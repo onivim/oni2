@@ -1,0 +1,12 @@
+(ocamllex
+  (modules When_lexer))
+
+(menhir
+  (modules When_parser))
+
+(library
+    (name WhenExpression)
+    (public_name Oni2.whenExpression)
+    (libraries 
+        Oni2.core
+    ))

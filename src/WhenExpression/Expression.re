@@ -1,4 +1,4 @@
-module Log = (val Oni_Core.Log.withNamespace("Oni2.Input.Expression"));
+module Log = (val Oni_Core.Log.withNamespace("Oni2.WhenExpression"));
 
 type t =
   | Variable(string)

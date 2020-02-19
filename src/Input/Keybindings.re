@@ -2,26 +2,26 @@ module Keybinding = {
   type t = {
     key: string,
     command: string,
-    condition: Expression.t,
+    condition: WhenExpression.t,
   };
 
   let parseAndExpression = (json: Yojson.Safe.t) =>
     switch (json) {
-    | `String(expr) => Expression.Variable(expr)
+    | `String(expr) => WhenExpression.Variable(expr)
     | `List(andExpressions) =>
       List.fold_left(
         (acc, curr) => {
           let result =
             switch (curr) {
-            | `String(expr) => Expression.Variable(expr)
-            | _ => Expression.False
+            | `String(expr) => WhenExpression.Variable(expr)
+            | _ => WhenExpression.False
             };
-          Expression.And(result, acc);
+          WhenExpression.And(result, acc);
         },
-        Expression.True,
+        WhenExpression.True,
         andExpressions,
       )
-    | _ => Expression.False
+    | _ => WhenExpression.False
     };
 
   let condition_of_yojson = (json: Yojson.Safe.t) => {
@@ -29,17 +29,17 @@ module Keybinding = {
     | `List(orExpressions) =>
       Ok(
         List.fold_left(
-          (acc, curr) => {Expression.Or(parseAndExpression(curr), acc)},
-          Expression.False,
+          (acc, curr) => {WhenExpression.Or(parseAndExpression(curr), acc)},
+          WhenExpression.False,
           orExpressions,
         ),
       )
     | `String(v) =>
-      switch (When.parse(v)) {
+      switch (WhenExpression.parse(v)) {
       | Error(err) => Error(err)
       | Ok(condition) => Ok(condition)
       }
-    | `Null => Ok(Expression.True)
+    | `Null => Ok(WhenExpression.True)
     | _ => Error("Expected string for condition")
     };
   };

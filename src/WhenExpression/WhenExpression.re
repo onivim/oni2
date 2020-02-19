@@ -1,3 +1,6 @@
+
+include Expression;
+
 let parse = str => {
   let lexbuf = Lexing.from_string(str);
   switch (When_parser.main(When_lexer.token, lexbuf)) {
