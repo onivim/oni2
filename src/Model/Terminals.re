@@ -1,10 +1,11 @@
 open Oni_Core;
 
 type msg =
-  | TerminalStarted({
+  | Started({
       id: int,
       cmd: string,
-    });
+    })
+  | ScreenUpdated;
 
 type t = {
   idToTerminal: IntMap.t(Terminal.t),
@@ -25,3 +26,5 @@ let create = (~id, ~cmd, ~rows, ~columns, {idToTerminal, lastId}) => {
 };
 
 let getBufferName = id => "oni-terminal://" ++ string_of_int(id);
+
+let toList = ({idToTerminal, _}) => IntMap.bindings(idToTerminal);

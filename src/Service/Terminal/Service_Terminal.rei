@@ -1,3 +1,4 @@
+open Oni_Core;
 open Oni_Extensions;
 
 module Msg: {
@@ -13,7 +14,8 @@ module Sub: {
       ~cmd: string,
       ~columns: int,
       ~rows: int,
-      ~extClient: ExtHostClient.t
+      ~workspace: Uri.t,
+      ~extHostClient: ExtHostClient.t
     ) =>
     Isolinear.Sub.t(Msg.t);
 };

@@ -343,7 +343,7 @@ let start = (getState, contributedCommands) => {
             Some(WindowTree.Vertical),
             None,
           ),
-          Actions.Terminals(Terminals.TerminalStarted({ id: nextTerminalId, cmd})),
+          Actions.Terminals(Terminals.Started({id: nextTerminalId, cmd})),
         ]);
       },
     ),
@@ -359,7 +359,7 @@ let start = (getState, contributedCommands) => {
             Some(WindowTree.Horizontal),
             None,
           ),
-          Actions.Terminals(Terminals.TerminalStarted({ id: nextTerminalId, cmd})),
+          Actions.Terminals(Terminals.Started({id: nextTerminalId, cmd})),
         ]);
       },
     ),
