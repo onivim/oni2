@@ -156,8 +156,8 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Model.Actions.Init({ shouldSyntaxHighlight, _}) => (
-      { ...state, syntaxHighlightingEnabled: shouldSyntaxHighlight },
+    | Model.Actions.Init({ syntaxHighlightingEnabled, _}) => (
+      { ...state, syntaxHighlightingEnabled: syntaxHighlightingEnabled },
       Isolinear.Effect.none
     )
     | Model.Actions.SyntaxServerClosed => (
