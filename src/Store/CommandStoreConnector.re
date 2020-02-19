@@ -149,7 +149,7 @@ let createDefaultCommands = getState => {
       ),
       Command.create(
         ~category=Some("Terminal"),
-        ~name="Open terminal in horizontal split",
+        ~name="Open terminal in vertical split",
         ~action=Command("terminal.new.vertical"),
         (),
       ),
@@ -161,6 +161,11 @@ let start = (getState, contributedCommands) => {
   let singleActionEffect = (action, name) =>
     Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
       dispatch(action)
+    );
+
+  let multiActionEffect = (actions, name) =>
+    Isolinear.Effect.createWithDispatch(~name="commands." ++ name, dispatch =>
+      List.iter(dispatch, actions)
     );
 
   let closeEditorEffect = (state, _) =>
@@ -326,11 +331,38 @@ let start = (getState, contributedCommands) => {
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),
     ("window.moveDown", state => windowMoveEffect(state, Down)),
-    ("terminal.new.vertical", ({terminals, _}) => 
-      Actions.OpenFileByPath(Terminals.getNextTerminalName(terminals), Vertical)),
-    ("terminal.new.horizontal", ({terminals, _}) => 
-      Actions.OpenFileByPath(Terminals.getNextTerminalName(terminals), 
-        Horizontal));
+    (
+      "terminal.new.vertical",
+      ({terminals, _}) => {
+        let nextTerminalId = Terminals.getNextId(terminals);
+        let bufferName = Terminals.getBufferName(nextTerminalId);
+        let cmd = "/bin/bash";
+        multiActionEffect([
+          Actions.OpenFileByPath(
+            bufferName,
+            Some(WindowTree.Vertical),
+            None,
+          ),
+          Actions.Terminals(Terminals.TerminalStarted({ id: nextTerminalId, cmd})),
+        ]);
+      },
+    ),
+    (
+      "terminal.new.horizontal",
+      ({terminals, _}) => {
+        let nextTerminalId = Terminals.getNextId(terminals);
+        let bufferName = Terminals.getBufferName(nextTerminalId);
+        let cmd = "/bin/bash";
+        multiActionEffect([
+          Actions.OpenFileByPath(
+            bufferName,
+            Some(WindowTree.Horizontal),
+            None,
+          ),
+          Actions.Terminals(Terminals.TerminalStarted({ id: nextTerminalId, cmd})),
+        ]);
+      },
+    ),
   ];
 
   let commandMap =

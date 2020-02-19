@@ -33,6 +33,7 @@ type t =
   | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
   | SyntaxServerStarted([@opaque] Oni_Syntax_Client.t)
   | SyntaxServerClosed
+  | Terminals([@opaque] Terminals.msg)
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension

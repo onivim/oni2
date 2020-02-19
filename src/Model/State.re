@@ -53,7 +53,7 @@ type t = {
   statusBar: StatusBarModel.t,
   syntaxHighlightingEnabled: bool,
   syntaxClient: option(Oni_Syntax_Client.t),
-  terminals: IntMap.t(Terminal.t),
+  terminals: Terminals.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
@@ -128,6 +128,6 @@ let create: unit => t =
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
-    terminals: IntMap.empty,
+    terminals: Terminals.initial,
     textContentProviders: [],
   };
