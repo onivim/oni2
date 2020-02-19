@@ -189,7 +189,10 @@ let make =
          | EditorsPicker => React.empty
          | _ => <input />
          }}
-        <dropdown />
+         {switch (variant) {
+         | Wildmenu(_) => React.empty
+         | _ => <dropdown />
+         }}
       </View>
     </OniBoxShadow>
   </AllowPointer>;

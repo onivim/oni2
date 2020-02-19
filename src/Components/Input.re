@@ -278,20 +278,20 @@ let%component make =
 
       let (beginnigStartStr, _) =
         getStringParts(startOffset + String.length(prefix), displayValue);
-      let beginnigTextWidth = measureTextWidth(beginnigStartStr);
+      let beginnigTextWidth = measureTextWidth(beginnigStartStr) |> int_of_float;
       let startOffset = beginnigTextWidth - scrollOffset^;
 
       let (endingStartStr, _) =
         getStringParts(endOffset + String.length(prefix), displayValue);
-      let endingTextWidth = measureTextWidth(endingStartStr);
+      let endingTextWidth = measureTextWidth(endingStartStr) |> int_of_float;
       let endOffset = endingTextWidth - scrollOffset^;
       let width = endOffset - startOffset + Constants.cursorWidth;
 
       <View style={Styles.selection(startOffset)}>
         <Opacity opacity=Constants.selectionOpacity>
           <Container
-            width
-            height=Styles.fontSize
+            width={width}
+            height={Styles.fontSize |> int_of_float}
             color=selectionColor
           />
         </Opacity>
