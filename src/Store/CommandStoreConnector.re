@@ -334,8 +334,8 @@ let start = (getState, contributedCommands) => {
     (
       "terminal.new.vertical",
       ({terminals, _}) => {
-        let nextTerminalId = Terminals.getNextId(terminals);
-        let bufferName = Terminals.getBufferName(nextTerminalId);
+        let nextTerminalId = Feature_Terminal.getNextId(terminals);
+        let bufferName = Feature_Terminal.getBufferName(nextTerminalId);
         let cmd = "/bin/bash";
         multiActionEffect([
           Actions.OpenFileByPath(
@@ -343,15 +343,17 @@ let start = (getState, contributedCommands) => {
             Some(WindowTree.Vertical),
             None,
           ),
-          Actions.Terminals(Terminals.Started({id: nextTerminalId, cmd})),
+          Actions.Terminal(
+            Feature_Terminal.Started({id: nextTerminalId, cmd}),
+          ),
         ]);
       },
     ),
     (
       "terminal.new.horizontal",
       ({terminals, _}) => {
-        let nextTerminalId = Terminals.getNextId(terminals);
-        let bufferName = Terminals.getBufferName(nextTerminalId);
+        let nextTerminalId = Feature_Terminal.getNextId(terminals);
+        let bufferName = Feature_Terminal.getBufferName(nextTerminalId);
         let cmd = "/bin/bash";
         multiActionEffect([
           Actions.OpenFileByPath(
@@ -359,7 +361,9 @@ let start = (getState, contributedCommands) => {
             Some(WindowTree.Horizontal),
             None,
           ),
-          Actions.Terminals(Terminals.Started({id: nextTerminalId, cmd})),
+          Actions.Terminal(
+            Feature_Terminal.Started({id: nextTerminalId, cmd}),
+          ),
         ]);
       },
     ),

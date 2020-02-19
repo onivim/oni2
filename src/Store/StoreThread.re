@@ -197,8 +197,8 @@ let start =
 
     let terminalSubscriptions =
       state.terminals
-      |> Model.Terminals.toList
-      |> List.map(((id, terminal: Model.Terminal.t)) => {
+      |> Feature_Terminal.toList
+      |> List.map(((id, terminal: Feature_Terminal.terminal)) => {
            Service_Terminal.Sub.terminal(
              ~id,
              ~cmd=terminal.cmd,
@@ -208,7 +208,7 @@ let start =
              ~extHostClient,
            )
            |> Isolinear.Sub.map(msg =>
-                Model.Actions.Terminals(Model.Terminals.ScreenUpdated)
+                Model.Actions.Terminal(Feature_Terminal.ScreenUpdated)
               )
          });
 

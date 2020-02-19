@@ -33,7 +33,6 @@ type t =
   | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
   | SyntaxServerStarted([@opaque] Oni_Syntax_Client.t)
   | SyntaxServerClosed
-  | Terminals([@opaque] Terminals.msg)
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
@@ -140,6 +139,7 @@ type t =
   | SearchHotkey
   | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
+  | Terminal([@opaque] Feature_Terminal.msg)
   | PaneTabClicked(Pane.pane)
   | VimDirectoryChanged(string)
   | WindowFocusGained
