@@ -14,12 +14,13 @@ module Sub: {
       ~cmd: string,
       ~columns: int,
       ~rows: int,
-      ~workspace: Uri.t,
+      ~workspaceUri: Uri.t,
       ~extHostClient: ExtHostClient.t
     ) =>
     Isolinear.Sub.t(Msg.t);
 };
 
 module Effect: {
-  let input: (~id: int, ~input: string, ExtHostClient.t) => Isolinear.Effect.t(Msg.t);
+  let input:
+    (~id: int, ~input: string, ExtHostClient.t) => Isolinear.Effect.t(Msg.t);
 };

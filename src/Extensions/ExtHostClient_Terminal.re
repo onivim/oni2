@@ -98,4 +98,37 @@ module Requests = {
         ]),
       ),
     );
+
+  let acceptProcessResize = (id, columns, rows, client) => {
+    ExtHostTransport.send(
+      client,
+      ExtHostProtocol.OutgoingNotifications._buildNotification(
+        "ExtHostTerminalService",
+        "$acceptProcessResize",
+        `List([`Int(id), `Int(columns), `Int(rows)]),
+      ),
+    );
+  };
+
+  let acceptProcessInput = (id, data, client) => {
+    ExtHostTransport.send(
+      client,
+      ExtHostProtocol.OutgoingNotifications._buildNotification(
+        "ExtHostTerminalService",
+        "$acceptProcessInput",
+        `List([`Int(id), `String(data)]),
+      ),
+    );
+  };
+
+  let acceptProcessShutdown = (~immediate=false, id, client) => {
+    ExtHostTransport.send(
+      client,
+      ExtHostProtocol.OutgoingNotifications._buildNotification(
+        "ExtHostTerminalService",
+        "$acceptProcessShutdown",
+        `List([`Int(id), `Bool(immediate)]),
+      ),
+    );
+  };
 };

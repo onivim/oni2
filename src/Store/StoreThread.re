@@ -189,7 +189,7 @@ let start =
         Isolinear.Sub.none;
       };
 
-    let workspace =
+    let workspaceUri =
       state.workspace
       |> Option.map((ws: Model.Workspace.workspace) => ws.workingDirectory)
       |> Option.value(~default=Sys.getcwd())
@@ -204,7 +204,7 @@ let start =
              ~cmd=terminal.cmd,
              ~rows=terminal.rows,
              ~columns=terminal.columns,
-             ~workspace,
+             ~workspaceUri,
              ~extHostClient,
            )
            |> Isolinear.Sub.map(msg =>
