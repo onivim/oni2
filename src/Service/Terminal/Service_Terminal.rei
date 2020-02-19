@@ -7,7 +7,7 @@ module Msg {
 }
 
 module Sub {
-	let create: (~id: int, ~cmd: string, ~columns: int, ~rows: int, ~extClient: ExtHostClient.t) => Isolinear.Sub.t(Msg.t);
+	let terminal: (~id: int, ~cmd: string, ~columns: int, ~rows: int, ~extClient: ExtHostClient.t) => Isolinear.Sub.t(Msg.t);
 }
 
 module Effect {
