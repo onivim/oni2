@@ -233,15 +233,8 @@ module Make = (Model: TreeModel) => {
                   ~tree,
                   (),
                 ) => {
-    let%hook (outerRef, setOuterRef) = Hooks.ref(None);
-
-    let menuHeight =
-      switch (outerRef) {
-      | Some(node) =>
-        let dimensions: Dimensions.t = node#measurements();
-        dimensions.height;
-      | None => itemHeight * initialRowsToRender
-      };
+    let%hook (menuHeight, setMenuHeight) =
+      Hooks.state(itemHeight * initialRowsToRender);
 
     let count = Model.expandedSubtreeSize(tree);
 
@@ -299,7 +292,7 @@ module Make = (Model: TreeModel) => {
 
     <View
       style=Styles.container
-      ref={ref => setOuterRef(Some(ref))}
+      onDimensionsChanged={({height, _}) => setMenuHeight(_ => height)}
       onMouseWheel>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>
