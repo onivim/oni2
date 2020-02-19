@@ -12,5 +12,4 @@ module Sub {
 
 module Effect {
 	let input: (~id: int, ~input: string) => Isolinear.Effect.t(Msg.t);
-	let resize: (~id: int, ~rows: int, ~columns: int) => Isolinear.Effect.t(Msg.t);
 }

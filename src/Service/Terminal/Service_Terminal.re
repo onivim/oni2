@@ -12,6 +12,4 @@ module Sub = {
 
 module Effect = {
 	let input = (~id, ~input) => Isolinear.Effect.none;
-
-	let resize = (~id, ~rows, ~columns) => Isolinear.Effect.none;
 }
