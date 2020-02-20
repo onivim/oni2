@@ -184,10 +184,12 @@ let start = (extensions, extHostClient) => {
 
     | Actions.BufferUpdate(bu) => (
         state,
-        Isolinear.Effect.batch([
-          modelChangedEffect(state.buffers, bu),
-          gitRefreshEffect(state.scm),
-        ]),
+        Isolinear.Effect.batch([modelChangedEffect(state.buffers, bu)]),
+      )
+
+    | Actions.BufferSaved(_) => (
+        state,
+        Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
       )
 
     | Actions.CommandExecuteContributed(cmd) => (

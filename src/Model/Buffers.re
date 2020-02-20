@@ -87,9 +87,6 @@ let reduce = (state: t, action: Actions.t) => {
 
   | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
 
-  | BufferSaved(metadata) =>
-    IntMap.update(metadata.id, setModified(metadata.modified), state)
-
   | _ => state
   };
 };
