@@ -51,6 +51,8 @@ type t = {
   scm: Feature_SCM.model,
   sneak: Sneak.t,
   statusBar: StatusBarModel.t,
+  syntaxHighlightingEnabled: bool,
+  syntaxClient: option(Oni_Syntax_Client.t),
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
@@ -111,6 +113,8 @@ let create: unit => t =
     scm: Feature_SCM.initial,
     sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),
+    syntaxHighlightingEnabled: false,
+    syntaxClient: None,
     windowManager: WindowManager.create(),
     windowTitle: "",
     windowIsFocused: true,

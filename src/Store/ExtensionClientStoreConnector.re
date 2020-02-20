@@ -174,7 +174,7 @@ let start = (extensions, extHostClient) => {
 
   let updater = (state: State.t, action) =>
     switch (action) {
-    | Actions.Init => (
+    | Actions.Init(_) => (
         state,
         Isolinear.Effect.batch([
           registerQuitCleanupEffect,

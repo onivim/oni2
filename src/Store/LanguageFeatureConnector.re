@@ -20,8 +20,6 @@ module Editor = Feature_Editor.Editor;
 module Log = (val Log.withNamespace("Oni2.Store.LanguageFeatures"));
 
 let start = () => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
-
   let checkForDefinitionEffect = (languageFeatures, buffer, location) =>
     Isolinear.Effect.createWithDispatch(
       ~name="languageFeature.checkForDefinition", dispatch => {
@@ -118,5 +116,5 @@ let start = () => {
     | _ => default
     };
   };
-  (updater, stream);
+  updater;
 };
