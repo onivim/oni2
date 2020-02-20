@@ -14,8 +14,8 @@ module ShellLaunchConfig = {
     let args = arguments |> List.map(s => `String(s));
     `Assoc([
       ("name", `String("Hello")),
-      ("executable", `String("bash")),
-      ("args", `List([])),
+      ("executable", `String(executable)),
+      ("args", `List(args)),
     ]);
   };
 };
