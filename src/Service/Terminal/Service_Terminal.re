@@ -45,7 +45,7 @@ module Sub = {
 
       let getUniqueId = ({id, _}) => string_of_int(id);
 
-      let init = (~params, ~dispatch) => {
+      let init = (~params, ~dispatch as _) => {
         let launchConfig =
           ExtHostClient.Terminal.ShellLaunchConfig.{
             name: "Terminal",
@@ -64,7 +64,7 @@ module Sub = {
           );
 
         let dispose =
-          Revery.Event.subscribe(Internal.onExtensionMessage, msg => {
+          Revery.Event.subscribe(Internal.onExtensionMessage, _msg => {
             // TODO:
             ()
           });
@@ -72,7 +72,7 @@ module Sub = {
         {dispose, currentRows: params.rows, currentColumns: params.columns};
       };
 
-      let update = (~params, ~state, ~dispatch) => {
+      let update = (~params, ~state, ~dispatch as _) => {
         if (params.rows != state.currentRows
             || params.columns != state.currentColumns) {
           let () =
@@ -112,7 +112,7 @@ module Sub = {
 };
 
 module Effect = {
-  let input = (~id, ~input, extHostClient) => Isolinear.Effect.none;
+  let input = (~id as _, ~input as _, _extHostClient) => Isolinear.Effect.none;
 };
 
 let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {

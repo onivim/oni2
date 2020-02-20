@@ -1,5 +1,4 @@
 open Oni_Core;
-open Utility;
 
 module ExtHostClient = Oni_Extensions.ExtHostClient;
 
@@ -25,6 +24,9 @@ let getBufferName = id => "oni://terminal/" ++ string_of_int(id);
 
 let toList = ({idToTerminal, _}) => IntMap.bindings(idToTerminal);
 
+let getTerminalOpt = (id, {idToTerminal, _}) =>
+  IntMap.find_opt(id, idToTerminal);
+
 type msg =
   | Started({
       id: int,
@@ -32,7 +34,7 @@ type msg =
     })
   | Service(Service_Terminal.Msg.t);
 
-let update = (extHostClient, model: t, msg) => {
+let update = (_extHostClient, model: t, msg) => {
   switch (msg) {
   | Started({id, cmd}) =>
     let idToTerminal =

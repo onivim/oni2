@@ -1,5 +1,4 @@
 open Oni_Core;
-open Utility;
 
 module ExtHostClient = Oni_Extensions.ExtHostClient;
 
@@ -21,6 +20,8 @@ let getNextId: t => int;
 let getBufferName: int => string;
 
 let toList: t => list((int, terminal));
+
+let getTerminalOpt: (int, t) => option(terminal);
 
 type msg =
   | Started({
