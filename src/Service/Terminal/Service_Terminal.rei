@@ -3,8 +3,11 @@ open Oni_Extensions;
 
 module Msg: {
   type t =
+    // TODO:
     | Resized(unit)
-    | Updated(unit);
+    | Updated(unit)
+    | ProcessStarted({id: int, pid: int})
+    | ProcessTitleSet({ id: int, title: string});
 };
 
 module Sub: {

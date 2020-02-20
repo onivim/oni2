@@ -195,24 +195,15 @@ let start =
       |> Option.value(~default=Sys.getcwd())
       |> Oni_Core.Uri.fromPath;
 
-    let terminalSubscriptions =
-      state.terminals
-      |> Feature_Terminal.toList
-      |> List.map(((id, terminal: Feature_Terminal.terminal)) => {
-           Service_Terminal.Sub.terminal(
-             ~id,
-             ~cmd=terminal.cmd,
-             ~rows=terminal.rows,
-             ~columns=terminal.columns,
-             ~workspaceUri,
-             ~extHostClient,
-           )
-           |> Isolinear.Sub.map(msg =>
-                Model.Actions.Terminal(Feature_Terminal.ScreenUpdated)
-              )
-         });
+    let terminalSubscription =
+      Feature_Terminal.subscription(
+        extHostClient,
+        workspaceUri,
+        state.terminals,
+      )
+    |> Isolinear.Sub.map(msg => Model.Actions.Terminal(Feature_Terminal.Service(msg)));
 
-    [syntaxSubscription, ...terminalSubscriptions] |> Isolinear.Sub.batch;
+    [syntaxSubscription, terminalSubscription] |> Isolinear.Sub.batch;
   };
 
   module Store =

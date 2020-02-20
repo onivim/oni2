@@ -9,7 +9,9 @@ module Internal = {
 module Msg = {
   type t =
     | Resized(unit)
-    | Updated(unit);
+    | Updated(unit)
+    | ProcessStarted({id: int, pid: int})
+    | ProcessTitleSet({ id: int, title: string});
 };
 
 module Sub = {
