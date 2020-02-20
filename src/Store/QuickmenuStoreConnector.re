@@ -153,7 +153,12 @@ let start = (themeInfo: ThemeInfo.t) => {
             let (text, cursorPosition) =
               InputModel.handleInput(~text=query, ~cursorPosition, key);
 
-            Quickmenu.{...state, query: text, cursorPosition};
+            Quickmenu.{
+              ...state,
+              query: text,
+              cursorPosition,
+              focused: Some(0),
+            };
           },
           state,
         ),
