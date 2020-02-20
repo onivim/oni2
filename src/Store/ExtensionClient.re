@@ -305,8 +305,7 @@ let create = (~extensions, ~setup: Setup.t) => {
         ~dispatch=msg => dispatch(Actions.SCM(msg)),
         msg,
       )
-    | Terminal(msg) =>
-      Service_Terminal.handleExtensionMessage(msg)
+    | Terminal(msg) => Service_Terminal.handleExtensionMessage(msg)
 
     | RegisterTextContentProvider({handle, scheme}) =>
       dispatch(NewTextContentProvider({handle, scheme}))
