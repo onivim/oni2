@@ -45,7 +45,7 @@ module Sub = {
 
       let getUniqueId = ({id, _}) => string_of_int(id);
 
-      let init = (~params, ~dispatch as _) => {
+      let init = (~params, ~dispatch) => {
         let launchConfig =
           ExtHostClient.Terminal.ShellLaunchConfig.{
             name: "Terminal",
@@ -64,9 +64,15 @@ module Sub = {
           );
 
         let dispose =
-          Revery.Event.subscribe(Internal.onExtensionMessage, _msg => {
-            // TODO:
-            ()
+          Revery.Event.subscribe(
+            Internal.onExtensionMessage, (msg: ExtHostClient.Terminal.msg) => {
+            switch (msg) {
+            | SendProcessTitle({terminalId, title}) =>
+              dispatch(Msg.ProcessTitleSet({id: terminalId, title}))
+            | SendProcessPid({terminalId, pid}) =>
+              dispatch(Msg.ProcessStarted({id: terminalId, pid}))
+            | _ => ()
+            }
           });
 
         {dispose, currentRows: params.rows, currentColumns: params.columns};
