@@ -9,5 +9,6 @@
       Revery
       isolinear
       base
+      vterm
     )
     (preprocess (pps ppx_let ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx)))
