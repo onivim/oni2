@@ -17,7 +17,7 @@ let initial = {idToTerminal: IntMap.empty, lastId: 0};
 
 let getNextId = ({lastId, _}) => lastId + 1;
 
-let getBufferName = id => "oni-terminal://" ++ string_of_int(id);
+let getBufferName = id => "oni://terminal/" ++ string_of_int(id);
 
 let toList = ({idToTerminal, _}) => IntMap.bindings(idToTerminal);
 
