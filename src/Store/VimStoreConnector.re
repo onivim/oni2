@@ -215,6 +215,12 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.Buffer.onWrite(id => {
+      Log.debugf(m => m("Buffer written: %n", id));
+      dispatch(Actions.BufferSaved(id));
+    });
+
+  let _: unit => unit =
     Vim.Cursor.onMoved(newPosition => {
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
@@ -349,8 +355,6 @@ let start =
         };
       dispatch(Actions.BufferEnter(meta, fileType));
     });
-
-  let _ = Vim.Buffer.onSaved;
 
   let _: unit => unit =
     Vim.Buffer.onUpdate(update => {
