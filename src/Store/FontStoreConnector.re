@@ -156,7 +156,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (state, loadEditorFontEffect(None, defaultFontSize))
+    | Actions.Init(_) => (state, loadEditorFontEffect(None, defaultFontSize))
     | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
     | Actions.LoadEditorFont(fontFamily, fontSize) => (
         state,

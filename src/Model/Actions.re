@@ -16,9 +16,11 @@ module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
+type initOptions = {syntaxHighlightingEnabled: bool};
+
 [@deriving show({with_path: false})]
 type t =
-  | Init
+  | Init([@opaque] initOptions)
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
@@ -29,6 +31,7 @@ type t =
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
+  | SyntaxServerStarted([@opaque] Oni_Syntax_Client.t)
   | SyntaxServerClosed
   | Command(string)
   | CommandsRegister(list(command))
@@ -109,6 +112,9 @@ type t =
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
+  // ReallyQuitting is dispatched when we've decided _for sure_
+  // to quit the app. This gives subscriptions the chance to clean up.
+  | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Location.t, Location.t)

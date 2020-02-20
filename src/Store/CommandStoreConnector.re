@@ -334,7 +334,7 @@ let start = (getState, contributedCommands) => {
 
   let updater = (state: State.t, action) => {
     switch (action) {
-    | Init => (state, setInitialCommands)
+    | Init(_) => (state, setInitialCommands)
 
     | EnableKeyDisplayer => (
         {...state, keyDisplayer: Some(KeyDisplayer.initial)},

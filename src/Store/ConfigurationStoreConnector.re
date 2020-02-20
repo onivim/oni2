@@ -157,7 +157,7 @@ let start =
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (state, initConfigurationEffect)
+    | Actions.Init(_) => (state, initConfigurationEffect)
     | Actions.ConfigurationTransform(file, transformer) => (
         state,
         transformConfigurationEffect(file, state.buffers, transformer),
