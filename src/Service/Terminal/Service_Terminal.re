@@ -93,3 +93,8 @@ module Sub = {
 module Effect = {
   let input = (~id, ~input, extHostClient) => Isolinear.Effect.none;
 };
+
+let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {
+   // TODO:
+   ();
+};

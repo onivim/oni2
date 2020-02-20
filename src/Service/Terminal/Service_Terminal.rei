@@ -24,3 +24,5 @@ module Effect: {
   let input:
     (~id: int, ~input: string, ExtHostClient.t) => Isolinear.Effect.t(Msg.t);
 };
+
+let handleExtensionMessage: ExtHostClient.Terminal.msg => unit;
