@@ -13,9 +13,9 @@ module ShellLaunchConfig = {
   let to_yojson = ({name, executable, arguments}) => {
     let args = arguments |> List.map(s => `String(s));
     `Assoc([
-      ("name", `String(name)),
-      ("executable", `String(executable)),
-      ("arguments", `List(args)),
+      ("name", `String("Hello")),
+      ("executable", `String("bash")),
+      ("args", `List([])),
     ]);
   };
 };
@@ -39,7 +39,7 @@ type msg =
       exitCode: int,
     });
 
-let handleMessage = (~dispatch, method, args) =>
+let handleMessage = (~dispatch, method, args) => {
   switch (method) {
   | "$sendProcessTitle" =>
     switch (args) {
@@ -80,24 +80,29 @@ let handleMessage = (~dispatch, method, args) =>
       )
     )
   };
+};
 
 // REQUESTS
 module Requests = {
-  let createProcess = (id, launchConfig, workspaceUri, columns, rows, client) =>
-    ExtHostTransport.send(
-      client,
-      ExtHostProtocol.OutgoingNotifications._buildNotification(
-        "ExtHostTerminalService",
-        "$createProcess",
-        `List([
-          `Int(id),
-          ShellLaunchConfig.to_yojson(launchConfig),
-          Uri.to_yojson(workspaceUri),
-          `Int(columns),
-          `Int(rows),
-        ]),
-      ),
-    );
+  let createProcess = (id, launchConfig, workspaceUri, columns, rows, client) => {
+    let () =
+      ExtHostTransport.send(
+        client,
+        ExtHostProtocol.OutgoingNotifications._buildNotification(
+          "ExtHostTerminalService",
+          "$createProcess",
+          `List([
+            `Int(id),
+            ShellLaunchConfig.to_yojson(launchConfig),
+            //Uri.to_yojson(workspaceUri),
+            `Assoc([]),
+            `Int(columns),
+            `Int(rows),
+          ]),
+        ),
+      );
+    ();
+  };
 
   let acceptProcessResize = (id, columns, rows, client) => {
     ExtHostTransport.send(

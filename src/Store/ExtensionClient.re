@@ -153,6 +153,24 @@ let create = (~extensions, ~setup: Setup.t) => {
         "reason_language_server",
         `Assoc([("location", `String(setup.rlsPath))]),
       ),
+      (
+        "terminal",
+        `Assoc([
+          (
+            "integrated",
+            `Assoc([
+              (
+                "env",
+                `Assoc([
+                  ("windows", `Null),
+                  ("linux", `Null),
+                  ("osx", `Null),
+                ]),
+              ),
+            ]),
+          ),
+        ]),
+      ),
     ]);
   let user = Configuration.Model.create(~keys, contents);
 

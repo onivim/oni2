@@ -28,6 +28,13 @@ type msg =
     })
   | ScreenUpdated;
 
-let updater = (extHostClient, model, msg) => {
-  (model, Isolinear.Effect.none);
+let update = (extHostClient, model: t, msg) => {
+  switch (msg) {
+  | Started({id, cmd}) =>
+    let idToTerminal =
+      IntMap.add(id, {id, cmd, rows: 80, columns: 40}, model.idToTerminal);
+    let lastId = max(id, model.lastId);
+    ({idToTerminal, lastId}, Isolinear.Effect.none);
+  | _ => (model, Isolinear.Effect.none)
+  };
 };
