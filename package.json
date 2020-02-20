@@ -192,7 +192,7 @@
     "@esy-ocaml/reason": "3.5.2",
     "@opam/camomile": "^1.0.1",
     "@opam/charInfo_width": "*",
-    "@opam/dune": "*",
+    "@opam/dune": "^2.0.0",
     "@opam/lwt": "*",
     "@opam/ocamlbuild": "*",
     "@opam/ppx_deriving": "*",
@@ -254,11 +254,12 @@
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reason-textmate": "onivim/reason-textmate#5f0dc38",
     "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d",
-    "reason-harfbuzz": "revery-ui/reason-harfbuzz#0848520"
+    "reason-harfbuzz": "revery-ui/reason-harfbuzz#0848520",
+    "@opam/ocaml-lsp-server": "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#b1168b8"
   },
   "devDependencies": {
     "ocaml": "~4.8",
-    "@opam/merlin": "~3.3.2",
+    "@opam/ocaml-lsp-server": "*",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
