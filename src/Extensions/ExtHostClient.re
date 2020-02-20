@@ -19,9 +19,11 @@ module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 type t = ExtHostTransport.t;
 
 module SCM = ExtHostClient_SCM;
+module Terminal = ExtHostClient_Terminal;
 
 type msg =
   | SCM(SCM.msg)
+  | Terminal(Terminal.msg)
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
@@ -220,6 +222,14 @@ let start =
 
     | ("MainThreadSCM", method, args) =>
       SCM.handleMessage(~dispatch=msg => dispatch(SCM(msg)), method, args);
+      Ok(None);
+
+    | ("MainThreadTerminalService", method, args) =>
+      Terminal.handleMessage(
+        ~dispatch=msg => dispatch(Terminal(msg)),
+        method,
+        args,
+      );
       Ok(None);
 
     | (scope, method, argsAsJson) =>
