@@ -1,6 +1,10 @@
 open Oni_Core;
 open Oni_Extensions;
 
+module Internal = {
+  let onExtensionMessage: Revery.Event.t(ExtHostClient.Terminal.msg) = Revery.Event.create();
+}
+
 module Msg = {
   type t =
     | Resized(unit)
@@ -22,6 +26,7 @@ module Sub = {
       type state = {
         currentRows: int,
         currentColumns: int,
+        dispose: unit => unit,
       };
 
       type msg = Msg.t;
@@ -49,7 +54,12 @@ module Sub = {
             params.extHostClient,
           );
 
-        {currentRows: params.rows, currentColumns: params.columns};
+        let dispose = Revery.Event.subscribe(Internal.onExtensionMessage, (msg) => {
+          // TODO: 
+          ();
+        });
+
+        {dispose, currentRows: params.rows, currentColumns: params.columns};
       };
 
       let update = (~params, ~state, ~dispatch) => {
@@ -65,7 +75,7 @@ module Sub = {
           ();
         };
 
-        {currentRows: params.rows, currentColumns: params.columns};
+        {...state, currentRows: params.rows, currentColumns: params.columns};
       };
 
       let dispose = (~params, ~state) => {
@@ -75,7 +85,8 @@ module Sub = {
             params.id,
             params.extHostClient,
           );
-        ();
+
+        state.dispose();
       };
     });
 
@@ -95,6 +106,5 @@ module Effect = {
 };
 
 let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {
-   // TODO:
-   ();
+   Revery.Event.dispatch(Internal.onExtensionMessage, msg);
 };
