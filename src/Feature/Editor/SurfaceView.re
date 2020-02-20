@@ -71,7 +71,7 @@ let%component make =
                 ~bufferWidthInCharacters,
                 (),
               ) => {
-  let%hook (elementRef, setElementRef) = React.Hooks.ref(None);
+  let%hook elementRef = React.Hooks.ref(None);
 
   let lineCount = Buffer.getNumberOfLines(buffer);
   let indentation =
@@ -86,7 +86,7 @@ let%component make =
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     Log.trace("editorMouseUp");
 
-    switch (elementRef) {
+    switch (elementRef^) {
     | None => ()
     | Some(r) =>
       let (minX, minY, _, _) = r#getBoundingBox() |> BoundingBox2d.getBounds;
@@ -120,7 +120,7 @@ let%component make =
   };
 
   <View
-    ref={node => setElementRef(Some(node))}
+    ref={node => elementRef := Some(node)}
     style={Styles.bufferViewClipped(
       gutterWidth,
       float(metrics.pixelWidth) -. gutterWidth,

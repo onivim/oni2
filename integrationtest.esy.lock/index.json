@@ -1,5 +1,5 @@
 {
-  "checksum": "ac911b53edd1472faef9eb8ec9ddbcb4",
+  "checksum": "bc321805af2d23862c294f3796f58a09",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -118,13 +118,13 @@
       "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#8417070@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#8417070@d41d8cd9",
+    "revery@github:revery-ui/revery#a525e7f@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#a525e7f@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#8417070",
+      "version": "github:revery-ui/revery#a525e7f",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#8417070" ]
+        "source": [ "github:revery-ui/revery#a525e7f" ]
       },
       "overrides": [],
       "dependencies": [
@@ -142,11 +142,12 @@
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/ppx_deriving@opam:4.4@21d6c7a5",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.5.0@677655b4",
+        "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/js_of_ocaml-lwt@opam:3.5.2@6ea3e3c2",
         "@opam/js_of_ocaml-compiler@opam:3.5.0@9ea7292f",
         "@opam/js_of_ocaml@opam:3.5.2@c5bae178",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9",
-        "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#0a2e476@d41d8cd9"
+        "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#34e5991@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -641,14 +642,14 @@
       "dependencies": [ "graceful-fs@4.2.3@d41d8cd9" ],
       "devDependencies": []
     },
-    "isolinear@3.0.0@d41d8cd9": {
-      "id": "isolinear@3.0.0@d41d8cd9",
+    "isolinear@2.3.0@d41d8cd9": {
+      "id": "isolinear@2.3.0@d41d8cd9",
       "name": "isolinear",
-      "version": "3.0.0",
+      "version": "2.3.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/isolinear/-/isolinear-3.0.0.tgz#sha1:493bed7c568d883607e7fd7f1a423d5a6f841515"
+          "archive:https://registry.npmjs.org/isolinear/-/isolinear-2.3.0.tgz#sha1:8f24a935b901c3fd097ec264575ca2b50288c5aa"
         ]
       },
       "overrides": [],
@@ -1070,7 +1071,7 @@
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
         "timber@github:glennsl/timber#ae065bb@d41d8cd9",
-        "revery@github:revery-ui/revery#8417070@d41d8cd9",
+        "revery@github:revery-ui/revery#a525e7f@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
@@ -1079,7 +1080,7 @@
         "reason-sdl2@2.10.3017@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#1daf653@d41d8cd9",
         "reason-jsonrpc@github:onivim/reason-jsonrpc#ebadf6d@d41d8cd9",
-        "ocaml@4.8.1000@d41d8cd9", "isolinear@3.0.0@d41d8cd9",
+        "ocaml@4.8.1000@d41d8cd9", "isolinear@2.3.0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
@@ -1579,6 +1580,32 @@
       ],
       "devDependencies": [
         "ocaml@4.8.1000@d41d8cd9", "@opam/result@opam:1.4@dc720aef"
+      ]
+    },
+    "@opam/psq@opam:0.2.0@247756d4": {
+      "id": "@opam/psq@opam:0.2.0@247756d4",
+      "name": "@opam/psq",
+      "version": "opam:0.2.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/b9/b94fb15f8878172bf58446b7d0fb7c1e#md5:b94fb15f8878172bf58446b7d0fb7c1e",
+          "archive:https://github.com/pqwy/psq/releases/download/v0.2.0/psq-v0.2.0.tbz#md5:b94fb15f8878172bf58446b7d0fb7c1e"
+        ],
+        "opam": {
+          "name": "psq",
+          "version": "0.2.0",
+          "path": "integrationtest.esy.lock/opam/psq.0.2.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.8.1000@d41d8cd9", "@opam/seq@opam:base@d8d7de1d",
+        "@opam/dune@opam:1.11.4@a7ccb7ae", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.8.1000@d41d8cd9", "@opam/seq@opam:base@d8d7de1d",
+        "@opam/dune@opam:1.11.4@a7ccb7ae"
       ]
     },
     "@opam/printbox@opam:0.4@8e9022ed": {
@@ -2212,6 +2239,23 @@
         "@opam/mmap@opam:1.1.0@b85334ff",
         "@opam/dune-configurator@opam:1.0.0@4873acd8",
         "@opam/dune@opam:1.11.4@a7ccb7ae"
+      ]
+    },
+    "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9": {
+      "id": "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
+      "name": "@opam/lru",
+      "version": "github:bryphe/lru:lru.opam#2708c70",
+      "source": {
+        "type": "install",
+        "source": [ "github:bryphe/lru:lru.opam#2708c70" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.8.1000@d41d8cd9", "@opam/psq@opam:0.2.0@247756d4",
+        "@opam/dune@opam:1.11.4@a7ccb7ae", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.8.1000@d41d8cd9", "@opam/psq@opam:0.2.0@247756d4"
       ]
     },
     "@opam/logs@opam:0.7.0@1d03143e": {
@@ -3216,14 +3260,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#0a2e476@d41d8cd9": {
+    "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#34e5991@d41d8cd9": {
       "id":
-        "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#0a2e476@d41d8cd9",
+        "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#34e5991@d41d8cd9",
       "name": "@brisk/brisk-reconciler",
-      "version": "github:briskml/brisk-reconciler#0a2e476",
+      "version": "github:briskml/brisk-reconciler#34e5991",
       "source": {
         "type": "install",
-        "source": [ "github:briskml/brisk-reconciler#0a2e476" ]
+        "source": [ "github:briskml/brisk-reconciler#34e5991" ]
       },
       "overrides": [],
       "dependencies": [
