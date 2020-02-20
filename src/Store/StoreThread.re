@@ -201,7 +201,7 @@ let start =
         extHostClient,
         state.terminals,
       )
-    |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
+      |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
 
     [syntaxSubscription, terminalSubscription] |> Isolinear.Sub.batch;
   };

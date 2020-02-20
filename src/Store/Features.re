@@ -36,7 +36,10 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
   | Terminal(msg) =>
     let (model, eff) =
       Feature_Terminal.update(extHostClient, state.terminals, msg);
-    ({...state, terminals: model}, eff |> Effect.map(msg => Actions.Terminal(msg)));
+    (
+      {...state, terminals: model},
+      eff |> Effect.map(msg => Actions.Terminal(msg)),
+    );
 
   | Modal(msg) =>
     switch (state.modal) {

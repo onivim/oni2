@@ -27,10 +27,11 @@ type msg =
       id: int,
       cmd: string,
     })
-  | Service(Service_Terminal.Msg.t)
+  | Service(Service_Terminal.Msg.t);
 
 let update: (ExtHostClient.t, t, msg) => (t, Isolinear.Effect.t(msg));
 
-let subscription: (~workspaceUri: Uri.t,ExtHostClient.t, t) => Isolinear.Sub.t(msg);
+let subscription:
+  (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);
 
 let shellCmd: string;

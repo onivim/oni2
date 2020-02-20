@@ -6,8 +6,14 @@ module Msg: {
     // TODO:
     | Resized(unit)
     | Updated(unit)
-    | ProcessStarted({id: int, pid: int})
-    | ProcessTitleSet({ id: int, title: string});
+    | ProcessStarted({
+        id: int,
+        pid: int,
+      })
+    | ProcessTitleSet({
+        id: int,
+        title: string,
+      });
 };
 
 module Sub: {
