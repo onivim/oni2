@@ -215,6 +215,9 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.Buffer.onWrite(id => {dispatch(Actions.BufferSaved(id))});
+
+  let _: unit => unit =
     Vim.Cursor.onMoved(newPosition => {
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
