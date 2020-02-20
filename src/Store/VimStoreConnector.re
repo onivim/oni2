@@ -350,6 +350,8 @@ let start =
       dispatch(Actions.BufferEnter(meta, fileType));
     });
 
+  let _ = Vim.Buffer.onSaved;
+
   let _: unit => unit =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
