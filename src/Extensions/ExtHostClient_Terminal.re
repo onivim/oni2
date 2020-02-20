@@ -13,7 +13,7 @@ module ShellLaunchConfig = {
   let to_yojson = ({name, executable, arguments}) => {
     let args = arguments |> List.map(s => `String(s));
     `Assoc([
-      ("name", `String("Hello")),
+      ("name", `String(name)),
       ("executable", `String(executable)),
       ("args", `List(args)),
     ]);
@@ -94,8 +94,7 @@ module Requests = {
           `List([
             `Int(id),
             ShellLaunchConfig.to_yojson(launchConfig),
-            //Uri.to_yojson(workspaceUri),
-            `Assoc([]),
+            Uri.to_yojson(workspaceUri),
             `Int(columns),
             `Int(rows),
           ]),

@@ -38,3 +38,5 @@ let update = (extHostClient, model: t, msg) => {
   | _ => (model, Isolinear.Effect.none)
   };
 };
+
+let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};

@@ -336,7 +336,7 @@ let start = (getState, contributedCommands) => {
       ({terminals, _}) => {
         let nextTerminalId = Feature_Terminal.getNextId(terminals);
         let bufferName = Feature_Terminal.getBufferName(nextTerminalId);
-        let cmd = "/bin/bash";
+        let cmd = Feature_Terminal.shellCmd;
         multiActionEffect([
           Actions.OpenFileByPath(
             bufferName,
@@ -354,7 +354,7 @@ let start = (getState, contributedCommands) => {
       ({terminals, _}) => {
         let nextTerminalId = Feature_Terminal.getNextId(terminals);
         let bufferName = Feature_Terminal.getBufferName(nextTerminalId);
-        let cmd = "/bin/bash";
+        let cmd = Feature_Terminal.shellCmd;
         multiActionEffect([
           Actions.OpenFileByPath(
             bufferName,
