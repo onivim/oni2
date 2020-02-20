@@ -197,11 +197,11 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
+        ~workspaceUri,
         extHostClient,
-        workspaceUri,
         state.terminals,
       )
-    |> Isolinear.Sub.map(msg => Model.Actions.Terminal(Feature_Terminal.Service(msg)));
+    |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
 
     [syntaxSubscription, terminalSubscription] |> Isolinear.Sub.batch;
   };

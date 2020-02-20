@@ -1,6 +1,8 @@
 open Oni_Core;
 open Utility;
 
+module ExtHostClient = Oni_Extensions.ExtHostClient;
+
 type terminal = {
   id: int,
   cmd: string,
@@ -47,7 +49,7 @@ let update = (extHostClient, model: t, msg) => {
   };
 };
 
-let subscription = (extHostClient, workspaceUri, model: t) => {
+let subscription = (~workspaceUri, extHostClient, model: t) => {
       model
       |> toList
       |> List.map(((id, terminal: terminal)) => {
@@ -60,7 +62,8 @@ let subscription = (extHostClient, workspaceUri, model: t) => {
              ~extHostClient,
            )
          })
-      |> Isolinear.Sub.batch;
+      |> Isolinear.Sub.batch
+      |> Isolinear.Sub.map(msg => Service(msg));
 }
 
 let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
