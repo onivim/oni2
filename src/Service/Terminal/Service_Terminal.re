@@ -6,17 +6,17 @@ module Internal = {
     Revery.Event.create();
 };
 
-  type msg =
-    | Resized(unit)
-    | Updated(unit)
-    | ProcessStarted({
-        id: int,
-        pid: int,
-      })
-    | ProcessTitleSet({
-        id: int,
-        title: string,
-      });
+type msg =
+  | Resized(unit)
+  | Updated(unit)
+  | ProcessStarted({
+      id: int,
+      pid: int,
+    })
+  | ProcessTitleSet({
+      id: int,
+      title: string,
+    });
 
 module Sub = {
   type params = {
@@ -77,8 +77,7 @@ module Sub = {
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
-        if (params.rows != state.rows
-            || params.columns != state.columns) {
+        if (params.rows != state.rows || params.columns != state.columns) {
           let () =
             ExtHostClient.Terminal.Requests.acceptProcessResize(
               params.id,

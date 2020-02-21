@@ -1,19 +1,18 @@
 open Oni_Core;
 open Oni_Extensions;
 
-
-  type msg =
-    // TODO:
-    | Resized(unit)
-    | Updated(unit)
-    | ProcessStarted({
-        id: int,
-        pid: int,
-      })
-    | ProcessTitleSet({
-        id: int,
-        title: string,
-      });
+type msg =
+  // TODO:
+  | Resized(unit)
+  | Updated(unit)
+  | ProcessStarted({
+      id: int,
+      pid: int,
+    })
+  | ProcessTitleSet({
+      id: int,
+      title: string,
+    });
 
 module Sub: {
   let terminal:
