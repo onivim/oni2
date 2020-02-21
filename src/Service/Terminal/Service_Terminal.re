@@ -14,7 +14,15 @@ type msg =
   | ProcessTitleChanged({
       id: int,
       title: string,
-    });
+    })
+  | TerminalScreenUpdated({
+      id: int,
+      screen: ReveryTerminal.Screen.t,
+    })
+  | TerminalCursorMoved({
+    id: int,
+    screen: ReveryTerminal.Cursor.t,
+  })
 
 module Sub = {
   type params = {
