@@ -228,7 +228,19 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             shouldHighlightActiveIndentGuides
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
-        | BufferRenderer.Terminal({ id }) => <WelcomeView state />
+        | BufferRenderer.Terminal({ id }) => 
+          let maybeFont = 
+            Revery.Font.load(state.editorFont.fontFile)
+            |> Stdlib.Result.to_option;
+          let maybeTerminal = state.terminals
+          |> Feature_Terminal.getTerminalOpt(id);
+          
+          Utility.OptionEx.map2(({screen, cursor, _}: Feature_Terminal.terminal, font) => {
+            let size = state.editorFont.fontSize;
+            let font = ReveryTerminal.Font.make(~size, font);
+            ReveryTerminal.render(~screen, ~cursor, ~font);
+          }, maybeTerminal, maybeFont)
+          |> Option.value(~default=React.empty);
         };
       | None => React.empty
       };

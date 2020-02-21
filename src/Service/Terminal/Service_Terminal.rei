@@ -1,6 +1,7 @@
 open Oni_Core;
 open Oni_Extensions;
 
+[@deriving show({with_path: false})]
 type msg =
   | ProcessStarted({
       id: int,

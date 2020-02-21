@@ -6,6 +6,7 @@ module Internal = {
     Revery.Event.create();
 };
 
+[@deriving show({with_path: false})]
 type msg =
   | ProcessStarted({
       id: int,
@@ -17,11 +18,11 @@ type msg =
     })
   | TerminalScreenUpdated({
       id: int,
-      screen: ReveryTerminal.Screen.t,
+      screen: [@opaque] ReveryTerminal.Screen.t,
     })
   | TerminalCursorMoved({
       id: int,
-      cursor: ReveryTerminal.Cursor.t,
+      cursor: [@opaque] ReveryTerminal.Cursor.t,
     });
 
 module Sub = {
