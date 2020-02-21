@@ -51,14 +51,14 @@ module Sub = {
             arguments: [],
           };
 
-          ExtHostClient.Terminal.Requests.createProcess(
-            params.id,
-            launchConfig,
-            params.workspaceUri,
-            params.columns,
-            params.rows,
-            params.extHostClient,
-          );
+        ExtHostClient.Terminal.Requests.createProcess(
+          params.id,
+          launchConfig,
+          params.workspaceUri,
+          params.columns,
+          params.rows,
+          params.extHostClient,
+        );
 
         let dispose =
           Revery.Event.subscribe(
@@ -77,12 +77,12 @@ module Sub = {
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
         if (params.rows != state.rows || params.columns != state.columns) {
-            ExtHostClient.Terminal.Requests.acceptProcessResize(
-              params.id,
-              params.rows,
-              params.columns,
-              params.extHostClient,
-            );
+          ExtHostClient.Terminal.Requests.acceptProcessResize(
+            params.id,
+            params.rows,
+            params.columns,
+            params.extHostClient,
+          );
         };
 
         {...state, rows: params.rows, columns: params.columns};
