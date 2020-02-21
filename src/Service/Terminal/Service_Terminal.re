@@ -7,13 +7,11 @@ module Internal = {
 };
 
 type msg =
-  | Resized(unit)
-  | Updated(unit)
   | ProcessStarted({
       id: int,
       pid: int,
     })
-  | ProcessTitleSet({
+  | ProcessTitleChanged({
       id: int,
       title: string,
     });
@@ -65,7 +63,7 @@ module Sub = {
             Internal.onExtensionMessage, (msg: ExtHostClient.Terminal.msg) => {
             switch (msg) {
             | SendProcessTitle({terminalId, title}) =>
-              dispatch(ProcessTitleSet({id: terminalId, title}))
+              dispatch(ProcessTitleChanged({id: terminalId, title}))
             | SendProcessPid({terminalId, pid}) =>
               dispatch(ProcessStarted({id: terminalId, pid}))
             | _ => ()

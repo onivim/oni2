@@ -40,7 +40,7 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
     let effect: Isolinear.Effect.t(Actions.t) =
       switch ((eff: Feature_Terminal.outmsg)) {
       | Nothing => Effect.none
-      | OpenBuffer({name, splitDirection}) =>
+      | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
           | Horizontal => WindowTree.Horizontal

@@ -24,12 +24,12 @@ type splitDirection =
   | Horizontal;
 
 type msg =
-  | Started({splitDirection})
+  | NewTerminal({splitDirection})
   | Service(Service_Terminal.msg);
 
 type outmsg =
   | Nothing
-  | OpenBuffer({
+  | TerminalCreated({
       name: string,
       splitDirection,
     });

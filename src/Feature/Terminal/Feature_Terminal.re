@@ -29,22 +29,22 @@ type splitDirection =
   | Vertical
   | Horizontal;
 
-type outmsg =
-  | Nothing
-  | OpenBuffer({
-      name: string,
-      splitDirection,
-    });
-
 type msg =
   | NewTerminal({splitDirection})
   | Service(Service_Terminal.msg);
+
+type outmsg =
+  | Nothing
+  | TerminalCreated({
+      name: string,
+      splitDirection,
+    });
 
 let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
 
 let update = (_extHostClient, model: t, msg) => {
   switch (msg) {
-  | Started({splitDirection}) =>
+  | NewTerminal({splitDirection}) =>
     let cmd = shellCmd;
     let id = model.nextId;
     let idToTerminal =
@@ -55,7 +55,7 @@ let update = (_extHostClient, model: t, msg) => {
       );
     (
       {idToTerminal, nextId: id + 1},
-      OpenBuffer({name: getBufferName(id), splitDirection}),
+      TerminalCreated({name: getBufferName(id), splitDirection}),
     );
   | Service(ProcessStarted({id, pid})) =>
     let idToTerminal =
@@ -65,7 +65,7 @@ let update = (_extHostClient, model: t, msg) => {
         model.idToTerminal,
       );
     ({...model, idToTerminal}, Nothing);
-  | Service(ProcessTitleSet({id, title})) =>
+  | Service(ProcessTitleChanged({id, title})) =>
     let idToTerminal =
       IntMap.update(
         id,
@@ -73,7 +73,6 @@ let update = (_extHostClient, model: t, msg) => {
         model.idToTerminal,
       );
     ({...model, idToTerminal}, Nothing);
-  | _ => (model, Nothing)
   };
 };
 
