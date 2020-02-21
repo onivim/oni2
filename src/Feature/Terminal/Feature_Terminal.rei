@@ -15,7 +15,7 @@ type t;
 
 let initial: t;
 
-let toList: t => list((int, terminal));
+let toList: t => list(terminal);
 
 let getTerminalOpt: (int, t) => option(terminal);
 

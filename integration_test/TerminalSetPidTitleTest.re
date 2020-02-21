@@ -17,15 +17,25 @@ runTest(~name="TerminalSetPidTitle", (dispatch, wait, _) => {
   // Spin up a terminal
   dispatch(
     Actions.Terminal(
-      Feature_Terminal.Started({id: 99, cmd: Feature_Terminal.shellCmd}),
+      Feature_Terminal.NewTerminal({splitDirection: Vertical}),
     ),
   );
+
+  let getTerminalOpt = (state: State.t) => {
+    state.terminals
+    |> Feature_Terminal.toList
+    |> (list => List.nth_opt(list, 0));
+  };
+
+  wait(~name="Terminal should now be in state.", (state: State.t) => {
+    state |> getTerminalOpt != None
+  });
 
   wait(
     ~timeout=30.0,
     ~name="Validate terminal started and set the pid / title",
     (state: State.t) =>
-    switch (Feature_Terminal.getTerminalOpt(99, state.terminals)) {
+    switch (getTerminalOpt(state)) {
     | None => failwith("Terminal should be in state!")
     | Some({id, pid, title, _}) =>
       let logOpt = str =>
@@ -42,7 +52,7 @@ runTest(~name="TerminalSetPidTitle", (dispatch, wait, _) => {
         ),
       );
 
-      id == 99 && pid != None && title != None;
+      pid != None && title != None;
     }
   );
 });

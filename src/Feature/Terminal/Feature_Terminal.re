@@ -20,7 +20,8 @@ let initial = {idToTerminal: IntMap.empty, nextId: 0};
 
 let getBufferName = id => "oni://terminal/" ++ string_of_int(id);
 
-let toList = ({idToTerminal, _}) => IntMap.bindings(idToTerminal);
+let toList = ({idToTerminal, _}) =>
+  idToTerminal |> IntMap.bindings |> List.map(snd);
 
 let getTerminalOpt = (id, {idToTerminal, _}) =>
   IntMap.find_opt(id, idToTerminal);
@@ -79,9 +80,9 @@ let update = (_extHostClient, model: t, msg) => {
 let subscription = (~workspaceUri, extHostClient, model: t) => {
   model
   |> toList
-  |> List.map(((id, terminal: terminal)) => {
+  |> List.map((terminal: terminal) => {
        Service_Terminal.Sub.terminal(
-         ~id,
+         ~id=terminal.id,
          ~cmd=terminal.cmd,
          ~rows=terminal.rows,
          ~columns=terminal.columns,
