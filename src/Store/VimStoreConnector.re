@@ -654,11 +654,19 @@ let start =
         let wholeLength = String.length(filePath);
         let prefixLength = String.length("oni://terminal/");
 
-        let id = String.sub(filePath, prefixLength, wholeLength - prefixLength)
-        |> int_of_string;
+        let id =
+          String.sub(filePath, prefixLength, wholeLength - prefixLength)
+          |> int_of_string;
 
-        dispatch(Actions.BufferRenderer(BufferRenderer.RendererAvailable(metadata.id, BufferRenderer.Terminal({id: id}))));
-      }
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              metadata.id,
+              BufferRenderer.Terminal({id: id}),
+            ),
+          ),
+        );
+      };
     });
 
   let applyCompletionEffect = completion =>

@@ -14,7 +14,7 @@
 type t =
   | Editor
   | Welcome
-  | Terminal({ id: int });
+  | Terminal({id: int});
 
 [@deriving show({with_path: false})]
 type action =
