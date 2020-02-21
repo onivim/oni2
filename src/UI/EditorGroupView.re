@@ -228,6 +228,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             shouldHighlightActiveIndentGuides
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
+        | BufferRenderer.Terminal({ id }) => <WelcomeView state />
         };
       | None => React.empty
       };
