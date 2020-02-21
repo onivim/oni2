@@ -24,10 +24,7 @@ type splitDirection =
   | Horizontal;
 
 type msg =
-  | Started({
-      cmd: string,
-      splitDirection,
-    })
+  | Started({splitDirection})
   | Service(Service_Terminal.msg);
 
 type outmsg =

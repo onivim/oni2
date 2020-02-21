@@ -37,15 +37,15 @@ type outmsg =
     });
 
 type msg =
-  | Started({
-      cmd: string,
-      splitDirection,
-    })
+  | NewTerminal({splitDirection})
   | Service(Service_Terminal.msg);
+
+let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
 
 let update = (_extHostClient, model: t, msg) => {
   switch (msg) {
-  | Started({cmd, splitDirection}) =>
+  | Started({splitDirection}) =>
+    let cmd = shellCmd;
     let id = model.nextId;
     let idToTerminal =
       IntMap.add(
@@ -93,5 +93,3 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
   |> Isolinear.Sub.batch
   |> Isolinear.Sub.map(msg => Service(msg));
 };
-
-let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};

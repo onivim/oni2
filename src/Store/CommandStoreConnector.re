@@ -328,22 +328,20 @@ let start = (getState, contributedCommands) => {
     ("window.moveDown", state => windowMoveEffect(state, Down)),
     (
       "terminal.new.vertical",
-      ({terminals, _}) => {
-        let cmd = Feature_Terminal.shellCmd;
+      _ => {
         singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.Started({cmd, splitDirection: Vertical}),
+            Feature_Terminal.NewTerminal({splitDirection: Vertical}),
           ),
         );
       },
     ),
     (
       "terminal.new.horizontal",
-      ({terminals, _}) => {
-        let cmd = Feature_Terminal.shellCmd;
+      _ => {
         singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.Started({cmd, splitDirection: Horizontal}),
+            Feature_Terminal.NewTerminal({splitDirection: Horizontal}),
           ),
         );
       },
