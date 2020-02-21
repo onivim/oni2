@@ -16,7 +16,7 @@ type msg =
     })
   | TerminalCursorMoved({
     id: int,
-    screen: ReveryTerminal.Cursor.t,
+    cursor: ReveryTerminal.Cursor.t,
   })
 
 module Sub: {

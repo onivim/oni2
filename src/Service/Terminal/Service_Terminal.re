@@ -21,7 +21,7 @@ type msg =
     })
   | TerminalCursorMoved({
     id: int,
-    screen: ReveryTerminal.Cursor.t,
+    cursor: ReveryTerminal.Cursor.t,
   })
 
 module Sub = {
@@ -40,6 +40,7 @@ module Sub = {
         rows: int,
         columns: int,
         dispose: unit => unit,
+        terminal: ReveryTerminal.t,
       };
 
       type nonrec msg = msg;
@@ -57,6 +58,18 @@ module Sub = {
             arguments: [],
           };
 
+        let onEffect = eff => switch (eff) {
+        | ReveryTerminal.ScreenResized(screen)
+        | ReveryTerminal.ScreenUpdated(screen) => dispatch(TerminalScreenUpdated({id: params.id, screen}));
+        | ReveryTerminal.CursorMoved(cursor) => dispatch(TerminalCursorMoved({id: params.id, cursor}));
+        // TODO: Handle output
+        | _ => ();
+        };
+
+        let terminal = ReveryTerminal.make(~rows=params.rows, ~columns=params.columns, ~onEffect);
+
+        let dispatchIfMatches = (id, msg) => if (id == params.id) { dispatch(msg) };
+
         ExtHostClient.Terminal.Requests.createProcess(
           params.id,
           launchConfig,
@@ -71,14 +84,18 @@ module Sub = {
             Internal.onExtensionMessage, (msg: ExtHostClient.Terminal.msg) => {
             switch (msg) {
             | SendProcessTitle({terminalId, title}) =>
-              dispatch(ProcessTitleChanged({id: terminalId, title}))
+              dispatchIfMatches(terminalId, ProcessTitleChanged({id: terminalId, title}))
             | SendProcessPid({terminalId, pid}) =>
-              dispatch(ProcessStarted({id: terminalId, pid}))
+              dispatchIfMatches(terminalId, ProcessStarted({id: terminalId, pid}))
+            | SendProcessData({terminalId, data}) =>
+              if(terminalId == params.id) {
+                let _: int = ReveryTerminal.write(~input=data, terminal);
+              }
             | _ => ()
             }
           });
 
-        {dispose, rows: params.rows, columns: params.columns};
+        {dispose, rows: params.rows, columns: params.columns, terminal};
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
