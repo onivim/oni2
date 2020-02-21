@@ -51,7 +51,6 @@ module Sub = {
             arguments: [],
           };
 
-        let () =
           ExtHostClient.Terminal.Requests.createProcess(
             params.id,
             launchConfig,
@@ -78,14 +77,12 @@ module Sub = {
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
         if (params.rows != state.rows || params.columns != state.columns) {
-          let () =
             ExtHostClient.Terminal.Requests.acceptProcessResize(
               params.id,
               params.rows,
               params.columns,
               params.extHostClient,
             );
-          ();
         };
 
         {...state, rows: params.rows, columns: params.columns};
