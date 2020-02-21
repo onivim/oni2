@@ -12,12 +12,12 @@ type msg =
     })
   | TerminalScreenUpdated({
       id: int,
-      screen: ReveryTerminal.Screen.t
+      screen: ReveryTerminal.Screen.t,
     })
   | TerminalCursorMoved({
-    id: int,
-    cursor: ReveryTerminal.Cursor.t,
-  })
+      id: int,
+      cursor: ReveryTerminal.Cursor.t,
+    });
 
 module Sub: {
   let terminal:

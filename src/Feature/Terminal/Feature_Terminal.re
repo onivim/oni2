@@ -9,6 +9,8 @@ type terminal = {
   columns: int,
   pid: option(int),
   title: option(string),
+  screen: ReveryTerminal.Screen.t,
+  cursor: ReveryTerminal.Cursor.t,
 };
 
 type t = {
@@ -43,6 +45,11 @@ type outmsg =
 
 let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
 
+let updateById = (id, f, model) => {
+  let idToTerminal = IntMap.update(id, Option.map(f), model.idToTerminal);
+  {...model, idToTerminal};
+};
+
 let update = (_extHostClient, model: t, msg) => {
   switch (msg) {
   | NewTerminal({splitDirection}) =>
@@ -51,7 +58,16 @@ let update = (_extHostClient, model: t, msg) => {
     let idToTerminal =
       IntMap.add(
         id,
-        {id, cmd, rows: 80, columns: 40, pid: None, title: None},
+        {
+          id,
+          cmd,
+          rows: 80,
+          columns: 40,
+          pid: None,
+          title: None,
+          screen: ReveryTerminal.Screen.initial,
+          cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
+        },
         model.idToTerminal,
       );
     (
@@ -59,21 +75,18 @@ let update = (_extHostClient, model: t, msg) => {
       TerminalCreated({name: getBufferName(id), splitDirection}),
     );
   | Service(ProcessStarted({id, pid})) =>
-    let idToTerminal =
-      IntMap.update(
-        id,
-        Option.map(term => {...term, pid: Some(pid)}),
-        model.idToTerminal,
-      );
-    ({...model, idToTerminal}, Nothing);
+    let newModel = updateById(id, term => {...term, pid: Some(pid)}, model);
+    (newModel, Nothing);
   | Service(ProcessTitleChanged({id, title})) =>
-    let idToTerminal =
-      IntMap.update(
-        id,
-        Option.map(term => {...term, title: Some(title)}),
-        model.idToTerminal,
-      );
-    ({...model, idToTerminal}, Nothing);
+    let newModel =
+      updateById(id, term => {...term, title: Some(title)}, model);
+    (newModel, Nothing);
+  | Service(TerminalScreenUpdated({id, screen})) =>
+    let newModel = updateById(id, term => {...term, screen}, model);
+    (newModel, Nothing);
+  | Service(TerminalCursorMoved({id, cursor})) =>
+    let newModel = updateById(id, term => {...term, cursor}, model);
+    (newModel, Nothing);
   };
 };
 

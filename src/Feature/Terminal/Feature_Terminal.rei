@@ -9,6 +9,8 @@ type terminal = {
   columns: int,
   pid: option(int),
   title: option(string),
+  screen: ReveryTerminal.Screen.t,
+  cursor: ReveryTerminal.Cursor.t,
 };
 
 type t;
