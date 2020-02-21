@@ -86,20 +86,30 @@ module Decode = {
 
         let fieldGetters = {
           optional: (name, valueDecoder) =>
-            switch (field(name, valueDecoder).run(json)) {
-            | Ok(value) => Some(value)
+            switch (field(name, value).run(json)) {
+            | Ok(json) =>
+              switch (valueDecoder.run(json)) {
+              | Ok(value) => Some(value)
+              | Error(err) => raise(InternalDecodeError(err))
+              }
+
             | Error(_) => None
             },
 
           required: (name, valueDecoder) =>
             switch (field(name, valueDecoder).run(json)) {
             | Ok(value) => value
-            | Error(error) => raise(InternalDecodeError(error))
+            | Error(err) => raise(InternalDecodeError(err))
             },
 
           withDefault: (name, default, valueDecoder) =>
-            switch (field(name, valueDecoder).run(json)) {
-            | Ok(value) => value
+            switch (field(name, value).run(json)) {
+            | Ok(json) =>
+              switch (valueDecoder.run(json)) {
+              | Ok(value) => value
+              | Error(err) => raise(InternalDecodeError(err))
+              }
+
             | Error(_) => default
             },
           monadic: field,
@@ -107,20 +117,30 @@ module Decode = {
 
         let atGetters = {
           optional: (names, valueDecoder) =>
-            switch (at(names, valueDecoder).run(json)) {
-            | Ok(value) => Some(value)
+            switch (at(names, value).run(json)) {
+            | Ok(json) =>
+              switch (valueDecoder.run(json)) {
+              | Ok(value) => Some(value)
+              | Error(err) => raise(InternalDecodeError(err))
+              }
+
             | Error(_) => None
             },
 
           required: (names, valueDecoder) =>
             switch (at(names, valueDecoder).run(json)) {
             | Ok(value) => value
-            | Error(error) => raise(InternalDecodeError(error))
+            | Error(err) => raise(InternalDecodeError(err))
             },
 
           withDefault: (names, default, valueDecoder) =>
-            switch (at(names, valueDecoder).run(json)) {
-            | Ok(value) => value
+            switch (at(names, value).run(json)) {
+            | Ok(json) =>
+              switch (valueDecoder.run(json)) {
+              | Ok(value) => value
+              | Error(err) => raise(InternalDecodeError(err))
+              }
+
             | Error(_) => default
             },
           monadic: at,

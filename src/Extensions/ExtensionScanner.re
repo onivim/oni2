@@ -56,12 +56,10 @@ let scan = (~prefix=None, ~category, directory: string) => {
       ExtensionManifest.localize(dict);
     };
 
-    try({
+    switch (Json.Decode.decode_value(ExtensionManifest.decode, json)) {
+    | Ok(parsedManifest) =>
       let manifest =
-        json
-        |> Json.Decode.decode_value(ExtensionManifest.decode)
-        |> Stdlib.Result.map_error(Json.Decode.string_of_error)
-        |> Stdlib.Result.get_ok
+        parsedManifest
         |> remapManifest(directory)
         |> ExtensionManifest.updateName(name =>
              prefix
@@ -71,10 +69,10 @@ let scan = (~prefix=None, ~category, directory: string) => {
         |> localize;
 
       Some({category, manifest, path: directory});
-    }) {
-    | ex =>
+
+    | Error(err) =>
       Log.errorf(m =>
-        m("Exception parsing %s : %s", pkg, Printexc.to_string(ex))
+        m("Failed to parse %s:\n\t%s", pkg, Json.Decode.string_of_error(err))
       );
       None;
     };
