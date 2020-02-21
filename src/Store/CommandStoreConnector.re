@@ -163,11 +163,6 @@ let start = (getState, contributedCommands) => {
       dispatch(action)
     );
 
-  let multiActionEffect = (actions, name) =>
-    Isolinear.Effect.createWithDispatch(~name="commands." ++ name, dispatch =>
-      List.iter(dispatch, actions)
-    );
-
   let closeEditorEffect = (state, _) =>
     Isolinear.Effect.createWithDispatch(~name="closeEditorEffect", dispatch => {
       let editor =
@@ -334,37 +329,23 @@ let start = (getState, contributedCommands) => {
     (
       "terminal.new.vertical",
       ({terminals, _}) => {
-        let nextTerminalId = Feature_Terminal.getNextId(terminals);
-        let bufferName = Feature_Terminal.getBufferName(nextTerminalId);
         let cmd = Feature_Terminal.shellCmd;
-        multiActionEffect([
-          Actions.OpenFileByPath(
-            bufferName,
-            Some(WindowTree.Vertical),
-            None,
-          ),
+        singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.Started({id: nextTerminalId, cmd}),
+            Feature_Terminal.Started({cmd, splitDirection: Vertical}),
           ),
-        ]);
+        );
       },
     ),
     (
       "terminal.new.horizontal",
       ({terminals, _}) => {
-        let nextTerminalId = Feature_Terminal.getNextId(terminals);
-        let bufferName = Feature_Terminal.getBufferName(nextTerminalId);
         let cmd = Feature_Terminal.shellCmd;
-        multiActionEffect([
-          Actions.OpenFileByPath(
-            bufferName,
-            Some(WindowTree.Horizontal),
-            None,
-          ),
+        singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.Started({id: nextTerminalId, cmd}),
+            Feature_Terminal.Started({cmd, splitDirection: Horizontal}),
           ),
-        ]);
+        );
       },
     ),
   ];

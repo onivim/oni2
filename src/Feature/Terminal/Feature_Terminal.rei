@@ -15,22 +15,29 @@ type t;
 
 let initial: t;
 
-let getNextId: t => int;
-
-let getBufferName: int => string;
-
 let toList: t => list((int, terminal));
 
 let getTerminalOpt: (int, t) => option(terminal);
 
+type splitDirection =
+  | Vertical
+  | Horizontal;
+
 type msg =
   | Started({
-      id: int,
       cmd: string,
+      splitDirection,
     })
   | Service(Service_Terminal.msg);
 
-let update: (ExtHostClient.t, t, msg) => (t, Isolinear.Effect.t(msg));
+type outmsg =
+  | Nothing
+  | OpenBuffer({
+      name: string,
+      splitDirection,
+    });
+
+let update: (ExtHostClient.t, t, msg) => (t, outmsg);
 
 let subscription:
   (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);

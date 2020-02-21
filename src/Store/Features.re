@@ -36,10 +36,25 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
   | Terminal(msg) =>
     let (model, eff) =
       Feature_Terminal.update(extHostClient, state.terminals, msg);
-    (
-      {...state, terminals: model},
-      eff |> Effect.map(msg => Actions.Terminal(msg)),
-    );
+
+    let effect: Isolinear.Effect.t(Actions.t) =
+      switch ((eff: Feature_Terminal.outmsg)) {
+      | Nothing => Effect.none
+      | OpenBuffer({name, splitDirection}) =>
+        let windowTreeDirection =
+          switch (splitDirection) {
+          | Horizontal => WindowTree.Horizontal
+          | Vertical => WindowTree.Vertical
+          };
+
+        Isolinear.Effect.createWithDispatch(
+          ~name="feature.terminal.openBuffer", dispatch => {
+          dispatch(
+            Actions.OpenFileByPath(name, Some(windowTreeDirection), None),
+          )
+        });
+      };
+    ({...state, terminals: model}, effect);
 
   | Modal(msg) =>
     switch (state.modal) {

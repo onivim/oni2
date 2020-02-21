@@ -13,12 +13,10 @@ type terminal = {
 
 type t = {
   idToTerminal: IntMap.t(terminal),
-  lastId: int,
+  nextId: int,
 };
 
-let initial = {idToTerminal: IntMap.empty, lastId: 0};
-
-let getNextId = ({lastId, _}) => lastId + 1;
+let initial = {idToTerminal: IntMap.empty, nextId: 0};
 
 let getBufferName = id => "oni://terminal/" ++ string_of_int(id);
 
@@ -27,24 +25,38 @@ let toList = ({idToTerminal, _}) => IntMap.bindings(idToTerminal);
 let getTerminalOpt = (id, {idToTerminal, _}) =>
   IntMap.find_opt(id, idToTerminal);
 
+type splitDirection =
+  | Vertical
+  | Horizontal;
+
+type outmsg =
+  | Nothing
+  | OpenBuffer({
+      name: string,
+      splitDirection,
+    });
+
 type msg =
   | Started({
-      id: int,
       cmd: string,
+      splitDirection,
     })
   | Service(Service_Terminal.msg);
 
 let update = (_extHostClient, model: t, msg) => {
   switch (msg) {
-  | Started({id, cmd}) =>
+  | Started({cmd, splitDirection}) =>
+    let id = model.nextId;
     let idToTerminal =
       IntMap.add(
         id,
         {id, cmd, rows: 80, columns: 40, pid: None, title: None},
         model.idToTerminal,
       );
-    let lastId = max(id, model.lastId);
-    ({idToTerminal, lastId}, Isolinear.Effect.none);
+    (
+      {idToTerminal, nextId: id + 1},
+      OpenBuffer({name: getBufferName(id), splitDirection}),
+    );
   | Service(ProcessStarted({id, pid})) =>
     let idToTerminal =
       IntMap.update(
@@ -52,7 +64,7 @@ let update = (_extHostClient, model: t, msg) => {
         Option.map(term => {...term, pid: Some(pid)}),
         model.idToTerminal,
       );
-    ({...model, idToTerminal}, Isolinear.Effect.none);
+    ({...model, idToTerminal}, Nothing);
   | Service(ProcessTitleSet({id, title})) =>
     let idToTerminal =
       IntMap.update(
@@ -60,8 +72,8 @@ let update = (_extHostClient, model: t, msg) => {
         Option.map(term => {...term, title: Some(title)}),
         model.idToTerminal,
       );
-    ({...model, idToTerminal}, Isolinear.Effect.none);
-  | _ => (model, Isolinear.Effect.none)
+    ({...model, idToTerminal}, Nothing);
+  | _ => (model, Nothing)
   };
 };
 
