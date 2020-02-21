@@ -235,16 +235,25 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           let maybeTerminal =
             state.terminals |> Feature_Terminal.getTerminalOpt(id);
 
-          Utility.OptionEx.map2(
-            ({screen, cursor, _}: Feature_Terminal.terminal, font) => {
-              let size = state.editorFont.fontSize;
-              let font = ReveryTerminal.Font.make(~size, font);
-              ReveryTerminal.render(~screen, ~cursor, ~font);
-            },
-            maybeTerminal,
-            maybeFont,
-          )
-          |> Option.value(~default=React.empty);
+          let element =
+            Utility.OptionEx.map2(
+              ({screen, cursor, _}: Feature_Terminal.terminal, font) => {
+                let size = state.editorFont.fontSize;
+                let font = ReveryTerminal.Font.make(~size, font);
+                ReveryTerminal.render(~screen, ~cursor, ~font);
+              },
+              maybeTerminal,
+              maybeFont,
+            )
+            |> Option.value(~default=React.empty);
+          <View
+            style=Style.[
+              position(`Relative),
+              width(metrics.pixelWidth),
+              height(metrics.pixelHeight),
+            ]>
+            element
+          </View>;
         };
       | None => React.empty
       };
