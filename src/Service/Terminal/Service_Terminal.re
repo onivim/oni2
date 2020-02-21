@@ -6,8 +6,7 @@ module Internal = {
     Revery.Event.create();
 };
 
-module Msg = {
-  type t =
+  type msg =
     | Resized(unit)
     | Updated(unit)
     | ProcessStarted({
@@ -18,10 +17,9 @@ module Msg = {
         id: int,
         title: string,
       });
-};
 
 module Sub = {
-  type terminalSubParams = {
+  type params = {
     id: int,
     cmd: string,
     extHostClient: ExtHostClient.t,
@@ -33,13 +31,13 @@ module Sub = {
   module TerminalSubscription =
     Isolinear.Sub.Make({
       type state = {
-        currentRows: int,
-        currentColumns: int,
+        rows: int,
+        columns: int,
         dispose: unit => unit,
       };
 
-      type msg = Msg.t;
-      type params = terminalSubParams;
+      type nonrec msg = msg;
+      type nonrec params = params;
 
       let subscriptionName = "Terminal";
 
@@ -68,19 +66,19 @@ module Sub = {
             Internal.onExtensionMessage, (msg: ExtHostClient.Terminal.msg) => {
             switch (msg) {
             | SendProcessTitle({terminalId, title}) =>
-              dispatch(Msg.ProcessTitleSet({id: terminalId, title}))
+              dispatch(ProcessTitleSet({id: terminalId, title}))
             | SendProcessPid({terminalId, pid}) =>
-              dispatch(Msg.ProcessStarted({id: terminalId, pid}))
+              dispatch(ProcessStarted({id: terminalId, pid}))
             | _ => ()
             }
           });
 
-        {dispose, currentRows: params.rows, currentColumns: params.columns};
+        {dispose, rows: params.rows, columns: params.columns};
       };
 
-      let update = (~params, ~state, ~dispatch as _) => {
-        if (params.rows != state.currentRows
-            || params.columns != state.currentColumns) {
+      let update = (~params: params, ~state: state, ~dispatch as _) => {
+        if (params.rows != state.rows
+            || params.columns != state.columns) {
           let () =
             ExtHostClient.Terminal.Requests.acceptProcessResize(
               params.id,
@@ -91,7 +89,7 @@ module Sub = {
           ();
         };
 
-        {...state, currentRows: params.rows, currentColumns: params.columns};
+        {...state, rows: params.rows, columns: params.columns};
       };
 
       let dispose = (~params, ~state) => {

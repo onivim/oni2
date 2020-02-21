@@ -1,8 +1,8 @@
 open Oni_Core;
 open Oni_Extensions;
 
-module Msg: {
-  type t =
+
+  type msg =
     // TODO:
     | Resized(unit)
     | Updated(unit)
@@ -14,7 +14,6 @@ module Msg: {
         id: int,
         title: string,
       });
-};
 
 module Sub: {
   let terminal:
@@ -26,12 +25,12 @@ module Sub: {
       ~workspaceUri: Uri.t,
       ~extHostClient: ExtHostClient.t
     ) =>
-    Isolinear.Sub.t(Msg.t);
+    Isolinear.Sub.t(msg);
 };
 
 module Effect: {
   let input:
-    (~id: int, ~input: string, ExtHostClient.t) => Isolinear.Effect.t(Msg.t);
+    (~id: int, ~input: string, ExtHostClient.t) => Isolinear.Effect.t(msg);
 };
 
 let handleExtensionMessage: ExtHostClient.Terminal.msg => unit;

@@ -32,7 +32,7 @@ type msg =
       id: int,
       cmd: string,
     })
-  | Service(Service_Terminal.Msg.t);
+  | Service(Service_Terminal.msg);
 
 let update = (_extHostClient, model: t, msg) => {
   switch (msg) {
