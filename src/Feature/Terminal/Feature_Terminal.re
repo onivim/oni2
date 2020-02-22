@@ -37,10 +37,14 @@ type splitDirection =
 type msg =
   | NewTerminal({splitDirection})
   | Service(Service_Terminal.msg)
-  | KeyPressed({id: int, key: string});
+  | KeyPressed({
+      id: int,
+      key: string,
+    });
 
 type outmsg =
   | Nothing
+  | Effect(Isolinear.Effect.t(msg))
   | TerminalCreated({
       name: string,
       splitDirection,
@@ -53,7 +57,7 @@ let updateById = (id, f, model) => {
   {...model, idToTerminal};
 };
 
-let update = (_extHostClient, model: t, msg) => {
+let update = (extHostClient, model: t, msg) => {
   switch (msg) {
   | NewTerminal({splitDirection}) =>
     let cmd = shellCmd;
@@ -64,7 +68,7 @@ let update = (_extHostClient, model: t, msg) => {
         {
           id,
           cmd,
-          rows: 80,
+          rows: 40,
           columns: 40,
           pid: None,
           title: None,
@@ -77,6 +81,13 @@ let update = (_extHostClient, model: t, msg) => {
       {idToTerminal, nextId: id + 1},
       TerminalCreated({name: getBufferName(id), splitDirection}),
     );
+
+  | KeyPressed({id, key}) =>
+    let inputEffect =
+      Service_Terminal.Effect.input(~id, ~input=key, extHostClient)
+      |> Isolinear.Effect.map(msg => Service(msg));
+
+    (model, Effect(inputEffect));
   | Service(ProcessStarted({id, pid})) =>
     let newModel = updateById(id, term => {...term, pid: Some(pid)}, model);
     (newModel, Nothing);

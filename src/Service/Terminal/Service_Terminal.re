@@ -153,7 +153,14 @@ module Sub = {
 };
 
 module Effect = {
-  let input = (~id as _, ~input as _, _extHostClient) => Isolinear.Effect.none;
+  let input = (~id, ~input, extHostClient) =>
+    Isolinear.Effect.create(~name="terminal.input", () => {
+      ExtHostClient.Terminal.Requests.acceptProcessInput(
+        id,
+        input,
+        extHostClient,
+      )
+    });
 };
 
 let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {

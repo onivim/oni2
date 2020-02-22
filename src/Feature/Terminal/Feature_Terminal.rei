@@ -29,10 +29,14 @@ type splitDirection =
 type msg =
   | NewTerminal({splitDirection})
   | Service(Service_Terminal.msg)
-  | KeyPressed({id: int, key: string});
+  | KeyPressed({
+      id: int,
+      key: string,
+    });
 
 type outmsg =
   | Nothing
+  | Effect(Isolinear.Effect.t(msg))
   | TerminalCreated({
       name: string,
       splitDirection,
