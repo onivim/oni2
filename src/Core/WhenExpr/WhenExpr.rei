@@ -4,6 +4,8 @@ module Value: {
     | String(string)
     | True
     | False;
+
+  let asBool: t => bool;
 };
 
 [@deriving show]
