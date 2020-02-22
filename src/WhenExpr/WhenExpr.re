@@ -1,38 +1,41 @@
 module Log = (val Oni_Core.Log.withNamespace("Oni2.WhenExpr"));
 
+module Value = {
+  [@deriving show({with_path: false})]
+  type t =
+    | String(string)
+    | True
+    | False;
+
+  // Emulate JavaScript semantics
+  let asBool =
+    fun
+    | True => true
+    | False => false
+    | String("") => false
+    | String(_) => true;
+};
+
 [@deriving show({with_path: false})]
 type t =
   | Defined(string)
-  | Eq(string, value)
-  | Neq(string, value)
+  | Eq(string, Value.t)
+  | Neq(string, Value.t)
   | And(list(t))
   | Or(list(t))
   | Not(t)
-  | Value(value)
-
-and value =
-  | String(string)
-  | True
-  | False;
+  | Value(Value.t);
 
 let evaluate = (expr, getValue) => {
   let rec eval =
     fun
-    | Defined(name) =>
-      switch (getValue(name)) {
-      | False => false
-      | True
-      | String(_) => true
-      }
+    | Defined(name) => getValue(name) |> Value.asBool
     | Eq(variable, value) => getValue(variable) == value
     | Neq(variable, value) => getValue(variable) != value
-    | And(es) => List.for_all(eval, es)
-    | Or(es) => List.exists(eval, es)
-    | Not(e) => !eval(e)
-    | Value(True) => true
-    | Value(False) => false
-    | Value(String("")) => false
-    | Value(String(_)) => true;
+    | And(exprs) => List.for_all(eval, exprs)
+    | Or(exprs) => List.exists(eval, exprs)
+    | Not(expr) => !eval(expr)
+    | Value(value) => Value.asBool(value);
 
   let result = eval(expr);
   Log.tracef(m => m("Expression %s evaluated to: %b", show(expr), result));
@@ -48,12 +51,12 @@ module Parse = {
 
     str =>
       switch (String.trim(str)) {
-      | "true" => True
-      | "false" => False
+      | "true" => Value.True
+      | "false" => Value.False
       | str =>
         switch (Re.Group.get(Re.exec(quoted, str), 1)) {
-        | unquoted => String(unquoted)
-        | exception Not_found => String(str)
+        | unquoted => Value.String(unquoted)
+        | exception Not_found => Value.String(str)
         }
       };
   };

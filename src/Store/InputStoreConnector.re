@@ -128,9 +128,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let getValue = v =>
       switch (Hashtbl.find_opt(currentConditions, v)) {
-      | Some(true) => WhenExpr.True
+      | Some(true) => WhenExpr.Value.True
       | Some(false)
-      | None => WhenExpr.False
+      | None => WhenExpr.Value.False
       };
 
     Keybindings.Keybinding.(

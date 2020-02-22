@@ -1,17 +1,20 @@
+module Value: {
+  [@deriving show]
+  type t =
+    | String(string)
+    | True
+    | False;
+};
+
 [@deriving show]
 type t =
   | Defined(string)
-  | Eq(string, value)
-  | Neq(string, value)
+  | Eq(string, Value.t)
+  | Neq(string, Value.t)
   | And(list(t))
   | Or(list(t))
   | Not(t)
-  | Value(value)
+  | Value(Value.t);
 
-and value =
-  | String(string)
-  | True
-  | False;
-
-let evaluate: (t, string => value) => bool;
+let evaluate: (t, string => Value.t) => bool;
 let parse: string => result(t, string);
