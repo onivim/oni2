@@ -16,11 +16,11 @@ type msg =
       id: int,
       title: string,
     })
-  | TerminalScreenUpdated({
+  | ScreenUpdated({
       id: int,
       screen: [@opaque] ReveryTerminal.Screen.t,
     })
-  | TerminalCursorMoved({
+  | CursorMoved({
       id: int,
       cursor: [@opaque] ReveryTerminal.Cursor.t,
     });

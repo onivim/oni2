@@ -83,10 +83,10 @@ let update = (_extHostClient, model: t, msg) => {
     let newModel =
       updateById(id, term => {...term, title: Some(title)}, model);
     (newModel, Nothing);
-  | Service(TerminalScreenUpdated({id, screen})) =>
+  | Service(ScreenUpdated({id, screen})) =>
     let newModel = updateById(id, term => {...term, screen}, model);
     (newModel, Nothing);
-  | Service(TerminalCursorMoved({id, cursor})) =>
+  | Service(CursorMoved({id, cursor})) =>
     let newModel = updateById(id, term => {...term, cursor}, model);
     (newModel, Nothing);
   };
