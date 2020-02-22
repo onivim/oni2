@@ -104,7 +104,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           Keybindings.Keybinding.{
             key,
             command: "list.select",
-            condition: Variable("inEditorsPicker"),
+            condition: Defined("inEditorsPicker"),
           };
 
         if (containsCtrl(binding.key)) {
@@ -128,8 +128,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let getValue = v =>
       switch (Hashtbl.find_opt(currentConditions, v)) {
-      | Some(variableValue) => variableValue
-      | None => false
+      | Some(true) => WhenExpression.True
+      | Some(false)
+      | None => WhenExpression.False
       };
 
     Keybindings.Keybinding.(

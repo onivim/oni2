@@ -1,12 +1,5 @@
-(ocamllex
-  (modules When_lexer))
-
-(menhir
-  (modules When_parser))
-
 (library
     (name WhenExpression)
     (public_name Oni2.whenExpression)
-    (modules_without_implementation types)
     (preprocess (pps ppx_deriving.show))
     (libraries Oni2.core))

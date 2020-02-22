@@ -1,13 +1,17 @@
 [@deriving show]
 type t =
-  | Variable(string)
-  | Eq(string, string)
-  | Neq(string, string)
+  | Defined(string)
+  | Eq(string, value)
+  | Neq(string, value)
   | And(t, t)
   | Or(t, t)
   | Not(t)
+  | Value(value)
+
+and value =
+  | String(string)
   | True
   | False;
 
-let evaluate: (t, string => [ | `Bool(bool) | `String(string)]) => bool;
+let evaluate: (t, string => value) => bool;
 let parse: string => result(t, string);

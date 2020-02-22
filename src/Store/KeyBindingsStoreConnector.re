@@ -176,7 +176,11 @@ let start = () => {
         command: "redo",
         condition: "editorTextFocus" |> parseExp,
       },
-      {key: "<C-G>", command: "sneak.start", condition: WhenExpression.True},
+      {
+        key: "<C-G>",
+        command: "sneak.start",
+        condition: WhenExpression.Value(True),
+      },
       {
         key: "<ESC>",
         command: "sneak.stop",
@@ -185,17 +189,17 @@ let start = () => {
       {
         key: "<S-C-M>",
         command: "workbench.actions.view.problems",
-        condition: WhenExpression.True,
+        condition: WhenExpression.Value(True),
       },
       {
         key: "<D-S-M>",
         command: "workbench.actions.view.problems",
-        condition: WhenExpression.True,
+        condition: WhenExpression.Value(True),
       },
       {
         key: "<D-W>",
         command: "view.closeEditor",
-        condition: WhenExpression.True,
+        condition: WhenExpression.Value(True),
       },
     ];
 

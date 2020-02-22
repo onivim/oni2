@@ -7,21 +7,21 @@ module Keybinding = {
 
   let parseAndExpression = (json: Yojson.Safe.t) =>
     switch (json) {
-    | `String(expr) => WhenExpression.Variable(expr)
+    | `String(expr) => WhenExpression.Defined(expr)
     | `List(andExpressions) =>
       List.fold_left(
         (acc, curr) => {
           let result =
             switch (curr) {
-            | `String(expr) => WhenExpression.Variable(expr)
-            | _ => WhenExpression.False
+            | `String(expr) => WhenExpression.Defined(expr)
+            | _ => WhenExpression.Value(False)
             };
           WhenExpression.And(result, acc);
         },
-        WhenExpression.True,
+        WhenExpression.Value(True),
         andExpressions,
       )
-    | _ => WhenExpression.False
+    | _ => WhenExpression.Value(False)
     };
 
   let condition_of_yojson = (json: Yojson.Safe.t) => {
@@ -30,7 +30,7 @@ module Keybinding = {
       Ok(
         List.fold_left(
           (acc, curr) => {WhenExpression.Or(parseAndExpression(curr), acc)},
-          WhenExpression.False,
+          WhenExpression.Value(False),
           orExpressions,
         ),
       )
@@ -39,7 +39,7 @@ module Keybinding = {
       | Error(err) => Error(err)
       | Ok(condition) => Ok(condition)
       }
-    | `Null => Ok(WhenExpression.True)
+    | `Null => Ok(WhenExpression.Value(True))
     | _ => Error("Expected string for condition")
     };
   };
