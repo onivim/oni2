@@ -112,11 +112,7 @@ describe("Keybindings", ({describe, _}) => {
         Keybinding.{
           key: "<F2>",
           command: "explorer.toggle",
-          condition:
-            WhenExpression.Or(
-              And(Variable("editorTextFocus"), True),
-              False,
-            ),
+          condition: WhenExpression.Or([And([Defined("editorTextFocus")])]),
         },
       );
     });
