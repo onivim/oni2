@@ -171,22 +171,40 @@ let start =
       contextMenuUpdater,
     ]);
 
-  let subscriptions = (state: Model.State.t) =>
-    if (state.syntaxHighlightingEnabled) {
-      SyntaxHighlightingStoreConnector.(
-        SyntaxHighlightingStoreConnector.Subscription.create({
-          id: "syntax-highlighter",
-          languageInfo,
-          setup,
-          onStart: client => Model.Actions.SyntaxServerStarted(client),
-          onClose: () => Model.Actions.SyntaxServerClosed,
-          onHighlights: highlights =>
-            Model.Actions.BufferSyntaxHighlights(highlights),
-        })
-      );
-    } else {
-      Isolinear.Sub.none;
-    };
+  let subscriptions = (state: Model.State.t) => {
+    let syntaxSubscription: Isolinear.Sub.t(Model.Actions.t) =
+      if (state.syntaxHighlightingEnabled) {
+        SyntaxHighlightingStoreConnector.(
+          SyntaxHighlightingStoreConnector.Subscription.create({
+            id: "syntax-highlighter",
+            languageInfo,
+            setup,
+            onStart: client => Model.Actions.SyntaxServerStarted(client),
+            onClose: () => Model.Actions.SyntaxServerClosed,
+            onHighlights: highlights =>
+              Model.Actions.BufferSyntaxHighlights(highlights),
+          })
+        );
+      } else {
+        Isolinear.Sub.none;
+      };
+
+    let workspaceUri =
+      state.workspace
+      |> Option.map((ws: Model.Workspace.workspace) => ws.workingDirectory)
+      |> Option.value(~default=Sys.getcwd())
+      |> Oni_Core.Uri.fromPath;
+
+    let terminalSubscription =
+      Feature_Terminal.subscription(
+        ~workspaceUri,
+        extHostClient,
+        state.terminals,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
+
+    [syntaxSubscription, terminalSubscription] |> Isolinear.Sub.batch;
+  };
 
   module Store =
     Isolinear.Store.Make({

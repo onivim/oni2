@@ -28,6 +28,7 @@
            SyntaxHighlightTextMateTest
            SyntaxHighlightTreesitterTest
            AddRemoveSplitTest
+           TerminalSetPidTitleTest
            TypingBatchedTest
            TypingUnbatchedTest
            VimlConfigurationTest
@@ -72,6 +73,7 @@
         SearchShowClearHighlightsTest.exe
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
+        TerminalSetPidTitleTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe

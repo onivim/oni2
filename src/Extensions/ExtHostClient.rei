@@ -1,7 +1,6 @@
 module Core = Oni_Core;
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
-module Terminal = ExtHostClient_Terminal;
 
 type t;
 
@@ -106,6 +105,50 @@ module SCM: {
 
     let onInputBoxValueChange:
       (t, Provider.t, string) => Isolinear.Effect.t(_);
+  };
+};
+
+// SCM
+
+module Terminal: {
+  // MODEL
+
+  module ShellLaunchConfig: {
+    [@deriving show({with_path: false})]
+    type t = {
+      name: string,
+      executable: string,
+      arguments: list(string),
+    };
+  };
+
+  type msg =
+    | SendProcessTitle({
+        terminalId: int,
+        title: string,
+      })
+    | SendProcessData({
+        terminalId: int,
+        data: string,
+      })
+    | SendProcessPid({
+        terminalId: int,
+        pid: int,
+      })
+    | SendProcessExit({
+        terminalId: int,
+        exitCode: int,
+      });
+
+  module Requests: {
+    let createProcess:
+      (int, ShellLaunchConfig.t, Core.Uri.t, int, int, t) => unit;
+
+    let acceptProcessResize: (int, int, int, t) => unit;
+
+    let acceptProcessInput: (int, string, t) => unit;
+
+    let acceptProcessShutdown: (~immediate: bool=?, int, t) => unit;
   };
 };
 

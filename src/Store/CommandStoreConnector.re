@@ -141,6 +141,18 @@ let createDefaultCommands = getState => {
         ~action=Command("sneak.start"),
         (),
       ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in horizontal split",
+        ~action=Command("terminal.new.horizontal"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in vertical split",
+        ~action=Command("terminal.new.vertical"),
+        (),
+      ),
     ]
   );
 };
@@ -314,6 +326,26 @@ let start = (getState, contributedCommands) => {
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),
     ("window.moveDown", state => windowMoveEffect(state, Down)),
+    (
+      "terminal.new.vertical",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({splitDirection: Vertical}),
+          ),
+        );
+      },
+    ),
+    (
+      "terminal.new.horizontal",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({splitDirection: Horizontal}),
+          ),
+        );
+      },
+    ),
   ];
 
   let commandMap =

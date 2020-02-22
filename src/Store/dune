@@ -14,6 +14,8 @@
         Oni2.syntax_client
         Oni2.components
         Oni2.ui
+        Oni2.feature.terminal
+        Oni2.service.terminal
         isolinear
         libvim
         textmate
