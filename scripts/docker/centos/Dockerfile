@@ -13,7 +13,7 @@ RUN yum -y install nodejs npm coreutils grep tar sed gawk diffutils autoconf
 
 RUN yum -y install file fuse fuse-devel wget bzip2-devel libXt-devel libSM-devel libICE-devel ncurses-devel libacl-devel libxrandr-devel libXinerama-devel libXcursor-devel libXi-devel mesa-libGL-devel mesa-libGLU-devel gtk3-devel perl-Digest-SHA bzip2 m4 patch which cmake3 git
 
-RUN yum -y install perl
+RUN yum -y install perl perl-Thread-Queue.noarch
 
 RUN rpm -i https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/c/colm-0.13.0.4-2.el7.x86_64.rpm
 RUN rpm -i https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/r/ragel-7.0.0.9-2.el7.x86_64.rpm
