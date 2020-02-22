@@ -1,7 +1,6 @@
 open TestFramework;
 
 open Oni_Input.Keybindings;
-module Expression = Oni_Input.Expression;
 
 let keybindingsJSON =
   {|
@@ -114,7 +113,7 @@ describe("Keybindings", ({describe, _}) => {
           key: "<F2>",
           command: "explorer.toggle",
           condition:
-            Expression.Or(And(Variable("editorTextFocus"), True), False),
+            WhenExpression.Or(And(Variable("editorTextFocus"), True), False),
         },
       );
     });
