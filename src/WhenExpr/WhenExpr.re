@@ -1,4 +1,4 @@
-module Log = (val Oni_Core.Log.withNamespace("Oni2.WhenExpression"));
+module Log = (val Oni_Core.Log.withNamespace("Oni2.WhenExpr"));
 
 [@deriving show({with_path: false})]
 type t =

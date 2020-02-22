@@ -153,5 +153,5 @@ let matchesCondition = (commandConditions, input, key, getValue) =>
   if (input != key) {
     false;
   } else {
-    WhenExpression.evaluate(commandConditions, getValue);
+    WhenExpr.evaluate(commandConditions, getValue);
   };

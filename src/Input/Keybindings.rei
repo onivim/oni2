@@ -2,7 +2,7 @@ module Keybinding: {
   type t = {
     key: string,
     command: string,
-    condition: WhenExpression.t,
+    condition: WhenExpr.t,
   };
 };
 

@@ -13,7 +13,7 @@ module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 let start = () => {
   // Helper function for parsing default expressions
   let parseExp = stringExpression =>
-    switch (WhenExpression.parse(stringExpression)) {
+    switch (WhenExpr.parse(stringExpression)) {
     | Ok(v) => v
     | Error(msg) => failwith(msg)
     };
@@ -179,7 +179,7 @@ let start = () => {
       {
         key: "<C-G>",
         command: "sneak.start",
-        condition: WhenExpression.Value(True),
+        condition: WhenExpr.Value(True),
       },
       {
         key: "<ESC>",
@@ -189,17 +189,17 @@ let start = () => {
       {
         key: "<S-C-M>",
         command: "workbench.actions.view.problems",
-        condition: WhenExpression.Value(True),
+        condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-M>",
         command: "workbench.actions.view.problems",
-        condition: WhenExpression.Value(True),
+        condition: WhenExpr.Value(True),
       },
       {
         key: "<D-W>",
         command: "view.closeEditor",
-        condition: WhenExpression.Value(True),
+        condition: WhenExpr.Value(True),
       },
     ];
 

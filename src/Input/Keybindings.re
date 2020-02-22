@@ -2,27 +2,27 @@ module Keybinding = {
   type t = {
     key: string,
     command: string,
-    condition: WhenExpression.t,
+    condition: WhenExpr.t,
   };
 
   let parseSimple =
     fun
-    | `String(s) => WhenExpression.Defined(s)
-    | _ => WhenExpression.Value(False);
+    | `String(s) => WhenExpr.Defined(s)
+    | _ => WhenExpr.Value(False);
 
   let parseAndExpression =
     fun
-    | `String(expr) => WhenExpression.Defined(expr)
+    | `String(expr) => WhenExpr.Defined(expr)
     | `List(andExpressions) =>
-      WhenExpression.And(List.map(parseSimple, andExpressions))
-    | _ => WhenExpression.Value(False);
+      WhenExpr.And(List.map(parseSimple, andExpressions))
+    | _ => WhenExpr.Value(False);
 
   let condition_of_yojson =
     fun
     | `List(orExpressions) =>
-      Ok(WhenExpression.Or(List.map(parseAndExpression, orExpressions)))
-    | `String(v) => WhenExpression.parse(v)
-    | `Null => Ok(WhenExpression.Value(True))
+      Ok(WhenExpr.Or(List.map(parseAndExpression, orExpressions)))
+    | `String(v) => WhenExpr.parse(v)
+    | `Null => Ok(WhenExpr.Value(True))
     | _ => Error("Expected string for condition");
 
   let of_yojson = (json: Yojson.Safe.t) => {
