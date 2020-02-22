@@ -72,23 +72,24 @@ let runTest =
   let initialState = Model.State.create();
   let currentState = ref(initialState);
 
-  let headlessWindow = Revery.Utility.HeadlessWindow.create(
+  let headlessWindow =
+    Revery.Utility.HeadlessWindow.create(
       Revery.WindowCreateOptions.create(~width=3440, ~height=1440, ()),
-  );
+    );
 
   let onStateChanged = state => {
     currentState := state;
-    
-    Oni_UI.GlobalContext.set({...Oni_UI.GlobalContext.current(),
+
+    Oni_UI.GlobalContext.set({
+      ...Oni_UI.GlobalContext.current(),
       getState: () => currentState^,
-      state});
-      
+      state,
+    });
+
     Revery.Utility.HeadlessWindow.render(
       headlessWindow,
-      <Oni_UI.Root state />
+      <Oni_UI.Root state />,
     );
-
-    Revery.Utility.HeadlessWindow.takeScreenshot(headlessWindow, "screenshot.png");
   };
 
   InitLog.info("Starting store...");
