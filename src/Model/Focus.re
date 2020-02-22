@@ -7,7 +7,8 @@ type focusable =
   | FileExplorer
   | SCM
   | Sneak
-  | Modal;
+  | Modal
+  | Terminal(int);
 
 type stack = list(focusable);
 

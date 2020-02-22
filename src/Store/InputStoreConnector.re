@@ -176,6 +176,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
           | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
 
+          | Terminal(id) => [Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k}))]
+
           | Search => [Actions.Search(Feature_Search.Input(k))]
 
           | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]

@@ -28,7 +28,8 @@ type splitDirection =
 [@deriving show({with_path: false})]
 type msg =
   | NewTerminal({splitDirection})
-  | Service(Service_Terminal.msg);
+  | Service(Service_Terminal.msg)
+  | KeyPressed({id: int, key: string});
 
 type outmsg =
   | Nothing
