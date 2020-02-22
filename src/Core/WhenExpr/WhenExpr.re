@@ -67,18 +67,28 @@ module Parse = {
 
       if (Re.execp(neq, str)) {
         switch (Re.split(neq, str)) {
+        // This matches more than two "pieces", which should be a synatx error.
+        // But since vscode accepts it, so do we.
         | [left, right, ..._] =>
-          // This matches more than two "pieces", which should be a synatx error.
-          // But since vscode accepts it, so do we.
-          Neq(String.trim(left), deserializeValue(right))
+          let key = String.trim(left);
+          switch (deserializeValue(right)) {
+          | True => Not(Defined(key))
+          | False => Defined(key)
+          | value => Neq(key, value)
+          };
         | _ => failwith("unreachable")
         };
       } else if (Re.execp(eq, str)) {
         switch (Re.split(eq, str)) {
+        // This matches more than two "pieces", which should be a synatx error.
+        // But since vscode accepts it, so do we.
         | [left, right, ..._] =>
-          // This matches more than two "pieces", which should be a synatx error.
-          // But since vscode accepts it, so do we.
-          Eq(String.trim(left), deserializeValue(right))
+          let key = String.trim(left);
+          switch (deserializeValue(right)) {
+          | True => Defined(key)
+          | False => Not(Defined(key))
+          | value => Eq(key, value)
+          };
         | _ => failwith("unreachable")
         // TODO: =~ (regex)
         };
