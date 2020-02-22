@@ -8,7 +8,7 @@
         lwt
         lwt.unix
         Oni2.core
-        Oni2.whenExpr
+        Oni2.core.whenExpr
         Rench
         Revery
     )

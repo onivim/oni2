@@ -8,7 +8,7 @@
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
         Oni2.core
-        Oni2.whenExpr
+        Oni2.core.whenExpr
         Oni2.model
         Oni2.input
         Oni2.extensions
