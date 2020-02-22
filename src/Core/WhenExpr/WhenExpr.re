@@ -103,4 +103,4 @@ module Parse = {
   };
 };
 
-let parse = str => Ok(Parse.deserializeOr(str));
+let parse = Parse.deserializeOr;

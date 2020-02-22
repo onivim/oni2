@@ -17,4 +17,4 @@ type t =
   | Value(Value.t);
 
 let evaluate: (t, string => Value.t) => bool;
-let parse: string => result(t, string);
+let parse: string => t;

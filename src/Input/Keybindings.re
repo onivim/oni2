@@ -21,7 +21,7 @@ module Keybinding = {
     fun
     | `List(orExpressions) =>
       Ok(WhenExpr.Or(List.map(parseAndExpression, orExpressions)))
-    | `String(v) => WhenExpr.parse(v)
+    | `String(v) => Ok(WhenExpr.parse(v))
     | `Null => Ok(WhenExpr.Value(True))
     | _ => Error("Expected string for condition");
 
