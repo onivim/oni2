@@ -70,7 +70,7 @@ module Parse = {
         | [left, right, ..._] =>
           // This matches more than two "pieces", which should be a synatx error.
           // But since vscode accepts it, so do we.
-          Neq(left, deserializeValue(right))
+          Neq(String.trim(left), deserializeValue(right))
         | _ => failwith("unreachable")
         };
       } else if (Re.execp(eq, str)) {
@@ -78,7 +78,7 @@ module Parse = {
         | [left, right, ..._] =>
           // This matches more than two "pieces", which should be a synatx error.
           // But since vscode accepts it, so do we.
-          Eq(left, deserializeValue(right))
+          Eq(String.trim(left), deserializeValue(right))
         | _ => failwith("unreachable")
         // TODO: =~ (regex)
         };
