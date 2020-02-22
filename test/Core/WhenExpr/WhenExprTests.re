@@ -1,8 +1,13 @@
 open TestFramework;
 
+let re = (pattern, str) => {
+  let re = pattern |> Re.Pcre.re |> Re.compile;
+  Re.execp(re, str);
+};
+
 describe("WhenExpr", ({describe, _}) => {
   describe("vscode tests", ({describe, _}) => {
-    // Translkated from https://github.com/microsoft/vscode/blob/df96558335782a39ef4b2df9bdbee0612ec63eed/src/vs/platform/contextkey/test/common/contextkey.test.ts
+    // Translkated from https://github.com/microsoft/vscode/blob/7fc5d9150569247b3494eb3715a078bf7f8e9272/src/vs/platform/contextkey/test/common/contextkey.test.ts
     // TODO: equals
     // TODO: normalize
     describe("evaluate", ({test, _}) => {
@@ -23,7 +28,7 @@ describe("WhenExpr", ({describe, _}) => {
           expr,
           ({expect}) => {
             let rules = WhenExpr.parse(expr);
-            Console.log(WhenExpr.show(rules));
+            // Console.log(WhenExpr.show(rules));
             expect.bool(WhenExpr.evaluate(rules, getValue)).toBe(expected);
           },
         );
@@ -36,7 +41,14 @@ describe("WhenExpr", ({describe, _}) => {
         testExpression(expr ++ " == 5", value == String("5"));
         testExpression(expr ++ " != 5", value != String("5"));
         testExpression("!" ++ expr, !WhenExpr.Value.asBool(value));
-        //testExpression(expr + " =~ **/d*", match("**/d*", value));
+        testExpression(
+          expr ++ " =~ /d.*/",
+          re("d.*", WhenExpr.Value.asString(value)),
+        );
+        testExpression(
+          expr ++ " =~ /D/i",
+          re("D", WhenExpr.Value.asString(value)),
+        );
       };
 
       testBatch("a", WhenExpr.Value.True);

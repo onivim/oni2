@@ -12,6 +12,13 @@ module Value = {
     | False => false
     | String("") => false
     | String(_) => true;
+
+  // Emulate JavaScript semantics
+  let asString =
+    fun
+    | True => "true"
+    | False => "false"
+    | String(str) => str;
 };
 
 [@deriving show({with_path: false})]
@@ -19,6 +26,7 @@ type t =
   | Defined(string)
   | Eq(string, Value.t)
   | Neq(string, Value.t)
+  | Regex(string, option(Re.re))
   | And(list(t))
   | Or(list(t))
   | Not(t)
@@ -28,8 +36,10 @@ let evaluate = (expr, getValue) => {
   let rec eval =
     fun
     | Defined(name) => getValue(name) |> Value.asBool
-    | Eq(variable, value) => getValue(variable) == value
-    | Neq(variable, value) => getValue(variable) != value
+    | Eq(key, value) => getValue(key) == value
+    | Neq(key, value) => getValue(key) != value
+    | Regex(_, None) => false
+    | Regex(key, Some(re)) => Re.execp(re, key |> getValue |> Value.asString)
     | And(exprs) => List.for_all(eval, exprs)
     | Or(exprs) => List.exists(eval, exprs)
     | Not(expr) => !eval(expr)
@@ -57,9 +67,30 @@ module Parse = {
       };
   };
 
+  let deserializeRegexValue = (~strict=false, str) =>
+    switch (String.trim(str)) {
+    | "" when strict => failwith("missing regexp-value for =~-expression")
+    | "" => None
+    | str =>
+      switch (String.index_opt(str, '/'), String.rindex_opt(str, '/')) {
+      | (Some(start), Some(stop)) when start == stop =>
+        failwith("bad regexp-value '" ++ str ++ "', missing /-enclosure")
+      | (Some(start), Some(stop)) =>
+        String.sub(str, start + 1, stop - start - 1)
+        |> Re.Pcre.re
+        |> Re.compile
+        |> Option.some
+      | (None, None) when strict =>
+        failwith("bad regexp-value '" ++ str ++ "', missing /-enclosure")
+      | (None, None) => None
+      | _ => failwith("unreachable")
+      }
+    };
+
   let deserializeOne = {
     let eq = Re.str("==") |> Re.compile;
     let neq = Re.str("!=") |> Re.compile;
+    let regex = Re.str("=~") |> Re.compile;
     let not = Re.Pcre.re("^\\!\\s*") |> Re.compile;
 
     str => {
@@ -90,7 +121,16 @@ module Parse = {
           | value => Eq(key, value)
           };
         | _ => failwith("unreachable")
-        // TODO: =~ (regex)
+        };
+      } else if (Re.execp(regex, str)) {
+        switch (Re.split(regex, str)) {
+        // This matches more than two "pieces", which should be a synatx error.
+        // But since vscode accepts it, so do we.
+        | [left, right, ..._] =>
+          let key = String.trim(left);
+          let maybeRegex = deserializeRegexValue(right);
+          Regex(key, maybeRegex);
+        | _ => failwith("unreachable")
         };
       } else if (Re.execp(not, str)) {
         Not(Defined(Re.Str.string_after(str, 1) |> String.trim));
