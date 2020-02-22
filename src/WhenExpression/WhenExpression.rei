@@ -3,8 +3,8 @@ type t =
   | Defined(string)
   | Eq(string, value)
   | Neq(string, value)
-  | And(t, t)
-  | Or(t, t)
+  | And(list(t))
+  | Or(list(t))
   | Not(t)
   | Value(value)
 

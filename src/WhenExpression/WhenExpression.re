@@ -5,8 +5,8 @@ type t =
   | Defined(string)
   | Eq(string, value)
   | Neq(string, value)
-  | And(t, t)
-  | Or(t, t)
+  | And(list(t))
+  | Or(list(t))
   | Not(t)
   | Value(value)
 
@@ -26,8 +26,8 @@ let evaluate = (expr, getValue) => {
       }
     | Eq(variable, value) => getValue(variable) == value
     | Neq(variable, value) => getValue(variable) != value
-    | And(e1, e2) => eval(e1) && eval(e2)
-    | Or(e1, e2) => eval(e1) || eval(e2)
+    | And(es) => List.for_all(eval, es)
+    | Or(es) => List.exists(eval, es)
     | Not(e) => !eval(e)
     | Value(True) => true
     | Value(False) => false
@@ -40,6 +40,9 @@ let evaluate = (expr, getValue) => {
 };
 
 module Parse = {
+  // Translated relatively faithfully from
+  // https://github.com/microsoft/vscode/blob/e683dce828edccc6053bebab48a1954fb61f8e29/src/vs/platform/contextkey/common/contextkey.ts#L59
+
   let deserializeValue = {
     let quoted = Re.Posix.re("^'([^']*)'$") |> Re.compile;
 
@@ -91,25 +94,13 @@ module Parse = {
   let deserializeAnd = {
     let re = Re.str("&&") |> Re.compile;
 
-    str =>
-      str
-      |> Re.split(re)
-      |> List.fold_left(
-           (acc, piece) => And(acc, deserializeOne(piece)),
-           Value(True),
-         );
+    str => And(str |> Re.split(re) |> List.map(deserializeOne));
   };
 
   let deserializeOr = {
     let re = Re.str("||") |> Re.compile;
 
-    str =>
-      str
-      |> Re.split(re)
-      |> List.fold_left(
-           (acc, piece) => Or(acc, deserializeAnd(piece)),
-           Value(False),
-         );
+    str => Or(str |> Re.split(re) |> List.map(deserializeAnd));
   };
 };
 

@@ -5,44 +5,25 @@ module Keybinding = {
     condition: WhenExpression.t,
   };
 
-  let parseAndExpression = (json: Yojson.Safe.t) =>
-    switch (json) {
+  let parseSimple =
+    fun
+    | `String(s) => WhenExpression.Defined(s)
+    | _ => WhenExpression.Value(False);
+
+  let parseAndExpression =
+    fun
     | `String(expr) => WhenExpression.Defined(expr)
     | `List(andExpressions) =>
-      List.fold_left(
-        (acc, curr) => {
-          let result =
-            switch (curr) {
-            | `String(expr) => WhenExpression.Defined(expr)
-            | _ => WhenExpression.Value(False)
-            };
-          WhenExpression.And(result, acc);
-        },
-        WhenExpression.Value(True),
-        andExpressions,
-      )
-    | _ => WhenExpression.Value(False)
-    };
+      WhenExpression.And(List.map(parseSimple, andExpressions))
+    | _ => WhenExpression.Value(False);
 
-  let condition_of_yojson = (json: Yojson.Safe.t) => {
-    switch (json) {
+  let condition_of_yojson =
+    fun
     | `List(orExpressions) =>
-      Ok(
-        List.fold_left(
-          (acc, curr) => {WhenExpression.Or(parseAndExpression(curr), acc)},
-          WhenExpression.Value(False),
-          orExpressions,
-        ),
-      )
-    | `String(v) =>
-      switch (WhenExpression.parse(v)) {
-      | Error(err) => Error(err)
-      | Ok(condition) => Ok(condition)
-      }
+      Ok(WhenExpression.Or(List.map(parseAndExpression, orExpressions)))
+    | `String(v) => WhenExpression.parse(v)
     | `Null => Ok(WhenExpression.Value(True))
-    | _ => Error("Expected string for condition")
-    };
-  };
+    | _ => Error("Expected string for condition");
 
   let of_yojson = (json: Yojson.Safe.t) => {
     let key = Yojson.Safe.Util.member("key", json);
