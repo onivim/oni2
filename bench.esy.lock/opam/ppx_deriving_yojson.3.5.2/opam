@@ -12,7 +12,7 @@ build: [
   ["dune" "runtest" "-p" name] {with-test}
 ]
 depends: [
-  "ocaml" {>= "4.04.0" & < "4.10.0"}
+  "ocaml" {>= "4.04.0" & < "4.11.0"}
   "yojson" {>= "1.6.0" & < "2.0.0"}
   "result"
   "ppx_deriving" {>= "4.0" & < "5.0"}
@@ -30,6 +30,6 @@ description: """
 ppx_deriving_yojson is a ppx_deriving plugin that provides
 a JSON codec generator."""
 url {
-  src: "https://github.com/ocaml-ppx/ppx_deriving_yojson/archive/v3.5.1.tar.gz"
-  checksum: "sha256=aefe9c673f2f0ee2beb9edcca5a4e332a9fe9266c81bc554b8df5cd375568994"
+  src: "https://github.com/ocaml-ppx/ppx_deriving_yojson/archive/v3.5.2.tar.gz"
+  checksum: "sha256=05fd2cf932b54d59daf8aaa23e74ca27c2a20301b753130e344c311910a39b63"
 }
