@@ -107,8 +107,7 @@ module Sub = {
               )
             | SendProcessData({terminalId, data}) =>
               if (terminalId == params.id) {
-                let _: int = ReveryTerminal.write(~input=data, terminal);
-                ();
+                ReveryTerminal.write(~input=data, terminal);
               }
             | _ => ()
             }
