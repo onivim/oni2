@@ -1,5 +1,5 @@
 {
-  "checksum": "3d5246642234035cc1b00fdb4788f0cf",
+  "checksum": "98966a5dbafd76ed25b741b4208ee9b7",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -132,6 +132,23 @@
       },
       "overrides": [],
       "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
+      "devDependencies": []
+    },
+    "revery-terminal@github:revery-ui/revery-terminal#e0d89a7@d41d8cd9": {
+      "id":
+        "revery-terminal@github:revery-ui/revery-terminal#e0d89a7@d41d8cd9",
+      "name": "revery-terminal",
+      "version": "github:revery-ui/revery-terminal#e0d89a7",
+      "source": {
+        "type": "install",
+        "source": [ "github:revery-ui/revery-terminal#e0d89a7" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "revery@github:revery-ui/revery#a525e7f@d41d8cd9",
+        "reason-libvterm@github:revery-ui/reason-libvterm#11f52f7@d41d8cd9",
+        "isolinear@3.0.0@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "revery@github:revery-ui/revery#a525e7f@d41d8cd9": {
@@ -323,7 +340,7 @@
         "ocaml@4.8.1000@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/ppx_let@opam:v0.12.0@b52d29f3",
-        "@opam/ppx_deriving_yojson@opam:3.5.1@06a1c37f",
+        "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
@@ -1189,6 +1206,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "timber@github:glennsl/timber#ae065bb@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#e0d89a7@d41d8cd9",
         "revery@github:revery-ui/revery#a525e7f@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
@@ -1209,7 +1227,7 @@
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/re@opam:1.9.0@d4d5e13d",
         "@opam/ppx_let@opam:v0.12.0@b52d29f3",
-        "@opam/ppx_deriving_yojson@opam:3.5.1@06a1c37f",
+        "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
         "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/lwt@opam:4.5.0@677655b4", "@opam/logs@opam:0.7.0@1d03143e",
@@ -1376,7 +1394,7 @@
         "@opam/topkg@opam:1.0.1@a42c631e",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/cmdliner@opam:1.0.2@8ab0598a",
+        "@opam/cmdliner@opam:1.0.2@1c17346c",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -1899,20 +1917,20 @@
         "@opam/dune@opam:1.11.4@a7ccb7ae", "@opam/base@opam:v0.12.2@d687150c"
       ]
     },
-    "@opam/ppx_deriving_yojson@opam:3.5.1@06a1c37f": {
-      "id": "@opam/ppx_deriving_yojson@opam:3.5.1@06a1c37f",
+    "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe": {
+      "id": "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
       "name": "@opam/ppx_deriving_yojson",
-      "version": "opam:3.5.1",
+      "version": "opam:3.5.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/ae/aefe9c673f2f0ee2beb9edcca5a4e332a9fe9266c81bc554b8df5cd375568994#sha256:aefe9c673f2f0ee2beb9edcca5a4e332a9fe9266c81bc554b8df5cd375568994",
-          "archive:https://github.com/ocaml-ppx/ppx_deriving_yojson/archive/v3.5.1.tar.gz#sha256:aefe9c673f2f0ee2beb9edcca5a4e332a9fe9266c81bc554b8df5cd375568994"
+          "archive:https://opam.ocaml.org/cache/sha256/05/05fd2cf932b54d59daf8aaa23e74ca27c2a20301b753130e344c311910a39b63#sha256:05fd2cf932b54d59daf8aaa23e74ca27c2a20301b753130e344c311910a39b63",
+          "archive:https://github.com/ocaml-ppx/ppx_deriving_yojson/archive/v3.5.2.tar.gz#sha256:05fd2cf932b54d59daf8aaa23e74ca27c2a20301b753130e344c311910a39b63"
         ],
         "opam": {
           "name": "ppx_deriving_yojson",
-          "version": "3.5.1",
-          "path": "bench.esy.lock/opam/ppx_deriving_yojson.3.5.1"
+          "version": "3.5.2",
+          "path": "bench.esy.lock/opam/ppx_deriving_yojson.3.5.2"
         }
       },
       "overrides": [],
@@ -2401,7 +2419,7 @@
         "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/js_of_ocaml@opam:3.5.2@c5bae178",
         "@opam/fmt@opam:0.8.8@01c3a23c",
-        "@opam/cmdliner@opam:1.0.2@8ab0598a",
+        "@opam/cmdliner@opam:1.0.2@1c17346c",
         "@opam/base-threads@opam:base@36803084",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
@@ -2554,7 +2572,7 @@
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocaml-migrate-parsetree@opam:1.5.0@3e319dbc",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
-        "@opam/cmdliner@opam:1.0.2@8ab0598a",
+        "@opam/cmdliner@opam:1.0.2@1c17346c",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -2562,7 +2580,7 @@
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/ocaml-migrate-parsetree@opam:1.5.0@3e319dbc",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
-        "@opam/cmdliner@opam:1.0.2@8ab0598a"
+        "@opam/cmdliner@opam:1.0.2@1c17346c"
       ]
     },
     "@opam/js_of_ocaml@opam:3.5.2@c5bae178": {
@@ -2697,7 +2715,7 @@
         "@opam/seq@opam:base@d8d7de1d",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/cmdliner@opam:1.0.2@8ab0598a",
+        "@opam/cmdliner@opam:1.0.2@1c17346c",
         "@opam/base-unix@opam:base@87d0b2eb",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
@@ -3004,8 +3022,8 @@
       "dependencies": [ "@esy-ocaml/substs@0.0.1@d41d8cd9" ],
       "devDependencies": []
     },
-    "@opam/cmdliner@opam:1.0.2@8ab0598a": {
-      "id": "@opam/cmdliner@opam:1.0.2@8ab0598a",
+    "@opam/cmdliner@opam:1.0.2@1c17346c": {
+      "id": "@opam/cmdliner@opam:1.0.2@1c17346c",
       "name": "@opam/cmdliner",
       "version": "opam:1.0.2",
       "source": {
