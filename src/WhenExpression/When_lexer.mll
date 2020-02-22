@@ -4,15 +4,25 @@
   exception Error
 }
 
+let whitespace = [' ' '\t' '\n']
+let ident = ['a'-'z' 'A'-'Z' '.']+
+let literal = ['a'-'z' 'A'-'Z' '0'-'9']+
+
 rule token = parse
-| [' ' '\t' '\n']
+| whitespace
     { token lexbuf }
-| ['a' - 'z' 'A' - 'Z']+ as i
-    { VAR (i) }
-| '&' '&'
+| ident as s
+    { IDENT s }
+| literal as s
+    { LITERAL s }
+| "&&"
     { AND }
-| '|' '|'
+| "||"
     { OR }
+| "=="
+    { EQ }
+| "!="
+    { NEQ }
 | '!'
     { NOT }
 | '('
