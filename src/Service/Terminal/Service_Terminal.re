@@ -63,9 +63,9 @@ module Sub = {
           switch (eff) {
           | ReveryTerminal.ScreenResized(screen)
           | ReveryTerminal.ScreenUpdated(screen) =>
-            dispatch(TerminalScreenUpdated({id: params.id, screen}))
+            dispatch(ScreenUpdated({id: params.id, screen}))
           | ReveryTerminal.CursorMoved(cursor) =>
-            dispatch(TerminalCursorMoved({id: params.id, cursor}))
+            dispatch(CursorMoved({id: params.id, cursor}))
           // TODO: Handle output
           | _ => ()
           };
