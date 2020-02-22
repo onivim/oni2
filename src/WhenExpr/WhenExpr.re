@@ -1,5 +1,3 @@
-module Log = (val Oni_Core.Log.withNamespace("Oni2.WhenExpr"));
-
 module Value = {
   [@deriving show({with_path: false})]
   type t =
@@ -37,9 +35,7 @@ let evaluate = (expr, getValue) => {
     | Not(expr) => !eval(expr)
     | Value(value) => Value.asBool(value);
 
-  let result = eval(expr);
-  Log.tracef(m => m("Expression %s evaluated to: %b", show(expr), result));
-  result;
+  eval(expr);
 };
 
 module Parse = {
