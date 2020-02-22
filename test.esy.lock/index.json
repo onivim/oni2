@@ -1,5 +1,5 @@
 {
-  "checksum": "3ac55494a30699c9ad4263ab7f5ead73",
+  "checksum": "740bddd4dad0e26f8395489313c06a9e",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -407,6 +407,24 @@
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
       "devDependencies": []
+    },
+    "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9": {
+      "id":
+        "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
+      "name": "reason-native-crash-utils",
+      "version": "github:onivim/reason-native-crash-utils#ae1fd34",
+      "source": {
+        "type": "install",
+        "source": [ "github:onivim/reason-native-crash-utils#ae1fd34" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.8.1000@d41d8cd9",
+        "@opam/dune-configurator@opam:1.0.0@4873acd8",
+        "@opam/dune@opam:1.11.4@a7ccb7ae",
+        "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
+      ],
+      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
     "reason-libvterm@github:revery-ui/reason-libvterm#11f52f7@d41d8cd9": {
       "id":
@@ -1214,6 +1232,7 @@
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
         "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9",
         "reason-sdl2@2.10.3017@d41d8cd9",
+        "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#11f52f7@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#05a1604@d41d8cd9",
         "reason-jsonrpc@github:onivim/reason-jsonrpc#ebadf6d@d41d8cd9",
