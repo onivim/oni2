@@ -131,17 +131,6 @@ let start =
     });
 
   let _: unit => unit =
-    // Unhandled escape is called when there is an `<esc>` sent to Vim,
-    // but nothing to escape from (ie, in normal mode with no pending operator)
-    Vim.onUnhandledEscape(() => {
-      let state = getState();
-      if (Notifications.any(state.notifications)) {
-        let oldestNotification = Notifications.getOldest(state.notifications);
-        dispatch(Actions.HideNotification(oldestNotification));
-      };
-    });
-
-  let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ChangeMode(newMode)));
 
   let _: unit => unit =
