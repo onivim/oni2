@@ -62,7 +62,6 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
-  | ContextMenuUpdated([@opaque] ContextMenu.t(t))
   | ContextMenuOverlayClicked
   | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
