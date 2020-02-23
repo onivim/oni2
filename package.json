@@ -207,12 +207,11 @@
     "reason-sdl2": "*",
     "reason-jsonrpc": "1.3.0",
     "reason-libvim": "8.10869.26000",
-    "reason-libvterm": "github:revery-ui/reason-libvterm#11f52f7",
     "reason-native-crash-utils": "github:onivim/reason-native-crash-utils#ae1fd34",
     "reasonFuzz": "*",
     "rench": "1.7.1",
     "revery": "0.27.0",
-    "revery-terminal": "github:revery-ui/revery-terminal#fcffe7d",
+    "revery-terminal": "github:revery-ui/revery-terminal#7816b08",
     "reason-tree-sitter": "*",
     "reason-textmate": "^2.3.0",
     "esy-sdl2": "*",
@@ -227,7 +226,7 @@
     "@opam/decoders-yojson": "*"
   },
   "resolutions": {
-    "reason-libvterm": "revery-ui/reason-libvterm#11f52f7",
+    "reason-libvterm": "revery-ui/reason-libvterm#8a42484",
     "reason-jsonrpc": "onivim/reason-jsonrpc#ebadf6d",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
