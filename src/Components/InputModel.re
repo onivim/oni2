@@ -186,3 +186,87 @@ let handleInput = (~text, ~cursorPosition, ~selectionPosition, key) => {
 
   handler(text, cursorPosition, selectionPosition);
 };
+
+let removeCharBeforeS = (text, selection) => {
+  let (textSlice, newCursorPosition) = removeBefore(Selection.focus(selection), text);
+
+  (textSlice, Selection.collapse(selection, Left(textSlice, 1)));
+};
+
+let removeSelectionS = (text, selection) => {
+  let (textSlice, focus) = removeAfter(
+    Selection.rangeStart(selection),
+    text,
+    ~count=Selection.range(selection)
+  );
+
+  (textSlice, Selection.collapse(selection, Position(textSlice, focus)));
+};
+
+
+let removeCharAfterS = (text, selection) => {
+  let (textSlice, focus) = removeAfter(Selection.focus(selection), text);
+
+  (textSlice, Selection.collapse(selection, Position(textSlice, focus)));
+};
+
+
+let previousWordS = (action, text, selection) => {
+  let prevFocus = Selection.focus(selection) |> findPrevWordBoundary(text);
+
+  (text, action(selection, Selection.Position(text, prevFocus)));
+}
+
+let nextWordS = (action,  text, selection) => {
+  let nextFocus = Selection.focus(selection) |> findNextWordBoundary(text);
+
+  (text, action(selection, Selection.Position(text, nextFocus)));
+}
+
+
+let addCharacterS = (key, text, selection) => {
+  let (newText, focus) = add(~at=Selection.focus(selection), key, text);
+
+  print_int(Selection.focus(selection));
+  print_int(focus);
+
+  let newSelection = Selection.Position(newText, focus) |> Selection.collapse(selection);
+
+  (newText, newSelection);
+};
+
+
+let replacesSelectionS = (key, text, selection) => {
+  let (textSlice, sliceSelection) =
+    removeSelectionS(text, selection);
+  let (newText, focus) = add(~at=Selection.focus(sliceSelection), key, textSlice);
+
+  (newText, Selection.collapse(selection, Position(newText, focus)));
+};
+
+let handleInputS = (~text, ~selection, key) => {
+  switch (key, Selection.isCollapsed(selection)) {
+    | ("<LEFT>", true) =>  (text, Selection.collapse(selection, Left(text, 1)));
+    | ("<LEFT>", false) => (text, Selection.collapse(selection, Left(text, 0)));
+    | ("<RIGHT>", true) => (text, Selection.collapse(selection, Right(text, 1)));
+    | ("<RIGHT>", false) => (text, Selection.collapse(selection, Right(text, 0)));
+    | ("<BS>", true) => removeCharBeforeS(text, selection);
+    | ("<BS>", false) => removeSelectionS(text, selection);
+    | ("<DEL>", true) => removeCharAfterS(text, selection);
+    | ("<DEL>", false) => removeSelectionS(text, selection);
+    | ("<HOME>", _) => (text, Selection.collapse(selection, Start));
+    | ("<END>", _) => (text, Selection.collapse(selection, End(text)));
+    | ("<S-LEFT>", _) => (text, Selection.extend(selection, Left(text, 1)));
+    | ("<S-RIGHT>", _) => (text, Selection.extend(selection, Right(text, 1)));
+    | ("<C-LEFT>", _) => previousWordS(Selection.collapse, text, selection); // add tests
+    | ("<C-RIGHT>", _) => nextWordS(Selection.collapse, text, selection); // add tests
+    | ("<S-HOME>", _) => (text, Selection.extend(selection, Start));
+    | ("<S-END>", _) => (text, Selection.extend(selection, End(text)));
+    | ("<S-C-LEFT>", _) => previousWordS(Selection.extend, text, selection);
+    | ("<S-C-RIGHT>", _) => nextWordS(Selection.extend, text, selection);
+    | ("<C-a>", _) => (text, Selection.create(text, ~anchor=0, ~focus=String.length(text)))
+    | (key, true) when String.length(key) == 1 => addCharacterS(key, text, selection);
+    | (key, false) when String.length(key) == 1 => replacesSelectionS(key, text, selection);
+    | (_, _) => (text, selection);
+  };
+};

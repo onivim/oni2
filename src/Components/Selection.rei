@@ -13,6 +13,11 @@ type selectionVariant =
 
 let initial: t;
 let create: (string, ~anchor:int, ~focus:int) => t;
+let anchor: (t) => int;
+let focus: (t) => int;
+let range: (t) => int;
+let rangeStart: (t) => int;
+let rangeEnd: (t) => int;
 
 let isCollapsed: t => bool;
 let collapse: (t, selectionVariant) => t;

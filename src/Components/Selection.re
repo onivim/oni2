@@ -30,6 +30,26 @@ let create = (text:string, ~anchor: int, ~focus: int):t => {
   { anchor: safeAnchor, focus: safeFocus };
 }
 
+let anchor = (selection: t):  int => {
+  selection.anchor;
+}
+
+let focus = (selection: t):  int => {
+  selection.focus;
+}
+
+let range = (selection: t): int => {
+  abs(selection.focus - selection.anchor);
+}
+
+let rangeStart = (selection: t): int => {
+  min(selection.focus, selection.anchor);
+}
+
+let rangeEnd = (selection: t): int => {
+  max(selection.focus, selection.anchor);
+}
+
 let isCollapsed = (selection: t): bool => {
   selection.anchor == selection.focus;
 };

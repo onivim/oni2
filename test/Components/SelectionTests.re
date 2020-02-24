@@ -44,6 +44,82 @@ describe("Selection#create", ({test, _}) => {
   });
 });
 
+describe("Selection#anchor", ({test, _}) => {
+  test("Returns anchor value", ({expect}) => {
+    let result = Selection.anchor(creator(~anchor=3, ~focus=5));
+
+    expect.int(result).toBe(3);
+  });
+});
+
+describe("Selection#focus", ({test, _}) => {
+  test("Returns anchor value", ({expect}) => {
+    let result = Selection.focus(creator(~anchor=3, ~focus=5));
+
+    expect.int(result).toBe(5);
+  });
+});
+
+describe("Selection#range", ({test, _}) => {
+  test("Returns range when anchor comes first", ({expect}) => {
+    let result = Selection.range(creator(~anchor=3, ~focus=5));
+
+    expect.int(result).toBe(2);
+  });
+
+  test("Returns range when anchor comes last", ({expect}) => {
+    let result = Selection.range(creator(~anchor=5, ~focus=3));
+
+    expect.int(result).toBe(2);
+  });
+
+  test("Returns 0 for collapsed selection", ({expect}) => {
+    let result = Selection.range(creator(~anchor=3, ~focus=3));
+
+    expect.int(result).toBe(0);
+  });
+});
+
+describe("Selection#rangeStart", ({test, _}) => {
+  test("Returns anchor", ({expect}) => {
+    let result = Selection.rangeStart(creator(~anchor=3, ~focus=5));
+
+    expect.int(result).toBe(3);
+  });
+
+  test("Returns focus", ({expect}) => {
+    let result = Selection.rangeStart(creator(~anchor=5, ~focus=3));
+
+    expect.int(result).toBe(3);
+  });
+
+  test("Returns any", ({expect}) => {
+    let result = Selection.rangeStart(creator(~anchor=3, ~focus=3));
+
+    expect.int(result).toBe(3);
+  });
+});
+
+describe("Selection#rangeEnd", ({test, _}) => {
+  test("Returns anchor", ({expect}) => {
+    let result = Selection.rangeEnd(creator(~anchor=5, ~focus=3));
+
+    expect.int(result).toBe(5);
+  });
+
+  test("Returns focus", ({expect}) => {
+    let result = Selection.rangeEnd(creator(~anchor=3, ~focus=5));
+
+    expect.int(result).toBe(5);
+  });
+
+  test("Returns any", ({expect}) => {
+    let result = Selection.rangeEnd(creator(~anchor=3, ~focus=3));
+
+    expect.int(result).toBe(3);
+  });
+});
+
 describe("Selection#isCollapsed", ({test, _}) => {
   test("Returns true", ({expect}) => {
     let result = Selection.isCollapsed(creator(~anchor=3, ~focus=3));
