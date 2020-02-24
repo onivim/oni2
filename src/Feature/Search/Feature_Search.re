@@ -8,19 +8,18 @@ open Oni_Components;
 type model = {
   queryInput: string,
   query: string,
-  cursorPosition: int,
-  selectionPosition: int,
+  selection: Oni_Components.Selection.t,
   hits: list(Ripgrep.Match.t),
 };
 
-let initial = {queryInput: "", query: "", cursorPosition: 0, selectionPosition: 0, hits: []};
+let initial = {queryInput: "", query: "", selection: Oni_Components.Selection.initial, hits: []};
 
 // UPDATE
 
 [@deriving show({with_path: false})]
 type msg =
   | Input(string)
-  | InputClicked(int)
+  | InputClicked(Oni_Components.Selection.t)
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete;
 
@@ -30,7 +29,7 @@ type outmsg =
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-    let {queryInput, cursorPosition, selectionPosition,_} = model;
+    let {queryInput, selection,_} = model;
 
     let model =
       switch (key) {
@@ -42,15 +41,15 @@ let update = (model, msg) => {
         }
 
       | _ =>
-        let (queryInput, cursorPosition, selectionPosition) =
-          InputModel.handleInput(~text=queryInput, ~cursorPosition, ~selectionPosition, key);
-        {...model, queryInput, cursorPosition, selectionPosition};
+        let (queryInput, selection) =
+          InputModel.handleInput(~text=queryInput, ~selection, key);
+        {...model, queryInput, selection};
       };
 
     (model, None);
 
-  | InputClicked(cursorPosition) => (
-      {...model, cursorPosition, selectionPosition: cursorPosition},
+  | InputClicked(selection) => (
+      {...model, selection},
       Some(Focus),
     )
 
@@ -172,12 +171,11 @@ let make =
         <Input
           style={Styles.input(~font=uiFont)}
           cursorColor=Colors.gray
-          cursorPosition={model.cursorPosition}
-          selectionPosition={model.selectionPosition}
+          selection={model.selection}
           value={model.queryInput}
           placeholder="Search"
           isFocused
-          onClick={pos => dispatch(InputClicked(pos))}
+          onClick={pos => dispatch(InputClicked(Oni_Components.Selection.create(model.queryInput, ~anchor=pos, ~focus=pos)))}
         />
       </View>
     </View>

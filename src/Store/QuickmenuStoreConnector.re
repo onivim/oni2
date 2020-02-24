@@ -151,25 +151,25 @@ let start = (themeInfo: ThemeInfo.t) => {
 
     | QuickmenuInput(key) => (
         Option.map(
-          (Quickmenu.{query, cursorPosition, selectionPosition, _} as state) => {
-            let (text, cursorPosition, selectionPosition) =
-              InputModel.handleInput(~text=query, ~cursorPosition, ~selectionPosition, key);
+          (Quickmenu.{query, selection, _} as state) => {
+            let (text, selection) =
+              InputModel.handleInput(~text=query, ~selection, key);
 
-            Quickmenu.{...state, query: text, cursorPosition, selectionPosition};
+            Quickmenu.{...state, query: text, selection};
           },
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuInputClicked(cursorPosition) => (
-        Option.map(state => Quickmenu.{...state, cursorPosition, selectionPosition: cursorPosition}, state),
+    | QuickmenuInputClicked(selection) => (
+        Option.map(state => Quickmenu.{...state, selection}, state),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuCommandlineUpdated(text, cursorPosition) => (
+    | QuickmenuCommandlineUpdated(text, focus) => (
         Option.map(
-          state => Quickmenu.{...state, query: text, selectionPosition: cursorPosition, cursorPosition},
+          state => Quickmenu.{...state, query: text, selection: Selection.create(text, ~anchor=focus, ~focus=focus)},
           state,
         ),
         Isolinear.Effect.none,

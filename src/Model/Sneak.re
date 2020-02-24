@@ -2,6 +2,7 @@ open Revery.Math;
 
 module InputModel = Oni_Components.InputModel;
 module StringEx = Oni_Core.Utility.StringEx;
+module Selection = Oni_Components.Selection;
 
 type callback = unit => unit;
 type bounds = unit => option(BoundingBox2d.t);
@@ -84,13 +85,14 @@ module Internal = {
 
 let refine = (characterToAdd: string, sneaks: t) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
+  let prefixLength = String.length(sneaks.prefix);
+  let selection = Selection.create(sneaks.prefix, ~anchor=prefixLength, ~focus=prefixLength);
 
-  let (prefix, _, _) =
+  let (prefix, _) =
     InputModel.handleInput(
       ~text=sneaks.prefix,
-      ~cursorPosition=String.length(sneaks.prefix),
-      ~selectionPosition=String.length(sneaks.prefix),
-      characterToAdd,
+      ~selection=selection,
+      characterToAdd
     );
 
   {...sneaks, prefix} |> Internal.applyFilter;
