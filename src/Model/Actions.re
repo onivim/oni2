@@ -138,7 +138,7 @@ type t =
   | SearchHotkey
   | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
-  | Terminal([@opaque] Feature_Terminal.msg)
+  | Terminal(Feature_Terminal.msg)
   | PaneTabClicked(Pane.pane)
   | VimDirectoryChanged(string)
   | WindowFocusGained

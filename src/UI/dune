@@ -16,6 +16,7 @@
         Oni2.feature.scm
         Rench
         Revery
+        revery-terminal.lib
         editor-core-types
         ppx_deriving.runtime
     ))

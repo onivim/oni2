@@ -228,6 +228,13 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             shouldHighlightActiveIndentGuides
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
+        | BufferRenderer.Terminal({id}) =>
+          state.terminals
+          |> Feature_Terminal.getTerminalOpt(id)
+          |> Option.map(terminal => {
+               <TerminalView editorFont={state.editorFont} metrics terminal />
+             })
+          |> Option.value(~default=React.empty)
         };
       | None => React.empty
       };

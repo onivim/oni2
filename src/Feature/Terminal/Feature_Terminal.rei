@@ -9,6 +9,8 @@ type terminal = {
   columns: int,
   pid: option(int),
   title: option(string),
+  screen: ReveryTerminal.Screen.t,
+  cursor: ReveryTerminal.Cursor.t,
 };
 
 type t;
@@ -23,6 +25,7 @@ type splitDirection =
   | Vertical
   | Horizontal;
 
+[@deriving show({with_path: false})]
 type msg =
   | NewTerminal({splitDirection})
   | Service(Service_Terminal.msg);

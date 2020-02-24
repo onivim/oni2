@@ -6,6 +6,7 @@
       Oni2.core
       Oni2.extensions
       Revery
+      revery-terminal.lib
       isolinear
       base
       vterm

@@ -1,5 +1,5 @@
 {
-  "checksum": "23b83b747f8b5a73175cb3b20b9f4cb0",
+  "checksum": "9cd053dfed35c6854189c726bbf73b76",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -132,6 +132,23 @@
       },
       "overrides": [],
       "dependencies": [ "@opam/dune@opam:1.11.4@a7ccb7ae" ],
+      "devDependencies": []
+    },
+    "revery-terminal@github:revery-ui/revery-terminal#7816b08@d41d8cd9": {
+      "id":
+        "revery-terminal@github:revery-ui/revery-terminal#7816b08@d41d8cd9",
+      "name": "revery-terminal",
+      "version": "github:revery-ui/revery-terminal#7816b08",
+      "source": {
+        "type": "install",
+        "source": [ "github:revery-ui/revery-terminal#7816b08" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "revery@github:revery-ui/revery#a525e7f@d41d8cd9",
+        "reason-libvterm@github:revery-ui/reason-libvterm#8a42484@d41d8cd9",
+        "isolinear@3.0.0@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "revery@github:revery-ui/revery#a525e7f@d41d8cd9": {
@@ -409,18 +426,20 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-libvterm@github:revery-ui/reason-libvterm#11f52f7@d41d8cd9": {
+    "reason-libvterm@github:revery-ui/reason-libvterm#8a42484@d41d8cd9": {
       "id":
-        "reason-libvterm@github:revery-ui/reason-libvterm#11f52f7@d41d8cd9",
+        "reason-libvterm@github:revery-ui/reason-libvterm#8a42484@d41d8cd9",
       "name": "reason-libvterm",
-      "version": "github:revery-ui/reason-libvterm#11f52f7",
+      "version": "github:revery-ui/reason-libvterm#8a42484",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-libvterm#11f52f7" ]
+        "source": [ "github:revery-ui/reason-libvterm#8a42484" ]
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.3.0@d41d8cd9", "esy-libvterm@1.0.0@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9",
+        "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
+        "esy-libvterm@1.0.0@d41d8cd9",
         "@opam/dune-configurator@opam:1.0.0@4873acd8",
         "@opam/dune@opam:1.11.4@a7ccb7ae",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
@@ -1207,6 +1226,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "timber@github:glennsl/timber#ae065bb@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#7816b08@d41d8cd9",
         "revery@github:revery-ui/revery#a525e7f@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
@@ -1216,7 +1236,6 @@
         "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9",
         "reason-sdl2@2.10.3017@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "reason-libvterm@github:revery-ui/reason-libvterm#11f52f7@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#05a1604@d41d8cd9",
         "reason-jsonrpc@github:onivim/reason-jsonrpc#ebadf6d@d41d8cd9",
         "ocaml@4.8.1000@d41d8cd9", "isolinear@3.0.0@d41d8cd9",

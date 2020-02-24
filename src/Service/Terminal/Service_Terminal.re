@@ -6,6 +6,7 @@ module Internal = {
     Revery.Event.create();
 };
 
+[@deriving show({with_path: false})]
 type msg =
   | ProcessStarted({
       id: int,
@@ -14,6 +15,14 @@ type msg =
   | ProcessTitleChanged({
       id: int,
       title: string,
+    })
+  | ScreenUpdated({
+      id: int,
+      screen: [@opaque] ReveryTerminal.Screen.t,
+    })
+  | CursorMoved({
+      id: int,
+      cursor: [@opaque] ReveryTerminal.Cursor.t,
     });
 
 module Sub = {
@@ -32,6 +41,7 @@ module Sub = {
         rows: int,
         columns: int,
         dispose: unit => unit,
+        terminal: ReveryTerminal.t,
       };
 
       type nonrec msg = msg;
@@ -49,6 +59,29 @@ module Sub = {
             arguments: [],
           };
 
+        let onEffect = eff =>
+          switch (eff) {
+          | ReveryTerminal.ScreenResized(screen)
+          | ReveryTerminal.ScreenUpdated(screen) =>
+            dispatch(ScreenUpdated({id: params.id, screen}))
+          | ReveryTerminal.CursorMoved(cursor) =>
+            dispatch(CursorMoved({id: params.id, cursor}))
+          // TODO: Handle output
+          | _ => ()
+          };
+
+        let terminal =
+          ReveryTerminal.make(
+            ~rows=params.rows,
+            ~columns=params.columns,
+            ~onEffect,
+          );
+
+        let dispatchIfMatches = (id, msg) =>
+          if (id == params.id) {
+            dispatch(msg);
+          };
+
         ExtHostClient.Terminal.Requests.createProcess(
           params.id,
           launchConfig,
@@ -63,14 +96,24 @@ module Sub = {
             Internal.onExtensionMessage, (msg: ExtHostClient.Terminal.msg) => {
             switch (msg) {
             | SendProcessTitle({terminalId, title}) =>
-              dispatch(ProcessTitleChanged({id: terminalId, title}))
+              dispatchIfMatches(
+                terminalId,
+                ProcessTitleChanged({id: terminalId, title}),
+              )
             | SendProcessPid({terminalId, pid}) =>
-              dispatch(ProcessStarted({id: terminalId, pid}))
+              dispatchIfMatches(
+                terminalId,
+                ProcessStarted({id: terminalId, pid}),
+              )
+            | SendProcessData({terminalId, data}) =>
+              if (terminalId == params.id) {
+                ReveryTerminal.write(~input=data, terminal);
+              }
             | _ => ()
             }
           });
 
-        {dispose, rows: params.rows, columns: params.columns};
+        {dispose, rows: params.rows, columns: params.columns, terminal};
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
