@@ -11,188 +11,189 @@ open Oni_Model;
 module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 
 let start = () => {
-  // Helper function for parsing default expressions
-  let parseExp = stringExpression =>
-    switch (When.parse(stringExpression)) {
-    | Ok(v) => v
-    | Error(msg) => failwith(msg)
-    };
-
   let defaultBindings =
     Keybindings.Keybinding.[
       {
         key: "<UP>",
         command: "list.focusUp",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<DOWN>",
         command: "list.focusDown",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<RIGHT>",
         command: "list.selectBackground",
-        condition: "quickmenuCursorEnd" |> parseExp,
+        condition: "quickmenuCursorEnd" |> WhenExpr.parse,
       },
       {
         key: "<S-C-F>",
         command: "workbench.action.findInFiles",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S-F>",
         command: "workbench.action.findInFiles",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-TAB>",
         command: "workbench.action.openNextRecentlyUsedEditorInGroup",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
         command: "workbench.action.quickOpen",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
         command: "workbench.action.quickOpen",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-C-P>",
         command: "workbench.action.showCommands",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S-P>",
         command: "workbench.action.showCommands",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-V>",
         command: "editor.action.clipboardPasteAction",
-        condition: "insertMode" |> parseExp,
+        condition: "insertMode" |> WhenExpr.parse,
       },
       {
         key: "<D-V>",
         command: "editor.action.clipboardPasteAction",
-        condition: "insertMode" |> parseExp,
+        condition: "insertMode" |> WhenExpr.parse,
       },
       {
         key: "<ESC>",
         command: "workbench.action.closeQuickOpen",
-        condition: "inQuickOpen" |> parseExp,
+        condition: "inQuickOpen" |> WhenExpr.parse,
       },
       {
         key: "<C-N>",
         command: "list.focusDown",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
         command: "list.focusUp",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-N>",
         command: "list.focusDown",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
         command: "list.focusUp",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<TAB>",
         command: "list.focusDown",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-TAB>",
         command: "list.focusUp",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-TAB>",
         command: "workbench.action.quickOpenNavigateNextInEditorPicker",
-        condition: "inEditorsPicker" |> parseExp,
+        condition: "inEditorsPicker" |> WhenExpr.parse,
       },
       {
         key: "<S-C-TAB>",
         command: "workbench.action.quickOpenNavigatePreviousInEditorPicker",
-        condition: "inEditorsPicker" |> parseExp,
+        condition: "inEditorsPicker" |> WhenExpr.parse,
       },
       {
         key: "<CR>",
         command: "list.select",
-        condition: "listFocus || textInputFocus" |> parseExp,
+        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-C-B>",
         command: "explorer.toggle",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
         command: "selectPrevSuggestion",
-        condition: "suggestWidgetVisible" |> parseExp,
+        condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<C-N>",
         command: "selectNextSuggestion",
-        condition: "suggestWidgetVisible" |> parseExp,
+        condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<CR>",
         command: "acceptSelectedSuggestion",
         condition:
-          "acceptSuggestionOnEnter && suggestWidgetVisible" |> parseExp,
+          "acceptSuggestionOnEnter && suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<TAB>",
         command: "acceptSelectedSuggestion",
-        condition: "suggestWidgetVisible" |> parseExp,
+        condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<S-TAB>",
         command: "acceptSelectedSuggestion",
-        condition: "suggestWidgetVisible" |> parseExp,
+        condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<S-CR>",
         command: "acceptSelectedSuggestion",
-        condition: "suggestWidgetVisible" |> parseExp,
+        condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<D-Z>",
         command: "undo",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S-Z>",
         command: "redo",
-        condition: "editorTextFocus" |> parseExp,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
-      {key: "<C-G>", command: "sneak.start", condition: Expression.True},
+      {
+        key: "<C-G>",
+        command: "sneak.start",
+        condition: WhenExpr.Value(True),
+      },
       {
         key: "<ESC>",
         command: "sneak.stop",
-        condition: "sneakMode" |> parseExp,
+        condition: "sneakMode" |> WhenExpr.parse,
       },
       {
         key: "<S-C-M>",
         command: "workbench.actions.view.problems",
-        condition: Expression.True,
+        condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-M>",
         command: "workbench.actions.view.problems",
-        condition: Expression.True,
+        condition: WhenExpr.Value(True),
       },
-      {key: "<D-W>", command: "view.closeEditor", condition: Expression.True},
+      {
+        key: "<D-W>",
+        command: "view.closeEditor",
+        condition: WhenExpr.Value(True),
+      },
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {

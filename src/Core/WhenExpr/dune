@@ -1,0 +1,5 @@
+(library
+    (name WhenExpr)
+    (public_name Oni2.core.whenExpr)
+    (preprocess (pps ppx_deriving.show))
+    (libraries re))
