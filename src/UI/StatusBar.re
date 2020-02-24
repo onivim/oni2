@@ -214,12 +214,13 @@ let textItem = (~background, ~font, ~theme: Theme.t, ~text, ()) =>
 
 let notificationCount =
     (
+      ~theme,
       ~font,
       ~foreground as color,
       ~background,
       ~notifications,
       ~contextMenu,
-      ~onContextMenuUpdate,
+      ~onContextMenuItemSelect,
       (),
     ) => {
   let text = notifications |> List.length |> string_of_int;
@@ -233,13 +234,34 @@ let notificationCount =
       Actions.StatusBar(NotificationsContextMenu),
     );
 
-  <item onClick onRightClick>
-    <Notifications.ContextMenu.Anchor
+  let menu = () => {
+    let items =
+      ContextMenu.[
+        {
+          label: "Clear All",
+          // icon: None,
+          data: Actions.ClearNotifications,
+        },
+        {
+          label: "Open",
+          // icon: None,
+          data: Actions.StatusBar(NotificationCountClicked),
+        },
+      ];
+
+    <ContextMenu
       orientation=(`Top, `Left)
-      offsetX=(-10) // correct for item padding
-      model=contextMenu
-      onUpdate=onContextMenuUpdate
-    />
+      offsetX=(-10)
+      items
+      theme
+      font // correct for item padding
+      onItemSelect=onContextMenuItemSelect
+    />;
+  };
+
+  <item onClick onRightClick>
+    {contextMenu == State.ContextMenu.NotificationStatusBarItem
+       ? <menu /> : React.empty}
     <View
       style=Style.[
         flexDirection(`Row),
@@ -293,12 +315,7 @@ let transitionAnimation =
   );
 
 let%component make =
-              (
-                ~state: State.t,
-                ~contextMenu: option(ContextMenu.t(Actions.t)),
-                ~onContextMenuUpdate,
-                (),
-              ) => {
+              (~state: State.t, ~contextMenu, ~onContextMenuItemSelect, ()) => {
   let State.{mode, theme, uiFont: font, diagnostics, notifications, _} = state;
 
   let%hook activeNotifications =
@@ -383,12 +400,13 @@ let%component make =
   <View style={Styles.view(background, yOffset)}>
     <section align=`FlexStart>
       <notificationCount
+        theme
         font
         foreground
         background
         notifications
         contextMenu
-        onContextMenuUpdate
+        onContextMenuItemSelect
       />
     </section>
     <sectionGroup>
