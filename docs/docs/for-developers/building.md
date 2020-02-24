@@ -16,15 +16,18 @@ sidebar_label: Building from Source
 
 ## Dependencies
 
-### Windows, macOS
+All platforms require `git`, `node` and `esy`, and the ones outlined in the `revery` docs:
+https://github.com/revery-ui/revery/wiki/Building-&-Installing.
 
-There should be no required system dependencies, outside of `git`, `node` and `esy` and the
-ones outlined in the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing.
+### Windows
+
+No additional requirements.
+
+### macOS
+
+Requires `libtool`. Can be installed via homebrew: `brew install libtool`.
 
 ### Linux
-
-Like the other platforms, `git`, `node` and `esy` are required, as well as any outlined in
-the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing.
 
 Some Linux distributions may need other packages:
 

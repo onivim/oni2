@@ -1,5 +1,5 @@
 {
-  "checksum": "62e6157d276424e11e8da64ad2b46aba",
+  "checksum": "3edd09d2382687a00b5bb461f0018036",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -1233,7 +1233,6 @@
         "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9",
         "reason-sdl2@2.10.3017@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "reason-libvterm@github:revery-ui/reason-libvterm#11f52f7@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#05a1604@d41d8cd9",
         "reason-jsonrpc@github:onivim/reason-jsonrpc#ebadf6d@d41d8cd9",
         "ocaml@4.8.1000@d41d8cd9", "isolinear@3.0.0@d41d8cd9",

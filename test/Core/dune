@@ -2,4 +2,10 @@
     (name Oni_Core_Test)
     (library_flags (-linkall -g))
     (modules (:standard))
-    (libraries Oni2.core Oni_Core_Utility_Test rely.lib editor-core-types))
+    (libraries
+        Oni2.core
+        Oni_Core_Utility_Test
+        Oni_Core_WhenExpr_Test
+        rely.lib
+        editor-core-types
+    ))

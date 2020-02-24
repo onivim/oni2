@@ -9,7 +9,6 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
-module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
@@ -17,13 +16,19 @@ module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
+module ContextMenu = {
+  type t =
+    | NotificationStatusBarItem
+    | Nothing;
+};
+
 type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
-  contextMenu: option(ContextMenu.t(Actions.t)),
+  contextMenu: ContextMenu.t,
   mode: Vim.Mode.t,
   completions: Completions.t,
   configuration: Configuration.t,
@@ -80,7 +85,7 @@ let create: unit => t =
     bufferRenderers: BufferRenderers.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
-    contextMenu: None,
+    contextMenu: ContextMenu.Nothing,
     completions: Completions.initial,
     configuration: Configuration.default,
     decorationProviders: [],

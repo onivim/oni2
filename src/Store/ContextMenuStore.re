@@ -1,24 +1,6 @@
 open Oni_Model;
 open Actions;
 
-module ContextMenu = Oni_Components.ContextMenu;
-
-let contextMenu =
-  Notifications.ContextMenu.init(
-    ContextMenu.[
-      {
-        label: "Clear All",
-        // icon: None,
-        data: ClearNotifications,
-      },
-      {
-        label: "Open",
-        // icon: None,
-        data: StatusBar(NotificationCountClicked),
-      },
-    ],
-  );
-
 let start = () => {
   let selectItemEffect = (item: ContextMenu.item(_)) =>
     Isolinear.Effect.createWithDispatch(
@@ -30,23 +12,18 @@ let start = () => {
     let default = (state, Isolinear.Effect.none);
 
     switch (action) {
-    | ContextMenuUpdated(model) => (
-        {...state, contextMenu: Some(model)},
-        Isolinear.Effect.none,
-      )
-
     | ContextMenuOverlayClicked => (
-        {...state, contextMenu: None},
+        {...state, contextMenu: State.ContextMenu.Nothing},
         Isolinear.Effect.none,
       )
 
     | ContextMenuItemSelected(item) => (
-        {...state, contextMenu: None},
+        {...state, contextMenu: State.ContextMenu.Nothing},
         selectItemEffect(item),
       )
 
     | StatusBar(NotificationsContextMenu) => (
-        {...state, contextMenu: Some(contextMenu)},
+        {...state, contextMenu: State.ContextMenu.NotificationStatusBarItem},
         Isolinear.Effect.none,
       )
 
