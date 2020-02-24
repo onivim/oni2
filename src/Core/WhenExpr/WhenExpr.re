@@ -124,7 +124,7 @@ module Parse = {
         };
       } else if (Re.execp(regex, str)) {
         switch (Re.split(regex, str)) {
-        // This matches more than two "pieces", which should be a synatx error.
+        // This matches more than two "pieces", which should be a syntax error.
         // But since vscode accepts it, so do we.
         | [left, right, ..._] =>
           let key = String.trim(left);
