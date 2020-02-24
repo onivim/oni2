@@ -2,7 +2,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 // This test validates that certain keystrokes are ignored by our Vim layer
-runTest(~name="InputIgnore test", (dispatch, wait, runEffects) => {
+runTest(~name="InputIgnore test", (_dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     state.mode == Vim.Types.Normal
   );
@@ -18,13 +18,5 @@ runTest(~name="InputIgnore test", (dispatch, wait, runEffects) => {
     } else {
       true;
     }
-  );
-
-  // Escape clears notification
-  dispatch(KeyboardInput("<esc>"));
-  runEffects();
-
-  wait(~name="Notification is cleared", (state: State.t) =>
-    List.length(state.notifications) == 0
   );
 });
