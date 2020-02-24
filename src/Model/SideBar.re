@@ -4,17 +4,27 @@ type pane =
   | Extensions;
 
 type t = {
+  // Track the last value of 'workbench.sideBar.visible'
+  // If it changes, we should update
+  openByDefault: bool,
   isOpen: bool,
   selected: pane,
 };
 
-let initial = {isOpen: true, selected: FileExplorer};
+let initial = {openByDefault: false, isOpen: false, selected: FileExplorer};
 
 let isVisible = (pane, model) => model.isOpen && model.selected == pane;
+
+let setDefaultVisibility = (pane, defaultVisibility) =>
+  if (pane.openByDefault == defaultVisibility) {
+    pane;
+  } else {
+    {...pane, openByDefault: defaultVisibility, isOpen: defaultVisibility};
+  };
 
 let toggle = (pane, state: t) =>
   if (pane == state.selected) {
     {...state, isOpen: !state.isOpen};
   } else {
-    {isOpen: true, selected: pane};
+    {...state, isOpen: true, selected: pane};
   };

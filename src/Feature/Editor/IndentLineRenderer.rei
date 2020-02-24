@@ -6,17 +6,13 @@
 
 let render:
   (
-    ~canvasContext: Revery.Draw.CanvasContext.t,
+    ~context: Draw.context,
     ~buffer: Oni_Core.Buffer.t,
     ~startLine: int,
     ~endLine: int,
-    ~lineHeight: float,
-    ~fontWidth: float,
-    ~bufferPositionToPixel: (int, int) => (float, float),
-    ~cursorLine: int,
+    ~cursorPosition: EditorCoreTypes.Location.t,
     ~theme: Oni_Core.Theme.t,
-    ~indentationSettings: Oni_Core.IndentationSettings.t,
     ~showActive: bool,
-    unit
+    Oni_Core.IndentationSettings.t
   ) =>
   unit;

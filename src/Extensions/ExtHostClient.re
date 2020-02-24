@@ -18,39 +18,12 @@ module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 
 type t = ExtHostTransport.t;
 
+module SCM = ExtHostClient_SCM;
+module Terminal = ExtHostClient_Terminal;
+
 type msg =
-  | RegisterSourceControl({
-      handle: int,
-      id: string,
-      label: string,
-      rootUri: option(Uri.t),
-    })
-  | UnregisterSourceControl({handle: int})
-  | UpdateSourceControl({
-      handle: int,
-      hasQuickDiffProvider: option(bool),
-      count: option(int),
-      commitTemplate: option(string),
-    })
-  // acceptInputCommand: option(_),
-  // statusBarCommands: option(_),
-  | RegisterSCMResourceGroup({
-      provider: int,
-      handle: int,
-      id: string,
-      label: string,
-    })
-  | UnregisterSCMResourceGroup({
-      provider: int,
-      handle: int,
-    })
-  | SpliceSCMResourceStates({
-      provider: int,
-      group: int,
-      start: int,
-      deleteCount: int,
-      additions: list(SCMResource.t),
-    })
+  | SCM(SCM.msg)
+  | Terminal(Terminal.msg)
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
@@ -202,80 +175,6 @@ let start =
       In.StatusBar.parseSetEntry(args) |> Option.iter(onStatusBarSetEntry);
       Ok(None);
 
-    | ("MainThreadSCM", "$registerSourceControl", args) =>
-      switch (args) {
-      | [`Int(handle), `String(id), `String(label), rootUri] =>
-        let rootUri = Core.Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
-        dispatch(RegisterSourceControl({handle, id, label, rootUri}));
-      | _ =>
-        Log.error(
-          "Unexpected arguments for MainThreadSCM.$registerSourceControl",
-        )
-      };
-      Ok(None);
-
-    | ("MainThreadSCM", "$unregisterSourceControl", [`Int(handle)]) =>
-      dispatch(UnregisterSourceControl({handle: handle}));
-      Ok(None);
-
-    | ("MainThreadSCM", "$updateSourceControl", [`Int(handle), features]) =>
-      open Yojson.Safe.Util;
-      dispatch(
-        UpdateSourceControl({
-          handle,
-          hasQuickDiffProvider:
-            features |> member("hasQuickDiffProvider") |> to_bool_option,
-          count: features |> member("count") |> to_int_option,
-          commitTemplate:
-            features |> member("commitTemplate") |> to_string_option,
-        }),
-      );
-      Ok(None);
-
-    | (
-        "MainThreadSCM",
-        "$registerGroup",
-        [`Int(provider), `Int(handle), `String(id), `String(label)],
-      ) =>
-      dispatch(RegisterSCMResourceGroup({provider, handle, id, label}));
-      Ok(None);
-
-    | ("MainThreadSCM", "$unregisterGroup", [`Int(handle), `Int(provider)]) =>
-      dispatch(UnregisterSCMResourceGroup({provider, handle}));
-      Ok(None);
-
-    | (
-        "MainThreadSCM",
-        "$spliceResourceStates",
-        [`Int(provider), `List(groupSplices)],
-      ) =>
-      List.iter(
-        fun
-        | `List([`Int(group), `List(splices)]) =>
-          List.iter(
-            splice =>
-              switch (splice) {
-              | `List([`Int(start), `Int(deleteCount), `List(additions)]) =>
-                let additions = List.map(In.SCM.parseResource, additions);
-                dispatch(
-                  SpliceSCMResourceStates({
-                    provider,
-                    group,
-                    start,
-                    deleteCount,
-                    additions,
-                  }),
-                );
-
-              | _ => Log.warn("spliceResourceStates: Unexpected json")
-              },
-            splices,
-          )
-        | _ => Log.warn("spliceResourceStates: Unexpected json"),
-        groupSplices,
-      );
-      Ok(None);
-
     | (
         "MainThreadDocumentContentProviders",
         "$registerTextContentProvider",
@@ -321,6 +220,18 @@ let start =
       dispatch(DecorationsDidChange({handle, uris}));
       Ok(None);
 
+    | ("MainThreadSCM", method, args) =>
+      SCM.handleMessage(~dispatch=msg => dispatch(SCM(msg)), method, args);
+      Ok(None);
+
+    | ("MainThreadTerminalService", method, args) =>
+      Terminal.handleMessage(
+        ~dispatch=msg => dispatch(Terminal(msg)),
+        method,
+        args,
+      );
+      Ok(None);
+
     | (scope, method, argsAsJson) =>
       Log.warnf(m =>
         m(
@@ -352,8 +263,11 @@ let activateByEvent = (evt, client) => {
   ExtHostTransport.send(client, Out.ExtensionService.activateByEvent(evt));
 };
 
-let executeContributedCommand = (cmd, client) => {
-  ExtHostTransport.send(client, Out.Commands.executeContributedCommand(cmd));
+let executeContributedCommand = (~arguments=[], cmd, client) => {
+  ExtHostTransport.send(
+    client,
+    Out.Commands.executeContributedCommand(cmd, arguments),
+  );
 };
 
 let acceptWorkspaceData = (workspace: Workspace.t, client) => {
@@ -374,7 +288,7 @@ let addDocument = (doc, client) => {
   );
 };
 
-let updateDocument = (uri, modelChange, dirty, client) => {
+let updateDocument = (uri, modelChange, ~dirty, client) => {
   ExtHostTransport.send(
     client,
     Out.Documents.acceptModelChanged(uri, modelChange, dirty),
@@ -410,7 +324,7 @@ let provideDecorations = (handle, uri, client) => {
           `String(source),
         ]),
       ) =>
-      Some(SCMDecoration.{handle, tooltip, letter, color, source})
+      Some(Decoration.{handle, tooltip, letter, color, source})
     | (_, json) => {
         Log.error("Unexpected data: " ++ Yojson.Safe.to_string(json));
         None;
@@ -494,18 +408,6 @@ let provideDocumentSymbols = (id, uri, client) => {
   promise;
 };
 
-let provideOriginalResource = (id, uri, client) => {
-  let promise =
-    ExtHostTransport.request(
-      ~msgType=MessageType.requestJsonArgsWithCancellation,
-      client,
-      Out.SCM.provideOriginalResource(id, uri),
-      json =>
-      Core.Uri.of_yojson(json) |> Stdlib.Result.get_ok
-    );
-  promise;
-};
-
 let provideReferences = (id, uri, position, client) => {
   let f = (json: Yojson.Safe.t) => {
     let default: list(LocationWithUri.t) = [];
@@ -543,3 +445,11 @@ let provideTextDocumentContent = (id, uri, client) => {
 let send = (client, msg) => ExtHostTransport.send(client, msg);
 
 let close = client => ExtHostTransport.close(client);
+
+module Effects = {
+  let executeContributedCommand = (extHostClient, ~arguments=[], id) =>
+    Isolinear.Effect.create(
+      ~name="extHostClient.executeContributedCommand", () =>
+      executeContributedCommand(id, ~arguments, extHostClient)
+    );
+};

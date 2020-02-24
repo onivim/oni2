@@ -29,7 +29,7 @@ jobs:
   steps:
   - template: .ci/use-node.yml
   - script: brew update
-  - script: brew install libpng ragel
+  - script: brew install libtool libpng ragel
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-check-hygiene.yml
@@ -96,7 +96,7 @@ jobs:
   steps:
   - template: .ci/use-node.yml
   - script: brew update
-  - script: brew install libpng ragel
+  - script: brew install libtool libpng ragel
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml

@@ -4,7 +4,13 @@ open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
-let metrics = EditorMetrics.create();
+let metrics =
+  EditorMetrics.{
+    pixelWidth: 3440,
+    pixelHeight: 1440,
+    lineHeight: 10.,
+    characterWidth: 10.,
+  };
 
 /* Create a state with some editor size */
 let simpleState = {
@@ -14,7 +20,7 @@ let simpleState = {
     state,
     Actions.EditorGroupSetSize(
       EditorGroups.activeGroupId(state.editorGroups),
-      EditorSize.create(~pixelWidth=1600, ~pixelHeight=1200, ()),
+      EditorSize.create(~pixelWidth=3440, ~pixelHeight=1440, ()),
     ),
   );
 };
@@ -24,10 +30,11 @@ let simpleState =
     simpleState,
     Actions.SetEditorFont(
       EditorFont.create(
-        ~fontFile="dummy",
-        ~fontSize=14.,
-        ~measuredWidth=14.,
-        ~measuredHeight=14.,
+        ~fontFile=
+          Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+        ~fontSize=10.,
+        ~measuredWidth=10.,
+        ~measuredHeight=10.,
         ~descenderHeight=1.,
         (),
       ),
@@ -41,6 +48,8 @@ let editorGroup =
 
 let thousandLines =
   Array.make(1000, "This is a buffer with a thousand lines!");
+
+let thousandLineBuffer = Buffer.ofLines(thousandLines);
 
 let thousandLineState =
   Reducer.reduce(

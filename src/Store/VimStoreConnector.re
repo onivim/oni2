@@ -131,17 +131,6 @@ let start =
     });
 
   let _: unit => unit =
-    // Unhandled escape is called when there is an `<esc>` sent to Vim,
-    // but nothing to escape from (ie, in normal mode with no pending operator)
-    Vim.onUnhandledEscape(() => {
-      let state = getState();
-      if (Notifications.any(state.notifications)) {
-        let oldestNotification = Notifications.getOldest(state.notifications);
-        dispatch(Actions.HideNotification(oldestNotification));
-      };
-    });
-
-  let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ChangeMode(newMode)));
 
   let _: unit => unit =
@@ -213,6 +202,9 @@ let start =
       Log.debugf(m => m("Buffer metadata changed: %n | %b", id, modified));
       dispatch(Actions.BufferSetModified(id, modified));
     });
+
+  let _: unit => unit =
+    Vim.Buffer.onWrite(id => {dispatch(Actions.BufferSaved(id))});
 
   let _: unit => unit =
     Vim.Cursor.onMoved(newPosition => {
@@ -646,6 +638,24 @@ let start =
       | Some(_) => dispatch(Actions.BufferEnter(metadata, fileType))
       | None => ()
       };
+
+      if (StringEx.startsWith(~prefix="oni://terminal", filePath)) {
+        let wholeLength = String.length(filePath);
+        let prefixLength = String.length("oni://terminal/");
+
+        let id =
+          String.sub(filePath, prefixLength, wholeLength - prefixLength)
+          |> int_of_string;
+
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              metadata.id,
+              BufferRenderer.Terminal({id: id}),
+            ),
+          ),
+        );
+      };
     });
 
   let applyCompletionEffect = completion =>
@@ -734,8 +744,12 @@ let start =
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
-          let (lines, columns) =
-            Editor.getLinesAndColumns(editor, editorGroup.metrics);
+          let Feature_Editor.EditorLayout.{
+                bufferHeightInCharacters: lines,
+                bufferWidthInCharacters: columns,
+                _,
+              } =
+            Editor.getLayout(editor, editorGroup.metrics);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -849,7 +863,7 @@ let start =
         };
       (state, eff);
 
-    | Init => (state, initEffect)
+    | Init(_) => (state, initEffect)
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),

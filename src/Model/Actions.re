@@ -17,19 +17,22 @@ module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
+type initOptions = {syntaxHighlightingEnabled: bool};
+
 [@deriving show({with_path: false})]
 type t =
-  | Init
+  | Init([@opaque] initOptions)
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
   | BufferUpdate([@opaque] BufferUpdate.t)
   | BufferRenderer(BufferRenderer.action)
-  | BufferSaved([@opaque] Vim.BufferMetadata.t)
+  | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
+  | SyntaxServerStarted([@opaque] Oni_Syntax_Client.t)
   | SyntaxServerClosed
   | Command(string)
   | CommandsRegister(list(command))
@@ -60,7 +63,6 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
-  | ContextMenuUpdated([@opaque] ContextMenu.t(t))
   | ContextMenuOverlayClicked
   | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
@@ -110,6 +112,9 @@ type t =
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
+  // ReallyQuitting is dispatched when we've decided _for sure_
+  // to quit the app. This gives subscriptions the chance to clean up.
+  | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Location.t, Location.t)
@@ -129,11 +134,12 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
-  | SCM(SCM.msg)
+  | SCM(Feature_SCM.msg)
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
+  | Terminal(Feature_Terminal.msg)
   | PaneTabClicked(Pane.pane)
   | VimDirectoryChanged(string)
   | WindowFocusGained
@@ -153,6 +159,28 @@ type t =
   | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
+  | GotOriginalUri({
+      bufferId: int,
+      uri: Uri.t,
+    })
+  | GotOriginalContent({
+      bufferId: int,
+      lines: [@opaque] array(string),
+    })
+  | NewDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | LostDecorationProvider({handle: int})
+  | DecorationsChanged({
+      handle: int,
+      uris: list(Uri.t),
+    })
+  | GotDecorations({
+      handle: int,
+      uri: Uri.t,
+      decorations: list(Decoration.t),
+    })
   | Noop
 and command = {
   commandCategory: option(string),

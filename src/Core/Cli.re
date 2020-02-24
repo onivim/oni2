@@ -100,6 +100,7 @@ let parse =
       ("--nofork", Unit(Timber.App.enable), ""),
       ("--debug", Unit(CoreLog.enableDebug), ""),
       ("--trace", Unit(CoreLog.enableTrace), ""),
+      ("--quiet", Unit(CoreLog.enableQuiet), ""),
       ("--version", printVersion |> runAndExitUnit, ""),
       ("--no-log-colors", Unit(Timber.App.disableColors), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),

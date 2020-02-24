@@ -10,6 +10,7 @@ open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
+module Tooltip = Oni_Components.Tooltip;
 
 module Styles = {
   open Style;
@@ -54,8 +55,8 @@ let make = (~state: State.t, ()) => {
         _,
       } = state;
 
-  let onContextMenuUpdate = model =>
-    GlobalContext.current().dispatch(ContextMenuUpdated(model));
+  let onContextMenuItemSelect = item =>
+    GlobalContext.current().dispatch(ContextMenuItemSelected(item));
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
@@ -69,19 +70,14 @@ let make = (~state: State.t, ()) => {
     )
     && !zenMode;
 
-  let sideBarVisible =
-    Selectors.getActiveConfigurationValue(state, c =>
-      c.workbenchSideBarVisible
-    )
-    && !zenMode
-    && sideBar.isOpen;
+  let sideBarVisible = !zenMode && sideBar.isOpen;
 
   let statusBarHeight = statusBarVisible ? 25 : 0;
 
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar state contextMenu onContextMenuUpdate />
+          <StatusBar state contextMenu onContextMenuItemSelect />
         </View>
       : React.empty;
 
@@ -133,22 +129,11 @@ let make = (~state: State.t, ()) => {
        }}
     </Overlay>
     statusBar
-    {switch (contextMenu) {
-     | Some(model) =>
-       let onOverlayClick = () =>
-         GlobalContext.current().dispatch(ContextMenuOverlayClicked);
-       let onItemSelect = item =>
-         GlobalContext.current().dispatch(ContextMenuItemSelected(item));
+    {let onClick = () =>
+       GlobalContext.current().dispatch(ContextMenuOverlayClicked);
 
-       <ContextMenu.Overlay
-         theme
-         font=uiFont
-         model
-         onOverlayClick
-         onItemSelect
-       />;
-     | None => React.empty
-     }}
+     <ContextMenu.Overlay onClick />}
+    <Tooltip.Overlay theme font=uiFont />
     <Modals state />
     <Overlay> <SneakView state /> </Overlay>
   </View>;
