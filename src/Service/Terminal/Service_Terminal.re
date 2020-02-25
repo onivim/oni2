@@ -174,23 +174,35 @@ module Sub = {
 };
 
 module Effect = {
+
+  open Vterm;
+
+  let keyToVtermKey = [
+    ("<CR>", Enter),
+    ("<BS>", Backspace),
+    ("<TAB>", Tab),
+    ("<UP>", Up),
+    ("<LEFT>", Left),
+    ("<RIGHT>", Right),
+    ("<DOWN>", Right),
+  ]
+  |> List.to_seq
+  |> Hashtbl.of_seq;
+
   let input = (~id, ~input, extHostClient) => {
     Isolinear.Effect.create(~name="terminal.input", () => {
       switch (Hashtbl.find_opt(Internal.idToTerminal, id)) {
       | Some(terminal) =>
-        if (input == "<CR>") {
-          //String.make(1, Char.chr(13))
-          ReveryTerminal.input(
-            ~key=13 |> Int32.of_int,
-            terminal,
-          );
-        } else if (String.length(input) == 1) {
-          let key = input.[0] |> Char.code |> Int32.of_int;
-          ReveryTerminal.input(~key, terminal);
-        } else {
-          ();
-        }
 
+        if (String.length(input) == 1) {
+          let key = input.[0] |> Char.code |> Uchar.of_int;
+          ReveryTerminal.input(~key=Unicode(key), terminal); 
+        } else {
+            switch (Hashtbl.find_opt(keyToVtermKey, input)) {
+            | Some(key) => ReveryTerminal.input(~key, terminal)
+            | None => ();
+            }
+        }
       | None => ()
       }
     });
