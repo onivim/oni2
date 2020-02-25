@@ -36,6 +36,7 @@ type splitDirection =
 [@deriving show({with_path: false})]
 type msg =
   | NewTerminal({splitDirection})
+  | Resized({id: int, rows: int, columns: int})
   | Service(Service_Terminal.msg);
 
 type outmsg =
@@ -76,6 +77,9 @@ let update = (_extHostClient, model: t, msg) => {
       {idToTerminal, nextId: id + 1},
       TerminalCreated({name: getBufferName(id), splitDirection}),
     );
+  | Resized({id, rows, columns}) => 
+    let newModel = updateById(id, term => { ...term, rows, columns}, model);
+    (newModel, Nothing)
   | Service(ProcessStarted({id, pid})) =>
     let newModel = updateById(id, term => {...term, pid: Some(pid)}, model);
     (newModel, Nothing);

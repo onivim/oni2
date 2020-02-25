@@ -8,6 +8,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
+open Oni_Model;
 
 module EditorMetrics = Feature_Editor.EditorMetrics;
 
@@ -30,15 +31,28 @@ let make =
   let maybeFont =
     Revery.Font.load(editorFont.fontFile) |> Stdlib.Result.to_option;
 
+  let size = editorFont.fontSize;
+
   let onDimensionsChanged = (({height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t)) => {
+    // If we have a loaded font, figure out how many columns and rows we can show
     print_endline (Printf.sprintf("TERMINAL DIMENSIONS: %dx%d", width, height ));
+
+    Option.iter((font) => {
+      let terminalFont = ReveryTerminal.Font.make(~size, font); 
+      let rows = (float_of_int(height) /. terminalFont.lineHeight) |> int_of_float;
+      let columns = (float_of_int(width) /. terminalFont.characterWidth) |> int_of_float;
+      
+    print_endline (Printf.sprintf("RESIZED: %dx%d", rows, columns ));
+      GlobalContext.current().dispatch(Actions.Terminal(
+        Feature_Terminal.Resized({id: terminal.id, rows, columns}) 
+      ));
+    }, maybeFont);
   };
 
   let element =
     Option.map(
       font => {
         let {screen, cursor, _}: Feature_Terminal.terminal = terminal;
-        let size = editorFont.fontSize;
         let font = ReveryTerminal.Font.make(~size, font);
         ReveryTerminal.render(~screen, ~cursor, ~font);
       },
