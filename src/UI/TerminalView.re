@@ -4,9 +4,7 @@
  * Component for the 'terminal' buffer renderer
  */
 
-open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Core;
 open Oni_Model;
 
