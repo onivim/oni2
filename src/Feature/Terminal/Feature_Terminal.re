@@ -36,11 +36,16 @@ type splitDirection =
 [@deriving show({with_path: false})]
 type msg =
   | NewTerminal({splitDirection})
-  | Service(Service_Terminal.msg)
+  | Resized({
+      id: int,
+      rows: int,
+      columns: int,
+    })
   | KeyPressed({
       id: int,
       key: string,
     });
+  | Service(Service_Terminal.msg);
 
 type outmsg =
   | Nothing
@@ -81,13 +86,15 @@ let update = (extHostClient, model: t, msg) => {
       {idToTerminal, nextId: id + 1},
       TerminalCreated({name: getBufferName(id), splitDirection}),
     );
-
   | KeyPressed({id, key}) =>
     let inputEffect =
       Service_Terminal.Effect.input(~id, ~input=key, extHostClient)
       |> Isolinear.Effect.map(msg => Service(msg));
 
     (model, Effect(inputEffect));
+  | Resized({id, rows, columns}) =>
+    let newModel = updateById(id, term => {...term, rows, columns}, model);
+    (newModel, Nothing);
   | Service(ProcessStarted({id, pid})) =>
     let newModel = updateById(id, term => {...term, pid: Some(pid)}, model);
     (newModel, Nothing);

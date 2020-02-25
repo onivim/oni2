@@ -130,8 +130,8 @@ module Sub = {
         if (params.rows != state.rows || params.columns != state.columns) {
           ExtHostClient.Terminal.Requests.acceptProcessResize(
             params.id,
-            params.rows,
             params.columns,
+            params.rows,
             params.extHostClient,
           );
         };
