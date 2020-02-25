@@ -4,7 +4,9 @@
  * Component for the 'terminal' buffer renderer
  */
 
+open Revery;
 open Revery.UI;
+open Revery.UI.Components;
 open Oni_Core;
 
 module EditorMetrics = Feature_Editor.EditorMetrics;
@@ -28,6 +30,10 @@ let make =
   let maybeFont =
     Revery.Font.load(editorFont.fontFile) |> Stdlib.Result.to_option;
 
+  let onDimensionsChanged = (({height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t)) => {
+    print_endline (Printf.sprintf("TERMINAL DIMENSIONS: %dx%d", width, height ));
+  };
+
   let element =
     Option.map(
       font => {
@@ -39,5 +45,6 @@ let make =
       maybeFont,
     )
     |> Option.value(~default=React.empty);
-  <View style={Styles.container(metrics)}> element </View>;
+  <View onDimensionsChanged
+    style={Styles.container(metrics)}> element </View>;
 };
