@@ -154,12 +154,12 @@ module Sub = {
 
 module Effect = {
   let input = (~id, ~input, extHostClient) => {
-
-    let input = if (input == "<CR>") {
-      String.make(1, Char.chr(13)); 
-    } else {
-      input
-    }
+    let input =
+      if (input == "<CR>") {
+        String.make(1, Char.chr(13));
+      } else {
+        input;
+      };
 
     Isolinear.Effect.create(~name="terminal.input", () => {
       ExtHostClient.Terminal.Requests.acceptProcessInput(
