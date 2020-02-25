@@ -36,8 +36,8 @@ type msg =
   | KeyPressed({
       id: int,
       key: string,
-    });
-  | Service(Service_Terminal.msg)
+    })
+  | Service(Service_Terminal.msg);
 
 type outmsg =
   | Nothing

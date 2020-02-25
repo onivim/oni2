@@ -44,6 +44,7 @@ module Sub = {
         columns: int,
         dispose: unit => unit,
         terminal: ReveryTerminal.t,
+        isResizing: ref(bool),
       };
 
       type nonrec msg = msg;
@@ -60,12 +61,16 @@ module Sub = {
             executable: params.cmd,
             arguments: [],
           };
+  
+        let isResizing = ref(false);
 
         let onEffect = eff =>
           switch (eff) {
-          | ReveryTerminal.ScreenResized(screen)
+          | ReveryTerminal.ScreenResized(screen) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
+            if (!isResizing^) {
             dispatch(ScreenUpdated({id: params.id, screen}))
+            }
           | ReveryTerminal.CursorMoved(cursor) =>
             dispatch(CursorMoved({id: params.id, cursor}))
           | ReveryTerminal.Output(output) =>
@@ -123,7 +128,7 @@ module Sub = {
             }
           });
 
-        {dispose, rows: params.rows, columns: params.columns, terminal};
+        {dispose, isResizing, rows: params.rows, columns: params.columns, terminal};
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
@@ -134,6 +139,11 @@ module Sub = {
             params.rows,
             params.extHostClient,
           );
+
+          state.isResizing := true;
+          ReveryTerminal.resize(~rows=params.rows, ~columns=params.columns,
+          state.terminal);
+          state.isResizing := false;
         };
 
         {...state, rows: params.rows, columns: params.columns};
