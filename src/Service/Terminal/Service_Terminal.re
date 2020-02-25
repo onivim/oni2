@@ -4,6 +4,8 @@ open Oni_Extensions;
 module Internal = {
   let onExtensionMessage: Revery.Event.t(ExtHostClient.Terminal.msg) =
     Revery.Event.create();
+
+  let idToTerminal: Hashtbl.t(int, ReveryTerminal.t) = Hashtbl.create(8);
 };
 
 [@deriving show({with_path: false})]
@@ -66,8 +68,14 @@ module Sub = {
             dispatch(ScreenUpdated({id: params.id, screen}))
           | ReveryTerminal.CursorMoved(cursor) =>
             dispatch(CursorMoved({id: params.id, cursor}))
-          // TODO: Handle output
-          | _ => ()
+          | ReveryTerminal.Output(output) =>
+            ExtHostClient.Terminal.Requests.acceptProcessInput(
+              params.id,
+              output,
+              params.extHostClient,
+            )
+          // TODO: Handle term prop changes
+          | ReveryTerminal.TermPropChanged(_) => ()
           };
 
         let terminal =
@@ -76,6 +84,8 @@ module Sub = {
             ~columns=params.columns,
             ~onEffect,
           );
+
+        Hashtbl.replace(Internal.idToTerminal, params.id, terminal);
 
         let dispatchIfMatches = (id, msg) =>
           if (id == params.id) {
@@ -137,6 +147,7 @@ module Sub = {
             params.extHostClient,
           );
 
+        Hashtbl.remove(Internal.idToTerminal, params.id);
         state.dispose();
       };
     });
@@ -154,19 +165,24 @@ module Sub = {
 
 module Effect = {
   let input = (~id, ~input, extHostClient) => {
-    let input =
-      if (input == "<CR>") {
-        String.make(1, Char.chr(13));
-      } else {
-        input;
-      };
-
     Isolinear.Effect.create(~name="terminal.input", () => {
-      ExtHostClient.Terminal.Requests.acceptProcessInput(
-        id,
-        input,
-        extHostClient,
-      )
+      switch (Hashtbl.find_opt(Internal.idToTerminal, id)) {
+      | Some(terminal) =>
+        if (input == "<CR>") {
+          //String.make(1, Char.chr(13))
+          ReveryTerminal.input(
+            ~key=13 |> Int32.of_int,
+            terminal,
+          );
+        } else if (String.length(input) == 1) {
+          let key = input.[0] |> Char.code |> Int32.of_int;
+          ReveryTerminal.input(~key, terminal);
+        } else {
+          ();
+        }
+
+      | None => ()
+      }
     });
   };
 };
