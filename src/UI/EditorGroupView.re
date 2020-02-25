@@ -109,7 +109,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
 
   let onDimensionsChanged =
       ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-    // TODO: Handle show tabs
+    let height = showTabs ? height - Constants.tabHeight : height;
+
     GlobalContext.current().notifyEditorSizeChanged(
       ~editorGroupId=editorGroup.editorGroupId,
       ~width,
