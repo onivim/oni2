@@ -107,6 +107,18 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
       );
     };
 
+  let onDimensionsChanged =
+      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+    let height = showTabs ? height - Constants.tabHeight : height;
+
+    GlobalContext.current().notifyEditorSizeChanged(
+      ~editorGroupId=editorGroup.editorGroupId,
+      ~width,
+      ~height,
+      (),
+    );
+  };
+
   let children = {
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
     let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
@@ -116,15 +128,6 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
-        let onDimensionsChanged =
-            ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-          GlobalContext.current().notifyEditorSizeChanged(
-            ~editorGroupId=editorGroup.editorGroupId,
-            ~width,
-            ~height,
-            (),
-          );
-        };
         let onScroll = deltaY => {
           let () =
             GlobalContext.current().editorScrollDelta(
@@ -203,8 +206,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             metrics
             editor
             buffer
-            onDimensionsChanged
             onCursorChange
+            onDimensionsChanged={_ => ()}
             onScroll
             theme
             rulers
@@ -263,7 +266,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     );
   };
 
-  <View onMouseDown style>
+  <View onMouseDown style onDimensionsChanged>
     <View style=absoluteStyle> children </View>
     <View style=overlayStyle />
   </View>;

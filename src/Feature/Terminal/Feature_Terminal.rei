@@ -28,6 +28,11 @@ type splitDirection =
 [@deriving show({with_path: false})]
 type msg =
   | NewTerminal({splitDirection})
+  | Resized({
+      id: int,
+      rows: int,
+      columns: int,
+    })
   | Service(Service_Terminal.msg);
 
 type outmsg =
