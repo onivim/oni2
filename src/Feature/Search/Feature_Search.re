@@ -8,18 +8,18 @@ open Oni_Components;
 type model = {
   queryInput: string,
   query: string,
-  selection: Oni_Components.Selection.t,
+  selection: Selection.t,
   hits: list(Ripgrep.Match.t),
 };
 
-let initial = {queryInput: "", query: "", selection: Oni_Components.Selection.initial, hits: []};
+let initial = {queryInput: "", query: "", selection: Selection.initial, hits: []};
 
 // UPDATE
 
 [@deriving show({with_path: false})]
 type msg =
   | Input(string)
-  | InputClicked(Oni_Components.Selection.t)
+  | InputClicked(Selection.t)
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete;
 
@@ -175,7 +175,7 @@ let make =
           value={model.queryInput}
           placeholder="Search"
           isFocused
-          onClick={pos => dispatch(InputClicked(Oni_Components.Selection.create(model.queryInput, ~anchor=pos, ~focus=pos)))}
+          onClick={selection => dispatch(InputClicked(selection))}
         />
       </View>
     </View>

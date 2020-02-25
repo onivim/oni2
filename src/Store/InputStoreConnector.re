@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Input;
+open Oni_Components;
 
 module Model = Oni_Model;
 module State = Model.State;
@@ -25,7 +26,7 @@ let conditionsOfState = (state: State.t) => {
     Hashtbl.add(ret, "listFocus", true);
     Hashtbl.add(ret, "inQuickOpen", true);
 
-    if (Selection.isCollapsed(selection) && selection.focus(selection) == String.length(query)) {
+    if (Selection.isCollapsed(selection) && Selection.focus(selection) == String.length(query)) {
       Hashtbl.add(ret, "quickmenuCursorEnd", true);
     };
 

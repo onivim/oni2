@@ -1,3 +1,4 @@
+[@deriving show({with_path: false})]
 type t = {
   anchor: int,
   focus: int
