@@ -529,7 +529,7 @@ module Pane = {
       return((provider, group));
     };
 
-    <View style=Styles.container>
+    <ScrollView style=Styles.container>
       <Input
         style={Styles.input(~font)}
         cursorColor=Colors.gray
@@ -551,6 +551,6 @@ module Pane = {
             />
           )
        |> React.listToElement}
-    </View>;
+    </ScrollView>;
   };
 };
