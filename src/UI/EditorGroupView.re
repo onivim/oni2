@@ -106,7 +106,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         state.configuration,
       );
     };
-    
+
   let onDimensionsChanged =
       ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
     // TODO: Handle show tabs
@@ -206,7 +206,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             editor
             buffer
             onCursorChange
-            onDimensionsChanged={(_) => ()}
+            onDimensionsChanged={_ => ()}
             onScroll
             theme
             rulers
