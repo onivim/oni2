@@ -61,15 +61,15 @@ module Sub = {
             executable: params.cmd,
             arguments: [],
           };
-  
+
         let isResizing = ref(false);
 
         let onEffect = eff =>
           switch (eff) {
           | ReveryTerminal.ScreenResized(screen) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
-            if (!isResizing^) {
-            dispatch(ScreenUpdated({id: params.id, screen}))
+            if (! isResizing^) {
+              dispatch(ScreenUpdated({id: params.id, screen}));
             }
           | ReveryTerminal.CursorMoved(cursor) =>
             dispatch(CursorMoved({id: params.id, cursor}))
@@ -128,7 +128,13 @@ module Sub = {
             }
           });
 
-        {dispose, isResizing, rows: params.rows, columns: params.columns, terminal};
+        {
+          dispose,
+          isResizing,
+          rows: params.rows,
+          columns: params.columns,
+          terminal,
+        };
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
@@ -141,8 +147,11 @@ module Sub = {
           );
 
           state.isResizing := true;
-          ReveryTerminal.resize(~rows=params.rows, ~columns=params.columns,
-          state.terminal);
+          ReveryTerminal.resize(
+            ~rows=params.rows,
+            ~columns=params.columns,
+            state.terminal,
+          );
           state.isResizing := false;
         };
 
@@ -174,34 +183,33 @@ module Sub = {
 };
 
 module Effect = {
-
   open Vterm;
 
-  let keyToVtermKey = [
-    ("<CR>", Enter),
-    ("<BS>", Backspace),
-    ("<TAB>", Tab),
-    ("<UP>", Up),
-    ("<LEFT>", Left),
-    ("<RIGHT>", Right),
-    ("<DOWN>", Right),
-  ]
-  |> List.to_seq
-  |> Hashtbl.of_seq;
+  let keyToVtermKey =
+    [
+      ("<CR>", Enter),
+      ("<BS>", Backspace),
+      ("<TAB>", Tab),
+      ("<UP>", Up),
+      ("<LEFT>", Left),
+      ("<RIGHT>", Right),
+      ("<DOWN>", Right),
+    ]
+    |> List.to_seq
+    |> Hashtbl.of_seq;
 
   let input = (~id, ~input, extHostClient) => {
     Isolinear.Effect.create(~name="terminal.input", () => {
       switch (Hashtbl.find_opt(Internal.idToTerminal, id)) {
       | Some(terminal) =>
-
         if (String.length(input) == 1) {
           let key = input.[0] |> Char.code |> Uchar.of_int;
-          ReveryTerminal.input(~key=Unicode(key), terminal); 
+          ReveryTerminal.input(~key=Unicode(key), terminal);
         } else {
-            switch (Hashtbl.find_opt(keyToVtermKey, input)) {
-            | Some(key) => ReveryTerminal.input(~key, terminal)
-            | None => ();
-            }
+          switch (Hashtbl.find_opt(keyToVtermKey, input)) {
+          | Some(key) => ReveryTerminal.input(~key, terminal)
+          | None => ()
+          };
         }
       | None => ()
       }
