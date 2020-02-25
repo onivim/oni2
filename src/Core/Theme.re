@@ -116,6 +116,23 @@ type t = {
   sneakBackground: Color.t,
   sneakForeground: Color.t,
   sneakHighlight: Color.t,
+  terminalBackground: Color.t,
+  terminalForeground: Color.t,
+  terminalAnsiBlack: Color.t,
+  terminalAnsiRed: Color.t,
+  terminalAnsiGreen: Color.t,
+  terminalAnsiYellow: Color.t,
+  terminalAnsiBlue: Color.t,
+  terminalAnsiMagenta: Color.t,
+  terminalAnsiCyan: Color.t,
+  terminalAnsiWhite: Color.t,
+  terminalAnsiBrightBlack: Color.t,
+  terminalAnsiBrightRed: Color.t,
+  terminalAnsiBrightGreen: Color.t,
+  terminalAnsiBrightYellow: Color.t,
+  terminalAnsiBrightBlue: Color.t,
+  terminalAnsiBrightMagenta: Color.t,
+  terminalAnsiBrightWhite: Color.t,
   titleBarActiveBackground: Color.t,
   titleBarActiveForeground: Color.t,
   titleBarInactiveBackground: Color.t,
@@ -192,6 +209,23 @@ let default: t = {
   sneakBackground: Colors.red,
   sneakForeground: Colors.white,
   sneakHighlight: Colors.white,
+  terminalBackground: Color.rgb(0, 0, 0),
+  terminalForeground: Color.rgb(233, 235, 235),
+  terminalAnsiBlack: Color.rgb(0, 0, 0),
+  terminalAnsiRed: Color.rgb(194, 54, 33),
+  terminalAnsiGreen: Color.rgb(37, 188, 36),
+  terminalAnsiYellow: Color.rgb(173, 173, 39),
+  terminalAnsiBlue: Color.rgb(73,46, 225),
+  terminalAnsiMagenta: Color.rgb(211, 56, 211),
+  terminalAnsiCyan: Color.rgb(51, 197, 200),
+  terminalAnsiWhite: Color.rgb(203, 204, 205),
+  terminalAnsiBrightBlack: Color.rgb(129, 131, 131),
+  terminalAnsiBrightRed: Color.rgb(252, 57, 31),
+  terminalAnsiBrightGreen: Color.rgb(49, 231, 34),
+  terminalAnsiBrightYellow: Color.rgb(234, 236, 35),
+  terminalAnsiBrightBlue: Color.rgb(88, 51, 255),
+  terminalAnsiBrightMagenta: Color.rgb(20, 240, 240),
+  terminalAnsiBrightWhite: Color.rgb(233, 235, 235),
   titleBarActiveBackground: Color.hex("#282C35"),
   titleBarActiveForeground: Color.hex("#ECEFF4"),
   titleBarInactiveBackground: Color.hex("#282C35"),
@@ -205,12 +239,18 @@ let default: t = {
 let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   open Textmate.ColorTheme;
   let defaults = getDefaults(uiTheme);
-  let defaultBackground = defaults.editorBackground;
-  let defaultForeground = defaults.editorForeground;
+  let defaultBackground = defaults.editorBackground |> Color.hex;
+  let defaultForeground = defaults.editorForeground |> Color.hex;
 
+  let emptyString = "";
   let getColor = (default, items) => {
-    let colorString = getFirstOrDefault(~default, items, ct);
-    Color.hex(colorString);
+    let colorString = getFirstOrDefault(~default=emptyString, items, ct);
+
+    if (colorString != emptyString) {
+      Color.hex(colorString); 
+    } else {
+      default
+    }
   };
 
   let background =
