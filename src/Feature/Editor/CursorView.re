@@ -26,16 +26,17 @@ let render =
   let x = float(offset) *. context.charWidth;
   let y = float(line) *. context.lineHeight +. 0.5;
   let height = context.lineHeight;
-  let color = Revery.Colors.white;
+  let background = theme.editorCursorBackground;
+  let foreground = theme.editorCursorForeground;
 
   switch (mode, isActiveSplit) {
   | (Insert, true) =>
     let width = 2.;
-    Draw.rect(~context, ~x, ~y, ~width, ~height, ~color);
+    Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
 
   | _ =>
     let width = float(characterWidth) *. context.charWidth;
-    Draw.rect(~context, ~x, ~y, ~width, ~height, ~color);
+    Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
 
     switch (BufferLine.subExn(~index=offset, ~length=1, bufferLine)) {
     | text =>
@@ -43,7 +44,7 @@ let render =
         ~context,
         ~x=x -. 0.5,
         ~y=y -. context.fontMetrics.ascent -. 0.5,
-        ~color=theme.editorBackground,
+        ~color=background,
         text,
       )
     | exception _ => ()

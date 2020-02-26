@@ -57,6 +57,8 @@ type t = {
   activityBarForeground: Color.t,
   editorBackground: Color.t,
   editorForeground: Color.t,
+  editorCursorBackground: Color.t,
+  editorCursorForeground: Color.t,
   editorHoverWidgetBackground: Color.t,
   editorHoverWidgetBorder: Color.t,
   editorLineHighlightBackground: Color.t,
@@ -135,6 +137,8 @@ let default: t = {
   activityBarForeground: Color.hex("#DCDCDC"),
   editorBackground: Color.hex("#2F3440"),
   editorForeground: Color.hex("#DCDCDC"),
+  editorCursorBackground: Color.hex("#2F3440"),
+  editorCursorForeground: Color.hex("#DCDCDC"),
   editorFindMatchBackground: Color.hex("#42557b"),
   editorFindMatchBorder: Color.hex("#457dff"),
   editorFindMatchHighlightBackground: Color.hex("#314365"),
@@ -222,6 +226,17 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     getColor(defaultBackground, ["editor.background", "background"]);
   let editorForeground =
     getColor(defaultForeground, ["editor.foreground", "foreground"]);
+
+  let editorCursorBackground =
+    getColor(
+      defaultBackground,
+      ["editorCursor.background", "editor.background", "background"],
+    );
+  let editorCursorForeground =
+    getColor(
+      defaultForeground,
+      ["editorCursor.foreground", "editor.foreground", "foreground"],
+    );
 
   let editorHoverWidgetBackground =
     getColor(
@@ -439,6 +454,8 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     activityBarForeground,
     editorBackground,
     editorForeground,
+    editorCursorBackground,
+    editorCursorForeground,
     editorHoverWidgetBackground,
     editorHoverWidgetBorder,
     editorIndentGuideBackground,
