@@ -28,15 +28,15 @@ let simpleState = {
 let simpleState =
   Reducer.reduce(
     simpleState,
-    Actions.Font(Service_Font.FontLoaded(
-        {
+    Actions.Font(
+      Service_Font.FontLoaded({
         fontFile:
-         Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
-        fontSize:10.,
-        measuredWidth:10.,
-        measuredHeight:10.,
-        descenderHeight:1.,
-        smoothing:Revery.Font.Smoothing.default,
+          Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+        fontSize: 10.,
+        measuredWidth: 10.,
+        measuredHeight: 10.,
+        descenderHeight: 1.,
+        smoothing: Revery.Font.Smoothing.default,
       }),
     ),
   );
