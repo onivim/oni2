@@ -4,6 +4,8 @@ open Oni_Extensions;
 module Internal = {
   let onExtensionMessage: Revery.Event.t(ExtHostClient.Terminal.msg) =
     Revery.Event.create();
+
+  let idToTerminal: Hashtbl.t(int, ReveryTerminal.t) = Hashtbl.create(8);
 };
 
 [@deriving show({with_path: false})]
@@ -42,6 +44,7 @@ module Sub = {
         columns: int,
         dispose: unit => unit,
         terminal: ReveryTerminal.t,
+        isResizing: ref(bool),
       };
 
       type nonrec msg = msg;
@@ -59,15 +62,25 @@ module Sub = {
             arguments: [],
           };
 
+        let isResizing = ref(false);
+
         let onEffect = eff =>
           switch (eff) {
-          | ReveryTerminal.ScreenResized(screen)
+          | ReveryTerminal.ScreenResized(_) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
-            dispatch(ScreenUpdated({id: params.id, screen}))
+            if (! isResizing^) {
+              dispatch(ScreenUpdated({id: params.id, screen}));
+            }
           | ReveryTerminal.CursorMoved(cursor) =>
             dispatch(CursorMoved({id: params.id, cursor}))
-          // TODO: Handle output
-          | _ => ()
+          | ReveryTerminal.Output(output) =>
+            ExtHostClient.Terminal.Requests.acceptProcessInput(
+              params.id,
+              output,
+              params.extHostClient,
+            )
+          // TODO: Handle term prop changes
+          | ReveryTerminal.TermPropChanged(_) => ()
           };
 
         let terminal =
@@ -76,6 +89,8 @@ module Sub = {
             ~columns=params.columns,
             ~onEffect,
           );
+
+        Hashtbl.replace(Internal.idToTerminal, params.id, terminal);
 
         let dispatchIfMatches = (id, msg) =>
           if (id == params.id) {
@@ -113,7 +128,13 @@ module Sub = {
             }
           });
 
-        {dispose, rows: params.rows, columns: params.columns, terminal};
+        {
+          dispose,
+          isResizing,
+          rows: params.rows,
+          columns: params.columns,
+          terminal,
+        };
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
@@ -124,6 +145,14 @@ module Sub = {
             params.rows,
             params.extHostClient,
           );
+
+          state.isResizing := true;
+          ReveryTerminal.resize(
+            ~rows=params.rows,
+            ~columns=params.columns,
+            state.terminal,
+          );
+          state.isResizing := false;
         };
 
         {...state, rows: params.rows, columns: params.columns};
@@ -137,6 +166,7 @@ module Sub = {
             params.extHostClient,
           );
 
+        Hashtbl.remove(Internal.idToTerminal, params.id);
         state.dispose();
       };
     });
@@ -153,7 +183,38 @@ module Sub = {
 };
 
 module Effect = {
-  let input = (~id as _, ~input as _, _extHostClient) => Isolinear.Effect.none;
+  open Vterm;
+
+  let keyToVtermKey =
+    [
+      ("<CR>", Enter),
+      ("<BS>", Backspace),
+      ("<TAB>", Tab),
+      ("<UP>", Up),
+      ("<LEFT>", Left),
+      ("<RIGHT>", Right),
+      ("<DOWN>", Right),
+    ]
+    |> List.to_seq
+    |> Hashtbl.of_seq;
+
+  let input = (~id, input) => {
+    Isolinear.Effect.create(~name="terminal.input", () => {
+      switch (Hashtbl.find_opt(Internal.idToTerminal, id)) {
+      | Some(terminal) =>
+        if (String.length(input) == 1) {
+          let key = input.[0] |> Char.code |> Uchar.of_int;
+          ReveryTerminal.input(~key=Unicode(key), terminal);
+        } else {
+          switch (Hashtbl.find_opt(keyToVtermKey, input)) {
+          | Some(key) => ReveryTerminal.input(~key, terminal)
+          | None => ()
+          };
+        }
+      | None => ()
+      }
+    });
+  };
 };
 
 let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {

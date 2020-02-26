@@ -41,10 +41,15 @@ type msg =
       rows: int,
       columns: int,
     })
+  | KeyPressed({
+      id: int,
+      key: string,
+    })
   | Service(Service_Terminal.msg);
 
 type outmsg =
   | Nothing
+  | Effect(Isolinear.Effect.t(msg))
   | TerminalCreated({
       name: string,
       splitDirection,
@@ -52,12 +57,24 @@ type outmsg =
 
 let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
 
+let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
+
+let shouldHandleInput = str => {
+  !
+    List.exists(s => str == s, inputToIgnore);
+    // pick what keys should be ignored by the terminal.
+    // One option would be a configuration setting that lets us
+    // better, more customizable way to manage this, though.
+    // the user can get out of the terminal. We should have a
+    // HACK: Let the window motion keys pass through, so that
+};
+
 let updateById = (id, f, model) => {
   let idToTerminal = IntMap.update(id, Option.map(f), model.idToTerminal);
   {...model, idToTerminal};
 };
 
-let update = (_extHostClient, model: t, msg) => {
+let update = (model: t, msg) => {
   switch (msg) {
   | NewTerminal({splitDirection}) =>
     let cmd = shellCmd;
@@ -68,7 +85,7 @@ let update = (_extHostClient, model: t, msg) => {
         {
           id,
           cmd,
-          rows: 80,
+          rows: 40,
           columns: 40,
           pid: None,
           title: None,
@@ -81,6 +98,12 @@ let update = (_extHostClient, model: t, msg) => {
       {idToTerminal, nextId: id + 1},
       TerminalCreated({name: getBufferName(id), splitDirection}),
     );
+  | KeyPressed({id, key}) =>
+    let inputEffect =
+      Service_Terminal.Effect.input(~id, key)
+      |> Isolinear.Effect.map(msg => Service(msg));
+
+    (model, Effect(inputEffect));
   | Resized({id, rows, columns}) =>
     let newModel = updateById(id, term => {...term, rows, columns}, model);
     (newModel, Nothing);

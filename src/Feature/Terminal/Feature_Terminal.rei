@@ -33,16 +33,23 @@ type msg =
       rows: int,
       columns: int,
     })
+  | KeyPressed({
+      id: int,
+      key: string,
+    })
   | Service(Service_Terminal.msg);
 
 type outmsg =
   | Nothing
+  | Effect(Isolinear.Effect.t(msg))
   | TerminalCreated({
       name: string,
       splitDirection,
     });
 
-let update: (ExtHostClient.t, t, msg) => (t, outmsg);
+let shouldHandleInput: string => bool;
+
+let update: (t, msg) => (t, outmsg);
 
 let subscription:
   (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);

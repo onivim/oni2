@@ -18,7 +18,13 @@ type item = {
 let getFontAdvance = (fontFile, fontSize) => {
   let dimensions =
     switch (Revery.Font.load(fontFile)) {
-    | Ok(font) => Revery.Font.FontRenderer.measure(font, fontSize, "x")
+    | Ok(font) =>
+      Revery.Font.FontRenderer.measure(
+        ~smoothing=Revery.Font.Smoothing.default,
+        font,
+        fontSize,
+        "x",
+      )
     | Error(_) => {width: 0., height: 0.}
     };
   dimensions;
@@ -82,6 +88,7 @@ let item =
 
   let locationWidth = {
     Revery.Draw.Text.measure(
+      ~smoothing=Revery.Font.Smoothing.default,
       ~fontSize=uiFont.fontSize,
       ~fontFamily=uiFont.fontFile,
       locationText,
