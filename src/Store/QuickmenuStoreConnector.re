@@ -19,8 +19,6 @@ let prefixFor: Vim.Types.cmdlineType => string =
   | _ => ":";
 
 let start = (themeInfo: ThemeInfo.t) => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
-
   let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
@@ -155,7 +153,12 @@ let start = (themeInfo: ThemeInfo.t) => {
             let (text, selection) =
               InputModel.handleInput(~text=query, ~selection, key);
 
-            Quickmenu.{...state, query: text, selection};
+            Quickmenu.{
+              ...state,
+              query: text,
+              selection,
+              focused: Some(0),
+            };
           },
           state,
         ),
@@ -294,7 +297,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     ({...state, quickmenu: menuState}, menuEffect);
   };
 
-  (updater, stream);
+  updater;
 };
 
 module QuickmenuFilterSubscription =

@@ -520,41 +520,6 @@ module IncomingNotifications = {
       };
     };
   };
-
-  module SCM = {
-    let parseResource =
-      fun
-      | `List([
-          `Int(handle),
-          uri,
-          `List(icons),
-          `String(tooltip),
-          `Bool(strikeThrough),
-          `Bool(faded),
-          source,
-          letter,
-          color,
-        ]) =>
-        SCMResource.{
-          handle,
-          uri: Uri.of_yojson(uri) |> Stdlib.Result.get_ok,
-          icons:
-            List.filter_map(
-              fun
-              | `String(icon) => Some(icon)
-              | _ => None,
-              icons,
-            ),
-          tooltip,
-          strikeThrough,
-          faded,
-          source: source |> Yojson.Safe.Util.to_string_option,
-          letter: letter |> Yojson.Safe.Util.to_string_option,
-          color: Yojson.Safe.Util.(color |> member("id") |> to_string_option),
-        }
-
-      | _ => failwith("Unexpected json for scm resource");
-  };
 };
 
 module OutgoingNotifications = {
@@ -563,11 +528,11 @@ module OutgoingNotifications = {
   };
 
   module Commands = {
-    let executeContributedCommand = cmd => {
+    let executeContributedCommand = (cmd, arguments) => {
       _buildNotification(
         "ExtHostCommands",
         "$executeContributedCommand",
-        `List([`String(cmd)]),
+        `List([`String(cmd), ...arguments]),
       );
     };
   };
@@ -726,15 +691,6 @@ module OutgoingNotifications = {
       _buildNotification(
         "ExtHostLanguageFeatures",
         "$provideDocumentSymbols",
-        `List([`Int(handle), Uri.to_yojson(resource)]),
-      );
-  };
-
-  module SCM = {
-    let provideOriginalResource = (handle: int, resource: Uri.t) =>
-      _buildNotification(
-        "ExtHostSCM",
-        "$provideOriginalResource",
         `List([`Int(handle), Uri.to_yojson(resource)]),
       );
   };

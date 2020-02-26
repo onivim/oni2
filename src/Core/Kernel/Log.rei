@@ -18,3 +18,4 @@ let withNamespace: string => (module Logger);
 
 let enableDebug: unit => unit;
 let enableTrace: unit => unit;
+let enableQuiet: unit => unit;

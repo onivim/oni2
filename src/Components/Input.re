@@ -104,8 +104,8 @@ let%component make =
                 ~onClick,
                 (),
               ) => {
-  let%hook (textRef, setTextRef) = Hooks.ref(None);
-  let%hook (scrollOffset, _setScrollOffset) = Hooks.state(ref(0));
+  let%hook textRef = Hooks.ref(None);
+  let%hook scrollOffset = Hooks.ref(0);
 
   let displayValue = prefix ++ value;
   let showPlaceholder = displayValue == "";
@@ -168,6 +168,7 @@ let%component make =
   let measureTextWidth = text => {
     let dimensions =
       Revery_Draw.Text.measure(
+        ~smoothing=Revery.Font.Smoothing.default,
         ~fontFamily=Styles.fontFamily,
         ~fontSize=Styles.fontSize,
         text,
@@ -193,7 +194,7 @@ let%component make =
       measureTextWidth(String.sub(displayValue, 0, Selection.focus(selection)))
       |> int_of_float;
 
-    switch (Option.bind(textRef, r => r#getParent())) {
+    switch (Option.bind(textRef^, r => r#getParent())) {
     | Some(containerNode) =>
       let container: Dimensions.t = containerNode#measurements();
 
@@ -237,7 +238,7 @@ let%component make =
       loop(1, 0);
     };
 
-    switch (textRef) {
+    switch (textRef^) {
     | Some(node) =>
       let offset =
         int_of_float(event.mouseX) - offsetLeft(node) + scrollOffset^;
@@ -301,7 +302,7 @@ let%component make =
 
   let text = () =>
     <Text
-      ref={node => setTextRef(Some(node))}
+      ref={node => textRef := Some(node)}
       text={showPlaceholder ? placeholder : displayValue}
       style=Styles.text
     />;

@@ -13,7 +13,8 @@
 [@deriving show({with_path: false})]
 type t =
   | Editor
-  | Welcome;
+  | Welcome
+  | Terminal({id: int});
 
 [@deriving show({with_path: false})]
 type action =

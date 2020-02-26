@@ -26,8 +26,20 @@ let loadAndValidateEditorFont =
   switch (fontResult) {
   | Error(msg) => onError(msg)
   | Ok(font) =>
-    let character1 = Revery.Font.FontRenderer.measure(font, fontSize, "H");
-    let character2 = Revery.Font.FontRenderer.measure(font, fontSize, "i");
+    let character1 =
+      Revery.Font.FontRenderer.measure(
+        ~smoothing=Revery.Font.Smoothing.default,
+        font,
+        fontSize,
+        "H",
+      );
+    let character2 =
+      Revery.Font.FontRenderer.measure(
+        ~smoothing=Revery.Font.Smoothing.default,
+        font,
+        fontSize,
+        "i",
+      );
 
     if (!Float.equal(character1.width, character2.width)) {
       onError("Not a monospace font");
@@ -156,7 +168,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (state, loadEditorFontEffect(None, defaultFontSize))
+    | Actions.Init(_) => (state, loadEditorFontEffect(None, defaultFontSize))
     | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
     | Actions.LoadEditorFont(fontFamily, fontSize) => (
         state,

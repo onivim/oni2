@@ -28,6 +28,7 @@ let spec =
     ),
     ("--debug", passthrough, " Enable debug logging."),
     ("--trace", passthrough, " Enable trace logging."),
+    ("--quiet", passthrough, " Print only error log messages."),
     ("--log-file", passthroughString, " Specify a file for the output logs."),
     ("--log-filter", passthroughString, " Filter log output."),
     (

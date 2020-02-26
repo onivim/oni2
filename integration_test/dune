@@ -28,6 +28,7 @@
            SyntaxHighlightTextMateTest
            SyntaxHighlightTreesitterTest
            AddRemoveSplitTest
+           TerminalSetPidTitleTest
            TypingBatchedTest
            TypingUnbatchedTest
            VimlConfigurationTest
@@ -37,6 +38,7 @@
     (libraries
         libvim
         Oni_IntegrationTestLib
+        reason-native-crash-utils.asan
             ))
 
 (install
@@ -72,6 +74,7 @@
         SearchShowClearHighlightsTest.exe
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
+        TerminalSetPidTitleTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe

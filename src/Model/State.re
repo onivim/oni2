@@ -9,7 +9,6 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
-module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
@@ -17,21 +16,28 @@ module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
+module ContextMenu = {
+  type t =
+    | NotificationStatusBarItem
+    | Nothing;
+};
+
 type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
-  contextMenu: option(ContextMenu.t(Actions.t)),
+  contextMenu: ContextMenu.t,
   mode: Vim.Mode.t,
   completions: Completions.t,
+  configuration: Configuration.t,
+  decorationProviders: list(DecorationProvider.t),
   diagnostics: Diagnostics.t,
   definition: Definition.t,
   editorFont: EditorFont.t,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
-  configuration: Configuration.t,
   sideBar: SideBar.t,
   // Theme is the UI shell theming
   theme: Theme.t,
@@ -47,9 +53,12 @@ type t = {
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
   references: References.t,
-  scm: SCM.t,
+  scm: Feature_SCM.model,
   sneak: Sneak.t,
   statusBar: StatusBarModel.t,
+  syntaxHighlightingEnabled: bool,
+  syntaxClient: option(Oni_Syntax_Client.t),
+  terminals: Feature_Terminal.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
@@ -76,9 +85,10 @@ let create: unit => t =
     bufferRenderers: BufferRenderers.initial,
     bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
-    contextMenu: None,
+    contextMenu: ContextMenu.Nothing,
     completions: Completions.initial,
     configuration: Configuration.default,
+    decorationProviders: [],
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
     mode: Normal,
@@ -106,9 +116,11 @@ let create: unit => t =
     languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.initial,
     references: References.initial,
-    scm: SCM.initial,
+    scm: Feature_SCM.initial,
     sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),
+    syntaxHighlightingEnabled: false,
+    syntaxClient: None,
     windowManager: WindowManager.create(),
     windowTitle: "",
     windowIsFocused: true,
@@ -121,5 +133,6 @@ let create: unit => t =
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
+    terminals: Feature_Terminal.initial,
     textContentProviders: [],
   };

@@ -9,38 +9,13 @@ module Constants = {
   // let maxMenuHeight = 600;
 };
 
-// TYPES
-
-module Id: {
-  type t;
-  let create: unit => t;
-} = {
-  type t = int;
-
-  let lastId = ref(0);
-  let create = () => {
-    incr(lastId);
-    lastId^;
-  };
-};
+// MODEL
 
 [@deriving show({with_path: false})]
 type item('data) = {
   label: string,
   // icon: option(IconTheme.IconDefinition.t),
   data: [@opaque] 'data,
-};
-
-type placement = {
-  x: int,
-  y: int,
-  orientation: ([ | `Top | `Middle | `Bottom], [ | `Left | `Middle | `Right]),
-};
-
-type t('data) = {
-  id: Id.t,
-  placement: option(placement),
-  items: list(item('data)),
 };
 
 // MENUITEM
@@ -150,10 +125,10 @@ module Menu = {
   };
 
   let component = React.Expert.component("Menu");
-  let make = (~items, ~placement, ~theme, ~font, ~onItemSelect, ()) =>
+  let make = (~items, ~x, ~y, ~orientation, ~theme, ~font, ~onItemSelect, ()) =>
     component(hooks => {
       let ((maybeRef, setRef), hooks) = Hooks.state(None, hooks);
-      let {x, y, orientation: (orientY, orientX)} = placement;
+      let (orientY, orientX) = orientation;
 
       let height =
         switch (maybeRef) {
@@ -195,6 +170,11 @@ module Menu = {
 // OVERLAY
 
 module Overlay = {
+  let internalSetMenus = ref(_ => ());
+
+  let setMenu = (id, menu) => internalSetMenus^(IntMap.add(id, menu));
+  let clearMenu = id => internalSetMenus^(IntMap.remove(id));
+
   module Styles = {
     open Style;
 
@@ -209,64 +189,79 @@ module Overlay = {
     ];
   };
 
-  let make = (~model, ~theme, ~font, ~onOverlayClick, ~onItemSelect, ()) =>
-    switch (model) {
-    | {items, placement: Some(placement), _} =>
-      <Clickable onClick=onOverlayClick style=Styles.overlay>
-        <Menu items placement theme font onItemSelect />
-      </Clickable>
-    | _ => React.empty
+  let%component make = (~onClick, ()) => {
+    let%hook (menus, setMenus) = Hooks.state(IntMap.empty);
+    internalSetMenus := setMenus;
+
+    if (IntMap.is_empty(menus)) {
+      React.empty;
+    } else {
+      <Clickable onClick style=Styles.overlay>
+        {IntMap.bindings(menus) |> List.map(snd) |> React.listToElement}
+      </Clickable>;
     };
-};
-
-module Make = (()) => {
-  let id = Id.create();
-
-  let init = items => {id, placement: None, items};
-
-  module Anchor = {
-    let component = React.Expert.component("Anchor");
-    let make =
-        (
-          ~model as maybeModel,
-          ~orientation=(`Bottom, `Left),
-          ~offsetX=0,
-          ~offsetY=0,
-          ~onUpdate,
-          (),
-        ) =>
-      component(hooks => {
-        let ((maybeRef, setRef), hooks) = Hooks.ref(None, hooks);
-
-        switch (maybeModel, maybeRef) {
-        | (Some(model), Some(node)) =>
-          if (model.id == id) {
-            let (x, y, width, _) =
-              Math.BoundingBox2d.getBounds(node#getBoundingBox());
-
-            let x =
-              switch (orientation) {
-              | (_, `Left) => x
-              | (_, `Middle) => x -. width /. 2.
-              | (_, `Right) => x -. width
-              };
-
-            let placement =
-              Some({
-                x: int_of_float(x) + offsetX,
-                y: int_of_float(y) + offsetY,
-                orientation,
-              });
-
-            if (model.placement != placement) {
-              onUpdate({...model, placement});
-            };
-          }
-
-        | _ => ()
-        };
-
-        (<View ref={node => setRef(Some(node))} />, hooks);
-      });
   };
 };
+
+// ANCHOR
+
+module Anchor = {
+  let generateId = {
+    let lastId = ref(0);
+
+    () => {
+      incr(lastId);
+      lastId^;
+    };
+  };
+
+  let component = React.Expert.component("Anchor");
+  let make =
+      (
+        ~items,
+        ~orientation=(`Bottom, `Left),
+        ~offsetX=0,
+        ~offsetY=0,
+        ~onItemSelect,
+        ~theme,
+        ~font,
+        (),
+      ) =>
+    component(hooks => {
+      let ((id, _), hooks) = Hooks.state(generateId(), hooks);
+      let ((maybeRef, setRef), hooks) = Hooks.state(None, hooks);
+      let ((), hooks) =
+        Hooks.effect(
+          OnMount,
+          () => Some(() => Overlay.clearMenu(id)),
+          hooks,
+        );
+
+      switch (maybeRef) {
+      | Some(node) =>
+        let (x, y, width, _) =
+          Math.BoundingBox2d.getBounds(node#getBoundingBox());
+
+        let x =
+          switch (orientation) {
+          | (_, `Left) => x
+          | (_, `Middle) => x -. width /. 2.
+          | (_, `Right) => x -. width
+          };
+
+        let x = int_of_float(x) + offsetX;
+        let y = int_of_float(y) + offsetY;
+
+        Overlay.setMenu(
+          id,
+          <Menu items x y orientation theme font onItemSelect />,
+        );
+
+      | None => ()
+      };
+
+      (<View ref={node => setRef(_ => Some(node))} />, hooks);
+    });
+};
+
+include Anchor;

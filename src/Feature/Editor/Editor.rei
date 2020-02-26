@@ -41,4 +41,3 @@ let getHorizontalScrollbarMetrics:
 let pixelPositionToLineColumn:
   (t, EditorMetrics.t, float, float) => (int, int);
 let getVimCursors: t => list(Vim.Cursor.t);
-let getLinesAndColumns: (t, EditorMetrics.t) => (int, int);

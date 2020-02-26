@@ -18,6 +18,7 @@ let reduce = (state: BufferRenderers.t, action) => {
           | _ => Welcome
           }
         | Editor => Editor
+        | Terminal(_) as term => term
         }
       );
     };
