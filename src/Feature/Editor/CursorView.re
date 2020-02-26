@@ -1,18 +1,16 @@
 open EditorCoreTypes;
-open Revery;
-open Revery.UI;
 
 open Oni_Core;
 
-let make =
+let render =
     (
+      ~context,
       ~buffer,
       ~mode: Vim.Mode.t,
       ~isActiveSplit,
       ~editorFont: EditorFont.t,
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
-      (),
     ) => {
   let cursorLine = Index.toZeroBased(cursorPosition.line);
   let lineCount = Buffer.getNumberOfLines(buffer);
@@ -31,38 +29,28 @@ let make =
       (0, 1);
     };
 
-  let fullCursorWidth =
-    cursorCharacterWidth * int_of_float(editorFont.measuredWidth);
+  let x =
+    editorFont.measuredWidth *. float(cursorOffset) -. editor.scrollX +. 0.5;
 
-  let cursorWidth =
+  let y =
+    editorFont.measuredHeight
+    *. float(Index.toZeroBased(cursorPosition.line))
+    -. editor.scrollY
+    +. 0.5;
+
+  let fullCursorWidth =
+    float(cursorCharacterWidth) *. editorFont.measuredWidth;
+
+  let width =
     switch (mode, isActiveSplit) {
-    | (Insert, true) => 2
+    | (Insert, true) => 2.
     | _ => fullCursorWidth
     };
 
-  let cursorPixelY =
-    int_of_float(
-      editorFont.measuredHeight
-      *. float(Index.toZeroBased(cursorPosition.line))
-      -. editor.scrollY
-      +. 0.5,
-    );
+  let height = editorFont.measuredHeight;
 
-  let cursorPixelX =
-    int_of_float(
-      editorFont.measuredWidth *. float(cursorOffset) -. editor.scrollX +. 0.5,
-    );
+  let opacity = isActiveSplit ? 0.5 : 0.25;
+  let color = Revery.Color.multiplyAlpha(opacity, Revery.Colors.white);
 
-  let style =
-    Style.[
-      position(`Absolute),
-      top(cursorPixelY),
-      left(cursorPixelX),
-      height(int_of_float(editorFont.measuredHeight)),
-      width(cursorWidth),
-      backgroundColor(Colors.white),
-    ];
-  let cursorOpacity = isActiveSplit ? 0.5 : 0.25;
-
-  <Opacity opacity=cursorOpacity> <View style /> </Opacity>;
+  Draw.rect(~context, ~x, ~y, ~width, ~height, ~color);
 };

@@ -177,9 +177,18 @@ let%component make =
             indentation,
           );
         };
+
+        CursorView.render(
+          ~context,
+          ~buffer,
+          ~mode,
+          ~isActiveSplit,
+          ~cursorPosition,
+          ~editor,
+          ~editorFont,
+        );
       }}
     />
-    <CursorView buffer mode isActiveSplit cursorPosition editor editorFont />
     <View style=Styles.horizontalScrollBar>
       <EditorHorizontalScrollbar
         editor
