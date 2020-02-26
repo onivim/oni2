@@ -235,7 +235,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           state.terminals
           |> Feature_Terminal.getTerminalOpt(id)
           |> Option.map(terminal => {
-               <TerminalView editorFont={state.editorFont} metrics terminal />
+               <TerminalView theme editorFont={state.editorFont} metrics terminal />
              })
           |> Option.value(~default=React.empty)
         };
