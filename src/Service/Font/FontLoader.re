@@ -6,7 +6,7 @@
 
 open Oni_Core;
 
-module Log = (val Log.withNamespace("Oni2.Sservice.FontLoader"));
+module Log = (val Log.withNamespace("Oni2.Service.FontLoader"));
 
 [@deriving show({with_path: false})]
 type t = {
