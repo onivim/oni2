@@ -49,7 +49,7 @@ type outmsg =
 
 let shouldHandleInput: string => bool;
 
-let update: (ExtHostClient.t, t, msg) => (t, outmsg);
+let update: (t, msg) => (t, outmsg);
 
 let subscription:
   (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);

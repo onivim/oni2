@@ -33,9 +33,6 @@ module Sub: {
     Isolinear.Sub.t(msg);
 };
 
-module Effect: {
-  let input:
-    (~id: int, ~input: string, ExtHostClient.t) => Isolinear.Effect.t(msg);
-};
+module Effect: {let input: (~id: int, string) => Isolinear.Effect.t(msg);};
 
 let handleExtensionMessage: ExtHostClient.Terminal.msg => unit;

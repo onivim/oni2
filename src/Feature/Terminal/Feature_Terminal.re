@@ -57,22 +57,16 @@ type outmsg =
 
 let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
 
-let inputToIgnore = [
-  "<C-w>",
-  "<C-h>",
-  "<C-j>",
-  "<C-k>",
-  "<C-l>",
-];
+let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
 
 let shouldHandleInput = str => {
-  // HACK: Let the window motion keys pass through, so that 
-  // the user can get out of the terminal. We should have a
-  // better, more customizable way to manage this, though.
-
-  // One option would be a configuration setting that lets us
-  // pick what keys should be ignored by the terminal.
-  !List.exists((s) => str == s, inputToIgnore);
+  !
+    List.exists(s => str == s, inputToIgnore);
+    // pick what keys should be ignored by the terminal.
+    // One option would be a configuration setting that lets us
+    // better, more customizable way to manage this, though.
+    // the user can get out of the terminal. We should have a
+    // HACK: Let the window motion keys pass through, so that
 };
 
 let updateById = (id, f, model) => {
@@ -80,7 +74,7 @@ let updateById = (id, f, model) => {
   {...model, idToTerminal};
 };
 
-let update = (extHostClient, model: t, msg) => {
+let update = (model: t, msg) => {
   switch (msg) {
   | NewTerminal({splitDirection}) =>
     let cmd = shellCmd;
@@ -106,7 +100,7 @@ let update = (extHostClient, model: t, msg) => {
     );
   | KeyPressed({id, key}) =>
     let inputEffect =
-      Service_Terminal.Effect.input(~id, ~input=key, extHostClient)
+      Service_Terminal.Effect.input(~id, key)
       |> Isolinear.Effect.map(msg => Service(msg));
 
     (model, Effect(inputEffect));

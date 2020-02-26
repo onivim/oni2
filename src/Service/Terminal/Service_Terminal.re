@@ -66,7 +66,7 @@ module Sub = {
 
         let onEffect = eff =>
           switch (eff) {
-          | ReveryTerminal.ScreenResized(screen) => ()
+          | ReveryTerminal.ScreenResized(_) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
             if (! isResizing^) {
               dispatch(ScreenUpdated({id: params.id, screen}));
@@ -198,7 +198,7 @@ module Effect = {
     |> List.to_seq
     |> Hashtbl.of_seq;
 
-  let input = (~id, ~input, extHostClient) => {
+  let input = (~id, input) => {
     Isolinear.Effect.create(~name="terminal.input", () => {
       switch (Hashtbl.find_opt(Internal.idToTerminal, id)) {
       | Some(terminal) =>

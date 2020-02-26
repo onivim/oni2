@@ -34,8 +34,7 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
   | Terminal(msg) =>
-    let (model, eff) =
-      Feature_Terminal.update(extHostClient, state.terminals, msg);
+    let (model, eff) = Feature_Terminal.update(state.terminals, msg);
 
     let effect: Isolinear.Effect.t(Actions.t) =
       switch ((eff: Feature_Terminal.outmsg)) {
