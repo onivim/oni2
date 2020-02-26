@@ -184,8 +184,7 @@ let%component make =
           ~mode,
           ~isActiveSplit,
           ~cursorPosition,
-          ~editor,
-          ~editorFont,
+          ~theme,
         );
       }}
     />

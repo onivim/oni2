@@ -4,53 +4,49 @@ open Oni_Core;
 
 let render =
     (
-      ~context,
+      ~context: Draw.context,
       ~buffer,
       ~mode: Vim.Mode.t,
       ~isActiveSplit,
-      ~editorFont: EditorFont.t,
       ~cursorPosition: Location.t,
-      ~editor: Editor.t,
+      ~theme: Theme.t,
     ) => {
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
+  let line = Index.toZeroBased(cursorPosition.line);
+  let column = Index.toZeroBased(cursorPosition.column);
+  let bufferLine = Buffer.getLine(line, buffer);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  let (cursorOffset, cursorCharacterWidth) =
-    if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorLine = Buffer.getLine(cursorLine, buffer);
-
-      let (cursorOffset, width) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          cursorLine,
-          Index.toZeroBased(cursorPosition.column),
-        );
-      (cursorOffset, width);
+  let (offset, characterWidth) =
+    if (lineCount > 0 && line < lineCount) {
+      BufferViewTokenizer.getCharacterPositionAndWidth(bufferLine, column);
     } else {
       (0, 1);
     };
 
-  let x =
-    editorFont.measuredWidth *. float(cursorOffset) -. editor.scrollX +. 0.5;
+  let x = float(offset) *. context.charWidth;
+  let y = float(line) *. context.lineHeight +. 0.5;
+  let height = context.lineHeight;
+  let color = Revery.Colors.white;
 
-  let y =
-    editorFont.measuredHeight
-    *. float(Index.toZeroBased(cursorPosition.line))
-    -. editor.scrollY
-    +. 0.5;
+  switch (mode, isActiveSplit) {
+  | (Insert, true) =>
+    let width = 2.;
+    Draw.rect(~context, ~x, ~y, ~width, ~height, ~color);
 
-  let fullCursorWidth =
-    float(cursorCharacterWidth) *. editorFont.measuredWidth;
+  | _ =>
+    let width = float(characterWidth) *. context.charWidth;
+    Draw.rect(~context, ~x, ~y, ~width, ~height, ~color);
 
-  let width =
-    switch (mode, isActiveSplit) {
-    | (Insert, true) => 2.
-    | _ => fullCursorWidth
+    switch (BufferLine.subExn(~index=offset, ~length=1, bufferLine)) {
+    | text =>
+      Draw.shapedText(
+        ~context,
+        ~x=x -. 0.5,
+        ~y=y -. context.fontMetrics.ascent -. 0.5,
+        ~color=theme.editorBackground,
+        text,
+      )
+    | exception _ => ()
     };
-
-  let height = editorFont.measuredHeight;
-
-  let opacity = isActiveSplit ? 0.5 : 0.25;
-  let color = Revery.Color.multiplyAlpha(opacity, Revery.Colors.white);
-
-  Draw.rect(~context, ~x, ~y, ~width, ~height, ~color);
+  };
 };
