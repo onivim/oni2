@@ -31,16 +31,9 @@ let changeEditorFont = () => {
   let _ =
     Reducer.reduce(
       state,
-      Actions.SetEditorFont(
-        EditorFont.create(
-          ~fontFile="dummy",
-          ~fontSize=10.,
-          ~measuredWidth=10.,
-          ~measuredHeight=10.,
-          ~descenderHeight=1.,
-          (),
-        ),
-      ),
+      Actions.Font(Service_Font.FontLoaded(
+        Service_Font.default
+      )),
     );
   ();
 };
