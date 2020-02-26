@@ -147,12 +147,6 @@ let parseString = (~default="", json) =>
   | _ => default
   };
 
-let parseStringOption = json =>
-  switch (json) {
-  | `String(v) => Some(v)
-  | _ => None
-  };
-
 type parseFunction =
   (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
 

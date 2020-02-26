@@ -30,12 +30,6 @@ let loadAndValidateEditorFont =
     m("loadAndValidateEditorFont path: %s | size: %f", fullPath, fontSize)
   );
 
-  switch (smoothing) {
-  | None => print_endline("---- NON!")
-  | Antialiased => print_endline("---- ANTI!")
-  | SubpixelAntialiased => print_endline("---- SUB!")
-  };
-
   fullPath
   |> Revery.Font.FontCache.load
   |> (

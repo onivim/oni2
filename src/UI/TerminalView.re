@@ -6,7 +6,6 @@
 
 open Revery.UI;
 open Oni_Model;
-open Oni_Core;
 
 module EditorMetrics = Feature_Editor.EditorMetrics;
 
