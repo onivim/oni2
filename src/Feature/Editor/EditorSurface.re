@@ -138,7 +138,7 @@ let make =
       ~isHoverEnabled=true,
       ~onCursorChange,
       ~definition,
-      ~shouldRenderWhitespace=ConfigurationValues.None,
+      ~shouldRenderWhitespace: ConfigurationValues.editorRenderWhitespace=ConfigurationValues.None,
       ~shouldRenderIndentGuides=false,
       ~shouldHighlightActiveIndentGuides=false,
       (),

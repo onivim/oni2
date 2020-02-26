@@ -1,0 +1,11 @@
+(library
+    (name Service_Font)
+    (public_name Oni2.service.font)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Revery
+      isolinear
+      base
+    )
+    (preprocess (pps ppx_let ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx)))

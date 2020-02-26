@@ -127,10 +127,24 @@ let parseEditorFontSize = json =>
       result > Constants.minimumFontSize ? result : Constants.minimumFontSize
   );
 
-let parseString = json =>
+let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
+  json =>
+    switch (json) {
+    | `String(smoothing) =>
+      let smoothing = String.lowercase_ascii(smoothing);
+      switch (smoothing) {
+      | "none" => None
+      | "antialiased" => Antialiased
+      | "subpixel-antialiased" => SubpixelAntialiased
+      | _ => Default
+      };
+    | _ => Default
+    };
+
+let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
-  | _ => ""
+  | _ => default
   };
 
 let parseStringOption = json =>
@@ -147,13 +161,23 @@ type configurationTuple = (string, parseFunction);
 let configurationParsers: list(configurationTuple) = [
   (
     "editor.fontFamily",
-    (s, v) => {...s, editorFontFamily: parseStringOption(v)},
+    (s, v) => {
+      ...s,
+      editorFontFamily: parseString(~default=Constants.defaultFontFamily, v),
+    },
   ),
   (
     "editor.fontSize",
     (config, json) => {
       ...config,
       editorFontSize: parseEditorFontSize(json),
+    },
+  ),
+  (
+    "editor.fontSmoothing",
+    (config, json) => {
+      ...config,
+      editorFontSmoothing: parseFontSmoothing(json),
     },
   ),
   ("editor.hover.delay", (s, v) => {...s, editorHoverDelay: parseInt(v)}),

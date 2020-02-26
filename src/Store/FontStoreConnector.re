@@ -10,8 +10,6 @@ open Oni_Model;
 module Log = (val Log.withNamespace("Oni2.Store.Font"));
 
 let minFontSize = 6.;
-let defaultFontFamily = "FiraCode-Regular.ttf";
-let defaultFontSize = 14.;
 
 let requestId = ref(0);
 
@@ -67,7 +65,7 @@ let loadAndValidateEditorFont =
 };
 
 let start = () => {
-  let setFont = (dispatch1, maybeFontFamily, fontSize: float) => {
+  let setFont = (dispatch1, fontFamily, fontSize: float) => {
     let dispatch = action =>
       Revery.App.runOnMainThread(() => dispatch1(action));
 
@@ -82,18 +80,13 @@ let start = () => {
           let fontSize = max(fontSize, minFontSize);
 
           let (name, fullPath) =
-            switch (maybeFontFamily) {
-            | None => (
-                defaultFontFamily,
-                Revery.Environment.executingDirectory ++ defaultFontFamily,
-              )
-
-            | Some(fontFamily) when fontFamily == "FiraCode-Regular.ttf" => (
-                defaultFontFamily,
-                Revery.Environment.executingDirectory ++ defaultFontFamily,
-              )
-
-            | Some(fontFamily) =>
+            if (fontFamily == Constants.defaultFontFamily) {
+              (
+                Constants.defaultFontFamily,
+                Revery.Environment.executingDirectory
+                ++ Constants.defaultFontFamily,
+              );
+            } else {
               Log.debug("Discovering font: " ++ fontFamily);
 
               if (Rench.Path.isAbsolute(fontFamily)) {
@@ -168,11 +161,17 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init(_) => (state, loadEditorFontEffect(None, defaultFontSize))
+    | Actions.Init(_) => (
+        state,
+        loadEditorFontEffect(
+          Constants.defaultFontFamily,
+          Constants.defaultFontSize,
+        ),
+      )
     | Actions.ConfigurationSet(c) => (state, synchronizeConfiguration(c))
     | Actions.LoadEditorFont(fontFamily, fontSize) => (
         state,
-        loadEditorFontEffect(Some(fontFamily), fontSize),
+        loadEditorFontEffect(fontFamily, fontSize),
       )
     | _ => (state, Isolinear.Effect.none)
     };

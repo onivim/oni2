@@ -22,11 +22,19 @@ type autoClosingBrackets =
   | Never
   | LanguageDefined;
 
+[@deriving show({with_path: false})]
+type fontSmoothing =
+  | Default
+  | None
+  | Antialiased
+  | SubpixelAntialiased;
+
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
-  editorFontFamily: option(string),
+  editorFontFamily: string,
   editorFontSize: float,
+  editorFontSmoothing: fontSmoothing,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
@@ -71,7 +79,8 @@ type t = {
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
   editorDetectIndentation: true,
-  editorFontFamily: Some("FiraCode-Regular.ttf"),
+  editorFontFamily: Constants.defaultFontFamily,
+  editorFontSmoothing: Default,
   editorFontSize: Constants.defaultFontSize,
   editorHoverDelay: 1000,
   editorHoverEnabled: true,

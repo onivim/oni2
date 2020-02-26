@@ -26,6 +26,7 @@
         Oni2.feature.editor
         Oni2.feature.scm
         Oni2.feature.terminal
+        Oni2.service.font
         ReasonFuzz
         textmate
         editor-core-types
