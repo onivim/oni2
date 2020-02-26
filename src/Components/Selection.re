@@ -4,12 +4,9 @@ type t = {
   focus: int
 };
 
-type selectionVariant =
-  | Left(string, int)
-  | Right(string, int)
-  | Start
-  | End(string)
-  | Position(string, int);
+type directionVariant =
+  | Left(int)
+  | Right(int);
 
 let initial:t = {
   anchor: 0,
@@ -24,7 +21,7 @@ let withinLength = (text: string, position: int):int => {
   withingBoth;
 }
 
-let create = (text:string, ~anchor: int, ~focus: int):t => {
+let create = (~text:string, ~anchor: int, ~focus: int):t => {
   let safeAnchor = withinLength(text, anchor);
   let safeFocus = withinLength(text, focus);
 
@@ -55,57 +52,33 @@ let isCollapsed = (selection: t): bool => {
   selection.anchor == selection.focus;
 };
 
-let collapse = (selection: t, direction: selectionVariant): t => {
-  switch (direction) {
-    | Left(text, offset) => {
-      let start = min(selection.anchor, selection.focus);
-      let collapsed = max(start - abs(offset), 0);
-
-      { anchor: collapsed, focus: collapsed };
-    };
-    | Right(text, offset) => {
-      let ending = max(selection.anchor, selection.focus);
-      let collapsed = min(ending + abs(offset), String.length(text));
-
-      { anchor: collapsed, focus: collapsed };
-    };
-    | Start => initial;
-    | End(text) => {
-      let collapsed = String.length(text);
-
-      { anchor: collapsed, focus: collapsed };
-    };
-    | Position(text, offset) => {
-      let safeOffset = withinLength(text, offset);
-
-      { anchor: safeOffset, focus: safeOffset };
-    };
-  };
+let collapse = (~text:string, offset:int):t => {
+  create(~text, ~anchor=offset, ~focus=offset)
 };
 
-
-let extend = (selection: t, direction: selectionVariant ) => {
+let collapseRelative = (~text:string, ~selection:t, direction:directionVariant):t => {
   switch (direction) {
-    | Left(text, offset) => {
-      let extended = max(selection.focus - abs(offset), 0);
-
-      { anchor: selection.anchor, focus: extended };
-    }
-    | Right(text, offset) => {
-      let extended = min(selection.focus + abs(offset), String.length(text));
-
-      { anchor: selection.anchor, focus: extended };
-    }
-    | Start => { anchor: selection.anchor, focus: 0 };
-    | End(text) => {
-      let ending = String.length(text);
-
-      { anchor: selection.anchor, focus: ending };
-    }
-    | Position(text, offset) => {
-      let safeOffset = withinLength(text, offset);
-
-      { anchor: selection.anchor, focus: safeOffset };
+    | Left(offset) => {
+      collapse(~text, rangeStart(selection) - abs(offset));
     };
-  };
+    | Right(offset) => {
+      collapse(~text, rangeEnd(selection) + abs(offset))
+    };
+  }
+}
+
+
+let extend = (~text:string, ~selection:t, offset:int):t => {
+  create(~text, ~anchor=anchor(selection), ~focus=offset);
 };
+
+let extendRelative = (~text:string, ~selection:t, direction:directionVariant):t => {
+  switch (direction) {
+    | Left(offset) => {
+      extend(~text, ~selection, focus(selection) - abs(offset))
+    };
+    | Right(offset) => {
+      extend(~text, ~selection, focus(selection) + abs(offset))
+    };
+  }
+}

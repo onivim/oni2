@@ -15,11 +15,11 @@ let runInputHandler = (~text=testString, selection, key) => {
 };
 
 let collapsedSelection = (~text=testString, position) => {
-  Oni_Components.Selection.create(text, ~anchor=position, ~focus=position);
+  Selection.create(~text, ~anchor=position, ~focus=position);
 };
 
 let notCollapsedSelection = (~text=testString, ~anchor, ~focus, ()) => {
-  Oni_Components.Selection.create(text, ~anchor=anchor, ~focus=focus);
+  Selection.create(~text, ~anchor=anchor, ~focus=focus);
 };
 
 describe("handleInputS#handleInput", ({describe, _}) => {

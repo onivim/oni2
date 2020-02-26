@@ -242,7 +242,7 @@ let%component make =
       let offset =
         int_of_float(event.mouseX) - offsetLeft(node) + scrollOffset^;
       let nearestOffset =  indexNearestOffset(offset)
-      let selection = Selection.create(value, ~anchor=nearestOffset, ~focus=nearestOffset);
+      let selection = Selection.collapse(~text=value, nearestOffset);
       resetCursor();
       onClick(selection);
 

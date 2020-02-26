@@ -169,7 +169,7 @@ let start = (themeInfo: ThemeInfo.t) => {
 
     | QuickmenuCommandlineUpdated(text, focus) => (
         Option.map(
-          state => Quickmenu.{...state, query: text, selection: Selection.create(text, ~anchor=focus, ~focus=focus)},
+          state => Quickmenu.{...state, query: text, selection: Selection.collapse(~text, focus)},
           state,
         ),
         Isolinear.Effect.none,

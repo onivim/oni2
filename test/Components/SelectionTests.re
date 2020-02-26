@@ -3,7 +3,8 @@ open TestFramework;
 module Selection = Oni_Components.Selection;
 
 let testString = "Some Strin";
-let creator = Selection.create(testString);
+let testStringLength = String.length(testString)
+let create = Selection.create(~text=testString);
 
 describe("Selection#initial", ({test, _}) => {
   test("Returns initial value", ({expect}) => {
@@ -15,38 +16,39 @@ describe("Selection#initial", ({test, _}) => {
 });
 
 describe("Selection#create", ({test, _}) => {
+
   test("Returns valid selection", ({expect}) => {
-    let result = creator(~anchor=3, ~focus=3);
+    let result = create(~anchor=3, ~focus=3);
 
     expect.int(result.anchor).toBe(3);
     expect.int(result.focus).toBe(3);
   });
 
   test("Handle different values", ({expect}) => {
-    let result = creator(~anchor=3, ~focus=6);
+    let result = create(~anchor=3, ~focus=6);
 
     expect.int(result.anchor).toBe(3);
     expect.int(result.focus).toBe(6);
   });
 
   test("Handle values below 0", ({expect}) => {
-    let result = creator(~anchor=-1, ~focus=-3);
+    let result = create(~anchor=-1, ~focus=-3);
 
     expect.int(result.anchor).toBe(0);
     expect.int(result.focus).toBe(0);
   });
 
   test("Handle above length", ({expect}) => {
-    let result = creator(~anchor=70, ~focus=10);
+    let result = create(~anchor=70, ~focus=55);
 
-    expect.int(result.anchor).toBe(10);
-    expect.int(result.focus).toBe(10);
+    expect.int(result.anchor).toBe(testStringLength);
+    expect.int(result.focus).toBe(testStringLength);
   });
 });
 
 describe("Selection#anchor", ({test, _}) => {
   test("Returns anchor value", ({expect}) => {
-    let result = Selection.anchor(creator(~anchor=3, ~focus=5));
+    let result = Selection.anchor(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(3);
   });
@@ -54,7 +56,7 @@ describe("Selection#anchor", ({test, _}) => {
 
 describe("Selection#focus", ({test, _}) => {
   test("Returns anchor value", ({expect}) => {
-    let result = Selection.focus(creator(~anchor=3, ~focus=5));
+    let result = Selection.focus(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(5);
   });
@@ -62,19 +64,19 @@ describe("Selection#focus", ({test, _}) => {
 
 describe("Selection#range", ({test, _}) => {
   test("Returns range when anchor comes first", ({expect}) => {
-    let result = Selection.range(creator(~anchor=3, ~focus=5));
+    let result = Selection.range(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(2);
   });
 
   test("Returns range when anchor comes last", ({expect}) => {
-    let result = Selection.range(creator(~anchor=5, ~focus=3));
+    let result = Selection.range(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(2);
   });
 
   test("Returns 0 for collapsed selection", ({expect}) => {
-    let result = Selection.range(creator(~anchor=3, ~focus=3));
+    let result = Selection.range(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(0);
   });
@@ -82,19 +84,19 @@ describe("Selection#range", ({test, _}) => {
 
 describe("Selection#rangeStart", ({test, _}) => {
   test("Returns anchor", ({expect}) => {
-    let result = Selection.rangeStart(creator(~anchor=3, ~focus=5));
+    let result = Selection.rangeStart(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(3);
   });
 
   test("Returns focus", ({expect}) => {
-    let result = Selection.rangeStart(creator(~anchor=5, ~focus=3));
+    let result = Selection.rangeStart(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(3);
   });
 
   test("Returns any", ({expect}) => {
-    let result = Selection.rangeStart(creator(~anchor=3, ~focus=3));
+    let result = Selection.rangeStart(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(3);
   });
@@ -102,19 +104,19 @@ describe("Selection#rangeStart", ({test, _}) => {
 
 describe("Selection#rangeEnd", ({test, _}) => {
   test("Returns anchor", ({expect}) => {
-    let result = Selection.rangeEnd(creator(~anchor=5, ~focus=3));
+    let result = Selection.rangeEnd(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(5);
   });
 
   test("Returns focus", ({expect}) => {
-    let result = Selection.rangeEnd(creator(~anchor=3, ~focus=5));
+    let result = Selection.rangeEnd(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(5);
   });
 
   test("Returns any", ({expect}) => {
-    let result = Selection.rangeEnd(creator(~anchor=3, ~focus=3));
+    let result = Selection.rangeEnd(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(3);
   });
@@ -122,284 +124,260 @@ describe("Selection#rangeEnd", ({test, _}) => {
 
 describe("Selection#isCollapsed", ({test, _}) => {
   test("Returns true", ({expect}) => {
-    let result = Selection.isCollapsed(creator(~anchor=3, ~focus=3));
+    let result = Selection.isCollapsed(create(~anchor=3, ~focus=3));
 
     expect.bool(result).toBe(true);
   });
 
   test("Returns false", ({expect}) => {
-    let result = Selection.isCollapsed(creator(~anchor=3, ~focus=7));
+    let result = Selection.isCollapsed(create(~anchor=3, ~focus=7));
 
     expect.bool(result).toBe(false);
   });
 });
 
-describe("Selection#collapse", ({describe, _}) => {
-  describe("Relatively left", ({test, _}) => {
-    test("Collapse when no selection", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=3), Left(testString, 2));
+describe("Selection#collapse", ({test, _}) => {
+  let collapse = Selection.collapse(~text=testString);
 
-      expect.equal(result, creator(~anchor=1, ~focus=1))
+  test("Collapse selection with offset", ({expect}) => {
+    let result = collapse(3);
+
+    expect.int(result.anchor).toBe(3);
+    expect.int(result.focus).toBe(3);
+  });
+
+  test("Collapse selection with offset less then 0", ({expect}) => {
+    let result = collapse(-20);
+
+    expect.int(result.anchor).toBe(0);
+    expect.int(result.focus).toBe(0);
+  });
+
+  test("Collapse selection with offset is more then length", ({expect}) => {
+    let result = collapse(testStringLength + 70);
+
+    expect.int(result.anchor).toBe(testStringLength);
+    expect.int(result.focus).toBe(testStringLength);
+  });
+});
+
+describe("Selection#collapseRelative", ({describe, _}) => {
+  let collapseRelative = Selection.collapseRelative(~text=testString)
+
+  describe("Left", ({test, _}) => {
+    test("Collapse when no selection", ({expect}) => {
+      let selection = create(~anchor=3, ~focus=3);
+      let result = collapseRelative(~selection, Left(2));
+
+      expect.int(result.anchor).toBe(1);
+      expect.int(result.focus).toBe(1);
     });
 
     test("Collapse selected when focus to the right", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=7, ~focus=3), Left(testString, 2));
+      let selection = create(~anchor=7, ~focus=3);
+      let result = collapseRelative(~selection, Left(2));
 
-      expect.equal(result, creator(~anchor=1, ~focus=1))
+      expect.int(result.anchor).toBe(1);
+      expect.int(result.focus).toBe(1);
     });
 
     test("Collapse selected when focus to the left", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=7), Left(testString, 2));
+      let selection = create(~anchor=3, ~focus=7);
+      let result = collapseRelative(~selection, Left(2));
 
-      expect.equal(result, creator(~anchor=1, ~focus=1))
+      expect.int(result.anchor).toBe(1);
+      expect.int(result.focus).toBe(1);
     });
 
     test("Collapse with 0 offset", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=3), Left(testString, 0));
+      let selection = create(~anchor=3, ~focus=3);
+      let result = collapseRelative(~selection, Left(0));
 
-      expect.equal(result, creator(~anchor=3, ~focus=3))
+      expect.int(result.anchor).toBe(3);
+      expect.int(result.focus).toBe(3);
     });
 
     test("Doesn't exceed 0", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=3), Left(testString, 15));
+      let selection = create(~anchor=3, ~focus=3);
+      let result = collapseRelative(~selection, Left(15));
 
-      expect.equal(result, creator(~anchor=0, ~focus=0))
+      expect.int(result.anchor).toBe(0);
+      expect.int(result.focus).toBe(0);
     });
   });
 
-  describe("Relatively Right", ({test, _}) => {
+  describe("Right", ({test, _}) => {
     test("Collapse when no selection", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=3), Right(testString, 2));
+      let selection = create(~anchor=3, ~focus=3);
+      let result = collapseRelative(~selection, Right(2));
 
-      expect.equal(result, creator(~anchor=5, ~focus=5))
+      expect.int(result.anchor).toBe(5);
+      expect.int(result.focus).toBe(5);
     });
 
     test("Collapse selected when focus to the right", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=7, ~focus=3), Right(testString, 2));
+      let selection = create(~anchor=7, ~focus=3);
+      let result = collapseRelative(~selection, Right(2));
 
-      expect.equal(result, creator(~anchor=9, ~focus=9))
+      expect.int(result.anchor).toBe(9);
+      expect.int(result.focus).toBe(9);
     });
 
     test("Collapse selected when focus to the left", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=7), Right(testString, 2));
+      let selection = create(~anchor=3, ~focus=7);
+      let result = collapseRelative(~selection, Right(2));
 
-      expect.equal(result, creator(~anchor=9, ~focus=9))
+      expect.int(result.anchor).toBe(9);
+      expect.int(result.focus).toBe(9);
     });
 
     test("Collapse with 0 offset", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=3), Right(testString, 0));
+      let selection = create(~anchor=3, ~focus=3);
+      let result = collapseRelative(~selection, Right(0));
 
-      expect.equal(result, creator(~anchor=3, ~focus=3))
+      expect.int(result.anchor).toBe(3);
+      expect.int(result.focus).toBe(3);
     });
 
     test("Doesn't exceed length", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=3), Right(testString, 15));
+      let selection = create(~anchor=3, ~focus=3);
+      let result = collapseRelative(~selection, Right(15));
 
-      expect.equal(result, creator(10, 10))
-    });
-  });
-
-  describe("To the Start", ({test, _}) => {
-    test("Collapse to the Start without selection", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=3), Start);
-
-      expect.equal(result, creator(~anchor=0, ~focus=0))
-    });
-
-    test("Collapse to the Start with selection", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=7), Start);
-
-      expect.equal(result, creator(~anchor=0, ~focus=0))
-    });
-  });
-
-  describe("To the End", ({test, _}) => {
-    test("Collapse to the Start without selection", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=3), End(testString));
-
-      expect.equal(result, creator(10, 10))
-    });
-
-    test("Collapse to the Start with selection", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=7), End(testString));
-
-      expect.equal(result, creator(10, 10))
-    });
-  });
-
-  describe("Absolute Position", ({test, _}) => {
-    test("Collapse with selection", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=7), Position(testString, 8));
-
-      expect.equal(result, creator(~anchor=8, ~focus=8))
-    });
-
-    test("Collapse without selection", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=5, ~focus=5), Position(testString, 8));
-
-      expect.equal(result, creator(~anchor=8, ~focus=8))
-    });
-
-    test("Doesn't exceed 0", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=7), Position(testString, -6));
-
-      expect.equal(result, creator(~anchor=0, ~focus=0))
-    });
-
-    test("Doesn't exceed length", ({expect}) => {
-      let result = Selection.collapse(creator(~anchor=3, ~focus=7), Position(testString, 80));
-
-      expect.equal(result, creator(10, 10))
+      expect.int(result.anchor).toBe(testStringLength);
+      expect.int(result.focus).toBe(testStringLength);
     });
   });
 });
 
-describe("Selection#extend", ({describe, _}) => {
-  describe("Relatively Left", ({test, _}) => {
-    test("Extends when focus to the left", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=7, ~focus=3), Left(testString, 2));
+describe("Selection#extend", ({test, _}) => {
+  let extend = Selection.extend(~text=testString);
 
-      expect.equal(result, creator(~anchor=7, ~focus=1))
+  test("Extend when selection is collapsed", ({expect}) => {
+    let selection = create(~anchor=3, ~focus=3)
+    let result = extend(~selection, 5);
+
+    expect.int(result.anchor).toBe(3);
+    expect.int(result.focus).toBe(5);
+  });
+
+  test("Extend when selection is not collapsed", ({expect}) => {
+    let selection = create(~anchor=3, ~focus=8)
+    let result = extend(~selection, 5);
+
+    expect.int(result.anchor).toBe(3);
+    expect.int(result.focus).toBe(5);
+  });
+
+  test("Doesn't extend when selection is not collapsed in offset", ({expect}) => {
+    let selection = create(~anchor=3, ~focus=3)
+    let result = extend(~selection, 3);
+
+    expect.int(result.anchor).toBe(3);
+    expect.int(result.focus).toBe(3);
+  });
+
+  test("Extends when offset is less than 0", ({expect}) => {
+    let selection = create(~anchor=3, ~focus=3)
+    let result = extend(~selection, -3);
+
+    expect.int(result.anchor).toBe(3);
+    expect.int(result.focus).toBe(0);
+  });
+
+  test("Extends when offset is more than length", ({expect}) => {
+    let selection = create(~anchor=3, ~focus=3)
+    let result = extend(~selection, testStringLength + 70);
+
+    expect.int(result.anchor).toBe(3);
+    expect.int(result.focus).toBe(testStringLength);
+  });
+});
+
+
+describe("Selection#extendRelative", ({describe, _}) => {
+  let extendRelative = Selection.extendRelative(~text=testString)
+
+  describe("Left", ({test, _}) => {
+    test("Extends when focus to the left", ({expect}) => {
+      let selection = create(~anchor=7, ~focus=3);
+      let result = extendRelative(~selection, Left(2));
+
+      expect.int(result.anchor).toBe(7);
+      expect.int(result.focus).toBe(1);
     });
 
     test("Extends when focus to the right", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=7), Left(testString, 2));
+      let selection = create(~anchor=3, ~focus=7);
+      let result = extendRelative(~selection, Left(2));
 
-      expect.equal(result, creator(~anchor=3, ~focus=5))
+      expect.int(result.anchor).toBe(3);
+      expect.int(result.focus).toBe(5);
     });
 
     test("Get over the anchor", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=7), Left(testString, 5));
+      let selection = create(~anchor=3, ~focus=7);
+      let result = extendRelative(~selection, Left(5));
 
-      expect.equal(result, creator(~anchor=3, ~focus=2))
+      expect.int(result.anchor).toBe(3);
+      expect.int(result.focus).toBe(2);
     });
 
     test("Doesn't move when extends for 0", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=7, ~focus=3), Left(testString, 0));
+      let selection = create(~anchor=7, ~focus=3);
+      let result = extendRelative(~selection, Left(0));
 
-      expect.equal(result, creator(~anchor=7, ~focus=3))
+      expect.int(result.anchor).toBe(7);
+      expect.int(result.focus).toBe(3);
     });
 
     test("Doesn't get less then 0", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=7, ~focus=3), Left(testString, 13));
+      let selection = create(~anchor=7, ~focus=3);
+      let result = extendRelative(~selection, Left(15));
 
-      expect.equal(result, creator(~anchor=7, ~focus=0))
+      expect.int(result.anchor).toBe(7);
+      expect.int(result.focus).toBe(0);
     });
   });
 
-  describe("Relatively Right", ({test, _}) => {
+  describe("Right", ({test, _}) => {
     test("Extends when focus to the left", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=7, ~focus=3), Right(testString, 2));
+      let selection = create(~anchor=7, ~focus=3);
+      let result = extendRelative(~selection, Right(2));
 
-      expect.equal(result, creator(~anchor=7, ~focus=5))
+      expect.int(result.anchor).toBe(7);
+      expect.int(result.focus).toBe(5);
     });
 
     test("Extends when focus to the right", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=7), Right(testString, 2));
+      let selection = create(~anchor=3, ~focus=7);
+      let result = extendRelative(~selection, Right(2));
 
-      expect.equal(result, creator(~anchor=3, ~focus=9))
+      expect.int(result.anchor).toBe(3);
+      expect.int(result.focus).toBe(9);
     });
 
     test("Get over the anchor", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=2), Right(testString, 5));
+      let selection = create(~anchor=3, ~focus=2);
+      let result = extendRelative(~selection, Right(5));
 
-      expect.equal(result, creator(~anchor=3, ~focus=7))
+      expect.int(result.anchor).toBe(3);
+      expect.int(result.focus).toBe(7);
     });
 
     test("Doesn't move when extends for 0", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=7, ~focus=3), Right(testString, 0));
+      let selection = create(~anchor=7, ~focus=3);
+      let result = extendRelative(~selection, Right(0));
 
-      expect.equal(result, creator(~anchor=7, ~focus=3))
+      expect.int(result.anchor).toBe(7);
+      expect.int(result.focus).toBe(3);
     });
 
     test("Doesn't get less then 0", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=7, ~focus=3), Right(testString, 13));
+      let selection = create(~anchor=7, ~focus=3);
+      let result = extendRelative(~selection, Right(testStringLength + 20));
 
-      expect.equal(result, creator(~anchor=7, ~focus=10))
-    });
-  });
-
-  describe("To the Start", ({test, _}) => {
-    test("Extends when focus to the left", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=7, ~focus=3), Start);
-
-      expect.equal(result, creator(~anchor=7, ~focus=0))
-    });
-
-    test("Extends when focus to the right", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=7), Start);
-
-      expect.equal(result, creator(~anchor=3, ~focus=0))
-    });
-
-    test("Get over the anchor", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=2), Start);
-
-      expect.equal(result, creator(~anchor=3, ~focus=0))
-    });
-
-    test("Collapse to the Start without selection", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=3), Start);
-
-      expect.equal(result, creator(~anchor=3, ~focus=0))
-    });
-
-    test("Doesn't move on the start", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=0, ~focus=0), Start);
-
-      expect.equal(result, creator(~anchor=0, ~focus=0))
-    });
-  });
-
-  describe("To the End", ({test, _}) => {
-    test("Extends when focus to the left", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=7, ~focus=3), End(testString));
-
-      expect.equal(result, creator(~anchor=7, ~focus=10))
-    });
-
-    test("Extends when focus to the right", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=7), End(testString));
-
-      expect.equal(result, creator(~anchor=3, ~focus=10))
-    });
-
-    test("Get over the anchor", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=2), End(testString));
-
-      expect.equal(result, creator(~anchor=3, ~focus=10))
-    });
-
-    test("Collapse to the End without selection", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=3), End(testString));
-
-      expect.equal(result, creator(~anchor=3, ~focus=10))
-    });
-
-    test("Doesn't move on the end", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=10, ~focus=10), End(testString));
-
-      expect.equal(result, creator(~anchor=10, ~focus=10))
-    });
-  });
-
-  describe("Absolute Position", ({test, _}) => {
-    test("Extends to position", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=7), Position(testString, 8));
-
-      expect.equal(result, creator(~anchor=3, ~focus=8))
-    });
-
-    test("Don't get below 0", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=7), Position(testString, -8));
-
-      expect.equal(result, creator(~anchor=3, ~focus=0))
-    });
-
-    test("Don't get above length", ({expect}) => {
-      let result = Selection.extend(creator(~anchor=3, ~focus=7), Position(testString, 77));
-
-      expect.equal(result, creator(~anchor=3, ~focus=10))
+      expect.int(result.anchor).toBe(7);
+      expect.int(result.focus).toBe(10);
     });
   });
 });
