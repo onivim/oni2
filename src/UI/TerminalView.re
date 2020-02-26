@@ -24,6 +24,7 @@ let make =
       ~metrics: EditorMetrics.t,
       ~terminal: Feature_Terminal.terminal,
       ~editorFont: EditorFont.t,
+      ~theme: Theme.t,
       (),
     ) => {
   let maybeFont =
@@ -54,6 +55,30 @@ let make =
     );
   };
 
+  let terminalTheme =
+    fun
+    | 0 => theme.terminalAnsiBlack
+    | 1 => theme.terminalAnsiRed
+    | 2 => theme.terminalAnsiGreen
+    | 3 => theme.terminalAnsiYellow
+    | 4 => theme.terminalAnsiBlue
+    | 5 => theme.terminalAnsiMagenta
+    | 6 => theme.terminalAnsiCyan
+    | 7 => theme.terminalAnsiWhite
+    | 8 => theme.terminalAnsiBrightBlack
+    | 9 => theme.terminalAnsiBrightRed
+    | 10 => theme.terminalAnsiBrightGreen
+    | 11 => theme.terminalAnsiBrightYellow
+    | 12 => theme.terminalAnsiBrightBlue
+    | 13 => theme.terminalAnsiBrightMagenta
+    | 14 => theme.terminalAnsiBrightCyan
+    | 15 => theme.terminalAnsiBrightWhite
+    // For 256 colors, fall back to defaults
+    | idx => ReveryTerminal.Theme.default(idx);
+
+  let defaultBackground = theme.terminalBackground;
+  let defaultForeground = theme.terminalForeground;
+
   let element =
     Option.map(
       font => {
@@ -64,7 +89,14 @@ let make =
             ~size,
             font,
           );
-        ReveryTerminal.render(~cursor, ~font, screen);
+        ReveryTerminal.render(
+          ~defaultBackground,
+          ~defaultForeground,
+          ~theme=terminalTheme,
+          ~cursor,
+          ~font,
+          screen,
+        );
       },
       maybeFont,
     )
