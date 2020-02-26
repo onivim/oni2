@@ -26,7 +26,7 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
 
   wait(~name="Font is updated", ({editorFont, _}: State.t) => {
     print_endline(
-      "Font metrics, round 1: " ++ EditorFont.toString(editorFont),
+      "Font metrics, round 1: " ++ Service_Font.toString(editorFont),
     );
 
     (
@@ -55,7 +55,7 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
 
   wait(~name="Font is updated again", ({editorFont, _}: State.t) => {
     print_endline(
-      "Font metrics, round 2: " ++ EditorFont.toString(editorFont),
+      "Font metrics, round 2: " ++ Service_Font.toString(editorFont),
     );
     (
       /* mac/win */ isClose(editorFont.measuredWidth, 14.4)

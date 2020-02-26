@@ -22,7 +22,7 @@ let make =
     (
       ~metrics: EditorMetrics.t,
       ~terminal: Feature_Terminal.terminal,
-      ~editorFont: EditorFont.t,
+      ~editorFont: Service_Font.t,
       (),
     ) => {
   let maybeFont =

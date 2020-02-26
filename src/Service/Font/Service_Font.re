@@ -13,6 +13,8 @@ type t = {
   smoothing: [@opaque] Revery.Font.Smoothing.t,
 };
 
+let toString = show;
+
 let default = {
   fontFile: Constants.defaultFontFamily,
   fontSize: Constants.defaultFontSize,

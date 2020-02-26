@@ -35,7 +35,7 @@ type t = {
   decorationProviders: list(DecorationProvider.t),
   diagnostics: Diagnostics.t,
   definition: Definition.t,
-  editorFont: EditorFont.t,
+  editorFont: Service_Font.t,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: SideBar.t,

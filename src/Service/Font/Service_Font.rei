@@ -9,6 +9,8 @@ type t = {
   smoothing: Revery.Font.Smoothing.t,
 };
 
+let toString: t => string;
+
 let default: t;
 
 let measure: (~text: string, t) => float;
