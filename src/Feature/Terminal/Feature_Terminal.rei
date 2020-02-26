@@ -47,6 +47,8 @@ type outmsg =
       splitDirection,
     });
 
+let shouldHandleInput: string => bool;
+
 let update: (ExtHostClient.t, t, msg) => (t, outmsg);
 
 let subscription:

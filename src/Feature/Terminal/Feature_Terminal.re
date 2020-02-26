@@ -57,6 +57,24 @@ type outmsg =
 
 let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
 
+let inputToIgnore = [
+  "<C-w>",
+  "<C-h>",
+  "<C-j>",
+  "<C-k>",
+  "<C-l>",
+];
+
+let shouldHandleInput = str => {
+  // HACK: Let the window motion keys pass through, so that 
+  // the user can get out of the terminal. We should have a
+  // better, more customizable way to manage this, though.
+
+  // One option would be a configuration setting that lets us
+  // pick what keys should be ignored by the terminal.
+  !List.exists((s) => str == s, inputToIgnore);
+};
+
 let updateById = (id, f, model) => {
   let idToTerminal = IntMap.update(id, Option.map(f), model.idToTerminal);
   {...model, idToTerminal};
