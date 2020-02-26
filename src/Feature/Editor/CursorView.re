@@ -9,7 +9,7 @@ let make =
       ~buffer,
       ~mode: Vim.Mode.t,
       ~isActiveSplit,
-      ~editorFont: EditorFont.t,
+      ~editorFont: Service_Font.t,
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
       (),

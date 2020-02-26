@@ -1,20 +1,12 @@
 module Zed_utf8 = ZedBundled;
 
-type t = {
-  fontFile: string,
-  fontSize: float,
-  measuredWidth: float,
-  measuredHeight: float,
-  descenderHeight: float,
-};
+type t = Service_Font.t;
 
-let getHeight = (v: t) => v.measuredHeight;
+let getHeight = Service_Font.getHeight;
 
-let measure = (~text, v: t) => {
-  float_of_int(Zed_utf8.length(text)) *. v.measuredWidth;
-};
+let measure = Service_Font.measure;
 
-let create =
+/*let create =
     (
       ~fontFile,
       ~fontSize,
@@ -28,9 +20,10 @@ let create =
   measuredWidth,
   measuredHeight,
   descenderHeight,
-};
+};*/
 
 let toString = editorFont => {
+  open Service_Font;
   Printf.sprintf(
     "fontFile: %s\n fontSize: %f\n measuredWidth: %f\n measuredHeight: %f\n",
     editorFont.fontFile,

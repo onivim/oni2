@@ -1,7 +1,7 @@
 open Oni_Core;
 
 type t = {
-  fontFamily: string,
+  fontFile: string,
   fontSize: float,
   font: Revery.Font.t,
   measuredWidth: float,
@@ -9,6 +9,12 @@ type t = {
   descenderHeight: float,
   smoothing: Revery.Font.Smoothing.t,
 };
+
+let default: t;
+
+let measure: (~text: string, t) => float;
+
+let getHeight: t => float;
 
 [@deriving show({with_path: false})]
 type msg =

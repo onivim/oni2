@@ -1,10 +1,11 @@
 open Oni_Core;
 
+module Zed_utf8 = ZedBundled;
 module Log = (val Log.withNamespace("Oni2.Service.Font"));
 
 [@deriving show({with_path: false})]
 type t = {
-  fontFamily: string,
+  fontFile: string,
   fontSize: float,
   font: [@opaque] Revery.Font.t,
   measuredWidth: float,
@@ -13,6 +14,21 @@ type t = {
   smoothing: [@opaque] Revery.Font.Smoothing.t,
 };
 
+let default = {
+  fontFile: Constants.defaultFontFamily,
+  fontSize: Constants.defaultFontSize,
+  measuredWidth: 1.,
+  measuredHeight: 1.,
+  descenderHeight: 0.,
+  smoothing: Default,
+};
+
+let measure = (~text, v: t) => {
+  float_of_int(Zed_utf8.length(text)) *. v.measuredWidth;
+};
+
+let getHeight = ({measuredHeight, _}) => measuredHeight;
+
 [@deriving show({with_path: false})]
 type msg =
   | FontLoaded(t)
@@ -20,7 +36,7 @@ type msg =
 
 let requestId = ref(0);
 
-let setFont = (dispatch1, fontFamily, fontSize: float) => {
+let setFont = (dispatch1, fontFamily, fontSize, smoothing) => {
   let dispatch = action =>
     Revery.App.runOnMainThread(() => dispatch1(action));
 
@@ -63,6 +79,7 @@ let setFont = (dispatch1, fontFamily, fontSize: float) => {
         let res =
           FontLoader.loadAndValidateEditorFont(
             ~requestId=req,
+            ~smoothing,
             fullPath,
             fontSize,
           );

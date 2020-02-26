@@ -135,7 +135,6 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
-  let fontUpdater = FontStoreConnector.start();
   let completionUpdater = CompletionStoreConnector.start();
 
   let languageFeatureUpdater = LanguageFeatureConnector.start();
@@ -154,7 +153,6 @@ let start =
       vimUpdater,
       syntaxUpdater,
       extHostUpdater,
-      fontUpdater,
       configurationUpdater,
       keyBindingsUpdater,
       commandUpdater,

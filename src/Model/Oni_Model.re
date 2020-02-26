@@ -14,6 +14,7 @@ module BufferRenderers = BufferRenderers;
 module Command = Command;
 module Commands = Commands;
 module DecorationProvider = DecorationProvider;
+module EditorFont = EditorFont;
 module EditorGroup = EditorGroup;
 module EditorGroups = EditorGroups;
 module EditorVisibleRanges = EditorVisibleRanges;

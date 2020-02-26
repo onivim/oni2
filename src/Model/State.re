@@ -93,15 +93,7 @@ let create: unit => t =
     diagnostics: Diagnostics.create(),
     mode: Normal,
     quickmenu: None,
-    editorFont:
-      EditorFont.create(
-        ~fontFile="FiraCode-Regular.ttf",
-        ~fontSize=14.,
-        ~measuredWidth=1.,
-        ~measuredHeight=1.,
-        ~descenderHeight=0.,
-        (),
-      ),
+    editorFont: Service_Font.default,
     extensions: Extensions.empty,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),

@@ -8,7 +8,19 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Oni2.Store.FontLoader"));
 
-let loadAndValidateEditorFont = (~requestId: int, fullPath, fontSize: float) => {
+[@deriving show({with_path: false})]
+type t = {
+  fontFile: string,
+  fontSize: float,
+  font: [@opaque] Revery.Font.t,
+  measuredWidth: float,
+  measuredHeight: float,
+  descenderHeight: float,
+  smoothing: [@opaque] Revery.Font.Smoothing.t,
+};
+
+
+let loadAndValidateEditorFont = (~requestId: int, ~smoothing, fullPath, fontSize: float) => {
   Log.tracef(m =>
     m("loadAndValidateEditorFont path: %s | size: %f", fullPath, fontSize)
   );
@@ -46,15 +58,15 @@ let loadAndValidateEditorFont = (~requestId: int, fullPath, fontSize: float) => 
             Log.debugf(m => m("Line height: %f ", lineHeight));
 
             Ok((
-              requestId,
-              EditorFont.create(
-                ~fontFile=fullPath,
-                ~fontSize,
-                ~measuredWidth,
-                ~measuredHeight=lineHeight,
-                ~descenderHeight=descent,
-                (),
-              ),
+              requestId, {
+                fontFile: fullPath, 
+                fontSize,
+                font,
+                measuredWidth,
+                measuredHeight: lineHeight,
+                descenderHeight: descent,
+                smoothing,
+              }
             ));
           };
         },

@@ -20,7 +20,6 @@ module ConfigurationValues = ConfigurationValues;
 module Constants = Constants;
 module Cursor = Cursor;
 module Diff = Diff;
-module EditorFont = EditorFont;
 module EditorSize = EditorSize;
 module EnvironmentVariables = Kernel.EnvironmentVariables;
 module Filesystem = Filesystem;

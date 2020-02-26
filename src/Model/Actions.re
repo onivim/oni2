@@ -69,10 +69,6 @@ type t =
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
-  // LoadEditorFont is the request to load a new font
-  // If successful, a SetEditorFont action will be dispatched.
-  | LoadEditorFont(string, float)
-  | SetEditorFont([@opaque] EditorFont.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
   | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer

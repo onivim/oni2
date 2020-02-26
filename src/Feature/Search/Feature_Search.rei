@@ -25,7 +25,7 @@ let make:
   (
     ~theme: Theme.t,
     ~uiFont: UiFont.t,
-    ~editorFont: EditorFont.t,
+    ~editorFont: Service_Font.t,
     ~isFocused: bool,
     ~model: model,
     ~onSelectResult: (string, Location.t) => unit,
