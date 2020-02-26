@@ -211,7 +211,7 @@
     "reasonFuzz": "*",
     "rench": "1.7.1",
     "revery": "0.27.0",
-    "revery-terminal": "github:revery-ui/revery-terminal#7816b08",
+    "revery-terminal": "github:revery-ui/revery-terminal#e4a54bb",
     "reason-tree-sitter": "*",
     "reason-textmate": "^2.3.0",
     "esy-sdl2": "*",
@@ -226,7 +226,6 @@
     "@opam/decoders-yojson": "*"
   },
   "resolutions": {
-    "reason-libvterm": "revery-ui/reason-libvterm#8a42484",
     "reason-jsonrpc": "onivim/reason-jsonrpc#ebadf6d",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
@@ -244,7 +243,7 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "revery-ui/revery#a525e7f",
+    "revery": "revery-ui/revery#e7bcb42",
     "reason-libvim": "onivim/reason-libvim#05a1604",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
