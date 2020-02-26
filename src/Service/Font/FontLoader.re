@@ -19,11 +19,22 @@ type t = {
   smoothing: [@opaque] Revery.Font.Smoothing.t,
 };
 
-
-let loadAndValidateEditorFont = (~requestId: int, ~smoothing, fullPath, fontSize: float) => {
+let loadAndValidateEditorFont =
+    (
+      ~requestId: int,
+      ~smoothing: Revery.Font.Smoothing.t,
+      fullPath,
+      fontSize: float,
+    ) => {
   Log.tracef(m =>
     m("loadAndValidateEditorFont path: %s | size: %f", fullPath, fontSize)
   );
+
+  switch (smoothing) {
+  | None => print_endline("---- NON!")
+  | Antialiased => print_endline("---- ANTI!")
+  | SubpixelAntialiased => print_endline("---- SUB!")
+  };
 
   fullPath
   |> Revery.Font.FontCache.load
@@ -33,19 +44,9 @@ let loadAndValidateEditorFont = (~requestId: int, ~smoothing, fullPath, fontSize
         r,
         font => {
           let character1 =
-            Revery.Font.FontRenderer.measure(
-              ~smoothing,
-              font,
-              fontSize,
-              "H",
-            );
+            Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "H");
           let character2 =
-            Revery.Font.FontRenderer.measure(
-              ~smoothing,
-              font,
-              fontSize,
-              "i",
-            );
+            Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "i");
 
           if (!Float.equal(character1.width, character2.width)) {
             Error("Not a monospace font");
@@ -58,15 +59,16 @@ let loadAndValidateEditorFont = (~requestId: int, ~smoothing, fullPath, fontSize
             Log.debugf(m => m("Line height: %f ", lineHeight));
 
             Ok((
-              requestId, {
-                fontFile: fullPath, 
+              requestId,
+              {
+                fontFile: fullPath,
                 fontSize,
                 font,
                 measuredWidth,
                 measuredHeight: lineHeight,
                 descenderHeight: descent,
                 smoothing,
-              }
+              },
             ));
           };
         },

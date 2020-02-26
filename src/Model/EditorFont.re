@@ -5,28 +5,29 @@ let getHeight = Service_Font.getHeight;
 let measure = Service_Font.measure;
 
 /*let create =
-    (
-      ~fontFile,
-      ~fontSize,
-      ~measuredWidth,
-      ~descenderHeight,
-      ~measuredHeight,
-      (),
-    ) => {
-  fontFile,
-  fontSize,
-  measuredWidth,
-  measuredHeight,
-  descenderHeight,
-};*/
+      (
+        ~fontFile,
+        ~fontSize,
+        ~measuredWidth,
+        ~descenderHeight,
+        ~measuredHeight,
+        (),
+      ) => {
+    fontFile,
+    fontSize,
+    measuredWidth,
+    measuredHeight,
+    descenderHeight,
+  };*/
 
 let toString = editorFont => {
-  open Service_Font;
-  Printf.sprintf(
-    "fontFile: %s\n fontSize: %f\n measuredWidth: %f\n measuredHeight: %f\n",
-    editorFont.fontFile,
-    editorFont.fontSize,
-    editorFont.measuredWidth,
-    editorFont.measuredHeight,
+  Service_Font.(
+    Printf.sprintf(
+      "fontFile: %s\n fontSize: %f\n measuredWidth: %f\n measuredHeight: %f\n",
+      editorFont.fontFile,
+      editorFont.fontSize,
+      editorFont.measuredWidth,
+      editorFont.measuredHeight,
+    )
   );
 };

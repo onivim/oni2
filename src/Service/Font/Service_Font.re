@@ -43,70 +43,82 @@ let setFont = (dispatch1, fontFamily, fontSize, smoothing) => {
   let req = requestId^;
 
   // We load the font asynchronously
-    ThreadHelper.create(
-      ~name="FontStore.loadThread",
-      () => {
-        let fontSize = max(fontSize, Constants.minimumFontSize);
+  ThreadHelper.create(
+    ~name="FontStore.loadThread",
+    () => {
+      let fontSize = max(fontSize, Constants.minimumFontSize);
 
-        let (name, fullPath) =
-          if (fontFamily == Constants.defaultFontFamily) {
-            (
-              Constants.defaultFontFamily,
-              Revery.Environment.executingDirectory
-              ++ Constants.defaultFontFamily,
-            );
-          } else {
-            Log.debug("Discovering font: " ++ fontFamily);
-
-            if (Rench.Path.isAbsolute(fontFamily)) {
-              (fontFamily, fontFamily);
-            } else {
-              let descriptor =
-                Revery.Font.Discovery.find(
-                  ~mono=true,
-                  ~weight=Revery.Font.Weight.Normal,
-                  fontFamily,
-                );
-
-              Log.debug("  at path: " ++ descriptor.path);
-
-              (fontFamily, descriptor.path);
-            };
-          };
-
-        let res =
-          FontLoader.loadAndValidateEditorFont(
-            ~requestId=req,
-            ~smoothing,
-            fullPath,
-            fontSize,
+      let (name, fullPath) =
+        if (fontFamily == Constants.defaultFontFamily) {
+          (
+            Constants.defaultFontFamily,
+            Revery.Environment.executingDirectory
+            ++ Constants.defaultFontFamily,
           );
+        } else {
+          Log.debug("Discovering font: " ++ fontFamily);
 
-        switch (res) {
-        | Error(msg) =>
-          Log.errorf(m => m("Error loading font: %s %s", name, msg));
-          dispatch(
-            FontLoadError(
-              Printf.sprintf("Unable to load font: %s: %s", name, msg),
-            ),
-          )
-        | Ok((reqId, {fontFile, fontSize, measuredWidth, measuredHeight, descenderHeight, smoothing, _})) =>
-          if (reqId == requestId^) {
-              dispatch(FontLoaded(
-                {
-                  fontFile,
-                  fontSize,
-                  measuredWidth,
-                  measuredHeight,
-                  descenderHeight,
-                  smoothing,
-                }
-                ));
-          }
+          if (Rench.Path.isAbsolute(fontFamily)) {
+            (fontFamily, fontFamily);
+          } else {
+            let descriptor =
+              Revery.Font.Discovery.find(
+                ~mono=true,
+                ~weight=Revery.Font.Weight.Normal,
+                fontFamily,
+              );
+
+            Log.debug("  at path: " ++ descriptor.path);
+
+            (fontFamily, descriptor.path);
+          };
         };
-      },
-      (),
-    ) |> ignore;
+
+      let res =
+        FontLoader.loadAndValidateEditorFont(
+          ~requestId=req,
+          ~smoothing,
+          fullPath,
+          fontSize,
+        );
+
+      switch (res) {
+      | Error(msg) =>
+        Log.errorf(m => m("Error loading font: %s %s", name, msg));
+        dispatch(
+          FontLoadError(
+            Printf.sprintf("Unable to load font: %s: %s", name, msg),
+          ),
+        );
+      | Ok((
+          reqId,
+          {
+            fontFile,
+            fontSize,
+            measuredWidth,
+            measuredHeight,
+            descenderHeight,
+            smoothing,
+            _,
+          },
+        )) =>
+        if (reqId == requestId^) {
+          dispatch(
+            FontLoaded({
+              fontFile,
+              fontSize,
+              measuredWidth,
+              measuredHeight,
+              descenderHeight,
+              smoothing,
+            }),
+          );
+        }
+      };
+    },
+    (),
+  )
+  |> ignore;
 };
 
 module Sub = {
@@ -134,16 +146,21 @@ module Sub = {
       };
 
       let init = (~params, ~dispatch) => {
-        print_endline (getUniqueId(params));
-        let reveryFontSmoothing = switch(params.fontSmoothing)  {
-        | None => Revery.Font.Smoothing.None 
-        | Antialiased => Revery.Font.Smoothing.Antialiased
-        | SubpixelAntialiased => Revery.Font.Smoothing.SubpixelAntialiased
-        | Default => Revery.Font.Smoothing.default
-        };
+        print_endline(getUniqueId(params));
+        let reveryFontSmoothing =
+          switch (params.fontSmoothing) {
+          | None => Revery.Font.Smoothing.None
+          | Antialiased => Revery.Font.Smoothing.Antialiased
+          | SubpixelAntialiased => Revery.Font.Smoothing.SubpixelAntialiased
+          | Default => Revery.Font.Smoothing.default
+          };
 
-        setFont(dispatch,
-        params.fontFamily, params.fontSize, reveryFontSmoothing);
+        setFont(
+          dispatch,
+          params.fontFamily,
+          params.fontSize,
+          reveryFontSmoothing,
+        );
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;

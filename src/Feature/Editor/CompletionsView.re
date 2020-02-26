@@ -131,7 +131,11 @@ module Styles = {
   ];
 
   let detailText =
-      (~editorFont: Service_Font.t, ~theme: Theme.t, ~tokenTheme: TokenTheme.t) => [
+      (
+        ~editorFont: Service_Font.t,
+        ~theme: Theme.t,
+        ~tokenTheme: TokenTheme.t,
+      ) => [
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),

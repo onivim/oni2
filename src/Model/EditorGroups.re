@@ -77,7 +77,10 @@ let reduce = (model, action: Actions.t) => {
     let editorGroup =
       switch (model.lastEditorFont) {
       | Some(font) =>
-        EditorGroupReducer.reduce(editorGroup, Font(Service_Font.FontLoaded(font)))
+        EditorGroupReducer.reduce(
+          editorGroup,
+          Font(Service_Font.FontLoaded(font)),
+        )
       | None => editorGroup
       };
 

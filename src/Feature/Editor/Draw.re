@@ -18,6 +18,7 @@ type context = {
   fontSize: float,
   charWidth: float,
   charHeight: float,
+  smoothing: Revery.Font.Smoothing.t,
 };
 
 let createContext =
@@ -45,6 +46,7 @@ let createContext =
     fontSize: editorFont.fontSize,
     charWidth: editorFont.measuredWidth,
     charHeight: editorFont.measuredHeight,
+    smoothing: editorFont.smoothing,
   };
 };
 
@@ -90,16 +92,13 @@ let drawShapedText = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
 
-  Revery.Font.Smoothing.setPaint(
-    ~smoothing=Revery.Font.Smoothing.default,
-    paint,
-  );
   Skia.Paint.setLcdRenderText(paint, true);
 
   (~context, ~x, ~y, ~color, text) => {
     let text =
       Revery.Font.(shape(context.font, text) |> ShapeResult.getGlyphString);
 
+    Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
     Skia.Paint.setTextSize(paint, context.fontSize);
     Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
     Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
@@ -113,13 +112,10 @@ let drawUtf8Text = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, Utf8);
 
-  Revery.Font.Smoothing.setPaint(
-    ~smoothing=Revery.Font.Smoothing.default,
-    paint,
-  );
   Skia.Paint.setLcdRenderText(paint, true);
 
   (~context, ~x, ~y, ~color, text) => {
+    Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
     Skia.Paint.setTextSize(paint, context.fontSize);
     Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
     Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
