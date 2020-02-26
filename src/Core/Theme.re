@@ -471,6 +471,89 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let titleBarBorder = getColor(Color.hex("#0000"), ["titleBar.border"]);
 
+  let terminalBackground = getColor(
+    default.terminalBackground,
+    ["terminal.background", "terminal.ansiBlack"]);
+  
+  let terminalForeground = getColor(
+    default.terminalForeground,
+    ["terminal.background", "terminal.ansiBrightWhite"]);
+
+  let terminalAnsiBlack = getColor(
+    default.terminalAnsiBlack,
+    ["terminal.ansiBlack"],
+  );
+  
+  let terminalAnsiRed = getColor(
+    default.terminalAnsiRed,
+    ["terminal.ansiRed"],
+  );
+  
+  let terminalAnsiGreen = getColor(
+    default.terminalAnsiGreen,
+    ["terminal.ansiGreen"],
+  );
+
+  let terminalAnsiYellow = getColor(
+    default.terminalAnsiYellow,
+    ["terminal.ansiYellow"],
+  );
+  
+  let terminalAnsiBlue = getColor(
+    default.terminalAnsiBlue,
+    ["terminal.ansiBlue"],
+  );
+
+  let terminalAnsiMagenta = getColor(
+    default.terminalAnsiMagenta,
+    ["terminal.ansiMagenta"],
+  );
+
+  let terminalAnsiCyan = getColor(
+    default.terminalAnsiCyan,
+    ["terminal.ansiCyan"],
+  );
+
+  let terminalAnsiWhite = getColor(
+    default.terminalAnsiWhite,
+    ["terminal.ansiWhite"],
+  );
+
+  let terminalAnsiBrightBlack = getColor(
+    default.terminalAnsiBrightBlack,
+    ["terminal.ansiBrightBlack"],
+  );
+  
+  let terminalAnsiBrightRed = getColor(
+    default.terminalAnsiBrightRed,
+    ["terminal.ansiBrightRed"],
+  );
+
+  let terminalAnsiBrightGreen = getColor(
+    default.terminalAnsiBrightGreen,
+    ["terminal.ansiBrightGreen"],
+  );
+
+  let terminalAnsiBrightYellow = getColor(
+    default.terminalAnsiBrightYellow,
+    ["terminal.ansiBrightYellow"],
+  );
+  
+  let terminalAnsiBrightBlue = getColor(
+    default.terminalAnsiBrightBlue,
+    ["terminal.ansiBrightBlue"],
+  );
+  
+  let terminalAnsiBrightMagenta = getColor(
+    default.terminalAnsiBrightMagenta,
+    ["terminal.ansiBrightMagenta"],
+  );
+
+  let terminalAnsiBrightWhite = getColor(
+    default.terminalAnsiBrightWhite,
+    ["terminal.ansiBrightWhite"],
+  );
+
   {
     ...default,
     background,
@@ -534,6 +617,23 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sneakBackground,
     sneakForeground,
     sneakHighlight,
+    terminalBackground,
+    terminalForeground,
+    terminalAnsiBlack,
+    terminalAnsiRed,
+    terminalAnsiGreen,
+    terminalAnsiYellow,
+    terminalAnsiBlue,
+    terminalAnsiMagenta,
+    terminalAnsiCyan,
+    terminalAnsiWhite,
+    terminalAnsiBrightBlack,
+    terminalAnsiBrightRed,
+    terminalAnsiBrightGreen,
+    terminalAnsiBrightYellow,
+    terminalAnsiBrightBlue,
+    terminalAnsiBrightMagenta,
+    terminalAnsiBrightWhite,
     titleBarActiveForeground,
     titleBarActiveBackground,
     titleBarInactiveForeground,
