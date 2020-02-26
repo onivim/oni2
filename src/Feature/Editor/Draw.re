@@ -89,7 +89,9 @@ let text = drawText;
 let drawShapedText = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
-  Skia.Paint.setAntiAlias(paint, true);
+
+  Revery.Font.Smoothing.setPaint(Revery.Font.Smoothing.default, paint);
+  //Skia.Paint.setAntiAlias(paint, true);
   Skia.Paint.setLcdRenderText(paint, true);
 
   (~context, ~x, ~y, ~color, text) => {

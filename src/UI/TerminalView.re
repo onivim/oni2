@@ -59,8 +59,13 @@ let make =
     Option.map(
       font => {
         let {screen, cursor, _}: Feature_Terminal.terminal = terminal;
-        let font = ReveryTerminal.Font.make(~size, font);
-        ReveryTerminal.render(~screen, ~cursor, ~font);
+        let font =
+          ReveryTerminal.Font.make(
+            ~smoothing=Revery.Font.Smoothing.default,
+            ~size,
+            font,
+          );
+        ReveryTerminal.render(~cursor, ~font, screen);
       },
       maybeFont,
     )
