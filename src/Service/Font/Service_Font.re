@@ -146,7 +146,6 @@ module Sub = {
       };
 
       let init = (~params, ~dispatch) => {
-        print_endline(getUniqueId(params));
         let reveryFontSmoothing =
           switch (params.fontSmoothing) {
           | None => Revery.Font.Smoothing.None
