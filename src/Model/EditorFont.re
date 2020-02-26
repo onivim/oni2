@@ -1,5 +1,3 @@
-module Zed_utf8 = ZedBundled;
-
 type t = Service_Font.t;
 
 let getHeight = Service_Font.getHeight;

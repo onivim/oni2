@@ -6,7 +6,7 @@
 
 open Oni_Core;
 
-module Log = (val Log.withNamespace("Oni2.Store.FontLoader"));
+module Log = (val Log.withNamespace("Oni2.Sservice.FontLoader"));
 
 [@deriving show({with_path: false})]
 type t = {
@@ -34,14 +34,14 @@ let loadAndValidateEditorFont = (~requestId: int, ~smoothing, fullPath, fontSize
         font => {
           let character1 =
             Revery.Font.FontRenderer.measure(
-              ~smoothing=Revery.Font.Smoothing.default,
+              ~smoothing,
               font,
               fontSize,
               "H",
             );
           let character2 =
             Revery.Font.FontRenderer.measure(
-              ~smoothing=Revery.Font.Smoothing.default,
+              ~smoothing,
               font,
               fontSize,
               "i",

@@ -869,7 +869,7 @@ let start =
         openFileByPathEffect(path, direction, location),
       )
     | BufferEnter(_)
-    | SetEditorFont(_)
+    | Font(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
     | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (

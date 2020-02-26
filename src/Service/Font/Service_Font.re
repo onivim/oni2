@@ -7,7 +7,6 @@ module Log = (val Log.withNamespace("Oni2.Service.Font"));
 type t = {
   fontFile: string,
   fontSize: float,
-  font: [@opaque] Revery.Font.t,
   measuredWidth: float,
   measuredHeight: float,
   descenderHeight: float,
@@ -20,7 +19,7 @@ let default = {
   measuredWidth: 1.,
   measuredHeight: 1.,
   descenderHeight: 0.,
-  smoothing: Default,
+  smoothing: Revery.Font.Smoothing.default,
 };
 
 let measure = (~text, v: t) => {
@@ -44,7 +43,6 @@ let setFont = (dispatch1, fontFamily, fontSize, smoothing) => {
   let req = requestId^;
 
   // We load the font asynchronously
-  let _: Thread.t =
     ThreadHelper.create(
       ~name="FontStore.loadThread",
       () => {
@@ -86,24 +84,29 @@ let setFont = (dispatch1, fontFamily, fontSize, smoothing) => {
 
         switch (res) {
         | Error(msg) =>
+          Log.errorf(m => m("Error loading font: %s %s", name, msg));
           dispatch(
             FontLoadError(
               Printf.sprintf("Unable to load font: %s: %s", name, msg),
             ),
           )
-        | Ok((reqId, editorFont)) =>
+        | Ok((reqId, {fontFile, fontSize, measuredWidth, measuredHeight, descenderHeight, smoothing, _})) =>
           if (reqId == requestId^) {
-            ()// TODO:
-              ;
-              /*dispatch(FontLoaded(
-                  editorFont
-                );*/
+              dispatch(FontLoaded(
+                {
+                  fontFile,
+                  fontSize,
+                  measuredWidth,
+                  measuredHeight,
+                  descenderHeight,
+                  smoothing,
+                }
+                ));
           }
         };
       },
       (),
-    );
-  ();
+    ) |> ignore;
 };
 
 module Sub = {
@@ -131,16 +134,20 @@ module Sub = {
       };
 
       let init = (~params, ~dispatch) => {
-        print_endline("FontSubscription: INIT: " ++ getUniqueId(params));
-        ();
+        print_endline (getUniqueId(params));
+        let reveryFontSmoothing = switch(params.fontSmoothing)  {
+        | None => Revery.Font.Smoothing.None 
+        | Antialiased => Revery.Font.Smoothing.Antialiased
+        | SubpixelAntialiased => Revery.Font.Smoothing.SubpixelAntialiased
+        | Default => Revery.Font.Smoothing.default
+        };
+
+        setFont(dispatch,
+        params.fontFamily, params.fontSize, reveryFontSmoothing);
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
-
-      let dispose = (~params as _, ~state as _) => {
-        print_endline("FontSubscription: DISPOSE");
-        ();
-      };
+      let dispose = (~params as _, ~state as _) => ();
     });
 
   let font = (~fontFamily, ~fontSize, ~fontSmoothing) => {

@@ -3,7 +3,6 @@ open Oni_Core;
 type t = {
   fontFile: string,
   fontSize: float,
-  font: Revery.Font.t,
   measuredWidth: float,
   measuredHeight: float,
   descenderHeight: float,
