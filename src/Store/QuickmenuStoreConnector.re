@@ -153,12 +153,7 @@ let start = (themeInfo: ThemeInfo.t) => {
             let (text, selection) =
               InputModel.handleInput(~text=query, ~selection, key);
 
-            Quickmenu.{
-              ...state,
-              query: text,
-              selection,
-              focused: Some(0),
-            };
+            Quickmenu.{...state, query: text, selection, focused: Some(0)};
           },
           state,
         ),
@@ -172,7 +167,12 @@ let start = (themeInfo: ThemeInfo.t) => {
 
     | QuickmenuCommandlineUpdated(text, focus) => (
         Option.map(
-          state => Quickmenu.{...state, query: text, selection: Selection.collapse(~text, focus)},
+          state =>
+            Quickmenu.{
+              ...state,
+              query: text,
+              selection: Selection.collapse(~text, focus),
+            },
           state,
         ),
         Isolinear.Effect.none,

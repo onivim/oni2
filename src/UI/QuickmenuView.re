@@ -187,7 +187,7 @@ let make =
          | EditorsPicker => React.empty
          | _ => <input />
          }}
-         {switch (variant) {
+        {switch (variant) {
          | Wildmenu(_) => React.empty
          | _ => <dropdown />
          }}

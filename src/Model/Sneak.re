@@ -85,15 +85,11 @@ module Internal = {
 
 let refine = (characterToAdd: string, sneaks: t) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
-  let selection = String.length(sneaks.prefix)
-    |> Selection.collapse(~text=sneaks.prefix);
+  let selection =
+    String.length(sneaks.prefix) |> Selection.collapse(~text=sneaks.prefix);
 
   let (prefix, _) =
-    InputModel.handleInput(
-      ~text=sneaks.prefix,
-      ~selection=selection,
-      characterToAdd
-    );
+    InputModel.handleInput(~text=sneaks.prefix, ~selection, characterToAdd);
 
   {...sneaks, prefix} |> Internal.applyFilter;
 };

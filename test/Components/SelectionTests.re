@@ -3,7 +3,7 @@ open TestFramework;
 module Selection = Oni_Components.Selection;
 
 let testString = "Some Strin";
-let testStringLength = String.length(testString)
+let testStringLength = String.length(testString);
 let create = Selection.create(~text=testString);
 
 describe("Selection#initial", ({test, _}) => {
@@ -12,11 +12,10 @@ describe("Selection#initial", ({test, _}) => {
 
     expect.int(result.anchor).toBe(0);
     expect.int(result.focus).toBe(0);
-  });
+  })
 });
 
 describe("Selection#create", ({test, _}) => {
-
   test("Returns valid selection", ({expect}) => {
     let result = create(~anchor=3, ~focus=3);
 
@@ -51,7 +50,7 @@ describe("Selection#anchor", ({test, _}) => {
     let result = Selection.anchor(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(3);
-  });
+  })
 });
 
 describe("Selection#focus", ({test, _}) => {
@@ -59,7 +58,7 @@ describe("Selection#focus", ({test, _}) => {
     let result = Selection.focus(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(5);
-  });
+  })
 });
 
 describe("Selection#range", ({test, _}) => {
@@ -162,7 +161,7 @@ describe("Selection#collapse", ({test, _}) => {
 });
 
 describe("Selection#collapseRelative", ({describe, _}) => {
-  let collapseRelative = Selection.collapseRelative(~text=testString)
+  let collapseRelative = Selection.collapseRelative(~text=testString);
 
   describe("Left", ({test, _}) => {
     test("Collapse when no selection", ({expect}) => {
@@ -253,7 +252,7 @@ describe("Selection#extend", ({test, _}) => {
   let extend = Selection.extend(~text=testString);
 
   test("Extend when selection is collapsed", ({expect}) => {
-    let selection = create(~anchor=3, ~focus=3)
+    let selection = create(~anchor=3, ~focus=3);
     let result = extend(~selection, 5);
 
     expect.int(result.anchor).toBe(3);
@@ -261,15 +260,16 @@ describe("Selection#extend", ({test, _}) => {
   });
 
   test("Extend when selection is not collapsed", ({expect}) => {
-    let selection = create(~anchor=3, ~focus=8)
+    let selection = create(~anchor=3, ~focus=8);
     let result = extend(~selection, 5);
 
     expect.int(result.anchor).toBe(3);
     expect.int(result.focus).toBe(5);
   });
 
-  test("Doesn't extend when selection is not collapsed in offset", ({expect}) => {
-    let selection = create(~anchor=3, ~focus=3)
+  test(
+    "Doesn't extend when selection is not collapsed in offset", ({expect}) => {
+    let selection = create(~anchor=3, ~focus=3);
     let result = extend(~selection, 3);
 
     expect.int(result.anchor).toBe(3);
@@ -277,7 +277,7 @@ describe("Selection#extend", ({test, _}) => {
   });
 
   test("Extends when offset is less than 0", ({expect}) => {
-    let selection = create(~anchor=3, ~focus=3)
+    let selection = create(~anchor=3, ~focus=3);
     let result = extend(~selection, -3);
 
     expect.int(result.anchor).toBe(3);
@@ -285,7 +285,7 @@ describe("Selection#extend", ({test, _}) => {
   });
 
   test("Extends when offset is more than length", ({expect}) => {
-    let selection = create(~anchor=3, ~focus=3)
+    let selection = create(~anchor=3, ~focus=3);
     let result = extend(~selection, testStringLength + 70);
 
     expect.int(result.anchor).toBe(3);
@@ -293,9 +293,8 @@ describe("Selection#extend", ({test, _}) => {
   });
 });
 
-
 describe("Selection#extendRelative", ({describe, _}) => {
-  let extendRelative = Selection.extendRelative(~text=testString)
+  let extendRelative = Selection.extendRelative(~text=testString);
 
   describe("Left", ({test, _}) => {
     test("Extends when focus to the left", ({expect}) => {

@@ -12,7 +12,12 @@ type model = {
   hits: list(Ripgrep.Match.t),
 };
 
-let initial = {queryInput: "", query: "", selection: Selection.initial, hits: []};
+let initial = {
+  queryInput: "",
+  query: "",
+  selection: Selection.initial,
+  hits: [],
+};
 
 // UPDATE
 
@@ -29,7 +34,7 @@ type outmsg =
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-    let {queryInput, selection,_} = model;
+    let {queryInput, selection, _} = model;
 
     let model =
       switch (key) {
@@ -48,10 +53,7 @@ let update = (model, msg) => {
 
     (model, None);
 
-  | InputClicked(selection) => (
-      {...model, selection},
-      Some(Focus),
-    )
+  | InputClicked(selection) => ({...model, selection}, Some(Focus))
 
   | Update(items) => ({...model, hits: model.hits @ items}, None)
 

@@ -538,7 +538,9 @@ module Pane = {
         selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}
         isFocused
-        onClick={selection => dispatch(InputBoxClicked({selection: selection}))}
+        onClick={selection =>
+          dispatch(InputBoxClicked({selection: selection}))
+        }
       />
       {groups
        |> List.map(((provider, group)) =>

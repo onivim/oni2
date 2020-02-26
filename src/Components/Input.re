@@ -191,7 +191,9 @@ let%component make =
 
   let () = {
     let cursorOffset =
-      measureTextWidth(String.sub(displayValue, 0, Selection.focus(selection)))
+      measureTextWidth(
+        String.sub(displayValue, 0, Selection.focus(selection)),
+      )
       |> int_of_float;
 
     switch (Option.bind(textRef^, r => r#getParent())) {
@@ -242,7 +244,7 @@ let%component make =
     | Some(node) =>
       let offset =
         int_of_float(event.mouseX) - offsetLeft(node) + scrollOffset^;
-      let nearestOffset =  indexNearestOffset(offset)
+      let nearestOffset = indexNearestOffset(offset);
       let selection = Selection.collapse(~text=value, nearestOffset);
       resetCursor();
       onClick(selection);
@@ -253,7 +255,10 @@ let%component make =
 
   let cursor = () => {
     let (startStr, _) =
-      getStringParts(Selection.focus(selection) + String.length(prefix), displayValue);
+      getStringParts(
+        Selection.focus(selection) + String.length(prefix),
+        displayValue,
+      );
 
     let textWidth = measureTextWidth(startStr) |> int_of_float;
 
@@ -270,35 +275,35 @@ let%component make =
     </View>;
   };
 
-  let selectionView = () => {
-    if (Selection.isCollapsed(selection)){
+  let selectionView = () =>
+    if (Selection.isCollapsed(selection)) {
       React.empty;
     } else {
-        let startOffset = Selection.rangeStart(selection);
-        let endOffset = Selection.rangeEnd(selection);
+      let startOffset = Selection.rangeStart(selection);
+      let endOffset = Selection.rangeEnd(selection);
 
-        let (beginnigStartStr, _) =
-          getStringParts(startOffset + String.length(prefix), displayValue);
-        let beginnigTextWidth = measureTextWidth(beginnigStartStr) |> int_of_float;
-        let startOffset = beginnigTextWidth - scrollOffset^;
+      let (beginnigStartStr, _) =
+        getStringParts(startOffset + String.length(prefix), displayValue);
+      let beginnigTextWidth =
+        measureTextWidth(beginnigStartStr) |> int_of_float;
+      let startOffset = beginnigTextWidth - scrollOffset^;
 
-        let (endingStartStr, _) =
-          getStringParts(endOffset + String.length(prefix), displayValue);
-        let endingTextWidth = measureTextWidth(endingStartStr) |> int_of_float;
-        let endOffset = endingTextWidth - scrollOffset^;
-        let width = endOffset - startOffset + Constants.cursorWidth;
+      let (endingStartStr, _) =
+        getStringParts(endOffset + String.length(prefix), displayValue);
+      let endingTextWidth = measureTextWidth(endingStartStr) |> int_of_float;
+      let endOffset = endingTextWidth - scrollOffset^;
+      let width = endOffset - startOffset + Constants.cursorWidth;
 
-        <View style={Styles.selection(startOffset)}>
-          <Opacity opacity=Constants.selectionOpacity>
-            <Container
-              width={width}
-              height={Styles.fontSize |> int_of_float}
-              color=selectionColor
-            />
-          </Opacity>
-        </View>;
-      };
-    }
+      <View style={Styles.selection(startOffset)}>
+        <Opacity opacity=Constants.selectionOpacity>
+          <Container
+            width
+            height={Styles.fontSize |> int_of_float}
+            color=selectionColor
+          />
+        </Opacity>
+      </View>;
+    };
 
   let text = () =>
     <Text
