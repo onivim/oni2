@@ -209,23 +209,23 @@ let default: t = {
   sneakBackground: Colors.red,
   sneakForeground: Colors.white,
   sneakHighlight: Colors.white,
-  terminalBackground: Color.rgb(0, 0, 0),
-  terminalForeground: Color.rgb(233, 235, 235),
-  terminalAnsiBlack: Color.rgb(0, 0, 0),
-  terminalAnsiRed: Color.rgb(194, 54, 33),
-  terminalAnsiGreen: Color.rgb(37, 188, 36),
-  terminalAnsiYellow: Color.rgb(173, 173, 39),
-  terminalAnsiBlue: Color.rgb(73,46, 225),
-  terminalAnsiMagenta: Color.rgb(211, 56, 211),
-  terminalAnsiCyan: Color.rgb(51, 197, 200),
-  terminalAnsiWhite: Color.rgb(203, 204, 205),
-  terminalAnsiBrightBlack: Color.rgb(129, 131, 131),
-  terminalAnsiBrightRed: Color.rgb(252, 57, 31),
-  terminalAnsiBrightGreen: Color.rgb(49, 231, 34),
-  terminalAnsiBrightYellow: Color.rgb(234, 236, 35),
-  terminalAnsiBrightBlue: Color.rgb(88, 51, 255),
-  terminalAnsiBrightMagenta: Color.rgb(20, 240, 240),
-  terminalAnsiBrightWhite: Color.rgb(233, 235, 235),
+  terminalBackground: Color.rgb_int(0, 0, 0),
+  terminalForeground: Color.rgb_int(233, 235, 235),
+  terminalAnsiBlack: Color.rgb_int(0, 0, 0),
+  terminalAnsiRed: Color.rgb_int(194, 54, 33),
+  terminalAnsiGreen: Color.rgb_int(37, 188, 36),
+  terminalAnsiYellow: Color.rgb_int(173, 173, 39),
+  terminalAnsiBlue: Color.rgb_int(73, 46, 225),
+  terminalAnsiMagenta: Color.rgb_int(211, 56, 211),
+  terminalAnsiCyan: Color.rgb_int(51, 197, 200),
+  terminalAnsiWhite: Color.rgb_int(203, 204, 205),
+  terminalAnsiBrightBlack: Color.rgb_int(129, 131, 131),
+  terminalAnsiBrightRed: Color.rgb_int(252, 57, 31),
+  terminalAnsiBrightGreen: Color.rgb_int(49, 231, 34),
+  terminalAnsiBrightYellow: Color.rgb_int(234, 236, 35),
+  terminalAnsiBrightBlue: Color.rgb_int(88, 51, 255),
+  terminalAnsiBrightMagenta: Color.rgb_int(20, 240, 240),
+  terminalAnsiBrightWhite: Color.rgb_int(233, 235, 235),
   titleBarActiveBackground: Color.hex("#282C35"),
   titleBarActiveForeground: Color.hex("#ECEFF4"),
   titleBarInactiveBackground: Color.hex("#282C35"),
@@ -247,10 +247,10 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     let colorString = getFirstOrDefault(~default=emptyString, items, ct);
 
     if (colorString != emptyString) {
-      Color.hex(colorString); 
+      Color.hex(colorString);
     } else {
-      default
-    }
+      default;
+    };
   };
 
   let background =
@@ -349,13 +349,13 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let editorIndentGuideBackground =
     getColor(
-      defaults.editorIndentGuideBackground,
+      defaults.editorIndentGuideBackground |> Color.hex,
       ["editorIndentGuide.background"],
     );
 
   let editorIndentGuideActiveBackground =
     getColor(
-      defaults.editorIndentGuideActiveBackground,
+      defaults.editorIndentGuideActiveBackground |> Color.hex,
       ["editorIndentGuide.activeBackground"],
     );
 
@@ -469,7 +469,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       ],
     );
 
-  let titleBarBorder = getColor("#0000", ["titleBar.border"]);
+  let titleBarBorder = getColor(Color.hex("#0000"), ["titleBar.border"]);
 
   {
     ...default,
