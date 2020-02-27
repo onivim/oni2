@@ -18,7 +18,6 @@ module ConfigurationParser = ConfigurationParser;
 module ConfigurationTransformer = ConfigurationTransformer;
 module ConfigurationValues = ConfigurationValues;
 module Constants = Constants;
-module Cursor = Cursor;
 module Diff = Diff;
 module EditorSize = EditorSize;
 module EnvironmentVariables = Kernel.EnvironmentVariables;
