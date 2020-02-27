@@ -141,7 +141,7 @@ let make =
       ~shouldRenderWhitespace=ConfigurationValues.None,
       ~shouldRenderIndentGuides=false,
       ~shouldHighlightActiveIndentGuides=false,
-      ~smoothScroll=true,
+      ~smoothScroll=false,
       (),
     ) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
