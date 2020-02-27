@@ -39,6 +39,10 @@ let render =
     Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
 
     switch (BufferLine.subExn(~index=column, ~length=1, bufferLine)) {
+    | exception _
+    | "" => ()
+    | text when BufferViewTokenizer.isWhitespace(ZedBundled.get(text, 0)) =>
+      ()
     | text =>
       Draw.shapedText(
         ~context,
@@ -47,7 +51,6 @@ let render =
         ~color=background,
         text,
       )
-    | exception _ => ()
     };
   };
 };

@@ -28,7 +28,7 @@ let tab = UChar.of_char('\t');
 let cr = UChar.of_char('\r');
 let lf = UChar.of_char('\n');
 
-let _isWhitespace = c => {
+let isWhitespace = c => {
   UChar.eq(space, c)
   || UChar.eq(tab, c)
   || UChar.eq(cr, c)
@@ -100,9 +100,7 @@ let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {
     let (bg1, fg1) = colorizer(i0);
     let (bg2, fg2) = colorizer(i1);
 
-    !colorEqual(bg1, bg2)
-    || !colorEqual(fg1, fg2)
-    || _isWhitespace(c0) != _isWhitespace(c1)
+    || isWhitespace(c0) != isWhitespace(c1)
     /* Always split on tabs */
     || UChar.eq(c0, tab)
     || UChar.eq(c1, tab);
