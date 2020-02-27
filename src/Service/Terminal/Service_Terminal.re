@@ -194,6 +194,7 @@ module Effect = {
       ("<LEFT>", Left),
       ("<RIGHT>", Right),
       ("<DOWN>", Right),
+      ("<ESC>", Escape),
     ]
     |> List.to_seq
     |> Hashtbl.of_seq;
