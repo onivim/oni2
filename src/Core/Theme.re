@@ -412,13 +412,13 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let statusBarBackground =
     getColor(
-      defaultBackground,
+      Color.hex("#007acc"),
       ["statusBar.background", "editor.background", "background"],
     );
 
   let statusBarForeground =
     getColor(
-      defaultForeground,
+      Color.hex("#fff"),
       ["statusBar.foreground", "editor.foreground", "foreground"],
     );
 

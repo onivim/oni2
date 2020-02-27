@@ -162,8 +162,12 @@ let make =
 
   <View style=Styles.container>
     <TreeView
-      scrollOffset onScrollOffsetChange tree itemHeight=22 onClick=onNodeClick
-      arrowColor=theme.foreground>
+      scrollOffset
+      onScrollOffsetChange
+      tree
+      itemHeight=22
+      onClick=onNodeClick
+      arrowColor={theme.foreground}>
       ...{node => {
         let decorations =
           StringMap.find_opt(node.path, state.fileExplorer.decorations);
