@@ -1,68 +1,56 @@
 open EditorCoreTypes;
-open Revery;
-open Revery.UI;
 
 open Oni_Core;
 
-let make =
+let render =
     (
+      ~context: Draw.context,
       ~buffer,
       ~mode: Vim.Mode.t,
       ~isActiveSplit,
-      ~editorFont: EditorFont.t,
       ~cursorPosition: Location.t,
-      ~editor: Editor.t,
-      (),
+      ~theme: Theme.t,
     ) => {
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
+  let line = Index.toZeroBased(cursorPosition.line);
+  let column = Index.toZeroBased(cursorPosition.column);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  let (cursorOffset, cursorCharacterWidth) =
-    if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorLine = Buffer.getLine(cursorLine, buffer);
+  if (lineCount <= 0 || line >= lineCount) {
+    ();
+  } else {
+    let bufferLine = Buffer.getLine(line, buffer);
+    let (offset, characterWidth) =
+      BufferViewTokenizer.getCharacterPositionAndWidth(bufferLine, column);
 
-      let (cursorOffset, width) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          cursorLine,
-          Index.toZeroBased(cursorPosition.column),
-        );
-      (cursorOffset, width);
-    } else {
-      (0, 1);
-    };
+    let x = float(offset) *. context.charWidth;
+    let y = float(line) *. context.lineHeight +. 0.5;
+    let height = context.lineHeight;
+    let background = theme.editorCursorBackground;
+    let foreground = theme.editorCursorForeground;
 
-  let fullCursorWidth =
-    cursorCharacterWidth * int_of_float(editorFont.measuredWidth);
-
-  let cursorWidth =
     switch (mode, isActiveSplit) {
-    | (Insert, true) => 2
-    | _ => fullCursorWidth
+    | (Insert, true) =>
+      let width = 2.;
+      Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
+
+    | _ =>
+      let width = float(characterWidth) *. context.charWidth;
+      Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
+
+      switch (BufferLine.subExn(~index=column, ~length=1, bufferLine)) {
+      | exception _
+      | "" => ()
+      | text when BufferViewTokenizer.isWhitespace(ZedBundled.get(text, 0)) =>
+        ()
+      | text =>
+        Draw.shapedText(
+          ~context,
+          ~x=x -. 0.5,
+          ~y=y -. context.fontMetrics.ascent -. 0.5,
+          ~color=background,
+          text,
+        )
+      };
     };
-
-  let cursorPixelY =
-    int_of_float(
-      editorFont.measuredHeight
-      *. float(Index.toZeroBased(cursorPosition.line))
-      -. editor.scrollY
-      +. 0.5,
-    );
-
-  let cursorPixelX =
-    int_of_float(
-      editorFont.measuredWidth *. float(cursorOffset) -. editor.scrollX +. 0.5,
-    );
-
-  let style =
-    Style.[
-      position(`Absolute),
-      top(cursorPixelY),
-      left(cursorPixelX),
-      height(int_of_float(editorFont.measuredHeight)),
-      width(cursorWidth),
-      backgroundColor(Colors.white),
-    ];
-  let cursorOpacity = isActiveSplit ? 0.5 : 0.25;
-
-  <Opacity opacity=cursorOpacity> <View style /> </Opacity>;
+  };
 };

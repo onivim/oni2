@@ -60,8 +60,8 @@ let runTest =
   };
 
   Revery.App.initConsole();
-  Printexc.record_backtrace(true);
 
+  Core.Log.enableDebug();
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
 
