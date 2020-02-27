@@ -56,7 +56,9 @@ module Styles = {
     [
       overflow(`Hidden),
       paddingHorizontal(5),
-      backgroundColor(theme.editorBackground),
+      backgroundColor(
+        isActive ? theme.tabActiveBackground : theme.tabInactiveBackground,
+      ),
       borderTop(~color=borderColor, ~width=2),
       borderBottom(~color=theme.editorBackground, ~width=2),
       height(Constants.tabHeight),
@@ -75,7 +77,7 @@ module Styles = {
       isActive && showHighlight ? uiFont.fontFileItalic : uiFont.fontFile,
     ),
     fontSize(uiFont.fontSize),
-    color(theme.tabActiveForeground),
+    color(isActive ? theme.tabActiveForeground : theme.tabInactiveForeground),
     justifyContent(`Center),
     alignItems(`Center),
   ];

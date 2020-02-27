@@ -165,10 +165,15 @@ let%component make =
        )
     |> React.listToElement;
 
-  let outerStyle = Style.[flexDirection(`Row), overflow(`Scroll)];
+  let outerStyle =
+    Style.[
+      flexDirection(`Row),
+      overflow(`Scroll),
+      backgroundColor(theme.editorGroupsHeaderTabsBackground),
+    ];
 
   let innerViewTransform =
-    Transform.[TranslateX((-1.) *. float_of_int(actualScrollLeft))];
+    Transform.[TranslateX((-1.) *. float(actualScrollLeft))];
 
   let innerStyle =
     Style.[flexDirection(`Row), transform(innerViewTransform)];

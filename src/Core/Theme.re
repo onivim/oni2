@@ -89,7 +89,11 @@ type t = {
   menuSelectionBackground: Color.t,
   editorOverviewRulerBracketMatchForeground: Color.t,
   editorWhitespaceForeground: Color.t,
+  editorGroupsHeaderTabsBackground: Color.t,
+  tabActiveBackground: Color.t,
   tabActiveForeground: Color.t,
+  tabInactiveBackground: Color.t,
+  tabInactiveForeground: Color.t,
   oniVisualModeBackground: Color.t,
   oniInsertModeBackground: Color.t,
   oniReplaceModeBackground: Color.t,
@@ -187,7 +191,11 @@ let default: t = {
   menuForeground: Color.hex("#FFFFFF"),
   menuSelectionBackground: Color.hex("#495162"),
   editorWhitespaceForeground: Color.hex("#3b4048"),
+  editorGroupsHeaderTabsBackground: Color.hex("#2F3440"),
+  tabActiveBackground: Color.hex("#2F3440"),
   tabActiveForeground: Color.hex("#DCDCDC"),
+  tabInactiveBackground: Color.hex("#2F3440"),
+  tabInactiveForeground: Color.hex("#DCDCDC"),
   oniVisualModeBackground: Color.hex("#56b6c2"),
   oniInsertModeBackground: Color.hex("#98c379"),
   oniReplaceModeBackground: Color.hex("#d19a66"),
@@ -452,12 +460,6 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let sneakForeground = menuForeground;
   let sneakHighlight = default.oniNormalModeBackground;
 
-  let tabActiveForeground =
-    getColor(
-      defaultForeground,
-      ["tab.activeForeground", "editor.foreground", "foreground"],
-    );
-
   let titleBarActiveBackground =
     getColor(
       defaultBackground,
@@ -625,7 +627,38 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sneakBackground,
     sneakForeground,
     sneakHighlight,
-    tabActiveForeground,
+    editorGroupsHeaderTabsBackground:
+      getColor(
+        defaultBackground,
+        [
+          "editorGroupHeader.tabsBackground",
+          "editor.background",
+          "background",
+        ],
+      ),
+    tabActiveBackground:
+      getColor(
+        defaultBackground,
+        ["tab.activebackground", "editor.background", "background"],
+      ),
+
+    tabActiveForeground:
+      getColor(
+        defaultForeground,
+        ["tab.activeForeground", "editor.foreground", "foreground"],
+      ),
+
+    tabInactiveBackground:
+      getColor(
+        defaultBackground,
+        ["tab.inactiveBackground", "editor.background", "background"],
+      ),
+
+    tabInactiveForeground:
+      getColor(
+        defaultForeground,
+        ["tab.inactiveForeground", "editor.foreground", "foreground"],
+      ),
     terminalBackground,
     terminalForeground,
     terminalAnsiBlack,
