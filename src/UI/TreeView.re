@@ -165,7 +165,7 @@ module Make = (Model: TreeModel) => {
 
   let useScroll = (~itemHeight, ~count, ~viewportHeight, ~scrollOffset) => {
     // We need to keep the previous value to know which edge to align a revealed item to
-    let%hook (prevScrollTop, setPrevScrollTop) = Hooks.ref(0);
+    let%hook prevScrollTop = Hooks.ref(0);
     // The internal value is used if scrollOffset isn't being passed in
     let%hook (internalScrollTop, setInternalScrollTop) = Hooks.state(0);
 
@@ -181,14 +181,14 @@ module Make = (Model: TreeModel) => {
              }
            | `Reveal(index) => {
                let offset = index * itemHeight;
-               if (offset < prevScrollTop) {
+               if (offset < prevScrollTop^) {
                  // out of view above, so align with top edge
                  offset;
-               } else if (offset + itemHeight > prevScrollTop + viewportHeight) {
+               } else if (offset + itemHeight > prevScrollTop^ + viewportHeight) {
                  // out of view below, so align with bottom edge
                  offset + itemHeight - viewportHeight;
                } else {
-                 prevScrollTop;
+                 prevScrollTop^;
                };
              },
          )
@@ -196,7 +196,7 @@ module Make = (Model: TreeModel) => {
       // Make sure we're not scrolled past the items
       |> IntEx.clamp(~lo=0, ~hi=itemHeight * count - viewportHeight);
 
-    setPrevScrollTop(targetScrollTop);
+    prevScrollTop := targetScrollTop;
 
     let%hook (actualScrollTop, setScrollTopImmediately) =
       Hooks.spring(
@@ -233,15 +233,8 @@ module Make = (Model: TreeModel) => {
                   ~tree,
                   (),
                 ) => {
-    let%hook (outerRef, setOuterRef) = Hooks.ref(None);
-
-    let menuHeight =
-      switch (outerRef) {
-      | Some(node) =>
-        let dimensions: Dimensions.t = node#measurements();
-        dimensions.height;
-      | None => itemHeight * initialRowsToRender
-      };
+    let%hook (menuHeight, setMenuHeight) =
+      Hooks.state(itemHeight * initialRowsToRender);
 
     let count = Model.expandedSubtreeSize(tree);
 
@@ -299,7 +292,7 @@ module Make = (Model: TreeModel) => {
 
     <View
       style=Styles.container
-      ref={ref => setOuterRef(Some(ref))}
+      onDimensionsChanged={({height, _}) => setMenuHeight(_ => height)}
       onMouseWheel>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>

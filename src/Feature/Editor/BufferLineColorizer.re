@@ -28,6 +28,7 @@ let create =
       ~index=0,
       ~backgroundColor=defaultBackgroundColor,
       ~foregroundColor=defaultForegroundColor,
+      ~syntaxScope=SyntaxScope.none,
       (),
     );
 

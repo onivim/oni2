@@ -7,7 +7,7 @@ module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
 module Constants = {
-  let fontSize = 20.;
+  let iconSize = 20.;
 };
 
 module Styles = {
@@ -29,12 +29,15 @@ module Styles = {
       backgroundColor(bg(~theme, ~isFocused)),
     ];
 
-  let icon = fgColor =>
+  let icon = fg =>
     Style.[
       fontFamily("seti.ttf"),
-      fontSize(Constants.fontSize),
+      fontSize(Constants.iconSize),
+      color(fg),
+      width(int_of_float(Constants.iconSize *. 0.75)),
+      height(int_of_float(Constants.iconSize *. 0.85)),
+      textWrap(TextWrapping.NoWrap),
       marginRight(10),
-      color(fgColor),
     ];
 
   let label = (~font: UiFont.t, ~theme: Theme.t, ~isFocused, ~custom) =>

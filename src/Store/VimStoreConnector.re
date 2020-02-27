@@ -18,6 +18,7 @@ module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
+module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
@@ -59,6 +60,9 @@ let start =
       setClipboardText,
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  let languageConfigLoader =
+    Ext.LanguageConfigurationLoader.create(languageInfo);
 
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
@@ -124,17 +128,6 @@ let start =
       OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
       |> Option.join
       |> Option.iter(action => dispatch(action));
-    });
-
-  let _: unit => unit =
-    // Unhandled escape is called when there is an `<esc>` sent to Vim,
-    // but nothing to escape from (ie, in normal mode with no pending operator)
-    Vim.onUnhandledEscape(() => {
-      let state = getState();
-      if (Notifications.any(state.notifications)) {
-        let oldestNotification = Notifications.getOldest(state.notifications);
-        dispatch(Actions.HideNotification(oldestNotification));
-      };
     });
 
   let _: unit => unit =
@@ -209,6 +202,9 @@ let start =
       Log.debugf(m => m("Buffer metadata changed: %n | %b", id, modified));
       dispatch(Actions.BufferSetModified(id, modified));
     });
+
+  let _: unit => unit =
+    Vim.Buffer.onWrite(id => {dispatch(Actions.BufferSaved(id))});
 
   let _: unit => unit =
     Vim.Cursor.onMoved(newPosition => {
@@ -512,6 +508,8 @@ let start =
           |> Option.map(Editor.getVimCursors)
           |> Option.value(~default=[]);
 
+        let primaryCursor = editor |> Option.map(Editor.getPrimaryCursor);
+
         let () =
           editor
           |> Option.iter(e => {
@@ -527,6 +525,27 @@ let start =
                ();
              });
 
+        let syntaxScope =
+          state
+          |> Selectors.getActiveBuffer
+          |> OptionEx.map2(
+               (primaryCursor, buffer) => {
+                 let bufferId = Core.Buffer.getId(buffer);
+                 let {line, column}: Location.t = primaryCursor;
+
+                 BufferSyntaxHighlights.getSyntaxScope(
+                   ~bufferId,
+                   ~line,
+                   // TODO: Reconcile 'byte position' vs 'character position'
+                   // in cursor.
+                   ~bytePosition=Index.toZeroBased(column),
+                   state.bufferSyntaxHighlights,
+                 );
+               },
+               primaryCursor,
+             )
+          |> Option.value(~default=Core.SyntaxScope.none);
+
         let acpEnabled =
           Core.Configuration.getValue(
             c => c.experimentalAutoClosingPairs,
@@ -535,17 +554,17 @@ let start =
 
         let autoClosingPairs =
           if (acpEnabled) {
-            Some(
-              Vim.AutoClosingPairs.create(
-                Vim.AutoClosingPairs.[
-                  AutoClosingPair.create(~opening="`", ~closing="`", ()),
-                  AutoClosingPair.create(~opening={|"|}, ~closing={|"|}, ()),
-                  AutoClosingPair.create(~opening="[", ~closing="]", ()),
-                  AutoClosingPair.create(~opening="(", ~closing=")", ()),
-                  AutoClosingPair.create(~opening="{", ~closing="}", ()),
-                ],
-              ),
-            );
+            state
+            |> Selectors.getActiveBuffer
+            |> OptionEx.flatMap(Core.Buffer.getFileType)
+            |> OptionEx.flatMap(
+                 Ext.LanguageConfigurationLoader.get_opt(
+                   languageConfigLoader,
+                 ),
+               )
+            |> Option.map(
+                 Ext.LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
+               );
           } else {
             None;
           };
@@ -618,6 +637,24 @@ let start =
       switch (dir) {
       | Some(_) => dispatch(Actions.BufferEnter(metadata, fileType))
       | None => ()
+      };
+
+      if (StringEx.startsWith(~prefix="oni://terminal", filePath)) {
+        let wholeLength = String.length(filePath);
+        let prefixLength = String.length("oni://terminal/");
+
+        let id =
+          String.sub(filePath, prefixLength, wholeLength - prefixLength)
+          |> int_of_string;
+
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              metadata.id,
+              BufferRenderer.Terminal({id: id}),
+            ),
+          ),
+        );
       };
     });
 
@@ -707,8 +744,12 @@ let start =
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
-          let (lines, columns) =
-            Editor.getLinesAndColumns(editor, editorGroup.metrics);
+          let Feature_Editor.EditorLayout.{
+                bufferHeightInCharacters: lines,
+                bufferWidthInCharacters: columns,
+                _,
+              } =
+            Editor.getLayout(editor, editorGroup.metrics);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -822,7 +863,7 @@ let start =
         };
       (state, eff);
 
-    | Init => (state, initEffect)
+    | Init(_) => (state, initEffect)
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),

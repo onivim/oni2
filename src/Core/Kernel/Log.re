@@ -51,6 +51,10 @@ let enableTrace = () => {
   Timber.App.setLevel(Timber.Level.trace);
 };
 
+let enableQuiet = () => {
+  Timber.App.setLevel(Timber.Level.error);
+};
+
 if (Timber.App.isLevelEnabled(Timber.Level.debug)) {
   enableDebug();
 } else {

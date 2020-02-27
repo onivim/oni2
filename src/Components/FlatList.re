@@ -94,14 +94,14 @@ let%component make =
                 ~ref as onRef=_ => (),
                 (),
               ) => {
-  let%hook (outerRef, setOuterRef) = Hooks.ref(None);
+  let%hook outerRef = Hooks.ref(None);
   let setOuterRef = ref => {
-    setOuterRef(Some(ref));
+    outerRef := Some(ref);
     onRef(ref);
   };
 
   let menuHeight =
-    switch (outerRef) {
+    switch (outerRef^) {
     | Some(node) =>
       let dimensions: Dimensions.t = node#measurements();
       dimensions.height;
@@ -186,7 +186,7 @@ let%component make =
 
   <View
     style={Styles.container(
-      ~isHeightEstimated=outerRef == None,
+      ~isHeightEstimated=outerRef^ == None,
       ~height=min(menuHeight, count * rowHeight),
     )}
     ref=setOuterRef

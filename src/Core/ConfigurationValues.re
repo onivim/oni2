@@ -17,7 +17,13 @@ type vimUseSystemClipboard = {
   paste: bool,
 };
 
+[@deriving show({with_path: false})]
+type autoClosingBrackets =
+  | Never
+  | LanguageDefined;
+
 type t = {
+  editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
   editorFontFamily: option(string),
   editorFontSize: float,
@@ -64,6 +70,7 @@ type t = {
 };
 
 let default = {
+  editorAutoClosingBrackets: LanguageDefined,
   editorDetectIndentation: true,
   editorFontFamily: Some("FiraCode-Regular.ttf"),
   editorFontSize: Constants.defaultFontSize,

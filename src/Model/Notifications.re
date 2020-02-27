@@ -3,9 +3,6 @@ open Notification;
 
 type t = list(Notification.t);
 
-module ContextMenu =
-  Oni_Components.ContextMenu.Make({});
-
 let initial: t = [];
 
 let reduce = (state, action: Actions.t) => {

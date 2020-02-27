@@ -10,7 +10,7 @@
   "dependencies": {
     "fs-extra": "^8.1.0",
     "sudo-prompt": "^9.0.0",
-    "vscode-exthost": "1.33.4",
+    "vscode-exthost": "1.33.5",
     "yauzl": "^2.5.1"
   },
   "jest": {

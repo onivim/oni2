@@ -104,7 +104,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           Keybindings.Keybinding.{
             key,
             command: "list.select",
-            condition: Variable("inEditorsPicker"),
+            condition: Defined("inEditorsPicker"),
           };
 
         if (containsCtrl(binding.key)) {
@@ -128,8 +128,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let getValue = v =>
       switch (Hashtbl.find_opt(currentConditions, v)) {
-      | Some(variableValue) => variableValue
-      | None => false
+      | Some(true) => WhenExpr.Value.True
+      | Some(false)
+      | None => WhenExpr.Value.False
       };
 
     Keybindings.Keybinding.(
@@ -173,6 +174,15 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           | FileExplorer => [
               Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
             ]
+
+          | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
+
+          | Terminal(id) =>
+            Feature_Terminal.shouldHandleInput(k)
+              ? [
+                Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
+              ]
+              : [Actions.KeyboardInput(k)]
 
           | Search => [Actions.Search(Feature_Search.Input(k))]
 

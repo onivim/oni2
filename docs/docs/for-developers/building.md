@@ -10,21 +10,24 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.6.2__ is required)
+- Install [Esy](https://esy.sh) (__0.6.2__ is required `npm install -g esy@0.6.2`)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - Install any other system packages required by Oni2 dependencies, as outlined below.
 
 ## Dependencies
 
-### Windows, macOS
+All platforms require `git`, `node` and `esy`, and the ones outlined in the `revery` docs:
+https://github.com/revery-ui/revery/wiki/Building-&-Installing.
 
-There should be no required system dependencies, outside of `git`, `node` and `esy` and the
-ones outlined in the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing.
+### Windows
+
+No additional requirements.
+
+### macOS
+
+Requires `libtool`. Can be installed via homebrew: `brew install libtool`.
 
 ### Linux
-
-Like the other platforms, `git`, `node` and `esy` are required, as well as any outlined in
-the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing.
 
 Some Linux distributions may need other packages:
 

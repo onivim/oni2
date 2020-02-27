@@ -14,5 +14,6 @@
         ppx_deriving_yojson.runtime
         reason-jsonrpc
         Oni2.core
+        isolinear
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

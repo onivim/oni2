@@ -107,6 +107,18 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
       );
     };
 
+  let onDimensionsChanged =
+      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+    let height = showTabs ? height - Constants.tabHeight : height;
+
+    GlobalContext.current().notifyEditorSizeChanged(
+      ~editorGroupId=editorGroup.editorGroupId,
+      ~width,
+      ~height,
+      (),
+    );
+  };
+
   let children = {
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
     let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
@@ -116,15 +128,6 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
-        let onDimensionsChanged =
-            ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-          GlobalContext.current().notifyEditorSizeChanged(
-            ~editorGroupId=editorGroup.editorGroupId,
-            ~width,
-            ~height,
-            (),
-          );
-        };
         let onScroll = deltaY => {
           let () =
             GlobalContext.current().editorScrollDelta(
@@ -142,17 +145,14 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
         switch (renderer) {
         | BufferRenderer.Editor =>
-          let activeBuffer = Selectors.getBufferForEditor(state, editor);
+          let buffer =
+            Selectors.getBufferForEditor(state, editor)
+            |> Option.value(~default=Buffer.empty);
           let rulers =
             Configuration.getValue(c => c.editorRulers, state.configuration);
           let showLineNumbers =
             Configuration.getValue(
               c => c.editorLineNumbers,
-              state.configuration,
-            );
-          let fontSize =
-            Configuration.getValue(
-              c => c.editorFontSize,
               state.configuration,
             );
           let showMinimap =
@@ -166,8 +166,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
               state.configuration,
             );
           let matchingPairsEnabled =
-            Selectors.getConfigurationValue(
-              state, Option.value(activeBuffer, ~default=Buffer.empty), c =>
+            Selectors.getConfigurationValue(state, buffer, c =>
               c.editorMatchBrackets
             );
           let shouldRenderWhitespace =
@@ -212,15 +211,14 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             isActiveSplit=isActive
             metrics
             editor
-            activeBuffer
-            onDimensionsChanged
+            buffer
             onCursorChange
+            onDimensionsChanged={_ => ()}
             onScroll
             theme
             rulers
             showLineNumbers
             editorFont={state.editorFont}
-            fontSize
             mode
             showMinimap
             maxMinimapCharacters
@@ -240,6 +238,18 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             smoothScroll
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
+        | BufferRenderer.Terminal({id}) =>
+          state.terminals
+          |> Feature_Terminal.getTerminalOpt(id)
+          |> Option.map(terminal => {
+               <TerminalView
+                 theme
+                 editorFont={state.editorFont}
+                 metrics
+                 terminal
+               />
+             })
+          |> Option.value(~default=React.empty)
         };
       | None => React.empty
       };
@@ -268,7 +278,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     );
   };
 
-  <View onMouseDown style>
+  <View onMouseDown style onDimensionsChanged>
     <View style=absoluteStyle> children </View>
     <View style=overlayStyle />
   </View>;
