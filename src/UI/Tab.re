@@ -25,29 +25,7 @@ let proportion = p => float(Constants.minWidth) *. p |> int_of_float;
 module Styles = {
   open Style;
 
-  let horizontalBorder = (tabPosition, numberOfTabs) =>
-    Style.(
-      switch (tabPosition, numberOfTabs) {
-      /* A single tab should have no borders */
-      | (1, 1) => []
-      /* The last tab should also have no borders */
-      | (i, l) when i == l => []
-      /* Every other tab should have a right border */
-      | (_, _) => [
-          borderRight(~width=1, ~color=Color.rgba(0., 0., 0., 0.1)),
-        ]
-      }
-    );
-
-  let container =
-      (
-        ~mode,
-        ~isActive,
-        ~showHighlight,
-        ~tabPosition,
-        ~numberOfTabs,
-        ~theme: Theme.t,
-      ) => {
+  let container = (~mode, ~isActive, ~showHighlight, ~theme: Theme.t) => {
     let (modeColor, _) = Theme.getColorsForMode(theme, mode);
 
     let borderColor =
@@ -60,13 +38,11 @@ module Styles = {
         isActive ? theme.tabActiveBackground : theme.tabInactiveBackground,
       ),
       borderTop(~color=borderColor, ~width=2),
-      borderBottom(~color=theme.editorBackground, ~width=2),
       height(Constants.tabHeight),
       minWidth(Constants.minWidth),
       flexDirection(`Row),
       justifyContent(`Center),
       alignItems(`Center),
-      ...horizontalBorder(tabPosition, numberOfTabs),
     ];
   };
 
@@ -93,8 +69,6 @@ module Styles = {
 let make =
     (
       ~title,
-      ~tabPosition,
-      ~numberOfTabs,
       ~isActive,
       ~modified,
       ~onClick,
@@ -132,15 +106,7 @@ let make =
     };
   };
 
-  <View
-    style={Styles.container(
-      ~mode,
-      ~isActive,
-      ~showHighlight,
-      ~tabPosition,
-      ~numberOfTabs,
-      ~theme,
-    )}>
+  <View style={Styles.container(~mode, ~isActive, ~showHighlight, ~theme)}>
     <Sneakable
       onSneak=onClick
       onAnyClick
