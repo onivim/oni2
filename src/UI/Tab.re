@@ -14,82 +14,96 @@ module Ext = Oni_Extensions;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
-type tabAction = unit => unit;
+module Constants = {
+  include Constants;
 
-let minWidth_ = 125;
-let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
+  let minWidth = 125;
+};
 
-let horizontalBorderStyles = (tabPosition, numberOfTabs) =>
-  Style.(
-    switch (tabPosition, numberOfTabs) {
-    /* A single tab should have no borders */
-    | (1, 1) => []
-    /* The last tab should also have no borders */
-    | (i, l) when i == l => []
-    /* Every other tab should have a right border */
-    | (_, _) => [borderRight(~width=1, ~color=Color.rgba(0., 0., 0., 0.1))]
-    }
-  );
+let proportion = p => float(Constants.minWidth) *. p |> int_of_float;
 
-let make =
-    (
-      ~title,
-      ~tabPosition,
-      ~numberOfTabs,
-      ~active,
-      ~modified,
-      ~onClick,
-      ~onClose,
-      ~theme: Theme.t,
-      ~uiFont: UiFont.t,
-      ~mode: Vim.Mode.t,
-      ~showHighlight: bool,
-      (),
-    ) => {
-  let (modeColor, _) = Theme.getColorsForMode(theme, mode);
+module Styles = {
+  open Style;
 
-  let borderColor =
-    active && showHighlight ? modeColor : Colors.transparentBlack;
+  let horizontalBorder = (tabPosition, numberOfTabs) =>
+    Style.(
+      switch (tabPosition, numberOfTabs) {
+      /* A single tab should have no borders */
+      | (1, 1) => []
+      /* The last tab should also have no borders */
+      | (i, l) when i == l => []
+      /* Every other tab should have a right border */
+      | (_, _) => [
+          borderRight(~width=1, ~color=Color.rgba(0., 0., 0., 0.1)),
+        ]
+      }
+    );
 
-  let containerStyle =
-    Style.[
+  let container =
+      (
+        ~mode,
+        ~isActive,
+        ~showHighlight,
+        ~tabPosition,
+        ~numberOfTabs,
+        ~theme: Theme.t,
+      ) => {
+    let (modeColor, _) = Theme.getColorsForMode(theme, mode);
+
+    let borderColor =
+      isActive && showHighlight ? modeColor : Colors.transparentBlack;
+
+    [
       overflow(`Hidden),
       paddingHorizontal(5),
       backgroundColor(theme.editorBackground),
       borderTop(~color=borderColor, ~width=2),
       borderBottom(~color=theme.editorBackground, ~width=2),
       height(Constants.tabHeight),
-      minWidth(minWidth_),
+      minWidth(Constants.minWidth),
       flexDirection(`Row),
       justifyContent(`Center),
       alignItems(`Center),
-      ...horizontalBorderStyles(tabPosition, numberOfTabs),
+      ...horizontalBorder(tabPosition, numberOfTabs),
     ];
+  };
 
-  let isBold = active && showHighlight;
+  let text = (~isActive, ~showHighlight, ~uiFont: UiFont.t, ~theme: Theme.t) => [
+    width(proportion(0.80) - 10),
+    textOverflow(`Ellipsis),
+    fontFamily(
+      isActive && showHighlight ? uiFont.fontFileItalic : uiFont.fontFile,
+    ),
+    fontSize(uiFont.fontSize),
+    color(theme.tabActiveForeground),
+    backgroundColor(theme.editorBackground),
+    justifyContent(`Center),
+    alignItems(`Center),
+  ];
 
-  let textStyle =
-    Style.[
-      width(proportion(0.80) - 10),
-      textOverflow(`Ellipsis),
-      fontFamily(isBold ? uiFont.fontFileItalic : uiFont.fontFile),
-      fontSize(uiFont.fontSize),
-      color(theme.tabActiveForeground),
-      backgroundColor(theme.editorBackground),
-      justifyContent(`Center),
-      alignItems(`Center),
-    ];
+  let icon = [
+    width(32),
+    height(Constants.tabHeight),
+    alignItems(`Center),
+    justifyContent(`Center),
+  ];
+};
 
-  let iconContainerStyle =
-    Style.[
-      width(32),
-      height(Constants.tabHeight),
-      alignItems(`Center),
-      justifyContent(`Center),
-    ];
-
-  let icon = modified ? FontAwesome.circle : FontAwesome.times;
-
+let make =
+    (
+      ~title,
+      ~tabPosition,
+      ~numberOfTabs,
+      ~isActive,
+      ~modified,
+      ~onClick,
+      ~onClose,
+      ~theme,
+      ~uiFont: UiFont.t,
+      ~mode,
+      ~showHighlight: bool,
+      (),
+    ) => {
   let state = GlobalContext.current().state;
   let language =
     Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
@@ -98,11 +112,11 @@ let make =
 
   let fileIconView =
     switch (fileIcon) {
-    | Some(v) =>
+    | Some(icon) =>
       <FontIcon
         fontFamily="seti.ttf"
-        icon={v.fontCharacter}
-        color={v.fontColor}
+        icon={icon.fontCharacter}
+        color={icon.fontColor}
         /* TODO: Use 'weight' value from IconTheme font */
         fontSize={uiFont.fontSize *. 1.5}
       />
@@ -117,7 +131,15 @@ let make =
     };
   };
 
-  <View style=containerStyle>
+  <View
+    style={Styles.container(
+      ~mode,
+      ~isActive,
+      ~showHighlight,
+      ~tabPosition,
+      ~numberOfTabs,
+      ~theme,
+    )}>
     <Sneakable
       onSneak=onClick
       onAnyClick
@@ -128,12 +150,15 @@ let make =
         alignItems(`Center),
         justifyContent(`Center),
       ]>
-      <View style=iconContainerStyle> fileIconView </View>
-      <Text style=textStyle text=title />
+      <View style=Styles.icon> fileIconView </View>
+      <Text
+        style={Styles.text(~isActive, ~showHighlight, ~uiFont, ~theme)}
+        text=title
+      />
     </Sneakable>
-    <Sneakable onClick=onClose style=iconContainerStyle>
+    <Sneakable onClick=onClose style=Styles.icon>
       <FontIcon
-        icon
+        icon={modified ? FontAwesome.circle : FontAwesome.times}
         color={theme.tabActiveForeground}
         fontSize={modified ? 10. : 12.}
       />

@@ -38,7 +38,7 @@ let toTab =
     tabPosition={index + 1}
     numberOfTabs
     title
-    active={Some(t.editorId) == activeEditorId}
+    isActive={Some(t.editorId) == activeEditorId}
     showHighlight=active
     modified={t.modified}
     uiFont
