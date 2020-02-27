@@ -211,7 +211,7 @@
     "reasonFuzz": "*",
     "rench": "1.7.1",
     "revery": "0.27.0",
-    "revery-terminal": "github:revery-ui/revery-terminal#65e81a0",
+    "revery-terminal": "github:revery-ui/revery-terminal#d9563a5",
     "reason-tree-sitter": "*",
     "reason-textmate": "^2.3.0",
     "esy-sdl2": "*",
