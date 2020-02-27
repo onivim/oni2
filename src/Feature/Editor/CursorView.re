@@ -38,7 +38,7 @@ let render =
     let width = float(characterWidth) *. context.charWidth;
     Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
 
-    switch (BufferLine.subExn(~index=offset, ~length=1, bufferLine)) {
+    switch (BufferLine.subExn(~index=column, ~length=1, bufferLine)) {
     | text =>
       Draw.shapedText(
         ~context,
