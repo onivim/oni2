@@ -452,6 +452,12 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let sneakForeground = menuForeground;
   let sneakHighlight = default.oniNormalModeBackground;
 
+  let tabActiveForeground =
+    getColor(
+      defaultForeground,
+      ["tab.activeForeground", "editor.foreground", "foreground"],
+    );
+
   let titleBarActiveBackground =
     getColor(
       defaultBackground,
@@ -619,6 +625,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sneakBackground,
     sneakForeground,
     sneakHighlight,
+    tabActiveForeground,
     terminalBackground,
     terminalForeground,
     terminalAnsiBlack,

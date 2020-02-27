@@ -76,7 +76,6 @@ module Styles = {
     ),
     fontSize(uiFont.fontSize),
     color(theme.tabActiveForeground),
-    backgroundColor(theme.editorBackground),
     justifyContent(`Center),
     alignItems(`Center),
   ];
