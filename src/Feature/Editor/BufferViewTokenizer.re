@@ -35,23 +35,11 @@ let isWhitespace = c => {
   || UChar.eq(lf, c);
 };
 
-let _isNonWhitespace = c => !_isWhitespace(c);
+let filterRuns = (r: Tokenizer.TextRun.t) => ZedBundled.length(r.text) != 0;
 
-let filterRuns = (r: Tokenizer.TextRun.t) => {
-  let len = ZedBundled.length(r.text);
-
-  if (len == 0) {
-    false;
-  } else {
-    true;
-  };
-};
-
-type colorizer = int => (Color.t, Color.t);
-
-let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
+let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
   let startIndex = Index.toZeroBased(r.startIndex);
-  let (bg, fg) = colorizer(startIndex);
+  let (backgroundColor, color) = colorizer(startIndex);
 
   let firstChar = ZedBundled.get(r.text, 0);
 
@@ -64,10 +52,7 @@ let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
       Text;
     };
 
-  let color = fg;
-  let backgroundColor = bg;
-
-  let ret: t = {
+  {
     tokenType,
     text: r.text,
     startPosition: r.startPosition,
@@ -75,7 +60,6 @@ let textRunToToken = (colorizer: colorizer, r: Tokenizer.TextRun.t) => {
     color,
     backgroundColor,
   };
-  ret;
 };
 
 let getCharacterPositionAndWidth = (~viewOffset: int=0, line: BufferLine.t, i) => {
@@ -91,15 +75,13 @@ let getCharacterPositionAndWidth = (~viewOffset: int=0, line: BufferLine.t, i) =
   (actualOffset, width);
 };
 
-let colorEqual = (c1: Color.t, c2: Color.t) => {
-  Color.equals(c1, c2);
-};
-
 let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {
   let split = (i0, c0, i1, c1) => {
-    let (bg1, fg1) = colorizer(i0);
-    let (bg2, fg2) = colorizer(i1);
+    let (bg0, fg0) = colorizer(i0);
+    let (bg1, fg1) = colorizer(i1);
 
+    !Color.equals(bg0, bg1)
+    || !Color.equals(fg0, fg1)
     || isWhitespace(c0) != isWhitespace(c1)
     /* Always split on tabs */
     || UChar.eq(c0, tab)
