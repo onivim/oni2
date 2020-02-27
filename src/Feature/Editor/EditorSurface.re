@@ -141,6 +141,7 @@ let make =
       ~shouldRenderWhitespace=ConfigurationValues.None,
       ~shouldRenderIndentGuides=false,
       ~shouldHighlightActiveIndentGuides=false,
+      ~smoothScroll=true,
       (),
     ) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
@@ -221,6 +222,7 @@ let make =
       isActiveSplit
       gutterWidth
       bufferWidthInCharacters={layout.bufferWidthInCharacters}
+      smoothScroll
     />
     {showMinimap
        ? <minimap

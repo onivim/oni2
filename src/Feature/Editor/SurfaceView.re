@@ -29,6 +29,9 @@ module Styles = {
   ];
 };
 
+let scrollSpringOptions =
+  Spring.Options.create(~stiffness=310., ~damping=30., ());
+
 let drawCurrentLineHighlight = (~context, ~theme: Theme.t, line) =>
   Draw.lineHighlight(
     ~context,
@@ -69,6 +72,7 @@ let%component make =
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferWidthInCharacters,
+                ~smoothScroll,
                 (),
               ) => {
   let%hook elementRef = React.Hooks.ref(None);
@@ -119,6 +123,21 @@ let%component make =
     };
   };
 
+  let%hook (scrollY, _setScrollYImmediately) =
+    Hooks.spring(
+      ~target=editor.scrollY,
+      ~restThreshold=100.,
+      ~enabled=smoothScroll,
+      scrollSpringOptions,
+    );
+  let%hook (scrollX, _setScrollXImmediately) =
+    Hooks.spring(
+      ~target=editor.scrollX,
+      ~restThreshold=100.,
+      ~enabled=smoothScroll,
+      scrollSpringOptions,
+    );
+
   <View
     ref={node => elementRef := Some(node)}
     style={Styles.bufferViewClipped(
@@ -138,8 +157,8 @@ let%component make =
             ~canvasContext,
             ~width=metrics.pixelWidth,
             ~height=metrics.pixelHeight,
-            ~scrollX=editor.scrollX,
-            ~scrollY=editor.scrollY,
+            ~scrollX,
+            ~scrollY,
             ~lineHeight=editorFont.measuredHeight,
             ~editorFont,
           );
