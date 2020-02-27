@@ -126,7 +126,9 @@ let make =
     <Sneakable onClick=onClose style=Styles.icon>
       <FontIcon
         icon={modified ? FontAwesome.circle : FontAwesome.times}
-        color={theme.tabActiveForeground}
+        color={
+          isActive ? theme.tabActiveForeground : theme.tabInactiveForeground
+        }
         fontSize={modified ? 10. : 12.}
       />
     </Sneakable>
