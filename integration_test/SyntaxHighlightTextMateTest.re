@@ -4,8 +4,6 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
-
 // Validate that textmate highlight runs
 runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
@@ -25,7 +23,7 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
     |> Option.map(Buffer.getId)
     |> Option.map(bufferId => {
          let tokens =
-           BufferSyntaxHighlights.getTokens(
+           Feature_Syntax.getTokens(
              bufferId,
              Index.zero,
              state.syntaxHighlights,

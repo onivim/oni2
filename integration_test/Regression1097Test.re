@@ -4,8 +4,6 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
-
 let gotSyntaxServerClose = ref(false);
 
 let onAfterDispatch =
@@ -45,7 +43,7 @@ runTestWithInput(
       |> Option.map(Buffer.getId)
       |> Option.map(bufferId => {
            let tokens =
-             BufferSyntaxHighlights.getTokens(
+             Feature_Syntax.getTokens(
                bufferId,
                Index.zero,
                state.syntaxHighlights,

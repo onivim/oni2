@@ -1,6 +1,5 @@
 module Core = Oni_Core;
 module Ext = Oni_Extensions;
-open Core.Utility;
 
 type msg =
   | ServerStarted(Oni_Syntax_Client.t)
