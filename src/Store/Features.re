@@ -33,6 +33,11 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | Syntax(msg) =>
+    let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);
+    let state = {...state, syntaxHighlights};
+    (state, Effect.none);
+
   | Terminal(msg) =>
     let (model, eff) = Feature_Terminal.update(state.terminals, msg);
 

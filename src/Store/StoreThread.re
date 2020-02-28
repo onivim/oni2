@@ -179,7 +179,7 @@ let start =
                Model.Actions.SyntaxServerStarted(client)
              | Service_Syntax.ServerClosed => Model.Actions.SyntaxServerClosed
              | Service_Syntax.ReceivedHighlights(hl) =>
-               Model.Actions.BufferSyntaxHighlights(hl),
+               Model.Actions.Syntax(Feature_Syntax.TokensHighlighted(hl)),
            );
       } else {
         Isolinear.Sub.none;

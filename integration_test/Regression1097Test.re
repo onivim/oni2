@@ -44,8 +44,8 @@ runTestWithInput(
       |> Option.map(bufferId => {
            let tokens =
              Feature_Syntax.getTokens(
-               bufferId,
-               Index.zero,
+               ~bufferId,
+               ~line=Index.zero,
                state.syntaxHighlights,
              );
 

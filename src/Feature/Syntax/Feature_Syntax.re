@@ -12,11 +12,9 @@ let empty = BufferMap.empty;
 
 let noTokens = [];
 
-module ClientLog = (
-  val Oni_Core.Log.withNamespace("Oni2.Feature.Syntax")
-);
+module ClientLog = (val Oni_Core.Log.withNamespace("Oni2.Feature.Syntax"));
 
-let getTokens = (bufferId: int, line: Index.t, highlights: t) => {
+let getTokens = (~bufferId: int, ~line: Index.t, highlights: t) => {
   highlights
   |> BufferMap.find_opt(bufferId)
   |> OptionEx.flatMap(LineMap.find_opt(line |> Index.toZeroBased))
@@ -25,7 +23,7 @@ let getTokens = (bufferId: int, line: Index.t, highlights: t) => {
 
 let getSyntaxScope =
     (~bufferId: int, ~line: Index.t, ~bytePosition: int, highlights: t) => {
-  let tokens = getTokens(bufferId, line, highlights);
+  let tokens = getTokens(~bufferId, ~line, highlights);
 
   let rec loop = (syntaxScope, currentTokens) => {
     ColorizedToken.(
@@ -91,3 +89,14 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
   );
 };
 
+[@deriving show({with_path: false})]
+type msg =
+  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
+  | BufferUpdated([@opaque] BufferUpdate.t);
+
+let update = (highlights: t, msg) =>
+  switch (msg) {
+  | TokensHighlighted(tokens) => setTokens(tokens, highlights)
+  | BufferUpdated(bu) when !bu.isFull => handleUpdate(bu, highlights)
+  | _ => highlights
+  };

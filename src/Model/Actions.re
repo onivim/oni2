@@ -30,7 +30,7 @@ type t =
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
-  | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
+  | Syntax(Feature_Syntax.msg)
   | SyntaxServerStarted([@opaque] Oni_Syntax_Client.t)
   | SyntaxServerClosed
   | Command(string)

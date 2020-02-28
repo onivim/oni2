@@ -16,6 +16,11 @@ module Ext = Oni_Extensions;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
+// TODO:
+// - Move effects to Service_Terminal
+// - Move updater to Feature_Terminal
+// - Change subscription granularity to per-buffer -
+// - this could help remove several effects!
 let start = (languageInfo: Ext.LanguageInfo.t) => {
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {

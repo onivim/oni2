@@ -58,8 +58,8 @@ let getTokensForLine =
 
     let tokenColors =
       Feature_Syntax.getTokens(
-        Buffer.getId(buffer),
-        Index.fromZeroBased(i),
+        ~bufferId=Buffer.getId(buffer),
+        ~line=Index.fromZeroBased(i),
         bufferSyntaxHighlights,
       );
 
