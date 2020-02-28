@@ -55,13 +55,11 @@ let generate = buffer =>
          );
 
        // if there are deleted lines past the end of the current document, mark the last lines as having deletes afterwards, or being modified
-       let markerLen = Array.length(markers);
-       if (markerLen > 0
-           && Array.length(deletes)
-           - shift^
-           - 1 > Array.length(adds)) {
-         markers[markerLen - 1] = (
-           switch (markers[markerLen - 1]) {
+       if (markers == [||]) {
+         [|DeletedBefore|];
+       } else if (Array.length(deletes) - shift^ - 1 > Array.length(adds)) {
+         markers[Array.length(markers) - 1] = (
+           switch (markers[Array.length(markers) - 1]) {
            | Modified
            | Added => Modified
 
@@ -70,9 +68,10 @@ let generate = buffer =>
            | Unmodified => DeletedAfter
            }
          );
+         markers;
+       } else {
+         markers;
        };
-
-       markers;
      });
 
 let markerPaint = Skia.Paint.make();
