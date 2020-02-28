@@ -4,6 +4,8 @@
  * Theming color / info
  */
 
+// VSCode theme defaults and fallbacks defined in https://github.com/microsoft/vscode/blob/abb01b183d450a590cbb78acb4e787eec5445830/src/vs/workbench/common/theme.ts
+
 open Revery;
 
 type defaults = {
@@ -411,16 +413,10 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     );
 
   let statusBarBackground =
-    getColor(
-      Color.hex("#007acc"),
-      ["statusBar.background", "editor.background", "background"],
-    );
+    getColor(Color.hex("#007acc"), ["statusBar.background"]);
 
   let statusBarForeground =
-    getColor(
-      Color.hex("#fff"),
-      ["statusBar.foreground", "editor.foreground", "foreground"],
-    );
+    getColor(Color.hex("#fff"), ["statusBar.foreground"]);
 
   let sideBarBackground =
     getColor(
@@ -644,20 +640,22 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
     tabActiveForeground:
       getColor(
-        defaultForeground,
-        ["tab.activeForeground", "editor.foreground", "foreground"],
+        defaults === light ? Color.hex("#333") : Colors.white,
+        ["tab.activeForeground"],
       ),
 
     tabInactiveBackground:
       getColor(
-        defaultBackground,
-        ["tab.inactiveBackground", "editor.background", "background"],
+        defaults === light ? Color.hex("#ececec") : Color.hex("#2d2d2d"),
+        ["tab.inactiveBackground"],
       ),
 
     tabInactiveForeground:
       getColor(
-        defaultForeground,
-        ["tab.inactiveForeground", "editor.foreground", "foreground"],
+        defaults === light
+          ? Color.multiplyAlpha(0.7, Color.hex("#333"))
+          : Color.multiplyAlpha(0.5, Colors.white), // should be lower opacity variant of _actual_ active foreground color, not the _default_ active foreground color
+        ["tab.inactiveForeground"],
       ),
     terminalBackground,
     terminalForeground,
