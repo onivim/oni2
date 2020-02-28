@@ -65,6 +65,9 @@ type t = {
   foreground: Color.t,
   activityBarBackground: Color.t,
   activityBarForeground: Color.t,
+  activityBarInactiveForeground: Color.t,
+  activityBarActiveBackground: Color.t,
+  activityBarActiveBorder: Color.t,
   editorBackground: Color.t,
   editorForeground: Color.t,
   editorCursorBackground: Color.t,
@@ -165,7 +168,10 @@ let default: t = {
   sideBarBackground: Color.hex("#21252b"),
   sideBarForeground: Color.hex("#ECEFF4"),
   activityBarBackground: Color.hex("#2F3440"),
-  activityBarForeground: Color.hex("#DCDCDC"),
+  activityBarForeground: Colors.white,
+  activityBarInactiveForeground: Color.hex("#DCDCDC"),
+  activityBarActiveBackground: Colors.transparentWhite,
+  activityBarActiveBorder: Colors.white,
   editorBackground: Color.hex("#2F3440"),
   editorForeground: Color.hex("#DCDCDC"),
   editorCursorBackground: Color.hex("#2F3440"),
@@ -306,6 +312,24 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let activityBarForeground =
     getColor(Colors.white, ["activityBar.foreground"]);
+
+  let activityBarInactiveForeground =
+    getColor(
+      Color.multiplyAlpha(0.4, Colors.white),
+      ["activityBar.inactiveForeground"],
+    );
+
+  let activityBarActiveBackground =
+    getColor(
+      Colors.transparentWhite, // Actually `null`
+      ["activityBar.activeBackground"],
+    );
+
+  let activityBarActiveBorder =
+    getColor(
+      Colors.white,
+      ["activityBar.activeBackground", "acitivityBar.foreground"],
+    );
 
   let editorHoverWidgetBorder =
     getColor(
@@ -552,6 +576,9 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     foreground,
     activityBarBackground,
     activityBarForeground,
+    activityBarInactiveForeground,
+    activityBarActiveBackground,
+    activityBarActiveBorder,
     editorBackground,
     editorForeground,
     editorCursorBackground,
