@@ -36,7 +36,7 @@ let make =
       left(0),
       width(totalWidth),
       height(scrollMetrics.thumbSize),
-      backgroundColor(theme.scrollbarSliderActiveBackground),
+      backgroundColor(theme.scrollbarSliderBackground),
     ];
 
   let totalPixel =

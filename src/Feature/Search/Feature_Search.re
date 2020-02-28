@@ -111,10 +111,10 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let title = (~font: UiFont.t) => [
+  let title = (~font: UiFont.t, ~theme: Theme.t) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
-    color(Colors.white),
+    color(theme.sideBarForeground),
     marginVertical(8),
     marginHorizontal(8),
   ];
@@ -165,7 +165,10 @@ let make =
   <View style=Styles.pane>
     <View style={Styles.queryPane(~theme)}>
       <View style=Styles.row>
-        <Text style={Styles.title(~font=uiFont)} text="Find in Files" />
+        <Text
+          style={Styles.title(~font=uiFont, ~theme)}
+          text="Find in Files"
+        />
       </View>
       <View style=Styles.row>
         <Input
@@ -181,7 +184,7 @@ let make =
     </View>
     <View style=Styles.resultsPane>
       <Text
-        style={Styles.title(~font=uiFont)}
+        style={Styles.title(~font=uiFont, ~theme)}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <LocationList theme uiFont editorFont items onSelectItem />
