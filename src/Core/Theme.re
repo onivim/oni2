@@ -274,9 +274,9 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   };
 
   let background =
-    getColor(defaultBackground, ["background", "editor.background"]);
+    getColor(defaultBackground, ["background"]);
   let foreground =
-    getColor(defaultForeground, ["foreground", "editor.foreground"]);
+    getColor(defaultForeground, ["foreground"]);
 
   let editorBackground =
     getColor(defaultBackground, ["editor.background", "background"]);
