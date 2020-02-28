@@ -613,12 +613,8 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sneakHighlight,
     editorGroupsHeaderTabsBackground:
       getColor(
-        defaults.editorBackground,
-        [
-          "editorGroupHeader.tabsBackground",
-          "editor.background",
-          "background",
-        ],
+        defaults === light ? Color.hex("#f3f3f3") : Color.hex("#252526"),
+        ["editorGroupHeader.tabsBackground"],
       ),
     tabActiveBackground:
       getColor(
