@@ -140,6 +140,7 @@ type t =
   | Sneak(Sneak.action)
   | Terminal(Feature_Terminal.msg)
   | PaneTabClicked(Pane.pane)
+  | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
   | WindowFocusGained
   | WindowFocusLost
