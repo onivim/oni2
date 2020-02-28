@@ -13,13 +13,11 @@ let fontToUse =
 let configuration = {|{ "editor.fontFamily": "|} ++ fontToUse ++ {|"}|};
 
 if (Revery.Environment.os !== Revery.Environment.Linux) {
-
   // Skipping this test on Linux, because there is a known fontconfig memory leak we hit.
   // The `FcInit` function in fontconfig leaks, and calling `FcFini` to clean it up crashes.
   // Some related notes:
   // https://www.spinics.net/lists/font-config/msg04332.html
   // https://bugs.archlinux.org/task/64168
-
   runTest(
     ~configuration=Some(configuration),
     ~name="EditorFontValid",
@@ -38,4 +36,4 @@ if (Revery.Environment.os !== Revery.Environment.Linux) {
       );
     },
   );
-}
+};
