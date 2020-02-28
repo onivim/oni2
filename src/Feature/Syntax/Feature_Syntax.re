@@ -99,8 +99,11 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
 let update = (highlights: t, msg) =>
   switch (msg) {
   | TokensHighlighted(tokens) => setTokens(tokens, highlights)
-  | BufferUpdated(update) when !update.isFull => handleUpdate(update, highlights)
-  | _ => highlights
+  | BufferUpdated(update) when !update.isFull =>
+    handleUpdate(update, highlights)
+  | ServerStarted(_client) => highlights
+  | ServerStopped => highlights
+  | BufferUpdated(_update) => highlights
   };
 
 let subscription = (~enabled, ~quitting, ~languageInfo, ~setup, _highlights) =>
