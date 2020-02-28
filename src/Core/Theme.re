@@ -300,15 +300,12 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let activityBarBackground =
     getColor(
-      defaults.editorBackground,
-      ["activityBar.background", "editor.background"],
+      defaults === light ? Color.hex("#2c2c2c") : Color.hex("#333"),
+      ["activityBar.background"],
     );
 
   let activityBarForeground =
-    getColor(
-      defaults.foreground,
-      ["activityBar.foreground", "editor.foreground", "foreground"],
-    );
+    getColor(Colors.white, ["activityBar.foreground"]);
 
   let editorHoverWidgetBorder =
     getColor(
