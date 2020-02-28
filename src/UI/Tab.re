@@ -26,17 +26,16 @@ module Styles = {
   open Style;
 
   let container = (~mode, ~isActive, ~showHighlight, ~theme: Theme.t) => {
+    let background =
+      isActive ? theme.tabActiveBackground : theme.tabInactiveBackground;
     let (modeColor, _) = Theme.getColorsForMode(theme, mode);
 
-    let borderColor =
-      isActive && showHighlight ? modeColor : Colors.transparentBlack;
+    let borderColor = isActive && showHighlight ? modeColor : background;
 
     [
       overflow(`Hidden),
       paddingHorizontal(5),
-      backgroundColor(
-        isActive ? theme.tabActiveBackground : theme.tabInactiveBackground,
-      ),
+      backgroundColor(background),
       borderTop(~color=borderColor, ~width=2),
       height(Constants.tabHeight),
       minWidth(Constants.minWidth),
