@@ -1,0 +1,12 @@
+(library
+    (name Service_Syntax)
+    (public_name Oni2.service.syntax)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Oni2.extensions
+      Oni2.syntax
+      Oni2.syntax_client
+      Revery
+    )
+    (preprocess (pps ppx_let ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx)))
