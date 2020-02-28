@@ -226,6 +226,7 @@
     "@opam/decoders-yojson": "*"
   },
   "resolutions": {
+    "reason-font-manager": "github:revery-ui/reason-font-manager#ee86456",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "3.5.2",
