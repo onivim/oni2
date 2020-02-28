@@ -21,7 +21,7 @@ let make = (~children, ~theme: Theme.t, ~configuration: Configuration.t, ()) => 
       ...children
     </View>;
   } else {
-    <View style=Style.[border(~color=theme.background, ~width=1)]>
+    <View style=Style.[border(~color=theme.editorBackground, ~width=1)]>
       ...children
     </View>;
   };

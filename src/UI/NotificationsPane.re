@@ -21,18 +21,14 @@ module Notification = {
       paddingVertical(5),
     ];
 
-    let text = (~background, ~font: UiFont.t) => [
+    let text = (~font: UiFont.t) => [
       fontFamily(font.fontFile),
       fontSize(11.),
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
-      backgroundColor(background),
     ];
 
-    let message = (~background, ~font) => [
-      flexGrow(1),
-      ...text(~background, ~font),
-    ];
+    let message = (~font) => [flexGrow(1), ...text(~font)];
 
     let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
   };
@@ -75,10 +71,7 @@ module Notification = {
 
     <View style=Styles.container>
       <icon />
-      <Text
-        style={Styles.message(~background=theme.background, ~font)}
-        text={item.message}
-      />
+      <Text style={Styles.message(~font)} text={item.message} />
       <closeButton />
     </View>;
   };
@@ -107,7 +100,6 @@ module Styles = {
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
     color(theme.editorForeground),
-    backgroundColor(theme.editorBackground),
     margin(8),
   ];
 };

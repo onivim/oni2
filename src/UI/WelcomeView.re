@@ -13,7 +13,7 @@ module Model = Oni_Model;
 module Styles = {
   let container = (~theme: Theme.t) =>
     Style.[
-      backgroundColor(theme.background),
+      backgroundColor(theme.editorBackground),
       color(theme.foreground),
       flexGrow(1),
       flexDirection(`Column),
@@ -26,7 +26,6 @@ module Styles = {
     Style.[
       fontFamily(font.fontFile),
       fontSize(20.),
-      backgroundColor(theme.background),
       color(theme.foreground),
       marginTop(-40),
     ];
@@ -35,7 +34,6 @@ module Styles = {
     Style.[
       fontFamily(font.fontFile),
       fontSize(12.),
-      backgroundColor(theme.background),
       color(theme.editorForeground),
     ];
 
@@ -75,7 +73,6 @@ module KeyBindingView = {
     let commandText = (~theme: Theme.t, ~fontFile, ~fontSize) => [
       fontFamily(fontFile),
       Style.fontSize(fontSize),
-      backgroundColor(theme.background),
       color(theme.editorForeground),
     ];
 

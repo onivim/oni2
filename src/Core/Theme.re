@@ -62,7 +62,6 @@ type editorGutter = {
 };
 
 type t = {
-  background: Color.t,
   foreground: Color.t,
   activityBarBackground: Color.t,
   activityBarForeground: Color.t,
@@ -162,7 +161,6 @@ type t = {
 };
 
 let default: t = {
-  background: Color.hex("#282C35"),
   foreground: Color.hex("#ECEFF4"),
   sideBarBackground: Color.hex("#21252b"),
   sideBarForeground: Color.hex("#ECEFF4"),
@@ -276,18 +274,17 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     };
   };
 
-  let background = getColor(defaults.editorBackground, ["background"]);
   let foreground = getColor(defaults.foreground, ["foreground"]);
 
   let editorBackground =
-    getColor(defaults.editorBackground, ["editor.background", "background"]);
+    getColor(defaults.editorBackground, ["editor.background"]);
   let editorForeground =
     getColor(defaults.foreground, ["editor.foreground", "foreground"]);
 
   let editorCursorBackground =
     getColor(
       defaults.editorBackground,
-      ["editorCursor.background", "editor.background", "background"],
+      ["editorCursor.background", "editor.background"],
     );
   let editorCursorForeground =
     getColor(
@@ -298,13 +295,13 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let editorHoverWidgetBackground =
     getColor(
       defaults.editorBackground,
-      ["editorHoverWidget.background", "editor.background", "background"],
+      ["editorHoverWidget.background", "editor.background"],
     );
 
   let activityBarBackground =
     getColor(
       defaults.editorBackground,
-      ["activityBar.background", "editor.background", "background"],
+      ["activityBar.background", "editor.background"],
     );
 
   let activityBarForeground =
@@ -322,7 +319,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let editorLineNumberBackground =
     getColor(
       defaults.editorBackground,
-      ["editorLineNumber.background", "editor.background", "background"],
+      ["editorLineNumber.background", "editor.background"],
     );
   let editorLineNumberForeground =
     getColor(
@@ -339,23 +336,19 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let editorLineHighlightBackground =
     getColor(
       defaults.editorBackground,
-      ["editor.lineHighlightBackground", "editor.background", "background"],
+      ["editor.lineHighlightBackground", "editor.background"],
     );
 
   let editorSuggestWidgetBackground =
     getColor(
       defaults.editorBackground,
-      ["editorSuggestWidget.background", "editor.background", "background"],
+      ["editorSuggestWidget.background", "editor.background"],
     );
 
   let editorSuggestWidgetSelectedBackground =
     getColor(
       defaults.editorBackground,
-      [
-        "editorSuggestWidget.selectedBackground",
-        "editor.background",
-        "background",
-      ],
+      ["editorSuggestWidget.selectedBackground", "editor.background"],
     );
 
   let editorSuggestWidgetBorder =
@@ -366,7 +359,6 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
         "editorHoverWidget.border",
         "editorSuggestWidget.background",
         "editor.background",
-        "background",
       ],
     );
   let editorSuggestWidgetHighlightForeground =
@@ -394,7 +386,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let menuBackground =
     getColor(
       defaults.editorBackground,
-      ["menu.background", "background", "editor.background"],
+      ["menu.background", "editor.background"],
     );
 
   let menuForeground =
@@ -412,7 +404,6 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
         "editor.selectionHighlightBackground",
         "list.focusBackground",
         "list.hoverBackground",
-        "background",
         "editor.background",
       ],
     );
@@ -461,7 +452,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let titleBarActiveBackground =
     getColor(
       defaults.editorBackground,
-      ["titleBar.activeBackground", "background", "editor.background"],
+      ["titleBar.activeBackground", "editor.background"],
     );
 
   let titleBarInactiveBackground =
@@ -470,7 +461,6 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       [
         "titleBar.inactiveBackground",
         "titleBar.activeBackground",
-        "background",
         "editor.background",
       ],
     );
@@ -478,7 +468,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let titleBarActiveForeground =
     getColor(
       defaults.foreground,
-      ["titleBar.activeForeground", "background", "editor.foreground"],
+      ["titleBar.activeForeground", "editor.foreground"],
     );
 
   let titleBarInactiveForeground =
@@ -562,7 +552,6 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   {
     ...default,
-    background,
     foreground,
     activityBarBackground,
     activityBarForeground,
@@ -634,7 +623,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     tabActiveBackground:
       getColor(
         defaults.editorBackground,
-        ["tab.activebackground", "editor.background", "background"],
+        ["tab.activebackground", "editor.background"],
       ),
 
     tabActiveForeground:
