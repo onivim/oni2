@@ -125,11 +125,6 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
         {...state, syntaxClient: Some(client)},
         Isolinear.Effect.none,
       )
-    // TODO: What to do about this?
-    /*| Model.Actions.ReallyQuitting => (
-        {...state, syntaxHighlightingEnabled: false},
-        Isolinear.Effect.none,
-      )*/
     | Model.Actions.ConfigurationSet(config) => (
         state,
         configurationChangeEffect(state.syntaxClient, config),
