@@ -218,7 +218,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             maxMinimapCharacters
             matchingPairsEnabled
             bufferHighlights={state.bufferHighlights}
-            bufferSyntaxHighlights={state.bufferSyntaxHighlights}
+            bufferSyntaxHighlights={state.syntaxHighlights}
             diagnostics={state.diagnostics}
             completions={state.completions}
             tokenTheme={state.tokenTheme}

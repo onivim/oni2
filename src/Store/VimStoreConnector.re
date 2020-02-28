@@ -18,7 +18,6 @@ module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
@@ -533,13 +532,13 @@ let start =
                  let bufferId = Core.Buffer.getId(buffer);
                  let {line, column}: Location.t = primaryCursor;
 
-                 BufferSyntaxHighlights.getSyntaxScope(
+                 Feature_Syntax.getSyntaxScope(
                    ~bufferId,
                    ~line,
                    // TODO: Reconcile 'byte position' vs 'character position'
                    // in cursor.
                    ~bytePosition=Index.toZeroBased(column),
-                   state.bufferSyntaxHighlights,
+                   state.syntaxHighlights,
                  );
                },
                primaryCursor,

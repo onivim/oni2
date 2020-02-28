@@ -1,8 +1,3 @@
-/*
- * BufferSyntaxHighlights.re
- *
- * State kept for per-buffer syntax highlighting
- */
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
@@ -18,7 +13,7 @@ let empty = BufferMap.empty;
 let noTokens = [];
 
 module ClientLog = (
-  val Oni_Core.Log.withNamespace("Oni2.Model.BufferSyntaxHighlights:TESTING")
+  val Oni_Core.Log.withNamespace("Oni2.Feature.Syntax")
 );
 
 let getTokens = (bufferId: int, line: Index.t, highlights: t) => {
@@ -95,3 +90,4 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
     highlights,
   );
 };
+

@@ -28,7 +28,7 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
            BufferSyntaxHighlights.getTokens(
              bufferId,
              Index.zero,
-             state.bufferSyntaxHighlights,
+             state.syntaxHighlights,
            );
 
          List.length(tokens) > 1;

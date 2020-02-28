@@ -57,7 +57,7 @@ let getTokensForLine =
       };
 
     let tokenColors =
-      BufferSyntaxHighlights.getTokens(
+      Feature_Syntax.getTokens(
         Buffer.getId(buffer),
         Index.fromZeroBased(i),
         bufferSyntaxHighlights,

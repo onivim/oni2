@@ -6,7 +6,7 @@
 
 open Oni_Model;
 
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
+module BufferSyntaxHighlights = Feature_Syntax;
 
 let reduce = (state: BufferSyntaxHighlights.t, action: Actions.t) => {
   switch (action) {

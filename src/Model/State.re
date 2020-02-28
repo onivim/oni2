@@ -14,7 +14,6 @@ module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 module ContextMenu = {
   type t =
@@ -26,7 +25,6 @@ type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
-  bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
   contextMenu: ContextMenu.t,
   mode: Vim.Mode.t,
@@ -56,8 +54,9 @@ type t = {
   scm: Feature_SCM.model,
   sneak: Sneak.t,
   statusBar: StatusBarModel.t,
-  syntaxHighlightingEnabled: bool,
   syntaxClient: option(Oni_Syntax_Client.t),
+  syntaxHighlightingEnabled: bool,
+  syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
@@ -83,7 +82,6 @@ let create: unit => t =
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: BufferRenderers.initial,
-    bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
     contextMenu: ContextMenu.Nothing,
     completions: Completions.initial,
@@ -111,8 +109,9 @@ let create: unit => t =
     scm: Feature_SCM.initial,
     sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),
-    syntaxHighlightingEnabled: false,
     syntaxClient: None,
+    syntaxHighlightingEnabled: false,
+    syntaxHighlights: Feature_Syntax.empty,
     windowManager: WindowManager.create(),
     windowTitle: "",
     windowIsFocused: true,
