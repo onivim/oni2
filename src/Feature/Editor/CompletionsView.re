@@ -104,7 +104,7 @@ module Styles = {
   let label = [flexGrow(1), margin(4)];
 
   let text =
-      (~highlighted=false, ~theme: Theme.t, ~editorFont: EditorFont.t, ()) => [
+      (~highlighted=false, ~theme: Theme.t, ~editorFont: Service_Font.t, ()) => [
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
@@ -115,7 +115,7 @@ module Styles = {
     backgroundColor(theme.editorBackground),
   ];
 
-  let highlightedText = (~theme: Theme.t, ~editorFont: EditorFont.t) =>
+  let highlightedText = (~theme: Theme.t, ~editorFont: Service_Font.t) =>
     text(~highlighted=true, ~theme, ~editorFont, ());
 
   let detail = (~width, ~lineHeight, ~theme: Theme.t) => [
@@ -131,7 +131,11 @@ module Styles = {
   ];
 
   let detailText =
-      (~editorFont: EditorFont.t, ~theme: Theme.t, ~tokenTheme: TokenTheme.t) => [
+      (
+        ~editorFont: Service_Font.t,
+        ~theme: Theme.t,
+        ~tokenTheme: TokenTheme.t,
+      ) => [
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
@@ -208,7 +212,7 @@ let make =
     |> Array.fold_left(
          (maxWidth, this: Filter.result(CompletionItem.t)) => {
            let textWidth =
-             EditorFont.measure(~text=this.item.label, editorFont);
+             Service_Font.measure(~text=this.item.label, editorFont);
            let thisWidth = int_of_float(textWidth +. 0.5) + Constants.padding;
            max(maxWidth, thisWidth);
          },

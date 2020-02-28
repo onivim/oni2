@@ -28,7 +28,7 @@ module Styles = {
     right(0),
   ];
 
-  let text = (~theme: Theme.t, ~editorFont: EditorFont.t) => [
+  let text = (~theme: Theme.t, ~editorFont: Service_Font.t) => [
     //width(width_),
     //height(height_),
     //textWrap(TextWrapping.NoWrap),
@@ -85,7 +85,7 @@ let%component hoverItem =
   } else {
     let width = {
       let measure = text =>
-        int_of_float(EditorFont.measure(~text, editorFont) +. 0.5);
+        int_of_float(Service_Font.measure(~text, editorFont) +. 0.5);
       let maxElementWidth =
         List.fold_left(
           (maxWidth, {message, _}: Diagnostic.t) =>
@@ -97,7 +97,8 @@ let%component hoverItem =
     };
 
     let height = {
-      let fontHeight = int_of_float(EditorFont.getHeight(editorFont) +. 0.5);
+      let fontHeight =
+        int_of_float(Service_Font.getHeight(editorFont) +. (-1.5));
       let elementHeight = fontHeight + Constants.innerPadding;
       elementHeight * List.length(diagnostics) + Constants.padding * 2;
     };

@@ -5,8 +5,8 @@
  */
 
 open Revery.UI;
-open Oni_Model;
 open Oni_Core;
+open Oni_Model;
 
 module EditorMetrics = Feature_Editor.EditorMetrics;
 
@@ -23,7 +23,7 @@ let make =
     (
       ~metrics: EditorMetrics.t,
       ~terminal: Feature_Terminal.terminal,
-      ~editorFont: EditorFont.t,
+      ~editorFont: Service_Font.t,
       ~theme: Theme.t,
       (),
     ) => {

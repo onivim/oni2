@@ -135,7 +135,6 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
-  let fontUpdater = FontStoreConnector.start();
   let completionUpdater = CompletionStoreConnector.start();
 
   let languageFeatureUpdater = LanguageFeatureConnector.start();
@@ -154,7 +153,6 @@ let start =
       vimUpdater,
       syntaxUpdater,
       extHostUpdater,
-      fontUpdater,
       configurationUpdater,
       keyBindingsUpdater,
       commandUpdater,
@@ -203,7 +201,27 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
 
-    [syntaxSubscription, terminalSubscription] |> Isolinear.Sub.batch;
+    let fontFamily =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontFamily,
+        state.configuration,
+      );
+    let fontSize =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontSize,
+        state.configuration,
+      );
+    let fontSmoothing =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontSmoothing,
+        state.configuration,
+      );
+    let editorFontSubscription =
+      Service_Font.Sub.font(~fontFamily, ~fontSize, ~fontSmoothing)
+      |> Isolinear.Sub.map(msg => Model.Actions.Font(msg));
+
+    [syntaxSubscription, terminalSubscription, editorFontSubscription]
+    |> Isolinear.Sub.batch;
   };
 
   module Store =
