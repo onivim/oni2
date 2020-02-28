@@ -14,7 +14,7 @@ let reduce = (state: BufferRenderers.t, action) => {
         switch (renderer) {
         | Welcome =>
           switch (action) {
-          | Actions.BufferUpdate(bu) when bu.id == id => Editor
+          | Actions.BufferUpdate(bu) when bu.update.id == id => Editor
           | _ => Welcome
           }
         | Editor => Editor

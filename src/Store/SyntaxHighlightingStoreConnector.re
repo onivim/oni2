@@ -61,19 +61,6 @@ module Subscription =
   });
 
 let start = (languageInfo: Ext.LanguageInfo.t) => {
-  let getLines = (state: Model.State.t, id: int) => {
-    switch (Model.Buffers.getBuffer(id, state.buffers)) {
-    | None => [||]
-    | Some(v) => Core.Buffer.getLines(v)
-    };
-  };
-
-  let getVersion = (state: Model.State.t, id: int) => {
-    switch (Model.Buffers.getBuffer(id, state.buffers)) {
-    | None => (-1)
-    | Some(v) => Core.Buffer.getVersion(v)
-    };
-  };
 
   let bufferEnterEffect = (maybeSyntaxClient, id: int, fileType) =>
     Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
@@ -144,10 +131,9 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;
   };
 
-  let getScopeForBuffer = (state: Model.State.t, id: int) => {
-    state.buffers
-    |> Model.Buffers.getBuffer(id)
-    |> OptionEx.flatMap(buf => Core.Buffer.getFileType(buf))
+  let getScopeForBuffer = (buffer: Core.Buffer.t) => {
+    buffer
+    |> Core.Buffer.getFileType
     |> OptionEx.flatMap(fileType =>
          Ext.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
        );
@@ -211,10 +197,10 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
       (state, visibilityChangedEffect(state.syntaxClient, visibleBuffers));
     // When there is a buffer update, send it over to the syntax highlight
     // strategy to handle the parsing.
-    | Model.Actions.BufferUpdate(bu) =>
-      let lines = getLines(state, bu.id);
-      let version = getVersion(state, bu.id);
-      let scope = getScopeForBuffer(state, bu.id);
+    | Model.Actions.BufferUpdate({ update as bu, newBuffer, _}) =>
+      let lines = Core.Buffer.getLines(newBuffer);
+      let version = Core.Buffer.getVersion(newBuffer);
+      let scope = getScopeForBuffer(newBuffer);
       if (!isVersionValid(version, bu.version)) {
         default;
       } else {

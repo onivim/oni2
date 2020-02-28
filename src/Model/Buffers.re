@@ -43,8 +43,8 @@ let isModifiedByPath = (buffers: t, filePath: string) => {
   );
 };
 
-let applyBufferUpdate = bufferUpdate =>
-  Option.map(buffer => Buffer.update(buffer, bufferUpdate));
+/*let applyBufferUpdate = ({update, newBuffer, _}) =>
+  Option.map(buffer => Buffer.update(buffer, bufferUpdate));*/
 
 let setIndentation = indent =>
   Option.map(buffer => Buffer.setIndentation(indent, buffer));
@@ -85,7 +85,7 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
 
-  | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
+  | BufferUpdate({update, newBuffer, _}) => IntMap.add(update.id, newBuffer, state)
 
   | _ => state
   };

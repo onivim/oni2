@@ -388,7 +388,15 @@ let start =
         != Some(false);
 
       if (shouldApply) {
-        dispatch(Actions.BufferUpdate(bu));
+        maybeBuffer
+        |> Option.iter((oldBuffer) => {
+          let newBuffer = Core.Buffer.update(oldBuffer, bu);
+          dispatch(Actions.BufferUpdate({
+            update: bu,
+            newBuffer,
+            oldBuffer,
+          }));
+        });
       } else {
         Log.debugf(m => m("Skipped buffer update at: %i", update.version));
       };
