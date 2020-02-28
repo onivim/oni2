@@ -32,7 +32,7 @@ module Styles = {
 
   let menuItem = [fontSize(14.), cursor(Revery.MouseCursors.pointer)];
 
-  let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) => [
+  let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted) => [
     fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
     textOverflow(`Ellipsis),
     fontSize(12.),
@@ -132,7 +132,7 @@ let make =
     let item = items[index];
     let isFocused = Some(index) == focused;
 
-    let style = Styles.label(~font, ~theme, ~isFocused);
+    let style = Styles.label(~font, ~theme);
     let text = Quickmenu.getLabel(item);
     let highlights = item.highlight;
     let normalStyle = style(~highlighted=false);
