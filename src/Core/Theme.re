@@ -18,6 +18,7 @@ type defaults = {
   editorForeground: Color.t,
   editorIndentGuideBackground: Color.t,
   editorIndentGuideActiveBackground: Color.t,
+  editorWhitespaceForeground: Color.t,
 };
 
 let light: defaults = {
@@ -26,6 +27,7 @@ let light: defaults = {
   editorForeground: Color.hex("#333"),
   editorIndentGuideBackground: Color.hex("#D3D3D3"),
   editorIndentGuideActiveBackground: Color.hex("#939393"),
+  editorWhitespaceForeground: Color.hex("#33333333"),
 };
 
 let dark: defaults = {
@@ -34,6 +36,7 @@ let dark: defaults = {
   editorForeground: Color.hex("#bbb"),
   editorIndentGuideBackground: Color.hex("#404040"),
   editorIndentGuideActiveBackground: Color.hex("#707070"),
+  editorWhitespaceForeground: Color.hex("#e3e4e229"),
 };
 
 let hcDark: defaults = {
@@ -42,6 +45,7 @@ let hcDark: defaults = {
   editorForeground: Color.hex("#FFF"),
   editorIndentGuideBackground: Color.hex("#FFF"),
   editorIndentGuideActiveBackground: Color.hex("#FFF"),
+  editorWhitespaceForeground: Color.hex("#e3e4e229"),
 };
 
 let getDefaults = uiTheme =>
@@ -392,6 +396,14 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       ],
     );
 
+  let editorWhitespaceForeground =
+    getColor(
+      defaults.editorWhitespaceForeground,
+      [
+        "editorWhitespace.foreground",
+      ],
+    );
+
   let editorIndentGuideBackground =
     getColor(
       defaults.editorIndentGuideBackground,
@@ -591,6 +603,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     editorSuggestWidgetBorder,
     editorSuggestWidgetHighlightForeground,
     editorSuggestWidgetSelectedBackground,
+    editorWhitespaceForeground,
     listActiveSelectionBackground:
       getColor(
         defaults === light ? Color.hex("#0074E8") : Color.hex("#094771"),
