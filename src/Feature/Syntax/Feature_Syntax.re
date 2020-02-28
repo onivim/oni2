@@ -6,6 +6,13 @@ open Oni_Syntax;
 module BufferMap = IntMap;
 module LineMap = IntMap;
 
+[@deriving show({with_path: false})]
+type msg =
+  | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerStopped
+  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
+  | BufferUpdated([@opaque] BufferUpdate.t);
+
 type t = BufferMap.t(LineMap.t(list(ColorizedToken.t)));
 
 let empty = BufferMap.empty;
@@ -89,14 +96,26 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
   );
 };
 
-[@deriving show({with_path: false})]
-type msg =
-  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
-  | BufferUpdated([@opaque] BufferUpdate.t);
-
 let update = (highlights: t, msg) =>
   switch (msg) {
   | TokensHighlighted(tokens) => setTokens(tokens, highlights)
   | BufferUpdated(bu) when !bu.isFull => handleUpdate(bu, highlights)
   | _ => highlights
   };
+
+let subscription = (~enabled, ~quitting, ~languageInfo, ~setup, highlights) => {
+  if (enabled && !quitting) {
+      Service_Syntax.Sub.create(~languageInfo, ~setup)
+      |> Isolinear.Sub.map(
+           fun
+           | Service_Syntax.ServerStarted(client) =>
+             ServerStarted(client)
+           | Service_Syntax.ServerClosed => 
+            ServerStopped
+           | Service_Syntax.ReceivedHighlights(hl) =>
+             TokensHighlighted(hl)
+         );
+  } else {
+    Isolinear.Sub.none
+  }
+}

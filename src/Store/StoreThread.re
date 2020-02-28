@@ -170,20 +170,15 @@ let start =
     ]);
 
   let subscriptions = (state: Model.State.t) => {
-    let syntaxSubscription: Isolinear.Sub.t(Model.Actions.t) =
-      if (state.syntaxHighlightingEnabled) {
-        Service_Syntax.Sub.create(~languageInfo, ~setup)
-        |> Isolinear.Sub.map(
-             fun
-             | Service_Syntax.ServerStarted(client) =>
-               Model.Actions.SyntaxServerStarted(client)
-             | Service_Syntax.ServerClosed => Model.Actions.SyntaxServerClosed
-             | Service_Syntax.ReceivedHighlights(hl) =>
-               Model.Actions.Syntax(Feature_Syntax.TokensHighlighted(hl)),
-           );
-      } else {
-        Isolinear.Sub.none;
-      };
+    let syntaxSubscription =
+      Feature_Syntax.subscription(
+        ~enabled=cliOptions.shouldSyntaxHighlight,
+        ~quitting=state.isQuitting,
+        ~languageInfo,
+        ~setup,
+        state.syntaxHighlights,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg));
 
     let workspaceUri =
       state.workspace

@@ -6,6 +6,8 @@
       Oni2.core
       Oni2.components
       Oni2.syntax
+      Oni2.syntax_client
+      Oni2.service.syntax
       Revery
       isolinear
       base

@@ -223,9 +223,7 @@ if (cliOptions.syntaxHighlightService) {
     });
 
     dispatch(
-      Model.Actions.Init({
-        syntaxHighlightingEnabled: cliOptions.shouldSyntaxHighlight,
-      }),
+      Model.Actions.Init
     );
     runEffects();
 

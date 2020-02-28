@@ -246,7 +246,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init(_) => (state, loadKeyBindingsEffect(true))
+    | Actions.Init => (state, loadKeyBindingsEffect(true))
     | Actions.KeyBindingsReload => (state, loadKeyBindingsEffect(false))
     | _ => (state, Isolinear.Effect.none)
     };

@@ -862,7 +862,7 @@ let start =
         };
       (state, eff);
 
-    | Init(_) => (state, initEffect)
+    | Init => (state, initEffect)
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),

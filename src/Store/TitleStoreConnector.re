@@ -109,7 +109,7 @@ let start = setTitle => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Init(_) => (state, Effects.updateTitle(state))
+    | Init => (state, Effects.updateTitle(state))
     | BufferEnter(_) => (state, Effects.updateTitle(state))
     | BufferSetModified(_) => (state, Effects.updateTitle(state))
 

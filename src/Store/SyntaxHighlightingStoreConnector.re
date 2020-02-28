@@ -117,22 +117,19 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Model.Actions.Init({syntaxHighlightingEnabled, _}) => (
-        {...state, syntaxHighlightingEnabled},
-        Isolinear.Effect.none,
-      )
-    | Model.Actions.SyntaxServerClosed => (
+    | Model.Actions.Syntax(Feature_Syntax.ServerStopped) => (
         {...state, syntaxClient: None},
         Isolinear.Effect.none,
       )
-    | Model.Actions.SyntaxServerStarted(client) => (
+    | Model.Actions.Syntax(Feature_Syntax.ServerStarted(client)) => (
         {...state, syntaxClient: Some(client)},
         Isolinear.Effect.none,
       )
-    | Model.Actions.ReallyQuitting => (
+    // TODO: What to do about this?
+    /*| Model.Actions.ReallyQuitting => (
         {...state, syntaxHighlightingEnabled: false},
         Isolinear.Effect.none,
-      )
+      )*/
     | Model.Actions.ConfigurationSet(config) => (
         state,
         configurationChangeEffect(state.syntaxClient, config),
