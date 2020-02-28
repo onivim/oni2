@@ -399,9 +399,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   let editorWhitespaceForeground =
     getColor(
       defaults.editorWhitespaceForeground,
-      [
-        "editorWhitespace.foreground",
-      ],
+      ["editorWhitespace.foreground"],
     );
 
   let editorIndentGuideBackground =
