@@ -52,5 +52,3 @@ module Sub = {
     SyntaxSubscription.create({id: "syntax-highligher", languageInfo, setup});
   };
 };
-
-module Effect = {};
