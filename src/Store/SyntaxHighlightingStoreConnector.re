@@ -215,10 +215,61 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
       let lines = getLines(state, bu.id);
       let version = getVersion(state, bu.id);
       let scope = getScopeForBuffer(state, bu.id);
+      let scopeStr = switch (scope) {
+      | None => "None"
+      | Some(s) => s;
+      };
+      prerr_endline (Printf.sprintf("VERSION: %d LINES: %d SCOPE: %s", version, Array.length(lines), scopeStr));
       if (!isVersionValid(version, bu.version)) {
         default;
       } else {
-        (state, bufferUpdateEffect(state.syntaxClient, bu, lines, scope));
+        // Run early syntax highlighting
+        switch (scope) {
+        | None => default
+        | Some(scope) => 
+          let syntaxGrammarRepository = 
+            Oni_Syntax.GrammarRepository.create(~log=(msg) => prerr_endline(msg), languageInfo);
+
+          let grammarRepository = 
+    Textmate.GrammarRepository.create(scope => 
+      Oni_Syntax.GrammarRepository.getGrammar(
+        ~scope,
+        syntaxGrammarRepository));
+          
+          let tokenizerJob = Oni_Syntax.TextmateTokenizerJob.create(
+          ~scope,
+          ~theme=state.tokenTheme,
+          ~grammarRepository,
+          lines,
+        ) |> Oni_Syntax.TextmateTokenizerJob.onBufferUpdate(bu, lines);
+
+        prerr_endline ("STARTING!");
+        let tokenizerJob = Core.Job.tick(~budget=Some(0.25), tokenizerJob);
+        prerr_endline ("STOPPING!");
+
+        let len = Array.length(lines);
+        let newSyntaxHighlights = ref(state.bufferSyntaxHighlights);
+        for (i in 0 to len) {
+          let tokens = 
+            Oni_Syntax.TextmateTokenizerJob.getTokenColors(i, tokenizerJob);
+
+          prerr_endline ("LINE: " ++ string_of_int(i));
+          List.iter((token) => prerr_endline(" -- token: " ++ Core.ColorizedToken.toString(token)), tokens);
+
+          newSyntaxHighlights := Feature_Editor.BufferSyntaxHighlights.setTokensForLine(
+            bu.id,
+            i,
+            tokens,
+            newSyntaxHighlights^,
+          );
+        };
+        ();
+        ({
+          ...state,
+          bufferSyntaxHighlights: newSyntaxHighlights^,
+        }, Isolinear.Effect.none)
+        };
+        //(state, bufferUpdateEffect(state.syntaxClient, bu, lines, scope));
       };
     | _ => default
     };
