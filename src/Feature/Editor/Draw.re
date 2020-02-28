@@ -250,7 +250,7 @@ let ruler = (~context, ~color, x) =>
   drawRect(
     ~context,
     ~x,
-    ~y=0.0,
+    ~y=context.scrollY,
     ~height=float(context.height),
     ~width=1.,
     ~color,
