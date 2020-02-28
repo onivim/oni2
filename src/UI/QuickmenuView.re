@@ -36,9 +36,6 @@ module Styles = {
     fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
     textOverflow(`Ellipsis),
     fontSize(12.),
-    backgroundColor(
-      isFocused ? theme.menuSelectionBackground : theme.menuBackground,
-    ),
     color(highlighted ? theme.oniNormalModeBackground : theme.menuForeground),
     textWrap(TextWrapping.NoWrap),
   ];

@@ -406,14 +406,14 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let menuBackground =
     getColor(
-      defaults.editorBackground,
-      ["menu.background", "editor.background"],
+      defaults === light ? Colors.white : Color.hex("#3c3c3c"),
+      ["menu.background", "dropdown.background"],
     );
 
   let menuForeground =
     getColor(
-      defaults.foreground,
-      ["menu.foreground", "foreground", "editor.foreground"],
+      defaults === light ? defaults.foreground : Color.hex("#f0f0f0"),
+      ["menu.foreground", "dropdown.foreground"],
     );
 
   let menuSelectionBackground =
