@@ -97,7 +97,7 @@ let make = (~state: State.t, ()) => {
         ])
       : React.empty;
 
-  <View style={Styles.root(theme.background, theme.foreground)}>
+  <View style={Styles.root(theme.editorBackground, theme.foreground)}>
     <Titlebar
       focused={state.windowIsFocused}
       maximized={state.windowIsMaximized}

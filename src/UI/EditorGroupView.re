@@ -79,7 +79,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
   let theme = state.theme;
   let mode = state.mode;
 
-  let style = editorViewStyle(theme.background, theme.foreground);
+  let style = editorViewStyle(theme.editorBackground, theme.foreground);
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 

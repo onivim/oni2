@@ -33,10 +33,10 @@ module Styles = {
     flexGrow(1),
     alignItems(`Center),
     backgroundColor(
-      if (isFocus) {
-        theme.listFocusBackground;
-      } else if (isActive) {
+      if (isActive) {
         theme.listActiveSelectionBackground;
+      } else if (isFocus) {
+        theme.listFocusBackground;
       } else {
         Colors.transparentWhite;
       },
@@ -55,10 +55,10 @@ module Styles = {
       ) {
       | Some(color) => color
       | None =>
-        if (isFocus) {
-          theme.listFocusForeground;
-        } else if (isActive) {
+        if (isActive) {
           theme.listActiveSelectionForeground;
+        } else if (isFocus) {
+          theme.listFocusForeground;
         } else {
           theme.foreground;
         }
@@ -162,7 +162,12 @@ let make =
 
   <View style=Styles.container>
     <TreeView
-      scrollOffset onScrollOffsetChange tree itemHeight=22 onClick=onNodeClick>
+      scrollOffset
+      onScrollOffsetChange
+      tree
+      itemHeight=22
+      onClick=onNodeClick
+      arrowColor={theme.foreground}>
       ...{node => {
         let decorations =
           StringMap.find_opt(node.path, state.fileExplorer.decorations);

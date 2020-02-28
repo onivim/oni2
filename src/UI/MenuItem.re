@@ -12,7 +12,7 @@ module Constants = {
 
 module Styles = {
   let bg = (~theme: Theme.t, ~isFocused) =>
-    isFocused ? theme.menuSelectionBackground : theme.menuBackground;
+    isFocused ? theme.listFocusBackground : theme.menuBackground;
 
   let text = (~theme: Theme.t, ~font: UiFont.t, ~isFocused) =>
     Style.[
