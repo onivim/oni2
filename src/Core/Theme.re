@@ -4,7 +4,11 @@
  * Theming color / info
  */
 
-// VSCode theme defaults and fallbacks defined in https://github.com/microsoft/vscode/blob/abb01b183d450a590cbb78acb4e787eec5445830/src/vs/workbench/common/theme.ts
+// VSCode theme defaults and fallbacks defined in
+// https://github.com/microsoft/vscode/blob/634068a42471d610453d97fa0c81ec7e713c4e17/src/vs/platform/theme/common/colorRegistry.ts
+// https://github.com/microsoft/vscode/blob/abb01b183d450a590cbb78acb4e787eec5445830/src/vs/workbench/common/theme.ts
+// https://github.com/microsoft/vscode/blob/d49c5f3bc73ca4b41fe1306b2bf1d5b4bff96291/src/vs/editor/common/view/editorColorRegistry.ts
+// https://github.com/microsoft/vscode/blob/0991720b7b44ffc15760b578b284caff78ccf398/src/vs/workbench/contrib/terminal/common/terminalColorRegistry.ts
 
 open Revery;
 
@@ -582,33 +586,33 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     editorSuggestWidgetSelectedBackground,
     listActiveSelectionBackground:
       getColor(
-        defaultBackground,
-        ["list.activeSelectionBackground", "menu.selectionBackground"],
+        defaults === light ? Color.hex("#0074E8") : Color.hex("#094771"),
+        ["list.activeSelectionBackground"],
       ),
     listActiveSelectionForeground:
       getColor(
-        defaultForeground,
-        ["list.activeSelectionForeground", "menu.foreground"],
+        Colors.white,
+        ["list.activeSelectionForeground"],
       ),
     listFocusBackground:
       getColor(
-        defaultBackground,
-        ["list.focusBackground", "menu.selectionBackground"],
+        defaults === light ? Color.hex("#D6EBFF") : Color.hex("#062F4A"),
+        ["list.focusBackground"],
       ),
     listFocusForeground:
       getColor(
-        defaultForeground,
-        ["list.focusForeground", "menu.foreground"],
+        defaultForeground, // Actually `null`, but not sure what that means
+        ["list.focusForeground"],
       ),
     listHoverBackground:
       getColor(
-        defaultBackground,
-        ["list.hoverBackground", "menu.selectionBackground"],
+        defaults === light ? Color.hex("#F0F0F0") : Color.hex("#2A2D2E"),
+        ["list.hoverBackground"],
       ),
     listHoverForeground:
       getColor(
-        defaultForeground,
-        ["list.hoverForeground", "menu.foreground"],
+        defaultForeground, // Actually `null`, but not sure what that means
+        ["list.hoverForeground"],
       ),
     menuBackground,
     menuForeground,
