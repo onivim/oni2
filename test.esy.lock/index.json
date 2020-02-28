@@ -1,5 +1,5 @@
 {
-  "checksum": "c8154b3faaed8b2625af08c2f585bdb7",
+  "checksum": "3f58923e3c2a3a1b14f4f088c17ec6d2",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -152,8 +152,8 @@
         "reason-sdl2@2.10.3017@d41d8cd9",
         "reason-harfbuzz@github:revery-ui/reason-harfbuzz#0848520@d41d8cd9",
         "reason-gl-matrix@0.9.9307@d41d8cd9",
-        "reason-font-manager@github:revery-ui/reason-font-manager#ee86456@d41d8cd9",
-        "flex@1.2.2@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
+        "reason-font-manager@2.0.2@d41d8cd9", "flex@1.2.2@d41d8cd9",
+        "@reason-native/rely@1.3.1@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
         "@opam/lwt_ppx@opam:1.2.2@ee59a0be", "@opam/lwt@opam:4.5.0@677655b4",
@@ -503,14 +503,15 @@
       ],
       "devDependencies": []
     },
-    "reason-font-manager@github:revery-ui/reason-font-manager#ee86456@d41d8cd9": {
-      "id":
-        "reason-font-manager@github:revery-ui/reason-font-manager#ee86456@d41d8cd9",
+    "reason-font-manager@2.0.2@d41d8cd9": {
+      "id": "reason-font-manager@2.0.2@d41d8cd9",
       "name": "reason-font-manager",
-      "version": "github:revery-ui/reason-font-manager#ee86456",
+      "version": "2.0.2",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-font-manager#ee86456" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-font-manager/-/reason-font-manager-2.0.2.tgz#sha1:c625a6ffe920fc34a8b433a6b03c2f9b238aa6c2"
+        ]
       },
       "overrides": [],
       "dependencies": [
