@@ -43,9 +43,6 @@ let isModifiedByPath = (buffers: t, filePath: string) => {
   );
 };
 
-/*let applyBufferUpdate = ({update, newBuffer, _}) =>
-  Option.map(buffer => Buffer.update(buffer, bufferUpdate));*/
-
 let setIndentation = indent =>
   Option.map(buffer => Buffer.setIndentation(indent, buffer));
 
