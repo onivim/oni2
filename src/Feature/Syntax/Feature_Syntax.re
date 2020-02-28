@@ -99,7 +99,7 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
 let update = (highlights: t, msg) =>
   switch (msg) {
   | TokensHighlighted(tokens) => setTokens(tokens, highlights)
-  | BufferUpdated(bu) when !bu.isFull => handleUpdate(bu, highlights)
+  | BufferUpdated(update) when !update.isFull => handleUpdate(update, highlights)
   | _ => highlights
   };
 
