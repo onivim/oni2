@@ -61,7 +61,6 @@ module Subscription =
   });
 
 let start = (languageInfo: Ext.LanguageInfo.t) => {
-
   let bufferEnterEffect = (maybeSyntaxClient, id: int, fileType) =>
     Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
       OptionEx.iter2(
@@ -197,14 +196,17 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
       (state, visibilityChangedEffect(state.syntaxClient, visibleBuffers));
     // When there is a buffer update, send it over to the syntax highlight
     // strategy to handle the parsing.
-    | Model.Actions.BufferUpdate({ update as bu, newBuffer, _}) =>
+    | Model.Actions.BufferUpdate({update, newBuffer, _}) =>
       let lines = Core.Buffer.getLines(newBuffer);
       let version = Core.Buffer.getVersion(newBuffer);
       let scope = getScopeForBuffer(newBuffer);
-      if (!isVersionValid(version, bu.version)) {
+      if (!isVersionValid(version, update.version)) {
         default;
       } else {
-        (state, bufferUpdateEffect(state.syntaxClient, bu, lines, scope));
+        (
+          state,
+          bufferUpdateEffect(state.syntaxClient, update, lines, scope),
+        );
       };
     | _ => default
     };

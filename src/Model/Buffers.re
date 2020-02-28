@@ -85,7 +85,8 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
 
-  | BufferUpdate({update, newBuffer, _}) => IntMap.add(update.id, newBuffer, state)
+  | BufferUpdate({update, newBuffer, _}) =>
+    IntMap.add(update.id, newBuffer, state)
 
   | _ => state
   };

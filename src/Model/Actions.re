@@ -26,9 +26,9 @@ type t =
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
   | BufferUpdate({
-    update: [@opaque] BufferUpdate.t,
-    oldBuffer: [@opaque] Buffer.t,
-    newBuffer: [@opaque] Buffer.t,
+      update: [@opaque] BufferUpdate.t,
+      oldBuffer: [@opaque] Buffer.t,
+      newBuffer: [@opaque] Buffer.t,
     })
   | BufferRenderer(BufferRenderer.action)
   | BufferSaved(int)

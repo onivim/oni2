@@ -184,7 +184,9 @@ let start = (extensions, extHostClient) => {
 
     | Actions.BufferUpdate(bu) => (
         state,
-        Isolinear.Effect.batch([modelChangedEffect(state.buffers, bu.update)]),
+        Isolinear.Effect.batch([
+          modelChangedEffect(state.buffers, bu.update),
+        ]),
       )
 
     | Actions.BufferSaved(_) => (
