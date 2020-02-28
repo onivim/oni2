@@ -49,7 +49,7 @@ module Sub = {
       };
     });
 
-  let create = (languageInfo, setup) => {
+  let create = (~languageInfo, ~setup) => {
     SyntaxSubscription.create({id: "syntax-highligher", languageInfo, setup});
   };
 };

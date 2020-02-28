@@ -172,16 +172,14 @@ let start =
   let subscriptions = (state: Model.State.t) => {
     let syntaxSubscription: Isolinear.Sub.t(Model.Actions.t) =
       if (state.syntaxHighlightingEnabled) {
-        SyntaxHighlightingStoreConnector.(
-          SyntaxHighlightingStoreConnector.Subscription.create({
-            id: "syntax-highlighter",
-            languageInfo,
-            setup,
-            onStart: client => Model.Actions.SyntaxServerStarted(client),
-            onClose: () => Model.Actions.SyntaxServerClosed,
-            onHighlights: highlights =>
-              Model.Actions.BufferSyntaxHighlights(highlights),
-          })
+        Service_Syntax.Sub.create(
+        ~languageInfo,
+        ~setup
+        )
+        |> Isolinear.Sub.map(fun
+        | Service_Syntax.ServerStarted(client) => Model.Actions.SyntaxServerStarted(client)
+        | Service_Syntax.ServerClosed => Model.Actions.SyntaxServerClosed
+        | Service_Syntax.ReceivedHighlights(hl) => Model.Actions.BufferSyntaxHighlights(hl)
         );
       } else {
         Isolinear.Sub.none;

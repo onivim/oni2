@@ -16,50 +16,6 @@ module Ext = Oni_Extensions;
 module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
-type subscriptionParams = {
-  id: string,
-  languageInfo: Ext.LanguageInfo.t,
-  setup: Core.Setup.t,
-  onStart: Oni_Syntax_Client.t => Model.Actions.t,
-  onClose: unit => Model.Actions.t,
-  onHighlights: list(Oni_Syntax.Protocol.TokenUpdate.t) => Model.Actions.t,
-};
-
-module Subscription =
-  Isolinear.Sub.Make({
-    type msg = Model.Actions.t;
-
-    type params = subscriptionParams;
-
-    type state = Oni_Syntax_Client.t;
-
-    let subscriptionName = "SyntaxSubscription";
-    let getUniqueId = params => params.id;
-
-    let init = (~params, ~dispatch) => {
-      let client =
-        Oni_Syntax_Client.start(
-          ~onClose=_ => dispatch(params.onClose()),
-          ~scheduler=Core.Scheduler.mainThread,
-          ~onHighlights=
-            highlights => {dispatch(params.onHighlights(highlights))},
-          ~onHealthCheckResult=_ => (),
-          params.languageInfo,
-          params.setup,
-        );
-
-      dispatch(params.onStart(client));
-      client;
-    };
-
-    let update = (~params as _, ~state, ~dispatch as _) => state;
-
-    let dispose = (~params as _, ~state) => {
-      let () = Oni_Syntax_Client.close(state);
-      ();
-    };
-  });
-
 let start = (languageInfo: Ext.LanguageInfo.t) => {
   let getLines = (state: Model.State.t, id: int) => {
     switch (Model.Buffers.getBuffer(id, state.buffers)) {
