@@ -21,7 +21,7 @@ let make =
       left(scrollMetrics.thumbOffset),
       width(scrollMetrics.thumbSize),
       top(0),
-      backgroundColor(theme.scrollbarSliderActiveBackground),
+      backgroundColor(theme.scrollbarSliderBackground),
     ];
 
   switch (scrollMetrics.visible) {

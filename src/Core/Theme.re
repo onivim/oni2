@@ -446,24 +446,20 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let scrollbarSliderActiveBackground =
     getColor(
-      defaults.editorBackground,
-      [
-        "scrollbarSlider.activeBackground",
-        "menu.selectionBackground",
-        "list.activeSelectionBackground",
-      ],
+      defaults === light ? Color.hex("#00000094") : Color.hex("#bfbfbf64"),
+      ["scrollbarSlider.activeBackground"],
     );
 
   let scrollbarSliderBackground =
     getColor(
-      defaults.editorBackground,
-      ["scrollbarSlider.background", "menu.background", "list.background"],
+      defaults === light ? Color.hex("#64646464") : Color.hex("#79797964"),
+      ["scrollbarSlider.background"],
     );
 
   let scrollbarSliderHoverBackground =
     getColor(
-      defaults.editorBackground,
-      ["scrollbarSlider.hoverBackground", "scrollbarSlider.background"],
+      defaults === light ? Color.hex("#646464B4") : Color.hex("#646464B4"),
+      ["scrollbarSlider.hoverBackground"],
     );
 
   let sneakBackground = menuSelectionBackground;
