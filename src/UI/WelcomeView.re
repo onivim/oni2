@@ -73,7 +73,7 @@ module KeyBindingView = {
     let commandText = (~theme: Theme.t, ~fontFile, ~fontSize) => [
       fontFamily(fontFile),
       Style.fontSize(fontSize),
-      color(theme.editorForeground),
+      color(theme.foreground),
     ];
 
     let spacer = Style.[flexGrow(1)];
