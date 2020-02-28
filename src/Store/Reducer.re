@@ -52,7 +52,7 @@ let reduce: (State.t, Actions.t) => State.t =
         | Font(Service_Font.FontLoaded(font)) => {...s, editorFont: font}
         | EnableZenMode => {...s, zenMode: true}
         | DisableZenMode => {...s, zenMode: false}
-        | ReallyQuitting => { ...s, isQuitting: true }
+        | ReallyQuitting => {...s, isQuitting: true}
         | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
         | WindowFocusGained => {...s, windowIsFocused: true}
         | WindowFocusLost => {...s, windowIsFocused: false}

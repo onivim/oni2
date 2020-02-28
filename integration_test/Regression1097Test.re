@@ -8,7 +8,8 @@ let gotSyntaxServerClose = ref(false);
 
 let onAfterDispatch =
   fun
-  | Actions.SyntaxServerClosed => gotSyntaxServerClose := true
+  | Actions.Syntax(Feature_Syntax.ServerStopped) =>
+    gotSyntaxServerClose := true
   | _ => ();
 
 // Validate that textmate highlight runs

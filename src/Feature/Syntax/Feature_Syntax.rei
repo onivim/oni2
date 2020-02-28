@@ -19,7 +19,12 @@ let getSyntaxScope:
 
 let update: (t, msg) => t;
 
-let subscription: (~enabled: bool, ~quitting: bool, 
-  ~languageInfo: Oni_Extensions.LanguageInfo.t,
-  ~setup: Setup.t,
-  t) => Isolinear.Sub.t(msg);
+let subscription:
+  (
+    ~enabled: bool,
+    ~quitting: bool,
+    ~languageInfo: Oni_Extensions.LanguageInfo.t,
+    ~setup: Setup.t,
+    t
+  ) =>
+  Isolinear.Sub.t(msg);

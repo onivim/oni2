@@ -222,9 +222,7 @@ if (cliOptions.syntaxHighlightService) {
       state: initialState,
     });
 
-    dispatch(
-      Model.Actions.Init
-    );
+    dispatch(Model.Actions.Init);
     runEffects();
 
     List.iter(

@@ -103,19 +103,15 @@ let update = (highlights: t, msg) =>
   | _ => highlights
   };
 
-let subscription = (~enabled, ~quitting, ~languageInfo, ~setup, highlights) => {
+let subscription = (~enabled, ~quitting, ~languageInfo, ~setup, _highlights) =>
   if (enabled && !quitting) {
-      Service_Syntax.Sub.create(~languageInfo, ~setup)
-      |> Isolinear.Sub.map(
-           fun
-           | Service_Syntax.ServerStarted(client) =>
-             ServerStarted(client)
-           | Service_Syntax.ServerClosed => 
-            ServerStopped
-           | Service_Syntax.ReceivedHighlights(hl) =>
-             TokensHighlighted(hl)
-         );
+    Service_Syntax.Sub.create(~languageInfo, ~setup)
+    |> Isolinear.Sub.map(
+         fun
+         | Service_Syntax.ServerStarted(client) => ServerStarted(client)
+         | Service_Syntax.ServerClosed => ServerStopped
+         | Service_Syntax.ReceivedHighlights(hl) => TokensHighlighted(hl),
+       );
   } else {
-    Isolinear.Sub.none
-  }
-}
+    Isolinear.Sub.none;
+  };
