@@ -1,8 +1,3 @@
-/*
- * BufferSyntaxHighlights.re
- *
- * State kept for per-buffer syntax highlighting
- */
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
@@ -11,17 +6,22 @@ open Oni_Syntax;
 module BufferMap = IntMap;
 module LineMap = IntMap;
 
+[@deriving show({with_path: false})]
+type msg =
+  | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerStopped
+  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
+  | BufferUpdated([@opaque] BufferUpdate.t);
+
 type t = BufferMap.t(LineMap.t(list(ColorizedToken.t)));
 
 let empty = BufferMap.empty;
 
 let noTokens = [];
 
-module ClientLog = (
-  val Oni_Core.Log.withNamespace("Oni2.Model.BufferSyntaxHighlights:TESTING")
-);
+module ClientLog = (val Oni_Core.Log.withNamespace("Oni2.Feature.Syntax"));
 
-let getTokens = (bufferId: int, line: Index.t, highlights: t) => {
+let getTokens = (~bufferId: int, ~line: Index.t, highlights: t) => {
   highlights
   |> BufferMap.find_opt(bufferId)
   |> OptionEx.flatMap(LineMap.find_opt(line |> Index.toZeroBased))
@@ -30,7 +30,7 @@ let getTokens = (bufferId: int, line: Index.t, highlights: t) => {
 
 let getSyntaxScope =
     (~bufferId: int, ~line: Index.t, ~bytePosition: int, highlights: t) => {
-  let tokens = getTokens(bufferId, line, highlights);
+  let tokens = getTokens(~bufferId, ~line, highlights);
 
   let rec loop = (syntaxScope, currentTokens) => {
     ColorizedToken.(
@@ -95,3 +95,26 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
     highlights,
   );
 };
+
+let update = (highlights: t, msg) =>
+  switch (msg) {
+  | TokensHighlighted(tokens) => setTokens(tokens, highlights)
+  | BufferUpdated(update) when !update.isFull =>
+    handleUpdate(update, highlights)
+  | ServerStarted(_client) => highlights
+  | ServerStopped => highlights
+  | BufferUpdated(_update) => highlights
+  };
+
+let subscription = (~enabled, ~quitting, ~languageInfo, ~setup, _highlights) =>
+  if (enabled && !quitting) {
+    Service_Syntax.Sub.create(~languageInfo, ~setup)
+    |> Isolinear.Sub.map(
+         fun
+         | Service_Syntax.ServerStarted(client) => ServerStarted(client)
+         | Service_Syntax.ServerClosed => ServerStopped
+         | Service_Syntax.ReceivedHighlights(hl) => TokensHighlighted(hl),
+       );
+  } else {
+    Isolinear.Sub.none;
+  };

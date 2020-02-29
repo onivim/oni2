@@ -129,7 +129,7 @@ let start = () => {
 
     let effect =
       switch (action) {
-      | Init(_) => initializeDefaultViewEffect(state)
+      | Init => initializeDefaultViewEffect(state)
       // When opening a file, ensure that the active editor is getting focus
       | ViewCloseEditor(_) =>
         if (List.length(WindowTree.getSplits(state.windowManager.windowTree))

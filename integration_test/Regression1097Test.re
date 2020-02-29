@@ -4,13 +4,12 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
-
 let gotSyntaxServerClose = ref(false);
 
 let onAfterDispatch =
   fun
-  | Actions.SyntaxServerClosed => gotSyntaxServerClose := true
+  | Actions.Syntax(Feature_Syntax.ServerStopped) =>
+    gotSyntaxServerClose := true
   | _ => ();
 
 // Validate that textmate highlight runs
@@ -45,10 +44,10 @@ runTestWithInput(
       |> Option.map(Buffer.getId)
       |> Option.map(bufferId => {
            let tokens =
-             BufferSyntaxHighlights.getTokens(
-               bufferId,
-               Index.zero,
-               state.bufferSyntaxHighlights,
+             Feature_Syntax.getTokens(
+               ~bufferId,
+               ~line=Index.zero,
+               state.syntaxHighlights,
              );
 
            List.length(tokens) > 1;

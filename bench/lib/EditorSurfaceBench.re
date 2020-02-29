@@ -23,7 +23,7 @@ let editorSurfaceMinimalState = hwnd => {
       onDimensionsChanged={_ => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
       diagnostics={thousandLineState.diagnostics}
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
@@ -47,7 +47,7 @@ let editorSurfaceThousandLineState = hwnd => {
       onDimensionsChanged={_ => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
       diagnostics={thousandLineState.diagnostics}
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
@@ -71,7 +71,7 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       onDimensionsChanged={_ => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
       diagnostics={thousandLineState.diagnostics}
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
@@ -96,7 +96,7 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       onDimensionsChanged={_ => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
       diagnostics={thousandLineState.diagnostics}
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
@@ -121,7 +121,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       onDimensionsChanged={_ => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.bufferSyntaxHighlights}
+      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
       diagnostics={thousandLineState.diagnostics}
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
