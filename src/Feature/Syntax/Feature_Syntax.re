@@ -6,6 +6,33 @@ open Oni_Syntax;
 module BufferMap = IntMap;
 module LineMap = IntMap;
 
+let highlight = (~scope, ~theme, ~grammars, lines) => {
+  let grammarRepository =
+    Textmate.GrammarRepository.create(scope =>
+      Oni_Syntax.GrammarRepository.getGrammar(~scope, grammars)
+    );
+
+  let tokenizerJob =
+    Oni_Syntax.TextmateTokenizerJob.create(
+      ~scope,
+      ~theme,
+      ~grammarRepository,
+      lines,
+    )
+    |> Job.tick(~budget=Some(0.25));
+
+  let len = Array.length(lines);
+  let result = Array.make(len, []);
+
+  for (i in 0 to len - 1) {
+    let tokens =
+      Oni_Syntax.TextmateTokenizerJob.getTokenColors(i, tokenizerJob);
+    result[i] = tokens;
+  };
+
+  result;
+};
+
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
