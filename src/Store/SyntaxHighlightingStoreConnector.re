@@ -22,71 +22,6 @@ module Protocol = Oni_Syntax.Protocol;
 // - Change subscription granularity to per-buffer -
 // - this could help remove several effects!
 let start = (languageInfo: Ext.LanguageInfo.t) => {
-  let bufferEnterEffect = (maybeSyntaxClient, id: int, fileType) =>
-    Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
-      OptionEx.iter2(
-        (syntaxClient, fileType) => {
-          Oni_Syntax_Client.notifyBufferEnter(syntaxClient, id, fileType)
-        },
-        maybeSyntaxClient,
-        fileType,
-      )
-    });
-
-  let bufferUpdateEffect =
-      (
-        maybeSyntaxClient,
-        bufferUpdate: Oni_Core.BufferUpdate.t,
-        lines,
-        scopeMaybe,
-      ) =>
-    Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
-      OptionEx.iter2(
-        (syntaxClient, scope) => {
-          Oni_Syntax_Client.notifyBufferUpdate(
-            syntaxClient,
-            bufferUpdate,
-            lines,
-            scope,
-          )
-        },
-        maybeSyntaxClient,
-        scopeMaybe,
-      )
-    });
-
-  let configurationChangeEffect =
-      (maybeSyntaxClient, config: Core.Configuration.t) =>
-    Isolinear.Effect.create(~name="syntax.configurationChange", () => {
-      Option.iter(
-        syntaxClient =>
-          Oni_Syntax_Client.notifyConfigurationChanged(syntaxClient, config),
-        maybeSyntaxClient,
-      )
-    });
-
-  let themeChangeEffect = (maybeSyntaxClient, theme) =>
-    Isolinear.Effect.create(~name="syntax.theme", () => {
-      Option.iter(
-        syntaxClient => {
-          Oni_Syntax_Client.notifyThemeChanged(syntaxClient, theme)
-        },
-        maybeSyntaxClient,
-      )
-    });
-
-  let visibilityChangedEffect = (maybeSyntaxClient, visibleRanges) =>
-    Isolinear.Effect.create(~name="syntax.visibilityChange", () => {
-      Option.iter(
-        syntaxClient =>
-          Oni_Syntax_Client.notifyVisibilityChanged(
-            syntaxClient,
-            visibleRanges,
-          ),
-        maybeSyntaxClient,
-      )
-    });
-
   let isVersionValid = (updateVersion, bufferVersion) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;
   };
@@ -98,6 +33,15 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
          Ext.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
        );
   };
+
+  let mapServiceEffect:
+    Isolinear.Effect.t(Service_Syntax.msg) =>
+    Isolinear.Effect.t(Model.Actions.t) =
+    effect =>
+      Isolinear.Effect.map(
+        msg => {Model.Actions.Syntax(Feature_Syntax.Service(msg))},
+        effect,
+      );
 
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
@@ -112,11 +56,13 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
       )
     | Model.Actions.ConfigurationSet(config) => (
         state,
-        configurationChangeEffect(state.syntaxClient, config),
+        Service_Syntax.Effect.configurationChange(state.syntaxClient, config)
+        |> mapServiceEffect,
       )
     | Model.Actions.SetTokenTheme(tokenTheme) => (
         state,
-        themeChangeEffect(state.syntaxClient, tokenTheme),
+        Service_Syntax.Effect.themeChange(state.syntaxClient, tokenTheme)
+        |> mapServiceEffect,
       )
     | Model.Actions.BufferEnter(metadata, fileType) =>
       let visibleBuffers =
@@ -124,15 +70,18 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
 
       let combinedEffects =
         Isolinear.Effect.batch([
-          visibilityChangedEffect(state.syntaxClient, visibleBuffers),
-          bufferEnterEffect(
+          Service_Syntax.Effect.visibilityChanged(
+            state.syntaxClient,
+            visibleBuffers,
+          ),
+          Service_Syntax.Effect.bufferEnter(
             state.syntaxClient,
             Vim.BufferMetadata.(metadata.id),
             fileType,
           ),
         ]);
 
-      (state, combinedEffects);
+      (state, combinedEffects |> mapServiceEffect);
     // When the view changes, update our list of visible buffers,
     // so we know which ones might have pending work!
     | Model.Actions.EditorGroupAdd(_)
@@ -146,7 +95,14 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
     | Model.Actions.ViewCloseEditor(_) =>
       let visibleBuffers =
         Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
-      (state, visibilityChangedEffect(state.syntaxClient, visibleBuffers));
+      (
+        state,
+        Service_Syntax.Effect.visibilityChanged(
+          state.syntaxClient,
+          visibleBuffers,
+        )
+        |> mapServiceEffect,
+      );
     // When there is a buffer update, send it over to the syntax highlight
     // strategy to handle the parsing.
     | Model.Actions.BufferUpdate({update, newBuffer, _}) =>
@@ -158,7 +114,13 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
       } else {
         (
           state,
-          bufferUpdateEffect(state.syntaxClient, update, lines, scope),
+          Service_Syntax.Effect.bufferUpdate(
+            state.syntaxClient,
+            update,
+            lines,
+            scope,
+          )
+          |> mapServiceEffect,
         );
       };
     | _ => default

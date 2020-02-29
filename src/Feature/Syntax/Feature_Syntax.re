@@ -11,7 +11,8 @@ type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
   | ServerStopped
   | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
-  | BufferUpdated([@opaque] BufferUpdate.t);
+  | BufferUpdated([@opaque] BufferUpdate.t)
+  | Service(Service_Syntax.msg);
 
 type t = BufferMap.t(LineMap.t(list(ColorizedToken.t)));
 
@@ -104,6 +105,7 @@ let update = (highlights: t, msg) =>
   | ServerStarted(_client) => highlights
   | ServerStopped => highlights
   | BufferUpdated(_update) => highlights
+  | Service(_) => highlights
   };
 
 let subscription = (~enabled, ~quitting, ~languageInfo, ~setup, _highlights) =>

@@ -6,7 +6,8 @@ type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
   | ServerStopped
   | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
-  | BufferUpdated([@opaque] BufferUpdate.t);
+  | BufferUpdated([@opaque] BufferUpdate.t)
+  | Service(Service_Syntax.msg);
 
 type t;
 

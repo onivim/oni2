@@ -10,7 +10,7 @@ type individualRange = {
   minimapRanges: list(Range.t),
 };
 
-type t = {ranges: list(Range.t)};
+//type t = {ranges: list(Range.t)};
 
 let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
@@ -86,6 +86,8 @@ let getVisibleBuffers = (state: State.t) => {
   |> List.map(e => e.Editor.bufferId);
 };
 
+type t = list((int, list(Range.t)));
+
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   let editors =
     WindowTree.getSplits(state.windowManager.windowTree)
@@ -113,8 +115,9 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   |> List.flatten;
 };
 
-let getVisibleBuffersAndRanges = (state: State.t) => {
-  let visibleBuffers = getVisibleBuffers(state);
+let getVisibleBuffersAndRanges: State.t => t =
+  (state: State.t) => {
+    let visibleBuffers = getVisibleBuffers(state);
 
-  List.map(b => (b, getVisibleRangesForBuffer(b, state)), visibleBuffers);
-};
+    List.map(b => (b, getVisibleRangesForBuffer(b, state)), visibleBuffers);
+  };
