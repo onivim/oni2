@@ -16,11 +16,9 @@ module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
-type initOptions = {syntaxHighlightingEnabled: bool};
-
 [@deriving show({with_path: false})]
 type t =
-  | Init([@opaque] initOptions)
+  | Init
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
@@ -30,9 +28,7 @@ type t =
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
-  | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
-  | SyntaxServerStarted([@opaque] Oni_Syntax_Client.t)
-  | SyntaxServerClosed
+  | Syntax(Feature_Syntax.msg)
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
