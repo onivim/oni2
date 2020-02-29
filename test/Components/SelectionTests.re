@@ -61,61 +61,61 @@ describe("Selection#create", ({test, _}) => {
   });
 });
 
-describe("Selection#rangeWidth", ({test, _}) => {
+describe("Selection#length", ({test, _}) => {
   test("Returns range when anchor comes first", ({expect}) => {
-    let result = Selection.rangeWidth(create(~anchor=3, ~focus=5));
+    let result = Selection.length(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(2);
   });
 
   test("Returns range when anchor comes last", ({expect}) => {
-    let result = Selection.rangeWidth(create(~anchor=5, ~focus=3));
+    let result = Selection.length(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(2);
   });
 
   test("Returns 0 for collapsed selection", ({expect}) => {
-    let result = Selection.rangeWidth(create(~anchor=3, ~focus=3));
+    let result = Selection.length(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(0);
   });
 });
 
-describe("Selection#rangeStart", ({test, _}) => {
+describe("Selection#offsetLeft", ({test, _}) => {
   test("Returns anchor", ({expect}) => {
-    let result = Selection.rangeStart(create(~anchor=3, ~focus=5));
+    let result = Selection.offsetLeft(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(3);
   });
 
   test("Returns focus", ({expect}) => {
-    let result = Selection.rangeStart(create(~anchor=5, ~focus=3));
+    let result = Selection.offsetLeft(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(3);
   });
 
   test("Returns any", ({expect}) => {
-    let result = Selection.rangeStart(create(~anchor=3, ~focus=3));
+    let result = Selection.offsetLeft(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(3);
   });
 });
 
-describe("Selection#rangeEnd", ({test, _}) => {
+describe("Selection#offsetRight", ({test, _}) => {
   test("Returns anchor", ({expect}) => {
-    let result = Selection.rangeEnd(create(~anchor=5, ~focus=3));
+    let result = Selection.offsetRight(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(5);
   });
 
   test("Returns focus", ({expect}) => {
-    let result = Selection.rangeEnd(create(~anchor=3, ~focus=5));
+    let result = Selection.offsetRight(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(5);
   });
 
   test("Returns any", ({expect}) => {
-    let result = Selection.rangeEnd(create(~anchor=3, ~focus=3));
+    let result = Selection.offsetRight(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(3);
   });

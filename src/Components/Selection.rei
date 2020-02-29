@@ -10,9 +10,9 @@ let anchor: t => int;
 let focus: t => int;
 
 let create: (~text: string, ~anchor: int, ~focus: int) => t;
-let rangeWidth: t => int;
-let rangeStart: t => int;
-let rangeEnd: t => int;
+let length: t => int;
+let offsetLeft: t => int;
+let offsetRight: t => int;
 let isCollapsed: t => bool;
 
 let collapsed: (~text: string, int) => t;

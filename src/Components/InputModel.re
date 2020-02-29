@@ -61,7 +61,7 @@ let removeCharBefore = (text, selection) => {
 
   (
     textSlice,
-    Selection.rangeStart(selection)
+    Selection.offsetLeft(selection)
     - 1
     |> Selection.collapsed(~text=textSlice),
   );
@@ -70,9 +70,9 @@ let removeCharBefore = (text, selection) => {
 let removeSelection = (text, selection) => {
   let (textSlice, focus) =
     removeAfter(
-      Selection.rangeStart(selection),
+      Selection.offsetLeft(selection),
       text,
-      ~count=Selection.rangeWidth(selection),
+      ~count=Selection.length(selection),
     );
 
   (textSlice, Selection.collapsed(~text=textSlice, focus));
@@ -138,19 +138,19 @@ let handleInput = (~text, ~selection, key) => {
   switch (key, Selection.isCollapsed(selection)) {
   | ("<LEFT>", true) => (
       text,
-      Selection.rangeStart(selection) - 1 |> Selection.collapsed(~text),
+      Selection.offsetLeft(selection) - 1 |> Selection.collapsed(~text),
     )
   | ("<LEFT>", false) => (
       text,
-      Selection.rangeStart(selection) |> Selection.collapsed(~text),
+      Selection.offsetLeft(selection) |> Selection.collapsed(~text),
     )
   | ("<RIGHT>", true) => (
       text,
-      Selection.rangeStart(selection) + 1 |> Selection.collapsed(~text),
+      Selection.offsetLeft(selection) + 1 |> Selection.collapsed(~text),
     )
   | ("<RIGHT>", false) => (
       text,
-      Selection.rangeEnd(selection) |> Selection.collapsed(~text),
+      Selection.offsetRight(selection) |> Selection.collapsed(~text),
     )
   | ("<BS>", true) => removeCharBefore(text, selection)
   | ("<BS>", false) => removeSelection(text, selection)

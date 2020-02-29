@@ -1,3 +1,5 @@
+open Utility;
+
 [@deriving show({with_path: false})]
 type t = {
   anchor: int,
@@ -14,29 +16,24 @@ let focus = (selection: t): int => {
   selection.focus;
 };
 
-let withinLength = (text: string, position: int): int => {
-  let withinStart = max(position, 0);
-  let withinBoth = min(withinStart, String.length(text));
-
-  withinBoth;
-};
-
 let create = (~text: string, ~anchor: int, ~focus: int): t => {
-  let safeAnchor = withinLength(text, anchor);
-  let safeFocus = withinLength(text, focus);
+  let safeOffset = IntEx.clamp(~lo=0, ~hi=String.length(text));
+
+  let safeAnchor = safeOffset(anchor);
+  let safeFocus = safeOffset(focus);
 
   {anchor: safeAnchor, focus: safeFocus};
 };
 
-let rangeWidth = (selection: t): int => {
+let length = (selection: t): int => {
   abs(selection.focus - selection.anchor);
 };
 
-let rangeStart = (selection: t): int => {
+let offsetLeft = (selection: t): int => {
   min(selection.focus, selection.anchor);
 };
 
-let rangeEnd = (selection: t): int => {
+let offsetRight = (selection: t): int => {
   max(selection.focus, selection.anchor);
 };
 

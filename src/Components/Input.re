@@ -279,8 +279,8 @@ let%component make =
     if (Selection.isCollapsed(selection)) {
       React.empty;
     } else {
-      let startOffset = Selection.rangeStart(selection);
-      let endOffset = Selection.rangeEnd(selection);
+      let startOffset = Selection.offsetLeft(selection);
+      let endOffset = Selection.offsetRight(selection);
 
       let (beginnigStartStr, _) =
         getStringParts(startOffset + String.length(prefix), displayValue);
