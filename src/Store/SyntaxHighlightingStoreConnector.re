@@ -43,15 +43,7 @@ let start = (cli: Core.Cli.t, languageInfo: Ext.LanguageInfo.t) => {
       );
 
   let syntaxGrammarRepository =
-    Oni_Syntax.GrammarRepository.create(
-      //~log=(msg) => Log.trace(msg),
-      languageInfo,
-    );
-
-  let grammarRepository =
-    Textmate.GrammarRepository.create(scope => {
-      Oni_Syntax.GrammarRepository.getGrammar(~scope, syntaxGrammarRepository)
-    });
+    Oni_Syntax.GrammarRepository.create(languageInfo);
 
   let getEagerLines = (~scope, ~configuration, ~theme, lines) => {
     let maxLines =

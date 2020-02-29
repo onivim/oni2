@@ -19,7 +19,7 @@ let highlight = (~scope, ~theme, ~grammars, lines) => {
       ~grammarRepository,
       lines,
     )
-    |> Job.tick(~budget=Some(0.25));
+    |> Job.tick(~budget=Some(0.1)); // 100ms
 
   let len = Array.length(lines);
   let result = Array.make(len, []);
@@ -102,7 +102,12 @@ let setTokens = (tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
     tokenUpdates
     |> List.fold_left(
          (acc, curr) => {
-           setTokensForLine(curr.bufferId, curr.line, curr.tokenColors, acc)
+           setTokensForLine(
+             ~bufferId=curr.bufferId,
+             ~line=curr.line,
+             ~tokens=curr.tokenColors,
+             acc,
+           )
          },
          highlights,
        )
