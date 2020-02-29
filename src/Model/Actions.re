@@ -23,7 +23,11 @@ type t =
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
-  | BufferUpdate([@opaque] BufferUpdate.t)
+  | BufferUpdate({
+      update: [@opaque] BufferUpdate.t,
+      oldBuffer: [@opaque] Buffer.t,
+      newBuffer: [@opaque] Buffer.t,
+    })
   | BufferRenderer(BufferRenderer.action)
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
