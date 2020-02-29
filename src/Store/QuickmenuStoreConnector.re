@@ -165,13 +165,13 @@ let start = (themeInfo: ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuCommandlineUpdated(text, focus) => (
+    | QuickmenuCommandlineUpdated(text, cursorPosition) => (
         Option.map(
           state =>
             Quickmenu.{
               ...state,
               query: text,
-              selection: Selection.collapse(~text, focus),
+              selection: Selection.collapsed(~text, cursorPosition),
             },
           state,
         ),

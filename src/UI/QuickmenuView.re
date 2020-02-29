@@ -188,7 +188,7 @@ let make =
          | _ => <input />
          }}
         {switch (variant) {
-         | Wildmenu(_) => React.empty
+         | Wildmenu(SearchForward | SearchReverse) => React.empty
          | _ => <dropdown />
          }}
       </View>

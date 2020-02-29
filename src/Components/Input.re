@@ -245,7 +245,7 @@ let%component make =
       let offset =
         int_of_float(event.mouseX) - offsetLeft(node) + scrollOffset^;
       let nearestOffset = indexNearestOffset(offset);
-      let selection = Selection.collapse(~text=value, nearestOffset);
+      let selection = Selection.collapsed(~text=value, nearestOffset);
       resetCursor();
       onClick(selection);
 
@@ -284,9 +284,9 @@ let%component make =
 
       let (beginnigStartStr, _) =
         getStringParts(startOffset + String.length(prefix), displayValue);
-      let beginnigTextWidth =
+      let beginningTextWidth =
         measureTextWidth(beginnigStartStr) |> int_of_float;
-      let startOffset = beginnigTextWidth - scrollOffset^;
+      let startOffset = beginningTextWidth - scrollOffset^;
 
       let (endingStartStr, _) =
         getStringParts(endOffset + String.length(prefix), displayValue);

@@ -86,7 +86,7 @@ module Internal = {
 let refine = (characterToAdd: string, sneaks: t) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
   let selection =
-    String.length(sneaks.prefix) |> Selection.collapse(~text=sneaks.prefix);
+    String.length(sneaks.prefix) |> Selection.collapsed(~text=sneaks.prefix);
 
   let (prefix, _) =
     InputModel.handleInput(~text=sneaks.prefix, ~selection, characterToAdd);
