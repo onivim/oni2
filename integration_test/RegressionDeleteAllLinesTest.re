@@ -2,8 +2,6 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
-
 // Validate that textmate highlight runs
 runTest(~name="RegressionDeleteAllLinesTest", (dispatch, wait, runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
