@@ -10,8 +10,6 @@ type individualRange = {
   minimapRanges: list(Range.t),
 };
 
-//type t = {ranges: list(Range.t)};
-
 let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
