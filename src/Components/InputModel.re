@@ -3,7 +3,7 @@ open Utility;
 
 let wordSeparators = " ./\\()\"'-:,.;<>~!@#$%^&*|+=[]{}`~?";
 
-let separatorOnIndex = (index, text) => {
+let separatorOnIndexExn = (index, text) => {
   String.contains(wordSeparators, text.[index]);
 };
 
@@ -11,7 +11,7 @@ let findNextWordBoundary = (text, focus) => {
   let finalIndex = String.length(text);
   let index = ref(min(focus + 1, finalIndex));
 
-  while (index^ < finalIndex && !separatorOnIndex(index^, text)) {
+  while (index^ < finalIndex && !separatorOnIndexExn(index^, text)) {
     index := index^ + 1;
   };
 
@@ -22,7 +22,7 @@ let findPrevWordBoundary = (text, focus) => {
   let finalIndex = 0;
   let index = ref(max(focus - 1, finalIndex));
 
-  while (index^ > finalIndex && !separatorOnIndex(index^ - 1, text)) {
+  while (index^ > finalIndex && !separatorOnIndexExn(index^ - 1, text)) {
     index := index^ - 1;
   };
 
