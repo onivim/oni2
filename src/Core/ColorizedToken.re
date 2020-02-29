@@ -12,14 +12,11 @@ let create = (~index, ~backgroundColor, ~foregroundColor, ~syntaxScope, ()) => {
   syntaxScope,
 };
 
-let toString = ({ 
+let toString = ({index, backgroundColor, foregroundColor, syntaxScope}) => {
+  Printf.sprintf(
+    "ColorizedToken - index: %d foreground: %s background: %s",
     index,
-    backgroundColor,
-    foregroundColor,
-    syntaxScope,
-  }) => {
-    Printf.sprintf("ColorizedToken - index: %d foreground: %s background: %s", index, 
     backgroundColor |> Revery.Color.toString,
-    foregroundColor |> Revery.Color.toString
-    );
-  };
+    foregroundColor |> Revery.Color.toString,
+  );
+};
