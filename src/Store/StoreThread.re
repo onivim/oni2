@@ -211,7 +211,7 @@ let start =
       );
     let editorFontSubscription =
       Service_Font.Sub.font(~fontFamily, ~fontSize, ~fontSmoothing)
-      |> Isolinear.Sub.map(msg => Model.Actions.Font(msg));
+      |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
     [syntaxSubscription, terminalSubscription, editorFontSubscription]
     |> Isolinear.Sub.batch;
