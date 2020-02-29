@@ -25,6 +25,7 @@ type msg =
 module Sub: {
   let font:
     (
+      ~uniqueId: string,
       ~fontFamily: string,
       ~fontSize: float,
       ~fontSmoothing: ConfigurationValues.fontSmoothing

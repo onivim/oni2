@@ -237,7 +237,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           |> Option.map(terminal => {
                <TerminalView
                  theme
-                 editorFont={state.editorFont}
+                 font={state.terminalFont}
                  metrics
                  terminal
                />

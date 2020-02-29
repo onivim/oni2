@@ -10,6 +10,9 @@ let reduce = (state, action: Actions.t) => {
   | EditorFont(Service_Font.FontLoadError(msg)) =>
     let errorNotification = Notification.create(~kind=Error, msg);
     [errorNotification, ...state];
+  | TerminalFont(Service_Font.FontLoadError(msg)) =>
+    let errorNotification = Notification.create(~kind=Error, msg);
+    [errorNotification, ...state];
   | ShowNotification(item) => [item, ...state]
   | HideNotification(item) => List.filter(it => it.id != item.id, state)
   | ClearNotifications => initial

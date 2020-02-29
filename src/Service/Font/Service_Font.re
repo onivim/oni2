@@ -35,14 +35,14 @@ type msg =
   | FontLoaded(t)
   | FontLoadError(string);
 
-let requestId = ref(0);
-
-let setFont = (dispatch1, fontFamily, fontSize, smoothing) => {
+let setFont = (requestId, dispatch1, fontFamily, fontSize, smoothing) => {
   let dispatch = action =>
     Revery.App.runOnMainThread(() => dispatch1(action));
 
   incr(requestId);
   let req = requestId^;
+
+  Log.infof(m => m("Loading font: %s %f %d", fontFamily, fontSize, req));
 
   // We load the font asynchronously
   ThreadHelper.create(
@@ -128,47 +128,84 @@ module Sub = {
     fontFamily: string,
     fontSize: float,
     fontSmoothing: ConfigurationValues.fontSmoothing,
+    uniqueId: string,
   };
 
   module FontSubscription =
     Isolinear.Sub.Make({
-      type state = unit;
+      type state = {
+        fontFamily: string,
+        fontSize: float,
+        fontSmoothing: ConfigurationValues.fontSmoothing,
+        requestId: ref(int),
+      };
       type nonrec msg = msg;
       type nonrec params = params;
 
       let subscriptionName = "Font";
 
-      let getUniqueId = ({fontFamily, fontSize, fontSmoothing}) => {
-        Printf.sprintf(
-          "%s-%s-%s",
-          fontFamily,
-          string_of_float(fontSize),
-          ConfigurationValues.show_fontSmoothing(fontSmoothing),
-        );
-      };
+      let getUniqueId = ({uniqueId, _}) => uniqueId;
 
-      let init = (~params, ~dispatch) => {
+      let getReveryFontSmoothing:
+        ConfigurationValues.fontSmoothing => Revery.Font.Smoothing.t =
+        fun
+        | None => Revery.Font.Smoothing.None
+        | Antialiased => Revery.Font.Smoothing.Antialiased
+        | SubpixelAntialiased => Revery.Font.Smoothing.SubpixelAntialiased
+        | Default => Revery.Font.Smoothing.default;
+
+      let init = (~params: params, ~dispatch: msg => unit) => {
         let reveryFontSmoothing =
-          switch (params.fontSmoothing) {
-          | None => Revery.Font.Smoothing.None
-          | Antialiased => Revery.Font.Smoothing.Antialiased
-          | SubpixelAntialiased => Revery.Font.Smoothing.SubpixelAntialiased
-          | Default => Revery.Font.Smoothing.default
-          };
+          getReveryFontSmoothing(params.fontSmoothing);
+
+        let requestId = ref(0);
 
         setFont(
+          requestId,
           dispatch,
           params.fontFamily,
           params.fontSize,
           reveryFontSmoothing,
         );
+
+        {
+          fontFamily: params.fontFamily,
+          fontSize: params.fontSize,
+          fontSmoothing: params.fontSmoothing,
+          requestId,
+        };
       };
 
-      let update = (~params as _, ~state, ~dispatch as _) => state;
-      let dispose = (~params as _, ~state as _) => ();
+      let update = (~params: params, ~state: state, ~dispatch: msg => unit) =>
+        if (params.fontFamily != state.fontFamily
+            || !Float.equal(params.fontSize, state.fontSize)
+            || params.fontSmoothing != state.fontSmoothing) {
+          let reveryFontSmoothing =
+            getReveryFontSmoothing(params.fontSmoothing);
+          setFont(
+            state.requestId,
+            dispatch,
+            params.fontFamily,
+            params.fontSize,
+            reveryFontSmoothing,
+          );
+          {
+            ...state,
+            fontFamily: params.fontFamily,
+            fontSize: params.fontSize,
+            fontSmoothing: params.fontSmoothing,
+          };
+        } else {
+          state;
+        };
+
+      let dispose = (~params as _, ~state) => {
+        // Cancel any pending font requests
+        state.requestId := (-1);
+      };
     });
 
-  let font = (~fontFamily, ~fontSize, ~fontSmoothing) => {
-    FontSubscription.create({fontFamily, fontSize, fontSmoothing});
+  let font = (~uniqueId, ~fontFamily, ~fontSize, ~fontSmoothing) => {
+    FontSubscription.create({uniqueId, fontFamily, fontSize, fontSmoothing});
   };
 };

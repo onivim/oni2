@@ -53,6 +53,7 @@ type t =
       [@opaque] LanguageFeatures.DefinitionResult.t,
     )
   | EditorFont(Service_Font.msg)
+  | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)

@@ -49,7 +49,14 @@ let reduce: (State.t, Actions.t) => State.t =
         | SetIconTheme(iconTheme) => {...s, iconTheme}
         | SetColorTheme(theme) => {...s, theme}
         | ChangeMode(m) => {...s, mode: m}
-        | EditorFont(Service_Font.FontLoaded(font)) => {...s, editorFont: font}
+        | EditorFont(Service_Font.FontLoaded(font)) => {
+            ...s,
+            editorFont: font,
+          }
+        | TerminalFont(Service_Font.FontLoaded(font)) => {
+            ...s,
+            terminalFont: font,
+          }
         | EnableZenMode => {...s, zenMode: true}
         | DisableZenMode => {...s, zenMode: false}
         | ReallyQuitting => {...s, isQuitting: true}
