@@ -281,6 +281,22 @@ let configurationParsers: list(configurationTuple) = [
     "editor.zenMode.singleFile",
     (s, v) => {...s, zenModeSingleFile: parseBool(v)},
   ),
+  (
+    "syntax.eagerMaxLines",
+    (s, v) => {
+      ...s,
+      syntaxEagerMaxLines:
+        parseInt(~default=Constants.syntaxEagerMaxLines, v),
+    },
+  ),
+  (
+    "syntax.eagerMaxLineLength",
+    (s, v) => {
+      ...s,
+      syntaxEagerMaxLineLength:
+        parseInt(~default=Constants.syntaxEagerMaxLineLength, v),
+    },
+  ),
   ("ui.shadows", (s, v) => {...s, uiShadows: parseBool(v)}),
   ("ui.zoom", (s, v) => {...s, uiZoom: parseFloat(v)}),
   (

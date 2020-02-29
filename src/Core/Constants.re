@@ -12,6 +12,10 @@ let defaultFontFamily = "FiraCode-Regular.ttf";
 let fontAwesomeRegularPath = "FontAwesome5FreeRegular.otf";
 let fontAwesomeSolidPath = "FontAwesome5FreeSolid.otf";
 
+let syntaxEagerMaxLines = 500;
+let syntaxEagerMaxLineLength = 1000;
+let syntaxEagerBudget = 0.25; /* 250 milliseconds */
+
 /* Horizontal padding on each side of the minimap */
 let minimapPadding = 0;
 

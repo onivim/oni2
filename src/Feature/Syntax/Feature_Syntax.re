@@ -78,7 +78,12 @@ let getSyntaxScope =
 };
 
 let setTokensForLine =
-    (bufferId: int, line: int, tokens: list(ColorizedToken.t), highlights: t) => {
+    (
+      ~bufferId: int,
+      ~line: int,
+      ~tokens: list(ColorizedToken.t),
+      highlights: t,
+    ) => {
   let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {
     LineMap.update(line, _ => Some(tokens), lineMap);
   };

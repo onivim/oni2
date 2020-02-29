@@ -108,7 +108,8 @@ let start =
       setClipboardText,
     );
 
-  let syntaxUpdater = SyntaxHighlightingStoreConnector.start(languageInfo);
+  let syntaxUpdater =
+    SyntaxHighlightingStoreConnector.start(cliOptions, languageInfo);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClient, extHostStream) =

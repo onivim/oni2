@@ -17,11 +17,10 @@ module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
 // TODO:
-// - Move effects to Service_Terminal
 // - Move updater to Feature_Terminal
 // - Change subscription granularity to per-buffer -
 // - this could help remove several effects!
-let start = (languageInfo: Ext.LanguageInfo.t) => {
+let start = (cli: Core.Cli.t, languageInfo: Ext.LanguageInfo.t) => {
   let isVersionValid = (updateVersion, bufferVersion) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;
   };
@@ -42,6 +41,54 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
         msg => {Model.Actions.Syntax(Feature_Syntax.Service(msg))},
         effect,
       );
+
+  let syntaxGrammarRepository =
+    Oni_Syntax.GrammarRepository.create(
+      //~log=(msg) => Log.trace(msg),
+      languageInfo,
+    );
+
+  let grammarRepository =
+    Textmate.GrammarRepository.create(scope => {
+      Oni_Syntax.GrammarRepository.getGrammar(~scope, syntaxGrammarRepository)
+    });
+
+  let getEagerLines = (~scope, ~configuration, ~theme, lines) => {
+    let maxLines =
+      configuration |> Core.Configuration.getValue(c => c.syntaxEagerMaxLines);
+    let maxLineLength =
+      configuration
+      |> Core.Configuration.getValue(c => c.syntaxEagerMaxLineLength);
+
+    let len = min(Array.length(lines), maxLines);
+    let idx = ref(0);
+    let limitExceeded = ref(false);
+
+    while (idx^ < len && ! limitExceeded^) {
+      if (String.length(lines[idx^]) > maxLineLength) {
+        limitExceeded := true;
+      };
+
+      incr(idx);
+    };
+
+    let numberOfLinesToHighlight = idx^;
+
+    if (numberOfLinesToHighlight == 0) {
+      [||];
+    } else {
+      let linesToHighlight =
+        Array.sub(lines, 0, numberOfLinesToHighlight - 1);
+      let highlights =
+        Feature_Syntax.highlight(
+          ~scope,
+          ~theme,
+          ~grammars=syntaxGrammarRepository,
+          linesToHighlight,
+        );
+      highlights;
+    };
+  };
 
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
@@ -112,16 +159,48 @@ let start = (languageInfo: Ext.LanguageInfo.t) => {
       if (!isVersionValid(version, update.version)) {
         default;
       } else {
-        (
-          state,
-          Service_Syntax.Effect.bufferUpdate(
-            state.syntaxClient,
-            update,
-            lines,
-            scope,
-          )
-          |> mapServiceEffect,
-        );
+        switch (scope) {
+        | None => default
+        | Some(scope) =>
+          // Eager syntax highlighting
+          let syntaxHighlights =
+            if (version == 1 && cli.shouldSyntaxHighlight) {
+              let highlights =
+                getEagerLines(
+                  ~scope,
+                  ~configuration=state.configuration,
+                  ~theme=state.tokenTheme,
+                  update.lines,
+                );
+
+              let len = Array.length(highlights);
+
+              let newHighlights = ref(state.syntaxHighlights);
+              for (i in 0 to len - 1) {
+                newHighlights :=
+                  Feature_Syntax.setTokensForLine(
+                    ~bufferId=update.id,
+                    ~line=i,
+                    ~tokens=highlights[i],
+                    newHighlights^,
+                  );
+              };
+              newHighlights^;
+            } else {
+              state.syntaxHighlights;
+            };
+
+          (
+            {...state, syntaxHighlights},
+            Service_Syntax.Effect.bufferUpdate(
+              state.syntaxClient,
+              update,
+              lines,
+              Some(scope),
+            )
+            |> mapServiceEffect,
+          );
+        };
       };
     | _ => default
     };
