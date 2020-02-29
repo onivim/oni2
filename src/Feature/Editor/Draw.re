@@ -213,8 +213,8 @@ let token =
 
   | Tab =>
     CanvasContext.Deprecated.drawString(
-      ~x=x +. context.charWidth /. 4.,
-      ~y,
+      ~x=x +. context.charWidth /. 4. -. context.scrollX,
+      ~y=y -. context.scrollY,
       ~color=theme.editorWhitespaceForeground,
       ~fontFamily="FontAwesome5FreeSolid.otf",
       ~fontSize=10.,
