@@ -6,6 +6,10 @@ open Oni_Syntax;
 module BufferMap = IntMap;
 module LineMap = IntMap;
 
+let highlight = (~scope, ~grammars, lines) => {
+  IntMap.empty;
+};
+
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)

@@ -1,6 +1,8 @@
 open EditorCoreTypes;
 open Oni_Core;
 
+let highlight: (~scope: string, ~grammars: Oni_Syntax.GrammarRepository.t, array(string)) => IntMap.t(list(ColorizedToken.t));
+
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
