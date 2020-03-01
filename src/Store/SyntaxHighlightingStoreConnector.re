@@ -54,16 +54,18 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
 
     let len = min(Array.length(lines), maxLines);
 
-    let rec iter = idx =>
-      if (idx >= len) {
-        idx;
-      } else if (String.length(lines[idx]) > maxLineLength) {
-        idx;
-      } else {
-        iter(idx + 1);
-      };
+    let numberOfLinesToHighlight = {
+      let rec iter = idx =>
+        if (idx >= len) {
+          idx;
+        } else if (String.length(lines[idx]) > maxLineLength) {
+          idx;
+        } else {
+          iter(idx + 1);
+        };
 
-    let numberOfLinesToHighlight = iter(0);
+      iter(0);
+    };
 
     if (numberOfLinesToHighlight == 0) {
       [||];
