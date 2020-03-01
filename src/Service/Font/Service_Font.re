@@ -36,8 +36,7 @@ type msg =
   | FontLoadError(string);
 
 let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
-  let dispatch = action =>
-    Revery.App.runOnMainThread(() => dispatch(action));
+  let dispatch = action => Revery.App.runOnMainThread(() => dispatch(action));
 
   incr(requestId);
   let req = requestId^;

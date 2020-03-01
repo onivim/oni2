@@ -104,7 +104,12 @@ module Styles = {
   let label = [flexGrow(1), margin(4)];
 
   let text =
-      (~highlighted=false, ~theme: Theme.t, ~editorFont: Service_Font.font, ()) => [
+      (
+        ~highlighted=false,
+        ~theme: Theme.t,
+        ~editorFont: Service_Font.font,
+        (),
+      ) => [
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
