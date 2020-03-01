@@ -157,7 +157,8 @@ let configurationParsers: list(configurationTuple) = [
     "editor.fontFamily",
     (config, json) => {
       ...config,
-      editorFontFamily: parseString(~default=Constants.defaultFontFamily, json),
+      editorFontFamily:
+        parseString(~default=Constants.defaultFontFamily, json),
     },
   ),
   (
@@ -174,14 +175,20 @@ let configurationParsers: list(configurationTuple) = [
       editorFontSmoothing: parseFontSmoothing(json),
     },
   ),
-  ("editor.hover.delay", (config, json) => {...config, editorHoverDelay: parseInt(json)}),
+  (
+    "editor.hover.delay",
+    (config, json) => {...config, editorHoverDelay: parseInt(json)},
+  ),
   (
     "editor.hover.enabled",
     (config, json) => {...config, editorHoverEnabled: parseBool(json)},
   ),
   (
     "editor.lineNumbers",
-    (config, json) => {...config, editorLineNumbers: parseLineNumberSetting(json)},
+    (config, json) => {
+      ...config,
+      editorLineNumbers: parseLineNumberSetting(json),
+    },
   ),
   (
     "editor.matchBrackets",
@@ -224,30 +231,60 @@ let configurationParsers: list(configurationTuple) = [
     "editor.insertSpaces",
     (config, json) => {...config, editorInsertSpaces: parseBool(json)},
   ),
-  ("editor.indentSize", (config, json) => {...config, editorIndentSize: parseInt(json)}),
+  (
+    "editor.indentSize",
+    (config, json) => {...config, editorIndentSize: parseInt(json)},
+  ),
   (
     "editor.largeFileOptimizations",
-    (config, json) => {...config, editorLargeFileOptimizations: parseBool(json)},
+    (config, json) => {
+      ...config,
+      editorLargeFileOptimizations: parseBool(json),
+    },
   ),
-  ("editor.tabSize", (config, json) => {...config, editorTabSize: parseInt(json)}),
+  (
+    "editor.tabSize",
+    (config, json) => {...config, editorTabSize: parseInt(json)},
+  ),
   (
     "editor.highlightActiveIndentGuide",
-    (config, json) => {...config, editorHighlightActiveIndentGuide: parseBool(json)},
+    (config, json) => {
+      ...config,
+      editorHighlightActiveIndentGuide: parseBool(json),
+    },
   ),
   (
     "editor.renderIndentGuides",
-    (config, json) => {...config, editorRenderIndentGuides: parseBool(json)},
+    (config, json) => {
+      ...config,
+      editorRenderIndentGuides: parseBool(json),
+    },
   ),
   (
     "editor.renderWhitespace",
-    (config, json) => {...config, editorRenderWhitespace: parseRenderWhitespace(json)},
+    (config, json) => {
+      ...config,
+      editorRenderWhitespace: parseRenderWhitespace(json),
+    },
   ),
-  ("editor.rulers", (config, json) => {...config, editorRulers: parseIntList(json)}),
-  ("files.exclude", (config, json) => {...config, filesExclude: parseStringList(json)}),
-  ("window.title", (config, json) => {...config, windowTitle: parseString(json)}),
+  (
+    "editor.rulers",
+    (config, json) => {...config, editorRulers: parseIntList(json)},
+  ),
+  (
+    "files.exclude",
+    (config, json) => {...config, filesExclude: parseStringList(json)},
+  ),
+  (
+    "window.title",
+    (config, json) => {...config, windowTitle: parseString(json)},
+  ),
   (
     "workbench.activityBar.visible",
-    (config, json) => {...config, workbenchActivityBarVisible: parseBool(json)},
+    (config, json) => {
+      ...config,
+      workbenchActivityBarVisible: parseBool(json),
+    },
   ),
   (
     "workbench.colorTheme",
@@ -267,7 +304,10 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "workbench.statusBar.visible",
-    (config, json) => {...config, workbenchStatusBarVisible: parseBool(json)},
+    (config, json) => {
+      ...config,
+      workbenchStatusBarVisible: parseBool(json),
+    },
   ),
   (
     "editor.zenMode.hideTabs",
@@ -297,7 +337,10 @@ let configurationParsers: list(configurationTuple) = [
         parseInt(~default=Constants.syntaxEagerMaxLineLength, json),
     },
   ),
-  ("ui.shadows", (config, json) => {...config, uiShadows: parseBool(json)}),
+  (
+    "ui.shadows",
+    (config, json) => {...config, uiShadows: parseBool(json)},
+  ),
   ("ui.zoom", (config, json) => {...config, uiZoom: parseFloat(json)}),
   (
     "vim.useSystemClipboard",
@@ -320,7 +363,10 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "experimental.autoClosingPairs",
-    (config, json) => {...config, experimentalAutoClosingPairs: parseBool(json)},
+    (config, json) => {
+      ...config,
+      experimentalAutoClosingPairs: parseBool(json),
+    },
   ),
   (
     "experimental.viml",
