@@ -54,17 +54,17 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
 
     let len = min(Array.length(lines), maxLines);
 
-    let rec loop = (idx) => {
+    let rec iter = (idx) => {
       if (idx >= len) {
         idx
       } else if (String.length(lines[idx]) > maxLineLength) {
         idx;
       } else {
-        loop(idx + 1)
+        iter(idx + 1)
       }
     };
 
-    let numberOfLinesToHighlight = loop(0);
+    let numberOfLinesToHighlight = iter(0);
 
     if (numberOfLinesToHighlight == 0) {
       [||];
@@ -184,14 +184,13 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
 
           (
             {...state, syntaxHighlights},
-            Isolinear.Effect.none,
-            /*Service_Syntax.Effect.bufferUpdate(
+            Service_Syntax.Effect.bufferUpdate(
               state.syntaxClient,
               update,
               lines,
               Some(scope),
             )
-            |> mapServiceEffect,*/
+            |> mapServiceEffect,
           );
         };
       };
