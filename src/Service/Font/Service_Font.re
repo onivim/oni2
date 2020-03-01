@@ -35,9 +35,9 @@ type msg =
   | FontLoaded(t)
   | FontLoadError(string);
 
-let setFont = (requestId, dispatch1, fontFamily, fontSize, smoothing) => {
+let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
   let dispatch = action =>
-    Revery.App.runOnMainThread(() => dispatch1(action));
+    Revery.App.runOnMainThread(() => dispatch(action));
 
   incr(requestId);
   let req = requestId^;
@@ -161,11 +161,11 @@ module Sub = {
         let requestId = ref(0);
 
         setFont(
-          requestId,
-          dispatch,
-          params.fontFamily,
-          params.fontSize,
-          reveryFontSmoothing,
+          ~requestId,
+          ~fontFamily=params.fontFamily,
+          ~fontSize=params.fontSize,
+          ~smoothing=reveryFontSmoothing,
+          ~dispatch,
         );
 
         {
@@ -183,11 +183,11 @@ module Sub = {
           let reveryFontSmoothing =
             getReveryFontSmoothing(params.fontSmoothing);
           setFont(
-            state.requestId,
-            dispatch,
-            params.fontFamily,
-            params.fontSize,
-            reveryFontSmoothing,
+            ~requestId=state.requestId,
+            ~fontFamily=params.fontFamily,
+            ~fontSize=params.fontSize,
+            ~smoothing=reveryFontSmoothing,
+            ~dispatch,
           );
           {
             ...state,
