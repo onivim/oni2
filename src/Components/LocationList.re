@@ -52,7 +52,7 @@ module Styles = {
     textWrap(TextWrapping.NoWrap),
   ];
 
-  let snippet = (~font: Service_Font.t, ~theme: Theme.t, ~isHighlighted) => [
+  let snippet = (~font: Service_Font.font, ~theme: Theme.t, ~isHighlighted) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
     color(
@@ -164,7 +164,7 @@ let%component make =
               (
                 ~theme: Theme.t,
                 ~uiFont: UiFont.t,
-                ~editorFont: Service_Font.t,
+                ~editorFont: Service_Font.font,
                 ~items: array(item),
                 ~onSelectItem: item => unit,
                 (),

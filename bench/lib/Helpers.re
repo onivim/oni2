@@ -28,7 +28,7 @@ let simpleState = {
 let simpleState =
   Reducer.reduce(
     simpleState,
-    Actions.Font(
+    Actions.EditorFont(
       Service_Font.FontLoaded({
         fontFile:
           Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",

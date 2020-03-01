@@ -23,14 +23,14 @@ let make =
     (
       ~metrics: EditorMetrics.t,
       ~terminal: Feature_Terminal.terminal,
-      ~editorFont: Service_Font.t,
+      ~font: Service_Font.font,
       ~theme: Theme.t,
       (),
     ) => {
-  let maybeFont =
-    Revery.Font.load(editorFont.fontFile) |> Stdlib.Result.to_option;
+  let maybeFont = Revery.Font.load(font.fontFile) |> Stdlib.Result.to_option;
 
-  let size = editorFont.fontSize;
+  let size = font.fontSize;
+  let smoothing = font.smoothing;
 
   let onDimensionsChanged =
       (
@@ -83,12 +83,7 @@ let make =
     Option.map(
       font => {
         let {screen, cursor, _}: Feature_Terminal.terminal = terminal;
-        let font =
-          ReveryTerminal.Font.make(
-            ~smoothing=Revery.Font.Smoothing.default,
-            ~size,
-            font,
-          );
+        let font = ReveryTerminal.Font.make(~smoothing, ~size, font);
         ReveryTerminal.render(
           ~defaultBackground,
           ~defaultForeground,

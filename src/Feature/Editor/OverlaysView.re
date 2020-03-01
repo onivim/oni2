@@ -32,7 +32,7 @@ let completionsView =
       ~cursorPixelY,
       ~theme,
       ~tokenTheme,
-      ~editorFont: Service_Font.t,
+      ~editorFont: Service_Font.font,
       (),
     ) =>
   Completions.isActive(completions)
@@ -61,7 +61,7 @@ let make =
       ~completions,
       ~theme,
       ~tokenTheme,
-      ~editorFont: Service_Font.t,
+      ~editorFont: Service_Font.font,
       (),
     ) => {
   let cursorLine = Index.toZeroBased(cursorPosition.line);

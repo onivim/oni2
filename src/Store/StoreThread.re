@@ -214,10 +214,44 @@ let start =
         state.configuration,
       );
     let editorFontSubscription =
-      Service_Font.Sub.font(~fontFamily, ~fontSize, ~fontSmoothing)
-      |> Isolinear.Sub.map(msg => Model.Actions.Font(msg));
+      Service_Font.Sub.font(
+        ~uniqueId="editorFont",
+        ~fontFamily,
+        ~fontSize,
+        ~fontSmoothing,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
-    [syntaxSubscription, terminalSubscription, editorFontSubscription]
+    let terminalFontFamily =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontFamily,
+        state.configuration,
+      );
+    let terminalFontSize =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontSize,
+        state.configuration,
+      );
+    let terminalFontSmoothing =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontSmoothing,
+        state.configuration,
+      );
+    let terminalFontSubscription =
+      Service_Font.Sub.font(
+        ~uniqueId="terminalFont",
+        ~fontFamily=terminalFontFamily,
+        ~fontSize=terminalFontSize,
+        ~fontSmoothing=terminalFontSmoothing,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
+
+    [
+      syntaxSubscription,
+      terminalSubscription,
+      editorFontSubscription,
+      terminalFontSubscription,
+    ]
     |> Isolinear.Sub.batch;
   };
 

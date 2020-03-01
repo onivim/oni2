@@ -8,6 +8,7 @@
 let minimumFontSize = 6.;
 let defaultFontSize = 14.;
 let defaultFontFamily = "FiraCode-Regular.ttf";
+let defaultTerminalFontSize = 12.;
 
 let fontAwesomeRegularPath = "FontAwesome5FreeRegular.otf";
 let fontAwesomeSolidPath = "FontAwesome5FreeSolid.otf";

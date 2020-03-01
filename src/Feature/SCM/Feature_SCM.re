@@ -3,6 +3,7 @@ open Utility;
 
 module InputModel = Oni_Components.InputModel;
 module ExtHostClient = Oni_Extensions.ExtHostClient;
+module Selection = Oni_Components.Selection;
 
 // MODEL
 
@@ -21,7 +22,7 @@ type model = {
 
 and inputBox = {
   value: string,
-  cursorPosition: int,
+  selection: Selection.t,
   placeholder: string,
 };
 
@@ -29,7 +30,7 @@ let initial = {
   providers: [],
   inputBox: {
     value: "",
-    cursorPosition: 0,
+    selection: Selection.initial,
     placeholder: "Do the commit thing!",
   },
 };
@@ -91,7 +92,7 @@ type msg =
       command,
     })
   | KeyPressed({key: string})
-  | InputBoxClicked({cursorPosition: int});
+  | InputBoxClicked({selection: Selection.t});
 
 module Msg = {
   let keyPressed = key => KeyPressed({key: key});
@@ -300,10 +301,10 @@ let update = (extHostClient, model, msg) =>
     )
 
   | KeyPressed({key}) =>
-    let (value, cursorPosition) =
+    let (value, selection) =
       InputModel.handleInput(
         ~text=model.inputBox.value,
-        ~cursorPosition=model.inputBox.cursorPosition,
+        ~selection=model.inputBox.selection,
         key,
       );
 
@@ -313,7 +314,7 @@ let update = (extHostClient, model, msg) =>
         inputBox: {
           ...model.inputBox,
           value,
-          cursorPosition,
+          selection,
         },
       },
       Effect(
@@ -330,12 +331,12 @@ let update = (extHostClient, model, msg) =>
       ),
     );
 
-  | InputBoxClicked({cursorPosition}) => (
+  | InputBoxClicked({selection}) => (
       {
         ...model,
         inputBox: {
           ...model.inputBox,
-          cursorPosition,
+          selection,
         },
       },
       Focus,
@@ -534,10 +535,12 @@ module Pane = {
         style={Styles.input(~font)}
         cursorColor=Colors.gray
         value={model.inputBox.value}
-        cursorPosition={model.inputBox.cursorPosition}
+        selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}
         isFocused
-        onClick={pos => dispatch(InputBoxClicked({cursorPosition: pos}))}
+        onClick={selection =>
+          dispatch(InputBoxClicked({selection: selection}))
+        }
       />
       {groups
        |> List.map(((provider, group)) =>
