@@ -28,7 +28,7 @@ module Styles = {
     right(0),
   ];
 
-  let text = (~theme: Theme.t, ~editorFont: Service_Font.t) => [
+  let text = (~theme: Theme.t, ~editorFont: Service_Font.font) => [
     //width(width_),
     //height(height_),
     //textWrap(TextWrapping.NoWrap),

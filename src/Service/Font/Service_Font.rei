@@ -1,6 +1,6 @@
 open Oni_Core;
 
-type t = {
+type font = {
   fontFile: string,
   fontSize: float,
   measuredWidth: float,
@@ -9,17 +9,17 @@ type t = {
   smoothing: Revery.Font.Smoothing.t,
 };
 
-let toString: t => string;
+let toString: font => string;
 
-let default: t;
+let default: font;
 
-let measure: (~text: string, t) => float;
+let measure: (~text: string, font) => float;
 
-let getHeight: t => float;
+let getHeight: font => float;
 
 [@deriving show({with_path: false})]
 type msg =
-  | FontLoaded(t)
+  | FontLoaded(font)
   | FontLoadError(string);
 
 module Sub: {

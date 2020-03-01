@@ -23,7 +23,7 @@ let make =
     (
       ~metrics: EditorMetrics.t,
       ~terminal: Feature_Terminal.terminal,
-      ~font: Service_Font.t,
+      ~font: Service_Font.font,
       ~theme: Theme.t,
       (),
     ) => {

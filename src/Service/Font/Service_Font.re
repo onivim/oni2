@@ -4,7 +4,7 @@ module Zed_utf8 = ZedBundled;
 module Log = (val Log.withNamespace("Oni2.Service.Font"));
 
 [@deriving show({with_path: false})]
-type t = {
+type font = {
   fontFile: string,
   fontSize: float,
   measuredWidth: float,
@@ -13,7 +13,7 @@ type t = {
   smoothing: [@opaque] Revery.Font.Smoothing.t,
 };
 
-let toString = show;
+let toString = show_font;
 
 let default = {
   fontFile: Constants.defaultFontFamily,
@@ -24,7 +24,7 @@ let default = {
   smoothing: Revery.Font.Smoothing.default,
 };
 
-let measure = (~text, v: t) => {
+let measure = (~text, v: font) => {
   float_of_int(Zed_utf8.length(text)) *. v.measuredWidth;
 };
 
@@ -32,7 +32,7 @@ let getHeight = ({measuredHeight, _}) => measuredHeight;
 
 [@deriving show({with_path: false})]
 type msg =
-  | FontLoaded(t)
+  | FontLoaded(font)
   | FontLoadError(string);
 
 let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {

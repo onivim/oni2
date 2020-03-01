@@ -10,7 +10,7 @@ type t = {
   idToGroup: IntMap.t(EditorGroup.t),
   activeId: int,
   /* Cache the last editor font, so when a new group is created, we can share it */
-  lastEditorFont: option(Service_Font.t),
+  lastEditorFont: option(Service_Font.font),
 };
 
 let create = () => {
