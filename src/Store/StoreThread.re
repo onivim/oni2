@@ -109,7 +109,7 @@ let start =
     );
 
   let syntaxUpdater =
-    SyntaxHighlightingStoreConnector.start(cliOptions, languageInfo);
+    SyntaxHighlightingStoreConnector.start(~enabled=cliOptions.shouldSyntaxHighlight, languageInfo);
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClient, extHostStream) =

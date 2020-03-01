@@ -20,7 +20,7 @@ module Protocol = Oni_Syntax.Protocol;
 // - Move updater to Feature_Terminal
 // - Change subscription granularity to per-buffer -
 // - this could help remove several effects!
-let start = (cli: Core.Cli.t, languageInfo: Ext.LanguageInfo.t) => {
+let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
   let isVersionValid = (updateVersion, bufferVersion) => {
     bufferVersion != (-1) && updateVersion == bufferVersion;
   };
@@ -53,18 +53,18 @@ let start = (cli: Core.Cli.t, languageInfo: Ext.LanguageInfo.t) => {
       |> Core.Configuration.getValue(c => c.syntaxEagerMaxLineLength);
 
     let len = min(Array.length(lines), maxLines);
-    let idx = ref(0);
-    let limitExceeded = ref(false);
 
-    while (idx^ < len && ! limitExceeded^) {
-      if (String.length(lines[idx^]) > maxLineLength) {
-        limitExceeded := true;
-      };
-
-      incr(idx);
+    let rec loop = (idx) => {
+      if (idx >= len) {
+        idx
+      } else if (String.length(lines[idx]) > maxLineLength) {
+        idx;
+      } else {
+        loop(idx + 1)
+      }
     };
 
-    let numberOfLinesToHighlight = idx^;
+    let numberOfLinesToHighlight = loop(0);
 
     if (numberOfLinesToHighlight == 0) {
       [||];
@@ -156,7 +156,7 @@ let start = (cli: Core.Cli.t, languageInfo: Ext.LanguageInfo.t) => {
         | Some(scope) =>
           // Eager syntax highlighting
           let syntaxHighlights =
-            if (version == 1 && cli.shouldSyntaxHighlight) {
+            if (version == 1 && enabled) {
               let highlights =
                 getEagerLines(
                   ~scope,
@@ -184,13 +184,14 @@ let start = (cli: Core.Cli.t, languageInfo: Ext.LanguageInfo.t) => {
 
           (
             {...state, syntaxHighlights},
-            Service_Syntax.Effect.bufferUpdate(
+            Isolinear.Effect.none,
+            /*Service_Syntax.Effect.bufferUpdate(
               state.syntaxClient,
               update,
               lines,
               Some(scope),
             )
-            |> mapServiceEffect,
+            |> mapServiceEffect,*/
           );
         };
       };
