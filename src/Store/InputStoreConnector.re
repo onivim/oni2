@@ -27,7 +27,7 @@ let conditionsOfState = (state: State.t) => {
     Hashtbl.add(ret, "inQuickOpen", true);
 
     if (Selection.isCollapsed(selection)
-        && Selection.focus(selection) == String.length(query)) {
+        && selection.focus == String.length(query)) {
       Hashtbl.add(ret, "quickmenuCursorEnd", true);
     };
 

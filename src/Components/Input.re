@@ -100,7 +100,7 @@ let%component make =
                 ~prefix="",
                 ~isFocused,
                 ~value,
-                ~selection,
+                ~selection: Selection.t,
                 ~onClick,
                 (),
               ) => {
@@ -191,9 +191,7 @@ let%component make =
 
   let () = {
     let cursorOffset =
-      measureTextWidth(
-        String.sub(displayValue, 0, Selection.focus(selection)),
-      )
+      measureTextWidth(String.sub(displayValue, 0, selection.focus))
       |> int_of_float;
 
     switch (Option.bind(textRef^, r => r#getParent())) {
@@ -255,10 +253,7 @@ let%component make =
 
   let cursor = () => {
     let (startStr, _) =
-      getStringParts(
-        Selection.focus(selection) + String.length(prefix),
-        displayValue,
-      );
+      getStringParts(selection.focus + String.length(prefix), displayValue);
 
     let textWidth = measureTextWidth(startStr) |> int_of_float;
 

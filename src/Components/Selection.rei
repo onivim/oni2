@@ -6,8 +6,6 @@ type t =
   };
 
 let initial: t;
-let anchor: t => int;
-let focus: t => int;
 
 let create: (~text: string, ~anchor: int, ~focus: int) => t;
 let length: t => int;

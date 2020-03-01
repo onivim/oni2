@@ -8,14 +8,6 @@ type t = {
 
 let initial: t = {anchor: 0, focus: 0};
 
-let anchor = (selection: t): int => {
-  selection.anchor;
-};
-
-let focus = (selection: t): int => {
-  selection.focus;
-};
-
 let create = (~text: string, ~anchor: int, ~focus: int): t => {
   let safeOffset = IntEx.clamp(~lo=0, ~hi=String.length(text));
 

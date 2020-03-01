@@ -56,8 +56,8 @@ let add = (~at as index, insert, text) => (
   index + String.length(insert),
 );
 
-let removeCharBefore = (text, selection) => {
-  let (textSlice, _) = removeBefore(Selection.focus(selection), text);
+let removeCharBefore = (text, selection: Selection.t) => {
+  let (textSlice, _) = removeBefore(selection.focus, text);
 
   (
     textSlice,
@@ -78,63 +78,62 @@ let removeSelection = (text, selection) => {
   (textSlice, Selection.collapsed(~text=textSlice, focus));
 };
 
-let removeCharAfter = (text, selection) => {
-  let (textSlice, focus) = removeAfter(Selection.focus(selection), text);
+let removeCharAfter = (text, selection: Selection.t) => {
+  let (textSlice, focus) = removeAfter(selection.focus, text);
 
   (textSlice, Selection.collapsed(~text=textSlice, focus));
 };
 
-let collapsePrevWord = (text, selection) => {
+let collapsePrevWord = (text, selection: Selection.t) => {
   let newSelection =
-    Selection.focus(selection)
+    selection.focus
     |> findPrevWordBoundary(text)
     |> Selection.collapsed(~text);
 
   (text, newSelection);
 };
 
-let collapseNextWord = (text, selection) => {
+let collapseNextWord = (text, selection: Selection.t) => {
   let newSelection =
-    Selection.focus(selection)
+    selection.focus
     |> findNextWordBoundary(text)
     |> Selection.collapsed(~text);
 
   (text, newSelection);
 };
 
-let extendPrevWord = (text, selection) => {
+let extendPrevWord = (text, selection: Selection.t) => {
   let newSelection =
-    Selection.focus(selection)
+    selection.focus
     |> findPrevWordBoundary(text)
     |> Selection.extend(~text, ~selection);
 
   (text, newSelection);
 };
 
-let extendNextWord = (text, selection) => {
+let extendNextWord = (text, selection: Selection.t) => {
   let newSelection =
-    Selection.focus(selection)
+    selection.focus
     |> findNextWordBoundary(text)
     |> Selection.extend(~text, ~selection);
 
   (text, newSelection);
 };
 
-let addCharacter = (key, text, selection) => {
-  let (newText, focus) = add(~at=Selection.focus(selection), key, text);
+let addCharacter = (key, text, selection: Selection.t) => {
+  let (newText, focus) = add(~at=selection.focus, key, text);
 
   (newText, Selection.collapsed(~text=newText, focus));
 };
 
-let replacesSelection = (key, text, selection) => {
+let replacesSelection = (key, text, selection: Selection.t) => {
   let (textSlice, selectionSlice) = removeSelection(text, selection);
-  let (newText, focus) =
-    add(~at=Selection.focus(selectionSlice), key, textSlice);
+  let (newText, focus) = add(~at=selectionSlice.focus, key, textSlice);
 
   (newText, Selection.collapsed(~text=newText, focus));
 };
 
-let handleInput = (~text, ~selection, key) => {
+let handleInput = (~text, ~selection: Selection.t, key) => {
   switch (key, Selection.isCollapsed(selection)) {
   | ("<LEFT>", true) => (
       text,
@@ -160,11 +159,11 @@ let handleInput = (~text, ~selection, key) => {
   | ("<END>", _) => (text, Selection.collapsed(~text, String.length(text)))
   | ("<S-LEFT>", _) => (
       text,
-      Selection.focus(selection) - 1 |> Selection.extend(~text, ~selection),
+      selection.focus - 1 |> Selection.extend(~text, ~selection),
     )
   | ("<S-RIGHT>", _) => (
       text,
-      Selection.focus(selection) + 1 |> Selection.extend(~text, ~selection),
+      selection.focus + 1 |> Selection.extend(~text, ~selection),
     )
   | ("<C-LEFT>", _) => collapsePrevWord(text, selection)
   | ("<C-RIGHT>", _) => collapseNextWord(text, selection)

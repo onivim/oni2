@@ -15,22 +15,6 @@ describe("Selection#initial", ({test, _}) => {
   })
 });
 
-describe("Selection#anchor", ({test, _}) => {
-  test("Returns anchor value", ({expect}) => {
-    let result = Selection.anchor(create(~anchor=3, ~focus=5));
-
-    expect.int(result).toBe(3);
-  })
-});
-
-describe("Selection#focus", ({test, _}) => {
-  test("Returns anchor value", ({expect}) => {
-    let result = Selection.focus(create(~anchor=3, ~focus=5));
-
-    expect.int(result).toBe(5);
-  })
-});
-
 describe("Selection#create", ({test, _}) => {
   test("Returns valid selection", ({expect}) => {
     let result = create(~anchor=3, ~focus=3);
