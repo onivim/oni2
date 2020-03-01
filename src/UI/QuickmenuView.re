@@ -53,8 +53,8 @@ module Styles = {
 let onFocusedChange = index =>
   GlobalContext.current().dispatch(ListFocus(index));
 
-let onInputClicked = cursorPosition =>
-  GlobalContext.current().dispatch(QuickmenuInputClicked(cursorPosition));
+let onInputClicked = selection =>
+  GlobalContext.current().dispatch(QuickmenuInputClicked(selection));
 
 let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
@@ -107,7 +107,7 @@ let make =
         ripgrepProgress,
         focused,
         query,
-        cursorPosition,
+        selection,
         prefix,
         variant,
         _,
@@ -161,7 +161,7 @@ let make =
         isFocused=true
         onClick=onInputClicked
         value=query
-        cursorPosition
+        selection
       />
     </View>;
 
@@ -184,7 +184,10 @@ let make =
          | EditorsPicker => React.empty
          | _ => <input />
          }}
-        <dropdown />
+        {switch (variant) {
+         | Wildmenu(SearchForward | SearchReverse) => React.empty
+         | _ => <dropdown />
+         }}
       </View>
     </OniBoxShadow>
   </AllowPointer>;

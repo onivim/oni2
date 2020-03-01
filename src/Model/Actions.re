@@ -8,6 +8,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
+open Oni_Components;
 
 module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
@@ -91,7 +92,7 @@ type t =
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputClicked(int)
+  | QuickmenuInputClicked(Selection.t)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
