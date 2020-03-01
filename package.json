@@ -254,7 +254,7 @@
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reason-textmate": "onivim/reason-textmate#5f0dc38",
     "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d",
-    "reason-harfbuzz": "revery-ui/reason-harfbuzz#eb832d7"
+    "reason-harfbuzz": "revery-ui/reason-harfbuzz#3b25ac0"
   },
   "devDependencies": {
     "ocaml": "~4.8",
