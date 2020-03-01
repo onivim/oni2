@@ -18,7 +18,7 @@ type t = {
 };
 
 module Regexes = {
-  let oniPath = Oniguruma.OnigRegExp.create("oni:\\/\\/([a-z]*)\\/(.*)")
+  let oniPath = Oniguruma.OnigRegExp.create("oni:\\/\\/([a-z]*)\\/(.*)");
 };
 
 let initial = {
@@ -49,14 +49,14 @@ let getLanguageFromFilePath = (li: t, fp: string) => {
 
   Regexes.oniPath
   |> Stdlib.Result.to_option
-  |> Utility.OptionEx.flatMap((regex) => {
-    let matches = Oniguruma.OnigRegExp.search(fp, 0, regex);
-    if (Array.length(matches) == 0) {
-      None
-    } else {
-      Some(Oniguruma.OnigRegExp.Match.getText(matches[1]))
-    }
-    })
+  |> Utility.OptionEx.flatMap(regex => {
+       let matches = Oniguruma.OnigRegExp.search(fp, 0, regex);
+       if (Array.length(matches) == 0) {
+         None;
+       } else {
+         Some(Oniguruma.OnigRegExp.Match.getText(matches[1]));
+       };
+     })
   |> Stdlib.Option.value(~default);
 };
 

@@ -66,6 +66,7 @@ module Styles = {
 
 let make =
     (
+      ~filePath,
       ~title,
       ~isActive,
       ~modified,
@@ -79,9 +80,9 @@ let make =
     ) => {
   let state = GlobalContext.current().state;
   let language =
-    Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
+    Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, filePath);
   let fileIcon: option(Model.IconTheme.IconDefinition.t) =
-    Model.IconTheme.getIconForFile(state.iconTheme, title, language);
+    Model.IconTheme.getIconForFile(state.iconTheme, filePath, language);
 
   let fileIconView =
     switch (fileIcon) {

@@ -11,6 +11,7 @@ let noop = () => ();
 
 type tabInfo = {
   editorId: int,
+  filePath: string,
   title: string,
   modified: bool,
   renderer: Oni_Model.BufferRenderer.t,
@@ -20,11 +21,13 @@ let toTab = (theme, mode, uiFont, active, activeEditorId, t: tabInfo) => {
   let title =
     switch (t.renderer) {
     | Welcome => "Welcome"
+    | Terminal({title, _}) => title
     | _ => Path.filename(t.title)
     };
 
   <Tab
     theme
+    filePath={t.filePath}
     title
     isActive={Some(t.editorId) == activeEditorId}
     showHighlight=active

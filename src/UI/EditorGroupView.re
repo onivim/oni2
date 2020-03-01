@@ -29,21 +29,16 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let truncateFilepath = path =>
-  switch (path) {
-  | Some(p) => Filename.basename(p)
-  | None => "untitled"
-  };
-
 let getBufferMetadata = (buffer: option(Buffer.t)) => {
   switch (buffer) {
-  | None => (false, "untitled")
+  | None => (false, "untitled", "untitled")
   | Some(v) =>
-    let filePath = Buffer.getFilePath(v);
+    let filePath =
+      Buffer.getFilePath(v) |> Option.value(~default="untitled");
     let modified = Buffer.isModified(v);
 
-    let title = filePath |> truncateFilepath;
-    (modified, title);
+    let title = filePath |> Filename.basename;
+    (modified, title, filePath);
   };
 };
 
@@ -57,13 +52,14 @@ let toUiTabs =
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
     | Some(v) =>
-      let (modified, title) =
+      let (modified, title, filePath) =
         Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
 
       let renderer = Model.BufferRenderers.getById(v.bufferId, renderers);
 
       let ret: Tabs.tabInfo = {
         editorId: v.editorId,
+        filePath,
         title,
         modified,
         renderer,
@@ -231,7 +227,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             shouldHighlightActiveIndentGuides
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
-        | BufferRenderer.Terminal({id}) =>
+        | BufferRenderer.Terminal({id, _}) =>
           state.terminals
           |> Feature_Terminal.getTerminalOpt(id)
           |> Option.map(terminal => {
