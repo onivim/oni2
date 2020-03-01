@@ -119,9 +119,9 @@ let parseRenderWhitespace = json =>
   | _ => All
   };
 
-let parseEditorFontSize = json =>
+let parseEditorFontSize = (~default=Constants.defaultFontSize, json) =>
   json
-  |> parseFloat(~default=Constants.defaultFontSize)
+  |> parseFloat(~default)
   |> (
     result =>
       result > Constants.minimumFontSize ? result : Constants.minimumFontSize
@@ -244,6 +244,29 @@ let configurationParsers: list(configurationTuple) = [
   ),
   ("editor.rulers", (s, v) => {...s, editorRulers: parseIntList(v)}),
   ("files.exclude", (s, v) => {...s, filesExclude: parseStringList(v)}),
+  (
+    "terminal.integrated.fontFamily",
+    (s, v) => {
+      ...s,
+      terminalIntegratedFontFamily:
+        parseString(~default=Constants.defaultFontFamily, v),
+    },
+  ),
+  (
+    "terminal.integrated.fontSize",
+    (config, json) => {
+      ...config,
+      terminalIntegratedFontSize:
+        parseEditorFontSize(~default=Constants.defaultTerminalFontSize, json),
+    },
+  ),
+  (
+    "terminal.integrated.fontSmoothing",
+    (config, json) => {
+      ...config,
+      terminalIntegratedFontSmoothing: parseFontSmoothing(json),
+    },
+  ),
   ("window.title", (s, v) => {...s, windowTitle: parseString(v)}),
   (
     "workbench.activityBar.visible",

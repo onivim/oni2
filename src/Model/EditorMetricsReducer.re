@@ -12,7 +12,7 @@ let reduce = (v: EditorMetrics.t, action) => {
       pixelWidth,
       pixelHeight,
     }
-  | Font(Service_Font.FontLoaded({measuredHeight, measuredWidth, _})) => {
+  | EditorFont(Service_Font.FontLoaded({measuredHeight, measuredWidth, _})) => {
       ...v,
       lineHeight: measuredHeight,
       characterWidth: measuredWidth,

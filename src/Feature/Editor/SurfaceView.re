@@ -53,7 +53,7 @@ let%component make =
                 ~onCursorChange,
                 ~cursorPosition: Location.t,
                 ~rulers,
-                ~editorFont: Service_Font.t,
+                ~editorFont: Service_Font.font,
                 ~leftVisibleColumn,
                 ~diagnosticsMap,
                 ~selectionRanges,

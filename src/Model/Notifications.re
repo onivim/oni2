@@ -7,7 +7,10 @@ let initial: t = [];
 
 let reduce = (state, action: Actions.t) => {
   switch (action) {
-  | Font(Service_Font.FontLoadError(msg)) =>
+  | EditorFont(Service_Font.FontLoadError(msg)) =>
+    let errorNotification = Notification.create(~kind=Error, msg);
+    [errorNotification, ...state];
+  | TerminalFont(Service_Font.FontLoadError(msg)) =>
     let errorNotification = Notification.create(~kind=Error, msg);
     [errorNotification, ...state];
   | ShowNotification(item) => [item, ...state]
