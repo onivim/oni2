@@ -179,7 +179,7 @@ if (process.platform == "linux") {
       "com.apple.security.cs.allow-unsigned-executable-memory": true,
       "com.apple.security.cs.disable-library-validation": true,
 
-// Allow dyld environment variables. Needed because Firefox uses
+// Allow dyld environment variables. Needed because Onivim 2 uses
 //         dyld variables (such as @executable_path) to load libaries from
 //         within the .app bundle.
 // See: https://github.com/onivim/oni2/issues/1397
