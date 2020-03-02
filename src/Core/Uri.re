@@ -56,21 +56,22 @@ module Internal = {
   let isDriveLetter = (candidate: Char.t) => {
     let aCode = Char.code('A');
     let zCode = Char.code('Z');
+    let upperCandidate = Char.uppercase_ascii(candidate);
 
-    Char.code(candidate) >= aCode && Char.code(candidate) <= zCode;
+    Char.code(upperCandidate) >= aCode && Char.code(upperCandidate) <= zCode;
   };
 
   let normalizePath = (scheme: Scheme.t, path: string) => {
     switch (scheme) {
     | File =>
       let pathLen = String.length(path);
-      if (pathLen > 1) {
-        let firstLetter = path.[0];
-        let secondCharacter = path.[1];
+      if (pathLen > 2 && path.[0] == '/') {
+        let firstLetter = path.[1];
+        let secondCharacter = path.[2];
         if (isDriveLetter(firstLetter) && secondCharacter == ':') {
           let firstLetterString =
             String.make(1, Char.lowercase_ascii(firstLetter));
-          firstLetterString ++ ":" ++ String.sub(path, 2, pathLen - 2);
+          firstLetterString ++ ":" ++ String.sub(path, 3, pathLen - 3);
         } else {
           path;
         };
@@ -103,7 +104,7 @@ module Internal = {
   };
 
   let referenceResolution = (scheme: Scheme.t, path: string) =>
-    path |> normalizePath(scheme) |> addSlash(scheme);
+    path |> addSlash(scheme) |> normalizePath(scheme);
 };
 
 let fromScheme = (~scheme: Scheme.t, ~query=?, path: string) => {
@@ -120,7 +121,7 @@ let toString = (uri: t) => {
 };
 
 let toFileSystemPath = (uri: t) => {
-  uri.path;
+  Internal.referenceResolution(uri.scheme, uri.path);
 };
 
 let getScheme = (uri: t) => uri.scheme;
