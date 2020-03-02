@@ -4,33 +4,48 @@
  * Theming color / info
  */
 
+// VSCode theme defaults and fallbacks defined in
+// https://github.com/microsoft/vscode/blob/634068a42471d610453d97fa0c81ec7e713c4e17/src/vs/platform/theme/common/colorRegistry.ts
+// https://github.com/microsoft/vscode/blob/abb01b183d450a590cbb78acb4e787eec5445830/src/vs/workbench/common/theme.ts
+// https://github.com/microsoft/vscode/blob/d49c5f3bc73ca4b41fe1306b2bf1d5b4bff96291/src/vs/editor/common/view/editorColorRegistry.ts
+// https://github.com/microsoft/vscode/blob/0991720b7b44ffc15760b578b284caff78ccf398/src/vs/workbench/contrib/terminal/common/terminalColorRegistry.ts
+
 open Revery;
 
 type defaults = {
-  editorBackground: string,
-  editorForeground: string,
-  editorIndentGuideBackground: string,
-  editorIndentGuideActiveBackground: string,
+  foreground: Color.t,
+  editorBackground: Color.t,
+  editorForeground: Color.t,
+  editorIndentGuideBackground: Color.t,
+  editorIndentGuideActiveBackground: Color.t,
+  editorWhitespaceForeground: Color.t,
 };
 
 let light: defaults = {
-  editorBackground: "#FFF",
-  editorForeground: "#000",
-  editorIndentGuideBackground: "#D3D3D3",
-  editorIndentGuideActiveBackground: "#939393",
+  foreground: Color.hex("#616161"),
+  editorBackground: Color.hex("#fffffe"),
+  editorForeground: Color.hex("#333"),
+  editorIndentGuideBackground: Color.hex("#D3D3D3"),
+  editorIndentGuideActiveBackground: Color.hex("#939393"),
+  editorWhitespaceForeground: Color.hex("#33333333"),
 };
 
 let dark: defaults = {
-  editorBackground: "#1E1E1E",
-  editorForeground: "#D4D4D4",
-  editorIndentGuideBackground: "#404040",
-  editorIndentGuideActiveBackground: "#707070",
+  foreground: Color.hex("#ccc"),
+  editorBackground: Color.hex("#1E1E1E"),
+  editorForeground: Color.hex("#bbb"),
+  editorIndentGuideBackground: Color.hex("#404040"),
+  editorIndentGuideActiveBackground: Color.hex("#707070"),
+  editorWhitespaceForeground: Color.hex("#e3e4e229"),
 };
+
 let hcDark: defaults = {
-  editorBackground: "#000",
-  editorForeground: "#FFF",
-  editorIndentGuideBackground: "#FFF",
-  editorIndentGuideActiveBackground: "#FFF",
+  foreground: Color.hex("#fff"),
+  editorBackground: Color.hex("#000"),
+  editorForeground: Color.hex("#FFF"),
+  editorIndentGuideBackground: Color.hex("#FFF"),
+  editorIndentGuideActiveBackground: Color.hex("#FFF"),
+  editorWhitespaceForeground: Color.hex("#e3e4e229"),
 };
 
 let getDefaults = uiTheme =>
@@ -42,13 +57,25 @@ let getDefaults = uiTheme =>
   | _ => dark
   };
 
-type t = {
+type editorGutter = {
   background: Color.t,
+  modifiedBackground: Color.t,
+  addedBackground: Color.t,
+  deletedBackground: Color.t,
+  commentRangeForeground: Color.t,
+};
+
+type t = {
   foreground: Color.t,
   activityBarBackground: Color.t,
   activityBarForeground: Color.t,
+  activityBarInactiveForeground: Color.t,
+  activityBarActiveBackground: Color.t,
+  activityBarActiveBorder: Color.t,
   editorBackground: Color.t,
   editorForeground: Color.t,
+  editorCursorBackground: Color.t,
+  editorCursorForeground: Color.t,
   editorHoverWidgetBackground: Color.t,
   editorHoverWidgetBorder: Color.t,
   editorLineHighlightBackground: Color.t,
@@ -68,12 +95,22 @@ type t = {
   editorFindMatchHighlightBackground: Color.t,
   editorIndentGuideBackground: Color.t,
   editorIndentGuideActiveBackground: Color.t,
+  listActiveSelectionBackground: Color.t,
+  listActiveSelectionForeground: Color.t,
+  listFocusBackground: Color.t,
+  listFocusForeground: Color.t,
+  listHoverBackground: Color.t,
+  listHoverForeground: Color.t,
   menuBackground: Color.t,
   menuForeground: Color.t,
   menuSelectionBackground: Color.t,
   editorOverviewRulerBracketMatchForeground: Color.t,
   editorWhitespaceForeground: Color.t,
+  editorGroupsHeaderTabsBackground: Color.t,
+  tabActiveBackground: Color.t,
   tabActiveForeground: Color.t,
+  tabInactiveBackground: Color.t,
+  tabInactiveForeground: Color.t,
   oniVisualModeBackground: Color.t,
   oniInsertModeBackground: Color.t,
   oniReplaceModeBackground: Color.t,
@@ -102,17 +139,47 @@ type t = {
   sneakBackground: Color.t,
   sneakForeground: Color.t,
   sneakHighlight: Color.t,
+  terminalBackground: Color.t,
+  terminalForeground: Color.t,
+  terminalAnsiBlack: Color.t,
+  terminalAnsiRed: Color.t,
+  terminalAnsiGreen: Color.t,
+  terminalAnsiYellow: Color.t,
+  terminalAnsiBlue: Color.t,
+  terminalAnsiMagenta: Color.t,
+  terminalAnsiCyan: Color.t,
+  terminalAnsiWhite: Color.t,
+  terminalAnsiBrightBlack: Color.t,
+  terminalAnsiBrightRed: Color.t,
+  terminalAnsiBrightGreen: Color.t,
+  terminalAnsiBrightYellow: Color.t,
+  terminalAnsiBrightBlue: Color.t,
+  terminalAnsiBrightCyan: Color.t,
+  terminalAnsiBrightMagenta: Color.t,
+  terminalAnsiBrightWhite: Color.t,
+  titleBarActiveBackground: Color.t,
+  titleBarActiveForeground: Color.t,
+  titleBarInactiveBackground: Color.t,
+  titleBarInactiveForeground: Color.t,
+  titleBarBorder: Color.t,
+  editorGutterModifiedBackground: Color.t,
+  editorGutterAddedBackground: Color.t,
+  editorGutterDeletedBackground: Color.t,
 };
 
 let default: t = {
-  background: Color.hex("#282C35"),
   foreground: Color.hex("#ECEFF4"),
   sideBarBackground: Color.hex("#21252b"),
   sideBarForeground: Color.hex("#ECEFF4"),
   activityBarBackground: Color.hex("#2F3440"),
-  activityBarForeground: Color.hex("#DCDCDC"),
+  activityBarForeground: Colors.white,
+  activityBarInactiveForeground: Color.hex("#DCDCDC"),
+  activityBarActiveBackground: Colors.transparentWhite,
+  activityBarActiveBorder: Colors.white,
   editorBackground: Color.hex("#2F3440"),
   editorForeground: Color.hex("#DCDCDC"),
+  editorCursorBackground: Color.hex("#2F3440"),
+  editorCursorForeground: Color.hex("#DCDCDC"),
   editorFindMatchBackground: Color.hex("#42557b"),
   editorFindMatchBorder: Color.hex("#457dff"),
   editorFindMatchHighlightBackground: Color.hex("#314365"),
@@ -129,6 +196,12 @@ let default: t = {
   editorOverviewRulerBracketMatchForeground: Color.hex("#A0A0A0"),
   editorActiveLineNumberForeground: Color.hex("#737984"),
   editorSelectionBackground: Color.hex("#687595"),
+  listActiveSelectionBackground: Color.hex("#495162"),
+  listActiveSelectionForeground: Color.hex("#FFFFFF"),
+  listFocusBackground: Color.hex("#495162"),
+  listFocusForeground: Color.hex("#FFFFFF"),
+  listHoverBackground: Color.hex("#495162"),
+  listHoverForeground: Color.hex("#FFFFFF"),
   scrollbarSliderBackground: Color.rgba(0., 0., 0., 0.2),
   scrollbarSliderActiveBackground: Color.hex("#2F3440"),
   editorIndentGuideBackground: Color.hex("#3b4048"),
@@ -137,7 +210,11 @@ let default: t = {
   menuForeground: Color.hex("#FFFFFF"),
   menuSelectionBackground: Color.hex("#495162"),
   editorWhitespaceForeground: Color.hex("#3b4048"),
+  editorGroupsHeaderTabsBackground: Color.hex("#2F3440"),
+  tabActiveBackground: Color.hex("#2F3440"),
   tabActiveForeground: Color.hex("#DCDCDC"),
+  tabInactiveBackground: Color.hex("#2F3440"),
+  tabInactiveForeground: Color.hex("#DCDCDC"),
   oniVisualModeBackground: Color.hex("#56b6c2"),
   oniInsertModeBackground: Color.hex("#98c379"),
   oniReplaceModeBackground: Color.hex("#d19a66"),
@@ -164,111 +241,165 @@ let default: t = {
   sneakBackground: Colors.red,
   sneakForeground: Colors.white,
   sneakHighlight: Colors.white,
+  terminalBackground: Color.rgb_int(0, 0, 0),
+  terminalForeground: Color.rgb_int(233, 235, 235),
+  terminalAnsiBlack: Color.rgb_int(0, 0, 0),
+  terminalAnsiRed: Color.rgb_int(194, 54, 33),
+  terminalAnsiGreen: Color.rgb_int(37, 188, 36),
+  terminalAnsiYellow: Color.rgb_int(173, 173, 39),
+  terminalAnsiBlue: Color.rgb_int(73, 46, 225),
+  terminalAnsiMagenta: Color.rgb_int(211, 56, 211),
+  terminalAnsiCyan: Color.rgb_int(51, 197, 200),
+  terminalAnsiWhite: Color.rgb_int(203, 204, 205),
+  terminalAnsiBrightBlack: Color.rgb_int(129, 131, 131),
+  terminalAnsiBrightRed: Color.rgb_int(252, 57, 31),
+  terminalAnsiBrightGreen: Color.rgb_int(49, 231, 34),
+  terminalAnsiBrightYellow: Color.rgb_int(234, 236, 35),
+  terminalAnsiBrightBlue: Color.rgb_int(88, 51, 255),
+  terminalAnsiBrightCyan: Color.rgb_int(20, 240, 240),
+  terminalAnsiBrightMagenta: Color.rgb_int(20, 240, 240),
+  terminalAnsiBrightWhite: Color.rgb_int(233, 235, 235),
+  titleBarActiveBackground: Color.hex("#282C35"),
+  titleBarActiveForeground: Color.hex("#ECEFF4"),
+  titleBarInactiveBackground: Color.hex("#282C35"),
+  titleBarInactiveForeground: Color.hex("#ECEFF4"),
+  titleBarBorder: Colors.transparentWhite,
+  editorGutterModifiedBackground: Color.hex("#0C7D9D"),
+  editorGutterAddedBackground: Color.hex("#587C0C"),
+  editorGutterDeletedBackground: Color.hex("#94151B"),
 };
 
 let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
   open Textmate.ColorTheme;
   let defaults = getDefaults(uiTheme);
-  let defaultBackground = defaults.editorBackground;
-  let defaultForeground = defaults.editorForeground;
 
+  let emptyString = "";
   let getColor = (default, items) => {
-    let colorString = getFirstOrDefault(~default, items, ct);
-    Color.hex(colorString);
+    let colorString = getFirstOrDefault(~default=emptyString, items, ct);
+
+    if (colorString != emptyString) {
+      Color.hex(colorString);
+    } else {
+      default;
+    };
   };
 
-  let background =
-    getColor(defaultBackground, ["background", "editor.background"]);
-  let foreground =
-    getColor(defaultForeground, ["foreground", "editor.foreground"]);
+  let foreground = getColor(defaults.foreground, ["foreground"]);
 
   let editorBackground =
-    getColor(defaultBackground, ["editor.background", "background"]);
+    getColor(defaults.editorBackground, ["editor.background"]);
   let editorForeground =
-    getColor(defaultForeground, ["editor.foreground", "foreground"]);
+    getColor(defaults.foreground, ["editor.foreground", "foreground"]);
+
+  let editorCursorBackground =
+    getColor(
+      defaults.editorBackground,
+      ["editorCursor.background", "editor.background"],
+    );
+  let editorCursorForeground =
+    getColor(
+      defaults.foreground,
+      ["editorCursor.foreground", "editor.foreground", "foreground"],
+    );
 
   let editorHoverWidgetBackground =
     getColor(
-      defaultBackground,
-      ["editorHoverWidget.background", "editor.background", "background"],
+      defaults.editorBackground,
+      ["editorHoverWidget.background", "editor.background"],
     );
 
   let activityBarBackground =
     getColor(
-      defaultBackground,
-      ["activityBar.background", "editor.background", "background"],
+      defaults === light ? Color.hex("#2c2c2c") : Color.hex("#333"),
+      ["activityBar.background"],
     );
 
   let activityBarForeground =
+    getColor(Colors.white, ["activityBar.foreground"]);
+
+  let activityBarInactiveForeground =
     getColor(
-      defaultForeground,
-      ["activityBar.foreground", "editor.foreground", "foreground"],
+      Color.multiplyAlpha(0.4, Colors.white),
+      ["activityBar.inactiveForeground"],
+    );
+
+  let activityBarActiveBackground =
+    getColor(
+      Colors.transparentWhite, // Actually `null`
+      ["activityBar.activeBackground"],
+    );
+
+  let activityBarActiveBorder =
+    getColor(
+      Colors.white,
+      ["activityBar.activeBackground", "acitivityBar.foreground"],
     );
 
   let editorHoverWidgetBorder =
     getColor(
-      defaultForeground,
+      defaults.foreground,
       ["editorHoverWidget.border", "editor.foreground", "foreground"],
     );
 
   let editorLineNumberBackground =
     getColor(
-      defaultBackground,
-      ["editorLineNumber.background", "editor.background", "background"],
+      defaults.editorBackground,
+      ["editorLineNumber.background", "editor.background"],
     );
   let editorLineNumberForeground =
     getColor(
-      defaultForeground,
+      defaults.foreground,
       ["editorLineNumber.foreground", "editor.foreground", "foreground"],
     );
 
   let editorRulerForeground =
     getColor(
-      defaultForeground,
+      defaults.foreground,
       ["editorRuler.foreground", "editor.foreground", "foreground"],
     );
 
   let editorLineHighlightBackground =
     getColor(
-      defaultBackground,
-      ["editor.lineHighlightBackground", "editor.background", "background"],
+      defaults.editorBackground,
+      ["editor.lineHighlightBackground", "editor.background"],
     );
 
   let editorSuggestWidgetBackground =
     getColor(
-      defaultBackground,
-      ["editorSuggestWidget.background", "editor.background", "background"],
+      defaults.editorBackground,
+      ["editorSuggestWidget.background", "editor.background"],
     );
 
   let editorSuggestWidgetSelectedBackground =
     getColor(
-      defaultBackground,
-      [
-        "editorSuggestWidget.selectedBackground",
-        "editor.background",
-        "background",
-      ],
+      defaults.editorBackground,
+      ["editorSuggestWidget.selectedBackground", "editor.background"],
     );
 
   let editorSuggestWidgetBorder =
     getColor(
-      defaultBackground,
+      defaults.editorBackground,
       [
         "editorSuggestWidget.border",
         "editorHoverWidget.border",
         "editorSuggestWidget.background",
         "editor.background",
-        "background",
       ],
     );
   let editorSuggestWidgetHighlightForeground =
     getColor(
-      defaultForeground,
+      defaults.foreground,
       [
         "editorSuggestWidget.highlightForeground",
         "editor.foreground",
         "foreground",
       ],
+    );
+
+  let editorWhitespaceForeground =
+    getColor(
+      defaults.editorWhitespaceForeground,
+      ["editorWhitespace.foreground"],
     );
 
   let editorIndentGuideBackground =
@@ -285,88 +416,179 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let menuBackground =
     getColor(
-      defaultBackground,
-      ["menu.background", "background", "editor.background"],
+      defaults === light ? Colors.white : Color.hex("#3c3c3c"),
+      ["menu.background", "dropdown.background"],
     );
 
   let menuForeground =
     getColor(
-      defaultForeground,
-      ["menu.foreground", "foreground", "editor.foreground"],
+      defaults === light ? defaults.foreground : Color.hex("#f0f0f0"),
+      ["menu.foreground", "dropdown.foreground"],
     );
 
   let menuSelectionBackground =
     getColor(
-      defaultBackground,
+      defaults.editorBackground,
       [
         "menu.selectionBackground",
         "list.activeSelectionBackground",
+        "editor.selectionHighlightBackground",
         "list.focusBackground",
         "list.hoverBackground",
-        "menu.background",
-        "background",
         "editor.background",
       ],
     );
 
   let statusBarBackground =
-    getColor(
-      defaultBackground,
-      ["statusBar.background", "editor.background", "background"],
-    );
+    getColor(Color.hex("#007acc"), ["statusBar.background"]);
 
   let statusBarForeground =
-    getColor(
-      defaultForeground,
-      ["statusBar.foreground", "editor.foreground", "foreground"],
-    );
+    getColor(Color.hex("#fff"), ["statusBar.foreground"]);
 
   let sideBarBackground =
-    getColor(
-      defaultBackground,
-      ["sideBar.background", "editor.background", "background"],
-    );
+    getColor(defaults.editorBackground, ["sideBar.background"]);
 
   let sideBarForeground =
     getColor(
-      defaultForeground,
-      ["sideBar.foreground", "editor.foreground", "foreground"],
+      defaults.foreground, // Actually `null`
+      ["sideBar.foreground"],
     );
 
   let scrollbarSliderActiveBackground =
     getColor(
-      defaultBackground,
-      [
-        "scrollbarSlider.activeBackground",
-        "menu.selectionBackground",
-        "list.activeSelectionBackground",
-      ],
+      defaults === light ? Color.hex("#00000094") : Color.hex("#bfbfbf64"),
+      ["scrollbarSlider.activeBackground"],
     );
 
   let scrollbarSliderBackground =
     getColor(
-      defaultBackground,
-      ["scrollbarSlider.background", "menu.background", "list.background"],
+      defaults === light ? Color.hex("#64646464") : Color.hex("#79797964"),
+      ["scrollbarSlider.background"],
     );
 
   let scrollbarSliderHoverBackground =
     getColor(
-      defaultBackground,
-      ["scrollbarSlider.hoverBackground", "scrollbarSlider.background"],
+      defaults === light ? Color.hex("#646464B4") : Color.hex("#646464B4"),
+      ["scrollbarSlider.hoverBackground"],
     );
 
   let sneakBackground = menuSelectionBackground;
   let sneakForeground = menuForeground;
   let sneakHighlight = default.oniNormalModeBackground;
 
+  let titleBarActiveBackground =
+    getColor(
+      defaults.editorBackground,
+      ["titleBar.activeBackground", "editor.background"],
+    );
+
+  let titleBarInactiveBackground =
+    getColor(
+      defaults.editorBackground,
+      [
+        "titleBar.inactiveBackground",
+        "titleBar.activeBackground",
+        "editor.background",
+      ],
+    );
+
+  let titleBarActiveForeground =
+    getColor(
+      defaults.foreground,
+      ["titleBar.activeForeground", "editor.foreground"],
+    );
+
+  let titleBarInactiveForeground =
+    getColor(
+      defaults.foreground,
+      [
+        "titleBar.inactiveForeground",
+        "titlebar.activeForeground",
+        "foreground",
+        "editor.foreground",
+      ],
+    );
+
+  let titleBarBorder = getColor(Color.hex("#0000"), ["titleBar.border"]);
+
+  let terminalBackground =
+    getColor(
+      default.terminalBackground,
+      ["terminal.background", "terminal.ansiBlack"],
+    );
+
+  let terminalForeground =
+    getColor(
+      default.terminalForeground,
+      ["terminal.foreground", "terminal.ansiBrightWhite"],
+    );
+
+  let terminalAnsiBlack =
+    getColor(default.terminalAnsiBlack, ["terminal.ansiBlack"]);
+
+  let terminalAnsiRed =
+    getColor(default.terminalAnsiRed, ["terminal.ansiRed"]);
+
+  let terminalAnsiGreen =
+    getColor(default.terminalAnsiGreen, ["terminal.ansiGreen"]);
+
+  let terminalAnsiYellow =
+    getColor(default.terminalAnsiYellow, ["terminal.ansiYellow"]);
+
+  let terminalAnsiBlue =
+    getColor(default.terminalAnsiBlue, ["terminal.ansiBlue"]);
+
+  let terminalAnsiMagenta =
+    getColor(default.terminalAnsiMagenta, ["terminal.ansiMagenta"]);
+
+  let terminalAnsiCyan =
+    getColor(default.terminalAnsiCyan, ["terminal.ansiCyan"]);
+
+  let terminalAnsiWhite =
+    getColor(default.terminalAnsiWhite, ["terminal.ansiWhite"]);
+
+  let terminalAnsiBrightBlack =
+    getColor(default.terminalAnsiBrightBlack, ["terminal.ansiBrightBlack"]);
+
+  let terminalAnsiBrightRed =
+    getColor(default.terminalAnsiBrightRed, ["terminal.ansiBrightRed"]);
+
+  let terminalAnsiBrightGreen =
+    getColor(default.terminalAnsiBrightGreen, ["terminal.ansiBrightGreen"]);
+
+  let terminalAnsiBrightYellow =
+    getColor(
+      default.terminalAnsiBrightYellow,
+      ["terminal.ansiBrightYellow"],
+    );
+
+  let terminalAnsiBrightBlue =
+    getColor(default.terminalAnsiBrightBlue, ["terminal.ansiBrightBlue"]);
+
+  let terminalAnsiBrightMagenta =
+    getColor(
+      default.terminalAnsiBrightMagenta,
+      ["terminal.ansiBrightMagenta"],
+    );
+
+  let terminalAnsiBrightCyan =
+    getColor(default.terminalAnsiBrightCyan, ["terminal.ansiBrightCyan"]);
+
+  let terminalAnsiBrightWhite =
+    getColor(default.terminalAnsiBrightWhite, ["terminal.ansiBrightWhite"]);
+
   {
     ...default,
-    background,
     foreground,
     activityBarBackground,
     activityBarForeground,
+    activityBarInactiveForeground,
+    activityBarActiveBackground,
+    activityBarActiveBorder,
     editorBackground,
     editorForeground,
+    editorCursorBackground,
+    editorCursorForeground,
     editorHoverWidgetBackground,
     editorHoverWidgetBorder,
     editorIndentGuideBackground,
@@ -379,6 +601,34 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     editorSuggestWidgetBorder,
     editorSuggestWidgetHighlightForeground,
     editorSuggestWidgetSelectedBackground,
+    editorWhitespaceForeground,
+    listActiveSelectionBackground:
+      getColor(
+        defaults === light ? Color.hex("#0074E8") : Color.hex("#094771"),
+        ["list.activeSelectionBackground"],
+      ),
+    listActiveSelectionForeground:
+      getColor(Colors.white, ["list.activeSelectionForeground"]),
+    listFocusBackground:
+      getColor(
+        defaults === light ? Color.hex("#D6EBFF") : Color.hex("#062F4A"),
+        ["list.focusBackground"],
+      ),
+    listFocusForeground:
+      getColor(
+        defaults.foreground, // Actually `null`, but not sure what that means
+        ["list.focusForeground"],
+      ),
+    listHoverBackground:
+      getColor(
+        defaults === light ? Color.hex("#F0F0F0") : Color.hex("#2A2D2E"),
+        ["list.hoverBackground"],
+      ),
+    listHoverForeground:
+      getColor(
+        defaults.foreground, // Actually `null`, but not sure what that means
+        ["list.hoverForeground"],
+      ),
     menuBackground,
     menuForeground,
     menuSelectionBackground,
@@ -392,6 +642,59 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     sneakBackground,
     sneakForeground,
     sneakHighlight,
+    editorGroupsHeaderTabsBackground:
+      getColor(
+        defaults === light ? Color.hex("#f3f3f3") : Color.hex("#252526"),
+        ["editorGroupHeader.tabsBackground"],
+      ),
+    tabActiveBackground:
+      getColor(
+        defaults.editorBackground,
+        ["tab.activebackground", "editor.background"],
+      ),
+
+    tabActiveForeground:
+      getColor(
+        defaults === light ? Color.hex("#333") : Colors.white,
+        ["tab.activeForeground"],
+      ),
+
+    tabInactiveBackground:
+      getColor(
+        defaults === light ? Color.hex("#ececec") : Color.hex("#2d2d2d"),
+        ["tab.inactiveBackground"],
+      ),
+
+    tabInactiveForeground:
+      getColor(
+        defaults === light
+          ? Color.multiplyAlpha(0.7, Color.hex("#333"))
+          : Color.multiplyAlpha(0.5, Colors.white), // should be lower opacity variant of _actual_ active foreground color, not the _default_ active foreground color
+        ["tab.inactiveForeground"],
+      ),
+    terminalBackground,
+    terminalForeground,
+    terminalAnsiBlack,
+    terminalAnsiRed,
+    terminalAnsiGreen,
+    terminalAnsiYellow,
+    terminalAnsiBlue,
+    terminalAnsiMagenta,
+    terminalAnsiCyan,
+    terminalAnsiWhite,
+    terminalAnsiBrightBlack,
+    terminalAnsiBrightRed,
+    terminalAnsiBrightGreen,
+    terminalAnsiBrightYellow,
+    terminalAnsiBrightBlue,
+    terminalAnsiBrightMagenta,
+    terminalAnsiBrightCyan,
+    terminalAnsiBrightWhite,
+    titleBarActiveForeground,
+    titleBarActiveBackground,
+    titleBarInactiveForeground,
+    titleBarInactiveBackground,
+    titleBarBorder,
   };
 };
 
@@ -417,3 +720,16 @@ let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
 
   (background, foreground);
 };
+
+let getCustomColor = (color, _theme) =>
+  switch (color) {
+  | "gitDecoration.addedResourceForeground" => Some(Color.hex("#81b88b"))
+  | "gitDecoration.modifiedResourceForeground" => Some(Color.hex("#E2C08D"))
+  | "gitDecoration.deletedResourceForeground" => Some(Color.hex("#c74e39"))
+  | "gitDecoration.untrackedResourceForeground" => Some(Color.hex("#73C991"))
+  | "gitDecoration.ignoredResourceForeground" => Some(Color.hex("#8C8C8C"))
+  | "gitDecoration.conflictingResourceForeground" =>
+    Some(Color.hex("#6c6cc4"))
+  | "gitDecoration.submoduleResourceForeground" => Some(Color.hex("#8db9e2"))
+  | _ => None
+  };

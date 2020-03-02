@@ -16,22 +16,18 @@ type item = {
 
 // TODO: move to Revery
 let getFontAdvance = (fontFile, fontSize) => {
-  open Revery.Draw;
-
-  let maybeWindow = Revery.UI.getActiveWindow();
-  let scaledFontSize =
-    Text._getScaledFontSizeFromWindow(maybeWindow, fontSize);
-  let font = FontCache.load(fontFile, scaledFontSize);
-  let shapedText = FontRenderer.shape(font, "x");
-  let Fontkit.{advance, _} =
-    FontRenderer.getGlyph(font, shapedText[0].glyphId);
-
-  let multiplier =
-    switch (maybeWindow) {
-    | None => 1.0
-    | Some(w) => Window.getScaleAndZoom(w) *. Window.getDevicePixelRatio(w)
+  let dimensions =
+    switch (Revery.Font.load(fontFile)) {
+    | Ok(font) =>
+      Revery.Font.FontRenderer.measure(
+        ~smoothing=Revery.Font.Smoothing.default,
+        font,
+        fontSize,
+        "x",
+      )
+    | Error(_) => {width: 0., height: 0.}
     };
-  float(advance) /. (64. *. multiplier);
+  dimensions;
 };
 
 module Styles = {
@@ -56,7 +52,7 @@ module Styles = {
     textWrap(TextWrapping.NoWrap),
   ];
 
-  let snippet = (~font: EditorFont.t, ~theme: Theme.t, ~isHighlighted) => [
+  let snippet = (~font: Service_Font.font, ~theme: Theme.t, ~isHighlighted) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
     color(
@@ -91,9 +87,8 @@ let item =
     );
 
   let locationWidth = {
-    let window = Revery.UI.getActiveWindow();
     Revery.Draw.Text.measure(
-      ~window,
+      ~smoothing=Revery.Font.Smoothing.default,
       ~fontSize=uiFont.fontSize,
       ~fontFamily=uiFont.fontFile,
       locationText,
@@ -122,7 +117,7 @@ let item =
 
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
-      let availableWidth = float(width - locationWidth);
+      let availableWidth = float(width) -. locationWidth;
       let maxLength =
         int_of_float(availableWidth /. editorFont.measuredWidth);
       let charStart = Index.toZeroBased(indexStart);
@@ -169,30 +164,32 @@ let%component make =
               (
                 ~theme: Theme.t,
                 ~uiFont: UiFont.t,
-                ~editorFont: EditorFont.t,
+                ~editorFont: Service_Font.font,
                 ~items: array(item),
                 ~onSelectItem: item => unit,
                 (),
               ) => {
-  let%hook (outerRef, setOuterRef) = Hooks.ref(None);
+  let%hook outerRef = Hooks.ref(None);
   let%hook (hovered, setHovered) = Hooks.state(-1);
 
   let editorFont = {
     ...editorFont,
     fontSize: uiFont.fontSize,
-    measuredWidth: getFontAdvance(editorFont.fontFile, uiFont.fontSize),
+    measuredWidth: getFontAdvance(editorFont.fontFile, uiFont.fontSize).width,
     // measuredHeight:
     //   editorFont.measuredHeight
     //   *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),
   };
 
   let width =
-    outerRef
+    outerRef^
     |> Option.map(node => node#measurements().Dimensions.width)
     |> Option.value(
          ~default=
            Revery.UI.getActiveWindow()
-           |> Option.map((window: Window.t) => window.metrics.size.width)
+           |> Option.map((window: Window.t) =>
+                Revery.Window.getRawSize(window).width
+              )
            |> Option.value(~default=4000),
        );
 
@@ -217,7 +214,7 @@ let%component make =
     rowHeight=20
     count={Array.length(items)}
     focused=None
-    ref={ref => setOuterRef(Some(ref))}>
+    ref={ref => outerRef := Some(ref)}>
     ...renderItem
   </FlatList>;
 };

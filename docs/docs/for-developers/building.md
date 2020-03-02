@@ -10,31 +10,37 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.6.0__ is required)
+- Install [Esy](https://esy.sh) (__0.6.2__ is required `npm install -g esy@0.6.2`)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - Install any other system packages required by Oni2 dependencies, as outlined below.
 
 ## Dependencies
 
-### Windows, macOS
+All platforms require `git`, `node` and `esy`, and the ones outlined in the `revery` docs:
+https://github.com/revery-ui/revery/wiki/Building-&-Installing.
 
-There should be no required system dependencies, outside of `git`, `node` and `esy` and the
-ones outlined in the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing.
+### Windows
+
+No additional requirements.
+
+### macOS
+
+Requires `libtool`. Can be installed via homebrew: `brew install libtool`.
 
 ### Linux
-
-Like the other platforms, `git`, `node` and `esy` are required, as well as any outlined in
-the `revery` docs: https://github.com/revery-ui/revery/wiki/Building-&-Installing.
 
 Some Linux distributions may need other packages:
 
  - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
+ - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel` for `libvim`
 
 ## Build and Run
 
 ### Build the front-end
 
-> __NOTE:__ On Windows, you must __build from a shell running as administrator__. This is a requirement of esy because creating symlinks requires administrator permissions (more info here: https://github.com/esy/esy/issues/389).
+> __NOTE:__ On Windows, you must __build from a shell running as administrator__. This is a requirement of esy because creating symlinks requires administrator permissions. More info at [esy/esy#389](https://github.com/esy/esy/issues/389).
+
+> __NOTE:__ On macOS, if you receive an `error: Too many open files`, you can run `ulimit -Sn 4096` to increase the file limit. More info at [esy/esy#1057](https://github.com/esy/esy/issues/1057)
 
 ```sh
 git clone https://github.com/onivim/oni2
@@ -103,6 +109,9 @@ If you want to develop, or debug, an extension integration, the following tips m
 
 There is a development extension in `src/development_extensions/oni-dev-extension` which can be used to implement dummy functionality that is often easier to test and integrate with than real extensions.
 
+#### Resources
+- [VS Code API reference](https://code.visualstudio.com/api/references/vscode-api)
+
 ### Intrumenting extensions
 
 To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log. (Make sure to turn debug logging on, via `ONI2_DEBUG=1` environment variable or the `--debug` command-line arg).
@@ -135,6 +144,9 @@ Results in this debug logging:
 
 ![image](https://user-images.githubusercontent.com/13532591/72770839-ed9e9800-3bb3-11ea-9cb9-317223fb2dbb.png)
 
+#### Protocol
+
+The extension host protocol is defined in [extHost.protocol.ts](https://github.com/onivim/vscode-exthost/blob/master/src/vs/workbench/api/node/extHost.protocol.ts). Interfaces prefixed with `MainThread` refer to messages sent from the extension host to the "main thread", which in our case is Oni2. While interfaces prefixed with `ExtHost` refer to messages sent _to_ the extension host.
 
 # Building the Documentation Website
 

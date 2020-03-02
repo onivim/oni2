@@ -19,8 +19,6 @@ let prefixFor: Vim.Types.cmdlineType => string =
   | _ => ":";
 
 let start = (themeInfo: ThemeInfo.t) => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
-
   let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
@@ -151,25 +149,30 @@ let start = (themeInfo: ThemeInfo.t) => {
 
     | QuickmenuInput(key) => (
         Option.map(
-          (Quickmenu.{query, cursorPosition, _} as state) => {
-            let (text, cursorPosition) =
-              InputModel.handleInput(~text=query, ~cursorPosition, key);
+          (Quickmenu.{query, selection, _} as state) => {
+            let (text, selection) =
+              InputModel.handleInput(~text=query, ~selection, key);
 
-            Quickmenu.{...state, query: text, cursorPosition};
+            Quickmenu.{...state, query: text, selection, focused: Some(0)};
           },
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuInputClicked(cursorPosition) => (
-        Option.map(state => Quickmenu.{...state, cursorPosition}, state),
+    | QuickmenuInputClicked(selection) => (
+        Option.map(state => Quickmenu.{...state, selection}, state),
         Isolinear.Effect.none,
       )
 
     | QuickmenuCommandlineUpdated(text, cursorPosition) => (
         Option.map(
-          state => Quickmenu.{...state, query: text, cursorPosition},
+          state =>
+            Quickmenu.{
+              ...state,
+              query: text,
+              selection: Selection.collapsed(~text, cursorPosition),
+            },
           state,
         ),
         Isolinear.Effect.none,
@@ -280,26 +283,21 @@ let start = (themeInfo: ThemeInfo.t) => {
   };
 
   let updater = (state: State.t, action: Actions.t) => {
-    switch (action) {
-    | Tick(_) => (state, Isolinear.Effect.none)
+    let (menuState, menuEffect) =
+      menuUpdater(
+        state.quickmenu,
+        action,
+        state.buffers,
+        state.languageInfo,
+        state.iconTheme,
+        themeInfo,
+        state.commands,
+      );
 
-    | action =>
-      let (menuState, menuEffect) =
-        menuUpdater(
-          state.quickmenu,
-          action,
-          state.buffers,
-          state.languageInfo,
-          state.iconTheme,
-          themeInfo,
-          state.commands,
-        );
-
-      ({...state, quickmenu: menuState}, menuEffect);
-    };
+    ({...state, quickmenu: menuState}, menuEffect);
   };
 
-  (updater, stream);
+  updater;
 };
 
 module QuickmenuFilterSubscription =

@@ -9,6 +9,8 @@ open Revery.UI;
 open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
+module KeyDisplayer = Oni_Components.KeyDisplayer;
+module Tooltip = Oni_Components.Tooltip;
 
 module Styles = {
   open Style;
@@ -35,6 +37,9 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
   ];
+
+  let titleBar = background =>
+    Style.[flexGrow(0), height(22), backgroundColor(background)];
 };
 
 let make = (~state: State.t, ()) => {
@@ -46,11 +51,12 @@ let make = (~state: State.t, ()) => {
         editorFont,
         sideBar,
         zenMode,
+        pane,
         _,
       } = state;
 
-  let onContextMenuUpdate = model =>
-    GlobalContext.current().dispatch(ContextMenuUpdated(model));
+  let onContextMenuItemSelect = item =>
+    GlobalContext.current().dispatch(ContextMenuItemSelected(item));
 
   let statusBarVisible =
     Selectors.getActiveConfigurationValue(state, c =>
@@ -64,26 +70,21 @@ let make = (~state: State.t, ()) => {
     )
     && !zenMode;
 
-  let sideBarVisible =
-    Selectors.getActiveConfigurationValue(state, c =>
-      c.workbenchSideBarVisible
-    )
-    && !zenMode
-    && SideBar.isOpen(sideBar);
+  let sideBarVisible = !zenMode && sideBar.isOpen;
 
   let statusBarHeight = statusBarVisible ? 25 : 0;
 
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar state contextMenu onContextMenuUpdate />
+          <StatusBar state contextMenu onContextMenuItemSelect />
         </View>
       : React.empty;
 
   let activityBar =
     activityBarVisible
       ? React.listToElement([
-          <Dock state />,
+          <Dock theme sideBar pane />,
           <WindowHandle direction=Vertical theme />,
         ])
       : React.empty;
@@ -96,7 +97,14 @@ let make = (~state: State.t, ()) => {
         ])
       : React.empty;
 
-  <View style={Styles.root(theme.background, theme.foreground)}>
+  <View style={Styles.root(theme.editorBackground, theme.foreground)}>
+    <Titlebar
+      focused={state.windowIsFocused}
+      maximized={state.windowIsMaximized}
+      font={state.uiFont}
+      title={state.windowTitle}
+      theme={state.theme}
+    />
     <View style=Styles.workspace>
       <View style=Styles.surface>
         activityBar
@@ -115,25 +123,17 @@ let make = (~state: State.t, ()) => {
          | _ => <QuickmenuView theme configuration state=quickmenu font />
          }
        }}
-      <KeyDisplayerView state />
+      {switch (state.keyDisplayer) {
+       | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
+       | None => React.empty
+       }}
     </Overlay>
     statusBar
-    {switch (contextMenu) {
-     | Some(model) =>
-       let onOverlayClick = () =>
-         GlobalContext.current().dispatch(ContextMenuOverlayClicked);
-       let onItemSelect = item =>
-         GlobalContext.current().dispatch(ContextMenuItemSelected(item));
+    {let onClick = () =>
+       GlobalContext.current().dispatch(ContextMenuOverlayClicked);
 
-       <ContextMenu.Overlay
-         theme
-         font=uiFont
-         model
-         onOverlayClick
-         onItemSelect
-       />;
-     | None => React.empty
-     }}
+     <ContextMenu.Overlay onClick />}
+    <Tooltip.Overlay theme font=uiFont />
     <Modals state />
     <Overlay> <SneakView state /> </Overlay>
   </View>;

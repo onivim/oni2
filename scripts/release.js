@@ -98,6 +98,7 @@ if (process.platform == "linux") {
     "Oni2",
     "Oni2_editor",
     "rg",
+    "rls",
     "node"
   ];
 
@@ -177,6 +178,12 @@ if (process.platform == "linux") {
       "com.apple.security.cs.allow-jit": true,
       "com.apple.security.cs.allow-unsigned-executable-memory": true,
       "com.apple.security.cs.disable-library-validation": true,
+
+// Allow dyld environment variables. Needed because Onivim 2 uses
+//         dyld variables (such as @executable_path) to load libaries from
+//         within the .app bundle.
+// See: https://github.com/onivim/oni2/issues/1397
+      "com.apple.security.cs.allow-dyld-environment-variables": true,
   };
   fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents));
 

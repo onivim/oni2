@@ -1,7 +1,7 @@
 (library
     (name Oni_UI)
     (public_name Oni2.ui)
-    (preprocess (pps brisk-reconciler.ppx))
+    (preprocess (pps brisk-reconciler.ppx ppx_deriving.show))
     (libraries 
         str
         bigarray
@@ -12,7 +12,11 @@
         Oni2.model
         Oni2.components
         Oni2.feature.search
+        Oni2.feature.editor
+        Oni2.feature.scm
         Rench
         Revery
+        revery-terminal.lib
         editor-core-types
+        ppx_deriving.runtime
     ))

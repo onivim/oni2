@@ -8,7 +8,8 @@ type t = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
-  focus: option(string) // path
+  focus: option(string), // path
+  decorations: StringMap.t(list(Decoration.t)),
 };
 
 [@deriving show({with_path: false})]
@@ -19,6 +20,15 @@ type action =
   | NodeClicked(FsTreeNode.t)
   | ScrollOffsetChanged([ | `Start(float) | `Middle(float) | `Reveal(int)])
   | KeyboardInput(string);
+
+let initial = {
+  tree: None,
+  isOpen: true,
+  scrollOffset: `Start(0.),
+  active: None,
+  focus: None,
+  decorations: StringMap.empty,
+};
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
   let fileIcon =
@@ -120,12 +130,4 @@ let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     |> List.sort(sortByLoweredDisplayName);
 
   FsTreeNode.directory(cwd, ~icon=getIcon(cwd), ~children, ~isOpen=true);
-};
-
-let initial = {
-  tree: None,
-  isOpen: true,
-  scrollOffset: `Start(0.),
-  active: None,
-  focus: None,
 };

@@ -81,7 +81,9 @@ open Revery.UI.Components;
 module Styles = {
   open Style;
 
-  let container = (~theme: Theme.t) => [backgroundColor(theme.background)];
+  let container = (~theme: Theme.t) => [
+    backgroundColor(theme.editorBackground),
+  ];
 
   let message = [padding(20), paddingBottom(10)];
 
@@ -106,7 +108,7 @@ module Styles = {
     isHovered
       ? backgroundColor(theme.menuSelectionBackground)
       : backgroundColor(theme.editorBackground),
-    fontSize(14),
+    fontSize(14.),
     alignSelf(`Center),
   ];
 
@@ -118,7 +120,7 @@ module Styles = {
     isHovered
       ? backgroundColor(theme.menuSelectionBackground)
       : backgroundColor(theme.editorBackground),
-    fontSize(14),
+    fontSize(14.),
     alignSelf(`Center),
   ];
 
@@ -128,7 +130,7 @@ module Styles = {
     isHovered
       ? backgroundColor(theme.menuSelectionBackground)
       : backgroundColor(theme.editorBackground),
-    fontSize(14),
+    fontSize(14.),
     alignSelf(`Center),
   ];
 };

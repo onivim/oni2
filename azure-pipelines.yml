@@ -24,14 +24,14 @@ jobs:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
+    MACOSX_DEPLOYMENT_TARGET: 10.12
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
   - template: .ci/use-node.yml
   - script: brew update
-  - script: brew install libpng ragel
+  - script: brew install libtool libpng ragel
   - template: .ci/swap-xcode.yml
-  # - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-check-hygiene.yml
   - template: .ci/publish-build-cache.yml
@@ -93,14 +93,14 @@ jobs:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
+    MACOSX_DEPLOYMENT_TARGET: 10.12
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
   - template: .ci/use-node.yml
   - script: brew update
-  - script: brew install libpng ragel
+  - script: brew install libtool libpng ragel
   - template: .ci/swap-xcode.yml
-  - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
     parameters:
@@ -117,7 +117,7 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3_/i
+    ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 

@@ -3,6 +3,7 @@
  */
 
 open Actions;
+open Feature_Editor;
 
 let reduce = (v: EditorMetrics.t, action) => {
   switch (action) {
@@ -11,7 +12,7 @@ let reduce = (v: EditorMetrics.t, action) => {
       pixelWidth,
       pixelHeight,
     }
-  | SetEditorFont({measuredHeight, measuredWidth, _}) => {
+  | EditorFont(Service_Font.FontLoaded({measuredHeight, measuredWidth, _})) => {
       ...v,
       lineHeight: measuredHeight,
       characterWidth: measuredWidth,

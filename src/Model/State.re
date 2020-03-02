@@ -9,23 +9,34 @@ open Oni_Input;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
-module ContextMenu = Oni_Components.ContextMenu;
+module KeyDisplayer = Oni_Components.KeyDisplayer;
+module Completions = Feature_LanguageSupport.Completions;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Definition = Feature_LanguageSupport.Definition;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+
+module ContextMenu = {
+  type t =
+    | NotificationStatusBarItem
+    | Nothing;
+};
 
 type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
-  bufferSyntaxHighlights: BufferSyntaxHighlights.t,
   commands: Commands.t,
-  contextMenu: option(ContextMenu.t(Actions.t)),
+  contextMenu: ContextMenu.t,
   mode: Vim.Mode.t,
   completions: Completions.t,
+  configuration: Configuration.t,
+  decorationProviders: list(DecorationProvider.t),
   diagnostics: Diagnostics.t,
   definition: Definition.t,
-  editorFont: EditorFont.t,
+  editorFont: Service_Font.font,
+  terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
-  configuration: Configuration.t,
   sideBar: SideBar.t,
   // Theme is the UI shell theming
   theme: Theme.t,
@@ -34,19 +45,26 @@ type t = {
   editorGroups: EditorGroups.t,
   extensions: Extensions.t,
   iconTheme: IconTheme.t,
+  isQuitting: bool,
   keyBindings: Keybindings.t,
-  keyDisplayer: KeyDisplayer.t,
+  keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
   languageInfo: Ext.LanguageInfo.t,
   lifecycle: Lifecycle.t,
   notifications: Notifications.t,
   references: References.t,
+  scm: Feature_SCM.model,
   sneak: Sneak.t,
   statusBar: StatusBarModel.t,
+  syntaxClient: option(Oni_Syntax_Client.t),
+  syntaxHighlights: Feature_Syntax.t,
+  terminals: Feature_Terminal.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
+  windowIsFocused: bool,
+  windowIsMaximized: bool,
   workspace: Workspace.t,
   zenMode: bool,
   // [darkMode] describes if the UI is in 'dark' or 'light' mode.
@@ -57,6 +75,7 @@ type t = {
   searchPane: Feature_Search.model,
   focus: Focus.stack,
   modal: option(Modal.t(Actions.t)),
+  textContentProviders: list((int, string)),
 };
 
 let create: unit => t =
@@ -64,41 +83,41 @@ let create: unit => t =
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: BufferRenderers.initial,
-    bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
     commands: Commands.empty,
-    contextMenu: None,
+    contextMenu: ContextMenu.Nothing,
     completions: Completions.initial,
     configuration: Configuration.default,
+    decorationProviders: [],
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
     mode: Normal,
     quickmenu: None,
-    editorFont:
-      EditorFont.create(
-        ~fontFile="FiraCode-Regular.ttf",
-        ~fontSize=14,
-        ~measuredWidth=1.,
-        ~measuredHeight=1.,
-        (),
-      ),
+    editorFont: Service_Font.default,
+    terminalFont: Service_Font.default,
     extensions: Extensions.empty,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
-    uiFont: UiFont.create(~fontFile="selawk.ttf", ~fontSize=12, ()),
+    uiFont: UiFont.default,
     sideBar: SideBar.initial,
     theme: Theme.default,
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
+    isQuitting: false,
     keyBindings: Keybindings.empty,
-    keyDisplayer: KeyDisplayer.empty,
+    keyDisplayer: None,
     languageInfo: Ext.LanguageInfo.initial,
     notifications: Notifications.initial,
     references: References.initial,
+    scm: Feature_SCM.initial,
     sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),
+    syntaxClient: None,
+    syntaxHighlights: Feature_Syntax.empty,
     windowManager: WindowManager.create(),
     windowTitle: "",
+    windowIsFocused: true,
+    windowIsMaximized: false,
     workspace: Workspace.initial,
     fileExplorer: FileExplorer.initial,
     zenMode: false,
@@ -107,4 +126,6 @@ let create: unit => t =
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
+    terminals: Feature_Terminal.initial,
+    textContentProviders: [],
   };

@@ -1,14 +1,14 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Utility;
-open Actions;
+
+module Editor = Feature_Editor.Editor;
+module EditorMetrics = Feature_Editor.EditorMetrics;
+module EditorLayout = Feature_Editor.EditorLayout;
 
 type individualRange = {
   editorRanges: list(Range.t),
   minimapRanges: list(Range.t),
 };
-
-type t = {ranges: list(Range.t)};
 
 let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
@@ -46,8 +46,7 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
   };
 
   let minimapLineHeight =
-    Constants.default.minimapCharacterHeight
-    + Constants.default.minimapLineSpacing;
+    Constants.minimapCharacterHeight + Constants.minimapLineSpacing;
 
   let minimapTopLine =
     int_of_float(editor.minimapScrollY /. float_of_int(minimapLineHeight));
@@ -82,8 +81,10 @@ let getVisibleBuffers = (state: State.t) => {
   |> List.map((split: WindowTree.split) => split.editorGroupId)
   |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
   |> List.filter_map(EditorGroup.getActiveEditor)
-  |> List.map(e => e.bufferId);
+  |> List.map(e => e.Editor.bufferId);
 };
+
+type t = list((int, list(Range.t)));
 
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   let editors =
@@ -98,7 +99,7 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
            Some(tup);
          }
        )
-    |> List.filter(((_, editor)) => editor.bufferId == bufferId);
+    |> List.filter(((_, editor)) => editor.Editor.bufferId == bufferId);
 
   let flatten = (prev: list(list(Range.t)), curr: individualRange) => {
     [curr.editorRanges, curr.minimapRanges, ...prev];
@@ -112,8 +113,9 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   |> List.flatten;
 };
 
-let getVisibleBuffersAndRanges = (state: State.t) => {
-  let visibleBuffers = getVisibleBuffers(state);
+let getVisibleBuffersAndRanges: State.t => t =
+  (state: State.t) => {
+    let visibleBuffers = getVisibleBuffers(state);
 
-  List.map(b => (b, getVisibleRangesForBuffer(b, state)), visibleBuffers);
-};
+    List.map(b => (b, getVisibleRangesForBuffer(b, state)), visibleBuffers);
+  };

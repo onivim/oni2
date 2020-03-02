@@ -13,7 +13,7 @@ module Model = Oni_Model;
 module Styles = {
   let container = (~theme: Theme.t) =>
     Style.[
-      backgroundColor(theme.background),
+      backgroundColor(theme.editorBackground),
       color(theme.foreground),
       flexGrow(1),
       flexDirection(`Column),
@@ -25,8 +25,7 @@ module Styles = {
   let titleText = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
-      fontSize(20),
-      backgroundColor(theme.background),
+      fontSize(20.),
       color(theme.foreground),
       marginTop(-40),
     ];
@@ -34,8 +33,7 @@ module Styles = {
   let commandText = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
-      fontSize(12),
-      backgroundColor(theme.background),
+      fontSize(12.),
       color(theme.editorForeground),
     ];
 
@@ -75,8 +73,7 @@ module KeyBindingView = {
     let commandText = (~theme: Theme.t, ~fontFile, ~fontSize) => [
       fontFamily(fontFile),
       Style.fontSize(fontSize),
-      backgroundColor(theme.background),
-      color(theme.editorForeground),
+      color(theme.foreground),
     ];
 
     let spacer = Style.[flexGrow(1)];
@@ -90,7 +87,7 @@ module KeyBindingView = {
         style={Styles.commandText(
           ~theme,
           ~fontFile=uiFont.fontFile,
-          ~fontSize=14,
+          ~fontSize=14.,
         )}
         text=name
       />
@@ -99,7 +96,7 @@ module KeyBindingView = {
         style={Styles.commandText(
           ~theme,
           ~fontFile=editorFont.fontFile,
-          ~fontSize=11,
+          ~fontSize=11.,
         )}
         text=shortcut
       />

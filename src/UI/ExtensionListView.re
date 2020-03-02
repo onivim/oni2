@@ -8,8 +8,6 @@ open Oni_Components;
 open Oni_Extensions;
 
 module Styles = {
-  let container = Style.[flexGrow(1)];
-
   let text = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontSize(font.fontSize),
@@ -29,7 +27,7 @@ let make = (~state: State.t, ()) => {
     let extension = extensions[idx];
 
     let icon =
-      switch (ExtensionManifest.getIcon(extension.manifest)) {
+      switch (extension.manifest.icon) {
       | None => <Container color=Colors.darkGray width=32 height=32 />
       | Some(iconPath) => <Image src=iconPath width=32 height=32 />
       };
@@ -57,7 +55,7 @@ let make = (~state: State.t, ()) => {
             ]>
             <Text
               style={Styles.text(~font=uiFont, ~theme)}
-              text={ExtensionManifest.getAuthor(extension.manifest)}
+              text={extension.manifest.author}
             />
           </View>
           <View
@@ -68,7 +66,7 @@ let make = (~state: State.t, ()) => {
             ]>
             <Text
               style={Styles.text(~font=uiFont, ~theme)}
-              text={ExtensionManifest.getVersion(extension.manifest)}
+              text={extension.manifest.version}
             />
           </View>
         </View>
@@ -94,9 +92,7 @@ let make = (~state: State.t, ()) => {
   let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
   //let developmentCount = Array.length(developmentExtensions);
 
-  <View style=Styles.container>
-    <FlatList rowHeight=50 count={Array.length(allExtensions)} focused=None>
-      ...{renderItem(allExtensions)}
-    </FlatList>
-  </View>;
+  <FlatList rowHeight=50 count={Array.length(allExtensions)} focused=None>
+    ...{renderItem(allExtensions)}
+  </FlatList>;
 };

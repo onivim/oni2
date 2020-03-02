@@ -1,8 +1,57 @@
+open Revery;
 open Revery.UI;
 
+open Oni_Core;
 open Oni_Model;
 
-let button = Style.[marginVertical(24)];
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
+module Styles = {
+  open Style;
+
+  let container = (~theme: Theme.t, ~offsetX) => [
+    top(0),
+    bottom(0),
+    backgroundColor(theme.activityBarBackground),
+    alignItems(`Center),
+    transform(Transform.[TranslateX(offsetX)]),
+  ];
+
+  let item = (~isHovered, ~isActive, ~theme: Theme.t) => [
+    height(50),
+    width(50),
+    justifyContent(`Center),
+    alignItems(`Center),
+    borderLeft(
+      ~width=2,
+      ~color=
+        isActive ? theme.activityBarActiveBorder : Colors.transparentWhite,
+    ),
+    backgroundColor(
+      isHovered ? theme.activityBarActiveBackground : Colors.transparentWhite,
+    ),
+  ];
+};
+
+let%component item = (~onClick, ~theme: Theme.t, ~isActive, ~icon, ()) => {
+  let%hook (isHovered, setHovered) = Hooks.state(false);
+  let onMouseOver = _ => setHovered(_ => true);
+  let onMouseOut = _ => setHovered(_ => false);
+
+  <View onMouseOver onMouseOut>
+    <Sneakable onClick style={Styles.item(~isHovered, ~isActive, ~theme)}>
+      <FontIcon
+        color={
+          isActive
+            ? theme.activityBarForeground : theme.activityBarInactiveForeground
+        }
+        fontSize=22.
+        icon
+      />
+    </Sneakable>
+  </View>;
+};
 
 let onExplorerClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
@@ -10,6 +59,10 @@ let onExplorerClick = _ => {
 
 let onSearchClick = _ => {
   GlobalContext.current().dispatch(Actions.ActivityBar(SearchClick));
+};
+
+let onSCMClick = _ => {
+  GlobalContext.current().dispatch(Actions.ActivityBar(SCMClick));
 };
 
 let onExtensionsClick = _ => {
@@ -24,30 +77,36 @@ let animation =
     |> delay(Revery.Time.milliseconds(75))
   );
 
-let%component make = (~state: State.t, ()) => {
-  let bg = state.theme.activityBarBackground;
-  let fg = state.theme.activityBarForeground;
+let%component make = (~theme, ~sideBar: SideBar.t, ~pane: Pane.t, ()) => {
+  let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
 
-  let%hook (transition, _animationState, _reset) =
-    Hooks.animation(animation, ~active=true);
+  let isSidebarVisible = it => SideBar.isVisible(it, sideBar);
+  let isPaneVisible = it => Pane.isVisible(it, pane);
 
-  <View
-    style=Style.[
-      top(0),
-      bottom(0),
-      backgroundColor(bg),
-      alignItems(`Center),
-      width(50),
-      transform(Transform.[TranslateX(transition)]),
-    ]>
-    <Sneakable onClick=onExplorerClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.file />
-    </Sneakable>
-    <Sneakable onClick=onSearchClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.search />
-    </Sneakable>
-    <Sneakable onClick=onExtensionsClick style=button>
-      <FontIcon backgroundColor=bg color=fg icon=FontAwesome.box />
-    </Sneakable>
+  <View style={Styles.container(~theme, ~offsetX)}>
+    <item
+      onClick=onExplorerClick
+      theme
+      isActive={isSidebarVisible(FileExplorer)}
+      icon=FontAwesome.copy
+    />
+    <item
+      onClick=onSearchClick
+      theme
+      isActive={isPaneVisible(Search)}
+      icon=FontAwesome.search
+    />
+    <item
+      onClick=onSCMClick
+      theme
+      isActive={isSidebarVisible(SCM)}
+      icon=FontAwesome.codeBranch
+    />
+    <item
+      onClick=onExtensionsClick
+      theme
+      isActive={isSidebarVisible(Extensions)}
+      icon=FontAwesome.thLarge
+    />
   </View>;
 };

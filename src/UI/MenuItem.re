@@ -3,13 +3,16 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Model;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
 module Constants = {
-  let fontSize = 20;
+  let iconSize = 20.;
 };
 
 module Styles = {
   let bg = (~theme: Theme.t, ~isFocused) =>
-    isFocused ? theme.menuSelectionBackground : theme.menuBackground;
+    isFocused ? theme.listFocusBackground : theme.menuBackground;
 
   let text = (~theme: Theme.t, ~font: UiFont.t, ~isFocused) =>
     Style.[
@@ -26,12 +29,15 @@ module Styles = {
       backgroundColor(bg(~theme, ~isFocused)),
     ];
 
-  let icon = fgColor =>
+  let icon = fg =>
     Style.[
       fontFamily("seti.ttf"),
-      fontSize(Constants.fontSize),
+      fontSize(Constants.iconSize),
+      color(fg),
+      width(int_of_float(Constants.iconSize *. 0.75)),
+      height(int_of_float(Constants.iconSize *. 0.85)),
+      textWrap(TextWrapping.NoWrap),
       marginRight(10),
-      color(fgColor),
     ];
 
   let label = (~font: UiFont.t, ~theme: Theme.t, ~isFocused, ~custom) =>
@@ -41,7 +47,7 @@ module Styles = {
           Style.[
             fontFamily(font.fontFile),
             textOverflow(`Ellipsis),
-            fontSize(12),
+            fontSize(12.),
             color(theme.menuForeground),
             backgroundColor(bg(~theme, ~isFocused)),
           ],

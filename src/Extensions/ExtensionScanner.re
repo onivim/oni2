@@ -5,8 +5,9 @@
  */
 
 open Oni_Core;
-open Utility;
 open Rench;
+
+module OptionEx = Utility.OptionEx;
 
 module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionScanner"));
 
@@ -55,10 +56,10 @@ let scan = (~prefix=None, ~category, directory: string) => {
       ExtensionManifest.localize(dict);
     };
 
-    try({
+    switch (Json.Decode.decode_value(ExtensionManifest.decode, json)) {
+    | Ok(parsedManifest) =>
       let manifest =
-        json
-        |> ExtensionManifest.of_yojson_exn
+        parsedManifest
         |> remapManifest(directory)
         |> ExtensionManifest.updateName(name =>
              prefix
@@ -68,10 +69,10 @@ let scan = (~prefix=None, ~category, directory: string) => {
         |> localize;
 
       Some({category, manifest, path: directory});
-    }) {
-    | ex =>
+
+    | Error(err) =>
       Log.errorf(m =>
-        m("Exception parsing %s : %s", pkg, Printexc.to_string(ex))
+        m("Failed to parse %s:\n\t%s", pkg, Json.Decode.string_of_error(err))
       );
       None;
     };

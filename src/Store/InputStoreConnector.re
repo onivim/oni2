@@ -6,11 +6,12 @@
 
 open Oni_Core;
 open Oni_Input;
-open Utility;
+open Oni_Components;
 
 module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
+module Completions = Feature_LanguageSupport.Completions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Input"));
 
@@ -21,11 +22,12 @@ let conditionsOfState = (state: State.t) => {
   let ret: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   switch (state.quickmenu) {
-  | Some({variant, query, cursorPosition, _}) =>
+  | Some({variant, query, selection, _}) =>
     Hashtbl.add(ret, "listFocus", true);
     Hashtbl.add(ret, "inQuickOpen", true);
 
-    if (cursorPosition == String.length(query)) {
+    if (Selection.isCollapsed(selection)
+        && selection.focus == String.length(query)) {
       Hashtbl.add(ret, "quickmenuCursorEnd", true);
     };
 
@@ -36,7 +38,7 @@ let conditionsOfState = (state: State.t) => {
   | None => ()
   };
 
-  if (Model.Completions.isActive(state.completions)) {
+  if (Completions.isActive(state.completions)) {
     Hashtbl.add(ret, "suggestWidgetVisible", true);
   };
 
@@ -104,7 +106,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           Keybindings.Keybinding.{
             key,
             command: "list.select",
-            condition: Variable("inEditorsPicker"),
+            condition: Defined("inEditorsPicker"),
           };
 
         if (containsCtrl(binding.key)) {
@@ -128,8 +130,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let getValue = v =>
       switch (Hashtbl.find_opt(currentConditions, v)) {
-      | Some(variableValue) => variableValue
-      | None => false
+      | Some(true) => WhenExpr.Value.True
+      | Some(false)
+      | None => WhenExpr.Value.False
       };
 
     Keybindings.Keybinding.(
@@ -173,6 +176,15 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           | FileExplorer => [
               Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
             ]
+
+          | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
+
+          | Terminal(id) =>
+            Feature_Terminal.shouldHandleInput(k)
+              ? [
+                Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
+              ]
+              : [Actions.KeyboardInput(k)]
 
           | Search => [Actions.Search(Feature_Search.Input(k))]
 
@@ -238,17 +250,15 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
-      Revery.Event.subscribe(window.onKeyDown, event =>
+      Revery.Window.onKeyDown(window, event =>
         dispatch(Actions.KeyDown(event))
       );
 
     let _: unit => unit =
-      Revery.Event.subscribe(window.onKeyUp, event =>
-        dispatch(Actions.KeyUp(event))
-      );
+      Revery.Window.onKeyUp(window, event => dispatch(Actions.KeyUp(event)));
 
     let _: unit => unit =
-      Revery.Event.subscribe(window.onTextInputCommit, event =>
+      Revery.Window.onTextInputCommit(window, event =>
         dispatch(Actions.TextInput(event))
       );
     ();

@@ -9,10 +9,11 @@
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
-open Utility;
 module Model = Oni_Model;
 
 module Window = WindowManager;
+
+module EditorSurface = Feature_Editor.EditorSurface;
 
 let noop = () => ();
 
@@ -78,7 +79,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
   let theme = state.theme;
   let mode = state.mode;
 
-  let style = editorViewStyle(theme.background, theme.foreground);
+  let style = editorViewStyle(theme.editorBackground, theme.foreground);
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -106,6 +107,18 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
       );
     };
 
+  let onDimensionsChanged =
+      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+    let height = showTabs ? height - Constants.tabHeight : height;
+
+    GlobalContext.current().notifyEditorSizeChanged(
+      ~editorGroupId=editorGroup.editorGroupId,
+      ~width,
+      ~height,
+      (),
+    );
+  };
+
   let children = {
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
     let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
@@ -115,18 +128,121 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
+        let onScroll = deltaY => {
+          let () =
+            GlobalContext.current().editorScrollDelta(
+              ~editorId=editor.editorId,
+              ~deltaY,
+              (),
+            );
+          ();
+        };
+        let onCursorChange = cursor =>
+          GlobalContext.current().dispatch(
+            Actions.EditorCursorMove(editor.editorId, [cursor]),
+          );
         let renderer =
           BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
         switch (renderer) {
         | BufferRenderer.Editor =>
+          let buffer =
+            Selectors.getBufferForEditor(state, editor)
+            |> Option.value(~default=Buffer.empty);
+          let rulers =
+            Configuration.getValue(c => c.editorRulers, state.configuration);
+          let showLineNumbers =
+            Configuration.getValue(
+              c => c.editorLineNumbers,
+              state.configuration,
+            );
+          let showMinimap =
+            Configuration.getValue(
+              c => c.editorMinimapEnabled,
+              state.configuration,
+            );
+          let maxMinimapCharacters =
+            Configuration.getValue(
+              c => c.editorMinimapMaxColumn,
+              state.configuration,
+            );
+          let matchingPairsEnabled =
+            Selectors.getConfigurationValue(state, buffer, c =>
+              c.editorMatchBrackets
+            );
+          let shouldRenderWhitespace =
+            Configuration.getValue(
+              c => c.editorRenderWhitespace,
+              state.configuration,
+            );
+          let shouldRenderIndentGuides =
+            Configuration.getValue(
+              c => c.editorRenderIndentGuides,
+              state.configuration,
+            );
+          let shouldHighlightActiveIndentGuides =
+            Configuration.getValue(
+              c => c.editorHighlightActiveIndentGuide,
+              state.configuration,
+            );
+          let showMinimapSlider =
+            Configuration.getValue(
+              c => c.editorMinimapShowSlider,
+              state.configuration,
+            );
+          let hoverDelay =
+            Configuration.getValue(
+              c => c.editorHoverDelay,
+              state.configuration,
+            )
+            |> Revery.Time.ms;
+          let isHoverEnabled =
+            Configuration.getValue(
+              c => c.editorHoverEnabled,
+              state.configuration,
+            );
+
           <EditorSurface
             isActiveSplit=isActive
-            editorGroup
             metrics
             editor
-            state
-          />
+            buffer
+            onCursorChange
+            onDimensionsChanged={_ => ()}
+            onScroll
+            theme
+            rulers
+            showLineNumbers
+            editorFont={state.editorFont}
+            mode
+            showMinimap
+            maxMinimapCharacters
+            matchingPairsEnabled
+            bufferHighlights={state.bufferHighlights}
+            bufferSyntaxHighlights={state.syntaxHighlights}
+            diagnostics={state.diagnostics}
+            completions={state.completions}
+            tokenTheme={state.tokenTheme}
+            definition={state.definition}
+            shouldRenderWhitespace
+            showMinimapSlider
+            hoverDelay
+            isHoverEnabled
+            shouldRenderIndentGuides
+            shouldHighlightActiveIndentGuides
+          />;
         | BufferRenderer.Welcome => <WelcomeView state />
+        | BufferRenderer.Terminal({id}) =>
+          state.terminals
+          |> Feature_Terminal.getTerminalOpt(id)
+          |> Option.map(terminal => {
+               <TerminalView
+                 theme
+                 font={state.terminalFont}
+                 metrics
+                 terminal
+               />
+             })
+          |> Option.value(~default=React.empty)
         };
       | None => React.empty
       };
@@ -155,7 +271,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     );
   };
 
-  <View onMouseDown style>
+  <View onMouseDown style onDimensionsChanged>
     <View style=absoluteStyle> children </View>
     <View style=overlayStyle />
   </View>;

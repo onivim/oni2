@@ -3,12 +3,11 @@
  */
 module Core = Oni_Core;
 module Log = (val Core.Log.withNamespace("IntegrationTest.ExtensionHelpers"));
-module Option = Core.Utility.Option;
 
 module Model = Oni_Model;
 
 module State = Model.State;
-module LanguageFeatures = Model.LanguageFeatures;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let waitForExtensionToActivate =
     (~extensionId, waitForState: Types.waitForState) => {

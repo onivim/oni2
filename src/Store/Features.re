@@ -5,11 +5,10 @@ open Actions;
 
 // UPDATE
 
-let update = (state: State.t, action: Actions.t) =>
+let update = (extHostClient, state: State.t, action: Actions.t) =>
   switch (action) {
-  | Search(model) =>
-    let (model, maybeOutmsg) =
-      Feature_Search.update(state.searchPane, model);
+  | Search(msg) =>
+    let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
 
     let state =
@@ -20,6 +19,48 @@ let update = (state: State.t, action: Actions.t) =>
 
     (state, Effect.none);
 
+  | SCM(msg) =>
+    let (model, maybeOutmsg) =
+      Feature_SCM.update(extHostClient, state.scm, msg);
+    let state = {...state, scm: model};
+
+    let (state, eff) =
+      switch ((maybeOutmsg: Feature_SCM.outmsg)) {
+      | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
+      | Effect(eff) => (FocusManager.push(Focus.SCM, state), eff)
+      | Nothing => (state, Effect.none)
+      };
+
+    (state, eff |> Effect.map(msg => Actions.SCM(msg)));
+
+  | Syntax(msg) =>
+    let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);
+    let state = {...state, syntaxHighlights};
+    (state, Effect.none);
+
+  | Terminal(msg) =>
+    let (model, eff) = Feature_Terminal.update(state.terminals, msg);
+
+    let effect: Isolinear.Effect.t(Actions.t) =
+      switch ((eff: Feature_Terminal.outmsg)) {
+      | Nothing => Effect.none
+      | Effect(eff) => eff |> Effect.map(msg => Actions.Terminal(msg))
+      | TerminalCreated({name, splitDirection}) =>
+        let windowTreeDirection =
+          switch (splitDirection) {
+          | Horizontal => WindowTree.Horizontal
+          | Vertical => WindowTree.Vertical
+          };
+
+        Isolinear.Effect.createWithDispatch(
+          ~name="feature.terminal.openBuffer", dispatch => {
+          dispatch(
+            Actions.OpenFileByPath(name, Some(windowTreeDirection), None),
+          )
+        });
+      };
+    ({...state, terminals: model}, effect);
+
   | Modal(msg) =>
     switch (state.modal) {
     | Some(model) =>
@@ -27,6 +68,20 @@ let update = (state: State.t, action: Actions.t) =>
       ({...state, modal: Some(model')}, eff);
 
     | None => (state, Effect.none)
+    }
+
+  | NotifyKeyPressed(time, key) =>
+    switch (state.keyDisplayer) {
+    | Some(model) when Oni_Input.Filter.filter(key) => (
+        {
+          ...state,
+          keyDisplayer:
+            Some(Oni_Components.KeyDisplayer.add(~time, key, model)),
+        },
+        Effect.none,
+      )
+
+    | _ => (state, Effect.none)
     }
 
   | _ => (state, Effect.none)

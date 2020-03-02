@@ -4,8 +4,15 @@
 
 open Oni_Model;
 open Actions;
+
 let showSearchPane = (state: State.t, isSearchFocused) => {
-  let newState = {...state, pane: Pane.setOpen(Pane.Search)};
+  let newState = {
+    ...state,
+    pane: {
+      isOpen: true,
+      selected: Search,
+    },
+  };
 
   if (isSearchFocused) {
     newState;
@@ -15,7 +22,13 @@ let showSearchPane = (state: State.t, isSearchFocused) => {
 };
 
 let hideSearchPane = (state: State.t, isSearchFocused) => {
-  let newState = {...state, pane: Pane.setClosed(state.pane)};
+  let newState = {
+    ...state,
+    pane: {
+      ...state.pane,
+      isOpen: false,
+    },
+  };
 
   if (isSearchFocused) {
     newState |> FocusManager.pop(Search);
@@ -24,51 +37,59 @@ let hideSearchPane = (state: State.t, isSearchFocused) => {
   };
 };
 
-let closePane = (state: State.t) => {
-  ...state,
-  pane: Pane.setClosed(state.pane),
-};
-
 let openDiagnosticsPane = (state: State.t) => {
   ...state,
-  pane: Pane.setOpen(Pane.Diagnostics),
+  pane: {
+    isOpen: true,
+    selected: Diagnostics,
+  },
 };
 
 let openNotificationsPane = (state: State.t) => {
   ...state,
-  pane: Pane.setOpen(Pane.Notifications),
+  pane: {
+    isOpen: true,
+    selected: Notifications,
+  },
+};
+
+let closePane = (state: State.t) => {
+  ...state,
+  pane: {
+    ...state.pane,
+    isOpen: false,
+  },
 };
 
 let reduce = (action: Actions.t, state: State.t) =>
-  switch (action, Pane.getType(state.pane)) {
-  | (SearchHotkey, Some(Pane.Search))
-  | (ActivityBar(ActivityBar.SearchClick), Some(Pane.Search)) =>
+  switch (action) {
+  | SearchHotkey
+  | ActivityBar(SearchClick) when Pane.isVisible(Search, state.pane) =>
     FocusManager.current(state) == Search
       ? hideSearchPane(state, true) : showSearchPane(state, false)
 
-  | (SearchHotkey, _)
-  | (PaneTabClicked(Pane.Search), _)
-  | (ActivityBar(ActivityBar.SearchClick), _) =>
+  | SearchHotkey
+  | PaneTabClicked(Search)
+  | ActivityBar(SearchClick) =>
     showSearchPane(state, FocusManager.current(state) == Search)
 
-  | (DiagnosticsHotKey, Some(Pane.Diagnostics))
-  | (StatusBar(StatusBarModel.DiagnosticsClicked), Some(Pane.Diagnostics)) =>
+  | DiagnosticsHotKey
+  | StatusBar(DiagnosticsClicked)
+      when Pane.isVisible(Diagnostics, state.pane) =>
     closePane(state)
 
-  | (DiagnosticsHotKey, _)
-  | (PaneTabClicked(Pane.Diagnostics), _)
-  | (StatusBar(StatusBarModel.DiagnosticsClicked), _) =>
-    openDiagnosticsPane(state)
+  | DiagnosticsHotKey
+  | PaneTabClicked(Diagnostics)
+  | StatusBar(DiagnosticsClicked) => openDiagnosticsPane(state)
 
-  | (
-      StatusBar(StatusBarModel.NotificationCountClicked),
-      Some(Pane.Notifications),
-    ) =>
+  | StatusBar(NotificationCountClicked)
+      when Pane.isVisible(Notifications, state.pane) =>
     closePane(state)
 
-  | (PaneTabClicked(Pane.Notifications), _)
-  | (StatusBar(StatusBarModel.NotificationCountClicked), _) =>
-    openNotificationsPane(state)
+  | PaneTabClicked(Notifications)
+  | StatusBar(NotificationCountClicked) => openNotificationsPane(state)
+
+  | PaneCloseButtonClicked => closePane(state)
 
   | _ => state
   };

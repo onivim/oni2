@@ -6,7 +6,6 @@
  */
 
 open Oni_Core;
-open Utility;
 
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
@@ -18,6 +17,27 @@ module Out = Protocol.OutgoingNotifications;
 module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostClient"));
 
 type t = ExtHostTransport.t;
+
+module SCM = ExtHostClient_SCM;
+module Terminal = ExtHostClient_Terminal;
+
+type msg =
+  | SCM(SCM.msg)
+  | Terminal(Terminal.msg)
+  | RegisterTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | UnregisterTextContentProvider({handle: int})
+  | RegisterDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | UnregisterDecorationProvider({handle: int})
+  | DecorationsDidChange({
+      handle: int,
+      uris: list(Uri.t),
+    });
 
 type unitCallback = unit => unit;
 let noop = () => ();
@@ -45,6 +65,7 @@ let start =
       ~onRegisterSuggestProvider=noop2,
       ~onShowMessage=noop1,
       ~onStatusBarSetEntry,
+      ~dispatch,
       setup: Setup.t,
     ) => {
   // Hold onto a reference of the client, so that we can pass it along with
@@ -62,6 +83,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerDefinitionSupport", args) =>
       Option.iter(
         client => {
@@ -71,6 +93,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerReferenceSupport", args) =>
       Option.iter(
         client => {
@@ -80,6 +103,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | (
         "MainThreadLanguageFeatures",
         "$registerDocumentHighlightProvider",
@@ -93,6 +117,7 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadLanguageFeatures", "$registerSuggestSupport", args) =>
       Option.iter(
         client => {
@@ -102,19 +127,24 @@ let start =
         client^,
       );
       Ok(None);
+
     | ("MainThreadOutputService", "$append", [_, `String(msg)]) =>
       onOutput(msg);
       Ok(None);
+
     | ("MainThreadDiagnostics", "$changeMany", args) =>
       In.Diagnostics.parseChangeMany(args)
       |> Option.iter(onDiagnosticsChangeMany);
       Ok(None);
+
     | ("MainThreadDiagnostics", "$clear", args) =>
       In.Diagnostics.parseClear(args) |> Option.iter(onDiagnosticsClear);
       Ok(None);
+
     | ("MainThreadTelemetry", "$publicLog", [`String(eventName), json]) =>
       onTelemetry(eventName ++ ":" ++ Yojson.Safe.to_string(json));
       Ok(None);
+
     | (
         "MainThreadMessageService",
         "$showMessage",
@@ -122,10 +152,12 @@ let start =
       ) =>
       onShowMessage(s);
       Ok(None);
+
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>
       let id = Protocol.PackedString.parse(v);
       onDidActivateExtension(id);
       Ok(None);
+
     | (
         "MainThreadExtensionService",
         "$onExtensionActivationFailed",
@@ -134,12 +166,72 @@ let start =
       let id = Protocol.PackedString.parse(v);
       onExtensionActivationFailed(id);
       Ok(None);
+
     | ("MainThreadCommands", "$registerCommand", [`String(v), ..._]) =>
       onRegisterCommand(v);
       Ok(None);
+
     | ("MainThreadStatusBar", "$setEntry", args) =>
       In.StatusBar.parseSetEntry(args) |> Option.iter(onStatusBarSetEntry);
       Ok(None);
+
+    | (
+        "MainThreadDocumentContentProviders",
+        "$registerTextContentProvider",
+        [`Int(handle), `String(scheme)],
+      ) =>
+      dispatch(RegisterTextContentProvider({handle, scheme}));
+      Ok(None);
+
+    | (
+        "MainThreadDocumentContentProviders",
+        "$unregisterTextContentProvider",
+        [`Int(handle)],
+      ) =>
+      dispatch(UnregisterTextContentProvider({handle: handle}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$registerDecorationProvider",
+        [`Int(handle), `String(label)],
+      ) =>
+      dispatch(RegisterDecorationProvider({handle, label}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$unregisterDecorationProvider",
+        [`Int(handle)],
+      ) =>
+      dispatch(UnregisterDecorationProvider({handle: handle}));
+      Ok(None);
+
+    | (
+        "MainThreadDecorations",
+        "$onDidChange",
+        [`Int(handle), `List(resources)],
+      ) =>
+      let uris =
+        resources
+        |> List.filter_map(json =>
+             Uri.of_yojson(json) |> Stdlib.Result.to_option
+           );
+      dispatch(DecorationsDidChange({handle, uris}));
+      Ok(None);
+
+    | ("MainThreadSCM", method, args) =>
+      SCM.handleMessage(~dispatch=msg => dispatch(SCM(msg)), method, args);
+      Ok(None);
+
+    | ("MainThreadTerminalService", method, args) =>
+      Terminal.handleMessage(
+        ~dispatch=msg => dispatch(Terminal(msg)),
+        method,
+        args,
+      );
+      Ok(None);
+
     | (scope, method, argsAsJson) =>
       Log.warnf(m =>
         m(
@@ -171,8 +263,11 @@ let activateByEvent = (evt, client) => {
   ExtHostTransport.send(client, Out.ExtensionService.activateByEvent(evt));
 };
 
-let executeContributedCommand = (cmd, client) => {
-  ExtHostTransport.send(client, Out.Commands.executeContributedCommand(cmd));
+let executeContributedCommand = (~arguments=[], cmd, client) => {
+  ExtHostTransport.send(
+    client,
+    Out.Commands.executeContributedCommand(cmd, arguments),
+  );
 };
 
 let acceptWorkspaceData = (workspace: Workspace.t, client) => {
@@ -193,7 +288,7 @@ let addDocument = (doc, client) => {
   );
 };
 
-let updateDocument = (uri, modelChange, dirty, client) => {
+let updateDocument = (uri, modelChange, ~dirty, client) => {
   ExtHostTransport.send(
     client,
     Out.Documents.acceptModelChanged(uri, modelChange, dirty),
@@ -213,6 +308,46 @@ let provideCompletions = (id, uri, position, client) => {
       f,
     );
   promise;
+};
+
+let provideDecorations = (handle, uri, client) => {
+  let decodeItem =
+    fun
+    | (
+        _requestId,
+        `List([
+          `Int(_),
+          `Bool(_),
+          `String(tooltip),
+          `String(letter),
+          `Assoc([("id", `String(color))]),
+          `String(source),
+        ]),
+      ) =>
+      Some(Decoration.{handle, tooltip, letter, color, source})
+    | (_, json) => {
+        Log.error("Unexpected data: " ++ Yojson.Safe.to_string(json));
+        None;
+      };
+
+  ExtHostTransport.request(
+    ~msgType=MessageType.requestJsonArgsWithCancellation,
+    client,
+    Out.Decorations.provideDecorations(handle, uri),
+    json =>
+    switch (json) {
+    | `Assoc(items) => items |> List.filter_map(decodeItem)
+
+    | _ =>
+      failwith(
+        Printf.sprintf(
+          "Unexpected response from provideDecorations for %s: \n  %s",
+          Uri.toString(uri),
+          Yojson.Safe.to_string(json),
+        ),
+      )
+    }
+  );
 };
 
 let provideDefinition = (id, uri, position, client) => {
@@ -293,9 +428,28 @@ let provideReferences = (id, uri, position, client) => {
   promise;
 };
 
-let send = (client, msg) => {
-  let _ = ExtHostTransport.send(client, msg);
-  ();
+let provideTextDocumentContent = (id, uri, client) => {
+  let promise =
+    ExtHostTransport.request(
+      ~msgType=MessageType.requestJsonArgsWithCancellation,
+      client,
+      Out.DocumentContent.provideTextDocumentContent(id, uri),
+      fun
+      | `String(content) => content
+      | json =>
+        failwith("Unexpected response: " ++ Yojson.Safe.to_string(json)),
+    );
+  promise;
 };
 
+let send = (client, msg) => ExtHostTransport.send(client, msg);
+
 let close = client => ExtHostTransport.close(client);
+
+module Effects = {
+  let executeContributedCommand = (extHostClient, ~arguments=[], id) =>
+    Isolinear.Effect.create(
+      ~name="extHostClient.executeContributedCommand", () =>
+      executeContributedCommand(id, ~arguments, extHostClient)
+    );
+};

@@ -16,7 +16,7 @@ module Styles = {
 
   let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
     fontSize(font.fontSize),
-    fontFamily(font.fontFile),
+    fontFamily(font.fontFileSemiBold),
     backgroundColor(bg),
     color(fg),
   ];
@@ -26,7 +26,7 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
     backgroundColor(theme.sideBarBackground),
-    height(Core.Constants.default.tabHeight),
+    height(Core.Constants.tabHeight),
   ];
 };
 
@@ -39,30 +39,54 @@ let animation =
   );
 
 let%component make = (~state: State.t, ()) => {
-  let State.{theme, sideBar, uiFont, _} = state;
+  [@warning "-27"]
+  let State.{theme, sideBar, uiFont: font, _} = state;
+
   let bg = theme.sideBarBackground;
   let fg = theme.sideBarForeground;
-
-  let sideBarType = SideBar.getType(sideBar);
 
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
 
   let title =
-    switch (sideBarType) {
+    switch (sideBar.selected) {
     | FileExplorer => "Explorer"
+    | SCM => "Source Control"
     | Extensions => "Extensions"
     };
 
   let elem =
-    switch (sideBarType) {
+    switch (sideBar.selected) {
     | FileExplorer => <FileExplorerView state />
+    | SCM =>
+      let onItemClick = (resource: Feature_SCM.Resource.t) =>
+        GlobalContext.current().dispatch(
+          Actions.OpenFileByPath(
+            Oni_Core.Uri.toFileSystemPath(resource.uri),
+            None,
+            None,
+          ),
+        );
+
+      let workingDirectory =
+        Option.map(w => w.Workspace.workingDirectory, state.workspace);
+
+      <Feature_SCM.Pane
+        model={state.scm}
+        workingDirectory
+        onItemClick
+        isFocused={FocusManager.current(state) == Focus.SCM}
+        theme
+        font
+        dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
+      />;
+
     | Extensions => <ExtensionListView state />
     };
 
   <View style={Styles.container(~bg, ~transition)}>
     <View style={Styles.heading(theme)}>
-      <Text text=title style={Styles.title(~fg, ~bg, ~font=uiFont)} />
+      <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
     </View>
     elem
   </View>;

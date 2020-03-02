@@ -1,25 +1,30 @@
-type sideBarType =
+type pane =
   | FileExplorer
+  | SCM
   | Extensions;
 
 type t = {
+  // Track the last value of 'workbench.sideBar.visible'
+  // If it changes, we should update
+  openByDefault: bool,
   isOpen: bool,
-  activeType: sideBarType,
+  selected: pane,
 };
 
-let initial = {isOpen: true, activeType: FileExplorer};
+let initial = {openByDefault: false, isOpen: false, selected: FileExplorer};
 
-let setOpen = sideBarType => {isOpen: true, activeType: sideBarType};
+let isVisible = (pane, model) => model.isOpen && model.selected == pane;
 
-let setClosed = (sideBar: t) => {...sideBar, isOpen: false};
+let setDefaultVisibility = (pane, defaultVisibility) =>
+  if (pane.openByDefault == defaultVisibility) {
+    pane;
+  } else {
+    {...pane, openByDefault: defaultVisibility, isOpen: defaultVisibility};
+  };
 
-let getType = sideBar => sideBar.activeType;
-
-let isOpen = sideBar => sideBar.isOpen;
-
-let toggle = (sideBarType, state: t) =>
-  if (sideBarType == state.activeType) {
+let toggle = (pane, state: t) =>
+  if (pane == state.selected) {
     {...state, isOpen: !state.isOpen};
   } else {
-    {isOpen: true, activeType: sideBarType};
+    {...state, isOpen: true, selected: pane};
   };

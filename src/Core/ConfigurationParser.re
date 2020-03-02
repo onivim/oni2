@@ -6,6 +6,7 @@
 open Kernel;
 open ConfigurationValues;
 open LineNumber;
+open Utility;
 
 let parseBool = json =>
   switch (json) {
@@ -13,29 +14,38 @@ let parseBool = json =>
   | _ => false
   };
 
-let parseInt = json =>
+let parseInt = (~default=0, json) =>
   switch (json) {
   | `Int(v) => v
-  | _ => 0
+  | `Float(v) => int_of_float(v +. 0.5)
+  | `String(str) =>
+    switch (int_of_string_opt(str)) {
+    | None => default
+    | Some(v) => v
+    }
+  | _ => default
   };
 
-let parseFloat = json =>
+let parseFloat = (~default=0., json) =>
   switch (json) {
   | `Int(v) => float_of_int(v)
   | `Float(v) => v
-  | _ => 0.
+  | `String(str) =>
+    let floatMaybe = float_of_string_opt(str);
+    let floatFromIntMaybe =
+      int_of_string_opt(str) |> Option.map(float_of_int);
+
+    floatMaybe |> OptionEx.or_(floatFromIntMaybe) |> Option.value(~default);
+  | _ => default
   };
 
 let parseStringList = json => {
   switch (json) {
   | `List(items) =>
-    List.fold_left(
-      (accum, item) =>
-        switch (item) {
-        | `String(v) => [v, ...accum]
-        | _ => accum
-        },
-      [],
+    List.filter_map(
+      fun
+      | `String(v) => Some(v)
+      | _ => None,
       items,
     )
   | `String(v) => [v]
@@ -109,16 +119,32 @@ let parseRenderWhitespace = json =>
   | _ => All
   };
 
-let parseString = json =>
+let parseEditorFontSize = (~default=Constants.defaultFontSize, json) =>
+  json
+  |> parseFloat(~default)
+  |> (
+    result =>
+      result > Constants.minimumFontSize ? result : Constants.minimumFontSize
+  );
+
+let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
+  json =>
+    switch (json) {
+    | `String(smoothing) =>
+      let smoothing = String.lowercase_ascii(smoothing);
+      switch (smoothing) {
+      | "none" => None
+      | "antialiased" => Antialiased
+      | "subpixel-antialiased" => SubpixelAntialiased
+      | _ => Default
+      };
+    | _ => Default
+    };
+
+let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
-  | _ => ""
-  };
-
-let parseStringOption = json =>
-  switch (json) {
-  | `String(v) => Some(v)
-  | _ => None
+  | _ => default
   };
 
 type parseFunction =
@@ -129,9 +155,25 @@ type configurationTuple = (string, parseFunction);
 let configurationParsers: list(configurationTuple) = [
   (
     "editor.fontFamily",
-    (s, v) => {...s, editorFontFamily: parseStringOption(v)},
+    (s, v) => {
+      ...s,
+      editorFontFamily: parseString(~default=Constants.defaultFontFamily, v),
+    },
   ),
-  ("editor.fontSize", (s, v) => {...s, editorFontSize: parseInt(v)}),
+  (
+    "editor.fontSize",
+    (config, json) => {
+      ...config,
+      editorFontSize: parseEditorFontSize(json),
+    },
+  ),
+  (
+    "editor.fontSmoothing",
+    (config, json) => {
+      ...config,
+      editorFontSmoothing: parseFontSmoothing(json),
+    },
+  ),
   ("editor.hover.delay", (s, v) => {...s, editorHoverDelay: parseInt(v)}),
   (
     "editor.hover.enabled",
@@ -202,6 +244,29 @@ let configurationParsers: list(configurationTuple) = [
   ),
   ("editor.rulers", (s, v) => {...s, editorRulers: parseIntList(v)}),
   ("files.exclude", (s, v) => {...s, filesExclude: parseStringList(v)}),
+  (
+    "terminal.integrated.fontFamily",
+    (s, v) => {
+      ...s,
+      terminalIntegratedFontFamily:
+        parseString(~default=Constants.defaultFontFamily, v),
+    },
+  ),
+  (
+    "terminal.integrated.fontSize",
+    (config, json) => {
+      ...config,
+      terminalIntegratedFontSize:
+        parseEditorFontSize(~default=Constants.defaultTerminalFontSize, json),
+    },
+  ),
+  (
+    "terminal.integrated.fontSmoothing",
+    (config, json) => {
+      ...config,
+      terminalIntegratedFontSmoothing: parseFontSmoothing(json),
+    },
+  ),
   ("window.title", (s, v) => {...s, windowTitle: parseString(v)}),
   (
     "workbench.activityBar.visible",

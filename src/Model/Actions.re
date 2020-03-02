@@ -8,25 +8,32 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
+open Oni_Components;
 
 module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
+module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
+module CompletionItem = Feature_LanguageSupport.CompletionItem;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 [@deriving show({with_path: false})]
 type t =
   | Init
-  | Tick(tick)
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
-  | BufferUpdate([@opaque] BufferUpdate.t)
+  | BufferUpdate({
+      update: [@opaque] BufferUpdate.t,
+      oldBuffer: [@opaque] Buffer.t,
+      newBuffer: [@opaque] Buffer.t,
+    })
   | BufferRenderer(BufferRenderer.action)
-  | BufferSaved([@opaque] Vim.BufferMetadata.t)
+  | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
-  | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
-  | SyntaxServerClosed
+  | Syntax(Feature_Syntax.msg)
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
@@ -46,6 +53,8 @@ type t =
       Location.t,
       [@opaque] LanguageFeatures.DefinitionResult.t,
     )
+  | EditorFont(Service_Font.msg)
+  | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
@@ -56,17 +65,12 @@ type t =
   | TextInput([@opaque] Revery.Events.textInputEvent)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
-  | ContextMenuUpdated([@opaque] ContextMenu.t(t))
   | ContextMenuOverlayClicked
   | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
-  // LoadEditorFont is the request to load a new font
-  // If successful, a SetEditorFont action will be dispatched.
-  | LoadEditorFont(string, int)
-  | SetEditorFont([@opaque] EditorFont.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
   | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
@@ -75,13 +79,13 @@ type t =
   | WindowSetActive(int, int)
   | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
-  | EditorGroupAdd(editorGroup)
+  | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSetSize(int, EditorSize.t)
-  | EditorCursorMove(EditorId.t, [@opaque] list(Vim.Cursor.t))
-  | EditorSetScroll(EditorId.t, float)
-  | EditorScroll(EditorId.t, float)
-  | EditorScrollToLine(EditorId.t, int)
-  | EditorScrollToColumn(EditorId.t, int)
+  | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
+  | EditorSetScroll(Feature_Editor.EditorId.t, float)
+  | EditorScroll(Feature_Editor.EditorId.t, float)
+  | EditorScrollToLine(Feature_Editor.EditorId.t, int)
+  | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | ShowNotification(Notification.t)
   | HideNotification(Notification.t)
   | ClearNotifications
@@ -89,7 +93,7 @@ type t =
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputClicked(int)
+  | QuickmenuInputClicked(Selection.t)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
@@ -106,6 +110,9 @@ type t =
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
+  // ReallyQuitting is dispatched when we've decided _for sure_
+  // to quit the app. This gives subscriptions the chance to clean up.
+  | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
   | SearchClearMatchingPair(int)
   | SearchSetMatchingPair(int, Location.t, Location.t)
@@ -125,19 +132,54 @@ type t =
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
+  | SCM(Feature_SCM.msg)
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
-  | PaneTabClicked(Pane.paneType)
+  | Terminal(Feature_Terminal.msg)
+  | PaneTabClicked(Pane.pane)
+  | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
+  | WindowFocusGained
+  | WindowFocusLost
+  | WindowMaximized
+  | WindowMinimized
+  | WindowRestored
   | WindowCloseBlocked
   | WindowCloseDiscardConfirmed
   | WindowCloseSaveAllConfirmed
   | WindowCloseCanceled
+  | NewTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | LostTextContentProvider({handle: int})
   | Modal(Modal.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
+  | GotOriginalUri({
+      bufferId: int,
+      uri: Uri.t,
+    })
+  | GotOriginalContent({
+      bufferId: int,
+      lines: [@opaque] array(string),
+    })
+  | NewDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | LostDecorationProvider({handle: int})
+  | DecorationsChanged({
+      handle: int,
+      uris: list(Uri.t),
+    })
+  | GotDecorations({
+      handle: int,
+      uri: Uri.t,
+      decorations: list(Decoration.t),
+    })
   | Noop
 and command = {
   commandCategory: option(string),
@@ -151,36 +193,6 @@ and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
 and tick = {
   deltaTime: float,
   totalTime: float,
-}
-and editor = {
-  editorId: EditorId.t,
-  bufferId: int,
-  scrollX: float,
-  scrollY: float,
-  minimapMaxColumnWidth: int,
-  minimapScrollY: float,
-  /*
-   * The maximum line visible in the view.
-   * TODO: This will be dependent on line-wrap settings.
-   */
-  maxLineLength: int,
-  viewLines: int,
-  cursors: [@opaque] list(Vim.Cursor.t),
-  selection: [@opaque] VisualRange.t,
-}
-and editorMetrics = {
-  pixelWidth: int,
-  pixelHeight: int,
-  lineHeight: float,
-  characterWidth: float,
-}
-and editorGroup = {
-  editorGroupId: int,
-  activeEditorId: option(int),
-  editors: [@opaque] IntMap.t(editor),
-  bufferIdToEditorId: [@opaque] IntMap.t(int),
-  reverseTabOrder: list(int),
-  metrics: editorMetrics,
 }
 and menuItem = {
   category: option(string),

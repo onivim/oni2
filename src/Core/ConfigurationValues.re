@@ -17,10 +17,24 @@ type vimUseSystemClipboard = {
   paste: bool,
 };
 
+[@deriving show({with_path: false})]
+type autoClosingBrackets =
+  | Never
+  | LanguageDefined;
+
+[@deriving show({with_path: false})]
+type fontSmoothing =
+  | Default
+  | None
+  | Antialiased
+  | SubpixelAntialiased;
+
 type t = {
+  editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
-  editorFontFamily: option(string),
-  editorFontSize: int,
+  editorFontFamily: string,
+  editorFontSize: float,
+  editorFontSmoothing: fontSmoothing,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
@@ -37,6 +51,9 @@ type t = {
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
   editorRulers: list(int),
+  terminalIntegratedFontFamily: string,
+  terminalIntegratedFontSize: float,
+  terminalIntegratedFontSmoothing: fontSmoothing,
   workbenchActivityBarVisible: bool,
   workbenchColorTheme: string,
   workbenchIconTheme: string,
@@ -63,9 +80,11 @@ type t = {
 };
 
 let default = {
+  editorAutoClosingBrackets: LanguageDefined,
   editorDetectIndentation: true,
-  editorFontFamily: Some("FiraCode-Regular.ttf"),
-  editorFontSize: 14,
+  editorFontFamily: Constants.defaultFontFamily,
+  editorFontSmoothing: Default,
+  editorFontSize: Constants.defaultFontSize,
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,
@@ -73,7 +92,7 @@ let default = {
   editorAcceptSuggestionOnEnter: `on,
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
+  editorMinimapMaxColumn: Constants.minimapMaxColumn,
   editorLineNumbers: On,
   editorInsertSpaces: false,
   editorIndentSize: 4,
@@ -82,6 +101,9 @@ let default = {
   editorHighlightActiveIndentGuide: true,
   editorRenderWhitespace: All,
   editorRulers: [],
+  terminalIntegratedFontFamily: Constants.defaultFontFamily,
+  terminalIntegratedFontSize: Constants.defaultTerminalFontSize,
+  terminalIntegratedFontSmoothing: Default,
   workbenchActivityBarVisible: true,
   workbenchColorTheme: "One Dark Pro",
   workbenchEditorShowTabs: true,
@@ -89,7 +111,7 @@ let default = {
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
-  filesExclude: ["node_modules", "_esy"],
+  filesExclude: ["_esy", "node_modules"],
   uiShadows: true,
   uiZoom: 1.0,
   vimUseSystemClipboard: {

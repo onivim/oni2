@@ -5,6 +5,9 @@ open Revery.UI.Components;
 open Oni_Core;
 open Utility;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+
 module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
 
 module type TreeModel = {
@@ -16,7 +19,8 @@ module type TreeModel = {
 };
 
 module Constants = {
-  let arrowSize = 15;
+  let arrowSize = 15.;
+  let arrowSizeI = 15;
   let indentSize = 12.;
   let scrollWheelMultiplier = 25;
   let scrollBarThickness = 6;
@@ -68,25 +72,32 @@ module Styles = {
     fontSize(12),
     color(Colors.white),
   ];
+
+  let arrow = size => [width(size), height(size)];
 };
 
 module Make = (Model: TreeModel) => {
-  let arrow = (~isOpen, ()) =>
-    <FontIcon
-      fontSize=Constants.arrowSize
-      color=Colors.white
-      icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
-      backgroundColor=Colors.transparentWhite
-    />;
+  let arrow = (~isOpen, ~color, ()) =>
+    <View style={Styles.arrow(int_of_float(Constants.arrowSize))}>
+      <FontIcon
+        fontSize=Constants.arrowSize
+        color
+        icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
+      />
+    </View>;
 
   let noArrow = () =>
     <View
-      style=Style.[width(Constants.arrowSize), height(Constants.arrowSize)]
+      style=Style.[
+        width(Constants.arrowSizeI),
+        height(Constants.arrowSizeI),
+      ]
     />;
 
   let rec nodeView =
           (
             ~renderContent,
+            ~arrowColor,
             ~itemHeight,
             ~clipRange as (clipStart, clipEnd),
             ~onClick,
@@ -112,6 +123,7 @@ module Make = (Model: TreeModel) => {
           let element =
             <nodeView
               renderContent
+              arrowColor
               itemHeight
               clipRange=(clipStart - count, clipEnd - count)
               onClick
@@ -139,7 +151,7 @@ module Make = (Model: TreeModel) => {
       switch (Model.kind(node)) {
       | `Node(state) =>
         <View>
-          <item arrow={arrow(~isOpen=state == `Open)} />
+          <item arrow={arrow(~isOpen=state == `Open, ~color=arrowColor)} />
           <View style=Styles.children>
             {switch (state) {
              | `Open => node |> Model.children |> renderChildren
@@ -155,7 +167,7 @@ module Make = (Model: TreeModel) => {
 
   let useScroll = (~itemHeight, ~count, ~viewportHeight, ~scrollOffset) => {
     // We need to keep the previous value to know which edge to align a revealed item to
-    let%hook (prevScrollTop, setPrevScrollTop) = Hooks.ref(0);
+    let%hook prevScrollTop = Hooks.ref(0);
     // The internal value is used if scrollOffset isn't being passed in
     let%hook (internalScrollTop, setInternalScrollTop) = Hooks.state(0);
 
@@ -171,14 +183,14 @@ module Make = (Model: TreeModel) => {
              }
            | `Reveal(index) => {
                let offset = index * itemHeight;
-               if (offset < prevScrollTop) {
+               if (offset < prevScrollTop^) {
                  // out of view above, so align with top edge
                  offset;
-               } else if (offset + itemHeight > prevScrollTop + viewportHeight) {
+               } else if (offset + itemHeight > prevScrollTop^ + viewportHeight) {
                  // out of view below, so align with bottom edge
                  offset + itemHeight - viewportHeight;
                } else {
-                 prevScrollTop;
+                 prevScrollTop^;
                };
              },
          )
@@ -186,7 +198,7 @@ module Make = (Model: TreeModel) => {
       // Make sure we're not scrolled past the items
       |> IntEx.clamp(~lo=0, ~hi=itemHeight * count - viewportHeight);
 
-    setPrevScrollTop(targetScrollTop);
+    prevScrollTop := targetScrollTop;
 
     let%hook (actualScrollTop, setScrollTopImmediately) =
       Hooks.spring(
@@ -210,6 +222,7 @@ module Make = (Model: TreeModel) => {
   let%component make =
                 (
                   ~children as renderContent,
+                  ~arrowColor=Colors.white,
                   ~itemHeight,
                   ~initialRowsToRender=10,
                   ~onClick,
@@ -223,15 +236,8 @@ module Make = (Model: TreeModel) => {
                   ~tree,
                   (),
                 ) => {
-    let%hook (outerRef, setOuterRef) = Hooks.ref(None);
-
-    let menuHeight =
-      switch (outerRef) {
-      | Some(node) =>
-        let dimensions: Dimensions.t = node#measurements();
-        dimensions.height;
-      | None => itemHeight * initialRowsToRender
-      };
+    let%hook (menuHeight, setMenuHeight) =
+      Hooks.state(itemHeight * initialRowsToRender);
 
     let count = Model.expandedSubtreeSize(tree);
 
@@ -289,11 +295,18 @@ module Make = (Model: TreeModel) => {
 
     <View
       style=Styles.container
-      ref={ref => setOuterRef(Some(ref))}
+      onDimensionsChanged={({height, _}) => setMenuHeight(_ => height)}
       onMouseWheel>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>
-          <nodeView renderContent itemHeight clipRange onClick node=tree />
+          <nodeView
+            renderContent
+            arrowColor
+            itemHeight
+            clipRange
+            onClick
+            node=tree
+          />
         </View>
       </View>
       {showScrollbar ? <scrollbar /> : React.empty}

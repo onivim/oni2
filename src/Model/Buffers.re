@@ -5,7 +5,6 @@
  */
 
 open Oni_Core;
-open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
@@ -43,9 +42,6 @@ let isModifiedByPath = (buffers: t, filePath: string) => {
     buffers,
   );
 };
-
-let applyBufferUpdate = bufferUpdate =>
-  Option.map(buffer => Buffer.update(buffer, bufferUpdate));
 
 let setIndentation = indent =>
   Option.map(buffer => Buffer.setIndentation(indent, buffer));
@@ -86,10 +82,8 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
 
-  | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
-
-  | BufferSaved(metadata) =>
-    IntMap.update(metadata.id, setModified(metadata.modified), state)
+  | BufferUpdate({update, newBuffer, _}) =>
+    IntMap.add(update.id, newBuffer, state)
 
   | _ => state
   };

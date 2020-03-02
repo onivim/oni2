@@ -1,6 +1,5 @@
 module Core = Oni_Core;
 module Utility = Core.Utility;
-module Option = Utility.Option;
 
 module Model = Oni_Model;
 module Store = Oni_Store;
@@ -21,15 +20,12 @@ let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
 
 let setTime = v => _currentTime := v;
-let getTime = () => _currentTime^;
 
 let setTitle = title => _currentTitle := title;
 let getTitle = () => _currentTitle^;
 
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
-
-let getScaleFactor = () => 1.0;
 
 let setVsync = vsync => _currentVsync := vsync;
 
@@ -63,7 +59,9 @@ let runTest =
     Timber.App.disableColors();
   };
 
-  Printexc.record_backtrace(true);
+  Revery.App.initConsole();
+
+  Core.Log.enableDebug();
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
 
@@ -74,8 +72,24 @@ let runTest =
   let initialState = Model.State.create();
   let currentState = ref(initialState);
 
-  let onStateChanged = v => {
-    currentState := v;
+  let headlessWindow =
+    Revery.Utility.HeadlessWindow.create(
+      Revery.WindowCreateOptions.create(~width=3440, ~height=1440, ()),
+    );
+
+  let onStateChanged = state => {
+    currentState := state;
+
+    Oni_UI.GlobalContext.set({
+      ...Oni_UI.GlobalContext.current(),
+      getState: () => currentState^,
+      state,
+    });
+
+    Revery.Utility.HeadlessWindow.render(
+      headlessWindow,
+      <Oni_UI.Root state />,
+    );
   };
 
   InitLog.info("Starting store...");
@@ -98,8 +112,6 @@ let runTest =
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~getScaleFactor,
-      ~getTime,
       ~setTitle,
       ~getZoom,
       ~setZoom,

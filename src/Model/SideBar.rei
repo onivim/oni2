@@ -1,12 +1,16 @@
-type sideBarType =
+type pane =
   | FileExplorer
+  | SCM
   | Extensions;
 
-type t;
+type t = {
+  openByDefault: bool,
+  isOpen: bool,
+  selected: pane,
+};
 
 let initial: t;
-let setOpen: sideBarType => t;
-let setClosed: t => t;
-let getType: t => sideBarType;
-let isOpen: t => bool;
-let toggle: (sideBarType, t) => t;
+
+let isVisible: (pane, t) => bool;
+let toggle: (pane, t) => t;
+let setDefaultVisibility: (t, bool) => t;

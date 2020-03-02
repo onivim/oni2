@@ -4,6 +4,10 @@ open Oni_Model;
 open Revery;
 open Revery.UI;
 
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+module Tooltip = Oni_Components.Tooltip;
+
 module Styles = {
   open Style;
 
@@ -21,22 +25,45 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
     backgroundColor(theme.sideBarBackground),
-    height(Constants.default.tabHeight),
+    height(Constants.tabHeight),
   ];
 
-  let item = (~isFocus, ~theme: Theme.t) => [
+  let item = (~isFocus, ~isActive, ~theme: Theme.t) => [
     flexDirection(`Row),
     flexGrow(1),
     alignItems(`Center),
     backgroundColor(
-      isFocus ? theme.menuSelectionBackground : theme.sideBarBackground,
+      if (isActive) {
+        theme.listActiveSelectionBackground;
+      } else if (isFocus) {
+        theme.listFocusBackground;
+      } else {
+        Colors.transparentWhite;
+      },
     ),
   ];
 
-  let text = (~isActive, ~theme: Theme.t, ~font: UiFont.t) => [
-    fontSize(font.fontSize),
+  let text =
+      (~isFocus, ~isActive, ~decoration, ~theme: Theme.t, ~font: UiFont.t) => [
+    fontSize(11.),
     fontFamily(font.fontFile),
-    color(isActive ? theme.oniNormalModeBackground : theme.sideBarForeground),
+    color(
+      switch (
+        Option.bind(decoration, (decoration: Decoration.t) =>
+          Theme.getCustomColor(decoration.color, theme)
+        )
+      ) {
+      | Some(color) => color
+      | None =>
+        if (isActive) {
+          theme.listActiveSelectionForeground;
+        } else if (isFocus) {
+          theme.listFocusForeground;
+        } else {
+          theme.foreground;
+        }
+      },
+    ),
     marginLeft(10),
     marginVertical(2),
     textWrap(TextWrapping.NoWrap),
@@ -48,10 +75,10 @@ let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
     text={FontIcon.codeToIcon(icon)}
     style=Style.[
       fontFamily("seti.ttf"),
-      fontSize(int_of_float(float(size) *. 2.)),
+      fontSize(size *. 2.),
       color(fg),
-      width(int_of_float(float(size) *. 1.5)),
-      height(int_of_float(float(size) *. 1.75)),
+      width(int_of_float(size *. 1.5)),
+      height(int_of_float(size *. 1.75)),
       textWrap(TextWrapping.NoWrap),
       marginLeft(-4),
     ]
@@ -65,6 +92,7 @@ let nodeView =
       ~font: UiFont.t,
       ~theme: Theme.t,
       ~node: FsTreeNode.t,
+      ~decorations=[],
       (),
     ) => {
   let icon = () =>
@@ -86,18 +114,30 @@ let nodeView =
       <FontIcon
         color={theme.sideBarForeground}
         icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
-        backgroundColor=Colors.transparentWhite
       />
     | _ => <icon />
     };
 
-  <View style={Styles.item(~isFocus, ~theme)}>
+  let decoration =
+    switch (decorations) {
+    | [last, ..._] => Some(last)
+    | [] => None
+    };
+
+  let tooltipText =
+    switch (decoration) {
+    | Some((decoration: Decoration.t)) =>
+      node.path ++ " • " ++ decoration.tooltip
+    | None => node.path
+    };
+
+  <Tooltip text=tooltipText style={Styles.item(~isFocus, ~isActive, ~theme)}>
     <icon />
     <Text
       text={node.displayName}
-      style={Styles.text(~theme, ~isActive, ~font)}
+      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme, ~font)}
     />
-  </View>;
+  </Tooltip>;
 };
 
 module TreeView = TreeView.Make(FsTreeNode.Model);
@@ -122,16 +162,25 @@ let make =
 
   <View style=Styles.container>
     <TreeView
-      scrollOffset onScrollOffsetChange tree itemHeight=22 onClick=onNodeClick>
-      ...{node =>
+      scrollOffset
+      onScrollOffsetChange
+      tree
+      itemHeight=22
+      onClick=onNodeClick
+      arrowColor={theme.foreground}>
+      ...{node => {
+        let decorations =
+          StringMap.find_opt(node.path, state.fileExplorer.decorations);
+
         <nodeView
           isFocus={Some(node.path) == focus}
           isActive={Some(node.path) == active}
           font
           theme
           node
-        />
-      }
+          ?decorations
+        />;
+      }}
     </TreeView>
   </View>;
 };

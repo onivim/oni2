@@ -17,51 +17,12 @@ open Oni_Model.StatusBarModel;
 
 module Animation = Revery.UI.Animation;
 module ContextMenu = Oni_Components.ContextMenu;
-
-let useExpiration = (~equals=(==), ~expireAfter, items) => {
-  let%hook (active, setActive) = Hooks.state([]);
-  let%hook (expired, setExpired) = Hooks.ref([]);
-  let%hook (time, _reset) = Hooks.timer(~active=active != [], ());
-
-  let (stillActive, freshlyExpired) =
-    List.partition(
-      ((_item, activated)) => Time.(time - activated < expireAfter),
-      active,
-    );
-
-  if (freshlyExpired != []) {
-    setActive(_ => stillActive);
-
-    freshlyExpired
-    |> List.map(((item, _t)) => item)
-    |> List.rev_append(expired)
-    |> setExpired;
-  };
-
-  let%hook () =
-    Hooks.effect(
-      If((!==), items),
-      () => {
-        let untracked =
-          items
-          |> List.filter(item => !List.exists(equals(item), expired))
-          |> List.filter(item =>
-               !List.exists(((it, _t)) => equals(it, item), active)
-             );
-
-        if (untracked != []) {
-          let init = item => (item, time);
-          setActive(tracked => List.map(init, untracked) @ tracked);
-        };
-
-        // TODO: Garbage collection of expired, but on what condition?
-
-        None;
-      },
-    );
-
-  List.map(((item, _t)) => item, stillActive);
-};
+module CustomHooks = Oni_Components.CustomHooks;
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Editor = Feature_Editor.Editor;
 
 module Notification = {
   open Notification;
@@ -88,7 +49,7 @@ module Notification = {
 
     let text = (~foreground, ~background, font: UiFont.t) => [
       fontFamily(font.fontFile),
-      fontSize(11),
+      fontSize(11.),
       textWrap(TextWrapping.NoWrap),
       marginLeft(6),
       color(foreground),
@@ -143,12 +104,7 @@ module Notification = {
       Hooks.animation(Animations.sequence, ~active=true);
 
     let icon = () =>
-      <FontIcon
-        icon={iconFor(item)}
-        fontSize=16
-        backgroundColor=background
-        color=foreground
-      />;
+      <FontIcon icon={iconFor(item)} fontSize=16. color=foreground />;
 
     <View style={Styles.container(~background, ~yOffset)}>
       <icon />
@@ -199,7 +155,15 @@ module Styles = {
 
   let text = (~color, ~background, uiFont: UiFont.t) => [
     fontFamily(uiFont.fontFile),
-    fontSize(11),
+    fontSize(11.),
+    textWrap(TextWrapping.NoWrap),
+    Style.color(color),
+    backgroundColor(background),
+  ];
+
+  let textBold = (~color, ~background, font: UiFont.t) => [
+    fontFamily(font.fontFileSemiBold),
+    fontSize(11.),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
@@ -250,12 +214,13 @@ let textItem = (~background, ~font, ~theme: Theme.t, ~text, ()) =>
 
 let notificationCount =
     (
+      ~theme,
       ~font,
       ~foreground as color,
       ~background,
       ~notifications,
       ~contextMenu,
-      ~onContextMenuUpdate,
+      ~onContextMenuItemSelect,
       (),
     ) => {
   let text = notifications |> List.length |> string_of_int;
@@ -269,25 +234,43 @@ let notificationCount =
       Actions.StatusBar(NotificationsContextMenu),
     );
 
-  <item onClick onRightClick>
-    <Notifications.ContextMenu.Anchor
+  let menu = () => {
+    let items =
+      ContextMenu.[
+        {
+          label: "Clear All",
+          // icon: None,
+          data: Actions.ClearNotifications,
+        },
+        {
+          label: "Open",
+          // icon: None,
+          data: Actions.StatusBar(NotificationCountClicked),
+        },
+      ];
+
+    <ContextMenu
       orientation=(`Top, `Left)
-      offsetX=(-10) // correct for item padding
-      model=contextMenu
-      onUpdate=onContextMenuUpdate
-    />
+      offsetX=(-10)
+      items
+      theme
+      font // correct for item padding
+      onItemSelect=onContextMenuItemSelect
+    />;
+  };
+
+  <item onClick onRightClick>
+    {contextMenu == State.ContextMenu.NotificationStatusBarItem
+       ? <menu /> : React.empty}
     <View
       style=Style.[
         flexDirection(`Row),
         justifyContent(`Center),
         alignItems(`Center),
       ]>
-      <FontIcon
-        icon=FontAwesome.bell
-        backgroundColor=background
-        color
-        margin=4
-      />
+      <View style=Style.[margin(4)]>
+        <FontIcon icon=FontAwesome.bell color />
+      </View>
       <Text style={Styles.text(~color, ~background, font)} text />
     </View>
   </item>;
@@ -307,12 +290,9 @@ let diagnosticCount = (~font, ~background, ~theme: Theme.t, ~diagnostics, ()) =>
         justifyContent(`Center),
         alignItems(`Center),
       ]>
-      <FontIcon
-        icon=FontAwesome.timesCircle
-        backgroundColor=background
-        color
-        margin=4
-      />
+      <View style=Style.[margin(4)]>
+        <FontIcon icon=FontAwesome.timesCircle color />
+      </View>
       <Text style={Styles.text(~color, ~background, font)} text />
     </View>
   </item>;
@@ -323,7 +303,7 @@ let modeIndicator = (~font, ~theme, ~mode, ()) => {
 
   <item backgroundColor=background>
     <Text
-      style={Styles.text(~color=foreground, ~background, font)}
+      style={Styles.textBold(~color=foreground, ~background, font)}
       text={Vim.Mode.show(mode)}
     />
   </item>;
@@ -335,16 +315,11 @@ let transitionAnimation =
   );
 
 let%component make =
-              (
-                ~state: State.t,
-                ~contextMenu: option(ContextMenu.t(Actions.t)),
-                ~onContextMenuUpdate,
-                (),
-              ) => {
+              (~state: State.t, ~contextMenu, ~onContextMenuItemSelect, ()) => {
   let State.{mode, theme, uiFont: font, diagnostics, notifications, _} = state;
 
   let%hook activeNotifications =
-    useExpiration(
+    CustomHooks.useExpiration(
       ~expireAfter=Notification.Animations.totalDuration,
       ~equals=(a, b) => Oni_Model.Notification.(a.id == b.id),
       notifications,
@@ -425,12 +400,13 @@ let%component make =
   <View style={Styles.view(background, yOffset)}>
     <section align=`FlexStart>
       <notificationCount
+        theme
         font
         foreground
         background
         notifications
         contextMenu
-        onContextMenuUpdate
+        onContextMenuItemSelect
       />
     </section>
     <sectionGroup>

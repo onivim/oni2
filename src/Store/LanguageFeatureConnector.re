@@ -9,17 +9,17 @@ open Oni_Core;
 open Oni_Model;
 open Utility;
 open Actions;
+open Oni_Syntax;
 
 module Utility = Utility;
 module Ext = Oni_Extensions;
 
 module DefinitionResult = LanguageFeatures.DefinitionResult;
+module Editor = Feature_Editor.Editor;
 
 module Log = (val Log.withNamespace("Oni2.Store.LanguageFeatures"));
 
 let start = () => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
-
   let checkForDefinitionEffect = (languageFeatures, buffer, location) =>
     Isolinear.Effect.createWithDispatch(
       ~name="languageFeature.checkForDefinition", dispatch => {
@@ -116,5 +116,5 @@ let start = () => {
     | _ => default
     };
   };
-  (updater, stream);
+  updater;
 };

@@ -18,7 +18,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
       items: list(JobConfig.item),
       itemStream: Isolinear.Stream.t(list(JobConfig.item)),
       onUpdate:
-        (list(Model.Filter.result(JobConfig.item)), ~progress: float) =>
+        (list(Core.Filter.result(JobConfig.item)), ~progress: float) =>
         action,
     };
 

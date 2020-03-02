@@ -73,7 +73,7 @@ We have two classes of tests - _unit tests_ and _integration tests_.
 
 ### Unit Tests
 
-Unit tests live in the `test` folder and be can be run via `esy '@test' run`. 
+Unit tests live in the `test` folder and be can be run via `esy '@test' run`, but remember to run `esy '@test' install` initially to install the test dependencies. 
 
 We organize our tests 1-to-1 with the `src` code - for example, test cases for `src/editor/Core/LineNumber.re` would live in `test/Core/LineNumberTests.re`.
 
