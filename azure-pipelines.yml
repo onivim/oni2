@@ -163,13 +163,61 @@ jobs:
     env:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
-- job: ValidateMacOSRelease
+- job: ValidateMacOSRelease13
   displayName: "MacOS: Validate Release (10.13)"
   dependsOn: 
   - Kickoff
   - MacOS
   pool:
     vmImage: 'macOS 10.13'
+  variables:
+    ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+
+  steps:
+  - script: echo $(ONI2_SHORT_COMMIT_ID)
+  - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
+    displayName: 'Echo artifact dir'
+  - task: DownloadBuildArtifacts@0
+    inputs: 
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'Release_Darwin'
+      downloadPath: '$(System.ArtifactsDirectory)'
+  - script: ./scripts/osx/validate-release.sh
+    env:
+      SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
+
+- job: ValidateMacOSRelease14
+  displayName: "MacOS: Validate Release (10.14)"
+  dependsOn: 
+  - Kickoff
+  - MacOS
+  pool:
+    vmImage: 'macOS 10.14'
+  variables:
+    ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+
+  steps:
+  - script: echo $(ONI2_SHORT_COMMIT_ID)
+  - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
+    displayName: 'Echo artifact dir'
+  - task: DownloadBuildArtifacts@0
+    inputs: 
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'Release_Darwin'
+      downloadPath: '$(System.ArtifactsDirectory)'
+  - script: ./scripts/osx/validate-release.sh
+    env:
+      SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
+
+- job: ValidateMacOSRelease15
+  displayName: "MacOS: Validate Release (10.15)"
+  dependsOn: 
+  - Kickoff
+  - MacOS
+  pool:
+    vmImage: 'macOS 10.15'
   variables:
     ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
