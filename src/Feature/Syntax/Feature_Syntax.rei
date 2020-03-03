@@ -27,6 +27,9 @@ let getTokens: (~bufferId: int, ~line: Index.t, t) => list(ColorizedToken.t);
 let getSyntaxScope:
   (~bufferId: int, ~line: Index.t, ~bytePosition: int, t) => SyntaxScope.t;
 
+let setTokensForLine:
+  (~bufferId: int, ~line: int, ~tokens: list(ColorizedToken.t), t) => t;
+
 let update: (t, msg) => t;
 
 let subscription:
