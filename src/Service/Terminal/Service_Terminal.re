@@ -199,18 +199,50 @@ module Effect = {
     |> List.to_seq
     |> Hashtbl.of_seq;
 
+  let controlKeyRegex = Oniguruma.OnigRegExp.create("<C-([a-z])>");
+
+  let getControlKey = keyCandidate => {
+    Oniguruma.(
+      controlKeyRegex
+      |> Stdlib.Result.map(OnigRegExp.search(keyCandidate, 0))
+      |> Stdlib.Result.to_option
+      |> Utility.OptionEx.flatMap(matches =>
+           if (Array.length(matches) < 2) {
+             None;
+           } else {
+             let key = OnigRegExp.Match.getText(matches[1]);
+             if (String.length(key) == 1) {
+               Some(key.[0]);
+             } else {
+               None;
+             };
+           }
+         )
+    );
+  };
+
   let input = (~id, input) => {
     Isolinear.Effect.create(~name="terminal.input", () => {
       switch (Hashtbl.find_opt(Internal.idToTerminal, id)) {
       | Some(terminal) =>
-        if (String.length(input) == 1) {
-          let key = input.[0] |> Char.code |> Uchar.of_int;
-          ReveryTerminal.input(~key=Unicode(key), terminal);
-        } else {
-          switch (Hashtbl.find_opt(keyToVtermKey, input)) {
-          | Some(key) => ReveryTerminal.input(~key, terminal)
-          | None => ()
-          };
+        switch (getControlKey(input)) {
+        | Some(key) =>
+          let keyChar = key |> Char.code |> Uchar.of_int;
+          ReveryTerminal.input(
+            ~key=Unicode(keyChar),
+            ~modifier=Control,
+            terminal,
+          );
+        | None =>
+          if (String.length(input) == 1) {
+            let key = input.[0] |> Char.code |> Uchar.of_int;
+            ReveryTerminal.input(~key=Unicode(key), terminal);
+          } else {
+            switch (Hashtbl.find_opt(keyToVtermKey, input)) {
+            | Some(key) => ReveryTerminal.input(~key, terminal)
+            | None => ()
+            };
+          }
         }
       | None => ()
       }
