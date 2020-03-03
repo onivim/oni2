@@ -85,9 +85,11 @@ module Sub = {
 
         let terminal =
           ReveryTerminal.make(
+            ~scrollBackSize=1024,
             ~rows=params.rows,
             ~columns=params.columns,
             ~onEffect,
+            (),
           );
 
         Hashtbl.replace(Internal.idToTerminal, params.id, terminal);
