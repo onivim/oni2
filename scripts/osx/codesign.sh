@@ -11,7 +11,7 @@ then
    scripts/osx/create-temporary-signing-key.sh
    CODESIGN_PASSWORD=password!
    CODESIGN_IDENTITY="local.outrunlabs.com"
-   CODESIGN_KEYCHAIN=key.keychain
+   CODESIGN_KEYCHAIN=onivim.keychain
 else   
    echo $OSX_P12_CERTIFICATE | base64 --decode > certificate.p12   
    CODESIGN_IDENTITY="Outrun Labs, LLC"
@@ -33,7 +33,7 @@ echo "Code signing certificate specified: ${CODESIGN_IDENTITY}"
 
 echo "Checking identities..."   
 
-security find-identity -v
+security find-identity -v -p codesigning $CODESIGN_KEYCHAIN
 echo "Starting codesign..."
 
 # Codesign individual files that require it
