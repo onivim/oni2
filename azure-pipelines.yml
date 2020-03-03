@@ -169,7 +169,7 @@ jobs:
   - Kickoff
   - MacOS
   pool:
-    vmImage: 'macOS 10.13'
+    vmImage: 'macOS-10.13'
   variables:
     ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
@@ -193,7 +193,7 @@ jobs:
   - Kickoff
   - MacOS
   pool:
-    vmImage: 'macOS 10.14'
+    vmImage: 'macOS-10.14'
   variables:
     ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
@@ -217,7 +217,7 @@ jobs:
   - Kickoff
   - MacOS
   pool:
-    vmImage: 'macOS 10.15'
+    vmImage: 'macOS-10.15'
   variables:
     ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
