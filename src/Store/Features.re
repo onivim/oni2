@@ -33,6 +33,15 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | BufferUpdate({update, _}) =>
+    let syntaxHighlights =
+      Feature_Syntax.update(
+        state.syntaxHighlights,
+        Feature_Syntax.BufferUpdated(update),
+      );
+    let state = {...state, syntaxHighlights};
+    (state, Effect.none);
+
   | Syntax(msg) =>
     let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);
     let state = {...state, syntaxHighlights};
