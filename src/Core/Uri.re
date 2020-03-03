@@ -117,7 +117,9 @@ let fromMemory = path => fromScheme(~scheme=Scheme.Memory, path);
 let fromPath = path => fromScheme(~scheme=Scheme.File, path);
 
 let toString = (uri: t) => {
-  Scheme.toString(uri.scheme) ++ "://" ++ uri.path;
+  Scheme.toString(uri.scheme)
+  ++ "://"
+  ++ Internal.addSlash(uri.scheme, uri.path);
 };
 
 let toFileSystemPath = (uri: t) => {
