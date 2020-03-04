@@ -55,3 +55,26 @@ let subscription:
   (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);
 
 let shellCmd: string;
+
+module Colors: {
+  let background: string;
+  let foreground: string;
+  let ansiBlack: string;
+  let ansiRed: string;
+  let ansiGreen: string;
+  let ansiYellow: string;
+  let ansiBlue: string;
+  let ansiMagenta: string;
+  let ansiCyan: string;
+  let ansiWhite: string;
+  let ansiBrightBlack: string;
+  let ansiBrightRed: string;
+  let ansiBrightGreen: string;
+  let ansiBrightYellow: string;
+  let ansiBrightBlue: string;
+  let ansiBrightMagenta: string;
+  let ansiBrightCyan: string;
+  let ansiBrightWhite: string;
+};
+
+module Contributions: {let colors: ColorTheme.Defaults.t;};

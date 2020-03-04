@@ -236,7 +236,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           |> Feature_Terminal.getTerminalOpt(id)
           |> Option.map(terminal => {
                <TerminalView
-                 theme
+                 theme={Feature_Theme.resolver(state.colorTheme)}
                  font={state.terminalFont}
                  metrics
                  terminal

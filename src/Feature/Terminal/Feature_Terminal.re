@@ -139,3 +139,89 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
   |> Isolinear.Sub.batch
   |> Isolinear.Sub.map(msg => Service(msg));
 };
+
+module Colors = {
+  let background = "terminal.background";
+  let foreground = "terminal.foreground";
+  let ansiBlack = "terminal.ansiBlack";
+  let ansiRed = "terminal.ansiRed";
+  let ansiGreen = "terminal.ansiGreen";
+  let ansiYellow = "terminal.ansiYellow";
+  let ansiBlue = "terminal.ansiBlue";
+  let ansiMagenta = "terminal.ansiMagenta";
+  let ansiCyan = "terminal.ansiCyan";
+  let ansiWhite = "terminal.ansiWhite";
+  let ansiBrightBlack = "terminal.ansiBrightBlack";
+  let ansiBrightRed = "terminal.ansiBrightRed";
+  let ansiBrightGreen = "terminal.ansiBrightGreen";
+  let ansiBrightYellow = "terminal.ansiBrightYellow";
+  let ansiBrightBlue = "terminal.ansiBrightBlue";
+  let ansiBrightMagenta = "terminal.ansiBrightMagenta";
+  let ansiBrightCyan = "terminal.ansiBrightCyan";
+  let ansiBrightWhite = "terminal.ansiBrightWhite";
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  open Revery;
+
+  let colors =
+    ColorTheme.Defaults.[
+      ("terminal.background", color(Color.rgb_int(0, 0, 0)) |> uniform),
+      (
+        "terminal.foreground",
+        color(Color.rgb_int(233, 235, 235)) |> uniform,
+      ),
+      ("terminal.ansiBlack", color(Color.rgb_int(0, 0, 0)) |> uniform),
+      ("terminal.ansiRed", color(Color.rgb_int(194, 54, 33)) |> uniform),
+      ("terminal.ansiGreen", color(Color.rgb_int(37, 188, 36)) |> uniform),
+      (
+        "terminal.ansiYellow",
+        color(Color.rgb_int(173, 173, 39)) |> uniform,
+      ),
+      ("terminal.ansiBlue", color(Color.rgb_int(73, 46, 225)) |> uniform),
+      (
+        "terminal.ansiMagenta",
+        color(Color.rgb_int(211, 56, 211)) |> uniform,
+      ),
+      ("terminal.ansiCyan", color(Color.rgb_int(51, 197, 200)) |> uniform),
+      (
+        "terminal.ansiWhite",
+        color(Color.rgb_int(203, 204, 205)) |> uniform,
+      ),
+      (
+        "terminal.ansiBrightBlack",
+        color(Color.rgb_int(129, 131, 131)) |> uniform,
+      ),
+      (
+        "terminal.ansiBrightRed",
+        color(Color.rgb_int(252, 57, 31)) |> uniform,
+      ),
+      (
+        "terminal.ansiBrightGreen",
+        color(Color.rgb_int(49, 231, 34)) |> uniform,
+      ),
+      (
+        "terminal.ansiBrightYellow",
+        color(Color.rgb_int(234, 236, 35)) |> uniform,
+      ),
+      (
+        "terminal.ansiBrightBlue",
+        color(Color.rgb_int(88, 51, 255)) |> uniform,
+      ),
+      (
+        "terminal.ansiBrightCyan",
+        color(Color.rgb_int(20, 240, 240)) |> uniform,
+      ),
+      (
+        "terminal.ansiBrightMagenta",
+        color(Color.rgb_int(20, 240, 240)) |> uniform,
+      ),
+      (
+        "terminal.ansiBrightWhite",
+        color(Color.rgb_int(233, 235, 235)) |> uniform,
+      ),
+    ]
+    |> ColorTheme.Defaults.fromList;
+};
