@@ -1,5 +1,5 @@
 {
-  "checksum": "8e267948fdb430f83aeca3697f719f34",
+  "checksum": "242287c20da784be471cd06812067a28",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -266,13 +266,13 @@
       ],
       "devDependencies": []
     },
-    "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9": {
-      "id": "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
+    "reasonFuzz@github:bryphe/reasonFuzz#c04fab7@d41d8cd9": {
+      "id": "reasonFuzz@github:bryphe/reasonFuzz#c04fab7@d41d8cd9",
       "name": "reasonFuzz",
-      "version": "github:CrossR/reasonFuzz#d36e084",
+      "version": "github:bryphe/reasonFuzz#c04fab7",
       "source": {
         "type": "install",
-        "source": [ "github:CrossR/reasonFuzz#d36e084" ]
+        "source": [ "github:bryphe/reasonFuzz#c04fab7" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1187,7 +1187,7 @@
         "revery@github:revery-ui/revery#75fdfdb@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
-        "reasonFuzz@github:CrossR/reasonFuzz#d36e084@d41d8cd9",
+        "reasonFuzz@github:bryphe/reasonFuzz#c04fab7@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
         "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9",
         "reason-sdl2@2.10.3018@d41d8cd9",
