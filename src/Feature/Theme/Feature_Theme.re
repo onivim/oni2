@@ -88,8 +88,7 @@ let update = (model, msg) => {
         colors:
           Textmate.ColorTheme.fold(
             (key, color, acc) => {
-              Console.log(key ++ ": " ++ color);
-              color == "" ? acc : [(key, Color.hex(color)), ...acc];
+              color == "" ? acc : [(key, Color.hex(color)), ...acc]
             },
             colors,
             [],
