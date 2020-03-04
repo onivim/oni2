@@ -254,7 +254,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         <Tabs
           active=isActive
           activeEditorId={editorGroup.activeEditorId}
-          theme
+          theme={Feature_Theme.resolver(state.colorTheme)}
           tabs
           mode
           uiFont

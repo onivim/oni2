@@ -13,10 +13,19 @@ module Ext = Oni_Extensions;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
+module Theme = Feature_Theme;
+
 module Constants = {
   include Constants;
 
   let minWidth = 125;
+};
+
+module Colors = {
+  let activeBackground = Theme.Colors.Tab.activeBackground;
+  let activeForeground = Theme.Colors.Tab.activeForeground;
+  let inactiveBackground = Theme.Colors.Tab.inactiveBackground;
+  let inactiveForeground = Theme.Colors.Tab.inactiveForeground;
 };
 
 let proportion = p => float(Constants.minWidth) *. p |> int_of_float;
@@ -24,11 +33,12 @@ let proportion = p => float(Constants.minWidth) *. p |> int_of_float;
 module Styles = {
   open Style;
 
-  let container = (~mode, ~isActive, ~showHighlight, ~theme: Theme.t) => {
+  let container = (~mode, ~isActive, ~showHighlight, ~theme) => {
     let background =
-      isActive ? theme.tabActiveBackground : theme.tabInactiveBackground;
-    let (modeColor, _) = Theme.getColorsForMode(theme, mode);
-
+      theme#color(
+        isActive ? Colors.activeBackground : Colors.inactiveBackground,
+      );
+    let modeColor = Theme.Colors.Oni.backgroundFor(mode) |> theme#color;
     let borderColor = isActive && showHighlight ? modeColor : background;
 
     [
@@ -44,14 +54,18 @@ module Styles = {
     ];
   };
 
-  let text = (~isActive, ~showHighlight, ~uiFont: UiFont.t, ~theme: Theme.t) => [
+  let text = (~isActive, ~showHighlight, ~uiFont: UiFont.t, ~theme) => [
     width(proportion(0.80) - 10),
     textOverflow(`Ellipsis),
     fontFamily(
       isActive && showHighlight ? uiFont.fontFileItalic : uiFont.fontFile,
     ),
     fontSize(uiFont.fontSize),
-    color(isActive ? theme.tabActiveForeground : theme.tabInactiveForeground),
+    color(
+      theme#color(
+        isActive ? Colors.activeForeground : Colors.inactiveForeground,
+      ),
+    ),
     justifyContent(`Center),
     alignItems(`Center),
   ];
@@ -125,7 +139,9 @@ let make =
       <FontIcon
         icon={modified ? FontAwesome.circle : FontAwesome.times}
         color={
-          isActive ? theme.tabActiveForeground : theme.tabInactiveForeground
+          theme#color(
+            isActive ? Colors.activeForeground : Colors.inactiveForeground,
+          )
         }
         fontSize={modified ? 10. : 12.}
       />
