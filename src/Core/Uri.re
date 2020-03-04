@@ -65,13 +65,13 @@ module Internal = {
     switch (scheme) {
     | File =>
       let pathLen = String.length(path);
-      if (pathLen > 2 && path.[0] == '/') {
-        let firstLetter = path.[1];
-        let secondCharacter = path.[2];
+      if (pathLen > 1) {
+        let firstLetter = path.[0];
+        let secondCharacter = path.[1];
         if (isDriveLetter(firstLetter) && secondCharacter == ':') {
           let firstLetterString =
             String.make(1, Char.lowercase_ascii(firstLetter));
-          firstLetterString ++ ":" ++ String.sub(path, 3, pathLen - 3);
+          firstLetterString ++ ":" ++ String.sub(path, 2, pathLen - 2);
         } else {
           path;
         };
@@ -104,7 +104,7 @@ module Internal = {
   };
 
   let referenceResolution = (scheme: Scheme.t, path: string) =>
-    path |> addSlash(scheme) |> normalizePath(scheme);
+    path |> normalizePath(scheme) |> addSlash(scheme);
 };
 
 let fromScheme = (~scheme: Scheme.t, ~query=?, path: string) => {
