@@ -256,7 +256,7 @@
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reason-textmate": "onivim/reason-textmate#5f0dc38",
-    "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d",
+    "@esy-ocaml/libffi": "onivim/libffi#9f1a8e3",
     "reason-harfbuzz": "revery-ui/reason-harfbuzz#eca58ea"
   },
   "devDependencies": {
