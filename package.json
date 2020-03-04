@@ -207,7 +207,7 @@
     "esy-macdylibbundler": "*",
     "isolinear": "^3.0.0",
     "ocaml": "~4.7.0",
-    "reason-sdl2": "*",
+    "reason-sdl2": "2.10.3016",
     "reason-jsonrpc": "1.4.0",
     "reason-libvim": "8.10869.26000",
     "reason-native-crash-utils": "github:onivim/reason-native-crash-utils#ae1fd34",
