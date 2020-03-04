@@ -29,7 +29,7 @@ let initial = contributions => {
 
 let fallback = keyName => {
   Log.warnf(m => m("Fallback color used for: %s", keyName));
-  Revery.Colors.black; // TODO: Transparent? Magenta?
+  Revery.Colors.magenta;
 };
 
 let resolver =
