@@ -14,6 +14,7 @@ let defaults =
   [
     Colors.Editor.defaults,
     Colors.List.defaults,
+    Colors.Oni.defaults,
     Colors.SideBar.defaults,
     Colors.Tab.defaults,
     Colors.remaining,

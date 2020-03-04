@@ -7,5 +7,6 @@
       isolinear
       base
       textmate
+      libvim
     )
     (preprocess (pps ppx_let ppx_deriving.show)))

@@ -39,6 +39,57 @@ module List = {
     ];
 };
 
+module Oni = {
+  let visualModeBackground = "oni.visualModeBackground";
+  let insertModeBackground = "oni.insertModeBackground";
+  let replaceModeBackground = "oni.replaceModeBackground";
+  let normalModeBackground = "oni.normalModeBackground";
+  let operatorModeBackground = "oni.operatorModeBackground";
+  let commandlineModeBackground = "oni.commandlineModeBackground";
+  let visualModeForeground = "oni.visualModeForeground";
+  let insertModeForeground = "oni.insertModeForeground";
+  let replaceModeForeground = "oni.replaceModeForeground";
+  let normalModeForeground = "oni.normalModeForeground";
+  let operatorModeForeground = "oni.operatorModeForeground";
+  let commandlineModeForeground = "oni.commandlineModeForeground";
+
+  let backgroundFor = (mode: Vim.Mode.t) =>
+    switch (mode) {
+    | Visual => visualModeBackground
+    | CommandLine => commandlineModeBackground
+    | Operator => operatorModeBackground
+    | Insert => insertModeBackground
+    | Replace => replaceModeBackground
+    | Normal => normalModeBackground
+    };
+
+  let foregroundFor = (mode: Vim.Mode.t) =>
+    switch (mode) {
+    | Visual => visualModeForeground
+    | CommandLine => commandlineModeForeground
+    | Operator => operatorModeForeground
+    | Insert => insertModeForeground
+    | Replace => replaceModeForeground
+    | Normal => normalModeForeground
+    };
+
+  let defaults =
+    ColorTheme.Defaults.[
+      (visualModeBackground, hex("#56b6c2") |> uniform),
+      (insertModeBackground, hex("#98c379") |> uniform),
+      (replaceModeBackground, hex("#d19a66") |> uniform),
+      (normalModeBackground, hex("#61afef") |> uniform),
+      (operatorModeBackground, hex("#d19a66") |> uniform),
+      (commandlineModeBackground, hex("#61afef") |> uniform),
+      (visualModeForeground, hex("#282c34") |> uniform),
+      (insertModeForeground, hex("#282c34") |> uniform),
+      (replaceModeForeground, hex("#282c34") |> uniform),
+      (normalModeForeground, hex("#282c34") |> uniform),
+      (operatorModeForeground, hex("#282c34") |> uniform),
+      (commandlineModeForeground, hex("#282c34") |> uniform),
+    ];
+};
+
 module SideBar = {
   let background = "sidebar.background";
   let foreground = "sidebar.foreground";
@@ -84,8 +135,6 @@ module Tab = {
       ),
     ];
 };
-
-module Oni = {};
 
 let remaining =
   ColorTheme.Defaults.[
@@ -136,18 +185,6 @@ let remaining =
     ("menu.foreground", hex("#FFFFFF") |> uniform),
     ("menu.selectionBackground", hex("#495162") |> uniform),
     ("editorWhitespace.foreground", hex("#3b4048") |> uniform),
-    ("oni.visualModeBackground", hex("#56b6c2") |> uniform),
-    ("oni.insertModeBackground", hex("#98c379") |> uniform),
-    ("oni.replaceModeBackground", hex("#d19a66") |> uniform),
-    ("oni.normalModeBackground", hex("#61afef") |> uniform),
-    ("oni.operatorModeBackground", hex("#d19a66") |> uniform),
-    ("oni.commandlineModeBackground", hex("#61afef") |> uniform),
-    ("oni.visualModeForeground", hex("#282c34") |> uniform),
-    ("oni.insertModeForeground", hex("#282c34") |> uniform),
-    ("oni.replaceModeForeground", hex("#282c34") |> uniform),
-    ("oni.normalModeForeground", hex("#282c34") |> uniform),
-    ("oni.operatorModeForeground", hex("#282c34") |> uniform),
-    ("oni.commandlineModeForeground", hex("#282c34") |> uniform),
     (
       "statusBar.background",
       {dark: hex("#007aCC"), light: hex("#007aCC"), hc: unspecified},
