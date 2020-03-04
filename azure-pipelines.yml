@@ -137,7 +137,7 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: ValidateLinuxReleaseUbuntu16
-  displayName: "Linux: Validate Release"
+  displayName: "Linux: Validate Release (Ubuntu 16.04)"
   dependsOn: 
   - Kickoff
   - CentOS
@@ -161,7 +161,7 @@ jobs:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - job: ValidateLinuxReleaseUbuntu18
-  displayName: "Linux: Validate Release"
+  displayName: "Linux: Validate Release (Ubuntu 18.04)"
   dependsOn: 
   - Kickoff
   - CentOS
