@@ -123,7 +123,24 @@ let toString = (uri: t) => {
 };
 
 let toFileSystemPath = (uri: t) => {
-  Internal.referenceResolution(uri.scheme, uri.path);
+  switch (uri.scheme) {
+  | File =>
+    let pathLen = String.length(uri.path);
+    if (pathLen > 2 && uri.path.[0] == '/') {
+      let firstLetter = uri.path.[1];
+      let secondCharacter = uri.path.[2];
+
+      // Remove the leading slash when using a Windows file system
+      if (Internal.isDriveLetter(firstLetter) && secondCharacter == ':') {
+        String.sub(uri.path, 1, pathLen - 1);
+      } else {
+        uri.path;
+      };
+    } else {
+      uri.path;
+    };
+  | _ => uri.path
+  };
 };
 
 let getScheme = (uri: t) => uri.scheme;
