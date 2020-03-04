@@ -25,6 +25,7 @@ type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
+  colorTheme: Feature_Theme.model,
   commands: Commands.t,
   contextMenu: ContextMenu.t,
   mode: Vim.Mode.t,
@@ -83,6 +84,8 @@ let create: unit => t =
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: BufferRenderers.initial,
+    colorTheme:
+      Feature_Theme.initial([Feature_Terminal.Contributions.colors]),
     commands: Commands.empty,
     contextMenu: ContextMenu.Nothing,
     completions: Completions.initial,

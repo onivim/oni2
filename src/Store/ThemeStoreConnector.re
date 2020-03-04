@@ -51,6 +51,16 @@ let start = (themeInfo: ThemeInfo.t) => {
       let theme = Textmate.Theme.from_file(~isDark=dark, themePath);
       let colors = Textmate.Theme.getColors(theme);
       let isDark = Textmate.Theme.isDark(theme);
+
+      dispatch(
+        Actions.Theme(
+          Feature_Theme.TextmateThemeLoaded(
+            isDark ? ColorTheme.Dark : ColorTheme.Light,
+            colors,
+          ),
+        ),
+      );
+
       let tokenColors = Textmate.Theme.getTokenColors(theme);
       let colors = Oni_Core.Theme.ofColorTheme(uiTheme, colors);
       let tokenTheme = TokenTheme.create(tokenColors);
