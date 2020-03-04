@@ -4,11 +4,18 @@
  * Component for the 'terminal' buffer renderer
  */
 
+open Revery;
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
 
 module EditorMetrics = Feature_Editor.EditorMetrics;
+
+module Constants = {
+  let scrollBarThickness = 6;
+  let scrollTrackColor = Color.rgba(0.0, 0.0, 0.0, 0.4);
+  let scrollThumbColor = Color.rgba(0.5, 0.5, 0.5, 0.4);
+};
 
 module Styles = {
   let container = (metrics: EditorMetrics.t) =>
@@ -90,6 +97,9 @@ let make =
           ~theme=terminalTheme,
           ~cursor,
           ~font,
+          ~scrollBarThickness=Constants.scrollBarThickness,
+          ~scrollBarThumb=Constants.scrollThumbColor,
+          ~scrollBarBackground=Constants.scrollTrackColor,
           screen,
         );
       },

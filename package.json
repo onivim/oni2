@@ -214,7 +214,7 @@
     "reasonFuzz": "*",
     "rench": "1.7.1",
     "revery": "0.30.0",
-    "revery-terminal": "github:revery-ui/revery-terminal#ceeb7f7",
+    "revery-terminal": "*",
     "reason-tree-sitter": "*",
     "reason-textmate": "^2.3.0",
     "esy-sdl2": "*",
@@ -229,6 +229,7 @@
     "@opam/decoders-yojson": "*"
   },
   "resolutions": {
+    "revery-terminal": "link:../revery-terminal",
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
     "@opam/cmdliner": "1.0.2",
     "@opam/js_of_ocaml": "3.5.2",
