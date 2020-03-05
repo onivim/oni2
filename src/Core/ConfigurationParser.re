@@ -141,6 +141,23 @@ let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
     | _ => Default
     };
 
+let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled =
+  json =>
+  switch (json) {
+  | `Bool(enabled) => {
+    other: enabled,
+    comments: enabled,
+    strings: enabled,
+  }
+  // TODO: Parse JS objects of the form:
+  // { "other": bool, "comments": bool, "strings": bool }
+  | _ => {
+    other: false,
+    comments: false,
+    strings: false,
+  }
+  };
+
 let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
@@ -251,6 +268,13 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {
       ...config,
       editorHighlightActiveIndentGuide: parseBool(json),
+    },
+  ),
+  (
+    "editor.quickSuggestions",
+    (config, json) => {
+      ...config,
+      editorQuickSuggestions: parseQuickSuggestions(json),
     },
   ),
   (

@@ -84,22 +84,31 @@ module Actions = {
         CompletionMeet.fromBufferLocation(~location, buffer)
       );
 
-    switch (maybeBuffer, maybeMeet) {
-    | (Some(buffer), Some(meet)) =>
-      switch (state.completions.meet) {
-      | None => start(~buffer, ~meet, state)
+    let suggestEnabled = 
+    state.configuration
+    |> Configuration.getValue(c => c.editorQuickSuggestions);
 
-      | Some(lastMeet)
-          when
-            meet.base != lastMeet.base
-            && meet == {...lastMeet, base: meet.base} =>
-        // Only base has changed, so narrow instead of requesting new completions
-        narrow(~meet, state)
+    // TODO: Take into account syntax scope of cursor position
+    if (!suggestEnabled.other) {
+      stop(state)
+    } else {
+      switch (maybeBuffer, maybeMeet) {
+      | (Some(buffer), Some(meet)) =>
+        switch (state.completions.meet) {
+        | None => start(~buffer, ~meet, state)
 
-      | Some(_) => start(~buffer, ~meet, state)
-      }
+        | Some(lastMeet)
+            when
+              meet.base != lastMeet.base
+              && meet == {...lastMeet, base: meet.base} =>
+          // Only base has changed, so narrow instead of requesting new completions
+          narrow(~meet, state)
 
-    | _ => stop(state)
+        | Some(_) => start(~buffer, ~meet, state)
+        }
+
+      | _ => stop(state)
+      };
     };
   };
 
