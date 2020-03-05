@@ -1,6 +1,9 @@
 open Oni_Core;
 open Revery;
 
+let foreground = "foreground";
+let contrastBorder = "contrastBorder";
+
 module Editor = {
   let background = "editor.background";
   let foreground = "editor.foreground";
@@ -103,12 +106,29 @@ module SideBar = {
 
 module Tab = {
   let activeBackground = "tab.activeBackground";
-  let activeForeground = "tab.activeForeground";
+  let unfocusedActiveBackground = "tab.unfocusedActiveBackground";
   let inactiveBackground = "tab.inactiveBackground";
+  let hoverBackground = "tab.hoverBackground";
+  let unfocusedHoverBackground = "tab.unfocuseHoverBackground";
+  let border = "tab.border";
+  let activeBorder = "tab.activeBorder";
+  let unfocusedActiveBorder = "tab.unfocusedActiveBorder";
+  let activeBorderTop = "tab.activeBorderTop";
+  let unfocusedActiveBorderTop = "tab.unfocusedActiveBorderTop";
+  let activeModifiedBorder = "tab.activeModifiedBorder";
+  let inactiveModifiedBorder = "tab.inactiveModifiedBorder";
+  let unfocusedActiveModifiedBorder = "tab.unfocusedActiveModifiedBorder";
+  let unfocusedInactiveModifiedBorder = "tab.unfocusedInactiveModifiedBorder";
+  let hoverBorder = "tab.hoverBorder";
+  let unfocusedHoverBorder = "tab.unfocusedHoverBorder";
+  let activeForeground = "tab.activeForeground";
   let inactiveForeground = "tab.inactiveForeground";
+  let unfocusedActiveForeground = "tab.unfocusedActiveForeground";
+  let unfocusedInactiveForeground = "tab.unfocusedInactiveForeground";
 
   let defaults =
     ColorTheme.Defaults.[
+      // BACKGROUND
       (
         activeBackground,
         {
@@ -117,28 +137,134 @@ module Tab = {
           hc: ref(Editor.background),
         },
       ),
-      (
-        activeForeground,
-        {dark: hex("#fff"), light: hex("#333"), hc: hex("#fff")},
-      ),
+      (unfocusedActiveBackground, ref(activeBackground) |> uniform),
       (
         inactiveBackground,
         {dark: hex("#2D2D2D"), light: hex("#ECECEC"), hc: unspecified},
       ),
+      (hoverBackground, unspecified |> uniform),
+      (
+        unfocusedHoverBackground,
+        {
+          dark: transparent(0.5, ref(hoverBackground)),
+          light: transparent(0.7, ref(hoverBackground)),
+          hc: unspecified,
+        },
+      ),
+      // BORDER
+      (
+        border,
+        {
+          dark: hex("#252526"),
+          light: hex("#F3F3F3"),
+          hc: ref(contrastBorder),
+        },
+      ),
+      (activeBorder, unspecified |> uniform),
+      (
+        unfocusedActiveBorder,
+        {
+          dark: transparent(0.5, ref(activeBorder)),
+          light: transparent(0.7, ref(activeBorder)),
+          hc: unspecified,
+        },
+      ),
+      (activeBorderTop, unspecified |> uniform),
+      (
+        unfocusedActiveBorderTop,
+        {
+          dark: transparent(0.5, ref(activeBorderTop)),
+          light: transparent(0.7, ref(activeBorderTop)),
+          hc: unspecified,
+        },
+      ),
+      (
+        activeModifiedBorder,
+        {
+          dark: hex("#252526"),
+          light: hex("#F3F3F3"),
+          hc: ref(contrastBorder),
+        },
+      ),
+      (
+        inactiveModifiedBorder,
+        {
+          dark: transparent(0.5, ref(activeModifiedBorder)),
+          light: transparent(0.7, ref(activeModifiedBorder)),
+          hc: hex("#FFF"),
+        },
+      ),
+      (
+        unfocusedActiveModifiedBorder,
+        {
+          dark: transparent(0.5, ref(activeModifiedBorder)),
+          light: transparent(0.7, ref(activeModifiedBorder)),
+          hc: hex("#FFF"),
+        },
+      ),
+      (
+        unfocusedInactiveModifiedBorder,
+        {
+          dark: transparent(0.5, ref(inactiveModifiedBorder)),
+          light: transparent(0.5, ref(inactiveModifiedBorder)),
+          hc: hex("#FFF"),
+        },
+      ),
+      (hoverBorder, unspecified |> uniform),
+      (
+        unfocusedHoverBorder,
+        {
+          dark: transparent(0.5, ref(hoverBorder)),
+          light: transparent(0.7, ref(hoverBorder)),
+          hc: unspecified,
+        },
+      ),
+      // FOREGROUND
+      (
+        activeForeground,
+        {dark: hex("#FFF"), light: hex("#333"), hc: hex("#FFF")},
+      ),
       (
         inactiveForeground,
         {
-          dark: transparent(0.4, ref(activeForeground)),
-          light: transparent(0.4, ref(activeForeground)),
-          hc: hex("#fff"),
+          dark: transparent(0.5, ref(activeForeground)),
+          light: transparent(0.7, ref(activeForeground)),
+          hc: hex("#FFF"),
+        },
+      ),
+      (
+        unfocusedActiveForeground,
+        {
+          dark: transparent(0.5, ref(activeForeground)),
+          light: transparent(0.7, ref(activeForeground)),
+          hc: hex("#FFF"),
+        },
+      ),
+      (
+        unfocusedInactiveForeground,
+        {
+          dark: transparent(0.5, ref(inactiveForeground)),
+          light: transparent(0.5, ref(inactiveForeground)),
+          hc: hex("#FFF"),
         },
       ),
     ];
 };
 
+let defaults =
+  ColorTheme.Defaults.[
+    (
+      foreground,
+      {light: hex("#CCC"), dark: hex("#616161"), hc: hex("#FFF")},
+    ),
+    (
+      contrastBorder,
+      {light: unspecified, dark: unspecified, hc: hex("#6FC3DF")},
+    ),
+  ];
+
 let remaining =
   ColorTheme.Defaults.[
-    ("foreground", hex("#ECEFF4") |> uniform),
     ("activityBar.background", hex("#2F3440") |> uniform),
     ("activityBar.foreground", hex("#fff") |> uniform),
     ("activityBar.inactiveForeground", hex("#DCDCDC") |> uniform),

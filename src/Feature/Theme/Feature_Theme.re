@@ -13,10 +13,12 @@ type model = {
 let defaults =
   [
     Colors.Editor.defaults,
+    Colors.EditorGroupHeader.defaults,
     Colors.List.defaults,
     Colors.Oni.defaults,
     Colors.SideBar.defaults,
     Colors.Tab.defaults,
+    Colors.defaults,
     Colors.remaining,
   ]
   |> List.map(ColorTheme.Defaults.fromList)

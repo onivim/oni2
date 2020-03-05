@@ -28,9 +28,9 @@ let toTab = (theme, mode, uiFont, active, activeEditorId, t: tabInfo) => {
   <Tab
     theme
     title
+    isGroupFocused=active
     isActive={Some(t.editorId) == activeEditorId}
-    showHighlight=active
-    modified={t.modified}
+    isModified={t.modified}
     uiFont
     mode
     onClick={() => GlobalContext.current().openEditorById(t.editorId)}
