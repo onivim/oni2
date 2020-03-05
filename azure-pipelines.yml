@@ -5,6 +5,10 @@
 
 name: $(Build.SourceVersion)
 
+# Master build triggers
+trigger: 
+- master
+
 # PR Triggers
 pr:
   autoCancel: true
