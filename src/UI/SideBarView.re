@@ -76,7 +76,7 @@ let%component make = (~state: State.t, ()) => {
         workingDirectory
         onItemClick
         isFocused={FocusManager.current(state) == Focus.SCM}
-        theme
+        theme={Feature_Theme.resolver(state.colorTheme)}
         font
         dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
       />;

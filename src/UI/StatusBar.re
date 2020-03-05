@@ -23,6 +23,43 @@ module FontIcon = Oni_Components.FontIcon;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Editor = Feature_Editor.Editor;
+module Theme = Feature_Theme;
+
+module Colors = {
+  let transparent = Colors.transparentWhite;
+
+  module Notification = {
+    let successBackground = "notification.successBackground";
+    let successForeground = "notification.successForeground";
+    let infoBackground = "notification.infoBackground";
+    let infoForeground = "notification.infoForeground";
+    let warningBackground = "notification.warningBackground";
+    let warningForeground = "notification.warningForeground";
+    let errorBackground = "notification.errorBackground";
+    let errorForeground = "notification.errorForeground";
+
+    let backgroundFor = (item: Notification.t) =>
+      switch (item.kind) {
+      | Success => successBackground
+      | Warning => warningBackground
+      | Error => errorBackground
+      | Info => infoBackground
+      };
+
+    let foregroundFor = (item: Notification.t) =>
+      switch (item.kind) {
+      | Success => successForeground
+      | Warning => warningForeground
+      | Error => errorForeground
+      | Info => infoForeground
+      };
+  };
+
+  module StatusBar = {
+    let background = "statusBar.background";
+    let foreground = "statusBar.foreground";
+  };
+};
 
 module Notification = {
   open Notification;
@@ -72,23 +109,6 @@ module Notification = {
 
     let sequence =
       enter |> andThen(~next=exit |> delay(Constants.popupDuration));
-  };
-
-  let backgroundColorFor = (item, ~theme: Theme.t) =>
-    switch (item.kind) {
-    | Success => theme.notificationSuccessBackground
-    | Warning => theme.notificationWarningBackground
-    | Error => theme.notificationErrorBackground
-    | Info => theme.notificationInfoBackground
-    };
-
-  let foregroundColorFor = (item, ~theme: Theme.t) => {
-    switch (item.kind) {
-    | Success => theme.notificationSuccessForeground
-    | Warning => theme.notificationWarningForeground
-    | Error => theme.notificationErrorForeground
-    | Info => theme.notificationInfoForeground
-    };
   };
 
   let iconFor = item =>
@@ -189,7 +209,7 @@ let section = (~children=React.empty, ~align, ()) =>
 let item =
     (
       ~children,
-      ~backgroundColor=Colors.transparentWhite,
+      ~backgroundColor=Colors.transparent,
       ~onClick=?,
       ~onRightClick=?,
       (),
@@ -204,10 +224,14 @@ let item =
   };
 };
 
-let textItem = (~background, ~font, ~theme: Theme.t, ~text, ()) =>
+let textItem = (~background, ~font, ~colorTheme, ~text, ()) =>
   <item>
     <Text
-      style={Styles.text(~color=theme.statusBarForeground, ~background, font)}
+      style={Styles.text(
+        ~color=colorTheme#color(Colors.StatusBar.foreground),
+        ~background,
+        font,
+      )}
       text
     />
   </item>;
@@ -276,8 +300,8 @@ let notificationCount =
   </item>;
 };
 
-let diagnosticCount = (~font, ~background, ~theme: Theme.t, ~diagnostics, ()) => {
-  let color = theme.statusBarForeground;
+let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
+  let color = colorTheme#color(Colors.StatusBar.foreground);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -298,8 +322,9 @@ let diagnosticCount = (~font, ~background, ~theme: Theme.t, ~diagnostics, ()) =>
   </item>;
 };
 
-let modeIndicator = (~font, ~theme, ~mode, ()) => {
-  let (background, foreground) = Theme.getColorsForMode(theme, mode);
+let modeIndicator = (~font, ~colorTheme, ~mode, ()) => {
+  let background = Theme.Colors.Oni.backgroundFor(mode) |> colorTheme#color;
+  let foreground = Theme.Colors.Oni.foregroundFor(mode) |> colorTheme#color;
 
   <item backgroundColor=background>
     <Text
@@ -316,7 +341,17 @@ let transitionAnimation =
 
 let%component make =
               (~state: State.t, ~contextMenu, ~onContextMenuItemSelect, ()) => {
-  let State.{mode, theme, uiFont: font, diagnostics, notifications, _} = state;
+  let State.{
+        mode,
+        colorTheme,
+        theme,
+        uiFont: font,
+        diagnostics,
+        notifications,
+        _,
+      } = state;
+
+  let colorTheme = Theme.resolver(colorTheme);
 
   let%hook activeNotifications =
     CustomHooks.useExpiration(
@@ -327,10 +362,15 @@ let%component make =
 
   let (background, foreground) =
     switch (activeNotifications) {
-    | [] => (theme.statusBarBackground, theme.statusBarForeground)
-    | [last, ..._] => (
-        Notification.backgroundColorFor(last, ~theme),
-        Notification.foregroundColorFor(last, ~theme),
+    | [] =>
+      Colors.StatusBar.(
+        background |> colorTheme#color,
+        foreground |> colorTheme#color,
+      )
+    | [last, ..._] =>
+      Colors.Notification.(
+        backgroundFor(last) |> colorTheme#color,
+        foregroundFor(last) |> colorTheme#color,
       )
     };
 
@@ -349,7 +389,7 @@ let%component make =
     Hooks.animation(transitionAnimation);
 
   let toStatusBarElement = (statusBarItem: Item.t) =>
-    <textItem font background theme text={statusBarItem.text} />;
+    <textItem font background colorTheme text={statusBarItem.text} />;
 
   let leftItems =
     state.statusBar
@@ -367,7 +407,7 @@ let%component make =
     let text =
       Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
 
-    <textItem font background theme text />;
+    <textItem font background colorTheme text />;
   };
 
   let fileType = () => {
@@ -377,7 +417,7 @@ let%component make =
       |> OptionEx.flatMap(Buffer.getFileType)
       |> Option.value(~default="plaintext");
 
-    <textItem font background theme text />;
+    <textItem font background colorTheme text />;
   };
 
   let position = () => {
@@ -388,7 +428,7 @@ let%component make =
       |> Option.map(Editor.getPrimaryCursor)
       |> positionToString;
 
-    <textItem font background theme text />;
+    <textItem font background colorTheme text />;
   };
 
   let notificationPopups = () =>
@@ -412,7 +452,7 @@ let%component make =
     <sectionGroup>
       <section align=`FlexStart> leftItems </section>
       <section align=`FlexStart>
-        <diagnosticCount font background theme diagnostics />
+        <diagnosticCount font background colorTheme diagnostics />
       </section>
       <section align=`Center />
       <section align=`FlexEnd> rightItems </section>
@@ -423,6 +463,6 @@ let%component make =
       </section>
       <notificationPopups />
     </sectionGroup>
-    <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
+    <section align=`FlexEnd> <modeIndicator font colorTheme mode /> </section>
   </View>;
 };
