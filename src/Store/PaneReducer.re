@@ -89,5 +89,7 @@ let reduce = (action: Actions.t, state: State.t) =>
   | PaneTabClicked(Notifications)
   | StatusBar(NotificationCountClicked) => openNotificationsPane(state)
 
+  | PaneCloseButtonClicked => closePane(state)
+
   | _ => state
   };

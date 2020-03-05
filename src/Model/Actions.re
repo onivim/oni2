@@ -8,6 +8,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
+open Oni_Components;
 
 module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
@@ -16,23 +17,23 @@ module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
-type initOptions = {syntaxHighlightingEnabled: bool};
-
 [@deriving show({with_path: false})]
 type t =
-  | Init([@opaque] initOptions)
+  | Init
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
-  | BufferUpdate([@opaque] BufferUpdate.t)
+  | BufferUpdate({
+      update: [@opaque] BufferUpdate.t,
+      oldBuffer: [@opaque] Buffer.t,
+      newBuffer: [@opaque] Buffer.t,
+    })
   | BufferRenderer(BufferRenderer.action)
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
-  | BufferSyntaxHighlights([@opaque] list(Protocol.TokenUpdate.t))
-  | SyntaxServerStarted([@opaque] Oni_Syntax_Client.t)
-  | SyntaxServerClosed
+  | Syntax(Feature_Syntax.msg)
   | Command(string)
   | CommandsRegister(list(command))
   // Execute a contribute command, from an extension
@@ -52,6 +53,8 @@ type t =
       Location.t,
       [@opaque] LanguageFeatures.DefinitionResult.t,
     )
+  | EditorFont(Service_Font.msg)
+  | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
@@ -68,10 +71,6 @@ type t =
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
-  // LoadEditorFont is the request to load a new font
-  // If successful, a SetEditorFont action will be dispatched.
-  | LoadEditorFont(string, float)
-  | SetEditorFont([@opaque] EditorFont.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
   | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
@@ -94,7 +93,7 @@ type t =
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputClicked(int)
+  | QuickmenuInputClicked(Selection.t)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
@@ -140,6 +139,7 @@ type t =
   | Sneak(Sneak.action)
   | Terminal(Feature_Terminal.msg)
   | PaneTabClicked(Pane.pane)
+  | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
   | WindowFocusGained
   | WindowFocusLost

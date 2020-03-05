@@ -26,10 +26,10 @@ module Styles = {
     borderLeft(
       ~width=2,
       ~color=
-        isActive ? theme.oniNormalModeBackground : Colors.transparentWhite,
+        isActive ? theme.activityBarActiveBorder : Colors.transparentWhite,
     ),
     backgroundColor(
-      isHovered ? theme.menuSelectionBackground : Colors.transparentWhite,
+      isHovered ? theme.activityBarActiveBackground : Colors.transparentWhite,
     ),
   ];
 };
@@ -41,7 +41,14 @@ let%component item = (~onClick, ~theme: Theme.t, ~isActive, ~icon, ()) => {
 
   <View onMouseOver onMouseOut>
     <Sneakable onClick style={Styles.item(~isHovered, ~isActive, ~theme)}>
-      <FontIcon color={theme.activityBarForeground} fontSize=22. icon />
+      <FontIcon
+        color={
+          isActive
+            ? theme.activityBarForeground : theme.activityBarInactiveForeground
+        }
+        fontSize=22.
+        icon
+      />
     </Sneakable>
   </View>;
 };

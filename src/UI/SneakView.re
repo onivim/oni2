@@ -32,7 +32,7 @@ module Styles = {
     Style.[
       backgroundColor(theme.sneakBackground),
       position(`Absolute),
-      top(y - Constants.size / 2),
+      top(y),
       left(x + Constants.size / 2),
       Style.height(Constants.size),
       Style.width(Constants.size),

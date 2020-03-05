@@ -16,17 +16,7 @@ type tabInfo = {
   renderer: Oni_Model.BufferRenderer.t,
 };
 
-let toTab =
-    (
-      theme,
-      mode,
-      uiFont,
-      numberOfTabs,
-      active,
-      activeEditorId,
-      index,
-      t: tabInfo,
-    ) => {
+let toTab = (theme, mode, uiFont, active, activeEditorId, t: tabInfo) => {
   let title =
     switch (t.renderer) {
     | Welcome => "Welcome"
@@ -35,10 +25,8 @@ let toTab =
 
   <Tab
     theme
-    tabPosition={index + 1}
-    numberOfTabs
     title
-    active={Some(t.editorId) == activeEditorId}
+    isActive={Some(t.editorId) == activeEditorId}
     showHighlight=active
     modified={t.modified}
     uiFont
@@ -157,18 +145,20 @@ let%component make =
     });
   };
 
-  let tabCount = List.length(tabs);
   let tabComponents =
     tabs
-    |> List.mapi(
-         toTab(theme, mode, uiFont, tabCount, active, activeEditorId),
-       )
+    |> List.map(toTab(theme, mode, uiFont, active, activeEditorId))
     |> React.listToElement;
 
-  let outerStyle = Style.[flexDirection(`Row), overflow(`Scroll)];
+  let outerStyle =
+    Style.[
+      flexDirection(`Row),
+      overflow(`Scroll),
+      backgroundColor(theme.editorGroupsHeaderTabsBackground),
+    ];
 
   let innerViewTransform =
-    Transform.[TranslateX((-1.) *. float_of_int(actualScrollLeft))];
+    Transform.[TranslateX((-1.) *. float(actualScrollLeft))];
 
   let innerStyle =
     Style.[flexDirection(`Row), transform(innerViewTransform)];

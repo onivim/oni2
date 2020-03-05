@@ -190,7 +190,7 @@ let start = () => {
   (state: State.t, action: Actions.t) =>
     switch (action) {
     // TODO: Should be handled by a more general init mechanism
-    | Init(_) =>
+    | Init =>
       let cwd = Rench.Environment.getWorkingDirectory();
       let newState = {
         ...state,

@@ -6,6 +6,7 @@
     (libraries
         yojson
         Oni_Core_Test
+        Oni_Components_Test
         Oni_Extensions_Test
         Oni_ExtensionManagement_Test
         Oni_Input_Test
@@ -63,6 +64,7 @@
     (libraries
         yojson
         Oni_Core_Test
+        Oni_Components_Test
         Oni_ExtensionManagement_Test
         Oni_Extensions_Test
         Oni_Input_Test

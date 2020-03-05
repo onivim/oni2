@@ -56,8 +56,9 @@ module Internal = {
   let isDriveLetter = (candidate: Char.t) => {
     let aCode = Char.code('A');
     let zCode = Char.code('Z');
+    let upperCandidate = Char.uppercase_ascii(candidate);
 
-    Char.code(candidate) >= aCode && Char.code(candidate) <= zCode;
+    Char.code(upperCandidate) >= aCode && Char.code(upperCandidate) <= zCode;
   };
 
   let normalizePath = (scheme: Scheme.t, path: string) => {
@@ -116,11 +117,30 @@ let fromMemory = path => fromScheme(~scheme=Scheme.Memory, path);
 let fromPath = path => fromScheme(~scheme=Scheme.File, path);
 
 let toString = (uri: t) => {
-  Scheme.toString(uri.scheme) ++ "://" ++ uri.path;
+  Scheme.toString(uri.scheme)
+  ++ "://"
+  ++ Internal.addSlash(uri.scheme, uri.path);
 };
 
 let toFileSystemPath = (uri: t) => {
-  uri.path;
+  switch (uri.scheme) {
+  | File =>
+    let pathLen = String.length(uri.path);
+    if (pathLen > 2 && uri.path.[0] == '/') {
+      let firstLetter = uri.path.[1];
+      let secondCharacter = uri.path.[2];
+
+      // Remove the leading slash when using a Windows file system
+      if (Internal.isDriveLetter(firstLetter) && secondCharacter == ':') {
+        String.sub(uri.path, 1, pathLen - 1);
+      } else {
+        uri.path;
+      };
+    } else {
+      uri.path;
+    };
+  | _ => uri.path
+  };
 };
 
 let getScheme = (uri: t) => uri.scheme;

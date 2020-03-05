@@ -18,7 +18,6 @@ module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
@@ -388,7 +387,13 @@ let start =
         != Some(false);
 
       if (shouldApply) {
-        dispatch(Actions.BufferUpdate(bu));
+        maybeBuffer
+        |> Option.iter(oldBuffer => {
+             let newBuffer = Core.Buffer.update(oldBuffer, bu);
+             dispatch(
+               Actions.BufferUpdate({update: bu, newBuffer, oldBuffer}),
+             );
+           });
       } else {
         Log.debugf(m => m("Skipped buffer update at: %i", update.version));
       };
@@ -533,13 +538,13 @@ let start =
                  let bufferId = Core.Buffer.getId(buffer);
                  let {line, column}: Location.t = primaryCursor;
 
-                 BufferSyntaxHighlights.getSyntaxScope(
+                 Feature_Syntax.getSyntaxScope(
                    ~bufferId,
                    ~line,
                    // TODO: Reconcile 'byte position' vs 'character position'
                    // in cursor.
                    ~bytePosition=Index.toZeroBased(column),
-                   state.bufferSyntaxHighlights,
+                   state.syntaxHighlights,
                  );
                },
                primaryCursor,
@@ -863,13 +868,13 @@ let start =
         };
       (state, eff);
 
-    | Init(_) => (state, initEffect)
+    | Init => (state, initEffect)
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),
       )
     | BufferEnter(_)
-    | SetEditorFont(_)
+    | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
     | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (

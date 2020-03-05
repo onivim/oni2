@@ -1,6 +1,7 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Revery.UI;
+open Oni_Components;
 
 type model;
 
@@ -9,7 +10,7 @@ let initial: model;
 [@deriving show]
 type msg =
   | Input(string)
-  | InputClicked(int)
+  | InputClicked(Selection.t)
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete;
 
@@ -25,7 +26,7 @@ let make:
   (
     ~theme: Theme.t,
     ~uiFont: UiFont.t,
-    ~editorFont: EditorFont.t,
+    ~editorFont: Service_Font.font,
     ~isFocused: bool,
     ~model: model,
     ~onSelectResult: (string, Location.t) => unit,

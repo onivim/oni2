@@ -56,7 +56,7 @@ let%component make =
                 ~onCursorChange,
                 ~cursorPosition: Location.t,
                 ~rulers,
-                ~editorFont: EditorFont.t,
+                ~editorFont: Service_Font.font,
                 ~leftVisibleColumn,
                 ~diagnosticsMap,
                 ~selectionRanges,

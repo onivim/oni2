@@ -108,7 +108,11 @@ let start =
       setClipboardText,
     );
 
-  let syntaxUpdater = SyntaxHighlightingStoreConnector.start(languageInfo);
+  let syntaxUpdater =
+    SyntaxHighlightingStoreConnector.start(
+      ~enabled=cliOptions.shouldSyntaxHighlight,
+      languageInfo,
+    );
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClient, extHostStream) =
@@ -135,7 +139,6 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
-  let fontUpdater = FontStoreConnector.start();
   let completionUpdater = CompletionStoreConnector.start();
 
   let languageFeatureUpdater = LanguageFeatureConnector.start();
@@ -154,7 +157,6 @@ let start =
       vimUpdater,
       syntaxUpdater,
       extHostUpdater,
-      fontUpdater,
       configurationUpdater,
       keyBindingsUpdater,
       commandUpdater,
@@ -172,22 +174,15 @@ let start =
     ]);
 
   let subscriptions = (state: Model.State.t) => {
-    let syntaxSubscription: Isolinear.Sub.t(Model.Actions.t) =
-      if (state.syntaxHighlightingEnabled) {
-        SyntaxHighlightingStoreConnector.(
-          SyntaxHighlightingStoreConnector.Subscription.create({
-            id: "syntax-highlighter",
-            languageInfo,
-            setup,
-            onStart: client => Model.Actions.SyntaxServerStarted(client),
-            onClose: () => Model.Actions.SyntaxServerClosed,
-            onHighlights: highlights =>
-              Model.Actions.BufferSyntaxHighlights(highlights),
-          })
-        );
-      } else {
-        Isolinear.Sub.none;
-      };
+    let syntaxSubscription =
+      Feature_Syntax.subscription(
+        ~enabled=cliOptions.shouldSyntaxHighlight,
+        ~quitting=state.isQuitting,
+        ~languageInfo,
+        ~setup,
+        state.syntaxHighlights,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg));
 
     let workspaceUri =
       state.workspace
@@ -203,7 +198,61 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
 
-    [syntaxSubscription, terminalSubscription] |> Isolinear.Sub.batch;
+    let fontFamily =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontFamily,
+        state.configuration,
+      );
+    let fontSize =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontSize,
+        state.configuration,
+      );
+    let fontSmoothing =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontSmoothing,
+        state.configuration,
+      );
+    let editorFontSubscription =
+      Service_Font.Sub.font(
+        ~uniqueId="editorFont",
+        ~fontFamily,
+        ~fontSize,
+        ~fontSmoothing,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
+
+    let terminalFontFamily =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontFamily,
+        state.configuration,
+      );
+    let terminalFontSize =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontSize,
+        state.configuration,
+      );
+    let terminalFontSmoothing =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontSmoothing,
+        state.configuration,
+      );
+    let terminalFontSubscription =
+      Service_Font.Sub.font(
+        ~uniqueId="terminalFont",
+        ~fontFamily=terminalFontFamily,
+        ~fontSize=terminalFontSize,
+        ~fontSmoothing=terminalFontSmoothing,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
+
+    [
+      syntaxSubscription,
+      terminalSubscription,
+      editorFontSubscription,
+      terminalFontSubscription,
+    ]
+    |> Isolinear.Sub.batch;
   };
 
   module Store =
@@ -266,7 +315,7 @@ let start =
     Isolinear.Stream.map(storeStream, ((state, action)) =>
       switch (action) {
       | Model.Actions.BufferUpdate(bs) =>
-        let buffer = Model.Selectors.getBufferById(state, bs.id);
+        let buffer = Model.Selectors.getBufferById(state, bs.update.id);
         Some(Model.Actions.RecalculateEditorView(buffer));
       | Model.Actions.BufferEnter({id, _}, _) =>
         let buffer = Model.Selectors.getBufferById(state, id);

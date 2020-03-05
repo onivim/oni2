@@ -18,6 +18,7 @@ type context = {
   fontSize: float,
   charWidth: float,
   charHeight: float,
+  smoothing: Revery.Font.Smoothing.t,
 };
 
 let createContext =
@@ -28,7 +29,7 @@ let createContext =
       ~scrollX,
       ~scrollY,
       ~lineHeight,
-      ~editorFont: EditorFont.t,
+      ~editorFont: Service_Font.font,
     ) => {
   let font = Revery.Font.load(editorFont.fontFile) |> Stdlib.Result.get_ok;
   let fontMetrics = Revery.Font.getMetrics(font, editorFont.fontSize);
@@ -45,6 +46,7 @@ let createContext =
     fontSize: editorFont.fontSize,
     charWidth: editorFont.measuredWidth,
     charHeight: editorFont.measuredHeight,
+    smoothing: editorFont.smoothing,
   };
 };
 
@@ -90,16 +92,13 @@ let drawShapedText = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
 
-  Revery.Font.Smoothing.setPaint(
-    ~smoothing=Revery.Font.Smoothing.default,
-    paint,
-  );
   Skia.Paint.setLcdRenderText(paint, true);
 
   (~context, ~x, ~y, ~color, text) => {
     let text =
       Revery.Font.(shape(context.font, text) |> ShapeResult.getGlyphString);
 
+    Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
     Skia.Paint.setTextSize(paint, context.fontSize);
     Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
     Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
@@ -113,13 +112,10 @@ let drawUtf8Text = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, Utf8);
 
-  Revery.Font.Smoothing.setPaint(
-    ~smoothing=Revery.Font.Smoothing.default,
-    paint,
-  );
   Skia.Paint.setLcdRenderText(paint, true);
 
   (~context, ~x, ~y, ~color, text) => {
+    Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
     Skia.Paint.setTextSize(paint, context.fontSize);
     Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(context.font));
     Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
@@ -217,8 +213,8 @@ let token =
 
   | Tab =>
     CanvasContext.Deprecated.drawString(
-      ~x=x +. context.charWidth /. 4.,
-      ~y,
+      ~x=x +. context.charWidth /. 4. -. context.scrollX,
+      ~y=y -. context.scrollY,
       ~color=theme.editorWhitespaceForeground,
       ~fontFamily="FontAwesome5FreeSolid.otf",
       ~fontSize=10.,
@@ -250,7 +246,7 @@ let ruler = (~context, ~color, x) =>
   drawRect(
     ~context,
     ~x,
-    ~y=0.0,
+    ~y=context.scrollY,
     ~height=float(context.height),
     ~width=1.,
     ~color,

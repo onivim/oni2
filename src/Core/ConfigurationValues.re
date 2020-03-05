@@ -22,11 +22,19 @@ type autoClosingBrackets =
   | Never
   | LanguageDefined;
 
+[@deriving show({with_path: false})]
+type fontSmoothing =
+  | Default
+  | None
+  | Antialiased
+  | SubpixelAntialiased;
+
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
-  editorFontFamily: option(string),
+  editorFontFamily: string,
   editorFontSize: float,
+  editorFontSmoothing: fontSmoothing,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
@@ -43,6 +51,11 @@ type t = {
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
   editorRulers: list(int),
+  syntaxEagerMaxLines: int,
+  syntaxEagerMaxLineLength: int,
+  terminalIntegratedFontFamily: string,
+  terminalIntegratedFontSize: float,
+  terminalIntegratedFontSmoothing: fontSmoothing,
   workbenchActivityBarVisible: bool,
   workbenchColorTheme: string,
   workbenchIconTheme: string,
@@ -72,7 +85,8 @@ type t = {
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
   editorDetectIndentation: true,
-  editorFontFamily: Some("FiraCode-Regular.ttf"),
+  editorFontFamily: Constants.defaultFontFamily,
+  editorFontSmoothing: Default,
   editorFontSize: Constants.defaultFontSize,
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
@@ -90,6 +104,11 @@ let default = {
   editorHighlightActiveIndentGuide: true,
   editorRenderWhitespace: All,
   editorRulers: [],
+  syntaxEagerMaxLines: Constants.syntaxEagerMaxLines,
+  syntaxEagerMaxLineLength: Constants.syntaxEagerMaxLineLength,
+  terminalIntegratedFontFamily: Constants.defaultFontFamily,
+  terminalIntegratedFontSize: Constants.defaultTerminalFontSize,
+  terminalIntegratedFontSmoothing: Default,
   workbenchActivityBarVisible: true,
   workbenchColorTheme: "One Dark Pro",
   workbenchEditorShowTabs: true,
