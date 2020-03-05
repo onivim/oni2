@@ -84,13 +84,13 @@ module Actions = {
         CompletionMeet.fromBufferLocation(~location, buffer)
       );
 
-    let suggestEnabled = 
-    state.configuration
-    |> Configuration.getValue(c => c.editorQuickSuggestions);
+    let suggestEnabled =
+      state.configuration
+      |> Configuration.getValue(c => c.editorQuickSuggestions);
 
     // TODO: Take into account syntax scope of cursor position
     if (!suggestEnabled.other) {
-      stop(state)
+      stop(state);
     } else {
       switch (maybeBuffer, maybeMeet) {
       | (Some(buffer), Some(meet)) =>
