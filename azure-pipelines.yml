@@ -6,7 +6,8 @@
 name: $(Build.SourceVersion)
 
 # Master build triggers
-trigger: master
+trigger: 
+- master
 
 # PR Triggers
 pr:
