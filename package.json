@@ -12,8 +12,7 @@
       "esy-installer Oni2.install",
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll \\'$cur__bin\\'': 'echo'}\"",
       "bash -c \"cp #{esy-sdl2.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{esy-skia.bin}/skia.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{@esy-ocaml/libffi.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
+      "bash -c \"cp #{esy-skia.bin}/skia.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
     ]
   },
   "build": {
@@ -256,7 +255,7 @@
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reason-textmate": "onivim/reason-textmate#5f0dc38",
-    "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d",
+    "@esy-ocaml/libffi": "onivim/libffi#590b041",
     "reason-harfbuzz": "revery-ui/reason-harfbuzz#eca58ea"
   },
   "devDependencies": {
