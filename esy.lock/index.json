@@ -1,5 +1,5 @@
 {
-  "checksum": "1ef1a0a38438c548050d56430aaa0ccb",
+  "checksum": "4967fa0c4fc9acf6af842d9976113428",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -1213,7 +1213,7 @@
         "@opam/camomile@opam:1.0.1@c82ecdb5",
         "@glennsl/timber@1.0.0@d41d8cd9",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9",
-        "@esy-ocaml/libffi@github:onivim/libffi#9f1a8e3@d41d8cd9"
+        "@esy-ocaml/libffi@github:onivim/libffi#590b041@d41d8cd9"
       ],
       "devDependencies": [
         "shelljs@0.8.3@d41d8cd9", "reperf@1.5.0@d41d8cd9",
@@ -2825,7 +2825,7 @@
       ],
       "dependencies": [
         "ocaml@4.8.1000@d41d8cd9", "@esy-ocaml/substs@0.0.1@d41d8cd9",
-        "@esy-ocaml/libffi@github:onivim/libffi#9f1a8e3@d41d8cd9"
+        "@esy-ocaml/libffi@github:onivim/libffi#590b041@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
@@ -3295,13 +3295,13 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "@esy-ocaml/libffi@github:onivim/libffi#9f1a8e3@d41d8cd9": {
-      "id": "@esy-ocaml/libffi@github:onivim/libffi#9f1a8e3@d41d8cd9",
+    "@esy-ocaml/libffi@github:onivim/libffi#590b041@d41d8cd9": {
+      "id": "@esy-ocaml/libffi@github:onivim/libffi#590b041@d41d8cd9",
       "name": "@esy-ocaml/libffi",
-      "version": "github:onivim/libffi#9f1a8e3",
+      "version": "github:onivim/libffi#590b041",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/libffi#9f1a8e3" ]
+        "source": [ "github:onivim/libffi#590b041" ]
       },
       "overrides": [],
       "dependencies": [],
