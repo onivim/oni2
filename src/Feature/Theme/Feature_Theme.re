@@ -12,6 +12,7 @@ type model = {
 
 let defaults =
   [
+    Colors.ActivityBar.defaults,
     Colors.Editor.defaults,
     Colors.EditorGroupHeader.defaults,
     Colors.List.defaults,

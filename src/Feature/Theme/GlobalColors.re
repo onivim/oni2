@@ -4,6 +4,41 @@ open Revery;
 let foreground = "foreground";
 let contrastBorder = "contrastBorder";
 
+module ActivityBar = {
+  let background = "activityBar.background";
+  let foreground = "activityBar.foreground";
+  let border = "activityBar.border";
+  let activeBorder = "activityBar.activeBorder";
+  let inactiveForeground = "activityBar.inactiveForeground";
+  let activeBackground = "activityBar.activeBackground";
+
+  let defaults =
+    ColorTheme.Defaults.[
+      (
+        background,
+        {dark: hex("#333"), light: hex("#2C2C2C"), hc: hex("#000")},
+      ),
+      (foreground, hex("#fff") |> uniform),
+      (
+        border,
+        {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
+      ),
+      (
+        activeBorder,
+        {dark: ref(foreground), light: ref(foreground), hc: unspecified},
+      ),
+      (
+        inactiveForeground,
+        {
+          dark: transparent(0.4, ref(foreground)),
+          light: transparent(0.4, ref(foreground)),
+          hc: hex("#FFF"),
+        },
+      ),
+      (activeBackground, unspecified |> uniform),
+    ];
+};
+
 module Editor = {
   let background = "editor.background";
   let foreground = "editor.foreground";
@@ -265,11 +300,6 @@ let defaults =
 
 let remaining =
   ColorTheme.Defaults.[
-    ("activityBar.background", hex("#2F3440") |> uniform),
-    ("activityBar.foreground", hex("#fff") |> uniform),
-    ("activityBar.inactiveForeground", hex("#DCDCDC") |> uniform),
-    ("activityBar.activeBackground", hex("#fff0") |> uniform),
-    ("activityBar.activeBorder", hex("#fff") |> uniform),
     ("editorCursor.background", hex("#2F3440") |> uniform),
     ("editorCursor.foreground", hex("#DCDCDC") |> uniform),
     ("editor.findMatchBackground", hex("#42557b") |> uniform),
