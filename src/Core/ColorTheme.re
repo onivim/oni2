@@ -46,7 +46,7 @@ module Defaults = {
   type value =
     | Constant(Color.t)
     | Reference(string)
-    | Computed((string => Color.t) => Color.t) // vscode: ColorFunction
+    | Computed((string => option(Color.t)) => option(Color.t)) // vscode: ColorFunction
     | Unspecified;
 
   // vscode: ColorDefaults
@@ -95,9 +95,10 @@ module Defaults = {
 
       switch (value) {
       | Constant(color) => Constant(color |> apply)
-      | Reference(name) => Computed(resolve => resolve(name) |> apply)
-      | Computed(f) => Computed(resolve => f(resolve) |> apply)
-      | Unspecified => Constant(Colors.black |> apply)
+      | Reference(name) =>
+        Computed(resolve => resolve(name) |> Option.map(apply))
+      | Computed(f) => Computed(resolve => f(resolve) |> Option.map(apply))
+      | Unspecified => Unspecified
       };
     };
     //let oneOf =
@@ -134,4 +135,8 @@ type t = {
   colors: Colors.t,
 };
 
-type resolver = {. color: string => Color.t};
+type resolver = {
+  .
+  tryColor: string => option(Revery.Color.t),
+  color: string => Revery.Color.t,
+};

@@ -27,11 +27,6 @@ let initial = contributions => {
   theme: ColorTheme.{variant: Dark, colors: ColorTheme.Colors.empty},
 };
 
-let fallback = keyName => {
-  Log.warnf(m => m("Fallback color used for: %s", keyName));
-  Revery.Colors.magenta;
-};
-
 let resolver =
     (
       ~extensionDefaults as _=[], // TODO
@@ -43,11 +38,16 @@ let resolver =
   let rec resolve = keyName => {
     let key = ColorTheme.key(keyName);
 
+    let fallback = keyName => {
+      Log.warnf(m => m("Fallback color used for: %s", keyName));
+      Some(Revery.Colors.magenta);
+    };
+
     switch (ColorTheme.Colors.get(key, customizations)) {
-    | Some(color) => color
+    | Some(color) => Some(color)
     | None =>
       switch (ColorTheme.Colors.get(key, theme.colors)) {
-      | Some(color) => color
+      | Some(color) => Some(color)
       | None =>
         switch (ColorTheme.Defaults.get(key, defaults)) {
         | Some((entry: ColorTheme.Defaults.entry)) =>
@@ -59,11 +59,11 @@ let resolver =
             };
 
           switch (colorValue) {
-          | Constant(color) => color
+          | Constant(color) => Some(color)
           | Reference(refName) when refName == keyName => fallback(keyName) // prevent infinite loop
           | Reference(refName) => resolve(refName)
           | Computed(f) => f(resolve)
-          | Unspecified => fallback(keyName)
+          | Unspecified => None
           };
 
         | None => fallback(keyName)
@@ -72,7 +72,12 @@ let resolver =
     };
   };
 
-  {as _; pub color = resolve};
+  {
+    as _;
+    pub tryColor = resolve;
+    pub color = key =>
+      resolve(key) |> Option.value(~default=Revery.Colors.transparentWhite)
+  };
 };
 
 [@deriving show({with_path: false})]
