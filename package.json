@@ -258,7 +258,7 @@
     "reason-textmate": "onivim/reason-textmate#5f0dc38",
     "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d",
     "reason-harfbuzz": "revery-ui/reason-harfbuzz#eca58ea",
-    "esy-oniguruma": "onivim/esy-oniguruma#46698ce4"
+    "esy-oniguruma": "onivim/esy-oniguruma#4698ce4"
   },
   "devDependencies": {
     "ocaml": "~4.8",
