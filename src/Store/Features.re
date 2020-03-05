@@ -70,6 +70,10 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
       };
     ({...state, terminals: model}, effect);
 
+  | Theme(msg) =>
+    let model' = Feature_Theme.update(state.colorTheme, msg);
+    ({...state, colorTheme: model'}, Effect.none);
+
   | Modal(msg) =>
     switch (state.modal) {
     | Some(model) =>

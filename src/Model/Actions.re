@@ -138,6 +138,7 @@ type t =
   | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
   | Terminal(Feature_Terminal.msg)
+  | Theme(Feature_Theme.msg)
   | PaneTabClicked(Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)

@@ -398,24 +398,32 @@ open Revery.UI.Components;
 
 module Input = Oni_Components.Input;
 
+module Theme = Feature_Theme;
+
+module Colors = {
+  let foreground = Theme.Colors.SideBar.foreground;
+  let background = Theme.Colors.SideBar.background;
+  let hoverBackground = Theme.Colors.List.hoverBackground;
+};
+
 module Pane = {
   module Styles = {
     open Style;
 
     let container = [padding(10), flexGrow(1)];
 
-    let text = (~theme: Theme.t, ~font: UiFont.t) => [
+    let text = (~theme, ~font: UiFont.t) => [
       fontSize(font.fontSize),
       fontFamily(font.fontFile),
-      color(theme.sideBarForeground),
+      color(theme#color(Colors.foreground)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
 
-    let input = (~font: UiFont.t) => [
+    let input = (~theme, ~font: UiFont.t) => [
       border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
       backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      color(Colors.white),
+      color(theme#color(Colors.foreground)),
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       flexGrow(1),
@@ -425,20 +433,20 @@ module Pane = {
 
     let groupLabel = [paddingVertical(3)];
 
-    let groupLabelText = (~theme: Theme.t, ~font: UiFont.t) => [
+    let groupLabelText = (~theme, ~font: UiFont.t) => [
       fontSize(font.fontSize *. 0.85),
       fontFamily(font.fontFileBold),
-      color(theme.sideBarForeground),
+      color(theme#color(Colors.foreground)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
 
     let groupItems = [marginLeft(6)];
 
-    let item = (~isHovered, ~theme: Theme.t) => [
+    let item = (~isHovered, ~theme) => [
       isHovered
-        ? backgroundColor(theme.listHoverBackground)
-        : backgroundColor(theme.sideBarBackground),
+        ? backgroundColor(theme#color(Colors.hoverBackground))
+        : backgroundColor(theme#color(Colors.background)),
       paddingVertical(2),
       cursor(MouseCursors.pointer),
     ];
@@ -532,8 +540,8 @@ module Pane = {
 
     <ScrollView style=Styles.container>
       <Input
-        style={Styles.input(~font)}
-        cursorColor=Colors.gray
+        style={Styles.input(~theme, ~font)}
+        cursorColor={theme#color(Colors.foreground)}
         value={model.inputBox.value}
         selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}
