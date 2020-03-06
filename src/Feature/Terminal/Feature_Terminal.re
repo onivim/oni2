@@ -31,7 +31,8 @@ let getTerminalOpt = (id, {idToTerminal, _}) =>
 [@deriving show({with_path: false})]
 type splitDirection =
   | Vertical
-  | Horizontal;
+  | Horizontal
+  | Current;
 
 [@deriving show({with_path: false})]
 type msg =

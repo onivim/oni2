@@ -143,14 +143,20 @@ let createDefaultCommands = getState => {
       ),
       Command.create(
         ~category=Some("Terminal"),
-        ~name="Open terminal in horizontal split",
+        ~name="Open terminal in new horizontal split",
         ~action=Command("terminal.new.horizontal"),
         (),
       ),
       Command.create(
         ~category=Some("Terminal"),
-        ~name="Open terminal in vertical split",
+        ~name="Open terminal in new vertical split",
         ~action=Command("terminal.new.vertical"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in current window",
+        ~action=Command("terminal.new.current"),
         (),
       ),
     ]
@@ -342,6 +348,16 @@ let start = (getState, contributedCommands) => {
         singleActionEffect(
           Actions.Terminal(
             Feature_Terminal.NewTerminal({splitDirection: Horizontal}),
+          ),
+        );
+      },
+    ),
+    (
+      "terminal.new.current",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({splitDirection: Current}),
           ),
         );
       },
