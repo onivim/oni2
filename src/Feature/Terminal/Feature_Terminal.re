@@ -36,7 +36,10 @@ type splitDirection =
 
 [@deriving show({with_path: false})]
 type msg =
-  | NewTerminal({splitDirection})
+  | NewTerminal({
+    cmd: option(string),
+    splitDirection: splitDirection,
+    })
   | Resized({
       id: int,
       rows: int,
@@ -77,15 +80,20 @@ let updateById = (id, f, model) => {
 
 let update = (model: t, msg) => {
   switch (msg) {
-  | NewTerminal({splitDirection}) =>
-    let cmd = shellCmd;
+  | NewTerminal({cmd, splitDirection}) =>
+    
+    let cmdToUse = switch (cmd) {
+    | None => shellCmd
+    | Some(specifiedCommand) => specifiedCommand
+    };
+    
     let id = model.nextId;
     let idToTerminal =
       IntMap.add(
         id,
         {
           id,
-          cmd,
+          cmd: cmdToUse,
           rows: 40,
           columns: 40,
           pid: None,

@@ -337,7 +337,7 @@ let start = (getState, contributedCommands) => {
       _ => {
         singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.NewTerminal({splitDirection: Vertical}),
+            Feature_Terminal.NewTerminal({cmd: None, splitDirection: Vertical}),
           ),
         );
       },
@@ -347,7 +347,7 @@ let start = (getState, contributedCommands) => {
       _ => {
         singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.NewTerminal({splitDirection: Horizontal}),
+            Feature_Terminal.NewTerminal({cmd: None, splitDirection: Horizontal}),
           ),
         );
       },
@@ -357,7 +357,7 @@ let start = (getState, contributedCommands) => {
       _ => {
         singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.NewTerminal({splitDirection: Current}),
+            Feature_Terminal.NewTerminal({cmd: None, splitDirection: Current}),
           ),
         );
       },
