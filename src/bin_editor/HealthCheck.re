@@ -120,12 +120,10 @@ let mainChecks = [
   ),
   (
     "Revery: Verify can measure & shape font",
-    _ =>
-      switch (
-        Revery.Font.load(
-          Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
-        )
-      ) {
+    _ => {
+      let fontPath =
+        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf";
+      switch (Revery.Font.load(fontPath)) {
       | Ok(font) =>
         let metrics = Revery.Font.getMetrics(font, 12.0);
         ignore(metrics);
@@ -148,7 +146,8 @@ let mainChecks = [
       | Error(msg) =>
         Log.error(msg);
         false;
-      },
+      };
+    },
   ),
   (
     "Verify bundled reason-language-server executable",
