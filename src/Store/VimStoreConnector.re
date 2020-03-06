@@ -240,17 +240,17 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onTerminal(({ cmd, curwin }) => {
+    Vim.onTerminal(({cmd, curwin}) => {
+      let splitDirection =
+        if (curwin) {Feature_Terminal.Current} else {
+          Feature_Terminal.Horizontal
+        };
 
-      let splitDirection = if(curwin) {
-        Feature_Terminal.Current
-      } else {
-        Feature_Terminal.Horizontal
-      };
-
-      dispatch(Actions.Terminal(
-        Feature_Terminal.NewTerminal({ cmd: Some(cmd), splitDirection})
-      ));
+      dispatch(
+        Actions.Terminal(
+          Feature_Terminal.NewTerminal({cmd: Some(cmd), splitDirection}),
+        ),
+      );
     });
 
   let _: unit => unit =

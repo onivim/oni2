@@ -29,9 +29,9 @@ type splitDirection =
 [@deriving show({with_path: false})]
 type msg =
   | NewTerminal({
-    cmd: option(string),
-    splitDirection: splitDirection,
-  })
+      cmd: option(string),
+      splitDirection,
+    })
   | Resized({
       id: int,
       rows: int,
