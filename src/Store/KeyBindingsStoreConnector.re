@@ -170,9 +170,14 @@ let start = () => {
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
+        key: "<D-S>",
+        command: "workbench.action.files.save",
+        condition: "editorTextFocus" |> WhenExpr.parse,
+      },
+      {
         key: "<C-S>",
         command: "workbench.action.files.save",
-        condition: "insertMode" |> WhenExpr.parse,
+        condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-G>",
