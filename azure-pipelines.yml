@@ -140,7 +140,7 @@ jobs:
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
     displayName: 'Validate signtool path'
-  - template: .ci/restore-build-cache.yml
+#  - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
     parameters:
