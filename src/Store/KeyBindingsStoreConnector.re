@@ -170,6 +170,11 @@ let start = () => {
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
+        key: "<C-S>",
+        command: "workbench.action.files.save",
+        condition: "insertMode" |> WhenExpr.parse,
+      },
+      {
         key: "<C-G>",
         command: "sneak.start",
         condition: WhenExpr.Value(True),

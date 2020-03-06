@@ -842,6 +842,14 @@ let start =
       ();
     });
 
+  let saveEffect =
+    Isolinear.Effect.create(~name="vim.save", () => {
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let cursors = Vim.input("w");
+      ();
+    });
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -854,6 +862,7 @@ let start =
       )
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
+    | Command("workbench.action.files.save") => (state, saveEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
