@@ -846,7 +846,9 @@ let start =
     Isolinear.Effect.create(~name="vim.save", () => {
       let _ = Vim.input("<esc>");
       let _ = Vim.input("<esc>");
-      let cursors = Vim.input("w");
+      let _ = Vim.input(":");
+      let _ = Vim.input("w");
+      let _ = Vim.input("<CR>");
       ();
     });
 
