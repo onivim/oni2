@@ -17,6 +17,10 @@ type t = {
   scopeToTreesitterPath: StringMap.t(option(string)),
 };
 
+module Regexes = {
+  let oniPath = Oniguruma.OnigRegExp.create("oni:\\/\\/([a-z]*)\\/(.*)");
+};
+
 let initial = {
   grammars: [],
   languages: [],
@@ -41,7 +45,19 @@ let getLanguageFromExtension = (li: t, ext: string) => {
 };
 
 let getLanguageFromFilePath = (li: t, fp: string) => {
-  Path.extname(fp) |> getLanguageFromExtension(li);
+  let default = Path.extname(fp) |> getLanguageFromExtension(li);
+
+  Regexes.oniPath
+  |> Stdlib.Result.to_option
+  |> Utility.OptionEx.flatMap(regex => {
+       let matches = Oniguruma.OnigRegExp.search(fp, 0, regex);
+       if (Array.length(matches) == 0) {
+         None;
+       } else {
+         Some(Oniguruma.OnigRegExp.Match.getText(matches[1]));
+       };
+     })
+  |> Stdlib.Option.value(~default);
 };
 
 let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {

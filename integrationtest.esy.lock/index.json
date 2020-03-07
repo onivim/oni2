@@ -1,5 +1,5 @@
 {
-  "checksum": "8012f866838d36c0cb0d9ba2ebe5d7d3",
+  "checksum": "b9f6b7d595f92d4137b04201624f6f9c",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -150,7 +150,7 @@
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-skia@github:revery-ui/reason-skia#48ee835@d41d8cd9",
         "reason-sdl2@2.10.3020@d41d8cd9",
-        "reason-harfbuzz@1.91.5008@d41d8cd9",
+        "reason-harfbuzz@1.91.8000@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
@@ -466,14 +466,14 @@
       ],
       "devDependencies": []
     },
-    "reason-harfbuzz@1.91.5008@d41d8cd9": {
-      "id": "reason-harfbuzz@1.91.5008@d41d8cd9",
+    "reason-harfbuzz@1.91.8000@d41d8cd9": {
+      "id": "reason-harfbuzz@1.91.8000@d41d8cd9",
       "name": "reason-harfbuzz",
-      "version": "1.91.5008",
+      "version": "1.91.8000",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-harfbuzz/-/reason-harfbuzz-1.91.5008.tgz#sha1:c0bccd880fe4aa7480d62d0da0c0480d316959f4"
+          "archive:https://registry.npmjs.org/reason-harfbuzz/-/reason-harfbuzz-1.91.8000.tgz#sha1:e9ab9be7de60f283b24e22d0804417800cbef9e9"
         ]
       },
       "overrides": [],
