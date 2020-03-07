@@ -2,19 +2,7 @@ open Oni_Core;
 
 module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Configuration"));
 
-module Globals = GlobalConfiguration;
-
 type model = {settings: Config.t};
-
-let defaults =
-  [
-    Globals.Editor.defaults,
-    Globals.Files.defaults,
-    Globals.Vim.defaults,
-    Globals.Workbench.defaults,
-  ]
-  |> List.map(Config.fromList)
-  |> Config.unionMany;
 
 let initial = {settings: Config.empty};
 
