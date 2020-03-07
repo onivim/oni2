@@ -144,21 +144,20 @@ module Styles = {
   ];
 };
 
-let make =
-    (
-      ~filePath,
-      ~title,
-      ~isActive,
-      ~isGroupFocused,
-      ~modified,
-      ~onClick,
-      ~onClose,
-      ~theme: ColorTheme.resolver,
-      ~uiFont: UiFont.t,
-      ~mode,
-      ~showHighlight: bool,
-      (),
-    ) => {
+let%component make =
+              (
+                ~filePath,
+                ~title,
+                ~isGroupFocused,
+                ~isActive,
+                ~isModified,
+                ~onClick,
+                ~onClose,
+                ~theme: ColorTheme.resolver,
+                ~uiFont: UiFont.t,
+                ~mode: Vim.Mode.t,
+                (),
+              ) => {
   let state = GlobalContext.current().state;
   let language =
     Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, filePath);
