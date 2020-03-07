@@ -43,7 +43,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     });
 
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
-    let currentDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
+    let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     buffers
     |> IntMap.to_seq
@@ -54,21 +54,19 @@ let start = (themeInfo: ThemeInfo.t) => {
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
        )
     |> List.filter_map(buffer => {
-         switch (Buffer.getFilePath(buffer)) {
-         | Some(path) =>
-           Some(
+        let maybeName = Buffer.getMediumFriendlyName(~workingDirectory, buffer);
+        let maybePath = Buffer.getFilePath(buffer);
+
+        OptionEx.map2((name, path) => 
              Actions.{
                category: None,
-               name: Path.toRelative(~base=currentDirectory, path),
+               name,
                command: () => {
                  Actions.OpenFileByPath(path, None, None);
                },
                icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
                highlight: [],
-             },
-           )
-         | None => None
-         }
+             }, maybeName, maybePath)
        })
     |> Array.of_list;
   };
