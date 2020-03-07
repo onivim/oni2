@@ -54,10 +54,12 @@ let start = (themeInfo: ThemeInfo.t) => {
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
        )
     |> List.filter_map(buffer => {
-        let maybeName = Buffer.getMediumFriendlyName(~workingDirectory, buffer);
-        let maybePath = Buffer.getFilePath(buffer);
+         let maybeName =
+           Buffer.getMediumFriendlyName(~workingDirectory, buffer);
+         let maybePath = Buffer.getFilePath(buffer);
 
-        OptionEx.map2((name, path) => 
+         OptionEx.map2(
+           (name, path) =>
              Actions.{
                category: None,
                name,
@@ -66,7 +68,10 @@ let start = (themeInfo: ThemeInfo.t) => {
                },
                icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
                highlight: [],
-             }, maybeName, maybePath)
+             },
+           maybeName,
+           maybePath,
+         );
        })
     |> Array.of_list;
   };

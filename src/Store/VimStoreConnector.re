@@ -658,28 +658,19 @@ let start =
       | None => ()
       };
 
-      if (StringEx.startsWith(~prefix="oni://terminal", filePath)) {
-        let wholeLength = String.length(filePath);
-        let prefixLength = String.length("oni://terminal/");
-
-        // Get string like 0/bash
-        let postFix = 
-          String.sub(filePath, prefixLength, wholeLength - prefixLength);
-
-        // And extract just number from it
-        let id = String.sub(postFix, 0, 
-          String.index(postFix, '/'))
-          |> int_of_string;
-
+      switch (Core.BufferPath.parse(filePath)) {
+      | Terminal({bufferId, cmd}) =>
         dispatch(
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
               metadata.id,
-              BufferRenderer.Terminal({title: "Terminal", id}),
+              BufferRenderer.Terminal({title: "Terminal", id: bufferId}),
             ),
           ),
         );
-      };
+      | Welcome => ()
+      | FilePath(_) => ();
+      }
     });
 
   let applyCompletionEffect = completion =>

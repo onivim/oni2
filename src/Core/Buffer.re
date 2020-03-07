@@ -28,20 +28,32 @@ let getShortFriendlyName = ({filePath, _}) => {
   Option.map(Filename.basename, filePath);
 };
 
-let getMediumFriendlyName = (~workingDirectory=?, {filePath, _}) => {
-      filePath
-      |> Option.map(fp =>
-           switch (workingDirectory) {
-           | Some(base) => Path.toRelative(~base, fp)
-           | _ => Sys.getcwd()
-           }
-         );
+let getMediumFriendlyName =
+    (~workingDirectory=?, {filePath as maybeFilePath, _}) => {
+  maybeFilePath
+  |> Option.map(filePath =>
+       switch (BufferPath.parse(filePath)) {
+       | Welcome => "Welcome"
+       | Terminal({cmd}) => "Terminal - " ++ cmd
+       | FilePath(fp) =>
+         switch (workingDirectory) {
+         | Some(base) => Path.toRelative(~base, fp)
+         | _ => Sys.getcwd()
+         }
+       }
+     );
 };
 
-let getLongFriendlyName = ({filePath, _}) => {
-    filePath
+let getLongFriendlyName = ({filePath as maybeFilePath, _}) => {
+  maybeFilePath
+  |> Option.map(filePath => {
+       switch (BufferPath.parse(filePath)) {
+       | Welcome => "Welcome"
+       | Terminal({cmd}) => "Terminal - " ++ cmd
+       | FilePath(fp) => fp
+       }
+     });
 };
-
 
 let ofLines = (~id=0, rawLines: array(string)) => {
   let lines =

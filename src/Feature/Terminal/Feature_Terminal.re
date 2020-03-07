@@ -20,7 +20,7 @@ type t = {
 
 let initial = {idToTerminal: IntMap.empty, nextId: 0};
 
-let getBufferName = (id, cmd) => 
+let getBufferName = (id, cmd) =>
   Printf.sprintf("oni://terminal/%d/%s", id, cmd);
 
 let toList = ({idToTerminal, _}) =>

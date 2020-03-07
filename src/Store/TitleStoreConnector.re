@@ -39,20 +39,21 @@ let getTemplateVariables: State.t => StringMap.t(string) =
       Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
       |> withTag("activeEditorShort");
     let activeEditorMedium =
-      Option.bind(maybeBuffer, (buf) => {
-          Option.bind(rootPath, ((_, nestedRootPath)) => {
-            Buffer.getMediumFriendlyName(~workingDirectory=nestedRootPath, buf)
-          })
-          }
-        )
+      Option.bind(maybeBuffer, buf => {
+        Option.bind(rootPath, ((_, nestedRootPath)) => {
+          Buffer.getMediumFriendlyName(~workingDirectory=nestedRootPath, buf)
+        })
+      })
       |> withTag("activeEditorMedium");
-    
-    let activeEditorLong = 
-    Option.bind(maybeBuffer, Buffer.getLongFriendlyName)
-    |> withTag("activeEditorLong");
+
+    let activeEditorLong =
+      Option.bind(maybeBuffer, Buffer.getLongFriendlyName)
+      |> withTag("activeEditorLong");
 
     let activeFolderShort =
-      Option.(maybeFilePath |> map(Filename.dirname) |> map(Filename.basename))
+      Option.(
+        maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
+      )
       |> withTag("activeFolderShort");
     let activeFolderMedium =
       maybeFilePath
@@ -65,7 +66,9 @@ let getTemplateVariables: State.t => StringMap.t(string) =
          )
       |> withTag("activeFolderMedium");
     let activeFolderLong =
-      maybeFilePath |> Option.map(Filename.dirname) |> withTag("activeFolderLong");
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> withTag("activeFolderLong");
 
     [
       appName,

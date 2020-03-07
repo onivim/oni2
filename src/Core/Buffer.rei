@@ -17,7 +17,7 @@ let getFilePath: t => option(string);
 let setFilePath: (option(string), t) => t;
 
 let getShortFriendlyName: t => option(string);
-let getMediumFriendlyName: (~workingDirectory:string=?, t) => option(string);
+let getMediumFriendlyName: (~workingDirectory: string=?, t) => option(string);
 let getLongFriendlyName: t => option(string);
 
 let getFileType: t => option(string);
