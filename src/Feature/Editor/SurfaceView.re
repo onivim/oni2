@@ -8,6 +8,8 @@ open Helpers;
 
 module Log = (val Log.withNamespace("Oni2.Editor.SurfaceView"));
 
+module Config = EditorConfiguration;
+
 module Styles = {
   open Style;
 
@@ -52,7 +54,6 @@ let%component make =
                 ~topVisibleLine,
                 ~onCursorChange,
                 ~cursorPosition: Location.t,
-                ~rulers,
                 ~editorFont: Service_Font.font,
                 ~leftVisibleColumn,
                 ~diagnosticsMap,
@@ -61,14 +62,12 @@ let%component make =
                 ~bufferHighlights,
                 ~definition,
                 ~bufferSyntaxHighlights,
-                ~shouldRenderWhitespace,
-                ~shouldRenderIndentGuides,
                 ~bottomVisibleLine,
-                ~shouldHighlightActiveIndentGuides,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferWidthInCharacters,
                 ~windowIsFocused,
+                ~config,
                 (),
               ) => {
   let%hook elementRef = React.Hooks.ref(None);
@@ -146,7 +145,7 @@ let%component make =
 
         drawCurrentLineHighlight(~context, ~theme, cursorPosition.line);
 
-        renderRulers(~context, ~theme, rulers);
+        renderRulers(~context, ~theme, Config.rulers(config));
 
         ContentView.render(
           ~context,
@@ -161,11 +160,11 @@ let%component make =
           ~cursorPosition,
           ~definition,
           ~bufferSyntaxHighlights,
-          ~shouldRenderWhitespace,
+          ~shouldRenderWhitespace=Config.renderWhitespace(config),
           ~bufferWidthInCharacters,
         );
 
-        if (shouldRenderIndentGuides) {
+        if (Config.renderIndentGuides(config)) {
           IndentLineRenderer.render(
             ~context,
             ~buffer,
@@ -173,7 +172,7 @@ let%component make =
             ~endLine=bottomVisibleLine + 1,
             ~cursorPosition,
             ~theme,
-            ~showActive=shouldHighlightActiveIndentGuides,
+            ~showActive=Config.highlightActiveIndentGuide(config),
             indentation,
           );
         };
