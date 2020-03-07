@@ -9,25 +9,18 @@ module Constants = {
 };
 
 let getLeadingWhitespace = (s: string) => {
-  let len = String.length(s);
-  let i = ref(0);
-
-  let foundChar = ref(false);
-  let spaceCount = ref(0);
-  let tabCount = ref(0);
-  while (i^ < len && foundChar^ == false) {
-    let c = s.[i^];
-    if (c == ' ') {
-      incr(spaceCount);
-    } else if (c == '\t') {
-      incr(tabCount);
+  let rec loop = (i, spaces, tabs) =>
+    if (i >= String.length(s)) {
+      (spaces, tabs, false);
     } else {
-      foundChar := true;
+      switch (s.[i]) {
+      | ' ' => loop(i + 1, spaces + 1, tabs)
+      | '\t' => loop(i + 1, spaces, tabs + 1)
+      | _ => (spaces, tabs, true)
+      };
     };
-    incr(i);
-  };
 
-  (spaceCount^, tabCount^, foundChar^);
+  loop(0, 0, 0);
 };
 
 type t = {
@@ -38,15 +31,12 @@ type t = {
 let getMaxKey = (map: IntMap.t(int)) => {
   let (maxKey, _) =
     IntMap.fold(
-      (key, v, curr) => {
-        let (curMaxKey, curMaxVal) = curr;
-
+      (key, v, (curMaxKey, curMaxVal)) =>
         if (v > curMaxVal || curMaxKey == (-1)) {
           (key, v);
         } else {
           (curMaxKey, curMaxVal);
-        };
-      },
+        },
       map,
       ((-1), (-1)),
     );
@@ -56,27 +46,21 @@ let getMaxKey = (map: IntMap.t(int)) => {
 
 let guessIndentation =
     (
-      ~f: int => string,
+      ~f as getLine: int => string,
       lineCount: int,
       defaultTabSize: int,
       defaultInsertSpaces: bool,
     ) => {
   let linesToCheck = min(lineCount, 1000);
-  let i = ref(0);
 
   /* Map of the delta between spaces in lines */
   let spaceDelta = ref(IntMap.empty);
   let linesWithLeadingSpaces = ref(0);
   let linesWithLeadingTabs = ref(0);
-  while (i^ < linesToCheck) {
-    let idx = i^;
-    let line = f(idx);
 
-    let prevLine =
-      switch (idx) {
-      | 0 => ""
-      | v => f(v - 1)
-      };
+  for (i in 0 to linesToCheck - 1) {
+    let line = getLine(i);
+    let prevLine = i == 0 ? "" : getLine(i - 1);
 
     let (spaceCount, tabCount, foundChar) = getLeadingWhitespace(line);
 
@@ -108,46 +92,38 @@ let guessIndentation =
         };
       };
     };
-
-    incr(i);
   };
 
-  let linesWithSpaces = linesWithLeadingSpaces^;
-  let linesWithTabs = linesWithLeadingTabs^;
-
   let shouldInsertSpaces =
-    if (linesWithSpaces == linesWithTabs) {
+    if (linesWithLeadingSpaces^ == linesWithLeadingTabs^) {
       defaultInsertSpaces;
-    } else if (linesWithSpaces > linesWithTabs) {
-      true;
     } else {
-      false;
+      linesWithLeadingSpaces^ > linesWithLeadingTabs^;
     };
 
+  let mode =
+    shouldInsertSpaces ? IndentationSettings.Spaces : IndentationSettings.Tabs;
+
   let size =
-    switch (shouldInsertSpaces) {
-    | false => defaultTabSize
-    | true =>
+    if (shouldInsertSpaces) {
       let max = getMaxKey(spaceDelta^);
       if (max >= Constants.minSpaces) {
         max;
       } else {
         defaultTabSize;
       };
+    } else {
+      defaultTabSize;
     };
 
-  let mode =
-    shouldInsertSpaces ? IndentationSettings.Spaces : IndentationSettings.Tabs;
   {mode, size};
 };
 
 let guessIndentationArray =
-    (lines: array(string), defaultTabSize: int, defaultInsertSpaces: bool) => {
-  let f = i => lines[i];
+    (lines: array(string), defaultTabSize: int, defaultInsertSpaces: bool) =>
   guessIndentation(
-    ~f,
+    ~f=i => lines[i],
     Array.length(lines),
     defaultTabSize,
     defaultInsertSpaces,
   );
-};
