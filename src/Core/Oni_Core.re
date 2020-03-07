@@ -42,6 +42,7 @@ module StringMap = Kernel.StringMap;
 module Subscription = Subscription;
 module SyntaxScope = SyntaxScope;
 module Theme = Theme;
+module ColorTheme = ColorTheme;
 module ThreadHelper = Kernel.ThreadHelper;
 module Tokenizer = Tokenizer;
 module UiFont = UiFont;

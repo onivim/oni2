@@ -1,5 +1,5 @@
 {
-  "checksum": "4b38e24c1172794a982390069029b267",
+  "checksum": "056e8ac5f3cfb292b4a9f935abcc1c57",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -128,19 +128,19 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#4277c43@d41d8cd9",
+        "revery@github:revery-ui/revery#d95d551@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#e0737be@d41d8cd9",
         "isolinear@3.0.0@d41d8cd9", "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#4277c43@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#4277c43@d41d8cd9",
+    "revery@github:revery-ui/revery#d95d551@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#d95d551@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#4277c43",
+      "version": "github:revery-ui/revery#d95d551",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#4277c43" ]
+        "source": [ "github:revery-ui/revery#d95d551" ]
       },
       "overrides": [],
       "dependencies": [
@@ -149,8 +149,8 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-skia@github:revery-ui/reason-skia#48ee835@d41d8cd9",
-        "reason-sdl2@2.10.3018@d41d8cd9",
-        "reason-harfbuzz@github:revery-ui/reason-harfbuzz#eca58ea@d41d8cd9",
+        "reason-sdl2@2.10.3019@d41d8cd9",
+        "reason-harfbuzz@1.91.8000@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
@@ -304,13 +304,13 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9": {
-      "id": "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9",
+    "reason-textmate@github:onivim/reason-textmate#98fbca5@d41d8cd9": {
+      "id": "reason-textmate@github:onivim/reason-textmate#98fbca5@d41d8cd9",
       "name": "reason-textmate",
-      "version": "github:onivim/reason-textmate#5f0dc38",
+      "version": "github:onivim/reason-textmate#98fbca5",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-textmate#5f0dc38" ]
+        "source": [ "github:onivim/reason-textmate#98fbca5" ]
       },
       "overrides": [],
       "dependencies": [
@@ -335,7 +335,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3018@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3019@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
         "esy-freetype2@2.9.1007@d41d8cd9", "@opam/lwt@opam:4.5.0@677655b4",
@@ -346,14 +346,14 @@
       ],
       "devDependencies": []
     },
-    "reason-sdl2@2.10.3018@d41d8cd9": {
-      "id": "reason-sdl2@2.10.3018@d41d8cd9",
+    "reason-sdl2@2.10.3019@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3019@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "2.10.3018",
+      "version": "2.10.3019",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3018.tgz#sha1:10184d2aeea19857a088e7c4e4952ab2f033d9c1"
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3019.tgz#sha1:77af5cc162d5a7ea244a870defa9072e24845067"
         ]
       },
       "overrides": [],
@@ -380,7 +380,8 @@
       "overrides": [],
       "dependencies": [
         "reperf@1.5.0@d41d8cd9", "refmterr@3.3.0@d41d8cd9",
-        "ocaml@4.8.1000@d41d8cd9", "esy-oniguruma@6.9.4000@d41d8cd9",
+        "ocaml@4.8.1000@d41d8cd9",
+        "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/dune@opam:2.3.1@b10b59bf",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
@@ -425,18 +426,18 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#8eed027@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#8eed027@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#a897319@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#a897319@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#8eed027",
+      "version": "github:onivim/reason-libvim#a897319",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#8eed027" ]
+        "source": [ "github:onivim/reason-libvim#a897319" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
-        "libvim@8.10869.29@d41d8cd9",
+        "libvim@8.10869.31@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "@opam/dune-configurator@opam:2.3.1@f275cf9a",
         "@opam/dune@opam:2.3.1@b10b59bf",
@@ -465,18 +466,20 @@
       ],
       "devDependencies": []
     },
-    "reason-harfbuzz@github:revery-ui/reason-harfbuzz#eca58ea@d41d8cd9": {
-      "id":
-        "reason-harfbuzz@github:revery-ui/reason-harfbuzz#eca58ea@d41d8cd9",
+    "reason-harfbuzz@1.91.8000@d41d8cd9": {
+      "id": "reason-harfbuzz@1.91.8000@d41d8cd9",
       "name": "reason-harfbuzz",
-      "version": "github:revery-ui/reason-harfbuzz#eca58ea",
+      "version": "1.91.8000",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-harfbuzz#eca58ea" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-harfbuzz/-/reason-harfbuzz-1.91.8000.tgz#sha1:e9ab9be7de60f283b24e22d0804417800cbef9e9"
+        ]
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.8.1000@d41d8cd9", "esy-harfbuzz@1.9.1005@d41d8cd9",
+        "ocaml@4.8.1000@d41d8cd9", "esy-harfbuzz@1.9.1008@d41d8cd9",
+        "@opam/dune-configurator@opam:2.3.1@f275cf9a",
         "@opam/dune@opam:2.3.1@b10b59bf",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
@@ -643,14 +646,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.29@d41d8cd9": {
-      "id": "libvim@8.10869.29@d41d8cd9",
+    "libvim@8.10869.31@d41d8cd9": {
+      "id": "libvim@8.10869.31@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.29",
+      "version": "8.10869.31",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.29.tgz#sha1:ef7588b9343ff8434117b6cb12ddcb38634064fd"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.31.tgz#sha1:7d29e24ff75566e46f8d121ce0a5f1d96c6ddae3"
         ]
       },
       "overrides": [],
@@ -880,15 +883,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-oniguruma@6.9.4000@d41d8cd9": {
-      "id": "esy-oniguruma@6.9.4000@d41d8cd9",
+    "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9": {
+      "id": "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
       "name": "esy-oniguruma",
-      "version": "6.9.4000",
+      "version": "github:onivim/esy-oniguruma#4698ce4",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/esy-oniguruma/-/esy-oniguruma-6.9.4000.tgz#sha1:cf7ce7c957094170bb246e2122ba74a35da880ae"
-        ]
+        "source": [ "github:onivim/esy-oniguruma#4698ce4" ]
       },
       "overrides": [],
       "dependencies": [],
@@ -987,14 +988,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-harfbuzz@1.9.1005@d41d8cd9": {
-      "id": "esy-harfbuzz@1.9.1005@d41d8cd9",
+    "esy-harfbuzz@1.9.1008@d41d8cd9": {
+      "id": "esy-harfbuzz@1.9.1008@d41d8cd9",
       "name": "esy-harfbuzz",
-      "version": "1.9.1005",
+      "version": "1.9.1008",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/esy-harfbuzz/-/esy-harfbuzz-1.9.1005.tgz#sha1:04651c73d33ce8004e61fde35a7549a7b9e908b6"
+          "archive:https://registry.npmjs.org/esy-harfbuzz/-/esy-harfbuzz-1.9.1008.tgz#sha1:b83d1e80752d6f334f6c3e37b5b857d7d13adb67"
         ]
       },
       "overrides": [],
@@ -1184,15 +1185,15 @@
       "overrides": [ "test.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#ceeb7f7@d41d8cd9",
-        "revery@github:revery-ui/revery#4277c43@d41d8cd9",
+        "revery@github:revery-ui/revery#d95d551@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:bryphe/reasonFuzz#c04fab7@d41d8cd9",
         "reason-tree-sitter@github:onivim/reason-tree-sitter#e2c571e@d41d8cd9",
-        "reason-textmate@github:onivim/reason-textmate#5f0dc38@d41d8cd9",
-        "reason-sdl2@2.10.3018@d41d8cd9",
+        "reason-textmate@github:onivim/reason-textmate#98fbca5@d41d8cd9",
+        "reason-sdl2@2.10.3019@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#8eed027@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#a897319@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
         "isolinear@3.0.0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
@@ -2257,8 +2258,8 @@
         "ocaml@4.8.1000@d41d8cd9", "@opam/dune@opam:2.3.1@b10b59bf"
       ]
     },
-    "@opam/menhir@opam:20200211@90483d81": {
-      "id": "@opam/menhir@opam:20200211@90483d81",
+    "@opam/menhir@opam:20200211@26571604": {
+      "id": "@opam/menhir@opam:20200211@26571604",
       "name": "@opam/menhir",
       "version": "opam:20200211",
       "source": {
@@ -2273,11 +2274,17 @@
           "path": "test.esy.lock/opam/menhir.20200211"
         }
       },
-      "overrides": [],
+      "overrides": [
+        {
+          "opamoverride":
+            "test.esy.lock/overrides/opam__s__menhir_opam__c__20200211_opam_override"
+        }
+      ],
       "dependencies": [
         "ocaml@4.8.1000@d41d8cd9", "@opam/menhirSdk@opam:20200211@1b43927c",
         "@opam/menhirLib@opam:20200211@99279102",
-        "@opam/dune@opam:2.3.1@b10b59bf", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+        "@opam/fix@opam:20200131@0ecd2f01", "@opam/dune@opam:2.3.1@b10b59bf",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.8.1000@d41d8cd9", "@opam/menhirSdk@opam:20200211@1b43927c",
@@ -3203,7 +3210,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.8.1000@d41d8cd9", "@opam/menhir@opam:20200211@90483d81",
+        "ocaml@4.8.1000@d41d8cd9", "@opam/menhir@opam:20200211@26571604",
         "@opam/jbuilder@opam:1.0+beta20.2@053ddcf2",
         "@opam/easy-format@opam:1.3.1@54402780",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
@@ -3290,7 +3297,7 @@
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocaml-migrate-parsetree@opam:1.6.0@da2643e7",
         "@opam/merlin-extend@opam:0.4@64c45329",
-        "@opam/menhir@opam:20200211@90483d81",
+        "@opam/menhir@opam:20200211@26571604",
         "@opam/fix@opam:20200131@0ecd2f01", "@opam/dune@opam:2.3.1@b10b59bf"
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
