@@ -3,14 +3,7 @@ open Kernel;
 module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {
-  let getDefaultShell = () => {
-    switch (Sys.getenv_opt("SHELL")) {
-    | Some(v) => v
-    | None => Sys.win32 ? "cmd.exe" : "/usr/bin/bash"
-    };
-  };
-
-  let getShellFromPath = () =>
+  let getPathFromEnvironment = () =>
     switch (Sys.getenv_opt("PATH")) {
     | Some(path) => path
     | None =>
@@ -19,11 +12,18 @@ module Internal = {
     };
 };
 
-let getShellPath = () => {
+let getDefaultShell = () => {
+  switch (Sys.getenv_opt("SHELL")) {
+  | Some(v) => v
+  | None => Sys.win32 ? "cmd.exe" : "/bin/bash"
+  };
+};
+
+let getPathFromShell = () => {
   let path =
     switch (Revery.Environment.os) {
     | Mac =>
-      let shell = Internal.getDefaultShell();
+      let shell = getDefaultShell();
       let shellCmd = Printf.sprintf("%s -lc 'echo $PATH'", shell);
       try({
         let (stdOut, stdIn, stdErr) = Unix.open_process_full(shellCmd, [||]);
@@ -34,10 +34,10 @@ let getShellPath = () => {
         path;
       }) {
       | ex =>
-        Log.warn("Unable to retrive path: " ++ Printexc.to_string(ex));
-        Internal.getShellFromPath();
+        Log.warn("Unable to retreive path: " ++ Printexc.to_string(ex));
+        Internal.getPathFromEnvironment();
       };
-    | _ => Internal.getShellFromPath()
+    | _ => Internal.getPathFromEnvironment()
     };
 
   Log.debug("Path detected as: " ++ path);

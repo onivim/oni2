@@ -47,7 +47,7 @@ let commonChecks = [
   (
     "Verify PATH is available",
     _ => {
-      let path = ShellUtility.getShellPath();
+      let path = ShellUtility.getPathFromShell();
       Log.info("Got PATH: " ++ path);
       true;
     },
