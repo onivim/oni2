@@ -13,9 +13,12 @@ module Internal = {
 
   // This strategy for determing the default shell came from StackOverflow:
   // https://stackoverflow.com/a/41553295
-  let discoverOSXShell = () => {
+  // This is important because in some cases, like launching from Finder,
+  // there may not be an $SHELL environment variable for us.
+  let discoverOSXShell = () =>
     try({
-      let (stdOut, stdIn, stdErr) = Unix.open_process_full("/usr/bin/dscl . read ~/ UserShell", [||]);
+      let (stdOut, stdIn, stdErr) =
+        Unix.open_process_full("/usr/bin/dscl . read ~/ UserShell", [||]);
       let userShell = input_line(stdOut);
       let () = close_in(stdOut);
       let () = close_out(stdIn);
@@ -25,29 +28,34 @@ module Internal = {
       let len = String.length(userShell);
       let slashIndex = String.index(userShell, '/');
       Log.infof(m => m("dscl returned: %s", userShell));
-      
+
       String.sub(userShell, slashIndex, len - slashIndex);
     }) {
-    | ex => 
+    | ex =>
       Log.warn("Unable to run dscl to get user shell");
-      "/bin/bash"
+      "/bin/bash";
     };
-  };
 };
 
 let getDefaultShell = () => {
-  lazy {
-    // We assume if the $SHELL environment variable is specified,
-    // that should be the default.
-    switch (Sys.getenv_opt("SHELL")) {
-    | Some(v) => v
-    | None => switch (Revery.Environment.os) {
-      | Windows => "cmd.exe"
-      | Mac => Internal.discoverOSXShell()
-      | _ => "/bin/bash"
+  (
+    lazy(
+      {
+        // We assume if the $SHELL environment variable is specified,
+        // that should be the default.
+        switch (Sys.getenv_opt("SHELL")) {
+        | Some(v) => v
+        | None =>
+          switch (Revery.Environment.os) {
+          | Windows => "cmd.exe"
+          | Mac => Internal.discoverOSXShell()
+          | _ => "/bin/bash"
+          }
+        };
       }
-    };
-  } |> Lazy.force;
+    )
+  )
+  |> Lazy.force;
 };
 
 let getPathFromShell = () => {
