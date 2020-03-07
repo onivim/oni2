@@ -106,7 +106,7 @@ describe("IndentationGuesser", ({describe, _}) =>
     test("mostly single spaced", ({expect}) => {
       let r = guessIndentationArray(mostlySingleSpaced, 4, true);
       expect.bool(r.mode == Spaces).toBe(true);
-      expect.int(r.size).toBe(1);
+      expect.int(r.size).toBe(2);
     });
 
     test("mostly double spaced", ({expect}) => {

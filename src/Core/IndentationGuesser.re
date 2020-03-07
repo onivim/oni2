@@ -3,6 +3,11 @@
  */
 open Kernel;
 
+module Constants = {
+  // The minimum numbers of spaces for considering it indentation
+  let minSpaces = 2;
+};
+
 let getLeadingWhitespace = (s: string) => {
   let len = String.length(s);
   let i = ref(0);
@@ -77,7 +82,7 @@ let guessIndentation =
 
     /* Only consider lines with non-whitespace */
     if (foundChar) {
-      if (spaceCount > 0) {
+      if (spaceCount >= Constants.minSpaces) {
         incr(linesWithLeadingSpaces);
       };
 
@@ -89,7 +94,7 @@ let guessIndentation =
         getLeadingWhitespace(prevLine);
       if (prevFoundChar) {
         let diff = abs(prevSpaceCount - spaceCount);
-        if (diff > 0) {
+        if (diff >= Constants.minSpaces) {
           spaceDelta :=
             IntMap.update(
               diff,
@@ -124,7 +129,7 @@ let guessIndentation =
     | false => defaultTabSize
     | true =>
       let max = getMaxKey(spaceDelta^);
-      if (max > 0) {
+      if (max >= Constants.minSpaces) {
         max;
       } else {
         defaultTabSize;
