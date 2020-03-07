@@ -5,8 +5,8 @@
  */
 
 module Buffer = Buffer;
-// TODO: Move to own module
 module BufferLine = BufferLine;
+module BufferPath = BufferPath;
 module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
 module Cli = Cli;
