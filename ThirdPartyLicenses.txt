@@ -16,7 +16,6 @@ This project incorporates components from the projects listed below. The origina
 10. vscode-textmate (https://github.com/Microsoft/vscode-textmate)
 11. OneDark-Pro (https://github.com/binaryify/OneDark-Pro)
 12. Zed (https://github.com/ocaml-community/zed)
-12. yoriuki/Camomile (https://github.com/yoriyuki/Camomile)
 13. ocsigen/lwt (https://github.com/ocsigen/lwt)
 14. zandoye/charInfo_width (https://bitbucket.org/zandoye/charinfo_width)
 15. ocaml-community/yojson (https://github.com/ocaml-community/yojson)
@@ -3178,12 +3177,6 @@ SOFTWARE.
 END of LaserWave NOTICES AND INFORMATION
 
  
-%% <template> NOTICES AND INFORMATION BEGIN HERE
-==============================================
-
-==============================================
-END of <template> NOTICES AND INFORMATION
-
 - camlp5 is licensed as follows:
   """
     * Copyright (c) 2007-2017, INRIA (Institut National de Recherches en
@@ -3222,3 +3215,23 @@ END of <template> NOTICES AND INFORMATION
 
     THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   """
+
+%% uutf NOTICES AND INFORMATION BEGIN HERE
+==============================================
+Copyright (c) 2016 Daniel C. Bünzli
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+==============================================
+END of uutf NOTICES AND INFORMATION
+
+%% uucp NOTICES AND INFORMATION BEGIN HERE
+==============================================
+Copyright (c) 2014 The uucp programmers
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+==============================================
+END of uucp NOTICES AND INFORMATION
