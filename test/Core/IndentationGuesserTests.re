@@ -31,6 +31,15 @@ describe("IndentationGuesser", ({describe, _}) =>
       "      ghi",
     |];
 
+    let mostlyTripleSpaced = [|
+      "   abc",
+      "      def",
+      "   ghi",
+      "   ghi",
+      "     ghi",
+      "        ghi",
+    |];
+
     let largerExample = [|
       "module Index = {",
       "  [@deriving show({with_path: false})]",
@@ -115,6 +124,12 @@ describe("IndentationGuesser", ({describe, _}) =>
       expect.int(r.size).toBe(2);
     });
 
+    test("mostly triple spaced", ({expect}) => {
+      let r = guessIndentationArray(mostlyTripleSpaced, 4, true);
+      expect.bool(r.mode == Spaces).toBe(true);
+      expect.int(r.size).toBe(3);
+    });
+
     test("larger example", ({expect}) => {
       let r = guessIndentationArray(largerExample, 4, false);
       expect.bool(r.mode == Spaces).toBe(true);
@@ -123,8 +138,8 @@ describe("IndentationGuesser", ({describe, _}) =>
 
     test("single-space block comment", ({expect}) => {
       let r = guessIndentationArray(singleSpaceBlockComment, 4, false);
-      expect.bool(r.mode == Spaces).toBe(true);
-      expect.int(r.size).toBe(2);
+      expect.bool(r.mode == Tabs).toBe(true);
+      expect.int(r.size).toBe(4);
     });
   })
 );
