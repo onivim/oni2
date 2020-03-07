@@ -21,11 +21,14 @@
         Oni2.syntax
         Oni2.syntax_client
         Oni2.components
+        Oni2.feature.theme
         Oni2.feature.search
+        Oni2.feature.syntax
         Oni2.feature.language_support
         Oni2.feature.editor
         Oni2.feature.scm
         Oni2.feature.terminal
+        Oni2.service.font
         ReasonFuzz
         textmate
         editor-core-types

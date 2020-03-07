@@ -21,13 +21,15 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let container = (~isHeightEstimated, ~height) => [
+  let container = (~height) => [
     position(`Relative),
     top(0),
     left(0),
-    isHeightEstimated ? bottom(0) : Style.height(height),
+    switch (height) {
+    | Some(height) => Style.height(height)
+    | None => flexGrow(1)
+    },
     overflow(`Hidden),
-    flexGrow(1),
   ];
 
   let slider = [
@@ -55,14 +57,14 @@ module Styles = {
   ];
 };
 
-let render = (~menuHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
+let render = (~viewportHeight, ~rowHeight, ~count, ~scrollTop, ~renderItem) =>
   if (rowHeight <= 0) {
     [];
   } else {
     let startRow = scrollTop / rowHeight;
     let startY = scrollTop mod rowHeight;
     let rowsToRender =
-      menuHeight
+      viewportHeight
       / rowHeight
       + Constants.additionalRowsToRender
       |> IntEx.clamp(~lo=0, ~hi=count - startRow);
@@ -94,19 +96,9 @@ let%component make =
                 ~ref as onRef=_ => (),
                 (),
               ) => {
-  let%hook outerRef = Hooks.ref(None);
-  let setOuterRef = ref => {
-    outerRef := Some(ref);
-    onRef(ref);
-  };
-
-  let menuHeight =
-    switch (outerRef^) {
-    | Some(node) =>
-      let dimensions: Dimensions.t = node#measurements();
-      dimensions.height;
-    | None => rowHeight * initialRowsToRender
-    };
+  let%hook (viewportHeight, setViewportHeight) =
+    Hooks.state(rowHeight * initialRowsToRender);
+  let contentHeight = count * rowHeight;
 
   let reducer = (action, actualScrollTop) =>
     switch (action) {
@@ -115,9 +107,9 @@ let%component make =
       if (offset < actualScrollTop) {
         // out of view above, so align with top edge
         offset;
-      } else if (offset + rowHeight > actualScrollTop + menuHeight) {
+      } else if (offset + rowHeight > actualScrollTop + viewportHeight) {
         // out of view below, so align with bottom edge
-        offset + rowHeight - menuHeight;
+        offset + rowHeight - viewportHeight;
       } else {
         actualScrollTop;
       };
@@ -129,7 +121,8 @@ let%component make =
 
   // Make sure we're not scrolled past the items
   let actualScrollTop =
-    actualScrollTop |> IntEx.clamp(~lo=0, ~hi=rowHeight * count - menuHeight);
+    actualScrollTop
+    |> IntEx.clamp(~lo=0, ~hi=rowHeight * count - viewportHeight);
 
   let%hook () =
     Hooks.effect(
@@ -148,8 +141,9 @@ let%component make =
   };
 
   let scrollbar = {
-    let maxHeight = count * rowHeight - menuHeight;
-    let thumbHeight = menuHeight * menuHeight / max(1, count * rowHeight);
+    let maxHeight = count * rowHeight - viewportHeight;
+    let thumbHeight =
+      viewportHeight * viewportHeight / max(1, count * rowHeight);
     let isVisible = maxHeight > 0;
 
     if (isVisible) {
@@ -158,7 +152,7 @@ let%component make =
           onValueChanged={v => dispatch(SetScrollTop(int_of_float(v)))}
           minimumValue=0.
           maximumValue={float_of_int(maxHeight)}
-          sliderLength=menuHeight
+          sliderLength=viewportHeight
           thumbLength=thumbHeight
           value={float_of_int(actualScrollTop)}
           trackThickness=Constants.scrollBarThickness
@@ -176,7 +170,7 @@ let%component make =
 
   let items =
     render(
-      ~menuHeight,
+      ~viewportHeight,
       ~rowHeight,
       ~count,
       ~scrollTop=actualScrollTop,
@@ -185,16 +179,20 @@ let%component make =
     |> React.listToElement;
 
   <View
-    style={Styles.container(
-      ~isHeightEstimated=outerRef^ == None,
-      ~height=min(menuHeight, count * rowHeight),
-    )}
-    ref=setOuterRef
-    onMouseWheel=scroll>
+    style=Style.[flexGrow(1)]
+    onDimensionsChanged={({height, _}) => {setViewportHeight(_ => height)}}>
     <View
-      style={Styles.viewport(~isScrollbarVisible=scrollbar == React.empty)}>
-      items
+      style={Styles.container(
+        // Set the height only to force it smaller, not bigger
+        ~height=contentHeight < viewportHeight ? Some(contentHeight) : None,
+      )}
+      ref=onRef
+      onMouseWheel=scroll>
+      <View
+        style={Styles.viewport(~isScrollbarVisible=scrollbar == React.empty)}>
+        items
+      </View>
+      scrollbar
     </View>
-    scrollbar
   </View>;
 };

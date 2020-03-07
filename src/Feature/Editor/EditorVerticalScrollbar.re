@@ -22,7 +22,7 @@ let make =
       ~diagnostics: IntMap.t(list(Diagnostic.t)),
       ~metrics,
       ~theme: Theme.t,
-      ~editorFont: EditorFont.t,
+      ~editorFont: Service_Font.font,
       ~bufferHighlights,
       (),
     ) => {
@@ -36,7 +36,7 @@ let make =
       left(0),
       width(totalWidth),
       height(scrollMetrics.thumbSize),
-      backgroundColor(theme.scrollbarSliderActiveBackground),
+      backgroundColor(theme.scrollbarSliderBackground),
     ];
 
   let totalPixel =

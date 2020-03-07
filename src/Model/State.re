@@ -14,7 +14,6 @@ module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 module ContextMenu = {
   type t =
@@ -26,7 +25,7 @@ type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
-  bufferSyntaxHighlights: BufferSyntaxHighlights.t,
+  colorTheme: Feature_Theme.model,
   commands: Commands.t,
   contextMenu: ContextMenu.t,
   mode: Vim.Mode.t,
@@ -35,7 +34,8 @@ type t = {
   decorationProviders: list(DecorationProvider.t),
   diagnostics: Diagnostics.t,
   definition: Definition.t,
-  editorFont: EditorFont.t,
+  editorFont: Service_Font.font,
+  terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: SideBar.t,
@@ -46,6 +46,7 @@ type t = {
   editorGroups: EditorGroups.t,
   extensions: Extensions.t,
   iconTheme: IconTheme.t,
+  isQuitting: bool,
   keyBindings: Keybindings.t,
   keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
@@ -56,8 +57,8 @@ type t = {
   scm: Feature_SCM.model,
   sneak: Sneak.t,
   statusBar: StatusBarModel.t,
-  syntaxHighlightingEnabled: bool,
   syntaxClient: option(Oni_Syntax_Client.t),
+  syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
   windowManager: WindowManager.t,
   fileExplorer: FileExplorer.t,
@@ -83,7 +84,8 @@ let create: unit => t =
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: BufferRenderers.initial,
-    bufferSyntaxHighlights: BufferSyntaxHighlights.empty,
+    colorTheme:
+      Feature_Theme.initial([Feature_Terminal.Contributions.colors]),
     commands: Commands.empty,
     contextMenu: ContextMenu.Nothing,
     completions: Completions.initial,
@@ -93,15 +95,8 @@ let create: unit => t =
     diagnostics: Diagnostics.create(),
     mode: Normal,
     quickmenu: None,
-    editorFont:
-      EditorFont.create(
-        ~fontFile="FiraCode-Regular.ttf",
-        ~fontSize=14.,
-        ~measuredWidth=1.,
-        ~measuredHeight=1.,
-        ~descenderHeight=0.,
-        (),
-      ),
+    editorFont: Service_Font.default,
+    terminalFont: Service_Font.default,
     extensions: Extensions.empty,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
@@ -111,6 +106,7 @@ let create: unit => t =
     tokenTheme: TokenTheme.empty,
     editorGroups: EditorGroups.create(),
     iconTheme: IconTheme.create(),
+    isQuitting: false,
     keyBindings: Keybindings.empty,
     keyDisplayer: None,
     languageInfo: Ext.LanguageInfo.initial,
@@ -119,8 +115,8 @@ let create: unit => t =
     scm: Feature_SCM.initial,
     sneak: Sneak.initial,
     statusBar: StatusBarModel.create(),
-    syntaxHighlightingEnabled: false,
     syntaxClient: None,
+    syntaxHighlights: Feature_Syntax.empty,
     windowManager: WindowManager.create(),
     windowTitle: "",
     windowIsFocused: true,

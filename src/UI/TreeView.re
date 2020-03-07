@@ -77,11 +77,11 @@ module Styles = {
 };
 
 module Make = (Model: TreeModel) => {
-  let arrow = (~isOpen, ()) =>
+  let arrow = (~isOpen, ~color, ()) =>
     <View style={Styles.arrow(int_of_float(Constants.arrowSize))}>
       <FontIcon
         fontSize=Constants.arrowSize
-        color=Colors.white
+        color
         icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
       />
     </View>;
@@ -97,6 +97,7 @@ module Make = (Model: TreeModel) => {
   let rec nodeView =
           (
             ~renderContent,
+            ~arrowColor,
             ~itemHeight,
             ~clipRange as (clipStart, clipEnd),
             ~onClick,
@@ -122,6 +123,7 @@ module Make = (Model: TreeModel) => {
           let element =
             <nodeView
               renderContent
+              arrowColor
               itemHeight
               clipRange=(clipStart - count, clipEnd - count)
               onClick
@@ -149,7 +151,7 @@ module Make = (Model: TreeModel) => {
       switch (Model.kind(node)) {
       | `Node(state) =>
         <View>
-          <item arrow={arrow(~isOpen=state == `Open)} />
+          <item arrow={arrow(~isOpen=state == `Open, ~color=arrowColor)} />
           <View style=Styles.children>
             {switch (state) {
              | `Open => node |> Model.children |> renderChildren
@@ -220,6 +222,7 @@ module Make = (Model: TreeModel) => {
   let%component make =
                 (
                   ~children as renderContent,
+                  ~arrowColor=Colors.white,
                   ~itemHeight,
                   ~initialRowsToRender=10,
                   ~onClick,
@@ -296,7 +299,14 @@ module Make = (Model: TreeModel) => {
       onMouseWheel>
       <View style={Styles.viewport(~showScrollbar)}>
         <View style={Styles.content(~scrollTop)}>
-          <nodeView renderContent itemHeight clipRange onClick node=tree />
+          <nodeView
+            renderContent
+            arrowColor
+            itemHeight
+            clipRange
+            onClick
+            node=tree
+          />
         </View>
       </View>
       {showScrollbar ? <scrollbar /> : React.empty}

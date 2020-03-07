@@ -28,16 +28,16 @@ let simpleState = {
 let simpleState =
   Reducer.reduce(
     simpleState,
-    Actions.SetEditorFont(
-      EditorFont.create(
-        ~fontFile=
+    Actions.EditorFont(
+      Service_Font.FontLoaded({
+        fontFile:
           Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
-        ~fontSize=10.,
-        ~measuredWidth=10.,
-        ~measuredHeight=10.,
-        ~descenderHeight=1.,
-        (),
-      ),
+        fontSize: 10.,
+        measuredWidth: 10.,
+        measuredHeight: 10.,
+        descenderHeight: 1.,
+        smoothing: Revery.Font.Smoothing.default,
+      }),
     ),
   );
 
@@ -49,12 +49,18 @@ let editorGroup =
 let thousandLines =
   Array.make(1000, "This is a buffer with a thousand lines!");
 
+let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
+  let newBuffer = Buffer.update(oldBuffer, update);
+  Actions.BufferUpdate({update, oldBuffer, newBuffer});
+};
+
 let thousandLineBuffer = Buffer.ofLines(thousandLines);
 
 let thousandLineState =
   Reducer.reduce(
     simpleState,
-    Actions.BufferUpdate(
+    createUpdateAction(
+      thousandLineBuffer,
       BufferUpdate.create(
         ~startLine=Index.zero,
         ~endLine=Index.fromZeroBased(1),
@@ -79,7 +85,8 @@ let thousandLinesWithIndents =
 let thousandLineStateWithIndents =
   Reducer.reduce(
     simpleState,
-    Actions.BufferUpdate(
+    createUpdateAction(
+      thousandLineBuffer,
       BufferUpdate.create(
         ~startLine=Index.zero,
         ~endLine=Index.fromZeroBased(1),
@@ -96,7 +103,8 @@ let hundredThousandLines =
 let hundredThousandLineState =
   Reducer.reduce(
     simpleState,
-    Actions.BufferUpdate(
+    createUpdateAction(
+      Buffer.ofLines([||]),
       BufferUpdate.create(
         ~startLine=Index.zero,
         ~endLine=Index.fromZeroBased(1),

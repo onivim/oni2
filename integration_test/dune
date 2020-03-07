@@ -20,6 +20,7 @@
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
+           RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
@@ -67,6 +68,7 @@
         QuickOpenEventuallyCompletesTest.exe
         Regression1097Test.exe
         RegressionCommandLineNoCompletionTest.exe
+        RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe

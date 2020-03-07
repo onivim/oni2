@@ -10,6 +10,7 @@
         lwt.unix
         Oni2.core
         Oni2.model
+        Oni2.feature.theme
         Oni2.components
         Oni2.feature.search
         Oni2.feature.editor

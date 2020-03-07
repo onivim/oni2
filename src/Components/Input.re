@@ -70,45 +70,15 @@ let getStringParts = (index, str) => {
   };
 };
 
-let getSafeStringBounds = (str, cursorPosition, change) => {
-  let nextPosition = cursorPosition + change;
-  let currentLength = String.length(str);
-  nextPosition > currentLength
-    ? currentLength : nextPosition < 0 ? 0 : nextPosition;
-};
-
-let removeCharacterBefore = (word, cursorPosition) => {
-  let (startStr, endStr) = getStringParts(cursorPosition, word);
-  let nextPosition = getSafeStringBounds(startStr, cursorPosition, -1);
-  let newString = Str.string_before(startStr, nextPosition) ++ endStr;
-  (newString, nextPosition);
-};
-
-let removeCharacterAfter = (word, cursorPosition) => {
-  let (startStr, endStr) = getStringParts(cursorPosition, word);
-  let newString =
-    startStr
-    ++ (
-      switch (endStr) {
-      | "" => ""
-      | _ => Str.last_chars(endStr, String.length(endStr) - 1)
-      }
-    );
-  (newString, cursorPosition);
-};
-
-let addCharacter = (word, char, index) => {
-  let (startStr, endStr) = getStringParts(index, word);
-  (startStr ++ char ++ endStr, String.length(startStr) + 1);
-};
-
 module Constants = {
   let cursorWidth = 2;
+  let selectionOpacity = 0.75;
 };
 
 module Styles = {
   let defaultPlaceholderColor = Colors.grey;
   let defaultCursorColor = Colors.black;
+  let defaultSelectionColor = Color.hex("#42557b");
 
   let default =
     Style.[
@@ -125,11 +95,12 @@ let%component make =
                 ~style=Styles.default,
                 ~placeholderColor=Styles.defaultPlaceholderColor,
                 ~cursorColor=Styles.defaultCursorColor,
+                ~selectionColor=Styles.defaultSelectionColor,
                 ~placeholder="",
                 ~prefix="",
                 ~isFocused,
                 ~value,
-                ~cursorPosition,
+                ~selection: Selection.t,
                 ~onClick,
                 (),
               ) => {
@@ -175,6 +146,12 @@ let%component make =
       transform(Transform.[TranslateX(float(offset))]),
     ];
 
+    let selection = offset => [
+      position(`Absolute),
+      marginTop(2),
+      transform(Transform.[TranslateX(float(offset))]),
+    ];
+
     let textContainer = [flexGrow(1), overflow(`Hidden)];
 
     let text = [
@@ -205,7 +182,7 @@ let%component make =
 
   let%hook () =
     Hooks.effect(
-      If((!=), (value, cursorPosition, isFocused)),
+      If((!=), (value, selection, isFocused)),
       () => {
         resetCursor();
         None;
@@ -214,7 +191,7 @@ let%component make =
 
   let () = {
     let cursorOffset =
-      measureTextWidth(String.sub(displayValue, 0, cursorPosition))
+      measureTextWidth(String.sub(displayValue, 0, selection.focus))
       |> int_of_float;
 
     switch (Option.bind(textRef^, r => r#getParent())) {
@@ -265,9 +242,10 @@ let%component make =
     | Some(node) =>
       let offset =
         int_of_float(event.mouseX) - offsetLeft(node) + scrollOffset^;
-      let cursorPosition = indexNearestOffset(offset);
+      let nearestOffset = indexNearestOffset(offset);
+      let selection = Selection.collapsed(~text=value, nearestOffset);
       resetCursor();
-      onClick(cursorPosition);
+      onClick(selection);
 
     | None => ()
     };
@@ -275,7 +253,7 @@ let%component make =
 
   let cursor = () => {
     let (startStr, _) =
-      getStringParts(cursorPosition + String.length(prefix), displayValue);
+      getStringParts(selection.focus + String.length(prefix), displayValue);
 
     let textWidth = measureTextWidth(startStr) |> int_of_float;
 
@@ -292,6 +270,36 @@ let%component make =
     </View>;
   };
 
+  let selectionView = () =>
+    if (Selection.isCollapsed(selection)) {
+      React.empty;
+    } else {
+      let startOffset = Selection.offsetLeft(selection);
+      let endOffset = Selection.offsetRight(selection);
+
+      let (beginnigStartStr, _) =
+        getStringParts(startOffset + String.length(prefix), displayValue);
+      let beginningTextWidth =
+        measureTextWidth(beginnigStartStr) |> int_of_float;
+      let startOffset = beginningTextWidth - scrollOffset^;
+
+      let (endingStartStr, _) =
+        getStringParts(endOffset + String.length(prefix), displayValue);
+      let endingTextWidth = measureTextWidth(endingStartStr) |> int_of_float;
+      let endOffset = endingTextWidth - scrollOffset^;
+      let width = endOffset - startOffset + Constants.cursorWidth;
+
+      <View style={Styles.selection(startOffset)}>
+        <Opacity opacity=Constants.selectionOpacity>
+          <Container
+            width
+            height={Styles.fontSize |> int_of_float}
+            color=selectionColor
+          />
+        </Opacity>
+      </View>;
+    };
+
   let text = () =>
     <Text
       ref={node => textRef := Some(node)}
@@ -302,6 +310,7 @@ let%component make =
   <Clickable onAnyClick=handleClick>
     <View style=Styles.box>
       <View style=Styles.marginContainer>
+        <selectionView />
         <cursor />
         <View style=Styles.textContainer> <text /> </View>
       </View>

@@ -142,6 +142,18 @@ if (process.platform == "linux") {
   copy(getNodePath(), path.join(binaryDirectory, "node"));
   copy(getRlsPath(), path.join(binaryDirectory, "rls"));
 
+  // Folders to delete
+  // TODO: Move this into our VSCode packaging, there are a lot of files we don't need to bundle at all
+  let resourceFoldersToDelete = [
+     "node/node_modules/vscode-exthost/out/vs/workbench/services/search/test",
+  ];
+
+  resourceFoldersToDelete.forEach((p) => {
+   let deletePath = path.join(resourcesDirectory, p); 
+   console.log("Deleting path: " + deletePath);
+   fs.removeSync(deletePath);
+  });
+
   // Remove setup.json prior to remapping bundled files,
   // so it doesn't get symlinked.
   fs.removeSync(path.join(binaryDirectory, "setup.json"));
@@ -178,6 +190,12 @@ if (process.platform == "linux") {
       "com.apple.security.cs.allow-jit": true,
       "com.apple.security.cs.allow-unsigned-executable-memory": true,
       "com.apple.security.cs.disable-library-validation": true,
+
+// Allow dyld environment variables. Needed because Onivim 2 uses
+//         dyld variables (such as @executable_path) to load libaries from
+//         within the .app bundle.
+// See: https://github.com/onivim/oni2/issues/1397
+      "com.apple.security.cs.allow-dyld-environment-variables": true,
   };
   fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents));
 

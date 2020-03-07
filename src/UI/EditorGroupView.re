@@ -79,7 +79,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
   let theme = state.theme;
   let mode = state.mode;
 
-  let style = editorViewStyle(theme.background, theme.foreground);
+  let style = editorViewStyle(theme.editorBackground, theme.foreground);
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -224,7 +224,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             maxMinimapCharacters
             matchingPairsEnabled
             bufferHighlights={state.bufferHighlights}
-            bufferSyntaxHighlights={state.bufferSyntaxHighlights}
+            bufferSyntaxHighlights={state.syntaxHighlights}
             diagnostics={state.diagnostics}
             completions={state.completions}
             tokenTheme={state.tokenTheme}
@@ -243,8 +243,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           |> Feature_Terminal.getTerminalOpt(id)
           |> Option.map(terminal => {
                <TerminalView
-                 theme
-                 editorFont={state.editorFont}
+                 theme={Feature_Theme.resolver(state.colorTheme)}
+                 font={state.terminalFont}
                  metrics
                  terminal
                />
@@ -261,7 +261,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         <Tabs
           active=isActive
           activeEditorId={editorGroup.activeEditorId}
-          theme
+          theme={Feature_Theme.resolver(state.colorTheme)}
           tabs
           mode
           uiFont

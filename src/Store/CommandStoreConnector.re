@@ -143,14 +143,20 @@ let createDefaultCommands = getState => {
       ),
       Command.create(
         ~category=Some("Terminal"),
-        ~name="Open terminal in horizontal split",
+        ~name="Open terminal in new horizontal split",
         ~action=Command("terminal.new.horizontal"),
         (),
       ),
       Command.create(
         ~category=Some("Terminal"),
-        ~name="Open terminal in vertical split",
+        ~name="Open terminal in new vertical split",
         ~action=Command("terminal.new.vertical"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in current window",
+        ~action=Command("terminal.new.current"),
         (),
       ),
     ]
@@ -331,7 +337,10 @@ let start = (getState, contributedCommands) => {
       _ => {
         singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.NewTerminal({splitDirection: Vertical}),
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Vertical,
+            }),
           ),
         );
       },
@@ -341,7 +350,23 @@ let start = (getState, contributedCommands) => {
       _ => {
         singleActionEffect(
           Actions.Terminal(
-            Feature_Terminal.NewTerminal({splitDirection: Horizontal}),
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Horizontal,
+            }),
+          ),
+        );
+      },
+    ),
+    (
+      "terminal.new.current",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Current,
+            }),
           ),
         );
       },
@@ -366,7 +391,7 @@ let start = (getState, contributedCommands) => {
 
   let updater = (state: State.t, action) => {
     switch (action) {
-    | Init(_) => (state, setInitialCommands)
+    | Init => (state, setInitialCommands)
 
     | EnableKeyDisplayer => (
         {...state, keyDisplayer: Some(KeyDisplayer.initial)},

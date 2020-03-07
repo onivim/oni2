@@ -96,6 +96,21 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
+    test("block deleted entirely", ({expect}) => {
+      let was = [|"a", "b", "c", "d"|];
+      let now = [||];
+
+      let buffer = Buffer.ofLines(now) |> Buffer.setOriginalLines(was);
+
+      let actual = EditorDiffMarkers.generate(buffer);
+      let expected = EditorDiffMarkers.([|DeletedBefore|]);
+
+      switch (actual) {
+      | Some(actual) => expect.array(actual).toEqual(expected)
+      | None => failwith("unreachable")
+      };
+    });
+
     test("single modified", ({expect}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", "C", "d"|];

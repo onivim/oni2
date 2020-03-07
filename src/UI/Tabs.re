@@ -7,6 +7,8 @@
 open Revery.UI;
 open Rench;
 
+module Theme = Feature_Theme;
+
 let noop = () => ();
 
 type tabInfo = {
@@ -16,17 +18,7 @@ type tabInfo = {
   renderer: Oni_Model.BufferRenderer.t,
 };
 
-let toTab =
-    (
-      theme,
-      mode,
-      uiFont,
-      numberOfTabs,
-      active,
-      activeEditorId,
-      index,
-      t: tabInfo,
-    ) => {
+let toTab = (theme, mode, uiFont, active, activeEditorId, t: tabInfo) => {
   let title =
     switch (t.renderer) {
     | Welcome => "Welcome"
@@ -35,12 +27,10 @@ let toTab =
 
   <Tab
     theme
-    tabPosition={index + 1}
-    numberOfTabs
     title
-    active={Some(t.editorId) == activeEditorId}
-    showHighlight=active
-    modified={t.modified}
+    isGroupFocused=active
+    isActive={Some(t.editorId) == activeEditorId}
+    isModified={t.modified}
     uiFont
     mode
     onClick={() => GlobalContext.current().openEditorById(t.editorId)}
@@ -105,7 +95,7 @@ let schedulePostRender = f => postRenderQueue := [f, ...postRenderQueue^];
 
 let%component make =
               (
-                ~theme,
+                ~theme: Oni_Core.ColorTheme.resolver,
                 ~tabs: list(tabInfo),
                 ~activeEditorId: option(int),
                 ~mode: Vim.Mode.t,
@@ -157,18 +147,22 @@ let%component make =
     });
   };
 
-  let tabCount = List.length(tabs);
   let tabComponents =
     tabs
-    |> List.mapi(
-         toTab(theme, mode, uiFont, tabCount, active, activeEditorId),
-       )
+    |> List.map(toTab(theme, mode, uiFont, active, activeEditorId))
     |> React.listToElement;
 
-  let outerStyle = Style.[flexDirection(`Row), overflow(`Scroll)];
+  let outerStyle =
+    Style.[
+      flexDirection(`Row),
+      overflow(`Scroll),
+      backgroundColor(
+        theme#color(Theme.Colors.EditorGroupHeader.tabsBackground),
+      ),
+    ];
 
   let innerViewTransform =
-    Transform.[TranslateX((-1.) *. float_of_int(actualScrollLeft))];
+    Transform.[TranslateX((-1.) *. float(actualScrollLeft))];
 
   let innerStyle =
     Style.[flexDirection(`Row), transform(innerViewTransform)];

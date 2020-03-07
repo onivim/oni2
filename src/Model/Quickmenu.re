@@ -1,10 +1,11 @@
 open Actions;
+module Selection = Oni_Components.Selection;
 
 type t = {
   variant,
   query: string,
   prefix: option(string),
-  cursorPosition: int,
+  selection: Selection.t,
   items: array(menuItem),
   filterProgress: progress,
   ripgrepProgress: progress,
@@ -24,7 +25,7 @@ let defaults = variant => {
   variant,
   query: "",
   prefix: None,
-  cursorPosition: 0,
+  selection: Selection.initial,
   focused: None,
   items: [||],
   filterProgress: Complete,
