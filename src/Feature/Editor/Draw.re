@@ -29,7 +29,7 @@ let createContext =
       ~scrollX,
       ~scrollY,
       ~lineHeight,
-      ~editorFont: Service_Font.t,
+      ~editorFont: Service_Font.font,
     ) => {
   let font = Revery.Font.load(editorFont.fontFile) |> Stdlib.Result.get_ok;
   let fontMetrics = Revery.Font.getMetrics(font, editorFont.fontSize);

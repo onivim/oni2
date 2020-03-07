@@ -7,6 +7,8 @@
 open Revery.UI;
 open Rench;
 
+module Theme = Feature_Theme;
+
 let noop = () => ();
 
 type tabInfo = {
@@ -29,9 +31,9 @@ let toTab = (theme, mode, uiFont, active, activeEditorId, t: tabInfo) => {
     theme
     filePath={t.filePath}
     title
+    isGroupFocused=active
     isActive={Some(t.editorId) == activeEditorId}
-    showHighlight=active
-    modified={t.modified}
+    isModified={t.modified}
     uiFont
     mode
     onClick={() => GlobalContext.current().openEditorById(t.editorId)}
@@ -96,7 +98,7 @@ let schedulePostRender = f => postRenderQueue := [f, ...postRenderQueue^];
 
 let%component make =
               (
-                ~theme,
+                ~theme: Oni_Core.ColorTheme.resolver,
                 ~tabs: list(tabInfo),
                 ~activeEditorId: option(int),
                 ~mode: Vim.Mode.t,
@@ -157,7 +159,9 @@ let%component make =
     Style.[
       flexDirection(`Row),
       overflow(`Scroll),
-      backgroundColor(theme.editorGroupsHeaderTabsBackground),
+      backgroundColor(
+        theme#color(Theme.Colors.EditorGroupHeader.tabsBackground),
+      ),
     ];
 
   let innerViewTransform =

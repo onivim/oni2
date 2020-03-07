@@ -1,4 +1,3 @@
-open Revery;
 open Revery.UI;
 
 open Oni_Core;
@@ -6,35 +5,35 @@ open Oni_Model;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
+module Colors = Feature_Theme.Colors.ActivityBar;
 
 module Styles = {
   open Style;
 
-  let container = (~theme: Theme.t, ~offsetX) => [
+  let container = (~theme, ~offsetX) => [
     top(0),
     bottom(0),
-    backgroundColor(theme.activityBarBackground),
+    backgroundColor(theme#color(Colors.background)),
     alignItems(`Center),
     transform(Transform.[TranslateX(offsetX)]),
   ];
 
-  let item = (~isHovered, ~isActive, ~theme: Theme.t) => [
+  let item = (~isHovered, ~isActive, ~theme) => [
     height(50),
     width(50),
     justifyContent(`Center),
     alignItems(`Center),
     borderLeft(
       ~width=2,
-      ~color=
-        isActive ? theme.activityBarActiveBorder : Colors.transparentWhite,
+      ~color=theme#color(isActive ? Colors.activeBorder : Colors.border),
     ),
     backgroundColor(
-      isHovered ? theme.activityBarActiveBackground : Colors.transparentWhite,
+      theme#color(isHovered ? Colors.activeBackground : Colors.background),
     ),
   ];
 };
 
-let%component item = (~onClick, ~theme: Theme.t, ~isActive, ~icon, ()) => {
+let%component item = (~onClick, ~theme, ~isActive, ~icon, ()) => {
   let%hook (isHovered, setHovered) = Hooks.state(false);
   let onMouseOver = _ => setHovered(_ => true);
   let onMouseOut = _ => setHovered(_ => false);
@@ -43,8 +42,9 @@ let%component item = (~onClick, ~theme: Theme.t, ~isActive, ~icon, ()) => {
     <Sneakable onClick style={Styles.item(~isHovered, ~isActive, ~theme)}>
       <FontIcon
         color={
-          isActive
-            ? theme.activityBarForeground : theme.activityBarInactiveForeground
+          theme#color(
+            isActive ? Colors.foreground : Colors.inactiveForeground,
+          )
         }
         fontSize=22.
         icon
@@ -77,7 +77,13 @@ let animation =
     |> delay(Revery.Time.milliseconds(75))
   );
 
-let%component make = (~theme, ~sideBar: SideBar.t, ~pane: Pane.t, ()) => {
+let%component make =
+              (
+                ~theme: ColorTheme.resolver,
+                ~sideBar: SideBar.t,
+                ~pane: Pane.t,
+                (),
+              ) => {
   let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
 
   let isSidebarVisible = it => SideBar.isVisible(it, sideBar);

@@ -84,7 +84,11 @@ let make = (~state: State.t, ()) => {
   let activityBar =
     activityBarVisible
       ? React.listToElement([
-          <Dock theme sideBar pane />,
+          <Dock
+            theme={Feature_Theme.resolver(state.colorTheme)}
+            sideBar
+            pane
+          />,
           <WindowHandle direction=Vertical theme />,
         ])
       : React.empty;

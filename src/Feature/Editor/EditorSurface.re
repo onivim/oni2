@@ -122,7 +122,7 @@ let make =
       ~theme: Theme.t,
       ~rulers=[],
       ~showLineNumbers=LineNumber.On,
-      ~editorFont: Service_Font.t,
+      ~editorFont: Service_Font.font,
       ~mode: Vim.Mode.t,
       ~showMinimap=true,
       ~showMinimapSlider=true,

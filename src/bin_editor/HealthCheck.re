@@ -119,6 +119,37 @@ let mainChecks = [
       ),
   ),
   (
+    "Revery: Verify can measure & shape font",
+    _ => {
+      let fontPath =
+        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf";
+      switch (Revery.Font.load(fontPath)) {
+      | Ok(font) =>
+        let metrics = Revery.Font.getMetrics(font, 12.0);
+        ignore(metrics);
+
+        let {height, width}: Revery.Font.measureResult =
+          Revery.Font.measure(
+            ~smoothing=Revery.Font.Smoothing.default,
+            font,
+            12.0,
+            "hello",
+          );
+        Log.infof(m =>
+          m("Measurements - width: %f height: %f", width, height)
+        );
+
+        let shapeResult = Revery.Font.shape(font, "abc => def");
+        let glyphCount = Revery.Font.ShapeResult.size(shapeResult);
+        Log.infof(m => m("Shaped glyphs: %d", glyphCount));
+        true;
+      | Error(msg) =>
+        Log.error(msg);
+        false;
+      };
+    },
+  ),
+  (
     "Verify bundled reason-language-server executable",
     (setup: Setup.t) => {
       let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);

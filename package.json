@@ -5,12 +5,14 @@
   "license": "MIT",
   "esy": {
     "build": "refmterr dune build -p Oni2 -j4",
+    "buildEnv": {
+	"MACOSX_DEPLOYMENT_TARGET": "10.12"
+    },
     "install": [
       "esy-installer Oni2.install",
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll \\'$cur__bin\\'': 'echo'}\"",
       "bash -c \"cp #{esy-sdl2.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{esy-skia.bin}/skia.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{@esy-ocaml/libffi.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
+      "bash -c \"cp #{esy-skia.bin}/skia.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
     ]
   },
   "build": {
@@ -205,12 +207,12 @@
     "isolinear": "^3.0.0",
     "ocaml": "~4.7.0",
     "reason-sdl2": "*",
-    "reason-jsonrpc": "1.4.0",
-    "reason-libvim": "8.10869.26000",
+    "reason-jsonrpc": "1.5.0",
+    "reason-libvim": "github:onivim/reason-libvim#a897319",
     "reason-native-crash-utils": "github:onivim/reason-native-crash-utils#ae1fd34",
     "reasonFuzz": "*",
     "rench": "1.7.1",
-    "revery": "0.27.0",
+    "revery": "0.30.0",
     "revery-terminal": "github:revery-ui/revery-terminal#ceeb7f7",
     "reason-tree-sitter": "*",
     "reason-textmate": "^2.3.0",
@@ -232,7 +234,7 @@
     "@opam/js_of_ocaml-compiler": "3.5.0",
     "@opam/js_of_ocaml-lwt": "3.5.2",
     "rebez": "github:jchavarri/rebez#46cbc183",
-    "reasonFuzz": "github:CrossR/reasonFuzz#d36e084",
+    "reasonFuzz": "github:bryphe/reasonFuzz#c04fab7",
     "pesy": "0.4.1",
     "@opam/ppx_tools_versioned": "5.2.3",
     "@opam/camomile": "1.0.1",
@@ -242,8 +244,7 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "reason-tree-sitter": "github:onivim/reason-tree-sitter#e2c571e",
-    "revery": "revery-ui/revery#5df4903",
-    "reason-libvim": "onivim/reason-libvim#05a1604",
+    "revery": "revery-ui/revery#d95d551",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
     "esy-sdl2": "revery-ui/esy-sdl2#b63892b",
@@ -252,9 +253,11 @@
     "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b6",
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
-    "reason-textmate": "onivim/reason-textmate#5f0dc38",
-    "@esy-ocaml/libffi": "esy-ocaml/libffi#c61127d",
-    "reason-harfbuzz": "revery-ui/reason-harfbuzz#0848520"
+    "reason-textmate": "onivim/reason-textmate#98fbca5",
+    "reason-harfbuzz": "revery-ui/reason-harfbuzz#eca58ea",
+    "@esy-ocaml/libffi": "onivim/libffi#590b041",
+    "reason-harfbuzz": "1.91.5008",
+    "esy-oniguruma": "onivim/esy-oniguruma#4698ce4"
   },
   "devDependencies": {
     "ocaml": "~4.8",

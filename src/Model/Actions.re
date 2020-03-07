@@ -53,7 +53,8 @@ type t =
       Location.t,
       [@opaque] LanguageFeatures.DefinitionResult.t,
     )
-  | Font(Service_Font.msg)
+  | EditorFont(Service_Font.msg)
+  | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
@@ -137,6 +138,7 @@ type t =
   | Search(Feature_Search.msg)
   | Sneak(Sneak.action)
   | Terminal(Feature_Terminal.msg)
+  | Theme(Feature_Theme.msg)
   | PaneTabClicked(Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)

@@ -22,7 +22,7 @@ let make =
       ~diagnostics: IntMap.t(list(Diagnostic.t)),
       ~metrics,
       ~theme: Theme.t,
-      ~editorFont: Service_Font.t,
+      ~editorFont: Service_Font.font,
       ~bufferHighlights,
       (),
     ) => {

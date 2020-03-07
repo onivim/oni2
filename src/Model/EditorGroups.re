@@ -10,7 +10,7 @@ type t = {
   idToGroup: IntMap.t(EditorGroup.t),
   activeId: int,
   /* Cache the last editor font, so when a new group is created, we can share it */
-  lastEditorFont: option(Service_Font.t),
+  lastEditorFont: option(Service_Font.font),
 };
 
 let create = () => {
@@ -65,7 +65,7 @@ let removeEmptyEditorGroups = model => {
 
 let reduce = (model, action: Actions.t) => {
   switch (action) {
-  | Font(Service_Font.FontLoaded(font)) => {
+  | EditorFont(Service_Font.FontLoaded(font)) => {
       ...model,
       idToGroup: applyToAllEditorGroups(model.idToGroup, action),
       lastEditorFont: Some(font),
@@ -79,7 +79,7 @@ let reduce = (model, action: Actions.t) => {
       | Some(font) =>
         EditorGroupReducer.reduce(
           editorGroup,
-          Font(Service_Font.FontLoaded(font)),
+          EditorFont(Service_Font.FontLoaded(font)),
         )
       | None => editorGroup
       };
