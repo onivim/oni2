@@ -141,14 +141,34 @@ let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
     | _ => Default
     };
 
-let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled =
+let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled = {
+  let decode =
+    Json.Decode.(
+      field("other", bool)
+      >>= (
+        other =>
+          field("comments", bool)
+          >>= (
+            comments =>
+              field("strings", bool)
+              >>= (strings => succeed({other, comments, strings}))
+          )
+      )
+    )
+    |> Json.Decode.decode_value;
   json =>
     switch (json) {
     | `Bool(enabled) => {other: enabled, comments: enabled, strings: enabled}
     // TODO: Parse JS objects of the form:
     // { "other": bool, "comments": bool, "strings": bool }
-    | _ => {other: false, comments: false, strings: false}
+    | _ =>
+      json
+      |> decode
+      |> Result.value(
+           ~default={other: false, comments: false, strings: false},
+         )
     };
+};
 
 let parseString = (~default="", json) =>
   switch (json) {
