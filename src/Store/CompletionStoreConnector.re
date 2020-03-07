@@ -83,29 +83,34 @@ module Actions = {
     let suggestEnabled =
       state.configuration
       |> Configuration.getValue(c => c.editorQuickSuggestions);
-    
+
     let maybeMeet =
-      OptionEx.bind2(maybeCursor, maybeBuffer, (location, buffer) => {
+      OptionEx.bind2(
+        maybeCursor,
+        maybeBuffer,
+        (location, buffer) => {
+          let {isComment, isString}: SyntaxScope.t =
+            Feature_Syntax.getSyntaxScope(
+              ~bufferId=Buffer.getId(buffer),
+              ~line=location.line,
+              ~bytePosition=location.column |> Index.toZeroBased,
+              state.syntaxHighlights,
+            );
 
-        let { isComment, isString }: SyntaxScope.t = Feature_Syntax.getSyntaxScope(
-          ~bufferId=Buffer.getId(buffer),
-          ~line=location.line,
-          ~bytePosition=location.column |> Index.toZeroBased,
-          state.syntaxHighlights
-        );
-        
-        let shouldCheckCompletion =
-          (isComment && suggestEnabled.comments)
-          || (isString && suggestEnabled.strings)
-          || suggestEnabled.other;
+          let shouldCheckCompletion =
+            isComment
+            && suggestEnabled.comments
+            || isString
+            && suggestEnabled.strings
+            || suggestEnabled.other;
 
-
-        if (shouldCheckCompletion) {
-          CompletionMeet.fromBufferLocation(~location, buffer)
-        } else {
-          None
-        };
-      });
+          if (shouldCheckCompletion) {
+            CompletionMeet.fromBufferLocation(~location, buffer);
+          } else {
+            None;
+          };
+        },
+      );
 
     switch (maybeBuffer, maybeMeet) {
     | (Some(buffer), Some(meet)) =>
