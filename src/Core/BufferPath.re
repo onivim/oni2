@@ -8,7 +8,10 @@ module OptionEx = Utility.OptionEx;
 
 type t =
   | FilePath(string)
-  | Terminal({bufferId: int, cmd: string})
+  | Terminal({
+      bufferId: int,
+      cmd: string,
+    })
   | Welcome;
 
 let welcome = "oni://Welcome";
@@ -26,9 +29,10 @@ let parse = bufferPath =>
          if (Array.length(matches) < 3) {
            None;
          } else {
-           let bufferId = OnigRegExp.Match.getText(matches[1]) |> int_of_string;
+           let bufferId =
+             OnigRegExp.Match.getText(matches[1]) |> int_of_string;
            let cmd = OnigRegExp.Match.getText(matches[2]);
-           Some(Terminal({bufferId, cmd: cmd}));
+           Some(Terminal({bufferId, cmd}));
          };
        })
     |> Option.value(~default=FilePath(bufferPath));

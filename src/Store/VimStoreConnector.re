@@ -667,10 +667,10 @@ let start =
               BufferRenderer.Terminal({title: "Terminal", id: bufferId}),
             ),
           ),
-        );
+        )
       | Welcome => ()
-      | FilePath(_) => ();
-      }
+      | FilePath(_) => ()
+      };
     });
 
   let applyCompletionEffect = completion =>
