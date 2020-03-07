@@ -79,36 +79,50 @@ module Actions = {
         Buffers.getBuffer(editor.bufferId, state.buffers)
       );
     let maybeCursor = Option.map(Editor.getPrimaryCursor, maybeEditor);
-    let maybeMeet =
-      OptionEx.bind2(maybeCursor, maybeBuffer, (location, buffer) =>
-        CompletionMeet.fromBufferLocation(~location, buffer)
-      );
 
     let suggestEnabled =
       state.configuration
       |> Configuration.getValue(c => c.editorQuickSuggestions);
+    
+    let maybeMeet =
+      OptionEx.bind2(maybeCursor, maybeBuffer, (location, buffer) => {
 
-    // TODO: Take into account syntax scope of cursor position
-    if (!suggestEnabled.other) {
-      stop(state);
-    } else {
-      switch (maybeBuffer, maybeMeet) {
-      | (Some(buffer), Some(meet)) =>
-        switch (state.completions.meet) {
-        | None => start(~buffer, ~meet, state)
+        let { isComment, isString }: SyntaxScope.t = Feature_Syntax.getSyntaxScope(
+          ~bufferId=Buffer.getId(buffer),
+          ~line=location.line,
+          ~bytePosition=location.column |> Index.toZeroBased,
+          state.syntaxHighlights
+        );
+        
+        let shouldCheckCompletion =
+          (isComment && suggestEnabled.comments)
+          || (isString && suggestEnabled.strings)
+          || suggestEnabled.other;
 
-        | Some(lastMeet)
-            when
-              meet.base != lastMeet.base
-              && meet == {...lastMeet, base: meet.base} =>
-          // Only base has changed, so narrow instead of requesting new completions
-          narrow(~meet, state)
 
-        | Some(_) => start(~buffer, ~meet, state)
-        }
+        if (shouldCheckCompletion) {
+          CompletionMeet.fromBufferLocation(~location, buffer)
+        } else {
+          None
+        };
+      });
 
-      | _ => stop(state)
-      };
+    switch (maybeBuffer, maybeMeet) {
+    | (Some(buffer), Some(meet)) =>
+      switch (state.completions.meet) {
+      | None => start(~buffer, ~meet, state)
+
+      | Some(lastMeet)
+          when
+            meet.base != lastMeet.base
+            && meet == {...lastMeet, base: meet.base} =>
+        // Only base has changed, so narrow instead of requesting new completions
+        narrow(~meet, state)
+
+      | Some(_) => start(~buffer, ~meet, state)
+      }
+
+    | _ => stop(state)
     };
   };
 
