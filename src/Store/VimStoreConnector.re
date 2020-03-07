@@ -491,7 +491,7 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e untitled");
+      let _ = Vim.command("e oni://welcome");
       hasInitialized := true;
 
       let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
