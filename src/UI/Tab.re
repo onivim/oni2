@@ -146,6 +146,7 @@ module Styles = {
 
 let%component make =
               (
+                ~filePath,
                 ~title,
                 ~isGroupFocused,
                 ~isActive,
@@ -159,9 +160,9 @@ let%component make =
               ) => {
   let state = GlobalContext.current().state;
   let language =
-    Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
+    Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, filePath);
   let fileIcon: option(Model.IconTheme.IconDefinition.t) =
-    Model.IconTheme.getIconForFile(state.iconTheme, title, language);
+    Model.IconTheme.getIconForFile(state.iconTheme, filePath, language);
   let%hook (isHovered, setHovered) = Hooks.state(false);
 
   let fileIconView =
