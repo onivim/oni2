@@ -5,6 +5,8 @@
  */
 open EditorCoreTypes;
 module ArrayEx = Utility.ArrayEx;
+module OptionEx = Utility.OptionEx;
+module Path = Utility.Path;
 
 type t = {
   id: int,
@@ -21,6 +23,25 @@ type t = {
 };
 
 let show = _ => "TODO";
+
+let getShortFriendlyName = ({filePath, _}) => {
+  Option.map(Filename.basename, filePath);
+};
+
+let getMediumFriendlyName = (~workingDirectory=?, {filePath, _}) => {
+      filePath
+      |> Option.map(fp =>
+           switch (workingDirectory) {
+           | Some(base) => Path.toRelative(~base, fp)
+           | _ => Sys.getcwd()
+           }
+         );
+};
+
+let getLongFriendlyName = ({filePath, _}) => {
+    filePath
+};
+
 
 let ofLines = (~id=0, rawLines: array(string)) => {
   let lines =

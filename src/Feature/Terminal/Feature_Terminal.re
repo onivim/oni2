@@ -20,7 +20,8 @@ type t = {
 
 let initial = {idToTerminal: IntMap.empty, nextId: 0};
 
-let getBufferName = id => "oni://terminal/" ++ string_of_int(id);
+let getBufferName = (id, cmd) => 
+  Printf.sprintf("oni://terminal/%d/%s", id, cmd);
 
 let toList = ({idToTerminal, _}) =>
   idToTerminal |> IntMap.bindings |> List.map(snd);
@@ -105,7 +106,7 @@ let update = (model: t, msg) => {
       );
     (
       {idToTerminal, nextId: id + 1},
-      TerminalCreated({name: getBufferName(id), splitDirection}),
+      TerminalCreated({name: getBufferName(id, cmdToUse), splitDirection}),
     );
   | KeyPressed({id, key}) =>
     let inputEffect =

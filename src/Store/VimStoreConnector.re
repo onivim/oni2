@@ -491,7 +491,7 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e oni://welcome");
+      let _ = Vim.command("e oni://Welcome");
       hasInitialized := true;
 
       let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
@@ -662,8 +662,13 @@ let start =
         let wholeLength = String.length(filePath);
         let prefixLength = String.length("oni://terminal/");
 
-        let id =
-          String.sub(filePath, prefixLength, wholeLength - prefixLength)
+        // Get string like 0/bash
+        let postFix = 
+          String.sub(filePath, prefixLength, wholeLength - prefixLength);
+
+        // And extract just number from it
+        let id = String.sub(postFix, 0, 
+          String.index(postFix, '/'))
           |> int_of_string;
 
         dispatch(
