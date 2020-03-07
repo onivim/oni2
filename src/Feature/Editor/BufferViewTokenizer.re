@@ -7,8 +7,6 @@ open Revery;
 
 open Oni_Core;
 
-open CamomileLibrary;
-
 type tokenType =
   | Tab
   | Whitespace
@@ -23,16 +21,16 @@ type t = {
   backgroundColor: Color.t,
 };
 
-let space = UChar.of_char(' ');
-let tab = UChar.of_char('\t');
-let cr = UChar.of_char('\r');
-let lf = UChar.of_char('\n');
+let space = Uchar.of_char(' ');
+let tab = Uchar.of_char('\t');
+let cr = Uchar.of_char('\r');
+let lf = Uchar.of_char('\n');
 
 let isWhitespace = c => {
-  UChar.eq(space, c)
-  || UChar.eq(tab, c)
-  || UChar.eq(cr, c)
-  || UChar.eq(lf, c);
+  Uchar.equal(space, c)
+  || Uchar.equal(tab, c)
+  || Uchar.equal(cr, c)
+  || Uchar.equal(lf, c);
 };
 
 let filterRuns = (r: Tokenizer.TextRun.t) => ZedBundled.length(r.text) != 0;
@@ -44,9 +42,9 @@ let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
   let firstChar = ZedBundled.get(r.text, 0);
 
   let tokenType =
-    if (UChar.eq(firstChar, tab)) {
+    if (Uchar.equal(firstChar, tab)) {
       Tab;
-    } else if (UChar.eq(firstChar, space)) {
+    } else if (Uchar.equal(firstChar, space)) {
       Whitespace;
     } else {
       Text;
@@ -84,8 +82,8 @@ let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {
     || !Color.equals(fg0, fg1)
     || isWhitespace(c0) != isWhitespace(c1)
     /* Always split on tabs */
-    || UChar.eq(c0, tab)
-    || UChar.eq(c1, tab);
+    || Uchar.equal(c0, tab)
+    || Uchar.equal(c1, tab);
   };
 
   Tokenizer.tokenize(~startIndex, ~endIndex, ~f=split, line)

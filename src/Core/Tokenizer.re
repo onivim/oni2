@@ -2,7 +2,6 @@
  * Tokenizer.re
  */
 
-open CamomileLibrary;
 open EditorCoreTypes;
 
 module Zed_utf8 = ZedBundled;
@@ -36,7 +35,7 @@ module TextRun = {
   };
 };
 
-type splitFunc = (int, UChar.t, int, UChar.t) => bool;
+type splitFunc = (int, Uchar.t, int, Uchar.t) => bool;
 
 let _getNextBreak =
     (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
@@ -46,8 +45,8 @@ let _getNextBreak =
   while (pos^ < max - 1 && ! found^) {
     let firstPos = pos^;
     let secondPos = pos^ + 1;
-    let char = BufferLine.getUCharExn(~index=firstPos, bufferLine);
-    let nextChar = BufferLine.getUCharExn(~index=secondPos, bufferLine);
+    let char = BufferLine.getUcharExn(~index=firstPos, bufferLine);
+    let nextChar = BufferLine.getUcharExn(~index=secondPos, bufferLine);
 
     if (f(firstPos, char, secondPos, nextChar)) {
       found := true;

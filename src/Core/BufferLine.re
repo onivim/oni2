@@ -5,16 +5,15 @@
  */
 exception OutOfBounds;
 
-open CamomileBundled.Camomile;
-let _space = UChar.of_char(' ');
-let tab = UChar.of_char('\t');
-let _cr = UChar.of_char('\r');
-let _lf = UChar.of_char('\n');
+let _space = Uchar.of_char(' ');
+let tab = Uchar.of_char('\t');
+let _cr = Uchar.of_char('\r');
+let _lf = Uchar.of_char('\n');
 
 type characterCacheInfo = {
   byteOffset: int,
   positionOffset: int,
-  uchar: UChar.t,
+  uchar: Uchar.t,
   width: int,
 };
 
@@ -36,7 +35,7 @@ type t = {
 
 module Internal = {
   let measure = (indentationSettings: IndentationSettings.t, c) =>
-    if (UChar.eq(c, tab)) {
+    if (Uchar.equal(c, tab)) {
       indentationSettings.tabSize;
     } else {
       1;
@@ -106,7 +105,7 @@ let lengthBounded = (~max, bufferLine) => {
   min(bufferLine.nextIndex, max);
 };
 
-let getUCharExn = (~index, bufferLine) => {
+let getUcharExn = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
   switch (characters[index]) {

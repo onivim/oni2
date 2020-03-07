@@ -3,4 +3,4 @@
   (public_name Oni2.zed)
   (wrapped false)
   (flags (:standard -safe-string))
-  (libraries bytes react camomile result charInfo_width))
+  (libraries bytes react uucp uutf result charInfo_width))

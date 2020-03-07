@@ -9,7 +9,6 @@ module Buffer = Buffer;
 module BufferLine = BufferLine;
 module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
-module CamomileBundled = CamomileBundled;
 module Cli = Cli;
 module ColorizedToken = ColorizedToken;
 module Configuration = Configuration;
