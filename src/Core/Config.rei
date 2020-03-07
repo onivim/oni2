@@ -3,6 +3,7 @@ type t;
 let empty: t;
 
 let fromList: list((string, Json.t)) => t;
+let fromFile: string => t;
 
 let union: (t, t) => t;
 let unionMany: list(t) => t;

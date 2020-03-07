@@ -40,6 +40,24 @@ let fromList = entries =>
   |> Seq.map(((keyName, entry)) => (Internal.Key.create(keyName), entry))
   |> Internal.Lookup.of_seq;
 
+let fromFile = path => {
+  switch (Yojson.Safe.from_file(path)) {
+  | `Assoc(items) => fromList(items)
+
+  | _ =>
+    Log.errorf(m =>
+      m("Expected configuration file to contain a JSON object")
+    );
+    empty;
+
+  | exception (Yojson.Json_error(message)) =>
+    Log.errorf(m =>
+      m("Error encoutnered reading configuration file: %s", message)
+    );
+    empty;
+  };
+};
+
 let union = (xs, ys) =>
   Internal.Lookup.union(
     (key, _x, y) => {
