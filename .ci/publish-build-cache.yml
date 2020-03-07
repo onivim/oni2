@@ -21,7 +21,7 @@ steps:
   
   - bash: |
       ls $(ESY__CACHE_INSTALL_PATH)/..
-      rm -rf $(ESY__CACHE_INSTALL_PATH)/..
+      rm -rf $(ESY__CACHE_INSTALL_PATH)/../
 
     workingDirectory: ''
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
