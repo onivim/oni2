@@ -1,6 +1,15 @@
+type t;
+
+let empty: t;
+
+let fromList: list((string, Json.t)) => t;
+
+let union: (t, t) => t;
+let unionMany: list(t) => t;
+
 module Schema: {
   type decoder('a);
-  type setting('a);
+  type setting('a) = t => 'a;
 
   let bool: decoder(option(bool));
   let int: decoder(option(int));
@@ -12,13 +21,3 @@ module Schema: {
 
   let setting: (string, decoder('a)) => setting('a);
 };
-
-type t;
-
-let empty: t;
-
-let get: (Schema.setting('a), t) => 'a;
-let fromList: list((string, Json.t)) => t;
-
-let union: (t, t) => t;
-let unionMany: list(t) => t;
