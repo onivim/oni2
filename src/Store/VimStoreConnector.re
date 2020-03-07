@@ -491,7 +491,7 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e oni://welcome");
+      let _ = Vim.command("e oni://Welcome");
       hasInitialized := true;
 
       let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
@@ -658,22 +658,18 @@ let start =
       | None => ()
       };
 
-      if (StringEx.startsWith(~prefix="oni://terminal", filePath)) {
-        let wholeLength = String.length(filePath);
-        let prefixLength = String.length("oni://terminal/");
-
-        let id =
-          String.sub(filePath, prefixLength, wholeLength - prefixLength)
-          |> int_of_string;
-
+      switch (Core.BufferPath.parse(filePath)) {
+      | Terminal({bufferId, cmd}) =>
         dispatch(
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
               metadata.id,
-              BufferRenderer.Terminal({id: id}),
+              BufferRenderer.Terminal({title: "Terminal", id: bufferId}),
             ),
           ),
-        );
+        )
+      | Welcome => ()
+      | FilePath(_) => ()
       };
     });
 

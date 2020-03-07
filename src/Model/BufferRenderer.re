@@ -11,10 +11,16 @@
  */
 
 [@deriving show({with_path: false})]
+type terminal = {
+  title: string,
+  id: int,
+};
+
+[@deriving show({with_path: false})]
 type t =
   | Editor
   | Welcome
-  | Terminal({id: int});
+  | Terminal(terminal);
 
 [@deriving show({with_path: false})]
 type action =
