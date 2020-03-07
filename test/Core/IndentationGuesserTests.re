@@ -69,6 +69,15 @@ describe("IndentationGuesser", ({describe, _}) =>
       "};",
     |];
 
+    let singleSpaceBlockComment = [|
+      "/*****",
+      " *",
+      " * Foo",
+      " *",
+      " *",
+      " */",
+    |];
+
     test("indeterminate uses passed-in settings", ({expect}) => {
       let settings = guessIndentationArray(indeterminateLines, 4, true);
       expect.bool(settings.mode == IndentationSettings.Spaces).toBe(true);
@@ -108,6 +117,12 @@ describe("IndentationGuesser", ({describe, _}) =>
 
     test("larger example", ({expect}) => {
       let r = guessIndentationArray(largerExample, 4, false);
+      expect.bool(r.mode == Spaces).toBe(true);
+      expect.int(r.size).toBe(2);
+    });
+
+    test("single-space block comment", ({expect}) => {
+      let r = guessIndentationArray(singleSpaceBlockComment, 4, false);
       expect.bool(r.mode == Spaces).toBe(true);
       expect.int(r.size).toBe(2);
     });
