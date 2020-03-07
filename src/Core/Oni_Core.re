@@ -50,4 +50,5 @@ module Utility = Utility;
 module Views = Views;
 module VimEx = VimEx;
 module VisualRange = VisualRange;
-module ZedBundled = ZedBundled;
+module ZedBundled = Zed_utf8;
+module Zed_utf8 = Zed_utf8;

@@ -6,7 +6,6 @@
 open ReasonFuzz;
 
 module IndexEx = Utility.IndexEx;
-module Zed_utf8 = ZedBundled;
 
 type result('a) = {
   item: 'a,
