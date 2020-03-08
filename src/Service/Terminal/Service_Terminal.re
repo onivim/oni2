@@ -88,6 +88,8 @@ module Sub = {
             ~rows=params.rows,
             ~columns=params.columns,
             ~onEffect,
+            ~scrollBackSize=256,
+            (),
           );
 
         Hashtbl.replace(Internal.idToTerminal, params.id, terminal);
