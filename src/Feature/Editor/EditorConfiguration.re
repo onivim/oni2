@@ -3,11 +3,9 @@ open Oni_Core;
 open Config.Schema;
 
 module CustomDecoders: {
-  let whitespace:
-    Config.Schema.decoder(option([ | `All | `Boundary | `None]));
-  let lineNumbers:
-    Config.Schema.decoder(option([ | `On | `Relative | `Off]));
-  let time: Config.Schema.decoder(option(Time.t));
+  let whitespace: Config.Schema.decoder([ | `All | `Boundary | `None]);
+  let lineNumbers: Config.Schema.decoder([ | `On | `Relative | `Off]);
+  let time: Config.Schema.decoder(Time.t);
 } = {
   open Json.Decode;
 
@@ -41,39 +39,37 @@ module CustomDecoders: {
 open CustomDecoders;
 
 let detectIndentation =
-  setting("editor.detectIndentation", bool |> default(true));
+  setting("editor.detectIndentation", bool, ~default=true);
 let fontFamily =
-  setting("editor.fontFamily", string |> default("FiraCode-Regular.ttf"));
-let fontSize = setting("editor.fontSize", int |> default(14));
+  setting("editor.fontFamily", string, ~default="FiraCode-Regular.ttf");
+let fontSize = setting("editor.fontSize", int, ~default=14);
 let largeFileOptimization =
-  setting("editor.largeFileOptimizations", bool |> default(true));
+  setting("editor.largeFileOptimizations", bool, ~default=true);
 let highlightActiveIndentGuide =
-  setting("editor.highlightActiveIndentGuide", bool |> default(true));
-let indentSize = setting("editor.indentSize", int |> default(4));
-let insertSpaces = setting("editor.insertSpaces", bool |> default(false));
-let lineNumbers = setting("editor.lineNumbers", lineNumbers |> default(`On));
-let matchBrackets = setting("editor.matchBrackets", bool |> default(true));
+  setting("editor.highlightActiveIndentGuide", bool, ~default=true);
+let indentSize = setting("editor.indentSize", int, ~default=4);
+let insertSpaces = setting("editor.insertSpaces", bool, ~default=false);
+let lineNumbers = setting("editor.lineNumbers", lineNumbers, ~default=`On);
+let matchBrackets = setting("editor.matchBrackets", bool, ~default=true);
 let renderIndentGuides =
-  setting("editor.renderIndentGuides", bool |> default(true));
+  setting("editor.renderIndentGuides", bool, ~default=true);
 let renderWhitespace =
-  setting("editor.renderWhitespace", whitespace |> default(`All));
-let rulers = setting("editor.rulers", list(int) |> default([]));
-let tabSize = setting("editor.tabSize", int |> default(4));
+  setting("editor.renderWhitespace", whitespace, ~default=`All);
+let rulers = setting("editor.rulers", list(int), ~default=[]);
+let tabSize = setting("editor.tabSize", int, ~default=4);
 
 module Hover = {
-  let enabled = setting("editor.hover.enabled", bool |> default(true));
-  let delay = setting("editor.hover.delay", time |> default(Time.zero));
+  let enabled = setting("editor.hover.enabled", bool, ~default=true);
+  let delay = setting("editor.hover.delay", time, ~default=Time.zero);
 };
 
 module Minimap = {
-  let enabled = setting("editor.minimap.enabled", bool |> default(true));
-  let maxColumn = setting("editor.minimap.maxColumn", int |> default(120));
-  let showSlider =
-    setting("editor.minimap.showSlider", bool |> default(true));
+  let enabled = setting("editor.minimap.enabled", bool, ~default=true);
+  let maxColumn = setting("editor.minimap.maxColumn", int, ~default=120);
+  let showSlider = setting("editor.minimap.showSlider", bool, ~default=true);
 };
 
 module ZenMode = {
-  let hideTabs = setting("editor.zenMode.hideTabs", bool |> default(true));
-  let singleFile =
-    setting("editor.zenMode.singleFile", bool |> default(true));
+  let hideTabs = setting("editor.zenMode.hideTabs", bool, ~default=true);
+  let singleFile = setting("editor.zenMode.singleFile", bool, ~default=true);
 };

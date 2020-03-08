@@ -12,13 +12,12 @@ module Schema: {
   type decoder('a);
   type setting('a) = t => 'a;
 
-  let bool: decoder(option(bool));
-  let int: decoder(option(int));
-  let string: decoder(option(string));
-  let list: decoder(option('a)) => decoder(option(list('a)));
+  let bool: decoder(bool);
+  let int: decoder(int);
+  let string: decoder(string);
+  let list: decoder('a) => decoder(list('a));
 
-  let default: ('a, decoder(option('a))) => decoder('a);
-  let custom: Json.decoder('a) => decoder(option('a));
+  let custom: Json.decoder('a) => decoder('a);
 
-  let setting: (string, decoder('a)) => setting('a);
+  let setting: (string, decoder('a), ~default: 'a) => setting('a);
 };
