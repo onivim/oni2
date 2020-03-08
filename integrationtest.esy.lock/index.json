@@ -1,5 +1,5 @@
 {
-  "checksum": "ea5af7440af57496d636e38c5da9bdbf",
+  "checksum": "1721504d5c90d5fd39106631b3d2ab1a",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -148,7 +148,7 @@
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-skia@github:revery-ui/reason-skia#48ee835@d41d8cd9",
+        "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9",
         "reason-sdl2@2.10.3020@d41d8cd9",
         "reason-harfbuzz@1.91.8000@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
@@ -325,17 +325,18 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-skia@github:revery-ui/reason-skia#48ee835@d41d8cd9": {
-      "id": "reason-skia@github:revery-ui/reason-skia#48ee835@d41d8cd9",
+    "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9": {
+      "id": "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9",
       "name": "reason-skia",
-      "version": "github:revery-ui/reason-skia#48ee835",
+      "version": "github:revery-ui/reason-skia#cc3cfa8",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-skia#48ee835" ]
+        "source": [ "github:revery-ui/reason-skia#cc3cfa8" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3020@d41d8cd9",
+        "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-sdl2@2.0.10006@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
         "@opam/lwt@opam:4.5.0@677655b4", "@opam/dune@opam:2.3.1@b10b59bf",
