@@ -1,3 +1,4 @@
+open Oni_Core;
 open BenchFramework;
 open Feature_Editor;
 
@@ -32,6 +33,7 @@ let editorSurfaceMinimalState = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
+      config=Config.empty
     />,
   );
 };
@@ -57,6 +59,7 @@ let editorSurfaceThousandLineState = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
+      config=Config.empty
     />,
   );
 };
@@ -81,8 +84,10 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
-      shouldRenderIndentGuides=true
       windowIsFocused=true
+      config={Config.fromList([
+        ("editor.renderIndentGuides", Json.Encode.bool(true)),
+      ])}
     />,
   );
   ();
@@ -107,8 +112,10 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
-      showMinimap=false
       windowIsFocused=true
+      config={Config.fromList([
+        ("editor.minimap.enabled", Json.Encode.bool(false)),
+      ])}
     />,
   );
 };
@@ -134,6 +141,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
+      config=Config.empty
     />,
   );
 };
