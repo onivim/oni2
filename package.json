@@ -183,6 +183,7 @@
     "bootstrap": "esy node ./scripts/bootstrap.js",
     "format": "esy dune build @fmt --auto-promote",
     "checkhealth": "esy x Oni2 -f --checkhealth",
+    "check": "esy b dune build @check",
     "run": "esy x Oni2",
     "watch": "dune build --watch -p Oni2 -j4",
     "create-release": "esy node ./scripts/release.js",
