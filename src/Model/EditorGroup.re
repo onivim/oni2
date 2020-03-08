@@ -82,6 +82,38 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   };
 };
 
+let setActiveEditorByIndexDiff = (diff, model) => {
+  let tabs = model.reverseTabOrder;
+  let count = List.length(tabs);
+
+  if (count <= 1) {
+    // Nothing to change
+    model
+  } else {
+    switch (model.activeEditorId) {
+    | Some(activeEditorId) =>
+      switch (_getIndexOfElement(activeEditorId, tabs)) {
+      | (-1) => model
+      | idx =>
+        let newIndex =
+          switch (idx + diff) {
+          // Wrapping negative, go to end
+          | -1 => count - 1
+          // If this is past the end, go to zero, otherwise this index is fine
+          | i => i >= count ? 0 : i
+          };
+
+        {...model, activeEditorId: List.nth_opt(tabs, newIndex)};
+      }
+    | None => model
+    };
+  };
+}
+
+// The diff amounts are inverted because the list is in reverse order
+let nextEditor = setActiveEditorByIndexDiff(-1);
+let previousEditor = setActiveEditorByIndexDiff(1);
+
 let isEmpty = model => IntMap.is_empty(model.editors);
 
 let removeEditorById = (state, editorId) => {

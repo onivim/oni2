@@ -47,6 +47,18 @@ let createDefaultCommands = getState => {
       ),
       Command.create(
         ~category=Some("View"),
+        ~name="Open Next Editor",
+        ~action=Command("workbench.action.nextEditor"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Open Previous Editor",
+        ~action=Command("workbench.action.previousEditor"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
         ~name="Toggle Problems (Errors, Warnings)",
         ~action=Command("workbench.actions.view.problems"),
         (),
@@ -319,6 +331,8 @@ let start = (getState, contributedCommands) => {
     ("list.select", _ => singleActionEffect(ListSelect)),
     ("list.selectBackground", _ => singleActionEffect(ListSelectBackground)),
     ("view.closeEditor", state => closeEditorEffect(state)),
+    ("workbench.action.nextEditor", _ => singleActionEffect(ViewNextEditor)),
+    ("workbench.action.previousEditor", _ => singleActionEffect(ViewPreviousEditor)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
     (
