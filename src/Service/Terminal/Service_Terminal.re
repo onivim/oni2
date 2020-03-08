@@ -85,10 +85,10 @@ module Sub = {
 
         let terminal =
           ReveryTerminal.make(
+            ~scrollBackSize=512,
             ~rows=params.rows,
             ~columns=params.columns,
             ~onEffect,
-            ~scrollBackSize=256,
             (),
           );
 
