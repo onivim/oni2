@@ -1,44 +1,19 @@
 open Revery;
 
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
-
-// INTERNAL
-
-module Internal = {
-  module Key: {
-    type t =
-      pri {
-        hash: int,
-        name: string,
-      };
-    let compare: (t, t) => int;
-    let create: string => t;
-  } = {
-    type t = {
-      hash: int,
-      name: string,
-    };
-
-    let compare = (a, b) =>
-      a.hash == b.hash ? compare(a.name, b.name) : compare(a.hash, b.hash);
-
-    let create = name => {hash: Hashtbl.hash(name), name};
-  };
-
-  module Lookup = Map.Make(Key);
-};
+module Lookup = Kernel.KeyedStringMap;
 
 // CONFIGURATION
 
-type t = Internal.Lookup.t(Json.t);
+type t = Lookup.t(Json.t);
 
-let empty = Internal.Lookup.empty;
+let empty = Lookup.empty;
 
 let fromList = entries =>
   entries
   |> List.to_seq
-  |> Seq.map(((keyName, entry)) => (Internal.Key.create(keyName), entry))
-  |> Internal.Lookup.of_seq;
+  |> Seq.map(((keyName, entry)) => (Lookup.key(keyName), entry))
+  |> Lookup.of_seq;
 
 let fromFile = path => {
   switch (Yojson.Safe.from_file(path)) {
@@ -59,16 +34,17 @@ let fromFile = path => {
 };
 
 let union = (xs, ys) =>
-  Internal.Lookup.union(
-    (key, _x, y) => {
-      Log.warnf(m => m("Encountered duplicate key: %s", key.name));
+  Lookup.union(
+    (key: Lookup.key, _x, y) => {
+      Log.warnf(m =>
+        m("Encountered duplicate key: %s", Lookup.keyName(key))
+      );
       Some(y);
     },
     xs,
     ys,
   );
-let unionMany = lookups =>
-  List.fold_left(union, Internal.Lookup.empty, lookups);
+let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
 
 module Schema = {
   type decoder('a) =
@@ -94,12 +70,12 @@ module Schema = {
 
   let setting: type a. (string, decoder(a), t) => a =
     (keyName, decoder) => {
-      let key = Internal.Key.create(keyName);
+      let key = Lookup.key(keyName);
 
       lookup => {
         switch (decoder) {
         | Optional(decoder) =>
-          switch (Internal.Lookup.find_opt(key, lookup)) {
+          switch (Lookup.find_opt(key, lookup)) {
           | Some(jsonValue) =>
             switch (Json.Decode.decode_value(decoder, jsonValue)) {
             | Ok(value) => Some(value)
@@ -107,7 +83,7 @@ module Schema = {
               Log.errorf(m =>
                 m(
                   "Error decoding configuration value `%s`:\n\t%s",
-                  key.name,
+                  keyName,
                   Json.Decode.string_of_error(err),
                 )
               );
@@ -115,12 +91,12 @@ module Schema = {
             }
           | None =>
             Log.warnf(m =>
-              m("Unknown configuration key requested: %s", key.name)
+              m("Unknown configuration key requested: %s", keyName)
             );
             None;
           }
         | WithDefault(default, decoder) =>
-          switch (Internal.Lookup.find_opt(key, lookup)) {
+          switch (Lookup.find_opt(key, lookup)) {
           | Some(jsonValue) =>
             switch (Json.Decode.decode_value(decoder, jsonValue)) {
             | Ok(value) => value
@@ -128,7 +104,7 @@ module Schema = {
               Log.errorf(m =>
                 m(
                   "Error decoding configuration value `%s`:\n\t%s",
-                  key.name,
+                  keyName,
                   Json.Decode.string_of_error(err),
                 )
               );

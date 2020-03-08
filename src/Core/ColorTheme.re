@@ -1,6 +1,7 @@
 open Revery;
 
 module Log = (val Log.withNamespace("Oni2.Core.ColorTheme"));
+module Lookup = Kernel.KeyedStringMap;
 
 // vscode: type
 [@deriving show({with_path: false})]
@@ -9,36 +10,10 @@ type variant =
   | Dark
   | HighContrast;
 
-// INTERNAL
-
-module Internal = {
-  module Key: {
-    type t =
-      pri {
-        hash: int,
-        name: string,
-      };
-    let compare: (t, t) => int;
-    let create: string => t;
-  } = {
-    type t = {
-      hash: int,
-      name: string,
-    };
-
-    let compare = (a, b) =>
-      a.hash == b.hash ? compare(a.name, b.name) : compare(a.hash, b.hash);
-
-    let create = name => {hash: Hashtbl.hash(name), name};
-  };
-
-  module Lookup = Map.Make(Key);
-};
-
 // KEY
 
-type key = Internal.Key.t;
-let key = Internal.Key.create;
+type key = Lookup.key;
+let key = Lookup.key;
 
 // DEFAULTS
 
@@ -88,28 +63,29 @@ module Schema = {
     from: resolver => Color.t,
   };
 
-  type t = Internal.Lookup.t(definition);
+  type t = Lookup.t(definition);
 
   let fromList = entries =>
     entries
     |> List.to_seq
     |> Seq.map(definition => (definition.key, definition))
-    |> Internal.Lookup.of_seq;
+    |> Lookup.of_seq;
 
-  let get = Internal.Lookup.find_opt;
+  let get = Lookup.find_opt;
 
   let union = (xs, ys) =>
-    Internal.Lookup.union(
+    Lookup.union(
       (key, _x, y) => {
-        Log.warnf(m => m("Encountered duplicate default: %s", key.name));
+        Log.warnf(m =>
+          m("Encountered duplicate default: %s", Lookup.keyName(key))
+        );
         Some(y);
       },
       xs,
       ys,
     );
 
-  let unionMany = lookups =>
-    List.fold_left(union, Internal.Lookup.empty, lookups);
+  let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
 
   // DSL
 
@@ -140,7 +116,7 @@ module Schema = {
     let all = value => {light: value, dark: value, hc: value};
 
     let define = (keyName, defaults) => {
-      let key = Internal.Key.create(keyName);
+      let key = Lookup.key(keyName);
 
       let rec tryGet = (resolve, key) =>
         switch (resolve(key)) {
@@ -168,18 +144,16 @@ module Schema = {
 // COLORS
 
 module Colors = {
-  type t = Internal.Lookup.t(Color.t);
+  type t = Lookup.t(Color.t);
 
-  let empty = Internal.Lookup.empty;
+  let empty = Lookup.empty;
   let fromList = entries =>
     entries
     |> List.to_seq
-    |> Seq.map(((keyName, entry)) =>
-         (Internal.Key.create(keyName), entry)
-       )
-    |> Internal.Lookup.of_seq;
+    |> Seq.map(((keyName, entry)) => (Lookup.key(keyName), entry))
+    |> Lookup.of_seq;
 
-  let get = Internal.Lookup.find_opt;
+  let get = Lookup.find_opt;
 };
 
 // THEME
