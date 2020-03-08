@@ -240,7 +240,7 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onTerminal(({cmd, curwin}) => {
+    Vim.onTerminal(({cmd, curwin, _}) => {
       let splitDirection =
         if (curwin) {Feature_Terminal.Current} else {
           Feature_Terminal.Horizontal
@@ -659,7 +659,7 @@ let start =
       };
 
       switch (Core.BufferPath.parse(filePath)) {
-      | Terminal({bufferId, cmd}) =>
+      | Terminal({bufferId, _}) =>
         dispatch(
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(

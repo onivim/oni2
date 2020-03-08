@@ -194,7 +194,7 @@
     "@esy-ocaml/reason": "3.5.2",
     "@opam/camomile": "^1.0.1",
     "@opam/charInfo_width": "*",
-    "@opam/dune": "*",
+    "@opam/dune": "^2.0.0",
     "@opam/lwt": "*",
     "@opam/ocamlbuild": "*",
     "@opam/ppx_deriving": "*",
