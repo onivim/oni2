@@ -20,11 +20,6 @@ let developmentExtensionsPath = path.join(rootDir, "development_extensions");
 let rgPath = path.join(vendorPath, "ripgrep-v0.10.0")
 let rlsPath = path.join(vendorPath, "reason-language-server");
 
-let camomileRoot = process.argv[2];
-let camomilePath = path.join(camomileRoot, "share", "camomile");
-
-console.log("Camomile path: " + camomilePath);
-
 const getCygwinPath = inputPath => {
     return inputPath.replace(/\\/g, "/")
 }
@@ -51,7 +46,6 @@ if (isWindows) {
 
 const config = {
     node: nodePath,
-    camomile: camomilePath,
     nodeScript: nodeScriptPath,
     bundledExtensions: extensionsPath,
     developmentExtensions: developmentExtensionsPath,

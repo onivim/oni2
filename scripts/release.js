@@ -22,11 +22,6 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md");
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt");
 
-let camomileRoot = process.argv[2];
-let camomilePath = path.join(camomileRoot, "share", "camomile");
-
-console.log("Camomile path: " + camomilePath);
-
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`);
      if (process.platform == "darwin") {
@@ -137,7 +132,6 @@ if (process.platform == "linux") {
 
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(nodeScriptSourceDirectory, resourcesDirectory);
-  copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
   copy(getRlsPath(), path.join(binaryDirectory, "rls"));
@@ -185,17 +179,19 @@ if (process.platform == "linux") {
 
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${frameworksDirectory}" -p "@executable_path/../Frameworks/" -cd`);
 
+  const frameworks = fs.readdirSync(frameworksDirectory);
+
+  if (frameworks.length > 0) {
+    console.error("Found a dynamic library: " + JSON.stringify(frameworks));
+    console.error("There should be only static libraries to successfully package.");
+    throw "FrameworkFound";
+  }
+
   const entitlementsPath = path.join(releaseDirectory, "entitlements.plist");
   const entitlementsContents = {
       "com.apple.security.cs.allow-jit": true,
       "com.apple.security.cs.allow-unsigned-executable-memory": true,
       "com.apple.security.cs.disable-library-validation": true,
-
-// Allow dyld environment variables. Needed because Onivim 2 uses
-//         dyld variables (such as @executable_path) to load libaries from
-//         within the .app bundle.
-// See: https://github.com/onivim/oni2/issues/1397
-      "com.apple.security.cs.allow-dyld-environment-variables": true,
   };
   fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents));
 
@@ -238,7 +234,6 @@ if (process.platform == "linux") {
   copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
   copy(getNodePath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"));
   copy(getRlsPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"));
-  copy(camomilePath, path.join(platformReleaseDirectory, "camomile"));
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconFile = path.join(imageSourceDirectory, "oni2.ico");
   fs.copySync(iconFile, path.join(platformReleaseDirectory, "oni2.ico"));

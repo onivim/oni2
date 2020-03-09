@@ -19,9 +19,7 @@
   "author": "",
   "license": "SEE LICENSE IN README.md",
   "devDependencies": {
-    "@types/jest": "*",
     "@types/node": "^11.9.5",
-    "jest": "*",
     "typescript": "^3.3.3333"
   },
   "resolutions": {

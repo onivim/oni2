@@ -20,7 +20,8 @@ type t = {
 
 let initial = {idToTerminal: IntMap.empty, nextId: 0};
 
-let getBufferName = id => "oni://terminal/" ++ string_of_int(id);
+let getBufferName = (id, cmd) =>
+  Printf.sprintf("oni://terminal/%d/%s", id, cmd);
 
 let toList = ({idToTerminal, _}) =>
   idToTerminal |> IntMap.bindings |> List.map(snd);
@@ -31,11 +32,15 @@ let getTerminalOpt = (id, {idToTerminal, _}) =>
 [@deriving show({with_path: false})]
 type splitDirection =
   | Vertical
-  | Horizontal;
+  | Horizontal
+  | Current;
 
 [@deriving show({with_path: false})]
 type msg =
-  | NewTerminal({splitDirection})
+  | NewTerminal({
+      cmd: option(string),
+      splitDirection,
+    })
   | Resized({
       id: int,
       rows: int,
@@ -76,15 +81,20 @@ let updateById = (id, f, model) => {
 
 let update = (model: t, msg) => {
   switch (msg) {
-  | NewTerminal({splitDirection}) =>
-    let cmd = shellCmd;
+  | NewTerminal({cmd, splitDirection}) =>
+    let cmdToUse =
+      switch (cmd) {
+      | None => shellCmd
+      | Some(specifiedCommand) => specifiedCommand
+      };
+
     let id = model.nextId;
     let idToTerminal =
       IntMap.add(
         id,
         {
           id,
-          cmd,
+          cmd: cmdToUse,
           rows: 40,
           columns: 40,
           pid: None,
@@ -96,7 +106,7 @@ let update = (model: t, msg) => {
       );
     (
       {idToTerminal, nextId: id + 1},
-      TerminalCreated({name: getBufferName(id), splitDirection}),
+      TerminalCreated({name: getBufferName(id, cmdToUse), splitDirection}),
     );
   | KeyPressed({id, key}) =>
     let inputEffect =

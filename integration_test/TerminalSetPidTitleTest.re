@@ -17,7 +17,7 @@ runTest(~name="TerminalSetPidTitle", (dispatch, wait, _) => {
   // Spin up a terminal
   dispatch(
     Actions.Terminal(
-      Feature_Terminal.NewTerminal({splitDirection: Vertical}),
+      Feature_Terminal.NewTerminal({cmd: None, splitDirection: Vertical}),
     ),
   );
 
