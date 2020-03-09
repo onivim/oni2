@@ -32,7 +32,13 @@ const packagesToInstall = [
 packagesToInstall.forEach((pkg) => {
     const fullPath = path.join(rootDir, pkg);
     console.log("Installing packages at: " + fullPath);
-    cp.spawnSync(nodeBinaryPath, args, {stdio: "inherit", cwd: fullPath});
+    console.log("Running: " + nodeBinaryPath + " | " + JSON.stringify(args));
+    const result = cp.spawnSync(nodeBinaryPath, args, {stdio: "inherit", cwd: fullPath});
+    if (result.status != 0) {
+        console.error(`Process exited with code ${result.status}`);
+        console.error(`stderr: ${result.stderr}`);
+        throw result.error;
+    }
 });
 
 console.log("Node dependencies successfully installed.");
