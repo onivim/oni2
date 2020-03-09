@@ -58,6 +58,7 @@ let start = () => {
           windowTree:
             WindowTree.addSplit(
               ~target=Some(s.windowManager.activeWindowId),
+              ~position=End,
               direction,
               split,
               s.windowManager.windowTree,

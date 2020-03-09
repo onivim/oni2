@@ -19,9 +19,19 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, Horizontal, split1)
-        |> addSplit(~target=Some(split1.id), Horizontal, split2)
-        |> addSplit(~target=Some(split2.id), Horizontal, split3);
+        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Horizontal,
+             split2,
+           )
+        |> addSplit(
+             ~target=Some(split2.id),
+             ~position=Before,
+             Horizontal,
+             split3,
+           );
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 300, 300, splits);
 
@@ -62,8 +72,13 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, Vertical, split1)
-        |> addSplit(~target=Some(split1.id), Vertical, split2);
+        |> addSplit(~target=None, ~position=Before, Vertical, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Vertical,
+             split2,
+           );
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
@@ -85,8 +100,13 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, Horizontal, split1)
-        |> addSplit(~target=Some(split1.id), Horizontal, split2);
+        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Horizontal,
+             split2,
+           );
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
@@ -108,9 +128,19 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, Horizontal, split1)
-        |> addSplit(~target=Some(split1.id), Horizontal, split2)
-        |> addSplit(~target=Some(split1.id), Vertical, split3);
+        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Horizontal,
+             split2,
+           )
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Vertical,
+             split3,
+           );
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
