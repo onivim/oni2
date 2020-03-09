@@ -24,6 +24,8 @@ module Internal = {
     ret;
   };
 
+  // This strategy for determing the default shell for Linux came from StackOverflow:
+  // https://unix.stackexchange.com/a/352320
   let discoverLinuxShell = () =>
     try({
       let user = Sys.getenv("USER");
@@ -32,7 +34,9 @@ module Internal = {
       userShell;
     }) {
     | ex =>
-      Log.warnf(m => m("Unable to get shell from getent: %s", Printexc.to_string(ex));
+      Log.warnf(m =>
+        m("Unable to get shell from getent: %s", Printexc.to_string(ex))
+      );
       defaultPosixShell;
     };
 
@@ -52,7 +56,9 @@ module Internal = {
       String.sub(userShell, slashIndex, len - slashIndex);
     }) {
     | ex =>
-      Log.warnf(m => m("Unable to run dscl to get user shell: %s", Printexc.to_string(ex)));
+      Log.warnf(m =>
+        m("Unable to run dscl to get user shell: %s", Printexc.to_string(ex))
+      );
       defaultPosixShell;
     };
 };
