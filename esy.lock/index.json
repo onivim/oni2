@@ -1,5 +1,5 @@
 {
-  "checksum": "654ea3e8838df8b53eda3a4afcdfeba0",
+  "checksum": "04dedfa4de851059dc276ffa0db99120",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -148,7 +148,7 @@
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-skia@github:revery-ui/reason-skia#48ee835@d41d8cd9",
+        "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9",
         "reason-sdl2@2.10.3020@d41d8cd9",
         "reason-harfbuzz@1.91.8000@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
@@ -325,21 +325,21 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-skia@github:revery-ui/reason-skia#48ee835@d41d8cd9": {
-      "id": "reason-skia@github:revery-ui/reason-skia#48ee835@d41d8cd9",
+    "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9": {
+      "id": "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9",
       "name": "reason-skia",
-      "version": "github:revery-ui/reason-skia#48ee835",
+      "version": "github:revery-ui/reason-skia#cc3cfa8",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-skia#48ee835" ]
+        "source": [ "github:revery-ui/reason-skia#cc3cfa8" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3020@d41d8cd9",
+        "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
-        "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
-        "esy-freetype2@2.9.1007@d41d8cd9", "@opam/lwt@opam:4.5.0@677655b4",
-        "@opam/dune@opam:2.3.1@b10b59bf",
+        "esy-sdl2@2.0.10006@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
+        "@opam/lwt@opam:4.5.0@677655b4", "@opam/dune@opam:2.3.1@b10b59bf",
         "@opam/ctypes-foreign@opam:0.4.0@b1c8ff37",
         "@opam/ctypes@opam:0.15.1@b0227b2f",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
@@ -358,8 +358,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.3.0@d41d8cd9",
-        "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9", "esy-sdl2@2.0.10006@d41d8cd9",
         "esy-cmake@github:prometheansacrifice/esy-cmake#2a47392def755@d41d8cd9",
         "@opam/dune-configurator@opam:2.3.1@f275cf9a",
         "@opam/dune@opam:2.3.1@b10b59bf",
@@ -871,13 +870,15 @@
       ],
       "devDependencies": []
     },
-    "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9": {
-      "id": "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
+    "esy-sdl2@2.0.10006@d41d8cd9": {
+      "id": "esy-sdl2@2.0.10006@d41d8cd9",
       "name": "esy-sdl2",
-      "version": "github:revery-ui/esy-sdl2#b63892b",
+      "version": "2.0.10006",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/esy-sdl2#b63892b" ]
+        "source": [
+          "archive:https://registry.npmjs.org/esy-sdl2/-/esy-sdl2-2.0.10006.tgz#sha1:f16e204a0c3a5fbeca1bb0d1cccbaaa4519cddd3"
+        ]
       },
       "overrides": [],
       "dependencies": [],
@@ -1197,8 +1198,7 @@
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
         "isolinear@3.0.0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
-        "esy-sdl2@github:revery-ui/esy-sdl2#b63892b@d41d8cd9",
-        "esy-macdylibbundler@0.4.5@d41d8cd9",
+        "esy-sdl2@2.0.10006@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "axios@0.19.2@d41d8cd9", "@reason-native/rely@1.3.1@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
