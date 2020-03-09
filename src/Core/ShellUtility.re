@@ -3,7 +3,8 @@ open Kernel;
 module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {
-  let defaultPosixShell = "/bin/bash";
+  let defaultLinuxShell = "/bin/bash";
+  let defaultOSXShell = "/bin/zsh";
 
   let getPathFromEnvironment = () =>
     switch (Sys.getenv_opt("PATH")) {
@@ -34,7 +35,7 @@ module Internal = {
       Log.warnf(m =>
         m("Unable to get shell from passwd: %s", Printexc.to_string(ex))
       );
-      defaultPosixShell;
+      defaultLinuxShell;
     };
 
   // This strategy for determing the default shell came from StackOverflow:
@@ -56,7 +57,7 @@ module Internal = {
       Log.warnf(m =>
         m("Unable to run dscl to get user shell: %s", Printexc.to_string(ex))
       );
-      defaultPosixShell;
+      defaultOSXShell;
     };
 };
 
@@ -73,7 +74,7 @@ let getDefaultShell = () => {
           | Windows => "powershell.exe"
           | Mac => Internal.discoverOSXShell()
           | Linux => Internal.discoverLinuxShell()
-          | _ => Internal.defaultPosixShell
+          | _ => Internal.defaultLinuxShell
           }
         };
       }
