@@ -170,13 +170,13 @@ let start = (themeInfo: ThemeInfo.t) => {
               let transition = selection.focus - newSelection.focus;
 
               if (transition > 0) {
-                for (x in 0 to abs(transition)) {
+                for (_ in 0 to transition) {
                   GlobalContext.current().dispatch(
                     Actions.KeyboardInput("<LEFT>"),
                   );
                 };
               } else if (transition < 0) {
-                for (x in 0 to abs(transition)) {
+                for (_ in 0 downto transition) {
                   GlobalContext.current().dispatch(
                     Actions.KeyboardInput("<RIGHT>"),
                   );
