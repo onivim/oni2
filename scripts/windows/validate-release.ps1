@@ -33,4 +33,4 @@ ls D:/a/1/s
 ls D:/a/1/s/Onivim2
 
 Write-Host "Running health-check on installed build..."
-D:/a/1/s/Oni2.exe -f --no-log-colors --checkhealth
+D:/a/1/s/Onivim2/Oni2.exe -f --no-log-colors --checkhealth
