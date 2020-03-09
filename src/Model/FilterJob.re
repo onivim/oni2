@@ -17,7 +17,6 @@ module type Config = {
 };
 
 module Make = (Config: Config) => {
-  open CamomileBundled.Camomile;
   module Zed_utf8 = Oni_Core.ZedBundled;
   module Time = Revery_Core.Time;
   module Queue = ChunkyQueue;
@@ -30,7 +29,7 @@ module Make = (Config: Config) => {
   module PendingWork = {
     type t = {
       filter: string,
-      explodedFilter: list(UChar.t),
+      explodedFilter: list(Uchar.t),
       shouldLower: bool,
       allItems: Queue.t(Config.item),
       queue: Queue.t(Config.item),

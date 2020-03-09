@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 open Oni_Core;
-open CamomileBundled.Camomile;
 
 // A [meet] is information about where a completion should be requested
 // (where the candidate completions _meet_ the text). It includes
@@ -18,7 +17,7 @@ let toString: t => string;
 
 let fromLine:
   (
-    ~triggerCharacters: list(UChar.t)=?,
+    ~triggerCharacters: list(Uchar.t)=?,
     ~lineNumber: int=?,
     ~bufferId: int,
     ~index: Index.t,
@@ -27,5 +26,5 @@ let fromLine:
   option(t);
 
 let fromBufferLocation:
-  (~triggerCharacters: list(UChar.t)=?, ~location: Location.t, Buffer.t) =>
+  (~triggerCharacters: list(Uchar.t)=?, ~location: Location.t, Buffer.t) =>
   option(t);

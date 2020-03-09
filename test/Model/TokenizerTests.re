@@ -2,16 +2,14 @@ open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
 
-open CamomileLibrary;
-
 module TextRun = Tokenizer.TextRun;
 
 let alwaysSplit = (_, _, _, _) => true;
 let noSplit = (_, _, _, _) => false;
-let splitOnCharacter = (_, c1, _, c2) => !UChar.eq(c1, c2);
+let splitOnCharacter = (_, c1, _, c2) => !Uchar.equal(c1, c2);
 
 let thickB = c =>
-  switch (UChar.char_of(c)) {
+  switch (Uchar.to_char(c)) {
   | 'b' => 2
   | _ => 1
   };

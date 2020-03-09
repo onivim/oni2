@@ -5,10 +5,7 @@
  */
 open ReasonFuzz;
 
-open CamomileBundled.Camomile;
-
 module IndexEx = Utility.IndexEx;
-module Zed_utf8 = ZedBundled;
 
 type result('a) = {
   item: 'a,
@@ -51,7 +48,7 @@ let rank = (query, format, items) => {
 
 // Check whether the query matches...
 // Benchmarking showed that this was slightly faster than the recursive version
-let fuzzyMatches = (query: list(UChar.t), str) => {
+let fuzzyMatches = (query: list(Uchar.t), str) => {
   let toMatch = Zed_utf8.explode(str);
 
   let q = ref(query);
@@ -68,7 +65,7 @@ let fuzzyMatches = (query: list(UChar.t), str) => {
     | (_, []) =>
       result := false;
       atEnd := true;
-    | ([qh, ...qtail], [mh, ...mtail]) when UChar.eq(qh, mh) =>
+    | ([qh, ...qtail], [mh, ...mtail]) when Uchar.equal(qh, mh) =>
       q := qtail;
       m := mtail;
     | (_, [_, ...mtail]) => m := mtail
