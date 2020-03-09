@@ -47,7 +47,7 @@ let getDefaultShell = () => {
         | Some(v) => v
         | None =>
           switch (Revery.Environment.os) {
-          | Windows => "cmd.exe"
+          | Windows => "powershell.exe"
           | Mac => Internal.discoverOSXShell()
           | _ => "/bin/bash"
           }
