@@ -185,6 +185,14 @@ if (process.platform == "linux") {
 
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${frameworksDirectory}" -p "@executable_path/../Frameworks/" -cd`);
 
+  const frameworks = fs.readdirSync(frameworksDirectory);
+
+  if (frameworks.length > 0) {
+    console.error("Found a dynamic library: " + JSON.stringify(frameworks));
+    console.error("There should be only static libraries to successfully package.");
+    throw "FrameworkFound";
+  }
+
   const entitlementsPath = path.join(releaseDirectory, "entitlements.plist");
   const entitlementsContents = {
       "com.apple.security.cs.allow-jit": true,

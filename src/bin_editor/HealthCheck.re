@@ -150,6 +150,29 @@ let mainChecks = [
     },
   ),
   (
+    "SDl2: Verify version",
+    _ => {
+      let compiledVersion = Sdl2.Version.getCompiled();
+      let linkedVersion = Sdl2.Version.getLinked();
+
+      Log.info(
+        "SDL2 - compiled version: " ++ Sdl2.Version.toString(compiledVersion),
+      );
+      Log.info(
+        "SDL2 - linked version: " ++ Sdl2.Version.toString(linkedVersion),
+      );
+
+      (
+        compiledVersion.major == 2
+        && compiledVersion.minor >= 0
+        && compiledVersion.patch >= 10
+      )
+      && linkedVersion.major == 2
+      && linkedVersion.minor >= 0
+      && linkedVersion.patch >= 10;
+    },
+  ),
+  (
     "Verify bundled reason-language-server executable",
     (setup: Setup.t) => {
       let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
