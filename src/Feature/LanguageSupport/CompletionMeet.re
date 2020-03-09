@@ -8,7 +8,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-open CamomileBundled.Camomile;
 module Zed_utf8 = ZedBundled;
 
 type t = {
@@ -26,7 +25,7 @@ let toString = (meet: t) =>
     meet.location |> Location.show,
   );
 
-let defaultTriggerCharacters = [UChar.of_char('.')];
+let defaultTriggerCharacters = [Uchar.of_char('.')];
 
 let fromLine =
     (
@@ -45,7 +44,7 @@ let fromLine =
   let pos = ref(idx);
 
   let matchesTriggerCharacters = c => {
-    List.exists(tc => UChar.eq(c, tc), triggerCharacters);
+    List.exists(tc => Uchar.equal(c, tc), triggerCharacters);
   };
 
   let lastCharacter = ref(None);
@@ -54,11 +53,11 @@ let fromLine =
   let candidateBase = ref([]);
 
   while (pos^ >= 0 && ! found^) {
-    let c = BufferLine.getUCharExn(~index=pos^, line);
+    let c = BufferLine.getUcharExn(~index=pos^, line);
     lastCharacter := Some(c);
 
     if (matchesTriggerCharacters(c)
-        || Zed_utf8.is_space(c)
+        || Uucp.White.is_white_space(c)
         && List.length(candidateBase^) > 0) {
       found := true;
       incr(pos);

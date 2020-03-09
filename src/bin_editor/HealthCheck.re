@@ -9,22 +9,6 @@ type checks =
 
 let commonChecks = [
   (
-    "Verify camomile:datadir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.datadir),
-  ),
-  (
-    "Verify camomile:localedir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.localedir),
-  ),
-  (
-    "Verify camomile:charmapdir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.charmapdir),
-  ),
-  (
-    "Verify camomile:unimapdir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.unimapdir),
-  ),
-  (
     "Verify oniguruma dependency",
     _ => {
       Oniguruma.(

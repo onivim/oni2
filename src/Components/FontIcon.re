@@ -5,7 +5,6 @@
  */
 
 open Revery.UI;
-open Oni_Core.CamomileBundled.Camomile;
 module ZedBundled = Oni_Core.ZedBundled;
 
 module Styles = {
@@ -19,7 +18,7 @@ module Styles = {
   ];
 };
 
-let codeToIcon = icon => ZedBundled.singleton(UChar.of_int(icon));
+let codeToIcon = icon => ZedBundled.singleton(Uchar.of_int(icon));
 
 let make =
     (~icon, ~fontFamily=FontAwesome.fontFamily, ~fontSize=15., ~color, ()) =>

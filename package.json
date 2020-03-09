@@ -180,19 +180,19 @@
     ]
   },
   "scripts": {
-    "bootstrap": "esy node ./scripts/bootstrap.js #{@opam/camomile.install}",
+    "bootstrap": "esy node ./scripts/bootstrap.js",
     "format": "esy dune build @fmt --auto-promote",
     "checkhealth": "esy x Oni2 -f --checkhealth",
+    "check": "esy b dune build @check",
     "run": "esy x Oni2",
     "watch": "dune build --watch -p Oni2 -j4",
-    "create-release": "esy node ./scripts/release.js #{@opam/camomile.install}",
+    "create-release": "esy node ./scripts/release.js",
     "create-win-setup": "esy node ./scripts/windows/BuildSetupTemplate.js",
     "test": "esy @test run",
     "clean-extensions": "esy b bash ./scripts/clean-extensions.sh"
   },
   "dependencies": {
     "@esy-ocaml/reason": "3.5.2",
-    "@opam/camomile": "^1.0.1",
     "@opam/charInfo_width": "*",
     "@opam/dune": "^2.0.0",
     "@opam/lwt": "*",
@@ -225,7 +225,9 @@
     "@glennsl/timber": "1.0.0",
     "refmterr": "*",
     "@esy-ocaml/libffi": "*",
-    "@opam/decoders-yojson": "*"
+    "@opam/decoders-yojson": "*",
+    "@opam/uutf": "*",
+    "@opam/uucp": "*"
   },
   "resolutions": {
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
@@ -237,7 +239,6 @@
     "reasonFuzz": "github:bryphe/reasonFuzz#c04fab7",
     "pesy": "0.4.1",
     "@opam/ppx_tools_versioned": "5.2.3",
-    "@opam/camomile": "1.0.1",
     "@opam/ocamlfind": "1.8.1",
     "@opam/biniou": "1.2.0",
     "@opam/easy-format": "1.3.1",
