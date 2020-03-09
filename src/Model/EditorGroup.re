@@ -61,16 +61,23 @@ let getOrCreateEditorForBuffer = (state, bufferId) => {
   };
 };
 
-// TODO: Just use List.find_opt?
 let rec _getIndexOfElement = elem =>
   fun
-  | [] => (-1)
-  | [hd, ...tl] => hd === elem ? 0 : _getIndexOfElement(elem, tl) + 1;
+  | [] => None
+  | [hd, ...tl] =>
+    hd === elem
+      ? Some(0)
+      : (
+        switch (_getIndexOfElement(elem, tl)) {
+        | None => None
+        | Some(i) => Some(i + 1)
+        }
+      );
 
 let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   switch (_getIndexOfElement(editor, reverseTabOrder)) {
-  | (-1) => None
-  | idx =>
+  | None => None
+  | Some(idx) =>
     switch (
       List.nth_opt(reverseTabOrder, idx + 1),
       List.nth_opt(reverseTabOrder, max(idx - 1, 0)),
@@ -82,37 +89,47 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   };
 };
 
-let setActiveEditorByIndexDiff = (diff, model) => {
-  let tabs = model.reverseTabOrder;
-  let count = List.length(tabs);
-
-  if (count <= 1) {
-    // Nothing to change
-    model
-  } else {
+let setActiveEditorTo = (kind, model) =>
+  switch (model.reverseTabOrder) {
+  | []
+  | [_] => model
+  | _ =>
     switch (model.activeEditorId) {
     | Some(activeEditorId) =>
-      switch (_getIndexOfElement(activeEditorId, tabs)) {
-      | (-1) => model
-      | idx =>
+      switch (_getIndexOfElement(activeEditorId, model.reverseTabOrder)) {
+      | None => model
+      | Some(idx) =>
+        // The diff amounts are inverted because the list is in reverse order
         let newIndex =
-          switch (idx + diff) {
-          // Wrapping negative, go to end
-          | -1 => count - 1
-          // If this is past the end, go to zero, otherwise this index is fine
-          | i => i >= count ? 0 : i
+          switch (kind) {
+          | `Next => idx - 1
+          | `Previous => idx + 1
           };
 
-        {...model, activeEditorId: List.nth_opt(tabs, newIndex)};
+        let count = List.length(model.reverseTabOrder);
+
+        let newIndex =
+          if (newIndex < 0) {
+            // Wrapping negative, go to end
+            count - 1;
+          } else if (newIndex >= count) {
+            0;
+            // If this is past the end, go to zero
+          } else {
+            newIndex;
+          };
+
+        {
+          ...model,
+          activeEditorId: List.nth_opt(model.reverseTabOrder, newIndex),
+        };
       }
     | None => model
-    };
+    }
   };
-}
 
-// The diff amounts are inverted because the list is in reverse order
-let nextEditor = setActiveEditorByIndexDiff(-1);
-let previousEditor = setActiveEditorByIndexDiff(1);
+let nextEditor = setActiveEditorTo(`Next);
+let previousEditor = setActiveEditorTo(`Previous);
 
 let isEmpty = model => IntMap.is_empty(model.editors);
 
