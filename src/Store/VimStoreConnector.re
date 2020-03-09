@@ -904,8 +904,8 @@ let start =
       )
     | ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
     | ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
-    | ViewNextEditor => (state, synchronizeEditorEffect(state))
-    | ViewPreviousEditor => (state, synchronizeEditorEffect(state))
+    | Command("workbench.action.nextEditor") => (state, synchronizeEditorEffect(state))
+    | Command("workbench.action.previousEditor") => (state, synchronizeEditorEffect(state))
     | KeyboardInput(s) => (state, inputEffect(s))
     | CopyActiveFilepathToClipboard => (
         state,

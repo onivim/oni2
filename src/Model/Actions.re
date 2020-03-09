@@ -128,8 +128,6 @@ type t =
   | StatusBarDisposeItem(int)
   | StatusBar(StatusBarModel.action)
   | ViewCloseEditor(int)
-  | ViewNextEditor
-  | ViewPreviousEditor
   | ViewSetActiveEditor(int)
   | EnableZenMode
   | DisableZenMode

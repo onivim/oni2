@@ -331,8 +331,6 @@ let start = (getState, contributedCommands) => {
     ("list.select", _ => singleActionEffect(ListSelect)),
     ("list.selectBackground", _ => singleActionEffect(ListSelectBackground)),
     ("view.closeEditor", state => closeEditorEffect(state)),
-    ("workbench.action.nextEditor", _ => singleActionEffect(ViewNextEditor)),
-    ("workbench.action.previousEditor", _ => singleActionEffect(ViewPreviousEditor)),
     ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
     (

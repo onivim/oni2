@@ -24,9 +24,9 @@ let reduce = (v: EditorGroup.t, action: Actions.t) => {
     let (newState, activeEditorId) =
       EditorGroup.getOrCreateEditorForBuffer(v, id);
     {...newState, activeEditorId: Some(activeEditorId)};
+  | Command("workbench.action.nextEditor") => EditorGroup.nextEditor(v)
+  | Command("workbench.action.previousEditor") => EditorGroup.previousEditor(v)
   | ViewCloseEditor(id) => EditorGroup.removeEditorById(v, id)
-  | ViewNextEditor => EditorGroup.nextEditor(v)
-  | ViewPreviousEditor => EditorGroup.previousEditor(v)
   | ViewSetActiveEditor(id) =>
     switch (IntMap.find_opt(id, v.editors)) {
     | None => v
