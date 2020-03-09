@@ -180,6 +180,16 @@ let start = () => {
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
+        key: "<TAB>",
+        command: "input.indent",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<S-TAB>",
+        command: "input.outdent",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
         key: "<C-G>",
         command: "sneak.start",
         condition: WhenExpr.Value(True),

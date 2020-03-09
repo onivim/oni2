@@ -862,6 +862,22 @@ let start =
       ();
     });
 
+  let indentEffect =
+    Isolinear.Effect.create(~name="vim.indent", () => {
+      let _ = Vim.input(">");
+      let _ = Vim.input("g");
+      let _ = Vim.input("v");
+      ();
+    });
+
+  let outdentEffect =
+    Isolinear.Effect.create(~name="vim.outdent", () => {
+      let _ = Vim.input("<");
+      let _ = Vim.input("g");
+      let _ = Vim.input("v");
+      ();
+    });
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -875,6 +891,8 @@ let start =
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
     | Command("workbench.action.files.save") => (state, saveEffect)
+    | Command("input.indent") => (state, indentEffect)
+    | Command("input.outdent") => (state, outdentEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
