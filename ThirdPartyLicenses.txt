@@ -32,6 +32,8 @@ This project incorporates components from the projects listed below. The origina
 26. LaserWave (https://github.com/Jaredk3nt/laserwave)
 27. camlp5 (https://github.com/camlp5/camlp5)
 28. ocaml-decoders (https://github.com/mattjbray/ocaml-decoders)
+29. uutf (https://github.com/dbuenzli/uutf)
+30. uucp (https://github.com/dbuenzli/uucp)
 
 %% FiraCode NOTICES AND INFORMATION BEGIN HERE
 ==============================================
