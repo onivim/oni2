@@ -4,7 +4,7 @@ module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {
   let defaultPosixShell = "/bin/sh";
-  
+
   let getPathFromEnvironment = () =>
     switch (Sys.getenv_opt("PATH")) {
     | Some(path) => path
@@ -13,38 +13,36 @@ module Internal = {
       "";
     };
 
-  let runCommand = (cmd) => {
-      Log.infof(m => m("Running cmd: %s", cmd));
-      let (stdOut, stdIn, stdErr) =
-        Unix.open_process_full(cmd, [||]);
-      let ret = input_line(stdOut);
-      Log.infof(m => m("Received output: %s", ret));
-      let () = close_in(stdOut);
-      let () = close_out(stdIn);
-      let () = close_in(stdErr);
-      ret;
+  let runCommand = cmd => {
+    Log.infof(m => m("Running cmd: %s", cmd));
+    let (stdOut, stdIn, stdErr) = Unix.open_process_full(cmd, [||]);
+    let ret = input_line(stdOut);
+    Log.infof(m => m("Received output: %s", ret));
+    let () = close_in(stdOut);
+    let () = close_out(stdIn);
+    let () = close_in(stdErr);
+    ret;
   };
 
-  let discoverLinuxShell = () =>  {
+  let discoverLinuxShell = () =>
     try({
-      let user = Sys.getenv("USER");
-      let userShell = runCommand("getent passwd " ++ user ++ " | awk -F: '{print $NF}'");
-      userShell
+      let uid = Unix.getuid();
+      let {pw_shell, _}: Unix.passwd_entry = Unix.getpwuid(uid);
+      pw_shell;
     }) {
     | ex =>
       Log.warn("Unable to get shell from getent");
-      defaultPosixShell
-    }
-  };
+      defaultPosixShell;
+    };
 
   // This strategy for determing the default shell came from StackOverflow:
   // https://stackoverflow.com/a/41553295
   // This is important because in some cases, like launching from Finder,
   // there may not be an $SHELL environment variable for us.
   let discoverOSXShell = () =>
+    // Returns a string of the form: "UserShell: /bin/zsh"
     try({
-      // Returns a string of the form: "UserShell: /bin/zsh"
-      let userShell = runCommand("/usr/bin/dscl . read ~/ UserShell")
+      let userShell = runCommand("/usr/bin/dscl . read ~/ UserShell");
 
       let len = String.length(userShell);
       let slashIndex = String.index(userShell, '/');
@@ -54,7 +52,7 @@ module Internal = {
     }) {
     | ex =>
       Log.warn("Unable to run dscl to get user shell");
-      defaultPosixShell
+      defaultPosixShell;
     };
 };
 
@@ -67,14 +65,15 @@ let getDefaultShell = () => {
         switch (Sys.getenv_opt("SHELL")) {
         | Some(v) => v
         | None =>
-          let shell = switch (Revery.Environment.os) {
-          | Windows => "cmd.exe"
-          | Mac => Internal.discoverOSXShell()
-          | Linux => Internal.discoverLinuxShell()
-          | _ => "/bin/sh"
-          };
-          prerr_endline ("SHELL: " ++ shell);
-          shell
+          let shell =
+            switch (Revery.Environment.os) {
+            | Windows => "cmd.exe"
+            | Mac => Internal.discoverOSXShell()
+            | Linux => Internal.discoverLinuxShell()
+            | _ => "/bin/sh"
+            };
+          prerr_endline("SHELL: " ++ shell);
+          shell;
         };
       }
     )
@@ -88,9 +87,7 @@ let getPathFromShell = () => {
     | Mac =>
       let shell = getDefaultShell();
       let shellCmd = Printf.sprintf("%s -lc 'echo $PATH'", shell);
-      try({
-        Internal.runCommand(shellCmd);
-      }) {
+      try(Internal.runCommand(shellCmd)) {
       | ex =>
         Log.warn("Unable to retreive path: " ++ Printexc.to_string(ex));
         Internal.getPathFromEnvironment();
