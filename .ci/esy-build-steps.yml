@@ -9,6 +9,8 @@ steps:
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy build
     displayName: 'Build: esy build'
+  - script: esy build dune build @check
+    displayName: 'Build: esy build dune build @check'
   - script: esy x Oni2 --help
     displayName: "esy x Oni2 --help"
   - script: esy x Oni2 -f --version

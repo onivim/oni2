@@ -51,7 +51,6 @@ let start =
   Unix.set_close_on_exec(stderr);
 
   let parentPid = Unix.getpid() |> string_of_int;
-  let camomilePath = Setup.(setup.camomilePath);
 
   // Remove ONI2_LOG_FILE from environment of syntax server
   let envList =
@@ -59,22 +58,13 @@ let start =
     |> Array.to_list
     |> List.filter(str => !StringEx.contains("ONI2_LOG_FILE", str));
 
-  let env = [
-    EnvironmentVariables.parentPid ++ "=" ++ parentPid,
-    EnvironmentVariables.camomilePath ++ "=" ++ camomilePath,
-    ...envList,
-  ];
+  let env = [EnvironmentVariables.parentPid ++ "=" ++ parentPid, ...envList];
 
   let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
   let executablePath = Revery.Environment.executingDirectory ++ executableName;
 
   ClientLog.debugf(m =>
-    m(
-      "Starting executable: %s with camomilePath: %s and parentPid: %s",
-      executablePath,
-      camomilePath,
-      parentPid,
-    )
+    m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
   );
 
   let pid =

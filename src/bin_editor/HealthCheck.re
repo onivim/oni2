@@ -9,22 +9,6 @@ type checks =
 
 let commonChecks = [
   (
-    "Verify camomile:datadir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.datadir),
-  ),
-  (
-    "Verify camomile:localedir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.localedir),
-  ),
-  (
-    "Verify camomile:charmapdir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.charmapdir),
-  ),
-  (
-    "Verify camomile:unimapdir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.unimapdir),
-  ),
-  (
     "Verify oniguruma dependency",
     _ => {
       Oniguruma.(
@@ -147,6 +131,29 @@ let mainChecks = [
         Log.error(msg);
         false;
       };
+    },
+  ),
+  (
+    "SDl2: Verify version",
+    _ => {
+      let compiledVersion = Sdl2.Version.getCompiled();
+      let linkedVersion = Sdl2.Version.getLinked();
+
+      Log.info(
+        "SDL2 - compiled version: " ++ Sdl2.Version.toString(compiledVersion),
+      );
+      Log.info(
+        "SDL2 - linked version: " ++ Sdl2.Version.toString(linkedVersion),
+      );
+
+      (
+        compiledVersion.major == 2
+        && compiledVersion.minor >= 0
+        && compiledVersion.patch >= 10
+      )
+      && linkedVersion.major == 2
+      && linkedVersion.minor >= 0
+      && linkedVersion.patch >= 10;
     },
   ),
   (

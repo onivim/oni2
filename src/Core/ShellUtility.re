@@ -3,7 +3,7 @@ open Kernel;
 module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
 module Internal = {
-  let defaultPosixShell = "/bin/sh";
+  let defaultPosixShell = "/bin/bash";
 
   let getPathFromEnvironment = () =>
     switch (Sys.getenv_opt("PATH")) {
@@ -31,7 +31,9 @@ module Internal = {
       pw_shell;
     }) {
     | ex =>
-      Log.warn("Unable to get shell from getent");
+      Log.warnf(m =>
+        m("Unable to get shell from passwd: %s", Printexc.to_string(ex))
+      );
       defaultPosixShell;
     };
 
@@ -51,7 +53,9 @@ module Internal = {
       String.sub(userShell, slashIndex, len - slashIndex);
     }) {
     | ex =>
-      Log.warn("Unable to run dscl to get user shell");
+      Log.warnf(m =>
+        m("Unable to run dscl to get user shell: %s", Printexc.to_string(ex))
+      );
       defaultPosixShell;
     };
 };
@@ -65,15 +69,12 @@ let getDefaultShell = () => {
         switch (Sys.getenv_opt("SHELL")) {
         | Some(v) => v
         | None =>
-          let shell =
-            switch (Revery.Environment.os) {
-            | Windows => "cmd.exe"
-            | Mac => Internal.discoverOSXShell()
-            | Linux => Internal.discoverLinuxShell()
-            | _ => "/bin/sh"
-            };
-          prerr_endline("SHELL: " ++ shell);
-          shell;
+          switch (Revery.Environment.os) {
+          | Windows => "powershell.exe"
+          | Mac => Internal.discoverOSXShell()
+          | Linux => Internal.discoverLinuxShell()
+          | _ => Internal.defaultPosixShell
+          }
         };
       }
     )

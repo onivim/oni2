@@ -4,8 +4,6 @@
  * In-memory text buffer representation
  */
 
-open CamomileBundled.Camomile;
-
 exception OutOfBounds;
 
 type t;
@@ -34,10 +32,10 @@ let lengthSlow: t => int;
 let lengthBounded: (~max: int, t) => int;
 
 /*
-  * [getUCharExn(~index, str)] returns the [UChar.t] at UTF-8 index [index].
+  * [getUcharExn(~index, str)] returns the [Uchar.t] at UTF-8 index [index].
   * Raises [OutOfBounds] if the index is not valid.
  */
-let getUCharExn: (~index: int, t) => UChar.t;
+let getUcharExn: (~index: int, t) => Uchar.t;
 
 let subExn: (~index: int, ~length: int, t) => string;
 
