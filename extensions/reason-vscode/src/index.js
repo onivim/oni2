@@ -70,13 +70,11 @@ const isEsyAvailable = (projectPath) => {
     }
 };
 
-const addExe = (filePath) => {
-    if (process.platform == "win32") {
-        return filePath + ".exe"
-    } else {
-        return filePath
-    }
-}
+const addExe = (filePath) => 
+    isWindows ? filePath + ".exe" : filePath;
+
+const addCmd = (filePath) => 
+    isWindows ? filePath + ".cmd" : filePath;
 
 const getOcamlLspPath = (projectPath) => {
     try {
@@ -85,20 +83,6 @@ const getOcamlLspPath = (projectPath) => {
        .toString()
        .trim();
         return path.join(ocamlLspDirectory, addExe("ocamllsp"));
-    } catch (ex) {
-        vscode.window.showErrorMessage("ERROR CHECKING ocamllspserver: " + ex.toString());
-        return null;
-    }
-};
-
-const getReasonMerlinPath = (projectPath) => {
-    try {
-        //let ocamlLspDirectory = cp.execSync("esy", ["-q", "sh", "-c","echo #{@opam/ocaml-lsp-server.bin}"], { cwd: projectPath })
-        const ocamlmerlin = "ocamlmerlin-reason";
-        let reasonMerlinPath = cp.execSync(`esy -q sh -c "${whichOrWhere} ${addExe(ocamlmerlin)}"`, { cwd: projectPath })
-       .toString()
-       .trim();
-       return reasonMerlinPath;
     } catch (ex) {
         vscode.window.showErrorMessage("ERROR CHECKING ocamllspserver: " + ex.toString());
         return null;
@@ -121,10 +105,8 @@ const getLocation = (_context) => {
     vscode.window.showErrorMessage("ESY AVAILABLE: " + ocamlLspPath);
         if (ocamlLspPath) {
             // Check if ocamlmerlin-reason is available
-            const ocamlMerlinReasonPath = getReasonMerlinPath(projectPath);
-            const ocamlMerlinReasonDirectory = ocamlMerlinReasonPath ? path.dirname(ocamlMerlinReasonPath) : null;
-            vscode.window.showErrorMessage('Got ocaml LSP binary: ' + ocamlLspPath + " Extra dir: " + ocamlMerlinReasonDirectory);
-            return [ocamlLspPath, ocamlMerlinReasonDirectory];
+            vscode.window.showErrorMessage('Got ocaml LSP binary: ' + ocamlLspPath);
+            return [addCmd("esy"), [ocamlLspPath]];
         } else {
             return [rlsBinaryLocation, null]
         }
@@ -230,7 +212,7 @@ function activate(context) {
         if (client) {
             client.stop();
         }
-        const [binLocation, additionalPaths] = getLocation(context)
+        const [binLocation, args] = getLocation(context)
         if (!binLocation) return
 
         vscode.window.showErrorMessage('Starting server: ' + binLocation);
@@ -238,11 +220,8 @@ function activate(context) {
             'reason-language-server',
             'Reason Language Server',
             {
-                command: binLocation,
-                args: [],
-                options: {
-                    env: addPathToEnvironment(process.env, additionalPaths)
-                }
+                command: "esy",
+                args,
             },
             Object.assign({}, clientOptions, {
                 revealOutputChannelOn: vscode.workspace.getConfiguration('reason_language_server').get('show_debug_errors')
@@ -271,6 +250,7 @@ function activate(context) {
     });
 
     vscode.workspace.onDidChangeWorkspaceFolders(_evt => {
+            vscode.window.showErrorMessage('FOLDERS CHANGED: ' + vscode.workspace.rootPath);
         restart(); 
     });
 
