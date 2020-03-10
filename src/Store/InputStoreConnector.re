@@ -56,7 +56,7 @@ let conditionsOfState = (state: State.t) => {
   | (false, Vim.Types.Insert) =>
     Hashtbl.add(ret, "insertMode", true);
     Hashtbl.add(ret, "editorTextFocus", true);
-  | (false, Vim.Types.Visual) => Hashtbl.add(ret, "visualMode", true);
+  | (false, Vim.Types.Visual) => Hashtbl.add(ret, "visualMode", true)
   | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
   | _ => ()
   };
