@@ -60,7 +60,7 @@ type outmsg =
       splitDirection,
     });
 
-let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
+let shellCmd = ShellUtility.getDefaultShell();
 
 let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
 
