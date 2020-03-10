@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 'use strict';
 const vscode = require("vscode");
-const {Uri} = vscode;
+const {Uri, window} = vscode;
 const {LanguageClient, RevealOutputChannelOn} = require("vscode-languageclient");
 const {TextDocument} = require('vscode-languageserver-types');
 const path = require('path')
@@ -12,109 +12,6 @@ const fs = require('fs')
 const cp = require('child_process');
 
 const isWindows = process.platform == "win32";
-const whichOrWhere = isWindows ? "where" : "which";
-
-const addPathToEnvironment = (env, pathToAdd) => {
-    if (!pathToAdd) {
-        return env;
-    }
-    
-    let oldPath = env.PATH;
-
-    let newPath;
-    if (isWindows) {
-        newPath = oldPath + ";" + pathToAdd
-    } else {
-        newPath = oldPath + ":" + pathToAdd
-    }
-
-    
-    vscode.window.showErrorMessage("NEW PATH:" + newPath);
-
-    return {
-        ...env,
-        PATH: newPath,
-        Path: newPath,
-    }
-}
-
-const validatePath = (pathToValidate) => {
-    if (!pathToValidate) {
-        return null;
-    }
-
-    if (!path.isAbsolute(pathToValidate)) {
-        pathToValidate = path.join(vscode.workspace.rootPath, pathToValidate);
-    }
-
-    if (!fs.existsSync(pathToValidate)) {
-        // TODO: Log?
-        return null;
-    }
-
-    return pathToValidate;
-};
-
-const isEsyProject = () => {
-    // We assume if there is an OPAM file, this must be a native project.
-    return true;
-};
-
-const isEsyAvailable = (projectPath) => {
-    try {
-        cp.execSync("esy --version", { cwd: projectPath });
-        return true;
-    } catch (ex) {
-    vscode.window.showErrorMessage("ERROR CHECKING ESY: " + ex.toString());
-        return false;
-    }
-};
-
-const addExe = (filePath) => 
-    isWindows ? filePath + ".exe" : filePath;
-
-const addCmd = (filePath) => 
-    isWindows ? filePath + ".cmd" : filePath;
-
-const getOcamlLspPath = (projectPath) => {
-    try {
-        //let ocamlLspDirectory = cp.execSync("esy", ["-q", "sh", "-c","echo #{@opam/ocaml-lsp-server.bin}"], { cwd: projectPath })
-        let ocamlLspDirectory = cp.execSync("esy -q sh -c \"echo #{@opam/ocaml-lsp-server.bin}\"", { cwd: projectPath })
-       .toString()
-       .trim();
-        return path.join(ocamlLspDirectory, addExe("ocamllsp"));
-    } catch (ex) {
-        vscode.window.showErrorMessage("ERROR CHECKING ocamllspserver: " + ex.toString());
-        return null;
-    }
-};
-
-const getLocation = (_context) => {
-    //let binaryLocation = vscode.workspace.getConfiguration('reason_language_server').get('location')
-
-    //binaryLocation = "/Users/bryphe/.esy/3__________________________________________________________________/i/opam__s__ocaml_lsp_server-111372b5/bin/ocamllsp";
-    //vscode.window.showErrorMessage('Reason Language Server not found! You specified ' + binaryLocation);
-
-    let rlsBinaryLocation = validatePath(vscode.workspace.getConfiguration('reason_language_server').get('location'));
-
-    const projectPath = vscode.workspace.rootPath;
-    if (isEsyAvailable(projectPath) && isEsyProject(projectPath)) {
-        // Let's see if ocaml-lsp-server is available
-    //vscode.window.showErrorMessage("ESY AVAILABLE");
-        const ocamlLspPath = getOcamlLspPath(projectPath);
-    vscode.window.showErrorMessage("ESY AVAILABLE: " + ocamlLspPath);
-        if (ocamlLspPath) {
-            // Check if ocamlmerlin-reason is available
-            vscode.window.showErrorMessage('Got ocaml LSP binary: ' + ocamlLspPath);
-            return [addCmd("esy"), [ocamlLspPath]];
-        } else {
-            return [rlsBinaryLocation, null]
-        }
-    }
-
-    //vscode.window.showErrorMessage('Using language server:' + rlsBinaryLocation);
-    return [rlsBinaryLocation, null];
-}
 
 const shouldReload = () => vscode.workspace.getConfiguration('reason_language_server').get('reloadOnChange')
 
@@ -181,6 +78,87 @@ function activate(context) {
     let client = null
     let lastStartTime = null
     let interval = null
+    let channel = window.createOutputChannel("reason-vscode");
+    context.subscriptions.push(channel);
+
+    let log = (msg) => channel.appendLine(msg);
+
+    const validatePath = (pathToValidate) => {
+        if (!pathToValidate) {
+            return null;
+        }
+
+        if (!path.isAbsolute(pathToValidate)) {
+            pathToValidate = path.join(vscode.workspace.rootPath, pathToValidate);
+        }
+
+        if (!fs.existsSync(pathToValidate)) {
+            return null;
+        }
+
+        return pathToValidate;
+    };
+
+    const isEsyProject = (projectPath) => {
+        const files = fs.readdirSync(projectPath);
+
+        let filtered = files.filter((file) => {
+            return file == "dune" || file == "dune-project" || path.extname(file) == ".opam" || file == "esy.lock"
+        });
+        // We assume if there is an OPAM file or a dune file, this must be a native project.
+        const result = filtered.length > 0;
+        log(`isEsyProject(${projectPath}): ${result}`);
+        return result;
+    };
+
+    const isEsyAvailable = (projectPath) => {
+        try {
+            cp.execSync("esy --version", { cwd: projectPath });
+            return true;
+        } catch (ex) {
+            log("Unable to get esy version: " + ex.toString());
+            return false;
+        }
+    };
+
+    const addExe = (filePath) => 
+        isWindows ? filePath + ".exe" : filePath;
+
+    const addCmd = (filePath) => 
+        isWindows ? filePath + ".cmd" : filePath;
+
+    const getOcamlLspPath = (projectPath) => {
+        try {
+           let ocamlLspDirectory = cp.execSync("esy -q sh -c \"echo #{@opam/ocaml-lsp-server.bin}\"", { cwd: projectPath })
+           .toString()
+           .trim();
+            return path.join(ocamlLspDirectory, addExe("ocamllsp"));
+        } catch (ex) {
+            log("Unable to get ocaml-lsp-server binary: " + ex.toString());
+            return null;
+        }
+    };
+
+    const getLocation = (_context) => {
+        let rlsBinaryLocation = validatePath(vscode.workspace.getConfiguration('reason_language_server').get('location'));
+
+        const projectPath = vscode.workspace.rootPath;
+        if (isEsyAvailable(projectPath) && isEsyProject(projectPath)) {
+            // Let's see if ocaml-lsp-server is available
+            log("Found esy. Looking to see if ocaml-lsp-server is available...")
+            const ocamlLspPath = getOcamlLspPath(projectPath);
+            if (ocamlLspPath) {
+                log('Got ocaml LSP binary: ' + ocamlLspPath);
+                return [addCmd("esy"), [ocamlLspPath]];
+            } else {
+                log("ocaml-lsp not found, falling back to RLS: " + rlsBinaryLocation);
+                return [rlsBinaryLocation, null]
+            }
+        } else {
+            log("Esy not found, falling back to RLS: " + rlsBinaryLocation);
+            return [rlsBinaryLocation, null];
+        }
+    }
 
     const startChecking = (location) => {
         vscode.window.showInformationMessage('DEBUG MODE: Will auto-restart the reason language server if it recompiles');
@@ -215,7 +193,7 @@ function activate(context) {
         const [command, args] = getLocation(context)
         if (!command) return
 
-        vscode.window.showErrorMessage(`Starting server: ${command}|${args}`);
+        vscode.window.showInformationMessage(`Starting language server: ${command} | ${args}`);
         client = new LanguageClient(
             'reason-language-server',
             'Reason Language Server',
