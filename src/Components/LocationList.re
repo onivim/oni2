@@ -18,7 +18,13 @@ type item = {
 let getFontAdvance = (fontFile, fontSize) => {
   let dimensions =
     switch (Revery.Font.load(fontFile)) {
-    | Ok(font) => Revery.Font.FontRenderer.measure(font, fontSize, "x")
+    | Ok(font) =>
+      Revery.Font.FontRenderer.measure(
+        ~smoothing=Revery.Font.Smoothing.default,
+        font,
+        fontSize,
+        "x",
+      )
     | Error(_) => {width: 0., height: 0.}
     };
   dimensions;
@@ -46,7 +52,7 @@ module Styles = {
     textWrap(TextWrapping.NoWrap),
   ];
 
-  let snippet = (~font: EditorFont.t, ~theme: Theme.t, ~isHighlighted) => [
+  let snippet = (~font: Service_Font.font, ~theme: Theme.t, ~isHighlighted) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
     color(
@@ -82,6 +88,7 @@ let item =
 
   let locationWidth = {
     Revery.Draw.Text.measure(
+      ~smoothing=Revery.Font.Smoothing.default,
       ~fontSize=uiFont.fontSize,
       ~fontFamily=uiFont.fontFile,
       locationText,
@@ -157,7 +164,7 @@ let%component make =
               (
                 ~theme: Theme.t,
                 ~uiFont: UiFont.t,
-                ~editorFont: EditorFont.t,
+                ~editorFont: Service_Font.font,
                 ~items: array(item),
                 ~onSelectItem: item => unit,
                 (),

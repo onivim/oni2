@@ -153,6 +153,24 @@ let create = (~extensions, ~setup: Setup.t) => {
         "reason_language_server",
         `Assoc([("location", `String(setup.rlsPath))]),
       ),
+      (
+        "terminal",
+        `Assoc([
+          (
+            "integrated",
+            `Assoc([
+              (
+                "env",
+                `Assoc([
+                  ("windows", `Null),
+                  ("linux", `Null),
+                  ("osx", `Null),
+                ]),
+              ),
+            ]),
+          ),
+        ]),
+      ),
     ]);
   let user = Configuration.Model.create(~keys, contents);
 
@@ -287,6 +305,7 @@ let create = (~extensions, ~setup: Setup.t) => {
         ~dispatch=msg => dispatch(Actions.SCM(msg)),
         msg,
       )
+    | Terminal(msg) => Service_Terminal.handleExtensionMessage(msg)
 
     | RegisterTextContentProvider({handle, scheme}) =>
       dispatch(NewTextContentProvider({handle, scheme}))
@@ -302,8 +321,6 @@ let create = (~extensions, ~setup: Setup.t) => {
 
     | DecorationsDidChange({handle, uris}) =>
       dispatch(DecorationsChanged({handle, uris}))
-    // TODO:
-    | Terminal(_) => ()
     };
 
   let onOutput = Log.info;

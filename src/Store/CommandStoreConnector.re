@@ -141,6 +141,24 @@ let createDefaultCommands = getState => {
         ~action=Command("sneak.start"),
         (),
       ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in new horizontal split",
+        ~action=Command("terminal.new.horizontal"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in new vertical split",
+        ~action=Command("terminal.new.vertical"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in current window",
+        ~action=Command("terminal.new.current"),
+        (),
+      ),
     ]
   );
 };
@@ -314,6 +332,45 @@ let start = (getState, contributedCommands) => {
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),
     ("window.moveDown", state => windowMoveEffect(state, Down)),
+    (
+      "terminal.new.vertical",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Vertical,
+            }),
+          ),
+        );
+      },
+    ),
+    (
+      "terminal.new.horizontal",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Horizontal,
+            }),
+          ),
+        );
+      },
+    ),
+    (
+      "terminal.new.current",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Current,
+            }),
+          ),
+        );
+      },
+    ),
   ];
 
   let commandMap =
@@ -334,7 +391,7 @@ let start = (getState, contributedCommands) => {
 
   let updater = (state: State.t, action) => {
     switch (action) {
-    | Init(_) => (state, setInitialCommands)
+    | Init => (state, setInitialCommands)
 
     | EnableKeyDisplayer => (
         {...state, keyDisplayer: Some(KeyDisplayer.initial)},

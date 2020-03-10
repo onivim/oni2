@@ -12,13 +12,13 @@ let withTag = (tag: string, value: option(string)) =>
 
 let getTemplateVariables: State.t => StringMap.t(string) =
   state => {
-    let buffer = Selectors.getActiveBuffer(state);
-    let filePath = Option.bind(buffer, Buffer.getFilePath);
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeFilePath = Option.bind(maybeBuffer, Buffer.getFilePath);
 
     let appName = Option.some("Onivim 2") |> withTag("appName");
 
     let dirty =
-      Option.map(Buffer.isModified, buffer)
+      Option.map(Buffer.isModified, maybeBuffer)
       |> (
         fun
         | Some(true) => Some("*")
@@ -36,23 +36,27 @@ let getTemplateVariables: State.t => StringMap.t(string) =
       };
 
     let activeEditorShort =
-      Option.map(Filename.basename, filePath) |> withTag("activeEditorShort");
+      Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
+      |> withTag("activeEditorShort");
     let activeEditorMedium =
-      filePath
-      |> OptionEx.flatMap(fp =>
-           switch (rootPath) {
-           | Some((_, base)) => Some(Path.toRelative(~base, fp))
-           | _ => None
-           }
-         )
+      Option.bind(maybeBuffer, buf => {
+        Option.bind(rootPath, ((_, nestedRootPath)) => {
+          Buffer.getMediumFriendlyName(~workingDirectory=nestedRootPath, buf)
+        })
+      })
       |> withTag("activeEditorMedium");
-    let activeEditorLong = filePath |> withTag("activeEditorLong");
+
+    let activeEditorLong =
+      Option.bind(maybeBuffer, Buffer.getLongFriendlyName)
+      |> withTag("activeEditorLong");
 
     let activeFolderShort =
-      Option.(filePath |> map(Filename.dirname) |> map(Filename.basename))
+      Option.(
+        maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
+      )
       |> withTag("activeFolderShort");
     let activeFolderMedium =
-      filePath
+      maybeFilePath
       |> Option.map(Filename.dirname)
       |> OptionEx.flatMap(fp =>
            switch (rootPath) {
@@ -62,7 +66,9 @@ let getTemplateVariables: State.t => StringMap.t(string) =
          )
       |> withTag("activeFolderMedium");
     let activeFolderLong =
-      filePath |> Option.map(Filename.dirname) |> withTag("activeFolderLong");
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> withTag("activeFolderLong");
 
     [
       appName,
@@ -109,7 +115,7 @@ let start = setTitle => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Init(_) => (state, Effects.updateTitle(state))
+    | Init => (state, Effects.updateTitle(state))
     | BufferEnter(_) => (state, Effects.updateTitle(state))
     | BufferSetModified(_) => (state, Effects.updateTitle(state))
 

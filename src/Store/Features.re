@@ -33,6 +33,46 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | BufferUpdate({update, _}) =>
+    let syntaxHighlights =
+      Feature_Syntax.update(
+        state.syntaxHighlights,
+        Feature_Syntax.BufferUpdated(update),
+      );
+    let state = {...state, syntaxHighlights};
+    (state, Effect.none);
+
+  | Syntax(msg) =>
+    let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);
+    let state = {...state, syntaxHighlights};
+    (state, Effect.none);
+
+  | Terminal(msg) =>
+    let (model, eff) = Feature_Terminal.update(state.terminals, msg);
+
+    let effect: Isolinear.Effect.t(Actions.t) =
+      switch ((eff: Feature_Terminal.outmsg)) {
+      | Nothing => Effect.none
+      | Effect(eff) => eff |> Effect.map(msg => Actions.Terminal(msg))
+      | TerminalCreated({name, splitDirection}) =>
+        let windowTreeDirection =
+          switch (splitDirection) {
+          | Horizontal => Some(WindowTree.Horizontal)
+          | Vertical => Some(WindowTree.Vertical)
+          | Current => None
+          };
+
+        Isolinear.Effect.createWithDispatch(
+          ~name="feature.terminal.openBuffer", dispatch => {
+          dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
+        });
+      };
+    ({...state, terminals: model}, effect);
+
+  | Theme(msg) =>
+    let model' = Feature_Theme.update(state.colorTheme, msg);
+    ({...state, colorTheme: model'}, Effect.none);
+
   | Modal(msg) =>
     switch (state.modal) {
     | Some(model) =>

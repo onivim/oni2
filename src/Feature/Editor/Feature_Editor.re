@@ -1,5 +1,4 @@
 module BufferLineColorizer = BufferLineColorizer;
-module BufferSyntaxHighlights = BufferSyntaxHighlights;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Selection = Selection;
 

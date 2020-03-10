@@ -22,11 +22,6 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions");
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md");
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt");
 
-let camomileRoot = process.argv[2];
-let camomilePath = path.join(camomileRoot, "share", "camomile");
-
-console.log("Camomile path: " + camomilePath);
-
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`);
      if (process.platform == "darwin") {
@@ -137,10 +132,21 @@ if (process.platform == "linux") {
 
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(nodeScriptSourceDirectory, resourcesDirectory);
-  copy(camomilePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
   copy(getRlsPath(), path.join(binaryDirectory, "rls"));
+
+  // Folders to delete
+  // TODO: Move this into our VSCode packaging, there are a lot of files we don't need to bundle at all
+  let resourceFoldersToDelete = [
+     "node/node_modules/vscode-exthost/out/vs/workbench/services/search/test",
+  ];
+
+  resourceFoldersToDelete.forEach((p) => {
+   let deletePath = path.join(resourcesDirectory, p); 
+   console.log("Deleting path: " + deletePath);
+   fs.removeSync(deletePath);
+  });
 
   // Remove setup.json prior to remapping bundled files,
   // so it doesn't get symlinked.
@@ -172,6 +178,14 @@ if (process.platform == "linux") {
   copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"));
 
   shell(`dylibbundler -b -x "${path.join(binaryDirectory, "Oni2_editor")}" -d "${frameworksDirectory}" -p "@executable_path/../Frameworks/" -cd`);
+
+  const frameworks = fs.readdirSync(frameworksDirectory);
+
+  if (frameworks.length > 0) {
+    console.error("Found a dynamic library: " + JSON.stringify(frameworks));
+    console.error("There should be only static libraries to successfully package.");
+    throw "FrameworkFound";
+  }
 
   const entitlementsPath = path.join(releaseDirectory, "entitlements.plist");
   const entitlementsContents = {
@@ -220,7 +234,6 @@ if (process.platform == "linux") {
   copy(getRipgrepPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rg.exe" : "rg"));
   copy(getNodePath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"));
   copy(getRlsPath(), path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"));
-  copy(camomilePath, path.join(platformReleaseDirectory, "camomile"));
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconFile = path.join(imageSourceDirectory, "oni2.ico");
   fs.copySync(iconFile, path.join(platformReleaseDirectory, "oni2.ico"));

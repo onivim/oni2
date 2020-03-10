@@ -9,22 +9,6 @@ type checks =
 
 let commonChecks = [
   (
-    "Verify camomile:datadir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.datadir),
-  ),
-  (
-    "Verify camomile:localedir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.localedir),
-  ),
-  (
-    "Verify camomile:charmapdir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.charmapdir),
-  ),
-  (
-    "Verify camomile:unimapdir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.unimapdir),
-  ),
-  (
     "Verify oniguruma dependency",
     _ => {
       Oniguruma.(
@@ -47,7 +31,7 @@ let commonChecks = [
   (
     "Verify PATH is available",
     _ => {
-      let path = ShellUtility.getShellPath();
+      let path = ShellUtility.getPathFromShell();
       Log.info("Got PATH: " ++ path);
       true;
     },
@@ -117,6 +101,60 @@ let mainChecks = [
       Sys.file_exists(
         Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
       ),
+  ),
+  (
+    "Revery: Verify can measure & shape font",
+    _ => {
+      let fontPath =
+        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf";
+      switch (Revery.Font.load(fontPath)) {
+      | Ok(font) =>
+        let metrics = Revery.Font.getMetrics(font, 12.0);
+        ignore(metrics);
+
+        let {height, width}: Revery.Font.measureResult =
+          Revery.Font.measure(
+            ~smoothing=Revery.Font.Smoothing.default,
+            font,
+            12.0,
+            "hello",
+          );
+        Log.infof(m =>
+          m("Measurements - width: %f height: %f", width, height)
+        );
+
+        let shapeResult = Revery.Font.shape(font, "abc => def");
+        let glyphCount = Revery.Font.ShapeResult.size(shapeResult);
+        Log.infof(m => m("Shaped glyphs: %d", glyphCount));
+        true;
+      | Error(msg) =>
+        Log.error(msg);
+        false;
+      };
+    },
+  ),
+  (
+    "SDl2: Verify version",
+    _ => {
+      let compiledVersion = Sdl2.Version.getCompiled();
+      let linkedVersion = Sdl2.Version.getLinked();
+
+      Log.info(
+        "SDL2 - compiled version: " ++ Sdl2.Version.toString(compiledVersion),
+      );
+      Log.info(
+        "SDL2 - linked version: " ++ Sdl2.Version.toString(linkedVersion),
+      );
+
+      (
+        compiledVersion.major == 2
+        && compiledVersion.minor >= 0
+        && compiledVersion.patch >= 10
+      )
+      && linkedVersion.major == 2
+      && linkedVersion.minor >= 0
+      && linkedVersion.patch >= 10;
+    },
   ),
   (
     "Verify bundled reason-language-server executable",

@@ -20,6 +20,7 @@
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
+           RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
@@ -28,6 +29,7 @@
            SyntaxHighlightTextMateTest
            SyntaxHighlightTreesitterTest
            AddRemoveSplitTest
+           TerminalSetPidTitleTest
            TypingBatchedTest
            TypingUnbatchedTest
            VimlConfigurationTest
@@ -37,6 +39,7 @@
     (libraries
         libvim
         Oni_IntegrationTestLib
+        reason-native-crash-utils.asan
             ))
 
 (install
@@ -65,6 +68,7 @@
         QuickOpenEventuallyCompletesTest.exe
         Regression1097Test.exe
         RegressionCommandLineNoCompletionTest.exe
+        RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionVspEmptyExistingBufferTest.exe
@@ -72,6 +76,7 @@
         SearchShowClearHighlightsTest.exe
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
+        TerminalSetPidTitleTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe

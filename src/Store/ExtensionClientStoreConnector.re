@@ -174,7 +174,7 @@ let start = (extensions, extHostClient) => {
 
   let updater = (state: State.t, action) =>
     switch (action) {
-    | Actions.Init(_) => (
+    | Actions.Init => (
         state,
         Isolinear.Effect.batch([
           registerQuitCleanupEffect,
@@ -185,9 +185,13 @@ let start = (extensions, extHostClient) => {
     | Actions.BufferUpdate(bu) => (
         state,
         Isolinear.Effect.batch([
-          modelChangedEffect(state.buffers, bu),
-          gitRefreshEffect(state.scm),
+          modelChangedEffect(state.buffers, bu.update),
         ]),
+      )
+
+    | Actions.BufferSaved(_) => (
+        state,
+        Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
       )
 
     | Actions.CommandExecuteContributed(cmd) => (

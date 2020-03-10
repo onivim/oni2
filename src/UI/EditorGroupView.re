@@ -29,21 +29,16 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let truncateFilepath = path =>
-  switch (path) {
-  | Some(p) => Filename.basename(p)
-  | None => "untitled"
-  };
-
 let getBufferMetadata = (buffer: option(Buffer.t)) => {
   switch (buffer) {
-  | None => (false, "untitled")
+  | None => (false, "untitled", "untitled")
   | Some(v) =>
-    let filePath = Buffer.getFilePath(v);
+    let filePath =
+      Buffer.getFilePath(v) |> Option.value(~default="untitled");
     let modified = Buffer.isModified(v);
 
-    let title = filePath |> truncateFilepath;
-    (modified, title);
+    let title = filePath |> Filename.basename;
+    (modified, title, filePath);
   };
 };
 
@@ -57,13 +52,14 @@ let toUiTabs =
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
     | Some(v) =>
-      let (modified, title) =
+      let (modified, title, filePath) =
         Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
 
       let renderer = Model.BufferRenderers.getById(v.bufferId, renderers);
 
       let ret: Tabs.tabInfo = {
         editorId: v.editorId,
+        filePath,
         title,
         modified,
         renderer,
@@ -79,7 +75,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
   let theme = state.theme;
   let mode = state.mode;
 
-  let style = editorViewStyle(theme.background, theme.foreground);
+  let style = editorViewStyle(theme.editorBackground, theme.foreground);
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -107,6 +103,18 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
       );
     };
 
+  let onDimensionsChanged =
+      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+    let height = showTabs ? height - Constants.tabHeight : height;
+
+    GlobalContext.current().notifyEditorSizeChanged(
+      ~editorGroupId=editorGroup.editorGroupId,
+      ~width,
+      ~height,
+      (),
+    );
+  };
+
   let children = {
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
     let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
@@ -116,15 +124,6 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
-        let onDimensionsChanged =
-            ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-          GlobalContext.current().notifyEditorSizeChanged(
-            ~editorGroupId=editorGroup.editorGroupId,
-            ~width,
-            ~height,
-            (),
-          );
-        };
         let onScroll = deltaY => {
           let () =
             GlobalContext.current().editorScrollDelta(
@@ -203,8 +202,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             metrics
             editor
             buffer
-            onDimensionsChanged
             onCursorChange
+            onDimensionsChanged={_ => ()}
             onScroll
             theme
             rulers
@@ -215,7 +214,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             maxMinimapCharacters
             matchingPairsEnabled
             bufferHighlights={state.bufferHighlights}
-            bufferSyntaxHighlights={state.bufferSyntaxHighlights}
+            bufferSyntaxHighlights={state.syntaxHighlights}
             diagnostics={state.diagnostics}
             completions={state.completions}
             tokenTheme={state.tokenTheme}
@@ -228,6 +227,18 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             shouldHighlightActiveIndentGuides
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
+        | BufferRenderer.Terminal({id, _}) =>
+          state.terminals
+          |> Feature_Terminal.getTerminalOpt(id)
+          |> Option.map(terminal => {
+               <TerminalView
+                 theme={Feature_Theme.resolver(state.colorTheme)}
+                 font={state.terminalFont}
+                 metrics
+                 terminal
+               />
+             })
+          |> Option.value(~default=React.empty)
         };
       | None => React.empty
       };
@@ -239,7 +250,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         <Tabs
           active=isActive
           activeEditorId={editorGroup.activeEditorId}
-          theme
+          theme={Feature_Theme.resolver(state.colorTheme)}
           tabs
           mode
           uiFont
@@ -256,7 +267,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     );
   };
 
-  <View onMouseDown style>
+  <View onMouseDown style onDimensionsChanged>
     <View style=absoluteStyle> children </View>
     <View style=overlayStyle />
   </View>;

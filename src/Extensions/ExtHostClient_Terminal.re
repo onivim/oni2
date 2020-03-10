@@ -15,7 +15,7 @@ module ShellLaunchConfig = {
     `Assoc([
       ("name", `String(name)),
       ("executable", `String(executable)),
-      ("arguments", `List(args)),
+      ("args", `List(args)),
     ]);
   };
 };
@@ -39,7 +39,7 @@ type msg =
       exitCode: int,
     });
 
-let handleMessage = (~dispatch, method, args) =>
+let handleMessage = (~dispatch, method, args) => {
   switch (method) {
   | "$sendProcessTitle" =>
     switch (args) {
@@ -80,22 +80,59 @@ let handleMessage = (~dispatch, method, args) =>
       )
     )
   };
+};
 
 // REQUESTS
 module Requests = {
-  let createProcess = (id, launchConfig, workspaceUri, columns, rows, client) =>
+  let createProcess = (id, launchConfig, workspaceUri, columns, rows, client) => {
+    let () =
+      ExtHostTransport.send(
+        client,
+        ExtHostProtocol.OutgoingNotifications._buildNotification(
+          "ExtHostTerminalService",
+          "$createProcess",
+          `List([
+            `Int(id),
+            ShellLaunchConfig.to_yojson(launchConfig),
+            Uri.to_yojson(workspaceUri),
+            `Int(columns),
+            `Int(rows),
+          ]),
+        ),
+      );
+    ();
+  };
+
+  let acceptProcessResize = (id, columns, rows, client) => {
     ExtHostTransport.send(
       client,
       ExtHostProtocol.OutgoingNotifications._buildNotification(
         "ExtHostTerminalService",
-        "$createProcess",
-        `List([
-          `Int(id),
-          ShellLaunchConfig.to_yojson(launchConfig),
-          Uri.to_yojson(workspaceUri),
-          `Int(columns),
-          `Int(rows),
-        ]),
+        "$acceptProcessResize",
+        `List([`Int(id), `Int(columns), `Int(rows)]),
       ),
     );
+  };
+
+  let acceptProcessInput = (id, data, client) => {
+    ExtHostTransport.send(
+      client,
+      ExtHostProtocol.OutgoingNotifications._buildNotification(
+        "ExtHostTerminalService",
+        "$acceptProcessInput",
+        `List([`Int(id), `String(data)]),
+      ),
+    );
+  };
+
+  let acceptProcessShutdown = (~immediate=false, id, client) => {
+    ExtHostTransport.send(
+      client,
+      ExtHostProtocol.OutgoingNotifications._buildNotification(
+        "ExtHostTerminalService",
+        "$acceptProcessShutdown",
+        `List([`Int(id), `Bool(immediate)]),
+      ),
+    );
+  };
 };

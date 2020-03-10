@@ -10,12 +10,14 @@
         lwt.unix
         Oni2.core
         Oni2.model
+        Oni2.feature.theme
         Oni2.components
         Oni2.feature.search
         Oni2.feature.editor
         Oni2.feature.scm
         Rench
         Revery
+        revery-terminal.lib
         editor-core-types
         ppx_deriving.runtime
     ))

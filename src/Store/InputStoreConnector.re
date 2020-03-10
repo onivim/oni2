@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Input;
+open Oni_Components;
 
 module Model = Oni_Model;
 module State = Model.State;
@@ -21,11 +22,12 @@ let conditionsOfState = (state: State.t) => {
   let ret: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   switch (state.quickmenu) {
-  | Some({variant, query, cursorPosition, _}) =>
+  | Some({variant, query, selection, _}) =>
     Hashtbl.add(ret, "listFocus", true);
     Hashtbl.add(ret, "inQuickOpen", true);
 
-    if (cursorPosition == String.length(query)) {
+    if (Selection.isCollapsed(selection)
+        && selection.focus == String.length(query)) {
       Hashtbl.add(ret, "quickmenuCursorEnd", true);
     };
 
@@ -104,7 +106,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           Keybindings.Keybinding.{
             key,
             command: "list.select",
-            condition: Variable("inEditorsPicker"),
+            condition: Defined("inEditorsPicker"),
           };
 
         if (containsCtrl(binding.key)) {
@@ -128,8 +130,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let getValue = v =>
       switch (Hashtbl.find_opt(currentConditions, v)) {
-      | Some(variableValue) => variableValue
-      | None => false
+      | Some(true) => WhenExpr.Value.True
+      | Some(false)
+      | None => WhenExpr.Value.False
       };
 
     Keybindings.Keybinding.(
@@ -175,6 +178,13 @@ let start = (window: option(Revery.Window.t), runEffects) => {
             ]
 
           | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
+
+          | Terminal(id) =>
+            Feature_Terminal.shouldHandleInput(k)
+              ? [
+                Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
+              ]
+              : [Actions.KeyboardInput(k)]
 
           | Search => [Actions.Search(Feature_Search.Input(k))]
 

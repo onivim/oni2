@@ -119,24 +119,61 @@ let parseRenderWhitespace = json =>
   | _ => All
   };
 
-let parseEditorFontSize = json =>
+let parseEditorFontSize = (~default=Constants.defaultFontSize, json) =>
   json
-  |> parseFloat(~default=Constants.defaultFontSize)
+  |> parseFloat(~default)
   |> (
     result =>
       result > Constants.minimumFontSize ? result : Constants.minimumFontSize
   );
 
-let parseString = json =>
+let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
+  json =>
+    switch (json) {
+    | `String(smoothing) =>
+      let smoothing = String.lowercase_ascii(smoothing);
+      switch (smoothing) {
+      | "none" => None
+      | "antialiased" => Antialiased
+      | "subpixel-antialiased" => SubpixelAntialiased
+      | _ => Default
+      };
+    | _ => Default
+    };
+
+let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled = {
+  let decode =
+    Json.Decode.(
+      field("other", bool)
+      >>= (
+        other =>
+          field("comments", bool)
+          >>= (
+            comments =>
+              field("strings", bool)
+              >>= (strings => succeed({other, comments, strings}))
+          )
+      )
+    )
+    |> Json.Decode.decode_value;
+  json =>
+    switch (json) {
+    | `Bool(enabled) => {other: enabled, comments: enabled, strings: enabled}
+    // TODO: Parse JS objects of the form:
+    // { "other": bool, "comments": bool, "strings": bool }
+    | _ =>
+      json
+      |> decode
+      |> Result.value(
+           ~default={other: false, comments: false, strings: false},
+         )
+    };
+};
+
+let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
-  | _ => ""
-  };
-
-let parseStringOption = json =>
-  switch (json) {
-  | `String(v) => Some(v)
-  | _ => None
+  | _ => default
   };
 
 type parseFunction =
@@ -147,7 +184,11 @@ type configurationTuple = (string, parseFunction);
 let configurationParsers: list(configurationTuple) = [
   (
     "editor.fontFamily",
-    (s, v) => {...s, editorFontFamily: parseStringOption(v)},
+    (config, json) => {
+      ...config,
+      editorFontFamily:
+        parseString(~default=Constants.defaultFontFamily, json),
+    },
   ),
   (
     "editor.fontSize",
@@ -156,25 +197,38 @@ let configurationParsers: list(configurationTuple) = [
       editorFontSize: parseEditorFontSize(json),
     },
   ),
-  ("editor.hover.delay", (s, v) => {...s, editorHoverDelay: parseInt(v)}),
+  (
+    "editor.fontSmoothing",
+    (config, json) => {
+      ...config,
+      editorFontSmoothing: parseFontSmoothing(json),
+    },
+  ),
+  (
+    "editor.hover.delay",
+    (config, json) => {...config, editorHoverDelay: parseInt(json)},
+  ),
   (
     "editor.hover.enabled",
-    (s, v) => {...s, editorHoverEnabled: parseBool(v)},
+    (config, json) => {...config, editorHoverEnabled: parseBool(json)},
   ),
   (
     "editor.lineNumbers",
-    (s, v) => {...s, editorLineNumbers: parseLineNumberSetting(v)},
+    (config, json) => {
+      ...config,
+      editorLineNumbers: parseLineNumberSetting(json),
+    },
   ),
   (
     "editor.matchBrackets",
-    (s, v) => {...s, editorMatchBrackets: parseBool(v)},
+    (config, json) => {...config, editorMatchBrackets: parseBool(json)},
   ),
   (
     "editor.acceptSuggestionOnEnter",
-    (s, v) => {
-      ...s,
+    (config, json) => {
+      ...config,
       editorAcceptSuggestionOnEnter:
-        switch (v) {
+        switch (json) {
         | `String("on") => `on
         | `String("off") => `off
         | `String("smart") => `smart
@@ -184,113 +238,198 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "editor.minimap.enabled",
-    (s, v) => {...s, editorMinimapEnabled: parseBool(v)},
+    (config, json) => {...config, editorMinimapEnabled: parseBool(json)},
   ),
   (
     "editor.minimap.showSlider",
-    (s, v) => {...s, editorMinimapShowSlider: parseBool(v)},
+    (config, json) => {...config, editorMinimapShowSlider: parseBool(json)},
   ),
   (
     "editor.minimap.maxColumn",
-    (s, v) => {...s, editorMinimapMaxColumn: parseInt(v)},
+    (config, json) => {...config, editorMinimapMaxColumn: parseInt(json)},
   ),
   (
     "editor.minimap.showSlider",
-    (s, v) => {...s, editorMinimapShowSlider: parseBool(v)},
+    (config, json) => {...config, editorMinimapShowSlider: parseBool(json)},
   ),
   (
     "editor.detectIndentation",
-    (s, v) => {...s, editorDetectIndentation: parseBool(v)},
+    (config, json) => {...config, editorDetectIndentation: parseBool(json)},
   ),
   (
     "editor.insertSpaces",
-    (s, v) => {...s, editorInsertSpaces: parseBool(v)},
+    (config, json) => {...config, editorInsertSpaces: parseBool(json)},
   ),
-  ("editor.indentSize", (s, v) => {...s, editorIndentSize: parseInt(v)}),
+  (
+    "editor.indentSize",
+    (config, json) => {...config, editorIndentSize: parseInt(json)},
+  ),
   (
     "editor.largeFileOptimizations",
-    (s, v) => {...s, editorLargeFileOptimizations: parseBool(v)},
+    (config, json) => {
+      ...config,
+      editorLargeFileOptimizations: parseBool(json),
+    },
   ),
-  ("editor.tabSize", (s, v) => {...s, editorTabSize: parseInt(v)}),
+  (
+    "editor.tabSize",
+    (config, json) => {...config, editorTabSize: parseInt(json)},
+  ),
   (
     "editor.highlightActiveIndentGuide",
-    (s, v) => {...s, editorHighlightActiveIndentGuide: parseBool(v)},
+    (config, json) => {
+      ...config,
+      editorHighlightActiveIndentGuide: parseBool(json),
+    },
+  ),
+  (
+    "editor.quickSuggestions",
+    (config, json) => {
+      ...config,
+      editorQuickSuggestions: parseQuickSuggestions(json),
+    },
   ),
   (
     "editor.renderIndentGuides",
-    (s, v) => {...s, editorRenderIndentGuides: parseBool(v)},
+    (config, json) => {
+      ...config,
+      editorRenderIndentGuides: parseBool(json),
+    },
   ),
   (
     "editor.renderWhitespace",
-    (s, v) => {...s, editorRenderWhitespace: parseRenderWhitespace(v)},
+    (config, json) => {
+      ...config,
+      editorRenderWhitespace: parseRenderWhitespace(json),
+    },
   ),
-  ("editor.rulers", (s, v) => {...s, editorRulers: parseIntList(v)}),
-  ("files.exclude", (s, v) => {...s, filesExclude: parseStringList(v)}),
-  ("window.title", (s, v) => {...s, windowTitle: parseString(v)}),
+  (
+    "editor.rulers",
+    (config, json) => {...config, editorRulers: parseIntList(json)},
+  ),
+  (
+    "files.exclude",
+    (config, json) => {...config, filesExclude: parseStringList(json)},
+  ),
+  (
+    "window.title",
+    (config, json) => {...config, windowTitle: parseString(json)},
+  ),
+  (
+    "terminal.integrated.fontFamily",
+    (config, json) => {
+      ...config,
+      terminalIntegratedFontFamily:
+        parseString(~default=Constants.defaultFontFamily, json),
+    },
+  ),
+  (
+    "terminal.integrated.fontSize",
+    (config, json) => {
+      ...config,
+      terminalIntegratedFontSize:
+        parseEditorFontSize(~default=Constants.defaultTerminalFontSize, json),
+    },
+  ),
+  (
+    "terminal.integrated.fontSmoothing",
+    (config, json) => {
+      ...config,
+      terminalIntegratedFontSmoothing: parseFontSmoothing(json),
+    },
+  ),
   (
     "workbench.activityBar.visible",
-    (s, v) => {...s, workbenchActivityBarVisible: parseBool(v)},
+    (config, json) => {
+      ...config,
+      workbenchActivityBarVisible: parseBool(json),
+    },
   ),
   (
     "workbench.colorTheme",
-    (s, v) => {...s, workbenchColorTheme: parseString(v)},
+    (config, json) => {...config, workbenchColorTheme: parseString(json)},
   ),
   (
     "workbench.iconTheme",
-    (s, v) => {...s, workbenchIconTheme: parseString(v)},
+    (config, json) => {...config, workbenchIconTheme: parseString(json)},
   ),
   (
     "workbench.editor.showTabs",
-    (s, v) => {...s, workbenchEditorShowTabs: parseBool(v)},
+    (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
   ),
   (
     "workbench.sideBar.visible",
-    (s, v) => {...s, workbenchSideBarVisible: parseBool(v)},
+    (config, json) => {...config, workbenchSideBarVisible: parseBool(json)},
   ),
   (
     "workbench.statusBar.visible",
-    (s, v) => {...s, workbenchStatusBarVisible: parseBool(v)},
+    (config, json) => {
+      ...config,
+      workbenchStatusBarVisible: parseBool(json),
+    },
   ),
   (
     "editor.zenMode.hideTabs",
-    (s, v) => {...s, zenModeHideTabs: parseBool(v)},
+    (config, json) => {...config, zenModeHideTabs: parseBool(json)},
   ),
   (
     "workbench.tree.indent",
-    (s, v) => {...s, workbenchTreeIndent: parseInt(v)},
+    (config, json) => {...config, workbenchTreeIndent: parseInt(json)},
   ),
   (
     "editor.zenMode.singleFile",
-    (s, v) => {...s, zenModeSingleFile: parseBool(v)},
+    (config, json) => {...config, zenModeSingleFile: parseBool(json)},
   ),
-  ("ui.shadows", (s, v) => {...s, uiShadows: parseBool(v)}),
-  ("ui.zoom", (s, v) => {...s, uiZoom: parseFloat(v)}),
+  (
+    "syntax.eagerMaxLines",
+    (config, json) => {
+      ...config,
+      syntaxEagerMaxLines:
+        parseInt(~default=Constants.syntaxEagerMaxLines, json),
+    },
+  ),
+  (
+    "syntax.eagerMaxLineLength",
+    (config, json) => {
+      ...config,
+      syntaxEagerMaxLineLength:
+        parseInt(~default=Constants.syntaxEagerMaxLineLength, json),
+    },
+  ),
+  (
+    "ui.shadows",
+    (config, json) => {...config, uiShadows: parseBool(json)},
+  ),
+  ("ui.zoom", (config, json) => {...config, uiZoom: parseFloat(json)}),
   (
     "vim.useSystemClipboard",
-    (s, v) => {
-      ...s,
-      vimUseSystemClipboard: parseVimUseSystemClipboardSetting(v),
+    (config, json) => {
+      ...config,
+      vimUseSystemClipboard: parseVimUseSystemClipboardSetting(json),
     },
   ),
   (
     "vsync",
-    (s, v) => {
-      ...s,
+    (config, json) => {
+      ...config,
       vsync:
-        parseBool(v) ? Revery.Vsync.Synchronized : Revery.Vsync.Immediate,
+        parseBool(json) ? Revery.Vsync.Synchronized : Revery.Vsync.Immediate,
     },
   ),
   (
     "experimental.treeSitter",
-    (s, v) => {...s, experimentalTreeSitter: parseBool(v)},
+    (config, json) => {...config, experimentalTreeSitter: parseBool(json)},
   ),
   (
     "experimental.autoClosingPairs",
-    (s, v) => {...s, experimentalAutoClosingPairs: parseBool(v)},
+    (config, json) => {
+      ...config,
+      experimentalAutoClosingPairs: parseBool(json),
+    },
   ),
   (
     "experimental.viml",
-    (s, v) => {...s, experimentalVimL: parseStringList(v)},
+    (config, json) => {...config, experimentalVimL: parseStringList(json)},
   ),
 ];
 

@@ -4,44 +4,27 @@ open Revery.UI;
 [@deriving show]
 type item('data) = {
   label: string,
-  // icon: option(IconTheme.IconDefinition.t),
+  // TODO: icon: option(IconTheme.IconDefinition.t),
   data: [@opaque] 'data,
 };
 
-type t('data);
-
 module Overlay: {
-  let make:
-    (
-      ~model: t('data),
-      ~theme: Theme.t,
-      ~font: UiFont.t,
-      ~onOverlayClick: unit => unit,
-      ~onItemSelect: item('data) => unit,
-      unit
-    ) =>
-    element;
+  let make: (~key: React.Key.t=?, ~onClick: unit => unit, unit) => element;
 };
 
-module Make:
-  () =>
-   {
-    let init: list(item('data)) => t('data);
-
-    module Anchor: {
-      let make:
-        (
-          ~model: option(t('data)),
-          ~orientation: (
-                          [ | `Top | `Middle | `Bottom],
-                          [ | `Left | `Middle | `Right],
-                        )
-                          =?,
-          ~offsetX: int=?,
-          ~offsetY: int=?,
-          ~onUpdate: t('data) => unit,
-          unit
-        ) =>
-        element;
-    };
-  };
+let make:
+  (
+    ~items: list(item('data)),
+    ~orientation: (
+                    [ | `Top | `Middle | `Bottom],
+                    [ | `Left | `Middle | `Right],
+                  )
+                    =?,
+    ~offsetX: int=?,
+    ~offsetY: int=?,
+    ~onItemSelect: item('data) => unit,
+    ~theme: Theme.t,
+    ~font: UiFont.t,
+    unit
+  ) =>
+  element;

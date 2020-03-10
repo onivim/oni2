@@ -5,11 +5,10 @@
  */
 
 module Buffer = Buffer;
-// TODO: Move to own module
 module BufferLine = BufferLine;
+module BufferPath = BufferPath;
 module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
-module CamomileBundled = CamomileBundled;
 module Cli = Cli;
 module ColorizedToken = ColorizedToken;
 module Configuration = Configuration;
@@ -18,9 +17,7 @@ module ConfigurationParser = ConfigurationParser;
 module ConfigurationTransformer = ConfigurationTransformer;
 module ConfigurationValues = ConfigurationValues;
 module Constants = Constants;
-module Cursor = Cursor;
 module Diff = Diff;
-module EditorFont = EditorFont;
 module EditorSize = EditorSize;
 module EnvironmentVariables = Kernel.EnvironmentVariables;
 module Filesystem = Filesystem;
@@ -44,6 +41,7 @@ module StringMap = Kernel.StringMap;
 module Subscription = Subscription;
 module SyntaxScope = SyntaxScope;
 module Theme = Theme;
+module ColorTheme = ColorTheme;
 module ThreadHelper = Kernel.ThreadHelper;
 module Tokenizer = Tokenizer;
 module UiFont = UiFont;
@@ -52,4 +50,5 @@ module Utility = Utility;
 module Views = Views;
 module VimEx = VimEx;
 module VisualRange = VisualRange;
-module ZedBundled = ZedBundled;
+module ZedBundled = Zed_utf8;
+module Zed_utf8 = Zed_utf8;

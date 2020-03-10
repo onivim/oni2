@@ -8,18 +8,23 @@ open Oni_Components;
 type model = {
   queryInput: string,
   query: string,
-  cursorPosition: int,
+  selection: Selection.t,
   hits: list(Ripgrep.Match.t),
 };
 
-let initial = {queryInput: "", query: "", cursorPosition: 0, hits: []};
+let initial = {
+  queryInput: "",
+  query: "",
+  selection: Selection.initial,
+  hits: [],
+};
 
 // UPDATE
 
 [@deriving show({with_path: false})]
 type msg =
   | Input(string)
-  | InputClicked(int)
+  | InputClicked(Selection.t)
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete;
 
@@ -29,7 +34,7 @@ type outmsg =
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-    let {queryInput, cursorPosition, _} = model;
+    let {queryInput, selection, _} = model;
 
     let model =
       switch (key) {
@@ -41,17 +46,14 @@ let update = (model, msg) => {
         }
 
       | _ =>
-        let (queryInput, cursorPosition) =
-          InputModel.handleInput(~text=queryInput, ~cursorPosition, key);
-        {...model, queryInput, cursorPosition};
+        let (queryInput, selection) =
+          InputModel.handleInput(~text=queryInput, ~selection, key);
+        {...model, queryInput, selection};
       };
 
     (model, None);
 
-  | InputClicked(cursorPosition) => (
-      {...model, cursorPosition},
-      Some(Focus),
-    )
+  | InputClicked(selection) => ({...model, selection}, Some(Focus))
 
   | Update(items) => ({...model, hits: model.hits @ items}, None)
 
@@ -111,10 +113,10 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let title = (~font: UiFont.t) => [
+  let title = (~font: UiFont.t, ~theme: Theme.t) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
-    color(Colors.white),
+    color(theme.sideBarForeground),
     marginVertical(8),
     marginHorizontal(8),
   ];
@@ -165,23 +167,26 @@ let make =
   <View style=Styles.pane>
     <View style={Styles.queryPane(~theme)}>
       <View style=Styles.row>
-        <Text style={Styles.title(~font=uiFont)} text="Find in Files" />
+        <Text
+          style={Styles.title(~font=uiFont, ~theme)}
+          text="Find in Files"
+        />
       </View>
       <View style=Styles.row>
         <Input
           style={Styles.input(~font=uiFont)}
           cursorColor=Colors.gray
-          cursorPosition={model.cursorPosition}
+          selection={model.selection}
           value={model.queryInput}
           placeholder="Search"
           isFocused
-          onClick={pos => dispatch(InputClicked(pos))}
+          onClick={selection => dispatch(InputClicked(selection))}
         />
       </View>
     </View>
     <View style=Styles.resultsPane>
       <Text
-        style={Styles.title(~font=uiFont)}
+        style={Styles.title(~font=uiFont, ~theme)}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <LocationList theme uiFont editorFont items onSelectItem />

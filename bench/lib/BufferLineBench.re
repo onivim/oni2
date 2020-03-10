@@ -15,13 +15,13 @@ let lengthBounded = () => {
   ();
 };
 
-let getUCharExn = () => {
-  let _ = largeBufferLine |> BufferLine.getUCharExn(~index=8000);
+let getUcharExn = () => {
+  let _ = largeBufferLine |> BufferLine.getUcharExn(~index=8000);
   ();
 };
 
 let getPositionAndWidth = () => {
-  let _ = largeBufferLine |> BufferLine.getUCharExn(~index=9000);
+  let _ = largeBufferLine |> BufferLine.getUcharExn(~index=9000);
   ();
 };
 
@@ -38,7 +38,7 @@ bench(
   (),
 );
 
-bench(~name="BufferLine: getUCharExn", ~options, ~setup, ~f=getUCharExn, ());
+bench(~name="BufferLine: getUcharExn", ~options, ~setup, ~f=getUcharExn, ());
 
 bench(
   ~name="BufferLine: getPositionAndWidth",

@@ -1,11 +1,5 @@
 echo "cur bin $cur__bin"
 
-CAMOMILE_ROOT=`esy bash -c 'echo #{@opam/camomile.install}'`
-echo "Camomile root: $CAMOMILE_ROOT"
-CAMOMILE_PATH=$CAMOMILE_ROOT/share/camomile/
-
-ls $CAMOMILE_PATH
-
 rm -rf _release
 rm -rf _staging
 
@@ -39,8 +33,6 @@ cp _release/linux/bin/Oni2 _release/Onivim2.AppDir/usr/bin/Oni2
 cp vendor/ripgrep-v0.10.0/linux/rg _release/Onivim2.AppDir/usr/bin/rg
 cp vendor/node-v10.15.1/linux-x64/node _release/Onivim2.AppDir/usr/bin/node
 cp vendor/reason-language-server/bin.native.linux _release/Onivim2.AppDir/usr/bin/rls
-
-cp -r $CAMOMILE_PATH _release/Onivim2.AppDir/usr/share
 
 ls _release/Onivim2.AppDir/usr/share
 

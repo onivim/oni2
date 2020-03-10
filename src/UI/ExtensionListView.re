@@ -8,8 +8,6 @@ open Oni_Components;
 open Oni_Extensions;
 
 module Styles = {
-  let container = Style.[flexGrow(1)];
-
   let text = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontSize(font.fontSize),
@@ -94,9 +92,7 @@ let make = (~state: State.t, ()) => {
   let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
   //let developmentCount = Array.length(developmentExtensions);
 
-  <View style=Styles.container>
-    <FlatList rowHeight=50 count={Array.length(allExtensions)} focused=None>
-      ...{renderItem(allExtensions)}
-    </FlatList>
-  </View>;
+  <FlatList rowHeight=50 count={Array.length(allExtensions)} focused=None>
+    ...{renderItem(allExtensions)}
+  </FlatList>;
 };

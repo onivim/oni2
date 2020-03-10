@@ -29,6 +29,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.fontSize` __(_int_ default: `14`)__ - The font size used by the editor surface.
 
+- `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialised"_)__ - The smoothing strategy used when rendering fonts. The `"antialised"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid. 
+
 - `editor.hover.delay` __(_int_ default: `1000`)__ - The delay in milliseconds before showing the hover UI.
 
 - `editor.hover.enabled` __(_bool_ default: `true`)__ - Controls whether or not the hover UI is enabled.
@@ -50,11 +52,17 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.insertSpaces` __(_bool_ default: `true`)__ - When `true`, the Onivim will use spaces for indentation as opposed to tabs.
 
+- `editor.quickSuggestions` __(_bool_ default: `true`)__ - When `true`, code completions will be enabled. When `false`, code completions will be disabled.
+
+   Code completions also support finer-grained configuration, via a JSON object of the form: `{ "comments": true, "strings": true, "others": true }`.
+
+   This allows enabling code-completions based on the current syntax scope.
+
+- `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
+
 - `editor.zenMode.singleFile` __(_bool_ default: `true`)__ - When `true`, the Onivim will automatically enter zen mode when started up with a single file. Zen mode hides most of the UI until disabled via the command pallette.
 
 - `editor.zenMode.hideTabs` __(_bool_ default: `true`)__ - When `true`, the Onivim will hide the buffer tabs from the user whilst in zen mode. Zen mode can be toggled in the command pallette, or automatically enabled with the `editor.zenMode.singleFile` configuration option.
-
-- `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
 - `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
 

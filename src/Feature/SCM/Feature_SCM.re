@@ -3,6 +3,7 @@ open Utility;
 
 module InputModel = Oni_Components.InputModel;
 module ExtHostClient = Oni_Extensions.ExtHostClient;
+module Selection = Oni_Components.Selection;
 
 // MODEL
 
@@ -21,7 +22,7 @@ type model = {
 
 and inputBox = {
   value: string,
-  cursorPosition: int,
+  selection: Selection.t,
   placeholder: string,
 };
 
@@ -29,7 +30,7 @@ let initial = {
   providers: [],
   inputBox: {
     value: "",
-    cursorPosition: 0,
+    selection: Selection.initial,
     placeholder: "Do the commit thing!",
   },
 };
@@ -91,7 +92,7 @@ type msg =
       command,
     })
   | KeyPressed({key: string})
-  | InputBoxClicked({cursorPosition: int});
+  | InputBoxClicked({selection: Selection.t});
 
 module Msg = {
   let keyPressed = key => KeyPressed({key: key});
@@ -300,10 +301,10 @@ let update = (extHostClient, model, msg) =>
     )
 
   | KeyPressed({key}) =>
-    let (value, cursorPosition) =
+    let (value, selection) =
       InputModel.handleInput(
         ~text=model.inputBox.value,
-        ~cursorPosition=model.inputBox.cursorPosition,
+        ~selection=model.inputBox.selection,
         key,
       );
 
@@ -313,7 +314,7 @@ let update = (extHostClient, model, msg) =>
         inputBox: {
           ...model.inputBox,
           value,
-          cursorPosition,
+          selection,
         },
       },
       Effect(
@@ -330,12 +331,12 @@ let update = (extHostClient, model, msg) =>
       ),
     );
 
-  | InputBoxClicked({cursorPosition}) => (
+  | InputBoxClicked({selection}) => (
       {
         ...model,
         inputBox: {
           ...model.inputBox,
-          cursorPosition,
+          selection,
         },
       },
       Focus,
@@ -397,24 +398,32 @@ open Revery.UI.Components;
 
 module Input = Oni_Components.Input;
 
+module Theme = Feature_Theme;
+
+module Colors = {
+  let foreground = Theme.Colors.SideBar.foreground;
+  let background = Theme.Colors.SideBar.background;
+  let hoverBackground = Theme.Colors.List.hoverBackground;
+};
+
 module Pane = {
   module Styles = {
     open Style;
 
     let container = [padding(10), flexGrow(1)];
 
-    let text = (~theme: Theme.t, ~font: UiFont.t) => [
+    let text = (~theme, ~font: UiFont.t) => [
       fontSize(font.fontSize),
       fontFamily(font.fontFile),
-      color(theme.sideBarForeground),
+      color(theme#color(Colors.foreground)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
 
-    let input = (~font: UiFont.t) => [
+    let input = (~theme, ~font: UiFont.t) => [
       border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
       backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      color(Colors.white),
+      color(theme#color(Colors.foreground)),
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       flexGrow(1),
@@ -424,20 +433,20 @@ module Pane = {
 
     let groupLabel = [paddingVertical(3)];
 
-    let groupLabelText = (~theme: Theme.t, ~font: UiFont.t) => [
+    let groupLabelText = (~theme, ~font: UiFont.t) => [
       fontSize(font.fontSize *. 0.85),
       fontFamily(font.fontFileBold),
-      color(theme.sideBarForeground),
+      color(theme#color(Colors.foreground)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
 
     let groupItems = [marginLeft(6)];
 
-    let item = (~isHovered, ~theme: Theme.t) => [
+    let item = (~isHovered, ~theme) => [
       isHovered
-        ? backgroundColor(theme.listHoverBackground)
-        : backgroundColor(theme.sideBarBackground),
+        ? backgroundColor(theme#color(Colors.hoverBackground))
+        : backgroundColor(theme#color(Colors.background)),
       paddingVertical(2),
       cursor(MouseCursors.pointer),
     ];
@@ -529,15 +538,17 @@ module Pane = {
       return((provider, group));
     };
 
-    <View style=Styles.container>
+    <ScrollView style=Styles.container>
       <Input
-        style={Styles.input(~font)}
-        cursorColor=Colors.gray
+        style={Styles.input(~theme, ~font)}
+        cursorColor={theme#color(Colors.foreground)}
         value={model.inputBox.value}
-        cursorPosition={model.inputBox.cursorPosition}
+        selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}
         isFocused
-        onClick={pos => dispatch(InputBoxClicked({cursorPosition: pos}))}
+        onClick={selection =>
+          dispatch(InputBoxClicked({selection: selection}))
+        }
       />
       {groups
        |> List.map(((provider, group)) =>
@@ -551,6 +562,6 @@ module Pane = {
             />
           )
        |> React.listToElement}
-    </View>;
+    </ScrollView>;
   };
 };

@@ -18,7 +18,6 @@ module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
-module BufferSyntaxHighlights = Feature_Editor.BufferSyntaxHighlights;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
@@ -131,17 +130,6 @@ let start =
     });
 
   let _: unit => unit =
-    // Unhandled escape is called when there is an `<esc>` sent to Vim,
-    // but nothing to escape from (ie, in normal mode with no pending operator)
-    Vim.onUnhandledEscape(() => {
-      let state = getState();
-      if (Notifications.any(state.notifications)) {
-        let oldestNotification = Notifications.getOldest(state.notifications);
-        dispatch(Actions.HideNotification(oldestNotification));
-      };
-    });
-
-  let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ChangeMode(newMode)));
 
   let _: unit => unit =
@@ -215,6 +203,9 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.Buffer.onWrite(id => {dispatch(Actions.BufferSaved(id))});
+
+  let _: unit => unit =
     Vim.Cursor.onMoved(newPosition => {
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
@@ -247,6 +238,20 @@ let start =
       | QuitOne(buf) => dispatch(QuitBuffer(buf, force))
       }
     );
+
+  let _: unit => unit =
+    Vim.onTerminal(({cmd, curwin, _}) => {
+      let splitDirection =
+        if (curwin) {Feature_Terminal.Current} else {
+          Feature_Terminal.Horizontal
+        };
+
+      dispatch(
+        Actions.Terminal(
+          Feature_Terminal.NewTerminal({cmd: Some(cmd), splitDirection}),
+        ),
+      );
+    });
 
   let _: unit => unit =
     Vim.Visual.onRangeChanged(vr => {
@@ -396,7 +401,13 @@ let start =
         != Some(false);
 
       if (shouldApply) {
-        dispatch(Actions.BufferUpdate(bu));
+        maybeBuffer
+        |> Option.iter(oldBuffer => {
+             let newBuffer = Core.Buffer.update(oldBuffer, bu);
+             dispatch(
+               Actions.BufferUpdate({update: bu, newBuffer, oldBuffer}),
+             );
+           });
       } else {
         Log.debugf(m => m("Skipped buffer update at: %i", update.version));
       };
@@ -480,7 +491,7 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e untitled");
+      let _ = Vim.command("e oni://Welcome");
       hasInitialized := true;
 
       let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
@@ -541,13 +552,13 @@ let start =
                  let bufferId = Core.Buffer.getId(buffer);
                  let {line, column}: Location.t = primaryCursor;
 
-                 BufferSyntaxHighlights.getSyntaxScope(
+                 Feature_Syntax.getSyntaxScope(
                    ~bufferId,
                    ~line,
                    // TODO: Reconcile 'byte position' vs 'character position'
                    // in cursor.
                    ~bytePosition=Index.toZeroBased(column),
-                   state.bufferSyntaxHighlights,
+                   state.syntaxHighlights,
                  );
                },
                primaryCursor,
@@ -645,6 +656,20 @@ let start =
       switch (dir) {
       | Some(_) => dispatch(Actions.BufferEnter(metadata, fileType))
       | None => ()
+      };
+
+      switch (Core.BufferPath.parse(filePath)) {
+      | Terminal({bufferId, _}) =>
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              metadata.id,
+              BufferRenderer.Terminal({title: "Terminal", id: bufferId}),
+            ),
+          ),
+        )
+      | Welcome => ()
+      | FilePath(_) => ()
       };
     });
 
@@ -827,6 +852,16 @@ let start =
       ();
     });
 
+  let saveEffect =
+    Isolinear.Effect.create(~name="vim.save", () => {
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input(":");
+      let _ = Vim.input("w");
+      let _ = Vim.input("<CR>");
+      ();
+    });
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -839,6 +874,7 @@ let start =
       )
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
+    | Command("workbench.action.files.save") => (state, saveEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
@@ -853,13 +889,13 @@ let start =
         };
       (state, eff);
 
-    | Init(_) => (state, initEffect)
+    | Init => (state, initEffect)
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),
       )
     | BufferEnter(_)
-    | SetEditorFont(_)
+    | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
     | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (

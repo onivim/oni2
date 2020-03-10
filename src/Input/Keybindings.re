@@ -2,47 +2,28 @@ module Keybinding = {
   type t = {
     key: string,
     command: string,
-    condition: Expression.t,
+    condition: WhenExpr.t,
   };
 
-  let parseAndExpression = (json: Yojson.Safe.t) =>
-    switch (json) {
-    | `String(expr) => Expression.Variable(expr)
+  let parseSimple =
+    fun
+    | `String(s) => WhenExpr.Defined(s)
+    | _ => WhenExpr.Value(False);
+
+  let parseAndExpression =
+    fun
+    | `String(expr) => WhenExpr.Defined(expr)
     | `List(andExpressions) =>
-      List.fold_left(
-        (acc, curr) => {
-          let result =
-            switch (curr) {
-            | `String(expr) => Expression.Variable(expr)
-            | _ => Expression.False
-            };
-          Expression.And(result, acc);
-        },
-        Expression.True,
-        andExpressions,
-      )
-    | _ => Expression.False
-    };
+      WhenExpr.And(List.map(parseSimple, andExpressions))
+    | _ => WhenExpr.Value(False);
 
-  let condition_of_yojson = (json: Yojson.Safe.t) => {
-    switch (json) {
+  let condition_of_yojson =
+    fun
     | `List(orExpressions) =>
-      Ok(
-        List.fold_left(
-          (acc, curr) => {Expression.Or(parseAndExpression(curr), acc)},
-          Expression.False,
-          orExpressions,
-        ),
-      )
-    | `String(v) =>
-      switch (When.parse(v)) {
-      | Error(err) => Error(err)
-      | Ok(condition) => Ok(condition)
-      }
-    | `Null => Ok(Expression.True)
-    | _ => Error("Expected string for condition")
-    };
-  };
+      Ok(WhenExpr.Or(List.map(parseAndExpression, orExpressions)))
+    | `String(v) => Ok(WhenExpr.parse(v))
+    | `Null => Ok(WhenExpr.Value(True))
+    | _ => Error("Expected string for condition");
 
   let of_yojson = (json: Yojson.Safe.t) => {
     let key = Yojson.Safe.Util.member("key", json);

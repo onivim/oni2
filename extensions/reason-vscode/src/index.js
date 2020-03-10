@@ -13,6 +13,10 @@ const fs = require('fs')
 const getLocation = (context) => {
     let binaryLocation = vscode.workspace.getConfiguration('reason_language_server').get('location')
 
+    binaryLocation = "/Users/bryphe/.esy/3__________________________________________________________________/i/opam__s__ocaml_lsp_server-111372b5/bin/ocamllsp";
+    vscode.window.showErrorMessage('Reason Language Server not found! You specified ' + binaryLocation);
+
+
     if (!binaryLocation) {
         // see if it's bundled with the extension
         // hmm actually I could bundle one for each platform & probably be fine
@@ -143,12 +147,13 @@ function activate(context) {
         if (binLocation != location) {
             fs.writeFileSync(binLocation, fs.readFileSync(location))
         }
+            vscode.window.showErrorMessage('Starting server: ' + binLocation);
         client = new LanguageClient(
             'reason-language-server',
             'Reason Language Server',
             {
                 command: binLocation,
-                args: [],
+                args: ["--log-file=/Users/bryphe/loggy.log"],
             },
             Object.assign({}, clientOptions, {
                 revealOutputChannelOn: vscode.workspace.getConfiguration('reason_language_server').get('show_debug_errors')

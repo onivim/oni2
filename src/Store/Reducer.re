@@ -15,8 +15,8 @@ let reduce: (State.t, Actions.t) => State.t =
       let s = {
         ...s,
         buffers: Buffers.reduce(s.buffers, a),
-        bufferSyntaxHighlights:
-          BufferSyntaxHighlightsReducer.reduce(s.bufferSyntaxHighlights, a),
+        /*syntaxHighlights:
+          BufferSyntaxHighlightsReducer.reduce(s.syntaxHighlights, a),*/
         bufferHighlights:
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
@@ -49,9 +49,17 @@ let reduce: (State.t, Actions.t) => State.t =
         | SetIconTheme(iconTheme) => {...s, iconTheme}
         | SetColorTheme(theme) => {...s, theme}
         | ChangeMode(m) => {...s, mode: m}
-        | SetEditorFont(font) => {...s, editorFont: font}
+        | EditorFont(Service_Font.FontLoaded(font)) => {
+            ...s,
+            editorFont: font,
+          }
+        | TerminalFont(Service_Font.FontLoaded(font)) => {
+            ...s,
+            terminalFont: font,
+          }
         | EnableZenMode => {...s, zenMode: true}
         | DisableZenMode => {...s, zenMode: false}
+        | ReallyQuitting => {...s, isQuitting: true}
         | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
         | WindowFocusGained => {...s, windowIsFocused: true}
         | WindowFocusLost => {...s, windowIsFocused: false}

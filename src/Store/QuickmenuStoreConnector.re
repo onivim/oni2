@@ -5,10 +5,12 @@
  */
 open Oni_Core;
 open Oni_Model;
+open Oni_UI;
 open Utility;
 
 module InputModel = Oni_Components.InputModel;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
+module Selection = Oni_Components.Selection;
 
 module Log = (val Log.withNamespace("Oni2.Store.Quickmenu"));
 
@@ -43,7 +45,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     });
 
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
-    let currentDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
+    let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     buffers
     |> IntMap.to_seq
@@ -54,21 +56,24 @@ let start = (themeInfo: ThemeInfo.t) => {
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
        )
     |> List.filter_map(buffer => {
-         switch (Buffer.getFilePath(buffer)) {
-         | Some(path) =>
-           Some(
+         let maybeName =
+           Buffer.getMediumFriendlyName(~workingDirectory, buffer);
+         let maybePath = Buffer.getFilePath(buffer);
+
+         OptionEx.map2(
+           (name, path) =>
              Actions.{
                category: None,
-               name: Path.toRelative(~base=currentDirectory, path),
+               name,
                command: () => {
                  Actions.OpenFileByPath(path, None, None);
                },
                icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
                highlight: [],
              },
-           )
-         | None => None
-         }
+           maybeName,
+           maybePath,
+         );
        })
     |> Array.of_list;
   };
@@ -149,25 +154,55 @@ let start = (themeInfo: ThemeInfo.t) => {
 
     | QuickmenuInput(key) => (
         Option.map(
-          (Quickmenu.{query, cursorPosition, _} as state) => {
-            let (text, cursorPosition) =
-              InputModel.handleInput(~text=query, ~cursorPosition, key);
+          (Quickmenu.{query, selection, _} as state) => {
+            let (text, selection) =
+              InputModel.handleInput(~text=query, ~selection, key);
 
-            Quickmenu.{...state, query: text, cursorPosition};
+            Quickmenu.{...state, query: text, selection, focused: Some(0)};
           },
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuInputClicked(cursorPosition) => (
-        Option.map(state => Quickmenu.{...state, cursorPosition}, state),
+    | QuickmenuInputClicked((newSelection: Selection.t)) => (
+        Option.map(
+          (Quickmenu.{variant, selection, _} as state) => {
+            switch (variant) {
+            | Wildmenu(_) =>
+              let transition = selection.focus - newSelection.focus;
+
+              if (transition > 0) {
+                for (_ in 0 to transition) {
+                  GlobalContext.current().dispatch(
+                    Actions.KeyboardInput("<LEFT>"),
+                  );
+                };
+              } else if (transition < 0) {
+                for (_ in 0 downto transition) {
+                  GlobalContext.current().dispatch(
+                    Actions.KeyboardInput("<RIGHT>"),
+                  );
+                };
+              };
+            | _ => ()
+            };
+
+            Quickmenu.{...state, variant, selection: newSelection};
+          },
+          state,
+        ),
         Isolinear.Effect.none,
       )
 
     | QuickmenuCommandlineUpdated(text, cursorPosition) => (
         Option.map(
-          state => Quickmenu.{...state, query: text, cursorPosition},
+          state =>
+            Quickmenu.{
+              ...state,
+              query: text,
+              selection: Selection.collapsed(~text, cursorPosition),
+            },
           state,
         ),
         Isolinear.Effect.none,
