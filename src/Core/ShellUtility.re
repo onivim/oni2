@@ -1,11 +1,15 @@
 open Kernel;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Core.ShellUtility"));
 
-module Internal = {
+module Constants = {
   let defaultLinuxShell = "/bin/bash";
   let defaultOSXShell = "/bin/zsh";
+  let defaultWindowsShell = "powershell.exe";
+};
 
+module Internal = {
   let getPathFromEnvironment = () =>
     switch (Sys.getenv_opt("PATH")) {
     | Some(path) => path
@@ -25,6 +29,13 @@ module Internal = {
     ret;
   };
 
+  let getShellFromEnvironment = () => {
+    Sys.getenv_opt("SHELL")
+    |> OptionEx.flatMap(shellPath => {
+         Sys.file_exists(shellPath) ? Some(shellPath) : None
+       });
+  };
+
   // This strategy for determing the default shell for Linux came from StackOverflow:
   // https://unix.stackexchange.com/a/352320
   let discoverLinuxShell = () =>
@@ -32,13 +43,13 @@ module Internal = {
       let user = Sys.getenv("USER");
       let userShell =
         runCommand("getent passwd " ++ user ++ " | awk -F: '{print $NF}'");
-      userShell;
+      Some(userShell);
     }) {
     | ex =>
       Log.warnf(m =>
         m("Unable to get shell from getent: %s", Printexc.to_string(ex))
       );
-      defaultLinuxShell;
+      None;
     };
 
   // This strategy for determing the default shell came from StackOverflow:
@@ -54,34 +65,37 @@ module Internal = {
       let slashIndex = String.index(userShell, '/');
       Log.infof(m => m("dscl returned: %s", userShell));
 
-      String.sub(userShell, slashIndex, len - slashIndex);
+      Some(String.sub(userShell, slashIndex, len - slashIndex));
     }) {
     | ex =>
       Log.warnf(m =>
         m("Unable to run dscl to get user shell: %s", Printexc.to_string(ex))
       );
-      defaultOSXShell;
+      None;
     };
 };
 
 let getDefaultShell = () => {
   (
-    lazy(
-      {
-        // We assume if the $SHELL environment variable is specified,
-        // that should be the default.
-        switch (Sys.getenv_opt("SHELL")) {
-        | Some(v) => v
-        | None =>
-          switch (Revery.Environment.os) {
-          | Windows => "powershell.exe"
-          | Mac => Internal.discoverOSXShell()
-          | Linux => Internal.discoverLinuxShell()
-          | _ => Internal.defaultLinuxShell
-          }
+    lazy({
+      let default =
+        switch (Revery.Environment.os) {
+        | Windows => Constants.defaultWindowsShell
+        | Mac => Constants.defaultOSXShell
+        | _ => Constants.defaultLinuxShell
         };
-      }
-    )
+      // We assume if the $SHELL environment variable is specified,
+      // that should be the default.
+      Internal.getShellFromEnvironment()
+      |> OptionEx.or_lazy(() => {
+           switch (Revery.Environment.os) {
+           | Mac => Internal.discoverOSXShell()
+           | Linux => Internal.discoverLinuxShell()
+           | _ => None
+           }
+         })
+      |> Option.value(~default);
+    })
   )
   |> Lazy.force;
 };
