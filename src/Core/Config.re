@@ -21,15 +21,11 @@ module Settings = {
     | `Assoc(items) => fromList(items)
 
     | _ =>
-      Log.errorf(m =>
-        m("Expected configuration file to contain a JSON object")
-      );
+      Log.errorf(m => m("Expected file to contain a JSON object"));
       empty;
 
     | exception (Yojson.Json_error(message)) =>
-      Log.errorf(m =>
-        m("Error encoutnered reading configuration file: %s", message)
-      );
+      Log.errorf(m => m("Failed to read file %s: %s", path, message));
       empty;
     };
   };
@@ -113,7 +109,7 @@ module Schema = {
             | Error(err) =>
               Log.errorf(m =>
                 m(
-                  "Error decoding configuration value `%s`:\n\t%s",
+                  "Failed to decode value for `%s`:\n\t%s",
                   keyName,
                   Json.Decode.string_of_error(err),
                 )
