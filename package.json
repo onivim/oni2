@@ -227,8 +227,7 @@
     "@esy-ocaml/libffi": "*",
     "@opam/decoders-yojson": "*",
     "@opam/uutf": "*",
-    "@opam/uucp": "*",
-    "@opam/ocaml-lsp-server": "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#04733ed"
+    "@opam/uucp": "*"
   },
   "resolutions": {
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
@@ -268,6 +267,7 @@
     "shelljs": "*",
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
-    "rcedit": "2.0.0"
+    "rcedit": "2.0.0",
+    "@opam/ocaml-lsp-server": "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#04733ed"
   }
 }
