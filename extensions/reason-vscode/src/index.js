@@ -330,6 +330,24 @@ function activate(context) {
 
     vscode.commands.registerCommand('reason-language-server.show_ppxed_source', showPpxedSource);
 
+    vscode.commands.registerCommand('reason-language-server.dump_file_data', () => {
+        if (!client) {
+            return vscode.window.showInformationMessage('Language server not running');
+        }
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return vscode.window.showInformationMessage('No active editor');
+        }
+        if (editor.document.languageId !== 'ocaml' && editor.document.languageId !== 'reason') {
+            return vscode.window.showInformationMessage('Not an OCaml or Reason file');
+        }
+        client.sendRequest("custom:reasonLanguageServer/dumpFileData", {
+            "textDocument": {
+                "uri": editor.document.uri.with({scheme: 'file'}).toString(),
+            },
+        })
+    });
+
     const showAst = () => {
         if (!client) {
             return vscode.window.showInformationMessage('Language server not running');

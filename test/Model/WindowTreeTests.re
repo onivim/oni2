@@ -18,10 +18,25 @@ describe("WindowTreeTests", ({describe, _}) => {
 
       let splits =
         splits
-        |> addSplit(~target=None, Vertical, split1)
-        |> addSplit(~target=Some(split1.id), Vertical, split2)
-        |> addSplit(~target=Some(split2.id), Horizontal, split3)
-        |> addSplit(~target=Some(split1.id), Horizontal, split4);
+        |> addSplit(~target=None, ~position=Before, Vertical, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Vertical,
+             split2,
+           )
+        |> addSplit(
+             ~target=Some(split2.id),
+             ~position=Before,
+             Horizontal,
+             split3,
+           )
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Horizontal,
+             split4,
+           );
 
       let newSplits =
         splits
@@ -44,15 +59,51 @@ describe("WindowTreeTests", ({describe, _}) => {
       let split = createSplit(~editorGroupId=1, ());
       let targetId = split.id;
 
-      let splits = addSplit(~target=None, Vertical, split, splits);
+      let splits =
+        addSplit(~target=None, ~position=Before, Vertical, split, splits);
 
       expect.bool(splits == Parent(Vertical, [Leaf(split)])).toBe(true);
 
       let split2 = createSplit(~editorGroupId=2, ());
 
       let splits =
-        addSplit(~target=Some(targetId), Vertical, split2, splits);
+        addSplit(
+          ~target=Some(targetId),
+          ~position=Before,
+          Vertical,
+          split2,
+          splits,
+        );
       expect.bool(splits == Parent(Vertical, [Leaf(split2), Leaf(split)])).
+        toBe(
+        true,
+      );
+    });
+
+    test("add vertical split - after", ({expect}) => {
+      let splits = WindowTree.empty;
+
+      expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
+
+      let split = createSplit(~editorGroupId=1, ());
+      let targetId = split.id;
+
+      let splits =
+        addSplit(~target=None, ~position=After, Vertical, split, splits);
+
+      expect.bool(splits == Parent(Vertical, [Leaf(split)])).toBe(true);
+
+      let split2 = createSplit(~editorGroupId=2, ());
+
+      let splits =
+        addSplit(
+          ~target=Some(targetId),
+          ~position=After,
+          Vertical,
+          split2,
+          splits,
+        );
+      expect.bool(splits == Parent(Vertical, [Leaf(split), Leaf(split2)])).
         toBe(
         true,
       );
@@ -68,9 +119,16 @@ describe("WindowTreeTests", ({describe, _}) => {
       let split2 = createSplit(~editorGroupId=2, ());
       let split3 = createSplit(~editorGroupId=3, ());
 
-      let splits = addSplit(~target=None, Horizontal, split1, splits);
       let splits =
-        addSplit(~target=Some(targetId), Horizontal, split2, splits);
+        addSplit(~target=None, ~position=Before, Horizontal, split1, splits);
+      let splits =
+        addSplit(
+          ~target=Some(targetId),
+          ~position=Before,
+          Horizontal,
+          split2,
+          splits,
+        );
 
       expect.bool(
         splits
@@ -84,7 +142,13 @@ describe("WindowTreeTests", ({describe, _}) => {
       );
 
       let splits =
-        addSplit(~target=Some(targetId), Vertical, split3, splits);
+        addSplit(
+          ~target=Some(targetId),
+          ~position=Before,
+          Vertical,
+          split3,
+          splits,
+        );
 
       expect.bool(
         splits
@@ -115,9 +179,9 @@ describe("rotateForward", ({test, _}) => {
     let splitC = createSplit(~editorGroupId=3, ());
     let tree =
       WindowTree.empty
-      |> addSplit(Vertical, splitA)
-      |> addSplit(Vertical, splitB)
-      |> addSplit(Vertical, splitC);
+      |> addSplit(~position=Before, Vertical, splitA)
+      |> addSplit(~position=Before, Vertical, splitB)
+      |> addSplit(~position=Before, Vertical, splitC);
 
     expect.bool(
       tree == Parent(Vertical, [Leaf(splitC), Leaf(splitB), Leaf(splitA)]),
@@ -144,10 +208,20 @@ describe("rotateForward", ({test, _}) => {
     let splitD = createSplit(~editorGroupId=4, ());
     let tree =
       WindowTree.empty
-      |> addSplit(Vertical, splitA)
-      |> addSplit(Horizontal, splitB, ~target=Some(splitA.id))
-      |> addSplit(Horizontal, splitC, ~target=Some(splitB.id))
-      |> addSplit(Vertical, splitD);
+      |> addSplit(~position=Before, Vertical, splitA)
+      |> addSplit(
+           ~position=Before,
+           Horizontal,
+           splitB,
+           ~target=Some(splitA.id),
+         )
+      |> addSplit(
+           ~position=Before,
+           Horizontal,
+           splitC,
+           ~target=Some(splitB.id),
+         )
+      |> addSplit(~position=Before, Vertical, splitD);
 
     expect.bool(
       tree
@@ -194,9 +268,9 @@ describe("rotateBackward", ({test, _}) => {
     let splitC = createSplit(~editorGroupId=3, ());
     let tree =
       WindowTree.empty
-      |> addSplit(Vertical, splitA)
-      |> addSplit(Vertical, splitB)
-      |> addSplit(Vertical, splitC);
+      |> addSplit(~position=Before, Vertical, splitA)
+      |> addSplit(~position=Before, Vertical, splitB)
+      |> addSplit(~position=Before, Vertical, splitC);
 
     expect.bool(
       tree == Parent(Vertical, [Leaf(splitC), Leaf(splitB), Leaf(splitA)]),
@@ -223,10 +297,20 @@ describe("rotateBackward", ({test, _}) => {
     let splitD = createSplit(~editorGroupId=4, ());
     let tree =
       WindowTree.empty
-      |> addSplit(Vertical, splitA)
-      |> addSplit(Horizontal, splitB, ~target=Some(splitA.id))
-      |> addSplit(Horizontal, splitC, ~target=Some(splitB.id))
-      |> addSplit(Vertical, splitD);
+      |> addSplit(~position=Before, Vertical, splitA)
+      |> addSplit(
+           ~position=Before,
+           Horizontal,
+           splitB,
+           ~target=Some(splitA.id),
+         )
+      |> addSplit(
+           ~position=Before,
+           Horizontal,
+           splitC,
+           ~target=Some(splitB.id),
+         )
+      |> addSplit(~position=Before, Vertical, splitD);
 
     expect.bool(
       tree
