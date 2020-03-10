@@ -11,7 +11,7 @@ const path = require('path')
 const fs = require('fs')
 const cp = require('child_process');
 
-const validatePath = (pathToValidate, context) => {
+const validatePath = (pathToValidate) => {
     if (!pathToValidate) {
         return null;
     }
@@ -38,6 +38,7 @@ const isEsyAvailable = (projectPath) => {
         cp.execSync("esy --version", { cwd: projectPath });
         return true;
     } catch (ex) {
+    vscode.window.showErrorMessage("ERROR CHECKING ESY: " + ex.toString());
         return false;
     }
 };
@@ -52,11 +53,12 @@ const addExe = (filePath) => {
 
 const getOcamlLspPath = (projectPath) => {
     try {
-        let ocamlLspDirectory = cp.execSync("esy -q sh -c 'echo #{@opam/ocaml-lsp-server.bin}'", { cwd: projectPath })
+        let ocamlLspDirectory = cp.execSync("esy", ["-q", "sh", "-c","echo #{@opam/ocaml-lsp-server.bin}"], { cwd: projectPath })
        .toString()
        .trim();
         return path.join(ocamlLspDirectory, addExe("ocamllsp"));
     } catch (ex) {
+        vscode.window.showErrorMessage("ERROR CHECKING ocamllspserver: " + ex.toString());
         return null;
     }
 };
@@ -72,8 +74,9 @@ const getLocation = (_context) => {
     const projectPath = vscode.workspace.rootPath;
     if (isEsyAvailable(projectPath) && isEsyProject(projectPath)) {
         // Let's see if ocaml-lsp-server is available
-    vscode.window.showErrorMessage("ESY AVAILABLE");
+    //vscode.window.showErrorMessage("ESY AVAILABLE");
         const ocamlLspPath = getOcamlLspPath(projectPath);
+    vscode.window.showErrorMessage("ESY AVAILABLE: " + ocamlLspPath);
         if (ocamlLspPath) {
             vscode.window.showErrorMessage('Got ocaml LSP binary: ' + ocamlLspPath);
             return ocamlLspPath;
