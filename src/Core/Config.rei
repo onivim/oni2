@@ -10,6 +10,11 @@ let unionMany: list(t) => t;
 
 module Schema: {
   type codec('a);
+  type spec;
+  type setting('a) = {
+    spec,
+    get: t => 'a,
+  };
 
   let bool: codec(bool);
   let int: codec(int);

@@ -51,6 +51,14 @@ module Schema = {
     decode: Json.decoder('a),
     encode: Json.encoder('a),
   };
+  type spec = {
+    key: Lookup.key,
+    default: Json.t,
+  };
+  type setting('a) = {
+    spec,
+    get: t => 'a,
+  };
 
   let bool = {decode: Json.Decode.bool, encode: Json.Encode.bool};
   let int = {decode: Json.Decode.int, encode: Json.Encode.int};
@@ -66,6 +74,10 @@ module Schema = {
     let key = Lookup.key(keyName);
 
     {
+      spec: {
+        key,
+        default: codec.encode(default),
+      },
       get: lookup => {
         switch (Lookup.find_opt(key, lookup)) {
         | Some(jsonValue) =>
