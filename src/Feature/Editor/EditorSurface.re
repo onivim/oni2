@@ -144,11 +144,11 @@ let make =
 
   let layout =
     EditorLayout.getLayout(
-      ~showLineNumbers=Config.lineNumbers(config) != `Off,
-      ~maxMinimapCharacters=Config.Minimap.maxColumn(config),
+      ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
+      ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
       ~pixelWidth=float(metrics.pixelWidth),
       ~pixelHeight=float(metrics.pixelHeight),
-      ~isMinimapShown=Config.Minimap.enabled(config),
+      ~isMinimapShown=Config.Minimap.enabled.get(config),
       ~characterWidth=editorFont.measuredWidth,
       ~characterHeight=editorFont.measuredHeight,
       ~bufferLineCount=lineCount,
@@ -156,7 +156,7 @@ let make =
     );
 
   let matchingPairs =
-    !Config.matchBrackets(config)
+    !Config.matchBrackets.get(config)
       ? None
       : BufferHighlights.getMatchingPair(
           Buffer.getId(buffer),
@@ -173,7 +173,7 @@ let make =
 
   let (gutterWidth, gutterView) =
     <GutterView
-      showLineNumbers={Config.lineNumbers(config)}
+      showLineNumbers={Config.lineNumbers.get(config)}
       height={metrics.pixelHeight}
       theme
       scrollY={editor.scrollY}
@@ -210,7 +210,7 @@ let make =
       windowIsFocused
       config
     />
-    {Config.Minimap.enabled(config)
+    {Config.Minimap.enabled.get(config)
        ? <minimap
            editor
            diagnosticsMap
@@ -222,7 +222,7 @@ let make =
            matchingPairs
            bufferSyntaxHighlights
            selectionRanges
-           showMinimapSlider={Config.Minimap.showSlider(config)}
+           showMinimapSlider={Config.Minimap.showSlider.get(config)}
            diffMarkers
            onScroll
            bufferWidthInCharacters={layout.bufferWidthInCharacters}
@@ -232,8 +232,8 @@ let make =
     <OverlaysView
       buffer
       isActiveSplit
-      hoverDelay={Config.Hover.delay(config)}
-      isHoverEnabled={Config.Hover.enabled(config)}
+      hoverDelay={Config.Hover.delay.get(config)}
+      isHoverEnabled={Config.Hover.enabled.get(config)}
       diagnostics
       mode
       cursorPosition

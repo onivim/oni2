@@ -48,7 +48,7 @@ let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
 
 module Schema = {
   type decoder('a) = Json.decoder('a);
-  type setting('a) = t => 'a;
+  type setting('a) = {get: t => 'a};
 
   let bool = Json.Decode.bool;
   let int = Json.Decode.int;
@@ -60,23 +60,25 @@ module Schema = {
   let setting = (keyName, decoder, ~default) => {
     let key = Lookup.key(keyName);
 
-    lookup => {
-      switch (Lookup.find_opt(key, lookup)) {
-      | Some(jsonValue) =>
-        switch (Json.Decode.decode_value(decoder, jsonValue)) {
-        | Ok(value) => value
-        | Error(err) =>
-          Log.errorf(m =>
-            m(
-              "Error decoding configuration value `%s`:\n\t%s",
-              keyName,
-              Json.Decode.string_of_error(err),
-            )
-          );
-          default;
-        }
-      | None => default
-      };
+    {
+      get: lookup => {
+        switch (Lookup.find_opt(key, lookup)) {
+        | Some(jsonValue) =>
+          switch (Json.Decode.decode_value(decoder, jsonValue)) {
+          | Ok(value) => value
+          | Error(err) =>
+            Log.errorf(m =>
+              m(
+                "Error decoding configuration value `%s`:\n\t%s",
+                keyName,
+                Json.Decode.string_of_error(err),
+              )
+            );
+            default;
+          }
+        | None => default
+        };
+      },
     };
   };
 };

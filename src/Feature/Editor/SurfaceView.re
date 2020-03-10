@@ -145,7 +145,7 @@ let%component make =
 
         drawCurrentLineHighlight(~context, ~theme, cursorPosition.line);
 
-        renderRulers(~context, ~theme, Config.rulers(config));
+        renderRulers(~context, ~theme, Config.rulers.get(config));
 
         ContentView.render(
           ~context,
@@ -160,11 +160,11 @@ let%component make =
           ~cursorPosition,
           ~definition,
           ~bufferSyntaxHighlights,
-          ~shouldRenderWhitespace=Config.renderWhitespace(config),
+          ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
           ~bufferWidthInCharacters,
         );
 
-        if (Config.renderIndentGuides(config)) {
+        if (Config.renderIndentGuides.get(config)) {
           IndentLineRenderer.render(
             ~context,
             ~buffer,
@@ -172,7 +172,7 @@ let%component make =
             ~endLine=bottomVisibleLine + 1,
             ~cursorPosition,
             ~theme,
-            ~showActive=Config.highlightActiveIndentGuide(config),
+            ~showActive=Config.highlightActiveIndentGuide.get(config),
             indentation,
           );
         };

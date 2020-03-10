@@ -10,7 +10,7 @@ let unionMany: list(t) => t;
 
 module Schema: {
   type decoder('a);
-  type setting('a) = t => 'a;
+  type setting('a) = {get: t => 'a};
 
   let bool: decoder(bool);
   let int: decoder(int);
