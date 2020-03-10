@@ -36,18 +36,15 @@ module Internal = {
        });
   };
 
-  // This strategy for determing the default shell for Linux came from StackOverflow:
-  // https://unix.stackexchange.com/a/352320
   let discoverLinuxShell = () =>
     try({
-      let user = Sys.getenv("USER");
-      let userShell =
-        runCommand("getent passwd " ++ user ++ " | awk -F: '{print $NF}'");
-      Some(userShell);
+      let uid = Unix.getuid();
+      let {pw_shell, _}: Unix.passwd_entry = Unix.getpwuid(uid);
+      Some(pw_shell);
     }) {
     | ex =>
       Log.warnf(m =>
-        m("Unable to get shell from getent: %s", Printexc.to_string(ex))
+        m("Unable to get shell from passwd: %s", Printexc.to_string(ex))
       );
       None;
     };
