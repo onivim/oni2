@@ -3,37 +3,60 @@ open Oni_Core;
 open Config.Schema;
 
 module CustomDecoders: {
-  let whitespace: Config.Schema.decoder([ | `All | `Boundary | `None]);
-  let lineNumbers: Config.Schema.decoder([ | `On | `Relative | `Off]);
-  let time: Config.Schema.decoder(Time.t);
+  let whitespace: Config.Schema.codec([ | `All | `Boundary | `None]);
+  let lineNumbers: Config.Schema.codec([ | `On | `Relative | `Off]);
+  let time: Config.Schema.codec(Time.t);
 } = {
-  open Json.Decode;
-
   let whitespace =
     custom(
-      string
-      |> map(
-           fun
-           | "none" => `None
-           | "boundary" => `Boundary
-           | "all"
-           | _ => `All,
-         ),
+      ~decode=
+        Json.Decode.(
+          string
+          |> map(
+               fun
+               | "none" => `None
+               | "boundary" => `Boundary
+               | "all"
+               | _ => `All,
+             )
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | `None => string("none")
+          | `Boundary => string("boundary")
+          | `All => string("all")
+        ),
     );
 
   let lineNumbers =
     custom(
-      string
-      |> map(
-           fun
-           | "off" => `Off
-           | "relative" => `Relative
-           | "on"
-           | _ => `On,
-         ),
+      ~decode=
+        Json.Decode.(
+          string
+          |> map(
+               fun
+               | "off" => `Off
+               | "relative" => `Relative
+               | "on"
+               | _ => `On,
+             )
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | `Off => string("off")
+          | `Relative => string("relative")
+          | `On => string("on")
+        ),
     );
 
-  let time = custom(int |> map(Time.ms));
+  let time =
+    custom(
+      ~decode=Json.Decode.(int |> map(Time.ms)),
+      ~encode=
+        Json.Encode.(t => t |> Time.toFloatSeconds |> int_of_float |> int),
+    );
 };
 
 open CustomDecoders;

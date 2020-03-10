@@ -47,24 +47,29 @@ let union = (xs, ys) =>
 let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
 
 module Schema = {
-  type decoder('a) = Json.decoder('a);
-  type setting('a) = {get: t => 'a};
+  type codec('a) = {
+    decode: Json.decoder('a),
+    encode: Json.encoder('a),
+  };
 
-  let bool = Json.Decode.bool;
-  let int = Json.Decode.int;
-  let string = Json.Decode.string;
-  let list = Json.Decode.list;
+  let bool = {decode: Json.Decode.bool, encode: Json.Encode.bool};
+  let int = {decode: Json.Decode.int, encode: Json.Encode.int};
+  let string = {decode: Json.Decode.string, encode: Json.Encode.string};
+  let list = valueCodec => {
+    decode: Json.Decode.list(valueCodec.decode),
+    encode: Json.Encode.list(valueCodec.encode),
+  };
 
-  let custom = decoder => decoder;
+  let custom = (~decode, ~encode) => {decode, encode};
 
-  let setting = (keyName, decoder, ~default) => {
+  let setting = (keyName, codec, ~default) => {
     let key = Lookup.key(keyName);
 
     {
       get: lookup => {
         switch (Lookup.find_opt(key, lookup)) {
         | Some(jsonValue) =>
-          switch (Json.Decode.decode_value(decoder, jsonValue)) {
+          switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
           | Ok(value) => value
           | Error(err) =>
             Log.errorf(m =>

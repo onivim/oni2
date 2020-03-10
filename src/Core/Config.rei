@@ -9,15 +9,15 @@ let union: (t, t) => t;
 let unionMany: list(t) => t;
 
 module Schema: {
-  type decoder('a);
-  type setting('a) = {get: t => 'a};
+  type codec('a);
 
-  let bool: decoder(bool);
-  let int: decoder(int);
-  let string: decoder(string);
-  let list: decoder('a) => decoder(list('a));
+  let bool: codec(bool);
+  let int: codec(int);
+  let string: codec(string);
+  let list: codec('a) => codec(list('a));
 
-  let custom: Json.decoder('a) => decoder('a);
+  let custom:
+    (~decode: Json.decoder('a), ~encode: Json.encoder('a)) => codec('a);
 
-  let setting: (string, decoder('a), ~default: 'a) => setting('a);
+  let setting: (string, codec('a), ~default: 'a) => setting('a);
 };
