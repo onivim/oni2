@@ -47,6 +47,18 @@ let createDefaultCommands = getState => {
       ),
       Command.create(
         ~category=Some("View"),
+        ~name="Open Next Editor",
+        ~action=Command("workbench.action.nextEditor"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Open Previous Editor",
+        ~action=Command("workbench.action.previousEditor"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
         ~name="Toggle Problems (Errors, Warnings)",
         ~action=Command("workbench.actions.view.problems"),
         (),

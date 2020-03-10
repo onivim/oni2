@@ -17,6 +17,8 @@ let getActiveEditor: t => option(Feature_Editor.Editor.t);
 let setActiveEditor: (t, int) => t;
 let getEditorById: (int, t) => option(Feature_Editor.Editor.t);
 let getOrCreateEditorForBuffer: (t, int) => (t, Feature_Editor.EditorId.t);
+let nextEditor: t => t;
+let previousEditor: t => t;
 let removeEditorById: (t, int) => t;
 
 let isEmpty: t => bool;
