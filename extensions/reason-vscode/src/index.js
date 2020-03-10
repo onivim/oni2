@@ -212,15 +212,15 @@ function activate(context) {
         if (client) {
             client.stop();
         }
-        const [binLocation, args] = getLocation(context)
-        if (!binLocation) return
+        const [command, args] = getLocation(context)
+        if (!command) return
 
-        vscode.window.showErrorMessage('Starting server: ' + binLocation);
+        vscode.window.showErrorMessage(`Starting server: ${command}|${args}`);
         client = new LanguageClient(
             'reason-language-server',
             'Reason Language Server',
             {
-                command: "esy",
+                command,
                 args,
             },
             Object.assign({}, clientOptions, {
