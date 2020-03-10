@@ -120,7 +120,9 @@ module Schema = {
               );
               default;
             }
-          | None => default
+          | None =>
+            Log.warnf(m => m("Missing default value for `%s`", keyName));
+            default;
           };
         },
       };
