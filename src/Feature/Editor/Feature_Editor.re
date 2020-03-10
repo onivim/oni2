@@ -9,3 +9,7 @@ module EditorMetrics = EditorMetrics;
 module EditorSurface = EditorSurface;
 
 module EditorDiffMarkers = EditorDiffMarkers;
+
+module Contributions = {
+  let configuration = EditorConfiguration.contributions;
+};

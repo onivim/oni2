@@ -96,3 +96,26 @@ module ZenMode = {
   let hideTabs = setting("editor.zenMode.hideTabs", bool, ~default=true);
   let singleFile = setting("editor.zenMode.singleFile", bool, ~default=true);
 };
+
+let contributions = [
+  detectIndentation.spec,
+  fontFamily.spec,
+  fontSize.spec,
+  largeFileOptimization.spec,
+  highlightActiveIndentGuide.spec,
+  indentSize.spec,
+  insertSpaces.spec,
+  lineNumbers.spec,
+  matchBrackets.spec,
+  renderIndentGuides.spec,
+  renderWhitespace.spec,
+  rulers.spec,
+  tabSize.spec,
+  Hover.enabled.spec,
+  Hover.delay.spec,
+  Minimap.enabled.spec,
+  Minimap.maxColumn.spec,
+  Minimap.showSlider.spec,
+  ZenMode.hideTabs.spec,
+  ZenMode.singleFile.spec,
+];

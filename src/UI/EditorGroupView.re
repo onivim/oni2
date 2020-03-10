@@ -163,7 +163,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             tokenTheme={state.tokenTheme}
             definition={state.definition}
             windowIsFocused={state.windowIsFocused}
-            config={state.config.settings}
+            config={state.config.merged}
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
         | BufferRenderer.Terminal({id, _}) =>

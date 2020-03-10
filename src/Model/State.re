@@ -90,7 +90,10 @@ let create: unit => t =
     commands: Commands.empty,
     contextMenu: ContextMenu.Nothing,
     completions: Completions.initial,
-    config: Feature_Configuration.initial,
+    config:
+      Feature_Configuration.initial([
+        Feature_Editor.Contributions.configuration,
+      ]),
     configuration: Configuration.default,
     decorationProviders: [],
     definition: Definition.empty,

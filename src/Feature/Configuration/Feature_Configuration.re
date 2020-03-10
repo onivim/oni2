@@ -2,9 +2,27 @@ open Oni_Core;
 
 module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Configuration"));
 
-type model = {settings: Config.t};
+type model = {
+  schema: Config.Schema.t,
+  user: Config.Settings.t,
+  merged: Config.Settings.t,
+};
 
-let initial = {settings: Config.empty};
+let merge = model => {
+  ...model,
+  merged:
+    Config.Settings.union(Config.Schema.defaults(model.schema), model.user),
+};
+
+let initial = contributions =>
+  merge({
+    schema:
+      Config.Schema.unionMany(
+        contributions |> List.map(Config.Schema.fromList),
+      ),
+    user: Config.Settings.empty,
+    merged: Config.Settings.empty,
+  });
 
 [@deriving show({with_path: false})]
 type msg =
@@ -17,8 +35,8 @@ let update = (~configFile, model, msg) =>
   | ConfigurationFileChanged =>
     switch (getConfigurationFile(configFile)) {
     | Ok(configFile) =>
-      let settings = Config.fromFile(configFile);
-      settings == Config.empty ? model : {settings: settings};
+      let user = Config.Settings.fromFile(configFile);
+      user == Config.Settings.empty ? model : merge({...model, user});
     | Error(_) => model
     }
   };
