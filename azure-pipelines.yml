@@ -99,10 +99,10 @@ jobs:
   - template: .ci/publish-linux.yml
 
 - job: MacOS
-  displayName: "MacOS 10.14"
+  displayName: "MacOS 10.15"
   timeoutInMinutes: 0
   pool:
-    vmImage: 'macOS 10.14'
+    vmImage: 'macOS-10.15'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
