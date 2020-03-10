@@ -204,6 +204,26 @@ let start = () => {
         command: "view.closeEditor",
         condition: WhenExpr.Value(True),
       },
+      {
+        key: "<C-PAGEDOWN>",
+        command: "workbench.action.nextEditor",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-S-]>",
+        command: "workbench.action.nextEditor",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-PAGEUP>",
+        command: "workbench.action.previousEditor",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-S-[>",
+        command: "workbench.action.previousEditor",
+        condition: WhenExpr.Value(True),
+      },
     ];
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
