@@ -228,7 +228,7 @@ function activate(context) {
     });
 
     vscode.workspace.onDidChangeWorkspaceFolders(_evt => {
-            vscode.window.showErrorMessage('FOLDERS CHANGED: ' + vscode.workspace.rootPath);
+        log('Workspace root changed:' + vscode.workspace.rootPath);
         restart(); 
     });
 
