@@ -180,6 +180,26 @@ let start = () => {
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
+        key: "<C-]>",
+        command: "editor.action.indentLines",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<C-[>",
+        command: "editor.action.outdentLines",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<D-]>",
+        command: "editor.action.indentLines",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<D-[>",
+        command: "editor.action.outdentLines",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
         key: "<TAB>",
         command: "editor.action.indentLines",
         condition: "visualMode" |> WhenExpr.parse,
