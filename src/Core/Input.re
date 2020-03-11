@@ -11,6 +11,7 @@ type controlMode =
   | [@name "suggestWidgetVisible"] SuggestWidgetVisible
   // Onivim extensions to the 'when' syntax
   | [@name "insertMode"] InsertMode
+  | [@name "visualMode"] VisualMode
   | [@name "quickmenuCursorEnd"] QuickmenuCursorEnd;
 
 [@deriving show({with_path: false})]
