@@ -1,7 +1,7 @@
 open Revery;
 
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
-module Lookup = Kernel.KeyedStringMap;
+module Lookup = Kernel.KeyedStringTree;
 
 // SETTINGS
 
@@ -12,9 +12,8 @@ module Settings = {
 
   let fromList = entries =>
     entries
-    |> List.to_seq
-    |> Seq.map(((keyName, entry)) => (Lookup.key(keyName), entry))
-    |> Lookup.of_seq;
+    |> List.map(((keyName, entry)) => (Lookup.key(keyName), entry))
+    |> Lookup.fromList;
 
   let fromFile = path => {
     switch (Yojson.Safe.from_file(path)) {
@@ -32,7 +31,7 @@ module Settings = {
 
   let union = (xs, ys) =>
     Lookup.union(
-      (key: Lookup.key, _x, y) => {
+      (key, _x, y) => {
         Log.warnf(m =>
           m("Encountered duplicate key: %s", Lookup.keyName(key))
         );
@@ -54,11 +53,11 @@ module Schema = {
   type t = Lookup.t(spec);
 
   let fromList = specs =>
-    specs |> List.to_seq |> Seq.map(spec => (spec.key, spec)) |> Lookup.of_seq;
+    specs |> List.map(spec => (spec.key, spec)) |> Lookup.fromList;
 
   let union = (xs, ys) =>
     Lookup.union(
-      (key: Lookup.key, _x, y) => {
+      (key, _x, y) => {
         Log.warnf(m =>
           m("Encountered duplicate key: %s", Lookup.keyName(key))
         );
@@ -102,7 +101,7 @@ module Schema = {
           default: codec.encode(default),
         },
         get: lookup => {
-          switch (Lookup.find_opt(key, lookup)) {
+          switch (Lookup.get(key, lookup)) {
           | Some(jsonValue) =>
             switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
             | Ok(value) => value
