@@ -891,6 +891,8 @@ let start =
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
     | Command("workbench.action.files.save") => (state, saveEffect)
+    | Command("indent") => (state, indentEffect)
+    | Command("outdent") => (state, outdentEffect)
     | Command("editor.action.indentLines") => (state, indentEffect)
     | Command("editor.action.outdentLines") => (state, outdentEffect)
     | ListFocusUp

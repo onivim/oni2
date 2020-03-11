@@ -201,12 +201,12 @@ let start = () => {
       },
       {
         key: "<TAB>",
-        command: "editor.action.indentLines",
+        command: "indent",
         condition: "visualMode" |> WhenExpr.parse,
       },
       {
         key: "<S-TAB>",
-        command: "editor.action.outdentLines",
+        command: "outdent",
         condition: "visualMode" |> WhenExpr.parse,
       },
       {
