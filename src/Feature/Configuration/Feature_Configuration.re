@@ -28,7 +28,25 @@ let initial = contributions =>
 type msg =
   | ConfigurationFileChanged;
 
-let getConfigurationFile = Filesystem.getOrCreateConfigFile;
+let defaultConfigurationFileName = "configuration.json";
+let getConfigurationFile = configurationFilePath => {
+  switch (configurationFilePath) {
+  | None => Filesystem.getOrCreateConfigFile(defaultConfigurationFileName)
+  | Some(path) =>
+    switch (Sys.file_exists(path)) {
+    | exception ex =>
+      Log.error("Error loading configuration file at: " ++ path);
+      Log.error("  " ++ Printexc.to_string(ex));
+      Filesystem.getOrCreateConfigFile(defaultConfigurationFileName);
+
+    | false =>
+      Log.error("Error loading configuration file at: " ++ path);
+      Filesystem.getOrCreateConfigFile(defaultConfigurationFileName);
+
+    | true => Ok(path)
+    }
+  };
+};
 
 let update = (~configFile, model, msg) =>
   switch (msg) {

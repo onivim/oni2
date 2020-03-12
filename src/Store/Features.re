@@ -5,13 +5,7 @@ open Actions;
 
 // UPDATE
 
-let update =
-    (
-      ~extHostClient,
-      ~configFile="configuration.json",
-      state: State.t,
-      action: Actions.t,
-    ) =>
+let update = (~extHostClient, ~configFile, state: State.t, action: Actions.t) =>
   switch (action) {
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);

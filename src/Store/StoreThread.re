@@ -169,7 +169,7 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(~extHostClient, ~configFile=?configurationFilePath),
+      Features.update(~extHostClient, ~configFile=configurationFilePath),
       contextMenuUpdater,
     ]);
 
