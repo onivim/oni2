@@ -3,10 +3,10 @@ open Revery;
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
 module Lookup = Kernel.KeyedStringTree;
 
-type key = Lookup.key;
+type key = Lookup.path;
 type resolver = key => option(Json.t);
 
-let key = Lookup.key;
+let key = Lookup.path;
 
 // SETTINGS
 
@@ -17,7 +17,7 @@ module Settings = {
 
   let fromList = entries =>
     entries
-    |> List.map(((keyName, entry)) => (Lookup.key(keyName), entry))
+    |> List.map(((key, entry)) => (Lookup.path(key), entry))
     |> Lookup.fromList;
 
   let fromFile = path => {
@@ -38,10 +38,8 @@ module Settings = {
 
   let union = (xs, ys) =>
     Lookup.union(
-      (key, _x, y) => {
-        Log.warnf(m =>
-          m("Encountered duplicate key: %s", Lookup.keyName(key))
-        );
+      (path, _x, y) => {
+        Log.warnf(m => m("Encountered duplicate key: %s", Lookup.key(path)));
         Some(y);
       },
       xs,
@@ -54,20 +52,18 @@ module Settings = {
 
 module Schema = {
   type spec = {
-    key: Lookup.key,
+    path: Lookup.path,
     default: Json.t,
   };
   type t = Lookup.t(spec);
 
   let fromList = specs =>
-    specs |> List.map(spec => (spec.key, spec)) |> Lookup.fromList;
+    specs |> List.map(spec => (spec.path, spec)) |> Lookup.fromList;
 
   let union = (xs, ys) =>
     Lookup.union(
-      (key, _x, y) => {
-        Log.warnf(m =>
-          m("Encountered duplicate key: %s", Lookup.keyName(key))
-        );
+      (path, _x, y) => {
+        Log.warnf(m => m("Encountered duplicate key: %s", Lookup.key(path)));
         Some(y);
       },
       xs,
@@ -99,16 +95,16 @@ module Schema = {
 
     let custom = (~decode, ~encode) => {decode, encode};
 
-    let setting = (keyName, codec, ~default) => {
-      let key = Lookup.key(keyName);
+    let setting = (key, codec, ~default) => {
+      let path = Lookup.path(key);
 
       {
         spec: {
-          key,
+          path,
           default: codec.encode(default),
         },
         get: resolve => {
-          switch (resolve(key)) {
+          switch (resolve(path)) {
           | Some(jsonValue) =>
             switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
             | Ok(value) => value
@@ -116,14 +112,14 @@ module Schema = {
               Log.errorf(m =>
                 m(
                   "Failed to decode value for `%s`:\n\t%s",
-                  keyName,
+                  key,
                   Json.Decode.string_of_error(err),
                 )
               );
               default;
             }
           | None =>
-            Log.warnf(m => m("Missing default value for `%s`", keyName));
+            Log.warnf(m => m("Missing default value for `%s`", key));
             default;
           };
         },
