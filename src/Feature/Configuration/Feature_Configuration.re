@@ -40,3 +40,5 @@ let update = (~configFile, model, msg) =>
     | Error(_) => model
     }
   };
+
+let resolver = (model, key) => Config.Settings.get(key, model.merged);

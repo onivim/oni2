@@ -1,3 +1,8 @@
+type key;
+type resolver = key => option(Json.t);
+
+let key: string => key;
+
 // SETTINGS
 
 module Settings: {
@@ -7,6 +12,8 @@ module Settings: {
 
   let fromList: list((string, Json.t)) => t;
   let fromFile: string => t;
+
+  let get: (key, t) => option(Json.t);
 
   let union: (t, t) => t;
   let unionMany: list(t) => t;
@@ -27,7 +34,7 @@ module Schema: {
   type codec('a);
   type setting('a) = {
     spec,
-    get: Settings.t => 'a,
+    get: resolver => 'a,
   };
 
   // DSL

@@ -3,6 +3,11 @@ open Revery;
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
 module Lookup = Kernel.KeyedStringTree;
 
+type key = Lookup.key;
+type resolver = key => option(Json.t);
+
+let key = Lookup.key;
+
 // SETTINGS
 
 module Settings = {
@@ -28,6 +33,8 @@ module Settings = {
       empty;
     };
   };
+
+  let get = Lookup.get;
 
   let union = (xs, ys) =>
     Lookup.union(
@@ -75,7 +82,7 @@ module Schema = {
   module DSL = {
     type setting('a) = {
       spec,
-      get: Settings.t => 'a,
+      get: resolver => 'a,
     };
     type codec('a) = {
       decode: Json.decoder('a),
@@ -100,8 +107,8 @@ module Schema = {
           key,
           default: codec.encode(default),
         },
-        get: lookup => {
-          switch (Lookup.get(key, lookup)) {
+        get: resolve => {
+          switch (resolve(key)) {
           | Some(jsonValue) =>
             switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
             | Ok(value) => value
