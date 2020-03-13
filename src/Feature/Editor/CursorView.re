@@ -16,7 +16,7 @@ let render =
   let column = Index.toZeroBased(cursorPosition.column);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  if (lineCount <= 0 || line >= lineCount) {
+  if (lineCount <= 0 || line >= lineCount || !isActiveSplit) {
     ();
   } else {
     let bufferLine = Buffer.getLine(line, buffer);
@@ -49,9 +49,6 @@ let render =
         ~height,
         ~color=foreground,
       );
-    } else if (mode == Insert && isActiveSplit) {
-      let width = 2.;
-      Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
     } else {
       let width = float(characterWidth) *. context.charWidth;
       Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
