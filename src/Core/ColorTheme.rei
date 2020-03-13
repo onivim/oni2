@@ -59,7 +59,7 @@ module Schema: {
       Defaults.expr;
     let transparent: (float, Defaults.expr) => Defaults.expr;
 
-    let uniform: Defaults.expr => Defaults.t;
+    let all: Defaults.expr => Defaults.t;
 
     let define: (string, Defaults.t) => definition;
   };
@@ -73,7 +73,7 @@ module Schema: {
   let transparent: (float, Defaults.expr) => Defaults.expr;
   let unspecified: Defaults.expr;
 
-  let uniform: Defaults.expr => Defaults.t;
+  let all: Defaults.expr => Defaults.t;
 
   let define: (string, Defaults.t) => definition;
 };

@@ -137,7 +137,7 @@ module Schema = {
     //let lessProminent =
     let unspecified = Unspecified;
 
-    let uniform = value => {light: value, dark: value, hc: value};
+    let all = value => {light: value, dark: value, hc: value};
 
     let define = (keyName, defaults) => {
       let key = Internal.Key.create(keyName);

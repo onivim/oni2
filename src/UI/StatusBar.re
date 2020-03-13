@@ -32,21 +32,21 @@ module Colors = {
 
   module Notification = {
     let successBackground =
-      define("notification.successBackground", uniform(unspecified));
+      define("notification.successBackground", all(unspecified));
     let successForeground =
-      define("notification.successForeground", uniform(unspecified));
+      define("notification.successForeground", all(unspecified));
     let infoBackground =
-      define("notification.infoBackground", uniform(unspecified));
+      define("notification.infoBackground", all(unspecified));
     let infoForeground =
-      define("notification.infoForeground", uniform(unspecified));
+      define("notification.infoForeground", all(unspecified));
     let warningBackground =
-      define("notification.warningBackground", uniform(unspecified));
+      define("notification.warningBackground", all(unspecified));
     let warningForeground =
-      define("notification.warningForeground", uniform(unspecified));
+      define("notification.warningForeground", all(unspecified));
     let errorBackground =
-      define("notification.errorBackground", uniform(unspecified));
+      define("notification.errorBackground", all(unspecified));
     let errorForeground =
-      define("notification.errorForeground", uniform(unspecified));
+      define("notification.errorForeground", all(unspecified));
 
     let backgroundFor = (item: Notification.t) =>
       switch (item.kind) {
@@ -66,8 +66,8 @@ module Colors = {
   };
 
   module StatusBar = {
-    let background = define("statusBar.background", uniform(unspecified));
-    let foreground = define("statusBar.foreground", uniform(unspecified));
+    let background = define("statusBar.background", all(unspecified));
+    let foreground = define("statusBar.foreground", all(unspecified));
   };
 };
 

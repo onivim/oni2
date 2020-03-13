@@ -155,88 +155,76 @@ module Colors = {
   open ColorTheme.Schema;
 
   let background =
-    define("terminal.background", color(Color.rgb_int(0, 0, 0)) |> uniform);
+    define("terminal.background", color(Color.rgb_int(0, 0, 0)) |> all);
   let foreground =
     define(
       "terminal.foreground",
-      color(Color.rgb_int(233, 235, 235)) |> uniform,
+      color(Color.rgb_int(233, 235, 235)) |> all,
     );
   let ansiBlack =
-    define("terminal.ansiBlack", color(Color.rgb_int(0, 0, 0)) |> uniform);
+    define("terminal.ansiBlack", color(Color.rgb_int(0, 0, 0)) |> all);
   let ansiRed =
-    define(
-      "terminal.ansiRed",
-      color(Color.rgb_int(194, 54, 33)) |> uniform,
-    );
+    define("terminal.ansiRed", color(Color.rgb_int(194, 54, 33)) |> all);
   let ansiGreen =
-    define(
-      "terminal.ansiGreen",
-      color(Color.rgb_int(37, 188, 36)) |> uniform,
-    );
+    define("terminal.ansiGreen", color(Color.rgb_int(37, 188, 36)) |> all);
   let ansiYellow =
     define(
       "terminal.ansiYellow",
-      color(Color.rgb_int(173, 173, 39)) |> uniform,
+      color(Color.rgb_int(173, 173, 39)) |> all,
     );
   let ansiBlue =
-    define(
-      "terminal.ansiBlue",
-      color(Color.rgb_int(73, 46, 225)) |> uniform,
-    );
+    define("terminal.ansiBlue", color(Color.rgb_int(73, 46, 225)) |> all);
   let ansiMagenta =
     define(
       "terminal.ansiMagenta",
-      color(Color.rgb_int(211, 56, 211)) |> uniform,
+      color(Color.rgb_int(211, 56, 211)) |> all,
     );
   let ansiCyan =
-    define(
-      "terminal.ansiCyan",
-      color(Color.rgb_int(51, 197, 200)) |> uniform,
-    );
+    define("terminal.ansiCyan", color(Color.rgb_int(51, 197, 200)) |> all);
   let ansiWhite =
     define(
       "terminal.ansiWhite",
-      color(Color.rgb_int(203, 204, 205)) |> uniform,
+      color(Color.rgb_int(203, 204, 205)) |> all,
     );
   let ansiBrightBlack =
     define(
       "terminal.ansiBrightBlack",
-      color(Color.rgb_int(129, 131, 131)) |> uniform,
+      color(Color.rgb_int(129, 131, 131)) |> all,
     );
   let ansiBrightRed =
     define(
       "terminal.ansiBrightRed",
-      color(Color.rgb_int(252, 57, 31)) |> uniform,
+      color(Color.rgb_int(252, 57, 31)) |> all,
     );
   let ansiBrightGreen =
     define(
       "terminal.ansiBrightGreen",
-      color(Color.rgb_int(49, 231, 34)) |> uniform,
+      color(Color.rgb_int(49, 231, 34)) |> all,
     );
   let ansiBrightYellow =
     define(
       "terminal.ansiBrightYellow",
-      color(Color.rgb_int(234, 236, 35)) |> uniform,
+      color(Color.rgb_int(234, 236, 35)) |> all,
     );
   let ansiBrightBlue =
     define(
       "terminal.ansiBrightBlue",
-      color(Color.rgb_int(88, 51, 255)) |> uniform,
+      color(Color.rgb_int(88, 51, 255)) |> all,
     );
   let ansiBrightMagenta =
     define(
       "terminal.ansiBrightMagenta",
-      color(Color.rgb_int(20, 240, 240)) |> uniform,
+      color(Color.rgb_int(20, 240, 240)) |> all,
     );
   let ansiBrightCyan =
     define(
       "terminal.ansiBrightCyan",
-      color(Color.rgb_int(20, 240, 240)) |> uniform,
+      color(Color.rgb_int(20, 240, 240)) |> all,
     );
   let ansiBrightWhite =
     define(
       "terminal.ansiBrightWhite",
-      color(Color.rgb_int(233, 235, 235)) |> uniform,
+      color(Color.rgb_int(233, 235, 235)) |> all,
     );
 };
 
