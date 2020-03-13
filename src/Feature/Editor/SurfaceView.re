@@ -65,7 +65,6 @@ let%component make =
                 ~shouldRenderIndentGuides,
                 ~bottomVisibleLine,
                 ~shouldHighlightActiveIndentGuides,
-                ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferWidthInCharacters,
@@ -182,7 +181,6 @@ let%component make =
         CursorView.render(
           ~context,
           ~buffer,
-          ~mode,
           ~isActiveSplit,
           ~cursorPosition,
           ~theme,

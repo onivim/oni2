@@ -218,7 +218,6 @@ let make =
       shouldRenderIndentGuides
       bottomVisibleLine
       shouldHighlightActiveIndentGuides
-      mode
       isActiveSplit
       gutterWidth
       bufferWidthInCharacters={layout.bufferWidthInCharacters}

@@ -6,7 +6,6 @@ let render =
     (
       ~context: Draw.context,
       ~buffer,
-      ~mode: Vim.Mode.t,
       ~isActiveSplit,
       ~cursorPosition: Location.t,
       ~theme: Theme.t,
