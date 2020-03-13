@@ -225,6 +225,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             isHoverEnabled
             shouldRenderIndentGuides
             shouldHighlightActiveIndentGuides
+            windowIsFocused={state.windowIsFocused}
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
         | BufferRenderer.Terminal({id, _}) =>

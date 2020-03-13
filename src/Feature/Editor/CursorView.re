@@ -10,6 +10,7 @@ let render =
       ~isActiveSplit,
       ~cursorPosition: Location.t,
       ~theme: Theme.t,
+      ~windowIsFocused,
     ) => {
   let line = Index.toZeroBased(cursorPosition.line);
   let column = Index.toZeroBased(cursorPosition.column);
@@ -28,12 +29,30 @@ let render =
     let background = theme.editorCursorBackground;
     let foreground = theme.editorCursorForeground;
 
-    switch (mode, isActiveSplit) {
-    | (Insert, true) =>
+    if (!windowIsFocused) {
+      let width = float(characterWidth) *. context.charWidth;
+      Draw.rect(~context, ~x, ~y, ~width=1., ~height, ~color=foreground);
+      Draw.rect(~context, ~x, ~y, ~width, ~height=1., ~color=foreground);
+      Draw.rect(
+        ~context,
+        ~x,
+        ~y=y +. height -. 1.,
+        ~width,
+        ~height=1.,
+        ~color=foreground,
+      );
+      Draw.rect(
+        ~context,
+        ~x=x +. width -. 1.,
+        ~y,
+        ~width=1.,
+        ~height,
+        ~color=foreground,
+      );
+    } else if (mode == Insert && isActiveSplit) {
       let width = 2.;
       Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
-
-    | _ =>
+    } else {
       let width = float(characterWidth) *. context.charWidth;
       Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
 

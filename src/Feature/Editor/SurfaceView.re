@@ -69,6 +69,7 @@ let%component make =
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferWidthInCharacters,
+                ~windowIsFocused,
                 (),
               ) => {
   let%hook elementRef = React.Hooks.ref(None);
@@ -185,6 +186,7 @@ let%component make =
           ~isActiveSplit,
           ~cursorPosition,
           ~theme,
+          ~windowIsFocused,
         );
       }}
     />
