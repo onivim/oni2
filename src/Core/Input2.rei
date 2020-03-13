@@ -12,6 +12,8 @@ module Modifiers: {
 	~meta: bool) => t;
 
 	let none: t;
+
+	let equals: (t, t) => bool;
 };
 
 type key = {
@@ -25,18 +27,9 @@ type keyMatcher =
 | Scancode(int, Modifiers.t)
 | Keycode(int, Modifiers.t);
 
-type chord = list(keyMatcher);
+type sequence = list(keyMatcher);
 
-type sequence = list(chord);
-
-type binding = {
-	id: int,
-	matcher: sequence,
-	payload: payload,
-	enabled: context => bool,
-};
-
-let addBinding: (keyMatcher, context => bool, payload, t) =>
+let addBinding: (sequence, context => bool, payload, t) =>
 (t, int);
 //let removeBinding: (t, int) => t;
 

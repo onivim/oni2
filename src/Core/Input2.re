@@ -23,6 +23,8 @@ module Modifiers = {
 		shift: false,
 		meta: false,
 	};
+
+	let equals = (_, _) => true;
 };
 
 type key = {
@@ -41,13 +43,11 @@ type keyMatcher =
 | Scancode(int, Modifiers.t)
 | Keycode(int, Modifiers.t);
 
-type chord = list(keyMatcher);
-
-type sequence = list(chord);
+type sequence = list(keyMatcher);
 
 type binding = {
 	id: int,
-	matcher: sequence,
+	sequence: sequence,
 	payload: payload,
 	enabled: context => bool,
 };
@@ -55,30 +55,98 @@ type binding = {
 type t = {
 	nextId: int,
 	allBindings: list(binding),
+	keys: list(key),
 };
 
-let addBinding = (matcher, enabled, payload, bindings) => {
-	let {nextId, allBindings} = bindings;
+let keyMatches = (keyMatcher, key) => {
+	switch (keyMatcher) {
+	| Scancode(scancode, mods) =>
+	key.scancode == scancode && Modifiers.equals(mods, key.modifiers)
+	| Keycode(keycode, mods) =>
+	key.keycode == keycode && Modifiers.equals(mods, key.modifiers)
+	}
+};
+
+let applyKeyToBinding = (key, binding) => {
+	switch (binding.sequence) {
+	| [hd, ...tail] when keyMatches(hd, key) => Some({
+		...binding,
+		sequence: tail
+	})
+	| [] => Some(binding)
+	| _ => None
+	}
+};
+
+let applyKeyToBindings = (key, bindings) => {
+	List.filter_map(applyKeyToBinding(key), bindings);
+};
+
+let applyKeysToBindings = (keys, bindings) => {
+	List.fold_left((acc, curr) => {
+		applyKeyToBindings(curr, acc);
+	}, bindings, keys);
+};
+
+let addBinding = (sequence, enabled, payload, bindings) => {
+	let {nextId, allBindings, _} = bindings;
 	let allBindings = [{
 		id: nextId,
-		matcher,
+		sequence,
 		payload,
 		enabled,
 	}, 
 	...allBindings];
 
 	let newBindings = {
+		...bindings,
 		allBindings,
 		nextId: nextId + 1,
 	};
 	(newBindings, nextId);
 };
 
-let keyDown = (key, bindings) => (bindings, []);
-let keyUp = (key, bindings) => (bindings, []);
+let reset = (bindings) => {
+	...bindings,
+	keys: [],
+};
+
+let getReadyBindings = (bindings) => {
+	let filter = (binding) => binding.sequence == [];
+
+	bindings
+	|> List.filter(filter);
+};
+
+let keyDown = (key, bindings) => {
+
+	let keys = [key, ...bindings.keys];
+
+	let candidateBindings =
+	applyKeysToBindings(keys |> List.rev, bindings.allBindings);
+
+	let readyBindings = getReadyBindings(candidateBindings);
+	let candidateBindingCount = List.length(candidateBindings);
+
+	switch (List.nth_opt(readyBindings, 0)) {
+	| Some(binding) => 
+		if (binding.sequence == [])  {
+			(reset(bindings), [Execute(binding.payload)]);
+		} else {
+			({ ...bindings, keys }, []);
+		};
+	| None when candidateBindingCount > 0 => 
+		({ ...bindings, keys }, []);
+	| None => 
+		(reset(bindings), [Unhandled(key)]);
+	};
+};
+
+let keyUp = (_key, bindings) => (bindings, []);
 let flush = (bindings) => (bindings, []);
 
 let empty = {
 	nextId: 0,
 	allBindings: [],
+	keys: [],
 };
