@@ -4,7 +4,7 @@ module Colors = GlobalColors;
 
 type model;
 
-let initial: list(ColorTheme.Defaults.t) => model;
+let initial: list(list(ColorTheme.Schema.definition)) => model;
 
 [@deriving show]
 type msg =

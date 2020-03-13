@@ -47,13 +47,16 @@ module Styles = {
         };
 
       if (isHovered) {
-        theme#tryColor(
+        (
           isGroupFocused
-            ? Colors.unfocusedHoverBackground : Colors.hoverBackground,
+            ? Colors.unfocusedHoverBackground : Colors.hoverBackground
+        ).
+          tryGet(
+          theme,
         )
-        |> Option.value(~default=theme#color(unhovered));
+        |> Option.value(~default=unhovered.get(theme));
       } else {
-        theme#color(unhovered);
+        unhovered.get(theme);
       };
     };
 
@@ -62,9 +65,12 @@ module Styles = {
         if (isActive) {
           background;
         } else {
-          theme#tryColor(
+          (
             isGroupFocused
-              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop,
+              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop
+          ).
+            tryGet(
+            theme,
           )
           |> Option.value(~default=background);
         };
@@ -85,13 +91,17 @@ module Styles = {
             | (true, false, false) => Colors.unfocusedActiveBorder
             | (true, true, false) => Colors.activeBorder
             }
+          ).
+            tryGet(
+            theme,
           )
-          |> theme#tryColor
           |> Option.value(~default=background);
 
         if (isHovered) {
-          (isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder)
-          |> theme#tryColor
+          (isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder).
+            tryGet(
+            theme,
+          )
           |> Option.value(~default=unhovered);
         } else {
           unhovered;
@@ -130,7 +140,7 @@ module Styles = {
         isGroupFocused && isActive ? uiFont.fontFileItalic : uiFont.fontFile,
       ),
       fontSize(uiFont.fontSize),
-      color(foreground |> theme#color),
+      color(foreground.get(theme)),
       justifyContent(`Center),
       alignItems(`Center),
     ];
@@ -217,8 +227,8 @@ let%component make =
       <FontIcon
         icon={isModified ? FontAwesome.circle : FontAwesome.times}
         color={
-          theme#color(
-            isActive ? Colors.activeForeground : Colors.inactiveForeground,
+          (isActive ? Colors.activeForeground : Colors.inactiveForeground).get(
+            theme,
           )
         }
         fontSize={isModified ? 10. : 12.}

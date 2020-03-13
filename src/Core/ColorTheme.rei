@@ -12,50 +12,70 @@ let key: string => key;
 // DEFAULTS
 
 module Defaults: {
-  type value =
-    pri
-      | Constant(Revery.Color.t)
-      | Reference(string)
-      | Computed(
-          (string => option(Revery.Color.t)) => option(Revery.Color.t),
-        )
-      | Unspecified;
+  type expr;
 
-  type entry = {
-    light: value,
-    dark: value,
-    hc: value,
+  type t = {
+    light: expr,
+    dark: expr,
+    hc: expr,
+  };
+
+  let get: (variant, t) => expr;
+  let evaluate:
+    (key => option(Revery.Color.t), expr) => option(Revery.Color.t);
+};
+
+// RESOLVER
+
+type resolver =
+  key =>
+  [ | `Color(Revery.Color.t) | `Default(Defaults.expr) | `NotRegistered];
+
+// SCHEMA
+
+module Schema: {
+  type definition = {
+    key,
+    defaults: Defaults.t,
+    tryGet: resolver => option(Revery.Color.t),
+    get: resolver => Revery.Color.t,
   };
 
   type t;
 
-  let fromList: list((string, entry)) => t;
+  let fromList: list(definition) => t;
 
-  let get: (key, t) => option(entry);
+  let get: (key, t) => option(definition);
 
   let union: (t, t) => t;
   let unionMany: list(t) => t;
 
   module DSL: {
-    let hex: string => value;
-    let color: Revery.Color.t => value;
-    let ref: string => value;
+    let hex: string => Defaults.expr;
+    let color: Revery.Color.t => Defaults.expr;
+    let ref: definition => Defaults.expr;
     let computed:
-      ((string => option(Revery.Color.t)) => option(Revery.Color.t)) => value;
-    let transparent: (float, value) => value;
+      ((key => option(Revery.Color.t)) => option(Revery.Color.t)) =>
+      Defaults.expr;
+    let transparent: (float, Defaults.expr) => Defaults.expr;
 
-    let uniform: value => entry;
+    let uniform: Defaults.expr => Defaults.t;
+
+    let define: (string, Defaults.t) => definition;
   };
 
-  let hex: string => value;
-  let color: Revery.Color.t => value;
-  let ref: string => value;
+  let hex: string => Defaults.expr;
+  let color: Revery.Color.t => Defaults.expr;
+  let ref: definition => Defaults.expr;
   let computed:
-    ((string => option(Revery.Color.t)) => option(Revery.Color.t)) => value;
-  let transparent: (float, value) => value;
-  let unspecified: value;
+    ((key => option(Revery.Color.t)) => option(Revery.Color.t)) =>
+    Defaults.expr;
+  let transparent: (float, Defaults.expr) => Defaults.expr;
+  let unspecified: Defaults.expr;
 
-  let uniform: value => entry;
+  let uniform: Defaults.expr => Defaults.t;
+
+  let define: (string, Defaults.t) => definition;
 };
 
 // COLORS
@@ -74,10 +94,4 @@ module Colors: {
 type t = {
   variant,
   colors: Colors.t,
-};
-
-type resolver = {
-  .
-  tryColor: string => option(Revery.Color.t),
-  color: string => Revery.Color.t,
 };

@@ -13,7 +13,7 @@ module Styles = {
   let container = (~theme, ~offsetX) => [
     top(0),
     bottom(0),
-    backgroundColor(theme#color(Colors.background)),
+    backgroundColor(Colors.background.get(theme)),
     alignItems(`Center),
     transform(Transform.[TranslateX(offsetX)]),
   ];
@@ -25,10 +25,10 @@ module Styles = {
     alignItems(`Center),
     borderLeft(
       ~width=2,
-      ~color=theme#color(isActive ? Colors.activeBorder : Colors.border),
+      ~color=(isActive ? Colors.activeBorder : Colors.border).get(theme),
     ),
     backgroundColor(
-      theme#color(isHovered ? Colors.activeBackground : Colors.background),
+      theme |> (isHovered ? Colors.activeBackground : Colors.background).get,
     ),
   ];
 };
@@ -42,8 +42,8 @@ let%component item = (~onClick, ~theme, ~isActive, ~icon, ()) => {
     <Sneakable onClick style={Styles.item(~isHovered, ~isActive, ~theme)}>
       <FontIcon
         color={
-          theme#color(
-            isActive ? Colors.foreground : Colors.inactiveForeground,
+          (isActive ? Colors.foreground : Colors.inactiveForeground).get(
+            theme,
           )
         }
         fontSize=22.

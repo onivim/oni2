@@ -160,7 +160,7 @@ let%component make =
       flexDirection(`Row),
       overflow(`Scroll),
       backgroundColor(
-        theme#color(Theme.Colors.EditorGroupHeader.tabsBackground),
+        Theme.Colors.EditorGroupHeader.tabsBackground.get(theme),
       ),
     ];
 

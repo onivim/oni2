@@ -26,17 +26,27 @@ module Editor = Feature_Editor.Editor;
 module Theme = Feature_Theme;
 
 module Colors = {
+  open ColorTheme.Schema;
+
   let transparent = Colors.transparentWhite;
 
   module Notification = {
-    let successBackground = "notification.successBackground";
-    let successForeground = "notification.successForeground";
-    let infoBackground = "notification.infoBackground";
-    let infoForeground = "notification.infoForeground";
-    let warningBackground = "notification.warningBackground";
-    let warningForeground = "notification.warningForeground";
-    let errorBackground = "notification.errorBackground";
-    let errorForeground = "notification.errorForeground";
+    let successBackground =
+      define("notification.successBackground", uniform(unspecified));
+    let successForeground =
+      define("notification.successForeground", uniform(unspecified));
+    let infoBackground =
+      define("notification.infoBackground", uniform(unspecified));
+    let infoForeground =
+      define("notification.infoForeground", uniform(unspecified));
+    let warningBackground =
+      define("notification.warningBackground", uniform(unspecified));
+    let warningForeground =
+      define("notification.warningForeground", uniform(unspecified));
+    let errorBackground =
+      define("notification.errorBackground", uniform(unspecified));
+    let errorForeground =
+      define("notification.errorForeground", uniform(unspecified));
 
     let backgroundFor = (item: Notification.t) =>
       switch (item.kind) {
@@ -56,8 +66,8 @@ module Colors = {
   };
 
   module StatusBar = {
-    let background = "statusBar.background";
-    let foreground = "statusBar.foreground";
+    let background = define("statusBar.background", uniform(unspecified));
+    let foreground = define("statusBar.foreground", uniform(unspecified));
   };
 };
 
@@ -228,7 +238,7 @@ let textItem = (~background, ~font, ~colorTheme, ~text, ()) =>
   <item>
     <Text
       style={Styles.text(
-        ~color=colorTheme#color(Colors.StatusBar.foreground),
+        ~color=Colors.StatusBar.foreground.get(colorTheme),
         ~background,
         font,
       )}
@@ -301,7 +311,7 @@ let notificationCount =
 };
 
 let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
-  let color = colorTheme#color(Colors.StatusBar.foreground);
+  let color = Colors.StatusBar.foreground.get(colorTheme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -323,8 +333,8 @@ let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
 };
 
 let modeIndicator = (~font, ~colorTheme, ~mode, ()) => {
-  let background = Theme.Colors.Oni.backgroundFor(mode) |> colorTheme#color;
-  let foreground = Theme.Colors.Oni.foregroundFor(mode) |> colorTheme#color;
+  let background = Theme.Colors.Oni.backgroundFor(mode, colorTheme);
+  let foreground = Theme.Colors.Oni.foregroundFor(mode, colorTheme);
 
   <item backgroundColor=background>
     <Text
@@ -364,13 +374,13 @@ let%component make =
     switch (activeNotifications) {
     | [] =>
       Colors.StatusBar.(
-        background |> colorTheme#color,
-        foreground |> colorTheme#color,
+        background.get(colorTheme),
+        foreground.get(colorTheme),
       )
     | [last, ..._] =>
       Colors.Notification.(
-        backgroundFor(last) |> colorTheme#color,
-        foregroundFor(last) |> colorTheme#color,
+        backgroundFor(last).get(colorTheme),
+        foregroundFor(last).get(colorTheme),
       )
     };
 
