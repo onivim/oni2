@@ -12,6 +12,8 @@ let setup = () => {
   hwnd;
 };
 
+let configResolver = (settings, key) => Config.Settings.get(key, settings);
+
 let editorSurfaceMinimalState = hwnd => {
   Revery.Utility.HeadlessWindow.render(
     hwnd,
@@ -33,7 +35,7 @@ let editorSurfaceMinimalState = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
-      config=Config.empty
+      config={configResolver(Config.Settings.empty)}
     />,
   );
 };
@@ -59,7 +61,7 @@ let editorSurfaceThousandLineState = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
-      config=Config.empty
+      config={configResolver(Config.Settings.empty)}
     />,
   );
 };
@@ -85,9 +87,11 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
-      config={Config.fromList([
-        ("editor.renderIndentGuides", Json.Encode.bool(true)),
-      ])}
+      config={configResolver(
+        Config.Settings.fromList([
+          ("editor.renderIndentGuides", Json.Encode.bool(true)),
+        ]),
+      )}
     />,
   );
   ();
@@ -113,9 +117,11 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
-      config={Config.fromList([
-        ("editor.minimap.enabled", Json.Encode.bool(false)),
-      ])}
+      config={configResolver(
+        Config.Settings.fromList([
+          ("editor.minimap.enabled", Json.Encode.bool(false)),
+        ]),
+      )}
     />,
   );
 };
@@ -141,7 +147,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
-      config=Config.empty
+      config={configResolver(Config.Settings.empty)}
     />,
   );
 };
