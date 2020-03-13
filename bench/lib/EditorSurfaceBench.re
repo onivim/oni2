@@ -31,6 +31,7 @@ let editorSurfaceMinimalState = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
+      windowIsFocused=true
     />,
   );
 };
@@ -55,6 +56,7 @@ let editorSurfaceThousandLineState = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
+      windowIsFocused=true
     />,
   );
 };
@@ -80,6 +82,7 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       shouldRenderIndentGuides=true
+      windowIsFocused=true
     />,
   );
   ();
@@ -105,6 +108,7 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       showMinimap=false
+      windowIsFocused=true
     />,
   );
 };
@@ -129,6 +133,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
+      windowIsFocused=true
     />,
   );
 };
