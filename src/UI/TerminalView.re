@@ -66,27 +66,27 @@ let make =
 
   let terminalTheme =
     fun
-    | 0 => Colors.ansiBlack.get(theme)
-    | 1 => Colors.ansiRed.get(theme)
-    | 2 => Colors.ansiGreen.get(theme)
-    | 3 => Colors.ansiYellow.get(theme)
-    | 4 => Colors.ansiBlue.get(theme)
-    | 5 => Colors.ansiMagenta.get(theme)
-    | 6 => Colors.ansiCyan.get(theme)
-    | 7 => Colors.ansiWhite.get(theme)
-    | 8 => Colors.ansiBrightBlack.get(theme)
-    | 9 => Colors.ansiBrightRed.get(theme)
-    | 10 => Colors.ansiBrightGreen.get(theme)
-    | 11 => Colors.ansiBrightYellow.get(theme)
-    | 12 => Colors.ansiBrightBlue.get(theme)
-    | 13 => Colors.ansiBrightMagenta.get(theme)
-    | 14 => Colors.ansiBrightCyan.get(theme)
-    | 15 => Colors.ansiBrightWhite.get(theme)
+    | 0 => Colors.ansiBlack.from(theme)
+    | 1 => Colors.ansiRed.from(theme)
+    | 2 => Colors.ansiGreen.from(theme)
+    | 3 => Colors.ansiYellow.from(theme)
+    | 4 => Colors.ansiBlue.from(theme)
+    | 5 => Colors.ansiMagenta.from(theme)
+    | 6 => Colors.ansiCyan.from(theme)
+    | 7 => Colors.ansiWhite.from(theme)
+    | 8 => Colors.ansiBrightBlack.from(theme)
+    | 9 => Colors.ansiBrightRed.from(theme)
+    | 10 => Colors.ansiBrightGreen.from(theme)
+    | 11 => Colors.ansiBrightYellow.from(theme)
+    | 12 => Colors.ansiBrightBlue.from(theme)
+    | 13 => Colors.ansiBrightMagenta.from(theme)
+    | 14 => Colors.ansiBrightCyan.from(theme)
+    | 15 => Colors.ansiBrightWhite.from(theme)
     // For 256 colors, fall back to defaults
     | idx => ReveryTerminal.Theme.default(idx);
 
-  let defaultBackground = Colors.background.get(theme);
-  let defaultForeground = Colors.foreground.get(theme);
+  let defaultBackground = Colors.background.from(theme);
+  let defaultForeground = Colors.foreground.from(theme);
 
   let element =
     Option.map(

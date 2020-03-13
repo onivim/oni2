@@ -84,8 +84,8 @@ module Schema = {
   type definition = {
     key,
     defaults: Defaults.t,
-    tryGet: resolver => option(Color.t),
-    get: resolver => Color.t,
+    tryFrom: resolver => option(Color.t),
+    from: resolver => Color.t,
   };
 
   type t = Internal.Lookup.t(definition);
@@ -154,8 +154,8 @@ module Schema = {
       {
         key,
         defaults,
-        tryGet: resolve => tryGet(resolve, key),
-        get: resolve =>
+        tryFrom: resolve => tryGet(resolve, key),
+        from: resolve =>
           tryGet(resolve, key)
           |> Option.value(~default=Colors.transparentWhite),
       };

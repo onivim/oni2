@@ -415,7 +415,7 @@ module Pane = {
     let text = (~theme, ~font: UiFont.t) => [
       fontSize(font.fontSize),
       fontFamily(font.fontFile),
-      color(Colors.foreground.get(theme)),
+      color(Colors.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
@@ -423,7 +423,7 @@ module Pane = {
     let input = (~theme, ~font: UiFont.t) => [
       border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
       backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      color(Colors.foreground.get(theme)),
+      color(Colors.foreground.from(theme)),
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       flexGrow(1),
@@ -436,7 +436,7 @@ module Pane = {
     let groupLabelText = (~theme, ~font: UiFont.t) => [
       fontSize(font.fontSize *. 0.85),
       fontFamily(font.fontFileBold),
-      color(Colors.foreground.get(theme)),
+      color(Colors.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
@@ -445,8 +445,8 @@ module Pane = {
 
     let item = (~isHovered, ~theme) => [
       isHovered
-        ? backgroundColor(Colors.hoverBackground.get(theme))
-        : backgroundColor(Colors.background.get(theme)),
+        ? backgroundColor(Colors.hoverBackground.from(theme))
+        : backgroundColor(Colors.background.from(theme)),
       paddingVertical(2),
       cursor(MouseCursors.pointer),
     ];
@@ -541,7 +541,7 @@ module Pane = {
     <ScrollView style=Styles.container>
       <Input
         style={Styles.input(~theme, ~font)}
-        cursorColor={Colors.foreground.get(theme)}
+        cursorColor={Colors.foreground.from(theme)}
         value={model.inputBox.value}
         selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}

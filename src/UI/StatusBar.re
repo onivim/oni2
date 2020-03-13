@@ -238,7 +238,7 @@ let textItem = (~background, ~font, ~colorTheme, ~text, ()) =>
   <item>
     <Text
       style={Styles.text(
-        ~color=Colors.StatusBar.foreground.get(colorTheme),
+        ~color=Colors.StatusBar.foreground.from(colorTheme),
         ~background,
         font,
       )}
@@ -311,7 +311,7 @@ let notificationCount =
 };
 
 let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
-  let color = Colors.StatusBar.foreground.get(colorTheme);
+  let color = Colors.StatusBar.foreground.from(colorTheme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -333,8 +333,8 @@ let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
 };
 
 let modeIndicator = (~font, ~colorTheme, ~mode, ()) => {
-  let background = Theme.Colors.Oni.backgroundFor(mode, colorTheme);
-  let foreground = Theme.Colors.Oni.foregroundFor(mode, colorTheme);
+  let background = Theme.Colors.Oni.backgroundFor(mode).from(colorTheme);
+  let foreground = Theme.Colors.Oni.foregroundFor(mode).from(colorTheme);
 
   <item backgroundColor=background>
     <Text
@@ -374,13 +374,13 @@ let%component make =
     switch (activeNotifications) {
     | [] =>
       Colors.StatusBar.(
-        background.get(colorTheme),
-        foreground.get(colorTheme),
+        background.from(colorTheme),
+        foreground.from(colorTheme),
       )
     | [last, ..._] =>
       Colors.Notification.(
-        backgroundFor(last).get(colorTheme),
-        foregroundFor(last).get(colorTheme),
+        backgroundFor(last).from(colorTheme),
+        foregroundFor(last).from(colorTheme),
       )
     };
 

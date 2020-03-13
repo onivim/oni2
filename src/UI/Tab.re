@@ -47,16 +47,13 @@ module Styles = {
         };
 
       if (isHovered) {
-        (
+        let color =
           isGroupFocused
-            ? Colors.unfocusedHoverBackground : Colors.hoverBackground
-        ).
-          tryGet(
-          theme,
-        )
-        |> Option.value(~default=unhovered.get(theme));
+            ? Colors.unfocusedHoverBackground : Colors.hoverBackground;
+
+        color.tryFrom(theme) |> Option.value(~default=unhovered.from(theme));
       } else {
-        unhovered.get(theme);
+        unhovered.from(theme);
       };
     };
 
@@ -65,14 +62,11 @@ module Styles = {
         if (isActive) {
           background;
         } else {
-          (
+          let color =
             isGroupFocused
-              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop
-          ).
-            tryGet(
-            theme,
-          )
-          |> Option.value(~default=background);
+              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop;
+
+          color.tryFrom(theme) |> Option.value(~default=background);
         };
 
       borderTop(~color, ~width=2);
@@ -92,17 +86,16 @@ module Styles = {
             | (true, true, false) => Colors.activeBorder
             }
           ).
-            tryGet(
+            tryFrom(
             theme,
           )
           |> Option.value(~default=background);
 
         if (isHovered) {
-          (isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder).
-            tryGet(
-            theme,
-          )
-          |> Option.value(~default=unhovered);
+          let color =
+            isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder;
+
+          color.tryFrom(theme) |> Option.value(~default=unhovered);
         } else {
           unhovered;
         };
@@ -140,7 +133,7 @@ module Styles = {
         isGroupFocused && isActive ? uiFont.fontFileItalic : uiFont.fontFile,
       ),
       fontSize(uiFont.fontSize),
-      color(foreground.get(theme)),
+      color(foreground.from(theme)),
       justifyContent(`Center),
       alignItems(`Center),
     ];
@@ -227,9 +220,9 @@ let%component make =
       <FontIcon
         icon={isModified ? FontAwesome.circle : FontAwesome.times}
         color={
-          (isActive ? Colors.activeForeground : Colors.inactiveForeground).get(
-            theme,
-          )
+          isActive
+            ? Colors.activeForeground.from(theme)
+            : Colors.inactiveForeground.from(theme)
         }
         fontSize={isModified ? 10. : 12.}
       />

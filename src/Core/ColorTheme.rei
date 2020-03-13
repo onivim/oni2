@@ -37,8 +37,8 @@ module Schema: {
   type definition = {
     key,
     defaults: Defaults.t,
-    tryGet: resolver => option(Revery.Color.t),
-    get: resolver => Revery.Color.t,
+    tryFrom: resolver => option(Revery.Color.t),
+    from: resolver => Revery.Color.t,
   };
 
   type t;
