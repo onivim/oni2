@@ -47,13 +47,13 @@ module Styles = {
         };
 
       if (isHovered) {
-        theme#tryColor(
+        let color =
           isGroupFocused
-            ? Colors.unfocusedHoverBackground : Colors.hoverBackground,
-        )
-        |> Option.value(~default=theme#color(unhovered));
+            ? Colors.unfocusedHoverBackground : Colors.hoverBackground;
+
+        color.tryFrom(theme) |> Option.value(~default=unhovered.from(theme));
       } else {
-        theme#color(unhovered);
+        unhovered.from(theme);
       };
     };
 
@@ -62,11 +62,11 @@ module Styles = {
         if (isActive) {
           background;
         } else {
-          theme#tryColor(
+          let color =
             isGroupFocused
-              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop,
-          )
-          |> Option.value(~default=background);
+              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop;
+
+          color.tryFrom(theme) |> Option.value(~default=background);
         };
 
       borderTop(~color, ~width=2);
@@ -85,14 +85,17 @@ module Styles = {
             | (true, false, false) => Colors.unfocusedActiveBorder
             | (true, true, false) => Colors.activeBorder
             }
+          ).
+            tryFrom(
+            theme,
           )
-          |> theme#tryColor
           |> Option.value(~default=background);
 
         if (isHovered) {
-          (isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder)
-          |> theme#tryColor
-          |> Option.value(~default=unhovered);
+          let color =
+            isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder;
+
+          color.tryFrom(theme) |> Option.value(~default=unhovered);
         } else {
           unhovered;
         };
@@ -130,7 +133,7 @@ module Styles = {
         isGroupFocused && isActive ? uiFont.fontFileItalic : uiFont.fontFile,
       ),
       fontSize(uiFont.fontSize),
-      color(foreground |> theme#color),
+      color(foreground.from(theme)),
       justifyContent(`Center),
       alignItems(`Center),
     ];
@@ -217,9 +220,9 @@ let%component make =
       <FontIcon
         icon={isModified ? FontAwesome.circle : FontAwesome.times}
         color={
-          theme#color(
-            isActive ? Colors.activeForeground : Colors.inactiveForeground,
-          )
+          isActive
+            ? Colors.activeForeground.from(theme)
+            : Colors.inactiveForeground.from(theme)
         }
         fontSize={isModified ? 10. : 12.}
       />

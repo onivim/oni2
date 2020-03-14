@@ -13,7 +13,7 @@ module Styles = {
   let container = (~theme, ~offsetX) => [
     top(0),
     bottom(0),
-    backgroundColor(theme#color(Colors.background)),
+    backgroundColor(Colors.background.from(theme)),
     alignItems(`Center),
     transform(Transform.[TranslateX(offsetX)]),
   ];
@@ -25,10 +25,10 @@ module Styles = {
     alignItems(`Center),
     borderLeft(
       ~width=2,
-      ~color=theme#color(isActive ? Colors.activeBorder : Colors.border),
+      ~color=(isActive ? Colors.activeBorder : Colors.border).from(theme),
     ),
     backgroundColor(
-      theme#color(isHovered ? Colors.activeBackground : Colors.background),
+      theme |> (isHovered ? Colors.activeBackground : Colors.background).from,
     ),
   ];
 };
@@ -37,18 +37,11 @@ let%component item = (~onClick, ~theme, ~isActive, ~icon, ()) => {
   let%hook (isHovered, setHovered) = Hooks.state(false);
   let onMouseOver = _ => setHovered(_ => true);
   let onMouseOut = _ => setHovered(_ => false);
+  let iconColor = isActive ? Colors.foreground : Colors.inactiveForeground;
 
   <View onMouseOver onMouseOut>
     <Sneakable onClick style={Styles.item(~isHovered, ~isActive, ~theme)}>
-      <FontIcon
-        color={
-          theme#color(
-            isActive ? Colors.foreground : Colors.inactiveForeground,
-          )
-        }
-        fontSize=22.
-        icon
-      />
+      <FontIcon color={iconColor.from(theme)} fontSize=22. icon />
     </Sneakable>
   </View>;
 };
