@@ -101,22 +101,11 @@ let getReadyBindings = bindings => {
   bindings |> List.filter(filter);
 };
 
-let printKey = ({text, _}) => prerr_endline(text);
-let printKeys = keys => {
-  prerr_endline("Keys:");
-  List.iter(printKey, keys);
-};
-
 let flush = bindings => {
   //let allBindings = bindings.allBindings;
   let allKeys = bindings.keys;
 
   let rec loop = (flush, revKeys, remainingKeys, effects) => {
-    prerr_endline("LOOP");
-    prerr_endline("Reverse keys:");
-    printKeys(revKeys);
-    prerr_endline("Remaining keys:");
-    printKeys(remainingKeys);
 
     let candidateBindings =
       applyKeysToBindings(revKeys |> List.rev, bindings.allBindings);
@@ -165,8 +154,6 @@ let flush = bindings => {
 };
 
 let keyDown = (key, bindings) => {
-  prerr_endline(" -- keydown");
-  printKey(key);
 
   let keys = [key, ...bindings.keys];
 
@@ -180,15 +167,12 @@ let keyDown = (key, bindings) => {
   let potentialBindingCount = candidateBindingCount - readyBindingCount;
 
   if (potentialBindingCount > 0) {
-    prerr_endline("Potential binding count greater");
     ({...bindings, keys}, []);
   } else {
     switch (List.nth_opt(readyBindings, 0)) {
     | Some(binding) =>
-      prerr_endline("Found binding");
       (reset(bindings), [Execute(binding.payload)]);
     | None =>
-      prerr_endline("No binding");
       flush({...bindings, keys});
     };
   };

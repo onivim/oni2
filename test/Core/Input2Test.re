@@ -24,6 +24,33 @@ let cKeyNoModifiers: key = {
 };
 
 describe("Input 2", ({describe, _}) => {
+  describe("flush", ({test, _}) => {
+    test("simple sequence", ({expect}) => {
+      let (bindings, _id) =
+        Input2.empty
+        |> Input2.addBinding(
+             [Keycode(1, Modifiers.none), Keycode(2, Modifiers.none)],
+             _ => true,
+             "payloadAB",
+           );
+      
+      let (bindings, _id) =
+        bindings
+        |> Input2.addBinding(
+             [Keycode(1, Modifiers.none)],
+             _ => true,
+             "payloadA",
+           );
+
+      let (bindings, effects) = Input2.keyDown(aKeyNoModifiers, bindings);
+
+      expect.equal(effects, []);
+
+      let (bindings, effects) = Input2.flush(bindings);
+
+      expect.equal(effects, [Execute("payloadA")]);
+    });
+  });
   describe("sequences", ({test, _}) => {
     test("simple sequence", ({expect}) => {
       let (bindings, _id) =
@@ -60,7 +87,6 @@ describe("Input 2", ({describe, _}) => {
       expect.equal(effects, [Execute("payloadAA")]);
     });
     test("partial match with another match", ({expect}) => {
-      prerr_endline("** START PARTIAL MATCH");
       let (bindings, _id) =
         Input2.empty
         |> Input2.addBinding(
@@ -88,10 +114,8 @@ describe("Input 2", ({describe, _}) => {
       let (_bindings, effects) = Input2.keyDown(cKeyNoModifiers, bindings);
 
       expect.equal(effects, [Execute("payloadAC")]);
-      prerr_endline("** END PARTIAL MATCH");
     });
     test("partial match with unhandled", ({expect}) => {
-      prerr_endline("** START PARTIAL MATCH");
       let (bindings, _id) =
         Input2.empty
         |> Input2.addBinding(
@@ -118,7 +142,6 @@ describe("Input 2", ({describe, _}) => {
         effects,
         [Unhandled(bKeyNoModifiers), Execute("payloadA")],
       );
-      prerr_endline("** END PARTIAL MATCH");
     });
   });
   describe("key matching", ({test, _}) => {
