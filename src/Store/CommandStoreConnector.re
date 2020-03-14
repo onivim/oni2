@@ -128,6 +128,12 @@ let createDefaultCommands = getState => {
         (),
       ),
       Command.create(
+        ~category=Some("Editor"),
+        ~name="Detect Indentation from Content",
+        ~action=Command("editor.action.detectIndentation"),
+        (),
+      ),
+      Command.create(
         ~category=Some("System"),
         ~name="Add Oni2 to System PATH",
         ~enabled=() => pathSymlinkEnabled(~addingLink=true),
