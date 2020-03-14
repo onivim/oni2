@@ -103,7 +103,7 @@ module Decode = {
         tooltip: obj |> member("tooltip") |> to_string_option,
         arguments: obj |> member("arguments") |> listOrEmpty,
       })
-    | _ => None
+    | _ => None;
 };
 
 // UPDATE
@@ -173,9 +173,7 @@ let handleMessage = (~dispatch, method, args) =>
             commitTemplate:
               features |> member("commitTemplate") |> to_string_option,
             acceptInputCommand:
-              features
-              |> member("acceptInputCommand")
-              |> Decode.command,
+              features |> member("acceptInputCommand") |> Decode.command,
           }),
         )
       )
