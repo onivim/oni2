@@ -6,16 +6,16 @@ let render =
     (
       ~context: Draw.context,
       ~buffer,
-      ~mode: Vim.Mode.t,
       ~isActiveSplit,
       ~cursorPosition: Location.t,
       ~theme: Theme.t,
+      ~windowIsFocused,
     ) => {
   let line = Index.toZeroBased(cursorPosition.line);
   let column = Index.toZeroBased(cursorPosition.column);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  if (lineCount <= 0 || line >= lineCount) {
+  if (lineCount <= 0 || line >= lineCount || !isActiveSplit) {
     ();
   } else {
     let bufferLine = Buffer.getLine(line, buffer);
@@ -28,12 +28,27 @@ let render =
     let background = theme.editorCursorBackground;
     let foreground = theme.editorCursorForeground;
 
-    switch (mode, isActiveSplit) {
-    | (Insert, true) =>
-      let width = 2.;
-      Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
-
-    | _ =>
+    if (!windowIsFocused) {
+      let width = float(characterWidth) *. context.charWidth;
+      Draw.rect(~context, ~x, ~y, ~width=1., ~height, ~color=foreground);
+      Draw.rect(~context, ~x, ~y, ~width, ~height=1., ~color=foreground);
+      Draw.rect(
+        ~context,
+        ~x,
+        ~y=y +. height -. 1.,
+        ~width,
+        ~height=1.,
+        ~color=foreground,
+      );
+      Draw.rect(
+        ~context,
+        ~x=x +. width -. 1.,
+        ~y,
+        ~width=1.,
+        ~height,
+        ~color=foreground,
+      );
+    } else {
       let width = float(characterWidth) *. context.charWidth;
       Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
 

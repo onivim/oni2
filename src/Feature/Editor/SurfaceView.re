@@ -65,10 +65,10 @@ let%component make =
                 ~shouldRenderIndentGuides,
                 ~bottomVisibleLine,
                 ~shouldHighlightActiveIndentGuides,
-                ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferWidthInCharacters,
+                ~windowIsFocused,
                 (),
               ) => {
   let%hook elementRef = React.Hooks.ref(None);
@@ -181,10 +181,10 @@ let%component make =
         CursorView.render(
           ~context,
           ~buffer,
-          ~mode,
           ~isActiveSplit,
           ~cursorPosition,
           ~theme,
+          ~windowIsFocused,
         );
       }}
     />

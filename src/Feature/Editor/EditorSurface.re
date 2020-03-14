@@ -141,6 +141,7 @@ let make =
       ~shouldRenderWhitespace: ConfigurationValues.editorRenderWhitespace=ConfigurationValues.None,
       ~shouldRenderIndentGuides=false,
       ~shouldHighlightActiveIndentGuides=false,
+      ~windowIsFocused,
       (),
     ) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
@@ -217,10 +218,10 @@ let make =
       shouldRenderIndentGuides
       bottomVisibleLine
       shouldHighlightActiveIndentGuides
-      mode
       isActiveSplit
       gutterWidth
       bufferWidthInCharacters={layout.bufferWidthInCharacters}
+      windowIsFocused
     />
     {showMinimap
        ? <minimap
