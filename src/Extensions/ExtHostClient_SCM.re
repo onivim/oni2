@@ -8,6 +8,7 @@ module Log = (val Log.withNamespace("Oni2.Extensions.SCM"));
 type command = {
   id: string,
   title: string,
+  tooltip: option(string),
   arguments: list([@opaque] Json.t),
 };
 
@@ -99,6 +100,7 @@ module Decode = {
       Some({
         id: obj |> member("id") |> to_string,
         title: obj |> member("title") |> to_string,
+        tooltip: obj |> member("tooltip") |> to_string_option,
         arguments: obj |> member("arguments") |> listOrEmpty,
       })
     | _ => None
