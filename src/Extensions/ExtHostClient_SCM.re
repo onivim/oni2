@@ -53,6 +53,8 @@ module Provider = {
 };
 
 module Decode = {
+  open Yojson.Safe.Util;
+
   let resource =
     fun
     | `List([
@@ -79,12 +81,27 @@ module Decode = {
         tooltip,
         strikeThrough,
         faded,
-        source: source |> Yojson.Safe.Util.to_string_option,
-        letter: letter |> Yojson.Safe.Util.to_string_option,
-        color: Yojson.Safe.Util.(color |> member("id") |> to_string_option),
+        source: source |> to_string_option,
+        letter: letter |> to_string_option,
+        color: color |> member("id") |> to_string_option,
       }
 
     | _ => failwith("Unexpected json for scm resource");
+
+  let listOrEmpty =
+    fun
+    | `List(list) => list
+    | _ => [];
+
+  let command =
+    fun
+    | `Assoc(_) as obj =>
+      Some({
+        id: obj |> member("id") |> to_string,
+        title: obj |> member("title") |> to_string,
+        arguments: obj |> member("arguments") |> listOrEmpty,
+      })
+    | _ => None
 };
 
 // UPDATE
@@ -156,16 +173,7 @@ let handleMessage = (~dispatch, method, args) =>
             acceptInputCommand:
               features
               |> member("acceptInputCommand")
-              |> (
-                fun
-                | `Assoc(_) as obj =>
-                  Some({
-                    id: obj |> member("id") |> to_string,
-                    title: obj |> member("title") |> to_string,
-                    arguments: obj |> member("arguments") |> to_list,
-                  })
-                | _ => None
-              ),
+              |> Decode.command,
           }),
         )
       )
