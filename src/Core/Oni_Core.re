@@ -11,6 +11,7 @@ module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
 module Cli = Cli;
 module ColorizedToken = ColorizedToken;
+module Config = Config;
 module Configuration = Configuration;
 module ConfigurationDefaults = ConfigurationDefaults;
 module ConfigurationParser = ConfigurationParser;

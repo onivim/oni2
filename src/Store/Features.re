@@ -5,7 +5,7 @@ open Actions;
 
 // UPDATE
 
-let update = (extHostClient, state: State.t, action: Actions.t) =>
+let update = (~extHostClient, ~configFile, state: State.t, action: Actions.t) =>
   switch (action) {
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
@@ -40,6 +40,11 @@ let update = (extHostClient, state: State.t, action: Actions.t) =>
         Feature_Syntax.BufferUpdated(update),
       );
     let state = {...state, syntaxHighlights};
+    (state, Effect.none);
+
+  | Config(msg) =>
+    let config = Feature_Configuration.update(~configFile, state.config, msg);
+    let state = {...state, config};
     (state, Effect.none);
 
   | Syntax(msg) =>

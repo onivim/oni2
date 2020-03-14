@@ -6,7 +6,6 @@
  */
 
 open EditorCoreTypes;
-open Revery;
 open Revery.UI;
 
 open Oni_Core;
@@ -14,6 +13,7 @@ open Oni_Core;
 open Helpers;
 
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
+module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
@@ -120,28 +120,18 @@ let make =
       ~metrics: EditorMetrics.t,
       ~editor: Editor.t,
       ~theme: Theme.t,
-      ~rulers=[],
-      ~showLineNumbers=LineNumber.On,
       ~editorFont: Service_Font.font,
       ~mode: Vim.Mode.t,
-      ~showMinimap=true,
-      ~showMinimapSlider=true,
-      ~maxMinimapCharacters=50,
-      ~matchingPairsEnabled=true,
       ~bufferHighlights,
       ~bufferSyntaxHighlights,
       ~onScroll,
       ~diagnostics,
       ~completions,
       ~tokenTheme,
-      ~hoverDelay=Time.ms(1000),
-      ~isHoverEnabled=true,
       ~onCursorChange,
       ~definition,
-      ~shouldRenderWhitespace: ConfigurationValues.editorRenderWhitespace=ConfigurationValues.None,
-      ~shouldRenderIndentGuides=false,
-      ~shouldHighlightActiveIndentGuides=false,
       ~windowIsFocused,
+      ~config,
       (),
     ) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
@@ -154,11 +144,11 @@ let make =
 
   let layout =
     EditorLayout.getLayout(
-      ~showLineNumbers=showLineNumbers != LineNumber.Off,
-      ~maxMinimapCharacters,
+      ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
+      ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
       ~pixelWidth=float(metrics.pixelWidth),
       ~pixelHeight=float(metrics.pixelHeight),
-      ~isMinimapShown=showMinimap,
+      ~isMinimapShown=Config.Minimap.enabled.get(config),
       ~characterWidth=editorFont.measuredWidth,
       ~characterHeight=editorFont.measuredHeight,
       ~bufferLineCount=lineCount,
@@ -166,7 +156,7 @@ let make =
     );
 
   let matchingPairs =
-    !matchingPairsEnabled
+    !Config.matchBrackets.get(config)
       ? None
       : BufferHighlights.getMatchingPair(
           Buffer.getId(buffer),
@@ -183,7 +173,7 @@ let make =
 
   let (gutterWidth, gutterView) =
     <GutterView
-      showLineNumbers
+      showLineNumbers={Config.lineNumbers.get(config)}
       height={metrics.pixelHeight}
       theme
       scrollY={editor.scrollY}
@@ -205,7 +195,6 @@ let make =
       topVisibleLine
       onCursorChange
       cursorPosition
-      rulers
       editorFont
       leftVisibleColumn
       diagnosticsMap
@@ -214,16 +203,14 @@ let make =
       bufferHighlights
       definition
       bufferSyntaxHighlights
-      shouldRenderWhitespace
-      shouldRenderIndentGuides
       bottomVisibleLine
-      shouldHighlightActiveIndentGuides
       isActiveSplit
       gutterWidth
       bufferWidthInCharacters={layout.bufferWidthInCharacters}
       windowIsFocused
+      config
     />
-    {showMinimap
+    {Config.Minimap.enabled.get(config)
        ? <minimap
            editor
            diagnosticsMap
@@ -235,7 +222,7 @@ let make =
            matchingPairs
            bufferSyntaxHighlights
            selectionRanges
-           showMinimapSlider
+           showMinimapSlider={Config.Minimap.showSlider.get(config)}
            diffMarkers
            onScroll
            bufferWidthInCharacters={layout.bufferWidthInCharacters}
@@ -245,8 +232,8 @@ let make =
     <OverlaysView
       buffer
       isActiveSplit
-      hoverDelay
-      isHoverEnabled
+      hoverDelay={Config.Hover.delay.get(config)}
+      isHoverEnabled={Config.Hover.enabled.get(config)}
       diagnostics
       mode
       cursorPosition

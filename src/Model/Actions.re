@@ -42,6 +42,7 @@ type t =
       [@opaque] CompletionMeet.t,
       [@opaque] list(CompletionItem.t),
     )
+  | Config(Feature_Configuration.msg)
   | ConfigurationReload
   | ConfigurationSet([@opaque] Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer

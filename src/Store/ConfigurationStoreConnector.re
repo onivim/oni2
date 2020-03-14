@@ -82,6 +82,7 @@ let start =
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
+      dispatch(Actions.Config(ConfigurationFileChanged));
       defaultConfigurationFileName
       |> getConfigurationFile
       |> (
@@ -93,12 +94,13 @@ let start =
             | Error(err) =>
               Log.error("Error loading configuration file: " ++ err)
           )
-      )
+      );
     });
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
       if (cliOptions.shouldLoadConfiguration) {
+        dispatch(Actions.Config(ConfigurationFileChanged));
         switch (getConfigurationFile(defaultConfigurationFileName)) {
         | Ok(path) =>
           Log.info("Loading configuration: " ++ path);

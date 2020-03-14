@@ -30,14 +30,14 @@ let getLineNumberPixelWidth = (~lines: int, ~fontPixelWidth: float, ()) => {
   float_of_int(digits + 2) *. fontPixelWidth;
 };
 
-let getLineNumber =
-    (~bufferLine: int, ~cursorLine: int, ~setting: setting, ()) =>
+let getLineNumber = (~bufferLine: int, ~cursorLine: int, ~setting, ()) =>
   switch (setting) {
-  | Relative =>
+  | `Relative =>
     if (bufferLine === cursorLine) {
       bufferLine;
     } else {
       abs(bufferLine - cursorLine);
     }
-  | _ => bufferLine
+  | `On
+  | `Off => bufferLine
   };
