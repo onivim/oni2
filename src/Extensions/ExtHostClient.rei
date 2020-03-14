@@ -13,6 +13,7 @@ module SCM: {
   type command = {
     id: string,
     title: string,
+    tooltip: option(string),
     arguments: list(Core.Json.t),
   };
 
