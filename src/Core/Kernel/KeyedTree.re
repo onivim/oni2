@@ -15,6 +15,7 @@ module type S = {
 
   let union: ((path, 'a, 'a) => option('a), t('a), t('a)) => t('a);
   let map: ('a => 'b, t('a)) => t('b);
+  let fold: ((path, 'a, 'b) => 'b, t('a), 'b) => 'b;
 };
 
 module Make = (Ord: OrderedType) => {
@@ -96,4 +97,24 @@ module Make = (Ord: OrderedType) => {
     KeyedMap.map(node => {
       {value: Option.map(f, node.value), children: map(f, node.children)}
     });
+
+  let fold = (f, tree, initial) => {
+    let rec traverse = (tree, revPath, acc) =>
+      KeyedMap.fold(
+        (key, node, acc) => {
+          let revPath = [key, ...revPath];
+          let acc =
+            switch (node.value) {
+            | Some(value) => f(List.rev(revPath), value, acc)
+            | None => acc
+            };
+
+          traverse(node.children, revPath, acc);
+        },
+        tree,
+        acc,
+      );
+
+    traverse(tree, [], initial);
+  };
 };

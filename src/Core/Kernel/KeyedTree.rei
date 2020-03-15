@@ -15,6 +15,7 @@ module type S = {
 
   let union: ((path, 'a, 'a) => option('a), t('a), t('a)) => t('a);
   let map: ('a => 'b, t('a)) => t('b);
+  let fold: ((path, 'a, 'b) => 'b, t('a), 'b) => 'b;
 };
 
 module Make: (Ord: OrderedType) => S with type key = Ord.t;
