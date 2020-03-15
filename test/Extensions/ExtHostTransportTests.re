@@ -1,9 +1,10 @@
 open Oni_Core;
 open Utility;
-open Oni_Core_Test;
 open Oni_Extensions;
 
 open TestFramework;
+
+module Helpers = Oni_Core_Test.Helpers;
 
 let initialConfiguration = Oni_Extensions.Configuration.empty;
 let initData = ExtHostInitData.create();
