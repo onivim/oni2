@@ -204,6 +204,7 @@ let make =
       definition
       bufferSyntaxHighlights
       bottomVisibleLine
+      mode
       isActiveSplit
       gutterWidth
       bufferWidthInCharacters={layout.bufferWidthInCharacters}
