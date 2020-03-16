@@ -63,6 +63,7 @@ let%component make =
                 ~definition,
                 ~bufferSyntaxHighlights,
                 ~bottomVisibleLine,
+                ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferWidthInCharacters,
@@ -180,6 +181,7 @@ let%component make =
         CursorView.render(
           ~context,
           ~buffer,
+          ~mode,
           ~isActiveSplit,
           ~cursorPosition,
           ~theme,

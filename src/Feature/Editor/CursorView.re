@@ -6,6 +6,7 @@ let render =
     (
       ~context: Draw.context,
       ~buffer,
+      ~mode: Vim.Mode.t,
       ~isActiveSplit,
       ~cursorPosition: Location.t,
       ~theme: Theme.t,
@@ -48,6 +49,9 @@ let render =
         ~height,
         ~color=foreground,
       );
+    } else if (mode == Insert) {
+      let width = 2.;
+      Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
     } else {
       let width = float(characterWidth) *. context.charWidth;
       Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
