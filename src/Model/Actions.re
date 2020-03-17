@@ -87,9 +87,8 @@ type t =
   | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
-  | ShowNotification(Notification.t)
-  | HideNotification(Notification.t)
-  | ClearNotifications
+  | Notification(Feature_Notification.msg)
+  | ExtMessageReceived(string)
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
@@ -122,6 +121,7 @@ type t =
   | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
+  | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | SetTokenTheme([@opaque] TokenTheme.t)
   | SetColorTheme([@opaque] Theme.t)
@@ -143,6 +143,11 @@ type t =
   | PaneTabClicked(Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
+  | VimMessageReceived({
+      priority: [@opaque] Vim.Types.msgPriority,
+      title: string,
+      message: string,
+    })
   | WindowFocusGained
   | WindowFocusLost
   | WindowMaximized

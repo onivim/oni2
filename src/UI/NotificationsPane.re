@@ -9,7 +9,7 @@ module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
 module Notification = {
-  open Notification;
+  open Feature_Notification;
 
   module Styles = {
     open Style;
@@ -59,7 +59,10 @@ module Notification = {
       />;
 
     let closeButton = () => {
-      let onClick = () => GlobalContext.current().hideNotification(item);
+      let onClick = () =>
+        GlobalContext.current().dispatch(
+          Actions.Notification(Dismissed(item)),
+        );
 
       <Clickable onClick style=Styles.closeButton>
         <FontIcon

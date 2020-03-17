@@ -29,45 +29,32 @@ let reduce: (State.t, Actions.t) => State.t =
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
         sideBar: SideBarReducer.reduce(s.sideBar, a),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
-        notifications: Notifications.reduce(s.notifications, a),
       };
 
-      (
-        switch (a) {
-        | DarkModeSet(darkMode) => {...s, darkMode}
-        | DiagnosticsSet(buffer, key, diags) => {
-            ...s,
-            diagnostics:
-              Diagnostics.change(s.diagnostics, buffer, key, diags),
-          }
-        | DiagnosticsClear(key) => {
-            ...s,
-            diagnostics: Diagnostics.clear(s.diagnostics, key),
-          }
-        | KeyBindingsSet(keyBindings) => {...s, keyBindings}
-        | SetLanguageInfo(languageInfo) => {...s, languageInfo}
-        | SetIconTheme(iconTheme) => {...s, iconTheme}
-        | SetColorTheme(theme) => {...s, theme}
-        | ChangeMode(m) => {...s, mode: m}
-        | EditorFont(Service_Font.FontLoaded(font)) => {
-            ...s,
-            editorFont: font,
-          }
-        | TerminalFont(Service_Font.FontLoaded(font)) => {
-            ...s,
-            terminalFont: font,
-          }
-        | EnableZenMode => {...s, zenMode: true}
-        | DisableZenMode => {...s, zenMode: false}
-        | ReallyQuitting => {...s, isQuitting: true}
-        | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
-        | WindowFocusGained => {...s, windowIsFocused: true}
-        | WindowFocusLost => {...s, windowIsFocused: false}
-        | WindowMaximized => {...s, windowIsMaximized: true}
-        | WindowRestored
-        | WindowMinimized => {...s, windowIsMaximized: false}
-        | _ => s
+      switch (a) {
+      | DarkModeSet(darkMode) => {...s, darkMode}
+      | DiagnosticsSet(buffer, key, diags) => {
+          ...s,
+          diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),
         }
-      )
-      |> PaneReducer.reduce(a);
+      | DiagnosticsClear(key) => {
+          ...s,
+          diagnostics: Diagnostics.clear(s.diagnostics, key),
+        }
+      | KeyBindingsSet(keyBindings) => {...s, keyBindings}
+      | SetLanguageInfo(languageInfo) => {...s, languageInfo}
+      | SetIconTheme(iconTheme) => {...s, iconTheme}
+      | SetColorTheme(theme) => {...s, theme}
+      | ChangeMode(m) => {...s, mode: m}
+      | EnableZenMode => {...s, zenMode: true}
+      | DisableZenMode => {...s, zenMode: false}
+      | ReallyQuitting => {...s, isQuitting: true}
+      | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
+      | WindowFocusGained => {...s, windowIsFocused: true}
+      | WindowFocusLost => {...s, windowIsFocused: false}
+      | WindowMaximized => {...s, windowIsMaximized: true}
+      | WindowRestored
+      | WindowMinimized => {...s, windowIsMaximized: false}
+      | _ => s
+      };
     };

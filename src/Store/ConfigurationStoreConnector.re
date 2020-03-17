@@ -52,33 +52,34 @@ let start =
     ();
   };
 
-  let transformConfigurationEffect = (fileName, buffers, transformer) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="configuration.transform", dispatch => {
-      let configPath = getConfigurationFile(fileName);
-      switch (configPath) {
-      | Error(msg) => Log.error("Unable to load configuration: " ++ msg)
-      | Ok(configPath) =>
-        if (!Buffers.isModifiedByPath(buffers, configPath)) {
-          Oni_Core.Log.perf("Apply configuration transform", () => {
-            let parsedJson = Yojson.Safe.from_file(configPath);
-            let newJson = transformer(parsedJson);
-            let oc = open_out(configPath);
-            Yojson.Safe.pretty_to_channel(oc, newJson);
-            close_out(oc);
-          });
-        } else {
-          dispatch(
-            Actions.ShowNotification(
-              Notification.create(
-                ~kind=Error,
-                "Unable to save theme selection to configuration; configuration file is modified.",
-              ),
-            ),
+  let transformConfigurationEffect = (fileName, buffers, transformer) => {
+    let configPath = getConfigurationFile(fileName);
+    switch (configPath) {
+    | Error(msg) =>
+      Log.error("Unable to load configuration: " ++ msg);
+      Isolinear.Effect.none;
+    | Ok(configPath) =>
+      if (!Buffers.isModifiedByPath(buffers, configPath)) {
+        Oni_Core.Log.perf("Apply configuration transform", () => {
+          let parsedJson = Yojson.Safe.from_file(configPath);
+          let newJson = transformer(parsedJson);
+          let oc = open_out(configPath);
+          Yojson.Safe.pretty_to_channel(oc, newJson);
+          close_out(oc);
+        });
+
+        Isolinear.Effect.none;
+      } else {
+        {
+          Feature_Notification.Effects.create(
+            ~kind=Error,
+            "Unable to save theme selection to configuration; configuration file is modified.",
           );
         }
-      };
-    });
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg));
+      }
+    };
+  };
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {

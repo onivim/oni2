@@ -48,7 +48,7 @@ module Colors = {
     let errorForeground =
       define("notification.errorForeground", all(unspecified));
 
-    let backgroundFor = (item: Notification.t) =>
+    let backgroundFor = (item: Feature_Notification.notification) =>
       switch (item.kind) {
       | Success => successBackground
       | Warning => warningBackground
@@ -56,7 +56,7 @@ module Colors = {
       | Info => infoBackground
       };
 
-    let foregroundFor = (item: Notification.t) =>
+    let foregroundFor = (item: Feature_Notification.notification) =>
       switch (item.kind) {
       | Success => successForeground
       | Warning => warningForeground
@@ -72,8 +72,6 @@ module Colors = {
 };
 
 module Notification = {
-  open Notification;
-
   module Constants = {
     let popupDuration = Time.ms(3000);
   };
@@ -121,7 +119,7 @@ module Notification = {
       enter |> andThen(~next=exit |> delay(Constants.popupDuration));
   };
 
-  let iconFor = item =>
+  let iconFor = (item: Feature_Notification.notification) =>
     switch (item.kind) {
     | Success => FontAwesome.checkCircle
     | Warning => FontAwesome.exclamationTriangle
@@ -274,7 +272,7 @@ let notificationCount =
         {
           label: "Clear All",
           // icon: None,
-          data: Actions.ClearNotifications,
+          data: Actions.StatusBar(NotificationClearAllClicked),
         },
         {
           label: "Open",
@@ -366,7 +364,7 @@ let%component make =
   let%hook activeNotifications =
     CustomHooks.useExpiration(
       ~expireAfter=Notification.Animations.totalDuration,
-      ~equals=(a, b) => Oni_Model.Notification.(a.id == b.id),
+      ~equals=(a, b) => Feature_Notification.(a.id == b.id),
       notifications,
     );
 

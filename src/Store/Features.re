@@ -78,6 +78,10 @@ let update = (~extHostClient, ~configFile, state: State.t, action: Actions.t) =>
     let model' = Feature_Theme.update(state.colorTheme, msg);
     ({...state, colorTheme: model'}, Effect.none);
 
+  | Notification(msg) =>
+    let model' = Feature_Notification.update(state.notifications, msg);
+    ({...state, notifications: model'}, Effect.none);
+
   | Modal(msg) =>
     switch (state.modal) {
     | Some(model) =>
@@ -100,6 +104,28 @@ let update = (~extHostClient, ~configFile, state: State.t, action: Actions.t) =>
 
     | _ => (state, Effect.none)
     }
+
+  // TODO: This should live in the editor feature project
+  | EditorFont(Service_Font.FontLoaded(font)) => (
+      {...state, editorFont: font},
+      Isolinear.Effect.none,
+    )
+  | EditorFont(Service_Font.FontLoadError(message)) => (
+      state,
+      Feature_Notification.Effects.create(~kind=Error, message)
+      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+    )
+
+  // TODO: This should live in the terminal feature project
+  | TerminalFont(Service_Font.FontLoaded(font)) => (
+      {...state, terminalFont: font},
+      Isolinear.Effect.none,
+    )
+  | TerminalFont(Service_Font.FontLoadError(message)) => (
+      state,
+      Feature_Notification.Effects.create(~kind=Error, message)
+      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+    )
 
   | _ => (state, Effect.none)
   };

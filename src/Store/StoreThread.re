@@ -170,6 +170,7 @@ let start =
       titleUpdater,
       sneakUpdater,
       Features.update(~extHostClient, ~configFile=configurationFilePath),
+      PaneStore.update,
       contextMenuUpdater,
     ]);
 

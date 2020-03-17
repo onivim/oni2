@@ -7,6 +7,7 @@
 [@deriving show({with_path: false})]
 type action =
   | DiagnosticsClicked
+  | NotificationClearAllClicked
   | NotificationCountClicked
   | NotificationsContextMenu;
 
