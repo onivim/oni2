@@ -33,15 +33,26 @@ module Styles = {
   ];
 };
 
-let%component item = (~onClick, ~theme, ~isActive, ~icon, ()) => {
+let%component item =
+              (~onClick, ~theme, ~isActive, ~icon, ~iconStyle=`Solid, ()) => {
   let%hook (isHovered, setHovered) = Hooks.state(false);
   let onMouseOver = _ => setHovered(_ => true);
   let onMouseOut = _ => setHovered(_ => false);
-  let iconColor = isActive ? Colors.foreground : Colors.inactiveForeground;
+
+  let icon = () => {
+    let color = isActive ? Colors.foreground : Colors.inactiveForeground;
+    let fontFamily =
+      switch (iconStyle) {
+      | `Solid => FontAwesome.FontFamily.solid
+      | `Regular => FontAwesome.FontFamily.regular
+      };
+
+    <FontIcon fontFamily color={color.from(theme)} fontSize=22. icon />;
+  };
 
   <View onMouseOver onMouseOut>
     <Sneakable onClick style={Styles.item(~isHovered, ~isActive, ~theme)}>
-      <FontIcon color={iconColor.from(theme)} fontSize=22. icon />
+      <icon />
     </Sneakable>
   </View>;
 };
@@ -88,6 +99,7 @@ let%component make =
       theme
       isActive={isSidebarVisible(FileExplorer)}
       icon=FontAwesome.copy
+      iconStyle=`Regular
     />
     <item
       onClick=onSearchClick
