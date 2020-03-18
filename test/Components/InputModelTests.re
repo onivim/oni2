@@ -116,7 +116,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual(testString);
     });
 
-    test("Doesn't move cursor position more that string length", ({expect, _}) => {
+    test(
+      "Doesn't move cursor position more that string length", ({expect, _}) => {
       let selection = collapsedSelection(testStringLength);
       let expected = collapsedSelection(testStringLength);
 
@@ -206,7 +207,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual(testString);
     });
 
-    test("Doesn't move cursor position more that string length", ({expect, _}) => {
+    test(
+      "Doesn't move cursor position more that string length", ({expect, _}) => {
       let selection = collapsedSelection(testStringLength);
       let expected = collapsedSelection(testStringLength);
 
@@ -392,7 +394,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
   describe("When HOME with selection", ({test, _}) => {
     let key = "<HOME>";
 
-    test("Moves cursor to the beginning and discard selection", ({expect, _}) => {
+    test(
+      "Moves cursor to the beginning and discard selection", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=12, ~focus=5, ());
       let expected = notCollapsedSelection(~anchor=0, ~focus=0, ());
 
@@ -500,7 +503,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
     });
 
     test(
-      "Moves cursor to 1 character left and increase selection", ({expect, _}) => {
+      "Moves cursor to 1 character left and increase selection",
+      ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=11, ~focus=5, ());
       let expected = notCollapsedSelection(~anchor=11, ~focus=4, ());
 
@@ -510,7 +514,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual(testString);
     });
 
-    test("Doesn't move cursor position when it at the beginning", ({expect, _}) => {
+    test(
+      "Doesn't move cursor position when it at the beginning", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=5, ~focus=0, ());
       let expected = notCollapsedSelection(~anchor=5, ~focus=0, ());
 
@@ -542,7 +547,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual("");
     });
 
-    test("Moves cursor to 1 character left and undo selection", ({expect, _}) => {
+    test(
+      "Moves cursor to 1 character left and undo selection", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=4, ~focus=5, ());
       let expected = collapsedSelection(4);
 
@@ -553,7 +559,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
     });
 
     test(
-      "Moves cursor to 1 character left and decrease selection", ({expect, _}) => {
+      "Moves cursor to 1 character left and decrease selection",
+      ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=4, ~focus=8, ());
       let expected = notCollapsedSelection(~anchor=4, ~focus=7, ());
 
@@ -567,7 +574,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
   describe("When S-RIGHT", ({test, _}) => {
     let key = "<S-RIGHT>";
 
-    test("Moves cursor to 1 character right and add selection", ({expect, _}) => {
+    test(
+      "Moves cursor to 1 character right and add selection", ({expect, _}) => {
       let selection = collapsedSelection(4);
       let expected = notCollapsedSelection(~anchor=4, ~focus=5, ());
 
@@ -578,7 +586,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
     });
 
     test(
-      "Moves cursor to 1 character right and increase selection", ({expect, _}) => {
+      "Moves cursor to 1 character right and increase selection",
+      ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=4, ~focus=11, ());
       let expected = notCollapsedSelection(~anchor=4, ~focus=12, ());
 
@@ -622,7 +631,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual("");
     });
 
-    test("Moves cursor to 1 character right and undo selection", ({expect, _}) => {
+    test(
+      "Moves cursor to 1 character right and undo selection", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=6, ~focus=5, ());
       let expected = collapsedSelection(6);
 
@@ -633,7 +643,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
     });
 
     test(
-      "Moves cursor to 1 character right and decrease selection", ({expect, _}) => {
+      "Moves cursor to 1 character right and decrease selection",
+      ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=8, ~focus=3, ());
       let expected = notCollapsedSelection(~anchor=8, ~focus=4, ());
 
@@ -657,7 +668,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual(testString);
     });
 
-    test("Moves cursor to the beginning and increase selection", ({expect, _}) => {
+    test(
+      "Moves cursor to the beginning and increase selection", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=7, ~focus=4, ());
       let expected = notCollapsedSelection(~anchor=7, ~focus=0, ());
 
@@ -667,7 +679,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual(testString);
     });
 
-    test("Doesn't move cursor position when it at the beginning", ({expect, _}) => {
+    test(
+      "Doesn't move cursor position when it at the beginning", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=5, ~focus=0, ());
       let expected = notCollapsedSelection(~anchor=5, ~focus=0, ());
 
@@ -709,7 +722,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual(testString);
     });
 
-    test("Moves cursor to the beginning and decrease selection", ({expect, _}) => {
+    test(
+      "Moves cursor to the beginning and decrease selection", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=3, ~focus=8, ());
       let expected = notCollapsedSelection(~anchor=3, ~focus=0, ());
 
@@ -825,7 +839,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual(testString);
     });
 
-    test("Doesn't move cursor position when it at the beginning", ({expect, _}) => {
+    test(
+      "Doesn't move cursor position when it at the beginning", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=10, ~focus=0, ());
       let expected = notCollapsedSelection(~anchor=10, ~focus=0, ());
 
@@ -905,7 +920,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual(testString);
     });
 
-    test("Doesn't move cursor position when it at the beginning", ({expect, _}) => {
+    test(
+      "Doesn't move cursor position when it at the beginning", ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=10, ~focus=0, ());
       let expected = collapsedSelection(0);
 
@@ -1021,7 +1037,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
     });
 
     test(
-      "Moves cursor to the next word boundary and undo selection", ({expect, _}) => {
+      "Moves cursor to the next word boundary and undo selection",
+      ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=16, ~focus=5, ());
       let expected = notCollapsedSelection(~anchor=16, ~focus=16, ());
 
@@ -1101,7 +1118,8 @@ describe("handleInputS#handleInput", ({describe, _}) => {
     });
 
     test(
-      "Moves cursor to the next word boundary and undo selection", ({expect, _}) => {
+      "Moves cursor to the next word boundary and undo selection",
+      ({expect, _}) => {
       let selection = notCollapsedSelection(~anchor=16, ~focus=5, ());
       let expected = collapsedSelection(16);
 

@@ -406,7 +406,8 @@ describe("StringEx", ({describe, _}) => {
       expect.int(charEnd).toBe(2);
     });
 
-    test("match fits | ~maxLength=7, ~charStart=6, ~charEnd=9", ({expect, _}) => {
+    test(
+      "match fits | ~maxLength=7, ~charStart=6, ~charEnd=9", ({expect, _}) => {
       let (snippet, charStart, charEnd) =
         extractSnippet(~maxLength=7, ~charStart=6, ~charEnd=9, text);
 

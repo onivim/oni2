@@ -53,7 +53,8 @@ describe("Buffer List Tests", ({test, _}) => {
 
      NOTE: the cardinality of the map is not updated
    */
-  test("Buffer enter should update metadata, if already there", ({expect, _}) => {
+  test(
+    "Buffer enter should update metadata, if already there", ({expect, _}) => {
     let bufferList = Buffers.empty;
 
     let added =
