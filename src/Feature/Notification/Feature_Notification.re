@@ -1,3 +1,5 @@
+open Oni_Core;
+
 module Internal = {
   let generateId = {
     let lastId = ref(0);
@@ -65,11 +67,48 @@ module Effects = {
     );
 };
 
+// COLORS
+
+module Colors = {
+  open ColorTheme.Schema;
+
+  let successBackground =
+    define("notification.successBackground", all(unspecified));
+  let successForeground =
+    define("notification.successForeground", all(unspecified));
+  let infoBackground =
+    define("notification.infoBackground", all(unspecified));
+  let infoForeground =
+    define("notification.infoForeground", all(unspecified));
+  let warningBackground =
+    define("notification.warningBackground", all(unspecified));
+  let warningForeground =
+    define("notification.warningForeground", all(unspecified));
+  let errorBackground =
+    define("notification.errorBackground", all(unspecified));
+  let errorForeground =
+    define("notification.errorForeground", all(unspecified));
+
+  let backgroundFor = notification =>
+    switch (notification.kind) {
+    | Success => successBackground
+    | Warning => warningBackground
+    | Error => errorBackground
+    | Info => infoBackground
+    };
+
+  let foregroundFor = notification =>
+    switch (notification.kind) {
+    | Success => successForeground
+    | Warning => warningForeground
+    | Error => errorForeground
+    | Info => infoForeground
+    };
+};
+
 // VIEW
 
 module View = {
-  open Oni_Core;
-
   open Revery;
   open Revery.UI;
   open Revery.UI.Components;

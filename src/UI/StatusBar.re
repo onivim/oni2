@@ -30,45 +30,8 @@ module Colors = {
 
   let transparent = Colors.transparentWhite;
 
-  module Notification = {
-    let successBackground =
-      define("notification.successBackground", all(unspecified));
-    let successForeground =
-      define("notification.successForeground", all(unspecified));
-    let infoBackground =
-      define("notification.infoBackground", all(unspecified));
-    let infoForeground =
-      define("notification.infoForeground", all(unspecified));
-    let warningBackground =
-      define("notification.warningBackground", all(unspecified));
-    let warningForeground =
-      define("notification.warningForeground", all(unspecified));
-    let errorBackground =
-      define("notification.errorBackground", all(unspecified));
-    let errorForeground =
-      define("notification.errorForeground", all(unspecified));
-
-    let backgroundFor = (item: Feature_Notification.notification) =>
-      switch (item.kind) {
-      | Success => successBackground
-      | Warning => warningBackground
-      | Error => errorBackground
-      | Info => infoBackground
-      };
-
-    let foregroundFor = (item: Feature_Notification.notification) =>
-      switch (item.kind) {
-      | Success => successForeground
-      | Warning => warningForeground
-      | Error => errorForeground
-      | Info => infoForeground
-      };
-  };
-
-  module StatusBar = {
-    let background = define("statusBar.background", all(unspecified));
-    let foreground = define("statusBar.foreground", all(unspecified));
-  };
+  let background = define("statusBar.background", all(unspecified));
+  let foreground = define("statusBar.foreground", all(unspecified));
 };
 
 module Styles = {
@@ -163,7 +126,7 @@ let textItem = (~background, ~font, ~colorTheme, ~text, ()) =>
   <item>
     <Text
       style={Styles.text(
-        ~color=Colors.StatusBar.foreground.from(colorTheme),
+        ~color=Colors.foreground.from(colorTheme),
         ~background,
         font,
       )}
@@ -239,7 +202,7 @@ let notificationCount =
 };
 
 let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
-  let color = Colors.StatusBar.foreground.from(colorTheme);
+  let color = Colors.foreground.from(colorTheme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -301,12 +264,9 @@ let%component make =
   let (background, foreground) =
     switch (activeNotifications) {
     | [] =>
-      Colors.StatusBar.(
-        background.from(colorTheme),
-        foreground.from(colorTheme),
-      )
+      Colors.(background.from(colorTheme), foreground.from(colorTheme))
     | [last, ..._] =>
-      Colors.Notification.(
+      Feature_Notification.Colors.(
         backgroundFor(last).from(colorTheme),
         foregroundFor(last).from(colorTheme),
       )

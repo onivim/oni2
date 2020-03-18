@@ -35,6 +35,13 @@ module Effects: {
   let dismissAll: Isolinear.Effect.t(msg);
 };
 
+// COLORS
+
+module Colors: {
+  let backgroundFor: notification => ColorTheme.Schema.definition;
+  let foregroundFor: notification => ColorTheme.Schema.definition;
+};
+
 // VIEW
 
 module View: {
