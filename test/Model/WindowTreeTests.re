@@ -51,7 +51,7 @@ describe("WindowTreeTests", ({describe, _}) => {
     })
   });
   describe("addSplit", ({test, _}) => {
-    test("add vertical split", ({expect}) => {
+    test("add vertical split", ({expect, _}) => {
       let splits = WindowTree.empty;
 
       expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
@@ -80,7 +80,7 @@ describe("WindowTreeTests", ({describe, _}) => {
       );
     });
 
-    test("add vertical split - after", ({expect}) => {
+    test("add vertical split - after", ({expect, _}) => {
       let splits = WindowTree.empty;
 
       expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
@@ -109,7 +109,7 @@ describe("WindowTreeTests", ({describe, _}) => {
       );
     });
 
-    test("parent split changes direction if needed", ({expect}) => {
+    test("parent split changes direction if needed", ({expect, _}) => {
       let splits = WindowTree.empty;
 
       expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
@@ -173,7 +173,7 @@ describe("WindowTreeTests", ({describe, _}) => {
 });
 
 describe("rotateForward", ({test, _}) => {
-  test("simple tree", ({expect}) => {
+  test("simple tree", ({expect, _}) => {
     let splitA = createSplit(~editorGroupId=1, ());
     let splitB = createSplit(~editorGroupId=2, ());
     let splitC = createSplit(~editorGroupId=3, ());
@@ -201,7 +201,7 @@ describe("rotateForward", ({test, _}) => {
     );
   });
 
-  test("nested tree", ({expect}) => {
+  test("nested tree", ({expect, _}) => {
     let splitA = createSplit(~editorGroupId=1, ());
     let splitB = createSplit(~editorGroupId=2, ());
     let splitC = createSplit(~editorGroupId=3, ());
@@ -262,7 +262,7 @@ describe("rotateForward", ({test, _}) => {
 });
 
 describe("rotateBackward", ({test, _}) => {
-  test("simple tree", ({expect}) => {
+  test("simple tree", ({expect, _}) => {
     let splitA = createSplit(~editorGroupId=1, ());
     let splitB = createSplit(~editorGroupId=2, ());
     let splitC = createSplit(~editorGroupId=3, ());
@@ -290,7 +290,7 @@ describe("rotateBackward", ({test, _}) => {
     );
   });
 
-  test("nested tree", ({expect}) => {
+  test("nested tree", ({expect, _}) => {
     let splitA = createSplit(~editorGroupId=1, ());
     let splitB = createSplit(~editorGroupId=2, ());
     let splitC = createSplit(~editorGroupId=3, ());

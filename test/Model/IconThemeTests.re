@@ -54,7 +54,7 @@ let testTheme = {|
 let json: Yojson.Safe.t = Yojson.Safe.from_string(testTheme);
 
 describe("IconTheme", ({test, _}) => {
-  test("gets icon for matching filename", ({expect}) => {
+  test("gets icon for matching filename", ({expect, _}) => {
     let _iconTheme =
       IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
     let icon: option(IconTheme.IconDefinition.t) =
@@ -66,7 +66,7 @@ describe("IconTheme", ({test, _}) => {
     };
   });
 
-  test("gets icon for matching extension", ({expect}) => {
+  test("gets icon for matching extension", ({expect, _}) => {
     let _iconTheme =
       IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
     let icon: option(IconTheme.IconDefinition.t) =
@@ -82,7 +82,7 @@ describe("IconTheme", ({test, _}) => {
     };
   });
 
-  test("gets icon for matching extension", ({expect}) => {
+  test("gets icon for matching extension", ({expect, _}) => {
     let _iconTheme =
       IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
     let icon: option(IconTheme.IconDefinition.t) =
@@ -94,7 +94,7 @@ describe("IconTheme", ({test, _}) => {
     };
   });
 
-  test("falls back to default icon", ({expect}) => {
+  test("falls back to default icon", ({expect, _}) => {
     let _iconTheme =
       IconTheme.ofJson(json) |> Oni_Core_Test.Helpers.getOrThrow;
     let icon: option(IconTheme.IconDefinition.t) =

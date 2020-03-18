@@ -19,7 +19,7 @@ let normalizeExpectedPath = path =>
 
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
-    test("activates by language", ({expect}) => {
+    test("activates by language", ({expect, _}) => {
       let activations: ref(list(string)) = ref([]);
       let onDidActivateExtension = id => activations := [id, ...activations^];
 
@@ -37,7 +37,7 @@ describe("ExtHostClient", ({describe, _}) => {
       );
     });
 
-    test("activates by command", ({expect}) => {
+    test("activates by command", ({expect, _}) => {
       let activations: ref(list(string)) = ref([]);
       let onDidActivateExtension = id => activations := [id, ...activations^];
 
@@ -59,7 +59,7 @@ describe("ExtHostClient", ({describe, _}) => {
   });
 
   describe("commands", ({test, _}) =>
-    test("executes simple command", ({expect}) => {
+    test("executes simple command", ({expect, _}) => {
       let registeredCommands = empty();
       let messages = empty();
 
@@ -102,7 +102,7 @@ describe("ExtHostClient", ({describe, _}) => {
         (),
       );
     };
-    test("document added successfully", ({expect}) => {
+    test("document added successfully", ({expect, _}) => {
       let registeredCommands = empty();
       let messages = emptyInfoMsgs();
 
@@ -142,7 +142,7 @@ describe("ExtHostClient", ({describe, _}) => {
       );
     });
 
-    test("document updated successfully", ({expect}) => {
+    test("document updated successfully", ({expect, _}) => {
       let registeredCommands = empty();
       let messages = emptyInfoMsgs();
 

@@ -8,7 +8,7 @@ module Constants = Oni_Core.Constants;
 
 describe("ConfigurationParser", ({test, describe, _}) => {
   describe("per-filetype handling", ({test, _}) => {
-    test("simple filetype case", ({expect}) => {
+    test("simple filetype case", ({expect, _}) => {
       let fileTypeConfiguration = {|
 		{
       	"editor.insertSpaces": false,
@@ -39,7 +39,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       };
     });
 
-    test("ignores doubly-nested languages", ({expect}) => {
+    test("ignores doubly-nested languages", ({expect, _}) => {
       let fileTypeConfiguration = {|
 	  {
       	"editor.insertSpaces": false,
@@ -68,7 +68,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     });
   });
   describe("error handling", ({test, _}) => {
-    test("invalid json returns error", ({expect}) => {
+    test("invalid json returns error", ({expect, _}) => {
       let invalidConfiguration = "{]";
 
       switch (ConfigurationParser.ofString(invalidConfiguration)) {
@@ -77,7 +77,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       };
     });
 
-    test("json array returns error", ({expect}) => {
+    test("json array returns error", ({expect, _}) => {
       let invalidConfiguration = "[]";
 
       switch (ConfigurationParser.ofString(invalidConfiguration)) {
@@ -87,7 +87,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     });
   });
 
-  test("empty configuration", ({expect}) => {
+  test("empty configuration", ({expect, _}) => {
     let emptyConfiguration = "{}";
 
     switch (ConfigurationParser.ofString(emptyConfiguration)) {
@@ -100,7 +100,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("bool value", ({expect}) => {
+  test("bool value", ({expect, _}) => {
     let configuration = {|
       { "editor.minimap.enabled": false }
       |};
@@ -124,7 +124,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
 
   describe("editor.quickSuggestions", ({test, _}) => {
     let getQuickSuggestions = getExpectedValue(c => c.editorQuickSuggestions);
-    test("bool: false", ({expect}) => {
+    test("bool: false", ({expect, _}) => {
       let quickSuggestions =
         getQuickSuggestions(
           {|
@@ -136,7 +136,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
         {other: false, strings: false, comments: false},
       );
     });
-    test("bool: true", ({expect}) => {
+    test("bool: true", ({expect, _}) => {
       let quickSuggestions =
         getQuickSuggestions(
           {|
@@ -149,7 +149,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       );
     });
 
-    test("json: mixed", ({expect}) => {
+    test("json: mixed", ({expect, _}) => {
       let quickSuggestions =
         getQuickSuggestions(
           {|
@@ -169,7 +169,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
 
   describe("editor.fontSize", ({test, _}) => {
     let getFontSize = getExpectedValue(c => c.editorFontSize);
-    test("parses string if possible", ({expect}) => {
+    test("parses string if possible", ({expect, _}) => {
       let fontSize =
         getFontSize({|
         { "editor.fontSize": "12" }
@@ -177,7 +177,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       expect.float(fontSize).toBeCloseTo(12.);
     });
 
-    test("uses default size if unable to parse", ({expect}) => {
+    test("uses default size if unable to parse", ({expect, _}) => {
       let fontSize =
         getFontSize({|
         { "editor.fontSize": "true" }
@@ -185,7 +185,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       expect.float(fontSize).toBeCloseTo(Constants.defaultFontSize);
     });
 
-    test("does not allow value lower than minimum size", ({expect}) => {
+    test("does not allow value lower than minimum size", ({expect, _}) => {
       let fontSize =
         getFontSize({|
         { "editor.fontSize": 1 }
@@ -194,7 +194,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     });
   });
 
-  test("vimUseSystemClipboard value", ({expect}) => {
+  test("vimUseSystemClipboard value", ({expect, _}) => {
     let configuration = {|
       { "vim.useSystemClipboard": [] }
       |};
@@ -260,7 +260,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("list of numbers", ({expect}) => {
+  test("list of numbers", ({expect, _}) => {
     let configuration = {|
       { "editor.rulers": [120, 80] }
     |};
@@ -275,7 +275,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("list of strings", ({expect}) => {
+  test("list of strings", ({expect, _}) => {
     let configuration = {|
      { "experimental.viml": ["first thing", "second thing", "third thing"] }
      |};
@@ -291,7 +291,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("resiliency tests", ({expect}) => {
+  test("resiliency tests", ({expect, _}) => {
     let trailingCommaInObject = {|
       { "editor.rulers": [120, 80], }
     |};

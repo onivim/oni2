@@ -30,7 +30,7 @@ let getFileTypeOrFail = (v: option(Buffer.t)) => {
 };
 
 describe("Buffer List Tests", ({test, _}) => {
-  test("Buffer enter should create metadata", ({expect}) => {
+  test("Buffer enter should create metadata", ({expect, _}) => {
     let bufferList = Buffers.empty;
 
     let added =
@@ -53,7 +53,7 @@ describe("Buffer List Tests", ({test, _}) => {
 
      NOTE: the cardinality of the map is not updated
    */
-  test("Buffer enter should update metadata, if already there", ({expect}) => {
+  test("Buffer enter should update metadata, if already there", ({expect, _}) => {
     let bufferList = Buffers.empty;
 
     let added =
@@ -79,7 +79,7 @@ describe("Buffer List Tests", ({test, _}) => {
     );
   });
 
-  test("Should correctly find the active bufferId", ({expect}) => {
+  test("Should correctly find the active bufferId", ({expect, _}) => {
     let bufferList = Buffers.empty;
     let updated =
       Buffers.reduce(
@@ -94,7 +94,7 @@ describe("Buffer List Tests", ({test, _}) => {
     expect.string(path).toMatch("/myfile.js");
   });
 
-  test("Should set filetype", ({expect}) => {
+  test("Should set filetype", ({expect, _}) => {
     let bufferList = Buffers.empty;
     let updated =
       Buffers.reduce(
