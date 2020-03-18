@@ -4,7 +4,7 @@
     "run": "esy '@integrationtest' x bash -c run-tests.sh"
   },
   "override": {
-      "build": ["dune build -p Oni2,OniIntegrationTests -j4"],
+      "build": ["dune build --verbose -p Oni2,OniIntegrationTests -j4"],
       "install": [
           "esy-installer #{self.target_dir}/default/Oni2.install",
           "esy-installer #{self.target_dir}/default/OniIntegrationTests.install"
