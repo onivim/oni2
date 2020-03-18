@@ -64,7 +64,15 @@ let content = (~selected, ~theme, ~uiFont, ~editorFont, ~state, ()) =>
     />;
 
   | Pane.Diagnostics => <DiagnosticsPane state />
-  | Pane.Notifications => <NotificationsPane state />
+  | Pane.Notifications =>
+    let dispatch = msg =>
+      GlobalContext.current().dispatch(Actions.Notification(msg));
+    <Feature_Notification.View.Pane
+      notifications={state.notifications}
+      theme
+      font=uiFont
+      dispatch
+    />;
   };
 
 let closeButton = (~theme: Theme.t, ()) =>

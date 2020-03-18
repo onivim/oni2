@@ -4,7 +4,9 @@
     (public_name Oni2.feature.notification)
     (libraries 
       Oni2.core
+      Oni2.components
       isolinear
       base
+      Revery
     )
-    (preprocess (pps ppx_let ppx_deriving.show)))
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
