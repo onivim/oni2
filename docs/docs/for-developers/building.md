@@ -155,3 +155,17 @@ From the `oni2` directory:
 - `cd docs/website`
 - `npm install`
 - `npm start`
+
+### Docker
+
+```bash
+docker build --network=host -t oni2-dev -f Dockerfile.dev .
+# Creates a 12GB image !!!
+
+docker run -it \
+   -v ${PWD}:/code \
+   -v "$HOME/.Xauthority:/root/.Xauthority:rw" \
+   --network=host \
+   --env="DISPLAY" \
+   oni2-dev
+```
