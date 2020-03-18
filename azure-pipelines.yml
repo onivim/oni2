@@ -53,16 +53,17 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Linux
-  displayName: 'Linux - Ubuntu 18.04'
+  displayName: 'Linux - Ubuntu 16.04'
   timeoutInMinutes: 60
   pool:
-    vmImage: 'ubuntu-18.04'
+    vmImage: 'ubuntu-16.04'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
+    ESY__LOG: verbose
 
   steps:
   - template: .ci/use-node.yml
