@@ -22,7 +22,7 @@ let makeLine =
 
 let validateToken =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualToken: TextRun.t,
       expectedToken: TextRun.t,
     ) => {
@@ -43,7 +43,7 @@ let validateToken =
 
 let validateTokens =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualTokens: list(TextRun.t),
       expectedTokens: list(TextRun.t),
     ) => {
