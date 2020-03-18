@@ -71,79 +71,6 @@ module Colors = {
   };
 };
 
-module Notification = {
-  module Constants = {
-    let popupDuration = Time.ms(3000);
-  };
-
-  module Styles = {
-    open Style;
-
-    let container = (~background, ~yOffset) => [
-      position(`Absolute),
-      top(0),
-      bottom(0),
-      left(0),
-      right(0),
-      backgroundColor(background),
-      flexDirection(`Row),
-      alignItems(`Center),
-      paddingHorizontal(10),
-      transform(Transform.[TranslateY(yOffset)]),
-    ];
-
-    let text = (~foreground, ~background, font: UiFont.t) => [
-      fontFamily(font.fontFile),
-      fontSize(11.),
-      textWrap(TextWrapping.NoWrap),
-      marginLeft(6),
-      color(foreground),
-      backgroundColor(background),
-    ];
-  };
-
-  module Animations = {
-    open Animation;
-
-    let transitionDuration = Time.ms(150);
-    let totalDuration =
-      Time.(Constants.popupDuration + transitionDuration *. 2.);
-
-    let enter =
-      animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
-
-    let exit =
-      animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
-
-    let sequence =
-      enter |> andThen(~next=exit |> delay(Constants.popupDuration));
-  };
-
-  let iconFor = (item: Feature_Notification.notification) =>
-    switch (item.kind) {
-    | Success => FontAwesome.checkCircle
-    | Warning => FontAwesome.exclamationTriangle
-    | Error => FontAwesome.exclamationCircle
-    | Info => FontAwesome.infoCircle
-    };
-
-  let%component make = (~item, ~background, ~foreground, ~font, ()) => {
-    let%hook (yOffset, _animationState, _reset) =
-      Hooks.animation(Animations.sequence, ~active=true);
-
-    let icon = () =>
-      <FontIcon icon={iconFor(item)} fontSize=16. color=foreground />;
-
-    <View style={Styles.container(~background, ~yOffset)}>
-      <icon />
-      <Text
-        style={Styles.text(~foreground, ~background, font)}
-        text={item.message}
-      />
-    </View>;
-  };
-};
-
 module Styles = {
   open Style;
 
@@ -363,7 +290,7 @@ let%component make =
 
   let%hook activeNotifications =
     CustomHooks.useExpiration(
-      ~expireAfter=Notification.Animations.totalDuration,
+      ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
       ~equals=(a, b) => Feature_Notification.(a.id == b.id),
       notifications,
     );
@@ -384,12 +311,12 @@ let%component make =
 
   let%hook background =
     CustomHooks.colorTransition(
-      ~duration=Notification.Animations.transitionDuration,
+      ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
       background,
     );
   let%hook foreground =
     CustomHooks.colorTransition(
-      ~duration=Notification.Animations.transitionDuration,
+      ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
       foreground,
     );
 
@@ -442,7 +369,9 @@ let%component make =
   let notificationPopups = () =>
     activeNotifications
     |> List.rev
-    |> List.map(item => <Notification item background foreground font />)
+    |> List.map(item =>
+         <Feature_Notification.View.Popup item background foreground font />
+       )
     |> React.listToElement;
 
   <View style={Styles.view(background, yOffset)}>

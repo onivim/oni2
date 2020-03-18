@@ -67,7 +67,7 @@ let content = (~selected, ~theme, ~uiFont, ~editorFont, ~state, ()) =>
   | Pane.Notifications =>
     let dispatch = msg =>
       GlobalContext.current().dispatch(Actions.Notification(msg));
-    <Feature_Notification.View.Pane
+    <Feature_Notification.View.List
       notifications={state.notifications}
       theme
       font=uiFont

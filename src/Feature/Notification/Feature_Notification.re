@@ -77,42 +77,55 @@ module View = {
   module FontAwesome = Oni_Components.FontAwesome;
   module FontIcon = Oni_Components.FontIcon;
 
-  // NOTIFICATION
+  // POPUP
 
-  module Notification = {
+  module Popup = {
+    module Constants = {
+      let popupDuration = Time.ms(3000);
+    };
+
     module Styles = {
       open Style;
 
-      let container = [
+      let container = (~background, ~yOffset) => [
+        position(`Absolute),
+        top(0),
+        bottom(0),
+        left(0),
+        right(0),
+        backgroundColor(background),
         flexDirection(`Row),
         alignItems(`Center),
         paddingHorizontal(10),
-        paddingVertical(5),
+        transform(Transform.[TranslateY(yOffset)]),
       ];
 
-      let text = (~font: UiFont.t, ~theme: Theme.t) => [
+      let text = (~foreground, ~background, font: UiFont.t) => [
         fontFamily(font.fontFile),
         fontSize(11.),
         textWrap(TextWrapping.NoWrap),
         marginLeft(6),
-        color(theme.foreground),
+        color(foreground),
+        backgroundColor(background),
       ];
-
-      let message = (~font, ~theme) => [
-        flexGrow(1),
-        ...text(~font, ~theme),
-      ];
-
-      let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
     };
 
-    let colorFor = (item, ~theme: Theme.t) =>
-      switch (item.kind) {
-      | Success => theme.notificationSuccessBackground
-      | Warning => theme.notificationWarningBackground
-      | Error => theme.notificationErrorBackground
-      | Info => theme.notificationInfoBackground
-      };
+    module Animations = {
+      open Animation;
+
+      let transitionDuration = Time.ms(150);
+      let totalDuration =
+        Time.(Constants.popupDuration + transitionDuration *. 2.);
+
+      let enter =
+        animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
+
+      let exit =
+        animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
+
+      let sequence =
+        enter |> andThen(~next=exit |> delay(Constants.popupDuration));
+    };
 
     let iconFor = item =>
       switch (item.kind) {
@@ -122,37 +135,97 @@ module View = {
       | Info => FontAwesome.infoCircle
       };
 
-    let make = (~item, ~theme: Theme.t, ~font, ~dispatch, ()) => {
+    let%component make = (~item, ~background, ~foreground, ~font, ()) => {
+      let%hook (yOffset, _animationState, _reset) =
+        Hooks.animation(Animations.sequence, ~active=true);
+
       let icon = () =>
-        <FontIcon
-          icon={iconFor(item)}
-          fontSize=16.
-          color={colorFor(item, ~theme)}
-        />;
+        <FontIcon icon={iconFor(item)} fontSize=16. color=foreground />;
 
-      let closeButton = () => {
-        let onClick = () => dispatch(Dismissed(item));
-
-        <Clickable onClick style=Styles.closeButton>
-          <FontIcon
-            icon=FontAwesome.times
-            fontSize=13.
-            color={theme.foreground}
-          />
-        </Clickable>;
-      };
-
-      <View style=Styles.container>
+      <View style={Styles.container(~background, ~yOffset)}>
         <icon />
-        <Text style={Styles.message(~font, ~theme)} text={item.message} />
-        <closeButton />
+        <Text
+          style={Styles.text(~foreground, ~background, font)}
+          text={item.message}
+        />
       </View>;
     };
   };
 
-  // PANE
+  // LIST
 
-  module Pane = {
+  module List = {
+    module Item = {
+      module Styles = {
+        open Style;
+
+        let container = [
+          flexDirection(`Row),
+          alignItems(`Center),
+          paddingHorizontal(10),
+          paddingVertical(5),
+        ];
+
+        let text = (~font: UiFont.t, ~theme: Theme.t) => [
+          fontFamily(font.fontFile),
+          fontSize(11.),
+          textWrap(TextWrapping.NoWrap),
+          marginLeft(6),
+          color(theme.foreground),
+        ];
+
+        let message = (~font, ~theme) => [
+          flexGrow(1),
+          ...text(~font, ~theme),
+        ];
+
+        let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
+      };
+
+      let colorFor = (item, ~theme: Theme.t) =>
+        switch (item.kind) {
+        | Success => theme.notificationSuccessBackground
+        | Warning => theme.notificationWarningBackground
+        | Error => theme.notificationErrorBackground
+        | Info => theme.notificationInfoBackground
+        };
+
+      let iconFor = item =>
+        switch (item.kind) {
+        | Success => FontAwesome.checkCircle
+        | Warning => FontAwesome.exclamationTriangle
+        | Error => FontAwesome.exclamationCircle
+        | Info => FontAwesome.infoCircle
+        };
+
+      let make = (~item, ~theme: Theme.t, ~font, ~dispatch, ()) => {
+        let icon = () =>
+          <FontIcon
+            icon={iconFor(item)}
+            fontSize=16.
+            color={colorFor(item, ~theme)}
+          />;
+
+        let closeButton = () => {
+          let onClick = () => dispatch(Dismissed(item));
+
+          <Clickable onClick style=Styles.closeButton>
+            <FontIcon
+              icon=FontAwesome.times
+              fontSize=13.
+              color={theme.foreground}
+            />
+          </Clickable>;
+        };
+
+        <View style=Styles.container>
+          <icon />
+          <Text style={Styles.message(~font, ~theme)} text={item.message} />
+          <closeButton />
+        </View>;
+      };
+    };
+
     module Styles = {
       open Style;
 
@@ -182,8 +255,7 @@ module View = {
 
     let make = (~notifications, ~theme, ~font, ~dispatch, ()) => {
       let items =
-        notifications
-        |> List.map(item => <Notification item theme font dispatch />);
+        notifications |> List.map(item => <Item item theme font dispatch />);
 
       let innerElement =
         if (items == []) {
