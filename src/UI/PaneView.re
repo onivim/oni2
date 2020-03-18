@@ -68,7 +68,7 @@ let content = (~selected, ~theme, ~uiFont, ~editorFont, ~state, ()) =>
     let dispatch = msg =>
       GlobalContext.current().dispatch(Actions.Notification(msg));
     <Feature_Notification.View.List
-      notifications={state.notifications}
+      model={state.notifications}
       theme
       font=uiFont
       dispatch

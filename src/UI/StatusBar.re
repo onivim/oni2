@@ -177,12 +177,15 @@ let notificationCount =
       ~font,
       ~foreground as color,
       ~background,
-      ~notifications,
+      ~notifications: Feature_Notification.model,
       ~contextMenu,
       ~onContextMenuItemSelect,
       (),
     ) => {
-  let text = notifications |> List.length |> string_of_int;
+  let text =
+    (notifications :> list(Feature_Notification.notification))
+    |> List.length
+    |> string_of_int;
 
   let onClick = () =>
     GlobalContext.current().dispatch(
@@ -292,7 +295,7 @@ let%component make =
     CustomHooks.useExpiration(
       ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
       ~equals=(a, b) => Feature_Notification.(a.id == b.id),
-      notifications,
+      (notifications :> list(Feature_Notification.notification)),
     );
 
   let (background, foreground) =
@@ -369,8 +372,8 @@ let%component make =
   let notificationPopups = () =>
     activeNotifications
     |> List.rev
-    |> List.map(item =>
-         <Feature_Notification.View.Popup item background foreground font />
+    |> List.map(model =>
+         <Feature_Notification.View.Popup model background foreground font />
        )
     |> React.listToElement;
 

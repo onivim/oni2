@@ -45,7 +45,7 @@ let update = (model, msg) => {
   };
 };
 
-let oldest = model => model |> List.rev |> List.hd; // NOTE: raises exception if empty
+// EFFECTS
 
 module Effects = {
   let create = (~kind=Info, message) =>
@@ -135,18 +135,18 @@ module View = {
       | Info => FontAwesome.infoCircle
       };
 
-    let%component make = (~item, ~background, ~foreground, ~font, ()) => {
+    let%component make = (~model, ~background, ~foreground, ~font, ()) => {
       let%hook (yOffset, _animationState, _reset) =
         Hooks.animation(Animations.sequence, ~active=true);
 
       let icon = () =>
-        <FontIcon icon={iconFor(item)} fontSize=16. color=foreground />;
+        <FontIcon icon={iconFor(model)} fontSize=16. color=foreground />;
 
       <View style={Styles.container(~background, ~yOffset)}>
         <icon />
         <Text
           style={Styles.text(~foreground, ~background, font)}
-          text={item.message}
+          text={model.message}
         />
       </View>;
     };
@@ -253,9 +253,8 @@ module View = {
       ];
     };
 
-    let make = (~notifications, ~theme, ~font, ~dispatch, ()) => {
-      let items =
-        notifications |> List.map(item => <Item item theme font dispatch />);
+    let make = (~model, ~theme, ~font, ~dispatch, ()) => {
+      let items = model |> List.map(item => <Item item theme font dispatch />);
 
       let innerElement =
         if (items == []) {
