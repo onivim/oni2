@@ -1,5 +1,5 @@
 {
-  "checksum": "472507a54a9c92b666bf8f8e0ed98268",
+  "checksum": "303498c6e4893e6e0b63ef7f0a091e7d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -283,14 +283,15 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-tree-sitter@github:glennsl/reason-tree-sitter#a5b5221@d41d8cd9": {
-      "id":
-        "reason-tree-sitter@github:glennsl/reason-tree-sitter#a5b5221@d41d8cd9",
+    "reason-tree-sitter@1.0.1001@d41d8cd9": {
+      "id": "reason-tree-sitter@1.0.1001@d41d8cd9",
       "name": "reason-tree-sitter",
-      "version": "github:glennsl/reason-tree-sitter#a5b5221",
+      "version": "1.0.1001",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/reason-tree-sitter#a5b5221" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-tree-sitter/-/reason-tree-sitter-1.0.1001.tgz#sha1:bd642ac513d19dc1151ab78d983cab779677cb31"
+        ]
       },
       "overrides": [],
       "dependencies": [
@@ -301,7 +302,7 @@
         "@opam/dune@opam:2.4.0@639d28a3",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
-      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
+      "devDependencies": []
     },
     "reason-textmate@2.3.1@d41d8cd9": {
       "id": "reason-textmate@2.3.1@d41d8cd9",
@@ -316,8 +317,7 @@
       "overrides": [],
       "dependencies": [
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
-        "refmterr@3.3.0@d41d8cd9",
-        "reason-oniguruma@github:glennsl/reason-oniguruma#18a8287@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9", "reason-oniguruma@6.94.1001@d41d8cd9",
         "ocaml@4.8.1000@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/ppx_let@opam:v0.12.0@b52d29f3",
@@ -368,14 +368,15 @@
       ],
       "devDependencies": []
     },
-    "reason-oniguruma@github:glennsl/reason-oniguruma#18a8287@d41d8cd9": {
-      "id":
-        "reason-oniguruma@github:glennsl/reason-oniguruma#18a8287@d41d8cd9",
+    "reason-oniguruma@6.94.1001@d41d8cd9": {
+      "id": "reason-oniguruma@6.94.1001@d41d8cd9",
       "name": "reason-oniguruma",
-      "version": "github:glennsl/reason-oniguruma#18a8287",
+      "version": "6.94.1001",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/reason-oniguruma#18a8287" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-oniguruma/-/reason-oniguruma-6.94.1001.tgz#sha1:ee1d3de3d2f91d43162fd6b76c6fad55101c7556"
+        ]
       },
       "overrides": [],
       "dependencies": [
@@ -386,7 +387,7 @@
         "@opam/dune@opam:2.4.0@639d28a3",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
-      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
+      "devDependencies": []
     },
     "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9": {
       "id":
@@ -1189,7 +1190,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
-        "reason-tree-sitter@github:glennsl/reason-tree-sitter#a5b5221@d41d8cd9",
+        "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@2.3.1@d41d8cd9", "reason-sdl2@2.10.3020@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#a897319@d41d8cd9",
