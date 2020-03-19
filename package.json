@@ -214,7 +214,7 @@
     "revery": "0.30.0",
     "revery-terminal": "github:revery-ui/revery-terminal#6b2f4e0",
     "reason-tree-sitter": "*",
-    "reason-textmate": "^2.3.0",
+    "reason-textmate": "^2.3.1",
     "esy-sdl2": "*",
     "esy-skia": "*",
     "@opam/fmt": "^0.8.8",
@@ -253,7 +253,6 @@
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "reason-tree-sitter": "glennsl/reason-tree-sitter#a5b5221",
     "reason-oniguruma": "glennsl/reason-oniguruma#18a8287",
-    "reason-textmate": "glennsl/reason-textmate#51bfa1f",
     "reason-harfbuzz": "revery-ui/reason-harfbuzz#eca58ea",
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4"
