@@ -250,7 +250,7 @@
     "yarn-pkg-config": "esy-ocaml/yarn-pkg-config#db3a0b6",
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
-    "reasonFuzz": "glennsl/reasonFuzz#d10bac6",
+    "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "reason-tree-sitter": "glennsl/reason-tree-sitter#a5b5221",
     "reason-oniguruma": "glennsl/reason-oniguruma#18a8287",
     "reason-textmate": "glennsl/reason-textmate#51bfa1f",
