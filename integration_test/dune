@@ -37,7 +37,6 @@
            ZenModeSplitTest
     )
     (libraries
-        libvim
         Oni_IntegrationTestLib
             ))
 
