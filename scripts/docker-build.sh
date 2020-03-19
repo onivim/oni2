@@ -7,3 +7,11 @@ node install-node-deps.js --production
 esy build
 esy x Oni2 -f --checkhealth
 esy create-release
+
+esy @test install
+esy @test build
+esy @test run
+
+esy @integrationtest install
+esy @integrationtest build
+esy @integrationtest run
