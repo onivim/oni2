@@ -163,7 +163,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   let handleTextInput = (state: State.t, k: string) => {
-      let actions = switch (Model.FocusManager.current(state)) {
+      switch (Model.FocusManager.current(state)) {
       | Editor
       | Wildmenu => [Actions.KeyboardInput(k)]
 
@@ -189,7 +189,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
       };
 
-    updateFromInput(state, k, actions);
   };
 
   /**
@@ -202,19 +201,31 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
 
-      let isTextInputActive = isTextInputActive();
       let bindingActions = getActionsForBinding(key, bindings, conditions);
 
-      if (bindingActions != []) {
-        bindingActions;
-        updateFromInput(state, "TODO", bindingActions);
-      } else {
-        let key = Handler.keyPressToCommand(~isTextInputActive, key);
+      let (newState, effects) = Keybindings.keyDown(
+        ~context=conditions,
+        ~key,
+        state.keyBindings
+      );
+    
+      let effectToActions = (effect) => switch(effect) {
+      | Keybindings.Command(command) => [Actions.Command(command)]
+      | Keybindings.Unhandled(key) => 
+        let isTextInputActive = isTextInputActive();
+        let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
         switch (key) {
-        | None => (state, Isolinear.Effect.none)
-        | Some(k) => handleTextInput(state, k)
+        | None => (newState, Isolinear.Effect.none)
+        | Some(k) => handleTextInput(newState, k)
         }
       };
+      
+
+      let actions = effects
+      |> List.map(effectToActions)
+      |> List.flatten;
+
+      updateFromInput(newState, "TODO", actions)
   };
 
   let handleKeyUp = (state: State.t, event: Revery.Key.KeyEvent.t) => {
@@ -245,7 +256,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     switch (action) {
     | KeyDown(event) => handleKeyPress(state, event);
     | KeyUp(event) => handleKeyUp(state, event)
-    | TextInput(event) => handleTextInput(state, event.text)
+    | TextInput(event) => 
+      let actions = handleTextInput(state, event.text)
+      updateFromInput(actions, "TODO", state);
 
     | _ => (state, Isolinear.Effect.none)
     };
