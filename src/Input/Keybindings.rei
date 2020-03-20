@@ -1,14 +1,10 @@
-module Keybinding: {
-  type t = {
-    key: string,
-    command: string,
-    condition: WhenExpr.t,
-  };
-};
-
-type t = list(Keybinding.t);
+type t;
 
 let empty: t;
+
+type effect =
+| Command(string)
+| Unhandled(EditorInput.key)
 
 /*
    [of_yojson_with_errors] parses the keybindings,

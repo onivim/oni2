@@ -222,6 +222,7 @@
     "@opam/logs": "^0.7.0",
     "@opam/re": "*",
     "editor-core-types": "*",
+    "editor-input": "*",
     "@glennsl/timber": "1.0.0",
     "refmterr": "*",
     "@esy-ocaml/libffi": "*",
@@ -231,10 +232,6 @@
   },
   "resolutions": {
     "@opam/yojson": "github:onivim/yojson:yojson.opam#f480aef",
-    "@opam/cmdliner": "1.0.2",
-    "@opam/js_of_ocaml": "3.5.2",
-    "@opam/js_of_ocaml-compiler": "3.5.0",
-    "@opam/js_of_ocaml-lwt": "3.5.2",
     "rebez": "github:jchavarri/rebez#46cbc183",
     "reasonFuzz": "github:bryphe/reasonFuzz#c04fab7",
     "pesy": "0.4.1",
@@ -257,7 +254,9 @@
     "reason-harfbuzz": "revery-ui/reason-harfbuzz#eca58ea",
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
     "reason-harfbuzz": "1.91.8000",
-    "esy-oniguruma": "onivim/esy-oniguruma#4698ce4"
+    "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
+    "editor-input": "link:../editor-input",
+    "reason-sdl2": "link:../reason-sdl2"
   },
   "devDependencies": {
     "ocaml": "~4.8",

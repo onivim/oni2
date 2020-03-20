@@ -100,7 +100,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     // NOTE: THis currently only generates a single command based on an ordinary
     // keybinding in order to emulate vscode's behaviour in the editors picker
-    List.filter_map((binding: Keybindings.Keybinding.t) =>
+
+    // TODO: Port over in keybindings
+    /*List.filter_map((binding: Keybindings.Keybinding.t) =>
       switch (binding.command) {
       | "workbench.action.openNextRecentlyUsedEditorInGroup" =>
         let createBinding = key =>
@@ -122,7 +124,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
       | _ => None
       }
-    );
+    );*/
   };
 
   let getActionsForBinding =
