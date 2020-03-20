@@ -128,20 +128,14 @@ let keyPressToCommand =
     None;
         // If AltGr is pressed, and we're in text input mode, we'll assume the text input handled it
   } else {
-    let keyPressString =
-      keyPressToString(
-        ~isTextInputActive,
-        ~shiftKey,
-        ~altKey,
-        ~ctrlKey,
-        ~superKey,
-        keycode,
-      );
-
-    switch (keyPressString) {
-    | None => None
-    | Some(_) as v => v
-    };
+    keyPressToString(
+      ~isTextInputActive,
+      ~shiftKey,
+      ~altKey,
+      ~ctrlKey,
+      ~superKey,
+      keycode,
+    );
   };
 };
 

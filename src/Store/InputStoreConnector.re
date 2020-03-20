@@ -125,11 +125,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       | _ => None
       }
     );*/
+    (_) => None
   };
 
   let getActionsForBinding =
       (inputKey, bindings, currentConditions: Hashtbl.t(string, bool)) => {
-    let inputKey = String.uppercase_ascii(inputKey);
+    //let inputKey = String.uppercase_ascii(inputKey);
 
     let getValue = v =>
       switch (Hashtbl.find_opt(currentConditions, v)) {
@@ -138,7 +139,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       | None => WhenExpr.Value.False
       };
 
-    Keybindings.Keybinding.(
+    /*Keybindings.Keybinding.(
       List.fold_left(
         (defaultAction, {key, command, condition}) =>
           Handler.matchesCondition(condition, inputKey, key, getValue)
@@ -146,7 +147,49 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         [],
         bindings,
       )
+    );*/
+    []
+  };
+
+  let updateFromInput = (state: State.t, key: string, actions) => {
+    let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
+    (
+      state,
+      immediateDispatchEffect([
+        Actions.NotifyKeyPressed(time, key),
+        ...actions,
+      ]),
     );
+  };
+
+  let handleTextInput = (state: State.t, k: string) => {
+      let actions = switch (Model.FocusManager.current(state)) {
+      | Editor
+      | Wildmenu => [Actions.KeyboardInput(k)]
+
+      | Quickmenu => [Actions.QuickmenuInput(k)]
+
+      | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
+
+      | FileExplorer => [
+          Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
+        ]
+
+      | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
+
+      | Terminal(id) =>
+        Feature_Terminal.shouldHandleInput(k)
+          ? [
+            Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
+          ]
+          : [Actions.KeyboardInput(k)]
+
+      | Search => [Actions.Search(Feature_Search.Input(k))]
+
+      | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
+      };
+
+    updateFromInput(state, k, actions);
   };
 
   /**
@@ -155,56 +198,23 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let handleKeyPress = (state: State.t, key) => {
+  let handleKeyPress = (state: State.t, key: Revery.Key.KeyEvent.t) => {
     let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
-    let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
 
-    switch (key) {
-    | Some(k) =>
-      let bindingActions = getActionsForBinding(k, bindings, conditions);
+      let isTextInputActive = isTextInputActive();
+      let bindingActions = getActionsForBinding(key, bindings, conditions);
 
-      let actions =
-        if (bindingActions != []) {
-          bindingActions;
-        } else {
-          switch (Model.FocusManager.current(state)) {
-          | Editor
-          | Wildmenu => [Actions.KeyboardInput(k)]
-
-          | Quickmenu => [Actions.QuickmenuInput(k)]
-
-          | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
-
-          | FileExplorer => [
-              Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
-            ]
-
-          | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
-
-          | Terminal(id) =>
-            Feature_Terminal.shouldHandleInput(k)
-              ? [
-                Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
-              ]
-              : [Actions.KeyboardInput(k)]
-
-          | Search => [Actions.Search(Feature_Search.Input(k))]
-
-          | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
-          };
-        };
-
-      (
-        state,
-        immediateDispatchEffect([
-          Actions.NotifyKeyPressed(time, k),
-          ...actions,
-        ]),
-      );
-
-    | None => (state, Isolinear.Effect.none)
-    };
+      if (bindingActions != []) {
+        bindingActions;
+        updateFromInput(state, "TODO", bindingActions);
+      } else {
+        let key = Handler.keyPressToCommand(~isTextInputActive, key);
+        switch (key) {
+        | None => (state, Isolinear.Effect.none)
+        | Some(k) => handleTextInput(state, k)
+        }
+      };
   };
 
   let handleKeyUp = (state: State.t, event: Revery.Key.KeyEvent.t) => {
@@ -233,15 +243,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event) =>
-      let isTextInputActive = isTextInputActive();
-      event
-      |> Handler.keyPressToCommand(~isTextInputActive)
-      |> handleKeyPress(state);
-
+    | KeyDown(event) => handleKeyPress(state, event);
     | KeyUp(event) => handleKeyUp(state, event)
-
-    | TextInput(event) => handleKeyPress(state, Some(event.text))
+    | TextInput(event) => handleTextInput(state, event.text)
 
     | _ => (state, Isolinear.Effect.none)
     };

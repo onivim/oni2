@@ -1,9 +1,25 @@
-module Keybinding = {
-  type t = {
+type effect =
+| Command(string)
+| Unhandled(EditorInput.key);
+
+let keyDown = (
+  ~context as _,
+  ~key as _,
+  bindings
+) => (bindings, []);
+
+// TODO;
+let count = _ => 0;
+
+  type keybinding = {
     key: string,
     command: string,
     condition: WhenExpr.t,
   };
+
+
+module Keybinding = {
+  type t = keybinding;
 
   let parseSimple =
     fun
@@ -107,7 +123,7 @@ module Legacy = {
     };
 };
 
-let of_yojson_with_errors = json => {
+let of_yojson_with_errors = (~default=[], json) => {
   switch (json) {
   // Current format:
   // [ ...bindings ]

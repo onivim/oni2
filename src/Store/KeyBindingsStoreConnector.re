@@ -12,7 +12,7 @@ module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 
 let start = () => {
   let defaultBindings =
-    Keybindings.Keybinding.[
+    Keybindings.[
       {
         key: "<UP>",
         command: "list.focusUp",
@@ -289,7 +289,7 @@ let start = () => {
 
           let parseResult =
             Yojson.Safe.from_file(keyBindingPath)
-            |> Keybindings.of_yojson_with_errors;
+            |> Keybindings.of_yojson_with_errors(~default=defaultBindings);
 
           switch (parseResult) {
           | Ok((bindings, _)) => bindings
@@ -299,9 +299,9 @@ let start = () => {
           };
         };
 
-      Log.infof(m => m("Loading %i keybindings", List.length(keyBindings)));
+      Log.infof(m => m("Loading %i keybindings", Keybindings.count(keyBindings)));
 
-      dispatch(Actions.KeyBindingsSet(defaultBindings @ keyBindings));
+      dispatch(Actions.KeyBindingsSet(keyBindings));
     });
 
   let updater = (state: State.t, action: Actions.t) => {
