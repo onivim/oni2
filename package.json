@@ -6,7 +6,7 @@
   "esy": {
     "build": "refmterr dune build -p Oni2 -j4",
     "buildEnv": {
-	"MACOSX_DEPLOYMENT_TARGET": "10.12"
+      "MACOSX_DEPLOYMENT_TARGET": "10.12"
     },
     "install": [
       "esy-installer Oni2.install",
@@ -254,7 +254,6 @@
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reason-textmate": "onivim/reason-textmate#98fbca5",
-    "reason-harfbuzz": "revery-ui/reason-harfbuzz#eca58ea",
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
     "reason-harfbuzz": "1.91.8000",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4"
