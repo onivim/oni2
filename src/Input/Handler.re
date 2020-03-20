@@ -99,15 +99,21 @@ let keyPressToString =
 };
 
 let keyPressToCommand =
-    (~isTextInputActive, {keymod, keycode, _}: Key.KeyEvent.t) => {
-  open Revery.Key;
-  let superKey = Keymod.isGuiDown(keymod);
+    (~isTextInputActive, {modifiers, keycode, _}: EditorInput.key) => {
+
+  let altGr = modifiers.altGr;
+  let shiftKey = modifiers.shift;
+  let altKey = modifiers.alt;
+  let ctrlKey = modifiers.control;
+  let superKey = modifiers.meta;
+  /*let superKey = Keymod.isGuiDown(keymod);
   let shiftKey = Keymod.isShiftDown(keymod);
   let altKey = Keymod.isAltDown(keymod);
   let ctrlKey = Keymod.isControlDown(keymod);
-  let altGr = Keymod.isAltGrKeyDown(keymod);
+  let altGr = Keymod.isAltGrKeyDown(keymod);*/
 
-  let (altGr, ctrlKey, altKey) =
+  /*let (altGr, ctrlKey, altKey) =
+    // TODO: Move to place where we convert revery key -> EditorInput.key
     switch (Revery.Environment.os) {
     // On Windows, we need to do some special handling here.
     // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
@@ -122,7 +128,7 @@ let keyPressToCommand =
       let altKey = altGr ? false : altKey;
       (altGr, ctrlKey, altKey);
     | _ => (altGr, ctrlKey, altKey)
-    };
+    };*/
 
   if (altGr && isTextInputActive) {
     None;

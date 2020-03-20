@@ -2,12 +2,6 @@ type effect =
 | Command(string)
 | Unhandled(EditorInput.key);
 
-let keyDown = (
-  ~context as _,
-  ~key as _,
-  bindings
-) => (bindings, []);
-
 // TODO;
 let count = _ => 0;
 
@@ -100,6 +94,77 @@ let empty = [];
 
 type t = list(Keybinding.t);
 
+let _keyToVimString = (key: EditorInput.key) => {
+
+  let name = ref(Sdl2.Keycode.getName(key.keycode));
+  
+  if (key.modifiers.alt) {
+    name := "A-" ++ name^;
+  };
+
+  if (key.modifiers.control) {
+    name := "C-" ++ name^;
+  };
+  
+  if (key.modifiers.shift) {
+    name := "S-" ++ name^;
+  };
+
+  if (key.modifiers.meta) {
+    name := "D-" ++ name^;
+  };
+
+  let wrapIfLong = str => {
+    if(String.length(str) > 1) {
+      "<" ++ str ++ ">"
+    } else {
+      str
+    }
+  };
+
+  let convertSdlName = fun
+  | "<ESCAPE>" => "<ESC>"
+  | "<RETURN>" => "<CR>"
+  | v => v;
+  
+  name^
+  |> String.uppercase_ascii
+  |> wrapIfLong
+  |> convertSdlName;
+};
+
+let keyDown = (
+  ~context,
+  ~key,
+  bindings
+) => {
+
+  let keyStr = _keyToVimString(key);
+
+  prerr_endline ("KEYSTR: " ++ keyStr);
+
+  let getValue = propertyName =>
+    switch (Hashtbl.find_opt(context, propertyName)) {
+    | Some(true) => WhenExpr.Value.True
+    | Some(false)
+    | None => WhenExpr.Value.False
+    };
+
+    let effects = List.fold_left(
+      (defaultAction, {key, command, condition}) =>
+        Handler.matchesCondition(condition, keyStr, key, getValue)
+          ? [Command(command)] : defaultAction,
+      [],
+      bindings,
+    )
+
+    if (effects == []) {
+      (bindings, [Unhandled(key)])
+    } else {
+      (bindings, effects)
+    }
+};
+
 // Old version of keybindings - the legacy format:
 // { bindings: [ ..bindings. ] }
 module Legacy = {
@@ -124,7 +189,7 @@ module Legacy = {
 };
 
 let of_yojson_with_errors = (~default=[], json) => {
-  switch (json) {
+  let previous = switch (json) {
   // Current format:
   // [ ...bindings ]
   | `List(bindingsJson) =>
@@ -141,4 +206,9 @@ let of_yojson_with_errors = (~default=[], json) => {
        });
   | _ => Error("Unable to parse keybindings - not a JSON array.")
   };
+
+  previous
+  |> Stdlib.Result.map(((bindings, errors)) => {
+      (default @ bindings, errors)
+  });
 };

@@ -198,25 +198,45 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      a revery element is focused oni2 should defer to revery
    */
   let handleKeyPress = (state: State.t, key: Revery.Key.KeyEvent.t) => {
-    let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
 
-      let bindingActions = getActionsForBinding(key, bindings, conditions);
 
-      let (newState, effects) = Keybindings.keyDown(
+      let shift = Revery.Key.Keymod.isShiftDown(key.keymod);
+      let control  = Revery.Key.Keymod.isControlDown(key.keymod);
+      let alt = Revery.Key.Keymod.isAltDown(key.keymod);
+      let meta = Revery.Key.Keymod.isGuiDown(key.keymod);
+      
+      let inputKey = EditorInput.{
+        scancode: key.scancode,
+        keycode: key.keycode,
+        modifiers: EditorInput.Modifiers.create(
+          ~shift,
+          ~control,
+          ~alt,
+          ~meta,
+          ()
+        ),
+        text: ""
+      };
+      let (keyBindings, effects) = Keybindings.keyDown(
         ~context=conditions,
-        ~key,
+        ~key=inputKey,
         state.keyBindings
       );
+
+      let newState = {
+        ...state,
+        keyBindings,
+      };
     
       let effectToActions = (effect) => switch(effect) {
       | Keybindings.Command(command) => [Actions.Command(command)]
       | Keybindings.Unhandled(key) => 
         let isTextInputActive = isTextInputActive();
         let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
-        switch (key) {
-        | None => (newState, Isolinear.Effect.none)
-        | Some(k) => handleTextInput(newState, k)
+        switch (maybeKeyString) {
+        | None => []
+        | Some(k) => handleTextInput(state, k)
         }
       };
       
@@ -258,7 +278,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | KeyUp(event) => handleKeyUp(state, event)
     | TextInput(event) => 
       let actions = handleTextInput(state, event.text)
-      updateFromInput(actions, "TODO", state);
+      updateFromInput(state, "TODO", actions);
 
     | _ => (state, Isolinear.Effect.none)
     };
