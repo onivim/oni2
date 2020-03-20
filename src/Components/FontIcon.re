@@ -21,7 +21,13 @@ module Styles = {
 let codeToIcon = icon => ZedBundled.singleton(Uchar.of_int(icon));
 
 let make =
-    (~icon, ~fontFamily=FontAwesome.fontFamily, ~fontSize=15., ~color, ()) =>
+    (
+      ~icon,
+      ~fontFamily=FontAwesome.FontFamily.solid,
+      ~fontSize=15.,
+      ~color,
+      (),
+    ) =>
   <Text
     text={codeToIcon(icon)}
     style={Styles.text(~fontFamily, ~fontSize, ~color)}
