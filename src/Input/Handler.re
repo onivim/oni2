@@ -100,17 +100,16 @@ let keyPressToString =
 
 let keyPressToCommand =
     (~isTextInputActive, {modifiers, keycode, _}: EditorInput.key) => {
-
   let altGr = modifiers.altGr;
   let shiftKey = modifiers.shift;
   let altKey = modifiers.alt;
   let ctrlKey = modifiers.control;
   let superKey = modifiers.meta;
   /*let superKey = Keymod.isGuiDown(keymod);
-  let shiftKey = Keymod.isShiftDown(keymod);
-  let altKey = Keymod.isAltDown(keymod);
-  let ctrlKey = Keymod.isControlDown(keymod);
-  let altGr = Keymod.isAltGrKeyDown(keymod);*/
+    let shiftKey = Keymod.isShiftDown(keymod);
+    let altKey = Keymod.isAltDown(keymod);
+    let ctrlKey = Keymod.isControlDown(keymod);
+    let altGr = Keymod.isAltGrKeyDown(keymod);*/
 
   /*let (altGr, ctrlKey, altKey) =
     // TODO: Move to place where we convert revery key -> EditorInput.key

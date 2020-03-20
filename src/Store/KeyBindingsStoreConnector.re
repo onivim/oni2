@@ -299,7 +299,9 @@ let start = () => {
           };
         };
 
-      Log.infof(m => m("Loading %i keybindings", Keybindings.count(keyBindings)));
+      Log.infof(m =>
+        m("Loading %i keybindings", Keybindings.count(keyBindings))
+      );
 
       dispatch(Actions.KeyBindingsSet(keyBindings));
     });

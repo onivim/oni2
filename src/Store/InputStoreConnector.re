@@ -103,29 +103,29 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     // TODO: Port over in keybindings
     /*List.filter_map((binding: Keybindings.Keybinding.t) =>
-      switch (binding.command) {
-      | "workbench.action.openNextRecentlyUsedEditorInGroup" =>
-        let createBinding = key =>
-          Keybindings.Keybinding.{
-            key,
-            command: "list.select",
-            condition: Defined("inEditorsPicker"),
+        switch (binding.command) {
+        | "workbench.action.openNextRecentlyUsedEditorInGroup" =>
+          let createBinding = key =>
+            Keybindings.Keybinding.{
+              key,
+              command: "list.select",
+              condition: Defined("inEditorsPicker"),
+            };
+
+          if (containsCtrl(binding.key)) {
+            Some(createBinding("<C>"));
+          } else if (containsShift(binding.key)) {
+            Some(createBinding("<S>"));
+          } else if (containsAlt(binding.key)) {
+            Some(createBinding("<A>"));
+          } else {
+            None;
           };
 
-        if (containsCtrl(binding.key)) {
-          Some(createBinding("<C>"));
-        } else if (containsShift(binding.key)) {
-          Some(createBinding("<S>"));
-        } else if (containsAlt(binding.key)) {
-          Some(createBinding("<A>"));
-        } else {
-          None;
-        };
-
-      | _ => None
-      }
-    );*/
-    (_) => None
+        | _ => None
+        }
+      );*/
+    _ => None;
   };
 
   let getActionsForBinding =
@@ -140,15 +140,15 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       };
 
     /*Keybindings.Keybinding.(
-      List.fold_left(
-        (defaultAction, {key, command, condition}) =>
-          Handler.matchesCondition(condition, inputKey, key, getValue)
-            ? [Actions.Command(command)] : defaultAction,
-        [],
-        bindings,
-      )
-    );*/
-    []
+        List.fold_left(
+          (defaultAction, {key, command, condition}) =>
+            Handler.matchesCondition(condition, inputKey, key, getValue)
+              ? [Actions.Command(command)] : defaultAction,
+          [],
+          bindings,
+        )
+      );*/
+    [];
   };
 
   let updateFromInput = (state: State.t, key: string, actions) => {
@@ -163,32 +163,29 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   let handleTextInput = (state: State.t, k: string) => {
-      switch (Model.FocusManager.current(state)) {
-      | Editor
-      | Wildmenu => [Actions.KeyboardInput(k)]
+    switch (Model.FocusManager.current(state)) {
+    | Editor
+    | Wildmenu => [Actions.KeyboardInput(k)]
 
-      | Quickmenu => [Actions.QuickmenuInput(k)]
+    | Quickmenu => [Actions.QuickmenuInput(k)]
 
-      | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
+    | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
 
-      | FileExplorer => [
-          Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
-        ]
+    | FileExplorer => [
+        Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
+      ]
 
-      | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
+    | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
 
-      | Terminal(id) =>
-        Feature_Terminal.shouldHandleInput(k)
-          ? [
-            Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
-          ]
-          : [Actions.KeyboardInput(k)]
+    | Terminal(id) =>
+      Feature_Terminal.shouldHandleInput(k)
+        ? [Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k}))]
+        : [Actions.KeyboardInput(k)]
 
-      | Search => [Actions.Search(Feature_Search.Input(k))]
+    | Search => [Actions.Search(Feature_Search.Input(k))]
 
-      | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
-      };
-
+    | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
+    };
   };
 
   /**
@@ -200,52 +197,44 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleKeyPress = (state: State.t, key: Revery.Key.KeyEvent.t) => {
     let conditions = conditionsOfState(state);
 
+    let shift = Revery.Key.Keymod.isShiftDown(key.keymod);
+    let control = Revery.Key.Keymod.isControlDown(key.keymod);
+    let alt = Revery.Key.Keymod.isAltDown(key.keymod);
+    let meta = Revery.Key.Keymod.isGuiDown(key.keymod);
 
-      let shift = Revery.Key.Keymod.isShiftDown(key.keymod);
-      let control  = Revery.Key.Keymod.isControlDown(key.keymod);
-      let alt = Revery.Key.Keymod.isAltDown(key.keymod);
-      let meta = Revery.Key.Keymod.isGuiDown(key.keymod);
-      
-      let inputKey = EditorInput.{
+    let inputKey =
+      EditorInput.{
         scancode: key.scancode,
         keycode: key.keycode,
-        modifiers: EditorInput.Modifiers.create(
-          ~shift,
-          ~control,
-          ~alt,
-          ~meta,
-          ()
-        ),
-        text: ""
+        modifiers:
+          EditorInput.Modifiers.create(~shift, ~control, ~alt, ~meta, ()),
+        text: "",
       };
-      let (keyBindings, effects) = Keybindings.keyDown(
+    let (keyBindings, effects) =
+      Keybindings.keyDown(
         ~context=conditions,
         ~key=inputKey,
-        state.keyBindings
+        state.keyBindings,
       );
 
-      let newState = {
-        ...state,
-        keyBindings,
-      };
-    
-      let effectToActions = (effect) => switch(effect) {
+    let newState = {...state, keyBindings};
+
+    let effectToActions = effect =>
+      switch (effect) {
       | Keybindings.Command(command) => [Actions.Command(command)]
-      | Keybindings.Unhandled(key) => 
+      | Keybindings.Unhandled(key) =>
         let isTextInputActive = isTextInputActive();
-        let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
+        let maybeKeyString =
+          Handler.keyPressToCommand(~isTextInputActive, key);
         switch (maybeKeyString) {
         | None => []
         | Some(k) => handleTextInput(state, k)
-        }
+        };
       };
-      
 
-      let actions = effects
-      |> List.map(effectToActions)
-      |> List.flatten;
+    let actions = effects |> List.map(effectToActions) |> List.flatten;
 
-      updateFromInput(newState, "TODO", actions)
+    updateFromInput(newState, "TODO", actions);
   };
 
   let handleKeyUp = (state: State.t, event: Revery.Key.KeyEvent.t) => {
@@ -274,10 +263,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event) => handleKeyPress(state, event);
+    | KeyDown(event) => handleKeyPress(state, event)
     | KeyUp(event) => handleKeyUp(state, event)
-    | TextInput(event) => 
-      let actions = handleTextInput(state, event.text)
+    | TextInput(event) =>
+      let actions = handleTextInput(state, event.text);
       updateFromInput(state, "TODO", actions);
 
     | _ => (state, Isolinear.Effect.none)
