@@ -6,8 +6,8 @@
   "override": {
       "build": ["dune build --verbose -p Oni2,OniIntegrationTests -j4"],
       "install": [
-          "esy-installer #{self.target_dir}/default/Oni2.install",
-          "esy-installer #{self.target_dir}/default/OniIntegrationTests.install"
+          "esy-installer Oni2.install",
+          "esy-installer OniIntegrationTests.install"
       ]
   }
 }
