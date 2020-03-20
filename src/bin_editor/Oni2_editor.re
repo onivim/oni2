@@ -225,6 +225,14 @@ if (cliOptions.syntaxHighlightService) {
     dispatch(Model.Actions.Init);
     runEffects();
 
+    // Add a quit handler, so that regardless of how we quit -
+    // we have the opportunity to clean up
+    Revery.App.onBeforeQuit(app, () => {
+       if (!currentState^.isQuitting) {
+         dispatch(Model.Actions.Quit(true));
+       }
+    }) |> (ignore: Revery.App.unsubscribe => unit);
+
     List.iter(
       v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
       cliOptions.filesToOpen,
