@@ -38,6 +38,7 @@
     )
     (libraries
         Oni_IntegrationTestLib
+        reason-native-crash-utils.asan
             ))
 
 (install

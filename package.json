@@ -4,9 +4,9 @@
   "description": "Lightweight code editor",
   "license": "MIT",
   "esy": {
-    "build": "dune build --verbose -p Oni2 -j4",
+    "build": "refmterr dune build -p Oni2 -j4",
     "buildEnv": {
-	"MACOSX_DEPLOYMENT_TARGET": "10.12"
+      "MACOSX_DEPLOYMENT_TARGET": "10.12"
     },
     "install": [
       "esy-installer Oni2.install",

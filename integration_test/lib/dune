@@ -1,7 +1,5 @@
 (library
     (name Oni_IntegrationTestLib)
     (modules (:standard))
-    (flags -cclib -v)
-    (ocamlopt_flags -verbose)
     (preprocess (pps brisk-reconciler.ppx ppx_deriving_yojson ppx_deriving.show))
     (libraries Oni2.feature.terminal Oni2.store Oni2.extensions Oni2.model Oni2.core))
