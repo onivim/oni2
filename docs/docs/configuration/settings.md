@@ -99,8 +99,6 @@ If the display scaling is not correct, you can override by using the `--force-de
 oni2 --force-device-scale-factor=2.0
 ```
 
-> __NOTE:__ Due to a [current limitation in Revery](https://github.com/revery-ui/revery/issues/598), fractional scaling is not yet supported
-
 ### Experimental
 
 Experimental features are features that we are working to stabilize and turn on-by-default.
