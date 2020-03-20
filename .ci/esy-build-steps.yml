@@ -27,6 +27,8 @@ steps:
     displayName: 'Unit Tests: esy test-ci (round 1)'
   - script: esy cleanup .
     displayName: "esy cleanup . (prune disk space)"
+  - script: rm -rf _esy
+    displayName: "rm -rf _esy (prune disk space)"
   - script: esy @integrationtest install
     displayName: 'Integration Tests: install'
   - script: esy @integrationtest run
