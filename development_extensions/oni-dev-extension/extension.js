@@ -168,6 +168,9 @@ function activate(context) {
 
     const editorFontFamily = vscode.workspace.getConfiguration().get("editor.fontFamily");
     console.error("Editor Font Family: ", editorFontFamily);
+
+    const dontCrash = vscode.workspace.getConfiguration().get("developer.oni.dont-crash");
+    console.error("Don't crash: ", dontCrash);
 }
 
 // this method is called when your extension is deactivated

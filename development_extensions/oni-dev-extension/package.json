@@ -30,6 +30,14 @@
 				"title": "Onivim - Developer: Show Workspace Folders"
 			}
 		],
+		"configuration": {
+			"properties": {
+				"developer.oni.dont-crash": {
+					"type": "boolean",
+					"default": false
+				}
+			}
+		},
 		"languages": [{
 			"id": "oni-dev",
 			"extensions": [
