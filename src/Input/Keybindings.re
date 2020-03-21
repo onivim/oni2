@@ -85,14 +85,16 @@ module Internal = {
     };
 };
 
-module Input = EditorInput.Make({
-  type context = Hashtbl.t(string, bool);
-  type payload = string;
-});
+module Input =
+  EditorInput.Make({
+    type context = Hashtbl.t(string, bool);
+    type payload = string;
+  });
 
-type effect = 
-| Command(string)
-| Unhandled(EditorInput.key);
+type effect =
+  | Command(string)
+  | Text(string)
+  | Unhandled(EditorInput.key);
 
 let empty = Input.empty;
 
@@ -133,15 +135,23 @@ let _keyToVimString = (key: EditorInput.key) => {
   name^ |> String.uppercase_ascii |> wrapIfLong |> convertSdlName;
 };
 
-
-let mapEffect = fun
-| Input.Execute(cmd) => Command(cmd)
-| Input.Unhandled(key) => Unhandled(key);
+let mapEffect =
+  fun
+  | Input.Execute(cmd) => Command(cmd)
+  | Input.Unhandled(key) => Unhandled(key)
+  | Input.Text(text) => Text(text);
 
 let mapEffects = List.map(mapEffect);
 
 let keyDown = (~context, ~key, bindings) => {
-  let (bindings, effects) = Input.keyDown(~context, key, bindings);
+  let (bindings, effects) = Input.keyDown(~context, ~key, bindings);
+
+  let mappedEffects = mapEffects(effects);
+  (bindings, mappedEffects);
+};
+
+let text = (~text: string, bindings) => {
+  let (bindings, effects) = Input.text(~text, bindings);
 
   let mappedEffects = mapEffects(effects);
   (bindings, mappedEffects);
@@ -170,43 +180,38 @@ module Legacy = {
     };
 };
 
-let strToSdl = fun
-| "ESC" => "Escape"
-| "CR" => "Enter"
-| "UP" => "Up"
-| "DOWN" => "Down"
-| "LEFT" => "Left"
-| "RIGHT" => "Right"
-| "TAB" => "Tab"
-| str => str;
+let strToSdl =
+  fun
+  | "ESC" => "Escape"
+  | "CR" => "Enter"
+  | "UP" => "Up"
+  | "DOWN" => "Down"
+  | "LEFT" => "Left"
+  | "RIGHT" => "Right"
+  | "TAB" => "Tab"
+  | str => str;
 
 let wrap = (f, s) => {
-  prerr_endline ("S: " ++ s);
+  prerr_endline("S: " ++ s);
   let ret = f(s);
-  prerr_endline ("RESULT: " ++ ret);
+  prerr_endline("RESULT: " ++ ret);
   ret;
-}
-
-let codeToOpt = fun
-| 0 => None
-| x => Some(x);
-
-let getKeycode = keycodeStr => {
-  keycodeStr
-  |> wrap(strToSdl)
-  |> Sdl2.Keycode.ofName
-  |> codeToOpt;
 };
 
-let getScancode = scancodeStr =>  {
-  scancodeStr
-  |> strToSdl
-  |> Sdl2.Scancode.ofName
-  |> codeToOpt;
+let codeToOpt =
+  fun
+  | 0 => None
+  | x => Some(x);
+
+let getKeycode = keycodeStr => {
+  keycodeStr |> wrap(strToSdl) |> Sdl2.Keycode.ofName |> codeToOpt;
+};
+
+let getScancode = scancodeStr => {
+  scancodeStr |> strToSdl |> Sdl2.Scancode.ofName |> codeToOpt;
 };
 
 let addBinding = ({key, command, condition}, bindings) => {
-
   let evaluateCondition = (whenExpr, context) => {
     let getValue = v =>
       switch (Hashtbl.find_opt(context, v)) {
@@ -214,47 +219,42 @@ let addBinding = ({key, command, condition}, bindings) => {
       | Some(false)
       | None => WhenExpr.Value.False
       };
-  
+
     WhenExpr.evaluate(whenExpr, getValue);
   };
 
-  let matchers = EditorInput.Matcher.parse(
-     ~getKeycode,
-     ~getScancode,
-     key,
-  );
+  let matchers = EditorInput.Matcher.parse(~getKeycode, ~getScancode, key);
 
   matchers
   |> Stdlib.Result.map(m => {
-    let (bindings, _id) = Input.addBinding(
-      m,
-      evaluateCondition(condition),
-      command,
-      bindings,
-    );
-    bindings
-  });
+       let (bindings, _id) =
+         Input.addBinding(
+           m,
+           evaluateCondition(condition),
+           command,
+           bindings,
+         );
+       bindings;
+     });
 };
 
 let evaluateBindings = (bindings: list(keybinding), errors) => {
-
   let rec loop = (bindings, errors, currentBindings) => {
-  switch (bindings) {
-  | [hd, ...tail] =>
-      switch(addBinding(hd, currentBindings)) {
-      | Ok(newBindings) => loop(tail, errors, newBindings);
+    switch (bindings) {
+    | [hd, ...tail] =>
+      switch (addBinding(hd, currentBindings)) {
+      | Ok(newBindings) => loop(tail, errors, newBindings)
       | Error(msg) =>
-      prerr_endline ("FAIL: " ++ msg);
-      failwith("ohno");
-      loop(tail, [msg, ...errors], currentBindings);
+        prerr_endline("FAIL: " ++ msg);
+        failwith("ohno");
+        loop(tail, [msg, ...errors], currentBindings);
       }
-  | [] => (currentBindings, errors)
-  }
+    | [] => (currentBindings, errors)
+    };
   };
 
   loop(bindings, errors, Input.empty);
-  
-}
+};
 
 let of_yojson_with_errors = (~default=[], json) => {
   let previous =

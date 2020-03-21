@@ -4,6 +4,7 @@ let empty: t;
 
 type effect =
   | Command(string)
+  | Text(string)
   | Unhandled(EditorInput.key);
 
 let count: t => int;
@@ -11,6 +12,8 @@ let count: t => int;
 let keyDown:
   (~context: Hashtbl.t(string, bool), ~key: EditorInput.key, t) =>
   (t, list(effect));
+
+let text: (~text: string, t) => (t, list(effect));
 
 type keybinding = {
   key: string,
