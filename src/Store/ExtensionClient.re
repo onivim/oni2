@@ -147,31 +147,16 @@ let create = (~extensions, ~setup: Setup.t) => {
   let defaults = Configuration.Model.ofExtensions(manifests);
   let keys = ["reason_language_server.location"];
 
-  let contents =
-    `Assoc([
-      (
-        "reason_language_server",
-        `Assoc([("location", `String(setup.rlsPath))]),
-      ),
-      (
-        "terminal",
-        `Assoc([
-          (
-            "integrated",
-            `Assoc([
-              (
-                "env",
-                `Assoc([
-                  ("windows", `Null),
-                  ("linux", `Null),
-                  ("osx", `Null),
-                ]),
-              ),
-            ]),
-          ),
-        ]),
-      ),
+  let hardCoded =
+    Config.Settings.fromList([
+      ("reason_language_server.location", Json.Encode.string(setup.rlsPath)),
+      ("terminal.integratied.enc.windows", Json.Encode.null),
+      ("terminal.integratied.enc.linux", Json.Encode.null),
+      ("terminal.integratied.enc.osx", Json.Encode.null),
     ]);
+
+  let contents = hardCoded |> Config.Settings.toJson;
+
   let user = Configuration.Model.create(~keys, contents);
 
   let initialConfiguration = Configuration.create(~defaults, ~user, ());
