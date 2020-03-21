@@ -1,6 +1,5 @@
 open Rely.MatcherTypes;
 
-open Oni_Core.Utility;
 open Kernel;
 
 // TREE EXTENSIONS

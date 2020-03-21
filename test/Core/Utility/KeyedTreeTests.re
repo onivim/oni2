@@ -1,7 +1,5 @@
 open TestFramework;
 
-open Oni_Core.Utility;
-
 module Tree = Kernel.KeyedStringTree;
 
 module TreeDSL = {
