@@ -81,26 +81,26 @@ let errorCount = v =>
 
 describe("Keybindings", ({describe, _}) => {
   describe("parsing", ({test, _}) => {
-    test("basic key binding", ({expect}) => {
+    test("basic key binding", ({expect, _}) => {
       let result = of_yojson_with_errors(keybindingsJSON);
       expect.bool(isOk(result)).toBe(true);
       expect.int(bindingCount(result)).toBe(1);
       expect.int(errorCount(result)).toBe(0);
     });
-    test("basic key binding with comment", ({expect}) => {
+    test("basic key binding with comment", ({expect, _}) => {
       let result = of_yojson_with_errors(keybindingsJSONWithComment);
       expect.bool(isOk(result)).toBe(true);
       expect.int(bindingCount(result)).toBe(1);
       expect.int(errorCount(result)).toBe(0);
     });
-    test("legacy keybinding with new expression", ({expect}) => {
+    test("legacy keybinding with new expression", ({expect, _}) => {
       let result =
         of_yojson_with_errors(legacyKeyBindingsWithNewExpressionJSON);
       expect.bool(isOk(result)).toBe(true);
       expect.int(bindingCount(result)).toBe(1);
       expect.int(errorCount(result)).toBe(0);
     });
-    test("regression test: #1152 (legacy expression)", ({expect}) => {
+    test("regression test: #1152 (legacy expression)", ({expect, _}) => {
       let result = of_yojson_with_errors(regressionTest1152);
       expect.bool(isOk(result)).toBe(true);
       expect.int(bindingCount(result)).toBe(1);
@@ -116,7 +116,7 @@ describe("Keybindings", ({describe, _}) => {
         },
       );
     });
-    test("regression test: #1160 (legacy binding)", ({expect}) => {
+    test("regression test: #1160 (legacy binding)", ({expect, _}) => {
       let result = of_yojson_with_errors(regressionTest1160);
       expect.bool(isOk(result)).toBe(true);
       expect.int(bindingCount(result)).toBe(4);

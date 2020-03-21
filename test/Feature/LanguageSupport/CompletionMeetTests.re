@@ -13,7 +13,7 @@ describe("CompletionMeet", ({describe, _}) => {
     let line0column2 = Location.{line: Index.zero, column: Index.(zero + 2)};
     let line0column8 = Location.{line: Index.zero, column: Index.(zero + 8)};
 
-    test("empty line - no meet", ({expect}) => {
+    test("empty line - no meet", ({expect, _}) => {
       let result =
         CompletionMeet.fromLine(
           ~index=Index.zero,
@@ -23,7 +23,7 @@ describe("CompletionMeet", ({describe, _}) => {
       expect.equal(result, None);
     });
 
-    test("single character at beginning", ({expect}) => {
+    test("single character at beginning", ({expect, _}) => {
       let result =
         CompletionMeet.fromLine(
           ~index=Index.(zero + 1),
@@ -37,7 +37,7 @@ describe("CompletionMeet", ({describe, _}) => {
       expect.equal(result, Some(expected));
     });
 
-    test("spaces prior to character", ({expect}) => {
+    test("spaces prior to character", ({expect, _}) => {
       let result =
         CompletionMeet.fromLine(
           ~index=Index.(zero + 1),
@@ -50,7 +50,7 @@ describe("CompletionMeet", ({describe, _}) => {
       expect.equal(result, Some(expected));
     });
 
-    test("longer base", ({expect}) => {
+    test("longer base", ({expect, _}) => {
       let result =
         CompletionMeet.fromLine(
           ~index=Index.(zero + 4),
@@ -62,7 +62,7 @@ describe("CompletionMeet", ({describe, _}) => {
       expect.equal(result, Some(expected));
     });
 
-    test("default trigger character", ({expect}) => {
+    test("default trigger character", ({expect, _}) => {
       let result =
         CompletionMeet.fromLine(
           ~index=Index.(zero + 1),
@@ -74,7 +74,7 @@ describe("CompletionMeet", ({describe, _}) => {
       expect.equal(result, Some(expected));
     });
 
-    test("default trigger character with base", ({expect}) => {
+    test("default trigger character with base", ({expect, _}) => {
       let result =
         CompletionMeet.fromLine(
           ~index=Index.(zero + 10),

@@ -6,13 +6,13 @@ let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
 
 describe("BufferLine", ({describe, _}) => {
   describe("subExn", ({test, _}) => {
-    test("sub in middle of string", ({expect}) => {
+    test("sub in middle of string", ({expect, _}) => {
       let bufferLine = makeLine("abcd");
 
       let str = BufferLine.subExn(~index=1, ~length=2, bufferLine);
       expect.string(str).toEqual("bc");
     });
-    test("clamps to end of string", ({expect}) => {
+    test("clamps to end of string", ({expect, _}) => {
       let bufferLine = makeLine("abcd");
 
       let str = BufferLine.subExn(~index=1, ~length=10, bufferLine);
@@ -20,13 +20,13 @@ describe("BufferLine", ({describe, _}) => {
     });
   });
   describe("lengthBounded", ({test, _}) => {
-    test("max less than total length", ({expect}) => {
+    test("max less than total length", ({expect, _}) => {
       let bufferLine = makeLine("abc");
 
       let len = BufferLine.lengthBounded(~max=2, bufferLine);
       expect.int(len).toBe(2);
     });
-    test("max greater than total length", ({expect}) => {
+    test("max greater than total length", ({expect, _}) => {
       let bufferLine = makeLine("abc");
 
       let len = BufferLine.lengthBounded(~max=5, bufferLine);
@@ -34,7 +34,7 @@ describe("BufferLine", ({describe, _}) => {
     });
   });
   describe("getPositionAndWidth", ({test, _}) => {
-    test("empty line", ({expect}) => {
+    test("empty line", ({expect, _}) => {
       let bufferLine = makeLine("");
       let (position, width) =
         BufferLine.getPositionAndWidth(~index=0, bufferLine);
@@ -42,7 +42,7 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(position).toBe(0);
       expect.int(width).toBe(1);
     });
-    test("position past end of string", ({expect}) => {
+    test("position past end of string", ({expect, _}) => {
       let bufferLine = makeLine("abc");
       let (position, width) =
         BufferLine.getPositionAndWidth(~index=4, bufferLine);
@@ -50,7 +50,7 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(position).toBe(3);
       expect.int(width).toBe(1);
     });
-    test("tab settings are respected for width", ({expect}) => {
+    test("tab settings are respected for width", ({expect, _}) => {
       let indentation =
         IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=3, ());
 
@@ -59,7 +59,7 @@ describe("BufferLine", ({describe, _}) => {
         BufferLine.getPositionAndWidth(~index=0, bufferLine);
       expect.int(width).toBe(3);
     });
-    test("tab settings impact position", ({expect}) => {
+    test("tab settings impact position", ({expect, _}) => {
       let indentation =
         IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=3, ());
 

@@ -6,7 +6,7 @@ module EditorDiffMarkers = Feature_Editor.EditorDiffMarkers;
 
 describe("EditorDiffMarkers", ({describe, _}) => {
   describe("generate", ({test, _}) => {
-    test("single added", ({expect}) => {
+    test("single added", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", ".", "c", "d"|];
 
@@ -24,7 +24,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("block added", ({expect}) => {
+    test("block added", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", ".", ".", ".", "c", "d"|];
 
@@ -50,7 +50,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("single deleted", ({expect}) => {
+    test("single deleted", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", "d"|];
 
@@ -66,7 +66,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("block deleted from beginning", ({expect}) => {
+    test("block deleted from beginning", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"c", "d"|];
 
@@ -81,7 +81,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("block deleted from end", ({expect}) => {
+    test("block deleted from end", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b"|];
 
@@ -96,7 +96,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("block deleted entirely", ({expect}) => {
+    test("block deleted entirely", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [||];
 
@@ -111,7 +111,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("single modified", ({expect}) => {
+    test("single modified", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", "C", "d"|];
 
@@ -127,7 +127,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("block modified", ({expect}) => {
+    test("block modified", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "B", "C", "d"|];
 
@@ -143,7 +143,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("add + modify", ({expect}) => {
+    test("add + modify", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", ".", "B", "c", "d"|];
 
@@ -161,7 +161,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("delete + modify", ({expect}) => {
+    test("delete + modify", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "C", "d"|];
 
@@ -177,7 +177,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("delete + add + delete", ({expect}) => {
+    test("delete + add + delete", ({expect, _}) => {
       let was = [|"a", "b", "c", "d", "e", "f", "g"|];
       let now = [|"a", "c", ".", "d", "f", "g"|];
 
@@ -202,7 +202,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("delete block + add + delete", ({expect}) => {
+    test("delete block + add + delete", ({expect, _}) => {
       let was = [|"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"|];
       let now = [|"a", "d", ".", "e", "h", "i", "j"|];
 
@@ -230,7 +230,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       };
     });
 
-    test("delete + add + delete block", ({expect}) => {
+    test("delete + add + delete block", ({expect, _}) => {
       let was = [|"a", "b", "c", "d", "e", "f", "g", "h"|];
       let now = [|"a", "c", ".", "d", "g", "h"|];
 
