@@ -281,7 +281,7 @@ describe("handleInputS#handleInput", ({describe, _}) => {
          });
 
          test(
-           "Doesn't remove character if cursor at the beginnig",
+           "Doesn't remove character if cursor at the beginning",
            ({expect, _}) => {
            let selection = collapsedSelection(0);
            let expected = collapsedSelection(0);
