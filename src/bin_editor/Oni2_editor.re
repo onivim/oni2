@@ -217,7 +217,6 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
       setActiveWindow: (splitId, editorGroupId) =>
         dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
-      hideNotification: id => dispatch(Model.Actions.HideNotification(id)),
       dispatch,
       state: initialState,
     });

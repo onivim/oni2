@@ -324,6 +324,12 @@ let start = (extensions, extHostClient) => {
         Isolinear.Effect.none,
       )
 
+    | ExtMessageReceived(message) => (
+        state,
+        Feature_Notification.Effects.create(message)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      )
+
     | _ => (state, Isolinear.Effect.none)
     };
 

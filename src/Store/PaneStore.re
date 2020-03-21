@@ -61,35 +61,55 @@ let closePane = (state: State.t) => {
   },
 };
 
-let reduce = (action: Actions.t, state: State.t) =>
+let update = (state: State.t, action: Actions.t) =>
   switch (action) {
   | SearchHotkey
-  | ActivityBar(SearchClick) when Pane.isVisible(Search, state.pane) =>
-    FocusManager.current(state) == Search
-      ? hideSearchPane(state, true) : showSearchPane(state, false)
+  | ActivityBar(SearchClick) when Pane.isVisible(Search, state.pane) => (
+      FocusManager.current(state) == Search
+        ? hideSearchPane(state, true) : showSearchPane(state, false),
+      Isolinear.Effect.none,
+    )
 
   | SearchHotkey
   | PaneTabClicked(Search)
-  | ActivityBar(SearchClick) =>
-    showSearchPane(state, FocusManager.current(state) == Search)
+  | ActivityBar(SearchClick) => (
+      showSearchPane(state, FocusManager.current(state) == Search),
+      Isolinear.Effect.none,
+    )
 
   | DiagnosticsHotKey
   | StatusBar(DiagnosticsClicked)
-      when Pane.isVisible(Diagnostics, state.pane) =>
-    closePane(state)
+      when Pane.isVisible(Diagnostics, state.pane) => (
+      closePane(state),
+      Isolinear.Effect.none,
+    )
 
   | DiagnosticsHotKey
   | PaneTabClicked(Diagnostics)
-  | StatusBar(DiagnosticsClicked) => openDiagnosticsPane(state)
+  | StatusBar(DiagnosticsClicked) => (
+      openDiagnosticsPane(state),
+      Isolinear.Effect.none,
+    )
 
   | StatusBar(NotificationCountClicked)
-      when Pane.isVisible(Notifications, state.pane) =>
-    closePane(state)
+      when Pane.isVisible(Notifications, state.pane) => (
+      closePane(state),
+      Isolinear.Effect.none,
+    )
 
   | PaneTabClicked(Notifications)
-  | StatusBar(NotificationCountClicked) => openNotificationsPane(state)
+  | StatusBar(NotificationCountClicked) => (
+      openNotificationsPane(state),
+      Isolinear.Effect.none,
+    )
 
-  | PaneCloseButtonClicked => closePane(state)
+  | StatusBar(NotificationClearAllClicked) => (
+      state,
+      Feature_Notification.Effects.dismissAll
+      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+    )
 
-  | _ => state
+  | PaneCloseButtonClicked => (closePane(state), Isolinear.Effect.none)
+
+  | _ => (state, Isolinear.Effect.none)
   };
