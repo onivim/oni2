@@ -26,7 +26,7 @@ describe("WhenExpr", ({describe, _}) => {
       let testExpression = (expr, expected) =>
         test(
           expr,
-          ({expect}) => {
+          ({expect, _}) => {
             let rules = WhenExpr.parse(expr);
             // Console.log(WhenExpr.show(rules));
             expect.bool(WhenExpr.evaluate(rules, getValue)).toBe(expected);

@@ -6,7 +6,7 @@ module Configuration = Oni_Core.Configuration;
 module ConfigurationParser = Oni_Core.ConfigurationParser;
 
 describe("ConfigurationDefaults", ({test, _}) =>
-  test("configuration.json matches", ({expect}) => {
+  test("configuration.json matches", ({expect, _}) => {
     let configJsonString =
       switch (getDefaultConfigString("configuration.json")) {
       | Some(c) => c

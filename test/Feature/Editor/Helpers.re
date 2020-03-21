@@ -3,7 +3,7 @@ open Feature_Editor;
 
 let validateToken =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualToken: BufferViewTokenizer.t,
       expectedToken: BufferViewTokenizer.t,
     ) => {
@@ -18,7 +18,7 @@ let validateToken =
 
 let validateTokens =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualTokens: list(BufferViewTokenizer.t),
       expectedTokens: list(BufferViewTokenizer.t),
     ) => {
