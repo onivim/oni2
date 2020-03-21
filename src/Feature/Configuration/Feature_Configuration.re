@@ -48,13 +48,15 @@ let getConfigurationFile = configurationFilePath => {
   };
 };
 
+let loadConfiguration = configFile =>
+  getConfigurationFile(configFile) |> Result.map(Config.Settings.fromFile);
+
 let update = (~configFile, model, msg) =>
   switch (msg) {
   | ConfigurationFileChanged =>
-    switch (getConfigurationFile(configFile)) {
-    | Ok(configFile) =>
-      let user = Config.Settings.fromFile(configFile);
-      user == Config.Settings.empty ? model : merge({...model, user});
+    switch (loadConfiguration(configFile)) {
+    | Ok(user) when user == Config.Settings.empty => model
+    | Ok(user) => merge({...model, user})
     | Error(_) => model
     }
   };

@@ -2,6 +2,7 @@ type key;
 type resolver = key => option(Json.t);
 
 let key: string => key;
+let keyAsString: key => string;
 
 // SETTINGS
 
@@ -17,6 +18,8 @@ module Settings: {
 
   let union: (t, t) => t;
   let unionMany: list(t) => t;
+
+  let keys: t => list(key);
 
   let toJson: t => Json.t;
 };

@@ -7,6 +7,7 @@ type key = Lookup.path;
 type resolver = key => option(Json.t);
 
 let key = Lookup.path;
+let keyAsString = Lookup.key;
 
 // SETTINGS
 
@@ -46,6 +47,9 @@ module Settings = {
       ys,
     );
   let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
+
+  let keys = settings =>
+    Lookup.fold((key, _, acc) => [key, ...acc], settings, []);
 
   let rec toJson = node =>
     switch ((node: t)) {

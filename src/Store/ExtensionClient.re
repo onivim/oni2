@@ -138,26 +138,29 @@ module ExtensionDocumentSymbolProvider = {
   };
 };
 
-let create = (~extensions, ~setup: Setup.t) => {
+let create =
+    (~config: Feature_Configuration.model, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let manifests =
-    List.map((ext: ExtensionScanner.t) => ext.manifest, extensions);
+  let defaults =
+    extensions
+    |> List.map(ext =>
+         ext.ExtensionScanner.manifest.contributes.configuration
+       )
+    |> List.map(ExtensionContributions.Configuration.toSettings)
+    |> Config.Settings.unionMany
+    |> Config.Settings.union(Config.Schema.defaults(config.schema))
+    |> Configuration.Model.fromSettings;
 
-  let defaults = Configuration.Model.ofExtensions(manifests);
-  let keys = ["reason_language_server.location"];
-
-  let hardCoded =
+  let user =
     Config.Settings.fromList([
       ("reason_language_server.location", Json.Encode.string(setup.rlsPath)),
       ("terminal.integratied.enc.windows", Json.Encode.null),
       ("terminal.integratied.enc.linux", Json.Encode.null),
       ("terminal.integratied.enc.osx", Json.Encode.null),
-    ]);
-
-  let contents = hardCoded |> Config.Settings.toJson;
-
-  let user = Configuration.Model.create(~keys, contents);
+    ])
+    |> Config.Settings.union(config.user)
+    |> Configuration.Model.fromSettings;
 
   let initialConfiguration = Configuration.create(~defaults, ~user, ());
 
