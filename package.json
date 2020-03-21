@@ -242,7 +242,7 @@
     "@opam/easy-format": "1.3.1",
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
-    "revery": "revery-ui/revery#26b1161",
+    "revery": "github:revery-ui/revery#ced2dde",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
     "esy-skia": "revery-ui/esy-skia#91b10c9",
