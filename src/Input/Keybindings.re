@@ -157,6 +157,13 @@ let text = (~text: string, bindings) => {
   (bindings, mappedEffects);
 };
 
+let keyUp = (~context, ~key, bindings) => {
+  let (bindings, effects) = Input.keyUp(~context, ~key, bindings);
+
+  let mappedEffects = mapEffects(effects);
+  (bindings, mappedEffects);
+};
+
 // Old version of keybindings - the legacy format:
 // { bindings: [ ..bindings. ] }
 module Legacy = {

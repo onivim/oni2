@@ -187,6 +187,36 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
     };
   };
+    
+    let effectToActions = (state, effect) =>
+      switch (effect) {
+      | Keybindings.Command(command) => [Actions.Command(command)]
+      | Keybindings.Text(text) => handleTextEffect(state, text)
+      | Keybindings.Unhandled(key) =>
+        let isTextInputActive = isTextInputActive();
+        let maybeKeyString =
+          Handler.keyPressToCommand(~isTextInputActive, key);
+        switch (maybeKeyString) {
+        | None => []
+        | Some(k) => handleTextEffect(state, k)
+        };
+      };
+
+
+  let reveryKeyToEditorKey = (key: Revery.Key.KeyEvent.t) => {
+    let shift = Revery.Key.Keymod.isShiftDown(key.keymod);
+    let control = Revery.Key.Keymod.isControlDown(key.keymod);
+    let alt = Revery.Key.Keymod.isAltDown(key.keymod);
+    let meta = Revery.Key.Keymod.isGuiDown(key.keymod);
+
+      EditorInput.{
+        scancode: key.scancode,
+        keycode: key.keycode,
+        modifiers:
+          EditorInput.Modifiers.create(~shift, ~control, ~alt, ~meta, ()),
+      };
+  
+  };
 
   /**
      The key handlers return (keyPressedString, shouldOniListen)
@@ -197,18 +227,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleKeyPress = (state: State.t, key: Revery.Key.KeyEvent.t) => {
     let conditions = conditionsOfState(state);
 
-    let shift = Revery.Key.Keymod.isShiftDown(key.keymod);
-    let control = Revery.Key.Keymod.isControlDown(key.keymod);
-    let alt = Revery.Key.Keymod.isAltDown(key.keymod);
-    let meta = Revery.Key.Keymod.isGuiDown(key.keymod);
-
-    let inputKey =
-      EditorInput.{
-        scancode: key.scancode,
-        keycode: key.keycode,
-        modifiers:
-          EditorInput.Modifiers.create(~shift, ~control, ~alt, ~meta, ()),
-      };
+    let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
       Keybindings.keyDown(
         ~context=conditions,
@@ -218,21 +237,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let newState = {...state, keyBindings};
 
-    let effectToActions = effect =>
-      switch (effect) {
-      | Keybindings.Command(command) => [Actions.Command(command)]
-      | Keybindings.Text(text) => handleTextEffect(state, text)
-      | Keybindings.Unhandled(key) =>
-        let isTextInputActive = isTextInputActive();
-        let maybeKeyString =
-          Handler.keyPressToCommand(~isTextInputActive, key);
-        switch (maybeKeyString) {
-        | None => []
-        | Some(k) => handleTextEffect(state, k)
-        };
-      };
-
-    let actions = effects |> List.map(effectToActions) |> List.flatten;
+    let actions = effects |> List.map(effectToActions(state)) |> List.flatten;
 
     updateFromInput(newState, "TODO", actions);
   };
@@ -240,49 +245,29 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleTextInput = (state: State.t, text) => {
     let (keyBindings, effects) = Keybindings.text(~text, state.keyBindings);
 
-    let effectToActions = effect =>
-      switch (effect) {
-      | Keybindings.Command(command) => [Actions.Command(command)]
-      | Keybindings.Text(text) => handleTextEffect(state, text)
-      | Keybindings.Unhandled(key) =>
-        let isTextInputActive = isTextInputActive();
-        let maybeKeyString =
-          Handler.keyPressToCommand(~isTextInputActive, key);
-        switch (maybeKeyString) {
-        | None => []
-        | Some(k) => handleTextEffect(state, k)
-        };
-      };
-
-    let actions = effects |> List.map(effectToActions) |> List.flatten;
+    let actions = effects |> List.map(effectToActions(state)) |> List.flatten;
 
     let newState = {...state, keyBindings};
 
     updateFromInput(newState, "TODO", actions);
   };
 
-  let handleKeyUp = (state: State.t, event: Revery.Key.KeyEvent.t) => {
-    let bindings = state.keyBindings;
+  let handleKeyUp = (state: State.t, key: Revery.Key.KeyEvent.t) => {
     let conditions = conditionsOfState(state);
 
-    // NOTE: This curretly only handles Ctrl, Shift and Alt. Everything else is ignored
-    let maybeKeyString =
-      switch (event.keycode) {
-      | 1073742048 => Some("<C>")
-      | 1073742049 => Some("<S>")
-      | 1073742050 => Some("<A>")
-      | _ => None
-      };
+    let inputKey = reveryKeyToEditorKey(key);
+    let (keyBindings, effects) =
+      Keybindings.keyUp(
+        ~context=conditions,
+        ~key=inputKey,
+        state.keyBindings,
+      );
 
-    switch (maybeKeyString) {
-    | Some(keyString) =>
-      let bindings = getKeyUpBindings(bindings);
-      let actions = getActionsForBinding(keyString, bindings, conditions);
+    let newState = {...state, keyBindings};
 
-      (state, immediateDispatchEffect(actions));
+    let actions = effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    | None => (state, Isolinear.Effect.none)
-    };
+    updateFromInput(newState, "TODO", actions);
   };
 
   let updater = (state: State.t, action: Actions.t) => {

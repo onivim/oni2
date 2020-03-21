@@ -15,6 +15,10 @@ let keyDown:
 
 let text: (~text: string, t) => (t, list(effect));
 
+let keyUp:
+  (~context: Hashtbl.t(string, bool), ~key: EditorInput.key, t) =>
+  (t, list(effect));
+
 type keybinding = {
   key: string,
   command: string,
