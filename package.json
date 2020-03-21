@@ -6,7 +6,7 @@
   "esy": {
     "build": "refmterr dune build -p Oni2 -j4",
     "buildEnv": {
-	"MACOSX_DEPLOYMENT_TARGET": "10.12"
+      "MACOSX_DEPLOYMENT_TARGET": "10.12"
     },
     "install": [
       "esy-installer Oni2.install",
@@ -257,13 +257,13 @@
   },
   "devDependencies": {
     "ocaml": "~4.8",
-    "@opam/merlin": "~3.3.2",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
     "shelljs": "*",
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
-    "rcedit": "2.0.0"
+    "rcedit": "2.0.0",
+    "@opam/ocaml-lsp-server": "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#04733ed"
   }
 }
