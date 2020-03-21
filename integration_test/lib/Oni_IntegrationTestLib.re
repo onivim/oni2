@@ -80,12 +80,6 @@ let runTest =
   let onStateChanged = state => {
     currentState := state;
 
-    Oni_UI.GlobalContext.set({
-      ...Oni_UI.GlobalContext.current(),
-      getState: () => currentState^,
-      state,
-    });
-
     Revery.Utility.HeadlessWindow.render(
       headlessWindow,
       <Oni_UI.Root state />,

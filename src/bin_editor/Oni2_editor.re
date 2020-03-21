@@ -121,8 +121,7 @@ if (cliOptions.syntaxHighlightService) {
 
     PreflightChecks.run();
 
-    let initialState = Model.State.create();
-    let currentState = ref(initialState);
+    let currentState = ref(Model.State.create());
 
     let update = UI.start(w, <Root state=currentState^ />);
 
@@ -136,9 +135,7 @@ if (cliOptions.syntaxHighlightService) {
       Tick.interval(
         _dt =>
           if (isDirty^) {
-            let state = currentState^;
-            GlobalContext.set({...GlobalContext.current(), state});
-            update(<Root state />);
+            update(<Root state=currentState^ />);
             isDirty := false;
           },
         Time.seconds(0),
@@ -193,7 +190,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
 
     GlobalContext.set({
-      getState: () => currentState^,
       notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
         dispatch(Model.Actions.WindowTreeSetSize(width, height)),
       notifyEditorSizeChanged: (~editorGroupId, ~width, ~height, ()) =>
@@ -218,7 +214,6 @@ if (cliOptions.syntaxHighlightService) {
       setActiveWindow: (splitId, editorGroupId) =>
         dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
       dispatch,
-      state: initialState,
     });
 
     dispatch(Model.Actions.Init);

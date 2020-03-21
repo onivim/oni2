@@ -193,6 +193,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           tabs
           mode
           uiFont
+          languageInfo={state.languageInfo}
+          iconTheme={state.iconTheme}
         />,
         editorView,
       ])
