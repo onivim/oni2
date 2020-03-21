@@ -1,7 +1,3 @@
-type effect =
-  | Command(string)
-  | Unhandled(EditorInput.key);
-
 // TODO;
 let count = _ => 0;
 
@@ -89,9 +85,18 @@ module Internal = {
     };
 };
 
-let empty = [];
+module Input = EditorInput.Make({
+  type context = Hashtbl.t(string, bool);
+  type payload = string;
+});
 
-type t = list(Keybinding.t);
+type effect = 
+| Command(string)
+| Unhandled(EditorInput.key);
+
+let empty = Input.empty;
+
+type t = Input.t;
 
 let _keyToVimString = (key: EditorInput.key) => {
   let name = ref(Sdl2.Keycode.getName(key.keycode));
@@ -128,32 +133,18 @@ let _keyToVimString = (key: EditorInput.key) => {
   name^ |> String.uppercase_ascii |> wrapIfLong |> convertSdlName;
 };
 
+
+let mapEffect = fun
+| Input.Execute(cmd) => Command(cmd)
+| Input.Unhandled(key) => Unhandled(key);
+
+let mapEffects = List.map(mapEffect);
+
 let keyDown = (~context, ~key, bindings) => {
-  let keyStr = _keyToVimString(key);
+  let (bindings, effects) = Input.keyDown(~context, key, bindings);
 
-  prerr_endline("KEYSTR: " ++ keyStr);
-
-  let getValue = propertyName =>
-    switch (Hashtbl.find_opt(context, propertyName)) {
-    | Some(true) => WhenExpr.Value.True
-    | Some(false)
-    | None => WhenExpr.Value.False
-    };
-
-  let effects =
-    List.fold_left(
-      (defaultAction, {key, command, condition}) =>
-        Handler.matchesCondition(condition, keyStr, key, getValue)
-          ? [Command(command)] : defaultAction,
-      [],
-      bindings,
-    );
-
-  if (effects == []) {
-    (bindings, [Unhandled(key)]);
-  } else {
-    (bindings, effects);
-  };
+  let mappedEffects = mapEffects(effects);
+  (bindings, mappedEffects);
 };
 
 // Old version of keybindings - the legacy format:
@@ -179,6 +170,92 @@ module Legacy = {
     };
 };
 
+let strToSdl = fun
+| "ESC" => "Escape"
+| "CR" => "Enter"
+| "UP" => "Up"
+| "DOWN" => "Down"
+| "LEFT" => "Left"
+| "RIGHT" => "Right"
+| "TAB" => "Tab"
+| str => str;
+
+let wrap = (f, s) => {
+  prerr_endline ("S: " ++ s);
+  let ret = f(s);
+  prerr_endline ("RESULT: " ++ ret);
+  ret;
+}
+
+let codeToOpt = fun
+| 0 => None
+| x => Some(x);
+
+let getKeycode = keycodeStr => {
+  keycodeStr
+  |> wrap(strToSdl)
+  |> Sdl2.Keycode.ofName
+  |> codeToOpt;
+};
+
+let getScancode = scancodeStr =>  {
+  scancodeStr
+  |> strToSdl
+  |> Sdl2.Scancode.ofName
+  |> codeToOpt;
+};
+
+let addBinding = ({key, command, condition}, bindings) => {
+
+  let evaluateCondition = (whenExpr, context) => {
+    let getValue = v =>
+      switch (Hashtbl.find_opt(context, v)) {
+      | Some(true) => WhenExpr.Value.True
+      | Some(false)
+      | None => WhenExpr.Value.False
+      };
+  
+    WhenExpr.evaluate(whenExpr, getValue);
+  };
+
+  let matchers = EditorInput.Matcher.parse(
+     ~getKeycode,
+     ~getScancode,
+     key,
+  );
+
+  matchers
+  |> Stdlib.Result.map(m => {
+    let (bindings, _id) = Input.addBinding(
+      m,
+      evaluateCondition(condition),
+      command,
+      bindings,
+    );
+    bindings
+  });
+};
+
+let evaluateBindings = (bindings: list(keybinding), errors) => {
+
+  let rec loop = (bindings, errors, currentBindings) => {
+  switch (bindings) {
+  | [hd, ...tail] =>
+      switch(addBinding(hd, currentBindings)) {
+      | Ok(newBindings) => loop(tail, errors, newBindings);
+      | Error(msg) =>
+      prerr_endline ("FAIL: " ++ msg);
+      failwith("ohno");
+      loop(tail, [msg, ...errors], currentBindings);
+      }
+  | [] => (currentBindings, errors)
+  }
+  };
+
+  loop(bindings, errors, Input.empty);
+  
+}
+
 let of_yojson_with_errors = (~default=[], json) => {
   let previous =
     switch (json) {
@@ -201,6 +278,7 @@ let of_yojson_with_errors = (~default=[], json) => {
 
   previous
   |> Stdlib.Result.map(((bindings, errors)) => {
-       (default @ bindings, errors)
+       let combinedBindings = default @ bindings;
+       evaluateBindings(combinedBindings, errors);
      });
 };
