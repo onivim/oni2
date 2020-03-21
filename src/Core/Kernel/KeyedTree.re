@@ -13,7 +13,6 @@ module type S = {
   let fromList: list((path, 'a)) => t('a);
 
   let add: (path, 'a, t('a)) => t('a);
-  let update: (path, option('a), t('a)) => t('a);
   let get: (path, t('a)) => option('a);
 
   let union: ((path, 'a, 'a) => option('a), t('a), t('a)) => t('a);
@@ -93,11 +92,9 @@ module Make = (Ord: OrderedType) => {
     | ([key, ...rest], Node(children)) =>
       switch (KeyedMap.find_opt(key, children)) {
       | Some(child) => get(rest, child)
-      | None => 
-        None
+      | None => None
       }
-    | _ =>
-      None
+    | _ => None
     };
 
   let union = f => {

@@ -13,7 +13,6 @@ module type S = {
   let fromList: list((path, 'a)) => t('a);
 
   let add: (path, 'a, t('a)) => t('a);
-  let update: (path, option('a), t('a)) => t('a);
   let get: (path, t('a)) => option('a);
 
   let union: ((path, 'a, 'a) => option('a), t('a), t('a)) => t('a);
