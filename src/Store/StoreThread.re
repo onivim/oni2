@@ -60,6 +60,7 @@ let start =
       ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
+      ~getState,
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
@@ -80,12 +81,7 @@ let start =
       cliOptions,
     );
 
-  let state = Model.State.create();
-
-  let latestState: ref(Model.State.t) = ref(state);
   let latestRunEffects: ref(option(unit => unit)) = ref(None);
-
-  let getState = () => latestState^;
 
   let runRunEffects = () =>
     switch (latestRunEffects^) {
@@ -261,18 +257,14 @@ let start =
       type msg = Model.Actions.t;
       type model = Model.State.t;
 
-      let initial = state;
+      let initial = getState();
       let updater = updater;
       let subscriptions = subscriptions;
     });
 
   let storeStream = Store.Deprecated.getStoreStream();
 
-  let _unsubscribe: unit => unit =
-    Store.onModelChanged(newState => {
-      latestState := newState;
-      onStateChanged(newState);
-    });
+  let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
   let _unsubscribe: unit => unit =
     Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
@@ -301,7 +293,7 @@ let start =
   Option.iter(
     window =>
       Revery.Window.setCanQuitCallback(window, () =>
-        if (Model.Buffers.anyModified(latestState^.buffers)) {
+        if (Model.Buffers.anyModified(getState().buffers)) {
           dispatch(Model.Actions.WindowCloseBlocked);
           false;
         } else {

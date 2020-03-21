@@ -7,6 +7,8 @@
 open Revery.UI;
 open Rench;
 
+module Model = Oni_Model;
+module Ext = Oni_Extensions;
 module Theme = Feature_Theme;
 
 let noop = () => ();
@@ -19,25 +21,40 @@ type tabInfo = {
   renderer: Oni_Model.BufferRenderer.t,
 };
 
-let toTab = (theme, mode, uiFont, active, activeEditorId, t: tabInfo) => {
+let toTab =
+    (
+      theme,
+      mode,
+      uiFont,
+      active,
+      activeEditorId,
+      languageInfo,
+      iconTheme,
+      tabInfo,
+    ) => {
   let title =
-    switch (t.renderer) {
+    switch (tabInfo.renderer) {
     | Welcome => "Welcome"
     | Terminal({title, _}) => title
-    | _ => Path.filename(t.title)
+    | _ => Path.filename(tabInfo.title)
     };
+
+  let language =
+    Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, tabInfo.filePath);
+  let icon =
+    Model.IconTheme.getIconForFile(iconTheme, tabInfo.filePath, language);
 
   <Tab
     theme
-    filePath={t.filePath}
     title
     isGroupFocused=active
-    isActive={Some(t.editorId) == activeEditorId}
-    isModified={t.modified}
+    isActive={Some(tabInfo.editorId) == activeEditorId}
+    isModified={tabInfo.modified}
     uiFont
     mode
-    onClick={() => GlobalContext.current().openEditorById(t.editorId)}
-    onClose={() => GlobalContext.current().closeEditorById(t.editorId)}
+    icon
+    onClick={() => GlobalContext.current().openEditorById(tabInfo.editorId)}
+    onClose={() => GlobalContext.current().closeEditorById(tabInfo.editorId)}
   />;
 };
 
@@ -104,6 +121,8 @@ let%component make =
                 ~mode: Vim.Mode.t,
                 ~uiFont,
                 ~active,
+                ~languageInfo,
+                ~iconTheme,
                 (),
               ) => {
   let%hook (actualScrollLeft, setScrollLeft) = Hooks.state(0);
@@ -152,7 +171,17 @@ let%component make =
 
   let tabComponents =
     tabs
-    |> List.map(toTab(theme, mode, uiFont, active, activeEditorId))
+    |> List.map(
+         toTab(
+           theme,
+           mode,
+           uiFont,
+           active,
+           activeEditorId,
+           languageInfo,
+           iconTheme,
+         ),
+       )
     |> React.listToElement;
 
   let outerStyle =

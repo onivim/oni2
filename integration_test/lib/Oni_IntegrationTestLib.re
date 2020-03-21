@@ -69,8 +69,7 @@ let runTest =
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
 
-  let initialState = Model.State.create();
-  let currentState = ref(initialState);
+  let currentState = ref(Model.State.create());
 
   let headlessWindow =
     Revery.Utility.HeadlessWindow.create(
@@ -79,12 +78,6 @@ let runTest =
 
   let onStateChanged = state => {
     currentState := state;
-
-    Oni_UI.GlobalContext.set({
-      ...Oni_UI.GlobalContext.current(),
-      getState: () => currentState^,
-      state,
-    });
 
     Revery.Utility.HeadlessWindow.render(
       headlessWindow,
@@ -117,6 +110,7 @@ let runTest =
       ~setZoom,
       ~setVsync,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
+      ~getState=() => currentState^,
       ~onStateChanged,
       ~cliOptions,
       ~configurationFilePath=Some(configurationFilePath),
