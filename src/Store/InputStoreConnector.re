@@ -212,8 +212,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       EditorInput.{
         scancode: key.scancode,
         keycode: key.keycode,
-        modifiers:
-          EditorInput.Modifiers.create(~shift, ~control, ~alt, ~meta, ()),
+        modifiers: { ...EditorInput.Modifiers.none, shift, control, alt, meta },
       };
   
   };
