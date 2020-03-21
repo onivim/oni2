@@ -155,9 +155,9 @@ let create =
   let user =
     Config.Settings.fromList([
       ("reason_language_server.location", Json.Encode.string(setup.rlsPath)),
-      ("terminal.integratied.enc.windows", Json.Encode.null),
-      ("terminal.integratied.enc.linux", Json.Encode.null),
-      ("terminal.integratied.enc.osx", Json.Encode.null),
+      ("terminal.integrated.env.windows", Json.Encode.null),
+      ("terminal.integrated.env.linux", Json.Encode.null),
+      ("terminal.integrated.env.osx", Json.Encode.null),
     ])
     |> Config.Settings.union(config.user)
     |> Configuration.Model.fromSettings;
