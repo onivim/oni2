@@ -861,6 +861,12 @@ let start =
       let _ = Vim.input("<CR>");
       ();
     });
+  
+  let escapeEffect =
+    Isolinear.Effect.create(~name="vim.esc", () => {
+      let _ = Vim.input("<esc>");
+      ();
+    });
 
   let indentEffect =
     Isolinear.Effect.create(~name="vim.indent", () => {
@@ -895,6 +901,7 @@ let start =
     | Command("outdent") => (state, outdentEffect)
     | Command("editor.action.indentLines") => (state, indentEffect)
     | Command("editor.action.outdentLines") => (state, outdentEffect)
+    | Command("vim.esc") => (state, escapeEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
