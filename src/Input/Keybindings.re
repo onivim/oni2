@@ -33,7 +33,7 @@ module Keybinding = {
     let condition =
       Yojson.Safe.Util.member("when", json) |> condition_of_yojson;
 
-    let wrapError = (msg) => Error(msg ++ ": " ++ Yojson.Safe.to_string(json));
+    let wrapError = msg => Error(msg ++ ": " ++ Yojson.Safe.to_string(json));
 
     switch (condition) {
     | Ok(condition) =>
