@@ -124,6 +124,8 @@ function activate(context) {
         return vscode.Uri.file(absolutePath);
     }
 
+    // Test SCM
+
     const testSCM = vscode.scm.createSourceControl('test', 'Test');
 
     const index = testSCM.createResourceGroup('index', 'Index');
@@ -148,6 +150,8 @@ function activate(context) {
 
     testSCM.dispose();
 
+    // Text Document Content Provider
+
     const textContentProvider = {
         provideTextDocumentContent: (uri) => {
             console.error("CONTENT!");
@@ -156,6 +160,14 @@ function activate(context) {
     };
     let disposable = vscode.workspace.registerTextDocumentContentProvider('foo', textContentProvider)
     disposable.dispose();
+
+    // Settings
+
+    const rlsLocation = vscode.workspace.getConfiguration().get("reason_language_server.location");
+    console.error("Configured RLS location: ", rlsLocation);
+
+    const editorFontFamily = vscode.workspace.getConfiguration().get("editor.fontFamily");
+    console.error("Editor Font Family: ", editorFontFamily);
 }
 
 // this method is called when your extension is deactivated
