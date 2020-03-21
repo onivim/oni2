@@ -277,29 +277,30 @@ let start = () => {
       let keyBindingsFile =
         Filesystem.getOrCreateConfigFile("keybindings.json");
 
-      let keyBindings =
-        switch (keyBindingsFile) {
-        | Error(msg) =>
-          Log.error("Unable to load keybindings: " ++ msg);
-          Keybindings.empty;
-        | Ok(keyBindingPath) =>
-          if (isFirstLoad) {
-            reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
-          };
-
-          let parseResult =
-            Yojson.Safe.from_file(keyBindingPath)
-            |> Keybindings.of_yojson_with_errors;
-
-          switch (parseResult) {
-          | Ok((bindings, _)) => bindings
-          | Error(msg) =>
-            Log.error("Error parsing keybindings: " ++ msg);
-            Keybindings.empty;
-          };
+      let checkFirstLoad = keyBindingPath =>
+        if (isFirstLoad) {
+          reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
         };
 
-      Log.infof(m => m("Loading %i keybindings", List.length(keyBindings)));
+      let onError = msg => {
+        let errorMsg = "Error parsing keybindings: " ++ msg;
+        Log.error(errorMsg);
+        dispatch(Actions.KeyBindingsParseError(errorMsg));
+      };
+
+      let (keyBindings, individualErrors) =
+        keyBindingsFile
+        |> Utility.ResultEx.tap(checkFirstLoad)
+        |> Utility.ResultEx.flatMap(Utility.JsonEx.from_file)
+        |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors)
+        // Handle error case when parsing entire JSON file
+        |> Utility.ResultEx.tapError(onError)
+        |> Stdlib.Result.value(~default=(Keybindings.empty, []));
+
+      // Handle individual binding errors
+      individualErrors |> List.iter(onError);
+
+      Log.infof(m => m("Loaded %i keybindings", List.length(keyBindings)));
 
       dispatch(Actions.KeyBindingsSet(defaultBindings @ keyBindings));
     });
@@ -308,6 +309,11 @@ let start = () => {
     switch (action) {
     | Actions.Init => (state, loadKeyBindingsEffect(true))
     | Actions.KeyBindingsReload => (state, loadKeyBindingsEffect(false))
+    | Actions.KeyBindingsParseError(msg) => (
+        state,
+        Feature_Notification.Effects.create(~kind=Error, msg)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };
