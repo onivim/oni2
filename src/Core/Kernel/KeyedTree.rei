@@ -3,7 +3,10 @@ module type OrderedType = Map.OrderedType;
 module type S = {
   type key;
   type path = list(key);
-  type t('a);
+  module KeyedMap: Map.S with type key := key;
+  type t('a) =
+    | Node(KeyedMap.t(t('a)))
+    | Leaf('a);
 
   let empty: t(_);
 
