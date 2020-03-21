@@ -17,6 +17,8 @@ module Settings: {
 
   let union: (t, t) => t;
   let unionMany: list(t) => t;
+
+  let toJson: t => Json.t;
 };
 
 // SCHEMA

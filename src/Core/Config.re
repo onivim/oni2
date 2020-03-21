@@ -46,6 +46,18 @@ module Settings = {
       ys,
     );
   let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
+
+  let rec toJson = node =>
+    switch ((node: t)) {
+    | Node(children) =>
+      Json.Encode.obj(
+        children
+        |> Lookup.KeyedMap.to_seq
+        |> Seq.map(((key, value)) => (key, toJson(value)))
+        |> List.of_seq,
+      )
+    | Leaf(value) => value
+    };
 };
 
 // SCHEMA
