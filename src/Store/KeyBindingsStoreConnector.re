@@ -10,7 +10,7 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 
-let start = () => {
+let start = maybeKeyBindingsFilePath => {
   let defaultBindings =
     Keybindings.Keybinding.[
       {
@@ -256,6 +256,13 @@ let start = () => {
       },
     ];
 
+  let getKeybindingsFile = () => {
+    Filesystem.getOrCreateConfigFile(
+      ~overridePath=?maybeKeyBindingsFilePath,
+      "keybindings.json",
+    );
+  };
+
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
     let _: unit => unit =
       Vim.AutoCommands.onDispatch((cmd, buffer) => {
@@ -274,8 +281,7 @@ let start = () => {
 
   let loadKeyBindingsEffect = isFirstLoad =>
     Isolinear.Effect.createWithDispatch(~name="keyBindings.load", dispatch => {
-      let keyBindingsFile =
-        Filesystem.getOrCreateConfigFile("keybindings.json");
+      let keyBindingsFile = getKeybindingsFile();
 
       let checkFirstLoad = keyBindingPath =>
         if (isFirstLoad) {

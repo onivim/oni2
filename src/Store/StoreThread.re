@@ -57,6 +57,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 let start =
     (
       ~configurationFilePath=None,
+      ~keybindingsFilePath=None,
       ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
@@ -131,7 +132,8 @@ let start =
       ~setZoom,
       ~setVsync,
     );
-  let keyBindingsUpdater = KeyBindingsStoreConnector.start();
+  let keyBindingsUpdater =
+    KeyBindingsStoreConnector.start(keybindingsFilePath);
 
   let fileExplorerUpdater = FileExplorerStore.start();
 

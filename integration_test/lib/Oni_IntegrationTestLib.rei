@@ -7,6 +7,7 @@ open Types;
 let runTest:
   (
     ~configuration: option(string)=?,
+    ~keybindings: option(string)=?,
     ~cliOptions: option(Core.Cli.t)=?,
     ~name: string=?,
     ~onAfterDispatch: Model.Actions.t => unit=?,
