@@ -146,6 +146,7 @@ let make =
       style=Styles.menuItem
       label={`Custom(labelView)}
       icon={item.icon}
+      font
       onMouseOver={() => onFocusedChange(index)}
       isFocused
     />;

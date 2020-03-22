@@ -8,7 +8,6 @@ open Revery.UI;
 open Oni_Core;
 
 module Model = Oni_Model;
-module Ext = Oni_Extensions;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
@@ -149,7 +148,6 @@ module Styles = {
 
 let%component make =
               (
-                ~filePath,
                 ~title,
                 ~isGroupFocused,
                 ~isActive,
@@ -159,18 +157,14 @@ let%component make =
                 ~theme: ColorTheme.resolver,
                 ~uiFont: UiFont.t,
                 ~mode: Vim.Mode.t,
+                ~icon,
                 (),
               ) => {
-  let state = GlobalContext.current().state;
-  let language =
-    Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, filePath);
-  let fileIcon: option(Model.IconTheme.IconDefinition.t) =
-    Model.IconTheme.getIconForFile(state.iconTheme, filePath, language);
   let%hook (isHovered, setHovered) = Hooks.state(false);
 
   let fileIconView =
-    switch (fileIcon) {
-    | Some(icon) =>
+    switch (icon) {
+    | Some((icon: Model.IconTheme.IconDefinition.t)) =>
       <FontIcon
         fontFamily="seti.ttf"
         icon={icon.fontCharacter}
