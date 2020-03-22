@@ -119,6 +119,11 @@ let start = maybeKeyBindingsFilePath => {
         condition: "inEditorsPicker" |> WhenExpr.parse,
       },
       {
+        key: "<release>",
+        command: "list.select",
+        condition: "inEditorsPicker" |> WhenExpr.parse,
+      },
+      {
         key: "<CR>",
         command: "list.select",
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
