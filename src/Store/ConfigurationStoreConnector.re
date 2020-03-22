@@ -18,23 +18,12 @@ let start =
       ~setVsync,
     ) => {
   let defaultConfigurationFileName = "configuration.json";
+
   let getConfigurationFile = fileName => {
-    switch (configurationFilePath) {
-    | None => Filesystem.getOrCreateConfigFile(fileName)
-    | Some(path) =>
-      switch (Sys.file_exists(path)) {
-      | exception ex =>
-        Log.error("Error loading configuration file at: " ++ path);
-        Log.error("  " ++ Printexc.to_string(ex));
-        Filesystem.getOrCreateConfigFile(fileName);
-
-      | false =>
-        Log.error("Error loading configuration file at: " ++ path);
-        Filesystem.getOrCreateConfigFile(fileName);
-
-      | true => Ok(path)
-      }
-    };
+    Filesystem.getOrCreateConfigFile(
+      ~overridePath=?configurationFilePath,
+      fileName,
+    );
   };
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {

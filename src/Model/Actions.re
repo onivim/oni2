@@ -61,6 +61,7 @@ type t =
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
+  | KeyBindingsParseError(string)
   | KeyDown([@opaque] Revery.Key.KeyEvent.t)
   | KeyUp([@opaque] Revery.Key.KeyEvent.t)
   | TextInput([@opaque] Revery.Events.textInputEvent)
