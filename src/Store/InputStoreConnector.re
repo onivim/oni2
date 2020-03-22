@@ -93,64 +93,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
-  let getKeyUpBindings = {
-    let containsCtrl = Re.execp(Re.compile(Re.str("C-")));
-    let containsShift = Re.execp(Re.compile(Re.str("S-")));
-    let containsAlt = Re.execp(Re.compile(Re.str("A-")));
-
-    // NOTE: THis currently only generates a single command based on an ordinary
-    // keybinding in order to emulate vscode's behaviour in the editors picker
-
-    // TODO: Port over in keybindings
-    /*List.filter_map((binding: Keybindings.Keybinding.t) =>
-        switch (binding.command) {
-        | "workbench.action.openNextRecentlyUsedEditorInGroup" =>
-          let createBinding = key =>
-            Keybindings.Keybinding.{
-              key,
-              command: "list.select",
-              condition: Defined("inEditorsPicker"),
-            };
-
-          if (containsCtrl(binding.key)) {
-            Some(createBinding("<C>"));
-          } else if (containsShift(binding.key)) {
-            Some(createBinding("<S>"));
-          } else if (containsAlt(binding.key)) {
-            Some(createBinding("<A>"));
-          } else {
-            None;
-          };
-
-        | _ => None
-        }
-      );*/
-    _ => None;
-  };
-
-  let getActionsForBinding =
-      (inputKey, bindings, currentConditions: Hashtbl.t(string, bool)) => {
-    //let inputKey = String.uppercase_ascii(inputKey);
-
-    let getValue = v =>
-      switch (Hashtbl.find_opt(currentConditions, v)) {
-      | Some(true) => WhenExpr.Value.True
-      | Some(false)
-      | None => WhenExpr.Value.False
-      };
-
-    /*Keybindings.Keybinding.(
-        List.fold_left(
-          (defaultAction, {key, command, condition}) =>
-            Handler.matchesCondition(condition, inputKey, key, getValue)
-              ? [Actions.Command(command)] : defaultAction,
-          [],
-          bindings,
-        )
-      );*/
-    [];
-  };
-
   let updateFromInput = (state: State.t, key: string, actions) => {
     let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
     (

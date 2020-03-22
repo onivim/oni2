@@ -273,8 +273,6 @@ let evaluateBindings = (bindings: list(keybinding), errors) => {
       switch (addBinding(hd, currentBindings)) {
       | Ok(newBindings) => loop(tail, errors, newBindings)
       | Error(msg) =>
-        prerr_endline("FAIL: " ++ msg);
-        failwith("ohno");
         loop(tail, [msg, ...errors], currentBindings);
       }
     | [] => (currentBindings, errors)

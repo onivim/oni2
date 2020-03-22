@@ -4,8 +4,6 @@
  * Basic input handling for Oni
  */
 
-open Revery;
-
 module Log = (val Oni_Core.Log.withNamespace("Oni2.Input.Handler"));
 module Zed_utf8 = Oni_Core.ZedBundled;
 
@@ -143,14 +141,3 @@ let keyPressToCommand =
     );
   };
 };
-
-/**
-   Search if any of the matching "when" conditions in the Keybindings.json
-   match the current condition in state
- */
-let matchesCondition = (commandConditions, input, key, getValue) =>
-  if (input != key) {
-    false;
-  } else {
-    WhenExpr.evaluate(commandConditions, getValue);
-  };

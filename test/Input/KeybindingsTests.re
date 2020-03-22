@@ -56,7 +56,7 @@ let isOk = v =>
 
 let bindingCount = v =>
   switch (v) {
-  | Ok((bindings, _)) => List.length(bindings)
+  | Ok((bindings, _)) => count(bindings)
   | Error(_) => 0
   };
 
