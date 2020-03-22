@@ -9,6 +9,8 @@ type keybinding = {
 
 module Json = Oni_Core.Json;
 
+open EditorInput;
+
 module Keybinding = {
   type t = keybinding;
 
@@ -98,13 +100,13 @@ module Input =
 type effect =
   | Command(string)
   | Text(string)
-  | Unhandled(EditorInput.key);
+  | Unhandled(EditorInput.keyPress);
 
 let empty = Input.empty;
 
 type t = Input.t;
 
-let _keyToVimString = (key: EditorInput.key) => {
+let _keyToVimString = (key: EditorInput.keyPress) => {
   let name = ref(Sdl2.Keycode.getName(key.keycode));
 
   if (key.modifiers.alt) {
@@ -191,23 +193,35 @@ module Legacy = {
     };
 };
 
-let strToSdl =
+let keyToSdl = EditorInput.Key.({
   fun
-  | "ESC" => "Escape"
-  | "CR" => "Enter"
-  | "UP" => "Up"
-  | "DOWN" => "Down"
-  | "LEFT" => "Left"
-  | "RIGHT" => "Right"
-  | "TAB" => "Tab"
-  | str => str;
-
-let wrap = (f, s) => {
-  prerr_endline("S: " ++ s);
-  let ret = f(s);
-  prerr_endline("RESULT: " ++ ret);
-  ret;
-};
+  | Escape => "Escape"
+  | Return => "Return"
+  | Up => "Up"
+  | Down => "Down"
+  | Left => "Left"
+  | Right => "Right"
+  | Tab => "Tab"
+  | PageUp => "PageUp"
+  | PageDown => "PageDown"
+  | Delete => "Delete"
+  | Pause => "Pause"
+  | Home => "Home"
+  | End => "End"
+  | Backspace => "Backspace"
+  | CapsLock => "CapsLock"
+  | Insert => "Insert"
+  | Function(digit) => "F" ++ string_of_int(digit)
+  | Space => "Space"
+  | NumpadDigit(digit) => "Keypad " ++ string_of_int(digit)
+  | NumpadMultiply => "Keypad *"
+  | NumpadAdd => "Keypad +"
+  | NumpadSeparator => "Keypad "
+  | NumpadSubtract => "Keypad -"
+  | NumpadDivide => "Keypad //"
+  | NumpadDecimal => "Keypad ."
+  | Character(c) => String.make(1, c) |> String.uppercase_ascii
+});
 
 let codeToOpt =
   fun
@@ -215,11 +229,11 @@ let codeToOpt =
   | x => Some(x);
 
 let getKeycode = keycodeStr => {
-  keycodeStr |> wrap(strToSdl) |> Sdl2.Keycode.ofName |> codeToOpt;
+  keycodeStr |> keyToSdl |> Sdl2.Keycode.ofName |> codeToOpt;
 };
 
 let getScancode = scancodeStr => {
-  scancodeStr |> strToSdl |> Sdl2.Scancode.ofName |> codeToOpt;
+  scancodeStr |> keyToSdl |> Sdl2.Scancode.ofName |> codeToOpt;
 };
 
 let addBinding = ({key, command, condition}, bindings) => {

@@ -11,7 +11,7 @@ open Oni_Model;
 module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 
 let start = maybeKeyBindingsFilePath => {
-  let defaultBindings =
+  let default =
     Keybindings.[
       {
         key: "<UP>",
@@ -283,10 +283,12 @@ let start = maybeKeyBindingsFilePath => {
     Isolinear.Effect.createWithDispatch(~name="keyBindings.load", dispatch => {
       let keyBindingsFile = getKeybindingsFile();
 
-      let checkFirstLoad = keyBindingPath =>
+      let checkFirstLoad = keyBindingPath => {
+        prerr_endline ("keybinding path: " ++ keyBindingPath);
         if (isFirstLoad) {
           reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
         };
+      };
 
       let onError = msg => {
         let errorMsg = "Error parsing keybindings: " ++ msg;
@@ -298,7 +300,7 @@ let start = maybeKeyBindingsFilePath => {
         keyBindingsFile
         |> Utility.ResultEx.tap(checkFirstLoad)
         |> Utility.ResultEx.flatMap(Utility.JsonEx.from_file)
-        |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors)
+        |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors(~default))
         // Handle error case when parsing entire JSON file
         |> Utility.ResultEx.tapError(onError)
         |> Stdlib.Result.value(~default=(Keybindings.empty, []));

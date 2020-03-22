@@ -99,7 +99,7 @@ let keyPressToString =
 };
 
 let keyPressToCommand =
-    (~isTextInputActive, {modifiers, keycode, _}: EditorInput.key) => {
+    (~isTextInputActive, {modifiers, keycode, _}: EditorInput.keyPress) => {
   let altGr = modifiers.altGr;
   let shiftKey = modifiers.shift;
   let altKey = modifiers.alt;

@@ -5,18 +5,18 @@ let empty: t;
 type effect =
   | Command(string)
   | Text(string)
-  | Unhandled(EditorInput.key);
+  | Unhandled(EditorInput.keyPress);
 
 let count: t => int;
 
 let keyDown:
-  (~context: Hashtbl.t(string, bool), ~key: EditorInput.key, t) =>
+  (~context: Hashtbl.t(string, bool), ~key: EditorInput.keyPress, t) =>
   (t, list(effect));
 
 let text: (~text: string, t) => (t, list(effect));
 
 let keyUp:
-  (~context: Hashtbl.t(string, bool), ~key: EditorInput.key, t) =>
+  (~context: Hashtbl.t(string, bool), ~key: EditorInput.keyPress, t) =>
   (t, list(effect));
 
 type keybinding = {
