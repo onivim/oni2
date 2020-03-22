@@ -7,7 +7,7 @@ let testStringLength = String.length(testString);
 let create = Selection.create(~text=testString);
 
 describe("Selection#initial", ({test, _}) => {
-  test("Returns initial value", ({expect}) => {
+  test("Returns initial value", ({expect, _}) => {
     let result = Selection.initial;
 
     expect.int(result.anchor).toBe(0);
@@ -16,28 +16,28 @@ describe("Selection#initial", ({test, _}) => {
 });
 
 describe("Selection#create", ({test, _}) => {
-  test("Returns valid selection", ({expect}) => {
+  test("Returns valid selection", ({expect, _}) => {
     let result = create(~anchor=3, ~focus=3);
 
     expect.int(result.anchor).toBe(3);
     expect.int(result.focus).toBe(3);
   });
 
-  test("Handle different values", ({expect}) => {
+  test("Handle different values", ({expect, _}) => {
     let result = create(~anchor=3, ~focus=6);
 
     expect.int(result.anchor).toBe(3);
     expect.int(result.focus).toBe(6);
   });
 
-  test("Handle values below 0", ({expect}) => {
+  test("Handle values below 0", ({expect, _}) => {
     let result = create(~anchor=-1, ~focus=-3);
 
     expect.int(result.anchor).toBe(0);
     expect.int(result.focus).toBe(0);
   });
 
-  test("Handle above length", ({expect}) => {
+  test("Handle above length", ({expect, _}) => {
     let result = create(~anchor=70, ~focus=55);
 
     expect.int(result.anchor).toBe(testStringLength);
@@ -46,19 +46,19 @@ describe("Selection#create", ({test, _}) => {
 });
 
 describe("Selection#length", ({test, _}) => {
-  test("Returns range when anchor comes first", ({expect}) => {
+  test("Returns range when anchor comes first", ({expect, _}) => {
     let result = Selection.length(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(2);
   });
 
-  test("Returns range when anchor comes last", ({expect}) => {
+  test("Returns range when anchor comes last", ({expect, _}) => {
     let result = Selection.length(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(2);
   });
 
-  test("Returns 0 for collapsed selection", ({expect}) => {
+  test("Returns 0 for collapsed selection", ({expect, _}) => {
     let result = Selection.length(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(0);
@@ -66,19 +66,19 @@ describe("Selection#length", ({test, _}) => {
 });
 
 describe("Selection#offsetLeft", ({test, _}) => {
-  test("Returns anchor", ({expect}) => {
+  test("Returns anchor", ({expect, _}) => {
     let result = Selection.offsetLeft(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(3);
   });
 
-  test("Returns focus", ({expect}) => {
+  test("Returns focus", ({expect, _}) => {
     let result = Selection.offsetLeft(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(3);
   });
 
-  test("Returns any", ({expect}) => {
+  test("Returns any", ({expect, _}) => {
     let result = Selection.offsetLeft(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(3);
@@ -86,19 +86,19 @@ describe("Selection#offsetLeft", ({test, _}) => {
 });
 
 describe("Selection#offsetRight", ({test, _}) => {
-  test("Returns anchor", ({expect}) => {
+  test("Returns anchor", ({expect, _}) => {
     let result = Selection.offsetRight(create(~anchor=5, ~focus=3));
 
     expect.int(result).toBe(5);
   });
 
-  test("Returns focus", ({expect}) => {
+  test("Returns focus", ({expect, _}) => {
     let result = Selection.offsetRight(create(~anchor=3, ~focus=5));
 
     expect.int(result).toBe(5);
   });
 
-  test("Returns any", ({expect}) => {
+  test("Returns any", ({expect, _}) => {
     let result = Selection.offsetRight(create(~anchor=3, ~focus=3));
 
     expect.int(result).toBe(3);
@@ -106,13 +106,13 @@ describe("Selection#offsetRight", ({test, _}) => {
 });
 
 describe("Selection#isCollapsed", ({test, _}) => {
-  test("Returns true", ({expect}) => {
+  test("Returns true", ({expect, _}) => {
     let result = Selection.isCollapsed(create(~anchor=3, ~focus=3));
 
     expect.bool(result).toBe(true);
   });
 
-  test("Returns false", ({expect}) => {
+  test("Returns false", ({expect, _}) => {
     let result = Selection.isCollapsed(create(~anchor=3, ~focus=7));
 
     expect.bool(result).toBe(false);
@@ -122,21 +122,21 @@ describe("Selection#isCollapsed", ({test, _}) => {
 describe("Selection#collapse", ({test, _}) => {
   let collapse = Selection.collapsed(~text=testString);
 
-  test("Collapse selection with offset", ({expect}) => {
+  test("Collapse selection with offset", ({expect, _}) => {
     let result = collapse(3);
 
     expect.int(result.anchor).toBe(3);
     expect.int(result.focus).toBe(3);
   });
 
-  test("Collapse selection with offset less then 0", ({expect}) => {
+  test("Collapse selection with offset less then 0", ({expect, _}) => {
     let result = collapse(-20);
 
     expect.int(result.anchor).toBe(0);
     expect.int(result.focus).toBe(0);
   });
 
-  test("Collapse selection with offset is more then length", ({expect}) => {
+  test("Collapse selection with offset is more then length", ({expect, _}) => {
     let result = collapse(testStringLength + 70);
 
     expect.int(result.anchor).toBe(testStringLength);
@@ -147,7 +147,7 @@ describe("Selection#collapse", ({test, _}) => {
 describe("Selection#extend", ({test, _}) => {
   let extend = Selection.extend(~text=testString);
 
-  test("Extend when selection is collapsed", ({expect}) => {
+  test("Extend when selection is collapsed", ({expect, _}) => {
     let selection = create(~anchor=3, ~focus=3);
     let result = extend(~selection, 5);
 
@@ -155,7 +155,7 @@ describe("Selection#extend", ({test, _}) => {
     expect.int(result.focus).toBe(5);
   });
 
-  test("Extend when selection is not collapsed", ({expect}) => {
+  test("Extend when selection is not collapsed", ({expect, _}) => {
     let selection = create(~anchor=3, ~focus=8);
     let result = extend(~selection, 5);
 
@@ -164,7 +164,7 @@ describe("Selection#extend", ({test, _}) => {
   });
 
   test(
-    "Doesn't extend when selection is not collapsed in offset", ({expect}) => {
+    "Doesn't extend when selection is not collapsed in offset", ({expect, _}) => {
     let selection = create(~anchor=3, ~focus=3);
     let result = extend(~selection, 3);
 
@@ -172,7 +172,7 @@ describe("Selection#extend", ({test, _}) => {
     expect.int(result.focus).toBe(3);
   });
 
-  test("Extends when offset is less than 0", ({expect}) => {
+  test("Extends when offset is less than 0", ({expect, _}) => {
     let selection = create(~anchor=3, ~focus=3);
     let result = extend(~selection, -3);
 
@@ -180,7 +180,7 @@ describe("Selection#extend", ({test, _}) => {
     expect.int(result.focus).toBe(0);
   });
 
-  test("Extends when offset is more than length", ({expect}) => {
+  test("Extends when offset is more than length", ({expect, _}) => {
     let selection = create(~anchor=3, ~focus=3);
     let result = extend(~selection, testStringLength + 70);
 

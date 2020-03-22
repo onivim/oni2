@@ -12,7 +12,7 @@ describe("WindowTreeLayout", ({describe, _}) => {
   describe("move", ({test, _}) =>
     test(
       "regression test for #603 - navigation across splits not working",
-      ({expect}) => {
+      ({expect, _}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
       let split3 = createSplit(~editorGroupId=3, ());
@@ -66,7 +66,7 @@ describe("WindowTreeLayout", ({describe, _}) => {
   );
 
   describe("layout", ({test, _}) => {
-    test("layout vertical splits", ({expect}) => {
+    test("layout vertical splits", ({expect, _}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
 
@@ -94,7 +94,7 @@ describe("WindowTreeLayout", ({describe, _}) => {
       );
     });
 
-    test("layout horizontal splits", ({expect}) => {
+    test("layout horizontal splits", ({expect, _}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
 
@@ -121,7 +121,7 @@ describe("WindowTreeLayout", ({describe, _}) => {
         true,
       );
     });
-    test("layout mixed splits", ({expect}) => {
+    test("layout mixed splits", ({expect, _}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
       let split3 = createSplit(~editorGroupId=3, ());

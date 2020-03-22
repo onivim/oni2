@@ -26,25 +26,19 @@ type t = {
   setActiveWindow: (int, int) => unit,
   openEditorById: int => unit,
   closeEditorById: int => unit,
-  hideNotification: Notification.t => unit,
   dispatch: Actions.t => unit,
-  getState: unit => State.t,
-  state: State.t,
 };
 
 let viewNoop: Views.viewOperation =
   (~path as _="", ~id as _=0, ~openMethod as _=Buffer, ()) => ();
 
 let default = {
-  state: State.create(),
-  getState: () => State.create(),
   notifyWindowTreeSizeChanged: (~width as _, ~height as _, ()) => (),
   notifyEditorSizeChanged:
     (~editorGroupId as _, ~width as _, ~height as _, ()) =>
     (),
   editorScrollDelta: (~editorId as _, ~deltaY as _, ()) => (),
   editorSetScroll: (~editorId as _, ~scrollY as _, ()) => (),
-  hideNotification: _ => (),
   openEditorById: _ => (),
   setActiveWindow: (_, _) => (),
   dispatch: _ => (),

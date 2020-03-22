@@ -16,7 +16,7 @@ let basicColorizer = _ => (Colors.black, Colors.white);
 let makeLine = str => BufferLine.make(~indentation, str);
 
 describe("BufferViewTokenizer", ({describe, test, _}) => {
-  test("empty string", ({expect}) => {
+  test("empty string", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
         ~endIndex=0,
@@ -27,7 +27,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   });
 
   describe("indentation settings", ({test, _}) =>
-    test("accounts for tab size", ({expect}) => {
+    test("accounts for tab size", ({expect, _}) => {
       let indentation =
         IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ());
       let result =
@@ -60,7 +60,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
     })
   );
 
-  test("string with only whitespace", ({expect}) => {
+  test("string with only whitespace", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
         ~endIndex=4,
@@ -70,7 +70,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
     expect.int(List.length(result)).toBe(2);
   });
 
-  test("single word token", ({expect}) => {
+  test("single word token", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
         ~endIndex=8,
@@ -92,7 +92,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
     validateTokens(expect, result, expectedTokens);
   });
 
-  test("single word token, surrounded by whitespace", ({expect}) => {
+  test("single word token, surrounded by whitespace", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
         ~endIndex=12,
@@ -130,7 +130,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
     validateTokens(expect, result, expectedTokens);
   });
 
-  test("single letter token, no spaces", ({expect}) => {
+  test("single letter token, no spaces", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
         ~endIndex=1,
@@ -152,7 +152,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
     validateTokens(expect, result, expectedTokens);
   });
 
-  test("respects tokenColor breaks", ({expect}) => {
+  test("respects tokenColor breaks", ({expect, _}) => {
     let differentColorTokenizer = i =>
       i > 0 ? (Colors.green, Colors.yellow) : (Colors.black, Colors.white);
 
@@ -185,7 +185,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
     validateTokens(expect, result, expectedTokens);
   });
 
-  test("multiple tokens", ({expect}) => {
+  test("multiple tokens", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
         ~endIndex=9,

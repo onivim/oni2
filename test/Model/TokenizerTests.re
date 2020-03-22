@@ -22,7 +22,7 @@ let makeLine =
 
 let validateToken =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualToken: TextRun.t,
       expectedToken: TextRun.t,
     ) => {
@@ -43,7 +43,7 @@ let validateToken =
 
 let validateTokens =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualTokens: list(TextRun.t),
       expectedTokens: list(TextRun.t),
     ) => {
@@ -58,7 +58,7 @@ let validateTokens =
 
 describe("Tokenizer", ({test, describe, _}) => {
   describe("start / end indices", ({test, _}) => {
-    test("empty string returns nothing", ({expect}) => {
+    test("empty string returns nothing", ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
           ~startIndex=1,
@@ -71,7 +71,7 @@ describe("Tokenizer", ({test, describe, _}) => {
 
       validateTokens(expect, result, runs);
     });
-    test("start index past string", ({expect}) => {
+    test("start index past string", ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
           ~startIndex=5,
@@ -86,7 +86,7 @@ describe("Tokenizer", ({test, describe, _}) => {
     });
     test(
       "only part of token is produced when start / end index is specified",
-      ({expect}) => {
+      ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
           ~startIndex=1,
@@ -108,7 +108,7 @@ describe("Tokenizer", ({test, describe, _}) => {
 
       validateTokens(expect, result, runs);
     });
-    test("offset prior to tokenize is handled", ({expect}) => {
+    test("offset prior to tokenize is handled", ({expect, _}) => {
       // Use '\t' which is two characters wide with default settings
       let result =
         Tokenizer.tokenize(
@@ -134,7 +134,7 @@ describe("Tokenizer", ({test, describe, _}) => {
   });
 
   describe("character measurement", ({test, _}) =>
-    test("wide tab", ({expect}) => {
+    test("wide tab", ({expect, _}) => {
       let str = "a\ta\t";
       let result =
         Tokenizer.tokenize(~endIndex=4, ~f=splitOnCharacter, str |> makeLine);
@@ -178,13 +178,13 @@ describe("Tokenizer", ({test, describe, _}) => {
     })
   );
 
-  test("empty string", ({expect}) => {
+  test("empty string", ({expect, _}) => {
     let result =
       Tokenizer.tokenize(~endIndex=0, ~f=alwaysSplit, "" |> makeLine);
     expect.int(List.length(result)).toBe(0);
   });
 
-  test("string broken up by characters", ({expect}) => {
+  test("string broken up by characters", ({expect, _}) => {
     let str = "abab" |> makeLine;
     let result = Tokenizer.tokenize(~endIndex=4, ~f=splitOnCharacter, str);
 
@@ -226,7 +226,7 @@ describe("Tokenizer", ({test, describe, _}) => {
     validateTokens(expect, result, runs);
   });
 
-  test("string broken up by characters", ({expect}) => {
+  test("string broken up by characters", ({expect, _}) => {
     let str = "aabbbbaa";
     let result =
       Tokenizer.tokenize(

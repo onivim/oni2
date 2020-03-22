@@ -56,7 +56,7 @@ describe("Diagnostics", ({describe, _}) => {
   });
 
   describe("getDiagnostics", ({test, _}) =>
-    test("no diagnostics", ({expect}) => {
+    test("no diagnostics", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
@@ -67,7 +67,7 @@ describe("Diagnostics", ({describe, _}) => {
   );
 
   describe("getDiagnosticsAtPosition", ({test, _}) =>
-    test("simple diagnostic", ({expect}) => {
+    test("simple diagnostic", ({expect, _}) => {
       let singleDiagnostic = [
         Diagnostic.create(
           ~range=
@@ -136,7 +136,7 @@ describe("Diagnostics", ({describe, _}) => {
     })
   );
   describe("clear", ({test, _}) => {
-    test("single diagnostic", ({expect}) => {
+    test("single diagnostic", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
 
       let v = Diagnostics.create();
@@ -147,7 +147,7 @@ describe("Diagnostics", ({describe, _}) => {
 
       expect.int(List.length(diagnostics)).toBe(0);
     });
-    test("doesn't remove other keys", ({expect}) => {
+    test("doesn't remove other keys", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
 
       let v = Diagnostics.create();
@@ -162,7 +162,7 @@ describe("Diagnostics", ({describe, _}) => {
   });
 
   describe("change", ({test, _}) => {
-    test("simple diagnostic add", ({expect}) => {
+    test("simple diagnostic add", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
@@ -173,7 +173,7 @@ describe("Diagnostics", ({describe, _}) => {
       expect.int(List.length(diagnostics)).toBe(1);
     });
 
-    test("diagnostics from multiple sources", ({expect}) => {
+    test("diagnostics from multiple sources", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 
@@ -187,7 +187,7 @@ describe("Diagnostics", ({describe, _}) => {
 
     test(
       "clearing diagnostic from one source doesn't clear the other source",
-      ({expect}) => {
+      ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
       let v = Diagnostics.create();
 

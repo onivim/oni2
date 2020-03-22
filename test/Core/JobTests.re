@@ -5,7 +5,7 @@ module Time = Revery_Core.Time;
 
 describe("Job", ({describe, _}) =>
   describe("tick", ({test, _}) =>
-    test("does multiple iterations of work", ({expect}) => {
+    test("does multiple iterations of work", ({expect, _}) => {
       let f = ((), c) =>
         if (c == 3) {
           (true, (), 3);

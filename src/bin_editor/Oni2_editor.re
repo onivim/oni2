@@ -121,8 +121,7 @@ if (cliOptions.syntaxHighlightService) {
 
     PreflightChecks.run();
 
-    let initialState = Model.State.create();
-    let currentState = ref(initialState);
+    let currentState = ref(Model.State.create());
 
     let update = UI.start(w, <Root state=currentState^ />);
 
@@ -136,9 +135,7 @@ if (cliOptions.syntaxHighlightService) {
       Tick.interval(
         _dt =>
           if (isDirty^) {
-            let state = currentState^;
-            GlobalContext.set({...GlobalContext.current(), state});
-            update(<Root state />);
+            update(<Root state=currentState^ />);
             isDirty := false;
           },
         Time.seconds(0),
@@ -167,6 +164,7 @@ if (cliOptions.syntaxHighlightService) {
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
         ~executingDirectory=Revery.Environment.executingDirectory,
+        ~getState=() => currentState^,
         ~onStateChanged,
         ~getZoom,
         ~setZoom,
@@ -193,7 +191,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
 
     GlobalContext.set({
-      getState: () => currentState^,
       notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
         dispatch(Model.Actions.WindowTreeSetSize(width, height)),
       notifyEditorSizeChanged: (~editorGroupId, ~width, ~height, ()) =>
@@ -217,13 +214,20 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
       setActiveWindow: (splitId, editorGroupId) =>
         dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
-      hideNotification: id => dispatch(Model.Actions.HideNotification(id)),
       dispatch,
-      state: initialState,
     });
 
     dispatch(Model.Actions.Init);
     runEffects();
+
+    // Add a quit handler, so that regardless of how we quit -
+    // we have the opportunity to clean up
+    Revery.App.onBeforeQuit(app, () =>
+      if (!currentState^.isQuitting) {
+        dispatch(Model.Actions.Quit(true));
+      }
+    )
+    |> (ignore: Revery.App.unsubscribe => unit);
 
     List.iter(
       v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),

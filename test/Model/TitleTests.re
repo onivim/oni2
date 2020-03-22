@@ -6,11 +6,11 @@ module Title = Oni_Model.Title;
 
 describe("Title", ({describe, _}) => {
   describe("parse", ({test, _}) => {
-    test("plain string", ({expect}) => {
+    test("plain string", ({expect, _}) => {
       let title = Title.ofString("abc");
       expect.equal(title, [Title.Text("abc", false)]);
     });
-    test("string with separator", ({expect}) => {
+    test("string with separator", ({expect, _}) => {
       let title = Title.ofString("abc${separator}def");
       expect.equal(
         title,
@@ -21,7 +21,7 @@ describe("Title", ({describe, _}) => {
         ],
       );
     });
-    test("string with variables", ({expect}) => {
+    test("string with variables", ({expect, _}) => {
       let title = Title.ofString("${variable1}${separator}${variable2}");
       expect.equal(
         title,
@@ -40,13 +40,13 @@ describe("Title", ({describe, _}) => {
       |> List.to_seq
       |> StringMap.of_seq;
 
-    test("basic case", ({expect}) => {
+    test("basic case", ({expect, _}) => {
       let title =
         Title.ofString("prefix${variable1}${separator}${variable2}postfix");
       let result = Title.toString(title, simpleMap);
       expect.string(result).toEqual("prefixrv1 - rv2postfix");
     });
-    test("nested variable missing case", ({expect}) => {
+    test("nested variable missing case", ({expect, _}) => {
       let title =
         Title.ofString(
           "prefix${variable1}${separator}${missingVariable}${separator}${variable2}postfix",

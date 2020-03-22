@@ -16,6 +16,7 @@
         Oni2.syntax_client
         Oni2.components
         Oni2.ui
+        Oni2.feature.notification
         Oni2.feature.theme
         Oni2.feature.terminal
         Oni2.service.font

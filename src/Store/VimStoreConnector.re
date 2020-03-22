@@ -138,18 +138,8 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onMessage((priority, title, msg) => {
-      open Vim.Types;
-      let (priorityString, kind) =
-        switch (priority) {
-        | Error => ("ERROR", Notification.Error)
-        | Warning => ("WARNING", Notification.Warning)
-        | Info => ("INFO", Notification.Info)
-        };
-
-      Log.debugf(m => m("Message - %s [%s]: %s", priorityString, title, msg));
-
-      dispatch(ShowNotification(Notification.create(~kind, msg)));
+    Vim.onMessage((priority, title, message) => {
+      dispatch(VimMessageReceived({priority, title, message}))
     });
 
   let _: unit => unit =
@@ -967,6 +957,20 @@ let start =
           ),
           TitleStoreConnector.Effects.updateTitle(newState),
         ]),
+      );
+
+    | VimMessageReceived({priority, message, _}) =>
+      let kind =
+        switch (priority) {
+        | Error => Feature_Notification.Error
+        | Warning => Feature_Notification.Warning
+        | Info => Feature_Notification.Info
+        };
+
+      (
+        state,
+        Feature_Notification.Effects.create(~kind, message)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       );
 
     | _ => (state, Isolinear.Effect.none)

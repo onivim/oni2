@@ -4,6 +4,7 @@ open Revery.Draw;
 
 open Oni_Core;
 
+module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
 type context = {
@@ -216,9 +217,9 @@ let token =
       ~x=x +. context.charWidth /. 4. -. context.scrollX,
       ~y=y -. context.scrollY,
       ~color=theme.editorWhitespaceForeground,
-      ~fontFamily="FontAwesome5FreeSolid.otf",
+      ~fontFamily=FontAwesome.FontFamily.solid,
       ~fontSize=10.,
-      ~text=FontIcon.codeToIcon(0xf30b),
+      ~text=FontIcon.codeToIcon(FontAwesome.longArrowAltRight),
       context.canvasContext,
     )
 

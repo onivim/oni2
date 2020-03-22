@@ -6,7 +6,7 @@ open Helpers;
 
 describe("Buffer", ({describe, _}) =>
   describe("update", ({test, _}) => {
-    test("empty buffer w/ update", ({expect}) => {
+    test("empty buffer w/ update", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
       let update =
         BufferUpdate.create(
@@ -20,7 +20,7 @@ describe("Buffer", ({describe, _}) =>
       validateBuffer(expect, updatedBuffer, [|"a"|]);
     });
 
-    test("BufEnter update does not duplicate content", ({expect}) => {
+    test("BufEnter update does not duplicate content", ({expect, _}) => {
       let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.create(
@@ -37,7 +37,7 @@ describe("Buffer", ({describe, _}) =>
 
     test(
       "BufEnter update does not duplicate content, 1-based indices",
-      ({expect}) => {
+      ({expect, _}) => {
       let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.create(
@@ -52,7 +52,7 @@ describe("Buffer", ({describe, _}) =>
       validateBuffer(expect, updatedBuffer, [|"a", "d", "e", "f", "c"|]);
     });
 
-    test("update single line", ({expect}) => {
+    test("update single line", ({expect, _}) => {
       let buffer = Buffer.ofLines([|"a"|]);
       let update =
         BufferUpdate.create(
@@ -66,7 +66,7 @@ describe("Buffer", ({describe, _}) =>
       validateBuffer(expect, updatedBuffer, [|"abc"|]);
     });
 
-    test("delete line", ({expect}) => {
+    test("delete line", ({expect, _}) => {
       let buffer = Buffer.ofLines([|"a"|]);
       let update =
         BufferUpdate.create(
@@ -80,7 +80,7 @@ describe("Buffer", ({describe, _}) =>
       validateBuffer(expect, updatedBuffer, [||]);
     });
 
-    test("update single line", ({expect}) => {
+    test("update single line", ({expect, _}) => {
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
@@ -94,7 +94,7 @@ describe("Buffer", ({describe, _}) =>
       validateBuffer(expect, updatedBuffer, [|"a", "d", "e", "f", "c"|]);
     });
 
-    test("add new line after buffer", ({expect}) => {
+    test("add new line after buffer", ({expect, _}) => {
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
@@ -108,7 +108,7 @@ describe("Buffer", ({describe, _}) =>
       validateBuffer(expect, updatedBuffer, [|"a", "b", "c", "d"|]);
     });
 
-    test("version gets updated with buffer update", ({expect}) => {
+    test("version gets updated with buffer update", ({expect, _}) => {
       let buffer = Buffer.ofLines([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
@@ -123,7 +123,7 @@ describe("Buffer", ({describe, _}) =>
       expect.int(Buffer.getVersion(updatedBuffer)).toBe(5);
     });
 
-    test("buffer update with lower version gets rejected", ({expect}) => {
+    test("buffer update with lower version gets rejected", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
       let update =
         BufferUpdate.create(

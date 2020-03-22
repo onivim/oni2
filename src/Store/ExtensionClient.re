@@ -330,7 +330,7 @@ let create = (~extensions, ~setup: Setup.t) => {
   };
 
   let onShowMessage = message => {
-    dispatch(Actions.ShowNotification(Notification.create(message)));
+    dispatch(Actions.ExtMessageReceived(message));
   };
 
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
