@@ -284,7 +284,7 @@ let start = maybeKeyBindingsFilePath => {
       let keyBindingsFile = getKeybindingsFile();
 
       let checkFirstLoad = keyBindingPath => {
-        prerr_endline ("keybinding path: " ++ keyBindingPath);
+        prerr_endline("keybinding path: " ++ keyBindingPath);
         if (isFirstLoad) {
           reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
         };
@@ -300,7 +300,9 @@ let start = maybeKeyBindingsFilePath => {
         keyBindingsFile
         |> Utility.ResultEx.tap(checkFirstLoad)
         |> Utility.ResultEx.flatMap(Utility.JsonEx.from_file)
-        |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors(~default))
+        |> Utility.ResultEx.flatMap(
+             Keybindings.of_yojson_with_errors(~default),
+           )
         // Handle error case when parsing entire JSON file
         |> Utility.ResultEx.tapError(onError)
         |> Stdlib.Result.value(~default=(Keybindings.empty, []));

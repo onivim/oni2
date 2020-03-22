@@ -193,35 +193,38 @@ module Legacy = {
     };
 };
 
-let keyToSdl = EditorInput.Key.({
-  fun
-  | Escape => "Escape"
-  | Return => "Return"
-  | Up => "Up"
-  | Down => "Down"
-  | Left => "Left"
-  | Right => "Right"
-  | Tab => "Tab"
-  | PageUp => "PageUp"
-  | PageDown => "PageDown"
-  | Delete => "Delete"
-  | Pause => "Pause"
-  | Home => "Home"
-  | End => "End"
-  | Backspace => "Backspace"
-  | CapsLock => "CapsLock"
-  | Insert => "Insert"
-  | Function(digit) => "F" ++ string_of_int(digit)
-  | Space => "Space"
-  | NumpadDigit(digit) => "Keypad " ++ string_of_int(digit)
-  | NumpadMultiply => "Keypad *"
-  | NumpadAdd => "Keypad +"
-  | NumpadSeparator => "Keypad "
-  | NumpadSubtract => "Keypad -"
-  | NumpadDivide => "Keypad //"
-  | NumpadDecimal => "Keypad ."
-  | Character(c) => String.make(1, c) |> String.uppercase_ascii
-});
+let keyToSdl =
+  EditorInput.Key.(
+    {
+      fun
+      | Escape => "Escape"
+      | Return => "Return"
+      | Up => "Up"
+      | Down => "Down"
+      | Left => "Left"
+      | Right => "Right"
+      | Tab => "Tab"
+      | PageUp => "PageUp"
+      | PageDown => "PageDown"
+      | Delete => "Delete"
+      | Pause => "Pause"
+      | Home => "Home"
+      | End => "End"
+      | Backspace => "Backspace"
+      | CapsLock => "CapsLock"
+      | Insert => "Insert"
+      | Function(digit) => "F" ++ string_of_int(digit)
+      | Space => "Space"
+      | NumpadDigit(digit) => "Keypad " ++ string_of_int(digit)
+      | NumpadMultiply => "Keypad *"
+      | NumpadAdd => "Keypad +"
+      | NumpadSeparator => "Keypad "
+      | NumpadSubtract => "Keypad -"
+      | NumpadDivide => "Keypad //"
+      | NumpadDecimal => "Keypad ."
+      | Character(c) => String.make(1, c) |> String.uppercase_ascii;
+    }
+  );
 
 let codeToOpt =
   fun

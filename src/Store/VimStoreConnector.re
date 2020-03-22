@@ -851,7 +851,7 @@ let start =
       let _ = Vim.input("<CR>");
       ();
     });
-  
+
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
       let _ = Vim.input("<esc>");
