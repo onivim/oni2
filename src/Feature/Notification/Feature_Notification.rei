@@ -16,7 +16,7 @@ type notification = {
   message: string,
 };
 
-type model = pri list(notification);
+type model = list(notification);
 
 let initial: model;
 

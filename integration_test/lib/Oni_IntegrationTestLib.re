@@ -49,6 +49,7 @@ let getAssetPath = path =>
 let runTest =
     (
       ~configuration=None,
+      ~keybindings=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
@@ -87,17 +88,25 @@ let runTest =
 
   InitLog.info("Starting store...");
 
-  let configurationFilePath = Filename.temp_file("configuration", ".json");
-  let oc = open_out(configurationFilePath);
+  let writeConfigurationFile = (name, jsonStringOpt) => {
+    let tempFilePath = Filename.temp_file(name, ".json");
+    let oc = open_out(tempFilePath);
 
-  InitLog.info("Writing configuration file: " ++ configurationFilePath);
+    InitLog.info("Writing configuration file: " ++ tempFilePath);
 
-  let () =
-    configuration
-    |> Option.value(~default="{}")
-    |> Printf.fprintf(oc, "%s\n");
+    let () =
+      jsonStringOpt
+      |> Option.value(~default="{}")
+      |> Printf.fprintf(oc, "%s\n");
 
-  close_out(oc);
+    close_out(oc);
+    tempFilePath;
+  };
+
+  let configurationFilePath =
+    writeConfigurationFile("configuration", configuration);
+  let keybindingsFilePath =
+    writeConfigurationFile("keybindings", keybindings);
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -114,6 +123,7 @@ let runTest =
       ~onStateChanged,
       ~cliOptions,
       ~configurationFilePath=Some(configurationFilePath),
+      ~keybindingsFilePath=Some(keybindingsFilePath),
       ~quit,
       ~window=None,
       (),

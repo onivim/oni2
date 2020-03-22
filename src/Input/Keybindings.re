@@ -1,3 +1,5 @@
+module Json = Oni_Core.Json;
+
 module Keybinding = {
   type t = {
     key: string,
@@ -31,16 +33,18 @@ module Keybinding = {
     let condition =
       Yojson.Safe.Util.member("when", json) |> condition_of_yojson;
 
+    let wrapError = msg => Error(msg ++ ": " ++ Yojson.Safe.to_string(json));
+
     switch (condition) {
     | Ok(condition) =>
       switch (key, command) {
       | (`String(key), `String(command)) => Ok({key, command, condition})
-      | (`String(_), _) => Error("Command must be a string")
-      | (_, `String(_)) => Error("Key must be a string")
-      | _ => Error("Binding must specify key and command strings")
+      | (`String(_), _) => wrapError("'command' is required")
+      | (_, `String(_)) => wrapError("'key' is required")
+      | _ => wrapError("'key' and 'command' are required")
       }
 
-    | Error(msg) => Error(msg)
+    | Error(_) as err => err
     };
   };
 };
