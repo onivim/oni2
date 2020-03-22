@@ -228,23 +228,21 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.string(text).toEqual("");
     });
   });
-
-  describe("When <BS> with no selection", ({test, _}) => {
-    let key = "<BS>";
-
-    test("Removes character on the left of cursor", ({expect, _}) => {
+  describe("When <C-w> with no selection", ({test, _}) => {
+    let key = "<C-w>";
+    test("Removes word characters on the left of cursor", ({expect, _}) => {
       let selection = collapsedSelection(4);
-      let expected = collapsedSelection(3);
+      let expected = collapsedSelection(0);
 
       let (text, newSelection) = runInputHandler(selection, key);
 
       expect.equal(expected, newSelection);
       expect.string(text).toEqual(
-        "Som interesting. Test. String. Isn't it? Maybe",
+        " interesting. Test. String. Isn't it? Maybe",
       );
     });
 
-    test("Doesn't remove character if cursor at the beginnig", ({expect, _}) => {
+    test("Doesn't remove anything if cursor at the beginning", ({expect, _}) => {
       let selection = collapsedSelection(0);
       let expected = collapsedSelection(0);
 
@@ -263,6 +261,48 @@ describe("handleInputS#handleInput", ({describe, _}) => {
       expect.equal(expected, newSelection);
       expect.string(text).toEqual("");
     });
+  });
+
+  describe("When <BS> with no selection", ({test, _}) => {
+    let keys = ["<BS>", "<C-h>"];
+
+    keys
+    |> List.iter(key => {
+         test("Removes character on the left of cursor", ({expect, _}) => {
+           let selection = collapsedSelection(4);
+           let expected = collapsedSelection(3);
+
+           let (text, newSelection) = runInputHandler(selection, key);
+
+           expect.equal(expected, newSelection);
+           expect.string(text).toEqual(
+             "Som interesting. Test. String. Isn't it? Maybe",
+           );
+         });
+
+         test(
+           "Doesn't remove character if cursor at the beginning",
+           ({expect, _}) => {
+           let selection = collapsedSelection(0);
+           let expected = collapsedSelection(0);
+
+           let (text, newSelection) = runInputHandler(selection, key);
+
+           expect.equal(expected, newSelection);
+           expect.string(text).toEqual(testString);
+         });
+
+         test("Don't do anything for blank string", ({expect, _}) => {
+           let selection = collapsedSelection(~text="", -1);
+           let expected = collapsedSelection(~text="", 0);
+
+           let (text, newSelection) =
+             runInputHandler(~text="", selection, key);
+
+           expect.equal(expected, newSelection);
+           expect.string(text).toEqual("");
+         });
+       });
   });
 
   describe("When <BS> with with selection", ({test, _}) => {
