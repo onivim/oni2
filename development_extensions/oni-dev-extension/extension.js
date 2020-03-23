@@ -161,7 +161,7 @@ function activate(context) {
     let disposable = vscode.workspace.registerTextDocumentContentProvider('foo', textContentProvider)
     disposable.dispose();
 
-    // Settings
+    // Configuration
 
     const rlsLocation = vscode.workspace.getConfiguration().get("reason_language_server.location");
     console.error("Configured RLS location: ", rlsLocation);
@@ -171,6 +171,16 @@ function activate(context) {
 
     const dontCrash = vscode.workspace.getConfiguration().get("developer.oni.dont-crash");
     console.error("Don't crash: ", dontCrash);
+
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration("developer.oni.dont-crash")) {
+        const dontCrash = vscode.workspace.getConfiguration().get("developer.oni.dont-crash");
+        console.error("Setting changed, Don't crash: ", dontCrash);
+      } else {
+        const dontCrash = vscode.workspace.getConfiguration().get("developer.oni.dont-crash");
+        console.error("Setting did not change, Don't crash: ", dontCrash);
+      }
+    });
 }
 
 // this method is called when your extension is deactivated
