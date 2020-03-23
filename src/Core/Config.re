@@ -21,19 +21,22 @@ module Settings = {
     |> List.map(((key, entry)) => (Lookup.path(key), entry))
     |> Lookup.fromList;
 
-  let fromFile = path => {
-    switch (Yojson.Safe.from_file(path)) {
+  let fromJson = json => {
+    switch (json) {
     | `Assoc(items) => fromList(items)
 
     | _ =>
       Log.errorf(m => m("Expected file to contain a JSON object"));
       empty;
+    };
+  };
 
-    | exception (Yojson.Json_error(message)) =>
+  let fromFile = path =>
+    try(path |> Yojson.Safe.from_file |> fromJson) {
+    | Yojson.Json_error(message) =>
       Log.errorf(m => m("Failed to read file %s: %s", path, message));
       empty;
     };
-  };
 
   let get = Lookup.get;
 

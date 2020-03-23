@@ -12,6 +12,7 @@ module Settings: {
   let empty: t;
 
   let fromList: list((string, Json.t)) => t;
+  let fromJson: Json.t => t;
   let fromFile: string => t;
 
   let get: (key, t) => option(Json.t);
