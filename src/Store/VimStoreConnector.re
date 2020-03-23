@@ -868,6 +868,16 @@ let start =
       ();
     });
 
+  let setBufferLinesEffect = (bufferId, lines: array(string)) => {
+    Isolinear.Effect.create(~name="vim.setBufferLines", () => {
+        let () = bufferId
+        |> Vim.Buffer.getById
+        |> Option.iter((buf) => {
+          Vim.Buffer.setLines(lines, buf);
+        });
+    });
+  }
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -922,6 +932,32 @@ let start =
         state,
         synchronizeEditorEffect(state),
       )
+    | Command("terminal.normalMode") => 
+
+      let maybeBufferId =
+      state
+      |> Selectors.getActiveBuffer
+      |> Option.map(Oni_Core.Buffer.getId);
+
+      /*let maybeTerminalId =
+      maybeBufferId
+      |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
+      |> OptionEx.flatMap(fun
+      | BufferRenderer.Terminal({ id, _}) => Some(id)
+      | _ => None
+      );*/
+      
+      let maybeTerminalId = Some(1);
+
+      let effect = OptionEx.map2(
+      (bufferId, _terminalId) => {
+        setBufferLinesEffect(bufferId, [|"abc"|])
+      }, maybeBufferId, maybeTerminalId
+      )
+      |> Option.value(~default=Isolinear.Effect.none);
+
+      (state, effect)
+
     | KeyboardInput(s) => (state, inputEffect(s))
     | CopyActiveFilepathToClipboard => (
         state,

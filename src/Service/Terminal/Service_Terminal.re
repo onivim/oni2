@@ -255,3 +255,9 @@ module Effect = {
 let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {
   Revery.Event.dispatch(Internal.onExtensionMessage, msg);
 };
+
+type terminalLine = {
+  text: string,
+};
+
+let getLinesAndHighlights = (terminalId) => None;

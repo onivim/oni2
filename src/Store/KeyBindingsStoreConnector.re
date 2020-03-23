@@ -254,6 +254,11 @@ let start = maybeKeyBindingsFilePath => {
         command: "workbench.action.previousEditor",
         condition: WhenExpr.Value(True),
       },
+      {
+        key: "<C-T>",
+        command: "terminal.normalMode",
+        condition: WhenExpr.Value(True),
+      },
     ];
 
   let getKeybindingsFile = () => {
