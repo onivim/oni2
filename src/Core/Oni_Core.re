@@ -26,7 +26,6 @@ module Filter = Filter;
 module Indentation = Indentation;
 module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;
-module Input = Input;
 module IntMap = Kernel.IntMap;
 module Json = Json;
 module Job = Job;
