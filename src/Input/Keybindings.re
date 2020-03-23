@@ -1,6 +1,3 @@
-// TODO;
-let count = _ => 0;
-
 type keybinding = {
   key: string,
   command: string,
@@ -105,6 +102,8 @@ type effect =
 let empty = Input.empty;
 
 type t = Input.t;
+
+let count = Input.count;
 
 let mapEffect =
   fun

@@ -48,6 +48,13 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
+let getKeyFromSDL: string => EditorInput.keyPress =
+  key => {
+    let scancode = Sdl2.Scancode.ofName(key);
+    let keycode = Sdl2.Keycode.ofName(key);
+    EditorInput.{keycode, scancode, modifiers: EditorInput.Modifiers.none};
+  };
+
 let contextWithEditorTextFocus =
   [("editorTextFocus", true)] |> List.to_seq |> Hashtbl.of_seq;
 
@@ -105,19 +112,22 @@ describe("Keybindings", ({describe, _}) => {
     });
     test("regression test: #1152 (legacy expression)", ({expect, _}) => {
       let result = of_yojson_with_errors(regressionTest1152);
+
       expect.bool(isOk(result)).toBe(true);
-      expect.int(bindingCount(result)).toBe(1);
       expect.int(errorCount(result)).toBe(0);
 
-      let binding = getFirstBinding(result);
-      expect.equal(
-        binding,
-        Keybinding.{
-          key: "<F2>",
-          command: "explorer.toggle",
-          condition: WhenExpr.Or([And([Defined("editorTextFocus")])]),
-        },
-      );
+      result
+      |> Utility.ResultEx.tapError(err => failwith(err))
+      |> Result.iter(((bindings, _)) => {
+           let (_bindings, effects) =
+             keyDown(
+               ~context=contextWithEditorTextFocus,
+               ~key=getKeyFromSDL("F2"),
+               bindings,
+             );
+
+           expect.equal(effects, [Command("explorer.toggle")]);
+         });
     });
     test("regression test: #1160 (legacy binding)", ({expect, _}) => {
       let result = of_yojson_with_errors(regressionTest1160);
@@ -125,22 +135,47 @@ describe("Keybindings", ({describe, _}) => {
       expect.int(bindingCount(result)).toBe(4);
       expect.int(errorCount(result)).toBe(0);
 
-      Keybinding.(
-        {
-          let binding0 = getNthBinding(~index=0, result);
-          let binding1 = getNthBinding(~index=1, result);
-          let binding2 = getNthBinding(~index=2, result);
-          let binding3 = getNthBinding(~index=3, result);
+      let validateKeyResultsInCommand = ((key, modifiers, cmd)) => {
+        result
+        |> Result.iter(((bindings, _)) => {
+             let key = {...getKeyFromSDL(key), modifiers};
+             let (_bindings, effects) =
+               keyDown(~context=contextWithEditorTextFocus, ~key, bindings);
+             expect.equal(effects, [Command(cmd)]);
+           });
+      };
 
-          // Validate quickOpen.open gets upgraded to workbench.action.quickOpen
-          expect.equal(binding0.command, "workbench.action.quickOpen");
-          expect.equal(binding1.command, "workbench.action.quickOpen");
+      let modifier = (~control, ~shift, ~meta) => {
+        ...EditorInput.Modifiers.none,
+        control,
+        shift,
+        meta,
+      };
 
-          // Validate commandPalette.open gets upgraded to workbench.action.quickOpen
-          expect.equal(binding2.command, "workbench.action.showCommands");
-          expect.equal(binding3.command, "workbench.action.showCommands");
-        }
-      );
+      let cases = [
+        (
+          "p",
+          modifier(~control=true, ~shift=false, ~meta=false),
+          "workbench.action.quickOpen",
+        ),
+        (
+          "p",
+          modifier(~control=false, ~shift=false, ~meta=true),
+          "workbench.action.quickOpen",
+        ),
+        (
+          "p",
+          modifier(~control=true, ~shift=true, ~meta=false),
+          "workbench.action.showCommands",
+        ),
+        (
+          "p",
+          modifier(~control=false, ~shift=true, ~meta=true),
+          "workbench.action.showCommands",
+        ),
+      ];
+
+      cases |> List.iter(validateKeyResultsInCommand);
     });
   })
 });
