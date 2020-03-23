@@ -14,7 +14,7 @@ let metrics =
 
 /* Create a state with some editor size */
 let simpleState = {
-  let state = State.create();
+  let state = State.initial(~configFile=None);
 
   Reducer.reduce(
     state,
