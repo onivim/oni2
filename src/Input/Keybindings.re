@@ -272,8 +272,7 @@ let evaluateBindings = (bindings: list(keybinding), errors) => {
     | [hd, ...tail] =>
       switch (addBinding(hd, currentBindings)) {
       | Ok(newBindings) => loop(tail, errors, newBindings)
-      | Error(msg) =>
-        loop(tail, [msg, ...errors], currentBindings);
+      | Error(msg) => loop(tail, [msg, ...errors], currentBindings)
       }
     | [] => (currentBindings, errors)
     };

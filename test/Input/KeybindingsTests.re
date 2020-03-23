@@ -48,6 +48,9 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
+let contextWithEditorTextFocus =
+  [("editorTextFocus", true)] |> List.to_seq |> Hashtbl.of_seq;
+
 let isOk = v =>
   switch (v) {
   | Ok(_) => true
