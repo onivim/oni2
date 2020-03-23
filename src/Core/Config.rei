@@ -19,6 +19,12 @@ module Settings: {
   let union: (t, t) => t;
   let unionMany: list(t) => t;
 
+  /** Returns the set of changed keys with its new value, or `null` if removed */
+  let diff: (t, t) => t;
+
+  /** Returns the set of changed keys with the value `true`, intended for conversion to Json to mimic weird JavaScript semantics */
+  let changed: (t, t) => t;
+
   let keys: t => list(key);
 
   let toJson: t => Json.t;

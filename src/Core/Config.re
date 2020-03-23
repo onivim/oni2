@@ -48,6 +48,23 @@ module Settings = {
     );
   let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
 
+  let diff = (xs, ys) =>
+    Lookup.merge(
+      (_path, x, y) =>
+        switch (x, y) {
+        | (Some(x), Some(y)) when x == y => None
+        | (Some(_), Some(y)) => Some(y)
+        | (Some(_), None) => Some(Json.Encode.null)
+        | (None, Some(value)) => Some(value)
+        | (None, None) => failwith("unreachable")
+        },
+      xs,
+      ys,
+    );
+
+  let changed = (xs, ys) =>
+    diff(xs, ys) |> Lookup.map(_ => Json.Encode.bool(true));
+
   let keys = settings =>
     Lookup.fold((key, _, acc) => [key, ...acc], settings, []);
 
