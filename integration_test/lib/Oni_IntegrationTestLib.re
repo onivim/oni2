@@ -70,7 +70,7 @@ let runTest =
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
 
-  let currentState = ref(Model.State.create());
+  let currentState = ref(Model.State.initial(~configFile=None));
 
   let headlessWindow =
     Revery.Utility.HeadlessWindow.create(

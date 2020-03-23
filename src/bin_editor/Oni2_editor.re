@@ -121,7 +121,7 @@ if (cliOptions.syntaxHighlightService) {
 
     PreflightChecks.run();
 
-    let currentState = ref(Model.State.create());
+    let currentState = ref(Model.State.initial(~configFile=None));
 
     let update = UI.start(w, <Root state=currentState^ />);
 
