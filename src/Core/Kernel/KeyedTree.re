@@ -15,6 +15,8 @@ module type S = {
   let add: (path, 'a, t('a)) => t('a);
   let get: (path, t('a)) => option('a);
 
+  let merge:
+    ((path, option('a), option('b)) => option('c), t('a), t('b)) => t('c);
   let union: ((path, 'a, 'a) => option('a), t('a), t('a)) => t('a);
   let map: ('a => 'b, t('a)) => t('b);
   let fold: ((path, 'a, 'b) => 'b, t('a), 'b) => 'b;
@@ -96,6 +98,41 @@ module Make = (Ord: OrderedType) => {
       }
     | _ => None
     };
+
+  let merge = (f, a, b) => {
+    let f = (path, a, b) =>
+      Option.map(value => Leaf(value), f(path, a, b));
+
+    let rec aux = (path, a, b) =>
+      switch (a, b) {
+      | (Leaf(a), Leaf(b)) => f(path, Some(a), Some(b))
+      | (Node(_), Leaf(b)) => f(path, None, Some(b))
+      | (Leaf(a), Node(_)) => f(path, Some(a), None)
+      | (Node(aChildren), Node(bChildren)) =>
+        let merged =
+          KeyedMap.merge(
+            (key, a, b) => {
+              let path = [key, ...path];
+              switch (a, b) {
+              | (Some(a), Some(b)) => aux(path, a, b)
+              | (None, Some(b)) => aux(path, empty, b)
+              | (Some(a), None) => aux(path, a, empty)
+              | (None, None) => failwith("unreachable")
+              };
+            },
+            aChildren,
+            bChildren,
+          );
+
+        if (merged == KeyedMap.empty) {
+          None;
+        } else {
+          Some(Node(merged));
+        };
+      };
+
+    aux([], a, b) |> Option.value(~default=empty);
+  };
 
   let union = f => {
     let rec aux = (f, path, a, b) =>

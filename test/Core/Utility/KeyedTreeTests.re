@@ -70,6 +70,128 @@ describe("KeyedTree", ({describe, _}) => {
     });
   });
 
+  describe("merge", ({test, _}) => {
+    test("only a", ({expect, _}) => {
+      let a =
+        TreeDSL.(
+          node([
+            ("1", leaf(1)),
+            ("2", node([("1", leaf(21))])),
+            ("3", node([("1", leaf(31)), ("2", leaf(32))])),
+          ])
+        );
+      let b =
+        TreeDSL.(
+          node([
+            ("1", leaf(1)),
+            ("3", node([("2", leaf(32))])),
+            ("4", node([("1", node([("1", leaf(411))]))])),
+          ])
+        );
+      let expected = a;
+
+      let actual = Tree.merge((_, a, _) => a, a, b);
+
+      expect.ext.tree(actual).toEqual(expected);
+    });
+
+    test("only b", ({expect, _}) => {
+      let a =
+        TreeDSL.(
+          node([
+            ("1", leaf(1)),
+            ("2", node([("1", leaf(21))])),
+            ("3", node([("1", leaf(31)), ("2", leaf(32))])),
+          ])
+        );
+      let b =
+        TreeDSL.(
+          node([
+            ("1", leaf(1)),
+            ("3", node([("2", leaf(32))])),
+            ("4", node([("1", node([("1", leaf(411))]))])),
+          ])
+        );
+      let expected = b;
+
+      let actual = Tree.merge((_, _, b) => b, a, b);
+
+      expect.ext.tree(actual).toEqual(expected);
+    });
+
+    test("only in both", ({expect, _}) => {
+      let a =
+        TreeDSL.(
+          node([
+            ("1", leaf(1)),
+            ("2", node([("1", leaf(21))])),
+            ("3", node([("1", leaf(31)), ("2", leaf(32))])),
+          ])
+        );
+      let b =
+        TreeDSL.(
+          node([
+            ("1", leaf(1)),
+            ("3", node([("2", leaf(32))])),
+            ("4", node([("1", node([("1", leaf(411))]))])),
+          ])
+        );
+      let expected =
+        TreeDSL.(
+          node([("1", leaf(1)), ("3", node([("2", leaf(32))]))])
+        );
+
+      let actual =
+        Tree.merge(
+          (_, a, b) =>
+            switch (a, b) {
+            | (Some(_), Some(_)) => b
+            | (None, _)
+            | (_, None) => None
+            },
+          a,
+          b,
+        );
+
+      expect.ext.tree(actual).toEqual(expected);
+    });
+
+    test("all", ({expect, _}) => {
+      let a =
+        TreeDSL.(
+          node([
+            ("1", leaf(1)),
+            ("2", node([("1", leaf(21))])),
+            ("3", node([("1", leaf(31)), ("2", leaf(32))])),
+          ])
+        );
+      let b =
+        TreeDSL.(
+          node([
+            ("1", leaf(1)),
+            ("3", node([("2", leaf(32))])),
+            ("4", node([("1", node([("1", leaf(411))]))])),
+          ])
+        );
+      let expected = Tree.union((_, _, b) => Some(b), a, b);
+
+      let actual =
+        Tree.merge(
+          (_, a, b) =>
+            switch (a, b) {
+            | (Some(_), Some(_)) => b
+            | (None, Some(_)) => b
+            | (Some(_), None) => a
+            | (None, None) => failwith("unreachable")
+            },
+          a,
+          b,
+        );
+
+      expect.ext.tree(actual).toEqual(expected);
+    });
+  });
+
   describe("map", ({test, _}) => {
     test("simple", ({expect, _}) => {
       let tree =
