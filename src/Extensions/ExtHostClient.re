@@ -442,6 +442,13 @@ let provideTextDocumentContent = (id, uri, client) => {
   promise;
 };
 
+let acceptConfigurationChanged = (config, ~changed, client) => {
+  ExtHostTransport.send(
+    client,
+    Out.Configuration.acceptConfigurationChanged(config, changed),
+  );
+};
+
 let send = (client, msg) => ExtHostTransport.send(client, msg);
 
 let close = client => ExtHostTransport.close(client);
@@ -451,5 +458,11 @@ module Effects = {
     Isolinear.Effect.create(
       ~name="extHostClient.executeContributedCommand", () =>
       executeContributedCommand(id, ~arguments, extHostClient)
+    );
+
+  let acceptConfigurationChanged = (extHostClient, config, ~changed) =>
+    Isolinear.Effect.create(
+      ~name="extHostClient.acceptConfigurationChanged", () =>
+      acceptConfigurationChanged(config, ~changed, extHostClient)
     );
 };

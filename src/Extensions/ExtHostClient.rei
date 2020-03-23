@@ -228,6 +228,8 @@ let provideReferences:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(LocationWithUri.t));
 let provideTextDocumentContent: (int, Core.Uri.t, t) => Lwt.t(string);
+let acceptConfigurationChanged:
+  (Configuration.t, ~changed: Configuration.Model.t, t) => unit;
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;
 
@@ -236,4 +238,7 @@ let close: t => unit;
 module Effects: {
   let executeContributedCommand:
     (t, ~arguments: list(Core.Json.t)=?, string) => Isolinear.Effect.t(_);
+  let acceptConfigurationChanged:
+    (t, Configuration.t, ~changed: Configuration.Model.t) =>
+    Isolinear.Effect.t(_);
 };
