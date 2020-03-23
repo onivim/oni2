@@ -115,6 +115,7 @@ module Oni = {
 
   let backgroundFor = (mode: Vim.Mode.t) =>
     switch (mode) {
+    | Select
     | Visual => visualModeBackground
     | CommandLine => commandlineModeBackground
     | Operator => operatorModeBackground
@@ -125,6 +126,7 @@ module Oni = {
 
   let foregroundFor = (mode: Vim.Mode.t) =>
     switch (mode) {
+    | Select
     | Visual => visualModeForeground
     | CommandLine => commandlineModeForeground
     | Operator => operatorModeForeground

@@ -701,6 +701,7 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 let getColorsForMode = (theme: t, mode: Vim.Mode.t) => {
   let (background, foreground) =
     switch (mode) {
+    | Select
     | Visual => (theme.oniVisualModeBackground, theme.oniVisualModeForeground)
     | CommandLine => (
         theme.oniCommandlineModeBackground,
