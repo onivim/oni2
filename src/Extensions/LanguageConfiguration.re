@@ -123,18 +123,24 @@ module Decode = {
 let decode = Decode.configuration;
 
 let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
+  let toAutoPair = ({openPair, closePair, _}: AutoClosingPair.t) => {
+    Vim.AutoClosingPairs.AutoPair.{opening: openPair, closing: closePair};
+  };
+
   let pairs =
     configuration.autoClosingPairs
     |> List.filter(AutoClosingPair.isActive(syntaxScope))
-    |> List.map(({openPair, closePair, _}: AutoClosingPair.t) => {
-         Vim.AutoClosingPairs.AutoClosingPair.create(
-           ~opening=openPair,
-           ~closing=closePair,
-           (),
-         )
-       });
+    |> List.map(toAutoPair);
+
+  let passThrough =
+    configuration.autoClosingPairs
+    |> List.map(({closePair, _}: AutoClosingPair.t) => closePair);
+
+  let deletionPairs = configuration.autoClosingPairs |> List.map(toAutoPair);
 
   Vim.AutoClosingPairs.create(
+    ~passThrough,
+    ~deletionPairs,
     ~allowBefore=configuration.autoCloseBefore,
     pairs,
   );
