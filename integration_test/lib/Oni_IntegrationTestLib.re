@@ -46,6 +46,9 @@ let getAssetPath = path =>
     raise(TestAssetNotFound(path));
   };
 
+let currentUserSettings = ref(Core.Config.Settings.empty);
+let setUserSettings = settings => currentUserSettings := settings;
+
 let runTest =
     (
       ~configuration=None,
@@ -70,7 +73,18 @@ let runTest =
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
 
-  let currentState = ref(Model.State.initial(~configFile=None));
+  currentUserSettings :=
+    (
+      switch (configuration) {
+      | Some(json) =>
+        json |> Yojson.Safe.from_string |> Core.Config.Settings.fromJson
+      | None => Core.Config.Settings.empty
+      }
+    );
+
+  let getUserSettings = () => Ok(currentUserSettings^);
+
+  let currentState = ref(Model.State.initial(~getUserSettings));
 
   let headlessWindow =
     Revery.Utility.HeadlessWindow.create(
@@ -110,6 +124,7 @@ let runTest =
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
+      ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,

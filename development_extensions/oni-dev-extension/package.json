@@ -32,9 +32,9 @@
 		],
 		"configuration": {
 			"properties": {
-				"developer.oni.dont-crash": {
-					"type": "boolean",
-					"default": false
+				"developer.oni.test": {
+					"type": "string",
+					"default": "not set"
 				}
 			}
 		},

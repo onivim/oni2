@@ -169,16 +169,13 @@ function activate(context) {
     const editorFontFamily = vscode.workspace.getConfiguration().get("editor.fontFamily");
     console.error("Editor Font Family: ", editorFontFamily);
 
-    const dontCrash = vscode.workspace.getConfiguration().get("developer.oni.dont-crash");
-    console.error("Don't crash: ", dontCrash);
+    const testSetting = vscode.workspace.getConfiguration().get("developer.oni.test");
+    console.error("Test setting: ", testSetting);
 
     vscode.workspace.onDidChangeConfiguration(event => {
-      if (event.affectsConfiguration("developer.oni.dont-crash")) {
-        const dontCrash = vscode.workspace.getConfiguration().get("developer.oni.dont-crash");
-        console.error("Setting changed, Don't crash: ", dontCrash);
-      } else {
-        const dontCrash = vscode.workspace.getConfiguration().get("developer.oni.dont-crash");
-        console.error("Setting did not change, Don't crash: ", dontCrash);
+      if (event.affectsConfiguration("developer.oni.test")) {
+        const setting = vscode.workspace.getConfiguration().get("developer.oni.test");
+        vscode.window.showInformationMessage("Setting changed: " + setting);
       }
     });
 }
