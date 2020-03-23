@@ -24,6 +24,32 @@ let initial = contributions =>
     merged: Config.Settings.empty,
   });
 
+let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
+  open Oni_Extensions;
+
+  let defaults =
+    extensions
+    |> List.map(ext =>
+         ext.ExtensionScanner.manifest.contributes.configuration
+       )
+    |> List.map(ExtensionContributions.Configuration.toSettings)
+    |> Config.Settings.unionMany
+    |> Config.Settings.union(Config.Schema.defaults(config.schema))
+    |> Configuration.Model.fromSettings;
+
+  let user =
+    Config.Settings.fromList([
+      ("reason_language_server.location", Json.Encode.string(setup.rlsPath)),
+      ("terminal.integrated.env.windows", Json.Encode.null),
+      ("terminal.integrated.env.linux", Json.Encode.null),
+      ("terminal.integrated.env.osx", Json.Encode.null),
+    ])
+    |> Config.Settings.union(config.user)
+    |> Configuration.Model.fromSettings;
+
+  Configuration.create(~defaults, ~user, ());
+};
+
 [@deriving show({with_path: false})]
 type msg =
   | ConfigurationFileChanged;
