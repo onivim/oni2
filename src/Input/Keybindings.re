@@ -106,41 +106,6 @@ let empty = Input.empty;
 
 type t = Input.t;
 
-let _keyToVimString = (key: EditorInput.keyPress) => {
-  let name = ref(Sdl2.Keycode.getName(key.keycode));
-
-  if (key.modifiers.alt) {
-    name := "A-" ++ name^;
-  };
-
-  if (key.modifiers.control) {
-    name := "C-" ++ name^;
-  };
-
-  if (key.modifiers.shift) {
-    name := "S-" ++ name^;
-  };
-
-  if (key.modifiers.meta) {
-    name := "D-" ++ name^;
-  };
-
-  let wrapIfLong = str =>
-    if (String.length(str) > 1) {
-      "<" ++ str ++ ">";
-    } else {
-      str;
-    };
-
-  let convertSdlName =
-    fun
-    | "<ESCAPE>" => "<ESC>"
-    | "<RETURN>" => "<CR>"
-    | v => v;
-
-  name^ |> String.uppercase_ascii |> wrapIfLong |> convertSdlName;
-};
-
 let mapEffect =
   fun
   | Input.Execute(cmd) => Command(cmd)
