@@ -113,7 +113,7 @@ let start =
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   // TODO: This is only necessary because the config file can't be passed to the initialization in order for the state to be properly initalized.
-  let config =
+  let (config, _) =
     Feature_Configuration.update(
       ~configFile=configurationFilePath,
       state.config,
@@ -175,7 +175,11 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(~extHostClient, ~configFile=configurationFilePath),
+      Features.update(
+        ~extHostClient,
+        ~configFile=configurationFilePath,
+        ~setup,
+      ),
       PaneStore.update,
       contextMenuUpdater,
     ]);

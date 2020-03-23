@@ -54,6 +54,10 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
 type msg =
   | ConfigurationFileChanged;
 
+type outmsg =
+  | ConfigurationChanged({changed: Config.Settings.t})
+  | Nothing;
+
 let defaultConfigurationFileName = "configuration.json";
 let getConfigurationFile = configurationFilePath => {
   switch (configurationFilePath) {
@@ -80,11 +84,17 @@ let loadConfiguration = configFile =>
 let update = (~configFile, model, msg) =>
   switch (msg) {
   | ConfigurationFileChanged =>
-    switch (loadConfiguration(configFile)) {
-    | Ok(user) when user == Config.Settings.empty => model
-    | Ok(user) => merge({...model, user})
-    | Error(_) => model
-    }
+    let previous = model;
+    let updated =
+      switch (loadConfiguration(configFile)) {
+      | Ok(user) when user == Config.Settings.empty => model
+      | Ok(user) => merge({...model, user})
+      | Error(_) => model
+      };
+
+    let changed = Config.Settings.changed(previous.merged, updated.merged);
+
+    (updated, ConfigurationChanged({changed: changed}));
   };
 
 let resolver = (model, key) => Config.Settings.get(key, model.merged);
