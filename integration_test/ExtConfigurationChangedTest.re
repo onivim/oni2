@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -8,7 +7,7 @@ open Oni_IntegrationTestLib;
 // - That changes to configuration settings are properly propagated to extensions
 // - That extension messages are delivered as notifications Oni-side
 runTestWithInput(
-  ~name="ExtConfigurationChangedTest", (input, dispatch, wait, _runEffects) => {
+  ~name="ExtConfigurationChangedTest", (_input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.notifications == []
   );
