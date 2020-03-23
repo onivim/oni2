@@ -80,7 +80,7 @@ type t = {
   textContentProviders: list((int, string)),
 };
 
-let initial = (~configFile) => {
+let initial = (~getUserSettings) => {
   buffers: Buffers.empty,
   bufferHighlights: BufferHighlights.initial,
   bufferRenderers: BufferRenderers.initial,
@@ -90,7 +90,7 @@ let initial = (~configFile) => {
   completions: Completions.initial,
   config:
     Feature_Configuration.initial(
-      ~configFile,
+      ~getUserSettings,
       [Feature_Editor.Contributions.configuration],
     ),
   configuration: Configuration.default,

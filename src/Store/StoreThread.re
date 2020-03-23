@@ -56,6 +56,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 
 let start =
     (
+      ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
       ~onAfterDispatch=_ => (),
@@ -167,11 +168,7 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(
-        ~extHostClient,
-        ~configFile=configurationFilePath,
-        ~setup,
-      ),
+      Features.update(~extHostClient, ~getUserSettings, ~setup),
       PaneStore.update,
       contextMenuUpdater,
     ]);

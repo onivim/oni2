@@ -6,7 +6,13 @@ open Actions;
 // UPDATE
 
 let update =
-    (~extHostClient, ~configFile, ~setup, state: State.t, action: Actions.t) =>
+    (
+      ~extHostClient,
+      ~getUserSettings,
+      ~setup,
+      state: State.t,
+      action: Actions.t,
+    ) =>
   switch (action) {
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
@@ -43,9 +49,9 @@ let update =
     let state = {...state, syntaxHighlights};
     (state, Effect.none);
 
-  | Config(msg) =>
+  | Configuration(msg) =>
     let (config, outmsg) =
-      Feature_Configuration.update(~configFile, state.config, msg);
+      Feature_Configuration.update(~getUserSettings, state.config, msg);
     let state = {...state, config};
     let eff =
       switch (outmsg) {
