@@ -70,7 +70,7 @@ let validateTextIsSynchronized =
         | Some(str) => String.equal("fulltext:" ++ str, onivimBuffer)
         };
       expectedEqual
-      && String.equal(onivimBuffer, extHostBuffer)
+      && String.equal("oni-dev-extension: " ++ onivimBuffer, extHostBuffer)
       && String.equal(onivimBuffer, vimBuffer);
     },
   );
