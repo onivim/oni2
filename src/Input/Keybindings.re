@@ -91,7 +91,7 @@ module Internal = {
 module Input =
   EditorInput.Make({
     type context = Hashtbl.t(string, bool);
-    type payload = string;
+    type command = string;
   });
 
 type effect =
