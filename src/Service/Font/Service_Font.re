@@ -141,9 +141,9 @@ module Sub = {
       type nonrec msg = msg;
       type nonrec params = params;
 
-      let subscriptionName = "Font";
+      let name = "Font";
 
-      let getUniqueId = ({uniqueId, _}) => uniqueId;
+      let id = ({uniqueId, _}) => uniqueId;
 
       let getReveryFontSmoothing:
         ConfigurationValues.fontSmoothing => Revery.Font.Smoothing.t =
