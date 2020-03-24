@@ -140,6 +140,31 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         let renderer =
           BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
         switch (renderer) {
+        | BufferRenderer.Terminal({normalMode, _}) when normalMode =>
+          let buffer =
+            Selectors.getBufferForEditor(state, editor)
+            |> Option.value(~default=Buffer.empty);
+
+          <EditorSurface
+            isActiveSplit=isActive
+            metrics
+            editor
+            buffer
+            onCursorChange
+            onDimensionsChanged={_ => ()}
+            onScroll
+            theme
+            editorFont={state.editorFont}
+            mode
+            bufferHighlights={state.bufferHighlights}
+            bufferSyntaxHighlights={state.syntaxHighlights}
+            diagnostics={state.diagnostics}
+            completions={state.completions}
+            tokenTheme={state.tokenTheme}
+            definition={state.definition}
+            windowIsFocused={state.windowIsFocused}
+            config={Feature_Configuration.resolver(state.config)}
+          />;
         | BufferRenderer.Editor =>
           let buffer =
             Selectors.getBufferForEditor(state, editor)

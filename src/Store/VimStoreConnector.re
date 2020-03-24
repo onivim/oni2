@@ -654,7 +654,7 @@ let start =
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
               metadata.id,
-              BufferRenderer.Terminal({title: "Terminal", id: bufferId}),
+              BufferRenderer.Terminal({title: "Terminal", id: bufferId, normalMode: false}),
             ),
           ),
         )
