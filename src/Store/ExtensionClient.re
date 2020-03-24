@@ -138,43 +138,8 @@ module ExtensionDocumentSymbolProvider = {
   };
 };
 
-let create = (~extensions, ~setup: Setup.t) => {
+let create = (~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
-
-  let manifests =
-    List.map((ext: ExtensionScanner.t) => ext.manifest, extensions);
-
-  let defaults = Configuration.Model.ofExtensions(manifests);
-  let keys = ["reason_language_server.location"];
-
-  let contents =
-    `Assoc([
-      (
-        "reason_language_server",
-        `Assoc([("location", `String(setup.rlsPath))]),
-      ),
-      (
-        "terminal",
-        `Assoc([
-          (
-            "integrated",
-            `Assoc([
-              (
-                "env",
-                `Assoc([
-                  ("windows", `Null),
-                  ("linux", `Null),
-                  ("osx", `Null),
-                ]),
-              ),
-            ]),
-          ),
-        ]),
-      ),
-    ]);
-  let user = Configuration.Model.create(~keys, contents);
-
-  let initialConfiguration = Configuration.create(~defaults, ~user, ());
 
   let onExtHostClosed = () => Log.debug("ext host closed");
 
@@ -337,7 +302,12 @@ let create = (~extensions, ~setup: Setup.t) => {
 
   let client =
     Extensions.ExtHostClient.start(
-      ~initialConfiguration,
+      ~initialConfiguration=
+        Feature_Configuration.toExtensionConfiguration(
+          config,
+          extensions,
+          setup,
+        ),
       ~initialWorkspace=Workspace.fromPath(Sys.getcwd()),
       ~initData,
       ~onClosed=onExtHostClosed,

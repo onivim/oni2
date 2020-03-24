@@ -69,6 +69,11 @@ module Configuration = {
   };
 
   let decode = Decode.configuration;
+
+  let toSettings = config =>
+    config
+    |> List.map(({name, default}) => (name, default))
+    |> Config.Settings.fromList;
 };
 
 module Language = {

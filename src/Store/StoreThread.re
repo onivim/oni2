@@ -56,6 +56,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 
 let start =
     (
+      ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
       ~onAfterDispatch=_ => (),
@@ -113,7 +114,7 @@ let start =
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClient, extHostStream) =
-    ExtensionClient.create(~extensions, ~setup);
+    ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
 
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);
@@ -167,7 +168,7 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(~extHostClient, ~configFile=configurationFilePath),
+      Features.update(~extHostClient, ~getUserSettings, ~setup),
       PaneStore.update,
       contextMenuUpdater,
     ]);
