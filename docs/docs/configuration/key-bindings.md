@@ -38,7 +38,49 @@ There are a set of default rules provided by Onivim, but the customized rules ar
 
 ### `key` format
 
-TODO
+The `key` parameter supports both _Vim style_ and _VSCode style_ key bindings.
+
+#### Vim style
+
+Vim-style keybindings are surrounded by `<` and `>`, and allow the following modifiers:
+
+| Modifier | Description | Example | Notes |
+| --- | --- | --- | --- |
+| C- | Control key | <C-P> | | 
+| S- | Shift key | <S-P> | |
+| A- | Alt key | <A-P> | | 
+| D- | Command key | <D-P> | A difference between Vim and Onivim is that `D-` also handles the 'Meta' and 'Win' keys on Linux and Windows, respectively |
+
+Modifiers may be combined, for example:
+
+```
+[
+  { "key": "<C-S-P>", "command": "quickOpenFiles", "when": "editorTextFocus" }
+]
+```
+
+The `<C-S-P>` would require the Control, Shift, and P keys to be pressed.
+
+#### VSCode style
+
+VSCode-style keybindings feature friendly names, like:
+
+| Modifier | Description | Example | Notes |
+| --- | --- | --- | --- |
+| Ctrl+ | Control key | Ctrl+P | |
+| Shift+ | Shift key | Shift+P | |
+| Alt+ | Alt key | Alt+J | |
+| Meta+ | Meta/Command/Windows key | Meta+P | Cmd+,Win+ are equivalent.
+
+### Key Sequences
+
+Onivim supports binding to key sequences, which require multiple key-presses in succession to engage.
+
+Example:
+
+```
+  { "key": "jk", "command": "vim.esc", "when": "insertMode" }
+```
 
 ### `command` arguments
 

@@ -48,7 +48,7 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
-let getKeyFromSDL: string => EditorInput.keyPress =
+let getKeyFromSDL: string => EditorInput.KeyPress.t =
   key => {
     let scancode = Sdl2.Scancode.ofName(key);
     let keycode = Sdl2.Keycode.ofName(key);

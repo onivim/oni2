@@ -93,14 +93,18 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
-  let updateFromInput = (state: State.t, key: string, actions) => {
+  let updateFromInput = (state: State.t, maybeKey: option(string), actions) => {
+    let actions =
+    maybeKey
+    |> Option.map((key) => {
     let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
+    [Actions.NotifyKeyPressed(time, key), ...actions]
+    })
+    |> Option.value(~default=actions);
+    
     (
       state,
-      immediateDispatchEffect([
-        Actions.NotifyKeyPressed(time, key),
-        ...actions,
-      ]),
+      immediateDispatchEffect(actions),
     );
   };
 
@@ -162,6 +166,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
+  let keyCodeToString = Sdl2.Keycode.getName;
+
+  let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
+
   /**
      The key handlers return (keyPressedString, shouldOniListen)
      i.e. if ctrl or alt or cmd were pressed then Oni2 should listen
@@ -171,7 +179,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleKeyPress = (state: State.t, key) => {
     let conditions = conditionsOfState(state);
 
-    //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
       Keybindings.keyDown(~context=conditions, ~key, state.keyBindings);
 
@@ -180,7 +187,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    updateFromInput(newState, "TODO", actions);
+    updateFromInput(newState, Some(keyPressToString(key)), actions);
   };
 
   let handleTextInput = (state: State.t, text) => {
@@ -191,7 +198,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let newState = {...state, keyBindings};
 
-    updateFromInput(newState, "TODO", actions);
+    updateFromInput(newState, Some("Text: " ++ text), actions);
   };
 
   let handleKeyUp = (state: State.t, key) => {
@@ -206,7 +213,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    updateFromInput(newState, "TODO", actions);
+    updateFromInput(newState, None, actions);
   };
 
   let updater = (state: State.t, action: Actions.t) => {
