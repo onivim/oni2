@@ -15,6 +15,7 @@
            ExtHostDefinitionTest
            FontSizeChangeTest
            KeybindingsInvalidJsonTest
+           KeySequenceJJTest
            InputIgnoreTest
            LanguageCssTest
            LanguageTypeScriptTest
@@ -63,6 +64,7 @@
         ExtHostDefinitionTest.exe
         FontSizeChangeTest.exe
         KeybindingsInvalidJsonTest.exe
+        KeySequenceJJTest.exe
         InputIgnoreTest.exe
         LanguageCssTest.exe
         LanguageTypeScriptTest.exe

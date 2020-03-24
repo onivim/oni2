@@ -67,7 +67,8 @@ runTestWithInput(
   );
 
   // Now, delete a line - we had some bugs where deletes were not sync'd properly
-  input("gg");
+  input("g");
+  input("g");
   input("j");
   input("dd");
 

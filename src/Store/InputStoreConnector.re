@@ -168,14 +168,14 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let handleKeyPress = (state: State.t, key: Revery.Key.KeyEvent.t) => {
+  let handleKeyPress = (state: State.t, key) => {
     let conditions = conditionsOfState(state);
 
-    let inputKey = reveryKeyToEditorKey(key);
+    //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
       Keybindings.keyDown(
         ~context=conditions,
-        ~key=inputKey,
+        ~key,
         state.keyBindings,
       );
 
@@ -198,14 +198,14 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     updateFromInput(newState, "TODO", actions);
   };
 
-  let handleKeyUp = (state: State.t, key: Revery.Key.KeyEvent.t) => {
+  let handleKeyUp = (state: State.t, key) => {
     let conditions = conditionsOfState(state);
 
-    let inputKey = reveryKeyToEditorKey(key);
+    //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
       Keybindings.keyUp(
         ~context=conditions,
-        ~key=inputKey,
+        ~key,
         state.keyBindings,
       );
 
@@ -221,7 +221,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     switch (action) {
     | KeyDown(event) => handleKeyPress(state, event)
     | KeyUp(event) => handleKeyUp(state, event)
-    | TextInput(event) => handleTextInput(state, event.text)
+    | TextInput(event) => handleTextInput(state, event)
 
     | _ => (state, Isolinear.Effect.none)
     };
@@ -234,15 +234,15 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   | Some(window) =>
     let _: unit => unit =
       Revery.Window.onKeyDown(window, event =>
-        dispatch(Actions.KeyDown(event))
+        dispatch(Actions.KeyDown(event |> reveryKeyToEditorKey))
       );
 
     let _: unit => unit =
-      Revery.Window.onKeyUp(window, event => dispatch(Actions.KeyUp(event)));
+      Revery.Window.onKeyUp(window, event => dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey)));
 
     let _: unit => unit =
       Revery.Window.onTextInputCommit(window, event =>
-        dispatch(Actions.TextInput(event))
+        dispatch(Actions.TextInput(event.text))
       );
     ();
   };
