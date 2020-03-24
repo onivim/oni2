@@ -56,7 +56,7 @@ let getKeyFromSDL: string => EditorInput.keyPress =
   };
 
 let contextWithEditorTextFocus =
-  Seq.return(("editorTextFocus", true))|> Hashtbl.of_seq;
+  Seq.return(("editorTextFocus", true)) |> Hashtbl.of_seq;
 
 let isOk = v =>
   switch (v) {

@@ -53,6 +53,17 @@ module Keybinding = {
   };
 };
 
+module Input =
+  EditorInput.Make({
+    type context = Hashtbl.t(string, bool);
+    type command = string;
+  });
+
+type effect =
+  | Command(string)
+  | Text(string)
+  | Unhandled(EditorInput.keyPress);
+
 module Internal = {
   let of_yojson_with_errors:
     list(Yojson.Safe.t) => (list(Keybinding.t), list(string)) =
@@ -86,18 +97,17 @@ module Internal = {
 
       (bindings, errors);
     };
+
+  // Map an effect from the Input module (from EditorInput)
+  // to an effect modeled by this Keybinding module.
+  let mapEffect =
+    fun
+    | Input.Execute(cmd) => Command(cmd)
+    | Input.Unhandled(key) => Unhandled(key)
+    | Input.Text(text) => Text(text);
+
+  let mapEffects = List.map(mapEffect);
 };
-
-module Input =
-  EditorInput.Make({
-    type context = Hashtbl.t(string, bool);
-    type command = string;
-  });
-
-type effect =
-  | Command(string)
-  | Text(string)
-  | Unhandled(EditorInput.keyPress);
 
 let empty = Input.empty;
 
@@ -105,32 +115,24 @@ type t = Input.t;
 
 let count = Input.count;
 
-let mapEffect =
-  fun
-  | Input.Execute(cmd) => Command(cmd)
-  | Input.Unhandled(key) => Unhandled(key)
-  | Input.Text(text) => Text(text);
-
-let mapEffects = List.map(mapEffect);
-
 let keyDown = (~context, ~key, bindings) => {
   let (bindings, effects) = Input.keyDown(~context, ~key, bindings);
 
-  let mappedEffects = mapEffects(effects);
+  let mappedEffects = Internal.mapEffects(effects);
   (bindings, mappedEffects);
 };
 
 let text = (~text: string, bindings) => {
   let (bindings, effects) = Input.text(~text, bindings);
 
-  let mappedEffects = mapEffects(effects);
+  let mappedEffects = Internal.mapEffects(effects);
   (bindings, mappedEffects);
 };
 
 let keyUp = (~context, ~key, bindings) => {
   let (bindings, effects) = Input.keyUp(~context, ~key, bindings);
 
-  let mappedEffects = mapEffects(effects);
+  let mappedEffects = Internal.mapEffects(effects);
   (bindings, mappedEffects);
 };
 
@@ -191,17 +193,25 @@ let keyToSdlName =
   );
 
 let getKeycode = inputKey => {
-  inputKey |> keyToSdlName |> Sdl2.Keycode.ofName
-  |> fun
-  | 0 => None
-  | x => Some(x);
+  inputKey
+  |> keyToSdlName
+  |> Sdl2.Keycode.ofName
+  |> (
+    fun
+    | 0 => None
+    | x => Some(x)
+  );
 };
 
 let getScancode = inputKey => {
-  inputKey |> keyToSdlName |> Sdl2.Scancode.ofName
-  |> fun
-  | 0 => None
-  | x => Some(x);
+  inputKey
+  |> keyToSdlName
+  |> Sdl2.Scancode.ofName
+  |> (
+    fun
+    | 0 => None
+    | x => Some(x)
+  );
 };
 
 let addBinding = ({key, command, condition}, bindings) => {
