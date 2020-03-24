@@ -62,7 +62,7 @@ module Input =
 type effect =
   | Command(string)
   | Text(string)
-  | Unhandled(EditorInput.keyPress);
+  | Unhandled(EditorInput.KeyPress.t);
 
 module Internal = {
   let of_yojson_with_errors:

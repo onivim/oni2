@@ -62,8 +62,8 @@ type t =
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
-  | KeyDown([@opaque] EditorInput.keyPress)
-  | KeyUp([@opaque] EditorInput.keyPress)
+  | KeyDown([@opaque] EditorInput.KeyPress.t)
+  | KeyUp([@opaque] EditorInput.KeyPress.t)
   | TextInput([@opaque] string)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)

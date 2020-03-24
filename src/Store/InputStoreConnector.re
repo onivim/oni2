@@ -149,7 +149,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let alt = Revery.Key.Keymod.isAltDown(key.keymod);
     let meta = Revery.Key.Keymod.isGuiDown(key.keymod);
 
-    EditorInput.{
+    EditorInput.KeyPress.{
       scancode: key.scancode,
       keycode: key.keycode,
       modifiers: {
