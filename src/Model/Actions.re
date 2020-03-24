@@ -74,7 +74,6 @@ type t =
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
-  | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)

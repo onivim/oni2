@@ -288,12 +288,10 @@ let start = maybeKeyBindingsFilePath => {
     Isolinear.Effect.createWithDispatch(~name="keyBindings.load", dispatch => {
       let keyBindingsFile = getKeybindingsFile();
 
-      let checkFirstLoad = keyBindingPath => {
-        prerr_endline("keybinding path: " ++ keyBindingPath);
+      let checkFirstLoad = keyBindingPath =>
         if (isFirstLoad) {
           reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
         };
-      };
 
       let onError = msg => {
         let errorMsg = "Error parsing keybindings: " ++ msg;

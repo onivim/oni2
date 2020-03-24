@@ -108,7 +108,6 @@ let keyDown = (~context, ~key, bindings) => {
 
 let text = (~text: string, bindings) => {
   Input.text(~text, bindings);
-
 };
 
 let keyUp = (~context, ~key, bindings) => {

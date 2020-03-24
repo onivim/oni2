@@ -504,7 +504,7 @@ let start =
     ();
   };
 
-  let vimKeyFilter  = key => {
+  let vimKeyFilter = key => {
     !String.equal(key, "<S-SHIFT>")
     && !String.equal(key, "<A-SHIFT>")
     && !String.equal(key, "<D-SHIFT>")
