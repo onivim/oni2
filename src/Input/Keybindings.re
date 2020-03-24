@@ -157,7 +157,7 @@ module Legacy = {
     };
 };
 
-let keyToSdl =
+let keyToSdlName =
   EditorInput.Key.(
     {
       fun
@@ -190,17 +190,18 @@ let keyToSdl =
     }
   );
 
-let codeToOpt =
-  fun
+let getKeycode = inputKey => {
+  inputKey |> keyToSdlName |> Sdl2.Keycode.ofName
+  |> fun
   | 0 => None
   | x => Some(x);
-
-let getKeycode = keycodeStr => {
-  keycodeStr |> keyToSdl |> Sdl2.Keycode.ofName |> codeToOpt;
 };
 
-let getScancode = scancodeStr => {
-  scancodeStr |> keyToSdl |> Sdl2.Scancode.ofName |> codeToOpt;
+let getScancode = inputKey => {
+  inputKey |> keyToSdlName |> Sdl2.Scancode.ofName
+  |> fun
+  | 0 => None
+  | x => Some(x);
 };
 
 let addBinding = ({key, command, condition}, bindings) => {
