@@ -94,14 +94,12 @@ function activate(context) {
         }
     }));
 
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with  registerCommand
-    // The commandId parameter must match the command field in package.json
-    cleanup(vscode.commands.registerCommand('developer.oni.showNotification', () => {
-        // The code you place here will be executed every time your command is executed
+    cleanup(vscode.commands.registerCommand('developer.oni.showWarning', () => {
+        vscode.window.showWarningMessage('This is a warning');
+    }));
 
-        // Display a message box to the user
-        vscode.window.showInformationMessage('Hello from extension!');
+    cleanup(vscode.commands.registerCommand('developer.oni.showError', () => {
+        vscode.window.showErrorMessage('Hello, this is error');
     }));
     
     cleanup(vscode.commands.registerCommand('developer.oni.showWorkspaceRootPath', () => {
