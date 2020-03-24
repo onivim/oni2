@@ -8,6 +8,8 @@ module Json = Oni_Core.Json;
 
 open EditorInput;
 
+type effect = EditorInput.effect(string);
+
 module Keybinding = {
   type t = keybinding;
 
@@ -59,11 +61,6 @@ module Input =
     type command = string;
   });
 
-type effect =
-  | Command(string)
-  | Text(string)
-  | Unhandled(EditorInput.KeyPress.t);
-
 module Internal = {
   let of_yojson_with_errors:
     list(Yojson.Safe.t) => (list(Keybinding.t), list(string)) =
@@ -97,16 +94,6 @@ module Internal = {
 
       (bindings, errors);
     };
-
-  // Map an effect from the Input module (from EditorInput)
-  // to an effect modeled by this Keybinding module.
-  let mapEffect =
-    fun
-    | Input.Execute(cmd) => Command(cmd)
-    | Input.Unhandled(key) => Unhandled(key)
-    | Input.Text(text) => Text(text);
-
-  let mapEffects = List.map(mapEffect);
 };
 
 let empty = Input.empty;
@@ -116,24 +103,16 @@ type t = Input.t;
 let count = Input.count;
 
 let keyDown = (~context, ~key, bindings) => {
-  let (bindings, effects) = Input.keyDown(~context, ~key, bindings);
-
-  let mappedEffects = Internal.mapEffects(effects);
-  (bindings, mappedEffects);
+  Input.keyDown(~context, ~key, bindings);
 };
 
 let text = (~text: string, bindings) => {
-  let (bindings, effects) = Input.text(~text, bindings);
+  Input.text(~text, bindings);
 
-  let mappedEffects = Internal.mapEffects(effects);
-  (bindings, mappedEffects);
 };
 
 let keyUp = (~context, ~key, bindings) => {
-  let (bindings, effects) = Input.keyUp(~context, ~key, bindings);
-
-  let mappedEffects = Internal.mapEffects(effects);
-  (bindings, mappedEffects);
+  Input.keyUp(~context, ~key, bindings);
 };
 
 // Old version of keybindings - the legacy format:

@@ -2,10 +2,7 @@ type t;
 
 let empty: t;
 
-type effect =
-  | Command(string)
-  | Text(string)
-  | Unhandled(EditorInput.KeyPress.t);
+type effect = EditorInput.effect(string);
 
 let count: t => int;
 
