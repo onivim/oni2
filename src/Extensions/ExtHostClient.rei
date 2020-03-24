@@ -156,6 +156,11 @@ module Terminal: {
 type msg =
   | SCM(SCM.msg)
   | Terminal(Terminal.msg)
+  | ShowMessage({
+      severity: [ | `Ignore | `Info | `Warning | `Error],
+      message: string,
+      extensionId: option(string),
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
@@ -198,7 +203,6 @@ let start:
                                          =?,
     ~onRegisterReferencesProvider: (t, Protocol.BasicProvider.t) => unit=?,
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
-    ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
     ~dispatch: msg => unit,
     Core.Setup.t

@@ -272,6 +272,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       )
     | Terminal(msg) => Service_Terminal.handleExtensionMessage(msg)
 
+    | ShowMessage({severity, message, extensionId}) =>
+      dispatch(ExtMessageReceived({severity, message, extensionId}))
+
     | RegisterTextContentProvider({handle, scheme}) =>
       dispatch(NewTextContentProvider({handle, scheme}))
 
@@ -292,10 +295,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
   let onDidActivateExtension = id => {
     dispatch(Actions.Extension(Oni_Model.Extensions.Activated(id)));
-  };
-
-  let onShowMessage = message => {
-    dispatch(Actions.ExtMessageReceived(message));
   };
 
   let initData = ExtHostInitData.create(~extensions=extensionInfo, ());
@@ -320,7 +319,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~onRegisterDocumentSymbolProvider,
       ~onRegisterReferencesProvider,
       ~onRegisterSuggestProvider,
-      ~onShowMessage,
       ~onOutput,
       ~dispatch=onClientMessage,
       setup,

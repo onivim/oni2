@@ -321,11 +321,24 @@ let start = (extensions, extHostClient) => {
         Isolinear.Effect.none,
       )
 
-    | ExtMessageReceived(message) => (
+    | ExtMessageReceived({severity, message, extensionId}) =>
+      let kind: Feature_Notification.kind =
+        switch (severity) {
+        | `Ignore => Info
+        | `Info => Info
+        | `Warning => Warning
+        | `Error => Error
+        };
+      let message =
+        switch (extensionId) {
+        | Some(extensionId) => extensionId ++ ": " ++ message
+        | None => message
+        };
+      (
         state,
-        Feature_Notification.Effects.create(message)
+        Feature_Notification.Effects.create(~kind, message)
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
-      )
+      );
 
     | _ => (state, Isolinear.Effect.none)
     };
