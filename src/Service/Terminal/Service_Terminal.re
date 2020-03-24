@@ -50,9 +50,9 @@ module Sub = {
       type nonrec msg = msg;
       type nonrec params = params;
 
-      let subscriptionName = "Terminal";
+      let name = "Terminal";
 
-      let getUniqueId = ({id, _}) => string_of_int(id);
+      let id = ({id, _}) => string_of_int(id);
 
       let init = (~params, ~dispatch) => {
         let launchConfig =

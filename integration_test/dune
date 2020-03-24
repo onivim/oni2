@@ -9,6 +9,7 @@
            EchoNotificationTest
            EditorFontFromPathTest
            EditorFontValidTest
+           ExtConfigurationChangedTest
            ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
            ExtHostCompletionTest
@@ -57,6 +58,7 @@
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
+        ExtConfigurationChangedTest.exe
         ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe

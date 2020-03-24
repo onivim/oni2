@@ -56,6 +56,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 
 let start =
     (
+      ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
       ~onAfterDispatch=_ => (),
@@ -113,7 +114,7 @@ let start =
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClient, extHostStream) =
-    ExtensionClient.create(~extensions, ~setup);
+    ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
 
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);
@@ -167,7 +168,7 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(~extHostClient, ~configFile=configurationFilePath),
+      Features.update(~extHostClient, ~getUserSettings, ~setup),
       PaneStore.update,
       contextMenuUpdater,
     ]);
@@ -282,11 +283,11 @@ let start =
 
   let _unsubscribe: unit => unit =
     Store.onBeforeEffectRan(e => {
-      Log.debugf(m => m("Running effect: %s", Isolinear.Effect.getName(e)))
+      Log.debugf(m => m("Running effect: %s", Isolinear.Effect.name(e)))
     });
   let _unsubscribe: unit => unit =
     Store.onAfterEffectRan(e => {
-      Log.debugf(m => m("Effect complete: %s", Isolinear.Effect.getName(e)))
+      Log.debugf(m => m("Effect complete: %s", Isolinear.Effect.name(e)))
     });
 
   let runEffects = Store.runPendingEffects;
@@ -307,7 +308,7 @@ let start =
 
   // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
   let editorEventStream =
-    Isolinear.Stream.map(storeStream, ((state, action)) =>
+    Isolinear.Stream.filterMap(storeStream, ((state, action)) =>
       switch (action) {
       | Model.Actions.BufferUpdate(bs) =>
         let buffer = Model.Selectors.getBufferById(state, bs.update.id);
@@ -320,13 +321,13 @@ let start =
     );
 
   // TODO: These should all be replaced with isolinear subscriptions.
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, inputStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, vimStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, editorEventStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));

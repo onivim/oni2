@@ -2,6 +2,7 @@ type key;
 type resolver = key => option(Json.t);
 
 let key: string => key;
+let keyAsString: key => string;
 
 // SETTINGS
 
@@ -11,12 +12,23 @@ module Settings: {
   let empty: t;
 
   let fromList: list((string, Json.t)) => t;
+  let fromJson: Json.t => t;
   let fromFile: string => t;
 
   let get: (key, t) => option(Json.t);
 
   let union: (t, t) => t;
   let unionMany: list(t) => t;
+
+  /** Returns the set of changed keys with its new value, or `null` if removed */
+  let diff: (t, t) => t;
+
+  /** Returns the set of changed keys with the value `true`, intended for conversion to Json to mimic weird JavaScript semantics */
+  let changed: (t, t) => t;
+
+  let keys: t => list(key);
+
+  let toJson: t => Json.t;
 };
 
 // SCHEMA
