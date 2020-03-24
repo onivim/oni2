@@ -186,7 +186,14 @@ let runTest =
   dispatch(Model.Actions.Quit(true));
 };
 
-let runTestWithInput = (~configuration=?, ~keybindings=?, ~name, ~onAfterDispatch=?, f: testCallbackWithInput) => {
+let runTestWithInput =
+    (
+      ~configuration=?,
+      ~keybindings=?,
+      ~name,
+      ~onAfterDispatch=?,
+      f: testCallbackWithInput,
+    ) => {
   runTest(
     ~name,
     ~configuration?,
@@ -194,16 +201,7 @@ let runTestWithInput = (~configuration=?, ~keybindings=?, ~name, ~onAfterDispatc
     ~onAfterDispatch?,
     (dispatch, wait, runEffects) => {
       let input = key => {
-
-        let scancode = Sdl2.Scancode.ofName(key);
-        let keycode = Sdl2.Keycode.ofName(key);
-        let modifiers = EditorInput.Modifiers.none;
-
-        let keyPress: EditorInput.keyPress = { scancode, keycode, modifiers };
-
-        dispatch(Model.Actions.KeyDown(keyPress));
-        dispatch(Model.Actions.TextInput(key));
-        dispatch(Model.Actions.KeyUp(keyPress));
+        dispatch(Model.Actions.KeyboardInput(key));
         runEffects();
       };
 

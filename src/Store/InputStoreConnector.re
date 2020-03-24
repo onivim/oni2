@@ -173,11 +173,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
-      Keybindings.keyDown(
-        ~context=conditions,
-        ~key,
-        state.keyBindings,
-      );
+      Keybindings.keyDown(~context=conditions, ~key, state.keyBindings);
 
     let newState = {...state, keyBindings};
 
@@ -203,11 +199,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
-      Keybindings.keyUp(
-        ~context=conditions,
-        ~key,
-        state.keyBindings,
-      );
+      Keybindings.keyUp(~context=conditions, ~key, state.keyBindings);
 
     let newState = {...state, keyBindings};
 
@@ -238,7 +230,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       );
 
     let _: unit => unit =
-      Revery.Window.onKeyUp(window, event => dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey)));
+      Revery.Window.onKeyUp(window, event =>
+        dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey))
+      );
 
     let _: unit => unit =
       Revery.Window.onTextInputCommit(window, event =>
