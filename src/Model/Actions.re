@@ -62,9 +62,9 @@ type t =
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
-  | KeyDown([@opaque] EditorInput.KeyPress.t)
-  | KeyUp([@opaque] EditorInput.KeyPress.t)
-  | TextInput([@opaque] string)
+  | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked

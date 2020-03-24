@@ -93,19 +93,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
-  let updateFromInput = (state: State.t, maybeKey: option(string), actions) => {
-    let actions =
-    maybeKey
-    |> Option.map((key) => {
-    let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
-    [Actions.NotifyKeyPressed(time, key), ...actions]
-    })
-    |> Option.value(~default=actions);
-    
-    (
-      state,
-      immediateDispatchEffect(actions),
-    );
+  let updateFromInput = (state: State.t, actions) => {
+    (state, immediateDispatchEffect(actions));
   };
 
   let handleTextEffect = (state: State.t, k: string) => {
@@ -187,7 +176,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    updateFromInput(newState, Some(keyPressToString(key)), actions);
+    updateFromInput(newState, /*Some(keyPressToString(key)),*/ actions);
   };
 
   let handleTextInput = (state: State.t, text) => {
@@ -198,7 +187,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let newState = {...state, keyBindings};
 
-    updateFromInput(newState, Some("Text: " ++ text), actions);
+    updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
   };
 
   let handleKeyUp = (state: State.t, key) => {
@@ -213,14 +202,38 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    updateFromInput(newState, None, actions);
+    updateFromInput(newState, /*None, */ actions);
   };
 
+  // TODO: This should be moved to a Feature_Keybindings project
+  // (Including the KeyDisplayer too!)
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event) => handleKeyPress(state, event)
-    | KeyUp(event) => handleKeyUp(state, event)
-    | TextInput(event) => handleTextInput(state, event)
+    | KeyDown(event, time) =>
+      let keyDisplayer =
+        state.keyDisplayer
+        |> Option.map(keyDisplayer =>
+             Oni_Components.KeyDisplayer.keyPress(
+               ~time=Revery.Time.toFloatSeconds(time),
+               keyPressToString(event),
+               keyDisplayer,
+             )
+           );
+
+      handleKeyPress({...state, keyDisplayer}, event);
+    | KeyUp(event, _time) => handleKeyUp(state, event)
+    | TextInput(text, time) =>
+      let keyDisplayer =
+        state.keyDisplayer
+        |> Option.map(keyDisplayer =>
+             Oni_Components.KeyDisplayer.textInput(
+               ~time=Revery.Time.toFloatSeconds(time),
+               text,
+               keyDisplayer,
+             )
+           );
+
+      handleTextInput({...state, keyDisplayer}, text);
 
     | _ => (state, Isolinear.Effect.none)
     };
@@ -232,18 +245,30 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
-      Revery.Window.onKeyDown(window, event =>
-        dispatch(Actions.KeyDown(event |> reveryKeyToEditorKey))
+      Revery.Window.onKeyDown(
+        window,
+        event => {
+          let time = Revery.Time.now();
+          dispatch(Actions.KeyDown(event |> reveryKeyToEditorKey, time));
+        },
       );
 
     let _: unit => unit =
-      Revery.Window.onKeyUp(window, event =>
-        dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey))
+      Revery.Window.onKeyUp(
+        window,
+        event => {
+          let time = Revery.Time.now();
+          dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey, time));
+        },
       );
 
     let _: unit => unit =
-      Revery.Window.onTextInputCommit(window, event =>
-        dispatch(Actions.TextInput(event.text))
+      Revery.Window.onTextInputCommit(
+        window,
+        event => {
+          let time = Revery.Time.now();
+          dispatch(Actions.TextInput(event.text, time));
+        },
       );
     ();
   };
