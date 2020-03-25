@@ -67,11 +67,6 @@ type editorGutter = {
 
 type t = {
   foreground: Color.t,
-  activityBarBackground: Color.t,
-  activityBarForeground: Color.t,
-  activityBarInactiveForeground: Color.t,
-  activityBarActiveBackground: Color.t,
-  activityBarActiveBorder: Color.t,
   editorBackground: Color.t,
   editorForeground: Color.t,
   editorCursorBackground: Color.t,
@@ -106,11 +101,7 @@ type t = {
   menuSelectionBackground: Color.t,
   editorOverviewRulerBracketMatchForeground: Color.t,
   editorWhitespaceForeground: Color.t,
-  editorGroupsHeaderTabsBackground: Color.t,
-  tabActiveBackground: Color.t,
   tabActiveForeground: Color.t,
-  tabInactiveBackground: Color.t,
-  tabInactiveForeground: Color.t,
   oniVisualModeBackground: Color.t,
   oniInsertModeBackground: Color.t,
   oniReplaceModeBackground: Color.t,
@@ -123,8 +114,6 @@ type t = {
   oniNormalModeForeground: Color.t,
   oniOperatorModeForeground: Color.t,
   oniCommandlineModeForeground: Color.t,
-  statusBarForeground: Color.t,
-  statusBarBackground: Color.t,
   scrollbarSliderHoverBackground: Color.t,
   sideBarBackground: Color.t,
   sideBarForeground: Color.t,
@@ -139,24 +128,6 @@ type t = {
   sneakBackground: Color.t,
   sneakForeground: Color.t,
   sneakHighlight: Color.t,
-  terminalBackground: Color.t,
-  terminalForeground: Color.t,
-  terminalAnsiBlack: Color.t,
-  terminalAnsiRed: Color.t,
-  terminalAnsiGreen: Color.t,
-  terminalAnsiYellow: Color.t,
-  terminalAnsiBlue: Color.t,
-  terminalAnsiMagenta: Color.t,
-  terminalAnsiCyan: Color.t,
-  terminalAnsiWhite: Color.t,
-  terminalAnsiBrightBlack: Color.t,
-  terminalAnsiBrightRed: Color.t,
-  terminalAnsiBrightGreen: Color.t,
-  terminalAnsiBrightYellow: Color.t,
-  terminalAnsiBrightBlue: Color.t,
-  terminalAnsiBrightCyan: Color.t,
-  terminalAnsiBrightMagenta: Color.t,
-  terminalAnsiBrightWhite: Color.t,
   titleBarActiveBackground: Color.t,
   titleBarActiveForeground: Color.t,
   titleBarInactiveBackground: Color.t,
@@ -171,11 +142,6 @@ let default: t = {
   foreground: Color.hex("#ECEFF4"),
   sideBarBackground: Color.hex("#21252b"),
   sideBarForeground: Color.hex("#ECEFF4"),
-  activityBarBackground: Color.hex("#2F3440"),
-  activityBarForeground: Colors.white,
-  activityBarInactiveForeground: Color.hex("#DCDCDC"),
-  activityBarActiveBackground: Colors.transparentWhite,
-  activityBarActiveBorder: Colors.white,
   editorBackground: Color.hex("#2F3440"),
   editorForeground: Color.hex("#DCDCDC"),
   editorCursorBackground: Color.hex("#2F3440"),
@@ -210,11 +176,7 @@ let default: t = {
   menuForeground: Color.hex("#FFFFFF"),
   menuSelectionBackground: Color.hex("#495162"),
   editorWhitespaceForeground: Color.hex("#3b4048"),
-  editorGroupsHeaderTabsBackground: Color.hex("#2F3440"),
-  tabActiveBackground: Color.hex("#2F3440"),
   tabActiveForeground: Color.hex("#DCDCDC"),
-  tabInactiveBackground: Color.hex("#2F3440"),
-  tabInactiveForeground: Color.hex("#DCDCDC"),
   oniVisualModeBackground: Color.hex("#56b6c2"),
   oniInsertModeBackground: Color.hex("#98c379"),
   oniReplaceModeBackground: Color.hex("#d19a66"),
@@ -227,8 +189,6 @@ let default: t = {
   oniNormalModeForeground: Color.hex("#282c34"),
   oniOperatorModeForeground: Color.hex("#282c34"),
   oniCommandlineModeForeground: Color.hex("#282c34"),
-  statusBarBackground: Color.hex("#21252b"),
-  statusBarForeground: Color.hex("#9da5b4"),
   scrollbarSliderHoverBackground: Color.rgba(123.0, 123.0, 123.0, 0.1),
   notificationSuccessBackground: Color.hex("#23d160"),
   notificationSuccessForeground: Colors.white,
@@ -241,24 +201,6 @@ let default: t = {
   sneakBackground: Colors.red,
   sneakForeground: Colors.white,
   sneakHighlight: Colors.white,
-  terminalBackground: Color.rgb_int(0, 0, 0),
-  terminalForeground: Color.rgb_int(233, 235, 235),
-  terminalAnsiBlack: Color.rgb_int(0, 0, 0),
-  terminalAnsiRed: Color.rgb_int(194, 54, 33),
-  terminalAnsiGreen: Color.rgb_int(37, 188, 36),
-  terminalAnsiYellow: Color.rgb_int(173, 173, 39),
-  terminalAnsiBlue: Color.rgb_int(73, 46, 225),
-  terminalAnsiMagenta: Color.rgb_int(211, 56, 211),
-  terminalAnsiCyan: Color.rgb_int(51, 197, 200),
-  terminalAnsiWhite: Color.rgb_int(203, 204, 205),
-  terminalAnsiBrightBlack: Color.rgb_int(129, 131, 131),
-  terminalAnsiBrightRed: Color.rgb_int(252, 57, 31),
-  terminalAnsiBrightGreen: Color.rgb_int(49, 231, 34),
-  terminalAnsiBrightYellow: Color.rgb_int(234, 236, 35),
-  terminalAnsiBrightBlue: Color.rgb_int(88, 51, 255),
-  terminalAnsiBrightCyan: Color.rgb_int(20, 240, 240),
-  terminalAnsiBrightMagenta: Color.rgb_int(20, 240, 240),
-  terminalAnsiBrightWhite: Color.rgb_int(233, 235, 235),
   titleBarActiveBackground: Color.hex("#282C35"),
   titleBarActiveForeground: Color.hex("#ECEFF4"),
   titleBarInactiveBackground: Color.hex("#282C35"),
@@ -306,33 +248,6 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     getColor(
       defaults.editorBackground,
       ["editorHoverWidget.background", "editor.background"],
-    );
-
-  let activityBarBackground =
-    getColor(
-      defaults === light ? Color.hex("#2c2c2c") : Color.hex("#333"),
-      ["activityBar.background"],
-    );
-
-  let activityBarForeground =
-    getColor(Colors.white, ["activityBar.foreground"]);
-
-  let activityBarInactiveForeground =
-    getColor(
-      Color.multiplyAlpha(0.4, Colors.white),
-      ["activityBar.inactiveForeground"],
-    );
-
-  let activityBarActiveBackground =
-    getColor(
-      Colors.transparentWhite, // Actually `null`
-      ["activityBar.activeBackground"],
-    );
-
-  let activityBarActiveBorder =
-    getColor(
-      Colors.white,
-      ["activityBar.activeBackground", "acitivityBar.foreground"],
     );
 
   let editorHoverWidgetBorder =
@@ -439,12 +354,6 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
       ],
     );
 
-  let statusBarBackground =
-    getColor(Color.hex("#007acc"), ["statusBar.background"]);
-
-  let statusBarForeground =
-    getColor(Color.hex("#fff"), ["statusBar.foreground"]);
-
   let sideBarBackground =
     getColor(defaults.editorBackground, ["sideBar.background"]);
 
@@ -511,80 +420,9 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
 
   let titleBarBorder = getColor(Color.hex("#0000"), ["titleBar.border"]);
 
-  let terminalBackground =
-    getColor(
-      default.terminalBackground,
-      ["terminal.background", "terminal.ansiBlack"],
-    );
-
-  let terminalForeground =
-    getColor(
-      default.terminalForeground,
-      ["terminal.foreground", "terminal.ansiBrightWhite"],
-    );
-
-  let terminalAnsiBlack =
-    getColor(default.terminalAnsiBlack, ["terminal.ansiBlack"]);
-
-  let terminalAnsiRed =
-    getColor(default.terminalAnsiRed, ["terminal.ansiRed"]);
-
-  let terminalAnsiGreen =
-    getColor(default.terminalAnsiGreen, ["terminal.ansiGreen"]);
-
-  let terminalAnsiYellow =
-    getColor(default.terminalAnsiYellow, ["terminal.ansiYellow"]);
-
-  let terminalAnsiBlue =
-    getColor(default.terminalAnsiBlue, ["terminal.ansiBlue"]);
-
-  let terminalAnsiMagenta =
-    getColor(default.terminalAnsiMagenta, ["terminal.ansiMagenta"]);
-
-  let terminalAnsiCyan =
-    getColor(default.terminalAnsiCyan, ["terminal.ansiCyan"]);
-
-  let terminalAnsiWhite =
-    getColor(default.terminalAnsiWhite, ["terminal.ansiWhite"]);
-
-  let terminalAnsiBrightBlack =
-    getColor(default.terminalAnsiBrightBlack, ["terminal.ansiBrightBlack"]);
-
-  let terminalAnsiBrightRed =
-    getColor(default.terminalAnsiBrightRed, ["terminal.ansiBrightRed"]);
-
-  let terminalAnsiBrightGreen =
-    getColor(default.terminalAnsiBrightGreen, ["terminal.ansiBrightGreen"]);
-
-  let terminalAnsiBrightYellow =
-    getColor(
-      default.terminalAnsiBrightYellow,
-      ["terminal.ansiBrightYellow"],
-    );
-
-  let terminalAnsiBrightBlue =
-    getColor(default.terminalAnsiBrightBlue, ["terminal.ansiBrightBlue"]);
-
-  let terminalAnsiBrightMagenta =
-    getColor(
-      default.terminalAnsiBrightMagenta,
-      ["terminal.ansiBrightMagenta"],
-    );
-
-  let terminalAnsiBrightCyan =
-    getColor(default.terminalAnsiBrightCyan, ["terminal.ansiBrightCyan"]);
-
-  let terminalAnsiBrightWhite =
-    getColor(default.terminalAnsiBrightWhite, ["terminal.ansiBrightWhite"]);
-
   {
     ...default,
     foreground,
-    activityBarBackground,
-    activityBarForeground,
-    activityBarInactiveForeground,
-    activityBarActiveBackground,
-    activityBarActiveBorder,
     editorBackground,
     editorForeground,
     editorCursorBackground,
@@ -637,59 +475,14 @@ let ofColorTheme = (uiTheme, ct: Textmate.ColorTheme.t) => {
     scrollbarSliderHoverBackground,
     sideBarBackground,
     sideBarForeground,
-    statusBarBackground,
-    statusBarForeground,
     sneakBackground,
     sneakForeground,
     sneakHighlight,
-    editorGroupsHeaderTabsBackground:
-      getColor(
-        defaults === light ? Color.hex("#f3f3f3") : Color.hex("#252526"),
-        ["editorGroupHeader.tabsBackground"],
-      ),
-    tabActiveBackground:
-      getColor(
-        defaults.editorBackground,
-        ["tab.activebackground", "editor.background"],
-      ),
-
     tabActiveForeground:
       getColor(
         defaults === light ? Color.hex("#333") : Colors.white,
         ["tab.activeForeground"],
       ),
-
-    tabInactiveBackground:
-      getColor(
-        defaults === light ? Color.hex("#ececec") : Color.hex("#2d2d2d"),
-        ["tab.inactiveBackground"],
-      ),
-
-    tabInactiveForeground:
-      getColor(
-        defaults === light
-          ? Color.multiplyAlpha(0.7, Color.hex("#333"))
-          : Color.multiplyAlpha(0.5, Colors.white), // should be lower opacity variant of _actual_ active foreground color, not the _default_ active foreground color
-        ["tab.inactiveForeground"],
-      ),
-    terminalBackground,
-    terminalForeground,
-    terminalAnsiBlack,
-    terminalAnsiRed,
-    terminalAnsiGreen,
-    terminalAnsiYellow,
-    terminalAnsiBlue,
-    terminalAnsiMagenta,
-    terminalAnsiCyan,
-    terminalAnsiWhite,
-    terminalAnsiBrightBlack,
-    terminalAnsiBrightRed,
-    terminalAnsiBrightGreen,
-    terminalAnsiBrightYellow,
-    terminalAnsiBrightBlue,
-    terminalAnsiBrightMagenta,
-    terminalAnsiBrightCyan,
-    terminalAnsiBrightWhite,
     titleBarActiveForeground,
     titleBarActiveBackground,
     titleBarInactiveForeground,
