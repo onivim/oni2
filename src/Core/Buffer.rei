@@ -6,6 +6,8 @@
 
 type t;
 
+let initial: t;
+
 let show: t => string;
 
 let ofLines: (~id: int=?, array(string)) => t;
@@ -50,5 +52,3 @@ let getLastUsed: t => float;
 
 let shouldApplyUpdate: (BufferUpdate.t, t) => bool;
 let update: (t, BufferUpdate.t) => t;
-
-let empty: t;
