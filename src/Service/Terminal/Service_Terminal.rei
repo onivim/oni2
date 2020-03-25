@@ -37,8 +37,4 @@ module Effect: {let input: (~id: int, string) => Isolinear.Effect.t(msg);};
 
 let handleExtensionMessage: ExtHostClient.Terminal.msg => unit;
 
-type terminalLine = {
-  text: string,
-}
-
-let getLinesAndHighlights: int => option(array(terminalLine));
+let getLinesAndHighlights: int => array(string);

@@ -939,19 +939,18 @@ let start =
       |> Selectors.getActiveBuffer
       |> Option.map(Oni_Core.Buffer.getId);
 
-      /*let maybeTerminalId =
+      let maybeTerminalId =
       maybeBufferId
       |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
       |> OptionEx.flatMap(fun
       | BufferRenderer.Terminal({ id, _}) => Some(id)
       | _ => None
-      );*/
+      );
       
-      let maybeTerminalId = Some(1);
-
       let effect = OptionEx.map2(
-      (bufferId, _terminalId) => {
-        setBufferLinesEffect(bufferId, [|"abc"|])
+      (bufferId, terminalId) => {
+        let lines = Service_Terminal.getLinesAndHighlights(terminalId);
+        setBufferLinesEffect(bufferId, lines);
       }, maybeBufferId, maybeTerminalId
       )
       |> Option.value(~default=Isolinear.Effect.none);
