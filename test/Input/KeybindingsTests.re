@@ -126,7 +126,7 @@ describe("Keybindings", ({describe, _}) => {
                bindings,
              );
 
-           expect.equal(effects, [Command("explorer.toggle")]);
+           expect.equal(effects, [Execute("explorer.toggle")]);
          });
     });
     test("regression test: #1160 (legacy binding)", ({expect, _}) => {
@@ -141,7 +141,7 @@ describe("Keybindings", ({describe, _}) => {
              let key = {...getKeyFromSDL(key), modifiers};
              let (_bindings, effects) =
                keyDown(~context=contextWithEditorTextFocus, ~key, bindings);
-             expect.equal(effects, [Command(cmd)]);
+             expect.equal(effects, [Execute(cmd)]);
            });
       };
 

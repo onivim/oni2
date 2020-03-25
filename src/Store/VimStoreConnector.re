@@ -504,7 +504,7 @@ let start =
     ();
   };
 
-  let vimKeyFilter = key => {
+  let isVimKey = key => {
     !String.equal(key, "<S-SHIFT>")
     && !String.equal(key, "<A-SHIFT>")
     && !String.equal(key, "<D-SHIFT>")
@@ -519,7 +519,7 @@ let start =
 
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
-      if (vimKeyFilter(key)) {
+      if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
         let editor =
