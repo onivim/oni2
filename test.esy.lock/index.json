@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "checksum": "7344899efad8adff606395bb389b7aeb",
-=======
-  "checksum": "5f6eb7fde00a9c82087f2e0ba4362b40",
->>>>>>> master
+  "checksum": "290a2bc6294cca5ee5c104dba6b31bd0",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
