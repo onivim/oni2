@@ -1,5 +1,5 @@
 {
-  "checksum": "4d97b23b13818cf2d364dff5bcf82a2a",
+  "checksum": "bc99c8a05ff3666548aee86a9a78fe78",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -1032,13 +1032,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "editor-input@github:onivim/editor-input#ca5f130@d41d8cd9": {
-      "id": "editor-input@github:onivim/editor-input#ca5f130@d41d8cd9",
+    "editor-input@github:onivim/editor-input#c494950@d41d8cd9": {
+      "id": "editor-input@github:onivim/editor-input#c494950@d41d8cd9",
       "name": "editor-input",
-      "version": "github:onivim/editor-input#ca5f130",
+      "version": "github:onivim/editor-input#c494950",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/editor-input#ca5f130" ]
+        "source": [ "github:onivim/editor-input#c494950" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1216,7 +1216,7 @@
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-sdl2@2.0.10006@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
-        "editor-input@github:onivim/editor-input#ca5f130@d41d8cd9",
+        "editor-input@github:onivim/editor-input#c494950@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "axios@0.19.2@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
