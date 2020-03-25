@@ -24,6 +24,11 @@ module Terminal = ExtHostClient_Terminal;
 type msg =
   | SCM(SCM.msg)
   | Terminal(Terminal.msg)
+  | ShowMessage({
+      severity: [ | `Ignore | `Info | `Warning | `Error],
+      message: string,
+      extensionId: option(string),
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
@@ -63,7 +68,6 @@ let start =
       ~onRegisterDocumentSymbolProvider=noop2,
       ~onRegisterReferencesProvider=noop2,
       ~onRegisterSuggestProvider=noop2,
-      ~onShowMessage=noop1,
       ~onStatusBarSetEntry,
       ~dispatch,
       setup: Setup.t,
@@ -148,9 +152,25 @@ let start =
     | (
         "MainThreadMessageService",
         "$showMessage",
-        [_level, `String(s), _extInfo, ..._],
+        [`Int(severity), `String(message), options, ..._],
       ) =>
-      onShowMessage(s);
+      let severity =
+        switch (severity) {
+        | 0 => `Ignore
+        | 1 => `Info
+        | 2 => `Warning
+        | 3 => `Error
+        | _ => `Ignore
+        };
+      let extensionId =
+        Yojson.Safe.Util.(
+          options
+          |> member("extension")
+          |> member("identifier")
+          |> member("value")
+          |> to_string_option
+        );
+      dispatch(ShowMessage({severity, message, extensionId}));
       Ok(None);
 
     | ("MainThreadExtensionService", "$onDidActivateExtension", [v, ..._]) =>

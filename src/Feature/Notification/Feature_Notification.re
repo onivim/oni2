@@ -25,6 +25,7 @@ type notification = {
   id: int,
   kind,
   message: string,
+  source: option(string),
 };
 
 type model = list(notification);
@@ -50,9 +51,9 @@ let update = (model, msg) => {
 // EFFECTS
 
 module Effects = {
-  let create = (~kind=Info, message) =>
+  let create = (~kind=Info, ~source=?, message) =>
     Isolinear.Effect.createWithDispatch(~name="notification.create", dispatch =>
-      dispatch(Created({id: Internal.generateId(), kind, message}))
+      dispatch(Created({id: Internal.generateId(), kind, message, source}))
     );
 
   let dismiss = notification =>
@@ -139,13 +140,12 @@ module View = {
         transform(Transform.[TranslateY(yOffset)]),
       ];
 
-      let text = (~foreground, ~background, font: UiFont.t) => [
+      let text = (~foreground, font: UiFont.t) => [
         fontFamily(font.fontFile),
         fontSize(11.),
         textWrap(TextWrapping.NoWrap),
         marginLeft(6),
         color(foreground),
-        backgroundColor(background),
       ];
     };
 
@@ -181,12 +181,18 @@ module View = {
       let icon = () =>
         <FontIcon icon={iconFor(model)} fontSize=16. color=foreground />;
 
+      let source = () =>
+        switch (model.source) {
+        | Some(text) =>
+          let foreground = Color.multiplyAlpha(0.5, foreground);
+          <Text style={Styles.text(~foreground, font)} text />;
+        | None => React.empty
+        };
+
       <View style={Styles.container(~background, ~yOffset)}>
         <icon />
-        <Text
-          style={Styles.text(~foreground, ~background, font)}
-          text={model.message}
-        />
+        <source />
+        <Text style={Styles.text(~foreground, font)} text={model.message} />
       </View>;
     };
   };
@@ -205,17 +211,17 @@ module View = {
           paddingVertical(5),
         ];
 
-        let text = (~font: UiFont.t, ~theme: Theme.t) => [
+        let text = (~foreground, ~font: UiFont.t) => [
           fontFamily(font.fontFile),
           fontSize(11.),
           textWrap(TextWrapping.NoWrap),
           marginLeft(6),
-          color(theme.foreground),
+          color(foreground),
         ];
 
-        let message = (~font, ~theme) => [
+        let message = (~foreground, ~font) => [
           flexGrow(1),
-          ...text(~font, ~theme),
+          ...text(~foreground, ~font),
         ];
 
         let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
@@ -238,6 +244,8 @@ module View = {
         };
 
       let make = (~item, ~theme: Theme.t, ~font, ~dispatch, ()) => {
+        let foreground = theme.foreground;
+
         let icon = () =>
           <FontIcon
             icon={iconFor(item)}
@@ -245,21 +253,29 @@ module View = {
             color={colorFor(item, ~theme)}
           />;
 
+        let source = () =>
+          switch (item.source) {
+          | Some(text) =>
+            let foreground = Color.multiplyAlpha(0.5, foreground);
+            <Text style={Styles.text(~foreground, ~font)} text />;
+          | None => React.empty
+          };
+
         let closeButton = () => {
           let onClick = () => dispatch(Dismissed(item));
 
           <Clickable onClick style=Styles.closeButton>
-            <FontIcon
-              icon=FontAwesome.times
-              fontSize=13.
-              color={theme.foreground}
-            />
+            <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
           </Clickable>;
         };
 
         <View style=Styles.container>
           <icon />
-          <Text style={Styles.message(~font, ~theme)} text={item.message} />
+          <source />
+          <Text
+            style={Styles.message(~foreground, ~font)}
+            text={item.message}
+          />
           <closeButton />
         </View>;
       };

@@ -14,6 +14,7 @@ type notification = {
   id: int,
   kind,
   message: string,
+  source: option(string),
 };
 
 type model = list(notification);
@@ -30,7 +31,8 @@ let update: (model, msg) => model;
 // EFFECTS
 
 module Effects: {
-  let create: (~kind: kind=?, string) => Isolinear.Effect.t(msg);
+  let create:
+    (~kind: kind=?, ~source: string=?, string) => Isolinear.Effect.t(msg);
   let dismiss: notification => Isolinear.Effect.t(msg);
   let dismissAll: Isolinear.Effect.t(msg);
 };
