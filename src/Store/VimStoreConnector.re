@@ -949,7 +949,9 @@ let start =
       
       let effect = OptionEx.map2(
       (bufferId, terminalId) => {
-        let lines = Service_Terminal.getLinesAndHighlights(terminalId);
+        let (lines, _highlights) = Feature_Terminal.getLinesAndHighlights(
+        ~colorTheme=Feature_Theme.resolver(state.colorTheme),
+        terminalId);
         setBufferLinesEffect(bufferId, lines);
       }, maybeBufferId, maybeTerminalId
       )

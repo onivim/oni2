@@ -256,34 +256,8 @@ let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {
   Revery.Event.dispatch(Internal.onExtensionMessage, msg);
 };
 
-let getLinesAndHighlights = (terminalId) => {
+let getScreenOpt = (terminalId) => {
   terminalId
   |> Hashtbl.find_opt(Internal.idToTerminal)
-  |> Option.map(ReveryTerminal.screen)
-  |> Option.map((screen) => {
-    let totalRows = ReveryTerminal.Screen.getVisibleRows(screen);
-
-    let columns = ReveryTerminal.Screen.getColumns(screen);
-    
-    let lines = Array.make(totalRows, "");
-
-    for (lineIndex in 0 to totalRows - 1) {
-      let buffer = Stdlib.Buffer.create(columns * 2);
-
-      for (column in 0 to columns - 1) {
-        let cell = ReveryTerminal.Screen.getCell(lineIndex, column, screen);
-        let codeInt = Uchar.to_int(cell.char);
-        if (codeInt != 0 && codeInt <= 0x10FFFF) {
-          Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);
-        } else {
-          Stdlib.Buffer.add_string(buffer, " ");
-        }
-      }
-
-      let str = Stdlib.Buffer.contents(buffer) |> Utility.StringEx.trimRight;
-      lines[lineIndex] = str;
-    }
-    lines
-  })
-  |> Option.value(~default=[||]);
+  |> Option.map(ReveryTerminal.screen);
 }
