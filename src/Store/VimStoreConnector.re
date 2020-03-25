@@ -744,6 +744,17 @@ let start =
         | _ => ()
         };
 
+        // Set configured line comment
+        editorBuffer
+        |> OptionEx.flatMap(Core.Buffer.getFileType)
+        |> OptionEx.flatMap(
+             Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
+           )
+        |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+             config.lineComment
+           )
+        |> Option.iter(Vim.Options.setLineComment);
+
         let synchronizeWindowMetrics =
             (editor: Editor.t, editorGroup: EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
