@@ -8,7 +8,10 @@ module Json = Oni_Core.Json;
 
 open EditorInput;
 
-type effect = EditorInput.effect(string);
+type effect = EditorInput.effect(string) =
+| Command(string)
+| Text(string)
+| Unhandled(EditorInput.KeyPress.t);
 
 module Keybinding = {
   type t = keybinding;
