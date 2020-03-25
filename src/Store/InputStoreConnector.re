@@ -136,21 +136,39 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       };
     };
 
-  let reveryKeyToEditorKey = (key: Revery.Key.KeyEvent.t) => {
-    let shift = Revery.Key.Keymod.isShiftDown(key.keymod);
-    let control = Revery.Key.Keymod.isControlDown(key.keymod);
-    let alt = Revery.Key.Keymod.isAltDown(key.keymod);
-    let meta = Revery.Key.Keymod.isGuiDown(key.keymod);
+  let reveryKeyToEditorKey = ({keycode, scancode, keymod}: Revery.Key.KeyEvent.t) => {
+    let shift = Revery.Key.Keymod.isShiftDown(keymod);
+    let control = Revery.Key.Keymod.isControlDown(keymod);
+    let alt = Revery.Key.Keymod.isAltDown(keymod);
+    let meta = Revery.Key.Keymod.isGuiDown(keymod);
+    let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
+
+    let (altGr, control, alt) =
+      switch (Revery.Environment.os) {
+      // On Windows, we need to do some special handling here
+      // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
+      // https://devblogs.microsoft.com/oldnewthing/?p=40003
+      | Revery.Environment.Windows => 
+        let altGr =
+          altGr
+          || Revery.Key.Keymod.isRightAltDown(keymod)
+          && Revery.Key.Keymod.isControlDown(keymod);
+        // If altGr is active, disregard control / alt key
+        let ctrlKey = altGr ? false : control;
+        let altKey = altGr ? false : alt;
+        (altGr, ctrlKey, altKey);
+      | _ => (altGr, control, alt)
+      };
 
     EditorInput.KeyPress.{
-      scancode: key.scancode,
-      keycode: key.keycode,
+      scancode,
+      keycode,
       modifiers: {
-        ...EditorInput.Modifiers.none,
         shift,
         control,
         alt,
         meta,
+        altGr,
       },
     };
   };
