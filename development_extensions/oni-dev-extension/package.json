@@ -14,8 +14,12 @@
 	"contributes": {
 		"commands": [
 			{
-				"command": "developer.oni.showNotification",
-				"title": "Onivim - Developer: Show Notification"
+				"command": "developer.oni.showWarning",
+				"title": "Onivim - Developer: Show Warning"
+			},
+			{
+				"command": "developer.oni.showError",
+				"title": "Onivim - Developer: Show Error"
 			},
 			{
 				"command": "developer.oni.getBufferText",
