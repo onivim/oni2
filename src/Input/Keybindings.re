@@ -6,8 +6,6 @@ type keybinding = {
 
 module Json = Oni_Core.Json;
 
-type effect = EditorInput.effect(string);
-
 module Keybinding = {
   type t = keybinding;
 
@@ -93,6 +91,10 @@ module Internal = {
       (bindings, errors);
     };
 };
+
+type effect =
+  Input.effect =
+    | Execute(string) | Text(string) | Unhandled(EditorInput.KeyPress.t);
 
 type t = Input.t;
 

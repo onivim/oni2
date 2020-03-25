@@ -125,9 +125,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | EditorInput.Execute(command) => [Actions.Command(command)]
-    | EditorInput.Text(text) => handleTextEffect(state, text)
-    | EditorInput.Unhandled(key) =>
+    | Keybindings.Execute(command) => [Actions.Command(command)]
+    | Keybindings.Text(text) => handleTextEffect(state, text)
+    | Keybindings.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();
       let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
       switch (maybeKeyString) {
