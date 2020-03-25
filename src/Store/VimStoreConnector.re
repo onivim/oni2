@@ -947,15 +947,27 @@ let start =
       | _ => None
       );
       
-      let effect = OptionEx.map2(
+      let (state, effect) = OptionEx.map2(
       (bufferId, terminalId) => {
         let (lines, _highlights) = Feature_Terminal.getLinesAndHighlights(
         ~colorTheme=Feature_Theme.resolver(state.colorTheme),
         terminalId);
-        setBufferLinesEffect(bufferId, lines);
+
+        let syntaxHighlights =
+          List.fold_left((acc, curr) => {
+            let (line, tokens) = curr;
+            Feature_Syntax.setTokensForLine(
+              ~bufferId,
+              ~line,
+              ~tokens,
+              acc,
+            );
+          }, state.syntaxHighlights, _highlights);
+
+        ({ ...state, syntaxHighlights }, setBufferLinesEffect(bufferId, lines));
       }, maybeBufferId, maybeTerminalId
       )
-      |> Option.value(~default=Isolinear.Effect.none);
+      |> Option.value(~default=(state, Isolinear.Effect.none));
 
       (state, effect)
 

@@ -289,7 +289,26 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
     let columns = TermScreen.getColumns(screen);
     
     let lines = Array.make(totalRows, "");
-    let highlights = ref([]);
+    let highlights = ref([(0,
+        [ColorizedToken.{
+          index: 0,
+          foregroundColor: Revery.Colors.red,
+          backgroundColor: Revery.Colors.black,
+          syntaxScope: SyntaxScope.none,
+        },
+        ColorizedToken.{
+          index: 4,
+          foregroundColor: Revery.Colors.white,
+          backgroundColor: Revery.Colors.black,
+          syntaxScope: SyntaxScope.none,
+        },
+        ColorizedToken.{
+          index: 8,
+          foregroundColor: Revery.Colors.blue,
+          backgroundColor: Revery.Colors.black,
+          syntaxScope: SyntaxScope.none,
+        }],
+      )]);
 
     let theme = theme(colorTheme);
     let defaultBackground = defaultBackground(colorTheme);
