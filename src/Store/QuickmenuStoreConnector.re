@@ -18,7 +18,8 @@ let prefixFor: Vim.Types.cmdlineType => string =
   fun
   | SearchForward => "/"
   | SearchReverse => "?"
-  | _ => ":";
+  | Ex
+  | Unknown => ":";
 
 let start = (themeInfo: ThemeInfo.t) => {
   let selectItemEffect = (item: Actions.menuItem) =>
