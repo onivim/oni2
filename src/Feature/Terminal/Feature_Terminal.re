@@ -227,7 +227,7 @@ module Colors = {
     );
 };
 
-  let theme = (theme) =>
+  let _theme = (theme) =>
     fun
     | 0 => Colors.ansiBlack.from(theme)
     | 1 => Colors.ansiRed.from(theme)
@@ -247,6 +247,12 @@ module Colors = {
     | 15 => Colors.ansiBrightWhite.from(theme)
     // For 256 colors, fall back to defaults
     | idx => ReveryTerminal.Theme.default(idx);
+
+  let theme = (theme, idx) => {
+    let ret = _theme(theme, idx);
+    prerr_endline (Printf.sprintf("Index: %d Color: %s", idx, Revery.Color.toString(ret)))
+    ret;
+  };
 
   let defaultBackground =theme => Colors.background.from(theme);
   let defaultForeground = theme =>Colors.foreground.from(theme);
@@ -289,26 +295,7 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
     let columns = TermScreen.getColumns(screen);
     
     let lines = Array.make(totalRows, "");
-    let highlights = ref([(0,
-        [ColorizedToken.{
-          index: 0,
-          foregroundColor: Revery.Colors.red,
-          backgroundColor: Revery.Colors.black,
-          syntaxScope: SyntaxScope.none,
-        },
-        ColorizedToken.{
-          index: 4,
-          foregroundColor: Revery.Colors.white,
-          backgroundColor: Revery.Colors.black,
-          syntaxScope: SyntaxScope.none,
-        },
-        ColorizedToken.{
-          index: 8,
-          foregroundColor: Revery.Colors.blue,
-          backgroundColor: Revery.Colors.black,
-          syntaxScope: SyntaxScope.none,
-        }],
-      )]);
+    let highlights = ref([]);
 
     let theme = theme(colorTheme);
     let defaultBackground = defaultBackground(colorTheme);
@@ -319,19 +306,36 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
       let lineHighlights = ref([]);
       for (column in 0 to columns - 1) {
         let cell = TermScreen.getCell(lineIndex, column, screen);
-        let _fg = TermScreen.getForegroundColor(
-          ~defaultBackground,
-          ~defaultForeground,
-          ~theme,
-          cell);
-        let _bg = TermScreen.getBackgroundColor(
-          ~defaultBackground,
-          ~defaultForeground,
-          ~theme,
-          cell);
         let codeInt = Uchar.to_int(cell.char);
         if (codeInt != 0 && codeInt <= 0x10FFFF) {
           Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);
+          let fg = TermScreen.getForegroundColor(
+            ~defaultBackground,
+            ~defaultForeground,
+            ~theme,
+            cell);
+          let bg = TermScreen.getBackgroundColor(
+            ~defaultBackground,
+            ~defaultForeground,
+            ~theme,
+            cell);
+
+          prerr_endline (Printf.sprintf("Line: %d column: %d %s", lineIndex, column,  Revery.Color.toString(fg)));
+
+          let newToken = ColorizedToken.{
+            index: column,
+            backgroundColor: bg,
+            foregroundColor: fg,
+            syntaxScope: SyntaxScope.none,
+          };
+
+          let newHighlights = switch(lineHighlights^) {
+          //| [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] when (foregroundColor != fg || backgroundColor != bg) => [newToken, ct, ...tail]
+          | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] => [newToken, ct, ...tail]
+          | [] => [newToken]
+          //| [...tokens] => tokens
+          };
+          lineHighlights := newHighlights;
         } else {
           Stdlib.Buffer.add_string(buffer, " ");
         }
@@ -339,6 +343,8 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
 
       let str = Stdlib.Buffer.contents(buffer) |> Utility.StringEx.trimRight;
       lines[lineIndex] = str;
+
+      highlights := [(lineIndex, List.rev(lineHighlights^)), ...highlights^];
     };
     (lines, highlights^);
   })

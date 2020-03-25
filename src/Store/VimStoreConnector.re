@@ -956,6 +956,7 @@ let start =
         let syntaxHighlights =
           List.fold_left((acc, curr) => {
             let (line, tokens) = curr;
+            prerr_endline (Printf.sprintf("Setting %d tokens for line %d", List.length(tokens), line));
             Feature_Syntax.setTokensForLine(
               ~bufferId,
               ~line,
