@@ -75,6 +75,8 @@ module AutoClosingPair = {
 type t = {
   autoCloseBefore: list(string),
   autoClosingPairs: list(AutoClosingPair.t),
+  lineComment: option(string),
+  blockComment: option((string, string)),
 };
 
 let default = {
@@ -93,6 +95,8 @@ let default = {
     "\t",
   ],
   autoClosingPairs: [],
+  lineComment: None,
+  blockComment: None,
 };
 
 module Decode = {
@@ -102,7 +106,7 @@ module Decode = {
   let autoCloseBeforeDecode = string |> map(StringEx.explode);
 
   let configuration =
-    obj(({field, _}) =>
+    obj(({field, at, _}) =>
       {
         autoCloseBefore:
           field.withDefault(
@@ -115,6 +119,17 @@ module Decode = {
             "autoClosingPairs",
             [],
             list(AutoClosingPair.decode),
+          ),
+        lineComment: at.optional(["comments", "lineComment"], string),
+        blockComment:
+          at.optional(
+            ["comments", "blockComment"],
+            list(string)
+            |> and_then(
+                 fun
+                 | [start, stop] => succeed((start, stop))
+                 | _ => fail("Expected pair"),
+               ),
           ),
       }
     );
