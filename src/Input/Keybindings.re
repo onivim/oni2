@@ -6,8 +6,6 @@ type keybinding = {
 
 module Json = Oni_Core.Json;
 
-open EditorInput;
-
 type effect = EditorInput.effect(string);
 
 module Keybinding = {

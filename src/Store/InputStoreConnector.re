@@ -137,7 +137,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
 
   let reveryKeyToEditorKey =
-      ({keycode, scancode, keymod}: Revery.Key.KeyEvent.t) => {
+      ({keycode, scancode, keymod, repeat}: Revery.Key.KeyEvent.t) => {
+    // TODO: Should we filter out repeat keys from key binding processing?
+    ignore(repeat);
+
     let shift = Revery.Key.Keymod.isShiftDown(keymod);
     let control = Revery.Key.Keymod.isControlDown(keymod);
     let alt = Revery.Key.Keymod.isAltDown(keymod);

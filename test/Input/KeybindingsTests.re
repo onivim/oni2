@@ -52,7 +52,7 @@ let getKeyFromSDL: string => EditorInput.KeyPress.t =
   key => {
     let scancode = Sdl2.Scancode.ofName(key);
     let keycode = Sdl2.Keycode.ofName(key);
-    EditorInput.{keycode, scancode, modifiers: EditorInput.Modifiers.none};
+    {keycode, scancode, modifiers: EditorInput.Modifiers.none};
   };
 
 let contextWithEditorTextFocus =
