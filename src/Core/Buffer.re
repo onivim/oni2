@@ -75,7 +75,7 @@ let ofLines = (~id=0, rawLines: array(string)) => {
   };
 };
 
-let empty = ofLines([||]);
+let initial = ofLines([||]);
 
 let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   id: metadata.id,
