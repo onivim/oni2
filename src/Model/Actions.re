@@ -62,9 +62,9 @@ type t =
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
-  | KeyDown([@opaque] Revery.Key.KeyEvent.t)
-  | KeyUp([@opaque] Revery.Key.KeyEvent.t)
-  | TextInput([@opaque] Revery.Events.textInputEvent)
+  | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked
@@ -74,7 +74,6 @@ type t =
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
-  | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)

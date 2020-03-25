@@ -17,6 +17,8 @@ let runTest:
 
 let runTestWithInput:
   (
+    ~configuration: option(string)=?,
+    ~keybindings: option(string)=?,
     ~name: string,
     ~onAfterDispatch: Model.Actions.t => unit=?,
     testCallbackWithInput

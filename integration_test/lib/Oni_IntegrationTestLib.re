@@ -201,9 +201,18 @@ let runTest =
   dispatch(Model.Actions.Quit(true));
 };
 
-let runTestWithInput = (~name, ~onAfterDispatch=?, f: testCallbackWithInput) => {
+let runTestWithInput =
+    (
+      ~configuration=?,
+      ~keybindings=?,
+      ~name,
+      ~onAfterDispatch=?,
+      f: testCallbackWithInput,
+    ) => {
   runTest(
     ~name,
+    ~configuration?,
+    ~keybindings?,
     ~onAfterDispatch?,
     (dispatch, wait, runEffects) => {
       let input = key => {

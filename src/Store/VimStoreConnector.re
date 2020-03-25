@@ -504,9 +504,22 @@ let start =
     ();
   };
 
+  let isVimKey = key => {
+    !String.equal(key, "<S-SHIFT>")
+    && !String.equal(key, "<A-SHIFT>")
+    && !String.equal(key, "<D-SHIFT>")
+    && !String.equal(key, "<D->")
+    && !String.equal(key, "<D-A->")
+    && !String.equal(key, "<D-S->")
+    && !String.equal(key, "<C->")
+    && !String.equal(key, "<A-C->")
+    && !String.equal(key, "<SHIFT>")
+    && !String.equal(key, "<S-C->");
+  };
+
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
-      if (Oni_Input.Filter.filter(key)) {
+      if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
         let editor =
@@ -863,6 +876,12 @@ let start =
       ();
     });
 
+  let escapeEffect =
+    Isolinear.Effect.create(~name="vim.esc", () => {
+      let _ = Vim.input("<esc>");
+      ();
+    });
+
   let indentEffect =
     Isolinear.Effect.create(~name="vim.indent", () => {
       let _ = Vim.input(">");
@@ -896,6 +915,7 @@ let start =
     | Command("outdent") => (state, outdentEffect)
     | Command("editor.action.indentLines") => (state, indentEffect)
     | Command("editor.action.outdentLines") => (state, outdentEffect)
+    | Command("vim.esc") => (state, escapeEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>

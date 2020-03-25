@@ -11,7 +11,8 @@ type t;
 
 let initial: t;
 
-let add: (~time: float, string, t) => t;
+let keyPress: (~time: float, string, t) => t;
+let textInput: (~time: float, string, t) => t;
 
 let make:
   (
