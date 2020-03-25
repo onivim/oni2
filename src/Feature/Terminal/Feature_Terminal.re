@@ -1,6 +1,4 @@
-open Oni_Core;
-
-module ExtHostClient = Oni_Extensions.ExtHostClient;
+open Oni_Core; module ExtHostClient = Oni_Extensions.ExtHostClient;
 
 type terminal = {
   id: int,
@@ -285,23 +283,33 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
   terminalId
   |> Service_Terminal.getScreenOpt
   |> Option.map((screen) => {
-    let totalRows = ReveryTerminal.Screen.getVisibleRows(screen);
 
-    let columns = ReveryTerminal.Screen.getColumns(screen);
+    module TermScreen = ReveryTerminal.Screen;
+    let totalRows = TermScreen.getVisibleRows(screen);
+    let columns = TermScreen.getColumns(screen);
     
     let lines = Array.make(totalRows, "");
     let highlights = ref([]);
 
-    let _terminalTheme = theme(colorTheme);
-    let _defaultBackground = defaultBackground(colorTheme);
-    let _defaultForeground = defaultForeground(colorTheme);
+    let theme = theme(colorTheme);
+    let defaultBackground = defaultBackground(colorTheme);
+    let defaultForeground = defaultForeground(colorTheme);
     for (lineIndex in 0 to totalRows - 1) {
       let buffer = Stdlib.Buffer.create(columns * 2);
 
       let lineHighlights = ref([]);
       for (column in 0 to columns - 1) {
-        let cell = ReveryTerminal.Screen.getCell(lineIndex, column, screen);
-        //let bg = cell.
+        let cell = TermScreen.getCell(lineIndex, column, screen);
+        let _fg = TermScreen.getForegroundColor(
+          ~defaultBackground,
+          ~defaultForeground,
+          ~theme,
+          cell);
+        let _bg = TermScreen.getBackgroundColor(
+          ~defaultBackground,
+          ~defaultForeground,
+          ~theme,
+          cell);
         let codeInt = Uchar.to_int(cell.char);
         if (codeInt != 0 && codeInt <= 0x10FFFF) {
           Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);
