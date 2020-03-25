@@ -18,7 +18,7 @@ module Model: {
   let to_yojson: t => Json.t;
   let encode: Json.encoder(t);
 
-  let ofExtensions: list(ExtensionManifest.t) => t;
+  let fromSettings: Config.Settings.t => t;
   let toString: t => string;
 };
 

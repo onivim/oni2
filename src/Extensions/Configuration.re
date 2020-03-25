@@ -33,23 +33,9 @@ module Model = {
 
   let to_yojson = Json.Encode.encode_value(encode);
 
-  let ofExtensions = (extensions: list(ExtensionManifest.t)) => {
-    open ExtensionManifest;
-    open ExtensionContributions.Configuration;
-
-    let configModels =
-      extensions
-      |> List.map(manifest => manifest.contributes.configuration)
-      |> List.flatten;
-
-    let keys = configModels |> List.map(it => it.name);
-    let contents =
-      configModels
-      |> List.map(({name, default}) => (name, default))
-      |> Json.Encode.obj
-      |> Utility.JsonEx.explode;
-
-    {keys, contents};
+  let fromSettings = settings => {
+    keys: settings |> Config.Settings.keys |> List.map(Config.keyAsString),
+    contents: settings |> Config.Settings.toJson,
   };
 
   let toString = (model: t) => {

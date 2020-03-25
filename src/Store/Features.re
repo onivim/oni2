@@ -5,7 +5,14 @@ open Actions;
 
 // UPDATE
 
-let update = (~extHostClient, ~configFile, state: State.t, action: Actions.t) =>
+let update =
+    (
+      ~extHostClient,
+      ~getUserSettings,
+      ~setup,
+      state: State.t,
+      action: Actions.t,
+    ) =>
   switch (action) {
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
@@ -42,10 +49,26 @@ let update = (~extHostClient, ~configFile, state: State.t, action: Actions.t) =>
     let state = {...state, syntaxHighlights};
     (state, Effect.none);
 
-  | Config(msg) =>
-    let config = Feature_Configuration.update(~configFile, state.config, msg);
+  | Configuration(msg) =>
+    let (config, outmsg) =
+      Feature_Configuration.update(~getUserSettings, state.config, msg);
     let state = {...state, config};
-    (state, Effect.none);
+    let eff =
+      switch (outmsg) {
+      | ConfigurationChanged({changed}) =>
+        Oni_Extensions.ExtHostClient.Effects.acceptConfigurationChanged(
+          extHostClient,
+          Feature_Configuration.toExtensionConfiguration(
+            config,
+            state.extensions.extensions,
+            setup,
+          ),
+          ~changed=Oni_Extensions.Configuration.Model.fromSettings(changed),
+        )
+      | Nothing => Effect.none
+      };
+
+    (state, eff);
 
   | Syntax(msg) =>
     let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);

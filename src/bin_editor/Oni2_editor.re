@@ -121,7 +121,9 @@ if (cliOptions.syntaxHighlightService) {
 
     PreflightChecks.run();
 
-    let currentState = ref(Model.State.create());
+    let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
+
+    let currentState = ref(Model.State.initial(~getUserSettings));
 
     let update = UI.start(w, <Root state=currentState^ />);
 
@@ -160,6 +162,7 @@ if (cliOptions.syntaxHighlightService) {
     Log.debug("Startup: Starting StoreThread");
     let (dispatch, runEffects) =
       Store.StoreThread.start(
+        ~getUserSettings,
         ~setup,
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),

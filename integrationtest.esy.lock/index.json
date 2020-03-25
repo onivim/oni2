@@ -1,5 +1,5 @@
 {
-  "checksum": "71b76aa99cfee890d3e68635be5ca285",
+  "checksum": "eaadb0e7c3ec593137edb74e819d73c4",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -117,20 +117,20 @@
       "dependencies": [ "@opam/dune@opam:2.4.0@639d28a3" ],
       "devDependencies": []
     },
-    "revery-terminal@github:revery-ui/revery-terminal#6b2f4e0@d41d8cd9": {
-      "id":
-        "revery-terminal@github:revery-ui/revery-terminal#6b2f4e0@d41d8cd9",
+    "revery-terminal@github:glennsl/revery-terminal#3ac848c@d41d8cd9": {
+      "id": "revery-terminal@github:glennsl/revery-terminal#3ac848c@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:revery-ui/revery-terminal#6b2f4e0",
+      "version": "github:glennsl/revery-terminal#3ac848c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery-terminal#6b2f4e0" ]
+        "source": [ "github:glennsl/revery-terminal#3ac848c" ]
       },
       "overrides": [],
       "dependencies": [
         "revery@github:revery-ui/revery#ced2dde@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#91bad1f@d41d8cd9",
-        "isolinear@3.0.0@d41d8cd9", "@glennsl/timber@1.0.0@d41d8cd9"
+        "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
+        "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -149,7 +149,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9",
-        "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
+        "reason-sdl2@2.10.3020@d41d8cd9",
         "reason-harfbuzz@github:revery-ui/reason-harfbuzz#eca58ea@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
         "@reason-native/rely@3.2.1@d41d8cd9",
@@ -337,8 +337,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.3.0@d41d8cd9",
-        "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3020@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-sdl2@2.0.10006@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
@@ -349,13 +348,15 @@
       ],
       "devDependencies": []
     },
-    "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9": {
-      "id": "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
+    "reason-sdl2@2.10.3020@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3020@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "github:revery-ui/reason-sdl2#ce07970",
+      "version": "2.10.3020",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-sdl2#ce07970" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3020.tgz#sha1:2ed80ba0b5085f6a51cc91cf92a973d9362ce79f"
+        ]
       },
       "overrides": [],
       "dependencies": [
@@ -672,15 +673,13 @@
       "dependencies": [ "graceful-fs@4.2.3@d41d8cd9" ],
       "devDependencies": []
     },
-    "isolinear@3.0.0@d41d8cd9": {
-      "id": "isolinear@3.0.0@d41d8cd9",
+    "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9": {
+      "id": "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
       "name": "isolinear",
-      "version": "3.0.0",
+      "version": "github:revery-ui/isolinear#b17ce17",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/isolinear/-/isolinear-3.0.0.tgz#sha1:493bed7c568d883607e7fd7f1a423d5a6f841515"
-        ]
+        "source": [ "github:revery-ui/isolinear#b17ce17" ]
       },
       "overrides": [],
       "dependencies": [
@@ -688,7 +687,7 @@
         "@opam/dune@opam:2.4.0@639d28a3",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
-      "devDependencies": []
+      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
     "interpret@1.2.0@d41d8cd9": {
       "id": "interpret@1.2.0@d41d8cd9",
@@ -1033,24 +1032,6 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "editor-input@github:onivim/editor-input#63a614c@d41d8cd9": {
-      "id": "editor-input@github:onivim/editor-input#63a614c@d41d8cd9",
-      "name": "editor-input",
-      "version": "github:onivim/editor-input#63a614c",
-      "source": {
-        "type": "install",
-        "source": [ "github:onivim/editor-input#63a614c" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
-        "@opam/menhir@opam:20200211@26571604",
-        "@opam/dune@opam:2.4.0@639d28a3",
-        "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
-      ],
-      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
-    },
     "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9": {
       "id":
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
@@ -1202,21 +1183,19 @@
       },
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
-        "revery-terminal@github:revery-ui/revery-terminal#6b2f4e0@d41d8cd9",
+        "revery-terminal@github:glennsl/revery-terminal#3ac848c@d41d8cd9",
         "revery@github:revery-ui/revery#ced2dde@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@2.3.1@d41d8cd9",
-        "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
+        "reason-textmate@2.3.1@d41d8cd9", "reason-sdl2@2.10.3020@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#0640e6b@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
-        "isolinear@3.0.0@d41d8cd9",
+        "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-sdl2@2.0.10006@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
-        "editor-input@github:onivim/editor-input#63a614c@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "axios@0.19.2@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",

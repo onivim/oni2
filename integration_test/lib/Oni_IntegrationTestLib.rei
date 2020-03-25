@@ -25,6 +25,7 @@ let runTestWithInput:
   ) =>
   unit;
 
+let setUserSettings: Core.Config.Settings.t => unit;
 let setClipboard: option(string) => unit;
 let getClipboard: unit => option(string);
 let setTime: float => unit;

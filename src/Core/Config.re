@@ -7,6 +7,7 @@ type key = Lookup.path;
 type resolver = key => option(Json.t);
 
 let key = Lookup.path;
+let keyAsString = Lookup.key;
 
 // SETTINGS
 
@@ -20,19 +21,22 @@ module Settings = {
     |> List.map(((key, entry)) => (Lookup.path(key), entry))
     |> Lookup.fromList;
 
-  let fromFile = path => {
-    switch (Yojson.Safe.from_file(path)) {
+  let fromJson = json => {
+    switch (json) {
     | `Assoc(items) => fromList(items)
 
     | _ =>
       Log.errorf(m => m("Expected file to contain a JSON object"));
       empty;
+    };
+  };
 
-    | exception (Yojson.Json_error(message)) =>
+  let fromFile = path =>
+    try(path |> Yojson.Safe.from_file |> fromJson) {
+    | Yojson.Json_error(message) =>
       Log.errorf(m => m("Failed to read file %s: %s", path, message));
       empty;
     };
-  };
 
   let get = Lookup.get;
 
@@ -46,6 +50,38 @@ module Settings = {
       ys,
     );
   let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
+
+  let diff = (xs, ys) =>
+    Lookup.merge(
+      (_path, x, y) =>
+        switch (x, y) {
+        | (Some(x), Some(y)) when x == y => None
+        | (Some(_), Some(y)) => Some(y)
+        | (Some(_), None) => Some(Json.Encode.null)
+        | (None, Some(value)) => Some(value)
+        | (None, None) => failwith("unreachable")
+        },
+      xs,
+      ys,
+    );
+
+  let changed = (xs, ys) =>
+    diff(xs, ys) |> Lookup.map(_ => Json.Encode.bool(true));
+
+  let keys = settings =>
+    Lookup.fold((key, _, acc) => [key, ...acc], settings, []);
+
+  let rec toJson = node =>
+    switch ((node: t)) {
+    | Node(children) =>
+      Json.Encode.obj(
+        children
+        |> Lookup.KeyedMap.to_seq
+        |> Seq.map(((key, value)) => (key, toJson(value)))
+        |> List.of_seq,
+      )
+    | Leaf(value) => value
+    };
 };
 
 // SCHEMA
