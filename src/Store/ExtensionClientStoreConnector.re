@@ -329,14 +329,14 @@ let start = (extensions, extHostClient) => {
         | `Warning => Warning
         | `Error => Error
         };
-      let message =
-        switch (extensionId) {
-        | Some(extensionId) => extensionId ++ ": " ++ message
-        | None => message
-        };
+
       (
         state,
-        Feature_Notification.Effects.create(~kind, message)
+        Feature_Notification.Effects.create(
+          ~kind,
+          ~source=?extensionId,
+          message,
+        )
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       );
 
