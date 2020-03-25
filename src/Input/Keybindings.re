@@ -94,23 +94,13 @@ module Internal = {
     };
 };
 
-let empty = Input.empty;
-
 type t = Input.t;
 
+let empty = Input.empty;
 let count = Input.count;
-
-let keyDown = (~context, ~key, bindings) => {
-  Input.keyDown(~context, ~key, bindings);
-};
-
-let text = (~text: string, bindings) => {
-  Input.text(~text, bindings);
-};
-
-let keyUp = (~context, ~key, bindings) => {
-  Input.keyUp(~context, ~key, bindings);
-};
+let keyDown = Input.keyDown;
+let text = Input.text;
+let keyUp = Input.keyUp;
 
 // Old version of keybindings - the legacy format:
 // { bindings: [ ..bindings. ] }
