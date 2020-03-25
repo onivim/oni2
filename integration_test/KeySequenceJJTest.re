@@ -21,11 +21,12 @@ runTest(
       let keycode = Sdl2.Keycode.ofName(key);
       let modifiers = EditorInput.Modifiers.none;
 
-      let keyPress: EditorInput.keyPress = {scancode, keycode, modifiers};
+      let keyPress: EditorInput.KeyPress.t = {scancode, keycode, modifiers};
+      let time = Revery.Time.now();
 
-      dispatch(Model.Actions.KeyDown(keyPress));
+      dispatch(Model.Actions.KeyDown(keyPress, time));
       //dispatch(Model.Actions.TextInput(key));
-      dispatch(Model.Actions.KeyUp(keyPress));
+      dispatch(Model.Actions.KeyUp(keyPress, time));
     };
 
     input("i");
