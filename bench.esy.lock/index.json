@@ -1,5 +1,5 @@
 {
-  "checksum": "6f205a2cb9cd61586e54c99530f67168",
+  "checksum": "d80fb0fd60e5004e7bce79824c245472",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -428,18 +428,18 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#0640e6b@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#0640e6b@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#cf76967@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#cf76967@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#0640e6b",
+      "version": "github:onivim/reason-libvim#cf76967",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#0640e6b" ]
+        "source": [ "github:onivim/reason-libvim#cf76967" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
-        "libvim@8.10869.33@d41d8cd9",
+        "libvim@8.10869.35@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "@opam/dune-configurator@opam:2.4.0@6976bb12",
         "@opam/dune@opam:2.4.0@639d28a3",
@@ -646,14 +646,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.33@d41d8cd9": {
-      "id": "libvim@8.10869.33@d41d8cd9",
+    "libvim@8.10869.35@d41d8cd9": {
+      "id": "libvim@8.10869.35@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.33",
+      "version": "8.10869.35",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.33.tgz#sha1:b5e70eab2e856454071b1449432cabdc4d7f49e5"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.35.tgz#sha1:c476f8d8113bf7978a8e1ceb6331ce3616a867f3"
         ]
       },
       "overrides": [],
@@ -1193,7 +1193,7 @@
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@2.3.1@d41d8cd9", "reason-sdl2@2.10.3020@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#0640e6b@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#cf76967@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
