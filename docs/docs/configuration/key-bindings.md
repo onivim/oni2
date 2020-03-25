@@ -44,12 +44,14 @@ The `key` parameter supports both _Vim style_ and _VSCode style_ key bindings.
 
 Vim-style keybindings are surrounded by `<` and `>`, and allow the following modifiers:
 
-| Modifier | Description | Example | Notes |
-| --- | --- | --- | --- |
-| C- | Control key | <C-P> | | 
-| S- | Shift key | <S-P> | |
-| A- | Alt key | <A-P> | | 
-| D- | Command key | <D-P> | A difference between Vim and Onivim is that `D-` also handles the 'Meta' and 'Win' keys on Linux and Windows, respectively |
+| Modifier | Description | Example |
+| --- | --- | --- |
+| `C-` | Control key | `<C-P>` |
+| `S-` | Shift key | `<S-P>` |
+| `A-` | Alt key | `<A-P>` |
+| `D-` | Command key | `<D-P>` | 
+
+> __Note:__ A difference between Vim and Onivim is that `D-` also handles the 'Meta' and 'Win' keys on Linux and Windows, respectively
 
 Modifiers may be combined, for example:
 
@@ -59,18 +61,20 @@ Modifiers may be combined, for example:
 ]
 ```
 
-The `<C-S-P>` would require the Control, Shift, and P keys to be pressed.
+The `<C-S-P>` key binding would require the Control, Shift, and P keys to be pressed.
 
 #### VSCode style
 
 VSCode-style keybindings feature friendly names, like:
 
-| Modifier | Description | Example | Notes |
-| --- | --- | --- | --- |
-| Ctrl+ | Control key | Ctrl+P | |
-| Shift+ | Shift key | Shift+P | |
-| Alt+ | Alt key | Alt+J | |
-| Meta+ | Meta/Command/Windows key | Meta+P | Cmd+,Win+ are equivalent.
+| Modifier | Description | Example |
+| --- | --- | --- |
+| `Ctrl+` | Control key | `Ctrl+P` |
+| `Shift+` | Shift key | `Shift+P` |
+| `Alt+` | Alt key | `Alt+J` |
+| `Meta+` | Meta/Command/Windows key |
+| `Cmd+` | Same as above | `Cmd+P` |
+| `Win+` | Same as above | `Win+P` |
 
 ### Key Sequences
 
@@ -81,6 +85,9 @@ Example:
 ```
   { "key": "jk", "command": "vim.esc", "when": "insertMode" }
 ```
+
+This would require a key-press of 'j', followed by 'k'.
+
 
 ### `command` arguments
 
@@ -154,6 +161,11 @@ Onivim-specific contexts:
 | Control+W, Control+L | Move to right split | `window.moveRight` |
 | Control+W, Control+J | Move down a split | `window.moveDown` |
 | Control+W, Control+K | Move up a split | `window.moveUp` |
+
+### Vim commands
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| Escape | Used to send `<ESC>` to Vim | `vim.esc` |
 
 ### Additional Commands
 
