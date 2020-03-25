@@ -63,7 +63,11 @@ describe("ExtHostClient", ({describe, _}) => {
       let registeredCommands = empty();
       let messages = empty();
 
-      let onShowMessage = append(messages);
+      let dispatch =
+        fun
+        | ExtHostClient.ShowMessage({message, _}) =>
+          append(messages, message)
+        | _ => ();
       let onRegisterCommand = append(registeredCommands);
 
       let isExpectedCommandRegistered = () =>
@@ -72,7 +76,7 @@ describe("ExtHostClient", ({describe, _}) => {
       let anyMessages = any(messages);
 
       withExtensionClient(
-        ~onShowMessage,
+        ~dispatch,
         ~onRegisterCommand,
         client => {
           Waiters.wait(isExpectedCommandRegistered, client);
@@ -106,7 +110,11 @@ describe("ExtHostClient", ({describe, _}) => {
       let registeredCommands = empty();
       let messages = emptyInfoMsgs();
 
-      let onShowMessage = appendInfoMsg(messages);
+      let dispatch =
+        fun
+        | ExtHostClient.ShowMessage({message, _}) =>
+          appendInfoMsg(messages, message)
+        | _ => ();
       let onRegisterCommand = append(registeredCommands);
 
       let isExpectedCommandRegistered = () =>
@@ -123,7 +131,7 @@ describe("ExtHostClient", ({describe, _}) => {
 
       withExtensionClient(
         ~onRegisterCommand,
-        ~onShowMessage,
+        ~dispatch,
         client => {
           Waiters.wait(isExpectedCommandRegistered, client);
           expect.bool(isExpectedCommandRegistered()).toBe(true);
@@ -146,7 +154,11 @@ describe("ExtHostClient", ({describe, _}) => {
       let registeredCommands = empty();
       let messages = emptyInfoMsgs();
 
-      let onShowMessage = appendInfoMsg(messages);
+      let dispatch =
+        fun
+        | ExtHostClient.ShowMessage({message, _}) =>
+          appendInfoMsg(messages, message)
+        | _ => ();
       let onRegisterCommand = append(registeredCommands);
 
       let isExpectedCommandRegistered = () =>
@@ -178,7 +190,7 @@ describe("ExtHostClient", ({describe, _}) => {
         );
 
       withExtensionClient(
-        ~onShowMessage,
+        ~dispatch,
         ~onRegisterCommand,
         client => {
           Waiters.wait(isExpectedCommandRegistered, client);
