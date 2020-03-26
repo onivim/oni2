@@ -73,7 +73,7 @@ let toUiTabs =
 
 let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
   let theme = state.theme;
-  let mode = state.mode;
+  let mode = state.vimMode;
 
   let style = editorViewStyle(theme.editorBackground, theme.foreground);
 

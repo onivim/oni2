@@ -230,7 +230,7 @@ let modeIndicator = (~font, ~colorTheme, ~mode, ()) => {
   <item backgroundColor=background>
     <Text
       style={Styles.textBold(~color=foreground, ~background, font)}
-      text={Vim.Mode.show(mode)}
+      text={Mode.toString(mode)}
     />
   </item>;
 };
@@ -242,16 +242,9 @@ let transitionAnimation =
 
 let%component make =
               (~state: State.t, ~contextMenu, ~onContextMenuItemSelect, ()) => {
-  let State.{
-        mode,
-        colorTheme,
-        theme,
-        uiFont: font,
-        diagnostics,
-        notifications,
-        _,
-      } = state;
+  let State.{colorTheme, theme, uiFont: font, diagnostics, notifications, _} = state;
 
+  let mode = ModeManager.current(state);
   let colorTheme = Theme.resolver(colorTheme);
 
   let%hook activeNotifications =

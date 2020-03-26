@@ -48,18 +48,28 @@ let conditionsOfState = (state: State.t) => {
   | `off => ()
   };
 
+  let terminalIsActive = Model.Selectors.terminalIsActive(state);
+
+  if (terminalIsActive) {
+    Hashtbl.add(ret, "terminalFocus", true);
+  };
+
+  let mode = Model.ModeManager.current(state);
+
   // HACK: Because we don't have AND conditions yet for input
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
-  switch (isQuickmenuOpen(state), state.mode) {
-  | (false, Vim.Types.Insert) =>
+  switch (isQuickmenuOpen(state), mode) {
+  | (false, Mode.Insert) =>
     Hashtbl.add(ret, "insertMode", true);
     Hashtbl.add(ret, "editorTextFocus", true);
-  | (false, Vim.Types.Visual) => Hashtbl.add(ret, "visualMode", true)
+  | (false, Mode.Normal) =>
+    Hashtbl.add(ret, "normalMode", true);
+    Hashtbl.add(ret, "editorTextFocus", true);
+  | (false, Mode.Visual) => Hashtbl.add(ret, "visualMode", true)
   | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
-  | (true, Vim.Types.CommandLine) =>
-    Hashtbl.add(ret, "commandLineFocus", true)
+  | (true, Mode.CommandLine) => Hashtbl.add(ret, "commandLineFocus", true)
   | _ => ()
   };
 
