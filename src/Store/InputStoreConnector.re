@@ -48,15 +48,28 @@ let conditionsOfState = (state: State.t) => {
   | `off => ()
   };
 
+  let terminalIsActive = Model.Selectors.terminalIsActive(state);
+
+  // When a terminal renderer is active, we handle the modes
+  // in the Onivim 2 layer.
+  let mode = Model.ModeManager.current(state);
+
+  if (terminalIsActive) {
+    Hashtbl.add(ret, "terminalFocus", true);
+  };
+
   // HACK: Because we don't have AND conditions yet for input
   // (the conditions array are OR's), we are making `insertMode`
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
-  switch (isQuickmenuOpen(state), state.mode) {
-  | (false, Vim.Types.Insert) =>
+  switch (isQuickmenuOpen(state), mode) {
+  | (false, Model.ModeManager.Insert) =>
     Hashtbl.add(ret, "insertMode", true);
     Hashtbl.add(ret, "editorTextFocus", true);
-  | (false, Vim.Types.Visual) => Hashtbl.add(ret, "visualMode", true)
+  | (false, Model.ModeManager.Normal) =>
+    Hashtbl.add(ret, "normalMode", true);
+    Hashtbl.add(ret, "editorTextFocus", true);
+  | (false, Model.ModeManager.Visual) => Hashtbl.add(ret, "visualMode", true)
   | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
   | _ => ()
   };
