@@ -79,10 +79,8 @@ let start =
     let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
 
     let getClipboardValue = () => {
-      switch (getClipboardText()) {
-      | None => None
-      | Some(v) => Some(v |> removeWindowsNewLines |> splitNewLines)
-      };
+      getClipboardText()
+      |> Option.map(text => text |> removeWindowsNewLines |> splitNewLines);
     };
 
     let starReg = Char.code('*');
@@ -799,27 +797,34 @@ let start =
     );
 
   let pasteIntoEditorAction =
-    Isolinear.Effect.create(~name="vim.clipboardPaste", () =>
-      if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
-        switch (getClipboardText()) {
-        | Some(text) =>
-          Vim.command("set paste");
-          let latestCursors = ref([]);
-          Zed_utf8.iter(
-            s => {
-              latestCursors := Vim.input(~cursors=[], Zed_utf8.singleton(s));
-              ();
-            },
-            text,
-          );
+    Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
+      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
+      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
 
-          updateActiveEditorCursors(latestCursors^);
+      if (isInsertMode || isCmdLineMode) {
+        getClipboardText()
+        |> Option.iter(text => {
+             if (!isCmdLineMode) {
+               Vim.command("set paste");
+             };
 
-          Vim.command("set nopaste");
-        | None => ()
-        };
-      }
-    );
+             let latestCursors = ref([]);
+             Zed_utf8.iter(
+               s => {
+                 latestCursors :=
+                   Vim.input(~cursors=[], Zed_utf8.singleton(s));
+                 ();
+               },
+               text,
+             );
+
+             if (!isCmdLineMode) {
+               updateActiveEditorCursors(latestCursors^);
+               Vim.command("set nopaste");
+             };
+           });
+      };
+    });
 
   let copyActiveFilepathToClipboardEffect =
     Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
