@@ -32,7 +32,7 @@ let editorSurfaceMinimalState = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={thousandLineState.theme}
+      theme=Feature_Theme.resolver(thousandLineState.colorTheme)
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
@@ -58,7 +58,7 @@ let editorSurfaceThousandLineState = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={thousandLineState.theme}
+      theme=Feature_Theme.resolver(thousandLineState.colorTheme)
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
@@ -84,7 +84,7 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={thousandLineState.theme}
+      theme=Feature_Theme.resolver(thousandLineState.colorTheme)
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(
@@ -114,7 +114,7 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={thousandLineState.theme}
+      theme=Feature_Theme.resolver(thousandLineState.colorTheme)
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(
@@ -144,7 +144,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={thousandLineState.theme}
+      theme=Feature_Theme.resolver(thousandLineState.colorTheme)
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
