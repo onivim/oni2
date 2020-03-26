@@ -22,6 +22,11 @@ module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Definition = Feature_LanguageSupport.Definition;
 
+module Colors = {
+  include Feature_Theme.Colors;
+  include Editor;
+};
+
 module Constants = {
   include Constants;
 
@@ -33,19 +38,19 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let container = (~theme: Theme.t) => [
-    backgroundColor(theme.editorBackground),
-    color(theme.editorForeground),
+  let container = (~theme) => [
+    backgroundColor(Colors.background.from(theme)),
+    color(Colors.foreground.from(theme)),
     flexGrow(1),
   ];
 
-  let verticalScrollBar = (~theme: Theme.t) =>
+  let verticalScrollBar = (~theme) =>
     Style.[
       position(`Absolute),
       top(0),
       right(0),
       width(Constants.scrollBarThickness),
-      backgroundColor(theme.scrollbarSliderBackground),
+      backgroundColor(Colors.ScrollbarSlider.background.from(theme)),
       bottom(0),
     ];
 };
@@ -119,7 +124,7 @@ let make =
       ~isActiveSplit: bool,
       ~metrics: EditorMetrics.t,
       ~editor: Editor.t,
-      ~theme: Theme.t,
+      ~theme,
       ~editorFont: Service_Font.font,
       ~mode: Vim.Mode.t,
       ~bufferHighlights,

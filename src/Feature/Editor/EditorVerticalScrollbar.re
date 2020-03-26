@@ -10,6 +10,7 @@ open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Colors = Feature_Theme.Colors;
 
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
@@ -21,7 +22,7 @@ let make =
       ~width as totalWidth,
       ~diagnostics: IntMap.t(list(Diagnostic.t)),
       ~metrics,
-      ~theme: Theme.t,
+      ~theme,
       ~editorFont: Service_Font.font,
       ~bufferHighlights,
       (),
@@ -36,7 +37,7 @@ let make =
       left(0),
       width(totalWidth),
       height(scrollMetrics.thumbSize),
-      backgroundColor(theme.scrollbarSliderBackground),
+      backgroundColor(Colors.ScrollbarSlider.background.from(theme)),
     ];
 
   let totalPixel =
@@ -64,7 +65,7 @@ let make =
       left(0),
       width(totalWidth),
       height(cursorSize),
-      backgroundColor(theme.foreground),
+      backgroundColor(Colors.foreground.from(theme)),
     ];
 
   let diagnosticElements =
@@ -83,7 +84,7 @@ let make =
              right(0),
              width(Constants.scrollBarThickness / 3),
              height(cursorSize),
-             backgroundColor(Colors.red),
+             backgroundColor(Revery.Colors.red),
            ];
          <View style=diagnosticStyle />;
        })
@@ -96,7 +97,9 @@ let make =
       left(4),
       right(4),
       height(8),
-      backgroundColor(theme.editorOverviewRulerBracketMatchForeground),
+      backgroundColor(
+        Colors.EditorOverviewRuler.bracketMatchForeground.from(theme),
+      ),
     ];
 
   let matchingPairElements =
@@ -126,7 +129,10 @@ let make =
       right(0),
       height(bot - t),
       backgroundColor(
-        Color.multiplyAlpha(0.5, theme.editorSelectionBackground),
+        Color.multiplyAlpha(
+          0.5,
+          Colors.Editor.selectionBackground.from(theme),
+        ),
       ),
     ];
   };
@@ -156,7 +162,7 @@ let make =
       left(4),
       right(4),
       height(8),
-      backgroundColor(theme.editorFindMatchBackground),
+      backgroundColor(Colors.Editor.findMatchBackground.from(theme)),
     ];
 
   let searchHighlightToElement = line => {

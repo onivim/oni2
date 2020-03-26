@@ -1,6 +1,8 @@
 open Revery.UI;
 open Oni_Core;
 
+module Colors = Feature_Theme.Colors;
+
 module Constants = {
   include Constants;
 
@@ -14,7 +16,7 @@ let renderLineNumber =
       ~context: Draw.context,
       lineNumber: int,
       lineNumberWidth: float,
-      theme: Theme.t,
+      theme,
       lineSetting,
       cursorLine: int,
       yOffset: float,
@@ -43,8 +45,8 @@ let renderLineNumber =
 
   let color =
     isActiveLine
-      ? theme.editorActiveLineNumberForeground
-      : theme.editorLineNumberForeground;
+      ? Colors.EditorLineNumber.activeForeground.from(theme)
+      : Colors.EditorLineNumber.foreground.from(theme);
 
   Draw.utf8Text(~context, ~x=lineNumberXOffset, ~y, ~color, lineNumber);
 };
@@ -54,7 +56,7 @@ let renderLineNumbers =
       ~context,
       ~lineNumberWidth,
       ~height,
-      ~theme: Theme.t,
+      ~theme,
       ~count,
       ~showLineNumbers,
       ~cursorLine,
@@ -65,7 +67,7 @@ let renderLineNumbers =
     ~y=0.,
     ~width=lineNumberWidth,
     ~height=float(height),
-    ~color=theme.editorLineNumberBackground,
+    ~color=Colors.EditorGutter.background.from(theme),
   );
 
   Draw.renderImmediate(~context, ~count, (item, offset) =>

@@ -2,6 +2,8 @@ open Oni_Core;
 
 open Revery.Draw;
 
+module Colors = Feature_Theme.Colors.EditorGutter;
+
 [@deriving show({with_path: false})]
 type t = array(marker)
 
@@ -76,7 +78,7 @@ let generate = buffer =>
 
 let markerPaint = Skia.Paint.make();
 let renderMarker =
-    (~x, ~y, ~rowHeight, ~width, ~canvasContext, ~theme: Theme.t, marker) => {
+    (~x, ~y, ~rowHeight, ~width, ~canvasContext, ~theme, marker) => {
   let (y, height) =
     switch (marker) {
     | Modified
@@ -88,14 +90,14 @@ let renderMarker =
 
   let color =
     switch (marker) {
-    | Modified => theme.editorGutterModifiedBackground
-    | Added => theme.editorGutterAddedBackground
-    | DeletedBefore => theme.editorGutterDeletedBackground
-    | DeletedAfter => theme.editorGutterDeletedBackground
+    | Modified => Colors.modifiedBackground
+    | Added => Colors.addedBackground
+    | DeletedBefore => Colors.deletedBackground
+    | DeletedAfter => Colors.deletedBackground
     | Unmodified => failwith("unreachable")
     };
 
-  let color = Revery.Color.toSkia(color);
+  let color = Revery.Color.toSkia(color.from(theme));
   Skia.Paint.setColor(markerPaint, color);
   CanvasContext.drawRectLtwh(
     ~left=x,

@@ -6,11 +6,14 @@
 open Revery;
 open Revery.UI;
 
-open Oni_Core;
-
 module Zed_utf8 = Oni_Core.ZedBundled;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
+
+module Colors = {
+  include Feature_Theme.Colors;
+  include EditorHoverWidget;
+};
 
 module Constants = {
   let padding = 8;
@@ -28,15 +31,15 @@ module Styles = {
     right(0),
   ];
 
-  let text = (~theme: Theme.t, ~editorFont: Service_Font.font) => [
+  let text = (~theme, ~editorFont: Service_Font.font) => [
     //width(width_),
     //height(height_),
     //textWrap(TextWrapping.NoWrap),
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
-    color(theme.editorForeground),
-    backgroundColor(theme.editorHoverWidgetBackground),
+    color(Colors.Editor.foreground.from(theme)),
+    backgroundColor(Colors.background.from(theme)),
   ];
 
   let outerPosition = (~x, ~y) => [
@@ -45,7 +48,7 @@ module Styles = {
     left(x + 4),
   ];
 
-  let innerPosition = (~width, ~height, ~theme: Theme.t) => [
+  let innerPosition = (~width, ~height, ~theme) => [
     position(`Absolute),
     bottom(0),
     left(0),
@@ -54,8 +57,8 @@ module Styles = {
     flexDirection(`Column),
     alignItems(`Center),
     justifyContent(`Center),
-    border(~color=theme.editorHoverWidgetBorder, ~width=1),
-    backgroundColor(theme.editorHoverWidgetBackground),
+    border(~color=Colors.border.from(theme), ~width=1),
+    backgroundColor(Colors.background.from(theme)),
   ];
 };
 

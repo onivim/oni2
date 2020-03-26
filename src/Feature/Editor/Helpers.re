@@ -2,6 +2,7 @@ open EditorCoreTypes;
 open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
+module Colors = Feature_Theme.Colors;
 
 let bufferPositionToPixel = (~context: Draw.context, line, char) => {
   let x = float(char) *. context.charWidth -. context.scrollX;
@@ -14,7 +15,7 @@ let getTokensForLine =
       ~buffer,
       ~bufferHighlights,
       ~cursorLine,
-      ~theme: Theme.t,
+      ~theme,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~ignoreMatchingPairs=false,
@@ -39,7 +40,7 @@ let getTokensForLine =
     let isActiveLine = i == cursorLine;
     let defaultBackground =
       isActiveLine
-        ? theme.editorLineHighlightBackground : theme.editorBackground;
+        ? Colors.Editor.lineHighlightBackground : Colors.Editor.background;
 
     let matchingPairIndex =
       switch (matchingPairs) {
@@ -67,13 +68,13 @@ let getTokensForLine =
       BufferLineColorizer.create(
         ~startIndex,
         ~endIndex,
-        ~defaultBackgroundColor=defaultBackground,
-        ~defaultForegroundColor=theme.editorForeground,
+        ~defaultBackgroundColor=defaultBackground.from(theme),
+        ~defaultForegroundColor=Colors.Editor.foreground.from(theme),
         ~selectionHighlights=selection,
-        ~selectionColor=theme.editorSelectionBackground,
+        ~selectionColor=Colors.Editor.selectionBackground.from(theme),
         ~matchingPair=matchingPairIndex,
         ~searchHighlights=highlights,
-        ~searchHighlightColor=theme.editorFindMatchBackground,
+        ~searchHighlightColor=Colors.Editor.findMatchBackground.from(theme),
         tokenColors,
       );
 

@@ -13,6 +13,8 @@ open Revery.UI;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
+module Colors = Feature_Theme.Colors;
+
 module Constants = {
   include Constants;
 
@@ -114,7 +116,7 @@ let%component make =
                 ~metrics,
                 ~onScroll,
                 ~showSlider,
-                ~theme: Theme.t,
+                ~theme,
                 ~bufferHighlights,
                 ~diffMarkers,
                 (),
@@ -181,7 +183,7 @@ let%component make =
           /* Draw slider/viewport */
           Skia.Paint.setColor(
             minimapPaint,
-            Color.toSkia(theme.scrollbarSliderHoverBackground),
+            Color.toSkia(Colors.ScrollbarSlider.hoverBackground.from(theme)),
           );
           CanvasContext.drawRectLtwh(
             ~left=0.,
@@ -200,7 +202,7 @@ let%component make =
         /* Draw cursor line */
         Skia.Paint.setColor(
           minimapPaint,
-          Color.toSkia(theme.editorLineHighlightBackground),
+          Color.toSkia(Colors.Editor.lineHighlightBackground.from(theme)),
         );
         CanvasContext.drawRectLtwh(
           ~left=Constants.leftMargin,
@@ -267,8 +269,8 @@ let%component make =
               switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
-                let selectionColor = theme.editorSelectionBackground;
-                List.iter(renderRange(~color=selectionColor, ~offset), v);
+                let color = Colors.Editor.selectionBackground.from(theme);
+                List.iter(renderRange(~color, ~offset), v);
               };
 
               let tokens = getTokensForLine(item);

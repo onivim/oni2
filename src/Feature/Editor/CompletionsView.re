@@ -12,6 +12,11 @@ module Zed_utf8 = Oni_Core.ZedBundled;
 module Ext = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 
+module Colors = {
+  include Feature_Theme.Colors;
+  include EditorSuggestWidget;
+};
+
 open Ext.CompletionItemKind;
 
 module Constants = {
@@ -74,20 +79,20 @@ module Styles = {
     left(x + 4),
   ];
 
-  let innerPosition = (~height, ~width, ~lineHeight, ~theme: Theme.t) => [
+  let innerPosition = (~height, ~width, ~lineHeight, ~theme) => [
     position(`Absolute),
     top(int_of_float(lineHeight +. 0.5)),
     left(0),
     Style.width(width),
     Style.height(height),
-    border(~color=theme.editorSuggestWidgetBorder, ~width=1),
-    backgroundColor(theme.editorSuggestWidgetBackground),
+    border(~color=Colors.border.from(theme), ~width=1),
+    backgroundColor(Colors.background.from(theme)),
   ];
 
-  let item = (~isFocused, ~theme: Theme.t) => [
+  let item = (~isFocused, ~theme) => [
     isFocused
-      ? backgroundColor(theme.editorSuggestWidgetSelectedBackground)
-      : backgroundColor(theme.editorSuggestWidgetBackground),
+      ? backgroundColor(Colors.selectedBackground.from(theme))
+      : backgroundColor(Colors.background.from(theme)),
     flexDirection(`Row),
   ];
 
@@ -103,27 +108,22 @@ module Styles = {
 
   let label = [flexGrow(1), margin(4)];
 
-  let text =
-      (
-        ~highlighted=false,
-        ~theme: Theme.t,
-        ~editorFont: Service_Font.font,
-        (),
-      ) => [
+  let text = (~highlighted=false, ~theme, ~editorFont: Service_Font.font, ()) => [
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
     textWrap(TextWrapping.NoWrap),
     color(
-      highlighted ? theme.oniNormalModeBackground : theme.editorForeground,
+      highlighted
+        ? Colors.Oni.normalModeBackground.from(theme)
+        : Colors.Editor.foreground.from(theme),
     ),
-    backgroundColor(theme.editorBackground),
   ];
 
-  let highlightedText = (~theme: Theme.t, ~editorFont: Service_Font.font) =>
+  let highlightedText = (~theme, ~editorFont: Service_Font.font) =>
     text(~highlighted=true, ~theme, ~editorFont, ());
 
-  let detail = (~width, ~lineHeight, ~theme: Theme.t) => [
+  let detail = (~width, ~lineHeight, ~theme) => [
     position(`Absolute),
     left(width),
     top(int_of_float(lineHeight +. 0.5)),
@@ -131,22 +131,16 @@ module Styles = {
     flexDirection(`Column),
     alignItems(`FlexStart),
     justifyContent(`Center),
-    border(~color=theme.editorSuggestWidgetBorder, ~width=1),
-    backgroundColor(theme.editorSuggestWidgetBackground),
+    border(~color=Colors.border.from(theme), ~width=1),
+    backgroundColor(Colors.background.from(theme)),
   ];
 
-  let detailText =
-      (
-        ~editorFont: Service_Font.font,
-        ~theme: Theme.t,
-        ~tokenTheme: TokenTheme.t,
-      ) => [
+  let detailText = (~editorFont: Service_Font.font, ~tokenTheme: TokenTheme.t) => [
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
     color(tokenTheme.commentColor),
     margin(3),
-    backgroundColor(theme.editorBackground),
   ];
 };
 
@@ -156,7 +150,7 @@ let itemView =
       ~text,
       ~kind,
       ~highlight,
-      ~theme: Theme.t,
+      ~theme,
       ~tokenTheme,
       ~editorFont,
       (),
@@ -169,13 +163,13 @@ let itemView =
   let iconColor =
     kind
     |> OptionEx.flatMap(kindToColor(tokenTheme))
-    |> Option.value(~default=theme.editorForeground);
+    |> Option.value(~default=Colors.Editor.foreground.from(theme));
 
   <View style={Styles.item(~isFocused, ~theme)}>
     <View style={Styles.icon(~color=iconColor)}>
       <FontIcon
         icon
-        color={theme.editorSuggestWidgetBackground}
+        color={Colors.background.from(theme)}
         // Not sure why, but specifying a font size fails to render the icon!
         // Might be a bug with Revery font loading / re - rendering in this case?
       />
@@ -194,7 +188,7 @@ let itemView =
 let detailView =
     (~text, ~width, ~lineHeight, ~editorFont, ~theme, ~tokenTheme, ()) =>
   <View style={Styles.detail(~width, ~lineHeight, ~theme)}>
-    <Text style={Styles.detailText(~editorFont, ~theme, ~tokenTheme)} text />
+    <Text style={Styles.detailText(~editorFont, ~tokenTheme)} text />
   </View>;
 
 let make =

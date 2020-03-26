@@ -204,8 +204,7 @@ let range =
   };
 };
 
-let token =
-    (~context, ~offsetY, ~theme: Theme.t, token: BufferViewTokenizer.t) => {
+let token = (~context, ~offsetY, ~theme, token: BufferViewTokenizer.t) => {
   let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
   let y = offsetY -. context.fontMetrics.ascent;
 
@@ -216,7 +215,7 @@ let token =
     CanvasContext.Deprecated.drawString(
       ~x=x +. context.charWidth /. 4. -. context.scrollX,
       ~y=y -. context.scrollY,
-      ~color=theme.editorWhitespaceForeground,
+      ~color=Feature_Theme.Colors.EditorWhitespace.foreground.from(theme),
       ~fontFamily=FontAwesome.FontFamily.solid,
       ~fontSize=10.,
       ~text=FontIcon.codeToIcon(FontAwesome.longArrowAltRight),
@@ -237,7 +236,7 @@ let token =
         ~y=y -. yOffset,
         ~width=size,
         ~height=size,
-        ~color=theme.editorWhitespaceForeground,
+        ~color=Feature_Theme.Colors.EditorWhitespace.foreground.from(theme),
       );
     };
   };

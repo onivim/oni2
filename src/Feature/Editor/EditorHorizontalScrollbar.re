@@ -4,13 +4,12 @@
 
 open Revery.UI;
 
-open Oni_Core;
+module Colors = Feature_Theme.Colors;
 
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-let make =
-    (~editor: Editor.t, ~width as totalWidth, ~metrics, ~theme: Theme.t, ()) => {
+let make = (~editor: Editor.t, ~width as totalWidth, ~metrics, ~theme, ()) => {
   let scrollMetrics =
     Editor.getHorizontalScrollbarMetrics(editor, totalWidth, metrics);
 
@@ -21,7 +20,7 @@ let make =
       left(scrollMetrics.thumbOffset),
       width(scrollMetrics.thumbSize),
       top(0),
-      backgroundColor(theme.scrollbarSliderBackground),
+      backgroundColor(Colors.ScrollbarSlider.background.from(theme)),
     ];
 
   switch (scrollMetrics.visible) {

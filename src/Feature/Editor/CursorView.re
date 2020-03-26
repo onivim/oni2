@@ -2,6 +2,8 @@ open EditorCoreTypes;
 
 open Oni_Core;
 
+module Colors = Feature_Theme.Colors.EditorCursor;
+
 let render =
     (
       ~context: Draw.context,
@@ -9,7 +11,7 @@ let render =
       ~mode: Vim.Mode.t,
       ~isActiveSplit,
       ~cursorPosition: Location.t,
-      ~theme: Theme.t,
+      ~theme,
       ~windowIsFocused,
     ) => {
   let line = Index.toZeroBased(cursorPosition.line);
@@ -26,8 +28,8 @@ let render =
     let x = float(offset) *. context.charWidth;
     let y = float(line) *. context.lineHeight +. 0.5;
     let height = context.lineHeight;
-    let background = theme.editorCursorBackground;
-    let foreground = theme.editorCursorForeground;
+    let background = Colors.background.from(theme);
+    let foreground = Colors.foreground.from(theme);
 
     if (!windowIsFocused) {
       let width = float(characterWidth) *. context.charWidth;

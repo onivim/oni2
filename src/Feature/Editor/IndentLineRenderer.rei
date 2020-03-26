@@ -11,7 +11,7 @@ let render:
     ~startLine: int,
     ~endLine: int,
     ~cursorPosition: EditorCoreTypes.Location.t,
-    ~theme: Oni_Core.Theme.t,
+    ~theme: Oni_Core.ColorTheme.resolver,
     ~showActive: bool,
     Oni_Core.IndentationSettings.t
   ) =>

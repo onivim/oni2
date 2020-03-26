@@ -6,13 +6,17 @@ open Helpers;
 
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Definition = Feature_LanguageSupport.Definition;
+module Colors = {
+  include Feature_Theme.Colors;
+  include Editor;
+};
 
 let renderLine =
     (
       ~context,
       ~buffer,
       ~leftVisibleColumn,
-      ~theme: Theme.t,
+      ~theme,
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
@@ -44,14 +48,14 @@ let renderLine =
         ~context,
         ~buffer,
         ~leftVisibleColumn,
-        ~color=theme.editorSelectionBackground,
+        ~color=Colors.selectionBackground.from(theme),
       ),
       v,
     )
   };
 
   /* Draw match highlights */
-  let matchColor = theme.editorSelectionBackground;
+  let matchColor = Colors.selectionBackground.from(theme);
   switch (matchingPairs) {
   | None => ()
   | Some((startPos, endPos)) =>
@@ -83,7 +87,7 @@ let renderLine =
          ~buffer,
          ~leftVisibleColumn,
          ~padding=1.,
-         ~color=theme.editorFindMatchBackground,
+         ~color=Colors.findMatchBackground.from(theme),
        ),
      );
 };

@@ -10,6 +10,11 @@ module Log = (val Log.withNamespace("Oni2.Editor.SurfaceView"));
 
 module Config = EditorConfiguration;
 
+module Colors = {
+  include Feature_Theme.Colors;
+  include Editor;
+};
+
 module Styles = {
   open Style;
 
@@ -31,18 +36,23 @@ module Styles = {
   ];
 };
 
-let drawCurrentLineHighlight = (~context, ~theme: Theme.t, line) =>
+let drawCurrentLineHighlight = (~context, ~theme, line) =>
   Draw.lineHighlight(
     ~context,
-    ~color=theme.editorLineHighlightBackground,
+    ~color=Colors.lineHighlightBackground.from(theme),
     line,
   );
 
-let renderRulers = (~context, ~theme: Theme.t, rulers) =>
+let renderRulers = (~context, ~theme, rulers) =>
   rulers
   |> List.map(bufferPositionToPixel(~context, 0))
   |> List.map(fst)
-  |> List.iter(Draw.ruler(~context, ~color=theme.editorRulerForeground));
+  |> List.iter(
+       Draw.ruler(
+         ~context,
+         ~color=Colors.EditorRuler.foreground.from(theme),
+       ),
+     );
 
 let%component make =
               (
