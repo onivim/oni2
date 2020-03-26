@@ -79,10 +79,8 @@ let start =
     let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
 
     let getClipboardValue = () => {
-      switch (getClipboardText()) {
-      | None => None
-      | Some(v) => Some(v |> removeWindowsNewLines |> splitNewLines)
-      };
+      getClipboardText()
+      |> Option.map(text => text |> removeWindowsNewLines |> splitNewLines);
     };
 
     let starReg = Char.code('*');
@@ -804,8 +802,8 @@ let start =
       let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
 
       if (isInsertMode || isCmdLineMode) {
-        switch (getClipboardText()) {
-        | Some(text) =>
+        getClipboardText()
+        |> Option.iter(text => {
           if (!isCmdLineMode) {
             Vim.command("set paste");
           };
@@ -823,8 +821,7 @@ let start =
             updateActiveEditorCursors(latestCursors^);
             Vim.command("set nopaste");
           };
-        | None => ()
-        };
+        });
       };
     });
 
