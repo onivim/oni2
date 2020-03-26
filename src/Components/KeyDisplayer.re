@@ -90,7 +90,13 @@ let add = (~time, key, model) => {
   {...model, groups} |> removeExpired(time);
 };
 
-let keyPress = (~time, key, model) => add(~time, Key(key), model);
+let keyPress = (~time, key, model) => {
+  if (!String.equal(key , "LEFT SHIFT")) {
+  add(~time, Key(key), model);
+  } else {
+    model
+  }
+}
 let textInput = (~time, text, model) => add(~time, Text(text), model);
 
 // VIEW

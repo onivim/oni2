@@ -100,6 +100,8 @@ if (cliOptions.syntaxHighlightService) {
             ~vsync=Vsync.Immediate,
             ~icon=Some("logo.png"),
             ~titlebarStyle=WindowStyles.Transparent,
+            ~width=640,
+            ~height=480,
             (),
           ),
         app,

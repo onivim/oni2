@@ -123,7 +123,7 @@ let default = {
   workbenchActivityBarVisible: true,
   workbenchColorTheme: "One Dark Pro",
   workbenchEditorShowTabs: true,
-  workbenchSideBarVisible: true,
+  workbenchSideBarVisible: false,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
