@@ -4,7 +4,7 @@ open Oni_IntegrationTestLib;
 // Validate that change the font size via config results in new metrics
 runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
   wait(~name="Mode switches back to normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   wait(~name="Set configuration to small font size", (state: State.t) => {

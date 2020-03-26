@@ -14,7 +14,7 @@ runTest(
   ~name="SyntaxHighlightTreesitterTest",
   (dispatch, wait, _runEffects) => {
     wait(~name="Capture initial state", (state: State.t) =>
-      state.mode == Vim.Types.Normal
+      state.vimMode == Vim.Types.Normal
     );
 
     let testFile = getAssetPath("some-test-file.json");

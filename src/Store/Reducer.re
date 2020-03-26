@@ -45,7 +45,6 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | SetColorTheme(theme) => {...s, theme}
-      | ChangeMode(m) => {...s, mode: m}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}

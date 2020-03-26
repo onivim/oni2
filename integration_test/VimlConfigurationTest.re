@@ -10,7 +10,7 @@ runTest(
   ~name="Viml Configuration Block",
   (dispatch, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      state.mode == Vim.Types.Normal
+      state.vimMode == Vim.Types.Normal
     );
 
     // Because of our 'experimental.viml' block, the ';' semicolon
@@ -18,7 +18,7 @@ runTest(
     dispatch(KeyboardInput(";"));
 
     wait(~name="Mode switches to command line", (state: State.t) =>
-      state.mode == Vim.Types.CommandLine
+      state.vimMode == Vim.Types.CommandLine
     );
 
     dispatch(KeyboardInput("e"));

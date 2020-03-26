@@ -9,7 +9,7 @@ open Oni_IntegrationTestLib;
 runTestWithInput(
   ~name="RegressionFileModifiedIndication", (input, _, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   Vim.command("e regression-file-modified-indication.txt");

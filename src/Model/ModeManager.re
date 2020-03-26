@@ -3,7 +3,7 @@ let current: State.t => Oni_Core.Mode.t =
     if (Selectors.terminalIsActive(state)) {
       TerminalInsert;
     } else {
-      switch (state.mode) {
+      switch (state.vimMode) {
       | Vim.Types.Insert => Insert
       | Vim.Types.Normal => Normal
       | Vim.Types.Visual => Visual

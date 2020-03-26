@@ -28,7 +28,7 @@ let current = (state: State.t) =>
     | _ =>
       state
       // See if terminal has focus
-      |> Selectors.getActiveTerminalIdOpt
+      |> Selectors.getActiveTerminalId
       |> Option.map(id => Focus.Terminal(id))
       // Otherwise, get from assigned focus state
       |> OptionEx.or_(Focus.current(state.focus))

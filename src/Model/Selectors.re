@@ -83,4 +83,4 @@ let getActiveTerminalId = (state: State.t) => {
 };
 
 let terminalIsActive = (state: State.t) =>
-  getActiveTerminalIdOpt(state) == Some(true);
+  getActiveTerminalId(state) != None;

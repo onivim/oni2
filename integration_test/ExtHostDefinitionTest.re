@@ -11,7 +11,7 @@ open Feature_Editor;
 runTestWithInput(
   ~name="ExtHostDefinitionTest", (input, _dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   // Wait until the extension is activated

@@ -31,14 +31,14 @@ runTest(
 
     input("i");
     wait(~name="Mode is now insert", (state: State.t) =>
-      state.mode == Vim.Types.Insert
+      state.vimMode == Vim.Types.Insert
     );
 
     input("j");
     input("j");
 
     wait(~name="Mode is back to normal", (state: State.t) =>
-      state.mode == Vim.Types.Normal
+      state.vimMode == Vim.Types.Normal
     );
     // TODO: Figure out why this check is failing...
     wait(~name="Validate buffer is empty", (state: State.t) => {

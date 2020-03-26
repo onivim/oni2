@@ -130,7 +130,7 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.Mode.onChanged(newMode => dispatch(Actions.ChangeMode(newMode)));
+    Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
@@ -931,6 +931,7 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
+    | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),
