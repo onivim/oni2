@@ -1,3 +1,11 @@
+// VSCode theme defaults and fallbacks defined in (amongst other places)
+// https://github.com/microsoft/vscode/blob/634068a42471d610453d97fa0c81ec7e713c4e17/src/vs/platform/theme/common/colorRegistry.ts
+// https://github.com/microsoft/vscode/blob/abb01b183d450a590cbb78acb4e787eec5445830/src/vs/workbench/common/theme.ts
+// https://github.com/microsoft/vscode/blob/d49c5f3bc73ca4b41fe1306b2bf1d5b4bff96291/src/vs/editor/common/view/editorColorRegistry.ts
+// https://github.com/microsoft/vscode/blob/0991720b7b44ffc15760b578b284caff78ccf398/src/vs/workbench/contrib/terminal/common/terminalColorRegistry.ts
+// https://github.com/microsoft/vscode/blob/418d1974ca0f99529e4f55c8d05f0a202404c980/src/vs/workbench/contrib/scm/browser/dirtydiffDecorator.ts
+// https://github.com/microsoft/vscode/blob/3b192336931fa3deaac15233005ba44b51865c19/src/vs/editor/contrib/suggest/suggestWidget.ts
+
 open Oni_Core;
 open Revery;
 open ColorTheme.Schema;
