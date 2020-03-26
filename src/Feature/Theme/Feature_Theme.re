@@ -24,6 +24,7 @@ let defaults =
     Colors.EditorRuler.defaults,
     Colors.EditorSuggestWidget.defaults,
     Colors.EditorWhitespace.defaults,
+    Colors.EditorWidget.defaults,
     Colors.List.defaults,
     Colors.Oni.defaults,
     Colors.ScrollbarSlider.defaults,
