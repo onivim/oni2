@@ -799,11 +799,17 @@ let start =
     );
 
   let pasteIntoEditorAction =
-    Isolinear.Effect.create(~name="vim.clipboardPaste", () =>
-      if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
+    Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
+      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
+      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
+
+      if (isInsertMode || isCmdLineMode) {
         switch (getClipboardText()) {
         | Some(text) =>
-          Vim.command("set paste");
+          if (!isCmdLineMode) {
+            Vim.command("set paste");
+          };
+
           let latestCursors = ref([]);
           Zed_utf8.iter(
             s => {
@@ -813,13 +819,14 @@ let start =
             text,
           );
 
-          updateActiveEditorCursors(latestCursors^);
-
-          Vim.command("set nopaste");
+          if (!isCmdLineMode) {
+            updateActiveEditorCursors(latestCursors^);
+            Vim.command("set nopaste");
+          };
         | None => ()
         };
-      }
-    );
+      };
+    });
 
   let copyActiveFilepathToClipboardEffect =
     Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>

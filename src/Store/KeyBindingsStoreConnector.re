@@ -66,12 +66,12 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-V>",
         command: "editor.action.clipboardPasteAction",
-        condition: "insertMode" |> WhenExpr.parse,
+        condition: "insertMode || commandLineMode" |> WhenExpr.parse,
       },
       {
         key: "<D-V>",
         command: "editor.action.clipboardPasteAction",
-        condition: "insertMode" |> WhenExpr.parse,
+        condition: "insertMode || commandLineMode" |> WhenExpr.parse,
       },
       {
         key: "<ESC>",
