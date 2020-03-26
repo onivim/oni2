@@ -124,7 +124,7 @@ Onivim-specific contexts:
 | Context Name | True When | 
 | --- | --- |
 | `insertMode` |  The active editor is in `insert` mode |
-| `commandLineMode` | The Vim commandline is open |
+| `commandLineFocus` | The Vim commandline is open |
 | `menuFocus` | A pop-up menu has focus |
 
 ## Commands

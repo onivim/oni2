@@ -59,9 +59,7 @@ let conditionsOfState = (state: State.t) => {
   | (false, Vim.Types.Visual) => Hashtbl.add(ret, "visualMode", true)
   | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
   | (true, Vim.Types.CommandLine) =>
-    // LEGACY: Support `commandLineFocus` too.
-    Hashtbl.add(ret, "commandLineFocus", true);
-    Hashtbl.add(ret, "commandLineMode", true);
+    Hashtbl.add(ret, "commandLineFocus", true)
   | _ => ()
   };
 
