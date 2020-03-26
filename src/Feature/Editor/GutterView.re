@@ -1,8 +1,6 @@
 open Revery.UI;
 open Oni_Core;
 
-module Colors = Feature_Theme.Colors;
-
 module Constants = {
   include Constants;
 
@@ -16,7 +14,7 @@ let renderLineNumber =
       ~context: Draw.context,
       lineNumber: int,
       lineNumberWidth: float,
-      theme,
+      colors: Colors.t,
       lineSetting,
       cursorLine: int,
       yOffset: float,
@@ -45,8 +43,7 @@ let renderLineNumber =
 
   let color =
     isActiveLine
-      ? Colors.EditorLineNumber.activeForeground.from(theme)
-      : Colors.EditorLineNumber.foreground.from(theme);
+      ? colors.lineNumberActiveForeground : colors.lineNumberForeground;
 
   Draw.utf8Text(~context, ~x=lineNumberXOffset, ~y, ~color, lineNumber);
 };
@@ -56,7 +53,7 @@ let renderLineNumbers =
       ~context,
       ~lineNumberWidth,
       ~height,
-      ~theme,
+      ~colors: Colors.t,
       ~count,
       ~showLineNumbers,
       ~cursorLine,
@@ -67,7 +64,7 @@ let renderLineNumbers =
     ~y=0.,
     ~width=lineNumberWidth,
     ~height=float(height),
-    ~color=Colors.EditorGutter.background.from(theme),
+    ~color=colors.gutterBackground,
   );
 
   Draw.renderImmediate(~context, ~count, (item, offset) =>
@@ -75,7 +72,7 @@ let renderLineNumbers =
       ~context,
       item,
       lineNumberWidth,
-      theme,
+      colors,
       showLineNumbers,
       cursorLine,
       offset,
@@ -89,7 +86,7 @@ let render =
       ~lineNumberWidth,
       ~width,
       ~height,
-      ~theme,
+      ~colors,
       ~editorFont: Service_Font.font,
       ~scrollY,
       ~lineHeight,
@@ -114,7 +111,7 @@ let render =
       ~context,
       ~lineNumberWidth,
       ~height,
-      ~theme,
+      ~colors,
       ~count,
       ~showLineNumbers,
       ~cursorLine,
@@ -130,7 +127,7 @@ let render =
       ~width=Constants.diffMarkerWidth,
       ~count,
       ~canvasContext,
-      ~theme,
+      ~colors,
     ),
     diffMarkers,
   );
@@ -140,7 +137,7 @@ let make =
     (
       ~showLineNumbers,
       ~height,
-      ~theme,
+      ~colors,
       ~editorFont: Service_Font.font,
       ~scrollY,
       ~lineHeight,
@@ -177,7 +174,7 @@ let make =
       ~lineNumberWidth,
       ~width=int_of_float(totalWidth),
       ~height,
-      ~theme,
+      ~colors,
       ~editorFont,
       ~scrollY,
       ~lineHeight,

@@ -2,7 +2,6 @@ open EditorCoreTypes;
 open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Colors = Feature_Theme.Colors;
 
 let bufferPositionToPixel = (~context: Draw.context, line, char) => {
   let x = float(char) *. context.charWidth -. context.scrollX;
@@ -15,7 +14,7 @@ let getTokensForLine =
       ~buffer,
       ~bufferHighlights,
       ~cursorLine,
-      ~theme,
+      ~colors: Colors.t,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~ignoreMatchingPairs=false,
@@ -39,8 +38,7 @@ let getTokensForLine =
 
     let isActiveLine = i == cursorLine;
     let defaultBackground =
-      isActiveLine
-        ? Colors.Editor.lineHighlightBackground : Colors.Editor.background;
+      isActiveLine ? colors.lineHighlightBackground : colors.editorBackground;
 
     let matchingPairIndex =
       switch (matchingPairs) {
@@ -68,13 +66,13 @@ let getTokensForLine =
       BufferLineColorizer.create(
         ~startIndex,
         ~endIndex,
-        ~defaultBackgroundColor=defaultBackground.from(theme),
-        ~defaultForegroundColor=Colors.Editor.foreground.from(theme),
+        ~defaultBackgroundColor=defaultBackground,
+        ~defaultForegroundColor=colors.editorForeground,
         ~selectionHighlights=selection,
-        ~selectionColor=Colors.Editor.selectionBackground.from(theme),
+        ~selectionColor=colors.selectionBackground,
         ~matchingPair=matchingPairIndex,
         ~searchHighlights=highlights,
-        ~searchHighlightColor=Colors.Editor.findMatchBackground.from(theme),
+        ~searchHighlightColor=colors.findMatchBackground,
         tokenColors,
       );
 
@@ -86,7 +84,7 @@ let getTokenAtPosition =
       ~buffer,
       ~bufferHighlights,
       ~cursorLine,
-      ~theme,
+      ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~startIndex,
@@ -100,7 +98,7 @@ let getTokenAtPosition =
     ~buffer,
     ~bufferHighlights,
     ~cursorLine,
-    ~theme,
+    ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~ignoreMatchingPairs=true,

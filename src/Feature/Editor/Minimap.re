@@ -6,14 +6,11 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Revery;
 open Revery.Draw;
 open Revery.UI;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-
-module Colors = Feature_Theme.Colors;
 
 module Constants = {
   include Constants;
@@ -48,7 +45,7 @@ let renderLine =
 
       let emphasis = shouldHighlight(startPosition);
       let color =
-        emphasis ? token.color : Color.multiplyAlpha(0.5, token.color);
+        emphasis ? token.color : Revery.Color.multiplyAlpha(0.5, token.color);
 
       let offset = 1.0;
       let halfOffset = offset /. 2.0;
@@ -60,7 +57,7 @@ let renderLine =
       let y = yOffset;
       let width = emphasis ? width +. offset : width;
 
-      Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+      Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
       CanvasContext.drawRectLtwh(
         ~top=y,
         ~left=x,
@@ -83,7 +80,7 @@ let absoluteStyle =
     bottom(0),
     left(0),
     right(0),
-    cursor(MouseCursors.pointer),
+    cursor(Revery.MouseCursors.pointer),
   ];
 
 let getMinimapSize = (view: Editor.t, metrics) => {
@@ -116,7 +113,7 @@ let%component make =
                 ~metrics,
                 ~onScroll,
                 ~showSlider,
-                ~theme,
+                ~colors: Colors.t,
                 ~bufferHighlights,
                 ~diffMarkers,
                 (),
@@ -183,7 +180,7 @@ let%component make =
           /* Draw slider/viewport */
           Skia.Paint.setColor(
             minimapPaint,
-            Color.toSkia(Colors.ScrollbarSlider.hoverBackground.from(theme)),
+            Revery.Color.toSkia(colors.scrollbarSliderHoverBackground),
           );
           CanvasContext.drawRectLtwh(
             ~left=0.,
@@ -202,7 +199,7 @@ let%component make =
         /* Draw cursor line */
         Skia.Paint.setColor(
           minimapPaint,
-          Color.toSkia(Colors.Editor.lineHighlightBackground.from(theme)),
+          Revery.Color.toSkia(colors.lineHighlightBackground),
         );
         CanvasContext.drawRectLtwh(
           ~left=Constants.leftMargin,
@@ -226,7 +223,7 @@ let%component make =
              float(Index.toZeroBased(range.stop.column))
              *. float(Constants.minimapCharacterWidth);
 
-           Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+           Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
            CanvasContext.drawRectLtwh(
              ~left=startX -. 1.0,
              ~top=offset -. 1.0,
@@ -246,7 +243,7 @@ let%component make =
              float(Index.toZeroBased(range.stop.column))
              *. float(Constants.minimapCharacterWidth);
 
-           Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+           Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
            CanvasContext.drawRectLtwh(
              ~left=startX -. 1.0,
              ~top=offset +. float(Constants.minimapCharacterHeight),
@@ -269,7 +266,7 @@ let%component make =
               switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
-                let color = Colors.Editor.selectionBackground.from(theme);
+                let color = colors.selectionBackground;
                 List.iter(renderRange(~color, ~offset), v);
               };
 
@@ -293,8 +290,11 @@ let%component make =
               // Draw error highlight
               switch (IntMap.find_opt(item, diagnostics)) {
               | Some(_) =>
-                let color = Color.rgba(1.0, 0.0, 0.0, 0.3);
-                Skia.Paint.setColor(minimapPaint, Color.toSkia(color));
+                let color = Revery.Color.rgba(1.0, 0.0, 0.0, 0.3);
+                Skia.Paint.setColor(
+                  minimapPaint,
+                  Revery.Color.toSkia(color),
+                );
                 CanvasContext.drawRectLtwh(
                   ~left=0.,
                   ~top=rowHeight *. float(item) -. scrollY -. 1.0,
@@ -324,7 +324,7 @@ let%component make =
                   (d: Diagnostic.t) =>
                     renderUnderline(
                       ~offset,
-                      ~color=Color.rgba(1.0, 0., 0., 1.0),
+                      ~color=Revery.Color.rgba(1.0, 0., 0., 1.0),
                       d.range,
                     ),
                   v,
@@ -343,7 +343,7 @@ let%component make =
             ~width=2.,
             ~count,
             ~canvasContext,
-            ~theme,
+            ~colors,
           ),
           diffMarkers,
         );

@@ -1,4 +1,3 @@
-open Revery;
 open Revery.UI;
 
 open Oni_Core;
@@ -11,11 +10,6 @@ open Feature_LanguageSupport.Completions;
 module Zed_utf8 = Oni_Core.ZedBundled;
 module Ext = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
-
-module Colors = {
-  include Feature_Theme.Colors;
-  include EditorSuggestWidget;
-};
 
 open Ext.CompletionItemKind;
 
@@ -79,20 +73,20 @@ module Styles = {
     left(x + 4),
   ];
 
-  let innerPosition = (~height, ~width, ~lineHeight, ~theme) => [
+  let innerPosition = (~height, ~width, ~lineHeight, ~colors: Colors.t) => [
     position(`Absolute),
     top(int_of_float(lineHeight +. 0.5)),
     left(0),
     Style.width(width),
     Style.height(height),
-    border(~color=Colors.border.from(theme), ~width=1),
-    backgroundColor(Colors.background.from(theme)),
+    border(~color=colors.suggestWidgetBorder, ~width=1),
+    backgroundColor(colors.suggestWidgetBackground),
   ];
 
-  let item = (~isFocused, ~theme) => [
+  let item = (~isFocused, ~colors: Colors.t) => [
     isFocused
-      ? backgroundColor(Colors.selectedBackground.from(theme))
-      : backgroundColor(Colors.background.from(theme)),
+      ? backgroundColor(colors.suggestWidgetSelectedBackground)
+      : backgroundColor(colors.suggestWidgetBackground),
     flexDirection(`Row),
   ];
 
@@ -108,22 +102,26 @@ module Styles = {
 
   let label = [flexGrow(1), margin(4)];
 
-  let text = (~highlighted=false, ~theme, ~editorFont: Service_Font.font, ()) => [
+  let text =
+      (
+        ~highlighted=false,
+        ~colors: Colors.t,
+        ~editorFont: Service_Font.font,
+        (),
+      ) => [
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
-    textWrap(TextWrapping.NoWrap),
+    textWrap(Revery.TextWrapping.NoWrap),
     color(
-      highlighted
-        ? Colors.Oni.normalModeBackground.from(theme)
-        : Colors.Editor.foreground.from(theme),
+      highlighted ? colors.normalModeBackground : colors.editorForeground,
     ),
   ];
 
-  let highlightedText = (~theme, ~editorFont: Service_Font.font) =>
-    text(~highlighted=true, ~theme, ~editorFont, ());
+  let highlightedText = (~colors, ~editorFont: Service_Font.font) =>
+    text(~highlighted=true, ~colors, ~editorFont, ());
 
-  let detail = (~width, ~lineHeight, ~theme) => [
+  let detail = (~width, ~lineHeight, ~colors: Colors.t) => [
     position(`Absolute),
     left(width),
     top(int_of_float(lineHeight +. 0.5)),
@@ -131,8 +129,8 @@ module Styles = {
     flexDirection(`Column),
     alignItems(`FlexStart),
     justifyContent(`Center),
-    border(~color=Colors.border.from(theme), ~width=1),
-    backgroundColor(Colors.background.from(theme)),
+    border(~color=colors.suggestWidgetBorder, ~width=1),
+    backgroundColor(colors.suggestWidgetBackground),
   ];
 
   let detailText = (~editorFont: Service_Font.font, ~tokenTheme: TokenTheme.t) => [
@@ -150,7 +148,7 @@ let itemView =
       ~text,
       ~kind,
       ~highlight,
-      ~theme,
+      ~colors: Colors.t,
       ~tokenTheme,
       ~editorFont,
       (),
@@ -163,13 +161,13 @@ let itemView =
   let iconColor =
     kind
     |> OptionEx.flatMap(kindToColor(tokenTheme))
-    |> Option.value(~default=Colors.Editor.foreground.from(theme));
+    |> Option.value(~default=colors.editorForeground);
 
-  <View style={Styles.item(~isFocused, ~theme)}>
+  <View style={Styles.item(~isFocused, ~colors)}>
     <View style={Styles.icon(~color=iconColor)}>
       <FontIcon
         icon
-        color={Colors.background.from(theme)}
+        color={colors.suggestWidgetBackground}
         // Not sure why, but specifying a font size fails to render the icon!
         // Might be a bug with Revery font loading / re - rendering in this case?
       />
@@ -177,8 +175,8 @@ let itemView =
     <View style=Styles.label>
       <HighlightText
         highlights=highlight
-        style={Styles.text(~theme, ~editorFont, ())}
-        highlightStyle={Styles.highlightedText(~theme, ~editorFont)}
+        style={Styles.text(~colors, ~editorFont, ())}
+        highlightStyle={Styles.highlightedText(~colors, ~editorFont)}
         text
       />
     </View>
@@ -186,8 +184,8 @@ let itemView =
 };
 
 let detailView =
-    (~text, ~width, ~lineHeight, ~editorFont, ~theme, ~tokenTheme, ()) =>
-  <View style={Styles.detail(~width, ~lineHeight, ~theme)}>
+    (~text, ~width, ~lineHeight, ~editorFont, ~colors, ~tokenTheme, ()) =>
+  <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
     <Text style={Styles.detailText(~editorFont, ~tokenTheme)} text />
   </View>;
 
@@ -196,7 +194,7 @@ let make =
       ~x: int,
       ~y: int,
       ~lineHeight: float,
-      ~theme,
+      ~colors,
       ~tokenTheme,
       ~editorFont,
       ~completions,
@@ -228,7 +226,7 @@ let make =
       let focused: Filter.result(CompletionItem.t) = items[index];
       switch (focused.item.detail) {
       | Some(text) =>
-        <detailView text width lineHeight theme tokenTheme editorFont />
+        <detailView text width lineHeight colors tokenTheme editorFont />
       | None => React.empty
       };
     | None => React.empty
@@ -237,7 +235,7 @@ let make =
   <View style={Styles.outerPosition(~x, ~y)}>
     <Opacity opacity=Constants.opacity>
       <View
-        style={Styles.innerPosition(~height, ~width, ~lineHeight, ~theme)}>
+        style={Styles.innerPosition(~height, ~width, ~lineHeight, ~colors)}>
         <FlatList
           rowHeight=Constants.itemHeight
           initialRowsToRender=5
@@ -251,7 +249,7 @@ let make =
               text
               kind
               highlight
-              theme
+              colors
               tokenTheme
               editorFont
             />;

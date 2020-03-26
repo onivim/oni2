@@ -3,17 +3,11 @@
  *
  */
 
-open Revery;
 open Revery.UI;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-
-module Colors = {
-  include Feature_Theme.Colors;
-  include EditorHoverWidget;
-};
 
 module Constants = {
   let padding = 8;
@@ -31,15 +25,15 @@ module Styles = {
     right(0),
   ];
 
-  let text = (~theme, ~editorFont: Service_Font.font) => [
+  let text = (~colors: Colors.t, ~editorFont: Service_Font.font) => [
     //width(width_),
     //height(height_),
     //textWrap(TextWrapping.NoWrap),
     textOverflow(`Ellipsis),
     fontFamily(editorFont.fontFile),
     fontSize(editorFont.fontSize),
-    color(Colors.Editor.foreground.from(theme)),
-    backgroundColor(Colors.background.from(theme)),
+    color(colors.editorForeground),
+    backgroundColor(colors.hoverWidgetBackground),
   ];
 
   let outerPosition = (~x, ~y) => [
@@ -48,7 +42,7 @@ module Styles = {
     left(x + 4),
   ];
 
-  let innerPosition = (~width, ~height, ~theme) => [
+  let innerPosition = (~width, ~height, ~colors: Colors.t) => [
     position(`Absolute),
     bottom(0),
     left(0),
@@ -57,8 +51,8 @@ module Styles = {
     flexDirection(`Column),
     alignItems(`Center),
     justifyContent(`Center),
-    border(~color=Colors.border.from(theme), ~width=1),
-    backgroundColor(Colors.background.from(theme)),
+    border(~color=colors.hoverWidgetBorder, ~width=1),
+    backgroundColor(colors.hoverWidgetBackground),
   ];
 };
 
@@ -70,12 +64,12 @@ let%component hoverItem =
                 ~buffer,
                 ~location,
                 ~delay,
-                ~theme,
+                ~colors,
                 ~editorFont,
                 (),
               ) => {
   let%hook (opacity, _, _) =
-    Animation.animate(Time.ms(250))
+    Animation.animate(Revery.Time.ms(250))
     |> Animation.delay(delay)
     |> Animation.tween(0., 1.)
     |> Hooks.animation;
@@ -109,14 +103,14 @@ let%component hoverItem =
     let elements =
       diagnostics
       |> List.map(({message, _}: Diagnostic.t) =>
-           <Text style={Styles.text(~theme, ~editorFont)} text=message />
+           <Text style={Styles.text(~colors, ~editorFont)} text=message />
          )
       |> List.rev
       |> React.listToElement;
 
     <View style={Styles.outerPosition(~x, ~y)}>
       <Opacity opacity>
-        <View style={Styles.innerPosition(~width, ~height, ~theme)}>
+        <View style={Styles.innerPosition(~width, ~height, ~colors)}>
           elements
         </View>
       </Opacity>
@@ -130,7 +124,7 @@ let make =
       ~y,
       ~delay,
       ~isEnabled,
-      ~theme,
+      ~colors,
       ~editorFont,
       ~diagnostics,
       ~editor: Editor.t,
@@ -149,7 +143,7 @@ let make =
               buffer
               location=cursor
               delay
-              theme
+              colors
               editorFont
             />
           )

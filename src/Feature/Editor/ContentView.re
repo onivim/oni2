@@ -6,17 +6,13 @@ open Helpers;
 
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Definition = Feature_LanguageSupport.Definition;
-module Colors = {
-  include Feature_Theme.Colors;
-  include Editor;
-};
 
 let renderLine =
     (
       ~context,
       ~buffer,
       ~leftVisibleColumn,
-      ~theme,
+      ~colors: Colors.t,
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
@@ -48,14 +44,13 @@ let renderLine =
         ~context,
         ~buffer,
         ~leftVisibleColumn,
-        ~color=Colors.selectionBackground.from(theme),
+        ~color=colors.selectionBackground,
       ),
       v,
     )
   };
 
   /* Draw match highlights */
-  let matchColor = Colors.selectionBackground.from(theme);
   switch (matchingPairs) {
   | None => ()
   | Some((startPos, endPos)) =>
@@ -63,14 +58,14 @@ let renderLine =
       ~context,
       ~buffer,
       ~leftVisibleColumn,
-      ~color=matchColor,
+      ~color=colors.selectionBackground,
       Range.{start: startPos, stop: startPos},
     );
     Draw.range(
       ~context,
       ~buffer,
       ~leftVisibleColumn,
-      ~color=matchColor,
+      ~color=colors.selectionBackground,
       Range.{start: endPos, stop: endPos},
     );
   };
@@ -87,7 +82,7 @@ let renderLine =
          ~buffer,
          ~leftVisibleColumn,
          ~padding=1.,
-         ~color=Colors.findMatchBackground.from(theme),
+         ~color=colors.findMatchBackground,
        ),
      );
 };
@@ -98,7 +93,7 @@ let renderEmbellishments =
       ~count,
       ~buffer,
       ~leftVisibleColumn,
-      ~theme,
+      ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
@@ -111,7 +106,7 @@ let renderEmbellishments =
       ~context,
       ~buffer,
       ~leftVisibleColumn,
-      ~theme,
+      ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
@@ -126,7 +121,7 @@ let renderDefinition =
       ~cursorPosition: Location.t,
       ~buffer,
       ~bufferHighlights,
-      ~theme,
+      ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~bufferWidthInCharacters,
@@ -135,7 +130,7 @@ let renderDefinition =
     ~buffer,
     ~bufferHighlights,
     ~cursorLine=Index.toZeroBased(cursorPosition.line),
-    ~theme,
+    ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~startIndex=leftVisibleColumn,
@@ -163,10 +158,10 @@ let renderDefinition =
      });
 
 let renderTokens =
-    (~context, ~offsetY, ~theme, ~tokens, ~shouldRenderWhitespace) => {
+    (~context, ~offsetY, ~colors, ~tokens, ~shouldRenderWhitespace) => {
   tokens
   |> WhitespaceTokenFilter.filter(shouldRenderWhitespace)
-  |> List.iter(Draw.token(~context, ~offsetY, ~theme));
+  |> List.iter(Draw.token(~context, ~offsetY, ~colors));
 };
 
 let renderText =
@@ -177,7 +172,7 @@ let renderText =
       ~buffer,
       ~bufferHighlights,
       ~cursorLine,
-      ~theme,
+      ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~leftVisibleColumn,
@@ -203,7 +198,7 @@ let renderText =
           ~buffer,
           ~bufferHighlights,
           ~cursorLine,
-          ~theme,
+          ~colors,
           ~matchingPairs,
           ~bufferSyntaxHighlights,
           ~selection=selectionRange,
@@ -215,7 +210,7 @@ let renderText =
       renderTokens(
         ~context,
         ~offsetY,
-        ~theme,
+        ~colors,
         ~tokens,
         ~shouldRenderWhitespace,
       );
@@ -228,7 +223,7 @@ let render =
       ~count,
       ~buffer,
       ~leftVisibleColumn,
-      ~theme,
+      ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
@@ -244,7 +239,7 @@ let render =
     ~count,
     ~buffer,
     ~leftVisibleColumn,
-    ~theme,
+    ~colors,
     ~diagnosticsMap,
     ~selectionRanges,
     ~matchingPairs,
@@ -262,7 +257,7 @@ let render =
       ~cursorPosition,
       ~buffer,
       ~bufferHighlights,
-      ~theme,
+      ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~bufferWidthInCharacters,
@@ -276,7 +271,7 @@ let render =
     ~buffer,
     ~bufferHighlights,
     ~cursorLine=Index.toZeroBased(cursorPosition.line),
-    ~theme,
+    ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~leftVisibleColumn,

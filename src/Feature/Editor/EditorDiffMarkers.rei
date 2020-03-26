@@ -21,7 +21,7 @@ let render:
     ~width: float,
     ~count: int,
     ~canvasContext: Revery.Draw.CanvasContext.t,
-    ~theme: ColorTheme.resolver,
+    ~colors: Colors.t,
     t
   ) =>
   unit;

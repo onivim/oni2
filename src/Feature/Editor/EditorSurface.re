@@ -22,11 +22,6 @@ module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Definition = Feature_LanguageSupport.Definition;
 
-module Colors = {
-  include Feature_Theme.Colors;
-  include Editor;
-};
-
 module Constants = {
   include Constants;
 
@@ -38,21 +33,20 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let container = (~theme) => [
-    backgroundColor(Colors.background.from(theme)),
-    color(Colors.foreground.from(theme)),
+  let container = (~colors: Colors.t) => [
+    backgroundColor(colors.editorBackground),
+    color(colors.editorForeground),
     flexGrow(1),
   ];
 
-  let verticalScrollBar = (~theme) =>
-    Style.[
-      position(`Absolute),
-      top(0),
-      right(0),
-      width(Constants.scrollBarThickness),
-      backgroundColor(Colors.ScrollbarSlider.background.from(theme)),
-      bottom(0),
-    ];
+  let verticalScrollBar = (~colors: Colors.t) => [
+    position(`Absolute),
+    top(0),
+    right(0),
+    width(Constants.scrollBarThickness),
+    backgroundColor(colors.scrollbarSliderBackground),
+    bottom(0),
+  ];
 };
 
 let minimap =
@@ -60,7 +54,7 @@ let minimap =
       ~buffer,
       ~bufferHighlights,
       ~cursorPosition: Location.t,
-      ~theme,
+      ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~selectionRanges,
@@ -99,7 +93,7 @@ let minimap =
         ~buffer,
         ~bufferHighlights,
         ~cursorLine=Index.toZeroBased(cursorPosition.line),
-        ~theme,
+        ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
         0,
@@ -108,7 +102,7 @@ let minimap =
       selection=selectionRanges
       showSlider=showMinimapSlider
       onScroll
-      theme
+      colors
       bufferHighlights
       diffMarkers
     />
@@ -139,6 +133,7 @@ let make =
       ~config,
       (),
     ) => {
+  let colors = Colors.precompute(theme);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
@@ -180,7 +175,7 @@ let make =
     <GutterView
       showLineNumbers={Config.lineNumbers.get(config)}
       height={metrics.pixelHeight}
-      theme
+      colors
       scrollY={editor.scrollY}
       lineHeight={metrics.lineHeight}
       count=lineCount
@@ -189,14 +184,14 @@ let make =
       diffMarkers
     />;
 
-  <View style={Styles.container(~theme)} onDimensionsChanged>
+  <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
       onScroll
       buffer
       editor
       metrics
-      theme
+      colors
       topVisibleLine
       onCursorChange
       cursorPosition
@@ -224,7 +219,7 @@ let make =
            buffer
            bufferHighlights
            cursorPosition
-           theme
+           colors
            matchingPairs
            bufferSyntaxHighlights
            selectionRanges
@@ -247,17 +242,17 @@ let make =
       gutterWidth
       editorFont
       completions
-      theme
+      colors
       tokenTheme
     />
-    <View style={Styles.verticalScrollBar(~theme)}>
+    <View style={Styles.verticalScrollBar(~colors)}>
       <EditorVerticalScrollbar
         editor
         metrics
         width=Constants.scrollBarThickness
         height={metrics.pixelHeight}
         diagnostics=diagnosticsMap
-        theme
+        colors
         editorFont
         bufferHighlights
       />

@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Revery;
 open Revery.Draw;
 
 open Oni_Core;
@@ -127,7 +126,13 @@ let drawUtf8Text = {
 let utf8Text = drawUtf8Text;
 
 let underline =
-    (~context, ~buffer, ~leftVisibleColumn, ~color=Colors.black, r: Range.t) => {
+    (
+      ~context,
+      ~buffer,
+      ~leftVisibleColumn,
+      ~color=Revery.Colors.black,
+      r: Range.t,
+    ) => {
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
   let endC = Index.toZeroBased(r.stop.column);
@@ -165,7 +170,7 @@ let range =
       ~padding=0.,
       ~buffer,
       ~leftVisibleColumn,
-      ~color=Colors.black,
+      ~color=Revery.Colors.black,
       r: Range.t,
     ) => {
   let doublePadding = padding *. 2.;
@@ -204,7 +209,8 @@ let range =
   };
 };
 
-let token = (~context, ~offsetY, ~theme, token: BufferViewTokenizer.t) => {
+let token =
+    (~context, ~offsetY, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
   let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
   let y = offsetY -. context.fontMetrics.ascent;
 
@@ -215,7 +221,7 @@ let token = (~context, ~offsetY, ~theme, token: BufferViewTokenizer.t) => {
     CanvasContext.Deprecated.drawString(
       ~x=x +. context.charWidth /. 4. -. context.scrollX,
       ~y=y -. context.scrollY,
-      ~color=Feature_Theme.Colors.EditorWhitespace.foreground.from(theme),
+      ~color=colors.whitespaceForeground,
       ~fontFamily=FontAwesome.FontFamily.solid,
       ~fontSize=10.,
       ~text=FontIcon.codeToIcon(FontAwesome.longArrowAltRight),
@@ -236,7 +242,7 @@ let token = (~context, ~offsetY, ~theme, token: BufferViewTokenizer.t) => {
         ~y=y -. yOffset,
         ~width=size,
         ~height=size,
-        ~color=Feature_Theme.Colors.EditorWhitespace.foreground.from(theme),
+        ~color=colors.whitespaceForeground,
       );
     };
   };
