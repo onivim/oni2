@@ -50,13 +50,11 @@ let conditionsOfState = (state: State.t) => {
 
   let terminalIsActive = Model.Selectors.terminalIsActive(state);
 
-  // When a terminal renderer is active, we handle the modes
-  // in the Onivim 2 layer.
-  let mode = Model.ModeManager.current(state);
-
   if (terminalIsActive) {
     Hashtbl.add(ret, "terminalFocus", true);
   };
+
+  let mode = Model.ModeManager.current(state);
 
   // HACK: Because we don't have AND conditions yet for input
   // (the conditions array are OR's), we are making `insertMode`
