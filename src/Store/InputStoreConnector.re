@@ -63,13 +63,13 @@ let conditionsOfState = (state: State.t) => {
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
   switch (isQuickmenuOpen(state), mode) {
-  | (false, Model.ModeManager.Insert) =>
+  | (false, Mode.Insert) =>
     Hashtbl.add(ret, "insertMode", true);
     Hashtbl.add(ret, "editorTextFocus", true);
-  | (false, Model.ModeManager.Normal) =>
+  | (false, Mode.Normal) =>
     Hashtbl.add(ret, "normalMode", true);
     Hashtbl.add(ret, "editorTextFocus", true);
-  | (false, Model.ModeManager.Visual) => Hashtbl.add(ret, "visualMode", true)
+  | (false, Mode.Visual) => Hashtbl.add(ret, "visualMode", true)
   | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
   | _ => ()
   };

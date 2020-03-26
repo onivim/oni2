@@ -113,23 +113,25 @@ module Oni = {
   let commandlineModeForeground =
     define("oni.commandlineModeForeground", hex("#282c34") |> all);
 
-  let backgroundFor = (mode: Vim.Mode.t) =>
+  let backgroundFor = (mode: Mode.t) =>
     switch (mode) {
     | Select
     | Visual => visualModeBackground
     | CommandLine => commandlineModeBackground
     | Operator => operatorModeBackground
+    | TerminalInsert
     | Insert => insertModeBackground
     | Replace => replaceModeBackground
     | Normal => normalModeBackground
     };
 
-  let foregroundFor = (mode: Vim.Mode.t) =>
+  let foregroundFor = (mode: Mode.t) =>
     switch (mode) {
     | Select
     | Visual => visualModeForeground
     | CommandLine => commandlineModeForeground
     | Operator => operatorModeForeground
+    | TerminalInsert
     | Insert => insertModeForeground
     | Replace => replaceModeForeground
     | Normal => normalModeForeground
