@@ -83,7 +83,4 @@ let getActiveTerminalId = (state: State.t) => {
 };
 
 let terminalIsActive = (state: State.t) =>
-  state
-  |> getActiveTerminalIdOpt
-  |> Option.map(_ => true)
-  |> Option.value(~default=false);
+  getActiveTerminalIdOpt(state) == Some(true);
