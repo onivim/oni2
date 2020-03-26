@@ -31,7 +31,7 @@ let editorSurfaceMinimalState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
+      mode={thousandLineState.vimMode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
@@ -57,7 +57,7 @@ let editorSurfaceThousandLineState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
+      mode={thousandLineState.vimMode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
@@ -83,7 +83,7 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
+      mode={thousandLineState.vimMode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
@@ -113,7 +113,7 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
+      mode={thousandLineState.vimMode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
@@ -143,7 +143,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
+      mode={thousandLineState.vimMode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
       windowIsFocused=true
