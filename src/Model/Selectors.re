@@ -68,7 +68,7 @@ let getActiveConfigurationValue = (state: State.t, f) => {
   };
 };
 
-let getActiveTerminalIdOpt = (state: State.t) => {
+let getActiveTerminalId = (state: State.t) => {
   state
   // See if terminal has focus
   |> getActiveBuffer
