@@ -804,24 +804,25 @@ let start =
       if (isInsertMode || isCmdLineMode) {
         getClipboardText()
         |> Option.iter(text => {
-          if (!isCmdLineMode) {
-            Vim.command("set paste");
-          };
+             if (!isCmdLineMode) {
+               Vim.command("set paste");
+             };
 
-          let latestCursors = ref([]);
-          Zed_utf8.iter(
-            s => {
-              latestCursors := Vim.input(~cursors=[], Zed_utf8.singleton(s));
-              ();
-            },
-            text,
-          );
+             let latestCursors = ref([]);
+             Zed_utf8.iter(
+               s => {
+                 latestCursors :=
+                   Vim.input(~cursors=[], Zed_utf8.singleton(s));
+                 ();
+               },
+               text,
+             );
 
-          if (!isCmdLineMode) {
-            updateActiveEditorCursors(latestCursors^);
-            Vim.command("set nopaste");
-          };
-        });
+             if (!isCmdLineMode) {
+               updateActiveEditorCursors(latestCursors^);
+               Vim.command("set nopaste");
+             };
+           });
       };
     });
 
