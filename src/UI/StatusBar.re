@@ -242,14 +242,7 @@ let transitionAnimation =
 
 let%component make =
               (~state: State.t, ~contextMenu, ~onContextMenuItemSelect, ()) => {
-  let State.{
-        colorTheme,
-        theme,
-        uiFont: font,
-        diagnostics,
-        notifications,
-        _,
-      } = state;
+  let State.{colorTheme, theme, uiFont: font, diagnostics, notifications, _} = state;
 
   let mode = ModeManager.current(state);
   let colorTheme = Theme.resolver(colorTheme);
