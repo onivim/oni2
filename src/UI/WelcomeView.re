@@ -34,7 +34,7 @@ module Styles = {
     Style.[
       fontFamily(font.fontFile),
       fontSize(12.),
-      color(theme.editorForeground),
+      color(theme.foreground),
     ];
 
   let header =
