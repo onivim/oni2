@@ -12,10 +12,7 @@ let createItem = name => {
   let ret: Actions.menuItem = {
     category: None,
     name,
-    command: () =>
-      Oni_Model.Actions.ShowNotification(
-        Oni_Model.Notification.create(name),
-      ),
+    command: () => Oni_Model.Actions.Noop,
     icon: None,
     highlight: [],
   };

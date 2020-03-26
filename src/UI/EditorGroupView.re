@@ -143,65 +143,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         | BufferRenderer.Editor =>
           let buffer =
             Selectors.getBufferForEditor(state, editor)
-            |> Option.value(~default=Buffer.empty);
-          let rulers =
-            Configuration.getValue(c => c.editorRulers, state.configuration);
-          let showLineNumbers =
-            Configuration.getValue(
-              c => c.editorLineNumbers,
-              state.configuration,
-            );
-          let showMinimap =
-            Configuration.getValue(
-              c => c.editorMinimapEnabled,
-              state.configuration,
-            );
-          let maxMinimapCharacters =
-            Configuration.getValue(
-              c => c.editorMinimapMaxColumn,
-              state.configuration,
-            );
-          let matchingPairsEnabled =
-            Selectors.getConfigurationValue(state, buffer, c =>
-              c.editorMatchBrackets
-            );
-          let shouldRenderWhitespace =
-            Configuration.getValue(
-              c => c.editorRenderWhitespace,
-              state.configuration,
-            );
-          let shouldRenderIndentGuides =
-            Configuration.getValue(
-              c => c.editorRenderIndentGuides,
-              state.configuration,
-            );
-          let shouldHighlightActiveIndentGuides =
-            Configuration.getValue(
-              c => c.editorHighlightActiveIndentGuide,
-              state.configuration,
-            );
-          let showMinimapSlider =
-            Configuration.getValue(
-              c => c.editorMinimapShowSlider,
-              state.configuration,
-            );
-          let hoverDelay =
-            Configuration.getValue(
-              c => c.editorHoverDelay,
-              state.configuration,
-            )
-            |> Revery.Time.ms;
-          let isHoverEnabled =
-            Configuration.getValue(
-              c => c.editorHoverEnabled,
-              state.configuration,
-            );
-
-          let smoothScroll =
-            Configuration.getValue(
-              c => c.experimentalEditorSmoothScroll,
-              state.configuration,
-            );
+            |> Option.value(~default=Buffer.initial);
 
           <EditorSurface
             isActiveSplit=isActive
@@ -212,26 +154,16 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             onDimensionsChanged={_ => ()}
             onScroll
             theme
-            rulers
-            showLineNumbers
             editorFont={state.editorFont}
             mode
-            showMinimap
-            maxMinimapCharacters
-            matchingPairsEnabled
             bufferHighlights={state.bufferHighlights}
             bufferSyntaxHighlights={state.syntaxHighlights}
             diagnostics={state.diagnostics}
             completions={state.completions}
             tokenTheme={state.tokenTheme}
             definition={state.definition}
-            shouldRenderWhitespace
-            showMinimapSlider
-            hoverDelay
-            isHoverEnabled
-            shouldRenderIndentGuides
-            shouldHighlightActiveIndentGuides
-            smoothScroll
+            windowIsFocused={state.windowIsFocused}
+            config={Feature_Configuration.resolver(state.config)}
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
         | BufferRenderer.Terminal({id, _}) =>
@@ -261,6 +193,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           tabs
           mode
           uiFont
+          languageInfo={state.languageInfo}
+          iconTheme={state.iconTheme}
         />,
         editorView,
       ])

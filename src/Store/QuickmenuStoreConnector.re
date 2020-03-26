@@ -5,10 +5,12 @@
  */
 open Oni_Core;
 open Oni_Model;
+open Oni_UI;
 open Utility;
 
 module InputModel = Oni_Components.InputModel;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
+module Selection = Oni_Components.Selection;
 
 module Log = (val Log.withNamespace("Oni2.Store.Quickmenu"));
 
@@ -16,7 +18,8 @@ let prefixFor: Vim.Types.cmdlineType => string =
   fun
   | SearchForward => "/"
   | SearchReverse => "?"
-  | _ => ":";
+  | Ex
+  | Unknown => ":";
 
 let start = (themeInfo: ThemeInfo.t) => {
   let selectItemEffect = (item: Actions.menuItem) =>
@@ -163,8 +166,33 @@ let start = (themeInfo: ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuInputClicked(selection) => (
-        Option.map(state => Quickmenu.{...state, selection}, state),
+    | QuickmenuInputClicked((newSelection: Selection.t)) => (
+        Option.map(
+          (Quickmenu.{variant, selection, _} as state) => {
+            switch (variant) {
+            | Wildmenu(_) =>
+              let transition = selection.focus - newSelection.focus;
+
+              if (transition > 0) {
+                for (_ in 0 to transition) {
+                  GlobalContext.current().dispatch(
+                    Actions.KeyboardInput("<LEFT>"),
+                  );
+                };
+              } else if (transition < 0) {
+                for (_ in 0 downto transition) {
+                  GlobalContext.current().dispatch(
+                    Actions.KeyboardInput("<RIGHT>"),
+                  );
+                };
+              };
+            | _ => ()
+            };
+
+            Quickmenu.{...state, variant, selection: newSelection};
+          },
+          state,
+        ),
         Isolinear.Effect.none,
       )
 

@@ -67,6 +67,17 @@ let removeCharBefore = (text, selection: Selection.t) => {
   );
 };
 
+let removeWord = (text, selection: Selection.t) => {
+  let lastWordStart = findPrevWordBoundary(text, selection.focus);
+  let index = selection.focus;
+
+  let count = index - lastWordStart;
+
+  let (textSlice, idx) = removeBefore(~count, index, text);
+
+  (textSlice, Selection.collapsed(~text=textSlice, idx));
+};
+
 let removeSelection = (text, selection) => {
   let (textSlice, focus) =
     removeAfter(
@@ -153,6 +164,10 @@ let handleInput = (~text, ~selection: Selection.t, key) => {
     )
   | ("<BS>", true) => removeCharBefore(text, selection)
   | ("<BS>", false) => removeSelection(text, selection)
+  | ("<C-h>", true) => removeCharBefore(text, selection)
+  | ("<C-h>", false) => removeSelection(text, selection)
+  | ("<C-w>", true) => removeWord(text, selection)
+  | ("<C-w>", false) => removeSelection(text, selection)
   | ("<DEL>", true) => removeCharAfter(text, selection)
   | ("<DEL>", false) => removeSelection(text, selection)
   | ("<HOME>", _) => (text, Selection.collapsed(~text, 0))

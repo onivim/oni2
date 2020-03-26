@@ -46,6 +46,7 @@ jobs:
   - template: .ci/use-node.yml
   - script: brew update
   - script: brew install libtool libpng ragel
+  - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-check-hygiene.yml
@@ -67,14 +68,8 @@ jobs:
   - template: .ci/use-node.yml
   - script: sudo apt-get update
   - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev nasm
-  - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
-  - template: .ci/esy-build-steps.yml
-    parameters:
-      platform: linux
-  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --no-log-colors --checkhealth
-    displayName: 'Release: --checkhealth'
-  - template: .ci/publish-build-cache.yml
+  - template: .ci/run-integration-tests.yml
 
 - job: CentOS
   displayName: 'Linux - CentOS - Docker Image'
@@ -115,6 +110,7 @@ jobs:
   - template: .ci/use-node.yml
   - script: brew update
   - script: brew install libtool libpng ragel
+  - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
@@ -201,30 +197,6 @@ jobs:
       artifactName: 'Release_Linux'
       downloadPath: '$(System.ArtifactsDirectory)'
   - script: ./scripts/linux/validate-release.sh
-    env:
-      SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
-
-- job: ValidateMacOSRelease13
-  displayName: "MacOS: Validate Release (10.13)"
-  dependsOn: 
-  - Kickoff
-  - MacOS
-  pool:
-    vmImage: 'macOS-10.13'
-  variables:
-    ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
-
-  steps:
-  - script: echo $(ONI2_SHORT_COMMIT_ID)
-  - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
-    displayName: 'Echo artifact dir'
-  - task: DownloadBuildArtifacts@0
-    inputs: 
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: 'Release_Darwin'
-      downloadPath: '$(System.ArtifactsDirectory)'
-  - script: ./scripts/osx/validate-release.sh
     env:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 

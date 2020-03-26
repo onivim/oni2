@@ -23,8 +23,8 @@ module Sub = {
 
       type state = Oni_Syntax_Client.t;
 
-      let subscriptionName = "SyntaxSubscription";
-      let getUniqueId = params => params.id;
+      let name = "SyntaxSubscription";
+      let id = params => params.id;
 
       let init = (~params, ~dispatch) => {
         let client =

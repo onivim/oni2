@@ -79,10 +79,8 @@ let start =
     let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
 
     let getClipboardValue = () => {
-      switch (getClipboardText()) {
-      | None => None
-      | Some(v) => Some(v |> removeWindowsNewLines |> splitNewLines)
-      };
+      getClipboardText()
+      |> Option.map(text => text |> removeWindowsNewLines |> splitNewLines);
     };
 
     let starReg = Char.code('*');
@@ -138,18 +136,8 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onMessage((priority, title, msg) => {
-      open Vim.Types;
-      let (priorityString, kind) =
-        switch (priority) {
-        | Error => ("ERROR", Notification.Error)
-        | Warning => ("WARNING", Notification.Warning)
-        | Info => ("INFO", Notification.Info)
-        };
-
-      Log.debugf(m => m("Message - %s [%s]: %s", priorityString, title, msg));
-
-      dispatch(ShowNotification(Notification.create(~kind, msg)));
+    Vim.onMessage((priority, title, message) => {
+      dispatch(VimMessageReceived({priority, title, message}))
     });
 
   let _: unit => unit =
@@ -240,7 +228,7 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onTerminal(({cmd, curwin}) => {
+    Vim.onTerminal(({cmd, curwin, _}) => {
       let splitDirection =
         if (curwin) {Feature_Terminal.Current} else {
           Feature_Terminal.Horizontal
@@ -514,9 +502,22 @@ let start =
     ();
   };
 
+  let isVimKey = key => {
+    !String.equal(key, "<S-SHIFT>")
+    && !String.equal(key, "<A-SHIFT>")
+    && !String.equal(key, "<D-SHIFT>")
+    && !String.equal(key, "<D->")
+    && !String.equal(key, "<D-A->")
+    && !String.equal(key, "<D-S->")
+    && !String.equal(key, "<C->")
+    && !String.equal(key, "<A-C->")
+    && !String.equal(key, "<SHIFT>")
+    && !String.equal(key, "<S-C->");
+  };
+
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
-      if (Oni_Input.Filter.filter(key)) {
+      if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
         let editor =
@@ -659,7 +660,7 @@ let start =
       };
 
       switch (Core.BufferPath.parse(filePath)) {
-      | Terminal({bufferId, cmd}) =>
+      | Terminal({bufferId, _}) =>
         dispatch(
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
@@ -754,6 +755,17 @@ let start =
         | _ => ()
         };
 
+        // Set configured line comment
+        editorBuffer
+        |> OptionEx.flatMap(Core.Buffer.getFileType)
+        |> OptionEx.flatMap(
+             Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
+           )
+        |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+             config.lineComment
+           )
+        |> Option.iter(Vim.Options.setLineComment);
+
         let synchronizeWindowMetrics =
             (editor: Editor.t, editorGroup: EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
@@ -785,27 +797,34 @@ let start =
     );
 
   let pasteIntoEditorAction =
-    Isolinear.Effect.create(~name="vim.clipboardPaste", () =>
-      if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
-        switch (getClipboardText()) {
-        | Some(text) =>
-          Vim.command("set paste");
-          let latestCursors = ref([]);
-          Zed_utf8.iter(
-            s => {
-              latestCursors := Vim.input(~cursors=[], Zed_utf8.singleton(s));
-              ();
-            },
-            text,
-          );
+    Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
+      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
+      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
 
-          updateActiveEditorCursors(latestCursors^);
+      if (isInsertMode || isCmdLineMode) {
+        getClipboardText()
+        |> Option.iter(text => {
+             if (!isCmdLineMode) {
+               Vim.command("set paste");
+             };
 
-          Vim.command("set nopaste");
-        | None => ()
-        };
-      }
-    );
+             let latestCursors = ref([]);
+             Zed_utf8.iter(
+               s => {
+                 latestCursors :=
+                   Vim.input(~cursors=[], Zed_utf8.singleton(s));
+                 ();
+               },
+               text,
+             );
+
+             if (!isCmdLineMode) {
+               updateActiveEditorCursors(latestCursors^);
+               Vim.command("set nopaste");
+             };
+           });
+      };
+    });
 
   let copyActiveFilepathToClipboardEffect =
     Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
@@ -862,6 +881,28 @@ let start =
       ();
     });
 
+  let escapeEffect =
+    Isolinear.Effect.create(~name="vim.esc", () => {
+      let _ = Vim.input("<esc>");
+      ();
+    });
+
+  let indentEffect =
+    Isolinear.Effect.create(~name="vim.indent", () => {
+      let _ = Vim.input(">");
+      let _ = Vim.input("g");
+      let _ = Vim.input("v");
+      ();
+    });
+
+  let outdentEffect =
+    Isolinear.Effect.create(~name="vim.outdent", () => {
+      let _ = Vim.input("<");
+      let _ = Vim.input("g");
+      let _ = Vim.input("v");
+      ();
+    });
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -875,6 +916,11 @@ let start =
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
     | Command("workbench.action.files.save") => (state, saveEffect)
+    | Command("indent") => (state, indentEffect)
+    | Command("outdent") => (state, outdentEffect)
+    | Command("editor.action.indentLines") => (state, indentEffect)
+    | Command("editor.action.outdentLines") => (state, outdentEffect)
+    | Command("vim.esc") => (state, escapeEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
@@ -904,6 +950,14 @@ let start =
       )
     | ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
     | ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
+    | Command("workbench.action.nextEditor") => (
+        state,
+        synchronizeEditorEffect(state),
+      )
+    | Command("workbench.action.previousEditor") => (
+        state,
+        synchronizeEditorEffect(state),
+      )
     | KeyboardInput(s) => (state, inputEffect(s))
     | CopyActiveFilepathToClipboard => (
         state,
@@ -932,6 +986,20 @@ let start =
           ),
           TitleStoreConnector.Effects.updateTitle(newState),
         ]),
+      );
+
+    | VimMessageReceived({priority, message, _}) =>
+      let kind =
+        switch (priority) {
+        | Error => Feature_Notification.Error
+        | Warning => Feature_Notification.Warning
+        | Info => Feature_Notification.Info
+        };
+
+      (
+        state,
+        Feature_Notification.Effects.create(~kind, message)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       );
 
     | _ => (state, Isolinear.Effect.none)

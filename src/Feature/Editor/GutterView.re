@@ -107,7 +107,7 @@ let render =
       ~editorFont,
     );
 
-  if (showLineNumbers != LineNumber.Off) {
+  if (showLineNumbers != `Off) {
     renderLineNumbers(
       ~context,
       ~lineNumberWidth,
@@ -148,7 +148,7 @@ let make =
       (),
     ) => {
   let lineNumberWidth =
-    showLineNumbers != LineNumber.Off
+    showLineNumbers != `Off
       ? LineNumber.getLineNumberPixelWidth(
           ~lines=count,
           ~fontPixelWidth=editorFont.measuredWidth,

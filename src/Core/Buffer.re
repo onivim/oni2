@@ -29,12 +29,12 @@ let getShortFriendlyName = ({filePath, _}) => {
 };
 
 let getMediumFriendlyName =
-    (~workingDirectory=?, {filePath as maybeFilePath, _}) => {
+    (~workingDirectory=?, {filePath: maybeFilePath, _}) => {
   maybeFilePath
   |> Option.map(filePath =>
        switch (BufferPath.parse(filePath)) {
        | Welcome => "Welcome"
-       | Terminal({cmd}) => "Terminal - " ++ cmd
+       | Terminal({cmd, _}) => "Terminal - " ++ cmd
        | FilePath(fp) =>
          switch (workingDirectory) {
          | Some(base) => Path.toRelative(~base, fp)
@@ -44,12 +44,12 @@ let getMediumFriendlyName =
      );
 };
 
-let getLongFriendlyName = ({filePath as maybeFilePath, _}) => {
+let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
   maybeFilePath
   |> Option.map(filePath => {
        switch (BufferPath.parse(filePath)) {
        | Welcome => "Welcome"
-       | Terminal({cmd}) => "Terminal - " ++ cmd
+       | Terminal({cmd, _}) => "Terminal - " ++ cmd
        | FilePath(fp) => fp
        }
      });
@@ -75,7 +75,7 @@ let ofLines = (~id=0, rawLines: array(string)) => {
   };
 };
 
-let empty = ofLines([||]);
+let initial = ofLines([||]);
 
 let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   id: metadata.id,

@@ -6,7 +6,7 @@ module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Theme"));
 module Colors = GlobalColors;
 
 type model = {
-  defaults: ColorTheme.Defaults.t,
+  schema: ColorTheme.Schema.t,
   theme: ColorTheme.t,
 };
 
@@ -22,11 +22,15 @@ let defaults =
     Colors.defaults,
     Colors.remaining,
   ]
-  |> List.map(ColorTheme.Defaults.fromList)
-  |> ColorTheme.Defaults.unionMany;
+  |> List.map(ColorTheme.Schema.fromList)
+  |> ColorTheme.Schema.unionMany;
 
 let initial = contributions => {
-  defaults: ColorTheme.Defaults.unionMany([defaults, ...contributions]),
+  schema:
+    ColorTheme.Schema.unionMany([
+      defaults,
+      ...List.map(ColorTheme.Schema.fromList, contributions),
+    ]),
   theme: ColorTheme.{variant: Dark, colors: ColorTheme.Colors.empty},
 };
 
@@ -36,51 +40,28 @@ let resolver =
       ~customizations=ColorTheme.Colors.empty, // TODO
       model,
     ) => {
-  let {defaults, theme} = model;
+  let {schema, theme} = model;
 
-  let rec resolve = keyName => {
-    let key = ColorTheme.key(keyName);
-
-    let fallback = keyName => {
-      Log.warnf(m => m("Fallback color used for: %s", keyName));
-      Some(Revery.Colors.magenta);
-    };
-
+  let resolve = key => {
     switch (ColorTheme.Colors.get(key, customizations)) {
-    | Some(color) => Some(color)
+    | Some(color) => `Color(color)
     | None =>
       switch (ColorTheme.Colors.get(key, theme.colors)) {
-      | Some(color) => Some(color)
+      | Some(color) => `Color(color)
       | None =>
-        switch (ColorTheme.Defaults.get(key, defaults)) {
-        | Some((entry: ColorTheme.Defaults.entry)) =>
-          let colorValue =
-            switch (theme.variant) {
-            | Light => entry.light
-            | Dark => entry.dark
-            | HighContrast => entry.hc
-            };
+        switch (ColorTheme.Schema.get(key, schema)) {
+        | Some(definition) =>
+          `Default(
+            ColorTheme.Defaults.get(theme.variant, definition.defaults),
+          )
 
-          switch (colorValue) {
-          | Constant(color) => Some(color)
-          | Reference(refName) when refName == keyName => fallback(keyName) // prevent infinite loop
-          | Reference(refName) => resolve(refName)
-          | Computed(f) => f(resolve)
-          | Unspecified => None
-          };
-
-        | None => fallback(keyName)
+        | None => `NotRegistered
         }
       }
     };
   };
 
-  {
-    as _;
-    pub tryColor = resolve;
-    pub color = key =>
-      resolve(key) |> Option.value(~default=Revery.Colors.transparentWhite)
-  };
+  resolve;
 };
 
 [@deriving show({with_path: false})]

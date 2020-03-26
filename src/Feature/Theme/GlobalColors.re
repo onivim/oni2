@@ -1,98 +1,121 @@
 open Oni_Core;
 open Revery;
+open ColorTheme.Schema;
 
-let foreground = "foreground";
-let contrastBorder = "contrastBorder";
+let foreground =
+  define(
+    "foreground",
+    {light: hex("#CCC"), dark: hex("#616161"), hc: hex("#FFF")},
+  );
+let contrastBorder =
+  define(
+    "contrastBorder",
+    {light: unspecified, dark: unspecified, hc: hex("#6FC3DF")},
+  );
 
 module ActivityBar = {
-  let background = "activityBar.background";
-  let foreground = "activityBar.foreground";
-  let border = "activityBar.border";
-  let activeBorder = "activityBar.activeBorder";
-  let inactiveForeground = "activityBar.inactiveForeground";
-  let activeBackground = "activityBar.activeBackground";
+  let background =
+    define(
+      "activityBar.background",
+      {dark: hex("#333"), light: hex("#2C2C2C"), hc: hex("#000")},
+    );
+  let foreground = define("acitvityBar.foreground", hex("#fff") |> all);
+  let border =
+    define(
+      "activityBar.border",
+      {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
+    );
+  let activeBorder =
+    define(
+      "activityBar.activeBorder",
+      {dark: ref(foreground), light: ref(foreground), hc: unspecified},
+    );
+  let inactiveForeground =
+    define(
+      "activityBar.inactiveForeground",
+      {
+        dark: transparent(0.4, ref(foreground)),
+        light: transparent(0.4, ref(foreground)),
+        hc: hex("#FFF"),
+      },
+    );
+  let activeBackground =
+    define("activityBar.activeBackground", all(unspecified));
 
-  let defaults =
-    ColorTheme.Defaults.[
-      (
-        background,
-        {dark: hex("#333"), light: hex("#2C2C2C"), hc: hex("#000")},
-      ),
-      (foreground, hex("#fff") |> uniform),
-      (
-        border,
-        {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
-      ),
-      (
-        activeBorder,
-        {dark: ref(foreground), light: ref(foreground), hc: unspecified},
-      ),
-      (
-        inactiveForeground,
-        {
-          dark: transparent(0.4, ref(foreground)),
-          light: transparent(0.4, ref(foreground)),
-          hc: hex("#FFF"),
-        },
-      ),
-      (activeBackground, unspecified |> uniform),
-    ];
+  let defaults = [
+    background,
+    foreground,
+    border,
+    activeBorder,
+    inactiveForeground,
+    activeBackground,
+  ];
 };
 
 module Editor = {
-  let background = "editor.background";
-  let foreground = "editor.foreground";
+  let background = define("editor.background", hex("#2F3440") |> all);
+  let foreground = define("editor.foreground", hex("#DCDCDC") |> all);
 
-  let defaults =
-    ColorTheme.Defaults.[
-      (background, hex("#2F3440") |> uniform),
-      (foreground, hex("#DCDCDC") |> uniform),
-    ];
+  let defaults = [background, foreground];
 };
 
 module EditorGroupHeader = {
-  let tabsBackground = "editorGroupHeader.tabsBackground";
+  let tabsBackground =
+    define(
+      "editorGroupHeader.tabsBackground",
+      {dark: hex("#252526"), light: hex("#F3F3F3"), hc: unspecified},
+    );
 
-  let defaults =
-    ColorTheme.Defaults.[
-      (
-        tabsBackground,
-        {dark: hex("#252526"), light: hex("#F3F3F3"), hc: unspecified},
-      ),
-    ];
+  let defaults = [tabsBackground];
 };
 
 module List = {
-  let focusBackground = "list.focusBackground";
-  let focusForeground = "list.focusForeground";
-  let hoverBackground = "list.hoverBackground";
-  let hoverForeground = "list.hoverForeground";
+  let focusBackground =
+    define("list.focusBackground", hex("#495162") |> all);
+  let focusForeground =
+    define("list.focusForeground", hex("#FFFFFF") |> all);
+  let hoverBackground =
+    define("list.hoverBackground", hex("#495162") |> all);
+  let hoverForeground =
+    define("list.hoverForeground", hex("#FFFFFF") |> all);
 
-  let defaults =
-    ColorTheme.Defaults.[
-      (focusBackground, hex("#495162") |> uniform),
-      (focusForeground, hex("#FFFFFF") |> uniform),
-      (hoverBackground, hex("#495162") |> uniform),
-      (hoverForeground, hex("#FFFFFF") |> uniform),
-    ];
+  let defaults = [
+    focusBackground,
+    focusForeground,
+    hoverBackground,
+    hoverForeground,
+  ];
 };
 
 module Oni = {
-  let visualModeBackground = "oni.visualModeBackground";
-  let insertModeBackground = "oni.insertModeBackground";
-  let replaceModeBackground = "oni.replaceModeBackground";
-  let normalModeBackground = "oni.normalModeBackground";
-  let operatorModeBackground = "oni.operatorModeBackground";
-  let commandlineModeBackground = "oni.commandlineModeBackground";
-  let visualModeForeground = "oni.visualModeForeground";
-  let insertModeForeground = "oni.insertModeForeground";
-  let replaceModeForeground = "oni.replaceModeForeground";
-  let normalModeForeground = "oni.normalModeForeground";
-  let operatorModeForeground = "oni.operatorModeForeground";
-  let commandlineModeForeground = "oni.commandlineModeForeground";
+  let visualModeBackground =
+    define("oni.visualModeBackground", hex("#56b6c2") |> all);
+  let insertModeBackground =
+    define("oni.insertModeBackground", hex("#98c379") |> all);
+  let replaceModeBackground =
+    define("oni.replaceModeBackground", hex("#d19a66") |> all);
+  let normalModeBackground =
+    define("oni.normalModeBackground", hex("#61afef") |> all);
+  let operatorModeBackground =
+    define("oni.operatorModeBackground", hex("#d19a66") |> all);
+  let commandlineModeBackground =
+    define("oni.commandlineModeBackground", hex("#61afef") |> all);
+  let visualModeForeground =
+    define("oni.visualModeForeground", hex("#282c34") |> all);
+  let insertModeForeground =
+    define("oni.insertModeForeground", hex("#282c34") |> all);
+  let replaceModeForeground =
+    define("oni.replaceModeForeground", hex("#282c34") |> all);
+  let normalModeForeground =
+    define("oni.normalModeForeground", hex("#282c34") |> all);
+  let operatorModeForeground =
+    define("oni.operatorModeForeground", hex("#282c34") |> all);
+  let commandlineModeForeground =
+    define("oni.commandlineModeForeground", hex("#282c34") |> all);
 
   let backgroundFor = (mode: Vim.Mode.t) =>
     switch (mode) {
+    | Select
     | Visual => visualModeBackground
     | CommandLine => commandlineModeBackground
     | Operator => operatorModeBackground
@@ -103,6 +126,7 @@ module Oni = {
 
   let foregroundFor = (mode: Vim.Mode.t) =>
     switch (mode) {
+    | Select
     | Visual => visualModeForeground
     | CommandLine => commandlineModeForeground
     | Operator => operatorModeForeground
@@ -111,262 +135,270 @@ module Oni = {
     | Normal => normalModeForeground
     };
 
-  let defaults =
-    ColorTheme.Defaults.[
-      (visualModeBackground, hex("#56b6c2") |> uniform),
-      (insertModeBackground, hex("#98c379") |> uniform),
-      (replaceModeBackground, hex("#d19a66") |> uniform),
-      (normalModeBackground, hex("#61afef") |> uniform),
-      (operatorModeBackground, hex("#d19a66") |> uniform),
-      (commandlineModeBackground, hex("#61afef") |> uniform),
-      (visualModeForeground, hex("#282c34") |> uniform),
-      (insertModeForeground, hex("#282c34") |> uniform),
-      (replaceModeForeground, hex("#282c34") |> uniform),
-      (normalModeForeground, hex("#282c34") |> uniform),
-      (operatorModeForeground, hex("#282c34") |> uniform),
-      (commandlineModeForeground, hex("#282c34") |> uniform),
-    ];
+  let defaults = [
+    visualModeBackground,
+    insertModeBackground,
+    replaceModeBackground,
+    normalModeBackground,
+    operatorModeBackground,
+    commandlineModeBackground,
+    visualModeForeground,
+    insertModeForeground,
+    replaceModeForeground,
+    normalModeForeground,
+    operatorModeForeground,
+    commandlineModeForeground,
+  ];
 };
 
 module SideBar = {
-  let background = "sidebar.background";
-  let foreground = "sidebar.foreground";
+  let background = define("sidebar.background", hex("#21252b") |> all);
+  let foreground = define("sidebar.foreground", hex("#ECEFF4") |> all);
 
-  let defaults =
-    ColorTheme.Defaults.[
-      (background, hex("#21252b") |> uniform),
-      (foreground, hex("#ECEFF4") |> uniform),
-    ];
+  let defaults = [background, foreground];
 };
 
 module Tab = {
-  let activeBackground = "tab.activeBackground";
-  let unfocusedActiveBackground = "tab.unfocusedActiveBackground";
-  let inactiveBackground = "tab.inactiveBackground";
-  let hoverBackground = "tab.hoverBackground";
-  let unfocusedHoverBackground = "tab.unfocuseHoverBackground";
-  let border = "tab.border";
-  let activeBorder = "tab.activeBorder";
-  let unfocusedActiveBorder = "tab.unfocusedActiveBorder";
-  let activeBorderTop = "tab.activeBorderTop";
-  let unfocusedActiveBorderTop = "tab.unfocusedActiveBorderTop";
-  let activeModifiedBorder = "tab.activeModifiedBorder";
-  let inactiveModifiedBorder = "tab.inactiveModifiedBorder";
-  let unfocusedActiveModifiedBorder = "tab.unfocusedActiveModifiedBorder";
-  let unfocusedInactiveModifiedBorder = "tab.unfocusedInactiveModifiedBorder";
-  let hoverBorder = "tab.hoverBorder";
-  let unfocusedHoverBorder = "tab.unfocusedHoverBorder";
-  let activeForeground = "tab.activeForeground";
-  let inactiveForeground = "tab.inactiveForeground";
-  let unfocusedActiveForeground = "tab.unfocusedActiveForeground";
-  let unfocusedInactiveForeground = "tab.unfocusedInactiveForeground";
+  // BACKGROUND
 
-  let defaults =
-    ColorTheme.Defaults.[
-      // BACKGROUND
-      (
-        activeBackground,
-        {
-          dark: ref(Editor.background),
-          light: ref(Editor.background),
-          hc: ref(Editor.background),
-        },
-      ),
-      (unfocusedActiveBackground, ref(activeBackground) |> uniform),
-      (
-        inactiveBackground,
-        {dark: hex("#2D2D2D"), light: hex("#ECECEC"), hc: unspecified},
-      ),
-      (hoverBackground, unspecified |> uniform),
-      (
-        unfocusedHoverBackground,
-        {
-          dark: transparent(0.5, ref(hoverBackground)),
-          light: transparent(0.7, ref(hoverBackground)),
-          hc: unspecified,
-        },
-      ),
-      // BORDER
-      (
-        border,
-        {
-          dark: hex("#252526"),
-          light: hex("#F3F3F3"),
-          hc: ref(contrastBorder),
-        },
-      ),
-      (activeBorder, unspecified |> uniform),
-      (
-        unfocusedActiveBorder,
-        {
-          dark: transparent(0.5, ref(activeBorder)),
-          light: transparent(0.7, ref(activeBorder)),
-          hc: unspecified,
-        },
-      ),
-      (activeBorderTop, unspecified |> uniform),
-      (
-        unfocusedActiveBorderTop,
-        {
-          dark: transparent(0.5, ref(activeBorderTop)),
-          light: transparent(0.7, ref(activeBorderTop)),
-          hc: unspecified,
-        },
-      ),
-      (
-        activeModifiedBorder,
-        {
-          dark: hex("#252526"),
-          light: hex("#F3F3F3"),
-          hc: ref(contrastBorder),
-        },
-      ),
-      (
-        inactiveModifiedBorder,
-        {
-          dark: transparent(0.5, ref(activeModifiedBorder)),
-          light: transparent(0.7, ref(activeModifiedBorder)),
-          hc: hex("#FFF"),
-        },
-      ),
-      (
-        unfocusedActiveModifiedBorder,
-        {
-          dark: transparent(0.5, ref(activeModifiedBorder)),
-          light: transparent(0.7, ref(activeModifiedBorder)),
-          hc: hex("#FFF"),
-        },
-      ),
-      (
-        unfocusedInactiveModifiedBorder,
-        {
-          dark: transparent(0.5, ref(inactiveModifiedBorder)),
-          light: transparent(0.5, ref(inactiveModifiedBorder)),
-          hc: hex("#FFF"),
-        },
-      ),
-      (hoverBorder, unspecified |> uniform),
-      (
-        unfocusedHoverBorder,
-        {
-          dark: transparent(0.5, ref(hoverBorder)),
-          light: transparent(0.7, ref(hoverBorder)),
-          hc: unspecified,
-        },
-      ),
-      // FOREGROUND
-      (
-        activeForeground,
-        {dark: hex("#FFF"), light: hex("#333"), hc: hex("#FFF")},
-      ),
-      (
-        inactiveForeground,
-        {
-          dark: transparent(0.5, ref(activeForeground)),
-          light: transparent(0.7, ref(activeForeground)),
-          hc: hex("#FFF"),
-        },
-      ),
-      (
-        unfocusedActiveForeground,
-        {
-          dark: transparent(0.5, ref(activeForeground)),
-          light: transparent(0.7, ref(activeForeground)),
-          hc: hex("#FFF"),
-        },
-      ),
-      (
-        unfocusedInactiveForeground,
-        {
-          dark: transparent(0.5, ref(inactiveForeground)),
-          light: transparent(0.5, ref(inactiveForeground)),
-          hc: hex("#FFF"),
-        },
-      ),
-    ];
+  let activeBackground =
+    define(
+      "tab.activeBackground",
+      {
+        dark: ref(Editor.background),
+        light: ref(Editor.background),
+        hc: ref(Editor.background),
+      },
+    );
+  let unfocusedActiveBackground =
+    define("tab.unfocusedActiveBackground", ref(activeBackground) |> all);
+  let inactiveBackground =
+    define(
+      "tab.inactiveBackground",
+      {dark: hex("#2D2D2D"), light: hex("#ECECEC"), hc: unspecified},
+    );
+  let hoverBackground = define("tab.hoverBackground", all(unspecified));
+  let unfocusedHoverBackground =
+    define(
+      "tab.unfocusedHoverBackground",
+      {
+        dark: transparent(0.5, ref(hoverBackground)),
+        light: transparent(0.7, ref(hoverBackground)),
+        hc: unspecified,
+      },
+    );
+
+  // BORDER
+
+  let border =
+    define(
+      "tab.border",
+      {
+        dark: hex("#252526"),
+        light: hex("#F3F3F3"),
+        hc: ref(contrastBorder),
+      },
+    );
+  let activeBorder = define("tab.activeBorder", all(unspecified));
+  let unfocusedActiveBorder =
+    define(
+      "tab.unfocusedActiveBorder",
+      {
+        dark: transparent(0.5, ref(activeBorder)),
+        light: transparent(0.7, ref(activeBorder)),
+        hc: unspecified,
+      },
+    );
+  let activeBorderTop = define("tab.activeBorderTop", all(unspecified));
+  let unfocusedActiveBorderTop =
+    define(
+      "tab.unfocusedActiveBorderTop",
+      {
+        dark: transparent(0.5, ref(activeBorderTop)),
+        light: transparent(0.7, ref(activeBorderTop)),
+        hc: unspecified,
+      },
+    );
+  let activeModifiedBorder =
+    define(
+      "tab.activeModifiedBorder",
+      {
+        dark: hex("#252526"),
+        light: hex("#F3F3F3"),
+        hc: ref(contrastBorder),
+      },
+    );
+  let inactiveModifiedBorder =
+    define(
+      "tab.inactiveModifiedBorder",
+      {
+        dark: transparent(0.5, ref(activeModifiedBorder)),
+        light: transparent(0.7, ref(activeModifiedBorder)),
+        hc: hex("#FFF"),
+      },
+    );
+
+  let unfocusedActiveModifiedBorder =
+    define(
+      "tab.unfocusedActiveModifiedBorder",
+      {
+        dark: transparent(0.5, ref(activeModifiedBorder)),
+        light: transparent(0.7, ref(activeModifiedBorder)),
+        hc: hex("#FFF"),
+      },
+    );
+  let unfocusedInactiveModifiedBorder =
+    define(
+      "tab.unfocusedInactiveModifiedBorder",
+      {
+        dark: transparent(0.5, ref(inactiveModifiedBorder)),
+        light: transparent(0.5, ref(inactiveModifiedBorder)),
+        hc: hex("#FFF"),
+      },
+    );
+  let hoverBorder = define("tab.hoverBorder", all(unspecified));
+  let unfocusedHoverBorder =
+    define(
+      "tab.unfocusedHoverBorder",
+      {
+        dark: transparent(0.5, ref(hoverBorder)),
+        light: transparent(0.7, ref(hoverBorder)),
+        hc: unspecified,
+      },
+    );
+
+  // FOREGROUND
+
+  let activeForeground =
+    define(
+      "tab.activeForeground",
+      {dark: hex("#FFF"), light: hex("#333"), hc: hex("#FFF")},
+    );
+  let inactiveForeground =
+    define(
+      "tab.inactiveForeground",
+      {
+        dark: transparent(0.5, ref(activeForeground)),
+        light: transparent(0.7, ref(activeForeground)),
+        hc: hex("#FFF"),
+      },
+    );
+  let unfocusedActiveForeground =
+    define(
+      "tab.unfocusedActiveForeground",
+      {
+        dark: transparent(0.5, ref(activeForeground)),
+        light: transparent(0.7, ref(activeForeground)),
+        hc: hex("#FFF"),
+      },
+    );
+  let unfocusedInactiveForeground =
+    define(
+      "tab.unfocusedInactiveForeground",
+      {
+        dark: transparent(0.5, ref(inactiveForeground)),
+        light: transparent(0.5, ref(inactiveForeground)),
+        hc: hex("#FFF"),
+      },
+    );
+
+  let defaults = [
+    // BACKGROUND
+    activeBackground,
+    unfocusedActiveBackground,
+    inactiveBackground,
+    hoverBackground,
+    unfocusedHoverBackground,
+    // BORDER
+    border,
+    activeBorder,
+    unfocusedActiveBorder,
+    activeBorderTop,
+    unfocusedActiveBorderTop,
+    activeModifiedBorder,
+    inactiveModifiedBorder,
+    unfocusedActiveModifiedBorder,
+    unfocusedInactiveModifiedBorder,
+    hoverBorder,
+    unfocusedHoverBorder,
+    // FOREGROUND
+    activeForeground,
+    inactiveForeground,
+    unfocusedActiveForeground,
+    unfocusedInactiveForeground,
+  ];
 };
 
-let defaults =
-  ColorTheme.Defaults.[
-    (
-      foreground,
-      {light: hex("#CCC"), dark: hex("#616161"), hc: hex("#FFF")},
-    ),
-    (
-      contrastBorder,
-      {light: unspecified, dark: unspecified, hc: hex("#6FC3DF")},
-    ),
-  ];
+let defaults = [foreground, contrastBorder];
 
-let remaining =
-  ColorTheme.Defaults.[
-    ("editorCursor.background", hex("#2F3440") |> uniform),
-    ("editorCursor.foreground", hex("#DCDCDC") |> uniform),
-    ("editor.findMatchBackground", hex("#42557b") |> uniform),
-    ("editor.findMatchBorder", hex("#457dff") |> uniform),
-    ("editor.findMatchHighlightBackground", hex("#314365") |> uniform),
-    ("editor.hoverWidgetBackground", hex("#FFFFFF") |> uniform),
-    ("editor.hoverWidgetBorder", hex("#FFFFFF") |> uniform),
-    ("editor.lineHighlightBackground", hex("#495162") |> uniform),
-    //("editorLineNumberBackground", hex("#2F3440")),
-    ("editorLineNumber.foreground", hex("#495162") |> uniform),
-    ("editorLineNumber.activeForeground", hex("#737984") |> uniform),
-    (
-      "editorRuler.foreground",
-      color(Color.rgba(0.78, 0.78, 0.78, 0.78)) |> uniform,
-    ),
-    ("editorSuggestWidget.background", hex("#282C35") |> uniform),
-    ("editorSuggestWidget,border", hex("#ECEFF4") |> uniform),
-    ("editorSuggestWidget.highlightForeground", hex("#ECEFF4") |> uniform),
-    ("editorSuggestWidget.selectedBackground", hex("#282C35") |> uniform),
-    (
-      "editorOverviewRuler.bracketMatchForeground",
-      hex("#A0A0A0") |> uniform,
-    ),
-    //("editorctiveLineNumberForeground", hex("#737984")),
-    ("editor.selectionBackground", hex("#687595") |> uniform),
-    ("list.activeSelectionBackground", hex("#495162") |> uniform),
-    ("list.activeSelectionForeground", hex("#FFFFFF") |> uniform),
-    (
-      "scrollbarSlider.background",
-      color(Color.rgba(0., 0., 0., 0.2)) |> uniform,
-    ),
-    ("scrollbarSlider.activeBackground", hex("#2F3440") |> uniform),
-    ("editorIndentGuide.background", hex("#3b4048") |> uniform),
-    (
-      "editorIndentGuide.activeBackground",
-      color(Color.rgba(0.78, 0.78, 0.78, 0.78)) |> uniform,
-    ),
-    ("menu.background", hex("#2F3440") |> uniform),
-    ("menu.foreground", hex("#FFFFFF") |> uniform),
-    ("menu.selectionBackground", hex("#495162") |> uniform),
-    ("editorWhitespace.foreground", hex("#3b4048") |> uniform),
-    (
-      "statusBar.background",
-      {dark: hex("#007aCC"), light: hex("#007aCC"), hc: unspecified},
-    ),
-    ("statusBar.foreground", hex("#fff") |> uniform),
-    (
-      "scrollbarSlider.hoverBackground",
-      color(Color.rgba(123.0, 123.0, 123.0, 0.1)) |> uniform,
-    ),
-    //("notificationSuccessBackground", hex("#23d160")),
-    //("notificationSuccessForeground", hex("#fff")),
-    ("notification.infoBackground", hex("#209cee") |> uniform),
-    ("notification.infoForeground", hex("#fff") |> uniform),
-    ("notification.warningBackground", hex("#ffdd57") |> uniform),
-    ("notification.warningForeground", hex("#fff") |> uniform),
-    ("notification.errorBackground", hex("#ff3860") |> uniform),
-    ("notification.errorForeground", hex("#fff") |> uniform),
-    //("sneakBackground", Revery.Colors.red),
-    //("sneakForeground", hex("#fff")),
-    //("sneakHighlight", hex("#fff")),
-    ("titleBar.activeBackground", hex("#282C35") |> uniform),
-    ("titleBar.activeForeground", hex("#ECEFF4") |> uniform),
-    ("titleBar.inactiveBackground", hex("#282C35") |> uniform),
-    ("titleBar.inactiveForeground", hex("#ECEFF4") |> uniform),
-    ("titleBar.border", hex("#fff0") |> uniform),
-    ("editorGutter.modifiedBackground", hex("#0C7D9D") |> uniform),
-    ("editorGutter.addedBackground", hex("#587C0C") |> uniform),
-    ("editorGutter.deletedBackground", hex("#94151B") |> uniform),
-  ];
+let remaining = [
+  define("editorCursor.background", hex("#2F3440") |> all),
+  define("editorCursor.foreground", hex("#DCDCDC") |> all),
+  define("editor.findMatchBackground", hex("#42557b") |> all),
+  define("editor.findMatchBorder", hex("#457dff") |> all),
+  define("editor.findMatchHighlightBackground", hex("#314365") |> all),
+  define("editor.hoverWidgetBackground", hex("#FFFFFF") |> all),
+  define("editor.hoverWidgetBorder", hex("#FFFFFF") |> all),
+  define("editor.lineHighlightBackground", hex("#495162") |> all),
+  //define("editorLineNumberBackground", hex("#2F3440")),
+  define("editorLineNumber.foreground", hex("#495162") |> all),
+  define("editorLineNumber.activeForeground", hex("#737984") |> all),
+  define(
+    "editorRuler.foreground",
+    color(Color.rgba(0.78, 0.78, 0.78, 0.78)) |> all,
+  ),
+  define("editorSuggestWidget.background", hex("#282C35") |> all),
+  define("editorSuggestWidget,border", hex("#ECEFF4") |> all),
+  define("editorSuggestWidget.highlightForeground", hex("#ECEFF4") |> all),
+  define("editorSuggestWidget.selectedBackground", hex("#282C35") |> all),
+  define(
+    "editorOverviewRuler.bracketMatchForeground",
+    hex("#A0A0A0") |> all,
+  ),
+  //define("editorctiveLineNumberForeground", hex("#737984")),
+  define("editor.selectionBackground", hex("#687595") |> all),
+  define("list.activeSelectionBackground", hex("#495162") |> all),
+  define("list.activeSelectionForeground", hex("#FFFFFF") |> all),
+  define(
+    "scrollbarSlider.background",
+    color(Color.rgba(0., 0., 0., 0.2)) |> all,
+  ),
+  define("scrollbarSlider.activeBackground", hex("#2F3440") |> all),
+  define("editorIndentGuide.background", hex("#3b4048") |> all),
+  define(
+    "editorIndentGuide.activeBackground",
+    color(Color.rgba(0.78, 0.78, 0.78, 0.78)) |> all,
+  ),
+  define("menu.background", hex("#2F3440") |> all),
+  define("menu.foreground", hex("#FFFFFF") |> all),
+  define("menu.selectionBackground", hex("#495162") |> all),
+  define("editorWhitespace.foreground", hex("#3b4048") |> all),
+  define(
+    "statusBar.background",
+    {dark: hex("#007aCC"), light: hex("#007aCC"), hc: unspecified},
+  ),
+  define("statusBar.foreground", hex("#fff") |> all),
+  define(
+    "scrollbarSlider.hoverBackground",
+    color(Color.rgba(123.0, 123.0, 123.0, 0.1)) |> all,
+  ),
+  //define("notificationSuccessBackground", hex("#23d160")),
+  //define("notificationSuccessForeground", hex("#fff")),
+  define("notification.infoBackground", hex("#209cee") |> all),
+  define("notification.infoForeground", hex("#fff") |> all),
+  define("notification.warningBackground", hex("#ffdd57") |> all),
+  define("notification.warningForeground", hex("#fff") |> all),
+  define("notification.errorBackground", hex("#ff3860") |> all),
+  define("notification.errorForeground", hex("#fff") |> all),
+  //define("sneakBackground", Revery.Colors.red),
+  //define("sneakForeground", hex("#fff")),
+  //define("sneakHighlight", hex("#fff")),
+  define("titleBar.activeBackground", hex("#282C35") |> all),
+  define("titleBar.activeForeground", hex("#ECEFF4") |> all),
+  define("titleBar.inactiveBackground", hex("#282C35") |> all),
+  define("titleBar.inactiveForeground", hex("#ECEFF4") |> all),
+  define("titleBar.border", hex("#fff0") |> all),
+  define("editorGutter.modifiedBackground", hex("#0C7D9D") |> all),
+  define("editorGutter.addedBackground", hex("#587C0C") |> all),
+  define("editorGutter.deletedBackground", hex("#94151B") |> all),
+];

@@ -141,6 +141,35 @@ let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
     | _ => Default
     };
 
+let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled = {
+  let decode =
+    Json.Decode.(
+      field("other", bool)
+      >>= (
+        other =>
+          field("comments", bool)
+          >>= (
+            comments =>
+              field("strings", bool)
+              >>= (strings => succeed({other, comments, strings}))
+          )
+      )
+    )
+    |> Json.Decode.decode_value;
+  json =>
+    switch (json) {
+    | `Bool(enabled) => {other: enabled, comments: enabled, strings: enabled}
+    // TODO: Parse JS objects of the form:
+    // { "other": bool, "comments": bool, "strings": bool }
+    | _ =>
+      json
+      |> decode
+      |> Result.value(
+           ~default={other: false, comments: false, strings: false},
+         )
+    };
+};
+
 let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
@@ -251,6 +280,13 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {
       ...config,
       editorHighlightActiveIndentGuide: parseBool(json),
+    },
+  ),
+  (
+    "editor.quickSuggestions",
+    (config, json) => {
+      ...config,
+      editorQuickSuggestions: parseQuickSuggestions(json),
     },
   ),
   (
@@ -394,10 +430,6 @@ let configurationParsers: list(configurationTuple) = [
   (
     "experimental.viml",
     (config, json) => {...config, experimentalVimL: parseStringList(json)},
-  ),
-  (
-    "experimental.editor.smoothScroll",
-    (s, v) => {...s, experimentalEditorSmoothScroll: parseBool(v)},
   ),
 ];
 

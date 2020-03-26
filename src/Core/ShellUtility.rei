@@ -1,2 +1,5 @@
+// Get the default shell command for the user
+let getDefaultShell: unit => string;
+
 // Get the value of the $PATH environment variable from the login shell
-let getShellPath: unit => string;
+let getPathFromShell: unit => string;

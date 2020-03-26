@@ -29,6 +29,12 @@ type fontSmoothing =
   | Antialiased
   | SubpixelAntialiased;
 
+type quickSuggestionsEnabled = {
+  other: bool,
+  comments: bool,
+  strings: bool,
+};
+
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
@@ -46,6 +52,7 @@ type t = {
   editorMinimapMaxColumn: int,
   editorInsertSpaces: bool,
   editorIndentSize: int,
+  editorQuickSuggestions: quickSuggestionsEnabled,
   editorTabSize: int,
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
@@ -78,7 +85,6 @@ type t = {
   // - JSON
   experimentalTreeSitter: bool,
   experimentalAutoClosingPairs: bool,
-  experimentalEditorSmoothScroll: bool,
   experimentalVimL: list(string),
 };
 
@@ -102,6 +108,11 @@ let default = {
   editorTabSize: 4,
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
+  editorQuickSuggestions: {
+    other: true,
+    comments: true,
+    strings: true,
+  },
   editorRenderWhitespace: All,
   editorRulers: [],
   syntaxEagerMaxLines: Constants.syntaxEagerMaxLines,
@@ -132,5 +143,4 @@ let default = {
   experimentalTreeSitter: false,
   experimentalAutoClosingPairs: false,
   experimentalVimL: [],
-  experimentalEditorSmoothScroll: false,
 };

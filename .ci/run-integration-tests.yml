@@ -1,0 +1,11 @@
+steps:
+  - script: npm install -g esy@0.6.2
+    displayName: 'Install Esy: npm install -g esy@0.6.2'
+  - script: esy install
+    displayName: 'Install Dependencies: esy install'
+  - script: esy bootstrap
+    displayName: 'Bootstrap Oni2 setup with system specific build variables'
+  - script: esy @integrationtest install
+    displayName: 'Integration Tests: install'
+  - script: esy @integrationtest run
+    displayName: 'Integration Tests: run'

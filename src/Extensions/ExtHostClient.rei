@@ -13,6 +13,7 @@ module SCM: {
   type command = {
     id: string,
     title: string,
+    tooltip: option(string),
     arguments: list(Core.Json.t),
   };
 
@@ -155,6 +156,11 @@ module Terminal: {
 type msg =
   | SCM(SCM.msg)
   | Terminal(Terminal.msg)
+  | ShowMessage({
+      severity: [ | `Ignore | `Info | `Warning | `Error],
+      message: string,
+      extensionId: option(string),
+    })
   | RegisterTextContentProvider({
       handle: int,
       scheme: string,
@@ -197,7 +203,6 @@ let start:
                                          =?,
     ~onRegisterReferencesProvider: (t, Protocol.BasicProvider.t) => unit=?,
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
-    ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
     ~dispatch: msg => unit,
     Core.Setup.t
@@ -227,6 +232,8 @@ let provideReferences:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(LocationWithUri.t));
 let provideTextDocumentContent: (int, Core.Uri.t, t) => Lwt.t(string);
+let acceptConfigurationChanged:
+  (Configuration.t, ~changed: Configuration.Model.t, t) => unit;
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;
 
@@ -235,4 +242,7 @@ let close: t => unit;
 module Effects: {
   let executeContributedCommand:
     (t, ~arguments: list(Core.Json.t)=?, string) => Isolinear.Effect.t(_);
+  let acceptConfigurationChanged:
+    (t, Configuration.t, ~changed: Configuration.Model.t) =>
+    Isolinear.Effect.t(_);
 };

@@ -61,24 +61,24 @@ let subscription:
 let shellCmd: string;
 
 module Colors: {
-  let background: string;
-  let foreground: string;
-  let ansiBlack: string;
-  let ansiRed: string;
-  let ansiGreen: string;
-  let ansiYellow: string;
-  let ansiBlue: string;
-  let ansiMagenta: string;
-  let ansiCyan: string;
-  let ansiWhite: string;
-  let ansiBrightBlack: string;
-  let ansiBrightRed: string;
-  let ansiBrightGreen: string;
-  let ansiBrightYellow: string;
-  let ansiBrightBlue: string;
-  let ansiBrightMagenta: string;
-  let ansiBrightCyan: string;
-  let ansiBrightWhite: string;
+  let background: ColorTheme.Schema.definition;
+  let foreground: ColorTheme.Schema.definition;
+  let ansiBlack: ColorTheme.Schema.definition;
+  let ansiRed: ColorTheme.Schema.definition;
+  let ansiGreen: ColorTheme.Schema.definition;
+  let ansiYellow: ColorTheme.Schema.definition;
+  let ansiBlue: ColorTheme.Schema.definition;
+  let ansiMagenta: ColorTheme.Schema.definition;
+  let ansiCyan: ColorTheme.Schema.definition;
+  let ansiWhite: ColorTheme.Schema.definition;
+  let ansiBrightBlack: ColorTheme.Schema.definition;
+  let ansiBrightRed: ColorTheme.Schema.definition;
+  let ansiBrightGreen: ColorTheme.Schema.definition;
+  let ansiBrightYellow: ColorTheme.Schema.definition;
+  let ansiBrightBlue: ColorTheme.Schema.definition;
+  let ansiBrightMagenta: ColorTheme.Schema.definition;
+  let ansiBrightCyan: ColorTheme.Schema.definition;
+  let ansiBrightWhite: ColorTheme.Schema.definition;
 };
 
-module Contributions: {let colors: ColorTheme.Defaults.t;};
+module Contributions: {let colors: list(ColorTheme.Schema.definition);};

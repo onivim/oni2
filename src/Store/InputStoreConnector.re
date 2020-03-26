@@ -56,7 +56,10 @@ let conditionsOfState = (state: State.t) => {
   | (false, Vim.Types.Insert) =>
     Hashtbl.add(ret, "insertMode", true);
     Hashtbl.add(ret, "editorTextFocus", true);
+  | (false, Vim.Types.Visual) => Hashtbl.add(ret, "visualMode", true)
   | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
+  | (true, Vim.Types.CommandLine) =>
+    Hashtbl.add(ret, "commandLineFocus", true)
   | _ => ()
   };
 
@@ -92,59 +95,93 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
-  let getKeyUpBindings = {
-    let containsCtrl = Re.execp(Re.compile(Re.str("C-")));
-    let containsShift = Re.execp(Re.compile(Re.str("S-")));
-    let containsAlt = Re.execp(Re.compile(Re.str("A-")));
-
-    // NOTE: THis currently only generates a single command based on an ordinary
-    // keybinding in order to emulate vscode's behaviour in the editors picker
-    List.filter_map((binding: Keybindings.Keybinding.t) =>
-      switch (binding.command) {
-      | "workbench.action.openNextRecentlyUsedEditorInGroup" =>
-        let createBinding = key =>
-          Keybindings.Keybinding.{
-            key,
-            command: "list.select",
-            condition: Defined("inEditorsPicker"),
-          };
-
-        if (containsCtrl(binding.key)) {
-          Some(createBinding("<C>"));
-        } else if (containsShift(binding.key)) {
-          Some(createBinding("<S>"));
-        } else if (containsAlt(binding.key)) {
-          Some(createBinding("<A>"));
-        } else {
-          None;
-        };
-
-      | _ => None
-      }
-    );
+  let updateFromInput = (state: State.t, actions) => {
+    (state, immediateDispatchEffect(actions));
   };
 
-  let getActionsForBinding =
-      (inputKey, bindings, currentConditions: Hashtbl.t(string, bool)) => {
-    let inputKey = String.uppercase_ascii(inputKey);
+  let handleTextEffect = (state: State.t, k: string) => {
+    switch (Model.FocusManager.current(state)) {
+    | Editor
+    | Wildmenu => [Actions.KeyboardInput(k)]
 
-    let getValue = v =>
-      switch (Hashtbl.find_opt(currentConditions, v)) {
-      | Some(true) => WhenExpr.Value.True
-      | Some(false)
-      | None => WhenExpr.Value.False
+    | Quickmenu => [Actions.QuickmenuInput(k)]
+
+    | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
+
+    | FileExplorer => [
+        Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
+      ]
+
+    | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
+
+    | Terminal(id) =>
+      Feature_Terminal.shouldHandleInput(k)
+        ? [Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k}))]
+        : [Actions.KeyboardInput(k)]
+
+    | Search => [Actions.Search(Feature_Search.Input(k))]
+
+    | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
+    };
+  };
+
+  let effectToActions = (state, effect) =>
+    switch (effect) {
+    | Keybindings.Execute(command) => [Actions.Command(command)]
+    | Keybindings.Text(text) => handleTextEffect(state, text)
+    | Keybindings.Unhandled(key) =>
+      let isTextInputActive = isTextInputActive();
+      let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
+      switch (maybeKeyString) {
+      | None => []
+      | Some(k) => handleTextEffect(state, k)
+      };
+    };
+
+  let reveryKeyToEditorKey =
+      ({keycode, scancode, keymod, repeat}: Revery.Key.KeyEvent.t) => {
+    // TODO: Should we filter out repeat keys from key binding processing?
+    ignore(repeat);
+
+    let shift = Revery.Key.Keymod.isShiftDown(keymod);
+    let control = Revery.Key.Keymod.isControlDown(keymod);
+    let alt = Revery.Key.Keymod.isAltDown(keymod);
+    let meta = Revery.Key.Keymod.isGuiDown(keymod);
+    let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
+
+    let (altGr, control, alt) =
+      switch (Revery.Environment.os) {
+      // On Windows, we need to do some special handling here
+      // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
+      // https://devblogs.microsoft.com/oldnewthing/?p=40003
+      | Revery.Environment.Windows =>
+        let altGr =
+          altGr
+          || Revery.Key.Keymod.isRightAltDown(keymod)
+          && Revery.Key.Keymod.isControlDown(keymod);
+        // If altGr is active, disregard control / alt key
+        let ctrlKey = altGr ? false : control;
+        let altKey = altGr ? false : alt;
+        (altGr, ctrlKey, altKey);
+      | _ => (altGr, control, alt)
       };
 
-    Keybindings.Keybinding.(
-      List.fold_left(
-        (defaultAction, {key, command, condition}) =>
-          Handler.matchesCondition(condition, inputKey, key, getValue)
-            ? [Actions.Command(command)] : defaultAction,
-        [],
-        bindings,
-      )
-    );
+    EditorInput.KeyPress.{
+      scancode,
+      keycode,
+      modifiers: {
+        shift,
+        control,
+        alt,
+        meta,
+        altGr,
+      },
+    };
   };
+
+  let keyCodeToString = Sdl2.Keycode.getName;
+
+  let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
 
   /**
      The key handlers return (keyPressedString, shouldOniListen)
@@ -153,92 +190,74 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      a revery element is focused oni2 should defer to revery
    */
   let handleKeyPress = (state: State.t, key) => {
-    let bindings = state.keyBindings;
-    let conditions = conditionsOfState(state);
-    let time = Revery.Time.now() |> Revery.Time.toFloatSeconds;
-
-    switch (key) {
-    | Some(k) =>
-      let bindingActions = getActionsForBinding(k, bindings, conditions);
-
-      let actions =
-        if (bindingActions != []) {
-          bindingActions;
-        } else {
-          switch (Model.FocusManager.current(state)) {
-          | Editor
-          | Wildmenu => [Actions.KeyboardInput(k)]
-
-          | Quickmenu => [Actions.QuickmenuInput(k)]
-
-          | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
-
-          | FileExplorer => [
-              Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
-            ]
-
-          | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
-
-          | Terminal(id) =>
-            Feature_Terminal.shouldHandleInput(k)
-              ? [
-                Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
-              ]
-              : [Actions.KeyboardInput(k)]
-
-          | Search => [Actions.Search(Feature_Search.Input(k))]
-
-          | Modal => [Actions.Modal(Model.Modal.KeyPressed(k))]
-          };
-        };
-
-      (
-        state,
-        immediateDispatchEffect([
-          Actions.NotifyKeyPressed(time, k),
-          ...actions,
-        ]),
-      );
-
-    | None => (state, Isolinear.Effect.none)
-    };
-  };
-
-  let handleKeyUp = (state: State.t, event: Revery.Key.KeyEvent.t) => {
-    let bindings = state.keyBindings;
     let conditions = conditionsOfState(state);
 
-    // NOTE: This curretly only handles Ctrl, Shift and Alt. Everything else is ignored
-    let maybeKeyString =
-      switch (event.keycode) {
-      | 1073742048 => Some("<C>")
-      | 1073742049 => Some("<S>")
-      | 1073742050 => Some("<A>")
-      | _ => None
-      };
+    let (keyBindings, effects) =
+      Keybindings.keyDown(~context=conditions, ~key, state.keyBindings);
 
-    switch (maybeKeyString) {
-    | Some(keyString) =>
-      let bindings = getKeyUpBindings(bindings);
-      let actions = getActionsForBinding(keyString, bindings, conditions);
+    let newState = {...state, keyBindings};
 
-      (state, immediateDispatchEffect(actions));
+    let actions =
+      effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    | None => (state, Isolinear.Effect.none)
-    };
+    updateFromInput(newState, /*Some(keyPressToString(key)),*/ actions);
   };
 
+  let handleTextInput = (state: State.t, text) => {
+    let (keyBindings, effects) = Keybindings.text(~text, state.keyBindings);
+
+    let actions =
+      effects |> List.map(effectToActions(state)) |> List.flatten;
+
+    let newState = {...state, keyBindings};
+
+    updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
+  };
+
+  let handleKeyUp = (state: State.t, key) => {
+    let conditions = conditionsOfState(state);
+
+    //let inputKey = reveryKeyToEditorKey(key);
+    let (keyBindings, effects) =
+      Keybindings.keyUp(~context=conditions, ~key, state.keyBindings);
+
+    let newState = {...state, keyBindings};
+
+    let actions =
+      effects |> List.map(effectToActions(state)) |> List.flatten;
+
+    updateFromInput(newState, /*None, */ actions);
+  };
+
+  // TODO: This should be moved to a Feature_Keybindings project
+  // (Including the KeyDisplayer too!)
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event) =>
-      let isTextInputActive = isTextInputActive();
-      event
-      |> Handler.keyPressToCommand(~isTextInputActive)
-      |> handleKeyPress(state);
+    | KeyDown(event, time) =>
+      let keyDisplayer =
+        state.keyDisplayer
+        |> Option.map(keyDisplayer =>
+             Oni_Components.KeyDisplayer.keyPress(
+               ~time=Revery.Time.toFloatSeconds(time),
+               keyPressToString(event),
+               keyDisplayer,
+             )
+           );
 
-    | KeyUp(event) => handleKeyUp(state, event)
+      handleKeyPress({...state, keyDisplayer}, event);
+    | KeyUp(event, _time) => handleKeyUp(state, event)
+    | TextInput(text, time) =>
+      let keyDisplayer =
+        state.keyDisplayer
+        |> Option.map(keyDisplayer =>
+             Oni_Components.KeyDisplayer.textInput(
+               ~time=Revery.Time.toFloatSeconds(time),
+               text,
+               keyDisplayer,
+             )
+           );
 
-    | TextInput(event) => handleKeyPress(state, Some(event.text))
+      handleTextInput({...state, keyDisplayer}, text);
 
     | _ => (state, Isolinear.Effect.none)
     };
@@ -250,16 +269,30 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   | None => Log.error("No window to subscribe to events")
   | Some(window) =>
     let _: unit => unit =
-      Revery.Window.onKeyDown(window, event =>
-        dispatch(Actions.KeyDown(event))
+      Revery.Window.onKeyDown(
+        window,
+        event => {
+          let time = Revery.Time.now();
+          dispatch(Actions.KeyDown(event |> reveryKeyToEditorKey, time));
+        },
       );
 
     let _: unit => unit =
-      Revery.Window.onKeyUp(window, event => dispatch(Actions.KeyUp(event)));
+      Revery.Window.onKeyUp(
+        window,
+        event => {
+          let time = Revery.Time.now();
+          dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey, time));
+        },
+      );
 
     let _: unit => unit =
-      Revery.Window.onTextInputCommit(window, event =>
-        dispatch(Actions.TextInput(event))
+      Revery.Window.onTextInputCommit(
+        window,
+        event => {
+          let time = Revery.Time.now();
+          dispatch(Actions.TextInput(event.text, time));
+        },
       );
     ();
   };

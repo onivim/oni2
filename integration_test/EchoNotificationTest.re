@@ -11,12 +11,15 @@ runTest(~name="InputIgnore test", (_dispatch, wait, runEffects) => {
   Vim.command("echo 'hi from test'");
   runEffects();
 
-  wait(~name="notification shows up", (state: State.t) =>
-    if (Notifications.any(state.notifications)) {
-      let notification = List.hd(state.notifications);
+  wait(~name="notification shows up", (state: State.t) => {
+    let notifications = (
+      state.notifications :> list(Feature_Notification.notification)
+    );
+    if (notifications != []) {
+      let notification = List.hd(notifications);
       String.equal(notification.message, "hi from test");
     } else {
       true;
-    }
-  );
+    };
+  });
 });

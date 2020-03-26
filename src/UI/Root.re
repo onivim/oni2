@@ -121,11 +121,7 @@ let make = (~state: State.t, ()) => {
       {switch (state.quickmenu) {
        | None => React.empty
        | Some(quickmenu) =>
-         switch (quickmenu.variant) {
-         | Wildmenu(_) => <WildmenuView theme configuration state=quickmenu />
-
-         | _ => <QuickmenuView theme configuration state=quickmenu font />
-         }
+         <QuickmenuView theme configuration state=quickmenu font />
        }}
       {switch (state.keyDisplayer) {
        | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />

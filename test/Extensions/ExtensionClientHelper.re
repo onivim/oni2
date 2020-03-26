@@ -66,8 +66,8 @@ let withExtensionClient =
     (
       ~onStatusBarSetEntry=noop1,
       ~onDidActivateExtension=noop1,
-      ~onShowMessage=noop1,
       ~onRegisterCommand=noop1,
+      ~dispatch=_ => (),
       f: ExtHostClient.t => unit,
     ) => {
   let setup = Setup.init();
@@ -95,9 +95,8 @@ let withExtensionClient =
       ~onStatusBarSetEntry,
       ~onDidActivateExtension,
       ~onRegisterCommand,
-      ~onShowMessage,
       ~onClosed,
-      ~dispatch=_ => (),
+      ~dispatch,
       setup,
     );
 

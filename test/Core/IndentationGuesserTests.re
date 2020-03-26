@@ -31,6 +31,15 @@ describe("IndentationGuesser", ({describe, _}) =>
       "      ghi",
     |];
 
+    let mostlyTripleSpaced = [|
+      "   abc",
+      "      def",
+      "   ghi",
+      "   ghi",
+      "     ghi",
+      "        ghi",
+    |];
+
     let largerExample = [|
       "module Index = {",
       "  [@deriving show({with_path: false})]",
@@ -69,7 +78,16 @@ describe("IndentationGuesser", ({describe, _}) =>
       "};",
     |];
 
-    test("indeterminate uses passed-in settings", ({expect}) => {
+    let singleSpaceBlockComment = [|
+      "/*****",
+      " *",
+      " * Foo",
+      " *",
+      " *",
+      " */",
+    |];
+
+    test("indeterminate uses passed-in settings", ({expect, _}) => {
       let settings = guessIndentationArray(indeterminateLines, 4, true);
       expect.bool(settings.mode == IndentationSettings.Spaces).toBe(true);
       expect.int(settings.size).toBe(4);
@@ -79,37 +97,49 @@ describe("IndentationGuesser", ({describe, _}) =>
       expect.int(settings.size).toBe(3);
     });
 
-    test("more tabs than spaces", ({expect}) => {
+    test("more tabs than spaces", ({expect, _}) => {
       let r = guessIndentationArray(moreTabsThanSpaces, 4, true);
       expect.bool(r.mode == Tabs).toBe(true);
     });
 
-    test("more spaces than tabs", ({expect}) => {
+    test("more spaces than tabs", ({expect, _}) => {
       let r = guessIndentationArray(moreSpacesThanTabs, 4, false);
       expect.bool(r.mode == Spaces).toBe(true);
     });
 
-    test("ignores empty lines", ({expect}) => {
+    test("ignores empty lines", ({expect, _}) => {
       let r = guessIndentationArray(someEmptyLines, 4, true);
       expect.bool(r.mode == Tabs).toBe(true);
     });
 
-    test("mostly single spaced", ({expect}) => {
+    test("mostly single spaced", ({expect, _}) => {
       let r = guessIndentationArray(mostlySingleSpaced, 4, true);
       expect.bool(r.mode == Spaces).toBe(true);
-      expect.int(r.size).toBe(1);
+      expect.int(r.size).toBe(2);
     });
 
-    test("mostly double spaced", ({expect}) => {
+    test("mostly double spaced", ({expect, _}) => {
       let r = guessIndentationArray(mostlyDoubleSpaced, 4, true);
       expect.bool(r.mode == Spaces).toBe(true);
       expect.int(r.size).toBe(2);
     });
 
-    test("larger example", ({expect}) => {
+    test("mostly triple spaced", ({expect, _}) => {
+      let r = guessIndentationArray(mostlyTripleSpaced, 4, true);
+      expect.bool(r.mode == Spaces).toBe(true);
+      expect.int(r.size).toBe(3);
+    });
+
+    test("larger example", ({expect, _}) => {
       let r = guessIndentationArray(largerExample, 4, false);
       expect.bool(r.mode == Spaces).toBe(true);
       expect.int(r.size).toBe(2);
+    });
+
+    test("single-space block comment", ({expect, _}) => {
+      let r = guessIndentationArray(singleSpaceBlockComment, 4, false);
+      expect.bool(r.mode == Tabs).toBe(true);
+      expect.int(r.size).toBe(4);
     });
   })
 );

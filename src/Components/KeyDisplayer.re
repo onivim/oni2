@@ -6,6 +6,15 @@
 
 open Oni_Core;
 
+type keyEvent =
+  | Key(string)
+  | Text(string);
+
+let keyEventToString =
+  fun
+  | Key(str) => str
+  | Text(str) => str;
+
 // MODEL
 
 // We group key presses in time together,
@@ -14,7 +23,7 @@ type group = {
   id: float, // use time of first keypress as id
   isExclusive: bool,
   mutable time: float,
-  mutable keys: list(string),
+  mutable keys: list(keyEvent),
 };
 
 type t = {
@@ -41,30 +50,48 @@ let removeExpired = (time, model) => {
 };
 
 let add = (~time, key, model) => {
-  let isCharKey = String.length(key) == 1;
-  let isExclusive = !isCharKey || key == " ";
-  let isWithinGroupingInterval = group =>
-    time -. group.time <= Constants.maxGroupingInterval;
-  let canGroupWith = group =>
-    !group.isExclusive && isCharKey && isWithinGroupingInterval(group);
-
   let groups =
-    switch (model.groups) {
-    | [] => [{id: time, time, isExclusive, keys: [key]}]
+    switch (key) {
+    | Text(text) =>
+      switch (model.groups) {
+      | [] => [{id: time, time, isExclusive: false, keys: [Text(text)]}]
+      | [group, ..._] as groups =>
+        group.time = time;
+        let keys =
+          switch (group.keys) {
+          | [Key(_), ...tail] => [Text(text), ...tail]
+          | list => [Text(text), ...list]
+          };
+        group.keys = keys;
+        groups;
+      }
+    | Key(keyString) =>
+      let isCharKey = String.length(keyString) == 1;
+      let isExclusive = !isCharKey || keyString == " ";
+      let isWithinGroupingInterval = group =>
+        time -. group.time <= Constants.maxGroupingInterval;
+      let canGroupWith = group =>
+        !group.isExclusive && isCharKey && isWithinGroupingInterval(group);
 
-    | [group, ..._] as groups when canGroupWith(group) =>
-      group.time = time;
-      group.keys = [key, ...group.keys];
-      groups;
+      switch (model.groups) {
+      | [] => [{id: time, time, isExclusive, keys: [key]}]
 
-    | groups => [
-        {id: time, time, isExclusive: !isCharKey, keys: [key]},
-        ...groups,
-      ]
+      | [group, ..._] as groups when canGroupWith(group) =>
+        group.time = time;
+        group.keys = [key, ...group.keys];
+        groups;
+
+      | groups => [
+          {id: time, time, isExclusive: !isCharKey, keys: [key]},
+          ...groups,
+        ]
+      };
     };
-
   {...model, groups} |> removeExpired(time);
 };
+
+let keyPress = (~time, key, model) => add(~time, Key(key), model);
+let textInput = (~time, text, model) => add(~time, Text(text), model);
 
 // VIEW
 
@@ -114,7 +141,7 @@ let%component make =
       group => {
         let text =
           group.keys
-          |> List.map(Oni_Input.Parser.toFriendlyName)
+          |> List.map(keyEventToString)
           |> List.rev
           |> String.concat("");
         <keyGroupView uiFont text />;

@@ -8,7 +8,7 @@ module Selection = Feature_Editor.Selection;
 open Oni_Core_Test.Helpers;
 
 describe("Selection", ({test, _}) =>
-  test("linewise: clamps range to buffer lines", ({expect}) => {
+  test("linewise: clamps range to buffer lines", ({expect, _}) => {
     let buffer = Buffer.ofLines([|"abc", "defg"|]);
 
     /* Visual range is one-based */

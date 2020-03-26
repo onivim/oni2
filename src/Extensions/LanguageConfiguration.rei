@@ -23,6 +23,8 @@ module AutoClosingPair: {
 type t = {
   autoCloseBefore: list(string),
   autoClosingPairs: list(AutoClosingPair.t),
+  lineComment: option(string),
+  blockComment: option((string, string)),
 };
 
 let default: t;

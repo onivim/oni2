@@ -4,6 +4,8 @@
     (libraries 
         str
         bigarray
+        editor-input
+        sdl2
         zed_oni
         lwt
         lwt.unix

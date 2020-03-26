@@ -10,9 +10,9 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 
-let start = () => {
-  let defaultBindings =
-    Keybindings.Keybinding.[
+let start = maybeKeyBindingsFilePath => {
+  let default =
+    Keybindings.[
       {
         key: "<UP>",
         command: "list.focusUp",
@@ -66,12 +66,12 @@ let start = () => {
       {
         key: "<C-V>",
         command: "editor.action.clipboardPasteAction",
-        condition: "insertMode" |> WhenExpr.parse,
+        condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-V>",
         command: "editor.action.clipboardPasteAction",
-        condition: "insertMode" |> WhenExpr.parse,
+        condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
       },
       {
         key: "<ESC>",
@@ -116,6 +116,11 @@ let start = () => {
       {
         key: "<S-C-TAB>",
         command: "workbench.action.quickOpenNavigatePreviousInEditorPicker",
+        condition: "inEditorsPicker" |> WhenExpr.parse,
+      },
+      {
+        key: "<release>",
+        command: "list.select",
         condition: "inEditorsPicker" |> WhenExpr.parse,
       },
       {
@@ -180,6 +185,36 @@ let start = () => {
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
+        key: "<C-]>",
+        command: "editor.action.indentLines",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<C-[>",
+        command: "editor.action.outdentLines",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<D-]>",
+        command: "editor.action.indentLines",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<D-[>",
+        command: "editor.action.outdentLines",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<TAB>",
+        command: "indent",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<S-TAB>",
+        command: "outdent",
+        condition: "visualMode" |> WhenExpr.parse,
+      },
+      {
         key: "<C-G>",
         command: "sneak.start",
         condition: WhenExpr.Value(True),
@@ -204,7 +239,34 @@ let start = () => {
         command: "view.closeEditor",
         condition: WhenExpr.Value(True),
       },
+      {
+        key: "<C-PAGEDOWN>",
+        command: "workbench.action.nextEditor",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-S-]>",
+        command: "workbench.action.nextEditor",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-PAGEUP>",
+        command: "workbench.action.previousEditor",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-S-[>",
+        command: "workbench.action.previousEditor",
+        condition: WhenExpr.Value(True),
+      },
     ];
+
+  let getKeybindingsFile = () => {
+    Filesystem.getOrCreateConfigFile(
+      ~overridePath=?maybeKeyBindingsFilePath,
+      "keybindings.json",
+    );
+  };
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
     let _: unit => unit =
@@ -224,40 +286,49 @@ let start = () => {
 
   let loadKeyBindingsEffect = isFirstLoad =>
     Isolinear.Effect.createWithDispatch(~name="keyBindings.load", dispatch => {
-      let keyBindingsFile =
-        Filesystem.getOrCreateConfigFile("keybindings.json");
+      let keyBindingsFile = getKeybindingsFile();
 
-      let keyBindings =
-        switch (keyBindingsFile) {
-        | Error(msg) =>
-          Log.error("Unable to load keybindings: " ++ msg);
-          Keybindings.empty;
-        | Ok(keyBindingPath) =>
-          if (isFirstLoad) {
-            reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
-          };
-
-          let parseResult =
-            Yojson.Safe.from_file(keyBindingPath)
-            |> Keybindings.of_yojson_with_errors;
-
-          switch (parseResult) {
-          | Ok((bindings, _)) => bindings
-          | Error(msg) =>
-            Log.error("Error parsing keybindings: " ++ msg);
-            Keybindings.empty;
-          };
+      let checkFirstLoad = keyBindingPath =>
+        if (isFirstLoad) {
+          reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
         };
 
-      Log.infof(m => m("Loading %i keybindings", List.length(keyBindings)));
+      let onError = msg => {
+        let errorMsg = "Error parsing keybindings: " ++ msg;
+        Log.error(errorMsg);
+        dispatch(Actions.KeyBindingsParseError(errorMsg));
+      };
 
-      dispatch(Actions.KeyBindingsSet(defaultBindings @ keyBindings));
+      let (keyBindings, individualErrors) =
+        keyBindingsFile
+        |> Utility.ResultEx.tap(checkFirstLoad)
+        |> Utility.ResultEx.flatMap(Utility.JsonEx.from_file)
+        |> Utility.ResultEx.flatMap(
+             Keybindings.of_yojson_with_errors(~default),
+           )
+        // Handle error case when parsing entire JSON file
+        |> Utility.ResultEx.tapError(onError)
+        |> Stdlib.Result.value(~default=(Keybindings.empty, []));
+
+      // Handle individual binding errors
+      individualErrors |> List.iter(onError);
+
+      Log.infof(m =>
+        m("Loading %i keybindings", Keybindings.count(keyBindings))
+      );
+
+      dispatch(Actions.KeyBindingsSet(keyBindings));
     });
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.Init => (state, loadKeyBindingsEffect(true))
     | Actions.KeyBindingsReload => (state, loadKeyBindingsEffect(false))
+    | Actions.KeyBindingsParseError(msg) => (
+        state,
+        Feature_Notification.Effects.create(~kind=Error, msg)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

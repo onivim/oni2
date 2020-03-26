@@ -7,6 +7,8 @@
    reference (source of inspiration): https://medium.com/@huund/making-a-directory-in-ocaml-53ceca84979f
  */
 module Path = Utility.Path;
+open Kernel;
+module Log = (val Log.withNamespace("Oni2.Filesystem"));
 
 type t('a) = result('a, string);
 
@@ -362,27 +364,44 @@ let getExtensionsFolder = () =>
   >>= (dir => getPath(dir, "extensions"))
   >>= getOrCreateConfigFolder;
 
-let getOrCreateConfigFile = filename =>
-  /* Get Oni Directory */
-  getHomeDirectory()
-  >>= getOniDirectory
-  >>= (
-    configDir =>
-      getPath(configDir, filename)
-      /* Check whether the config file already exists */
-      >>= stat
-      >>= (
-        fun
-        | Some(existingFileStats) =>
-          /* is the the thing that exists a file */
-          isFile(existingFileStats)
-          >>= (
-            () =>
-              getPath(configDir, filename)
-              /* if it exists but is not a file attempt to create a file */
-              /\/= (_ => createConfigIfNecessary(configDir, filename))
-          )
-        /* if the file does not exist try and create it */
-        | None => createConfigIfNecessary(configDir, filename)
-      )
-  );
+let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
+  switch (overridePath) {
+  | Some(path) =>
+    switch (Sys.file_exists(path)) {
+    | exception ex =>
+      Log.error("Error loading configuration file at: " ++ path);
+      Log.error("  " ++ Printexc.to_string(ex));
+      getOrCreateConfigFile(filename);
+
+    | false =>
+      Log.error("Error loading configuration file at: " ++ path);
+      getOrCreateConfigFile(filename);
+
+    | true => Ok(path)
+    }
+  | None =>
+    /* Get Oni Directory */
+    getHomeDirectory()
+    >>= getOniDirectory
+    >>= (
+      configDir =>
+        getPath(configDir, filename)
+        /* Check whether the config file already exists */
+        >>= stat
+        >>= (
+          fun
+          | Some(existingFileStats) =>
+            /* is the the thing that exists a file */
+            isFile(existingFileStats)
+            >>= (
+              () =>
+                getPath(configDir, filename)
+                /* if it exists but is not a file attempt to create a file */
+                /\/= (_ => createConfigIfNecessary(configDir, filename))
+            )
+          /* if the file does not exist try and create it */
+          | None => createConfigIfNecessary(configDir, filename)
+        )
+    )
+  };
+};

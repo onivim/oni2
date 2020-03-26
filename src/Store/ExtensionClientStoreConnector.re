@@ -172,9 +172,9 @@ let start = (extensions, extHostClient) => {
       );
     });
 
-  let updater = (state: State.t, action) =>
+  let updater = (state: State.t, action: Actions.t) =>
     switch (action) {
-    | Actions.Init => (
+    | Init => (
         state,
         Isolinear.Effect.batch([
           registerQuitCleanupEffect,
@@ -182,29 +182,26 @@ let start = (extensions, extHostClient) => {
         ]),
       )
 
-    | Actions.BufferUpdate(bu) => (
+    | BufferUpdate(bu) => (
         state,
         Isolinear.Effect.batch([
           modelChangedEffect(state.buffers, bu.update),
         ]),
       )
 
-    | Actions.BufferSaved(_) => (
+    | BufferSaved(_) => (
         state,
         Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
       )
 
-    | Actions.CommandExecuteContributed(cmd) => (
+    | CommandExecuteContributed(cmd) => (
         state,
         executeContributedCommandEffect(cmd),
       )
 
-    | Actions.VimDirectoryChanged(path) => (
-        state,
-        changeWorkspaceEffect(path),
-      )
+    | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
-    | Actions.BufferEnter(metadata, fileTypeOpt) =>
+    | BufferEnter(metadata, fileTypeOpt) =>
       let eff =
         switch (metadata.filePath) {
         | Some(path) =>
@@ -220,7 +217,7 @@ let start = (extensions, extHostClient) => {
         };
       (state, eff);
 
-    | Actions.NewTextContentProvider({handle, scheme}) => (
+    | NewTextContentProvider({handle, scheme}) => (
         {
           ...state,
           textContentProviders: [
@@ -231,7 +228,7 @@ let start = (extensions, extHostClient) => {
         Isolinear.Effect.none,
       )
 
-    | Actions.LostTextContentProvider({handle}) => (
+    | LostTextContentProvider({handle}) => (
         {
           ...state,
           textContentProviders:
@@ -323,6 +320,25 @@ let start = (extensions, extHostClient) => {
         },
         Isolinear.Effect.none,
       )
+
+    | ExtMessageReceived({severity, message, extensionId}) =>
+      let kind: Feature_Notification.kind =
+        switch (severity) {
+        | `Ignore => Info
+        | `Info => Info
+        | `Warning => Warning
+        | `Error => Error
+        };
+
+      (
+        state,
+        Feature_Notification.Effects.create(
+          ~kind,
+          ~source=?extensionId,
+          message,
+        )
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      );
 
     | _ => (state, Isolinear.Effect.none)
     };

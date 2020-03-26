@@ -62,6 +62,12 @@ Launching `oni2` with a folder will open that folder. That is, `oni2 ~/git` will
 (for the file explorer, quick open and more). Launching without a folder will open Oni2 in the current
 folder. The current folder can be changed once inside Oni2 by using the normal vim `:cd` command.
 
+You can set Oni2 as the [default text editor for git](https://www.git-scm.com/book/en/v2/Customizing-Git-Git-Configuration#_code_core_editor_code) by running: 
+
+```bash
+git config --global core.editor "oni2 --nofork --quiet"
+```
+
 ## Extension Management
 
 A more in detail explanation of the VSCode extension management can be found

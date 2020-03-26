@@ -26,114 +26,12 @@ module Editor = Feature_Editor.Editor;
 module Theme = Feature_Theme;
 
 module Colors = {
+  open ColorTheme.Schema;
+
   let transparent = Colors.transparentWhite;
 
-  module Notification = {
-    let successBackground = "notification.successBackground";
-    let successForeground = "notification.successForeground";
-    let infoBackground = "notification.infoBackground";
-    let infoForeground = "notification.infoForeground";
-    let warningBackground = "notification.warningBackground";
-    let warningForeground = "notification.warningForeground";
-    let errorBackground = "notification.errorBackground";
-    let errorForeground = "notification.errorForeground";
-
-    let backgroundFor = (item: Notification.t) =>
-      switch (item.kind) {
-      | Success => successBackground
-      | Warning => warningBackground
-      | Error => errorBackground
-      | Info => infoBackground
-      };
-
-    let foregroundFor = (item: Notification.t) =>
-      switch (item.kind) {
-      | Success => successForeground
-      | Warning => warningForeground
-      | Error => errorForeground
-      | Info => infoForeground
-      };
-  };
-
-  module StatusBar = {
-    let background = "statusBar.background";
-    let foreground = "statusBar.foreground";
-  };
-};
-
-module Notification = {
-  open Notification;
-
-  module Constants = {
-    let popupDuration = Time.ms(3000);
-  };
-
-  module Styles = {
-    open Style;
-
-    let container = (~background, ~yOffset) => [
-      position(`Absolute),
-      top(0),
-      bottom(0),
-      left(0),
-      right(0),
-      backgroundColor(background),
-      flexDirection(`Row),
-      alignItems(`Center),
-      paddingHorizontal(10),
-      transform(Transform.[TranslateY(yOffset)]),
-    ];
-
-    let text = (~foreground, ~background, font: UiFont.t) => [
-      fontFamily(font.fontFile),
-      fontSize(11.),
-      textWrap(TextWrapping.NoWrap),
-      marginLeft(6),
-      color(foreground),
-      backgroundColor(background),
-    ];
-  };
-
-  module Animations = {
-    open Animation;
-
-    let transitionDuration = Time.ms(150);
-    let totalDuration =
-      Time.(Constants.popupDuration + transitionDuration *. 2.);
-
-    let enter =
-      animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
-
-    let exit =
-      animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
-
-    let sequence =
-      enter |> andThen(~next=exit |> delay(Constants.popupDuration));
-  };
-
-  let iconFor = item =>
-    switch (item.kind) {
-    | Success => FontAwesome.checkCircle
-    | Warning => FontAwesome.exclamationTriangle
-    | Error => FontAwesome.exclamationCircle
-    | Info => FontAwesome.infoCircle
-    };
-
-  let%component make = (~item, ~background, ~foreground, ~font, ()) => {
-    let%hook (yOffset, _animationState, _reset) =
-      Hooks.animation(Animations.sequence, ~active=true);
-
-    let icon = () =>
-      <FontIcon icon={iconFor(item)} fontSize=16. color=foreground />;
-
-    <View style={Styles.container(~background, ~yOffset)}>
-      <icon />
-      <Text
-        style={Styles.text(~foreground, ~background, font)}
-        text={item.message}
-      />
-    </View>;
-  };
+  let background = define("statusBar.background", all(unspecified));
+  let foreground = define("statusBar.foreground", all(unspecified));
 };
 
 module Styles = {
@@ -228,7 +126,7 @@ let textItem = (~background, ~font, ~colorTheme, ~text, ()) =>
   <item>
     <Text
       style={Styles.text(
-        ~color=colorTheme#color(Colors.StatusBar.foreground),
+        ~color=Colors.foreground.from(colorTheme),
         ~background,
         font,
       )}
@@ -242,12 +140,15 @@ let notificationCount =
       ~font,
       ~foreground as color,
       ~background,
-      ~notifications,
+      ~notifications: Feature_Notification.model,
       ~contextMenu,
       ~onContextMenuItemSelect,
       (),
     ) => {
-  let text = notifications |> List.length |> string_of_int;
+  let text =
+    (notifications :> list(Feature_Notification.notification))
+    |> List.length
+    |> string_of_int;
 
   let onClick = () =>
     GlobalContext.current().dispatch(
@@ -264,7 +165,7 @@ let notificationCount =
         {
           label: "Clear All",
           // icon: None,
-          data: Actions.ClearNotifications,
+          data: Actions.StatusBar(NotificationClearAllClicked),
         },
         {
           label: "Open",
@@ -301,7 +202,7 @@ let notificationCount =
 };
 
 let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
-  let color = colorTheme#color(Colors.StatusBar.foreground);
+  let color = Colors.foreground.from(colorTheme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -323,8 +224,8 @@ let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
 };
 
 let modeIndicator = (~font, ~colorTheme, ~mode, ()) => {
-  let background = Theme.Colors.Oni.backgroundFor(mode) |> colorTheme#color;
-  let foreground = Theme.Colors.Oni.foregroundFor(mode) |> colorTheme#color;
+  let background = Theme.Colors.Oni.backgroundFor(mode).from(colorTheme);
+  let foreground = Theme.Colors.Oni.foregroundFor(mode).from(colorTheme);
 
   <item backgroundColor=background>
     <Text
@@ -355,33 +256,30 @@ let%component make =
 
   let%hook activeNotifications =
     CustomHooks.useExpiration(
-      ~expireAfter=Notification.Animations.totalDuration,
-      ~equals=(a, b) => Oni_Model.Notification.(a.id == b.id),
-      notifications,
+      ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
+      ~equals=(a, b) => Feature_Notification.(a.id == b.id),
+      (notifications :> list(Feature_Notification.notification)),
     );
 
   let (background, foreground) =
     switch (activeNotifications) {
     | [] =>
-      Colors.StatusBar.(
-        background |> colorTheme#color,
-        foreground |> colorTheme#color,
-      )
+      Colors.(background.from(colorTheme), foreground.from(colorTheme))
     | [last, ..._] =>
-      Colors.Notification.(
-        backgroundFor(last) |> colorTheme#color,
-        foregroundFor(last) |> colorTheme#color,
+      Feature_Notification.Colors.(
+        backgroundFor(last).from(colorTheme),
+        foregroundFor(last).from(colorTheme),
       )
     };
 
   let%hook background =
     CustomHooks.colorTransition(
-      ~duration=Notification.Animations.transitionDuration,
+      ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
       background,
     );
   let%hook foreground =
     CustomHooks.colorTransition(
-      ~duration=Notification.Animations.transitionDuration,
+      ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
       foreground,
     );
 
@@ -434,7 +332,9 @@ let%component make =
   let notificationPopups = () =>
     activeNotifications
     |> List.rev
-    |> List.map(item => <Notification item background foreground font />)
+    |> List.map(model =>
+         <Feature_Notification.View.Popup model background foreground font />
+       )
     |> React.listToElement;
 
   <View style={Styles.view(background, yOffset)}>

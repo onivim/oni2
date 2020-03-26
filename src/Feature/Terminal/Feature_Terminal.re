@@ -60,7 +60,7 @@ type outmsg =
       splitDirection,
     });
 
-let shellCmd = if (Sys.win32) {"cmd.exe"} else {"/bin/bash"};
+let shellCmd = ShellUtility.getDefaultShell();
 
 let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
 
@@ -151,53 +151,105 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
 };
 
 module Colors = {
-  let background = "terminal.background";
-  let foreground = "terminal.foreground";
-  let ansiBlack = "terminal.ansiBlack";
-  let ansiRed = "terminal.ansiRed";
-  let ansiGreen = "terminal.ansiGreen";
-  let ansiYellow = "terminal.ansiYellow";
-  let ansiBlue = "terminal.ansiBlue";
-  let ansiMagenta = "terminal.ansiMagenta";
-  let ansiCyan = "terminal.ansiCyan";
-  let ansiWhite = "terminal.ansiWhite";
-  let ansiBrightBlack = "terminal.ansiBrightBlack";
-  let ansiBrightRed = "terminal.ansiBrightRed";
-  let ansiBrightGreen = "terminal.ansiBrightGreen";
-  let ansiBrightYellow = "terminal.ansiBrightYellow";
-  let ansiBrightBlue = "terminal.ansiBrightBlue";
-  let ansiBrightMagenta = "terminal.ansiBrightMagenta";
-  let ansiBrightCyan = "terminal.ansiBrightCyan";
-  let ansiBrightWhite = "terminal.ansiBrightWhite";
+  open Revery;
+  open ColorTheme.Schema;
+
+  let background =
+    define("terminal.background", color(Color.rgb_int(0, 0, 0)) |> all);
+  let foreground =
+    define(
+      "terminal.foreground",
+      color(Color.rgb_int(233, 235, 235)) |> all,
+    );
+  let ansiBlack =
+    define("terminal.ansiBlack", color(Color.rgb_int(0, 0, 0)) |> all);
+  let ansiRed =
+    define("terminal.ansiRed", color(Color.rgb_int(194, 54, 33)) |> all);
+  let ansiGreen =
+    define("terminal.ansiGreen", color(Color.rgb_int(37, 188, 36)) |> all);
+  let ansiYellow =
+    define(
+      "terminal.ansiYellow",
+      color(Color.rgb_int(173, 173, 39)) |> all,
+    );
+  let ansiBlue =
+    define("terminal.ansiBlue", color(Color.rgb_int(73, 46, 225)) |> all);
+  let ansiMagenta =
+    define(
+      "terminal.ansiMagenta",
+      color(Color.rgb_int(211, 56, 211)) |> all,
+    );
+  let ansiCyan =
+    define("terminal.ansiCyan", color(Color.rgb_int(51, 197, 200)) |> all);
+  let ansiWhite =
+    define(
+      "terminal.ansiWhite",
+      color(Color.rgb_int(203, 204, 205)) |> all,
+    );
+  let ansiBrightBlack =
+    define(
+      "terminal.ansiBrightBlack",
+      color(Color.rgb_int(129, 131, 131)) |> all,
+    );
+  let ansiBrightRed =
+    define(
+      "terminal.ansiBrightRed",
+      color(Color.rgb_int(252, 57, 31)) |> all,
+    );
+  let ansiBrightGreen =
+    define(
+      "terminal.ansiBrightGreen",
+      color(Color.rgb_int(49, 231, 34)) |> all,
+    );
+  let ansiBrightYellow =
+    define(
+      "terminal.ansiBrightYellow",
+      color(Color.rgb_int(234, 236, 35)) |> all,
+    );
+  let ansiBrightBlue =
+    define(
+      "terminal.ansiBrightBlue",
+      color(Color.rgb_int(88, 51, 255)) |> all,
+    );
+  let ansiBrightMagenta =
+    define(
+      "terminal.ansiBrightMagenta",
+      color(Color.rgb_int(20, 240, 240)) |> all,
+    );
+  let ansiBrightCyan =
+    define(
+      "terminal.ansiBrightCyan",
+      color(Color.rgb_int(20, 240, 240)) |> all,
+    );
+  let ansiBrightWhite =
+    define(
+      "terminal.ansiBrightWhite",
+      color(Color.rgb_int(233, 235, 235)) |> all,
+    );
 };
 
 // CONTRIBUTIONS
 
 module Contributions = {
-  module Color = Revery.Color;
-
   let colors =
-    ColorTheme.Defaults.(
-      Colors.[
-        (background, color(Color.rgb_int(0, 0, 0)) |> uniform),
-        (foreground, color(Color.rgb_int(233, 235, 235)) |> uniform),
-        (ansiBlack, color(Color.rgb_int(0, 0, 0)) |> uniform),
-        (ansiRed, color(Color.rgb_int(194, 54, 33)) |> uniform),
-        (ansiGreen, color(Color.rgb_int(37, 188, 36)) |> uniform),
-        (ansiYellow, color(Color.rgb_int(173, 173, 39)) |> uniform),
-        (ansiBlue, color(Color.rgb_int(73, 46, 225)) |> uniform),
-        (ansiMagenta, color(Color.rgb_int(211, 56, 211)) |> uniform),
-        (ansiCyan, color(Color.rgb_int(51, 197, 200)) |> uniform),
-        (ansiWhite, color(Color.rgb_int(203, 204, 205)) |> uniform),
-        (ansiBrightBlack, color(Color.rgb_int(129, 131, 131)) |> uniform),
-        (ansiBrightRed, color(Color.rgb_int(252, 57, 31)) |> uniform),
-        (ansiBrightGreen, color(Color.rgb_int(49, 231, 34)) |> uniform),
-        (ansiBrightYellow, color(Color.rgb_int(234, 236, 35)) |> uniform),
-        (ansiBrightBlue, color(Color.rgb_int(88, 51, 255)) |> uniform),
-        (ansiBrightCyan, color(Color.rgb_int(20, 240, 240)) |> uniform),
-        (ansiBrightMagenta, color(Color.rgb_int(20, 240, 240)) |> uniform),
-        (ansiBrightWhite, color(Color.rgb_int(233, 235, 235)) |> uniform),
-      ]
-      |> fromList
-    );
+    Colors.[
+      background,
+      foreground,
+      ansiBlack,
+      ansiRed,
+      ansiGreen,
+      ansiYellow,
+      ansiBlue,
+      ansiMagenta,
+      ansiCyan,
+      ansiWhite,
+      ansiBrightBlack,
+      ansiBrightRed,
+      ansiBrightGreen,
+      ansiBrightYellow,
+      ansiBrightBlue,
+      ansiBrightCyan,
+      ansiBrightMagenta,
+      ansiBrightWhite,
+    ];
 };

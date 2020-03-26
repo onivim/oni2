@@ -5,7 +5,7 @@
  *
  */
 
-module ModelConfig = Configuration;
+module ExtConfiguration = Configuration;
 
 open EditorCoreTypes;
 open Oni_Core;
@@ -538,13 +538,28 @@ module OutgoingNotifications = {
   };
 
   module Configuration = {
-    let initializeConfiguration = config => {
+    let initializeConfiguration = config =>
       _buildNotification(
         "ExtHostConfiguration",
         "$initializeConfiguration",
-        `List([config |> ModelConfig.to_yojson]),
+        `List([config |> ExtConfiguration.to_yojson]),
       );
-    };
+
+    let acceptConfigurationChanged = (config, changed) =>
+      _buildNotification(
+        "ExtHostConfiguration",
+        "$acceptConfigurationChanged",
+        `List([
+          config |> ExtConfiguration.to_yojson,
+          `Assoc([
+            (
+              "changedConfiguration",
+              changed |> ExtConfiguration.Model.to_yojson,
+            ),
+            ("changedConfigurationByResource", `Assoc([])),
+          ]),
+        ]),
+      );
   };
 
   module Decorations = {

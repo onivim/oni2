@@ -8,6 +8,8 @@ open Helpers;
 
 module Log = (val Log.withNamespace("Oni2.Editor.SurfaceView"));
 
+module Config = EditorConfiguration;
+
 module Styles = {
   open Style;
 
@@ -55,7 +57,6 @@ let%component make =
                 ~topVisibleLine,
                 ~onCursorChange,
                 ~cursorPosition: Location.t,
-                ~rulers,
                 ~editorFont: Service_Font.font,
                 ~leftVisibleColumn,
                 ~diagnosticsMap,
@@ -64,15 +65,13 @@ let%component make =
                 ~bufferHighlights,
                 ~definition,
                 ~bufferSyntaxHighlights,
-                ~shouldRenderWhitespace,
-                ~shouldRenderIndentGuides,
                 ~bottomVisibleLine,
-                ~shouldHighlightActiveIndentGuides,
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferWidthInCharacters,
-                ~smoothScroll,
+                ~windowIsFocused,
+                ~config,
                 (),
               ) => {
   let%hook elementRef = React.Hooks.ref(None);
@@ -123,6 +122,8 @@ let%component make =
     };
   };
 
+  let smoothScroll = Config.Experimental.editorSmoothScroll.get(config);
+
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
       ~target=editor.scrollY,
@@ -165,7 +166,7 @@ let%component make =
 
         drawCurrentLineHighlight(~context, ~theme, cursorPosition.line);
 
-        renderRulers(~context, ~theme, rulers);
+        renderRulers(~context, ~theme, Config.rulers.get(config));
 
         ContentView.render(
           ~context,
@@ -180,11 +181,11 @@ let%component make =
           ~cursorPosition,
           ~definition,
           ~bufferSyntaxHighlights,
-          ~shouldRenderWhitespace,
+          ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
           ~bufferWidthInCharacters,
         );
 
-        if (shouldRenderIndentGuides) {
+        if (Config.renderIndentGuides.get(config)) {
           IndentLineRenderer.render(
             ~context,
             ~buffer,
@@ -192,7 +193,7 @@ let%component make =
             ~endLine=bottomVisibleLine + 1,
             ~cursorPosition,
             ~theme,
-            ~showActive=shouldHighlightActiveIndentGuides,
+            ~showActive=Config.highlightActiveIndentGuide.get(config),
             indentation,
           );
         };
@@ -204,6 +205,7 @@ let%component make =
           ~isActiveSplit,
           ~cursorPosition,
           ~theme,
+          ~windowIsFocused,
         );
       }}
     />

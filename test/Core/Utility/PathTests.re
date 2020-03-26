@@ -3,7 +3,7 @@ open TestFramework;
 open Oni_Core.Utility;
 
 describe("Path", ({test, _}) => {
-  test("hasTrailingSlash", ({expect}) => {
+  test("hasTrailingSlash", ({expect, _}) => {
     let cases = [
       ("", false),
       ("a", false),
@@ -20,7 +20,7 @@ describe("Path", ({test, _}) => {
     List.iter(runCase, cases);
   });
 
-  test("trimTrailingSeparator", ({expect}) => {
+  test("trimTrailingSeparator", ({expect, _}) => {
     let cases = [
       ("", ""),
       ("\\", ""),
@@ -40,7 +40,7 @@ describe("Path", ({test, _}) => {
     List.iter(runCase, cases);
   });
 
-  test("toRelative (POSIX)", ({expect}) =>
+  test("toRelative (POSIX)", ({expect, _}) =>
     if (!Sys.win32) {
       expect.string(
         Path.toRelative(~base="/Applications", "/Applications/Onivim2.app"),
@@ -63,7 +63,7 @@ describe("Path", ({test, _}) => {
     }
   );
 
-  test("toRelative (Windows)", ({expect}) =>
+  test("toRelative (Windows)", ({expect, _}) =>
     if (Sys.win32) {
       expect.string(Path.toRelative(~base="D:", "D:\\Onivim2")).toEqual(
         "Onivim2",

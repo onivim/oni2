@@ -8,7 +8,6 @@ open Revery.UI;
 open Oni_Core;
 
 module Model = Oni_Model;
-module Ext = Oni_Extensions;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
@@ -47,13 +46,13 @@ module Styles = {
         };
 
       if (isHovered) {
-        theme#tryColor(
+        let color =
           isGroupFocused
-            ? Colors.unfocusedHoverBackground : Colors.hoverBackground,
-        )
-        |> Option.value(~default=theme#color(unhovered));
+            ? Colors.unfocusedHoverBackground : Colors.hoverBackground;
+
+        color.tryFrom(theme) |> Option.value(~default=unhovered.from(theme));
       } else {
-        theme#color(unhovered);
+        unhovered.from(theme);
       };
     };
 
@@ -62,11 +61,11 @@ module Styles = {
         if (isActive) {
           background;
         } else {
-          theme#tryColor(
+          let color =
             isGroupFocused
-              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop,
-          )
-          |> Option.value(~default=background);
+              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop;
+
+          color.tryFrom(theme) |> Option.value(~default=background);
         };
 
       borderTop(~color, ~width=2);
@@ -85,14 +84,17 @@ module Styles = {
             | (true, false, false) => Colors.unfocusedActiveBorder
             | (true, true, false) => Colors.activeBorder
             }
+          ).
+            tryFrom(
+            theme,
           )
-          |> theme#tryColor
           |> Option.value(~default=background);
 
         if (isHovered) {
-          (isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder)
-          |> theme#tryColor
-          |> Option.value(~default=unhovered);
+          let color =
+            isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder;
+
+          color.tryFrom(theme) |> Option.value(~default=unhovered);
         } else {
           unhovered;
         };
@@ -130,7 +132,7 @@ module Styles = {
         isGroupFocused && isActive ? uiFont.fontFileItalic : uiFont.fontFile,
       ),
       fontSize(uiFont.fontSize),
-      color(foreground |> theme#color),
+      color(foreground.from(theme)),
       justifyContent(`Center),
       alignItems(`Center),
     ];
@@ -146,7 +148,6 @@ module Styles = {
 
 let%component make =
               (
-                ~filePath,
                 ~title,
                 ~isGroupFocused,
                 ~isActive,
@@ -156,18 +157,14 @@ let%component make =
                 ~theme: ColorTheme.resolver,
                 ~uiFont: UiFont.t,
                 ~mode: Vim.Mode.t,
+                ~icon,
                 (),
               ) => {
-  let state = GlobalContext.current().state;
-  let language =
-    Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, filePath);
-  let fileIcon: option(Model.IconTheme.IconDefinition.t) =
-    Model.IconTheme.getIconForFile(state.iconTheme, filePath, language);
   let%hook (isHovered, setHovered) = Hooks.state(false);
 
   let fileIconView =
-    switch (fileIcon) {
-    | Some(icon) =>
+    switch (icon) {
+    | Some((icon: Model.IconTheme.IconDefinition.t)) =>
       <FontIcon
         fontFamily="seti.ttf"
         icon={icon.fontCharacter}
@@ -217,9 +214,9 @@ let%component make =
       <FontIcon
         icon={isModified ? FontAwesome.circle : FontAwesome.times}
         color={
-          theme#color(
-            isActive ? Colors.activeForeground : Colors.inactiveForeground,
-          )
+          isActive
+            ? Colors.activeForeground.from(theme)
+            : Colors.inactiveForeground.from(theme)
         }
         fontSize={isModified ? 10. : 12.}
       />

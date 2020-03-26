@@ -64,6 +64,7 @@ let make =
     (
       ~style=[],
       ~icon=None,
+      ~font,
       ~label,
       ~isFocused,
       ~theme,
@@ -71,9 +72,6 @@ let make =
       ~onMouseOver=noop,
       (),
     ) => {
-  let state = GlobalContext.current().state;
-  let font = State.(state.uiFont);
-
   let iconView =
     switch (icon) {
     | Some(v) =>

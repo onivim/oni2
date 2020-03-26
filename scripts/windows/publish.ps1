@@ -16,6 +16,10 @@ if (Test-Path env:CODESIGN_CERTIFICATE) {
     CodeSign("_release/win32/Oni2_editor.exe")
     CodeSign("_release/win32/rg.exe")
     CodeSign("_release/win32/node.exe")
+    CodeSign("_release/win32/*.dll")
+    CodeSign("_release/win32/node/node_modules/node-pty/build/Release/*.dll")
+    CodeSign("_release/win32/node/node_modules/node-pty/build/Release/*.exe")
+    CodeSign("_release/win32/node/node_modules/node-pty/build/Release/*.node")
 }
 
 mkdir -p _publish

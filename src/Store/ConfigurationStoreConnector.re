@@ -18,23 +18,12 @@ let start =
       ~setVsync,
     ) => {
   let defaultConfigurationFileName = "configuration.json";
+
   let getConfigurationFile = fileName => {
-    switch (configurationFilePath) {
-    | None => Filesystem.getOrCreateConfigFile(fileName)
-    | Some(path) =>
-      switch (Sys.file_exists(path)) {
-      | exception ex =>
-        Log.error("Error loading configuration file at: " ++ path);
-        Log.error("  " ++ Printexc.to_string(ex));
-        Filesystem.getOrCreateConfigFile(fileName);
-
-      | false =>
-        Log.error("Error loading configuration file at: " ++ path);
-        Filesystem.getOrCreateConfigFile(fileName);
-
-      | true => Ok(path)
-      }
-    };
+    Filesystem.getOrCreateConfigFile(
+      ~overridePath=?configurationFilePath,
+      fileName,
+    );
   };
 
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
@@ -52,36 +41,38 @@ let start =
     ();
   };
 
-  let transformConfigurationEffect = (fileName, buffers, transformer) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="configuration.transform", dispatch => {
-      let configPath = getConfigurationFile(fileName);
-      switch (configPath) {
-      | Error(msg) => Log.error("Unable to load configuration: " ++ msg)
-      | Ok(configPath) =>
-        if (!Buffers.isModifiedByPath(buffers, configPath)) {
-          Oni_Core.Log.perf("Apply configuration transform", () => {
-            let parsedJson = Yojson.Safe.from_file(configPath);
-            let newJson = transformer(parsedJson);
-            let oc = open_out(configPath);
-            Yojson.Safe.pretty_to_channel(oc, newJson);
-            close_out(oc);
-          });
-        } else {
-          dispatch(
-            Actions.ShowNotification(
-              Notification.create(
-                ~kind=Error,
-                "Unable to save theme selection to configuration; configuration file is modified.",
-              ),
-            ),
+  let transformConfigurationEffect = (fileName, buffers, transformer) => {
+    let configPath = getConfigurationFile(fileName);
+    switch (configPath) {
+    | Error(msg) =>
+      Log.error("Unable to load configuration: " ++ msg);
+      Isolinear.Effect.none;
+    | Ok(configPath) =>
+      if (!Buffers.isModifiedByPath(buffers, configPath)) {
+        Oni_Core.Log.perf("Apply configuration transform", () => {
+          let parsedJson = Yojson.Safe.from_file(configPath);
+          let newJson = transformer(parsedJson);
+          let oc = open_out(configPath);
+          Yojson.Safe.pretty_to_channel(oc, newJson);
+          close_out(oc);
+        });
+
+        Isolinear.Effect.none;
+      } else {
+        {
+          Feature_Notification.Effects.create(
+            ~kind=Error,
+            "Unable to save theme selection to configuration; configuration file is modified.",
           );
         }
-      };
-    });
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg));
+      }
+    };
+  };
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
+      dispatch(Actions.Configuration(UserSettingsChanged));
       defaultConfigurationFileName
       |> getConfigurationFile
       |> (
@@ -93,12 +84,13 @@ let start =
             | Error(err) =>
               Log.error("Error loading configuration file: " ++ err)
           )
-      )
+      );
     });
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
       if (cliOptions.shouldLoadConfiguration) {
+        dispatch(Actions.Configuration(UserSettingsChanged));
         switch (getConfigurationFile(defaultConfigurationFileName)) {
         | Ok(path) =>
           Log.info("Loading configuration: " ++ path);

@@ -46,9 +46,13 @@ let getAssetPath = path =>
     raise(TestAssetNotFound(path));
   };
 
+let currentUserSettings = ref(Core.Config.Settings.empty);
+let setUserSettings = settings => currentUserSettings := settings;
+
 let runTest =
     (
       ~configuration=None,
+      ~keybindings=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
@@ -69,8 +73,18 @@ let runTest =
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
 
-  let initialState = Model.State.create();
-  let currentState = ref(initialState);
+  currentUserSettings :=
+    (
+      switch (configuration) {
+      | Some(json) =>
+        json |> Yojson.Safe.from_string |> Core.Config.Settings.fromJson
+      | None => Core.Config.Settings.empty
+      }
+    );
+
+  let getUserSettings = () => Ok(currentUserSettings^);
+
+  let currentState = ref(Model.State.initial(~getUserSettings));
 
   let headlessWindow =
     Revery.Utility.HeadlessWindow.create(
@@ -80,12 +94,6 @@ let runTest =
   let onStateChanged = state => {
     currentState := state;
 
-    Oni_UI.GlobalContext.set({
-      ...Oni_UI.GlobalContext.current(),
-      getState: () => currentState^,
-      state,
-    });
-
     Revery.Utility.HeadlessWindow.render(
       headlessWindow,
       <Oni_UI.Root state />,
@@ -94,20 +102,29 @@ let runTest =
 
   InitLog.info("Starting store...");
 
-  let configurationFilePath = Filename.temp_file("configuration", ".json");
-  let oc = open_out(configurationFilePath);
+  let writeConfigurationFile = (name, jsonStringOpt) => {
+    let tempFilePath = Filename.temp_file(name, ".json");
+    let oc = open_out(tempFilePath);
 
-  InitLog.info("Writing configuration file: " ++ configurationFilePath);
+    InitLog.info("Writing configuration file: " ++ tempFilePath);
 
-  let () =
-    configuration
-    |> Option.value(~default="{}")
-    |> Printf.fprintf(oc, "%s\n");
+    let () =
+      jsonStringOpt
+      |> Option.value(~default="{}")
+      |> Printf.fprintf(oc, "%s\n");
 
-  close_out(oc);
+    close_out(oc);
+    tempFilePath;
+  };
+
+  let configurationFilePath =
+    writeConfigurationFile("configuration", configuration);
+  let keybindingsFilePath =
+    writeConfigurationFile("keybindings", keybindings);
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
+      ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
@@ -117,9 +134,11 @@ let runTest =
       ~setZoom,
       ~setVsync,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
+      ~getState=() => currentState^,
       ~onStateChanged,
       ~cliOptions,
       ~configurationFilePath=Some(configurationFilePath),
+      ~keybindingsFilePath=Some(keybindingsFilePath),
       ~quit,
       ~window=None,
       (),
@@ -182,9 +201,18 @@ let runTest =
   dispatch(Model.Actions.Quit(true));
 };
 
-let runTestWithInput = (~name, ~onAfterDispatch=?, f: testCallbackWithInput) => {
+let runTestWithInput =
+    (
+      ~configuration=?,
+      ~keybindings=?,
+      ~name,
+      ~onAfterDispatch=?,
+      f: testCallbackWithInput,
+    ) => {
   runTest(
     ~name,
+    ~configuration?,
+    ~keybindings?,
     ~onAfterDispatch?,
     (dispatch, wait, runEffects) => {
       let input = key => {

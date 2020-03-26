@@ -7,6 +7,7 @@ open Types;
 let runTest:
   (
     ~configuration: option(string)=?,
+    ~keybindings: option(string)=?,
     ~cliOptions: option(Core.Cli.t)=?,
     ~name: string=?,
     ~onAfterDispatch: Model.Actions.t => unit=?,
@@ -16,12 +17,15 @@ let runTest:
 
 let runTestWithInput:
   (
+    ~configuration: option(string)=?,
+    ~keybindings: option(string)=?,
     ~name: string,
     ~onAfterDispatch: Model.Actions.t => unit=?,
     testCallbackWithInput
   ) =>
   unit;
 
+let setUserSettings: Core.Config.Settings.t => unit;
 let setClipboard: option(string) => unit;
 let getClipboard: unit => option(string);
 let setTime: float => unit;

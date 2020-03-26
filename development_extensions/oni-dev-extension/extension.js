@@ -94,14 +94,12 @@ function activate(context) {
         }
     }));
 
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with  registerCommand
-    // The commandId parameter must match the command field in package.json
-    cleanup(vscode.commands.registerCommand('developer.oni.showNotification', () => {
-        // The code you place here will be executed every time your command is executed
+    cleanup(vscode.commands.registerCommand('developer.oni.showWarning', () => {
+        vscode.window.showWarningMessage('This is a warning');
+    }));
 
-        // Display a message box to the user
-        vscode.window.showInformationMessage('Hello from extension!');
+    cleanup(vscode.commands.registerCommand('developer.oni.showError', () => {
+        vscode.window.showErrorMessage('Hello, this is error');
     }));
     
     cleanup(vscode.commands.registerCommand('developer.oni.showWorkspaceRootPath', () => {
@@ -123,6 +121,8 @@ function activate(context) {
         const absolutePath = path.join(vscode.workspace.rootPath, relativePath);
         return vscode.Uri.file(absolutePath);
     }
+
+    // Test SCM
 
     const testSCM = vscode.scm.createSourceControl('test', 'Test');
 
@@ -148,6 +148,8 @@ function activate(context) {
 
     testSCM.dispose();
 
+    // Text Document Content Provider
+
     const textContentProvider = {
         provideTextDocumentContent: (uri) => {
             console.error("CONTENT!");
@@ -156,6 +158,24 @@ function activate(context) {
     };
     let disposable = vscode.workspace.registerTextDocumentContentProvider('foo', textContentProvider)
     disposable.dispose();
+
+    // Configuration
+
+    const rlsLocation = vscode.workspace.getConfiguration().get("reason_language_server.location");
+    console.error("Configured RLS location: ", rlsLocation);
+
+    const editorFontFamily = vscode.workspace.getConfiguration().get("editor.fontFamily");
+    console.error("Editor Font Family: ", editorFontFamily);
+
+    const testSetting = vscode.workspace.getConfiguration().get("developer.oni.test");
+    console.error("Test setting: ", testSetting);
+
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (event.affectsConfiguration("developer.oni.test")) {
+        const setting = vscode.workspace.getConfiguration().get("developer.oni.test");
+        vscode.window.showInformationMessage("Setting changed: " + setting);
+      }
+    });
 }
 
 // this method is called when your extension is deactivated

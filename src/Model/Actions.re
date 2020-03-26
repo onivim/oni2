@@ -42,6 +42,7 @@ type t =
       [@opaque] CompletionMeet.t,
       [@opaque] list(CompletionItem.t),
     )
+  | Configuration(Feature_Configuration.msg)
   | ConfigurationReload
   | ConfigurationSet([@opaque] Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
@@ -60,9 +61,10 @@ type t =
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
-  | KeyDown([@opaque] Revery.Key.KeyEvent.t)
-  | KeyUp([@opaque] Revery.Key.KeyEvent.t)
-  | TextInput([@opaque] Revery.Events.textInputEvent)
+  | KeyBindingsParseError(string)
+  | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | HoverShow
   | ChangeMode([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked
@@ -72,7 +74,6 @@ type t =
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
   | RecalculateEditorView([@opaque] option(Buffer.t))
-  | NotifyKeyPressed(float, string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
@@ -86,9 +87,12 @@ type t =
   | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
-  | ShowNotification(Notification.t)
-  | HideNotification(Notification.t)
-  | ClearNotifications
+  | Notification(Feature_Notification.msg)
+  | ExtMessageReceived({
+      severity: [ | `Ignore | `Info | `Warning | `Error],
+      message: string,
+      extensionId: option(string),
+    })
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
@@ -121,6 +125,7 @@ type t =
   | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
+  | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | SetTokenTheme([@opaque] TokenTheme.t)
   | SetColorTheme([@opaque] Theme.t)
@@ -142,6 +147,11 @@ type t =
   | PaneTabClicked(Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
+  | VimMessageReceived({
+      priority: [@opaque] Vim.Types.msgPriority,
+      title: string,
+      message: string,
+    })
   | WindowFocusGained
   | WindowFocusLost
   | WindowMaximized

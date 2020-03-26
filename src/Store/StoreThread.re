@@ -56,10 +56,13 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 
 let start =
     (
+      ~getUserSettings,
       ~configurationFilePath=None,
+      ~keybindingsFilePath=None,
       ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
+      ~getState,
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
@@ -80,12 +83,7 @@ let start =
       cliOptions,
     );
 
-  let state = Model.State.create();
-
-  let latestState: ref(Model.State.t) = ref(state);
   let latestRunEffects: ref(option(unit => unit)) = ref(None);
-
-  let getState = () => latestState^;
 
   let runRunEffects = () =>
     switch (latestRunEffects^) {
@@ -116,7 +114,7 @@ let start =
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClient, extHostStream) =
-    ExtensionClient.create(~extensions, ~setup);
+    ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
 
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);
@@ -131,7 +129,8 @@ let start =
       ~setZoom,
       ~setVsync,
     );
-  let keyBindingsUpdater = KeyBindingsStoreConnector.start();
+  let keyBindingsUpdater =
+    KeyBindingsStoreConnector.start(keybindingsFilePath);
 
   let fileExplorerUpdater = FileExplorerStore.start();
 
@@ -169,7 +168,8 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(extHostClient),
+      Features.update(~extHostClient, ~getUserSettings, ~setup),
+      PaneStore.update,
       contextMenuUpdater,
     ]);
 
@@ -260,18 +260,14 @@ let start =
       type msg = Model.Actions.t;
       type model = Model.State.t;
 
-      let initial = state;
+      let initial = getState();
       let updater = updater;
       let subscriptions = subscriptions;
     });
 
   let storeStream = Store.Deprecated.getStoreStream();
 
-  let _unsubscribe: unit => unit =
-    Store.onModelChanged(newState => {
-      latestState := newState;
-      onStateChanged(newState);
-    });
+  let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
   let _unsubscribe: unit => unit =
     Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
@@ -287,11 +283,11 @@ let start =
 
   let _unsubscribe: unit => unit =
     Store.onBeforeEffectRan(e => {
-      Log.debugf(m => m("Running effect: %s", Isolinear.Effect.getName(e)))
+      Log.debugf(m => m("Running effect: %s", Isolinear.Effect.name(e)))
     });
   let _unsubscribe: unit => unit =
     Store.onAfterEffectRan(e => {
-      Log.debugf(m => m("Effect complete: %s", Isolinear.Effect.getName(e)))
+      Log.debugf(m => m("Effect complete: %s", Isolinear.Effect.name(e)))
     });
 
   let runEffects = Store.runPendingEffects;
@@ -300,7 +296,7 @@ let start =
   Option.iter(
     window =>
       Revery.Window.setCanQuitCallback(window, () =>
-        if (Model.Buffers.anyModified(latestState^.buffers)) {
+        if (Model.Buffers.anyModified(getState().buffers)) {
           dispatch(Model.Actions.WindowCloseBlocked);
           false;
         } else {
@@ -312,7 +308,7 @@ let start =
 
   // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
   let editorEventStream =
-    Isolinear.Stream.map(storeStream, ((state, action)) =>
+    Isolinear.Stream.filterMap(storeStream, ((state, action)) =>
       switch (action) {
       | Model.Actions.BufferUpdate(bs) =>
         let buffer = Model.Selectors.getBufferById(state, bs.update.id);
@@ -325,13 +321,13 @@ let start =
     );
 
   // TODO: These should all be replaced with isolinear subscriptions.
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, inputStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, vimStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, editorEventStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));

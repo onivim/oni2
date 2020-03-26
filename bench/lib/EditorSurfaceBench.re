@@ -1,3 +1,4 @@
+open Oni_Core;
 open BenchFramework;
 open Feature_Editor;
 
@@ -10,6 +11,8 @@ let setup = () => {
     );
   hwnd;
 };
+
+let configResolver = (settings, key) => Config.Settings.get(key, settings);
 
 let editorSurfaceMinimalState = hwnd => {
   Revery.Utility.HeadlessWindow.render(
@@ -31,6 +34,8 @@ let editorSurfaceMinimalState = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
+      windowIsFocused=true
+      config={configResolver(Config.Settings.empty)}
     />,
   );
 };
@@ -55,6 +60,8 @@ let editorSurfaceThousandLineState = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
+      windowIsFocused=true
+      config={configResolver(Config.Settings.empty)}
     />,
   );
 };
@@ -79,7 +86,12 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
-      shouldRenderIndentGuides=true
+      windowIsFocused=true
+      config={configResolver(
+        Config.Settings.fromList([
+          ("editor.renderIndentGuides", Json.Encode.bool(true)),
+        ]),
+      )}
     />,
   );
   ();
@@ -104,7 +116,12 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
-      showMinimap=false
+      windowIsFocused=true
+      config={configResolver(
+        Config.Settings.fromList([
+          ("editor.minimap.enabled", Json.Encode.bool(false)),
+        ]),
+      )}
     />,
   );
 };
@@ -129,6 +146,8 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       mode={thousandLineState.mode}
       theme={thousandLineState.theme}
       editorFont={thousandLineState.editorFont}
+      windowIsFocused=true
+      config={configResolver(Config.Settings.empty)}
     />,
   );
 };
