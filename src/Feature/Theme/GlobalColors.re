@@ -56,6 +56,32 @@ module Editor = {
   let background = define("editor.background", hex("#2F3440") |> all);
   let foreground = define("editor.foreground", hex("#DCDCDC") |> all);
 
+  let findMatchBackground =
+    define("editor.findMatchBackground", hex("#42557b") |> all);
+  let findMatchBorder =
+    define("editor.findMatchBorder", hex("#457dff") |> all);
+  let findMatchHighlightsBackground =
+    define("editor.findMatchHighlightBackground", hex("#314365") |> all);
+  let lineHighlightBackground =
+    define("editor.lineHighlightBackground", hex("#495162") |> all);
+  let selectionBackground =
+    define("editor.selectionBackground", hex("#687595") |> all);
+
+  let defaults = [
+    background,
+    foreground,
+    findMatchBackground,
+    findMatchBorder,
+    findMatchHighlightsBackground,
+    lineHighlightBackground,
+    selectionBackground,
+  ];
+};
+
+module EditorCursor = {
+  let background = define("editorCursor.background", hex("#2F3440") |> all);
+  let foreground = define("editorCursor.foreground", hex("#DCDCDC") |> all);
+
   let defaults = [background, foreground];
 };
 
@@ -67,6 +93,96 @@ module EditorGroupHeader = {
     );
 
   let defaults = [tabsBackground];
+};
+
+module EditorGutter = {
+  let background = define("editorGutter.background", hex("#2F3440") |> all);
+  let modifiedBackground =
+    define("editorGutter.modifiedBackground", hex("#0C7D9D") |> all);
+  let addedBackground =
+    define("editorGutter.addedBackground", hex("#587C0C") |> all);
+  let deletedBackground =
+    define("editorGutter.deletedBackground", hex("#94151B") |> all);
+
+  let defaults = [
+    background,
+    modifiedBackground,
+    addedBackground,
+    deletedBackground,
+  ];
+};
+
+module EditorHoverWidget = {
+  let background =
+    define("editorHoverWidget.background", hex("#FFFFFF") |> all);
+  let border = define("editorHoverWidget.border", hex("#FFFFFF") |> all);
+
+  let defaults = [background, border];
+};
+
+module EditorIndentGuide = {
+  let background =
+    define("editorIndentGuide.background", hex("#3b4048") |> all);
+  let activeBackground =
+    define(
+      "editorIndentGuide.activeBackground",
+      color(Color.rgba(0.78, 0.78, 0.78, 0.78)) |> all,
+    );
+
+  let defaults = [background, activeBackground];
+};
+
+module EditorLineNumber = {
+  let foreground =
+    define("editorLineNumber.foreground", hex("#495162") |> all);
+  let activeForeground =
+    define("editorLineNumber.activeForeground", hex("#737984") |> all);
+
+  let defaults = [foreground, activeForeground];
+};
+
+module EditorOverviewRuler = {
+  let bracketMatchForeground =
+    define(
+      "editorOverviewRuler.bracketMatchForeground",
+      hex("#A0A0A0") |> all,
+    );
+
+  let defaults = [bracketMatchForeground];
+};
+
+module EditorRuler = {
+  let foreground =
+    define(
+      "editorRuler.foreground",
+      color(Color.rgba(0.78, 0.78, 0.78, 0.78)) |> all,
+    );
+
+  let defaults = [foreground];
+};
+
+module EditorSuggestWidget = {
+  let background =
+    define("editorSuggestWidget.background", hex("#282C35") |> all);
+  let border = define("editorSuggestWidget,border", hex("#ECEFF4") |> all);
+  let highlightForeground =
+    define("editorSuggestWidget.highlightForeground", hex("#ECEFF4") |> all);
+  let selectedBackground =
+    define("editorSuggestWidget.selectedBackground", hex("#282C35") |> all);
+
+  let defaults = [
+    background,
+    border,
+    highlightForeground,
+    selectedBackground,
+  ];
+};
+
+module EditorWhitespace = {
+  let foreground =
+    define("editorWhitespace.foreground", hex("#3b4048") |> all);
+
+  let defaults = [foreground];
 };
 
 module List = {
@@ -151,6 +267,23 @@ module Oni = {
     operatorModeForeground,
     commandlineModeForeground,
   ];
+};
+
+module ScrollbarSlider = {
+  let background =
+    define(
+      "scrollbarSlider.background",
+      color(Color.rgba(0., 0., 0., 0.2)) |> all,
+    );
+  let activeBackground =
+    define("scrollbarSlider.activeBackground", hex("#2F3440") |> all);
+  let hoverBackground =
+    define(
+      "scrollbarSlider.hoverBackground",
+      color(Color.rgba(123.0, 123.0, 123.0, 0.1)) |> all,
+    );
+
+  let defaults = [background, activeBackground, hoverBackground];
 };
 
 module SideBar = {
@@ -334,56 +467,16 @@ module Tab = {
 let defaults = [foreground, contrastBorder];
 
 let remaining = [
-  define("editorCursor.background", hex("#2F3440") |> all),
-  define("editorCursor.foreground", hex("#DCDCDC") |> all),
-  define("editor.findMatchBackground", hex("#42557b") |> all),
-  define("editor.findMatchBorder", hex("#457dff") |> all),
-  define("editor.findMatchHighlightBackground", hex("#314365") |> all),
-  define("editor.hoverWidgetBackground", hex("#FFFFFF") |> all),
-  define("editor.hoverWidgetBorder", hex("#FFFFFF") |> all),
-  define("editor.lineHighlightBackground", hex("#495162") |> all),
-  //define("editorLineNumberBackground", hex("#2F3440")),
-  define("editorLineNumber.foreground", hex("#495162") |> all),
-  define("editorLineNumber.activeForeground", hex("#737984") |> all),
-  define(
-    "editorRuler.foreground",
-    color(Color.rgba(0.78, 0.78, 0.78, 0.78)) |> all,
-  ),
-  define("editorSuggestWidget.background", hex("#282C35") |> all),
-  define("editorSuggestWidget,border", hex("#ECEFF4") |> all),
-  define("editorSuggestWidget.highlightForeground", hex("#ECEFF4") |> all),
-  define("editorSuggestWidget.selectedBackground", hex("#282C35") |> all),
-  define(
-    "editorOverviewRuler.bracketMatchForeground",
-    hex("#A0A0A0") |> all,
-  ),
-  //define("editorctiveLineNumberForeground", hex("#737984")),
-  define("editor.selectionBackground", hex("#687595") |> all),
   define("list.activeSelectionBackground", hex("#495162") |> all),
   define("list.activeSelectionForeground", hex("#FFFFFF") |> all),
-  define(
-    "scrollbarSlider.background",
-    color(Color.rgba(0., 0., 0., 0.2)) |> all,
-  ),
-  define("scrollbarSlider.activeBackground", hex("#2F3440") |> all),
-  define("editorIndentGuide.background", hex("#3b4048") |> all),
-  define(
-    "editorIndentGuide.activeBackground",
-    color(Color.rgba(0.78, 0.78, 0.78, 0.78)) |> all,
-  ),
   define("menu.background", hex("#2F3440") |> all),
   define("menu.foreground", hex("#FFFFFF") |> all),
   define("menu.selectionBackground", hex("#495162") |> all),
-  define("editorWhitespace.foreground", hex("#3b4048") |> all),
   define(
     "statusBar.background",
     {dark: hex("#007aCC"), light: hex("#007aCC"), hc: unspecified},
   ),
   define("statusBar.foreground", hex("#fff") |> all),
-  define(
-    "scrollbarSlider.hoverBackground",
-    color(Color.rgba(123.0, 123.0, 123.0, 0.1)) |> all,
-  ),
   //define("notificationSuccessBackground", hex("#23d160")),
   //define("notificationSuccessForeground", hex("#fff")),
   define("notification.infoBackground", hex("#209cee") |> all),
@@ -400,7 +493,4 @@ let remaining = [
   define("titleBar.inactiveBackground", hex("#282C35") |> all),
   define("titleBar.inactiveForeground", hex("#ECEFF4") |> all),
   define("titleBar.border", hex("#fff0") |> all),
-  define("editorGutter.modifiedBackground", hex("#0C7D9D") |> all),
-  define("editorGutter.addedBackground", hex("#587C0C") |> all),
-  define("editorGutter.deletedBackground", hex("#94151B") |> all),
 ];
