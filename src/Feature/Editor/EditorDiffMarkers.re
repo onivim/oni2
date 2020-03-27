@@ -76,7 +76,7 @@ let generate = buffer =>
 
 let markerPaint = Skia.Paint.make();
 let renderMarker =
-    (~x, ~y, ~rowHeight, ~width, ~canvasContext, ~theme: Theme.t, marker) => {
+    (~x, ~y, ~rowHeight, ~width, ~canvasContext, ~colors: Colors.t, marker) => {
   let (y, height) =
     switch (marker) {
     | Modified
@@ -88,10 +88,10 @@ let renderMarker =
 
   let color =
     switch (marker) {
-    | Modified => theme.editorGutterModifiedBackground
-    | Added => theme.editorGutterAddedBackground
-    | DeletedBefore => theme.editorGutterDeletedBackground
-    | DeletedAfter => theme.editorGutterDeletedBackground
+    | Modified => colors.gutterModifiedBackground
+    | Added => colors.gutterAddedBackground
+    | DeletedBefore => colors.gutterDeletedBackground
+    | DeletedAfter => colors.gutterDeletedBackground
     | Unmodified => failwith("unreachable")
     };
 
@@ -116,7 +116,7 @@ let render =
       ~width,
       ~count,
       ~canvasContext,
-      ~theme,
+      ~colors,
       markers,
     ) =>
   ImmediateList.render(
@@ -133,7 +133,7 @@ let render =
             ~rowHeight,
             ~width,
             ~canvasContext,
-            ~theme,
+            ~colors,
             markers[i],
           );
         },

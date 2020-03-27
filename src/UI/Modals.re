@@ -52,7 +52,7 @@ module Styles = {
 
   let text = (~theme: Theme.t, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(theme.editorForeground),
+    color(theme.foreground),
     backgroundColor(theme.editorBackground),
     fontSize(14.),
     textWrap(TextWrapping.NoWrap),

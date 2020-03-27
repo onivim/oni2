@@ -3,7 +3,6 @@
  */
 
 open EditorCoreTypes;
-open Revery;
 open Revery.UI;
 
 open Oni_Core;
@@ -21,7 +20,7 @@ let make =
       ~width as totalWidth,
       ~diagnostics: IntMap.t(list(Diagnostic.t)),
       ~metrics,
-      ~theme: Theme.t,
+      ~colors: Colors.t,
       ~editorFont: Service_Font.font,
       ~bufferHighlights,
       (),
@@ -36,7 +35,7 @@ let make =
       left(0),
       width(totalWidth),
       height(scrollMetrics.thumbSize),
-      backgroundColor(theme.scrollbarSliderBackground),
+      backgroundColor(colors.scrollbarSliderBackground),
     ];
 
   let totalPixel =
@@ -64,7 +63,7 @@ let make =
       left(0),
       width(totalWidth),
       height(cursorSize),
-      backgroundColor(theme.foreground),
+      backgroundColor(colors.editorForeground),
     ];
 
   let diagnosticElements =
@@ -83,7 +82,7 @@ let make =
              right(0),
              width(Constants.scrollBarThickness / 3),
              height(cursorSize),
-             backgroundColor(Colors.red),
+             backgroundColor(Revery.Colors.red),
            ];
          <View style=diagnosticStyle />;
        })
@@ -96,7 +95,7 @@ let make =
       left(4),
       right(4),
       height(8),
-      backgroundColor(theme.editorOverviewRulerBracketMatchForeground),
+      backgroundColor(colors.overviewRulerBracketMatchForeground),
     ];
 
   let matchingPairElements =
@@ -126,7 +125,7 @@ let make =
       right(0),
       height(bot - t),
       backgroundColor(
-        Color.multiplyAlpha(0.5, theme.editorSelectionBackground),
+        Revery.Color.multiplyAlpha(0.5, colors.selectionBackground),
       ),
     ];
   };
@@ -156,7 +155,7 @@ let make =
       left(4),
       right(4),
       height(8),
-      backgroundColor(theme.editorFindMatchBackground),
+      backgroundColor(colors.findMatchBackground),
     ];
 
   let searchHighlightToElement = line => {

@@ -104,7 +104,7 @@ module Styles = {
 
   let buttonText = (~isHovered, ~theme: Theme.t, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(theme.editorForeground),
+    color(theme.foreground),
     isHovered
       ? backgroundColor(theme.menuSelectionBackground)
       : backgroundColor(theme.editorBackground),
