@@ -291,7 +291,7 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
   |> Option.map((screen) => {
 
     module TermScreen = ReveryTerminal.Screen;
-    let totalRows = TermScreen.getVisibleRows(screen);
+    let totalRows = TermScreen.getTotalRows(screen);
     let columns = TermScreen.getColumns(screen);
     
     let lines = Array.make(totalRows, "");
@@ -320,8 +320,7 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
             ~theme,
             cell);
 
-          prerr_endline (Printf.sprintf("Line: %d column: %d %s", lineIndex, column,  Revery.Color.toString(fg)));
-
+          // TODO: Only create if necessary
           let newToken = ColorizedToken.{
             index: column,
             backgroundColor: bg,
@@ -330,6 +329,7 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
           };
 
           let newHighlights = switch(lineHighlights^) {
+          // TODO: Fix when syntax highlighting is set up
           //| [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] when (foregroundColor != fg || backgroundColor != bg) => [newToken, ct, ...tail]
           | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] => [newToken, ct, ...tail]
           | [] => [newToken]

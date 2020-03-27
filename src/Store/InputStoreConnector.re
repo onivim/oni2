@@ -66,7 +66,6 @@ let conditionsOfState = (state: State.t) => {
     Hashtbl.add(ret, "insertMode", true);
     Hashtbl.add(ret, "terminalFocus", true);
   | (false, Mode.TerminalNormal) =>
-    prerr_endline ("terminal normal bnranch hit");
     Hashtbl.add(ret, "normalMode", true);
     Hashtbl.add(ret, "terminalFocus", true);
   | (false, Mode.TerminalVisual) =>
