@@ -256,8 +256,8 @@ let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {
   Revery.Event.dispatch(Internal.onExtensionMessage, msg);
 };
 
-let getScreenOpt = (terminalId) => {
+let getScreenOpt = terminalId => {
   terminalId
   |> Hashtbl.find_opt(Internal.idToTerminal)
   |> Option.map(ReveryTerminal.screen);
-}
+};

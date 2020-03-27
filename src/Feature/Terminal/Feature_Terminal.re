@@ -1,4 +1,5 @@
-open Oni_Core; module ExtHostClient = Oni_Extensions.ExtHostClient;
+open Oni_Core;
+module ExtHostClient = Oni_Extensions.ExtHostClient;
 
 type terminal = {
   id: int,
@@ -227,35 +228,37 @@ module Colors = {
     );
 };
 
-  let _theme = (theme) =>
-    fun
-    | 0 => Colors.ansiBlack.from(theme)
-    | 1 => Colors.ansiRed.from(theme)
-    | 2 => Colors.ansiGreen.from(theme)
-    | 3 => Colors.ansiYellow.from(theme)
-    | 4 => Colors.ansiBlue.from(theme)
-    | 5 => Colors.ansiMagenta.from(theme)
-    | 6 => Colors.ansiCyan.from(theme)
-    | 7 => Colors.ansiWhite.from(theme)
-    | 8 => Colors.ansiBrightBlack.from(theme)
-    | 9 => Colors.ansiBrightRed.from(theme)
-    | 10 => Colors.ansiBrightGreen.from(theme)
-    | 11 => Colors.ansiBrightYellow.from(theme)
-    | 12 => Colors.ansiBrightBlue.from(theme)
-    | 13 => Colors.ansiBrightMagenta.from(theme)
-    | 14 => Colors.ansiBrightCyan.from(theme)
-    | 15 => Colors.ansiBrightWhite.from(theme)
-    // For 256 colors, fall back to defaults
-    | idx => ReveryTerminal.Theme.default(idx);
+let _theme = theme =>
+  fun
+  | 0 => Colors.ansiBlack.from(theme)
+  | 1 => Colors.ansiRed.from(theme)
+  | 2 => Colors.ansiGreen.from(theme)
+  | 3 => Colors.ansiYellow.from(theme)
+  | 4 => Colors.ansiBlue.from(theme)
+  | 5 => Colors.ansiMagenta.from(theme)
+  | 6 => Colors.ansiCyan.from(theme)
+  | 7 => Colors.ansiWhite.from(theme)
+  | 8 => Colors.ansiBrightBlack.from(theme)
+  | 9 => Colors.ansiBrightRed.from(theme)
+  | 10 => Colors.ansiBrightGreen.from(theme)
+  | 11 => Colors.ansiBrightYellow.from(theme)
+  | 12 => Colors.ansiBrightBlue.from(theme)
+  | 13 => Colors.ansiBrightMagenta.from(theme)
+  | 14 => Colors.ansiBrightCyan.from(theme)
+  | 15 => Colors.ansiBrightWhite.from(theme)
+  // For 256 colors, fall back to defaults
+  | idx => ReveryTerminal.Theme.default(idx);
 
-  let theme = (theme, idx) => {
-    let ret = _theme(theme, idx);
-    prerr_endline (Printf.sprintf("Index: %d Color: %s", idx, Revery.Color.toString(ret)))
-    ret;
-  };
+let theme = (theme, idx) => {
+  let ret = _theme(theme, idx);
+  prerr_endline(
+    Printf.sprintf("Index: %d Color: %s", idx, Revery.Color.toString(ret)),
+  );
+  ret;
+};
 
-  let defaultBackground =theme => Colors.background.from(theme);
-  let defaultForeground = theme =>Colors.foreground.from(theme);
+let defaultBackground = theme => Colors.background.from(theme);
+let defaultForeground = theme => Colors.foreground.from(theme);
 
 // CONTRIBUTIONS
 
@@ -288,65 +291,79 @@ type highlight = (int, list(ColorizedToken.t));
 let getLinesAndHighlights = (~colorTheme, terminalId) => {
   terminalId
   |> Service_Terminal.getScreenOpt
-  |> Option.map((screen) => {
+  |> Option.map(screen => {
+       module TermScreen = ReveryTerminal.Screen;
+       let totalRows = TermScreen.getTotalRows(screen);
+       let columns = TermScreen.getColumns(screen);
 
-    module TermScreen = ReveryTerminal.Screen;
-    let totalRows = TermScreen.getTotalRows(screen);
-    let columns = TermScreen.getColumns(screen);
-    
-    let lines = Array.make(totalRows, "");
-    let highlights = ref([]);
+       let lines = Array.make(totalRows, "");
+       let highlights = ref([]);
 
-    let theme = theme(colorTheme);
-    let defaultBackground = defaultBackground(colorTheme);
-    let defaultForeground = defaultForeground(colorTheme);
-    for (lineIndex in 0 to totalRows - 1) {
-      let buffer = Stdlib.Buffer.create(columns * 2);
+       let theme = theme(colorTheme);
+       let defaultBackground = defaultBackground(colorTheme);
+       let defaultForeground = defaultForeground(colorTheme);
+       for (lineIndex in 0 to totalRows - 1) {
+         let buffer = Stdlib.Buffer.create(columns * 2);
 
-      let lineHighlights = ref([]);
-      for (column in 0 to columns - 1) {
-        let cell = TermScreen.getCell(lineIndex, column, screen);
-        let codeInt = Uchar.to_int(cell.char);
-        if (codeInt != 0 && codeInt <= 0x10FFFF) {
-          Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);
-          let fg = TermScreen.getForegroundColor(
-            ~defaultBackground,
-            ~defaultForeground,
-            ~theme,
-            cell);
-          let bg = TermScreen.getBackgroundColor(
-            ~defaultBackground,
-            ~defaultForeground,
-            ~theme,
-            cell);
+         let lineHighlights = ref([]);
+         for (column in 0 to columns - 1) {
+           let cell = TermScreen.getCell(lineIndex, column, screen);
+           let codeInt = Uchar.to_int(cell.char);
+           if (codeInt != 0 && codeInt <= 0x10FFFF) {
+             Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);
+             let fg =
+               TermScreen.getForegroundColor(
+                 ~defaultBackground,
+                 ~defaultForeground,
+                 ~theme,
+                 cell,
+               );
+             let bg =
+               TermScreen.getBackgroundColor(
+                 ~defaultBackground,
+                 ~defaultForeground,
+                 ~theme,
+                 cell,
+               );
 
-          // TODO: Only create if necessary
-          let newToken = ColorizedToken.{
-            index: column,
-            backgroundColor: bg,
-            foregroundColor: fg,
-            syntaxScope: SyntaxScope.none,
-          };
+             // TODO: Only create if necessary
+             let newToken =
+               ColorizedToken.{
+                 index: column,
+                 backgroundColor: bg,
+                 foregroundColor: fg,
+                 syntaxScope: SyntaxScope.none,
+               };
 
-          let newHighlights = switch(lineHighlights^) {
-          // TODO: Fix when syntax highlighting is set up
-          //| [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] when (foregroundColor != fg || backgroundColor != bg) => [newToken, ct, ...tail]
-          | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] => [newToken, ct, ...tail]
-          | [] => [newToken]
-          //| [...tokens] => tokens
-          };
-          lineHighlights := newHighlights;
-        } else {
-          Stdlib.Buffer.add_string(buffer, " ");
-        }
-      }
+             let newHighlights =
+               switch (lineHighlights^) {
+               // TODO: Fix when syntax highlighting is set up
+               //| [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] when (foregroundColor != fg || backgroundColor != bg) => [newToken, ct, ...tail]
+               | [
+                   ColorizedToken.{foregroundColor, backgroundColor, _} as ct,
+                   ...tail,
+                 ] => [
+                   newToken,
+                   ct,
+                   ...tail,
+                 ]
+               | [] => [newToken]
+               //| [...tokens] => tokens
+               };
+             lineHighlights := newHighlights;
+           } else {
+             Stdlib.Buffer.add_string(buffer, " ");
+           };
+         };
 
-      let str = Stdlib.Buffer.contents(buffer) |> Utility.StringEx.trimRight;
-      lines[lineIndex] = str;
+         let str =
+           Stdlib.Buffer.contents(buffer) |> Utility.StringEx.trimRight;
+         lines[lineIndex] = str;
 
-      highlights := [(lineIndex, List.rev(lineHighlights^)), ...highlights^];
-    };
-    (lines, highlights^);
-  })
+         highlights :=
+           [(lineIndex, List.rev(lineHighlights^)), ...highlights^];
+       };
+       (lines, highlights^);
+     })
   |> Option.value(~default=([||], []));
-}
+};

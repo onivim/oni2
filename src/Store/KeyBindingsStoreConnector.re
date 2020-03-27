@@ -264,38 +264,44 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-\\><C-N>",
         command: "terminal.normalMode",
-        condition: "terminalFocus && insertMode" |> WhenExpr.parse
+        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
       },
       // Bindings to go from normal / visual mode -> insert mode
       {
         key: "o",
         command: "terminal.insertMode",
-        condition: "terminalFocus && normalMode || visualMode" |> WhenExpr.parse
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "O",
         command: "terminal.insertMode",
-        condition: "terminalFocus && normalMode || visualMode" |> WhenExpr.parse
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "A",
         command: "terminal.insertMode",
-        condition: "terminalFocus && normalMode || visualMode" |> WhenExpr.parse
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "a",
         command: "terminal.insertMode",
-        condition: "terminalFocus && normalMode || visualMode" |> WhenExpr.parse
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "i",
         command: "terminal.insertMode",
-        condition: "terminalFocus && normalMode || visualMode" |> WhenExpr.parse
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "I",
         command: "terminal.insertMode",
-        condition: "terminalFocus && normalMode || visualMode" |> WhenExpr.parse
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
     ];
 

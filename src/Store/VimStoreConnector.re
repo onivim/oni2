@@ -665,7 +665,11 @@ let start =
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
               metadata.id,
-              BufferRenderer.Terminal({title: "Terminal", id: bufferId, normalMode: false}),
+              BufferRenderer.Terminal({
+                title: "Terminal",
+                id: bufferId,
+                normalMode: false,
+              }),
             ),
           ),
         )
@@ -905,19 +909,19 @@ let start =
 
   let setBufferLinesEffect = (bufferId, lines: array(string)) => {
     Isolinear.Effect.create(~name="vim.setBufferLines", () => {
-        let () = bufferId
+      let () =
+        bufferId
         |> Vim.Buffer.getById
-        |> Option.iter((buf) => {
-          Vim.Buffer.setLines(lines, buf);
-        });
+        |> Option.iter(buf => {Vim.Buffer.setLines(lines, buf)});
 
-        // Clear out previous mode
-        let _ = Vim.input("<esc>");
-        let _ = Vim.input("<esc>");
-        // Jump to bottom
-        let _ = Vim.input("G");
+      // Clear out previous mode
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      // Jump to bottom
+      let _ = Vim.input("G");
+      ();
     });
-  }
+  };
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
@@ -975,45 +979,65 @@ let start =
         state,
         synchronizeEditorEffect(state),
       )
-    | Command("terminal.normalMode") => 
-
+    | Command("terminal.normalMode") =>
       let maybeBufferId =
-      state
-      |> Selectors.getActiveBuffer
-      |> Option.map(Oni_Core.Buffer.getId);
+        state
+        |> Selectors.getActiveBuffer
+        |> Option.map(Oni_Core.Buffer.getId);
 
       let maybeTerminalId =
-      maybeBufferId
-      |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
-      |> OptionEx.flatMap(fun
-      | BufferRenderer.Terminal({ id, _}) => Some(id)
-      | _ => None
-      );
-      
-      let (state, effect) = OptionEx.map2(
-      (bufferId, terminalId) => {
-        let (lines, _highlights) = Feature_Terminal.getLinesAndHighlights(
-        ~colorTheme=Feature_Theme.resolver(state.colorTheme),
-        terminalId);
+        maybeBufferId
+        |> Option.map(id =>
+             BufferRenderers.getById(id, state.bufferRenderers)
+           )
+        |> OptionEx.flatMap(
+             fun
+             | BufferRenderer.Terminal({id, _}) => Some(id)
+             | _ => None,
+           );
 
-        let syntaxHighlights =
-          List.fold_left((acc, curr) => {
-            let (line, tokens) = curr;
-            prerr_endline (Printf.sprintf("Setting %d tokens for line %d", List.length(tokens), line));
-            Feature_Syntax.setTokensForLine(
-              ~bufferId,
-              ~line,
-              ~tokens,
-              acc,
+      let (state, effect) =
+        OptionEx.map2(
+          (bufferId, terminalId) => {
+            let (lines, _highlights) =
+              Feature_Terminal.getLinesAndHighlights(
+                ~colorTheme=Feature_Theme.resolver(state.colorTheme),
+                terminalId,
+              );
+
+            let syntaxHighlights =
+              List.fold_left(
+                (acc, curr) => {
+                  let (line, tokens) = curr;
+                  prerr_endline(
+                    Printf.sprintf(
+                      "Setting %d tokens for line %d",
+                      List.length(tokens),
+                      line,
+                    ),
+                  );
+                  Feature_Syntax.setTokensForLine(
+                    ~bufferId,
+                    ~line,
+                    ~tokens,
+                    acc,
+                  );
+                },
+                state.syntaxHighlights,
+                _highlights,
+              );
+
+            (
+              {...state, syntaxHighlights},
+              setBufferLinesEffect(bufferId, lines),
             );
-          }, state.syntaxHighlights, _highlights);
+          },
+          maybeBufferId,
+          maybeTerminalId,
+        )
+        |> Option.value(~default=(state, Isolinear.Effect.none));
 
-        ({ ...state, syntaxHighlights }, setBufferLinesEffect(bufferId, lines));
-      }, maybeBufferId, maybeTerminalId
-      )
-      |> Option.value(~default=(state, Isolinear.Effect.none));
-
-      (state, effect)
+      (state, effect);
 
     | KeyboardInput(s) => (state, inputEffect(s))
     | CopyActiveFilepathToClipboard => (

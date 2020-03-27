@@ -60,7 +60,6 @@ let subscription:
 
 let shellCmd: string;
 
-
 module Colors: {
   let background: ColorTheme.Schema.definition;
   let foreground: ColorTheme.Schema.definition;
@@ -87,6 +86,8 @@ let defaultBackground: ColorTheme.resolver => Revery.Color.t;
 let defaultForeground: ColorTheme.resolver => Revery.Color.t;
 
 type highlight = (int, list(ColorizedToken.t));
-let getLinesAndHighlights: (~colorTheme:ColorTheme.resolver, int) => (array(string), list(highlight));
+let getLinesAndHighlights:
+  (~colorTheme: ColorTheme.resolver, int) =>
+  (array(string), list(highlight));
 
 module Contributions: {let colors: list(ColorTheme.Schema.definition);};

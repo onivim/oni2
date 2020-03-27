@@ -155,7 +155,7 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
         switch (scope) {
         | None => default
         | Some(scope) =>
-          prerr_endline ("SCOPE! " ++ scope);
+          prerr_endline("SCOPE! " ++ scope);
           // Eager syntax highlighting
           let syntaxHighlights =
             if (version == 1 && enabled) {

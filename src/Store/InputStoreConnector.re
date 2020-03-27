@@ -50,10 +50,10 @@ let conditionsOfState = (state: State.t) => {
 
   /*let terminalIsActive = Model.Selectors.terminalIsActive(state);
 
-  if (terminalIsActive) {
-    Hashtbl.add(ret, "terminalFocus", true);
-  };
-  */
+    if (terminalIsActive) {
+      Hashtbl.add(ret, "terminalFocus", true);
+    };
+    */
 
   let mode = Model.ModeManager.current(state);
 
