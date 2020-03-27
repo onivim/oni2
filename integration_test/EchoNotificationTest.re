@@ -4,7 +4,7 @@ open Oni_IntegrationTestLib;
 // This test validates that certain keystrokes are ignored by our Vim layer
 runTest(~name="InputIgnore test", (_dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   // Create notification - an echo should trigger onj

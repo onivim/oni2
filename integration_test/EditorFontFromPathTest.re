@@ -16,7 +16,7 @@ runTest(
   ~name="EditorFontFromPath",
   (_, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      state.mode == Vim.Types.Normal
+      state.vimMode == Vim.Types.Normal
     );
 
     print_endline("Using font: " ++ font);

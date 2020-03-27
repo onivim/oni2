@@ -5,7 +5,7 @@ open Oni_IntegrationTestLib;
 // Validate that textmate highlight runs
 runTest(~name="RegressionDeleteAllLinesTest", (dispatch, wait, runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   let testFile = getAssetPath("some-test-file.txt");

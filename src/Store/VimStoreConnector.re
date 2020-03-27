@@ -79,10 +79,8 @@ let start =
     let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
 
     let getClipboardValue = () => {
-      switch (getClipboardText()) {
-      | None => None
-      | Some(v) => Some(v |> removeWindowsNewLines |> splitNewLines)
-      };
+      getClipboardText()
+      |> Option.map(text => text |> removeWindowsNewLines |> splitNewLines);
     };
 
     let starReg = Char.code('*');
@@ -130,7 +128,7 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.Mode.onChanged(newMode => dispatch(Actions.ChangeMode(newMode)));
+    Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
@@ -504,9 +502,22 @@ let start =
     ();
   };
 
+  let isVimKey = key => {
+    !String.equal(key, "<S-SHIFT>")
+    && !String.equal(key, "<A-SHIFT>")
+    && !String.equal(key, "<D-SHIFT>")
+    && !String.equal(key, "<D->")
+    && !String.equal(key, "<D-A->")
+    && !String.equal(key, "<D-S->")
+    && !String.equal(key, "<C->")
+    && !String.equal(key, "<A-C->")
+    && !String.equal(key, "<SHIFT>")
+    && !String.equal(key, "<S-C->");
+  };
+
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
-      if (Oni_Input.Filter.filter(key)) {
+      if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
         let editor =
@@ -744,6 +755,17 @@ let start =
         | _ => ()
         };
 
+        // Set configured line comment
+        editorBuffer
+        |> OptionEx.flatMap(Core.Buffer.getFileType)
+        |> OptionEx.flatMap(
+             Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
+           )
+        |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+             config.lineComment
+           )
+        |> Option.iter(Vim.Options.setLineComment);
+
         let synchronizeWindowMetrics =
             (editor: Editor.t, editorGroup: EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
@@ -775,27 +797,34 @@ let start =
     );
 
   let pasteIntoEditorAction =
-    Isolinear.Effect.create(~name="vim.clipboardPaste", () =>
-      if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
-        switch (getClipboardText()) {
-        | Some(text) =>
-          Vim.command("set paste");
-          let latestCursors = ref([]);
-          Zed_utf8.iter(
-            s => {
-              latestCursors := Vim.input(~cursors=[], Zed_utf8.singleton(s));
-              ();
-            },
-            text,
-          );
+    Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
+      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
+      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
 
-          updateActiveEditorCursors(latestCursors^);
+      if (isInsertMode || isCmdLineMode) {
+        getClipboardText()
+        |> Option.iter(text => {
+             if (!isCmdLineMode) {
+               Vim.command("set paste");
+             };
 
-          Vim.command("set nopaste");
-        | None => ()
-        };
-      }
-    );
+             let latestCursors = ref([]);
+             Zed_utf8.iter(
+               s => {
+                 latestCursors :=
+                   Vim.input(~cursors=[], Zed_utf8.singleton(s));
+                 ();
+               },
+               text,
+             );
+
+             if (!isCmdLineMode) {
+               updateActiveEditorCursors(latestCursors^);
+               Vim.command("set nopaste");
+             };
+           });
+      };
+    });
 
   let copyActiveFilepathToClipboardEffect =
     Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
@@ -852,6 +881,12 @@ let start =
       ();
     });
 
+  let escapeEffect =
+    Isolinear.Effect.create(~name="vim.esc", () => {
+      let _ = Vim.input("<esc>");
+      ();
+    });
+
   let indentEffect =
     Isolinear.Effect.create(~name="vim.indent", () => {
       let _ = Vim.input(">");
@@ -895,6 +930,7 @@ let start =
     | Command("outdent") => (state, outdentEffect)
     | Command("editor.action.indentLines") => (state, indentEffect)
     | Command("editor.action.outdentLines") => (state, outdentEffect)
+    | Command("vim.esc") => (state, escapeEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
@@ -910,6 +946,7 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
+    | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),

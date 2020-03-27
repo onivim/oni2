@@ -11,8 +11,8 @@ open Oni_Model;
 module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 
 let start = maybeKeyBindingsFilePath => {
-  let defaultBindings =
-    Keybindings.Keybinding.[
+  let default =
+    Keybindings.[
       {
         key: "<UP>",
         command: "list.focusUp",
@@ -66,12 +66,12 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-V>",
         command: "editor.action.clipboardPasteAction",
-        condition: "insertMode" |> WhenExpr.parse,
+        condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-V>",
         command: "editor.action.clipboardPasteAction",
-        condition: "insertMode" |> WhenExpr.parse,
+        condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
       },
       {
         key: "<ESC>",
@@ -116,6 +116,11 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<S-C-TAB>",
         command: "workbench.action.quickOpenNavigatePreviousInEditorPicker",
+        condition: "inEditorsPicker" |> WhenExpr.parse,
+      },
+      {
+        key: "<release>",
+        command: "list.select",
         condition: "inEditorsPicker" |> WhenExpr.parse,
       },
       {
@@ -303,7 +308,9 @@ let start = maybeKeyBindingsFilePath => {
         keyBindingsFile
         |> Utility.ResultEx.tap(checkFirstLoad)
         |> Utility.ResultEx.flatMap(Utility.JsonEx.from_file)
-        |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors)
+        |> Utility.ResultEx.flatMap(
+             Keybindings.of_yojson_with_errors(~default),
+           )
         // Handle error case when parsing entire JSON file
         |> Utility.ResultEx.tapError(onError)
         |> Stdlib.Result.value(~default=(Keybindings.empty, []));
@@ -311,9 +318,11 @@ let start = maybeKeyBindingsFilePath => {
       // Handle individual binding errors
       individualErrors |> List.iter(onError);
 
-      Log.infof(m => m("Loaded %i keybindings", List.length(keyBindings)));
+      Log.infof(m =>
+        m("Loading %i keybindings", Keybindings.count(keyBindings))
+      );
 
-      dispatch(Actions.KeyBindingsSet(defaultBindings @ keyBindings));
+      dispatch(Actions.KeyBindingsSet(keyBindings));
     });
 
   let updater = (state: State.t, action: Actions.t) => {

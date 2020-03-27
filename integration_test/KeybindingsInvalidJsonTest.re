@@ -10,7 +10,7 @@ runTest(
   ~name="KeybindingsInvalidJson",
   (_dispatch, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      state.mode == Vim.Types.Normal
+      state.vimMode == Vim.Types.Normal
     );
 
     let getErrorNotificationCount = (state: State.t) => {

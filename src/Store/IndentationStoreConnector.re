@@ -67,31 +67,33 @@ let start = () => {
    * Otherwise, it sets indentation values for a buffer,
    * if it hasn't been done yet.
    */
-  let checkIndentationEffect = (state: State.t, bufferId) => {
-    let maybeBuffer = Buffers.getBuffer(bufferId, state.buffers);
-    switch (maybeBuffer) {
-    | Some(buffer) =>
-      if (!Buffer.isIndentationSet(buffer)) {
-        if (Configuration.getValue(
-              c => c.editorDetectIndentation,
-              state.configuration,
-            )) {
-          detectIndentationEffect(state, buffer);
-        } else {
-          setIndentationEffect(state, buffer);
-        };
-      } else {
-        Isolinear.Effect.none;
-      }
-    | None => Isolinear.Effect.none
+  let checkIndentationEffect = (state: State.t, buffer) =>
+    if (Configuration.getValue(
+          c => c.editorDetectIndentation,
+          state.configuration,
+        )) {
+      detectIndentationEffect(state, buffer);
+    } else {
+      setIndentationEffect(state, buffer);
     };
-  };
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.BufferEnter(metadata, _) => (
+    | Actions.BufferEnter(metadata, _) =>
+      switch (Buffers.getBuffer(metadata.id, state.buffers)) {
+      | Some(buffer) when !Buffer.isIndentationSet(buffer) => (
+          state,
+          checkIndentationEffect(state, buffer),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
+
+    | Actions.BufferUpdate({oldBuffer, newBuffer, _})
+        when
+          Buffer.getNumberOfLines(oldBuffer) <= 1
+          && Buffer.getNumberOfLines(newBuffer) > 2 => (
         state,
-        checkIndentationEffect(state, metadata.id),
+        checkIndentationEffect(state, newBuffer),
       )
 
     | Actions.Command("editor.action.detectIndentation") =>
