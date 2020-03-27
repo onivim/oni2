@@ -34,8 +34,8 @@ type t = {
 let initial: t = {groups: [], isEnabled: false};
 
 module Constants = {
-  let duration = 2.5;
-  let maxGroupingInterval = 0.3;
+  let duration = 1.75;
+  let maxGroupingInterval = 0.4;
 };
 
 // UPDATE-ish
@@ -91,7 +91,8 @@ let add = (~time, key, model) => {
 };
 
 let keyPress = (~time, key, model) => {
-  if (!String.equal(key , "LEFT SHIFT")) {
+  if (!String.equal(key , "LEFT SHIFT")
+    && !String.equal(key, "Ctrl + Left Ctrl")) {
   add(~time, Key(key), model);
   } else {
     model
