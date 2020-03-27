@@ -228,7 +228,7 @@ module Colors = {
     );
 };
 
-let _theme = theme =>
+let theme = theme =>
   fun
   | 0 => Colors.ansiBlack.from(theme)
   | 1 => Colors.ansiRed.from(theme)
@@ -248,14 +248,6 @@ let _theme = theme =>
   | 15 => Colors.ansiBrightWhite.from(theme)
   // For 256 colors, fall back to defaults
   | idx => ReveryTerminal.Theme.default(idx);
-
-let theme = (theme, idx) => {
-  let ret = _theme(theme, idx);
-  prerr_endline(
-    Printf.sprintf("Index: %d Color: %s", idx, Revery.Color.toString(ret)),
-  );
-  ret;
-};
 
 let defaultBackground = theme => Colors.background.from(theme);
 let defaultForeground = theme => Colors.foreground.from(theme);
@@ -337,8 +329,7 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
 
              let newHighlights =
                switch (lineHighlights^) {
-               // TODO: Fix when syntax highlighting is set up
-               //| [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] when (foregroundColor != fg || backgroundColor != bg) => [newToken, ct, ...tail]
+               | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] when (foregroundColor != fg || backgroundColor != bg) => [newToken, ct, ...tail]
                | [
                    ColorizedToken.{foregroundColor, backgroundColor, _} as ct,
                    ...tail,
@@ -348,7 +339,6 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
                    ...tail,
                  ]
                | [] => [newToken]
-               //| [...tokens] => tokens
                };
              lineHighlights := newHighlights;
            } else {

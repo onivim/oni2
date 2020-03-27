@@ -255,7 +255,7 @@
     "editor-input": "onivim/editor-input#c494950",
     "reason-sdl2": "revery-ui/reason-sdl2#ce07970",
     "isolinear": "revery-ui/isolinear#b17ce17",
-    "revery-terminal": "link:../revery-terminal"
+    "revery-terminal": "revery-ui/revery-terminal#2ef1c65"
   },
   "devDependencies": {
     "ocaml": "~4.8",

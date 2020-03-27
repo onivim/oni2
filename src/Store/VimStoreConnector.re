@@ -918,6 +918,8 @@ let start =
       let _ = Vim.input("<esc>");
       let _ = Vim.input("<esc>");
       // Jump to bottom
+      let _ = Vim.input("g");
+      let _ = Vim.input("g");
       let _ = Vim.input("G");
       ();
     });
@@ -1009,13 +1011,6 @@ let start =
               List.fold_left(
                 (acc, curr) => {
                   let (line, tokens) = curr;
-                  prerr_endline(
-                    Printf.sprintf(
-                      "Setting %d tokens for line %d",
-                      List.length(tokens),
-                      line,
-                    ),
-                  );
                   Feature_Syntax.setTokensForLine(
                     ~bufferId,
                     ~line,
