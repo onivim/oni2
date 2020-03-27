@@ -48,11 +48,12 @@ let conditionsOfState = (state: State.t) => {
   | `off => ()
   };
 
-  let terminalIsActive = Model.Selectors.terminalIsActive(state);
+  /*let terminalIsActive = Model.Selectors.terminalIsActive(state);
 
   if (terminalIsActive) {
     Hashtbl.add(ret, "terminalFocus", true);
   };
+  */
 
   let mode = Model.ModeManager.current(state);
 
@@ -61,6 +62,16 @@ let conditionsOfState = (state: State.t) => {
   // only true when the editor is insert mode AND we are in the
   // editor (editorTextFocus is set)
   switch (isQuickmenuOpen(state), mode) {
+  | (false, Mode.TerminalInsert) =>
+    Hashtbl.add(ret, "insertMode", true);
+    Hashtbl.add(ret, "terminalFocus", true);
+  | (false, Mode.TerminalNormal) =>
+    prerr_endline ("terminal normal bnranch hit");
+    Hashtbl.add(ret, "normalMode", true);
+    Hashtbl.add(ret, "terminalFocus", true);
+  | (false, Mode.TerminalVisual) =>
+    Hashtbl.add(ret, "visualMode", true);
+    Hashtbl.add(ret, "terminalFocus", true);
   | (false, Mode.Insert) =>
     Hashtbl.add(ret, "insertMode", true);
     Hashtbl.add(ret, "editorTextFocus", true);

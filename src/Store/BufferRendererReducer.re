@@ -24,6 +24,12 @@ let terminalReducer:
          normalMode: true, 
        }
     }
+    | Command("terminal.insertMode") => {
+       {
+          ...terminal,
+         normalMode: false, 
+       }
+    }
 
     | _ => terminal
     };

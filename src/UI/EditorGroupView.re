@@ -143,7 +143,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         | BufferRenderer.Terminal({normalMode, _}) when normalMode =>
           let buffer =
             Selectors.getBufferForEditor(state, editor)
-            |> Option.value(~default=Buffer.empty);
+            |> Option.value(~default=Buffer.initial);
 
           <EditorSurface
             isActiveSplit=isActive

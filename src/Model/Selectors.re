@@ -68,7 +68,7 @@ let getActiveConfigurationValue = (state: State.t, f) => {
   };
 };
 
-let getActiveTerminalId = (state: State.t) => {
+let getActiveTerminal = (state: State.t) => {
   state
   // See if terminal has focus
   |> getActiveBuffer
@@ -76,10 +76,16 @@ let getActiveTerminalId = (state: State.t) => {
   |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
   |> OptionEx.flatMap(renderer =>
        switch (renderer) {
-       | BufferRenderer.Terminal({id, _}) => Some(id)
+       | BufferRenderer.Terminal(terminal) => Some(terminal)
        | _ => None
        }
      );
+};
+
+let getActiveTerminalId = (state: State.t) => {
+  state
+  |> getActiveTerminal
+  |> Option.map(({id, _}: BufferRenderer.terminal) => id);
 };
 
 let terminalIsActive = (state: State.t) =>

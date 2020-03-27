@@ -14,7 +14,9 @@ type t =
   | Operator
   | CommandLine
   // Additional modes
-  | TerminalInsert;
+  | TerminalInsert
+  | TerminalNormal
+  | TerminalVisual;
 
 let toString =
   fun
@@ -25,4 +27,6 @@ let toString =
   | Replace => "Replace"
   | Operator => "Operator"
   | CommandLine => "Command Line"
-  | TerminalInsert => "Terminal Insert";
+  | TerminalInsert => "Terminal Insert"
+  | TerminalNormal => "Terminal Normal"
+  | TerminalVisual => "Terminal Visual";

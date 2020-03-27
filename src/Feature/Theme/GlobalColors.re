@@ -116,24 +116,28 @@ module Oni = {
   let backgroundFor = (mode: Mode.t) =>
     switch (mode) {
     | Select
+    | TerminalVisual
     | Visual => visualModeBackground
     | CommandLine => commandlineModeBackground
     | Operator => operatorModeBackground
     | TerminalInsert
     | Insert => insertModeBackground
     | Replace => replaceModeBackground
+    | TerminalNormal
     | Normal => normalModeBackground
     };
 
   let foregroundFor = (mode: Mode.t) =>
     switch (mode) {
     | Select
+    | TerminalVisual
     | Visual => visualModeForeground
     | CommandLine => commandlineModeForeground
     | Operator => operatorModeForeground
     | TerminalInsert
     | Insert => insertModeForeground
     | Replace => replaceModeForeground
+    | TerminalNormal
     | Normal => normalModeForeground
     };
 

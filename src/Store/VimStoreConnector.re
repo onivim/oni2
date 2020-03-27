@@ -910,6 +910,12 @@ let start =
         |> Option.iter((buf) => {
           Vim.Buffer.setLines(lines, buf);
         });
+
+        // Clear out previous mode
+        let _ = Vim.input("<esc>");
+        let _ = Vim.input("<esc>");
+        // Jump to bottom
+        let _ = Vim.input("G");
     });
   }
 

@@ -126,6 +126,8 @@ Onivim-specific contexts:
 | --- | --- |
 | `insertMode` |  The active editor is in `insert` mode |
 | `normalMode` |  The active editor is in `normal` mode |
+| `visualMode` |  The active editor is in `visual` mode |
+| `sneakMode` | Sneak mode is active |
 | `commandLineFocus` | The Vim commandline is open |
 | `menuFocus` | A pop-up menu has focus |
 
