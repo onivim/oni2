@@ -303,7 +303,7 @@ let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
 
 let getLines = (~terminalId) => {
   terminalId
-  |> Service_Terminal.getScreenOpt
+  |> Service_Terminal.getScreen
   |> Option.map(screen => {
        module TermScreen = ReveryTerminal.Screen;
        let totalRows = TermScreen.getTotalRows(screen);

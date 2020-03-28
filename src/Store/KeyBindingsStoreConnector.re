@@ -46,22 +46,22 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-P>",
         command: "workbench.action.quickOpen",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
         command: "workbench.action.quickOpen",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-C-P>",
         command: "workbench.action.showCommands",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S-P>",
         command: "workbench.action.showCommands",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-V>",
