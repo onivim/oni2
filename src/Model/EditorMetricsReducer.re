@@ -7,16 +7,16 @@ open Feature_Editor;
 
 let reduce = (v: EditorMetrics.t, action) => {
   switch (action) {
-  | EditorGroupSetSize(_, {pixelWidth, pixelHeight}) => {
-      ...v,
+  | EditorGroupSetSize(_, {pixelWidth, pixelHeight}) => EditorMetrics.{
       pixelWidth,
       pixelHeight,
-    }
-  | EditorFont(Service_Font.FontLoaded({measuredHeight, measuredWidth, _})) => {
+    };
+// TODO: Move elsewhere
+/*  | EditorFont(Service_Font.FontLoaded({measuredHeight, measuredWidth, _})) => {
       ...v,
       lineHeight: measuredHeight,
       characterWidth: measuredWidth,
-    }
+    }*/
   | _ => v
   };
 };

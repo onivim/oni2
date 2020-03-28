@@ -119,7 +119,6 @@ let make =
       ~metrics: EditorMetrics.t,
       ~editor: Editor.t,
       ~theme,
-      ~editorFont: Service_Font.font,
       ~mode: Vim.Mode.t,
       ~bufferHighlights,
       ~bufferSyntaxHighlights,
@@ -136,8 +135,10 @@ let make =
   let colors = Colors.precompute(theme);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
-  let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
+  let editorFont = editor.font;
+
+  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
+  let topVisibleLine = Editor.getTopVisibleLine(editor);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
   let cursorPosition = Editor.getPrimaryCursor(editor);
@@ -177,7 +178,7 @@ let make =
       height={metrics.pixelHeight}
       colors
       scrollY={editor.scrollY}
-      lineHeight={metrics.lineHeight}
+      lineHeight={editorFont.measuredHeight}
       count=lineCount
       editorFont
       cursorLine={Index.toZeroBased(cursorPosition.line)}

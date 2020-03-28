@@ -39,7 +39,7 @@ let make =
     ];
 
   let totalPixel =
-    Editor.getTotalSizeInPixels(editor, metrics) |> float_of_int;
+    Editor.getTotalSizeInPixels(editor) |> float_of_int;
 
   let bufferLineToScrollbarPixel = line => {
     let pixelY = float_of_int(line) *. editorFont.measuredHeight;

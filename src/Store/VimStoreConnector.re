@@ -538,8 +538,8 @@ let start =
                  |> Selectors.getActiveEditorGroup
                  |> Option.map(EditorGroup.getMetrics)
                  |> Option.iter(metrics => {
-                      let topLine = Editor.getTopVisibleLine(e, metrics);
-                      let leftCol = Editor.getLeftVisibleColumn(e, metrics);
+                      let topLine = Editor.getTopVisibleLine(e);
+                      let leftCol = Editor.getLeftVisibleColumn(e);
                       Vim.Window.setTopLeft(topLine, leftCol);
                     });
                ();

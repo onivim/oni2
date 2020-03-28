@@ -49,7 +49,7 @@ let getOrCreateEditorForBuffer = (state, bufferId) => {
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | Some(editor) => (state, editor)
   | None =>
-    let newEditor = Editor.create(~bufferId, ());
+    let newEditor = Editor.create(~font=Service_Font.default, ~bufferId, ());
     let newState = {
       ...state,
       editors: IntMap.add(newEditor.editorId, newEditor, state.editors),

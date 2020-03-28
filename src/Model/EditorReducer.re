@@ -29,7 +29,7 @@ module Internal = {
 let scrollTo = (view, newScrollY, metrics: EditorMetrics.t) => {
   let newScrollY = max(0., newScrollY);
   let availableScroll =
-    max(float_of_int(view.viewLines - 1), 0.) *. metrics.lineHeight;
+    max(float_of_int(view.viewLines - 1), 0.) *. Editor.getLineHeight(view)
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
@@ -46,7 +46,7 @@ let scrollTo = (view, newScrollY, metrics: EditorMetrics.t) => {
 };
 
 let scrollToLine = (view, line, metrics: EditorMetrics.t) => {
-  let scrollAmount = float_of_int(line) *. metrics.lineHeight;
+  let scrollAmount = float_of_int(line) *. Editor.getLineHeight(view);
   scrollTo(view, scrollAmount, metrics);
 };
 
@@ -57,7 +57,7 @@ let scrollToHorizontal = (view, newScrollX, metrics: EditorMetrics.t) => {
     max(
       0.,
       float_of_int(view.maxLineLength)
-      *. metrics.characterWidth
+      *. Editor.getCharacterWidth(view)
       -. float(metrics.pixelWidth),
     );
   let scrollX = min(newScrollX, availableScroll);
@@ -66,7 +66,7 @@ let scrollToHorizontal = (view, newScrollX, metrics: EditorMetrics.t) => {
 };
 
 let scrollToColumn = (view, column, metrics: EditorMetrics.t) => {
-  let scrollAmount = float_of_int(column) *. metrics.characterWidth;
+  let scrollAmount = float_of_int(column) *. Editor.getCharacterWidth(view);
   scrollToHorizontal(view, scrollAmount, metrics);
 };
 
