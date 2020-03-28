@@ -207,7 +207,11 @@ let start = (getState, contributedCommands) => {
         | Some(b) =>
           let ec = EditorGroup.create();
           let (g, editorId) =
-            EditorGroup.getOrCreateEditorForBuffer(ec, Buffer.getId(b));
+            EditorGroup.getOrCreateEditorForBuffer(
+              ~font=state.editorFont,
+              ~bufferId=Buffer.getId(b),
+              ec,
+            );
           let g = EditorGroup.setActiveEditor(g, editorId);
           g;
         | None => EditorGroup.create()

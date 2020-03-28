@@ -159,7 +159,6 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             onDimensionsChanged={_ => ()}
             onScroll
             theme
-            editorFont={state.editorFont}
             mode
             bufferHighlights={state.bufferHighlights}
             bufferSyntaxHighlights={state.syntaxHighlights}
