@@ -906,7 +906,7 @@ let start =
         |> Vim.Buffer.getById
         |> Option.iter(buf => {
              Vim.Buffer.setModifiable(~modifiable=true, buf);
-             Vim.Buffer.setLines(lines, buf);
+             Vim.Buffer.setLines(~lines, buf);
              Vim.Buffer.setModifiable(~modifiable=false, buf);
              Vim.Buffer.setReadOnly(~readOnly=true, buf);
            });
