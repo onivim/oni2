@@ -141,7 +141,8 @@ let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
     | _ => Default
     };
 
-let parseAutoClosingBrackets: Yojson.Safe.t => ConfigurationValues.autoClosingBrackets =
+let parseAutoClosingBrackets:
+  Yojson.Safe.t => ConfigurationValues.autoClosingBrackets =
   json =>
     switch (json) {
     | `Bool(true) => LanguageDefined
@@ -201,7 +202,7 @@ let configurationParsers: list(configurationTuple) = [
     "editor.autoClosingBrackets",
     (config, json) => {
       ...config,
-      editorAutoClosingBrackets: parseAutoClosingBrackets(json)
+      editorAutoClosingBrackets: parseAutoClosingBrackets(json),
     },
   ),
   (

@@ -564,9 +564,11 @@ let start =
             c => c.editorAutoClosingBrackets,
             state.configuration,
           )
-          |> fun 
-          | LanguageDefined => true
-          | Never => false;
+          |> (
+            fun
+            | LanguageDefined => true
+            | Never => false
+          );
 
         let autoClosingPairs =
           if (acpEnabled) {
