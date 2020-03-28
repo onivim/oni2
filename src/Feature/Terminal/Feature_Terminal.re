@@ -278,8 +278,6 @@ module Contributions = {
     ];
 };
 
-type highlight = (int, list(ColorizedToken.t));
-
 let getLines = (~terminalId) => {
   terminalId
   |> Service_Terminal.getScreenOpt
@@ -294,7 +292,7 @@ let getLines = (~terminalId) => {
          let buffer = Stdlib.Buffer.create(columns * 2);
 
          for (column in 0 to columns - 1) {
-           let cell = TermScreen.getCell(lineIndex, column, screen);
+           let cell = TermScreen.getCell(~row=lineIndex, ~column, screen);
            let codeInt = Uchar.to_int(cell.char);
            if (codeInt != 0 && codeInt <= 0x10FFFF) {
              Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);

@@ -149,7 +149,7 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
       let lines = Core.Buffer.getLines(newBuffer);
       let version = Core.Buffer.getVersion(newBuffer);
       let scope = getScopeForBuffer(newBuffer);
-      if (!isVersionValid(version, update.version) || true) {
+      if (!isVersionValid(version, update.version)) {
         default;
       } else {
         switch (scope) {
