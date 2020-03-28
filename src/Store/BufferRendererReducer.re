@@ -18,8 +18,8 @@ let terminalReducer:
         id,
         title,
       }
-    | Command("terminal.normalMode") => {...terminal, normalMode: true}
-    | Command("terminal.insertMode") => {...terminal, normalMode: false}
+    | Command("terminal.normalMode") => {...terminal, insertMode: false}
+    | Command("terminal.insertMode") => {...terminal, insertMode: true}
 
     | _ => terminal
     };

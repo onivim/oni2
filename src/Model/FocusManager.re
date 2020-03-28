@@ -33,7 +33,7 @@ let current = (state: State.t) =>
       |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
       |> OptionEx.flatMap(renderer =>
            switch (renderer) {
-           | BufferRenderer.Terminal({id, normalMode, _}) when !normalMode =>
+           | BufferRenderer.Terminal({id, insertMode, _}) when insertMode =>
              Some(Focus.Terminal(id))
            | _ => None
            }

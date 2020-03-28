@@ -13,6 +13,7 @@ module Model = Oni_Model;
 
 module Window = WindowManager;
 
+module Colors = Feature_Theme.Colors;
 module EditorSurface = Feature_Editor.EditorSurface;
 
 let noop = () => ();
@@ -72,10 +73,14 @@ let toUiTabs =
 };
 
 let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
-  let theme = state.theme;
+  let theme = Feature_Theme.resolver(state.colorTheme);
   let mode = state.vimMode;
 
-  let style = editorViewStyle(theme.editorBackground, theme.foreground);
+  let style =
+    editorViewStyle(
+      Colors.Editor.background.from(theme),
+      Colors.foreground.from(theme),
+    );
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -140,7 +145,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         let renderer =
           BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
         switch (renderer) {
-        | BufferRenderer.Terminal({normalMode, _}) when normalMode =>
+        | BufferRenderer.Terminal({insertMode, _}) when !insertMode =>
           let buffer =
             Selectors.getBufferForEditor(state, editor)
             |> Option.value(~default=Buffer.initial);
@@ -196,7 +201,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           |> Feature_Terminal.getTerminalOpt(id)
           |> Option.map(terminal => {
                <TerminalView
-                 theme={Feature_Theme.resolver(state.colorTheme)}
+                 theme
                  font={state.terminalFont}
                  metrics
                  terminal
@@ -214,7 +219,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
         <Tabs
           active=isActive
           activeEditorId={editorGroup.activeEditorId}
-          theme={Feature_Theme.resolver(state.colorTheme)}
+          theme
           tabs
           mode
           uiFont

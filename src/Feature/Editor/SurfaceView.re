@@ -31,18 +31,14 @@ module Styles = {
   ];
 };
 
-let drawCurrentLineHighlight = (~context, ~theme: Theme.t, line) =>
-  Draw.lineHighlight(
-    ~context,
-    ~color=theme.editorLineHighlightBackground,
-    line,
-  );
+let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
+  Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
-let renderRulers = (~context, ~theme: Theme.t, rulers) =>
+let renderRulers = (~context, ~colors: Colors.t, rulers) =>
   rulers
   |> List.map(bufferPositionToPixel(~context, 0))
   |> List.map(fst)
-  |> List.iter(Draw.ruler(~context, ~color=theme.editorRulerForeground));
+  |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
 
 let%component make =
               (
@@ -50,7 +46,7 @@ let%component make =
                 ~buffer,
                 ~editor,
                 ~metrics,
-                ~theme,
+                ~colors,
                 ~topVisibleLine,
                 ~onCursorChange,
                 ~cursorPosition: Location.t,
@@ -144,16 +140,16 @@ let%component make =
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(~context, ~theme, cursorPosition.line);
+        drawCurrentLineHighlight(~context, ~colors, cursorPosition.line);
 
-        renderRulers(~context, ~theme, Config.rulers.get(config));
+        renderRulers(~context, ~colors, Config.rulers.get(config));
 
         ContentView.render(
           ~context,
           ~count=lineCount,
           ~buffer,
           ~leftVisibleColumn,
-          ~theme,
+          ~colors,
           ~diagnosticsMap,
           ~selectionRanges,
           ~matchingPairs,
@@ -172,7 +168,7 @@ let%component make =
             ~startLine=topVisibleLine - 1,
             ~endLine=bottomVisibleLine + 1,
             ~cursorPosition,
-            ~theme,
+            ~colors,
             ~showActive=Config.highlightActiveIndentGuide.get(config),
             indentation,
           );
@@ -184,7 +180,7 @@ let%component make =
           ~mode,
           ~isActiveSplit,
           ~cursorPosition,
-          ~theme,
+          ~colors,
           ~windowIsFocused,
         );
       }}
@@ -194,7 +190,7 @@ let%component make =
         editor
         metrics
         width={metrics.pixelWidth}
-        theme
+        colors
       />
     </View>
   </View>;

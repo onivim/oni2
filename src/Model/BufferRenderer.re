@@ -14,7 +14,7 @@
 type terminal = {
   title: string,
   id: int,
-  normalMode: bool,
+  insertMode: bool,
 };
 
 [@deriving show({with_path: false})]

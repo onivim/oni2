@@ -55,9 +55,7 @@ module Styles = {
   let snippet = (~font: Service_Font.font, ~theme: Theme.t, ~isHighlighted) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
-    color(
-      isHighlighted ? theme.oniNormalModeBackground : theme.editorForeground,
-    ),
+    color(isHighlighted ? theme.oniNormalModeBackground : theme.foreground),
     textWrap(TextWrapping.NoWrap),
   ];
 };

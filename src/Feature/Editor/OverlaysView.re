@@ -30,7 +30,7 @@ let completionsView =
       ~completions,
       ~cursorPixelX,
       ~cursorPixelY,
-      ~theme,
+      ~colors,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
       (),
@@ -40,7 +40,7 @@ let completionsView =
         x=cursorPixelX
         y=cursorPixelY
         lineHeight={editorFont.measuredHeight}
-        theme
+        colors
         tokenTheme
         editorFont
         completions
@@ -59,7 +59,7 @@ let make =
       ~editor: Editor.t,
       ~gutterWidth,
       ~completions,
-      ~theme,
+      ~colors,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
       (),
@@ -105,7 +105,7 @@ let make =
           y=cursorPixelY
           delay=hoverDelay
           isEnabled=isHoverEnabled
-          theme
+          colors
           editorFont
           diagnostics
           editor
@@ -116,7 +116,7 @@ let make =
           completions
           cursorPixelX
           cursorPixelY
-          theme
+          colors
           tokenTheme
           editorFont
         />

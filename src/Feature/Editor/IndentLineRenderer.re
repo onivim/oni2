@@ -72,7 +72,7 @@ let render =
       ~startLine: int,
       ~endLine: int,
       ~cursorPosition: Location.t,
-      ~theme: Theme.t,
+      ~colors: Colors.t,
       ~showActive: bool,
       indentationSettings: IndentationSettings.t,
     ) => {
@@ -104,7 +104,7 @@ let render =
     for (i in 0 to level - 1) {
       Skia.Paint.setColor(
         paint,
-        Revery.Color.toSkia(theme.editorIndentGuideBackground),
+        Revery.Color.toSkia(colors.indentGuideBackground),
       );
       CanvasContext.drawRectLtwh(
         ~left=x +. indentationWidthInPixels *. float(i),
@@ -178,7 +178,7 @@ let render =
     if (cursorLineIndentLevel^ >= 1) {
       Skia.Paint.setColor(
         paint,
-        Revery.Color.toSkia(theme.editorIndentGuideActiveBackground),
+        Revery.Color.toSkia(colors.indentGuideActiveBackground),
       );
       CanvasContext.drawRectLtwh(
         ~left=

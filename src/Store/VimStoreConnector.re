@@ -667,7 +667,7 @@ let start =
               BufferRenderer.Terminal({
                 title: "Terminal",
                 id: bufferId,
-                normalMode: false,
+                insertMode: true,
               }),
             ),
           ),

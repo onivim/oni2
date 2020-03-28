@@ -14,7 +14,7 @@ let getTokensForLine =
       ~buffer,
       ~bufferHighlights,
       ~cursorLine,
-      ~theme: Theme.t,
+      ~colors: Colors.t,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~ignoreMatchingPairs=false,
@@ -38,8 +38,7 @@ let getTokensForLine =
 
     let isActiveLine = i == cursorLine;
     let defaultBackground =
-      isActiveLine
-        ? theme.editorLineHighlightBackground : theme.editorBackground;
+      isActiveLine ? colors.lineHighlightBackground : colors.editorBackground;
 
     let matchingPairIndex =
       switch (matchingPairs) {
@@ -68,12 +67,12 @@ let getTokensForLine =
         ~startIndex,
         ~endIndex,
         ~defaultBackgroundColor=defaultBackground,
-        ~defaultForegroundColor=theme.editorForeground,
+        ~defaultForegroundColor=colors.editorForeground,
         ~selectionHighlights=selection,
-        ~selectionColor=theme.editorSelectionBackground,
+        ~selectionColor=colors.selectionBackground,
         ~matchingPair=matchingPairIndex,
         ~searchHighlights=highlights,
-        ~searchHighlightColor=theme.editorFindMatchBackground,
+        ~searchHighlightColor=colors.findMatchBackground,
         tokenColors,
       );
 
@@ -85,7 +84,7 @@ let getTokenAtPosition =
       ~buffer,
       ~bufferHighlights,
       ~cursorLine,
-      ~theme,
+      ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~startIndex,
@@ -99,7 +98,7 @@ let getTokenAtPosition =
     ~buffer,
     ~bufferHighlights,
     ~cursorLine,
-    ~theme,
+    ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~ignoreMatchingPairs=true,

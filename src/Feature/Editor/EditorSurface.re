@@ -33,21 +33,20 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let container = (~theme: Theme.t) => [
-    backgroundColor(theme.editorBackground),
-    color(theme.editorForeground),
+  let container = (~colors: Colors.t) => [
+    backgroundColor(colors.editorBackground),
+    color(colors.editorForeground),
     flexGrow(1),
   ];
 
-  let verticalScrollBar = (~theme: Theme.t) =>
-    Style.[
-      position(`Absolute),
-      top(0),
-      right(0),
-      width(Constants.scrollBarThickness),
-      backgroundColor(theme.scrollbarSliderBackground),
-      bottom(0),
-    ];
+  let verticalScrollBar = (~colors: Colors.t) => [
+    position(`Absolute),
+    top(0),
+    right(0),
+    width(Constants.scrollBarThickness),
+    backgroundColor(colors.scrollbarSliderBackground),
+    bottom(0),
+  ];
 };
 
 let minimap =
@@ -55,7 +54,7 @@ let minimap =
       ~buffer,
       ~bufferHighlights,
       ~cursorPosition: Location.t,
-      ~theme,
+      ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~selectionRanges,
@@ -94,7 +93,7 @@ let minimap =
         ~buffer,
         ~bufferHighlights,
         ~cursorLine=Index.toZeroBased(cursorPosition.line),
-        ~theme,
+        ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
         0,
@@ -103,7 +102,7 @@ let minimap =
       selection=selectionRanges
       showSlider=showMinimapSlider
       onScroll
-      theme
+      colors
       bufferHighlights
       diffMarkers
     />
@@ -119,7 +118,7 @@ let make =
       ~isActiveSplit: bool,
       ~metrics: EditorMetrics.t,
       ~editor: Editor.t,
-      ~theme: Theme.t,
+      ~theme,
       ~editorFont: Service_Font.font,
       ~mode: Vim.Mode.t,
       ~bufferHighlights,
@@ -134,6 +133,7 @@ let make =
       ~config,
       (),
     ) => {
+  let colors = Colors.precompute(theme);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
@@ -175,7 +175,7 @@ let make =
     <GutterView
       showLineNumbers={Config.lineNumbers.get(config)}
       height={metrics.pixelHeight}
-      theme
+      colors
       scrollY={editor.scrollY}
       lineHeight={metrics.lineHeight}
       count=lineCount
@@ -184,14 +184,14 @@ let make =
       diffMarkers
     />;
 
-  <View style={Styles.container(~theme)} onDimensionsChanged>
+  <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
       onScroll
       buffer
       editor
       metrics
-      theme
+      colors
       topVisibleLine
       onCursorChange
       cursorPosition
@@ -219,7 +219,7 @@ let make =
            buffer
            bufferHighlights
            cursorPosition
-           theme
+           colors
            matchingPairs
            bufferSyntaxHighlights
            selectionRanges
@@ -242,17 +242,17 @@ let make =
       gutterWidth
       editorFont
       completions
-      theme
+      colors
       tokenTheme
     />
-    <View style={Styles.verticalScrollBar(~theme)}>
+    <View style={Styles.verticalScrollBar(~colors)}>
       <EditorVerticalScrollbar
         editor
         metrics
         width=Constants.scrollBarThickness
         height={metrics.pixelHeight}
         diagnostics=diagnosticsMap
-        theme
+        colors
         editorFont
         bufferHighlights
       />

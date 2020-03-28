@@ -52,6 +52,8 @@ module Schema: {
 
   module DSL: {
     let hex: string => Defaults.expr;
+    let rgb: (int, int, int) => Defaults.expr;
+    let rgba: (int, int, int, float) => Defaults.expr;
     let color: Revery.Color.t => Defaults.expr;
     let ref: definition => Defaults.expr;
     let computed:
@@ -65,6 +67,8 @@ module Schema: {
   };
 
   let hex: string => Defaults.expr;
+  let rgb: (int, int, int) => Defaults.expr;
+  let rgba: (int, int, int, float) => Defaults.expr;
   let color: Revery.Color.t => Defaults.expr;
   let ref: definition => Defaults.expr;
   let computed:
