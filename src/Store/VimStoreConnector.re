@@ -561,9 +561,12 @@ let start =
 
         let acpEnabled =
           Core.Configuration.getValue(
-            c => c.experimentalAutoClosingPairs,
+            c => c.editorAutoClosingBrackets,
             state.configuration,
-          );
+          )
+          |> fun 
+          | LanguageDefined => true
+          | Never => false;
 
         let autoClosingPairs =
           if (acpEnabled) {

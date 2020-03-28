@@ -141,6 +141,21 @@ let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
     | _ => Default
     };
 
+let parseAutoClosingBrackets: Yojson.Safe.t => ConfigurationValues.autoClosingBrackets =
+  json =>
+    switch (json) {
+    | `Bool(true) => LanguageDefined
+    | `Bool(false) => Never
+    | `String(autoClosingBrackets) =>
+      let autoClosingBrackets = String.lowercase_ascii(autoClosingBrackets);
+      switch (autoClosingBrackets) {
+      | "never" => Never
+      | "languagedefined" => LanguageDefined
+      | _ => Never
+      };
+    | _ => Never
+    };
+
 let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled = {
   let decode =
     Json.Decode.(
@@ -182,6 +197,13 @@ type parseFunction =
 type configurationTuple = (string, parseFunction);
 
 let configurationParsers: list(configurationTuple) = [
+  (
+    "editor.autoClosingBrackets",
+    (config, json) => {
+      ...config,
+      editorAutoClosingBrackets: parseAutoClosingBrackets(json)
+    },
+  ),
   (
     "editor.fontFamily",
     (config, json) => {
@@ -419,13 +441,6 @@ let configurationParsers: list(configurationTuple) = [
   (
     "experimental.treeSitter",
     (config, json) => {...config, experimentalTreeSitter: parseBool(json)},
-  ),
-  (
-    "experimental.autoClosingPairs",
-    (config, json) => {
-      ...config,
-      experimentalAutoClosingPairs: parseBool(json),
-    },
   ),
   (
     "experimental.viml",
