@@ -15,6 +15,12 @@ let map2 = (f, a, b) =>
   | _ => None
   };
 
+let map3 = (f, a, b, c) =>
+  switch (a, b, c) {
+  | (Some(aVal), Some(bVal), Some(cVal)) => Some(f(aVal, bVal, cVal))
+  | _ => None
+  };
+
 let iter2 = (f, a, b) => {
   switch (a, b) {
   | (Some(a), Some(b)) => f(a, b)

@@ -10,13 +10,16 @@ let terminalReducer:
     switch (action) {
     | Actions.Terminal(
         Feature_Terminal.Service(
-          Service_Terminal.ProcessTitleChanged({id, title}),
+          Service_Terminal.ProcessTitleChanged({id, title, _}),
         ),
       )
         when terminal.id == id => {
+        ...terminal,
         id,
         title,
       }
+    | Command("terminal.normalMode") => {...terminal, insertMode: false}
+    | Command("terminal.insertMode") => {...terminal, insertMode: true}
 
     | _ => terminal
     };

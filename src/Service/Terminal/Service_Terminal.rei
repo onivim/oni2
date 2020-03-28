@@ -36,3 +36,5 @@ module Sub: {
 module Effect: {let input: (~id: int, string) => Isolinear.Effect.t(msg);};
 
 let handleExtensionMessage: ExtHostClient.Terminal.msg => unit;
+
+let getScreen: int => option(ReveryTerminal.Screen.t);

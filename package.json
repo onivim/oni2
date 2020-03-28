@@ -212,7 +212,7 @@
     "reasonFuzz": "*",
     "rench": "1.7.1",
     "revery": "0.30.0",
-    "revery-terminal": "revery-ui/revery-terminal#0bf4bf4",
+    "revery-terminal": "*",
     "reason-tree-sitter": "^1.0.1001",
     "reason-textmate": "^2.3.1",
     "esy-sdl2": "*",
@@ -240,7 +240,6 @@
     "@opam/lwt_ppx": "1.2.2",
     "@opam/merlin-extend": "0.4",
     "revery": "revery-ui/revery#ced2dde",
-    "reason-libvim": "onivim/reason-libvim#cf76967",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
     "esy-skia": "revery-ui/esy-skia#91b10c9",
@@ -254,7 +253,8 @@
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "editor-input": "onivim/editor-input#c494950",
     "reason-sdl2": "revery-ui/reason-sdl2#ce07970",
-    "isolinear": "revery-ui/isolinear#b17ce17"
+    "isolinear": "revery-ui/isolinear#b17ce17",
+    "revery-terminal": "revery-ui/revery-terminal#2ef1c65"
   },
   "devDependencies": {
     "ocaml": "~4.8",

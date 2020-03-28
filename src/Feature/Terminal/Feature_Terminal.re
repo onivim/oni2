@@ -1,5 +1,4 @@
 open Oni_Core;
-
 module ExtHostClient = Oni_Extensions.ExtHostClient;
 
 type terminal = {
@@ -228,6 +227,30 @@ module Colors = {
     );
 };
 
+let theme = theme =>
+  fun
+  | 0 => Colors.ansiBlack.from(theme)
+  | 1 => Colors.ansiRed.from(theme)
+  | 2 => Colors.ansiGreen.from(theme)
+  | 3 => Colors.ansiYellow.from(theme)
+  | 4 => Colors.ansiBlue.from(theme)
+  | 5 => Colors.ansiMagenta.from(theme)
+  | 6 => Colors.ansiCyan.from(theme)
+  | 7 => Colors.ansiWhite.from(theme)
+  | 8 => Colors.ansiBrightBlack.from(theme)
+  | 9 => Colors.ansiBrightRed.from(theme)
+  | 10 => Colors.ansiBrightGreen.from(theme)
+  | 11 => Colors.ansiBrightYellow.from(theme)
+  | 12 => Colors.ansiBrightBlue.from(theme)
+  | 13 => Colors.ansiBrightMagenta.from(theme)
+  | 14 => Colors.ansiBrightCyan.from(theme)
+  | 15 => Colors.ansiBrightWhite.from(theme)
+  // For 256 colors, fall back to defaults
+  | idx => ReveryTerminal.Theme.default(idx);
+
+let defaultBackground = theme => Colors.background.from(theme);
+let defaultForeground = theme => Colors.foreground.from(theme);
+
 // CONTRIBUTIONS
 
 module Contributions = {
@@ -252,4 +275,69 @@ module Contributions = {
       ansiBrightMagenta,
       ansiBrightWhite,
     ];
+};
+
+let getFirstNonEmptyLine =
+    (~start: int, ~direction: int, lines: array(string)) => {
+  let len = Array.length(lines);
+
+  let rec loop = idx =>
+    if (idx == len || idx < 0) {
+      idx;
+    } else if (String.length(lines[idx]) == 0) {
+      loop(idx + direction);
+    } else {
+      idx;
+    };
+
+  loop(start);
+};
+
+let getFirstNonEmptyLineFromTop = (lines: array(string)) => {
+  getFirstNonEmptyLine(~start=0, ~direction=1, lines);
+};
+
+let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
+  getFirstNonEmptyLine(~start=Array.length(lines) - 1, ~direction=-1, lines);
+};
+
+let getLines = (~terminalId) => {
+  terminalId
+  |> Service_Terminal.getScreen
+  |> Option.map(screen => {
+       module TermScreen = ReveryTerminal.Screen;
+       let totalRows = TermScreen.getTotalRows(screen);
+       let columns = TermScreen.getColumns(screen);
+
+       let lines = Array.make(totalRows, "");
+
+       for (lineIndex in 0 to totalRows - 1) {
+         let buffer = Stdlib.Buffer.create(columns * 2);
+
+         for (column in 0 to columns - 1) {
+           let cell = TermScreen.getCell(~row=lineIndex, ~column, screen);
+           let codeInt = Uchar.to_int(cell.char);
+           if (codeInt != 0 && codeInt <= 0x10FFFF) {
+             Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);
+           } else {
+             Stdlib.Buffer.add_string(buffer, " ");
+           };
+         };
+
+         let str =
+           Stdlib.Buffer.contents(buffer) |> Utility.StringEx.trimRight;
+         lines[lineIndex] = str;
+       };
+
+       let startLine = getFirstNonEmptyLineFromTop(lines);
+       let bottomLine = getFirstNonEmptyLineFromBottom(lines);
+
+       Utility.ArrayEx.slice(
+         ~start=startLine,
+         ~length=bottomLine - startLine + 1,
+         ~lines,
+         (),
+       );
+     })
+  |> Option.value(~default=[||]);
 };

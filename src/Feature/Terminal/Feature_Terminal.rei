@@ -81,4 +81,10 @@ module Colors: {
   let ansiBrightWhite: ColorTheme.Schema.definition;
 };
 
+let theme: ColorTheme.resolver => ReveryTerminal.Theme.t;
+let defaultBackground: ColorTheme.resolver => Revery.Color.t;
+let defaultForeground: ColorTheme.resolver => Revery.Color.t;
+
+let getLines: (~terminalId: int) => array(string);
+
 module Contributions: {let colors: list(ColorTheme.Schema.definition);};
