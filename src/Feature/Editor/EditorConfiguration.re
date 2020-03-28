@@ -102,7 +102,11 @@ module Experimental = {
     setting("experimental.editor.smoothScroll", bool, ~default=false);
 
   let editorSmoothCursor =
-    setting("experimental.editor.smoothCursor", bool, ~default=false);
+    setting(
+      "experimental.editor.cursorSmoothCaretAnimation",
+      bool,
+      ~default=false,
+    );
 };
 
 let contributions = [
