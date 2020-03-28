@@ -533,9 +533,9 @@ let start =
         let () =
           editor
           |> Option.iter(e => {
-                      let topLine = Editor.getTopVisibleLine(e);
-                      let leftCol = Editor.getLeftVisibleColumn(e);
-                      Vim.Window.setTopLeft(topLine, leftCol);
+               let topLine = Editor.getTopVisibleLine(e);
+               let leftCol = Editor.getLeftVisibleColumn(e);
+               Vim.Window.setTopLeft(topLine, leftCol);
              });
 
         let syntaxScope =

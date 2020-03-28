@@ -7,8 +7,7 @@ open Revery.UI;
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-let make =
-    (~editor: Editor.t, ~width as totalWidth, ~colors: Colors.t, ()) => {
+let make = (~editor: Editor.t, ~width as totalWidth, ~colors: Colors.t, ()) => {
   let scrollMetrics =
     Editor.getHorizontalScrollbarMetrics(editor, totalWidth);
 

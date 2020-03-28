@@ -91,8 +91,7 @@ let%component make =
       let relX = evt.mouseX -. minX;
 
       let numberOfLines = Buffer.getNumberOfLines(buffer);
-      let (line, col) =
-        Editor.pixelPositionToLineColumn(editor, relX, relY);
+      let (line, col) = Editor.pixelPositionToLineColumn(editor, relX, relY);
 
       if (line < numberOfLines) {
         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
@@ -186,11 +185,7 @@ let%component make =
       }}
     />
     <View style=Styles.horizontalScrollBar>
-      <EditorHorizontalScrollbar
-        editor
-        width={metrics.pixelWidth}
-        colors
-      />
+      <EditorHorizontalScrollbar editor width={metrics.pixelWidth} colors />
     </View>
   </View>;
 };
