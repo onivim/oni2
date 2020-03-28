@@ -4,13 +4,7 @@ open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
-let metrics =
-  EditorMetrics.{
-    pixelWidth: 3440,
-    pixelHeight: 1440,
-    lineHeight: 10.,
-    characterWidth: 10.,
-  };
+let metrics = EditorMetrics.{pixelWidth: 3440, pixelHeight: 1440};
 
 /* Create a state with some editor size */
 let simpleState = {
@@ -25,23 +19,22 @@ let simpleState = {
   );
 };
 
+let defaultFont: Service_Font.font = {
+  fontFile: Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+  fontSize: 10.,
+  measuredWidth: 10.,
+  measuredHeight: 10.,
+  descenderHeight: 1.,
+  smoothing: Revery.Font.Smoothing.default,
+};
+
 let simpleState =
   Reducer.reduce(
     simpleState,
-    Actions.EditorFont(
-      Service_Font.FontLoaded({
-        fontFile:
-          Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
-        fontSize: 10.,
-        measuredWidth: 10.,
-        measuredHeight: 10.,
-        descenderHeight: 1.,
-        smoothing: Revery.Font.Smoothing.default,
-      }),
-    ),
+    Actions.EditorFont(Service_Font.FontLoaded(defaultFont)),
   );
 
-let simpleEditor = Editor.create();
+let simpleEditor = Editor.create(~font=defaultFont, ());
 let editorGroup =
   EditorGroups.getActiveEditorGroup(simpleState.editorGroups)
   |> Option.value(~default=EditorGroup.create());

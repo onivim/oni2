@@ -11,10 +11,10 @@ type individualRange = {
 };
 
 let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
-  let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
+  let topVisibleLine = Editor.getTopVisibleLine(editor);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
-  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
+  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
 
   let {bufferWidthInCharacters, minimapWidthInCharacters, _}: EditorLayout.t =
     Editor.getLayout(editor, metrics);

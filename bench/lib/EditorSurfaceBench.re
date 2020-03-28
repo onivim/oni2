@@ -33,7 +33,6 @@ let editorSurfaceMinimalState = hwnd => {
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
       theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
-      editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,
@@ -59,7 +58,6 @@ let editorSurfaceThousandLineState = hwnd => {
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
       theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
-      editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,
@@ -85,7 +83,6 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
       theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
-      editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(
         Config.Settings.fromList([
@@ -115,7 +112,6 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
       theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
-      editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(
         Config.Settings.fromList([
@@ -145,7 +141,6 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
       theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
-      editorFont={thousandLineState.editorFont}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,

@@ -91,8 +91,7 @@ let%component make =
       let relX = evt.mouseX -. minX;
 
       let numberOfLines = Buffer.getNumberOfLines(buffer);
-      let (line, col) =
-        Editor.pixelPositionToLineColumn(editor, metrics, relX, relY);
+      let (line, col) = Editor.pixelPositionToLineColumn(editor, relX, relY);
 
       if (line < numberOfLines) {
         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
@@ -119,14 +118,14 @@ let%component make =
     ref={node => elementRef := Some(node)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(metrics.pixelWidth) -. gutterWidth,
+      float(EditorMetrics.(metrics.pixelWidth)) -. gutterWidth,
     )}
     onMouseUp
     onMouseWheel>
     <Canvas
       style={Styles.bufferViewClipped(
         0.,
-        float(metrics.pixelWidth) -. gutterWidth,
+        float(EditorMetrics.(metrics.pixelWidth)) -. gutterWidth,
       )}
       render={canvasContext => {
         let context =
@@ -186,12 +185,7 @@ let%component make =
       }}
     />
     <View style=Styles.horizontalScrollBar>
-      <EditorHorizontalScrollbar
-        editor
-        metrics
-        width={metrics.pixelWidth}
-        colors
-      />
+      <EditorHorizontalScrollbar editor width={metrics.pixelWidth} colors />
     </View>
   </View>;
 };

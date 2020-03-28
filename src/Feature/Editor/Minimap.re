@@ -84,7 +84,7 @@ let absoluteStyle =
   ];
 
 let getMinimapSize = (view: Editor.t, metrics) => {
-  let currentViewSize = Editor.getVisibleView(metrics);
+  let currentViewSize = Editor.getVisibleView(view, metrics);
 
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
@@ -125,8 +125,8 @@ let%component make =
     React.Hooks.reducer(~initialState, reducer);
 
   let getScrollTo = (mouseY: float) => {
-    let totalHeight: int = Editor.getTotalSizeInPixels(editor, metrics);
-    let visibleHeight: int = metrics.pixelHeight;
+    let totalHeight: int = Editor.getTotalSizeInPixels(editor);
+    let visibleHeight: int = EditorMetrics.(metrics.pixelHeight);
     let offsetMouseY: int = int_of_float(mouseY) - Constants.tabHeight;
     float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
   };
@@ -186,7 +186,7 @@ let%component make =
             ~left=0.,
             ~top=
               rowHeight
-              *. float(Editor.getTopVisibleLine(editor, metrics) - 1)
+              *. float(Editor.getTopVisibleLine(editor) - 1)
               -. scrollY,
             ~height=rowHeight *. float(getMinimapSize(editor, metrics)),
             ~width=float(width),
