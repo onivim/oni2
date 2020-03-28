@@ -99,7 +99,10 @@ module ZenMode = {
 
 module Experimental = {
   let editorSmoothScroll =
-    setting("experimental.editor.smoothScroll", bool, ~default=true);
+    setting("experimental.editor.smoothScroll", bool, ~default=false);
+
+  let editorSmoothCursor =
+    setting("experimental.editor.smoothCursor", bool, ~default=false);
 };
 
 let contributions = [
