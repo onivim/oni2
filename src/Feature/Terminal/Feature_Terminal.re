@@ -280,7 +280,7 @@ module Contributions = {
 
 type highlight = (int, list(ColorizedToken.t));
 
-let getLinesAndHighlights = (~colorTheme, terminalId) => {
+let getLines = (~terminalId) => {
   terminalId
   |> Service_Terminal.getScreenOpt
   |> Option.map(screen => {
@@ -289,58 +289,15 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
        let columns = TermScreen.getColumns(screen);
 
        let lines = Array.make(totalRows, "");
-       let highlights = ref([]);
 
-       let theme = theme(colorTheme);
-       let defaultBackground = defaultBackground(colorTheme);
-       let defaultForeground = defaultForeground(colorTheme);
        for (lineIndex in 0 to totalRows - 1) {
          let buffer = Stdlib.Buffer.create(columns * 2);
 
-         let lineHighlights = ref([]);
          for (column in 0 to columns - 1) {
            let cell = TermScreen.getCell(lineIndex, column, screen);
            let codeInt = Uchar.to_int(cell.char);
            if (codeInt != 0 && codeInt <= 0x10FFFF) {
              Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);
-             let fg =
-               TermScreen.getForegroundColor(
-                 ~defaultBackground,
-                 ~defaultForeground,
-                 ~theme,
-                 cell,
-               );
-             let bg =
-               TermScreen.getBackgroundColor(
-                 ~defaultBackground,
-                 ~defaultForeground,
-                 ~theme,
-                 cell,
-               );
-
-             // TODO: Only create if necessary
-             let newToken =
-               ColorizedToken.{
-                 index: column,
-                 backgroundColor: bg,
-                 foregroundColor: fg,
-                 syntaxScope: SyntaxScope.none,
-               };
-
-             let newHighlights =
-               switch (lineHighlights^) {
-               | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail] when (foregroundColor != fg || backgroundColor != bg) => [newToken, ct, ...tail]
-               | [
-                   ColorizedToken.{foregroundColor, backgroundColor, _} as ct,
-                   ...tail,
-                 ] => [
-                   newToken,
-                   ct,
-                   ...tail,
-                 ]
-               | [] => [newToken]
-               };
-             lineHighlights := newHighlights;
            } else {
              Stdlib.Buffer.add_string(buffer, " ");
            };
@@ -349,11 +306,8 @@ let getLinesAndHighlights = (~colorTheme, terminalId) => {
          let str =
            Stdlib.Buffer.contents(buffer) |> Utility.StringEx.trimRight;
          lines[lineIndex] = str;
-
-         highlights :=
-           [(lineIndex, List.rev(lineHighlights^)), ...highlights^];
        };
-       (lines, highlights^);
+       lines;
      })
-  |> Option.value(~default=([||], []));
+  |> Option.value(~default=[||]);
 };

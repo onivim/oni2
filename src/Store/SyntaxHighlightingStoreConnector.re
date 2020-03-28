@@ -134,7 +134,7 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
     //| Model.Actions.BufferEnter(_)
     | Model.Actions.ViewCloseEditor(_) =>
       let visibleBuffers = [];
-        //Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
+      //Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
       (
         state,
         Service_Syntax.Effect.visibilityChanged(

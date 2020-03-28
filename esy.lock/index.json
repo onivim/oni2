@@ -1,5 +1,5 @@
 {
-  "checksum": "dc68dff2c6570a8b80fc087f24e75aa3",
+  "checksum": "6521cd255228442bfac3636035c0f9e9",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -117,11 +117,15 @@
       "dependencies": [ "@opam/dune@opam:2.4.0@639d28a3" ],
       "devDependencies": []
     },
-    "revery-terminal@link:../revery-terminal": {
-      "id": "revery-terminal@link:../revery-terminal",
+    "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9": {
+      "id":
+        "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9",
       "name": "revery-terminal",
-      "version": "link:../revery-terminal",
-      "source": { "type": "link", "path": "../revery-terminal" },
+      "version": "github:revery-ui/revery-terminal#2ef1c65",
+      "source": {
+        "type": "install",
+        "source": [ "github:revery-ui/revery-terminal#2ef1c65" ]
+      },
       "overrides": [],
       "dependencies": [
         "revery@github:revery-ui/revery#ced2dde@d41d8cd9",
@@ -423,18 +427,18 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#cf76967@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#cf76967@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#95b03c5@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#95b03c5@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#cf76967",
+      "version": "github:onivim/reason-libvim#95b03c5",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#cf76967" ]
+        "source": [ "github:onivim/reason-libvim#95b03c5" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
-        "libvim@8.10869.35@d41d8cd9",
+        "libvim@8.10869.37@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "@opam/dune-configurator@opam:2.4.0@6976bb12",
         "@opam/dune@opam:2.4.0@639d28a3",
@@ -641,14 +645,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.35@d41d8cd9": {
-      "id": "libvim@8.10869.35@d41d8cd9",
+    "libvim@8.10869.37@d41d8cd9": {
+      "id": "libvim@8.10869.37@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.35",
+      "version": "8.10869.37",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.35.tgz#sha1:c476f8d8113bf7978a8e1ceb6331ce3616a867f3"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.37.tgz#sha1:4a139fcc69d7d5a471427863837859139313019e"
         ]
       },
       "overrides": [],
@@ -1197,7 +1201,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery-terminal@link:../revery-terminal",
+        "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9",
         "revery@github:revery-ui/revery#ced2dde@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
@@ -1206,7 +1210,7 @@
         "reason-textmate@2.3.1@d41d8cd9",
         "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#cf76967@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#95b03c5@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",

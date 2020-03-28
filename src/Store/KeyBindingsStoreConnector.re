@@ -274,13 +274,13 @@ let start = maybeKeyBindingsFilePath => {
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
-        key: "O",
+        key: "<S-O>",
         command: "terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
-        key: "A",
+        key: "Shift+a",
         command: "terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
@@ -298,7 +298,7 @@ let start = maybeKeyBindingsFilePath => {
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
-        key: "I",
+        key: "Shift+i",
         command: "terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,

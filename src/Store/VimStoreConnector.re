@@ -1,5 +1,5 @@
 /*
- * VimStoreConnector.re
+ * /
  *
  * This module connects vim to the Store:
  * - Translates incoming vim notifications into Actions
@@ -590,7 +590,6 @@ let start =
           };
 
         let cursors = Vim.input(~autoClosingPairs?, ~cursors, key);
-
         let newTopLine = Vim.Window.getTopLine();
         let newLeftColumn = Vim.Window.getLeftColumn();
 
@@ -907,12 +906,17 @@ let start =
       ();
     });
 
-  let setBufferLinesEffect = (bufferId, lines: array(string)) => {
-    Isolinear.Effect.create(~name="vim.setBufferLines", () => {
+  let setTerminalLinesEffect = (~editorId, ~bufferId, lines: array(string)) => {
+    Isolinear.Effect.create(~name="vim.setTerminalLinesEffect", () => {
       let () =
         bufferId
         |> Vim.Buffer.getById
-        |> Option.iter(buf => {Vim.Buffer.setLines(lines, buf)});
+        |> Option.iter(buf => {
+             Vim.Buffer.setModifiable(~modifiable=true, buf);
+             Vim.Buffer.setLines(lines, buf);
+             Vim.Buffer.setModifiable(~modifiable=false, buf);
+             Vim.Buffer.setReadOnly(~readOnly=true, buf);
+           });
 
       // Clear out previous mode
       let _ = Vim.input("<esc>");
@@ -920,8 +924,14 @@ let start =
       // Jump to bottom
       let _ = Vim.input("g");
       let _ = Vim.input("g");
-      let _ = Vim.input("G");
-      ();
+      let cursors = Vim.input("G");
+      let newTopLine = Vim.Window.getTopLine();
+      let newLeftColumn = Vim.Window.getLeftColumn();
+
+      // Update the editor, which is the source of truth for cursor position
+      dispatch(Actions.EditorCursorMove(editorId, cursors));
+      dispatch(Actions.EditorScrollToLine(editorId, newTopLine - 1));
+      dispatch(Actions.EditorScrollToColumn(editorId, newLeftColumn));
     });
   };
 
@@ -998,37 +1008,21 @@ let start =
              | _ => None,
            );
 
+      let maybeEditorId =
+        state
+        |> Selectors.getActiveEditorGroup
+        |> Selectors.getActiveEditor
+        |> Option.map((editor: Feature_Editor.Editor.t) => editor.editorId);
+
       let (state, effect) =
-        OptionEx.map2(
-          (bufferId, terminalId) => {
-            let (lines, _highlights) =
-              Feature_Terminal.getLinesAndHighlights(
-                ~colorTheme=Feature_Theme.resolver(state.colorTheme),
-                terminalId,
-              );
-
-            let syntaxHighlights =
-              List.fold_left(
-                (acc, curr) => {
-                  let (line, tokens) = curr;
-                  Feature_Syntax.setTokensForLine(
-                    ~bufferId,
-                    ~line,
-                    ~tokens,
-                    acc,
-                  );
-                },
-                state.syntaxHighlights,
-                _highlights,
-              );
-
-            (
-              {...state, syntaxHighlights},
-              setBufferLinesEffect(bufferId, lines),
-            );
+        OptionEx.map3(
+          (bufferId, terminalId, editorId) => {
+            let lines = Feature_Terminal.getLines(~terminalId);
+            (state, setTerminalLinesEffect(~bufferId, ~editorId, lines));
           },
           maybeBufferId,
           maybeTerminalId,
+          maybeEditorId,
         )
         |> Option.value(~default=(state, Isolinear.Effect.none));
 
