@@ -93,6 +93,9 @@ module Schema = {
     open Defaults;
 
     let hex = str => Constant(Color.hex(str));
+    let rgb = (r, g, b) => Constant(Color.rgb_int(r, g, b));
+    let rgba = (r, g, b, a) =>
+      Constant(Color.rgba_int(r, g, b, int_of_float(a *. 255.)));
     let color = color => Constant(color);
     let ref = def => Reference(def.key);
     let computed = f => Computed(f);

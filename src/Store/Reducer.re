@@ -22,7 +22,8 @@ let reduce: (State.t, Actions.t) => State.t =
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
         commands: Commands.reduce(s.commands, a),
         definition: DefinitionReducer.reduce(a, s.definition),
-        editorGroups: EditorGroups.reduce(s.editorGroups, a),
+        editorGroups:
+          EditorGroups.reduce(~defaultFont=s.editorFont, s.editorGroups, a),
         extensions: ExtensionsReducer.reduce(a, s.extensions),
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
@@ -45,7 +46,6 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | SetColorTheme(theme) => {...s, theme}
-      | ChangeMode(m) => {...s, mode: m}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}

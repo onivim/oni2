@@ -31,9 +31,8 @@ let editorSurfaceMinimalState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
-      theme={thousandLineState.theme}
-      editorFont={thousandLineState.editorFont}
+      mode={thousandLineState.vimMode}
+      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,
@@ -57,9 +56,8 @@ let editorSurfaceThousandLineState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
-      theme={thousandLineState.theme}
-      editorFont={thousandLineState.editorFont}
+      mode={thousandLineState.vimMode}
+      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,
@@ -83,9 +81,8 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
-      theme={thousandLineState.theme}
-      editorFont={thousandLineState.editorFont}
+      mode={thousandLineState.vimMode}
+      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(
         Config.Settings.fromList([
@@ -113,9 +110,8 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
-      theme={thousandLineState.theme}
-      editorFont={thousandLineState.editorFont}
+      mode={thousandLineState.vimMode}
+      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(
         Config.Settings.fromList([
@@ -143,9 +139,8 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.mode}
-      theme={thousandLineState.theme}
-      editorFont={thousandLineState.editorFont}
+      mode={thousandLineState.vimMode}
+      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,

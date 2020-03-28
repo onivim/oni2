@@ -28,6 +28,7 @@ module Lifecycle = Lifecycle;
 module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
 module Modal = Modal;
+module ModeManager = ModeManager;
 module Pane = Pane;
 module References = References;
 module Selectors = Selectors;

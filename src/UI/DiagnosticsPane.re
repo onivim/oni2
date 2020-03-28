@@ -16,7 +16,7 @@ module Styles = {
     Style.[
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
-      color(theme.editorForeground),
+      color(theme.foreground),
       margin(8),
     ];
 };

@@ -9,4 +9,6 @@ let getActiveEditorGroup: t => option(EditorGroup.t);
 let isActive: (t, EditorGroup.t) => bool;
 let isEmpty: (int, t) => bool;
 
-let reduce: (t, Actions.t) => t;
+let reduce: (~defaultFont: Service_Font.font, t, Actions.t) => t;
+
+let setBufferFont: (~bufferId: int, ~font: Service_Font.font, t) => t;

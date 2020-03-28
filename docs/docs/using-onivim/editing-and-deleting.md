@@ -4,4 +4,14 @@ title: Editing and Deleting Text
 sidebar_label: Editing and Deleting Text
 ---
 
-Coming soon!
+## Insert Mode
+
+TODO
+
+## Operators
+
+TODO
+
+## Undo / Redo
+
+TODO

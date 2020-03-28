@@ -9,7 +9,7 @@ let render =
       ~mode: Vim.Mode.t,
       ~isActiveSplit,
       ~cursorPosition: Location.t,
-      ~theme: Theme.t,
+      ~colors: Colors.t,
       ~windowIsFocused,
     ) => {
   let line = Index.toZeroBased(cursorPosition.line);
@@ -26,8 +26,8 @@ let render =
     let x = float(offset) *. context.charWidth;
     let y = float(line) *. context.lineHeight +. 0.5;
     let height = context.lineHeight;
-    let background = theme.editorCursorBackground;
-    let foreground = theme.editorCursorForeground;
+    let background = colors.cursorBackground;
+    let foreground = colors.cursorForeground;
 
     if (!windowIsFocused) {
       let width = float(characterWidth) *. context.charWidth;

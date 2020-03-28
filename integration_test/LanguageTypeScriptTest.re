@@ -7,7 +7,7 @@ open Feature_LanguageSupport;
 runTestWithInput(
   ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   ExtensionHelpers.waitForExtensionToActivate(

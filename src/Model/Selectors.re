@@ -67,3 +67,20 @@ let getActiveConfigurationValue = (state: State.t, f) => {
     Configuration.getValue(~fileType, f, state.configuration);
   };
 };
+
+let getActiveTerminalId = (state: State.t) => {
+  state
+  // See if terminal has focus
+  |> getActiveBuffer
+  |> Option.map(Oni_Core.Buffer.getId)
+  |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
+  |> OptionEx.flatMap(renderer =>
+       switch (renderer) {
+       | BufferRenderer.Terminal({id, _}) => Some(id)
+       | _ => None
+       }
+     );
+};
+
+let terminalIsActive = (state: State.t) =>
+  getActiveTerminalId(state) != None;

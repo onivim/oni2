@@ -5,7 +5,7 @@
 
 ### Lightweight, Modal Code Editor
 
-:warning: Alpha - may be bugs or instability - use with caution :warning: 
+:warning: Currently in alpha - may have bugs or instability - use with caution :warning: 
 
 <p align="center">
   <img src="https://user-images.githubusercontent.com/13532591/71643323-375b2900-2c6d-11ea-974e-03361046402d.png" alt="Onivim 2" />
@@ -91,4 +91,4 @@ We hope that this approach will bring us the best of worlds - the ability to hav
 
 Several dependencies have their own set of license terms here: [ThirdPartyLicenses.txt](ThirdPartyLicenses.txt)
 
-Copyright 2019 Outrun Labs, LLC.
+Copyright (c) 2019-2020 Outrun Labs, LLC.

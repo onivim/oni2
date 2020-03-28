@@ -24,7 +24,7 @@ module Styles = {
       flexGrow(0),
       height(25),
       backgroundColor(theme.editorBackground),
-      color(theme.editorForeground),
+      color(theme.foreground),
       flexDirection(`Row),
       alignItems(`Center),
     ];
@@ -33,7 +33,7 @@ module Styles = {
     Style.[
       fontSize(font.fontSize),
       fontFamily(font.fontFile),
-      color(theme.editorForeground),
+      color(theme.foreground),
       backgroundColor(theme.editorBackground),
     ];
 };

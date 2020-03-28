@@ -66,7 +66,7 @@ type t =
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | HoverShow
-  | ChangeMode([@opaque] Vim.Mode.t)
+  | ModeChanged([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked
   | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey

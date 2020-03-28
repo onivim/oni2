@@ -117,6 +117,7 @@ Common contexts with VSCode:
 | --- | --- |
 | `editorFocus` | An editor has focus |
 | `textInputFocus` | A text input area has focus |
+| `terminalFocus` | A terminal has focus |
 | `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
 
 Onivim-specific contexts:
@@ -124,6 +125,7 @@ Onivim-specific contexts:
 | Context Name | True When | 
 | --- | --- |
 | `insertMode` |  The active editor is in `insert` mode |
+| `normalMode` |  The active editor is in `normal` mode |
 | `commandLineFocus` | The Vim commandline is open |
 | `menuFocus` | A pop-up menu has focus |
 
