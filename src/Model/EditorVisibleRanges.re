@@ -10,14 +10,15 @@ type individualRange = {
   minimapRanges: list(Range.t),
 };
 
-let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
+let getVisibleRangesForEditor =
+    (~config, editor: Editor.t, metrics: EditorMetrics.t) => {
   let topVisibleLine = Editor.getTopVisibleLine(editor, metrics);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor, metrics);
 
   let {bufferWidthInCharacters, minimapWidthInCharacters, _}: EditorLayout.t =
-    Editor.getLayout(editor, metrics);
+    Editor.getLayout(~config, editor, metrics);
 
   let i = ref(max(topVisibleLine - 1, 0));
   let eRanges = ref([]);
@@ -86,7 +87,7 @@ let getVisibleBuffers = (state: State.t) => {
 
 type t = list((int, list(Range.t)));
 
-let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
+let getVisibleRangesForBuffer = (~config, bufferId: int, state: State.t) => {
   let editors =
     WindowTree.getSplits(state.windowManager.windowTree)
     |> List.map((split: WindowTree.split) => split.editorGroupId)
@@ -107,7 +108,7 @@ let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
 
   editors
   |> List.map(((metrics, editor)) =>
-       getVisibleRangesForEditor(editor, metrics)
+       getVisibleRangesForEditor(~config, editor, metrics)
      )
   |> List.fold_left(flatten, [])
   |> List.flatten;
@@ -117,5 +118,10 @@ let getVisibleBuffersAndRanges: State.t => t =
   (state: State.t) => {
     let visibleBuffers = getVisibleBuffers(state);
 
-    List.map(b => (b, getVisibleRangesForBuffer(b, state)), visibleBuffers);
+    let config = Feature_Configuration.resolver(state.config);
+
+    List.map(
+      b => (b, getVisibleRangesForBuffer(~config, b, state)),
+      visibleBuffers,
+    );
   };

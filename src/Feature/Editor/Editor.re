@@ -115,20 +115,28 @@ let getHorizontalScrollbarMetrics =
     };
 };
 
-let getLayout = (view, metrics: EditorMetrics.t) => {
-  let layout: EditorLayout.t =
-    EditorLayout.getLayout(
-      ~maxMinimapCharacters=view.minimapMaxColumnWidth,
-      ~pixelWidth=float_of_int(metrics.pixelWidth),
-      ~pixelHeight=float_of_int(metrics.pixelHeight),
-      ~isMinimapShown=true,
-      ~characterWidth=metrics.characterWidth,
-      ~characterHeight=metrics.lineHeight,
-      ~bufferLineCount=view.viewLines,
-      (),
+let getLayout = (~config, view, metrics: EditorMetrics.t) => {
+  let showLineNumbers =
+    EditorConfiguration.lineNumbers.get(config)
+    |> (
+      fun
+      | `Off => false
+      | `Relative => true
+      | `On => true
     );
 
-  layout;
+  let isMinimapShown = EditorConfiguration.Minimap.enabled.get(config);
+  EditorLayout.getLayout(
+    ~maxMinimapCharacters=view.minimapMaxColumnWidth,
+    ~pixelWidth=float_of_int(metrics.pixelWidth),
+    ~pixelHeight=float_of_int(metrics.pixelHeight),
+    ~isMinimapShown,
+    ~showLineNumbers,
+    ~characterWidth=metrics.characterWidth,
+    ~characterHeight=metrics.lineHeight,
+    ~bufferLineCount=view.viewLines,
+    (),
+  );
 };
 
 let getLeftVisibleColumn = (view, metrics: EditorMetrics.t) => {

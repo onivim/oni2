@@ -18,8 +18,8 @@ type t = {
 
 let getLayout =
     (
-      ~showLineNumbers=true,
-      ~maxMinimapCharacters=120,
+      ~showLineNumbers,
+      ~maxMinimapCharacters,
       ~pixelWidth: float,
       ~pixelHeight: float,
       ~isMinimapShown: bool,

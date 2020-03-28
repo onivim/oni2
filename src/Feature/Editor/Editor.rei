@@ -31,7 +31,8 @@ let getId: t => int;
 let getTopVisibleLine: (t, EditorMetrics.t) => int;
 let getBottomVisibleLine: (t, EditorMetrics.t) => int;
 let getLeftVisibleColumn: (t, EditorMetrics.t) => int;
-let getLayout: (t, EditorMetrics.t) => EditorLayout.t;
+let getLayout:
+  (~config: Config.resolver, t, EditorMetrics.t) => EditorLayout.t;
 let getPrimaryCursor: t => Location.t;
 let getVisibleView: EditorMetrics.t => int; // TODO: Move to EditorMetrics?
 let getTotalSizeInPixels: (t, EditorMetrics.t) => int;

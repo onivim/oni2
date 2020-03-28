@@ -771,12 +771,14 @@ let start =
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
+          let config = Feature_Configuration.resolver(state.config);
+
           let Feature_Editor.EditorLayout.{
                 bufferHeightInCharacters: lines,
                 bufferWidthInCharacters: columns,
                 _,
               } =
-            Editor.getLayout(editor, editorGroup.metrics);
+            Editor.getLayout(~config, editor, editorGroup.metrics);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
