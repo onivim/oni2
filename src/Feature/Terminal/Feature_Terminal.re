@@ -301,7 +301,9 @@ let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
   getFirstNonEmptyLine(~start=Array.length(lines) - 1, ~direction=-1, lines);
 };
 
-let getLines = (~terminalId) => {
+type highlights = (int, list(ColorizedToken.t));
+
+let getLinesAndHighlights = (~terminalId) => {
   terminalId
   |> Service_Terminal.getScreen
   |> Option.map(screen => {
@@ -332,12 +334,14 @@ let getLines = (~terminalId) => {
        let startLine = getFirstNonEmptyLineFromTop(lines);
        let bottomLine = getFirstNonEmptyLineFromBottom(lines);
 
-       Utility.ArrayEx.slice(
+       let lines = Utility.ArrayEx.slice(
          ~start=startLine,
          ~length=bottomLine - startLine + 1,
          ~lines,
          (),
        );
+
+       (lines, []);
      })
-  |> Option.value(~default=[||]);
+  |> Option.value(~default=([||], []));
 };

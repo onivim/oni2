@@ -41,15 +41,18 @@ type msg =
   | BufferUpdated([@opaque] BufferUpdate.t)
   | Service(Service_Syntax.msg);
 
-type t = BufferMap.t(LineMap.t(list(ColorizedToken.t)));
+type t = {
+ highlights: BufferMap.t(LineMap.t(list(ColorizedToken.t))),
+ ignoredBuffers: BufferMap.t(bool)
+};
 
-let empty = BufferMap.empty;
+let empty = { ignoredBuffers: BufferMap.empty, highlights: BufferMap.empty };
 
 let noTokens = [];
 
 module ClientLog = (val Oni_Core.Log.withNamespace("Oni2.Feature.Syntax"));
 
-let getTokens = (~bufferId: int, ~line: Index.t, highlights: t) => {
+let getTokens = (~bufferId: int, ~line: Index.t, { highlights, _ }) => {
   highlights
   |> BufferMap.find_opt(bufferId)
   |> OptionEx.flatMap(LineMap.find_opt(line |> Index.toZeroBased))
@@ -57,8 +60,8 @@ let getTokens = (~bufferId: int, ~line: Index.t, highlights: t) => {
 };
 
 let getSyntaxScope =
-    (~bufferId: int, ~line: Index.t, ~bytePosition: int, highlights: t) => {
-  let tokens = getTokens(~bufferId, ~line, highlights);
+    (~bufferId: int, ~line: Index.t, ~bytePosition: int, bufferHighlights) => {
+  let tokens = getTokens(~bufferId, ~line, bufferHighlights);
 
   let rec loop = (syntaxScope, currentTokens) => {
     ColorizedToken.(
@@ -82,19 +85,20 @@ let setTokensForLine =
       ~bufferId: int,
       ~line: int,
       ~tokens: list(ColorizedToken.t),
-      highlights: t,
+      { highlights, ignoredBuffers }: t,
     ) => {
   let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {
     LineMap.update(line, _ => Some(tokens), lineMap);
   };
 
-  BufferMap.update(
+  let highlights = BufferMap.update(
     bufferId,
     fun
     | None => Some(updateLineMap(LineMap.empty))
     | Some(v) => Some(updateLineMap(v)),
     highlights,
   );
+  { ignoredBuffers, highlights: highlights };
 };
 
 let setTokens = (tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
@@ -114,9 +118,19 @@ let setTokens = (tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
   );
 };
 
+let ignore = (~bufferId, bufferHighlights) => {
+  let ignoredBuffers = bufferHighlights.ignoredBuffers
+    |> BufferMap.add(bufferId, true);
+
+  { ...bufferHighlights, ignoredBuffers };
+}
+
 // When there is a buffer update, shift the lines to match
-let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
-  BufferMap.update(
+let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) => {
+  if (BufferMap.mem(bufferUpdate.id, bufferHighlights.ignoredBuffers)) {
+    bufferHighlights 
+  } else {
+  let highlights = BufferMap.update(
     bufferUpdate.id,
     fun
     | None => None
@@ -130,8 +144,10 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, highlights: t) => {
           lineMap,
         ),
       ),
-    highlights,
+    bufferHighlights.highlights,
   );
+  { ...bufferHighlights, highlights: highlights };
+  };
 };
 
 let update = (highlights: t, msg) =>
