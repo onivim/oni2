@@ -17,7 +17,6 @@ type t = {
   viewLines: int,
   cursors: [@opaque] list(Vim.Cursor.t),
   selection: [@opaque] VisualRange.t,
-
   font: [@opaque] Service_Font.font,
 };
 
@@ -30,13 +29,13 @@ type scrollbarMetrics = {
 let create: (~font: Service_Font.font, ~bufferId: int=?, unit) => t;
 
 let getId: t => int;
-let getTopVisibleLine: (t) => int;
+let getTopVisibleLine: t => int;
 let getBottomVisibleLine: (t, EditorMetrics.t) => int;
-let getLeftVisibleColumn: (t) => int;
+let getLeftVisibleColumn: t => int;
 let getLayout: (t, EditorMetrics.t) => EditorLayout.t;
 let getPrimaryCursor: t => Location.t;
 let getVisibleView: (t, EditorMetrics.t) => int; // TODO: Move to EditorMetrics?
-let getTotalSizeInPixels: (t) => int;
+let getTotalSizeInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int, EditorMetrics.t) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics:
   (t, int, EditorMetrics.t) => scrollbarMetrics;
@@ -46,3 +45,5 @@ let getVimCursors: t => list(Vim.Cursor.t);
 
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
+
+let setFont: (~font: Service_Font.font, t) => t;

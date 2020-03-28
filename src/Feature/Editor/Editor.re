@@ -19,7 +19,6 @@ type t = {
   viewLines: int,
   cursors: [@opaque] list(Vim.Cursor.t),
   selection: [@opaque] VisualRange.t,
-
   font: [@opaque] Service_Font.font,
 };
 
@@ -69,8 +68,8 @@ let getPrimaryCursor = model =>
 
 let getId = model => model.editorId;
 
-let getLineHeight = (editor) => editor.font.measuredHeight;
-let getCharacterWidth = (editor) => editor.font.measuredWidth;
+let getLineHeight = editor => editor.font.measuredHeight;
+let getCharacterWidth = editor => editor.font.measuredWidth;
 
 let pixelPositionToLineColumn =
     (view, metrics: EditorMetrics.t, pixelX, pixelY) => {
@@ -82,9 +81,9 @@ let pixelPositionToLineColumn =
 };
 
 let getVisibleView = (editor, metrics: EditorMetrics.t) =>
-  int_of_float(float_of_int(metrics.pixelHeight) /. getLineHeight(editor))
+  int_of_float(float_of_int(metrics.pixelHeight) /. getLineHeight(editor));
 
-let getTotalSizeInPixels = (editor) =>
+let getTotalSizeInPixels = editor =>
   int_of_float(float_of_int(editor.viewLines) *. getLineHeight(editor));
 
 let getVerticalScrollbarMetrics =
@@ -137,11 +136,11 @@ let getLayout = (view, metrics: EditorMetrics.t) => {
   layout;
 };
 
-let getLeftVisibleColumn = (view) => {
+let getLeftVisibleColumn = view => {
   int_of_float(view.scrollX /. getCharacterWidth(view));
 };
 
-let getTopVisibleLine = (view) =>
+let getTopVisibleLine = view =>
   int_of_float(view.scrollY /. getLineHeight(view)) + 1;
 
 let getBottomVisibleLine = (view, metrics: EditorMetrics.t) => {
@@ -153,3 +152,5 @@ let getBottomVisibleLine = (view, metrics: EditorMetrics.t) => {
 
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
+
+let setFont = (~font, editor) => {...editor, font};

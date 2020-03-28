@@ -11,5 +11,5 @@ type t = {
 };
 
 let create = () => {
-  {pixelWidth: 1000, pixelHeight: 1000 };
+  {pixelWidth: 1000, pixelHeight: 1000};
 };

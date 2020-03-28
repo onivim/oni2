@@ -45,11 +45,25 @@ let setActiveEditor = (model, editorId) => {
   activeEditorId: Some(editorId),
 };
 
-let getOrCreateEditorForBuffer = (state, bufferId) => {
+let setBufferFont = (~bufferId, ~font, group) => {
+  let editors =
+    group.editors
+    |> IntMap.map((editor: Feature_Editor.Editor.t) =>
+         if (editor.bufferId == bufferId) {
+           Editor.setFont(~font, editor);
+         } else {
+           editor;
+         }
+       );
+
+  {...group, editors};
+};
+
+let getOrCreateEditorForBuffer = (~font, ~bufferId, state) => {
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | Some(editor) => (state, editor)
   | None =>
-    let newEditor = Editor.create(~font=Service_Font.default, ~bufferId, ());
+    let newEditor = Editor.create(~font, ~bufferId, ());
     let newState = {
       ...state,
       editors: IntMap.add(newEditor.editorId, newEditor, state.editors),

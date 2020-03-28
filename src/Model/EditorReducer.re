@@ -29,7 +29,7 @@ module Internal = {
 let scrollTo = (view, newScrollY, metrics: EditorMetrics.t) => {
   let newScrollY = max(0., newScrollY);
   let availableScroll =
-    max(float_of_int(view.viewLines - 1), 0.) *. Editor.getLineHeight(view)
+    max(float_of_int(view.viewLines - 1), 0.) *. Editor.getLineHeight(view);
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
