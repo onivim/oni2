@@ -533,16 +533,9 @@ let start =
         let () =
           editor
           |> Option.iter(e => {
-               let () =
-                 state
-                 |> Selectors.getActiveEditorGroup
-                 |> Option.map(EditorGroup.getMetrics)
-                 |> Option.iter(metrics => {
                       let topLine = Editor.getTopVisibleLine(e);
                       let leftCol = Editor.getLeftVisibleColumn(e);
                       Vim.Window.setTopLeft(topLine, leftCol);
-                    });
-               ();
              });
 
         let syntaxScope =

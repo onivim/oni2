@@ -8,8 +8,6 @@ let metrics =
   EditorMetrics.{
     pixelWidth: 3440,
     pixelHeight: 1440,
-    lineHeight: 10.,
-    characterWidth: 10.,
   };
 
 /* Create a state with some editor size */
@@ -25,11 +23,7 @@ let simpleState = {
   );
 };
 
-let simpleState =
-  Reducer.reduce(
-    simpleState,
-    Actions.EditorFont(
-      Service_Font.FontLoaded({
+let defaultFont: Service_Font.font = { 
         fontFile:
           Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
         fontSize: 10.,
@@ -37,11 +31,17 @@ let simpleState =
         measuredHeight: 10.,
         descenderHeight: 1.,
         smoothing: Revery.Font.Smoothing.default,
-      }),
-    ),
-  );
+};
 
-let simpleEditor = Editor.create();
+let simpleState =
+  Reducer.reduce(
+    simpleState,
+    Actions.EditorFont(Service_Font.FontLoaded(
+      defaultFont
+    )
+  ));
+
+let simpleEditor = Editor.create(~font=defaultFont, ());
 let editorGroup =
   EditorGroups.getActiveEditorGroup(simpleState.editorGroups)
   |> Option.value(~default=EditorGroup.create());

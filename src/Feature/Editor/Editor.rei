@@ -34,13 +34,13 @@ let getBottomVisibleLine: (t, EditorMetrics.t) => int;
 let getLeftVisibleColumn: t => int;
 let getLayout: (t, EditorMetrics.t) => EditorLayout.t;
 let getPrimaryCursor: t => Location.t;
-let getVisibleView: (t, EditorMetrics.t) => int; // TODO: Move to EditorMetrics?
+let getVisibleView: (t, EditorMetrics.t) => int;
 let getTotalSizeInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int, EditorMetrics.t) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics:
-  (t, int, EditorMetrics.t) => scrollbarMetrics;
+  (t, int) => scrollbarMetrics;
 let pixelPositionToLineColumn:
-  (t, EditorMetrics.t, float, float) => (int, int);
+  (t, float, float) => (int, int);
 let getVimCursors: t => list(Vim.Cursor.t);
 
 let getCharacterWidth: t => float;

@@ -28,7 +28,7 @@ let reduce = (~defaultFont, v: EditorGroup.t, action: Actions.t) => {
           editors,
         ),
     }
-  | BufferEnter({id, fileType, _}, _) =>
+  | BufferEnter({id, _}, _) =>
     let (newState, activeEditorId) =
       EditorGroup.getOrCreateEditorForBuffer(
         ~font=defaultFont,

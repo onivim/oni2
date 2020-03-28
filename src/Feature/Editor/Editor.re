@@ -72,7 +72,7 @@ let getLineHeight = editor => editor.font.measuredHeight;
 let getCharacterWidth = editor => editor.font.measuredWidth;
 
 let pixelPositionToLineColumn =
-    (view, metrics: EditorMetrics.t, pixelX, pixelY) => {
+    (view, pixelX, pixelY) => {
   let line = int_of_float((pixelY +. view.scrollY) /. getLineHeight(view));
   let column =
     int_of_float((pixelX +. view.scrollX) /. getCharacterWidth(view));
@@ -102,7 +102,7 @@ let getVerticalScrollbarMetrics =
 };
 
 let getHorizontalScrollbarMetrics =
-    (view, availableWidth, metrics: EditorMetrics.t) => {
+    (view, availableWidth) => {
   let totalViewWidthInPixels =
     float_of_int(view.maxLineLength) *. getCharacterWidth(view);
   let availableWidthF = float_of_int(availableWidth);
