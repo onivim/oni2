@@ -277,6 +277,30 @@ module Contributions = {
     ];
 };
 
+let getFirstNonEmptyLine =
+    (~start: int, ~direction: int, lines: array(string)) => {
+  let len = Array.length(lines);
+
+  let rec loop = idx =>
+    if (idx == len || idx < 0) {
+      idx;
+    } else if (String.length(lines[idx]) == 0) {
+      loop(idx + direction);
+    } else {
+      idx;
+    };
+
+  loop(start);
+};
+
+let getFirstNonEmptyLineFromTop = (lines: array(string)) => {
+  getFirstNonEmptyLine(~start=0, ~direction=1, lines);
+};
+
+let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
+  getFirstNonEmptyLine(~start=Array.length(lines) - 1, ~direction=-1, lines);
+};
+
 let getLines = (~terminalId) => {
   terminalId
   |> Service_Terminal.getScreenOpt
@@ -304,7 +328,16 @@ let getLines = (~terminalId) => {
            Stdlib.Buffer.contents(buffer) |> Utility.StringEx.trimRight;
          lines[lineIndex] = str;
        };
-       lines;
+
+       let startLine = getFirstNonEmptyLineFromTop(lines);
+       let bottomLine = getFirstNonEmptyLineFromBottom(lines);
+
+       Utility.ArrayEx.slice(
+         ~start=startLine,
+         ~length=bottomLine - startLine + 1,
+         ~lines,
+         (),
+       );
      })
   |> Option.value(~default=[||]);
 };

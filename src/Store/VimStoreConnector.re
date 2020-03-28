@@ -924,7 +924,8 @@ let start =
       // Jump to bottom
       let _ = Vim.input("g");
       let _ = Vim.input("g");
-      let cursors = Vim.input("G");
+      let _ = Vim.input("G");
+      let cursors = Vim.input("$");
       let newTopLine = Vim.Window.getTopLine();
       let newLeftColumn = Vim.Window.getLeftColumn();
 
