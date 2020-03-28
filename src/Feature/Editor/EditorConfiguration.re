@@ -97,6 +97,11 @@ module ZenMode = {
   let singleFile = setting("editor.zenMode.singleFile", bool, ~default=true);
 };
 
+module Experimental = {
+  let editorSmoothScroll =
+    setting("experimental.editor.smoothScroll", bool, ~default=true);
+};
+
 let contributions = [
   detectIndentation.spec,
   fontFamily.spec,
