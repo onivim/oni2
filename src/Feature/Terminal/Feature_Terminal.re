@@ -61,8 +61,7 @@ type outmsg =
 
 let shellCmd = ShellUtility.getDefaultShell();
 
-// TODO: REMOVE C-T! Debugging only while waiting for key sequences...
-let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>", "<C-t>"];
+let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
 
 let shouldHandleInput = str => {
   !

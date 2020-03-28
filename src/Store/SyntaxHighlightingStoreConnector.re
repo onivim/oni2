@@ -17,7 +17,7 @@ module NativeSyntaxHighlights = Oni_Syntax.NativeSyntaxHighlights;
 module Protocol = Oni_Syntax.Protocol;
 
 // TODO:
-// - Move updater to Feature_Syntax
+// - Move updater to Feature_Terminal
 // - Change subscription granularity to per-buffer -
 // - this could help remove several effects!
 let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
@@ -133,8 +133,8 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
     | Model.Actions.ViewSetActiveEditor(_)
     //| Model.Actions.BufferEnter(_)
     | Model.Actions.ViewCloseEditor(_) =>
-      let visibleBuffers = [];
-      //Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
+      let visibleBuffers =
+        Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
       (
         state,
         Service_Syntax.Effect.visibilityChanged(

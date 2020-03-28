@@ -48,13 +48,6 @@ let conditionsOfState = (state: State.t) => {
   | `off => ()
   };
 
-  /*let terminalIsActive = Model.Selectors.terminalIsActive(state);
-
-    if (terminalIsActive) {
-      Hashtbl.add(ret, "terminalFocus", true);
-    };
-    */
-
   let mode = Model.ModeManager.current(state);
 
   // HACK: Because we don't have AND conditions yet for input

@@ -1,5 +1,5 @@
 /*
- * /
+ * VimStoreConnector.re
  *
  * This module connects vim to the Store:
  * - Translates incoming vim notifications into Actions
