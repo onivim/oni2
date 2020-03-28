@@ -303,7 +303,46 @@ let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
 
 type highlights = (int, list(ColorizedToken.t));
 
-let getLinesAndHighlights = (~terminalId) => {
+module TermScreen = ReveryTerminal.Screen;
+
+let addHighlightForCell =
+    (~defaultBackground, ~defaultForeground, ~theme, ~cell, ~column, tokens) => {
+  let fg =
+    TermScreen.getForegroundColor(
+      ~defaultBackground,
+      ~defaultForeground,
+      ~theme,
+      cell,
+    );
+  let bg =
+    TermScreen.getBackgroundColor(
+      ~defaultBackground,
+      ~defaultForeground,
+      ~theme,
+      cell,
+    );
+
+  let newToken =
+    ColorizedToken.{
+      index: column,
+      backgroundColor: bg,
+      foregroundColor: fg,
+      syntaxScope: SyntaxScope.none,
+    };
+
+  switch (tokens) {
+  | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail]
+      when foregroundColor != fg && backgroundColor != bg => [
+      newToken,
+      ct,
+      ...tail,
+    ]
+  | [] => [newToken]
+  | list => list
+  };
+};
+
+let getLinesAndHighlights = (~colorTheme, ~terminalId) => {
   terminalId
   |> Service_Terminal.getScreen
   |> Option.map(screen => {
@@ -313,14 +352,29 @@ let getLinesAndHighlights = (~terminalId) => {
 
        let lines = Array.make(totalRows, "");
 
+       let highlights = ref([]);
+       let theme = theme(colorTheme);
+       let defaultBackground = defaultBackground(colorTheme);
+       let defaultForeground = defaultForeground(colorTheme);
+
        for (lineIndex in 0 to totalRows - 1) {
          let buffer = Stdlib.Buffer.create(columns * 2);
-
+         let lineHighlights = ref([]);
          for (column in 0 to columns - 1) {
            let cell = TermScreen.getCell(~row=lineIndex, ~column, screen);
            let codeInt = Uchar.to_int(cell.char);
            if (codeInt != 0 && codeInt <= 0x10FFFF) {
              Stdlib.Buffer.add_utf_8_uchar(buffer, cell.char);
+
+             lineHighlights :=
+               addHighlightForCell(
+                 ~defaultBackground,
+                 ~defaultForeground,
+                 ~theme,
+                 ~cell,
+                 ~column,
+                 lineHighlights^,
+               );
            } else {
              Stdlib.Buffer.add_string(buffer, " ");
            };
@@ -328,20 +382,27 @@ let getLinesAndHighlights = (~terminalId) => {
 
          let str =
            Stdlib.Buffer.contents(buffer) |> Utility.StringEx.trimRight;
+         highlights :=
+           [(lineIndex, lineHighlights^ |> List.rev), ...highlights^];
          lines[lineIndex] = str;
        };
 
        let startLine = getFirstNonEmptyLineFromTop(lines);
        let bottomLine = getFirstNonEmptyLineFromBottom(lines);
 
-       let lines = Utility.ArrayEx.slice(
-         ~start=startLine,
-         ~length=bottomLine - startLine + 1,
-         ~lines,
-         (),
-       );
+       let lines =
+         Utility.ArrayEx.slice(
+           ~start=startLine,
+           ~length=bottomLine - startLine + 1,
+           ~lines,
+           (),
+         );
 
-       (lines, []);
+       let highlights =
+         highlights^
+         |> List.map(((idx, tokens)) => (idx - startLine, tokens));
+
+       (lines, highlights);
      })
   |> Option.value(~default=([||], []));
 };
