@@ -27,7 +27,13 @@ let%component make =
 
   let (x, y, characterWidth) =
     if (lineCount <= 0 || line >= lineCount || !isActiveSplit) {
-      (0., 0., 0);
+      (
+        // If we don't have a line, we're not rendering anything anyway...
+        // ...but we still need to engange our hooks
+        0.,
+        0.,
+        0,
+      );
     } else {
       let bufferLine = Buffer.getLine(line, buffer);
       let (offset, characterWidth) =
