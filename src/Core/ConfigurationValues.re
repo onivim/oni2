@@ -84,7 +84,6 @@ type t = {
   // Turn on tree-sitter for supported filetypes:
   // - JSON
   experimentalTreeSitter: bool,
-  experimentalAutoClosingPairs: bool,
   experimentalVimL: list(string),
 };
 
@@ -141,6 +140,5 @@ let default = {
   zenModeSingleFile: true,
 
   experimentalTreeSitter: false,
-  experimentalAutoClosingPairs: false,
   experimentalVimL: [],
 };

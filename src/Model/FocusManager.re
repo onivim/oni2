@@ -28,8 +28,16 @@ let current = (state: State.t) =>
     | _ =>
       state
       // See if terminal has focus
-      |> Selectors.getActiveTerminalId
-      |> Option.map(id => Focus.Terminal(id))
+      |> Selectors.getActiveBuffer
+      |> Option.map(Oni_Core.Buffer.getId)
+      |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
+      |> OptionEx.flatMap(renderer =>
+           switch (renderer) {
+           | BufferRenderer.Terminal({id, insertMode, _}) when insertMode =>
+             Some(Focus.Terminal(id))
+           | _ => None
+           }
+         )
       // Otherwise, get from assigned focus state
       |> OptionEx.or_(Focus.current(state.focus))
       |> Option.value(~default=Focus.Editor)

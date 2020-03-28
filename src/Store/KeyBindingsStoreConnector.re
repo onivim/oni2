@@ -46,22 +46,22 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-P>",
         command: "workbench.action.quickOpen",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
         command: "workbench.action.quickOpen",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-C-P>",
         command: "workbench.action.showCommands",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S-P>",
         command: "workbench.action.showCommands",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-V>",
@@ -258,6 +258,50 @@ let start = maybeKeyBindingsFilePath => {
         key: "<D-S-[>",
         command: "workbench.action.previousEditor",
         condition: WhenExpr.Value(True),
+      },
+      // TERMINAL
+      // Binding to open normal mode
+      {
+        key: "<C-\\><C-N>",
+        command: "terminal.normalMode",
+        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
+      },
+      // Bindings to go from normal / visual mode -> insert mode
+      {
+        key: "o",
+        command: "terminal.insertMode",
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<S-O>",
+        command: "terminal.insertMode",
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "Shift+a",
+        command: "terminal.insertMode",
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "a",
+        command: "terminal.insertMode",
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "i",
+        command: "terminal.insertMode",
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
+      },
+      {
+        key: "Shift+i",
+        command: "terminal.insertMode",
+        condition:
+          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
     ];
 

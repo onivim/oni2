@@ -561,8 +561,13 @@ let start =
 
         let acpEnabled =
           Core.Configuration.getValue(
-            c => c.experimentalAutoClosingPairs,
+            c => c.editorAutoClosingBrackets,
             state.configuration,
+          )
+          |> (
+            fun
+            | LanguageDefined => true
+            | Never => false
           );
 
         let autoClosingPairs =
@@ -583,7 +588,6 @@ let start =
           };
 
         let cursors = Vim.input(~autoClosingPairs?, ~cursors, key);
-
         let newTopLine = Vim.Window.getTopLine();
         let newLeftColumn = Vim.Window.getLeftColumn();
 
@@ -658,7 +662,11 @@ let start =
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
               metadata.id,
-              BufferRenderer.Terminal({title: "Terminal", id: bufferId}),
+              BufferRenderer.Terminal({
+                title: "Terminal",
+                id: bufferId,
+                insertMode: true,
+              }),
             ),
           ),
         )
@@ -896,6 +904,36 @@ let start =
       ();
     });
 
+  let setTerminalLinesEffect = (~editorId, ~bufferId, lines: array(string)) => {
+    Isolinear.Effect.create(~name="vim.setTerminalLinesEffect", () => {
+      let () =
+        bufferId
+        |> Vim.Buffer.getById
+        |> Option.iter(buf => {
+             Vim.Buffer.setModifiable(~modifiable=true, buf);
+             Vim.Buffer.setLines(~lines, buf);
+             Vim.Buffer.setModifiable(~modifiable=false, buf);
+             Vim.Buffer.setReadOnly(~readOnly=true, buf);
+           });
+
+      // Clear out previous mode
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      // Jump to bottom
+      let _ = Vim.input("g");
+      let _ = Vim.input("g");
+      let _ = Vim.input("G");
+      let cursors = Vim.input("$");
+      let newTopLine = Vim.Window.getTopLine();
+      let newLeftColumn = Vim.Window.getLeftColumn();
+
+      // Update the editor, which is the source of truth for cursor position
+      dispatch(Actions.EditorCursorMove(editorId, cursors));
+      dispatch(Actions.EditorScrollToLine(editorId, newTopLine - 1));
+      dispatch(Actions.EditorScrollToColumn(editorId, newLeftColumn));
+    });
+  };
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -952,6 +990,43 @@ let start =
         state,
         synchronizeEditorEffect(state),
       )
+    | Command("terminal.normalMode") =>
+      let maybeBufferId =
+        state
+        |> Selectors.getActiveBuffer
+        |> Option.map(Oni_Core.Buffer.getId);
+
+      let maybeTerminalId =
+        maybeBufferId
+        |> Option.map(id =>
+             BufferRenderers.getById(id, state.bufferRenderers)
+           )
+        |> OptionEx.flatMap(
+             fun
+             | BufferRenderer.Terminal({id, _}) => Some(id)
+             | _ => None,
+           );
+
+      let maybeEditorId =
+        state
+        |> Selectors.getActiveEditorGroup
+        |> Selectors.getActiveEditor
+        |> Option.map((editor: Feature_Editor.Editor.t) => editor.editorId);
+
+      let (state, effect) =
+        OptionEx.map3(
+          (bufferId, terminalId, editorId) => {
+            let lines = Feature_Terminal.getLines(~terminalId);
+            (state, setTerminalLinesEffect(~bufferId, ~editorId, lines));
+          },
+          maybeBufferId,
+          maybeTerminalId,
+          maybeEditorId,
+        )
+        |> Option.value(~default=(state, Isolinear.Effect.none));
+
+      (state, effect);
+
     | KeyboardInput(s) => (state, inputEffect(s))
     | CopyActiveFilepathToClipboard => (
         state,
