@@ -113,6 +113,9 @@ let minimap =
 
 let make =
     (
+      ~showDiffMarkers=true,
+      ~backgroundColor: option(Revery.Color.t)=?,
+      ~foregroundColor: option(Revery.Color.t)=?,
       ~buffer,
       ~onDimensionsChanged,
       ~isActiveSplit: bool,
@@ -133,6 +136,18 @@ let make =
       (),
     ) => {
   let colors = Colors.precompute(theme);
+
+  let colors =
+    backgroundColor
+    |> Option.map(editorBackground =>
+         {...colors, gutterBackground: editorBackground, editorBackground}
+       )
+    |> Option.value(~default=colors);
+  let colors =
+    foregroundColor
+    |> Option.map(editorForeground => {...colors, editorForeground})
+    |> Option.value(~default=colors);
+
   let lineCount = Buffer.getNumberOfLines(buffer);
 
   let editorFont = editor.font;
@@ -169,7 +184,7 @@ let make =
     Selection.getRanges(editor.selection, buffer) |> Range.toHash;
 
   let diffMarkers =
-    lineCount < Constants.diffMarkersMaxLineCount
+    lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
       ? EditorDiffMarkers.generate(buffer) : None;
 
   let (gutterWidth, gutterView) =

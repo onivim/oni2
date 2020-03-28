@@ -150,7 +150,15 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             Selectors.getBufferForEditor(state, editor)
             |> Option.value(~default=Buffer.initial);
 
+          let defaultTerminalBackground =
+            Feature_Terminal.defaultBackground(theme);
+          let defaultTerminalForeground =
+            Feature_Terminal.defaultForeground(theme);
+
           <EditorSurface
+            backgroundColor=defaultTerminalBackground
+            foregroundColor=defaultTerminalForeground
+            showDiffMarkers=false
             isActiveSplit=isActive
             metrics
             editor
