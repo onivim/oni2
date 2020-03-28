@@ -19,14 +19,19 @@ the majority of our time is spent navigating, manipulating, and editing - rather
 
 In normal mode, you can move the cursor around:
 
-- `h` - move the cursor left
-- `j` - move the cursor down
-- `l` - move the cursor right
-- `k` - move the cursor up
+- <kbd>h</kbd> - move the cursor left
+- <kbd>j</kbd> - move the cursor down
+- <kbd>l</kbd> - move the cursor right
+- <kbd>k</kbd> - move the cursor up
+
+> NOTE: You can use the arrow keys, too, but we recommend <kbd>h</kbd>, <kbd>j</kbd>, <kbd>k</kbd>, and <kbd>l</kbd>, because it keeps your hands on the home row!
 
 You can also prefix these characters with a number, for example:
-- `5j` moves the cursor 5 lines down
-- `10l` moves the cursor 10 lines right
+
+- <kbd>5</kbd><kbd>j</kbd> moves the cursor 5 lines down
+- <kbd>1</kbd><kbd>0</kbd><kbd>l</kbd> moves the cursor 10 lines right
+
+This tends to be faster than repeatedly pressing or holding a key.
 
 ### Insert Mode
 
