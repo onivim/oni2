@@ -1039,8 +1039,16 @@ let start =
 
             let syntaxHighlights =
               syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
+
+            let editorGroups =
+              state.editorGroups
+              |> EditorGroups.setBufferFont(
+                   ~bufferId,
+                   ~font=state.terminalFont,
+                 );
+
             (
-              {...state, syntaxHighlights},
+              {...state, editorGroups, syntaxHighlights},
               setTerminalLinesEffect(~bufferId, ~editorId, lines),
             );
           },
