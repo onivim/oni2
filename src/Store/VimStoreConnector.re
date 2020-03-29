@@ -1017,7 +1017,18 @@ let start =
         OptionEx.map3(
           (bufferId, terminalId, editorId) => {
             let lines = Feature_Terminal.getLines(~terminalId);
-            (state, setTerminalLinesEffect(~bufferId, ~editorId, lines));
+
+            let editorGroups =
+              state.editorGroups
+              |> EditorGroups.setBufferFont(
+                   ~bufferId,
+                   ~font=state.terminalFont,
+                 );
+
+            (
+              {...state, editorGroups},
+              setTerminalLinesEffect(~bufferId, ~editorId, lines),
+            );
           },
           maybeBufferId,
           maybeTerminalId,
