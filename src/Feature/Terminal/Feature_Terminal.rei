@@ -85,6 +85,9 @@ let theme: ColorTheme.resolver => ReveryTerminal.Theme.t;
 let defaultBackground: ColorTheme.resolver => Revery.Color.t;
 let defaultForeground: ColorTheme.resolver => Revery.Color.t;
 
-let getLines: (~terminalId: int) => array(string);
+type highlights = (int, list(ColorizedToken.t));
+let getLinesAndHighlights:
+  (~colorTheme: ColorTheme.resolver, ~terminalId: int) =>
+  (array(string), list(highlights));
 
 module Contributions: {let colors: list(ColorTheme.Schema.definition);};

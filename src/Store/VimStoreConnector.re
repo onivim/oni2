@@ -1016,7 +1016,29 @@ let start =
       let (state, effect) =
         OptionEx.map3(
           (bufferId, terminalId, editorId) => {
-            let lines = Feature_Terminal.getLines(~terminalId);
+            let colorTheme = Feature_Theme.resolver(state.colorTheme);
+            let (lines, highlights) =
+              Feature_Terminal.getLinesAndHighlights(
+                ~colorTheme,
+                ~terminalId,
+              );
+            let syntaxHighlights =
+              List.fold_left(
+                (acc, curr) => {
+                  let (line, tokens) = curr;
+                  Feature_Syntax.setTokensForLine(
+                    ~bufferId,
+                    ~line,
+                    ~tokens,
+                    acc,
+                  );
+                },
+                state.syntaxHighlights,
+                highlights,
+              );
+
+            let syntaxHighlights =
+              syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
 
             let editorGroups =
               state.editorGroups
@@ -1026,7 +1048,7 @@ let start =
                  );
 
             (
-              {...state, editorGroups},
+              {...state, editorGroups, syntaxHighlights},
               setTerminalLinesEffect(~bufferId, ~editorId, lines),
             );
           },
