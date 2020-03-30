@@ -81,7 +81,11 @@ type t =
   | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(EditorGroup.t)
-  | EditorGroupSetSize(int, EditorSize.t)
+  | EditorGroupSetSize({
+      id: int,
+      width: int,
+      height: int,
+    })
   | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSetScroll(Feature_Editor.EditorId.t, float)
   | EditorScroll(Feature_Editor.EditorId.t, float)

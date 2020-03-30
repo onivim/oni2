@@ -198,14 +198,11 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.WindowTreeSetSize(width, height)),
       notifyEditorSizeChanged: (~editorGroupId, ~width, ~height, ()) =>
         dispatch(
-          Model.Actions.EditorGroupSetSize(
-            editorGroupId,
-            Core.EditorSize.create(
-              ~pixelWidth=width,
-              ~pixelHeight=height,
-              (),
-            ),
-          ),
+          Model.Actions.EditorGroupSetSize({
+            id: editorGroupId,
+            width,
+            height,
+          }),
         ),
       openEditorById: id => {
         dispatch(Model.Actions.ViewSetActiveEditor(id));

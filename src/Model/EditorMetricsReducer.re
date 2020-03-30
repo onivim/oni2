@@ -7,8 +7,8 @@ open Feature_Editor;
 
 let reduce = (v: EditorMetrics.t, action) => {
   switch (action) {
-  | EditorGroupSetSize(_, {pixelWidth, pixelHeight}) =>
-    EditorMetrics.{pixelWidth, pixelHeight}
+  | EditorGroupSetSize({width, height, _}) =>
+    EditorMetrics.{pixelWidth: width, pixelHeight: height}
   | _ => v
   };
 };
