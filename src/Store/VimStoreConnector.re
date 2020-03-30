@@ -163,6 +163,9 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.onWriteFailure((_reason, _buffer) => dispatch(WriteFailure));
+
+  let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
@@ -904,6 +907,28 @@ let start =
       ();
     });
 
+  let discardChangesEffect =
+    Isolinear.Effect.create(~name="vim.discardChanges", () => {
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input(":");
+      let _ = Vim.input("e");
+      let _ = Vim.input("!");
+      let _ = Vim.input("<CR>");
+      ();
+    });
+
+  let forceOverwriteEffect =
+    Isolinear.Effect.create(~name="vim.forceOverwrite", () => {
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input(":");
+      let _ = Vim.input("w");
+      let _ = Vim.input("!");
+      let _ = Vim.input("<CR>");
+      ();
+    });
+
   let setTerminalLinesEffect = (~editorId, ~bufferId, lines: array(string)) => {
     Isolinear.Effect.create(~name="vim.setTerminalLinesEffect", () => {
       let () =
@@ -1070,6 +1095,30 @@ let start =
         Feature_Notification.Effects.create(~kind, message)
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       );
+
+    | WriteFailure => (
+        {...state, modal: Some(Oni_UI.Modals.writeFailure)}
+        |> FocusManager.push(Focus.Modal),
+        Isolinear.Effect.none,
+      )
+
+    | WriteFailureDiscardConfirmed => (
+        {...state, modal: None}
+        |> FocusManager.pop(Focus.Modal),
+        discardChangesEffect,
+      )
+
+    | WriteFailureOverwriteConfirmed => (
+        {...state, modal: None}
+        |> FocusManager.pop(Focus.Modal),
+        forceOverwriteEffect,
+      )
+
+    | WriteFailureCanceled => (
+        {...state, modal: None}
+        |> FocusManager.pop(Focus.Modal),
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

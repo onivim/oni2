@@ -161,6 +161,10 @@ type t =
   | WindowCloseDiscardConfirmed
   | WindowCloseSaveAllConfirmed
   | WindowCloseCanceled
+  | WriteFailure
+  | WriteFailureDiscardConfirmed
+  | WriteFailureOverwriteConfirmed
+  | WriteFailureCanceled
   | NewTextContentProvider({
       handle: int,
       scheme: string,
