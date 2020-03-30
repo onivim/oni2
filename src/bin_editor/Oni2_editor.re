@@ -196,17 +196,6 @@ if (cliOptions.syntaxHighlightService) {
     GlobalContext.set({
       notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
         dispatch(Model.Actions.WindowTreeSetSize(width, height)),
-      notifyEditorSizeChanged: (~editorGroupId, ~width, ~height, ()) =>
-        dispatch(
-          Model.Actions.EditorGroupSetSize(
-            editorGroupId,
-            Core.EditorSize.create(
-              ~pixelWidth=width,
-              ~pixelHeight=height,
-              (),
-            ),
-          ),
-        ),
       openEditorById: id => {
         dispatch(Model.Actions.ViewSetActiveEditor(id));
       },

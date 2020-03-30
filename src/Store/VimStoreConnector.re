@@ -975,7 +975,7 @@ let start =
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
-    | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
+    | EditorGroupSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
