@@ -113,11 +113,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let height = showTabs ? height - Constants.tabHeight : height;
     let height = max(height, 0); // BUGFIX: #1525
 
-    GlobalContext.current().notifyEditorSizeChanged(
-      ~editorGroupId=editorGroup.editorGroupId,
-      ~width,
-      ~height,
-      (),
+    GlobalContext.current().dispatch(
+      EditorGroupSetSize({id: editorGroup.editorGroupId, width, height}),
     );
   };
 
