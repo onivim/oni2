@@ -81,7 +81,7 @@ type t =
   | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(EditorGroup.t)
-  | EditorGroupSetSize({
+  | EditorGroupSizeChanged({
       id: int,
       width: int,
       height: int,

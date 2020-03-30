@@ -114,7 +114,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let height = max(height, 0); // BUGFIX: #1525
 
     GlobalContext.current().dispatch(
-      EditorGroupSetSize({id: editorGroup.editorGroupId, width, height}),
+      EditorGroupSizeChanged({id: editorGroup.editorGroupId, width, height}),
     );
   };
 

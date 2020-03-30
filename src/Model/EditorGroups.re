@@ -104,7 +104,7 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
         IntMap.add(editorGroup.editorGroupId, editorGroup, model.idToGroup),
     };
 
-  | EditorGroupSetSize({id, _}) =>
+  | EditorGroupSizeChanged({id, _}) =>
     let idToGroup =
       IntMap.update(
         id,

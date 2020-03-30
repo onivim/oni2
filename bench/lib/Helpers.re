@@ -12,7 +12,7 @@ let simpleState = {
 
   Reducer.reduce(
     state,
-    Actions.EditorGroupSetSize({
+    Actions.EditorGroupSizeChanged({
       id: EditorGroups.activeGroupId(state.editorGroups),
       width: 3440,
       height: 1440,
