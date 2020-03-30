@@ -1,5 +1,5 @@
 {
-  "checksum": "af4aece973fd8cd7e94f7ac89f914f20",
+  "checksum": "3a3f500b958fe7778c536a0e879e799f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -305,14 +305,14 @@
       ],
       "devDependencies": []
     },
-    "reason-textmate@2.3.1@d41d8cd9": {
-      "id": "reason-textmate@2.3.1@d41d8cd9",
+    "reason-textmate@3.0.0@d41d8cd9": {
+      "id": "reason-textmate@3.0.0@d41d8cd9",
       "name": "reason-textmate",
-      "version": "2.3.1",
+      "version": "3.0.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-2.3.1.tgz#sha1:799e912540d4ad98625173d396245d3a949e8049"
+          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-3.0.0.tgz#sha1:0d6feb7ebac25ca04ef649bd170b0ed89100b118"
         ]
       },
       "overrides": [],
@@ -1208,7 +1208,7 @@
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@2.3.1@d41d8cd9",
+        "reason-textmate@3.0.0@d41d8cd9",
         "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#3ead103@d41d8cd9",
