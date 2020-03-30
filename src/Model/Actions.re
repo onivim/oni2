@@ -64,6 +64,7 @@ type t =
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
+  | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration

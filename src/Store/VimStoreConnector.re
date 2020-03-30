@@ -1152,9 +1152,35 @@ let start =
         Isolinear.Effect.none,
       )
 
+    | FileChanged(event) =>
+      switch (Selectors.getActiveBuffer(state)) {
+      | Some(buffer)
+          when
+            Core.Buffer.getFilePath(buffer) == Some(event.path)
+            && !Core.Buffer.isModified(buffer) => (
+          state,
+          Service_Vim.reload(),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
+
     | _ => (state, Isolinear.Effect.none)
     };
   };
 
   (updater, stream);
+};
+
+let subscriptions = (state: State.t) => {
+  state.buffers
+  |> Core.IntMap.bindings
+  |> List.filter_map(((_key, buffer)) =>
+       buffer
+       |> Core.Buffer.getFilePath
+       |> Option.map(path =>
+            Service_FileWatcher.watch(~path, ~onEvent=event =>
+              Actions.FileChanged(event)
+            )
+          )
+     );
 };
