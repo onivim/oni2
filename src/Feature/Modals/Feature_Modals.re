@@ -51,7 +51,7 @@ let update = (model, msg) =>
 
   | WriteFailureDiscardConfirmed => (
       model,
-      ChoiceConfirmed(Service_Vim.discardChanges()),
+      ChoiceConfirmed(Service_Vim.forceReload()),
     )
 
   | WriteFailureOverwriteConfirmed => (
