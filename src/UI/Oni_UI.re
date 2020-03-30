@@ -9,4 +9,3 @@ module GlobalContext = GlobalContext;
 module FileExplorerView = FileExplorerView;
 module Root = Root;
 module SneakRegistry = SneakRegistry;
-module Modals = Modals;

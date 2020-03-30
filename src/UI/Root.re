@@ -52,6 +52,7 @@ let make = (~state: State.t, ()) => {
         sideBar,
         zenMode,
         pane,
+        buffers,
         _,
       } = state;
 
@@ -101,6 +102,27 @@ let make = (~state: State.t, ()) => {
         ])
       : React.empty;
 
+  let modals = () => {
+    switch (state.modal) {
+    | Some(model) =>
+      let workingDirectory =
+        Option.map(ws => ws.Workspace.workingDirectory, state.workspace);
+      let dispatch = msg =>
+        GlobalContext.current().dispatch(Actions.Modals(msg));
+
+      <Feature_Modals.View
+        model
+        buffers
+        workingDirectory
+        theme
+        font
+        dispatch
+      />;
+
+    | None => React.empty
+    };
+  };
+
   <View style={Styles.root(theme.editorBackground, theme.foreground)}>
     <Titlebar
       focused={state.windowIsFocused}
@@ -134,7 +156,7 @@ let make = (~state: State.t, ()) => {
 
      <ContextMenu.Overlay onClick />}
     <Tooltip.Overlay theme font=uiFont />
-    <Modals.View state />
+    <modals />
     <Overlay> <SneakView state /> </Overlay>
   </View>;
 };

@@ -105,11 +105,22 @@ let update =
     let model' = Feature_Notification.update(state.notifications, msg);
     ({...state, notifications: model'}, Effect.none);
 
-  | Modal(msg) =>
+  | Modals(msg) =>
     switch (state.modal) {
     | Some(model) =>
-      let (model', eff) = Oni_UI.Modals.update(model, msg);
-      ({...state, modal: Some(model')}, eff);
+      let (model, outmsg) = Feature_Modals.update(model, msg);
+
+      switch (outmsg) {
+      | ChoiceConfirmed(eff) => (
+          {...state, modal: None},
+          eff |> Effect.map(msg => Actions.Modals(msg)),
+        )
+
+      | Effect(eff) => (
+          {...state, modal: Some(model)},
+          eff |> Effect.map(msg => Actions.Modals(msg)),
+        )
+      };
 
     | None => (state, Effect.none)
     }
