@@ -10,7 +10,6 @@ let forceOverwrite = () =>
 
 let reload = () =>
   Isolinear.Effect.create(~name="vim.reload", () => {
-    Console.log("reloading buffer");
     Vim.command("e");
   });
 
