@@ -50,26 +50,31 @@ let start = (themeInfo: ThemeInfo.t) => {
       ~name="theme.loadThemeByPath", dispatch => {
       Oni_Core.Log.perf("theme.load", () => {
         let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
-        let theme = Textmate.Theme.from_file(~isDark=dark, themePath);
-        let colors = Textmate.Theme.getColors(theme);
-        let isDark = Textmate.Theme.isDark(theme);
 
-        dispatch(
-          Actions.Theme(
-            Feature_Theme.TextmateThemeLoaded(
-              isDark ? ColorTheme.Dark : ColorTheme.Light,
-              colors,
-            ),
-          ),
-        );
+        themePath
+        |> Textmate.Theme.from_file(~isDark=dark)
+        |> Utility.ResultEx.tapError(err => {
+             dispatch(Actions.ThemeLoadError(err))
+           })
+        |> Result.iter(theme => {
+             let colors = Textmate.Theme.getColors(theme);
+             let isDark = Textmate.Theme.isDark(theme);
 
-        let tokenColors = Textmate.Theme.getTokenColors(theme);
-        let colors = Oni_Core.Theme.ofColorTheme(uiTheme, colors);
-        let tokenTheme = TokenTheme.create(tokenColors);
+             dispatch(
+               Actions.Theme(
+                 Feature_Theme.TextmateThemeLoaded(
+                   isDark ? ColorTheme.Dark : ColorTheme.Light,
+                   colors,
+                 ),
+               ),
+             );
 
-        dispatch(Actions.SetColorTheme(colors));
-        dispatch(Actions.DarkModeSet(isDark));
-        dispatch(Actions.SetTokenTheme(tokenTheme));
+             let tokenColors = Textmate.Theme.getTokenColors(theme);
+             let colors = Oni_Core.Theme.ofColorTheme(uiTheme, colors);
+             let tokenTheme = TokenTheme.create(tokenColors);
+
+             dispatch(Actions.ThemeLoaded({colors, isDark, tokenTheme}));
+           });
       })
     });
 
@@ -132,6 +137,11 @@ let start = (themeInfo: ThemeInfo.t) => {
 
     | ThemeChanged(name) => (state, loadThemeByNameEffect(name))
 
+    | Actions.ThemeLoadError(errorMsg) => (
+        state,
+        Feature_Notification.Effects.create(~kind=Error, errorMsg)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

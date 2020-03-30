@@ -33,7 +33,6 @@ let reduce: (State.t, Actions.t) => State.t =
       };
 
       switch (a) {
-      | DarkModeSet(darkMode) => {...s, darkMode}
       | DiagnosticsSet(buffer, key, diags) => {
           ...s,
           diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),
@@ -45,11 +44,15 @@ let reduce: (State.t, Actions.t) => State.t =
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
-      | SetColorTheme(theme) => {...s, theme}
+      | ThemeLoaded({colors, isDark, tokenTheme}) => {
+          ...s,
+          tokenTheme,
+          theme: colors,
+          darkMode: isDark,
+        }
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}
-      | SetTokenTheme(tokenTheme) => {...s, tokenTheme}
       | WindowFocusGained => {...s, windowIsFocused: true}
       | WindowFocusLost => {...s, windowIsFocused: false}
       | WindowMaximized => {...s, windowIsMaximized: true}

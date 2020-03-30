@@ -48,7 +48,6 @@ type t =
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
-  | DarkModeSet(bool)
   | DefinitionAvailable(
       int,
       Location.t,
@@ -131,11 +130,17 @@ type t =
   | ThemeLoadByName(string)
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
-  | SetTokenTheme([@opaque] TokenTheme.t)
-  | SetColorTheme([@opaque] Theme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | StatusBar(StatusBarModel.action)
+  | ThemeLoaded({
+      [@opaque]
+      tokenTheme: TokenTheme.t,
+      isDark: bool,
+      [@opaque]
+      colors: Theme.t,
+    })
+  | ThemeLoadError(string)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | EnableZenMode
