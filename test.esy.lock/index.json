@@ -1,5 +1,5 @@
 {
-  "checksum": "f7f751a3f65dfe824e97bf9f524f5319",
+  "checksum": "9d2178219c4aaf4b05347d50f69cb7cc",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
@@ -305,11 +305,16 @@
       ],
       "devDependencies": []
     },
-    "reason-textmate@link:../reason-textmate": {
-      "id": "reason-textmate@link:../reason-textmate",
+    "reason-textmate@3.0.0@d41d8cd9": {
+      "id": "reason-textmate@3.0.0@d41d8cd9",
       "name": "reason-textmate",
-      "version": "link:../reason-textmate",
-      "source": { "type": "link", "path": "../reason-textmate" },
+      "version": "3.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-3.0.0.tgz#sha1:0d6feb7ebac25ca04ef649bd170b0ed89100b118"
+        ]
+      },
       "overrides": [],
       "dependencies": [
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
@@ -321,7 +326,7 @@
         "@opam/dune@opam:2.4.0@639d28a3",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
-      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
+      "devDependencies": []
     },
     "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9": {
       "id": "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9",
@@ -1202,7 +1207,7 @@
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@link:../reason-textmate",
+        "reason-textmate@3.0.0@d41d8cd9",
         "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#3ead103@d41d8cd9",
