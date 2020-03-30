@@ -167,15 +167,13 @@ type t =
   | WindowMinimized
   | WindowRestored
   | WindowCloseBlocked
-  | WindowCloseDiscardConfirmed
-  | WindowCloseSaveAllConfirmed
-  | WindowCloseCanceled
+  | WriteFailure
   | NewTextContentProvider({
       handle: int,
       scheme: string,
     })
   | LostTextContentProvider({handle: int})
-  | Modal(Modal.msg)
+  | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
   | GotOriginalUri({
