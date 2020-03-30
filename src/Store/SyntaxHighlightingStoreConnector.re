@@ -99,7 +99,7 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
         Service_Syntax.Effect.configurationChange(state.syntaxClient, config)
         |> mapServiceEffect,
       )
-    | Model.Actions.SetTokenTheme(tokenTheme) => (
+    | Model.Actions.ThemeLoaded({tokenTheme, _}) => (
         state,
         Service_Syntax.Effect.themeChange(state.syntaxClient, tokenTheme)
         |> mapServiceEffect,
