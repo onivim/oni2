@@ -1,0 +1,9 @@
+(library
+    (name Service_Vim)
+    (public_name Oni2.service.vim)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show)))

@@ -8,16 +8,6 @@
 open Oni_Model;
 
 let start = quit => {
-  let saveAllAndQuitEffect =
-    Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () => {
-      Vim.input("<ESC>") |> (ignore: list(Vim.Cursor.t) => unit);
-      Vim.input("<ESC>") |> (ignore: list(Vim.Cursor.t) => unit);
-      Vim.input(":") |> (ignore: list(Vim.Cursor.t) => unit);
-      Vim.input("x") |> (ignore: list(Vim.Cursor.t) => unit);
-      Vim.input("a") |> (ignore: list(Vim.Cursor.t) => unit);
-      Vim.input("<CR>") |> (ignore: list(Vim.Cursor.t) => unit);
-    });
-
   let quitAllEffect = (state: State.t, force) => {
     let handlers = state.lifecycle.onQuitFunctions;
 
@@ -59,23 +49,7 @@ let start = quit => {
     | Actions.Quit(force) => (state, quitAllEffect(state, force))
 
     | WindowCloseBlocked => (
-        {...state, modal: Some(Oni_UI.Modals.unsavedBuffersWarning)}
-        |> FocusManager.push(Focus.Modal),
-        Isolinear.Effect.none,
-      )
-
-    | WindowCloseDiscardConfirmed => (
-        {...state, modal: None} |> FocusManager.pop(Focus.Modal),
-        quitAllEffect(state, true),
-      )
-
-    | WindowCloseSaveAllConfirmed => (
-        {...state, modal: None} |> FocusManager.pop(Focus.Modal),
-        saveAllAndQuitEffect,
-      )
-
-    | WindowCloseCanceled => (
-        {...state, modal: None} |> FocusManager.pop(Focus.Modal),
+        {...state, modal: Some(Feature_Modals.unsavedBuffersWarning)},
         Isolinear.Effect.none,
       )
 

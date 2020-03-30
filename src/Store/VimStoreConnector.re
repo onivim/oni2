@@ -163,6 +163,9 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.onWriteFailure((_reason, _buffer) => dispatch(WriteFailure));
+
+  let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
@@ -1103,6 +1106,11 @@ let start =
         Feature_Notification.Effects.create(~kind, message)
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       );
+
+    | WriteFailure => (
+        {...state, modal: Some(Feature_Modals.writeFailure)},
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };
