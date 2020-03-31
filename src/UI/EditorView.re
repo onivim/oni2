@@ -29,6 +29,7 @@ let make = (~state: State.t, ~theme, ()) =>
        | Some(editorGroup) =>
          <EditorGroupView
            state
+           theme
            windowId={state.windowManager.activeWindowId}
            editorGroup
          />
@@ -36,5 +37,7 @@ let make = (~state: State.t, ~theme, ()) =>
        }}
     </View>;
   } else {
-    <View style={Styles.container(theme)}> <EditorLayoutView state /> </View>;
+    <View style={Styles.container(theme)}>
+      <EditorLayoutView state theme />
+    </View>;
   };

@@ -72,8 +72,8 @@ let toUiTabs =
   List.filter_map(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
-let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
-  let theme = Feature_Theme.resolver(state.colorTheme);
+let make =
+    (~state: State.t, ~theme, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
   let mode = state.vimMode;
 
   let style =

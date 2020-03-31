@@ -41,7 +41,7 @@ let animation =
   );
 
 let%component make = (~theme, ~state: State.t, ()) => {
-  let State.{sideBar, uiFont: font, extensions, _} = state;
+  let State.{sideBar, uiFont: font, _} = state;
 
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
@@ -55,7 +55,9 @@ let%component make = (~theme, ~state: State.t, ()) => {
 
   let elem =
     switch (sideBar.selected) {
-    | FileExplorer => <FileExplorerView state />
+    | FileExplorer =>
+      <FileExplorerView model={state.fileExplorer} theme font />
+
     | SCM =>
       let onItemClick = (resource: Feature_SCM.Resource.t) =>
         GlobalContext.current().dispatch(
@@ -79,7 +81,7 @@ let%component make = (~theme, ~state: State.t, ()) => {
         dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
       />;
 
-    | Extensions => <ExtensionListView extensions theme font />
+    | Extensions => <ExtensionListView model={state.extensions} theme font />
     };
 
   <View style={Styles.container(~theme, ~transition)}>

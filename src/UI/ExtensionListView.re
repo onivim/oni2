@@ -22,7 +22,7 @@ module Styles = {
     ];
 };
 
-let make = (~extensions, ~theme, ~font, ()) => {
+let make = (~model, ~theme, ~font, ()) => {
   let renderItem = (extensions: array(ExtensionScanner.t), idx) => {
     let extension = extensions[idx];
 
@@ -75,10 +75,10 @@ let make = (~extensions, ~theme, ~font, ()) => {
   };
 
   let bundledExtensions =
-    Extensions.getExtensions(~category=ExtensionScanner.Bundled, extensions);
+    Extensions.getExtensions(~category=ExtensionScanner.Bundled, model);
 
   let userExtensions =
-    Extensions.getExtensions(~category=ExtensionScanner.User, extensions);
+    Extensions.getExtensions(~category=ExtensionScanner.User, model);
 
   //let developmentExtensions =
   //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
