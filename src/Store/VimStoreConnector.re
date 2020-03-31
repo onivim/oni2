@@ -163,6 +163,9 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.onWriteFailure((_reason, _buffer) => dispatch(WriteFailure));
+
+  let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
@@ -975,7 +978,7 @@ let start =
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
-    | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
+    | EditorGroupSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
@@ -1103,6 +1106,11 @@ let start =
         Feature_Notification.Effects.create(~kind, message)
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       );
+
+    | WriteFailure => (
+        {...state, modal: Some(Feature_Modals.writeFailure)},
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

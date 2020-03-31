@@ -76,7 +76,7 @@ type t = {
   pane: Pane.t,
   searchPane: Feature_Search.model,
   focus: Focus.stack,
-  modal: option(Modal.t(Actions.t)),
+  modal: option(Feature_Modals.model),
   textContentProviders: list((int, string)),
 };
 

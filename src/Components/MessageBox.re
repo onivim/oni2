@@ -116,7 +116,7 @@ module Styles = {
 
   let shortcutText = (~isHovered, ~theme: Theme.t, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(theme.foreground),
+    color(Revery.Color.multiplyAlpha(0.75, theme.foreground)),
     isHovered
       ? backgroundColor(theme.menuSelectionBackground)
       : backgroundColor(theme.editorBackground),

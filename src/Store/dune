@@ -22,6 +22,7 @@
         Oni2.service.font
         Oni2.service.syntax
         Oni2.service.terminal
+        Oni2.feature.modals
         isolinear
         libvim
         textmate
