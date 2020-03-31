@@ -141,7 +141,7 @@ let%component make = (~state: State.t, ()) => {
         />
         <Text
           style={Styles.versionText(~theme, ~font=state.uiFont)}
-          text=Printf.sprintf("Version %s", Oni_Core.BuildInfo.version)
+          text={Printf.sprintf("Version %s", Oni_Core.BuildInfo.version)}
         />
       </View>
       <View style=Styles.controls>

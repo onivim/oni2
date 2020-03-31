@@ -23,7 +23,7 @@ let parse = bufferPath =>
   if (String.equal(bufferPath, welcome)) {
     Welcome;
   } else if (String.equal(bufferPath, version)) {
-    Version
+    Version;
   } else {
     terminalRegex
     |> Result.to_option

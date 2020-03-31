@@ -101,11 +101,7 @@ let start =
 
   let _: unit => unit =
     Vim.onVersion(() => {
-       Actions.OpenFileByPath(
-         "oni://Version",
-         None,
-         None,
-       ) |> dispatch;
+      Actions.OpenFileByPath("oni://Version", None, None) |> dispatch
     });
 
   let _: unit => unit =
@@ -682,12 +678,12 @@ let start =
             ),
           ),
         )
-      | Version => 
+      | Version =>
         dispatch(
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
               metadata.id,
-              BufferRenderer.Version
+              BufferRenderer.Version,
             ),
           ),
         )
