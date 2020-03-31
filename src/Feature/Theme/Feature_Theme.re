@@ -33,6 +33,7 @@ let defaults =
     Colors.SideBar.defaults,
     Colors.StatusBar.defaults,
     Colors.Tab.defaults,
+    Colors.TitleBar.defaults,
     Colors.defaults,
     Colors.remaining,
   ]

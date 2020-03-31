@@ -685,33 +685,48 @@ module Tab = {
   ];
 };
 
-let defaults = [foreground, contrastBorder];
+module TitleBar = {
+  let activeForeground =
+    define(
+      "titleBar.activeForeground",
+      {dark: hex("#CCC"), light: hex("#333"), hc: hex("#FFF")},
+    );
+  let inactiveForeground =
+    define(
+      "titleBar.inactiveForeground",
+      {
+        dark: ref(activeForeground) |> transparent(0.6),
+        light: ref(activeForeground) |> transparent(0.6),
+        hc: unspecified,
+      },
+    );
+  let activeBackground =
+    define(
+      "titleBar.activeBackground",
+      {dark: hex("#3C3C3C"), light: hex("#DDD"), hc: hex("#000")},
+    );
+  let inactiveBackground =
+    define(
+      "titleBar.inactiveBackground",
+      {
+        dark: ref(activeBackground) |> transparent(0.6),
+        light: ref(activeBackground) |> transparent(0.6),
+        hc: unspecified,
+      },
+    );
+  let border =
+    define(
+      "titleBar.border",
+      {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
+    );
 
-let remaining = [
-  define("list.activeSelectionBackground", hex("#495162") |> all),
-  define("list.activeSelectionForeground", hex("#FFFFFF") |> all),
-  define("menu.background", hex("#2F3440") |> all),
-  define("menu.foreground", hex("#FFFFFF") |> all),
-  define("menu.selectionBackground", hex("#495162") |> all),
-  define(
-    "statusBar.background",
-    {dark: hex("#007aCC"), light: hex("#007aCC"), hc: unspecified},
-  ),
-  define("statusBar.foreground", hex("#fff") |> all),
-  //define("notificationSuccessBackground", hex("#23d160")),
-  //define("notificationSuccessForeground", hex("#fff")),
-  define("notification.infoBackground", hex("#209cee") |> all),
-  define("notification.infoForeground", hex("#fff") |> all),
-  define("notification.warningBackground", hex("#ffdd57") |> all),
-  define("notification.warningForeground", hex("#fff") |> all),
-  define("notification.errorBackground", hex("#ff3860") |> all),
-  define("notification.errorForeground", hex("#fff") |> all),
-  //define("sneakBackground", Revery.Colors.red),
-  //define("sneakForeground", hex("#fff")),
-  //define("sneakHighlight", hex("#fff")),
-  define("titleBar.activeBackground", hex("#282C35") |> all),
-  define("titleBar.activeForeground", hex("#ECEFF4") |> all),
-  define("titleBar.inactiveBackground", hex("#282C35") |> all),
-  define("titleBar.inactiveForeground", hex("#ECEFF4") |> all),
-  define("titleBar.border", hex("#fff0") |> all),
-];
+  let defaults = [
+    activeForeground,
+    inactiveForeground,
+    activeBackground,
+    inactiveBackground,
+    border,
+  ];
+};
+
+let defaults = [foreground, contrastBorder];
