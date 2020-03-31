@@ -157,6 +157,6 @@ let make = (~state: State.t, ()) => {
      <ContextMenu.Overlay onClick />}
     <Tooltip.Overlay theme font=uiFont />
     <modals />
-    <Overlay> <SneakView state /> </Overlay>
+    <Overlay> <SneakView model={state.sneak} theme font /> </Overlay>
   </View>;
 };
