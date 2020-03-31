@@ -85,20 +85,14 @@ let make = (~state: State.t, ()) => {
   let activityBar =
     activityBarVisible
       ? React.listToElement([
-          <Dock
-            theme={Feature_Theme.resolver(state.colorTheme)}
-            sideBar
-            pane
-          />,
-          <WindowHandle direction=Vertical theme />,
+          <WindowHandle direction=Vertical />,
         ])
       : React.empty;
 
   let sideBar =
     sideBarVisible
       ? React.listToElement([
-          <SideBarView state />,
-          <WindowHandle direction=Vertical theme />,
+          <WindowHandle direction=Vertical />,
         ])
       : React.empty;
 

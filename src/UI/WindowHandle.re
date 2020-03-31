@@ -31,5 +31,4 @@ let spacer = (direction: direction) => {
   };
 };
 
-let make = (~theme as _: Core.Theme.t, ~direction: direction, ()) =>
-  <View style={spacer(direction)} />;
+let make = (~direction: direction, ()) => <View style={spacer(direction)} />;
