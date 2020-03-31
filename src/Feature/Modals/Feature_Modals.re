@@ -64,13 +64,15 @@ let update = (model, msg) =>
 
 // VIEW
 
-open Revery;
-open Revery.UI;
-
-open Oni_Core;
-open Utility;
-
 module View = {
+  open Revery;
+  open Revery.UI;
+
+  open Oni_Core;
+  open Utility;
+
+  module Colors = Feature_Theme.Colors;
+
   module Styles = {
     open Style;
 
@@ -88,20 +90,18 @@ module View = {
       pointerEvents(`Allow),
     ];
 
-    let text = (~theme: Theme.t, ~font: UiFont.t) => [
+    let text = (~theme, ~font: UiFont.t) => [
       fontFamily(font.fontFile),
-      color(theme.foreground),
-      backgroundColor(theme.editorBackground),
+      color(Colors.foreground.from(theme)),
       fontSize(14.),
       textWrap(TextWrapping.NoWrap),
     ];
 
     let files = [padding(10)];
 
-    let file = (~theme: Theme.t, ~font: UiFont.t) => [
+    let file = (~theme, ~font: UiFont.t) => [
       fontFamily(font.fontFile),
-      color(theme.foreground),
-      backgroundColor(theme.editorBackground),
+      color(Colors.foreground.from(theme)),
       fontSize(14.),
       textWrap(TextWrapping.NoWrap),
     ];
