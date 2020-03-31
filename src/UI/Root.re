@@ -78,7 +78,7 @@ let make = (~state: State.t, ()) => {
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar state contextMenu onContextMenuItemSelect />
+          <StatusBar state contextMenu onContextMenuItemSelect theme />
         </View>
       : React.empty;
 

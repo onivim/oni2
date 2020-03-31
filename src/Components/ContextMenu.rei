@@ -23,7 +23,7 @@ let make:
     ~offsetX: int=?,
     ~offsetY: int=?,
     ~onItemSelect: item('data) => unit,
-    ~theme: Theme.t,
+    ~theme: ColorTheme.resolver,
     ~font: UiFont.t,
     unit
   ) =>
