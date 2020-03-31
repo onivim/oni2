@@ -72,7 +72,7 @@ module View: {
     let make:
       (
         ~model: model,
-        ~theme: Theme.t,
+        ~theme: ColorTheme.resolver,
         ~font: UiFont.t,
         ~dispatch: msg => unit,
         unit

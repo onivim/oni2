@@ -6,17 +6,19 @@ module LocationList = Oni_Components.LocationList;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
+module Colors = Feature_Theme.Colors;
+
 module Styles = {
   let pane = Style.[flexGrow(1), flexDirection(`Row)];
 
   let noResultsContainer =
     Style.[flexGrow(1), alignItems(`Center), justifyContent(`Center)];
 
-  let title = (~theme: Theme.t, ~font: UiFont.t) =>
+  let title = (~theme, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
-      color(theme.foreground),
+      color(Colors.foreground.from(theme)),
       margin(8),
     ];
 };
@@ -28,11 +30,9 @@ let toLocListItem = (diagWithUri: (Uri.t, Diagnostic.t)) => {
   LocationList.{file, location, text: diag.message, highlight: None};
 };
 
-let make = (~state: State.t, ()) => {
-  let {theme, uiFont, editorFont, _}: State.t = state;
-
+let make = (~diagnostics, ~theme, ~uiFont, ~editorFont, ()) => {
   let items =
-    state.diagnostics
+    diagnostics
     |> Diagnostics.getAllDiagnostics
     |> List.map(toLocListItem)
     |> Array.of_list;
