@@ -54,9 +54,7 @@ module Sub = {
 
       let id = ({id, _}) => string_of_int(id);
 
-
       let init = (~params, ~dispatch) => {
-        prerr_endline ("Subscription init");
         let launchConfig =
           ExtHostClient.Terminal.ShellLaunchConfig.{
             name: "Terminal",
@@ -142,12 +140,11 @@ module Sub = {
       };
 
       let update = (~params: params, ~state: state, ~dispatch as _) => {
-          let rows = params.rows;
-          let columns = params.columns;
-        if (rows > 0 && columns >0 && (rows != state.rows || columns != state.columns)) {
-          prerr_endline(
-            Printf.sprintf("RESIZING - rows: %d columns: %d", rows, columns)
-          )
+        let rows = params.rows;
+        let columns = params.columns;
+        if (rows > 0
+            && columns > 0
+            && (rows != state.rows || columns != state.columns)) {
           ExtHostClient.Terminal.Requests.acceptProcessResize(
             params.id,
             columns,
@@ -156,17 +153,12 @@ module Sub = {
           );
 
           state.isResizing := true;
-          ReveryTerminal.resize(
-            ~rows,
-            ~columns,
-            state.terminal,
-          );
+          ReveryTerminal.resize(~rows, ~columns, state.terminal);
           state.isResizing := false;
-        {...state, rows, columns };
+          {...state, rows, columns};
         } else {
-          state
-        }
-
+          state;
+        };
       };
 
       let dispose = (~params, ~state) => {

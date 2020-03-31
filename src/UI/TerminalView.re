@@ -45,7 +45,6 @@ let make =
       (
         {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
       ) => {
-    prerr_endline ("onDimensionsChanged!")
     // If we have a loaded font, figure out how many columns and rows we can show
     Option.iter(
       font => {
@@ -55,7 +54,6 @@ let make =
         let columns =
           float_of_int(width) /. terminalFont.characterWidth |> int_of_float;
 
-      prerr_endline (Printf.sprintf("Feature_Terminal.Resized - rows: %d columns: %d", rows, columns));
         GlobalContext.current().dispatch(
           Actions.Terminal(
             Feature_Terminal.Resized({id: terminal.id, rows, columns}),
