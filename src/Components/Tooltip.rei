@@ -3,7 +3,13 @@ open Revery.UI;
 
 module Overlay: {
   let make:
-    (~key: React.Key.t=?, ~theme: Theme.t, ~font: UiFont.t, unit) => element;
+    (
+      ~key: React.Key.t=?,
+      ~theme: ColorTheme.resolver,
+      ~font: UiFont.t,
+      unit
+    ) =>
+    element;
 };
 
 let make:

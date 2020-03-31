@@ -9,7 +9,16 @@ let make = (~state: State.t, ()) => {
 
   switch (state.fileExplorer) {
   | {tree: None, _} => React.empty
-  | {tree: Some(tree), active, focus, _} =>
-    <FileTreeView state active focus onNodeClick tree />
+  | {tree: Some(tree), active, focus, scrollOffset, decorations, _} =>
+    <FileTreeView
+      scrollOffset
+      decorations
+      active
+      focus
+      onNodeClick
+      tree
+      theme={Feature_Theme.resolver(state.colorTheme)}
+      font={state.uiFont}
+    />
   };
 };
