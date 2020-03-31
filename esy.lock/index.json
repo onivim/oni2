@@ -1,15 +1,18 @@
 {
-  "checksum": "b3c0ea3d399da34d4e3c236b3fd68789",
+  "checksum": "ab9e11f9f03c82b5b3db926086c1704a",
   "root": "Oni2@link-dev:./package.json",
   "node": {
-    "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9": {
+    "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0@d41d8cd9": {
       "id":
-        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0@d41d8cd9",
       "name": "yarn-pkg-config",
-      "version": "github:esy-ocaml/yarn-pkg-config#db3a0b6",
+      "version":
+        "github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0",
       "source": {
         "type": "install",
-        "source": [ "github:esy-ocaml/yarn-pkg-config#db3a0b6" ]
+        "source": [
+          "github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0"
+        ]
       },
       "overrides": [],
       "dependencies": [],
@@ -150,7 +153,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
         "reason-skia@github:revery-ui/reason-skia#cc3cfa8@d41d8cd9",
-        "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
+        "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-harfbuzz@github:revery-ui/reason-harfbuzz#eca58ea@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
         "@reason-native/rely@3.2.1@d41d8cd9",
@@ -338,8 +341,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.3.0@d41d8cd9",
-        "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
         "esy-sdl2@2.0.10006@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
@@ -350,13 +352,15 @@
       ],
       "devDependencies": []
     },
-    "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9": {
-      "id": "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
+    "reason-sdl2@2.10.3021@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3021@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "github:revery-ui/reason-sdl2#ce07970",
+      "version": "2.10.3021",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-sdl2#ce07970" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3021.tgz#sha1:9ea4f7a663c49954db438fe5d914bafd7864d0e0"
+        ]
       },
       "overrides": [],
       "dependencies": [
@@ -1207,8 +1211,7 @@
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@3.0.0@d41d8cd9",
-        "reason-sdl2@github:revery-ui/reason-sdl2#ce07970@d41d8cd9",
+        "reason-textmate@3.0.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#5a6976d@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
@@ -3054,7 +3057,7 @@
         }
       ],
       "dependencies": [
-        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b6@d41d8cd9",
+        "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0@d41d8cd9",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": []
