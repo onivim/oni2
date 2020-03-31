@@ -33,7 +33,6 @@ module Styles = {
 
 module HeaderView = {
   module Styles = {
-    open Style;
     let header = (~uiFont: UiFont.t) =>
       Style.[
         flexGrow(0),
