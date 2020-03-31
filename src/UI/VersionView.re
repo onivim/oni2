@@ -72,8 +72,9 @@ module VersionView = {
       color(theme.foreground),
     ];
 
+    let versionValue = [flexGrow(0), alignItems(`FlexEnd)];
+
     let spacer = Style.[flexGrow(1)];
-    let tempSpacer = Style.[flexGrow(1)];
   };
 
   let make = (~name: string, ~version: string, ~state: State.t, ()) => {
@@ -89,8 +90,8 @@ module VersionView = {
         text=name
       />
       <View style=Styles.spacer />
-      <View style=Styles.tempSpacer>
-        <View style=Style.[flexGrow(0), alignItems(`FlexEnd)]>
+      <View style=Styles.spacer>
+        <View style=Styles.versionValue>
           <Text
             style={Styles.versionText(
               ~theme,
