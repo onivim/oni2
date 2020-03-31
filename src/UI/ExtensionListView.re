@@ -7,12 +7,14 @@ open Oni_Components;
 
 open Oni_Extensions;
 
+module Colors = Feature_Theme.Colors;
+
 module Styles = {
-  let text = (~theme: Theme.t, ~font: UiFont.t) =>
+  let text = (~theme, ~font: UiFont.t) =>
     Style.[
       fontSize(font.fontSize),
       fontFamily(font.fontFile),
-      color(theme.sideBarForeground),
+      color(Colors.SideBar.foreground.from(theme)),
       marginLeft(10),
       marginVertical(2),
       textWrap(TextWrapping.NoWrap),
@@ -20,15 +22,13 @@ module Styles = {
     ];
 };
 
-let make = (~state: State.t, ()) => {
-  let {theme, uiFont, _}: State.t = state;
-
+let make = (~extensions, ~theme, ~font, ()) => {
   let renderItem = (extensions: array(ExtensionScanner.t), idx) => {
     let extension = extensions[idx];
 
     let icon =
       switch (extension.manifest.icon) {
-      | None => <Container color=Colors.darkGray width=32 height=32 />
+      | None => <Container color=Revery.Colors.darkGray width=32 height=32 />
       | Some(iconPath) => <Image src=iconPath width=32 height=32 />
       };
 
@@ -43,7 +43,7 @@ let make = (~state: State.t, ()) => {
       icon
       <View style=Style.[flexDirection(`Column), flexGrow(1)]>
         <Text
-          style={Styles.text(~font=uiFont, ~theme)}
+          style={Styles.text(~font, ~theme)}
           text={ExtensionManifest.getDisplayName(extension.manifest)}
         />
         <View style=Style.[flexDirection(`Row), flexGrow(1)]>
@@ -54,7 +54,7 @@ let make = (~state: State.t, ()) => {
               overflow(`Hidden),
             ]>
             <Text
-              style={Styles.text(~font=uiFont, ~theme)}
+              style={Styles.text(~font, ~theme)}
               text={extension.manifest.author}
             />
           </View>
@@ -65,7 +65,7 @@ let make = (~state: State.t, ()) => {
               overflow(`Hidden),
             ]>
             <Text
-              style={Styles.text(~font=uiFont, ~theme)}
+              style={Styles.text(~font, ~theme)}
               text={extension.manifest.version}
             />
           </View>
@@ -75,16 +75,10 @@ let make = (~state: State.t, ()) => {
   };
 
   let bundledExtensions =
-    Extensions.getExtensions(
-      ~category=ExtensionScanner.Bundled,
-      state.extensions,
-    );
+    Extensions.getExtensions(~category=ExtensionScanner.Bundled, extensions);
 
   let userExtensions =
-    Extensions.getExtensions(
-      ~category=ExtensionScanner.User,
-      state.extensions,
-    );
+    Extensions.getExtensions(~category=ExtensionScanner.User, extensions);
 
   //let developmentExtensions =
   //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;

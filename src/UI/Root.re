@@ -92,6 +92,7 @@ let make = (~state: State.t, ()) => {
   let sideBar =
     sideBarVisible
       ? React.listToElement([
+          <SideBarView theme state />,
           <WindowHandle direction=Vertical />,
         ])
       : React.empty;
