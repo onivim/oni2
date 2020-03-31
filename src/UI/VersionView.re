@@ -125,14 +125,14 @@ let make = (~state: State.t, ()) => {
   let header = HeaderView.make(~state);
 
   <View style={Styles.container(~theme)}>
-    <header text="Onivim 2:" />
+    <header text="Onivim 2" />
     <version name="Version" version=Oni_Core.BuildInfo.version />
     <version name="Commit" version=Oni_Core.BuildInfo.commitId />
     // spacer
-    <header text="OCaml:" />
+    <header text="OCaml" />
     <version name="Compiler Version " version=Sys.ocaml_version />
     // spacer
-    <header text="SDL:" />
+    <header text="SDL" />
     <version
       name="SDL Compiled"
       version={Sdl2.Version.getCompiled() |> sdlVersionToString}
@@ -142,7 +142,7 @@ let make = (~state: State.t, ()) => {
       version={Sdl2.Version.getLinked() |> sdlVersionToString}
     />
     // spacer
-    <header text="OpenGL:" />
+    <header text="OpenGL" />
     <version name="Version" version={Sdl2.Gl.getString(Sdl2.Gl.Version)} />
     <version name="Vendor" version={Sdl2.Gl.getString(Sdl2.Gl.Vendor)} />
     <version name="Renderer" version={Sdl2.Gl.getString(Sdl2.Gl.Renderer)} />
