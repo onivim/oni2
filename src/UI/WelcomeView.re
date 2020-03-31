@@ -30,6 +30,14 @@ module Styles = {
       marginTop(-40),
     ];
 
+  let versionText = (~theme: Theme.t, ~font: UiFont.t) =>
+    Style.[
+      fontFamily(font.fontFile),
+      fontSize(12.),
+      color(theme.foreground),
+      marginTop(0),
+    ];
+
   let commandText = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
@@ -130,6 +138,10 @@ let%component make = (~state: State.t, ()) => {
         <Text
           style={Styles.titleText(~theme, ~font=state.uiFont)}
           text="Modal Editing from the Future"
+        />
+        <Text
+          style={Styles.versionText(~theme, ~font=state.uiFont)}
+          text=Printf.sprintf("Version %s", Oni_Core.BuildInfo.version)
         />
       </View>
       <View style=Styles.controls>

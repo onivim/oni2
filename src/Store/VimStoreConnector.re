@@ -100,6 +100,15 @@ let start =
   });
 
   let _: unit => unit =
+    Vim.onVersion(() => {
+       Actions.OpenFileByPath(
+         "oni://Version",
+         None,
+         None,
+       ) |> dispatch;
+    });
+
+  let _: unit => unit =
     Vim.onGoto((_position, _definitionType) => {
       Log.debug("Goto definition requested");
       // Get buffer and cursor position
@@ -670,6 +679,15 @@ let start =
                 id: bufferId,
                 insertMode: true,
               }),
+            ),
+          ),
+        )
+      | Version => 
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              metadata.id,
+              BufferRenderer.Version
             ),
           ),
         )

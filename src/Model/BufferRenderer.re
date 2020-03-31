@@ -21,6 +21,7 @@ type terminal = {
 type t =
   | Editor
   | Welcome
+  | Version
   | Terminal(terminal);
 
 [@deriving show({with_path: false})]
