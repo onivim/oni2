@@ -8,53 +8,51 @@ open Revery.UI;
 open Oni_Core;
 module Model = Oni_Model;
 
+module Colors = Feature_Theme.Colors.TitleBar;
+
 module Styles = {
   open Style;
 
-  let container = background => [
+  let container = (~isFocused, ~theme) => [
     flexGrow(0),
     height(25),
-    backgroundColor(background),
+    backgroundColor(
+      isFocused
+        ? Colors.activeBackground.from(theme)
+        : Colors.inactiveBackground.from(theme),
+    ),
     flexDirection(`Row),
     justifyContent(`Center),
     alignItems(`Center),
   ];
 
-  let text = (~background, ~foreground, ~font: UiFont.t) => [
+  let text = (~isFocused, ~theme, ~font: UiFont.t) => [
     flexGrow(0),
     fontSize(12.),
     fontFamily(font.fontFileSemiBold),
-    backgroundColor(background),
-    color(foreground),
+    backgroundColor(
+      isFocused
+        ? Colors.activeBackground.from(theme)
+        : Colors.inactiveBackground.from(theme),
+    ),
+    color(
+      isFocused
+        ? Colors.activeForeground.from(theme)
+        : Colors.inactiveForeground.from(theme),
+    ),
     textWrap(TextWrapping.NoWrap),
   ];
 };
 
-let make =
-    (~focused, ~maximized, ~title, ~theme: Theme.t, ~font: UiFont.t, ()) =>
-  if (maximized) {
+let make = (~isFocused, ~isMaximized, ~title, ~theme, ~font: UiFont.t, ()) =>
+  if (isMaximized) {
     React.empty;
   } else {
     switch (Revery.Environment.os) {
     | Mac =>
-      let {
-        titleBarActiveBackground,
-        titleBarActiveForeground,
-        titleBarInactiveBackground,
-        titleBarInactiveForeground,
-        _,
-      }: Theme.t = theme;
-      let background =
-        focused ? titleBarActiveBackground : titleBarInactiveBackground;
-      let foreground =
-        focused ? titleBarActiveForeground : titleBarInactiveForeground;
-
-      <View style={Styles.container(background)}>
-        <Text
-          style={Styles.text(~background, ~foreground, ~font)}
-          text=title
-        />
-      </View>;
+      <View style={Styles.container(~isFocused, ~theme)}>
+        <Text style={Styles.text(~isFocused, ~theme, ~font)} text=title />
+      </View>
     | _ => React.empty
     };
   };

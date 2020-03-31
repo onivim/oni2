@@ -125,11 +125,11 @@ let make = (~state: State.t, ()) => {
 
   <View style={Styles.root(theme.editorBackground, theme.foreground)}>
     <Titlebar
-      focused={state.windowIsFocused}
-      maximized={state.windowIsMaximized}
+      isFocused={state.windowIsFocused}
+      isMaximized={state.windowIsMaximized}
       font={state.uiFont}
       title={state.windowTitle}
-      theme={state.theme}
+      theme
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
