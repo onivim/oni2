@@ -242,7 +242,7 @@
     "revery": "revery-ui/revery#4f08701",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
-    "esy-skia": "revery-ui/esy-skia#91b10c9",
+    "esy-skia": "revery-ui/esy-skia#07c13a9",
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",

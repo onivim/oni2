@@ -1,5 +1,5 @@
 {
-  "checksum": "90aada3a61ae0aa72c1c20785dc71c1e",
+  "checksum": "cb900499e5f2d0af107b41a1da0b7c73",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0@d41d8cd9": {
@@ -343,7 +343,7 @@
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#07c13a9@d41d8cd9",
         "esy-sdl2@2.0.10006@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
         "@opam/lwt@opam:4.5.0@677655b4", "@opam/dune@opam:2.4.0@639d28a3",
         "@opam/ctypes@opam:0.15.1@b0227b2f",
@@ -856,13 +856,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9": {
-      "id": "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
+    "esy-skia@github:revery-ui/esy-skia#07c13a9@d41d8cd9": {
+      "id": "esy-skia@github:revery-ui/esy-skia#07c13a9@d41d8cd9",
       "name": "esy-skia",
-      "version": "github:revery-ui/esy-skia#91b10c9",
+      "version": "github:revery-ui/esy-skia#07c13a9",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/esy-skia#91b10c9" ]
+        "source": [ "github:revery-ui/esy-skia#07c13a9" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1215,7 +1215,7 @@
         "reason-libvim@github:onivim/reason-libvim#5a6976d@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#91b10c9@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#07c13a9@d41d8cd9",
         "esy-sdl2@2.0.10006@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-input@github:onivim/editor-input#c494950@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
