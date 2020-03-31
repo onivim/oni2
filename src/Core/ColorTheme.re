@@ -138,7 +138,9 @@ module Schema = {
         | `Color(color) => Some(color)
         | `Default(expr) => Defaults.evaluate(tryGet(resolve), expr)
         | `NotRegistered =>
-          Log.warnf(m => m("Missing contributed default for `%s`", keyName));
+          Log.warnf(m =>
+            m("Missing contributed default for `%s`", Lookup.keyName(key))
+          );
           Some(Colors.magenta);
         };
 
