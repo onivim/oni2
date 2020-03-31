@@ -199,7 +199,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             windowIsFocused={state.windowIsFocused}
             config={Feature_Configuration.resolver(state.config)}
           />;
-        | BufferRenderer.Welcome => <WelcomeView state />
+        | BufferRenderer.Welcome =>
+          <WelcomeView theme uiFont editorFont={state.editorFont} />
         | BufferRenderer.Version => <VersionView state />
         | BufferRenderer.Terminal({id, _}) =>
           state.terminals

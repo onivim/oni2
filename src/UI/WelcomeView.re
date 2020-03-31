@@ -5,16 +5,17 @@
  */
 
 open Revery.UI;
-open Oni_Model;
 open Oni_Core;
 
 module Model = Oni_Model;
 
+module Colors = Feature_Theme.Colors;
+
 module Styles = {
-  let container = (~theme: Theme.t) =>
+  let container = (~theme) =>
     Style.[
-      backgroundColor(theme.editorBackground),
-      color(theme.foreground),
+      backgroundColor(Colors.Editor.background.from(theme)),
+      color(Colors.foreground.from(theme)),
       flexGrow(1),
       flexDirection(`Column),
       justifyContent(`Center),
@@ -22,27 +23,27 @@ module Styles = {
       overflow(`Hidden),
     ];
 
-  let titleText = (~theme: Theme.t, ~font: UiFont.t) =>
+  let titleText = (~theme, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(20.),
-      color(theme.foreground),
+      color(Colors.foreground.from(theme)),
       marginTop(-40),
     ];
 
-  let versionText = (~theme: Theme.t, ~font: UiFont.t) =>
+  let versionText = (~theme, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(12.),
-      color(theme.foreground),
+      color(Colors.foreground.from(theme)),
       marginTop(0),
     ];
 
-  let commandText = (~theme: Theme.t, ~font: UiFont.t) =>
+  let commandText = (~theme, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(12.),
-      color(theme.foreground),
+      color(Colors.foreground.from(theme)),
     ];
 
   let header =
@@ -78,18 +79,24 @@ module KeyBindingView = {
       minWidth(150),
     ];
 
-    let commandText = (~theme: Theme.t, ~fontFile, ~fontSize) => [
+    let commandText = (~theme, ~fontFile, ~fontSize) => [
       fontFamily(fontFile),
       Style.fontSize(fontSize),
-      color(theme.foreground),
+      color(Colors.foreground.from(theme)),
     ];
 
     let spacer = Style.[flexGrow(1)];
   };
 
-  let make = (~name: string, ~shortcut: string, ~state: State.t, ()) => {
-    let {theme, editorFont, uiFont, _}: State.t = state;
-
+  let make =
+      (
+        ~name: string,
+        ~shortcut: string,
+        ~theme,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        (),
+      ) => {
     <View style=Styles.container>
       <Text
         style={Styles.commandText(
@@ -120,9 +127,7 @@ let animation =
     |> delay(Revery.Time.milliseconds(150))
   );
 
-let%component make = (~state: State.t, ()) => {
-  let theme = state.theme;
-
+let%component make = (~theme, ~uiFont, ~editorFont, ()) => {
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
 
@@ -136,7 +141,7 @@ let%component make = (~state: State.t, ()) => {
           opacity=transition
         />
         <Text
-          style={Styles.titleText(~theme, ~font=state.uiFont)}
+          style={Styles.titleText(~theme, ~font=uiFont)}
           text="Modal Editing from the Future"
         />
         <Text
@@ -145,15 +150,41 @@ let%component make = (~state: State.t, ()) => {
         />
       </View>
       <View style=Styles.controls>
-        <KeyBindingView name="Quick open" shortcut="Cmd + P" state />
+        <KeyBindingView
+          name="Quick open"
+          shortcut="Cmd + P"
+          theme
+          uiFont
+          editorFont
+        />
         <KeyBindingView
           name="Command palette"
           shortcut="Cmd + Shift + P"
-          state
+          theme
+          uiFont
+          editorFont
         />
-        <KeyBindingView name="Vim command" shortcut=":" state />
-        <KeyBindingView name="Sneak" shortcut="Ctrl + G" state />
-        <KeyBindingView name="Terminal" shortcut=":term" state />
+        <KeyBindingView
+          name="Vim command"
+          shortcut=":"
+          theme
+          uiFont
+          editorFont
+        />
+        <KeyBindingView
+          name="Sneak"
+          shortcut="Ctrl + G"
+          theme
+          uiFont
+          editorFont
+        />
+        <KeyBindingView
+          name="Terminal"
+          shortcut=":term"
+          theme
+          uiFont
+          editorFont
+        />
       </View>
     </Opacity>
   </View>;

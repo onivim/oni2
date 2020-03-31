@@ -84,9 +84,7 @@ let make = (~state: State.t, ()) => {
 
   let activityBar =
     activityBarVisible
-      ? React.listToElement([
-          <WindowHandle direction=Vertical />,
-        ])
+      ? React.listToElement([<WindowHandle direction=Vertical />])
       : React.empty;
 
   let sideBar =
