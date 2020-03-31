@@ -40,7 +40,7 @@ module ActivityBar = {
       "activityBar.background",
       {dark: hex("#333"), light: hex("#2C2C2C"), hc: hex("#000")},
     );
-  let foreground = define("acitvityBar.foreground", hex("#fff") |> all);
+  let foreground = define("activityBar.foreground", hex("#fff") |> all);
   let border =
     define(
       "activityBar.border",
