@@ -51,15 +51,9 @@ module WatchSubscription =
       };
     };
 
-    let update = (~params as path, ~state, ~dispatch as _) =>
-      if (path != state.path) {
-        // Should be unreachable because the path is the id
-        failwith(
-          "unreachable",
-        );
-      } else {
-        state;
-      };
+    let update = (~params as _, ~state, ~dispatch as _) =>
+      // Since the path is the id, there's nothing to change
+      state;
 
     let dispose = (~params as path, ~state) => {
       Log.tracef(m => m("Disposing file watcher for %s", path));
