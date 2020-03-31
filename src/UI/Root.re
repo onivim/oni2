@@ -135,7 +135,7 @@ let make = (~state: State.t, ()) => {
       <View style=Styles.surface>
         activityBar
         sideBar
-        <EditorView state />
+        <EditorView state theme />
       </View>
       <PaneView theme uiFont editorFont state />
     </View>
