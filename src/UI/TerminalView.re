@@ -28,15 +28,33 @@ module Styles = {
     ];
 };
 
-let make =
-    (
-      ~metrics: EditorMetrics.t,
-      ~terminal: Feature_Terminal.terminal,
-      ~font: Service_Font.font,
-      ~theme: Oni_Core.ColorTheme.resolver,
-      (),
-    ) => {
+let%component make =
+              (
+                ~metrics: EditorMetrics.t,
+                ~terminal: Feature_Terminal.terminal,
+                ~font: Service_Font.font,
+                ~theme: Oni_Core.ColorTheme.resolver,
+                (),
+              ) => {
   let maybeFont = Revery.Font.load(font.fontFile) |> Stdlib.Result.to_option;
+
+  let%hook lastDimensions = Hooks.ref(None);
+  let%hook () =
+    React.Hooks.effect(
+      If((!=), terminal.id),
+      () => {
+        lastDimensions^
+        |> Option.iter(((rows, columns)) => {
+             GlobalContext.current().dispatch(
+               Actions.Terminal(
+                 Feature_Terminal.Resized({id: terminal.id, rows, columns}),
+               ),
+             )
+           });
+
+        None;
+      },
+    );
 
   let size = font.fontSize;
   let smoothing = font.smoothing;
@@ -54,6 +72,7 @@ let make =
         let columns =
           float_of_int(width) /. terminalFont.characterWidth |> int_of_float;
 
+        lastDimensions := Some((rows, columns));
         GlobalContext.current().dispatch(
           Actions.Terminal(
             Feature_Terminal.Resized({id: terminal.id, rows, columns}),
