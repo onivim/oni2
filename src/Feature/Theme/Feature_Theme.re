@@ -13,6 +13,7 @@ type model = {
 let defaults =
   [
     Colors.ActivityBar.defaults,
+    Colors.Dropdown.defaults,
     Colors.Editor.defaults,
     Colors.EditorCursor.defaults,
     Colors.EditorGroupHeader.defaults,
@@ -26,6 +27,7 @@ let defaults =
     Colors.EditorWhitespace.defaults,
     Colors.EditorWidget.defaults,
     Colors.List.defaults,
+    Colors.Menu.defaults,
     Colors.Oni.defaults,
     Colors.ScrollbarSlider.defaults,
     Colors.SideBar.defaults,

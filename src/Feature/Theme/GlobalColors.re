@@ -73,6 +73,21 @@ module ActivityBar = {
   ];
 };
 
+module Dropdown = {
+  let background =
+    define(
+      "dropdown.background",
+      {dark: hex("#3C3C3C"), light: hex("#FFF"), hc: hex("#000")},
+    );
+  let foreground =
+    define(
+      "dropdown.foreground",
+      {dark: hex("#F0F0F0"), light: unspecified, hc: hex("#FFF")},
+    );
+
+  let defaults = [background, foreground];
+};
+
 module Editor = {
   let background =
     define(
@@ -293,6 +308,16 @@ module List = {
       {dark: hex("#062F4A"), light: hex("#D6EBFF"), hc: unspecified},
     );
   let focusForeground = define("list.focusForeground", all(unspecified));
+  let activeSelectionBackground =
+    define(
+      "list.activeSelectionBackground",
+      {dark: hex("#094771"), light: hex("#0074E8"), hc: unspecified},
+    );
+  let activeSelectionForeground =
+    define(
+      "list.activeSelectionForeground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: unspecified},
+    );
   let hoverBackground =
     define(
       "list.hoverBackground",
@@ -308,8 +333,11 @@ module List = {
   let defaults = [
     focusBackground,
     focusForeground,
+    activeSelectionBackground,
+    activeSelectionForeground,
     hoverBackground,
     hoverForeground,
+    highlightForeground,
   ];
 };
 
@@ -340,6 +368,26 @@ module EditorSuggestWidget = {
     highlightForeground,
     selectedBackground,
   ];
+};
+
+module Menu = {
+  let background = define("menu.background", all(ref(Dropdown.background)));
+  let foreground =
+    define(
+      "menu.foreground",
+      {
+        dark: ref(Dropdown.foreground),
+        light: ref(foreground),
+        hc: ref(foreground),
+      },
+    );
+  let selectionBackground =
+    define(
+      "menu.selectionBackground",
+      all(ref(List.activeSelectionBackground)),
+    );
+
+  let defaults = [background, foreground, selectionBackground];
 };
 
 module Oni = {
