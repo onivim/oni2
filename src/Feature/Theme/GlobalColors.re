@@ -503,6 +503,17 @@ module SideBar = {
   let defaults = [background, foreground];
 };
 
+module StatusBar = {
+  let background =
+    define(
+      "statusBar.background",
+      {dark: hex("#007ACC"), light: hex("#007ACC"), hc: unspecified},
+    );
+  let foreground = define("statusBar.foreground", all(hex("#FFF")));
+
+  let defaults = [background, foreground];
+};
+
 module Tab = {
   // BACKGROUND
 

@@ -31,6 +31,7 @@ let defaults =
     Colors.Oni.defaults,
     Colors.ScrollbarSlider.defaults,
     Colors.SideBar.defaults,
+    Colors.StatusBar.defaults,
     Colors.Tab.defaults,
     Colors.defaults,
     Colors.remaining,
