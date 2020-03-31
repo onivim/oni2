@@ -29,13 +29,13 @@ let defaults =
     Colors.List.defaults,
     Colors.Menu.defaults,
     Colors.Oni.defaults,
+    Colors.Oni.Sneak.defaults,
     Colors.ScrollbarSlider.defaults,
     Colors.SideBar.defaults,
     Colors.StatusBar.defaults,
     Colors.Tab.defaults,
     Colors.TitleBar.defaults,
     Colors.defaults,
-    Colors.remaining,
   ]
   |> List.map(ColorTheme.Schema.fromList)
   |> ColorTheme.Schema.unionMany;

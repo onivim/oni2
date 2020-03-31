@@ -458,6 +458,17 @@ module Oni = {
     operatorModeForeground,
     commandlineModeForeground,
   ];
+
+  module Sneak = {
+    let background =
+      define("oni.sneak.background", all(ref(Menu.selectionBackground)));
+    let foreground =
+      define("oni.sneak.foreground", all(ref(Menu.foreground)));
+    let highlight =
+      define("oni.sneak.highlight", all(ref(normalModeBackground)));
+
+    let defaults = [background, foreground, highlight];
+  };
 };
 
 module ScrollbarSlider = {
