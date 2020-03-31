@@ -12,12 +12,14 @@ module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Tooltip = Oni_Components.Tooltip;
 
+module Colors = Feature_Theme.Colors;
+
 module Styles = {
   open Style;
 
-  let root = (background, foreground) => [
-    backgroundColor(background),
-    color(foreground),
+  let root = theme => [
+    backgroundColor(Colors.Editor.background.from(theme)),
+    color(Colors.foreground.from(theme)),
     position(`Absolute),
     top(0),
     left(0),
@@ -44,7 +46,6 @@ module Styles = {
 
 let make = (~state: State.t, ()) => {
   let State.{
-        theme,
         configuration,
         contextMenu,
         uiFont as font,
@@ -55,6 +56,10 @@ let make = (~state: State.t, ()) => {
         buffers,
         _,
       } = state;
+
+  let theme = {
+    Feature_Theme.resolver(state.colorTheme);
+  };
 
   let onContextMenuItemSelect = item =>
     GlobalContext.current().dispatch(ContextMenuItemSelected(item));
@@ -84,7 +89,10 @@ let make = (~state: State.t, ()) => {
 
   let activityBar =
     activityBarVisible
-      ? React.listToElement([<WindowHandle direction=Vertical />])
+      ? React.listToElement([
+          <Dock theme sideBar pane />,
+          <WindowHandle direction=Vertical />,
+        ])
       : React.empty;
 
   let sideBar =
@@ -116,7 +124,7 @@ let make = (~state: State.t, ()) => {
     };
   };
 
-  <View style={Styles.root(theme.editorBackground, theme.foreground)}>
+  <View style={Styles.root(theme)}>
     <Titlebar
       isFocused={state.windowIsFocused}
       isMaximized={state.windowIsMaximized}
