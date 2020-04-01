@@ -153,6 +153,7 @@ let%component make = (~state: State.t, ()) => {
         />
         <KeyBindingView name="Vim command" shortcut=":" state />
         <KeyBindingView name="Sneak" shortcut="Ctrl + G" state />
+        <KeyBindingView name="Terminal" shortcut=":term" state />
       </View>
     </Opacity>
   </View>;
