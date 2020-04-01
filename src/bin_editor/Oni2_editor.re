@@ -99,6 +99,8 @@ if (cliOptions.syntaxHighlightService) {
             ~maximized=false,
             ~vsync=Vsync.Immediate,
             ~icon=Some("logo.png"),
+            ~width=960,
+            ~height=540,
             ~titlebarStyle=WindowStyles.Transparent,
             (),
           ),

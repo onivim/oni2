@@ -14,7 +14,7 @@ function activate(context) {
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
     item.text = "Developer";
-    item.show();
+    //item.show();
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
 
