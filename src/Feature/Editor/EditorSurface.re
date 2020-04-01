@@ -110,31 +110,33 @@ let minimap =
 };
 
 // VIEW
+let scrollSpringOptions =
+  Spring.Options.create(~stiffness=310., ~damping=30., ());
 
-let make =
-    (
-      ~showDiffMarkers=true,
-      ~backgroundColor: option(Revery.Color.t)=?,
-      ~foregroundColor: option(Revery.Color.t)=?,
-      ~buffer,
-      ~onDimensionsChanged,
-      ~isActiveSplit: bool,
-      ~metrics: EditorMetrics.t,
-      ~editor: Editor.t,
-      ~theme,
-      ~mode: Vim.Mode.t,
-      ~bufferHighlights,
-      ~bufferSyntaxHighlights,
-      ~onScroll,
-      ~diagnostics,
-      ~completions,
-      ~tokenTheme,
-      ~onCursorChange,
-      ~definition,
-      ~windowIsFocused,
-      ~config,
-      (),
-    ) => {
+let%component make =
+              (
+                ~showDiffMarkers=true,
+                ~backgroundColor: option(Revery.Color.t)=?,
+                ~foregroundColor: option(Revery.Color.t)=?,
+                ~buffer,
+                ~onDimensionsChanged,
+                ~isActiveSplit: bool,
+                ~metrics: EditorMetrics.t,
+                ~editor: Editor.t,
+                ~theme,
+                ~mode: Vim.Mode.t,
+                ~bufferHighlights,
+                ~bufferSyntaxHighlights,
+                ~onScroll,
+                ~diagnostics,
+                ~completions,
+                ~tokenTheme,
+                ~onCursorChange,
+                ~definition,
+                ~windowIsFocused,
+                ~config,
+                (),
+              ) => {
   let colors = Colors.precompute(theme);
 
   let colors =
@@ -186,6 +188,25 @@ let make =
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
       ? EditorDiffMarkers.generate(buffer) : None;
+
+  let smoothScroll = Config.Experimental.editorSmoothScroll.get(config);
+
+  let%hook (scrollY, _setScrollYImmediately) =
+    Hooks.spring(
+      ~target=editor.scrollY,
+      ~restThreshold=10.,
+      ~enabled=smoothScroll,
+      scrollSpringOptions,
+    );
+  let%hook (scrollX, _setScrollXImmediately) =
+    Hooks.spring(
+      ~target=editor.scrollX,
+      ~restThreshold=10.,
+      ~enabled=smoothScroll,
+      scrollSpringOptions,
+    );
+
+  let editor = {...editor, scrollX, scrollY};
 
   let (gutterWidth, gutterView) =
     <GutterView
