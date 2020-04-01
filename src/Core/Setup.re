@@ -21,10 +21,7 @@ type t = {
   rgPath: string,
   [@key "rls"]
   rlsPath: string,
-  version: [@default "Unknown"] string,
 };
-
-let version = "0.3.0";
 
 let default = () => {
   let execDir = Revery.Environment.executingDirectory;
@@ -37,7 +34,6 @@ let default = () => {
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg.exe",
       rlsPath: execDir ++ "rls.exe",
-      version,
     }
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
@@ -46,7 +42,6 @@ let default = () => {
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
       rlsPath: execDir ++ "rls",
-      version,
     }
   | _ => {
       nodePath: execDir ++ "node",
@@ -55,7 +50,6 @@ let default = () => {
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
       rlsPath: execDir ++ "rls",
-      version,
     }
   };
 };
