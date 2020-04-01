@@ -32,7 +32,7 @@ npm install -g innosetup-compiler
 innosetup-compiler _release/setup.iss --O=_publish
 
 if (Test-Path env:CODESIGN_CERTIFICATE) {
-    CodeSign("_publish/Onivim2-0.3.0-win.exe");
+    CodeSign("_publish/Onivim2-win.exe");
 }
 
 mv _publish/Onivim2-win.exe _publish/Onivim2-$SHORT_COMMIT_ID-x64.exe
