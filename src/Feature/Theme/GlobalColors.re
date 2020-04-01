@@ -120,12 +120,13 @@ module Editor = {
 };
 
 module EditorCursor = {
-  let background = define("editorCursor.background", all(unspecified));
   let foreground =
     define(
       "editorCursor.foreground",
       {dark: hex("#AEAFAD"), light: hex("#000"), hc: hex("#FFF")},
     );
+  let background =
+    define("editorCursor.background", all(opposite(ref(foreground)))); // actually: all(unspecified)
 
   let defaults = [background, foreground];
 };
