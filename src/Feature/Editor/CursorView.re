@@ -3,6 +3,8 @@ open EditorCoreTypes;
 open Oni_Core;
 open Revery.UI;
 
+module Config = EditorConfiguration;
+
 let cursorSpringOptions =
   Spring.Options.create(~stiffness=310., ~damping=30., ());
 
@@ -18,6 +20,7 @@ let%component make =
                 ~cursorPosition: Location.t,
                 ~colors: Colors.t,
                 ~windowIsFocused,
+                ~config,
                 (),
               ) => {
   let%hook () = React.Hooks.effect(Always, () => None);
@@ -56,19 +59,31 @@ let%component make =
       Revery.Time.milliseconds(100);
     };
 
+  let animatedCursor = Config.Experimental.editorSmoothCursor.get(config);
+
+  // When in insert mode, we use a negative delay to give some anticipation
+  let delay = mode == Insert ?
+  Revery.Time.milliseconds(-50) : Revery.Time.zero;
+
+  let defaultDuration = Revery.Time.milliseconds(100);
+  let easing = Easing.easeIn;
+
   let%hook y =
     Hooks.transition(
+      ~active=animatedCursor,
       ~durationFunc,
-      ~delay={mode == Insert ? Revery.Time.milliseconds(-50): Revery.Time.zero},
-      ~duration=Revery.Time.milliseconds(100),
-      ~easing=Easing.easeIn,
+      ~delay,
+      ~duration=defaultDuration,
+      ~easing,
       originalY,
     );
   let%hook x =
     Hooks.transition(
+      ~active=animatedCursor,
+      ~delay,
       ~durationFunc,
-      ~duration=Revery.Time.milliseconds(100),
-      ~easing=Easing.easeIn,
+      ~duration=defaultDuration,
+      ~easing,
       originalX,
     );
 

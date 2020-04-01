@@ -177,6 +177,7 @@ let%component make =
       }}
     />
     <CursorView
+      config
       scrollX
       scrollY
       metrics
