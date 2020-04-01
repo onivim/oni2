@@ -48,13 +48,13 @@ let%component make =
     Hooks.transition(
       ~duration=Revery.Time.milliseconds(100),
       ~easing=Easing.easeIn,
-      originalY
+      originalY,
     );
   let%hook x =
     Hooks.transition(
       ~duration=Revery.Time.milliseconds(100),
       ~easing=Easing.easeIn,
-      originalX
+      originalX,
     );
 
   // Set the opacity of the text in the cursor based on distance.
@@ -65,7 +65,8 @@ let%component make =
   let deltaDistSquared = deltaY *. deltaY +. deltaX *. deltaX;
   let maxDistSquared = 8. *. 8.;
 
-  let textOpacity = (maxDistSquared -. deltaDistSquared) /. maxDistSquared |> max(0.);
+  let textOpacity =
+    (maxDistSquared -. deltaDistSquared) /. maxDistSquared |> max(0.);
 
   <Canvas
     style=Style.[
