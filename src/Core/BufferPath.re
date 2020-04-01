@@ -12,14 +12,18 @@ type t =
       bufferId: int,
       cmd: string,
     })
-  | Welcome;
+  | Welcome
+  | Version;
 
 let welcome = "oni://Welcome";
+let version = "oni://Version";
 let terminalRegex = OnigRegExp.create("oni://terminal/([0-9]*)/(.*)");
 
 let parse = bufferPath =>
   if (String.equal(bufferPath, welcome)) {
     Welcome;
+  } else if (String.equal(bufferPath, version)) {
+    Version;
   } else {
     terminalRegex
     |> Result.to_option

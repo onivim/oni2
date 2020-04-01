@@ -38,6 +38,7 @@ let reduce = (state: BufferRenderers.t, action) => {
           | Actions.BufferUpdate(bu) when bu.update.id == id => Editor
           | _ => Welcome
           }
+        | Version => Version
         | Editor => Editor
         | Terminal(term) => Terminal(terminalReducer(term, action))
         }

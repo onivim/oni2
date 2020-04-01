@@ -200,6 +200,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             config={Feature_Configuration.resolver(state.config)}
           />;
         | BufferRenderer.Welcome => <WelcomeView state />
+        | BufferRenderer.Version => <VersionView state />
         | BufferRenderer.Terminal({id, _}) =>
           state.terminals
           |> Feature_Terminal.getTerminalOpt(id)

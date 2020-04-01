@@ -31,9 +31,6 @@ module Styles = {
   ];
 };
 
-let scrollSpringOptions =
-  Spring.Options.create(~stiffness=310., ~damping=30., ());
-
 let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
@@ -82,6 +79,8 @@ let%component make =
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     onScroll(wheelEvent.deltaY *. (-50.));
 
+  let {scrollX, scrollY, _}: Editor.t = editor;
+
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     Log.trace("editorMouseUp");
 
@@ -116,23 +115,6 @@ let%component make =
       };
     };
   };
-
-  let smoothScroll = Config.Experimental.editorSmoothScroll.get(config);
-
-  let%hook (scrollY, _setScrollYImmediately) =
-    Hooks.spring(
-      ~target=editor.scrollY,
-      ~restThreshold=100.,
-      ~enabled=smoothScroll,
-      scrollSpringOptions,
-    );
-  let%hook (scrollX, _setScrollXImmediately) =
-    Hooks.spring(
-      ~target=editor.scrollX,
-      ~restThreshold=100.,
-      ~enabled=smoothScroll,
-      scrollSpringOptions,
-    );
 
   <View
     ref={node => elementRef := Some(node)}

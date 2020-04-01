@@ -34,6 +34,7 @@ let getMediumFriendlyName =
   |> Option.map(filePath =>
        switch (BufferPath.parse(filePath)) {
        | Welcome => "Welcome"
+       | Version => "Version"
        | Terminal({cmd, _}) => "Terminal - " ++ cmd
        | FilePath(fp) =>
          switch (workingDirectory) {
@@ -49,6 +50,7 @@ let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
   |> Option.map(filePath => {
        switch (BufferPath.parse(filePath)) {
        | Welcome => "Welcome"
+       | Version => "Version"
        | Terminal({cmd, _}) => "Terminal - " ++ cmd
        | FilePath(fp) => fp
        }
