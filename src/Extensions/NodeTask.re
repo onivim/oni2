@@ -5,7 +5,6 @@
 open Oni_Core;
 
 exception TaskFailed;
-
 module Log = (val Log.withNamespace("Oni2.Extensions.NodeTask"));
 
 let run =

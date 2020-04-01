@@ -44,14 +44,29 @@ let%component make =
       (x, y, characterWidth);
     };
 
+  let durationFunc = (currentValue, targetValue) =>
+    if (Float.abs(targetValue -. currentValue) < 2.
+        *. editorFont.measuredHeight) {
+      if (mode == Insert) {
+        Revery.Time.milliseconds(100);
+      } else {
+        Revery.Time.zero;
+      };
+    } else {
+      Revery.Time.milliseconds(100);
+    };
+
   let%hook y =
     Hooks.transition(
+      ~durationFunc,
+      ~delay={mode == Insert ? Revery.Time.milliseconds(-50): Revery.Time.zero},
       ~duration=Revery.Time.milliseconds(100),
       ~easing=Easing.easeIn,
       originalY,
     );
   let%hook x =
     Hooks.transition(
+      ~durationFunc,
       ~duration=Revery.Time.milliseconds(100),
       ~easing=Easing.easeIn,
       originalX,
