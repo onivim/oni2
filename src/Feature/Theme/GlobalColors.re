@@ -12,7 +12,7 @@ open ColorTheme.Schema;
 let foreground =
   define(
     "foreground",
-    {light: hex("#CCC"), dark: hex("#616161"), hc: hex("#FFF")},
+    {dark: hex("#CCC"), light: hex("#616161"), hc: hex("#FFF")},
   );
 let focusBorder =
   define(
@@ -446,10 +446,10 @@ module ScrollbarSlider = {
 module SideBar = {
   let background =
     define(
-      "sidebar.background",
+      "sideBar.background",
       {dark: hex("#252526"), light: hex("#F3F3F3"), hc: hex("#000")},
     );
-  let foreground = define("sidebar.foreground", all(unspecified));
+  let foreground = define("sideBar.foreground", all(ref(foreground))); // actually: all(unspecified)
 
   let defaults = [background, foreground];
 };
