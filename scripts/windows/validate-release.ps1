@@ -17,8 +17,8 @@ Write-Host "Running health-check on zip build..."
 Write-Host "** Validating .exe installer **"
 rm -r _unpacked
 mkdir _unpacked
-cp $env:SYSTEM_ARTIFACTSDIRECTORY/Release_Windows/Onivim2-$SHORT_COMMIT_ID-x64.exe _unpacked/Onivim2-0.3.0-win.exe
-_unpacked/Onivim2-0.3.0-win.exe /silent /verysilent /sp /suppressmsgboxes /norestart /Dir="D:/a/1/s/Onivim2" /log="D:/a/1/s/install.log" | Out-Null
+cp $env:SYSTEM_ARTIFACTSDIRECTORY/Release_Windows/Onivim2-$SHORT_COMMIT_ID-x64.exe _unpacked/Onivim2-win.exe
+_unpacked/Onivim2-win.exe /silent /verysilent /sp /suppressmsgboxes /norestart /Dir="D:/a/1/s/Onivim2" /log="D:/a/1/s/install.log" | Out-Null
 
 Write-Host "Ran installer!"
 

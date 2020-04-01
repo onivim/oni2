@@ -35,4 +35,4 @@ if (Test-Path env:CODESIGN_CERTIFICATE) {
     CodeSign("_publish/Onivim2-0.3.0-win.exe");
 }
 
-mv _publish/Onivim2-0.3.0-win.exe _publish/Onivim2-$SHORT_COMMIT_ID-x64.exe
+mv _publish/Onivim2-win.exe _publish/Onivim2-$SHORT_COMMIT_ID-x64.exe
