@@ -25,7 +25,7 @@ let%component make =
   let column = Index.toZeroBased(cursorPosition.column);
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  let (x, y, characterWidth) =
+  let (originalX, originalY, characterWidth) =
     if (lineCount <= 0 || line >= lineCount || !isActiveSplit) {
       (
         // If we don't have a line, we're not rendering anything anyway...
@@ -44,20 +44,28 @@ let%component make =
       (x, y, characterWidth);
     };
 
-  let%hook (y, _setScrollYImmediately) =
-    Hooks.spring(
-      ~target=y,
-      ~restThreshold=1.,
-      ~enabled=true,
-      cursorSpringOptions,
+  let%hook y =
+    Hooks.transition(
+      ~duration=Revery.Time.milliseconds(100),
+      ~easing=Easing.easeIn,
+      originalY
     );
-  let%hook (x, _setScrollXImmediately) =
-    Hooks.spring(
-      ~target=x,
-      ~restThreshold=1.,
-      ~enabled=true,
-      cursorSpringOptions,
+  let%hook x =
+    Hooks.transition(
+      ~duration=Revery.Time.milliseconds(100),
+      ~easing=Easing.easeIn,
+      originalX
     );
+
+  // Set the opacity of the text in the cursor based on distance.
+  // Other, there is a jarring effect where the destination character
+  // shows up early in the cursor.
+  let deltaY = y -. originalY;
+  let deltaX = x -. originalX;
+  let deltaDistSquared = deltaY *. deltaY +. deltaX *. deltaX;
+  let maxDistSquared = 8. *. 8.;
+
+  let textOpacity = (maxDistSquared -. deltaDistSquared) /. maxDistSquared |> max(0.);
 
   <Canvas
     style=Style.[
@@ -128,7 +136,7 @@ let%component make =
               ~context,
               ~x=x -. 0.5,
               ~y=y -. context.fontMetrics.ascent -. 0.5,
-              ~color=background,
+              ~color=background |> Revery.Color.multiplyAlpha(textOpacity),
               text,
             )
           };
