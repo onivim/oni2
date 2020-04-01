@@ -99,6 +99,8 @@ module Schema = {
     let color = color => Constant(color);
     let ref = def => Reference(def.key);
     let computed = f => Computed(f);
+    let unspecified = Unspecified;
+
     //let darken =
     //let lighten =
     let transparent = (factor, value) => {
@@ -112,9 +114,19 @@ module Schema = {
       | Unspecified => Unspecified
       };
     };
+    let opposite = value => {
+      let apply = Color.opposite;
+
+      switch (value) {
+      | Constant(color) => Constant(color |> apply)
+      | Reference(name) =>
+        Computed(resolve => resolve(name) |> Option.map(apply))
+      | Computed(f) => Computed(resolve => f(resolve) |> Option.map(apply))
+      | Unspecified => Unspecified
+      };
+    };
     //let oneOf =
     //let lessProminent =
-    let unspecified = Unspecified;
 
     let all = value => {light: value, dark: value, hc: value};
 

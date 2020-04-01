@@ -59,7 +59,10 @@ module Schema: {
     let computed:
       ((key => option(Revery.Color.t)) => option(Revery.Color.t)) =>
       Defaults.expr;
+    let unspecified: Defaults.expr;
+
     let transparent: (float, Defaults.expr) => Defaults.expr;
+    let opposite: Defaults.expr => Defaults.expr;
 
     let all: Defaults.expr => Defaults.t;
 
@@ -74,8 +77,10 @@ module Schema: {
   let computed:
     ((key => option(Revery.Color.t)) => option(Revery.Color.t)) =>
     Defaults.expr;
-  let transparent: (float, Defaults.expr) => Defaults.expr;
   let unspecified: Defaults.expr;
+
+  let transparent: (float, Defaults.expr) => Defaults.expr;
+  let opposite: Defaults.expr => Defaults.expr;
 
   let all: Defaults.expr => Defaults.t;
 
