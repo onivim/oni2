@@ -3,6 +3,7 @@ open Oni_Core.Utility;
 let push = (focusable: Focus.focusable, state: State.t) =>
   switch (focusable) {
   | Sneak
+  | Modal
   | Quickmenu
   | Wildmenu =>
     failwith("Not allowed to push " ++ Focus.show_focusable(focusable))
@@ -12,6 +13,7 @@ let push = (focusable: Focus.focusable, state: State.t) =>
 let pop = (focusable: Focus.focusable, state: State.t) =>
   switch (focusable) {
   | Sneak
+  | Modal
   | Quickmenu
   | Wildmenu =>
     failwith("Not allowed to pop " ++ Focus.show_focusable(focusable))
@@ -21,6 +23,8 @@ let pop = (focusable: Focus.focusable, state: State.t) =>
 let current = (state: State.t) =>
   if (Sneak.isActive(state.sneak)) {
     Focus.Sneak;
+  } else if (state.modal != None) {
+    Focus.Modal;
   } else {
     switch (state.quickmenu) {
     | Some({variant: Actions.Wildmenu(_), _}) => Focus.Wildmenu

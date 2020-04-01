@@ -1,0 +1,11 @@
+(library
+    (name Feature_Modals)
+    (public_name Oni2.feature.modals)
+    (libraries 
+      Oni2.core
+      Oni2.components
+      Oni2.service.vim
+      Revery
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

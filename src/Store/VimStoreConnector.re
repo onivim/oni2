@@ -163,6 +163,9 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.onWriteFailure((_reason, _buffer) => dispatch(WriteFailure));
+
+  let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
@@ -975,7 +978,7 @@ let start =
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
-    | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
+    | EditorGroupSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
@@ -1016,7 +1019,29 @@ let start =
       let (state, effect) =
         OptionEx.map3(
           (bufferId, terminalId, editorId) => {
-            let lines = Feature_Terminal.getLines(~terminalId);
+            let colorTheme = Feature_Theme.resolver(state.colorTheme);
+            let (lines, highlights) =
+              Feature_Terminal.getLinesAndHighlights(
+                ~colorTheme,
+                ~terminalId,
+              );
+            let syntaxHighlights =
+              List.fold_left(
+                (acc, curr) => {
+                  let (line, tokens) = curr;
+                  Feature_Syntax.setTokensForLine(
+                    ~bufferId,
+                    ~line,
+                    ~tokens,
+                    acc,
+                  );
+                },
+                state.syntaxHighlights,
+                highlights,
+              );
+
+            let syntaxHighlights =
+              syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
 
             let editorGroups =
               state.editorGroups
@@ -1026,7 +1051,7 @@ let start =
                  );
 
             (
-              {...state, editorGroups},
+              {...state, editorGroups, syntaxHighlights},
               setTerminalLinesEffect(~bufferId, ~editorId, lines),
             );
           },
@@ -1081,6 +1106,11 @@ let start =
         Feature_Notification.Effects.create(~kind, message)
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       );
+
+    | WriteFailure => (
+        {...state, modal: Some(Feature_Modals.writeFailure)},
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

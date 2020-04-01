@@ -32,6 +32,11 @@ let setTokensForLine:
 
 let update: (t, msg) => t;
 
+// [ignore(~bufferId, syntax)] marks a buffer to be ignored.
+// The only syntax highlight adjustment will come from explicit
+// calls to [setTokensForLine];
+let ignore: (~bufferId: int, t) => t;
+
 let subscription:
   (
     ~enabled: bool,

@@ -48,7 +48,6 @@ type t =
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
-  | DarkModeSet(bool)
   | DefinitionAvailable(
       int,
       Location.t,
@@ -81,7 +80,11 @@ type t =
   | WindowTitleSet(string)
   | WindowTreeSetSize(int, int)
   | EditorGroupAdd(EditorGroup.t)
-  | EditorGroupSetSize(int, EditorSize.t)
+  | EditorGroupSizeChanged({
+      id: int,
+      width: int,
+      height: int,
+    })
   | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSetScroll(Feature_Editor.EditorId.t, float)
   | EditorScroll(Feature_Editor.EditorId.t, float)
@@ -127,11 +130,17 @@ type t =
   | ThemeLoadByName(string)
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
-  | SetTokenTheme([@opaque] TokenTheme.t)
-  | SetColorTheme([@opaque] Theme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | StatusBar(StatusBarModel.action)
+  | ThemeLoaded({
+      [@opaque]
+      tokenTheme: TokenTheme.t,
+      isDark: bool,
+      [@opaque]
+      colors: Theme.t,
+    })
+  | ThemeLoadError(string)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)
   | EnableZenMode
@@ -158,15 +167,13 @@ type t =
   | WindowMinimized
   | WindowRestored
   | WindowCloseBlocked
-  | WindowCloseDiscardConfirmed
-  | WindowCloseSaveAllConfirmed
-  | WindowCloseCanceled
+  | WriteFailure
   | NewTextContentProvider({
       handle: int,
       scheme: string,
     })
   | LostTextContentProvider({handle: int})
-  | Modal(Modal.msg)
+  | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
   | GotOriginalUri({

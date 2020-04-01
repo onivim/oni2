@@ -12,10 +12,11 @@ let simpleState = {
 
   Reducer.reduce(
     state,
-    Actions.EditorGroupSetSize(
-      EditorGroups.activeGroupId(state.editorGroups),
-      EditorSize.create(~pixelWidth=3440, ~pixelHeight=1440, ()),
-    ),
+    Actions.EditorGroupSizeChanged({
+      id: EditorGroups.activeGroupId(state.editorGroups),
+      width: 3440,
+      height: 1440,
+    }),
   );
 };
 
