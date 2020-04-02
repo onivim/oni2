@@ -29,9 +29,12 @@ module Runner =
 Runner.run(~dispatch=() => (), ~sub, Runner.empty);
 
 // Modify file on disk
-let oc = open_out(tempFilePath);
-Printf.fprintf(oc, "bar");
-close_out(oc);
+let timer = Luv.Timer.init () |> Result.get_ok;
+Luv.Timer.start(timer, 100, () => {
+  let oc = open_out(tempFilePath);
+  Printf.fprintf(oc, "bar");
+  close_out(oc);
+}) |> Result.get_ok;
 
 // Runner
 let timer = Luv.Timer.init() |> Result.get_ok;
