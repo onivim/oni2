@@ -100,6 +100,13 @@ module ZenMode = {
 module Experimental = {
   let editorSmoothScroll =
     setting("experimental.editor.smoothScroll", bool, ~default=false);
+
+  let editorSmoothCursor =
+    setting(
+      "experimental.editor.cursorSmoothCaretAnimation",
+      bool,
+      ~default=false,
+    );
 };
 
 let contributions = [
