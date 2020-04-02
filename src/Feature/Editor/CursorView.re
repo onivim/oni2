@@ -47,9 +47,8 @@ let%component make =
       (x, y, characterWidth);
     };
 
-  let durationFunc = (currentValue, targetValue) =>
-    if (Float.abs(targetValue -. currentValue) < 2.
-        *. editorFont.measuredHeight) {
+  let durationFunc = (~current, ~target) =>
+    if (Float.abs(target -. current) < 2. *. editorFont.measuredHeight) {
       if (mode == Insert) {
         Revery.Time.milliseconds(100);
       } else {
@@ -62,27 +61,27 @@ let%component make =
   let animatedCursor = Config.Experimental.editorSmoothCursor.get(config);
 
   // When in insert mode, we use a negative delay to give some anticipation
-  let delay = mode == Insert ?
-  Revery.Time.milliseconds(-50) : Revery.Time.zero;
+  let delay =
+    mode == Insert ? Revery.Time.milliseconds(-50) : Revery.Time.zero;
 
   let defaultDuration = Revery.Time.milliseconds(100);
   let easing = Easing.easeIn;
 
   let%hook y =
-    Hooks.transition(
+    Hooks.transitionf(
       ~active=animatedCursor,
-      ~durationFunc,
+      ~duration=durationFunc,
       ~delay,
-      ~duration=defaultDuration,
+      ~initialDuration=defaultDuration,
       ~easing,
       originalY,
     );
   let%hook x =
-    Hooks.transition(
+    Hooks.transitionf(
       ~active=animatedCursor,
       ~delay,
-      ~durationFunc,
-      ~duration=defaultDuration,
+      ~duration=durationFunc,
+      ~initialDuration=defaultDuration,
       ~easing,
       originalX,
     );
