@@ -50,7 +50,7 @@ let%component make =
   let durationFunc = (~current, ~target) =>
     if (Float.abs(target -. current) < 2. *. editorFont.measuredHeight) {
       if (mode == Insert) {
-        Revery.Time.milliseconds(100);
+        Revery.Time.milliseconds(0);
       } else {
         Revery.Time.zero;
       };
