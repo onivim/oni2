@@ -52,6 +52,8 @@ let removeExpired = (time, model) => {
 let keysToIgnore = [
   "LEFT SHIFT",
   "RIGHT SHIFT",
+  "Ctrl + Left Ctrl",
+  "Ctrl + LEFT SHIFT",
 ]
 |> List.map(key => (key, true))
 |> List.to_seq
