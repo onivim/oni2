@@ -16,10 +16,13 @@ close_out(oc);
 
 // System under test
 let sub =
-  Service_FileWatcher.watch(~path=tempFilePath, ~onEvent=_ => {
-    Console.log("Success!");
-    Luv.Loop.stop(Luv.Loop.default());
-  });
+  Service_FileWatcher.watch(
+    ~path=tempFilePath,
+    ~onEvent=_ => {
+      Console.log("Success!");
+      Luv.Loop.stop(Luv.Loop.default());
+    },
+  );
 
 module Runner =
   Isolinear.Testing.SubscriptionRunner.Make({
@@ -29,12 +32,17 @@ module Runner =
 Runner.run(~dispatch=() => (), ~sub, Runner.empty);
 
 // Modify file on disk
-let timer = Luv.Timer.init () |> Result.get_ok;
-Luv.Timer.start(timer, 100, () => {
-  let oc = open_out(tempFilePath);
-  Printf.fprintf(oc, "bar");
-  close_out(oc);
-}) |> Result.get_ok;
+let timer = Luv.Timer.init() |> Result.get_ok;
+Luv.Timer.start(
+  timer,
+  100,
+  () => {
+    let oc = open_out(tempFilePath);
+    Printf.fprintf(oc, "bar");
+    close_out(oc);
+  },
+)
+|> Result.get_ok;
 
 // Runner
 let timer = Luv.Timer.init() |> Result.get_ok;
