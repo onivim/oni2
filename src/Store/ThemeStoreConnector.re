@@ -69,11 +69,10 @@ let start = (themeInfo: ThemeInfo.t) => {
                ),
              );
 
-             let tokenColors = Textmate.Theme.getTokenColors(theme);
-             let colors = Oni_Core.Theme.ofColorTheme(uiTheme, colors);
-             let tokenTheme = TokenTheme.create(tokenColors);
+             let tokenTheme =
+               theme |> Textmate.Theme.getTokenColors |> TokenTheme.create;
 
-             dispatch(Actions.ThemeLoaded({colors, isDark, tokenTheme}));
+             dispatch(Actions.ThemeLoaded(tokenTheme));
            });
       })
     });
