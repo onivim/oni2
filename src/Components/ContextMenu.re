@@ -60,7 +60,7 @@ module MenuItem = {
     'data.
     (
       ~item: item('data),
-      ~theme: ColorTheme.resolver,
+      ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~onClick: unit => unit,
       unit

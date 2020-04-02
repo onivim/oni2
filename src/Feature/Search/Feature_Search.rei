@@ -24,7 +24,7 @@ let subscriptions:
 
 let make:
   (
-    ~theme: ColorTheme.resolver,
+    ~theme: ColorTheme.Colors.t,
     ~uiFont: UiFont.t,
     ~editorFont: Service_Font.font,
     ~isFocused: bool,

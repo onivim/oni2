@@ -9,6 +9,20 @@ type variant =
 type key;
 let key: string => key;
 
+// COLORS
+
+module Colors: {
+  type t;
+
+  let empty: t;
+  let fromList: list((key, Revery.Color.t)) => t;
+
+  let get: (key, t) => option(Revery.Color.t);
+
+  let union: (t, t) => t;
+  let unionMany: list(t) => t;
+};
+
 // DEFAULTS
 
 module Defaults: {
@@ -25,20 +39,14 @@ module Defaults: {
     (key => option(Revery.Color.t), expr) => option(Revery.Color.t);
 };
 
-// RESOLVER
-
-type resolver =
-  key =>
-  [ | `Color(Revery.Color.t) | `Default(Defaults.expr) | `NotRegistered];
-
 // SCHEMA
 
 module Schema: {
   type definition = {
     key,
     defaults: Defaults.t,
-    tryFrom: resolver => option(Revery.Color.t),
-    from: resolver => Revery.Color.t,
+    tryFrom: Colors.t => option(Revery.Color.t),
+    from: Colors.t => Revery.Color.t,
   };
 
   type t;
@@ -49,6 +57,8 @@ module Schema: {
 
   let union: (t, t) => t;
   let unionMany: list(t) => t;
+
+  let toList: t => list(definition);
 
   module DSL: {
     let hex: string => Defaults.expr;
@@ -85,17 +95,6 @@ module Schema: {
   let all: Defaults.expr => Defaults.t;
 
   let define: (string, Defaults.t) => definition;
-};
-
-// COLORS
-
-module Colors: {
-  type t;
-
-  let empty: t;
-  let fromList: list((string, Revery.Color.t)) => t;
-
-  let get: (key, t) => option(Revery.Color.t);
 };
 
 // THEME

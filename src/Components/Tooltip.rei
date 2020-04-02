@@ -5,7 +5,7 @@ module Overlay: {
   let make:
     (
       ~key: React.Key.t=?,
-      ~theme: ColorTheme.resolver,
+      ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       unit
     ) =>

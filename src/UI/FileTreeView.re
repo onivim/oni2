@@ -50,7 +50,7 @@ module Styles = {
     color(
       switch (
         Option.bind(decoration, (decoration: Decoration.t) =>
-          Theme.getCustomColor(decoration.color, theme)
+          ColorTheme.(Colors.get(key(decoration.color), theme))
         )
       ) {
       | Some(color) => color

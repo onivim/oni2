@@ -58,7 +58,7 @@ let make = (~state: State.t, ()) => {
       } = state;
 
   let theme = {
-    Feature_Theme.resolver(state.colorTheme);
+    Feature_Theme.colors(state.colorTheme);
   };
 
   let onContextMenuItemSelect = item =>

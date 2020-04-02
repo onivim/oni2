@@ -83,7 +83,7 @@ let animation =
 
 let%component make =
               (
-                ~theme: ColorTheme.resolver,
+                ~theme: ColorTheme.Colors.t,
                 ~sideBar: SideBar.t,
                 ~pane: Pane.t,
                 (),
