@@ -49,7 +49,19 @@ let removeExpired = (time, model) => {
   {...model, groups};
 };
 
+let keysToIgnore = [
+  "LEFT SHIFT",
+  "RIGHT SHIFT",
+]
+|> List.map(key => (key, true))
+|> List.to_seq
+|> Hashtbl.of_seq;
+
 let add = (~time, key, model) => {
+  let str = keyEventToString(key);
+  if (Hashtbl.mem(keysToIgnore, str)) {
+    model
+  } else {
   let groups =
     switch (key) {
     | Text(text) =>
@@ -88,10 +100,14 @@ let add = (~time, key, model) => {
       };
     };
   {...model, groups} |> removeExpired(time);
+  }
 };
 
 let keyPress = (~time, key, model) => add(~time, Key(key), model);
-let textInput = (~time, text, model) => add(~time, Text(text), model);
+let textInput = (~time, text, model) => {
+  let text = String.equal(text, " ") ? "Space" : text;
+  add(~time, Text(text), model);
+};
 
 // VIEW
 
