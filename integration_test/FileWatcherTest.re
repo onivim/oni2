@@ -1,6 +1,10 @@
-Console.log("Running FileWatcherTest...");
+// Disable colors on windows to prevent hanging on CI
+if (Sys.win32) {
+  Timber.App.disableColors();
+};
 
-let changed = ref(false);
+Timber.App.enable();
+Timber.App.setLevel(Timber.Level.trace);
 
 // Create test file
 let tempFilePath = Filename.temp_file("test", ".txt");
