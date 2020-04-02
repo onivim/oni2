@@ -133,10 +133,7 @@ type t =
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | StatusBar(StatusBarModel.action)
-  | TokenThemeLoaded({
-      [@opaque]
-      tokenTheme: TokenTheme.t,
-    })
+  | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)
   | ViewCloseEditor(int)
   | ViewSetActiveEditor(int)

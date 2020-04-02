@@ -72,7 +72,7 @@ let start = (themeInfo: ThemeInfo.t) => {
              let tokenTheme =
                theme |> Textmate.Theme.getTokenColors |> TokenTheme.create;
 
-             dispatch(Actions.ThemeLoaded(tokenTheme));
+             dispatch(Actions.TokenThemeLoaded(tokenTheme));
            });
       })
     });

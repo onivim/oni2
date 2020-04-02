@@ -145,7 +145,7 @@ let%component make = (~theme, ~uiFont, ~editorFont, ()) => {
           text="Modal Editing from the Future"
         />
         <Text
-          style={Styles.versionText(~theme, ~font=state.uiFont)}
+          style={Styles.versionText(~theme, ~font=uiFont)}
           text={Printf.sprintf("Version %s", Oni_Core.BuildInfo.version)}
         />
       </View>
