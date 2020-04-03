@@ -126,7 +126,7 @@ let default = {
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
-  filesExclude: ["_esy", "node_modules"],
+  filesExclude: ["_esy", "node_modules", ".git"],
   uiShadows: true,
   uiZoom: 1.0,
   vimUseSystemClipboard: {
