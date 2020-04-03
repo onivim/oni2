@@ -43,8 +43,10 @@ module Schema = {
     |> Lookup.of_seq;
 
   let union = (xs, ys) => Lookup.union((_key, _x, y) => Some(y), xs, ys);
-
   let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
+
+  let map = f =>
+    Lookup.map(entry => {...entry, get: model => entry.get(f(model))});
 };
 
 type t = Lookup.t(Value.t);

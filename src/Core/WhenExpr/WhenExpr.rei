@@ -19,6 +19,11 @@ module ContextKeys: {
     let string: (string, 'model => string) => entry('model);
 
     let fromList: list(entry('model)) => t('model);
+
+    let union: (t('model), t('model)) => t('model);
+    let unionMany: list(t('model)) => t('model);
+
+    let map: ('a => 'b, t('b)) => t('a);
   };
 
   type t;
