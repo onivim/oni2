@@ -9,6 +9,25 @@ module Value: {
   let asString: t => string;
 };
 
+module ContextKeys: {
+  module Schema: {
+    type entry('model);
+    type t('model);
+
+    let define: (string, 'model => Value.t) => entry('model);
+    let bool: (string, 'model => bool) => entry('model);
+    let string: (string, 'model => string) => entry('model);
+
+    let fromList: list(entry('model)) => t('model);
+  };
+
+  type t;
+
+  let fromSchema: (Schema.t('model), 'model) => t;
+
+  let getValue: (t, string) => Value.t;
+};
+
 [@deriving show]
 type t =
   | Defined(string)

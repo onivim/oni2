@@ -1,25 +1,6 @@
-module Value = {
-  [@deriving show({with_path: false})]
-  type t =
-    | String(string)
-    | True
-    | False;
+module ContextKeys = ContextKeys;
 
-  // Emulate JavaScript semantics
-  let asBool =
-    fun
-    | True => true
-    | False => false
-    | String("") => false
-    | String(_) => true;
-
-  // Emulate JavaScript semantics
-  let asString =
-    fun
-    | True => "true"
-    | False => "false"
-    | String(str) => str;
-};
+module Value = ContextKeys.Value;
 
 [@deriving show({with_path: false})]
 type t =
