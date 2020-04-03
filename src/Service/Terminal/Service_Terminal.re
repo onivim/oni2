@@ -196,7 +196,7 @@ module Effect = {
       ("<UP>", Up),
       ("<LEFT>", Left),
       ("<RIGHT>", Right),
-      ("<DOWN>", Right),
+      ("<DOWN>", Down),
       ("<ESC>", Escape),
     ]
     |> List.to_seq
