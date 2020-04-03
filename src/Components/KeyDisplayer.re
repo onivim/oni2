@@ -49,60 +49,56 @@ let removeExpired = (time, model) => {
   {...model, groups};
 };
 
-let keysToIgnore = [
-  "LEFT SHIFT",
-  "RIGHT SHIFT",
-  "Ctrl + Left Ctrl",
-  "Ctrl + LEFT SHIFT",
-]
-|> List.map(key => (key, true))
-|> List.to_seq
-|> Hashtbl.of_seq;
+let keysToIgnore =
+  ["LEFT SHIFT", "RIGHT SHIFT", "Ctrl + Left Ctrl", "Ctrl + LEFT SHIFT"]
+  |> List.map(key => (key, true))
+  |> List.to_seq
+  |> Hashtbl.of_seq;
 
 let add = (~time, key, model) => {
   let str = keyEventToString(key);
   if (Hashtbl.mem(keysToIgnore, str)) {
-    model
+    model;
   } else {
-  let groups =
-    switch (key) {
-    | Text(text) =>
-      switch (model.groups) {
-      | [] => [{id: time, time, isExclusive: false, keys: [Text(text)]}]
-      | [group, ..._] as groups =>
-        group.time = time;
-        let keys =
-          switch (group.keys) {
-          | [Key(_), ...tail] => [Text(text), ...tail]
-          | list => [Text(text), ...list]
-          };
-        group.keys = keys;
-        groups;
-      }
-    | Key(keyString) =>
-      let isCharKey = String.length(keyString) == 1;
-      let isExclusive = !isCharKey || keyString == " ";
-      let isWithinGroupingInterval = group =>
-        time -. group.time <= Constants.maxGroupingInterval;
-      let canGroupWith = group =>
-        !group.isExclusive && isCharKey && isWithinGroupingInterval(group);
+    let groups =
+      switch (key) {
+      | Text(text) =>
+        switch (model.groups) {
+        | [] => [{id: time, time, isExclusive: false, keys: [Text(text)]}]
+        | [group, ..._] as groups =>
+          group.time = time;
+          let keys =
+            switch (group.keys) {
+            | [Key(_), ...tail] => [Text(text), ...tail]
+            | list => [Text(text), ...list]
+            };
+          group.keys = keys;
+          groups;
+        }
+      | Key(keyString) =>
+        let isCharKey = String.length(keyString) == 1;
+        let isExclusive = !isCharKey || keyString == " ";
+        let isWithinGroupingInterval = group =>
+          time -. group.time <= Constants.maxGroupingInterval;
+        let canGroupWith = group =>
+          !group.isExclusive && isCharKey && isWithinGroupingInterval(group);
 
-      switch (model.groups) {
-      | [] => [{id: time, time, isExclusive, keys: [key]}]
+        switch (model.groups) {
+        | [] => [{id: time, time, isExclusive, keys: [key]}]
 
-      | [group, ..._] as groups when canGroupWith(group) =>
-        group.time = time;
-        group.keys = [key, ...group.keys];
-        groups;
+        | [group, ..._] as groups when canGroupWith(group) =>
+          group.time = time;
+          group.keys = [key, ...group.keys];
+          groups;
 
-      | groups => [
-          {id: time, time, isExclusive: !isCharKey, keys: [key]},
-          ...groups,
-        ]
+        | groups => [
+            {id: time, time, isExclusive: !isCharKey, keys: [key]},
+            ...groups,
+          ]
+        };
       };
-    };
-  {...model, groups} |> removeExpired(time);
-  }
+    {...model, groups} |> removeExpired(time);
+  };
 };
 
 let keyPress = (~time, key, model) => add(~time, Key(key), model);
