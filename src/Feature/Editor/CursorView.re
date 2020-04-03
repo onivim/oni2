@@ -50,7 +50,7 @@ let%component make =
   let durationFunc = (~current, ~target) =>
     if (Float.abs(target -. current) < 2. *. editorFont.measuredHeight) {
       if (mode == Insert) {
-        Revery.Time.milliseconds(100);
+        Revery.Time.milliseconds(50);
       } else {
         Revery.Time.zero;
       };
@@ -60,10 +60,7 @@ let%component make =
 
   let animatedCursor = Config.Experimental.editorSmoothCursor.get(config);
 
-  // When in insert mode, we use a negative delay to give some anticipation
-  let delay =
-    mode == Insert ? Revery.Time.milliseconds(-50) : Revery.Time.zero;
-
+  let delay = Revery.Time.zero;
   let defaultDuration = Revery.Time.milliseconds(100);
   let easing = Easing.easeIn;
 
