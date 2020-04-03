@@ -28,7 +28,7 @@ let getDefaultConfigString = configName =>
   "editor.tabSize": 4,
   "editor.zenMode.hideTabs": true,
   "editor.zenMode.singleFile": true,
-  "files.exclude": ["_esy", "node_modules"],
+  "files.exclude": ["_esy", "node_modules", ".git"],
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
   "workbench.iconTheme": "vs-seti",
