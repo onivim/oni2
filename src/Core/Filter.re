@@ -22,18 +22,17 @@ let rank = (query, format, items) => {
   let format = item => format(item, ~shouldLower);
 
   let search = (query, format, item) => {
-    Console.log("Starting search...");
     let searchStr = format(item);
-    Console.log("Checking " ++ searchStr ++ " against " ++ query);
     let result = Fzy.fzySearchList([searchStr], query);
-    Console.log("Returning from search...");
-    Console.log(result);
 
-    (item, List.hd(result))
+    let finalReuslt = List.hd(result);
+
+    (item, finalReuslt)
   }
 
   items
   |> List.map(search(query, format))
+  |> List.sort(((_, a), (_, b)) => Fzy.Result.(compare(b.score, a.score)))
   |> List.map(makeResult);
 };
 
