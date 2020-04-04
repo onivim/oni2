@@ -18,9 +18,9 @@ shelljs.cp(sourceFile, destFile)
 
 const packageJsonContents = fs.readFileSync(path.join(__dirname, "..", "..", "package.json"))
 const packageMeta = JSON.parse(packageJsonContents)
-const { version, name } = packageMeta
+const { version } = packageMeta
 const prodName = packageMeta.build.productName
-const executableName = `Oni2.exe`
+const executableName = `Oni2_editor.exe`
 const pathVariable = "{app}"
 const appIcon = `${pathVariable}\\oni2.ico`
 
@@ -35,7 +35,7 @@ if (process.env["APPVEYOR"]) {
 const valuesToReplace = {
     AppName: prodName,
     AppExecutableName: executableName,
-    AppSetupExecutableName: `${prodName}-${version}-${buildFolderPrefix}win`,
+    AppSetupExecutableName: `${prodName}-${buildFolderPrefix}win`,
     Version: version,
     SetupIconFile: path.join(__dirname, "..", "..", "assets", "images", "oni2.ico"),
     AppIcon: appIcon,

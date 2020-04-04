@@ -5,8 +5,7 @@
  */
 open Oni_Core;
 open Oni_Model;
-
-module Option = Utility.Option;
+open Utility;
 
 module Effects = {
   let load = (directory, languageInfo, iconTheme, configuration, ~onComplete) => {
@@ -56,20 +55,15 @@ let revealPath = (path, state: State.t) => {
           state.iconTheme,
           state.configuration,
           ~onComplete=node =>
-          Actions.FileExplorer(FocusNodeLoaded(lastNode.path, node))
+          Actions.FileExplorer(FocusNodeLoaded(node))
         ),
       )
 
     // Open ALL the nodes (in the path)!
-    | `Success(nodes) =>
-      let tree =
-        FsTreeNode.updateNodesInPath(
-          ~tree,
-          nodes,
-          ~updater=FsTreeNode.setOpen,
-        );
+    | `Success(_) =>
+      let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
       let offset =
-        switch (FsTreeNode.expandedIndex(tree, nodes)) {
+        switch (FsTreeNode.expandedIndex(path, tree)) {
         | Some(offset) => `Middle(float(offset))
         | None => state.fileExplorer.scrollOffset
         };
@@ -84,9 +78,20 @@ let revealPath = (path, state: State.t) => {
   };
 };
 
-let start = () => {
-  let (stream, _) = Isolinear.Stream.create();
+let revealFocus =
+  updateFileExplorer(state => {
+    switch (state.focus, state.tree) {
+    | (Some(focus), Some(tree)) =>
+      switch (FsTreeNode.expandedIndex(focus, tree)) {
+      | Some(index) => {...state, scrollOffset: `Reveal(index)}
+      | None => state
+      }
 
+    | _ => state
+    }
+  });
+
+let start = () => {
   // TODO: remove when effect has been exposed wherever that ought to be (VimStore?)
   let openFileByPathEffect = path => {
     Isolinear.Effect.createWithDispatch(
@@ -95,10 +100,10 @@ let start = () => {
     });
   };
 
-  let replaceNode = (path, node, state: State.t) =>
+  let replaceNode = (node, state: State.t) =>
     switch (state.fileExplorer.tree) {
     | Some(tree) =>
-      setTree(FsTreeNode.update(path, ~tree, ~updater=_ => node), state)
+      setTree(FsTreeNode.replace(~replacement=node, tree), state)
     | None => state
     };
 
@@ -109,7 +114,7 @@ let start = () => {
       (state |> setActive(Some(node.path)), openFileByPathEffect(path))
 
     | {kind: Directory({isOpen, _}), _} => (
-        replaceNode(node.path, FsTreeNode.toggleOpen(node), state),
+        replaceNode(FsTreeNode.toggleOpen(node), state),
         isOpen
           ? Isolinear.Effect.none
           : Effects.load(
@@ -118,7 +123,7 @@ let start = () => {
               state.iconTheme,
               state.configuration,
               ~onComplete=newNode =>
-              Actions.FileExplorer(NodeLoaded(node.path, newNode))
+              Actions.FileExplorer(NodeLoaded(newNode))
             ),
       )
     };
@@ -127,15 +132,12 @@ let start = () => {
     switch (action) {
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)
 
-    | NodeLoaded(path, node) => (
-        replaceNode(path, node, state),
-        Isolinear.Effect.none,
-      )
+    | NodeLoaded(node) => (replaceNode(node, state), Isolinear.Effect.none)
 
-    | FocusNodeLoaded(path, node) =>
+    | FocusNodeLoaded(node) =>
       switch (state.fileExplorer.active) {
       | Some(activePath) =>
-        state |> replaceNode(path, node) |> revealPath(activePath)
+        state |> replaceNode(node) |> revealPath(activePath)
 
       | None => (state, Isolinear.Effect.none)
       }
@@ -161,71 +163,74 @@ let start = () => {
         | "<UP>" =>
           FsTreeNode.prevExpandedNode(path, tree)
           |> Option.map((node: FsTreeNode.t) =>
-               (setFocus(Some(node.path), state), Isolinear.Effect.none)
+               (
+                 state |> setFocus(Some(node.path)) |> revealFocus,
+                 Isolinear.Effect.none,
+               )
              )
 
         | "<DOWN>" =>
           FsTreeNode.nextExpandedNode(path, tree)
           |> Option.map((node: FsTreeNode.t) =>
-               (setFocus(Some(node.path), state), Isolinear.Effect.none)
+               (
+                 state |> setFocus(Some(node.path)) |> revealFocus,
+                 Isolinear.Effect.none,
+               )
              )
 
         | _ => None
         };
 
-      Option.zip(state.fileExplorer.focus, state.fileExplorer.tree)
-      |> Option.bind(handleKey)
+      OptionEx.zip(state.fileExplorer.focus, state.fileExplorer.tree)
+      |> OptionEx.flatMap(handleKey)
       |> Option.value(~default=(state, Isolinear.Effect.none));
     };
   };
 
-  (
-    (state: State.t, action: Actions.t) =>
-      switch (action) {
-      // TODO: Should be handled by a more general init mechanism
-      | Init =>
-        let cwd = Rench.Environment.getWorkingDirectory();
-        let newState = {
-          ...state,
-          workspace:
-            Some(
-              Workspace.{
-                workingDirectory: cwd,
-                rootName: Filename.basename(cwd),
-              },
-            ),
+  (state: State.t, action: Actions.t) =>
+    switch (action) {
+    // TODO: Should be handled by a more general init mechanism
+    | Init =>
+      let cwd = Rench.Environment.getWorkingDirectory();
+      let newState = {
+        ...state,
+        workspace:
+          Some(
+            Workspace.{
+              workingDirectory: cwd,
+              rootName: Filename.basename(cwd),
+            },
+          ),
+      };
+
+      (
+        newState,
+        Isolinear.Effect.batch([
+          Effects.load(
+            cwd,
+            state.languageInfo,
+            state.iconTheme,
+            state.configuration,
+            ~onComplete=tree =>
+            Actions.FileExplorer(TreeLoaded(tree))
+          ),
+          TitleStoreConnector.Effects.updateTitle(newState),
+        ]),
+      );
+
+    | BufferEnter({filePath, _}, _) =>
+      switch (state.fileExplorer) {
+      | {active, _} when active != filePath =>
+        let state = setActive(filePath, state);
+        switch (filePath) {
+        | Some(path) => revealPath(path, state)
+        | None => (state, Isolinear.Effect.none)
         };
 
-        (
-          newState,
-          Isolinear.Effect.batch([
-            Effects.load(
-              cwd,
-              state.languageInfo,
-              state.iconTheme,
-              state.configuration,
-              ~onComplete=tree =>
-              Actions.FileExplorer(TreeLoaded(tree))
-            ),
-            TitleStoreConnector.Effects.updateTitle(newState),
-          ]),
-        );
-
-      | BufferEnter({filePath, _}, _) =>
-        switch (state.fileExplorer) {
-        | {active, _} when active != filePath =>
-          let state = setActive(filePath, state);
-          switch (filePath) {
-          | Some(path) => revealPath(path, state)
-          | None => (state, Isolinear.Effect.none)
-          };
-
-        | _ => (state, Isolinear.Effect.none)
-        }
-
-      | FileExplorer(action) => updater(state, action)
       | _ => (state, Isolinear.Effect.none)
-      },
-    stream,
-  );
+      }
+
+    | FileExplorer(action) => updater(state, action)
+    | _ => (state, Isolinear.Effect.none)
+    };
 };

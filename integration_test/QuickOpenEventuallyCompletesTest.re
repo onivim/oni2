@@ -3,7 +3,7 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   /* Switch to root directory */
@@ -35,12 +35,9 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
     ~name="Quickmenu is loading is false",
     ~timeout=longWaitTime,
     (state: State.t) => {
-      dispatch(Tick({deltaTime: 0., totalTime: 0.}));
-      runEffects();
-      switch (state.quickmenu) {
-      | Some({filterProgress: Complete, _}) => true
-      | _ => false
-      };
-    },
-  );
+    switch (state.quickmenu) {
+    | Some({filterProgress: Complete, _}) => true
+    | _ => false
+    }
+  });
 });

@@ -20,7 +20,7 @@ let editorViewStyle = (background, foreground) =>
 
 let make = (~state: State.t, ()) => {
   let theme = state.theme;
-  let style = editorViewStyle(theme.background, theme.foreground);
+  let style = editorViewStyle(theme.editorBackground, theme.foreground);
 
   if (state.zenMode) {
     <View style>

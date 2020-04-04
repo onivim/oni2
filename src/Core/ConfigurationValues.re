@@ -17,10 +17,30 @@ type vimUseSystemClipboard = {
   paste: bool,
 };
 
+[@deriving show({with_path: false})]
+type autoClosingBrackets =
+  | Never
+  | LanguageDefined;
+
+[@deriving show({with_path: false})]
+type fontSmoothing =
+  | Default
+  | None
+  | Antialiased
+  | SubpixelAntialiased;
+
+type quickSuggestionsEnabled = {
+  other: bool,
+  comments: bool,
+  strings: bool,
+};
+
 type t = {
+  editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
-  editorFontFamily: option(string),
-  editorFontSize: int,
+  editorFontFamily: string,
+  editorFontSize: float,
+  editorFontSmoothing: fontSmoothing,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
@@ -32,11 +52,17 @@ type t = {
   editorMinimapMaxColumn: int,
   editorInsertSpaces: bool,
   editorIndentSize: int,
+  editorQuickSuggestions: quickSuggestionsEnabled,
   editorTabSize: int,
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
   editorRulers: list(int),
+  syntaxEagerMaxLines: int,
+  syntaxEagerMaxLineLength: int,
+  terminalIntegratedFontFamily: string,
+  terminalIntegratedFontSize: float,
+  terminalIntegratedFontSmoothing: fontSmoothing,
   workbenchActivityBarVisible: bool,
   workbenchColorTheme: string,
   workbenchIconTheme: string,
@@ -58,14 +84,15 @@ type t = {
   // Turn on tree-sitter for supported filetypes:
   // - JSON
   experimentalTreeSitter: bool,
-  experimentalAutoClosingPairs: bool,
   experimentalVimL: list(string),
 };
 
 let default = {
+  editorAutoClosingBrackets: LanguageDefined,
   editorDetectIndentation: true,
-  editorFontFamily: Some("FiraCode-Regular.ttf"),
-  editorFontSize: 14,
+  editorFontFamily: Constants.defaultFontFamily,
+  editorFontSmoothing: Default,
+  editorFontSize: Constants.defaultFontSize,
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,
@@ -73,15 +100,25 @@ let default = {
   editorAcceptSuggestionOnEnter: `on,
   editorMinimapEnabled: true,
   editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: Constants.default.minimapMaxColumn,
+  editorMinimapMaxColumn: Constants.minimapMaxColumn,
   editorLineNumbers: On,
   editorInsertSpaces: false,
   editorIndentSize: 4,
   editorTabSize: 4,
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
+  editorQuickSuggestions: {
+    other: true,
+    comments: true,
+    strings: true,
+  },
   editorRenderWhitespace: All,
   editorRulers: [],
+  syntaxEagerMaxLines: Constants.syntaxEagerMaxLines,
+  syntaxEagerMaxLineLength: Constants.syntaxEagerMaxLineLength,
+  terminalIntegratedFontFamily: Constants.defaultFontFamily,
+  terminalIntegratedFontSize: Constants.defaultTerminalFontSize,
+  terminalIntegratedFontSmoothing: Default,
   workbenchActivityBarVisible: true,
   workbenchColorTheme: "One Dark Pro",
   workbenchEditorShowTabs: true,
@@ -89,7 +126,7 @@ let default = {
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
-  filesExclude: ["node_modules", "_esy"],
+  filesExclude: ["_esy", "node_modules", ".git"],
   uiShadows: true,
   uiZoom: 1.0,
   vimUseSystemClipboard: {
@@ -103,6 +140,5 @@ let default = {
   zenModeSingleFile: true,
 
   experimentalTreeSitter: false,
-  experimentalAutoClosingPairs: false,
   experimentalVimL: [],
 };

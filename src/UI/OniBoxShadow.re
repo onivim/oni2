@@ -6,19 +6,22 @@ let make = (~children, ~theme: Theme.t, ~configuration: Configuration.t, ()) => 
   let useBoxShadow = Configuration.getValue(c => c.uiShadows, configuration);
 
   if (useBoxShadow) {
-    <BoxShadow
-      boxShadow={Style.BoxShadow.make(
-        ~xOffset=-11.,
-        ~yOffset=-11.,
-        ~blurRadius=25.,
-        ~spreadRadius=0.,
-        ~color=Color.rgba(0., 0., 0., 0.2),
-        (),
-      )}>
+    let color = Color.rgba(0., 0., 0., 0.75);
+    <View
+      style=[
+        Style.backgroundColor(color),
+        Style.boxShadow(
+          ~xOffset=4.,
+          ~yOffset=4.,
+          ~blurRadius=12.,
+          ~spreadRadius=0.,
+          ~color,
+        ),
+      ]>
       ...children
-    </BoxShadow>;
+    </View>;
   } else {
-    <View style=Style.[border(~color=theme.background, ~width=1)]>
+    <View style=Style.[border(~color=theme.editorBackground, ~width=1)]>
       ...children
     </View>;
   };

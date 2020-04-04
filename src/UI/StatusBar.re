@@ -11,152 +11,27 @@ open Revery.UI.Components;
 
 open Oni_Core;
 open Oni_Model;
+open Utility;
 
 open Oni_Model.StatusBarModel;
 
-module Option = Utility.Option;
 module Animation = Revery.UI.Animation;
+module ContextMenu = Oni_Components.ContextMenu;
+module CustomHooks = Oni_Components.CustomHooks;
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
+module Diagnostics = Feature_LanguageSupport.Diagnostics;
+module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Editor = Feature_Editor.Editor;
+module Theme = Feature_Theme;
 
-let useExpiration = (~equals=(==), ~expireAfter, items) => {
-  let%hook (active, setActive) = Hooks.state([]);
-  let%hook (expired, setExpired) = Hooks.ref([]);
-  let%hook (time, _reset) = Hooks.timer(~active=active != [], ());
+module Colors = {
+  open ColorTheme.Schema;
 
-  let (stillActive, freshlyExpired) =
-    List.partition(
-      ((_item, activated)) => Time.(time - activated < expireAfter),
-      active,
-    );
+  let transparent = Colors.transparentWhite;
 
-  if (freshlyExpired != []) {
-    setActive(_ => stillActive);
-
-    freshlyExpired
-    |> List.map(((item, _t)) => item)
-    |> List.rev_append(expired)
-    |> setExpired;
-  };
-
-  let%hook () =
-    Hooks.effect(
-      If((!==), items),
-      () => {
-        let untracked =
-          items
-          |> List.filter(item => !List.exists(equals(item), expired))
-          |> List.filter(item =>
-               !List.exists(((it, _t)) => equals(it, item), active)
-             );
-
-        if (untracked != []) {
-          let init = item => (item, time);
-          setActive(tracked => List.map(init, untracked) @ tracked);
-        };
-
-        // TODO: Garbage collection of expired, but on what condition?
-
-        None;
-      },
-    );
-
-  List.map(((item, _t)) => item, stillActive);
-};
-
-module Notification = {
-  open Notification;
-
-  module Constants = {
-    let popupDuration = Time.ms(3000);
-  };
-
-  module Styles = {
-    open Style;
-
-    let container = (~background, ~yOffset) => [
-      position(`Absolute),
-      top(0),
-      bottom(0),
-      left(0),
-      right(0),
-      backgroundColor(background),
-      flexDirection(`Row),
-      alignItems(`Center),
-      paddingHorizontal(10),
-      transform(Transform.[TranslateY(yOffset)]),
-    ];
-
-    let text = (~foreground, ~background, font: UiFont.t) => [
-      fontFamily(font.fontFile),
-      fontSize(11),
-      textWrap(TextWrapping.NoWrap),
-      marginLeft(6),
-      color(foreground),
-      backgroundColor(background),
-    ];
-  };
-
-  module Animations = {
-    open Animation;
-
-    let transitionDuration = Time.ms(150);
-    let totalDuration =
-      Time.(Constants.popupDuration + transitionDuration *. 2.);
-
-    let enter =
-      animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
-
-    let exit =
-      animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
-
-    let sequence =
-      enter |> andThen(~next=exit |> delay(Constants.popupDuration));
-  };
-
-  let backgroundColorFor = (item, ~theme: Theme.t) =>
-    switch (item.kind) {
-    | Success => theme.notificationSuccessBackground
-    | Warning => theme.notificationWarningBackground
-    | Error => theme.notificationErrorBackground
-    | Info => theme.notificationInfoBackground
-    };
-
-  let foregroundColorFor = (item, ~theme: Theme.t) => {
-    switch (item.kind) {
-    | Success => theme.notificationSuccessForeground
-    | Warning => theme.notificationWarningForeground
-    | Error => theme.notificationErrorForeground
-    | Info => theme.notificationInfoForeground
-    };
-  };
-
-  let iconFor = item =>
-    switch (item.kind) {
-    | Success => FontAwesome.checkCircle
-    | Warning => FontAwesome.exclamationTriangle
-    | Error => FontAwesome.exclamationCircle
-    | Info => FontAwesome.infoCircle
-    };
-
-  let%component make = (~item, ~background, ~foreground, ~font, ()) => {
-    let%hook (yOffset, _animationState, _reset) =
-      Hooks.animation(Animations.sequence, ~active=true);
-
-    let icon = () =>
-      <FontIcon
-        icon={iconFor(item)}
-        fontSize=16
-        backgroundColor=background
-        color=foreground
-      />;
-
-    <View style={Styles.container(~background, ~yOffset)}>
-      <icon />
-      <Text
-        style={Styles.text(~foreground, ~background, font)}
-        text={item.message}
-      />
-    </View>;
-  };
+  let background = define("statusBar.background", all(unspecified));
+  let foreground = define("statusBar.foreground", all(unspecified));
 };
 
 module Styles = {
@@ -198,7 +73,15 @@ module Styles = {
 
   let text = (~color, ~background, uiFont: UiFont.t) => [
     fontFamily(uiFont.fontFile),
-    fontSize(11),
+    fontSize(11.),
+    textWrap(TextWrapping.NoWrap),
+    Style.color(color),
+    backgroundColor(background),
+  ];
+
+  let textBold = (~color, ~background, font: UiFont.t) => [
+    fontFamily(font.fontFileSemiBold),
+    fontSize(11.),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
@@ -222,52 +105,104 @@ let section = (~children=React.empty, ~align, ()) =>
   <View style={Styles.section(align)}> children </View>;
 
 let item =
-    (~children, ~backgroundColor=Colors.transparentWhite, ~onClick=?, ()) => {
+    (
+      ~children,
+      ~backgroundColor=Colors.transparent,
+      ~onClick=?,
+      ~onRightClick=?,
+      (),
+    ) => {
   let style = Styles.item(backgroundColor);
 
-  switch (onClick) {
-  | Some(onClick) => <Clickable onClick style> children </Clickable>
-  | None => <View style> children </View>
+  // Avoid cursor turning into pointer if there's no mouse interaction available
+  if (onClick == None && onRightClick == None) {
+    <View style> children </View>;
+  } else {
+    <Clickable ?onClick ?onRightClick style> children </Clickable>;
   };
 };
 
-let textItem = (~background, ~font, ~theme: Theme.t, ~text, ()) =>
+let textItem = (~background, ~font, ~colorTheme, ~text, ()) =>
   <item>
     <Text
-      style={Styles.text(~color=theme.statusBarForeground, ~background, font)}
+      style={Styles.text(
+        ~color=Colors.foreground.from(colorTheme),
+        ~background,
+        font,
+      )}
       text
     />
   </item>;
 
 let notificationCount =
-    (~font, ~foreground as color, ~background, ~notifications, ()) => {
-  let text = notifications |> List.length |> string_of_int;
+    (
+      ~theme,
+      ~font,
+      ~foreground as color,
+      ~background,
+      ~notifications: Feature_Notification.model,
+      ~contextMenu,
+      ~onContextMenuItemSelect,
+      (),
+    ) => {
+  let text =
+    (notifications :> list(Feature_Notification.notification))
+    |> List.length
+    |> string_of_int;
 
   let onClick = () =>
     GlobalContext.current().dispatch(
       Actions.StatusBar(NotificationCountClicked),
     );
+  let onRightClick = () =>
+    GlobalContext.current().dispatch(
+      Actions.StatusBar(NotificationsContextMenu),
+    );
 
-  <item onClick>
+  let menu = () => {
+    let items =
+      ContextMenu.[
+        {
+          label: "Clear All",
+          // icon: None,
+          data: Actions.StatusBar(NotificationClearAllClicked),
+        },
+        {
+          label: "Open",
+          // icon: None,
+          data: Actions.StatusBar(NotificationCountClicked),
+        },
+      ];
+
+    <ContextMenu
+      orientation=(`Top, `Left)
+      offsetX=(-10)
+      items
+      theme
+      font // correct for item padding
+      onItemSelect=onContextMenuItemSelect
+    />;
+  };
+
+  <item onClick onRightClick>
+    {contextMenu == State.ContextMenu.NotificationStatusBarItem
+       ? <menu /> : React.empty}
     <View
       style=Style.[
         flexDirection(`Row),
         justifyContent(`Center),
         alignItems(`Center),
       ]>
-      <FontIcon
-        icon=FontAwesome.bell
-        backgroundColor=background
-        color
-        margin=4
-      />
+      <View style=Style.[margin(4)]>
+        <FontIcon icon=FontAwesome.bell color />
+      </View>
       <Text style={Styles.text(~color, ~background, font)} text />
     </View>
   </item>;
 };
 
-let diagnosticCount = (~font, ~background, ~theme: Theme.t, ~diagnostics, ()) => {
-  let color = theme.statusBarForeground;
+let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
+  let color = Colors.foreground.from(colorTheme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -280,24 +215,22 @@ let diagnosticCount = (~font, ~background, ~theme: Theme.t, ~diagnostics, ()) =>
         justifyContent(`Center),
         alignItems(`Center),
       ]>
-      <FontIcon
-        icon=FontAwesome.timesCircle
-        backgroundColor=background
-        color
-        margin=4
-      />
+      <View style=Style.[margin(4)]>
+        <FontIcon icon=FontAwesome.timesCircle color />
+      </View>
       <Text style={Styles.text(~color, ~background, font)} text />
     </View>
   </item>;
 };
 
-let modeIndicator = (~font, ~theme, ~mode, ()) => {
-  let (background, foreground) = Theme.getColorsForMode(theme, mode);
+let modeIndicator = (~font, ~colorTheme, ~mode, ()) => {
+  let background = Theme.Colors.Oni.backgroundFor(mode).from(colorTheme);
+  let foreground = Theme.Colors.Oni.foregroundFor(mode).from(colorTheme);
 
   <item backgroundColor=background>
     <Text
-      style={Styles.text(~color=foreground, ~background, font)}
-      text={Vim.Mode.show(mode)}
+      style={Styles.textBold(~color=foreground, ~background, font)}
+      text={Mode.toString(mode)}
     />
   </item>;
 };
@@ -307,33 +240,39 @@ let transitionAnimation =
     animate(Time.ms(150)) |> ease(Easing.ease) |> tween(50.0, 0.)
   );
 
-let%component make = (~state: State.t, ()) => {
-  let State.{mode, theme, uiFont: font, diagnostics, notifications, _} = state;
+let%component make =
+              (~state: State.t, ~contextMenu, ~onContextMenuItemSelect, ()) => {
+  let State.{colorTheme, theme, uiFont: font, diagnostics, notifications, _} = state;
+
+  let mode = ModeManager.current(state);
+  let colorTheme = Theme.resolver(colorTheme);
 
   let%hook activeNotifications =
-    useExpiration(
-      ~expireAfter=Notification.Animations.totalDuration,
-      ~equals=(a, b) => Oni_Model.Notification.(a.id == b.id),
-      notifications,
+    CustomHooks.useExpiration(
+      ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
+      ~equals=(a, b) => Feature_Notification.(a.id == b.id),
+      (notifications :> list(Feature_Notification.notification)),
     );
 
   let (background, foreground) =
     switch (activeNotifications) {
-    | [] => (theme.statusBarBackground, theme.statusBarForeground)
-    | [last, ..._] => (
-        Notification.backgroundColorFor(last, ~theme),
-        Notification.foregroundColorFor(last, ~theme),
+    | [] =>
+      Colors.(background.from(colorTheme), foreground.from(colorTheme))
+    | [last, ..._] =>
+      Feature_Notification.Colors.(
+        backgroundFor(last).from(colorTheme),
+        foregroundFor(last).from(colorTheme),
       )
     };
 
   let%hook background =
     CustomHooks.colorTransition(
-      ~duration=Notification.Animations.transitionDuration,
+      ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
       background,
     );
   let%hook foreground =
     CustomHooks.colorTransition(
-      ~duration=Notification.Animations.transitionDuration,
+      ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
       foreground,
     );
 
@@ -341,7 +280,7 @@ let%component make = (~state: State.t, ()) => {
     Hooks.animation(transitionAnimation);
 
   let toStatusBarElement = (statusBarItem: Item.t) =>
-    <textItem font background theme text={statusBarItem.text} />;
+    <textItem font background colorTheme text={statusBarItem.text} />;
 
   let leftItems =
     state.statusBar
@@ -359,17 +298,17 @@ let%component make = (~state: State.t, ()) => {
     let text =
       Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
 
-    <textItem font background theme text />;
+    <textItem font background colorTheme text />;
   };
 
   let fileType = () => {
     let text =
       state
       |> Selectors.getActiveBuffer
-      |> Option.bind(Buffer.getFileType)
+      |> OptionEx.flatMap(Buffer.getFileType)
       |> Option.value(~default="plaintext");
 
-    <textItem font background theme text />;
+    <textItem font background colorTheme text />;
   };
 
   let position = () => {
@@ -380,23 +319,33 @@ let%component make = (~state: State.t, ()) => {
       |> Option.map(Editor.getPrimaryCursor)
       |> positionToString;
 
-    <textItem font background theme text />;
+    <textItem font background colorTheme text />;
   };
 
   let notificationPopups = () =>
     activeNotifications
     |> List.rev
-    |> List.map(item => <Notification item background foreground font />)
+    |> List.map(model =>
+         <Feature_Notification.View.Popup model background foreground font />
+       )
     |> React.listToElement;
 
   <View style={Styles.view(background, yOffset)}>
     <section align=`FlexStart>
-      <notificationCount font foreground background notifications />
+      <notificationCount
+        theme
+        font
+        foreground
+        background
+        notifications
+        contextMenu
+        onContextMenuItemSelect
+      />
     </section>
     <sectionGroup>
       <section align=`FlexStart> leftItems </section>
       <section align=`FlexStart>
-        <diagnosticCount font background theme diagnostics />
+        <diagnosticCount font background colorTheme diagnostics />
       </section>
       <section align=`Center />
       <section align=`FlexEnd> rightItems </section>
@@ -407,6 +356,6 @@ let%component make = (~state: State.t, ()) => {
       </section>
       <notificationPopups />
     </sectionGroup>
-    <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
+    <section align=`FlexEnd> <modeIndicator font colorTheme mode /> </section>
   </View>;
 };

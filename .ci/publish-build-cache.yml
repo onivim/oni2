@@ -14,9 +14,22 @@ steps:
       fi
       echo "STDIR: $STDIR"
       tar -czf "$STDIR/esy-cache.tar" .
+
     workingDirectory: ''
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: '[Cache][Publish] Tar esy cache directory'
+  
+  - bash: |
+      cd $(ESY__CACHE_INSTALL_PATH)/..
+      pwd
+      ls
+      rm -rf b
+      rm -rf i
+      ls
+
+    workingDirectory: ''
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    displayName: '[Cache][Publish] Delete esy directory to avoid running out of space'
 
   # - bash: 'cd $(ESY__NPM_ROOT) && tar -czf $(STAGING_DIRECTORY)/npm-cache.tar .'
   #   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))

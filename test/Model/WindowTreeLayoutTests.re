@@ -12,16 +12,26 @@ describe("WindowTreeLayout", ({describe, _}) => {
   describe("move", ({test, _}) =>
     test(
       "regression test for #603 - navigation across splits not working",
-      ({expect}) => {
+      ({expect, _}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
       let split3 = createSplit(~editorGroupId=3, ());
 
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, Horizontal, split1)
-        |> addSplit(~target=Some(split1.id), Horizontal, split2)
-        |> addSplit(~target=Some(split2.id), Horizontal, split3);
+        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Horizontal,
+             split2,
+           )
+        |> addSplit(
+             ~target=Some(split2.id),
+             ~position=Before,
+             Horizontal,
+             split3,
+           );
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 300, 300, splits);
 
@@ -56,14 +66,19 @@ describe("WindowTreeLayout", ({describe, _}) => {
   );
 
   describe("layout", ({test, _}) => {
-    test("layout vertical splits", ({expect}) => {
+    test("layout vertical splits", ({expect, _}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
 
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, Vertical, split1)
-        |> addSplit(~target=Some(split1.id), Vertical, split2);
+        |> addSplit(~target=None, ~position=Before, Vertical, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Vertical,
+             split2,
+           );
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
@@ -79,14 +94,19 @@ describe("WindowTreeLayout", ({describe, _}) => {
       );
     });
 
-    test("layout horizontal splits", ({expect}) => {
+    test("layout horizontal splits", ({expect, _}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
 
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, Horizontal, split1)
-        |> addSplit(~target=Some(split1.id), Horizontal, split2);
+        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Horizontal,
+             split2,
+           );
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
@@ -101,16 +121,26 @@ describe("WindowTreeLayout", ({describe, _}) => {
         true,
       );
     });
-    test("layout mixed splits", ({expect}) => {
+    test("layout mixed splits", ({expect, _}) => {
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
       let split3 = createSplit(~editorGroupId=3, ());
 
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, Horizontal, split1)
-        |> addSplit(~target=Some(split1.id), Horizontal, split2)
-        |> addSplit(~target=Some(split1.id), Vertical, split3);
+        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Horizontal,
+             split2,
+           )
+        |> addSplit(
+             ~target=Some(split1.id),
+             ~position=Before,
+             Vertical,
+             split3,
+           );
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 

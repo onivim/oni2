@@ -5,19 +5,20 @@
  */
 
 open Oni_Core;
+open Feature_Editor;
 
 module EditorGroupId =
   Revery.UniqueId.Make({});
 
-type t =
-  Actions.editorGroup = {
-    editorGroupId: int,
-    activeEditorId: option(int),
-    editors: IntMap.t(Editor.t),
-    bufferIdToEditorId: IntMap.t(int),
-    reverseTabOrder: list(int),
-    metrics: EditorMetrics.t,
-  };
+[@deriving show]
+type t = {
+  editorGroupId: int,
+  activeEditorId: option(int),
+  editors: [@opaque] IntMap.t(Editor.t),
+  bufferIdToEditorId: [@opaque] IntMap.t(int),
+  reverseTabOrder: list(int),
+  metrics: EditorMetrics.t,
+};
 
 let create: unit => t =
   () => {
@@ -44,11 +45,25 @@ let setActiveEditor = (model, editorId) => {
   activeEditorId: Some(editorId),
 };
 
-let getOrCreateEditorForBuffer = (state, bufferId) => {
+let setBufferFont = (~bufferId, ~font, group) => {
+  let editors =
+    group.editors
+    |> IntMap.map((editor: Feature_Editor.Editor.t) =>
+         if (editor.bufferId == bufferId) {
+           Editor.setFont(~font, editor);
+         } else {
+           editor;
+         }
+       );
+
+  {...group, editors};
+};
+
+let getOrCreateEditorForBuffer = (~font, ~bufferId, state) => {
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | Some(editor) => (state, editor)
   | None =>
-    let newEditor = Editor.create(~bufferId, ());
+    let newEditor = Editor.create(~font, ~bufferId, ());
     let newState = {
       ...state,
       editors: IntMap.add(newEditor.editorId, newEditor, state.editors),
@@ -60,16 +75,23 @@ let getOrCreateEditorForBuffer = (state, bufferId) => {
   };
 };
 
-// TODO: Just use List.find_opt?
 let rec _getIndexOfElement = elem =>
   fun
-  | [] => (-1)
-  | [hd, ...tl] => hd === elem ? 0 : _getIndexOfElement(elem, tl) + 1;
+  | [] => None
+  | [hd, ...tl] =>
+    hd === elem
+      ? Some(0)
+      : (
+        switch (_getIndexOfElement(elem, tl)) {
+        | None => None
+        | Some(i) => Some(i + 1)
+        }
+      );
 
 let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
   switch (_getIndexOfElement(editor, reverseTabOrder)) {
-  | (-1) => None
-  | idx =>
+  | None => None
+  | Some(idx) =>
     switch (
       List.nth_opt(reverseTabOrder, idx + 1),
       List.nth_opt(reverseTabOrder, max(idx - 1, 0)),
@@ -80,6 +102,48 @@ let _getAdjacentEditor = (editor: int, reverseTabOrder: list(int)) => {
     }
   };
 };
+
+let setActiveEditorTo = (kind, model) =>
+  switch (model.reverseTabOrder) {
+  | []
+  | [_] => model
+  | _ =>
+    switch (model.activeEditorId) {
+    | Some(activeEditorId) =>
+      switch (_getIndexOfElement(activeEditorId, model.reverseTabOrder)) {
+      | None => model
+      | Some(idx) =>
+        // The diff amounts are inverted because the list is in reverse order
+        let newIndex =
+          switch (kind) {
+          | `Next => idx - 1
+          | `Previous => idx + 1
+          };
+
+        let count = List.length(model.reverseTabOrder);
+
+        let newIndex =
+          if (newIndex < 0) {
+            // Wrapping negative, go to end
+            count - 1;
+          } else if (newIndex >= count) {
+            0;
+            // If this is past the end, go to zero
+          } else {
+            newIndex;
+          };
+
+        {
+          ...model,
+          activeEditorId: List.nth_opt(model.reverseTabOrder, newIndex),
+        };
+      }
+    | None => model
+    }
+  };
+
+let nextEditor = setActiveEditorTo(`Next);
+let previousEditor = setActiveEditorTo(`Previous);
 
 let isEmpty = model => IntMap.is_empty(model.editors);
 

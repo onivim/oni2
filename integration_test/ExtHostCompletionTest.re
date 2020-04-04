@@ -9,7 +9,7 @@ open Oni_IntegrationTestLib;
 runTestWithInput(
   ~name="ExtHostCompletionTest", (input, _dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   // Wait until the extension is activated
@@ -33,9 +33,8 @@ runTestWithInput(
     ~name="Wait for oni-dev filetype to show up",
     (state: State.t) => {
       let fileType =
-        Some(state)
-        |> Option.bind(Selectors.getActiveBuffer)
-        |> Option.bind(Buffer.getFileType);
+        Selectors.getActiveBuffer(state)
+        |> OptionEx.flatMap(Buffer.getFileType);
 
       switch (fileType) {
       | Some("oni-dev") => true

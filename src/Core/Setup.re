@@ -3,6 +3,7 @@
  *
  * Runtime configuration of dependencies
  */
+open Kernel;
 
 module Log = (val Log.withNamespace("Oni2.Core.Setup"));
 
@@ -10,9 +11,6 @@ module Log = (val Log.withNamespace("Oni2.Core.Setup"));
 type t = {
   [@key "node"]
   nodePath: string,
-  /* Camomile runtime files */
-  [@key "camomile"]
-  camomilePath: string,
   [@key "bundledExtensions"]
   bundledExtensionsPath: string,
   [@key "developmentExtensions"]
@@ -23,57 +21,35 @@ type t = {
   rgPath: string,
   [@key "rls"]
   rlsPath: string,
-  version: [@default "Unknown"] string,
 };
-
-let version = "0.3.0";
 
 let default = () => {
   let execDir = Revery.Environment.executingDirectory;
-
-  let defaultCamomilePath =
-    switch (Revery.Environment.os) {
-    | Revery.Environment.Windows => execDir ++ "camomile"
-    | Revery.Environment.Mac => execDir ++ "../Resources/camomile"
-    | _ => execDir ++ "../share/camomile"
-    };
-
-  let camomilePath =
-    switch (Sys.getenv_opt(EnvironmentVariables.camomilePath)) {
-    | None => defaultCamomilePath
-    | Some(v) => v
-    };
 
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows => {
       nodePath: execDir ++ "node.exe",
       nodeScriptPath: execDir ++ "node",
       bundledExtensionsPath: execDir ++ "extensions",
-      camomilePath,
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg.exe",
       rlsPath: execDir ++ "rls.exe",
-      version,
     }
   | Revery.Environment.Mac => {
       nodePath: execDir ++ "node",
       nodeScriptPath: execDir ++ "../Resources/node",
-      camomilePath,
       bundledExtensionsPath: execDir ++ "../Resources/extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
       rlsPath: execDir ++ "rls",
-      version,
     }
   | _ => {
       nodePath: execDir ++ "node",
       nodeScriptPath: execDir ++ "../share/node",
-      camomilePath,
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
       rlsPath: execDir ++ "rls",
-      version,
     }
   };
 };
@@ -91,10 +67,15 @@ let getNodeHealthCheckPath = (v: t) => {
 };
 
 let getNodeExtensionHostPath = (v: t) => {
-  getNodeScriptPath(
-    ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
-    v,
-  );
+  switch (Sys.getenv_opt("ONI2_EXTHOST")) {
+  | Some(extHostPath) =>
+    Rench.Path.join(extHostPath, "out/bootstrap-fork.js")
+  | None =>
+    getNodeScriptPath(
+      ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
+      v,
+    )
+  };
 };
 
 let init = () => {

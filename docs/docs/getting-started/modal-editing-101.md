@@ -19,14 +19,19 @@ the majority of our time is spent navigating, manipulating, and editing - rather
 
 In normal mode, you can move the cursor around:
 
-- `h` - move the cursor left
-- `j` - move the cursor down
-- `l` - move the cursor right
-- `k` - move the cursor up
+- <kbd>h</kbd> - move the cursor left
+- <kbd>j</kbd> - move the cursor down
+- <kbd>l</kbd> - move the cursor right
+- <kbd>k</kbd> - move the cursor up
+
+> NOTE: You can use the arrow keys, too, but we recommend <kbd>h</kbd>, <kbd>j</kbd>, <kbd>k</kbd>, and <kbd>l</kbd>, because it keeps your hands on the home row!
 
 You can also prefix these characters with a number, for example:
-- `5j` moves the cursor 5 lines down
-- `10l` moves the cursor 10 lines right
+
+- <kbd>5</kbd><kbd>j</kbd> moves the cursor 5 lines down
+- <kbd>1</kbd><kbd>0</kbd><kbd>l</kbd> moves the cursor 10 lines right
+
+This tends to be faster than repeatedly pressing or holding a key.
 
 ### Insert Mode
 
@@ -35,6 +40,17 @@ Even though we spend a lot time in _normal mode_, we need to be able to type and
 The cursor will switch to a caret, and you'll see an indication in the status bar that we are now in insert mode.
 
 Once you have finished typing, you can press `Escape`, `Control+c`, or `Control+[` to return to _normal mode_ - pick whichever one is most comfortable for you.
+
+### Ex Commands
+
+Onivim also exposes a vast number of vim's ex commands, which are key sequences starting with `:`. Some useful ones to get started with are:
+
+- `:cd <directory>` to change the working directory
+- `:e <filename>` to open a file for editing, or create a new file if it doesn't exist
+- `:w` to save the current file
+- `:w <filename>` to save the current file with a new name
+- `:q` to close the current file, and the editor if it the last open file
+- `:wq` as a shorthand to save and close
 
 ### Next Steps
 

@@ -45,7 +45,7 @@ let start =
     ) => {
   let args = ["--type=extensionHost"];
   let env = [
-    "PATH=" ++ ShellUtility.getShellPath(),
+    "PATH=" ++ ShellUtility.getPathFromShell(),
     "AMD_ENTRYPOINT=vs/workbench/services/extensions/node/extensionHostProcess",
     "VSCODE_PARENT_PID=" ++ string_of_int(Process.pid()),
   ];
@@ -136,7 +136,7 @@ let start =
     };
 
   let handleReply = (reqId: int, payload: Yojson.Safe.t) => {
-    Log.debugf(m =>
+    Log.tracef(m =>
       m("Reply ID: %d payload: %s\n", reqId, Yojson.Safe.to_string(payload))
     );
     switch (Hashtbl.find_opt(replyIdToResolver, reqId)) {
@@ -149,7 +149,7 @@ let start =
 
   let _sendInitData = () => {
     let _: int =
-      send(MessageType.initData, ExtHostInitData.to_yojson(initData));
+      send(MessageType.initData, ExtHostInitData.encode(initData));
     ();
   };
 

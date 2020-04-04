@@ -6,7 +6,6 @@
 
 open Oni_Core;
 
-module Option = Utility.Option;
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
 type t = IntMap.t(Buffer.t);
@@ -44,24 +43,14 @@ let isModifiedByPath = (buffers: t, filePath: string) => {
   );
 };
 
-let ofBufferOpt = (f, buffer) => {
-  switch (buffer) {
-  | None => None
-  | Some(b) => Some(f(b))
-  };
-};
-
-let applyBufferUpdate = bufferUpdate =>
-  ofBufferOpt(buffer => Buffer.update(buffer, bufferUpdate));
-
 let setIndentation = indent =>
-  ofBufferOpt(buffer => Buffer.setIndentation(indent, buffer));
+  Option.map(buffer => Buffer.setIndentation(indent, buffer));
 
 let disableSyntaxHighlighting =
-  ofBufferOpt(buffer => Buffer.disableSyntaxHighlighting(buffer));
+  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
 
 let setModified = modified =>
-  ofBufferOpt(buffer => Buffer.setModified(modified, buffer));
+  Option.map(buffer => Buffer.setModified(modified, buffer));
 
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
@@ -93,10 +82,8 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
 
-  | BufferUpdate(bu) => IntMap.update(bu.id, applyBufferUpdate(bu), state)
-
-  | BufferSaved(metadata) =>
-    IntMap.update(metadata.id, setModified(metadata.modified), state)
+  | BufferUpdate({update, newBuffer, _}) =>
+    IntMap.add(update.id, newBuffer, state)
 
   | _ => state
   };

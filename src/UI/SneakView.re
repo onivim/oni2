@@ -32,7 +32,7 @@ module Styles = {
     Style.[
       backgroundColor(theme.sneakBackground),
       position(`Absolute),
-      top(y - Constants.size / 2),
+      top(y),
       left(x + Constants.size / 2),
       Style.height(Constants.size),
       Style.width(Constants.size),
@@ -46,14 +46,14 @@ module Styles = {
       backgroundColor(theme.sneakBackground),
       color(theme.sneakForeground),
       fontFamily(uiFont.fontFile),
-      fontSize(12),
+      fontSize(12.),
     ];
   let highlightStyle = (theme: Core.Theme.t, uiFont: Core.UiFont.t) =>
     Style.[
       backgroundColor(theme.sneakBackground),
       color(theme.sneakHighlight),
       fontFamily(uiFont.fontFile),
-      fontSize(12),
+      fontSize(12.),
     ];
 };
 

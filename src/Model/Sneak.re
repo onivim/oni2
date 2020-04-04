@@ -1,7 +1,11 @@
 open Revery.Math;
 
+module InputModel = Oni_Components.InputModel;
+module StringEx = Oni_Core.Utility.StringEx;
+module Selection = Oni_Components.Selection;
+
 type callback = unit => unit;
-type bounds = unit => option(Rectangle.t);
+type bounds = unit => option(BoundingBox2d.t);
 
 type sneakInfo = {
   callback,
@@ -52,7 +56,7 @@ let isActive = sneaks => sneaks.active;
 
 module Internal = {
   let filter = (prefix: string, sneak: sneak) => {
-    Oni_Core.Utility.StringUtil.startsWith(~prefix, sneak.id);
+    StringEx.startsWith(~prefix, sneak.id);
   };
 
   let applyFilter = (sneaks: t) =>
@@ -81,13 +85,11 @@ module Internal = {
 
 let refine = (characterToAdd: string, sneaks: t) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
+  let selection =
+    String.length(sneaks.prefix) |> Selection.collapsed(~text=sneaks.prefix);
 
   let (prefix, _) =
-    InputModel.handleInput(
-      ~text=sneaks.prefix,
-      ~cursorPosition=String.length(sneaks.prefix),
-      characterToAdd,
-    );
+    InputModel.handleInput(~text=sneaks.prefix, ~selection, characterToAdd);
 
   {...sneaks, prefix} |> Internal.applyFilter;
 };

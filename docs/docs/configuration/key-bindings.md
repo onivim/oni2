@@ -38,7 +38,56 @@ There are a set of default rules provided by Onivim, but the customized rules ar
 
 ### `key` format
 
-TODO
+The `key` parameter supports both _Vim style_ and _VSCode style_ key bindings.
+
+#### Vim style
+
+Vim-style keybindings are surrounded by `<` and `>`, and allow the following modifiers:
+
+| Modifier | Description | Example |
+| --- | --- | --- |
+| `C-` | Control key | `<C-P>` |
+| `S-` | Shift key | `<S-P>` |
+| `A-` | Alt key | `<A-P>` |
+| `D-` | Command key | `<D-P>` | 
+
+> __Note:__ A difference between Vim and Onivim is that `D-` also handles the 'Meta' and 'Win' keys on Linux and Windows, respectively
+
+Modifiers may be combined, for example:
+
+```
+[
+  { "key": "<C-S-P>", "command": "quickOpenFiles", "when": "editorTextFocus" }
+]
+```
+
+The `<C-S-P>` key binding would require the Control, Shift, and P keys to be pressed.
+
+#### VSCode style
+
+VSCode-style keybindings feature friendly names, like:
+
+| Modifier | Description | Example |
+| --- | --- | --- |
+| `Ctrl+` | Control key | `Ctrl+P` |
+| `Shift+` | Shift key | `Shift+P` |
+| `Alt+` | Alt key | `Alt+J` |
+| `Meta+` | Meta/Command/Windows key |
+| `Cmd+` | Same as above | `Cmd+P` |
+| `Win+` | Same as above | `Win+P` |
+
+### Key Sequences
+
+Onivim supports binding to key sequences, which require multiple key-presses in succession to engage.
+
+Example:
+
+```
+  { "key": "jk", "command": "vim.esc", "when": "insertMode" }
+```
+
+This would require a key-press of 'j', followed by 'k'.
+
 
 ### `command` arguments
 
@@ -68,6 +117,7 @@ Common contexts with VSCode:
 | --- | --- |
 | `editorFocus` | An editor has focus |
 | `textInputFocus` | A text input area has focus |
+| `terminalFocus` | A terminal has focus |
 | `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
 
 Onivim-specific contexts:
@@ -75,6 +125,9 @@ Onivim-specific contexts:
 | Context Name | True When | 
 | --- | --- |
 | `insertMode` |  The active editor is in `insert` mode |
+| `normalMode` |  The active editor is in `normal` mode |
+| `visualMode` |  The active editor is in `visual` mode |
+| `sneakMode` | Sneak mode is active |
 | `commandLineFocus` | The Vim commandline is open |
 | `menuFocus` | A pop-up menu has focus |
 
@@ -112,6 +165,11 @@ Onivim-specific contexts:
 | Control+W, Control+L | Move to right split | `window.moveRight` |
 | Control+W, Control+J | Move down a split | `window.moveDown` |
 | Control+W, Control+K | Move up a split | `window.moveUp` |
+
+### Vim commands
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| Escape | Used to send `<ESC>` to Vim | `vim.esc` |
 
 ### Additional Commands
 

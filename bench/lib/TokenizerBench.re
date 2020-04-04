@@ -9,24 +9,35 @@ let createGiantString = iter => {
 
   f("", iter);
 };
+let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
 
-let giantString = createGiantString(50);
+let giantString = createGiantString(50) |> makeLine;
 
 let splitEverything = (_, _, _, _) => true;
 let splitNothing = (_, _, _, _) => false;
 
 let tokenizeWithSplits = () => {
-  let _ = Tokenizer.tokenize(~f=splitEverything, giantString);
+  let _: list(Tokenizer.TextRun.t) =
+    Tokenizer.tokenize(
+      ~f=splitEverything,
+      ~endIndex=BufferLine.lengthSlow(giantString),
+      giantString,
+    );
   ();
 };
 
 let tokenizeWithoutSplits = () => {
-  let _ = Tokenizer.tokenize(~f=splitNothing, giantString);
+  let _: list(Tokenizer.TextRun.t) =
+    Tokenizer.tokenize(
+      ~f=splitNothing,
+      ~endIndex=BufferLine.lengthSlow(giantString),
+      giantString,
+    );
   ();
 };
 
 let tokenizeWithSplitsSub = () => {
-  let _ =
+  let _: list(Tokenizer.TextRun.t) =
     Tokenizer.tokenize(
       ~startIndex=100,
       ~endIndex=200,
@@ -37,7 +48,7 @@ let tokenizeWithSplitsSub = () => {
 };
 
 let tokenizeWithoutSplitsSub = () => {
-  let _ =
+  let _: list(Tokenizer.TextRun.t) =
     Tokenizer.tokenize(
       ~startIndex=100,
       ~endIndex=200,

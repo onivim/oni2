@@ -2,11 +2,12 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
+open Feature_LanguageSupport;
 
 runTestWithInput(
   ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   ExtensionHelpers.waitForExtensionToActivate(
@@ -25,9 +26,8 @@ runTestWithInput(
         ~name="Validate we have a TypeScript filetype",
         (state: State.t) => {
           let fileType =
-            Some(state)
-            |> Option.bind(Selectors.getActiveBuffer)
-            |> Option.bind(Buffer.getFileType);
+            Selectors.getActiveBuffer(state)
+            |> OptionEx.flatMap(Buffer.getFileType);
 
           switch (fileType) {
           | Some("typescript") => true
@@ -71,8 +71,7 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags =
-          Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) > 0;
       | _ => false
       };
@@ -98,8 +97,7 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags =
-          Model.Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) == 0;
       | _ => false
       };

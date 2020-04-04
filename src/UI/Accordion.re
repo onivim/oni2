@@ -6,11 +6,13 @@ open Revery;
 open Revery.UI;
 
 open Oni_Core;
+open Oni_Components;
+
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
 
 module Constants = {
-  let arrowSize = 15;
+  let arrowSize = 15.;
 };
 
 module Styles = {
@@ -22,7 +24,7 @@ module Styles = {
       flexGrow(0),
       height(25),
       backgroundColor(theme.editorBackground),
-      color(theme.editorForeground),
+      color(theme.foreground),
       flexDirection(`Row),
       alignItems(`Center),
     ];
@@ -31,7 +33,7 @@ module Styles = {
     Style.[
       fontSize(font.fontSize),
       fontFamily(font.fontFile),
-      color(theme.editorForeground),
+      color(theme.foreground),
       backgroundColor(theme.editorBackground),
     ];
 };
@@ -59,7 +61,6 @@ let make =
         fontSize=Constants.arrowSize
         color=Colors.white
         icon={expanded ? FontAwesome.caretDown : FontAwesome.caretRight}
-        backgroundColor=Colors.transparentWhite
       />
       <Text style={Styles.titleText(~theme, ~font=uiFont)} text=title />
     </View>

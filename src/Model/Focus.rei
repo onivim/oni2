@@ -5,7 +5,10 @@ type focusable =
   | Quickmenu
   | Search
   | FileExplorer
-  | Sneak;
+  | SCM
+  | Sneak
+  | Modal
+  | Terminal(int);
 
 type stack;
 

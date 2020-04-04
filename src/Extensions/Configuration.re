@@ -5,8 +5,7 @@
  *
  */
 
-let emptyJsonObject = `Assoc([]);
-let emptyJsonArray = `List([]);
+open Oni_Core;
 
 // Type relating to 'ConfigurationModel' in VSCode
 // This is an 'instance' of configuration - modelling user, workspace, or default configuration.
@@ -19,55 +18,24 @@ module Model = {
     // overrides: ?
   };
 
-  let empty = {contents: emptyJsonObject, keys: []};
+  let empty = {contents: Json.Encode.obj([]), keys: []};
 
   let create = (~keys, contents) => {keys, contents};
 
-  let to_yojson = model => {
-    let {contents, keys} = model;
-
-    let keysJson = keys |> List.map(str => `String(str));
-
-    `Assoc([
-      ("contents", contents),
-      ("keys", `List(keysJson)),
-      ("overrides", emptyJsonArray),
-    ]);
-  };
-
-  let ofExtensions = (extensions: list(ExtensionManifest.t)) => {
-    ExtensionManifest.(
-      {
-        let configModels: ExtensionContributions.Configuration.t =
-          extensions
-          |> List.map(manifest => manifest.contributes)
-          |> List.map(contributes =>
-               ExtensionContributions.getConfiguration(contributes)
-             )
-          |> List.flatten;
-
-        ExtensionContributions.Configuration.(
-          {
-            let keys =
-              List.map(
-                (configModel: config) => configModel.name,
-                configModels,
-              );
-
-            let json: Yojson.Safe.json =
-              `Assoc(
-                List.map(
-                  ({name, default}: config) => (name, default),
-                  configModels,
-                ),
-              );
-
-            let contents = Oni_Core.Utility.Json.explode(json);
-            {keys, contents};
-          }
-        );
-      }
+  let encode = model =>
+    Json.Encode.(
+      obj([
+        ("contents", model.contents),
+        ("keys", model.keys |> list(string)),
+        ("overrides", list(value, [])),
+      ])
     );
+
+  let to_yojson = Json.Encode.encode_value(encode);
+
+  let fromSettings = settings => {
+    keys: settings |> Config.Settings.keys |> List.map(Config.keyAsString),
+    contents: settings |> Config.Settings.toJson,
   };
 
   let toString = (model: t) => {
@@ -91,17 +59,19 @@ type t = {
   // configurationScopes: {}
 };
 
-let to_yojson = config => {
-  let {defaults, user, workspace} = config;
-  `Assoc([
-    ("defaults", defaults |> Model.to_yojson),
-    ("user", user |> Model.to_yojson),
-    ("workspace", workspace |> Model.to_yojson),
-    ("folders", emptyJsonObject),
-    ("isComplete", `Bool(true)),
-    ("configurationScopes", emptyJsonObject),
-  ]);
-};
+let encode = config =>
+  Json.Encode.(
+    obj([
+      ("defaults", config.defaults |> Model.encode),
+      ("user", config.user |> Model.encode),
+      ("workspace", config.workspace |> Model.encode),
+      ("folders", obj([])),
+      ("isComplete", bool(true)),
+      ("configurationScopes", obj([])),
+    ])
+  );
+
+let to_yojson = Json.Encode.encode_value(encode);
 
 let empty = {
   defaults: Model.empty,

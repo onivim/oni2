@@ -1,0 +1,5 @@
+(library
+    (name Oni_Core_Utility_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries base Oni2.core rely.lib editor-core-types))

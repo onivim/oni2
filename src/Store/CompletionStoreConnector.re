@@ -7,13 +7,12 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
+open Utility;
 open Actions;
 
-module Option = Utility.Option;
-module VimEx = Utility.VimEx;
-module IndexEx = Utility.IndexEx;
-
 module Log = (val Log.withNamespace("Oni2.Store.Completions"));
+module Completions = Feature_LanguageSupport.Completions;
+module Editor = Feature_Editor.Editor;
 
 module Effects = {
   let requestCompletions =
@@ -76,17 +75,41 @@ module Actions = {
     let maybeEditor =
       state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
     let maybeBuffer =
-      Option.bind(
-        editor => Buffers.getBuffer(editor.bufferId, state.buffers),
-        maybeEditor,
+      Option.bind(maybeEditor, editor =>
+        Buffers.getBuffer(editor.bufferId, state.buffers)
       );
     let maybeCursor = Option.map(Editor.getPrimaryCursor, maybeEditor);
+
+    let suggestEnabled =
+      state.configuration
+      |> Configuration.getValue(c => c.editorQuickSuggestions);
+
     let maybeMeet =
-      Option.bind2(
-        (location, buffer) =>
-          CompletionMeet.fromBufferLocation(~location, buffer),
+      OptionEx.bind2(
         maybeCursor,
         maybeBuffer,
+        (location, buffer) => {
+          let {isComment, isString}: SyntaxScope.t =
+            Feature_Syntax.getSyntaxScope(
+              ~bufferId=Buffer.getId(buffer),
+              ~line=location.line,
+              ~bytePosition=location.column |> Index.toZeroBased,
+              state.syntaxHighlights,
+            );
+
+          let shouldCheckCompletion =
+            isComment
+            && suggestEnabled.comments
+            || isString
+            && suggestEnabled.strings
+            || suggestEnabled.other;
+
+          if (shouldCheckCompletion) {
+            CompletionMeet.fromBufferLocation(~location, buffer);
+          } else {
+            None;
+          };
+        },
       );
 
     switch (maybeBuffer, maybeMeet) {
@@ -133,12 +156,12 @@ let start = () => {
     fun
     | Command("acceptSelectedSuggestion") => Actions.applyCompletion(state)
 
-    | ChangeMode(mode) when mode == Vim.Types.Insert =>
+    | ModeChanged(mode) when mode == Vim.Types.Insert =>
       Actions.checkCompletionMeet(state)
 
-    | ChangeMode(mode) when mode != Vim.Types.Insert => Actions.stop(state)
+    | ModeChanged(mode) when mode != Vim.Types.Insert => Actions.stop(state)
 
-    | EditorCursorMove(_) when state.mode == Vim.Types.Insert =>
+    | EditorCursorMove(_) when state.vimMode == Vim.Types.Insert =>
       Actions.checkCompletionMeet(state)
 
     | CompletionAddItems(_meet, items) =>

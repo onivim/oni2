@@ -11,9 +11,18 @@
  */
 
 [@deriving show({with_path: false})]
+type terminal = {
+  title: string,
+  id: int,
+  insertMode: bool,
+};
+
+[@deriving show({with_path: false})]
 type t =
   | Editor
-  | Welcome;
+  | Welcome
+  | Version
+  | Terminal(terminal);
 
 [@deriving show({with_path: false})]
 type action =

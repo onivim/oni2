@@ -18,6 +18,8 @@ let getLanguageFromBuffer: (t, Buffer.t) => string;
 let getScopeFromLanguage: (t, string) => option(string);
 let getScopeFromExtension: (t, string) => option(string);
 
+let getLanguageConfigurationPath: (t, string) => option(string);
+
 let getGrammarPathFromScope: (t, string) => option(string);
 let getTreesitterPathFromScope: (t, string) => option(string);
 

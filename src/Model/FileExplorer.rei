@@ -1,20 +1,22 @@
+open Oni_Core;
 open Oni_Extensions;
 
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,
-  scrollOffset: [ | `Start(float) | `Middle(float)],
+  scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
-  focus: option(string) // path
+  focus: option(string), // path
+  decorations: StringMap.t(list(Decoration.t)),
 };
 
 [@deriving show]
 type action =
-  | TreeLoaded([@opaque] FsTreeNode.t)
-  | NodeLoaded(string, [@opaque] FsTreeNode.t)
-  | FocusNodeLoaded(string, [@opaque] FsTreeNode.t)
-  | NodeClicked([@opaque] FsTreeNode.t)
-  | ScrollOffsetChanged([ | `Start(float) | `Middle(float)])
+  | TreeLoaded(FsTreeNode.t)
+  | NodeLoaded(FsTreeNode.t)
+  | FocusNodeLoaded(FsTreeNode.t)
+  | NodeClicked(FsTreeNode.t)
+  | ScrollOffsetChanged([ | `Start(float) | `Middle(float) | `Reveal(int)])
   | KeyboardInput(string);
 
 let initial: t;

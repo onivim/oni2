@@ -27,6 +27,8 @@ let spec =
       " Stay attached to the foreground terminal.",
     ),
     ("--debug", passthrough, " Enable debug logging."),
+    ("--trace", passthrough, " Enable trace logging."),
+    ("--quiet", passthrough, " Print only error log messages."),
     ("--log-file", passthroughString, " Specify a file for the output logs."),
     ("--log-filter", passthroughString, " Filter log output."),
     (
@@ -81,7 +83,7 @@ let spec =
   ]);
 
 let usage = {|
-Onivim 2 0.2.0
+Onivim 2
 
 Usage:
 

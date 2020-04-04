@@ -13,7 +13,8 @@ module Model = Oni_Model;
 
 module Window = WindowManager;
 
-module List = Utility.List;
+module Colors = Feature_Theme.Colors;
+module EditorSurface = Feature_Editor.EditorSurface;
 
 let noop = () => ();
 
@@ -29,21 +30,16 @@ let editorViewStyle = (background, foreground) =>
     flexDirection(`Column),
   ];
 
-let truncateFilepath = path =>
-  switch (path) {
-  | Some(p) => Filename.basename(p)
-  | None => "untitled"
-  };
-
 let getBufferMetadata = (buffer: option(Buffer.t)) => {
   switch (buffer) {
-  | None => (false, "untitled")
+  | None => (false, "untitled", "untitled")
   | Some(v) =>
-    let filePath = Buffer.getFilePath(v);
+    let filePath =
+      Buffer.getFilePath(v) |> Option.value(~default="untitled");
     let modified = Buffer.isModified(v);
 
-    let title = filePath |> truncateFilepath;
-    (modified, title);
+    let title = filePath |> Filename.basename;
+    (modified, title, filePath);
   };
 };
 
@@ -57,13 +53,14 @@ let toUiTabs =
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
     | Some(v) =>
-      let (modified, title) =
+      let (modified, title, filePath) =
         Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
 
       let renderer = Model.BufferRenderers.getById(v.bufferId, renderers);
 
       let ret: Tabs.tabInfo = {
         editorId: v.editorId,
+        filePath,
         title,
         modified,
         renderer,
@@ -76,10 +73,14 @@ let toUiTabs =
 };
 
 let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
-  let theme = state.theme;
-  let mode = state.mode;
+  let theme = Feature_Theme.resolver(state.colorTheme);
+  let mode = state.vimMode;
 
-  let style = editorViewStyle(theme.background, theme.foreground);
+  let style =
+    editorViewStyle(
+      Colors.Editor.background.from(theme),
+      Colors.foreground.from(theme),
+    );
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -107,6 +108,16 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
       );
     };
 
+  let onDimensionsChanged =
+      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
+    let height = showTabs ? height - Constants.tabHeight : height;
+    let height = max(height, 0); // BUGFIX: #1525
+
+    GlobalContext.current().dispatch(
+      EditorGroupSizeChanged({id: editorGroup.editorGroupId, width, height}),
+    );
+  };
+
   let children = {
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
     let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
@@ -116,18 +127,92 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
+        let onScroll = deltaY => {
+          let () =
+            GlobalContext.current().editorScrollDelta(
+              ~editorId=editor.editorId,
+              ~deltaY,
+              (),
+            );
+          ();
+        };
+        let onCursorChange = cursor =>
+          GlobalContext.current().dispatch(
+            Actions.EditorCursorMove(editor.editorId, [cursor]),
+          );
         let renderer =
           BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
         switch (renderer) {
-        | BufferRenderer.Editor =>
+        | BufferRenderer.Terminal({insertMode, _}) when !insertMode =>
+          let buffer =
+            Selectors.getBufferForEditor(state, editor)
+            |> Option.value(~default=Buffer.initial);
+
+          let defaultTerminalBackground =
+            Feature_Terminal.defaultBackground(theme);
+          let defaultTerminalForeground =
+            Feature_Terminal.defaultForeground(theme);
+
           <EditorSurface
+            backgroundColor=defaultTerminalBackground
+            foregroundColor=defaultTerminalForeground
+            showDiffMarkers=false
             isActiveSplit=isActive
-            editorGroup
             metrics
             editor
-            state
-          />
+            buffer
+            onCursorChange
+            onDimensionsChanged={_ => ()}
+            onScroll
+            theme
+            mode
+            bufferHighlights={state.bufferHighlights}
+            bufferSyntaxHighlights={state.syntaxHighlights}
+            diagnostics={state.diagnostics}
+            completions={state.completions}
+            tokenTheme={state.tokenTheme}
+            definition={state.definition}
+            windowIsFocused={state.windowIsFocused}
+            config={Feature_Configuration.resolver(state.config)}
+          />;
+        | BufferRenderer.Editor =>
+          let buffer =
+            Selectors.getBufferForEditor(state, editor)
+            |> Option.value(~default=Buffer.initial);
+
+          <EditorSurface
+            isActiveSplit=isActive
+            metrics
+            editor
+            buffer
+            onCursorChange
+            onDimensionsChanged={_ => ()}
+            onScroll
+            theme
+            mode
+            bufferHighlights={state.bufferHighlights}
+            bufferSyntaxHighlights={state.syntaxHighlights}
+            diagnostics={state.diagnostics}
+            completions={state.completions}
+            tokenTheme={state.tokenTheme}
+            definition={state.definition}
+            windowIsFocused={state.windowIsFocused}
+            config={Feature_Configuration.resolver(state.config)}
+          />;
         | BufferRenderer.Welcome => <WelcomeView state />
+        | BufferRenderer.Version => <VersionView state />
+        | BufferRenderer.Terminal({id, _}) =>
+          state.terminals
+          |> Feature_Terminal.getTerminalOpt(id)
+          |> Option.map(terminal => {
+               <TerminalView
+                 theme
+                 font={state.terminalFont}
+                 metrics
+                 terminal
+               />
+             })
+          |> Option.value(~default=React.empty)
         };
       | None => React.empty
       };
@@ -143,6 +228,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
           tabs
           mode
           uiFont
+          languageInfo={state.languageInfo}
+          iconTheme={state.iconTheme}
         />,
         editorView,
       ])
@@ -156,7 +243,7 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
     );
   };
 
-  <View onMouseDown style>
+  <View onMouseDown style onDimensionsChanged>
     <View style=absoluteStyle> children </View>
     <View style=overlayStyle />
   </View>;

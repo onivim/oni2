@@ -45,36 +45,50 @@ let configurationWatcher =
 let start = (themeInfo: ThemeInfo.t) => {
   Log.info(ThemeInfo.show(themeInfo));
 
-  let loadThemeByPath = (uiTheme, themePath, dispatch) => {
-    Oni_Core.Log.perf("theme.load", () => {
-      let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
-      let theme = Textmate.Theme.from_file(~isDark=dark, themePath);
-      let colors = Textmate.Theme.getColors(theme);
-      let isDark = Textmate.Theme.isDark(theme);
-      let tokenColors = Textmate.Theme.getTokenColors(theme);
-      let colors = Oni_Core.Theme.ofColorTheme(uiTheme, colors);
-      let tokenTheme = TokenTheme.create(tokenColors);
+  let loadThemeByPathEffect = (uiTheme, themePath) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="theme.loadThemeByPath", dispatch => {
+      Oni_Core.Log.perf("theme.load", () => {
+        let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
 
-      dispatch(Actions.SetColorTheme(colors));
-      dispatch(Actions.DarkModeSet(isDark));
-      dispatch(Actions.SetTokenTheme(tokenTheme));
+        themePath
+        |> Textmate.Theme.from_file(~isDark=dark)
+        |> Utility.ResultEx.tapError(err => {
+             dispatch(Actions.ThemeLoadError(err))
+           })
+        |> Result.iter(theme => {
+             let colors = Textmate.Theme.getColors(theme);
+             let isDark = Textmate.Theme.isDark(theme);
+
+             dispatch(
+               Actions.Theme(
+                 Feature_Theme.TextmateThemeLoaded(
+                   isDark ? ColorTheme.Dark : ColorTheme.Light,
+                   colors,
+                 ),
+               ),
+             );
+
+             let tokenColors = Textmate.Theme.getTokenColors(theme);
+             let colors = Oni_Core.Theme.ofColorTheme(uiTheme, colors);
+             let tokenTheme = TokenTheme.create(tokenColors);
+
+             dispatch(Actions.ThemeLoaded({colors, isDark, tokenTheme}));
+           });
+      })
     });
-  };
 
-  let loadThemeByName = (themeName, dispatch) => {
+  let loadThemeByNameEffect = themeName => {
     let themeInfo = ThemeInfo.getThemeByName(themeInfo, themeName);
 
     switch (themeInfo) {
-    | Some({uiTheme, path, _}) => loadThemeByPath(uiTheme, path, dispatch)
+    | Some({uiTheme, path, _}) => loadThemeByPathEffect(uiTheme, path)
     | None =>
-      dispatch(
-        Actions.ShowNotification(
-          Notification.create(
-            ~kind=Error,
-            "Unable to find theme: " ++ themeName,
-          ),
-        ),
+      Feature_Notification.Effects.create(
+        ~kind=Error,
+        "Unable to find theme: " ++ themeName,
       )
+      |> Isolinear.Effect.map(msg => Actions.Notification(msg))
     };
   };
 
@@ -91,20 +105,8 @@ let start = (themeInfo: ThemeInfo.t) => {
       )
     );
 
-  let loadThemeByPathEffect = (uiTheme, themePath) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="theme.loadThemeByPath", dispatch =>
-      loadThemeByPath(uiTheme, themePath, dispatch)
-    );
-
-  let loadThemeByNameEffect = name =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="theme.loadThemeByName", dispatch =>
-      loadThemeByName(name, dispatch)
-    );
-
   let onChanged = (newTheme, dispatch) =>
-    loadThemeByName(newTheme, dispatch);
+    dispatch(Actions.ThemeChanged(newTheme));
   let withWatcher =
     configurationWatcher(c => c.workbenchColorTheme, onChanged);
 
@@ -133,6 +135,13 @@ let start = (themeInfo: ThemeInfo.t) => {
         ]),
       )
 
+    | ThemeChanged(name) => (state, loadThemeByNameEffect(name))
+
+    | Actions.ThemeLoadError(errorMsg) => (
+        state,
+        Feature_Notification.Effects.create(~kind=Error, errorMsg)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

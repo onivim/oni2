@@ -10,13 +10,13 @@ runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   dispatch(KeyboardInput("i"));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    state.mode == Vim.Types.Insert
+    state.vimMode == Vim.Types.Insert
   );
 
   setClipboard(None);
@@ -32,7 +32,7 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line = Buffer.getLine(buf, 0);
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "AB");
     }

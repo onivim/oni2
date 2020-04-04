@@ -2,6 +2,7 @@
   "docs": {
     "Getting Started": [
       "getting-started/why-onivim",
+      "getting-started/installation",
       "getting-started/vim-differences",
       "getting-started/modal-editing-101"
     ],
@@ -20,7 +21,8 @@
     "For Developers": [
       "for-developers/architecture",
       "for-developers/building",
-      "for-developers/contributing"
+      "for-developers/contributing",
+      "for-developers/style-guide"
     ],
     "Other": [
       "other/faq",

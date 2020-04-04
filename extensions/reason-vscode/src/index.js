@@ -4,42 +4,14 @@
  * ------------------------------------------------------------------------------------------ */
 'use strict';
 const vscode = require("vscode");
-const {Uri} = vscode;
+const {Uri, window} = vscode;
 const {LanguageClient, RevealOutputChannelOn} = require("vscode-languageclient");
 const {TextDocument} = require('vscode-languageserver-types');
 const path = require('path')
 const fs = require('fs')
+const cp = require('child_process');
 
-const getLocation = (context) => {
-    let binaryLocation = vscode.workspace.getConfiguration('reason_language_server').get('location')
-
-    if (!binaryLocation) {
-        // see if it's bundled with the extension
-        // hmm actually I could bundle one for each platform & probably be fine
-        // I guess it's 9mb binary. I wonder if I can cut that down?
-        const ext = process.platform === 'win32'
-            ? '.exe'
-            : (process.platform === 'linux' ? '.linux' : '');
-
-        binaryLocation = path.join(vscode.workspace.rootPath, 'node_modules', '@jaredly', 'reason-language-server', 'lib', 'bs', 'native', 'bin.native' + ext)
-        if (!fs.existsSync(binaryLocation)) {
-            binaryLocation = context.asAbsolutePath('bin.native' + ext)
-            if (!fs.existsSync(binaryLocation)) {
-                vscode.window.showErrorMessage('Reason Language Server not found! Please install the npm package @jaredly/reason-language-server to enable IDE functionality');
-                return null
-            }
-        }
-    } else {
-        if (!binaryLocation.startsWith('/')) {
-            binaryLocation = path.join(vscode.workspace.rootPath, binaryLocation)
-        }
-        if (!fs.existsSync(binaryLocation)) {
-            vscode.window.showErrorMessage('Reason Language Server not found! You specified ' + binaryLocation);
-            return null
-        }
-    }
-    return binaryLocation
-}
+const isWindows = process.platform == "win32";
 
 const shouldReload = () => vscode.workspace.getConfiguration('reason_language_server').get('reloadOnChange')
 
@@ -106,6 +78,87 @@ function activate(context) {
     let client = null
     let lastStartTime = null
     let interval = null
+    let channel = window.createOutputChannel("reason-vscode");
+    context.subscriptions.push(channel);
+
+    let log = (msg) => channel.appendLine(msg);
+
+    const validatePath = (pathToValidate) => {
+        if (!pathToValidate) {
+            return null;
+        }
+
+        if (!path.isAbsolute(pathToValidate)) {
+            pathToValidate = path.join(vscode.workspace.rootPath, pathToValidate);
+        }
+
+        if (!fs.existsSync(pathToValidate)) {
+            return null;
+        }
+
+        return pathToValidate;
+    };
+
+    const isEsyProject = (projectPath) => {
+        const files = fs.readdirSync(projectPath);
+
+        let filtered = files.filter((file) => {
+            return file == "dune" || file == "dune-project" || path.extname(file) == ".opam" || file == "esy.lock"
+        });
+        // We assume if there is an OPAM file or a dune file, this must be a native project.
+        const result = filtered.length > 0;
+        log(`isEsyProject(${projectPath}): ${result}`);
+        return result;
+    };
+
+    const isEsyAvailable = (projectPath) => {
+        try {
+            cp.execSync("esy --version", { cwd: projectPath });
+            return true;
+        } catch (ex) {
+            log("Unable to get esy version: " + ex.toString());
+            return false;
+        }
+    };
+
+    const addExe = (filePath) => 
+        isWindows ? filePath + ".exe" : filePath;
+
+    const addCmd = (filePath) => 
+        isWindows ? filePath + ".cmd" : filePath;
+
+    const getOcamlLspPath = (projectPath) => {
+        try {
+           let ocamlLspDirectory = cp.execSync("esy -q sh -c \"echo #{@opam/ocaml-lsp-server.bin}\"", { cwd: projectPath })
+           .toString()
+           .trim();
+            return path.join(ocamlLspDirectory, addExe("ocamllsp"));
+        } catch (ex) {
+            log("Unable to get ocaml-lsp-server binary: " + ex.toString());
+            return null;
+        }
+    };
+
+    const getLocation = (_context) => {
+        let rlsBinaryLocation = validatePath(vscode.workspace.getConfiguration('reason_language_server').get('location'));
+
+        const projectPath = vscode.workspace.rootPath;
+        if (isEsyAvailable(projectPath) && isEsyProject(projectPath)) {
+            // Let's see if ocaml-lsp-server is available
+            log("Found esy. Looking to see if ocaml-lsp-server is available...")
+            const ocamlLspPath = getOcamlLspPath(projectPath);
+            if (ocamlLspPath) {
+                log('Got ocaml LSP binary: ' + ocamlLspPath);
+                return [addCmd("esy"), [ocamlLspPath]];
+            } else {
+                log("ocaml-lsp not found, falling back to RLS: " + rlsBinaryLocation);
+                return [rlsBinaryLocation, null]
+            }
+        } else {
+            log("Esy not found, falling back to RLS: " + rlsBinaryLocation);
+            return [rlsBinaryLocation, null];
+        }
+    }
 
     const startChecking = (location) => {
         vscode.window.showInformationMessage('DEBUG MODE: Will auto-restart the reason language server if it recompiles');
@@ -137,18 +190,16 @@ function activate(context) {
         if (client) {
             client.stop();
         }
-        const location = getLocation(context)
-        if (!location) return
-        const binLocation = process.platform === 'win32' ? location + '.hot.exe' : location
-        if (binLocation != location) {
-            fs.writeFileSync(binLocation, fs.readFileSync(location))
-        }
+        const [command, args] = getLocation(context)
+        if (!command) return
+
+        vscode.window.showInformationMessage(`Starting language server: ${command} | ${args}`);
         client = new LanguageClient(
             'reason-language-server',
             'Reason Language Server',
             {
-                command: binLocation,
-                args: [],
+                command,
+                args,
             },
             Object.assign({}, clientOptions, {
                 revealOutputChannelOn: vscode.workspace.getConfiguration('reason_language_server').get('show_debug_errors')
@@ -174,7 +225,12 @@ function activate(context) {
         if (evt.affectsConfiguration('reason_language_server.location')) {
             restart()
         }
-    })
+    });
+
+    vscode.workspace.onDidChangeWorkspaceFolders(_evt => {
+        log('Workspace root changed:' + vscode.workspace.rootPath);
+        restart(); 
+    });
 
     vscode.commands.registerCommand('reason-language-server.restart', restart);
 
@@ -273,6 +329,24 @@ function activate(context) {
     };
 
     vscode.commands.registerCommand('reason-language-server.show_ppxed_source', showPpxedSource);
+
+    vscode.commands.registerCommand('reason-language-server.dump_file_data', () => {
+        if (!client) {
+            return vscode.window.showInformationMessage('Language server not running');
+        }
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return vscode.window.showInformationMessage('No active editor');
+        }
+        if (editor.document.languageId !== 'ocaml' && editor.document.languageId !== 'reason') {
+            return vscode.window.showInformationMessage('Not an OCaml or Reason file');
+        }
+        client.sendRequest("custom:reasonLanguageServer/dumpFileData", {
+            "textDocument": {
+                "uri": editor.document.uri.with({scheme: 'file'}).toString(),
+            },
+        })
+    });
 
     const showAst = () => {
         if (!client) {

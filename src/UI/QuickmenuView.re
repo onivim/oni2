@@ -2,6 +2,7 @@ open Revery;
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
+open Oni_Components;
 
 module Constants = {
   let menuWidth = 400;
@@ -24,20 +25,17 @@ module Styles = {
     backgroundColor(Color.rgba(0., 0., 0., 0.3)),
     color(Colors.white),
     fontFamily(font),
-    fontSize(14),
+    fontSize(14.),
   ];
 
   let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
 
-  let menuItem = [fontSize(14), cursor(Revery.MouseCursors.pointer)];
+  let menuItem = [fontSize(14.), cursor(Revery.MouseCursors.pointer)];
 
-  let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted, ~isFocused) => [
-    fontFamily(font.fontFile),
+  let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted) => [
+    fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
     textOverflow(`Ellipsis),
-    fontSize(12),
-    backgroundColor(
-      isFocused ? theme.menuSelectionBackground : theme.menuBackground,
-    ),
+    fontSize(12.),
     color(highlighted ? theme.oniNormalModeBackground : theme.menuForeground),
     textWrap(TextWrapping.NoWrap),
   ];
@@ -55,8 +53,8 @@ module Styles = {
 let onFocusedChange = index =>
   GlobalContext.current().dispatch(ListFocus(index));
 
-let onInputClicked = cursorPosition =>
-  GlobalContext.current().dispatch(QuickmenuInputClicked(cursorPosition));
+let onInputClicked = selection =>
+  GlobalContext.current().dispatch(QuickmenuInputClicked(selection));
 
 let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
@@ -109,7 +107,7 @@ let make =
         ripgrepProgress,
         focused,
         query,
-        cursorPosition,
+        selection,
         prefix,
         variant,
         _,
@@ -134,7 +132,7 @@ let make =
     let item = items[index];
     let isFocused = Some(index) == focused;
 
-    let style = Styles.label(~font, ~theme, ~isFocused);
+    let style = Styles.label(~font, ~theme);
     let text = Quickmenu.getLabel(item);
     let highlights = item.highlight;
     let normalStyle = style(~highlighted=false);
@@ -148,6 +146,7 @@ let make =
       style=Styles.menuItem
       label={`Custom(labelView)}
       icon={item.icon}
+      font
       onMouseOver={() => onFocusedChange(index)}
       isFocused
     />;
@@ -155,7 +154,7 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <OniInput
+      <Input
         placeholder
         ?prefix
         cursorColor=Colors.white
@@ -163,7 +162,7 @@ let make =
         isFocused=true
         onClick=onInputClicked
         value=query
-        cursorPosition
+        selection
       />
     </View>;
 
@@ -186,7 +185,10 @@ let make =
          | EditorsPicker => React.empty
          | _ => <input />
          }}
-        <dropdown />
+        {switch (variant) {
+         | Wildmenu(SearchForward | SearchReverse) => React.empty
+         | _ => <dropdown />
+         }}
       </View>
     </OniBoxShadow>
   </AllowPointer>;

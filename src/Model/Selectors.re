@@ -8,6 +8,7 @@ open Oni_Core;
 open Oni_Core.Utility;
 
 module Ext = Oni_Extensions;
+module Editor = Feature_Editor.Editor;
 
 let getActiveEditorGroup = (state: State.t) => {
   EditorGroups.getActiveEditorGroup(state.editorGroups);
@@ -50,7 +51,7 @@ let getActiveBuffer = (state: State.t) => {
 let withActiveBufferAndFileType = (state: State.t, f) => {
   let () =
     getActiveBuffer(state)
-    |> Option.bind(buf =>
+    |> OptionEx.flatMap(buf =>
          Buffer.getFileType(buf) |> Option.map(ft => (buf, ft))
        )
     |> Option.iter(((buf, ft)) => f(buf, ft));
@@ -66,3 +67,26 @@ let getActiveConfigurationValue = (state: State.t, f) => {
     Configuration.getValue(~fileType, f, state.configuration);
   };
 };
+
+let getActiveTerminal = (state: State.t) => {
+  state
+  // See if terminal has focus
+  |> getActiveBuffer
+  |> Option.map(Oni_Core.Buffer.getId)
+  |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
+  |> OptionEx.flatMap(renderer =>
+       switch (renderer) {
+       | BufferRenderer.Terminal(terminal) => Some(terminal)
+       | _ => None
+       }
+     );
+};
+
+let getActiveTerminalId = (state: State.t) => {
+  state
+  |> getActiveTerminal
+  |> Option.map(({id, _}: BufferRenderer.terminal) => id);
+};
+
+let terminalIsActive = (state: State.t) =>
+  getActiveTerminalId(state) != None;

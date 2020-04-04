@@ -1,10 +1,10 @@
 module Core = Oni_Core;
 module Utility = Core.Utility;
-module Option = Utility.Option;
 
 module Model = Oni_Model;
 module Store = Oni_Store;
 module Log = (val Core.Log.withNamespace("IntegrationTest"));
+module InitLog = (val Core.Log.withNamespace("IntegrationTest.Init"));
 module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
 
@@ -20,15 +20,12 @@ let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
 
 let setTime = v => _currentTime := v;
-let getTime = () => _currentTime^;
 
 let setTitle = title => _currentTitle := title;
 let getTitle = () => _currentTitle^;
 
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
-
-let getScaleFactor = () => 1.0;
 
 let setVsync = vsync => _currentVsync := vsync;
 
@@ -49,12 +46,16 @@ let getAssetPath = path =>
     raise(TestAssetNotFound(path));
   };
 
+let currentUserSettings = ref(Core.Config.Settings.empty);
+let setUserSettings = settings => currentUserSettings := settings;
+
 let runTest =
     (
       ~configuration=None,
+      ~keybindings=None,
       ~cliOptions=None,
       ~name="AnonymousTest",
-      ~onAfterDispatch=Utility.noop1,
+      ~onAfterDispatch=_ => (),
       test: testCallback,
     ) => {
   // Disable colors on windows to prevent hanging on CI
@@ -62,61 +63,90 @@ let runTest =
     Timber.App.disableColors();
   };
 
-  Printexc.record_backtrace(true);
-  Timber.App.enablePrinting();
-  Timber.App.enableDebugLogging();
+  Revery.App.initConsole();
+
+  Core.Log.enableDebug();
+  Timber.App.enable();
+  Timber.App.setLevel(Timber.Level.trace);
 
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
 
-  let initialState = Model.State.create();
-  let currentState = ref(initialState);
+  currentUserSettings :=
+    (
+      switch (configuration) {
+      | Some(json) =>
+        json |> Yojson.Safe.from_string |> Core.Config.Settings.fromJson
+      | None => Core.Config.Settings.empty
+      }
+    );
 
-  let onStateChanged = v => {
-    currentState := v;
+  let getUserSettings = () => Ok(currentUserSettings^);
+
+  let currentState = ref(Model.State.initial(~getUserSettings));
+
+  let headlessWindow =
+    Revery.Utility.HeadlessWindow.create(
+      Revery.WindowCreateOptions.create(~width=3440, ~height=1440, ()),
+    );
+
+  let onStateChanged = state => {
+    currentState := state;
+
+    Revery.Utility.HeadlessWindow.render(
+      headlessWindow,
+      <Oni_UI.Root state />,
+    );
   };
 
-  let logInit = s => Log.debug("[INITIALIZATION] " ++ s);
+  InitLog.info("Starting store...");
 
-  logInit("Starting store...");
+  let writeConfigurationFile = (name, jsonStringOpt) => {
+    let tempFilePath = Filename.temp_file(name, ".json");
+    let oc = open_out(tempFilePath);
 
-  let configurationFilePath = Filename.temp_file("configuration", ".json");
-  let oc = open_out(configurationFilePath);
+    InitLog.info("Writing configuration file: " ++ tempFilePath);
 
-  logInit("Writing configuration file: " ++ configurationFilePath);
+    let () =
+      jsonStringOpt
+      |> Option.value(~default="{}")
+      |> Printf.fprintf(oc, "%s\n");
 
-  let () =
-    configuration
-    |> Option.value(~default="{}")
-    |> Printf.fprintf(oc, "%s\n");
+    close_out(oc);
+    tempFilePath;
+  };
 
-  close_out(oc);
+  let configurationFilePath =
+    writeConfigurationFile("configuration", configuration);
+  let keybindingsFilePath =
+    writeConfigurationFile("keybindings", keybindings);
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
+      ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~getScaleFactor,
-      ~getTime,
       ~setTitle,
       ~getZoom,
       ~setZoom,
       ~setVsync,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
+      ~getState=() => currentState^,
       ~onStateChanged,
       ~cliOptions,
       ~configurationFilePath=Some(configurationFilePath),
+      ~keybindingsFilePath=Some(keybindingsFilePath),
       ~quit,
       ~window=None,
       (),
     );
 
-  logInit("Store started!");
+  InitLog.info("Store started!");
 
-  logInit("Sending init event");
+  InitLog.info("Sending init event");
 
   dispatch(Model.Actions.Init);
 
@@ -171,9 +201,18 @@ let runTest =
   dispatch(Model.Actions.Quit(true));
 };
 
-let runTestWithInput = (~name, ~onAfterDispatch=?, f: testCallbackWithInput) => {
+let runTestWithInput =
+    (
+      ~configuration=?,
+      ~keybindings=?,
+      ~name,
+      ~onAfterDispatch=?,
+      f: testCallbackWithInput,
+    ) => {
   runTest(
     ~name,
+    ~configuration?,
+    ~keybindings?,
     ~onAfterDispatch?,
     (dispatch, wait, runEffects) => {
       let input = key => {

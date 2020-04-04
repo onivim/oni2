@@ -4,4 +4,4 @@
  *
  */
 
-include Zed_utf8.Make(CamomileBundled.Camomile);
+include Zed_utf8;

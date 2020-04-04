@@ -1,8 +1,180 @@
+module Core = Oni_Core;
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
-module Core = Oni_Core;
 
 type t;
+
+// SCM
+
+module SCM: {
+  // MODEL
+
+  [@deriving show]
+  type command = {
+    id: string,
+    title: string,
+    tooltip: option(string),
+    arguments: list(Core.Json.t),
+  };
+
+  module Resource: {
+    [@deriving show]
+    type t = {
+      handle: int,
+      uri: Core.Uri.t,
+      icons: list(string),
+      tooltip: string,
+      strikeThrough: bool,
+      faded: bool,
+      source: option(string),
+      letter: option(string),
+      color: option(string),
+    };
+  };
+
+  module ResourceGroup: {
+    [@deriving show]
+    type t = {
+      handle: int,
+      id: string,
+      label: string,
+      hideWhenEmpty: bool,
+      resources: list(Resource.t),
+    };
+  };
+
+  module Provider: {
+    [@deriving show]
+    type t = {
+      handle: int,
+      id: string,
+      label: string,
+      rootUri: option(Core.Uri.t),
+      resourceGroups: list(ResourceGroup.t),
+      hasQuickDiffProvider: bool,
+      count: int,
+      commitTemplate: string,
+      acceptInputCommand: option(command),
+    };
+  };
+
+  // UPDATE
+
+  type msg =
+    | RegisterSourceControl({
+        handle: int,
+        id: string,
+        label: string,
+        rootUri: option(Core.Uri.t),
+      })
+    | UnregisterSourceControl({handle: int})
+    | UpdateSourceControl({
+        handle: int,
+        hasQuickDiffProvider: option(bool),
+        count: option(int),
+        commitTemplate: option(string),
+        acceptInputCommand: option(command),
+      })
+    // statusBarCommands: option(_),
+    | RegisterSCMResourceGroup({
+        provider: int,
+        handle: int,
+        id: string,
+        label: string,
+      })
+    | UnregisterSCMResourceGroup({
+        provider: int,
+        handle: int,
+      })
+    | SpliceSCMResourceStates({
+        provider: int,
+        group: int,
+        start: int,
+        deleteCount: int,
+        additions: list(Resource.t),
+      });
+
+  let handleMessage:
+    (~dispatch: msg => unit, string, list(Core.Json.t)) => unit;
+
+  // EFFECTS
+
+  module Effects: {
+    let provideOriginalResource:
+      (t, list(Provider.t), string, Core.Uri.t => 'msg) =>
+      Isolinear.Effect.t('msg);
+
+    let onInputBoxValueChange:
+      (t, Provider.t, string) => Isolinear.Effect.t(_);
+  };
+};
+
+// SCM
+
+module Terminal: {
+  // MODEL
+
+  module ShellLaunchConfig: {
+    [@deriving show({with_path: false})]
+    type t = {
+      name: string,
+      executable: string,
+      arguments: list(string),
+    };
+  };
+
+  type msg =
+    | SendProcessTitle({
+        terminalId: int,
+        title: string,
+      })
+    | SendProcessData({
+        terminalId: int,
+        data: string,
+      })
+    | SendProcessPid({
+        terminalId: int,
+        pid: int,
+      })
+    | SendProcessExit({
+        terminalId: int,
+        exitCode: int,
+      });
+
+  module Requests: {
+    let createProcess:
+      (int, ShellLaunchConfig.t, Core.Uri.t, int, int, t) => unit;
+
+    let acceptProcessResize: (int, int, int, t) => unit;
+
+    let acceptProcessInput: (int, string, t) => unit;
+
+    let acceptProcessShutdown: (~immediate: bool=?, int, t) => unit;
+  };
+};
+
+type msg =
+  | SCM(SCM.msg)
+  | Terminal(Terminal.msg)
+  | ShowMessage({
+      severity: [ | `Ignore | `Info | `Warning | `Error],
+      message: string,
+      extensionId: option(string),
+    })
+  | RegisterTextContentProvider({
+      handle: int,
+      scheme: string,
+    })
+  | UnregisterTextContentProvider({handle: int})
+  | RegisterDecorationProvider({
+      handle: int,
+      label: string,
+    })
+  | UnregisterDecorationProvider({handle: int})
+  | DecorationsDidChange({
+      handle: int,
+      uris: list(Core.Uri.t),
+    });
 
 type unitCallback = unit => unit;
 
@@ -31,20 +203,23 @@ let start:
                                          =?,
     ~onRegisterReferencesProvider: (t, Protocol.BasicProvider.t) => unit=?,
     ~onRegisterSuggestProvider: (t, Protocol.SuggestProvider.t) => unit=?,
-    ~onShowMessage: string => unit=?,
     ~onStatusBarSetEntry: ((int, string, int, int)) => unit,
+    ~dispatch: msg => unit,
     Core.Setup.t
   ) =>
   t;
 let activateByEvent: (string, t) => unit;
-let executeContributedCommand: (string, t) => unit;
+let executeContributedCommand:
+  (~arguments: list(Core.Json.t)=?, string, t) => unit;
 let acceptWorkspaceData: (Workspace.t, t) => unit;
 let addDocument: (Protocol.ModelAddedDelta.t, t) => unit;
 let updateDocument:
-  (Core.Uri.t, Protocol.ModelChangedEvent.t, bool, t) => unit;
+  (Core.Uri.t, Protocol.ModelChangedEvent.t, ~dirty: bool, t) => unit;
 let provideCompletions:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(option(list(Protocol.SuggestionItem.t)));
+let provideDecorations:
+  (int, Core.Uri.t, t) => Lwt.t(list(Core.Decoration.t));
 let provideDefinition:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(Protocol.DefinitionLink.t);
@@ -56,5 +231,18 @@ let provideDocumentSymbols:
 let provideReferences:
   (int, Core.Uri.t, Protocol.OneBasedPosition.t, t) =>
   Lwt.t(list(LocationWithUri.t));
+let provideTextDocumentContent: (int, Core.Uri.t, t) => Lwt.t(string);
+let acceptConfigurationChanged:
+  (Configuration.t, ~changed: Configuration.Model.t, t) => unit;
 let send: (t, Yojson.Safe.t) => unit;
 let close: t => unit;
+
+// EFFECTS
+
+module Effects: {
+  let executeContributedCommand:
+    (t, ~arguments: list(Core.Json.t)=?, string) => Isolinear.Effect.t(_);
+  let acceptConfigurationChanged:
+    (t, Configuration.t, ~changed: Configuration.Model.t) =>
+    Isolinear.Effect.t(_);
+};

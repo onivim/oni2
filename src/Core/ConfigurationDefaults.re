@@ -28,7 +28,7 @@ let getDefaultConfigString = configName =>
   "editor.tabSize": 4,
   "editor.zenMode.hideTabs": true,
   "editor.zenMode.singleFile": true,
-  "files.exclude": ["_esy", "node_modules"],
+  "files.exclude": ["_esy", "node_modules", ".git"],
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
   "workbench.iconTheme": "vs-seti",
@@ -45,8 +45,9 @@ let getDefaultConfigString = configName =>
 [
   // See the onivim documentation for details on the format:
   // https://onivim.github.io/docs/configuration/key-bindings
-  // Add key bindings here, ie:
+  // Add key bindings here, for example:
   // { "key": "<TAB>", "command": "workbench.action.quickOpen", when: "editorTextFocus" },
+  // { "key": "jk", "command": "vim.esc", when: "insertMode" },
 ]
 |},
     )

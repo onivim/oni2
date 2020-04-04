@@ -1,53 +1,33 @@
-open Oni_Core;
+type keybinding = {
+  key: string,
+  command: string,
+  condition: WhenExpr.t,
+};
 
-module List = Utility.List;
-module Result = Utility.Result;
+module Json = Oni_Core.Json;
 
 module Keybinding = {
-  type t = {
-    key: string,
-    command: string,
-    condition: Expression.t,
-  };
+  type t = keybinding;
 
-  let parseAndExpression = (json: Yojson.Safe.t) =>
-    switch (json) {
-    | `String(expr) => Expression.Variable(expr)
+  let parseSimple =
+    fun
+    | `String(s) => WhenExpr.Defined(s)
+    | _ => WhenExpr.Value(False);
+
+  let parseAndExpression =
+    fun
+    | `String(expr) => WhenExpr.Defined(expr)
     | `List(andExpressions) =>
-      List.fold_left(
-        (acc, curr) => {
-          let result =
-            switch (curr) {
-            | `String(expr) => Expression.Variable(expr)
-            | _ => Expression.False
-            };
-          Expression.And(result, acc);
-        },
-        Expression.True,
-        andExpressions,
-      )
-    | _ => Expression.False
-    };
+      WhenExpr.And(List.map(parseSimple, andExpressions))
+    | _ => WhenExpr.Value(False);
 
-  let condition_of_yojson = (json: Yojson.Safe.t) => {
-    switch (json) {
+  let condition_of_yojson =
+    fun
     | `List(orExpressions) =>
-      Ok(
-        List.fold_left(
-          (acc, curr) => {Expression.Or(parseAndExpression(curr), acc)},
-          Expression.False,
-          orExpressions,
-        ),
-      )
-    | `String(v) =>
-      switch (When.parse(v)) {
-      | Error(err) => Error(err)
-      | Ok(condition) => Ok(condition)
-      }
-    | `Null => Ok(Expression.True)
-    | _ => Error("Expected string for condition")
-    };
-  };
+      Ok(WhenExpr.Or(List.map(parseAndExpression, orExpressions)))
+    | `String(v) => Ok(WhenExpr.parse(v))
+    | `Null => Ok(WhenExpr.Value(True))
+    | _ => Error("Expected string for condition");
 
   let of_yojson = (json: Yojson.Safe.t) => {
     let key = Yojson.Safe.Util.member("key", json);
@@ -55,19 +35,27 @@ module Keybinding = {
     let condition =
       Yojson.Safe.Util.member("when", json) |> condition_of_yojson;
 
+    let wrapError = msg => Error(msg ++ ": " ++ Yojson.Safe.to_string(json));
+
     switch (condition) {
     | Ok(condition) =>
       switch (key, command) {
       | (`String(key), `String(command)) => Ok({key, command, condition})
-      | (`String(_), _) => Error("Command must be a string")
-      | (_, `String(_)) => Error("Key must be a string")
-      | _ => Error("Binding must specify key and command strings")
+      | (`String(_), _) => wrapError("'command' is required")
+      | (_, `String(_)) => wrapError("'key' is required")
+      | _ => wrapError("'key' and 'command' are required")
       }
 
-    | Error(msg) => Error(msg)
+    | Error(_) as err => err
     };
   };
 };
+
+module Input =
+  EditorInput.Make({
+    type context = Hashtbl.t(string, bool);
+    type command = string;
+  });
 
 module Internal = {
   let of_yojson_with_errors:
@@ -104,9 +92,17 @@ module Internal = {
     };
 };
 
-let empty = [];
+type effect =
+  Input.effect =
+    | Execute(string) | Text(string) | Unhandled(EditorInput.KeyPress.t);
 
-type t = list(Keybinding.t);
+type t = Input.t;
+
+let empty = Input.empty;
+let count = Input.count;
+let keyDown = Input.keyDown;
+let text = Input.text;
+let keyUp = Input.keyUp;
 
 // Old version of keybindings - the legacy format:
 // { bindings: [ ..bindings. ] }
@@ -131,22 +127,126 @@ module Legacy = {
     };
 };
 
-let of_yojson_with_errors = json => {
-  switch (json) {
-  // Current format:
-  // [ ...bindings ]
-  | `List(bindingsJson) =>
-    let res = bindingsJson |> Internal.of_yojson_with_errors;
-    Ok(res);
-  // Legacy format:
-  // { bindings: [ ..bindings. ] }
-  | `Assoc([("bindings", `List(bindingsJson))]) =>
-    let res = bindingsJson |> Internal.of_yojson_with_errors;
+let keyToSdlName =
+  EditorInput.Key.(
+    {
+      fun
+      | Escape => "Escape"
+      | Return => "Return"
+      | Up => "Up"
+      | Down => "Down"
+      | Left => "Left"
+      | Right => "Right"
+      | Tab => "Tab"
+      | PageUp => "PageUp"
+      | PageDown => "PageDown"
+      | Delete => "Delete"
+      | Pause => "Pause"
+      | Home => "Home"
+      | End => "End"
+      | Backspace => "Backspace"
+      | CapsLock => "CapsLock"
+      | Insert => "Insert"
+      | Function(digit) => "F" ++ string_of_int(digit)
+      | Space => "Space"
+      | NumpadDigit(digit) => "Keypad " ++ string_of_int(digit)
+      | NumpadMultiply => "Keypad *"
+      | NumpadAdd => "Keypad +"
+      | NumpadSeparator => "Keypad "
+      | NumpadSubtract => "Keypad -"
+      | NumpadDivide => "Keypad //"
+      | NumpadDecimal => "Keypad ."
+      | Character(c) => String.make(1, c) |> String.uppercase_ascii;
+    }
+  );
 
-    Ok(res)
-    |> Result.map(((bindings, errors)) => {
-         (Legacy.upgrade(bindings), errors)
-       });
-  | _ => Error("Unable to parse keybindings - not a JSON array.")
+let getKeycode = inputKey => {
+  inputKey
+  |> keyToSdlName
+  |> Sdl2.Keycode.ofName
+  |> (
+    fun
+    | 0 => None
+    | x => Some(x)
+  );
+};
+
+let getScancode = inputKey => {
+  inputKey
+  |> keyToSdlName
+  |> Sdl2.Scancode.ofName
+  |> (
+    fun
+    | 0 => None
+    | x => Some(x)
+  );
+};
+
+let addBinding = ({key, command, condition}, bindings) => {
+  let evaluateCondition = (whenExpr, context) => {
+    let getValue = v =>
+      switch (Hashtbl.find_opt(context, v)) {
+      | Some(true) => WhenExpr.Value.True
+      | Some(false)
+      | None => WhenExpr.Value.False
+      };
+
+    WhenExpr.evaluate(whenExpr, getValue);
   };
+
+  let matchers = EditorInput.Matcher.parse(~getKeycode, ~getScancode, key);
+
+  matchers
+  |> Stdlib.Result.map(m => {
+       let (bindings, _id) =
+         Input.addBinding(
+           m,
+           evaluateCondition(condition),
+           command,
+           bindings,
+         );
+       bindings;
+     });
+};
+
+let evaluateBindings = (bindings: list(keybinding), errors) => {
+  let rec loop = (bindings, errors, currentBindings) => {
+    switch (bindings) {
+    | [hd, ...tail] =>
+      switch (addBinding(hd, currentBindings)) {
+      | Ok(newBindings) => loop(tail, errors, newBindings)
+      | Error(msg) => loop(tail, [msg, ...errors], currentBindings)
+      }
+    | [] => (currentBindings, errors)
+    };
+  };
+
+  loop(bindings, errors, Input.empty);
+};
+
+let of_yojson_with_errors = (~default=[], json) => {
+  let previous =
+    switch (json) {
+    // Current format:
+    // [ ...bindings ]
+    | `List(bindingsJson) =>
+      let res = bindingsJson |> Internal.of_yojson_with_errors;
+      Ok(res);
+    // Legacy format:
+    // { bindings: [ ..bindings. ] }
+    | `Assoc([("bindings", `List(bindingsJson))]) =>
+      let res = bindingsJson |> Internal.of_yojson_with_errors;
+
+      Ok(res)
+      |> Stdlib.Result.map(((bindings, errors)) => {
+           (Legacy.upgrade(bindings), errors)
+         });
+    | _ => Error("Unable to parse keybindings - not a JSON array.")
+    };
+
+  previous
+  |> Stdlib.Result.map(((bindings, errors)) => {
+       let combinedBindings = default @ bindings;
+       evaluateBindings(combinedBindings, errors);
+     });
 };

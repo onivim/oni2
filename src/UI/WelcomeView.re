@@ -13,7 +13,7 @@ module Model = Oni_Model;
 module Styles = {
   let container = (~theme: Theme.t) =>
     Style.[
-      backgroundColor(theme.background),
+      backgroundColor(theme.editorBackground),
       color(theme.foreground),
       flexGrow(1),
       flexDirection(`Column),
@@ -25,18 +25,24 @@ module Styles = {
   let titleText = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
-      fontSize(20),
-      backgroundColor(theme.background),
+      fontSize(20.),
       color(theme.foreground),
       marginTop(-40),
+    ];
+
+  let versionText = (~theme: Theme.t, ~font: UiFont.t) =>
+    Style.[
+      fontFamily(font.fontFile),
+      fontSize(12.),
+      color(theme.foreground),
+      marginTop(0),
     ];
 
   let commandText = (~theme: Theme.t, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
-      fontSize(12),
-      backgroundColor(theme.background),
-      color(theme.editorForeground),
+      fontSize(12.),
+      color(theme.foreground),
     ];
 
   let header =
@@ -75,8 +81,7 @@ module KeyBindingView = {
     let commandText = (~theme: Theme.t, ~fontFile, ~fontSize) => [
       fontFamily(fontFile),
       Style.fontSize(fontSize),
-      backgroundColor(theme.background),
-      color(theme.editorForeground),
+      color(theme.foreground),
     ];
 
     let spacer = Style.[flexGrow(1)];
@@ -90,7 +95,7 @@ module KeyBindingView = {
         style={Styles.commandText(
           ~theme,
           ~fontFile=uiFont.fontFile,
-          ~fontSize=14,
+          ~fontSize=14.,
         )}
         text=name
       />
@@ -99,7 +104,7 @@ module KeyBindingView = {
         style={Styles.commandText(
           ~theme,
           ~fontFile=editorFont.fontFile,
-          ~fontSize=11,
+          ~fontSize=11.,
         )}
         text=shortcut
       />
@@ -134,6 +139,10 @@ let%component make = (~state: State.t, ()) => {
           style={Styles.titleText(~theme, ~font=state.uiFont)}
           text="Modal Editing from the Future"
         />
+        <Text
+          style={Styles.versionText(~theme, ~font=state.uiFont)}
+          text={Printf.sprintf("Version %s", Oni_Core.BuildInfo.version)}
+        />
       </View>
       <View style=Styles.controls>
         <KeyBindingView name="Quick open" shortcut="Cmd + P" state />
@@ -144,6 +153,7 @@ let%component make = (~state: State.t, ()) => {
         />
         <KeyBindingView name="Vim command" shortcut=":" state />
         <KeyBindingView name="Sneak" shortcut="Ctrl + G" state />
+        <KeyBindingView name="Terminal" shortcut=":term" state />
       </View>
     </Opacity>
   </View>;

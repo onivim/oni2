@@ -7,7 +7,9 @@
 [@deriving show({with_path: false})]
 type action =
   | DiagnosticsClicked
-  | NotificationCountClicked;
+  | NotificationClearAllClicked
+  | NotificationCountClicked
+  | NotificationsContextMenu;
 
 module Alignment = {
   type t =

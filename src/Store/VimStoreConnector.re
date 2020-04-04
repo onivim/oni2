@@ -7,15 +7,49 @@
  */
 
 open EditorCoreTypes;
-module Core = Oni_Core;
-module Option = Core.Utility.Option;
-
 open Oni_Model;
+
+module Core = Oni_Core;
+open Core.Utility;
 
 module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
+module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
+module Definition = Feature_LanguageSupport.Definition;
+module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
+module Editor = Feature_Editor.Editor;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
+
+type commandLineCompletionMeet = {
+  prefix: string,
+  position: int,
+};
+
+let getCommandLineCompletionsMeet = (str: string, position: int) => {
+  let len = String.length(str);
+
+  if (len == 0 || position < len) {
+    None;
+  } else {
+    /* Look backwards for '/' or ' ' */
+    let found = ref(false);
+    let meet = ref(position);
+
+    while (meet^ > 0 && ! found^) {
+      let pos = meet^ - 1;
+      let c = str.[pos];
+      if (c == ' ') {
+        found := true;
+      } else {
+        decr(meet);
+      };
+    };
+
+    let pos = meet^;
+    Some({prefix: String.sub(str, pos, len - pos), position: pos});
+  };
+};
 
 let start =
     (
@@ -25,6 +59,9 @@ let start =
       setClipboardText,
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  let languageConfigLoader =
+    Ext.LanguageConfigurationLoader.create(languageInfo);
 
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
@@ -42,10 +79,8 @@ let start =
     let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
 
     let getClipboardValue = () => {
-      switch (getClipboardText()) {
-      | None => None
-      | Some(v) => Some(v |> removeWindowsNewLines |> splitNewLines)
-      };
+      getClipboardText()
+      |> Option.map(text => text |> removeWindowsNewLines |> splitNewLines);
     };
 
     let starReg = Char.code('*');
@@ -64,7 +99,12 @@ let start =
     };
   });
 
-  let _ =
+  let _: unit => unit =
+    Vim.onVersion(() => {
+      Actions.OpenFileByPath("oni://Version", None, None) |> dispatch
+    });
+
+  let _: unit => unit =
     Vim.onGoto((_position, _definitionType) => {
       Log.debug("Goto definition requested");
       // Get buffer and cursor position
@@ -87,46 +127,25 @@ let start =
            });
       };
 
-      Option.map2(getDefinition, maybeBuffer, maybeEditor)
-      |> Option.flatten
+      OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
+      |> Option.join
       |> Option.iter(action => dispatch(action));
     });
 
-  let _ =
-    // Unhandled escape is called when there is an `<esc>` sent to Vim,
-    // but nothing to escape from (ie, in normal mode with no pending operator)
-    Vim.onUnhandledEscape(() => {
-      let state = getState();
-      if (Notifications.any(state.notifications)) {
-        let oldestNotification = Notifications.getOldest(state.notifications);
-        dispatch(Actions.HideNotification(oldestNotification));
-      };
-    });
+  let _: unit => unit =
+    Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
 
-  let _ =
-    Vim.Mode.onChanged(newMode => dispatch(Actions.ChangeMode(newMode)));
-
-  let _ =
+  let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
       dispatch(Actions.VimDirectoryChanged(newDir))
     );
 
-  let _ =
-    Vim.onMessage((priority, title, msg) => {
-      open Vim.Types;
-      let (priorityString, kind) =
-        switch (priority) {
-        | Error => ("ERROR", Notification.Error)
-        | Warning => ("WARNING", Notification.Warning)
-        | Info => ("INFO", Notification.Info)
-        };
-
-      Log.debugf(m => m("Message - %s [%s]: %s", priorityString, title, msg));
-
-      dispatch(ShowNotification(Notification.create(~kind, msg)));
+  let _: unit => unit =
+    Vim.onMessage((priority, title, message) => {
+      dispatch(VimMessageReceived({priority, title, message}))
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.onYank(({lines, register, operator, _}) => {
       let state = getState();
       let yankConfig =
@@ -148,7 +167,10 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
+    Vim.onWriteFailure((_reason, _buffer) => dispatch(WriteFailure));
+
+  let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
       let meta = {
@@ -170,13 +192,16 @@ let start =
       dispatch(Actions.BufferEnter(meta, fileType));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Buffer.onModifiedChanged((id, modified) => {
       Log.debugf(m => m("Buffer metadata changed: %n | %b", id, modified));
       dispatch(Actions.BufferSetModified(id, modified));
     });
 
-  let _ =
+  let _: unit => unit =
+    Vim.Buffer.onWrite(id => {dispatch(Actions.BufferSaved(id))});
+
+  let _: unit => unit =
     Vim.Cursor.onMoved(newPosition => {
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
@@ -195,14 +220,14 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Search.onStopSearchHighlight(() => {
       let buffer = Vim.Buffer.getCurrent();
       let id = Vim.Buffer.getId(buffer);
       dispatch(Actions.SearchClearHighlights(id));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.onQuit((quitType, force) =>
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
@@ -210,7 +235,21 @@ let start =
       }
     );
 
-  let _ =
+  let _: unit => unit =
+    Vim.onTerminal(({cmd, curwin, _}) => {
+      let splitDirection =
+        if (curwin) {Feature_Terminal.Current} else {
+          Feature_Terminal.Horizontal
+        };
+
+      dispatch(
+        Actions.Terminal(
+          Feature_Terminal.NewTerminal({cmd: Some(cmd), splitDirection}),
+        ),
+      );
+    });
+
+  let _: unit => unit =
     Vim.Visual.onRangeChanged(vr => {
       open Vim.VisualRange;
 
@@ -232,7 +271,7 @@ let start =
       dispatch(SelectionChanged(vr));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Window.onSplit((splitType, buf) => {
       /* If buf wasn't specified, use the filepath from the current buffer */
       let buf =
@@ -245,7 +284,7 @@ let start =
         | v => v
         };
 
-      Log.debug("Vim.Window.onSplit: " ++ buf);
+      Log.trace("Vim.Window.onSplit: " ++ buf);
 
       let command =
         switch (splitType) {
@@ -258,9 +297,9 @@ let start =
       dispatch(command);
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Window.onMovement((movementType, _count) => {
-      Log.debug("Vim.Window.onMovement");
+      Log.trace("Vim.Window.onMovement");
       let currentState = getState();
 
       let move = moveFunc => {
@@ -293,7 +332,7 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Buffer.onEnter(buf => {
       let meta = {
         ...Vim.BufferMetadata.ofBuffer(buf),
@@ -312,7 +351,7 @@ let start =
       dispatch(Actions.BufferEnter(meta, fileType));
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
       Log.debugf(m => m("Buffer update: %n", update.id));
@@ -358,13 +397,19 @@ let start =
         != Some(false);
 
       if (shouldApply) {
-        dispatch(Actions.BufferUpdate(bu));
+        maybeBuffer
+        |> Option.iter(oldBuffer => {
+             let newBuffer = Core.Buffer.update(oldBuffer, bu);
+             dispatch(
+               Actions.BufferUpdate({update: bu, newBuffer, oldBuffer}),
+             );
+           });
       } else {
         Log.debugf(m => m("Skipped buffer update at: %i", update.version));
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.CommandLine.onEnter(c =>
       dispatch(Actions.QuickmenuShow(Wildmenu(c.cmdType)))
     );
@@ -395,7 +440,7 @@ let start =
     dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
   };
 
-  let _ =
+  let _: unit => unit =
     Vim.CommandLine.onUpdate(({text, position: cursorPosition, _}) => {
       dispatch(Actions.QuickmenuCommandlineUpdated(text, cursorPosition));
 
@@ -408,7 +453,7 @@ let start =
           | None => ""
           };
         let position = Vim.CommandLine.getPosition();
-        let meet = Core.Utility.getCommandLineCompletionsMeet(text, position);
+        let meet = getCommandLineCompletionsMeet(text, position);
         lastCompletionMeet := meet;
 
         isCompleting^ ? () : checkCommandLineCompletions();
@@ -431,7 +476,7 @@ let start =
       };
     });
 
-  let _ =
+  let _: unit => unit =
     Vim.CommandLine.onLeave(() => {
       lastCompletionMeet := None;
       isCompleting := false;
@@ -442,7 +487,7 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e untitled");
+      let _ = Vim.command("e oni://Welcome");
       hasInitialized := true;
 
       let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
@@ -456,7 +501,6 @@ let start =
   let currentBufferId: ref(option(int)) = ref(None);
 
   let updateActiveEditorCursors = cursors => {
-    open Oni_Core.Utility;
     let () =
       getState()
       |> Selectors.getActiveEditorGroup
@@ -466,39 +510,92 @@ let start =
     ();
   };
 
+  let isVimKey = key => {
+    !String.equal(key, "<S-SHIFT>")
+    && !String.equal(key, "<A-SHIFT>")
+    && !String.equal(key, "<D-SHIFT>")
+    && !String.equal(key, "<D->")
+    && !String.equal(key, "<D-A->")
+    && !String.equal(key, "<D-S->")
+    && !String.equal(key, "<C->")
+    && !String.equal(key, "<A-C->")
+    && !String.equal(key, "<SHIFT>")
+    && !String.equal(key, "<S-C->");
+  };
+
   let inputEffect = key =>
     Isolinear.Effect.create(~name="vim.input", () =>
-      if (Oni_Input.Filter.filter(key)) {
-        open Oni_Core.Utility;
-
+      if (isVimKey(key)) {
         // Set cursors based on current editor
+        let state = getState();
         let editor =
-          getState()
-          |> Selectors.getActiveEditorGroup
-          |> Selectors.getActiveEditor;
+          state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
         let cursors =
           editor
           |> Option.map(Editor.getVimCursors)
           |> Option.value(~default=[]);
 
+        let primaryCursor = editor |> Option.map(Editor.getPrimaryCursor);
+
         let () =
           editor
-          |> Core.Utility.Option.iter(e => {
-               let () =
-                 getState()
-                 |> Selectors.getActiveEditorGroup
-                 |> Option.map(EditorGroup.getMetrics)
-                 |> Option.iter(metrics => {
-                      let topLine = Editor.getTopVisibleLine(e, metrics);
-                      let leftCol = Editor.getLeftVisibleColumn(e, metrics);
-                      Vim.Window.setTopLeft(topLine, leftCol);
-                    });
-               ();
+          |> Option.iter(e => {
+               let topLine = Editor.getTopVisibleLine(e);
+               let leftCol = Editor.getLeftVisibleColumn(e);
+               Vim.Window.setTopLeft(topLine, leftCol);
              });
 
-        let cursors = Vim.input(~cursors, key);
+        let syntaxScope =
+          state
+          |> Selectors.getActiveBuffer
+          |> OptionEx.map2(
+               (primaryCursor, buffer) => {
+                 let bufferId = Core.Buffer.getId(buffer);
+                 let {line, column}: Location.t = primaryCursor;
 
+                 Feature_Syntax.getSyntaxScope(
+                   ~bufferId,
+                   ~line,
+                   // TODO: Reconcile 'byte position' vs 'character position'
+                   // in cursor.
+                   ~bytePosition=Index.toZeroBased(column),
+                   state.syntaxHighlights,
+                 );
+               },
+               primaryCursor,
+             )
+          |> Option.value(~default=Core.SyntaxScope.none);
+
+        let acpEnabled =
+          Core.Configuration.getValue(
+            c => c.editorAutoClosingBrackets,
+            state.configuration,
+          )
+          |> (
+            fun
+            | LanguageDefined => true
+            | Never => false
+          );
+
+        let autoClosingPairs =
+          if (acpEnabled) {
+            state
+            |> Selectors.getActiveBuffer
+            |> OptionEx.flatMap(Core.Buffer.getFileType)
+            |> OptionEx.flatMap(
+                 Ext.LanguageConfigurationLoader.get_opt(
+                   languageConfigLoader,
+                 ),
+               )
+            |> Option.map(
+                 Ext.LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
+               );
+          } else {
+            None;
+          };
+
+        let cursors = Vim.input(~autoClosingPairs?, ~cursors, key);
         let newTopLine = Vim.Window.getTopLine();
         let newLeftColumn = Vim.Window.getLeftColumn();
 
@@ -516,8 +613,6 @@ let start =
 
   let openFileByPathEffect = (filePath, dir, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      open Oni_Core.Utility;
-
       /* If a split was requested, create that first! */
       switch (dir) {
       | Some(direction) =>
@@ -568,34 +663,59 @@ let start =
       | Some(_) => dispatch(Actions.BufferEnter(metadata, fileType))
       | None => ()
       };
+
+      switch (Core.BufferPath.parse(filePath)) {
+      | Terminal({bufferId, _}) =>
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              metadata.id,
+              BufferRenderer.Terminal({
+                title: "Terminal",
+                id: bufferId,
+                insertMode: true,
+              }),
+            ),
+          ),
+        )
+      | Version =>
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              metadata.id,
+              BufferRenderer.Version,
+            ),
+          ),
+        )
+      | Welcome => ()
+      | FilePath(_) => ()
+      };
     });
 
   let applyCompletionEffect = completion =>
     Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
-      Core.Utility.(
-        switch (lastCompletionMeet^) {
-        | None => ()
-        | Some({position, _}) =>
-          isCompleting := true;
-          let currentPos = ref(Vim.CommandLine.getPosition());
-          while (currentPos^ > position) {
-            let _ = Vim.input(~cursors=[], "<bs>");
-            currentPos := Vim.CommandLine.getPosition();
-          };
+      switch (lastCompletionMeet^) {
+      | None => ()
+      | Some({position, _}) =>
+        isCompleting := true;
+        let currentPos = ref(Vim.CommandLine.getPosition());
+        while (currentPos^ > position) {
+          let _ = Vim.input(~cursors=[], "<bs>");
+          currentPos := Vim.CommandLine.getPosition();
+        };
 
-          let completion = Core.Utility.trimTrailingSlash(completion);
-          let latestCursors = ref([]);
-          String.iter(
-            c => {
-              latestCursors := Vim.input(~cursors=[], String.make(1, c));
-              ();
-            },
-            completion,
-          );
-          updateActiveEditorCursors(latestCursors^);
-          isCompleting := false;
-        }
-      )
+        let completion = Path.trimTrailingSeparator(completion);
+        let latestCursors = ref([]);
+        String.iter(
+          c => {
+            latestCursors := Vim.input(~cursors=[], String.make(1, c));
+            ();
+          },
+          completion,
+        );
+        updateActiveEditorCursors(latestCursors^);
+        isCompleting := false;
+      }
     );
 
   let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
@@ -653,13 +773,28 @@ let start =
         | _ => ()
         };
 
+        // Set configured line comment
+        editorBuffer
+        |> OptionEx.flatMap(Core.Buffer.getFileType)
+        |> OptionEx.flatMap(
+             Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
+           )
+        |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+             config.lineComment
+           )
+        |> Option.iter(Vim.Options.setLineComment);
+
         let synchronizeWindowMetrics =
             (editor: Editor.t, editorGroup: EditorGroup.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
-          let (lines, columns) =
-            Editor.getLinesAndColumns(editor, editorGroup.metrics);
+          let Feature_Editor.EditorLayout.{
+                bufferHeightInCharacters: lines,
+                bufferWidthInCharacters: columns,
+                _,
+              } =
+            Editor.getLayout(editor, editorGroup.metrics);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -680,27 +815,34 @@ let start =
     );
 
   let pasteIntoEditorAction =
-    Isolinear.Effect.create(~name="vim.clipboardPaste", () =>
-      if (Vim.Mode.getCurrent() == Vim.Types.Insert) {
-        switch (getClipboardText()) {
-        | Some(text) =>
-          Vim.command("set paste");
-          let latestCursors = ref([]);
-          Zed_utf8.iter(
-            s => {
-              latestCursors := Vim.input(~cursors=[], Zed_utf8.singleton(s));
-              ();
-            },
-            text,
-          );
+    Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
+      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
+      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
 
-          updateActiveEditorCursors(latestCursors^);
+      if (isInsertMode || isCmdLineMode) {
+        getClipboardText()
+        |> Option.iter(text => {
+             if (!isCmdLineMode) {
+               Vim.command("set paste");
+             };
 
-          Vim.command("set nopaste");
-        | None => ()
-        };
-      }
-    );
+             let latestCursors = ref([]);
+             Zed_utf8.iter(
+               s => {
+                 latestCursors :=
+                   Vim.input(~cursors=[], Zed_utf8.singleton(s));
+                 ();
+               },
+               text,
+             );
+
+             if (!isCmdLineMode) {
+               updateActiveEditorCursors(latestCursors^);
+               Vim.command("set nopaste");
+             };
+           });
+      };
+    });
 
   let copyActiveFilepathToClipboardEffect =
     Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
@@ -747,6 +889,68 @@ let start =
       ();
     });
 
+  let saveEffect =
+    Isolinear.Effect.create(~name="vim.save", () => {
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input(":");
+      let _ = Vim.input("w");
+      let _ = Vim.input("<CR>");
+      ();
+    });
+
+  let escapeEffect =
+    Isolinear.Effect.create(~name="vim.esc", () => {
+      let _ = Vim.input("<esc>");
+      ();
+    });
+
+  let indentEffect =
+    Isolinear.Effect.create(~name="vim.indent", () => {
+      let _ = Vim.input(">");
+      let _ = Vim.input("g");
+      let _ = Vim.input("v");
+      ();
+    });
+
+  let outdentEffect =
+    Isolinear.Effect.create(~name="vim.outdent", () => {
+      let _ = Vim.input("<");
+      let _ = Vim.input("g");
+      let _ = Vim.input("v");
+      ();
+    });
+
+  let setTerminalLinesEffect = (~editorId, ~bufferId, lines: array(string)) => {
+    Isolinear.Effect.create(~name="vim.setTerminalLinesEffect", () => {
+      let () =
+        bufferId
+        |> Vim.Buffer.getById
+        |> Option.iter(buf => {
+             Vim.Buffer.setModifiable(~modifiable=true, buf);
+             Vim.Buffer.setLines(~lines, buf);
+             Vim.Buffer.setModifiable(~modifiable=false, buf);
+             Vim.Buffer.setReadOnly(~readOnly=true, buf);
+           });
+
+      // Clear out previous mode
+      let _ = Vim.input("<esc>");
+      let _ = Vim.input("<esc>");
+      // Jump to bottom
+      let _ = Vim.input("g");
+      let _ = Vim.input("g");
+      let _ = Vim.input("G");
+      let cursors = Vim.input("$");
+      let newTopLine = Vim.Window.getTopLine();
+      let newLeftColumn = Vim.Window.getLeftColumn();
+
+      // Update the editor, which is the source of truth for cursor position
+      dispatch(Actions.EditorCursorMove(editorId, cursors));
+      dispatch(Actions.EditorScrollToLine(editorId, newTopLine - 1));
+      dispatch(Actions.EditorScrollToColumn(editorId, newLeftColumn));
+    });
+  };
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -759,6 +963,12 @@ let start =
       )
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
+    | Command("workbench.action.files.save") => (state, saveEffect)
+    | Command("indent") => (state, indentEffect)
+    | Command("outdent") => (state, outdentEffect)
+    | Command("editor.action.indentLines") => (state, indentEffect)
+    | Command("editor.action.outdentLines") => (state, outdentEffect)
+    | Command("vim.esc") => (state, escapeEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
@@ -774,20 +984,99 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
+    | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),
       )
     | BufferEnter(_)
-    | SetEditorFont(_)
+    | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
-    | EditorGroupSetSize(_, _) => (state, synchronizeEditorEffect(state))
+    | EditorGroupSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
       )
     | ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
     | ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
+    | Command("workbench.action.nextEditor") => (
+        state,
+        synchronizeEditorEffect(state),
+      )
+    | Command("workbench.action.previousEditor") => (
+        state,
+        synchronizeEditorEffect(state),
+      )
+    | Command("terminal.normalMode") =>
+      let maybeBufferId =
+        state
+        |> Selectors.getActiveBuffer
+        |> Option.map(Oni_Core.Buffer.getId);
+
+      let maybeTerminalId =
+        maybeBufferId
+        |> Option.map(id =>
+             BufferRenderers.getById(id, state.bufferRenderers)
+           )
+        |> OptionEx.flatMap(
+             fun
+             | BufferRenderer.Terminal({id, _}) => Some(id)
+             | _ => None,
+           );
+
+      let maybeEditorId =
+        state
+        |> Selectors.getActiveEditorGroup
+        |> Selectors.getActiveEditor
+        |> Option.map((editor: Feature_Editor.Editor.t) => editor.editorId);
+
+      let (state, effect) =
+        OptionEx.map3(
+          (bufferId, terminalId, editorId) => {
+            let colorTheme = Feature_Theme.resolver(state.colorTheme);
+            let (lines, highlights) =
+              Feature_Terminal.getLinesAndHighlights(
+                ~colorTheme,
+                ~terminalId,
+              );
+            let syntaxHighlights =
+              List.fold_left(
+                (acc, curr) => {
+                  let (line, tokens) = curr;
+                  Feature_Syntax.setTokensForLine(
+                    ~bufferId,
+                    ~line,
+                    ~tokens,
+                    acc,
+                  );
+                },
+                state.syntaxHighlights,
+                highlights,
+              );
+
+            let syntaxHighlights =
+              syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
+
+            let editorGroups =
+              state.editorGroups
+              |> EditorGroups.setBufferFont(
+                   ~bufferId,
+                   ~font=state.terminalFont,
+                 );
+
+            (
+              {...state, editorGroups, syntaxHighlights},
+              setTerminalLinesEffect(~bufferId, ~editorId, lines),
+            );
+          },
+          maybeBufferId,
+          maybeTerminalId,
+          maybeEditorId,
+        )
+        |> Option.value(~default=(state, Isolinear.Effect.none));
+
+      (state, effect);
+
     | KeyboardInput(s) => (state, inputEffect(s))
     | CopyActiveFilepathToClipboard => (
         state,
@@ -817,6 +1106,25 @@ let start =
           TitleStoreConnector.Effects.updateTitle(newState),
         ]),
       );
+
+    | VimMessageReceived({priority, message, _}) =>
+      let kind =
+        switch (priority) {
+        | Error => Feature_Notification.Error
+        | Warning => Feature_Notification.Warning
+        | Info => Feature_Notification.Info
+        };
+
+      (
+        state,
+        Feature_Notification.Effects.create(~kind, message)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      );
+
+    | WriteFailure => (
+        {...state, modal: Some(Feature_Modals.writeFailure)},
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

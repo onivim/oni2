@@ -1,19 +1,20 @@
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
+open Oni_Syntax;
 
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   // Edit
   dispatch(KeyboardInput("i"));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    state.mode == Vim.Types.Insert
+    state.vimMode == Vim.Types.Insert
   );
 
   dispatch(KeyboardInput("a"));

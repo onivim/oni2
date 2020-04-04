@@ -47,6 +47,7 @@ The following conventions are used to determine the priority level of log messag
 - __Warn__ if it MIGHT cause unexpected behaviour, but also might not, i.e. it's suspicious, but not a definite problem.
 - __Info__ if it is both understandable AND actionable by the end-user
 - __Debug__ otherwise
+- __Trace__ if the output is overwhelming or just excessively detailed. Namespace filtering is expected at this level
 
 ### Branch Naming
 

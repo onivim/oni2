@@ -7,19 +7,19 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
+open Utility;
 open Actions;
+open Oni_Syntax;
 
 module Utility = Utility;
 module Ext = Oni_Extensions;
 
 module DefinitionResult = LanguageFeatures.DefinitionResult;
-module Option = Utility.Option;
+module Editor = Feature_Editor.Editor;
 
 module Log = (val Log.withNamespace("Oni2.Store.LanguageFeatures"));
 
 let start = () => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
-
   let checkForDefinitionEffect = (languageFeatures, buffer, location) =>
     Isolinear.Effect.createWithDispatch(
       ~name="languageFeature.checkForDefinition", dispatch => {
@@ -68,7 +68,7 @@ let start = () => {
       let maybeEditor =
         state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
-      Option.iter2(
+      OptionEx.iter2(
         (buffer, editor) => {
           let location = Editor.getPrimaryCursor(editor);
           let promise =
@@ -97,7 +97,7 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | EditorCursorMove(_, cursors) when state.mode != Vim.Types.Insert =>
+    | EditorCursorMove(_, cursors) when state.vimMode != Vim.Types.Insert =>
       switch (Selectors.getActiveBuffer(state)) {
       | None => (state, Isolinear.Effect.none)
       | Some(buf) =>
@@ -116,5 +116,5 @@ let start = () => {
     | _ => default
     };
   };
-  (updater, stream);
+  updater;
 };

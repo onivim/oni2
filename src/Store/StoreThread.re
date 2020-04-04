@@ -7,10 +7,7 @@
  * so that we can eek out as much perf as we can in this architecture.
  */
 
-open Revery;
-
 module Core = Oni_Core;
-module Option = Core.Utility.Option;
 
 module Extensions = Oni_Extensions;
 module Model = Oni_Model;
@@ -59,22 +56,23 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 
 let start =
     (
+      ~getUserSettings,
       ~configurationFilePath=None,
-      ~onAfterDispatch=Core.Utility.noop1,
+      ~keybindingsFilePath=None,
+      ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
+      ~getState,
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
       ~getZoom,
       ~setZoom,
       ~quit,
-      ~getTime,
       ~setTitle,
       ~setVsync,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
-      ~getScaleFactor,
       (),
     ) => {
   ignore(executingDirectory);
@@ -85,15 +83,7 @@ let start =
       cliOptions,
     );
 
-  let state = Model.State.create();
-
-  let accumulatedEffects: ref(list(Isolinear.Effect.t(Model.Actions.t))) =
-    ref([]);
-
-  let latestState: ref(Model.State.t) = ref(state);
   let latestRunEffects: ref(option(unit => unit)) = ref(None);
-
-  let getState = () => latestState^;
 
   let runRunEffects = () =>
     switch (latestRunEffects^) {
@@ -116,15 +106,20 @@ let start =
       setClipboardText,
     );
 
-  let (syntaxUpdater, syntaxStream) =
-    SyntaxHighlightingStoreConnector.start(languageInfo, setup, cliOptions);
+  let syntaxUpdater =
+    SyntaxHighlightingStoreConnector.start(
+      ~enabled=cliOptions.shouldSyntaxHighlight,
+      languageInfo,
+    );
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
-  let (extHostUpdater, extHostStream) =
-    ExtensionClientStoreConnector.start(extensions, setup);
+  let (extHostClient, extHostStream) =
+    ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
 
-  let (quickmenuUpdater, quickmenuStream) =
-    QuickmenuStoreConnector.start(themeInfo);
+  let extHostUpdater =
+    ExtensionClientStoreConnector.start(extensions, extHostClient);
+
+  let quickmenuUpdater = QuickmenuStoreConnector.start(themeInfo);
 
   let configurationUpdater =
     ConfigurationStoreConnector.start(
@@ -134,127 +129,189 @@ let start =
       ~setZoom,
       ~setVsync,
     );
-  let keyBindingsUpdater = KeyBindingsStoreConnector.start();
+  let keyBindingsUpdater =
+    KeyBindingsStoreConnector.start(keybindingsFilePath);
 
-  let ripgrep = Core.Ripgrep.make(~executablePath=setup.rgPath);
+  let fileExplorerUpdater = FileExplorerStore.start();
 
-  let (fileExplorerUpdater, explorerStream) = FileExplorerStore.start();
-
-  let (searchUpdater, searchStream) = SearchStoreConnector.start();
-
-  let (lifecycleUpdater, lifecycleStream) =
-    LifecycleStoreConnector.start(quit);
+  let lifecycleUpdater = LifecycleStoreConnector.start(quit);
   let indentationUpdater = IndentationStoreConnector.start();
-  let (windowUpdater, windowStream) = WindowsStoreConnector.start();
-
-  let fontUpdater = FontStoreConnector.start(~getScaleFactor, ());
-  let keyDisplayerUpdater = KeyDisplayerConnector.start(getTime);
-  let acpUpdater = AutoClosingPairsConnector.start(languageInfo);
+  let windowUpdater = WindowsStoreConnector.start();
 
   let completionUpdater = CompletionStoreConnector.start();
 
-  let (languageFeatureUpdater, languageFeatureStream) =
-    LanguageFeatureConnector.start();
+  let languageFeatureUpdater = LanguageFeatureConnector.start();
 
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
   let titleUpdater = TitleStoreConnector.start(setTitle);
   let sneakUpdater = SneakStore.start();
+  let contextMenuUpdater = ContextMenuStore.start();
+  let updater =
+    Isolinear.Updater.combine([
+      Isolinear.Updater.ofReducer(Reducer.reduce),
+      inputUpdater,
+      quickmenuUpdater,
+      vimUpdater,
+      syntaxUpdater,
+      extHostUpdater,
+      configurationUpdater,
+      keyBindingsUpdater,
+      commandUpdater,
+      lifecycleUpdater,
+      fileExplorerUpdater,
+      indentationUpdater,
+      windowUpdater,
+      themeUpdater,
+      languageFeatureUpdater,
+      completionUpdater,
+      titleUpdater,
+      sneakUpdater,
+      Features.update(~extHostClient, ~getUserSettings, ~setup),
+      PaneStore.update,
+      contextMenuUpdater,
+    ]);
 
-  let (storeDispatch, storeStream) =
-    Isolinear.Store.create(
-      ~initialState=state,
-      ~updater=
-        Isolinear.Updater.combine([
-          Isolinear.Updater.ofReducer(Reducer.reduce),
-          inputUpdater,
-          quickmenuUpdater,
-          vimUpdater,
-          syntaxUpdater,
-          extHostUpdater,
-          fontUpdater,
-          configurationUpdater,
-          keyBindingsUpdater,
-          commandUpdater,
-          lifecycleUpdater,
-          fileExplorerUpdater,
-          searchUpdater,
-          indentationUpdater,
-          windowUpdater,
-          keyDisplayerUpdater,
-          themeUpdater,
-          acpUpdater,
-          languageFeatureUpdater,
-          completionUpdater,
-          titleUpdater,
-          sneakUpdater,
-        ]),
-      (),
-    );
+  let subscriptions = (state: Model.State.t) => {
+    let syntaxSubscription =
+      Feature_Syntax.subscription(
+        ~enabled=cliOptions.shouldSyntaxHighlight,
+        ~quitting=state.isQuitting,
+        ~languageInfo,
+        ~setup,
+        state.syntaxHighlights,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg));
 
-  module QuickmenuSubscriptionRunner =
-    Core.Subscription.Runner({
-      type action = Model.Actions.t;
-      let id = "quickmenu-subscription";
-    });
-  let (quickmenuSubscriptionsUpdater, quickmenuSubscriptionsStream) =
-    QuickmenuStoreConnector.subscriptions(ripgrep);
+    let workspaceUri =
+      state.workspace
+      |> Option.map((ws: Model.Workspace.workspace) => ws.workingDirectory)
+      |> Option.value(~default=Sys.getcwd())
+      |> Oni_Core.Uri.fromPath;
 
-  module SearchSubscriptionRunner =
-    Core.Subscription.Runner({
-      type action = Model.Actions.t;
-      let id = "search-subscription";
-    });
-  let (searchSubscriptionsUpdater, searchSubscriptionsStream) =
-    SearchStoreConnector.subscriptions(ripgrep);
+    let terminalSubscription =
+      Feature_Terminal.subscription(
+        ~workspaceUri,
+        extHostClient,
+        state.terminals,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
 
-  let rec dispatch = (action: Model.Actions.t) => {
-    switch (action) {
-    | Tick(_) => () // This gets a bit intense, so ignore it
-    | _ => DispatchLog.info(Model.Actions.show(action))
-    };
+    let fontFamily =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontFamily,
+        state.configuration,
+      );
+    let fontSize =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontSize,
+        state.configuration,
+      );
+    let fontSmoothing =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontSmoothing,
+        state.configuration,
+      );
+    let editorFontSubscription =
+      Service_Font.Sub.font(
+        ~uniqueId="editorFont",
+        ~fontFamily,
+        ~fontSize,
+        ~fontSmoothing,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
-    let lastState = latestState^;
-    let (newState, effect) = storeDispatch(action);
-    accumulatedEffects := [effect, ...accumulatedEffects^];
-    latestState := newState;
+    let terminalFontFamily =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontFamily,
+        state.configuration,
+      );
+    let terminalFontSize =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontSize,
+        state.configuration,
+      );
+    let terminalFontSmoothing =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontSmoothing,
+        state.configuration,
+      );
+    let terminalFontSubscription =
+      Service_Font.Sub.font(
+        ~uniqueId="terminalFont",
+        ~fontFamily=terminalFontFamily,
+        ~fontSize=terminalFontSize,
+        ~fontSmoothing=terminalFontSmoothing,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
-    if (newState !== lastState) {
-      onStateChanged(newState);
-    };
-
-    // TODO: Wire this up properly
-    let quickmenuSubs = quickmenuSubscriptionsUpdater(newState);
-    QuickmenuSubscriptionRunner.run(~dispatch, quickmenuSubs);
-    let searchSubs = searchSubscriptionsUpdater(newState);
-    SearchSubscriptionRunner.run(~dispatch, searchSubs);
-
-    onAfterDispatch(action);
+    [
+      syntaxSubscription,
+      terminalSubscription,
+      editorFontSubscription,
+      terminalFontSubscription,
+    ]
+    |> Isolinear.Sub.batch;
   };
 
-  let runEffects = () => {
-    let effects = accumulatedEffects^;
-    accumulatedEffects := [];
+  module Store =
+    Isolinear.Store.Make({
+      type msg = Model.Actions.t;
+      type model = Model.State.t;
 
-    effects
-    |> List.filter(e => e != Isolinear.Effect.none)
-    |> List.rev
-    |> List.iter(e => {
-         Log.debugf(m =>
-           m("Running effect: %s", Isolinear.Effect.getName(e))
-         );
-         Isolinear.Effect.run(e, dispatch);
-       });
-  };
+      let initial = getState();
+      let updater = updater;
+      let subscriptions = subscriptions;
+    });
 
+  let storeStream = Store.Deprecated.getStoreStream();
+
+  let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
+
+  let _unsubscribe: unit => unit =
+    Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
+
+  let dispatch = Store.dispatch;
+
+  let _unsubscribe: unit => unit =
+    Store.onAfterMsg((msg, model) => {
+      Features.updateSubscriptions(setup, model, dispatch);
+      onAfterDispatch(msg);
+      DispatchLog.debugf(m => m("After: %s", Model.Actions.show(msg)));
+    });
+
+  let _unsubscribe: unit => unit =
+    Store.onBeforeEffectRan(e => {
+      Log.debugf(m => m("Running effect: %s", Isolinear.Effect.name(e)))
+    });
+  let _unsubscribe: unit => unit =
+    Store.onAfterEffectRan(e => {
+      Log.debugf(m => m("Effect complete: %s", Isolinear.Effect.name(e)))
+    });
+
+  let runEffects = Store.runPendingEffects;
   latestRunEffects := Some(runEffects);
 
+  Option.iter(
+    window =>
+      Revery.Window.setCanQuitCallback(window, () =>
+        if (Model.Buffers.anyModified(getState().buffers)) {
+          dispatch(Model.Actions.WindowCloseBlocked);
+          false;
+        } else {
+          true;
+        }
+      ),
+    window,
+  );
+
+  // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
   let editorEventStream =
-    Isolinear.Stream.map(storeStream, ((state, action)) =>
+    Isolinear.Stream.filterMap(storeStream, ((state, action)) =>
       switch (action) {
       | Model.Actions.BufferUpdate(bs) =>
-        let buffer = Model.Selectors.getBufferById(state, bs.id);
+        let buffer = Model.Selectors.getBufferById(state, bs.update.id);
         Some(Model.Actions.RecalculateEditorView(buffer));
       | Model.Actions.BufferEnter({id, _}, _) =>
         let buffer = Model.Selectors.getBufferById(state, id);
@@ -263,32 +320,15 @@ let start =
       }
     );
 
-  let _: Isolinear.Stream.unsubscribeFunc =
+  // TODO: These should all be replaced with isolinear subscriptions.
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, inputStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, vimStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, editorEventStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, syntaxStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
+  let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, extHostStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, quickmenuStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, explorerStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, searchStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, lifecycleStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, windowStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, languageFeatureStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, quickmenuSubscriptionsStream);
-  let _: Isolinear.Stream.unsubscribeFunc =
-    Isolinear.Stream.connect(dispatch, searchSubscriptionsStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
 
@@ -322,17 +362,8 @@ let start =
 
   setIconTheme("vs-seti");
 
-  let totalTime = ref(0.0);
-  let _ =
-    Tick.interval(
-      deltaT => {
-        let deltaTime = Time.toFloatSeconds(deltaT);
-        totalTime := totalTime^ +. deltaTime;
-        dispatch(Model.Actions.Tick({deltaTime, totalTime: totalTime^}));
-        runEffects();
-      },
-      Time.zero,
-    );
+  let _: unit => unit =
+    Revery.Tick.interval(_ => runEffects(), Revery.Time.zero);
 
   (dispatch, runEffects);
 };

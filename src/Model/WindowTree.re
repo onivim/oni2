@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 module WindowSplitId =
   Revery.UniqueId.Make({});
@@ -7,6 +8,10 @@ module WindowSplitId =
 type direction =
   | Horizontal
   | Vertical;
+
+type position =
+  | Before
+  | After;
 
 [@deriving show({with_path: false})]
 type split = {
@@ -67,7 +72,7 @@ let rec getEditorGroupIdFromSplitId = (splitId: int, currentTree) => {
   };
 };
 
-let addSplit = (~target=None, direction, newSplit, currentTree) => {
+let addSplit = (~target=None, ~position, direction, newSplit, currentTree) => {
   let rec f = (targetId, parent, split) => {
     switch (split) {
     | Parent(d, tree) => [
@@ -75,14 +80,19 @@ let addSplit = (~target=None, direction, newSplit, currentTree) => {
       ]
     | Leaf(v) =>
       if (v.id == targetId) {
+        let children =
+          switch (position) {
+          | Before => [Leaf(newSplit), Leaf(v)]
+          | After => [Leaf(v), Leaf(newSplit)]
+          };
         switch (parent) {
         | Some(Parent(dir, _)) =>
           if (dir == direction) {
-            [Leaf(newSplit), Leaf(v)];
+            children;
           } else {
-            [Parent(direction, [Leaf(newSplit), Leaf(v)])];
+            [Parent(direction, children)];
           }
-        | _ => [Leaf(newSplit), Leaf(v)]
+        | _ => children
         };
       } else {
         [Leaf(v)];
@@ -150,9 +160,9 @@ let rotateForward = (id, currentTree) => {
     | [] => []
     | [a] => [a]
     | [a, b] => [b, a]
-    | l =>
-      switch (Utility.last(l)) {
-      | Some(x) => [x, ...Utility.dropLast(l)]
+    | list =>
+      switch (ListEx.last(list)) {
+      | Some(x) => [x, ...ListEx.dropLast(list)]
       | None => []
       };
 

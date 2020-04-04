@@ -1,0 +1,5 @@
+(library
+    (name Oni_Components_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries Oni2.components rely.lib))

@@ -9,7 +9,7 @@ let map = simpleList |> List.to_seq |> IntMap.of_seq;
 
 describe("IntMap", ({describe, _}) => {
   describe("shift", ({test, _}) => {
-    test("no shift if no add / deletions", ({expect}) => {
+    test("no shift if no add / deletions", ({expect, _}) => {
       let newMap = IntMap.shift(~startPos=1, ~endPos=1, ~delta=0, map);
 
       let firstVal = IntMap.find(0, newMap);
@@ -21,7 +21,7 @@ describe("IntMap", ({describe, _}) => {
       expect.string(thirdVal).toEqual("c");
     });
 
-    test("add lines between 1 and 2", ({expect}) => {
+    test("add lines between 1 and 2", ({expect, _}) => {
       let newMap =
         IntMap.shift(
           ~default=_ => Some("f"),
@@ -44,7 +44,7 @@ describe("IntMap", ({describe, _}) => {
       expect.string(val4).toEqual("c");
     });
 
-    test("remove line", ({expect}) => {
+    test("remove line", ({expect, _}) => {
       let newMap =
         IntMap.shift(
           ~default=_ => Some("f"),

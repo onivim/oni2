@@ -13,6 +13,8 @@
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
         reason-jsonrpc
+        oniguruma
         Oni2.core
+        isolinear
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

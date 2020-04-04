@@ -3,26 +3,22 @@
  *
  * This implements an updater (reducer + side effects) for the window title
  */
-
-module Core = Oni_Core;
-module Model = Oni_Model;
-
-module Actions = Model.Actions;
-module Option = Core.Utility.Option;
-module Path = Core.Utility.Path;
+open Oni_Core;
+open Oni_Model;
+open Utility;
 
 let withTag = (tag: string, value: option(string)) =>
   Option.map(v => (tag, v), value);
 
-let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
+let getTemplateVariables: State.t => StringMap.t(string) =
   state => {
-    let buffer = Model.Selectors.getActiveBuffer(state);
-    let filePath = Option.bind(Core.Buffer.getFilePath, buffer);
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeFilePath = Option.bind(maybeBuffer, Buffer.getFilePath);
 
     let appName = Option.some("Onivim 2") |> withTag("appName");
 
     let dirty =
-      Option.map(Core.Buffer.isModified, buffer)
+      Option.map(Buffer.isModified, maybeBuffer)
       |> (
         fun
         | Some(true) => Some("*")
@@ -40,25 +36,29 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       };
 
     let activeEditorShort =
-      Option.map(Filename.basename, filePath) |> withTag("activeEditorShort");
+      Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
+      |> withTag("activeEditorShort");
     let activeEditorMedium =
-      filePath
-      |> Option.bind(fp =>
-           switch (rootPath) {
-           | Some((_, base)) => Some(Path.toRelative(~base, fp))
-           | _ => None
-           }
-         )
+      Option.bind(maybeBuffer, buf => {
+        Option.bind(rootPath, ((_, nestedRootPath)) => {
+          Buffer.getMediumFriendlyName(~workingDirectory=nestedRootPath, buf)
+        })
+      })
       |> withTag("activeEditorMedium");
-    let activeEditorLong = filePath |> withTag("activeEditorLong");
+
+    let activeEditorLong =
+      Option.bind(maybeBuffer, Buffer.getLongFriendlyName)
+      |> withTag("activeEditorLong");
 
     let activeFolderShort =
-      Option.(filePath |> map(Filename.dirname) |> map(Filename.basename))
+      Option.(
+        maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
+      )
       |> withTag("activeFolderShort");
     let activeFolderMedium =
-      filePath
+      maybeFilePath
       |> Option.map(Filename.dirname)
-      |> Option.bind(fp =>
+      |> OptionEx.flatMap(fp =>
            switch (rootPath) {
            | Some((_, base)) => Some(Path.toRelative(~base, fp))
            | _ => None
@@ -66,7 +66,9 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
          )
       |> withTag("activeFolderMedium");
     let activeFolderLong =
-      filePath |> Option.map(Filename.dirname) |> withTag("activeFolderLong");
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> withTag("activeFolderLong");
 
     [
       appName,
@@ -80,9 +82,9 @@ let getTemplateVariables: Model.State.t => Core.StringMap.t(string) =
       rootName,
       rootPath,
     ]
-    |> Option.values
+    |> OptionEx.values
     |> List.to_seq
-    |> Core.StringMap.of_seq;
+    |> StringMap.of_seq;
   };
 
 module Effects = {
@@ -90,10 +92,10 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="title.update", dispatch => {
       let templateVariables = getTemplateVariables(state);
       let titleTemplate =
-        Core.Configuration.getValue(c => c.windowTitle, state.configuration);
+        Configuration.getValue(c => c.windowTitle, state.configuration);
 
-      let titleModel = Model.Title.ofString(titleTemplate);
-      let title = Model.Title.toString(titleModel, templateVariables);
+      let titleModel = Title.ofString(titleTemplate);
+      let title = Title.toString(titleModel, templateVariables);
 
       dispatch(Actions.SetTitle(title));
     });
@@ -111,18 +113,21 @@ let start = setTitle => {
       }
     );
 
-  let updater = (state: Model.State.t, action: Actions.t) => {
+  let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Init => (state, Effects.updateTitle(state))
     | BufferEnter(_) => (state, Effects.updateTitle(state))
     | BufferSetModified(_) => (state, Effects.updateTitle(state))
 
-    // TODO: This shouldn't exist, but needs to  be here because it deoends on
-    // `setTitle` being passed in. It would however be ebtter to have a more
+    // TODO: This shouldn't exist, but needs to  be here because it depends on
+    // `setTitle` being passed in. It would however be better to have a more
     // general mechanism, like "Effect actions" handled by an injected dependency
     // or have effects parameterized by an "environment" passed in along with
     // `dispatch`
-    | SetTitle(title) => (state, internalSetTitleEffect(title))
+    | SetTitle(title) => (
+        {...state, windowTitle: title},
+        internalSetTitleEffect(title),
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

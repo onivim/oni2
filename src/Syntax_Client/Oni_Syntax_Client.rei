@@ -5,9 +5,7 @@
  */
 
 open EditorCoreTypes;
-
-module Core = Oni_Core;
-module Ext = Oni_Extensions;
+open Oni_Core;
 
 open Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
@@ -23,20 +21,19 @@ let start:
   (
     ~onConnected: connectedCallback=?,
     ~onClose: closeCallback=?,
-    ~scheduler: Core.Scheduler.t,
+    ~scheduler: Scheduler.t,
     ~onHighlights: highlightsCallback,
     ~onHealthCheckResult: bool => unit,
-    Ext.LanguageInfo.t,
-    Core.Setup.t
+    Oni_Extensions.LanguageInfo.t,
+    Setup.t
   ) =>
   t;
 
 let notifyBufferEnter: (t, int, string) => unit;
 let notifyBufferLeave: (t, int) => unit;
 let notifyThemeChanged: (t, TokenTheme.t) => unit;
-let notifyConfigurationChanged: (t, Core.Configuration.t) => unit;
-let notifyBufferUpdate:
-  (t, Core.BufferUpdate.t, array(string), string) => unit;
+let notifyConfigurationChanged: (t, Configuration.t) => unit;
+let notifyBufferUpdate: (t, BufferUpdate.t, array(string), string) => unit;
 
 let notifyVisibilityChanged: (t, list((int, list(Range.t)))) => unit;
 let healthCheck: t => unit;

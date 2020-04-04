@@ -1,0 +1,10 @@
+(library
+    (name Feature_Configuration)
+    (public_name Oni2.feature.configuration)
+    (libraries 
+      Oni2.core
+      Oni2.extensions
+      isolinear
+      base
+    )
+    (preprocess (pps ppx_let ppx_deriving.show)))

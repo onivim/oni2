@@ -7,12 +7,22 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
+        editor-input
         Oni2.core
+        Oni2.core.whenExpr
         Oni2.model
         Oni2.input
         Oni2.extensions
         Oni2.syntax_client
+        Oni2.components
         Oni2.ui
+        Oni2.feature.notification
+        Oni2.feature.theme
+        Oni2.feature.terminal
+        Oni2.service.font
+        Oni2.service.syntax
+        Oni2.service.terminal
+        Oni2.feature.modals
         isolinear
         libvim
         textmate

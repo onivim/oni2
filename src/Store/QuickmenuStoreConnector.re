@@ -3,30 +3,25 @@
  *
  * This implements an updater (reducer + side effects) for the Quickmenu
  */
+open Oni_Core;
+open Oni_Model;
+open Oni_UI;
+open Utility;
 
-module Core = Oni_Core;
-module Option = Core.Utility.Option;
-module Model = Oni_Model;
-
-module Actions = Model.Actions;
-module Quickmenu = Model.Quickmenu;
-module InputModel = Model.InputModel;
-module Utility = Core.Utility;
-module Path = Utility.Path;
+module InputModel = Oni_Components.InputModel;
 module ExtensionContributions = Oni_Extensions.ExtensionContributions;
-module IndexEx = Utility.IndexEx;
+module Selection = Oni_Components.Selection;
 
-module Log = (val Core.Log.withNamespace("Oni2.Store.Quickmenu"));
+module Log = (val Log.withNamespace("Oni2.Store.Quickmenu"));
 
 let prefixFor: Vim.Types.cmdlineType => string =
   fun
   | SearchForward => "/"
   | SearchReverse => "?"
-  | _ => ":";
+  | Ex
+  | Unknown => ":";
 
-let start = (themeInfo: Model.ThemeInfo.t) => {
-  let (stream, _dispatch) = Isolinear.Stream.create();
-
+let start = (themeInfo: ThemeInfo.t) => {
   let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
@@ -51,41 +46,35 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     });
 
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
-    let currentDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
+    let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     buffers
-    |> Core.IntMap.to_seq
+    |> IntMap.to_seq
     |> Seq.map(snd)
     |> List.of_seq
     // Sort by most recerntly used
     |> List.fast_sort((a, b) =>
-         -
-           Float.compare(
-             Core.Buffer.getLastUsed(a),
-             Core.Buffer.getLastUsed(b),
-           )
+         - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
        )
-    |> Utility.List.filter_map(buffer => {
-         switch (Core.Buffer.getFilePath(buffer)) {
-         | Some(path) =>
-           Some(
+    |> List.filter_map(buffer => {
+         let maybeName =
+           Buffer.getMediumFriendlyName(~workingDirectory, buffer);
+         let maybePath = Buffer.getFilePath(buffer);
+
+         OptionEx.map2(
+           (name, path) =>
              Actions.{
                category: None,
-               name: Path.toRelative(~base=currentDirectory, path),
+               name,
                command: () => {
-                 Model.Actions.OpenFileByPath(path, None, None);
+                 Actions.OpenFileByPath(path, None, None);
                },
-               icon:
-                 Oni_Model.FileExplorer.getFileIcon(
-                   languageInfo,
-                   iconTheme,
-                   path,
-                 ),
+               icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
                highlight: [],
              },
-           )
-         | None => None
-         }
+           maybeName,
+           maybePath,
+         );
        })
     |> Array.of_list;
   };
@@ -105,7 +94,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     | QuickmenuShow(CommandPalette) => (
         Some({
           ...Quickmenu.defaults(CommandPalette),
-          items: Model.Commands.toQuickMenu(commands) |> Array.of_list,
+          items: Commands.toQuickMenu(commands) |> Array.of_list,
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -147,7 +136,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | QuickmenuShow(ThemesPicker) =>
       let items =
-        Model.ThemeInfo.getThemes(themeInfo)
+        ThemeInfo.getThemes(themeInfo)
         |> List.map((theme: ExtensionContributions.Theme.t) => {
              Actions.{
                category: Some("Theme"),
@@ -166,25 +155,55 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
 
     | QuickmenuInput(key) => (
         Option.map(
-          (Quickmenu.{query, cursorPosition, _} as state) => {
-            let (text, cursorPosition) =
-              InputModel.handleInput(~text=query, ~cursorPosition, key);
+          (Quickmenu.{query, selection, _} as state) => {
+            let (text, selection) =
+              InputModel.handleInput(~text=query, ~selection, key);
 
-            Quickmenu.{...state, query: text, cursorPosition};
+            Quickmenu.{...state, query: text, selection, focused: Some(0)};
           },
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuInputClicked(cursorPosition) => (
-        Option.map(state => Quickmenu.{...state, cursorPosition}, state),
+    | QuickmenuInputClicked((newSelection: Selection.t)) => (
+        Option.map(
+          (Quickmenu.{variant, selection, _} as state) => {
+            switch (variant) {
+            | Wildmenu(_) =>
+              let transition = selection.focus - newSelection.focus;
+
+              if (transition > 0) {
+                for (_ in 0 to transition) {
+                  GlobalContext.current().dispatch(
+                    Actions.KeyboardInput("<LEFT>"),
+                  );
+                };
+              } else if (transition < 0) {
+                for (_ in 0 downto transition) {
+                  GlobalContext.current().dispatch(
+                    Actions.KeyboardInput("<RIGHT>"),
+                  );
+                };
+              };
+            | _ => ()
+            };
+
+            Quickmenu.{...state, variant, selection: newSelection};
+          },
+          state,
+        ),
         Isolinear.Effect.none,
       )
 
     | QuickmenuCommandlineUpdated(text, cursorPosition) => (
         Option.map(
-          state => Quickmenu.{...state, query: text, cursorPosition},
+          state =>
+            Quickmenu.{
+              ...state,
+              query: text,
+              selection: Selection.collapsed(~text, cursorPosition),
+            },
           state,
         ),
         Isolinear.Effect.none,
@@ -219,10 +238,7 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
           (state: Quickmenu.t) => {
             let count = Array.length(state.items);
 
-            {
-              ...state,
-              focused: Some(Utility.clamp(index, ~lo=0, ~hi=count)),
-            };
+            {...state, focused: Some(IntEx.clamp(index, ~lo=0, ~hi=count))};
           },
           state,
         ),
@@ -297,38 +313,32 @@ let start = (themeInfo: Model.ThemeInfo.t) => {
     };
   };
 
-  let updater = (state: Model.State.t, action: Actions.t) => {
-    switch (action) {
-    | Tick(_) => (state, Isolinear.Effect.none)
+  let updater = (state: State.t, action: Actions.t) => {
+    let (menuState, menuEffect) =
+      menuUpdater(
+        state.quickmenu,
+        action,
+        state.buffers,
+        state.languageInfo,
+        state.iconTheme,
+        themeInfo,
+        state.commands,
+      );
 
-    | action =>
-      let (menuState, menuEffect) =
-        menuUpdater(
-          state.quickmenu,
-          action,
-          state.buffers,
-          state.languageInfo,
-          state.iconTheme,
-          themeInfo,
-          state.commands,
-        );
-
-      ({...state, quickmenu: menuState}, menuEffect);
-    };
+    ({...state, quickmenu: menuState}, menuEffect);
   };
 
-  (updater, stream);
+  updater;
 };
 
-let subscriptions = ripgrep => {
-  let (stream, dispatch) = Isolinear.Stream.create();
-  let (itemStream, addItems) = Isolinear.Stream.create();
+module QuickmenuFilterSubscription =
+  FilterSubscription.Make({
+    type item = Actions.menuItem;
+    let format = Quickmenu.getLabel;
+  });
 
-  module QuickmenuFilterSubscription =
-    FilterSubscription.Make({
-      type item = Actions.menuItem;
-      let format = Model.Quickmenu.getLabel;
-    });
+let subscriptions = (ripgrep, dispatch) => {
+  let (itemStream, addItems) = Isolinear.Stream.create();
 
   let filter = (query, items) => {
     QuickmenuFilterSubscription.create(
@@ -339,7 +349,7 @@ let subscriptions = ripgrep => {
       ~onUpdate=(items, ~progress) => {
         let items =
           items
-          |> List.map((Model.Filter.{item, highlight}) =>
+          |> List.map((Filter.{item, highlight}) =>
                ({...item, highlight}: Actions.menuItem)
              )
           |> Array.of_list;
@@ -360,16 +370,15 @@ let subscriptions = ripgrep => {
 
   let ripgrep = (languageInfo, iconTheme, configuration) => {
     let filesExclude =
-      Core.Configuration.getValue(c => c.filesExclude, configuration);
+      Configuration.getValue(c => c.filesExclude, configuration);
     let directory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     let stringToCommand = (languageInfo, iconTheme, fullPath) =>
       Actions.{
         category: None,
         name: Path.toRelative(~base=directory, fullPath),
-        command: () => Model.Actions.OpenFileByPath(fullPath, None, None),
-        icon:
-          Model.FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
+        command: () => Actions.OpenFileByPath(fullPath, None, None),
+        icon: FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
         highlight: [],
       };
 
@@ -390,7 +399,7 @@ let subscriptions = ripgrep => {
     );
   };
 
-  let updater = (state: Model.State.t) => {
+  let updater = (state: State.t) => {
     switch (state.quickmenu) {
     | Some(quickmenu) =>
       switch (quickmenu.variant) {
@@ -405,7 +414,7 @@ let subscriptions = ripgrep => {
 
       | Wildmenu(_) => []
       | DocumentSymbols =>
-        switch (Model.Selectors.getActiveBuffer(state)) {
+        switch (Selectors.getActiveBuffer(state)) {
         | Some(buffer) => [
             filter(quickmenu.query, quickmenu.items),
             documentSymbols(state.languageFeatures, buffer),
@@ -418,5 +427,5 @@ let subscriptions = ripgrep => {
     };
   };
 
-  (updater, stream);
+  updater;
 };

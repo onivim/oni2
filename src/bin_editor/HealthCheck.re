@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2_editor.HealthCheck"));
 
@@ -8,37 +9,21 @@ type checks =
 
 let commonChecks = [
   (
-    "Verify camomile:datadir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.datadir),
-  ),
-  (
-    "Verify camomile:localedir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.localedir),
-  ),
-  (
-    "Verify camomile:charmapdir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.charmapdir),
-  ),
-  (
-    "Verify camomile:unimapdir",
-    _ => Sys.is_directory(CamomileBundled.LocalConfig.unimapdir),
-  ),
-  (
     "Verify oniguruma dependency",
     _ => {
       Oniguruma.(
         {
           OnigRegExp.create("(@selector\\()(.*?)(\\))")
-          |> Utility.Result.map(
+          |> Stdlib.Result.map(
                OnigRegExp.search("@selector(windowWillClose:)", 0),
              )
-          |> Utility.Result.map(result => {
+          |> Stdlib.Result.map(result => {
                OnigRegExp.(
                  Match.getText(result[1]) == "@selector("
                  && Match.getText(result[3]) == ")"
                )
              })
-          |> Utility.Result.default(~value=false);
+          |> Stdlib.Result.value(~default=false);
         }
       );
     },
@@ -46,7 +31,7 @@ let commonChecks = [
   (
     "Verify PATH is available",
     _ => {
-      let path = ShellUtility.getShellPath();
+      let path = ShellUtility.getPathFromShell();
       Log.info("Got PATH: " ++ path);
       true;
     },
@@ -94,7 +79,7 @@ let mainChecks = [
         ~setup,
         "check-health.js",
       )
-      |> Utility.LwtUtil.sync
+      |> LwtEx.sync
       |> (
         fun
         | Ok(_) => true
@@ -113,16 +98,70 @@ let mainChecks = [
   (
     "Verify bundled font exists",
     _ =>
-      Sys.file_exists(Utility.executingDirectory ++ "FiraCode-Regular.ttf"),
+      Sys.file_exists(
+        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+      ),
+  ),
+  (
+    "Revery: Verify can measure & shape font",
+    _ => {
+      let fontPath =
+        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf";
+      switch (Revery.Font.load(fontPath)) {
+      | Ok(font) =>
+        let metrics = Revery.Font.getMetrics(font, 12.0);
+        ignore(metrics);
+
+        let {height, width}: Revery.Font.measureResult =
+          Revery.Font.measure(
+            ~smoothing=Revery.Font.Smoothing.default,
+            font,
+            12.0,
+            "hello",
+          );
+        Log.infof(m =>
+          m("Measurements - width: %f height: %f", width, height)
+        );
+
+        let shapeResult = Revery.Font.shape(font, "abc => def");
+        let glyphCount = Revery.Font.ShapeResult.size(shapeResult);
+        Log.infof(m => m("Shaped glyphs: %d", glyphCount));
+        true;
+      | Error(msg) =>
+        Log.error(msg);
+        false;
+      };
+    },
+  ),
+  (
+    "SDl2: Verify version",
+    _ => {
+      let compiledVersion = Sdl2.Version.getCompiled();
+      let linkedVersion = Sdl2.Version.getLinked();
+
+      Log.info(
+        "SDL2 - compiled version: " ++ Sdl2.Version.toString(compiledVersion),
+      );
+      Log.info(
+        "SDL2 - linked version: " ++ Sdl2.Version.toString(linkedVersion),
+      );
+
+      (
+        compiledVersion.major == 2
+        && compiledVersion.minor >= 0
+        && compiledVersion.patch >= 10
+      )
+      && linkedVersion.major == 2
+      && linkedVersion.minor >= 0
+      && linkedVersion.patch >= 10;
+    },
   ),
   (
     "Verify bundled reason-language-server executable",
     (setup: Setup.t) => {
       let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
 
-      ret.stdout
-      |> String.trim
-      |> Utility.StringUtil.contains("Reason Language Server");
+      ret.stdout |> String.trim |> StringEx.contains("Reason Language Server");
     },
   ),
   (

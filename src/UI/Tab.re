@@ -3,103 +3,174 @@
  *
  */
 
-open Revery;
 open Revery.UI;
 
 open Oni_Core;
+
 module Model = Oni_Model;
-module Ext = Oni_Extensions;
 
-type tabAction = unit => unit;
+module FontAwesome = Oni_Components.FontAwesome;
+module FontIcon = Oni_Components.FontIcon;
 
-let minWidth_ = 125;
-let proportion = p => float_of_int(minWidth_) *. p |> int_of_float;
+module Theme = Feature_Theme;
 
-let horizontalBorderStyles = (tabPosition, numberOfTabs) =>
-  Style.(
-    switch (tabPosition, numberOfTabs) {
-    /* A single tab should have no borders */
-    | (1, 1) => []
-    /* The last tab should also have no borders */
-    | (i, l) when i == l => []
-    /* Every other tab should have a right border */
-    | (_, _) => [borderRight(~width=1, ~color=Color.rgba(0., 0., 0., 0.1))]
-    }
-  );
+module Constants = {
+  include Constants;
 
-let make =
-    (
-      ~title,
-      ~tabPosition,
-      ~numberOfTabs,
-      ~active,
-      ~modified,
-      ~onClick,
-      ~onClose,
-      ~theme: Theme.t,
-      ~uiFont: UiFont.t,
-      ~mode: Vim.Mode.t,
-      ~showHighlight: bool,
-      (),
-    ) => {
-  let (modeColor, _) = Theme.getColorsForMode(theme, mode);
+  let minWidth = 125;
+};
 
-  let borderColor =
-    active && showHighlight ? modeColor : Colors.transparentBlack;
+module Colors = Theme.Colors.Tab;
 
-  let containerStyle =
-    Style.[
+let proportion = factor =>
+  float(Constants.minWidth) *. factor |> int_of_float;
+
+module Styles = {
+  open Style;
+
+  let container =
+      (
+        ~mode as _,
+        ~isGroupFocused,
+        ~isActive,
+        ~isHovered,
+        ~isModified,
+        ~theme,
+      ) => {
+    let background = {
+      let unhovered =
+        switch (isActive, isGroupFocused) {
+        | (false, _) => Colors.inactiveBackground
+        | (true, false) => Colors.unfocusedActiveBackground
+        | (true, true) => Colors.activeBackground
+        };
+
+      if (isHovered) {
+        let color =
+          isGroupFocused
+            ? Colors.unfocusedHoverBackground : Colors.hoverBackground;
+
+        color.tryFrom(theme) |> Option.value(~default=unhovered.from(theme));
+      } else {
+        unhovered.from(theme);
+      };
+    };
+
+    let borderTop = {
+      let color =
+        if (isActive) {
+          background;
+        } else {
+          let color =
+            isGroupFocused
+              ? Colors.activeBorderTop : Colors.unfocusedActiveBorderTop;
+
+          color.tryFrom(theme) |> Option.value(~default=background);
+        };
+
+      borderTop(~color, ~width=2);
+    };
+
+    let borderBottom = {
+      let color = {
+        let unhovered =
+          (
+            switch (isActive, isGroupFocused, isModified) {
+            | (false, _, false) => Colors.border
+            | (false, false, true) => Colors.unfocusedInactiveModifiedBorder
+            | (false, true, true) => Colors.inactiveModifiedBorder
+            | (true, false, true) => Colors.unfocusedActiveModifiedBorder
+            | (true, true, true) => Colors.activeModifiedBorder
+            | (true, false, false) => Colors.unfocusedActiveBorder
+            | (true, true, false) => Colors.activeBorder
+            }
+          ).
+            tryFrom(
+            theme,
+          )
+          |> Option.value(~default=background);
+
+        if (isHovered) {
+          let color =
+            isGroupFocused ? Colors.unfocusedHoverBorder : Colors.hoverBorder;
+
+          color.tryFrom(theme) |> Option.value(~default=unhovered);
+        } else {
+          unhovered;
+        };
+      };
+
+      borderBottom(~color, ~width=1);
+    };
+
+    [
       overflow(`Hidden),
       paddingHorizontal(5),
-      backgroundColor(theme.editorBackground),
-      borderTop(~color=borderColor, ~width=2),
-      borderBottom(~color=theme.editorBackground, ~width=2),
-      height(Constants.default.tabHeight),
-      minWidth(minWidth_),
+      backgroundColor(background),
+      borderTop,
+      borderBottom,
+      height(Constants.tabHeight),
+      minWidth(Constants.minWidth),
       flexDirection(`Row),
       justifyContent(`Center),
       alignItems(`Center),
-      ...horizontalBorderStyles(tabPosition, numberOfTabs),
     ];
+  };
 
-  let textStyle =
-    Style.[
+  let text = (~isGroupFocused, ~isActive, ~uiFont: UiFont.t, ~theme) => {
+    let foreground =
+      switch (isActive, isGroupFocused) {
+      | (false, false) => Colors.unfocusedInactiveForeground
+      | (false, true) => Colors.inactiveForeground
+      | (true, false) => Colors.unfocusedActiveForeground
+      | (true, true) => Colors.activeForeground
+      };
+    [
       width(proportion(0.80) - 10),
       textOverflow(`Ellipsis),
-      fontFamily(uiFont.fontFile),
+      fontFamily(
+        isGroupFocused && isActive ? uiFont.fontFileItalic : uiFont.fontFile,
+      ),
       fontSize(uiFont.fontSize),
-      color(theme.tabActiveForeground),
-      backgroundColor(theme.editorBackground),
+      color(foreground.from(theme)),
       justifyContent(`Center),
       alignItems(`Center),
     ];
+  };
 
-  let iconContainerStyle =
-    Style.[
-      width(32),
-      height(Constants.default.tabHeight),
-      alignItems(`Center),
-      justifyContent(`Center),
-    ];
+  let icon = [
+    width(32),
+    height(Constants.tabHeight),
+    alignItems(`Center),
+    justifyContent(`Center),
+  ];
+};
 
-  let icon = modified ? FontAwesome.circle : FontAwesome.times;
-
-  let state = GlobalContext.current().state;
-  let language =
-    Ext.LanguageInfo.getLanguageFromFilePath(state.languageInfo, title);
-  let fileIcon: option(Model.IconTheme.IconDefinition.t) =
-    Model.IconTheme.getIconForFile(state.iconTheme, title, language);
+let%component make =
+              (
+                ~title,
+                ~isGroupFocused,
+                ~isActive,
+                ~isModified,
+                ~onClick,
+                ~onClose,
+                ~theme: ColorTheme.resolver,
+                ~uiFont: UiFont.t,
+                ~mode: Vim.Mode.t,
+                ~icon,
+                (),
+              ) => {
+  let%hook (isHovered, setHovered) = Hooks.state(false);
 
   let fileIconView =
-    switch (fileIcon) {
-    | Some(v) =>
+    switch (icon) {
+    | Some((icon: Model.IconTheme.IconDefinition.t)) =>
       <FontIcon
         fontFamily="seti.ttf"
-        icon={v.fontCharacter}
-        backgroundColor={theme.editorBackground}
-        color={v.fontColor}
+        icon={icon.fontCharacter}
+        color={icon.fontColor}
         /* TODO: Use 'weight' value from IconTheme font */
-        fontSize={int_of_float(float_of_int(uiFont.fontSize) *. 1.5)}
+        fontSize={uiFont.fontSize *. 1.5}
       />
     | None => React.empty
     };
@@ -112,7 +183,17 @@ let make =
     };
   };
 
-  <View style=containerStyle>
+  <View
+    onMouseOver={_ => setHovered(_ => true)}
+    onMouseOut={_ => setHovered(_ => false)}
+    style={Styles.container(
+      ~mode,
+      ~isGroupFocused,
+      ~isActive,
+      ~isHovered,
+      ~isModified,
+      ~theme,
+    )}>
     <Sneakable
       onSneak=onClick
       onAnyClick
@@ -123,15 +204,21 @@ let make =
         alignItems(`Center),
         justifyContent(`Center),
       ]>
-      <View style=iconContainerStyle> fileIconView </View>
-      <Text style=textStyle text=title />
+      <View style=Styles.icon> fileIconView </View>
+      <Text
+        style={Styles.text(~isGroupFocused, ~isActive, ~uiFont, ~theme)}
+        text=title
+      />
     </Sneakable>
-    <Sneakable onClick=onClose style=iconContainerStyle>
+    <Sneakable onClick=onClose style=Styles.icon>
       <FontIcon
-        icon
-        backgroundColor={theme.editorBackground}
-        color={theme.tabActiveForeground}
-        fontSize={modified ? 10 : 12}
+        icon={isModified ? FontAwesome.circle : FontAwesome.times}
+        color={
+          isActive
+            ? Colors.activeForeground.from(theme)
+            : Colors.inactiveForeground.from(theme)
+        }
+        fontSize={isModified ? 10. : 12.}
       />
     </Sneakable>
   </View>;

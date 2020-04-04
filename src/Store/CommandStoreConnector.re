@@ -3,6 +3,8 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
+module KeyDisplayer = Oni_Components.KeyDisplayer;
+
 let pathSymlinkEnabled = (~addingLink) =>
   (
     Revery.Environment.os == Revery.Environment.Mac
@@ -45,6 +47,18 @@ let createDefaultCommands = getState => {
       ),
       Command.create(
         ~category=Some("View"),
+        ~name="Open Next Editor",
+        ~action=Command("workbench.action.nextEditor"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
+        ~name="Open Previous Editor",
+        ~action=Command("workbench.action.previousEditor"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("View"),
         ~name="Toggle Problems (Errors, Warnings)",
         ~action=Command("workbench.actions.view.problems"),
         (),
@@ -78,14 +92,14 @@ let createDefaultCommands = getState => {
       Command.create(
         ~category=Some("Input"),
         ~name="Disable Key Displayer",
-        ~enabled=() => KeyDisplayer.getEnabled(getState().keyDisplayer),
+        ~enabled=() => getState().keyDisplayer != None,
         ~action=DisableKeyDisplayer,
         (),
       ),
       Command.create(
         ~category=Some("Input"),
         ~name="Enable Key Displayer",
-        ~enabled=() => !KeyDisplayer.getEnabled(getState().keyDisplayer),
+        ~enabled=() => getState().keyDisplayer == None,
         ~action=EnableKeyDisplayer,
         (),
       ),
@@ -114,6 +128,12 @@ let createDefaultCommands = getState => {
         (),
       ),
       Command.create(
+        ~category=Some("Editor"),
+        ~name="Detect Indentation from Content",
+        ~action=Command("editor.action.detectIndentation"),
+        (),
+      ),
+      Command.create(
         ~category=Some("System"),
         ~name="Add Oni2 to System PATH",
         ~enabled=() => pathSymlinkEnabled(~addingLink=true),
@@ -137,6 +157,24 @@ let createDefaultCommands = getState => {
         ~category=Some("Sneak"),
         ~name="Start sneak (keyboard-accessible UI)",
         ~action=Command("sneak.start"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in new horizontal split",
+        ~action=Command("terminal.new.horizontal"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in new vertical split",
+        ~action=Command("terminal.new.vertical"),
+        (),
+      ),
+      Command.create(
+        ~category=Some("Terminal"),
+        ~name="Open terminal in current window",
+        ~action=Command("terminal.new.current"),
         (),
       ),
     ]
@@ -169,7 +207,11 @@ let start = (getState, contributedCommands) => {
         | Some(b) =>
           let ec = EditorGroup.create();
           let (g, editorId) =
-            EditorGroup.getOrCreateEditorForBuffer(ec, Buffer.getId(b));
+            EditorGroup.getOrCreateEditorForBuffer(
+              ~font=state.editorFont,
+              ~bufferId=Buffer.getId(b),
+              ec,
+            );
           let g = EditorGroup.setActiveEditor(g, editorId);
           g;
         | None => EditorGroup.create()
@@ -312,6 +354,45 @@ let start = (getState, contributedCommands) => {
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),
     ("window.moveDown", state => windowMoveEffect(state, Down)),
+    (
+      "terminal.new.vertical",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Vertical,
+            }),
+          ),
+        );
+      },
+    ),
+    (
+      "terminal.new.horizontal",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Horizontal,
+            }),
+          ),
+        );
+      },
+    ),
+    (
+      "terminal.new.current",
+      _ => {
+        singleActionEffect(
+          Actions.Terminal(
+            Feature_Terminal.NewTerminal({
+              cmd: None,
+              splitDirection: Current,
+            }),
+          ),
+        );
+      },
+    ),
   ];
 
   let commandMap =
@@ -333,6 +414,17 @@ let start = (getState, contributedCommands) => {
   let updater = (state: State.t, action) => {
     switch (action) {
     | Init => (state, setInitialCommands)
+
+    | EnableKeyDisplayer => (
+        {...state, keyDisplayer: Some(KeyDisplayer.initial)},
+        Isolinear.Effect.none,
+      )
+
+    | DisableKeyDisplayer => (
+        {...state, keyDisplayer: None},
+        Isolinear.Effect.none,
+      )
+
     | Command(cmd) =>
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))

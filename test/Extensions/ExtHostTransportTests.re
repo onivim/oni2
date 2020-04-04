@@ -1,14 +1,16 @@
 open Oni_Core;
-open Oni_Core_Test;
+open Utility;
 open Oni_Extensions;
 
 open TestFramework;
+
+module Helpers = Oni_Core_Test.Helpers;
 
 let initialConfiguration = Oni_Extensions.Configuration.empty;
 let initData = ExtHostInitData.create();
 
 describe("ExtHostTransport", ({test, _}) => {
-  test("gets initialized message", ({expect}) =>
+  test("gets initialized message", ({expect, _}) =>
     Helpers.repeat(() => {
       let setup = Setup.init();
       let initialized = ref(false);
@@ -20,7 +22,7 @@ describe("ExtHostTransport", ({test, _}) => {
           ~onInitialized,
           setup,
         );
-      Oni_Core.Utility.waitForCondition(() => {
+      ThreadEx.waitForCondition(() => {
         Revery.App.flushPendingCallbacks();
         initialized^;
       });
@@ -28,7 +30,7 @@ describe("ExtHostTransport", ({test, _}) => {
       ExtHostTransport.close(extClient);
     })
   );
-  test("doesn't die after a few seconds", ({expect}) => {
+  test("doesn't die after a few seconds", ({expect, _}) => {
     let setup = Setup.init();
     let initialized = ref(false);
     let closed = ref(false);
@@ -42,7 +44,7 @@ describe("ExtHostTransport", ({test, _}) => {
         ~onClosed,
         setup,
       );
-    Oni_Core.Utility.waitForCondition(() => {
+    ThreadEx.waitForCondition(() => {
       Revery.App.flushPendingCallbacks();
       initialized^;
     });
@@ -52,7 +54,7 @@ describe("ExtHostTransport", ({test, _}) => {
     Unix.sleep(2);
     expect.bool(closed^).toBe(false);
   });
-  test("closes after close is called", ({expect}) => {
+  test("closes after close is called", ({expect, _}) => {
     let setup = Setup.init();
     let initialized = ref(false);
     let closed = ref(false);
@@ -66,13 +68,13 @@ describe("ExtHostTransport", ({test, _}) => {
         ~onClosed,
         setup,
       );
-    Oni_Core.Utility.waitForCondition(() => {
+    ThreadEx.waitForCondition(() => {
       Revery.App.flushPendingCallbacks();
       initialized^;
     });
     expect.bool(initialized^).toBe(true);
     ExtHostTransport.close(extClient);
-    Oni_Core.Utility.waitForCondition(() => {closed^});
+    ThreadEx.waitForCondition(() => {closed^});
     expect.bool(closed^).toBe(false);
   });
   test("basic extension activation", _ => {
@@ -105,11 +107,11 @@ describe("ExtHostTransport", ({test, _}) => {
         ~onMessage,
         setup,
       );
-    Oni_Core.Utility.waitForCondition(() => {
+    ThreadEx.waitForCondition(() => {
       Revery.App.flushPendingCallbacks();
       gotWillActivateMessage^;
     });
-    Oni_Core.Utility.waitForCondition(() => {
+    ThreadEx.waitForCondition(() => {
       Revery.App.flushPendingCallbacks();
       gotDidActivateMessage^;
     });

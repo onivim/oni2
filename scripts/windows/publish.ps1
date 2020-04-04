@@ -16,6 +16,10 @@ if (Test-Path env:CODESIGN_CERTIFICATE) {
     CodeSign("_release/win32/Oni2_editor.exe")
     CodeSign("_release/win32/rg.exe")
     CodeSign("_release/win32/node.exe")
+    CodeSign("_release/win32/*.dll")
+    CodeSign("_release/win32/node/node_modules/node-pty/build/Release/*.dll")
+    CodeSign("_release/win32/node/node_modules/node-pty/build/Release/*.exe")
+    CodeSign("_release/win32/node/node_modules/node-pty/build/Release/*.node")
 }
 
 mkdir -p _publish
@@ -28,7 +32,7 @@ npm install -g innosetup-compiler
 innosetup-compiler _release/setup.iss --O=_publish
 
 if (Test-Path env:CODESIGN_CERTIFICATE) {
-    CodeSign("_publish/Onivim2-0.3.0-win.exe");
+    CodeSign("_publish/Onivim2-win.exe");
 }
 
-mv _publish/Onivim2-0.3.0-win.exe _publish/Onivim2-$SHORT_COMMIT_ID-x64.exe
+mv _publish/Onivim2-win.exe _publish/Onivim2-$SHORT_COMMIT_ID-x64.exe

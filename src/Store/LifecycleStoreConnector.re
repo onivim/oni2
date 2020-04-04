@@ -5,52 +5,57 @@
  * - Handling quit cleanup
  */
 
-module Core = Oni_Core;
-module Model = Oni_Model;
+open Oni_Model;
 
 let start = quit => {
-  let (stream, dispatch) = Isolinear.Stream.create();
-
-  let quitAllEffect = (state: Model.State.t, force) => {
+  let quitAllEffect = (state: State.t, force) => {
     let handlers = state.lifecycle.onQuitFunctions;
 
-    let anyModified = Model.Buffers.anyModified(state.buffers);
+    let anyModified = Buffers.anyModified(state.buffers);
     let canClose = force || !anyModified;
 
-    Isolinear.Effect.create(~name="lifecycle.quit", () =>
+    Isolinear.Effect.createWithDispatch(~name="lifecycle.quitAll", dispatch =>
       if (canClose) {
+        dispatch(Actions.ReallyQuitting);
         List.iter(h => h(), handlers);
         quit(0);
       }
     );
   };
 
-  let quitBufferEffect = (state: Model.State.t, buffer: Vim.Buffer.t, force) => {
-    Isolinear.Effect.create(~name="lifecycle.quitBuffer", () => {
-      let editorGroup = Model.Selectors.getActiveEditorGroup(state);
-      switch (Model.Selectors.getActiveEditor(editorGroup)) {
+  let quitBufferEffect = (state: State.t, buffer: Vim.Buffer.t, force) => {
+    Isolinear.Effect.createWithDispatch(~name="lifecycle.quitBuffer", dispatch => {
+      let editorGroup = Selectors.getActiveEditorGroup(state);
+      switch (Selectors.getActiveEditor(editorGroup)) {
       | None => ()
       | Some(editor) =>
         let bufferMeta = Vim.BufferMetadata.ofBuffer(buffer);
         if (editor.bufferId == bufferMeta.id) {
           if (force || !bufferMeta.modified) {
-            dispatch(Model.Actions.ViewCloseEditor(editor.editorId));
+            dispatch(Actions.ViewCloseEditor(editor.editorId));
           };
         };
       };
     });
   };
 
-  let updater = (state: Model.State.t, action) => {
+  let updater = (state: State.t, action) => {
     switch (action) {
-    | Model.Actions.QuitBuffer(buffer, force) => (
+    | Actions.QuitBuffer(buffer, force) => (
         state,
         quitBufferEffect(state, buffer, force),
       )
-    | Model.Actions.Quit(force) => (state, quitAllEffect(state, force))
+
+    | Actions.Quit(force) => (state, quitAllEffect(state, force))
+
+    | WindowCloseBlocked => (
+        {...state, modal: Some(Feature_Modals.unsavedBuffersWarning)},
+        Isolinear.Effect.none,
+      )
+
     | _ => (state, Isolinear.Effect.none)
     };
   };
 
-  (updater, stream);
+  updater;
 };

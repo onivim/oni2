@@ -27,7 +27,7 @@ let repeat = (~iterations: int=5, f) => {
 
 let validateRange =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualRange: Range.t,
       expectedRange: Range.t,
     ) => {
@@ -46,17 +46,13 @@ let validateRange =
 };
 
 let validateRanges =
-    (
-      expect: Rely__DefaultMatchers.matchers(unit),
-      actualRanges,
-      expectedRanges,
-    ) => {
+    (expect: Rely.matchers(unit), actualRanges, expectedRanges) => {
   List.iter2(validateRange(expect), actualRanges, expectedRanges);
 };
 
 let validateBuffer =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualBuffer: Buffer.t,
       expectedLines: array(string),
     ) => {
@@ -69,7 +65,7 @@ let validateBuffer =
   };
 
   let f = (i, expected) => {
-    let actual = Buffer.getLine(actualBuffer, i);
+    let actual = Buffer.getLine(i, actualBuffer) |> BufferLine.raw;
     validateLine(actual, expected);
   };
 

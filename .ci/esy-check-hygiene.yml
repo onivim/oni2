@@ -4,12 +4,16 @@ steps:
   - task: NodeTool@0
     inputs:
       versionSpec: '8.9'
-  - script: npm install -g esy@0.6.0
-    displayName: 'npm install -g esy@0.6.0'
+  - script: npm install -g esy@0.6.2
+    displayName: 'npm install -g esy@0.6.2'
   - script: npm install -g yarn
     displayName: 'npm install -g yarn'
+  - script: git diff --exit-code
+    displayName: 'check that they are no .js.map/.ts files leftover in extensions. If this fails, run ./scripts/clean-extensions.sh and re-submit PR.'
   - script: esy install
     displayName: 'esy install'
+  - script: esy clean-extensions
+    displayName: 'esy clean-extensions'
   - script: git diff --exit-code
     displayName: 'check that `esy.lock` is up-to-date. If this fails, run ./update-lockfiles.sh and re-submit PR.'
   - script: esy @bench install

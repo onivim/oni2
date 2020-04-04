@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Core_Test;
 open Oni_Extensions;
 
 open TestFramework;
@@ -20,7 +19,7 @@ let normalizeExpectedPath = path =>
 
 describe("ExtHostClient", ({describe, _}) => {
   describe("activation", ({test, _}) => {
-    test("activates by language", ({expect}) => {
+    test("activates by language", ({expect, _}) => {
       let activations: ref(list(string)) = ref([]);
       let onDidActivateExtension = id => activations := [id, ...activations^];
 
@@ -38,7 +37,7 @@ describe("ExtHostClient", ({describe, _}) => {
       );
     });
 
-    test("activates by command", ({expect}) => {
+    test("activates by command", ({expect, _}) => {
       let activations: ref(list(string)) = ref([]);
       let onDidActivateExtension = id => activations := [id, ...activations^];
 
@@ -60,11 +59,15 @@ describe("ExtHostClient", ({describe, _}) => {
   });
 
   describe("commands", ({test, _}) =>
-    test("executes simple command", ({expect}) => {
+    test("executes simple command", ({expect, _}) => {
       let registeredCommands = empty();
       let messages = empty();
 
-      let onShowMessage = append(messages);
+      let dispatch =
+        fun
+        | ExtHostClient.ShowMessage({message, _}) =>
+          append(messages, message)
+        | _ => ();
       let onRegisterCommand = append(registeredCommands);
 
       let isExpectedCommandRegistered = () =>
@@ -73,7 +76,7 @@ describe("ExtHostClient", ({describe, _}) => {
       let anyMessages = any(messages);
 
       withExtensionClient(
-        ~onShowMessage,
+        ~dispatch,
         ~onRegisterCommand,
         client => {
           Waiters.wait(isExpectedCommandRegistered, client);
@@ -103,11 +106,15 @@ describe("ExtHostClient", ({describe, _}) => {
         (),
       );
     };
-    test("document added successfully", ({expect}) => {
+    test("document added successfully", ({expect, _}) => {
       let registeredCommands = empty();
       let messages = emptyInfoMsgs();
 
-      let onShowMessage = appendInfoMsg(messages);
+      let dispatch =
+        fun
+        | ExtHostClient.ShowMessage({message, _}) =>
+          appendInfoMsg(messages, message)
+        | _ => ();
       let onRegisterCommand = append(registeredCommands);
 
       let isExpectedCommandRegistered = () =>
@@ -124,7 +131,7 @@ describe("ExtHostClient", ({describe, _}) => {
 
       withExtensionClient(
         ~onRegisterCommand,
-        ~onShowMessage,
+        ~dispatch,
         client => {
           Waiters.wait(isExpectedCommandRegistered, client);
           expect.bool(isExpectedCommandRegistered()).toBe(true);
@@ -143,11 +150,15 @@ describe("ExtHostClient", ({describe, _}) => {
       );
     });
 
-    test("document updated successfully", ({expect}) => {
+    test("document updated successfully", ({expect, _}) => {
       let registeredCommands = empty();
       let messages = emptyInfoMsgs();
 
-      let onShowMessage = appendInfoMsg(messages);
+      let dispatch =
+        fun
+        | ExtHostClient.ShowMessage({message, _}) =>
+          appendInfoMsg(messages, message)
+        | _ => ();
       let onRegisterCommand = append(registeredCommands);
 
       let isExpectedCommandRegistered = () =>
@@ -179,7 +190,7 @@ describe("ExtHostClient", ({describe, _}) => {
         );
 
       withExtensionClient(
-        ~onShowMessage,
+        ~dispatch,
         ~onRegisterCommand,
         client => {
           Waiters.wait(isExpectedCommandRegistered, client);
@@ -222,7 +233,7 @@ describe("ExtHostClient", ({describe, _}) => {
           ExtHostClient.updateDocument(
             Uri.fromPath("/root/test.txt"),
             modelChangedEvent,
-            true,
+            ~dirty=true,
             client,
           );
 

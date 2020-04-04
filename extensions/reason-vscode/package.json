@@ -3,7 +3,7 @@
 	"description": "IDE & Syntax support for Reason/OCaml",
 	"author": "Jared Forsyth",
 	"license": "ISC",
-	"version": "1.7.2",
+	"version": "1.7.8",
 	"publisher": "jaredly",
 	"repository": {
 		"type": "git",
@@ -39,6 +39,10 @@
 			{
 				"command": "reason-language-server.create_interface",
 				"title": "Reason: Create an interface file for this implementation file."
+			},
+			{
+				"command": "reason-language-server.dump_file_data",
+				"title": "Reason: dump data on the current file"
 			}
 		],
 		"snippets": [
@@ -77,6 +81,10 @@
 				"reason_language_server.lispRefmt": {
 					"type": "string",
 					"description": "Provide a location for the reason-lisp lispRefmt binary"
+				},
+				"reason_language_server.mlfmt": {
+					"type": "string",
+					"description": "Provide a location for an .ml/.mli formatter"
 				},
 				"reason_language_server.format_width": {
 					"type": "number",
@@ -117,11 +125,6 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Enables autorun of bsb"
-				},
-				"reason_language_server.useOldDuneProcess": {
-					"type": "boolean",
-					"default": true,
-					"description": "Keep the old process for determining package files (for compatability, will remove soon)"
 				}
 			}
 		},
@@ -199,10 +202,5 @@
 	},
 	"devDependencies": {
 		"typescript": "^2.8.1"
-	},
-	"__metadata": {
-		"id": "8a8e3e61-d49b-47f8-b98f-b7169d624b29",
-		"publisherId": "c10ae63a-fcd5-41d7-a94f-f0cebd0bcb1c",
-		"publisherDisplayName": "Jared Forsyth"
 	}
 }

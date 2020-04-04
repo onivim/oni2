@@ -4,6 +4,9 @@
  * In-memory text buffer representation
  */
 open EditorCoreTypes;
+module ArrayEx = Utility.ArrayEx;
+module OptionEx = Utility.OptionEx;
+module Path = Utility.Path;
 
 type t = {
   id: int,
@@ -11,7 +14,9 @@ type t = {
   fileType: option(string),
   modified: bool,
   version: int,
-  lines: array(string),
+  lines: array(BufferLine.t),
+  originalUri: option(Uri.t),
+  originalLines: option(array(string)),
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
   lastUsed: float,
@@ -19,19 +24,60 @@ type t = {
 
 let show = _ => "TODO";
 
-let ofLines = (~id=0, lines: array(string)) => {
-  id,
-  version: 0,
-  filePath: None,
-  fileType: None,
-  modified: false,
-  lines,
-  indentation: None,
-  syntaxHighlightingEnabled: true,
-  lastUsed: 0.,
+let getShortFriendlyName = ({filePath, _}) => {
+  Option.map(Filename.basename, filePath);
 };
 
-let empty = ofLines([||]);
+let getMediumFriendlyName =
+    (~workingDirectory=?, {filePath: maybeFilePath, _}) => {
+  maybeFilePath
+  |> Option.map(filePath =>
+       switch (BufferPath.parse(filePath)) {
+       | Welcome => "Welcome"
+       | Version => "Version"
+       | Terminal({cmd, _}) => "Terminal - " ++ cmd
+       | FilePath(fp) =>
+         switch (workingDirectory) {
+         | Some(base) => Path.toRelative(~base, fp)
+         | _ => Sys.getcwd()
+         }
+       }
+     );
+};
+
+let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
+  maybeFilePath
+  |> Option.map(filePath => {
+       switch (BufferPath.parse(filePath)) {
+       | Welcome => "Welcome"
+       | Version => "Version"
+       | Terminal({cmd, _}) => "Terminal - " ++ cmd
+       | FilePath(fp) => fp
+       }
+     });
+};
+
+let ofLines = (~id=0, rawLines: array(string)) => {
+  let lines =
+    rawLines
+    |> Array.map(BufferLine.make(~indentation=IndentationSettings.default));
+
+  {
+    id,
+    version: 0,
+    filePath: None,
+    fileType: None,
+    modified: false,
+    lines,
+    originalUri: None,
+    originalLines: None,
+    indentation: None,
+    syntaxHighlightingEnabled: true,
+    lastUsed: 0.,
+  };
+};
+
+let initial = ofLines([||]);
 
 let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   id: metadata.id,
@@ -40,6 +86,8 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   modified: metadata.modified,
   fileType: None,
   lines: [||],
+  originalUri: None,
+  originalLines: None,
   indentation: None,
   syntaxHighlightingEnabled: true,
   lastUsed: 0.,
@@ -59,8 +107,20 @@ let setFileType = (fileType: option(string), buffer: t) => {
 
 let getId = (buffer: t) => buffer.id;
 
-let getLine = (buffer: t, line: int) => buffer.lines[line];
-let getLines = (buffer: t) => buffer.lines;
+let getLine = (line: int, buffer: t) => {
+  buffer.lines[line];
+};
+
+let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
+
+let getOriginalUri = buffer => buffer.originalUri;
+let setOriginalUri = (uri, buffer) => {...buffer, originalUri: Some(uri)};
+
+let getOriginalLines = buffer => buffer.originalLines;
+let setOriginalLines = (lines, buffer) => {
+  ...buffer,
+  originalLines: Some(lines),
+};
 
 let getVersion = (buffer: t) => buffer.version;
 let setVersion = (version: int, buffer: t) => {...buffer, version};
@@ -85,35 +145,11 @@ let getUri = (buffer: t) => {
   };
 };
 
-/*
- * TODO:
- * - Handle variable tab sizes, based on indentation settings
- * - Handle multibyte characters
- */
-let getLineLength = (buffer: t, line: int) => {
-  let line = getLine(buffer, line);
-  String.length(line);
-};
-
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
-let slice = (~lines: array(string), ~start, ~length, ()) => {
-  let len = Array.length(lines);
-  if (start >= len) {
-    [||];
-  } else {
-    let start = max(start, 0);
-    let len = min(start + length, len) - start;
-    if (len <= 0) {
-      [||];
-    } else {
-      Array.sub(lines, start, len);
-    };
-  };
-};
-
-let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
-  let updateLines = update.lines;
+let applyUpdate =
+    (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
+  let updateLines = update.lines |> Array.map(BufferLine.make(~indentation));
   let startLine = update.startLine |> Index.toZeroBased;
   let endLine = update.endLine |> Index.toZeroBased;
   if (Array.length(lines) == 0) {
@@ -122,16 +158,16 @@ let applyUpdate = (lines: array(string), update: BufferUpdate.t) => {
     let ret = Array.concat([lines, updateLines]);
     ret;
   } else {
-    let prev = slice(~lines, ~start=0, ~length=startLine, ());
+    let prev = ArrayEx.slice(~lines, ~start=0, ~length=startLine, ());
     let post =
-      slice(
+      ArrayEx.slice(
         ~lines,
         ~start=endLine,
         ~length=Array.length(lines) - endLine,
         (),
       );
 
-    let lines = update.lines;
+    let lines = updateLines;
 
     Array.concat([prev, lines, post]);
   };
@@ -143,7 +179,14 @@ let isIndentationSet = buf => {
   | None => false
   };
 };
-let setIndentation = (indent, buf) => {...buf, indentation: Some(indent)};
+let setIndentation = (indentation, buf) => {
+  let lines =
+    buf.lines
+    |> Array.map(line =>
+         BufferLine.raw(line) |> BufferLine.make(~indentation)
+       );
+  {...buf, lines, indentation: Some(indentation)};
+};
 
 let getIndentation = buf => buf.indentation;
 
@@ -151,20 +194,27 @@ let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
   update.version > getVersion(buf);
 };
 
-let update = (buf: t, update: BufferUpdate.t) =>
+let update = (buf: t, update: BufferUpdate.t) => {
+  let indentation =
+    Option.value(~default=IndentationSettings.default, buf.indentation);
   if (shouldApplyUpdate(update, buf)) {
     /***
-     If it's a full update, just apply the lines in their entiretupdate.endLiney
+     If it's a full update, just apply the lines in the entire update
      */
     if (update.isFull) {
-      {...buf, version: update.version, lines: update.lines};
+      {
+        ...buf,
+        version: update.version,
+        lines: update.lines |> Array.map(BufferLine.make(~indentation)),
+      };
     } else {
       {
         ...buf,
         version: update.version,
-        lines: applyUpdate(buf.lines, update),
+        lines: applyUpdate(~indentation, buf.lines, update),
       };
     };
   } else {
     buf;
   };
+};

@@ -10,13 +10,13 @@ runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.mode == Vim.Types.Normal
+    state.vimMode == Vim.Types.Normal
   );
 
   dispatch(KeyboardInput("i"));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    state.mode == Vim.Types.Insert
+    state.vimMode == Vim.Types.Insert
   );
 
   setClipboard(Some("def\nghi"));
@@ -31,8 +31,8 @@ runTest(
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
-      let line1 = Buffer.getLine(buf, 0);
-      let line2 = Buffer.getLine(buf, 1);
+      let line1 = Buffer.getLine(0, buf) |> BufferLine.raw;
+      let line2 = Buffer.getLine(1, buf) |> BufferLine.raw;
       Log.info("Line1 is: " ++ line1 ++ "|");
       Log.info("Line2 is: " ++ line2 ++ "|");
       String.equal(line1, "Adef") && String.equal(line2, "ghiB");

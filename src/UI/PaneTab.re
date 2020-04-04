@@ -38,7 +38,7 @@ let make = (~uiFont, ~theme, ~title, ~onClick, ~active, ()) => {
   let textStyle =
     Style.[
       textOverflow(`Ellipsis),
-      fontFamily(uiFont.fontFile),
+      fontFamily(active ? uiFont.fontFileSemiBold : uiFont.fontFile),
       fontSize(uiFont.fontSize),
       color(theme.tabActiveForeground),
       backgroundColor(theme.editorBackground),

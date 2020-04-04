@@ -16,13 +16,12 @@ module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
-module Option = Core.Utility.Option;
+module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, cli) => {
   switch (Store.Utility.getUserExtensionsDirectory(cli)) {
   | Some(extensionsFolder) =>
-    let result =
-      ExtM.install(~extensionsFolder, ~path) |> Core.Utility.LwtUtil.sync;
+    let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
 
     switch (result) {
     | Ok(_) =>
@@ -55,7 +54,7 @@ let listExtensions = cli => {
 };
 
 let printVersion = _cli => {
-  print_endline("Onivim 2." ++ Core.BuildInfo.version);
+  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
   0;
 };
 
@@ -92,8 +91,6 @@ if (cliOptions.syntaxHighlightService) {
   let init = app => {
     Log.debug("Init");
 
-    let _ = Revery.Log.listen((_, msg) => ReveryLog.debug(msg));
-
     let w =
       App.createWindow(
         ~createOptions=
@@ -102,6 +99,7 @@ if (cliOptions.syntaxHighlightService) {
             ~maximized=false,
             ~vsync=Vsync.Immediate,
             ~icon=Some("logo.png"),
+            ~titlebarStyle=WindowStyles.Transparent,
             (),
           ),
         app,
@@ -119,10 +117,13 @@ if (cliOptions.syntaxHighlightService) {
     | v => v
     };
 
+    Revery.Window.setBackgroundColor(w, Colors.black);
+
     PreflightChecks.run();
 
-    let initialState = Model.State.create();
-    let currentState = ref(initialState);
+    let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
+
+    let currentState = ref(Model.State.initial(~getUserSettings));
 
     let update = UI.start(w, <Root state=currentState^ />);
 
@@ -132,23 +133,15 @@ if (cliOptions.syntaxHighlightService) {
       isDirty := true;
     };
 
-    let _ =
+    let _: unit => unit =
       Tick.interval(
         _dt =>
           if (isDirty^) {
-            let state = currentState^;
-            GlobalContext.set({...GlobalContext.current(), state});
-            update(<Root state />);
+            update(<Root state=currentState^ />);
             isDirty := false;
           },
         Time.seconds(0),
       );
-
-    let getScaleFactor = () => {
-      Window.getDevicePixelRatio(w) *. Window.getScaleAndZoom(w);
-    };
-
-    let getTime = () => Time.now() |> Time.toFloatSeconds;
 
     let getZoom = () => {
       Window.getZoom(w);
@@ -163,19 +156,19 @@ if (cliOptions.syntaxHighlightService) {
     let setVsync = vsync => Window.setVsync(w, vsync);
 
     let quit = code => {
-      App.quit(~code, app);
+      App.quit(~askNicely=false, ~code, app);
     };
 
     Log.debug("Startup: Starting StoreThread");
     let (dispatch, runEffects) =
       Store.StoreThread.start(
+        ~getUserSettings,
         ~setup,
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
-        ~getTime,
-        ~executingDirectory=Core.Utility.executingDirectory,
+        ~executingDirectory=Revery.Environment.executingDirectory,
+        ~getState=() => currentState^,
         ~onStateChanged,
-        ~getScaleFactor,
         ~getZoom,
         ~setZoom,
         ~setTitle,
@@ -187,21 +180,22 @@ if (cliOptions.syntaxHighlightService) {
       );
     Log.debug("Startup: StoreThread started!");
 
+    let _: Window.unsubscribe =
+      Window.onMaximized(w, () => dispatch(Model.Actions.WindowMaximized));
+    let _: Window.unsubscribe =
+      Window.onMinimized(w, () => dispatch(Model.Actions.WindowMinimized));
+    let _: Window.unsubscribe =
+      Window.onRestored(w, () => dispatch(Model.Actions.WindowRestored));
+    let _: Window.unsubscribe =
+      Window.onFocusGained(w, () =>
+        dispatch(Model.Actions.WindowFocusGained)
+      );
+    let _: Window.unsubscribe =
+      Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
+
     GlobalContext.set({
-      getState: () => currentState^,
       notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
         dispatch(Model.Actions.WindowTreeSetSize(width, height)),
-      notifyEditorSizeChanged: (~editorGroupId, ~width, ~height, ()) =>
-        dispatch(
-          Model.Actions.EditorGroupSetSize(
-            editorGroupId,
-            Core.EditorSize.create(
-              ~pixelWidth=width,
-              ~pixelHeight=height,
-              (),
-            ),
-          ),
-        ),
       openEditorById: id => {
         dispatch(Model.Actions.ViewSetActiveEditor(id));
       },
@@ -212,13 +206,20 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
       setActiveWindow: (splitId, editorGroupId) =>
         dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
-      hideNotification: id => dispatch(Model.Actions.HideNotification(id)),
       dispatch,
-      state: initialState,
     });
 
     dispatch(Model.Actions.Init);
     runEffects();
+
+    // Add a quit handler, so that regardless of how we quit -
+    // we have the opportunity to clean up
+    Revery.App.onBeforeQuit(app, () =>
+      if (!currentState^.isQuitting) {
+        dispatch(Model.Actions.Quit(true));
+      }
+    )
+    |> (ignore: Revery.App.unsubscribe => unit);
 
     List.iter(
       v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),

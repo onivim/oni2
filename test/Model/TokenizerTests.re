@@ -2,23 +2,27 @@ open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
 
-open CamomileLibrary;
-
 module TextRun = Tokenizer.TextRun;
 
 let alwaysSplit = (_, _, _, _) => true;
 let noSplit = (_, _, _, _) => false;
-let splitOnCharacter = (_, c1, _, c2) => !UChar.eq(c1, c2);
+let splitOnCharacter = (_, c1, _, c2) => !Uchar.equal(c1, c2);
 
 let thickB = c =>
-  switch (UChar.char_of(c)) {
+  switch (Uchar.to_char(c)) {
   | 'b' => 2
   | _ => 1
   };
 
+let makeLine =
+  BufferLine.make(
+    ~indentation=
+      IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=2, ()),
+  );
+
 let validateToken =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualToken: TextRun.t,
       expectedToken: TextRun.t,
     ) => {
@@ -39,7 +43,7 @@ let validateToken =
 
 let validateTokens =
     (
-      expect: Rely__DefaultMatchers.matchers(unit),
+      expect: Rely.matchers(unit),
       actualTokens: list(TextRun.t),
       expectedTokens: list(TextRun.t),
     ) => {
@@ -54,32 +58,26 @@ let validateTokens =
 
 describe("Tokenizer", ({test, describe, _}) => {
   describe("start / end indices", ({test, _}) => {
-    test("empty string returns nothing", ({expect}) => {
-      let measure = _ => 1;
-
+    test("empty string returns nothing", ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
           ~startIndex=1,
           ~endIndex=3,
           ~f=noSplit,
-          ~measure,
-          "",
+          "" |> makeLine,
         );
 
       let runs = [];
 
       validateTokens(expect, result, runs);
     });
-    test("start index past string", ({expect}) => {
-      let measure = _ => 1;
-
+    test("start index past string", ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
           ~startIndex=5,
           ~endIndex=8,
           ~f=noSplit,
-          ~measure,
-          "abc",
+          "abc" |> makeLine,
         );
 
       let runs = [];
@@ -88,16 +86,13 @@ describe("Tokenizer", ({test, describe, _}) => {
     });
     test(
       "only part of token is produced when start / end index is specified",
-      ({expect}) => {
-      let measure = _ => 1;
-
+      ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
           ~startIndex=1,
           ~endIndex=3,
           ~f=noSplit,
-          ~measure,
-          "abcd",
+          "abcd" |> makeLine,
         );
 
       let runs = [
@@ -113,26 +108,23 @@ describe("Tokenizer", ({test, describe, _}) => {
 
       validateTokens(expect, result, runs);
     });
-    test("offset prior to tokenize is handled", ({expect}) => {
-      // Pretend 'b' is actually 2 characters wide
-      let measure = thickB;
-
+    test("offset prior to tokenize is handled", ({expect, _}) => {
+      // Use '\t' which is two characters wide with default settings
       let result =
         Tokenizer.tokenize(
-          ~startIndex=2,
-          ~endIndex=4,
+          ~startIndex=3,
+          ~endIndex=5,
           ~f=noSplit,
-          ~measure,
-          "bbbcd",
+          "\t\t\tcd" |> makeLine,
         );
 
       let runs = [
         TextRun.create(
-          ~text="bc",
-          ~startIndex=Index.fromZeroBased(2),
-          ~endIndex=Index.fromZeroBased(4),
-          ~startPosition=Index.fromZeroBased(4),
-          ~endPosition=Index.fromZeroBased(7),
+          ~text="cd",
+          ~startIndex=Index.fromZeroBased(3),
+          ~endIndex=Index.fromZeroBased(5),
+          ~startPosition=Index.fromZeroBased(6),
+          ~endPosition=Index.fromZeroBased(8),
           (),
         ),
       ];
@@ -142,10 +134,10 @@ describe("Tokenizer", ({test, describe, _}) => {
   });
 
   describe("character measurement", ({test, _}) =>
-    test("wide b", ({expect}) => {
-      let str = "abab";
+    test("wide tab", ({expect, _}) => {
+      let str = "a\ta\t";
       let result =
-        Tokenizer.tokenize(~f=splitOnCharacter, ~measure=thickB, str);
+        Tokenizer.tokenize(~endIndex=4, ~f=splitOnCharacter, str |> makeLine);
 
       let runs = [
         TextRun.create(
@@ -157,7 +149,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           (),
         ),
         TextRun.create(
-          ~text="b",
+          ~text="\t",
           ~startIndex=Index.fromZeroBased(1),
           ~endIndex=Index.fromZeroBased(2),
           ~startPosition=Index.fromZeroBased(1),
@@ -173,7 +165,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           (),
         ),
         TextRun.create(
-          ~text="b",
+          ~text="\t",
           ~startIndex=Index.fromZeroBased(3),
           ~endIndex=Index.fromZeroBased(4),
           ~startPosition=Index.fromZeroBased(4),
@@ -186,14 +178,15 @@ describe("Tokenizer", ({test, describe, _}) => {
     })
   );
 
-  test("empty string", ({expect}) => {
-    let result = Tokenizer.tokenize(~f=alwaysSplit, "");
+  test("empty string", ({expect, _}) => {
+    let result =
+      Tokenizer.tokenize(~endIndex=0, ~f=alwaysSplit, "" |> makeLine);
     expect.int(List.length(result)).toBe(0);
   });
 
-  test("string broken up by characters", ({expect}) => {
-    let str = "abab";
-    let result = Tokenizer.tokenize(~f=splitOnCharacter, str);
+  test("string broken up by characters", ({expect, _}) => {
+    let str = "abab" |> makeLine;
+    let result = Tokenizer.tokenize(~endIndex=4, ~f=splitOnCharacter, str);
 
     let runs = [
       TextRun.create(
@@ -233,9 +226,14 @@ describe("Tokenizer", ({test, describe, _}) => {
     validateTokens(expect, result, runs);
   });
 
-  test("string broken up by characters", ({expect}) => {
+  test("string broken up by characters", ({expect, _}) => {
     let str = "aabbbbaa";
-    let result = Tokenizer.tokenize(~f=splitOnCharacter, str);
+    let result =
+      Tokenizer.tokenize(
+        ~endIndex=String.length(str),
+        ~f=splitOnCharacter,
+        str |> makeLine,
+      );
 
     let runs = [
       TextRun.create(

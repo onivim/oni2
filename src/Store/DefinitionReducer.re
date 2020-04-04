@@ -4,6 +4,8 @@
 
 open Oni_Model;
 
+module Definition = Feature_LanguageSupport.Definition;
+
 let reduce = (action: Actions.t, state: Definition.t) => {
   switch (action) {
   | EditorCursorMove(_) => Definition.empty

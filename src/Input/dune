@@ -1,19 +1,16 @@
-(ocamllex
-  (modules When_lexer))
-
-(menhir
-  (modules When_parser))
-
 (library
     (name Oni_Input)
     (public_name Oni2.input)
     (libraries 
         str
         bigarray
+        editor-input
+        sdl2
         zed_oni
         lwt
         lwt.unix
         Oni2.core
+        Oni2.core.whenExpr
         Rench
         Revery
     )

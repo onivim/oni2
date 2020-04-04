@@ -1,14 +1,29 @@
-module Keybinding: {
-  type t = {
-    key: string,
-    command: string,
-    condition: Expression.t,
-  };
-};
-
-type t = list(Keybinding.t);
+type t;
 
 let empty: t;
+
+type effect =
+  | Execute(string)
+  | Text(string)
+  | Unhandled(EditorInput.KeyPress.t);
+
+let count: t => int;
+
+let keyDown:
+  (~context: Hashtbl.t(string, bool), ~key: EditorInput.KeyPress.t, t) =>
+  (t, list(effect));
+
+let text: (~text: string, t) => (t, list(effect));
+
+let keyUp:
+  (~context: Hashtbl.t(string, bool), ~key: EditorInput.KeyPress.t, t) =>
+  (t, list(effect));
+
+type keybinding = {
+  key: string,
+  command: string,
+  condition: WhenExpr.t,
+};
 
 /*
    [of_yojson_with_errors] parses the keybindings,
@@ -16,4 +31,5 @@ let empty: t;
    as well as a list of errors for unsuccessfully parsed keybindings.
  */
 let of_yojson_with_errors:
-  Yojson.Safe.t => result((t, list(string)), string);
+  (~default: list(keybinding)=?, Yojson.Safe.t) =>
+  result((t, list(string)), string);
