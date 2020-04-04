@@ -1,3 +1,5 @@
+module Log = (val Timber.Log.withNamespace("Oni2.Core.WhenExpr.ContextKeys"));
+
 module Lookup = Kernel.KeyedStringMap;
 
 module Value = {
@@ -42,7 +44,17 @@ module Schema = {
     |> Seq.map(entry => (Lookup.key(entry.key), entry))
     |> Lookup.of_seq;
 
-  let union = (xs, ys) => Lookup.union((_key, _x, y) => Some(y), xs, ys);
+  let union = (xs, ys) =>
+    Lookup.union(
+      (key, _x, y) => {
+        Log.errorf(m =>
+          m("Encountered duplicate context key: %s", Lookup.keyName(key))
+        );
+        Some(y);
+      },
+      xs,
+      ys,
+    );
   let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
 
   let map = f =>
