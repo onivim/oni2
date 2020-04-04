@@ -6,6 +6,20 @@ sidebar_label: Integrated Terminal
 
 Onivim features an integrated terminal, with support for modal navigation via 'normal mode'.
 
+<center>
+	<figure>
+		<video autoplay loop muted playsinline width=640>
+			<source src="/vid/open-terminal.mp4" type="video/mp4">
+			<source src="/vid/open-terminal.webm" type="video/webm">
+		</video>
+		<figcaption>
+			<i>
+				Opening the terminal with `:term ++curwin`
+			</i>
+			</figcaption>
+	</figure>
+</center>
+
 To open the terminal:
 
 - `:term` to open a terminal in a horizontal split
@@ -25,6 +39,20 @@ The terminals support the same window movement commands as other windows:
 To change the current working directory, which will also update the file explorer root, you can use the `:cd` command - for example: `:cd ~/my/project`.
 
 ## Normal Mode
+
+<center>
+	<figure>
+		<video autoplay loop muted playsinline width=640>
+			<source src="/vid/terminal-normal-mode.mp4" type="video/mp4">
+			<source src="/vid/termina-normal-mode.webm" type="video/webm">
+		</video>
+		<figcaption>
+			<i>
+				Switching to `Terminal Normal` mode and back
+			</i>
+			</figcaption>
+	</figure>
+</center>
 
 To switch to `Terminal Normal` mode, use the following command:
 
