@@ -11,7 +11,8 @@
       "using-onivim/editing-and-deleting",
       "using-onivim/visual-mode",
       "using-onivim/working-with-files",
-      "using-onivim/command-line"
+      "using-onivim/command-line",
+      "using-onivim/integrated-terminal"
     ],
     "Configuration": [
       "configuration/settings",
