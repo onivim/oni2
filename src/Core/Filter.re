@@ -14,7 +14,7 @@ type result('a) = {
 
 let makeResult = ((item, match: Fzy.Result.t)) => {
       item,
-      highlight: Utility.ranges(match.positions),
+      highlight: IndexEx.ranges(match.positions),
   };
 
 let rank = (query, format, items) => {
