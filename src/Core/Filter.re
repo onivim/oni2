@@ -13,9 +13,9 @@ type result('a) = {
 };
 
 let makeResult = ((item, match: Fzy.Result.t)) => {
-      item,
-      highlight: IndexEx.ranges(match.positions),
-  };
+  item,
+  highlight: IndexEx.ranges(match.positions),
+};
 
 let rank = (query, format, items) => {
   let shouldLower = query == String.lowercase_ascii(query);
@@ -27,8 +27,8 @@ let rank = (query, format, items) => {
 
     let finalReuslt = List.hd(result);
 
-    (item, finalReuslt)
-  }
+    (item, finalReuslt);
+  };
 
   items
   |> List.map(search(query, format))
