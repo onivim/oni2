@@ -21,17 +21,19 @@ let rank = (query, format, items) => {
   let shouldLower = query == String.lowercase_ascii(query);
   let format = item => format(item, ~shouldLower);
 
-  let search = (query, format, item) => {
-    let searchStr = format(item);
-    let result = Fzy.fzySearchList([searchStr], query);
+  let search = (query, format, items) => {
+    let searchStrings = List.map(item => format(item), items);
+    let results = Fzy.fzySearchList(searchStrings, query, ~sorted=false, ());
 
-    let finalReuslt = List.hd(result);
-
-    (item, finalReuslt);
+    Console.log("##############################################")
+    Console.log(List.length(results));
+    Console.log(List.length(items));
+    Console.log("##############################################")
+    List.map2((a, b) => (a, b), items, results)
   };
 
   items
-  |> List.map(search(query, format))
+  |> search(query, format)
   |> List.sort(((_, a), (_, b)) => Fzy.Result.(compare(b.score, a.score)))
   |> List.map(makeResult);
 };
