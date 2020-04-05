@@ -25,10 +25,6 @@ let rank = (query, format, items) => {
     let searchStrings = List.map(item => format(item), items);
     let results = Fzy.fzySearchList(searchStrings, query, ~sorted=false, ());
 
-    Console.log("##############################################")
-    Console.log(List.length(results));
-    Console.log(List.length(items));
-    Console.log("##############################################")
     List.map2((a, b) => (a, b), items, results)
   };
 
