@@ -1,5 +1,5 @@
 {
-  "checksum": "b2b1c7705f7a6c64f7dc8eb9d6d70d2c",
+  "checksum": "5649292224a73179a31c841f17cc8bd8",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#cca65f99674ed2d954d28788edeb8c57fada5ed0@d41d8cd9": {
@@ -270,18 +270,18 @@
       ],
       "devDependencies": []
     },
-    "reasonFuzz@github:CrossR/reasonFuzz#840270f@d41d8cd9": {
-      "id": "reasonFuzz@github:CrossR/reasonFuzz#840270f@d41d8cd9",
+    "reasonFuzz@github:CrossR/reasonFuzz#8a78531@d41d8cd9": {
+      "id": "reasonFuzz@github:CrossR/reasonFuzz#8a78531@d41d8cd9",
       "name": "reasonFuzz",
-      "version": "github:CrossR/reasonFuzz#840270f",
+      "version": "github:CrossR/reasonFuzz#8a78531",
       "source": {
         "type": "install",
-        "source": [ "github:CrossR/reasonFuzz#840270f" ]
+        "source": [ "github:CrossR/reasonFuzz#8a78531" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9",
-        "reason-fzy@github:CrossR/reason-fzy#4b9296a@d41d8cd9",
+        "reason-fzy@github:CrossR/reason-fzy#e2d0fda@d41d8cd9",
         "ocaml@4.8.1000@d41d8cd9", "@opam/dune@opam:2.4.0@639d28a3",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
@@ -487,13 +487,13 @@
       ],
       "devDependencies": []
     },
-    "reason-fzy@github:CrossR/reason-fzy#4b9296a@d41d8cd9": {
-      "id": "reason-fzy@github:CrossR/reason-fzy#4b9296a@d41d8cd9",
+    "reason-fzy@github:CrossR/reason-fzy#e2d0fda@d41d8cd9": {
+      "id": "reason-fzy@github:CrossR/reason-fzy#e2d0fda@d41d8cd9",
       "name": "reason-fzy",
-      "version": "github:CrossR/reason-fzy#4b9296a",
+      "version": "github:CrossR/reason-fzy#e2d0fda",
       "source": {
         "type": "install",
-        "source": [ "github:CrossR/reason-fzy#4b9296a" ]
+        "source": [ "github:CrossR/reason-fzy#e2d0fda" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1238,7 +1238,7 @@
         "revery@github:revery-ui/revery#6fd117a@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
-        "reasonFuzz@github:CrossR/reasonFuzz#840270f@d41d8cd9",
+        "reasonFuzz@github:CrossR/reasonFuzz#8a78531@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.0.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
