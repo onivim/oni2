@@ -146,7 +146,7 @@ Onivim-specific contexts:
 | Default Key Binding | Description | Command |
 | --- | --- | --- |
 | Control+V / Command+V | Paste from clipboard | `editor.action.clipboardPasteAction` |
-| Control+S | Save file | `workbench.action.files.save`
+| Control+S / Command+S | Save file | `workbench.action.files.save`
 
 ### List / Menu commands
 
