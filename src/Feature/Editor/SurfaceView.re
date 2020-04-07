@@ -174,17 +174,20 @@ let%component make =
             indentation,
           );
         };
-
-        CursorView.render(
-          ~context,
-          ~buffer,
-          ~mode,
-          ~isActiveSplit,
-          ~cursorPosition,
-          ~colors,
-          ~windowIsFocused,
-        );
       }}
+    />
+    <CursorView
+      config
+      scrollX
+      scrollY
+      metrics
+      editorFont
+      buffer
+      mode
+      cursorPosition
+      isActiveSplit
+      windowIsFocused
+      colors
     />
     <View style=Styles.horizontalScrollBar>
       <EditorHorizontalScrollbar editor width={metrics.pixelWidth} colors />
