@@ -71,7 +71,7 @@ let largeFileOptimization =
 let highlightActiveIndentGuide =
   setting("editor.highlightActiveIndentGuide", bool, ~default=true);
 let indentSize = setting("editor.indentSize", int, ~default=4);
-let insertSpaces = setting("editor.insertSpaces", bool, ~default=false);
+let insertSpaces = setting("editor.insertSpaces", bool, ~default=true);
 let lineNumbers = setting("editor.lineNumbers", lineNumbers, ~default=`On);
 let matchBrackets = setting("editor.matchBrackets", bool, ~default=true);
 let renderIndentGuides =
