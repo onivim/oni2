@@ -89,6 +89,7 @@ jobs:
   - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'which ragel'
   - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ls -a'
   - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+  - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-test.sh'
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
