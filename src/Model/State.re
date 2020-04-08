@@ -26,7 +26,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   colorTheme: Feature_Theme.model,
-  commands: Commands.t,
+  commands: Feature_Commands.model(Actions.t),
   contextMenu: ContextMenu.t,
   vimMode: Vim.Mode.t,
   completions: Completions.t,
@@ -75,7 +75,7 @@ type t = {
   textContentProviders: list((int, string)),
 };
 
-let initial = (~getUserSettings) => {
+let initial = (~getUserSettings, ~contributedCommands) => {
   buffers: Buffers.empty,
   bufferHighlights: BufferHighlights.initial,
   bufferRenderers: BufferRenderers.initial,
@@ -84,7 +84,7 @@ let initial = (~getUserSettings) => {
       Feature_Terminal.Contributions.colors,
       Feature_Notification.Contributions.colors,
     ]),
-  commands: Commands.empty,
+  commands: Feature_Commands.initial(contributedCommands),
   contextMenu: ContextMenu.Nothing,
   completions: Completions.initial,
   config:

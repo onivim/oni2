@@ -43,7 +43,7 @@ type t =
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
   | Command(string)
-  | CommandsRegister(list(command))
+  | Commands(Feature_Commands.msg(t))
   // Execute a contribute command, from an extension
   | CommandExecuteContributed(string)
   | CompletionAddItems(
