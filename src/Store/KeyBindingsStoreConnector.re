@@ -298,43 +298,43 @@ let start = maybeKeyBindingsFilePath => {
       // Binding to open normal mode
       {
         key: "<C-\\><C-N>",
-        command: Commands.Oni.Terminal.normalMode.id,
+        command: Feature_Terminal.Commands.Oni.normalMode.id,
         condition: "terminalFocus && insertMode" |> WhenExpr.parse,
       },
       // Bindings to go from normal / visual mode -> insert mode
       {
         key: "o",
-        command: Commands.Oni.Terminal.insertMode.id,
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "<S-O>",
-        command: Commands.Oni.Terminal.insertMode.id,
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "Shift+a",
-        command: Commands.Oni.Terminal.insertMode.id,
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "a",
-        command: Commands.Oni.Terminal.insertMode.id,
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "i",
-        command: Commands.Oni.Terminal.insertMode.id,
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "Shift+i",
-        command: Commands.Oni.Terminal.insertMode.id,
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },

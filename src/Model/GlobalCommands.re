@@ -120,13 +120,6 @@ module Oni = {
       );
   };
 
-  module Terminal = {
-    let normalMode =
-      define("oni.terminal.normalMode", Command("terminal.normalMode"));
-    let insertMode =
-      define("oni.terminal.insertMode", Command("terminal.insertMode"));
-  };
-
   module View = {
     let rotateForward =
       define(
@@ -185,41 +178,6 @@ module ReferencesView = {
       "references-view.find",
       References(References.Requested),
     );
-};
-
-module Terminal = {
-  module New = {
-    let horizontal =
-      define(
-        ~category="Terminal",
-        ~title="Open terminal in new horizontal split",
-        "terminal.new.horizontal",
-        Actions.Terminal(
-          Feature_Terminal.NewTerminal({
-            cmd: None,
-            splitDirection: Horizontal,
-          }),
-        ),
-      );
-    let vertical =
-      define(
-        ~category="Terminal",
-        ~title="Open terminal in new vertical split",
-        "terminal.new.vertical",
-        Actions.Terminal(
-          Feature_Terminal.NewTerminal({cmd: None, splitDirection: Vertical}),
-        ),
-      );
-    let current =
-      define(
-        ~category="Terminal",
-        ~title="Open terminal in current window",
-        "terminal.new.current",
-        Actions.Terminal(
-          Feature_Terminal.NewTerminal({cmd: None, splitDirection: Current}),
-        ),
-      );
-  };
 };
 
 module View = {
@@ -347,7 +305,7 @@ module Workbench = {
   };
 };
 
-let all = [
+let contributions = [
   copyFilePath,
   acceptSelectedSuggestion,
   selectPrevSuggestion,
@@ -371,8 +329,6 @@ let all = [
   Oni.Sneak.stop,
   Oni.System.addToPath,
   Oni.System.removeFromPath,
-  Oni.Terminal.normalMode,
-  Oni.Terminal.insertMode,
   Oni.View.rotateForward,
   Oni.View.rotateBackward,
   Oni.Vim.esc,
@@ -380,9 +336,6 @@ let all = [
   Oni.Workbench.Action.disableZenMode,
   Oni.Workbench.Action.reloadSettings,
   ReferencesView.find,
-  Terminal.New.horizontal,
-  Terminal.New.vertical,
-  Terminal.New.current,
   View.closeEditor,
   View.splitVertical,
   View.splitHorizontal,

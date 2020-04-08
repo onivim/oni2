@@ -83,9 +83,7 @@ let getActiveTerminal = (state: State.t) => {
 };
 
 let getActiveTerminalId = (state: State.t) => {
-  state
-  |> getActiveTerminal
-  |> Option.map(({id, _}: BufferRenderer.terminal) => id);
+  state |> getActiveTerminal |> Option.map((Feature_Terminal.{id, _}) => id);
 };
 
 let terminalIsActive = (state: State.t) =>

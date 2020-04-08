@@ -335,7 +335,8 @@ let start =
     window,
   );
 
-  registerCommands(~dispatch, Model.GlobalCommands.all);
+  registerCommands(~dispatch, Model.GlobalCommands.contributions);
+  registerCommands(~dispatch, Feature_Terminal.Contributions.commands |> List.map(Feature_Commands.Schema.map(msg => Model.Actions.Terminal(msg))));
   registerExtensionCommands(~dispatch, ~extensions);
 
   // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.

@@ -2,6 +2,8 @@ open Oni_Core;
 
 module ExtHostClient = Oni_Extensions.ExtHostClient;
 
+// MODEL
+
 type terminal = {
   id: int,
   cmd: string,
@@ -21,17 +23,25 @@ let toList: t => list(terminal);
 
 let getTerminalOpt: (int, t) => option(terminal);
 
+// UPDATE
+
 type splitDirection =
   | Vertical
   | Horizontal
   | Current;
 
 [@deriving show({with_path: false})]
-type msg =
+type command =
   | NewTerminal({
       cmd: option(string),
       splitDirection,
     })
+  | NormalMode
+  | InsertMode;
+
+[@deriving show({with_path: false})]
+type msg =
+  | Command(command)
   | Resized({
       id: int,
       rows: int,
@@ -59,6 +69,8 @@ let subscription:
   (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);
 
 let shellCmd: string;
+
+// COLORS
 
 module Colors: {
   let background: ColorTheme.Schema.definition;
@@ -90,4 +102,35 @@ let getLinesAndHighlights:
   (~colorTheme: ColorTheme.Colors.t, ~terminalId: int) =>
   (array(string), list(highlights));
 
-module Contributions: {let colors: list(ColorTheme.Schema.definition);};
+// BUFFERRENDERER
+
+[@deriving show]
+type rendererState = {
+  title: string,
+  id: int,
+  insertMode: bool,
+};
+
+let bufferRendererReducer: (rendererState, msg) => rendererState;
+
+// COMMANDS
+
+module Commands: {
+  module New: {
+    let horizontal: Feature_Commands.Schema.command(msg);
+    let vertical: Feature_Commands.Schema.command(msg);
+    let current: Feature_Commands.Schema.command(msg);
+  };
+
+  module Oni: {
+    let normalMode: Feature_Commands.Schema.command(msg);
+    let insertMode: Feature_Commands.Schema.command(msg);
+  };
+};
+
+// CONTRIBUTIONS
+
+module Contributions: {
+  let colors: list(ColorTheme.Schema.definition);
+  let commands: list(Feature_Commands.Schema.command(msg));
+};

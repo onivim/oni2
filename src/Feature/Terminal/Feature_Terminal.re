@@ -1,6 +1,8 @@
 open Oni_Core;
 module ExtHostClient = Oni_Extensions.ExtHostClient;
 
+// MODEL
+
 type terminal = {
   id: int,
   cmd: string,
@@ -28,6 +30,8 @@ let toList = ({idToTerminal, _}) =>
 let getTerminalOpt = (id, {idToTerminal, _}) =>
   IntMap.find_opt(id, idToTerminal);
 
+// UPDATE
+
 [@deriving show({with_path: false})]
 type splitDirection =
   | Vertical
@@ -35,11 +39,17 @@ type splitDirection =
   | Current;
 
 [@deriving show({with_path: false})]
-type msg =
+type command =
   | NewTerminal({
       cmd: option(string),
       splitDirection,
     })
+  | NormalMode
+  | InsertMode;
+
+[@deriving show({with_path: false})]
+type msg =
+  | Command(command)
   | Resized({
       id: int,
       rows: int,
@@ -80,7 +90,7 @@ let updateById = (id, f, model) => {
 
 let update = (model: t, msg) => {
   switch (msg) {
-  | NewTerminal({cmd, splitDirection}) =>
+  | Command(NewTerminal({cmd, splitDirection})) =>
     let cmdToUse =
       switch (cmd) {
       | None => shellCmd
@@ -107,25 +117,34 @@ let update = (model: t, msg) => {
       {idToTerminal, nextId: id + 1},
       TerminalCreated({name: getBufferName(id, cmdToUse), splitDirection}),
     );
+
+  | Command(InsertMode | NormalMode) =>
+    // Used for the renderer state
+    (model, Nothing)
+
   | KeyPressed({id, key}) =>
     let inputEffect =
       Service_Terminal.Effect.input(~id, key)
       |> Isolinear.Effect.map(msg => Service(msg));
-
     (model, Effect(inputEffect));
+
   | Resized({id, rows, columns}) =>
     let newModel = updateById(id, term => {...term, rows, columns}, model);
     (newModel, Nothing);
+
   | Service(ProcessStarted({id, pid})) =>
     let newModel = updateById(id, term => {...term, pid: Some(pid)}, model);
     (newModel, Nothing);
+
   | Service(ProcessTitleChanged({id, title})) =>
     let newModel =
       updateById(id, term => {...term, title: Some(title)}, model);
     (newModel, Nothing);
+
   | Service(ScreenUpdated({id, screen})) =>
     let newModel = updateById(id, term => {...term, screen}, model);
     (newModel, Nothing);
+
   | Service(CursorMoved({id, cursor})) =>
     let newModel = updateById(id, term => {...term, cursor}, model);
     (newModel, Nothing);
@@ -148,6 +167,8 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
   |> Isolinear.Sub.batch
   |> Isolinear.Sub.map(msg => Service(msg));
 };
+
+// COLORS
 
 module Colors = {
   open Revery;
@@ -250,32 +271,6 @@ let theme = theme =>
 
 let defaultBackground = theme => Colors.background.from(theme);
 let defaultForeground = theme => Colors.foreground.from(theme);
-
-// CONTRIBUTIONS
-
-module Contributions = {
-  let colors =
-    Colors.[
-      background,
-      foreground,
-      ansiBlack,
-      ansiRed,
-      ansiGreen,
-      ansiYellow,
-      ansiBlue,
-      ansiMagenta,
-      ansiCyan,
-      ansiWhite,
-      ansiBrightBlack,
-      ansiBrightRed,
-      ansiBrightGreen,
-      ansiBrightYellow,
-      ansiBrightBlue,
-      ansiBrightCyan,
-      ansiBrightMagenta,
-      ansiBrightWhite,
-    ];
-};
 
 let getFirstNonEmptyLine =
     (~start: int, ~direction: int, lines: array(string)) => {
@@ -405,4 +400,98 @@ let getLinesAndHighlights = (~colorTheme, ~terminalId) => {
        (lines, highlights);
      })
   |> Option.value(~default=([||], []));
+};
+
+// BUFFERRENDERER
+
+// TODO: Unify the model and renderer state. This shouldn't be needed.
+[@deriving show({with_path: false})]
+type rendererState = {
+  title: string,
+  id: int,
+  insertMode: bool,
+};
+
+let bufferRendererReducer = (state, action) => {
+  switch (action) {
+  | Service(ProcessTitleChanged({id, title, _})) when state.id == id => {
+      ...state,
+      id,
+      title,
+    }
+  | Command(NormalMode) => {...state, insertMode: false}
+  | Command(InsertMode) => {...state, insertMode: true}
+
+  | _ => state
+  };
+};
+
+// COMMANDS
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  module New = {
+    let horizontal =
+      define(
+        ~category="Terminal",
+        ~title="Open terminal in new horizontal split",
+        "terminal.new.horizontal",
+        Command(NewTerminal({cmd: None, splitDirection: Horizontal})),
+      );
+    let vertical =
+      define(
+        ~category="Terminal",
+        ~title="Open terminal in new vertical split",
+        "terminal.new.vertical",
+        Command(NewTerminal({cmd: None, splitDirection: Vertical})),
+      );
+    let current =
+      define(
+        ~category="Terminal",
+        ~title="Open terminal in current window",
+        "terminal.new.current",
+        Command(NewTerminal({cmd: None, splitDirection: Current})),
+      );
+  };
+
+  module Oni = {
+    let normalMode = define("terminal.oni.normalMode", Command(NormalMode));
+    let insertMode = define("terminal.oni.insertMode", Command(InsertMode));
+  };
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let colors =
+    Colors.[
+      background,
+      foreground,
+      ansiBlack,
+      ansiRed,
+      ansiGreen,
+      ansiYellow,
+      ansiBlue,
+      ansiMagenta,
+      ansiCyan,
+      ansiWhite,
+      ansiBrightBlack,
+      ansiBrightRed,
+      ansiBrightGreen,
+      ansiBrightYellow,
+      ansiBrightBlue,
+      ansiBrightCyan,
+      ansiBrightMagenta,
+      ansiBrightWhite,
+    ];
+
+  let commands =
+    Commands.[
+      New.horizontal,
+      New.vertical,
+      New.current,
+      Oni.normalMode,
+      Oni.insertMode,
+    ];
 };
