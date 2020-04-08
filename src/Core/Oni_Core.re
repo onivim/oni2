@@ -22,6 +22,7 @@ module Diff = Diff;
 module EnvironmentVariables = Kernel.EnvironmentVariables;
 module Filesystem = Filesystem;
 module Filter = Filter;
+module IconTheme = IconTheme;
 module Indentation = Indentation;
 module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;
