@@ -130,7 +130,7 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<S-C-B>",
-        command: "explorer.toggle",
+        command: "oni.explorer.toggle",
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
@@ -216,12 +216,12 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<C-G>",
-        command: "sneak.start",
+        command: "oni.sneak.start",
         condition: WhenExpr.Value(True),
       },
       {
         key: "<ESC>",
-        command: "sneak.stop",
+        command: "oni.sneak.stop",
         condition: "sneakMode" |> WhenExpr.parse,
       },
       {
@@ -299,37 +299,37 @@ let start = maybeKeyBindingsFilePath => {
       // Bindings to go from normal / visual mode -> insert mode
       {
         key: "o",
-        command: "terminal.insertMode",
+        command: "oni.terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "<S-O>",
-        command: "terminal.insertMode",
+        command: "oni.terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "Shift+a",
-        command: "terminal.insertMode",
+        command: "oni.terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "a",
-        command: "terminal.insertMode",
+        command: "oni.terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "i",
-        command: "terminal.insertMode",
+        command: "oni.terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "Shift+i",
-        command: "terminal.insertMode",
+        command: "oni.terminal.insertMode",
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
@@ -394,15 +394,32 @@ let start = maybeKeyBindingsFilePath => {
       dispatch(Actions.KeyBindingsSet(keyBindings));
     });
 
+  let executeCommandEffect = msg =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="keybindings.executeCommand", dispatch =>
+      dispatch(msg)
+    );
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.Init => (state, loadKeyBindingsEffect(true))
+
     | Actions.KeyBindingsReload => (state, loadKeyBindingsEffect(false))
+
     | Actions.KeyBindingsParseError(msg) => (
         state,
         Feature_Notification.Effects.create(~kind=Error, msg)
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       )
+
+    | KeybindingsCommand(command) =>
+      switch (Feature_Commands.find(command, state.commands)) {
+      | Some(command) => (state, executeCommandEffect(command.msg))
+      | None =>
+        Log.errorf(m => m("Unknown command: %s", command));
+        (state, Isolinear.Effect.none);
+      }
+
     | _ => (state, Isolinear.Effect.none)
     };
   };

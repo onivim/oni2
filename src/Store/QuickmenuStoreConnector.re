@@ -94,7 +94,18 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(CommandPalette) => (
         Some({
           ...Quickmenu.defaults(CommandPalette),
-          items: Commands.toQuickMenu(commands) |> Array.of_list,
+          items:
+            commands
+            |> List.map((v: Feature_Commands.Schema.command(_)) =>
+                 Actions.{
+                   category: v.category,
+                   name: v.title |> Option.value(~default=v.id),
+                   command: () => v.msg,
+                   icon: v.icon,
+                   highlight: [],
+                 }
+               )
+            |> Array.of_list,
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -322,7 +333,7 @@ let start = (themeInfo: ThemeInfo.t) => {
         state.languageInfo,
         state.iconTheme,
         themeInfo,
-        state.commands,
+        Feature_Commands.enabledCommands(state.commands),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);

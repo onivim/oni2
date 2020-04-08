@@ -54,6 +54,31 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
     [];
   };
 
+let registerCommands = (~dispatch, commands) => {
+  List.iter(
+    command => dispatch(Model.Actions.Commands(NewCommand(command))),
+    commands,
+  );
+};
+
+let registerExtensionCommands = (~dispatch, ~extensions) => {
+  extensions
+  |> List.map(ExtensionScanner.(it => it.manifest.contributes.commands))
+  |> List.flatten
+  |> List.map(
+       ExtensionContributions.Command.(
+         it =>
+           Feature_Commands.Schema.define(
+             ~category=?it.category,
+             ~title=it.title |> LocalizedToken.to_string,
+             it.command,
+             Model.Actions.CommandExecuteContributed(it.command),
+           )
+       ),
+     )
+  |> registerCommands(~dispatch);
+};
+
 let start =
     (
       ~getUserSettings,
@@ -94,10 +119,8 @@ let start =
   let extensions = discoverExtensions(setup, cliOptions);
   let languageInfo = LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
-  let contributedCommands = Model.Commands.ofExtensions(extensions);
 
-  let commandUpdater =
-    CommandStoreConnector.start(getState, contributedCommands);
+  let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
       languageInfo,
@@ -312,6 +335,9 @@ let start =
     window,
   );
 
+  registerCommands(~dispatch, Model.GlobalCommands.all);
+  registerExtensionCommands(~dispatch, ~extensions);
+
   // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
   let editorEventStream =
     Isolinear.Stream.filterMap(storeStream, ((state, action)) =>
@@ -356,7 +382,7 @@ let start =
     switch (iconThemeInfo) {
     | Some(iconThemeInfo) =>
       let iconTheme =
-        Yojson.Safe.from_file(iconThemeInfo.path) |> Model.IconTheme.ofJson;
+        Yojson.Safe.from_file(iconThemeInfo.path) |> Core.IconTheme.ofJson;
 
       switch (iconTheme) {
       | Some(iconTheme) => dispatch(Model.Actions.SetIconTheme(iconTheme))
