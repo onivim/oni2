@@ -56,7 +56,12 @@ let getKeyFromSDL: string => EditorInput.KeyPress.t =
   };
 
 let contextWithEditorTextFocus =
-  Seq.return(("editorTextFocus", true)) |> Hashtbl.of_seq;
+  WhenExpr.ContextKeys.(
+    fromSchema(
+      Schema.fromList(Schema.[bool("editorTextFocus", () => true)]),
+      (),
+    )
+  );
 
 let isOk = v =>
   switch (v) {
