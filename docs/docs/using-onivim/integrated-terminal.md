@@ -56,7 +56,7 @@ To change the current working directory, which will also update the file explore
 
 To switch to `Terminal Normal` mode, use the following command:
 
-- <kbd>Ctrl</kbd>+<kbd>/</kbd>, <kbd>Ctrl</kbd>+<kbd>N</kbd>
+- <kbd>Ctrl</kbd>+<kbd>\\</kbd>, <kbd>Ctrl</kbd>+<kbd>N</kbd>
 
 > __NOTE:__ In `Terminal Normal` mode, the buffer is _read-only_.
 
