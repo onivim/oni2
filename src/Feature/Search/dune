@@ -6,6 +6,7 @@
       Oni2.core
       Oni2.components
       Oni2.service.font
+      Oni2.feature.theme
       Revery
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx)))

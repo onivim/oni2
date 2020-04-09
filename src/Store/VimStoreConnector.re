@@ -1033,7 +1033,7 @@ let start =
       let (state, effect) =
         OptionEx.map3(
           (bufferId, terminalId, editorId) => {
-            let colorTheme = Feature_Theme.resolver(state.colorTheme);
+            let colorTheme = Feature_Theme.colors(state.colorTheme);
             let (lines, highlights) =
               Feature_Terminal.getLinesAndHighlights(
                 ~colorTheme,

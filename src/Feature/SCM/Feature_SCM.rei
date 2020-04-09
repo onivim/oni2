@@ -86,7 +86,7 @@ module Pane: {
       ~workingDirectory: option(string),
       ~onItemClick: Resource.t => unit,
       ~isFocused: bool,
-      ~theme: ColorTheme.resolver,
+      ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,
       unit

@@ -115,7 +115,7 @@ let schedulePostRender = f => postRenderQueue := [f, ...postRenderQueue^];
 
 let%component make =
               (
-                ~theme: Oni_Core.ColorTheme.resolver,
+                ~theme: Oni_Core.ColorTheme.Colors.t,
                 ~tabs: list(tabInfo),
                 ~activeEditorId: option(int),
                 ~mode: Vim.Mode.t,

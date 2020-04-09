@@ -40,8 +40,6 @@ type t = {
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: SideBar.t,
-  // Theme is the UI shell theming
-  theme: Theme.t,
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
   editorGroups: EditorGroups.t,
@@ -69,9 +67,6 @@ type t = {
   windowIsMaximized: bool,
   workspace: Workspace.t,
   zenMode: bool,
-  // [darkMode] describes if the UI is in 'dark' or 'light' mode.
-  // Generally controlled by the theme.
-  darkMode: bool,
   // State of the bottom pane
   pane: Pane.t,
   searchPane: Feature_Search.model,
@@ -106,7 +101,6 @@ let initial = (~getUserSettings) => {
   lifecycle: Lifecycle.create(),
   uiFont: UiFont.default,
   sideBar: SideBar.initial,
-  theme: Theme.default,
   tokenTheme: TokenTheme.empty,
   editorGroups: EditorGroups.create(),
   iconTheme: IconTheme.create(),
@@ -128,7 +122,6 @@ let initial = (~getUserSettings) => {
   workspace: Workspace.initial,
   fileExplorer: FileExplorer.initial,
   zenMode: false,
-  darkMode: true,
   pane: Pane.initial,
   searchPane: Feature_Search.initial,
   focus: Focus.initial,

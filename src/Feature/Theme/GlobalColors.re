@@ -73,6 +73,21 @@ module ActivityBar = {
   ];
 };
 
+module Dropdown = {
+  let background =
+    define(
+      "dropdown.background",
+      {dark: hex("#3C3C3C"), light: hex("#FFF"), hc: hex("#000")},
+    );
+  let foreground =
+    define(
+      "dropdown.foreground",
+      {dark: hex("#F0F0F0"), light: unspecified, hc: hex("#FFF")},
+    );
+
+  let defaults = [background, foreground];
+};
+
 module Editor = {
   let background =
     define(
@@ -293,6 +308,16 @@ module List = {
       {dark: hex("#062F4A"), light: hex("#D6EBFF"), hc: unspecified},
     );
   let focusForeground = define("list.focusForeground", all(unspecified));
+  let activeSelectionBackground =
+    define(
+      "list.activeSelectionBackground",
+      {dark: hex("#094771"), light: hex("#0074E8"), hc: unspecified},
+    );
+  let activeSelectionForeground =
+    define(
+      "list.activeSelectionForeground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: unspecified},
+    );
   let hoverBackground =
     define(
       "list.hoverBackground",
@@ -308,8 +333,11 @@ module List = {
   let defaults = [
     focusBackground,
     focusForeground,
+    activeSelectionBackground,
+    activeSelectionForeground,
     hoverBackground,
     hoverForeground,
+    highlightForeground,
   ];
 };
 
@@ -340,6 +368,26 @@ module EditorSuggestWidget = {
     highlightForeground,
     selectedBackground,
   ];
+};
+
+module Menu = {
+  let background = define("menu.background", all(ref(Dropdown.background)));
+  let foreground =
+    define(
+      "menu.foreground",
+      {
+        dark: ref(Dropdown.foreground),
+        light: ref(foreground),
+        hc: ref(foreground),
+      },
+    );
+  let selectionBackground =
+    define(
+      "menu.selectionBackground",
+      all(ref(List.activeSelectionBackground)),
+    );
+
+  let defaults = [background, foreground, selectionBackground];
 };
 
 module Oni = {
@@ -410,6 +458,17 @@ module Oni = {
     operatorModeForeground,
     commandlineModeForeground,
   ];
+
+  module Sneak = {
+    let background =
+      define("oni.sneak.background", all(ref(Menu.selectionBackground)));
+    let foreground =
+      define("oni.sneak.foreground", all(ref(Menu.foreground)));
+    let highlight =
+      define("oni.sneak.highlight", all(ref(normalModeBackground)));
+
+    let defaults = [background, foreground, highlight];
+  };
 };
 
 module ScrollbarSlider = {
@@ -451,6 +510,17 @@ module SideBar = {
       {dark: hex("#252526"), light: hex("#F3F3F3"), hc: hex("#000")},
     );
   let foreground = define("sideBar.foreground", all(ref(foreground))); // actually: all(unspecified)
+
+  let defaults = [background, foreground];
+};
+
+module StatusBar = {
+  let background =
+    define(
+      "statusBar.background",
+      {dark: hex("#007ACC"), light: hex("#007ACC"), hc: unspecified},
+    );
+  let foreground = define("statusBar.foreground", all(hex("#FFF")));
 
   let defaults = [background, foreground];
 };
@@ -626,33 +696,48 @@ module Tab = {
   ];
 };
 
-let defaults = [foreground, contrastBorder];
+module TitleBar = {
+  let activeForeground =
+    define(
+      "titleBar.activeForeground",
+      {dark: hex("#CCC"), light: hex("#333"), hc: hex("#FFF")},
+    );
+  let inactiveForeground =
+    define(
+      "titleBar.inactiveForeground",
+      {
+        dark: ref(activeForeground) |> transparent(0.6),
+        light: ref(activeForeground) |> transparent(0.6),
+        hc: unspecified,
+      },
+    );
+  let activeBackground =
+    define(
+      "titleBar.activeBackground",
+      {dark: hex("#3C3C3C"), light: hex("#DDD"), hc: hex("#000")},
+    );
+  let inactiveBackground =
+    define(
+      "titleBar.inactiveBackground",
+      {
+        dark: ref(activeBackground) |> transparent(0.6),
+        light: ref(activeBackground) |> transparent(0.6),
+        hc: unspecified,
+      },
+    );
+  let border =
+    define(
+      "titleBar.border",
+      {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
+    );
 
-let remaining = [
-  define("list.activeSelectionBackground", hex("#495162") |> all),
-  define("list.activeSelectionForeground", hex("#FFFFFF") |> all),
-  define("menu.background", hex("#2F3440") |> all),
-  define("menu.foreground", hex("#FFFFFF") |> all),
-  define("menu.selectionBackground", hex("#495162") |> all),
-  define(
-    "statusBar.background",
-    {dark: hex("#007aCC"), light: hex("#007aCC"), hc: unspecified},
-  ),
-  define("statusBar.foreground", hex("#fff") |> all),
-  //define("notificationSuccessBackground", hex("#23d160")),
-  //define("notificationSuccessForeground", hex("#fff")),
-  define("notification.infoBackground", hex("#209cee") |> all),
-  define("notification.infoForeground", hex("#fff") |> all),
-  define("notification.warningBackground", hex("#ffdd57") |> all),
-  define("notification.warningForeground", hex("#fff") |> all),
-  define("notification.errorBackground", hex("#ff3860") |> all),
-  define("notification.errorForeground", hex("#fff") |> all),
-  //define("sneakBackground", Revery.Colors.red),
-  //define("sneakForeground", hex("#fff")),
-  //define("sneakHighlight", hex("#fff")),
-  define("titleBar.activeBackground", hex("#282C35") |> all),
-  define("titleBar.activeForeground", hex("#ECEFF4") |> all),
-  define("titleBar.inactiveBackground", hex("#282C35") |> all),
-  define("titleBar.inactiveForeground", hex("#ECEFF4") |> all),
-  define("titleBar.border", hex("#fff0") |> all),
-];
+  let defaults = [
+    activeForeground,
+    inactiveForeground,
+    activeBackground,
+    inactiveBackground,
+    border,
+  ];
+};
+
+let defaults = [foreground, contrastBorder];

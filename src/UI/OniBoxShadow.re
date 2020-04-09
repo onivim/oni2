@@ -2,7 +2,9 @@ open Revery;
 open Revery.UI;
 open Oni_Core;
 
-let make = (~children, ~theme: Theme.t, ~configuration: Configuration.t, ()) => {
+module Colors = Feature_Theme.Colors;
+
+let make = (~children, ~theme, ~configuration: Configuration.t, ()) => {
   let useBoxShadow = Configuration.getValue(c => c.uiShadows, configuration);
 
   if (useBoxShadow) {
@@ -21,7 +23,10 @@ let make = (~children, ~theme: Theme.t, ~configuration: Configuration.t, ()) => 
       ...children
     </View>;
   } else {
-    <View style=Style.[border(~color=theme.editorBackground, ~width=1)]>
+    <View
+      style=Style.[
+        border(~color=Colors.Editor.background.from(theme), ~width=1),
+      ]>
       ...children
     </View>;
   };

@@ -33,7 +33,7 @@ let%component make =
                 ~metrics: EditorMetrics.t,
                 ~terminal: Feature_Terminal.terminal,
                 ~font: Service_Font.font,
-                ~theme: Oni_Core.ColorTheme.resolver,
+                ~theme: Oni_Core.ColorTheme.Colors.t,
                 (),
               ) => {
   let maybeFont = Revery.Font.load(font.fontFile) |> Stdlib.Result.to_option;

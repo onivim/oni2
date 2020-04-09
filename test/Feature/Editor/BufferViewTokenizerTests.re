@@ -7,8 +7,6 @@ open Helpers;
 
 module BufferViewTokenizer = Feature_Editor.BufferViewTokenizer;
 
-let theme = Theme.default;
-
 let indentation = IndentationSettings.default;
 
 let basicColorizer = _ => (Colors.black, Colors.white);

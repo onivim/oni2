@@ -8,59 +8,59 @@ module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Tooltip = Oni_Components.Tooltip;
 
+module Colors = Feature_Theme.Colors;
+
 module Styles = {
   open Style;
 
   let container = [flexGrow(1)];
 
-  let title = (~fg, ~bg, ~font: UiFont.t) => [
+  let title = (~fg, ~font: UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFile),
-    backgroundColor(bg),
     color(fg),
   ];
 
-  let heading = (theme: Theme.t) => [
+  let heading = theme => [
     flexDirection(`Row),
     justifyContent(`Center),
     alignItems(`Center),
-    backgroundColor(theme.sideBarBackground),
+    backgroundColor(Colors.SideBar.background.from(theme)),
     height(Constants.tabHeight),
   ];
 
-  let item = (~isFocus, ~isActive, ~theme: Theme.t) => [
+  let item = (~isFocus, ~isActive, ~theme) => [
     flexDirection(`Row),
     flexGrow(1),
     alignItems(`Center),
     backgroundColor(
       if (isActive) {
-        theme.listActiveSelectionBackground;
+        Colors.List.activeSelectionBackground.from(theme);
       } else if (isFocus) {
-        theme.listFocusBackground;
+        Colors.List.focusBackground.from(theme);
       } else {
-        Colors.transparentWhite;
+        Revery.Colors.transparentWhite;
       },
     ),
   ];
 
-  let text =
-      (~isFocus, ~isActive, ~decoration, ~theme: Theme.t, ~font: UiFont.t) => [
+  let text = (~isFocus, ~isActive, ~decoration, ~theme, ~font: UiFont.t) => [
     fontSize(11.),
     fontFamily(font.fontFile),
     color(
       switch (
         Option.bind(decoration, (decoration: Decoration.t) =>
-          Theme.getCustomColor(decoration.color, theme)
+          ColorTheme.(Colors.get(key(decoration.color), theme))
         )
       ) {
       | Some(color) => color
       | None =>
         if (isActive) {
-          theme.listActiveSelectionForeground;
+          Colors.List.activeSelectionForeground.from(theme);
         } else if (isFocus) {
-          theme.listFocusForeground;
+          Colors.List.focusForeground.from(theme);
         } else {
-          theme.foreground;
+          Colors.foreground.from(theme);
         }
       },
     ),
@@ -90,7 +90,7 @@ let nodeView =
       ~isFocus,
       ~isActive,
       ~font: UiFont.t,
-      ~theme: Theme.t,
+      ~theme,
       ~node: FsTreeNode.t,
       ~decorations=[],
       (),
@@ -112,7 +112,7 @@ let nodeView =
     switch (node.kind) {
     | Directory({isOpen, _}) =>
       <FontIcon
-        color={theme.sideBarForeground}
+        color={Colors.SideBar.foreground.from(theme)}
         icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
       />
     | _ => <icon />
@@ -144,17 +144,16 @@ module TreeView = TreeView.Make(FsTreeNode.Model);
 
 let make =
     (
+      ~scrollOffset,
+      ~decorations,
       ~tree: FsTreeNode.t,
       ~active: option(string),
       ~focus: option(string),
       ~onNodeClick,
-      ~state: State.t,
+      ~theme,
+      ~font,
       (),
     ) => {
-  [@warning "-27"]
-  let State.{theme, uiFont as font, _} = state;
-
-  let FileExplorer.{scrollOffset, _} = state.fileExplorer;
   let onScrollOffsetChange = offset =>
     GlobalContext.current().dispatch(
       FileExplorer(ScrollOffsetChanged(offset)),
@@ -167,10 +166,9 @@ let make =
       tree
       itemHeight=22
       onClick=onNodeClick
-      arrowColor={theme.foreground}>
+      arrowColor={Colors.foreground.from(theme)}>
       ...{node => {
-        let decorations =
-          StringMap.find_opt(node.path, state.fileExplorer.decorations);
+        let decorations = StringMap.find_opt(node.path, decorations);
 
         <nodeView
           isFocus={Some(node.path) == focus}

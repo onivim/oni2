@@ -10,24 +10,26 @@ open Revery.UI;
 open Oni_Model;
 module Model = Oni_Model;
 
-let editorViewStyle = (background, foreground) =>
-  Style.[
-    backgroundColor(background),
-    color(foreground),
+module Colors = Feature_Theme.Colors;
+
+module Styles = {
+  open Style;
+
+  let container = theme => [
+    backgroundColor(Colors.Editor.background.from(theme)),
     flexGrow(1),
     flexDirection(`Column),
   ];
+};
 
-let make = (~state: State.t, ()) => {
-  let theme = state.theme;
-  let style = editorViewStyle(theme.editorBackground, theme.foreground);
-
+let make = (~state: State.t, ~theme, ()) =>
   if (state.zenMode) {
-    <View style>
+    <View style={Styles.container(theme)}>
       {switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
        | Some(editorGroup) =>
          <EditorGroupView
            state
+           theme
            windowId={state.windowManager.activeWindowId}
            editorGroup
          />
@@ -35,6 +37,7 @@ let make = (~state: State.t, ()) => {
        }}
     </View>;
   } else {
-    <View style> <EditorLayoutView state /> </View>;
+    <View style={Styles.container(theme)}>
+      <EditorLayoutView state theme />
+    </View>;
   };
-};

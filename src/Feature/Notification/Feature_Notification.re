@@ -1,3 +1,4 @@
+open Revery;
 open Oni_Core;
 
 module Internal = {
@@ -73,6 +74,8 @@ module Effects = {
 module Colors = {
   open ColorTheme.Schema;
 
+  let foreground = Feature_Theme.Colors.foreground;
+
   let successBackground =
     define("notification.successBackground", all(unspecified));
   let successForeground =
@@ -110,7 +113,6 @@ module Colors = {
 // VIEW
 
 module View = {
-  open Revery;
   open Revery.UI;
   open Revery.UI.Components;
 
@@ -227,12 +229,12 @@ module View = {
         let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
       };
 
-      let colorFor = (item, ~theme: Theme.t) =>
+      let colorFor = (item, ~theme) =>
         switch (item.kind) {
-        | Success => theme.notificationSuccessBackground
-        | Warning => theme.notificationWarningBackground
-        | Error => theme.notificationErrorBackground
-        | Info => theme.notificationInfoBackground
+        | Success => Colors.successBackground.from(theme)
+        | Warning => Colors.warningBackground.from(theme)
+        | Error => Colors.errorBackground.from(theme)
+        | Info => Colors.infoBackground.from(theme)
         };
 
       let iconFor = item =>
@@ -243,8 +245,8 @@ module View = {
         | Info => FontAwesome.infoCircle
         };
 
-      let make = (~item, ~theme: Theme.t, ~font, ~dispatch, ()) => {
-        let foreground = theme.foreground;
+      let make = (~item, ~theme, ~font, ~dispatch, ()) => {
+        let foreground = Colors.foreground.from(theme);
 
         let icon = () =>
           <FontIcon
@@ -300,10 +302,10 @@ module View = {
         right(0),
       ];
 
-      let title = (~theme: Theme.t, ~font: UiFont.t) => [
+      let title = (~theme, ~font: UiFont.t) => [
         fontFamily(font.fontFile),
         fontSize(font.fontSize),
-        color(theme.foreground),
+        color(Colors.foreground.from(theme)),
         margin(8),
       ];
     };

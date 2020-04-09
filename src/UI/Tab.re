@@ -154,7 +154,7 @@ let%component make =
                 ~isModified,
                 ~onClick,
                 ~onClose,
-                ~theme: ColorTheme.resolver,
+                ~theme: ColorTheme.Colors.t,
                 ~uiFont: UiFont.t,
                 ~mode: Vim.Mode.t,
                 ~icon,

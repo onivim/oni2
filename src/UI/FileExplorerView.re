@@ -1,15 +1,24 @@
 open Oni_Model;
-open Revery_UI;
+open Revery.UI;
 
-let make = (~state: State.t, ()) => {
-  let onNodeClick = node =>
-    GlobalContext.current().dispatch(
-      FileExplorer(FileExplorer.NodeClicked(node)),
-    );
+let make = (~model, ~theme, ~font, ()) => {
+  switch ((model: FileExplorer.t)) {
+  | {tree: Some(tree), active, focus, scrollOffset, decorations, _} =>
+    let onNodeClick = node =>
+      GlobalContext.current().dispatch(
+        FileExplorer(FileExplorer.NodeClicked(node)),
+      );
 
-  switch (state.fileExplorer) {
-  | {tree: None, _} => React.empty
-  | {tree: Some(tree), active, focus, _} =>
-    <FileTreeView state active focus onNodeClick tree />
+    <FileTreeView
+      scrollOffset
+      decorations
+      active
+      focus
+      onNodeClick
+      tree
+      theme
+      font
+    />;
+  | _ => React.empty
   };
 };

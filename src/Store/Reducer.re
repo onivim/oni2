@@ -44,12 +44,7 @@ let reduce: (State.t, Actions.t) => State.t =
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
-      | ThemeLoaded({colors, isDark, tokenTheme}) => {
-          ...s,
-          tokenTheme,
-          theme: colors,
-          darkMode: isDark,
-        }
+      | TokenThemeLoaded(tokenTheme) => {...s, tokenTheme}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}

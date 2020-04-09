@@ -1,9 +1,10 @@
 open Revery.UI;
-open Oni_Core;
 open Oni_Model;
 
 module FontIcon = Oni_Components.FontIcon;
 module FontAwesome = Oni_Components.FontAwesome;
+
+module Colors = Feature_Theme.Colors;
 
 module Constants = {
   let height = 225;
@@ -12,11 +13,11 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let pane = (~theme: Theme.t) => [
+  let pane = (~theme) => [
     flexDirection(`Column),
     height(Constants.height),
-    borderTop(~color=theme.sideBarBackground, ~width=1),
-    backgroundColor(theme.editorBackground),
+    borderTop(~color=Colors.SideBar.background.from(theme), ~width=1),
+    backgroundColor(Colors.Editor.background.from(theme)),
   ];
 
   let header = [flexDirection(`Row), justifyContent(`SpaceBetween)];
@@ -43,7 +44,7 @@ let showNotifications = () =>
 let closePane = () =>
   GlobalContext.current().dispatch(Actions.PaneCloseButtonClicked);
 
-let content = (~selected, ~theme, ~uiFont, ~editorFont, ~state, ()) =>
+let content = (~selected, ~theme, ~uiFont, ~editorFont, ~state: State.t, ()) =>
   switch (selected) {
   | Pane.Search =>
     let onSelectResult = (file, location) =>
@@ -63,7 +64,8 @@ let content = (~selected, ~theme, ~uiFont, ~editorFont, ~state, ()) =>
       dispatch
     />;
 
-  | Pane.Diagnostics => <DiagnosticsPane state />
+  | Pane.Diagnostics =>
+    <DiagnosticsPane diagnostics={state.diagnostics} theme uiFont editorFont />
   | Pane.Notifications =>
     let dispatch = msg =>
       GlobalContext.current().dispatch(Actions.Notification(msg));
@@ -75,11 +77,11 @@ let content = (~selected, ~theme, ~uiFont, ~editorFont, ~state, ()) =>
     />;
   };
 
-let closeButton = (~theme: Theme.t, ()) =>
+let closeButton = (~theme, ()) =>
   <Sneakable onClick=closePane style=Styles.closeButton>
     <FontIcon
       icon=FontAwesome.times
-      color={theme.tabActiveForeground}
+      color={Colors.Tab.activeForeground.from(theme)}
       fontSize=12.
     />
   </Sneakable>;
@@ -89,7 +91,7 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) =>
     <View />;
   } else {
     [
-      <WindowHandle theme direction=Horizontal />,
+      <WindowHandle direction=Horizontal />,
       <View style={Styles.pane(~theme)}>
         <View style=Styles.header>
           <View style=Styles.tabs>
@@ -98,21 +100,21 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) =>
               theme
               title="Search"
               onClick=showSearch
-              active={state.pane.selected == Pane.Search}
+              isActive={state.pane.selected == Pane.Search}
             />
             <PaneTab
               uiFont
               theme
               title="Problems"
               onClick=showProblems
-              active={state.pane.selected == Pane.Diagnostics}
+              isActive={state.pane.selected == Pane.Diagnostics}
             />
             <PaneTab
               uiFont
               theme
               title="Notifications"
               onClick=showNotifications
-              active={state.pane.selected == Pane.Notifications}
+              isActive={state.pane.selected == Pane.Notifications}
             />
           </View>
           <closeButton theme />
