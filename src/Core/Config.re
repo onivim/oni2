@@ -124,6 +124,9 @@ module Schema = {
     let bool = {decode: Json.Decode.bool, encode: Json.Encode.bool};
     let int = {decode: Json.Decode.int, encode: Json.Encode.int};
     let string = {decode: Json.Decode.string, encode: Json.Encode.string};
+    let stringOpt = {
+    decode: Json.Decode.nullable(Json.Decode.string),
+    encode: Json.Encode.option(Json.Encode.string)};
     let list = valueCodec => {
       decode: Json.Decode.list(valueCodec.decode),
       encode: Json.Encode.list(valueCodec.encode),

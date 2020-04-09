@@ -38,6 +38,11 @@ let or_lazy = f =>
   | Some(_) as orig => orig
   | None => f();
 
+let default_lazy = (~default) =>
+  fun
+  | Some(v) => v
+  | None => default();
+
 let of_list =
   fun
   | [] => None

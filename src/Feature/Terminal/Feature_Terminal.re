@@ -1,5 +1,6 @@
 open Oni_Core;
 module ExtHostClient = Oni_Extensions.ExtHostClient;
+module OptionEx = Oni_Core.Utility.OptionEx;
 
 type terminal = {
   id: int,
@@ -11,6 +12,17 @@ type terminal = {
   screen: ReveryTerminal.Screen.t,
   cursor: ReveryTerminal.Cursor.t,
 };
+
+module Configuration = {
+open Config.Schema;
+let osxShell =
+  setting("terminal.integrated.shell.osx", stringOpt, ~default=None);
+let winShell =
+  setting("terminal.integrated.shell.win", stringOpt, ~default=None);
+let linuxShell =
+  setting("terminal.integrated.shell.linux", stringOpt, ~default=None);
+  
+}
 
 type t = {
   idToTerminal: IntMap.t(terminal),
@@ -78,14 +90,24 @@ let updateById = (id, f, model) => {
   {...model, idToTerminal};
 };
 
-let update = (model: t, msg) => {
+let getShellToUse = (~config, specifiedShell: option(string)) => {
+
+  let platformShellConfig  = switch (Revery.Environment.os) {
+  | Windows => Configuration.winShell.get(config)
+  | Linux => Configuration.linuxShell.get(config)
+  | Mac => Configuration.osxShell.get(config)
+  | _ => None
+  };
+
+  specifiedShell
+  |> OptionEx.or_(platformShellConfig)
+  |> Option.value(~default=shellCmd);
+};
+
+let update = (~config, model: t, msg) => {
   switch (msg) {
   | NewTerminal({cmd, splitDirection}) =>
-    let cmdToUse =
-      switch (cmd) {
-      | None => shellCmd
-      | Some(specifiedCommand) => specifiedCommand
-      };
+    let cmdToUse = getShellToUse(~config, cmd);
 
     let id = model.nextId;
     let idToTerminal =

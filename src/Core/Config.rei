@@ -55,6 +55,7 @@ module Schema: {
     let bool: codec(bool);
     let int: codec(int);
     let string: codec(string);
+    let stringOpt: codec(option(string));
     let list: codec('a) => codec(list('a));
 
     let custom:
@@ -66,6 +67,7 @@ module Schema: {
   let bool: codec(bool);
   let int: codec(int);
   let string: codec(string);
+  let stringOpt: codec(option(string));
   let list: codec('a) => codec(list('a));
 
   let custom:
