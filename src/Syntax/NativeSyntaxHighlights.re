@@ -33,22 +33,6 @@ type t =
     })
     : t;
 
-let _hasTreeSitterScope = (configuration, scope: string) => {
-  let treeSitterEnabled =
-    Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
-
-  if (!treeSitterEnabled) {
-    false;
-  } else {
-    switch (scope) {
-    | "source.json" => true
-    /*  | "source.c" => true
-        | "source.cpp" => true */
-    | _ => false
-    };
-  };
-};
-
 let anyPendingWork = hl => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
@@ -88,18 +72,20 @@ let create =
     ) => {
   ignore(bufferUpdate);
   let maybeScopeConverter = getTreesitterScope(scope);
+  let maybeParser = TreeSitterSyntaxHighlights.getParserFromScope(scope);
 
   let allowTreeSitter =
-    Core.Configuration.getValue(
-      config => config.experimentalTreeSitter,
-      configuration,
-    )
-    && _hasTreeSitterScope(configuration, scope);
+    Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
 
-  switch (maybeScopeConverter) {
-  | Some(scopeConverter) when allowTreeSitter =>
+  switch (maybeScopeConverter, maybeParser) {
+  | (Some(scopeConverter), Some(parser)) when allowTreeSitter =>
     let ts =
-      TreeSitterSyntaxHighlights.create(~theme, ~scopeConverter, lines);
+      TreeSitterSyntaxHighlights.create(
+        ~theme,
+        ~scopeConverter,
+        ~parser,
+        lines,
+      );
     Highlighter({
       highlighter: (module TreeSitterSyntaxHighlights),
       state: ts,
