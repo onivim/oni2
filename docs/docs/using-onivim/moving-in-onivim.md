@@ -10,8 +10,8 @@ In _normal mode_, the cursor can be moved with the following keys:
 
 - <kbd>h</kbd> - move left
 - <kbd>j</kbd> - move down
-- <kbd>k</kbd> - move right
-- <kbd>l</kbd> - move down
+- <kbd>l</kbd> - move right
+- <kbd>k</kbd> - move up
 
 These keys can be prefixed with a number: <kbd>1</kbd><kbd>0</kbd><kbd>j</kbd> would jump down 10 lines.
 

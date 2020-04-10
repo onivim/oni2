@@ -23,7 +23,7 @@ let parentStyle = (dir: direction) => {
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let renderTree = (state, tree) => {
+let renderTree = (state, theme, tree) => {
   open State;
   let items =
     WindowTreeLayout.layout(
@@ -51,7 +51,12 @@ let renderTree = (state, tree) => {
             )
           ) {
           | Some(editorGroup) =>
-            <EditorGroupView state windowId={item.split.id} editorGroup />
+            <EditorGroupView
+              state
+              theme
+              windowId={item.split.id}
+              editorGroup
+            />
           | None => React.empty
           }}
        </View>
@@ -59,11 +64,11 @@ let renderTree = (state, tree) => {
   |> React.listToElement;
 };
 
-let make = (~state: State.t, ()) => {
+let make = (~state: State.t, ~theme, ()) => {
   let {State.windowManager, _} = state;
   let {windowTree, _} = windowManager;
 
-  let children = renderTree(state, windowTree);
+  let children = renderTree(state, theme, windowTree);
 
   let splits =
     [

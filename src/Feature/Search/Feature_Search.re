@@ -1,4 +1,5 @@
 open EditorCoreTypes;
+open Revery;
 open Oni_Core;
 open Utility;
 open Oni_Components;
@@ -92,17 +93,18 @@ let subscriptions = (ripgrep, dispatch) => {
 
 // VIEW
 
-open Revery;
 open Revery.UI;
+
+module Colors = Feature_Theme.Colors;
 
 module Styles = {
   open Style;
 
   let pane = [flexGrow(1), flexDirection(`Row)];
 
-  let queryPane = (~theme: Theme.t) => [
+  let queryPane = (~theme) => [
     width(300),
-    borderRight(~color=theme.sideBarBackground, ~width=1),
+    borderRight(~color=Colors.SideBar.background.from(theme), ~width=1),
   ];
 
   let resultsPane = [flexGrow(1)];
@@ -113,10 +115,10 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let title = (~font: UiFont.t, ~theme: Theme.t) => [
+  let title = (~font: UiFont.t, ~theme) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
-    color(theme.sideBarForeground),
+    color(Colors.SideBar.foreground.from(theme)),
     marginVertical(8),
     marginHorizontal(8),
   ];
@@ -124,7 +126,7 @@ module Styles = {
   let input = (~font: UiFont.t) => [
     border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
     backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-    color(Colors.white),
+    color(Revery.Colors.white),
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
     flexGrow(1),
@@ -175,7 +177,7 @@ let make =
       <View style=Styles.row>
         <Input
           style={Styles.input(~font=uiFont)}
-          cursorColor=Colors.gray
+          cursorColor=Revery.Colors.gray
           selection={model.selection}
           value={model.queryInput}
           placeholder="Search"

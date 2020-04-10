@@ -15,6 +15,20 @@ type variant =
 type key = Lookup.key;
 let key = Lookup.key;
 
+// COLORS
+
+module Colors = {
+  type t = Lookup.t(Color.t);
+
+  let empty = Lookup.empty;
+  let fromList = entries => entries |> List.to_seq |> Lookup.of_seq;
+
+  let get = Lookup.find_opt;
+
+  let union = (xs, ys) => Lookup.union((_key, _x, y) => Some(y), xs, ys);
+  let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
+};
+
 // DEFAULTS
 
 module Defaults = {
@@ -48,19 +62,14 @@ module Defaults = {
     | Unspecified => None;
 };
 
-// RESOLVER
-
-type resolver =
-  key => [ | `Color(Color.t) | `Default(Defaults.expr) | `NotRegistered];
-
 // SCHEMA
 
 module Schema = {
   type definition = {
     key,
     defaults: Defaults.t,
-    tryFrom: resolver => option(Color.t),
-    from: resolver => Color.t,
+    tryFrom: Colors.t => option(Color.t),
+    from: Colors.t => Color.t,
   };
 
   type t = Lookup.t(definition);
@@ -86,6 +95,11 @@ module Schema = {
     );
 
   let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
+
+  let toList = lookup =>
+    Lookup.to_seq(lookup)
+    |> Seq.map(((_key, definition)) => definition)
+    |> List.of_seq;
 
   // DSL
 
@@ -133,42 +147,18 @@ module Schema = {
     let define = (keyName, defaults) => {
       let key = Lookup.key(keyName);
 
-      let rec tryGet = (resolve, key) =>
-        switch (resolve(key)) {
-        | `Color(color) => Some(color)
-        | `Default(expr) => Defaults.evaluate(tryGet(resolve), expr)
-        | `NotRegistered =>
-          Log.warnf(m => m("Missing contributed default for `%s`", keyName));
-          Some(Colors.magenta);
-        };
-
       {
         key,
         defaults,
-        tryFrom: resolve => tryGet(resolve, key),
-        from: resolve =>
-          tryGet(resolve, key)
-          |> Option.value(~default=Colors.transparentWhite),
+        tryFrom: Colors.get(key),
+        from: lookup =>
+          Colors.get(key, lookup)
+          |> Option.value(~default=Color.hex("#0000")),
       };
     };
   };
 
   include DSL;
-};
-
-// COLORS
-
-module Colors = {
-  type t = Lookup.t(Color.t);
-
-  let empty = Lookup.empty;
-  let fromList = entries =>
-    entries
-    |> List.to_seq
-    |> Seq.map(((keyName, entry)) => (Lookup.key(keyName), entry))
-    |> Lookup.of_seq;
-
-  let get = Lookup.find_opt;
 };
 
 // THEME

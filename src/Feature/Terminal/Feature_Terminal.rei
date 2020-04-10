@@ -81,13 +81,13 @@ module Colors: {
   let ansiBrightWhite: ColorTheme.Schema.definition;
 };
 
-let theme: ColorTheme.resolver => ReveryTerminal.Theme.t;
-let defaultBackground: ColorTheme.resolver => Revery.Color.t;
-let defaultForeground: ColorTheme.resolver => Revery.Color.t;
+let theme: ColorTheme.Colors.t => ReveryTerminal.Theme.t;
+let defaultBackground: ColorTheme.Colors.t => Revery.Color.t;
+let defaultForeground: ColorTheme.Colors.t => Revery.Color.t;
 
 type highlights = (int, list(ColorizedToken.t));
 let getLinesAndHighlights:
-  (~colorTheme: ColorTheme.resolver, ~terminalId: int) =>
+  (~colorTheme: ColorTheme.Colors.t, ~terminalId: int) =>
   (array(string), list(highlights));
 
 module Contributions: {let colors: list(ColorTheme.Schema.definition);};

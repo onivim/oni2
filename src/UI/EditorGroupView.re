@@ -72,9 +72,9 @@ let toUiTabs =
   List.filter_map(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
-let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
-  let theme = Feature_Theme.resolver(state.colorTheme);
-  let mode = state.vimMode;
+let make =
+    (~state: State.t, ~theme, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
+  let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let style =
     editorViewStyle(
@@ -121,7 +121,6 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
   let children = {
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
     let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
-    let uiFont = state.uiFont;
 
     let metrics = editorGroup.metrics;
     let editorView =
@@ -199,8 +198,8 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
             windowIsFocused={state.windowIsFocused}
             config={Feature_Configuration.resolver(state.config)}
           />;
-        | BufferRenderer.Welcome => <WelcomeView state />
-        | BufferRenderer.Version => <VersionView state />
+        | BufferRenderer.Welcome => <WelcomeView theme uiFont editorFont />
+        | BufferRenderer.Version => <VersionView theme uiFont editorFont />
         | BufferRenderer.Terminal({id, _}) =>
           state.terminals
           |> Feature_Terminal.getTerminalOpt(id)

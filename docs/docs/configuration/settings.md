@@ -107,6 +107,8 @@ Experimental features are features that we are working to stabilize and turn on-
 
 > __NOTE:__ Experimental features may cause instability, like crashes. Use with caution!
 
+- `experimental.editor.cursorSmoothCaretAnimation` - __(_bool_ default: `false`)__ - Use an animation for moving the cursor caret.
+
 - `experimental.editor.smoothScroll` - __(_bool_ default: `false`)__ - Use an animation for scrolling the editor surface.
 
 - `experimental.viml` - __(_string|list of string_ default: `[]`)__ - Execute some VimL upon load. Example: `"experimental.viml": ["nnoremap ; :"]`

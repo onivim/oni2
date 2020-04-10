@@ -10,13 +10,13 @@ type effect =
 let count: t => int;
 
 let keyDown:
-  (~context: Hashtbl.t(string, bool), ~key: EditorInput.KeyPress.t, t) =>
+  (~context: WhenExpr.ContextKeys.t, ~key: EditorInput.KeyPress.t, t) =>
   (t, list(effect));
 
 let text: (~text: string, t) => (t, list(effect));
 
 let keyUp:
-  (~context: Hashtbl.t(string, bool), ~key: EditorInput.KeyPress.t, t) =>
+  (~context: WhenExpr.ContextKeys.t, ~key: EditorInput.KeyPress.t, t) =>
   (t, list(effect));
 
 type keybinding = {

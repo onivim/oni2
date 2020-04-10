@@ -11,7 +11,7 @@ open Revery.Math;
 module Core = Oni_Core;
 open Oni_Model;
 
-let bgc = Color.rgba(0.1, 0.1, 0.1, 0.25);
+module Colors = Feature_Theme.Colors;
 
 module Constants = {
   let size = 25;
@@ -20,7 +20,7 @@ module Constants = {
 module Styles = {
   let containerStyle =
     Style.[
-      backgroundColor(bgc),
+      backgroundColor(Color.rgba(0.1, 0.1, 0.1, 0.25)),
       position(`Absolute),
       top(0),
       left(0),
@@ -28,9 +28,9 @@ module Styles = {
       bottom(0),
     ];
 
-  let sneakItem = (x, y, theme: Core.Theme.t) =>
+  let sneakItem = (x, y, theme) =>
     Style.[
-      backgroundColor(theme.sneakBackground),
+      backgroundColor(Colors.Oni.Sneak.background.from(theme)),
       position(`Absolute),
       top(y),
       left(x + Constants.size / 2),
@@ -41,36 +41,33 @@ module Styles = {
       alignItems(`Center),
     ];
 
-  let textStyle = (theme: Core.Theme.t, uiFont: Core.UiFont.t) =>
+  let textStyle = (theme, font: Core.UiFont.t) =>
     Style.[
-      backgroundColor(theme.sneakBackground),
-      color(theme.sneakForeground),
-      fontFamily(uiFont.fontFile),
+      color(Colors.Oni.Sneak.foreground.from(theme)),
+      fontFamily(font.fontFile),
       fontSize(12.),
     ];
-  let highlightStyle = (theme: Core.Theme.t, uiFont: Core.UiFont.t) =>
+  let highlightStyle = (theme, font: Core.UiFont.t) =>
     Style.[
-      backgroundColor(theme.sneakBackground),
-      color(theme.sneakHighlight),
-      fontFamily(uiFont.fontFile),
+      backgroundColor(Colors.Oni.Sneak.background.from(theme)),
+      color(Colors.Oni.Sneak.highlight.from(theme)),
+      fontFamily(font.fontFile),
       fontSize(12.),
     ];
 };
 
-let make = (~state: State.t, ()) => {
-  let {theme, uiFont, _}: State.t = state;
+let make = (~model, ~theme, ~font, ()) => {
   let makeSneak = (bbox, text) => {
     let (x, y, _width, _height) = BoundingBox2d.getBounds(bbox);
 
-    let (highlightText, remainingText) =
-      Sneak.getTextHighlight(text, state.sneak);
+    let (highlightText, remainingText) = Sneak.getTextHighlight(text, model);
     <View style={Styles.sneakItem(int_of_float(x), int_of_float(y), theme)}>
-      <Text style={Styles.highlightStyle(theme, uiFont)} text=highlightText />
-      <Text style={Styles.textStyle(theme, uiFont)} text=remainingText />
+      <Text style={Styles.highlightStyle(theme, font)} text=highlightText />
+      <Text style={Styles.textStyle(theme, font)} text=remainingText />
     </View>;
   };
 
-  let sneaks = Sneak.getFiltered(state.sneak);
+  let sneaks = Sneak.getFiltered(model);
   let sneakViews =
     List.map(
       (Sneak.{boundingBox, id, _}) => makeSneak(boundingBox, id),
@@ -78,7 +75,7 @@ let make = (~state: State.t, ()) => {
     )
     |> React.listToElement;
 
-  let isActive = Sneak.isActive(state.sneak);
+  let isActive = Sneak.isActive(model);
   isActive
     ? <View style=Styles.containerStyle> sneakViews </View> : React.empty;
 };

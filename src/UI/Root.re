@@ -12,12 +12,14 @@ module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Tooltip = Oni_Components.Tooltip;
 
+module Colors = Feature_Theme.Colors;
+
 module Styles = {
   open Style;
 
-  let root = (background, foreground) => [
-    backgroundColor(background),
-    color(foreground),
+  let root = theme => [
+    backgroundColor(Colors.Editor.background.from(theme)),
+    color(Colors.foreground.from(theme)),
     position(`Absolute),
     top(0),
     left(0),
@@ -44,7 +46,6 @@ module Styles = {
 
 let make = (~state: State.t, ()) => {
   let State.{
-        theme,
         configuration,
         contextMenu,
         uiFont as font,
@@ -55,6 +56,10 @@ let make = (~state: State.t, ()) => {
         buffers,
         _,
       } = state;
+
+  let theme = {
+    Feature_Theme.colors(state.colorTheme);
+  };
 
   let onContextMenuItemSelect = item =>
     GlobalContext.current().dispatch(ContextMenuItemSelected(item));
@@ -78,27 +83,23 @@ let make = (~state: State.t, ()) => {
   let statusBar =
     statusBarVisible
       ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar state contextMenu onContextMenuItemSelect />
+          <StatusBar state contextMenu onContextMenuItemSelect theme />
         </View>
       : React.empty;
 
   let activityBar =
     activityBarVisible
       ? React.listToElement([
-          <Dock
-            theme={Feature_Theme.resolver(state.colorTheme)}
-            sideBar
-            pane
-          />,
-          <WindowHandle direction=Vertical theme />,
+          <Dock theme sideBar pane />,
+          <WindowHandle direction=Vertical />,
         ])
       : React.empty;
 
   let sideBar =
     sideBarVisible
       ? React.listToElement([
-          <SideBarView state />,
-          <WindowHandle direction=Vertical theme />,
+          <SideBarView theme state />,
+          <WindowHandle direction=Vertical />,
         ])
       : React.empty;
 
@@ -123,19 +124,19 @@ let make = (~state: State.t, ()) => {
     };
   };
 
-  <View style={Styles.root(theme.editorBackground, theme.foreground)}>
+  <View style={Styles.root(theme)}>
     <Titlebar
-      focused={state.windowIsFocused}
-      maximized={state.windowIsMaximized}
+      isFocused={state.windowIsFocused}
+      isMaximized={state.windowIsMaximized}
       font={state.uiFont}
       title={state.windowTitle}
-      theme={state.theme}
+      theme
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
         activityBar
         sideBar
-        <EditorView state />
+        <EditorView state theme />
       </View>
       <PaneView theme uiFont editorFont state />
     </View>
@@ -157,6 +158,6 @@ let make = (~state: State.t, ()) => {
      <ContextMenu.Overlay onClick />}
     <Tooltip.Overlay theme font=uiFont />
     <modals />
-    <Overlay> <SneakView state /> </Overlay>
+    <Overlay> <SneakView model={state.sneak} theme font /> </Overlay>
   </View>;
 };
