@@ -68,12 +68,21 @@ let registerExtensionCommands = (~dispatch, ~extensions) => {
   |> List.map(
        ExtensionContributions.Command.(
          it =>
-           Feature_Commands.Schema.define(
-             ~category=?it.category,
-             ~title=it.title |> LocalizedToken.to_string,
-             it.command,
-             Model.Actions.CommandExecuteContributed(it.command),
-           )
+           Feature_Commands.Schema.{
+             id: it.command,
+             category: it.category,
+             title: Some(it.title |> LocalizedToken.to_string),
+             icon: None,
+             isEnabled: () => true,
+             msg:
+               `Arg1(
+                 arg =>
+                   Model.Actions.CommandExecuteContributed({
+                     command: it.command,
+                     arguments: [arg],
+                   }),
+               ),
+           }
        ),
      )
   |> registerCommands(~dispatch);
@@ -336,7 +345,13 @@ let start =
   );
 
   registerCommands(~dispatch, Model.GlobalCommands.contributions);
-  registerCommands(~dispatch, Feature_Terminal.Contributions.commands |> List.map(Feature_Commands.Schema.map(msg => Model.Actions.Terminal(msg))));
+  registerCommands(
+    ~dispatch,
+    Feature_Terminal.Contributions.commands
+    |> List.map(
+         Feature_Commands.Schema.map(msg => Model.Actions.Terminal(msg)),
+       ),
+  );
   registerExtensionCommands(~dispatch, ~extensions);
 
   // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.

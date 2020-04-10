@@ -8,7 +8,7 @@ module Schema: {
     category: option(string),
     icon: option([@opaque] IconTheme.IconDefinition.t),
     isEnabled: unit => bool, // WhenExpr.t
-    msg: 'msg,
+    msg: [ | `Arg0('msg) | `Arg1(Json.t => 'msg)],
   };
 
   let map: ('a => 'b, command('a)) => command('b);

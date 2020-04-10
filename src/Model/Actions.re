@@ -45,7 +45,10 @@ type t =
   | Command(string)
   | Commands(Feature_Commands.msg(t))
   // Execute a contribute command, from an extension
-  | CommandExecuteContributed(string)
+  | CommandExecuteContributed({
+      command: string,
+      arguments: [@opaque] list(Json.t),
+    })
   | CompletionAddItems(
       [@opaque] CompletionMeet.t,
       [@opaque] list(CompletionItem.t),

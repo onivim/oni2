@@ -8,10 +8,17 @@ module Schema = {
     category: option(string),
     icon: option([@opaque] IconTheme.IconDefinition.t),
     isEnabled: unit => bool, // WhenExpr.t
-    msg: 'msg,
+    msg: [ | `Arg0('msg) | `Arg1(Json.t => 'msg)],
   };
 
-  let map = (f, command) => {...command, msg: f(command.msg)};
+  let map = (f, command) => {
+    ...command,
+    msg:
+      switch (command.msg) {
+      | `Arg0(msg) => `Arg0(f(msg))
+      | `Arg1(msgf) => `Arg1(arg => f(msgf(arg)))
+      },
+  };
 
   let define =
       (~category=?, ~title=?, ~icon=?, ~isEnabled=() => true, id, msg) => {
@@ -20,7 +27,7 @@ module Schema = {
     category,
     icon,
     isEnabled,
-    msg,
+    msg: `Arg0(msg),
   };
 };
 

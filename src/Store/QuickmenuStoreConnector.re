@@ -99,8 +99,13 @@ let start = (themeInfo: ThemeInfo.t) => {
             |> List.map((v: Feature_Commands.Schema.command(_)) =>
                  Actions.{
                    category: v.category,
-                   name: v.title |> Option.value(~default=v.id),
-                   command: () => v.msg,
+                   name: v.label,
+                   command: () =>
+                     switch (Feature_Commands.find(v.command, commands)) {
+                     | Some({msg: `Arg0(msg), _}) => msg
+                     | Some({msg: `Arg1(msgf), _}) => msgf(Json.Encode.null)
+                     | None => Actions.Noop
+                     },
                    icon: v.icon,
                    highlight: [],
                  }

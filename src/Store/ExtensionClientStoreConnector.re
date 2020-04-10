@@ -92,16 +92,16 @@ let start = (extensions, extHostClient) => {
       }
     );
 
-  let executeContributedCommandEffect = cmd =>
+  let executeContributedCommandEffect = (cmd, arguments) =>
     Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
-      ExtHostClient.executeContributedCommand(cmd, extHostClient)
+      ExtHostClient.executeContributedCommand(cmd, ~arguments, extHostClient)
     });
 
   let gitRefreshEffect = (scm: Feature_SCM.model) =>
     if (scm == Feature_SCM.initial) {
       Isolinear.Effect.none;
     } else {
-      executeContributedCommandEffect("git.refresh");
+      executeContributedCommandEffect("git.refresh", []);
     };
 
   let discoveredExtensionsEffect = extensions =>
@@ -194,9 +194,9 @@ let start = (extensions, extHostClient) => {
         Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
       )
 
-    | CommandExecuteContributed(cmd) => (
+    | CommandExecuteContributed({command, arguments}) => (
         state,
-        executeContributedCommandEffect(cmd),
+        executeContributedCommandEffect(command, arguments),
       )
 
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))

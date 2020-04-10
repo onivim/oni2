@@ -402,7 +402,10 @@ let start = maybeKeyBindingsFilePath => {
   let executeCommandEffect = msg =>
     Isolinear.Effect.createWithDispatch(
       ~name="keybindings.executeCommand", dispatch =>
-      dispatch(msg)
+      switch (msg) {
+      | `Arg0(msg) => dispatch(msg)
+      | `Arg1(msgf) => dispatch(msgf(Json.Encode.null))
+      }
     );
 
   let updater = (state: State.t, action: Actions.t) => {
