@@ -7,7 +7,7 @@ module Schema: {
     title: option(string),
     category: option(string),
     icon: option([@opaque] IconTheme.IconDefinition.t),
-    isEnabled: WhenExpr.t,
+    isEnabledWhen: WhenExpr.t,
     msg: [ | `Arg0('msg) | `Arg1(Json.t => 'msg)],
   };
 
@@ -18,7 +18,7 @@ module Schema: {
       ~category: string=?,
       ~title: string=?,
       ~icon: IconTheme.IconDefinition.t=?,
-      ~isEnabled: WhenExpr.t=?,
+      ~isEnabledWhen: WhenExpr.t=?,
       string,
       'msg
     ) =>

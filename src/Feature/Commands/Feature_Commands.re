@@ -7,7 +7,7 @@ module Schema = {
     title: option(string),
     category: option(string),
     icon: option([@opaque] IconTheme.IconDefinition.t),
-    isEnabled: WhenExpr.t,
+    isEnabledWhen: WhenExpr.t,
     msg: [ | `Arg0('msg) | `Arg1(Json.t => 'msg)],
   };
 
@@ -25,7 +25,7 @@ module Schema = {
         ~category=?,
         ~title=?,
         ~icon=?,
-        ~isEnabled=WhenExpr.Value(True),
+        ~isEnabledWhen=WhenExpr.Value(True),
         id,
         msg,
       ) => {
@@ -33,7 +33,7 @@ module Schema = {
     title,
     category,
     icon,
-    isEnabled,
+    isEnabledWhen,
     msg: `Arg0(msg),
   };
 };
@@ -54,7 +54,9 @@ let enabledCommands = (getValue, model) =>
   model
   |> StringMap.to_seq
   |> Seq.map(snd)
-  |> Seq.filter(Schema.(it => WhenExpr.evaluate(it.isEnabled, getValue)))
+  |> Seq.filter(
+       Schema.(it => WhenExpr.evaluate(it.isEnabledWhen, getValue)),
+     )
   |> List.of_seq;
 
 // UPDATE

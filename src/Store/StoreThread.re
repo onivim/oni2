@@ -73,7 +73,7 @@ let registerExtensionCommands = (~dispatch, ~extensions) => {
              category: it.category,
              title: Some(it.title |> LocalizedToken.to_string),
              icon: None,
-             isEnabled: WhenExpr.Value(True),
+             isEnabledWhen: it.condition,
              msg:
                `Arg1(
                  arg =>
