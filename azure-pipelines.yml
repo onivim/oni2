@@ -38,6 +38,7 @@ jobs:
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     MACOSX_DEPLOYMENT_TARGET: 10.12
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
@@ -61,6 +62,7 @@ jobs:
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
@@ -80,16 +82,19 @@ jobs:
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
   - script: docker build -t centos scripts/docker/centos
-    displayName: 'docker build'
-  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'which ragel'
+    displayName: 'docker: build Dockerfile'
   - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ls -a'
+    displayName: 'docker: ls -a'
   - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+    displayName: 'docker: build Onivim 2'
   - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-test.sh'
+    displayName: 'docker: unit tests'
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
@@ -103,6 +108,7 @@ jobs:
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     MACOSX_DEPLOYMENT_TARGET: 10.12
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
@@ -130,6 +136,7 @@ jobs:
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 

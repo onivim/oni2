@@ -7,5 +7,10 @@ steps:
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy @integrationtest install
     displayName: 'Integration Tests: install'
+  - script: esy @integrationtest build
+    displayName: 'Integration Tests: build'
+  - bash: 'rm -rf *'
+    workingDirectory: '$(ESY_CACHE_BUILD_PATH)'
+    displayName: 'Integration Tests: rm -rf build folder'
   - script: esy @integrationtest run
     displayName: 'Integration Tests: run'
