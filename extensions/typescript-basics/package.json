@@ -54,6 +54,7 @@
         "language": "typescript",
         "scopeName": "source.ts",
         "path": "./syntaxes/TypeScript.tmLanguage.json",
+        "treeSitterPath": "./syntaxes/tree-sitter-typescript.json",
         "tokenTypes": {
           "entity.name.type.instance.jsdoc": "other",
           "entity.name.function.tagged-template": "other",
@@ -64,6 +65,7 @@
       {
         "language": "typescriptreact",
         "scopeName": "source.tsx",
+        "treeSitterPath": "./syntaxes/tree-sitter-tsx.json",
         "path": "./syntaxes/TypeScriptReact.tmLanguage.json",
         "embeddedLanguages": {
           "meta.tag.tsx": "jsx-tags",

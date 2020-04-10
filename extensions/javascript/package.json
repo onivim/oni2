@@ -71,6 +71,7 @@
         "language": "javascript",
         "scopeName": "source.js",
         "path": "./syntaxes/JavaScript.tmLanguage.json",
+        "treeSitterPath": "./syntaxes/tree-sitter-javascript.json",
         "embeddedLanguages": {
           "meta.tag.js": "jsx-tags",
           "meta.tag.without-attributes.js": "jsx-tags",

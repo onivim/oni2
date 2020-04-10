@@ -18,7 +18,8 @@
 		"grammars": [{
 			"language": "python",
 			"scopeName": "source.python",
-			"path": "./syntaxes/MagicPython.tmLanguage.json"
+			"path": "./syntaxes/MagicPython.tmLanguage.json",
+			"treeSitterPath": "./syntaxes/tree-sitter-python.json"
 		},{
 			"scopeName": "source.regexp.python",
 			"path": "./syntaxes/MagicRegExp.tmLanguage.json"
