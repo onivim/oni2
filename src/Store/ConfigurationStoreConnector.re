@@ -6,6 +6,7 @@
 
 open Oni_Core;
 open Oni_Model;
+module ResultEx = Oni_Core.Utility.ResultEx;
 
 module Log = (val Log.withNamespace("Oni2.Store.Configuration"));
 
@@ -70,6 +71,11 @@ let start =
     };
   };
 
+  let onError = (~dispatch, err: string) => {
+      Log.error("Error loading configuration file: " ++ err)
+      dispatch(Actions.ConfigurationParseError(err));
+  }
+
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
       dispatch(Actions.Configuration(UserSettingsChanged));
@@ -81,8 +87,7 @@ let start =
           |> (
             fun
             | Ok(config) => dispatch(Actions.ConfigurationSet(config))
-            | Error(err) =>
-              Log.error("Error loading configuration file: " ++ err)
+            | Error(err) => onError(~dispatch, err)
           )
       );
     });
@@ -91,12 +96,14 @@ let start =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
       if (cliOptions.shouldLoadConfiguration) {
         dispatch(Actions.Configuration(UserSettingsChanged));
-        switch (getConfigurationFile(defaultConfigurationFileName)) {
-        | Ok(path) =>
-          Log.info("Loading configuration: " ++ path);
 
-          switch (ConfigurationParser.ofFile(path)) {
-          | Ok(configuration) =>
+        defaultConfigurationFileName
+        |> getConfigurationFile
+        // Once we know the path - register a listener to reload
+        |> ResultEx.tap(configPath => reloadConfigOnWritePost(~configPath, dispatch))
+        |> ResultEx.flatMap(ConfigurationParser.ofFile)
+        |> ResultEx.tapError(onError(~dispatch))
+        |> Result.iter(configuration => {
             dispatch(Actions.ConfigurationSet(configuration));
 
             let zenModeSingleFile =
@@ -105,13 +112,8 @@ let start =
             if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
               dispatch(Actions.EnableZenMode);
             };
-          | Error(err) =>
-            Log.error("Error loading configuration file: " ++ err)
-          };
-          reloadConfigOnWritePost(~configPath=path, dispatch);
-        | Error(err) => Log.error("Error loading configuration file: " ++ err)
-        };
-        ();
+        });
+
       } else {
         Log.info("Not loading configuration initially; disabled via CLI.");
       }
@@ -122,7 +124,7 @@ let start =
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
       | Ok(path) => dispatch(Actions.OpenFileByPath(path, None, None))
-      | Error(e) => Log.error(e)
+      | Error(e) => onError(~dispatch, e);
       }
     );
 
@@ -157,6 +159,11 @@ let start =
     | Actions.ConfigurationSet(configuration) => (
         {...state, configuration},
         synchronizeConfigurationEffect(configuration),
+      )
+    | Actions.ConfigurationParseError(msg) => (
+        state,
+        Feature_Notification.Effects.create(~kind=Error, msg)
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       )
     | Actions.ConfigurationReload => (state, reloadConfigurationEffect)
     | Actions.OpenConfigFile(path) => (
