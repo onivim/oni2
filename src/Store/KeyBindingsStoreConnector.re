@@ -420,7 +420,7 @@ let start = maybeKeyBindingsFilePath => {
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       )
 
-    | KeybindingsCommand(command) =>
+    | KeybindingInvoked({command}) =>
       switch (Feature_Commands.find(command, state.commands)) {
       | Some(command) => (state, executeCommandEffect(command.msg))
       | None =>

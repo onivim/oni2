@@ -71,7 +71,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Keybindings.Execute(command) => [Actions.KeybindingsCommand(command)]
+    | Keybindings.Execute(command) => [
+        Actions.KeybindingInvoked({command: command}),
+      ]
     | Keybindings.Text(text) => handleTextEffect(state, text)
     | Keybindings.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();
