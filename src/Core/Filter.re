@@ -23,14 +23,14 @@ let rank = (query, format, items) => {
 
   let search = (query, format, items) => {
     let searchStrings = List.map(item => format(item), items);
-    let results = Fzy.fzySearchList(searchStrings, query, ~sorted=false, ());
+    let results = Fzy.fzySearchList(searchStrings, query, ());
+    let lookup = (result: Fzy.Result.t) => List.nth(items, result.original_index);
 
-    List.map2((a, b) => (a, b), items, results)
+    List.map((result) => (lookup(result), result), results);
   };
 
   items
   |> search(query, format)
-  |> List.sort(((_, a), (_, b)) => Fzy.Result.(compare(b.score, a.score)))
   |> List.map(makeResult);
 };
 
