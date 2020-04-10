@@ -34,3 +34,57 @@
 .post a:hover {
     opacity: 1.0;
 }
+
+.tips {
+    background-color: blue;
+    display: flex;
+    flex-direction: column;
+}
+
+.tip {
+    background-color:rgb(220, 220, 220);
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.tip-inner {
+    max-width: 800px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.tip:nth-of-type(2n) {
+    background-color:rgb(240, 240, 240);
+}
+
+.tip:nth-of-type(2n) .tip-inner {
+    background-color:rgb(240, 240, 240);
+    flex-direction: row-reverse;
+}
+
+.tip-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.tip-text h2 {
+    margin: 0;
+    padding: 0;
+}
+
+.tip-text .description {
+    margin: 2em;
+}
+
+.tip-video {
+    margin: 3em;
+    width: 400;
+    height: 300;
+}
