@@ -5,12 +5,12 @@ steps:
     displayName: 'Install Dependencies: esy install'
   - script: esy bootstrap
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
-  - bash: 'rm -rf _esy'
-    displayName: 'Integration Tests: rm -rf _esy'
   - script: esy cleanup integrationtest.json --dry-run
     displayName: 'Clean up dry-run'
   - script: esy cleanup integrationtest.json
     displayName: 'Clean up dry-run'
+  - bash: 'rm -rf _esy'
+    displayName: 'Integration Tests: rm -rf _esy'
   - script: esy @integrationtest install
     displayName: 'Integration Tests: install'
   - script: esy @integrationtest build
