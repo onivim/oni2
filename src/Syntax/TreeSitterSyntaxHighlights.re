@@ -33,8 +33,19 @@ let scopesToStrings = (scopes: list(TreeSitter.Syntax.scope)) => {
   );
 };
 
-let create = (~theme, ~scopeConverter, lines: array(string)) => {
-  let parser = Parser.json();
+let getParserFromScope = language =>
+  switch (language) {
+  | "source.json" => Some(Parser.json())
+  | "source.c" => Some(Parser.c())
+  | "source.cpp" => Some(Parser.cpp())
+  | "source.python" => Some(Parser.python())
+  | "source.javascript" => Some(Parser.javascript())
+  | "source.typescript" => Some(Parser.typescript())
+  | "source.tsx" => Some(Parser.tsx())
+  | _ => None
+  };
+
+let create = (~theme, ~scopeConverter, ~parser, lines: array(string)) => {
   let (tree, baseline) = ArrayParser.parse(parser, None, lines);
 
   let job =
