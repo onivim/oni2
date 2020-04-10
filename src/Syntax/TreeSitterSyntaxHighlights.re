@@ -39,8 +39,8 @@ let getParserFromScope = language =>
   | "source.c" => Some(Parser.c())
   | "source.cpp" => Some(Parser.cpp())
   | "source.python" => Some(Parser.python())
-  | "source.javascript" => Some(Parser.javascript())
-  | "source.typescript" => Some(Parser.typescript())
+  | "source.js" => Some(Parser.javascript())
+  | "source.ts" => Some(Parser.typescript())
   | "source.tsx" => Some(Parser.tsx())
   | _ => None
   };
