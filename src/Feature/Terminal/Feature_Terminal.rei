@@ -117,14 +117,14 @@ let bufferRendererReducer: (rendererState, msg) => rendererState;
 
 module Commands: {
   module New: {
-    let horizontal: Feature_Commands.Schema.command(msg);
-    let vertical: Feature_Commands.Schema.command(msg);
-    let current: Feature_Commands.Schema.command(msg);
+    let horizontal: Command.t(msg);
+    let vertical: Command.t(msg);
+    let current: Command.t(msg);
   };
 
   module Oni: {
-    let normalMode: Feature_Commands.Schema.command(msg);
-    let insertMode: Feature_Commands.Schema.command(msg);
+    let normalMode: Command.t(msg);
+    let insertMode: Command.t(msg);
   };
 };
 
@@ -132,5 +132,5 @@ module Commands: {
 
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
-  let commands: list(Feature_Commands.Schema.command(msg));
+  let commands: list(Command.t(msg));
 };

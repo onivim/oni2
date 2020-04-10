@@ -1,18 +1,6 @@
 open Oni_Core;
 
 module Schema: {
-  [@deriving show]
-  type command('msg) = {
-    id: string,
-    title: option(string),
-    category: option(string),
-    icon: option([@opaque] IconTheme.IconDefinition.t),
-    isEnabledWhen: WhenExpr.t,
-    msg: [ | `Arg0('msg) | `Arg1(Json.t => 'msg)],
-  };
-
-  let map: ('a => 'b, command('a)) => command('b);
-
   let define:
     (
       ~category: string=?,
@@ -22,24 +10,25 @@ module Schema: {
       string,
       'msg
     ) =>
-    command('msg);
+    Command.t('msg);
 };
 
 // MODEL
 
 type model('msg);
 
-let initial: list(Schema.command('msg)) => model('msg);
+let initial: list(Command.t('msg)) => model('msg);
 
-let find: (string, model('msg)) => option(Schema.command('msg));
+let find: (string, model('msg)) => option(Command.t('msg));
 
+let all: model('msg) => list(Command.t('msg));
 let enabledCommands:
-  (string => WhenExpr.Value.t, model('msg)) => list(Schema.command('msg));
+  (WhenExpr.ContextKeys.t, model('msg)) => list(Command.t('msg));
 
 // UPDATE
 
 [@deriving show]
 type msg('msg) =
-  | NewCommand(Schema.command('msg));
+  | NewCommand(Command.t('msg));
 
 let update: (model('msg), msg('msg)) => model('msg);

@@ -68,7 +68,7 @@ let registerExtensionCommands = (~dispatch, ~extensions) => {
   |> List.map(
        ExtensionContributions.Command.(
          it =>
-           Feature_Commands.Schema.{
+           Core.Command.{
              id: it.command,
              category: it.category,
              title: Some(it.title |> LocalizedToken.to_string),
@@ -348,9 +348,7 @@ let start =
   registerCommands(
     ~dispatch,
     Feature_Terminal.Contributions.commands
-    |> List.map(
-         Feature_Commands.Schema.map(msg => Model.Actions.Terminal(msg)),
-       ),
+    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
   );
   registerExtensionCommands(~dispatch, ~extensions);
 

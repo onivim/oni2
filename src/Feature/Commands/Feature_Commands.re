@@ -1,25 +1,6 @@
 open Oni_Core;
 
 module Schema = {
-  [@deriving show]
-  type command('msg) = {
-    id: string,
-    title: option(string),
-    category: option(string),
-    icon: option([@opaque] IconTheme.IconDefinition.t),
-    isEnabledWhen: WhenExpr.t,
-    msg: [ | `Arg0('msg) | `Arg1(Json.t => 'msg)],
-  };
-
-  let map = (f, command) => {
-    ...command,
-    msg:
-      switch (command.msg) {
-      | `Arg0(msg) => `Arg0(f(msg))
-      | `Arg1(msgf) => `Arg1(arg => f(msgf(arg)))
-      },
-  };
-
   let define =
       (
         ~category=?,
@@ -28,34 +9,36 @@ module Schema = {
         ~isEnabledWhen=WhenExpr.Value(True),
         id,
         msg,
-      ) => {
-    id,
-    title,
-    category,
-    icon,
-    isEnabledWhen,
-    msg: `Arg0(msg),
-  };
+      ) =>
+    Command.{id, title, category, icon, isEnabledWhen, msg: `Arg0(msg)};
 };
 
 // MODEL
 
-type model('msg) = StringMap.t(Schema.command('msg));
+type model('msg) = StringMap.t(Command.t('msg));
 
 let initial = contributions =>
   contributions
   |> List.to_seq
-  |> Seq.map(Schema.(command => (command.id, command)))
+  |> Seq.map(Command.(command => (command.id, command)))
   |> StringMap.of_seq;
 
 let find = StringMap.find_opt;
 
-let enabledCommands = (getValue, model) =>
+let all = model => model |> StringMap.to_seq |> Seq.map(snd) |> List.of_seq;
+
+let enabledCommands = (contextKeys, model) =>
   model
   |> StringMap.to_seq
   |> Seq.map(snd)
   |> Seq.filter(
-       Schema.(it => WhenExpr.evaluate(it.isEnabledWhen, getValue)),
+       Command.(
+         it =>
+           WhenExpr.evaluate(
+             it.isEnabledWhen,
+             WhenExpr.ContextKeys.getValue(contextKeys),
+           )
+       ),
      )
   |> List.of_seq;
 
@@ -63,7 +46,7 @@ let enabledCommands = (getValue, model) =>
 
 [@deriving show]
 type msg('msg) =
-  | NewCommand(Schema.command('msg));
+  | NewCommand(Command.t('msg));
 
 let update = (model, msg) => {
   switch (msg) {

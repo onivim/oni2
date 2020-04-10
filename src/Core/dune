@@ -10,6 +10,7 @@
     (libraries 
         Oni2.core.kernel
         Oni2.core.utility
+        Oni2.core.whenExpr
         Rench
         Revery
         yojson
