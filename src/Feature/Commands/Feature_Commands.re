@@ -7,7 +7,7 @@ module Schema = {
     title: option(string),
     category: option(string),
     icon: option([@opaque] IconTheme.IconDefinition.t),
-    isEnabled: unit => bool, // WhenExpr.t
+    isEnabled: WhenExpr.t,
     msg: [ | `Arg0('msg) | `Arg1(Json.t => 'msg)],
   };
 
@@ -21,7 +21,14 @@ module Schema = {
   };
 
   let define =
-      (~category=?, ~title=?, ~icon=?, ~isEnabled=() => true, id, msg) => {
+      (
+        ~category=?,
+        ~title=?,
+        ~icon=?,
+        ~isEnabled=WhenExpr.Value(True),
+        id,
+        msg,
+      ) => {
     id,
     title,
     category,
@@ -43,11 +50,11 @@ let initial = contributions =>
 
 let find = StringMap.find_opt;
 
-let enabledCommands = model =>
+let enabledCommands = (getValue, model) =>
   model
   |> StringMap.to_seq
   |> Seq.map(snd)
-  |> Seq.filter(Schema.(it => it.isEnabled()))
+  |> Seq.filter(Schema.(it => WhenExpr.evaluate(it.isEnabled, getValue)))
   |> List.of_seq;
 
 // UPDATE

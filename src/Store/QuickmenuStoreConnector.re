@@ -88,6 +88,7 @@ let start = (themeInfo: ThemeInfo.t) => {
         iconTheme,
         themeInfo,
         commands,
+        contextKeys,
       )
       : (option(Quickmenu.t), Isolinear.Effect.t(Actions.t)) => {
     switch (action) {
@@ -338,7 +339,8 @@ let start = (themeInfo: ThemeInfo.t) => {
         state.languageInfo,
         state.iconTheme,
         themeInfo,
-        Feature_Commands.enabledCommands(state.commands),
+        state.commands,
+        WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);

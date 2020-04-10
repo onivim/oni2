@@ -7,7 +7,7 @@ module Schema: {
     title: option(string),
     category: option(string),
     icon: option([@opaque] IconTheme.IconDefinition.t),
-    isEnabled: unit => bool, // WhenExpr.t
+    isEnabled: WhenExpr.t,
     msg: [ | `Arg0('msg) | `Arg1(Json.t => 'msg)],
   };
 
@@ -18,7 +18,7 @@ module Schema: {
       ~category: string=?,
       ~title: string=?,
       ~icon: IconTheme.IconDefinition.t=?,
-      ~isEnabled: unit => bool=?,
+      ~isEnabled: WhenExpr.t=?,
       string,
       'msg
     ) =>
@@ -33,7 +33,8 @@ let initial: list(Schema.command('msg)) => model('msg);
 
 let find: (string, model('msg)) => option(Schema.command('msg));
 
-let enabledCommands: model('msg) => list(Schema.command('msg));
+let enabledCommands:
+  (string => WhenExpr.Value.t, model('msg)) => list(Schema.command('msg));
 
 // UPDATE
 
