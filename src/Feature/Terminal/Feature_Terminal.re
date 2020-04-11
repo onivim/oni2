@@ -456,8 +456,8 @@ module Commands = {
   };
 
   module Oni = {
-    let normalMode = define("terminal.oni.normalMode", Command(NormalMode));
-    let insertMode = define("terminal.oni.insertMode", Command(InsertMode));
+    let normalMode = define("oni.terminal.normalMode", Command(NormalMode));
+    let insertMode = define("oni.terminal.insertMode", Command(InsertMode));
   };
 };
 
