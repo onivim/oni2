@@ -25,12 +25,12 @@ let rank = (query, format, items) => {
     let searchStrings = List.map(item => format(item), items);
     let results = Fzy.fzySearchList(searchStrings, query, ());
     let lookup = (result: Fzy.Result.t) =>
-      List.nth(items, result.original_index);
+      makeResult((List.nth(items, result.original_index), result));
 
-    List.map(result => (lookup(result), result), results);
+    List.map(result => (lookup(result)), results);
   };
 
-  items |> search(query, format) |> List.map(makeResult);
+  items |> search(query, format)
 };
 
 // Check whether the query matches...
