@@ -2,9 +2,7 @@
     (name Feature_Commands)
     (public_name Oni2.feature.commands)
     (libraries 
-      editor-core-types
       Oni2.core
-      Oni2.extensions
       isolinear
       base
     )
