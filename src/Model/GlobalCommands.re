@@ -8,14 +8,19 @@ let copyFilePath =
     "copyFilePath",
     CopyActiveFilepathToClipboard,
   );
+
 let acceptSelectedSuggestion =
   define("acceptSelectedSuggestion", Command("acceptSelectedSuggestion"));
+
 let selectPrevSuggestion =
   define("selectPrevSuggestion", Command("selectPrevSuggestion"));
+
 let selectNextSuggestion =
   define("selectNextSuggestion", Command("selectNextSuggestion"));
+
 let undo = define("undo", Command("undo"));
 let redo = define("redo", Command("redo"));
+
 let indent = define("indent", Command("indent"));
 let outdent = define("outdent", Command("outdent"));
 
@@ -28,16 +33,19 @@ module Editor = {
         "editor.action.detectIndentation",
         Command("editor.action.detectIndentation"),
       );
+
     let clipboardPasteAction =
       define(
         "editor.action.clipboardPasteAction",
         Command("editor.action.clipboardPasteAction"),
       );
+
     let indentLines =
       define(
         "editor.action.indentLines",
         Command("editor.action.indentLines"),
       );
+
     let outdentLines =
       define(
         "editor.action.outdentLines",
@@ -49,6 +57,7 @@ module Editor = {
 module List = {
   let focusDown = define("list.focusDown", ListFocusDown);
   let focusUp = define("list.focusUp", ListFocusUp);
+
   let select = define("list.select", ListSelect);
   let selectBackground =
     define("list.selectBackground", ListSelectBackground);
@@ -70,16 +79,17 @@ module Oni = {
       define(
         ~category="Input",
         ~title="Disable Key Displayer",
+        ~isEnabledWhen=WhenExpr.parse("oni.keyDisplayerEnabled"),
         "oni.keyDisplayer.disable",
-        //~isEnabled=() => getState().keyDisplayer != None,
         DisableKeyDisplayer,
       );
+
     let enable =
       define(
         ~category="Input",
         ~title="Enable Key Displayer",
+        ~isEnabledWhen=WhenExpr.parse("!oni.keyDisplayerEnabled"),
         "oni.keyDisplayer.enable",
-        //~isEnabled=() => getState().keyDisplayer == None,
         EnableKeyDisplayer,
       );
   };
@@ -92,6 +102,7 @@ module Oni = {
         "oni.sneak.start",
         Command("sneak.start"),
       );
+
     let stop =
       define(
         ~category="Sneak",
@@ -106,16 +117,17 @@ module Oni = {
       define(
         ~category="System",
         ~title="Add Oni2 to System PATH",
+        ~isEnabledWhen=WhenExpr.parse("isMac && !symLinkExists"),
         "oni.system.addToPath",
-        //~isEnabled=() => pathSymlinkEnabled(~addingLink=true),
         Command("system.addToPath"),
       );
+
     let removeFromPath =
       define(
         ~category="System",
         ~title="Remove Oni2 from System PATH",
+        ~isEnabledWhen=WhenExpr.parse("isMac && symLinkExists"),
         "oni.system.removeFromPath",
-        //~isEnabled=() => pathSymlinkEnabled(~addingLink=false),
         Command("system.removeFromPath"),
       );
   };
@@ -128,6 +140,7 @@ module Oni = {
         "oni.view.rotateForward",
         Command("view.rotateForward"),
       );
+
     let rotateBackward =
       define(
         ~category="View",
@@ -150,20 +163,23 @@ module Oni = {
           "oni.workbench.action.reloadSettings",
           ConfigurationReload,
         );
+
       let enableZenMode =
         define(
           ~category="View",
           ~title="Enable Zen Mode",
+          ~isEnabledWhen=WhenExpr.parse("!zenMode"),
           "oni.workbench.action.enableZenMode", // use workbench.action.toggleZenMode?
           //~isEnabled=() => !getState().zenMode,
           EnableZenMode,
         );
+
       let disableZenMode =
         define(
           ~category="View",
           ~title="Disable Zen Mode",
+          ~isEnabledWhen=WhenExpr.parse("zenMode"),
           "oni.workbench.action.disableZenMode", // use workbench.action.toggleZenMode?
-          //~isEnabled=() => getState().zenMode,
           DisableZenMode,
         );
     };
@@ -188,6 +204,7 @@ module View = {
       "view.closeEditor",
       Command("view.closeEditor"),
     );
+
   let splitVertical =
     define(
       ~category="View",
@@ -195,6 +212,7 @@ module View = {
       "view.splitVertical",
       Command("view.splitVertical"),
     );
+
   let splitHorizontal =
     define(
       ~category="View",
@@ -213,6 +231,7 @@ module Workbench = {
         "workbench.action.openSettings",
         OpenConfigFile("configuration.json"),
       );
+
     let openDefaultKeybindingsFile =
       define(
         ~category="Preferences",
@@ -220,6 +239,7 @@ module Workbench = {
         "workbench.action.openDefaultKeybindingsFile",
         OpenConfigFile("keybindings.json"),
       );
+
     let selectTheme =
       define(
         ~category="Preferences",
@@ -227,18 +247,21 @@ module Workbench = {
         "workbench.action.selectTheme",
         QuickmenuShow(ThemesPicker),
       );
+
     let showCommands =
       define(
         ~title="Show All Commands",
         "workbench.action.showCommands",
         QuickmenuShow(CommandPalette),
       );
+
     let gotoSymbol =
       define(
         ~title="Goto symbol in file...",
         "workbench.action.gotoSymbol",
         QuickmenuShow(DocumentSymbols),
       );
+
     let openNextRecentlyUsedEditorInGroup =
       define(
         ~category="View",
@@ -246,12 +269,14 @@ module Workbench = {
         "workbench.action.openNextRecentlyUsedEditorInGroup",
         QuickmenuShow(EditorsPicker),
       );
+
     let quickOpen =
       define(
         ~title="Go to File...",
         "workbench.action.quickOpen",
         QuickmenuShow(FilesPicker),
       );
+
     let nextEditor =
       define(
         ~category="View",
@@ -259,6 +284,7 @@ module Workbench = {
         "workbench.action.nextEditor",
         Command("workbench.action.nextEditor"),
       );
+
     let previousEditor =
       define(
         ~category="View",
@@ -266,20 +292,24 @@ module Workbench = {
         "workbench.action.previousEditor",
         Command("workbench.action.previousEditor"),
       );
+
     let quickOpenNavigateNextInEditorPicker =
       define(
         ~title="Navigate Next in Quick Open",
         "workbench.action.quickOpenNavigateNextInEditorPicker",
         ListFocusDown,
       );
+
     let quickOpenNavigatePreviousInEditorPicker =
       define(
         ~title="Navigate Previous in Quick Open",
         "workbench.action.quickOpenNavigatePreviousInEditorPicker",
         ListFocusUp,
       );
+
     let closeQuickOpen =
       define("workbench.action.closeQuickOpen", QuickmenuClose);
+
     let findInFiles =
       define(
         ~category="Search",
@@ -287,6 +317,7 @@ module Workbench = {
         "workbench.action.findInFiles",
         SearchHotkey,
       );
+
     module Files = {
       let save =
         define("workbench.action.save", Command("workbench.action.save"));

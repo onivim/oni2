@@ -78,6 +78,18 @@ let other =
         | _ => false,
       ),
       bool("sneakMode", state => Sneak.isActive(state.sneak)),
+      bool("oni.zenMode", state => state.zenMode),
+      bool("oni.keyDisplayerEnabled", state => state.keyDisplayer != None),
+      bool("oni.symLinkExists", _state =>
+        Sys.file_exists("/usr/local/bin/oni2")
+      ),
+      bool("isLinux", _state =>
+        Revery.Environment.os == Revery.Environment.Linux
+      ),
+      bool("isMax", _state => Revery.Environment.os == Revery.Environment.Mac),
+      bool("isWin", _state =>
+        Revery.Environment.os == Revery.Environment.Windows
+      ),
     ],
   );
 
