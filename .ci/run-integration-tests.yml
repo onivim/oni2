@@ -6,9 +6,9 @@ steps:
   - script: esy bootstrap
     displayName: 'Bootstrap Oni2 setup with system specific build variables'
   - script: esy cleanup . --dry-run
-    displayName: 'Clean up dry-run'
+    displayName: 'esy cleanup . --dry-run'
   - script: esy cleanup .
-    displayName: 'Clean up dry-run'
+    displayName: 'esy cleanup'
   - bash: 'rm -rf _esy'
     displayName: 'Integration Tests: rm -rf _esy'
   - script: esy @integrationtest install
