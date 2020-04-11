@@ -134,6 +134,74 @@ module Editor = {
   ];
 };
 
+module EditorError = {
+  let foreground =
+    define(
+      "editorError.foreground",
+      {dark: hex("#F48771"), light: hex("#E51400"), hc: unspecified},
+    );
+  let border =
+    define(
+      "editorError.border",
+      {dark: unspecified, light: unspecified, hc: hex("#E47777")},
+    );
+
+  let defaults = [foreground, border];
+};
+
+module EditorWarning = {
+  let foreground =
+    define(
+      "editorWarning.foreground",
+      {dark: hex("#CCA700"), light: hex("#E9A700"), hc: unspecified},
+    );
+  let border =
+    define(
+      "editorWarning.border",
+      {dark: unspecified, light: unspecified, hc: hex("#FFCC00")},
+    );
+
+  let defaults = [foreground, border];
+};
+
+module EditorInfo = {
+  let foreground =
+    define(
+      "editorInfo.foreground",
+      {dark: hex("#75BEFF"), light: hex("#75BEFF"), hc: unspecified},
+    );
+  let border =
+    define(
+      "editorInfo.border",
+      {dark: unspecified, light: unspecified, hc: hex("#75BEFF")},
+    );
+
+  let defaults = [foreground, border];
+};
+
+module EditorHint = {
+  let foreground =
+    define(
+      "editorHint.foreground",
+      {
+        dark: hex("#EEE") |> transparent(0.7),
+        light: hex("#6c6c6c"),
+        hc: unspecified,
+      },
+    );
+  let border =
+    define(
+      "editorHint.border",
+      {
+        dark: unspecified,
+        light: unspecified,
+        hc: hex("#EEE") |> transparent(0.8),
+      },
+    );
+
+  let defaults = [foreground, border];
+};
+
 module EditorCursor = {
   let foreground =
     define(
