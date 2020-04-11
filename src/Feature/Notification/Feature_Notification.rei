@@ -4,7 +4,6 @@ open Oni_Core;
 
 [@deriving show]
 type kind =
-  | Success
   | Info
   | Warning
   | Error;
@@ -80,3 +79,7 @@ module View: {
       React.element(React.node);
   };
 };
+
+// CONTRIBUTIONS
+
+module Contributions: {let colors: list(ColorTheme.Schema.definition);};
