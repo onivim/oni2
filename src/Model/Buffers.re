@@ -52,12 +52,22 @@ let disableSyntaxHighlighting =
 let setModified = modified =>
   Option.map(buffer => Buffer.setModified(modified, buffer));
 
+let setLineEndings = le =>
+  Option.map(buffer => Buffer.setLineEndings(le, buffer));
+
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | BufferDisableSyntaxHighlighting(id) =>
     IntMap.update(id, disableSyntaxHighlighting, state)
 
-  | BufferEnter(metadata, fileType) =>
+  | BufferEnter({metadata, fileType, lineEndings}) =>
+    let maybeSetLineEndings = (maybeLineEndings, buf) => {
+      switch (maybeLineEndings) {
+      | Some(le) => Buffer.setLineEndings(le, buf)
+      | None => buf
+      };
+    };
+
     let updater = (
       fun
       | Some(buffer) =>
@@ -66,11 +76,13 @@ let reduce = (state: t, action: Actions.t) => {
         |> Buffer.setFilePath(metadata.filePath)
         |> Buffer.setVersion(metadata.version)
         |> Buffer.stampLastUsed
+        |> maybeSetLineEndings(lineEndings)
         |> Option.some
       | None =>
         Buffer.ofMetadata(metadata)
         |> Buffer.setFileType(fileType)
         |> Buffer.stampLastUsed
+        |> maybeSetLineEndings(lineEndings)
         |> Option.some
     );
     IntMap.update(metadata.id, updater, state);
@@ -81,6 +93,9 @@ let reduce = (state: t, action: Actions.t) => {
 
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
+
+  | BufferLineEndingsChanged({id, lineEndings}) =>
+    IntMap.update(id, setLineEndings(lineEndings), state)
 
   | BufferUpdate({update, newBuffer, _}) =>
     IntMap.add(update.id, newBuffer, state)
