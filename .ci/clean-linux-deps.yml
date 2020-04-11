@@ -7,3 +7,9 @@ steps:
   # https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/dotnetcore-sdk.sh
   - script: rm -rf /usr/share/dotnet
     displayName: 'Remove .NET dependencies and SDK'
+  # Remove Haskell dependencies
+  # https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/haskell.sh
+  - script: rm -rf /opt/ghc
+    displayName: 'Remove GHC"
+  - script: rm -rf /opt/cabal
+    displayName: 'Remove Cabal"
