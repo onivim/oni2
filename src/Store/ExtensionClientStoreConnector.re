@@ -194,7 +194,7 @@ let start = (extensions, extHostClient) => {
         Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
       )
 
-    | CommandExecuteContributed({command, arguments}) => (
+    | Extension(ExecuteCommand({command, arguments})) => (
         state,
         executeContributedCommandEffect(command, arguments),
       )

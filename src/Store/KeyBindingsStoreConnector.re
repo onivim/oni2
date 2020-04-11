@@ -421,8 +421,11 @@ let start = maybeKeyBindingsFilePath => {
       )
 
     | KeybindingInvoked({command}) =>
-      switch (Feature_Commands.find(command, state.commands)) {
-      | Some(command) => (state, executeCommandEffect(command.msg))
+      switch (Command.Lookup.get(command, State.commands(state))) {
+      | Some((command: Command.t(_))) => (
+          state,
+          executeCommandEffect(command.msg),
+        )
       | None =>
         Log.errorf(m => m("Unknown command: %s", command));
         (state, Isolinear.Effect.none);

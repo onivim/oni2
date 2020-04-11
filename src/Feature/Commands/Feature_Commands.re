@@ -15,32 +15,11 @@ module Schema = {
 
 // MODEL
 
-type model('msg) = StringMap.t(Command.t('msg));
+type model('msg) = Command.Lookup.t('msg);
 
-let initial = contributions =>
-  contributions
-  |> List.to_seq
-  |> Seq.map(Command.(command => (command.id, command)))
-  |> StringMap.of_seq;
+let initial = contributions => Command.Lookup.unionMany(contributions);
 
-let find = StringMap.find_opt;
-
-let all = model => model |> StringMap.to_seq |> Seq.map(snd) |> List.of_seq;
-
-let enabledCommands = (contextKeys, model) =>
-  model
-  |> StringMap.to_seq
-  |> Seq.map(snd)
-  |> Seq.filter(
-       Command.(
-         it =>
-           WhenExpr.evaluate(
-             it.isEnabledWhen,
-             WhenExpr.ContextKeys.getValue(contextKeys),
-           )
-       ),
-     )
-  |> List.of_seq;
+let all = model => model;
 
 // UPDATE
 
@@ -50,6 +29,6 @@ type msg('msg) =
 
 let update = (model, msg) => {
   switch (msg) {
-  | NewCommand(command) => StringMap.add(command.id, command, model) /*   }*/
+  | NewCommand(command) => Command.Lookup.add(command.id, command, model) /*   }*/
   };
 };

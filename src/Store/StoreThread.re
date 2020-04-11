@@ -61,33 +61,6 @@ let registerCommands = (~dispatch, commands) => {
   );
 };
 
-let registerExtensionCommands = (~dispatch, ~extensions) => {
-  extensions
-  |> List.map(ExtensionScanner.(it => it.manifest.contributes.commands))
-  |> List.flatten
-  |> List.map(
-       ExtensionContributions.Command.(
-         it =>
-           Core.Command.{
-             id: it.command,
-             category: it.category,
-             title: Some(it.title |> LocalizedToken.to_string),
-             icon: None,
-             isEnabledWhen: it.condition,
-             msg:
-               `Arg1(
-                 arg =>
-                   Model.Actions.CommandExecuteContributed({
-                     command: it.command,
-                     arguments: [arg],
-                   }),
-               ),
-           }
-       ),
-     )
-  |> registerCommands(~dispatch);
-};
-
 let start =
     (
       ~getUserSettings,
@@ -350,7 +323,6 @@ let start =
     Feature_Terminal.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
   );
-  registerExtensionCommands(~dispatch, ~extensions);
 
   // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
   let editorEventStream =

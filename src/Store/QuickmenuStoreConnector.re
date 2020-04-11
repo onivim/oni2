@@ -102,7 +102,7 @@ let start = (themeInfo: ThemeInfo.t) => {
                    category: v.category,
                    name: v.label,
                    command: () =>
-                     switch (Feature_Commands.find(v.command, commands)) {
+                     switch (Command.Lookup.get(v.command, commands)) {
                      | Some({msg: `Arg0(msg), _}) => msg
                      | Some({msg: `Arg1(msgf), _}) => msgf(Json.Encode.null)
                      | None => Actions.Noop
@@ -339,7 +339,7 @@ let start = (themeInfo: ThemeInfo.t) => {
         state.languageInfo,
         state.iconTheme,
         themeInfo,
-        state.commands,
+        State.commands(state),
         WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
       );
 

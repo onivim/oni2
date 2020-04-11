@@ -17,13 +17,9 @@ module Schema: {
 
 type model('msg);
 
-let initial: list(Command.t('msg)) => model('msg);
+let initial: list(Command.Lookup.t('msg)) => model('msg);
 
-let find: (string, model('msg)) => option(Command.t('msg));
-
-let all: model('msg) => list(Command.t('msg));
-let enabledCommands:
-  (WhenExpr.ContextKeys.t, model('msg)) => list(Command.t('msg));
+let all: model('msg) => Command.Lookup.t('msg);
 
 // UPDATE
 

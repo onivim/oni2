@@ -18,6 +18,7 @@ module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module ContextMenu = {
   type t =
     | NotificationStatusBarItem
+    | SCM(Feature_SCM.menu)
     | Nothing;
 };
 
@@ -133,3 +134,11 @@ let initial = (~getUserSettings, ~contributedCommands) => {
   terminals: Feature_Terminal.initial,
   textContentProviders: [],
 };
+
+let commands = state =>
+  Command.Lookup.unionMany([
+    Feature_Commands.all(state.commands),
+    Extensions.commands(state.extensions)
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.Extension(msg)),
+  ]);
