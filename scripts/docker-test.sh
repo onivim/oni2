@@ -10,6 +10,3 @@ esy cleanup test.json
 esy @test install
 esy @test build
 esy @test run
-
-esy cleanup package.json --dry-run
-esy cleanup package.json
