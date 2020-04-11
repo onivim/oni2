@@ -80,3 +80,7 @@ module View: {
       React.element(React.node);
   };
 };
+
+// CONTRIBUTIONS
+
+module Contributions: {let colors: list(ColorTheme.Schema.definition);};

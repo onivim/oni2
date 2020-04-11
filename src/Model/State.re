@@ -79,7 +79,11 @@ let initial = (~getUserSettings) => {
   buffers: Buffers.empty,
   bufferHighlights: BufferHighlights.initial,
   bufferRenderers: BufferRenderers.initial,
-  colorTheme: Feature_Theme.initial([Feature_Terminal.Contributions.colors]),
+  colorTheme:
+    Feature_Theme.initial([
+      Feature_Terminal.Contributions.colors,
+      Feature_Notification.Contributions.colors,
+    ]),
   commands: Commands.empty,
   contextMenu: ContextMenu.Nothing,
   completions: Completions.initial,

@@ -73,25 +73,50 @@ module Effects = {
 
 module Colors = {
   open ColorTheme.Schema;
+  open Feature_Theme.Colors;
 
-  let foreground = Feature_Theme.Colors.foreground;
+  let foreground = foreground;
 
   let successBackground =
-    define("notification.successBackground", all(unspecified));
+    define(
+      "oni.notification.successBackground",
+      all(ref(EditorInfo.foreground)),
+    );
   let successForeground =
-    define("notification.successForeground", all(unspecified));
+    define(
+      "oni.notification.successForeground",
+      all(ref(StatusBar.foreground)),
+    );
   let infoBackground =
-    define("notification.infoBackground", all(unspecified));
+    define(
+      "oni.notification.infoBackground",
+      all(ref(EditorInfo.foreground)),
+    );
   let infoForeground =
-    define("notification.infoForeground", all(unspecified));
+    define(
+      "oni.notification.infoForeground",
+      all(ref(StatusBar.foreground)),
+    );
   let warningBackground =
-    define("notification.warningBackground", all(unspecified));
+    define(
+      "oni.notification.warningBackground",
+      all(ref(EditorWarning.foreground)),
+    );
   let warningForeground =
-    define("notification.warningForeground", all(unspecified));
+    define(
+      "oni.notification.warningForeground",
+      all(ref(StatusBar.foreground)),
+    );
   let errorBackground =
-    define("notification.errorBackground", all(unspecified));
+    define(
+      "oni.notification.errorBackground",
+      all(ref(EditorError.foreground)),
+    );
   let errorForeground =
-    define("notification.errorForeground", all(unspecified));
+    define(
+      "oni.notification.errorForeground",
+      all(ref(StatusBar.foreground)),
+    );
 
   let backgroundFor = notification =>
     switch (notification.kind) {
@@ -330,4 +355,20 @@ module View = {
       <View style=Styles.pane> innerElement </View>;
     };
   };
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let colors =
+    Colors.[
+      successBackground,
+      successForeground,
+      infoBackground,
+      infoForeground,
+      warningBackground,
+      warningForeground,
+      errorBackground,
+      errorForeground,
+    ];
 };
