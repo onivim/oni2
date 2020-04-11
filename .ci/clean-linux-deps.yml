@@ -1,15 +1,15 @@
 steps:
   # Remove Android SDK:
   # https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/1804/android.sh
-  - script: rm -rf /usr/local/lib/android
+  - script: sudo rm -rf /usr/local/lib/android
     displayName: 'Remove Android SDK'
   # Remove .NET dependencies / SDK
   # https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/dotnetcore-sdk.sh
-  - script: rm -rf /usr/share/dotnet
+  - script: sudo rm -rf /usr/share/dotnet
     displayName: 'Remove .NET dependencies and SDK'
   # Remove Haskell dependencies
   # https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/haskell.sh
-  - script: rm -rf /opt/ghc
+  - script: sudo rm -rf /opt/ghc
     displayName: 'Remove GHC'
-  - script: rm -rf /opt/cabal
+  - script: sudo rm -rf /opt/cabal
     displayName: 'Remove Cabal'
