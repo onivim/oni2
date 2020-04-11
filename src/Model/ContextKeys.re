@@ -6,7 +6,13 @@ let menus =
       bool("listFocus", model => model != None),
       bool("inQuickOpen", model => model != None),
       bool(
-        "quickmenuCursorEnd",
+        "inEditorsPicker",
+        fun
+        | Some({variant: EditorsPicker, _}) => true
+        | _ => false,
+      ),
+      bool(
+        "oni.quickmenuCursorEnd",
         fun
         | Some({selection, query, _})
             when
@@ -15,38 +21,11 @@ let menus =
           true
         | _ => false,
       ),
-      bool(
-        "inEditorsPicker",
-        fun
-        | Some({variant: EditorsPicker, _}) => true
-        | _ => false,
-      ),
     ],
   );
 
 let editors =
   fromList([
-    bool("insertMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalInsert
-      | Insert => true
-      | _ => false
-      }
-    ),
-    bool("normalMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalNormal
-      | Normal => true
-      | _ => false
-      }
-    ),
-    bool("visualMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalVisual
-      | Visual => true
-      | _ => false
-      }
-    ),
     bool("editorTextFocus", state =>
       switch (ModeManager.current(state)) {
       | TerminalInsert
@@ -63,8 +42,29 @@ let editors =
       | _ => false
       }
     ),
-    bool("commandLineFocus", state =>
+    bool("oni.commandLineFocus", state =>
       ModeManager.current(state) == CommandLine
+    ),
+    bool("oni.insertMode", state =>
+      switch (ModeManager.current(state)) {
+      | TerminalInsert
+      | Insert => true
+      | _ => false
+      }
+    ),
+    bool("oni.normalMode", state =>
+      switch (ModeManager.current(state)) {
+      | TerminalNormal
+      | Normal => true
+      | _ => false
+      }
+    ),
+    bool("oni.visualMode", state =>
+      switch (ModeManager.current(state)) {
+      | TerminalVisual
+      | Visual => true
+      | _ => false
+      }
     ),
   ]);
 
@@ -77,18 +77,18 @@ let other =
         | {completions, _} when Completions.isActive(completions) => true
         | _ => false,
       ),
-      bool("sneakMode", state => Sneak.isActive(state.sneak)),
-      bool("oni.zenMode", state => state.zenMode),
-      bool("oni.keyDisplayerEnabled", state => state.keyDisplayer != None),
-      bool("oni.symLinkExists", _state =>
-        Sys.file_exists("/usr/local/bin/oni2")
-      ),
       bool("isLinux", _state =>
         Revery.Environment.os == Revery.Environment.Linux
       ),
       bool("isMax", _state => Revery.Environment.os == Revery.Environment.Mac),
       bool("isWin", _state =>
         Revery.Environment.os == Revery.Environment.Windows
+      ),
+      bool("oni.sneakMode", state => Sneak.isActive(state.sneak)),
+      bool("oni.zenMode", state => state.zenMode),
+      bool("oni.keyDisplayerEnabled", state => state.keyDisplayer != None),
+      bool("oni.symLinkExists", _state =>
+        Sys.file_exists("/usr/local/bin/oni2")
       ),
     ],
   );
