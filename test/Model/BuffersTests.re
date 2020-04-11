@@ -36,10 +36,11 @@ describe("Buffer List Tests", ({test, _}) => {
     let added =
       Buffers.reduce(
         bufferList,
-        BufferEnter(
-          BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
-          None,
-        ),
+        BufferEnter({
+          metadata: BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          fileType: None,
+          lineEndings: None,
+        }),
       );
 
     expect.string(Buffers.getBuffer(0, added) |> getFilePathOrFail).toMatch(
@@ -60,18 +61,20 @@ describe("Buffer List Tests", ({test, _}) => {
     let added =
       Buffers.reduce(
         bufferList,
-        BufferEnter(
-          BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
-          None,
-        ),
+        BufferEnter({
+          metadata: BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          fileType: None,
+          lineEndings: None,
+        }),
       );
     let addedAgain =
       Buffers.reduce(
         added,
-        BufferEnter(
-          BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
-          None,
-        ),
+        BufferEnter({
+          metadata: BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
+          fileType: None,
+          lineEndings: None,
+        }),
       );
 
     expect.string(Buffers.getBuffer(0, addedAgain) |> getFilePathOrFail).
@@ -85,10 +88,11 @@ describe("Buffer List Tests", ({test, _}) => {
     let updated =
       Buffers.reduce(
         bufferList,
-        BufferEnter(
-          BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
-          None,
-        ),
+        BufferEnter({
+          metadata: BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          fileType: None,
+          lineEndings: None,
+        }),
       );
     let activeBuffer = Buffers.getBuffer(4, updated);
     let path = getFilePathOrFail(activeBuffer);
@@ -100,10 +104,11 @@ describe("Buffer List Tests", ({test, _}) => {
     let updated =
       Buffers.reduce(
         bufferList,
-        BufferEnter(
-          BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
-          Some("reason"),
-        ),
+        BufferEnter({
+          metadata: BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          fileType: Some("reason"),
+          lineEndings: None
+        }),
       );
     let activeBuffer = Buffers.getBuffer(4, updated);
     let fileType = getFileTypeOrFail(activeBuffer);
