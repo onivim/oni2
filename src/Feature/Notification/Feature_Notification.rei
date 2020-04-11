@@ -4,7 +4,6 @@ open Oni_Core;
 
 [@deriving show]
 type kind =
-  | Success
   | Info
   | Warning
   | Error;

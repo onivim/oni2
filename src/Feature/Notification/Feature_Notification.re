@@ -16,7 +16,6 @@ module Internal = {
 
 [@deriving show({with_path: false})]
 type kind =
-  | Success
   | Info
   | Warning
   | Error;
@@ -77,16 +76,6 @@ module Colors = {
 
   let foreground = foreground;
 
-  let successBackground =
-    define(
-      "oni.notification.successBackground",
-      all(ref(EditorInfo.foreground)),
-    );
-  let successForeground =
-    define(
-      "oni.notification.successForeground",
-      all(ref(StatusBar.foreground)),
-    );
   let infoBackground =
     define(
       "oni.notification.infoBackground",
@@ -120,7 +109,6 @@ module Colors = {
 
   let backgroundFor = notification =>
     switch (notification.kind) {
-    | Success => successBackground
     | Warning => warningBackground
     | Error => errorBackground
     | Info => infoBackground
@@ -128,7 +116,6 @@ module Colors = {
 
   let foregroundFor = notification =>
     switch (notification.kind) {
-    | Success => successForeground
     | Warning => warningForeground
     | Error => errorForeground
     | Info => infoForeground
@@ -195,7 +182,6 @@ module View = {
 
     let iconFor = item =>
       switch (item.kind) {
-      | Success => FontAwesome.checkCircle
       | Warning => FontAwesome.exclamationTriangle
       | Error => FontAwesome.exclamationCircle
       | Info => FontAwesome.infoCircle
@@ -256,7 +242,6 @@ module View = {
 
       let colorFor = (item, ~theme) =>
         switch (item.kind) {
-        | Success => Colors.successBackground.from(theme)
         | Warning => Colors.warningBackground.from(theme)
         | Error => Colors.errorBackground.from(theme)
         | Info => Colors.infoBackground.from(theme)
@@ -264,7 +249,6 @@ module View = {
 
       let iconFor = item =>
         switch (item.kind) {
-        | Success => FontAwesome.checkCircle
         | Warning => FontAwesome.exclamationTriangle
         | Error => FontAwesome.exclamationCircle
         | Info => FontAwesome.infoCircle
@@ -362,8 +346,6 @@ module View = {
 module Contributions = {
   let colors =
     Colors.[
-      successBackground,
-      successForeground,
       infoBackground,
       infoForeground,
       warningBackground,
