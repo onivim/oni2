@@ -10,6 +10,6 @@ steps:
   # Remove Haskell dependencies
   # https://github.com/actions/virtual-environments/blob/master/images/linux/scripts/installers/haskell.sh
   - script: rm -rf /opt/ghc
-    displayName: 'Remove GHC"
+    displayName: 'Remove GHC'
   - script: rm -rf /opt/cabal
-    displayName: 'Remove Cabal"
+    displayName: 'Remove Cabal'
