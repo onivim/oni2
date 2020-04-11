@@ -22,7 +22,8 @@ let map = (f, command) => {
 };
 
 module Lookup = {
-  type nonrec t('msg) = KeyedStringMap.t(t('msg));
+  type command('msg) = t('msg);
+  type t('msg) = KeyedStringMap.t(command('msg));
 
   let fromList = commands =>
     commands
