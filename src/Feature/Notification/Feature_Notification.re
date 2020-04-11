@@ -77,35 +77,17 @@ module Colors = {
   let foreground = foreground;
 
   let infoBackground =
-    define(
-      "oni.notification.infoBackground",
-      all(ref(EditorInfo.foreground)),
-    );
+    define("oni.notification.infoBackground", all(hex("#209CEE")));
   let infoForeground =
-    define(
-      "oni.notification.infoForeground",
-      all(ref(StatusBar.foreground)),
-    );
+    define("oni.notification.infoForeground", all(hex("#FFF")));
   let warningBackground =
-    define(
-      "oni.notification.warningBackground",
-      all(ref(EditorWarning.foreground)),
-    );
+    define("oni.notification.warningBackground", all(hex("#FFDD57")));
   let warningForeground =
-    define(
-      "oni.notification.warningForeground",
-      all(ref(StatusBar.foreground)),
-    );
+    define("oni.notification.warningForeground", all(hex("#333")));
   let errorBackground =
-    define(
-      "oni.notification.errorBackground",
-      all(ref(EditorError.foreground)),
-    );
+    define("oni.notification.errorBackground", all(hex("#FF3860")));
   let errorForeground =
-    define(
-      "oni.notification.errorForeground",
-      all(ref(StatusBar.foreground)),
-    );
+    define("oni.notification.errorForeground", all(hex("#FFF")));
 
   let backgroundFor = notification =>
     switch (notification.kind) {
