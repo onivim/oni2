@@ -1,5 +1,5 @@
 {
-  "checksum": "e0714b1bf7bb24df4a5f0ffdafbbcc38",
+  "checksum": "611eb0f7404ccaf34f3468f47359cf53",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -287,20 +287,20 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-tree-sitter@github:CrossR/reason-tree-sitter#5baa4ae@d41d8cd9": {
+    "reason-tree-sitter@github:CrossR/reason-tree-sitter#b2913d3@d41d8cd9": {
       "id":
-        "reason-tree-sitter@github:CrossR/reason-tree-sitter#5baa4ae@d41d8cd9",
+        "reason-tree-sitter@github:CrossR/reason-tree-sitter#b2913d3@d41d8cd9",
       "name": "reason-tree-sitter",
-      "version": "github:CrossR/reason-tree-sitter#5baa4ae",
+      "version": "github:CrossR/reason-tree-sitter#b2913d3",
       "source": {
         "type": "install",
-        "source": [ "github:CrossR/reason-tree-sitter#5baa4ae" ]
+        "source": [ "github:CrossR/reason-tree-sitter#b2913d3" ]
       },
       "overrides": [],
       "dependencies": [
         "reperf@1.5.0@d41d8cd9", "refmterr@3.3.0@d41d8cd9",
         "ocaml@4.8.1000@d41d8cd9",
-        "esy-tree-sitter@github:CrossR/esy-tree-sitter#4453dce@d41d8cd9",
+        "esy-tree-sitter@github:CrossR/esy-tree-sitter#fdcf8f7@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "@opam/dune-configurator@opam:2.4.0@6976bb12",
         "@opam/dune@opam:2.4.0@639d28a3",
@@ -842,13 +842,13 @@
       ],
       "devDependencies": []
     },
-    "esy-tree-sitter@github:CrossR/esy-tree-sitter#4453dce@d41d8cd9": {
-      "id": "esy-tree-sitter@github:CrossR/esy-tree-sitter#4453dce@d41d8cd9",
+    "esy-tree-sitter@github:CrossR/esy-tree-sitter#fdcf8f7@d41d8cd9": {
+      "id": "esy-tree-sitter@github:CrossR/esy-tree-sitter#fdcf8f7@d41d8cd9",
       "name": "esy-tree-sitter",
-      "version": "github:CrossR/esy-tree-sitter#4453dce",
+      "version": "github:CrossR/esy-tree-sitter#fdcf8f7",
       "source": {
         "type": "install",
-        "source": [ "github:CrossR/esy-tree-sitter#4453dce" ]
+        "source": [ "github:CrossR/esy-tree-sitter#fdcf8f7" ]
       },
       "overrides": [],
       "dependencies": [],
@@ -1207,7 +1207,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
-        "reason-tree-sitter@github:CrossR/reason-tree-sitter#5baa4ae@d41d8cd9",
+        "reason-tree-sitter@github:CrossR/reason-tree-sitter#b2913d3@d41d8cd9",
         "reason-textmate@3.0.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#5a6976d@d41d8cd9",

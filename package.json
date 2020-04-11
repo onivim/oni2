@@ -246,7 +246,7 @@
     "rench": "bryphe/rench#a976fe5",
     "@esy-ocaml/reason": "facebook/reason#8f71db0",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
-    "reason-tree-sitter": "CrossR/reason-tree-sitter#5baa4ae",
+    "reason-tree-sitter": "CrossR/reason-tree-sitter#b2913d3",
     "reason-harfbuzz": "revery-ui/reason-harfbuzz#eca58ea",
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
