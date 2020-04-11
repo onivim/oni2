@@ -118,7 +118,7 @@ let textItem = (~background, ~font, ~theme, ~text, ()) =>
   <item>
     <Text
       style={Styles.text(
-        ~color=Colors.foreground.from(theme),
+        ~color=Colors.StatusBar.foreground.from(theme),
         ~background,
         font,
       )}
