@@ -1032,7 +1032,7 @@ let start =
         state,
         synchronizeEditorEffect(state),
       )
-    | Command("terminal.normalMode") =>
+    | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state
         |> Selectors.getActiveBuffer
