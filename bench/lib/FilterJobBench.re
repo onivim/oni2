@@ -26,16 +26,31 @@ let largeAmountOfItems =
     )
   );
 
-let job =
+let smallerNumberOfItems =
+  List.init(10000, i =>
+    createItem(
+      "Some item with a long name but with index " ++ string_of_int(i),
+    )
+  );
+
+let getJob = (items) =>
   MenuFilterJob.create()
   |> Job.map(MenuFilterJob.updateQuery("item 1"))
-  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
-  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
-  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
-  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems))
-  |> Job.map(MenuFilterJob.addItems(largeAmountOfItems));
+  |> Job.map(MenuFilterJob.addItems(items))
+  |> Job.map(MenuFilterJob.addItems(items))
+  |> Job.map(MenuFilterJob.addItems(items))
+  |> Job.map(MenuFilterJob.addItems(items))
+  |> Job.map(MenuFilterJob.addItems(items));
 
+let job = getJob(largeAmountOfItems);
 let runJob = () => Job.doWork(job) |> (ignore: Job.t(_) => unit);
+
+let completeJob = () => {
+  let job = ref(getJob(smallerNumberOfItems))
+  while (! Job.isComplete(job^)) {
+    job := Job.doWork(job^);
+  }
+}
 
 let setup = () => ();
 
@@ -56,3 +71,6 @@ bench(
     },
   (),
 );
+
+let options = Reperf.Options.create(~iterations=100, ());
+bench(~name="FilterJob: completeJob", ~setup, ~options, ~f=completeJob, ());
