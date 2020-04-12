@@ -2,11 +2,13 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 let keybindings =
-  Some({|
+  Some(
+    {|
 [
-  {"key": "jj", "command": "vim.esc", "when": "insertMode"}
+  {"key": "jj", "command": "oni.vim.esc", "when": "oni.insertMode"}
 ]
-|});
+|},
+  );
 
 runTest(
   ~keybindings,
