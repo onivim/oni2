@@ -24,16 +24,14 @@ module Internal = {
 
   let commandsToMenuItems = commands =>
     commands
-    |> Command.Lookup.toList
     |> List.map((command: Command.t(_)) =>
          Actions.{
            category: command.category,
            name: command.title |> Option.value(~default=command.id),
            command: () =>
-             switch (Command.Lookup.get(command.id, commands)) {
-             | Some({msg: `Arg0(msg), _}) => msg
-             | Some({msg: `Arg1(msgf), _}) => msgf(Json.Encode.null)
-             | None => Actions.Noop
+             switch (command.msg) {
+             | `Arg0(msg) => msg
+             | `Arg1(msgf) => msgf(Json.Encode.null)
              },
            icon: command.icon,
            highlight: [],
@@ -116,7 +114,16 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(CommandPalette) => (
         Some({
           ...Quickmenu.defaults(CommandPalette),
-          items: Internal.commandsToMenuItems(commands),
+          items:
+            commands
+            |> Command.Lookup.toList
+            |> List.filter((command: Command.t(_)) =>
+                 WhenExpr.evaluate(
+                   command.isEnabledWhen,
+                   WhenExpr.ContextKeys.getValue(contextKeys),
+                 )
+               )
+            |> Internal.commandsToMenuItems,
           focused: Some(0),
         }),
         Isolinear.Effect.none,
