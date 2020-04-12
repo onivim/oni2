@@ -14,12 +14,33 @@ module Selection = Oni_Components.Selection;
 
 module Log = (val Log.withNamespace("Oni2.Store.Quickmenu"));
 
-let prefixFor: Vim.Types.cmdlineType => string =
-  fun
-  | SearchForward => "/"
-  | SearchReverse => "?"
-  | Ex
-  | Unknown => ":";
+module Internal = {
+  let prefixFor: Vim.Types.cmdlineType => string =
+    fun
+    | SearchForward => "/"
+    | SearchReverse => "?"
+    | Ex
+    | Unknown => ":";
+
+  let commandsToMenuItems = commands =>
+    commands
+    |> Command.Lookup.toList
+    |> List.map((command: Command.t(_)) =>
+         Actions.{
+           category: command.category,
+           name: command.title |> Option.value(~default=command.id),
+           command: () =>
+             switch (Command.Lookup.get(command.id, commands)) {
+             | Some({msg: `Arg0(msg), _}) => msg
+             | Some({msg: `Arg1(msgf), _}) => msgf(Json.Encode.null)
+             | None => Actions.Noop
+             },
+           icon: command.icon,
+           highlight: [],
+         }
+       )
+    |> Array.of_list;
+};
 
 let start = (themeInfo: ThemeInfo.t) => {
   let selectItemEffect = (item: Actions.menuItem) =>
@@ -95,23 +116,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(CommandPalette) => (
         Some({
           ...Quickmenu.defaults(CommandPalette),
-          items:
-            commands
-            |> List.map((v: Feature_Commands.Schema.command(_)) =>
-                 Actions.{
-                   category: v.category,
-                   name: v.label,
-                   command: () =>
-                     switch (Command.Lookup.get(v.command, commands)) {
-                     | Some({msg: `Arg0(msg), _}) => msg
-                     | Some({msg: `Arg1(msgf), _}) => msgf(Json.Encode.null)
-                     | None => Actions.Noop
-                     },
-                   icon: v.icon,
-                   highlight: [],
-                 }
-               )
-            |> Array.of_list,
+          items: Internal.commandsToMenuItems(commands),
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -146,7 +151,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(Wildmenu(cmdType)) => (
         Some({
           ...Quickmenu.defaults(Wildmenu(cmdType)),
-          prefix: Some(prefixFor(cmdType)),
+          prefix: Some(Internal.prefixFor(cmdType)),
         }),
         Isolinear.Effect.none,
       )
