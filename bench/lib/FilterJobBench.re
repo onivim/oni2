@@ -33,7 +33,7 @@ let smallerNumberOfItems =
     )
   );
 
-let getJob = (items) =>
+let getJob = items =>
   MenuFilterJob.create()
   |> Job.map(MenuFilterJob.updateQuery("item 1"))
   |> Job.map(MenuFilterJob.addItems(items))
@@ -46,11 +46,11 @@ let job = getJob(largeAmountOfItems);
 let runJob = () => Job.doWork(job) |> (ignore: Job.t(_) => unit);
 
 let completeJob = () => {
-  let job = ref(getJob(smallerNumberOfItems))
-  while (! Job.isComplete(job^)) {
+  let job = ref(getJob(smallerNumberOfItems));
+  while (!Job.isComplete(job^)) {
     job := Job.doWork(job^);
-  }
-}
+  };
+};
 
 let setup = () => ();
 

@@ -27,10 +27,10 @@ let rank = (query, format, items) => {
     let lookup = (result: Fzy.Result.t) =>
       makeResult((List.nth(items, result.original_index), result));
 
-    List.map(result => (lookup(result)), results);
+    List.map(result => lookup(result), results);
   };
 
-  items |> search(query, format)
+  items |> search(query, format);
 };
 
 // Check whether the query matches...
