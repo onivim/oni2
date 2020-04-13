@@ -42,6 +42,39 @@ module Command = {
     );
 };
 
+module Menu = {
+  [@deriving show]
+  type t = Menu.Schema.definition
+
+  and item = Menu.Schema.item;
+
+  module Decode = {
+    open Json.Decode;
+
+    let whenExpression = string |> map(WhenExpr.parse);
+
+    let item =
+      obj(({field, _}) =>
+        Menu.Schema.{
+          command: field.required("command", string),
+          alt: field.optional("alt", string),
+          group: field.optional("group", string),
+          index: None,
+          isVisibleWhen:
+            field.withDefault(
+              "when",
+              WhenExpr.Value(True),
+              string |> map(WhenExpr.parse),
+            ),
+        }
+      );
+
+    let menus =
+      key_value_pairs(list(item))
+      |> map(List.map(((id, items)) => Menu.Schema.{id, items}));
+  };
+};
+
 module Configuration = {
   [@deriving show]
   type t = list(property)
@@ -216,26 +249,28 @@ module IconTheme = {
 
 [@deriving show]
 type t = {
+  configuration: Configuration.t,
   commands: list(Command.t),
+  menus: list(Menu.t),
   languages: list(Language.t),
   grammars: list(Grammar.t),
   themes: list(Theme.t),
   iconThemes: list(IconTheme.t),
-  configuration: Configuration.t,
 };
 
 let decode =
   Json.Decode.(
     obj(({field, _}) =>
       {
+        configuration:
+          field.withDefault("configuration", [], Configuration.decode),
         commands: field.withDefault("commands", [], list(Command.decode)),
+        menus: field.withDefault("menus", [], Menu.Decode.menus),
         languages: field.withDefault("languages", [], list(Language.decode)),
         grammars: field.withDefault("grammars", [], list(Grammar.decode)),
         themes: field.withDefault("themes", [], list(Theme.decode)),
         iconThemes:
           field.withDefault("iconThemes", [], list(IconTheme.decode)),
-        configuration:
-          field.withDefault("configuration", [], Configuration.decode),
       }
     )
   );
@@ -243,12 +278,13 @@ let decode =
 let encode = data =>
   Json.Encode.(
     obj([
+      ("configuration", null),
       ("commands", data.commands |> list(Command.encode)),
+      ("menus", null),
       ("languages", data.languages |> list(Language.encode)),
       ("grammars", data.grammars |> list(Grammar.encode)),
       ("themes", data.themes |> list(Theme.encode)),
       ("iconThemes", data.iconThemes |> list(IconTheme.encode)),
-      ("configuration", null),
     ])
   );
 
