@@ -40,7 +40,7 @@ let%component make =
     } else {
       let bufferLine = Buffer.getLine(line, buffer);
       let (offset, characterWidth) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(bufferLine, column);
+        BufferLine.getPositionAndWidth(~index=column, bufferLine);
 
       let x = float(offset) *. editorFont.measuredWidth;
       let y = float(line) *. editorFont.measuredHeight +. 0.5;

@@ -3,8 +3,8 @@ open Oni_Core;
 
 [@deriving show]
 type t = {
-  editorId: EditorId.t,
   bufferId: int,
+  editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
   minimapMaxColumnWidth: int,
@@ -33,7 +33,7 @@ let getTopVisibleLine: t => int;
 let getBottomVisibleLine: (t, EditorMetrics.t) => int;
 let getLeftVisibleColumn: t => int;
 let getLayout: (t, EditorMetrics.t) => EditorLayout.t;
-let getPrimaryCursor: t => Location.t;
+let getPrimaryCursor: (~buffer: Buffer.t, t) => Location.t;
 let getVisibleView: (t, EditorMetrics.t) => int;
 let getTotalSizeInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int, EditorMetrics.t) => scrollbarMetrics;

@@ -309,12 +309,19 @@ let%component make =
   };
 
   let position = () => {
-    let text =
-      state
-      |> Selectors.getActiveEditorGroup
-      |> Selectors.getActiveEditor
-      |> Option.map(Editor.getPrimaryCursor)
+    let text = {
+      let editor =
+        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+
+      let buffer = state |> Selectors.getActiveBuffer;
+
+      OptionEx.map2(
+        (editor, buffer) => {Editor.getPrimaryCursor(~buffer, editor)},
+        editor,
+        buffer,
+      )
       |> positionToString;
+    };
 
     <textItem font background theme text />;
   };

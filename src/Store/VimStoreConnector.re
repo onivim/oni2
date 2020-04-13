@@ -116,7 +116,7 @@ let start =
 
       let getDefinition = (buffer, editor) => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(editor);
+        let position = Editor.getPrimaryCursor(~buffer, editor);
         Definition.getAt(id, position, state.definition)
         |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
              Actions.OpenFileByPath(
@@ -536,7 +536,11 @@ let start =
           |> Option.map(Editor.getVimCursors)
           |> Option.value(~default=[]);
 
-        let primaryCursor = editor |> Option.map(Editor.getPrimaryCursor);
+        let primaryCursor =
+          switch (cursors) {
+          | [hd, ..._] => Some(hd)
+          | [] => None
+          };
 
         let () =
           editor
@@ -557,8 +561,6 @@ let start =
                  Feature_Syntax.getSyntaxScope(
                    ~bufferId,
                    ~line,
-                   // TODO: Reconcile 'byte position' vs 'character position'
-                   // in cursor.
                    ~bytePosition=Index.toZeroBased(column),
                    state.syntaxHighlights,
                  );

@@ -17,7 +17,8 @@ type characterCacheInfo = {
   width: int,
 };
 
-let emptyArray = Array.make(0, None);
+let emptyArrayCharacters = Array.make(0, None);
+let emptyArrayIndex = Array.make(0, None);
 
 type t = {
   indentation: IndentationSettings.t,
@@ -25,6 +26,8 @@ type t = {
   raw: string,
   // [characters] is a cache of discovered characters we've found in the string so far
   mutable characters: array(option(characterCacheInfo)),
+  // [byteMap] is a cache of byte -> index
+  mutable byteMap: array(option(int)),
   // nextByte is the nextByte to work from, or -1 if complete
   mutable nextByte: int,
   // nextIndex is the nextIndex to work from
@@ -38,14 +41,21 @@ module Internal = {
     if (Uchar.equal(c, tab)) {
       indentationSettings.tabSize;
     } else {
-      1;
-      // TODO: Integrate charWidth / wcwidth
+      Uucp.Break.tty_width_hint(
+        c,
+        //1;
+        // TODO: Integrate charWidth / wcwidth
+      );
     };
 
   let resolveTo = (~index, cache: t) => {
     // First, allocate our cache, if necessary
-    if (cache.characters === emptyArray) {
+    if (cache.characters === emptyArrayCharacters) {
       cache.characters = Array.make(String.length(cache.raw), None);
+    };
+
+    if (cache.byteMap === emptyArrayIndex) {
+      cache.byteMap = Array.make(String.length(cache.raw), None);
     };
 
     // We've already resolved to this point,
@@ -65,13 +75,17 @@ module Internal = {
 
         let characterWidth = measure(cache.indentation, uchar);
 
-        cache.characters[i^] =
+        let idx = i^;
+        let byteOffset = byte^;
+        cache.characters[idx] =
           Some({
-            byteOffset: byte^,
+            byteOffset,
             positionOffset: position^,
             uchar,
             width: characterWidth,
           });
+
+        cache.byteMap[byteOffset] = Some(idx);
 
         position := position^ + characterWidth;
         byte := offset;
@@ -88,8 +102,17 @@ module Internal = {
 let make = (~indentation, raw: string) => {
   // Create a cache the size of the string - this would be the max length
   // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
-  let characters = emptyArray;
-  {indentation, raw, characters, nextByte: 0, nextIndex: 0, nextPosition: 0};
+  let characters = emptyArrayCharacters;
+  let byteMap = emptyArrayIndex;
+  {
+    indentation,
+    raw,
+    characters,
+    byteMap,
+    nextByte: 0,
+    nextIndex: 0,
+    nextPosition: 0,
+  };
 };
 
 let empty = make(~indentation=IndentationSettings.default, "");
@@ -103,6 +126,26 @@ let raw = ({raw, _}) => raw;
 let lengthBounded = (~max, bufferLine) => {
   Internal.resolveTo(~index=max, bufferLine);
   min(bufferLine.nextIndex, max);
+};
+
+let getIndexExn = (~byte, bufferLine) => {
+  Internal.resolveTo(~index=byte, bufferLine);
+
+  let rec loop = idx =>
+    if (idx <= 0) {
+      0;
+    } else {
+      switch (bufferLine.byteMap[idx]) {
+      | Some(v) => v
+      | None => loop(idx - 1)
+      };
+    };
+
+  if (byte >= String.length(bufferLine.raw)) {
+    bufferLine.nextIndex;
+  } else {
+    loop(byte);
+  };
 };
 
 let getUcharExn = (~index, bufferLine) => {
@@ -143,7 +186,11 @@ let getPositionAndWidth = (~index: int, bufferLine: t) => {
   } else {
     switch (characters[index]) {
     | Some({positionOffset, width, _}) => (positionOffset, width)
-    | None => (0, 1)
+    | None =>
+      switch (characters[bufferLine.nextIndex - 1]) {
+      | Some({positionOffset, width, _}) => (positionOffset + width, 1)
+      | None => (0, 1)
+      }
     };
   };
 };

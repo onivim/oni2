@@ -104,6 +104,7 @@ let initialState = {isCapturing: false};
 let%component make =
               (
                 ~editor: Editor.t,
+                ~cursorPosition: Location.t,
                 ~width: int,
                 ~height: int,
                 ~count,
@@ -195,7 +196,6 @@ let%component make =
           );
         };
 
-        let cursorPosition = Editor.getPrimaryCursor(editor);
         /* Draw cursor line */
         Skia.Paint.setColor(
           minimapPaint,
@@ -205,7 +205,7 @@ let%component make =
           ~left=Constants.leftMargin,
           ~top=
             rowHeight
-            *. float(Index.toZeroBased(cursorPosition.line))
+            *. float(Index.toZeroBased(Location.(cursorPosition.line)))
             -. scrollY,
           ~height=float(Constants.minimapCharacterHeight),
           ~width=float(width),

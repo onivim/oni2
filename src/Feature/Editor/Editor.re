@@ -5,8 +5,8 @@ let lastId = ref(0);
 
 [@deriving show]
 type t = {
-  editorId: EditorId.t,
   bufferId: int,
+  editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
   minimapMaxColumnWidth: int,
@@ -60,9 +60,20 @@ type scrollbarMetrics = {
 
 let getVimCursors = model => model.cursors;
 
-let getPrimaryCursor = model =>
-  switch (model.cursors) {
-  | [cursor, ..._] => (cursor :> Location.t)
+let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
+  let byte = position.column |> Index.toZeroBased;
+  let line = position.line |> Index.toZeroBased;
+
+  let bufferLine = Buffer.getLine(line, buffer);
+
+  let column = BufferLine.getIndexExn(~byte, bufferLine);
+
+  Location.{line: Index.(zero + line), column: Index.(zero + column)};
+};
+
+let getPrimaryCursor = (~buffer, editor) =>
+  switch (editor.cursors) {
+  | [cursor, ..._] => mapCursor(~position=cursor, ~buffer)
   | [] => Location.{line: Index.zero, column: Index.zero}
   };
 

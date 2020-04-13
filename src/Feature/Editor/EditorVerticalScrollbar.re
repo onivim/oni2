@@ -16,6 +16,7 @@ let absoluteStyle =
 let make =
     (
       ~editor: Editor.t,
+      ~cursorPosition: Location.t,
       ~height as totalHeight,
       ~width as totalWidth,
       ~diagnostics: IntMap.t(list(Diagnostic.t)),
@@ -49,16 +50,16 @@ let make =
     );
   };
 
-  let cursorPosition = Editor.getPrimaryCursor(editor);
-
-  let cursorPosition =
-    bufferLineToScrollbarPixel(Index.toZeroBased(cursorPosition.line));
+  let cursorLine =
+    bufferLineToScrollbarPixel(
+      Index.toZeroBased(Location.(cursorPosition.line)),
+    );
   let cursorSize = 2;
 
   let scrollCursorStyle =
     Style.[
       position(`Absolute),
-      top(cursorPosition),
+      top(cursorLine),
       left(0),
       width(totalWidth),
       height(cursorSize),
