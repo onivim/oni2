@@ -41,7 +41,7 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-TAB>",
         command: "workbench.action.openNextRecentlyUsedEditorInGroup",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
