@@ -1,3 +1,35 @@
+// SCHEMA
+
+module Schema: {
+  [@deriving show]
+  type item = {
+    isVisibleWhen: WhenExpr.t,
+    group: option(string),
+    index: option(int),
+    command: string,
+    alt: option(string) // currently unused
+  };
+
+  type group;
+
+  [@deriving show]
+  type definition = {
+    id: string,
+    items: list(item),
+  };
+
+  let extend: (string, list(group)) => definition;
+
+  let group: (string, list(item)) => group;
+  let ungrouped: list(item) => group;
+
+  let item:
+    (~index: int=?, ~alt: string=?, ~isVisibleWhen: WhenExpr.t=?, string) =>
+    item;
+};
+
+// MODEL
+
 [@deriving show]
 type item = {
   label: string,
@@ -9,6 +41,8 @@ type item = {
   index: option(int),
   command: string,
 };
+
+// LOOKUP
 
 module Lookup: {
   type t;
