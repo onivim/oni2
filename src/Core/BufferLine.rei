@@ -33,10 +33,8 @@ let lengthBounded: (~max: int, t) => int;
 
 /*
  * [getIndex(~byte, str)] returns the character index at byte [byte]
- *
- * Raises [OutOfBounds] if the index is greater than the length of string.
  */
-let getIndexExn: (~byte: int, t) => int;
+let getIndex: (~byte: int, t) => int;
 
 /*
   * [getUcharExn(~index, str)] returns the [Uchar.t] at UTF-8 index [index].

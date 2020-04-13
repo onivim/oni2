@@ -9,7 +9,7 @@ describe("BufferLine", ({describe, _}) => {
     test("simple ASCII string", ({expect, _}) => {
       let line = "abc" |> makeLine;
 
-      let getByte = byte => BufferLine.getIndexExn(~byte, line);
+      let getByte = byte => BufferLine.getIndex(~byte, line);
 
       expect.equal(getByte(0), 0);
       expect.equal(getByte(1), 1);
@@ -18,10 +18,7 @@ describe("BufferLine", ({describe, _}) => {
     test("UTF-8 text: κόσμε", ({expect, _}) => {
       let line = "κόσμε" |> makeLine;
 
-      let getByte = byte => {
-        prerr_endline("Getting byte: " ++ string_of_int(byte));
-        BufferLine.getIndexExn(~byte, line);
-      };
+      let getByte = byte => BufferLine.getIndex(~byte, line);
 
       expect.equal(getByte(0), 0);
       expect.equal(getByte(1), 0);
@@ -43,10 +40,7 @@ describe("BufferLine", ({describe, _}) => {
     test("UTF-8 text (cached): κόσμε", ({expect, _}) => {
       let line = "κόσμε" |> makeLine;
 
-      let getByte = byte => {
-        prerr_endline("Getting byte: " ++ string_of_int(byte));
-        BufferLine.getIndexExn(~byte, line);
-      };
+      let getByte = byte => BufferLine.getIndex(~byte, line);
 
       expect.equal(getByte(10), 4);
       expect.equal(getByte(9), 4);

@@ -66,7 +66,7 @@ let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
 
   let bufferLine = Buffer.getLine(line, buffer);
 
-  let column = BufferLine.getIndexExn(~byte, bufferLine);
+  let column = BufferLine.getIndex(~byte, bufferLine);
 
   Location.{line: Index.(zero + line), column: Index.(zero + column)};
 };

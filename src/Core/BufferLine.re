@@ -41,11 +41,7 @@ module Internal = {
     if (Uchar.equal(c, tab)) {
       indentationSettings.tabSize;
     } else {
-      Uucp.Break.tty_width_hint(
-        c,
-        //1;
-        // TODO: Integrate charWidth / wcwidth
-      );
+      Uucp.Break.tty_width_hint(c);
     };
 
   let resolveTo = (~index, cache: t) => {
@@ -128,9 +124,11 @@ let lengthBounded = (~max, bufferLine) => {
   min(bufferLine.nextIndex, max);
 };
 
-let getIndexExn = (~byte, bufferLine) => {
+let getIndex = (~byte, bufferLine) => {
   Internal.resolveTo(~index=byte, bufferLine);
 
+  // In the case where we are looking at an 'intermediate' byte,
+  // work backwards to the previous matching index.
   let rec loop = idx =>
     if (idx <= 0) {
       0;
@@ -141,6 +139,10 @@ let getIndexExn = (~byte, bufferLine) => {
       };
     };
 
+  // If we're asking for a byte past the length of the string,
+  // return the index that would be past the last index. The reason
+  // we handle this case - as opposed throw - is to handle the
+  // case where a cursor position is past the end of the current string.
   if (byte >= String.length(bufferLine.raw)) {
     bufferLine.nextIndex;
   } else {
