@@ -78,3 +78,21 @@ let commands = model => {
        }
      );
 };
+
+let menus = model =>
+  // Combine menu items contributed to common menus from different extensions
+  List.fold_left(
+    (acc, extension: ExtensionScanner.t) =>
+      List.fold_left(
+        (acc, menu: Menu.Schema.definition) =>
+          StringMap.add(menu.id, menu.items, acc),
+        StringMap.empty,
+        extension.manifest.contributes.menus,
+      )
+      |> StringMap.union((_, xs, ys) => Some(xs @ ys), acc),
+    StringMap.empty,
+    model.extensions,
+  )
+  |> StringMap.to_seq
+  |> Seq.map(((id, items)) => Menu.Schema.{id, items})
+  |> List.of_seq;

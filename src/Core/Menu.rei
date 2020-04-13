@@ -42,12 +42,15 @@ type item = {
   command: string,
 };
 
+let fromSchemaItem: (Command.Lookup.t(_), Schema.item) => option(item);
+
 // LOOKUP
 
 module Lookup: {
   type t;
 
   let fromList: list((string, list(item))) => t;
+  let fromSchema: (Command.Lookup.t(_), list(Schema.definition)) => t;
 
   let get: (string, t) => list(item);
 

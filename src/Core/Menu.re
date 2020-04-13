@@ -52,6 +52,21 @@ type item = {
   command: string,
 };
 
+let fromSchemaItem = (commands, item: Schema.item) =>
+  Command.Lookup.get(item.command, commands)
+  |> Option.map((command: Command.t(_)) =>
+       {
+         label: command.title |> Option.value(~default=command.id),
+         category: command.category,
+         icon: command.icon,
+         isEnabledWhen: command.isEnabledWhen,
+         isVisibleWhen: item.isVisibleWhen,
+         group: item.group,
+         index: item.index,
+         command: command.id,
+       }
+     );
+
 // LOOKUP
 
 module Lookup = {
@@ -62,6 +77,16 @@ module Lookup = {
     |> List.to_seq
     |> Seq.map(((id, items)) => (KeyedStringMap.key(id), items))
     |> KeyedStringMap.of_seq;
+
+  let fromSchema = (commands, definitions) =>
+    definitions
+    |> List.map((definition: Schema.definition) =>
+         (
+           definition.id,
+           definition.items |> List.filter_map(fromSchemaItem(commands)),
+         )
+       )
+    |> fromList;
 
   let get = (id, lookup) =>
     KeyedStringMap.find_opt(KeyedStringMap.key(id), lookup)
