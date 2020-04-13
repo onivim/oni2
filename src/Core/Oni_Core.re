@@ -33,6 +33,7 @@ module Job = Job;
 module LazyLoader = LazyLoader;
 module LineNumber = LineNumber;
 module Log = Kernel.Log;
+module Menu = Menu;
 module Mode = Mode;
 module Ripgrep = Ripgrep;
 module Scheduler = Scheduler;

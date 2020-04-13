@@ -41,7 +41,7 @@ module Lookup = {
     KeyedStringMap.union(
       (key, _x, y) => {
         Log.warnf(m =>
-          m("Encountered duplicate default: %s", KeyedStringMap.keyName(key))
+          m("Encountered duplicate command: %s", KeyedStringMap.keyName(key))
         );
         Some(y);
       },
