@@ -4,6 +4,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 
 [@deriving show]
 type t = {
@@ -13,7 +14,11 @@ type t = {
 
 let create = (~range, ~message, ()) => {range, message};
 
+// Clamp the number of lines a diagnostic range can span to a tractable number.
+let maxDiagnosticLines = 1000;
+
 let explode = (buffer, diagnostic) => {
+  prerr_endline("Exploding range: " ++ Range.show(diagnostic.range));
   let lineCount = Buffer.getNumberOfLines(buffer);
   let measure = n => {
     Index.toZeroBased(n) < lineCount
@@ -24,5 +29,6 @@ let explode = (buffer, diagnostic) => {
   };
 
   Range.explode(measure, diagnostic.range)
-  |> List.map(range => create(~range, ~message=diagnostic.message, ()));
+  |> ListEx.firstk(maxDiagnosticLines)
+  |> ListEx.safeMap(range => create(~range, ~message=diagnostic.message, ()));
 };
