@@ -692,6 +692,21 @@ let start =
       };
     });
 
+  let openTutorEffect =
+    Isolinear.Effect.create(~name="vim.tutor", () => {
+      let filename = Filename.temp_file("tutor", "");
+
+      let input = open_in(Revery.Environment.getAssetPath("tutor"));
+      let content = really_input_string(input, in_channel_length(input));
+      close_in(input);
+
+      let output = open_out(filename);
+      output_string(output, content);
+      close_out(output);
+
+      ignore(Vim.Buffer.openFile(filename): Vim.Buffer.t);
+    });
+
   let applyCompletionEffect = completion =>
     Isolinear.Effect.create(~name="vim.applyCommandlineCompletion", () =>
       switch (lastCompletionMeet^) {
@@ -969,6 +984,7 @@ let start =
     | Command("editor.action.indentLines") => (state, indentEffect)
     | Command("editor.action.outdentLines") => (state, outdentEffect)
     | Command("vim.esc") => (state, escapeEffect)
+    | Command("vim.tutor") => (state, openTutorEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
