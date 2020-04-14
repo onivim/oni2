@@ -13,6 +13,7 @@ module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 open Oni_Extensions;
+open Core.Utility;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
 module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
@@ -187,7 +188,7 @@ let start =
     let workspaceUri =
       state.workspace
       |> Option.map((ws: Model.Workspace.workspace) => ws.workingDirectory)
-      |> Option.value(~default=Sys.getcwd())
+      |> OptionEx.value_lazy(~default= Sys.getcwd)
       |> Oni_Core.Uri.fromPath;
 
     let terminalSubscription =
@@ -269,8 +270,8 @@ let start =
 
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
-  let _unsubscribe: unit => unit =
-    Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
+  /*let _unsubscribe: unit => unit =
+    Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});*/
 
   let dispatch = Store.dispatch;
 
