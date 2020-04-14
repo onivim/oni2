@@ -36,6 +36,8 @@ let lengthBounded: (~max: int, t) => int;
  */
 let getIndex: (~byte: int, t) => int;
 
+let getByte: (~index: int, t) => int;
+
 /*
   * [getUcharExn(~index, str)] returns the [Uchar.t] at UTF-8 index [index].
   * Raises [OutOfBounds] if the index is not valid.

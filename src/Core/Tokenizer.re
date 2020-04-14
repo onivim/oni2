@@ -8,6 +8,11 @@ module TextRun = {
   type t = {
     text: string,
     /*
+     * Bytes refer to the byte position in the parent string
+     */
+     startByte: int,
+     endByte: int,
+    /*
      * Indices refer to the UTF-8 position in the parent string
      */
     startIndex: Index.t,
@@ -24,8 +29,10 @@ module TextRun = {
   };
 
   let create =
-      (~text, ~startIndex, ~endIndex, ~startPosition, ~endPosition, ()) => {
+      (~text, ~startByte, ~endByte, ~startIndex, ~endIndex, ~startPosition, ~endPosition, ()) => {
     text,
+    startByte,
+    endByte,
     startIndex,
     endIndex,
     startPosition,
@@ -90,9 +97,14 @@ let tokenize =
           bufferLine,
         );
 
+      let startByte = BufferLine.getByte(~index=startToken, bufferLine);
+      let endByte = BufferLine.getByte(~index=endToken, bufferLine);
+
       let textRun =
         TextRun.create(
           ~text,
+          ~startByte,
+          ~endByte,
           ~startIndex=Index.fromZeroBased(startToken),
           ~endIndex=Index.fromZeroBased(endToken),
           ~startPosition=Index.fromZeroBased(startOffset),

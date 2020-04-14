@@ -159,7 +159,7 @@ let getUcharExn = (~index, bufferLine) => {
   };
 };
 
-let getByteOffset = (~index, bufferLine) => {
+let getByte = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let rawLength = String.length(bufferLine.raw);
   let characters = bufferLine.characters;
@@ -174,8 +174,8 @@ let getByteOffset = (~index, bufferLine) => {
 };
 
 let subExn = (~index: int, ~length: int, bufferLine) => {
-  let startOffset = getByteOffset(~index, bufferLine);
-  let endOffset = getByteOffset(~index=index + length, bufferLine);
+  let startOffset = getByte(~index, bufferLine);
+  let endOffset = getByte(~index=index + length, bufferLine);
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
 };
 
