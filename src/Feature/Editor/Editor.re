@@ -20,6 +20,9 @@ type t = {
   cursors: [@opaque] list(Vim.Cursor.t),
   selection: [@opaque] VisualRange.t,
   font: [@opaque] Service_Font.font,
+
+  pixelWidth: int,
+  pixelHeight: int,
 };
 
 let create = (~font, ~bufferId=0, ()) => {
@@ -49,6 +52,8 @@ let create = (~font, ~bufferId=0, ()) => {
         },
       ),
     font,
+    pixelWidth: 1,
+    pixelHeight: 1,
   };
 };
 
@@ -79,18 +84,21 @@ let pixelPositionToLineColumn = (view, pixelX, pixelY) => {
   (line, column);
 };
 
-let getVisibleView = (editor, metrics: EditorMetrics.t) =>
-  int_of_float(float_of_int(metrics.pixelHeight) /. getLineHeight(editor));
+let getVisibleView = (editor) => {
+  let {pixelHeight, pixelWidth, _} = editor;
+  int_of_float(float_of_int(pixelHeight) /. getLineHeight(editor));
+}
 
 let getTotalSizeInPixels = editor =>
   int_of_float(float_of_int(editor.viewLines) *. getLineHeight(editor));
 
 let getVerticalScrollbarMetrics =
-    (view, scrollBarHeight, metrics: EditorMetrics.t) => {
+    (view, scrollBarHeight) => {
+  let {pixelHeight, pixelWidth, _} = view;
   let totalViewSizeInPixels =
-    float_of_int(getTotalSizeInPixels(view) + metrics.pixelHeight);
+    float_of_int(getTotalSizeInPixels(view) + pixelHeight);
   let thumbPercentage =
-    float_of_int(metrics.pixelHeight) /. totalViewSizeInPixels;
+    float_of_int(pixelHeight) /. totalViewSizeInPixels;
   let thumbSize =
     int_of_float(thumbPercentage *. float_of_int(scrollBarHeight));
 
@@ -118,12 +126,13 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
     };
 };
 
-let getLayout = (view, metrics: EditorMetrics.t) => {
+let getLayout = (view) => {
+  let {pixelWidth, pixelHeight, _} = view;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~maxMinimapCharacters=view.minimapMaxColumnWidth,
-      ~pixelWidth=float_of_int(metrics.pixelWidth),
-      ~pixelHeight=float_of_int(metrics.pixelHeight),
+      ~pixelWidth=float_of_int(pixelWidth),
+      ~pixelHeight=float_of_int(pixelHeight),
       ~isMinimapShown=true,
       ~characterWidth=getCharacterWidth(view),
       ~characterHeight=getLineHeight(view),
@@ -141,10 +150,10 @@ let getLeftVisibleColumn = view => {
 let getTopVisibleLine = view =>
   int_of_float(view.scrollY /. getLineHeight(view)) + 1;
 
-let getBottomVisibleLine = (view, metrics: EditorMetrics.t) => {
+let getBottomVisibleLine = (view) => {
   let absoluteBottomLine =
     int_of_float(
-      (view.scrollY +. float_of_int(metrics.pixelHeight))
+      (view.scrollY +. float_of_int(view.pixelHeight))
       /. getLineHeight(view),
     );
 

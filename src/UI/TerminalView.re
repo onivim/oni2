@@ -20,17 +20,15 @@ module Constants = {
 };
 
 module Styles = {
-  let container = (metrics: EditorMetrics.t) =>
+  let container = (pixelWidth, pixelHeight) =>
     Style.[
       position(`Relative),
-      width(metrics.pixelWidth),
-      height(metrics.pixelHeight),
+      flexGrow(1),
     ];
 };
 
 let%component make =
               (
-                ~metrics: EditorMetrics.t,
                 ~terminal: Feature_Terminal.terminal,
                 ~font: Service_Font.font,
                 ~theme: Oni_Core.ColorTheme.Colors.t,
@@ -112,7 +110,8 @@ let%component make =
       maybeFont,
     )
     |> Option.value(~default=React.empty);
-  <View onDimensionsChanged style={Styles.container(metrics)}>
+  // TODO
+  <View onDimensionsChanged style={Styles.container(100, 100)}>
     element
   </View>;
 };

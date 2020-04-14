@@ -26,17 +26,18 @@ module Internal = {
   };
 };
 
-let scrollTo = (view, newScrollY, metrics: EditorMetrics.t) => {
+let scrollTo = (view, newScrollY) => {
+  let {pixelHeight, pixelWidth, _} = view;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
     max(float_of_int(view.viewLines - 1), 0.) *. Editor.getLineHeight(view);
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
-    newScrollY /. (availableScroll -. float_of_int(metrics.pixelHeight));
+    newScrollY /. (availableScroll -. float_of_int(pixelHeight));
   let minimapLineSize =
     Constants.minimapCharacterWidth + Constants.minimapCharacterHeight;
-  let linesInMinimap = metrics.pixelHeight / minimapLineSize;
+  let linesInMinimap = pixelHeight / minimapLineSize;
   let availableMinimapScroll =
     max(view.viewLines - linesInMinimap, 0) * minimapLineSize;
   let newMinimapScroll =
@@ -45,12 +46,12 @@ let scrollTo = (view, newScrollY, metrics: EditorMetrics.t) => {
   {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
 };
 
-let scrollToLine = (view, line, metrics: EditorMetrics.t) => {
+let scrollToLine = (view, line) => {
   let scrollAmount = float_of_int(line) *. Editor.getLineHeight(view);
-  scrollTo(view, scrollAmount, metrics);
+  scrollTo(view, scrollAmount);
 };
 
-let scrollToHorizontal = (view, newScrollX, metrics: EditorMetrics.t) => {
+let scrollToHorizontal = (view, newScrollX) => {
   let newScrollX = max(0., newScrollX);
 
   let availableScroll =
@@ -58,21 +59,21 @@ let scrollToHorizontal = (view, newScrollX, metrics: EditorMetrics.t) => {
       0.,
       float_of_int(view.maxLineLength)
       *. Editor.getCharacterWidth(view)
-      -. float(metrics.pixelWidth),
+      -. float(view.pixelWidth),
     );
   let scrollX = min(newScrollX, availableScroll);
 
   {...view, scrollX};
 };
 
-let scrollToColumn = (view, column, metrics: EditorMetrics.t) => {
+let scrollToColumn = (view, column) => {
   let scrollAmount = float_of_int(column) *. Editor.getCharacterWidth(view);
-  scrollToHorizontal(view, scrollAmount, metrics);
+  scrollToHorizontal(view, scrollAmount);
 };
 
-let scroll = (view, scrollDeltaY, metrics) => {
+let scroll = (view, scrollDeltaY) => {
   let newScrollY = view.scrollY +. scrollDeltaY;
-  scrollTo(view, newScrollY, metrics);
+  scrollTo(view, newScrollY);
 };
 
 let recalculate = (view, maybeBuffer) =>
@@ -85,7 +86,7 @@ let recalculate = (view, maybeBuffer) =>
   | None => view
   };
 
-let reduce = (view, action, metrics: EditorMetrics.t) =>
+let reduce = (view, action) =>
   switch ((action: Actions.t)) {
   | SelectionChanged(selection) => {...view, selection}
   | RecalculateEditorView(buffer) => recalculate(view, buffer)
@@ -94,12 +95,12 @@ let reduce = (view, action, metrics: EditorMetrics.t) =>
       cursors,
     }
   | EditorSetScroll(id, scrollY) when EditorId.equals(view.editorId, id) =>
-    scrollTo(view, scrollY, metrics)
+    scrollTo(view, scrollY)
   | EditorScroll(id, scrollDeltaY) when EditorId.equals(view.editorId, id) =>
-    scroll(view, scrollDeltaY, metrics)
+    scroll(view, scrollDeltaY)
   | EditorScrollToLine(id, line) when EditorId.equals(view.editorId, id) =>
-    scrollToLine(view, line, metrics)
+    scrollToLine(view, line)
   | EditorScrollToColumn(id, column) when EditorId.equals(view.editorId, id) =>
-    scrollToColumn(view, column, metrics)
+    scrollToColumn(view, column)
   | _ => view
   };

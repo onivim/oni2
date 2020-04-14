@@ -17,7 +17,6 @@ type t = {
   editors: [@opaque] IntMap.t(Editor.t),
   bufferIdToEditorId: [@opaque] IntMap.t(int),
   reverseTabOrder: list(int),
-  metrics: EditorMetrics.t,
 };
 
 let create: unit => t =
@@ -27,12 +26,9 @@ let create: unit => t =
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: None,
     reverseTabOrder: [],
-    metrics: EditorMetrics.create(),
   };
 
 let getEditorById = (id, model) => IntMap.find_opt(id, model.editors);
-
-let getMetrics = model => model.metrics;
 
 let getActiveEditor = model =>
   switch (model.activeEditorId) {

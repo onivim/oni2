@@ -122,7 +122,6 @@ let make =
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
     let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
 
-    let metrics = editorGroup.metrics;
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
@@ -157,7 +156,6 @@ let make =
             foregroundColor=defaultTerminalForeground
             showDiffMarkers=false
             isActiveSplit=isActive
-            metrics
             editor
             buffer
             onCursorChange
@@ -181,7 +179,6 @@ let make =
 
           <EditorSurface
             isActiveSplit=isActive
-            metrics
             editor
             buffer
             onCursorChange
@@ -207,7 +204,6 @@ let make =
                <TerminalView
                  theme
                  font={state.terminalFont}
-                 metrics
                  terminal
                />
              })

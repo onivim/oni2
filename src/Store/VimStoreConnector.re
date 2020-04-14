@@ -819,7 +819,7 @@ let start =
                 bufferWidthInCharacters: columns,
                 _,
               } =
-            Editor.getLayout(editor, editorGroup.metrics);
+            Editor.getLayout(editor);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
