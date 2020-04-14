@@ -311,9 +311,9 @@ let%component make =
   let lineEndings = () => {
     let toString =
       fun
-      | Vim.LF => "LF"
-      | Vim.CR => "CR"
-      | Vim.CRLF => "CRLF";
+      | Vim.Types.LF => "LF"
+      | Vim.Types.CR => "CR"
+      | Vim.Types.CRLF => "CRLF";
 
     state
     |> Selectors.getActiveBuffer

@@ -106,16 +106,7 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onLineEndingsChanged((id, lineEndings) => {
-      //HACK: Need to fix the types in reason-libvim...
-      let convert: Vim.Types.lineEnding => Vim.lineEnding =
-        fun
-        | CR => CR
-        | LF => LF
-        | CRLF => CRLF;
-
-      let lineEndings = convert(lineEndings);
-
-      Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch;
+      Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
 
   let _: unit => unit =

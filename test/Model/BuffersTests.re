@@ -37,7 +37,8 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
-          metadata: BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          metadata:
+            BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
           fileType: None,
           lineEndings: None,
         }),
@@ -62,7 +63,8 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
-          metadata: BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          metadata:
+            BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
           fileType: None,
           lineEndings: None,
         }),
@@ -71,7 +73,8 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         added,
         BufferEnter({
-          metadata: BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
+          metadata:
+            BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
           fileType: None,
           lineEndings: None,
         }),
@@ -89,7 +92,8 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
-          metadata: BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          metadata:
+            BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
           fileType: None,
           lineEndings: None,
         }),
@@ -105,9 +109,10 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
-          metadata: BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          metadata:
+            BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
           fileType: Some("reason"),
-          lineEndings: None
+          lineEndings: None,
         }),
       );
     let activeBuffer = Buffers.getBuffer(4, updated);
