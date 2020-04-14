@@ -52,9 +52,9 @@ let zip = (a, b) =>
 let values = list => List.filter_map(Fun.id, list);
 
 let value_lazy = (~default) =>
-fun
-| Some(v) => v
-| None => default();
+  fun
+  | Some(v) => v
+  | None => default();
 
 let toString = f =>
   fun

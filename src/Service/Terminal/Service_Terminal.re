@@ -72,7 +72,6 @@ module Sub = {
           | ReveryTerminal.ScreenUpdated(screen) =>
             if (! isResizing^) {
               queuedScreen := Some(screen);
-              //dispatch(ScreenUpdated({id: params.id, screen}));
             }
           | ReveryTerminal.CursorMoved(cursor) =>
             dispatch(CursorMoved({id: params.id, cursor}))
@@ -161,10 +160,10 @@ module Sub = {
           state.isResizing := false;
           {...state, rows, columns};
         } else if (state.queuedScreen^ != None) {
-          let screen = Option.get(state.queuedScreen^)
+          let screen = Option.get(state.queuedScreen^);
           dispatch(ScreenUpdated({id: params.id, screen}));
           state.queuedScreen := None;
-          state
+          state;
         } else {
           state;
         };
