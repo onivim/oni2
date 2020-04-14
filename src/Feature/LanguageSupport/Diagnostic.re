@@ -18,7 +18,6 @@ let create = (~range, ~message, ()) => {range, message};
 let maxDiagnosticLines = 1000;
 
 let explode = (buffer, diagnostic) => {
-  prerr_endline("Exploding range: " ++ Range.show(diagnostic.range));
   let lineCount = Buffer.getNumberOfLines(buffer);
   let measure = n => {
     Index.toZeroBased(n) < lineCount
