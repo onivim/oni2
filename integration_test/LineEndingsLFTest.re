@@ -1,12 +1,10 @@
-open EditorCoreTypes;
-
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTestWithInput(
-  ~name="LineEndingsLFTest", (input, dispatch, wait, _runEffects) => {
+runTest(
+  ~name="LineEndingsLFTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.vimMode == Vim.Types.Normal
   );
@@ -16,7 +14,7 @@ runTestWithInput(
   // Create a buffer
   dispatch(Actions.OpenFileByPath(testFile, None, None));
 
-  wait("Verify buffer is loaded", (state: State.t) => {
+  wait(~name="Verify buffer is loaded", (state: State.t) => {
     state
     |> Selectors.getActiveBuffer
     |> OptionEx.flatMap(Buffer.getShortFriendlyName)

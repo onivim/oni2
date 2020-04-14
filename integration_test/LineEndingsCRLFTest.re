@@ -1,12 +1,10 @@
-open EditorCoreTypes;
-
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTestWithInput(
-  ~name="LineEndingsCRLFTest", (input, dispatch, wait, _runEffects) => {
+runTest(
+  ~name="LineEndingsCRLFTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.vimMode == Vim.Types.Normal
   );
