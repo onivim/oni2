@@ -809,8 +809,7 @@ let start =
            )
         |> Option.iter(Vim.Options.setLineComment);
 
-        let synchronizeWindowMetrics =
-            (editor: Editor.t, editorGroup: EditorGroup.t) => {
+        let synchronizeWindowMetrics = (editor: Editor.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
@@ -832,8 +831,8 @@ let start =
 
         /* Update the window metrics for the editor */
         /* This synchronizes the window width / height with libvim's model */
-        switch (editor, editorGroup) {
-        | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
+        switch (editor) {
+        | Some(e) => synchronizeWindowMetrics(e)
         | _ => ()
         };
       }
@@ -1018,7 +1017,7 @@ let start =
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
-    | EditorGroupSizeChanged(_) => (state, synchronizeEditorEffect(state))
+    | EditorSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),

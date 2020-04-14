@@ -27,7 +27,7 @@ module Internal = {
 };
 
 let scrollTo = (view, newScrollY) => {
-  let {pixelHeight, pixelWidth, _} = view;
+  let {pixelHeight, _} = view;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
     max(float_of_int(view.viewLines - 1), 0.) *. Editor.getLineHeight(view);

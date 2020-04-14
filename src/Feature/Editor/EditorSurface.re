@@ -117,7 +117,7 @@ let%component make =
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
                 ~buffer,
-                //~onDimensionsChanged,
+                ~onEditorSizeChanged,
                 ~isActiveSplit: bool,
                 ~editor: Editor.t,
                 ~theme,
@@ -135,6 +135,33 @@ let%component make =
                 (),
               ) => {
   let colors = Colors.precompute(theme);
+
+  let%hook lastDimensions = Hooks.ref(None);
+
+  // When the terminal id changes, we need to make sure we're dispatching the resized
+  // event, too. The ideal fix would be to have this component 'keyed' on the `terminal.id`
+  // but since we don't have the concept of a key prop, this `If` handler will be triggered
+  // when the `terminal.id` changes, so we have an opportunity to set the size for a new terminal.
+  let%hook () =
+    React.Hooks.effect(
+      If((!=), editor.editorId),
+      () => {
+        lastDimensions^
+        |> Option.iter(((pixelWidth, pixelHeight)) => {
+             onEditorSizeChanged(editor.editorId, pixelWidth, pixelHeight)
+           });
+
+        None;
+      },
+    );
+
+  let onDimensionsChanged =
+      (
+        {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
+      ) => {
+    lastDimensions := Some((width, height));
+    onEditorSizeChanged(editor.editorId, width, height);
+  };
 
   let colors =
     backgroundColor

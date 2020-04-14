@@ -24,8 +24,7 @@ let make =
       ~bufferHighlights,
       (),
     ) => {
-  let scrollMetrics =
-    Editor.getVerticalScrollbarMetrics(editor, totalHeight);
+  let scrollMetrics = Editor.getVerticalScrollbarMetrics(editor, totalHeight);
 
   let scrollThumbStyle =
     Style.[

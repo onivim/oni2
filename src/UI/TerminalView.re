@@ -8,8 +8,6 @@ open Revery;
 open Revery.UI;
 open Oni_Model;
 
-module EditorMetrics = Feature_Editor.EditorMetrics;
-
 module Colors = Feature_Terminal.Colors;
 module Theme = Feature_Theme;
 
@@ -20,11 +18,7 @@ module Constants = {
 };
 
 module Styles = {
-  let container = (pixelWidth, pixelHeight) =>
-    Style.[
-      position(`Relative),
-      flexGrow(1),
-    ];
+  let container = Style.[position(`Relative), flexGrow(1)];
 };
 
 let%component make =
@@ -111,7 +105,5 @@ let%component make =
     )
     |> Option.value(~default=React.empty);
   // TODO
-  <View onDimensionsChanged style={Styles.container(100, 100)}>
-    element
-  </View>;
+  <View onDimensionsChanged style=Styles.container> element </View>;
 };
