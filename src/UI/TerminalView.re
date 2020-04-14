@@ -104,6 +104,5 @@ let%component make =
       maybeFont,
     )
     |> Option.value(~default=React.empty);
-  // TODO
   <View onDimensionsChanged style=Styles.container> element </View>;
 };
