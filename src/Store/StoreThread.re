@@ -270,8 +270,8 @@ let start =
 
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
-  /*let _unsubscribe: unit => unit =
-    Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});*/
+  let _unsubscribe: unit => unit =
+    Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
 
   let dispatch = Store.dispatch;
 
