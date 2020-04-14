@@ -79,7 +79,7 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.BufferEnter(metadata, _) =>
+    | Actions.BufferEnter({metadata, _}) =>
       switch (Buffers.getBuffer(metadata.id, state.buffers)) {
       | Some(buffer) when !Buffer.isIndentationSet(buffer) => (
           state,
