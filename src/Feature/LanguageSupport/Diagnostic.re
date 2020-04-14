@@ -6,6 +6,12 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Constants = {
+  // Clamp the number of lines a diagnostic range can span to a tractable number.
+  // See: https://github.com/onivim/oni2/issues/1607
+  let maxDiagnosticLines = 1000;
+};
+
 [@deriving show]
 type t = {
   range: Range.t,
@@ -13,9 +19,6 @@ type t = {
 };
 
 let create = (~range, ~message, ()) => {range, message};
-
-// Clamp the number of lines a diagnostic range can span to a tractable number.
-let maxDiagnosticLines = 1000;
 
 let explode = (buffer, diagnostic) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
