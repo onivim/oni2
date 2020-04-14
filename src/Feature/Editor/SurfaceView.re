@@ -119,14 +119,14 @@ let%component make =
     ref={node => elementRef := Some(node)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(EditorMetrics.(editor.pixelWidth)) -. gutterWidth,
+      float(Editor.(editor.pixelWidth)) -. gutterWidth,
     )}
     onMouseUp
     onMouseWheel>
     <Canvas
       style={Styles.bufferViewClipped(
         0.,
-        float(EditorMetrics.(editor.pixelWidth)) -. gutterWidth,
+        float(Editor.(editor.pixelWidth)) -. gutterWidth,
       )}
       render={canvasContext => {
         let context =
