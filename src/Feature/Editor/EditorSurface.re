@@ -138,10 +138,8 @@ let%component make =
 
   let%hook lastDimensions = Hooks.ref(None);
 
-  // When the terminal id changes, we need to make sure we're dispatching the resized
-  // event, too. The ideal fix would be to have this component 'keyed' on the `terminal.id`
-  // but since we don't have the concept of a key prop, this `If` handler will be triggered
-  // when the `terminal.id` changes, so we have an opportunity to set the size for a new terminal.
+  // When the editor id changes, we need to make sure we're dispatching the resized
+  // event, too. The ideal fix would be to have this component 'keyed' on the `editor.editorId`
   let%hook () =
     React.Hooks.effect(
       If((!=), editor.editorId),
