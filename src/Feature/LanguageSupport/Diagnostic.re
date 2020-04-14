@@ -31,6 +31,6 @@ let explode = (buffer, diagnostic) => {
   };
 
   Range.explode(measure, diagnostic.range)
-  |> ListEx.firstk(maxDiagnosticLines)
+  |> ListEx.firstk(Constants.maxDiagnosticLines)
   |> ListEx.safeMap(range => create(~range, ~message=diagnostic.message, ()));
 };
