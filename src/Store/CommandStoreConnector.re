@@ -7,7 +7,10 @@ module KeyDisplayer = Oni_Components.KeyDisplayer;
 
 let pathSymlinkEnabled = (~addingLink) =>
   (
-    Revery.Environment.os == Revery.Environment.Mac
+    (
+      Revery.Environment.os == Revery.Environment.Mac
+      || Revery.Environment.os == Revery.Environment.Linux
+    )
     && !Sys.file_exists("/usr/local/bin/oni2")
   )
   == addingLink;
