@@ -45,7 +45,6 @@ let%component make =
                 ~onScroll,
                 ~buffer,
                 ~editor,
-                ~metrics,
                 ~colors,
                 ~topVisibleLine,
                 ~onCursorChange,
@@ -120,21 +119,21 @@ let%component make =
     ref={node => elementRef := Some(node)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(EditorMetrics.(metrics.pixelWidth)) -. gutterWidth,
+      float(Editor.(editor.pixelWidth)) -. gutterWidth,
     )}
     onMouseUp
     onMouseWheel>
     <Canvas
       style={Styles.bufferViewClipped(
         0.,
-        float(EditorMetrics.(metrics.pixelWidth)) -. gutterWidth,
+        float(Editor.(editor.pixelWidth)) -. gutterWidth,
       )}
       render={canvasContext => {
         let context =
           Draw.createContext(
             ~canvasContext,
-            ~width=metrics.pixelWidth,
-            ~height=metrics.pixelHeight,
+            ~width=editor.pixelWidth,
+            ~height=editor.pixelHeight,
             ~scrollX,
             ~scrollY,
             ~lineHeight=editorFont.measuredHeight,
@@ -178,9 +177,9 @@ let%component make =
     />
     <CursorView
       config
+      editor
       scrollX
       scrollY
-      metrics
       editorFont
       buffer
       mode
@@ -190,7 +189,7 @@ let%component make =
       colors
     />
     <View style=Styles.horizontalScrollBar>
-      <EditorHorizontalScrollbar editor width={metrics.pixelWidth} colors />
+      <EditorHorizontalScrollbar editor width={editor.pixelWidth} colors />
     </View>
   </View>;
 };

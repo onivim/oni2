@@ -14,6 +14,7 @@
            ExtHostBufferUpdatesTest
            ExtHostCompletionTest
            ExtHostDefinitionTest
+           FileWatcherTest
            FontSizeChangeTest
            KeybindingsInvalidJsonTest
            KeySequenceJJTest
@@ -49,7 +50,7 @@
     (libraries
         Oni_IntegrationTestLib
         reason-native-crash-utils.asan
-            ))
+))
 
 (install
     (section bin)
@@ -71,6 +72,7 @@
         ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe
         ExtHostDefinitionTest.exe
+        FileWatcherTest.exe
         FontSizeChangeTest.exe
         KeybindingsInvalidJsonTest.exe
         KeySequenceJJTest.exe
@@ -105,4 +107,4 @@
         some-test-file.txt
         test.crlf
         test.lf
-        ))
+))
