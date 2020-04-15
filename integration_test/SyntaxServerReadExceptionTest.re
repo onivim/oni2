@@ -5,8 +5,7 @@ open Oni_Extensions;
 open Oni_IntegrationTestLib;
 
 SyntaxServerTest.run(
-  ~name="SyntaxServerReadExceptionTest",
-  ({syntaxClient, isConnected, hasExited, wait}) => {
+  ~name="SyntaxServerReadExceptionTest", ({syntaxClient, hasExited, wait, _}) => {
   Oni_Syntax_Client.simulateReadException(syntaxClient);
 
   // Syntax server should exit with code 2

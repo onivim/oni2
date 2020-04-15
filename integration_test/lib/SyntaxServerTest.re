@@ -38,7 +38,7 @@ let run = (~parentPid=?, ~name, f) => {
 
   let syntaxClient =
     Oni_Syntax_Client.start(
-	  ~parentPid?,
+      ~parentPid?,
       ~executablePath=
         Revery.Environment.executingDirectory ++ "SyntaxServer.exe",
       ~onConnected,

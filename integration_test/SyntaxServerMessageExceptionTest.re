@@ -6,7 +6,7 @@ open Oni_IntegrationTestLib;
 
 SyntaxServerTest.run(
   ~name="SyntaxServerMessageExceptionTest",
-  ({syntaxClient, isConnected, hasExited, wait}) => {
+  ({syntaxClient, hasExited, wait, _}) => {
   // Simulate an error parsing a message
   Oni_Syntax_Client.simulateMessageException(syntaxClient);
 
