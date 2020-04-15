@@ -3,7 +3,6 @@
  *
  * Module to filter & rank items using various strategies.
  */
-open ReasonFuzz;
 
 module IndexEx = Utility.IndexEx;
 

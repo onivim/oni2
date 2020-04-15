@@ -32,7 +32,7 @@
         Oni2.feature.terminal
         Oni2.service.font
         Oni2.feature.modals
-        ReasonFuzz
+        Fzy
         textmate
         editor-core-types
     )
