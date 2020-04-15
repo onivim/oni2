@@ -233,9 +233,14 @@ let notifyVisibilityChanged = (v: t, visibility) => {
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
 };
 
-let simulateException = (v: t) => {
-  ClientLog.trace("Sending visibleRangesChanged notification...");
-  write(v, Protocol.ClientToServer.SimulateException);
+let simulateReadException = (v: t) => {
+  ClientLog.trace("Sending simulateReadException notification...");
+  write(v, Protocol.ClientToServer.SimulateReadException);
+};
+
+let simulateMessageException = (v: t) => {
+  ClientLog.trace("Sending simulateMessageException notification...");
+  write(v, Protocol.ClientToServer.SimulateMessageException);
 };
 
 let close = (syntaxClient: t) => {

@@ -61,5 +61,6 @@ module ClientToServer = {
       )
     | Close
     // Debug
-    | SimulateException;
+    | SimulateMessageException
+    | SimulateReadException;
 };

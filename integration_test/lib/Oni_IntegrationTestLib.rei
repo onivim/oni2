@@ -2,6 +2,7 @@ module Core = Oni_Core;
 module Model = Oni_Model;
 module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
+module SyntaxServerTest = SyntaxServerTest;
 open Types;
 
 let runTest:

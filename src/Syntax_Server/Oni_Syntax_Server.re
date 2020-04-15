@@ -32,8 +32,10 @@ let start = (~healthCheck) => {
 
   let write = (msg: Protocol.ServerToClient.t) => {
     Mutex.lock(outputMutex);
+    prerr_endline("!!! Before write...");
     Marshal.to_channel(Stdlib.stdout, msg, []);
     Stdlib.flush(Stdlib.stdout);
+    prerr_endline("!!! After write...");
     Mutex.unlock(outputMutex);
   };
 
@@ -140,7 +142,7 @@ let start = (~healthCheck) => {
                 write(Protocol.ServerToClient.Closing);
                 exit(0);
               }
-            | SimulateException => failwith("Exception!")
+            | SimulateMessageException => failwith("Exception!")
             | v => log("Unhandled message: " ++ ClientToServer.show(v))
           );
 
@@ -151,38 +153,46 @@ let start = (~healthCheck) => {
           | Message(protocol) => handleProtocol(protocol);
 
         while (isRunning^) {
-          log("Waiting for incoming message...");
+          try(
+            {
+              log("Waiting for incoming message...");
 
-          // Wait for pending incoming messages
-          Mutex.lock(messageMutex);
-          while (!hasPendingMessage() && !State.anyPendingWork(state^)) {
-            Condition.wait(messageCondition, messageMutex);
+              // Wait for pending incoming messages
+              Mutex.lock(messageMutex);
+              while (!hasPendingMessage() && !State.anyPendingWork(state^)) {
+                Condition.wait(messageCondition, messageMutex);
+              };
+
+              // Once we have them, let's track and run them
+              let messages = flush();
+              Mutex.unlock(messageMutex);
+
+              // Handle messages
+              messages
+              // Messages are queued in inverse order, so we need to fix that...
+              |> List.rev
+              |> List.iter(handleMessage);
+
+              // TODO: Do this in a loop
+              // If the messages incurred work, do it!
+              if (State.anyPendingWork(state^)) {
+                log("Running unit of work...");
+                map(State.doPendingWork);
+                log("Unit of work completed.");
+              } else {
+                log("No pending work.");
+              };
+
+              let tokenUpdates = State.getTokenUpdates(state^);
+              write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+              log("Token updates sent.");
+              map(State.clearTokenUpdates);
+            }
+          ) {
+          | ex =>
+            queue(Exception(Printexc.to_string(ex)));
+            exit(2);
           };
-
-          // Once we have them, let's track and run them
-          let messages = flush();
-          Mutex.unlock(messageMutex);
-
-          // Handle messages
-          messages
-          // Messages are queued in inverse order, so we need to fix that...
-          |> List.rev
-          |> List.iter(handleMessage);
-
-          // TODO: Do this in a loop
-          // If the messages incurred work, do it!
-          if (State.anyPendingWork(state^)) {
-            log("Running unit of work...");
-            map(State.doPendingWork);
-            log("Unit of work completed.");
-          } else {
-            log("No pending work.");
-          };
-
-          let tokenUpdates = State.getTokenUpdates(state^);
-          write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
-          log("Token updates sent.");
-          map(State.clearTokenUpdates);
         };
       },
       (),
@@ -195,11 +205,19 @@ let start = (~healthCheck) => {
           try({
             let msg: Oni_Syntax.Protocol.ClientToServer.t =
               Marshal.from_channel(Stdlib.stdin);
-            queue(Message(msg));
+
+            switch (msg) {
+            | SimulateReadException => failwith("Exception")
+            | msg => queue(Message(msg))
+            };
           }) {
-          | ex => queue(Exception(Printexc.to_string(ex)))
+          | ex =>
+            queue(Exception(Printexc.to_string(ex)));
+            exit(2);
+          //isRunning := false;
           };
-        }
+        };
+        ();
       },
       (),
     );

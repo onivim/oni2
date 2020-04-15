@@ -25,7 +25,8 @@
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            SyntaxServer
-           SyntaxServerExceptionTest
+           SyntaxServerMessageExceptionTest
+           SyntaxServerReadExceptionTest
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
@@ -87,7 +88,8 @@
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
         SyntaxServer.exe
-        SyntaxServerExceptionTest.exe
+        SyntaxServerMessageExceptionTest.exe
+        SyntaxServerReadExceptionTest.exe
         TerminalSetPidTitleTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe

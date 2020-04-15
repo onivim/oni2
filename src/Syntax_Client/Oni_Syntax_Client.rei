@@ -41,4 +41,5 @@ let healthCheck: t => unit;
 let close: t => unit;
 
 // Debug methods
-let simulateException: t => unit;
+let simulateReadException: t => unit;
+let simulateMessageException: t => unit;
