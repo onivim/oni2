@@ -18,6 +18,9 @@ let getUri: t => Uri.t;
 let getFilePath: t => option(string);
 let setFilePath: (option(string), t) => t;
 
+let getLineEndings: t => option(Vim.lineEnding);
+let setLineEndings: (Vim.lineEnding, t) => t;
+
 let getShortFriendlyName: t => option(string);
 let getMediumFriendlyName: (~workingDirectory: string=?, t) => option(string);
 let getLongFriendlyName: t => option(string);

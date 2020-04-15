@@ -313,7 +313,7 @@ let start =
       | Model.Actions.BufferUpdate(bs) =>
         let buffer = Model.Selectors.getBufferById(state, bs.update.id);
         Some(Model.Actions.RecalculateEditorView(buffer));
-      | Model.Actions.BufferEnter({id, _}, _) =>
+      | Model.Actions.BufferEnter({metadata: {id, _}, _}) =>
         let buffer = Model.Selectors.getBufferById(state, id);
         Some(Model.Actions.RecalculateEditorView(buffer));
       | _ => None

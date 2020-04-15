@@ -58,7 +58,8 @@ let%component make =
       Revery.Time.milliseconds(100);
     };
 
-  let animatedCursor = Config.Experimental.editorSmoothCursor.get(config);
+  let animatedCursor =
+    Config.Experimental.cursorSmoothCaretAnimation.get(config);
 
   let delay = Revery.Time.zero;
   let defaultDuration = Revery.Time.milliseconds(100);

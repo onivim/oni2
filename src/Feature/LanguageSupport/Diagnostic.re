@@ -4,6 +4,13 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
+
+module Constants = {
+  // Clamp the number of lines a diagnostic range can span to a tractable number.
+  // See: https://github.com/onivim/oni2/issues/1607
+  let maxDiagnosticLines = 1000;
+};
 
 [@deriving show]
 type t = {
@@ -24,5 +31,6 @@ let explode = (buffer, diagnostic) => {
   };
 
   Range.explode(measure, diagnostic.range)
-  |> List.map(range => create(~range, ~message=diagnostic.message, ()));
+  |> ListEx.firstk(Constants.maxDiagnosticLines)
+  |> ListEx.safeMap(range => create(~range, ~message=diagnostic.message, ()));
 };

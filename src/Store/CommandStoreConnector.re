@@ -177,6 +177,12 @@ let createDefaultCommands = getState => {
         ~action=Command("terminal.new.current"),
         (),
       ),
+      Command.create(
+        ~category=Some("Help"),
+        ~name="Open Vim Tutor",
+        ~action=Command("vim.tutor"),
+        (),
+      ),
     ]
   );
 };

@@ -20,6 +20,8 @@
            InputIgnoreTest
            LanguageCssTest
            LanguageTypeScriptTest
+           LineEndingsLFTest
+           LineEndingsCRLFTest
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
            RegressionCommandLineNoCompletionTest
@@ -70,6 +72,7 @@
         InputIgnoreTest.exe
         LanguageCssTest.exe
         LanguageTypeScriptTest.exe
+        LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
         Regression1097Test.exe
         RegressionCommandLineNoCompletionTest.exe
@@ -90,4 +93,6 @@
         ZenModeSplitTest.exe
         some-test-file.json
         some-test-file.txt
+        test.crlf
+        test.lf
         ))
