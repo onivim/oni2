@@ -1,5 +1,5 @@
 {
-  "checksum": "09e56bab7d2b2a48befd1a16c8728b67",
+  "checksum": "9cb31b5902bc4e35dd8da20d0c6443e1",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -308,13 +308,15 @@
       ],
       "devDependencies": []
     },
-    "reason-textmate@github:onivim/reason-textmate#5269e5f@d41d8cd9": {
-      "id": "reason-textmate@github:onivim/reason-textmate#5269e5f@d41d8cd9",
+    "reason-textmate@3.1.0@d41d8cd9": {
+      "id": "reason-textmate@3.1.0@d41d8cd9",
       "name": "reason-textmate",
-      "version": "github:onivim/reason-textmate#5269e5f",
+      "version": "3.1.0",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-textmate#5269e5f" ]
+        "source": [
+          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-3.1.0.tgz#sha1:1b2dcbaf0903c3802c9a7889e4644ea58973a866"
+        ]
       },
       "overrides": [],
       "dependencies": [
@@ -327,7 +329,7 @@
         "@opam/markup@opam:0.8.2@87975241", "@opam/dune@opam:2.5.0@aef1678b",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
-      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
+      "devDependencies": []
     },
     "reason-skia@github:revery-ui/reason-skia#2352b85@d41d8cd9": {
       "id": "reason-skia@github:revery-ui/reason-skia#2352b85@d41d8cd9",
@@ -1208,8 +1210,7 @@
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@github:onivim/reason-textmate#5269e5f@d41d8cd9",
-        "reason-sdl2@2.10.3021@d41d8cd9",
+        "reason-textmate@3.1.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#e791e3a@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
