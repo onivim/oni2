@@ -19,6 +19,7 @@ type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
 
 let start:
   (
+    ~executablePath: string=?,
     ~onConnected: connectedCallback=?,
     ~onClose: closeCallback=?,
     ~scheduler: Scheduler.t,

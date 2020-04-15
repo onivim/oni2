@@ -29,8 +29,14 @@ let write = (client: t, msg: Protocol.ClientToServer.t) => {
   Stdlib.flush(client.out_channel);
 };
 
+module Defaults = {
+  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
+  let executablePath = Revery.Environment.executingDirectory ++ executableName;
+}
+
 let start =
     (
+      ~executablePath=Defaults.executablePath,
       ~onConnected=() => (),
       ~onClose=_ => (),
       ~scheduler,
@@ -59,9 +65,6 @@ let start =
     |> List.filter(str => !StringEx.contains("ONI2_LOG_FILE", str));
 
   let env = [EnvironmentVariables.parentPid ++ "=" ++ parentPid, ...envList];
-
-  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
-  let executablePath = Revery.Environment.executingDirectory ++ executableName;
 
   ClientLog.debugf(m =>
     m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
