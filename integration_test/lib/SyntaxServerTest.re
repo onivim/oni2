@@ -10,7 +10,7 @@ type testContext = {
   wait: (~name: string=?, unit => bool) => unit,
 };
 
-let run = (~name, f) => {
+let run = (~parentPid=?, ~name, f) => {
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.debug);
   module Log = (val Log.withNamespace(name));
@@ -38,6 +38,7 @@ let run = (~name, f) => {
 
   let syntaxClient =
     Oni_Syntax_Client.start(
+	  ~parentPid?,
       ~executablePath=
         Revery.Environment.executingDirectory ++ "SyntaxServer.exe",
       ~onConnected,

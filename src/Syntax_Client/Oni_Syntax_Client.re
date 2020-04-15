@@ -36,6 +36,7 @@ module Defaults = {
 
 let start =
     (
+      ~parentPid=?,
       ~executablePath=Defaults.executablePath,
       ~onConnected=() => (),
       ~onClose=_ => (),
@@ -56,7 +57,10 @@ let start =
   Unix.set_close_on_exec(pstderr);
   Unix.set_close_on_exec(stderr);
 
-  let parentPid = Unix.getpid() |> string_of_int;
+  let parentPid = switch(parentPid) {
+  | None => Unix.getpid() |> string_of_int;
+  | Some(pid) => pid
+  };
 
   // Remove ONI2_LOG_FILE from environment of syntax server
   let envList =
