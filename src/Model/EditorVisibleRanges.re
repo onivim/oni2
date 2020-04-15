@@ -58,8 +58,10 @@ let getVisibleRangesForEditor = (editor: Editor.t) => {
   let minimapBottomLine =
     min(minimapTopLine + minimapVisibleLines, editor.viewLines);
 
+  let ranges = max(0, minimapBottomLine - minimapTopLine);
+
   let minimapRanges =
-    List.init(minimapBottomLine - minimapTopLine, i => i + minimapTopLine)
+    List.init(ranges, i => i + minimapTopLine)
     |> List.map(i =>
          Range.{
            start:
