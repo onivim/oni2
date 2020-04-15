@@ -132,16 +132,15 @@ if (cliOptions.syntaxHighlightService) {
       currentState := state;
       isDirty := true;
     };
+    let tick = _dt => {
+      let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
 
-    let _: unit => unit =
-      Tick.interval(
-        _dt =>
-          if (isDirty^) {
-            update(<Root state=currentState^ />);
-            isDirty := false;
-          },
-        Time.seconds(0),
-      );
+      if (isDirty^) {
+        update(<Root state=currentState^ />);
+        isDirty := false;
+      };
+    };
+    let _: unit => unit = Tick.interval(tick, Time.zero);
 
     let getZoom = () => {
       Window.getZoom(w);

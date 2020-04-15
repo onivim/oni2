@@ -227,6 +227,7 @@
     "@esy-ocaml/libffi": "*",
     "@opam/decoders-yojson": "*",
     "@opam/uutf": "*",
+    "@opam/luv": "~0.5.1",
     "@opam/uucp": "*"
   },
   "resolutions": {

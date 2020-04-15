@@ -1,5 +1,5 @@
 {
-  "checksum": "26cc6f98e4c0545cffd6d7d2697c39bb",
+  "checksum": "53da598f0bd22c5c686a14e0335d3f0d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1227,8 +1227,9 @@
         "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
         "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/lwt@opam:4.5.0@677655b4", "@opam/logs@opam:0.7.0@1d03143e",
-        "@opam/fmt@opam:0.8.8@01c3a23c", "@opam/dune@opam:2.5.0@aef1678b",
+        "@opam/lwt@opam:4.5.0@677655b4", "@opam/luv@opam:0.5.1@a530d73c",
+        "@opam/logs@opam:0.7.0@1d03143e", "@opam/fmt@opam:0.8.8@01c3a23c",
+        "@opam/dune@opam:2.5.0@aef1678b",
         "@opam/decoders-yojson@opam:0.3.0@b9081413",
         "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
         "@glennsl/timber@1.0.0@d41d8cd9",
@@ -2524,6 +2525,37 @@
         "@opam/mmap@opam:1.1.0@b85334ff",
         "@opam/dune-configurator@opam:2.5.0@3755a265",
         "@opam/dune@opam:2.5.0@aef1678b"
+      ]
+    },
+    "@opam/luv@opam:0.5.1@a530d73c": {
+      "id": "@opam/luv@opam:0.5.1@a530d73c",
+      "name": "@opam/luv",
+      "version": "opam:0.5.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/1b/1b1665a64412af2a65587a6aa4a42d4a#md5:1b1665a64412af2a65587a6aa4a42d4a",
+          "archive:https://github.com/aantron/luv/releases/download/0.5.1/luv-0.5.1.tar.gz#md5:1b1665a64412af2a65587a6aa4a42d4a"
+        ],
+        "opam": {
+          "name": "luv",
+          "version": "0.5.1",
+          "path": "esy.lock/opam/luv.0.5.1"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.8.1000@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
+        "@opam/dune@opam:2.5.0@aef1678b",
+        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/base-unix@opam:base@87d0b2eb",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.8.1000@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
+        "@opam/dune@opam:2.5.0@aef1678b",
+        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/base-unix@opam:base@87d0b2eb"
       ]
     },
     "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9": {
