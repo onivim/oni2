@@ -16,7 +16,6 @@ module Internal = {
 
 [@deriving show({with_path: false})]
 type kind =
-  | Success
   | Info
   | Warning
   | Error;
@@ -73,29 +72,25 @@ module Effects = {
 
 module Colors = {
   open ColorTheme.Schema;
+  open Feature_Theme.Colors;
 
-  let foreground = Feature_Theme.Colors.foreground;
+  let foreground = foreground;
 
-  let successBackground =
-    define("notification.successBackground", all(unspecified));
-  let successForeground =
-    define("notification.successForeground", all(unspecified));
   let infoBackground =
-    define("notification.infoBackground", all(unspecified));
+    define("oni.notification.infoBackground", all(hex("#209CEE")));
   let infoForeground =
-    define("notification.infoForeground", all(unspecified));
+    define("oni.notification.infoForeground", all(hex("#FFF")));
   let warningBackground =
-    define("notification.warningBackground", all(unspecified));
+    define("oni.notification.warningBackground", all(hex("#FFDD57")));
   let warningForeground =
-    define("notification.warningForeground", all(unspecified));
+    define("oni.notification.warningForeground", all(hex("#333")));
   let errorBackground =
-    define("notification.errorBackground", all(unspecified));
+    define("oni.notification.errorBackground", all(hex("#FF3860")));
   let errorForeground =
-    define("notification.errorForeground", all(unspecified));
+    define("oni.notification.errorForeground", all(hex("#FFF")));
 
   let backgroundFor = notification =>
     switch (notification.kind) {
-    | Success => successBackground
     | Warning => warningBackground
     | Error => errorBackground
     | Info => infoBackground
@@ -103,7 +98,6 @@ module Colors = {
 
   let foregroundFor = notification =>
     switch (notification.kind) {
-    | Success => successForeground
     | Warning => warningForeground
     | Error => errorForeground
     | Info => infoForeground
@@ -170,7 +164,6 @@ module View = {
 
     let iconFor = item =>
       switch (item.kind) {
-      | Success => FontAwesome.checkCircle
       | Warning => FontAwesome.exclamationTriangle
       | Error => FontAwesome.exclamationCircle
       | Info => FontAwesome.infoCircle
@@ -231,7 +224,6 @@ module View = {
 
       let colorFor = (item, ~theme) =>
         switch (item.kind) {
-        | Success => Colors.successBackground.from(theme)
         | Warning => Colors.warningBackground.from(theme)
         | Error => Colors.errorBackground.from(theme)
         | Info => Colors.infoBackground.from(theme)
@@ -239,7 +231,6 @@ module View = {
 
       let iconFor = item =>
         switch (item.kind) {
-        | Success => FontAwesome.checkCircle
         | Warning => FontAwesome.exclamationTriangle
         | Error => FontAwesome.exclamationCircle
         | Info => FontAwesome.infoCircle
@@ -330,4 +321,18 @@ module View = {
       <View style=Styles.pane> innerElement </View>;
     };
   };
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let colors =
+    Colors.[
+      infoBackground,
+      infoForeground,
+      warningBackground,
+      warningForeground,
+      errorBackground,
+      errorForeground,
+    ];
 };

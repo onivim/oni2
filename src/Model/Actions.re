@@ -23,11 +23,19 @@ type t =
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
-  | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
+  | BufferEnter({
+      metadata: [@opaque] Vim.BufferMetadata.t,
+      fileType: option(string),
+      lineEndings: [@opaque] option(Vim.lineEnding),
+    })
   | BufferUpdate({
       update: [@opaque] BufferUpdate.t,
       oldBuffer: [@opaque] Buffer.t,
       newBuffer: [@opaque] Buffer.t,
+    })
+  | BufferLineEndingsChanged({
+      id: int,
+      lineEndings: [@opaque] Vim.lineEnding,
     })
   | BufferRenderer(BufferRenderer.action)
   | BufferSaved(int)
