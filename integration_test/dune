@@ -94,6 +94,7 @@
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
         some-test-file.json
+        some-test-file.txt
         test.crlf
         test.lf
 ))
