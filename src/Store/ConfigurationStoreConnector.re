@@ -72,9 +72,9 @@ let start =
   };
 
   let onError = (~dispatch, err: string) => {
-      Log.error("Error loading configuration file: " ++ err)
-      dispatch(Actions.ConfigurationParseError(err));
-  }
+    Log.error("Error loading configuration file: " ++ err);
+    dispatch(Actions.ConfigurationParseError(err));
+  };
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
@@ -100,20 +100,27 @@ let start =
         defaultConfigurationFileName
         |> getConfigurationFile
         // Once we know the path - register a listener to reload
-        |> ResultEx.tap(configPath => reloadConfigOnWritePost(~configPath, dispatch))
+        |> ResultEx.tap(configPath =>
+             reloadConfigOnWritePost(~configPath, dispatch)
+           )
         |> ResultEx.flatMap(ConfigurationParser.ofFile)
-        |> ResultEx.tapError(onError(~dispatch))
+        |> ResultEx.tapError(err => {
+             onError(~dispatch, err);
+             dispatch(Actions.ConfigurationSet(Configuration.default));
+           })
         |> Result.iter(configuration => {
-            dispatch(Actions.ConfigurationSet(configuration));
+             dispatch(Actions.ConfigurationSet(configuration));
 
-            let zenModeSingleFile =
-              Configuration.getValue(c => c.zenModeSingleFile, configuration);
+             let zenModeSingleFile =
+               Configuration.getValue(
+                 c => c.zenModeSingleFile,
+                 configuration,
+               );
 
-            if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
-              dispatch(Actions.EnableZenMode);
-            };
-        });
-
+             if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
+               dispatch(Actions.EnableZenMode);
+             };
+           });
       } else {
         Log.info("Not loading configuration initially; disabled via CLI.");
       }
@@ -124,7 +131,7 @@ let start =
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
       | Ok(path) => dispatch(Actions.OpenFileByPath(path, None, None))
-      | Error(e) => onError(~dispatch, e);
+      | Error(e) => onError(~dispatch, e)
       }
     );
 
