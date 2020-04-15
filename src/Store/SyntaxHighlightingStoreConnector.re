@@ -104,7 +104,7 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
         Service_Syntax.Effect.themeChange(state.syntaxClient, tokenTheme)
         |> mapServiceEffect,
       )
-    | Model.Actions.BufferEnter(metadata, fileType) =>
+    | Model.Actions.BufferEnter({metadata, fileType, _}) =>
       let visibleBuffers =
         Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
 

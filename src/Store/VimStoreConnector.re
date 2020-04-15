@@ -105,6 +105,11 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.Buffer.onLineEndingsChanged((id, lineEndings) => {
+      Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
+    });
+
+  let _: unit => unit =
     Vim.onGoto((_position, _definitionType) => {
       Log.debug("Goto definition requested");
       // Get buffer and cursor position
@@ -173,7 +178,7 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
-      let meta = {
+      let metadata = {
         ...meta,
         /*
              Set version to 0 so that a buffer update is processed.
@@ -183,13 +188,13 @@ let start =
       };
 
       let fileType =
-        switch (meta.filePath) {
+        switch (metadata.filePath) {
         | Some(v) =>
           Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
-      dispatch(Actions.BufferEnter(meta, fileType));
+      dispatch(Actions.BufferEnter({metadata, fileType, lineEndings: None}));
     });
 
   let _: unit => unit =
@@ -334,7 +339,7 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onEnter(buf => {
-      let meta = {
+      let metadata = {
         ...Vim.BufferMetadata.ofBuffer(buf),
         /*
              Set version to 0 so that a buffer update is processed.
@@ -343,12 +348,15 @@ let start =
         version: 0,
       };
       let fileType =
-        switch (meta.filePath) {
+        switch (metadata.filePath) {
         | Some(v) =>
           Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
-      dispatch(Actions.BufferEnter(meta, fileType));
+
+      let lineEndings: option(Vim.lineEnding) =
+        Vim.Buffer.getLineEndings(buf);
+      dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}));
     });
 
   let _: unit => unit =
@@ -630,6 +638,7 @@ let start =
 
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
+      let lineEndings = Vim.Buffer.getLineEndings(buffer);
 
       let fileType =
         switch (metadata.filePath) {
@@ -662,7 +671,8 @@ let start =
        * (This wouldn't happen if we're splitting the same buffer we're already at)
        */
       switch (dir) {
-      | Some(_) => dispatch(Actions.BufferEnter(metadata, fileType))
+      | Some(_) =>
+        dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}))
       | None => ()
       };
 
@@ -692,6 +702,21 @@ let start =
       | Welcome => ()
       | FilePath(_) => ()
       };
+    });
+
+  let openTutorEffect =
+    Isolinear.Effect.create(~name="vim.tutor", () => {
+      let filename = Filename.temp_file("tutor", "");
+
+      let input = open_in(Revery.Environment.getAssetPath("tutor"));
+      let content = really_input_string(input, in_channel_length(input));
+      close_in(input);
+
+      let output = open_out(filename);
+      output_string(output, content);
+      close_out(output);
+
+      ignore(Vim.Buffer.openFile(filename): Vim.Buffer.t);
     });
 
   let applyCompletionEffect = completion =>
@@ -971,6 +996,7 @@ let start =
     | Command("editor.action.indentLines") => (state, indentEffect)
     | Command("editor.action.outdentLines") => (state, outdentEffect)
     | Command("vim.esc") => (state, escapeEffect)
+    | Command("vim.tutor") => (state, openTutorEffect)
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
