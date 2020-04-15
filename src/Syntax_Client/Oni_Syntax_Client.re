@@ -32,7 +32,7 @@ let write = (client: t, msg: Protocol.ClientToServer.t) => {
 module Defaults = {
   let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
   let executablePath = Revery.Environment.executingDirectory ++ executableName;
-}
+};
 
 let start =
     (
@@ -231,6 +231,11 @@ let notifyBufferUpdate =
 let notifyVisibilityChanged = (v: t, visibility) => {
   ClientLog.trace("Sending visibleRangesChanged notification...");
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
+};
+
+let simulateException = (v: t) => {
+  ClientLog.trace("Sending visibleRangesChanged notification...");
+  write(v, Protocol.ClientToServer.SimulateException);
 };
 
 let close = (syntaxClient: t) => {

@@ -140,6 +140,7 @@ let start = (~healthCheck) => {
                 write(Protocol.ServerToClient.Closing);
                 exit(0);
               }
+            | SimulateException => failwith("Exception!")
             | v => log("Unhandled message: " ++ ClientToServer.show(v))
           );
 

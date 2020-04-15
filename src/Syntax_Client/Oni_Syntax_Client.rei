@@ -39,3 +39,6 @@ let notifyBufferUpdate: (t, BufferUpdate.t, array(string), string) => unit;
 let notifyVisibilityChanged: (t, list((int, list(Range.t)))) => unit;
 let healthCheck: t => unit;
 let close: t => unit;
+
+// Debug methods
+let simulateException: t => unit;
