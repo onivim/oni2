@@ -130,4 +130,6 @@ let contributions = [
   Minimap.showSlider.spec,
   ZenMode.hideTabs.spec,
   ZenMode.singleFile.spec,
+  Experimental.smoothScroll.spec,
+  Experimental.cursorSmoothCaretAnimation.spec,
 ];
