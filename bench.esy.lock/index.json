@@ -1,5 +1,5 @@
 {
-  "checksum": "bedd335944bd380ef5a6c9b0b84ea067",
+  "checksum": "e0c80fb72a3430234f4597c455aca166",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -168,14 +168,14 @@
       ],
       "devDependencies": []
     },
-    "resolve@1.15.1@d41d8cd9": {
-      "id": "resolve@1.15.1@d41d8cd9",
+    "resolve@1.16.0@d41d8cd9": {
+      "id": "resolve@1.16.0@d41d8cd9",
       "name": "resolve",
-      "version": "1.15.1",
+      "version": "1.16.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/resolve/-/resolve-1.15.1.tgz#sha1:27bdcdeffeaf2d6244b95bb0f9f4b4653451f3e8"
+          "archive:https://registry.npmjs.org/resolve/-/resolve-1.16.0.tgz#sha1:063dc704fa3413e13ac1d0d1756a7cbfe95dd1a7"
         ]
       },
       "overrides": [],
@@ -251,7 +251,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "resolve@1.15.1@d41d8cd9" ],
+      "dependencies": [ "resolve@1.16.0@d41d8cd9" ],
       "devDependencies": []
     },
     "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9": {
@@ -283,6 +283,28 @@
         "reperf@1.5.0@d41d8cd9", "refmterr@3.3.0@d41d8cd9",
         "ocaml@4.8.1000@d41d8cd9", "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/dune@opam:2.5.0@aef1678b",
+        "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
+      ],
+      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
+    },
+    "reason-vscode-exthost@github:onivim/reason-vscode-exthost#2686bd1@d41d8cd9": {
+      "id":
+        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#2686bd1@d41d8cd9",
+      "name": "reason-vscode-exthost",
+      "version": "github:onivim/reason-vscode-exthost#2686bd1",
+      "source": {
+        "type": "install",
+        "source": [ "github:onivim/reason-vscode-exthost#2686bd1" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
+        "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
+        "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
+        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/luv@opam:0.5.1@a530d73c", "@opam/dune@opam:2.5.0@aef1678b",
+        "@opam/decoders-yojson@opam:0.3.0@b9081413",
+        "@glennsl/timber@1.0.0@d41d8cd9",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
@@ -1210,6 +1232,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
+        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#2686bd1@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.1.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",

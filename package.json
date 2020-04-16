@@ -254,7 +254,7 @@
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#b17ce17",
     "revery-terminal": "revery-ui/revery-terminal#2ef1c65",
-    "reason-vscode-exthost": "link:../reason-vscode-exthost"
+    "reason-vscode-exthost": "onivim/reason-vscode-exthost#2686bd1"
   },
   "devDependencies": {
     "ocaml": "~4.8",
