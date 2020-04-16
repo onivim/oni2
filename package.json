@@ -227,8 +227,8 @@
     "@esy-ocaml/libffi": "*",
     "@opam/decoders-yojson": "*",
     "@opam/uutf": "*",
-    "@opam/luv": "~0.5.1",
-    "@opam/uucp": "*"
+    "@opam/uucp": "*",
+    "@opam/luv": "~0.5.1"
   },
   "resolutions": {
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",

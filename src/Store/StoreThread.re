@@ -251,6 +251,7 @@ let start =
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
+      Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
     ]
     |> Isolinear.Sub.batch;
   };

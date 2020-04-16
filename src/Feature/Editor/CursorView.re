@@ -12,7 +12,7 @@ let%component make =
               (
                 ~scrollX,
                 ~scrollY,
-                ~metrics: EditorMetrics.t,
+                ~editor: Editor.t,
                 ~editorFont: Service_Font.font,
                 ~buffer,
                 ~mode: Vim.Mode.t,
@@ -107,8 +107,8 @@ let%component make =
       let context =
         Draw.createContext(
           ~canvasContext,
-          ~width=metrics.pixelWidth,
-          ~height=metrics.pixelHeight,
+          ~width=editor.pixelWidth,
+          ~height=editor.pixelHeight,
           ~scrollX,
           ~scrollY,
           ~lineHeight=editorFont.measuredHeight,
