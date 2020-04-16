@@ -48,10 +48,9 @@ let start =
       languageInfo,
       setup,
     ) => {
-
-  let namedPipe = NamedPipe.create("test") |> NamedPipe.toString;
-
   let parentPid = Unix.getpid() |> string_of_int;
+  let name = Printf.sprintf("syntax-client-%s", parentPid);
+  let namedPipe = name |> NamedPipe.create |> NamedPipe.toString;
 
   let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
 
@@ -59,7 +58,11 @@ let start =
     Luv.Env.environ()
     |> Result.map(filterOutLogFile)
     |> Result.map(items =>
-         [(EnvironmentVariables.parentPid, parentPid), ...items]
+         [
+           (EnvironmentVariables.namedPipe, namedPipe),
+           (EnvironmentVariables.parentPid, parentPid),
+           ...items,
+         ]
        )
     |> Result.get_ok;
 

@@ -5,74 +5,35 @@
 module Protocol = Oni_Syntax.Protocol;
 module ClientToServer = Protocol.ClientToServer;
 
+module Transport = Exthost.Transport;
+
 type message =
   | Log(string)
   | Message(ClientToServer.t)
   | Exception(string);
 
 let start = (~healthCheck) => {
-  Stdlib.set_binary_mode_out(Stdlib.stdout, true);
-  Stdlib.set_binary_mode_in(Stdlib.stdin, true);
 
-  // A list of pending messages for us to handle
-  let messageQueue: ref(list(message)) = ref([]);
-  // Mutex to guard accessing the queue from multiple threads
-  let messageMutex = Mutex.create();
-  // And a semaphore for signaling when we have a new message
-  let messageCondition = Condition.create();
-
-  let outputMutex = Mutex.create();
-
-  let queue = msg => {
-    Mutex.lock(messageMutex);
-    messageQueue := [msg, ...messageQueue^];
-    Condition.signal(messageCondition);
-    Mutex.unlock(messageMutex);
-  };
+  let transport = ref(None);
 
   let write = (msg: Protocol.ServerToClient.t) => {
-    Mutex.lock(outputMutex);
-    Marshal.to_channel(Stdlib.stdout, msg, []);
-    Stdlib.flush(Stdlib.stdout);
-    Mutex.unlock(outputMutex);
+    let bytes = Marshal.to_bytes(msg, []);
+    let packet = Transport.Packet.create(
+      ~bytes,
+      ~packetType=Regular,
+      ~id=0,
+    );
+
+    transport^
+    |> Option.iter(Transport.send(~packet));
   };
 
   let log = msg => write(Protocol.ServerToClient.Log(msg));
 
-  let buffer = Buffer.create(0);
-
-  // Route Core.Log logging to be sent
-  // to main process.
-  let formatter =
-    Format.make_formatter(
-      Buffer.add_substring(buffer),
-      () => {
-        log(Buffer.contents(buffer));
-        Buffer.clear(buffer);
-      },
-    );
-  Logs.format_reporter(~app=formatter, ~dst=formatter, ())
-  |> Logs.set_reporter;
-
-  let hasPendingMessage = () =>
-    switch (messageQueue^) {
-    | [] => false
-    | _ => true
-    };
-
-  let flush = () => {
-    let result = messageQueue^;
-    messageQueue := [];
-    result;
-  };
-
-  let isRunning = ref(true);
-
   let parentPid = Unix.getenv("__ONI2_PARENT_PID__") |> int_of_string;
+  let namedPipe = Unix.getenv("__ONI2_NAMED_PIPE__");
 
-  let _runThread: Thread.t =
-    Thread.create(
-      () => {
+
         log(
           "Starting up server. Parent PID is: " ++ string_of_int(parentPid),
         );
@@ -81,6 +42,19 @@ let start = (~healthCheck) => {
 
         let state = ref(State.empty);
         let map = f => state := f(state^);
+
+  // Route Core.Log logging to be sent
+  // to main process.
+  /*let formatter =
+    Format.make_formatter(
+      Buffer.add_substring(buffer),
+      () => {
+        log(Buffer.contents(buffer));
+        Buffer.clear(buffer);
+      },
+    );
+  Logs.format_reporter(~app=formatter, ~dst=formatter, ())
+  |> Logs.set_reporter;*/
 
         let handleProtocol =
           ClientToServer.(
@@ -149,74 +123,25 @@ let start = (~healthCheck) => {
           | Exception(msg) => log("Exception encountered: " ++ msg)
           | Message(protocol) => handleProtocol(protocol);
 
-        while (isRunning^) {
-          log("Waiting for incoming message...");
 
-          // Wait for pending incoming messages
-          Mutex.lock(messageMutex);
-          while (!hasPendingMessage() && !State.anyPendingWork(state^)) {
-            Condition.wait(messageCondition, messageMutex);
-          };
-
-          // Once we have them, let's track and run them
-          let messages = flush();
-          Mutex.unlock(messageMutex);
-
-          // Handle messages
-          messages
-          // Messages are queued in inverse order, so we need to fix that...
-          |> List.rev
-          |> List.iter(handleMessage);
-
-          // TODO: Do this in a loop
-          // If the messages incurred work, do it!
-          if (State.anyPendingWork(state^)) {
-            log("Running unit of work...");
-            map(State.doPendingWork);
-            log("Unit of work completed.");
-          } else {
-            log("No pending work.");
-          };
-
-          let tokenUpdates = State.getTokenUpdates(state^);
-          write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
-          log("Token updates sent.");
-          map(State.clearTokenUpdates);
-        };
-      },
-      (),
-    );
-
-  let _readThread: Thread.t =
-    Thread.create(
-      () => {
-        while (isRunning^) {
-          try({
-            let msg: Oni_Syntax.Protocol.ClientToServer.t =
-              Marshal.from_channel(Stdlib.stdin);
-            queue(Message(msg));
-          }) {
-          | ex => queue(Exception(Printexc.to_string(ex)))
-          };
-        }
-      },
-      (),
-    );
-
-  // On Windows, we have to wait on the parent to close...
-  // If we don't do this, the app will never close.
-  if (Sys.win32) {
-    let (_exitCode, _status) = Thread.wait_pid(parentPid);
-    ();
-  } else {
-    // On Linux / OSX, the syntax process will close when
-    // the parent closes.
-    let () = Thread.join(_readThread);
-    ();
+  let handlePacket = ({body, _}: Transport.Packet.t) => {
+    let msg:  Protocol.ClientToServer.t = Marshal.from_bytes(body, Bytes.length(body));
+    
+    handleMessage(Message(msg));
   };
 
-  isRunning := false;
-  Stdlib.close_out_noerr(Stdlib.stdout);
-  Stdlib.close_in_noerr(Stdlib.stdin);
-  ();
+  let dispatch = 
+  | Connected => log("Connected!")
+  | Transport.Packet(packet) => handlePacket(packet)
+  | _ => ();
+
+  let _transport = Exthost.Transport.connect(
+  ~namedPipe,
+  ~dispatch,
+  );
+
+  let isRunning = ref(true);
+
+
+  let _: unit = Luv.Loop.run();
 };
