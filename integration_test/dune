@@ -1,51 +1,7 @@
 (executables
-    (names InsertModeTest
-           ClipboardInsertModePasteMultiLineTest
-           ClipboardInsertModePasteSingleLineTest
-           ClipboardInsertModePasteEmptyTest
-           ClipboardNormalModePasteTest
-           ClipboardYankTest
-           CopyActiveFilepathToClipboardTest
-           EchoNotificationTest
-           EditorFontFromPathTest
-           EditorFontValidTest
-           ExtConfigurationChangedTest
-           ExtHostBufferOpenTest
-           ExtHostBufferUpdatesTest
-           ExtHostCompletionTest
-           ExtHostDefinitionTest
-           FileWatcherTest
-           FontSizeChangeTest
-           KeybindingsInvalidJsonTest
-           KeySequenceJJTest
-           InputIgnoreTest
-           LanguageCssTest
-           LanguageTypeScriptTest
-           LineEndingsLFTest
-           LineEndingsCRLFTest
-           QuickOpenEventuallyCompletesTest
-           SearchShowClearHighlightsTest
+    (names 
            SyntaxServer
-           SyntaxServerCloseTest
-           SyntaxServerMessageExceptionTest
            SyntaxServerParentPidTest
-           SyntaxServerReadExceptionTest
-           RegressionCommandLineNoCompletionTest
-           RegressionDeleteAllLinesTest
-           RegressionFileModifiedIndicationTest
-           RegressionVspEmptyInitialBufferTest
-           RegressionVspEmptyExistingBufferTest
-           Regression1097Test
-           SCMGitTest
-           SyntaxHighlightTextMateTest
-           SyntaxHighlightTreesitterTest
-           AddRemoveSplitTest
-           TerminalSetPidTitleTest
-           TypingBatchedTest
-           TypingUnbatchedTest
-           VimlConfigurationTest
-           ZenModeSingleFileModeTest
-           ZenModeSplitTest
     )
     (libraries
         Oni_IntegrationTestLib
@@ -57,52 +13,8 @@
     (package OniIntegrationTests)
     (files 
         run-tests.sh
-        InsertModeTest.exe
-        ClipboardInsertModePasteMultiLineTest.exe
-        ClipboardInsertModePasteSingleLineTest.exe
-        ClipboardInsertModePasteEmptyTest.exe
-        ClipboardNormalModePasteTest.exe
-        ClipboardYankTest.exe
-        CopyActiveFilepathToClipboardTest.exe
-        EchoNotificationTest.exe
-        EditorFontFromPathTest.exe
-        EditorFontValidTest.exe
-        ExtConfigurationChangedTest.exe
-        ExtHostBufferOpenTest.exe
-        ExtHostBufferUpdatesTest.exe
-        ExtHostCompletionTest.exe
-        ExtHostDefinitionTest.exe
-        FileWatcherTest.exe
-        FontSizeChangeTest.exe
-        KeybindingsInvalidJsonTest.exe
-        KeySequenceJJTest.exe
-        InputIgnoreTest.exe
-        LanguageCssTest.exe
-        LanguageTypeScriptTest.exe
-        LineEndingsLFTest.exe
-        QuickOpenEventuallyCompletesTest.exe
-        Regression1097Test.exe
-        RegressionCommandLineNoCompletionTest.exe
-        RegressionDeleteAllLinesTest.exe
-        RegressionFileModifiedIndicationTest.exe
-        RegressionVspEmptyInitialBufferTest.exe
-        RegressionVspEmptyExistingBufferTest.exe
-        SCMGitTest.exe
-        SearchShowClearHighlightsTest.exe
-        SyntaxHighlightTextMateTest.exe
-        SyntaxHighlightTreesitterTest.exe
         SyntaxServer.exe
-        SyntaxServerCloseTest.exe
-        SyntaxServerMessageExceptionTest.exe
         SyntaxServerParentPidTest.exe
-        SyntaxServerReadExceptionTest.exe
-        TerminalSetPidTitleTest.exe
-        AddRemoveSplitTest.exe
-        TypingBatchedTest.exe
-        TypingUnbatchedTest.exe
-        VimlConfigurationTest.exe
-        ZenModeSingleFileModeTest.exe
-        ZenModeSplitTest.exe
         some-test-file.json
         some-test-file.txt
         test.crlf

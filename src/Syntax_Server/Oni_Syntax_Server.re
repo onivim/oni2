@@ -223,7 +223,15 @@ let start = (~healthCheck) => {
   let _parentProcessWatcherThread: Thread.t =
     Thread.create(
       () => {
-        let (_exitCode, _status) = Thread.wait_pid(parentPid);
+        try({
+          let (_exitCode, _status) = Thread.wait_pid(parentPid);
+          ();
+        }) {
+        | ex =>
+          queue(Exception(Printexc.to_string(ex)));
+          exit(2);
+        };
+
         exit(0);
       },
       (),
