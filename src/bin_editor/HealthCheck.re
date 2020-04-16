@@ -185,7 +185,8 @@ let mainChecks = [
           ~onHealthCheckResult=res => {healthCheckResult := res},
           Oni_Extensions.LanguageInfo.initial,
           setup,
-        );
+        )
+        |> Result.get_ok;
 
       let waitForRef = (condition: ref(bool)) => {
         let tries = ref(0);

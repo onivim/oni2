@@ -4,6 +4,7 @@ open Oni_Core;
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted(Oni_Syntax_Client.t)
+  | ServerFailedToStart(string)
   | ServerClosed
   | ReceivedHighlights(list(Oni_Syntax.Protocol.TokenUpdate.t));
 

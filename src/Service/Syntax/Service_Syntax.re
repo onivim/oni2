@@ -5,6 +5,7 @@ module OptionEx = Core.Utility.OptionEx;
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerFailedToStart(string)
   | ServerClosed
   | ReceivedHighlights([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t));
 
@@ -21,13 +22,13 @@ module Sub = {
 
       type nonrec params = params;
 
-      type state = Oni_Syntax_Client.t;
+      type state = result(Oni_Syntax_Client.t, string);
 
       let name = "SyntaxSubscription";
       let id = params => params.id;
 
       let init = (~params, ~dispatch) => {
-        let client =
+        let clientResult =
           Oni_Syntax_Client.start(
             ~onClose=_ => dispatch(ServerClosed),
             ~onHighlights=
@@ -35,17 +36,19 @@ module Sub = {
             ~onHealthCheckResult=_ => (),
             params.languageInfo,
             params.setup,
-          );
+          )
+          |> Utility.ResultEx.tap(client => dispatch(ServerStarted(client)))
+          |> Utility.ResultEx.tapError(msg =>
+               dispatch(ServerFailedToStart(msg))
+             );
 
-        dispatch(ServerStarted(client));
-        client;
+        clientResult;
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
       let dispose = (~params as _, ~state) => {
-        let () = Oni_Syntax_Client.close(state);
-        ();
+        state |> Result.iter(Oni_Syntax_Client.close);
       };
     });
 

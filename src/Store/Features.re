@@ -41,7 +41,7 @@ let update =
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
   | BufferUpdate({update, _}) =>
-    let syntaxHighlights =
+    let (syntaxHighlights, _) =
       Feature_Syntax.update(
         state.syntaxHighlights,
         Feature_Syntax.BufferUpdated(update),
@@ -71,9 +71,21 @@ let update =
     (state, eff);
 
   | Syntax(msg) =>
-    let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);
+    let (syntaxHighlights, out) =
+      Feature_Syntax.update(state.syntaxHighlights, msg);
     let state = {...state, syntaxHighlights};
-    (state, Effect.none);
+
+    let effect =
+      switch (out) {
+      | Nothing => Effect.none
+      | ServerError(msg) =>
+        Feature_Notification.Effects.create(
+          ~kind=Error,
+          "Syntax Server error: " ++ msg,
+        )
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg))
+      };
+    (state, effect);
 
   | Terminal(msg) =>
     let (model, eff) = Feature_Terminal.update(state.terminals, msg);

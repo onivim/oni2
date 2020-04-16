@@ -40,6 +40,64 @@ let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
   writeTransport(~id, transport, msg);
 };
 
+let getEnvironment = (~namedPipe, ~parentPid) => {
+  let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
+
+  Luv.Env.environ()
+  |> Result.map(filterOutLogFile)
+  |> Result.map(items =>
+       [
+         (EnvironmentVariables.namedPipe, namedPipe),
+         (EnvironmentVariables.parentPid, parentPid),
+         ...items,
+       ]
+     );
+};
+
+let startProcess = (~namedPipe, ~parentPid, ~onClose) => {
+  getEnvironment(~namedPipe, ~parentPid)
+  |> Utility.ResultEx.flatMap(environment => {
+       let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
+       let executablePath =
+         Revery.Environment.executingDirectory ++ executableName;
+
+       ClientLog.debugf(m =>
+         m(
+           "Starting executable: %s and parentPid: %s",
+           executablePath,
+           parentPid,
+         )
+       );
+
+       let on_exit = (_proc, ~exit_status, ~term_signal) => {
+         let exitCode = exit_status |> Int64.to_int;
+         if (exitCode == 0) {
+           ClientLog.debug("Syntax process exited safely.");
+         } else {
+           ClientLog.errorf(m =>
+             m(
+               "Syntax process exited with code: %d and signal: %d",
+               exitCode,
+               term_signal,
+             )
+           );
+         };
+         onClose(exitCode);
+       };
+
+       Luv.Process.spawn(
+         ~on_exit,
+         ~environment,
+         ~windows_hide=true,
+         ~windows_hide_console=true,
+         ~windows_hide_gui=true,
+         executablePath,
+         [executablePath, "--syntax-highlight-service"],
+       );
+     })
+  |> Result.map_error(Luv.Error.strerror);
+};
+
 let start =
     (
       ~onConnected=() => (),
@@ -52,43 +110,6 @@ let start =
   let parentPid = Unix.getpid() |> string_of_int;
   let name = Printf.sprintf("syntax-client-%s", parentPid);
   let namedPipe = name |> NamedPipe.create |> NamedPipe.toString;
-
-  let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
-
-  let environment =
-    Luv.Env.environ()
-    |> Result.map(filterOutLogFile)
-    |> Result.map(items =>
-         [
-           (EnvironmentVariables.namedPipe, namedPipe),
-           (EnvironmentVariables.parentPid, parentPid),
-           ...items,
-         ]
-       )
-    |> Result.get_ok;
-
-  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
-  let executablePath = Revery.Environment.executingDirectory ++ executableName;
-
-  ClientLog.debugf(m =>
-    m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
-  );
-
-  let on_exit = (_proc, ~exit_status, ~term_signal) => {
-    let exitCode = exit_status |> Int64.to_int;
-    if (exitCode == 0) {
-      ClientLog.debug("Syntax process exited safely.");
-    } else {
-      ClientLog.errorf(m =>
-        m(
-          "Syntax process exited with code: %d and signal: %d",
-          exitCode,
-          term_signal,
-        )
-      );
-    };
-    onClose(exitCode);
-  };
 
   let handleMessage = msg =>
     switch (msg) {
@@ -127,24 +148,12 @@ let start =
     | Transport.Disconnected => ClientLog.info("Disconnected")
     | Transport.Received({body, _}) => handlePacket(body);
 
-  let transport = Transport.start(~namedPipe, ~dispatch) |> Result.get_ok;
-  _transport := Some(transport);
-
-  let process =
-    Luv.Process.spawn(
-      ~on_exit,
-      ~environment,
-      ~windows_hide=true,
-      ~windows_hide_console=true,
-      ~windows_hide_gui=true,
-      executablePath,
-      [executablePath, "--syntax-highlight-service"],
-    )
-    |> Result.get_ok;
-
-  let ret = {transport, process, nextId: ref(0)};
-
-  ret;
+  Transport.start(~namedPipe, ~dispatch)
+  |> Utility.ResultEx.tap(transport => _transport := Some(transport))
+  |> Utility.ResultEx.flatMap(transport => {
+       startProcess(~parentPid, ~namedPipe, ~onClose)
+       |> Result.map(process => {transport, process, nextId: ref(0)})
+     });
 };
 
 let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
