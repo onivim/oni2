@@ -30,20 +30,42 @@ let start = (~healthCheck) => {
   log("Starting up server. Parent PID is: " ++ string_of_int(parentPid));
 
   let state = ref(State.empty);
-  let map = f => state := f(state^);
+  let timer: Luv.Timer.t = Luv.Timer.init() |> Result.get_ok;
 
-  // Route Core.Log logging to be sent
-  // to main process.
-  /*let formatter =
-      Format.make_formatter(
-        Buffer.add_substring(buffer),
-        () => {
-          log(Buffer.contents(buffer));
-          Buffer.clear(buffer);
-        },
-      );
-    Logs.format_reporter(~app=formatter, ~dst=formatter, ())
-    |> Logs.set_reporter;*/
+  let stopWork = () => Luv.Timer.stop(timer);
+  let map2 = f => state := f(state^);
+
+  let doWork = () => {
+    if (State.anyPendingWork(state^)) {
+      log("Running unit of work...");
+
+      map2(State.doPendingWork);
+      log("Unit of work completed.");
+    } else {
+      log("No pending work, stopping.");
+      let _: result(unit, Luv.Error.t) = stopWork();
+      ();
+    };
+
+    let tokenUpdates = State.getTokenUpdates(state^);
+    write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+    log("Token updates sent.");
+    map2(State.clearTokenUpdates);
+  };
+
+  let startWork = () => {
+    Luv.Timer.start(~repeat=1, timer, 0, () => {doWork()}) |> Result.get_ok;
+  };
+
+  let map = f => {
+    state := f(state^);
+    if (State.anyPendingWork(state^)) {
+      let _: result(unit, Luv.Error.t) = Luv.Timer.again(timer);
+      ();
+    };
+  };
+
+  startWork();
 
   let handleProtocol =
     ClientToServer.(

@@ -3,7 +3,6 @@
  */
 
 open Oni_Core;
-open Utility;
 
 module Transport = Exthost.Transport;
 module NamedPipe = Exthost.NamedPipe;
@@ -75,7 +74,7 @@ let start =
     m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
   );
 
-  let on_exit = (proc, ~exit_status, ~term_signal) => {
+  let on_exit = (_proc, ~exit_status, ~term_signal) => {
     let exitCode = exit_status |> Int64.to_int;
     if (exitCode == 0) {
       ClientLog.debug("Syntax process exited safely.");
