@@ -215,6 +215,7 @@
     "revery-terminal": "*",
     "reason-tree-sitter": "^1.0.1001",
     "reason-textmate": "^3.1.0",
+    "reason-vscode-exthost": "*",
     "esy-sdl2": "*",
     "esy-skia": "*",
     "@opam/fmt": "^0.8.8",
@@ -252,7 +253,8 @@
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#b17ce17",
-    "revery-terminal": "revery-ui/revery-terminal#2ef1c65"
+    "revery-terminal": "revery-ui/revery-terminal#2ef1c65",
+    "reason-vscode-exthost": "link:../reason-vscode-exthost"
   },
   "devDependencies": {
     "ocaml": "~4.8",
