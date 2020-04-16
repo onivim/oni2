@@ -5,6 +5,7 @@
     (libraries
         bigarray
         zed_oni
+        luv
         lwt
         lwt.unix
         oniguruma
@@ -17,7 +18,6 @@
         Oni2.syntax_server
         Oni2.ui
         sdl2
-        luv
     )
     (preprocess (
         pps
