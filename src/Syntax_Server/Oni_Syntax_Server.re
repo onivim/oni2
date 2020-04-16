@@ -94,8 +94,7 @@ let start = (~healthCheck) => {
                 log("Initialized!");
               }
             | RunHealthCheck => {
-                //let res = healthCheck();
-                let res = 0;
+                let res = healthCheck();
                 write(Protocol.ServerToClient.HealthCheckPass(res == 0));
               }
             | BufferEnter(id, filetype) => {
@@ -231,7 +230,7 @@ let start = (~healthCheck) => {
     while (isRunning^) {
       Unix.sleepf(5.0);
       try(Unix.kill(pid, 0)) {
-      | ex => isRunning := false
+      | _ex => isRunning := false
       };
     };
   };

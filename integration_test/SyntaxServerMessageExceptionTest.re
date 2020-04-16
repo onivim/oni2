@@ -6,7 +6,7 @@ SyntaxServerTest.run(
   wait(~name="Connected", isConnected);
 
   // Simulate an error parsing a message
-  Oni_Syntax_Client.simulateMessageException(syntaxClient);
+  Oni_Syntax_Client.Testing.simulateMessageException(syntaxClient);
 
   // Syntax server should exit with code 2
   wait(~name="Closed", () => hasExited() == Some(2));
