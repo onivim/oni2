@@ -103,6 +103,7 @@
         VimlConfigurationTest.exe
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
+        large-c-file.c
         some-test-file.json
         some-test-file.txt
         test.crlf
