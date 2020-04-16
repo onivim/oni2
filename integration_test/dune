@@ -29,6 +29,7 @@
            SyntaxServerCloseTest
            SyntaxServerMessageExceptionTest
            SyntaxServerParentPidTest
+           SyntaxServerParentPidCorrectTest
            SyntaxServerReadExceptionTest
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
@@ -95,6 +96,7 @@
         SyntaxServerCloseTest.exe
         SyntaxServerMessageExceptionTest.exe
         SyntaxServerParentPidTest.exe
+        SyntaxServerParentPidCorrectTest.exe
         SyntaxServerReadExceptionTest.exe
         TerminalSetPidTitleTest.exe
         AddRemoveSplitTest.exe
