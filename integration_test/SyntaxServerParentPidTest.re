@@ -1,17 +1,15 @@
 open Oni_IntegrationTestLib;
 
 let createDummyProcess = () => {
-  let cmd = "bash";
+  let cmd = Sys.win32 ? "bash" : "cmd.exe";
   try({
     let (inchannel, outchannel) = Unix.open_process(cmd);
     let pid = Unix.process_pid((inchannel, outchannel));
 
     let stop = () => {
-      prerr_endline(Printf.sprintf("Killing process with pid: %d", pid));
       Unix.close_process((inchannel, outchannel));
     };
 
-    prerr_endline(Printf.sprintf("Created dummy process with pid: %d", pid));
     (pid, stop);
   }) {
   | ex =>
