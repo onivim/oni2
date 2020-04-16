@@ -227,7 +227,7 @@ let start = (~healthCheck) => {
       exit(0);
     }) {
     // If the PID doesn't exist, Thread.wait_pid will throw
-    | _ex => exit(2);
+    | _ex => exit(2)
     };
 
   let waitForPidPosix = pid => {

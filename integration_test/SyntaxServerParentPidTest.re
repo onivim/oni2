@@ -6,9 +6,7 @@ let createDummyProcess = () => {
     let (inchannel, outchannel) = Unix.open_process(cmd);
     let pid = Unix.process_pid((inchannel, outchannel));
 
-    let stop = () => {
-      Unix.close_process((inchannel, outchannel));
-    };
+    let stop = () => Unix.close_process((inchannel, outchannel));
 
     (pid, stop);
   }) {
