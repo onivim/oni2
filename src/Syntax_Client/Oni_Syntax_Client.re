@@ -238,17 +238,19 @@ let notifyVisibilityChanged = (v: t, visibility) => {
   write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
 };
 
-let simulateReadException = (v: t) => {
-  ClientLog.trace("Sending simulateReadException notification...");
-  write(v, Protocol.ClientToServer.SimulateReadException);
-};
-
-let simulateMessageException = (v: t) => {
-  ClientLog.trace("Sending simulateMessageException notification...");
-  write(v, Protocol.ClientToServer.SimulateMessageException);
-};
-
 let close = (syntaxClient: t) => {
   ClientLog.debug("Sending close request...");
   write(syntaxClient, Protocol.ClientToServer.Close);
+};
+
+module Testing = {
+  let simulateReadException = (v: t) => {
+    ClientLog.trace("Sending simulateReadException notification...");
+    write(v, Protocol.ClientToServer.SimulateReadException);
+  };
+
+  let simulateMessageException = (v: t) => {
+    ClientLog.trace("Sending simulateMessageException notification...");
+    write(v, Protocol.ClientToServer.SimulateMessageException);
+  };
 };

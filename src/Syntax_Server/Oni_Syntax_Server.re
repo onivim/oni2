@@ -94,7 +94,8 @@ let start = (~healthCheck) => {
                 log("Initialized!");
               }
             | RunHealthCheck => {
-                let res = healthCheck();
+                //let res = healthCheck();
+                let res = 0;
                 write(Protocol.ServerToClient.HealthCheckPass(res == 0));
               }
             | BufferEnter(id, filetype) => {
@@ -212,7 +213,6 @@ let start = (~healthCheck) => {
           | ex =>
             queue(Exception(Printexc.to_string(ex)));
             exit(2);
-          //isRunning := false;
           };
         };
         ();
@@ -220,22 +220,26 @@ let start = (~healthCheck) => {
       (),
     );
 
-  let _parentProcessWatcherThread: Thread.t =
-    Thread.create(
-      () => {
-        try({
-          let (_exitCode, _status) = Thread.wait_pid(parentPid);
-          ();
-        }) {
-        | ex =>
-          queue(Exception(Printexc.to_string(ex)));
-          exit(2);
-        };
+  let waitForPidWindows = pid => {
+    let (_exitCode, _status) = Thread.wait_pid(pid);
+    ();
+  };
 
-        exit(0);
-      },
-      (),
-    );
+  let waitForPidPosix = pid => {
+    let isRunning = ref(true);
+
+    while (isRunning^) {
+      Unix.sleepf(5.0);
+      try(Unix.kill(pid, 0)) {
+      | ex => isRunning := false
+      };
+    };
+  };
+
+  let waitForPid = Sys.win32 ? waitForPidWindows : waitForPidPosix;
+
+  let _parentProcessWatcherThread: Thread.t =
+    Thread.create(() => {waitForPid(parentPid)}, ());
 
   // On Windows, we have to wait on the parent to close...
   // If we don't do this, the app will never close.

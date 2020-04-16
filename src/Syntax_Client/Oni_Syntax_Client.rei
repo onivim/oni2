@@ -41,6 +41,7 @@ let notifyVisibilityChanged: (t, list((int, list(Range.t)))) => unit;
 let healthCheck: t => unit;
 let close: t => unit;
 
-// Debug methods
-let simulateReadException: t => unit;
-let simulateMessageException: t => unit;
+module Testing: {
+  let simulateReadException: t => unit;
+  let simulateMessageException: t => unit;
+};
