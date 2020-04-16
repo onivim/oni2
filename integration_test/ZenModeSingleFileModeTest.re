@@ -23,7 +23,9 @@ runTest(
   (_dispatch, wait, _runEffects) => {
     wait(~name="Wait for split to be created 1", (state: State.t) => {
       let splitCount =
-        state.windowManager.windowTree |> WindowTree.getSplits |> List.length;
+        state.layout.windowTree
+        |> Feature_Layout.WindowTree.getSplits
+        |> List.length;
       splitCount == 1;
     });
 

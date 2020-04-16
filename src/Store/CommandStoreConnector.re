@@ -46,7 +46,7 @@ let start = () => {
       dispatch(EditorGroupAdd(newEditorGroup));
 
       let split =
-        WindowTree.createSplit(
+        Feature_Layout.WindowTree.createSplit(
           ~editorGroupId=newEditorGroup.editorGroupId,
           (),
         );
@@ -56,11 +56,11 @@ let start = () => {
 
   let windowMoveEffect = (state: State.t, direction, _) => {
     Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
-      let windowId = WindowManager.move(direction, state.windowManager);
+      let windowId = Feature_Layout.move(direction, state.layout);
       let maybeEditorGroupId =
-        WindowTree.getEditorGroupIdFromSplitId(
+        Feature_Layout.WindowTree.getEditorGroupIdFromSplitId(
           windowId,
-          state.windowManager.windowTree,
+          state.layout.windowTree,
         );
 
       switch (maybeEditorGroupId) {

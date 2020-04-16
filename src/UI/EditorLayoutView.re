@@ -7,14 +7,12 @@
 open Revery;
 open UI;
 open Oni_Model;
-open WindowManager;
-open WindowTree;
 
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
 let splitStyle = Style.[flexGrow(1)];
 
-let parentStyle = (dir: direction) => {
+let parentStyle = (dir: Feature_Layout.WindowTree.direction) => {
   let flexDir =
     switch (dir) {
     | Vertical => `Row
@@ -26,16 +24,16 @@ let parentStyle = (dir: direction) => {
 let renderTree = (state, theme, tree) => {
   open State;
   let items =
-    WindowTreeLayout.layout(
+    Feature_Layout.WindowTreeLayout.layout(
       0,
       0,
-      state.windowManager.windowTreeWidth,
-      state.windowManager.windowTreeHeight,
+      state.layout.windowTreeWidth,
+      state.layout.windowTreeHeight,
       tree,
     );
 
   items
-  |> List.map((item: WindowTreeLayout.t) =>
+  |> List.map((item: Feature_Layout.WindowTreeLayout.t) =>
        <View
          style=Style.[
            position(`Absolute),
@@ -65,10 +63,7 @@ let renderTree = (state, theme, tree) => {
 };
 
 let make = (~state: State.t, ~theme, ()) => {
-  let {State.windowManager, _} = state;
-  let {windowTree, _} = windowManager;
-
-  let children = renderTree(state, theme, windowTree);
+  let children = renderTree(state, theme, state.layout.windowTree);
 
   let splits =
     [

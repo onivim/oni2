@@ -82,3 +82,6 @@ let move = (direction: direction, v) => {
   | Right => moveRight(v)
   };
 };
+
+module WindowTree = WindowTree;
+module WindowTreeLayout = WindowTreeLayout;

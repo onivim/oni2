@@ -294,9 +294,17 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Actions.OpenFileByPath(buf, Some(WindowTree.Vertical), None)
+          Actions.OpenFileByPath(
+            buf,
+            Some(Feature_Layout.WindowTree.Vertical),
+            None,
+          )
         | Vim.Types.Horizontal =>
-          Actions.OpenFileByPath(buf, Some(WindowTree.Horizontal), None)
+          Actions.OpenFileByPath(
+            buf,
+            Some(Feature_Layout.WindowTree.Horizontal),
+            None,
+          )
         | Vim.Types.TabPage => Actions.OpenFileByPath(buf, None, None)
         };
       dispatch(command);
@@ -308,11 +316,11 @@ let start =
       let currentState = getState();
 
       let move = moveFunc => {
-        let windowId = moveFunc(currentState.windowManager);
+        let windowId = moveFunc(currentState.layout);
         let maybeEditorGroupId =
-          WindowTree.getEditorGroupIdFromSplitId(
+          Feature_Layout.WindowTree.getEditorGroupIdFromSplitId(
             windowId,
-            currentState.windowManager.windowTree,
+            currentState.layout.windowTree,
           );
 
         switch (maybeEditorGroupId) {
@@ -324,16 +332,16 @@ let start =
 
       switch (movementType) {
       | FullLeft
-      | OneLeft => move(WindowManager.moveLeft)
+      | OneLeft => move(Feature_Layout.moveLeft)
       | FullRight
-      | OneRight => move(WindowManager.moveRight)
+      | OneRight => move(Feature_Layout.moveRight)
       | FullDown
-      | OneDown => move(WindowManager.moveDown)
+      | OneDown => move(Feature_Layout.moveDown)
       | FullUp
-      | OneUp => move(WindowManager.moveUp)
+      | OneUp => move(Feature_Layout.moveUp)
       | RotateDownwards => dispatch(Actions.Command("view.rotateForward"))
       | RotateUpwards => dispatch(Actions.Command("view.rotateBackward"))
-      | _ => move(windowManager => windowManager.activeWindowId)
+      | _ => move(layout => layout.activeWindowId)
       };
     });
 
@@ -628,7 +636,10 @@ let start =
         dispatch(Actions.EditorGroupAdd(eg));
 
         let split =
-          WindowTree.createSplit(~editorGroupId=eg.editorGroupId, ());
+          Feature_Layout.WindowTree.createSplit(
+            ~editorGroupId=eg.editorGroupId,
+            (),
+          );
 
         dispatch(Actions.AddSplit(direction, split));
       | None => ()

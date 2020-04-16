@@ -30,7 +30,7 @@ let make = (~state: State.t, ~theme, ()) =>
          <EditorGroupView
            state
            theme
-           windowId={state.windowManager.activeWindowId}
+           windowId={state.layout.activeWindowId}
            editorGroup
          />
        | None => React.empty

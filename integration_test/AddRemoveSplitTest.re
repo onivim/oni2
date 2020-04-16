@@ -4,7 +4,9 @@ open Oni_IntegrationTestLib;
 runTest(~name="AddRemoveSplitTest", (dispatch, wait, _) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =
-      state.windowManager.windowTree |> WindowTree.getSplits |> List.length;
+      state.layout.windowTree
+      |> Feature_Layout.WindowTree.getSplits
+      |> List.length;
     splitCount == 1;
   });
 
@@ -12,7 +14,9 @@ runTest(~name="AddRemoveSplitTest", (dispatch, wait, _) => {
 
   wait(~name="Wait for split to be created", (state: State.t) => {
     let splitCount =
-      state.windowManager.windowTree |> WindowTree.getSplits |> List.length;
+      state.layout.windowTree
+      |> Feature_Layout.WindowTree.getSplits
+      |> List.length;
 
     splitCount == 2;
   });
@@ -21,7 +25,9 @@ runTest(~name="AddRemoveSplitTest", (dispatch, wait, _) => {
 
   wait(~name="Wait for split to be closed", (state: State.t) => {
     let splitCount =
-      state.windowManager.windowTree |> WindowTree.getSplits |> List.length;
+      state.layout.windowTree
+      |> Feature_Layout.WindowTree.getSplits
+      |> List.length;
 
     splitCount == 1;
   });

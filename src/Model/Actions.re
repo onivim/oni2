@@ -125,8 +125,15 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
-  | AddSplit(WindowTree.direction, WindowTree.split)
+  | OpenFileByPath(
+      string,
+      option(Feature_Layout.WindowTree.direction),
+      option(Location.t),
+    )
+  | AddSplit(
+      Feature_Layout.WindowTree.direction,
+      Feature_Layout.WindowTree.split,
+    )
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)

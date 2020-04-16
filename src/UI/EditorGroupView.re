@@ -11,8 +11,6 @@ open Oni_Core;
 open Oni_Model;
 module Model = Oni_Model;
 
-module Window = WindowManager;
-
 module Colors = Feature_Theme.Colors;
 module EditorSurface = Feature_Editor.EditorSurface;
 

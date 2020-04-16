@@ -2,7 +2,7 @@ open TestFramework;
 
 /* open Helpers; */
 
-module WindowTree = Oni_Model.WindowTree;
+module WindowTree = Feature_Layout.WindowTree;
 
 open WindowTree;
 
