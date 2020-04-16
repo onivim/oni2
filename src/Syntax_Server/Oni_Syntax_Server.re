@@ -32,10 +32,8 @@ let start = (~healthCheck) => {
 
   let write = (msg: Protocol.ServerToClient.t) => {
     Mutex.lock(outputMutex);
-    prerr_endline("!!! Before write...");
     Marshal.to_channel(Stdlib.stdout, msg, []);
     Stdlib.flush(Stdlib.stdout);
-    prerr_endline("!!! After write...");
     Mutex.unlock(outputMutex);
   };
 
