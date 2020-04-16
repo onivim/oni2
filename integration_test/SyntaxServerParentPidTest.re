@@ -10,7 +10,7 @@ SyntaxServerTest.run(
   ~name="SyntaxServerParentPidTest", ~parentPid, ({hasExited, wait, _}) => {
   // This should close automatically, since there is no parentPid
   // present...
-  wait(~name="Closed", ()
+  wait(~name="Closed", ~timeout=30.0, ()
     // TODO: This should be exit code 0,
     // but there is a bug on Windows preventing this - the 'wait_pid' behavior.
     // hasExited() == Some(0)

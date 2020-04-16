@@ -219,18 +219,24 @@ let start = (~healthCheck) => {
       (),
     );
 
-  let waitForPidWindows = pid => {
-    let (_exitCode, _status) = Thread.wait_pid(pid);
-    ();
-  };
+  log("Testing...");
+
+  let waitForPidWindows = pid =>
+    try({
+      let (_exitCode, _status) = Thread.wait_pid(pid);
+      ();
+    }) {
+    // If the PID doesn't exist, Thread.wait_pid will throw
+    | _ex => ()
+    };
 
   let waitForPidPosix = pid => {
-    let isRunning = ref(true);
-
-    while (isRunning^) {
+    while (true) {
       Unix.sleepf(5.0);
       try(Unix.kill(pid, 0)) {
-      | _ex => isRunning := false
+      // If we couldn't send signal 0, the process is dead:
+      // https://stackoverflow.com/questions/3043978/how-to-check-if-a-process-id-pid-exists
+      | _ex => exit(0)
       };
     };
   };

@@ -7,7 +7,7 @@ type testContext = {
   syntaxClient: Oni_Syntax_Client.t,
   isConnected: unit => bool,
   hasExited: unit => option(int),
-  wait: (~name: string=?, unit => bool) => unit,
+  wait: (~name: string=?, ~timeout: float=?, unit => bool) => unit,
 };
 
 let run = (~parentPid=?, ~name, f) => {
@@ -28,8 +28,8 @@ let run = (~parentPid=?, ~name, f) => {
     connected := true;
   };
 
-  let wait = (~name="TODO", f) => {
-    ThreadEx.waitForCondition(f);
+  let wait = (~name="TODO", ~timeout=1.0, f) => {
+    ThreadEx.waitForCondition(~timeout, f);
     if (!f()) {
       let msg = "Failed: " ++ name;
       Log.error(msg);
