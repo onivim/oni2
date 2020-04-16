@@ -52,8 +52,6 @@ let run = (~parentPid=?, ~name, f) => {
 
   let isConnected = () => connected^;
   let hasExited = () => exitCode^;
-  wait(~name="Connected", () => connected^);
-
   f({syntaxClient, isConnected, hasExited, wait});
   Log.info("== PASSED ==");
 };
