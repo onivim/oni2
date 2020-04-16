@@ -1,5 +1,3 @@
-open Revery_UI;
-
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
@@ -12,16 +10,12 @@ module WindowId = {
   };
 };
 
-[@deriving show({with_path: false})]
-type componentCreator = unit => React.element(React.node);
-
 type direction =
   | Up
   | Left
   | Down
   | Right;
 
-[@deriving show({with_path: false})]
 type t = {
   windowTree: WindowTree.t,
   activeWindowId: int,

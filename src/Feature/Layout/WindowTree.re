@@ -21,7 +21,6 @@ type split = {
   height: option(int),
 };
 
-[@deriving show({with_path: false})]
 type t =
   | Parent(direction, list(t))
   | Leaf(split)
