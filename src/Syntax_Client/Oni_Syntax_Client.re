@@ -29,19 +29,13 @@ type t = {
 };
 
 let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
-
   incr(nextId);
   let id = nextId^;
 
   let bytes = Marshal.to_bytes(msg, []);
-  let packet = Transport.Packet.create(
-    ~packetType=Regular,
-    ~id,
-    ~bytes,
-  );
+  let packet = Transport.Packet.create(~packetType=Regular, ~id, ~bytes);
   Transport.send(~packet, transport);
 };
-
 
 let start =
     (
@@ -53,7 +47,6 @@ let start =
       languageInfo,
       setup,
     ) => {
-
   //let dispatch = fun
   //| _ => ();
 
@@ -65,10 +58,13 @@ let start =
   let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
 
   // TODO: Proper mapping
-  let environment = Luv.Env.environ() 
-  |> Result.map(filterOutLogFile)
-  |> Result.map(items => [(EnvironmentVariables.parentPid, parentPid), ...items])
-  |> Result.get_ok;
+  let environment =
+    Luv.Env.environ()
+    |> Result.map(filterOutLogFile)
+    |> Result.map(items =>
+         [(EnvironmentVariables.parentPid, parentPid), ...items]
+       )
+    |> Result.get_ok;
 
   let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
   let executablePath = Revery.Environment.executingDirectory ++ executableName;
@@ -80,62 +76,68 @@ let start =
   let on_exit = (proc, ~exit_status, ~term_signal) => {
     let exitCode = exit_status |> Int64.to_int;
     if (exitCode == 0) {
-        ClientLog.debug("Syntax process exited safely.");
+      ClientLog.debug("Syntax process exited safely.");
     } else {
-        ClientLog.errorf(m => m("Syntax process exited with code: %d and signal: %d", exitCode, term_signal));
-    }
+      ClientLog.errorf(m =>
+        m(
+          "Syntax process exited with code: %d and signal: %d",
+          exitCode,
+          term_signal,
+        )
+      );
+    };
   };
-  let process = Luv.Process.spawn( 
-  ~on_exit,
-  ~environment,
-  ~windows_hide=true,
-  ~windows_hide_console=true,
-  ~windows_hide_gui=true,
-  executablePath,
-  [executablePath, "--syntax-highlight-service"]
-  ) |> Result.get_ok;
+  let process =
+    Luv.Process.spawn(
+      ~on_exit,
+      ~environment,
+      ~windows_hide=true,
+      ~windows_hide_console=true,
+      ~windows_hide_gui=true,
+      executablePath,
+      [executablePath, "--syntax-highlight-service"],
+    )
+    |> Result.get_ok;
 
+  // TODO: Remove scheduler
   let scheduler = cb => Scheduler.run(cb, scheduler);
 
-  let handleMessage = msg => switch(msg) {
-        | ServerToClient.Initialized => scheduler(onConnected)
-        | ServerToClient.EchoReply(result) =>
-          scheduler(() =>
-            ClientLog.tracef(m =>
-              m("got message from channel: |%s|", result)
-            )
-          )
-        | ServerToClient.Log(msg) => scheduler(() => ServerLog.trace(msg))
-        | ServerToClient.Closing =>
-          scheduler(() => ServerLog.debug("Closing"))
-        | ServerToClient.HealthCheckPass(res) =>
-          scheduler(() => onHealthCheckResult(res))
-        | ServerToClient.TokenUpdate(tokens) =>
-          scheduler(() => {
-            onHighlights(tokens);
-            ClientLog.trace("Tokens applied");
-          })
+  let handleMessage = msg =>
+    switch (msg) {
+    | ServerToClient.Initialized => scheduler(onConnected)
+    | ServerToClient.EchoReply(result) =>
+      scheduler(() =>
+        ClientLog.tracef(m => m("got message from channel: |%s|", result))
+      )
+    | ServerToClient.Log(msg) => scheduler(() => ServerLog.trace(msg))
+    | ServerToClient.Closing => scheduler(() => ServerLog.debug("Closing"))
+    | ServerToClient.HealthCheckPass(res) =>
+      scheduler(() => onHealthCheckResult(res))
+    | ServerToClient.TokenUpdate(tokens) =>
+      scheduler(() => {
+        onHighlights(tokens);
+        ClientLog.trace("Tokens applied");
+      })
     };
 
-  let handlePacket = (bytes) => {
-      let msg: ServerToClient.t = Marshal.from_bytes(bytes, Bytes.length(bytes))
-      handleMessage(msg);
+  let handlePacket = bytes => {
+    let msg: ServerToClient.t =
+      Marshal.from_bytes(bytes, Bytes.length(bytes));
+    handleMessage(msg);
   };
 
-  let dispatch = fun
-  | Transport.Connected => ClientLog.info("Connected to server")
-  | Transport.Error(msg) => ClientLog.errorf(m => m("Error: %s", msg))
-  | Transport.Disconnected => ClientLog.info("Disconnected")
-  | Transport.Received({ body, _ }) => handlePacket(body);
+  let dispatch =
+    fun
+    | Transport.Connected => ClientLog.info("Connected to server")
+    | Transport.Error(msg) => ClientLog.errorf(m => m("Error: %s", msg))
+    | Transport.Disconnected => ClientLog.info("Disconnected")
+    | Transport.Received({body, _}) => handlePacket(body);
 
   let transport = Transport.start(~namedPipe, ~dispatch) |> Result.get_ok;
 
-  let ret = { transport, process, nextId: ref(0) };
+  let ret = {transport, process, nextId: ref(0)};
 
-  write(
-    ret,
-    Protocol.ClientToServer.Initialize(languageInfo, setup),
-  );
+  write(ret, Protocol.ClientToServer.Initialize(languageInfo, setup));
   ret;
 };
 
