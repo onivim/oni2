@@ -41,23 +41,20 @@ let start =
     (
       ~onConnected=() => (),
       ~onClose=_ => (),
+      // TODO: Remove scheduler
       ~scheduler,
       ~onHighlights,
       ~onHealthCheckResult,
       languageInfo,
       setup,
     ) => {
-  //let dispatch = fun
-  //| _ => ();
 
   let namedPipe = NamedPipe.create("test") |> NamedPipe.toString;
-  //let transport = Transport.start(~namedPipe, ~dispatch);
 
   let parentPid = Unix.getpid() |> string_of_int;
 
   let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
 
-  // TODO: Proper mapping
   let environment =
     Luv.Env.environ()
     |> Result.map(filterOutLogFile)
