@@ -134,6 +134,8 @@ let make = (~theme, ~uiFont, ~editorFont, ()) => {
     // spacer
     <header text="OCaml" />
     <version name="Compiler Version " version=Sys.ocaml_version />
+    <header text="libuv" />
+    <version name="Version " version={Luv.Version.string()} />
     // spacer
     <header text="SDL" />
     <version

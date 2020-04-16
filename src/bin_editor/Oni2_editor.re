@@ -132,7 +132,6 @@ if (cliOptions.syntaxHighlightService) {
       currentState := state;
       isDirty := true;
     };
-
     let tick = _dt => {
       let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
 
