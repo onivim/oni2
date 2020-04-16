@@ -64,6 +64,13 @@ let commonChecks = [
       );
     },
   ),
+  (
+    "Verify libuv dependency",
+    _ => {
+      Log.infof(m => m("libuv version: %s", Luv.Version.string()));
+      true;
+    },
+  ),
 ];
 
 let mainChecks = [
