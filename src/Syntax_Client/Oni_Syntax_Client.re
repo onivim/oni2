@@ -28,21 +28,23 @@ type t = {
   nextId: ref(int),
 };
 
-let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
-  incr(nextId);
-  let id = nextId^;
-
+let writeTransport =
+    (~id=0, transport: Transport.t, msg: Protocol.ClientToServer.t) => {
   let bytes = Marshal.to_bytes(msg, []);
   let packet = Transport.Packet.create(~packetType=Regular, ~id, ~bytes);
   Transport.send(~packet, transport);
+};
+
+let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
+  incr(nextId);
+  let id = nextId^;
+  writeTransport(~id, transport, msg);
 };
 
 let start =
     (
       ~onConnected=() => (),
       ~onClose=_ => (),
-      // TODO: Remove scheduler
-      ~scheduler,
       ~onHighlights,
       ~onHealthCheckResult,
       languageInfo,
@@ -86,7 +88,49 @@ let start =
         )
       );
     };
+    onClose(exitCode);
   };
+
+  let handleMessage = msg =>
+    switch (msg) {
+    | ServerToClient.Initialized => onConnected()
+    | ServerToClient.EchoReply(result) =>
+      ClientLog.tracef(m => m("got message from channel: |%s|", result))
+    | ServerToClient.Log(msg) => ServerLog.trace(msg)
+    | ServerToClient.Closing => ServerLog.debug("Closing")
+    | ServerToClient.HealthCheckPass(res) => onHealthCheckResult(res)
+    | ServerToClient.TokenUpdate(tokens) =>
+      onHighlights(tokens);
+      ClientLog.trace("Tokens applied");
+    };
+
+  let handlePacket = bytes => {
+    let msg: ServerToClient.t = Marshal.from_bytes(bytes, 0);
+    handleMessage(msg);
+  };
+
+  let _transport = ref(None);
+
+  let dispatch =
+    fun
+    | Transport.Connected => {
+        ClientLog.info("Connected to server");
+        _transport^
+        |> Option.iter(t =>
+             writeTransport(
+               ~id=0,
+               t,
+               Protocol.ClientToServer.Initialize(languageInfo, setup),
+             )
+           );
+      }
+    | Transport.Error(msg) => ClientLog.errorf(m => m("Error: %s", msg))
+    | Transport.Disconnected => ClientLog.info("Disconnected")
+    | Transport.Received({body, _}) => handlePacket(body);
+
+  let transport = Transport.start(~namedPipe, ~dispatch) |> Result.get_ok;
+  _transport := Some(transport);
+
   let process =
     Luv.Process.spawn(
       ~on_exit,
@@ -99,45 +143,8 @@ let start =
     )
     |> Result.get_ok;
 
-  // TODO: Remove scheduler
-  let scheduler = cb => Scheduler.run(cb, scheduler);
-
-  let handleMessage = msg =>
-    switch (msg) {
-    | ServerToClient.Initialized => scheduler(onConnected)
-    | ServerToClient.EchoReply(result) =>
-      scheduler(() =>
-        ClientLog.tracef(m => m("got message from channel: |%s|", result))
-      )
-    | ServerToClient.Log(msg) => scheduler(() => ServerLog.trace(msg))
-    | ServerToClient.Closing => scheduler(() => ServerLog.debug("Closing"))
-    | ServerToClient.HealthCheckPass(res) =>
-      scheduler(() => onHealthCheckResult(res))
-    | ServerToClient.TokenUpdate(tokens) =>
-      scheduler(() => {
-        onHighlights(tokens);
-        ClientLog.trace("Tokens applied");
-      })
-    };
-
-  let handlePacket = bytes => {
-    let msg: ServerToClient.t =
-      Marshal.from_bytes(bytes, Bytes.length(bytes));
-    handleMessage(msg);
-  };
-
-  let dispatch =
-    fun
-    | Transport.Connected => ClientLog.info("Connected to server")
-    | Transport.Error(msg) => ClientLog.errorf(m => m("Error: %s", msg))
-    | Transport.Disconnected => ClientLog.info("Disconnected")
-    | Transport.Received({body, _}) => handlePacket(body);
-
-  let transport = Transport.start(~namedPipe, ~dispatch) |> Result.get_ok;
-
   let ret = {transport, process, nextId: ref(0)};
 
-  write(ret, Protocol.ClientToServer.Initialize(languageInfo, setup));
   ret;
 };
 

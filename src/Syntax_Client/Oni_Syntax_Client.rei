@@ -21,7 +21,6 @@ let start:
   (
     ~onConnected: connectedCallback=?,
     ~onClose: closeCallback=?,
-    ~scheduler: Scheduler.t,
     ~onHighlights: highlightsCallback,
     ~onHealthCheckResult: bool => unit,
     Oni_Extensions.LanguageInfo.t,

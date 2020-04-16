@@ -156,32 +156,33 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
         | None => default
         | Some(scope) =>
           // Eager syntax highlighting
-          let syntaxHighlights =
-            if (version == 1 && enabled) {
-              let highlights =
-                getEagerLines(
-                  ~scope,
-                  ~configuration=state.configuration,
-                  ~theme=state.tokenTheme,
-                  update.lines,
-                );
+          let syntaxHighlights = state.syntaxHighlights;
+          /*       let syntaxHighlights =
+                   if (version == 1 && enabled) {
+                     let highlights =
+                       getEagerLines(
+                         ~scope,
+                         ~configuration=state.configuration,
+                         ~theme=state.tokenTheme,
+                         update.lines,
+                       );
 
-              let len = Array.length(highlights);
+                     let len = Array.length(highlights);
 
-              let newHighlights = ref(state.syntaxHighlights);
-              for (i in 0 to len - 1) {
-                newHighlights :=
-                  Feature_Syntax.setTokensForLine(
-                    ~bufferId=update.id,
-                    ~line=i,
-                    ~tokens=highlights[i],
-                    newHighlights^,
-                  );
-              };
-              newHighlights^;
-            } else {
-              state.syntaxHighlights;
-            };
+                     let newHighlights = ref(state.syntaxHighlights);
+                     for (i in 0 to len - 1) {
+                       newHighlights :=
+                         Feature_Syntax.setTokensForLine(
+                           ~bufferId=update.id,
+                           ~line=i,
+                           ~tokens=highlights[i],
+                           newHighlights^,
+                         );
+                     };
+                     newHighlights^;
+                   } else {
+                     state.syntaxHighlights;
+                   };*/
 
           (
             {...state, syntaxHighlights},

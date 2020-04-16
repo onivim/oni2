@@ -30,7 +30,6 @@ module Sub = {
         let client =
           Oni_Syntax_Client.start(
             ~onClose=_ => dispatch(ServerClosed),
-            ~scheduler=Core.Scheduler.mainThread,
             ~onHighlights=
               highlights => {dispatch(ReceivedHighlights(highlights))},
             ~onHealthCheckResult=_ => (),
