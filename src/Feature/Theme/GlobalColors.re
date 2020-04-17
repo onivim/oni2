@@ -375,7 +375,8 @@ module List = {
       "list.focusBackground",
       {dark: hex("#062F4A"), light: hex("#D6EBFF"), hc: unspecified},
     );
-  let focusForeground = define("list.focusForeground", all(unspecified));
+  let focusForeground =
+    define("list.focusForeground", all(ref(foreground))); // actually: unspecified
   let activeSelectionBackground =
     define(
       "list.activeSelectionBackground",
