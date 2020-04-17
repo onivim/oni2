@@ -36,8 +36,8 @@ module Effects = {
         Index.toZeroBased(cursor.column)
         - Index.toZeroBased(meet.location.column);
 
-      let _: list(Vim.Cursor.t) = VimEx.repeatInput(delta, "<BS>");
-      let cursors = VimEx.inputString(completion.label);
+      let _: (Vim.Context.t)= VimEx.repeatInput(delta, "<BS>");
+      let {cursors, _}: Vim.Context.t= VimEx.inputString(completion.label);
 
       dispatch(EditorCursorMove(Editor.getId(editor), cursors));
     });

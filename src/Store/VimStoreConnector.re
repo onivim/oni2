@@ -598,14 +598,21 @@ let start =
                )
             |> Option.map(
                  Ext.LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
-               );
+               )
+            |> Option.value(~default=Vim.AutoClosingPairs.empty);
           } else {
-            None;
+            Vim.AutoClosingPairs.empty
           };
 
-        let cursors = Vim.input(~autoClosingPairs?, ~cursors, key);
-        let newTopLine = Vim.Window.getTopLine();
-        let newLeftColumn = Vim.Window.getLeftColumn();
+        let context = {
+          ...Vim.Context.default(),
+          autoClosingPairs,
+          cursors,
+        }
+
+        let ({cursors, topLine, leftColumn, _}: Vim.Context.t, _effects) = Vim.input(~context, key);
+        let newTopLine = topLine;
+        let newLeftColumn = leftColumn;
 
         let () =
           editor
@@ -725,20 +732,22 @@ let start =
         isCompleting := true;
         let currentPos = ref(Vim.CommandLine.getPosition());
         while (currentPos^ > position) {
-          let _ = Vim.input(~cursors=[], "<bs>");
+          let _ = Vim.input("<bs>");
           currentPos := Vim.CommandLine.getPosition();
         };
 
         let completion = Path.trimTrailingSeparator(completion);
-        let latestCursors = ref([]);
+        let latestContext = ref(Vim.Context.default());
         String.iter(
           c => {
-            latestCursors := Vim.input(~cursors=[], String.make(1, c));
+            let (context, _eff) = Vim.input(~context=latestContext^, String.make(1, c));
+            latestContext := context;
             ();
           },
           completion,
         );
-        updateActiveEditorCursors(latestCursors^);
+        let cursors = latestContext^.cursors;
+        updateActiveEditorCursors(cursors);
         isCompleting := false;
       }
     );
@@ -847,22 +856,23 @@ let start =
         getClipboardText()
         |> Option.iter(text => {
              if (!isCmdLineMode) {
-               Vim.command("set paste");
+               Vim.command("set paste") |> ignore;
              };
 
-             let latestCursors = ref([]);
+             let latestContext = ref(Vim.Context.default());
              Zed_utf8.iter(
                s => {
-                 latestCursors :=
-                   Vim.input(~cursors=[], Zed_utf8.singleton(s));
-                 ();
+                let (context, _eff) = 
+                   Vim.input(~context=latestContext^, Zed_utf8.singleton(s));
+                latestContext := context;
                },
                text,
              );
 
              if (!isCmdLineMode) {
-               updateActiveEditorCursors(latestCursors^);
-               Vim.command("set nopaste");
+               let cursors = latestContext^.cursors;
+               updateActiveEditorCursors(cursors);
+               Vim.command("set nopaste") |> ignore;
              };
            });
       };
@@ -886,7 +896,7 @@ let start =
         List.iter(
           l => {
             Log.info("Running VimL from config: " ++ l);
-            Vim.command(l);
+            Vim.command(l) |> ignore;
             Log.info("VimL command completed.");
           },
           lines,
@@ -899,7 +909,7 @@ let start =
     Isolinear.Effect.create(~name="vim.undo", () => {
       let _ = Vim.input("<esc>");
       let _ = Vim.input("<esc>");
-      let cursors = Vim.input("u");
+      let ({cursors, _}: Vim.Context.t, _eff) = Vim.input("u");
       updateActiveEditorCursors(cursors);
       ();
     });
@@ -908,7 +918,7 @@ let start =
     Isolinear.Effect.create(~name="vim.redo", () => {
       let _ = Vim.input("<esc>");
       let _ = Vim.input("<esc>");
-      let cursors = Vim.input("<c-r>");
+      let ({cursors, _}: Vim.Context.t, _eff) = Vim.input("<c-r>");
       updateActiveEditorCursors(cursors);
       ();
     });
@@ -964,9 +974,9 @@ let start =
       let _ = Vim.input("g");
       let _ = Vim.input("g");
       let _ = Vim.input("G");
-      let cursors = Vim.input("$");
-      let newTopLine = Vim.Window.getTopLine();
-      let newLeftColumn = Vim.Window.getLeftColumn();
+      let ({cursors, topLine, leftColumn, _}: Vim.Context.t, _eff) = Vim.input("$");
+      let newTopLine = topLine;
+      let newLeftColumn = leftColumn;
 
       // Update the editor, which is the source of truth for cursor position
       dispatch(Actions.EditorCursorMove(editorId, cursors));
