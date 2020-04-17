@@ -45,7 +45,6 @@ module Sub = {
             () => {
         Log.info("onConnected");
             pendingResult^ |> Option.iter(server => dispatch(ServerStarted(server)));
-              prerr_endline("Hey got to onconnected!!") 
             }},
             ~onClose=_ => dispatch(ServerClosed),
             ~onHighlights=
@@ -125,7 +124,6 @@ module Effect = {
     Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
       OptionEx.iter2(
         (syntaxClient, fileType) => {
-          prerr_endline("Notify buffer enter");
           Oni_Syntax_Client.notifyBufferEnter(syntaxClient, id, fileType)
         },
         maybeSyntaxClient,
@@ -143,7 +141,6 @@ module Effect = {
     Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
       OptionEx.iter2(
         (syntaxClient, scope) => {
-          prerr_endline("Notify buffer update");
           Oni_Syntax_Client.notifyBufferUpdate(
             syntaxClient,
             bufferUpdate,

@@ -145,7 +145,6 @@ let start =
   let dispatch =
     fun
     | Transport.Connected => {
-        prerr_endline("!!!!! CONNECTED");
         ClientLog.info("Connected to server");
         _transport^
         |> Option.iter(t =>
