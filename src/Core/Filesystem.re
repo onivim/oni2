@@ -213,31 +213,31 @@ let rmdir = path =>
     }
   );
 
-let unsafeFindHome = () =>
+let getUserDataDirectoryExn = () =>
   Revery.(
     switch (Environment.os) {
     | Environment.Windows => Sys.getenv("LOCALAPPDATA")
     | _ =>
       switch (Sys.getenv_opt("HOME")) {
       | Some(dir) => dir
-      | None => failwith("Could not find HOME dir")
+      | None => failwith("Could not find user data directory")
       }
     }
   );
 
-let getOniDirectory = home =>
+let getOniDirectory = dataDirectory =>
   Revery.(
     switch (Environment.os) {
-    | Environment.Windows => Path.join([home, "Oni2"]) |> return
-    | _ => Path.join([home, ".config", "oni2"]) |> return
+    | Environment.Windows => Path.join([dataDirectory, "Oni2"]) |> return
+    | _ => Path.join([dataDirectory, ".config", "oni2"]) |> return
     }
   );
 
-let getHomeDirectory = () =>
+let getUserDataDirectory = () =>
   Unix.(
-    try(unsafeFindHome() |> return) {
+    try(getUserDataDirectoryExn() |> return) {
     | Unix_error(err, _, _) =>
-      error("Cannot find home because: '%s'", error_message(err))
+      error("Cannot find data directory because: '%s'", error_message(err))
     | Failure(reason) => error("The OS could not be identified %s", reason)
     }
   );
@@ -362,7 +362,7 @@ let getOrCreateConfigFolder = configDir =>
   );
 
 let getExtensionsFolder = () =>
-  getHomeDirectory()
+  getUserDataDirectory()
   >>= getOniDirectory
   >>= (dir => getPath(dir, "extensions"))
   >>= getOrCreateConfigFolder;
@@ -384,7 +384,7 @@ let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
     }
   | None =>
     /* Get Oni Directory */
-    getHomeDirectory()
+    getUserDataDirectory()
     >>= getOniDirectory
     >>= (
       configDir =>
