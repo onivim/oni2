@@ -176,6 +176,7 @@ let start =
   let subscriptions = (state: Model.State.t) => {
     let syntaxSubscription =
       Feature_Syntax.subscription(
+        ~configuration=state.configuration,
         ~enabled=cliOptions.shouldSyntaxHighlight,
         ~quitting=state.isQuitting,
         ~languageInfo,

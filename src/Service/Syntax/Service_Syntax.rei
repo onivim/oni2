@@ -10,8 +10,11 @@ type msg =
 
 module Sub: {
   let create:
-    (~languageInfo: Oni_Extensions.LanguageInfo.t, ~setup: Oni_Core.Setup.t,
-    ~tokenTheme: TokenTheme.t,
+    (
+      ~configuration: Configuration.t,
+      ~languageInfo: Oni_Extensions.LanguageInfo.t,
+      ~setup: Oni_Core.Setup.t,
+      ~tokenTheme: TokenTheme.t
     ) =>
     Isolinear.Sub.t(msg);
 };
@@ -33,9 +36,6 @@ module Effect: {
   let bufferEnter:
     (option(Oni_Syntax_Client.t), int, option(string)) =>
     Isolinear.Effect.t(msg);
-
-  let configurationChange:
-    (option(Oni_Syntax_Client.t), Configuration.t) => Isolinear.Effect.t(msg);
 
   let visibilityChanged:
     (option(Oni_Syntax_Client.t), list((int, list(Range.t)))) =>

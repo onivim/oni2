@@ -39,6 +39,7 @@ let ignore: (~bufferId: int, t) => t;
 
 let subscription:
   (
+    ~configuration: Configuration.t,
     ~enabled: bool,
     ~quitting: bool,
     ~languageInfo: Oni_Extensions.LanguageInfo.t,

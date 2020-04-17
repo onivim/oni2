@@ -33,7 +33,7 @@ type t =
     })
     : t;
 
-let _hasTreeSitterScope = (useTreeSitter, scope: string) => {
+let _hasTreeSitterScope = (useTreeSitter, scope: string) =>
   if (!useTreeSitter) {
     false;
   } else {
@@ -44,7 +44,6 @@ let _hasTreeSitterScope = (useTreeSitter, scope: string) => {
     | _ => false
     };
   };
-};
 
 let anyPendingWork = hl => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;

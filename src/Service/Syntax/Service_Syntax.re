@@ -3,6 +3,8 @@ module Syntax = Oni_Syntax;
 module Ext = Oni_Extensions;
 module OptionEx = Core.Utility.OptionEx;
 
+module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
+
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
@@ -15,6 +17,7 @@ module Sub = {
     languageInfo: Ext.LanguageInfo.t,
     setup: Core.Setup.t,
     tokenTheme: Syntax.TokenTheme.t,
+    configuration: Core.Configuration.t,
   };
 
   module SyntaxSubscription =
@@ -26,6 +29,7 @@ module Sub = {
       type state = {
         client: Oni_Syntax_Client.t,
         lastSyncedTokenTheme: option(Syntax.TokenTheme.t),
+        lastConfiguration: option(Core.Configuration.t),
       };
 
       let name = "SyntaxSubscription";
@@ -44,20 +48,41 @@ module Sub = {
           );
 
         dispatch(ServerStarted(client));
-        { client, lastSyncedTokenTheme: None };
+        {client, lastSyncedTokenTheme: None, lastConfiguration: None};
       };
 
+      let compare: ('a, option('a)) => bool =
+        (v, opt) => {
+          switch (opt) {
+          | None => false
+          | Some(innerVal) => innerVal === v
+          };
+        };
+
+      let syncTokenTheme = (tokenTheme, state) =>
+        if (!compare(tokenTheme, state.lastSyncedTokenTheme)) {
+          Oni_Syntax_Client.notifyThemeChanged(state.client, tokenTheme);
+          {...state, lastSyncedTokenTheme: Some(tokenTheme)};
+        } else {
+          state;
+        };
+
+      let syncConfiguration = (configuration, state) =>
+        if (!compare(configuration, state.lastConfiguration)) {
+          Oni_Syntax_Client.notifyConfigurationChanged(
+            state.client,
+            configuration,
+          );
+          {...state, lastConfiguration: Some(configuration)};
+        } else {
+          state;
+        };
+
       let update = (~params, ~state, ~dispatch as _) => {
-         if (Some(params.tokenTheme) != state.lastSyncedTokenTheme) {
-            Oni_Syntax_Client.notifyThemeChanged(state.client, params.tokenTheme);
-            {
-              ...state,
-              lastSyncedTokenTheme: Some(params.tokenTheme),
-            };
-         } else {
-            state;
-         }
-      }
+        state
+        |> syncTokenTheme(params.tokenTheme)
+        |> syncConfiguration(params.configuration);
+      };
 
       let dispose = (~params as _, ~state) => {
         let () = Oni_Syntax_Client.close(state.client);
@@ -65,8 +90,14 @@ module Sub = {
       };
     });
 
-  let create = (~languageInfo, ~setup, ~tokenTheme) => {
-    SyntaxSubscription.create({id: "syntax-highligher", languageInfo, setup, tokenTheme});
+  let create = (~configuration, ~languageInfo, ~setup, ~tokenTheme) => {
+    SyntaxSubscription.create({
+      id: "syntax-highligher",
+      configuration,
+      languageInfo,
+      setup,
+      tokenTheme,
+    });
   };
 };
 
@@ -101,15 +132,6 @@ module Effect = {
         },
         maybeSyntaxClient,
         scopeMaybe,
-      )
-    });
-
-  let configurationChange = (maybeSyntaxClient, config: Core.Configuration.t) =>
-    Isolinear.Effect.create(~name="syntax.configurationChange", () => {
-      Option.iter(
-        syntaxClient =>
-          Oni_Syntax_Client.notifyConfigurationChanged(syntaxClient, config),
-        maybeSyntaxClient,
       )
     });
 
