@@ -13,7 +13,7 @@ module Ext = Oni_Extensions;
 type logFunc = string => unit;
 
 type t = {
-  configuration: Configuration.t,
+  useTreeSitter: bool,
   setup: option(Setup.t),
   languageInfo: Ext.LanguageInfo.t,
   treesitterRepository: TreesitterRepository.t,
@@ -24,7 +24,7 @@ type t = {
 };
 
 let empty = {
-  configuration: Configuration.default,
+  useTreeSitter: false,
   setup: None,
   visibleBuffers: [],
   highlightsMap: IntMap.empty,
@@ -78,8 +78,8 @@ let updateTheme = (theme, state) => {
   {...state, theme, highlightsMap};
 };
 
-let updateConfiguration = (configuration, state) => {
-  {...state, configuration};
+let setUseTreeSitter = (useTreeSitter, state) => {
+  {...state, useTreeSitter};
 };
 
 let doPendingWork = state => {
@@ -166,7 +166,7 @@ let bufferUpdate =
 
           Some(
             NativeSyntaxHighlights.create(
-              ~configuration=state.configuration,
+              ~useTreeSitter=state.useTreeSitter,
               ~bufferUpdate,
               ~theme=state.theme,
               ~scope,

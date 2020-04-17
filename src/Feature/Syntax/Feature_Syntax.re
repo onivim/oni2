@@ -171,9 +171,23 @@ let update: (t, msg) => (t, outmsg) =
     | Service(_) => (highlights, Nothing)
     };
 
-let subscription = (~enabled, ~quitting, ~languageInfo, ~setup, _highlights) =>
+let subscription =
+    (
+      ~configuration,
+      ~enabled,
+      ~quitting,
+      ~languageInfo,
+      ~setup,
+      ~tokenTheme,
+      _highlights,
+    ) =>
   if (enabled && !quitting) {
-    Service_Syntax.Sub.create(~languageInfo, ~setup)
+    Service_Syntax.Sub.create(
+      ~configuration,
+      ~languageInfo,
+      ~setup,
+      ~tokenTheme,
+    )
     |> Isolinear.Sub.map(
          fun
          | Service_Syntax.ServerStarted(client) => ServerStarted(client)

@@ -53,7 +53,7 @@ module ClientToServer = {
         [@opaque] array(string),
         string,
       )
-    | ConfigurationChanged([@opaque] Configuration.t)
+    | UseTreeSitter(bool)
     | ThemeChanged([@opaque] TokenTheme.t)
     | RunHealthCheck
     | VisibleRangesChanged(

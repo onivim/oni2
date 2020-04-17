@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Syntax;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -10,7 +11,12 @@ type msg =
 
 module Sub: {
   let create:
-    (~languageInfo: Oni_Extensions.LanguageInfo.t, ~setup: Oni_Core.Setup.t) =>
+    (
+      ~configuration: Configuration.t,
+      ~languageInfo: Oni_Extensions.LanguageInfo.t,
+      ~setup: Oni_Core.Setup.t,
+      ~tokenTheme: TokenTheme.t
+    ) =>
     Isolinear.Sub.t(msg);
 };
 
@@ -30,13 +36,6 @@ module Effect: {
   // buffers, themes, and configuration via that subscription.
   let bufferEnter:
     (option(Oni_Syntax_Client.t), int, option(string)) =>
-    Isolinear.Effect.t(msg);
-
-  let configurationChange:
-    (option(Oni_Syntax_Client.t), Configuration.t) => Isolinear.Effect.t(msg);
-
-  let themeChange:
-    (option(Oni_Syntax_Client.t), Oni_Syntax.TokenTheme.t) =>
     Isolinear.Effect.t(msg);
 
   let visibilityChanged:
