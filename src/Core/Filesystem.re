@@ -215,10 +215,13 @@ let rmdir = path =>
 
 let unsafeFindHome = () =>
   Revery.(
-    switch (Sys.getenv_opt("HOME"), Environment.os) {
-    | (Some(dir), _) => dir
-    | (None, Environment.Windows) => Sys.getenv("LOCALAPPDATA")
-    | (None, _) => failwith("Could not find HOME dir")
+    switch (Environment.os) {
+    | Environment.Windows => Sys.getenv("LOCALAPPDATA")
+    | _ =>
+      switch (Sys.getenv_opt("HOME")) {
+      | Some(dir) => dir
+      | None => failwith("Could not find HOME dir")
+      }
     }
   );
 
