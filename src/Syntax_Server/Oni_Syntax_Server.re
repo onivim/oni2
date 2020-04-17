@@ -45,17 +45,16 @@ let start = (~healthCheck) => {
     try(
       {
         if (State.anyPendingWork(state^)) {
-          map2(
-            State.doPendingWork,
-          );
+          map2(State.doPendingWork);
         } else {
           let _: result(unit, Luv.Error.t) = stopWork();
+          ();
         };
 
         let tokenUpdates = State.getTokenUpdates(state^);
         if (tokenUpdates != []) {
           write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
-        }
+        };
         map2(State.clearTokenUpdates);
       }
     ) {
@@ -71,6 +70,7 @@ let start = (~healthCheck) => {
   let map = f => {
     state := f(state^);
     let _: result(unit, Luv.Error.t) = Luv.Timer.again(timer);
+    ();
   };
 
   startWork();
@@ -105,7 +105,7 @@ let start = (~healthCheck) => {
           map(State.setUseTreeSitter(useTreeSitter));
           log(
             "got new config - treesitter enabled:"
-            ++ string_of_bool(useTreeSitter)
+            ++ string_of_bool(useTreeSitter),
           );
         }
       | ThemeChanged(theme) => {

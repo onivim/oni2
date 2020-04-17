@@ -72,7 +72,7 @@ let runTest =
 
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
   | None => ()
-  | Some(logFile) => Timber.App.setLogFile(logFile);
+  | Some(logFile) => Timber.App.setLogFile(logFile)
   };
 
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
@@ -104,7 +104,6 @@ let runTest =
       headlessWindow,
       <Oni_UI.Root state />,
     );
-
     //Revery.Utility.HeadlessWindow.takeScreenshot(headlessWindow, "screenshot.png");
   };
 

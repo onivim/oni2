@@ -41,11 +41,12 @@ module Sub = {
         let pendingResult = ref(None);
         let clientResult =
           Oni_Syntax_Client.start(
-            ~onConnected={
-            () => {
-        Log.info("onConnected");
-            pendingResult^ |> Option.iter(server => dispatch(ServerStarted(server)));
-            }},
+            ~onConnected=
+              () => {
+                Log.info("onConnected");
+                pendingResult^
+                |> Option.iter(server => dispatch(ServerStarted(server)));
+              },
             ~onClose=_ => dispatch(ServerClosed),
             ~onHighlights=
               highlights => {dispatch(ReceivedHighlights(highlights))},
@@ -58,7 +59,11 @@ module Sub = {
                dispatch(ServerFailedToStart(msg))
              );
 
-        {client: clientResult, lastSyncedTokenTheme: None, lastConfiguration: None};
+        {
+          client: clientResult,
+          lastSyncedTokenTheme: None,
+          lastConfiguration: None,
+        };
       };
 
       let compare: ('a, option('a)) => bool =
@@ -72,10 +77,10 @@ module Sub = {
       let syncTokenTheme = (tokenTheme, state) =>
         if (!compare(tokenTheme, state.lastSyncedTokenTheme)) {
           state.client
-          |> Result.map((client) => {
-            Oni_Syntax_Client.notifyThemeChanged(client, tokenTheme);
-            {...state, lastSyncedTokenTheme: Some(tokenTheme)};
-          })
+          |> Result.map(client => {
+               Oni_Syntax_Client.notifyThemeChanged(client, tokenTheme);
+               {...state, lastSyncedTokenTheme: Some(tokenTheme)};
+             })
           |> Result.value(~default=state);
         } else {
           state;
@@ -85,13 +90,12 @@ module Sub = {
         if (!compare(configuration, state.lastConfiguration)) {
           state.client
           |> Result.map(client => {
-          Oni_Syntax_Client.notifyConfigurationChanged(
-            client,
-            configuration,
-          );
-          {...state, lastConfiguration: Some(configuration)};
-  
-          })
+               Oni_Syntax_Client.notifyConfigurationChanged(
+                 client,
+                 configuration,
+               );
+               {...state, lastConfiguration: Some(configuration)};
+             })
           |> Result.value(~default=state);
         } else {
           state;

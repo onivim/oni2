@@ -122,8 +122,8 @@ let start =
   let handleMessage = msg =>
     switch (msg) {
     | ServerToClient.Initialized =>
-        ClientLog.info("Initialized");
-      onConnected()
+      ClientLog.info("Initialized");
+      onConnected();
     | ServerToClient.EchoReply(result) =>
       ClientLog.tracef(m => m("got message from channel: |%s|", result))
     | ServerToClient.Log(msg) => ServerLog.trace(msg)
