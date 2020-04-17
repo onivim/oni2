@@ -107,16 +107,11 @@ let start = (~healthCheck) => {
                 );
                 map(State.bufferEnter(id));
               }
-            | ConfigurationChanged(config) => {
-                map(State.updateConfiguration(config));
-                let treeSitterEnabled =
-                  Oni_Core.Configuration.getValue(
-                    c => c.experimentalTreeSitter,
-                    config,
-                  );
+            | UseTreeSitter(useTreeSitter) => {
+                map(State.setUseTreeSitter(useTreeSitter));
                 log(
                   "got new config - treesitter enabled:"
-                  ++ (treeSitterEnabled ? "true" : "false"),
+                  ++ string_of_bool(useTreeSitter),
                 );
               }
             | ThemeChanged(theme) => {
@@ -182,8 +177,10 @@ let start = (~healthCheck) => {
               };
 
               let tokenUpdates = State.getTokenUpdates(state^);
-              write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
-              log("Token updates sent.");
+              if (tokenUpdates !== []) {
+                write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+                log("Token updates sent.");
+              };
               map(State.clearTokenUpdates);
             }
           ) {
