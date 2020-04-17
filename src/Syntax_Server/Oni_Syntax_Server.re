@@ -59,10 +59,9 @@ let start = (~healthCheck) => {
 
   let map = f => {
     state := f(state^);
-    if (State.anyPendingWork(state^)) {
-      let _: result(unit, Luv.Error.t) = Luv.Timer.again(timer);
-      ();
-    };
+    //if (State.anyPendingWork(state^)) {
+    let _: result(unit, Luv.Error.t) = Luv.Timer.again(timer);
+      //();
   };
 
   startWork();
