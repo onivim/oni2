@@ -180,6 +180,7 @@ let start =
         ~quitting=state.isQuitting,
         ~languageInfo,
         ~setup,
+        ~tokenTheme=state.tokenTheme,
         state.syntaxHighlights,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg));

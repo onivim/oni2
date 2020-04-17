@@ -43,6 +43,7 @@ let subscription:
     ~quitting: bool,
     ~languageInfo: Oni_Extensions.LanguageInfo.t,
     ~setup: Setup.t,
+    ~tokenTheme: Oni_Syntax.TokenTheme.t,
     t
   ) =>
   Isolinear.Sub.t(msg);

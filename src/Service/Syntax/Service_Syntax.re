@@ -1,4 +1,5 @@
 module Core = Oni_Core;
+module Syntax = Oni_Syntax;
 module Ext = Oni_Extensions;
 module OptionEx = Core.Utility.OptionEx;
 
@@ -13,6 +14,7 @@ module Sub = {
     id: string,
     languageInfo: Ext.LanguageInfo.t,
     setup: Core.Setup.t,
+    tokenTheme: Syntax.TokenTheme.t,
   };
 
   module SyntaxSubscription =
@@ -21,7 +23,10 @@ module Sub = {
 
       type nonrec params = params;
 
-      type state = Oni_Syntax_Client.t;
+      type state = {
+        client: Oni_Syntax_Client.t,
+        lastSyncedTokenTheme: option(Syntax.TokenTheme.t),
+      };
 
       let name = "SyntaxSubscription";
       let id = params => params.id;
@@ -39,19 +44,29 @@ module Sub = {
           );
 
         dispatch(ServerStarted(client));
-        client;
+        { client, lastSyncedTokenTheme: None };
       };
 
-      let update = (~params as _, ~state, ~dispatch as _) => state;
+      let update = (~params, ~state, ~dispatch as _) => {
+         if (Some(params.tokenTheme) != state.lastSyncedTokenTheme) {
+            Oni_Syntax_Client.notifyThemeChanged(state.client, params.tokenTheme);
+            {
+              ...state,
+              lastSyncedTokenTheme: Some(params.tokenTheme),
+            };
+         } else {
+            state;
+         }
+      }
 
       let dispose = (~params as _, ~state) => {
-        let () = Oni_Syntax_Client.close(state);
+        let () = Oni_Syntax_Client.close(state.client);
         ();
       };
     });
 
-  let create = (~languageInfo, ~setup) => {
-    SyntaxSubscription.create({id: "syntax-highligher", languageInfo, setup});
+  let create = (~languageInfo, ~setup, ~tokenTheme) => {
+    SyntaxSubscription.create({id: "syntax-highligher", languageInfo, setup, tokenTheme});
   };
 };
 
