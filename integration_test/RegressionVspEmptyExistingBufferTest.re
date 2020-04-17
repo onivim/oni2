@@ -8,10 +8,10 @@ runTest(~name="RegressionVspEmpty", (_, wait, _) => {
     splitCount == 1;
   });
 
-  Vim.command("e test.txt");
+  Vim.command("e test.txt") |> ignore;
 
   /* :vsp with no arguments should create a second split w/ same buffer */
-  Vim.command("vsp");
+  Vim.command("vsp") |> ignore;
 
   wait(~name="Wait for split to be created", (state: State.t) => {
     let splitCount =

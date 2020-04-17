@@ -28,7 +28,7 @@ runTestWithInput(
   );
 
   // Create a buffer
-  Vim.command("new test.oni-dev");
+  Vim.command("new test.oni-dev") |> ignore;
 
   // Wait for the oni-dev filetype
   wait(

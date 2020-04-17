@@ -8,7 +8,7 @@ runTest(~name="InputIgnore test", (_dispatch, wait, runEffects) => {
   );
 
   // Create notification - an echo should trigger onj
-  Vim.command("echo 'hi from test'");
+  Vim.command("echo 'hi from test'") |> ignore;
   runEffects();
 
   wait(~name="notification shows up", (state: State.t) => {

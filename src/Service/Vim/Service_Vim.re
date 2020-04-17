@@ -9,7 +9,9 @@ let forceOverwrite = () =>
   );
 
 let reload = () =>
-  Isolinear.Effect.create(~name="vim.reload", () => {Vim.command("e") |> ignore});
+  Isolinear.Effect.create(~name="vim.reload", () => {
+    Vim.command("e") |> ignore
+  });
 
 let saveAllAndQuit = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>

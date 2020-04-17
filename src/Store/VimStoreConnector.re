@@ -425,6 +425,118 @@ let start =
   let lastCompletionMeet = ref(None);
   let isCompleting = ref(false);
 
+  let contextFromState: State.t => Vim.Context.t =
+    state => {
+      state
+      |> Selectors.getActiveEditorGroup
+      |> Selectors.getActiveEditor
+      |> Option.map((editor: Editor.t) => {
+           let {bufferId, cursors, _}: Editor.t = editor;
+           let primaryCursor = Editor.getPrimaryCursor(editor);
+
+           let syntaxScope =
+             state
+             |> Selectors.getActiveBuffer
+             |> Option.map(buffer => {
+                  let bufferId = Core.Buffer.getId(buffer);
+                  let {line, column}: Location.t = primaryCursor;
+
+                  Feature_Syntax.getSyntaxScope(
+                    ~bufferId,
+                    ~line,
+                    // TODO: Reconcile 'byte position' vs 'character position'
+                    // in cursor.
+                    ~bytePosition=Index.toZeroBased(column),
+                    state.syntaxHighlights,
+                  );
+                })
+             |> Option.value(~default=Core.SyntaxScope.none);
+
+           let acpEnabled =
+             Core.Configuration.getValue(
+               c => c.editorAutoClosingBrackets,
+               state.configuration,
+             )
+             |> (
+               fun
+               | LanguageDefined => true
+               | Never => false
+             );
+
+           let autoClosingPairs =
+             if (acpEnabled) {
+               state
+               |> Selectors.getActiveBuffer
+               |> OptionEx.flatMap(Core.Buffer.getFileType)
+               |> OptionEx.flatMap(
+                    Ext.LanguageConfigurationLoader.get_opt(
+                      languageConfigLoader,
+                    ),
+                  )
+               |> Option.map(
+                    Ext.LanguageConfiguration.toVimAutoClosingPairs(
+                      syntaxScope,
+                    ),
+                  )
+               |> Option.value(~default=Vim.AutoClosingPairs.empty);
+             } else {
+               Vim.AutoClosingPairs.empty;
+             };
+
+           let Feature_Editor.EditorLayout.{
+                 bufferHeightInCharacters: height,
+                 bufferWidthInCharacters: width,
+                 _,
+               } =
+             Editor.getLayout(editor);
+
+           let leftColumn = Editor.getLeftVisibleColumn(editor);
+           let topLine = Editor.getTopVisibleLine(editor);
+
+           let editorBuffer = Selectors.getActiveBuffer(state);
+
+           // Set configured line comment
+           let lineComment =
+             editorBuffer
+             |> OptionEx.flatMap(Core.Buffer.getFileType)
+             |> OptionEx.flatMap(
+                  Ext.LanguageConfigurationLoader.get_opt(
+                    languageConfigLoader,
+                  ),
+                )
+             |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+                  config.lineComment
+                );
+
+           let indentation =
+             editorBuffer
+             |> OptionEx.flatMap(Core.Buffer.getIndentation)
+             |> Option.value(~default=Core.IndentationSettings.default);
+
+           let insertSpaces =
+             switch (indentation.mode) {
+             | Tabs => false
+             | Spaces => true
+             };
+
+           let ret: Vim.Context.t =
+             Vim.Context.{
+               bufferId,
+               leftColumn,
+               topLine,
+               width,
+               height,
+               cursors,
+               autoClosingPairs,
+               lineComment,
+               insertSpaces,
+               tabSize: indentation.size,
+             };
+           ret;
+         })
+      |> Option.value(~default=Vim.Context.default());
+    };
+
   let checkCommandLineCompletions = () => {
     Log.debug("checkCommandLineCompletions");
 
@@ -506,8 +618,6 @@ let start =
       );
     });
 
-  let currentBufferId: ref(option(int)) = ref(None);
-
   let updateActiveEditorCursors = cursors => {
     let () =
       getState()
@@ -539,78 +649,10 @@ let start =
         let editor =
           state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
-        let cursors =
-          editor
-          |> Option.map(Editor.getVimCursors)
-          |> Option.value(~default=[]);
+        let context = contextFromState(state);
 
-        let primaryCursor = editor |> Option.map(Editor.getPrimaryCursor);
-
-        let () =
-          editor
-          |> Option.iter(e => {
-               let topLine = Editor.getTopVisibleLine(e);
-               let leftCol = Editor.getLeftVisibleColumn(e);
-               Vim.Window.setTopLeft(topLine, leftCol);
-             });
-
-        let syntaxScope =
-          state
-          |> Selectors.getActiveBuffer
-          |> OptionEx.map2(
-               (primaryCursor, buffer) => {
-                 let bufferId = Core.Buffer.getId(buffer);
-                 let {line, column}: Location.t = primaryCursor;
-
-                 Feature_Syntax.getSyntaxScope(
-                   ~bufferId,
-                   ~line,
-                   // TODO: Reconcile 'byte position' vs 'character position'
-                   // in cursor.
-                   ~bytePosition=Index.toZeroBased(column),
-                   state.syntaxHighlights,
-                 );
-               },
-               primaryCursor,
-             )
-          |> Option.value(~default=Core.SyntaxScope.none);
-
-        let acpEnabled =
-          Core.Configuration.getValue(
-            c => c.editorAutoClosingBrackets,
-            state.configuration,
-          )
-          |> (
-            fun
-            | LanguageDefined => true
-            | Never => false
-          );
-
-        let autoClosingPairs =
-          if (acpEnabled) {
-            state
-            |> Selectors.getActiveBuffer
-            |> OptionEx.flatMap(Core.Buffer.getFileType)
-            |> OptionEx.flatMap(
-                 Ext.LanguageConfigurationLoader.get_opt(
-                   languageConfigLoader,
-                 ),
-               )
-            |> Option.map(
-                 Ext.LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
-               )
-            |> Option.value(~default=Vim.AutoClosingPairs.empty);
-          } else {
-            Vim.AutoClosingPairs.empty
-          };
-
-        let context = {
-          ...Vim.Context.default(),
-          autoClosingPairs,
-          cursors,
-        }
-
-        let ({cursors, topLine, leftColumn, _}: Vim.Context.t, _effects) = Vim.input(~context, key);
+        let ({cursors, topLine, leftColumn, _}: Vim.Context.t, _effects) =
+          Vim.input(~context, key);
         let newTopLine = topLine;
         let newLeftColumn = leftColumn;
 
@@ -740,7 +782,8 @@ let start =
         let latestContext = ref(Vim.Context.default());
         String.iter(
           c => {
-            let (context, _eff) = Vim.input(~context=latestContext^, String.make(1, c));
+            let (context, _eff) =
+              Vim.input(~context=latestContext^, String.make(1, c));
             latestContext := context;
             ();
           },
@@ -752,102 +795,7 @@ let start =
       }
     );
 
-  let synchronizeIndentationEffect = (indentation: Core.IndentationSettings.t) =>
-    Isolinear.Effect.create(~name="vim.setIndentation", () => {
-      let insertSpaces =
-        switch (indentation.mode) {
-        | Tabs => false
-        | Spaces => true
-        };
-
-      Vim.Options.setTabSize(indentation.size);
-      Vim.Options.setInsertSpaces(insertSpaces);
-    });
-
-  /**
-   synchronizeEditorEffect checks the current state of the app:
-   - open buffer
-   - open editor
-
-   If it is changed from the last time we 'synchronized', we
-   push those changes to vim and record the latest state.
-
-   This allows us to keep the buffer management in Onivim 2,
-   and treat vim as an entity for manipulating a singular buffer.
-   */
-  // TODO: Remove remaining 'synchronization'
-  let synchronizeEditorEffect = state =>
-    Isolinear.Effect.create(~name="vim.synchronizeEditor", () =>
-      switch (hasInitialized^) {
-      | false => ()
-      | true =>
-        let editorGroup = Selectors.getActiveEditorGroup(state);
-        let editor = Selectors.getActiveEditor(editorGroup);
-
-        /* If the editor / buffer in Onivim changed,
-         * let libvim know about it and set it as the current buffer */
-        let editorBuffer = Selectors.getActiveBuffer(state);
-        switch (editorBuffer, currentBufferId^) {
-        | (Some(editorBuffer), Some(v)) =>
-          let id = Core.Buffer.getId(editorBuffer);
-          if (id != v) {
-            let buf = Vim.Buffer.getById(id);
-            switch (buf) {
-            | None => ()
-            | Some(v) => Vim.Buffer.setCurrent(v)
-            };
-          };
-        | (Some(editorBuffer), _) =>
-          let id = Core.Buffer.getId(editorBuffer);
-          let buf = Vim.Buffer.getById(id);
-          switch (buf) {
-          | None => ()
-          | Some(v) => Vim.Buffer.setCurrent(v)
-          };
-        | _ => ()
-        };
-
-        // Set configured line comment
-        editorBuffer
-        |> OptionEx.flatMap(Core.Buffer.getFileType)
-        |> OptionEx.flatMap(
-             Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
-           )
-        |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
-             config.lineComment
-           )
-        |> Option.iter(Vim.Options.setLineComment);
-
-        let synchronizeWindowMetrics = (editor: Editor.t) => {
-          let vimWidth = Vim.Window.getWidth();
-          let vimHeight = Vim.Window.getHeight();
-
-          let Feature_Editor.EditorLayout.{
-                bufferHeightInCharacters: lines,
-                bufferWidthInCharacters: columns,
-                _,
-              } =
-            Editor.getLayout(editor);
-
-          if (columns != vimWidth) {
-            Vim.Window.setWidth(columns);
-          };
-
-          if (lines != vimHeight) {
-            Vim.Window.setHeight(lines);
-          };
-        };
-
-        /* Update the window metrics for the editor */
-        /* This synchronizes the window width / height with libvim's model */
-        switch (editor) {
-        | Some(e) => synchronizeWindowMetrics(e)
-        | _ => ()
-        };
-      }
-    );
-
-  let pasteIntoEditorAction =
+  let pasteIntoEditorAction = state =>
     Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
       let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
       let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
@@ -859,12 +807,12 @@ let start =
                Vim.command("set paste") |> ignore;
              };
 
-             let latestContext = ref(Vim.Context.default());
+             let latestContext = ref(contextFromState(state));
              Zed_utf8.iter(
                s => {
-                let (context, _eff) = 
+                 let (context, _eff) =
                    Vim.input(~context=latestContext^, Zed_utf8.singleton(s));
-                latestContext := context;
+                 latestContext := context;
                },
                text,
              );
@@ -974,7 +922,8 @@ let start =
       let _ = Vim.input("g");
       let _ = Vim.input("g");
       let _ = Vim.input("G");
-      let ({cursors, topLine, leftColumn, _}: Vim.Context.t, _eff) = Vim.input("$");
+      let ({cursors, topLine, leftColumn, _}: Vim.Context.t, _eff) =
+        Vim.input("$");
       let newTopLine = topLine;
       let newLeftColumn = leftColumn;
 
@@ -993,7 +942,7 @@ let start =
       )
     | Command("editor.action.clipboardPasteAction") => (
         state,
-        pasteIntoEditorAction,
+        pasteIntoEditorAction(state),
       )
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
@@ -1023,24 +972,6 @@ let start =
     | OpenFileByPath(path, direction, location) => (
         state,
         openFileByPathEffect(path, direction, location),
-      )
-    | BufferEnter(_)
-    | EditorFont(Service_Font.FontLoaded(_))
-    | WindowSetActive(_, _)
-    | EditorSizeChanged(_) => (state, synchronizeEditorEffect(state))
-    | BufferSetIndentation(_, indent) => (
-        state,
-        synchronizeIndentationEffect(indent),
-      )
-    | ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
-    | ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
-    | Command("workbench.action.nextEditor") => (
-        state,
-        synchronizeEditorEffect(state),
-      )
-    | Command("workbench.action.previousEditor") => (
-        state,
-        synchronizeEditorEffect(state),
       )
     | Command("terminal.normalMode") =>
       let maybeBufferId =

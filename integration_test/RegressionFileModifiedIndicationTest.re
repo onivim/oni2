@@ -12,7 +12,7 @@ runTestWithInput(
     state.vimMode == Vim.Types.Normal
   );
 
-  Vim.command("e regression-file-modified-indication.txt");
+  Vim.command("e regression-file-modified-indication.txt") |> ignore;
 
   let id = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
 
@@ -33,7 +33,7 @@ runTestWithInput(
 
   // Save file, should clear modified flag
   let _ = input("<esc>");
-  Vim.command("w");
+  Vim.command("w") |> ignore;
 
   wait(~name="Wait for modified flag to be set", (state: State.t) =>
     validateBufferCondition(b => Buffer.isModified(b) == false, state)
