@@ -21,6 +21,11 @@ type connectedCallback = unit => unit;
 type closeCallback = int => unit;
 type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
 
+module Defaults = {
+  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
+  let executablePath = Revery.Environment.executingDirectory ++ executableName;
+};
+
 type t = {
   transport: Transport.t,
   process: Luv.Process.t,
@@ -54,13 +59,9 @@ let getEnvironment = (~namedPipe, ~parentPid) => {
      );
 };
 
-let startProcess = (~namedPipe, ~parentPid, ~onClose) => {
+let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
   getEnvironment(~namedPipe, ~parentPid)
   |> Utility.ResultEx.flatMap(environment => {
-       let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
-       let executablePath =
-         Revery.Environment.executingDirectory ++ executableName;
-
        ClientLog.debugf(m =>
          m(
            "Starting executable: %s and parentPid: %s",
@@ -100,6 +101,8 @@ let startProcess = (~namedPipe, ~parentPid, ~onClose) => {
 
 let start =
     (
+      ~parentPid=?,
+      ~executablePath=Defaults.executablePath,
       ~onConnected=() => (),
       ~onClose=_ => (),
       ~onHighlights,
@@ -107,7 +110,12 @@ let start =
       languageInfo,
       setup,
     ) => {
-  let parentPid = Unix.getpid() |> string_of_int;
+  let parentPid =
+    switch (parentPid) {
+    | None => Unix.getpid() |> string_of_int
+    | Some(pid) => pid
+    };
+
   let name = Printf.sprintf("syntax-client-%s", parentPid);
   let namedPipe = name |> NamedPipe.create |> NamedPipe.toString;
 
@@ -134,6 +142,7 @@ let start =
   let dispatch =
     fun
     | Transport.Connected => {
+        prerr_endline("!!!!! CONNECTED");
         ClientLog.info("Connected to server");
         _transport^
         |> Option.iter(t =>
@@ -151,7 +160,7 @@ let start =
   Transport.start(~namedPipe, ~dispatch)
   |> Utility.ResultEx.tap(transport => _transport := Some(transport))
   |> Utility.ResultEx.flatMap(transport => {
-       startProcess(~parentPid, ~namedPipe, ~onClose)
+       startProcess(~executablePath, ~parentPid, ~namedPipe, ~onClose)
        |> Result.map(process => {transport, process, nextId: ref(0)})
      });
 };
@@ -193,4 +202,19 @@ let notifyVisibilityChanged = (v: t, visibility) => {
 let close = (syntaxClient: t) => {
   ClientLog.debug("Sending close request...");
   write(syntaxClient, Protocol.ClientToServer.Close);
+};
+
+module Testing = {
+  let simulateReadException = ({transport, _}: t) => {
+    let id = 1;
+    let bytes = Bytes.make(128, 'a');
+    let packet = Transport.Packet.create(~packetType=Regular, ~id, ~bytes);
+    ClientLog.trace("Simulating a bad packet...");
+    Transport.send(~packet, transport);
+  };
+
+  let simulateMessageException = (v: t) => {
+    ClientLog.trace("Sending simulateMessageException notification...");
+    write(v, Protocol.ClientToServer.SimulateMessageException);
+  };
 };

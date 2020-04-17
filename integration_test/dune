@@ -25,6 +25,12 @@
            LineEndingsCRLFTest
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
+           SyntaxServer
+           SyntaxServerCloseTest
+           SyntaxServerMessageExceptionTest
+           SyntaxServerParentPidTest
+           SyntaxServerParentPidCorrectTest
+           SyntaxServerReadExceptionTest
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
@@ -86,6 +92,12 @@
         SearchShowClearHighlightsTest.exe
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
+        SyntaxServer.exe
+        SyntaxServerCloseTest.exe
+        SyntaxServerMessageExceptionTest.exe
+        SyntaxServerParentPidTest.exe
+        SyntaxServerParentPidCorrectTest.exe
+        SyntaxServerReadExceptionTest.exe
         TerminalSetPidTitleTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe

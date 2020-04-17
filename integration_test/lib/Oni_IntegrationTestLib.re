@@ -7,6 +7,7 @@ module Log = (val Core.Log.withNamespace("IntegrationTest"));
 module InitLog = (val Core.Log.withNamespace("IntegrationTest.Init"));
 module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
+module SyntaxServerTest = SyntaxServerTest;
 
 open Types;
 

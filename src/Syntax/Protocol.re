@@ -59,5 +59,8 @@ module ClientToServer = {
     | VisibleRangesChanged(
         [@opaque] list((int /* buffer id */, list(Range.t))),
       )
-    | Close;
+    | Close
+    // Debug
+    | SimulateMessageException
+    | SimulateReadException;
 };

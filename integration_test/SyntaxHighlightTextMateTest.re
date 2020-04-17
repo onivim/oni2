@@ -17,7 +17,7 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
 
   // Wait for highlights to show up
   wait(
-    ~name="Verify we get syntax highlights", ~timeout=30.0, (state: State.t) => {
+    ~name="Verify we get syntax highlights", ~timeout=60.0, (state: State.t) => {
     state
     |> Selectors.getActiveBuffer
     |> Option.map(Buffer.getId)
