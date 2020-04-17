@@ -9,7 +9,8 @@ type msg =
 
 module Sub: {
   let create:
-    (~languageInfo: Oni_Extensions.LanguageInfo.t, ~setup: Oni_Core.Setup.t) =>
+    (~languageInfo: Oni_Extensions.LanguageInfo.t, ~setup: Oni_Core.Setup.t,
+    ) =>
     Isolinear.Sub.t(msg);
 };
 
