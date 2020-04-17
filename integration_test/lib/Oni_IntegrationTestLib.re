@@ -176,6 +176,7 @@ let runTest =
       // Flush any queued calls from `Revery.App.runOnMainThread`
       Revery.App.flushPendingCallbacks();
       Revery.Tick.pump();
+      let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
 
       // Flush any pending effects
       wrappedRunEffects();
