@@ -113,16 +113,6 @@ module Effect = {
       )
     });
 
-  let themeChange = (maybeSyntaxClient, theme) =>
-    Isolinear.Effect.create(~name="syntax.theme", () => {
-      Option.iter(
-        syntaxClient => {
-          Oni_Syntax_Client.notifyThemeChanged(syntaxClient, theme)
-        },
-        maybeSyntaxClient,
-      )
-    });
-
   let visibilityChanged = (maybeSyntaxClient, visibleRanges) =>
     Isolinear.Effect.create(~name="syntax.visibilityChange", () => {
       Option.iter(
