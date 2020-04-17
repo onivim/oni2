@@ -121,13 +121,16 @@ let start =
 
   let handleMessage = msg =>
     switch (msg) {
-    | ServerToClient.Initialized => onConnected()
+    | ServerToClient.Initialized =>
+        ClientLog.info("Initialized");
+      onConnected()
     | ServerToClient.EchoReply(result) =>
       ClientLog.tracef(m => m("got message from channel: |%s|", result))
     | ServerToClient.Log(msg) => ServerLog.trace(msg)
     | ServerToClient.Closing => ServerLog.debug("Closing")
     | ServerToClient.HealthCheckPass(res) => onHealthCheckResult(res)
     | ServerToClient.TokenUpdate(tokens) =>
+      ClientLog.info("Received token update");
       onHighlights(tokens);
       ClientLog.trace("Tokens applied");
     };
@@ -177,10 +180,12 @@ let notifyBufferLeave = (_v: t, _bufferId: int) => {
 };
 
 let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
+  ClientLog.info("Notifying theme changed.");
   write(v, Protocol.ClientToServer.ThemeChanged(theme));
 };
 
 let notifyConfigurationChanged = (v: t, configuration: Configuration.t) => {
+  ClientLog.info("Notifying configuration changed.");
   write(v, Protocol.ClientToServer.ConfigurationChanged(configuration));
 };
 

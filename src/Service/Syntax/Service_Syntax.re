@@ -2,6 +2,8 @@ module Core = Oni_Core;
 module Ext = Oni_Extensions;
 module OptionEx = Core.Utility.OptionEx;
 
+module Log = (val Core.Log.withNamespace("Oni2.Service.Syntax"));
+
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
@@ -28,8 +30,16 @@ module Sub = {
       let id = params => params.id;
 
       let init = (~params, ~dispatch) => {
+        Log.info("Init called");
+        let pendingResult = ref(None);
         let clientResult =
           Oni_Syntax_Client.start(
+            ~onConnected={
+            () => {
+        Log.info("onConnected");
+            pendingResult^ |> Option.iter(server => dispatch(ServerStarted(server)));
+              prerr_endline("Hey got to onconnected!!") 
+            }},
             ~onClose=_ => dispatch(ServerClosed),
             ~onHighlights=
               highlights => {dispatch(ReceivedHighlights(highlights))},
@@ -37,12 +47,13 @@ module Sub = {
             params.languageInfo,
             params.setup,
           )
-          |> Utility.ResultEx.tap(client => dispatch(ServerStarted(client)))
+          |> Utility.ResultEx.tap(server => dispatch(ServerStarted(server)))
           |> Utility.ResultEx.tapError(msg =>
                dispatch(ServerFailedToStart(msg))
              );
 
-        clientResult;
+        pendingResult := clientResult |> Result.to_option;
+        clientResult
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
@@ -62,6 +73,7 @@ module Effect = {
     Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
       OptionEx.iter2(
         (syntaxClient, fileType) => {
+          prerr_endline("Notify buffer enter");
           Oni_Syntax_Client.notifyBufferEnter(syntaxClient, id, fileType)
         },
         maybeSyntaxClient,
@@ -79,6 +91,7 @@ module Effect = {
     Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
       OptionEx.iter2(
         (syntaxClient, scope) => {
+          prerr_endline("Notify buffer update");
           Oni_Syntax_Client.notifyBufferUpdate(
             syntaxClient,
             bufferUpdate,
@@ -93,6 +106,7 @@ module Effect = {
 
   let configurationChange = (maybeSyntaxClient, config: Core.Configuration.t) =>
     Isolinear.Effect.create(~name="syntax.configurationChange", () => {
+      Log.info("Trying configuration change...");
       Option.iter(
         syntaxClient =>
           Oni_Syntax_Client.notifyConfigurationChanged(syntaxClient, config),
@@ -102,6 +116,7 @@ module Effect = {
 
   let themeChange = (maybeSyntaxClient, theme) =>
     Isolinear.Effect.create(~name="syntax.theme", () => {
+      Log.info("Trying theme change...");
       Option.iter(
         syntaxClient => {
           Oni_Syntax_Client.notifyThemeChanged(syntaxClient, theme)

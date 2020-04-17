@@ -58,8 +58,12 @@ let getActiveHighlighters = state => {
 let anyPendingWork = state => getActiveHighlighters(state) != [];
 
 let bufferEnter = (id: int, state: t) => {
-  // TODO: Don't add duplicates...
-  let visibleBuffers = [id, ...state.visibleBuffers];
+  let exists = List.exists(v => v == id, state.visibleBuffers)
+  let visibleBuffers = if (exists) {
+    state.visibleBuffers
+  } else {
+    [id, ...state.visibleBuffers]
+  };
 
   {...state, visibleBuffers};
 };

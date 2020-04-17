@@ -70,6 +70,11 @@ let runTest =
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
 
+  switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
+  | None => ()
+  | Some(logFile) => Timber.App.setLogFile(logFile);
+  };
+
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
@@ -99,6 +104,8 @@ let runTest =
       headlessWindow,
       <Oni_UI.Root state />,
     );
+
+    //Revery.Utility.HeadlessWindow.takeScreenshot(headlessWindow, "screenshot.png");
   };
 
   InitLog.info("Starting store...");
@@ -149,17 +156,25 @@ let runTest =
 
   InitLog.info("Sending init event");
 
+  Oni_UI.GlobalContext.set({
+    notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
+      dispatch(Model.Actions.WindowTreeSetSize(width, height)),
+    openEditorById: id => {
+      dispatch(Model.Actions.ViewSetActiveEditor(id));
+    },
+    closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
+    editorScrollDelta: (~editorId, ~deltaY, ()) =>
+      dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
+    editorSetScroll: (~editorId, ~scrollY, ()) =>
+      dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
+    setActiveWindow: (splitId, editorGroupId) =>
+      dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
+    dispatch,
+  });
+
   dispatch(Model.Actions.Init);
 
-  let wrappedRunEffects = () => {
-    runEffects();
-  };
-
-  wrappedRunEffects();
-
-  let wrappedDispatch = action => {
-    dispatch(action);
-  };
+  runEffects();
 
   let waitForState = (~name, ~timeout=0.5, waiter) => {
     let logWaiter = msg => Log.info(" WAITER (" ++ name ++ "): " ++ msg);
@@ -180,7 +195,7 @@ let runTest =
       let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
 
       // Flush any pending effects
-      wrappedRunEffects();
+      runEffects();
 
       Unix.sleepf(0.1);
       Thread.yield();
@@ -197,7 +212,7 @@ let runTest =
   };
 
   Log.info("--- Starting test: " ++ name);
-  test(wrappedDispatch, waitForState, wrappedRunEffects);
+  test(dispatch, waitForState, runEffects);
   Log.info("--- TEST COMPLETE: " ++ name);
 
   dispatch(Model.Actions.Quit(true));

@@ -21,6 +21,10 @@ runTestWithInput(
       state.vimMode == Vim.Types.Normal
     );
 
+    wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
+      state.syntaxClient |> Option.is_some
+    });
+
     let testFile = getAssetPath("some-test-file.json");
 
     // Create a buffer
@@ -35,6 +39,7 @@ runTestWithInput(
 
     // Open file again
     dispatch(Actions.OpenFileByPath(testFile, None, None));
+
 
     // Wait for highlights to show up
     wait(
@@ -56,7 +61,7 @@ runTestWithInput(
     });
 
     // Verify syntax server did not close
-    wait(~name="Verify we get syntax highlights", ~timeout=10.0, _state => {
+    wait(~name="Verify server did not close", ~timeout=10.0, _state => {
       ! gotSyntaxServerClose^
     });
   },

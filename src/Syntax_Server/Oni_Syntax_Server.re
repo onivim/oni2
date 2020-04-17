@@ -45,20 +45,17 @@ let start = (~healthCheck) => {
     try(
       {
         if (State.anyPendingWork(state^)) {
-          //log("Running unit of work...");
           map2(
             State.doPendingWork,
-            //log("Unit of work completed.");
           );
         } else {
-          //log("No pending work, stopping.");
           let _: result(unit, Luv.Error.t) = stopWork();
-          ();
         };
 
         let tokenUpdates = State.getTokenUpdates(state^);
-        write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
-        //log("Token updates sent.");
+        if (tokenUpdates != []) {
+          write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+        }
         map2(State.clearTokenUpdates);
       }
     ) {
@@ -73,10 +70,7 @@ let start = (~healthCheck) => {
 
   let map = f => {
     state := f(state^);
-    //if (State.anyPendingWork(state^)) {
     let _: result(unit, Luv.Error.t) = Luv.Timer.again(timer);
-    ();
-    //();
   };
 
   startWork();
