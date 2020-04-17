@@ -1,5 +1,5 @@
 {
-  "checksum": "e0c80fb72a3430234f4597c455aca166",
+  "checksum": "ea13c6bdd6f67126f82552e51798f324",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -287,14 +287,14 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-vscode-exthost@github:onivim/reason-vscode-exthost#2686bd1@d41d8cd9": {
+    "reason-vscode-exthost@github:onivim/reason-vscode-exthost#ea4e622@d41d8cd9": {
       "id":
-        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#2686bd1@d41d8cd9",
+        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#ea4e622@d41d8cd9",
       "name": "reason-vscode-exthost",
-      "version": "github:onivim/reason-vscode-exthost#2686bd1",
+      "version": "github:onivim/reason-vscode-exthost#ea4e622",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-vscode-exthost#2686bd1" ]
+        "source": [ "github:onivim/reason-vscode-exthost#ea4e622" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1231,7 +1231,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
-        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#2686bd1@d41d8cd9",
+        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#ea4e622@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.1.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
