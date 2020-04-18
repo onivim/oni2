@@ -45,7 +45,6 @@ module Sub = {
         dispose: unit => unit,
         terminal: ReveryTerminal.t,
         isResizing: ref(bool),
-        queuedScreen: ref(option(ReveryTerminal.Screen.t)),
       };
 
       type nonrec msg = msg;
@@ -64,17 +63,43 @@ module Sub = {
           };
 
         let isResizing = ref(false);
-        let queuedScreen = ref(None);
+
+        let makeDebouncedDispatch = () => {
+          let scheduled = ref(false);
+          let latestAction = ref(None);
+          action => {
+            latestAction := Some(action);
+            if (! scheduled^) {
+              scheduled := true;
+
+              let _: unit => unit =
+                Revery.Tick.timeout(
+                  () => {
+                    latestAction^ |> Option.iter(dispatch);
+                    scheduled := false;
+                    latestAction := None;
+                  },
+                  Revery.Time.zero,
+                );
+              ();
+            };
+          };
+        };
+
+        let debouncedScreenDispatch = makeDebouncedDispatch();
+        let debouncedCursorDispatch = makeDebouncedDispatch();
 
         let onEffect = eff =>
           switch (eff) {
           | ReveryTerminal.ScreenResized(_) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
             if (! isResizing^) {
-              queuedScreen := Some(screen);
+              debouncedScreenDispatch(
+                ScreenUpdated({id: params.id, screen}),
+              );
             }
           | ReveryTerminal.CursorMoved(cursor) =>
-            dispatch(CursorMoved({id: params.id, cursor}))
+            debouncedCursorDispatch(CursorMoved({id: params.id, cursor}))
           | ReveryTerminal.Output(output) =>
             ExtHostClient.Terminal.Requests.acceptProcessInput(
               params.id,
@@ -138,7 +163,6 @@ module Sub = {
           rows: params.rows,
           columns: params.columns,
           terminal,
-          queuedScreen,
         };
       };
 
@@ -159,11 +183,6 @@ module Sub = {
           ReveryTerminal.resize(~rows, ~columns, state.terminal);
           state.isResizing := false;
           {...state, rows, columns};
-        } else if (state.queuedScreen^ != None) {
-          let screen = Option.get(state.queuedScreen^);
-          dispatch(ScreenUpdated({id: params.id, screen}));
-          state.queuedScreen := None;
-          state;
         } else {
           state;
         };
