@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Oni_Core;
 open TestFramework;
 
 module Json = Oni_Core.Json;

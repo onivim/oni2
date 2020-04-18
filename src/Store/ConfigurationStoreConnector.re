@@ -3,8 +3,6 @@
  *
  * This implements an updater (reducer + side effects) for managing configuration
  */
-open EditorCoreTypes;
-
 open Oni_Core;
 open Oni_Model;
 module ResultEx = Oni_Core.Utility.ResultEx;
