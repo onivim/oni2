@@ -43,13 +43,6 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let pixelPositionToLineColumn: (t, float, float) => (int, int);
 let getVimCursors: t => list(Vim.Cursor.t);
 
-let scrollToColumn: (~column: int, t) => t;
-let scrollToPixelX: (~pixelX: float, t) => t;
-
-let scrollToLine: (~line: int, t) => t;
-let scrollToPixelY: (~pixelY: float, t) => t;
-let scrollDeltaPixelY: (~pixelY: float, t) => t;
-
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
 
