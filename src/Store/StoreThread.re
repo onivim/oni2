@@ -13,7 +13,6 @@ module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 open Oni_Extensions;
-open Core.Utility;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
 module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));

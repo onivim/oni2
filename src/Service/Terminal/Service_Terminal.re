@@ -166,7 +166,7 @@ module Sub = {
         };
       };
 
-      let update = (~params: params, ~state: state, ~dispatch) => {
+      let update = (~params: params, ~state: state, ~dispatch as _) => {
         let rows = params.rows;
         let columns = params.columns;
         if (rows > 0
