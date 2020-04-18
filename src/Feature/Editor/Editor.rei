@@ -35,6 +35,7 @@ let getTopVisibleLine: t => int;
 let getBottomVisibleLine: t => int;
 let getLeftVisibleColumn: t => int;
 let getLayout: t => EditorLayout.t;
+let getCharacterUnderCursor: (~buffer: Buffer.t, t) => option(Uchar.t);
 let getPrimaryCursor: (~buffer: Buffer.t, t) => Location.t;
 let getVisibleView: t => int;
 let getTotalSizeInPixels: t => int;

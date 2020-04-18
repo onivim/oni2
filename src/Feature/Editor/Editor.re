@@ -75,6 +75,10 @@ let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
   Location.{line: Index.(zero + line), column: Index.(zero + column)};
 };
 
+let getCharacterUnderCursor = (~buffer, editor) => {
+  None;
+};
+
 let getPrimaryCursor = (~buffer, editor) =>
   switch (editor.cursors) {
   | [cursor, ..._] => mapCursor(~position=cursor, ~buffer)
