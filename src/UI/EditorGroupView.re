@@ -70,8 +70,7 @@ let toUiTabs =
   List.filter_map(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
-let make =
-    (~state: State.t, ~theme, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
+let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
   let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let style =
@@ -221,9 +220,8 @@ let make =
   };
 
   let onMouseDown = _ => {
-    GlobalContext.current().setActiveWindow(
-      windowId,
-      editorGroup.editorGroupId,
+    GlobalContext.current().dispatch(
+      EditorGroupSelected(editorGroup.editorGroupId),
     );
   };
 

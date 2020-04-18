@@ -313,19 +313,18 @@ let start =
   let _: unit => unit =
     Vim.Window.onMovement((movementType, _count) => {
       Log.trace("Vim.Window.onMovement");
-      let currentState = getState();
+      let state = getState();
 
       let move = moveFunc => {
-        let windowId = moveFunc(currentState.layout);
         let maybeEditorGroupId =
-          Feature_Layout.WindowTree.getEditorGroupIdFromSplitId(
-            windowId,
-            currentState.layout.windowTree,
-          );
+          EditorGroups.getActiveEditorGroup(state.editorGroups)
+          |> Option.map((group: EditorGroup.t) =>
+               moveFunc(group.editorGroupId, state.layout)
+             );
 
         switch (maybeEditorGroupId) {
         | Some(editorGroupId) =>
-          dispatch(Actions.WindowSetActive(windowId, editorGroupId))
+          dispatch(Actions.EditorGroupSelected(editorGroupId))
         | None => ()
         };
       };
@@ -341,7 +340,9 @@ let start =
       | OneUp => move(Feature_Layout.moveUp)
       | RotateDownwards => dispatch(Actions.Command("view.rotateForward"))
       | RotateUpwards => dispatch(Actions.Command("view.rotateBackward"))
-      | _ => move(layout => layout.activeWindowId)
+      | TopLeft
+      | BottomRight
+      | Previous => Log.error("Window movement not implemented")
       };
     });
 
@@ -633,8 +634,6 @@ let start =
       switch (dir) {
       | Some(direction) =>
         let eg = EditorGroup.create();
-        dispatch(Actions.EditorGroupAdd(eg));
-
         let split =
           Feature_Layout.WindowTree.createSplit(
             ~editorGroupId=eg.editorGroupId,
@@ -642,6 +641,10 @@ let start =
           );
 
         dispatch(Actions.AddSplit(direction, split));
+
+        // This needs to be dispatched after the split, since this will set the
+        // active editor group, which is then used as the target for the split.
+        dispatch(Actions.EditorGroupAdd(eg));
       | None => ()
       };
 
@@ -1027,7 +1030,7 @@ let start =
       )
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
-    | WindowSetActive(_, _)
+    | EditorGroupSelected(_)
     | EditorSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,

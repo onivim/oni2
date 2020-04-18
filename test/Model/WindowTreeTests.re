@@ -13,26 +13,26 @@ describe("WindowTreeTests", ({describe, _}) => {
 
       let split1 = createSplit(~editorGroupId=1, ());
       let split2 = createSplit(~editorGroupId=2, ());
-      let split3 = createSplit(~editorGroupId=2, ());
-      let split4 = createSplit(~editorGroupId=1, ());
+      let split3 = createSplit(~editorGroupId=3, ());
+      let split4 = createSplit(~editorGroupId=4, ());
 
       let splits =
         splits
         |> addSplit(~target=None, ~position=Before, Vertical, split1)
         |> addSplit(
-             ~target=Some(split1.id),
+             ~target=Some(split1.editorGroupId),
              ~position=Before,
              Vertical,
              split2,
            )
         |> addSplit(
-             ~target=Some(split2.id),
+             ~target=Some(split2.editorGroupId),
              ~position=Before,
              Horizontal,
              split3,
            )
         |> addSplit(
-             ~target=Some(split1.id),
+             ~target=Some(split1.editorGroupId),
              ~position=Before,
              Horizontal,
              split4,
@@ -40,9 +40,9 @@ describe("WindowTreeTests", ({describe, _}) => {
 
       let newSplits =
         splits
-        |> removeSplit(split4.id)
-        |> removeSplit(split3.id)
-        |> removeSplit(split2.id);
+        |> removeSplit(split4.editorGroupId)
+        |> removeSplit(split3.editorGroupId)
+        |> removeSplit(split2.editorGroupId);
 
       expect.equal(
         newSplits,
@@ -57,7 +57,7 @@ describe("WindowTreeTests", ({describe, _}) => {
       expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
 
       let split = createSplit(~editorGroupId=1, ());
-      let targetId = split.id;
+      let targetId = split.editorGroupId;
 
       let splits =
         addSplit(~target=None, ~position=Before, Vertical, split, splits);
@@ -86,7 +86,7 @@ describe("WindowTreeTests", ({describe, _}) => {
       expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
 
       let split = createSplit(~editorGroupId=1, ());
-      let targetId = split.id;
+      let targetId = split.editorGroupId;
 
       let splits =
         addSplit(~target=None, ~position=After, Vertical, split, splits);
@@ -115,7 +115,7 @@ describe("WindowTreeTests", ({describe, _}) => {
       expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
 
       let split1 = createSplit(~editorGroupId=1, ());
-      let targetId = split1.id;
+      let targetId = split1.editorGroupId;
       let split2 = createSplit(~editorGroupId=2, ());
       let split3 = createSplit(~editorGroupId=3, ());
 
@@ -183,21 +183,16 @@ describe("rotateForward", ({test, _}) => {
       |> addSplit(~position=Before, Vertical, splitB)
       |> addSplit(~position=Before, Vertical, splitC);
 
-    expect.bool(
-      tree == Parent(Vertical, [Leaf(splitC), Leaf(splitB), Leaf(splitA)]),
-    ).
-      toBe(
-      true,
+    expect.equal(
+      Parent(Vertical, [Leaf(splitC), Leaf(splitB), Leaf(splitA)]),
+      tree,
     );
 
-    let newTree = rotateForward(splitC.id, tree);
+    let newTree = rotateForward(splitC.editorGroupId, tree);
 
-    expect.bool(
-      newTree
-      == Parent(Vertical, [Leaf(splitA), Leaf(splitC), Leaf(splitB)]),
-    ).
-      toBe(
-      true,
+    expect.equal(
+      Parent(Vertical, [Leaf(splitA), Leaf(splitC), Leaf(splitB)]),
+      newTree,
     );
   });
 
@@ -213,13 +208,13 @@ describe("rotateForward", ({test, _}) => {
            ~position=Before,
            Horizontal,
            splitB,
-           ~target=Some(splitA.id),
+           ~target=Some(splitA.editorGroupId),
          )
       |> addSplit(
            ~position=Before,
            Horizontal,
            splitC,
-           ~target=Some(splitB.id),
+           ~target=Some(splitB.editorGroupId),
          )
       |> addSplit(~position=Before, Vertical, splitD);
 
@@ -240,7 +235,7 @@ describe("rotateForward", ({test, _}) => {
       true,
     );
 
-    let newTree = rotateForward(splitA.id, tree);
+    let newTree = rotateForward(splitA.editorGroupId, tree);
 
     expect.bool(
       newTree
@@ -279,7 +274,7 @@ describe("rotateBackward", ({test, _}) => {
       true,
     );
 
-    let newTree = rotateBackward(splitC.id, tree);
+    let newTree = rotateBackward(splitC.editorGroupId, tree);
 
     expect.bool(
       newTree
@@ -302,13 +297,13 @@ describe("rotateBackward", ({test, _}) => {
            ~position=Before,
            Horizontal,
            splitB,
-           ~target=Some(splitA.id),
+           ~target=Some(splitA.editorGroupId),
          )
       |> addSplit(
            ~position=Before,
            Horizontal,
            splitC,
-           ~target=Some(splitB.id),
+           ~target=Some(splitB.editorGroupId),
          )
       |> addSplit(~position=Before, Vertical, splitD);
 
@@ -329,7 +324,7 @@ describe("rotateBackward", ({test, _}) => {
       true,
     );
 
-    let newTree = rotateBackward(splitA.id, tree);
+    let newTree = rotateBackward(splitA.editorGroupId, tree);
 
     expect.bool(
       newTree

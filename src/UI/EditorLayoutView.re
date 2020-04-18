@@ -48,13 +48,7 @@ let renderTree = (state, theme, tree) => {
               item.split.editorGroupId,
             )
           ) {
-          | Some(editorGroup) =>
-            <EditorGroupView
-              state
-              theme
-              windowId={item.split.id}
-              editorGroup
-            />
+          | Some(editorGroup) => <EditorGroupView state theme editorGroup />
           | None => React.empty
           }}
        </View>

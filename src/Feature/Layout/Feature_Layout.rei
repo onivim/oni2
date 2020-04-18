@@ -16,7 +16,13 @@ module WindowTree: {
     height: option(int),
   };
 
-  type t;
+  // definition only used for tests
+  type t =
+    | Parent(direction, list(t))
+    | Leaf(split)
+    | Empty;
+
+  let empty: t; // only used for tests
 
   let getSplits: t => list(split);
   let createSplit:
@@ -25,6 +31,8 @@ module WindowTree: {
     (~target: option(int)=?, ~position: position, direction, split, t) => t;
   let removeSplit: (int, t) => t;
   let getEditorGroupIdFromSplitId: (int, t) => option(int);
+
+  // only used for tests
   let rotateForward: (int, t) => t;
   let rotateBackward: (int, t) => t;
 };
@@ -39,6 +47,7 @@ module WindowTreeLayout: {
   };
 
   let layout: (int, int, int, int, WindowTree.t) => list(t);
+  let move: (int, int, int, list(t)) => option(int); // only used for tests
 };
 
 type direction =
@@ -49,7 +58,6 @@ type direction =
 
 type t = {
   windowTree: WindowTree.t,
-  activeWindowId: int,
   windowTreeWidth: int,
   windowTreeHeight: int,
 };
@@ -57,10 +65,12 @@ type t = {
 let create: unit => t;
 
 let setTreeSize: (int, int, t) => t;
-let ensureActive: t => t;
 
-let move: (direction, t) => int;
-let moveLeft: t => int;
-let moveRight: t => int;
-let moveUp: t => int;
-let moveDown: t => int;
+let move: (direction, int, t) => int;
+let moveLeft: (int, t) => int;
+let moveRight: (int, t) => int;
+let moveUp: (int, t) => int;
+let moveDown: (int, t) => int;
+
+let rotateForward: (int, t) => t;
+let rotateBackward: (int, t) => t;

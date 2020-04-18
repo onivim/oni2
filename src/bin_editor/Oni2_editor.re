@@ -209,8 +209,6 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
       editorSetScroll: (~editorId, ~scrollY, ()) =>
         dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-      setActiveWindow: (splitId, editorGroupId) =>
-        dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
       dispatch,
     });
 

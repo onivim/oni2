@@ -78,7 +78,7 @@ let addSplit = (~target=None, ~position, direction, newSplit, currentTree) => {
         Parent(d, List.concat(List.map(f(targetId, Some(split)), tree))),
       ]
     | Leaf(v) =>
-      if (v.id == targetId) {
+      if (v.editorGroupId == targetId) {
         let children =
           switch (position) {
           | Before => [Leaf(newSplit), Leaf(v)]
@@ -111,12 +111,12 @@ let addSplit = (~target=None, ~position, direction, newSplit, currentTree) => {
   };
 };
 
-let rec removeSplit = (id, currentTree) =>
+let rec removeSplit = (content, currentTree) =>
   switch (currentTree) {
   | Parent(direction, children) =>
     let newChildren =
       children
-      |> List.map(child => removeSplit(id, child))
+      |> List.map(child => removeSplit(content, child))
       |> List.filter(filterEmpty);
 
     if (List.length(newChildren) > 0) {
@@ -124,16 +124,16 @@ let rec removeSplit = (id, currentTree) =>
     } else {
       Empty;
     };
-  | Leaf(split) when split.id == id => Empty
+  | Leaf(split) when split.editorGroupId == content => Empty
   | Leaf(_) as leaf => leaf
   | Empty => Empty
   };
 
-let rec rotate = (id, func, currenTree) => {
-  let findSplit = (id, children) => {
+let rec rotate = (target, func, currenTree) => {
+  let findSplit = children => {
     let predicate =
       fun
-      | Leaf(split) => split.id == id
+      | Leaf(split) => split.editorGroupId == target
       | _ => false;
 
     List.exists(predicate, children);
@@ -144,8 +144,8 @@ let rec rotate = (id, func, currenTree) => {
     Parent(
       direction,
       List.map(
-        rotate(id, func),
-        findSplit(id, children) ? func(children) : children,
+        rotate(target, func),
+        findSplit(children) ? func(children) : children,
       ),
     )
   | Leaf(_) as leaf => leaf
@@ -153,7 +153,7 @@ let rec rotate = (id, func, currenTree) => {
   };
 };
 
-let rotateForward = (id, currentTree) => {
+let rotateForward = (target, currentTree) => {
   let f =
     fun
     | [] => []
@@ -165,10 +165,10 @@ let rotateForward = (id, currentTree) => {
       | None => []
       };
 
-  rotate(id, f, currentTree);
+  rotate(target, f, currentTree);
 };
 
-let rotateBackward = (id, currentTree) => {
+let rotateBackward = (target, currentTree) => {
   let f =
     fun
     | [] => []
@@ -176,5 +176,23 @@ let rotateBackward = (id, currentTree) => {
     | [a, b] => [b, a]
     | [head, ...tail] => tail @ [head];
 
-  rotate(id, f, currentTree);
+  rotate(target, f, currentTree);
+};
+
+let rec windowFor = (content, node) => {
+  let rec loopChildren =
+    fun
+    | [] => None
+    | [head, ...rest] =>
+      switch (windowFor(content, head)) {
+      | Some(split) => Some(split)
+      | None => loopChildren(rest)
+      };
+
+  switch (node) {
+  | Parent(_, children) => loopChildren(children)
+  | Leaf(split) when split.editorGroupId == content => Some(split)
+  | Leaf(_)
+  | Empty => None
+  };
 };

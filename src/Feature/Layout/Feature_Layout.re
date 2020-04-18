@@ -1,15 +1,6 @@
 module WindowSplitId =
   Revery.UniqueId.Make({});
 
-module WindowId = {
-  let _current = ref(0);
-  let current = () => _current^;
-  let next = () => {
-    incr(_current);
-    current();
-  };
-};
-
 type direction =
   | Up
   | Left
@@ -18,15 +9,11 @@ type direction =
 
 type t = {
   windowTree: WindowTree.t,
-  activeWindowId: int,
   windowTreeWidth: int,
   windowTreeHeight: int,
 };
 
-let initialWindowId = WindowId.next();
-
 let create = (): t => {
-  activeWindowId: initialWindowId,
   windowTree: WindowTree.empty,
   windowTreeWidth: 1,
   windowTreeHeight: 1,
@@ -38,43 +25,35 @@ let setTreeSize = (width, height, v: t) => {
   windowTreeHeight: height,
 };
 
-/* Ensure the activeWindowId points to a valid winodw */
-let ensureActive = (v: t) => {
-  let splits: list(WindowTree.split) = WindowTree.getSplits(v.windowTree);
-  let activeWindowId: int = v.activeWindowId;
+let moveCore = (current, dirX, dirY, model) => {
+  let layout = WindowTreeLayout.layout(0, 0, 200, 200, model.windowTree);
 
-  let splitIsActive =
-    List.exists((s: WindowTree.split) => s.id == activeWindowId, splits);
-
-  if (!splitIsActive && List.length(splits) > 0) {
-    {...v, activeWindowId: List.hd(splits).id};
-  } else {
-    v;
-  };
+  WindowTreeLayout.move(current, dirX, dirY, layout)
+  |> Option.value(~default=current);
 };
 
-let moveCore = (dirX, dirY, v: t) => {
-  let layout = WindowTreeLayout.layout(0, 0, 200, 200, v.windowTree);
-  let newWindow = WindowTreeLayout.move(v.activeWindowId, dirX, dirY, layout);
+let moveLeft = current => moveCore(current, -1, 0);
+let moveRight = current => moveCore(current, 1, 0);
+let moveUp = current => moveCore(current, 0, -1);
+let moveDown = current => moveCore(current, 0, 1);
 
-  switch (newWindow) {
-  | None => v.activeWindowId
-  | Some(newId) => newId
-  };
-};
-
-let moveLeft = moveCore(-1, 0);
-let moveRight = moveCore(1, 0);
-let moveUp = moveCore(0, -1);
-let moveDown = moveCore(0, 1);
-
-let move = (direction: direction, v) => {
+let move = (direction: direction, current, v) => {
   switch (direction) {
-  | Up => moveUp(v)
-  | Down => moveDown(v)
-  | Left => moveLeft(v)
-  | Right => moveRight(v)
+  | Up => moveUp(current, v)
+  | Down => moveDown(current, v)
+  | Left => moveLeft(current, v)
+  | Right => moveRight(current, v)
   };
+};
+
+let rotateForward = (target, model) => {
+  ...model,
+  windowTree: WindowTree.rotateForward(target, model.windowTree),
+};
+
+let rotateBackward = (target, model) => {
+  ...model,
+  windowTree: WindowTree.rotateBackward(target, model.windowTree),
 };
 
 module WindowTree = WindowTree;

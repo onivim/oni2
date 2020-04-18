@@ -10,6 +10,8 @@ module Model = Oni_Model;
 open Model;
 open Model.Actions;
 
+module OptionEx = Core.Utility.OptionEx;
+
 let start = () => {
   let quitEffect =
     Isolinear.Effect.createWithDispatch(~name="windows.quitEffect", dispatch =>
@@ -29,16 +31,6 @@ let start = () => {
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | WindowSetActive(splitId, _) =>
-      {
-        ...s,
-        layout: {
-          ...s.layout,
-          activeWindowId: splitId,
-        },
-      }
-      |> FocusManager.push(Editor)
-
     | WindowTreeSetSize(width, height) => {
         ...s,
         layout: Feature_Layout.setTreeSize(width, height, s.layout),
@@ -55,10 +47,12 @@ let start = () => {
           == 0,
         layout: {
           ...s.layout,
-          activeWindowId: split.id,
           windowTree:
             Feature_Layout.WindowTree.addSplit(
-              ~target=Some(s.layout.activeWindowId),
+              ~target={
+                EditorGroups.getActiveEditorGroup(s.editorGroups)
+                |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+              },
               ~position=After,
               direction,
               split,
@@ -96,34 +90,37 @@ let start = () => {
              s.layout.windowTree,
            );
 
-      let layout = Feature_Layout.ensureActive({...s.layout, windowTree});
-
-      {...s, layout};
+      {
+        ...s,
+        layout: {
+          ...s.layout,
+          windowTree,
+        },
+      };
 
     | OpenFileByPath(_) => FocusManager.push(Editor, s)
 
-    | Command("view.rotateForward") => {
-        ...s,
-        layout: {
-          ...s.layout,
-          windowTree:
-            Feature_Layout.WindowTree.rotateForward(
-              s.layout.activeWindowId,
-              s.layout.windowTree,
-            ),
-        },
+    | Command("view.rotateForward") =>
+      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...s,
+          layout:
+            Feature_Layout.rotateForward(editorGroup.editorGroupId, s.layout),
+        }
+      | None => s
       }
 
-    | Command("view.rotateBackward") => {
-        ...s,
-        layout: {
-          ...s.layout,
-          windowTree:
-            Feature_Layout.WindowTree.rotateBackward(
-              s.layout.activeWindowId,
-              s.layout.windowTree,
+    | Command("view.rotateBackward") =>
+      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...s,
+          layout:
+            Feature_Layout.rotateBackward(
+              editorGroup.editorGroupId,
+              s.layout,
             ),
-        },
+        }
+      | None => s
       }
 
     | _ => s

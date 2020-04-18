@@ -43,8 +43,6 @@ let start = () => {
         | None => EditorGroup.create()
         };
 
-      dispatch(EditorGroupAdd(newEditorGroup));
-
       let split =
         Feature_Layout.WindowTree.createSplit(
           ~editorGroupId=newEditorGroup.editorGroupId,
@@ -52,20 +50,23 @@ let start = () => {
         );
 
       dispatch(AddSplit(direction, split));
+
+      // This needs to be dispatched after the split, since this will set the
+      // active editor group, which is then used as the target for the split.
+      dispatch(EditorGroupAdd(newEditorGroup));
     });
 
   let windowMoveEffect = (state: State.t, direction, _) => {
     Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
-      let windowId = Feature_Layout.move(direction, state.layout);
       let maybeEditorGroupId =
-        Feature_Layout.WindowTree.getEditorGroupIdFromSplitId(
-          windowId,
-          state.layout.windowTree,
-        );
+        EditorGroups.getActiveEditorGroup(state.editorGroups)
+        |> Option.map((group: EditorGroup.t) =>
+             Feature_Layout.move(direction, group.editorGroupId, state.layout)
+           );
 
       switch (maybeEditorGroupId) {
       | Some(editorGroupId) =>
-        dispatch(WindowSetActive(windowId, editorGroupId))
+        dispatch(Actions.EditorGroupSelected(editorGroupId))
       | None => ()
       };
     });

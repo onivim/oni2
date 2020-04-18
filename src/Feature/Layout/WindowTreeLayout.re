@@ -18,7 +18,7 @@ let intersects = (x, y, split: t) => {
   + split.height;
 };
 
-let move = (id, dirX, dirY, splits: list(t)) => {
+let move = (content, dirX, dirY, splits: list(t)) => {
   let (minX, minY, maxX, maxY, deltaX, deltaY) =
     List.fold_left(
       (prev, cur) => {
@@ -37,7 +37,7 @@ let move = (id, dirX, dirY, splits: list(t)) => {
       splits,
     );
 
-  let splitInfo = List.filter(s => s.split.id == id, splits);
+  let splitInfo = List.filter(s => s.split.editorGroupId == content, splits);
 
   if (List.length(splitInfo) == 0) {
     None;
@@ -64,7 +64,7 @@ let move = (id, dirX, dirY, splits: list(t)) => {
         );
 
       if (List.length(intersects) > 0) {
-        result := Some(List.hd(intersects).split.id);
+        result := Some(List.hd(intersects).split.editorGroupId);
         found := true;
       };
 
