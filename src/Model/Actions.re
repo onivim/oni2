@@ -86,7 +86,6 @@ type t =
   | EnableKeyDisplayer
   | KeyboardInput(string)
   | WindowTitleSet(string)
-  | WindowTreeSetSize(int, int)
   | EditorGroupSelected(int)
   | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSizeChanged({

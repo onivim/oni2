@@ -199,8 +199,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
 
     GlobalContext.set({
-      notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
-        dispatch(Model.Actions.WindowTreeSetSize(width, height)),
       openEditorById: id => {
         dispatch(Model.Actions.ViewSetActiveEditor(id));
       },

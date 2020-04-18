@@ -7,23 +7,9 @@ type direction =
   | Down
   | Right;
 
-type t = {
-  windowTree: WindowTree.t,
-  windowTreeWidth: int,
-  windowTreeHeight: int,
-};
+type t = {windowTree: WindowTree.t};
 
-let create = (): t => {
-  windowTree: WindowTree.empty,
-  windowTreeWidth: 1,
-  windowTreeHeight: 1,
-};
-
-let setTreeSize = (width, height, v: t) => {
-  ...v,
-  windowTreeWidth: width,
-  windowTreeHeight: height,
-};
+let create = (): t => {windowTree: WindowTree.empty};
 
 let moveCore = (current, dirX, dirY, model) => {
   let layout = WindowTreeLayout.layout(0, 0, 200, 200, model.windowTree);
@@ -47,12 +33,10 @@ let move = (direction: direction, current, v) => {
 };
 
 let rotateForward = (target, model) => {
-  ...model,
   windowTree: WindowTree.rotateForward(target, model.windowTree),
 };
 
 let rotateBackward = (target, model) => {
-  ...model,
   windowTree: WindowTree.rotateBackward(target, model.windowTree),
 };
 

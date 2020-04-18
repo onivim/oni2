@@ -21,16 +21,9 @@ let parentStyle = direction => {
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let renderTree = (state, theme, tree) => {
-  open State;
+let renderTree = (~width, ~height, state: State.t, theme, tree) => {
   let items =
-    Feature_Layout.WindowTreeLayout.layout(
-      0,
-      0,
-      state.layout.windowTreeWidth,
-      state.layout.windowTreeHeight,
-      tree,
-    );
+    Feature_Layout.WindowTreeLayout.layout(0, 0, width, height, tree);
 
   items
   |> List.map((item: Feature_Layout.WindowTreeLayout.t) =>
@@ -53,18 +46,20 @@ let renderTree = (state, theme, tree) => {
   |> React.listToElement;
 };
 
-let make = (~state: State.t, ~theme, ()) => {
-  let children = renderTree(state, theme, state.layout.windowTree);
+let%component make = (~state: State.t, ~theme, ()) => {
+  let%hook (maybeDimensions, setDimensions) = Hooks.state(None);
+  let children =
+    switch (maybeDimensions) {
+    | Some((width, height)) =>
+      renderTree(~width, ~height, state, theme, state.layout.windowTree)
+    | None => React.empty
+    };
 
   let splits =
     [
       <View
         onDimensionsChanged={dim =>
-          GlobalContext.current().notifyWindowTreeSizeChanged(
-            ~width=dim.width,
-            ~height=dim.height,
-            (),
-          )
+          setDimensions(_ => Some((dim.width, dim.height)))
         }
         style=Style.[flexGrow(1)]>
         children

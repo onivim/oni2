@@ -46,15 +46,9 @@ type direction =
   | Down
   | Right;
 
-type t = {
-  windowTree: WindowTree.t,
-  windowTreeWidth: int,
-  windowTreeHeight: int,
-};
+type t = {windowTree: WindowTree.t};
 
 let create: unit => t;
-
-let setTreeSize: (int, int, t) => t;
 
 let move: (direction, int, t) => int;
 let moveLeft: (int, t) => int;

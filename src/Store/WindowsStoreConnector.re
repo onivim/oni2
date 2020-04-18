@@ -30,11 +30,6 @@ let start = () => {
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | WindowTreeSetSize(width, height) => {
-        ...s,
-        layout: Feature_Layout.setTreeSize(width, height, s.layout),
-      }
-
     | AddSplit(direction, split) => {
         ...s,
         // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
@@ -45,7 +40,6 @@ let start = () => {
              )
           == 0,
         layout: {
-          ...s.layout,
           windowTree:
             Feature_Layout.WindowTree.addSplit(
               ~target={
@@ -64,7 +58,6 @@ let start = () => {
         ...s,
         zenMode: false,
         layout: {
-          ...s.layout,
           windowTree:
             Feature_Layout.WindowTree.removeSplit(id, s.layout.windowTree),
         },
@@ -89,8 +82,7 @@ let start = () => {
       {
         ...s,
         layout: {
-          ...s.layout,
-          windowTree,
+          windowTree: windowTree,
         },
       };
 

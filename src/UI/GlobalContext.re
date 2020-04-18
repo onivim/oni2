@@ -10,14 +10,12 @@
 open Oni_Core;
 open Oni_Model;
 
-type notifyWindowTreeSizeChanged = (~width: int, ~height: int, unit) => unit;
 type editorScrollDelta =
   (~editorId: Feature_Editor.EditorId.t, ~deltaY: float, unit) => unit;
 type editorSetScroll =
   (~editorId: Feature_Editor.EditorId.t, ~scrollY: float, unit) => unit;
 
 type t = {
-  notifyWindowTreeSizeChanged,
   editorScrollDelta,
   editorSetScroll,
   openEditorById: int => unit,
@@ -29,7 +27,6 @@ let viewNoop: Views.viewOperation =
   (~path as _="", ~id as _=0, ~openMethod as _=Buffer, ()) => ();
 
 let default = {
-  notifyWindowTreeSizeChanged: (~width as _, ~height as _, ()) => (),
   editorScrollDelta: (~editorId as _, ~deltaY as _, ()) => (),
   editorSetScroll: (~editorId as _, ~scrollY as _, ()) => (),
   openEditorById: _ => (),
