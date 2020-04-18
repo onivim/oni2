@@ -237,6 +237,27 @@ describe("JsonEx", ({describe, _}) => {
       expect.equal(keys, ["a.b.c", "a.b.d", "a.e.f"]);
     });
   });
+  describe("parseYojsonErrorMessage", ({test, _}) => {
+    let parseError = JsonEx.parseYojsonErrorMessage;
+    test("invalid message", ({expect, _}) => {
+      let msg = parseError("some error that doesn't match");
+
+      expect.equal(msg, None);
+    });
+
+    test("valid error", ({expect, _}) => {
+      let validError = {|
+Line 6, bytes 2-35:
+Expected ',' or '}' but found something else;
+      |};
+      let msg = parseError(validError);
+      expect.equal(
+        msg,
+        Some((6, 2, 35, "Expected ',' or '}' but found something else")),
+      );
+    });
+  });
+
   describe("explode", ({test, _}) => {
     test("simple a.b.c case", ({expect, _}) => {
       let json = `Assoc([("a.b.c", `Int(1))]);
