@@ -3,20 +3,14 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="AddRemoveSplitTest", (dispatch, wait, _) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
-    let splitCount =
-      state.layout.windowTree
-      |> Feature_Layout.WindowTree.getSplits
-      |> List.length;
+    let splitCount = state.layout |> Feature_Layout.windows |> List.length;
     splitCount == 1;
   });
 
   dispatch(Command("view.splitVertical"));
 
   wait(~name="Wait for split to be created", (state: State.t) => {
-    let splitCount =
-      state.layout.windowTree
-      |> Feature_Layout.WindowTree.getSplits
-      |> List.length;
+    let splitCount = state.layout |> Feature_Layout.windows |> List.length;
 
     splitCount == 2;
   });
@@ -24,10 +18,7 @@ runTest(~name="AddRemoveSplitTest", (dispatch, wait, _) => {
   dispatch(QuitBuffer(Vim.Buffer.getCurrent(), false));
 
   wait(~name="Wait for split to be closed", (state: State.t) => {
-    let splitCount =
-      state.layout.windowTree
-      |> Feature_Layout.WindowTree.getSplits
-      |> List.length;
+    let splitCount = state.layout |> Feature_Layout.windows |> List.length;
 
     splitCount == 1;
   });

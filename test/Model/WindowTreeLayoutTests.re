@@ -2,11 +2,7 @@ open TestFramework;
 
 open Oni_Core_Test.Helpers;
 
-module WindowTree = Feature_Layout.WindowTree;
-module WindowTreeLayout = Feature_Layout.WindowTreeLayout;
-
-open WindowTree;
-open WindowTreeLayout;
+module Layout = Feature_Layout;
 
 describe("WindowTreeLayout", ({describe, _}) => {
   describe("move", ({test, _}) =>
@@ -14,15 +10,25 @@ describe("WindowTreeLayout", ({describe, _}) => {
       "regression test for #603 - navigation across splits not working",
       ({expect, _}) => {
       let splits =
-        WindowTree.empty
-        |> addSplit(~target=None, ~position=`Before, `Horizontal, 1)
-        |> addSplit(~target=Some(1), ~position=`Before, `Horizontal, 2)
-        |> addSplit(~target=Some(2), ~position=`Before, `Horizontal, 3);
+        Layout.initial
+        |> Layout.addWindow(~target=None, ~position=`Before, `Horizontal, 1)
+        |> Layout.addWindow(
+             ~target=Some(1),
+             ~position=`Before,
+             `Horizontal,
+             2,
+           )
+        |> Layout.addWindow(
+             ~target=Some(2),
+             ~position=`Before,
+             `Horizontal,
+             3,
+           );
 
-      let layoutItems = WindowTreeLayout.layout(0, 0, 300, 300, splits);
+      let layoutItems = Layout.layout(0, 0, 300, 300, splits);
 
       expect.equal(
-        [
+        Layout.[
           {content: 3, width: 300, height: 100, x: 0, y: 0},
           {content: 2, width: 300, height: 100, x: 0, y: 100},
           {content: 1, width: 300, height: 100, x: 0, y: 200},
@@ -30,16 +36,16 @@ describe("WindowTreeLayout", ({describe, _}) => {
         layoutItems,
       );
 
-      let destId = WindowTreeLayout.move(3, 0, 1, layoutItems) |> getOrThrow;
+      let destId = Layout.Internal.move(3, 0, 1, layoutItems) |> getOrThrow;
       expect.int(destId).toBe(2);
 
-      let destId = WindowTreeLayout.move(2, 0, 1, layoutItems) |> getOrThrow;
+      let destId = Layout.Internal.move(2, 0, 1, layoutItems) |> getOrThrow;
       expect.int(destId).toBe(1);
 
-      let destId = WindowTreeLayout.move(1, 0, -1, layoutItems) |> getOrThrow;
+      let destId = Layout.Internal.move(1, 0, -1, layoutItems) |> getOrThrow;
       expect.int(destId).toBe(2);
 
-      let destId = WindowTreeLayout.move(2, 0, -1, layoutItems) |> getOrThrow;
+      let destId = Layout.Internal.move(2, 0, -1, layoutItems) |> getOrThrow;
       expect.int(destId).toBe(3);
     })
   );
@@ -47,14 +53,14 @@ describe("WindowTreeLayout", ({describe, _}) => {
   describe("layout", ({test, _}) => {
     test("layout vertical splits", ({expect, _}) => {
       let splits =
-        WindowTree.empty
-        |> addSplit(~target=None, ~position=`Before, `Vertical, 1)
-        |> addSplit(~target=Some(1), ~position=`Before, `Vertical, 2);
+        Layout.initial
+        |> Layout.addWindow(~target=None, ~position=`Before, `Vertical, 1)
+        |> Layout.addWindow(~target=Some(1), ~position=`Before, `Vertical, 2);
 
-      let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
+      let layoutItems = Layout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
-        [
+        Layout.[
           {content: 2, width: 100, height: 200, x: 0, y: 0},
           {content: 1, width: 100, height: 200, x: 100, y: 0},
         ],
@@ -64,14 +70,19 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
     test("layout horizontal splits", ({expect, _}) => {
       let splits =
-        WindowTree.empty
-        |> addSplit(~target=None, ~position=`Before, `Horizontal, 1)
-        |> addSplit(~target=Some(1), ~position=`Before, `Horizontal, 2);
+        Layout.initial
+        |> Layout.addWindow(~target=None, ~position=`Before, `Horizontal, 1)
+        |> Layout.addWindow(
+             ~target=Some(1),
+             ~position=`Before,
+             `Horizontal,
+             2,
+           );
 
-      let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
+      let layoutItems = Layout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
-        [
+        Layout.[
           {content: 2, width: 200, height: 100, x: 0, y: 0},
           {content: 1, width: 200, height: 100, x: 0, y: 100},
         ],
@@ -81,15 +92,20 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
     test("layout mixed splits", ({expect, _}) => {
       let splits =
-        WindowTree.empty
-        |> addSplit(~target=None, ~position=`Before, `Horizontal, 1)
-        |> addSplit(~target=Some(1), ~position=`Before, `Horizontal, 2)
-        |> addSplit(~target=Some(1), ~position=`Before, `Vertical, 3);
+        Layout.initial
+        |> Layout.addWindow(~target=None, ~position=`Before, `Horizontal, 1)
+        |> Layout.addWindow(
+             ~target=Some(1),
+             ~position=`Before,
+             `Horizontal,
+             2,
+           )
+        |> Layout.addWindow(~target=Some(1), ~position=`Before, `Vertical, 3);
 
-      let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
+      let layoutItems = Layout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
-        [
+        Layout.[
           {content: 2, width: 200, height: 100, x: 0, y: 0},
           {content: 3, width: 100, height: 100, x: 0, y: 100},
           {content: 1, width: 100, height: 100, x: 100, y: 100},

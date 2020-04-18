@@ -1,54 +1,46 @@
-module WindowTree: {
-  // definition only used for tests
-  type t =
-    | Split([ | `Horizontal | `Vertical], list(t))
-    | Window({
-        weight: float,
-        content: int,
-      })
-    | Empty;
-
-  let empty: t; // only used for tests
-
-  let getSplits: t => list(int);
-  let addSplit:
-    (
-      ~target: option(int)=?,
-      ~position: [ | `Before | `After],
-      [ | `Horizontal | `Vertical],
-      int,
-      t
-    ) =>
-    t;
-  let removeSplit: (int, t) => t;
-
-  // only used for tests
-  let rotateForward: (int, t) => t;
-  let rotateBackward: (int, t) => t;
-};
-
-module WindowTreeLayout: {
-  type t = {
-    content: int,
-    x: int,
-    y: int,
-    width: int,
-    height: int,
-  };
-
-  let layout: (int, int, int, int, WindowTree.t) => list(t);
-  let move: (int, int, int, list(t)) => option(int); // only used for tests
-};
-
 type direction =
   | Up
   | Left
   | Down
   | Right;
 
-type t = {windowTree: WindowTree.t};
+// definition only used for tests
+type t =
+  | Split([ | `Horizontal | `Vertical], list(t))
+  | Window({
+      weight: float,
+      content: int,
+    })
+  | Empty;
 
-let create: unit => t;
+[@deriving show]
+type window = {
+  content: int,
+  x: int,
+  y: int,
+  width: int,
+  height: int,
+};
+
+module Internal: {
+  let move: (int, int, int, list(window)) => option(int); // only used for tests
+};
+
+let initial: t;
+
+let windows: t => list(int);
+let addWindow:
+  (
+    ~target: option(int)=?,
+    ~position: [ | `Before | `After],
+    [ | `Horizontal | `Vertical],
+    int,
+    t
+  ) =>
+  t;
+let removeWindow: (int, t) => t;
+
+let layout: (int, int, int, int, t) => list(window);
 
 let move: (direction, int, t) => int;
 let moveLeft: (int, t) => int;

@@ -119,7 +119,7 @@ let initial = (~getUserSettings, ~contributedCommands) => {
   statusBar: StatusBarModel.create(),
   syntaxClient: None,
   syntaxHighlights: Feature_Syntax.empty,
-  layout: Feature_Layout.create(),
+  layout: Feature_Layout.initial,
   windowTitle: "",
   windowIsFocused: true,
   windowIsMaximized: false,

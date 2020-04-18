@@ -2,27 +2,43 @@ open TestFramework;
 
 /* open Helpers; */
 
-module WindowTree = Feature_Layout.WindowTree;
-
-open WindowTree;
+module Layout = Feature_Layout;
 
 describe("WindowTreeTests", ({describe, _}) => {
-  describe("removeSplit", ({test, _}) => {
+  describe("removeWindow", ({test, _}) => {
     test("empty parent splits are removed", ({expect, _}) => {
-      let splits = WindowTree.empty;
+      let layout = Layout.initial;
 
-      let splits =
-        splits
-        |> addSplit(~target=None, ~position=`Before, `Vertical, 1)
-        |> addSplit(~target=Some(1), ~position=`Before, `Vertical, 2)
-        |> addSplit(~target=Some(2), ~position=`Before, `Horizontal, 3)
-        |> addSplit(~target=Some(1), ~position=`Before, `Horizontal, 4);
+      let layout =
+        layout
+        |> Layout.addWindow(~target=None, ~position=`Before, `Vertical, 1)
+        |> Layout.addWindow(
+             ~target=Some(1),
+             ~position=`Before,
+             `Vertical,
+             2,
+           )
+        |> Layout.addWindow(
+             ~target=Some(2),
+             ~position=`Before,
+             `Horizontal,
+             3,
+           )
+        |> Layout.addWindow(
+             ~target=Some(1),
+             ~position=`Before,
+             `Horizontal,
+             4,
+           );
 
-      let newSplits =
-        splits |> removeSplit(4) |> removeSplit(3) |> removeSplit(2);
+      let newLayout =
+        layout
+        |> Layout.removeWindow(4)
+        |> Layout.removeWindow(3)
+        |> Layout.removeWindow(2);
 
       expect.equal(
-        newSplits,
+        newLayout,
         Split(
           `Vertical,
           [Split(`Horizontal, [Window({weight: 1., content: 1})])],
@@ -31,73 +47,109 @@ describe("WindowTreeTests", ({describe, _}) => {
     })
   });
 
-  describe("addSplit", ({test, _}) => {
+  describe("addWindow", ({test, _}) => {
     test("add vertical split", ({expect, _}) => {
-      let splits = WindowTree.empty;
+      let layout = Layout.initial;
 
-      expect.equal(Split(`Vertical, [Empty]), splits);
+      expect.equal(Layout.Split(`Vertical, [Empty]), layout);
 
-      let splits =
-        addSplit(~target=None, ~position=`Before, `Vertical, 1, splits);
+      let layout =
+        Layout.addWindow(
+          ~target=None,
+          ~position=`Before,
+          `Vertical,
+          1,
+          layout,
+        );
 
       expect.equal(
-        Split(`Vertical, [Window({weight: 1., content: 1})]),
-        splits,
+        Layout.Split(`Vertical, [Window({weight: 1., content: 1})]),
+        layout,
       );
 
-      let splits =
-        addSplit(~target=Some(1), ~position=`Before, `Vertical, 2, splits);
+      let layout =
+        Layout.addWindow(
+          ~target=Some(1),
+          ~position=`Before,
+          `Vertical,
+          2,
+          layout,
+        );
       expect.equal(
-        Split(
+        Layout.Split(
           `Vertical,
           [
             Window({weight: 1., content: 2}),
             Window({weight: 1., content: 1}),
           ],
         ),
-        splits,
+        layout,
       );
     });
 
     test("add vertical split - after", ({expect, _}) => {
-      let splits = WindowTree.empty;
+      let layout = Layout.initial;
 
-      expect.equal(Split(`Vertical, [Empty]), splits);
+      expect.equal(Layout.Split(`Vertical, [Empty]), layout);
 
-      let splits =
-        addSplit(~target=None, ~position=`After, `Vertical, 1, splits);
+      let layout =
+        Layout.addWindow(
+          ~target=None,
+          ~position=`After,
+          `Vertical,
+          1,
+          layout,
+        );
 
       expect.equal(
-        Split(`Vertical, [Window({weight: 1., content: 1})]),
-        splits,
+        Layout.Split(`Vertical, [Window({weight: 1., content: 1})]),
+        layout,
       );
 
-      let splits =
-        addSplit(~target=Some(1), ~position=`After, `Vertical, 2, splits);
+      let layout =
+        Layout.addWindow(
+          ~target=Some(1),
+          ~position=`After,
+          `Vertical,
+          2,
+          layout,
+        );
       expect.equal(
-        Split(
+        Layout.Split(
           `Vertical,
           [
             Window({weight: 1., content: 1}),
             Window({weight: 1., content: 2}),
           ],
         ),
-        splits,
+        layout,
       );
     });
 
     test("parent split changes direction if needed", ({expect, _}) => {
-      let splits = WindowTree.empty;
+      let layout = Layout.initial;
 
-      expect.equal(Split(`Vertical, [Empty]), splits);
+      expect.equal(Layout.Split(`Vertical, [Empty]), layout);
 
-      let splits =
-        addSplit(~target=None, ~position=`Before, `Horizontal, 1, splits);
-      let splits =
-        addSplit(~target=Some(1), ~position=`Before, `Horizontal, 2, splits);
+      let layout =
+        Layout.addWindow(
+          ~target=None,
+          ~position=`Before,
+          `Horizontal,
+          1,
+          layout,
+        );
+      let layout =
+        Layout.addWindow(
+          ~target=Some(1),
+          ~position=`Before,
+          `Horizontal,
+          2,
+          layout,
+        );
 
       expect.equal(
-        Split(
+        Layout.Split(
           `Vertical,
           [
             Split(
@@ -109,14 +161,20 @@ describe("WindowTreeTests", ({describe, _}) => {
             ),
           ],
         ),
-        splits,
+        layout,
       );
 
-      let splits =
-        addSplit(~target=Some(1), ~position=`Before, `Vertical, 3, splits);
+      let layout =
+        Layout.addWindow(
+          ~target=Some(1),
+          ~position=`Before,
+          `Vertical,
+          3,
+          layout,
+        );
 
       expect.equal(
-        Split(
+        Layout.Split(
           `Vertical,
           [
             Split(
@@ -134,7 +192,7 @@ describe("WindowTreeTests", ({describe, _}) => {
             ),
           ],
         ),
-        splits,
+        layout,
       );
     });
   });
@@ -143,13 +201,13 @@ describe("WindowTreeTests", ({describe, _}) => {
 describe("rotateForward", ({test, _}) => {
   test("simple tree", ({expect, _}) => {
     let tree =
-      WindowTree.empty
-      |> addSplit(~position=`Before, `Vertical, 1)
-      |> addSplit(~position=`Before, `Vertical, 2)
-      |> addSplit(~position=`Before, `Vertical, 3);
+      Layout.initial
+      |> Layout.addWindow(~position=`Before, `Vertical, 1)
+      |> Layout.addWindow(~position=`Before, `Vertical, 2)
+      |> Layout.addWindow(~position=`Before, `Vertical, 3);
 
     expect.equal(
-      Split(
+      Layout.Split(
         `Vertical,
         [
           Window({weight: 1., content: 3}),
@@ -160,10 +218,10 @@ describe("rotateForward", ({test, _}) => {
       tree,
     );
 
-    let newTree = rotateForward(3, tree);
+    let newTree = Layout.rotateForward(3, tree);
 
     expect.equal(
-      Split(
+      Layout.Split(
         `Vertical,
         [
           Window({weight: 1., content: 1}),
@@ -177,14 +235,24 @@ describe("rotateForward", ({test, _}) => {
 
   test("nested tree", ({expect, _}) => {
     let tree =
-      WindowTree.empty
-      |> addSplit(~position=`Before, `Vertical, 1)
-      |> addSplit(~position=`Before, `Horizontal, 2, ~target=Some(1))
-      |> addSplit(~position=`Before, `Horizontal, 3, ~target=Some(2))
-      |> addSplit(~position=`Before, `Vertical, 4);
+      Layout.initial
+      |> Layout.addWindow(~position=`Before, `Vertical, 1)
+      |> Layout.addWindow(
+           ~position=`Before,
+           `Horizontal,
+           2,
+           ~target=Some(1),
+         )
+      |> Layout.addWindow(
+           ~position=`Before,
+           `Horizontal,
+           3,
+           ~target=Some(2),
+         )
+      |> Layout.addWindow(~position=`Before, `Vertical, 4);
 
     expect.equal(
-      Split(
+      Layout.Split(
         `Vertical,
         [
           Window({weight: 1., content: 4}),
@@ -201,10 +269,10 @@ describe("rotateForward", ({test, _}) => {
       tree,
     );
 
-    let newTree = rotateForward(1, tree);
+    let newTree = Layout.rotateForward(1, tree);
 
     expect.equal(
-      Split(
+      Layout.Split(
         `Vertical,
         [
           Window({weight: 1., content: 4}),
@@ -226,13 +294,13 @@ describe("rotateForward", ({test, _}) => {
 describe("rotateBackward", ({test, _}) => {
   test("simple tree", ({expect, _}) => {
     let tree =
-      WindowTree.empty
-      |> addSplit(~position=`Before, `Vertical, 1)
-      |> addSplit(~position=`Before, `Vertical, 2)
-      |> addSplit(~position=`Before, `Vertical, 3);
+      Layout.initial
+      |> Layout.addWindow(~position=`Before, `Vertical, 1)
+      |> Layout.addWindow(~position=`Before, `Vertical, 2)
+      |> Layout.addWindow(~position=`Before, `Vertical, 3);
 
     expect.equal(
-      Split(
+      Layout.Split(
         `Vertical,
         [
           Window({weight: 1., content: 3}),
@@ -243,10 +311,10 @@ describe("rotateBackward", ({test, _}) => {
       tree,
     );
 
-    let newTree = rotateBackward(3, tree);
+    let newTree = Layout.rotateBackward(3, tree);
 
     expect.equal(
-      Split(
+      Layout.Split(
         `Vertical,
         [
           Window({weight: 1., content: 2}),
@@ -260,14 +328,24 @@ describe("rotateBackward", ({test, _}) => {
 
   test("nested tree", ({expect, _}) => {
     let tree =
-      WindowTree.empty
-      |> addSplit(~position=`Before, `Vertical, 1)
-      |> addSplit(~position=`Before, `Horizontal, 2, ~target=Some(1))
-      |> addSplit(~position=`Before, `Horizontal, 3, ~target=Some(2))
-      |> addSplit(~position=`Before, `Vertical, 4);
+      Layout.initial
+      |> Layout.addWindow(~position=`Before, `Vertical, 1)
+      |> Layout.addWindow(
+           ~position=`Before,
+           `Horizontal,
+           2,
+           ~target=Some(1),
+         )
+      |> Layout.addWindow(
+           ~position=`Before,
+           `Horizontal,
+           3,
+           ~target=Some(2),
+         )
+      |> Layout.addWindow(~position=`Before, `Vertical, 4);
 
     expect.equal(
-      Split(
+      Layout.Split(
         `Vertical,
         [
           Window({weight: 1., content: 4}),
@@ -284,10 +362,10 @@ describe("rotateBackward", ({test, _}) => {
       tree,
     );
 
-    let newTree = rotateBackward(1, tree);
+    let newTree = Layout.rotateBackward(1, tree);
 
     expect.equal(
-      Split(
+      Layout.Split(
         `Vertical,
         [
           Window({weight: 1., content: 4}),

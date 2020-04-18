@@ -1,5 +1,4 @@
-module WindowSplitId =
-  Revery.UniqueId.Make({});
+open Utility;
 
 type direction =
   | Up
@@ -7,14 +6,240 @@ type direction =
   | Down
   | Right;
 
-type t = {windowTree: WindowTree.t};
+type t =
+  | Split([ | `Horizontal | `Vertical], list(t))
+  | Window({
+      weight: float,
+      content: int,
+    })
+  | Empty;
 
-let create = (): t => {windowTree: WindowTree.empty};
+[@deriving show({with_path: false})]
+type window = {
+  content: int,
+  x: int,
+  y: int,
+  width: int,
+  height: int,
+};
 
-let moveCore = (current, dirX, dirY, model) => {
-  let layout = WindowTreeLayout.layout(0, 0, 200, 200, model.windowTree);
+module Internal = {
+  let intersects = (x, y, split: window) => {
+    x >= split.x
+    && x <= split.x
+    + split.width
+    && y >= split.y
+    && y <= split.y
+    + split.height;
+  };
 
-  WindowTreeLayout.move(current, dirX, dirY, layout)
+  let move = (content, dirX, dirY, splits: list(window)) => {
+    let (minX, minY, maxX, maxY, deltaX, deltaY) =
+      List.fold_left(
+        (prev, cur) => {
+          let (minX, minY, maxX, maxY, deltaX, deltaY) = prev;
+
+          let newMinX = cur.x < minX ? cur.x : minX;
+          let newMinY = cur.y < minY ? cur.y : minY;
+          let newMaxX = cur.x + cur.width > maxX ? cur.x + cur.width : maxX;
+          let newMaxY = cur.y + cur.height > maxY ? cur.y + cur.height : maxY;
+          let newDeltaX = cur.width / 2 < deltaX ? cur.width / 2 : deltaX;
+          let newDeltaY = cur.height / 2 < deltaY ? cur.height / 2 : deltaY;
+
+          (newMinX, newMinY, newMaxX, newMaxY, newDeltaX, newDeltaY);
+        },
+        (0, 0, 1, 1, 100, 100),
+        splits,
+      );
+
+    let splitInfo = List.filter(s => s.content == content, splits);
+
+    if (List.length(splitInfo) == 0) {
+      None;
+    } else {
+      let startSplit = List.hd(splitInfo);
+
+      let curX = ref(startSplit.x + startSplit.width / 2);
+      let curY = ref(startSplit.y + startSplit.height / 2);
+      let found = ref(false);
+      let result = ref(None);
+
+      while (! found^
+             && curX^ >= minX
+             && curX^ < maxX
+             && curY^ >= minY
+             && curY^ < maxY) {
+        let x = curX^;
+        let y = curY^;
+
+        let intersects =
+          List.filter(
+            s => s.content != startSplit.content && intersects(x, y, s),
+            splits,
+          );
+
+        if (List.length(intersects) > 0) {
+          result := Some(List.hd(intersects).content);
+          found := true;
+        };
+
+        curX := x + dirX * deltaX;
+        curY := y + dirY * deltaY;
+      };
+
+      result^;
+    };
+  };
+
+  let rec rotate = (target, func, currenTree) => {
+    let findSplit = children => {
+      let predicate =
+        fun
+        | Window({content, _}) => content == target
+        | _ => false;
+
+      List.exists(predicate, children);
+    };
+
+    switch (currenTree) {
+    | Split(direction, children) =>
+      Split(
+        direction,
+        List.map(
+          rotate(target, func),
+          findSplit(children) ? func(children) : children,
+        ),
+      )
+    | Window(_) as window => window
+    | Empty => Empty
+    };
+  };
+};
+
+let initial = Split(`Vertical, [Empty]);
+
+let windows = tree => {
+  let rec traverse = (node, acc) => {
+    switch (node) {
+    | Split(_, children) =>
+      List.fold_left((acc, child) => traverse(child, acc), acc, children)
+    | Window({content, _}) => [content, ...acc]
+    | Empty => acc
+    };
+  };
+
+  traverse(tree, []);
+};
+
+let addWindow = (~target=None, ~position, direction, content, tree) => {
+  let newWindow = Window({weight: 1., content});
+
+  let rec f = (targetId, parent, split) => {
+    switch (split) {
+    | Split(direction, children) => [
+        Split(
+          direction,
+          List.concat(List.map(f(targetId, Some(split)), children)),
+        ),
+      ]
+    | Window({content, _}) as window =>
+      if (content == targetId) {
+        let children =
+          switch (position) {
+          | `Before => [newWindow, window]
+          | `After => [window, newWindow]
+          };
+
+        switch (parent) {
+        | Some(Split(dir, _)) =>
+          if (dir == direction) {
+            children;
+          } else {
+            [Split(direction, children)];
+          }
+        | _ => children
+        };
+      } else {
+        [window];
+      }
+    | Empty => [newWindow]
+    };
+  };
+
+  switch (target) {
+  | Some(targetId) => f(targetId, None, tree) |> List.hd
+  | None =>
+    switch (tree) {
+    | Split(d, children) =>
+      Split(d, List.filter(node => node != Empty, [newWindow, ...children]))
+    | other => other
+    }
+  };
+};
+
+let rec removeWindow = (target, tree) =>
+  switch (tree) {
+  | Split(direction, children) =>
+    let newChildren =
+      children
+      |> List.map(child => removeWindow(target, child))
+      |> List.filter(node => node != Empty);
+
+    if (List.length(newChildren) > 0) {
+      Split(direction, newChildren);
+    } else {
+      Empty;
+    };
+  | Window({content, _}) when content == target => Empty
+  | Window(_) as window => window
+  | Empty => Empty
+  };
+
+let rec layout = (x: int, y: int, width: int, height: int, tree: t) => {
+  switch (tree) {
+  | Split(direction, children) =>
+    let startX = x;
+    let startY = y;
+    let count = max(List.length(children), 1);
+    let individualWidth = width / count;
+    let individualHeight = height / count;
+
+    let result =
+      switch (direction) {
+      | `Horizontal =>
+        List.mapi(
+          i =>
+            layout(
+              startX,
+              startY + individualHeight * i,
+              width,
+              individualHeight,
+            ),
+          children,
+        )
+      | `Vertical =>
+        List.mapi(
+          i =>
+            layout(
+              startX + individualWidth * i,
+              startY,
+              individualWidth,
+              height,
+            ),
+          children,
+        )
+      };
+
+    List.concat(result);
+  | Window({content, _}) => [{content, x, y, width, height}]
+  | Empty => []
+  };
+};
+
+let moveCore = (current, dirX, dirY, tree) => {
+  let layout = layout(0, 0, 200, 200, tree);
+
+  Internal.move(current, dirX, dirY, layout)
   |> Option.value(~default=current);
 };
 
@@ -32,13 +257,28 @@ let move = (direction: direction, current, v) => {
   };
 };
 
-let rotateForward = (target, model) => {
-  windowTree: WindowTree.rotateForward(target, model.windowTree),
+let rotateForward = (target, currentTree) => {
+  let f =
+    fun
+    | [] => []
+    | [a] => [a]
+    | [a, b] => [b, a]
+    | list =>
+      switch (ListEx.last(list)) {
+      | Some(x) => [x, ...ListEx.dropLast(list)]
+      | None => []
+      };
+
+  Internal.rotate(target, f, currentTree);
 };
 
-let rotateBackward = (target, model) => {
-  windowTree: WindowTree.rotateBackward(target, model.windowTree),
-};
+let rotateBackward = (target, currentTree) => {
+  let f =
+    fun
+    | [] => []
+    | [a] => [a]
+    | [a, b] => [b, a]
+    | [head, ...tail] => tail @ [head];
 
-module WindowTree = WindowTree;
-module WindowTreeLayout = WindowTreeLayout;
+  Internal.rotate(target, f, currentTree);
+};

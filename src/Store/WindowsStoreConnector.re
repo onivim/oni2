@@ -33,58 +33,43 @@ let start = () => {
     | AddSplit(direction, split) => {
         ...s,
         // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
-        zenMode:
-          s.zenMode
-          && List.length(
-               Feature_Layout.WindowTree.getSplits(s.layout.windowTree),
-             )
-          == 0,
-        layout: {
-          windowTree:
-            Feature_Layout.WindowTree.addSplit(
-              ~target={
-                EditorGroups.getActiveEditorGroup(s.editorGroups)
-                |> Option.map((group: EditorGroup.t) => group.editorGroupId);
-              },
-              ~position=`After,
-              direction,
-              split,
-              s.layout.windowTree,
-            ),
-        },
+        zenMode: s.zenMode && Feature_Layout.windows(s.layout) == [],
+        layout:
+          Feature_Layout.addWindow(
+            ~target={
+              EditorGroups.getActiveEditorGroup(s.editorGroups)
+              |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+            },
+            ~position=`After,
+            direction,
+            split,
+            s.layout,
+          ),
       }
 
     | RemoveSplit(id) => {
         ...s,
         zenMode: false,
-        layout: {
-          windowTree:
-            Feature_Layout.WindowTree.removeSplit(id, s.layout.windowTree),
-        },
+        layout: Feature_Layout.removeWindow(id, s.layout),
       }
 
     | ViewCloseEditor(_) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
       /* Remove splits */
-      let windowTree =
-        s.layout.windowTree
-        |> Feature_Layout.WindowTree.getSplits
+      let layout =
+        s.layout
+        |> Feature_Layout.windows
         |> List.filter(editorGroupId =>
              Model.EditorGroups.isEmpty(editorGroupId, s.editorGroups)
            )
         |> List.fold_left(
              (acc, editorGroupId) =>
-               Feature_Layout.WindowTree.removeSplit(editorGroupId, acc),
-             s.layout.windowTree,
+               Feature_Layout.removeWindow(editorGroupId, acc),
+             s.layout,
            );
 
-      {
-        ...s,
-        layout: {
-          windowTree: windowTree,
-        },
-      };
+      {...s, layout};
 
     | OpenFileByPath(_) => FocusManager.push(Editor, s)
 
@@ -122,10 +107,7 @@ let start = () => {
       | Init => initializeDefaultViewEffect(state)
       // When opening a file, ensure that the active editor is getting focus
       | ViewCloseEditor(_) =>
-        if (List.length(
-              Feature_Layout.WindowTree.getSplits(state.layout.windowTree),
-            )
-            == 0) {
+        if (List.length(Feature_Layout.windows(state.layout)) == 0) {
           quitEffect;
         } else {
           Isolinear.Effect.none;

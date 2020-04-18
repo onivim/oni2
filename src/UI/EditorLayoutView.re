@@ -22,11 +22,10 @@ let parentStyle = direction => {
 };
 
 let renderTree = (~width, ~height, state: State.t, theme, tree) => {
-  let items =
-    Feature_Layout.WindowTreeLayout.layout(0, 0, width, height, tree);
+  let items = Feature_Layout.layout(0, 0, width, height, tree);
 
   items
-  |> List.map((item: Feature_Layout.WindowTreeLayout.t) =>
+  |> List.map((item: Feature_Layout.window) =>
        <View
          style=Style.[
            position(`Absolute),
@@ -51,7 +50,7 @@ let%component make = (~state: State.t, ~theme, ()) => {
   let children =
     switch (maybeDimensions) {
     | Some((width, height)) =>
-      renderTree(~width, ~height, state, theme, state.layout.windowTree)
+      renderTree(~width, ~height, state, theme, state.layout)
     | None => React.empty
     };
 
