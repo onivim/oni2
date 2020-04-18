@@ -71,7 +71,7 @@ let largeFileOptimization =
 let highlightActiveIndentGuide =
   setting("editor.highlightActiveIndentGuide", bool, ~default=true);
 let indentSize = setting("editor.indentSize", int, ~default=4);
-let insertSpaces = setting("editor.insertSpaces", bool, ~default=false);
+let insertSpaces = setting("editor.insertSpaces", bool, ~default=true);
 let lineNumbers = setting("editor.lineNumbers", lineNumbers, ~default=`On);
 let matchBrackets = setting("editor.matchBrackets", bool, ~default=true);
 let renderIndentGuides =
@@ -98,10 +98,10 @@ module ZenMode = {
 };
 
 module Experimental = {
-  let editorSmoothScroll =
+  let smoothScroll =
     setting("experimental.editor.smoothScroll", bool, ~default=false);
 
-  let editorSmoothCursor =
+  let cursorSmoothCaretAnimation =
     setting(
       "experimental.editor.cursorSmoothCaretAnimation",
       bool,
@@ -130,4 +130,6 @@ let contributions = [
   Minimap.showSlider.spec,
   ZenMode.hideTabs.spec,
   ZenMode.singleFile.spec,
+  Experimental.smoothScroll.spec,
+  Experimental.cursorSmoothCaretAnimation.spec,
 ];

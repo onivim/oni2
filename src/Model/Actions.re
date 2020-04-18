@@ -65,6 +65,7 @@ type t =
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
+  | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
@@ -96,6 +97,11 @@ type t =
     })
   | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSetScroll(Feature_Editor.EditorId.t, float)
+  | EditorSizeChanged({
+      id: Feature_Editor.EditorId.t,
+      pixelWidth: int,
+      pixelHeight: int,
+    })
   | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)

@@ -20,6 +20,8 @@ type t = {
   cursors: [@opaque] list(Vim.Cursor.t),
   selection: [@opaque] VisualRange.t,
   font: [@opaque] Service_Font.font,
+  pixelWidth: int,
+  pixelHeight: int,
 };
 
 let create = (~font, ~bufferId=0, ()) => {
@@ -49,6 +51,8 @@ let create = (~font, ~bufferId=0, ()) => {
         },
       ),
     font,
+    pixelWidth: 1,
+    pixelHeight: 1,
   };
 };
 
@@ -79,18 +83,19 @@ let pixelPositionToLineColumn = (view, pixelX, pixelY) => {
   (line, column);
 };
 
-let getVisibleView = (editor, metrics: EditorMetrics.t) =>
-  int_of_float(float_of_int(metrics.pixelHeight) /. getLineHeight(editor));
+let getVisibleView = editor => {
+  let {pixelHeight, _} = editor;
+  int_of_float(float_of_int(pixelHeight) /. getLineHeight(editor));
+};
 
 let getTotalSizeInPixels = editor =>
   int_of_float(float_of_int(editor.viewLines) *. getLineHeight(editor));
 
-let getVerticalScrollbarMetrics =
-    (view, scrollBarHeight, metrics: EditorMetrics.t) => {
+let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
+  let {pixelHeight, _} = view;
   let totalViewSizeInPixels =
-    float_of_int(getTotalSizeInPixels(view) + metrics.pixelHeight);
-  let thumbPercentage =
-    float_of_int(metrics.pixelHeight) /. totalViewSizeInPixels;
+    float_of_int(getTotalSizeInPixels(view) + pixelHeight);
+  let thumbPercentage = float_of_int(pixelHeight) /. totalViewSizeInPixels;
   let thumbSize =
     int_of_float(thumbPercentage *. float_of_int(scrollBarHeight));
 
@@ -118,12 +123,13 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
     };
 };
 
-let getLayout = (view, metrics: EditorMetrics.t) => {
+let getLayout = view => {
+  let {pixelWidth, pixelHeight, _} = view;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~maxMinimapCharacters=view.minimapMaxColumnWidth,
-      ~pixelWidth=float_of_int(metrics.pixelWidth),
-      ~pixelHeight=float_of_int(metrics.pixelHeight),
+      ~pixelWidth=float_of_int(pixelWidth),
+      ~pixelHeight=float_of_int(pixelHeight),
       ~isMinimapShown=true,
       ~characterWidth=getCharacterWidth(view),
       ~characterHeight=getLineHeight(view),
@@ -141,14 +147,69 @@ let getLeftVisibleColumn = view => {
 let getTopVisibleLine = view =>
   int_of_float(view.scrollY /. getLineHeight(view)) + 1;
 
-let getBottomVisibleLine = (view, metrics: EditorMetrics.t) => {
+let getBottomVisibleLine = view => {
   let absoluteBottomLine =
     int_of_float(
-      (view.scrollY +. float_of_int(metrics.pixelHeight))
-      /. getLineHeight(view),
+      (view.scrollY +. float_of_int(view.pixelHeight)) /. getLineHeight(view),
     );
 
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 
 let setFont = (~font, editor) => {...editor, font};
+
+let setSize = (~pixelWidth, ~pixelHeight, editor) => {
+  ...editor,
+  pixelWidth,
+  pixelHeight,
+};
+
+let scrollToPixelY = (~pixelY as newScrollY, view) => {
+  let {pixelHeight, _} = view;
+  let newScrollY = max(0., newScrollY);
+  let availableScroll =
+    max(float_of_int(view.viewLines - 1), 0.) *. getLineHeight(view);
+  let newScrollY = min(newScrollY, availableScroll);
+
+  let scrollPercentage =
+    newScrollY /. (availableScroll -. float_of_int(pixelHeight));
+  let minimapLineSize =
+    Constants.minimapCharacterWidth + Constants.minimapCharacterHeight;
+  let linesInMinimap = pixelHeight / minimapLineSize;
+  let availableMinimapScroll =
+    max(view.viewLines - linesInMinimap, 0) * minimapLineSize;
+  let newMinimapScroll =
+    scrollPercentage *. float_of_int(availableMinimapScroll);
+
+  {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
+};
+
+let scrollToLine = (~line, view) => {
+  let pixelY = float_of_int(line) *. getLineHeight(view);
+  scrollToPixelY(~pixelY, view);
+};
+
+let scrollToPixelX = (~pixelX as newScrollX, view) => {
+  let newScrollX = max(0., newScrollX);
+
+  let availableScroll =
+    max(
+      0.,
+      float_of_int(view.maxLineLength)
+      *. getCharacterWidth(view)
+      -. float(view.pixelWidth),
+    );
+  let scrollX = min(newScrollX, availableScroll);
+
+  {...view, scrollX};
+};
+
+let scrollToColumn = (~column, view) => {
+  let pixelX = float_of_int(column) *. getCharacterWidth(view);
+  scrollToPixelX(~pixelX, view);
+};
+
+let scrollDeltaPixelY = (~pixelY, view) => {
+  let pixelY = view.scrollY +. pixelY;
+  scrollToPixelY(~pixelY, view);
+};

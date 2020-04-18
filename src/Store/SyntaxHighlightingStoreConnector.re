@@ -94,16 +94,6 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
         {...state, syntaxClient: Some(client)},
         Isolinear.Effect.none,
       )
-    | Model.Actions.ConfigurationSet(config) => (
-        state,
-        Service_Syntax.Effect.configurationChange(state.syntaxClient, config)
-        |> mapServiceEffect,
-      )
-    | Model.Actions.TokenThemeLoaded(tokenTheme) => (
-        state,
-        Service_Syntax.Effect.themeChange(state.syntaxClient, tokenTheme)
-        |> mapServiceEffect,
-      )
     | Model.Actions.BufferEnter({metadata, fileType, _}) =>
       let visibleBuffers =
         Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);

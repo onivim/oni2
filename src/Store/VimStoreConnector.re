@@ -809,8 +809,7 @@ let start =
            )
         |> Option.iter(Vim.Options.setLineComment);
 
-        let synchronizeWindowMetrics =
-            (editor: Editor.t, editorGroup: EditorGroup.t) => {
+        let synchronizeWindowMetrics = (editor: Editor.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
@@ -819,7 +818,7 @@ let start =
                 bufferWidthInCharacters: columns,
                 _,
               } =
-            Editor.getLayout(editor, editorGroup.metrics);
+            Editor.getLayout(editor);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -832,8 +831,8 @@ let start =
 
         /* Update the window metrics for the editor */
         /* This synchronizes the window width / height with libvim's model */
-        switch (editor, editorGroup) {
-        | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
+        switch (editor) {
+        | Some(e) => synchronizeWindowMetrics(e)
         | _ => ()
         };
       }
@@ -1018,7 +1017,7 @@ let start =
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
-    | EditorGroupSizeChanged(_) => (state, synchronizeEditorEffect(state))
+    | EditorSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
@@ -1152,9 +1151,35 @@ let start =
         Isolinear.Effect.none,
       )
 
+    | FileChanged(event) =>
+      switch (Selectors.getActiveBuffer(state)) {
+      | Some(buffer)
+          when
+            Core.Buffer.getFilePath(buffer) == Some(event.path)
+            && !Core.Buffer.isModified(buffer) => (
+          state,
+          Service_Vim.reload(),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
+
     | _ => (state, Isolinear.Effect.none)
     };
   };
 
   (updater, stream);
+};
+
+let subscriptions = (state: State.t) => {
+  state.buffers
+  |> Core.IntMap.bindings
+  |> List.filter_map(((_key, buffer)) =>
+       buffer
+       |> Core.Buffer.getFilePath
+       |> Option.map(path =>
+            Service_FileWatcher.watch(~path, ~onEvent=event =>
+              Actions.FileChanged(event)
+            )
+          )
+     );
 };

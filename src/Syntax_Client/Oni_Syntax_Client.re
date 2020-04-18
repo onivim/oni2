@@ -29,8 +29,15 @@ let write = (client: t, msg: Protocol.ClientToServer.t) => {
   Stdlib.flush(client.out_channel);
 };
 
+module Defaults = {
+  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
+  let executablePath = Revery.Environment.executingDirectory ++ executableName;
+};
+
 let start =
     (
+      ~parentPid=?,
+      ~executablePath=Defaults.executablePath,
       ~onConnected=() => (),
       ~onClose=_ => (),
       ~scheduler,
@@ -50,7 +57,11 @@ let start =
   Unix.set_close_on_exec(pstderr);
   Unix.set_close_on_exec(stderr);
 
-  let parentPid = Unix.getpid() |> string_of_int;
+  let parentPid =
+    switch (parentPid) {
+    | None => Unix.getpid() |> string_of_int
+    | Some(pid) => pid
+    };
 
   // Remove ONI2_LOG_FILE from environment of syntax server
   let envList =
@@ -59,9 +70,6 @@ let start =
     |> List.filter(str => !StringEx.contains("ONI2_LOG_FILE", str));
 
   let env = [EnvironmentVariables.parentPid ++ "=" ++ parentPid, ...envList];
-
-  let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
-  let executablePath = Revery.Environment.executingDirectory ++ executableName;
 
   ClientLog.debugf(m =>
     m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
@@ -212,7 +220,10 @@ let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
 };
 
 let notifyConfigurationChanged = (v: t, configuration: Configuration.t) => {
-  write(v, Protocol.ClientToServer.ConfigurationChanged(configuration));
+  ClientLog.info("Notifying configuration changed.");
+  let useTreeSitter =
+    configuration |> Configuration.getValue(c => c.experimentalTreeSitter);
+  write(v, Protocol.ClientToServer.UseTreeSitter(useTreeSitter));
 };
 
 let healthCheck = (v: t) => {
@@ -233,4 +244,16 @@ let notifyVisibilityChanged = (v: t, visibility) => {
 let close = (syntaxClient: t) => {
   ClientLog.debug("Sending close request...");
   write(syntaxClient, Protocol.ClientToServer.Close);
+};
+
+module Testing = {
+  let simulateReadException = (v: t) => {
+    ClientLog.trace("Sending simulateReadException notification...");
+    write(v, Protocol.ClientToServer.SimulateReadException);
+  };
+
+  let simulateMessageException = (v: t) => {
+    ClientLog.trace("Sending simulateMessageException notification...");
+    write(v, Protocol.ClientToServer.SimulateMessageException);
+  };
 };

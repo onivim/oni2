@@ -1,0 +1,9 @@
+(library
+    (name Service_FileWatcher)
+    (public_name Oni2.service.file-watcher)
+    (libraries 
+      Oni2.core
+      isolinear
+      luv
+    )
+    (preprocess (pps ppx_let ppx_deriving.show)))
