@@ -10,8 +10,8 @@ module TextRun = {
     /*
      * Bytes refer to the byte position in the parent string
      */
-     startByte: int,
-     endByte: int,
+    startByte: int,
+    endByte: int,
     /*
      * Indices refer to the UTF-8 position in the parent string
      */
@@ -29,7 +29,16 @@ module TextRun = {
   };
 
   let create =
-      (~text, ~startByte, ~endByte, ~startIndex, ~endIndex, ~startPosition, ~endPosition, ()) => {
+      (
+        ~text,
+        ~startByte,
+        ~endByte,
+        ~startIndex,
+        ~endIndex,
+        ~startPosition,
+        ~endPosition,
+        (),
+      ) => {
     text,
     startByte,
     endByte,

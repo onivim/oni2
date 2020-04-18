@@ -68,15 +68,37 @@ let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
   let byte = position.column |> Index.toZeroBased;
   let line = position.line |> Index.toZeroBased;
 
-  let bufferLine = Buffer.getLine(line, buffer);
+  let bufferLineCount = Buffer.getNumberOfLines(buffer);
 
-  let column = BufferLine.getIndex(~byte, bufferLine);
+  if (line < bufferLineCount) {
+    let bufferLine = Buffer.getLine(line, buffer);
 
-  Location.{line: Index.(zero + line), column: Index.(zero + column)};
+    let column = BufferLine.getIndex(~byte, bufferLine);
+
+    Location.{line: Index.(zero + line), column: Index.(zero + column)};
+  } else {
+    Location.{line: Index.zero, column: Index.zero};
+  };
 };
 
 let getCharacterUnderCursor = (~buffer, editor) => {
-  None;
+  switch (editor.cursors) {
+  | [] => None
+  | [cursor, ..._] =>
+    let byte = cursor.column |> Index.toZeroBased;
+    let line = cursor.line |> Index.toZeroBased;
+
+    let bufferLineCount = Buffer.getNumberOfLines(buffer);
+
+    if (line < bufferLineCount) {
+      let bufferLine = Buffer.getLine(line, buffer);
+      let index = BufferLine.getIndex(~byte, bufferLine);
+      let character = BufferLine.getUcharExn(~index, bufferLine);
+      Some(character);
+    } else {
+      None;
+    };
+  };
 };
 
 let getPrimaryCursor = (~buffer, editor) =>

@@ -98,6 +98,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       let runs = [
         TextRun.create(
           ~text="bc",
+          ~startByte=0,
+          ~endByte=0,
           ~startIndex=Index.fromZeroBased(1),
           ~endIndex=Index.fromZeroBased(3),
           ~startPosition=Index.fromZeroBased(1),
@@ -121,6 +123,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       let runs = [
         TextRun.create(
           ~text="cd",
+          ~startByte=0,
+          ~endByte=0,
           ~startIndex=Index.fromZeroBased(3),
           ~endIndex=Index.fromZeroBased(5),
           ~startPosition=Index.fromZeroBased(6),
@@ -142,6 +146,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       let runs = [
         TextRun.create(
           ~text="a",
+          ~startByte=0,
+          ~endByte=0,
           ~startIndex=Index.zero,
           ~endIndex=Index.fromZeroBased(1),
           ~startPosition=Index.zero,
@@ -150,6 +156,8 @@ describe("Tokenizer", ({test, describe, _}) => {
         ),
         TextRun.create(
           ~text="\t",
+          ~startByte=0,
+          ~endByte=0,
           ~startIndex=Index.fromZeroBased(1),
           ~endIndex=Index.fromZeroBased(2),
           ~startPosition=Index.fromZeroBased(1),
@@ -158,6 +166,8 @@ describe("Tokenizer", ({test, describe, _}) => {
         ),
         TextRun.create(
           ~text="a",
+          ~startByte=0,
+          ~endByte=0,
           ~startIndex=Index.fromZeroBased(2),
           ~endIndex=Index.fromZeroBased(3),
           ~startPosition=Index.fromZeroBased(3),
@@ -166,6 +176,8 @@ describe("Tokenizer", ({test, describe, _}) => {
         ),
         TextRun.create(
           ~text="\t",
+          ~startByte=0,
+          ~endByte=0,
           ~startIndex=Index.fromZeroBased(3),
           ~endIndex=Index.fromZeroBased(4),
           ~startPosition=Index.fromZeroBased(4),
@@ -191,6 +203,8 @@ describe("Tokenizer", ({test, describe, _}) => {
     let runs = [
       TextRun.create(
         ~text="a",
+        ~startByte=0,
+        ~endByte=0,
         ~startIndex=Index.zero,
         ~endIndex=Index.fromZeroBased(1),
         ~startPosition=Index.zero,
@@ -199,6 +213,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       ),
       TextRun.create(
         ~text="b",
+        ~startByte=0,
+        ~endByte=0,
         ~startIndex=Index.fromZeroBased(1),
         ~endIndex=Index.fromZeroBased(2),
         ~startPosition=Index.fromZeroBased(1),
@@ -207,6 +223,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       ),
       TextRun.create(
         ~text="a",
+        ~startByte=0,
+        ~endByte=0,
         ~startIndex=Index.fromZeroBased(2),
         ~endIndex=Index.fromZeroBased(3),
         ~startPosition=Index.fromZeroBased(2),
@@ -215,6 +233,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       ),
       TextRun.create(
         ~text="b",
+        ~startByte=0,
+        ~endByte=0,
         ~startIndex=Index.fromZeroBased(3),
         ~endIndex=Index.fromZeroBased(4),
         ~startPosition=Index.fromZeroBased(3),
@@ -238,6 +258,8 @@ describe("Tokenizer", ({test, describe, _}) => {
     let runs = [
       TextRun.create(
         ~text="aa",
+        ~startByte=0,
+        ~endByte=0,
         ~startIndex=Index.zero,
         ~endIndex=Index.fromZeroBased(2),
         ~startPosition=Index.zero,
@@ -246,6 +268,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       ),
       TextRun.create(
         ~text="bbbb",
+        ~startByte=0,
+        ~endByte=0,
         ~startIndex=Index.fromZeroBased(2),
         ~endIndex=Index.fromZeroBased(6),
         ~startPosition=Index.fromZeroBased(2),
@@ -254,6 +278,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       ),
       TextRun.create(
         ~text="aa",
+        ~startByte=0,
+        ~endByte=0,
         ~startIndex=Index.fromZeroBased(6),
         ~endIndex=Index.fromZeroBased(8),
         ~startPosition=Index.fromZeroBased(6),
