@@ -177,10 +177,12 @@ let start =
   let subscriptions = (state: Model.State.t) => {
     let syntaxSubscription =
       Feature_Syntax.subscription(
+        ~configuration=state.configuration,
         ~enabled=cliOptions.shouldSyntaxHighlight,
         ~quitting=state.isQuitting,
         ~languageInfo,
         ~setup,
+        ~tokenTheme=state.tokenTheme,
         state.syntaxHighlights,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg));
@@ -256,6 +258,7 @@ let start =
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
+      Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
     ]
     |> Isolinear.Sub.batch;
   };
@@ -318,7 +321,7 @@ let start =
       | Model.Actions.BufferUpdate(bs) =>
         let buffer = Model.Selectors.getBufferById(state, bs.update.id);
         Some(Model.Actions.RecalculateEditorView(buffer));
-      | Model.Actions.BufferEnter({id, _}, _) =>
+      | Model.Actions.BufferEnter({metadata: {id, _}, _}) =>
         let buffer = Model.Selectors.getBufferById(state, id);
         Some(Model.Actions.RecalculateEditorView(buffer));
       | _ => None

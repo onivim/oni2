@@ -7,12 +7,10 @@ type t = {
   editors: [@opaque] IntMap.t(Feature_Editor.Editor.t), // TODO: internal
   bufferIdToEditorId: [@opaque] IntMap.t(int), // TODO: internal
   reverseTabOrder: list(int),
-  metrics: Feature_Editor.EditorMetrics.t,
 };
 
 let create: unit => t;
 
-let getMetrics: t => Feature_Editor.EditorMetrics.t;
 let getActiveEditor: t => option(Feature_Editor.Editor.t);
 let setActiveEditor: (t, int) => t;
 let getEditorById: (int, t) => option(Feature_Editor.Editor.t);

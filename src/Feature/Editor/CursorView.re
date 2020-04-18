@@ -12,7 +12,7 @@ let%component make =
               (
                 ~scrollX,
                 ~scrollY,
-                ~metrics: EditorMetrics.t,
+                ~editor: Editor.t,
                 ~editorFont: Service_Font.font,
                 ~buffer,
                 ~mode: Vim.Mode.t,
@@ -58,7 +58,8 @@ let%component make =
       Revery.Time.milliseconds(100);
     };
 
-  let animatedCursor = Config.Experimental.editorSmoothCursor.get(config);
+  let animatedCursor =
+    Config.Experimental.cursorSmoothCaretAnimation.get(config);
 
   let delay = Revery.Time.zero;
   let defaultDuration = Revery.Time.milliseconds(100);
@@ -106,8 +107,8 @@ let%component make =
       let context =
         Draw.createContext(
           ~canvasContext,
-          ~width=metrics.pixelWidth,
-          ~height=metrics.pixelHeight,
+          ~width=editor.pixelWidth,
+          ~height=editor.pixelHeight,
           ~scrollX,
           ~scrollY,
           ~lineHeight=editorFont.measuredHeight,

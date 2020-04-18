@@ -201,19 +201,19 @@ let start = (extensions, extHostClient) => {
 
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
-    | BufferEnter(metadata, fileTypeOpt) =>
+    | BufferEnter({metadata, fileType, _}) =>
       let eff =
         switch (metadata.filePath) {
         | Some(path) =>
           Isolinear.Effect.batch([
-            sendBufferEnterEffect(metadata, fileTypeOpt),
+            sendBufferEnterEffect(metadata, fileType),
             Feature_SCM.Effects.getOriginalUri(
               extHostClient, state.scm, path, uri =>
               Actions.GotOriginalUri({bufferId: metadata.id, uri})
             ),
           ])
 
-        | None => sendBufferEnterEffect(metadata, fileTypeOpt)
+        | None => sendBufferEnterEffect(metadata, fileType)
         };
       (state, eff);
 

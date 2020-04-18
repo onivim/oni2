@@ -5,6 +5,7 @@
     (libraries
         bigarray
         zed_oni
+        luv
         lwt
         lwt.unix
         oniguruma

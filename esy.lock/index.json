@@ -1,5 +1,5 @@
 {
-  "checksum": "bbd748d5a1c71a635c9bab9e9b26812e",
+  "checksum": "de597a8c310e9f39ed1eed6d1dffd72f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -131,20 +131,20 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#e3448c2@d41d8cd9",
+        "revery@github:revery-ui/revery#18aa22d@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#91bad1f@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#e3448c2@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#e3448c2@d41d8cd9",
+    "revery@github:revery-ui/revery#18aa22d@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#18aa22d@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#e3448c2",
+      "version": "github:revery-ui/revery#18aa22d",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#e3448c2" ]
+        "source": [ "github:revery-ui/revery#18aa22d" ]
       },
       "overrides": [],
       "dependencies": [
@@ -152,7 +152,7 @@
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9",
-        "reason-skia@github:revery-ui/reason-skia#7b1361b@d41d8cd9",
+        "reason-skia@github:revery-ui/reason-skia#2352b85@d41d8cd9",
         "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-harfbuzz@github:revery-ui/reason-harfbuzz#eca58ea@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
@@ -331,13 +331,13 @@
       ],
       "devDependencies": []
     },
-    "reason-skia@github:revery-ui/reason-skia#7b1361b@d41d8cd9": {
-      "id": "reason-skia@github:revery-ui/reason-skia#7b1361b@d41d8cd9",
+    "reason-skia@github:revery-ui/reason-skia#2352b85@d41d8cd9": {
+      "id": "reason-skia@github:revery-ui/reason-skia#2352b85@d41d8cd9",
       "name": "reason-skia",
-      "version": "github:revery-ui/reason-skia#7b1361b",
+      "version": "github:revery-ui/reason-skia#2352b85",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-skia#7b1361b" ]
+        "source": [ "github:revery-ui/reason-skia#2352b85" ]
       },
       "overrides": [],
       "dependencies": [
@@ -430,18 +430,18 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#5a6976d@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#5a6976d@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#e791e3a@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#e791e3a@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#5a6976d",
+      "version": "github:onivim/reason-libvim#e791e3a",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#5a6976d" ]
+        "source": [ "github:onivim/reason-libvim#e791e3a" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
-        "libvim@8.10869.39@d41d8cd9",
+        "libvim@8.10869.40@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.0@3755a265",
         "@opam/dune@opam:2.5.0@aef1678b",
@@ -648,14 +648,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.39@d41d8cd9": {
-      "id": "libvim@8.10869.39@d41d8cd9",
+    "libvim@8.10869.40@d41d8cd9": {
+      "id": "libvim@8.10869.40@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.39",
+      "version": "8.10869.40",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.39.tgz#sha1:1c525b5e06314c6270175b99680c7b8d37ee3340"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.40.tgz#sha1:293fc51c6da2c132397970257332ea4698c8c161"
         ]
       },
       "overrides": [],
@@ -1205,14 +1205,14 @@
       "overrides": [],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
-        "revery@github:revery-ui/revery#e3448c2@d41d8cd9",
+        "revery@github:revery-ui/revery#18aa22d@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.1.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#5a6976d@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#e791e3a@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#07c13a9@d41d8cd9",
@@ -1227,8 +1227,9 @@
         "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
         "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/lwt@opam:4.5.0@677655b4", "@opam/logs@opam:0.7.0@1d03143e",
-        "@opam/fmt@opam:0.8.8@01c3a23c", "@opam/dune@opam:2.5.0@aef1678b",
+        "@opam/lwt@opam:4.5.0@677655b4", "@opam/luv@opam:0.5.1@a530d73c",
+        "@opam/logs@opam:0.7.0@1d03143e", "@opam/fmt@opam:0.8.8@01c3a23c",
+        "@opam/dune@opam:2.5.0@aef1678b",
         "@opam/decoders-yojson@opam:0.3.0@b9081413",
         "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
         "@glennsl/timber@1.0.0@d41d8cd9",
@@ -2551,6 +2552,37 @@
         "@opam/mmap@opam:1.1.0@b85334ff",
         "@opam/dune-configurator@opam:2.5.0@3755a265",
         "@opam/dune@opam:2.5.0@aef1678b"
+      ]
+    },
+    "@opam/luv@opam:0.5.1@a530d73c": {
+      "id": "@opam/luv@opam:0.5.1@a530d73c",
+      "name": "@opam/luv",
+      "version": "opam:0.5.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/1b/1b1665a64412af2a65587a6aa4a42d4a#md5:1b1665a64412af2a65587a6aa4a42d4a",
+          "archive:https://github.com/aantron/luv/releases/download/0.5.1/luv-0.5.1.tar.gz#md5:1b1665a64412af2a65587a6aa4a42d4a"
+        ],
+        "opam": {
+          "name": "luv",
+          "version": "0.5.1",
+          "path": "esy.lock/opam/luv.0.5.1"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.8.1000@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
+        "@opam/dune@opam:2.5.0@aef1678b",
+        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/base-unix@opam:base@87d0b2eb",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.8.1000@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
+        "@opam/dune@opam:2.5.0@aef1678b",
+        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/base-unix@opam:base@87d0b2eb"
       ]
     },
     "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9": {

@@ -7,17 +7,15 @@
 open Oni_Core;
 
 let reduce = (~defaultFont, v: EditorGroup.t, action: Actions.t) => {
-  let metrics = EditorMetricsReducer.reduce(v.metrics, action);
-
   /* Only send updates to _active_ editor */
   let editors =
     switch (v.activeEditorId, EditorGroup.getActiveEditor(v)) {
     | (Some(id), Some(e)) =>
-      IntMap.add(id, EditorReducer.reduce(e, action, metrics), v.editors)
+      IntMap.add(id, EditorReducer.reduce(e, action), v.editors)
     | _ => v.editors
     };
 
-  let v = {...v, metrics, editors};
+  let v = {...v, editors};
 
   switch (action) {
   | EditorFont(Service_Font.FontLoaded(font)) => {
@@ -28,7 +26,18 @@ let reduce = (~defaultFont, v: EditorGroup.t, action: Actions.t) => {
           editors,
         ),
     }
-  | BufferEnter({id, _}, _) =>
+  | EditorSizeChanged({id, pixelWidth, pixelHeight}) => {
+      ...v,
+      editors:
+        IntMap.update(
+          id,
+          Option.map(
+            Feature_Editor.Editor.setSize(~pixelWidth, ~pixelHeight),
+          ),
+          editors,
+        ),
+    }
+  | BufferEnter({metadata: {id, _}, _}) =>
     let (newState, activeEditorId) =
       EditorGroup.getOrCreateEditorForBuffer(
         ~font=defaultFont,

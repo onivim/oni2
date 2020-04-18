@@ -14,14 +14,23 @@
            ExtHostBufferUpdatesTest
            ExtHostCompletionTest
            ExtHostDefinitionTest
+           FileWatcherTest
            FontSizeChangeTest
            KeybindingsInvalidJsonTest
            KeySequenceJJTest
            InputIgnoreTest
            LanguageCssTest
            LanguageTypeScriptTest
+           LineEndingsLFTest
+           LineEndingsCRLFTest
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
+           SyntaxServer
+           SyntaxServerCloseTest
+           SyntaxServerMessageExceptionTest
+           SyntaxServerParentPidTest
+           SyntaxServerParentPidCorrectTest
+           SyntaxServerReadExceptionTest
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
@@ -42,7 +51,7 @@
     (libraries
         Oni_IntegrationTestLib
         reason-native-crash-utils.asan
-            ))
+))
 
 (install
     (section bin)
@@ -64,12 +73,14 @@
         ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe
         ExtHostDefinitionTest.exe
+        FileWatcherTest.exe
         FontSizeChangeTest.exe
         KeybindingsInvalidJsonTest.exe
         KeySequenceJJTest.exe
         InputIgnoreTest.exe
         LanguageCssTest.exe
         LanguageTypeScriptTest.exe
+        LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
         Regression1097Test.exe
         RegressionCommandLineNoCompletionTest.exe
@@ -81,6 +92,12 @@
         SearchShowClearHighlightsTest.exe
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
+        SyntaxServer.exe
+        SyntaxServerCloseTest.exe
+        SyntaxServerMessageExceptionTest.exe
+        SyntaxServerParentPidTest.exe
+        SyntaxServerParentPidCorrectTest.exe
+        SyntaxServerReadExceptionTest.exe
         TerminalSetPidTitleTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
@@ -88,6 +105,9 @@
         VimlConfigurationTest.exe
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
+        large-c-file.c
         some-test-file.json
         some-test-file.txt
-        ))
+        test.crlf
+        test.lf
+))

@@ -12,6 +12,7 @@ type t = {
   id: int,
   filePath: option(string),
   fileType: option(string),
+  lineEndings: option(Vim.lineEnding),
   modified: bool,
   version: int,
   lines: array(BufferLine.t),
@@ -45,6 +46,12 @@ let getMediumFriendlyName =
      );
 };
 
+let getLineEndings = ({lineEndings, _}) => lineEndings;
+let setLineEndings = (lineEndings, buf) => {
+  ...buf,
+  lineEndings: Some(lineEndings),
+};
+
 let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
   maybeFilePath
   |> Option.map(filePath => {
@@ -69,6 +76,7 @@ let ofLines = (~id=0, rawLines: array(string)) => {
     fileType: None,
     modified: false,
     lines,
+    lineEndings: None,
     originalUri: None,
     originalLines: None,
     indentation: None,
@@ -83,6 +91,7 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   id: metadata.id,
   version: metadata.version,
   filePath: metadata.filePath,
+  lineEndings: None,
   modified: metadata.modified,
   fileType: None,
   lines: [||],

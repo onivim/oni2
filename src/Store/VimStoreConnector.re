@@ -105,6 +105,11 @@ let start =
     });
 
   let _: unit => unit =
+    Vim.Buffer.onLineEndingsChanged((id, lineEndings) => {
+      Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
+    });
+
+  let _: unit => unit =
     Vim.onGoto((_position, _definitionType) => {
       Log.debug("Goto definition requested");
       // Get buffer and cursor position
@@ -173,7 +178,7 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
-      let meta = {
+      let metadata = {
         ...meta,
         /*
              Set version to 0 so that a buffer update is processed.
@@ -183,13 +188,13 @@ let start =
       };
 
       let fileType =
-        switch (meta.filePath) {
+        switch (metadata.filePath) {
         | Some(v) =>
           Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
-      dispatch(Actions.BufferEnter(meta, fileType));
+      dispatch(Actions.BufferEnter({metadata, fileType, lineEndings: None}));
     });
 
   let _: unit => unit =
@@ -334,7 +339,7 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onEnter(buf => {
-      let meta = {
+      let metadata = {
         ...Vim.BufferMetadata.ofBuffer(buf),
         /*
              Set version to 0 so that a buffer update is processed.
@@ -343,12 +348,15 @@ let start =
         version: 0,
       };
       let fileType =
-        switch (meta.filePath) {
+        switch (metadata.filePath) {
         | Some(v) =>
           Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
-      dispatch(Actions.BufferEnter(meta, fileType));
+
+      let lineEndings: option(Vim.lineEnding) =
+        Vim.Buffer.getLineEndings(buf);
+      dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}));
     });
 
   let _: unit => unit =
@@ -628,6 +636,7 @@ let start =
 
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
+      let lineEndings = Vim.Buffer.getLineEndings(buffer);
 
       let fileType =
         switch (metadata.filePath) {
@@ -660,7 +669,8 @@ let start =
        * (This wouldn't happen if we're splitting the same buffer we're already at)
        */
       switch (dir) {
-      | Some(_) => dispatch(Actions.BufferEnter(metadata, fileType))
+      | Some(_) =>
+        dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}))
       | None => ()
       };
 
@@ -799,8 +809,7 @@ let start =
            )
         |> Option.iter(Vim.Options.setLineComment);
 
-        let synchronizeWindowMetrics =
-            (editor: Editor.t, editorGroup: EditorGroup.t) => {
+        let synchronizeWindowMetrics = (editor: Editor.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
@@ -809,7 +818,7 @@ let start =
                 bufferWidthInCharacters: columns,
                 _,
               } =
-            Editor.getLayout(editor, editorGroup.metrics);
+            Editor.getLayout(editor);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -822,8 +831,8 @@ let start =
 
         /* Update the window metrics for the editor */
         /* This synchronizes the window width / height with libvim's model */
-        switch (editor, editorGroup) {
-        | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
+        switch (editor) {
+        | Some(e) => synchronizeWindowMetrics(e)
         | _ => ()
         };
       }
@@ -1008,7 +1017,7 @@ let start =
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | WindowSetActive(_, _)
-    | EditorGroupSizeChanged(_) => (state, synchronizeEditorEffect(state))
+    | EditorSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
@@ -1142,9 +1151,35 @@ let start =
         Isolinear.Effect.none,
       )
 
+    | FileChanged(event) =>
+      switch (Selectors.getActiveBuffer(state)) {
+      | Some(buffer)
+          when
+            Core.Buffer.getFilePath(buffer) == Some(event.path)
+            && !Core.Buffer.isModified(buffer) => (
+          state,
+          Service_Vim.reload(),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
+
     | _ => (state, Isolinear.Effect.none)
     };
   };
 
   (updater, stream);
+};
+
+let subscriptions = (state: State.t) => {
+  state.buffers
+  |> Core.IntMap.bindings
+  |> List.filter_map(((_key, buffer)) =>
+       buffer
+       |> Core.Buffer.getFilePath
+       |> Option.map(path =>
+            Service_FileWatcher.watch(~path, ~onEvent=event =>
+              Actions.FileChanged(event)
+            )
+          )
+     );
 };

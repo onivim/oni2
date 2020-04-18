@@ -308,6 +308,21 @@ let%component make =
     <textItem font background theme text />;
   };
 
+  let lineEndings = () => {
+    let toString =
+      fun
+      | Vim.Types.LF => "LF"
+      | Vim.Types.CR => "CR"
+      | Vim.Types.CRLF => "CRLF";
+
+    state
+    |> Selectors.getActiveBuffer
+    |> OptionEx.flatMap(Buffer.getLineEndings)
+    |> Option.map(toString)
+    |> Option.map(text => {<textItem font background theme text />})
+    |> Option.value(~default=React.empty);
+  };
+
   let position = () => {
     let text =
       state
@@ -347,6 +362,7 @@ let%component make =
       <section align=`Center />
       <section align=`FlexEnd> rightItems </section>
       <section align=`FlexEnd>
+        <lineEndings />
         <indentation />
         <fileType />
         <position />
