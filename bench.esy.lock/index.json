@@ -1,5 +1,5 @@
 {
-  "checksum": "bedd335944bd380ef5a6c9b0b84ea067",
+  "checksum": "de597a8c310e9f39ed1eed6d1dffd72f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -120,14 +120,14 @@
       "dependencies": [ "@opam/dune@opam:2.5.0@aef1678b" ],
       "devDependencies": []
     },
-    "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9": {
+    "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9": {
       "id":
-        "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:revery-ui/revery-terminal#2ef1c65",
+      "version": "github:revery-ui/revery-terminal#4e8ca1c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery-terminal#2ef1c65" ]
+        "source": [ "github:revery-ui/revery-terminal#4e8ca1c" ]
       },
       "overrides": [],
       "dependencies": [
@@ -168,14 +168,14 @@
       ],
       "devDependencies": []
     },
-    "resolve@1.15.1@d41d8cd9": {
-      "id": "resolve@1.15.1@d41d8cd9",
+    "resolve@1.16.1@d41d8cd9": {
+      "id": "resolve@1.16.1@d41d8cd9",
       "name": "resolve",
-      "version": "1.15.1",
+      "version": "1.16.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/resolve/-/resolve-1.15.1.tgz#sha1:27bdcdeffeaf2d6244b95bb0f9f4b4653451f3e8"
+          "archive:https://registry.npmjs.org/resolve/-/resolve-1.16.1.tgz#sha1:49fac5d8bacf1fd53f200fa51247ae736175832c"
         ]
       },
       "overrides": [],
@@ -251,7 +251,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "resolve@1.15.1@d41d8cd9" ],
+      "dependencies": [ "resolve@1.16.1@d41d8cd9" ],
       "devDependencies": []
     },
     "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9": {
@@ -1204,7 +1204,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
         "revery@github:revery-ui/revery#18aa22d@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
