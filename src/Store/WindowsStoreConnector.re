@@ -20,13 +20,12 @@ let start = () => {
 
   let initializeDefaultViewEffect = (state: State.t) =>
     Isolinear.Effect.createWithDispatch(~name="windows.init", dispatch => {
-      let editor =
-        Feature_Layout.WindowTree.createSplit(
-          ~editorGroupId=EditorGroups.activeGroupId(state.editorGroups),
-          (),
-        );
-
-      dispatch(Actions.AddSplit(Vertical, editor));
+      dispatch(
+        Actions.AddSplit(
+          `Vertical,
+          EditorGroups.activeGroupId(state.editorGroups),
+        ),
+      )
     });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
@@ -53,7 +52,7 @@ let start = () => {
                 EditorGroups.getActiveEditorGroup(s.editorGroups)
                 |> Option.map((group: EditorGroup.t) => group.editorGroupId);
               },
-              ~position=After,
+              ~position=`After,
               direction,
               split,
               s.layout.windowTree,
@@ -78,15 +77,12 @@ let start = () => {
       let windowTree =
         s.layout.windowTree
         |> Feature_Layout.WindowTree.getSplits
-        |> List.filter((split: Feature_Layout.WindowTree.split) =>
-             Model.EditorGroups.isEmpty(split.editorGroupId, s.editorGroups)
+        |> List.filter(editorGroupId =>
+             Model.EditorGroups.isEmpty(editorGroupId, s.editorGroups)
            )
         |> List.fold_left(
-             (
-               prev: Feature_Layout.WindowTree.t,
-               curr: Feature_Layout.WindowTree.split,
-             ) =>
-               Feature_Layout.WindowTree.removeSplit(curr.editorGroupId, prev),
+             (acc, editorGroupId) =>
+               Feature_Layout.WindowTree.removeSplit(editorGroupId, acc),
              s.layout.windowTree,
            );
 

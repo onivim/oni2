@@ -1,31 +1,25 @@
 module WindowTree: {
-  [@deriving show]
-  type direction =
-    | Horizontal
-    | Vertical;
-
-  type position =
-    | Before
-    | After;
-
-  [@deriving show]
-  type split = {
-    editorGroupId: int,
-  };
-
   // definition only used for tests
   type t =
-    | Parent(direction, list(t))
-    | Leaf(split)
+    | Split([ | `Horizontal | `Vertical], list(t))
+    | Window({
+        weight: float,
+        content: int,
+      })
     | Empty;
 
   let empty: t; // only used for tests
 
-  let getSplits: t => list(split);
-  let createSplit:
-    (~editorGroupId: int, unit) => split;
+  let getSplits: t => list(int);
   let addSplit:
-    (~target: option(int)=?, ~position: position, direction, split, t) => t;
+    (
+      ~target: option(int)=?,
+      ~position: [ | `Before | `After],
+      [ | `Horizontal | `Vertical],
+      int,
+      t
+    ) =>
+    t;
   let removeSplit: (int, t) => t;
 
   // only used for tests
@@ -35,7 +29,7 @@ module WindowTree: {
 
 module WindowTreeLayout: {
   type t = {
-    split: WindowTree.split,
+    content: int,
     x: int,
     y: int,
     width: int,

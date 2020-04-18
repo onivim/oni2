@@ -32,11 +32,11 @@ runTest(~name="RegressionVspEmpty", (_, wait, _) => {
     let secondSplit = List.nth(splits, 1);
 
     let firstActiveEditor =
-      Selectors.getEditorGroupById(state, firstSplit.editorGroupId)
+      Selectors.getEditorGroupById(state, firstSplit)
       |> Selectors.getActiveEditor;
 
     let secondActiveEditor =
-      Selectors.getEditorGroupById(state, secondSplit.editorGroupId)
+      Selectors.getEditorGroupById(state, secondSplit)
       |> Selectors.getActiveEditor;
 
     switch (firstActiveEditor, secondActiveEditor) {

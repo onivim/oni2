@@ -11,162 +11,130 @@ describe("WindowTreeTests", ({describe, _}) => {
     test("empty parent splits are removed", ({expect, _}) => {
       let splits = WindowTree.empty;
 
-      let split1 = createSplit(~editorGroupId=1, ());
-      let split2 = createSplit(~editorGroupId=2, ());
-      let split3 = createSplit(~editorGroupId=3, ());
-      let split4 = createSplit(~editorGroupId=4, ());
-
       let splits =
         splits
-        |> addSplit(~target=None, ~position=Before, Vertical, split1)
-        |> addSplit(
-             ~target=Some(split1.editorGroupId),
-             ~position=Before,
-             Vertical,
-             split2,
-           )
-        |> addSplit(
-             ~target=Some(split2.editorGroupId),
-             ~position=Before,
-             Horizontal,
-             split3,
-           )
-        |> addSplit(
-             ~target=Some(split1.editorGroupId),
-             ~position=Before,
-             Horizontal,
-             split4,
-           );
+        |> addSplit(~target=None, ~position=`Before, `Vertical, 1)
+        |> addSplit(~target=Some(1), ~position=`Before, `Vertical, 2)
+        |> addSplit(~target=Some(2), ~position=`Before, `Horizontal, 3)
+        |> addSplit(~target=Some(1), ~position=`Before, `Horizontal, 4);
 
       let newSplits =
-        splits
-        |> removeSplit(split4.editorGroupId)
-        |> removeSplit(split3.editorGroupId)
-        |> removeSplit(split2.editorGroupId);
+        splits |> removeSplit(4) |> removeSplit(3) |> removeSplit(2);
 
       expect.equal(
         newSplits,
-        Parent(Vertical, [Parent(Horizontal, [Leaf(split1)])]),
+        Split(
+          `Vertical,
+          [Split(`Horizontal, [Window({weight: 1., content: 1})])],
+        ),
       );
     })
   });
+
   describe("addSplit", ({test, _}) => {
     test("add vertical split", ({expect, _}) => {
       let splits = WindowTree.empty;
 
-      expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
-
-      let split = createSplit(~editorGroupId=1, ());
-      let targetId = split.editorGroupId;
+      expect.equal(Split(`Vertical, [Empty]), splits);
 
       let splits =
-        addSplit(~target=None, ~position=Before, Vertical, split, splits);
+        addSplit(~target=None, ~position=`Before, `Vertical, 1, splits);
 
-      expect.bool(splits == Parent(Vertical, [Leaf(split)])).toBe(true);
-
-      let split2 = createSplit(~editorGroupId=2, ());
+      expect.equal(
+        Split(`Vertical, [Window({weight: 1., content: 1})]),
+        splits,
+      );
 
       let splits =
-        addSplit(
-          ~target=Some(targetId),
-          ~position=Before,
-          Vertical,
-          split2,
-          splits,
-        );
-      expect.bool(splits == Parent(Vertical, [Leaf(split2), Leaf(split)])).
-        toBe(
-        true,
+        addSplit(~target=Some(1), ~position=`Before, `Vertical, 2, splits);
+      expect.equal(
+        Split(
+          `Vertical,
+          [
+            Window({weight: 1., content: 2}),
+            Window({weight: 1., content: 1}),
+          ],
+        ),
+        splits,
       );
     });
 
     test("add vertical split - after", ({expect, _}) => {
       let splits = WindowTree.empty;
 
-      expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
-
-      let split = createSplit(~editorGroupId=1, ());
-      let targetId = split.editorGroupId;
+      expect.equal(Split(`Vertical, [Empty]), splits);
 
       let splits =
-        addSplit(~target=None, ~position=After, Vertical, split, splits);
+        addSplit(~target=None, ~position=`After, `Vertical, 1, splits);
 
-      expect.bool(splits == Parent(Vertical, [Leaf(split)])).toBe(true);
-
-      let split2 = createSplit(~editorGroupId=2, ());
+      expect.equal(
+        Split(`Vertical, [Window({weight: 1., content: 1})]),
+        splits,
+      );
 
       let splits =
-        addSplit(
-          ~target=Some(targetId),
-          ~position=After,
-          Vertical,
-          split2,
-          splits,
-        );
-      expect.bool(splits == Parent(Vertical, [Leaf(split), Leaf(split2)])).
-        toBe(
-        true,
+        addSplit(~target=Some(1), ~position=`After, `Vertical, 2, splits);
+      expect.equal(
+        Split(
+          `Vertical,
+          [
+            Window({weight: 1., content: 1}),
+            Window({weight: 1., content: 2}),
+          ],
+        ),
+        splits,
       );
     });
 
     test("parent split changes direction if needed", ({expect, _}) => {
       let splits = WindowTree.empty;
 
-      expect.bool(splits == Parent(Vertical, [Empty])).toBe(true);
-
-      let split1 = createSplit(~editorGroupId=1, ());
-      let targetId = split1.editorGroupId;
-      let split2 = createSplit(~editorGroupId=2, ());
-      let split3 = createSplit(~editorGroupId=3, ());
+      expect.equal(Split(`Vertical, [Empty]), splits);
 
       let splits =
-        addSplit(~target=None, ~position=Before, Horizontal, split1, splits);
+        addSplit(~target=None, ~position=`Before, `Horizontal, 1, splits);
       let splits =
-        addSplit(
-          ~target=Some(targetId),
-          ~position=Before,
-          Horizontal,
-          split2,
-          splits,
-        );
+        addSplit(~target=Some(1), ~position=`Before, `Horizontal, 2, splits);
 
-      expect.bool(
-        splits
-        == Parent(
-             Vertical,
-             [Parent(Horizontal, [Leaf(split2), Leaf(split1)])],
-           ),
-      ).
-        toBe(
-        true,
+      expect.equal(
+        Split(
+          `Vertical,
+          [
+            Split(
+              `Horizontal,
+              [
+                Window({weight: 1., content: 2}),
+                Window({weight: 1., content: 1}),
+              ],
+            ),
+          ],
+        ),
+        splits,
       );
 
       let splits =
-        addSplit(
-          ~target=Some(targetId),
-          ~position=Before,
-          Vertical,
-          split3,
-          splits,
-        );
+        addSplit(~target=Some(1), ~position=`Before, `Vertical, 3, splits);
 
-      expect.bool(
-        splits
-        == Parent(
-             Vertical,
-             [
-               Parent(
-                 Horizontal,
-                 [
-                   Leaf(split2),
-                   Parent(Vertical, [Leaf(split3), Leaf(split1)]),
-                 ],
-               ),
-             ],
-           ),
-      ).
-        toBe(
-        true,
+      expect.equal(
+        Split(
+          `Vertical,
+          [
+            Split(
+              `Horizontal,
+              [
+                Window({weight: 1., content: 2}),
+                Split(
+                  `Vertical,
+                  [
+                    Window({weight: 1., content: 3}),
+                    Window({weight: 1., content: 1}),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+        splits,
       );
     });
   });
@@ -174,173 +142,166 @@ describe("WindowTreeTests", ({describe, _}) => {
 
 describe("rotateForward", ({test, _}) => {
   test("simple tree", ({expect, _}) => {
-    let splitA = createSplit(~editorGroupId=1, ());
-    let splitB = createSplit(~editorGroupId=2, ());
-    let splitC = createSplit(~editorGroupId=3, ());
     let tree =
       WindowTree.empty
-      |> addSplit(~position=Before, Vertical, splitA)
-      |> addSplit(~position=Before, Vertical, splitB)
-      |> addSplit(~position=Before, Vertical, splitC);
+      |> addSplit(~position=`Before, `Vertical, 1)
+      |> addSplit(~position=`Before, `Vertical, 2)
+      |> addSplit(~position=`Before, `Vertical, 3);
 
     expect.equal(
-      Parent(Vertical, [Leaf(splitC), Leaf(splitB), Leaf(splitA)]),
+      Split(
+        `Vertical,
+        [
+          Window({weight: 1., content: 3}),
+          Window({weight: 1., content: 2}),
+          Window({weight: 1., content: 1}),
+        ],
+      ),
       tree,
     );
 
-    let newTree = rotateForward(splitC.editorGroupId, tree);
+    let newTree = rotateForward(3, tree);
 
     expect.equal(
-      Parent(Vertical, [Leaf(splitA), Leaf(splitC), Leaf(splitB)]),
+      Split(
+        `Vertical,
+        [
+          Window({weight: 1., content: 1}),
+          Window({weight: 1., content: 3}),
+          Window({weight: 1., content: 2}),
+        ],
+      ),
       newTree,
     );
   });
 
   test("nested tree", ({expect, _}) => {
-    let splitA = createSplit(~editorGroupId=1, ());
-    let splitB = createSplit(~editorGroupId=2, ());
-    let splitC = createSplit(~editorGroupId=3, ());
-    let splitD = createSplit(~editorGroupId=4, ());
     let tree =
       WindowTree.empty
-      |> addSplit(~position=Before, Vertical, splitA)
-      |> addSplit(
-           ~position=Before,
-           Horizontal,
-           splitB,
-           ~target=Some(splitA.editorGroupId),
-         )
-      |> addSplit(
-           ~position=Before,
-           Horizontal,
-           splitC,
-           ~target=Some(splitB.editorGroupId),
-         )
-      |> addSplit(~position=Before, Vertical, splitD);
+      |> addSplit(~position=`Before, `Vertical, 1)
+      |> addSplit(~position=`Before, `Horizontal, 2, ~target=Some(1))
+      |> addSplit(~position=`Before, `Horizontal, 3, ~target=Some(2))
+      |> addSplit(~position=`Before, `Vertical, 4);
 
-    expect.bool(
-      tree
-      == Parent(
-           Vertical,
-           [
-             Leaf(splitD),
-             Parent(
-               Horizontal,
-               [Leaf(splitC), Leaf(splitB), Leaf(splitA)],
-             ),
-           ],
-         ),
-    ).
-      toBe(
-      true,
+    expect.equal(
+      Split(
+        `Vertical,
+        [
+          Window({weight: 1., content: 4}),
+          Split(
+            `Horizontal,
+            [
+              Window({weight: 1., content: 3}),
+              Window({weight: 1., content: 2}),
+              Window({weight: 1., content: 1}),
+            ],
+          ),
+        ],
+      ),
+      tree,
     );
 
-    let newTree = rotateForward(splitA.editorGroupId, tree);
+    let newTree = rotateForward(1, tree);
 
-    expect.bool(
-      newTree
-      == Parent(
-           Vertical,
-           [
-             Leaf(splitD),
-             Parent(
-               Horizontal,
-               [Leaf(splitA), Leaf(splitC), Leaf(splitB)],
-             ),
-           ],
-         ),
-    ).
-      toBe(
-      true,
+    expect.equal(
+      Split(
+        `Vertical,
+        [
+          Window({weight: 1., content: 4}),
+          Split(
+            `Horizontal,
+            [
+              Window({weight: 1., content: 1}),
+              Window({weight: 1., content: 3}),
+              Window({weight: 1., content: 2}),
+            ],
+          ),
+        ],
+      ),
+      newTree,
     );
   });
 });
 
 describe("rotateBackward", ({test, _}) => {
   test("simple tree", ({expect, _}) => {
-    let splitA = createSplit(~editorGroupId=1, ());
-    let splitB = createSplit(~editorGroupId=2, ());
-    let splitC = createSplit(~editorGroupId=3, ());
     let tree =
       WindowTree.empty
-      |> addSplit(~position=Before, Vertical, splitA)
-      |> addSplit(~position=Before, Vertical, splitB)
-      |> addSplit(~position=Before, Vertical, splitC);
+      |> addSplit(~position=`Before, `Vertical, 1)
+      |> addSplit(~position=`Before, `Vertical, 2)
+      |> addSplit(~position=`Before, `Vertical, 3);
 
-    expect.bool(
-      tree == Parent(Vertical, [Leaf(splitC), Leaf(splitB), Leaf(splitA)]),
-    ).
-      toBe(
-      true,
+    expect.equal(
+      Split(
+        `Vertical,
+        [
+          Window({weight: 1., content: 3}),
+          Window({weight: 1., content: 2}),
+          Window({weight: 1., content: 1}),
+        ],
+      ),
+      tree,
     );
 
-    let newTree = rotateBackward(splitC.editorGroupId, tree);
+    let newTree = rotateBackward(3, tree);
 
-    expect.bool(
-      newTree
-      == Parent(Vertical, [Leaf(splitB), Leaf(splitA), Leaf(splitC)]),
-    ).
-      toBe(
-      true,
+    expect.equal(
+      Split(
+        `Vertical,
+        [
+          Window({weight: 1., content: 2}),
+          Window({weight: 1., content: 1}),
+          Window({weight: 1., content: 3}),
+        ],
+      ),
+      newTree,
     );
   });
 
   test("nested tree", ({expect, _}) => {
-    let splitA = createSplit(~editorGroupId=1, ());
-    let splitB = createSplit(~editorGroupId=2, ());
-    let splitC = createSplit(~editorGroupId=3, ());
-    let splitD = createSplit(~editorGroupId=4, ());
     let tree =
       WindowTree.empty
-      |> addSplit(~position=Before, Vertical, splitA)
-      |> addSplit(
-           ~position=Before,
-           Horizontal,
-           splitB,
-           ~target=Some(splitA.editorGroupId),
-         )
-      |> addSplit(
-           ~position=Before,
-           Horizontal,
-           splitC,
-           ~target=Some(splitB.editorGroupId),
-         )
-      |> addSplit(~position=Before, Vertical, splitD);
+      |> addSplit(~position=`Before, `Vertical, 1)
+      |> addSplit(~position=`Before, `Horizontal, 2, ~target=Some(1))
+      |> addSplit(~position=`Before, `Horizontal, 3, ~target=Some(2))
+      |> addSplit(~position=`Before, `Vertical, 4);
 
-    expect.bool(
-      tree
-      == Parent(
-           Vertical,
-           [
-             Leaf(splitD),
-             Parent(
-               Horizontal,
-               [Leaf(splitC), Leaf(splitB), Leaf(splitA)],
-             ),
-           ],
-         ),
-    ).
-      toBe(
-      true,
+    expect.equal(
+      Split(
+        `Vertical,
+        [
+          Window({weight: 1., content: 4}),
+          Split(
+            `Horizontal,
+            [
+              Window({weight: 1., content: 3}),
+              Window({weight: 1., content: 2}),
+              Window({weight: 1., content: 1}),
+            ],
+          ),
+        ],
+      ),
+      tree,
     );
 
-    let newTree = rotateBackward(splitA.editorGroupId, tree);
+    let newTree = rotateBackward(1, tree);
 
-    expect.bool(
-      newTree
-      == Parent(
-           Vertical,
-           [
-             Leaf(splitD),
-             Parent(
-               Horizontal,
-               [Leaf(splitB), Leaf(splitA), Leaf(splitC)],
-             ),
-           ],
-         ),
-    ).
-      toBe(
-      true,
+    expect.equal(
+      Split(
+        `Vertical,
+        [
+          Window({weight: 1., content: 4}),
+          Split(
+            `Horizontal,
+            [
+              Window({weight: 1., content: 2}),
+              Window({weight: 1., content: 1}),
+              Window({weight: 1., content: 3}),
+            ],
+          ),
+        ],
+      ),
+      newTree,
     );
   });
 });

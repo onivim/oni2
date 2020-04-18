@@ -6,100 +6,90 @@ type direction =
   | Horizontal
   | Vertical;
 
-type position =
-  | Before
-  | After;
-
-[@deriving show({with_path: false})]
-type split = {
-  editorGroupId: int,
-};
-
 type t =
-  | Parent(direction, list(t))
-  | Leaf(split)
+  | Split([ | `Horizontal | `Vertical], list(t))
+  | Window({
+      weight: float,
+      content: int,
+    })
   | Empty;
 
-let empty = Parent(Vertical, [Empty]);
+let empty = Split(`Vertical, [Empty]);
 
-let createSplit = (~editorGroupId, ()) => {
-  editorGroupId: editorGroupId,
-};
-
-let getSplits = (tree: t) => {
-  let rec f = (tree: t, splits: list(split)) => {
-    switch (tree) {
-    | Parent(_, children) =>
-      List.fold_left((c, curr) => f(curr, c), splits, children)
-    | Leaf(split) => [split, ...splits]
-    | Empty => splits
+let getSplits = tree => {
+  let rec traverse = (node, acc) => {
+    switch (node) {
+    | Split(_, children) =>
+      List.fold_left((acc, child) => traverse(child, acc), acc, children)
+    | Window({content, _}) => [content, ...acc]
+    | Empty => acc
     };
   };
 
-  f(tree, []);
+  traverse(tree, []);
 };
 
-let filterEmpty = v =>
-  switch (v) {
-  | Empty => false
-  | _ => true
-  };
+let addSplit = (~target=None, ~position, direction, content, tree) => {
+  let newWindow = Window({weight: 1., content});
 
-let addSplit = (~target=None, ~position, direction, newSplit, currentTree) => {
   let rec f = (targetId, parent, split) => {
     switch (split) {
-    | Parent(d, tree) => [
-        Parent(d, List.concat(List.map(f(targetId, Some(split)), tree))),
+    | Split(direction, children) => [
+        Split(
+          direction,
+          List.concat(List.map(f(targetId, Some(split)), children)),
+        ),
       ]
-    | Leaf(v) =>
-      if (v.editorGroupId == targetId) {
+    | Window({content, _}) as window =>
+      if (content == targetId) {
         let children =
           switch (position) {
-          | Before => [Leaf(newSplit), Leaf(v)]
-          | After => [Leaf(v), Leaf(newSplit)]
+          | `Before => [newWindow, window]
+          | `After => [window, newWindow]
           };
+
         switch (parent) {
-        | Some(Parent(dir, _)) =>
+        | Some(Split(dir, _)) =>
           if (dir == direction) {
             children;
           } else {
-            [Parent(direction, children)];
+            [Split(direction, children)];
           }
         | _ => children
         };
       } else {
-        [Leaf(v)];
+        [window];
       }
-    | Empty => [Leaf(newSplit)]
+    | Empty => [newWindow]
     };
   };
 
   switch (target) {
-  | Some(targetId) => f(targetId, None, currentTree) |> List.hd
+  | Some(targetId) => f(targetId, None, tree) |> List.hd
   | None =>
-    switch (currentTree) {
-    | Parent(d, tree) =>
-      Parent(d, List.filter(filterEmpty, [Leaf(newSplit), ...tree]))
-    | v => v
+    switch (tree) {
+    | Split(d, children) =>
+      Split(d, List.filter(node => node != Empty, [newWindow, ...children]))
+    | other => other
     }
   };
 };
 
-let rec removeSplit = (content, currentTree) =>
-  switch (currentTree) {
-  | Parent(direction, children) =>
+let rec removeSplit = (target, tree) =>
+  switch (tree) {
+  | Split(direction, children) =>
     let newChildren =
       children
-      |> List.map(child => removeSplit(content, child))
-      |> List.filter(filterEmpty);
+      |> List.map(child => removeSplit(target, child))
+      |> List.filter(node => node != Empty);
 
     if (List.length(newChildren) > 0) {
-      Parent(direction, newChildren);
+      Split(direction, newChildren);
     } else {
       Empty;
     };
-  | Leaf(split) when split.editorGroupId == content => Empty
-  | Leaf(_) as leaf => leaf
+  | Window({content, _}) when content == target => Empty
+  | Window(_) as window => window
   | Empty => Empty
   };
 
@@ -107,22 +97,22 @@ let rec rotate = (target, func, currenTree) => {
   let findSplit = children => {
     let predicate =
       fun
-      | Leaf(split) => split.editorGroupId == target
+      | Window({content, _}) => content == target
       | _ => false;
 
     List.exists(predicate, children);
   };
 
   switch (currenTree) {
-  | Parent(direction, children) =>
-    Parent(
+  | Split(direction, children) =>
+    Split(
       direction,
       List.map(
         rotate(target, func),
         findSplit(children) ? func(children) : children,
       ),
     )
-  | Leaf(_) as leaf => leaf
+  | Window(_) as window => window
   | Empty => Empty
   };
 };
@@ -151,22 +141,4 @@ let rotateBackward = (target, currentTree) => {
     | [head, ...tail] => tail @ [head];
 
   rotate(target, f, currentTree);
-};
-
-let rec windowFor = (content, node) => {
-  let rec loopChildren =
-    fun
-    | [] => None
-    | [head, ...rest] =>
-      switch (windowFor(content, head)) {
-      | Some(split) => Some(split)
-      | None => loopChildren(rest)
-      };
-
-  switch (node) {
-  | Parent(_, children) => loopChildren(children)
-  | Leaf(split) when split.editorGroupId == content => Some(split)
-  | Leaf(_)
-  | Empty => None
-  };
 };

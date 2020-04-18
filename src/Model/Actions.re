@@ -127,13 +127,10 @@ type t =
   | ListSelectBackground
   | OpenFileByPath(
       string,
-      option(Feature_Layout.WindowTree.direction),
+      option([ | `Horizontal | `Vertical]),
       option(Location.t),
     )
-  | AddSplit(
-      Feature_Layout.WindowTree.direction,
-      Feature_Layout.WindowTree.split,
-    )
+  | AddSplit([ | `Horizontal | `Vertical], int)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)

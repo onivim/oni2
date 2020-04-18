@@ -294,17 +294,9 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Actions.OpenFileByPath(
-            buf,
-            Some(Feature_Layout.WindowTree.Vertical),
-            None,
-          )
+          Actions.OpenFileByPath(buf, Some(`Vertical), None)
         | Vim.Types.Horizontal =>
-          Actions.OpenFileByPath(
-            buf,
-            Some(Feature_Layout.WindowTree.Horizontal),
-            None,
-          )
+          Actions.OpenFileByPath(buf, Some(`Horizontal), None)
         | Vim.Types.TabPage => Actions.OpenFileByPath(buf, None, None)
         };
       dispatch(command);
@@ -634,13 +626,8 @@ let start =
       switch (dir) {
       | Some(direction) =>
         let eg = EditorGroup.create();
-        let split =
-          Feature_Layout.WindowTree.createSplit(
-            ~editorGroupId=eg.editorGroupId,
-            (),
-          );
 
-        dispatch(Actions.AddSplit(direction, split));
+        dispatch(Actions.AddSplit(direction, eg.editorGroupId));
 
         // This needs to be dispatched after the split, since this will set the
         // active editor group, which is then used as the target for the split.

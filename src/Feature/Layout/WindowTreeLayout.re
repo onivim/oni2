@@ -2,7 +2,7 @@ open WindowTree;
 
 [@deriving show({with_path: false})]
 type t = {
-  split: WindowTree.split,
+  content: int,
   x: int,
   y: int,
   width: int,
@@ -37,7 +37,7 @@ let move = (content, dirX, dirY, splits: list(t)) => {
       splits,
     );
 
-  let splitInfo = List.filter(s => s.split.editorGroupId == content, splits);
+  let splitInfo = List.filter(s => s.content == content, splits);
 
   if (List.length(splitInfo) == 0) {
     None;
@@ -59,12 +59,12 @@ let move = (content, dirX, dirY, splits: list(t)) => {
 
       let intersects =
         List.filter(
-          s => s.split.editorGroupId != startSplit.split.editorGroupId && intersects(x, y, s),
+          s => s.content != startSplit.content && intersects(x, y, s),
           splits,
         );
 
       if (List.length(intersects) > 0) {
-        result := Some(List.hd(intersects).split.editorGroupId);
+        result := Some(List.hd(intersects).content);
         found := true;
       };
 
@@ -78,7 +78,7 @@ let move = (content, dirX, dirY, splits: list(t)) => {
 
 let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) => {
   switch (tree) {
-  | Parent(direction, children) =>
+  | Split(direction, children) =>
     let startX = x;
     let startY = y;
     let count = max(List.length(children), 1);
@@ -87,7 +87,7 @@ let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) =
 
     let result =
       switch (direction) {
-      | Horizontal =>
+      | `Horizontal =>
         List.mapi(
           i =>
             layout(
@@ -98,7 +98,7 @@ let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) =
             ),
           children,
         )
-      | Vertical =>
+      | `Vertical =>
         List.mapi(
           i =>
             layout(
@@ -112,7 +112,7 @@ let rec layout = (x: int, y: int, width: int, height: int, tree: WindowTree.t) =
       };
 
     List.concat(result);
-  | Leaf(split) => [{split, x, y, width, height}]
+  | Window({content, _}) => [{content, x, y, width, height}]
   | Empty => []
   };
 };

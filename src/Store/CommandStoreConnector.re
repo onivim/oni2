@@ -43,13 +43,7 @@ let start = () => {
         | None => EditorGroup.create()
         };
 
-      let split =
-        Feature_Layout.WindowTree.createSplit(
-          ~editorGroupId=newEditorGroup.editorGroupId,
-          (),
-        );
-
-      dispatch(AddSplit(direction, split));
+      dispatch(AddSplit(direction, newEditorGroup.editorGroupId));
 
       // This needs to be dispatched after the split, since this will set the
       // active editor group, which is then used as the target for the split.
@@ -117,8 +111,8 @@ let start = () => {
     ("system.addToPath", _ => togglePathEffect),
     ("system.removeFromPath", _ => togglePathEffect),
     ("view.closeEditor", state => closeEditorEffect(state)),
-    ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
-    ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
+    ("view.splitVertical", state => splitEditorEffect(state, `Vertical)),
+    ("view.splitHorizontal", state => splitEditorEffect(state, `Horizontal)),
     ("window.moveLeft", state => windowMoveEffect(state, Left)),
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),

@@ -12,11 +12,11 @@ let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
 let splitStyle = Style.[flexGrow(1)];
 
-let parentStyle = (dir: Feature_Layout.WindowTree.direction) => {
+let parentStyle = direction => {
   let flexDir =
-    switch (dir) {
-    | Vertical => `Row
-    | Horizontal => `Column
+    switch (direction) {
+    | `Vertical => `Row
+    | `Horizontal => `Column
     };
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
@@ -43,10 +43,7 @@ let renderTree = (state, theme, tree) => {
            height(item.height),
          ]>
          {switch (
-            EditorGroups.getEditorGroupById(
-              state.editorGroups,
-              item.split.editorGroupId,
-            )
+            EditorGroups.getEditorGroupById(state.editorGroups, item.content)
           ) {
           | Some(editorGroup) => <EditorGroupView state theme editorGroup />
           | None => React.empty

@@ -13,137 +13,86 @@ describe("WindowTreeLayout", ({describe, _}) => {
     test(
       "regression test for #603 - navigation across splits not working",
       ({expect, _}) => {
-      let split1 = createSplit(~editorGroupId=1, ());
-      let split2 = createSplit(~editorGroupId=2, ());
-      let split3 = createSplit(~editorGroupId=3, ());
-
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
-        |> addSplit(
-             ~target=Some(split1.editorGroupId),
-             ~position=Before,
-             Horizontal,
-             split2,
-           )
-        |> addSplit(
-             ~target=Some(split2.editorGroupId),
-             ~position=Before,
-             Horizontal,
-             split3,
-           );
+        |> addSplit(~target=None, ~position=`Before, `Horizontal, 1)
+        |> addSplit(~target=Some(1), ~position=`Before, `Horizontal, 2)
+        |> addSplit(~target=Some(2), ~position=`Before, `Horizontal, 3);
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 300, 300, splits);
 
       expect.equal(
         [
-          {split: split3, width: 300, height: 100, x: 0, y: 0},
-          {split: split2, width: 300, height: 100, x: 0, y: 100},
-          {split: split1, width: 300, height: 100, x: 0, y: 200},
+          {content: 3, width: 300, height: 100, x: 0, y: 0},
+          {content: 2, width: 300, height: 100, x: 0, y: 100},
+          {content: 1, width: 300, height: 100, x: 0, y: 200},
         ],
         layoutItems,
       );
 
-      let destId =
-        WindowTreeLayout.move(split3.editorGroupId, 0, 1, layoutItems)
-        |> getOrThrow;
-      expect.int(destId).toBe(split2.editorGroupId);
+      let destId = WindowTreeLayout.move(3, 0, 1, layoutItems) |> getOrThrow;
+      expect.int(destId).toBe(2);
 
-      let destId =
-        WindowTreeLayout.move(split2.editorGroupId, 0, 1, layoutItems)
-        |> getOrThrow;
-      expect.int(destId).toBe(split1.editorGroupId);
+      let destId = WindowTreeLayout.move(2, 0, 1, layoutItems) |> getOrThrow;
+      expect.int(destId).toBe(1);
 
-      let destId =
-        WindowTreeLayout.move(split1.editorGroupId, 0, -1, layoutItems)
-        |> getOrThrow;
-      expect.int(destId).toBe(split2.editorGroupId);
+      let destId = WindowTreeLayout.move(1, 0, -1, layoutItems) |> getOrThrow;
+      expect.int(destId).toBe(2);
 
-      let destId =
-        WindowTreeLayout.move(split2.editorGroupId, 0, -1, layoutItems)
-        |> getOrThrow;
-      expect.int(destId).toBe(split3.editorGroupId);
+      let destId = WindowTreeLayout.move(2, 0, -1, layoutItems) |> getOrThrow;
+      expect.int(destId).toBe(3);
     })
   );
 
   describe("layout", ({test, _}) => {
     test("layout vertical splits", ({expect, _}) => {
-      let split1 = createSplit(~editorGroupId=1, ());
-      let split2 = createSplit(~editorGroupId=2, ());
-
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, ~position=Before, Vertical, split1)
-        |> addSplit(
-             ~target=Some(split1.editorGroupId),
-             ~position=Before,
-             Vertical,
-             split2,
-           );
+        |> addSplit(~target=None, ~position=`Before, `Vertical, 1)
+        |> addSplit(~target=Some(1), ~position=`Before, `Vertical, 2);
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
         [
-          {split: split2, width: 100, height: 200, x: 0, y: 0},
-          {split: split1, width: 100, height: 200, x: 100, y: 0},
+          {content: 2, width: 100, height: 200, x: 0, y: 0},
+          {content: 1, width: 100, height: 200, x: 100, y: 0},
         ],
         layoutItems,
       );
     });
 
     test("layout horizontal splits", ({expect, _}) => {
-      let split1 = createSplit(~editorGroupId=1, ());
-      let split2 = createSplit(~editorGroupId=2, ());
-
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
-        |> addSplit(
-             ~target=Some(split1.editorGroupId),
-             ~position=Before,
-             Horizontal,
-             split2,
-           );
+        |> addSplit(~target=None, ~position=`Before, `Horizontal, 1)
+        |> addSplit(~target=Some(1), ~position=`Before, `Horizontal, 2);
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
         [
-          {split: split2, width: 200, height: 100, x: 0, y: 0},
-          {split: split1, width: 200, height: 100, x: 0, y: 100},
+          {content: 2, width: 200, height: 100, x: 0, y: 0},
+          {content: 1, width: 200, height: 100, x: 0, y: 100},
         ],
         layoutItems,
       );
     });
-    test("layout mixed splits", ({expect, _}) => {
-      let split1 = createSplit(~editorGroupId=1, ());
-      let split2 = createSplit(~editorGroupId=2, ());
-      let split3 = createSplit(~editorGroupId=3, ());
 
+    test("layout mixed splits", ({expect, _}) => {
       let splits =
         WindowTree.empty
-        |> addSplit(~target=None, ~position=Before, Horizontal, split1)
-        |> addSplit(
-             ~target=Some(split1.editorGroupId),
-             ~position=Before,
-             Horizontal,
-             split2,
-           )
-        |> addSplit(
-             ~target=Some(split1.editorGroupId),
-             ~position=Before,
-             Vertical,
-             split3,
-           );
+        |> addSplit(~target=None, ~position=`Before, `Horizontal, 1)
+        |> addSplit(~target=Some(1), ~position=`Before, `Horizontal, 2)
+        |> addSplit(~target=Some(1), ~position=`Before, `Vertical, 3);
 
       let layoutItems = WindowTreeLayout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
         [
-          {split: split2, width: 200, height: 100, x: 0, y: 0},
-          {split: split3, width: 100, height: 100, x: 0, y: 100},
-          {split: split1, width: 100, height: 100, x: 100, y: 100},
+          {content: 2, width: 200, height: 100, x: 0, y: 0},
+          {content: 3, width: 100, height: 100, x: 0, y: 100},
+          {content: 1, width: 100, height: 100, x: 100, y: 100},
         ],
         layoutItems,
       );
