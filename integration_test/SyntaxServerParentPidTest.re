@@ -1,7 +1,7 @@
 open Oni_IntegrationTestLib;
 
 let createDummyProcess = () => {
-  let cmd = Sys.win32 ? "bash" : "cmd.exe";
+  let cmd = Sys.win32 ? "cmd.exe" : "bash";
   try({
     let (inchannel, outchannel) = Unix.open_process(cmd);
     let pid = Unix.process_pid((inchannel, outchannel));
