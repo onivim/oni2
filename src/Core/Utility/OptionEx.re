@@ -51,11 +51,6 @@ let zip = (a, b) =>
 
 let values = list => List.filter_map(Fun.id, list);
 
-let value_lazy = (~default) =>
-  fun
-  | Some(v) => v
-  | None => default();
-
 let toString = f =>
   fun
   | Some(v) => Printf.sprintf("Some(%s)", f(v))
