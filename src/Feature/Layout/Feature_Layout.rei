@@ -12,8 +12,6 @@ module WindowTree: {
   type split = {
     id: int,
     editorGroupId: int,
-    width: option(int),
-    height: option(int),
   };
 
   // definition only used for tests
@@ -26,7 +24,7 @@ module WindowTree: {
 
   let getSplits: t => list(split);
   let createSplit:
-    (~width: int=?, ~height: int=?, ~editorGroupId: int, unit) => split;
+    (~editorGroupId: int, unit) => split;
   let addSplit:
     (~target: option(int)=?, ~position: position, direction, split, t) => t;
   let removeSplit: (int, t) => t;

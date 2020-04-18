@@ -17,8 +17,6 @@ type position =
 type split = {
   id: int,
   editorGroupId: int,
-  width: option(int),
-  height: option(int),
 };
 
 type t =
@@ -28,11 +26,9 @@ type t =
 
 let empty = Parent(Vertical, [Empty]);
 
-let createSplit = (~width=?, ~height=?, ~editorGroupId, ()) => {
+let createSplit = (~editorGroupId, ()) => {
   id: WindowSplitId.getUniqueId(),
   editorGroupId,
-  width,
-  height,
 };
 
 let getSplits = (tree: t) => {
