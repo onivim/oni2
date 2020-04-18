@@ -86,7 +86,7 @@ let start = () => {
                prev: Feature_Layout.WindowTree.t,
                curr: Feature_Layout.WindowTree.split,
              ) =>
-               Feature_Layout.WindowTree.removeSplit(curr.id, prev),
+               Feature_Layout.WindowTree.removeSplit(curr.editorGroupId, prev),
              s.layout.windowTree,
            );
 

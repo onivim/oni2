@@ -1,9 +1,6 @@
 open Oni_Core;
 open Utility;
 
-module WindowSplitId =
-  Revery.UniqueId.Make({});
-
 [@deriving show({with_path: false})]
 type direction =
   | Horizontal
@@ -15,7 +12,6 @@ type position =
 
 [@deriving show({with_path: false})]
 type split = {
-  id: int,
   editorGroupId: int,
 };
 
@@ -27,8 +23,7 @@ type t =
 let empty = Parent(Vertical, [Empty]);
 
 let createSplit = (~editorGroupId, ()) => {
-  id: WindowSplitId.getUniqueId(),
-  editorGroupId,
+  editorGroupId: editorGroupId,
 };
 
 let getSplits = (tree: t) => {
@@ -49,23 +44,6 @@ let filterEmpty = v =>
   | Empty => false
   | _ => true
   };
-
-let rec getEditorGroupIdFromSplitId = (splitId: int, currentTree) => {
-  switch (currentTree) {
-  | Parent(_, tree) =>
-    List.fold_left(
-      (prev, curr) =>
-        switch (prev) {
-        | Some(_) => prev
-        | None => getEditorGroupIdFromSplitId(splitId, curr)
-        },
-      None,
-      tree,
-    )
-  | Leaf(split) => split.id == splitId ? Some(split.editorGroupId) : None
-  | Empty => None
-  };
-};
 
 let addSplit = (~target=None, ~position, direction, newSplit, currentTree) => {
   let rec f = (targetId, parent, split) => {

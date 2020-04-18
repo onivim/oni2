@@ -10,7 +10,6 @@ module WindowTree: {
 
   [@deriving show]
   type split = {
-    id: int,
     editorGroupId: int,
   };
 
@@ -28,7 +27,6 @@ module WindowTree: {
   let addSplit:
     (~target: option(int)=?, ~position: position, direction, split, t) => t;
   let removeSplit: (int, t) => t;
-  let getEditorGroupIdFromSplitId: (int, t) => option(int);
 
   // only used for tests
   let rotateForward: (int, t) => t;

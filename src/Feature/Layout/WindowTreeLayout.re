@@ -59,7 +59,7 @@ let move = (content, dirX, dirY, splits: list(t)) => {
 
       let intersects =
         List.filter(
-          s => s.split.id != startSplit.split.id && intersects(x, y, s),
+          s => s.split.editorGroupId != startSplit.split.editorGroupId && intersects(x, y, s),
           splits,
         );
 
