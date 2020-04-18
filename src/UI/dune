@@ -6,6 +6,7 @@
         str
         bigarray
         zed_oni
+        luv
         lwt
         lwt.unix
         Oni2.core

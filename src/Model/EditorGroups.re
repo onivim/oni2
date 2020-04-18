@@ -82,6 +82,11 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
         applyToAllEditorGroups(~defaultFont, model.idToGroup, action),
       lastEditorFont: Some(font),
     }
+  | EditorSizeChanged(_) => {
+      ...model,
+      idToGroup:
+        applyToAllEditorGroups(~defaultFont, model.idToGroup, action),
+    }
 
   | WindowSetActive(_, editorGroupId) => {...model, activeId: editorGroupId}
 
@@ -103,21 +108,6 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
       idToGroup:
         IntMap.add(editorGroup.editorGroupId, editorGroup, model.idToGroup),
     };
-
-  | EditorGroupSizeChanged({id, _}) =>
-    let idToGroup =
-      IntMap.update(
-        id,
-        editorGroup =>
-          switch (editorGroup) {
-          | Some(group) =>
-            Some(EditorGroupReducer.reduce(~defaultFont, group, action))
-          | None => None
-          },
-        model.idToGroup,
-      );
-
-    {...model, idToGroup};
 
   | action =>
     let newModel =

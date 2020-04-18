@@ -20,14 +20,12 @@ let make =
       ~height as totalHeight,
       ~width as totalWidth,
       ~diagnostics: IntMap.t(list(Diagnostic.t)),
-      ~metrics,
       ~colors: Colors.t,
       ~editorFont: Service_Font.font,
       ~bufferHighlights,
       (),
     ) => {
-  let scrollMetrics =
-    Editor.getVerticalScrollbarMetrics(editor, totalHeight, metrics);
+  let scrollMetrics = Editor.getVerticalScrollbarMetrics(editor, totalHeight);
 
   let scrollThumbStyle =
     Style.[
@@ -45,7 +43,7 @@ let make =
     let pixelY = float_of_int(line) *. editorFont.measuredHeight;
     int_of_float(
       pixelY
-      /. (totalPixel +. float_of_int(metrics.pixelHeight))
+      /. (totalPixel +. float_of_int(editor.pixelHeight))
       *. float_of_int(totalHeight),
     );
   };

@@ -107,16 +107,11 @@ let start = (~healthCheck) => {
                 );
                 map(State.bufferEnter(id));
               }
-            | ConfigurationChanged(config) => {
-                map(State.updateConfiguration(config));
-                let treeSitterEnabled =
-                  Oni_Core.Configuration.getValue(
-                    c => c.experimentalTreeSitter,
-                    config,
-                  );
+            | UseTreeSitter(useTreeSitter) => {
+                map(State.setUseTreeSitter(useTreeSitter));
                 log(
                   "got new config - treesitter enabled:"
-                  ++ (treeSitterEnabled ? "true" : "false"),
+                  ++ string_of_bool(useTreeSitter),
                 );
               }
             | ThemeChanged(theme) => {
@@ -140,6 +135,7 @@ let start = (~healthCheck) => {
                 write(Protocol.ServerToClient.Closing);
                 exit(0);
               }
+            | SimulateMessageException => failwith("Exception!")
             | v => log("Unhandled message: " ++ ClientToServer.show(v))
           );
 
@@ -150,38 +146,48 @@ let start = (~healthCheck) => {
           | Message(protocol) => handleProtocol(protocol);
 
         while (isRunning^) {
-          log("Waiting for incoming message...");
+          try(
+            {
+              log("Waiting for incoming message...");
 
-          // Wait for pending incoming messages
-          Mutex.lock(messageMutex);
-          while (!hasPendingMessage() && !State.anyPendingWork(state^)) {
-            Condition.wait(messageCondition, messageMutex);
+              // Wait for pending incoming messages
+              Mutex.lock(messageMutex);
+              while (!hasPendingMessage() && !State.anyPendingWork(state^)) {
+                Condition.wait(messageCondition, messageMutex);
+              };
+
+              // Once we have them, let's track and run them
+              let messages = flush();
+              Mutex.unlock(messageMutex);
+
+              // Handle messages
+              messages
+              // Messages are queued in inverse order, so we need to fix that...
+              |> List.rev
+              |> List.iter(handleMessage);
+
+              // TODO: Do this in a loop
+              // If the messages incurred work, do it!
+              if (State.anyPendingWork(state^)) {
+                log("Running unit of work...");
+                map(State.doPendingWork);
+                log("Unit of work completed.");
+              } else {
+                log("No pending work.");
+              };
+
+              let tokenUpdates = State.getTokenUpdates(state^);
+              if (tokenUpdates !== []) {
+                write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+                log("Token updates sent.");
+              };
+              map(State.clearTokenUpdates);
+            }
+          ) {
+          | ex =>
+            queue(Exception(Printexc.to_string(ex)));
+            exit(2);
           };
-
-          // Once we have them, let's track and run them
-          let messages = flush();
-          Mutex.unlock(messageMutex);
-
-          // Handle messages
-          messages
-          // Messages are queued in inverse order, so we need to fix that...
-          |> List.rev
-          |> List.iter(handleMessage);
-
-          // TODO: Do this in a loop
-          // If the messages incurred work, do it!
-          if (State.anyPendingWork(state^)) {
-            log("Running unit of work...");
-            map(State.doPendingWork);
-            log("Unit of work completed.");
-          } else {
-            log("No pending work.");
-          };
-
-          let tokenUpdates = State.getTokenUpdates(state^);
-          write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
-          log("Token updates sent.");
-          map(State.clearTokenUpdates);
         };
       },
       (),
@@ -194,19 +200,53 @@ let start = (~healthCheck) => {
           try({
             let msg: Oni_Syntax.Protocol.ClientToServer.t =
               Marshal.from_channel(Stdlib.stdin);
-            queue(Message(msg));
+
+            switch (msg) {
+            | SimulateReadException => failwith("Exception")
+            | msg => queue(Message(msg))
+            };
           }) {
-          | ex => queue(Exception(Printexc.to_string(ex)))
+          | ex =>
+            queue(Exception(Printexc.to_string(ex)));
+            exit(2);
           };
-        }
+        };
+        ();
       },
       (),
     );
 
+  log("Testing...");
+
+  let waitForPidWindows = pid =>
+    try({
+      let (_exitCode, _status) = Thread.wait_pid(pid);
+      exit(0);
+    }) {
+    // If the PID doesn't exist, Thread.wait_pid will throw
+    | _ex => exit(2)
+    };
+
+  let waitForPidPosix = pid => {
+    while (true) {
+      Unix.sleepf(5.0);
+      try(Unix.kill(pid, 0)) {
+      // If we couldn't send signal 0, the process is dead:
+      // https://stackoverflow.com/questions/3043978/how-to-check-if-a-process-id-pid-exists
+      | _ex => exit(0)
+      };
+    };
+  };
+
+  let waitForPid = Sys.win32 ? waitForPidWindows : waitForPidPosix;
+
+  let _parentProcessWatcherThread: Thread.t =
+    Thread.create(() => {waitForPid(parentPid)}, ());
+
   // On Windows, we have to wait on the parent to close...
   // If we don't do this, the app will never close.
   if (Sys.win32) {
-    let (_exitCode, _status) = Thread.wait_pid(parentPid);
+    let () = Thread.join(_parentProcessWatcherThread);
     ();
   } else {
     // On Linux / OSX, the syntax process will close when

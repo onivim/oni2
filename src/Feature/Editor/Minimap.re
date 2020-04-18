@@ -83,8 +83,8 @@ let absoluteStyle =
     cursor(Revery.MouseCursors.pointer),
   ];
 
-let getMinimapSize = (view: Editor.t, metrics) => {
-  let currentViewSize = Editor.getVisibleView(view, metrics);
+let getMinimapSize = (view: Editor.t) => {
+  let currentViewSize = Editor.getVisibleView(view);
 
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
@@ -111,7 +111,6 @@ let%component make =
                 ~diagnostics,
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection: Hashtbl.t(Index.t, list(Range.t)),
-                ~metrics,
                 ~onScroll,
                 ~showSlider,
                 ~colors: Colors.t,
@@ -127,7 +126,7 @@ let%component make =
 
   let getScrollTo = (mouseY: float) => {
     let totalHeight: int = Editor.getTotalSizeInPixels(editor);
-    let visibleHeight: int = EditorMetrics.(metrics.pixelHeight);
+    let visibleHeight: int = Editor.(editor.pixelHeight);
     let offsetMouseY: int = int_of_float(mouseY) - Constants.tabHeight;
     float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
   };
@@ -153,7 +152,7 @@ let%component make =
     let scrollTo = getScrollTo(evt.mouseY);
     let minimapLineSize =
       Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-    let linesInMinimap = metrics.pixelHeight / minimapLineSize;
+    let linesInMinimap = editor.pixelHeight / minimapLineSize;
     if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
       onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
 
@@ -163,7 +162,7 @@ let%component make =
             let scrollTo = getScrollTo(evt.mouseY);
             let minimapLineSize =
               Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-            let linesInMinimap = metrics.pixelHeight / minimapLineSize;
+            let linesInMinimap = editor.pixelHeight / minimapLineSize;
             onScroll(scrollTo -. float(linesInMinimap));
           },
         ~onMouseUp=_evt => {scrollComplete()},
@@ -189,7 +188,7 @@ let%component make =
               rowHeight
               *. float(Editor.getTopVisibleLine(editor) - 1)
               -. scrollY,
-            ~height=rowHeight *. float(getMinimapSize(editor, metrics)),
+            ~height=rowHeight *. float(getMinimapSize(editor)),
             ~width=float(width),
             ~paint=minimapPaint,
             canvasContext,
