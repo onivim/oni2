@@ -188,7 +188,11 @@ let start =
     let workspaceUri =
       state.workspace
       |> Option.map((ws: Model.Workspace.workspace) => ws.workingDirectory)
-      |> OptionEx.value_lazy(~default=Sys.getcwd)
+      |> (
+        fun
+        | None => Sys.getcwd()
+        | Some(uri) => uri
+      )
       |> Oni_Core.Uri.fromPath;
 
     let terminalSubscription =
