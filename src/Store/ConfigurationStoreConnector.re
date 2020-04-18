@@ -85,8 +85,8 @@ let start =
     dispatch(Actions.ConfigurationParseError(err));
 
     err
-    |> Utility.JsonEx.parseYojsonErrorMessage
-    |> Option.iter(((line, startByte, endByte, message)) => {
+    |> Json.Error.ofString
+    |> Option.iter(({range, message}: Json.Error.t) => {
          defaultConfigurationFileName
          |> getConfigurationFile
          |> Result.iter(configPath => {
@@ -97,17 +97,7 @@ let start =
                   Constants.diagnosticsKey,
                   [
                     Feature_LanguageSupport.Diagnostic.create(
-                      ~range=
-                        Range.{
-                          start: {
-                            line: Index.(zero + line - 1),
-                            column: Index.(zero + startByte),
-                          },
-                          stop: {
-                            line: Index.(zero + line - 1),
-                            column: Index.(zero + endByte),
-                          },
-                        },
+                      ~range,
                       ~message,
                       (),
                     ),

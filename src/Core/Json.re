@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 type t = Yojson.Safe.json;
 
 module Decode = {
@@ -172,3 +174,45 @@ module Encode = {
 
 type decoder('a) = Decode.decoder('a);
 type encoder('a) = Encode.encoder('a);
+
+module Error = {
+  type t = {
+    range: Range.t,
+    message: string,
+  };
+
+  let ofString = {
+    open Oniguruma;
+    let yojsonRegExp =
+      OnigRegExp.create("Line ([0-9]+), bytes ([0-9]+)-([0-9]+):\n(.*)$");
+
+    msg => {
+      yojsonRegExp
+      |> Result.to_option
+      |> Utility.OptionEx.flatMap(regex => {
+           let matches = regex |> OnigRegExp.search(msg, 0);
+           if (Array.length(matches) < 5) {
+             None;
+           } else {
+             let line = OnigRegExp.Match.getText(matches[1]) |> int_of_string;
+             let startByte =
+               OnigRegExp.Match.getText(matches[2]) |> int_of_string;
+             let endByte =
+               OnigRegExp.Match.getText(matches[3]) |> int_of_string;
+             let message = OnigRegExp.Match.getText(matches[4]);
+             let start =
+               Location.{
+                 line: Index.(zero + line - 1),
+                 column: Index.(zero + startByte),
+               };
+             let stop =
+               Location.{
+                 line: Index.(zero + line - 1),
+                 column: Index.(zero + endByte),
+               };
+             Some({range: Range.{start, stop}, message});
+           };
+         });
+    };
+  };
+};
