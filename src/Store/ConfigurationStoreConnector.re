@@ -3,12 +3,17 @@
  *
  * This implements an updater (reducer + side effects) for managing configuration
  */
+open EditorCoreTypes;
 
 open Oni_Core;
 open Oni_Model;
 module ResultEx = Oni_Core.Utility.ResultEx;
 
 module Log = (val Log.withNamespace("Oni2.Store.Configuration"));
+
+module Constants = {
+  let diagnosticsKey = "onivim.configuration";
+};
 
 let start =
     (
@@ -71,9 +76,46 @@ let start =
     };
   };
 
+  let clearDiagnostics = (~dispatch) => {
+    dispatch(Actions.DiagnosticsClear(Constants.diagnosticsKey));
+  };
+
   let onError = (~dispatch, err: string) => {
     Log.error("Error loading configuration file: " ++ err);
     dispatch(Actions.ConfigurationParseError(err));
+
+    err
+    |> Utility.JsonEx.parseYojsonErrorMessage
+    |> Option.iter(((line, startByte, endByte, message)) => {
+         defaultConfigurationFileName
+         |> getConfigurationFile
+         |> Result.iter(configPath => {
+              let uri = Uri.fromPath(configPath);
+              dispatch(
+                Actions.DiagnosticsSet(
+                  uri,
+                  Constants.diagnosticsKey,
+                  [
+                    Feature_LanguageSupport.Diagnostic.create(
+                      ~range=
+                        Range.{
+                          start: {
+                            line: Index.(zero + line - 1),
+                            column: Index.(zero + startByte),
+                          },
+                          stop: {
+                            line: Index.(zero + line - 1),
+                            column: Index.(zero + endByte),
+                          },
+                        },
+                      ~message,
+                      (),
+                    ),
+                  ],
+                ),
+              );
+            })
+       });
   };
 
   let reloadConfigurationEffect =
@@ -86,7 +128,10 @@ let start =
           Stdlib.Result.bind(result, ConfigurationParser.ofFile)
           |> (
             fun
-            | Ok(config) => dispatch(Actions.ConfigurationSet(config))
+            | Ok(config) => {
+                dispatch(Actions.ConfigurationSet(config));
+                clearDiagnostics(~dispatch);
+              }
             | Error(err) => onError(~dispatch, err)
           )
       );

@@ -248,7 +248,7 @@ describe("JsonEx", ({describe, _}) => {
     test("valid error", ({expect, _}) => {
       let validError = {|
 Line 6, bytes 2-35:
-Expected ',' or '}' but found something else;
+Expected ',' or '}' but found something else
       |};
       let msg = parseError(validError);
       expect.equal(

@@ -56,14 +56,14 @@ let getKeys = json => {
 let parseYojsonErrorMessage = {
   open Oniguruma;
   let yojsonRegExp =
-    OnigRegExp.create("Line ([0-9]+), bytes ([0-9]+)-([0-9]+):\n(.*);(.*)$");
+    OnigRegExp.create("Line ([0-9]+), bytes ([0-9]+)-([0-9]+):\n(.*)$");
 
   msg => {
     yojsonRegExp
     |> Result.to_option
     |> OptionEx.flatMap(regex => {
          let matches = regex |> OnigRegExp.search(msg, 0);
-         if (Array.length(matches) < 6) {
+         if (Array.length(matches) < 5) {
            None;
          } else {
            let line = OnigRegExp.Match.getText(matches[1]) |> int_of_string;
