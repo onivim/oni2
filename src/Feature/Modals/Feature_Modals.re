@@ -76,8 +76,8 @@ module View = {
   module Styles = {
     open Style;
 
-    let overlay = [
-      backgroundColor(Color.hex("#0004")),
+    let backdrop = (~theme) => [
+      backgroundColor(Colors.Oni.Modal.backdrop.from(theme)),
       position(`Absolute),
       top(0),
       left(0),
@@ -92,7 +92,7 @@ module View = {
 
     let text = (~theme, ~font: UiFont.t) => [
       fontFamily(font.fontFile),
-      color(Colors.foreground.from(theme)),
+      color(Colors.Oni.Modal.foreground.from(theme)),
       fontSize(14.),
       textWrap(TextWrapping.NoWrap),
     ];
@@ -101,7 +101,9 @@ module View = {
 
     let file = (~theme, ~font: UiFont.t) => [
       fontFamily(font.fontFile),
-      color(Colors.foreground.from(theme)),
+      color(
+        Colors.Oni.Modal.foreground.from(theme) |> Color.multiplyAlpha(0.75),
+      ),
       fontSize(14.),
       textWrap(TextWrapping.NoWrap),
     ];
@@ -157,7 +159,7 @@ module View = {
 
   let make =
       (~model, ~buffers, ~workingDirectory, ~theme, ~font, ~dispatch, ()) => {
-    <View style=Styles.overlay>
+    <View style={Styles.backdrop(~theme)}>
       {switch (model) {
        | UnsavedBuffersWarning(model) =>
          <unsavedBuffersWarning

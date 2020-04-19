@@ -84,32 +84,29 @@ module Styles = {
   open Style;
 
   let container = (~theme) => [
-    backgroundColor(Colors.Editor.background.from(theme)),
+    backgroundColor(Colors.Oni.Modal.background.from(theme)),
   ];
 
   let message = [padding(20), paddingBottom(10)];
 
   let actions = (~theme) => [
     flexDirection(`Row),
-    borderTop(~width=1, ~color=Colors.Menu.selectionBackground.from(theme)),
+    borderTop(~width=1, ~color=Colors.Selection.background.from(theme)),
   ];
 
   let buttonOuter = (~isHovered, ~theme) => [
     isHovered
-      ? backgroundColor(Colors.Menu.selectionBackground.from(theme))
-      : backgroundColor(Colors.Editor.background.from(theme)),
+      ? backgroundColor(Colors.Selection.background.from(theme))
+      : backgroundColor(Colors.Oni.Modal.background.from(theme)),
     flexGrow(1),
-    borderRight(
-      ~width=1,
-      ~color=Colors.Menu.selectionBackground.from(theme),
-    ),
+    borderRight(~width=1, ~color=Colors.Selection.background.from(theme)),
   ];
 
   let buttonInner = [padding(10), flexDirection(`Row)];
 
   let buttonText = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(Colors.foreground.from(theme)),
+    color(Colors.Oni.Modal.foreground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
@@ -118,14 +115,14 @@ module Styles = {
 
   let shortcutText = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.7)),
+    color(Colors.Oni.Modal.shortcutForeground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
 
   let shortcutHighlight = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(Colors.Oni.normalModeBackground.from(theme)),
+    color(Colors.Oni.Modal.shortcutHighlightForeground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
