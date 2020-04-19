@@ -259,6 +259,36 @@ let start = maybeKeyBindingsFilePath => {
         command: "workbench.action.previousEditor",
         condition: WhenExpr.Value(True),
       },
+      {
+        key: "<D-=>",
+        command: "workbench.action.zoomIn",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-=>",
+        command: "workbench.action.zoomIn",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-->",
+        command: "workbench.action.zoomOut",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-->",
+        command: "workbench.action.zoomOut",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-0>",
+        command: "workbench.action.zoomReset",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-0>",
+        command: "workbench.action.zoomReset",
+        condition: WhenExpr.Value(True),
+      },
       // TERMINAL
       // Binding to open normal mode
       {
