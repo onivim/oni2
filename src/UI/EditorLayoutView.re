@@ -25,7 +25,7 @@ let renderTree = (~width, ~height, state: State.t, theme, tree) => {
   let items = Feature_Layout.layout(0, 0, width, height, tree);
 
   items
-  |> List.map((item: Feature_Layout.window) =>
+  |> List.map((item: Feature_Layout.window(_)) =>
        <View
          style=Style.[
            position(`Absolute),

@@ -5,17 +5,17 @@ type direction =
   | Right;
 
 // definition only used for tests
-type t =
-  | Split([ | `Horizontal | `Vertical], list(t))
+type t('content) =
+  | Split([ | `Horizontal | `Vertical], list(t('content)))
   | Window({
       weight: float,
-      content: int,
+      content: 'content,
     })
   | Empty;
 
 [@deriving show]
-type window = {
-  content: int,
+type window('content) = {
+  content: 'content,
   x: int,
   y: int,
   width: int,
@@ -23,30 +23,31 @@ type window = {
 };
 
 module Internal: {
-  let move: (int, int, int, list(window)) => option(int); // only used for tests
+  let move:
+    ('content, int, int, list(window('content))) => option('content); // only used for tests
 };
 
-let initial: t;
+let initial: t('content);
 
-let windows: t => list(int);
+let windows: t('content) => list('content);
 let addWindow:
   (
-    ~target: option(int)=?,
+    ~target: option('content)=?,
     ~position: [ | `Before | `After],
     [ | `Horizontal | `Vertical],
-    int,
-    t
+    'content,
+    t('content)
   ) =>
-  t;
-let removeWindow: (int, t) => t;
+  t('content);
+let removeWindow: ('content, t('content)) => t('content);
 
-let layout: (int, int, int, int, t) => list(window);
+let layout: (int, int, int, int, t('content)) => list(window('content));
 
-let move: (direction, int, t) => int;
-let moveLeft: (int, t) => int;
-let moveRight: (int, t) => int;
-let moveUp: (int, t) => int;
-let moveDown: (int, t) => int;
+let move: (direction, 'content, t('content)) => 'content;
+let moveLeft: ('content, t('content)) => 'content;
+let moveRight: ('content, t('content)) => 'content;
+let moveUp: ('content, t('content)) => 'content;
+let moveDown: ('content, t('content)) => 'content;
 
-let rotateForward: (int, t) => t;
-let rotateBackward: (int, t) => t;
+let rotateForward: ('content, t('content)) => t('content);
+let rotateBackward: ('content, t('content)) => t('content);

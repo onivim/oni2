@@ -6,17 +6,17 @@ type direction =
   | Down
   | Right;
 
-type t =
-  | Split([ | `Horizontal | `Vertical], list(t))
+type t('content) =
+  | Split([ | `Horizontal | `Vertical], list(t('content)))
   | Window({
       weight: float,
-      content: int,
+      content: 'content,
     })
   | Empty;
 
 [@deriving show({with_path: false})]
-type window = {
-  content: int,
+type window('content) = {
+  content: 'content,
   x: int,
   y: int,
   width: int,
@@ -24,7 +24,7 @@ type window = {
 };
 
 module Internal = {
-  let intersects = (x, y, split: window) => {
+  let intersects = (x, y, split) => {
     x >= split.x
     && x <= split.x
     + split.width
@@ -33,7 +33,7 @@ module Internal = {
     + split.height;
   };
 
-  let move = (content, dirX, dirY, splits: list(window)) => {
+  let move = (content, dirX, dirY, splits) => {
     let (minX, minY, maxX, maxY, deltaX, deltaY) =
       List.fold_left(
         (prev, cur) => {
@@ -54,7 +54,7 @@ module Internal = {
 
     let splitInfo = List.filter(s => s.content == content, splits);
 
-    if (List.length(splitInfo) == 0) {
+    if (splitInfo == []) {
       None;
     } else {
       let startSplit = List.hd(splitInfo);
@@ -78,7 +78,7 @@ module Internal = {
             splits,
           );
 
-        if (List.length(intersects) > 0) {
+        if (intersects != []) {
           result := Some(List.hd(intersects).content);
           found := true;
         };
@@ -195,7 +195,7 @@ let rec removeWindow = (target, tree) =>
   | Empty => Empty
   };
 
-let rec layout = (x: int, y: int, width: int, height: int, tree: t) => {
+let rec layout = (x, y, width, height, tree) => {
   switch (tree) {
   | Split(direction, children) =>
     let startX = x;

@@ -59,7 +59,7 @@ type t = {
   syntaxClient: option(Oni_Syntax_Client.t),
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
-  layout: Feature_Layout.t,
+  layout: Feature_Layout.t(int),
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
