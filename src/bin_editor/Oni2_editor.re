@@ -134,28 +134,25 @@ if (cliOptions.syntaxHighlightService) {
     };
 
     let runEventLoop = () => {
-  
-      let rec loop = (idx) => {
-        if (idx == 0)  {
-          true
+      let rec loop = idx =>
+        if (idx == 0) {
+          ();
         } else {
-          let v: bool = Luv.Loop.run(~mode=`NOWAIT, ());
+          ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
           //prerr_endline (Printf.sprintf("Iteration: %d Ret: %s", idx, string_of_bool(v)));
           loop(idx - 1);
-        }
-      }
+        };
 
       // TODO: How many times should we run it?
+      // The ideal amount would be just enough to do pending work,
+      // but not too much to just spin. Unfortunately, it seems
+      // Luv.Loop.run always returns [true] for us, so we don't
+      // have a reliable way to know we're done (at the moment).
       loop(100);
     };
 
     let tick = _dt => {
-      let start = Unix.gettimeofday();
       runEventLoop();
-      let stop = Unix.gettimeofday();
-      let duration = stop -. start;
-      prerr_endline ("DURATION: " ++ (duration |> string_of_float));
-      //let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
 
       if (isDirty^) {
         update(<Root state=currentState^ />);
