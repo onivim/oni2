@@ -16,8 +16,8 @@ module Styles = {
   let pane = (~theme) => [
     flexDirection(`Column),
     height(Constants.height),
-    borderTop(~color=Colors.SideBar.background.from(theme), ~width=1),
-    backgroundColor(Colors.Editor.background.from(theme)),
+    borderTop(~color=Colors.Panel.border.from(theme), ~width=1),
+    backgroundColor(Colors.Panel.background.from(theme)),
   ];
 
   let header = [flexDirection(`Row), justifyContent(`SpaceBetween)];
