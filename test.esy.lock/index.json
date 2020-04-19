@@ -1,5 +1,5 @@
 {
-  "checksum": "65e9898b85873323af1c2d9ce6a36fb5",
+  "checksum": "aafdfff96954fc1a58c082af6488a6d1",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -120,14 +120,14 @@
       "dependencies": [ "@opam/dune@opam:2.5.0@aef1678b" ],
       "devDependencies": []
     },
-    "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9": {
+    "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9": {
       "id":
-        "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:revery-ui/revery-terminal#2ef1c65",
+      "version": "github:revery-ui/revery-terminal#4e8ca1c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery-terminal#2ef1c65" ]
+        "source": [ "github:revery-ui/revery-terminal#4e8ca1c" ]
       },
       "overrides": [],
       "dependencies": [
@@ -168,14 +168,14 @@
       ],
       "devDependencies": []
     },
-    "resolve@1.16.0@d41d8cd9": {
-      "id": "resolve@1.16.0@d41d8cd9",
+    "resolve@1.16.1@d41d8cd9": {
+      "id": "resolve@1.16.1@d41d8cd9",
       "name": "resolve",
-      "version": "1.16.0",
+      "version": "1.16.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/resolve/-/resolve-1.16.0.tgz#sha1:063dc704fa3413e13ac1d0d1756a7cbfe95dd1a7"
+          "archive:https://registry.npmjs.org/resolve/-/resolve-1.16.1.tgz#sha1:49fac5d8bacf1fd53f200fa51247ae736175832c"
         ]
       },
       "overrides": [],
@@ -251,7 +251,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "resolve@1.16.0@d41d8cd9" ],
+      "dependencies": [ "resolve@1.16.1@d41d8cd9" ],
       "devDependencies": []
     },
     "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9": {
@@ -287,15 +287,11 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-vscode-exthost@github:onivim/reason-vscode-exthost#ea4e622@d41d8cd9": {
-      "id":
-        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#ea4e622@d41d8cd9",
+    "reason-vscode-exthost@link:../reason-vscode-exthost": {
+      "id": "reason-vscode-exthost@link:../reason-vscode-exthost",
       "name": "reason-vscode-exthost",
-      "version": "github:onivim/reason-vscode-exthost#ea4e622",
-      "source": {
-        "type": "install",
-        "source": [ "github:onivim/reason-vscode-exthost#ea4e622" ]
-      },
+      "version": "link:../reason-vscode-exthost",
+      "source": { "type": "link", "path": "../reason-vscode-exthost" },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
@@ -1226,12 +1222,12 @@
       },
       "overrides": [ "test.json" ],
       "dependencies": [
-        "revery-terminal@github:revery-ui/revery-terminal#2ef1c65@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
         "revery@github:revery-ui/revery#18aa22d@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
-        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#ea4e622@d41d8cd9",
+        "reason-vscode-exthost@link:../reason-vscode-exthost",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.1.0@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",

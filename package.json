@@ -253,8 +253,8 @@
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#b17ce17",
-    "revery-terminal": "revery-ui/revery-terminal#2ef1c65",
-    "reason-vscode-exthost": "onivim/reason-vscode-exthost#ea4e622"
+    "revery-terminal": "revery-ui/revery-terminal#4e8ca1c",
+    "reason-vscode-exthost": "link:../reason-vscode-exthost"
   },
   "devDependencies": {
     "ocaml": "~4.8",
