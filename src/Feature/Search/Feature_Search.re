@@ -122,10 +122,7 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let input = (~font: UiFont.t, ~theme) => [
-    border(~width=1, ~color=Colors.PanelInput.border.from(theme)),
-    backgroundColor(Colors.Input.background.from(theme)),
-    color(Colors.Input.foreground.from(theme)),
+  let input = (~font: UiFont.t) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
     flexGrow(1),
@@ -175,13 +172,13 @@ let make =
       </View>
       <View style=Styles.row>
         <Input
-          style={Styles.input(~font=uiFont, ~theme)}
-          cursorColor={Colors.Input.foreground.from(theme)}
+          style={Styles.input(~font=uiFont)}
           selection={model.selection}
           value={model.queryInput}
           placeholder="Search"
           isFocused
           onClick={selection => dispatch(InputClicked(selection))}
+          theme
         />
       </View>
     </View>

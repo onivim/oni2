@@ -22,13 +22,7 @@ module Styles = {
 
   let inputContainer = [padding(5)];
 
-  let input = (~font, ~theme) => [
-    border(~width=1, ~color=Colors.PanelInput.border.from(theme)),
-    backgroundColor(Colors.Input.background.from(theme)),
-    color(Colors.Input.foreground.from(theme)),
-    fontFamily(font),
-    fontSize(14.),
-  ];
+  let input = (~font) => [fontFamily(font), fontSize(14.)];
 
   let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
 
@@ -163,12 +157,12 @@ let make =
       <Input
         placeholder
         ?prefix
-        cursorColor={Colors.Input.foreground.from(theme)}
-        style={Styles.input(~font=font.fontFile, ~theme)}
+        style={Styles.input(~font=font.fontFile)}
         isFocused=true
         onClick=onInputClicked
         value=query
         selection
+        theme
       />
     </View>;
 

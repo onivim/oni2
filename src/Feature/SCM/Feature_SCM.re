@@ -414,10 +414,7 @@ module Pane = {
       textOverflow(`Ellipsis),
     ];
 
-    let input = (~theme, ~font: UiFont.t) => [
-      border(~width=1, ~color=Colors.PanelInput.border.from(theme)),
-      backgroundColor(Colors.Input.background.from(theme)),
-      color(Colors.Input.foreground.from(theme)),
+    let input = (~font: UiFont.t) => [
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       flexGrow(1),
@@ -534,8 +531,7 @@ module Pane = {
 
     <ScrollView style=Styles.container>
       <Input
-        style={Styles.input(~theme, ~font)}
-        cursorColor={Colors.Input.foreground.from(theme)}
+        style={Styles.input(~font)}
         value={model.inputBox.value}
         selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}
@@ -543,6 +539,7 @@ module Pane = {
         onClick={selection =>
           dispatch(InputBoxClicked({selection: selection}))
         }
+        theme
       />
       {groups
        |> List.map(((provider, group)) =>
