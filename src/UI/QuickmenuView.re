@@ -22,10 +22,10 @@ module Styles = {
 
   let inputContainer = [padding(5)];
 
-  let input = font => [
-    border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-    backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-    color(Revery.Colors.white),
+  let input = (~font, ~theme) => [
+    border(~width=1, ~color=Colors.PanelInput.border.from(theme)),
+    backgroundColor(Colors.Input.background.from(theme)),
+    color(Colors.Input.foreground.from(theme)),
     fontFamily(font),
     fontSize(14.),
   ];
@@ -163,8 +163,8 @@ let make =
       <Input
         placeholder
         ?prefix
-        cursorColor=Revery.Colors.white
-        style={Styles.input(font.fontFile)}
+        cursorColor={Colors.Input.foreground.from(theme)}
+        style={Styles.input(~font=font.fontFile, ~theme)}
         isFocused=true
         onClick=onInputClicked
         value=query
