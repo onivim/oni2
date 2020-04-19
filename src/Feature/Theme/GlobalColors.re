@@ -540,6 +540,80 @@ module Oni = {
   };
 };
 
+module Panel = {
+  let background = define("panel.background", all(ref(Editor.background)));
+  let border =
+    define(
+      "panel.border",
+      {
+        dark: hex("#808080") |> transparent(0.35),
+        light: hex("#808080") |> transparent(0.35),
+        hc: ref(contrastBorder),
+      },
+    );
+
+  let defaults = [background, border];
+};
+
+module PanelTitle = {
+  let activeForeground =
+    define(
+      "panelTitle.activeForeground",
+      {dark: hex("#E7E7E7"), light: hex("#424242"), hc: hex("#FFF")},
+    );
+
+  let inactiveForeground =
+    define(
+      "panelTitle.inactiveForeground",
+      {
+        dark: ref(activeForeground) |> transparent(0.6),
+        light: ref(activeForeground) |> transparent(0.71),
+        hc: hex("#FFF"),
+      },
+    );
+
+  let activeBorder =
+    define(
+      "panelTitle.activeBorder",
+      {
+        dark: ref(activeForeground),
+        light: ref(activeForeground),
+        hc: ref(contrastBorder),
+      },
+    );
+
+  let dropBackground =
+    define(
+      "panelTitle.dropBackground",
+      {
+        dark: hex("#FFF") |> transparent(0.12),
+        light: hex("#2677CB") |> transparent(0.18),
+        hc: hex("#FFF") |> transparent(0.12),
+      },
+    );
+
+  let defaults = [
+    activeForeground,
+    inactiveForeground,
+    activeBorder,
+    dropBackground,
+  ];
+};
+
+module PanelInput = {
+  let border =
+    define(
+      "panelInput.border",
+      {
+        dark: ref(Input.border), // actually: unspecified
+        light: hex("#ddd"),
+        hc: unspecified,
+      },
+    );
+
+  let defaults = [border];
+};
+
 module ScrollbarSlider = {
   let background =
     define(
