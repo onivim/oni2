@@ -21,24 +21,24 @@ let renderLine =
       _offset,
     ) => {
   let index = Index.fromZeroBased(item);
-  let renderDiagnostics = (d: Diagnostic.t) =>
+  let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) =>
     Draw.underline(
       ~context,
       ~buffer,
       ~leftVisibleColumn,
-      ~color=Revery.Colors.red,
-      d.range,
+      ~color=colors.errorForeground,
+      diagnostic.range,
     );
 
   /* Draw error markers */
   switch (IntMap.find_opt(item, diagnosticsMap)) {
   | None => ()
-  | Some(v) => List.iter(renderDiagnostics, v)
+  | Some(diagnostics) => List.iter(renderDiagnostics(colors), diagnostics)
   };
 
   switch (Hashtbl.find_opt(selectionRanges, index)) {
   | None => ()
-  | Some(v) =>
+  | Some(selections) =>
     List.iter(
       Draw.range(
         ~context,
@@ -46,7 +46,7 @@ let renderLine =
         ~leftVisibleColumn,
         ~color=colors.selectionBackground,
       ),
-      v,
+      selections,
     )
   };
 
