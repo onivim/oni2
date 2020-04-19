@@ -451,8 +451,17 @@ module Input = {
       "input.border",
       {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
     );
+  let placeholderForeground =
+    define(
+      "input.placeholderForeground",
+      {
+        dark: ref(foreground) |> transparent(0.5),
+        light: ref(foreground) |> transparent(0.5),
+        hc: ref(foreground) |> transparent(0.7),
+      },
+    );
 
-  let defaults = [background, foreground, border];
+  let defaults = [background, foreground, border, placeholderForeground];
 };
 
 module Menu = {
