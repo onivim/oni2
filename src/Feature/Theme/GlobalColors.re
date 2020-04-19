@@ -703,6 +703,91 @@ module ScrollbarSlider = {
   let defaults = [background, activeBackground, hoverBackground];
 };
 
+module Minimap = {
+  let findMatchHighlight =
+    define(
+      "minimap.findMatchHighlight",
+      {light: hex("#d18616"), dark: hex("#d18616"), hc: hex("#AB5A00")},
+    );
+  let selectionHighlight =
+    define(
+      "minimap.selectionHighlight",
+      {light: hex("#ADD6FF"), dark: hex("#264F78"), hc: hex("#ffffff")},
+    );
+  let errorHighlight =
+    define(
+      "minimap.errorHighlight",
+      {
+        dark: color(Revery.Color.rgb_int(255, 18, 18)) |> transparent(0.7),
+        light: color(Revery.Color.rgb_int(255, 18, 18)) |> transparent(0.7),
+        hc: color(Revery.Color.rgb_int(255, 50, 50)),
+      },
+    );
+  let warningHighlight =
+    define("minimap.warningHighlight", all(ref(EditorWarning.foreground)));
+  let background = define("minimap.background", all(unspecified));
+
+  let defaults = [
+    findMatchHighlight,
+    selectionHighlight,
+    errorHighlight,
+    warningHighlight,
+    background,
+  ];
+};
+
+module MinimapSlider = {
+  let background =
+    define(
+      "minimapSlider.background",
+      all(ref(ScrollbarSlider.background) |> transparent(0.5)),
+    );
+  let hoverBackground =
+    define(
+      "minimapSlider.hoverBackground",
+      all(ref(ScrollbarSlider.hoverBackground) |> transparent(0.5)),
+    );
+  let activeBackground =
+    define(
+      "minimapSlider.activeBackground",
+      all(ref(ScrollbarSlider.activeBackground) |> transparent(0.5)),
+    );
+
+  let defaults = [background, hoverBackground, activeBackground];
+};
+
+module MinimapGutter = {
+  let addedBackground =
+    define(
+      "minimapGutter.addedBackground",
+      {
+        dark: color(Revery.Color.rgb_int(12, 125, 157)),
+        light: color(Revery.Color.rgb_int(102, 175, 224)),
+        hc: color(Revery.Color.rgb_int(0, 155, 249)),
+      },
+    );
+  let modifiedBackground =
+    define(
+      "minimapGutter.modifiedBackground",
+      {
+        dark: color(Revery.Color.rgb_int(88, 124, 12)),
+        light: color(Revery.Color.rgb_int(129, 184, 139)),
+        hc: color(Revery.Color.rgb_int(51, 171, 78)),
+      },
+    );
+  let deletedBackground =
+    define(
+      "minimapGutter.deletedBackground",
+      {
+        dark: color(Revery.Color.rgb_int(148, 21, 27)),
+        light: color(Revery.Color.rgb_int(202, 75, 81)),
+        hc: color(Revery.Color.rgb_int(252, 93, 109)),
+      },
+    );
+
+  let defaults = [addedBackground, modifiedBackground, deletedBackground];
+};
+
 module SideBar = {
   let background =
     define(
