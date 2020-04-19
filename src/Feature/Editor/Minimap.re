@@ -179,7 +179,7 @@ let%component make =
           /* Draw slider/viewport */
           Skia.Paint.setColor(
             minimapPaint,
-            Revery.Color.toSkia(colors.scrollbarSliderHoverBackground),
+            Revery.Color.toSkia(colors.minimapSliderBackground),
           );
           CanvasContext.drawRectLtwh(
             ~left=0.,
@@ -265,7 +265,7 @@ let%component make =
               switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
-                let color = colors.selectionBackground;
+                let color = colors.minimapSelectionHighlight;
                 List.iter(renderRange(~color, ~offset), v);
               };
 

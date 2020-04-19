@@ -1,5 +1,7 @@
 open Revery;
-open Feature_Theme.Colors;
+
+module Colors = Feature_Theme.Colors;
+open Colors;
 
 type t = {
   editorBackground: Color.t,
@@ -29,6 +31,9 @@ type t = {
   scrollbarSliderBackground: Color.t,
   scrollbarSliderHoverBackground: Color.t,
   normalModeBackground: Color.t,
+  // Minimap
+  minimapSliderBackground: Color.t,
+  minimapSelectionHighlight: Color.t,
 };
 
 let precompute = theme => {
@@ -61,4 +66,7 @@ let precompute = theme => {
   scrollbarSliderBackground: ScrollbarSlider.background.from(theme),
   scrollbarSliderHoverBackground: ScrollbarSlider.hoverBackground.from(theme),
   normalModeBackground: Oni.normalModeBackground.from(theme),
+  // Minimap
+  minimapSliderBackground: MinimapSlider.background.from(theme),
+  minimapSelectionHighlight: Colors.Minimap.selectionHighlight.from(theme),
 };
