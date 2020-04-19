@@ -439,6 +439,13 @@ module EditorSuggestWidget = {
   ];
 };
 
+module Selection = {
+  let background =
+    define("selection.background", all(ref(Editor.selectionBackground))); // actually: unspecified
+
+  let defaults = [background];
+};
+
 module Input = {
   let background =
     define(
@@ -553,9 +560,34 @@ module Oni = {
     commandlineModeForeground,
   ];
 
+  module Modal = {
+    let backdrop = define("oni.modal.backdrop", all(hex("#0004")));
+    let background =
+      define("oni.modal.background", all(ref(Editor.background)));
+    let foreground = define("oni.modal.foreground", all(ref(foreground)));
+    let shortcutForeground =
+      define(
+        "oni.modal.shortcutForeground",
+        all(ref(foreground) |> transparent(0.7)),
+      );
+    let shortcutHighlightForeground =
+      define(
+        "oni.modal.shortcutHighlightForeground",
+        all(ref(normalModeBackground)),
+      );
+
+    let defaults = [
+      backdrop,
+      background,
+      foreground,
+      shortcutForeground,
+      shortcutHighlightForeground,
+    ];
+  };
+
   module Sneak = {
     let background =
-      define("oni.sneak.background", all(ref(Menu.selectionBackground)));
+      define("oni.sneak.background", all(ref(Selection.background)));
     let foreground =
       define("oni.sneak.foreground", all(ref(Menu.foreground)));
     let highlight =
