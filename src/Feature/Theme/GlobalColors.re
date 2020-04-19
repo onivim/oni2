@@ -439,6 +439,22 @@ module EditorSuggestWidget = {
   ];
 };
 
+module Input = {
+  let background =
+    define(
+      "input.background",
+      {dark: hex("#3C3C3C"), light: hex("#FFF"), hc: hex("#000")},
+    );
+  let foreground = define("input.foreground", all(ref(foreground)));
+  let border =
+    define(
+      "input.border",
+      {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
+    );
+
+  let defaults = [background, foreground, border];
+};
+
 module Menu = {
   let background = define("menu.background", all(ref(Dropdown.background)));
   let foreground =

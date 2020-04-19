@@ -30,6 +30,7 @@ let defaults =
     Colors.EditorSuggestWidget.defaults,
     Colors.EditorWhitespace.defaults,
     Colors.EditorWidget.defaults,
+    Colors.Input.defaults,
     Colors.List.defaults,
     Colors.Menu.defaults,
     Colors.Oni.defaults,
