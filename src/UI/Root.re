@@ -4,7 +4,6 @@
  * Root editor component - contains all UI elements
  */
 
-open Revery;
 open Revery.UI;
 open Oni_Model;
 

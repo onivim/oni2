@@ -168,7 +168,7 @@ let make =
 
   let dropdown = () =>
     <View style=Styles.dropdown>
-      <FlatList rowHeight=40 count={Array.length(items)} focused>
+      <FlatList rowHeight=40 count={Array.length(items)} focused theme>
         ...renderItem
       </FlatList>
       {switch (progress) {

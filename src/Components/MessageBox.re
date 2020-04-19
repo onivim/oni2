@@ -89,9 +89,7 @@ module Styles = {
 
   let message = [padding(20), paddingBottom(10)];
 
-  let actions = (~theme) => [
-    flexDirection(`Row),
-  ];
+  let actions = [flexDirection(`Row)];
 
   let buttonOuter = (~isHovered, ~theme) => [
     isHovered
@@ -170,7 +168,7 @@ let%component button = (~text, ~shortcut, ~input, ~onClick, ~theme, ~font, ()) =
 let make = (~children as message, ~theme, ~font, ~model, ~onAction, ()) => {
   <View style={Styles.container(~theme)}>
     <View style=Styles.message> message </View>
-    <View style={Styles.actions(~theme)}>
+    <View style=Styles.actions>
       {model.actions
        |> List.map(action =>
             <button

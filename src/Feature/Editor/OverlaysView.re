@@ -31,6 +31,7 @@ let completionsView =
       ~cursorPixelX,
       ~cursorPixelY,
       ~colors,
+      ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
       (),
@@ -41,6 +42,7 @@ let completionsView =
         y=cursorPixelY
         lineHeight={editorFont.measuredHeight}
         colors
+        theme
         tokenTheme
         editorFont
         completions
@@ -60,6 +62,7 @@ let make =
       ~gutterWidth,
       ~completions,
       ~colors,
+      ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
       (),
@@ -117,6 +120,7 @@ let make =
           cursorPixelX
           cursorPixelY
           colors
+          theme
           tokenTheme
           editorFont
         />
