@@ -443,7 +443,7 @@ let start = (getState, contributedCommands) => {
     ),
     (
       "workbench.action.zoomReset",
-      state => zoomEffect(state, zoom => Constants.defaultZoomValue),
+      state => zoomEffect(state, _zoom => Constants.defaultZoomValue),
     ),
   ];
 
