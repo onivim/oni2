@@ -91,7 +91,6 @@ module Styles = {
 
   let actions = (~theme) => [
     flexDirection(`Row),
-    borderTop(~width=1, ~color=Colors.Selection.background.from(theme)),
   ];
 
   let buttonOuter = (~isHovered, ~theme) => [
@@ -99,7 +98,6 @@ module Styles = {
       ? backgroundColor(Colors.Selection.background.from(theme))
       : backgroundColor(Colors.Oni.Modal.background.from(theme)),
     flexGrow(1),
-    borderRight(~width=1, ~color=Colors.Selection.background.from(theme)),
   ];
 
   let buttonInner = [padding(10), flexDirection(`Row)];
