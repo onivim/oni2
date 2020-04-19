@@ -77,15 +77,19 @@ module Constants = {
 };
 
 module Colors = {
-  let getter = (key, theme) =>
-    ColorTheme.Colors.get(ColorTheme.key(key), theme)
-    |> Option.value(~default=Colors.transparentBlack);
+  let color = key => {
+    let key = ColorTheme.key(key);
 
-  let foreground = getter("input.foreground");
-  let background = getter("input.background");
-  let border = getter("input.border");
-  let placeholderForeground = getter("input.placeholderForeground");
-  let selection = getter("selection.background");
+    theme =>
+      ColorTheme.Colors.get(key, theme)
+      |> Option.value(~default=Colors.transparentBlack);
+  };
+
+  let foreground = color("input.foreground");
+  let background = color("input.background");
+  let border = color("input.border");
+  let placeholderForeground = color("input.placeholderForeground");
+  let selection = color("selection.background");
 };
 
 module Styles = {
