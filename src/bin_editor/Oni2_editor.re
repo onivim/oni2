@@ -132,8 +132,30 @@ if (cliOptions.syntaxHighlightService) {
       currentState := state;
       isDirty := true;
     };
+
+    let runEventLoop = () => {
+  
+      let rec loop = (idx) => {
+        if (idx == 0)  {
+          true
+        } else {
+          let v: bool = Luv.Loop.run(~mode=`NOWAIT, ());
+          //prerr_endline (Printf.sprintf("Iteration: %d Ret: %s", idx, string_of_bool(v)));
+          loop(idx - 1);
+        }
+      }
+
+      // TODO: How many times should we run it?
+      loop(100);
+    };
+
     let tick = _dt => {
-      let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
+      let start = Unix.gettimeofday();
+      runEventLoop();
+      let stop = Unix.gettimeofday();
+      let duration = stop -. start;
+      prerr_endline ("DURATION: " ++ (duration |> string_of_float));
+      //let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
 
       if (isDirty^) {
         update(<Root state=currentState^ />);
