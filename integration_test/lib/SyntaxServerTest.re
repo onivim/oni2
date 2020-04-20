@@ -30,7 +30,10 @@ let run = (~parentPid=?, ~name, f) => {
 
   let wait = (~name="TODO", ~timeout=1.0, f) => {
     let wrappedF = () => {
-      let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
+      for(_ in 0 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      }
+
       f();
     };
 
