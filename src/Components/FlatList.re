@@ -15,6 +15,7 @@ module Constants = {
   let scrollWheelMultiplier = 25;
   let additionalRowsToRender = 1;
   let scrollBarThickness = 6;
+  let minimumThumbSize = 4;
 };
 
 module Styles = {
@@ -143,7 +144,10 @@ let%component make =
   let scrollbar = {
     let maxHeight = count * rowHeight - viewportHeight;
     let thumbHeight =
-      viewportHeight * viewportHeight / max(1, count * rowHeight);
+      viewportHeight
+      * viewportHeight
+      / max(1, count * rowHeight)
+      |> max(Constants.minimumThumbSize);
     let isVisible = maxHeight > 0;
 
     if (isVisible) {
