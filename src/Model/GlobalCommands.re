@@ -318,6 +318,30 @@ module Workbench = {
         SearchHotkey,
       );
 
+    let zoomIn =
+      define(
+        ~category="View",
+        ~title="Zoom In",
+        "workbench.action.zoomIn",
+        Command("workbench.action.zoomIn"),
+      );
+
+    let zoomOut =
+      define(
+        ~category="View",
+        ~title="Zoom Out",
+        "workbench.action.zoomOut",
+        Command("workbench.action.zoomOut"),
+      );
+
+    let zoomReset =
+      define(
+        ~category="View",
+        ~title="Reset Zoom",
+        "workbench.action.zoomReset",
+        Command("workbench.action.zoomReset"),
+      );
+
     module Files = {
       let save =
         define("workbench.action.save", Command("workbench.action.save"));
@@ -385,6 +409,9 @@ let contributions = [
   Workbench.Action.closeQuickOpen,
   Workbench.Action.nextEditor,
   Workbench.Action.previousEditor,
+  Workbench.Action.zoomIn,
+  Workbench.Action.zoomOut,
+  Workbench.Action.zoomReset,
   Workbench.Action.Files.save,
   Workbench.Actions.View.problems,
 ];
