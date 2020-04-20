@@ -134,21 +134,14 @@ if (cliOptions.syntaxHighlightService) {
     };
 
     let runEventLoop = () => {
-      let rec loop = idx =>
-        if (idx == 0) {
-          ();
-        } else {
-          ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
-          //prerr_endline (Printf.sprintf("Iteration: %d Ret: %s", idx, string_of_bool(v)));
-          loop(idx - 1);
-        };
-
       // TODO: How many times should we run it?
       // The ideal amount would be just enough to do pending work,
       // but not too much to just spin. Unfortunately, it seems
       // Luv.Loop.run always returns [true] for us, so we don't
       // have a reliable way to know we're done (at the moment).
-      loop(100);
+      Oni_Core.Utility.FunEx.repeat(~count=100, () => {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool)
+      });
     };
 
     let tick = _dt => {

@@ -191,7 +191,9 @@ let runTest =
       // Flush any queued calls from `Revery.App.runOnMainThread`
       Revery.App.flushPendingCallbacks();
       Revery.Tick.pump();
-      let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
+      Oni_Core.Utility.FunEx.repeat(~count=100, () => {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool)
+      });
 
       // Flush any pending effects
       runEffects();
