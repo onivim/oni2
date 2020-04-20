@@ -79,7 +79,7 @@ let make =
              right(0),
              width(Constants.scrollBarThickness / 3),
              height(cursorSize),
-             backgroundColor(Revery.Colors.red),
+             backgroundColor(colors.errorForeground),
            ];
          <View style=diagnosticStyle />;
        })

@@ -1,6 +1,7 @@
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
+open Oni_Core;
 
 module Cursor = {
   type state = {
@@ -75,27 +76,40 @@ module Constants = {
   let selectionOpacity = 0.75;
 };
 
-module Styles = {
-  let defaultPlaceholderColor = Colors.grey;
-  let defaultCursorColor = Colors.black;
-  let defaultSelectionColor = Color.hex("#42557b");
+module Colors = {
+  let color = key => {
+    let key = ColorTheme.key(key);
 
-  let default =
+    theme =>
+      ColorTheme.Colors.get(key, theme)
+      |> Option.value(~default=Colors.transparentBlack);
+  };
+
+  let foreground = color("input.foreground");
+  let background = color("input.background");
+  let border = color("input.border");
+  let placeholderForeground = color("input.placeholderForeground");
+  let selection = color("selection.background");
+};
+
+module Styles = {
+  let default = (~theme) =>
     Style.[
-      color(Colors.black),
+      color(Colors.foreground(theme)),
       paddingVertical(8),
       paddingHorizontal(12),
-      border(~width=1, ~color=Colors.black),
-      backgroundColor(Colors.transparentWhite),
+      border(~width=1, ~color=Colors.border(theme)),
+      backgroundColor(Colors.background(theme)),
     ];
 };
 
 let%component make =
               (
-                ~style=Styles.default,
-                ~placeholderColor=Styles.defaultPlaceholderColor,
-                ~cursorColor=Styles.defaultCursorColor,
-                ~selectionColor=Styles.defaultSelectionColor,
+                ~theme,
+                ~style=Styles.default(~theme),
+                ~placeholderColor=Colors.placeholderForeground(theme),
+                ~cursorColor=Colors.foreground(theme),
+                ~selectionColor=Colors.selection(theme),
                 ~placeholder="",
                 ~prefix="",
                 ~isFocused,
@@ -115,7 +129,7 @@ let%component make =
     include Styles;
 
     let fontSize = Selector.select(style, FontSize, 18.);
-    let textColor = Selector.select(style, Color, Colors.black);
+    let textColor = Selector.select(style, Color, Colors.foreground(theme));
     let fontFamily = Selector.select(style, FontFamily, "Roboto-Regular.ttf");
 
     let _all =
@@ -126,7 +140,7 @@ let%component make =
           justifyContent(`FlexStart),
           overflow(`Hidden),
           cursor(MouseCursors.text),
-          ...default,
+          ...default(~theme),
         ],
         ~target=style,
       );

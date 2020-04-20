@@ -300,6 +300,7 @@ let%component make =
       editorFont
       completions
       colors
+      theme
       tokenTheme
     />
     <View style={Styles.verticalScrollBar(~colors)}>

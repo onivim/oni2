@@ -72,9 +72,7 @@ module Effects = {
 
 module Colors = {
   open ColorTheme.Schema;
-  open Feature_Theme.Colors;
-
-  let foreground = foreground;
+  include Feature_Theme.Colors;
 
   let infoBackground =
     define("oni.notification.infoBackground", all(hex("#209CEE")));
@@ -296,7 +294,7 @@ module View = {
       let title = (~theme, ~font: UiFont.t) => [
         fontFamily(font.fontFile),
         fontSize(font.fontSize),
-        color(Colors.foreground.from(theme)),
+        color(Colors.PanelTitle.activeForeground.from(theme)),
         margin(8),
       ];
     };

@@ -61,7 +61,6 @@ let explode_key = String.split_on_char('.');
  and converts it to:
  [{"a": { "b": { "c": 1 }}}]
  */
-
 let explode = json => {
   let rec expand_item = (currJson, keys, jsonValue) => {
     switch (keys) {
