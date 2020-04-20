@@ -180,7 +180,7 @@ module Overlay = {
   module Styles = {
     open Style;
 
-    let overlay = [
+    let backdrop = [
       position(`Absolute),
       top(0),
       bottom(0),
@@ -198,7 +198,7 @@ module Overlay = {
     if (IntMap.is_empty(menus)) {
       React.empty;
     } else {
-      <Clickable onClick style=Styles.overlay>
+      <Clickable onClick style=Styles.backdrop>
         {IntMap.bindings(menus) |> List.map(snd) |> React.listToElement}
       </Clickable>;
     };

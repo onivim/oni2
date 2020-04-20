@@ -4,6 +4,7 @@
     (libraries 
         Oni2.core.kernel
         libvim
+        oniguruma
         str
         lwt
         timber)

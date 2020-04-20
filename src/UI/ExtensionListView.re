@@ -86,7 +86,8 @@ let make = (~model, ~theme, ~font, ()) => {
   let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
   //let developmentCount = Array.length(developmentExtensions);
 
-  <FlatList rowHeight=50 count={Array.length(allExtensions)} focused=None>
+  <FlatList
+    rowHeight=50 count={Array.length(allExtensions)} focused=None theme>
     ...{renderItem(allExtensions)}
   </FlatList>;
 };

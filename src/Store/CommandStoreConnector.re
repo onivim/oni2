@@ -5,6 +5,13 @@ open Oni_Model.Actions;
 
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 
+module Constants = {
+  let zoomStep = 0.2;
+  let defaultZoomValue = 1.0;
+  let minZoomValue = 0.0;
+  let maxZoomValue = 2.8;
+};
+
 let pathSymlinkEnabled = (~addingLink) =>
   (
     Revery.Environment.os == Revery.Environment.Mac
@@ -265,6 +272,33 @@ let start = (getState, contributedCommands) => {
       },
     );
 
+  let zoomEffect = (state: State.t, getCalculatedZoomValue, _) =>
+    Isolinear.Effect.createWithDispatch(~name="window.zoom", dispatch => {
+      let configuration = state.configuration;
+      let currentZoomValue =
+        Configuration.getValue(c => c.uiZoom, configuration);
+
+      let calculatedZoomValue = getCalculatedZoomValue(currentZoomValue);
+      let newZoomValue =
+        Utility.IntEx.clamp(
+          calculatedZoomValue,
+          ~hi=Constants.maxZoomValue,
+          ~lo=Constants.minZoomValue,
+        );
+
+      if (newZoomValue != currentZoomValue) {
+        dispatch(
+          ConfigurationSet({
+            ...configuration,
+            default: {
+              ...configuration.default,
+              uiZoom: newZoomValue,
+            },
+          }),
+        );
+      };
+    });
+
   let commands = [
     ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
     ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
@@ -398,6 +432,18 @@ let start = (getState, contributedCommands) => {
           ),
         );
       },
+    ),
+    (
+      "workbench.action.zoomIn",
+      state => zoomEffect(state, zoom => zoom +. Constants.zoomStep),
+    ),
+    (
+      "workbench.action.zoomOut",
+      state => zoomEffect(state, zoom => zoom -. Constants.zoomStep),
+    ),
+    (
+      "workbench.action.zoomReset",
+      state => zoomEffect(state, _zoom => Constants.defaultZoomValue),
     ),
   ];
 
