@@ -12,7 +12,7 @@ let menus =
         | _ => false,
       ),
       bool(
-        "oni.quickmenuCursorEnd",
+        "quickmenuCursorEnd",
         fun
         | Some({selection, query, _})
             when
@@ -42,24 +42,24 @@ let editors =
       | _ => false
       }
     ),
-    bool("oni.commandLineFocus", state =>
+    bool("commandLineFocus", state =>
       ModeManager.current(state) == CommandLine
     ),
-    bool("oni.insertMode", state =>
+    bool("insertMode", state =>
       switch (ModeManager.current(state)) {
       | TerminalInsert
       | Insert => true
       | _ => false
       }
     ),
-    bool("oni.normalMode", state =>
+    bool("normalMode", state =>
       switch (ModeManager.current(state)) {
       | TerminalNormal
       | Normal => true
       | _ => false
       }
     ),
-    bool("oni.visualMode", state =>
+    bool("visualMode", state =>
       switch (ModeManager.current(state)) {
       | TerminalVisual
       | Visual => true
@@ -84,9 +84,9 @@ let other =
       bool("isWin", _state =>
         Revery.Environment.os == Revery.Environment.Windows
       ),
-      bool("oni.sneakMode", state => Sneak.isActive(state.sneak)),
-      bool("oni.zenMode", state => state.zenMode),
-      bool("oni.keyDisplayerEnabled", state => state.keyDisplayer != None),
+      bool("sneakMode", state => Sneak.isActive(state.sneak)),
+      bool("zenMode", state => state.zenMode),
+      bool("keyDisplayerEnabled", state => state.keyDisplayer != None),
     ],
   );
 

@@ -81,7 +81,7 @@ module Oni = {
       register(
         ~category="View",
         ~title="Toggle File Explorer visibility",
-        "oni.explorer.toggle", // use workbench.action.toggleSidebarVisibility instead?
+        "explorer.toggle", // use workbench.action.toggleSidebarVisibility instead?
         Actions.ActivityBar(ActivityBar.FileExplorerClick),
       );
   };
@@ -91,8 +91,8 @@ module Oni = {
       register(
         ~category="Input",
         ~title="Disable Key Displayer",
-        ~isEnabledWhen=WhenExpr.parse("oni.keyDisplayerEnabled"),
-        "oni.keyDisplayer.disable",
+        ~isEnabledWhen=WhenExpr.parse("keyDisplayerEnabled"),
+        "keyDisplayer.disable",
         DisableKeyDisplayer,
       );
 
@@ -100,8 +100,8 @@ module Oni = {
       register(
         ~category="Input",
         ~title="Enable Key Displayer",
-        ~isEnabledWhen=WhenExpr.parse("!oni.keyDisplayerEnabled"),
-        "oni.keyDisplayer.enable",
+        ~isEnabledWhen=WhenExpr.parse("!keyDisplayerEnabled"),
+        "keyDisplayer.enable",
         EnableKeyDisplayer,
       );
   };
@@ -111,7 +111,7 @@ module Oni = {
       register(
         ~category="Sneak",
         ~title="Enter sneak mode (keyboard-accessible UI)",
-        "oni.sneak.start",
+        "sneak.start",
         Command("sneak.start"),
       );
 
@@ -119,7 +119,7 @@ module Oni = {
       register(
         ~category="Sneak",
         ~title="Exit sneak mode",
-        "oni.sneak.stop",
+        "sneak.stop",
         Command("sneak.stop"),
       );
   };
@@ -129,8 +129,8 @@ module Oni = {
       register(
         ~category="System",
         ~title="Add Oni2 to System PATH",
-        ~isEnabledWhen=WhenExpr.parse("isMac && !.symLinkExists"), // NOTE: symLinkExists only defined in command palette
-        "oni.system.addToPath",
+        ~isEnabledWhen=WhenExpr.parse("isMac && !symLinkExists"), // NOTE: symLinkExists only defined in command palette
+        "system.addToPath",
         Command("system.addToPath"),
       );
 
@@ -138,8 +138,8 @@ module Oni = {
       register(
         ~category="System",
         ~title="Remove Oni2 from System PATH",
-        ~isEnabledWhen=WhenExpr.parse("isMac && oni.symLinkExists"), // NOTE: symLinkExists only defined in command palette
-        "oni.system.removeFromPath",
+        ~isEnabledWhen=WhenExpr.parse("isMac && symLinkExists"), // NOTE: symLinkExists only defined in command palette
+        "system.removeFromPath",
         Command("system.removeFromPath"),
       );
   };
@@ -149,7 +149,7 @@ module Oni = {
       register(
         ~category="View",
         ~title="Rotate Windows (Forwards)",
-        "oni.view.rotateForward",
+        "view.rotateForward",
         Command("view.rotateForward"),
       );
 
@@ -157,18 +157,18 @@ module Oni = {
       register(
         ~category="View",
         ~title="Rotate Windows (Backwards)",
-        "oni.view.rotateBackward",
+        "view.rotateBackward",
         Command("view.rotateBackward"),
       );
   };
 
   module Vim = {
-    let esc = register("oni.vim.esc", Command("vim.esc"));
+    let esc = register("vim.esc", Command("vim.esc"));
     let tutor =
       register(
         ~category="Help",
         ~title="Open Vim Tutor",
-        "oni.vim.tutor",
+        "vim.tutor",
         Command("vim.tutor"),
       );
   };
@@ -179,7 +179,7 @@ module Oni = {
         register(
           ~category="Preferences",
           ~title="Reload configuration",
-          "oni.workbench.action.reloadSettings",
+          "workbench.action.reloadSettings",
           ConfigurationReload,
         );
 
@@ -188,7 +188,7 @@ module Oni = {
           ~category="View",
           ~title="Enable Zen Mode",
           ~isEnabledWhen=WhenExpr.parse("!zenMode"),
-          "oni.workbench.action.enableZenMode", // use workbench.action.toggleZenMode?
+          "workbench.action.enableZenMode", // use workbench.action.toggleZenMode?
           //~isEnabled=() => !getState().zenMode,
           EnableZenMode,
         );
@@ -198,7 +198,7 @@ module Oni = {
           ~category="View",
           ~title="Disable Zen Mode",
           ~isEnabledWhen=WhenExpr.parse("zenMode"),
-          "oni.workbench.action.disableZenMode", // use workbench.action.toggleZenMode?
+          "workbench.action.disableZenMode", // use workbench.action.toggleZenMode?
           DisableZenMode,
         );
     };
