@@ -51,6 +51,7 @@ type t =
       [@opaque] list(CompletionItem.t),
     )
   | Configuration(Feature_Configuration.msg)
+  | ConfigurationParseError(string)
   | ConfigurationReload
   | ConfigurationSet([@opaque] Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
