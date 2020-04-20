@@ -12,6 +12,7 @@ module Command = {
     command: string,
     title: LocalizedToken.t,
     category: option(string),
+    condition: WhenExpr.t,
   };
 
   let decode =
@@ -21,6 +22,12 @@ module Command = {
           command: field.required("command", string),
           title: field.required("title", LocalizedToken.decode),
           category: field.optional("category", string),
+          condition:
+            field.withDefault(
+              "when",
+              WhenExpr.Value(True),
+              string |> map(WhenExpr.parse),
+            ),
         }
       )
     );

@@ -4,6 +4,7 @@
  * This module models state around loaded / activated extensions
  * for the 'Hover' view
  */
+open Oni_Core;
 open Oni_Extensions;
 
 type t = {
@@ -14,7 +15,11 @@ type t = {
 [@deriving show({with_path: false})]
 type action =
   | Activated(string /* id */)
-  | Discovered([@opaque] list(ExtensionScanner.t));
+  | Discovered([@opaque] list(ExtensionScanner.t))
+  | ExecuteCommand({
+      command: string,
+      arguments: [@opaque] list(Json.t),
+    });
 
 let empty = {activatedIds: [], extensions: []};
 
@@ -51,4 +56,25 @@ let getExtensions = (~category, model) => {
   | ExtensionScanner.Bundled => List.filter(_filterBundled, results)
   | _ => results
   };
+};
+
+// TODO: Should be stored as proper commands instead of converting every time
+let commands = model => {
+  model.extensions
+  |> List.map((ext: ExtensionScanner.t) => ext.manifest.contributes.commands)
+  |> List.flatten
+  |> List.map((extcmd: ExtensionContributions.Command.t) =>
+       Command.{
+         id: extcmd.command,
+         category: extcmd.category,
+         title: Some(extcmd.title |> LocalizedToken.to_string),
+         icon: None,
+         isEnabledWhen: extcmd.condition,
+         msg:
+           `Arg1(
+             arg =>
+               ExecuteCommand({command: extcmd.command, arguments: [arg]}),
+           ),
+       }
+     );
 };

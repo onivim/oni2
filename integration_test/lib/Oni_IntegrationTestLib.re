@@ -85,7 +85,8 @@ let runTest =
 
   let getUserSettings = () => Ok(currentUserSettings^);
 
-  let currentState = ref(Model.State.initial(~getUserSettings));
+  let currentState =
+    ref(Model.State.initial(~getUserSettings, ~contributedCommands=[]));
 
   let headlessWindow =
     Revery.Utility.HeadlessWindow.create(

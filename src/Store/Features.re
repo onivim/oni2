@@ -70,6 +70,11 @@ let update =
 
     (state, eff);
 
+  | Commands(msg) =>
+    let commands = Feature_Commands.update(state.commands, msg);
+    let state = {...state, commands};
+    (state, Effect.none);
+
   | Syntax(msg) =>
     let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);
     let state = {...state, syntaxHighlights};
