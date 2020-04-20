@@ -152,6 +152,13 @@ module Oni = {
 
   module Vim = {
     let esc = define("oni.vim.esc", Command("vim.esc"));
+    let tutor =
+      define(
+        ~category="Help",
+        ~title="Open Vim Tutor",
+        "oni.vim.tutor",
+        Command("vim.tutor"),
+      );
   };
 
   module Workbench = {
@@ -387,6 +394,7 @@ let contributions = [
   Oni.View.rotateForward,
   Oni.View.rotateBackward,
   Oni.Vim.esc,
+  Oni.Vim.tutor,
   Oni.Workbench.Action.enableZenMode,
   Oni.Workbench.Action.disableZenMode,
   Oni.Workbench.Action.reloadSettings,
