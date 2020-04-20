@@ -4,9 +4,7 @@ let tap = (f, x) => {
 };
 
 let rec repeat = (~count, f) =>
-  if (count <= 0) {
-    ();
-  } else {
+  if (count > 0) {
     f();
     repeat(~count=count - 1, f);
   };
