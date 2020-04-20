@@ -80,7 +80,7 @@ let other =
       bool("isLinux", _state =>
         Revery.Environment.os == Revery.Environment.Linux
       ),
-      bool("isMax", _state => Revery.Environment.os == Revery.Environment.Mac),
+      bool("isMac", _state => Revery.Environment.os == Revery.Environment.Mac),
       bool("isWin", _state =>
         Revery.Environment.os == Revery.Environment.Windows
       ),
