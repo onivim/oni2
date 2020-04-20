@@ -3,6 +3,13 @@ open Oni_Core;
 open Oni_Model;
 open Actions;
 
+module Internal = {
+  let notificationEffect = (~kind, message) => {
+    Feature_Notification.Effects.create(~kind, message)
+    |> Isolinear.Effect.map(msg => Actions.Notification(msg));
+  };
+};
+
 // UPDATE
 
 let update =
@@ -79,11 +86,10 @@ let update =
       switch (out) {
       | Nothing => Effect.none
       | ServerError(msg) =>
-        Feature_Notification.Effects.create(
+        Internal.notificationEffect(
           ~kind=Error,
           "Syntax Server error: " ++ msg,
         )
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg))
       };
     (state, effect);
 
@@ -144,8 +150,7 @@ let update =
     )
   | EditorFont(Service_Font.FontLoadError(message)) => (
       state,
-      Feature_Notification.Effects.create(~kind=Error, message)
-      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      Internal.notificationEffect(~kind=Error, message),
     )
 
   // TODO: This should live in the terminal feature project
@@ -155,8 +160,7 @@ let update =
     )
   | TerminalFont(Service_Font.FontLoadError(message)) => (
       state,
-      Feature_Notification.Effects.create(~kind=Error, message)
-      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      Internal.notificationEffect(~kind=Error, message),
     )
 
   | _ => (state, Effect.none)
