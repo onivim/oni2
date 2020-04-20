@@ -117,7 +117,7 @@ module Oni = {
       define(
         ~category="System",
         ~title="Add Oni2 to System PATH",
-        ~isEnabledWhen=WhenExpr.parse("isMac && !oni.symLinkExists"),
+        ~isEnabledWhen=WhenExpr.parse("isMac && !oni.symLinkExists"), // NOTE: symLinkExists only defined in command palette
         "oni.system.addToPath",
         Command("system.addToPath"),
       );
@@ -126,7 +126,7 @@ module Oni = {
       define(
         ~category="System",
         ~title="Remove Oni2 from System PATH",
-        ~isEnabledWhen=WhenExpr.parse("isMac && oni.symLinkExists"),
+        ~isEnabledWhen=WhenExpr.parse("isMac && oni.symLinkExists"), // NOTE: symLinkExists only defined in command palette
         "oni.system.removeFromPath",
         Command("system.removeFromPath"),
       );

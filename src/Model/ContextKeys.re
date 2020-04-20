@@ -87,9 +87,6 @@ let other =
       bool("oni.sneakMode", state => Sneak.isActive(state.sneak)),
       bool("oni.zenMode", state => state.zenMode),
       bool("oni.keyDisplayerEnabled", state => state.keyDisplayer != None),
-      bool("oni.symLinkExists", _state =>
-        Sys.file_exists("/usr/local/bin/oni2")
-      ),
     ],
   );
 

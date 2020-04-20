@@ -38,6 +38,31 @@ module Internal = {
          }
        )
     |> Array.of_list;
+
+  let commandPaletteItems = (commands, contextKeys) => {
+    let contextKeys =
+      WhenExpr.ContextKeys.union(
+        contextKeys,
+        WhenExpr.ContextKeys.fromList([
+          (
+            "oni.symLinkExists",
+            WhenExpr.Value.(
+              Sys.file_exists("/usr/local/bin/oni2") ? True : False
+            ),
+          ),
+        ]),
+      );
+
+    commands
+    |> Command.Lookup.toList
+    |> List.filter((command: Command.t(_)) =>
+         WhenExpr.evaluate(
+           command.isEnabledWhen,
+           WhenExpr.ContextKeys.getValue(contextKeys),
+         )
+       )
+    |> commandsToMenuItems;
+  };
 };
 
 let start = (themeInfo: ThemeInfo.t) => {
@@ -114,16 +139,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(CommandPalette) => (
         Some({
           ...Quickmenu.defaults(CommandPalette),
-          items:
-            commands
-            |> Command.Lookup.toList
-            |> List.filter((command: Command.t(_)) =>
-                 WhenExpr.evaluate(
-                   command.isEnabledWhen,
-                   WhenExpr.ContextKeys.getValue(contextKeys),
-                 )
-               )
-            |> Internal.commandsToMenuItems,
+          items: Internal.commandPaletteItems(commands, contextKeys),
           focused: Some(0),
         }),
         Isolinear.Effect.none,
