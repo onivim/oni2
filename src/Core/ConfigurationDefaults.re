@@ -47,7 +47,7 @@ let getDefaultConfigString = configName =>
   // https://onivim.github.io/docs/configuration/key-bindings
   // Add key bindings here, for example:
   // { "key": "<TAB>", "command": "workbench.action.quickOpen", when: "editorTextFocus" },
-  // { "key": "jk", "command": "oni.vim.esc", when: "insertMode" },
+  // { "key": "jk", "command": "oni.vim.esc", when: "oni.insertMode" },
 ]
 |},
     )
