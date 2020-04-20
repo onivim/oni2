@@ -192,7 +192,7 @@ let runTest =
       Revery.App.flushPendingCallbacks();
       Revery.Tick.pump();
       
-      for(_ in 0 to 100) {
+      for(_ in 1 to 100) {
         ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool)
       };
 
