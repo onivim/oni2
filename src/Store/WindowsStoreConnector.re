@@ -107,7 +107,7 @@ let start = () => {
       | Init => initializeDefaultViewEffect(state)
       // When opening a file, ensure that the active editor is getting focus
       | ViewCloseEditor(_) =>
-        if (List.length(Feature_Layout.windows(state.layout)) == 0) {
+        if (Feature_Layout.windows(state.layout) == []) {
           quitEffect;
         } else {
           Isolinear.Effect.none;
