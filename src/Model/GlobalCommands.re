@@ -1,8 +1,20 @@
 open Actions;
 open Feature_Commands.Schema;
 
+module Internal = {
+  let registrations = ref([]);
+
+  let register = (~category=?, ~title=?, ~icon=?, ~isEnabledWhen=?, id, msg) => {
+    let entry = define(~category?, ~title?, ~icon?, ~isEnabledWhen?, id, msg);
+    registrations := [entry, ...registrations^];
+    entry;
+  };
+};
+
+open Internal;
+
 let copyFilePath =
-  define(
+  register(
     ~category="Editor",
     ~title="Copy Active Filepath to Clipboard",
     "copyFilePath",
@@ -10,24 +22,24 @@ let copyFilePath =
   );
 
 let acceptSelectedSuggestion =
-  define("acceptSelectedSuggestion", Command("acceptSelectedSuggestion"));
+  register("acceptSelectedSuggestion", Command("acceptSelectedSuggestion"));
 
 let selectPrevSuggestion =
-  define("selectPrevSuggestion", Command("selectPrevSuggestion"));
+  register("selectPrevSuggestion", Command("selectPrevSuggestion"));
 
 let selectNextSuggestion =
-  define("selectNextSuggestion", Command("selectNextSuggestion"));
+  register("selectNextSuggestion", Command("selectNextSuggestion"));
 
-let undo = define("undo", Command("undo"));
-let redo = define("redo", Command("redo"));
+let undo = register("undo", Command("undo"));
+let redo = register("redo", Command("redo"));
 
-let indent = define("indent", Command("indent"));
-let outdent = define("outdent", Command("outdent"));
+let indent = register("indent", Command("indent"));
+let outdent = register("outdent", Command("outdent"));
 
 module Editor = {
   module Action = {
     let detectIndentation =
-      define(
+      register(
         ~category="Editor",
         ~title="Detect Indentation from Content",
         "editor.action.detectIndentation",
@@ -35,19 +47,19 @@ module Editor = {
       );
 
     let clipboardPasteAction =
-      define(
+      register(
         "editor.action.clipboardPasteAction",
         Command("editor.action.clipboardPasteAction"),
       );
 
     let indentLines =
-      define(
+      register(
         "editor.action.indentLines",
         Command("editor.action.indentLines"),
       );
 
     let outdentLines =
-      define(
+      register(
         "editor.action.outdentLines",
         Command("editor.action.outdentLines"),
       );
@@ -55,18 +67,18 @@ module Editor = {
 };
 
 module List = {
-  let focusDown = define("list.focusDown", ListFocusDown);
-  let focusUp = define("list.focusUp", ListFocusUp);
+  let focusDown = register("list.focusDown", ListFocusDown);
+  let focusUp = register("list.focusUp", ListFocusUp);
 
-  let select = define("list.select", ListSelect);
+  let select = register("list.select", ListSelect);
   let selectBackground =
-    define("list.selectBackground", ListSelectBackground);
+    register("list.selectBackground", ListSelectBackground);
 };
 
 module Oni = {
   module Explorer = {
     let toggle =
-      define(
+      register(
         ~category="View",
         ~title="Toggle File Explorer visibility",
         "oni.explorer.toggle", // use workbench.action.toggleSidebarVisibility instead?
@@ -76,7 +88,7 @@ module Oni = {
 
   module KeyDisplayer = {
     let disable =
-      define(
+      register(
         ~category="Input",
         ~title="Disable Key Displayer",
         ~isEnabledWhen=WhenExpr.parse("oni.keyDisplayerEnabled"),
@@ -85,7 +97,7 @@ module Oni = {
       );
 
     let enable =
-      define(
+      register(
         ~category="Input",
         ~title="Enable Key Displayer",
         ~isEnabledWhen=WhenExpr.parse("!oni.keyDisplayerEnabled"),
@@ -96,7 +108,7 @@ module Oni = {
 
   module Sneak = {
     let start =
-      define(
+      register(
         ~category="Sneak",
         ~title="Enter sneak mode (keyboard-accessible UI)",
         "oni.sneak.start",
@@ -104,7 +116,7 @@ module Oni = {
       );
 
     let stop =
-      define(
+      register(
         ~category="Sneak",
         ~title="Exit sneak mode",
         "oni.sneak.stop",
@@ -114,16 +126,16 @@ module Oni = {
 
   module System = {
     let addToPath =
-      define(
+      register(
         ~category="System",
         ~title="Add Oni2 to System PATH",
-        ~isEnabledWhen=WhenExpr.parse("isMac && !oni.symLinkExists"), // NOTE: symLinkExists only defined in command palette
+        ~isEnabledWhen=WhenExpr.parse("isMac && !.symLinkExists"), // NOTE: symLinkExists only defined in command palette
         "oni.system.addToPath",
         Command("system.addToPath"),
       );
 
     let removeFromPath =
-      define(
+      register(
         ~category="System",
         ~title="Remove Oni2 from System PATH",
         ~isEnabledWhen=WhenExpr.parse("isMac && oni.symLinkExists"), // NOTE: symLinkExists only defined in command palette
@@ -134,7 +146,7 @@ module Oni = {
 
   module View = {
     let rotateForward =
-      define(
+      register(
         ~category="View",
         ~title="Rotate Windows (Forwards)",
         "oni.view.rotateForward",
@@ -142,7 +154,7 @@ module Oni = {
       );
 
     let rotateBackward =
-      define(
+      register(
         ~category="View",
         ~title="Rotate Windows (Backwards)",
         "oni.view.rotateBackward",
@@ -151,9 +163,9 @@ module Oni = {
   };
 
   module Vim = {
-    let esc = define("oni.vim.esc", Command("vim.esc"));
+    let esc = register("oni.vim.esc", Command("vim.esc"));
     let tutor =
-      define(
+      register(
         ~category="Help",
         ~title="Open Vim Tutor",
         "oni.vim.tutor",
@@ -164,7 +176,7 @@ module Oni = {
   module Workbench = {
     module Action = {
       let reloadSettings =
-        define(
+        register(
           ~category="Preferences",
           ~title="Reload configuration",
           "oni.workbench.action.reloadSettings",
@@ -172,7 +184,7 @@ module Oni = {
         );
 
       let enableZenMode =
-        define(
+        register(
           ~category="View",
           ~title="Enable Zen Mode",
           ~isEnabledWhen=WhenExpr.parse("!zenMode"),
@@ -182,7 +194,7 @@ module Oni = {
         );
 
       let disableZenMode =
-        define(
+        register(
           ~category="View",
           ~title="Disable Zen Mode",
           ~isEnabledWhen=WhenExpr.parse("zenMode"),
@@ -195,7 +207,7 @@ module Oni = {
 
 module ReferencesView = {
   let find =
-    define(
+    register(
       ~category="References",
       ~title="Find all References",
       "references-view.find",
@@ -205,7 +217,7 @@ module ReferencesView = {
 
 module View = {
   let closeEditor =
-    define(
+    register(
       ~category="View",
       ~title="Close Editor",
       "view.closeEditor",
@@ -213,7 +225,7 @@ module View = {
     );
 
   let splitVertical =
-    define(
+    register(
       ~category="View",
       ~title="Split Editor Vertically",
       "view.splitVertical",
@@ -221,7 +233,7 @@ module View = {
     );
 
   let splitHorizontal =
-    define(
+    register(
       ~category="View",
       ~title="Split Editor Horizontally",
       "view.splitHorizontal",
@@ -232,7 +244,7 @@ module View = {
 module Workbench = {
   module Action = {
     let openSettings =
-      define(
+      register(
         ~category="Preferences",
         ~title="Open configuration file",
         "workbench.action.openSettings",
@@ -240,7 +252,7 @@ module Workbench = {
       );
 
     let openDefaultKeybindingsFile =
-      define(
+      register(
         ~category="Preferences",
         ~title="Open keybindings file",
         "workbench.action.openDefaultKeybindingsFile",
@@ -248,7 +260,7 @@ module Workbench = {
       );
 
     let selectTheme =
-      define(
+      register(
         ~category="Preferences",
         ~title="Theme Picker",
         "workbench.action.selectTheme",
@@ -256,21 +268,21 @@ module Workbench = {
       );
 
     let showCommands =
-      define(
+      register(
         ~title="Show All Commands",
         "workbench.action.showCommands",
         QuickmenuShow(CommandPalette),
       );
 
     let gotoSymbol =
-      define(
+      register(
         ~title="Goto symbol in file...",
         "workbench.action.gotoSymbol",
         QuickmenuShow(DocumentSymbols),
       );
 
     let openNextRecentlyUsedEditorInGroup =
-      define(
+      register(
         ~category="View",
         ~title="Open Next Recently Used Editor In Group",
         "workbench.action.openNextRecentlyUsedEditorInGroup",
@@ -278,14 +290,14 @@ module Workbench = {
       );
 
     let quickOpen =
-      define(
+      register(
         ~title="Go to File...",
         "workbench.action.quickOpen",
         QuickmenuShow(FilesPicker),
       );
 
     let nextEditor =
-      define(
+      register(
         ~category="View",
         ~title="Open Next Editor",
         "workbench.action.nextEditor",
@@ -293,7 +305,7 @@ module Workbench = {
       );
 
     let previousEditor =
-      define(
+      register(
         ~category="View",
         ~title="Open Previous Editor",
         "workbench.action.previousEditor",
@@ -301,24 +313,24 @@ module Workbench = {
       );
 
     let quickOpenNavigateNextInEditorPicker =
-      define(
+      register(
         ~title="Navigate Next in Quick Open",
         "workbench.action.quickOpenNavigateNextInEditorPicker",
         ListFocusDown,
       );
 
     let quickOpenNavigatePreviousInEditorPicker =
-      define(
+      register(
         ~title="Navigate Previous in Quick Open",
         "workbench.action.quickOpenNavigatePreviousInEditorPicker",
         ListFocusUp,
       );
 
     let closeQuickOpen =
-      define("workbench.action.closeQuickOpen", QuickmenuClose);
+      register("workbench.action.closeQuickOpen", QuickmenuClose);
 
     let findInFiles =
-      define(
+      register(
         ~category="Search",
         ~title="Find in Files",
         "workbench.action.findInFiles",
@@ -326,7 +338,7 @@ module Workbench = {
       );
 
     let zoomIn =
-      define(
+      register(
         ~category="View",
         ~title="Zoom In",
         "workbench.action.zoomIn",
@@ -334,7 +346,7 @@ module Workbench = {
       );
 
     let zoomOut =
-      define(
+      register(
         ~category="View",
         ~title="Zoom Out",
         "workbench.action.zoomOut",
@@ -342,7 +354,7 @@ module Workbench = {
       );
 
     let zoomReset =
-      define(
+      register(
         ~category="View",
         ~title="Reset Zoom",
         "workbench.action.zoomReset",
@@ -351,13 +363,13 @@ module Workbench = {
 
     module Files = {
       let save =
-        define("workbench.action.save", Command("workbench.action.save"));
+        register("workbench.action.save", Command("workbench.action.save"));
     };
   };
   module Actions = {
     module View = {
       let problems =
-        define(
+        register(
           ~category="View",
           ~title="Toggle Problems (Errors, Warnings)",
           "workbench.actions.view.problems",
@@ -367,59 +379,4 @@ module Workbench = {
   };
 };
 
-let contributions = [
-  copyFilePath,
-  acceptSelectedSuggestion,
-  selectPrevSuggestion,
-  selectNextSuggestion,
-  undo,
-  redo,
-  indent,
-  outdent,
-  Editor.Action.detectIndentation,
-  Editor.Action.clipboardPasteAction,
-  Editor.Action.indentLines,
-  Editor.Action.outdentLines,
-  List.focusDown,
-  List.focusUp,
-  List.select,
-  List.selectBackground,
-  Oni.Explorer.toggle,
-  Oni.KeyDisplayer.disable,
-  Oni.KeyDisplayer.enable,
-  Oni.Sneak.start,
-  Oni.Sneak.stop,
-  Oni.System.addToPath,
-  Oni.System.removeFromPath,
-  Oni.View.rotateForward,
-  Oni.View.rotateBackward,
-  Oni.Vim.esc,
-  Oni.Vim.tutor,
-  Oni.Workbench.Action.enableZenMode,
-  Oni.Workbench.Action.disableZenMode,
-  Oni.Workbench.Action.reloadSettings,
-  ReferencesView.find,
-  View.closeEditor,
-  View.splitVertical,
-  View.splitHorizontal,
-  Workbench.Action.openSettings,
-  Workbench.Action.openDefaultKeybindingsFile,
-  Workbench.Action.selectTheme,
-  Workbench.Action.showCommands,
-  Workbench.Action.gotoSymbol,
-  Workbench.Action.openNextRecentlyUsedEditorInGroup,
-  Workbench.Action.quickOpen,
-  Workbench.Action.nextEditor,
-  Workbench.Action.previousEditor,
-  Workbench.Action.findInFiles,
-  Workbench.Action.quickOpenNavigateNextInEditorPicker,
-  Workbench.Action.quickOpenNavigatePreviousInEditorPicker,
-  Workbench.Action.closeQuickOpen,
-  Workbench.Action.nextEditor,
-  Workbench.Action.previousEditor,
-  Workbench.Action.zoomIn,
-  Workbench.Action.zoomOut,
-  Workbench.Action.zoomReset,
-  Workbench.Action.Files.save,
-  Workbench.Actions.View.problems,
-];
+let registrations = () => Internal.registrations^;

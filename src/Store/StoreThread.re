@@ -317,7 +317,7 @@ let start =
     window,
   );
 
-  registerCommands(~dispatch, Model.GlobalCommands.contributions);
+  registerCommands(~dispatch, Model.GlobalCommands.registrations());
   registerCommands(
     ~dispatch,
     Feature_Terminal.Contributions.commands
