@@ -17,8 +17,17 @@ type characterCacheInfo = {
   width: int,
 };
 
-let emptyArrayCharacters = Array.make(0, None);
-let emptyArrayIndex = Array.make(0, None);
+// We use these 'empty' values to reduce allocations in the normal workflow
+// of creating buffer lines. We defer actually creating the arrays / caches
+// until we need them.
+
+// This is important for performance for loading large files, and prevents
+// us from needing to allocate arrays for every line upon load of the buffer.
+
+// These 'placeholder' values are treated like a [None] - we can use a reference
+// equality check against these to see if we've allocated already.
+let emptyCharacterMap: array(option(characterCacheInfo)) = [||];
+let emptyByteIndexMap: array(option(int)) = [||];
 
 type t = {
   indentation: IndentationSettings.t,
@@ -26,8 +35,8 @@ type t = {
   raw: string,
   // [characters] is a cache of discovered characters we've found in the string so far
   mutable characters: array(option(characterCacheInfo)),
-  // [byteMap] is a cache of byte -> index
-  mutable byteMap: array(option(int)),
+  // [byteIndexMap] is a cache of byte -> index
+  mutable byteIndexMap: array(option(int)),
   // nextByte is the nextByte to work from, or -1 if complete
   mutable nextByte: int,
   // nextIndex is the nextIndex to work from
@@ -46,12 +55,12 @@ module Internal = {
 
   let resolveTo = (~index, cache: t) => {
     // First, allocate our cache, if necessary
-    if (cache.characters === emptyArrayCharacters) {
+    if (cache.characters === emptyCharacterMap) {
       cache.characters = Array.make(String.length(cache.raw), None);
     };
 
-    if (cache.byteMap === emptyArrayIndex) {
-      cache.byteMap = Array.make(String.length(cache.raw), None);
+    if (cache.byteIndexMap === emptyByteIndexMap) {
+      cache.byteIndexMap = Array.make(String.length(cache.raw), None);
     };
 
     // We've already resolved to this point,
@@ -81,7 +90,7 @@ module Internal = {
             width: characterWidth,
           });
 
-        cache.byteMap[byteOffset] = Some(idx);
+        cache.byteIndexMap[byteOffset] = Some(idx);
 
         position := position^ + characterWidth;
         byte := offset;
@@ -96,15 +105,14 @@ module Internal = {
 };
 
 let make = (~indentation, raw: string) => {
-  // Create a cache the size of the string - this would be the max length
-  // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
-  let characters = emptyArrayCharacters;
-  let byteMap = emptyArrayIndex;
   {
+    // Create a cache the size of the string - this would be the max length
+    // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
+
     indentation,
     raw,
-    characters,
-    byteMap,
+    characters: emptyCharacterMap,
+    byteIndexMap: emptyByteIndexMap,
     nextByte: 0,
     nextIndex: 0,
     nextPosition: 0,
@@ -133,7 +141,7 @@ let getIndex = (~byte, bufferLine) => {
     if (idx <= 0) {
       0;
     } else {
-      switch (bufferLine.byteMap[idx]) {
+      switch (bufferLine.byteIndexMap[idx]) {
       | Some(v) => v
       | None => loop(idx - 1)
       };
