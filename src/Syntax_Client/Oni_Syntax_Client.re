@@ -112,7 +112,7 @@ let start =
     ) => {
   let parentPid =
     switch (parentPid) {
-    | None => Unix.getpid() |> string_of_int
+    | None => Luv.Pid.getpid() |> string_of_int
     | Some(pid) => pid
     };
 

@@ -140,9 +140,7 @@ let start = (~healthCheck) => {
     | Message(protocol) => handleProtocol(protocol);
 
   let handlePacket = ({body, _}: Transport.Packet.t) => {
-    log("Start deserialize...");
     let msg: Protocol.ClientToServer.t = Marshal.from_bytes(body, 0);
-    log("End deserialize...");
 
     try(handleMessage(Message(msg))) {
     | exn =>
@@ -151,27 +149,19 @@ let start = (~healthCheck) => {
     };
   };
 
-  let waitForPidWindows = pid =>
-    try({
-      let (_exitCode, _status) = Thread.wait_pid(pid);
-      exit(0);
-    }) {
-    // If the PID doesn't exist, Thread.wait_pid will throw
-    | _ex => exit(2)
-    };
-
-  let waitForPidPosix = pid => {
+  let waitForPid = pid => {
     while (true) {
       Unix.sleepf(5.0);
-      try(Unix.kill(pid, 0)) {
-      // If we couldn't send signal 0, the process is dead:
-      // https://stackoverflow.com/questions/3043978/how-to-check-if-a-process-id-pid-exists
-      | _ex => exit(0)
-      };
+      Luv.Process.kill_pid(~pid, 0)
+      |> Result.iter_error(_err => {
+           // If we couldn't send signal 0, the process is dead:
+           // https://stackoverflow.com/questions/3043978/how-to-check-if-a-process-id-pid-exists
+           exit(
+             3,
+           )
+         });
     };
   };
-
-  let waitForPid = Sys.win32 ? waitForPidWindows : waitForPidPosix;
 
   let _parentProcessWatcherThread: Thread.t =
     Thread.create(() => {waitForPid(parentPid)}, ());
