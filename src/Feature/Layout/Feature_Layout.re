@@ -91,7 +91,7 @@ module Internal = {
     };
   };
 
-  let rec rotate = (target, func, currenTree) => {
+  let rec rotate = (target, func, tree) => {
     let findSplit = children => {
       let predicate =
         fun
@@ -101,7 +101,7 @@ module Internal = {
       List.exists(predicate, children);
     };
 
-    switch (currenTree) {
+    switch (tree) {
     | Split(direction, children) =>
       Split(
         direction,
@@ -257,7 +257,7 @@ let move = (direction: direction, current, v) => {
   };
 };
 
-let rotateForward = (target, currentTree) => {
+let rotateForward = (target, tree) => {
   let f =
     fun
     | [] => []
@@ -269,10 +269,10 @@ let rotateForward = (target, currentTree) => {
       | None => []
       };
 
-  Internal.rotate(target, f, currentTree);
+  Internal.rotate(target, f, tree);
 };
 
-let rotateBackward = (target, currentTree) => {
+let rotateBackward = (target, tree) => {
   let f =
     fun
     | [] => []
@@ -280,5 +280,5 @@ let rotateBackward = (target, currentTree) => {
     | [a, b] => [b, a]
     | [head, ...tail] => tail @ [head];
 
-  Internal.rotate(target, f, currentTree);
+  Internal.rotate(target, f, tree);
 };
