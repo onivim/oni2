@@ -123,7 +123,13 @@ if (cliOptions.syntaxHighlightService) {
 
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
 
-    let currentState = ref(Model.State.initial(~getUserSettings));
+    let currentState =
+      ref(
+        Model.State.initial(
+          ~getUserSettings,
+          ~contributedCommands=[] // TODO
+        ),
+      );
 
     let update = UI.start(w, <Root state=currentState^ />);
 
