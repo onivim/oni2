@@ -156,8 +156,6 @@ let runTest =
   InitLog.info("Sending init event");
 
   Oni_UI.GlobalContext.set({
-    notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
-      dispatch(Model.Actions.WindowTreeSetSize(width, height)),
     openEditorById: id => {
       dispatch(Model.Actions.ViewSetActiveEditor(id));
     },
@@ -166,8 +164,6 @@ let runTest =
       dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
     editorSetScroll: (~editorId, ~scrollY, ()) =>
       dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-    setActiveWindow: (splitId, editorGroupId) =>
-      dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
     dispatch,
   });
 
