@@ -22,24 +22,25 @@ module Internal = {
     | Ex
     | Unknown => ":";
 
-  let commandsToMenuItems = commands =>
-    commands
-    |> List.map((command: Command.t(_)) =>
+  let commandsToMenuItems = (commands, items) =>
+    items
+    |> List.map((item: Menu.item) =>
          Actions.{
-           category: command.category,
-           name: command.title |> Option.value(~default=command.id),
+           category: item.category,
+           name: item.label,
            command: () =>
-             switch (command.msg) {
-             | `Arg0(msg) => msg
-             | `Arg1(msgf) => msgf(Json.Encode.null)
+             switch (Command.Lookup.get(item.command, commands)) {
+             | Some({msg: `Arg0(msg), _}) => msg
+             | Some({msg: `Arg1(msgf), _}) => msgf(Json.Encode.null)
+             | None => Actions.Noop
              },
-           icon: command.icon,
+           icon: item.icon,
            highlight: [],
          }
        )
     |> Array.of_list;
 
-  let commandPaletteItems = (commands, contextKeys) => {
+  let commandPaletteItems = (commands, menus, contextKeys) => {
     let contextKeys =
       WhenExpr.ContextKeys.union(
         contextKeys,
@@ -53,15 +54,8 @@ module Internal = {
         ]),
       );
 
-    commands
-    |> Command.Lookup.toList
-    |> List.filter((command: Command.t(_)) =>
-         WhenExpr.evaluate(
-           command.isEnabledWhen,
-           WhenExpr.ContextKeys.getValue(contextKeys),
-         )
-       )
-    |> commandsToMenuItems;
+    Feature_Menus.commandPalette(contextKeys, commands, menus)
+    |> commandsToMenuItems(commands);
   };
 };
 
@@ -132,6 +126,7 @@ let start = (themeInfo: ThemeInfo.t) => {
         iconTheme,
         themeInfo,
         commands,
+        menus,
         contextKeys,
       )
       : (option(Quickmenu.t), Isolinear.Effect.t(Actions.t)) => {
@@ -139,7 +134,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(CommandPalette) => (
         Some({
           ...Quickmenu.defaults(CommandPalette),
-          items: Internal.commandPaletteItems(commands, contextKeys),
+          items: Internal.commandPaletteItems(commands, menus, contextKeys),
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -368,6 +363,7 @@ let start = (themeInfo: ThemeInfo.t) => {
         state.iconTheme,
         themeInfo,
         State.commands(state),
+        State.menus(state),
         WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
       );
 

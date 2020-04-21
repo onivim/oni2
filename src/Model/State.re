@@ -141,3 +141,9 @@ let commands = state =>
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.Extension(msg)),
   ]);
+
+let menus = state => {
+  let commands = commands(state);
+
+  Extensions.menus(state.extensions) |> Menu.Lookup.fromSchema(commands);
+};

@@ -91,4 +91,8 @@ let other =
   );
 
 let all =
-  unionMany(State.[menus |> map(state => state.quickmenu), editors, other]);
+  unionMany([
+    menus |> map((state: State.t) => state.quickmenu),
+    editors,
+    other,
+  ]);
