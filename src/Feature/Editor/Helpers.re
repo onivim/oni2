@@ -27,6 +27,12 @@ let getTokensForLine =
     [];
   } else {
     let line = Buffer.getLine(i, buffer);
+    let length = BufferLine.lengthInBytes(line);
+    let startIndex = max(0, startIndex);
+    let endIndex = max(0, endIndex);
+    if (length == 0) {
+      []
+    } else {
 
     let idx = Index.fromZeroBased(i);
     let highlights =
@@ -62,10 +68,13 @@ let getTokensForLine =
         bufferSyntaxHighlights,
       );
 
+    let startByte = BufferLine.getByte(~index=startIndex, line);
+    let endByte = BufferLine.getByte(~index=endIndex, line);
+
     let colorizer =
       BufferLineColorizer.create(
-        ~startIndex,
-        ~endIndex,
+        ~startByte,
+        ~endByte,
         ~defaultBackgroundColor=defaultBackground,
         ~defaultForegroundColor=colors.editorForeground,
         ~selectionHighlights=selection,
@@ -77,6 +86,7 @@ let getTokensForLine =
       );
 
     BufferViewTokenizer.tokenize(~startIndex, ~endIndex, line, colorizer);
+    }
   };
 
 let getTokenAtPosition =
