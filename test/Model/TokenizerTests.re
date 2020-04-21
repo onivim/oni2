@@ -47,6 +47,12 @@ let validateToken =
       expectedToken: TextRun.t,
     ) => {
   expect.string(actualToken.text).toEqual(expectedToken.text);
+  expect.int(actualToken.startByte).toBe(
+    expectedToken.startByte,
+  );
+  expect.int(actualToken.endByte).toBe(
+    expectedToken.endByte
+  );
   expect.int(Index.toZeroBased(actualToken.startIndex)).toBe(
     Index.toZeroBased(expectedToken.startIndex),
   );
@@ -265,6 +271,30 @@ describe("Tokenizer", ({test, describe, _}) => {
 
     validateTokens(expect, result, runs);
   });
+  test("simple multi-byte case", ({expect, _}) => {
+    let str = "κόσμε";
+    let result =
+      Tokenizer.tokenize(
+        ~endIndex=String.length(str),
+        ~f=noSplit,
+        str |> makeLine,
+      );
+
+    let runs = [
+      TextRun.create(
+        ~text="κόσμε",
+        ~startByte=0,
+        ~endByte=11,
+        ~startIndex=Index.zero,
+        ~endIndex=Index.fromZeroBased(5),
+        ~startPosition=Index.zero,
+        ~endPosition=Index.fromZeroBased(5),
+        (),
+      ),
+    ];
+
+    validateTokens(expect, result, runs);
+  });
 
   test("string broken up by characters", ({expect, _}) => {
     let str = "aabbbbaa";
@@ -288,8 +318,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       ),
       TextRun.create(
         ~text="bbbb",
-        ~startByte=0,
-        ~endByte=0,
+        ~startByte=2,
+        ~endByte=6,
         ~startIndex=Index.fromZeroBased(2),
         ~endIndex=Index.fromZeroBased(6),
         ~startPosition=Index.fromZeroBased(2),
