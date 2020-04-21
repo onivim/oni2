@@ -44,7 +44,7 @@ let basicTokens = [
 
 describe("BufferLineColorizer", ({test, _}) => {
   test("base case - cover all tokens", ({expect, _}) => {
-    let colorize = basicColorizer(~startIndex=0, ~endIndex=11, basicTokens);
+    let colorize = basicColorizer(~startByte=0, ~endByte=11, basicTokens);
 
     let (_, color0) = colorize(0);
     let (_, color2) = colorize(2);
@@ -58,7 +58,7 @@ describe("BufferLineColorizer", ({test, _}) => {
   });
 
   test("out of bounds", ({expect, _}) => {
-    let colorize = basicColorizer(~startIndex=4, ~endIndex=6, basicTokens);
+    let colorize = basicColorizer(~startByte=4, ~endByte=6, basicTokens);
 
     let (_, color0) = colorize(0);
     let (_, color11) = colorize(11);
