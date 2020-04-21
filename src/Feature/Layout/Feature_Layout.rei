@@ -14,7 +14,7 @@ type t('content) =
   | Empty;
 
 [@deriving show]
-type window('content) = {
+type sizedWindow('content) = {
   content: 'content,
   x: int,
   y: int,
@@ -24,7 +24,7 @@ type window('content) = {
 
 module Internal: {
   let move:
-    ('content, int, int, list(window('content))) => option('content); // only used for tests
+    ('content, int, int, list(sizedWindow('content))) => option('content); // only used for tests
 };
 
 let initial: t('content);
@@ -41,7 +41,7 @@ let addWindow:
   t('content);
 let removeWindow: ('content, t('content)) => t('content);
 
-let layout: (int, int, int, int, t('content)) => list(window('content));
+let layout: (int, int, int, int, t('content)) => list(sizedWindow('content));
 
 let move: (direction, 'content, t('content)) => 'content;
 let moveLeft: ('content, t('content)) => 'content;

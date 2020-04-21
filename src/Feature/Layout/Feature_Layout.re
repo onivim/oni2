@@ -15,7 +15,7 @@ type t('content) =
   | Empty;
 
 [@deriving show({with_path: false})]
-type window('content) = {
+type sizedWindow('content) = {
   content: 'content,
   x: int,
   y: int,
