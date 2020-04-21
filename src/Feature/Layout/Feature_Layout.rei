@@ -41,7 +41,8 @@ let addWindow:
   t('content);
 let removeWindow: ('content, t('content)) => t('content);
 
-let layout: (int, int, int, int, t('content)) => list(sizedWindow('content));
+let layout:
+  (int, int, int, int, t('content)) => list(sizedWindow('content));
 
 let move: (direction, 'content, t('content)) => 'content;
 let moveLeft: ('content, t('content)) => 'content;
