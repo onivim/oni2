@@ -28,7 +28,11 @@ steps:
   - script: esy @integrationtest install
     displayName: 'Integration Tests: install'
   - script: esy @integrationtest run
-    displayName: 'Integration Tests: run'
+    displayName: 'Integration Tests: run (round 1)'
+  - script: esy @integrationtest run
+    displayName: 'Integration Tests: run (round 2)'
+  - script: esy @integrationtest run
+    displayName: 'Integration Tests: run (round 3)'
   # TODO: Stabilize and bring back!
   # - script: esy x OniUnitTestRunner
   #  displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
