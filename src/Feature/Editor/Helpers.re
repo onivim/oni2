@@ -31,62 +31,62 @@ let getTokensForLine =
     let startIndex = max(0, startIndex);
     let endIndex = max(0, endIndex);
     if (length == 0) {
-      []
+      [];
     } else {
+      let idx = Index.fromZeroBased(i);
+      let highlights =
+        BufferHighlights.getHighlightsByLine(
+          ~bufferId=Buffer.getId(buffer),
+          ~line=idx,
+          bufferHighlights,
+        );
 
-    let idx = Index.fromZeroBased(i);
-    let highlights =
-      BufferHighlights.getHighlightsByLine(
-        ~bufferId=Buffer.getId(buffer),
-        ~line=idx,
-        bufferHighlights,
-      );
+      let isActiveLine = i == cursorLine;
+      let defaultBackground =
+        isActiveLine
+          ? colors.lineHighlightBackground : colors.editorBackground;
 
-    let isActiveLine = i == cursorLine;
-    let defaultBackground =
-      isActiveLine ? colors.lineHighlightBackground : colors.editorBackground;
+      let matchingPairIndex =
+        switch (matchingPairs) {
+        | None => None
+        | Some((startPos: Location.t, endPos: Location.t))
+            when !ignoreMatchingPairs =>
+          if (Index.toZeroBased(startPos.line) == i) {
+            Some(Index.toZeroBased(startPos.column));
+          } else if (Index.toZeroBased(endPos.line) == i) {
+            Some(Index.toZeroBased(endPos.column));
+          } else {
+            None;
+          }
+        | _ => None
+        };
 
-    let matchingPairIndex =
-      switch (matchingPairs) {
-      | None => None
-      | Some((startPos: Location.t, endPos: Location.t))
-          when !ignoreMatchingPairs =>
-        if (Index.toZeroBased(startPos.line) == i) {
-          Some(Index.toZeroBased(startPos.column));
-        } else if (Index.toZeroBased(endPos.line) == i) {
-          Some(Index.toZeroBased(endPos.column));
-        } else {
-          None;
-        }
-      | _ => None
-      };
+      let tokenColors =
+        Feature_Syntax.getTokens(
+          ~bufferId=Buffer.getId(buffer),
+          ~line=Index.fromZeroBased(i),
+          bufferSyntaxHighlights,
+        );
 
-    let tokenColors =
-      Feature_Syntax.getTokens(
-        ~bufferId=Buffer.getId(buffer),
-        ~line=Index.fromZeroBased(i),
-        bufferSyntaxHighlights,
-      );
+      let startByte = BufferLine.getByte(~index=startIndex, line);
+      let endByte = BufferLine.getByte(~index=endIndex, line);
 
-    let startByte = BufferLine.getByte(~index=startIndex, line);
-    let endByte = BufferLine.getByte(~index=endIndex, line);
+      let colorizer =
+        BufferLineColorizer.create(
+          ~startByte,
+          ~endByte,
+          ~defaultBackgroundColor=defaultBackground,
+          ~defaultForegroundColor=colors.editorForeground,
+          ~selectionHighlights=selection,
+          ~selectionColor=colors.selectionBackground,
+          ~matchingPair=matchingPairIndex,
+          ~searchHighlights=highlights,
+          ~searchHighlightColor=colors.findMatchBackground,
+          tokenColors,
+        );
 
-    let colorizer =
-      BufferLineColorizer.create(
-        ~startByte,
-        ~endByte,
-        ~defaultBackgroundColor=defaultBackground,
-        ~defaultForegroundColor=colors.editorForeground,
-        ~selectionHighlights=selection,
-        ~selectionColor=colors.selectionBackground,
-        ~matchingPair=matchingPairIndex,
-        ~searchHighlights=highlights,
-        ~searchHighlightColor=colors.findMatchBackground,
-        tokenColors,
-      );
-
-    BufferViewTokenizer.tokenize(~startIndex, ~endIndex, line, colorizer);
-    }
+      BufferViewTokenizer.tokenize(~startIndex, ~endIndex, line, colorizer);
+    };
   };
 
 let getTokenAtPosition =

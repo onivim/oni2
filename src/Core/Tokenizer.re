@@ -49,7 +49,18 @@ module TextRun = {
   };
 };
 
-type splitFunc = (int, Uchar.t, int, Uchar.t) => bool;
+type splitFunc =
+  (
+    ~index0: int,
+    ~byte0: int,
+    ~char0: Uchar.t,
+    ~index1: int,
+    ~byte1: int,
+    ~char1: Uchar.t
+  ) =>
+  bool;
+
+//type splitFunc = (int, Uchar.t, int, Uchar.t) => bool;
 
 let _getNextBreak =
     (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
@@ -57,12 +68,14 @@ let _getNextBreak =
   let found = ref(false);
 
   while (pos^ < max - 1 && ! found^) {
-    let firstPos = pos^;
-    let secondPos = pos^ + 1;
-    let char = BufferLine.getUcharExn(~index=firstPos, bufferLine);
-    let nextChar = BufferLine.getUcharExn(~index=secondPos, bufferLine);
+    let index0 = pos^;
+    let index1 = pos^ + 1;
+    let char0 = BufferLine.getUcharExn(~index=index0, bufferLine);
+    let char1 = BufferLine.getUcharExn(~index=index1, bufferLine);
+    let byte0 = BufferLine.getByte(~index=index0, bufferLine);
+    let byte1 = BufferLine.getByte(~index=index1, bufferLine);
 
-    if (f(firstPos, char, secondPos, nextChar)) {
+    if (f(~index0, ~index1, ~char0, ~char1, ~byte0, ~byte1)) {
       found := true;
     };
 
