@@ -214,7 +214,7 @@
     "revery": "0.30.0",
     "revery-terminal": "*",
     "reason-tree-sitter": "^1.0.1001",
-    "reason-textmate": "^3.1.0",
+    "reason-textmate": "^3.1.1",
     "esy-sdl2": "*",
     "esy-skia": "*",
     "@opam/fmt": "^0.8.8",
