@@ -91,27 +91,24 @@ let%component make =
       let relY = evt.mouseY -. minY;
       let relX = evt.mouseX -. minX;
 
-      let numberOfLines = Buffer.getNumberOfLines(buffer);
-      let (line, col) = Editor.pixelPositionToLineColumn(editor, relX, relY);
+      let (line, col) =
+        Editor.pixelPositionToBufferLineByte(
+          ~buffer,
+          ~pixelX=relX,
+          ~pixelY=relY,
+          editor,
+        );
 
-      if (line < numberOfLines) {
-        Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-        Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
+      Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
+      Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
 
-        let cursor =
-          Vim.Cursor.create(
-            ~line=Index.fromOneBased(line + 1),
-            ~column=Index.fromZeroBased(col),
-          );
+      let cursor =
+        Vim.Cursor.create(
+          ~line=Index.fromOneBased(line + 1),
+          ~column=Index.fromZeroBased(col),
+        );
 
-        /*GlobalContext.current().dispatch(
-            Actions.EditorScrollToLine(editorId, topVisibleLine),
-          );
-          GlobalContext.current().dispatch(
-            Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
-          );*/
-        onCursorChange(cursor);
-      };
+      onCursorChange(cursor);
     };
   };
 

@@ -41,7 +41,8 @@ let getVisibleView: t => int;
 let getTotalSizeInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
-let pixelPositionToLineColumn: (t, float, float) => (int, int);
+let pixelPositionToBufferLineByte:
+  (~buffer: Buffer.t, ~pixelX: float, ~pixelY: float, t) => (int, int);
 let getVimCursors: t => list(Vim.Cursor.t);
 
 let scrollToColumn: (~column: int, t) => t;

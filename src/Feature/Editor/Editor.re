@@ -112,12 +112,33 @@ let getId = model => model.editorId;
 let getLineHeight = editor => editor.font.measuredHeight;
 let getCharacterWidth = editor => editor.font.measuredWidth;
 
-let pixelPositionToLineColumn = (view, pixelX, pixelY) => {
-  let line = int_of_float((pixelY +. view.scrollY) /. getLineHeight(view));
-  let column =
+let pixelPositionToBufferLineByte =
+    (~buffer, ~pixelX: float, ~pixelY: float, view) => {
+  let rawLine =
+    int_of_float((pixelY +. view.scrollY) /. getLineHeight(view));
+  let rawColumn =
     int_of_float((pixelX +. view.scrollX) /. getCharacterWidth(view));
 
-  (line, column);
+  let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
+
+  let line =
+    if (rawLine >= totalLinesInBuffer) {
+      max(0, totalLinesInBuffer - 1);
+    } else {
+      rawLine;
+    };
+
+  if (line >= 0 && line < totalLinesInBuffer) {
+    let bufferLine = Buffer.getLine(line, buffer);
+    let byte = BufferLine.getByte(~index=rawColumn, bufferLine);
+    (line, byte);
+  } else {
+    (
+      // Empty buffer
+      0,
+      0,
+    );
+  };
 };
 
 let getVisibleView = editor => {
