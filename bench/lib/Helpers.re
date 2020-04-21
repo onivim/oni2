@@ -6,7 +6,11 @@ open Feature_Editor;
 
 /* Create a state with some editor size */
 let simpleState = {
-  let state = State.initial(~getUserSettings=() => Ok(Config.Settings.empty));
+  let state =
+    State.initial(
+      ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~contributedCommands=[],
+    );
 
   Reducer.reduce(
     state,

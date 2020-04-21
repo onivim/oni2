@@ -4,9 +4,8 @@
  * Typing / schema for icon themes
  */
 
+open Kernel;
 open Revery;
-
-open Oni_Core;
 
 module FontSource = {
   [@deriving (show({with_path: false}), yojson({strict: false}))]

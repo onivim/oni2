@@ -164,7 +164,7 @@ let%component make =
 
   let fileIconView =
     switch (icon) {
-    | Some((icon: Model.IconTheme.IconDefinition.t)) =>
+    | Some((icon: IconTheme.IconDefinition.t)) =>
       <FontIcon
         fontFamily="seti.ttf"
         icon={icon.fontCharacter}

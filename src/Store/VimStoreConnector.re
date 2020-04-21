@@ -249,7 +249,7 @@ let start =
 
       dispatch(
         Actions.Terminal(
-          Feature_Terminal.NewTerminal({cmd: Some(cmd), splitDirection}),
+          Command(NewTerminal({cmd: Some(cmd), splitDirection})),
         ),
       );
     });
@@ -1032,7 +1032,7 @@ let start =
         state,
         synchronizeEditorEffect(state),
       )
-    | Command("terminal.normalMode") =>
+    | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state
         |> Selectors.getActiveBuffer
