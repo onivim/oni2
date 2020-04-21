@@ -59,7 +59,7 @@ type t = {
   syntaxClient: option(Oni_Syntax_Client.t),
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
-  windowManager: WindowManager.t,
+  layout: Feature_Layout.t(int),
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
@@ -119,7 +119,7 @@ let initial = (~getUserSettings, ~contributedCommands) => {
   statusBar: StatusBarModel.create(),
   syntaxClient: None,
   syntaxHighlights: Feature_Syntax.empty,
-  windowManager: WindowManager.create(),
+  layout: Feature_Layout.initial,
   windowTitle: "",
   windowIsFocused: true,
   windowIsMaximized: false,

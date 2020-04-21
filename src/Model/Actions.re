@@ -85,9 +85,8 @@ type t =
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
-  | WindowSetActive(int, int)
   | WindowTitleSet(string)
-  | WindowTreeSetSize(int, int)
+  | EditorGroupSelected(int)
   | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSizeChanged({
       id: int,
@@ -125,8 +124,12 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
-  | AddSplit(WindowTree.direction, WindowTree.split)
+  | OpenFileByPath(
+      string,
+      option([ | `Horizontal | `Vertical]),
+      option(Location.t),
+    )
+  | AddSplit([ | `Horizontal | `Vertical], int)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)

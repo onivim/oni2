@@ -199,8 +199,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
 
     GlobalContext.set({
-      notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
-        dispatch(Model.Actions.WindowTreeSetSize(width, height)),
       openEditorById: id => {
         dispatch(Model.Actions.ViewSetActiveEditor(id));
       },
@@ -209,8 +207,6 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
       editorSetScroll: (~editorId, ~scrollY, ()) =>
         dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-      setActiveWindow: (splitId, editorGroupId) =>
-        dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
       dispatch,
     });
 

@@ -90,8 +90,8 @@ let update =
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
-          | Horizontal => Some(WindowTree.Horizontal)
-          | Vertical => Some(WindowTree.Vertical)
+          | Horizontal => Some(`Horizontal)
+          | Vertical => Some(`Vertical)
           | Current => None
           };
 

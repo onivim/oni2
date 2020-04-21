@@ -43,29 +43,24 @@ let start = () => {
         | None => EditorGroup.create()
         };
 
+      dispatch(AddSplit(direction, newEditorGroup.editorGroupId));
+
+      // This needs to be dispatched after the split, since this will set the
+      // active editor group, which is then used as the target for the split.
       dispatch(EditorGroupAdd(newEditorGroup));
-
-      let split =
-        WindowTree.createSplit(
-          ~editorGroupId=newEditorGroup.editorGroupId,
-          (),
-        );
-
-      dispatch(AddSplit(direction, split));
     });
 
   let windowMoveEffect = (state: State.t, direction, _) => {
     Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
-      let windowId = WindowManager.move(direction, state.windowManager);
       let maybeEditorGroupId =
-        WindowTree.getEditorGroupIdFromSplitId(
-          windowId,
-          state.windowManager.windowTree,
-        );
+        EditorGroups.getActiveEditorGroup(state.editorGroups)
+        |> Option.map((group: EditorGroup.t) =>
+             Feature_Layout.move(direction, group.editorGroupId, state.layout)
+           );
 
       switch (maybeEditorGroupId) {
       | Some(editorGroupId) =>
-        dispatch(WindowSetActive(windowId, editorGroupId))
+        dispatch(Actions.EditorGroupSelected(editorGroupId))
       | None => ()
       };
     });
@@ -116,8 +111,8 @@ let start = () => {
     ("system.addToPath", _ => togglePathEffect),
     ("system.removeFromPath", _ => togglePathEffect),
     ("view.closeEditor", state => closeEditorEffect(state)),
-    ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
-    ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
+    ("view.splitVertical", state => splitEditorEffect(state, `Vertical)),
+    ("view.splitHorizontal", state => splitEditorEffect(state, `Horizontal)),
     ("window.moveLeft", state => windowMoveEffect(state, Left)),
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),

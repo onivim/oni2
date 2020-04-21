@@ -88,7 +88,7 @@ let make = (~state: State.t, ()) => {
         && !zenMode) {
       React.listToElement([
         <Dock theme sideBar pane />,
-        <WindowHandle direction=Vertical />,
+        <WindowHandle direction=`Vertical />,
       ]);
     } else {
       React.empty;
@@ -98,7 +98,7 @@ let make = (~state: State.t, ()) => {
     if (!zenMode && sideBar.isOpen) {
       React.listToElement([
         <SideBarView theme state />,
-        <WindowHandle direction=Vertical />,
+        <WindowHandle direction=`Vertical />,
       ]);
     } else {
       React.empty;

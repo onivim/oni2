@@ -37,7 +37,4 @@ module StatusBarReducer = StatusBarReducer;
 module State = State;
 module ThemeInfo = ThemeInfo;
 module Title = Title;
-module WindowManager = WindowManager;
-module WindowTree = WindowTree;
-module WindowTreeLayout = WindowTreeLayout;
 module Workspace = Workspace;
