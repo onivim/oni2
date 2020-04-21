@@ -78,8 +78,7 @@ let getVisibleRangesForEditor = (editor: Editor.t) => {
 };
 
 let getVisibleBuffers = (state: State.t) => {
-  WindowTree.getSplits(state.windowManager.windowTree)
-  |> List.map((split: WindowTree.split) => split.editorGroupId)
+  Feature_Layout.windows(state.layout)
   |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
   |> List.filter_map(EditorGroup.getActiveEditor)
   |> List.map(e => e.Editor.bufferId);
@@ -89,8 +88,7 @@ type t = list((int, list(Range.t)));
 
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   let editors =
-    WindowTree.getSplits(state.windowManager.windowTree)
-    |> List.map((split: WindowTree.split) => split.editorGroupId)
+    Feature_Layout.windows(state.layout)
     |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
     |> List.filter_map(EditorGroup.getActiveEditor)
     |> List.filter(editor => editor.Editor.bufferId == bufferId);

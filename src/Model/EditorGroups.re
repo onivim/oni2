@@ -82,13 +82,14 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
         applyToAllEditorGroups(~defaultFont, model.idToGroup, action),
       lastEditorFont: Some(font),
     }
+
   | EditorSizeChanged(_) => {
       ...model,
       idToGroup:
         applyToAllEditorGroups(~defaultFont, model.idToGroup, action),
     }
 
-  | WindowSetActive(_, editorGroupId) => {...model, activeId: editorGroupId}
+  | EditorGroupSelected(editorGroupId) => {...model, activeId: editorGroupId}
 
   | EditorGroupAdd(editorGroup) =>
     let editorGroup =
