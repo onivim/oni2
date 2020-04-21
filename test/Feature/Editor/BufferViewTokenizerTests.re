@@ -11,13 +11,12 @@ let indentation = IndentationSettings.default;
 
 let basicColorizer = _ => (Colors.black, Colors.white);
 
-let splitColorizer = (split) => (idx) => {
-    if (idx < split) {
-      (Colors.red, Colors.red)
-    } else {
-      (Colors.green, Colors.green)
-    }
-};
+let splitColorizer = (split, idx) =>
+  if (idx < split) {
+    (Colors.red, Colors.red);
+  } else {
+    (Colors.green, Colors.green);
+  };
 
 let makeLine = str => BufferLine.make(~indentation, str);
 
@@ -33,41 +32,41 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   });
 
   test("multi-byte case", ({expect, _}) => {
-      let result =
-        BufferViewTokenizer.tokenize(
-          ~endIndex=9,
-          "κόσμε abc" |> BufferLine.make(~indentation),
-          // Split at byte 11 - after the multi-byte characters
-          splitColorizer(11),
-        );
+    let result =
+      BufferViewTokenizer.tokenize(
+        ~endIndex=9,
+        "κόσμε abc" |> BufferLine.make(~indentation),
+        // Split at byte 11 - after the multi-byte characters
+        splitColorizer(11),
+      );
 
-      let expectedTokens: list(BufferViewTokenizer.t) = [
-        {
-          tokenType: Text,
-          text: "κόσμε",
-          startPosition: Index.zero,
-          endPosition: Index.fromZeroBased(5),
-          color: Colors.red,
-          backgroundColor: Colors.red,
-        },
-        {
-          tokenType: Whitespace,
-          text: " ",
-          startPosition: Index.fromZeroBased(5),
-          endPosition: Index.fromZeroBased(6),
-          color: Colors.green,
-          backgroundColor: Colors.green,
-        },
-        {
-          tokenType: Text,
-          text: "abc",
-          startPosition: Index.fromZeroBased(6),
-          endPosition: Index.fromZeroBased(9),
-          color: Colors.green,
-          backgroundColor: Colors.green,
-        },
-      ];
-      validateTokens(expect, result, expectedTokens);
+    let expectedTokens: list(BufferViewTokenizer.t) = [
+      {
+        tokenType: Text,
+        text: "κόσμε",
+        startPosition: Index.zero,
+        endPosition: Index.fromZeroBased(5),
+        color: Colors.red,
+        backgroundColor: Colors.red,
+      },
+      {
+        tokenType: Whitespace,
+        text: " ",
+        startPosition: Index.fromZeroBased(5),
+        endPosition: Index.fromZeroBased(6),
+        color: Colors.green,
+        backgroundColor: Colors.green,
+      },
+      {
+        tokenType: Text,
+        text: "abc",
+        startPosition: Index.fromZeroBased(6),
+        endPosition: Index.fromZeroBased(9),
+        color: Colors.green,
+        backgroundColor: Colors.green,
+      },
+    ];
+    validateTokens(expect, result, expectedTokens);
   });
 
   describe("indentation settings", ({test, _}) =>

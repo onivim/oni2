@@ -47,12 +47,8 @@ let validateToken =
       expectedToken: TextRun.t,
     ) => {
   expect.string(actualToken.text).toEqual(expectedToken.text);
-  expect.int(actualToken.startByte).toBe(
-    expectedToken.startByte,
-  );
-  expect.int(actualToken.endByte).toBe(
-    expectedToken.endByte
-  );
+  expect.int(actualToken.startByte).toBe(expectedToken.startByte);
+  expect.int(actualToken.endByte).toBe(expectedToken.endByte);
   expect.int(Index.toZeroBased(actualToken.startIndex)).toBe(
     Index.toZeroBased(expectedToken.startIndex),
   );
