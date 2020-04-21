@@ -7,6 +7,10 @@ module ClientToServer = Protocol.ClientToServer;
 
 module Transport = Exthost.Transport;
 
+module Constants = {
+  let checkPidInterval = 5000; /* ms */
+};
+
 type message =
   | Log(string)
   | Message(ClientToServer.t)
@@ -39,23 +43,21 @@ let start = (~healthCheck) => {
   let timer: Luv.Timer.t = Luv.Timer.init() |> Result.get_ok;
 
   let _stopWork = () => Luv.Timer.stop(timer);
-  let map2 = f => state := f(state^);
+  let map = f => state := f(state^);
 
   let doWork = () =>
-    //log("STARTING SOME WORK");
     try(
       {
         if (State.anyPendingWork(state^)) {
-          map2(State.doPendingWork);
+          map(State.doPendingWork);
         } else {
-          //log("DONE!");
           let _: result(unit, Luv.Error.t) = _stopWork();
           ();
         };
 
         let tokenUpdates = State.getTokenUpdates(state^);
         write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
-        map2(State.clearTokenUpdates);
+        map(State.clearTokenUpdates);
       }
     ) {
     | ex =>
@@ -67,7 +69,7 @@ let start = (~healthCheck) => {
     Luv.Timer.start(~repeat=1, timer, 1, () => {doWork()}) |> Result.get_ok;
   };
 
-  let map = f => {
+  let updateAndRestartTimer = f => {
     state := f(state^);
     let _: result(unit, Luv.Error.t) = Luv.Timer.again(timer);
     ();
@@ -80,10 +82,9 @@ let start = (~healthCheck) => {
       fun
       | Echo(m) => {
           write(Protocol.ServerToClient.EchoReply(m));
-          log("handled echo");
         }
       | Initialize(languageInfo, setup) => {
-          map(State.initialize(~log, languageInfo, setup));
+          updateAndRestartTimer(State.initialize(~log, languageInfo, setup));
           write(Protocol.ServerToClient.Initialized);
           log("Initialized!");
         }
@@ -94,26 +95,28 @@ let start = (~healthCheck) => {
       | BufferEnter(id, filetype) => {
           log(
             Printf.sprintf(
-              "!!!!!!!! Buffer enter - id: %d filetype: %s",
+              "Buffer enter - id: %d filetype: %s",
               id,
               filetype,
             ),
           );
-          map(State.bufferEnter(id));
+          updateAndRestartTimer(State.bufferEnter(id));
         }
       | UseTreeSitter(useTreeSitter) => {
-          map(State.setUseTreeSitter(useTreeSitter));
+          updateAndRestartTimer(State.setUseTreeSitter(useTreeSitter));
           log(
             "got new config - treesitter enabled:"
             ++ string_of_bool(useTreeSitter),
           );
         }
       | ThemeChanged(theme) => {
-          map(State.updateTheme(theme));
+          updateAndRestartTimer(State.updateTheme(theme));
           log("handled theme changed");
         }
       | BufferUpdate(bufferUpdate, lines, scope) => {
-          map(State.bufferUpdate(~bufferUpdate, ~lines, ~scope));
+          updateAndRestartTimer(
+            State.bufferUpdate(~bufferUpdate, ~lines, ~scope),
+          );
           log(
             Printf.sprintf(
               "Received buffer update - %d | %d lines",
@@ -123,13 +126,13 @@ let start = (~healthCheck) => {
           );
         }
       | VisibleRangesChanged(visibilityUpdate) => {
-          map(State.updateVisibility(visibilityUpdate));
+          updateAndRestartTimer(State.updateVisibility(visibilityUpdate));
         }
       | Close => {
           write(Protocol.ServerToClient.Closing);
           exit(0);
         }
-      | SimulateMessageException => failwith("Exception!")
+      | SimulateMessageException => failwith("Simulated Exception!")
       | v => log("Unhandled message: " ++ ClientToServer.show(v))
     );
 
@@ -148,23 +151,28 @@ let start = (~healthCheck) => {
       exit(2);
     };
   };
-
-  let waitForPid = pid => {
-    while (true) {
-      Unix.sleepf(5.0);
-      Luv.Process.kill_pid(~pid, 0)
-      |> Result.iter_error(_err => {
-           // If we couldn't send signal 0, the process is dead:
-           // https://stackoverflow.com/questions/3043978/how-to-check-if-a-process-id-pid-exists
-           exit(
-             3,
-           )
-         });
-    };
+  let checkParentPid = pid => {
+    Luv.Process.kill_pid(~pid, 0)
+    |> Oni_Core.Utility.ResultEx.tap(() => log("Parent still active."))
+    |> Result.iter_error(_err => {
+         // If we couldn't send signal 0, the process is dead:
+         // https://stackoverflow.com/questions/3043978/how-to-check-if-a-process-id-pid-exists
+         exit(
+           3,
+         )
+       });
   };
 
-  let _parentProcessWatcherThread: Thread.t =
-    Thread.create(() => {waitForPid(parentPid)}, ());
+  let processWatcherTimer: Luv.Timer.t = Luv.Timer.init() |> Result.get_ok;
+  // Start Process watcher
+  Luv.Timer.start(
+    ~repeat=Constants.checkPidInterval,
+    processWatcherTimer,
+    Constants.checkPidInterval,
+    () => {
+    checkParentPid(parentPid)
+  })
+  |> Result.get_ok;
 
   let dispatch =
     fun

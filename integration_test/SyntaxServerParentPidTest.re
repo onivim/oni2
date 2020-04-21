@@ -1,7 +1,5 @@
 open Oni_IntegrationTestLib;
 
-open Oni_IntegrationTestLib;
-
 let win32Command = {
   switch (Sys.getenv_opt("COMSPEC")) {
   | None => "cmd.exe"
