@@ -195,6 +195,7 @@ let make =
       ~y: int,
       ~lineHeight: float,
       ~colors,
+      ~theme,
       ~tokenTheme,
       ~editorFont,
       ~completions,
@@ -240,6 +241,7 @@ let make =
           rowHeight=Constants.itemHeight
           initialRowsToRender=5
           count={Array.length(items)}
+          theme
           focused={completions.focused}>
           ...{index => {
             let Filter.{highlight, item} = items[index];

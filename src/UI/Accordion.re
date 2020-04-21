@@ -52,14 +52,14 @@ let make =
     ) => {
   let list =
     expanded
-      ? <FlatList rowHeight count focused> ...renderItem </FlatList>
+      ? <FlatList rowHeight count focused theme> ...renderItem </FlatList>
       : React.empty;
 
   <View style={Styles.container(expanded)}>
     <View style={Styles.titleBar(theme)}>
       <FontIcon
         fontSize=Constants.arrowSize
-        color=Revery.Colors.white
+        color={Colors.foreground.from(theme)}
         icon={expanded ? FontAwesome.caretDown : FontAwesome.caretRight}
       />
       <Text style={Styles.titleText(~theme, ~font=uiFont)} text=title />
