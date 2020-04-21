@@ -139,8 +139,8 @@ if (cliOptions.syntaxHighlightService) {
       // but not too much to just spin. Unfortunately, it seems
       // Luv.Loop.run always returns [true] for us, so we don't
       // have a reliable way to know we're done (at the moment).
-      for(_ in 1 to 100) {
-        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool)
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
       };
     };
 
