@@ -123,7 +123,13 @@ if (cliOptions.syntaxHighlightService) {
 
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
 
-    let currentState = ref(Model.State.initial(~getUserSettings));
+    let currentState =
+      ref(
+        Model.State.initial(
+          ~getUserSettings,
+          ~contributedCommands=[] // TODO
+        ),
+      );
 
     let update = UI.start(w, <Root state=currentState^ />);
 
@@ -193,8 +199,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
 
     GlobalContext.set({
-      notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
-        dispatch(Model.Actions.WindowTreeSetSize(width, height)),
       openEditorById: id => {
         dispatch(Model.Actions.ViewSetActiveEditor(id));
       },
@@ -203,8 +207,6 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
       editorSetScroll: (~editorId, ~scrollY, ()) =>
         dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-      setActiveWindow: (splitId, editorGroupId) =>
-        dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
       dispatch,
     });
 

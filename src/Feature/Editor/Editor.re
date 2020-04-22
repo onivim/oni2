@@ -5,8 +5,8 @@ let lastId = ref(0);
 
 [@deriving show]
 type t = {
-  editorId: EditorId.t,
   bufferId: int,
+  editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
   minimapMaxColumnWidth: int,
@@ -64,9 +64,46 @@ type scrollbarMetrics = {
 
 let getVimCursors = model => model.cursors;
 
-let getPrimaryCursor = model =>
-  switch (model.cursors) {
-  | [cursor, ..._] => (cursor :> Location.t)
+let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
+  let byte = position.column |> Index.toZeroBased;
+  let line = position.line |> Index.toZeroBased;
+
+  let bufferLineCount = Buffer.getNumberOfLines(buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = Buffer.getLine(line, buffer);
+
+    let column = BufferLine.getIndex(~byte, bufferLine);
+
+    Location.{line: Index.(zero + line), column: Index.(zero + column)};
+  } else {
+    Location.{line: Index.zero, column: Index.zero};
+  };
+};
+
+let getCharacterUnderCursor = (~buffer, editor) => {
+  switch (editor.cursors) {
+  | [] => None
+  | [cursor, ..._] =>
+    let byte = cursor.column |> Index.toZeroBased;
+    let line = cursor.line |> Index.toZeroBased;
+
+    let bufferLineCount = Buffer.getNumberOfLines(buffer);
+
+    if (line < bufferLineCount) {
+      let bufferLine = Buffer.getLine(line, buffer);
+      let index = BufferLine.getIndex(~byte, bufferLine);
+      let character = BufferLine.getUcharExn(~index, bufferLine);
+      Some(character);
+    } else {
+      None;
+    };
+  };
+};
+
+let getPrimaryCursor = (~buffer, editor) =>
+  switch (editor.cursors) {
+  | [cursor, ..._] => mapCursor(~position=cursor, ~buffer)
   | [] => Location.{line: Index.zero, column: Index.zero}
   };
 
@@ -75,12 +112,33 @@ let getId = model => model.editorId;
 let getLineHeight = editor => editor.font.measuredHeight;
 let getCharacterWidth = editor => editor.font.measuredWidth;
 
-let pixelPositionToLineColumn = (view, pixelX, pixelY) => {
-  let line = int_of_float((pixelY +. view.scrollY) /. getLineHeight(view));
-  let column =
+let pixelPositionToBufferLineByte =
+    (~buffer, ~pixelX: float, ~pixelY: float, view) => {
+  let rawLine =
+    int_of_float((pixelY +. view.scrollY) /. getLineHeight(view));
+  let rawColumn =
     int_of_float((pixelX +. view.scrollX) /. getCharacterWidth(view));
 
-  (line, column);
+  let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
+
+  let line =
+    if (rawLine >= totalLinesInBuffer) {
+      max(0, totalLinesInBuffer - 1);
+    } else {
+      rawLine;
+    };
+
+  if (line >= 0 && line < totalLinesInBuffer) {
+    let bufferLine = Buffer.getLine(line, buffer);
+    let byte = BufferLine.getByte(~index=rawColumn, bufferLine);
+    (line, byte);
+  } else {
+    (
+      // Empty buffer
+      0,
+      0,
+    );
+  };
 };
 
 let getVisibleView = editor => {

@@ -1,3 +1,5 @@
+open Oni_Core;
+
 [@deriving show]
 type t =
   pri {

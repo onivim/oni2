@@ -25,8 +25,8 @@ type t = int => tokenColor;
  */
 let create:
   (
-    ~startIndex: int,
-    ~endIndex: int,
+    ~startByte: int,
+    ~endByte: int,
     ~defaultBackgroundColor: Color.t,
     ~defaultForegroundColor: Color.t, // theme.editorForeground
     ~selectionHighlights: option(Range.t),

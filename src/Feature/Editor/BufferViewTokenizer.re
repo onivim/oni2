@@ -36,8 +36,8 @@ let isWhitespace = c => {
 let filterRuns = (r: Tokenizer.TextRun.t) => ZedBundled.length(r.text) != 0;
 
 let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
-  let startIndex = Index.toZeroBased(r.startIndex);
-  let (backgroundColor, color) = colorizer(startIndex);
+  //let startIndex = Index.toZeroBased(r.startIndex);
+  let (backgroundColor, color) = colorizer(r.startByte);
 
   let firstChar = ZedBundled.get(r.text, 0);
 
@@ -74,9 +74,17 @@ let getCharacterPositionAndWidth = (~viewOffset: int=0, line: BufferLine.t, i) =
 };
 
 let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {
-  let split = (i0, c0, i1, c1) => {
-    let (bg0, fg0) = colorizer(i0);
-    let (bg1, fg1) = colorizer(i1);
+  let split =
+      (
+        ~index0 as _,
+        ~byte0 as b0,
+        ~char0 as c0,
+        ~index1 as _,
+        ~byte1 as b1,
+        ~char1 as c1,
+      ) => {
+    let (bg0, fg0) = colorizer(b0);
+    let (bg1, fg1) = colorizer(b1);
 
     !Color.equals(bg0, bg1)
     || !Color.equals(fg0, fg1)

@@ -91,7 +91,7 @@ let make = (~theme, ~uiFont, ~editorFont, ~state: State.t, ()) =>
     <View />;
   } else {
     [
-      <WindowHandle direction=Horizontal />,
+      <WindowHandle direction=`Horizontal />,
       <View style={Styles.pane(~theme)}>
         <View style=Styles.header>
           <View style=Styles.tabs>

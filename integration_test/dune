@@ -9,6 +9,7 @@
            EchoNotificationTest
            EditorFontFromPathTest
            EditorFontValidTest
+           EditorUtf8Test
            ExtConfigurationChangedTest
            ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
@@ -34,6 +35,7 @@
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
+           RegressionNonExistentDirectory
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
            Regression1097Test
@@ -68,6 +70,7 @@
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
+        EditorUtf8Test.exe
         ExtConfigurationChangedTest.exe
         ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
@@ -87,6 +90,7 @@
         RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe
+        RegressionNonExistentDirectory.exe
         RegressionVspEmptyExistingBufferTest.exe
         SCMGitTest.exe
         SearchShowClearHighlightsTest.exe
@@ -110,4 +114,5 @@
         some-test-file.txt
         test.crlf
         test.lf
+        utf8.txt
 ))

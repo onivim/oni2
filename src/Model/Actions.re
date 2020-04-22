@@ -43,9 +43,7 @@ type t =
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
   | Command(string)
-  | CommandsRegister(list(command))
-  // Execute a contribute command, from an extension
-  | CommandExecuteContributed(string)
+  | Commands(Feature_Commands.msg(t))
   | CompletionAddItems(
       [@opaque] CompletionMeet.t,
       [@opaque] list(CompletionItem.t),
@@ -71,6 +69,7 @@ type t =
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
+  | KeybindingInvoked({command: string})
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
@@ -86,9 +85,8 @@ type t =
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
-  | WindowSetActive(int, int)
   | WindowTitleSet(string)
-  | WindowTreeSetSize(int, int)
+  | EditorGroupSelected(int)
   | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSizeChanged({
       id: int,
@@ -126,8 +124,12 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
-  | AddSplit(WindowTree.direction, WindowTree.split)
+  | OpenFileByPath(
+      string,
+      option([ | `Horizontal | `Vertical]),
+      option(Location.t),
+    )
+  | AddSplit([ | `Horizontal | `Vertical], int)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)

@@ -83,6 +83,7 @@ let minimap =
   <View style onMouseWheel>
     <Minimap
       editor
+      cursorPosition
       width=minimapPixelWidth
       height={editor.pixelHeight}
       count={Buffer.getNumberOfLines(buffer)}
@@ -180,7 +181,7 @@ let%component make =
   let topVisibleLine = Editor.getTopVisibleLine(editor);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
 
-  let cursorPosition = Editor.getPrimaryCursor(editor);
+  let cursorPosition = Editor.getPrimaryCursor(~buffer, editor);
 
   let layout =
     EditorLayout.getLayout(
@@ -306,6 +307,7 @@ let%component make =
     <View style={Styles.verticalScrollBar(~colors)}>
       <EditorVerticalScrollbar
         editor
+        cursorPosition
         width=Constants.scrollBarThickness
         height={editor.pixelHeight}
         diagnostics=diagnosticsMap

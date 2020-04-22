@@ -12,194 +12,7 @@ module Constants = {
   let maxZoomValue = 2.8;
 };
 
-let pathSymlinkEnabled = (~addingLink) =>
-  (
-    Revery.Environment.os == Revery.Environment.Mac
-    && !Sys.file_exists("/usr/local/bin/oni2")
-  )
-  == addingLink;
-
-let createDefaultCommands = getState => {
-  State.(
-    Actions.[
-      Command.create(
-        ~category=Some("Preferences"),
-        ~name="Open configuration file",
-        ~action=OpenConfigFile("configuration.json"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("Preferences"),
-        ~name="Open keybindings file",
-        ~action=OpenConfigFile("keybindings.json"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("Preferences"),
-        ~name="Reload configuration",
-        ~action=ConfigurationReload,
-        (),
-      ),
-      Command.create(
-        ~category=Some("Preferences"),
-        ~name="Theme Picker",
-        ~action=QuickmenuShow(ThemesPicker),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Close Editor",
-        ~action=Command("view.closeEditor"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Open Next Editor",
-        ~action=Command("workbench.action.nextEditor"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Open Previous Editor",
-        ~action=Command("workbench.action.previousEditor"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Toggle Problems (Errors, Warnings)",
-        ~action=Command("workbench.actions.view.problems"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Split Editor Vertically",
-        ~action=Command("view.splitVertical"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Split Editor Horizontally",
-        ~action=Command("view.splitHorizontal"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Enable Zen Mode",
-        ~enabled=() => !getState().zenMode,
-        ~action=EnableZenMode,
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Disable Zen Mode",
-        ~enabled=() => getState().zenMode,
-        ~action=DisableZenMode,
-        (),
-      ),
-      Command.create(
-        ~category=Some("Input"),
-        ~name="Disable Key Displayer",
-        ~enabled=() => getState().keyDisplayer != None,
-        ~action=DisableKeyDisplayer,
-        (),
-      ),
-      Command.create(
-        ~category=Some("Input"),
-        ~name="Enable Key Displayer",
-        ~enabled=() => getState().keyDisplayer == None,
-        ~action=EnableKeyDisplayer,
-        (),
-      ),
-      Command.create(
-        ~category=Some("References"),
-        ~name="Find all References",
-        ~action=Command("references-view.find"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Rotate Windows (Forwards)",
-        ~action=Command("view.rotateForward"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("View"),
-        ~name="Rotate Windows (Backwards)",
-        ~action=Command("view.rotateBackward"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("Editor"),
-        ~name="Copy Active Filepath to Clipboard",
-        ~action=CopyActiveFilepathToClipboard,
-        (),
-      ),
-      Command.create(
-        ~category=Some("Editor"),
-        ~name="Detect Indentation from Content",
-        ~action=Command("editor.action.detectIndentation"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("System"),
-        ~name="Add Oni2 to System PATH",
-        ~enabled=() => pathSymlinkEnabled(~addingLink=true),
-        ~action=Command("system.addToPath"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("System"),
-        ~name="Remove Oni2 from System PATH",
-        ~enabled=() => pathSymlinkEnabled(~addingLink=false),
-        ~action=Command("system.removeFromPath"),
-        (),
-      ),
-      Command.create(
-        ~category=None,
-        ~name="Goto symbol in file...",
-        ~action=QuickmenuShow(DocumentSymbols),
-        (),
-      ),
-      Command.create(
-        ~category=Some("Sneak"),
-        ~name="Start sneak (keyboard-accessible UI)",
-        ~action=Command("sneak.start"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("Terminal"),
-        ~name="Open terminal in new horizontal split",
-        ~action=Command("terminal.new.horizontal"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("Terminal"),
-        ~name="Open terminal in new vertical split",
-        ~action=Command("terminal.new.vertical"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("Terminal"),
-        ~name="Open terminal in current window",
-        ~action=Command("terminal.new.current"),
-        (),
-      ),
-      Command.create(
-        ~category=Some("Help"),
-        ~name="Open Vim Tutor",
-        ~action=Command("vim.tutor"),
-        (),
-      ),
-    ]
-  );
-};
-
-let start = (getState, contributedCommands) => {
-  let singleActionEffect = (action, name) =>
-    Isolinear.Effect.createWithDispatch(~name="command." ++ name, dispatch =>
-      dispatch(action)
-    );
-
+let start = () => {
   let closeEditorEffect = (state, _) =>
     Isolinear.Effect.createWithDispatch(~name="closeEditorEffect", dispatch => {
       let editor =
@@ -230,29 +43,24 @@ let start = (getState, contributedCommands) => {
         | None => EditorGroup.create()
         };
 
+      dispatch(AddSplit(direction, newEditorGroup.editorGroupId));
+
+      // This needs to be dispatched after the split, since this will set the
+      // active editor group, which is then used as the target for the split.
       dispatch(EditorGroupAdd(newEditorGroup));
-
-      let split =
-        WindowTree.createSplit(
-          ~editorGroupId=newEditorGroup.editorGroupId,
-          (),
-        );
-
-      dispatch(AddSplit(direction, split));
     });
 
   let windowMoveEffect = (state: State.t, direction, _) => {
     Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
-      let windowId = WindowManager.move(direction, state.windowManager);
       let maybeEditorGroupId =
-        WindowTree.getEditorGroupIdFromSplitId(
-          windowId,
-          state.windowManager.windowTree,
-        );
+        EditorGroups.getActiveEditorGroup(state.editorGroups)
+        |> Option.map((group: EditorGroup.t) =>
+             Feature_Layout.move(direction, group.editorGroupId, state.layout)
+           );
 
       switch (maybeEditorGroupId) {
       | Some(editorGroupId) =>
-        dispatch(WindowSetActive(windowId, editorGroupId))
+        dispatch(Actions.EditorGroupSelected(editorGroupId))
       | None => ()
       };
     });
@@ -300,139 +108,15 @@ let start = (getState, contributedCommands) => {
     });
 
   let commands = [
-    ("keyDisplayer.enable", _ => singleActionEffect(EnableKeyDisplayer)),
-    ("keyDisplayer.disable", _ => singleActionEffect(DisableKeyDisplayer)),
     ("system.addToPath", _ => togglePathEffect),
     ("system.removeFromPath", _ => togglePathEffect),
-    (
-      "references-view.find",
-      _ => singleActionEffect(References(References.Requested)),
-    ),
-    (
-      "workbench.action.showCommands",
-      _ => singleActionEffect(QuickmenuShow(CommandPalette)),
-    ),
-    (
-      "workbench.action.gotoSymbol",
-      _ => singleActionEffect(QuickmenuShow(DocumentSymbols)),
-    ),
-    ("workbench.action.findInFiles", _ => singleActionEffect(SearchHotkey)),
-    (
-      "workbench.actions.view.problems",
-      _ => singleActionEffect(DiagnosticsHotKey),
-    ),
-    (
-      "workbench.action.openNextRecentlyUsedEditorInGroup",
-      _ => singleActionEffect(QuickmenuShow(EditorsPicker)),
-    ),
-    (
-      "workbench.action.quickOpen",
-      _ => singleActionEffect(QuickmenuShow(FilesPicker)),
-    ),
-    (
-      "workbench.action.quickOpenNavigateNextInEditorPicker",
-      _ => singleActionEffect(ListFocusDown),
-    ),
-    (
-      "workbench.action.quickOpenNavigatePreviousInEditorPicker",
-      _ => singleActionEffect(ListFocusUp),
-    ),
-    /*(
-        "developer.massiveMenu",
-        (state: Oni_Model.State.t) => {
-          multipleActionEffect([
-            MenuOpen(
-              (setItems, _, _) => {
-                let commands =
-                  List.init(1000000, i =>
-                    {
-                      category: None,
-                      name: "Item " ++ string_of_int(i),
-                      command: () =>
-                        Oni_Model.Actions.ShowNotification(
-                          Oni_Model.Notification.create(
-                            ~title="derp",
-                            ~message=string_of_int(i),
-                            (),
-                          ),
-                        ),
-                      icon:
-                        Oni_Model.FileExplorer.getFileIcon(
-                          state.languageInfo,
-                          state.iconTheme,
-                          "txt",
-                        ),
-                    }
-                  );
-                setItems(commands);
-                () => ();
-              },
-            ),
-            SetInputControlMode(TextInputFocus),
-          ]);
-        },
-      ),*/
-    (
-      "workbench.action.closeQuickOpen",
-      _ => singleActionEffect(QuickmenuClose),
-    ),
-    ("list.focusDown", _ => singleActionEffect(ListFocusDown)),
-    ("list.focusUp", _ => singleActionEffect(ListFocusUp)),
-    ("list.select", _ => singleActionEffect(ListSelect)),
-    ("list.selectBackground", _ => singleActionEffect(ListSelectBackground)),
     ("view.closeEditor", state => closeEditorEffect(state)),
-    ("view.splitVertical", state => splitEditorEffect(state, Vertical)),
-    ("view.splitHorizontal", state => splitEditorEffect(state, Horizontal)),
-    (
-      "explorer.toggle",
-      _ =>
-        singleActionEffect(
-          Actions.ActivityBar(ActivityBar.FileExplorerClick),
-        ),
-    ),
+    ("view.splitVertical", state => splitEditorEffect(state, `Vertical)),
+    ("view.splitHorizontal", state => splitEditorEffect(state, `Horizontal)),
     ("window.moveLeft", state => windowMoveEffect(state, Left)),
     ("window.moveRight", state => windowMoveEffect(state, Right)),
     ("window.moveUp", state => windowMoveEffect(state, Up)),
     ("window.moveDown", state => windowMoveEffect(state, Down)),
-    (
-      "terminal.new.vertical",
-      _ => {
-        singleActionEffect(
-          Actions.Terminal(
-            Feature_Terminal.NewTerminal({
-              cmd: None,
-              splitDirection: Vertical,
-            }),
-          ),
-        );
-      },
-    ),
-    (
-      "terminal.new.horizontal",
-      _ => {
-        singleActionEffect(
-          Actions.Terminal(
-            Feature_Terminal.NewTerminal({
-              cmd: None,
-              splitDirection: Horizontal,
-            }),
-          ),
-        );
-      },
-    ),
-    (
-      "terminal.new.current",
-      _ => {
-        singleActionEffect(
-          Actions.Terminal(
-            Feature_Terminal.NewTerminal({
-              cmd: None,
-              splitDirection: Current,
-            }),
-          ),
-        );
-      },
-    ),
     (
       "workbench.action.zoomIn",
       state => zoomEffect(state, zoom => zoom +. Constants.zoomStep),
@@ -457,16 +141,8 @@ let start = (getState, contributedCommands) => {
       commands,
     );
 
-  let setInitialCommands =
-    Isolinear.Effect.createWithDispatch(~name="commands.setInitial", dispatch => {
-      let commands = createDefaultCommands(getState) @ contributedCommands;
-      dispatch(CommandsRegister(commands));
-    });
-
   let updater = (state: State.t, action) => {
     switch (action) {
-    | Init => (state, setInitialCommands)
-
     | EnableKeyDisplayer => (
         {...state, keyDisplayer: Some(KeyDisplayer.initial)},
         Isolinear.Effect.none,

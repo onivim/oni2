@@ -26,7 +26,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   colorTheme: Feature_Theme.model,
-  commands: Commands.t,
+  commands: Feature_Commands.model(Actions.t),
   contextMenu: ContextMenu.t,
   vimMode: Vim.Mode.t,
   completions: Completions.t,
@@ -59,7 +59,7 @@ type t = {
   syntaxClient: option(Oni_Syntax_Client.t),
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
-  windowManager: WindowManager.t,
+  layout: Feature_Layout.t(int),
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
@@ -75,7 +75,7 @@ type t = {
   textContentProviders: list((int, string)),
 };
 
-let initial = (~getUserSettings) => {
+let initial = (~getUserSettings, ~contributedCommands) => {
   buffers: Buffers.empty,
   bufferHighlights: BufferHighlights.initial,
   bufferRenderers: BufferRenderers.initial,
@@ -84,7 +84,7 @@ let initial = (~getUserSettings) => {
       Feature_Terminal.Contributions.colors,
       Feature_Notification.Contributions.colors,
     ]),
-  commands: Commands.empty,
+  commands: Feature_Commands.initial(contributedCommands),
   contextMenu: ContextMenu.Nothing,
   completions: Completions.initial,
   config:
@@ -119,7 +119,7 @@ let initial = (~getUserSettings) => {
   statusBar: StatusBarModel.create(),
   syntaxClient: None,
   syntaxHighlights: Feature_Syntax.empty,
-  windowManager: WindowManager.create(),
+  layout: Feature_Layout.initial,
   windowTitle: "",
   windowIsFocused: true,
   windowIsMaximized: false,
@@ -132,4 +132,18 @@ let initial = (~getUserSettings) => {
   modal: None,
   terminals: Feature_Terminal.initial,
   textContentProviders: [],
+};
+
+let commands = state =>
+  Command.Lookup.unionMany([
+    Feature_Commands.all(state.commands),
+    Extensions.commands(state.extensions)
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.Extension(msg)),
+  ]);
+
+let menus = state => {
+  let commands = commands(state);
+
+  Extensions.menus(state.extensions) |> Menu.Lookup.fromSchema(commands);
 };

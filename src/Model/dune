@@ -26,6 +26,7 @@
         Oni2.feature.configuration
         Oni2.feature.theme
         Oni2.feature.notification
+        Oni2.feature.commands
         Oni2.feature.search
         Oni2.feature.syntax
         Oni2.feature.language_support
@@ -33,6 +34,7 @@
         Oni2.feature.scm
         Oni2.feature.terminal
         Oni2.feature.modals
+        Oni2.feature.layout
         ReasonFuzz
         textmate
         editor-core-types

@@ -121,7 +121,7 @@ let start =
 
       let getDefinition = (buffer, editor) => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(editor);
+        let position = Editor.getPrimaryCursor(~buffer, editor);
         Definition.getAt(id, position, state.definition)
         |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
              Actions.OpenFileByPath(
@@ -249,7 +249,7 @@ let start =
 
       dispatch(
         Actions.Terminal(
-          Feature_Terminal.NewTerminal({cmd: Some(cmd), splitDirection}),
+          Command(NewTerminal({cmd: Some(cmd), splitDirection})),
         ),
       );
     });
@@ -294,9 +294,9 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Actions.OpenFileByPath(buf, Some(WindowTree.Vertical), None)
+          Actions.OpenFileByPath(buf, Some(`Vertical), None)
         | Vim.Types.Horizontal =>
-          Actions.OpenFileByPath(buf, Some(WindowTree.Horizontal), None)
+          Actions.OpenFileByPath(buf, Some(`Horizontal), None)
         | Vim.Types.TabPage => Actions.OpenFileByPath(buf, None, None)
         };
       dispatch(command);
@@ -305,35 +305,36 @@ let start =
   let _: unit => unit =
     Vim.Window.onMovement((movementType, _count) => {
       Log.trace("Vim.Window.onMovement");
-      let currentState = getState();
+      let state = getState();
 
       let move = moveFunc => {
-        let windowId = moveFunc(currentState.windowManager);
         let maybeEditorGroupId =
-          WindowTree.getEditorGroupIdFromSplitId(
-            windowId,
-            currentState.windowManager.windowTree,
-          );
+          EditorGroups.getActiveEditorGroup(state.editorGroups)
+          |> Option.map((group: EditorGroup.t) =>
+               moveFunc(group.editorGroupId, state.layout)
+             );
 
         switch (maybeEditorGroupId) {
         | Some(editorGroupId) =>
-          dispatch(Actions.WindowSetActive(windowId, editorGroupId))
+          dispatch(Actions.EditorGroupSelected(editorGroupId))
         | None => ()
         };
       };
 
       switch (movementType) {
       | FullLeft
-      | OneLeft => move(WindowManager.moveLeft)
+      | OneLeft => move(Feature_Layout.moveLeft)
       | FullRight
-      | OneRight => move(WindowManager.moveRight)
+      | OneRight => move(Feature_Layout.moveRight)
       | FullDown
-      | OneDown => move(WindowManager.moveDown)
+      | OneDown => move(Feature_Layout.moveDown)
       | FullUp
-      | OneUp => move(WindowManager.moveUp)
+      | OneUp => move(Feature_Layout.moveUp)
       | RotateDownwards => dispatch(Actions.Command("view.rotateForward"))
       | RotateUpwards => dispatch(Actions.Command("view.rotateBackward"))
-      | _ => move(windowManager => windowManager.activeWindowId)
+      | TopLeft
+      | BottomRight
+      | Previous => Log.error("Window movement not implemented")
       };
     });
 
@@ -432,7 +433,12 @@ let start =
       |> Selectors.getActiveEditor
       |> Option.map((editor: Editor.t) => {
            let {bufferId, cursors, _}: Editor.t = editor;
-           let primaryCursor = Editor.getPrimaryCursor(editor);
+           
+            let primaryCursor =
+              switch (cursors) {
+              | [hd, ..._] => Some(hd)
+              | [] => None
+              };
 
            let syntaxScope =
              state
@@ -674,12 +680,12 @@ let start =
       switch (dir) {
       | Some(direction) =>
         let eg = EditorGroup.create();
+
+        dispatch(Actions.AddSplit(direction, eg.editorGroupId));
+
+        // This needs to be dispatched after the split, since this will set the
+        // active editor group, which is then used as the target for the split.
         dispatch(Actions.EditorGroupAdd(eg));
-
-        let split =
-          WindowTree.createSplit(~editorGroupId=eg.editorGroupId, ());
-
-        dispatch(Actions.AddSplit(direction, split));
       | None => ()
       };
 
@@ -973,7 +979,29 @@ let start =
         state,
         openFileByPathEffect(path, direction, location),
       )
+<<<<<<< HEAD
     | Command("terminal.normalMode") =>
+=======
+    | BufferEnter(_)
+    | EditorFont(Service_Font.FontLoaded(_))
+    | EditorGroupSelected(_)
+    | EditorSizeChanged(_) => (state, synchronizeEditorEffect(state))
+    | BufferSetIndentation(_, indent) => (
+        state,
+        synchronizeIndentationEffect(indent),
+      )
+    | ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
+    | ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
+    | Command("workbench.action.nextEditor") => (
+        state,
+        synchronizeEditorEffect(state),
+      )
+    | Command("workbench.action.previousEditor") => (
+        state,
+        synchronizeEditorEffect(state),
+      )
+    | Terminal(Command(NormalMode)) =>
+>>>>>>> master
       let maybeBufferId =
         state
         |> Selectors.getActiveBuffer

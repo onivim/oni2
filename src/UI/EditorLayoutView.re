@@ -7,35 +7,25 @@
 open Revery;
 open UI;
 open Oni_Model;
-open WindowManager;
-open WindowTree;
 
 let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
 
 let splitStyle = Style.[flexGrow(1)];
 
-let parentStyle = (dir: direction) => {
+let parentStyle = direction => {
   let flexDir =
-    switch (dir) {
-    | Vertical => `Row
-    | Horizontal => `Column
+    switch (direction) {
+    | `Vertical => `Row
+    | `Horizontal => `Column
     };
   Style.[flexGrow(1), flexDirection(flexDir)];
 };
 
-let renderTree = (state, theme, tree) => {
-  open State;
-  let items =
-    WindowTreeLayout.layout(
-      0,
-      0,
-      state.windowManager.windowTreeWidth,
-      state.windowManager.windowTreeHeight,
-      tree,
-    );
+let renderTree = (~width, ~height, state: State.t, theme, tree) => {
+  let items = Feature_Layout.layout(0, 0, width, height, tree);
 
   items
-  |> List.map((item: WindowTreeLayout.t) =>
+  |> List.map((item: Feature_Layout.sizedWindow(_)) =>
        <View
          style=Style.[
            position(`Absolute),
@@ -45,18 +35,9 @@ let renderTree = (state, theme, tree) => {
            height(item.height),
          ]>
          {switch (
-            EditorGroups.getEditorGroupById(
-              state.editorGroups,
-              item.split.editorGroupId,
-            )
+            EditorGroups.getEditorGroupById(state.editorGroups, item.content)
           ) {
-          | Some(editorGroup) =>
-            <EditorGroupView
-              state
-              theme
-              windowId={item.split.id}
-              editorGroup
-            />
+          | Some(editorGroup) => <EditorGroupView state theme editorGroup />
           | None => React.empty
           }}
        </View>
@@ -64,21 +45,20 @@ let renderTree = (state, theme, tree) => {
   |> React.listToElement;
 };
 
-let make = (~state: State.t, ~theme, ()) => {
-  let {State.windowManager, _} = state;
-  let {windowTree, _} = windowManager;
-
-  let children = renderTree(state, theme, windowTree);
+let%component make = (~state: State.t, ~theme, ()) => {
+  let%hook (maybeDimensions, setDimensions) = Hooks.state(None);
+  let children =
+    switch (maybeDimensions) {
+    | Some((width, height)) =>
+      renderTree(~width, ~height, state, theme, state.layout)
+    | None => React.empty
+    };
 
   let splits =
     [
       <View
         onDimensionsChanged={dim =>
-          GlobalContext.current().notifyWindowTreeSizeChanged(
-            ~width=dim.width,
-            ~height=dim.height,
-            (),
-          )
+          setDimensions(_ => Some((dim.width, dim.height)))
         }
         style=Style.[flexGrow(1)]>
         children
