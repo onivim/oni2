@@ -434,27 +434,27 @@ let start =
       |> Option.map((editor: Editor.t) => {
            let {bufferId, cursors, _}: Editor.t = editor;
            
-            let primaryCursor =
-              switch (cursors) {
-              | [hd, ..._] => Some(hd)
-              | [] => None
-              };
+           let primaryVimCursor = switch(Editor.getVimCursors(editor)) {
+           | [hd, ..._] => Some(hd)
+           | [] => None;
+           };
 
            let syntaxScope =
              state
              |> Selectors.getActiveBuffer
-             |> Option.map(buffer => {
+             |> OptionEx.flatMap(buffer => {
                   let bufferId = Core.Buffer.getId(buffer);
-                  let {line, column}: Location.t = primaryCursor;
 
+                  // TODO: Reconcile byte <-> index here
+                  primaryVimCursor
+                  |> Option.map((cursor: Vim.Cursor.t) => {
                   Feature_Syntax.getSyntaxScope(
                     ~bufferId,
-                    ~line,
-                    // TODO: Reconcile 'byte position' vs 'character position'
-                    // in cursor.
-                    ~bytePosition=Index.toZeroBased(column),
+                    ~line=cursor.line,
+                    ~bytePosition=Index.toZeroBased(cursor.column),
                     state.syntaxHighlights,
-                  );
+                  )
+                  });
                 })
              |> Option.value(~default=Core.SyntaxScope.none);
 
@@ -979,29 +979,7 @@ let start =
         state,
         openFileByPathEffect(path, direction, location),
       )
-<<<<<<< HEAD
-    | Command("terminal.normalMode") =>
-=======
-    | BufferEnter(_)
-    | EditorFont(Service_Font.FontLoaded(_))
-    | EditorGroupSelected(_)
-    | EditorSizeChanged(_) => (state, synchronizeEditorEffect(state))
-    | BufferSetIndentation(_, indent) => (
-        state,
-        synchronizeIndentationEffect(indent),
-      )
-    | ViewSetActiveEditor(_) => (state, synchronizeEditorEffect(state))
-    | ViewCloseEditor(_) => (state, synchronizeEditorEffect(state))
-    | Command("workbench.action.nextEditor") => (
-        state,
-        synchronizeEditorEffect(state),
-      )
-    | Command("workbench.action.previousEditor") => (
-        state,
-        synchronizeEditorEffect(state),
-      )
     | Terminal(Command(NormalMode)) =>
->>>>>>> master
       let maybeBufferId =
         state
         |> Selectors.getActiveBuffer
