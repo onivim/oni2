@@ -96,8 +96,17 @@ let%component hoverItem =
     let height = {
       let fontHeight =
         int_of_float(Service_Font.getHeight(editorFont) +. (-1.5));
-      let elementHeight = fontHeight + Constants.innerPadding;
-      elementHeight * List.length(diagnostics) + Constants.padding * 2;
+      let contentHeight =
+        List.fold_left(
+          (acc, {message, _}: Diagnostic.t) => {
+            let lineCount =
+              String.split_on_char('\n', message) |> List.length;
+            acc + lineCount * fontHeight;
+          },
+          0,
+          diagnostics,
+        );
+      contentHeight + Constants.padding * 2;
     };
 
     let elements =
