@@ -9,6 +9,7 @@
            EchoNotificationTest
            EditorFontFromPathTest
            EditorFontValidTest
+           EditorUtf8Test
            ExtConfigurationChangedTest
            ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
@@ -69,6 +70,7 @@
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
+        EditorUtf8Test.exe
         ExtConfigurationChangedTest.exe
         ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
@@ -112,4 +114,5 @@
         some-test-file.txt
         test.crlf
         test.lf
+        utf8.txt
 ))

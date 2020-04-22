@@ -78,7 +78,12 @@ module Actions = {
       Option.bind(maybeEditor, editor =>
         Buffers.getBuffer(editor.bufferId, state.buffers)
       );
-    let maybeCursor = Option.map(Editor.getPrimaryCursor, maybeEditor);
+    let maybeCursor =
+      OptionEx.map2(
+        (buffer, editor) => Editor.getPrimaryCursor(~buffer, editor),
+        maybeBuffer,
+        maybeEditor,
+      );
 
     let suggestEnabled =
       state.configuration

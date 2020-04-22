@@ -17,7 +17,17 @@ type characterCacheInfo = {
   width: int,
 };
 
-let emptyArray = Array.make(0, None);
+// We use these 'empty' values to reduce allocations in the normal workflow
+// of creating buffer lines. We defer actually creating the arrays / caches
+// until we need them.
+
+// This is important for performance for loading large files, and prevents
+// us from needing to allocate arrays for every line upon load of the buffer.
+
+// These 'placeholder' values are treated like a [None] - we can use a reference
+// equality check against these to see if we've allocated already.
+let emptyCharacterMap: array(option(characterCacheInfo)) = [||];
+let emptyByteIndexMap: array(option(int)) = [||];
 
 type t = {
   indentation: IndentationSettings.t,
@@ -25,6 +35,8 @@ type t = {
   raw: string,
   // [characters] is a cache of discovered characters we've found in the string so far
   mutable characters: array(option(characterCacheInfo)),
+  // [byteIndexMap] is a cache of byte -> index
+  mutable byteIndexMap: array(option(int)),
   // nextByte is the nextByte to work from, or -1 if complete
   mutable nextByte: int,
   // nextIndex is the nextIndex to work from
@@ -38,14 +50,17 @@ module Internal = {
     if (Uchar.equal(c, tab)) {
       indentationSettings.tabSize;
     } else {
-      1;
-      // TODO: Integrate charWidth / wcwidth
+      Uucp.Break.tty_width_hint(c);
     };
 
   let resolveTo = (~index, cache: t) => {
     // First, allocate our cache, if necessary
-    if (cache.characters === emptyArray) {
+    if (cache.characters === emptyCharacterMap) {
       cache.characters = Array.make(String.length(cache.raw), None);
+    };
+
+    if (cache.byteIndexMap === emptyByteIndexMap) {
+      cache.byteIndexMap = Array.make(String.length(cache.raw), None);
     };
 
     // We've already resolved to this point,
@@ -65,13 +80,17 @@ module Internal = {
 
         let characterWidth = measure(cache.indentation, uchar);
 
-        cache.characters[i^] =
+        let idx = i^;
+        let byteOffset = byte^;
+        cache.characters[idx] =
           Some({
-            byteOffset: byte^,
+            byteOffset,
             positionOffset: position^,
             uchar,
             width: characterWidth,
           });
+
+        cache.byteIndexMap[byteOffset] = Some(idx);
 
         position := position^ + characterWidth;
         byte := offset;
@@ -86,10 +105,18 @@ module Internal = {
 };
 
 let make = (~indentation, raw: string) => {
-  // Create a cache the size of the string - this would be the max length
-  // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
-  let characters = emptyArray;
-  {indentation, raw, characters, nextByte: 0, nextIndex: 0, nextPosition: 0};
+  {
+    // Create a cache the size of the string - this would be the max length
+    // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
+
+    indentation,
+    raw,
+    characters: emptyCharacterMap,
+    byteIndexMap: emptyByteIndexMap,
+    nextByte: 0,
+    nextIndex: 0,
+    nextPosition: 0,
+  };
 };
 
 let empty = make(~indentation=IndentationSettings.default, "");
@@ -105,6 +132,32 @@ let lengthBounded = (~max, bufferLine) => {
   min(bufferLine.nextIndex, max);
 };
 
+let getIndex = (~byte, bufferLine) => {
+  Internal.resolveTo(~index=byte, bufferLine);
+
+  // In the case where we are looking at an 'intermediate' byte,
+  // work backwards to the previous matching index.
+  let rec loop = idx =>
+    if (idx <= 0) {
+      0;
+    } else {
+      switch (bufferLine.byteIndexMap[idx]) {
+      | Some(v) => v
+      | None => loop(idx - 1)
+      };
+    };
+
+  // If we're asking for a byte past the length of the string,
+  // return the index that would be past the last index. The reason
+  // we handle this case - as opposed throw - is to handle the
+  // case where a cursor position is past the end of the current string.
+  if (byte >= String.length(bufferLine.raw)) {
+    bufferLine.nextIndex;
+  } else {
+    loop(byte);
+  };
+};
+
 let getUcharExn = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
@@ -114,7 +167,7 @@ let getUcharExn = (~index, bufferLine) => {
   };
 };
 
-let getByteOffset = (~index, bufferLine) => {
+let getByte = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let rawLength = String.length(bufferLine.raw);
   let characters = bufferLine.characters;
@@ -129,8 +182,8 @@ let getByteOffset = (~index, bufferLine) => {
 };
 
 let subExn = (~index: int, ~length: int, bufferLine) => {
-  let startOffset = getByteOffset(~index, bufferLine);
-  let endOffset = getByteOffset(~index=index + length, bufferLine);
+  let startOffset = getByte(~index, bufferLine);
+  let endOffset = getByte(~index=index + length, bufferLine);
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
 };
 
@@ -143,7 +196,11 @@ let getPositionAndWidth = (~index: int, bufferLine: t) => {
   } else {
     switch (characters[index]) {
     | Some({positionOffset, width, _}) => (positionOffset, width)
-    | None => (0, 1)
+    | None =>
+      switch (characters[bufferLine.nextIndex - 1]) {
+      | Some({positionOffset, width, _}) => (positionOffset + width, 1)
+      | None => (0, 1)
+      }
     };
   };
 };

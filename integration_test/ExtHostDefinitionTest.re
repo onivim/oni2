@@ -67,7 +67,10 @@ runTestWithInput(
         state
         |> Selectors.getActiveEditorGroup
         |> Selectors.getActiveEditor
-        |> Option.map(editor => Editor.getPrimaryCursor(editor));
+        |> OptionEx.map2(
+             (buffer, editor) => Editor.getPrimaryCursor(~buffer, editor),
+             maybeBuffer,
+           );
 
       let isDefinitionAvailable = (buffer, location) => {
         Definition.isAvailable(
