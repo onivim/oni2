@@ -1,5 +1,5 @@
 {
-  "checksum": "7ba83ed4fd17053a770c1458ce724a27",
+  "checksum": "7be60cfafdd07ef700726c36b7db8668",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -308,20 +308,20 @@
       ],
       "devDependencies": []
     },
-    "reason-textmate@3.1.1@d41d8cd9": {
-      "id": "reason-textmate@3.1.1@d41d8cd9",
+    "reason-textmate@3.1.2@d41d8cd9": {
+      "id": "reason-textmate@3.1.2@d41d8cd9",
       "name": "reason-textmate",
-      "version": "3.1.1",
+      "version": "3.1.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-3.1.1.tgz#sha1:242a4cd7edb5a6708deab9eaac36a3187f8cd636"
+          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-3.1.2.tgz#sha1:50bc0ec73c3e3edaf30d392040949965e7f39732"
         ]
       },
       "overrides": [],
       "dependencies": [
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
-        "refmterr@3.3.0@d41d8cd9", "reason-oniguruma@6.94.1001@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9", "reason-oniguruma@6.94.1002@d41d8cd9",
         "ocaml@4.8.1000@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/ppx_let@opam:v0.12.0@b52d29f3",
@@ -371,14 +371,14 @@
       ],
       "devDependencies": []
     },
-    "reason-oniguruma@6.94.1001@d41d8cd9": {
-      "id": "reason-oniguruma@6.94.1001@d41d8cd9",
+    "reason-oniguruma@6.94.1002@d41d8cd9": {
+      "id": "reason-oniguruma@6.94.1002@d41d8cd9",
       "name": "reason-oniguruma",
-      "version": "6.94.1001",
+      "version": "6.94.1002",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-oniguruma/-/reason-oniguruma-6.94.1001.tgz#sha1:ee1d3de3d2f91d43162fd6b76c6fad55101c7556"
+          "archive:https://registry.npmjs.org/reason-oniguruma/-/reason-oniguruma-6.94.1002.tgz#sha1:0a98cd24a2ff9887ce86af4191a1f7e3cd6b35b9"
         ]
       },
       "overrides": [],
@@ -1210,7 +1210,7 @@
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@3.1.1@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
+        "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3021@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#e791e3a@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
