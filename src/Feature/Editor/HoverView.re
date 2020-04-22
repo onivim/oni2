@@ -4,8 +4,10 @@
  */
 
 open Revery.UI;
+open Oni_Core;
+open Utility;
 
-module Zed_utf8 = Oni_Core.ZedBundled;
+module Zed_utf8 = ZedBundled;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
@@ -80,6 +82,28 @@ let%component hoverItem =
   if (diagnostics == []) {
     React.empty;
   } else {
+    let lines =
+      diagnostics
+      |> List.map(({message, _}: Diagnostic.t) => {
+           let lines = String.split_on_char('\n', message);
+
+           let minIndentation =
+             lines
+             |> List.map(StringEx.indentation)
+             |> List.fold_left(min, max_int);
+
+           // remove extraneous indentation
+           lines
+           |> List.map(line =>
+                String.sub(
+                  line,
+                  minIndentation,
+                  String.length(line) - minIndentation,
+                )
+              );
+         })
+      |> List.concat;
+
     let width = {
       let measure = text =>
         int_of_float(Service_Font.measure(~text, editorFont) +. 0.5);
@@ -96,23 +120,14 @@ let%component hoverItem =
     let height = {
       let fontHeight =
         int_of_float(Service_Font.getHeight(editorFont) +. (-1.5));
-      let contentHeight =
-        List.fold_left(
-          (acc, {message, _}: Diagnostic.t) => {
-            let lineCount =
-              String.split_on_char('\n', message) |> List.length;
-            acc + lineCount * fontHeight;
-          },
-          0,
-          diagnostics,
-        );
+      let contentHeight = List.length(lines) * fontHeight;
       contentHeight + Constants.padding * 2;
     };
 
     let elements =
-      diagnostics
-      |> List.map(({message, _}: Diagnostic.t) =>
-           <Text style={Styles.text(~colors, ~editorFont)} text=message />
+      lines
+      |> List.map(text =>
+           <Text style={Styles.text(~colors, ~editorFont)} text />
          )
       |> List.rev
       |> React.listToElement;
