@@ -109,10 +109,9 @@ let%component hoverItem =
         int_of_float(Service_Font.measure(~text, editorFont) +. 0.5);
       let maxElementWidth =
         List.fold_left(
-          (maxWidth, {message, _}: Diagnostic.t) =>
-            max(maxWidth, measure(message) + Constants.padding),
+          (acc, line) => max(acc, measure(line) + Constants.padding),
           0,
-          diagnostics,
+          lines,
         );
       maxElementWidth + Constants.padding * 2;
     };
