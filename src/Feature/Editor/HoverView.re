@@ -83,6 +83,7 @@ let%component hoverItem =
   } else {
     let lines =
       diagnostics
+      |> List.rev
       |> List.map(({message, _}: Diagnostic.t) => {
            let lines = String.split_on_char('\n', message);
 
@@ -127,7 +128,6 @@ let%component hoverItem =
       |> List.map(text =>
            <Text style={Styles.text(~colors, ~editorFont)} text />
          )
-      |> List.rev
       |> React.listToElement;
 
     <View style={Styles.outerPosition(~x, ~y)}>
