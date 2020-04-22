@@ -30,18 +30,13 @@ let startsWith = (~prefix, str) => {
   if (prefixLength > strLength) {
     false;
   } else {
-    try(
-      {
-        for (idx in 0 to prefixLength - 1) {
-          if (prefix.[idx] != str.[idx]) {
-            raise(NoMatchException);
-          };
-        };
+    let rec match = i =>
+      if (i == prefixLength) {
         true;
-      }
-    ) {
-    | NoMatchException => false
-    };
+      } else {
+        prefix.[i] == str.[i] && match(i + 1);
+      };
+    match(0);
   };
 };
 
