@@ -21,6 +21,8 @@ let contains = (query, str) => {
 let explode = str =>
   str |> String.to_seq |> List.of_seq |> List.map(c => String.make(1, c));
 
+exception NoMatchException;
+
 let startsWith = (~prefix, str) => {
   let prefixLength = String.length(prefix);
   let strLength = String.length(str);
@@ -28,7 +30,18 @@ let startsWith = (~prefix, str) => {
   if (prefixLength > strLength) {
     false;
   } else {
-    String.sub(str, 0, prefixLength) == prefix;
+    try(
+      {
+        for (idx in 0 to prefixLength - 1) {
+          if (prefix.[idx] != str.[idx]) {
+            raise(NoMatchException);
+          };
+        };
+        true;
+      }
+    ) {
+    | NoMatchException => false
+    };
   };
 };
 
