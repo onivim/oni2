@@ -66,7 +66,7 @@ let start = (~healthCheck) => {
     };
 
   let startWork = () => {
-    Luv.Timer.start(~repeat=1, timer, 1, () => {doWork()}) |> Result.get_ok;
+    Luv.Timer.start(~repeat=1, timer, 0, () => {doWork()}) |> Result.get_ok;
   };
 
   let updateAndRestartTimer = f => {
