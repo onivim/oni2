@@ -66,6 +66,19 @@ let trimRight = str => {
   aux(length - 1);
 };
 
+let indentation = str => {
+  let rec loop = i =>
+    if (i >= String.length(str)) {
+      i;
+    } else if (isSpace(str.[i])) {
+      loop(i + 1);
+    } else {
+      i;
+    };
+
+  loop(0);
+};
+
 let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
   let originalLength = String.length(text);
 
