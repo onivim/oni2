@@ -6,17 +6,19 @@ type direction =
   | Down
   | Right;
 
-type t('content) =
-  | Split([ | `Horizontal | `Vertical], list(t('content)))
-  | Window({
-      weight: float,
-      content: 'content,
-    })
-  | Empty;
+[@deriving show({with_path: false})]
+type t('id) =
+  | Split([ | `Horizontal | `Vertical], list(container('id)))
+  | Window('id)
+  | Empty
+and container('id) = {
+  weight: float,
+  content: t('id),
+};
 
 [@deriving show({with_path: false})]
-type sizedWindow('content) = {
-  content: 'content,
+type sizedWindow('id) = {
+  id: 'id,
   x: int,
   y: int,
   width: int,
@@ -33,7 +35,7 @@ module Internal = {
     + split.height;
   };
 
-  let move = (content, dirX, dirY, splits) => {
+  let move = (id, dirX, dirY, splits) => {
     let (minX, minY, maxX, maxY, deltaX, deltaY) =
       List.fold_left(
         (prev, cur) => {
@@ -52,7 +54,7 @@ module Internal = {
         splits,
       );
 
-    let splitInfo = List.filter(s => s.content == content, splits);
+    let splitInfo = List.filter(s => s.id == id, splits);
 
     if (splitInfo == []) {
       None;
@@ -74,12 +76,12 @@ module Internal = {
 
         let intersects =
           List.filter(
-            s => s.content != startSplit.content && intersects(x, y, s),
+            s => s.id != startSplit.id && intersects(x, y, s),
             splits,
           );
 
         if (intersects != []) {
-          result := Some(List.hd(intersects).content);
+          result := Some(List.hd(intersects).id);
           found := true;
         };
 
@@ -92,22 +94,23 @@ module Internal = {
   };
 
   let rec rotate = (target, func, tree) => {
-    let findSplit = children => {
+    let findSplit = containers => {
       let predicate =
         fun
-        | Window({content, _}) => content == target
+        | {content: Window(id), _} => id == target
         | _ => false;
 
-      List.exists(predicate, children);
+      List.exists(predicate, containers);
     };
 
     switch (tree) {
-    | Split(direction, children) =>
+    | Split(direction, containers) =>
       Split(
         direction,
         List.map(
-          rotate(target, func),
-          findSplit(children) ? func(children) : children,
+          container =>
+            {...container, content: rotate(target, func, container.content)},
+          findSplit(containers) ? func(containers) : containers,
         ),
       )
     | Window(_) as window => window
@@ -116,14 +119,18 @@ module Internal = {
   };
 };
 
-let initial = Split(`Vertical, [Empty]);
+let initial = Empty;
 
 let windows = tree => {
   let rec traverse = (node, acc) => {
     switch (node) {
-    | Split(_, children) =>
-      List.fold_left((acc, child) => traverse(child, acc), acc, children)
-    | Window({content, _}) => [content, ...acc]
+    | Split(_, containers) =>
+      List.fold_left(
+        (acc, container) => traverse(container.content, acc),
+        acc,
+        containers,
+      )
+    | Window(id) => [id, ...acc]
     | Empty => acc
     };
   };
@@ -131,107 +138,153 @@ let windows = tree => {
   traverse(tree, []);
 };
 
-let addWindow = (~target=None, ~position, direction, content, tree) => {
-  let newWindow = Window({weight: 1., content});
-
-  let rec f = (targetId, parent, split) => {
-    switch (split) {
-    | Split(direction, children) => [
-        Split(
-          direction,
-          List.concat(List.map(f(targetId, Some(split)), children)),
-        ),
-      ]
-    | Window({content, _}) as window =>
-      if (content == targetId) {
-        let children =
-          switch (position) {
-          | `Before => [newWindow, window]
-          | `After => [window, newWindow]
-          };
-
-        switch (parent) {
-        | Some(Split(dir, _)) =>
-          if (dir == direction) {
-            children;
-          } else {
-            [Split(direction, children)];
-          }
-        | _ => children
-        };
-      } else {
-        [window];
-      }
-    | Empty => [newWindow]
-    };
-  };
-
+let addWindow = (~target=None, ~position, direction, id, tree) => {
+  let newContainer = {weight: 1., content: Window(id)};
   switch (target) {
-  | Some(targetId) => f(targetId, None, tree) |> List.hd
+  | Some(targetId) =>
+    let rec traverse = node => {
+      switch (node) {
+      | Split(thisDirection, containers) when thisDirection == direction =>
+        let onMatch = container =>
+          switch (position) {
+          | `Before => [newContainer, container]
+          | `After => [container, newContainer]
+          };
+        Split(thisDirection, traverseContainers(~onMatch, [], containers));
+
+      | Split(thisDirection, containers) =>
+        let onMatch = container =>
+          switch (position) {
+          | `Before => [
+              {
+                weight: container.weight,
+                content:
+                  Split(
+                    direction,
+                    [newContainer, {...container, weight: 1.}],
+                  ),
+              },
+            ]
+          | `After => [
+              {
+                weight: container.weight,
+                content:
+                  Split(
+                    direction,
+                    [{...container, weight: 1.}, newContainer],
+                  ),
+              },
+            ]
+          };
+        Split(thisDirection, traverseContainers(~onMatch, [], containers));
+
+      | Window(id) as window when id == targetId =>
+        switch (position) {
+        | `Before =>
+          Split(direction, [newContainer, {weight: 1., content: window}])
+        | `After =>
+          Split(direction, [{weight: 1., content: window}, newContainer])
+        }
+
+      | Window(_) as window => window
+
+      | Empty => Window(id)
+      };
+    }
+
+    and traverseContainers = (~onMatch, before, after) =>
+      switch (after) {
+      | [] => List.rev(before)
+      | [head, ...rest] =>
+        switch (head) {
+        | {content: Window(id), _} as container when id == targetId =>
+          traverseContainers(~onMatch, onMatch(container) @ before, rest)
+
+        | {content: Split(_) as split, _} as container =>
+          traverseContainers(
+            ~onMatch,
+            [{...container, content: traverse(split)}, ...before],
+            rest,
+          )
+        | container =>
+          traverseContainers(~onMatch, [container, ...before], rest)
+        }
+      };
+
+    traverse(tree);
+
   | None =>
     switch (tree) {
-    | Split(d, children) =>
-      Split(d, List.filter(node => node != Empty, [newWindow, ...children]))
-    | other => other
+    | Split(d, containers) => Split(d, [newContainer, ...containers])
+    | _ => tree
     }
   };
 };
 
 let rec removeWindow = (target, tree) =>
   switch (tree) {
-  | Split(direction, children) =>
-    let newChildren =
-      children
-      |> List.map(child => removeWindow(target, child))
-      |> List.filter(node => node != Empty);
+  | Split(direction, containers) =>
+    let newContainers =
+      containers
+      |> List.map(container =>
+           {...container, content: removeWindow(target, container.content)}
+         )
+      |> List.filter(({content, _}) => content != Empty);
 
-    if (List.length(newChildren) > 0) {
-      Split(direction, newChildren);
-    } else {
+    if (newContainers == []) {
       Empty;
+    } else {
+      Split(direction, newContainers);
     };
-  | Window({content, _}) when content == target => Empty
-  | Window(_) as window => window
-  | Empty => Empty
+  | Window(id) when id == target => Empty
+  | node => node
   };
 
 let rec layout = (x, y, width, height, tree) => {
+  // Console.log(
+  //   show((fmt, id) => Format.pp_print_int(fmt, Obj.magic(id)), tree),
+  // );
   switch (tree) {
-  | Split(direction, children) =>
-    let startX = x;
-    let startY = y;
-    let count = max(List.length(children), 1);
-    let individualWidth = width / count;
-    let individualHeight = height / count;
+  | Split(direction, containers) =>
+    let totalWeight =
+      containers
+      |> List.map(container => container.weight)
+      |> List.fold_left((+.), 0.)
+      |> max(1.);
 
-    let result =
+    (
       switch (direction) {
       | `Horizontal =>
-        List.mapi(
-          i =>
-            layout(
-              startX,
-              startY + individualHeight * i,
-              width,
-              individualHeight,
-            ),
-          children,
-        )
-      | `Vertical =>
-        List.mapi(
-          i =>
-            layout(
-              startX + individualWidth * i,
-              startY,
-              individualWidth,
-              height,
-            ),
-          children,
-        )
-      };
+        let unitHeight = float(height) /. totalWeight;
+        List.fold_left(
+          ((y, acc), container) => {
+            let height = int_of_float(unitHeight *. container.weight);
+            let windows = layout(x, y, width, height, container.content);
+            (y + height, windows @ acc);
+          },
+          (y, []),
+          containers,
+        );
 
-    List.concat(result);
-  | Window({content, _}) => [{content, x, y, width, height}]
+      | `Vertical =>
+        let unitWidth = float(width) /. totalWeight;
+        List.fold_left(
+          ((x, acc), container) => {
+            let width = int_of_float(unitWidth *. container.weight);
+            let windows = layout(x, y, width, height, container.content);
+            (x + width, windows @ acc);
+          },
+          (x, []),
+          containers,
+        );
+      }
+    )
+    |> snd
+    |> List.rev;
+
+  | Window(id) =>
+    // Printf.printf("%n: %n, %n, %n, %n\n%!", Obj.magic(id), x, y, width, height);
+    [{id, x, y, width, height}]
   | Empty => []
   };
 };
@@ -282,3 +335,4 @@ let rotateBackward = (target, tree) => {
 
   Internal.rotate(target, f, tree);
 };
+

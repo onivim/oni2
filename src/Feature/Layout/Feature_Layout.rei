@@ -5,17 +5,18 @@ type direction =
   | Right;
 
 // definition only used for tests
-type t('content) =
-  | Split([ | `Horizontal | `Vertical], list(t('content)))
-  | Window({
-      weight: float,
-      content: 'content,
-    })
-  | Empty;
+type t('id) =
+  | Split([ | `Horizontal | `Vertical], list(container('id)))
+  | Window('id)
+  | Empty
+and container('id) = {
+  weight: float,
+  content: t('id),
+};
 
 [@deriving show]
-type sizedWindow('content) = {
-  content: 'content,
+type sizedWindow('id) = {
+  id: 'id,
   x: int,
   y: int,
   width: int,
@@ -23,32 +24,33 @@ type sizedWindow('content) = {
 };
 
 module Internal: {
-  let move:
-    ('content, int, int, list(sizedWindow('content))) => option('content); // only used for tests
+  let move: ('id, int, int, list(sizedWindow('id))) => option('id); // only used for tests
 };
 
-let initial: t('content);
+let initial: t('id);
 
-let windows: t('content) => list('content);
+let windows: t('id) => list('id);
 let addWindow:
   (
-    ~target: option('content)=?,
+    ~target: option('id)=?,
     ~position: [ | `Before | `After],
     [ | `Horizontal | `Vertical],
-    'content,
-    t('content)
+    'id,
+    t('id)
   ) =>
-  t('content);
-let removeWindow: ('content, t('content)) => t('content);
+  t('id);
+let removeWindow: ('id, t('id)) => t('id);
 
-let layout:
-  (int, int, int, int, t('content)) => list(sizedWindow('content));
+let layout: (int, int, int, int, t('id)) => list(sizedWindow('id));
 
-let move: (direction, 'content, t('content)) => 'content;
-let moveLeft: ('content, t('content)) => 'content;
-let moveRight: ('content, t('content)) => 'content;
-let moveUp: ('content, t('content)) => 'content;
-let moveDown: ('content, t('content)) => 'content;
+let move: (direction, 'id, t('id)) => 'id;
+let moveLeft: ('id, t('id)) => 'id;
+let moveRight: ('id, t('id)) => 'id;
+let moveUp: ('id, t('id)) => 'id;
+let moveDown: ('id, t('id)) => 'id;
+
+let rotateForward: ('id, t('id)) => t('id);
+let rotateBackward: ('id, t('id)) => t('id);
 
 let rotateForward: ('content, t('content)) => t('content);
 let rotateBackward: ('content, t('content)) => t('content);
