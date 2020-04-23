@@ -9,6 +9,20 @@ open Oni_Core.Utility;
 module Time = Revery_Core.Time;
 module Log = (val Log.withNamespace("Oni2.Syntax.TextmateTokenizerJob"));
 
+module Internal = {
+  let hexToColorCache = Hashtbl.create(128);
+
+  let hexToColor = (hex: string) => {
+    switch (Hashtbl.find_opt(hexToColorCache, hex)) {
+    | None =>
+      let color = Revery.Color.hex(hex);
+      Hashtbl.add(hexToColorCache, hex, color);
+      color;
+    | Some(color) => color
+    };
+  };
+};
+
 // open Textmate;
 
 type pendingWork = {
@@ -101,18 +115,6 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
   Job.map(f, v);
 };
 
-let _hexToColor = Hashtbl.create(128);
-
-let hexToColor = (hex: string) => {
-  switch (Hashtbl.find_opt(_hexToColor, hex)) {
-  | None =>
-    let color = Revery.Color.hex(hex);
-    Hashtbl.add(_hexToColor, hex, color);
-    color;
-  | Some(color) => color
-  };
-};
-
 exception NoWhitespaceException;
 
 let doWork = (pending: pendingWork, completed: completedWork) => {
@@ -142,25 +144,13 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
         line,
       );
 
-    let isWhitespaceOnly = (startIndex, endIndex) =>
-      try(
-        {
-          for (idx in startIndex to endIndex - 1) {
-            if (!StringEx.isSpace(line.[idx])) {
-              raise(NoWhitespaceException);
-            };
-          };
-          true;
-        }
-      ) {
-      | NoWhitespaceException => false
-      };
+    let isWhitespaceOnly = (startIndex, endIndex) => StringEx.forAll(~start=startIndex, ~stop=endIndex, 
+      ~f=StringEx.isSpace,
+      line);
 
     let tokens =
       tokens
-      |> List.filter(({position, length, _}: Textmate.Token.t) => {
-           !isWhitespaceOnly(position, position + length)
-         })
+      |> List.filter(({position, length, _}: Textmate.Token.t) => !isWhitespaceOnly(position, position+length))
       |> List.map(token => {
            let {position, scopes, _}: Textmate.Token.t = token;
            let combinedScopes = scopes |> String.concat(" ") |> String.trim;
@@ -170,8 +160,8 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
 
            ColorizedToken.create(
              ~index=position,
-             ~backgroundColor=hexToColor(resolvedColor.background),
-             ~foregroundColor=hexToColor(resolvedColor.foreground),
+             ~backgroundColor=Internal.hexToColor(resolvedColor.background),
+             ~foregroundColor=Internal.hexToColor(resolvedColor.foreground),
              ~syntaxScope=SyntaxScope.ofScopes(scopes),
              (),
            );
