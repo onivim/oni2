@@ -1,4 +1,4 @@
-let create = (~initialSize, f) => {
+let memoize = (~initialSize, f) => {
   let cache = Hashtbl.create(initialSize);
 
   input =>

@@ -1,1 +1,1 @@
-let create: (~initialSize: int, 'a => 'b, 'a) => 'b;
+let memoize: (~initialSize: int, 'a => 'b, 'a) => 'b;
