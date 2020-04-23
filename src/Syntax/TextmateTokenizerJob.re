@@ -144,13 +144,19 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
         line,
       );
 
-    let isWhitespaceOnly = (startIndex, endIndex) => StringEx.forAll(~start=startIndex, ~stop=endIndex, 
-      ~f=StringEx.isSpace,
-      line);
+    let isWhitespaceOnly = (startIndex, endIndex) =>
+      StringEx.forAll(
+        ~start=startIndex,
+        ~stop=endIndex,
+        ~f=StringEx.isSpace,
+        line,
+      );
 
     let tokens =
       tokens
-      |> List.filter(({position, length, _}: Textmate.Token.t) => !isWhitespaceOnly(position, position+length))
+      |> List.filter(({position, length, _}: Textmate.Token.t) =>
+           !isWhitespaceOnly(position, position + length)
+         )
       |> List.map(token => {
            let {position, scopes, _}: Textmate.Token.t = token;
            let combinedScopes = scopes |> String.concat(" ") |> String.trim;

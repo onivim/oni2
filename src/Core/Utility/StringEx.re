@@ -23,22 +23,24 @@ let explode = str =>
 
 exception NoMatchException;
 
-/** 
+/**
   [forAll(~start, ~stop, ~f, str)] validates a predicate [f] for each character, from [start] (inclusive) to [stop] (exclusive)
 
   Returns [true] if predicate [f(c)] returns [true] from all characters from [start] to [stop], [false] otherwise.
 */
 let forAll = (~start=?, ~stop=?, ~f, str) => {
-  let start = switch(start) {
-  | None => 0
-  | Some(v) => v
-  };
+  let start =
+    switch (start) {
+    | None => 0
+    | Some(v) => v
+    };
 
-  let stop = switch(stop) {
-  | None => String.length(str)
-  | Some(v) => v;
-  };
-  
+  let stop =
+    switch (stop) {
+    | None => String.length(str)
+    | Some(v) => v
+    };
+
   let rec loop = i =>
     if (i >= stop) {
       true;
