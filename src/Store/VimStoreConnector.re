@@ -433,11 +433,12 @@ let start =
       |> Selectors.getActiveEditor
       |> Option.map((editor: Editor.t) => {
            let {bufferId, cursors, _}: Editor.t = editor;
-           
-           let primaryVimCursor = switch(Editor.getVimCursors(editor)) {
-           | [hd, ..._] => Some(hd)
-           | [] => None;
-           };
+
+           let primaryVimCursor =
+             switch (Editor.getVimCursors(editor)) {
+             | [hd, ..._] => Some(hd)
+             | [] => None
+             };
 
            let syntaxScope =
              state
@@ -448,13 +449,13 @@ let start =
                   // TODO: Reconcile byte <-> index here
                   primaryVimCursor
                   |> Option.map((cursor: Vim.Cursor.t) => {
-                  Feature_Syntax.getSyntaxScope(
-                    ~bufferId,
-                    ~line=cursor.line,
-                    ~bytePosition=Index.toZeroBased(cursor.column),
-                    state.syntaxHighlights,
-                  )
-                  });
+                       Feature_Syntax.getSyntaxScope(
+                         ~bufferId,
+                         ~line=cursor.line,
+                         ~bytePosition=Index.toZeroBased(cursor.column),
+                         state.syntaxHighlights,
+                       )
+                     });
                 })
              |> Option.value(~default=Core.SyntaxScope.none);
 
@@ -645,6 +646,15 @@ let start =
     && !String.equal(key, "<A-C->")
     && !String.equal(key, "<SHIFT>")
     && !String.equal(key, "<S-C->");
+  };
+
+  let commandEffect = cmd => {
+    Isolinear.Effect.create(~name="vim.command", () => {
+      // TODO: Hook up effect handler
+      ignore(
+        Vim.command(cmd): (Vim.Context.t, list(Vim.Effect.t)),
+      )
+    });
   };
 
   let inputEffect = key =>
@@ -959,6 +969,7 @@ let start =
     | Command("editor.action.outdentLines") => (state, outdentEffect)
     | Command("vim.esc") => (state, escapeEffect)
     | Command("vim.tutor") => (state, openTutorEffect)
+    | VimExecuteCommand(cmd) => (state, commandEffect(cmd))
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>

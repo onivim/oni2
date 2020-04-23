@@ -28,7 +28,7 @@ runTestWithInput(
   );
 
   // Create a buffer
-  Vim.command("new test.oni-dev") |> ignore;
+  dispatch(Actions.OpenFileByPath("test.oni-dev", None, None));
 
   // Wait for the oni-dev filetype
   wait(

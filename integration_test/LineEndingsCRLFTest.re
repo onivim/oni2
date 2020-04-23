@@ -24,7 +24,7 @@ runTest(~name="LineEndingsCRLFTest", (dispatch, wait, _runEffects) => {
   });
 
   // Switch line endings
-  Vim.command("set ff=unix") |> ignore;
+  dispatch(Actions.VimExecuteCommand("set ff=unix"));
 
   // Verify buffer now has LF line endings...
   wait(
