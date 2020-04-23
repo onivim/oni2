@@ -10,17 +10,7 @@ module Time = Revery_Core.Time;
 module Log = (val Log.withNamespace("Oni2.Syntax.TextmateTokenizerJob"));
 
 module Internal = {
-  let hexToColorCache = Hashtbl.create(128);
-
-  let hexToColor = (hex: string) => {
-    switch (Hashtbl.find_opt(hexToColorCache, hex)) {
-    | None =>
-      let color = Revery.Color.hex(hex);
-      Hashtbl.add(hexToColorCache, hex, color);
-      color;
-    | Some(color) => color
-    };
-  };
+  let hexToColor = Utility.Cache.create(~initialSize=128, Revery.Color.hex);
 };
 
 // open Textmate;
