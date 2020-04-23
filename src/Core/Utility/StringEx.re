@@ -28,12 +28,7 @@ exception NoMatchException;
 
   Returns [true] if predicate [f(c)] returns [true] from all characters from [start] to [stop], [false] otherwise.
 */
-let forAll = (~start=?, ~stop=?, ~f, str) => {
-  let start =
-    switch (start) {
-    | None => 0
-    | Some(v) => v
-    };
+let forAll = (~start=0, ~stop=?, ~f, str) => {
 
   let stop =
     switch (stop) {
