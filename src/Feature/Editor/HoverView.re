@@ -13,7 +13,6 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 module Constants = {
   let padding = 8;
-  let innerPadding = 1;
 };
 
 module Styles = {
@@ -51,8 +50,8 @@ module Styles = {
     Style.width(width),
     Style.height(height),
     flexDirection(`Column),
-    alignItems(`Center),
     justifyContent(`Center),
+    padding(Constants.padding),
     border(~color=colors.hoverWidgetBorder, ~width=1),
     backgroundColor(colors.hoverWidgetBackground),
   ];
@@ -84,6 +83,7 @@ let%component hoverItem =
   } else {
     let lines =
       diagnostics
+      |> List.rev
       |> List.map(({message, _}: Diagnostic.t) => {
            let lines = String.split_on_char('\n', message);
 
@@ -128,7 +128,6 @@ let%component hoverItem =
       |> List.map(text =>
            <Text style={Styles.text(~colors, ~editorFont)} text />
          )
-      |> List.rev
       |> React.listToElement;
 
     <View style={Styles.outerPosition(~x, ~y)}>
