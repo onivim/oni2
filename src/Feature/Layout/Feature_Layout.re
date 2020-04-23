@@ -336,3 +336,20 @@ let rotateBackward = (target, tree) => {
   Internal.rotate(target, f, tree);
 };
 
+let rec resizeWindow = (target, factor, tree) => {
+  switch (tree) {
+  | Split(dir, containers) =>
+    Split(dir, List.map(resizeContainer(target, factor), containers))
+  | node => node
+  };
+}
+and resizeContainer = (target, factor) =>
+  fun
+  | {content: Window(id), weight} as container when id == target => {
+      Console.log(weight *. factor);
+      {...container, weight: weight *. factor};
+    }
+  | {content, _} as container => {
+      ...container,
+      content: resizeWindow(target, factor, content),
+    };

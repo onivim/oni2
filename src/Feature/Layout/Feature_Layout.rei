@@ -52,5 +52,4 @@ let moveDown: ('id, t('id)) => 'id;
 let rotateForward: ('id, t('id)) => t('id);
 let rotateBackward: ('id, t('id)) => t('id);
 
-let rotateForward: ('content, t('content)) => t('content);
-let rotateBackward: ('content, t('content)) => t('content);
+let resizeWindow: ('id, float, t('id)) => t('id);
