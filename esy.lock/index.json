@@ -1,5 +1,5 @@
 {
-  "checksum": "e4d8afe5e47a08df2b53f63e29de37b5",
+  "checksum": "103013ec5ae2a8c2c79b1ecc3a9df00d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -131,20 +131,20 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#18aa22d@d41d8cd9",
+        "revery@github:revery-ui/revery#3454487@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#91bad1f@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#18aa22d@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#18aa22d@d41d8cd9",
+    "revery@github:revery-ui/revery#3454487@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#3454487@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#18aa22d",
+      "version": "github:revery-ui/revery#3454487",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#18aa22d" ]
+        "source": [ "github:revery-ui/revery#3454487" ]
       },
       "overrides": [],
       "dependencies": [
@@ -164,18 +164,18 @@
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@glennsl/timber@1.0.0@d41d8cd9",
         "@esy-ocaml/reason@github:facebook/reason#8f71db0@d41d8cd9",
-        "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#34e5991@d41d8cd9"
+        "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#10cab2d@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "resolve@1.16.1@d41d8cd9": {
-      "id": "resolve@1.16.1@d41d8cd9",
+    "resolve@1.17.0@d41d8cd9": {
+      "id": "resolve@1.17.0@d41d8cd9",
       "name": "resolve",
-      "version": "1.16.1",
+      "version": "1.17.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/resolve/-/resolve-1.16.1.tgz#sha1:49fac5d8bacf1fd53f200fa51247ae736175832c"
+          "archive:https://registry.npmjs.org/resolve/-/resolve-1.17.0.tgz#sha1:b25941b54968231cc2d1bb76a79cb7f2c0bf8444"
         ]
       },
       "overrides": [],
@@ -251,7 +251,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "resolve@1.16.1@d41d8cd9" ],
+      "dependencies": [ "resolve@1.17.0@d41d8cd9" ],
       "devDependencies": []
     },
     "rebez@github:jchavarri/rebez#46cbc183@d41d8cd9": {
@@ -1205,7 +1205,7 @@
       "overrides": [],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
-        "revery@github:revery-ui/revery#18aa22d@d41d8cd9",
+        "revery@github:revery-ui/revery#3454487@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
@@ -3472,14 +3472,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#34e5991@d41d8cd9": {
+    "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#10cab2d@d41d8cd9": {
       "id":
-        "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#34e5991@d41d8cd9",
+        "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#10cab2d@d41d8cd9",
       "name": "@brisk/brisk-reconciler",
-      "version": "github:briskml/brisk-reconciler#34e5991",
+      "version": "github:briskml/brisk-reconciler#10cab2d",
       "source": {
         "type": "install",
-        "source": [ "github:briskml/brisk-reconciler#34e5991" ]
+        "source": [ "github:briskml/brisk-reconciler#10cab2d" ]
       },
       "overrides": [],
       "dependencies": [
