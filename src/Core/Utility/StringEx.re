@@ -30,11 +30,7 @@ exception NoMatchException;
 */
 let forAll = (~start=0, ~stop=?, ~f, str) => {
 
-  let stop =
-    switch (stop) {
-    | None => String.length(str)
-    | Some(v) => v
-    };
+  let stop = stop |> Option.value(~default=String.length(str));
 
   let rec loop = i =>
     if (i >= stop) {
