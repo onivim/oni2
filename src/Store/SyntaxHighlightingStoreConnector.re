@@ -175,7 +175,6 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
 
           (
             {...state, syntaxHighlights},
-            Isolinear.Effect.none
             Service_Syntax.Effect.bufferUpdate(
               state.syntaxClient,
               update,

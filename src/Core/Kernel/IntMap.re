@@ -31,7 +31,7 @@ let shift =
     // Shift all items based on delta
     let newMap =
       fold(
-        (key, oldValue, prev) => {
+        (key, oldValue, prev) =>
           if (delta > 0) {
             if (key < startPos) {
               prev;
@@ -43,8 +43,7 @@ let shift =
           } else {
             let originalValue: option('a) = find_opt(key, original);
             update(key + delta, _ => originalValue, prev);
-          };
-        },
+          },
         map, /* map to fold over */
         map /* seed defaults */
       );
