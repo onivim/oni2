@@ -162,10 +162,11 @@ let applyUpdate =
   let startLine = update.startLine |> Index.toZeroBased;
   let endLine = update.endLine |> Index.toZeroBased;
   ArrayEx.replace(
-  ~replacement=updateLines,
-  ~start=startLine,
-  ~stop=endLine,
-  lines);
+    ~replacement=updateLines,
+    ~start=startLine,
+    ~stop=endLine,
+    lines,
+  );
 };
 
 let isIndentationSet = buf => {

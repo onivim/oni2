@@ -29,18 +29,17 @@ let slice = (~lines: array(_), ~start, ~length, ()) => {
   };
 };
 
-let replace = (~replacement, ~start, ~stop, arr) => {
+let replace = (~replacement, ~start, ~stop, arr) =>
   if (Array.length(arr) == 0) {
-    replacement
+    replacement;
   } else if (start >= Array.length(arr)) {
-    Array.concat([arr, replacement])
+    Array.concat([arr, replacement]);
   } else {
     // Get beginning of array
     let prev = slice(~lines=arr, ~start=0, ~length=start, ());
 
-    let post = slice(~lines=arr, ~start=stop, ~length=
-    Array.length(arr) - stop, ());
+    let post =
+      slice(~lines=arr, ~start=stop, ~length=Array.length(arr) - stop, ());
 
     Array.concat([prev, replacement, post]);
-  }
-};
+  };
