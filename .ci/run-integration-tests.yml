@@ -16,4 +16,8 @@ steps:
   - script: esy @integrationtest build
     displayName: 'Integration Tests: build'
   - script: esy @integrationtest run
-    displayName: 'Integration Tests: run'
+    displayName: 'Integration Tests: run (round 1)'
+  - script: esy @integrationtest run
+    displayName: 'Integration Tests: run (round 2)'
+  - script: esy @integrationtest run
+    displayName: 'Integration Tests: run (round 3)'
