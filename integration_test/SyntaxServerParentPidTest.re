@@ -31,8 +31,6 @@ SyntaxServerTest.run(
   // that we control is the parent process.
   ~parentPid=string_of_int(pid),
   ({hasExited, wait, isConnected, _}) => {
-    // TODO: Why doesn't initial connection pass on Windows?
-    // Is it a PID issue, or an issue with waitpid on Windows?
     wait(~name="Connected", isConnected);
 
     // Kill the process...
