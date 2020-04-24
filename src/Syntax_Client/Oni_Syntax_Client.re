@@ -231,9 +231,9 @@ let healthCheck = (v: t) => {
 };
 
 let notifyBufferUpdate =
-    (v: t, bufferUpdate: BufferUpdate.t, lines: array(string), scope) => {
+    (v: t, bufferUpdate: BufferUpdate.t, _lines: array(string), scope) => {
   ClientLog.trace("Sending bufferUpdate notification...");
-  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, lines, scope));
+  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, scope));
 };
 
 let notifyVisibilityChanged = (v: t, visibility) => {

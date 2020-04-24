@@ -118,15 +118,22 @@ let start = (~healthCheck) => {
                 map(State.updateTheme(theme));
                 log("handled theme changed");
               }
-            | BufferUpdate(bufferUpdate, lines, scope) => {
-                map(State.bufferUpdate(~bufferUpdate, ~lines, ~scope));
+            | BufferUpdate((bufferUpdate: Oni_Core.BufferUpdate.t), scope) => {
+                let delta = bufferUpdate.isFull ? "(FULL)" : "(DELTA)";
                 log(
                   Printf.sprintf(
-                    "Received buffer update - %d | %d lines",
+                    "Received buffer update - %d | %d lines %s",
                     bufferUpdate.id,
-                    Array.length(lines),
+                    Array.length(bufferUpdate.lines),
+                    delta,
                   ),
                 );
+                switch (State.bufferUpdate(~bufferUpdate, ~scope, state^)) {
+                | Ok(newState) =>
+                  state := newState;
+                  log("Buffer update successfully applied.");
+                | Error(msg) => log("Buffer update failed: " ++ msg)
+                };
               }
             | VisibleRangesChanged(visibilityUpdate) => {
                 map(State.updateVisibility(visibilityUpdate));

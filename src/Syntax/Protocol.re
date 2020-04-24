@@ -48,11 +48,7 @@ module ClientToServer = {
     | Initialize([@opaque] Ext.LanguageInfo.t, Setup.t)
     | BufferEnter(int, string)
     | BufferLeave(int)
-    | BufferUpdate(
-        [@opaque] Oni_Core.BufferUpdate.t,
-        [@opaque] array(string),
-        string,
-      )
+    | BufferUpdate([@opaque] Oni_Core.BufferUpdate.t, string)
     | UseTreeSitter(bool)
     | ThemeChanged([@opaque] TokenTheme.t)
     | RunHealthCheck
