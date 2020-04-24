@@ -153,7 +153,7 @@ let addWindow = (~target=None, ~position, direction, id, tree) => {
   | Some(targetId) =>
     let rec traverse = node => {
       switch (node) {
-      | Split(d, size, []) => Split(d, size, [newWindow]) // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
+      | Split(d, size, []) => Window(size, id) // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
       | Split(thisDirection, size, children) when thisDirection == direction =>
         let onMatch = child =>
           switch (position) {
@@ -217,6 +217,7 @@ let addWindow = (~target=None, ~position, direction, id, tree) => {
 
   | None =>
     switch (tree) {
+    | Split(d, size, []) => Window(size, id)
     | Split(d, size, children) => Split(d, size, [newWindow, ...children])
     | _ => tree
     }
@@ -296,7 +297,7 @@ let rec layout = (x, y, width, height, tree) => {
     //   width,
     //   height,
     // );
-    [{id, x, y, width, height}];
+    [{id, x, y, width, height}]
   };
 };
 
@@ -372,7 +373,7 @@ let rec resizeWindow = (target, factor, node) => {
 
   | Window(Weight(weight), id) when id == target =>
     // Console.log(weight *. factor);
-    Window(Weight(weight *. factor), id);
+    Window(Weight(weight *. factor), id)
 
   | Window(_) => node
   };
