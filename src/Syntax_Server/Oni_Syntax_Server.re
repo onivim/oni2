@@ -117,24 +117,24 @@ let start = (~healthCheck) => {
           log("handled theme changed");
         }
       | BufferUpdate(bufferUpdate, scope) => {
-        let delta = bufferUpdate.isFull ? "(FULL)" : "(DELTA)";
-        log(
-          Printf.sprintf(
-            "Received buffer update - %d | %d lines %s",
-            bufferUpdate.id,
-            Array.length(bufferUpdate.lines),
-            delta,
-          ),
-        );
-        switch (State.bufferUpdate(~bufferUpdate, ~scope, state^)) {
-        | Ok(newState) =>
-          state := newState;
-          log("Buffer update successfully applied.");
-        | Error(msg) => log("Buffer update failed: " ++ msg)
-        };
+          let delta = bufferUpdate.isFull ? "(FULL)" : "(DELTA)";
+          log(
+            Printf.sprintf(
+              "Received buffer update - %d | %d lines %s",
+              bufferUpdate.id,
+              Array.length(bufferUpdate.lines),
+              delta,
+            ),
+          );
+          switch (State.bufferUpdate(~bufferUpdate, ~scope, state^)) {
+          | Ok(newState) =>
+            state := newState;
+            log("Buffer update successfully applied.");
+          | Error(msg) => log("Buffer update failed: " ++ msg)
+          };
 
-        restartTimer();
-      }
+          restartTimer();
+        }
       | VisibleRangesChanged(visibilityUpdate) => {
           updateAndRestartTimer(State.updateVisibility(visibilityUpdate));
         }
