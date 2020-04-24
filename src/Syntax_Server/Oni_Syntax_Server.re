@@ -132,7 +132,7 @@ let start = (~healthCheck) => {
                 | Ok(newState) =>
                   state := newState;
                   log("Buffer update successfully applied.");
-                | Error(msg) => log("Buffer update failed: " ++ msg);
+                | Error(msg) => log("Buffer update failed: " ++ msg)
                 };
               }
             | VisibleRangesChanged(visibilityUpdate) => {
