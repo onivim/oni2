@@ -48,7 +48,8 @@ module ClientToServer = {
     | Initialize([@opaque] Ext.LanguageInfo.t, Setup.t)
     | BufferEnter(int, string)
     | BufferLeave(int)
-    | BufferUpdate(
+    | BufferDeltaUpdate([@opaque] Oni_Core.BufferUpdate.t)
+    | BufferFullUpdate(
         [@opaque] Oni_Core.BufferUpdate.t,
         [@opaque] array(string),
         string,

@@ -118,7 +118,8 @@ let start = (~healthCheck) => {
                 map(State.updateTheme(theme));
                 log("handled theme changed");
               }
-            | BufferUpdate(bufferUpdate, lines, scope) => {
+            | BufferDeltaUpdate(_) => log("delta update")
+            | BufferFullUpdate(bufferUpdate, lines, scope) => {
                 map(State.bufferUpdate(~bufferUpdate, ~lines, ~scope));
                 log(
                   Printf.sprintf(
