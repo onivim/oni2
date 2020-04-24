@@ -161,25 +161,11 @@ let applyUpdate =
   let updateLines = update.lines |> Array.map(BufferLine.make(~indentation));
   let startLine = update.startLine |> Index.toZeroBased;
   let endLine = update.endLine |> Index.toZeroBased;
-  if (Array.length(lines) == 0) {
-    updateLines;
-  } else if (startLine >= Array.length(lines)) {
-    let ret = Array.concat([lines, updateLines]);
-    ret;
-  } else {
-    let prev = ArrayEx.slice(~lines, ~start=0, ~length=startLine, ());
-    let post =
-      ArrayEx.slice(
-        ~lines,
-        ~start=endLine,
-        ~length=Array.length(lines) - endLine,
-        (),
-      );
-
-    let lines = updateLines;
-
-    Array.concat([prev, lines, post]);
-  };
+  ArrayEx.replace(
+  ~replacement=updateLines,
+  ~start=startLine,
+  ~stop=endLine,
+  lines);
 };
 
 let isIndentationSet = buf => {
