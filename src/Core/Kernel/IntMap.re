@@ -24,7 +24,7 @@ let shift =
       ~delta: int,
       map,
     ) =>
-  if (endPos - startPos == delta) {
+  if (delta == 0) {
     map;
   } else {
     let original: t('a) = map;

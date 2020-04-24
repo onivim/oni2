@@ -127,7 +127,7 @@ let ignore = (~bufferId, bufferHighlights) => {
 };
 
 // When there is a buffer update, shift the lines to match
-let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) =>
+let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) => {
   if (BufferMap.mem(bufferUpdate.id, bufferHighlights.ignoredBuffers)) {
     bufferHighlights;
   } else {
@@ -153,6 +153,7 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) =>
       );
     {...bufferHighlights, highlights};
   };
+};
 
 let update = (highlights: t, msg) =>
   switch (msg) {
