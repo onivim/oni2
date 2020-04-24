@@ -141,16 +141,19 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) =>
         bufferUpdate.id,
         fun
         | None => None
-        | Some(lineMap) =>
-          Some(
-            LineMap.shift(
-              ~default=v => v,
-              ~startPos=bufferUpdate.startLine |> Index.toZeroBased,
-              ~endPos=bufferUpdate.endLine |> Index.toZeroBased,
-              ~delta=Array.length(bufferUpdate.lines),
-              lineMap,
-            ),
-          ),
+        | Some(lineMap) => {
+            let startPos = bufferUpdate.startLine |> Index.toZeroBased;
+            let endPos = bufferUpdate.endLine |> Index.toZeroBased;
+            Some(
+              LineMap.shift(
+                ~default=v => v,
+                ~startPos,
+                ~endPos,
+                ~delta=Array.length(bufferUpdate.lines) - (endPos - startPos),
+                lineMap,
+              ),
+            );
+          },
         bufferHighlights.highlights,
       );
     {...bufferHighlights, highlights};
