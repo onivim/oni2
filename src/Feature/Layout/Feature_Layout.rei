@@ -5,14 +5,15 @@ type direction =
   | Right;
 
 // definition only used for tests
+[@deriving show({with_path: false})]
+type size =
+  | Weight(float);
+
+// definition only used for tests
+[@deriving show({with_path: false})]
 type t('id) =
-  | Split([ | `Horizontal | `Vertical], list(container('id)))
-  | Window('id)
-  | Empty
-and container('id) = {
-  weight: float,
-  content: t('id),
-};
+  | Split([ | `Horizontal | `Vertical], size, list(t('id)))
+  | Window(size, 'id);
 
 [@deriving show]
 type sizedWindow('id) = {
