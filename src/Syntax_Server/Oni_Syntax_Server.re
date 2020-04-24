@@ -69,10 +69,13 @@ let start = (~healthCheck) => {
     Luv.Timer.start(~repeat=1, timer, 0, () => {doWork()}) |> Result.get_ok;
   };
 
+  let restartTimer = () => {
+    ignore(Luv.Timer.again(timer): result(unit, Luv.Error.t));
+  };
+
   let updateAndRestartTimer = f => {
     state := f(state^);
-    let _: result(unit, Luv.Error.t) = Luv.Timer.again(timer);
-    ();
+    restartTimer();
   };
 
   startWork();
@@ -113,18 +116,25 @@ let start = (~healthCheck) => {
           updateAndRestartTimer(State.updateTheme(theme));
           log("handled theme changed");
         }
-      | BufferUpdate(bufferUpdate, lines, scope) => {
-          updateAndRestartTimer(
-            State.bufferUpdate(~bufferUpdate, ~lines, ~scope),
-          );
-          log(
-            Printf.sprintf(
-              "Received buffer update - %d | %d lines",
-              bufferUpdate.id,
-              Array.length(lines),
-            ),
-          );
-        }
+      | BufferUpdate(bufferUpdate, scope) => {
+        let delta = bufferUpdate.isFull ? "(FULL)" : "(DELTA)";
+        log(
+          Printf.sprintf(
+            "Received buffer update - %d | %d lines %s",
+            bufferUpdate.id,
+            Array.length(bufferUpdate.lines),
+            delta,
+          ),
+        );
+        switch (State.bufferUpdate(~bufferUpdate, ~scope, state^)) {
+        | Ok(newState) =>
+          state := newState;
+          log("Buffer update successfully applied.");
+        | Error(msg) => log("Buffer update failed: " ++ msg)
+        };
+
+        restartTimer();
+      }
       | VisibleRangesChanged(visibilityUpdate) => {
           updateAndRestartTimer(State.updateVisibility(visibilityUpdate));
         }
