@@ -171,6 +171,38 @@ module Oni = {
         "vim.tutor",
         Command("vim.tutor"),
       );
+
+    let decreaseHorizontalWindowSize =
+      register(
+        ~category="View",
+        ~title="Decrease Horizontal Window Size",
+        "vim.decreaseHorizontalWindowSize",
+        Command("vim.decreaseHorizontalWindowSize"),
+      );
+
+    let increaseHorizontalWindowSize =
+      register(
+        ~category="View",
+        ~title="Increase Horizontal Window Size",
+        "vim.increaseHorizontalWindowSize",
+        Command("vim.increaseHorizontalWindowSize"),
+      );
+
+    let decreaseVerticalWindowSize =
+      register(
+        ~category="View",
+        ~title="Decrease Vertical Window Size",
+        "vim.decreaseVerticalWindowSize",
+        Command("vim.decreaseVerticalWindowSize"),
+      );
+
+    let increaseVerticalWindowSize =
+      register(
+        ~category="View",
+        ~title="Increase Vertical Window Size",
+        "vim.increaseVerticalWindowSize",
+        Command("vim.increaseVerticalWindowSize"),
+      );
   };
 
   module Workbench = {

@@ -28,6 +28,21 @@ let start = () => {
       )
     });
 
+  let resize = (axis, factor, state: State.t) =>
+    switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+    | Some((editorGroup: EditorGroup.t)) => {
+        ...state,
+        layout:
+          Feature_Layout.resizeWindow(
+            axis,
+            editorGroup.editorGroupId,
+            factor,
+            state.layout,
+          ),
+      }
+    | None => state
+    };
+
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | AddSplit(direction, split) => {
@@ -97,44 +112,22 @@ let start = () => {
       }
 
     | Command("workbench.action.decreaseViewSize") =>
-      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
-      | Some((editorGroup: EditorGroup.t)) => {
-          ...s,
-          layout:
-            s.layout
-            |> Feature_Layout.resizeWindow(
-                 `Vertical,
-                 editorGroup.editorGroupId,
-                 0.95,
-               )
-            |> Feature_Layout.resizeWindow(
-                 `Horizontal,
-                 editorGroup.editorGroupId,
-                 0.95,
-               ),
-        }
-      | None => s
-      }
+      s |> resize(`Horizontal, 0.95) |> resize(`Vertical, 0.95)
 
     | Command("workbench.action.increaseViewSize") =>
-      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
-      | Some((editorGroup: EditorGroup.t)) => {
-          ...s,
-          layout:
-            s.layout
-            |> Feature_Layout.resizeWindow(
-                 `Horizontal,
-                 editorGroup.editorGroupId,
-                 1.05,
-               )
-            |> Feature_Layout.resizeWindow(
-                 `Vertical,
-                 editorGroup.editorGroupId,
-                 1.05,
-               ),
-        }
-      | None => s
-      }
+      s |> resize(`Horizontal, 1.05) |> resize(`Vertical, 1.05)
+
+    | Command("vim.decreaseHorizontalWindowSize") =>
+      s |> resize(`Horizontal, 0.95)
+
+    | Command("vim.increaseHorizontalWindowSize") =>
+      s |> resize(`Horizontal, 1.05)
+
+    | Command("vim.decreaseVerticalWindowSize") =>
+      s |> resize(`Vertical, 0.95)
+
+    | Command("vim.increaseVerticalWindowSize") =>
+      s |> resize(`Vertical, 1.05)
 
     | _ => s
     };
