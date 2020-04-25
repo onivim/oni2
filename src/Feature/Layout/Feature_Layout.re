@@ -370,41 +370,41 @@ let rotateBackward = (target, tree) => {
 // };
 
 let resizeWindow = (direction, target, factor, node) => {
-  let rec resizeTarget =
+  let rec traverse = (~parentDirection=?) =>
     fun
-    | Split(dir, size, children) =>
-      Split(
-        dir,
-        size,
-        List.map(dir == direction ? resizeParent : resizeTarget, children),
-      )
+    | Split(dir, Weight(weight) as size, children) => {
+        let (result, children) =
+          List.fold_left(
+            ((accResult, accChildren), child) => {
+              let (result, node) = traverse(~parentDirection=dir, child);
+              (
+                result == `NotFound ? accResult : result,
+                [node, ...accChildren],
+              );
+            },
+            (`NotFound, []),
+            List.rev(children),
+          );
 
-    | Window(Weight(weight), id) when id == target => {
-        Console.log("-- resizeTarget");
-        Window(Weight(weight *. factor), id);
+        switch (result, parentDirection) {
+        | (`NotAdjusted, Some(parentDirection))
+            when parentDirection != direction => (
+            `Adjusted,
+            Split(dir, Weight(weight *. factor), children),
+          )
+
+        | _ => (result, Split(dir, size, children))
+        };
       }
 
-    | Window(_) as node => node
+    | Window(Weight(weight), id) as window when id == target =>
+      if (parentDirection == Some(direction)) {
+        (`NotAdjusted, window);
+      } else {
+        (`Adjusted, Window(Weight(weight *. factor), id));
+      }
 
-  and resizeParent =
-    fun
-    | Split(dir, size, children) when dir == direction
-        && List.exists(
-            fun
-            | Window(_, id) when id == target => true
-            | _ => false,
-            children,
-          ) =>
-        switch (size) {
-        | Weight(weight) =>
-          Console.log("-- resizeParent");
-          Split(dir, Weight(weight *. factor), children);
-        }
+    | Window(_) as window => (`NotFound, window);
 
-    | Split(_) as node => 
-        resizeTarget(node)
-
-    | Window(_) as node => node;
-
-  resizeTarget(node);
+  traverse(node) |> snd;
 };
