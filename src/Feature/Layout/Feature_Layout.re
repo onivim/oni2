@@ -153,7 +153,7 @@ let addWindow = (~target=None, ~position, direction, id, tree) => {
   | Some(targetId) =>
     let rec traverse = node => {
       switch (node) {
-      | Split(d, size, []) => Window(size, id) // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
+      | Split(_, size, []) => Window(size, id) // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
       | Split(thisDirection, size, children) when thisDirection == direction =>
         let onMatch = child =>
           switch (position) {
@@ -276,7 +276,7 @@ let rec layout = (x, y, width, height, tree) => {
             switch (nodeSize(child)) {
             | Weight(weight) =>
               let width = int_of_float(unitWidth *. weight);
-              Printf.printf("%f *. %f = %n\n%!", unitWidth, weight, width);
+              // Printf.printf("%f *. %f = %n\n%!", unitWidth, weight, width);
               let windows = layout(x, y, width, height, child);
               (x + width, windows @ acc);
             }
@@ -349,33 +349,62 @@ let rotateBackward = (target, tree) => {
   Internal.rotate(target, f, tree);
 };
 
-//let pathTo = (target, tree) = {
-//  let rec loop = path => fun
-//    | Split(dir, children) as split =>
-//     loopContainers([split, ], children)
-//    | node => node
-//    }
-//  and loopContainers = path =>
-//    fun
-//    | [{content: Window(id), weight} as child], ...rest] when id == target => {
-//        {...child, weight: weight *. factor};
-//      }
-//    | {content, _} as child => {
-//        ...child,
-//        content: resizeWindow(target, factor, content),
-//      };
-//
-//}
-//
-let rec resizeWindow = (target, factor, node) => {
-  switch (node) {
-  | Split(dir, size, children) =>
-    Split(dir, size, List.map(resizeWindow(target, factor), children))
+// let pathTo = (target, tree) => {
+//   let rec traverse = path =>
+//     fun
+//     | Split(_, _, children) as split =>
+//       traverseChildren([split, ...path], children)
+//     | Window(_, id) as window when id == target => Some([window, ...path])
+//     | Window(_) => None
 
-  | Window(Weight(weight), id) when id == target =>
-    // Console.log(weight *. factor);
-    Window(Weight(weight *. factor), id)
+//   and traverseChildren = path =>
+//     fun
+//     | [] => None
+//     | [node, ...rest] =>
+//       switch (traverse(path, node)) {
+//       | None => traverseChildren(path, rest)
+//       | path => path
+//       };
 
-  | Window(_) => node
-  };
+//   traverse(tree);
+// };
+
+let resizeWindow = (direction, target, factor, node) => {
+  let rec resizeTarget =
+    fun
+    | Split(dir, size, children) =>
+      Split(
+        dir,
+        size,
+        List.map(dir == direction ? resizeParent : resizeTarget, children),
+      )
+
+    | Window(Weight(weight), id) when id == target => {
+        Console.log("-- resizeTarget");
+        Window(Weight(weight *. factor), id);
+      }
+
+    | Window(_) as node => node
+
+  and resizeParent =
+    fun
+    | Split(dir, size, children) when dir == direction
+        && List.exists(
+            fun
+            | Window(_, id) when id == target => true
+            | _ => false,
+            children,
+          ) =>
+        switch (size) {
+        | Weight(weight) =>
+          Console.log("-- resizeParent");
+          Split(dir, Weight(weight *. factor), children);
+        }
+
+    | Split(_) as node => 
+        resizeTarget(node)
+
+    | Window(_) as node => node;
+
+  resizeTarget(node);
 };
