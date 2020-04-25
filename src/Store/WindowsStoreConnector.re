@@ -96,6 +96,46 @@ let start = () => {
       | None => s
       }
 
+    | Command("workbench.action.decreaseViewSize") =>
+      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...s,
+          layout:
+            s.layout
+            |> Feature_Layout.resizeWindow(
+                 `Vertical,
+                 editorGroup.editorGroupId,
+                 0.95,
+               )
+            |> Feature_Layout.resizeWindow(
+                 `Horizontal,
+                 editorGroup.editorGroupId,
+                 0.95,
+               ),
+        }
+      | None => s
+      }
+
+    | Command("workbench.action.increaseViewSize") =>
+      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...s,
+          layout:
+            s.layout
+            |> Feature_Layout.resizeWindow(
+                 `Horizontal,
+                 editorGroup.editorGroupId,
+                 1.05,
+               )
+            |> Feature_Layout.resizeWindow(
+                 `Vertical,
+                 editorGroup.editorGroupId,
+                 1.05,
+               ),
+        }
+      | None => s
+      }
+
     | _ => s
     };
 

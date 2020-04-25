@@ -361,6 +361,22 @@ module Workbench = {
         Command("workbench.action.zoomReset"),
       );
 
+    let decreaseViewSize =
+      register(
+        ~category="View",
+        ~title="Decrease Currrent Window/View Size",
+        "workbench.action.decreaseViewSize",
+        Command("workbench.action.decreaseViewSize"),
+      );
+
+    let increaseViewSize =
+      register(
+        ~category="View",
+        ~title="Increase Currrent Window/View Size",
+        "workbench.action.increaseViewSize",
+        Command("workbench.action.increaseViewSize"),
+      );
+
     module Files = {
       let save =
         register("workbench.action.save", Command("workbench.action.save"));
