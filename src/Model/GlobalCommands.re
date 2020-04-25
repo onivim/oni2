@@ -409,6 +409,14 @@ module Workbench = {
         Command("workbench.action.increaseViewSize"),
       );
 
+    let evenEditorWidths =
+      register(
+        ~category="View",
+        ~title="Reset Window Sizes",
+        "workbench.action.evenEditorWidths",
+        Command("workbench.action.evenEditorWidths"),
+      );
+
     module Files = {
       let save =
         register("workbench.action.save", Command("workbench.action.save"));

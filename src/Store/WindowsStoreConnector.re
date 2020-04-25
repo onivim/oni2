@@ -129,6 +129,11 @@ let start = () => {
     | Command("vim.increaseVerticalWindowSize") =>
       s |> resize(`Vertical, 1.05)
 
+    | Command("workbench.action.evenEditorWidths") => {
+        ...s,
+        layout: Feature_Layout.resetWeights(s.layout),
+      }
+
     | _ => s
     };
 
