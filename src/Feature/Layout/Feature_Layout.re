@@ -217,9 +217,10 @@ let addWindow = (~target=None, ~position, direction, id, tree) => {
 
   | None =>
     switch (tree) {
-    | Split(d, size, []) => Window(size, id)
+    | Split(_, size, []) => Window(size, id)
     | Split(d, size, children) => Split(d, size, [newWindow, ...children])
-    | _ => tree
+    | Window(size, id) =>
+      Split(direction, size, [newWindow, Window(Weight(1.), id)])
     }
   };
 };
