@@ -396,7 +396,7 @@ module Workbench = {
     let decreaseViewSize =
       register(
         ~category="View",
-        ~title="Decrease Currrent Window/View Size",
+        ~title="Decrease Current Window/View Size",
         "workbench.action.decreaseViewSize",
         Command("workbench.action.decreaseViewSize"),
       );
@@ -404,7 +404,7 @@ module Workbench = {
     let increaseViewSize =
       register(
         ~category="View",
-        ~title="Increase Currrent Window/View Size",
+        ~title="Increase Current Window/View Size",
         "workbench.action.increaseViewSize",
         Command("workbench.action.increaseViewSize"),
       );
