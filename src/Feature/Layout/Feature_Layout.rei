@@ -55,3 +55,4 @@ let rotateBackward: ('id, t('id)) => t('id);
 
 let resizeWindow:
   ([ | `Horizontal | `Vertical], 'id, float, t('id)) => t('id);
+let resetWeights: t('id) => t('id);

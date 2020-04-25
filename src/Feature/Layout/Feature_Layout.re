@@ -231,7 +231,7 @@ let removeWindow = (target, tree) => {
     | Split(direction, size, children) =>
       switch (List.filter_map(traverse, children)) {
       | [] => None
-      // BUG: Simplification disabled because it doesn't preserve size.
+      // BUG: Collapsing disabled as it doesn't preserve size properly.
       // | [child] => Some(child)
       | newChildren => Some(Split(direction, size, newChildren))
       }
@@ -409,3 +409,9 @@ let resizeWindow = (direction, target, factor, node) => {
 
   traverse(node) |> snd;
 };
+
+let rec resetWeights =
+  fun
+  | Split(direction, Weight(_), children) =>
+    Split(direction, Weight(1.), List.map(resetWeights, children))
+  | Window(_, id) => Window(Weight(1.), id);
