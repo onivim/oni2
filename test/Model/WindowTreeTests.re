@@ -7,9 +7,11 @@ module Layout = Feature_Layout;
 module DSL = {
   open Layout;
 
-  let hsplit = children => Split(`Horizontal, Weight(1.), children);
-  let vsplit = children => Split(`Vertical, Weight(1.), children);
-  let window = id => Window(Weight(1.), id);
+  let hsplit = (~weight=1., children) =>
+    Split(`Horizontal, Weight(weight), children);
+  let vsplit = (~weight=1., children) =>
+    Split(`Vertical, Weight(weight), children);
+  let window = (~weight=1., id) => Window(Weight(weight), id);
 };
 
 include DSL;
@@ -198,6 +200,84 @@ describe("rotateBackward", ({test, _}) => {
 
     expect.equal(
       vsplit([window(4), hsplit([window(2), window(1), window(3)])]),
+      newTree,
+    );
+  });
+});
+
+describe("resizeWindow", ({test, _}) => {
+  test("vsplit  - vresize", ({expect, _}) => {
+    let tree = vsplit([window(1), window(2)]);
+
+    let newTree = Layout.resizeWindow(`Vertical, 2, 5., tree);
+
+    expect.equal(vsplit([window(1), window(2)]), newTree);
+  });
+
+  test("vsplit  - hresize", ({expect, _}) => {
+    let tree = vsplit([window(1), window(2)]);
+
+    let newTree = Layout.resizeWindow(`Horizontal, 2, 5., tree);
+
+    expect.equal(vsplit([window(1), window(~weight=5., 2)]), newTree);
+  });
+
+  test("hsplit  - hresize", ({expect, _}) => {
+    let tree = hsplit([window(1), window(2)]);
+
+    let newTree = Layout.resizeWindow(`Horizontal, 2, 5., tree);
+
+    expect.equal(hsplit([window(1), window(2)]), newTree);
+  });
+
+  test("hsplit  - vresize", ({expect, _}) => {
+    let tree = hsplit([window(1), window(2)]);
+
+    let newTree = Layout.resizeWindow(`Vertical, 2, 5., tree);
+
+    expect.equal(hsplit([window(1), window(~weight=5., 2)]), newTree);
+  });
+
+  test("vsplit+hsplit - hresize", ({expect, _}) => {
+    let tree = vsplit([window(1), hsplit([window(2), window(3)])]);
+
+    let newTree = Layout.resizeWindow(`Horizontal, 2, 5., tree);
+
+    expect.equal(
+      vsplit([window(1), hsplit(~weight=5., [window(2), window(3)])]),
+      newTree,
+    );
+  });
+
+  test("vsplit+hsplit - vresize", ({expect, _}) => {
+    let tree = vsplit([window(1), hsplit([window(2), window(3)])]);
+
+    let newTree = Layout.resizeWindow(`Vertical, 2, 5., tree);
+
+    expect.equal(
+      vsplit([window(1), hsplit([window(~weight=5., 2), window(3)])]),
+      newTree,
+    );
+  });
+
+  test("hsplit+vsplit - hresize", ({expect, _}) => {
+    let tree = hsplit([window(1), vsplit([window(2), window(3)])]);
+
+    let newTree = Layout.resizeWindow(`Horizontal, 2, 5., tree);
+
+    expect.equal(
+      hsplit([window(1), vsplit([window(~weight=5., 2), window(3)])]),
+      newTree,
+    );
+  });
+
+  test("hsplit+vsplit - vresize", ({expect, _}) => {
+    let tree = hsplit([window(1), vsplit([window(2), window(3)])]);
+
+    let newTree = Layout.resizeWindow(`Vertical, 2, 5., tree);
+
+    expect.equal(
+      hsplit([window(1), vsplit(~weight=5., [window(2), window(3)])]),
       newTree,
     );
   });
