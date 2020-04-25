@@ -242,9 +242,6 @@ let removeWindow = (target, tree) => {
 };
 
 let rec layout = (x, y, width, height, tree) => {
-  // Console.log(
-  //   show((fmt, id) => Format.pp_print_int(fmt, Obj.magic(id)), tree),
-  // );
   switch (tree) {
   | Split(direction, _, children) =>
     let totalWeight =
@@ -277,7 +274,6 @@ let rec layout = (x, y, width, height, tree) => {
             switch (nodeSize(child)) {
             | Weight(weight) =>
               let width = int_of_float(unitWidth *. weight);
-              // Printf.printf("%f *. %f = %n\n%!", unitWidth, weight, width);
               let windows = layout(x, y, width, height, child);
               (x + width, windows @ acc);
             }
@@ -290,16 +286,7 @@ let rec layout = (x, y, width, height, tree) => {
     |> snd
     |> List.rev;
 
-  | Window(_, id) =>
-    // Printf.printf(
-    //   "%n: %n, %n, %n, %n\n%!",
-    //   Obj.magic(id),
-    //   x,
-    //   y,
-    //   width,
-    //   height,
-    // );
-    [{id, x, y, width, height}]
+  | Window(_, id) => [{id, x, y, width, height}]
   };
 };
 
@@ -349,26 +336,6 @@ let rotateBackward = (target, tree) => {
 
   Internal.rotate(target, f, tree);
 };
-
-// let pathTo = (target, tree) => {
-//   let rec traverse = path =>
-//     fun
-//     | Split(_, _, children) as split =>
-//       traverseChildren([split, ...path], children)
-//     | Window(_, id) as window when id == target => Some([window, ...path])
-//     | Window(_) => None
-
-//   and traverseChildren = path =>
-//     fun
-//     | [] => None
-//     | [node, ...rest] =>
-//       switch (traverse(path, node)) {
-//       | None => traverseChildren(path, rest)
-//       | path => path
-//       };
-
-//   traverse(tree);
-// };
 
 let resizeWindow = (direction, target, factor, node) => {
   let rec traverse = (~parentDirection=?) =>
