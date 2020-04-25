@@ -49,7 +49,7 @@ describe("WindowTreeTests", ({describe, _}) => {
         |> Layout.removeWindow(3)
         |> Layout.removeWindow(2);
 
-      expect.equal(window(1), newLayout);
+      expect.equal(vsplit([hsplit([window(1)])]), newLayout);
     })
   });
 

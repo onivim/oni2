@@ -231,7 +231,8 @@ let removeWindow = (target, tree) => {
     | Split(direction, size, children) =>
       switch (List.filter_map(traverse, children)) {
       | [] => None
-      | [child] => Some(child)
+      // BUG: Simplification disabled because it doesn't preserve size.
+      // | [child] => Some(child)
       | newChildren => Some(Split(direction, size, newChildren))
       }
     | Window(_, id) when id == target => None
