@@ -95,11 +95,17 @@ This will create a `_release` folder at the root with the application bundle ins
 
 ### OSX
 
-Once you have a release build created, you can create an `oni2` symlink to point to your development environment.
+Once you have a release build created, you can install Oni2 on `/Applications` folder.
 
 Run the following from the `oni2` directory:
-- `./scripts/osx/create-symlink.sh`
 
+- `cp -R _release/Onivim2.app /Applications`
+
+Also, if you want the `oni2` command to open the editor from terminal you need to add Oni2 to system PATH:
+
+- Open Oni2 from launchpad
+- Open command palette with `Cmd + Shift + P`
+- Execute: `System: Add Oni2 to System PATH`
 
 ## Extension Integration
 
