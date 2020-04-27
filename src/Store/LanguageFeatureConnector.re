@@ -55,9 +55,10 @@ let start = () => {
         )
       });
 
-      Lwt.on_success(getDefinitionPromise, result =>
+      Lwt.on_success(getDefinitionPromise, result => {
+        prerr_endline(Printf.sprintf("Definition available - id: %d location: %s ", id, Location.toString(location)));
         dispatch(DefinitionAvailable(id, location, result))
-      );
+      });
     });
 
   let findAllReferences = state =>
@@ -107,6 +108,7 @@ let start = () => {
           | [] => Location.{line: Index.zero, column: Index.zero}
           };
 
+        prerr_endline ("Looking for definition at: " ++ Location.toString(location));
         (
           state,
           checkForDefinitionEffect(state.languageFeatures, buf, location),

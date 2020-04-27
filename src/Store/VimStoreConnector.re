@@ -109,7 +109,7 @@ let start =
       Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
 
-  let gotoDefinition = (~dispatch) => {
+  let gotoDefinition = (state, dispatch) => {
     Log.debug("Goto definition requested");
     // Get buffer and cursor position
     let state = getState();
@@ -121,16 +121,15 @@ let start =
     let getDefinition = (buffer, editor) => {
       let id = Core.Buffer.getId(buffer);
       let position = Editor.getPrimaryCursor(~buffer, editor);
-      prerr_endline("Get definition: " ++ string_of_int(id));
-      Definition.getAt(id, position, state.definition)
+      let ret = Definition.getAt(id, position, state.definition)
       |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
-           prerr_endline("OpenFileByPath");
            Actions.OpenFileByPath(
              definitionResult.uri |> Core.Uri.toFileSystemPath,
              None,
              Some(definitionResult.location),
            );
          });
+      ret;
     };
 
     OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
@@ -653,20 +652,16 @@ let start =
     });
   };
 
-  let handleVimEffect = (~dispatch) =>
+  let handleVimEffect = (~state, ~dispatch) =>
     fun
     | Vim.Effect.Message({priority, title, message}) => {
         dispatch(Actions.VimMessageReceived({priority, title, message}));
       }
-    | Vim.Effect.Goto(_) => {
-        prerr_endline("Goto");
-        let _: unit = gotoDefinition(~dispatch);
-        ();
-      }
+    | Vim.Effect.Goto(_) => gotoDefinition(state, dispatch);
     | _ => ();
 
-  let handleVimEffects = (~dispatch, effects) =>
-    effects |> List.iter(handleVimEffect(~dispatch));
+  let handleVimEffects = (~state, ~dispatch, effects) =>
+    effects |> List.iter(handleVimEffect(~state, ~dispatch));
 
   let inputEffect = key =>
     Isolinear.Effect.createWithDispatch(~name="vim.input", dispatch =>
@@ -683,6 +678,14 @@ let start =
         let newTopLine = topLine;
         let newLeftColumn = leftColumn;
 
+        // TODO: There is a timing dependency here
+        // If the cursor moved, it will clear the available definition,
+        // so effects need to be run prior to cursor moving.
+        // Alternatively - we need to be more picky when we dispatch
+        // EditorCursorMove/EditorScrollToLine/EditorScrollToColumn -
+        // only dispatching when they have changed.
+        effects |> handleVimEffects(~state, ~dispatch);
+
         let () =
           editor
           |> Option.map(Editor.getId)
@@ -692,7 +695,6 @@ let start =
                dispatch(Actions.EditorScrollToColumn(id, newLeftColumn));
              });
 
-        effects |> handleVimEffects(~dispatch);
         Log.debug("handled key: " ++ key);
       }
     );
