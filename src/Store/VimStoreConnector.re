@@ -109,8 +109,7 @@ let start =
       Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
 
-  let _: unit => unit =
-    Vim.onGoto((_position, _definitionType) => {
+  let gotoDefinition = (~dispatch) => {
       Log.debug("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
@@ -122,8 +121,10 @@ let start =
       let getDefinition = (buffer, editor) => {
         let id = Core.Buffer.getId(buffer);
         let position = Editor.getPrimaryCursor(~buffer, editor);
+        prerr_endline ("Get definition: " ++ string_of_int(id));
         Definition.getAt(id, position, state.definition)
         |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
+             prerr_endline ("OpenFileByPath");
              Actions.OpenFileByPath(
                definitionResult.uri |> Core.Uri.toFileSystemPath,
                None,
@@ -135,7 +136,7 @@ let start =
       OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
       |> Option.join
       |> Option.iter(action => dispatch(action));
-    });
+    };
 
   let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
@@ -655,6 +656,10 @@ let start =
   let handleVimEffect = (~dispatch) => fun
   | Vim.Effect.Message({ priority, title, message}) => {
     dispatch(Actions.VimMessageReceived({priority, title, message}))
+  }
+  | Vim.Effect.Goto(_) => {
+  prerr_endline ("Goto");
+  let _: unit = gotoDefinition(~dispatch)
   }
   | _ => ();
 
