@@ -146,11 +146,6 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onMessage((priority, title, message) => {
-      dispatch(VimMessageReceived({priority, title, message}))
-    });
-
-  let _: unit => unit =
     Vim.onYank(({lines, register, operator, _}) => {
       let state = getState();
       let yankConfig =
@@ -657,8 +652,17 @@ let start =
     });
   };
 
+  let handleVimEffect = (~dispatch) => fun
+  | Vim.Effect.Message({ priority, title, message}) => {
+    dispatch(Actions.VimMessageReceived({priority, title, message}))
+  }
+  | _ => ();
+
+  let handleVimEffects = (~dispatch, effects) => 
+    effects |> List.iter(handleVimEffect(~dispatch));
+
   let inputEffect = key =>
-    Isolinear.Effect.create(~name="vim.input", () =>
+    Isolinear.Effect.createWithDispatch(~name="vim.input", (dispatch) =>
       if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
@@ -667,7 +671,7 @@ let start =
 
         let context = contextFromState(state);
 
-        let ({cursors, topLine, leftColumn, _}: Vim.Context.t, _effects) =
+        let ({cursors, topLine, leftColumn, _}: Vim.Context.t, effects) =
           Vim.input(~context, key);
         let newTopLine = topLine;
         let newLeftColumn = leftColumn;
@@ -680,6 +684,9 @@ let start =
                dispatch(Actions.EditorScrollToLine(id, newTopLine - 1));
                dispatch(Actions.EditorScrollToColumn(id, newLeftColumn));
              });
+
+        effects
+        |> handleVimEffects(~dispatch);
         Log.debug("handled key: " ++ key);
       }
     );
