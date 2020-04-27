@@ -110,33 +110,33 @@ let start =
     });
 
   let gotoDefinition = (~dispatch) => {
-      Log.debug("Goto definition requested");
-      // Get buffer and cursor position
-      let state = getState();
-      let maybeBuffer = state |> Selectors.getActiveBuffer;
+    Log.debug("Goto definition requested");
+    // Get buffer and cursor position
+    let state = getState();
+    let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      let maybeEditor =
-        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
-      let getDefinition = (buffer, editor) => {
-        let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(~buffer, editor);
-        prerr_endline ("Get definition: " ++ string_of_int(id));
-        Definition.getAt(id, position, state.definition)
-        |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
-             prerr_endline ("OpenFileByPath");
-             Actions.OpenFileByPath(
-               definitionResult.uri |> Core.Uri.toFileSystemPath,
-               None,
-               Some(definitionResult.location),
-             )
-           });
-      };
-
-      OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
-      |> Option.join
-      |> Option.iter(action => dispatch(action));
+    let getDefinition = (buffer, editor) => {
+      let id = Core.Buffer.getId(buffer);
+      let position = Editor.getPrimaryCursor(~buffer, editor);
+      prerr_endline("Get definition: " ++ string_of_int(id));
+      Definition.getAt(id, position, state.definition)
+      |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
+           prerr_endline("OpenFileByPath");
+           Actions.OpenFileByPath(
+             definitionResult.uri |> Core.Uri.toFileSystemPath,
+             None,
+             Some(definitionResult.location),
+           );
+         });
     };
+
+    OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
+    |> Option.join
+    |> Option.iter(action => dispatch(action));
+  };
 
   let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
@@ -653,21 +653,23 @@ let start =
     });
   };
 
-  let handleVimEffect = (~dispatch) => fun
-  | Vim.Effect.Message({ priority, title, message}) => {
-    dispatch(Actions.VimMessageReceived({priority, title, message}))
-  }
-  | Vim.Effect.Goto(_) => {
-  prerr_endline ("Goto");
-  let _: unit = gotoDefinition(~dispatch)
-  }
-  | _ => ();
+  let handleVimEffect = (~dispatch) =>
+    fun
+    | Vim.Effect.Message({priority, title, message}) => {
+        dispatch(Actions.VimMessageReceived({priority, title, message}));
+      }
+    | Vim.Effect.Goto(_) => {
+        prerr_endline("Goto");
+        let _: unit = gotoDefinition(~dispatch);
+        ();
+      }
+    | _ => ();
 
-  let handleVimEffects = (~dispatch, effects) => 
+  let handleVimEffects = (~dispatch, effects) =>
     effects |> List.iter(handleVimEffect(~dispatch));
 
   let inputEffect = key =>
-    Isolinear.Effect.createWithDispatch(~name="vim.input", (dispatch) =>
+    Isolinear.Effect.createWithDispatch(~name="vim.input", dispatch =>
       if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
@@ -690,8 +692,7 @@ let start =
                dispatch(Actions.EditorScrollToColumn(id, newLeftColumn));
              });
 
-        effects
-        |> handleVimEffects(~dispatch);
+        effects |> handleVimEffects(~dispatch);
         Log.debug("handled key: " ++ key);
       }
     );
