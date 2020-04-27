@@ -5,6 +5,7 @@
         str
         bigarray
         zed_oni
+        luv
         lwt
         lwt.unix
         Rench

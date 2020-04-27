@@ -6,6 +6,7 @@
         libvim
         oniguruma
         str
+        luv
         lwt
         timber)
     (preprocess (pps lwt_ppx)))
