@@ -21,6 +21,28 @@ let contains = (query, str) => {
 let explode = str =>
   str |> String.to_seq |> List.of_seq |> List.map(c => String.make(1, c));
 
+exception NoMatchException;
+
+/**
+  [forAll(~start, ~stop, ~f, str)] validates a predicate [f] for each character, from [start] (inclusive) to [stop] (exclusive)
+
+  Returns [true] if predicate [f(c)] returns [true] from all characters from [start] to [stop], [false] otherwise.
+*/
+let forAll = (~start=0, ~stop=?, ~f, str) => {
+  let stop = stop |> Option.value(~default=String.length(str));
+
+  let rec loop = i =>
+    if (i >= stop) {
+      true;
+    } else if (f(str.[i])) {
+      loop(i + 1);
+    } else {
+      false;
+    };
+
+  loop(start);
+};
+
 let startsWith = (~prefix, str) => {
   let prefixLength = String.length(prefix);
   let strLength = String.length(str);
@@ -28,7 +50,13 @@ let startsWith = (~prefix, str) => {
   if (prefixLength > strLength) {
     false;
   } else {
-    String.sub(str, 0, prefixLength) == prefix;
+    let rec match = i =>
+      if (i == prefixLength) {
+        true;
+      } else {
+        prefix.[i] == str.[i] && match(i + 1);
+      };
+    match(0);
   };
 };
 
@@ -64,6 +92,19 @@ let trimRight = str => {
     };
 
   aux(length - 1);
+};
+
+let indentation = str => {
+  let rec loop = i =>
+    if (i >= String.length(str)) {
+      i;
+    } else if (isSpace(str.[i])) {
+      loop(i + 1);
+    } else {
+      i;
+    };
+
+  loop(0);
 };
 
 let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
