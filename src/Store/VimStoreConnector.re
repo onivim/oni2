@@ -100,11 +100,6 @@ let start =
   });
 
   let _: unit => unit =
-    Vim.onVersion(() => {
-      Actions.OpenFileByPath("oni://Version", None, None) |> dispatch
-    });
-
-  let _: unit => unit =
     Vim.Buffer.onLineEndingsChanged((id, lineEndings) => {
       Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
@@ -657,7 +652,9 @@ let start =
     | Vim.Effect.Message({priority, title, message}) => {
         dispatch(Actions.VimMessageReceived({priority, title, message}));
       }
-    | Vim.Effect.Goto(_) => gotoDefinition(state, dispatch);
+    | Vim.Effect.Goto(_) => gotoDefinition(state, dispatch)
+    | Vim.Effect.ShowVersion => Actions.OpenFileByPath("oni://Version", None, None) |> dispatch
+    | Vim.Effect.ShowIntro => Actions.OpenFileByPath("oni://Welcome", None, None) |> dispatch
     | _ => ();
 
   let handleVimEffects = (~state, ~dispatch, effects) =>
