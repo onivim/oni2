@@ -23,13 +23,12 @@ let start:
     ~executablePath: string=?,
     ~onConnected: connectedCallback=?,
     ~onClose: closeCallback=?,
-    ~scheduler: Scheduler.t,
     ~onHighlights: highlightsCallback,
     ~onHealthCheckResult: bool => unit,
     Oni_Extensions.LanguageInfo.t,
     Setup.t
   ) =>
-  t;
+  result(t, string);
 
 let notifyBufferEnter: (t, int, string) => unit;
 let notifyBufferLeave: (t, int) => unit;

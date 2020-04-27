@@ -8,6 +8,7 @@ module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerFailedToStart(string)
   | ServerClosed
   | ReceivedHighlights([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t));
 
@@ -27,7 +28,7 @@ module Sub = {
       type nonrec params = params;
 
       type state = {
-        client: Oni_Syntax_Client.t,
+        client: result(Oni_Syntax_Client.t, string),
         lastSyncedTokenTheme: option(Syntax.TokenTheme.t),
         lastConfiguration: option(Core.Configuration.t),
       };
@@ -36,19 +37,33 @@ module Sub = {
       let id = params => params.id;
 
       let init = (~params, ~dispatch) => {
-        let client =
+        Log.info("Init called");
+        let pendingResult = ref(None);
+        let clientResult =
           Oni_Syntax_Client.start(
+            ~onConnected=
+              () => {
+                Log.info("onConnected");
+                pendingResult^
+                |> Option.iter(server => dispatch(ServerStarted(server)));
+              },
             ~onClose=_ => dispatch(ServerClosed),
-            ~scheduler=Core.Scheduler.mainThread,
             ~onHighlights=
               highlights => {dispatch(ReceivedHighlights(highlights))},
             ~onHealthCheckResult=_ => (),
             params.languageInfo,
             params.setup,
-          );
+          )
+          |> Utility.ResultEx.tap(server => dispatch(ServerStarted(server)))
+          |> Utility.ResultEx.tapError(msg =>
+               dispatch(ServerFailedToStart(msg))
+             );
 
-        dispatch(ServerStarted(client));
-        {client, lastSyncedTokenTheme: None, lastConfiguration: None};
+        {
+          client: clientResult,
+          lastSyncedTokenTheme: None,
+          lastConfiguration: None,
+        };
       };
 
       let compare: ('a, option('a)) => bool =
@@ -61,19 +76,27 @@ module Sub = {
 
       let syncTokenTheme = (tokenTheme, state) =>
         if (!compare(tokenTheme, state.lastSyncedTokenTheme)) {
-          Oni_Syntax_Client.notifyThemeChanged(state.client, tokenTheme);
-          {...state, lastSyncedTokenTheme: Some(tokenTheme)};
+          state.client
+          |> Result.map(client => {
+               Oni_Syntax_Client.notifyThemeChanged(client, tokenTheme);
+               {...state, lastSyncedTokenTheme: Some(tokenTheme)};
+             })
+          |> Result.value(~default=state);
         } else {
           state;
         };
 
       let syncConfiguration = (configuration, state) =>
         if (!compare(configuration, state.lastConfiguration)) {
-          Oni_Syntax_Client.notifyConfigurationChanged(
-            state.client,
-            configuration,
-          );
-          {...state, lastConfiguration: Some(configuration)};
+          state.client
+          |> Result.map(client => {
+               Oni_Syntax_Client.notifyConfigurationChanged(
+                 client,
+                 configuration,
+               );
+               {...state, lastConfiguration: Some(configuration)};
+             })
+          |> Result.value(~default=state);
         } else {
           state;
         };
@@ -85,8 +108,7 @@ module Sub = {
       };
 
       let dispose = (~params as _, ~state) => {
-        let () = Oni_Syntax_Client.close(state.client);
-        ();
+        state.client |> Result.iter(Oni_Syntax_Client.close);
       };
     });
 

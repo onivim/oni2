@@ -1,5 +1,5 @@
 {
-  "checksum": "160cfa1f8cde23ca0088202833453352",
+  "checksum": "1c846af171dc7222b70c31d798be51b6",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -281,6 +281,27 @@
         "reperf@1.5.0@d41d8cd9", "refmterr@3.3.0@d41d8cd9",
         "ocaml@4.8.1000@d41d8cd9", "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/dune@opam:2.5.1@a0c1e658", "@esy-ocaml/reason@3.5.2@d41d8cd9"
+      ],
+      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
+    },
+    "reason-vscode-exthost@github:onivim/reason-vscode-exthost#453dcc3@d41d8cd9": {
+      "id":
+        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#453dcc3@d41d8cd9",
+      "name": "reason-vscode-exthost",
+      "version": "github:onivim/reason-vscode-exthost#453dcc3",
+      "source": {
+        "type": "install",
+        "source": [ "github:onivim/reason-vscode-exthost#453dcc3" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
+        "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
+        "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
+        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/luv@opam:0.5.1@a530d73c", "@opam/dune@opam:2.5.1@a0c1e658",
+        "@opam/decoders-yojson@opam:0.3.0@b9081413",
+        "@glennsl/timber@1.0.0@d41d8cd9", "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
@@ -1183,6 +1204,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
+        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#453dcc3@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3022@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",

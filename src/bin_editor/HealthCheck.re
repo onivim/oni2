@@ -179,14 +179,14 @@ let mainChecks = [
       let healthCheckResult = ref(false);
       let syntaxClient =
         Oni_Syntax_Client.start(
-          ~scheduler=Scheduler.immediate,
-          ~onConnected=() => connected := true,
-          ~onClose=_ => closed := true,
+          ~onConnected=() => {connected := true},
+          ~onClose=_ => {closed := true},
           ~onHighlights=_ => (),
-          ~onHealthCheckResult=res => healthCheckResult := res,
+          ~onHealthCheckResult=res => {healthCheckResult := res},
           Oni_Extensions.LanguageInfo.initial,
           setup,
-        );
+        )
+        |> Result.get_ok;
 
       let waitForRef = (condition: ref(bool)) => {
         let tries = ref(0);
@@ -195,6 +195,7 @@ let mainChecks = [
             ~name="HealthCheck.waitThread",
             () => {
               while (condition^ == false && tries^ < 10) {
+                let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
                 Unix.sleepf(0.2);
                 incr(tries);
               }
