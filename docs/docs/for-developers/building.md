@@ -95,13 +95,14 @@ This will create a `_release` folder at the root with the application bundle ins
 
 ### OSX
 
-Once you have a release build created, you can install Oni2 on `/Applications` folder.
+Once you have a release build created, you can install Oni2 in your `Applications` folder.
 
 Run the following from the `oni2` directory:
 
-- `cp -R _release/Onivim2.app /Applications`
+- `cp -R _release/Onivim2.app $USER/Applications`
 
-Also, if you want the `oni2` command to open the editor from terminal you need to add Oni2 to system PATH:
+If you want to open the editor from terminal with an `oni2` command, you can add Oni2 to the system PATH using a command
+item within the app:
 
 - Open Oni2 from launchpad
 - Open command palette with `Cmd + Shift + P`
