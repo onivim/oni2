@@ -4,16 +4,18 @@ module ExtHostClient = Oni_Extensions.ExtHostClient;
 
 // MODEL
 
-type terminal = {
-  id: int,
-  cmd: string,
-  rows: int,
-  columns: int,
-  pid: option(int),
-  title: option(string),
-  screen: ReveryTerminal.Screen.t,
-  cursor: ReveryTerminal.Cursor.t,
-};
+type terminal =
+  pri {
+    id: int,
+    cmd: string,
+    arguments: list(string),
+    rows: int,
+    columns: int,
+    pid: option(int),
+    title: option(string),
+    screen: ReveryTerminal.Screen.t,
+    cursor: ReveryTerminal.Cursor.t,
+  };
 
 type t;
 

@@ -6,6 +6,7 @@ module ExtHostClient = Oni_Extensions.ExtHostClient;
 type terminal = {
   id: int,
   cmd: string,
+  arguments: list(string),
   rows: int,
   columns: int,
   pid: option(int),
@@ -83,11 +84,19 @@ module Configuration = {
     setting("terminal.integrated.shell.linux", string, ~default=shellCmd);
   let shellCommandOSX =
     setting("terminal.integrated.shell.osx", string, ~default=shellCmd);
-  
+
   let shellArgsWindows =
-    setting("terminal.integrated.shellArgs.windows", list(string), ~default=[]);
+    setting(
+      "terminal.integrated.shellArgs.windows",
+      list(string),
+      ~default=[],
+    );
   let shellArgsLinux =
-    setting("terminal.integrated.shellArgs.linux", list(string), ~default=[]);
+    setting(
+      "terminal.integrated.shellArgs.linux",
+      list(string),
+      ~default=[],
+    );
   let shellArgsOSX =
     setting("terminal.integrated.shellArgs.osx", list(string), ~default=[]);
 };
@@ -114,14 +123,22 @@ let update = (~config: Config.resolver, model: t, msg) => {
   | Command(NewTerminal({cmd, splitDirection})) =>
     let cmdToUse =
       switch (cmd) {
-      | None => 
-      switch (Revery.Environment.os) {
-      | Windows => Configuration.shellCommandWindows.get(config)
-      | Mac => Configuration.shellCommandOSX.get(config)
-      | Linux => Configuration.shellCommandLinux.get(config)
-      | _ => shellCmd
-      }
+      | None =>
+        switch (Revery.Environment.os) {
+        | Windows => Configuration.shellCommandWindows.get(config)
+        | Mac => Configuration.shellCommandOSX.get(config)
+        | Linux => Configuration.shellCommandLinux.get(config)
+        | _ => shellCmd
+        }
       | Some(specifiedCommand) => specifiedCommand
+      };
+
+    let arguments =
+      switch (Revery.Environment.os) {
+      | Windows => Configuration.shellArgsWindows.get(config)
+      | Mac => Configuration.shellArgsOSX.get(config)
+      | Linux => Configuration.shellArgsLinux.get(config)
+      | _ => []
       };
 
     let id = model.nextId;
@@ -130,6 +147,7 @@ let update = (~config: Config.resolver, model: t, msg) => {
         id,
         {
           id,
+          arguments,
           cmd: cmdToUse,
           rows: 40,
           columns: 40,
@@ -184,6 +202,7 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
   |> List.map((terminal: terminal) => {
        Service_Terminal.Sub.terminal(
          ~id=terminal.id,
+         ~arguments=terminal.arguments,
          ~cmd=terminal.cmd,
          ~rows=terminal.rows,
          ~columns=terminal.columns,
@@ -522,12 +541,13 @@ module Contributions = {
       Oni.insertMode,
     ];
 
-  let configuration = Configuration.[
-    shellCommandWindows.spec,
-    shellCommandLinux.spec,
-    shellCommandOSX.spec,
-    shellArgsWindows.spec,
-    shellArgsLinux.spec,
-    shellArgsOSX.spec,
-  ];
+  let configuration =
+    Configuration.[
+      shellCommandWindows.spec,
+      shellCommandLinux.spec,
+      shellCommandOSX.spec,
+      shellArgsWindows.spec,
+      shellArgsLinux.spec,
+      shellArgsOSX.spec,
+    ];
 };
