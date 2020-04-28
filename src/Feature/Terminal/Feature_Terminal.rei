@@ -63,7 +63,7 @@ type outmsg =
 
 let shouldHandleInput: string => bool;
 
-let update: (t, msg) => (t, outmsg);
+let update: (~config: Config.resolver, t, msg) => (t, outmsg);
 
 let subscription:
   (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);
@@ -133,4 +133,5 @@ module Commands: {
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
   let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
 };

@@ -71,6 +71,27 @@ type outmsg =
 
 let shellCmd = ShellUtility.getDefaultShell();
 
+// CONFIGURATION
+
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let shellCommandWindows =
+    setting("terminal.integrated.shell.windows", string, ~default=shellCmd);
+  let shellCommandLinux =
+    setting("terminal.integrated.shell.linux", string, ~default=shellCmd);
+  let shellCommandOSX =
+    setting("terminal.integrated.shell.osx", string, ~default=shellCmd);
+  
+  let shellArgsWindows =
+    setting("terminal.integrated.shellArgs.windows", list(string), ~default=[]);
+  let shellArgsLinux =
+    setting("terminal.integrated.shellArgs.linux", list(string), ~default=[]);
+  let shellArgsOSX =
+    setting("terminal.integrated.shellArgs.osx", list(string), ~default=[]);
+};
+
 let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
 
 let shouldHandleInput = str => {
@@ -88,12 +109,18 @@ let updateById = (id, f, model) => {
   {...model, idToTerminal};
 };
 
-let update = (model: t, msg) => {
+let update = (~config: Config.resolver, model: t, msg) => {
   switch (msg) {
   | Command(NewTerminal({cmd, splitDirection})) =>
     let cmdToUse =
       switch (cmd) {
-      | None => shellCmd
+      | None => 
+      switch (Revery.Environment.os) {
+      | Windows => Configuration.shellCommandWindows.get(config)
+      | Mac => Configuration.shellCommandOSX.get(config)
+      | Linux => Configuration.shellCommandLinux.get(config)
+      | _ => shellCmd
+      }
       | Some(specifiedCommand) => specifiedCommand
       };
 
@@ -494,4 +521,13 @@ module Contributions = {
       Oni.normalMode,
       Oni.insertMode,
     ];
+
+  let configuration = Configuration.[
+    shellCommandWindows.spec,
+    shellCommandLinux.spec,
+    shellCommandOSX.spec,
+    shellArgsWindows.spec,
+    shellArgsLinux.spec,
+    shellArgsOSX.spec,
+  ];
 };
