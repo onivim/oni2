@@ -2,7 +2,7 @@ opam-version: "2.0"
 
 synopsis: "Binding to libuv: cross-platform asynchronous I/O"
 
-version: "0.5.1"
+version: "0.5.2"
 license: "MIT"
 homepage: "https://github.com/aantron/luv"
 doc: "https://aantron.github.io/luv"
@@ -36,6 +36,6 @@ exposes a lot of other functionality, amounting to a full OS API, and an
 alternative to the standard module Unix."
 
 url {
-  src: "https://github.com/aantron/luv/releases/download/0.5.1/luv-0.5.1.tar.gz"
-  checksum: "md5=1b1665a64412af2a65587a6aa4a42d4a"
+  src: "https://github.com/aantron/luv/releases/download/0.5.2/luv-0.5.2.tar.gz"
+  checksum: "md5=a196396b63bbe9ff9e8b932b58010b18"
 }
