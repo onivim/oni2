@@ -10,6 +10,7 @@ module ExtensionHelpers = ExtensionHelpers;
 module SyntaxServerTest = SyntaxServerTest;
 
 open Types;
+open Exthost.Types;
 
 let _currentClipboard: ref(option(string)) = ref(None);
 let _currentTime: ref(float) = ref(0.0);
@@ -47,7 +48,7 @@ let getAssetPath = path =>
     raise(TestAssetNotFound(path));
   };
 
-let currentUserSettings = ref(Core.Config.Settings.empty);
+let currentUserSettings = ref(Config.Settings.empty);
 let setUserSettings = settings => currentUserSettings := settings;
 
 let runTest =
@@ -83,8 +84,8 @@ let runTest =
     (
       switch (configuration) {
       | Some(json) =>
-        json |> Yojson.Safe.from_string |> Core.Config.Settings.fromJson
-      | None => Core.Config.Settings.empty
+        json |> Yojson.Safe.from_string |> Config.Settings.fromJson
+      | None => Config.Settings.empty
       }
     );
 

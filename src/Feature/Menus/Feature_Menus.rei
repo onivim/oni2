@@ -1,4 +1,4 @@
-open Oni_Core;
+open Exthost.Types;
 
 let explorerContext: Menu.Lookup.t => list(Menu.item);
 let editorContext: Menu.Lookup.t => list(Menu.item);

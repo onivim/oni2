@@ -5,7 +5,7 @@
  *
  */
 
-open Oni_Core;
+open Exthost.Types;
 
 // Type relating to 'ConfigurationModel' in VSCode
 // This is an 'instance' of configuration - modelling user, workspace, or default configuration.

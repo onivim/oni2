@@ -9,6 +9,8 @@ open Oni_Core;
 open Utility;
 open Oni_Extensions;
 
+module ExtensionScanner = Exthost.Extension.Scanner;
+
 module JsonInformationMessageFormat = {
   [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
   type t = {

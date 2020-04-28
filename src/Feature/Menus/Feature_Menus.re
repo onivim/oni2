@@ -1,4 +1,5 @@
 open Oni_Core;
+open Exthost.Types;
 
 module Log = (val Log.withNamespace("Oni.Feature.Menus"));
 

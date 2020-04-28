@@ -1,6 +1,6 @@
-open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
+open Exthost.Types;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated

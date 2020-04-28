@@ -1,6 +1,8 @@
 open Oni_Core;
 open Oni_Extensions;
 
+module IconTheme = Exthost.Types.IconTheme;
+
 module Log = (val Log.withNamespace("Oni2.Model.FileExplorer"));
 
 type t = {

@@ -5,8 +5,6 @@ open Revery.UI;
 open Revery.UI.Components;
 open Oni_Components;
 
-open Oni_Extensions;
-
 module Colors = Feature_Theme.Colors;
 
 module Styles = {
@@ -23,7 +21,8 @@ module Styles = {
 };
 
 let make = (~model, ~theme, ~font, ()) => {
-  let renderItem = (extensions: array(ExtensionScanner.t), idx) => {
+  let renderItem =
+      (extensions: array(Exthost.Extension.Scanner.ScanResult.t), idx) => {
     let extension = extensions[idx];
 
     let icon =
@@ -44,7 +43,7 @@ let make = (~model, ~theme, ~font, ()) => {
       <View style=Style.[flexDirection(`Column), flexGrow(1)]>
         <Text
           style={Styles.text(~font, ~theme)}
-          text={ExtensionManifest.getDisplayName(extension.manifest)}
+          text={Exthost.Extension.Manifest.getDisplayName(extension.manifest)}
         />
         <View style=Style.[flexDirection(`Row), flexGrow(1)]>
           <View
@@ -75,10 +74,13 @@ let make = (~model, ~theme, ~font, ()) => {
   };
 
   let bundledExtensions =
-    Extensions.getExtensions(~category=ExtensionScanner.Bundled, model);
+    Extensions.getExtensions(
+      ~category=Exthost.Extension.Scanner.Bundled,
+      model,
+    );
 
   let userExtensions =
-    Extensions.getExtensions(~category=ExtensionScanner.User, model);
+    Extensions.getExtensions(~category=Exthost.Extension.Scanner.User, model);
 
   //let developmentExtensions =
   //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;

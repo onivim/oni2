@@ -1,5 +1,6 @@
 open Revery;
-open Oni_Core;
+open Exthost.Types;
+module Config = Exthost.Types.Config;
 open Config.Schema;
 
 module CustomDecoders: {

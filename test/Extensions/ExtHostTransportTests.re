@@ -9,6 +9,8 @@ module Helpers = Oni_Core_Test.Helpers;
 let initialConfiguration = Oni_Extensions.Configuration.empty;
 let initData = ExtHostInitData.create();
 
+module ExtensionScanner = Exthost.Extension.Scanner;
+
 describe("ExtHostTransport", ({test, _}) => {
   test("gets initialized message", ({expect, _}) =>
     Helpers.repeat(() => {

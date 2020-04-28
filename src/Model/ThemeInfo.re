@@ -3,16 +3,18 @@
  */
 
 open Oni_Core;
-open Oni_Extensions;
 
-open Oni_Extensions.ExtensionScanner;
+module ExtensionContributions = Exthost.Extension.Contributions;
+module ExtensionScanResult = Exthost.Extension.Scanner.ScanResult;
+
+open ExtensionScanResult;
 
 type t = {
   themes: list(ExtensionContributions.Theme.t),
   nameToTheme: StringMap.t(ExtensionContributions.Theme.t),
 };
 
-let _getThemes = (extensions: list(ExtensionScanner.t)) => {
+let _getThemes = (extensions: list(ExtensionScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.themes) |> List.flatten;
 };
 
@@ -22,7 +24,7 @@ let getThemes = v => v.themes;
 
 let getThemeByName = (v, name) => StringMap.find_opt(name, v.nameToTheme);
 
-let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
+let ofExtensions = (extensions: list(ExtensionScanResult.t)) => {
   let themes = _getThemes(extensions);
 
   let nameToTheme =

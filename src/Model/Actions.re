@@ -146,7 +146,7 @@ type t =
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
   | ThemeChanged(string)
-  | SetIconTheme([@opaque] IconTheme.t)
+  | SetIconTheme([@opaque] Exthost.Types.IconTheme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
   | StatusBarDisposeItem(int)
   | StatusBar(StatusBarModel.action)
@@ -215,7 +215,7 @@ and command = {
   commandName: string,
   commandAction: t,
   commandEnabled: unit => bool,
-  commandIcon: [@opaque] option(IconTheme.IconDefinition.t),
+  commandIcon: [@opaque] option(Exthost.Types.IconTheme.IconDefinition.t),
 }
 // [configurationTransformer] is a function that modifies configuration json
 and configurationTransformer = Yojson.Safe.t => Yojson.Safe.t
@@ -227,7 +227,7 @@ and menuItem = {
   category: option(string),
   name: string,
   command: unit => t,
-  icon: [@opaque] option(IconTheme.IconDefinition.t),
+  icon: [@opaque] option(Exthost.Types.IconTheme.IconDefinition.t),
   highlight: list((int, int)),
 }
 and quickmenuVariant =

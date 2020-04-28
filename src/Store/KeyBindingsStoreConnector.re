@@ -11,6 +11,7 @@ open Oni_Model;
 module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 
 module Commands = GlobalCommands;
+module Command = Exthost.Types.Command;
 
 let start = maybeKeyBindingsFilePath => {
   let default =

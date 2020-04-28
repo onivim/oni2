@@ -9,7 +9,7 @@ let initial: t;
 
 let defaultLanguage: string;
 
-let getGrammars: t => list(ExtensionContributions.Grammar.t);
+let getGrammars: t => list(Exthost.Extension.Contributions.Grammar.t);
 
 let getLanguageFromExtension: (t, string) => string;
 let getLanguageFromFilePath: (t, string) => string;
@@ -23,4 +23,4 @@ let getLanguageConfigurationPath: (t, string) => option(string);
 let getGrammarPathFromScope: (t, string) => option(string);
 let getTreesitterPathFromScope: (t, string) => option(string);
 
-let ofExtensions: list(ExtensionScanner.t) => t;
+let ofExtensions: list(Exthost.Extension.Scanner.ScanResult.t) => t;

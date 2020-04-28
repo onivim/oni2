@@ -4,10 +4,10 @@
     (libraries 
       editor-core-types
       Oni2.core
-      Oni2.core.whenExpr
       Oni2.extensions
       Oni2.feature.commands
       isolinear
       base
+      vscode-exthost
     )
     (preprocess (pps ppx_let ppx_deriving.show)))

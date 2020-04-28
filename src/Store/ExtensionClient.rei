@@ -5,7 +5,7 @@ open Oni_Extensions;
 let create:
   (
     ~config: Feature_Configuration.model,
-    ~extensions: list(ExtensionScanner.t),
+    ~extensions: list(Exthost.Extension.Scanner.ScanResult.t),
     ~setup: Setup.t
   ) =>
   (ExtHostClient.t, Isolinear.Stream.t(Actions.t));

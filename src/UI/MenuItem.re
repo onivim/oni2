@@ -4,6 +4,7 @@ open Oni_Core;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
+module IconTheme = Exthost.Types.IconTheme;
 
 module Colors = Feature_Theme.Colors;
 
@@ -78,7 +79,7 @@ let make =
     | Some(v) =>
       IconTheme.IconDefinition.(
         <Text
-          style={Styles.icon(v.fontColor)}
+          style={Styles.icon(v.colorHex |> Revery.Color.hex)}
           text={FontIcon.codeToIcon(v.fontCharacter)}
         />
       )

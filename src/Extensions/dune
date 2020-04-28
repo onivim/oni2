@@ -13,9 +13,9 @@
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
         reason-jsonrpc
+        vscode-exthost
         oniguruma
         Oni2.core
-        Oni2.core.whenExpr
         isolinear
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

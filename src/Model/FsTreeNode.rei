@@ -1,4 +1,4 @@
-open Oni_Core;
+module IconTheme = Exthost.Types.IconTheme;
 
 [@deriving show]
 type t =

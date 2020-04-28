@@ -8,6 +8,10 @@
 open Rench;
 
 open Oni_Core;
+module ExtensionManifest = Exthost.Extension.Manifest;
+module ExtensionScanner = Exthost.Extension.Scanner;
+module ExtensionContributions = Exthost.Extension.Contributions;
+module ScanResult = Exthost.Extension.Scanner.ScanResult;
 open ExtensionManifest;
 open ExtensionScanner;
 
@@ -39,7 +43,8 @@ module ExtensionInfo = {
     enableProposedApi: bool,
   };
 
-  let ofScannedExtension = (extensionInfo: ExtensionScanner.t) => {
+  let ofScannedExtension = (extensionInfo: ScanResult.t) => {
+    open ScanResult;
     let {path, manifest, _} = extensionInfo;
 
     {
@@ -47,7 +52,7 @@ module ExtensionInfo = {
       extensionLocationPath: path,
       name: manifest.name,
       /* publisher: manifest.publisher, */
-      main: manifest.main,
+      main: Option.map(Rench.Path.join(path), manifest.main),
       version: manifest.version,
       engines: manifest.engines,
       activationEvents: manifest.activationEvents,

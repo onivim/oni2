@@ -6,5 +6,6 @@
       Oni2.extensions
       isolinear
       base
+      vscode-exthost
     )
     (preprocess (pps ppx_let ppx_deriving.show)))

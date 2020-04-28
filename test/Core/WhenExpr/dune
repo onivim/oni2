@@ -1,5 +1,0 @@
-(library
-    (name Oni_Core_WhenExpr_Test)
-    (library_flags (-linkall -g))
-    (modules (:standard))
-    (libraries Oni2.core.whenExpr rely.lib console.lib))

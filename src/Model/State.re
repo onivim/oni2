@@ -44,7 +44,7 @@ type t = {
   tokenTheme: TokenTheme.t,
   editorGroups: EditorGroups.t,
   extensions: Extensions.t,
-  iconTheme: IconTheme.t,
+  iconTheme: Exthost.Types.IconTheme.t,
   isQuitting: bool,
   keyBindings: Keybindings.t,
   keyDisplayer: option(KeyDisplayer.t),
@@ -107,7 +107,7 @@ let initial = (~getUserSettings, ~contributedCommands) => {
   sideBar: SideBar.initial,
   tokenTheme: TokenTheme.empty,
   editorGroups: EditorGroups.create(),
-  iconTheme: IconTheme.create(),
+  iconTheme: Exthost.Types.IconTheme.create(),
   isQuitting: false,
   keyBindings: Keybindings.empty,
   keyDisplayer: None,
@@ -135,15 +135,16 @@ let initial = (~getUserSettings, ~contributedCommands) => {
 };
 
 let commands = state =>
-  Command.Lookup.unionMany([
+  Exthost.Types.Command.Lookup.unionMany([
     Feature_Commands.all(state.commands),
     Extensions.commands(state.extensions)
-    |> Command.Lookup.fromList
-    |> Command.Lookup.map(msg => Actions.Extension(msg)),
+    |> Exthost.Types.Command.Lookup.fromList
+    |> Exthost.Types.Command.Lookup.map(msg => Actions.Extension(msg)),
   ]);
 
 let menus = state => {
   let commands = commands(state);
 
-  Extensions.menus(state.extensions) |> Menu.Lookup.fromSchema(commands);
+  Extensions.menus(state.extensions)
+  |> Exthost.Types.Menu.Lookup.fromSchema(commands);
 };

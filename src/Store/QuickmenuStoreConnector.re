@@ -9,7 +9,9 @@ open Oni_UI;
 open Utility;
 
 module InputModel = Oni_Components.InputModel;
-module ExtensionContributions = Oni_Extensions.ExtensionContributions;
+module ExtensionContributions = Exthost.Extension.Contributions;
+module Command = Exthost.Types.Command;
+module Menu = Exthost.Types.Menu;
 module Selection = Oni_Components.Selection;
 
 module Log = (val Log.withNamespace("Oni2.Store.Quickmenu"));

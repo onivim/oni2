@@ -1,6 +1,8 @@
 open Oni_Core;
 open Utility;
 
+module IconTheme = Exthost.Types.IconTheme;
+
 [@deriving show({with_path: false})]
 type t = {
   path: string,

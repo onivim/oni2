@@ -5,7 +5,6 @@
     (libraries
         Oni2.core
         Oni_Core_Utility_Test
-        Oni_Core_WhenExpr_Test
         rely.lib
         editor-core-types
     ))

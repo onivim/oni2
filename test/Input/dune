@@ -5,6 +5,5 @@
     (libraries
         Oni_Core_Test
         Oni2.input
-        Oni2.core.whenExpr
         rely.lib
     ))

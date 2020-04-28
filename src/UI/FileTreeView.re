@@ -100,7 +100,7 @@ let nodeView =
     | Some(icon) =>
       <setiIcon
         fontSize={font.fontSize}
-        fg={icon.fontColor}
+        fg={icon.colorHex |> Revery.Color.hex}
         icon={icon.fontCharacter}
       />
     | None => React.empty

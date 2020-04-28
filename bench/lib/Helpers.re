@@ -4,6 +4,8 @@ open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
+open Exthost.Types;
+
 /* Create a state with some editor size */
 let simpleState = {
   let state =

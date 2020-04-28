@@ -10,5 +10,6 @@
       isolinear
       base
       vterm
+      vscode-exthost
     )
     (preprocess (pps ppx_let ppx_deriving.show)))

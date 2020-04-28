@@ -17,6 +17,8 @@ open Oni_Extensions;
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
 module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
 
+module ExtensionScanner = Exthost.Extension.Scanner;
+
 let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
   if (cli.shouldLoadExtensions) {
     let extensions =
@@ -321,7 +323,9 @@ let start =
   registerCommands(
     ~dispatch,
     Feature_Terminal.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
+    |> List.map(
+         Exthost.Types.Command.map(msg => Model.Actions.Terminal(msg)),
+       ),
   );
 
   // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
@@ -355,11 +359,11 @@ let start =
   let setIconTheme = s => {
     let iconThemeInfo =
       extensions
-      |> List.map((ext: ExtensionScanner.t) =>
+      |> List.map((ext: ExtensionScanner.ScanResult.t) =>
            ext.manifest.contributes.iconThemes
          )
       |> List.flatten
-      |> List.filter((iconTheme: ExtensionContributions.IconTheme.t) =>
+      |> List.filter((iconTheme: Exthost.Extension.Contributions.IconTheme.t) =>
            String.equal(iconTheme.id, s)
          );
 
@@ -368,7 +372,8 @@ let start =
     switch (iconThemeInfo) {
     | Some(iconThemeInfo) =>
       let iconTheme =
-        Yojson.Safe.from_file(iconThemeInfo.path) |> Core.IconTheme.ofJson;
+        Yojson.Safe.from_file(iconThemeInfo.path)
+        |> Exthost.Types.IconTheme.ofJson;
 
       switch (iconTheme) {
       | Some(iconTheme) => dispatch(Model.Actions.SetIconTheme(iconTheme))

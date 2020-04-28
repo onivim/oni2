@@ -24,4 +24,5 @@
         revery-terminal.lib
         editor-core-types
         ppx_deriving.runtime
+        vscode-exthost
     ))

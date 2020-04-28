@@ -5,7 +5,11 @@
 open Oni_Core;
 open Rench;
 
-open ExtensionScanner;
+module ExtensionScanner = Exthost.Extension.Scanner;
+module ExtensionContributions = Exthost.Extension.Contributions;
+module ExtensionScanResult = Exthost.Extension.Scanner.ScanResult;
+
+open ExtensionScanResult;
 
 type t = {
   grammars: list(ExtensionContributions.Grammar.t),
@@ -91,15 +95,15 @@ let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
 };
 
-let _getGrammars = (extensions: list(ExtensionScanner.t)) => {
+let _getGrammars = (extensions: list(ExtensionScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.grammars) |> List.flatten;
 };
 
-let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
+let _getLanguages = (extensions: list(ExtensionScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
 };
 
-let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
+let ofExtensions = (extensions: list(ExtensionScanResult.t)) => {
   let grammars = _getGrammars(extensions);
   let languages = _getLanguages(extensions);
 

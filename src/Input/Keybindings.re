@@ -1,3 +1,5 @@
+module WhenExpr = Exthost.WhenExpr;
+
 type keybinding = {
   key: string,
   command: string,

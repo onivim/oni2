@@ -1,10 +1,11 @@
 open Oni_Core;
 open Utility;
-open Oni_Extensions;
 
 module ExtM = Oni_ExtensionManagement;
 
 open TestFramework;
+
+module ExtensionScanner = Exthost.Extension.Scanner;
 
 let testCollateralPath =
   Rench.Environment.getWorkingDirectory() ++ "/test/collateral/";

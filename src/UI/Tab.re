@@ -9,6 +9,8 @@ open Oni_Core;
 
 module Model = Oni_Model;
 
+module IconTheme = Exthost.Types.IconTheme;
+
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
@@ -168,7 +170,7 @@ let%component make =
       <FontIcon
         fontFamily="seti.ttf"
         icon={icon.fontCharacter}
-        color={icon.fontColor}
+        color={icon.colorHex |> Revery.Color.hex}
         /* TODO: Use 'weight' value from IconTheme font */
         fontSize={uiFont.fontSize *. 1.5}
       />

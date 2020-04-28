@@ -1,6 +1,8 @@
 open Oni_Core;
 open Oni_Extensions;
 
+module IconTheme = Exthost.Types.IconTheme;
+
 type t = {
   tree: option(FsTreeNode.t),
   isOpen: bool,

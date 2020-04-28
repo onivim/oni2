@@ -4,6 +4,7 @@ module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
 module SyntaxServerTest = SyntaxServerTest;
 open Types;
+open Exthost.Types;
 
 let runTest:
   (
@@ -26,7 +27,7 @@ let runTestWithInput:
   ) =>
   unit;
 
-let setUserSettings: Core.Config.Settings.t => unit;
+let setUserSettings: Config.Settings.t => unit;
 let setClipboard: option(string) => unit;
 let getClipboard: unit => option(string);
 let setTime: float => unit;

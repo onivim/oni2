@@ -9,7 +9,6 @@
         ppx_deriving_yojson.runtime
         editor-input
         Oni2.core
-        Oni2.core.whenExpr
         Oni2.model
         Oni2.input
         Oni2.extensions
@@ -31,5 +30,6 @@
         libvim
         textmate
         treesitter
+        vscode-exthost
     )
     (preprocess (pps brisk-reconciler.ppx ppx_deriving_yojson ppx_deriving.show)))

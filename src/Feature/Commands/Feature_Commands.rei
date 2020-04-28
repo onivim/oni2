@@ -1,4 +1,4 @@
-open Oni_Core;
+open Exthost.Types;
 
 module Schema: {
   let define:

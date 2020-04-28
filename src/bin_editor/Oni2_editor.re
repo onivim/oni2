@@ -14,6 +14,7 @@ module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
 module ExtM = Oni_ExtensionManagement;
+module ExtensionScanner = Exthost.Extension.Scanner;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
@@ -46,7 +47,7 @@ let uninstallExtension = (_extensionId, _cli) => {
 
 let listExtensions = cli => {
   let extensions = Store.Utility.getUserExtensions(cli);
-  let printExtension = (ext: Ext.ExtensionScanner.t) => {
+  let printExtension = (ext: ExtensionScanner.ScanResult.t) => {
     print_endline(ext.manifest.name);
   };
   List.iter(printExtension, extensions);
@@ -66,7 +67,7 @@ let cliOptions =
     ~listExtensions=
       cli => {
         let extensions = Store.Utility.getUserExtensions(cli);
-        let printExtension = (ext: Ext.ExtensionScanner.t) => {
+        let printExtension = (ext: ExtensionScanner.ScanResult.t) => {
           print_endline(ext.manifest.name);
         };
         List.iter(printExtension, extensions);

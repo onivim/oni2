@@ -6,10 +6,10 @@
 
 open Revery.UI;
 open Rench;
-open Oni_Core;
 
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
+module IconTheme = Exthost.Types.IconTheme;
 module Theme = Feature_Theme;
 
 let noop = () => ();

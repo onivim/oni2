@@ -1,8 +1,8 @@
-open Oni_Core;
 open BenchFramework;
 open Feature_Editor;
 
 open Helpers;
+open Exthost.Types;
 
 let setup = () => {
   let hwnd =

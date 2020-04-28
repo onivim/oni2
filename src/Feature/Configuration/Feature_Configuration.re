@@ -1,4 +1,5 @@
 open Oni_Core;
+open Exthost.Types;
 
 module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Configuration"));
 
@@ -32,15 +33,24 @@ let initial = (~getUserSettings, contributions) =>
     merged: Config.Settings.empty,
   });
 
+let toSettings = (config: Exthost.Extension.Contributions.Configuration.t) => {
+  Exthost.Extension.Contributions.Configuration.(
+    config
+    |> List.map(({name, default}) => (name, default))
+    |> Config.Settings.fromList
+  );
+};
+
 let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
+  open Exthost.Extension;
   open Oni_Extensions;
 
   let defaults =
     extensions
     |> List.map(ext =>
-         ext.ExtensionScanner.manifest.contributes.configuration
+         ext.Scanner.ScanResult.manifest.contributes.configuration
        )
-    |> List.map(ExtensionContributions.Configuration.toSettings)
+    |> List.map(toSettings)
     |> Config.Settings.unionMany
     |> Config.Settings.union(Config.Schema.defaults(config.schema))
     |> Configuration.Model.fromSettings;

@@ -10,8 +10,8 @@
         lwt
         lwt.unix
         Oni2.core
-        Oni2.core.whenExpr
         Rench
         Revery
+        vscode-exthost
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))
