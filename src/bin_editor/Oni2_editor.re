@@ -138,8 +138,20 @@ if (cliOptions.syntaxHighlightService) {
       currentState := state;
       isDirty := true;
     };
+
+    let runEventLoop = () => {
+      // TODO: How many times should we run it?
+      // The ideal amount would be just enough to do pending work,
+      // but not too much to just spin. Unfortunately, it seems
+      // Luv.Loop.run always returns [true] for us, so we don't
+      // have a reliable way to know we're done (at the moment).
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      };
+    };
+
     let tick = _dt => {
-      let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
+      runEventLoop();
 
       if (isDirty^) {
         update(<Root state=currentState^ />);

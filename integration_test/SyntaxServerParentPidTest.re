@@ -1,7 +1,14 @@
 open Oni_IntegrationTestLib;
 
+let win32Command = {
+  switch (Sys.getenv_opt("COMSPEC")) {
+  | None => "cmd.exe"
+  | Some(cmd) => cmd
+  };
+};
+
 let createDummyProcess = () => {
-  let cmd = Sys.win32 ? "cmd.exe" : "bash";
+  let cmd = Sys.win32 ? win32Command : "bash";
   try({
     let (inchannel, outchannel) = Unix.open_process(cmd);
     let pid = Unix.process_pid((inchannel, outchannel));

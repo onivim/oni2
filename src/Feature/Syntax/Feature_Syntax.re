@@ -36,10 +36,15 @@ let highlight = (~scope, ~theme, ~grammars, lines) => {
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerFailedToStart(string)
   | ServerStopped
   | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
   | BufferUpdated([@opaque] BufferUpdate.t)
   | Service(Service_Syntax.msg);
+
+type outmsg =
+  | Nothing
+  | ServerError(string);
 
 type t = {
   highlights: BufferMap.t(LineMap.t(list(ColorizedToken.t))),
@@ -154,16 +159,20 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) =>
     {...bufferHighlights, highlights};
   };
 
-let update = (highlights: t, msg) =>
-  switch (msg) {
-  | TokensHighlighted(tokens) => setTokens(tokens, highlights)
-  | BufferUpdated(update) when !update.isFull =>
-    handleUpdate(update, highlights)
-  | ServerStarted(_client) => highlights
-  | ServerStopped => highlights
-  | BufferUpdated(_update) => highlights
-  | Service(_) => highlights
-  };
+let update: (t, msg) => (t, outmsg) =
+  (highlights: t, msg) =>
+    switch (msg) {
+    | TokensHighlighted(tokens) => (setTokens(tokens, highlights), Nothing)
+    | BufferUpdated(update) when !update.isFull => (
+        handleUpdate(update, highlights),
+        Nothing,
+      )
+    | ServerFailedToStart(msg) => (highlights, ServerError(msg))
+    | ServerStarted(_client) => (highlights, Nothing)
+    | ServerStopped => (highlights, Nothing)
+    | BufferUpdated(_update) => (highlights, Nothing)
+    | Service(_) => (highlights, Nothing)
+    };
 
 let subscription =
     (
@@ -185,6 +194,7 @@ let subscription =
     |> Isolinear.Sub.map(
          fun
          | Service_Syntax.ServerStarted(client) => ServerStarted(client)
+         | Service_Syntax.ServerFailedToStart(msg) => ServerFailedToStart(msg)
          | Service_Syntax.ServerClosed => ServerStopped
          | Service_Syntax.ReceivedHighlights(hl) => TokensHighlighted(hl),
        );

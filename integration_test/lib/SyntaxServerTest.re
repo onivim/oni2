@@ -29,7 +29,15 @@ let run = (~parentPid=?, ~name, f) => {
   };
 
   let wait = (~name="TODO", ~timeout=1.0, f) => {
-    ThreadEx.waitForCondition(~timeout, f);
+    let wrappedF = () => {
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      };
+
+      f();
+    };
+
+    ThreadEx.waitForCondition(~timeout, wrappedF);
     if (!f()) {
       let msg = "Failed: " ++ name;
       Log.error(msg);
@@ -52,10 +60,10 @@ let run = (~parentPid=?, ~name, f) => {
       ~onClose,
       ~onHighlights=_ => (),
       ~onHealthCheckResult=_ => (),
-      ~scheduler=Scheduler.immediate,
       LanguageInfo.initial,
       Setup.default(),
-    );
+    )
+    |> Result.get_ok;
 
   let isConnected = () => connected^;
   let hasExited = () => exitCode^;

@@ -3,7 +3,10 @@
  */
 
 open Oni_Core;
-open Utility;
+
+module Transport = Exthost.Transport;
+module NamedPipe = Exthost.NamedPipe;
+module Packet = Exthost.Transport.Packet;
 
 module Ext = Oni_Extensions;
 
@@ -18,20 +21,82 @@ type connectedCallback = unit => unit;
 type closeCallback = int => unit;
 type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
 
-type t = {
-  in_channel: Stdlib.in_channel,
-  out_channel: Stdlib.out_channel,
-  readThread: Thread.t,
-};
-
-let write = (client: t, msg: Protocol.ClientToServer.t) => {
-  Marshal.to_channel(client.out_channel, msg, []);
-  Stdlib.flush(client.out_channel);
-};
-
 module Defaults = {
   let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
   let executablePath = Revery.Environment.executingDirectory ++ executableName;
+};
+
+type t = {
+  transport: Transport.t,
+  process: Luv.Process.t,
+  nextId: ref(int),
+};
+
+let writeTransport =
+    (~id=0, transport: Transport.t, msg: Protocol.ClientToServer.t) => {
+  let bytes = Marshal.to_bytes(msg, []);
+  let packet = Transport.Packet.create(~packetType=Regular, ~id, ~bytes);
+  Transport.send(~packet, transport);
+};
+
+let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
+  incr(nextId);
+  let id = nextId^;
+  writeTransport(~id, transport, msg);
+};
+
+let getEnvironment = (~namedPipe, ~parentPid) => {
+  let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
+
+  Luv.Env.environ()
+  |> Result.map(filterOutLogFile)
+  |> Result.map(items =>
+       [
+         (EnvironmentVariables.namedPipe, namedPipe),
+         (EnvironmentVariables.parentPid, parentPid),
+         ...items,
+       ]
+     );
+};
+
+let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
+  getEnvironment(~namedPipe, ~parentPid)
+  |> Utility.ResultEx.flatMap(environment => {
+       ClientLog.debugf(m =>
+         m(
+           "Starting executable: %s and parentPid: %s",
+           executablePath,
+           parentPid,
+         )
+       );
+
+       let on_exit = (_proc, ~exit_status, ~term_signal) => {
+         let exitCode = exit_status |> Int64.to_int;
+         if (exitCode == 0) {
+           ClientLog.debug("Syntax process exited safely.");
+         } else {
+           ClientLog.errorf(m =>
+             m(
+               "Syntax process exited with code: %d and signal: %d",
+               exitCode,
+               term_signal,
+             )
+           );
+         };
+         onClose(exitCode);
+       };
+
+       Luv.Process.spawn(
+         ~on_exit,
+         ~environment,
+         ~windows_hide=true,
+         ~windows_hide_console=true,
+         ~windows_hide_gui=true,
+         executablePath,
+         [executablePath, "--syntax-highlight-service"],
+       );
+     })
+  |> Result.map_error(Luv.Error.strerror);
 };
 
 let start =
@@ -40,168 +105,66 @@ let start =
       ~executablePath=Defaults.executablePath,
       ~onConnected=() => (),
       ~onClose=_ => (),
-      ~scheduler,
       ~onHighlights,
       ~onHealthCheckResult,
       languageInfo,
       setup,
     ) => {
-  let (pstdin, stdin) = Unix.pipe();
-  let (stdout, pstdout) = Unix.pipe();
-  let (stderr, pstderr) = Unix.pipe();
-
-  Unix.set_close_on_exec(pstdin);
-  Unix.set_close_on_exec(stdin);
-  Unix.set_close_on_exec(pstdout);
-  Unix.set_close_on_exec(stdout);
-  Unix.set_close_on_exec(pstderr);
-  Unix.set_close_on_exec(stderr);
-
   let parentPid =
     switch (parentPid) {
-    | None => Unix.getpid() |> string_of_int
+    | None => Luv.Pid.getpid() |> string_of_int
     | Some(pid) => pid
     };
 
-  // Remove ONI2_LOG_FILE from environment of syntax server
-  let envList =
-    Unix.environment()
-    |> Array.to_list
-    |> List.filter(str => !StringEx.contains("ONI2_LOG_FILE", str));
+  let name = Printf.sprintf("syntax-client-%s", parentPid);
+  let namedPipe = name |> NamedPipe.create |> NamedPipe.toString;
 
-  let env = [EnvironmentVariables.parentPid ++ "=" ++ parentPid, ...envList];
-
-  ClientLog.debugf(m =>
-    m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
-  );
-
-  let pid =
-    Unix.create_process_env(
-      executablePath,
-      [|executablePath, "--syntax-highlight-service"|],
-      Array.of_list(env),
-      pstdin,
-      pstdout,
-      pstderr,
-    );
-
-  Unix.close(pstdout);
-  Unix.close(pstdin);
-  Unix.close(pstderr);
-
-  let shouldClose = ref(false);
-
-  let in_channel = Unix.in_channel_of_descr(stdout);
-  let err_channel = Unix.in_channel_of_descr(stderr);
-  let out_channel = Unix.out_channel_of_descr(stdin);
-
-  Stdlib.set_binary_mode_in(in_channel, true);
-  Stdlib.set_binary_mode_out(out_channel, true);
-
-  let scheduler = cb => Scheduler.run(cb, scheduler);
-
-  let safeClose = channel =>
-    switch (Unix.close(channel)) {
-    // We may get a BADF if this is called too soon after opening a process
-    | exception (Unix.Unix_error(_)) => ()
-    | _ => ()
+  let handleMessage = msg =>
+    switch (msg) {
+    | ServerToClient.Initialized =>
+      ClientLog.info("Initialized");
+      onConnected();
+    | ServerToClient.EchoReply(result) =>
+      ClientLog.tracef(m => m("got message from channel: |%s|", result))
+    | ServerToClient.Log(msg) => ServerLog.trace(msg)
+    | ServerToClient.Closing => ServerLog.debug("Closing")
+    | ServerToClient.HealthCheckPass(res) => onHealthCheckResult(res)
+    | ServerToClient.TokenUpdate(tokens) =>
+      ClientLog.info("Received token update");
+      onHighlights(tokens);
+      ClientLog.trace("Tokens applied");
     };
 
-  let _waitThread =
-    ThreadHelper.create(
-      ~name="SyntaxThread.wait",
-      () => {
-        let (_pid, status: Unix.process_status) = Unix.waitpid([], pid);
-        let code =
-          switch (status) {
-          | Unix.WEXITED(0) =>
-            ClientLog.debug("Syntax process exited safely.");
-            0;
-          | Unix.WEXITED(code) =>
-            ClientLog.errorf(m =>
-              m("Syntax process exited with code: %i", code)
-            );
-            code;
-          | Unix.WSIGNALED(signal) =>
-            ClientLog.errorf(m =>
-              m("Syntax process stopped with signal: %i", signal)
-            );
-            signal;
-          | Unix.WSTOPPED(signal) =>
-            ClientLog.errorf(m =>
-              m("Syntax process stopped with signal: %i", signal)
-            );
-            signal;
-          };
-        shouldClose := true;
-        safeClose(stdin);
-        scheduler(() => onClose(code));
-      },
-      (),
-    );
+  let handlePacket = bytes => {
+    let msg: ServerToClient.t = Marshal.from_bytes(bytes, 0);
+    handleMessage(msg);
+  };
 
-  let readThread =
-    ThreadHelper.create(
-      ~name="SyntaxThread.read",
-      () => {
-        while (! shouldClose^) {
-          Thread.wait_read(stdout);
+  let _transport = ref(None);
 
-          let result: ServerToClient.t = Marshal.from_channel(in_channel);
-          switch (result) {
-          | ServerToClient.Initialized => scheduler(onConnected)
+  let dispatch =
+    fun
+    | Transport.Connected => {
+        ClientLog.info("Connected to server");
+        _transport^
+        |> Option.iter(t =>
+             writeTransport(
+               ~id=0,
+               t,
+               Protocol.ClientToServer.Initialize(languageInfo, setup),
+             )
+           );
+      }
+    | Transport.Error(msg) => ClientLog.errorf(m => m("Error: %s", msg))
+    | Transport.Disconnected => ClientLog.info("Disconnected")
+    | Transport.Received({body, _}) => handlePacket(body);
 
-          | ServerToClient.EchoReply(result) =>
-            scheduler(() =>
-              ClientLog.tracef(m =>
-                m("got message from channel: |%s|", result)
-              )
-            )
-
-          | ServerToClient.Log(msg) => scheduler(() => ServerLog.trace(msg))
-
-          | ServerToClient.Closing =>
-            scheduler(() => ServerLog.debug("Closing"))
-
-          | ServerToClient.HealthCheckPass(res) =>
-            scheduler(() => onHealthCheckResult(res))
-
-          | ServerToClient.TokenUpdate(tokens) =>
-            scheduler(() => {
-              onHighlights(tokens);
-              ClientLog.trace("Tokens applied");
-            })
-          };
-        };
-
-        safeClose(stdout);
-      },
-      (),
-    );
-
-  let _readStderr =
-    ThreadHelper.create(
-      ~name="SyntaxThread.stderr",
-      () => {
-        while (! shouldClose^) {
-          Thread.wait_read(stderr);
-          switch (input_line(err_channel)) {
-          | exception End_of_file => shouldClose := true
-          | msg => scheduler(() => ServerLog.debug(msg))
-          };
-        };
-        safeClose(stderr);
-        scheduler(() => ServerLog.debug("stderr thread done!"));
-      },
-      (),
-    );
-  ClientLog.debug("started syntax client");
-  let syntaxClient = {in_channel, out_channel, readThread};
-  write(
-    syntaxClient,
-    Protocol.ClientToServer.Initialize(languageInfo, setup),
-  );
-  syntaxClient;
+  Transport.start(~namedPipe, ~dispatch)
+  |> Utility.ResultEx.tap(transport => _transport := Some(transport))
+  |> Utility.ResultEx.flatMap(transport => {
+       startProcess(~executablePath, ~parentPid, ~namedPipe, ~onClose)
+       |> Result.map(process => {transport, process, nextId: ref(0)})
+     });
 };
 
 let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
@@ -216,6 +179,7 @@ let notifyBufferLeave = (_v: t, _bufferId: int) => {
 };
 
 let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
+  ClientLog.info("Notifying theme changed.");
   write(v, Protocol.ClientToServer.ThemeChanged(theme));
 };
 
@@ -247,9 +211,12 @@ let close = (syntaxClient: t) => {
 };
 
 module Testing = {
-  let simulateReadException = (v: t) => {
-    ClientLog.trace("Sending simulateReadException notification...");
-    write(v, Protocol.ClientToServer.SimulateReadException);
+  let simulateReadException = ({transport, _}: t) => {
+    let id = 1;
+    let bytes = Bytes.make(128, 'a');
+    let packet = Transport.Packet.create(~packetType=Regular, ~id, ~bytes);
+    ClientLog.trace("Simulating a bad packet...");
+    Transport.send(~packet, transport);
   };
 
   let simulateMessageException = (v: t) => {

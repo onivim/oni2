@@ -9,6 +9,9 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.vimMode == Vim.Types.Normal
   );
+  wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
+    state.syntaxClient |> Option.is_some
+  });
 
   let testFile = getAssetPath("large-c-file.c");
 
@@ -17,7 +20,7 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
 
   // Wait for highlights to show up
   wait(
-    ~name="Verify we get syntax highlights", ~timeout=30.0, (state: State.t) => {
+    ~name="Verify we get syntax highlights", ~timeout=60.0, (state: State.t) => {
     state
     |> Selectors.getActiveBuffer
     |> Option.map(Buffer.getId)

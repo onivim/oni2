@@ -13,10 +13,15 @@ let highlight:
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerFailedToStart(string)
   | ServerStopped
   | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
   | BufferUpdated([@opaque] BufferUpdate.t)
   | Service(Service_Syntax.msg);
+
+type outmsg =
+  | Nothing
+  | ServerError(string);
 
 type t;
 
@@ -30,7 +35,7 @@ let getSyntaxScope:
 let setTokensForLine:
   (~bufferId: int, ~line: int, ~tokens: list(ColorizedToken.t), t) => t;
 
-let update: (t, msg) => t;
+let update: (t, msg) => (t, outmsg);
 
 // [ignore(~bufferId, syntax)] marks a buffer to be ignored.
 // The only syntax highlight adjustment will come from explicit
