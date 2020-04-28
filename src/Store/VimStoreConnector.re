@@ -249,7 +249,7 @@ let start =
 
       dispatch(
         Actions.Terminal(
-          Command(NewTerminal({cmd: Some(cmd), splitDirection})),
+          Command(NewTerminal({cmd: cmd, splitDirection})),
         ),
       );
     });
