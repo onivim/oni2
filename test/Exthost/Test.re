@@ -90,7 +90,8 @@ let startWithExtensions =
 
   let extensionProcess =
     Node.spawn(
-      ~additionalEnv=[
+      ~env=[
+        ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
         (
           "AMD_ENTRYPOINT",
           "vs/workbench/services/extensions/node/extensionHostProcess",
