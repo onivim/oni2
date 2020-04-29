@@ -31,6 +31,13 @@ module Styles = {
   let item = (x, y, theme) => [
     backgroundColor(Colors.Oni.Sneak.background.from(theme)),
     position(`Absolute),
+      boxShadow(
+        ~xOffset=3.,
+        ~yOffset=3.,
+        ~blurRadius=5.,
+        ~spreadRadius=0.,
+        ~color=Revery.Color.rgba(0., 0., 0., 0.2),
+      ),
     top(y),
     left(x + Constants.size / 2),
     Style.height(Constants.size),

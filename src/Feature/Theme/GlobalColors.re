@@ -587,7 +587,8 @@ module Oni = {
 
   module Sneak = {
     let background =
-      define("oni.sneak.background", all(ref(Selection.background)));
+      define("oni.sneak.background", all(ref(Menu.selectionBackground)
+      ));
     let foreground =
       define("oni.sneak.foreground", all(ref(Menu.foreground)));
     let highlight =
