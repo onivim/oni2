@@ -1,5 +1,9 @@
 open Oni_Core;
 
+module Internal = {
+  let hash = value => value |> Hashtbl.hash |> Printf.sprintf("%x");
+};
+
 type codec('state, 'value) = {
   equal: ('value, 'value) => bool,
   encode: 'value => Json.t,
@@ -33,6 +37,27 @@ type definition('state, 'value) = {
 
 let define = (key, codec, default, get) => {key, codec, default, get};
 
+type entry('state) =
+  | Entry({
+      definition: definition('state, 'value),
+      mutable value: 'value,
+    })
+    : entry('state);
+
+let entry = definition => Entry({definition, value: definition.default});
+
+type store('state) = {
+  name: string,
+  hash: string,
+  entries: list(entry('state)),
+};
+
+let instantiate = (name, entries) => {
+  name,
+  hash: Internal.hash(name),
+  entries: entries(),
+};
+
 module Global = {
   open Oni_Model.State;
 
@@ -43,4 +68,6 @@ module Global = {
       Base.Option.map(~f=ws => ws.workingDirectory, state.workspace)
     );
 
+  let store =
+    instantiate("global", () => [entry(version), entry(workspace)]);
 };
