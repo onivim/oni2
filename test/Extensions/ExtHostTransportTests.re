@@ -7,7 +7,7 @@ open Exthost.Extension;
 
 module Helpers = Oni_Core_Test.Helpers;
 
-let initialConfiguration = Oni_Extensions.Configuration.empty;
+let initialConfiguration = Exthost.Configuration.empty;
 let initData = ExtHostInitData.create();
 
 describe("ExtHostTransport", ({test, _}) => {
