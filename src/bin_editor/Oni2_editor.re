@@ -156,6 +156,10 @@ if (cliOptions.syntaxHighlightService) {
       if (isDirty^) {
         update(<Root state=currentState^ />);
         isDirty := false;
+        Store.Persistence.persistIfDirty(
+          Store.Persistence.Global.store,
+          currentState^,
+        );
       };
     };
     let _: unit => unit = Tick.interval(tick, Time.zero);
