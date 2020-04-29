@@ -16,7 +16,7 @@ module Command = {
     condition: WhenExpr.t,
   };
 
- let decode =
+  let decode =
     Json.Decode.(
       obj(({field, _}) =>
         {
@@ -76,7 +76,6 @@ module Menu = {
   };
 };
 
-
 module Configuration = {
   [@deriving show]
   type t = list(property)
@@ -111,7 +110,7 @@ module Configuration = {
   };
 
   let decode = Decode.configuration;
-  
+
   let toSettings = config =>
     config
     |> List.map(({name, default}) => (name, default))

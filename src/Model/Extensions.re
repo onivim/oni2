@@ -5,7 +5,6 @@
  * for the 'Hover' view
  */
 open Oni_Core;
-open Oni_Extensions;
 
 open Exthost.Extension;
 
@@ -63,7 +62,9 @@ let getExtensions = (~category, model) => {
 // TODO: Should be stored as proper commands instead of converting every time
 let commands = model => {
   model.extensions
-  |> List.map((ext: Scanner.ScanResult.t) => ext.manifest.contributes.commands)
+  |> List.map((ext: Scanner.ScanResult.t) =>
+       ext.manifest.contributes.commands
+     )
   |> List.flatten
   |> List.map((extcmd: Contributions.Command.t) =>
        Command.{

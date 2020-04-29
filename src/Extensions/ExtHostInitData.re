@@ -71,10 +71,7 @@ module ExtensionInfo = {
           "extensionDependencies",
           data.extensionDependencies |> list(string),
         ),
-        (
-          "extensionKind",
-          data.extensionKind |> Manifest.Encode.kind,
-        ),
+        ("extensionKind", data.extensionKind |> Manifest.Encode.kind),
         ("contributes", data.contributes |> Contributions.encode),
         ("enableProposedApi", data.enableProposedApi |> bool),
       ])

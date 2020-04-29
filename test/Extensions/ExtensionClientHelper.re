@@ -8,6 +8,7 @@
 open Oni_Core;
 open Utility;
 open Oni_Extensions;
+open Exthost.Extension;
 
 module JsonInformationMessageFormat = {
   [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
@@ -76,7 +77,7 @@ let withExtensionClient =
   let testExtensionsPath = Rench.Path.join(rootPath, "test/test_extensions");
 
   let extensions =
-    ExtensionScanner.scan(~category=Development, testExtensionsPath)
+    Scanner.scan(~category=Development, testExtensionsPath)
     |> List.map(ext => ExtHostInitData.ExtensionInfo.ofScannedExtension(ext));
 
   let initData = ExtHostInitData.create(~extensions, ());

@@ -5,7 +5,6 @@ open Revery.UI;
 open Revery.UI.Components;
 open Oni_Components;
 
-open Oni_Extensions;
 open Exthost.Extension;
 
 module Colors = Feature_Theme.Colors;

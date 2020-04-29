@@ -143,9 +143,7 @@ module Manifest: {
 
   let getDisplayName: t => string;
 
-  module Encode: {
-    let kind: Oni_Core.Json.encoder(kind);
-  }
+  module Encode: {let kind: Oni_Core.Json.encoder(kind);};
 };
 
 module Scanner: {

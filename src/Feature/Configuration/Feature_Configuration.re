@@ -38,9 +38,7 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
 
   let defaults =
     extensions
-    |> List.map(ext =>
-         ext.manifest.contributes.configuration
-       )
+    |> List.map(ext => ext.manifest.contributes.configuration)
     |> List.map(Contributions.Configuration.toSettings)
     |> Config.Settings.unionMany
     |> Config.Settings.union(Config.Schema.defaults(config.schema))

@@ -6,7 +6,6 @@
 
 open Oni_Core;
 open Utility;
-open Oni_Extensions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Utility"));
 
