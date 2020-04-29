@@ -551,11 +551,11 @@ module Contributions = {
 
   let configuration =
     Configuration.[
-      shellCommandWindows.spec,
-      shellCommandLinux.spec,
-      shellCommandOSX.spec,
-      shellArgsWindows.spec,
-      shellArgsLinux.spec,
-      shellArgsOSX.spec,
+      Shell.windows.spec,
+      Shell.linux.spec,
+      Shell.osx.spec,
+      ShellArgs.windows.spec,
+      ShellArgs.linux.spec,
+      ShellArgs.osx.spec,
     ];
 };
