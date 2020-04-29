@@ -99,24 +99,29 @@ let start =
     };
   });
 
+let _: unit => unit =
+    Vim.onVersion(() => {
+      Actions.OpenFileByPath("oni://Version", None, None) |> dispatch
+    });
+
   let _: unit => unit =
     Vim.Buffer.onLineEndingsChanged((id, lineEndings) => {
       Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
 
-  let gotoDefinition = (state, dispatch) => {
-    Log.debug("Goto definition requested");
-    // Get buffer and cursor position
-    let state = getState();
-    let maybeBuffer = state |> Selectors.getActiveBuffer;
+  let _: unit => unit =
+    Vim.onGoto((_position, _definitionType) => {
+      Log.debug("Goto definition requested");
+      // Get buffer and cursor position
+      let state = getState();
+      let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-    let maybeEditor =
-      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+      let maybeEditor =
+        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
-    let getDefinition = (buffer, editor) => {
-      let id = Core.Buffer.getId(buffer);
-      let position = Editor.getPrimaryCursor(~buffer, editor);
-      let ret =
+      let getDefinition = (buffer, editor) => {
+        let id = Core.Buffer.getId(buffer);
+        let position = Editor.getPrimaryCursor(~buffer, editor);
         Definition.getAt(id, position, state.definition)
         |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
              Actions.OpenFileByPath(
@@ -125,13 +130,12 @@ let start =
                Some(definitionResult.location),
              )
            });
-      ret;
-    };
+      };
 
-    OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
-    |> Option.join
-    |> Option.iter(action => dispatch(action));
-  };
+      OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
+      |> Option.join
+      |> Option.iter(action => dispatch(action));
+    });
 
   let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
@@ -140,6 +144,11 @@ let start =
     Vim.onDirectoryChanged(newDir =>
       dispatch(Actions.VimDirectoryChanged(newDir))
     );
+
+  let _: unit => unit =
+    Vim.onMessage((priority, title, message) => {
+      dispatch(VimMessageReceived({priority, title, message}))
+    });
 
   let _: unit => unit =
     Vim.onYank(({lines, register, operator, _}) => {
