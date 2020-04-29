@@ -5,11 +5,11 @@ let configuration =
   Some(
     {|
 {
-  "terminal.integrated.shell.win": "win-shell",
+  "terminal.integrated.shell.windows": "win-shell",
   "terminal.integrated.shell.osx": "osx-shell",
   "terminal.integrated.shell.linux": "linux-shell",
 
-  "terminal.integrated.shellArgs.win": ["win-arg"],
+  "terminal.integrated.shellArgs.windows": ["win-arg"],
   "terminal.integrated.shellArgs.osx": ["osx-arg"],
   "terminal.integrated.shellArgs.linux": ["linux-arg"]
 }
