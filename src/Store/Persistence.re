@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 module Internal = {
   let hash = value => value |> Hashtbl.hash |> Printf.sprintf("%x");
@@ -56,6 +57,42 @@ let instantiate = (name, entries) => {
   name,
   hash: Internal.hash(name),
   entries: entries(),
+};
+
+let persist = store => {
+  let entries =
+    store.entries
+    |> List.map((Entry({definition, value})) =>
+         (definition.key, value |> definition.codec.encode)
+       );
+
+  let str = Json.Encode.encode_string(Json.Encode.obj, entries);
+
+  let path =
+    Filesystem.getStoreFolder()
+    |> Result.map(storeFolder => Filename.concat(storeFolder, store.hash))
+    |> ResultEx.flatMap(Filesystem.getOrCreateConfigFolder)
+    |> Result.map(folder => Filename.concat(folder, "store.json"))
+    |> Result.get_ok;
+
+  let outChannel = open_out(path);
+  Printf.fprintf(outChannel, "%s", str);
+  close_out(outChannel);
+};
+
+let persistIfDirty = (store, state) => {
+  let isDirty =
+    List.exists(
+      (Entry({definition, value})) =>
+        !definition.codec.equal(value, definition.get(state)),
+      store.entries,
+    );
+
+  if (isDirty) {
+    List.iter((Entry({definition, _} as entry)) => entry.value = definition.get(state), store.entries);
+    Console.log("-- persisiting");
+    persist(store);
+  };
 };
 
 module Global = {
