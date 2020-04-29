@@ -78,27 +78,35 @@ module Configuration = {
   open Oni_Core;
   open Config.Schema;
 
-  let shellCommandWindows =
-    setting("terminal.integrated.shell.windows", string, ~default=shellCmd);
-  let shellCommandLinux =
-    setting("terminal.integrated.shell.linux", string, ~default=shellCmd);
-  let shellCommandOSX =
-    setting("terminal.integrated.shell.osx", string, ~default=shellCmd);
+  module Shell = {
+    let windows =
+      setting("terminal.integrated.shell.windows", string, ~default=shellCmd);
+    let linux =
+      setting("terminal.integrated.shell.linux", string, ~default=shellCmd);
+    let osx =
+      setting("terminal.integrated.shell.osx", string, ~default=shellCmd);
+  };
 
-  let shellArgsWindows =
-    setting(
-      "terminal.integrated.shellArgs.windows",
-      list(string),
-      ~default=[],
-    );
-  let shellArgsLinux =
-    setting(
-      "terminal.integrated.shellArgs.linux",
-      list(string),
-      ~default=[],
-    );
-  let shellArgsOSX =
-    setting("terminal.integrated.shellArgs.osx", list(string), ~default=[]);
+  module ShellArgs = {
+    let windows =
+      setting(
+        "terminal.integrated.shellArgs.windows",
+        list(string),
+        ~default=[],
+      );
+    let linux =
+      setting(
+        "terminal.integrated.shellArgs.linux",
+        list(string),
+        ~default=[],
+      );
+    let osx =
+      setting(
+        "terminal.integrated.shellArgs.osx",
+        list(string),
+        ~default=[],
+      );
+  };
 };
 
 let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
@@ -125,9 +133,9 @@ let update = (~config: Config.resolver, model: t, msg) => {
       switch (cmd) {
       | None =>
         switch (Revery.Environment.os) {
-        | Windows => Configuration.shellCommandWindows.get(config)
-        | Mac => Configuration.shellCommandOSX.get(config)
-        | Linux => Configuration.shellCommandLinux.get(config)
+        | Windows => Configuration.Shell.windows.get(config)
+        | Mac => Configuration.Shell.osx.get(config)
+        | Linux => Configuration.Shell.linux.get(config)
         | _ => shellCmd
         }
       | Some(specifiedCommand) => specifiedCommand
@@ -135,9 +143,9 @@ let update = (~config: Config.resolver, model: t, msg) => {
 
     let arguments =
       switch (Revery.Environment.os) {
-      | Windows => Configuration.shellArgsWindows.get(config)
-      | Mac => Configuration.shellArgsOSX.get(config)
-      | Linux => Configuration.shellArgsLinux.get(config)
+      | Windows => Configuration.ShellArgs.win.get(config)
+      | Mac => Configuration.ShellArgs.osx.get(config)
+      | Linux => Configuration.ShellArgs.linux.get(config)
       | _ => []
       };
 
