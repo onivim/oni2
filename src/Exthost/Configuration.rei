@@ -5,8 +5,6 @@
  *
  */
 
-open Oni_Core;
-
 // Type relating to 'ConfigurationModel' in VSCode
 // This is an 'instance' of configuration - modelling user, workspace, or default configuration.
 // The full configuration is set up by combining the various configuration 'instances'.
@@ -18,7 +16,6 @@ module Model: {
   let to_yojson: t => Json.t;
   let encode: Json.encoder(t);
 
-  let fromSettings: Config.Settings.t => t;
   let toString: t => string;
 };
 

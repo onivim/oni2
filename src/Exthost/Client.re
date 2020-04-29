@@ -1,5 +1,10 @@
 type reply = unit;
 
+open Oni_Core;
+
+module Protocol = Exthost_Protocol;
+module Extension = Exthost_Extension;
+
 type t = {
   client: Protocol.t,
   lastRequestId: ref(int),
@@ -9,7 +14,7 @@ module Log = (val Timber.Log.withNamespace("Client"));
 
 let start =
     (
-      ~initialConfiguration=Types.Configuration.empty,
+      ~initialConfiguration=Configuration.empty,
       ~namedPipe,
       ~initData: Extension.InitData.t,
       ~handler: Msg.t => option(reply),
@@ -52,7 +57,7 @@ let start =
             method: "$initializeConfiguration",
             args:
               initialConfiguration
-              |> Types.Configuration.to_yojson
+              |> Configuration.to_yojson
               |> (json => `List([json])),
             usesCancellationToken: false,
           }),

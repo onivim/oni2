@@ -5,8 +5,6 @@
  *
  */
 
-open Oni_Core;
-
 // Type relating to 'ConfigurationModel' in VSCode
 // This is an 'instance' of configuration - modelling user, workspace, or default configuration.
 // The full configuration is set up by combining the various configuration 'instances'.
@@ -33,11 +31,6 @@ module Model = {
 
   let to_yojson = Json.Encode.encode_value(encode);
 
-  let fromSettings = settings => {
-    keys: settings |> Config.Settings.keys |> List.map(Config.keyAsString),
-    contents: settings |> Config.Settings.toJson,
-  };
-
   let toString = (model: t) => {
     Printf.sprintf(
       "Keys: %s \n JSON: %s\n",
@@ -56,7 +49,7 @@ type t = {
   // TODO: Investigate 'folders' option here
   // folders: ?
   // TODO: Investigate 'configurationScopes' option here
-  // configurationScopes: {}
+  // configurationScopes: []
 };
 
 let encode = config =>
@@ -65,9 +58,9 @@ let encode = config =>
       ("defaults", config.defaults |> Model.encode),
       ("user", config.user |> Model.encode),
       ("workspace", config.workspace |> Model.encode),
-      ("folders", obj([])),
+      ("folders", list(bool, [])),
       ("isComplete", bool(true)),
-      ("configurationScopes", obj([])),
+      ("configurationScopes", list(bool, [])),
     ])
   );
 
