@@ -70,7 +70,7 @@ let update =
             state.extensions.extensions,
             setup,
           ),
-          ~changed=Oni_Extensions.Configuration.Model.fromSettings(changed),
+          ~changed=Exthost.Configuration.Model.fromSettings(changed),
         )
       | Nothing => Effect.none
       };

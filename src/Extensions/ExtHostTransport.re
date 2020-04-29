@@ -13,6 +13,7 @@ open Rench;
 module Log = (val Log.withNamespace("Oni2.Extensions.ExtHostTransport"));
 
 module Protocol = ExtHostProtocol;
+module Configuration = Exthost.Configuration;
 
 module Workspace = Protocol.Workspace;
 

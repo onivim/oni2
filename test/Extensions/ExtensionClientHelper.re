@@ -90,7 +90,7 @@ let withExtensionClient =
 
   let v =
     ExtHostClient.start(
-      ~initialConfiguration=Oni_Extensions.Configuration.empty,
+      ~initialConfiguration=Exthost.Configuration.empty,
       ~initData,
       ~onInitialized,
       ~onStatusBarSetEntry,

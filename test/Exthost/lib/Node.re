@@ -14,13 +14,12 @@ let getNodePath = () => {
   nodePath |> String.trim;
 };
 
-let spawn = (~additionalEnv=[], ~onExit, args) => {
-  let env = Luv.Env.environ() |> Result.get_ok;
+let spawn = (~env=[], ~onExit, args) => {
   let nodeFullPath = getNodePath();
   Log.info("Using node path: " ++ nodeFullPath);
   Luv.Process.spawn(
     ~on_exit=onExit,
-    ~environment=env @ additionalEnv,
+    ~environment=env,
     ~redirect=[
       Luv.Process.inherit_fd(
         ~fd=Luv.Process.stdin,

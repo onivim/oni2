@@ -1,7 +1,9 @@
 steps:
   - task: NodeTool@0
-    displayName: 'Use Node 10.x'
     inputs:
-      versionSpec: '10.x'
+      versionSpec: "12.13.0"
   - script: npm install -g rimraf
     displayName: "Install rimraf"
+  - script: npm install
+    workingDirectory: test/collateral/exthost
+    displayName: "Install new exthost"
