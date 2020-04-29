@@ -266,21 +266,13 @@ module Message = {
 
     let bufferToPacket = (~buffer) => {
       let bytes = Buffer.to_bytes(buffer);
-      Packet.create(
-        ~bytes,
-        ~packetType=Packet.Regular,
-        ~id=packetId,
-      );
+      Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
     };
 
     switch (msg) {
     | Terminate =>
       let bytes = Bytes.make(1, Char.chr(3));
-      Packet.create(
-        ~bytes,
-        ~packetType=Packet.Regular,
-        ~id=packetId,
-      );
+      Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
     | Initialize({initData, _}) =>
       let bytes =
         initData
@@ -288,11 +280,7 @@ module Message = {
         |> Yojson.Safe.to_string
         |> Bytes.of_string;
 
-      Packet.create(
-        ~bytes,
-        ~packetType=Packet.Regular,
-        ~id=packetId,
-      );
+      Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
     | RequestJSONArgs({rpcId, method, args, usesCancellationToken, _}) =>
       let msgType =
         usesCancellationToken
@@ -345,11 +333,13 @@ let start =
     switch (msg) {
     | Exthost_Transport.Error(msg) => onError(msg)
     | Exthost_Transport.Connected => dispatch(Message.Incoming.Connected)
-    | Exthost_Transport.Disconnected => dispatch(Message.Incoming.Disconnected)
+    | Exthost_Transport.Disconnected =>
+      dispatch(Message.Incoming.Disconnected)
     | Exthost_Transport.Received(packet) => onPacket(packet)
     };
 
-  let resTransport = Exthost_Transport.start(~namedPipe, ~dispatch=transportHandler);
+  let resTransport =
+    Exthost_Transport.start(~namedPipe, ~dispatch=transportHandler);
 
   resTransport |> Result.iter(t => transport := Some(t));
 
