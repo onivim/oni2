@@ -13,6 +13,7 @@ module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 open Oni_Extensions;
+open Exthost.Extension;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
 module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
@@ -22,7 +23,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
     let extensions =
       Core.Log.perf("Discover extensions", () => {
         let extensions =
-          ExtensionScanner.scan(
+          Scanner.scan(
             // The extension host assumes bundled extensions start with 'vscode.'
             ~category=Bundled,
             ~prefix=Some("vscode"),
@@ -31,7 +32,7 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
 
         let developmentExtensions =
           switch (setup.developmentExtensionsPath) {
-          | Some(p) => ExtensionScanner.scan(~category=Development, p)
+          | Some(p) => Scanner.scan(~category=Development, p)
           | None => []
           };
 
@@ -355,11 +356,11 @@ let start =
   let setIconTheme = s => {
     let iconThemeInfo =
       extensions
-      |> List.map((ext: ExtensionScanner.t) =>
+      |> List.map((ext: Scanner.ScanResult.t) =>
            ext.manifest.contributes.iconThemes
          )
       |> List.flatten
-      |> List.filter((iconTheme: ExtensionContributions.IconTheme.t) =>
+      |> List.filter((iconTheme: Contributions.IconTheme.t) =>
            String.equal(iconTheme.id, s)
          );
 

@@ -8,7 +8,7 @@ type t = StringMap.t(string);
 
 let initial = StringMap.empty;
 
-let to_string_map = items => {
+let toStringMap = items => {
   List.fold_left(
     (acc, curr) => {
       let (key, json) = curr;
@@ -24,7 +24,7 @@ let to_string_map = items => {
 
 let of_yojson = json => {
   switch (json) {
-  | `Assoc(items) => to_string_map(items)
+  | `Assoc(items) => toStringMap(items)
   | _ => StringMap.empty
   };
 };
