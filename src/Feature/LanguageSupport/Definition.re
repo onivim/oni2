@@ -22,14 +22,13 @@ type t = option(definition);
 let empty: t = None;
 
 let getAt = (bufferId, position, definition: t) => {
-  let getHover = definition => {
+  let getHover = definition =>
     if (bufferId === definition.bufferId
         && Location.equals(position, definition.requestPosition)) {
       definition.result;
     } else {
       None;
     };
-  };
 
   Option.bind(definition, getHover);
 };

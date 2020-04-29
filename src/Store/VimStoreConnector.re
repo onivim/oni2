@@ -116,14 +116,15 @@ let start =
     let getDefinition = (buffer, editor) => {
       let id = Core.Buffer.getId(buffer);
       let position = Editor.getPrimaryCursor(~buffer, editor);
-      let ret = Definition.getAt(id, position, state.definition)
-      |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
-           Actions.OpenFileByPath(
-             definitionResult.uri |> Core.Uri.toFileSystemPath,
-             None,
-             Some(definitionResult.location),
-           );
-         });
+      let ret =
+        Definition.getAt(id, position, state.definition)
+        |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
+             Actions.OpenFileByPath(
+               definitionResult.uri |> Core.Uri.toFileSystemPath,
+               None,
+               Some(definitionResult.location),
+             )
+           });
       ret;
     };
 
@@ -238,9 +239,7 @@ let start =
         };
 
       dispatch(
-        Actions.Terminal(
-          Command(NewTerminal({cmd: Some(cmd), splitDirection})),
-        ),
+        Actions.Terminal(Command(NewTerminal({cmd, splitDirection}))),
       );
     });
 
@@ -531,7 +530,7 @@ let start =
              };
            ret;
          })
-      |> Option.value(~default=Vim.Context.default());
+      |> Option.value(~default=Vim.Context.current());
     };
 
   let checkCommandLineCompletions = () => {
@@ -641,24 +640,9 @@ let start =
   let commandEffect = cmd => {
     Isolinear.Effect.create(~name="vim.command", () => {
       // TODO: Hook up effect handler
-      ignore(
-        Vim.command(cmd): (Vim.Context.t, list(Vim.Effect.t)),
-      )
+      ignore(Vim.command(cmd): Vim.Context.t)
     });
   };
-
-  let handleVimEffect = (~state, ~dispatch) =>
-    fun
-    | Vim.Effect.Message({priority, title, message}) => {
-        dispatch(Actions.VimMessageReceived({priority, title, message}));
-      }
-    | Vim.Effect.Goto(_) => gotoDefinition(state, dispatch)
-    | Vim.Effect.ShowVersion => Actions.OpenFileByPath("oni://Version", None, None) |> dispatch
-    | Vim.Effect.ShowIntro => Actions.OpenFileByPath("oni://Welcome", None, None) |> dispatch
-    | _ => ();
-
-  let handleVimEffects = (~state, ~dispatch, effects) =>
-    effects |> List.iter(handleVimEffect(~state, ~dispatch));
 
   let inputEffect = key =>
     Isolinear.Effect.createWithDispatch(~name="vim.input", dispatch =>
@@ -670,18 +654,10 @@ let start =
 
         let context = contextFromState(state);
 
-        let ({cursors, topLine, leftColumn, _}: Vim.Context.t, effects) =
+        let {cursors, topLine, leftColumn, _}: Vim.Context.t =
           Vim.input(~context, key);
         let newTopLine = topLine;
         let newLeftColumn = leftColumn;
-
-        // TODO: There is a timing dependency here
-        // If the cursor moved, it will clear the available definition,
-        // so effects need to be run prior to cursor moving.
-        // Alternatively - we need to be more picky when we dispatch
-        // EditorCursorMove/EditorScrollToLine/EditorScrollToColumn -
-        // only dispatching when they have changed.
-        effects |> handleVimEffects(~state, ~dispatch);
 
         let () =
           editor
@@ -807,17 +783,8 @@ let start =
         };
 
         let completion = Path.trimTrailingSeparator(completion);
-        let latestContext = ref(Vim.Context.default());
-        String.iter(
-          c => {
-            let (context, _eff) =
-              Vim.input(~context=latestContext^, String.make(1, c));
-            latestContext := context;
-            ();
-          },
-          completion,
-        );
-        let cursors = latestContext^.cursors;
+        let latestContext: Vim.Context.t = Core.VimEx.inputString(completion);
+        let cursors = latestContext.cursors;
         updateActiveEditorCursors(cursors);
         isCompleting := false;
       }
@@ -835,18 +802,11 @@ let start =
                Vim.command("set paste") |> ignore;
              };
 
-             let latestContext = ref(contextFromState(state));
-             Zed_utf8.iter(
-               s => {
-                 let (context, _eff) =
-                   Vim.input(~context=latestContext^, Zed_utf8.singleton(s));
-                 latestContext := context;
-               },
-               text,
-             );
+             let latestContext: Vim.Context.t =
+               Oni_Core.VimEx.inputString(text);
 
              if (!isCmdLineMode) {
-               let cursors = latestContext^.cursors;
+               let cursors = latestContext.cursors;
                updateActiveEditorCursors(cursors);
                Vim.command("set nopaste") |> ignore;
              };
@@ -885,7 +845,7 @@ let start =
     Isolinear.Effect.create(~name="vim.undo", () => {
       let _ = Vim.input("<esc>");
       let _ = Vim.input("<esc>");
-      let ({cursors, _}: Vim.Context.t, _eff) = Vim.input("u");
+      let {cursors, _}: Vim.Context.t = Vim.input("u");
       updateActiveEditorCursors(cursors);
       ();
     });
@@ -894,7 +854,7 @@ let start =
     Isolinear.Effect.create(~name="vim.redo", () => {
       let _ = Vim.input("<esc>");
       let _ = Vim.input("<esc>");
-      let ({cursors, _}: Vim.Context.t, _eff) = Vim.input("<c-r>");
+      let {cursors, _}: Vim.Context.t = Vim.input("<c-r>");
       updateActiveEditorCursors(cursors);
       ();
     });
@@ -950,8 +910,7 @@ let start =
       let _ = Vim.input("g");
       let _ = Vim.input("g");
       let _ = Vim.input("G");
-      let ({cursors, topLine, leftColumn, _}: Vim.Context.t, _eff) =
-        Vim.input("$");
+      let {cursors, topLine, leftColumn, _}: Vim.Context.t = Vim.input("$");
       let newTopLine = topLine;
       let newLeftColumn = leftColumn;
 
