@@ -12,7 +12,7 @@ runTestWithInput(
     state.vimMode == Vim.Types.Normal
   );
 
-  Vim.command("e regression-file-modified-indication.txt") |> ignore;
+  ignore(Vim.command("e regression-file-modified-indication.txt"): Vim.Context.t);
 
   let id = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
 

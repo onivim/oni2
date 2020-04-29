@@ -7,11 +7,11 @@ runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => 
   );
 
   /* Switch to root directory */
-  if (Revery.Environment.os == Revery.Environment.Mac) {
+  let _: Vim.Context.t = if (Revery.Environment.os == Revery.Environment.Mac) {
     // CI machines timeout with '/' - so we'll use home (which also reproduces the crash)
-    Vim.command("cd ~") |> ignore;
+    Vim.command("cd ~");
   } else {
-    Vim.command("cd /") |> ignore;
+    Vim.command("cd /");
   };
 
   /* Launch quick open */
