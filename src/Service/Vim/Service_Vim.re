@@ -1,24 +1,24 @@
 let forceReload = () =>
   Isolinear.Effect.create(~name="vim.discardChanges", () =>
-    Vim.command("e!") |> ignore
+    ignore(Vim.command("e!"): Vim.Context.t);
   );
 
 let forceOverwrite = () =>
   Isolinear.Effect.create(~name="vim.forceOverwrite", () =>
-    Vim.command("w!") |> ignore
+    ignore(Vim.command("w!"): Vim.Context.t);
   );
 
 let reload = () =>
   Isolinear.Effect.create(~name="vim.reload", () => {
-    Vim.command("e") |> ignore
+    ignore(Vim.command("e"): Vim.Context.t);
   });
 
 let saveAllAndQuit = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>
-    Vim.command("xa") |> ignore
+    ignore(Vim.command("xa"): Vim.Context.t);
   );
 
 let quitAll = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>
-    Vim.command("qa!") |> ignore
+    ignore(Vim.command("qa!"): Vim.Context.t);
   );
