@@ -5,6 +5,7 @@
     "run-ci": "esy '@test' x OniUnitTestRunnerCI",
     "core": "esy '@test' x OniUnitTestRunnerCore",
     "model": "esy '@test' x OniUnitTestRunnerModel",
+    "exthost": "esy '@test' x OniUnitTestRunnerExtHost",
     "watch": "esy '@test' dune build --watch --root . -j4"
   },
   "override": {

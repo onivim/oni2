@@ -32,7 +32,7 @@ module ShellLaunchConfig: {
   type t = {
     name: string,
     executable: string,
-    arguments: list(string)
+    arguments: list(string),
   };
 
   let to_yojson: t => Yojson.Safe.t;
