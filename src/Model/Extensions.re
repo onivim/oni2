@@ -7,15 +7,17 @@
 open Oni_Core;
 open Oni_Extensions;
 
+open Exthost.Extension;
+
 type t = {
   activatedIds: list(string),
-  extensions: list(ExtensionScanner.t),
+  extensions: list(Scanner.ScanResult.t),
 };
 
 [@deriving show({with_path: false})]
 type action =
   | Activated(string /* id */)
-  | Discovered([@opaque] list(ExtensionScanner.t))
+  | Discovered([@opaque] list(Scanner.ScanResult.t))
   | ExecuteCommand({
       command: string,
       arguments: [@opaque] list(Json.t),
@@ -33,7 +35,7 @@ let add = (extensions, model) => {
   extensions: extensions @ model.extensions,
 };
 
-let _filterBundled = (scanner: ExtensionScanner.t) => {
+let _filterBundled = (scanner: Scanner.ScanResult.t) => {
   let name = scanner.manifest.name;
 
   name == "vscode.typescript-language-features"
@@ -50,10 +52,10 @@ let _filterBundled = (scanner: ExtensionScanner.t) => {
 let getExtensions = (~category, model) => {
   let results =
     model.extensions
-    |> List.filter((ext: ExtensionScanner.t) => ext.category == category);
+    |> List.filter((ext: Scanner.ScanResult.t) => ext.category == category);
 
   switch (category) {
-  | ExtensionScanner.Bundled => List.filter(_filterBundled, results)
+  | Scanner.Bundled => List.filter(_filterBundled, results)
   | _ => results
   };
 };
@@ -61,13 +63,13 @@ let getExtensions = (~category, model) => {
 // TODO: Should be stored as proper commands instead of converting every time
 let commands = model => {
   model.extensions
-  |> List.map((ext: ExtensionScanner.t) => ext.manifest.contributes.commands)
+  |> List.map((ext: Scanner.ScanResult.t) => ext.manifest.contributes.commands)
   |> List.flatten
-  |> List.map((extcmd: ExtensionContributions.Command.t) =>
+  |> List.map((extcmd: Contributions.Command.t) =>
        Command.{
          id: extcmd.command,
          category: extcmd.category,
-         title: Some(extcmd.title |> LocalizedToken.to_string),
+         title: Some(extcmd.title |> LocalizedToken.toString),
          icon: None,
          isEnabledWhen: extcmd.condition,
          msg:
@@ -82,7 +84,7 @@ let commands = model => {
 let menus = model =>
   // Combine menu items contributed to common menus from different extensions
   List.fold_left(
-    (acc, extension: ExtensionScanner.t) =>
+    (acc, extension: Scanner.ScanResult.t) =>
       List.fold_left(
         (acc, menu: Menu.Schema.definition) =>
           StringMap.add(menu.id, menu.items, acc),

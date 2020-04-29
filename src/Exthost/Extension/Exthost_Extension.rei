@@ -41,7 +41,14 @@ module Contributions: {
       command: string,
       title: LocalizedToken.t,
       category: option(string),
+      condition: WhenExpr.t,
     };
+  };
+
+  module Menu: {
+    [@deriving show]
+    type t = Oni_Core.Menu.Schema.definition
+    and item = Oni_Core.Menu.Schema.item;
   };
 
   module Configuration: {
@@ -50,6 +57,8 @@ module Contributions: {
       name: string,
       default: [@opaque] Oni_Core.Json.t,
     };
+
+    let toSettings: t => Oni_Core.Config.Settings.t;
   };
 
   module Language: {
@@ -92,12 +101,15 @@ module Contributions: {
   [@deriving show]
   type t = {
     commands: list(Command.t),
+    menus: list(Menu.t),
     languages: list(Language.t),
     grammars: list(Grammar.t),
     themes: list(Theme.t),
     iconThemes: list(IconTheme.t),
     configuration: Configuration.t,
   };
+
+  let encode: Oni_Core.Json.encoder(t);
 };
 
 module Manifest: {
@@ -128,6 +140,12 @@ module Manifest: {
     | Workspace;
 
   let decode: Oni_Core.Json.decoder(t);
+
+  let getDisplayName: t => string;
+
+  module Encode: {
+    let kind: Oni_Core.Json.encoder(kind);
+  }
 };
 
 module Scanner: {
