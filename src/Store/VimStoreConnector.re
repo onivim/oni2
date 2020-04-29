@@ -99,7 +99,7 @@ let start =
     };
   });
 
-let _: unit => unit =
+  let _: unit => unit =
     Vim.onVersion(() => {
       Actions.OpenFileByPath("oni://Version", None, None) |> dispatch
     });
@@ -799,7 +799,7 @@ let _: unit => unit =
       }
     );
 
-  let pasteIntoEditorAction = state =>
+  let pasteIntoEditorAction =
     Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
       let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
       let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
@@ -938,7 +938,7 @@ let _: unit => unit =
       )
     | Command("editor.action.clipboardPasteAction") => (
         state,
-        pasteIntoEditorAction(state),
+        pasteIntoEditorAction,
       )
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
