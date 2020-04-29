@@ -10,7 +10,6 @@ module Log = (val Log.withNamespace("Oni2.Extensions.NodeTask"));
 let run =
     (
       ~name="Anonymous",
-      ~scheduler=Scheduler.mainThread,
       ~args=[],
       ~setup: Setup.t,
       script: string,
@@ -50,8 +49,9 @@ let run =
              [setup.nodePath, scriptPath, ...args],
            );
 
+         // If process was created successfully, we'll read from stdout
          process
-         |> Result.iter(p => {
+         |> Result.iter(_ => {
               Luv.Stream.read_start(
                 parent_pipe,
                 fun
