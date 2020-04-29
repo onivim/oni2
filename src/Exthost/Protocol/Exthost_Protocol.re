@@ -1,7 +1,6 @@
 open Exthost_Transport;
 open Exthost_Extension;
 
-
 module Log = (val Timber.Log.withNamespace("Transport"));
 
 module ByteParser = {
