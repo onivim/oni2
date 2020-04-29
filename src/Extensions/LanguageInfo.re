@@ -5,11 +5,12 @@
 open Oni_Core;
 open Rench;
 
-open ExtensionScanner;
+open Exthost.Extension;
+open Scanner.ScanResult;
 
 type t = {
-  grammars: list(ExtensionContributions.Grammar.t),
-  languages: list(ExtensionContributions.Language.t),
+  grammars: list(Contributions.Grammar.t),
+  languages: list(Contributions.Language.t),
   extToLanguage: StringMap.t(string),
   languageToConfigurationPath: StringMap.t(string),
   languageToScope: StringMap.t(string),
@@ -87,19 +88,19 @@ let getTreesitterPathFromScope = (li: t, scope: string) => {
   li.scopeToTreesitterPath |> StringMap.find_opt(scope) |> Option.join;
 };
 
-let _getLanguageTuples = (lang: ExtensionContributions.Language.t) => {
+let _getLanguageTuples = (lang: Contributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
 };
 
-let _getGrammars = (extensions: list(ExtensionScanner.t)) => {
+let _getGrammars = (extensions: list(Scanner.ScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.grammars) |> List.flatten;
 };
 
-let _getLanguages = (extensions: list(ExtensionScanner.t)) => {
+let _getLanguages = (extensions: list(Scanner.ScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
 };
 
-let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
+let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
   let grammars = _getGrammars(extensions);
   let languages = _getLanguages(extensions);
 
@@ -114,7 +115,7 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
          },
          StringMap.empty,
        );
-  open ExtensionContributions.Grammar;
+  open Contributions.Grammar;
   let languageToScope =
     grammars
     |> List.fold_left(
@@ -145,7 +146,7 @@ let ofExtensions = (extensions: list(ExtensionScanner.t)) => {
   let languageToConfigurationPath =
     languages
     |> List.fold_left(
-         (prev, {id, configuration, _}: ExtensionContributions.Language.t) => {
+         (prev, {id, configuration, _}: Contributions.Language.t) => {
            switch (configuration) {
            | None => prev
            | Some(configPath) => StringMap.add(id, configPath, prev)

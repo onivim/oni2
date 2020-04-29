@@ -72,7 +72,6 @@ let start = () => {
       () => {
         let _ =
           Oni_Extensions.NodeTask.run(
-            ~scheduler=Scheduler.immediate,
             ~setup=Oni_Core.Setup.init(),
             "add-to-path.js",
           );

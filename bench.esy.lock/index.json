@@ -1,5 +1,5 @@
 {
-  "checksum": "4f7c15df06691d8e32bef10cf57c207e",
+  "checksum": "be2a7c4e3d6087014ed27a11ca58e486",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -284,27 +284,6 @@
       ],
       "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
     },
-    "reason-vscode-exthost@github:onivim/reason-vscode-exthost#453dcc3@d41d8cd9": {
-      "id":
-        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#453dcc3@d41d8cd9",
-      "name": "reason-vscode-exthost",
-      "version": "github:onivim/reason-vscode-exthost#453dcc3",
-      "source": {
-        "type": "install",
-        "source": [ "github:onivim/reason-vscode-exthost#453dcc3" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
-        "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
-        "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
-        "@opam/luv@opam:0.5.2@bfb5a32a", "@opam/dune@opam:2.5.1@a0c1e658",
-        "@opam/decoders-yojson@opam:0.3.0@b9081413",
-        "@glennsl/timber@1.0.0@d41d8cd9", "@esy-ocaml/reason@3.5.2@d41d8cd9"
-      ],
-      "devDependencies": [ "ocaml@4.8.1000@d41d8cd9" ]
-    },
     "reason-tree-sitter@1.0.1001@d41d8cd9": {
       "id": "reason-tree-sitter@1.0.1001@d41d8cd9",
       "name": "reason-tree-sitter",
@@ -451,7 +430,7 @@
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.0@d41d8cd9", "ocaml@4.8.1000@d41d8cd9",
-        "libvim@8.10869.40@d41d8cd9",
+        "libvim@8.10869.41@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.1@a0c1e658", "@esy-ocaml/reason@3.5.2@d41d8cd9"
@@ -643,14 +622,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.40@d41d8cd9": {
-      "id": "libvim@8.10869.40@d41d8cd9",
+    "libvim@8.10869.41@d41d8cd9": {
+      "id": "libvim@8.10869.41@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.40",
+      "version": "8.10869.41",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.40.tgz#sha1:293fc51c6da2c132397970257332ea4698c8c161"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.41.tgz#sha1:b22bae4a0f9661e4f4e4ed9b8a540eefe5d3bb37"
         ]
       },
       "overrides": [],
@@ -1202,7 +1181,6 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
-        "reason-vscode-exthost@github:onivim/reason-vscode-exthost#453dcc3@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3022@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",

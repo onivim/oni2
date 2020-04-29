@@ -1,11 +1,11 @@
 /*
- * ExtensionManifest.re
+ * Manifest.re
  *
  * Module to describing metadata about an extension
  */
-module Path = Rench.Path;
+open Rench;
 
-module Json = Oni_Core.Json;
+open Oni_Core;
 
 [@deriving show]
 type t = {
@@ -24,7 +24,7 @@ type t = {
   extensionDependencies: list(string),
   extensionPack: list(string),
   extensionKind: kind,
-  contributes: ExtensionContributions.t,
+  contributes: Contributions.t,
   enableProposedApi: bool,
 }
 
@@ -78,7 +78,11 @@ module Decode = {
             field.withDefault("extensionPack", [], list(string)),
           extensionKind: field.withDefault("extensionKind", Ui, kind),
           contributes:
-            field.required("contributes", ExtensionContributions.decode),
+            field.withDefault(
+              "contributes",
+              Contributions.default,
+              Contributions.decode,
+            ),
           enableProposedApi:
             field.withDefault("enableProposedApi", false, bool),
         }
@@ -99,16 +103,15 @@ let decode = Decode.manifest;
 
 let getDisplayName = (manifest: t) => {
   manifest.displayName
-  |> Option.map(tok => LocalizedToken.to_string(tok))
+  |> Option.map(tok => LocalizedToken.toString(tok))
   |> Option.value(~default=manifest.name);
 };
 
 let remapPaths = (rootPath: string, manifest: t) => {
   ...manifest,
-  main: Option.map(Path.join(rootPath), manifest.main),
+  //main: Option.map(Path.join(rootPath), manifest.main),
   icon: Option.map(Path.join(rootPath), manifest.icon),
-  contributes:
-    ExtensionContributions.remapPaths(rootPath, manifest.contributes),
+  contributes: Contributions.remapPaths(rootPath, manifest.contributes),
 };
 
 let updateName = (nameSetter, manifest: t) => {
@@ -120,5 +123,5 @@ let localize = (loc: LocalizationDictionary.t, manifest: t) => {
   ...manifest,
   displayName:
     Option.map(LocalizedToken.localize(loc), manifest.displayName),
-  contributes: ExtensionContributions.localize(loc, manifest.contributes),
+  contributes: Contributions.localize(loc, manifest.contributes),
 };

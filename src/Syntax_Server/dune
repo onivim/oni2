@@ -16,5 +16,5 @@
         Revery
         textmate
         treesitter
-        vscode-exthost
+        Oni2.exthost
     ))

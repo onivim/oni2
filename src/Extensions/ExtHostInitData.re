@@ -8,8 +8,7 @@
 open Rench;
 
 open Oni_Core;
-open ExtensionManifest;
-open ExtensionScanner;
+open Exthost.Extension;
 
 /*
  * ExtensionInfo
@@ -34,20 +33,20 @@ module ExtensionInfo = {
     engines: string,
     activationEvents: list(string),
     extensionDependencies: list(string),
-    extensionKind: ExtensionManifest.kind,
-    contributes: ExtensionContributions.t,
+    extensionKind: Manifest.kind,
+    contributes: Contributions.t,
     enableProposedApi: bool,
   };
 
-  let ofScannedExtension = (extensionInfo: ExtensionScanner.t) => {
-    let {path, manifest, _} = extensionInfo;
+  let ofScannedExtension = (extensionInfo: Scanner.ScanResult.t) => {
+    let {path, manifest, _}: Scanner.ScanResult.t = extensionInfo;
 
     {
       identifier: manifest.name,
       extensionLocationPath: path,
       name: manifest.name,
       /* publisher: manifest.publisher, */
-      main: manifest.main,
+      main: Option.map(Rench.Path.join(path), manifest.main),
       version: manifest.version,
       engines: manifest.engines,
       activationEvents: manifest.activationEvents,
@@ -72,11 +71,8 @@ module ExtensionInfo = {
           "extensionDependencies",
           data.extensionDependencies |> list(string),
         ),
-        (
-          "extensionKind",
-          data.extensionKind |> ExtensionManifest.Encode.kind,
-        ),
-        ("contributes", data.contributes |> ExtensionContributions.encode),
+        ("extensionKind", data.extensionKind |> Manifest.Encode.kind),
+        ("contributes", data.contributes |> Contributions.encode),
         ("enableProposedApi", data.enableProposedApi |> bool),
       ])
     );

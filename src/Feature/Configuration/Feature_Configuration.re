@@ -33,17 +33,16 @@ let initial = (~getUserSettings, contributions) =>
   });
 
 let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
-  open Oni_Extensions;
+  open Exthost.Extension;
+  open Scanner.ScanResult;
 
   let defaults =
     extensions
-    |> List.map(ext =>
-         ext.ExtensionScanner.manifest.contributes.configuration
-       )
-    |> List.map(ExtensionContributions.Configuration.toSettings)
+    |> List.map(ext => ext.manifest.contributes.configuration)
+    |> List.map(Contributions.Configuration.toSettings)
     |> Config.Settings.unionMany
     |> Config.Settings.union(Config.Schema.defaults(config.schema))
-    |> Configuration.Model.fromSettings;
+    |> Oni_Extensions.Configuration.Model.fromSettings;
 
   let user =
     Config.Settings.fromList([
@@ -53,9 +52,9 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
       ("terminal.integrated.env.osx", Json.Encode.null),
     ])
     |> Config.Settings.union(config.user)
-    |> Configuration.Model.fromSettings;
+    |> Oni_Extensions.Configuration.Model.fromSettings;
 
-  Configuration.create(~defaults, ~user, ());
+  Oni_Extensions.Configuration.create(~defaults, ~user, ());
 };
 
 [@deriving show({with_path: false})]
