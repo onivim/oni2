@@ -143,7 +143,7 @@ let update = (~config: Config.resolver, model: t, msg) => {
 
     let arguments =
       switch (Revery.Environment.os) {
-      | Windows => Configuration.ShellArgs.win.get(config)
+      | Windows => Configuration.ShellArgs.windows.get(config)
       | Mac => Configuration.ShellArgs.osx.get(config)
       | Linux => Configuration.ShellArgs.linux.get(config)
       | _ => []
