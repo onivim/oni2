@@ -21,4 +21,4 @@ let saveAllAndQuit = () =>
 let quitAll = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>
     ignore(Vim.command("qa!"): Vim.Context.t)
-  )
+  );
