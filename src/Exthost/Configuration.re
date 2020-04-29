@@ -31,6 +31,12 @@ module Model = {
       ])
     );
 
+  let fromSettings = settings => {
+    keys: settings |> Config.Settings.keys |> List.map(Config.keyAsString),
+    contents: settings |> Config.Settings.toJson,
+  };
+
+
   let to_yojson = Json.Encode.encode_value(encode);
 
   let toString = (model: t) => {
