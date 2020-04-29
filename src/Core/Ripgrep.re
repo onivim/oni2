@@ -1,5 +1,4 @@
 open Kernel;
-open Rench;
 open Utility;
 
 module Time = Revery_Core.Time;
@@ -141,57 +140,78 @@ module RipgrepProcessingJob = {
 };
 
 let process = (rgPath, args, onUpdate, onComplete) => {
-  let argsStr = String.concat("|", Array.to_list(args));
-  Log.debugf(m => m("Starting process: %s with args: |%s|", rgPath, argsStr));
-
-  // Mutex to
-  let jobMutex = Mutex.create();
-  let job = ref(RipgrepProcessingJob.create(~onUpdate, ~onComplete));
-
   let disposeTick = ref(None);
 
-  Revery.App.runOnMainThread(() =>
-    disposeTick :=
-      Some(
-        Revery.Tick.interval(
-          _ =>
-            if (!Job.isComplete(job^)) {
-              Mutex.lock(jobMutex);
-              job := Job.tick(job^);
-              Mutex.unlock(jobMutex);
-            },
-          Time.zero,
-        ),
-      )
-  );
+  let disposeAll = () => {
+    disposeTick^ |> Option.iter(f => f());
+  };
 
-  let childProcess = ChildProcess.spawn(rgPath, args);
-
-  let disposeOnData =
-    Event.subscribe(
-      childProcess.stdout.onData,
-      value => {
-        Mutex.lock(jobMutex);
-        job := RipgrepProcessingJob.queueWork(value, job^);
-        Mutex.unlock(jobMutex);
-      },
+  let on_exit = (_, ~exit_status: int64, ~term_signal as _) => {
+    Log.debugf(m =>
+      m("Process completed - exit code: %n", exit_status |> Int64.to_int)
     );
+    onComplete();
+    disposeAll();
+  };
 
-  let disposeOnClose =
-    Event.subscribe(childProcess.onClose, exitCode => {
-      Log.debugf(m => m("Process completed - exit code: %n", exitCode))
-    });
+  Log.debugf(m =>
+    m(
+      "Starting process: %s with args: |%s|",
+      rgPath,
+      args |> String.concat(" "),
+    )
+  );
+  let pipe = Luv.Pipe.init() |> Result.get_ok;
+
+  let process =
+    Luv.Process.spawn(
+      ~on_exit,
+      ~redirect=[
+        Luv.Process.to_parent_pipe(
+          ~fd=Luv.Process.stdout,
+          ~parent_pipe=pipe,
+          (),
+        ),
+      ],
+      rgPath,
+      [rgPath, ...args],
+    )
+    |> Result.get_ok;
 
   let dispose = () => {
-    Log.debug("Session complete.");
-    disposeOnData();
-    disposeOnClose();
-    switch (disposeTick^) {
-    | Some(dispose) => dispose()
-    | None => ()
-    };
-    childProcess.kill(Sys.sigkill);
+    disposeAll();
+    let _: result(unit, Luv.Error.t) = Luv.Process.kill(process, 2);
+    ();
   };
+
+  // Mutex to
+  let job = ref(RipgrepProcessingJob.create(~onUpdate, ~onComplete));
+
+  Luv.Stream.read_start(
+    pipe,
+    fun
+    | Error(`EOF) => {
+        Log.info("Done!");
+        Luv.Handle.close(pipe, ignore);
+      }
+    | Error(msg) => Log.error(Luv.Error.strerror(msg))
+    | Ok(buffer) => {
+        let bytes = Luv.Buffer.to_bytes(buffer);
+        job := RipgrepProcessingJob.queueWork(bytes, job^);
+        Log.info(Luv.Buffer.to_string(buffer));
+      },
+  );
+
+  disposeTick :=
+    Some(
+      Revery.Tick.interval(
+        _ =>
+          if (!Job.isComplete(job^)) {
+            job := Job.tick(job^);
+          },
+        Time.zero,
+      ),
+    );
 
   dispose;
 };
@@ -222,10 +242,7 @@ let search =
     |> List.map(x => ["-g", x])
     |> List.concat;
 
-  let args =
-    globs
-    @ ["--smart-case", "--hidden", "--files", "--", directory]
-    |> Array.of_list;
+  let args = globs @ ["--smart-case", "--hidden", "--files", "--", directory];
 
   process(
     executablePath,
@@ -239,7 +256,7 @@ let findInFiles =
     (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete) => {
   process(
     executablePath,
-    [|"--smart-case", "--hidden", "--json", "--", query, directory|],
+    ["--smart-case", "--hidden", "--json", "--", query, directory],
     items => {
       items
       |> List.filter_map(Match.fromJsonString)
