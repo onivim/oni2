@@ -3,6 +3,7 @@ open Utility;
 open Oni_Extensions;
 
 open TestFramework;
+open Exthost.Extension;
 
 module Helpers = Oni_Core_Test.Helpers;
 
@@ -83,7 +84,7 @@ describe("ExtHostTransport", ({test, _}) => {
     let testExtensionsPath =
       Rench.Path.join(rootPath, "test/test_extensions");
     let extensions =
-      ExtensionScanner.scan(~category=Development, testExtensionsPath)
+      Scanner.scan(~category=Development, testExtensionsPath)
       |> List.map(ext =>
            ExtHostInitData.ExtensionInfo.ofScannedExtension(ext)
          );

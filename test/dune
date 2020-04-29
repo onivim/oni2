@@ -15,6 +15,7 @@
         Oni_Syntax_Test
         Feature_Editor_Test
         Feature_LanguageSupport_Test
+        Exthost_Transport_Test
             ))
 
 (executable
@@ -70,4 +71,5 @@
         Oni_Input_Test
         Oni_Syntax_Test
         Oni_Model_Test
+        Exthost_Transport_Test
             ))

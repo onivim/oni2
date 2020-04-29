@@ -81,11 +81,7 @@ let mainChecks = [
   (
     "Verify node dependencies",
     (setup: Setup.t) => {
-      Oni_Extensions.NodeTask.run(
-        ~scheduler=Scheduler.immediate,
-        ~setup,
-        "check-health.js",
-      )
+      Oni_Extensions.NodeTask.run(~setup, "check-health.js")
       |> LwtEx.sync
       |> (
         fun

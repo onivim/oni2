@@ -1,8 +1,9 @@
 /*
- * ExtensionContributions.re
+ * Contributions.re
  *
  * Types for VSCode Extension contribution points
  */
+
 open Oni_Core;
 open Rench;
 
@@ -249,28 +250,38 @@ module IconTheme = {
 
 [@deriving show]
 type t = {
-  configuration: Configuration.t,
   commands: list(Command.t),
   menus: list(Menu.t),
   languages: list(Language.t),
   grammars: list(Grammar.t),
   themes: list(Theme.t),
   iconThemes: list(IconTheme.t),
+  configuration: Configuration.t,
+};
+
+let default = {
+  commands: [],
+  menus: [],
+  languages: [],
+  grammars: [],
+  themes: [],
+  iconThemes: [],
+  configuration: [],
 };
 
 let decode =
   Json.Decode.(
     obj(({field, _}) =>
       {
-        configuration:
-          field.withDefault("configuration", [], Configuration.decode),
         commands: field.withDefault("commands", [], list(Command.decode)),
-        menus: field.withDefault("menus", [], Menu.Decode.menus),
         languages: field.withDefault("languages", [], list(Language.decode)),
         grammars: field.withDefault("grammars", [], list(Grammar.decode)),
         themes: field.withDefault("themes", [], list(Theme.decode)),
+        menus: field.withDefault("menus", [], Menu.Decode.menus),
         iconThemes:
           field.withDefault("iconThemes", [], list(IconTheme.decode)),
+        configuration:
+          field.withDefault("configuration", [], Configuration.decode),
       }
     )
   );
@@ -278,13 +289,13 @@ let decode =
 let encode = data =>
   Json.Encode.(
     obj([
-      ("configuration", null),
       ("commands", data.commands |> list(Command.encode)),
       ("menus", null),
       ("languages", data.languages |> list(Language.encode)),
       ("grammars", data.grammars |> list(Grammar.encode)),
       ("themes", data.themes |> list(Theme.encode)),
       ("iconThemes", data.iconThemes |> list(IconTheme.encode)),
+      ("configuration", null),
     ])
   );
 

@@ -46,7 +46,7 @@ let uninstallExtension = (_extensionId, _cli) => {
 
 let listExtensions = cli => {
   let extensions = Store.Utility.getUserExtensions(cli);
-  let printExtension = (ext: Ext.ExtensionScanner.t) => {
+  let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
     print_endline(ext.manifest.name);
   };
   List.iter(printExtension, extensions);
@@ -66,7 +66,7 @@ let cliOptions =
     ~listExtensions=
       cli => {
         let extensions = Store.Utility.getUserExtensions(cli);
-        let printExtension = (ext: Ext.ExtensionScanner.t) => {
+        let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
           print_endline(ext.manifest.name);
         };
         List.iter(printExtension, extensions);
