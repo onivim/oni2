@@ -33,3 +33,14 @@ type definition('state, 'value) = {
 
 let define = (key, codec, default, get) => {key, codec, default, get};
 
+module Global = {
+  open Oni_Model.State;
+
+  let version =
+    define("version", string, BuildInfo.commitId, _ => BuildInfo.commitId);
+  let workspace =
+    define("workspace", option(string), None, state =>
+      Base.Option.map(~f=ws => ws.workingDirectory, state.workspace)
+    );
+
+};
