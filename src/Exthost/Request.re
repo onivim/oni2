@@ -1,3 +1,4 @@
+open Oni_Core;
 module Commands = {
   let executeContributedCommand = (~arguments, ~command, client) => {
     Client.notify(
@@ -37,8 +38,8 @@ module TerminalService = {
       ~args=
         `List([
           `Int(id),
-          Types.ShellLaunchConfig.to_yojson(shellLaunchConfig),
-          Types.Uri.to_yojson(activeWorkspaceRoot),
+          ShellLaunchConfig.to_yojson(shellLaunchConfig),
+          Uri.to_yojson(activeWorkspaceRoot),
           `Int(cols),
           `Int(rows),
           `Bool(isWorkspaceShellAllowed),

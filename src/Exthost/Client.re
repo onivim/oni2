@@ -1,7 +1,5 @@
 type reply = unit;
 
-open Oni_Core;
-
 module Protocol = Exthost_Protocol;
 module Extension = Exthost_Extension;
 
