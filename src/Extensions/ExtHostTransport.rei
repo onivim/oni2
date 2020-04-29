@@ -8,6 +8,7 @@
 
 module Protocol = ExtHostProtocol;
 module Workspace = Protocol.Workspace;
+module Configuration = Exthost.Configuration;
 
 type t;
 

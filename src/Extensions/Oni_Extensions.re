@@ -5,7 +5,6 @@
  */
 
 module CompletionItemKind = CompletionItemKind;
-module Configuration = Configuration;
 module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module ExtHostClient = ExtHostClient;
