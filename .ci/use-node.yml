@@ -6,4 +6,4 @@ steps:
     displayName: "Install rimraf"
   - script: npm install
     workingDirectory: test/collateral/exthost
-    displayName "Install new exthost"
+    displayName: "Install new exthost"
