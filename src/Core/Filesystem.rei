@@ -10,7 +10,7 @@ let hasGroup: (int, Unix.stats) => t(unit);
 
 let hasPerm: (int, Unix.stats) => t(unit);
 
-let getHomeDirectory: unit => t(string);
+let getUserDataDirectory: unit => t(string);
 
 let getGroupId: unit => t(int);
 
@@ -28,7 +28,7 @@ let mkTempDir: (~prefix: string=?, unit) => string;
 
 let rmdir: string => t(unit);
 
-let unsafeFindHome: unit => string;
+let getUserDataDirectoryExn: unit => string;
 
 let getOniDirectory: string => t(string);
 
