@@ -148,20 +148,32 @@ module StatusBar: {
 };
 
 module Msg: {
+  module Decorations: {
+    [@deriving show]
+    type msg =
+      | RegisterDecorationProvider({
+          handle: int,
+          label: string,
+        })
+      | UnregisterDecorationProvider({handle: int})
+      | DecorationsDidChange({
+          handle: int,
+          uris: list(Oni_Core.Uri.t),
+        });
+  };
+
   module DocumentContentProvider: {
     [@deriving show]
     type msg =
       | RegisterTextContentProvider({
           handle: int,
-          scheme: string
-      })
-      | UnregisterTextContentProvider({
-        handle: int,
-      })
+          scheme: string,
+        })
+      | UnregisterTextContentProvider({handle: int})
       | VirtualDocumentChange({
-        uri: Oni_Core.Uri.t,
-        value: string,
-      });
+          uri: Oni_Core.Uri.t,
+          value: string,
+        });
   };
 
   [@deriving show]
@@ -170,6 +182,7 @@ module Msg: {
     | Ready
     | Commands(Commands.msg)
     | DebugService(DebugService.msg)
+    | Decorations(Decorations.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
     | ExtensionService(ExtensionService.msg)
     | MessageService(MessageService.msg)

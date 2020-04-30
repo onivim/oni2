@@ -78,14 +78,18 @@ let handlers =
       ~mapper=msg => Msg.DebugService(msg),
       "MainThreadDebugService",
     ),
-    mainNotImplemented("MainThreadDecorations"),
+    main(
+      ~handler=Msg.Decorations.handle,
+      ~mapper=msg => Msg.Decorations(msg),
+      "MainThreadDecorations",
+    ),
     mainNotImplemented("MainThreadDiagnostics"),
     mainNotImplemented("MainThreadDialogs"),
     mainNotImplemented("MainThreadDocuments"),
     main(
       ~handler=Msg.DocumentContentProvider.handle,
       ~mapper=msg => Msg.DocumentContentProvider(msg),
-      "MainThreadDocumentContentProviders"
+      "MainThreadDocumentContentProviders",
     ),
     mainNotImplemented("MainThreadTextEditors"),
     mainNotImplemented("MainThreadEditorInsets"),
