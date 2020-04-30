@@ -23,7 +23,7 @@ runTest(
   );
 
   // '*' test case
-  setClipboard(Some("abc"));
+  setClipboard(Some("abc\n"));
 
   dispatch(KeyboardInput("\""));
   dispatch(KeyboardInput("*"));
@@ -94,7 +94,7 @@ runTest(
     }
   );
   // '+' test case
-  setClipboard(Some("def"));
+  setClipboard(Some("def\n"));
 
   dispatch(KeyboardInput("\""));
   dispatch(KeyboardInput("*"));
@@ -119,7 +119,7 @@ runTest(
   dispatch(KeyboardInput("y"));
   runEffects();
 
-  setClipboard(Some("ghi"));
+  setClipboard(Some("ghi\n"));
 
   dispatch(KeyboardInput("\""));
   dispatch(KeyboardInput("a"));
@@ -137,7 +137,7 @@ runTest(
   );
 
   // Test if the configuration is set - paste from unnamed register will pull from the keyboard
-  setClipboard(Some("jkl"));
+  setClipboard(Some("jkl\n"));
 
   wait(~name="Set configuration to pull clipboard on paste", (state: State.t) => {
     let configuration = state.configuration;
@@ -177,7 +177,7 @@ runTest(
   );
 
   // Set configuration back (paste=false), and it should not pull from clipboard
-  setClipboard(Some("mno"));
+  setClipboard(Some("mno\n"));
 
   wait(~name="Set configuration to pull clipboard on paste", (state: State.t) => {
     let configuration = state.configuration;
@@ -213,6 +213,26 @@ runTest(
       let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "jkl");
+    }
+    );
+  
+  // Single line case - should paste in front of previous text
+  setClipboard(Some("mno"));
+  dispatch(KeyboardInput("\""));
+  dispatch(KeyboardInput("*"));
+  dispatch(KeyboardInput("P"));
+  runEffects();
+
+  wait(
+    ~name=
+      "paste with single line, from clipboard",
+    (state: State.t) =>
+    switch (Selectors.getActiveBuffer(state)) {
+    | None => false
+    | Some(buf) =>
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
+      Log.info("Current line is: |" ++ line ++ "|");
+      String.equal(line, "mnojkl");
     }
   );
 });
