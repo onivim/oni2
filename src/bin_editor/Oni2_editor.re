@@ -18,8 +18,8 @@ module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
-let installExtension = (path, cli) => {
-  switch (Store.Utility.getUserExtensionsDirectory(cli)) {
+let installExtension = (path, Core.Cli.{overriddenExtensionsDir, _}) => {
+  switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
   | Some(extensionsFolder) =>
     let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
 
@@ -45,7 +45,7 @@ let uninstallExtension = (_extensionId, _cli) => {
 };
 
 let listExtensions = cli => {
-  let extensions = Store.Utility.getUserExtensions(cli);
+  let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
   let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
     print_endline(ext.manifest.name);
   };
@@ -64,8 +64,9 @@ let cliOptions =
     ~uninstallExtension,
     ~checkHealth=HealthCheck.run(~checks=All),
     ~listExtensions=
-      cli => {
-        let extensions = Store.Utility.getUserExtensions(cli);
+      ({overriddenExtensionsDir, _}) => {
+        let extensions =
+          Store.Utility.getUserExtensions(~overriddenExtensionsDir);
         let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
           print_endline(ext.manifest.name);
         };
@@ -206,7 +207,10 @@ if (cliOptions.syntaxHighlightService) {
         ~setTitle,
         ~setVsync,
         ~window=Some(window),
-        ~cliOptions=Some(cliOptions),
+        ~filesToOpen=cliOptions.filesToOpen,
+        ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
+        ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
+        ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
         ~quit,
         (),
       );

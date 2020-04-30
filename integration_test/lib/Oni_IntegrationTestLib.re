@@ -54,7 +54,7 @@ let runTest =
     (
       ~configuration=None,
       ~keybindings=None,
-      ~cliOptions=None,
+      ~filesToOpen=[],
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
       test: testCallback,
@@ -143,11 +143,11 @@ let runTest =
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
-      ~cliOptions,
       ~configurationFilePath=Some(configurationFilePath),
       ~keybindingsFilePath=Some(keybindingsFilePath),
       ~quit,
       ~window=None,
+      ~filesToOpen,
       (),
     );
 

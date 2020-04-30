@@ -18,8 +18,9 @@ open Exthost.Extension;
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
 module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
 
-let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
-  if (cli.shouldLoadExtensions) {
+let discoverExtensions =
+    (setup: Core.Setup.t, ~shouldLoadExtensions, ~overriddenExtensionsDir) =>
+  if (shouldLoadExtensions) {
     let extensions =
       Core.Log.perf("Discover extensions", () => {
         let extensions =
@@ -36,7 +37,8 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
           | None => []
           };
 
-        let userExtensions = Utility.getUserExtensions(cli);
+        let userExtensions =
+          Utility.getUserExtensions(~overriddenExtensionsDir);
 
         Log.infof(m =>
           m("Discovered %n user extensions.", List.length(userExtensions))
@@ -80,16 +82,14 @@ let start =
       ~setTitle,
       ~setVsync,
       ~window: option(Revery.Window.t),
-      ~cliOptions: option(Oni_Core.Cli.t),
+      ~filesToOpen=[],
+      ~overriddenExtensionsDir=?,
+      ~shouldLoadExtensions=true,
+      ~shouldSyntaxHighlight=true,
+      ~shouldLoadConfiguration=true,
       (),
     ) => {
   ignore(executingDirectory);
-
-  let cliOptions =
-    Option.value(
-      ~default=Core.Cli.create(~folder="", ~filesToOpen=[], ()),
-      cliOptions,
-    );
 
   let latestRunEffects: ref(option(unit => unit)) = ref(None);
 
@@ -99,7 +99,12 @@ let start =
     | None => ()
     };
 
-  let extensions = discoverExtensions(setup, cliOptions);
+  let extensions =
+    discoverExtensions(
+      setup,
+      ~shouldLoadExtensions,
+      ~overriddenExtensionsDir,
+    );
   let languageInfo = LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
 
@@ -114,7 +119,7 @@ let start =
 
   let syntaxUpdater =
     SyntaxHighlightingStoreConnector.start(
-      ~enabled=cliOptions.shouldSyntaxHighlight,
+      ~enabled=shouldSyntaxHighlight,
       languageInfo,
     );
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
@@ -130,10 +135,11 @@ let start =
   let configurationUpdater =
     ConfigurationStoreConnector.start(
       ~configurationFilePath,
-      ~cliOptions,
       ~getZoom,
       ~setZoom,
       ~setVsync,
+      ~shouldLoadConfiguration,
+      ~filesToOpen,
     );
   let keyBindingsUpdater =
     KeyBindingsStoreConnector.start(keybindingsFilePath);
@@ -183,7 +189,7 @@ let start =
     let syntaxSubscription =
       Feature_Syntax.subscription(
         ~configuration=state.configuration,
-        ~enabled=cliOptions.shouldSyntaxHighlight,
+        ~enabled=shouldSyntaxHighlight,
         ~quitting=state.isQuitting,
         ~languageInfo,
         ~setup,

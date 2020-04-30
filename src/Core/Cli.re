@@ -21,18 +21,6 @@ type t = {
   shouldLoadConfiguration: bool,
 };
 
-let create = (~folder, ~filesToOpen, ()) => {
-  folder,
-  filesToOpen,
-  forceScaleFactor: None,
-  syntaxHighlightService: false,
-  overriddenExtensionsDir: None,
-  shouldClose: false,
-  shouldLoadExtensions: true,
-  shouldSyntaxHighlight: true,
-  shouldLoadConfiguration: true,
-};
-
 let newline = "\n";
 
 let show = (v: t) => {
