@@ -50,6 +50,8 @@ jobs:
   - script: brew reinstall gettext
   - script: brew unlink gettext
   - script: brew link gettext --force
+  - script: find /usr -name libintl*a -print 2>/dev/null
+    displayName: "Look for libintl"
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
@@ -125,6 +127,8 @@ jobs:
   - script: brew reinstall gettext
   - script: brew unlink gettext
   - script: brew link gettext --force
+  - script: find /usr -name libintl*a -print 2>/dev/null
+    displayName: "Look for libintl"
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
