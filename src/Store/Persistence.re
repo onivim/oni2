@@ -89,8 +89,12 @@ let persistIfDirty = (store, state) => {
     );
 
   if (isDirty) {
-    List.iter((Entry({definition, _} as entry)) => entry.value = definition.get(state), store.entries);
-    Console.log("-- persisiting");
+    List.iter(
+      (Entry({definition, _} as entry)) =>
+        entry.value = definition.get(state),
+      store.entries,
+    );
+
     persist(store);
   };
 };
@@ -107,4 +111,48 @@ module Global = {
 
   let store =
     instantiate("global", () => [entry(version), entry(workspace)]);
+};
+
+module Workspace = {
+  let windowX =
+    define("windowX", int, 0, ((_state, window)) =>
+      Revery.Window.getPosition(window) |> fst
+    );
+  let windowY =
+    define("windowY", int, 0, ((_state, window)) =>
+      Revery.Window.getPosition(window) |> snd
+    );
+  let windowWidth =
+    define("windowWidth", int, 800, ((_state, window)) =>
+      Revery.Window.getRawSize(window).width
+    );
+  let windowHeight =
+    define("windowHeight", int, 600, ((_state, window)) =>
+      Revery.Window.getRawSize(window).height
+    );
+
+  let instantiate = path =>
+    instantiate(path, () =>
+      [
+        entry(windowX),
+        entry(windowY),
+        entry(windowWidth),
+        entry(windowHeight),
+      ]
+    );
+
+  let storeFor = {
+    let stores:
+      Hashtbl.t(string, store((Oni_Model.State.t, Revery.Window.t))) =
+      Hashtbl.create(10);
+
+    path =>
+      switch (Hashtbl.find_opt(stores, path)) {
+      | Some(store) => store
+      | None =>
+        let store = instantiate(path);
+        Hashtbl.add(stores, path, store);
+        store;
+      };
+  };
 };
