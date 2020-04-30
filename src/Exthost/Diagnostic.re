@@ -1,5 +1,3 @@
-open EditorCoreTypes;
-
 [@deriving yojson({strict: false})]
 type json = {
   startLineNumber: int,

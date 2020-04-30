@@ -11,6 +11,23 @@ let rec last =
   | [x] => Some(x)
   | [_, ...t] => last(t);
 
+let mapResult: list(result('a, 'b)) => result(list('a), 'b) =
+  items => {
+    List.fold_left(
+      (acc, curr) => {
+        acc
+        |> ResultEx.flatMap(list => {
+             switch (curr) {
+             | Ok(v) => Ok([v, ...list])
+             | Error(_) as err => err
+             }
+           })
+      },
+      Ok([]),
+      items,
+    );
+  };
+
 /**
  * Return all but the last element in a list.
  */

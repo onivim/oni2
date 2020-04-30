@@ -38,20 +38,21 @@ module Decorations = {
 
 module Diagnostics = {
   [@deriving (show, yojson({strict: false}))]
-  type entries = (Uri.t, [@opaque] list(Diagnostic.t));
+  type entry = (Uri.t, [@opaque] list(Diagnostic.t));
   [@deriving show]
   type msg =
     | ChangeMany({
         owner: string,
-        entries,
+        entries: list(entry),
       })
     | Clear({owner: string});
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
-    | ("$changeMany", `List([`String(owner), diagnosticsJson])) =>
+    | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
       diagnosticsJson
-      |> entries_of_yojson
+      |> List.map(entry_of_yojson)
+      |> Oni_Core.Utility.ListEx.mapResult
       |> Result.map(entries => {ChangeMany({owner, entries})})
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)

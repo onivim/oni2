@@ -83,7 +83,11 @@ let handlers =
       ~mapper=msg => Msg.Decorations(msg),
       "MainThreadDecorations",
     ),
-    mainNotImplemented("MainThreadDiagnostics"),
+    main(
+      ~handler=Msg.Diagnostics.handle,
+      ~mapper=msg => Msg.Diagnostics(msg),
+      "MainThreadDiagnostics",
+    ),
     mainNotImplemented("MainThreadDialogs"),
     mainNotImplemented("MainThreadDocuments"),
     main(
