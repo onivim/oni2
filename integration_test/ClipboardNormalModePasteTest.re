@@ -214,8 +214,8 @@ runTest(
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "jkl");
     }
-    );
-  
+  );
+
   // Single line case - should paste in front of previous text
   setClipboard(Some("mno"));
   dispatch(KeyboardInput("\""));
@@ -223,10 +223,7 @@ runTest(
   dispatch(KeyboardInput("P"));
   runEffects();
 
-  wait(
-    ~name=
-      "paste with single line, from clipboard",
-    (state: State.t) =>
+  wait(~name="paste with single line, from clipboard", (state: State.t) =>
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
     | Some(buf) =>
