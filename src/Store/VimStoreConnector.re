@@ -248,9 +248,7 @@ let start =
         };
 
       dispatch(
-        Actions.Terminal(
-          Command(NewTerminal({cmd: Some(cmd), splitDirection})),
-        ),
+        Actions.Terminal(Command(NewTerminal({cmd, splitDirection}))),
       );
     });
 
