@@ -424,124 +424,6 @@ let start =
   let lastCompletionMeet = ref(None);
   let isCompleting = ref(false);
 
-  let contextFromState: State.t => Vim.Context.t =
-    state => {
-      state
-      |> Selectors.getActiveEditorGroup
-      |> Selectors.getActiveEditor
-      |> Option.map((editor: Editor.t) => {
-           let {bufferId, cursors, _}: Editor.t = editor;
-
-           let primaryVimCursor =
-             switch (Editor.getVimCursors(editor)) {
-             | [hd, ..._] => Some(hd)
-             | [] => None
-             };
-
-           let syntaxScope =
-             state
-             |> Selectors.getActiveBuffer
-             |> OptionEx.flatMap(buffer => {
-                  let bufferId = Core.Buffer.getId(buffer);
-
-                  // TODO: Reconcile byte <-> index here
-                  primaryVimCursor
-                  |> Option.map((cursor: Vim.Cursor.t) => {
-                       Feature_Syntax.getSyntaxScope(
-                         ~bufferId,
-                         ~line=cursor.line,
-                         ~bytePosition=Index.toZeroBased(cursor.column),
-                         state.syntaxHighlights,
-                       )
-                     });
-                })
-             |> Option.value(~default=Core.SyntaxScope.none);
-
-           let acpEnabled =
-             Core.Configuration.getValue(
-               c => c.editorAutoClosingBrackets,
-               state.configuration,
-             )
-             |> (
-               fun
-               | LanguageDefined => true
-               | Never => false
-             );
-
-           let autoClosingPairs =
-             if (acpEnabled) {
-               state
-               |> Selectors.getActiveBuffer
-               |> OptionEx.flatMap(Core.Buffer.getFileType)
-               |> OptionEx.flatMap(
-                    Ext.LanguageConfigurationLoader.get_opt(
-                      languageConfigLoader,
-                    ),
-                  )
-               |> Option.map(
-                    Ext.LanguageConfiguration.toVimAutoClosingPairs(
-                      syntaxScope,
-                    ),
-                  )
-               |> Option.value(~default=Vim.AutoClosingPairs.empty);
-             } else {
-               Vim.AutoClosingPairs.empty;
-             };
-
-           let Feature_Editor.EditorLayout.{
-                 bufferHeightInCharacters: height,
-                 bufferWidthInCharacters: width,
-                 _,
-               } =
-             Editor.getLayout(editor);
-
-           let leftColumn = Editor.getLeftVisibleColumn(editor);
-           let topLine = Editor.getTopVisibleLine(editor);
-
-           let editorBuffer = Selectors.getActiveBuffer(state);
-
-           // Set configured line comment
-           let lineComment =
-             editorBuffer
-             |> OptionEx.flatMap(Core.Buffer.getFileType)
-             |> OptionEx.flatMap(
-                  Ext.LanguageConfigurationLoader.get_opt(
-                    languageConfigLoader,
-                  ),
-                )
-             |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
-                  config.lineComment
-                );
-
-           let indentation =
-             editorBuffer
-             |> OptionEx.flatMap(Core.Buffer.getIndentation)
-             |> Option.value(~default=Core.IndentationSettings.default);
-
-           let insertSpaces =
-             switch (indentation.mode) {
-             | Tabs => false
-             | Spaces => true
-             };
-
-           let ret: Vim.Context.t =
-             Vim.Context.{
-               bufferId,
-               leftColumn,
-               topLine,
-               width,
-               height,
-               cursors,
-               autoClosingPairs,
-               lineComment,
-               insertSpaces,
-               tabSize: indentation.size,
-             };
-           ret;
-         })
-      |> Option.value(~default=Vim.Context.current());
-    };
-
   let checkCommandLineCompletions = () => {
     Log.debug("checkCommandLineCompletions");
 
@@ -661,7 +543,8 @@ let start =
         let editor =
           state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
-        let context = contextFromState(state);
+        let context =
+          Oni_Model.VimContext.current(~languageConfigLoader, state);
 
         let {cursors, topLine, leftColumn, _}: Vim.Context.t =
           Vim.input(~context, key);

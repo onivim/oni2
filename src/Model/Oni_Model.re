@@ -38,3 +38,4 @@ module State = State;
 module ThemeInfo = ThemeInfo;
 module Title = Title;
 module Workspace = Workspace;
+module VimContext = VimContext;
