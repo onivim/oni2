@@ -209,7 +209,7 @@
     "ocaml": "~4.7.0",
     "reason-sdl2": "^2.10.2020",
     "reason-jsonrpc": "1.5.0",
-    "reason-libvim": "onivim/reason-libvim#a85c11f",
+    "reason-libvim": "onivim/reason-libvim#a0510e5",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#ae1fd34",
     "reasonFuzz": "*",
     "rench": "1.7.1",
@@ -247,7 +247,7 @@
     "revery-terminal": "revery-ui/revery-terminal#4e8ca1c"
   },
   "devDependencies": {
-    "ocaml": "~4.8",
+    "ocaml": "~4.9",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
