@@ -79,7 +79,7 @@ let start =
     let isMultipleLines =
       fun
       | [s] => String.contains(s, '\n')
-      | [..._] => true
+      | [_, ..._] => true
       | [] => false;
 
     let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
