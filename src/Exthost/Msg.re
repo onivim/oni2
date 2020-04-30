@@ -35,6 +35,30 @@ module Decorations = {
     };
   };
 };
+
+module Diagnostics = {
+  [@deriving (show, yojson({strict: false}))]
+  type entries = (Uri.t, [@opaque] list(Diagnostic.t));
+  [@deriving show]
+  type msg =
+    | ChangeMany({
+        owner: string,
+        entries,
+      })
+    | Clear({owner: string});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$changeMany", `List([`String(owner), diagnosticsJson])) =>
+      diagnosticsJson
+      |> entries_of_yojson
+      |> Result.map(entries => {ChangeMany({owner, entries})})
+    | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
+    | _ => Error("Unhandled method: " ++ method)
+    };
+  };
+};
+
 module DocumentContentProvider = {
   [@deriving show]
   type msg =
@@ -73,6 +97,7 @@ type t =
   | Commands(Commands.msg)
   | DebugService(DebugService.msg)
   | Decorations(Decorations.msg)
+  | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
   | ExtensionService(ExtensionService.msg)
   | MessageService(MessageService.msg)

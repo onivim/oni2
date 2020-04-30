@@ -162,6 +162,18 @@ module Msg: {
         });
   };
 
+  module Diagnostics: {
+    [@deriving (show, yojson({strict: false}))]
+    type entries = (Uri.t, [@opaque] list(Diagnostic.t));
+    [@deriving show]
+    type msg =
+      | ChangeMany({
+          owner: string,
+          entries,
+        })
+      | Clear({owner: string});
+  };
+
   module DocumentContentProvider: {
     [@deriving show]
     type msg =
@@ -183,6 +195,7 @@ module Msg: {
     | Commands(Commands.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
+    | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
     | ExtensionService(ExtensionService.msg)
     | MessageService(MessageService.msg)
