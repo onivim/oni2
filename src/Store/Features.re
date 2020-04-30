@@ -99,7 +99,12 @@ let update =
     (state, effect);
 
   | Terminal(msg) =>
-    let (model, eff) = Feature_Terminal.update(state.terminals, msg);
+    let (model, eff) =
+      Feature_Terminal.update(
+        ~config=Feature_Configuration.resolver(state.config),
+        state.terminals,
+        msg,
+      );
 
     let effect: Isolinear.Effect.t(Actions.t) =
       switch ((eff: Feature_Terminal.outmsg)) {
