@@ -46,10 +46,7 @@ jobs:
   steps:
   - template: .ci/use-node.yml
   - script: brew update
-  - script: brew install libtool libpng ragel
-  - script: brew reinstall gettext
-  - script: brew unlink gettext
-  - script: brew link gettext --force
+  - script: brew install libtool libpng ragel gettext
   - script: find /usr -name libintl*a -print 2>/dev/null
     displayName: "Look for libintl"
   - template: .ci/restore-build-cache.yml
@@ -123,10 +120,7 @@ jobs:
   steps:
   - template: .ci/use-node.yml
   - script: brew update
-  - script: brew install libtool libpng ragel
-  - script: brew reinstall gettext
-  - script: brew unlink gettext
-  - script: brew link gettext --force
+  - script: brew install libtool libpng ragel gettext
   - script: find /usr -name libintl*a -print 2>/dev/null
     displayName: "Look for libintl"
   - template: .ci/restore-build-cache.yml
