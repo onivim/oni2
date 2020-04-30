@@ -148,12 +148,29 @@ module StatusBar: {
 };
 
 module Msg: {
+  module DocumentContentProvider: {
+    [@deriving show]
+    type msg =
+      | RegisterTextContentProvider({
+          handle: int,
+          scheme: string
+      })
+      | UnregisterTextContentProvider({
+        handle: int,
+      })
+      | VirtualDocumentChange({
+        uri: Oni_Core.Uri.t,
+        value: string,
+      });
+  };
+
   [@deriving show]
   type t =
     | Connected
     | Ready
     | Commands(Commands.msg)
     | DebugService(DebugService.msg)
+    | DocumentContentProvider(DocumentContentProvider.msg)
     | ExtensionService(ExtensionService.msg)
     | MessageService(MessageService.msg)
     | StatusBar(StatusBar.msg)

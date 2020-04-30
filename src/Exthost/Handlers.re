@@ -82,7 +82,11 @@ let handlers =
     mainNotImplemented("MainThreadDiagnostics"),
     mainNotImplemented("MainThreadDialogs"),
     mainNotImplemented("MainThreadDocuments"),
-    mainNotImplemented("MainThreadDocumentContentProviders"),
+    main(
+      ~handler=Msg.DocumentContentProvider.handle,
+      ~mapper=msg => Msg.DocumentContentProvider(msg),
+      "MainThreadDocumentContentProviders"
+    ),
     mainNotImplemented("MainThreadTextEditors"),
     mainNotImplemented("MainThreadEditorInsets"),
     mainNotImplemented("MainThreadErrors"),
