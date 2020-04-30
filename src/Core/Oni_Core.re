@@ -9,7 +9,6 @@ module BufferLine = BufferLine;
 module BufferPath = BufferPath;
 module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
-module Cli = Cli;
 module ColorizedToken = ColorizedToken;
 module Command = Command;
 module Config = Config;

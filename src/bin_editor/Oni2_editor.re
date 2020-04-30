@@ -18,7 +18,7 @@ module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
-let installExtension = (path, Core.Cli.{overriddenExtensionsDir, _}) => {
+let installExtension = (path, Cli.{overriddenExtensionsDir, _}) => {
   switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
   | Some(extensionsFolder) =>
     let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
@@ -44,7 +44,7 @@ let uninstallExtension = (_extensionId, _cli) => {
   1;
 };
 
-let listExtensions = cli => {
+let listExtensions = (Cli.{overriddenExtensionsDir, _}) => {
   let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
   let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
     print_endline(ext.manifest.name);
@@ -59,7 +59,7 @@ let printVersion = _cli => {
 };
 
 let cliOptions =
-  Core.Cli.parse(
+  Cli.parse(
     ~installExtension,
     ~uninstallExtension,
     ~checkHealth=HealthCheck.run(~checks=All),
