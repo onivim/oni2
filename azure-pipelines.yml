@@ -46,7 +46,10 @@ jobs:
   steps:
   - template: .ci/use-node.yml
   - script: brew update
-  - script: brew install libtool libpng ragel gettext
+  - script: brew install libtool libpng ragel
+  - script: brew reinstall gettext
+  - script: brew unlink gettext
+  - script: brew link gettext --force
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
@@ -118,7 +121,10 @@ jobs:
   steps:
   - template: .ci/use-node.yml
   - script: brew update
-  - script: brew install libtool libpng ragel gettext
+  - script: brew install libtool libpng ragel
+  - script: brew reinstall gettext
+  - script: brew unlink gettext
+  - script: brew link gettext --force
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
