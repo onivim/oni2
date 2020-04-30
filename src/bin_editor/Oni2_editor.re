@@ -91,7 +91,7 @@ if (cliOptions.syntaxHighlightService) {
   let init = app => {
     Log.debug("Init");
 
-    let w =
+    let window =
       App.createWindow(
         ~createOptions=
           WindowCreateOptions.create(
@@ -117,7 +117,7 @@ if (cliOptions.syntaxHighlightService) {
     | v => v
     };
 
-    Revery.Window.setBackgroundColor(w, Colors.black);
+    Revery.Window.setBackgroundColor(window, Colors.black);
 
     PreflightChecks.run();
 
@@ -131,7 +131,21 @@ if (cliOptions.syntaxHighlightService) {
         ),
       );
 
-    let update = UI.start(w, <Root state=currentState^ />);
+    let persistGlobal = () =>
+      Store.Persistence.(persistIfDirty(Global.store, currentState^));
+    let persistWorkspace = () =>
+      switch (currentState^) {
+      | {workspace: Some({workingDirectory, _}), _} as state =>
+        Store.Persistence.(
+          persistIfDirty(
+            Workspace.storeFor(workingDirectory),
+            (state, window),
+          )
+        )
+      | _ => ()
+      };
+
+    let update = UI.start(window, <Root state=currentState^ />);
 
     let isDirty = ref(false);
     let onStateChanged = state => {
@@ -156,25 +170,22 @@ if (cliOptions.syntaxHighlightService) {
       if (isDirty^) {
         update(<Root state=currentState^ />);
         isDirty := false;
-        Store.Persistence.persistIfDirty(
-          Store.Persistence.Global.store,
-          currentState^,
-        );
+        persistGlobal();
       };
     };
     let _: unit => unit = Tick.interval(tick, Time.zero);
 
     let getZoom = () => {
-      Window.getZoom(w);
+      Window.getZoom(window);
     };
 
-    let setZoom = zoomFactor => Window.setZoom(w, zoomFactor);
+    let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
 
     let setTitle = title => {
-      Window.setTitle(w, title);
+      Window.setTitle(window, title);
     };
 
-    let setVsync = vsync => Window.setVsync(w, vsync);
+    let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
       App.quit(~askNicely=false, ~code, app);
@@ -194,7 +205,7 @@ if (cliOptions.syntaxHighlightService) {
         ~setZoom,
         ~setTitle,
         ~setVsync,
-        ~window=Some(w),
+        ~window=Some(window),
         ~cliOptions=Some(cliOptions),
         ~quit,
         (),
@@ -202,17 +213,27 @@ if (cliOptions.syntaxHighlightService) {
     Log.debug("Startup: StoreThread started!");
 
     let _: Window.unsubscribe =
-      Window.onMaximized(w, () => dispatch(Model.Actions.WindowMaximized));
+      Window.onMaximized(window, () =>
+        dispatch(Model.Actions.WindowMaximized)
+      );
     let _: Window.unsubscribe =
-      Window.onMinimized(w, () => dispatch(Model.Actions.WindowMinimized));
+      Window.onMinimized(window, () =>
+        dispatch(Model.Actions.WindowMinimized)
+      );
     let _: Window.unsubscribe =
-      Window.onRestored(w, () => dispatch(Model.Actions.WindowRestored));
+      Window.onRestored(window, () => dispatch(Model.Actions.WindowRestored));
     let _: Window.unsubscribe =
-      Window.onFocusGained(w, () =>
+      Window.onFocusGained(window, () =>
         dispatch(Model.Actions.WindowFocusGained)
       );
     let _: Window.unsubscribe =
-      Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
+      Window.onFocusLost(window, () =>
+        dispatch(Model.Actions.WindowFocusLost)
+      );
+    let _: Window.unsubscribe =
+      Window.onSizeChanged(window, _ => persistWorkspace());
+    let _: Window.unsubscribe =
+      Window.onMoved(window, _ => persistWorkspace());
 
     GlobalContext.set({
       openEditorById: id => {
