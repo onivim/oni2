@@ -340,6 +340,11 @@ module Request: {
       unit;
   };
 
+  module DocumentsAndEditors: {
+    let acceptDocumentsAndEditorsDelta: 
+      (~delta: DocumentsAndEditorsDelta.t, Client.t) => unit;
+  };
+
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => unit;
   };

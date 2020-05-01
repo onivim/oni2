@@ -141,6 +141,19 @@ let waitForReady = context => {
   waitForMessage(~name="Ready", msg => msg == Ready, context);
 };
 
+let waitForExtensionActivation = (expectedExtensionId, context) => {
+  let waitForActivation =
+    fun
+    | Msg.ExtensionService(DidActivateExtension({extensionId, _})) =>
+      extensionId == expectedExtensionId
+    | _ => false;
+
+  context
+  |> waitForMessage(~name="Activation:" ++ expectedExtensionId, 
+  waitForActivation);
+   
+};
+
 let withClient = (f, context) => {
   f(context.client);
   context;
