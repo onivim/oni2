@@ -175,7 +175,7 @@ module Global = {
     define("version", string, BuildInfo.commitId, _ => BuildInfo.commitId);
   let workspace =
     define("workspace", option(string), None, state =>
-      Base.Option.map(~f=ws => ws.workingDirectory, state.workspace)
+      Some(state.workspace.workingDirectory)
     );
 
   let store =

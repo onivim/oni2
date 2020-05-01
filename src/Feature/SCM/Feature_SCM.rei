@@ -83,7 +83,7 @@ module Pane: {
   let make:
     (
       ~model: model,
-      ~workingDirectory: option(string),
+      ~workingDirectory: string,
       ~onItemClick: Resource.t => unit,
       ~isFocused: bool,
       ~theme: ColorTheme.Colors.t,

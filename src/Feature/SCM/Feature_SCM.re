@@ -449,7 +449,7 @@ module Pane = {
                   ~resource: Resource.t,
                   ~theme,
                   ~font,
-                  ~workingDirectory: option(string),
+                  ~workingDirectory,
                   ~onClick,
                   (),
                 ) => {
@@ -459,11 +459,9 @@ module Pane = {
     let onMouseOut = _ => setHovered(_ => false);
 
     let base =
-      Option.first_some(
-        Option.map(provider.rootUri, ~f=Uri.toFileSystemPath),
-        workingDirectory,
-      )
-      |> Option.value(~default="/");
+      provider.rootUri
+      |> Option.map(~f=Uri.toFileSystemPath)
+      |> Option.value(~default=workingDirectory);
 
     let path = Uri.toFileSystemPath(resource.uri);
     let displayName = Path.toRelative(~base, path);

@@ -198,18 +198,9 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg));
 
-    let workspaceUri =
-      (
-        switch (state.workspace) {
-        | None => Sys.getcwd()
-        | Some({workingDirectory, _}) => workingDirectory
-        }
-      )
-      |> Oni_Core.Uri.fromPath;
-
     let terminalSubscription =
       Feature_Terminal.subscription(
-        ~workspaceUri,
+        ~workspaceUri=Core.Uri.fromPath(state.workspace.workingDirectory),
         extHostClient,
         state.terminals,
       )

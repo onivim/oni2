@@ -96,6 +96,8 @@ let initWorkingDirectory = () => {
   try(Sys.chdir(path)) {
   | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
   };
+
+  path;
 };
 
 if (cliOptions.syntaxHighlightService) {
@@ -133,7 +135,7 @@ if (cliOptions.syntaxHighlightService) {
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
 
-    initWorkingDirectory();
+    let initialWorkingDirectory = initWorkingDirectory();
 
     Revery.Window.setBackgroundColor(window, Colors.black);
 
@@ -145,23 +147,20 @@ if (cliOptions.syntaxHighlightService) {
       ref(
         Model.State.initial(
           ~getUserSettings,
-          ~contributedCommands=[] // TODO
+          ~contributedCommands=[], // TODO
+          ~workingDirectory=initialWorkingDirectory,
         ),
       );
 
     let persistGlobal = () =>
       Store.Persistence.(persistIfDirty(Global.store, currentState^));
     let persistWorkspace = () =>
-      switch (currentState^) {
-      | {workspace: Some({workingDirectory, _}), _} as state =>
-        Store.Persistence.(
-          persistIfDirty(
-            Workspace.storeFor(workingDirectory),
-            (state, window),
-          )
+      Store.Persistence.(
+        persistIfDirty(
+          Workspace.storeFor(currentState^.workspace.workingDirectory),
+          (currentState^, window),
         )
-      | _ => ()
-      };
+      );
 
     let update = UI.start(window, <Root state=currentState^ />);
 
