@@ -50,14 +50,16 @@ module ModelAddedDelta: {
     isDirty: bool,
   };
 
-  let create: (
-    ~versionId: int=?,
-    ~lines: list(string)=?,
-    ~eol: Eol.t =?,
-    ~isDirty: bool=?,
-    ~modeId: string,
-    Uri.t
-  ) => t;
+  let create:
+    (
+      ~versionId: int=?,
+      ~lines: list(string)=?,
+      ~eol: Eol.t=?,
+      ~isDirty: bool=?,
+      ~modeId: string,
+      Uri.t
+    ) =>
+    t;
 
   let to_yojson: t => Yojson.Safe.t;
 };
@@ -70,10 +72,12 @@ module DocumentsAndEditorsDelta: {
     addedEditors: list(string),
   };
 
-  let create: (
-    ~removedDocuments: list(Uri.t),
-    ~addedDocuments: list(ModelAddedDelta.t)
-  ) => t;
+  let create:
+    (
+      ~removedDocuments: list(Uri.t),
+      ~addedDocuments: list(ModelAddedDelta.t)
+    ) =>
+    t;
 
   let to_yojson: t => Yojson.Safe.t;
 };
