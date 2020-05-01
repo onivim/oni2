@@ -40,6 +40,44 @@ module Eol: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
+module ModelAddedDelta: {
+  type t = {
+    uri: Uri.t,
+    versionId: int,
+    lines: list(string),
+    eol: Eol.t,
+    modeId: string,
+    isDirty: bool,
+  };
+
+  let create: (
+    ~versionId: int=?,
+    ~lines: list(string)=?,
+    ~eol: Eol.t =?,
+    ~isDirty: bool=?,
+    ~modeId: string,
+    Uri.t
+  ) => t;
+
+  let to_yojson: t => Yojson.Safe.t;
+};
+
+module DocumentsAndEditorsDelta: {
+  type t = {
+    removedDocuments: list(Uri.t),
+    addedDocuments: list(ModelAddedDelta.t),
+    removedEditors: list(string),
+    addedEditors: list(string),
+  };
+
+  let create: (
+    ~removedDocuments: list(Uri.t),
+    ~addedDocuments: list(ModelAddedDelta.t)
+  ) => t;
+
+  let to_yojson: t => Yojson.Safe.t;
+};
+
 module ModelContentChange: {
   type t = {
     range: OneBasedRange.t,
