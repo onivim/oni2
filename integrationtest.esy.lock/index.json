@@ -1,5 +1,5 @@
 {
-  "checksum": "85bbeb1e2288273086cb639f1e47eee4",
+  "checksum": "f678cce578f36760177e85cc8b4c121b",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -131,20 +131,20 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#e108530@d41d8cd9",
+        "revery@github:revery-ui/revery#9f725e0@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#91bad1f@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#e108530@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#e108530@d41d8cd9",
+    "revery@github:revery-ui/revery#9f725e0@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#9f725e0@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#e108530",
+      "version": "github:revery-ui/revery#9f725e0",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#e108530" ]
+        "source": [ "github:revery-ui/revery#9f725e0" ]
       },
       "overrides": [],
       "dependencies": [
@@ -152,7 +152,7 @@
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9",
-        "reason-skia@github:revery-ui/reason-skia#2352b85@d41d8cd9",
+        "reason-skia@github:revery-ui/reason-skia#6b459c7@d41d8cd9",
         "reason-sdl2@2.10.3025@d41d8cd9",
         "reason-harfbuzz@1.91.8001@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
@@ -327,13 +327,13 @@
       ],
       "devDependencies": []
     },
-    "reason-skia@github:revery-ui/reason-skia#2352b85@d41d8cd9": {
-      "id": "reason-skia@github:revery-ui/reason-skia#2352b85@d41d8cd9",
+    "reason-skia@github:revery-ui/reason-skia#6b459c7@d41d8cd9": {
+      "id": "reason-skia@github:revery-ui/reason-skia#6b459c7@d41d8cd9",
       "name": "reason-skia",
-      "version": "github:revery-ui/reason-skia#2352b85",
+      "version": "github:revery-ui/reason-skia#6b459c7",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/reason-skia#2352b85" ]
+        "source": [ "github:revery-ui/reason-skia#6b459c7" ]
       },
       "overrides": [],
       "dependencies": [
@@ -421,13 +421,13 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#04fd9f4@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#04fd9f4@d41d8cd9",
+    "reason-libvim@github:onivim/reason-libvim#2493884@d41d8cd9": {
+      "id": "reason-libvim@github:onivim/reason-libvim#2493884@d41d8cd9",
       "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#04fd9f4",
+      "version": "github:onivim/reason-libvim#2493884",
       "source": {
         "type": "install",
-        "source": [ "github:onivim/reason-libvim#04fd9f4" ]
+        "source": [ "github:onivim/reason-libvim#2493884" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1178,14 +1178,14 @@
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
-        "revery@github:revery-ui/revery#e108530@d41d8cd9",
+        "revery@github:revery-ui/revery#9f725e0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3025@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#04fd9f4@d41d8cd9",
+        "reason-libvim@github:onivim/reason-libvim#2493884@d41d8cd9",
         "reason-jsonrpc@1.5.0@d41d8cd9", "ocaml@4.9.0@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#07c13a9@d41d8cd9",
