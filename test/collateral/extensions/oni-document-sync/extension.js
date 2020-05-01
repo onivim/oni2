@@ -31,8 +31,8 @@ function activate(context) {
 	const disposable2 = vscode.workspace.onDidChangeTextDocument((e) => {
 		showData({
 			type: "workspace.onDidChangeTextDocument",
-			filename: e.fileName,
-			fullText: e.getText(),
+			filename: e.document.fileName,
+			fullText: e.document.getText(),
 		});
 	});
 

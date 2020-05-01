@@ -56,7 +56,7 @@ describe("DocumentsTest", ({test, _}) => {
     let addedDelta =
       DocumentsAndEditorsDelta.create(
         ~removedDocuments=[],
-        ~addedDocuments=[model([])],
+        ~addedDocuments=[model(~lines=[])],
       );
 
     let removedDelta =
@@ -85,19 +85,13 @@ describe("DocumentsTest", ({test, _}) => {
        })
     |> Test.terminate
     |> Test.waitForProcessClosed;
-  })
-  
+  });
+
   test("open with lines", _ => {
     let addedDelta =
       DocumentsAndEditorsDelta.create(
         ~removedDocuments=[],
-        ~addedDocuments=[model(["Hello", "World"])],
-      );
-
-    let removedDelta =
-      DocumentsAndEditorsDelta.create(
-        ~removedDocuments=[testUri],
-        ~addedDocuments=[],
+        ~addedDocuments=[model(~lines=["Hello", "World"])],
       );
 
     Test.startWithExtensions(["oni-document-sync"])
@@ -108,9 +102,55 @@ describe("DocumentsTest", ({test, _}) => {
          ),
        )
     |> waitForDocEvent(~name="Open", evt => {
-         evt.eventType == "workspace.onDidOpenTextDocument" && evt.fullText  == "Hello\nWorld"
+         evt.eventType == "workspace.onDidOpenTextDocument"
+         && evt.fullText == "Hello\nWorld"
        })
     |> Test.terminate
     |> Test.waitForProcessClosed;
-  })
+  });
+
+  test("update with lines", _ => {
+    let addedDelta =
+      DocumentsAndEditorsDelta.create(
+        ~removedDocuments=[],
+        ~addedDocuments=[model(~lines=["hello", "world"])],
+      );
+
+    let change: ModelContentChange.t = {
+      range: {
+        startLineNumber: 1,
+        endLineNumber: 1,
+        startColumn: 1,
+        endColumn: 6,
+      },
+      text: "Greetings",
+    };
+
+    let modelChangedEvent: ModelChangedEvent.t = {
+      changes: [change],
+      eol: Eol.LF,
+      versionId: 1,
+    };
+
+    Test.startWithExtensions(["oni-document-sync"])
+    |> Test.waitForExtensionActivation("oni-document-sync")
+    |> Test.withClient(
+         Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+           ~delta=addedDelta,
+         ),
+       )
+    |> Test.withClient(
+         Request.Documents.acceptModelChanged(
+           ~uri=testUri,
+           ~modelChangedEvent,
+           ~isDirty=false,
+         ),
+       )
+    |> waitForDocEvent(~name="Update", evt => {
+         evt.eventType == "workspace.onDidChangeTextDocument"
+         && evt.fullText == "Greetings\nworld"
+       })
+    |> Test.terminate
+    |> Test.waitForProcessClosed;
+  });
 });

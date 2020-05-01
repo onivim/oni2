@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 module Extension = Exthost_Extension;
@@ -101,6 +102,18 @@ module ModelChangedEvent: {
   };
 
   let to_yojson: t => Yojson.Safe.t;
+};
+
+module OneBasedRange: {
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
+
+  let ofRange: Range.t => t;
+  let toRange: t => Range.t;
 };
 
 module ShellLaunchConfig: {

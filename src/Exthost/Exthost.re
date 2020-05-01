@@ -9,6 +9,7 @@ module Eol = Eol;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;
 module ModelContentChange = ModelContentChange;
+module OneBasedRange = OneBasedRange;
 
 module Client = Client;
 module Request = Request;

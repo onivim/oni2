@@ -37,7 +37,7 @@ module Documents = {
   let acceptDirtyStateChanged = (~uri, ~isDirty, client) => {
     Client.notify(
       ~rpcName="ExtHostDocuments",
-      ~method="$acceptModelSaved",
+      ~method="$acceptDirtyStateChanged",
       ~args=`List([Uri.to_yojson(uri), `Bool(isDirty)]),
       client,
     );
@@ -46,7 +46,7 @@ module Documents = {
   let acceptModelChanged = (~uri, ~modelChangedEvent, ~isDirty, client) => {
     Client.notify(
       ~rpcName="ExtHostDocuments",
-      ~method="$acceptModelSaved",
+      ~method="$acceptModelChanged",
       ~args=
         `List([
           Uri.to_yojson(uri),
