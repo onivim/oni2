@@ -363,7 +363,7 @@ module Workbench = {
 
     module Files = {
       let save =
-        register("workbench.action.save", Command("workbench.action.save"));
+        register("workbench.action.files.save", Command("workbench.action.files.save"));
     };
   };
   module Actions = {
