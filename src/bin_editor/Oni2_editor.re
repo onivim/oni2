@@ -100,6 +100,46 @@ let initWorkingDirectory = () => {
   path;
 };
 
+let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
+  let (x, y, width, height) =
+    Store.Persistence.(
+      {
+        let store = Workspace.storeFor(workingDirectory);
+
+        (
+          get(Workspace.windowX, store),
+          get(Workspace.windowY, store),
+          get(Workspace.windowWidth, store),
+          get(Workspace.windowHeight, store),
+        );
+      }
+    );
+
+  let window =
+    App.createWindow(
+      ~createOptions=
+        WindowCreateOptions.create(
+          ~forceScaleFactor=cliOptions.forceScaleFactor,
+          ~maximized=false,
+          ~vsync=Vsync.Immediate,
+          ~icon=Some("logo.png"),
+          ~titlebarStyle=WindowStyles.Transparent,
+          // ~x,
+          // ~y,
+          ~width,
+          ~height,
+          (),
+        ),
+      app,
+      "Oni2",
+    );
+
+  Window.setPosition(window, x, y);
+  Window.setBackgroundColor(window, Colors.black);
+
+  window;
+};
+
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start(~healthCheck=() =>
     HealthCheck.run(~checks=Common, cliOptions)
@@ -117,27 +157,16 @@ if (cliOptions.syntaxHighlightService) {
   let init = app => {
     Log.debug("Init");
 
+    let initialWorkingDirectory = initWorkingDirectory();
     let window =
-      App.createWindow(
-        ~createOptions=
-          WindowCreateOptions.create(
-            ~forceScaleFactor=cliOptions.forceScaleFactor,
-            ~maximized=false,
-            ~vsync=Vsync.Immediate,
-            ~icon=Some("logo.png"),
-            ~titlebarStyle=WindowStyles.Transparent,
-            (),
-          ),
+      createWindow(
+        ~forceScaleFactor=cliOptions.forceScaleFactor,
+        ~workingDirectory=initialWorkingDirectory,
         app,
-        "Oni2",
       );
 
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
-
-    let initialWorkingDirectory = initWorkingDirectory();
-
-    Revery.Window.setBackgroundColor(window, Colors.black);
 
     PreflightChecks.run();
 
