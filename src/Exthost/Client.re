@@ -87,7 +87,7 @@ let start =
           send(Outgoing.ReplyOKEmpty({requestId: requestId}));
         | Error(msg) => onError(msg)
         };
-      | _ => ()
+      | _ => Log.warn("Unhandled message: " ++ Protocol.Message.Incoming.show(msg));
       }
     );
   };
@@ -123,6 +123,31 @@ let notify =
          client,
        );
      });
+};
+
+let request = (
+  ~rpcName: string,
+  ~method: string,
+  ~args,
+  ~parser,
+  client
+) => {
+  exception Placeholder;
+  //let newRequestId = client.lastRequestId^ + 1;
+  let (promise, _resolver) = Lwt.task();
+
+  let wrapper = json => {
+    try (Lwt.return(parser(json))) {
+    | e =>
+    Log.warnf(m => m("Requested failed with error: %s", Printexc.to_string(e)))
+    Lwt.fail(e);
+    }
+  };
+
+  notify(~rpcName, ~method, ~args, client);
+
+  Lwt.wakeup_exn(_resolver, Placeholder)
+  Lwt.bind(promise, wrapper);
 };
 
 let terminate = ({client, _}) => Protocol.send(~message=Terminate, client);
