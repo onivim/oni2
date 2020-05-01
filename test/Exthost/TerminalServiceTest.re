@@ -4,7 +4,7 @@ open Exthost;
 
 let waitForProcessExit =
   fun
-  | Msg.TerminalService(TerminalService.SendProcessExit(_)) => true
+  | Msg.TerminalService(Msg.TerminalService.SendProcessExit(_)) => true
   | _ => false;
 
 describe("TerminalServiceTest", ({test, _}) => {
@@ -49,12 +49,12 @@ describe("TerminalServiceTest", ({test, _}) => {
           };
     let waitForProcessData =
       fun
-      | Msg.TerminalService(TerminalService.SendProcessData(_)) => true
+      | Msg.TerminalService(Msg.TerminalService.SendProcessData(_)) => true
       | _ => false;
 
     let waitForProcessTitle =
       fun
-      | Msg.TerminalService(TerminalService.SendProcessTitle(_)) => true
+      | Msg.TerminalService(Msg.TerminalService.SendProcessTitle(_)) => true
       | _ => false;
 
     Test.startWithExtensions([])

@@ -113,116 +113,26 @@ module ShellLaunchConfig: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
-module Commands: {
-  [@deriving show]
-  type msg =
-    | RegisterCommand(string)
-    | UnregisterCommand(string)
-    | ExecuteCommand({
-        command: string,
-        args: list(Yojson.Safe.t),
-        retry: bool,
-      })
-    | GetCommands;
-};
-
-module DebugService: {
-  [@deriving show]
-  type msg =
-    | RegisterDebugTypes(list(string));
-};
-
-module ExtensionService: {
-  [@deriving show]
-  type msg =
-    | ActivateExtension({
-        extensionId: string,
-        activationEvent: option(string),
-      })
-    | WillActivateExtension({extensionId: string})
-    | DidActivateExtension({
-        extensionId: string,
-        //startup: bool,
-        codeLoadingTime: int,
-        activateCallTime: int,
-        activateResolvedTime: int,
-      })
-    //activationEvent: option(string),
-    | ExtensionActivationError({
-        extensionId: string,
-        errorMessage: string,
-      })
-    | ExtensionRuntimeError({extensionId: string});
-};
-
-module MessageService: {
-  type severity =
-    | Ignore
-    | Info
-    | Warning
-    | Error;
-
-  [@deriving show]
-  type msg =
-    | ShowMessage({
-        severity,
-        message: string,
-        extensionId: option(string),
-      });
-};
-
-module Telemetry: {
-  [@deriving show]
-  type msg =
-    | PublicLog({
-        eventName: string,
-        data: Yojson.Safe.t,
-      })
-    | PublicLog2({
-        eventName: string,
-        data: Yojson.Safe.t,
-      });
-};
-
-module TerminalService: {
-  [@deriving show]
-  type msg =
-    | SendProcessTitle({
-        terminalId: int,
-        title: string,
-      })
-    | SendProcessData({
-        terminalId: int,
-        data: string,
-      })
-    | SendProcessPid({
-        terminalId: int,
-        pid: int,
-      })
-    | SendProcessExit({
-        terminalId: int,
-        exitCode: int,
-      });
-};
-
-module StatusBar: {
-  [@deriving show]
-  type alignment =
-    | Left
-    | Right;
-
-  [@deriving show]
-  type msg =
-    | SetEntry({
-        id: string,
-        text: string,
-        source: string,
-        alignment,
-        priority: int,
-      });
-};
-
 module Msg: {
+  module Commands: {
+    [@deriving show]
+    type msg =
+      | RegisterCommand(string)
+      | UnregisterCommand(string)
+      | ExecuteCommand({
+          command: string,
+          args: list(Yojson.Safe.t),
+          retry: bool,
+        })
+      | GetCommands;
+  };
+
+  module DebugService: {
+    [@deriving show]
+    type msg =
+      | RegisterDebugTypes(list(string));
+  };
+
   module Decorations: {
     [@deriving show]
     type msg =
@@ -260,6 +170,96 @@ module Msg: {
       | VirtualDocumentChange({
           uri: Oni_Core.Uri.t,
           value: string,
+        });
+  };
+
+  module ExtensionService: {
+    [@deriving show]
+    type msg =
+      | ActivateExtension({
+          extensionId: string,
+          activationEvent: option(string),
+        })
+      | WillActivateExtension({extensionId: string})
+      | DidActivateExtension({
+          extensionId: string,
+          //startup: bool,
+          codeLoadingTime: int,
+          activateCallTime: int,
+          activateResolvedTime: int,
+        })
+      //activationEvent: option(string),
+      | ExtensionActivationError({
+          extensionId: string,
+          errorMessage: string,
+        })
+      | ExtensionRuntimeError({extensionId: string});
+  };
+
+  module MessageService: {
+    type severity =
+      | Ignore
+      | Info
+      | Warning
+      | Error;
+
+    [@deriving show]
+    type msg =
+      | ShowMessage({
+          severity,
+          message: string,
+          extensionId: option(string),
+        });
+  };
+
+  module Telemetry: {
+    [@deriving show]
+    type msg =
+      | PublicLog({
+          eventName: string,
+          data: Yojson.Safe.t,
+        })
+      | PublicLog2({
+          eventName: string,
+          data: Yojson.Safe.t,
+        });
+  };
+
+  module TerminalService: {
+    [@deriving show]
+    type msg =
+      | SendProcessTitle({
+          terminalId: int,
+          title: string,
+        })
+      | SendProcessData({
+          terminalId: int,
+          data: string,
+        })
+      | SendProcessPid({
+          terminalId: int,
+          pid: int,
+        })
+      | SendProcessExit({
+          terminalId: int,
+          exitCode: int,
+        });
+  };
+
+  module StatusBar: {
+    [@deriving show]
+    type alignment =
+      | Left
+      | Right;
+
+    [@deriving show]
+    type msg =
+      | SetEntry({
+          id: string,
+          text: string,
+          source: string,
+          alignment,
+          priority: int,
         });
   };
 
