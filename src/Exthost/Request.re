@@ -58,6 +58,19 @@ module Documents = {
   };
 };
 
+module DocumentsAndEditors = {
+  let acceptDocumentsAndEditorsDelta = (~delta, client) => {
+    Client.notify(
+      ~rpcName="ExtHostDocumentsAndEditors",
+      ~method="$acceptDocumentsAndEditorsDelta",
+      ~args=`List([
+          DocumentsAndEditorsDelta.to_yojson(delta)
+      ]),
+      client
+    );
+  };
+};
+
 module ExtensionService = {
   let activateByEvent = (~event, client) => {
     Client.notify(

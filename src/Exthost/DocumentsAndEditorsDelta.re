@@ -1,4 +1,5 @@
 open Oni_Core;
+
 [@deriving yojson({strict: false})]
 type t = {
   removedDocuments: list(Uri.t),
