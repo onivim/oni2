@@ -25,7 +25,7 @@ No additional requirements.
 
 ### macOS
 
-Requires `libtool`. Can be installed via homebrew: `brew install libtool`.
+Requires `libtool` and `gettext` from homebrew: `brew install libtool gettext`.
 
 ### Linux
 

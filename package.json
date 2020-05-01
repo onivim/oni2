@@ -248,7 +248,7 @@
     "revery-terminal": "revery-ui/revery-terminal#4e8ca1c"
   },
   "devDependencies": {
-    "ocaml": "~4.8",
+    "ocaml": "~4.9",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",

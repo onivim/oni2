@@ -24,6 +24,7 @@ module Sub: {
   let terminal:
     (
       ~id: int,
+      ~arguments: list(string),
       ~cmd: string,
       ~columns: int,
       ~rows: int,

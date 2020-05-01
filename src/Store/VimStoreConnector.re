@@ -76,6 +76,12 @@ let start =
       |> List.map(c => String.make(1, c))
       |> String.concat("");
 
+    let isMultipleLines =
+      fun
+      | [s] => String.contains(s, '\n')
+      | [_, ..._] => true
+      | [] => false;
+
     let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
 
     let getClipboardValue = () => {
@@ -93,7 +99,14 @@ let start =
       && yankConfig.paste; // or if 'paste' set, but unnamed
 
     if (shouldPullFromClipboard) {
-      getClipboardValue();
+      getClipboardValue()
+      |> Option.map(lines =>
+           Vim.Types.{
+             lines,
+             blockType:
+               isMultipleLines(lines |> Array.to_list) ? Line : Character,
+           }
+         );
     } else {
       None;
     };

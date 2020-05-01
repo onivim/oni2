@@ -43,6 +43,7 @@
            SyntaxHighlightTreesitterTest
            AddRemoveSplitTest
            TerminalSetPidTitleTest
+           TerminalConfigurationTest
            TypingBatchedTest
            TypingUnbatchedTest
            VimlConfigurationTest
@@ -102,6 +103,7 @@
         SyntaxServerParentPidCorrectTest.exe
         SyntaxServerReadExceptionTest.exe
         TerminalSetPidTitleTest.exe
+        TerminalConfigurationTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
