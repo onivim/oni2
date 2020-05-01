@@ -37,8 +37,22 @@ module Decorations = {
 };
 
 module Diagnostics = {
-  [@deriving (show, yojson({strict: false}))]
+  [@deriving show]
   type entry = (Uri.t, [@opaque] list(Diagnostic.t));
+
+  let decodeEntry = json => switch(json) {
+  | `List([uriJson, diagnosticListJson]) => 
+    uriJson
+    |> Uri.to_yojson
+    |> ResultEx.flatMap(uri => {
+  
+      let entries = diagnosticListJson
+      |> List.map(Json.Decode.decode_value(Diagnostic.decode));
+      |> Base.Result.all;
+    });
+  | _ => Error("Expected 2-element tuple")
+  };
+
   [@deriving show]
   type msg =
     | ChangeMany({
@@ -50,12 +64,12 @@ module Diagnostics = {
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
-      diagnosticsJson
-      |> List.map(entry_of_yojson)
-      |> Base.Result.all
-      |> Result.map(entries => {ChangeMany({owner, entries})})
+  
+      diagnosticsJson 
+      |> decodeEntries;
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
+
     };
   };
 };

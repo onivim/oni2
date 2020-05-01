@@ -163,7 +163,7 @@ module Msg: {
   };
 
   module Diagnostics: {
-    [@deriving (show, yojson({strict: false}))]
+    [@deriving show]
     type entry = (Uri.t, [@opaque] list(Diagnostic.t));
     [@deriving show]
     type msg =
