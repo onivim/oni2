@@ -5,10 +5,10 @@ open Exthost;
 
 let testUri = Uri.fromPath("/test/path");
 
-let model =
+let model = (~lines) =>
   Exthost.ModelAddedDelta.create(
     ~versionId=0,
-    ~lines=[],
+    ~lines,
     ~eol=Eol.LF,
     ~modeId="plaintext",
     ~isDirty=false,
@@ -56,7 +56,7 @@ describe("DocumentsTest", ({test, _}) => {
     let addedDelta =
       DocumentsAndEditorsDelta.create(
         ~removedDocuments=[],
-        ~addedDocuments=[model],
+        ~addedDocuments=[model([])],
       );
 
     let removedDelta =
@@ -82,6 +82,33 @@ describe("DocumentsTest", ({test, _}) => {
        )
     |> waitForDocEvent(~name="Open", evt => {
          evt.eventType == "workspace.onDidCloseTextDocument"
+       })
+    |> Test.terminate
+    |> Test.waitForProcessClosed;
+  })
+  
+  test("open with lines", _ => {
+    let addedDelta =
+      DocumentsAndEditorsDelta.create(
+        ~removedDocuments=[],
+        ~addedDocuments=[model(["Hello", "World"])],
+      );
+
+    let removedDelta =
+      DocumentsAndEditorsDelta.create(
+        ~removedDocuments=[testUri],
+        ~addedDocuments=[],
+      );
+
+    Test.startWithExtensions(["oni-document-sync"])
+    |> Test.waitForExtensionActivation("oni-document-sync")
+    |> Test.withClient(
+         Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+           ~delta=addedDelta,
+         ),
+       )
+    |> waitForDocEvent(~name="Open", evt => {
+         evt.eventType == "workspace.onDidOpenTextDocument" && evt.fullText  == "Hello\nWorld"
        })
     |> Test.terminate
     |> Test.waitForProcessClosed;
