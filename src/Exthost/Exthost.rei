@@ -148,12 +148,55 @@ module StatusBar: {
 };
 
 module Msg: {
+  module Decorations: {
+    [@deriving show]
+    type msg =
+      | RegisterDecorationProvider({
+          handle: int,
+          label: string,
+        })
+      | UnregisterDecorationProvider({handle: int})
+      | DecorationsDidChange({
+          handle: int,
+          uris: list(Oni_Core.Uri.t),
+        });
+  };
+
+  module Diagnostics: {
+    [@deriving show]
+    type entry = (Uri.t, [@opaque] list(Diagnostic.t));
+    [@deriving show]
+    type msg =
+      | ChangeMany({
+          owner: string,
+          entries: list(entry),
+        })
+      | Clear({owner: string});
+  };
+
+  module DocumentContentProvider: {
+    [@deriving show]
+    type msg =
+      | RegisterTextContentProvider({
+          handle: int,
+          scheme: string,
+        })
+      | UnregisterTextContentProvider({handle: int})
+      | VirtualDocumentChange({
+          uri: Oni_Core.Uri.t,
+          value: string,
+        });
+  };
+
   [@deriving show]
   type t =
     | Connected
     | Ready
     | Commands(Commands.msg)
     | DebugService(DebugService.msg)
+    | Decorations(Decorations.msg)
+    | Diagnostics(Diagnostics.msg)
+    | DocumentContentProvider(DocumentContentProvider.msg)
     | ExtensionService(ExtensionService.msg)
     | MessageService(MessageService.msg)
     | StatusBar(StatusBar.msg)
