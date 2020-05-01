@@ -58,6 +58,7 @@ let printVersion = _cli => {
   0;
 };
 
+Log.debug("Startup: Parsing CLI options");
 let cliOptions =
   Cli.parse(
     ~installExtension,
@@ -75,6 +76,28 @@ let cliOptions =
       },
     ~printVersion,
   );
+
+let initWorkingDirectory = () => {
+  let path =
+    switch (cliOptions.folder) {
+    | Some(folder) => folder
+    | None =>
+      switch (Store.Persistence.(get(Global.workspace, Global.store))) {
+      | Some(path) => path
+      | None =>
+        switch (Revery.Environment.getWorkingDirectory()) {
+        | "/" => Sys.getenv_opt("HOME") |> Option.value(~default="/")
+        | path => path
+        }
+      }
+    };
+
+  Log.info("Startup: Changing folder to: " ++ path);
+  try(Sys.chdir(path)) {
+  | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
+  };
+};
+
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start(~healthCheck=() =>
     HealthCheck.run(~checks=Common, cliOptions)
@@ -109,14 +132,8 @@ if (cliOptions.syntaxHighlightService) {
 
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
-    Log.debug("Startup: Parsing CLI options");
 
-    Log.info("Startup: Changing folder to: " ++ cliOptions.folder);
-    switch (Sys.chdir(cliOptions.folder)) {
-    | exception (Sys_error(msg)) =>
-      Log.error("Folder does not exist: " ++ msg)
-    | v => v
-    };
+    initWorkingDirectory();
 
     Revery.Window.setBackgroundColor(window, Colors.black);
 
