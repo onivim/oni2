@@ -149,9 +149,10 @@ let waitForExtensionActivation = (expectedExtensionId, context) => {
     | _ => false;
 
   context
-  |> waitForMessage(~name="Activation:" ++ expectedExtensionId, 
-  waitForActivation);
-   
+  |> waitForMessage(
+       ~name="Activation:" ++ expectedExtensionId,
+       waitForActivation,
+     );
 };
 
 let withClient = (f, context) => {

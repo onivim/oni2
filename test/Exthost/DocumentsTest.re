@@ -5,14 +5,15 @@ open Exthost;
 
 let testUri = Uri.fromPath("/test/path");
 
-let model= Exthost.ModelAddedDelta.create(
-  ~versionId=0,
-  ~lines=[],
-  ~eol=Eol.default,
-  ~modeId="plaintext",
-  ~isDirty=false,
-  testUri,
-);
+let model =
+  Exthost.ModelAddedDelta.create(
+    ~versionId=0,
+    ~lines=[],
+    ~eol=Eol.LF,
+    ~modeId="plaintext",
+    ~isDirty=false,
+    testUri,
+  );
 
 module TestDocumentEvent = {
   type t = {
@@ -22,56 +23,67 @@ module TestDocumentEvent = {
   };
 
   let decode = {
-    open Json.Decode;
-    
-    obj(({field, _}) => {
-      eventType: field.required("type", string),
-      filename: field.required("filename", string),
-      fullText: field.withDefault("fullText", "", string),
-    });
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          eventType: field.required("type", string),
+          filename: field.required("filename", string),
+          fullText: field.withDefault("fullText", "", string),
+        }
+      )
+    );
   };
 };
 
 let waitForDocEvent = (~name, f, context) => {
   context
-  |> Test.waitForMessage(~name, fun
-  | Msg.MessageService(ShowMessage({
-      message,
-      _
-  })) => {
-      message
-      |> Yojson.Safe.from_string
-      |> Json.Decode.decode_value(TestDocumentEvent.decode)
-      |> Result.map(f)
-      |> Result.value(~default=false);
-  }
-  | _ => false);
+  |> Test.waitForMessage(
+       ~name,
+       fun
+       | Msg.MessageService(ShowMessage({message, _})) => {
+           message
+           |> Yojson.Safe.from_string
+           |> Json.Decode.decode_value(TestDocumentEvent.decode)
+           |> Result.map(f)
+           |> Result.value(~default=false);
+         }
+       | _ => false,
+     );
 };
 
 describe("DocumentsTest", ({test, _}) => {
-    test("open / close event", _ => {
-
-      let addedDelta = DocumentsAndEditorsDelta.create(
+  test("open / close event", _ => {
+    let addedDelta =
+      DocumentsAndEditorsDelta.create(
         ~removedDocuments=[],
         ~addedDocuments=[model],
       );
 
-      let removedDelta = DocumentsAndEditorsDelta.create(
+    let removedDelta =
+      DocumentsAndEditorsDelta.create(
         ~removedDocuments=[testUri],
-        ~addedDocuments=[]
+        ~addedDocuments=[],
       );
 
-      Test.startWithExtensions(["oni-document-sync"])
-      |> Test.waitForExtensionActivation("oni-document-sync")
-      |> Test.withClient(Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(~delta=addedDelta))
-      |> waitForDocEvent(~name="Open", (evt) => {
-        evt.eventType == "workspace.onDidOpenTextDocument" 
-      })
-      |> Test.withClient(Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(~delta=removedDelta))
-      |> waitForDocEvent(~name="Open", (evt) => {
-        evt.eventType == "workspace.onDidCloseTextDocument" 
-      })
-      |> Test.terminate
-      |> Test.waitForProcessClosed;
-    })
+    Test.startWithExtensions(["oni-document-sync"])
+    |> Test.waitForExtensionActivation("oni-document-sync")
+    |> Test.withClient(
+         Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+           ~delta=addedDelta,
+         ),
+       )
+    |> waitForDocEvent(~name="Open", evt => {
+         evt.eventType == "workspace.onDidOpenTextDocument"
+       })
+    |> Test.withClient(
+         Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+           ~delta=removedDelta,
+         ),
+       )
+    |> waitForDocEvent(~name="Open", evt => {
+         evt.eventType == "workspace.onDidCloseTextDocument"
+       })
+    |> Test.terminate
+    |> Test.waitForProcessClosed;
+  })
 });

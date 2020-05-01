@@ -341,7 +341,7 @@ module Request: {
   };
 
   module DocumentsAndEditors: {
-    let acceptDocumentsAndEditorsDelta: 
+    let acceptDocumentsAndEditorsDelta:
       (~delta: DocumentsAndEditorsDelta.t, Client.t) => unit;
   };
 
