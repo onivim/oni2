@@ -368,7 +368,7 @@ let getExtensionsFolder = () =>
   >>= getOrCreateConfigFolder;
 
 let getStoreFolder = () =>
-  getHomeDirectory()
+  getUserDataDirectory()
   >>= getOniDirectory
   >>= (dir => getPath(dir, "store"))
   >>= getOrCreateConfigFolder;
