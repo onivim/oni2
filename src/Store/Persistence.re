@@ -20,7 +20,7 @@ module Internal = {
   let hash = value => value |> Hashtbl.hash |> Printf.sprintf("%x");
 };
 
-type codec('state, 'value) = {
+type codec('value) = {
   equal: ('value, 'value) => bool,
   encode: 'value => Json.t,
   decode: Json.decoder('value),
@@ -47,7 +47,7 @@ let option = codec => {
 type definition('state, 'value) = {
   key: string,
   default: 'value,
-  codec: codec('state, 'value),
+  codec: codec('value),
   get: 'state => 'value,
   pipe: Pipe.t('value),
 };
@@ -183,6 +183,8 @@ module Global = {
 };
 
 module Workspace = {
+  type state = (Oni_Model.State.t, Revery.Window.t);
+
   let windowX =
     define("windowX", int, 0, ((_state, window)) =>
       Revery.Window.getPosition(window) |> fst
@@ -211,9 +213,7 @@ module Workspace = {
     );
 
   let storeFor = {
-    let stores:
-      Hashtbl.t(string, store((Oni_Model.State.t, Revery.Window.t))) =
-      Hashtbl.create(10);
+    let stores = Hashtbl.create(10);
 
     path =>
       switch (Hashtbl.find_opt(stores, path)) {
