@@ -66,7 +66,7 @@ let handlers =
     mainNotImplemented("MainThreadAuthentication"),
     mainNotImplemented("MainThreadClipboard"),
     main(
-      ~handler=Commands.handle,
+      ~handler=Msg.Commands.handle,
       ~mapper=msg => Msg.Commands(msg),
       "MainThreadCommands",
     ),
@@ -74,7 +74,7 @@ let handlers =
     mainNotImplemented("MainThreadConfiguration"),
     mainNotImplemented("MainThreadConsole"),
     main(
-      ~handler=DebugService.handle,
+      ~handler=Msg.DebugService.handle,
       ~mapper=msg => Msg.DebugService(msg),
       "MainThreadDebugService",
     ),
@@ -105,7 +105,7 @@ let handlers =
     mainNotImplemented("MainThreadLanguages"),
     mainNotImplemented("MainThreadLog"),
     main(
-      ~handler=MessageService.handle,
+      ~handler=Msg.MessageService.handle,
       ~mapper=msg => Msg.MessageService(msg),
       "MainThreadMessageService",
     ),
@@ -113,18 +113,18 @@ let handlers =
     mainNotImplemented("MainThreadProgress"),
     mainNotImplemented("MainThreadQuickOpen"),
     main(
-      ~handler=StatusBar.handle,
+      ~handler=Msg.StatusBar.handle,
       ~mapper=msg => Msg.StatusBar(msg),
       "MainThreadStatusBar",
     ),
     mainNotImplemented("MainThreadStorage"),
     main(
-      ~handler=Telemetry.handle,
+      ~handler=Msg.Telemetry.handle,
       ~mapper=msg => Msg.Telemetry(msg),
       "MainThreadTelemetry",
     ),
     main(
-      ~handler=TerminalService.handle,
+      ~handler=Msg.TerminalService.handle,
       ~mapper=msg => Msg.TerminalService(msg),
       "MainThreadTerminalService",
     ),
@@ -133,7 +133,7 @@ let handlers =
     mainNotImplemented("MainThreadWorkspace"),
     mainNotImplemented("MainThreadFileSystem"),
     main(
-      ~handler=ExtensionService.handle,
+      ~handler=Msg.ExtensionService.handle,
       ~mapper=msg => Msg.ExtensionService(msg),
       "MainThreadExtensionService",
     ),
