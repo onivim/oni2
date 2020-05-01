@@ -105,11 +105,7 @@ let current:
            |> OptionEx.flatMap(Buffer.getIndentation)
            |> Option.value(~default=IndentationSettings.default);
 
-         let insertSpaces =
-           switch (indentation.mode) {
-           | Tabs => false
-           | Spaces => true
-           };
+         let insertSpaces = indentation.mode == Spaces;
 
          Vim.Context.{
            bufferId,

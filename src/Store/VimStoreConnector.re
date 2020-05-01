@@ -507,7 +507,7 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e oni://Welcome");
+      let _: Vim.Context.t = Vim.command("e oni://Welcome");
       hasInitialized := true;
 
       let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
@@ -559,10 +559,8 @@ let start =
         let context =
           Oni_Model.VimContext.current(~languageConfigLoader, state);
 
-        let {cursors, topLine, leftColumn, _}: Vim.Context.t =
+        let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
           Vim.input(~context, key);
-        let newTopLine = topLine;
-        let newLeftColumn = leftColumn;
 
         let () =
           editor
@@ -683,14 +681,13 @@ let start =
         isCompleting := true;
         let currentPos = ref(Vim.CommandLine.getPosition());
         while (currentPos^ > position) {
-          let _ = Vim.input("<bs>");
+          let _: Vim.Context.t = Vim.input("<bs>");
           currentPos := Vim.CommandLine.getPosition();
         };
 
         let completion = Path.trimTrailingSeparator(completion);
         let latestContext: Vim.Context.t = Core.VimEx.inputString(completion);
-        let cursors = latestContext.cursors;
-        updateActiveEditorCursors(cursors);
+        updateActiveEditorCursors(latestContext.cursors);
         isCompleting := false;
       }
     );
@@ -711,8 +708,7 @@ let start =
                Oni_Core.VimEx.inputString(text);
 
              if (!isCmdLineMode) {
-               let cursors = latestContext.cursors;
-               updateActiveEditorCursors(cursors);
+               updateActiveEditorCursors(latestContext.cursors);
                Vim.command("set nopaste") |> ignore;
              };
            });
@@ -748,8 +744,8 @@ let start =
 
   let undoEffect =
     Isolinear.Effect.create(~name="vim.undo", () => {
-      let _ = Vim.input("<esc>");
-      let _ = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input("<esc>");
       let {cursors, _}: Vim.Context.t = Vim.input("u");
       updateActiveEditorCursors(cursors);
       ();
@@ -757,8 +753,8 @@ let start =
 
   let redoEffect =
     Isolinear.Effect.create(~name="vim.redo", () => {
-      let _ = Vim.input("<esc>");
-      let _ = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input("<esc>");
       let {cursors, _}: Vim.Context.t = Vim.input("<c-r>");
       updateActiveEditorCursors(cursors);
       ();
@@ -766,33 +762,33 @@ let start =
 
   let saveEffect =
     Isolinear.Effect.create(~name="vim.save", () => {
-      let _ = Vim.input("<esc>");
-      let _ = Vim.input("<esc>");
-      let _ = Vim.input(":");
-      let _ = Vim.input("w");
-      let _ = Vim.input("<CR>");
+      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input(":");
+      let _: Vim.Context.t = Vim.input("w");
+      let _: Vim.Context.t = Vim.input("<CR>");
       ();
     });
 
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
-      let _ = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input("<esc>");
       ();
     });
 
   let indentEffect =
     Isolinear.Effect.create(~name="vim.indent", () => {
-      let _ = Vim.input(">");
-      let _ = Vim.input("g");
-      let _ = Vim.input("v");
+      let _: Vim.Context.t = Vim.input(">");
+      let _: Vim.Context.t = Vim.input("g");
+      let _: Vim.Context.t = Vim.input("v");
       ();
     });
 
   let outdentEffect =
     Isolinear.Effect.create(~name="vim.outdent", () => {
-      let _ = Vim.input("<");
-      let _ = Vim.input("g");
-      let _ = Vim.input("v");
+      let _: Vim.Context.t = Vim.input("<");
+      let _: Vim.Context.t = Vim.input("g");
+      let _: Vim.Context.t = Vim.input("v");
       ();
     });
 
@@ -809,15 +805,14 @@ let start =
            });
 
       // Clear out previous mode
-      let _ = Vim.input("<esc>");
-      let _ = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.input("<esc>");
       // Jump to bottom
-      let _ = Vim.input("g");
-      let _ = Vim.input("g");
-      let _ = Vim.input("G");
-      let {cursors, topLine, leftColumn, _}: Vim.Context.t = Vim.input("$");
-      let newTopLine = topLine;
-      let newLeftColumn = leftColumn;
+      let _: Vim.Context.t = Vim.input("g");
+      let _: Vim.Context.t = Vim.input("g");
+      let _: Vim.Context.t = Vim.input("G");
+      let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
+        Vim.input("$");
 
       // Update the editor, which is the source of truth for cursor position
       dispatch(Actions.EditorCursorMove(editorId, cursors));
