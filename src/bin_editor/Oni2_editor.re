@@ -119,7 +119,7 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
     App.createWindow(
       ~createOptions=
         WindowCreateOptions.create(
-          ~forceScaleFactor=cliOptions.forceScaleFactor,
+          ~forceScaleFactor,
           ~maximized=false,
           ~vsync=Vsync.Immediate,
           ~icon=Some("logo.png"),
