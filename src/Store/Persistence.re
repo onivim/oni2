@@ -17,7 +17,10 @@ module Pipe = {
 };
 
 module Internal = {
-  let hash = value => value |> Hashtbl.hash |> Printf.sprintf("%x");
+  let hash =
+    fun
+    | "global" => "global"
+    | value => value |> Hashtbl.hash |> Printf.sprintf("%x");
 };
 
 module Schema = {
