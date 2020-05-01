@@ -30,8 +30,8 @@ module Configuration: {
 
 module Eol: {
   type t =
-  | LF
-  | CRLF;
+    | LF
+    | CRLF;
 
   let default: t;
 
@@ -283,14 +283,19 @@ module Request: {
     let acceptModelModeChanged:
       (~uri: Uri.t, ~oldModeId: string, ~newModeId: string, Client.t) => unit;
 
-    let acceptModelSaved: 
-      (~uri: Uri.t, Client.t) => unit;
+    let acceptModelSaved: (~uri: Uri.t, Client.t) => unit;
 
     let acceptDirtyStateChanged:
       (~uri: Uri.t, ~isDirty: bool, Client.t) => unit;
 
     let acceptModelChanged:
-      (~uri: Uri.t, ~modelChangedEvent: ModelChangedEvent.t, ~isDirty: bool, Client.t) => unit;
+      (
+        ~uri: Uri.t,
+        ~modelChangedEvent: ModelChangedEvent.t,
+        ~isDirty: bool,
+        Client.t
+      ) =>
+      unit;
   };
 
   module ExtensionService: {

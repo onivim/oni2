@@ -11,57 +11,50 @@ module Commands = {
 };
 
 module Documents = {
-  let acceptModelModeChanged =
-  (~uri, ~oldModeId, ~newModeId, client) => {
+  let acceptModelModeChanged = (~uri, ~oldModeId, ~newModeId, client) => {
     Client.notify(
       ~rpcName="ExtHostDocuments",
       ~method="$acceptModelModeChanged",
-      ~args=`List([
-      Uri.to_yojson(uri),
-      `String(oldModeId),
-      `String(newModeId),
-      ]),
-      client
-    )
+      ~args=
+        `List([
+          Uri.to_yojson(uri),
+          `String(oldModeId),
+          `String(newModeId),
+        ]),
+      client,
+    );
   };
 
-  let acceptModelSaved = 
-  (~uri, client) => {
+  let acceptModelSaved = (~uri, client) => {
     Client.notify(
       ~rpcName="ExtHostDocuments",
       ~method="$acceptModelSaved",
-      ~args=`List([
-      Uri.to_yojson(uri),
-      ]),
-      client
-    )
+      ~args=`List([Uri.to_yojson(uri)]),
+      client,
+    );
   };
 
-  let acceptDirtyStateChanged =
-  (~uri, ~isDirty, client) => {
+  let acceptDirtyStateChanged = (~uri, ~isDirty, client) => {
     Client.notify(
       ~rpcName="ExtHostDocuments",
       ~method="$acceptModelSaved",
-      ~args=`List([
-      Uri.to_yojson(uri),
-      `Bool(isDirty)
-      ]),
-      client
-    )
+      ~args=`List([Uri.to_yojson(uri), `Bool(isDirty)]),
+      client,
+    );
   };
 
-  let acceptModelChanged =
-  (~uri, ~modelChangedEvent, ~isDirty, client) => {
+  let acceptModelChanged = (~uri, ~modelChangedEvent, ~isDirty, client) => {
     Client.notify(
       ~rpcName="ExtHostDocuments",
       ~method="$acceptModelSaved",
-      ~args=`List([
-      Uri.to_yojson(uri),
-      ModelChangedEvent.to_yojson(modelChangedEvent),
-      `Bool(isDirty)
-      ]),
-      client
-    )
+      ~args=
+        `List([
+          Uri.to_yojson(uri),
+          ModelChangedEvent.to_yojson(modelChangedEvent),
+          `Bool(isDirty),
+        ]),
+      client,
+    );
   };
 };
 
