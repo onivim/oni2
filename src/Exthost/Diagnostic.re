@@ -21,6 +21,37 @@ type t = {
   // code: string,
   // relatedInformation: DiagnosticRelatedInformation.t,
 };
+module Decode = {
+  open Json.Decode;
+
+  let decode = string |> map(StringEx.explode);
+
+  let configuration =
+    obj(({field, at, _}) =>
+      {
+        startLineNumber: field.required( "startLineNumber", int),
+        endLineNumber: field.required( "startLineNumber", int),
+        startColumn: field.required( "startColumn", int),
+        autoClosingPairs:
+          field.withDefault(
+            "autoClosingPairs",
+            [],
+            list(AutoClosingPair.decode),
+          ),
+        lineComment: at.optional(["comments", "lineComment"], string),
+        blockComment:
+          at.optional(
+            ["comments", "blockComment"],
+            list(string)
+            |> and_then(
+                 fun
+                 | [start, stop] => succeed((start, stop))
+                 | _ => fail("Expected pair"),
+               ),
+          ),
+      }
+    );
+};
 
 let of_yojson = json => {
   switch (json_of_yojson(json)) {

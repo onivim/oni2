@@ -52,7 +52,7 @@ module Diagnostics = {
     | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
       diagnosticsJson
       |> List.map(entry_of_yojson)
-      |> Oni_Core.Utility.ListEx.mapResult
+      |> Base.Result.all
       |> Result.map(entries => {ChangeMany({owner, entries})})
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
