@@ -54,20 +54,20 @@ module Internal = {
   };
 
   let lineComment = (~buffer, ~languageConfigLoader) => {
-           buffer
-           |> OptionEx.flatMap(Buffer.getFileType)
-           |> OptionEx.flatMap(
-                Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
-              )
-           |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
-                config.lineComment
-              );
+    buffer
+    |> OptionEx.flatMap(Buffer.getFileType)
+    |> OptionEx.flatMap(
+         Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
+       )
+    |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+         config.lineComment
+       );
   };
 
-  let indentation = (~buffer) => 
-           buffer
-           |> OptionEx.flatMap(Buffer.getIndentation)
-           |> Option.value(~default=IndentationSettings.default);
+  let indentation = (~buffer) =>
+    buffer
+    |> OptionEx.flatMap(Buffer.getIndentation)
+    |> Option.value(~default=IndentationSettings.default);
 };
 
 let current:
@@ -106,7 +106,8 @@ let current:
          let editorBuffer = Selectors.getActiveBuffer(state);
 
          // Set configured line comment
-         let lineComment = Internal.lineComment(~buffer=editorBuffer, ~languageConfigLoader);
+         let lineComment =
+           Internal.lineComment(~buffer=editorBuffer, ~languageConfigLoader);
 
          let indentation = Internal.indentation(~buffer=editorBuffer);
 
