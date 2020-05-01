@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Decorations = {
   [@deriving show]
@@ -40,18 +41,21 @@ module Diagnostics = {
   [@deriving show]
   type entry = (Uri.t, [@opaque] list(Diagnostic.t));
 
-  let decodeEntry = json => switch(json) {
-  | `List([uriJson, diagnosticListJson]) => 
-    uriJson
-    |> Uri.to_yojson
-    |> ResultEx.flatMap(uri => {
-  
-      let entries = diagnosticListJson
-      |> List.map(Json.Decode.decode_value(Diagnostic.decode));
-      |> Base.Result.all;
-    });
-  | _ => Error("Expected 2-element tuple")
-  };
+  let decodeEntry = json =>
+    switch (json) {
+    | `List([uriJson, diagnosticListJson]) =>
+      uriJson
+      |> Uri.of_yojson
+      |> ResultEx.flatMap(uri => {
+           diagnosticListJson
+           |> Yojson.Safe.Util.to_list
+           |> List.map(Json.Decode.decode_value(Diagnostic.decode))
+           |> Base.Result.all
+           |> Result.map(diagList => (uri, diagList))
+           |> Result.map_error(Json.Decode.string_of_error)
+         })
+    | _ => Error("Expected 2-element tuple")
+    };
 
   [@deriving show]
   type msg =
@@ -64,12 +68,12 @@ module Diagnostics = {
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
-  
-      diagnosticsJson 
-      |> decodeEntries;
+      diagnosticsJson
+      |> List.map(decodeEntry)
+      |> Base.Result.all
+      |> Result.map(entries => ChangeMany({owner, entries}))
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
-
     };
   };
 };
