@@ -52,6 +52,22 @@ module Internal = {
       Vim.AutoClosingPairs.empty;
     };
   };
+
+  let lineComment = (~buffer, ~languageConfigLoader) => {
+           buffer
+           |> OptionEx.flatMap(Buffer.getFileType)
+           |> OptionEx.flatMap(
+                Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
+              )
+           |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+                config.lineComment
+              );
+  };
+
+  let indentation = (~buffer) => 
+           buffer
+           |> OptionEx.flatMap(Buffer.getIndentation)
+           |> Option.value(~default=IndentationSettings.default);
 };
 
 let current:
@@ -90,20 +106,9 @@ let current:
          let editorBuffer = Selectors.getActiveBuffer(state);
 
          // Set configured line comment
-         let lineComment =
-           editorBuffer
-           |> OptionEx.flatMap(Buffer.getFileType)
-           |> OptionEx.flatMap(
-                Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
-              )
-           |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
-                config.lineComment
-              );
+         let lineComment = Internal.lineComment(~buffer=editorBuffer, ~languageConfigLoader);
 
-         let indentation =
-           editorBuffer
-           |> OptionEx.flatMap(Buffer.getIndentation)
-           |> Option.value(~default=IndentationSettings.default);
+         let indentation = Internal.indentation(~buffer=editorBuffer);
 
          let insertSpaces = indentation.mode == Spaces;
 
