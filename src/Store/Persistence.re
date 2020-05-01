@@ -1,6 +1,21 @@
 open Oni_Core;
 open Utility;
 
+module Log = (val Log.withNamespace("Oni2.Store.Persistence"));
+
+module Pipe = {
+  type t('a) = ref(option('a));
+
+  let create = () => ref(None);
+
+  let send = (inPipe, outPipe, data) => {
+    inPipe := Some(data); // send
+    let received = outPipe^; // receive
+    inPipe := None; // reset
+    received; // return
+  };
+};
+
 module Internal = {
   let hash = value => value |> Hashtbl.hash |> Printf.sprintf("%x");
 };
@@ -34,9 +49,16 @@ type definition('state, 'value) = {
   default: 'value,
   codec: codec('state, 'value),
   get: 'state => 'value,
+  pipe: Pipe.t('value),
 };
 
-let define = (key, codec, default, get) => {key, codec, default, get};
+let define = (key, codec, default, get) => {
+  key,
+  codec,
+  default,
+  get,
+  pipe: Pipe.create(),
+};
 
 type entry('state) =
   | Entry({
@@ -134,6 +156,16 @@ let persistIfDirty = (store, state) => {
 
     persist(store);
   };
+};
+
+let get = (definition, store) => {
+  let Entry({value, definition: {pipe, _}, _}) =
+    List.find(
+      (Entry({definition: this, _})) => this.key == definition.key,
+      store.entries,
+    );
+
+  Pipe.send(pipe, definition.pipe, value) |> Option.get;
 };
 
 module Global = {
