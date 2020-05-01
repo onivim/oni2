@@ -54,12 +54,49 @@ type store('state) = {
 };
 
 let instantiate = (name, entries) => {
-  name,
-  hash: Internal.hash(name),
-  entries: entries(),
+  let store = {name, hash: Internal.hash(name), entries: entries()};
+
+  let path =
+    Filesystem.getStoreFolder()
+    |> Result.map(storeFolder => Filename.concat(storeFolder, store.hash))
+    |> ResultEx.flatMap(Filesystem.getOrCreateConfigFolder)
+    |> Result.map(folder => Filename.concat(folder, "store.json"))
+    |> Result.get_ok;
+
+  switch (Yojson.Safe.from_file(path)) {
+  | json =>
+    switch (Json.Decode.(decode_value(key_value_pairs(value), json))) {
+    | Ok(persistedEntries) =>
+      List.iter(
+        (Entry({definition, _} as entry)) =>
+          switch (List.assoc_opt(definition.key, persistedEntries)) {
+          | Some(value) =>
+            switch (Json.Decode.decode_value(definition.codec.decode, value)) {
+            | Ok(value) => entry.value = value
+            | Error(error) =>
+              let message = Json.Decode.string_of_error(error);
+              Log.error("Error decoding store file: " ++ message);
+              entry.value = definition.default;
+            }
+          | None => entry.value = definition.default
+          },
+        store.entries,
+      )
+
+    | Error(error) =>
+      let message = Json.Decode.string_of_error(error);
+      Log.error("Error parsing store file: " ++ message);
+    }
+  | exception (Sys_error(message)) =>
+    // Most likely because the file doesn't exist, which is expected, but log it just in case.
+    Log.debug("Unable to read store file: " ++ message)
+  };
+
+  store;
 };
 
 let persist = store => {
+  Log.debug("Writing store for " ++ store.name);
   let entries =
     store.entries
     |> List.map((Entry({definition, value})) =>
