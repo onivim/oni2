@@ -6,6 +6,7 @@ module Extension = Exthost_Extension;
 type t = {
   client: Protocol.t,
   lastRequestId: ref(int),
+  requestIdToReply: Hashtbl.t(int, Lwt.u(Yojson.Safe.json)),
 };
 
 module Log = (val Timber.Log.withNamespace("Client"));
@@ -21,6 +22,7 @@ let start =
     ) => {
   let protocolClient: ref(option(Protocol.t)) = ref(None);
   let lastRequestId = ref(0);
+  let requestIdToReply = Hashtbl.create(128);
   let send = message =>
     switch (protocolClient^) {
     | None => ()
@@ -100,7 +102,7 @@ let start =
        protocolClient := Some(pc);
      });
 
-  protocol |> Result.map(protocol => {{lastRequestId, client: protocol}});
+  protocol |> Result.map(protocol => {{lastRequestId, client: protocol, requestIdToReply}});
 };
 
 let notify =
@@ -133,20 +135,39 @@ let request = (
   client
 ) => {
   exception Placeholder;
-  //let newRequestId = client.lastRequestId^ + 1;
-  let (promise, _resolver) = Lwt.task();
+  let newRequestId = client.lastRequestId^ + 1;
+  let (promise, resolver) = Lwt.task();
+  Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
 
+  let finalize = () => {
+    Hashtbl.remove(client.requestIdToReply, newRequestId);
+    Log.tracef(m => m("Request finalized: %d", newRequestId));
+  };
+
+  let onError = (e) => {
+    finalize();
+    Log.warnf(m => m("Request %d failed with error: %s", newRequestId, Printexc.to_string(e)))
+  };
+  
   let wrapper = json => {
-    try (Lwt.return(parser(json))) {
+    try ({
+    finalize();
+    let ret = Lwt.return(parser(json));
+    Log.tracef(m => m("Request %d succeeded.", newRequestId))
+    ret;
+    }) {
     | e =>
-    Log.warnf(m => m("Requested failed with error: %s", Printexc.to_string(e)))
+    onError(e);
     Lwt.fail(e);
     }
   };
 
-  notify(~rpcName, ~method, ~args, client);
+  let () = notify(~rpcName, ~method, ~args, client);
 
-  Lwt.wakeup_exn(_resolver, Placeholder)
+  // TODO: Actually implement
+  Lwt.wakeup_exn(resolver, Placeholder)
+
+  Lwt.on_failure(promise, onError);
   Lwt.bind(promise, wrapper);
 };
 
