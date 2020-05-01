@@ -1,47 +1,62 @@
 open Oni_Core;
 open Oni_Model;
 
-type codec('value);
+// SCHEMA
 
-let custom:
-  (
-    ~equal: ('value, 'value) => bool,
-    ~encode: Json.encoder('value),
-    ~decode: Json.decoder('value)
-  ) =>
-  codec('value);
-let int: codec(int);
-let string: codec(Stdlib.String.t);
-let option: codec('value) => codec(option('value));
+module Schema: {
+  module Codec: {
+    type t('value);
+    let custom:
+      (
+        ~equal: ('value, 'value) => bool,
+        ~encode: Json.encoder('value),
+        ~decode: Json.decoder('value)
+      ) =>
+      t('value);
+  };
 
-type definition('state, 'value);
-let define:
-  (string, codec('value), 'value, 'state => 'value) =>
-  definition('state, 'value);
+  let int: Codec.t(int);
+  let string: Codec.t(Stdlib.String.t);
+  let option: Codec.t('value) => Codec.t(option('value));
 
-type entry('state);
-let entry: definition('state, _) => entry('state);
+  type item('state, 'value);
+  let define:
+    (string, Codec.t('value), 'value, 'state => 'value) =>
+    item('state, 'value);
+};
 
-type store('state);
-let instantiate: (string, unit => list(entry('state))) => store('state);
-let persist: store('state) => unit;
-let persistIfDirty: (store('state), 'state) => unit;
+// STORE
 
-let get: (definition('state, 'value), store('state)) => 'value;
+module Store: {
+  type t('state);
+
+  type entry('state);
+  let entry: Schema.item('state, _) => entry('state);
+
+  let instantiate: (string, unit => list(entry('state))) => t('state);
+
+  let persist: t('state) => unit;
+  let persistIfDirty: (t('state), 'state) => unit;
+
+  let get: (Schema.item('state, 'value), t('state)) => 'value;
+};
+
+// BUILTIN STORES
 
 module Global: {
-  let version: definition(State.t, string);
-  let workspace: definition(State.t, option(string));
+  let version: Schema.item(State.t, string);
+  let workspace: Schema.item(State.t, option(string));
 
-  let store: store(State.t);
+  let store: Store.t(State.t);
 };
 
 module Workspace: {
   type state = (State.t, Revery.Window.t);
-  let windowX: definition(state, int);
-  let windowY: definition(state, int);
-  let windowWidth: definition(state, int);
-  let windowHeight: definition(state, int);
 
-  let storeFor: string => store(state);
+  let windowX: Schema.item(state, int);
+  let windowY: Schema.item(state, int);
+  let windowWidth: Schema.item(state, int);
+  let windowHeight: Schema.item(state, int);
+
+  let storeFor: string => Store.t(state);
 };

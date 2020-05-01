@@ -82,7 +82,7 @@ let initWorkingDirectory = () => {
     switch (cliOptions.folder) {
     | Some(folder) => folder
     | None =>
-      switch (Store.Persistence.(get(Global.workspace, Global.store))) {
+      switch (Store.Persistence.(Store.get(Global.workspace, Global.store))) {
       | Some(path) => path
       | None =>
         switch (Revery.Environment.getWorkingDirectory()) {
@@ -107,10 +107,10 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
         let store = Workspace.storeFor(workingDirectory);
 
         (
-          get(Workspace.windowX, store),
-          get(Workspace.windowY, store),
-          get(Workspace.windowWidth, store),
-          get(Workspace.windowHeight, store),
+          Store.get(Workspace.windowX, store),
+          Store.get(Workspace.windowY, store),
+          Store.get(Workspace.windowWidth, store),
+          Store.get(Workspace.windowHeight, store),
         );
       }
     );
@@ -182,10 +182,10 @@ if (cliOptions.syntaxHighlightService) {
       );
 
     let persistGlobal = () =>
-      Store.Persistence.(persistIfDirty(Global.store, currentState^));
+      Store.Persistence.(Store.persistIfDirty(Global.store, currentState^));
     let persistWorkspace = () =>
       Store.Persistence.(
-        persistIfDirty(
+        Store.persistIfDirty(
           Workspace.storeFor(currentState^.workspace.workingDirectory),
           (currentState^, window),
         )
