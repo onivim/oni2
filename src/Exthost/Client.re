@@ -89,7 +89,10 @@ let start =
           send(Outgoing.ReplyOKEmpty({requestId: requestId}));
         | Error(msg) => onError(msg)
         };
-      | _ => Log.warn("Unhandled message: " ++ Protocol.Message.Incoming.show(msg));
+      | _ =>
+        Log.warn(
+          "Unhandled message: " ++ Protocol.Message.Incoming.show(msg),
+        )
       }
     );
   };
@@ -102,13 +105,20 @@ let start =
        protocolClient := Some(pc);
      });
 
-  protocol |> Result.map(protocol => {{lastRequestId, client: protocol, requestIdToReply}});
+  protocol
+  |> Result.map(protocol => {
+       {lastRequestId, client: protocol, requestIdToReply}
+     });
 };
 
 let notify =
     (
-    ~usesCancellationToken=false,
-    ~rpcName: string, ~method: string, ~args, {lastRequestId, client}: t) => {
+      ~usesCancellationToken=false,
+      ~rpcName: string,
+      ~method: string,
+      ~args,
+      {lastRequestId, client}: t,
+    ) => {
   open Protocol.Message;
   let maybeId = Handlers.stringToId(rpcName);
   maybeId
@@ -129,14 +139,15 @@ let notify =
      });
 };
 
-let request = (
-  ~usesCancellationToken=false,
-  ~rpcName: string,
-  ~method: string,
-  ~args,
-  ~parser,
-  client
-) => {
+let request =
+    (
+      ~usesCancellationToken=false,
+      ~rpcName: string,
+      ~method: string,
+      ~args,
+      ~parser,
+      client,
+    ) => {
   exception Placeholder;
   let newRequestId = client.lastRequestId^ + 1;
   let (promise, resolver) = Lwt.task();
@@ -147,28 +158,35 @@ let request = (
     Log.tracef(m => m("Request finalized: %d", newRequestId));
   };
 
-  let onError = (e) => {
+  let onError = e => {
     finalize();
-    Log.warnf(m => m("Request %d failed with error: %s", newRequestId, Printexc.to_string(e)))
+    Log.warnf(m =>
+      m(
+        "Request %d failed with error: %s",
+        newRequestId,
+        Printexc.to_string(e),
+      )
+    );
   };
-  
-  let wrapper = json => {
-    try ({
-    finalize();
-    let ret = Lwt.return(parser(json));
-    Log.tracef(m => m("Request %d succeeded.", newRequestId))
-    ret;
-    }) {
+
+  let wrapper = json =>
+    try(
+      {
+        finalize();
+        let ret = Lwt.return(parser(json));
+        Log.tracef(m => m("Request %d succeeded.", newRequestId));
+        ret;
+      }
+    ) {
     | e =>
-    onError(e);
-    Lwt.fail(e);
-    }
-  };
+      onError(e);
+      Lwt.fail(e);
+    };
 
   let () = notify(~usesCancellationToken, ~rpcName, ~method, ~args, client);
 
   // TODO: Actually implement
-  Lwt.wakeup_exn(resolver, Placeholder)
+  Lwt.wakeup_exn(resolver, Placeholder);
 
   Lwt.on_failure(promise, onError);
   Lwt.bind(promise, wrapper);

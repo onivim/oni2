@@ -13,7 +13,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
 
       Test.startWithExtensions(["oni-language-features"])
       |> Test.waitForReady
-      |> Test.waitForMessage(~name="Activation",waitForActivation)
+      |> Test.waitForMessage(~name="Activation", waitForActivation)
       |> Test.terminate
       |> Test.waitForProcessClosed;
     })
