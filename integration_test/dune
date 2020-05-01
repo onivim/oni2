@@ -32,6 +32,7 @@
            SyntaxServerParentPidTest
            SyntaxServerParentPidCorrectTest
            SyntaxServerReadExceptionTest
+           Regression1671Test
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
@@ -85,6 +86,7 @@
         LanguageTypeScriptTest.exe
         LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
+        Regression1671Test.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
