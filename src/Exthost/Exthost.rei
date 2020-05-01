@@ -4,6 +4,18 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module CompletionContext: {
+  type triggerKind = 
+  | Invoke
+  | TriggerCharacter
+  | TriggerForIncompleteCompletions;
+
+  type t = {
+    triggerKind: triggerKind,
+    triggerCharacter: option(string),
+  }
+};
+
 module Configuration: {
   // Type relating to 'ConfigurationModel' in VSCode
   // This is an 'instance' of configuration - modelling user, workspace, or default configuration.
@@ -37,6 +49,16 @@ module ShellLaunchConfig: {
 
   let to_yojson: t => Yojson.Safe.t;
 };
+
+module OneBasedPosition = {
+  type t = {
+    lineNumber: int,
+    column: int,
+  };
+
+  let ofPosition: Location.t => t;
+  let to_yojson: t => Yojson.Safe.t;
+}
 
 module Msg: {
   module Commands: {

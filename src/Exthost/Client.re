@@ -106,7 +106,9 @@ let start =
 };
 
 let notify =
-    (~rpcName: string, ~method: string, ~args, {lastRequestId, client}: t) => {
+    (
+    ~usesCancellationToken=false,
+    ~rpcName: string, ~method: string, ~args, {lastRequestId, client}: t) => {
   open Protocol.Message;
   let maybeId = Handlers.stringToId(rpcName);
   maybeId
@@ -120,7 +122,7 @@ let notify =
              requestId,
              method,
              args,
-             usesCancellationToken: false,
+             usesCancellationToken,
            }),
          client,
        );
@@ -128,6 +130,7 @@ let notify =
 };
 
 let request = (
+  ~usesCancellationToken=false,
   ~rpcName: string,
   ~method: string,
   ~args,
@@ -162,7 +165,7 @@ let request = (
     }
   };
 
-  let () = notify(~rpcName, ~method, ~args, client);
+  let () = notify(~usesCancellationToken, ~rpcName, ~method, ~args, client);
 
   // TODO: Actually implement
   Lwt.wakeup_exn(resolver, Placeholder)

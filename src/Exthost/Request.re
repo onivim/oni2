@@ -21,6 +21,34 @@ module ExtensionService = {
   };
 };
 
+module LanguageFeatures = {
+  let provideCompletionItems = (
+    ~handle: int,
+    ~resource: Uri.t,
+    ~position: OneBasedPosition.t,
+    ~context: CompletionContext.t,
+    client,
+  ) =>  {
+
+    let parser = (_) => [];
+
+    Client.request(
+      ~parser,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~methodName="$provideCompletionItems",
+      ~args=`List([
+        `Int(handle),
+        Uri.to_yojson(resource),
+        OneBasedRange.to_yojson(position),
+        CompletionContext.to_yojson(context),
+      ]),
+      client,
+    );
+  }
+  
+};
+
 module TerminalService = {
   let spawnExtHostProcess =
       (
