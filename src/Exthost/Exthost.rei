@@ -28,6 +28,39 @@ module Configuration: {
     (~defaults: Model.t=?, ~user: Model.t=?, ~workspace: Model.t=?, unit) => t;
 };
 
+module Eol: {
+  type t =
+  | LF
+  | CRLF;
+
+  let default: t;
+
+  let toString: t => string;
+
+  let to_yojson: t => Yojson.Safe.t;
+};
+
+module ModelContentChange: {
+  type t = {
+    range: OneBasedRange.t,
+    text: string,
+  };
+
+  let ofBufferUpdate: (BufferUpdate.t, Eol.t) => t;
+
+  let to_yojson: t => Yojson.Safe.t;
+};
+
+module ModelChangedEvent: {
+  type t = {
+    changes: list(ModelContentChange.t),
+    eol: Eol.t,
+    versionId: int,
+  };
+
+  let to_yojson: t => Yojson.Safe.t;
+};
+
 module ShellLaunchConfig: {
   type t = {
     name: string,
@@ -245,6 +278,21 @@ module Request: {
     let executeContributedCommand:
       (~arguments: list(Json.t), ~command: string, Client.t) => unit;
   };
+
+  module Documents: {
+    let acceptModelModeChanged:
+      (~uri: Uri.t, ~oldModeId: string, ~newModeId: string, Client.t) => unit;
+
+    let acceptModelSaved: 
+      (~uri: Uri.t, Client.t) => unit;
+
+    let acceptDirtyStateChanged:
+      (~uri: Uri.t, ~isDirty: bool, Client.t) => unit;
+
+    let acceptModelChanged:
+      (~uri: Uri.t, ~modelChangedEvent: ModelChangedEvent.t, ~isDirty: bool, Client.t) => unit;
+  };
+
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => unit;
   };

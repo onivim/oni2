@@ -4,6 +4,10 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Eol = Eol;
+module ModelChangedEvent = ModelChangedEvent;
+module ModelContentChange = ModelContentChange;
+
 module Client = Client;
 module Request = Request;
 
