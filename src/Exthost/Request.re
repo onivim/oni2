@@ -63,10 +63,8 @@ module DocumentsAndEditors = {
     Client.notify(
       ~rpcName="ExtHostDocumentsAndEditors",
       ~method="$acceptDocumentsAndEditorsDelta",
-      ~args=`List([
-          DocumentsAndEditorsDelta.to_yojson(delta)
-      ]),
-      client
+      ~args=`List([DocumentsAndEditorsDelta.to_yojson(delta)]),
+      client,
     );
   };
 };
