@@ -50,7 +50,7 @@ module Scheme = {
       |> and_then(
            fun
            | [scheme, ..._] => scheme |> ofString |> succeed
-           | _ => fail("No scheme"),
+           | [] => fail("No scheme"),
          );
 
     let decodeString = string |> map(ofString);
