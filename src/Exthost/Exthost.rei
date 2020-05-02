@@ -5,6 +5,86 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module CompletionContext: {
+  type triggerKind =
+    | Invoke
+    | TriggerCharacter
+    | TriggerForIncompleteCompletions;
+
+  type t = {
+    triggerKind,
+    triggerCharacter: option(string),
+  };
+};
+
+module CompletionKind: {
+  type t =
+    | Method
+    | Function
+    | Constructor
+    | Field
+    | Variable
+    | Class
+    | Struct
+    | Interface
+    | Module
+    | Property
+    | Event
+    | Operator
+    | Unit
+    | Value
+    | Constant
+    | Enum
+    | EnumMember
+    | Keyword
+    | Text
+    | Color
+    | File
+    | Reference
+    | Customcolor
+    | Folder
+    | TypeParameter
+    | User
+    | Issue
+    | Snippet;
+
+  let ofInt: int => option(t);
+};
+
+module DocumentFilter: {
+  [@deriving show]
+  type t = {
+    language: option(string),
+    scheme: option(string),
+    exclusive: bool,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module SuggestItem: {
+  type t = {
+    label: string,
+    kind: CompletionKind.t,
+    detail: option(string),
+    documentation: option(string),
+    sortText: option(string),
+    filterText: option(string),
+    insertText: option(string),
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module SuggestResult: {
+  type t = {
+    completions: list(SuggestItem.t),
+    isIncomplete: bool,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module Configuration: {
   // Type relating to 'ConfigurationModel' in VSCode
   // This is an 'instance' of configuration - modelling user, workspace, or default configuration.
@@ -126,6 +206,16 @@ module ShellLaunchConfig: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
+module OneBasedPosition: {
+  type t = {
+    lineNumber: int,
+    column: int,
+  };
+
+  let ofPosition: Location.t => t;
+  let to_yojson: t => Yojson.Safe.t;
+};
+
 module Msg: {
   module Commands: {
     [@deriving show]
@@ -209,6 +299,19 @@ module Msg: {
       | ExtensionRuntimeError({extensionId: string});
   };
 
+  module LanguageFeatures: {
+    [@deriving show]
+    type msg =
+      | RegisterSuggestSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+          triggerCharacters: list(string),
+          supportsResolveDetails: bool,
+          extensionId: string,
+        })
+      | Unregister({handle: int});
+  };
+
   module MessageService: {
     type severity =
       | Ignore
@@ -286,6 +389,7 @@ module Msg: {
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
     | ExtensionService(ExtensionService.msg)
+    | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
@@ -326,6 +430,8 @@ module Client: {
   let close: t => unit;
 
   let terminate: t => unit;
+
+  module Testing: {let getPendingRequestCount: t => int;};
 };
 
 module Request: {
@@ -360,6 +466,18 @@ module Request: {
 
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => unit;
+  };
+
+  module LanguageFeatures: {
+    let provideCompletionItems:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: CompletionContext.t,
+        Client.t
+      ) =>
+      Lwt.t(SuggestResult.t);
   };
 
   module TerminalService: {

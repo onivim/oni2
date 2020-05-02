@@ -27,6 +27,11 @@ let startWithExtensions =
     ) => {
   let messages = ref([]);
 
+  let errorHandler = err => {
+    prerr_endline("ERROR: " ++ err);
+    onError(err);
+  };
+
   let wrappedHandler = msg => {
     Msg.show(msg) |> prerr_endline;
     messages := [msg, ...messages^];
@@ -70,7 +75,7 @@ let startWithExtensions =
       ~namedPipe=pipe,
       ~initData,
       ~handler=wrappedHandler,
-      ~onError,
+      ~onError=errorHandler,
       (),
     )
     |> ResultEx.tap_error(msg => prerr_endline(msg))
@@ -157,6 +162,36 @@ let waitForExtensionActivation = (expectedExtensionId, context) => {
 
 let withClient = (f, context) => {
   f(context.client);
+  context;
+};
+
+let withClientRequest = (~name, ~validate, f, context) => {
+  let response = f(context.client);
+  let hasValidated = ref(false);
+
+  let validator = returnValue => {
+    if (!validate(returnValue)) {
+      failwith("Validation failed: " ++ name);
+    };
+    hasValidated := true;
+  };
+  let () = Lwt.on_success(response, validator);
+  Waiter.wait(
+    ~timeout=10.0,
+    ~name="Waiter: " ++ name,
+    () => {
+      prerr_endline("Waiting...");
+      hasValidated^;
+    },
+  );
+
+  context;
+};
+
+let validateNoPendingRequests = context => {
+  if (Client.Testing.getPendingRequestCount(context.client) > 0) {
+    failwith("There are still pending requests");
+  };
   context;
 };
 
