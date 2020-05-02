@@ -5,6 +5,8 @@
            ClipboardInsertModePasteEmptyTest
            ClipboardNormalModePasteTest
            ClipboardYankTest
+           ClipboardxpTest
+           ClipboardyypTest
            CopyActiveFilepathToClipboardTest
            EchoNotificationTest
            EditorFontFromPathTest
@@ -67,6 +69,8 @@
         ClipboardInsertModePasteEmptyTest.exe
         ClipboardNormalModePasteTest.exe
         ClipboardYankTest.exe
+        ClipboardxpTest.exe
+        ClipboardyypTest.exe
         CopyActiveFilepathToClipboardTest.exe
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe

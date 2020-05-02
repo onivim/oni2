@@ -93,11 +93,6 @@ let start =
       |> String.split_on_char('\n')
       |> Array.of_list;
 
-    let getClipboardValue = () => {
-      getClipboardText()
-      |> Option.map(text => text |> removeWindowsNewLines |> splitNewLines);
-    };
-
     let starReg = Char.code('*');
     let plusReg = Char.code('+');
     let unnamedReg = 0;
