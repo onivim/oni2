@@ -103,7 +103,7 @@ type outmsg =
   | Focus
   | Nothing;
 
-let update = (extHostClient, model, msg) =>
+let update = (extHostClient: Exthost.Client.t, model, msg) =>
   switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
       {
@@ -288,11 +288,13 @@ let update = (extHostClient, model, msg) =>
           |> List.map((provider: Provider.t) =>
                switch (provider.acceptInputCommand) {
                | Some(command) =>
-                 ExtHostClient.Effects.executeContributedCommand(
-                   extHostClient,
-                   command.id,
-                   ~arguments=command.arguments,
-                 )
+                 Isolinear.Effect.create(~name="acceptInputCommand", () => {
+                   Exthost.Request.Commands.executeContributedCommand(
+                     ~command=command.id,
+                     ~arguments=command.arguments,
+                     extHostClient,
+                   )
+                 })
                | None => Isolinear.Effect.none
                }
              ),
@@ -320,13 +322,15 @@ let update = (extHostClient, model, msg) =>
       Effect(
         Isolinear.Effect.batch(
           model.providers
-          |> List.map(provider =>
-               ExtHostClient.SCM.Effects.onInputBoxValueChange(
-                 extHostClient,
-                 provider,
-                 value,
-               )
-             ),
+          |> List.map(provider
+               => Isolinear.Effect.none)
+               // TODO: Hook this back up!
+               //               ExtHostClient.SCM.Effects.onInputBoxValueChange(
+               //                 extHostClient,
+               //                 provider,
+               //                 value,
+               //               )
+,
         ),
       ),
     );

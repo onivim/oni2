@@ -14,7 +14,7 @@ module Internal = {
 
 let update =
     (
-      ~extHostClient,
+      ~extHostClient: Exthost.Client.t,
       ~getUserSettings,
       ~setup,
       state: State.t,
@@ -62,16 +62,17 @@ let update =
     let state = {...state, config};
     let eff =
       switch (outmsg) {
-      | ConfigurationChanged({changed}) =>
-        Oni_Extensions.ExtHostClient.Effects.acceptConfigurationChanged(
-          extHostClient,
-          Feature_Configuration.toExtensionConfiguration(
-            config,
-            state.extensions.extensions,
-            setup,
-          ),
-          ~changed=Exthost.Configuration.Model.fromSettings(changed),
-        )
+      | ConfigurationChanged({changed}) => Isolinear.Effect.none
+      // TODO: Bring this back
+      //        Oni_Extensions.ExtHostClient.Effects.acceptConfigurationChanged(
+      //          extHostClient,
+      //          Feature_Configuration.toExtensionConfiguration(
+      //            config,
+      //            state.extensions.extensions,
+      //            setup,
+      //          ),
+      //          ~changed=Exthost.Configuration.Model.fromSettings(changed),
+      //        )
       | Nothing => Effect.none
       };
 

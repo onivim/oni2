@@ -4,6 +4,7 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Diagnostic = Diagnostic;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
 module Eol = Eol;
 module ModelAddedDelta = ModelAddedDelta;

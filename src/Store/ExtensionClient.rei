@@ -1,6 +1,7 @@
 open Oni_Core;
 open Oni_Model;
 open Oni_Extensions;
+open Exthost;
 open Exthost.Extension;
 
 let create:
@@ -9,4 +10,4 @@ let create:
     ~extensions: list(Scanner.ScanResult.t),
     ~setup: Setup.t
   ) =>
-  (ExtHostClient.t, Isolinear.Stream.t(Actions.t));
+  (result(Exthost.Client.t, string), Isolinear.Stream.t(Actions.t));

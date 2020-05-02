@@ -56,7 +56,7 @@ let initial: model;
 
 module Effects: {
   let getOriginalUri:
-    (ExtHostClient.t, model, string, Uri.t => 'msg) =>
+    (Exthost.Client.t, model, string, Uri.t => 'msg) =>
     Isolinear.Effect.t('msg);
 };
 
@@ -72,7 +72,7 @@ type outmsg =
   | Focus
   | Nothing;
 
-let update: (ExtHostClient.t, model, msg) => (model, outmsg);
+let update: (Exthost.Client.t, model, msg) => (model, outmsg);
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, ExtHostClient.SCM.msg) => unit;

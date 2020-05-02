@@ -20,7 +20,7 @@ module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 module Workspace = Protocol.Workspace;
 
-let start = (extensions, extHostClient) => {
+let start = (extensions, extHostClient: Exthost.Client.t) => {
   let _bufferMetadataToModelAddedDelta =
       (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
     switch (bm.filePath, fileType) {
@@ -28,13 +28,12 @@ let start = (extensions, extHostClient) => {
       Log.trace("Creating model for filetype: " ++ ft);
 
       Some(
-        Protocol.ModelAddedDelta.create(
-          ~uri=Uri.fromPath(fp),
+        Exthost.ModelAddedDelta.create(
           ~versionId=bm.version,
           ~lines=[""],
           ~modeId=ft,
           ~isDirty=true,
-          (),
+          Uri.fromPath(fp),
         ),
       );
     | _ => None
@@ -47,7 +46,10 @@ let start = (extensions, extHostClient) => {
     |> Option.iter(ft =>
          if (!Hashtbl.mem(activatedFileTypes, ft)) {
            // If no entry, we haven't activated yet
-           ExtHostClient.activateByEvent("onLanguage:" ++ ft, extHostClient);
+           Exthost.Request.ExtensionService.activateByEvent(
+             "onLanguage:" ++ ft,
+             extHostClient,
+           );
            Hashtbl.add(activatedFileTypes, ft, true);
          }
        );
@@ -57,9 +59,17 @@ let start = (extensions, extHostClient) => {
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
       switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
       | None => ()
-      | Some((v: Protocol.ModelAddedDelta.t)) =>
+      | Some((v: Exthost.ModelAddedDelta.t)) =>
         activateFileType(fileType);
-        ExtHostClient.addDocument(v, extHostClient);
+        let addedDelta =
+          Exthost.DocumentsAndEditorsDelta.create(
+            ~removedDocuments=[],
+            ~addedDocuments=[v],
+          );
+        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+          ~delta=addedDelta,
+          extHostClient,
+        );
       }
     );
 
@@ -70,31 +80,34 @@ let start = (extensions, extHostClient) => {
       | Some(buffer) =>
         Oni_Core.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
-            Protocol.ModelContentChange.ofBufferUpdate(
+            Exthost.ModelContentChange.ofBufferUpdate(
               update,
-              Protocol.Eol.default,
+              Exthost.Eol.default,
             );
           let modelChangedEvent =
-            Protocol.ModelChangedEvent.create(
-              ~changes=[modelContentChange],
-              ~eol=Protocol.Eol.default,
-              ~versionId=update.version,
-              (),
-            );
+            Exthost.ModelChangedEvent.{
+              changes: [modelContentChange],
+              eol: Exthost.Eol.default,
+              versionId: update.version,
+            };
 
-          ExtHostClient.updateDocument(
-            Buffer.getUri(buffer),
-            modelChangedEvent,
-            ~dirty=Buffer.isModified(buffer),
+          Exthost.Request.Documents.acceptModelChanged(
+            ~uri=Buffer.getUri(buffer),
+            ~modelChangedEvent,
+            ~isDirty=Buffer.isModified(buffer),
             extHostClient,
           );
         })
       }
     );
 
-  let executeContributedCommandEffect = (cmd, arguments) =>
+  let executeContributedCommandEffect = (command, arguments) =>
     Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
-      ExtHostClient.executeContributedCommand(cmd, ~arguments, extHostClient)
+      Exthost.Request.Commands.executeContributedCommand(
+        ~command,
+        ~arguments,
+        extHostClient,
+      )
     });
 
   let gitRefreshEffect = (scm: Feature_SCM.model) =>
@@ -117,59 +130,65 @@ let start = (extensions, extHostClient) => {
       ~name="exthost.registerQuitCleanup", dispatch =>
       dispatch(
         Actions.RegisterQuitCleanup(
-          () => ExtHostClient.close(extHostClient),
+          () => Exthost.Client.terminate(extHostClient),
         ),
       )
     );
 
   let changeWorkspaceEffect = path =>
     Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
-      ExtHostClient.acceptWorkspaceData(
-        Workspace.fromPath(path),
-        extHostClient,
-      )
+      // TODO: Add workspace APIs
+      //      ExtHostClient.acceptWorkspaceData(
+      //        Workspace.fromPath(path),
+      //        extHostClient,
+      //      )
+      ()
     });
 
   let getOriginalContent = (bufferId, uri, providers) =>
     Isolinear.Effect.createWithDispatch(
-      ~name="scm.getOriginalSourceLines", dispatch => {
-      let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
-      providers
-      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
-      |> Option.iter(provider => {
-           let (handle, _) = provider;
-           let promise =
-             ExtHostClient.provideTextDocumentContent(
-               handle,
-               uri,
-               extHostClient,
-             );
-
-           Lwt.on_success(
-             promise,
-             content => {
-               let lines =
-                 content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
-
-               dispatch(Actions.GotOriginalContent({bufferId, lines}));
-             },
-           );
-         });
+      ~name="scm.getOriginalSourceLines", _dispatch => {
+      // TODO: Hook up provideTextDOcument API
+      //      let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
+      //      providers
+      //      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+      //      |> Option.iter(provider => {
+      //           let (handle, _) = provider;
+      //           let promise =
+      //             ExtHostClient.provideTextDocumentContent(
+      //               handle,
+      //               uri,
+      //               extHostClient,
+      //             );
+      //
+      //           Lwt.on_success(
+      //             promise,
+      //             content => {
+      //               let lines =
+      //                 content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
+      //
+      //               dispatch(Actions.GotOriginalContent({bufferId, lines}));
+      //             },
+      //           );
+      //         });
+      ()
     });
 
   let provideDecorationsEffect = (handle, uri) =>
     Isolinear.Effect.createWithDispatch(
-      ~name="exthost.provideDecorations", dispatch => {
-      let promise =
-        Oni_Extensions.ExtHostClient.provideDecorations(
-          handle,
-          uri,
-          extHostClient,
-        );
-
-      Lwt.on_success(promise, decorations =>
-        dispatch(Actions.GotDecorations({handle, uri, decorations}))
-      );
+      ~name="exthost.provideDecorations", _dispatch => {
+      // TODO: provideDecorations API
+      //      let promise =
+      //        Oni_Extensions.ExtHostClient.provideDecorations(
+      //          handle,
+      //          uri,
+      //          extHostClient,
+      //        );
+      //
+      //      Lwt.on_success(promise, decorations =>
+      //        dispatch(Actions.GotDecorations({handle, uri, decorations}))
+      //      );
+      ()
     });
 
   let updater = (state: State.t, action: Actions.t) =>
@@ -202,19 +221,21 @@ let start = (extensions, extHostClient) => {
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
     | BufferEnter({metadata, fileType, _}) =>
-      let eff =
-        switch (metadata.filePath) {
-        | Some(path) =>
-          Isolinear.Effect.batch([
-            sendBufferEnterEffect(metadata, fileType),
-            Feature_SCM.Effects.getOriginalUri(
-              extHostClient, state.scm, path, uri =>
-              Actions.GotOriginalUri({bufferId: metadata.id, uri})
-            ),
-          ])
-
-        | None => sendBufferEnterEffect(metadata, fileType)
-        };
+      let eff = sendBufferEnterEffect(metadata, fileType);
+      // TODO: SCM - implement getOriginalUri
+      //      let eff =
+      //        switch (metadata.filePath) {
+      //        | Some(path) =>
+      //          Isolinear.Effect.batch([
+      //            sendBufferEnterEffect(metadata, fileType),
+      //            Feature_SCM.Effects.getOriginalUri(
+      //              extHostClient, state.scm, path, uri =>
+      //              Actions.GotOriginalUri({bufferId: metadata.id, uri})
+      //            ),
+      //          ])
+      //
+      //        | None => sendBufferEnterEffect(metadata, fileType)
+      //        };
       (state, eff);
 
     | NewTextContentProvider({handle, scheme}) => (
@@ -324,10 +345,10 @@ let start = (extensions, extHostClient) => {
     | ExtMessageReceived({severity, message, extensionId}) =>
       let kind: Feature_Notification.kind =
         switch (severity) {
-        | `Ignore => Info
-        | `Info => Info
-        | `Warning => Warning
-        | `Error => Error
+        | Exthost.Msg.MessageService.Ignore => Info
+        | Exthost.Msg.MessageService.Info => Info
+        | Exthost.Msg.MessageService.Warning => Warning
+        | Exthost.Msg.MessageService.Error => Error
         };
 
       (

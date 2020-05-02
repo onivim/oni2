@@ -105,7 +105,7 @@ type t =
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
-      severity: [ | `Ignore | `Info | `Warning | `Error],
+      severity: [@opaque] Exthost.Msg.MessageService.severity,
       message: string,
       extensionId: option(string),
     })
@@ -148,7 +148,7 @@ type t =
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
-  | StatusBarDisposeItem(int)
+  | StatusBarDisposeItem(string)
   | StatusBar(StatusBarModel.action)
   | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)

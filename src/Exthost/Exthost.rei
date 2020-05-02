@@ -29,6 +29,28 @@ module Configuration: {
     (~defaults: Model.t=?, ~user: Model.t=?, ~workspace: Model.t=?, unit) => t;
 };
 
+module OneBasedRange: {
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
+
+  let ofRange: Range.t => t;
+  let toRange: t => Range.t;
+};
+
+module Diagnostic: {
+  type t = {
+    range: OneBasedRange.t,
+    message: string,
+    severity: int,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module Eol: {
   type t =
     | LF
@@ -102,18 +124,6 @@ module ModelChangedEvent: {
   };
 
   let to_yojson: t => Yojson.Safe.t;
-};
-
-module OneBasedRange: {
-  type t = {
-    startLineNumber: int,
-    endLineNumber: int,
-    startColumn: int,
-    endColumn: int,
-  };
-
-  let ofRange: Range.t => t;
-  let toRange: t => Range.t;
 };
 
 module ShellLaunchConfig: {
