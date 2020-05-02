@@ -11,8 +11,8 @@ runTest(
       state.vimMode == Vim.Types.Normal
     );
 
-    Vim.command("e a-test-file");
-    let _: list(Vim.Cursor.t) = Vim.input("iabc");
+    ignore(Vim.command("e a-test-file"): Vim.Context.t);
+    ignore(Vim.input("iabc"): Vim.Context.t);
 
     // Wait for lines to be available in buffer
     let originalBufferId = ref(-1);
@@ -29,8 +29,8 @@ runTest(
     );
 
     // Repro for 1671 - switch to a different file, and then back
-    let _: list(Vim.Cursor.t) = Vim.input("<ESC>");
-    Vim.command("e! another-test-file");
+    ignore(Vim.input("<ESC>"): Vim.Context.t);
+    ignore(Vim.command("e! another-test-file"): Vim.Context.t);
     runEffects();
     wait(~name="Buffer switched", (state: State.t) => {
       state
@@ -39,7 +39,7 @@ runTest(
       |> Option.value(~default=false)
     });
 
-    Vim.command("e! a-test-file");
+    ignore(Vim.command("e! a-test-file"): Vim.Context.t);
     runEffects();
     wait(~name="Buffer switched back", (state: State.t) => {
       state

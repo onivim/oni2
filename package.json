@@ -244,7 +244,7 @@
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#b17ce17",
-    "reason-libvim": "onivim/reason-libvim#04fd9f4",
+    "reason-libvim": "onivim/reason-libvim#0fd53dc",
     "revery-terminal": "revery-ui/revery-terminal#4e8ca1c",
     "@opam/conf-pkg-config": "1.1"
   },
