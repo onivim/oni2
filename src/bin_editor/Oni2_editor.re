@@ -85,10 +85,7 @@ let initWorkingDirectory = () => {
       switch (Store.Persistence.(Store.get(Global.workspace, Global.store))) {
       | Some(path) => path
       | None =>
-        switch (Revery.Environment.getWorkingDirectory()) {
-        | "/" => Sys.getenv_opt("HOME") |> Option.value(~default="/")
-        | path => path
-        }
+        Dir.User.document |> Option.value(~default=Dir.home) |> Fp.toString
       }
     };
 
