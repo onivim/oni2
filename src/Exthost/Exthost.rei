@@ -51,6 +51,17 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module DocumentFilter: {
+  [@deriving show]
+  type t = {
+    language: option(string),
+    scheme: option(string),
+    exclusive: bool,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module SuggestItem: {
   type t = {
     label: string,
@@ -286,6 +297,19 @@ module Msg: {
           errorMessage: string,
         })
       | ExtensionRuntimeError({extensionId: string});
+  };
+
+  module LanguageFeatures: {
+    [@deriving show]
+    type msg =
+      | RegisterSuggestSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+          triggerCharacters: list(string),
+          supportsResolveDetails: bool,
+          extensionId: string,
+        })
+      | Unregister({handle: int});
   };
 
   module MessageService: {

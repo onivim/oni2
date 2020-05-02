@@ -7,6 +7,7 @@ module Transport = Exthost_Transport;
 module CompletionContext = CompletionContext;
 module CompletionKind = CompletionKind;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
+module DocumentFilter = DocumentFilter;
 module Eol = Eol;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;

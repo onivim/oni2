@@ -228,6 +228,59 @@ module ExtensionService = {
   };
 };
 
+module LanguageFeatures = {
+  [@deriving show]
+  type msg =
+    | RegisterSuggestSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+        triggerCharacters: list(string),
+        supportsResolveDetails: bool,
+        extensionId: string,
+      })
+    | Unregister({handle: int});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$unregister", `List([`Int(handle)])) =>
+      Ok(Unregister({handle: handle}))
+    | (
+        "$registerSuggestSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          triggerCharactersJson,
+          `Bool(supportsResolveDetails),
+          `String(extensionId),
+        ]),
+      ) =>
+      open Json.Decode;
+      let selectorResult =
+        selectorJson |> Json.Decode.decode_value(list(DocumentFilter.decode));
+
+      let triggerCharactersResult =
+        triggerCharactersJson |> Json.Decode.decode_value(list(string));
+
+      ResultEx.map2(
+        (selector, triggerCharacters) => {
+          RegisterSuggestSupport({
+            handle,
+            selector,
+            triggerCharacters,
+            supportsResolveDetails,
+            extensionId,
+          })
+        },
+        selectorResult,
+        triggerCharactersResult,
+      )
+      |> Result.map_error(Json.Decode.string_of_error);
+
+    | _ => Error("Unhandled method: " ++ method)
+    };
+  };
+};
+
 module MessageService = {
   [@deriving show]
   type severity =

@@ -8,6 +8,14 @@ let flatMap = f =>
   | Ok(x) => f(x)
   | Error(_) as err => err;
 
+let map2 = (f, a, b) => {
+  switch (a, b) {
+  | (Ok(vA), Ok(vB)) => Ok(f(vA, vB))
+  | (Error(_) as errA, _) => errA
+  | (_, Error(_) as errB) => errB
+  };
+};
+
 let tapError = f =>
   fun
   | Ok(_) as ok => ok
