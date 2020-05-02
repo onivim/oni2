@@ -178,13 +178,12 @@ if (cliOptions.syntaxHighlightService) {
         ),
       );
 
-    let persistGlobal = () =>
-      Store.Persistence.Global.persistIfDirty(currentState^);
+    let persistGlobal = () => Store.Persistence.Global.persist(currentState^);
     let persistWorkspace = () =>
       Store.Persistence.Workspace.(
-        persistIfDirty(
-          storeFor(currentState^.workspace.workingDirectory),
+        persist(
           (currentState^, window),
+          storeFor(currentState^.workspace.workingDirectory),
         )
       );
 

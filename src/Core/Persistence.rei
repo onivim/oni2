@@ -33,8 +33,10 @@ module Store: {
 
   let instantiate: (string, unit => list(entry('state))) => t('state);
 
-  let persist: t('state) => unit;
-  let persistIfDirty: (t('state), 'state) => unit;
+  let isDirty: ('state, t('state)) => bool;
+  let update: ('state, t('state)) => unit;
+  let write: t('state) => unit;
+  let persist: ('state, t('state)) => unit;
 
   let get: (Schema.item('state, 'value), t('state)) => 'value;
 };

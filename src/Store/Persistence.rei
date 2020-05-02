@@ -5,8 +5,7 @@ module Global: {
   let version: Schema.item(State.t, string);
   let workspace: Schema.item(State.t, option(string));
 
-  let persist: unit => unit;
-  let persistIfDirty: State.t => unit;
+  let persist: State.t => unit;
 
   let get: Schema.item(State.t, 'value) => 'value;
 };
@@ -22,8 +21,7 @@ module Workspace: {
 
   let storeFor: string => Store.t(state);
 
-  let persist: Store.t('state) => unit;
-  let persistIfDirty: (Store.t('state), 'state) => unit;
+  let persist: ('state, Store.t('state)) => unit;
 
   let get: (Schema.item('state, 'value), Store.t('state)) => 'value;
 };

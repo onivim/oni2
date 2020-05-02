@@ -137,7 +137,21 @@ module Store = {
     store;
   };
 
-  let persist = store => {
+  let isDirty = (state, store) =>
+    List.exists(
+      (Entry({definition, value})) =>
+        !definition.codec.equal(value, definition.get(state)),
+      store.entries,
+    );
+
+  let update = (state, store) =>
+    List.iter(
+      (Entry({definition, _} as entry)) =>
+        entry.value = definition.get(state),
+      store.entries,
+    );
+
+  let write = store => {
     Log.debug("Writing store for " ++ store.name);
 
     let jsonBuffer =
@@ -167,24 +181,11 @@ module Store = {
     );
   };
 
-  let persistIfDirty = (store, state) => {
-    let isDirty =
-      List.exists(
-        (Entry({definition, value})) =>
-          !definition.codec.equal(value, definition.get(state)),
-        store.entries,
-      );
-
-    if (isDirty) {
-      List.iter(
-        (Entry({definition, _} as entry)) =>
-          entry.value = definition.get(state),
-        store.entries,
-      );
-
-      persist(store);
+  let persist = (state, store) =>
+    if (isDirty(state, store)) {
+      update(state, store);
+      write(store);
     };
-  };
 
   let get = (definition: Schema.item(_), store) => {
     let Entry({value, definition: {pipe, _}, _}) =

@@ -17,8 +17,7 @@ module Global = {
       [Store.entry(version), Store.entry(workspace)]
     );
 
-  let persist = () => Store.persist(store);
-  let persistIfDirty = state => Store.persistIfDirty(store, state);
+  let persist = state => Store.persist(state, store);
 
   let get = item => Store.get(item, store);
 };
