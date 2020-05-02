@@ -259,7 +259,9 @@ module LanguageFeatures = {
         selectorJson |> Json.Decode.decode_value(list(DocumentFilter.decode));
 
       let triggerCharactersResult =
-        triggerCharactersJson |> Json.Decode.decode_value(list(string));
+        triggerCharactersJson
+        |> Json.Decode.decode_value(list(list(string)))
+        |> Result.map(List.flatten);
 
       ResultEx.map2(
         (selector, triggerCharacters) => {
@@ -482,6 +484,7 @@ type t =
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
   | ExtensionService(ExtensionService.msg)
+  | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)

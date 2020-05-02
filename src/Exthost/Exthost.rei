@@ -389,6 +389,7 @@ module Msg: {
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
     | ExtensionService(ExtensionService.msg)
+    | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)

@@ -23,19 +23,33 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           ~removedDocuments=[],
           ~addedDocuments=[model(~lines=["Hello", "World"])],
         );
+      let suggestHandle = ref(-1);
 
-      let getCompletionItems =
+      let getCompletionItems = client =>
         Request.LanguageFeatures.provideCompletionItems(
-          ~handle=0,
+          ~handle=suggestHandle^,
           ~resource=testUri,
           ~position=OneBasedPosition.{lineNumber: 1, column: 1},
           ~context=
             CompletionContext.{triggerKind: Invoke, triggerCharacter: None},
+          client,
         );
+
+      let waitForRegisterSuggestSupport =
+        fun
+        | Msg.LanguageFeatures(RegisterSuggestSupport({handle, _})) => {
+            suggestHandle := handle;
+            true;
+          }
+        | _ => false;
 
       Test.startWithExtensions(["oni-language-features"])
       |> Test.waitForReady
       |> Test.waitForExtensionActivation("oni-language-features")
+      |> Test.waitForMessage(
+           ~name="RegisterSuggestSupport",
+           waitForRegisterSuggestSupport,
+         )
       |> Test.withClient(
            Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
              ~delta=addedDelta,
