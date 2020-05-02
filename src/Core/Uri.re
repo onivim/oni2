@@ -23,6 +23,11 @@ module Scheme = {
     let ofString = Hashtbl.find(schemeLookup);
   };
 
+  let ofString = str =>
+      Internal.isKnownScheme(str)
+        ? str |> Internal.ofString : Custom(str);
+    
+
   let toString =
     fun
     | File => "file"
@@ -35,10 +40,7 @@ module Scheme = {
   let of_yojson = json =>
     switch (json) {
     | `String(scheme)
-    | `List([`String(scheme), ..._]) =>
-      Internal.isKnownScheme(scheme)
-        ? Ok(scheme |> Internal.ofString) : Ok(Custom(scheme))
-
+    | `List([`String(scheme), ..._]) => Ok(ofString(scheme))
     | _ => Error("Invalid scheme")
     };
 
@@ -49,20 +51,13 @@ module Scheme = {
       list(string)
       |> and_then(
            fun
-           | [scheme, ..._] =>
-             Internal.isKnownScheme(scheme)
-               ? succeed(scheme |> Internal.ofString)
-               : succeed(Custom(scheme))
+           | [scheme, ..._] => scheme |> ofString |> succeed
            | _ => fail("No scheme"),
          );
 
     let decodeString =
       string
-      |> and_then(scheme => {
-           Internal.isKnownScheme(scheme)
-             ? succeed(scheme |> Internal.ofString)
-             : succeed(Custom(scheme))
-         });
+      |> map(ofString);
 
     one_of([("string", decodeString), ("list", decodeList)]);
   };
