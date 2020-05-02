@@ -38,5 +38,3 @@ module Store: {
 
   let get: (Schema.item('state, 'value), t('state)) => 'value;
 };
-
-// BUILTIN STORES

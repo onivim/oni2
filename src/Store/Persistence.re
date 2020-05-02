@@ -16,6 +16,11 @@ module Global = {
     Store.instantiate("global", () =>
       [Store.entry(version), Store.entry(workspace)]
     );
+
+  let persist = () => Store.persist(store);
+  let persistIfDirty = state => Store.persistIfDirty(store, state);
+
+  let get = item => Store.get(item, store);
 };
 
 module Workspace = {
@@ -67,4 +72,6 @@ module Workspace = {
         store;
       };
   };
+
+  include Store;
 };

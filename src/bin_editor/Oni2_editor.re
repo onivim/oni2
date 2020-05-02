@@ -82,12 +82,7 @@ let initWorkingDirectory = () => {
     switch (cliOptions.folder) {
     | Some(folder) => folder
     | None =>
-      switch (
-        Core.Persistence.Store.get(
-          Store.Persistence.Global.workspace,
-          Store.Persistence.Global.store,
-        )
-      ) {
+      switch (Store.Persistence.Global.(get(workspace))) {
       | Some(path) => path
       | None =>
         Dir.User.document |> Option.value(~default=Dir.home) |> Fp.toString
@@ -103,24 +98,20 @@ let initWorkingDirectory = () => {
 };
 
 let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
-  let (x, y, width, height, maximized) =
-    Store.Persistence.(
-      Core.Persistence.(
-        {
-          let store = Workspace.storeFor(workingDirectory);
+  let (x, y, width, height, maximized) = {
+    open Store.Persistence.Workspace;
+    let store = storeFor(workingDirectory);
 
-          (
-            Store.get(Workspace.windowX, store)
-            |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
-            Store.get(Workspace.windowY, store)
-            |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
-            Store.get(Workspace.windowWidth, store),
-            Store.get(Workspace.windowHeight, store),
-            Store.get(Workspace.windowMaximized, store),
-          );
-        }
-      )
+    (
+      get(windowX, store)
+      |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+      get(windowY, store)
+      |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
+      get(windowWidth, store),
+      get(windowHeight, store),
+      get(windowMaximized, store),
     );
+  };
 
   let window =
     App.createWindow(
@@ -188,16 +179,13 @@ if (cliOptions.syntaxHighlightService) {
       );
 
     let persistGlobal = () =>
-      Core.Persistence.Store.persistIfDirty(
-        Store.Persistence.Global.store,
-        currentState^,
-      );
+      Store.Persistence.Global.persistIfDirty(currentState^);
     let persistWorkspace = () =>
-      Core.Persistence.Store.persistIfDirty(
-        Store.Persistence.Workspace.storeFor(
-          currentState^.workspace.workingDirectory,
-        ),
-        (currentState^, window),
+      Store.Persistence.Workspace.(
+        persistIfDirty(
+          storeFor(currentState^.workspace.workingDirectory),
+          (currentState^, window),
+        )
       );
 
     let update = UI.start(window, <Root state=currentState^ />);

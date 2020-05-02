@@ -5,7 +5,10 @@ module Global: {
   let version: Schema.item(State.t, string);
   let workspace: Schema.item(State.t, option(string));
 
-  let store: Store.t(State.t);
+  let persist: unit => unit;
+  let persistIfDirty: State.t => unit;
+
+  let get: Schema.item(State.t, 'value) => 'value;
 };
 
 module Workspace: {
@@ -18,4 +21,9 @@ module Workspace: {
   let windowMaximized: Schema.item(state, bool);
 
   let storeFor: string => Store.t(state);
+
+  let persist: Store.t('state) => unit;
+  let persistIfDirty: (Store.t('state), 'state) => unit;
+
+  let get: (Schema.item('state, 'value), Store.t('state)) => 'value;
 };
