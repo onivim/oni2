@@ -404,4 +404,11 @@ module Request: {
       (~id: int, ~cols: int, ~rows: int, Client.t) => unit;
     let acceptProcessShutdown: (~id: int, ~immediate: bool, Client.t) => unit;
   };
+
+  module Workspace: {
+    let initializeWorkspace:
+      (~workspace: option(WorkspaceData.t), Client.t) => unit;
+    let acceptWorkspaceData:
+      (~workspace: option(WorkspaceData.t), Client.t) => unit;
+  };
 };
