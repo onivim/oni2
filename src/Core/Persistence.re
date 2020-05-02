@@ -89,50 +89,65 @@ module Store = {
   type t('state) = {
     name: string,
     hash: string,
-    filePath: string,
+    filePath: option(string),
     entries: list(entry('state)),
   };
 
+  let read = store =>
+    switch (store.filePath) {
+    | Some(filePath) =>
+      switch (Yojson.Safe.from_file(filePath)) {
+      | json =>
+        switch (Json.Decode.(decode_value(key_value_pairs(value), json))) {
+        | Ok(persistedEntries) =>
+          List.iter(
+            (Entry({definition, _} as entry)) =>
+              switch (List.assoc_opt(definition.key, persistedEntries)) {
+              | Some(value) =>
+                switch (
+                  Json.Decode.decode_value(definition.codec.decode, value)
+                ) {
+                | Ok(value) => entry.value = value
+                | Error(error) =>
+                  let message = Json.Decode.string_of_error(error);
+                  Log.error("Error decoding store file: " ++ message);
+                  entry.value = definition.default;
+                }
+              | None => entry.value = definition.default
+              },
+            store.entries,
+          )
+
+        | Error(error) =>
+          let message = Json.Decode.string_of_error(error);
+          Log.error("Error parsing store file: " ++ message);
+        }
+      | exception (Sys_error(message)) =>
+        // Most likely because the file doesn't exist, which is expected, but log it just in case.
+        Log.debug("Unable to read store file: " ++ message)
+      }
+    | None =>
+      Log.warn("Unable to read store due to no path. See previous error.")
+    };
+
   let instantiate = (name, entries) => {
     let hash = Internal.hash(name);
-    let filePath =
+    let maybeFilePath =
       Filesystem.getStoreFolder()
       |> Result.map(storeFolder => Filename.concat(storeFolder, hash))
       |> ResultEx.flatMap(Filesystem.getOrCreateConfigFolder)
       |> Result.map(folder => Filename.concat(folder, "store.json"))
-      |> Result.get_ok;
-    let store = {name, hash, filePath, entries: entries()};
+      |> Result.fold(
+           ~ok=Option.some,
+           ~error=message => {
+             Log.error("Unable to get store path: " ++ message);
+             None;
+           },
+         );
 
-    switch (Yojson.Safe.from_file(filePath)) {
-    | json =>
-      switch (Json.Decode.(decode_value(key_value_pairs(value), json))) {
-      | Ok(persistedEntries) =>
-        List.iter(
-          (Entry({definition, _} as entry)) =>
-            switch (List.assoc_opt(definition.key, persistedEntries)) {
-            | Some(value) =>
-              switch (
-                Json.Decode.decode_value(definition.codec.decode, value)
-              ) {
-              | Ok(value) => entry.value = value
-              | Error(error) =>
-                let message = Json.Decode.string_of_error(error);
-                Log.error("Error decoding store file: " ++ message);
-                entry.value = definition.default;
-              }
-            | None => entry.value = definition.default
-            },
-          store.entries,
-        )
+    let store = {name, hash, filePath: maybeFilePath, entries: entries()};
 
-      | Error(error) =>
-        let message = Json.Decode.string_of_error(error);
-        Log.error("Error parsing store file: " ++ message);
-      }
-    | exception (Sys_error(message)) =>
-      // Most likely because the file doesn't exist, which is expected, but log it just in case.
-      Log.debug("Unable to read store file: " ++ message)
-    };
+    read(store);
 
     store;
   };
@@ -168,17 +183,22 @@ module Store = {
       | Error(luverr) =>
         Log.errorf(m => m("%s: %s", error, Luv.Error.strerror(luverr)));
 
-    Luv.File.open_(
-      store.filePath,
-      [`WRONLY, `CREAT, `TRUNC],
-      then_(~error="Failed to open store", file =>
-        Luv.File.write(
-          file,
-          [jsonBuffer],
-          then_(~error="Failed to write store", _ => ()),
-        )
-      ),
-    );
+    switch (store.filePath) {
+    | Some(filePath) =>
+      Luv.File.open_(
+        filePath,
+        [`WRONLY, `CREAT, `TRUNC],
+        then_(~error="Failed to open store", file =>
+          Luv.File.write(
+            file,
+            [jsonBuffer],
+            then_(~error="Failed to write store", _ => ()),
+          )
+        ),
+      )
+    | None =>
+      Log.warn("Unable to write store due to no path. See previous error.")
+    };
   };
 
   let persist = (state, store) =>
