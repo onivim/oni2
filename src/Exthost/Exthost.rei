@@ -55,7 +55,7 @@ module DefinitionLink: {
   type t = {
     uri: Uri.t,
     range: OneBasedRange.t,
-  }
+  };
 
   let decode: Json.decoder(t);
 };
@@ -312,21 +312,21 @@ module Msg: {
     [@deriving show]
     type msg =
       | RegisterDefinitionSupport({
-        handle: int,
-        selector: list(DocumentFilter.t)
-      })
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | RegisterDeclarationSupport({
-        handle: int,
-        selector: list(DocumentFilter.t),
-      })
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | RegisterImplementationSupport({
-        handle: int,
-        selector: list(DocumentFilter.t)
-      })
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | RegisterTypeDefinitionSupport({
-        handle: int,
-        selector: list(DocumentFilter.t)
-      })
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | RegisterSuggestSupport({
           handle: int,
           selector: list(DocumentFilter.t),
@@ -505,32 +505,20 @@ module Request: {
       Lwt.t(SuggestResult.t);
 
     let provideDefinition:
-      (
-        ~handle: int, 
-        ~resource: Uri.t,
-        ~position: OneBasedPosition.t,
-      ) => Lwt.t(unit);
-    
+      (~handle: int, ~resource: Uri.t, ~position: OneBasedPosition.t) =>
+      Lwt.t(unit);
+
     let provideDeclaration:
-      (
-        ~handle: int, 
-        ~resource: Uri.t,
-        ~position: OneBasedPosition.t,
-      ) => Lwt.t(unit);
+      (~handle: int, ~resource: Uri.t, ~position: OneBasedPosition.t) =>
+      Lwt.t(unit);
 
     let provideImplementation:
-      (
-        ~handle: int, 
-        ~resource: Uri.t,
-        ~position: OneBasedPosition.t,
-      ) => Lwt.t(unit);
+      (~handle: int, ~resource: Uri.t, ~position: OneBasedPosition.t) =>
+      Lwt.t(unit);
 
     let provideTypeDefinition:
-      (
-        ~handle: int, 
-        ~resource: Uri.t,
-        ~position: OneBasedPosition.t,
-      ) => Lwt.t(unit);
+      (~handle: int, ~resource: Uri.t, ~position: OneBasedPosition.t) =>
+      Lwt.t(unit);
   };
 
   module TerminalService: {
