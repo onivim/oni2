@@ -89,20 +89,21 @@ module Store = {
   type t('state) = {
     name: string,
     hash: string,
+    filePath: string,
     entries: list(entry('state)),
   };
 
   let instantiate = (name, entries) => {
-    let store = {name, hash: Internal.hash(name), entries: entries()};
-
-    let path =
+    let hash = Internal.hash(name);
+    let filePath =
       Filesystem.getStoreFolder()
-      |> Result.map(storeFolder => Filename.concat(storeFolder, store.hash))
+      |> Result.map(storeFolder => Filename.concat(storeFolder, hash))
       |> ResultEx.flatMap(Filesystem.getOrCreateConfigFolder)
       |> Result.map(folder => Filename.concat(folder, "store.json"))
       |> Result.get_ok;
+    let store = {name, hash, filePath, entries: entries()};
 
-    switch (Yojson.Safe.from_file(path)) {
+    switch (Yojson.Safe.from_file(filePath)) {
     | json =>
       switch (Json.Decode.(decode_value(key_value_pairs(value), json))) {
       | Ok(persistedEntries) =>
@@ -146,14 +147,7 @@ module Store = {
 
     let str = Json.Encode.encode_string(Json.Encode.obj, entries);
 
-    let path =
-      Filesystem.getStoreFolder()
-      |> Result.map(storeFolder => Filename.concat(storeFolder, store.hash))
-      |> ResultEx.flatMap(Filesystem.getOrCreateConfigFolder)
-      |> Result.map(folder => Filename.concat(folder, "store.json"))
-      |> Result.get_ok;
-
-    let outChannel = open_out(path);
+    let outChannel = open_out(store.filePath);
     Printf.fprintf(outChannel, "%s", str);
     close_out(outChannel);
   };
