@@ -255,27 +255,29 @@ module LanguageFeatures = {
         ]),
       ) =>
       open Json.Decode;
-      let selectorResult =
+
+      let ret = {
+
+      open Base.Result.Let_syntax;
+      let%bind selector =
         selectorJson |> Json.Decode.decode_value(list(DocumentFilter.decode));
 
-      let triggerCharactersResult =
+      let%bind triggerCharacters =
         triggerCharactersJson
         |> Json.Decode.decode_value(list(list(string)))
         |> Result.map(List.flatten);
 
-      ResultEx.map2(
-        (selector, triggerCharacters) => {
-          RegisterSuggestSupport({
+       Ok(RegisterSuggestSupport({
             handle,
             selector,
             triggerCharacters,
             supportsResolveDetails,
             extensionId,
-          })
-        },
-        selectorResult,
-        triggerCharactersResult,
-      )
+          }));
+
+      };
+      
+      ret
       |> Result.map_error(Json.Decode.string_of_error);
 
     | _ => Error("Unhandled method: " ++ method)
