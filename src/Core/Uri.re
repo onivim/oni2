@@ -24,9 +24,7 @@ module Scheme = {
   };
 
   let ofString = str =>
-      Internal.isKnownScheme(str)
-        ? str |> Internal.ofString : Custom(str);
-    
+    Internal.isKnownScheme(str) ? str |> Internal.ofString : Custom(str);
 
   let toString =
     fun
@@ -55,9 +53,7 @@ module Scheme = {
            | _ => fail("No scheme"),
          );
 
-    let decodeString =
-      string
-      |> map(ofString);
+    let decodeString = string |> map(ofString);
 
     one_of([("string", decodeString), ("list", decodeList)]);
   };
