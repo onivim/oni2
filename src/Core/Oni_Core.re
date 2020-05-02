@@ -37,6 +37,7 @@ module Mode = Mode;
 module Ripgrep = Ripgrep;
 module Scheduler = Scheduler;
 module Decoration = Decoration;
+module Persistence = Persistence;
 module Setup = Setup;
 module ShellUtility = ShellUtility;
 module StringMap = Kernel.StringMap;
