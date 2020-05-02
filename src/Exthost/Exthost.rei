@@ -17,6 +17,55 @@ module CompletionContext: {
   };
 };
 
+module CompletionKind: {
+  
+type t = 
+| Method
+| Function
+| Constructor
+| Field
+| Variable
+| Class
+| Struct
+| Interface
+| Module
+| Property
+| Event
+| Operator
+| Unit
+| Value
+| Constant
+| Enum
+| EnumMember
+| Keyword
+| Text
+| Color
+| File
+| Reference
+| Customcolor
+| Folder
+| TypeParameter
+| User
+| Issue
+| Snippet;
+
+let ofInt: int => option(t);
+};
+
+module SuggestItem: {
+  type t = {
+    label: string,
+    kind: CompletionKind.t,
+    detail: option(string),
+    documentation: option(string),
+    sortText: option(string),
+    filterText: option(string),
+    insertText: option(string),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module Configuration: {
   // Type relating to 'ConfigurationModel' in VSCode
   // This is an 'instance' of configuration - modelling user, workspace, or default configuration.

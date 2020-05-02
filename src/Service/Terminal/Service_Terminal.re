@@ -63,9 +63,6 @@ module Sub = {
             arguments: params.arguments,
           };
 
-        let launchStr =
-          launchConfig |> ExtHostClient.Terminal.ShellLaunchConfig.show;
-
         let isResizing = ref(false);
 
         let makeDebouncedDispatch = () => {

@@ -89,8 +89,8 @@ module LanguageFeatures = {
         ~context: CompletionContext.t,
         client,
       ) => {
-    let parser = _ => {
-      prerr_endline("Parser called");
+    let parser = json => {
+      prerr_endline("Parser called: " ++ Yojson.Safe.to_string(json));
       [];
     };
 
