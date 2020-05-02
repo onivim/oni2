@@ -27,7 +27,7 @@ let reduce: (State.t, Actions.t) => State.t =
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
-        sideBar: SideBarReducer.reduce(s.sideBar, a),
+        sideBar: SideBarReducer.reduce(~zenMode=s.zenMode, s.sideBar, a),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
       };
 
@@ -44,6 +44,9 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | TokenThemeLoaded(tokenTheme) => {...s, tokenTheme}
+      | ActivityBar(ActivityBar.FileExplorerClick) => {...s, zenMode: false}
+      | ActivityBar(ActivityBar.SCMClick) => {...s, zenMode: false}
+      | ActivityBar(ActivityBar.ExtensionsClick) => {...s, zenMode: false}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}
