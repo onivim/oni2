@@ -133,7 +133,7 @@ let notify =
       ~rpcName: string,
       ~method: string,
       ~args,
-      {lastRequestId, client}: t,
+      {lastRequestId, client, _}: t,
     ) => {
   open Protocol.Message;
   let maybeId = Handlers.stringToId(rpcName);

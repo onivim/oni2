@@ -188,7 +188,6 @@ module Message = {
       } else {
         try({
           let (messageType, bytes) = ByteParser.readUInt8(body);
-          prerr_endline("GOT MESSAGE: " ++ string_of_int(messageType));
           let (requestId, bytes) = ByteParser.readUInt32(bytes);
           if (messageType == requestJsonArgs
               || messageType == requestJsonArgsWithCancellation) {
@@ -333,7 +332,6 @@ let start =
 
       message
       |> Result.iter_error(err => {
-           prerr_endline("ERR: " ++ err);
            onError(err);
          });
     };

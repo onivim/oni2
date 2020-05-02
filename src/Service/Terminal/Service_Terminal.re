@@ -66,7 +66,6 @@ module Sub = {
         let launchStr =
           launchConfig |> ExtHostClient.Terminal.ShellLaunchConfig.show;
 
-        prerr_endline("USING LAUNCHCONFIG: " ++ launchStr);
         let isResizing = ref(false);
 
         let makeDebouncedDispatch = () => {
