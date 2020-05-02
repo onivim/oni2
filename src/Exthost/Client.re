@@ -6,9 +6,16 @@ module Extension = Exthost_Extension;
 type t = {
   client: Protocol.t,
   lastRequestId: ref(int),
+  requestIdToReply: Hashtbl.t(int, Lwt.u(Yojson.Safe.json)),
 };
 
 module Log = (val Timber.Log.withNamespace("Client"));
+
+module Testing = {
+  let getPendingRequestCount = ({requestIdToReply, _}) => {
+    requestIdToReply |> Hashtbl.length;
+  };
+};
 
 let start =
     (
@@ -21,6 +28,7 @@ let start =
     ) => {
   let protocolClient: ref(option(Protocol.t)) = ref(None);
   let lastRequestId = ref(0);
+  let requestIdToReply = Hashtbl.create(128);
   let send = message =>
     switch (protocolClient^) {
     | None => ()
@@ -73,7 +81,6 @@ let start =
             usesCancellationToken: false,
           }),
         );
-
       | Incoming.ReplyError({payload, _}) =>
         switch (payload) {
         | Message(str) => onError(str)
@@ -87,7 +94,21 @@ let start =
           send(Outgoing.ReplyOKEmpty({requestId: requestId}));
         | Error(msg) => onError(msg)
         };
-      | _ => ()
+      | Incoming.ReplyOk({requestId, payload}) =>
+        Hashtbl.find_opt(requestIdToReply, requestId)
+        |> Option.iter(resolver => {
+             switch (payload) {
+             | Json(json) => Lwt.wakeup(resolver, json)
+             | _ =>
+               Log.warnf(m =>
+                 m("Unhandled payload type for requestId: %d", requestId)
+               )
+             }
+           })
+      | _ =>
+        Log.warn(
+          "Unhandled message: " ++ Protocol.Message.Incoming.show(msg),
+        )
       }
     );
   };
@@ -100,11 +121,20 @@ let start =
        protocolClient := Some(pc);
      });
 
-  protocol |> Result.map(protocol => {{lastRequestId, client: protocol}});
+  protocol
+  |> Result.map(protocol => {
+       {lastRequestId, client: protocol, requestIdToReply}
+     });
 };
 
 let notify =
-    (~rpcName: string, ~method: string, ~args, {lastRequestId, client}: t) => {
+    (
+      ~usesCancellationToken=false,
+      ~rpcName: string,
+      ~method: string,
+      ~args,
+      {lastRequestId, client, _}: t,
+    ) => {
   open Protocol.Message;
   let maybeId = Handlers.stringToId(rpcName);
   maybeId
@@ -118,11 +148,65 @@ let notify =
              requestId,
              method,
              args,
-             usesCancellationToken: false,
+             usesCancellationToken,
            }),
          client,
        );
      });
+};
+
+let request =
+    (
+      ~usesCancellationToken=false,
+      ~rpcName: string,
+      ~method: string,
+      ~args,
+      ~parser,
+      client,
+    ) => {
+  let newRequestId = client.lastRequestId^ + 1;
+  let (promise, resolver) = Lwt.task();
+  Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
+
+  let finalize = () => {
+    Hashtbl.remove(client.requestIdToReply, newRequestId);
+    Log.tracef(m => m("Request finalized: %d", newRequestId));
+  };
+
+  let onError = e => {
+    finalize();
+    Log.warnf(m =>
+      m(
+        "Request %d failed with error: %s",
+        newRequestId,
+        Printexc.to_string(e),
+      )
+    );
+  };
+
+  let wrapper = json =>
+    try(
+      {
+        finalize();
+        exception ParseFailedException(string);
+
+        switch (parser(json)) {
+        | Ok(v) =>
+          Log.tracef(m => m("Request %d succeeded.", newRequestId));
+          Lwt.return(v);
+        | Error(msg) => Lwt.fail(ParseFailedException(msg))
+        };
+      }
+    ) {
+    | e =>
+      onError(e);
+      Lwt.fail(e);
+    };
+
+  let () = notify(~usesCancellationToken, ~rpcName, ~method, ~args, client);
+
+  Lwt.on_failure(promise, onError);
+  Lwt.bind(promise, wrapper);
 };
 
 let terminate = ({client, _}) => Protocol.send(~message=Terminate, client);

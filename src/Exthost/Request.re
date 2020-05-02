@@ -80,6 +80,38 @@ module ExtensionService = {
   };
 };
 
+module LanguageFeatures = {
+  let provideCompletionItems =
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: CompletionContext.t,
+        client,
+      ) => {
+    let parser = json => {
+      json
+      |> Json.Decode.decode_value(SuggestResult.decode)
+      |> Result.map_error(Json.Decode.string_of_error);
+    };
+
+    Client.request(
+      ~parser,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideCompletionItems",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          CompletionContext.to_yojson(context),
+        ]),
+      client,
+    );
+  };
+};
+
 module TerminalService = {
   let spawnExtHostProcess =
       (
