@@ -6,7 +6,7 @@ open Oni_IntegrationTestLib;
 // Regression test for: https://github.com/onivim/oni2/issues/1671
 runTestWithInput(
   ~name="Regression1671 - Opening new buffer loses changes in previous buffer",
-  (input, _dispatch, wait, runEffects) => {
+  (input, _dispatch, wait, _runEffects) => {
     wait(~name="Capture initial state", (state: State.t) =>
       state.vimMode == Vim.Types.Normal
     );
