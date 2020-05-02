@@ -226,6 +226,10 @@ module Workspace = {
     define("windowHeight", int, 600, ((_state, window)) =>
       Revery.Window.getRawSize(window).height
     );
+  let windowMaximized =
+    define("windowMazimized", bool, false, ((_state, window)) =>
+      Revery.Window.isMaximized(window)
+    );
 
   let instantiate = path =>
     Store.instantiate(path, () =>
@@ -234,6 +238,7 @@ module Workspace = {
         Store.entry(windowY),
         Store.entry(windowWidth),
         Store.entry(windowHeight),
+        Store.entry(windowMaximized),
       ]
     );
 

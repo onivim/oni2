@@ -101,7 +101,7 @@ let initWorkingDirectory = () => {
 };
 
 let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
-  let (x, y, width, height) =
+  let (x, y, width, height, maximized) =
     Store.Persistence.(
       {
         let store = Workspace.storeFor(workingDirectory);
@@ -113,6 +113,7 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
           |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
           Store.get(Workspace.windowWidth, store),
           Store.get(Workspace.windowHeight, store),
+          Store.get(Workspace.windowMaximized, store),
         );
       }
     );
@@ -122,7 +123,7 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
       ~createOptions=
         WindowCreateOptions.create(
           ~forceScaleFactor,
-          ~maximized=false,
+          ~maximized,
           ~vsync=Vsync.Immediate,
           ~icon=Some("logo.png"),
           ~titlebarStyle=WindowStyles.Transparent,

@@ -58,6 +58,7 @@ module Workspace: {
   let windowY: Schema.item(state, option(int));
   let windowWidth: Schema.item(state, int);
   let windowHeight: Schema.item(state, int);
+  let windowMaximized: Schema.item(state, bool);
 
   let storeFor: string => Store.t(state);
 };
