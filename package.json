@@ -238,7 +238,7 @@
     "revery": "revery-ui/revery#9f725e0",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
-    "esy-skia": "revery-ui/esy-skia#07c13a9",
+    "esy-skia": "revery-ui/esy-skia#d60e5fe",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",

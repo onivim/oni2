@@ -10,6 +10,65 @@ module Commands = {
   };
 };
 
+module Documents = {
+  let acceptModelModeChanged = (~uri, ~oldModeId, ~newModeId, client) => {
+    Client.notify(
+      ~rpcName="ExtHostDocuments",
+      ~method="$acceptModelModeChanged",
+      ~args=
+        `List([
+          Uri.to_yojson(uri),
+          `String(oldModeId),
+          `String(newModeId),
+        ]),
+      client,
+    );
+  };
+
+  let acceptModelSaved = (~uri, client) => {
+    Client.notify(
+      ~rpcName="ExtHostDocuments",
+      ~method="$acceptModelSaved",
+      ~args=`List([Uri.to_yojson(uri)]),
+      client,
+    );
+  };
+
+  let acceptDirtyStateChanged = (~uri, ~isDirty, client) => {
+    Client.notify(
+      ~rpcName="ExtHostDocuments",
+      ~method="$acceptDirtyStateChanged",
+      ~args=`List([Uri.to_yojson(uri), `Bool(isDirty)]),
+      client,
+    );
+  };
+
+  let acceptModelChanged = (~uri, ~modelChangedEvent, ~isDirty, client) => {
+    Client.notify(
+      ~rpcName="ExtHostDocuments",
+      ~method="$acceptModelChanged",
+      ~args=
+        `List([
+          Uri.to_yojson(uri),
+          ModelChangedEvent.to_yojson(modelChangedEvent),
+          `Bool(isDirty),
+        ]),
+      client,
+    );
+  };
+};
+
+module DocumentsAndEditors = {
+  let acceptDocumentsAndEditorsDelta = (~delta, client) => {
+    Client.notify(
+      ~rpcName="ExtHostDocumentsAndEditors",
+      ~method="$acceptDocumentsAndEditorsDelta",
+      ~args=`List([DocumentsAndEditorsDelta.to_yojson(delta)]),
+      client,
+    );
+  };
+};
+
 module ExtensionService = {
   let activateByEvent = (~event, client) => {
     Client.notify(
