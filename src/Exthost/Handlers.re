@@ -101,7 +101,11 @@ let handlers =
     mainNotImplemented("MainThreadTreeViews"),
     mainNotImplemented("MainThreadDownloadService"),
     mainNotImplemented("MainThreadKeytar"),
-    mainNotImplemented("MainThreadLanguageFeatures"),
+    main(
+      ~handler=Msg.LanguageFeatures.handle,
+      ~mapper=msg => Msg.LanguageFeatures(msg),
+      "MainThreadLanguageFeatures",
+    ),
     mainNotImplemented("MainThreadLanguages"),
     mainNotImplemented("MainThreadLog"),
     main(

@@ -228,6 +228,63 @@ module ExtensionService = {
   };
 };
 
+module LanguageFeatures = {
+  [@deriving show]
+  type msg =
+    | RegisterSuggestSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+        triggerCharacters: list(string),
+        supportsResolveDetails: bool,
+        extensionId: string,
+      })
+    | Unregister({handle: int});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$unregister", `List([`Int(handle)])) =>
+      Ok(Unregister({handle: handle}))
+    | (
+        "$registerSuggestSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          triggerCharactersJson,
+          `Bool(supportsResolveDetails),
+          `String(extensionId),
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson
+          |> Json.Decode.decode_value(list(DocumentFilter.decode));
+
+        let%bind triggerCharacters =
+          triggerCharactersJson
+          |> Json.Decode.decode_value(list(list(string)))
+          |> Result.map(List.flatten);
+
+        Ok(
+          RegisterSuggestSupport({
+            handle,
+            selector,
+            triggerCharacters,
+            supportsResolveDetails,
+            extensionId,
+          }),
+        );
+      };
+
+      ret |> Result.map_error(Json.Decode.string_of_error);
+
+    | _ => Error("Unhandled method: " ++ method)
+    };
+  };
+};
+
 module MessageService = {
   [@deriving show]
   type severity =
@@ -429,6 +486,7 @@ type t =
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
   | ExtensionService(ExtensionService.msg)
+  | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)
