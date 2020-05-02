@@ -139,17 +139,32 @@ module Store = {
 
   let persist = store => {
     Log.debug("Writing store for " ++ store.name);
-    let entries =
+
+    let jsonBuffer =
       store.entries
       |> List.map((Entry({definition, value})) =>
-           (definition.key, value |> definition.codec.encode)
-         );
+           (definition.key, definition.codec.encode(value))
+         )
+      |> Json.Encode.encode_string(Json.Encode.obj)
+      |> Luv.Buffer.from_string;
 
-    let str = Json.Encode.encode_string(Json.Encode.obj, entries);
+    let then_ = (~error="Failed", f) =>
+      fun
+      | Ok(value) => f(value)
+      | Error(luverr) =>
+        Log.errorf(m => m("%s: %s", error, Luv.Error.strerror(luverr)));
 
-    let outChannel = open_out(store.filePath);
-    Printf.fprintf(outChannel, "%s", str);
-    close_out(outChannel);
+    Luv.File.open_(
+      store.filePath,
+      [`WRONLY, `CREAT, `TRUNC],
+      then_(~error="Failed to open store", file =>
+        Luv.File.write(
+          file,
+          [jsonBuffer],
+          then_(~error="Failed to write store", _ => ()),
+        )
+      ),
+    );
   };
 
   let persistIfDirty = (store, state) => {
