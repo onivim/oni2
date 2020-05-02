@@ -51,6 +51,15 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module DefinitionLink: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+  }
+
+  let decode: Json.decoder(t);
+};
+
 module DocumentFilter: {
   [@deriving show]
   type t = {
@@ -494,6 +503,34 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let provideDefinition:
+      (
+        ~handle: int, 
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+      ) => Lwt.t(unit);
+    
+    let provideDeclaration:
+      (
+        ~handle: int, 
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+      ) => Lwt.t(unit);
+
+    let provideImplementation:
+      (
+        ~handle: int, 
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+      ) => Lwt.t(unit);
+
+    let provideTypeDefinition:
+      (
+        ~handle: int, 
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+      ) => Lwt.t(unit);
   };
 
   module TerminalService: {
