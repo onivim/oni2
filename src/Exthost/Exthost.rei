@@ -6,15 +6,15 @@ module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
 module CompletionContext: {
-  type triggerKind = 
-  | Invoke
-  | TriggerCharacter
-  | TriggerForIncompleteCompletions;
+  type triggerKind =
+    | Invoke
+    | TriggerCharacter
+    | TriggerForIncompleteCompletions;
 
   type t = {
-    triggerKind: triggerKind,
+    triggerKind,
     triggerCharacter: option(string),
-  }
+  };
 };
 
 module Configuration: {
@@ -138,7 +138,7 @@ module ShellLaunchConfig: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
-module OneBasedPosition = {
+module OneBasedPosition: {
   type t = {
     lineNumber: int,
     column: int,
@@ -146,7 +146,7 @@ module OneBasedPosition = {
 
   let ofPosition: Location.t => t;
   let to_yojson: t => Yojson.Safe.t;
-}
+};
 
 module Msg: {
   module Commands: {
@@ -348,6 +348,8 @@ module Client: {
   let close: t => unit;
 
   let terminate: t => unit;
+
+  module Testing: {let getPendingRequestCount: t => int;};
 };
 
 module Request: {
@@ -382,6 +384,18 @@ module Request: {
 
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => unit;
+  };
+
+  module LanguageFeatures: {
+    let provideCompletionItems:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: CompletionContext.t,
+        Client.t
+      ) =>
+      Lwt.t(list(int));
   };
 
   module TerminalService: {

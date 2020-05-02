@@ -89,18 +89,21 @@ module LanguageFeatures = {
         ~context: CompletionContext.t,
         client,
       ) => {
-    let parser = _ => [];
+    let parser = _ => {
+      prerr_endline("Parser called");
+      [];
+    };
 
     Client.request(
       ~parser,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
-      ~methodName="$provideCompletionItems",
+      ~method="$provideCompletionItems",
       ~args=
         `List([
           `Int(handle),
           Uri.to_yojson(resource),
-          OneBasedRange.to_yojson(position),
+          OneBasedPosition.to_yojson(position),
           CompletionContext.to_yojson(context),
         ]),
       client,

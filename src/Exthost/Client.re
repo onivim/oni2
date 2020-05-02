@@ -11,6 +11,12 @@ type t = {
 
 module Log = (val Timber.Log.withNamespace("Client"));
 
+module Testing = {
+  let getPendingRequestCount = ({requestIdToReply, _}) => {
+    requestIdToReply |> Hashtbl.length;
+  };
+};
+
 let start =
     (
       ~initialConfiguration=Configuration.empty,
@@ -75,7 +81,6 @@ let start =
             usesCancellationToken: false,
           }),
         );
-
       | Incoming.ReplyError({payload, _}) =>
         switch (payload) {
         | Message(str) => onError(str)
@@ -89,6 +94,17 @@ let start =
           send(Outgoing.ReplyOKEmpty({requestId: requestId}));
         | Error(msg) => onError(msg)
         };
+      | Incoming.ReplyOk({requestId, payload}) =>
+        Hashtbl.find_opt(requestIdToReply, requestId)
+        |> Option.iter(resolver => {
+             switch (payload) {
+             | Json(json) => Lwt.wakeup(resolver, json)
+             | _ =>
+               Log.warnf(m =>
+                 m("Unhandled payload type for requestId: %d", requestId)
+               )
+             }
+           })
       | _ =>
         Log.warn(
           "Unhandled message: " ++ Protocol.Message.Incoming.show(msg),
@@ -148,7 +164,6 @@ let request =
       ~parser,
       client,
     ) => {
-  exception Placeholder;
   let newRequestId = client.lastRequestId^ + 1;
   let (promise, resolver) = Lwt.task();
   Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
@@ -184,9 +199,6 @@ let request =
     };
 
   let () = notify(~usesCancellationToken, ~rpcName, ~method, ~args, client);
-
-  // TODO: Actually implement
-  Lwt.wakeup_exn(resolver, Placeholder);
 
   Lwt.on_failure(promise, onError);
   Lwt.bind(promise, wrapper);

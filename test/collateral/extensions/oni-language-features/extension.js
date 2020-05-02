@@ -12,6 +12,7 @@ function activate(context) {
 
 	const completionProvider = {
 		provideCompletionItems: (document, position, token, context) => {
+	vscode.window.showInformationMessage('Activated!');
 			return [{
 				label: "item1",
 			}, {

@@ -188,6 +188,7 @@ module Message = {
       } else {
         try({
           let (messageType, bytes) = ByteParser.readUInt8(body);
+          prerr_endline("GOT MESSAGE: " ++ string_of_int(messageType));
           let (requestId, bytes) = ByteParser.readUInt32(bytes);
           if (messageType == requestJsonArgs
               || messageType == requestJsonArgsWithCancellation) {
@@ -219,6 +220,10 @@ module Message = {
             );
           } else if (messageType == replyOkEmpty) {
             Ok(ReplyOk({requestId, payload: Empty}));
+          } else if (messageType == replyOkJSON) {
+            let (msg, _bytes) = ByteParser.readLongString(bytes);
+            let json = msg |> Yojson.Safe.from_string;
+            Ok(ReplyOk({requestId, payload: Json(json)}));
           } else if (messageType == replyErrError) {
             let (msg, _bytes) = ByteParser.readLongString(bytes);
             Ok(ReplyError({requestId, payload: Message(msg)}));
@@ -326,7 +331,11 @@ let start =
 
       message |> Result.iter(dispatch);
 
-      message |> Result.iter_error(onError);
+      message
+      |> Result.iter_error(err => {
+           prerr_endline("ERR: " ++ err);
+           onError(err);
+         });
     };
 
   let transportHandler = msg =>
