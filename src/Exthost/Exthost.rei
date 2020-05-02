@@ -126,6 +126,30 @@ module ShellLaunchConfig: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
+module WorkspaceData: {
+  module Folder: {
+    type t = {
+      uri: Uri.t,
+      name: string,
+      index: int,
+    };
+
+    let encode: Json.encoder(t);
+    let decode: Json.decoder(t);
+  };
+
+  type t = {
+    folders: list(Folder.t),
+    id: string,
+    name: string,
+    configuration: option(Uri.t),
+    isUntitled: bool,
+  };
+
+  let encode: Json.encoder(t);
+  let decode: Json.decoder(t);
+};
+
 module Msg: {
   module Commands: {
     [@deriving show]

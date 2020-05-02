@@ -10,6 +10,7 @@ module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;
 module ModelContentChange = ModelContentChange;
 module OneBasedRange = OneBasedRange;
+module WorkspaceData = WorkspaceData;
 
 module Client = Client;
 module Request = Request;

@@ -11,6 +11,9 @@ module Scheme: {
 
   let of_yojson: Yojson.Safe.t => result(t, string);
   let to_yojson: t => Yojson.Safe.t;
+
+  let decode: Json.decoder(t);
+  let encode: Json.encoder(t);
 };
 
 type t;
@@ -28,3 +31,6 @@ let toFileSystemPath: t => string;
 let getScheme: t => Scheme.t;
 
 let pp: (Format.formatter, t) => unit;
+
+let decode: Json.decoder(t);
+let encode: Json.encoder(t);
