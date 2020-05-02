@@ -34,6 +34,11 @@ module Schema = {
     let custom = (~equal, ~encode, ~decode) => {equal, encode, decode};
 
     module Builtins = {
+      let bool = {
+        equal: Bool.equal,
+        encode: Json.Encode.bool,
+        decode: Json.Decode.bool,
+      };
       let int = {
         equal: Int.equal,
         encode: Json.Encode.int,
