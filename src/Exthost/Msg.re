@@ -231,6 +231,22 @@ module ExtensionService = {
 module LanguageFeatures = {
   [@deriving show]
   type msg =
+    | RegisterDefinitionSupport({
+      handle: int,
+      selector: list(DocumentFilter.t)
+    })
+    | RegisterDeclarationSupport({
+      handle: int,
+      selector: list(DocumentFilter.t),
+    })
+    | RegisterImplementationSupport({
+      handle: int,
+      selector: list(DocumentFilter.t)
+    })
+    | RegisterTypeDefinitionSupport({
+      handle: int,
+      selector: list(DocumentFilter.t)
+    })
     | RegisterSuggestSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -240,10 +256,62 @@ module LanguageFeatures = {
       })
     | Unregister({handle: int});
 
+  let parseDocumentSelector = json => {
+  open Json.Decode;
+  
+  json
+  |> Json.Decode.decode_value(list(DocumentFilter.decode));
+  };
+
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | ("$unregister", `List([`Int(handle)])) =>
       Ok(Unregister({handle: handle}))
+    
+    | ("$registerDefinitionSupport", `List([
+        `Int(handle),
+        selectorJson
+    ])) => 
+
+        selectorJson
+        |> parseDocumentSelector
+        |> Result.map(selector => {
+            RegisterDefinitionSupport({handle, selector}) 
+        })
+        |> Result.map_error(Json.Decode.string_of_error);
+    | ("$registerDeclarationSupport", `List([
+        `Int(handle),
+        selectorJson
+    ])) => 
+
+        selectorJson
+        |> parseDocumentSelector
+        |> Result.map(selector => {
+            RegisterDeclarationSupport({handle, selector}) 
+        })
+        |> Result.map_error(Json.Decode.string_of_error);
+    | ("$registerImplementationSupport", `List([
+        `Int(handle),
+        selectorJson
+    ])) => 
+
+        selectorJson
+        |> parseDocumentSelector
+        |> Result.map(selector => {
+            RegisterImplementationSupport({handle, selector}) 
+        })
+        |> Result.map_error(Json.Decode.string_of_error);
+    | ("$registerTypeDefinitionSupport", `List([
+        `Int(handle),
+        selectorJson
+    ])) => 
+
+        selectorJson
+        |> parseDocumentSelector
+        |> Result.map(selector => {
+            RegisterImplementationSupport({handle, selector}) 
+        })
+        |> Result.map_error(Json.Decode.string_of_error);
     | (
         "$registerSuggestSupport",
         `List([

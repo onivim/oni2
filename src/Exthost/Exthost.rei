@@ -302,6 +302,22 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | RegisterDefinitionSupport({
+        handle: int,
+        selector: list(DocumentFilter.t)
+      })
+      | RegisterDeclarationSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+      | RegisterImplementationSupport({
+        handle: int,
+        selector: list(DocumentFilter.t)
+      })
+      | RegisterTypeDefinitionSupport({
+        handle: int,
+        selector: list(DocumentFilter.t)
+      })
       | RegisterSuggestSupport({
           handle: int,
           selector: list(DocumentFilter.t),
