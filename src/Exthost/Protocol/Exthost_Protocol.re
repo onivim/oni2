@@ -330,10 +330,7 @@ let start =
 
       message |> Result.iter(dispatch);
 
-      message
-      |> Result.iter_error(err => {
-           onError(err);
-         });
+      message |> Result.iter_error(err => {onError(err)});
     };
 
   let transportHandler = msg =>

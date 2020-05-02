@@ -17,7 +17,7 @@ let model = (~lines) =>
 
 describe("LanguageFeaturesTest", ({describe, _}) => {
   describe("completion", ({test, _}) => {
-    test("gets completion items", _ => {
+    test("gets completion items", ({expect, _}) => {
       let addedDelta =
         DocumentsAndEditorsDelta.create(
           ~removedDocuments=[],
@@ -43,7 +43,21 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
          )
       |> Test.withClientRequest(
            ~name="Get completion items",
-           ~validate=_ => true,
+           ~validate=
+             (suggestResult: Exthost.SuggestResult.t) => {
+               let {completions, isIncomplete}: Exthost.SuggestResult.t = suggestResult;
+               expect.int(List.length(completions)).toBe(2);
+               expect.bool(isIncomplete).toBe(false);
+
+               let firstResult: Exthost.SuggestItem.t =
+                 List.nth(completions, 0);
+               let secondResult: Exthost.SuggestItem.t =
+                 List.nth(completions, 1);
+
+               expect.string(firstResult.label).toEqual("item1");
+               expect.string(secondResult.label).toEqual("item2");
+               true;
+             },
            getCompletionItems,
          )
       |> Test.validateNoPendingRequests

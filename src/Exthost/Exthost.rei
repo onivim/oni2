@@ -18,38 +18,37 @@ module CompletionContext: {
 };
 
 module CompletionKind: {
-  
-type t = 
-| Method
-| Function
-| Constructor
-| Field
-| Variable
-| Class
-| Struct
-| Interface
-| Module
-| Property
-| Event
-| Operator
-| Unit
-| Value
-| Constant
-| Enum
-| EnumMember
-| Keyword
-| Text
-| Color
-| File
-| Reference
-| Customcolor
-| Folder
-| TypeParameter
-| User
-| Issue
-| Snippet;
+  type t =
+    | Method
+    | Function
+    | Constructor
+    | Field
+    | Variable
+    | Class
+    | Struct
+    | Interface
+    | Module
+    | Property
+    | Event
+    | Operator
+    | Unit
+    | Value
+    | Constant
+    | Enum
+    | EnumMember
+    | Keyword
+    | Text
+    | Color
+    | File
+    | Reference
+    | Customcolor
+    | Folder
+    | TypeParameter
+    | User
+    | Issue
+    | Snippet;
 
-let ofInt: int => option(t);
+  let ofInt: int => option(t);
 };
 
 module SuggestItem: {
@@ -61,6 +60,15 @@ module SuggestItem: {
     sortText: option(string),
     filterText: option(string),
     insertText: option(string),
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module SuggestResult: {
+  type t = {
+    completions: list(SuggestItem.t),
+    isIncomplete: bool,
   };
 
   let decode: Json.decoder(t);
@@ -444,7 +452,7 @@ module Request: {
         ~context: CompletionContext.t,
         Client.t
       ) =>
-      Lwt.t(list(int));
+      Lwt.t(SuggestResult.t);
   };
 
   module TerminalService: {

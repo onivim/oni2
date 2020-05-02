@@ -14,6 +14,7 @@ module ModelContentChange = ModelContentChange;
 module OneBasedPosition = OneBasedPosition;
 module OneBasedRange = OneBasedRange;
 module SuggestItem = SuggestItem;
+module SuggestResult = SuggestResult;
 
 module Client = Client;
 module Request = Request;

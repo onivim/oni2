@@ -188,9 +188,14 @@ let request =
     try(
       {
         finalize();
-        let ret = Lwt.return(parser(json));
-        Log.tracef(m => m("Request %d succeeded.", newRequestId));
-        ret;
+        exception ParseFailedException(string);
+
+        switch (parser(json)) {
+        | Ok(v) =>
+          Log.tracef(m => m("Request %d succeeded.", newRequestId));
+          Lwt.return(v);
+        | Error(msg) => Lwt.fail(ParseFailedException(msg))
+        };
       }
     ) {
     | e =>

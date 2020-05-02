@@ -90,8 +90,9 @@ module LanguageFeatures = {
         client,
       ) => {
     let parser = json => {
-      prerr_endline("Parser called: " ++ Yojson.Safe.to_string(json));
-      [];
+      json
+      |> Json.Decode.decode_value(SuggestResult.decode)
+      |> Result.map_error(Json.Decode.string_of_error);
     };
 
     Client.request(
