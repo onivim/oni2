@@ -1,61 +1,68 @@
 open Oni_Core;
-open Persistence;
 
 module Global = {
-  open Oni_Model.State;
-  open Schema;
+  module Schema = {
+    open Oni_Model.State;
+    open Persistence.Schema;
 
-  let version =
-    define("version", string, BuildInfo.commitId, _ => BuildInfo.commitId);
-  let workspace =
-    define("workspace", option(string), None, state =>
-      Some(state.workspace.workingDirectory)
-    );
+    let version =
+      define("version", string, BuildInfo.commitId, _ => BuildInfo.commitId);
+    let workspace =
+      define("workspace", option(string), None, state =>
+        Some(state.workspace.workingDirectory)
+      );
+  };
+
+  open Persistence.Store;
 
   let store =
-    Store.instantiate("global", () =>
-      [Store.entry(version), Store.entry(workspace)]
-    );
+    instantiate("global", () => Schema.[entry(version), entry(workspace)]);
 
-  let persist = state => Store.persist(state, store);
+  let version = () => get(Schema.version, store);
+  let workspace = () => get(Schema.workspace, store);
 
-  let get = item => Store.get(item, store);
+  let persist = state => persist(state, store);
 };
 
 module Workspace = {
-  open Schema;
+  module Schema = {
+    open Revery;
+    open Persistence.Schema;
+
+    let windowX =
+      define("windowX", option(int), None, ((_state, window)) =>
+        Some(Window.getPosition(window) |> fst)
+      );
+    let windowY =
+      define("windowY", option(int), None, ((_state, window)) =>
+        Some(Window.getPosition(window) |> snd)
+      );
+    let windowWidth =
+      define("windowWidth", int, 800, ((_state, window)) =>
+        Window.getRawSize(window).width
+      );
+    let windowHeight =
+      define("windowHeight", int, 600, ((_state, window)) =>
+        Window.getRawSize(window).height
+      );
+    let windowMaximized =
+      define("windowMazimized", bool, false, ((_state, window)) =>
+        Window.isMaximized(window)
+      );
+  };
 
   type state = (Oni_Model.State.t, Revery.Window.t);
 
-  let windowX =
-    define("windowX", option(int), None, ((_state, window)) =>
-      Some(Revery.Window.getPosition(window) |> fst)
-    );
-  let windowY =
-    define("windowY", option(int), None, ((_state, window)) =>
-      Some(Revery.Window.getPosition(window) |> snd)
-    );
-  let windowWidth =
-    define("windowWidth", int, 800, ((_state, window)) =>
-      Revery.Window.getRawSize(window).width
-    );
-  let windowHeight =
-    define("windowHeight", int, 600, ((_state, window)) =>
-      Revery.Window.getRawSize(window).height
-    );
-  let windowMaximized =
-    define("windowMazimized", bool, false, ((_state, window)) =>
-      Revery.Window.isMaximized(window)
-    );
+  include Persistence.Store;
 
   let instantiate = path =>
-    Store.instantiate(path, () =>
-      [
-        Store.entry(windowX),
-        Store.entry(windowY),
-        Store.entry(windowWidth),
-        Store.entry(windowHeight),
-        Store.entry(windowMaximized),
+    instantiate(path, () =>
+      Schema.[
+        entry(windowX),
+        entry(windowY),
+        entry(windowWidth),
+        entry(windowHeight),
+        entry(windowMaximized),
       ]
     );
 
@@ -72,5 +79,9 @@ module Workspace = {
       };
   };
 
-  include Store;
+  let windowX = store => get(Schema.windowX, store);
+  let windowY = store => get(Schema.windowY, store);
+  let windowWidth = store => get(Schema.windowWidth, store);
+  let windowHeight = store => get(Schema.windowHeight, store);
+  let windowMaximized = store => get(Schema.windowMaximized, store);
 };

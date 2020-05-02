@@ -82,7 +82,7 @@ let initWorkingDirectory = () => {
     switch (cliOptions.folder) {
     | Some(folder) => folder
     | None =>
-      switch (Store.Persistence.Global.(get(workspace))) {
+      switch (Store.Persistence.Global.workspace()) {
       | Some(path) => path
       | None =>
         Dir.User.document |> Option.value(~default=Dir.home) |> Fp.toString
@@ -103,13 +103,12 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
     let store = storeFor(workingDirectory);
 
     (
-      get(windowX, store)
-      |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
-      get(windowY, store)
+      windowX(store) |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+      windowY(store)
       |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
-      get(windowWidth, store),
-      get(windowHeight, store),
-      get(windowMaximized, store),
+      windowWidth(store),
+      windowHeight(store),
+      windowMaximized(store),
     );
   };
 
