@@ -53,8 +53,8 @@ module Global: {
 module Workspace: {
   type state = (State.t, Revery.Window.t);
 
-  let windowX: Schema.item(state, int);
-  let windowY: Schema.item(state, int);
+  let windowX: Schema.item(state, option(int));
+  let windowY: Schema.item(state, option(int));
   let windowWidth: Schema.item(state, int);
   let windowHeight: Schema.item(state, int);
 

@@ -206,12 +206,12 @@ module Workspace = {
   type state = (Oni_Model.State.t, Revery.Window.t);
 
   let windowX =
-    define("windowX", int, 0, ((_state, window)) =>
-      Revery.Window.getPosition(window) |> fst
+    define("windowX", option(int), None, ((_state, window)) =>
+      Some(Revery.Window.getPosition(window) |> fst)
     );
   let windowY =
-    define("windowY", int, 0, ((_state, window)) =>
-      Revery.Window.getPosition(window) |> snd
+    define("windowY", option(int), None, ((_state, window)) =>
+      Some(Revery.Window.getPosition(window) |> snd)
     );
   let windowWidth =
     define("windowWidth", int, 800, ((_state, window)) =>

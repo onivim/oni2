@@ -107,8 +107,10 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
         let store = Workspace.storeFor(workingDirectory);
 
         (
-          Store.get(Workspace.windowX, store),
-          Store.get(Workspace.windowY, store),
+          Store.get(Workspace.windowX, store)
+          |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+          Store.get(Workspace.windowY, store)
+          |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
           Store.get(Workspace.windowWidth, store),
           Store.get(Workspace.windowHeight, store),
         );
@@ -124,8 +126,8 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
           ~vsync=Vsync.Immediate,
           ~icon=Some("logo.png"),
           ~titlebarStyle=WindowStyles.Transparent,
-          // ~x,
-          // ~y,
+          ~x,
+          ~y,
           ~width,
           ~height,
           (),
@@ -134,7 +136,6 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
       "Oni2",
     );
 
-  Window.setPosition(window, x, y);
   Window.setBackgroundColor(window, Colors.black);
 
   window;
