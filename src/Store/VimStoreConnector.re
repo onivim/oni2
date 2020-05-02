@@ -76,13 +76,22 @@ let start =
       |> List.map(c => String.make(1, c))
       |> String.concat("");
 
-    let isMultipleLines =
-      fun
-      | [s] => String.contains(s, '\n')
-      | [_, ..._] => true
-      | [] => false;
+    let isMultipleLines = s => String.contains(s, '\n');
 
-    let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
+    let removeTrailingNewLine = s => {
+      let len = String.length(s);
+      if (len > 0 && s.[len - 1] == '\n') {
+        String.sub(s, 0, len - 1);
+      } else {
+        s;
+      };
+    };
+
+    let splitNewLines = s =>
+      s
+      |> removeTrailingNewLine
+      |> String.split_on_char('\n')
+      |> Array.of_list;
 
     let getClipboardValue = () => {
       getClipboardText()
@@ -99,14 +108,22 @@ let start =
       && yankConfig.paste; // or if 'paste' set, but unnamed
 
     if (shouldPullFromClipboard) {
-      getClipboardValue()
-      |> Option.map(lines =>
-           Vim.Types.{
-             lines,
-             blockType:
-               isMultipleLines(lines |> Array.to_list) ? Line : Character,
-           }
-         );
+      let clipboardValue = getClipboardText();
+      let blockType: Vim.Types.blockType =
+        clipboardValue
+        |> Option.map(isMultipleLines)
+        |> Option.map(
+             multiLine => multiLine ? Vim.Types.Line : Vim.Types.Character:
+                                                                    bool =>
+                                                                    Vim.Types.blockType,
+           )
+        |> Option.value(~default=Vim.Types.Line: Vim.Types.blockType);
+
+      clipboardValue
+      |> Option.map(removeTrailingNewLine)
+      |> Option.map(removeWindowsNewLines)
+      |> Option.map(splitNewLines)
+      |> Option.map(lines => Vim.Types.{lines, blockType});
     } else {
       None;
     };
@@ -164,7 +181,7 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.onYank(({lines, register, operator, _}) => {
+    Vim.onYank(({lines, register, operator, yankType, _}) => {
       let state = getState();
       let yankConfig =
         Selectors.getActiveConfigurationValue(state, c =>
@@ -180,7 +197,13 @@ let start =
         || operator == Vim.Yank.Delete
         && allDeletes;
       if (shouldPropagateToClipboard) {
-        let text = String.concat("\n", Array.to_list(lines));
+        let text =
+          if (Array.length(lines) == 1 && yankType == Line) {
+            lines[0] ++ "\n";
+          } else {
+            String.concat("\n", Array.to_list(lines));
+          };
+
         setClipboardText(text);
       };
     });
