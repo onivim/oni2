@@ -30,6 +30,8 @@ let start = () => {
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
+    | EditorGroupSelected(_) => FocusManager.push(Editor, s)
+
     | AddSplit(direction, split) => {
         ...s,
         // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
