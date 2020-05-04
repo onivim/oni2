@@ -113,10 +113,8 @@ let start = (setTitle, maximize) => {
       }
     );
 
-  let internalMaximizeEffect = () =>
-    Isolinear.Effect.createWithDispatch(~name="maximize", _dispatch =>
-      maximize()
-    );
+  let internalMaximizeEffect =
+    Isolinear.Effect.create(~name="maximize", _dispatch => maximize());
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
@@ -133,7 +131,7 @@ let start = (setTitle, maximize) => {
         {...state, windowTitle: title},
         internalSetTitleEffect(title),
       )
-    | Maximize => (state, internalMaximizeEffect())
+    | TitleDoubleClicked => (state, internalMaximizeEffect)
 
     | _ => (state, Isolinear.Effect.none)
     };

@@ -187,7 +187,7 @@ type t =
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
-  | Maximize
+  | TitleDoubleClicked
   | GotOriginalUri({
       bufferId: int,
       uri: Uri.t,
