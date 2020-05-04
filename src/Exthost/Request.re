@@ -10,6 +10,27 @@ module Commands = {
   };
 };
 
+module DocumentContentProvider = {
+  let provideTextDocumentContent = (~handle, ~uri, client) => {
+    let parser = json => {
+      Json.Decode.(
+        json
+        |> decode_value(maybe(string))
+        |> Result.map_error(string_of_error)
+      );
+    };
+
+    Client.request(
+      ~parser,
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostDocumentContentProviders",
+      ~method="$provideTextDocumentContent",
+      ~args=`List([`Int(handle), Uri.to_yojson(uri)]),
+      client,
+    );
+  };
+};
+
 module Documents = {
   let acceptModelModeChanged = (~uri, ~oldModeId, ~newModeId, client) => {
     Client.notify(

@@ -464,6 +464,11 @@ module Request: {
       (~arguments: list(Json.t), ~command: string, Client.t) => unit;
   };
 
+  module DocumentContentProvider: {
+    let provideTextDocumentContent:
+      (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(string));
+  };
+
   module Documents: {
     let acceptModelModeChanged:
       (~uri: Uri.t, ~oldModeId: string, ~newModeId: string, Client.t) => unit;
