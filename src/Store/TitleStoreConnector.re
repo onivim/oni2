@@ -113,7 +113,10 @@ let start = (setTitle, maximize) => {
       }
     );
 
-  let internalMaximizeEffect = () => Isolinear.Effect.createWithDispatch(~name="maximize", _dispatch => maximize());
+  let internalMaximizeEffect = () =>
+    Isolinear.Effect.createWithDispatch(~name="maximize", _dispatch =>
+      maximize()
+    );
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {

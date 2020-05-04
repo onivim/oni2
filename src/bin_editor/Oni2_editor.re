@@ -172,7 +172,7 @@ if (cliOptions.syntaxHighlightService) {
 
     let maximize = () => {
       Window.maximize(w);
-    }
+    };
 
     let setVsync = vsync => Window.setVsync(w, vsync);
 
