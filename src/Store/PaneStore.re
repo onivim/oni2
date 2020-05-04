@@ -5,37 +5,25 @@
 open Oni_Model;
 open Actions;
 
-let showSearchPane = (state: State.t, isSearchFocused) => {
-  let newState = {
+let showSearchPane = (state: State.t) =>
+  {
     ...state,
     pane: {
       isOpen: true,
       selected: Search,
     },
-  };
+  }
+  |> FocusManager.push(Search);
 
-  if (isSearchFocused) {
-    newState;
-  } else {
-    newState |> FocusManager.push(Search);
-  };
-};
-
-let hideSearchPane = (state: State.t, isSearchFocused) => {
-  let newState = {
+let hideSearchPane = (state: State.t) =>
+  {
     ...state,
     pane: {
       ...state.pane,
       isOpen: false,
     },
-  };
-
-  if (isSearchFocused) {
-    newState |> FocusManager.pop(Search);
-  } else {
-    newState;
-  };
-};
+  }
+  |> FocusManager.pop(Search);
 
 let openDiagnosticsPane = (state: State.t) => {
   ...state,
@@ -53,27 +41,29 @@ let openNotificationsPane = (state: State.t) => {
   },
 };
 
-let closePane = (state: State.t) => {
-  ...state,
-  pane: {
-    ...state.pane,
-    isOpen: false,
-  },
-};
+let closePane = (state: State.t) =>
+  {
+    ...state,
+    pane: {
+      ...state.pane,
+      isOpen: false,
+    },
+  }
+  |> FocusManager.pop(Search);
 
 let update = (state: State.t, action: Actions.t) =>
   switch (action) {
   | SearchHotkey
   | ActivityBar(SearchClick) when Pane.isVisible(Search, state.pane) => (
       FocusManager.current(state) == Search
-        ? hideSearchPane(state, true) : showSearchPane(state, false),
+        ? hideSearchPane(state) : showSearchPane(state),
       Isolinear.Effect.none,
     )
 
   | SearchHotkey
   | PaneTabClicked(Search)
   | ActivityBar(SearchClick) => (
-      showSearchPane(state, FocusManager.current(state) == Search),
+      showSearchPane(state),
       Isolinear.Effect.none,
     )
 

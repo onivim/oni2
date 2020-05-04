@@ -17,6 +17,7 @@ module OneBasedPosition = OneBasedPosition;
 module OneBasedRange = OneBasedRange;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
+module WorkspaceData = WorkspaceData;
 
 module Client = Client;
 module Request = Request;
