@@ -24,6 +24,65 @@ To improve the chances to get a pull request merged, you should select an issue 
 
 In addition, Onivim 2 is built on [Revery](https://github.com/revery-ui/revery) - any work or improvements there will directly improve Onivim 2, as well!
 
+#### Changelog generation
+
+We use a script to generate the change log based on metadata picked up from the commit message, PR title and PR body. For the changelog to be generated successfully it's therefore important that these follow the exact format explained below.
+
+##### PR title
+
+PR titles should have the following format:
+
+```
+<type>(<scope>): <subject>
+```
+
+where `type` can be one of
+
+* **feat:** A new feature
+* **fix:** A bug fix
+* **refactor:** A code change that neither fixes a bug nor adds a feature
+* **perf:** A code change that improves performance
+* **test:** Adding missing or correcting existing tests
+* **docs:** Documentation only changes
+* **chore:** Changes to the build process or auxiliary tools and libraries such as documentation generation
+* **style:** Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+
+`scope` is optional, but "encouraged". It is typically one of the "area" [issue labels](https://github.com/onivim/oni2/labels) or the name of a feature project converted to "humanized" title case. E.g. instead of `language-support` use `Language Support`, i.e. two words with the first letter of each word capitalized.
+
+`subject` should contain a succinct description of the change:
+
+* use the imperative, present tense: "change" not "changed" nor "changes"
+* don't capitalize first letter
+* no dot (.) at the end
+
+*Attribution: Adapted from [Angular's commit guidelines](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commit-message-format)*
+
+##### PR body
+
+More details can be provided in a `changelog` code block in the body of the PR if a longer description is needed or if there are beaking changes:
+
+    ```changelog
+    <breaking>This change breaks my brain</breaking>
+    
+    Detailed description of the change
+    ```
+
+Text inside `<breaking>` tags will be listed in the changelog as separate items so that they can be emphasized. ALL breaking changes MUST be listed in this way. If in doubt, list it anyway. We'll remove it later in the process if it's considered insignificant.
+
+The rest of the text will become the overall description of the change and can include anything considered text content in XML. Use [predefined entities](https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Predefined_entities_in_XML) in place of characters with special meaning in XML. And please do still try to be brief!
+
+##### Commit message
+
+*Note: this section is relevant only to maintainers who merge PRs. Contributors can safely ignore this.*
+
+Commits messages pushed to `master` should have the following format:
+
+```
+<type>(<scope>): <subject> (#<PR number>)
+```  
+
+where `type` and `scope` is as described above. This is usually what Github generates automatically when squashing a PR, assuming the PR title was formatted correctly.
+
 ### Submitting a Pull Request
 
 Before we can accept a pull request from you, you'll need to sign a a [Contributor License Agreement (CLA)](https://gist.github.com/bf98297731dd69b9b580ca1d7fd2b90e). It is an automated process and you'll be guided
