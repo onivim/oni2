@@ -7,7 +7,7 @@ let workspace1Uri = Uri.fromPath("/test/workspace1");
 let workspace2Uri = Uri.fromPath("/test/workspace2");
 
 let expectedPath1 = Sys.win32 ? "\\test\\workspace1" : "/test/workspace1";
-let expectedPath2 = Sys.win32 ? "\\test\\workspace2" : "\\test\\workspace2";
+let expectedPath2 = Sys.win32 ? "\\test\\workspace2" : "/test/workspace2";
 
 let toWorkspaceData = (~name, ~id, ~uri) => {
   WorkspaceData.{
