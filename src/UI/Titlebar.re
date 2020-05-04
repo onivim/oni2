@@ -53,7 +53,7 @@ let make =
     switch (Revery.Environment.os) {
     | Mac =>
       <Clickable
-        onClick={_ => Revery.Window.maximize(window)}
+        onDoubleClick={_ => Revery.Window.maximize(window)}
         style={Styles.container(~isFocused, ~theme)}>
         <Text style={Styles.text(~isFocused, ~theme, ~font)} text=title />
       </Clickable>
