@@ -6,6 +6,9 @@ open Exthost;
 let workspace1Uri = Uri.fromPath("/test/workspace1");
 let workspace2Uri = Uri.fromPath("/test/workspace2");
 
+let expectedPath1 = Sys.win32 ? "\\test\\workspace1" : "/test/workspace1";
+let expectedPath2 = Sys.win32 ? "\\test\\workspace2" : "\\test\\workspace2";
+
 let toWorkspaceData = (~name, ~id, ~uri) => {
   WorkspaceData.{
     folders: [Folder.{uri, name, index: 0}],
@@ -77,14 +80,14 @@ describe("WorkspaceTest", ({test, _}) => {
        )
     |> waitForWorkspaceEvent(~name="Workspace: changed to workspace 1", evt => {
          evt.eventType == "workspace.changed"
-         && evt.workspacePath == Some("/test/workspace1")
+         && evt.workspacePath == Some(expectedPath1)
        })
     |> Test.withClient(
          Request.Workspace.acceptWorkspaceData(~workspace=Some(workspace2)),
        )
     |> waitForWorkspaceEvent(~name="Workspace: changed to workspace 2", evt => {
          evt.eventType == "workspace.changed"
-         && evt.workspacePath == Some("/test/workspace2")
+         && evt.workspacePath == Some(expectedPath2)
        })
     |> Test.terminate
     |> Test.waitForProcessClosed
