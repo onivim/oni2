@@ -249,9 +249,9 @@
     "isolinear": "revery-ui/isolinear#b17ce17",
     "revery-terminal": "revery-ui/revery-terminal#4e8ca1c",
     "@opam/conf-pkg-config": "1.1",
-    "@opam/fs": "facebookexperimental/reason-native:fs.opam#bb80cbc",
-    "@opam/fp": "facebookexperimental/reason-native:fp.opam#bb80cbc",
-    "@opam/dir": "facebookexperimental/reason-native:dir.opam#bb80cbc"
+    "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
+    "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
+    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"
   },
   "devDependencies": {
     "ocaml": "~4.9",
