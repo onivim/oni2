@@ -137,7 +137,6 @@ let make = (~state: State.t, ()) => {
       isFocused={state.windowIsFocused}
       isMaximized={state.windowIsMaximized}
       font={state.uiFont}
-      window={state.window}
       title={state.windowTitle}
       theme
     />

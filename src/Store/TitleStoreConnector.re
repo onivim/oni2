@@ -101,7 +101,7 @@ module Effects = {
     });
 };
 
-let start = setTitle => {
+let start = (setTitle, maximize) => {
   let _lastTitle = ref("");
 
   let internalSetTitleEffect = title =>
@@ -112,6 +112,8 @@ let start = setTitle => {
         setTitle(title);
       }
     );
+
+  let internalMaximizeEffect = () => Isolinear.Effect.createWithDispatch(~name="maximize", _dispatch => maximize());
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
@@ -128,6 +130,7 @@ let start = setTitle => {
         {...state, windowTitle: title},
         internalSetTitleEffect(title),
       )
+    | Maximize => (state, internalMaximizeEffect())
 
     | _ => (state, Isolinear.Effect.none)
     };
