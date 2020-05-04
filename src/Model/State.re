@@ -61,6 +61,7 @@ type t = {
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.t(int),
   fileExplorer: FileExplorer.t,
+  window: Revery.Window.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
@@ -75,7 +76,7 @@ type t = {
   textContentProviders: list((int, string)),
 };
 
-let initial = (~getUserSettings, ~contributedCommands) => {
+let initial = (~getUserSettings, ~window, ~contributedCommands) => {
   buffers: Buffers.empty,
   bufferHighlights: BufferHighlights.initial,
   bufferRenderers: BufferRenderers.initial,
@@ -120,6 +121,7 @@ let initial = (~getUserSettings, ~contributedCommands) => {
   syntaxClient: None,
   syntaxHighlights: Feature_Syntax.empty,
   layout: Feature_Layout.initial,
+  window,
   windowTitle: "",
   windowIsFocused: true,
   windowIsMaximized: false,
