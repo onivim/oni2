@@ -4,6 +4,7 @@
 
 open Revery;
 open Revery.UI;
+open Revery.UI.Components;
 
 open Oni_Core;
 module Model = Oni_Model;
@@ -44,15 +45,18 @@ module Styles = {
   ];
 };
 
-let make = (~isFocused, ~isMaximized, ~title, ~theme, ~font: UiFont.t, ()) =>
+let make =
+    (~isFocused, ~isMaximized, ~title, ~theme, ~window, ~font: UiFont.t, ()) =>
   if (isMaximized) {
     React.empty;
   } else {
     switch (Revery.Environment.os) {
     | Mac =>
-      <View style={Styles.container(~isFocused, ~theme)}>
+      <Clickable
+        onClick={_ => Revery.Window.maximize(window)}
+        style={Styles.container(~isFocused, ~theme)}>
         <Text style={Styles.text(~isFocused, ~theme, ~font)} text=title />
-      </View>
+      </Clickable>
     | _ => React.empty
     };
   };

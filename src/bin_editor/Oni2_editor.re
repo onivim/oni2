@@ -127,6 +127,7 @@ if (cliOptions.syntaxHighlightService) {
       ref(
         Model.State.initial(
           ~getUserSettings,
+          ~window=w,
           ~contributedCommands=[] // TODO
         ),
       );
