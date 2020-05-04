@@ -187,3 +187,28 @@ module TerminalService = {
     );
   };
 };
+
+module Workspace = {
+  let initializeWorkspace = (~workspace, client) => {
+    let json =
+      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+
+    Client.notify(
+      ~rpcName="ExtHostWorkspace",
+      ~method="$initializeWorkspace",
+      ~args=`List([json]),
+      client,
+    );
+  };
+  let acceptWorkspaceData = (~workspace, client) => {
+    let json =
+      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+
+    Client.notify(
+      ~rpcName="ExtHostWorkspace",
+      ~method="$acceptWorkspaceData",
+      ~args=`List([json]),
+      client,
+    );
+  };
+};
