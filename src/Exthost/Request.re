@@ -138,8 +138,8 @@ module LanguageFeatures = {
       let parser = json => {
         Json.Decode.(
           json
-          |> Json.Decode.decode_value(list(DefinitionLink.decode))
-          |> Result.map_error(Json.Decode.string_of_error)
+          |> decode_value(list(DefinitionLink.decode))
+          |> Result.map_error(string_of_error)
         );
       };
 
