@@ -1,5 +1,62 @@
 <changelog>
-  <commit hash="5d4c99a9" pr=1623 time=588257227>
+  <commit type="feat" scope="other/#1631" hash="92bab00d" pr=1717 time=588630193>
+    correct double click behavior on macOS (maximize)
+  </commit>
+  <commit type="feat" scope="Extension Host" hash="4edce141" pr=1709 time=588627097>
+    Workspace APIs
+  </commit>
+  <commit type="refactor" scope="exthost" hash="89236cac" pr=1711 time=588617053>
+    v2 - API - provideTextDocumentContent
+  </commit>
+  <commit type="chore" scope="dependency" hash="ea560d1d" pr=1714 time=588519632>
+    add fs, fp, dir
+  </commit>
+  <commit type="fix" scope="search/#1693" hash="4b76ab42" pr=1713 time=588516594>
+    closing the search pane doesn't "defocus it"
+  </commit>
+  <commit type="chore" scope="dependency" hash="996f6b48" pr=1712 time=588503999>
+    revery -> 7853ddb
+  </commit>
+  <commit type="refactor" scope="exthost" hash="33790f4e" pr=1706 time=588448480>
+    v2 - API - completion
+  </commit>
+  <commit type="fix" scope="file-explorer/#873" hash="cf6af66d" pr=1705 time=588433491>
+    exit zen mode when toggling explorer
+  </commit>
+  <commit type="fix" scope="vim" hash="3890823d" pr=1704 time=588433444>
+    linewise clipboard paste (yyp)
+  </commit>
+  <commit type="refactor" scope="exthost" hash="b3be9160" pr=1702 time=588373057>
+    API - ExtHostDocuments: Document edit / update
+  </commit>
+  <commit type="refactor" scope="exthost" hash="ef4c6b33" pr=1701 time=588357323>
+    move handlers to Msg module
+  </commit>
+  <commit type="chore" scope="dependency" hash="670657c4" pr=1700 time=588345462>
+    esy-skia -> d60e5fe
+  </commit>
+  <commit type="fix" scope="workspace" hash="ccb322ff" pr=1699 time=588343021>
+    broken save command
+  </commit>
+  <commit type="refactor" scope="exthost" hash="9838721d" pr=1697 time=588341199>
+    DocumentContentProvider, Decorations, Diagnostics
+  </commit>
+  <commit type="fix" scope="vim/#1671" hash="7c6f4a78" pr=1685 time=588298351>
+    - buffer loses unsaved changes when switching
+  </commit>
+  <commit type="chore" scope="ci" hash="bc2ac4d2" pr=1698 time=588298337>
+    Linux (CentOS) - remove cleanup prior to tests
+  </commit>
+  <commit type="chore" scope="dependency" hash="25539c48" pr=1696 time=588294522>
+    revery -> 9f725e0
+  </commit>
+  <commit type="fix" scope="vim/#660" hash="ac39e58c" pr=1694 time=588287421>
+    clipboard - specify character mode when not multiple lines
+  </commit>
+  <commit type="chore" hash="a6506982" pr=1690 time=588262364>
+    Dependency: ocaml -> 4.9
+  </commit>
+  <commit type="fix" scope="configuration" hash="5d4c99a9" pr=1623 time=588257227>
     <breaking>
       On Windows, git-bash, powershell-core and perhaps others now correctly
       loads the config from %LOCALAPPDATA% instead of $HOME
@@ -7,5 +64,7 @@
         
     Always load Windows config from %LOCALAPPDATA% 
   </commit>
-  <commit hash="2e704922"/>
+  <commit hash="2e704922" pr=1676 time=588206100>
+    Fix #1578 - Terminal command + args configuration settings
+  </commit>
 </changelog>
