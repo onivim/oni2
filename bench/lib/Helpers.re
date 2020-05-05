@@ -10,6 +10,7 @@ let simpleState = {
     State.initial(
       ~getUserSettings=() => Ok(Config.Settings.empty),
       ~contributedCommands=[],
+      ~workingDirectory=Sys.getcwd(),
     );
 
   Reducer.reduce(
