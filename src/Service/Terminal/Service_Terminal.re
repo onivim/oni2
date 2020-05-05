@@ -1,5 +1,8 @@
 open Oni_Core;
 open Oni_Extensions;
+open Oni_Core.Utility;
+
+module Time = Revery.Time;
 
 module Internal = {
   let onExtensionMessage: Revery.Event.t(Exthost.Msg.TerminalService.msg) =
@@ -65,42 +68,22 @@ module Sub = {
 
         let isResizing = ref(false);
 
-        let makeDebouncedDispatch = () => {
-          let scheduled = ref(false);
-          let latestAction = ref(None);
-          action => {
-            latestAction := Some(action);
-            if (! scheduled^) {
-              scheduled := true;
-
-              let _: unit => unit =
-                Revery.Tick.timeout(
-                  () => {
-                    latestAction^ |> Option.iter(dispatch);
-                    scheduled := false;
-                    latestAction := None;
-                  },
-                  Revery.Time.zero,
-                );
-              ();
-            };
-          };
-        };
-
-        let debouncedScreenDispatch = makeDebouncedDispatch();
-        let debouncedCursorDispatch = makeDebouncedDispatch();
+        let throttledScreenDispatch =
+          FunEx.throttle(~time=Time.zero, dispatch);
+        let throttledCursorDispatch =
+          FunEx.throttle(~time=Time.zero, dispatch);
 
         let onEffect = eff =>
           switch (eff) {
           | ReveryTerminal.ScreenResized(_) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
             if (! isResizing^) {
-              debouncedScreenDispatch(
+              throttledScreenDispatch(
                 ScreenUpdated({id: params.id, screen}),
               );
             }
           | ReveryTerminal.CursorMoved(cursor) =>
-            debouncedCursorDispatch(CursorMoved({id: params.id, cursor}))
+            throttledCursorDispatch(CursorMoved({id: params.id, cursor}))
           | ReveryTerminal.Output(output) =>
             Exthost.Request.TerminalService.acceptProcessInput(
               params.id,

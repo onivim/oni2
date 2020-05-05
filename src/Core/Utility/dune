@@ -8,5 +8,6 @@
         str
         luv
         lwt
+        Revery
         timber)
     (preprocess (pps lwt_ppx)))
