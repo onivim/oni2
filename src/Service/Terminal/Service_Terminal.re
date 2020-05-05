@@ -67,8 +67,10 @@ module Sub = {
 
         let isResizing = ref(false);
 
-        let debouncedScreenDispatch = FunEx.debounce1(~time=Time.zero, dispatch);
-        let debouncedCursorDispatch = FunEx.debounce1(~time=Time.zero, dispatch);
+        let debouncedScreenDispatch =
+          FunEx.debounce1(~time=Time.zero, dispatch);
+        let debouncedCursorDispatch =
+          FunEx.debounce1(~time=Time.zero, dispatch);
 
         let onEffect = eff =>
           switch (eff) {
