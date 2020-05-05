@@ -132,8 +132,9 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
           );
         let renderer =
           BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
+
         switch (renderer) {
-        | BufferRenderer.Terminal({insertMode, _}) when !insertMode =>
+        | Terminal({insertMode, _}) when !insertMode =>
           let buffer =
             Selectors.getBufferForEditor(state, editor)
             |> Option.value(~default=Buffer.initial);
@@ -164,7 +165,7 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
             windowIsFocused={state.windowIsFocused}
             config={Feature_Configuration.resolver(state.config)}
           />;
-        | BufferRenderer.Editor =>
+        | Editor =>
           let buffer =
             Selectors.getBufferForEditor(state, editor)
             |> Option.value(~default=Buffer.initial);
@@ -187,9 +188,10 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
             windowIsFocused={state.windowIsFocused}
             config={Feature_Configuration.resolver(state.config)}
           />;
-        | BufferRenderer.Welcome => <WelcomeView theme uiFont editorFont />
-        | BufferRenderer.Version => <VersionView theme uiFont editorFont />
-        | BufferRenderer.Terminal({id, _}) =>
+        | Welcome => <WelcomeView theme uiFont editorFont />
+        | Version => <VersionView theme uiFont editorFont />
+        | Changelog => <Feature_Changelog.View.Full theme uiFont editorFont />
+        | Terminal({id, _}) =>
           state.terminals
           |> Feature_Terminal.getTerminalOpt(id)
           |> Option.map(terminal => {
@@ -197,6 +199,7 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
              })
           |> Option.value(~default=React.empty)
         };
+
       | None => React.empty
       };
 
