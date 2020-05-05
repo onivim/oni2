@@ -11,8 +11,6 @@ open Oni_Core;
 open Oni_Model;
 module Model = Oni_Model;
 
-module Window = WindowManager;
-
 module Colors = Feature_Theme.Colors;
 module EditorSurface = Feature_Editor.EditorSurface;
 
@@ -72,8 +70,7 @@ let toUiTabs =
   List.filter_map(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
-let make =
-    (~state: State.t, ~theme, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
+let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
   let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let style =
@@ -108,21 +105,15 @@ let make =
       );
     };
 
-  let onDimensionsChanged =
-      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-    let height = showTabs ? height - Constants.tabHeight : height;
-    let height = max(height, 0); // BUGFIX: #1525
-
-    GlobalContext.current().dispatch(
-      EditorGroupSizeChanged({id: editorGroup.editorGroupId, width, height}),
-    );
-  };
-
   let children = {
     let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
     let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
 
-    let metrics = editorGroup.metrics;
+    let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
+      GlobalContext.current().dispatch(
+        Actions.EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}),
+      );
+
     let editorView =
       switch (maybeEditor) {
       | Some(editor) =>
@@ -157,11 +148,10 @@ let make =
             foregroundColor=defaultTerminalForeground
             showDiffMarkers=false
             isActiveSplit=isActive
-            metrics
             editor
             buffer
             onCursorChange
-            onDimensionsChanged={_ => ()}
+            onEditorSizeChanged
             onScroll
             theme
             mode
@@ -181,11 +171,10 @@ let make =
 
           <EditorSurface
             isActiveSplit=isActive
-            metrics
             editor
             buffer
             onCursorChange
-            onDimensionsChanged={_ => ()}
+            onEditorSizeChanged
             onScroll
             theme
             mode
@@ -204,12 +193,7 @@ let make =
           state.terminals
           |> Feature_Terminal.getTerminalOpt(id)
           |> Option.map(terminal => {
-               <TerminalView
-                 theme
-                 font={state.terminalFont}
-                 metrics
-                 terminal
-               />
+               <TerminalView theme font={state.terminalFont} terminal />
              })
           |> Option.value(~default=React.empty)
         };
@@ -236,13 +220,12 @@ let make =
   };
 
   let onMouseDown = _ => {
-    GlobalContext.current().setActiveWindow(
-      windowId,
-      editorGroup.editorGroupId,
+    GlobalContext.current().dispatch(
+      EditorGroupSelected(editorGroup.editorGroupId),
     );
   };
 
-  <View onMouseDown style onDimensionsChanged>
+  <View onMouseDown style>
     <View style=absoluteStyle> children </View>
     <View style=overlayStyle />
   </View>;

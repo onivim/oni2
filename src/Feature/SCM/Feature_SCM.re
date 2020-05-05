@@ -398,13 +398,7 @@ open Revery.UI.Components;
 
 module Input = Oni_Components.Input;
 
-module Theme = Feature_Theme;
-
-module Colors = {
-  let foreground = Theme.Colors.SideBar.foreground;
-  let background = Theme.Colors.SideBar.background;
-  let hoverBackground = Theme.Colors.List.hoverBackground;
-};
+module Colors = Feature_Theme.Colors;
 
 module Pane = {
   module Styles = {
@@ -415,15 +409,12 @@ module Pane = {
     let text = (~theme, ~font: UiFont.t) => [
       fontSize(font.fontSize),
       fontFamily(font.fontFile),
-      color(Colors.foreground.from(theme)),
+      color(Colors.SideBar.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
 
-    let input = (~theme, ~font: UiFont.t) => [
-      border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-      backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      color(Colors.foreground.from(theme)),
+    let input = (~font: UiFont.t) => [
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
       flexGrow(1),
@@ -436,7 +427,7 @@ module Pane = {
     let groupLabelText = (~theme, ~font: UiFont.t) => [
       fontSize(font.fontSize *. 0.85),
       fontFamily(font.fontFileBold),
-      color(Colors.foreground.from(theme)),
+      color(Colors.SideBar.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
@@ -445,8 +436,8 @@ module Pane = {
 
     let item = (~isHovered, ~theme) => [
       isHovered
-        ? backgroundColor(Colors.hoverBackground.from(theme))
-        : backgroundColor(Colors.background.from(theme)),
+        ? backgroundColor(Colors.List.hoverBackground.from(theme))
+        : backgroundColor(Colors.SideBar.background.from(theme)),
       paddingVertical(2),
       cursor(MouseCursors.pointer),
     ];
@@ -540,8 +531,7 @@ module Pane = {
 
     <ScrollView style=Styles.container>
       <Input
-        style={Styles.input(~theme, ~font)}
-        cursorColor={Colors.foreground.from(theme)}
+        style={Styles.input(~font)}
         value={model.inputBox.value}
         selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}
@@ -549,6 +539,7 @@ module Pane = {
         onClick={selection =>
           dispatch(InputBoxClicked({selection: selection}))
         }
+        theme
       />
       {groups
        |> List.map(((provider, group)) =>

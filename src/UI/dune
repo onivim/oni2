@@ -6,6 +6,7 @@
         str
         bigarray
         zed_oni
+        luv
         lwt
         lwt.unix
         Oni2.core
@@ -17,6 +18,7 @@
         Oni2.feature.editor
         Oni2.feature.scm
         Oni2.feature.modals
+        Oni2.feature.layout
         Rench
         Revery
         revery-terminal.lib

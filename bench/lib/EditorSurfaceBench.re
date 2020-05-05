@@ -21,9 +21,8 @@ let editorSurfaceMinimalState = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -46,9 +45,8 @@ let editorSurfaceThousandLineState = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -71,9 +69,8 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -100,9 +97,8 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -129,9 +125,8 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}

@@ -4,7 +4,6 @@
  * Root editor component - contains all UI elements
  */
 
-open Revery;
 open Revery.UI;
 open Oni_Model;
 
@@ -13,6 +12,11 @@ module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Tooltip = Oni_Components.Tooltip;
 
 module Colors = Feature_Theme.Colors;
+
+module Constants = {
+  let statusBarHeight = 25;
+  let titleBarHeight = 22;
+};
 
 module Styles = {
   open Style;
@@ -33,15 +37,18 @@ module Styles = {
 
   let workspace = Style.[flexGrow(1), flexDirection(`Column)];
 
-  let statusBar = statusBarHeight => [
-    backgroundColor(Color.hex("#21252b")),
-    height(statusBarHeight),
+  let statusBar = [
+    Style.height(Constants.statusBarHeight),
     justifyContent(`Center),
     alignItems(`Center),
   ];
 
   let titleBar = background =>
-    Style.[flexGrow(0), height(22), backgroundColor(background)];
+    Style.[
+      flexGrow(0),
+      height(Constants.titleBarHeight),
+      backgroundColor(background),
+    ];
 };
 
 let make = (~state: State.t, ()) => {
@@ -57,51 +64,45 @@ let make = (~state: State.t, ()) => {
         _,
       } = state;
 
-  let theme = {
-    Feature_Theme.colors(state.colorTheme);
-  };
+  let theme = Feature_Theme.colors(state.colorTheme);
 
   let onContextMenuItemSelect = item =>
     GlobalContext.current().dispatch(ContextMenuItemSelected(item));
 
-  let statusBarVisible =
-    Selectors.getActiveConfigurationValue(state, c =>
-      c.workbenchStatusBarVisible
-    )
-    && !zenMode;
+  let statusBar = () =>
+    if (Selectors.getActiveConfigurationValue(state, c =>
+          c.workbenchStatusBarVisible
+        )
+        && !zenMode) {
+      <View style=Styles.statusBar>
+        <StatusBar state contextMenu onContextMenuItemSelect theme />
+      </View>;
+    } else {
+      React.empty;
+    };
 
-  let activityBarVisible =
-    Selectors.getActiveConfigurationValue(state, c =>
-      c.workbenchActivityBarVisible
-    )
-    && !zenMode;
+  let activityBar = () =>
+    if (Selectors.getActiveConfigurationValue(state, c =>
+          c.workbenchActivityBarVisible
+        )
+        && !zenMode) {
+      React.listToElement([
+        <Dock theme sideBar pane />,
+        <WindowHandle direction=`Vertical />,
+      ]);
+    } else {
+      React.empty;
+    };
 
-  let sideBarVisible = !zenMode && sideBar.isOpen;
-
-  let statusBarHeight = statusBarVisible ? 25 : 0;
-
-  let statusBar =
-    statusBarVisible
-      ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar state contextMenu onContextMenuItemSelect theme />
-        </View>
-      : React.empty;
-
-  let activityBar =
-    activityBarVisible
-      ? React.listToElement([
-          <Dock theme sideBar pane />,
-          <WindowHandle direction=Vertical />,
-        ])
-      : React.empty;
-
-  let sideBar =
-    sideBarVisible
-      ? React.listToElement([
-          <SideBarView theme state />,
-          <WindowHandle direction=Vertical />,
-        ])
-      : React.empty;
+  let sideBar = () =>
+    if (!zenMode && sideBar.isOpen) {
+      React.listToElement([
+        <SideBarView theme state />,
+        <WindowHandle direction=`Vertical />,
+      ]);
+    } else {
+      React.empty;
+    };
 
   let modals = () => {
     switch (state.modal) {
@@ -124,6 +125,13 @@ let make = (~state: State.t, ()) => {
     };
   };
 
+  let contextMenuOverlay = () => {
+    let onClick = () =>
+      GlobalContext.current().dispatch(ContextMenuOverlayClicked);
+
+    <ContextMenu.Overlay onClick />;
+  };
+
   <View style={Styles.root(theme)}>
     <Titlebar
       isFocused={state.windowIsFocused}
@@ -134,8 +142,8 @@ let make = (~state: State.t, ()) => {
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
-        activityBar
-        sideBar
+        <activityBar />
+        <sideBar />
         <EditorView state theme />
       </View>
       <PaneView theme uiFont editorFont state />
@@ -151,11 +159,8 @@ let make = (~state: State.t, ()) => {
        | None => React.empty
        }}
     </Overlay>
-    statusBar
-    {let onClick = () =>
-       GlobalContext.current().dispatch(ContextMenuOverlayClicked);
-
-     <ContextMenu.Overlay onClick />}
+    <statusBar />
+    <contextMenuOverlay />
     <Tooltip.Overlay theme font=uiFont />
     <modals />
     <Overlay> <SneakView model={state.sneak} theme font /> </Overlay>

@@ -28,7 +28,11 @@ module ContextKeys: {
 
   type t;
 
+  let fromList: list((string, Value.t)) => t;
   let fromSchema: (Schema.t('model), 'model) => t;
+
+  let union: (t, t) => t;
+  let unionMany: list(t) => t;
 
   let getValue: (t, string) => Value.t;
 };

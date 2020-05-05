@@ -46,7 +46,7 @@ let uninstallExtension = (_extensionId, _cli) => {
 
 let listExtensions = cli => {
   let extensions = Store.Utility.getUserExtensions(cli);
-  let printExtension = (ext: Ext.ExtensionScanner.t) => {
+  let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
     print_endline(ext.manifest.name);
   };
   List.iter(printExtension, extensions);
@@ -66,7 +66,7 @@ let cliOptions =
     ~listExtensions=
       cli => {
         let extensions = Store.Utility.getUserExtensions(cli);
-        let printExtension = (ext: Ext.ExtensionScanner.t) => {
+        let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
           print_endline(ext.manifest.name);
         };
         List.iter(printExtension, extensions);
@@ -123,7 +123,13 @@ if (cliOptions.syntaxHighlightService) {
 
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
 
-    let currentState = ref(Model.State.initial(~getUserSettings));
+    let currentState =
+      ref(
+        Model.State.initial(
+          ~getUserSettings,
+          ~contributedCommands=[] // TODO
+        ),
+      );
 
     let update = UI.start(w, <Root state=currentState^ />);
 
@@ -133,15 +139,26 @@ if (cliOptions.syntaxHighlightService) {
       isDirty := true;
     };
 
-    let _: unit => unit =
-      Tick.interval(
-        _dt =>
-          if (isDirty^) {
-            update(<Root state=currentState^ />);
-            isDirty := false;
-          },
-        Time.seconds(0),
-      );
+    let runEventLoop = () => {
+      // TODO: How many times should we run it?
+      // The ideal amount would be just enough to do pending work,
+      // but not too much to just spin. Unfortunately, it seems
+      // Luv.Loop.run always returns [true] for us, so we don't
+      // have a reliable way to know we're done (at the moment).
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      };
+    };
+
+    let tick = _dt => {
+      runEventLoop();
+
+      if (isDirty^) {
+        update(<Root state=currentState^ />);
+        isDirty := false;
+      };
+    };
+    let _: unit => unit = Tick.interval(tick, Time.zero);
 
     let getZoom = () => {
       Window.getZoom(w);
@@ -151,6 +168,10 @@ if (cliOptions.syntaxHighlightService) {
 
     let setTitle = title => {
       Window.setTitle(w, title);
+    };
+
+    let maximize = () => {
+      Window.maximize(w);
     };
 
     let setVsync = vsync => Window.setVsync(w, vsync);
@@ -173,6 +194,7 @@ if (cliOptions.syntaxHighlightService) {
         ~setZoom,
         ~setTitle,
         ~setVsync,
+        ~maximize,
         ~window=Some(w),
         ~cliOptions=Some(cliOptions),
         ~quit,
@@ -194,8 +216,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
 
     GlobalContext.set({
-      notifyWindowTreeSizeChanged: (~width, ~height, ()) =>
-        dispatch(Model.Actions.WindowTreeSetSize(width, height)),
       openEditorById: id => {
         dispatch(Model.Actions.ViewSetActiveEditor(id));
       },
@@ -204,8 +224,6 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
       editorSetScroll: (~editorId, ~scrollY, ()) =>
         dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-      setActiveWindow: (splitId, editorGroupId) =>
-        dispatch(Model.Actions.WindowSetActive(splitId, editorGroupId)),
       dispatch,
     });
 

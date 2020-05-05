@@ -7,6 +7,7 @@ module Log = (val Core.Log.withNamespace("IntegrationTest"));
 module InitLog = (val Core.Log.withNamespace("IntegrationTest.Init"));
 module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
+module SyntaxServerTest = SyntaxServerTest;
 
 open Types;
 
@@ -15,6 +16,7 @@ let _currentTime: ref(float) = ref(0.0);
 let _currentZoom: ref(float) = ref(1.0);
 let _currentTitle: ref(string) = ref("");
 let _currentVsync: ref(Revery.Vsync.t) = ref(Revery.Vsync.Immediate);
+let _currentMaximized: ref(bool) = ref(false);
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
@@ -28,6 +30,8 @@ let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
 
 let setVsync = vsync => _currentVsync := vsync;
+
+let maximize = () => _currentMaximized := true;
 
 let quit = code => exit(code);
 
@@ -69,6 +73,11 @@ let runTest =
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
 
+  switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
+  | None => ()
+  | Some(logFile) => Timber.App.setLogFile(logFile)
+  };
+
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
 
   let setup = Core.Setup.init() /* let cliOptions = Core.Cli.parse(setup); */;
@@ -84,7 +93,8 @@ let runTest =
 
   let getUserSettings = () => Ok(currentUserSettings^);
 
-  let currentState = ref(Model.State.initial(~getUserSettings));
+  let currentState =
+    ref(Model.State.initial(~getUserSettings, ~contributedCommands=[]));
 
   let headlessWindow =
     Revery.Utility.HeadlessWindow.create(
@@ -133,6 +143,7 @@ let runTest =
       ~getZoom,
       ~setZoom,
       ~setVsync,
+      ~maximize,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
@@ -148,17 +159,21 @@ let runTest =
 
   InitLog.info("Sending init event");
 
+  Oni_UI.GlobalContext.set({
+    openEditorById: id => {
+      dispatch(Model.Actions.ViewSetActiveEditor(id));
+    },
+    closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
+    editorScrollDelta: (~editorId, ~deltaY, ()) =>
+      dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
+    editorSetScroll: (~editorId, ~scrollY, ()) =>
+      dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
+    dispatch,
+  });
+
   dispatch(Model.Actions.Init);
 
-  let wrappedRunEffects = () => {
-    runEffects();
-  };
-
-  wrappedRunEffects();
-
-  let wrappedDispatch = action => {
-    dispatch(action);
-  };
+  runEffects();
 
   let waitForState = (~name, ~timeout=0.5, waiter) => {
     let logWaiter = msg => Log.info(" WAITER (" ++ name ++ "): " ++ msg);
@@ -177,8 +192,12 @@ let runTest =
       Revery.App.flushPendingCallbacks();
       Revery.Tick.pump();
 
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      };
+
       // Flush any pending effects
-      wrappedRunEffects();
+      runEffects();
 
       Unix.sleepf(0.1);
       Thread.yield();
@@ -195,7 +214,7 @@ let runTest =
   };
 
   Log.info("--- Starting test: " ++ name);
-  test(wrappedDispatch, waitForState, wrappedRunEffects);
+  test(dispatch, waitForState, runEffects);
   Log.info("--- TEST COMPLETE: " ++ name);
 
   dispatch(Model.Actions.Quit(true));

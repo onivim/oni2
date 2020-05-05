@@ -1,6 +1,6 @@
 open Oni_Core;
 open Utility;
-open Oni_Extensions;
+open Exthost.Extension;
 
 module ExtM = Oni_ExtensionManagement;
 
@@ -18,7 +18,7 @@ describe("Installer", ({test, _}) => {
   test("simple install test", ({expect, _}) => {
     let extensionsFolder = createExtensionsFolder();
     let startExtensions =
-      ExtensionScanner.scan(~category=Development, extensionsFolder);
+      Scanner.scan(~category=Development, extensionsFolder);
 
     expect.equal(List.length(startExtensions), 0);
 
@@ -28,7 +28,7 @@ describe("Installer", ({test, _}) => {
     expect.equal(result, Ok());
 
     let afterInstallExtensions =
-      ExtensionScanner.scan(~category=Development, extensionsFolder);
+      Scanner.scan(~category=Development, extensionsFolder);
     expect.equal(List.length(afterInstallExtensions), 1);
   })
 });

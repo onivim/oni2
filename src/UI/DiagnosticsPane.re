@@ -18,7 +18,7 @@ module Styles = {
     Style.[
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
-      color(Colors.foreground.from(theme)),
+      color(Colors.PanelTitle.activeForeground.from(theme)),
       margin(8),
     ];
 };

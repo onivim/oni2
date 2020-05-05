@@ -22,13 +22,7 @@ module Styles = {
 
   let inputContainer = [padding(5)];
 
-  let input = font => [
-    border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-    backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-    color(Revery.Colors.white),
-    fontFamily(font),
-    fontSize(14.),
-  ];
+  let input = (~font) => [fontFamily(font), fontSize(14.)];
 
   let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
 
@@ -163,18 +157,18 @@ let make =
       <Input
         placeholder
         ?prefix
-        cursorColor=Revery.Colors.white
-        style={Styles.input(font.fontFile)}
+        style={Styles.input(~font=font.fontFile)}
         isFocused=true
         onClick=onInputClicked
         value=query
         selection
+        theme
       />
     </View>;
 
   let dropdown = () =>
     <View style=Styles.dropdown>
-      <FlatList rowHeight=40 count={Array.length(items)} focused>
+      <FlatList rowHeight=40 count={Array.length(items)} focused theme>
         ...renderItem
       </FlatList>
       {switch (progress) {

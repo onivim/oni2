@@ -84,32 +84,25 @@ module Styles = {
   open Style;
 
   let container = (~theme) => [
-    backgroundColor(Colors.Editor.background.from(theme)),
+    backgroundColor(Colors.Oni.Modal.background.from(theme)),
   ];
 
   let message = [padding(20), paddingBottom(10)];
 
-  let actions = (~theme) => [
-    flexDirection(`Row),
-    borderTop(~width=1, ~color=Colors.Menu.selectionBackground.from(theme)),
-  ];
+  let actions = [flexDirection(`Row)];
 
   let buttonOuter = (~isHovered, ~theme) => [
     isHovered
-      ? backgroundColor(Colors.Menu.selectionBackground.from(theme))
-      : backgroundColor(Colors.Editor.background.from(theme)),
+      ? backgroundColor(Colors.Selection.background.from(theme))
+      : backgroundColor(Colors.Oni.Modal.background.from(theme)),
     flexGrow(1),
-    borderRight(
-      ~width=1,
-      ~color=Colors.Menu.selectionBackground.from(theme),
-    ),
   ];
 
   let buttonInner = [padding(10), flexDirection(`Row)];
 
   let buttonText = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(Colors.foreground.from(theme)),
+    color(Colors.Oni.Modal.foreground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
@@ -118,14 +111,14 @@ module Styles = {
 
   let shortcutText = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.7)),
+    color(Colors.Oni.Modal.shortcutForeground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
 
   let shortcutHighlight = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(Colors.Oni.normalModeBackground.from(theme)),
+    color(Colors.Oni.Modal.shortcutHighlightForeground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
@@ -175,7 +168,7 @@ let%component button = (~text, ~shortcut, ~input, ~onClick, ~theme, ~font, ()) =
 let make = (~children as message, ~theme, ~font, ~model, ~onAction, ()) => {
   <View style={Styles.container(~theme)}>
     <View style=Styles.message> message </View>
-    <View style={Styles.actions(~theme)}>
+    <View style=Styles.actions>
       {model.actions
        |> List.map(action =>
             <button

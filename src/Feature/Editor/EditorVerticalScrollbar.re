@@ -16,17 +16,16 @@ let absoluteStyle =
 let make =
     (
       ~editor: Editor.t,
+      ~cursorPosition: Location.t,
       ~height as totalHeight,
       ~width as totalWidth,
       ~diagnostics: IntMap.t(list(Diagnostic.t)),
-      ~metrics,
       ~colors: Colors.t,
       ~editorFont: Service_Font.font,
       ~bufferHighlights,
       (),
     ) => {
-  let scrollMetrics =
-    Editor.getVerticalScrollbarMetrics(editor, totalHeight, metrics);
+  let scrollMetrics = Editor.getVerticalScrollbarMetrics(editor, totalHeight);
 
   let scrollThumbStyle =
     Style.[
@@ -44,21 +43,21 @@ let make =
     let pixelY = float_of_int(line) *. editorFont.measuredHeight;
     int_of_float(
       pixelY
-      /. (totalPixel +. float_of_int(metrics.pixelHeight))
+      /. (totalPixel +. float_of_int(editor.pixelHeight))
       *. float_of_int(totalHeight),
     );
   };
 
-  let cursorPosition = Editor.getPrimaryCursor(editor);
-
-  let cursorPosition =
-    bufferLineToScrollbarPixel(Index.toZeroBased(cursorPosition.line));
+  let cursorLine =
+    bufferLineToScrollbarPixel(
+      Index.toZeroBased(Location.(cursorPosition.line)),
+    );
   let cursorSize = 2;
 
   let scrollCursorStyle =
     Style.[
       position(`Absolute),
-      top(cursorPosition),
+      top(cursorLine),
       left(0),
       width(totalWidth),
       height(cursorSize),
@@ -81,7 +80,7 @@ let make =
              right(0),
              width(Constants.scrollBarThickness / 3),
              height(cursorSize),
-             backgroundColor(Revery.Colors.red),
+             backgroundColor(colors.errorForeground),
            ];
          <View style=diagnosticStyle />;
        })

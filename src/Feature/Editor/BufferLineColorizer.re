@@ -12,8 +12,8 @@ type t = int => tokenColor;
 
 let create =
     (
-      ~startIndex,
-      ~endIndex,
+      ~startByte,
+      ~endByte,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
       ~selectionHighlights: option(Range.t),
@@ -32,7 +32,7 @@ let create =
       (),
     );
 
-  let length = max(endIndex - startIndex, 1);
+  let length = max(endByte - startByte, 1);
 
   let tokenColorArray: array(ColorizedToken.t) =
     Array.make(length, defaultToken2);
@@ -41,7 +41,7 @@ let create =
     switch (tokens) {
     | [] => ()
     | [hd, ...tail] =>
-      let adjIndex = hd.index - startIndex;
+      let adjIndex = hd.index - startByte;
 
       let pos = ref(start);
 
@@ -49,7 +49,7 @@ let create =
         tokenColorArray[pos^] = hd;
         decr(pos);
       };
-      if (hd.index < startIndex) {
+      if (hd.index < startByte) {
         ();
       } else {
         f(tail, pos^);
@@ -71,12 +71,12 @@ let create =
 
   i => {
     let colorIndex =
-      if (i < startIndex) {
+      if (i < startByte) {
         tokenColorArray[0];
-      } else if (i >= endIndex) {
+      } else if (i >= endByte) {
         tokenColorArray[Array.length(tokenColorArray) - 1];
       } else {
-        tokenColorArray[i - startIndex];
+        tokenColorArray[i - startByte];
       };
 
     let matchingPair =

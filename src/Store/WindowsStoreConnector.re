@@ -10,6 +10,8 @@ module Model = Oni_Model;
 open Model;
 open Model.Actions;
 
+module OptionEx = Core.Utility.OptionEx;
+
 let start = () => {
   let quitEffect =
     Isolinear.Effect.createWithDispatch(~name="windows.quitEffect", dispatch =>
@@ -18,108 +20,82 @@ let start = () => {
 
   let initializeDefaultViewEffect = (state: State.t) =>
     Isolinear.Effect.createWithDispatch(~name="windows.init", dispatch => {
-      let editor =
-        WindowTree.createSplit(
-          ~editorGroupId=EditorGroups.activeGroupId(state.editorGroups),
-          (),
-        );
-
-      dispatch(Actions.AddSplit(Vertical, editor));
+      dispatch(
+        Actions.AddSplit(
+          `Vertical,
+          EditorGroups.activeGroupId(state.editorGroups),
+        ),
+      )
     });
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | WindowSetActive(splitId, _) =>
-      {
-        ...s,
-        windowManager: {
-          ...s.windowManager,
-          activeWindowId: splitId,
-        },
-      }
-      |> FocusManager.push(Editor)
-
-    | WindowTreeSetSize(width, height) => {
-        ...s,
-        windowManager:
-          WindowManager.setTreeSize(width, height, s.windowManager),
-      }
+    | EditorGroupSelected(_) => FocusManager.push(Editor, s)
 
     | AddSplit(direction, split) => {
         ...s,
         // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
-        zenMode:
-          s.zenMode
-          && List.length(WindowTree.getSplits(s.windowManager.windowTree))
-          == 0,
-        windowManager: {
-          ...s.windowManager,
-          activeWindowId: split.id,
-          windowTree:
-            WindowTree.addSplit(
-              ~target=Some(s.windowManager.activeWindowId),
-              ~position=After,
-              direction,
-              split,
-              s.windowManager.windowTree,
-            ),
-        },
+        zenMode: s.zenMode && Feature_Layout.windows(s.layout) == [],
+        layout:
+          Feature_Layout.addWindow(
+            ~target={
+              EditorGroups.getActiveEditorGroup(s.editorGroups)
+              |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+            },
+            ~position=`After,
+            direction,
+            split,
+            s.layout,
+          ),
       }
 
     | RemoveSplit(id) => {
         ...s,
         zenMode: false,
-        windowManager: {
-          ...s.windowManager,
-          windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
-        },
+        layout: Feature_Layout.removeWindow(id, s.layout),
       }
 
     | ViewCloseEditor(_) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
       /* Remove splits */
-      let windowTree =
-        s.windowManager.windowTree
-        |> WindowTree.getSplits
-        |> List.filter((split: WindowTree.split) =>
-             Model.EditorGroups.isEmpty(split.editorGroupId, s.editorGroups)
+      let layout =
+        s.layout
+        |> Feature_Layout.windows
+        |> List.filter(editorGroupId =>
+             Model.EditorGroups.isEmpty(editorGroupId, s.editorGroups)
            )
         |> List.fold_left(
-             (prev: WindowTree.t, curr: WindowTree.split) =>
-               WindowTree.removeSplit(curr.id, prev),
-             s.windowManager.windowTree,
+             (acc, editorGroupId) =>
+               Feature_Layout.removeWindow(editorGroupId, acc),
+             s.layout,
            );
 
-      let windowManager =
-        WindowManager.ensureActive({...s.windowManager, windowTree});
-
-      {...s, windowManager};
+      {...s, layout};
 
     | OpenFileByPath(_) => FocusManager.push(Editor, s)
 
-    | Command("view.rotateForward") => {
-        ...s,
-        windowManager: {
-          ...s.windowManager,
-          windowTree:
-            WindowTree.rotateForward(
-              s.windowManager.activeWindowId,
-              s.windowManager.windowTree,
-            ),
-        },
+    | Command("view.rotateForward") =>
+      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...s,
+          layout:
+            Feature_Layout.rotateForward(editorGroup.editorGroupId, s.layout),
+        }
+      | None => s
       }
 
-    | Command("view.rotateBackward") => {
-        ...s,
-        windowManager: {
-          ...s.windowManager,
-          windowTree:
-            WindowTree.rotateBackward(
-              s.windowManager.activeWindowId,
-              s.windowManager.windowTree,
+    | Command("view.rotateBackward") =>
+      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...s,
+          layout:
+            Feature_Layout.rotateBackward(
+              editorGroup.editorGroupId,
+              s.layout,
             ),
-        },
+        }
+      | None => s
       }
 
     | _ => s
@@ -133,8 +109,7 @@ let start = () => {
       | Init => initializeDefaultViewEffect(state)
       // When opening a file, ensure that the active editor is getting focus
       | ViewCloseEditor(_) =>
-        if (List.length(WindowTree.getSplits(state.windowManager.windowTree))
-            == 0) {
+        if (Feature_Layout.windows(state.layout) == []) {
           quitEffect;
         } else {
           Isolinear.Effect.none;

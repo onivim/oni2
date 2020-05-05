@@ -63,8 +63,27 @@ module Schema = {
 
 type t = Lookup.t(Value.t);
 
+let fromList = entries =>
+  entries
+  |> List.to_seq
+  |> Seq.map(((key, value)) => (Lookup.key(key), value))
+  |> Lookup.of_seq;
+
 let fromSchema = (schema, model) =>
   Lookup.map(Schema.(entry => entry.get(model)), schema);
+
+let union = (xs, ys) =>
+  Lookup.union(
+    (key, _x, y) => {
+      Log.errorf(m =>
+        m("Encountered duplicate context key: %s", Lookup.keyName(key))
+      );
+      Some(y);
+    },
+    xs,
+    ys,
+  );
+let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
 
 let getValue = (lookup, key) =>
   Lookup.find_opt(Lookup.key(key), lookup)

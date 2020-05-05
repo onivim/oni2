@@ -9,7 +9,7 @@ const os = require("os");
 const sudo = require('sudo-prompt');
 const pty = require("node-pty");
 
-const shell = os.platform() == 'win32' ? 'powershell.exe' : 'bash';
+/*const shell = os.platform() == 'win32' ? 'cmd.exe' : 'bash';
 
 const ptyProcess = pty.spawn(shell, [], {
 	name: 'xterm-color',
@@ -24,6 +24,6 @@ ptyProcess.on('data', (data) => {
 	ptyProcess.destroy();
 });
 
-ptyProcess.write('ls\r\n');
+ptyProcess.write('ls\r\n');*/
 
 console.log("Success!");

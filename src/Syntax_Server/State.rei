@@ -25,11 +25,10 @@ let anyPendingWork: t => bool;
 
 let bufferEnter: (int, t) => t;
 let bufferUpdate:
-  (~scope: string, ~bufferUpdate: BufferUpdate.t, ~lines: array(string), t) =>
-  t;
+  (~scope: string, ~bufferUpdate: BufferUpdate.t, t) => result(t, string);
 
 let updateTheme: (TokenTheme.t, t) => t;
-let updateConfiguration: (Configuration.t, t) => t;
+let setUseTreeSitter: (bool, t) => t;
 
 /* [updateVisibility(bufferRangeList)] sets the ranges that are visible per-buffer, which allows syntax highlight to only run necessary work */
 let updateVisibility: (list((int, list(Range.t))), t) => t;

@@ -9,15 +9,18 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.vimMode == Vim.Types.Normal
   );
+  wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
+    state.syntaxClient |> Option.is_some
+  });
 
-  let testFile = getAssetPath("some-test-file.json");
+  let testFile = getAssetPath("large-c-file.c");
 
   // Create a buffer
   dispatch(Actions.OpenFileByPath(testFile, None, None));
 
   // Wait for highlights to show up
   wait(
-    ~name="Verify we get syntax highlights", ~timeout=10.0, (state: State.t) => {
+    ~name="Verify we get syntax highlights", ~timeout=60.0, (state: State.t) => {
     state
     |> Selectors.getActiveBuffer
     |> Option.map(Buffer.getId)
@@ -25,7 +28,8 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
          let tokens =
            Feature_Syntax.getTokens(
              ~bufferId,
-             ~line=Index.zero,
+             // Verify we get highlighting at the end!
+             ~line=Index.(zero + 14110),
              state.syntaxHighlights,
            );
 

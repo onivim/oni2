@@ -48,16 +48,15 @@ module ClientToServer = {
     | Initialize([@opaque] Ext.LanguageInfo.t, Setup.t)
     | BufferEnter(int, string)
     | BufferLeave(int)
-    | BufferUpdate(
-        [@opaque] Oni_Core.BufferUpdate.t,
-        [@opaque] array(string),
-        string,
-      )
-    | ConfigurationChanged([@opaque] Configuration.t)
+    | BufferUpdate([@opaque] Oni_Core.BufferUpdate.t, string)
+    | UseTreeSitter(bool)
     | ThemeChanged([@opaque] TokenTheme.t)
     | RunHealthCheck
     | VisibleRangesChanged(
         [@opaque] list((int /* buffer id */, list(Range.t))),
       )
-    | Close;
+    | Close
+    // Debug
+    | SimulateMessageException
+    | SimulateReadException;
 };

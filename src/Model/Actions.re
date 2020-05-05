@@ -43,14 +43,13 @@ type t =
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
   | Command(string)
-  | CommandsRegister(list(command))
-  // Execute a contribute command, from an extension
-  | CommandExecuteContributed(string)
+  | Commands(Feature_Commands.msg(t))
   | CompletionAddItems(
       [@opaque] CompletionMeet.t,
       [@opaque] list(CompletionItem.t),
     )
   | Configuration(Feature_Configuration.msg)
+  | ConfigurationParseError(string)
   | ConfigurationReload
   | ConfigurationSet([@opaque] Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
@@ -64,11 +63,13 @@ type t =
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
+  | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
+  | KeybindingInvoked({command: string})
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
@@ -84,9 +85,8 @@ type t =
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
-  | WindowSetActive(int, int)
   | WindowTitleSet(string)
-  | WindowTreeSetSize(int, int)
+  | EditorGroupSelected(int)
   | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSizeChanged({
       id: int,
@@ -95,6 +95,11 @@ type t =
     })
   | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSetScroll(Feature_Editor.EditorId.t, float)
+  | EditorSizeChanged({
+      id: Feature_Editor.EditorId.t,
+      pixelWidth: int,
+      pixelHeight: int,
+    })
   | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
@@ -119,8 +124,12 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
-  | AddSplit(WindowTree.direction, WindowTree.split)
+  | OpenFileByPath(
+      string,
+      option([ | `Horizontal | `Vertical]),
+      option(Location.t),
+    )
+  | AddSplit([ | `Horizontal | `Vertical], int)
   | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
@@ -178,6 +187,7 @@ type t =
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
+  | TitleDoubleClicked
   | GotOriginalUri({
       bufferId: int,
       uri: Uri.t,

@@ -45,7 +45,6 @@ let%component make =
                 ~onScroll,
                 ~buffer,
                 ~editor,
-                ~metrics,
                 ~colors,
                 ~topVisibleLine,
                 ~onCursorChange,
@@ -92,27 +91,24 @@ let%component make =
       let relY = evt.mouseY -. minY;
       let relX = evt.mouseX -. minX;
 
-      let numberOfLines = Buffer.getNumberOfLines(buffer);
-      let (line, col) = Editor.pixelPositionToLineColumn(editor, relX, relY);
+      let (line, col) =
+        Editor.pixelPositionToBufferLineByte(
+          ~buffer,
+          ~pixelX=relX,
+          ~pixelY=relY,
+          editor,
+        );
 
-      if (line < numberOfLines) {
-        Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-        Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
+      Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
+      Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
 
-        let cursor =
-          Vim.Cursor.create(
-            ~line=Index.fromOneBased(line + 1),
-            ~column=Index.fromZeroBased(col),
-          );
+      let cursor =
+        Vim.Cursor.create(
+          ~line=Index.fromOneBased(line + 1),
+          ~column=Index.fromZeroBased(col),
+        );
 
-        /*GlobalContext.current().dispatch(
-            Actions.EditorScrollToLine(editorId, topVisibleLine),
-          );
-          GlobalContext.current().dispatch(
-            Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
-          );*/
-        onCursorChange(cursor);
-      };
+      onCursorChange(cursor);
     };
   };
 
@@ -120,21 +116,21 @@ let%component make =
     ref={node => elementRef := Some(node)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(EditorMetrics.(metrics.pixelWidth)) -. gutterWidth,
+      float(Editor.(editor.pixelWidth)) -. gutterWidth,
     )}
     onMouseUp
     onMouseWheel>
     <Canvas
       style={Styles.bufferViewClipped(
         0.,
-        float(EditorMetrics.(metrics.pixelWidth)) -. gutterWidth,
+        float(Editor.(editor.pixelWidth)) -. gutterWidth,
       )}
       render={canvasContext => {
         let context =
           Draw.createContext(
             ~canvasContext,
-            ~width=metrics.pixelWidth,
-            ~height=metrics.pixelHeight,
+            ~width=editor.pixelWidth,
+            ~height=editor.pixelHeight,
             ~scrollX,
             ~scrollY,
             ~lineHeight=editorFont.measuredHeight,
@@ -178,9 +174,9 @@ let%component make =
     />
     <CursorView
       config
+      editor
       scrollX
       scrollY
-      metrics
       editorFont
       buffer
       mode
@@ -190,7 +186,7 @@ let%component make =
       colors
     />
     <View style=Styles.horizontalScrollBar>
-      <EditorHorizontalScrollbar editor width={metrics.pixelWidth} colors />
+      <EditorHorizontalScrollbar editor width={editor.pixelWidth} colors />
     </View>
   </View>;
 };

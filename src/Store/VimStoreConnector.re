@@ -76,12 +76,22 @@ let start =
       |> List.map(c => String.make(1, c))
       |> String.concat("");
 
-    let splitNewLines = s => String.split_on_char('\n', s) |> Array.of_list;
+    let isMultipleLines = s => String.contains(s, '\n');
 
-    let getClipboardValue = () => {
-      getClipboardText()
-      |> Option.map(text => text |> removeWindowsNewLines |> splitNewLines);
+    let removeTrailingNewLine = s => {
+      let len = String.length(s);
+      if (len > 0 && s.[len - 1] == '\n') {
+        String.sub(s, 0, len - 1);
+      } else {
+        s;
+      };
     };
+
+    let splitNewLines = s =>
+      s
+      |> removeTrailingNewLine
+      |> String.split_on_char('\n')
+      |> Array.of_list;
 
     let starReg = Char.code('*');
     let plusReg = Char.code('+');
@@ -93,7 +103,22 @@ let start =
       && yankConfig.paste; // or if 'paste' set, but unnamed
 
     if (shouldPullFromClipboard) {
-      getClipboardValue();
+      let clipboardValue = getClipboardText();
+      let blockType: Vim.Types.blockType =
+        clipboardValue
+        |> Option.map(isMultipleLines)
+        |> Option.map(
+             multiLine => multiLine ? Vim.Types.Line : Vim.Types.Character:
+                                                                    bool =>
+                                                                    Vim.Types.blockType,
+           )
+        |> Option.value(~default=Vim.Types.Line: Vim.Types.blockType);
+
+      clipboardValue
+      |> Option.map(removeTrailingNewLine)
+      |> Option.map(removeWindowsNewLines)
+      |> Option.map(splitNewLines)
+      |> Option.map(lines => Vim.Types.{lines, blockType});
     } else {
       None;
     };
@@ -121,7 +146,7 @@ let start =
 
       let getDefinition = (buffer, editor) => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(editor);
+        let position = Editor.getPrimaryCursor(~buffer, editor);
         Definition.getAt(id, position, state.definition)
         |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
              Actions.OpenFileByPath(
@@ -151,7 +176,7 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.onYank(({lines, register, operator, _}) => {
+    Vim.onYank(({lines, register, operator, yankType, _}) => {
       let state = getState();
       let yankConfig =
         Selectors.getActiveConfigurationValue(state, c =>
@@ -167,7 +192,13 @@ let start =
         || operator == Vim.Yank.Delete
         && allDeletes;
       if (shouldPropagateToClipboard) {
-        let text = String.concat("\n", Array.to_list(lines));
+        let text =
+          if (Array.length(lines) == 1 && yankType == Line) {
+            lines[0] ++ "\n";
+          } else {
+            String.concat("\n", Array.to_list(lines));
+          };
+
         setClipboardText(text);
       };
     });
@@ -248,9 +279,7 @@ let start =
         };
 
       dispatch(
-        Actions.Terminal(
-          Feature_Terminal.NewTerminal({cmd: Some(cmd), splitDirection}),
-        ),
+        Actions.Terminal(Command(NewTerminal({cmd, splitDirection}))),
       );
     });
 
@@ -294,9 +323,9 @@ let start =
       let command =
         switch (splitType) {
         | Vim.Types.Vertical =>
-          Actions.OpenFileByPath(buf, Some(WindowTree.Vertical), None)
+          Actions.OpenFileByPath(buf, Some(`Vertical), None)
         | Vim.Types.Horizontal =>
-          Actions.OpenFileByPath(buf, Some(WindowTree.Horizontal), None)
+          Actions.OpenFileByPath(buf, Some(`Horizontal), None)
         | Vim.Types.TabPage => Actions.OpenFileByPath(buf, None, None)
         };
       dispatch(command);
@@ -305,35 +334,36 @@ let start =
   let _: unit => unit =
     Vim.Window.onMovement((movementType, _count) => {
       Log.trace("Vim.Window.onMovement");
-      let currentState = getState();
+      let state = getState();
 
       let move = moveFunc => {
-        let windowId = moveFunc(currentState.windowManager);
         let maybeEditorGroupId =
-          WindowTree.getEditorGroupIdFromSplitId(
-            windowId,
-            currentState.windowManager.windowTree,
-          );
+          EditorGroups.getActiveEditorGroup(state.editorGroups)
+          |> Option.map((group: EditorGroup.t) =>
+               moveFunc(group.editorGroupId, state.layout)
+             );
 
         switch (maybeEditorGroupId) {
         | Some(editorGroupId) =>
-          dispatch(Actions.WindowSetActive(windowId, editorGroupId))
+          dispatch(Actions.EditorGroupSelected(editorGroupId))
         | None => ()
         };
       };
 
       switch (movementType) {
       | FullLeft
-      | OneLeft => move(WindowManager.moveLeft)
+      | OneLeft => move(Feature_Layout.moveLeft)
       | FullRight
-      | OneRight => move(WindowManager.moveRight)
+      | OneRight => move(Feature_Layout.moveRight)
       | FullDown
-      | OneDown => move(WindowManager.moveDown)
+      | OneDown => move(Feature_Layout.moveDown)
       | FullUp
-      | OneUp => move(WindowManager.moveUp)
+      | OneUp => move(Feature_Layout.moveUp)
       | RotateDownwards => dispatch(Actions.Command("view.rotateForward"))
       | RotateUpwards => dispatch(Actions.Command("view.rotateBackward"))
-      | _ => move(windowManager => windowManager.activeWindowId)
+      | TopLeft
+      | BottomRight
+      | Previous => Log.error("Window movement not implemented")
       };
     });
 
@@ -544,7 +574,11 @@ let start =
           |> Option.map(Editor.getVimCursors)
           |> Option.value(~default=[]);
 
-        let primaryCursor = editor |> Option.map(Editor.getPrimaryCursor);
+        let primaryCursor =
+          switch (cursors) {
+          | [hd, ..._] => Some(hd)
+          | [] => None
+          };
 
         let () =
           editor
@@ -565,8 +599,6 @@ let start =
                  Feature_Syntax.getSyntaxScope(
                    ~bufferId,
                    ~line,
-                   // TODO: Reconcile 'byte position' vs 'character position'
-                   // in cursor.
                    ~bytePosition=Index.toZeroBased(column),
                    state.syntaxHighlights,
                  );
@@ -625,12 +657,12 @@ let start =
       switch (dir) {
       | Some(direction) =>
         let eg = EditorGroup.create();
+
+        dispatch(Actions.AddSplit(direction, eg.editorGroupId));
+
+        // This needs to be dispatched after the split, since this will set the
+        // active editor group, which is then used as the target for the split.
         dispatch(Actions.EditorGroupAdd(eg));
-
-        let split =
-          WindowTree.createSplit(~editorGroupId=eg.editorGroupId, ());
-
-        dispatch(Actions.AddSplit(direction, split));
       | None => ()
       };
 
@@ -809,8 +841,7 @@ let start =
            )
         |> Option.iter(Vim.Options.setLineComment);
 
-        let synchronizeWindowMetrics =
-            (editor: Editor.t, editorGroup: EditorGroup.t) => {
+        let synchronizeWindowMetrics = (editor: Editor.t) => {
           let vimWidth = Vim.Window.getWidth();
           let vimHeight = Vim.Window.getHeight();
 
@@ -819,7 +850,7 @@ let start =
                 bufferWidthInCharacters: columns,
                 _,
               } =
-            Editor.getLayout(editor, editorGroup.metrics);
+            Editor.getLayout(editor);
 
           if (columns != vimWidth) {
             Vim.Window.setWidth(columns);
@@ -832,8 +863,8 @@ let start =
 
         /* Update the window metrics for the editor */
         /* This synchronizes the window width / height with libvim's model */
-        switch (editor, editorGroup) {
-        | (Some(e), Some(v)) => synchronizeWindowMetrics(e, v)
+        switch (editor) {
+        | Some(e) => synchronizeWindowMetrics(e)
         | _ => ()
         };
       }
@@ -1017,8 +1048,8 @@ let start =
       )
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
-    | WindowSetActive(_, _)
-    | EditorGroupSizeChanged(_) => (state, synchronizeEditorEffect(state))
+    | EditorGroupSelected(_)
+    | EditorSizeChanged(_) => (state, synchronizeEditorEffect(state))
     | BufferSetIndentation(_, indent) => (
         state,
         synchronizeIndentationEffect(indent),
@@ -1033,7 +1064,7 @@ let start =
         state,
         synchronizeEditorEffect(state),
       )
-    | Command("terminal.normalMode") =>
+    | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state
         |> Selectors.getActiveBuffer
@@ -1152,9 +1183,35 @@ let start =
         Isolinear.Effect.none,
       )
 
+    | FileChanged(event) =>
+      switch (Selectors.getActiveBuffer(state)) {
+      | Some(buffer)
+          when
+            Core.Buffer.getFilePath(buffer) == Some(event.path)
+            && !Core.Buffer.isModified(buffer) => (
+          state,
+          Service_Vim.reload(),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
+
     | _ => (state, Isolinear.Effect.none)
     };
   };
 
   (updater, stream);
+};
+
+let subscriptions = (state: State.t) => {
+  state.buffers
+  |> Core.IntMap.bindings
+  |> List.filter_map(((_key, buffer)) =>
+       buffer
+       |> Core.Buffer.getFilePath
+       |> Option.map(path =>
+            Service_FileWatcher.watch(~path, ~onEvent=event =>
+              Actions.FileChanged(event)
+            )
+          )
+     );
 };

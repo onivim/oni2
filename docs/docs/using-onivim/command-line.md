@@ -21,7 +21,7 @@ command pallette, by pressing `Cmd-Shift-P` and searching for `System`.
 After selecting the option and giving admin permissions, the `oni2` executable
 should be accessible.
 
-> __NOTE:__ Admin access is required to add a symlink in `/usr/bin/local`. This
+> __NOTE:__ Admin access is required to add a symlink in `/usr/local/bin`. This
 > should already be in your default path, but if it is not it can be added to
 > your `.bashrc`/`.zshrc`, depending on your shell.
 

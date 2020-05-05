@@ -3,8 +3,7 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="RegressionVspEmpty", (_, wait, _) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
-    let splitCount =
-      state.windowManager.windowTree |> WindowTree.getSplits |> List.length;
+    let splitCount = state.layout |> Feature_Layout.windows |> List.length;
     splitCount == 1;
   });
 
@@ -14,25 +13,24 @@ runTest(~name="RegressionVspEmpty", (_, wait, _) => {
   Vim.command("vsp");
 
   wait(~name="Wait for split to be created", (state: State.t) => {
-    let splitCount =
-      state.windowManager.windowTree |> WindowTree.getSplits |> List.length;
+    let splitCount = state.layout |> Feature_Layout.windows |> List.length;
 
     splitCount == 2;
   });
 
   /* Validate the editors all have same buffer id */
   wait(~name="Wait for split to be created", (state: State.t) => {
-    let splits = WindowTree.getSplits(state.windowManager.windowTree);
+    let splits = Feature_Layout.windows(state.layout);
 
     let firstSplit = List.nth(splits, 0);
     let secondSplit = List.nth(splits, 1);
 
     let firstActiveEditor =
-      Selectors.getEditorGroupById(state, firstSplit.editorGroupId)
+      Selectors.getEditorGroupById(state, firstSplit)
       |> Selectors.getActiveEditor;
 
     let secondActiveEditor =
-      Selectors.getEditorGroupById(state, secondSplit.editorGroupId)
+      Selectors.getEditorGroupById(state, secondSplit)
       |> Selectors.getActiveEditor;
 
     switch (firstActiveEditor, secondActiveEditor) {

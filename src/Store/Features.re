@@ -3,6 +3,13 @@ open Oni_Core;
 open Oni_Model;
 open Actions;
 
+module Internal = {
+  let notificationEffect = (~kind, message) => {
+    Feature_Notification.Effects.create(~kind, message)
+    |> Isolinear.Effect.map(msg => Actions.Notification(msg));
+  };
+};
+
 // UPDATE
 
 let update =
@@ -41,7 +48,7 @@ let update =
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
   | BufferUpdate({update, _}) =>
-    let syntaxHighlights =
+    let (syntaxHighlights, _) =
       Feature_Syntax.update(
         state.syntaxHighlights,
         Feature_Syntax.BufferUpdated(update),
@@ -63,20 +70,41 @@ let update =
             state.extensions.extensions,
             setup,
           ),
-          ~changed=Oni_Extensions.Configuration.Model.fromSettings(changed),
+          ~changed=Exthost.Configuration.Model.fromSettings(changed),
         )
       | Nothing => Effect.none
       };
 
     (state, eff);
 
-  | Syntax(msg) =>
-    let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);
-    let state = {...state, syntaxHighlights};
+  | Commands(msg) =>
+    let commands = Feature_Commands.update(state.commands, msg);
+    let state = {...state, commands};
     (state, Effect.none);
 
+  | Syntax(msg) =>
+    let (syntaxHighlights, out) =
+      Feature_Syntax.update(state.syntaxHighlights, msg);
+    let state = {...state, syntaxHighlights};
+
+    let effect =
+      switch (out) {
+      | Nothing => Effect.none
+      | ServerError(msg) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          "Syntax Server error: " ++ msg,
+        )
+      };
+    (state, effect);
+
   | Terminal(msg) =>
-    let (model, eff) = Feature_Terminal.update(state.terminals, msg);
+    let (model, eff) =
+      Feature_Terminal.update(
+        ~config=Feature_Configuration.resolver(state.config),
+        state.terminals,
+        msg,
+      );
 
     let effect: Isolinear.Effect.t(Actions.t) =
       switch ((eff: Feature_Terminal.outmsg)) {
@@ -85,8 +113,8 @@ let update =
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
-          | Horizontal => Some(WindowTree.Horizontal)
-          | Vertical => Some(WindowTree.Vertical)
+          | Horizontal => Some(`Horizontal)
+          | Vertical => Some(`Vertical)
           | Current => None
           };
 
@@ -132,8 +160,7 @@ let update =
     )
   | EditorFont(Service_Font.FontLoadError(message)) => (
       state,
-      Feature_Notification.Effects.create(~kind=Error, message)
-      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      Internal.notificationEffect(~kind=Error, message),
     )
 
   // TODO: This should live in the terminal feature project
@@ -143,8 +170,7 @@ let update =
     )
   | TerminalFont(Service_Font.FontLoadError(message)) => (
       state,
-      Feature_Notification.Effects.create(~kind=Error, message)
-      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      Internal.notificationEffect(~kind=Error, message),
     )
 
   | _ => (state, Effect.none)

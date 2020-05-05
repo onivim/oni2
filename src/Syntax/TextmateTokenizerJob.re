@@ -4,9 +4,14 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Time = Revery_Core.Time;
 module Log = (val Log.withNamespace("Oni2.Syntax.TextmateTokenizerJob"));
+
+module Internal = {
+  let hexToColor = Utility.Cache.memoize(~initialSize=128, Revery.Color.hex);
+};
 
 // open Textmate;
 
@@ -100,6 +105,8 @@ let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
   Job.map(f, v);
 };
 
+exception NoWhitespaceException;
+
 let doWork = (pending: pendingWork, completed: completedWork) => {
   let currentLine = pending.currentLine;
 
@@ -115,6 +122,8 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
 
     Log.tracef(m => m("Tokenizing line: %i", currentLine));
 
+    let line = pending.lines[currentLine] ++ "\n";
+
     // Get new tokens & scopes
     let (tokens, scopes) =
       Textmate.Tokenizer.tokenize(
@@ -122,31 +131,37 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
         ~scopeStack=scopes,
         ~scope=pending.scope,
         pending.tokenizer,
-        pending.lines[currentLine] ++ "\n",
+        line,
+      );
+
+    let isWhitespaceOnly = (startIndex, endIndex) =>
+      StringEx.forAll(
+        ~start=startIndex,
+        ~stop=endIndex,
+        ~f=StringEx.isSpace,
+        line,
       );
 
     let tokens =
-      List.map(
-        token => {
-          let {position, scopes, _}: Textmate.Token.t = token;
-          let combinedScopes =
-            scopes
-            |> List.fold_left((prev, curr) => {curr ++ " " ++ prev}, "")
-            |> String.trim;
+      tokens
+      |> List.filter(({position, length, _}: Textmate.Token.t) =>
+           !isWhitespaceOnly(position, position + length)
+         )
+      |> List.map(token => {
+           let {position, scopes, _}: Textmate.Token.t = token;
+           let combinedScopes = scopes |> String.concat(" ") |> String.trim;
 
-          let resolvedColor = TokenTheme.match(pending.theme, combinedScopes);
+           let resolvedColor =
+             TokenTheme.match(pending.theme, combinedScopes);
 
-          let col = position;
-          ColorizedToken.create(
-            ~index=col,
-            ~backgroundColor=Revery.Color.hex(resolvedColor.background),
-            ~foregroundColor=Revery.Color.hex(resolvedColor.foreground),
-            ~syntaxScope=SyntaxScope.ofScopes(scopes),
-            (),
-          );
-        },
-        tokens,
-      );
+           ColorizedToken.create(
+             ~index=position,
+             ~backgroundColor=Internal.hexToColor(resolvedColor.background),
+             ~foregroundColor=Internal.hexToColor(resolvedColor.foreground),
+             ~syntaxScope=SyntaxScope.ofScopes(scopes),
+             (),
+           );
+         });
 
     let newLineInfo = {
       tokens,
