@@ -464,6 +464,19 @@ module Request: {
       (~arguments: list(Json.t), ~command: string, Client.t) => unit;
   };
 
+  module Configuration: {
+    let initializeConfiguration:
+      (~configuration: Configuration.t, Client.t) => unit;
+
+    let acceptConfigurationChanged:
+      (
+        ~configuration: Configuration.t,
+        ~changed: Configuration.Model.t,
+        Client.t
+      ) =>
+      unit;
+  };
+
   module DocumentContentProvider: {
     let provideTextDocumentContent:
       (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(string));

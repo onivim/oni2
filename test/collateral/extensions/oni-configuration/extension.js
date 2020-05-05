@@ -17,7 +17,7 @@ function activate(context) {
 	const disposable0 = vscode.commands.registerCommand("config.show", (args) => {
 		showData({
 			type: "config.value",
-			value: vscode.workspace.getConfiguration().get("suggest.enabled"),
+			result: vscode.workspace.getConfiguration().get(args),
 			args: JSON.stringify(args),
 		});
 	
