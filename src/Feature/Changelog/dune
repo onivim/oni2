@@ -1,0 +1,10 @@
+(library
+    (name Feature_Changelog)
+    (public_name Oni2.feature.changelog)
+    (libraries 
+      Oni2.core
+      Oni2.feature.theme
+      Revery
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
