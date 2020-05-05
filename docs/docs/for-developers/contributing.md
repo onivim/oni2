@@ -47,7 +47,7 @@ where `type` can be one of
 * **chore:** Changes to the build process or auxiliary tools and libraries such as documentation generation
 * **style:** Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 
-`scope` is optional, but "encouraged". It is typically one of the "area" [issue labels](https://github.com/onivim/oni2/labels) or the name of a feature project converted to "humanized" title case. E.g. instead of `language-support` use `Language Support`, i.e. two words with the first letter of each word capitalized.
+`scope` is optional, but "encouraged". It is typically one of the "area" [issue labels](https://github.com/onivim/oni2/labels) or the name of a feature project.
 
 `subject` should contain a succinct description of the change:
 
