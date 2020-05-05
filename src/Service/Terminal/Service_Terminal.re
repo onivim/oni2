@@ -1,5 +1,8 @@
 open Oni_Core;
 open Oni_Extensions;
+open Oni_Core.Utility;
+
+module Time = Revery.Time;
 
 module Internal = {
   let onExtensionMessage: Revery.Event.t(ExtHostClient.Terminal.msg) =
@@ -64,36 +67,8 @@ module Sub = {
 
         let isResizing = ref(false);
 
-        let makeDebouncedDispatch = () => {
-          let scheduled = ref(false);
-          let latestAction = ref(None);
-          let debounceCount = ref(0);
-          action =>
-            if (debounceCount^ < 1) {
-              dispatch(action);
-              incr(debounceCount);
-            } else {
-              latestAction := Some(action);
-              if (! scheduled^) {
-                scheduled := true;
-
-                let _: unit => unit =
-                  Revery.Tick.timeout(
-                    () => {
-                      debounceCount := 0;
-                      latestAction^ |> Option.iter(dispatch);
-                      scheduled := false;
-                      latestAction := None;
-                    },
-                    Revery.Time.zero,
-                  );
-                ();
-              };
-            };
-        };
-
-        let debouncedScreenDispatch = makeDebouncedDispatch();
-        let debouncedCursorDispatch = makeDebouncedDispatch();
+        let debouncedScreenDispatch = FunEx.debounce1(~time=Time.zero, dispatch);
+        let debouncedCursorDispatch = FunEx.debounce1(~time=Time.zero, dispatch);
 
         let onEffect = eff =>
           switch (eff) {
@@ -114,7 +89,6 @@ module Sub = {
             )
           // TODO: Handle term prop changes
           | ReveryTerminal.TermPropChanged(_) => ()
-          | _ => ()
           };
 
         let terminal =

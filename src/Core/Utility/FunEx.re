@@ -12,7 +12,6 @@ let debounce1 = (~timeout=Revery.Tick.timeout, ~time, f) => {
   let debounceState = ref(NothingWaiting);
 
   let finish = () => {
-    prerr_endline("FINISH");
     switch (debounceState^) {
     | NothingWaiting => () // This shouldn't really happen..
     | Collecting => () // We queued up, but there weren't any further calls - nothing to do
