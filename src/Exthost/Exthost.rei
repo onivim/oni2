@@ -163,6 +163,16 @@ module DocumentsAndEditorsDelta: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
+module OneBasedPosition: {
+  type t = {
+    lineNumber: int,
+    column: int,
+  };
+
+  let ofPosition: Location.t => t;
+  let to_yojson: t => Yojson.Safe.t;
+};
+
 module ModelContentChange: {
   type t = {
     range: OneBasedRange.t,
@@ -206,14 +216,28 @@ module ShellLaunchConfig: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
-module OneBasedPosition: {
-  type t = {
-    lineNumber: int,
-    column: int,
+module WorkspaceData: {
+  module Folder: {
+    type t = {
+      uri: Uri.t,
+      name: string,
+      index: int,
+    };
+
+    let encode: Json.encoder(t);
+    let decode: Json.decoder(t);
   };
 
-  let ofPosition: Location.t => t;
-  let to_yojson: t => Yojson.Safe.t;
+  type t = {
+    folders: list(Folder.t),
+    id: string,
+    name: string,
+    configuration: option(Uri.t),
+    isUntitled: bool,
+  };
+
+  let encode: Json.encoder(t);
+  let decode: Json.decoder(t);
 };
 
 module Msg: {
@@ -440,6 +464,11 @@ module Request: {
       (~arguments: list(Json.t), ~command: string, Client.t) => unit;
   };
 
+  module DocumentContentProvider: {
+    let provideTextDocumentContent:
+      (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(string));
+  };
+
   module Documents: {
     let acceptModelModeChanged:
       (~uri: Uri.t, ~oldModeId: string, ~newModeId: string, Client.t) => unit;
@@ -497,5 +526,12 @@ module Request: {
     let acceptProcessResize:
       (~id: int, ~cols: int, ~rows: int, Client.t) => unit;
     let acceptProcessShutdown: (~id: int, ~immediate: bool, Client.t) => unit;
+  };
+
+  module Workspace: {
+    let initializeWorkspace:
+      (~workspace: option(WorkspaceData.t), Client.t) => unit;
+    let acceptWorkspaceData:
+      (~workspace: option(WorkspaceData.t), Client.t) => unit;
   };
 };

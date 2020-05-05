@@ -10,6 +10,27 @@ module Commands = {
   };
 };
 
+module DocumentContentProvider = {
+  let provideTextDocumentContent = (~handle, ~uri, client) => {
+    let parser = json => {
+      Json.Decode.(
+        json
+        |> decode_value(maybe(string))
+        |> Result.map_error(string_of_error)
+      );
+    };
+
+    Client.request(
+      ~parser,
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostDocumentContentProviders",
+      ~method="$provideTextDocumentContent",
+      ~args=`List([`Int(handle), Uri.to_yojson(uri)]),
+      client,
+    );
+  };
+};
+
 module Documents = {
   let acceptModelModeChanged = (~uri, ~oldModeId, ~newModeId, client) => {
     Client.notify(
@@ -162,6 +183,31 @@ module TerminalService = {
       ~rpcName="ExtHostTerminalService",
       ~method="$acceptProcessShutdown",
       ~args=`List([`Int(id), `Bool(immediate)]),
+      client,
+    );
+  };
+};
+
+module Workspace = {
+  let initializeWorkspace = (~workspace, client) => {
+    let json =
+      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+
+    Client.notify(
+      ~rpcName="ExtHostWorkspace",
+      ~method="$initializeWorkspace",
+      ~args=`List([json]),
+      client,
+    );
+  };
+  let acceptWorkspaceData = (~workspace, client) => {
+    let json =
+      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+
+    Client.notify(
+      ~rpcName="ExtHostWorkspace",
+      ~method="$acceptWorkspaceData",
+      ~args=`List([json]),
       client,
     );
   };

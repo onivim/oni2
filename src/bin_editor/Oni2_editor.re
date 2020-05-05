@@ -228,6 +228,10 @@ if (cliOptions.syntaxHighlightService) {
       Window.setTitle(window, title);
     };
 
+    let maximize = () => {
+      Window.maximize(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -248,6 +252,7 @@ if (cliOptions.syntaxHighlightService) {
         ~setZoom,
         ~setTitle,
         ~setVsync,
+        ~maximize,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
