@@ -68,8 +68,7 @@ module Sub = {
           let scheduled = ref(false);
           let latestAction = ref(None);
           let debounceCount = ref(0);
-          action => {
-
+          action =>
             if (debounceCount^ < 1) {
               dispatch(action);
               incr(debounceCount);
@@ -90,8 +89,7 @@ module Sub = {
                   );
                 ();
               };
-            }
-          };
+            };
         };
 
         let debouncedScreenDispatch = makeDebouncedDispatch();
