@@ -137,12 +137,10 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
 
   let changeWorkspaceEffect = path =>
     Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
-      // TODO: Add workspace APIs
-      //      ExtHostClient.acceptWorkspaceData(
-      //        Workspace.fromPath(path),
-      //        extHostClient,
-      //      )
-      ()
+      Exthost.Request.Workspace.acceptWorkspaceData(
+      ~workspace=Some(Exthost.WorkspaceData.fromPath(path)),
+      extHostClient,
+      )
     });
 
   let getOriginalContent = (bufferId, uri, providers) =>

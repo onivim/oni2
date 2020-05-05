@@ -246,6 +246,9 @@ module WorkspaceData: {
     isUntitled: bool,
   };
 
+  let fromUri: (~name: string, ~id: string, Uri.t) => t;
+  let fromPath: string => t;
+
   let encode: Json.encoder(t);
   let decode: Json.decoder(t);
 };

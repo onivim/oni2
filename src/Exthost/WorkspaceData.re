@@ -60,3 +60,19 @@ let encode = workspace =>
       ("isUntitled", workspace.isUntitled |> bool),
     ])
   );
+
+  let fromUri = (~name, ~id, uri) => {
+    id,
+    name,
+    folders: [{uri, name, index: 0}],
+    isUntitled: false,
+    configuration: None,
+  };
+
+  let fromPath = path => {
+    id: path,
+    name: path,
+    configuration: None,
+    isUntitled: false,
+    folders: [{uri: Uri.fromPath(path), name: path, index: 0}],
+  };
