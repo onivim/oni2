@@ -85,7 +85,9 @@ let initWorkingDirectory = () => {
       switch (Store.Persistence.Global.workspace()) {
       | Some(path) => path
       | None =>
-        Dir.User.document() |> Option.value(~default=Dir.home()) |> Fp.toString
+        Dir.User.document()
+        |> Option.value(~default=Dir.home())
+        |> Fp.toString
       }
     };
 
