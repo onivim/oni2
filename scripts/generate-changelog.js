@@ -18,7 +18,20 @@ function getLastCommit(xml) {
     return result && result[1]
 }
 
-// GENERATE NEW ENTRIES
+// PARSING
+
+function parseSubject(str) {
+    let result = str.match(/^([a-z]+)(?:\(([^\)]+)\))?:\s*(.*)$/)
+    return result
+        ? {
+              type: result[1],
+              scope: result[2],
+              subject: result[3],
+          }
+        : {
+              subject: str,
+          }
+}
 
 function extractPRNumber(str) {
     let result = str.match(/\(#(\d+)\)$/)
@@ -26,13 +39,14 @@ function extractPRNumber(str) {
 }
 
 function parseLogLine(line) {
-    return {
+    return Object.assign(parseSubject(line.substr(20)), {
         hash: line.substr(0, 8),
         time: line.substr(10, 9),
-        summary: line.substr(20),
         pr: extractPRNumber(line),
-    }
+    })
 }
+
+// GENERATE NEW ENTRIES
 
 function getLog(fromCommit) {
     const range = fromCommit ? fromCommit + ".." : ""
@@ -68,16 +82,19 @@ function getPullRequest(token, number) {
     )
 }
 
-function extractLogEntry(pr) {
-    let result = pr.body.match(/```changelog\r?\n((.|[\s\S])*)\r?\n```/)
+function extractLogEntry(body) {
+    let result = body.match(/```changelog\r?\n((.|[\s\S])*)\r?\n```/)
     return result && result[1]
 }
 
 // GENERATE XML
 
-function createCommitXml(commit) {
-    return `  <commit hash="${commit.hash}" pr=${commit.pr} time=${commit.time}>
-    ${commit.content.replace(/\n/g, "\n    ")}
+function createCommitXml({ type, scope, hash, pr, time, content, subject }) {
+    const typeAttr = type ? `type="${type}" ` : ""
+    const scopeAttr = scope ? `scope="${scope}" ` : ""
+
+    return `  <commit ${typeAttr}${scopeAttr}hash="${hash}" pr=${pr} time=${time}>
+    ${content ? content.replace(/\n/g, "\n    ") : subject}
   </commit>\n`
 }
 
@@ -112,30 +129,32 @@ const lastCommitHash = getLastCommit(xml)
 
 console.log("Retrieving commits since " + lastCommitHash)
 
-const commits = getLog(lastCommitHash)
-
 Promise.all(
-    commits
-        .filter((commit) => commit.pr)
-        .map((commit) => {
+    getLog(lastCommitHash).map((commit) => {
+        const fluffTypes = ["test", "docs", "chore"]
+        // If the commit has an associated PR and is not "fluff", check the
+        // PR for more, and more up-to-date, information
+        if (commit.pr && !fluffTypes.includes(commit.type)) {
             console.log(`Checking ${commit.hash} / #${commit.pr}`)
             return getPullRequest(token, commit.pr)
                 .then((pr) => {
-                    let logEntry = extractLogEntry(pr)
-                    return Object.assign({}, commit, { content: logEntry })
+                    let logEntry = extractLogEntry(pr.body)
+                    let parsed = parseSubject(pr.title)
+                    return Object.assign({}, commit, parsed, { content: logEntry })
                 })
                 .catch((error) => {
                     console.error(`Error retrieving PR #${commit.pr} for ${commit.hash}: ${error}`)
                     return Promise.reject(error)
                 })
-        }),
+        } else {
+            return commit
+        }
+    }),
 )
     .then((commits) => {
-        const validCommits = commits.filter((commit) => commit && commit.content)
+        console.log("New commits:", commits)
 
-        console.log("New commits:", validCommits)
-
-        const xmlCommits = validCommits.map(createCommitXml)
+        const xmlCommits = commits.map(createCommitXml)
         const newXml = addXmlCommits(xml, xmlCommits)
 
         console.log("Writing to: " + path)
