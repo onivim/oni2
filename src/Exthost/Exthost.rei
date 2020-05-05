@@ -213,6 +213,8 @@ module OneBasedRange: {
 
   let ofRange: Range.t => t;
   let toRange: t => Range.t;
+
+  let decode: Json.decoder(t);
 };
 
 module ShellLaunchConfig: {
@@ -534,20 +536,40 @@ module Request: {
       Lwt.t(SuggestResult.t);
 
     let provideDefinition:
-      (~handle: int, ~resource: Uri.t, ~position: OneBasedPosition.t) =>
-      Lwt.t(unit);
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
 
     let provideDeclaration:
-      (~handle: int, ~resource: Uri.t, ~position: OneBasedPosition.t) =>
-      Lwt.t(unit);
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
 
     let provideImplementation:
-      (~handle: int, ~resource: Uri.t, ~position: OneBasedPosition.t) =>
-      Lwt.t(unit);
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
 
     let provideTypeDefinition:
-      (~handle: int, ~resource: Uri.t, ~position: OneBasedPosition.t) =>
-      Lwt.t(unit);
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
   };
 
   module TerminalService: {
