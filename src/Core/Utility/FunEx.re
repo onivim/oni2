@@ -3,33 +3,39 @@ let tap = (f, x) => {
   x;
 };
 
-type debounceState('a) =
+type throttleState('a) =
   | NothingWaiting
   | Collecting
-  | Debouncing({latest: 'a});
+  | Throttling({latest: 'a});
 
-let debounce1 = (~timeout=Revery.Tick.timeout, ~time, f) => {
-  let debounceState = ref(NothingWaiting);
+let throttle =
+    (~leading=true, ~trailing=true, ~timeout=Revery.Tick.timeout, ~time, f) => {
+  let throttleState = ref(NothingWaiting);
 
   let finish = () => {
-    switch (debounceState^) {
+    switch (throttleState^) {
     | NothingWaiting => () // This shouldn't really happen..
     | Collecting => () // We queued up, but there weren't any further calls - nothing to do
-    | Debouncing({latest}) => f(latest)
+    | Throttling({latest}) =>
+      if (trailing) {
+        f(latest);
+      }
     };
 
-    debounceState := NothingWaiting;
+    throttleState := NothingWaiting;
   };
 
   v => {
-    switch (debounceState^) {
+    switch (throttleState^) {
     // Nothing is waiting... execute immediately, start timer, collect
     | NothingWaiting =>
-      f(v);
+      if (leading) {
+        f(v);
+      };
       let _: unit => unit = timeout(finish, time);
-      debounceState := Collecting;
+      throttleState := Collecting;
     | Collecting
-    | Debouncing(_) => debounceState := Debouncing({latest: v})
+    | Throttling(_) => throttleState := Throttling({latest: v})
     };
   };
 };

@@ -67,22 +67,22 @@ module Sub = {
 
         let isResizing = ref(false);
 
-        let debouncedScreenDispatch =
-          FunEx.debounce1(~time=Time.zero, dispatch);
-        let debouncedCursorDispatch =
-          FunEx.debounce1(~time=Time.zero, dispatch);
+        let throttledScreenDispatch =
+          FunEx.throttle(~time=Time.zero, dispatch);
+        let throttledCursorDispatch =
+          FunEx.throttle(~time=Time.zero, dispatch);
 
         let onEffect = eff =>
           switch (eff) {
           | ReveryTerminal.ScreenResized(_) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
             if (! isResizing^) {
-              debouncedScreenDispatch(
+              throttledScreenDispatch(
                 ScreenUpdated({id: params.id, screen}),
               );
             }
           | ReveryTerminal.CursorMoved(cursor) =>
-            debouncedCursorDispatch(CursorMoved({id: params.id, cursor}))
+            throttledCursorDispatch(CursorMoved({id: params.id, cursor}))
           | ReveryTerminal.Output(output) =>
             ExtHostClient.Terminal.Requests.acceptProcessInput(
               params.id,
