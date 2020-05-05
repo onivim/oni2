@@ -72,14 +72,12 @@ module DocumentFilter: {
 };
 
 module DocumentHighlight: {
-
   module Kind: {
-  
     [@deriving show]
     type t =
-    | Text
-    | Read
-    | Write;
+      | Text
+      | Read
+      | Write;
 
     let ofInt: int => option(t);
     let toInt: t => int;
@@ -90,7 +88,7 @@ module DocumentHighlight: {
   type t = {
     range: OneBasedRange.t,
     kind: Kind.t,
-  }
+  };
 
   let decode: Json.decoder(t);
 };
@@ -228,6 +226,7 @@ module ModelChangedEvent: {
 };
 
 module OneBasedRange: {
+  [@deriving show]
   type t = {
     startLineNumber: int,
     endLineNumber: int,
@@ -364,7 +363,7 @@ module Msg: {
       | RegisterDocumentHighlightProvider({
           handle: int,
           selector: list(DocumentFilter.t),
-      })
+        })
       | RegisterDefinitionSupport({
           handle: int,
           selector: list(DocumentFilter.t),
@@ -563,11 +562,12 @@ module Request: {
       ) =>
       Lwt.t(SuggestResult.t);
 
-    let provideDocumentHighlights: (
+    let provideDocumentHighlights:
+      (
         ~handle: int,
         ~resource: Uri.t,
         ~position: OneBasedPosition.t,
-        Client.t,
+        Client.t
       ) =>
       Lwt.t(list(DocumentHighlight.t));
 
@@ -576,7 +576,7 @@ module Request: {
         ~handle: int,
         ~resource: Uri.t,
         ~position: OneBasedPosition.t,
-        Client.t,
+        Client.t
       ) =>
       Lwt.t(list(DefinitionLink.t));
 
