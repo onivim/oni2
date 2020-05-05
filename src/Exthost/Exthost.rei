@@ -326,6 +326,10 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | RegisterDocumentHighlightProvider({
+          handle: int,
+          selector: list(DocumentFilter.t),
+      })
       | RegisterSuggestSupport({
           handle: int,
           selector: list(DocumentFilter.t),
@@ -507,6 +511,14 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let provideDocumentHighlights: 
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t,
+      );
   };
 
   module TerminalService: {
