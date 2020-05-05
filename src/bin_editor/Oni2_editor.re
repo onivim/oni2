@@ -174,6 +174,10 @@ if (cliOptions.syntaxHighlightService) {
       Window.maximize(w);
     };
 
+    let minimize = () => {
+      Window.minimize(w);
+    }
+
     let setVsync = vsync => Window.setVsync(w, vsync);
 
     let quit = code => {
@@ -195,6 +199,7 @@ if (cliOptions.syntaxHighlightService) {
         ~setTitle,
         ~setVsync,
         ~maximize,
+        ~minimize,
         ~window=Some(w),
         ~cliOptions=Some(cliOptions),
         ~quit,

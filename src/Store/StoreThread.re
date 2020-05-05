@@ -80,6 +80,7 @@ let start =
       ~setTitle,
       ~setVsync,
       ~maximize,
+      ~minimize,
       ~window: option(Revery.Window.t),
       ~cliOptions: option(Oni_Core.Cli.t),
       (),
@@ -152,7 +153,7 @@ let start =
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater = TitleStoreConnector.start(setTitle, maximize);
+  let titleUpdater = TitleStoreConnector.start(setTitle, maximize, minimize);
   let sneakUpdater = SneakStore.start();
   let contextMenuUpdater = ContextMenuStore.start();
   let updater =
