@@ -360,6 +360,10 @@ module Msg: {
           supportsResolveDetails: bool,
           extensionId: string,
         })
+      | RegisterReferenceSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | Unregister({handle: int});
   };
 
