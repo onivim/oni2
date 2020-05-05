@@ -1,4 +1,5 @@
 open EditorCoreTypes;
+open Oni_Core;
 
 [@deriving (show({with_path: false}), yojson({strict: false, exn: true}))]
 type t = {
@@ -36,3 +37,17 @@ let toRange = ({startLineNumber, endLineNumber, startColumn, endColumn}) => {
       },
   };
 };
+
+let decode =
+  Json.Decode.(
+    {
+      obj(({field, _}) =>
+        {
+          startLineNumber: field.required("startLineNumber", int),
+          endLineNumber: field.required("endLineNumber", int),
+          startColumn: field.required("startColumn", int),
+          endColumn: field.required("endColumn", int),
+        }
+      );
+    }
+  );

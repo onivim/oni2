@@ -51,6 +51,15 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module DefinitionLink: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module DocumentFilter: {
   [@deriving show]
   type t = {
@@ -204,6 +213,8 @@ module OneBasedRange: {
 
   let ofRange: Range.t => t;
   let toRange: t => Range.t;
+
+  let decode: Json.decoder(t);
 };
 
 module ShellLaunchConfig: {
@@ -326,6 +337,22 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | RegisterDefinitionSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterDeclarationSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterImplementationSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterTypeDefinitionSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | RegisterSuggestSupport({
           handle: int,
           selector: list(DocumentFilter.t),
@@ -507,6 +534,42 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let provideDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideDeclaration:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideImplementation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideTypeDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
   };
 
   module TerminalService: {
