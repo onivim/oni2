@@ -131,6 +131,90 @@ module LanguageFeatures = {
       client,
     );
   };
+
+  module Internal = {
+    let provideDefinitionLink =
+        (~handle, ~resource, ~position, method, client) => {
+      let parser = json => {
+        Json.Decode.(
+          json
+          |> decode_value(list(DefinitionLink.decode))
+          |> Result.map_error(string_of_error)
+        );
+      };
+
+      Client.request(
+        ~parser,
+        ~usesCancellationToken=true,
+        ~rpcName="ExtHostLanguageFeatures",
+        ~method,
+        ~args=
+          `List([
+            `Int(handle),
+            Uri.to_yojson(resource),
+            OneBasedPosition.to_yojson(position),
+          ]),
+        client,
+      );
+    };
+  };
+    let provideDocumentHighlights =
+        (~handle, ~resource, ~position, client) => {
+      let parser = json => {
+        Json.Decode.(
+          json
+          |> decode_value(list(DocumentHighlight.decode))
+          |> Result.map_error(string_of_error)
+        );
+      };
+
+      Client.request(
+        ~parser,
+        ~usesCancellationToken=true,
+        ~rpcName="ExtHostLanguageFeatures",
+        ~method="$provideDocumentHighlights",
+        ~args=
+          `List([
+            `Int(handle),
+            Uri.to_yojson(resource),
+            OneBasedPosition.to_yojson(position),
+          ]),
+        client,
+      );
+    };
+
+  let provideDefinition = (~handle, ~resource, ~position, client) =>
+    Internal.provideDefinitionLink(
+      ~handle,
+      ~resource,
+      ~position,
+      "$provideDefinition",
+      client,
+    );
+  let provideDeclaration = (~handle, ~resource, ~position, client) =>
+    Internal.provideDefinitionLink(
+      ~handle,
+      ~resource,
+      ~position,
+      "$provideDeclaration",
+      client,
+    );
+  let provideImplementation = (~handle, ~resource, ~position, client) =>
+    Internal.provideDefinitionLink(
+      ~handle,
+      ~resource,
+      ~position,
+      "$provideImplementation",
+      client,
+    );
+  let provideTypeDefinition = (~handle, ~resource, ~position, client) =>
+    Internal.provideDefinitionLink(
+      ~handle,
+      ~resource,
+      ~position,
+      "$provideTypeDefinition",
+      client,
+    );
 };
 
 module TerminalService = {
