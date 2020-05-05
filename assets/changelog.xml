@@ -1,0 +1,11 @@
+<changelog>
+  <commit hash="5d4c99a9" pr=1623 time=588257227>
+    <breaking>
+      On Windows, git-bash, powershell-core and perhaps others now correctly
+      loads the config from %LOCALAPPDATA% instead of $HOME
+    </breaking>
+        
+    Always load Windows config from %LOCALAPPDATA% 
+  </commit>
+  <commit hash="2e704922"/>
+</changelog>
