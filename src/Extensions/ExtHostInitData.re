@@ -90,7 +90,8 @@ module Environment = {
   [@deriving show({with_path: false})]
   type t = {globalStorageHomePath: string};
 
-  let create = (~globalStorageHomePath=Filesystem.unsafeFindHome(), ()) => {
+  let create =
+      (~globalStorageHomePath=Filesystem.getUserDataDirectoryExn(), ()) => {
     let ret: t = {globalStorageHomePath: globalStorageHomePath};
     ret;
   };
@@ -116,7 +117,7 @@ let create =
       ~parentPid=Process.pid(),
       ~extensions=[],
       ~environment=Environment.create(),
-      ~logsLocationPath=Filesystem.unsafeFindHome(),
+      ~logsLocationPath=Filesystem.getUserDataDirectoryExn(),
       ~autoStart=true,
       (),
     ) => {

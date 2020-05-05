@@ -219,6 +219,10 @@ module Message = {
             );
           } else if (messageType == replyOkEmpty) {
             Ok(ReplyOk({requestId, payload: Empty}));
+          } else if (messageType == replyOkJSON) {
+            let (msg, _bytes) = ByteParser.readLongString(bytes);
+            let json = msg |> Yojson.Safe.from_string;
+            Ok(ReplyOk({requestId, payload: Json(json)}));
           } else if (messageType == replyErrError) {
             let (msg, _bytes) = ByteParser.readLongString(bytes);
             Ok(ReplyError({requestId, payload: Message(msg)}));
@@ -326,7 +330,7 @@ let start =
 
       message |> Result.iter(dispatch);
 
-      message |> Result.iter_error(onError);
+      message |> Result.iter_error(err => {onError(err)});
     };
 
   let transportHandler = msg =>

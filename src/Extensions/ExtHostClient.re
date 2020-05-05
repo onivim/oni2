@@ -8,6 +8,7 @@
 open Oni_Core;
 
 module Protocol = ExtHostProtocol;
+module Configuration = Exthost.Configuration;
 module Workspace = Protocol.Workspace;
 module Core = Oni_Core;
 

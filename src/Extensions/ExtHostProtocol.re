@@ -5,7 +5,7 @@
  *
  */
 
-module ExtConfiguration = Configuration;
+module ExtConfiguration = Exthost.Configuration;
 
 open EditorCoreTypes;
 open Oni_Core;

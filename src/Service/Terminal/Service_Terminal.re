@@ -34,6 +34,7 @@ module Sub = {
   type params = {
     id: int,
     cmd: string,
+    arguments: list(string),
     extHostClient: ExtHostClient.t,
     workspaceUri: Uri.t,
     rows: int,
@@ -62,7 +63,7 @@ module Sub = {
           ExtHostClient.Terminal.ShellLaunchConfig.{
             name: "Terminal",
             executable: params.cmd,
-            arguments: [],
+            arguments: params.arguments,
           };
 
         let isResizing = ref(false);
@@ -184,9 +185,11 @@ module Sub = {
       };
     });
 
-  let terminal = (~id, ~cmd, ~columns, ~rows, ~workspaceUri, ~extHostClient) =>
+  let terminal =
+      (~id, ~arguments, ~cmd, ~columns, ~rows, ~workspaceUri, ~extHostClient) =>
     TerminalSubscription.create({
       id,
+      arguments,
       cmd,
       columns,
       rows,

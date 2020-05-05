@@ -4,16 +4,18 @@ module ExtHostClient = Oni_Extensions.ExtHostClient;
 
 // MODEL
 
-type terminal = {
-  id: int,
-  cmd: string,
-  rows: int,
-  columns: int,
-  pid: option(int),
-  title: option(string),
-  screen: ReveryTerminal.Screen.t,
-  cursor: ReveryTerminal.Cursor.t,
-};
+type terminal =
+  pri {
+    id: int,
+    cmd: string,
+    arguments: list(string),
+    rows: int,
+    columns: int,
+    pid: option(int),
+    title: option(string),
+    screen: ReveryTerminal.Screen.t,
+    cursor: ReveryTerminal.Cursor.t,
+  };
 
 type t;
 
@@ -63,7 +65,7 @@ type outmsg =
 
 let shouldHandleInput: string => bool;
 
-let update: (t, msg) => (t, outmsg);
+let update: (~config: Config.resolver, t, msg) => (t, outmsg);
 
 let subscription:
   (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);
@@ -133,4 +135,5 @@ module Commands: {
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
   let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
 };

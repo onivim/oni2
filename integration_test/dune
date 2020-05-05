@@ -5,6 +5,8 @@
            ClipboardInsertModePasteEmptyTest
            ClipboardNormalModePasteTest
            ClipboardYankTest
+           ClipboardxpTest
+           ClipboardyypTest
            CopyActiveFilepathToClipboardTest
            EchoNotificationTest
            EditorFontFromPathTest
@@ -32,6 +34,7 @@
            SyntaxServerParentPidTest
            SyntaxServerParentPidCorrectTest
            SyntaxServerReadExceptionTest
+           Regression1671Test
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
@@ -43,6 +46,7 @@
            SyntaxHighlightTreesitterTest
            AddRemoveSplitTest
            TerminalSetPidTitleTest
+           TerminalConfigurationTest
            TypingBatchedTest
            TypingUnbatchedTest
            VimlConfigurationTest
@@ -65,6 +69,8 @@
         ClipboardInsertModePasteEmptyTest.exe
         ClipboardNormalModePasteTest.exe
         ClipboardYankTest.exe
+        ClipboardxpTest.exe
+        ClipboardyypTest.exe
         CopyActiveFilepathToClipboardTest.exe
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
@@ -84,6 +90,7 @@
         LanguageTypeScriptTest.exe
         LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
+        Regression1671Test.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
@@ -101,6 +108,7 @@
         SyntaxServerParentPidCorrectTest.exe
         SyntaxServerReadExceptionTest.exe
         TerminalSetPidTitleTest.exe
+        TerminalConfigurationTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe

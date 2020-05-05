@@ -20,7 +20,7 @@ let initial:
 
 let toExtensionConfiguration:
   (model, list(Extension.Scanner.ScanResult.t), Setup.t) =>
-  Oni_Extensions.Configuration.t;
+  Exthost.Configuration.t;
 
 [@deriving show]
 type msg =

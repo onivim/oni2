@@ -23,6 +23,9 @@ module Scheme = {
     let ofString = Hashtbl.find(schemeLookup);
   };
 
+  let ofString = str =>
+    Internal.isKnownScheme(str) ? str |> Internal.ofString : Custom(str);
+
   let toString =
     fun
     | File => "file"
@@ -35,14 +38,28 @@ module Scheme = {
   let of_yojson = json =>
     switch (json) {
     | `String(scheme)
-    | `List([`String(scheme), ..._]) =>
-      Internal.isKnownScheme(scheme)
-        ? Ok(scheme |> Internal.ofString) : Ok(Custom(scheme))
-
+    | `List([`String(scheme), ..._]) => Ok(ofString(scheme))
     | _ => Error("Invalid scheme")
     };
 
+  let decode = {
+    open Json.Decode;
+
+    let decodeList =
+      list(string)
+      |> and_then(
+           fun
+           | [scheme, ..._] => scheme |> ofString |> succeed
+           | [] => fail("No scheme"),
+         );
+
+    let decodeString = string |> map(ofString);
+
+    one_of([("string", decodeString), ("list", decodeList)]);
+  };
+
   let to_yojson = v => `String(v |> toString);
+  let encode = scheme => Json.Encode.(scheme |> toString |> string);
 };
 
 [@deriving (show, yojson({strict: false}))]
@@ -50,6 +67,27 @@ type t = {
   scheme: Scheme.t,
   path: string,
   query: [@default None] option(string),
+};
+
+let encode = uri =>
+  Json.Encode.(
+    obj([
+      ("scheme", uri.scheme |> Scheme.encode),
+      ("path", uri.path |> string),
+      ("query", uri.query |> option(string)),
+    ])
+  );
+
+let decode = {
+  Json.Decode.(
+    obj(({field, _}) =>
+      {
+        scheme: field.required("scheme", Scheme.decode),
+        path: field.required("path", string),
+        query: field.optional("query", string),
+      }
+    )
+  );
 };
 
 module Internal = {
