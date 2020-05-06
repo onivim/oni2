@@ -29,7 +29,7 @@ module TestConfigurationEvent = {
   };
 };
 
-let waitForConfigurationShowEvent = (~name, f, context) => {
+let waitForConfigurationEvent = (~name, f, context) => {
   context
   |> Test.waitForMessage(
        ~name,
@@ -55,13 +55,17 @@ describe("ConfigurationTest", ({test, _}) => {
            ~changed=model1,
          ),
        )
+    |> waitForConfigurationEvent(
+         ~name="Configuration change event", ({eventType, _}) => {
+         String.equal(eventType, "config.changed")
+       })
     |> Test.withClient(
          Exthost.Request.Commands.executeContributedCommand(
            ~arguments=[`String("foo.bar")],
            ~command="config.show",
          ),
        )
-    |> waitForConfigurationShowEvent(
+    |> waitForConfigurationEvent(
          ~name="Value should be 'value1'", ({result, _}) => {
          String.equal(result, "value1")
        })

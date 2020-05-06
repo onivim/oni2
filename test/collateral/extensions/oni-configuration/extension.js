@@ -15,29 +15,19 @@ function activate(context) {
 	};
 
 	const disposable0 = vscode.commands.registerCommand("config.show", (args) => {
-	
 		const config = vscode.workspace.getConfiguration();
 		showData({
 			eventType: "config.value",
 			result: config.get(args),
 		});
-
-
-		/*const config = vscode.workspace.getConfiguration("foo");
-		const values = config.inspect("bar");
-
-		showData({
-			type: "config.inspect",
-			result: JSON.stringify(values)
-		});*/
 	});
 
 	const disposable1 = vscode.workspace.onDidChangeConfiguration((evt) => {
 		console.log(evt);
-		/*showData({
-			type: "config.changed",
-			evt: evt,
-		});*/
+		showData({
+			eventType: "config.changed",
+			result: "",
+		});
 	});
 
 	context.subscriptions.push(disposable0);	
