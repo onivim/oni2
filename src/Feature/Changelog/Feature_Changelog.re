@@ -127,7 +127,7 @@ module View = {
       overflow(`Hidden),
     ];
 
-    let commit = [flexDirection(`Row), marginTop(6)];
+    let commit = [flexDirection(`Row), marginTop(10)];
 
     let groupHeader = (font: UiFont.t, ~theme) => [
       fontFamily(font.fontFile),
