@@ -146,7 +146,8 @@ module Parts = {
 
       | FullChangelog => <Feature_Changelog.View.Full theme uiFont />
 
-      | UpdateChangelog => <Feature_Changelog.View.Update theme uiFont />
+      | UpdateChangelog({since}) =>
+        <Feature_Changelog.View.Update since theme uiFont />
       };
     };
   };

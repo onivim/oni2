@@ -362,9 +362,20 @@ module View = {
 
     // Update.make
 
-    let make = (~theme, ~uiFont, ()) => {
+    let make = (~since, ~theme, ~uiFont, ()) => {
       switch (Lazy.force(model)) {
       | Ok(commits) =>
+        let commits =
+          List.fold_right(
+            commit =>
+              fun
+              | None when since == commit.hash => Some([])
+              | None => None
+              | Some(commits) => Some([commit, ...commits]),
+            commits,
+            None,
+          )
+          |> Option.value(~default=commits);
         let breaking = commits |> List.filter(commit => commit.breaking != []);
         let features =
           commits |> List.filter(({typ, _}) => typ == Some("feat"));
