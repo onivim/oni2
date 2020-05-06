@@ -122,6 +122,57 @@ module SuggestResult: {
   let decode: Json.decoder(t);
 };
 
+module SymbolKind: {
+  [@deriving show]
+  type t =
+    | File
+    | Module
+    | Namespace
+    | Package
+    | Class
+    | Method
+    | Property
+    | Field
+    | Constructor
+    | Enum
+    | Interface
+    | Function
+    | Variable
+    | Constant
+    | String
+    | Number
+    | Boolean
+    | Array
+    | Object
+    | Key
+    | Null
+    | EnumMember
+    | Struct
+    | Event
+    | Operator
+    | TypeParameter;
+
+  let toInt: t => int;
+  let ofInt: int => option(t);
+  let decode: Json.decoder(t);
+};
+
+module DocumentSymbol: {
+  [@deriving show]
+  type t = {
+    name: string,
+    detail: string,
+    kind: SymbolKind.t,
+    // TODO: tags
+    containerName: option(string),
+    range: OneBasedRange.t,
+    selectionRange: OneBasedRange.t,
+    children: list(t),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module Configuration: {
   // Type relating to 'ConfigurationModel' in VSCode
   // This is an 'instance' of configuration - modelling user, workspace, or default configuration.
@@ -370,6 +421,11 @@ module Msg: {
           handle: int,
           selector: list(DocumentFilter.t),
         })
+      | RegisterDocumentSymbolProvider({
+          handle: int,
+          selector: list(DocumentFilter.t),
+          label: string,
+        })
       | RegisterDefinitionSupport({
           handle: int,
           selector: list(DocumentFilter.t),
@@ -580,6 +636,10 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(DocumentHighlight.t));
+
+    let provideDocumentSymbols:
+      (~handle: int, ~resource: Uri.t, Client.t) =>
+      Lwt.t(list(DocumentSymbol.t));
 
     let provideDefinition:
       (

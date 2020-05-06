@@ -9,6 +9,7 @@ module CompletionKind = CompletionKind;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
 module DocumentFilter = DocumentFilter;
 module DocumentHighlight = DocumentHighlight;
+module DocumentSymbol = DocumentSymbol;
 module Eol = Eol;
 module Location = Location;
 module ModelAddedDelta = ModelAddedDelta;
@@ -19,6 +20,7 @@ module OneBasedRange = OneBasedRange;
 module ReferenceContext = ReferenceContext;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
+module SymbolKind = SymbolKind;
 module WorkspaceData = WorkspaceData;
 
 module Client = Client;
