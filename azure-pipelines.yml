@@ -22,9 +22,7 @@ pr:
 # Multistage pipeline, but no stage depends on another.
 # Split by Linux, Mac, Windows
 stages:
-- stage: Linux
-  dependsOn: []
-  jobs:
+- stage: Setup
   - job: Kickoff
     displayName: "Kickoff"
     pool:
@@ -34,6 +32,9 @@ stages:
     - script: ./scripts/set-short-commit-variable.sh
       name: shortCommitVariableStep
 
+- stage: LinuxBuild
+  dependsOn: [Setup]
+  jobs:
   - job: Linux
     displayName: 'Linux - Ubuntu 16.04'
     timeoutInMinutes: 60
@@ -80,15 +81,17 @@ stages:
       displayName: 'Release: --checkhealth'
     - template: .ci/publish-linux.yml
 
+- stage: LinuxTest
+  dependsOn: [Setup, LinuxBuild]
+  jobs:
   - job: ValidateLinuxReleaseUbuntu16
     displayName: "Linux: Validate Release (Ubuntu 16.04)"
     dependsOn:
-    - Kickoff
     - CentOS
     pool:
       vmImage: 'ubuntu-16.04'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[stageDependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
@@ -107,12 +110,11 @@ stages:
   - job: ValidateLinuxReleaseUbuntu18
     displayName: "Linux: Validate Release (Ubuntu 18.04)"
     dependsOn:
-    - Kickoff
     - CentOS
     pool:
       vmImage: 'ubuntu-18.04'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[stageDependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
@@ -130,18 +132,9 @@ stages:
       env:
         SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
-- stage: Mac
-  dependsOn: []
+- stage: MacBuild
+  dependsOn: [Setup]
   jobs:
-  - job: Kickoff
-    displayName: "Kickoff"
-    pool:
-      vmImage: 'ubuntu-latest'
-
-    steps:
-    - script: ./scripts/set-short-commit-variable.sh
-      name: shortCommitVariableStep
-
   - job: Hygiene_Checks
     displayName: 'Hygiene Checks'
     timeoutInMinutes: 0
@@ -195,15 +188,17 @@ stages:
     - template: .ci/publish-osx.yml
     - template: .ci/publish-build-cache.yml
 
+- stage: MacTest
+  dependsOn: [Setup, MacBuild]
+  jobs:
   - job: ValidateMacOSRelease14
     displayName: "MacOS: Validate Release (10.14)"
     dependsOn:
-    - Kickoff
     - MacOS
     pool:
       vmImage: 'macOS-10.14'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[stageDependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
@@ -222,12 +217,11 @@ stages:
   - job: ValidateMacOSRelease15
     displayName: "MacOS: Validate Release (10.15)"
     dependsOn:
-    - Kickoff
     - MacOS
     pool:
       vmImage: 'macOS-10.15'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[stageDependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
@@ -243,18 +237,9 @@ stages:
       env:
         SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
-- stage: Windows
-  dependsOn: []
+- stage: WindowsBuild
+  dependsOn: [Setup]
   jobs:
-  - job: Kickoff
-    displayName: "Kickoff"
-    pool:
-      vmImage: 'ubuntu-latest'
-
-    steps:
-    - script: ./scripts/set-short-commit-variable.sh
-      name: shortCommitVariableStep
-
   - job: Windows
     timeoutInMinutes: 150
     pool:
@@ -285,16 +270,18 @@ stages:
     - template: .ci/publish-win.yml
     - template: .ci/publish-build-cache.yml
 
+- stage: WindowsTest
+  dependsOn: [Setup, WindowsBuild]
+  jobs:
   - job: ValidateWindowsRelease
     timeoutInMinutes: 10
     displayName: "Windows: Validate Release"
     dependsOn:
-    - Kickoff
     - Windows
     pool:
       vmImage: 'vs2017-win2016'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[stageDependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
