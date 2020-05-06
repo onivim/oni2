@@ -119,10 +119,10 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get definition",
            ~validate=
-             (definitions: list(Exthost.DefinitionLink.t)) => {
+             (definitions: list(Exthost.Location.t)) => {
                expect.int(List.length(definitions)).toBe(1);
                let definition = List.hd(definitions);
-               let {range, _}: Exthost.DefinitionLink.t = definition;
+               let {range, _}: Exthost.Location.t = definition;
 
                expect.int(range.startLineNumber).toBe(1);
                expect.int(range.endLineNumber).toBe(1);
@@ -177,10 +177,10 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get declaration",
            ~validate=
-             (declarations: list(Exthost.DefinitionLink.t)) => {
+             (declarations: list(Exthost.Location.t)) => {
                expect.int(List.length(declarations)).toBe(1);
                let definition = List.hd(declarations);
-               let {range, _}: Exthost.DefinitionLink.t = definition;
+               let {range, _}: Exthost.Location.t = definition;
 
                expect.int(range.startLineNumber).toBe(2);
                expect.int(range.endLineNumber).toBe(2);

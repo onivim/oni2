@@ -51,7 +51,7 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
-module DefinitionLink: {
+module Location: {
   type t = {
     uri: Uri.t,
     range: OneBasedRange.t,
@@ -83,6 +83,14 @@ module SuggestItem: {
   };
 
   let decode: Json.decoder(t);
+};
+
+module ReferenceContext: {
+  type t = {
+    includeDeclaration: bool,
+  }
+
+  let encode: Json.encoder(t);
 };
 
 module SuggestResult: {
@@ -178,7 +186,7 @@ module OneBasedPosition: {
     column: int,
   };
 
-  let ofPosition: Location.t => t;
+  let ofPosition: EditorCoreTypes.Location.t => t;
   let to_yojson: t => Yojson.Safe.t;
 };
 
@@ -546,7 +554,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DefinitionLink.t));
+      Lwt.t(list(Location.t));
 
     let provideDeclaration:
       (
@@ -555,7 +563,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DefinitionLink.t));
+      Lwt.t(list(Location.t));
 
     let provideImplementation:
       (
@@ -564,7 +572,16 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DefinitionLink.t));
+      Lwt.t(list(Location.t));
+
+    let provideReferences: (
+      ~handle: int,
+      ~resource: Uri.t,
+      ~position: OneBasedPosition.t,
+      ~context: ReferenceContext.t,
+      Client.t
+    ) =>
+    Lwt.t(list(Location.t));
 
     let provideTypeDefinition:
       (
@@ -573,7 +590,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DefinitionLink.t));
+      Lwt.t(list(Location.t));
   };
 
   module TerminalService: {

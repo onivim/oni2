@@ -6,15 +6,16 @@ module Transport = Exthost_Transport;
 
 module CompletionContext = CompletionContext;
 module CompletionKind = CompletionKind;
-module DefinitionLink = DefinitionLink;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
 module DocumentFilter = DocumentFilter;
 module Eol = Eol;
+module Location = Location;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;
 module ModelContentChange = ModelContentChange;
 module OneBasedPosition = OneBasedPosition;
 module OneBasedRange = OneBasedRange;
+module ReferenceContext = ReferenceContext;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
 module WorkspaceData = WorkspaceData;
