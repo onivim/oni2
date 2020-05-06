@@ -57,7 +57,7 @@ let runTest =
     (
       ~configuration=None,
       ~keybindings=None,
-      ~cliOptions=None,
+      ~filesToOpen=[],
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
       test: testCallback,
@@ -94,7 +94,13 @@ let runTest =
   let getUserSettings = () => Ok(currentUserSettings^);
 
   let currentState =
-    ref(Model.State.initial(~getUserSettings, ~contributedCommands=[]));
+    ref(
+      Model.State.initial(
+        ~getUserSettings,
+        ~contributedCommands=[],
+        ~workingDirectory=Sys.getcwd(),
+      ),
+    );
 
   let headlessWindow =
     Revery.Utility.HeadlessWindow.create(
@@ -147,11 +153,11 @@ let runTest =
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
-      ~cliOptions,
       ~configurationFilePath=Some(configurationFilePath),
       ~keybindingsFilePath=Some(keybindingsFilePath),
       ~quit,
       ~window=None,
+      ~filesToOpen,
       (),
     );
 

@@ -51,12 +51,43 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module DefinitionLink: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module DocumentFilter: {
   [@deriving show]
   type t = {
     language: option(string),
     scheme: option(string),
     exclusive: bool,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module DocumentHighlight: {
+  module Kind: {
+    [@deriving show]
+    type t =
+      | Text
+      | Read
+      | Write;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+    let decode: Json.decoder(t);
+  };
+
+  [@deriving show]
+  type t = {
+    range: OneBasedRange.t,
+    kind: Kind.t,
   };
 
   let decode: Json.decoder(t);
@@ -216,6 +247,21 @@ module ModelChangedEvent: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
+module OneBasedRange: {
+  [@deriving show]
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
+
+  let ofRange: Range.t => t;
+  let toRange: t => Range.t;
+
+  let decode: Json.decoder(t);
+};
+
 module ShellLaunchConfig: {
   type t = {
     name: string,
@@ -339,6 +385,26 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | RegisterDocumentHighlightProvider({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterDefinitionSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterDeclarationSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterImplementationSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterTypeDefinitionSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | RegisterSuggestSupport({
           handle: int,
           selector: list(DocumentFilter.t),
@@ -520,6 +586,51 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let provideDocumentHighlights:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DocumentHighlight.t));
+
+    let provideDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideDeclaration:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideImplementation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideTypeDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
   };
 
   module TerminalService: {

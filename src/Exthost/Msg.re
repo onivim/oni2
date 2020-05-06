@@ -231,6 +231,26 @@ module ExtensionService = {
 module LanguageFeatures = {
   [@deriving show]
   type msg =
+    | RegisterDocumentHighlightProvider({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+    | RegisterDefinitionSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+    | RegisterDeclarationSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+    | RegisterImplementationSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+    | RegisterTypeDefinitionSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
     | RegisterSuggestSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -240,10 +260,56 @@ module LanguageFeatures = {
       })
     | Unregister({handle: int});
 
+  let parseDocumentSelector = json => {
+    Json.Decode.(json |> decode_value(list(DocumentFilter.decode)));
+  };
+
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | ("$unregister", `List([`Int(handle)])) =>
       Ok(Unregister({handle: handle}))
+    | (
+        "$registerDocumentHighlightProvider",
+        `List([`Int(handle), selectorJson]),
+      ) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) =>
+        Ok(RegisterDocumentHighlightProvider({handle, selector}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
+    | ("$registerDefinitionSupport", `List([`Int(handle), selectorJson])) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {
+           RegisterDefinitionSupport({handle, selector})
+         })
+      |> Result.map_error(Json.Decode.string_of_error)
+    | ("$registerDeclarationSupport", `List([`Int(handle), selectorJson])) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {
+           RegisterDeclarationSupport({handle, selector})
+         })
+      |> Result.map_error(Json.Decode.string_of_error)
+    | (
+        "$registerImplementationSupport",
+        `List([`Int(handle), selectorJson]),
+      ) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {
+           RegisterImplementationSupport({handle, selector})
+         })
+      |> Result.map_error(Json.Decode.string_of_error)
+    | (
+        "$registerTypeDefinitionSupport",
+        `List([`Int(handle), selectorJson]),
+      ) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) =>
+        Ok(RegisterImplementationSupport({handle, selector}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
     | (
         "$registerSuggestSupport",
         `List([
@@ -259,12 +325,11 @@ module LanguageFeatures = {
       let ret = {
         open Base.Result.Let_syntax;
         let%bind selector =
-          selectorJson
-          |> Json.Decode.decode_value(list(DocumentFilter.decode));
+          selectorJson |> decode_value(list(DocumentFilter.decode));
 
         let%bind triggerCharacters =
           triggerCharactersJson
-          |> Json.Decode.decode_value(list(list(string)))
+          |> decode_value(list(list(string)))
           |> Result.map(List.flatten);
 
         Ok(
@@ -278,7 +343,7 @@ module LanguageFeatures = {
         );
       };
 
-      ret |> Result.map_error(Json.Decode.string_of_error);
+      ret |> Result.map_error(string_of_error);
 
     | _ => Error("Unhandled method: " ++ method)
     };

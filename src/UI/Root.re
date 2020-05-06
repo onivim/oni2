@@ -107,15 +107,13 @@ let make = (~state: State.t, ()) => {
   let modals = () => {
     switch (state.modal) {
     | Some(model) =>
-      let workingDirectory =
-        Option.map(ws => ws.Workspace.workingDirectory, state.workspace);
       let dispatch = msg =>
         GlobalContext.current().dispatch(Actions.Modals(msg));
 
       <Feature_Modals.View
         model
         buffers
-        workingDirectory
+        workingDirectory={state.workspace.workingDirectory}
         theme
         font
         dispatch

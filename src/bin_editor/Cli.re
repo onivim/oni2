@@ -10,7 +10,7 @@ module CoreLog = Log;
 module Log = (val Log.withNamespace("Oni2.Core.Cli"));
 
 type t = {
-  folder: string,
+  folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
   syntaxHighlightService: bool,
@@ -19,27 +19,6 @@ type t = {
   shouldLoadExtensions: bool,
   shouldSyntaxHighlight: bool,
   shouldLoadConfiguration: bool,
-};
-
-let create = (~folder, ~filesToOpen, ()) => {
-  folder,
-  filesToOpen,
-  forceScaleFactor: None,
-  syntaxHighlightService: false,
-  overriddenExtensionsDir: None,
-  shouldClose: false,
-  shouldLoadExtensions: true,
-  shouldSyntaxHighlight: true,
-  shouldLoadConfiguration: true,
-};
-
-let newline = "\n";
-
-let show = (v: t) => {
-  let files =
-    List.fold_left((curr, p) => curr ++ newline ++ p, "", v.filesToOpen);
-
-  "Folder: " ++ v.folder ++ newline ++ "Files: " ++ files;
 };
 
 let noop = () => ();
@@ -176,25 +155,14 @@ let parse =
   let directories = List.filter(isDirectory, absolutePaths);
   let filesToOpen = List.filter(p => !isDirectory(p), absolutePaths);
 
-  let homeOrWorkingDirectory =
-    switch (Sys.getenv_opt("HOME")) {
-    | Some(homePath) => homePath
-    | None => workingDirectory
-    };
-
-  /* Set the folder to be opened, based on 4 options:
-         - If a folder(s) is given, use the first.
-         - If no folders are given, but files are, use the dir of the first file.
-         - If no files or folders are given, and the path is, the root, "/", try and use the home directory
-         - If none of the other conditions are met, use the working directory
-     */
-
   let folder =
-    switch (directories, filesToOpen, workingDirectory) {
-    | ([hd, ..._], _, _) => hd
-    | ([], [hd, ..._], _) => Rench.Path.dirname(hd)
-    | ([], [], "/") => homeOrWorkingDirectory
-    | ([], [], workingDirectory) => workingDirectory
+    switch (directories) {
+    | [first, ..._] => Some(first)
+    | [] =>
+      switch (filesToOpen) {
+      | [first, ..._] => Some(Rench.Path.dirname(first))
+      | [] => None
+      }
     };
 
   let cli = {

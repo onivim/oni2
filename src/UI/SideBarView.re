@@ -68,12 +68,9 @@ let%component make = (~theme, ~state: State.t, ()) => {
           ),
         );
 
-      let workingDirectory =
-        Option.map(w => w.Workspace.workingDirectory, state.workspace);
-
       <Feature_SCM.Pane
         model={state.scm}
-        workingDirectory
+        workingDirectory={state.workspace.workingDirectory}
         onItemClick
         isFocused={FocusManager.current(state) == Focus.SCM}
         theme

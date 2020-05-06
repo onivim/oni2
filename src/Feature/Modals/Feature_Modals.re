@@ -119,11 +119,7 @@ module View = {
       |> Seq.map(Buffer.getFilePath)
       |> List.of_seq
       |> OptionEx.values
-      |> List.map(
-           Path.toRelative(
-             ~base=Option.value(workingDirectory, ~default=""),
-           ),
-         );
+      |> List.map(Path.toRelative(~base=workingDirectory));
 
     <MessageBox model onAction=dispatch theme font>
       <Text

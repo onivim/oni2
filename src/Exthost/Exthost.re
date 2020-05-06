@@ -6,9 +6,11 @@ module Transport = Exthost_Transport;
 
 module CompletionContext = CompletionContext;
 module CompletionKind = CompletionKind;
+module DefinitionLink = DefinitionLink;
 module Diagnostic = Diagnostic;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
 module DocumentFilter = DocumentFilter;
+module DocumentHighlight = DocumentHighlight;
 module Eol = Eol;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;
