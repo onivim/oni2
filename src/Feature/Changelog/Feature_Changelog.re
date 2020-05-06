@@ -101,27 +101,30 @@ let isSameDate = (a, b) => {
 module View = {
   open Revery.UI;
   open Revery.UI.Components;
+  open Oni_Components;
 
   module Colors = Feature_Theme.Colors;
 
   module Styles = {
     open Style;
 
-    let container = [
-      position(`Absolute),
-      top(0),
-      left(0),
-      bottom(0),
-      right(0),
+    let scrollContainer = [flexGrow(1)];
+
+    let content = [
       padding(10),
+      paddingLeft(20),
+      paddingRight(20),
+      overflow(`Hidden),
     ];
 
     let commit = [flexDirection(`Row)];
 
-    let groupHeader = (font: UiFont.t) => [
+    let groupHeader = (font: UiFont.t, ~theme) => [
       fontFamily(font.fontFile),
       fontSize(16.),
-      marginTop(4),
+      color(Colors.foreground.from(theme)),
+      marginTop(12),
+      marginBottom(4),
     ];
 
     let groupBody = [paddingLeft(10)];
@@ -130,13 +133,12 @@ module View = {
       fontFamily(font.fontFile),
       fontSize(12.),
       Style.color(color),
-      width(80),
+      width(60),
     ];
 
     let scope = (font: UiFont.t, ~theme) => [
       fontFamily(font.fontFile),
       fontSize(12.),
-      color(Revery.Colors.grey),
       width(130),
       color(
         Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
@@ -147,6 +149,15 @@ module View = {
       fontFamily(font.fontFile),
       fontSize(12.),
       color(Colors.foreground.from(theme)),
+    ];
+
+    let breaking = [flexDirection(`Row), marginTop(4)];
+
+    let breakingText = (font: UiFont.t, ~theme) => [
+      fontFamily(font.fontFile),
+      fontSize(12.),
+      color(Colors.foreground.from(theme)),
+      marginLeft(10),
     ];
 
     let error = (font: UiFont.t) => [fontFamily(font.fontFile)];
@@ -169,7 +180,6 @@ module View = {
       switch (commit.typ) {
       | Some("feat") => "feature"
       | Some("fix") => "bugfix"
-      | Some("perf") => "performance"
       | Some(other) => other
       | None => "unknown"
       };
@@ -210,7 +220,10 @@ module View = {
 
     let group = (~commits, ~uiFont, ~theme, ()) => {
       <View>
-        <date commit={List.hd(commits)} style={Styles.groupHeader(uiFont)} />
+        <date
+          commit={List.hd(commits)}
+          style={Styles.groupHeader(uiFont, ~theme)}
+        />
         <View style=Styles.groupBody>
           {commits
            |> List.map(commit => <line commit uiFont theme />)
@@ -219,7 +232,7 @@ module View = {
       </View>;
     };
 
-    let make = (~theme, ~uiFont, ~editorFont as _, ()) => {
+    let make = (~theme, ~uiFont, ()) => {
       let isSignificantCommit = commit =>
         switch (commit.typ) {
         | Some("feat" | "fix" | "perf") => true
@@ -228,13 +241,125 @@ module View = {
 
       switch (read()) {
       | Ok(commits) =>
-        <ScrollView style=Styles.container>
-          {commits
-           |> List.filter(isSignificantCommit)
-           |> Base.List.group(~break=(a, b) => !isSameDate(a.time, b.time))
-           |> List.map(commits => <group commits uiFont theme />)
-           |> React.listToElement}
+        <ScrollView style=Styles.scrollContainer>
+          <View style=Styles.content>
+            {commits
+             |> List.filter(isSignificantCommit)
+             |> Base.List.group(~break=(a, b) =>
+                  !isSameDate(a.time, b.time)
+                )
+             |> List.map(commits => <group commits uiFont theme />)
+             |> React.listToElement}
+          </View>
         </ScrollView>
+      | Error(message) => <Text style={Styles.error(uiFont)} text=message />
+      };
+    };
+  };
+
+  module Update = {
+    let line = (~commit, ~uiFont, ~theme, ()) => {
+      <View style=Styles.commit>
+        <typ commit uiFont theme />
+        <scope commit uiFont theme />
+        <summary commit uiFont theme />
+      </View>;
+    };
+
+    module Parts = {
+      module Breaking = {
+        let breakingChange = (~text, ~uiFont, ~theme, ()) => {
+          <View style=Styles.breaking>
+            <FontIcon
+              icon=FontAwesome.exclamationTriangle
+              color={Colors.EditorWarning.foreground.from(theme)}
+              fontSize=14.
+            />
+            <Text text style={Styles.breakingText(uiFont, ~theme)} />
+          </View>;
+        };
+
+        let commit = (~item, ~uiFont, ~theme, ()) => {
+          <View>
+            <Text
+              text={item.summary}
+              style={Styles.summary(uiFont, ~theme)}
+            />
+            {item.breaking
+             |> List.map(text => <breakingChange text uiFont theme />)
+             |> React.listToElement}
+          </View>;
+        };
+
+        let make = (~items, ~uiFont, ~theme, ()) => {
+          <View>
+            <Text
+              text="Breaking Changes"
+              style={Styles.groupHeader(uiFont, ~theme)}
+            />
+            <View style=Styles.groupBody>
+              {items
+               |> List.map(item => <commit item uiFont theme />)
+               |> React.listToElement}
+            </View>
+          </View>;
+        };
+      };
+
+      module Features = {
+        let make = (~items, ~uiFont, ~theme, ()) => {
+          <View>
+            <Text
+              text="Features"
+              style={Styles.groupHeader(uiFont, ~theme)}
+            />
+            <View style=Styles.groupBody>
+              {items
+               |> List.map(commit => <line commit uiFont theme />)
+               |> React.listToElement}
+            </View>
+          </View>;
+        };
+      };
+
+      module Fixes = {
+        let make = (~items, ~uiFont, ~theme, ()) => {
+          <View>
+            <Text
+              text="Bugfixes"
+              style={Styles.groupHeader(uiFont, ~theme)}
+            />
+            <View style=Styles.groupBody>
+              {items
+               |> List.map(commit => <line commit uiFont theme />)
+               |> React.listToElement}
+            </View>
+          </View>;
+        };
+      };
+    };
+
+    let make = (~theme, ~uiFont, ()) => {
+      switch (read()) {
+      | Ok(commits) =>
+        let breaking = commits |> List.filter(commit => commit.breaking != []);
+        let features =
+          commits |> List.filter(({typ, _}) => typ == Some("feat"));
+        let fixes =
+          commits
+          |> List.filter(
+               fun
+               | {typ: Some("fix" | "perf"), _} => true
+               | _ => false,
+             );
+
+        <ScrollView style=Styles.scrollContainer>
+          <View style=Styles.content>
+            <Parts.Breaking items=breaking uiFont theme />
+            <Parts.Features items=features uiFont theme />
+            <Parts.Fixes items=fixes uiFont theme />
+          </View>
+        </ScrollView>;
       | Error(message) => <Text style={Styles.error(uiFont)} text=message />
       };
     };
