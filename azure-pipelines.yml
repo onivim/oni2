@@ -88,8 +88,6 @@ stages:
   jobs:
   - job: ValidateLinuxReleaseUbuntu16
     displayName: "Linux: Validate Release (Ubuntu 16.04)"
-    dependsOn:
-    - CentOS
     pool:
       vmImage: 'ubuntu-16.04'
     variables:
@@ -111,8 +109,6 @@ stages:
 
   - job: ValidateLinuxReleaseUbuntu18
     displayName: "Linux: Validate Release (Ubuntu 18.04)"
-    dependsOn:
-    - CentOS
     pool:
       vmImage: 'ubuntu-18.04'
     variables:
@@ -195,8 +191,6 @@ stages:
   jobs:
   - job: ValidateMacOSRelease14
     displayName: "MacOS: Validate Release (10.14)"
-    dependsOn:
-    - MacOS
     pool:
       vmImage: 'macOS-10.14'
     variables:
@@ -218,8 +212,6 @@ stages:
 
   - job: ValidateMacOSRelease15
     displayName: "MacOS: Validate Release (10.15)"
-    dependsOn:
-    - MacOS
     pool:
       vmImage: 'macOS-10.15'
     variables:
@@ -278,8 +270,6 @@ stages:
   - job: ValidateWindowsRelease
     timeoutInMinutes: 10
     displayName: "Windows: Validate Release"
-    dependsOn:
-    - Windows
     pool:
       vmImage: 'vs2017-win2016'
     variables:
