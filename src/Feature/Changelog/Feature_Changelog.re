@@ -14,11 +14,6 @@ type commit = {
   breaking: list(string),
 };
 
-type model =
-  | NotLoaded
-  | Loaded(list(commit))
-  | Error(string);
-
 type simpleXml =
   | Element(string, list((string, string)), list(simpleXml))
   | Text(string);
