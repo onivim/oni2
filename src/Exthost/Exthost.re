@@ -9,6 +9,7 @@ module CompletionKind = CompletionKind;
 module DefinitionLink = DefinitionLink;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
 module DocumentFilter = DocumentFilter;
+module DocumentHighlight = DocumentHighlight;
 module Eol = Eol;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;
