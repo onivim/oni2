@@ -144,7 +144,9 @@ module Parts = {
 
       | Version => <VersionView theme uiFont editorFont />
 
-      | Changelog => <Feature_Changelog.View.Full theme uiFont />
+      | FullChangelog => <Feature_Changelog.View.Full theme uiFont />
+
+      | UpdateChangelog => <Feature_Changelog.View.Update theme uiFont />
       };
     };
   };

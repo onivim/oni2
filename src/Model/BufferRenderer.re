@@ -15,7 +15,8 @@ type t =
   | Editor
   | Welcome
   | Version
-  | Changelog
+  | FullChangelog
+  | UpdateChangelog
   | Terminal(Feature_Terminal.rendererState);
 
 [@deriving show({with_path: false})]
