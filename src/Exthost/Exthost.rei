@@ -51,7 +51,7 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
-module DefinitionLink: {
+module Location: {
   type t = {
     uri: Uri.t,
     range: OneBasedRange.t,
@@ -107,10 +107,67 @@ module SuggestItem: {
   let decode: Json.decoder(t);
 };
 
+module ReferenceContext: {
+  type t = {includeDeclaration: bool};
+
+  let encode: Json.encoder(t);
+};
+
 module SuggestResult: {
   type t = {
     completions: list(SuggestItem.t),
     isIncomplete: bool,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module SymbolKind: {
+  [@deriving show]
+  type t =
+    | File
+    | Module
+    | Namespace
+    | Package
+    | Class
+    | Method
+    | Property
+    | Field
+    | Constructor
+    | Enum
+    | Interface
+    | Function
+    | Variable
+    | Constant
+    | String
+    | Number
+    | Boolean
+    | Array
+    | Object
+    | Key
+    | Null
+    | EnumMember
+    | Struct
+    | Event
+    | Operator
+    | TypeParameter;
+
+  let toInt: t => int;
+  let ofInt: int => option(t);
+  let decode: Json.decoder(t);
+};
+
+module DocumentSymbol: {
+  [@deriving show]
+  type t = {
+    name: string,
+    detail: string,
+    kind: SymbolKind.t,
+    // TODO: tags
+    containerName: option(string),
+    range: OneBasedRange.t,
+    selectionRange: OneBasedRange.t,
+    children: list(t),
   };
 
   let decode: Json.decoder(t);
@@ -222,7 +279,7 @@ module OneBasedPosition: {
     column: int,
   };
 
-  let ofPosition: Location.t => t;
+  let ofPosition: EditorCoreTypes.Location.t => t;
   let to_yojson: t => Yojson.Safe.t;
 };
 
@@ -374,6 +431,11 @@ module Msg: {
           handle: int,
           selector: list(DocumentFilter.t),
         })
+      | RegisterDocumentSymbolProvider({
+          handle: int,
+          selector: list(DocumentFilter.t),
+          label: string,
+        })
       | RegisterDefinitionSupport({
           handle: int,
           selector: list(DocumentFilter.t),
@@ -396,6 +458,10 @@ module Msg: {
           triggerCharacters: list(string),
           supportsResolveDetails: bool,
           extensionId: string,
+        })
+      | RegisterReferenceSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
         })
       | Unregister({handle: int});
   };
@@ -581,6 +647,10 @@ module Request: {
       ) =>
       Lwt.t(list(DocumentHighlight.t));
 
+    let provideDocumentSymbols:
+      (~handle: int, ~resource: Uri.t, Client.t) =>
+      Lwt.t(list(DocumentSymbol.t));
+
     let provideDefinition:
       (
         ~handle: int,
@@ -588,7 +658,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DefinitionLink.t));
+      Lwt.t(list(Location.t));
 
     let provideDeclaration:
       (
@@ -597,7 +667,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DefinitionLink.t));
+      Lwt.t(list(Location.t));
 
     let provideImplementation:
       (
@@ -606,7 +676,17 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DefinitionLink.t));
+      Lwt.t(list(Location.t));
+
+    let provideReferences:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: ReferenceContext.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
 
     let provideTypeDefinition:
       (
@@ -615,7 +695,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DefinitionLink.t));
+      Lwt.t(list(Location.t));
   };
 
   module TerminalService: {
