@@ -10,6 +10,7 @@ module DefinitionLink = DefinitionLink;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
 module DocumentFilter = DocumentFilter;
 module DocumentHighlight = DocumentHighlight;
+module DocumentSymbol = DocumentSymbol;
 module Eol = Eol;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;
@@ -18,6 +19,7 @@ module OneBasedPosition = OneBasedPosition;
 module OneBasedRange = OneBasedRange;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
+module SymbolKind = SymbolKind;
 module WorkspaceData = WorkspaceData;
 
 module Client = Client;

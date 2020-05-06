@@ -116,6 +116,57 @@ module SuggestResult: {
   let decode: Json.decoder(t);
 };
 
+module SymbolKind: {
+[@deriving show]
+type t = 
+| File
+| Module
+| Namespace
+| Package
+| Class
+| Method
+| Property
+| Field
+| Constructor
+| Enum
+| Interface
+| Function
+| Variable
+| Constant
+| String
+| Number
+| Boolean
+| Array
+| Object
+| Key
+| Null
+| EnumMember
+| Struct
+| Event
+| Operator
+| TypeParameter;
+
+let toInt: t => int;
+let ofInt: int => option(t);
+let decode: Json.decoder(t);
+};
+
+module DocumentSymbol: {
+[@deriving show]
+type t = {
+	name: string,
+	detail: string,
+	kind: SymbolKind.t,
+	// TODO: tags
+	containerName: option(string),
+	range: OneBasedRange.t,
+	selectionRange: OneBasedRange.t,
+	children: list(t),
+};
+
+let decode: Json.decoder(t);
+};
+
 module Configuration: {
   // Type relating to 'ConfigurationModel' in VSCode
   // This is an 'instance' of configuration - modelling user, workspace, or default configuration.
