@@ -20,10 +20,9 @@ pr:
     - README.md
 
 # Multistage pipeline, but no stage depends on another.
-# Split by Linux, Mac, Windows, Docker
+# Split by Linux, Mac, Windows
 stages:
-- stage: LinuxStages
-  dependsOn: []
+- stage: Setup
   jobs:
   - job: Kickoff
     displayName: "Kickoff"
@@ -34,6 +33,9 @@ stages:
     - script: ./scripts/set-short-commit-variable.sh
       name: shortCommitVariableStep
 
+- stage: LinuxStages
+  dependsOn: [Setup]
+  jobs:
   - job: Linux
     displayName: 'Linux - Ubuntu 16.04'
     timeoutInMinutes: 60
@@ -54,6 +56,31 @@ stages:
     - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev nasm
     - template: .ci/js-build-steps.yml
     - template: .ci/run-integration-tests.yml
+
+  - job: CentOS
+    displayName: 'Linux - CentOS - Docker Image'
+    timeoutInMinutes: 0
+    pool:
+      vmImage: 'Ubuntu 16.04'
+
+    variables:
+      STAGING_DIRECTORY: $(Build.StagingDirectory)
+      ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
+      ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
+      ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
+      # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
+
+    steps:
+    - template: .ci/clean-linux-deps.yml
+    - script: docker build -t centos scripts/docker/centos
+      displayName: 'docker: build Dockerfile'
+    - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ls -a'
+      displayName: 'docker: ls -a'
+    - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+      displayName: 'docker: build Onivim 2'
+    - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
+      displayName: 'Release: --checkhealth'
+    - template: .ci/publish-linux.yml
 
   - job: ValidateLinuxReleaseUbuntu16
     displayName: "Linux: Validate Release (Ubuntu 16.04)"
@@ -106,7 +133,7 @@ stages:
         SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - stage: MacStages
-  dependsOn: []
+  dependsOn: [Setup]
   jobs:
   - job: Hygiene_Checks
     displayName: 'Hygiene Checks'
@@ -164,6 +191,7 @@ stages:
   - job: ValidateMacOSRelease14
     displayName: "MacOS: Validate Release (10.14)"
     dependsOn:
+    - Kickoff
     - MacOS
     pool:
       vmImage: 'macOS-10.14'
@@ -187,6 +215,7 @@ stages:
   - job: ValidateMacOSRelease15
     displayName: "MacOS: Validate Release (10.15)"
     dependsOn:
+    - Kickoff
     - MacOS
     pool:
       vmImage: 'macOS-10.15'
@@ -208,7 +237,7 @@ stages:
         SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - stage: WindowsStages
-  dependsOn: []
+  dependsOn: [Setup]
   jobs:
   - job: Windows
     timeoutInMinutes: 150
@@ -271,32 +300,4 @@ stages:
         set PATH=%PATH%;D:/a/1/s/Onivim2
         Oni2.exe -f --no-log-colors --checkhealth
       displayName: "Oni2.exe -f --no-log-colors --checkhealth (run installed)"
-
-- stage: DockerStages
-  dependsOn: []
-  jobs:
-  - job: CentOS
-    displayName: 'Linux - CentOS - Docker Image'
-    timeoutInMinutes: 0
-    pool:
-      vmImage: 'Ubuntu 16.04'
-
-    variables:
-      STAGING_DIRECTORY: $(Build.StagingDirectory)
-      ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
-      ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
-      ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
-      # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
-
-    steps:
-    - template: .ci/clean-linux-deps.yml
-    - script: docker build -t centos scripts/docker/centos
-      displayName: 'docker: build Dockerfile'
-    - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ls -a'
-      displayName: 'docker: ls -a'
-    - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
-      displayName: 'docker: build Onivim 2'
-    - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
-      displayName: 'Release: --checkhealth'
-    - template: .ci/publish-linux.yml
 
