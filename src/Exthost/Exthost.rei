@@ -529,9 +529,6 @@ module Request: {
   };
 
   module Configuration: {
-    let initializeConfiguration:
-      (~configuration: Configuration.t, Client.t) => unit;
-
     let acceptConfigurationChanged:
       (
         ~configuration: Configuration.t,

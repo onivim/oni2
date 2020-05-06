@@ -1,50 +1,58 @@
+open Oni_Core;
 open TestFramework;
 
 open Exthost;
 
+let model1 =
+  Configuration.Model.create(
+    ~keys=["foo.bar"],
+    `Assoc([("foo", `Assoc([("bar", `String("value1"))]))]),
+  );
+
+let configuration1 = Configuration.create(~user=model1, ());
+
+module TestConfigurationEvent = {
+  type t = {
+    eventType: string,
+    result: string,
+  };
+
+  let decode = {
+    Json.Decode.(
+      obj(({field, _}) => {
+        {
+          eventType: field.required("eventType", string),
+          result: field.required("result", string),
+        }
+      })
+    );
+  };
+};
+
+let waitForConfigurationShowEvent = (~name, f, context) => {
+  context
+  |> Test.waitForMessage(
+       ~name,
+       fun
+       | Msg.MessageService(ShowMessage({message, _})) => {
+           message
+           |> Yojson.Safe.from_string
+           |> Json.Decode.decode_value(TestConfigurationEvent.decode)
+           |> Result.map(f)
+           |> Result.value(~default=false);
+         }
+       | _ => false,
+     );
+};
+
 describe("ConfigurationTest", ({test, _}) => {
-  test("gets configuration value", _ => {
-    let waitForChangeMany =
-      fun
-      | Msg.Diagnostics(ChangeMany({owner, entries})) =>
-        owner == "diags" && List.length(entries) == 1
-      | _ => false;
-
-    let model1 =
-      Configuration.Model.create(
-        ~keys=["foo.bar"],
-        `Assoc([("foo", `Assoc([("bar", `String("value1"))]))]),
-      );
-
-    let configuration1 =
-      Configuration.create(~defaults=model1, ~user=model1, ());
-
-    let model2 =
-      Configuration.Model.create(
-        ~keys=["foo.bar"],
-        `Assoc([("foo", `Assoc([("bar", `String("value2"))]))]),
-      );
-
-    let configuration2 =
-      Configuration.create(~defaults=model2, ~user=model2, ());
-
+  test("sets configuration value", _ => {
     Test.startWithExtensions(["oni-configuration"])
     |> Test.waitForExtensionActivation("oni-configuration")
-    |> Test.withClient(
-         Exthost.Request.Configuration.initializeConfiguration(
-           ~configuration=configuration1,
-         ),
-       )
     |> Test.withClient(
          Exthost.Request.Configuration.acceptConfigurationChanged(
            ~configuration=configuration1,
            ~changed=model1,
-         ),
-       )
-    |> Test.withClient(
-         Exthost.Request.Configuration.acceptConfigurationChanged(
-           ~configuration=configuration2,
-           ~changed=model2,
          ),
        )
     |> Test.withClient(
@@ -53,8 +61,11 @@ describe("ConfigurationTest", ({test, _}) => {
            ~command="config.show",
          ),
        )
-    |> Test.waitForMessage(~name="Diagnostics$changeMany", waitForChangeMany)
+    |> waitForConfigurationShowEvent(
+         ~name="Value should be 'value1'", ({result, _}) => {
+         String.equal(result, "value1")
+       })
     |> Test.terminate
-    |> Test.waitForProcessClosed;
+    |> Test.waitForProcessClosed
   })
 });

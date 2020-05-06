@@ -15,15 +15,33 @@ function activate(context) {
 	};
 
 	const disposable0 = vscode.commands.registerCommand("config.show", (args) => {
-		showData({
-			type: "config.value",
-			result: vscode.workspace.getConfiguration().get(args),
-			args: JSON.stringify(args),
-		});
 	
+		const config = vscode.workspace.getConfiguration();
+		showData({
+			eventType: "config.value",
+			result: config.get(args),
+		});
+
+
+		/*const config = vscode.workspace.getConfiguration("foo");
+		const values = config.inspect("bar");
+
+		showData({
+			type: "config.inspect",
+			result: JSON.stringify(values)
+		});*/
+	});
+
+	const disposable1 = vscode.workspace.onDidChangeConfiguration((evt) => {
+		console.log(evt);
+		/*showData({
+			type: "config.changed",
+			evt: evt,
+		});*/
 	});
 
 	context.subscriptions.push(disposable0);	
+	context.subscriptions.push(disposable1);	
 }
 
 // this method is called when your extension is deactivated

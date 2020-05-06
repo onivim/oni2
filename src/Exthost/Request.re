@@ -13,15 +13,6 @@ module Commands = {
 
 module Configuration = {
   open Json.Encode;
-  let initializeConfiguration = (~configuration, client) => {
-    Client.notify(
-      ~rpcName="ExtHostConfiguration",
-      ~method="$initializeConfiguration",
-      ~args=`List([configuration |> encode_value(ExtConfig.encode)]),
-      client,
-    );
-  };
-
   let acceptConfigurationChanged = (~configuration, ~changed, client) => {
     Client.notify(
       ~rpcName="ExtHostConfiguration",

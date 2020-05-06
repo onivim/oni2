@@ -11,15 +11,12 @@
 	"main": "./extension.js",
 	"contributes": {
 		"configuration": {
-			"type": "object",
 			"title": "test configuration",
-			"order": 20,
 			"properties": {
 				"foo.bar": {
 					"type": "string",
 					"default": "value0",
 					"description": "description",
-					"scope": "resource"
 				}
 			}
 		}
