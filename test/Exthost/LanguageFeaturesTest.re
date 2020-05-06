@@ -21,13 +21,11 @@ let addedDelta =
     ~addedDocuments=[model(~lines=["Hello", "World"])],
   );
 
-
 describe("LanguageFeaturesTest", ({describe, _}) => {
-
   let startTest = () => {
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+    Test.startWithExtensions(["oni-language-features"])
+    |> Test.waitForReady
+    |> Test.waitForExtensionActivation("oni-language-features");
   };
 
   describe("completion", ({test, _}) => {
