@@ -62,7 +62,7 @@ module Decode = {
         `String(tooltip),
         `Bool(strikeThrough),
         `Bool(faded),
-        ..._additionalArgs
+        ..._additionalArgs,
       ]) =>
       Resource.{
         handle,
