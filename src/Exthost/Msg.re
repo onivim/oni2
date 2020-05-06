@@ -258,6 +258,10 @@ module LanguageFeatures = {
         supportsResolveDetails: bool,
         extensionId: string,
       })
+    | RegisterReferenceSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
     | Unregister({handle: int});
 
   let parseDocumentSelector = json => {
@@ -310,6 +314,13 @@ module LanguageFeatures = {
         Ok(RegisterImplementationSupport({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+
+    | ("$registerReferenceSupport", `List([`Int(handle), selectorJson])) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) => Ok(RegisterReferenceSupport({handle, selector}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
+
     | (
         "$registerSuggestSupport",
         `List([

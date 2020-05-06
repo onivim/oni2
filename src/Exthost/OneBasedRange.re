@@ -26,12 +26,12 @@ let ofRange = (r: Range.t) => {
 let toRange = ({startLineNumber, endLineNumber, startColumn, endColumn}) => {
   Range.{
     start:
-      Location.{
+      EditorCoreTypes.Location.{
         line: Index.fromOneBased(startLineNumber),
         column: Index.fromOneBased(startColumn),
       },
     stop:
-      Location.{
+      EditorCoreTypes.Location.{
         line: Index.fromOneBased(endLineNumber),
         column: Index.fromOneBased(endColumn),
       },
