@@ -158,6 +158,29 @@ module LanguageFeatures = {
       );
     };
   };
+  let provideDocumentHighlights = (~handle, ~resource, ~position, client) => {
+    let parser = json => {
+      Json.Decode.(
+        json
+        |> decode_value(list(DocumentHighlight.decode))
+        |> Result.map_error(string_of_error)
+      );
+    };
+
+    Client.request(
+      ~parser,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentHighlights",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
+      client,
+    );
+  };
 
   let provideDefinition = (~handle, ~resource, ~position, client) =>
     Internal.provideDefinitionLink(

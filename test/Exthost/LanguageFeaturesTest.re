@@ -15,14 +15,15 @@ let model = (~lines) =>
     testUri,
   );
 
+let addedDelta =
+  DocumentsAndEditorsDelta.create(
+    ~removedDocuments=[],
+    ~addedDocuments=[model(~lines=["Hello", "World"])],
+  );
+
 describe("LanguageFeaturesTest", ({describe, _}) => {
   describe("completion", ({test, _}) => {
     test("gets completion items", ({expect, _}) => {
-      let addedDelta =
-        DocumentsAndEditorsDelta.create(
-          ~removedDocuments=[],
-          ~addedDocuments=[model(~lines=["Hello", "World"])],
-        );
       let suggestHandle = ref(-1);
 
       let getCompletionItems = client =>
@@ -81,11 +82,6 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
   });
   describe("definition", ({test, _}) => {
     test("gets definition", ({expect, _}) => {
-      let addedDelta =
-        DocumentsAndEditorsDelta.create(
-          ~removedDocuments=[],
-          ~addedDocuments=[model(~lines=["Hello", "World"])],
-        );
       let definitionHandle = ref(-1);
 
       let getDefinition = client =>
@@ -139,11 +135,6 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
   });
   describe("declaration", ({test, _}) => {
     test("gets declaration", ({expect, _}) => {
-      let addedDelta =
-        DocumentsAndEditorsDelta.create(
-          ~removedDocuments=[],
-          ~addedDocuments=[model(~lines=["Hello", "World"])],
-        );
       let declarationHandle = ref(-1);
 
       let getDeclaration = client =>
@@ -189,6 +180,77 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                true;
              },
            getDeclaration,
+         )
+      |> Test.validateNoPendingRequests
+      |> Test.terminate
+      |> Test.waitForProcessClosed;
+    })
+  });
+  describe("highlights", ({test, _}) => {
+    test("gets highlights", ({expect, _}) => {
+      let highlightsHandle = ref(-1);
+
+      let getHighlights = client =>
+        Request.LanguageFeatures.provideDocumentHighlights(
+          ~handle=highlightsHandle^,
+          ~resource=testUri,
+          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+          client,
+        );
+
+      let waitForRegisterDocumentHighlightProvider =
+        fun
+        | Msg.LanguageFeatures(
+            RegisterDocumentHighlightProvider({handle, _}),
+          ) => {
+            highlightsHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      Test.startWithExtensions(["oni-language-features"])
+      |> Test.waitForReady
+      |> Test.waitForExtensionActivation("oni-language-features")
+      |> Test.waitForMessage(
+           ~name="RegisterHighlightProvider",
+           waitForRegisterDocumentHighlightProvider,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="Get highlights",
+           ~validate=
+             (highlights: list(Exthost.DocumentHighlight.t)) => {
+               expect.int(List.length(highlights)).toBe(2);
+               let highlight0: Exthost.DocumentHighlight.t =
+                 List.nth(highlights, 0);
+               let highlight1: Exthost.DocumentHighlight.t =
+                 List.nth(highlights, 1);
+
+               expect.equal(
+                 highlight0.kind,
+                 Exthost.DocumentHighlight.Kind.Text,
+               );
+               expect.equal(
+                 highlight1.kind,
+                 Exthost.DocumentHighlight.Kind.Text,
+               );
+
+               expect.int(highlight0.range.startLineNumber).toBe(2);
+               expect.int(highlight0.range.endLineNumber).toBe(4);
+               expect.int(highlight0.range.startColumn).toBe(3);
+               expect.int(highlight0.range.endColumn).toBe(5);
+
+               expect.int(highlight1.range.startLineNumber).toBe(6);
+               expect.int(highlight1.range.endLineNumber).toBe(8);
+               expect.int(highlight1.range.startColumn).toBe(7);
+               expect.int(highlight1.range.endColumn).toBe(9);
+               true;
+             },
+           getHighlights,
          )
       |> Test.validateNoPendingRequests
       |> Test.terminate

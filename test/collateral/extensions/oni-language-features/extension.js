@@ -12,12 +12,20 @@ function activate(context) {
 
 	const completionProvider = {
 		provideCompletionItems: (document, position, token, context) => {
-	vscode.window.showInformationMessage('Activated!');
 			return [{
 				label: "item1",
 			}, {
 				label: "item2"
 			}]
+		}
+	};
+
+	const documentHighlightProvider = {
+		provideDocumentHighlights: (document, position, token) => {
+			return [
+				new vscode.DocumentHighlight(new vscode.Range(1, 2, 3, 4), vscode.DocumentHighlightKind.Text),
+				new vscode.DocumentHighlight(new vscode.Range(5, 6, 7, 8), vscode.DocumentHighlightKind.Text),
+			]
 		}
 	};
 
@@ -44,12 +52,14 @@ function activate(context) {
 	const disposable2 = vscode.languages.registerDeclarationProvider("plaintext", declarationProvider);
 	const disposable3 = vscode.languages.registerTypeDefinitionProvider("plaintext", typeDefinitionProvider);
 	const disposable4 = vscode.languages.registerImplementationProvider("plaintext", implementationProvider);
+	const disposable5 = vscode.languages.registerDocumentHighlightProvider("plaintext", documentHighlightProvider);
 
 	context.subscriptions.push(disposable0);
 	context.subscriptions.push(disposable1);
 	context.subscriptions.push(disposable2);
 	context.subscriptions.push(disposable3);
 	context.subscriptions.push(disposable4);
+	context.subscriptions.push(disposable5);
 }
 
 // this method is called when your extension is deactivated

@@ -8,6 +8,7 @@ module CompletionContext = CompletionContext;
 module CompletionKind = CompletionKind;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
 module DocumentFilter = DocumentFilter;
+module DocumentHighlight = DocumentHighlight;
 module Eol = Eol;
 module Location = Location;
 module ModelAddedDelta = ModelAddedDelta;

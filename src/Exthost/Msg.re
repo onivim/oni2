@@ -231,6 +231,10 @@ module ExtensionService = {
 module LanguageFeatures = {
   [@deriving show]
   type msg =
+    | RegisterDocumentHighlightProvider({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
     | RegisterDefinitionSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -268,7 +272,15 @@ module LanguageFeatures = {
     switch (method, args) {
     | ("$unregister", `List([`Int(handle)])) =>
       Ok(Unregister({handle: handle}))
-
+    | (
+        "$registerDocumentHighlightProvider",
+        `List([`Int(handle), selectorJson]),
+      ) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) =>
+        Ok(RegisterDocumentHighlightProvider({handle, selector}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
     | ("$registerDefinitionSupport", `List([`Int(handle), selectorJson])) =>
       selectorJson
       |> parseDocumentSelector
