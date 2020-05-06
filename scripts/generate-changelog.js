@@ -1,3 +1,16 @@
+/**
+ *  Usage:
+ *
+ *      node scripts/generate-changelog.js [--token <token>] <path>
+ *
+ *      where <token> is a GitHub authentication token and <path> is the path to
+ *      the changelog file. Typically assets/changelog.xml.
+ *
+ *      If the changelog file already exists, only commits after the last commit
+ *      in the file will be retrieved and added. Existing commits will not be
+ *      updated.
+ */
+
 const childProcess = require("child_process")
 
 const initialLog = "<changelog>\n<changelog>"
