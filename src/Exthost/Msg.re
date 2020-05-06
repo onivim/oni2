@@ -235,6 +235,11 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
+    | RegisterDocumentSymbolProvider({
+        handle: int,
+        selector: list(DocumentFilter.t),
+        label: string,
+      })
     | RegisterDefinitionSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -275,6 +280,15 @@ module LanguageFeatures = {
       switch (parseDocumentSelector(selectorJson)) {
       | Ok(selector) =>
         Ok(RegisterDocumentHighlightProvider({handle, selector}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
+    | (
+        "$registerDocumentSymbolProvider",
+        `List([`Int(handle), selectorJson, `String(label)]),
+      ) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) =>
+        Ok(RegisterDocumentSymbolProvider({handle, selector, label}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
     | ("$registerDefinitionSupport", `List([`Int(handle), selectorJson])) =>
