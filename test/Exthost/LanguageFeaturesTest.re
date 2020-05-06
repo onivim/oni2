@@ -28,11 +28,11 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
     |> Test.waitForExtensionActivation("oni-language-features");
   };
 
-  let finishTest = (context) => {
-      context
-      |> Test.validateNoPendingRequests
-      |> Test.terminate
-      |> Test.waitForProcessClosed;
+  let finishTest = context => {
+    context
+    |> Test.validateNoPendingRequests
+    |> Test.terminate
+    |> Test.waitForProcessClosed;
   };
 
   describe("completion", ({test, _}) => {
@@ -251,7 +251,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
              },
            getHighlights,
          )
-        |> finishTest;
+      |> finishTest;
     })
   });
   describe("references", ({test, _}) => {
@@ -300,7 +300,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
              },
            getReferences,
          )
-        |> finishTest;
+      |> finishTest;
     })
   });
   describe("symbols", ({test, _}) => {
