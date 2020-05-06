@@ -117,14 +117,13 @@ module View = {
       overflow(`Hidden),
     ];
 
-    let commit = [flexDirection(`Row)];
+    let commit = [flexDirection(`Row), marginTop(6)];
 
     let groupHeader = (font: UiFont.t, ~theme) => [
       fontFamily(font.fontFile),
       fontSize(16.),
       color(Colors.foreground.from(theme)),
-      marginTop(12),
-      marginBottom(4),
+      marginTop(16),
     ];
 
     let groupBody = [paddingLeft(10)];
