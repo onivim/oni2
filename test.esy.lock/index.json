@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "checksum": "a211032fb68a10e94406ce3c9465b157",
-=======
-  "checksum": "a90109aacd9ccf2c1726b91f4c5a9c7d",
->>>>>>> 3739194e... Dependency: add markup
+  "checksum": "3e65c499389f296243bda186e15855b6",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -217,7 +213,7 @@
         "refmterr@3.3.0@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt@opam:4.5.0@677655b4",
-        "@opam/lambda-term@opam:3.0.0@50f5dee6",
+        "@opam/lambda-term@opam:3.0.1@161f34f6",
         "@opam/fpath@opam:0.7.2@45477b93", "@opam/dune@opam:2.5.1@a0c1e658",
         "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
@@ -1204,17 +1200,10 @@
         "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
         "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-<<<<<<< HEAD
-        "@opam/lwt@opam:4.5.0@677655b4", "@opam/luv@opam:0.5.2@bfb5a32a",
-        "@opam/logs@opam:0.7.0@1d03143e",
-        "@opam/fs@github:bryphe/reason-native:fs.opam#fd0225c@d41d8cd9",
-        "@opam/fp@github:bryphe/reason-native:fp.opam#fd0225c@d41d8cd9",
-=======
         "@opam/markup@opam:0.8.2@87975241", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/luv@opam:0.5.2@bfb5a32a", "@opam/logs@opam:0.7.0@1d03143e",
-        "@opam/fs@github:facebookexperimental/reason-native:fs.opam#bb80cbc@d41d8cd9",
-        "@opam/fp@github:facebookexperimental/reason-native:fp.opam#bb80cbc@d41d8cd9",
->>>>>>> 3739194e... Dependency: add markup
+        "@opam/fs@github:bryphe/reason-native:fs.opam#fd0225c@d41d8cd9",
+        "@opam/fp@github:bryphe/reason-native:fp.opam#fd0225c@d41d8cd9",
         "@opam/fmt@opam:0.8.8@01c3a23c",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.1@a0c1e658",
@@ -2702,20 +2691,20 @@
       ],
       "devDependencies": [ "ocaml@4.9.1000@d41d8cd9" ]
     },
-    "@opam/lambda-term@opam:3.0.0@50f5dee6": {
-      "id": "@opam/lambda-term@opam:3.0.0@50f5dee6",
+    "@opam/lambda-term@opam:3.0.1@161f34f6": {
+      "id": "@opam/lambda-term@opam:3.0.1@161f34f6",
       "name": "@opam/lambda-term",
-      "version": "opam:3.0.0",
+      "version": "opam:3.0.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/3e/3ee0d8b6cb31f20a07fcbf34990f8a4b#md5:3ee0d8b6cb31f20a07fcbf34990f8a4b",
-          "archive:https://github.com/ocaml-community/lambda-term/archive/3.0.0.tar.gz#md5:3ee0d8b6cb31f20a07fcbf34990f8a4b"
+          "archive:https://opam.ocaml.org/cache/md5/a5/a5537057f8830783e9b17a7d40f4e644#md5:a5537057f8830783e9b17a7d40f4e644",
+          "archive:https://github.com/ocaml-community/lambda-term/archive/3.0.1.tar.gz#md5:a5537057f8830783e9b17a7d40f4e644"
         ],
         "opam": {
           "name": "lambda-term",
-          "version": "3.0.0",
-          "path": "test.esy.lock/opam/lambda-term.3.0.0"
+          "version": "3.0.1",
+          "path": "test.esy.lock/opam/lambda-term.3.0.1"
         }
       },
       "overrides": [],
