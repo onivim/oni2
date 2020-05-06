@@ -41,7 +41,7 @@ function extractPRNumber(str) {
 function parseLogLine(line) {
     return Object.assign(parseSubject(line.substr(20)), {
         hash: line.substr(0, 8),
-        time: line.substr(10, 9),
+        time: line.substr(9, 10),
         pr: extractPRNumber(line),
     })
 }
