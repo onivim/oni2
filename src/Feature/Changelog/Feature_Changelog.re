@@ -297,7 +297,7 @@ module View = {
         let commit = (~item, ~uiFont, ~theme, ()) => {
           <View>
             <Text
-              text={item.summary}
+              text={item.summary |> Base.String.split(~on='\n') |> List.hd}
               style={Styles.summary(uiFont, ~theme)}
             />
             {item.breaking
