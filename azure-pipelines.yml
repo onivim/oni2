@@ -48,8 +48,10 @@ stages:
       ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
       ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
       # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
+      ONI2_SHORT_COMMIT_ID: $[dependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
+    - script: echo $(ONI2_SHORT_COMMIT_ID)
     - template: .ci/clean-linux-deps.yml
     - template: .ci/use-node.yml
     - script: sudo apt-get update
@@ -89,7 +91,7 @@ stages:
     pool:
       vmImage: 'ubuntu-16.04'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[dependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
@@ -112,7 +114,7 @@ stages:
     pool:
       vmImage: 'ubuntu-18.04'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[dependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
@@ -193,7 +195,7 @@ stages:
     pool:
       vmImage: 'macOS-10.14'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[dependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
@@ -216,7 +218,7 @@ stages:
     pool:
       vmImage: 'macOS-10.15'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[dependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
@@ -273,7 +275,7 @@ stages:
     pool:
       vmImage: 'vs2017-win2016'
     variables:
-      ONI2_SHORT_COMMIT_ID: $[dependencies.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
+      ONI2_SHORT_COMMIT_ID: $[dependencies.Setup.Kickoff.outputs['shortCommitVariableStep.ONI2_SHORT_COMMIT_ID'] ]
 
     steps:
     - script: echo $(ONI2_SHORT_COMMIT_ID)
