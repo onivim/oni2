@@ -5,7 +5,8 @@ let wait = (~timeout=10.0, ~name="TODO", condition) => {
   while (!condition() && delta() < timeout) {
     for (_i in 0 to 100) {
       let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
-    }
+      ();
+    };
     Unix.sleepf(0.1);
   };
 
