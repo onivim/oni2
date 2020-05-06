@@ -22,6 +22,19 @@ let addedDelta =
   );
 
 describe("LanguageFeaturesTest", ({describe, _}) => {
+  let startTest = () => {
+    Test.startWithExtensions(["oni-language-features"])
+    |> Test.waitForReady
+    |> Test.waitForExtensionActivation("oni-language-features");
+  };
+
+  let finishTest = (context) => {
+      context
+      |> Test.validateNoPendingRequests
+      |> Test.terminate
+      |> Test.waitForProcessClosed;
+  };
+
   describe("completion", ({test, _}) => {
     test("gets completion items", ({expect, _}) => {
       let suggestHandle = ref(-1);
@@ -44,9 +57,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterSuggestSupport",
            waitForRegisterSuggestSupport,
@@ -75,9 +86,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
              },
            getCompletionItems,
          )
-      |> Test.validateNoPendingRequests
-      |> Test.terminate
-      |> Test.waitForProcessClosed;
+      |> finishTest;
     })
   });
   describe("definition", ({test, _}) => {
@@ -100,9 +109,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterDefinitionSupport",
            waitForRegisterDefinitionSupport,
@@ -115,10 +122,10 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get definition",
            ~validate=
-             (definitions: list(Exthost.DefinitionLink.t)) => {
+             (definitions: list(Exthost.Location.t)) => {
                expect.int(List.length(definitions)).toBe(1);
                let definition = List.hd(definitions);
-               let {range, _}: Exthost.DefinitionLink.t = definition;
+               let {range, _}: Exthost.Location.t = definition;
 
                expect.int(range.startLineNumber).toBe(1);
                expect.int(range.endLineNumber).toBe(1);
@@ -128,9 +135,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
              },
            getDefinition,
          )
-      |> Test.validateNoPendingRequests
-      |> Test.terminate
-      |> Test.waitForProcessClosed;
+      |> finishTest;
     })
   });
   describe("declaration", ({test, _}) => {
@@ -153,9 +158,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterDeclarationSupport",
            waitForRegisterDeclarationSupport,
@@ -168,10 +171,10 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get declaration",
            ~validate=
-             (declarations: list(Exthost.DefinitionLink.t)) => {
+             (declarations: list(Exthost.Location.t)) => {
                expect.int(List.length(declarations)).toBe(1);
                let definition = List.hd(declarations);
-               let {range, _}: Exthost.DefinitionLink.t = definition;
+               let {range, _}: Exthost.Location.t = definition;
 
                expect.int(range.startLineNumber).toBe(2);
                expect.int(range.endLineNumber).toBe(2);
@@ -181,9 +184,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
              },
            getDeclaration,
          )
-      |> Test.validateNoPendingRequests
-      |> Test.terminate
-      |> Test.waitForProcessClosed;
+      |> finishTest;
     })
   });
   describe("highlights", ({test, _}) => {
@@ -208,9 +209,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterHighlightProvider",
            waitForRegisterDocumentHighlightProvider,
@@ -252,9 +251,56 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
              },
            getHighlights,
          )
-      |> Test.validateNoPendingRequests
-      |> Test.terminate
-      |> Test.waitForProcessClosed;
+        |> finishTest;
+    })
+  });
+  describe("references", ({test, _}) => {
+    test("gets references", ({expect, _}) => {
+      let referencesHandle = ref(-1);
+
+      let getReferences = client =>
+        Request.LanguageFeatures.provideReferences(
+          ~handle=referencesHandle^,
+          ~resource=testUri,
+          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+          ~context=Exthost.ReferenceContext.{includeDeclaration: true},
+          client,
+        );
+
+      let waitForRegisterReferencesProvider =
+        fun
+        | Msg.LanguageFeatures(RegisterReferenceSupport({handle, _})) => {
+            referencesHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterReferencesProvider",
+           waitForRegisterReferencesProvider,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="Get highlights",
+           ~validate=
+             (references: list(Exthost.Location.t)) => {
+               expect.int(List.length(references)).toBe(1);
+               let location: Exthost.Location.t = List.nth(references, 0);
+
+               expect.int(location.range.startLineNumber).toBe(2);
+               expect.int(location.range.endLineNumber).toBe(4);
+               expect.int(location.range.startColumn).toBe(3);
+               expect.int(location.range.endColumn).toBe(5);
+               true;
+             },
+           getReferences,
+         )
+        |> finishTest;
     })
   });
   describe("symbols", ({test, _}) => {
@@ -276,9 +322,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterSymbolProvider",
            waitForRegisterDocumentSymbolProvider,
@@ -305,9 +349,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
              },
            getSymbols,
          )
-      |> Test.validateNoPendingRequests
-      |> Test.terminate
-      |> Test.waitForProcessClosed;
+      |> finishTest;
     })
   });
 });
