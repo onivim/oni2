@@ -35,7 +35,7 @@ let renderTree = (~width, ~height, state: State.t, theme, tree) => {
            height(item.height),
          ]>
          {switch (
-            EditorGroups.getEditorGroupById(state.editorGroups, item.content)
+            EditorGroups.getEditorGroupById(state.editorGroups, item.id)
           ) {
           | Some(editorGroup) => <EditorGroupView state theme editorGroup />
           | None => React.empty

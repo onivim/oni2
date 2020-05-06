@@ -29,9 +29,9 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
       expect.equal(
         Layout.[
-          {content: 3, width: 300, height: 100, x: 0, y: 0},
-          {content: 2, width: 300, height: 100, x: 0, y: 100},
-          {content: 1, width: 300, height: 100, x: 0, y: 200},
+          {id: 3, width: 300, height: 100, x: 0, y: 0},
+          {id: 2, width: 300, height: 100, x: 0, y: 100},
+          {id: 1, width: 300, height: 100, x: 0, y: 200},
         ],
         layoutItems,
       );
@@ -61,8 +61,8 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
       expect.equal(
         Layout.[
-          {content: 2, width: 100, height: 200, x: 0, y: 0},
-          {content: 1, width: 100, height: 200, x: 100, y: 0},
+          {id: 2, width: 100, height: 200, x: 0, y: 0},
+          {id: 1, width: 100, height: 200, x: 100, y: 0},
         ],
         layoutItems,
       );
@@ -83,8 +83,8 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
       expect.equal(
         Layout.[
-          {content: 2, width: 200, height: 100, x: 0, y: 0},
-          {content: 1, width: 200, height: 100, x: 0, y: 100},
+          {id: 2, width: 200, height: 100, x: 0, y: 0},
+          {id: 1, width: 200, height: 100, x: 0, y: 100},
         ],
         layoutItems,
       );
@@ -106,9 +106,9 @@ describe("WindowTreeLayout", ({describe, _}) => {
 
       expect.equal(
         Layout.[
-          {content: 2, width: 200, height: 100, x: 0, y: 0},
-          {content: 3, width: 100, height: 100, x: 0, y: 100},
-          {content: 1, width: 100, height: 100, x: 100, y: 100},
+          {id: 2, width: 200, height: 100, x: 0, y: 0},
+          {id: 1, width: 100, height: 100, x: 100, y: 100},
+          {id: 3, width: 100, height: 100, x: 0, y: 100},
         ],
         layoutItems,
       );

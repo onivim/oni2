@@ -248,7 +248,6 @@
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#b17ce17",
     "revery-terminal": "revery-ui/revery-terminal#4e8ca1c",
-    "@opam/conf-pkg-config": "1.1",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"

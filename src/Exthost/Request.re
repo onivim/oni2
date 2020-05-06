@@ -199,6 +199,25 @@ module LanguageFeatures = {
     );
   };
 
+  let provideDocumentSymbols = (~handle, ~resource, client) => {
+    let parser = json => {
+      Json.Decode.(
+        json
+        |> decode_value(list(DocumentSymbol.decode))
+        |> Result.map_error(string_of_error)
+      );
+    };
+
+    Client.request(
+      ~parser,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentSymbols",
+      ~args=`List([`Int(handle), Uri.to_yojson(resource)]),
+      client,
+    );
+  };
+
   let provideDefinition = (~handle, ~resource, ~position, client) =>
     Internal.provideDefinitionLink(
       ~handle,
