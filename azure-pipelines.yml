@@ -22,7 +22,7 @@ pr:
 # Multistage pipeline, but no stage depends on another.
 # Split by Linux, Mac, Windows
 stages:
-- stage: LinuxStages
+- stage: Linux
   dependsOn: []
   jobs:
   - job: Kickoff
@@ -83,6 +83,7 @@ stages:
   - job: ValidateLinuxReleaseUbuntu16
     displayName: "Linux: Validate Release (Ubuntu 16.04)"
     dependsOn:
+    - Kickoff
     - CentOS
     pool:
       vmImage: 'ubuntu-16.04'
@@ -106,6 +107,7 @@ stages:
   - job: ValidateLinuxReleaseUbuntu18
     displayName: "Linux: Validate Release (Ubuntu 18.04)"
     dependsOn:
+    - Kickoff
     - CentOS
     pool:
       vmImage: 'ubuntu-18.04'
@@ -128,7 +130,7 @@ stages:
       env:
         SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
-- stage: MacStages
+- stage: Mac
   dependsOn: []
   jobs:
   - job: Kickoff
@@ -196,6 +198,7 @@ stages:
   - job: ValidateMacOSRelease14
     displayName: "MacOS: Validate Release (10.14)"
     dependsOn:
+    - Kickoff
     - MacOS
     pool:
       vmImage: 'macOS-10.14'
@@ -219,6 +222,7 @@ stages:
   - job: ValidateMacOSRelease15
     displayName: "MacOS: Validate Release (10.15)"
     dependsOn:
+    - Kickoff
     - MacOS
     pool:
       vmImage: 'macOS-10.15'
@@ -239,7 +243,7 @@ stages:
       env:
         SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
-- stage: WindowsStages
+- stage: Windows
   dependsOn: []
   jobs:
   - job: Kickoff
@@ -285,6 +289,7 @@ stages:
     timeoutInMinutes: 10
     displayName: "Windows: Validate Release"
     dependsOn:
+    - Kickoff
     - Windows
     pool:
       vmImage: 'vs2017-win2016'
