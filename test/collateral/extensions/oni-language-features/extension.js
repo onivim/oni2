@@ -47,12 +47,22 @@ function activate(context) {
 		provideImplementation: hardcodedLocationProvider(new vscode.Position(3, 3))
 	};
 
+	const documentSymbolProvider = {
+		provideSymbols: (document, position, _token) => {
+			return [
+				new vscode.SymbolInformation("symbol1", vscode.SymbolKind.File, "symbol1-container", new vscode.Location(document.uri, position)),
+				new vscode.SymbolInformation("symbol2", vscode.SymbolKind.TypeParameter, "symbol2-container", new vscode.Location(document.uri, position)),
+			]
+		},
+	}
+
 	const disposable0 = vscode.languages.registerCompletionItemProvider("plaintext", completionProvider, ["."])
 	const disposable1 = vscode.languages.registerDefinitionProvider("plaintext", definitionProvider);
 	const disposable2 = vscode.languages.registerDeclarationProvider("plaintext", declarationProvider);
 	const disposable3 = vscode.languages.registerTypeDefinitionProvider("plaintext", typeDefinitionProvider);
 	const disposable4 = vscode.languages.registerImplementationProvider("plaintext", implementationProvider);
 	const disposable5 = vscode.languages.registerDocumentHighlightProvider("plaintext", documentHighlightProvider);
+	const disposable6 = vscode.languages.registerDocumentSymbolProvider("plaintext", documentSymbolProvider);
 
 	context.subscriptions.push(disposable0);
 	context.subscriptions.push(disposable1);
@@ -60,6 +70,7 @@ function activate(context) {
 	context.subscriptions.push(disposable3);
 	context.subscriptions.push(disposable4);
 	context.subscriptions.push(disposable5);
+	context.subscriptions.push(disposable6);
 }
 
 // this method is called when your extension is deactivated
