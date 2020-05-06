@@ -145,31 +145,34 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
 
   let getOriginalContent = (bufferId, uri, providers) =>
     Isolinear.Effect.createWithDispatch(
-      ~name="scm.getOriginalSourceLines", _dispatch => {
-      // TODO: Hook up provideTextDOcument API
-      //      let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
-      //      providers
-      //      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
-      //      |> Option.iter(provider => {
-      //           let (handle, _) = provider;
-      //           let promise =
-      //             ExtHostClient.provideTextDocumentContent(
-      //               handle,
-      //               uri,
-      //               extHostClient,
-      //             );
-      //
-      //           Lwt.on_success(
-      //             promise,
-      //             content => {
-      //               let lines =
-      //                 content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
-      //
-      //               dispatch(Actions.GotOriginalContent({bufferId, lines}));
-      //             },
-      //           );
-      //         });
-      ()
+      ~name="scm.getOriginalSourceLines", dispatch => {
+            let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
+            providers
+            |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+            |> Option.iter(provider => {
+                 let (handle, _) = provider;
+                 let promise =
+                   Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
+                     ~handle,
+                     ~uri,
+                     extHostClient,
+                   );
+      
+                 Lwt.on_success(
+                   promise,
+                   maybeContent => {
+
+                      switch (maybeContent) {
+                      | None => () 
+                      | Some(content) => 
+                         let lines =
+                           content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
+          
+                         dispatch(Actions.GotOriginalContent({bufferId, lines}));
+                      }
+                   },
+                 );
+               });
     });
 
   let provideDecorationsEffect = (handle, uri) =>

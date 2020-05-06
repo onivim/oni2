@@ -247,21 +247,6 @@ module ModelChangedEvent: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
-module OneBasedRange: {
-  [@deriving show]
-  type t = {
-    startLineNumber: int,
-    endLineNumber: int,
-    startColumn: int,
-    endColumn: int,
-  };
-
-  let ofRange: Range.t => t;
-  let toRange: t => Range.t;
-
-  let decode: Json.decoder(t);
-};
-
 module ShellLaunchConfig: {
   type t = {
     name: string,
