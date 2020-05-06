@@ -172,11 +172,10 @@ let request =
     Log.tracef(m => m("Request finalized: %d", newRequestId));
   };
 
-  let parser = json => Oni_Core.Json.Decode.(
-        json
-        |> decode_value(decoder)
-        |> Result.map_error(string_of_error)
-  );
+  let parser = json =>
+    Oni_Core.Json.Decode.(
+      json |> decode_value(decoder) |> Result.map_error(string_of_error)
+    );
 
   let onError = e => {
     finalize();
