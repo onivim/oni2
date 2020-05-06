@@ -2,6 +2,8 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Oni2.Feature.Changelog"));
 
+// MODEL
+
 type commit = {
   hash: string,
   time: float,
@@ -20,6 +22,15 @@ type model =
 type simpleXml =
   | Element(string, list((string, string)), list(simpleXml))
   | Text(string);
+
+let isSameDate = (a, b) => {
+  let a = Unix.localtime(a);
+  let b = Unix.localtime(b);
+
+  a.tm_year == b.tm_year && a.tm_yday == b.tm_yday;
+};
+
+// READ
 
 let read = () => {
   let simplify = stream =>
@@ -91,12 +102,9 @@ let read = () => {
   };
 };
 
-let isSameDate = (a, b) => {
-  let a = Unix.localtime(a);
-  let b = Unix.localtime(b);
+// VIEW
 
-  a.tm_year == b.tm_year && a.tm_yday == b.tm_yday;
-};
+let model = Lazy.from_fun(read);
 
 module View = {
   open Revery.UI;
@@ -104,6 +112,8 @@ module View = {
   open Oni_Components;
 
   module Colors = Feature_Theme.Colors;
+
+  // STYLES
 
   module Styles = {
     open Style;
@@ -208,6 +218,8 @@ module View = {
     <Text style={Styles.summary(uiFont, ~theme)} text={commit.summary} />;
   };
 
+  // FULL
+
   module Full = {
     let line = (~commit, ~uiFont, ~theme, ()) => {
       <View style=Styles.commit>
@@ -238,7 +250,7 @@ module View = {
         | _ => false
         };
 
-      switch (read()) {
+      switch (Lazy.force(model)) {
       | Ok(commits) =>
         <ScrollView style=Styles.scrollContainer>
           <View style=Styles.content>
@@ -256,16 +268,20 @@ module View = {
     };
   };
 
-  module Update = {
-    let line = (~commit, ~uiFont, ~theme, ()) => {
-      <View style=Styles.commit>
-        <typ commit uiFont theme />
-        <scope commit uiFont theme />
-        <summary commit uiFont theme />
-      </View>;
-    };
+  // UPDATE
 
+  module Update = {
     module Parts = {
+      let line = (~commit, ~uiFont, ~theme, ()) => {
+        <View style=Styles.commit>
+          <typ commit uiFont theme />
+          <scope commit uiFont theme />
+          <summary commit uiFont theme />
+        </View>;
+      };
+
+      // BREAKING
+
       module Breaking = {
         let breakingChange = (~text, ~uiFont, ~theme, ()) => {
           <View style=Styles.breaking>
@@ -305,6 +321,8 @@ module View = {
         };
       };
 
+      // FEATURES
+
       module Features = {
         let make = (~items, ~uiFont, ~theme, ()) => {
           <View>
@@ -320,6 +338,8 @@ module View = {
           </View>;
         };
       };
+
+      // FIXES
 
       module Fixes = {
         let make = (~items, ~uiFont, ~theme, ()) => {
@@ -338,8 +358,10 @@ module View = {
       };
     };
 
+    // Update.make
+
     let make = (~theme, ~uiFont, ()) => {
-      switch (read()) {
+      switch (Lazy.force(model)) {
       | Ok(commits) =>
         let breaking = commits |> List.filter(commit => commit.breaking != []);
         let features =
@@ -359,6 +381,7 @@ module View = {
             <Parts.Fixes items=fixes uiFont theme />
           </View>
         </ScrollView>;
+
       | Error(message) => <Text style={Styles.error(uiFont)} text=message />
       };
     };
