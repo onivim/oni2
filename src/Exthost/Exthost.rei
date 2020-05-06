@@ -51,12 +51,43 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module Location: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module DocumentFilter: {
   [@deriving show]
   type t = {
     language: option(string),
     scheme: option(string),
     exclusive: bool,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module DocumentHighlight: {
+  module Kind: {
+    [@deriving show]
+    type t =
+      | Text
+      | Read
+      | Write;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+    let decode: Json.decoder(t);
+  };
+
+  [@deriving show]
+  type t = {
+    range: OneBasedRange.t,
+    kind: Kind.t,
   };
 
   let decode: Json.decoder(t);
@@ -74,6 +105,12 @@ module SuggestItem: {
   };
 
   let decode: Json.decoder(t);
+};
+
+module ReferenceContext: {
+  type t = {includeDeclaration: bool};
+
+  let encode: Json.encoder(t);
 };
 
 module SuggestResult: {
@@ -169,7 +206,7 @@ module OneBasedPosition: {
     column: int,
   };
 
-  let ofPosition: Location.t => t;
+  let ofPosition: EditorCoreTypes.Location.t => t;
   let to_yojson: t => Yojson.Safe.t;
 };
 
@@ -195,6 +232,7 @@ module ModelChangedEvent: {
 };
 
 module OneBasedRange: {
+  [@deriving show]
   type t = {
     startLineNumber: int,
     endLineNumber: int,
@@ -204,6 +242,8 @@ module OneBasedRange: {
 
   let ofRange: Range.t => t;
   let toRange: t => Range.t;
+
+  let decode: Json.decoder(t);
 };
 
 module ShellLaunchConfig: {
@@ -326,12 +366,36 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | RegisterDocumentHighlightProvider({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterDefinitionSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterDeclarationSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterImplementationSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterTypeDefinitionSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | RegisterSuggestSupport({
           handle: int,
           selector: list(DocumentFilter.t),
           triggerCharacters: list(string),
           supportsResolveDetails: bool,
           extensionId: string,
+        })
+      | RegisterReferenceSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
         })
       | Unregister({handle: int});
   };
@@ -520,6 +584,61 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let provideDocumentHighlights:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DocumentHighlight.t));
+
+    let provideDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideDeclaration:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideImplementation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideReferences:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: ReferenceContext.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideTypeDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
   };
 
   module TerminalService: {
