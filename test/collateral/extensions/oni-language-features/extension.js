@@ -48,11 +48,12 @@ function activate(context) {
 	};
 
 	const documentSymbolProvider = {
-		provideSymbols: (document, position, _token) => {
+		provideDocumentSymbols: (document, _token) => {
+			const position = new vscode.Position(0, 0);
 			return [
 				new vscode.SymbolInformation("symbol1", vscode.SymbolKind.File, "symbol1-container", new vscode.Location(document.uri, position)),
 				new vscode.SymbolInformation("symbol2", vscode.SymbolKind.TypeParameter, "symbol2-container", new vscode.Location(document.uri, position)),
-			]
+			];
 		},
 	}
 
