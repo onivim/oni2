@@ -161,7 +161,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
                  Lwt.on_success(
                    promise,
                    maybeContent => {
-
                       switch (maybeContent) {
                       | None => () 
                       | Some(content) => 
