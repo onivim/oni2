@@ -214,31 +214,31 @@ module LanguageFeatures = {
       "$provideTypeDefinition",
       client,
     );
-  
-  let provideReferences = (~handle, ~resource, ~position, ~context, client) => {
-      let parser = json => {
-        Json.Decode.(
-          json
-          |> decode_value(list(Location.decode))
-          |> Result.map_error(string_of_error)
-        );
-      };
 
-      Client.request(
-        ~parser,
-        ~usesCancellationToken=true,
-        ~rpcName="ExtHostLanguageFeatures",
-        ~method="$provideReferences",
-        ~args=
-          `List([
-            `Int(handle),
-            Uri.to_yojson(resource),
-            OneBasedPosition.to_yojson(position),
-            context |> Json.Encode.encode_value(ReferenceContext.encode),
-          ]),
-        client,
+  let provideReferences = (~handle, ~resource, ~position, ~context, client) => {
+    let parser = json => {
+      Json.Decode.(
+        json
+        |> decode_value(list(Location.decode))
+        |> Result.map_error(string_of_error)
       );
     };
+
+    Client.request(
+      ~parser,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideReferences",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          context |> Json.Encode.encode_value(ReferenceContext.encode),
+        ]),
+      client,
+    );
+  };
 };
 
 module TerminalService = {

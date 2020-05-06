@@ -314,14 +314,10 @@ module LanguageFeatures = {
         Ok(RegisterImplementationSupport({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
-    
-    | (
-        "$registerReferenceSupport",
-        `List([`Int(handle), selectorJson]),
-      ) =>
+
+    | ("$registerReferenceSupport", `List([`Int(handle), selectorJson])) =>
       switch (parseDocumentSelector(selectorJson)) {
-      | Ok(selector) =>
-        Ok(RegisterReferenceSupport({handle, selector}))
+      | Ok(selector) => Ok(RegisterReferenceSupport({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
 

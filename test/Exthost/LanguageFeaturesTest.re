@@ -21,7 +21,15 @@ let addedDelta =
     ~addedDocuments=[model(~lines=["Hello", "World"])],
   );
 
+
 describe("LanguageFeaturesTest", ({describe, _}) => {
+
+  let startTest = () => {
+      Test.startWithExtensions(["oni-language-features"])
+      |> Test.waitForReady
+      |> Test.waitForExtensionActivation("oni-language-features")
+  };
+
   describe("completion", ({test, _}) => {
     test("gets completion items", ({expect, _}) => {
       let suggestHandle = ref(-1);
@@ -44,9 +52,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterSuggestSupport",
            waitForRegisterSuggestSupport,
@@ -100,9 +106,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterDefinitionSupport",
            waitForRegisterDefinitionSupport,
@@ -153,9 +157,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterDeclarationSupport",
            waitForRegisterDeclarationSupport,
@@ -208,9 +210,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
           }
         | _ => false;
 
-      Test.startWithExtensions(["oni-language-features"])
-      |> Test.waitForReady
-      |> Test.waitForExtensionActivation("oni-language-features")
+      startTest()
       |> Test.waitForMessage(
            ~name="RegisterHighlightProvider",
            waitForRegisterDocumentHighlightProvider,
@@ -251,6 +251,57 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                true;
              },
            getHighlights,
+         )
+      |> Test.validateNoPendingRequests
+      |> Test.terminate
+      |> Test.waitForProcessClosed;
+    })
+  });
+  describe("references", ({test, _}) => {
+    test("gets references", ({expect, _}) => {
+      let referencesHandle = ref(-1);
+
+      let getReferences = client =>
+        Request.LanguageFeatures.provideReferences(
+          ~handle=referencesHandle^,
+          ~resource=testUri,
+          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+          ~context=Exthost.ReferenceContext.{includeDeclaration: true},
+          client,
+        );
+
+      let waitForRegisterReferencesProvider =
+        fun
+        | Msg.LanguageFeatures(RegisterReferenceSupport({handle, _})) => {
+            referencesHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterReferencesProvider",
+           waitForRegisterReferencesProvider,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="Get highlights",
+           ~validate=
+             (references: list(Exthost.Location.t)) => {
+               expect.int(List.length(references)).toBe(1);
+               let location: Exthost.Location.t = List.nth(references, 0);
+
+               expect.int(location.range.startLineNumber).toBe(2);
+               expect.int(location.range.endLineNumber).toBe(4);
+               expect.int(location.range.startColumn).toBe(3);
+               expect.int(location.range.endColumn).toBe(5);
+               true;
+             },
+           getReferences,
          )
       |> Test.validateNoPendingRequests
       |> Test.terminate

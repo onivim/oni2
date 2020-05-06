@@ -108,9 +108,7 @@ module SuggestItem: {
 };
 
 module ReferenceContext: {
-  type t = {
-    includeDeclaration: bool,
-  }
+  type t = {includeDeclaration: bool};
 
   let encode: Json.encoder(t);
 };
@@ -610,14 +608,15 @@ module Request: {
       ) =>
       Lwt.t(list(Location.t));
 
-    let provideReferences: (
-      ~handle: int,
-      ~resource: Uri.t,
-      ~position: OneBasedPosition.t,
-      ~context: ReferenceContext.t,
-      Client.t
-    ) =>
-    Lwt.t(list(Location.t));
+    let provideReferences:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: ReferenceContext.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
 
     let provideTypeDefinition:
       (
