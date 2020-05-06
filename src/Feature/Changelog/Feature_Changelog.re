@@ -160,6 +160,8 @@ module View = {
       color(Colors.foreground.from(theme)),
     ];
 
+    let breakingCommit = [marginTop(10), marginBottom(6)];
+
     let breaking = [flexDirection(`Row), marginTop(4)];
 
     let breakingText = (font: UiFont.t, ~theme) => [
@@ -295,7 +297,7 @@ module View = {
         };
 
         let commit = (~item, ~uiFont, ~theme, ()) => {
-          <View>
+          <View style=Styles.breakingCommit>
             <Text
               text={item.summary |> Base.String.split(~on='\n') |> List.hd}
               style={Styles.summary(uiFont, ~theme)}
