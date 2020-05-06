@@ -1,10 +1,98 @@
 open Oni_Core;
+
 module Commands = {
   let executeContributedCommand = (~arguments, ~command, client) => {
     Client.notify(
       ~rpcName="ExtHostCommands",
       ~method="$executeContributedCommand",
       ~args=`List([`String(command), ...arguments]),
+      client,
+    );
+  };
+};
+
+module Decorations = {
+  type request = {
+    id: int,
+    handle: int,
+    uri: Uri.t,
+  };
+
+  let encodeRequest = request =>
+    Json.Encode.(
+      obj([
+        ("id", request.id |> int),
+        ("handle", request.handle |> int),
+        ("uri", request.uri |> Uri.encode),
+      ])
+    );
+
+  type decoration = {
+    priority: int,
+    bubble: bool,
+    title: string,
+    letter: string,
+    color: ThemeColor.t,
+  };
+
+  let (>>=::) = (fst, rest) => Json.Decode.uncons(rest, fst);
+
+  let decodeDecoration: Json.decoder(decoration) =
+    Json.Decode.(
+      int
+      >>=:: (
+        priority =>
+          bool
+          >>=:: (
+            bubble =>
+              string
+              >>=:: (
+                title =>
+                  string
+                  >>=:: (
+                    letter =>
+                      ThemeColor.decode
+                      >>=:: (
+                        color =>
+                          succeed({priority, bubble, title, letter, color})
+                      )
+                  )
+              )
+          )
+      )
+    );
+
+  type reply = IntMap.t(decoration);
+
+  let decodeReply =
+    Json.Decode.(
+      {
+        key_value_pairs(decodeDecoration)
+        |> and_then(items => {
+             succeed(
+               List.fold_left(
+                 (acc, (id, decoration)) => {
+                   let id = int_of_string(id);
+                   IntMap.add(id, decoration, acc);
+                 },
+                 IntMap.empty,
+                 items,
+               ),
+             )
+           });
+      }
+    );
+
+  let provideDecorations = (~requests, client) => {
+    let requestItems =
+      requests |> List.map(Json.Encode.encode_value(encodeRequest));
+
+    Client.request(
+      ~decoder=decodeReply,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostDecorations",
+      ~method="$provideDecorations",
+      ~args=`List([`List(requestItems)]),
       client,
     );
   };
