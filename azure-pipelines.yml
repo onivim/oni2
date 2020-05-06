@@ -23,6 +23,8 @@ pr:
 # Split by Linux, Mac, Windows
 stages:
 - stage: Setup
+  dependsOn: []
+  jobs:
   - job: Kickoff
     displayName: "Kickoff"
     pool:
