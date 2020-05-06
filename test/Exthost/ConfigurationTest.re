@@ -10,11 +10,6 @@ describe("ConfigurationTest", ({test, _}) => {
         owner == "diags" && List.length(entries) == 1
       | _ => false;
 
-    let waitForClear =
-      fun
-      | Msg.Diagnostics(Clear({owner})) => owner == "diags"
-      | _ => false;
-
     let model1 =
       Configuration.Model.create(
         ~keys=["foo.bar"],
