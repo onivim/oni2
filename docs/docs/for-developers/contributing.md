@@ -24,13 +24,13 @@ To improve the chances to get a pull request merged, you should select an issue 
 
 In addition, Onivim 2 is built on [Revery](https://github.com/revery-ui/revery) - any work or improvements there will directly improve Onivim 2, as well!
 
-#### Changelog generation
+#### Changelog Generation
 
-We use a script to generate the change log based on metadata picked up from the commit message, PR title and PR body. For the changelog to be generated successfully it's therefore important that these follow the exact format explained below.
+We use a script to generate the change log based on metadata picked up from the commit message, and pull request title and body. For the changelog to be generated successfully it's therefore important that these follow the exact format explained below.
 
-##### PR title
+##### Pull Request Title
 
-PR titles should have the following format:
+Pull request titles should have the following format:
 
 ```
 <type>(<scope>): <subject>
@@ -46,7 +46,7 @@ where `type` can be one of
 * **docs:** Documentation only changes
 * **chore:** Changes to the build process or auxiliary tools and libraries such as documentation generation
 
-`scope` is optional, but "encouraged". It is typically one of the ["area" issue labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) or the name of a feature project. Supplementary information, like associated issues, can be added to the scope following a `/`. For example, a PR that fixes issue #XXX regarding vim could have the type and scope `fix(vim/#XXX)`.
+`scope` is optional, but "encouraged". It is typically one of the ["area" issue labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) or the name of a feature project. Supplementary information, like associated issues, can be added to the scope following a `/`. For example, a PR that fixes issue `#123` regarding vim could have the type and scope `fix(vim/#123)`.
 
 `subject` should contain a succinct description of the change:
 
@@ -58,9 +58,9 @@ Do NOT add temporary tags, like `[WIP]`, to the title. Instead use GitHub's draf
 
 *Attribution: Adapted from [Angular's commit guidelines](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commit-message-format)*
 
-##### PR body
+##### Pull Request Body
 
-More details can be provided in a `changelog` code block in the body of the PR if a longer description is needed or if there are beaking changes:
+More details can be provided in a `changelog` code block in the body of the pull request if a longer description is needed or if there are beaking changes:
 
     ```changelog
     <breaking>This change breaks my brain</breaking>
@@ -72,7 +72,7 @@ Text inside `<breaking>` tags will be listed in the changelog as separate items 
 
 The rest of the text will become the overall description of the change and can include anything considered text content in XML. Use [predefined entities](https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Predefined_entities_in_XML) in place of characters with special meaning in XML. And please do still try to be brief!
 
-##### Commit message
+##### Commit Message
 
 *Note: this section is relevant only to maintainers who merge PRs. Contributors can safely ignore this.*
 
