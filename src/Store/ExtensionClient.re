@@ -61,8 +61,8 @@ module ExtensionCompletionProvider = {
       );
   };
 
-  // TODO: Bring back language features
-
+  
+  // TODO: Properly type definitoin provider...
   /*
   module ExtensionDefinitionProvider = {
     let definitionToModel = def => {
@@ -93,13 +93,14 @@ module ExtensionCompletionProvider = {
       );
     };
   };
+  */
 
   module ExtensionDocumentHighlightProvider = {
-    let definitionToModel = (highlights: list(Protocol.DocumentHighlight.t)) => {
+    let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
       highlights
-      |> List.map(highlights =>
-           Protocol.OneBasedRange.toRange(
-             Protocol.DocumentHighlight.(highlights.range),
+      |> List.map(highlight =>
+           Exthost.OneBasedRange.toRange(
+             Exthost.DocumentHighlight.(highlight.range),
            )
          );
     };
@@ -111,14 +112,21 @@ module ExtensionCompletionProvider = {
         ~selector,
         () => {
           let uri = Buffer.getUri(buffer);
-          let position = Protocol.OneBasedPosition.ofPosition(location);
+          let position = Exthost.OneBasedPosition.ofPosition(location);
 
-          ExtHostClient.provideDocumentHighlights(id, uri, position, client)
+          Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+          ~handle=id,
+          ~resource=uri,
+          ~position,
+          client
+          )
           |> Lwt.map(definitionToModel);
         },
       );
     };
   };
+
+/*
 
   module ExtensionFindAllReferencesProvider = {
     let create =

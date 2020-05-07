@@ -71,6 +71,18 @@ module DocumentFilter: {
   let decode: Json.decoder(t);
 };
 
+module OneBasedRange: {
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
+
+  let ofRange: Range.t => t;
+  let toRange: t => Range.t;
+};
+
 module DocumentHighlight: {
   module Kind: {
     [@deriving show]
@@ -249,18 +261,6 @@ module Configuration: {
   let empty: t;
   let create:
     (~defaults: Model.t=?, ~user: Model.t=?, ~workspace: Model.t=?, unit) => t;
-};
-
-module OneBasedRange: {
-  type t = {
-    startLineNumber: int,
-    endLineNumber: int,
-    startColumn: int,
-    endColumn: int,
-  };
-
-  let ofRange: Range.t => t;
-  let toRange: t => Range.t;
 };
 
 module Diagnostic: {
