@@ -589,6 +589,16 @@ module Request: {
     let executeContributedCommand:
       (~arguments: list(Json.t), ~command: string, Client.t) => unit;
   };
+  
+  module Configuration: {
+    let acceptConfigurationChanged:
+      (
+        ~configuration: Configuration.t,
+        ~changed: Configuration.Model.t,
+        Client.t
+      ) =>
+      unit;
+  };
 
   module Decorations: {
     type request = {

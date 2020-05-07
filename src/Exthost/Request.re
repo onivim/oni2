@@ -1,3 +1,4 @@
+module ExtConfig = Configuration;
 open Oni_Core;
 
 module Commands = {
@@ -6,6 +7,22 @@ module Commands = {
       ~rpcName="ExtHostCommands",
       ~method="$executeContributedCommand",
       ~args=`List([`String(command), ...arguments]),
+      client,
+    );
+  };
+};
+
+module Configuration = {
+  open Json.Encode;
+  let acceptConfigurationChanged = (~configuration, ~changed, client) => {
+    Client.notify(
+      ~rpcName="ExtHostConfiguration",
+      ~method="$acceptConfigurationChanged",
+      ~args=
+        `List([
+          configuration |> encode_value(ExtConfig.encode),
+          changed |> encode_value(ExtConfig.Model.encode),
+        ]),
       client,
     );
   };
@@ -94,7 +111,7 @@ module Decorations = {
       ~method="$provideDecorations",
       ~args=`List([`List(requestItems)]),
       client,
-    );
+   );
   };
 };
 
