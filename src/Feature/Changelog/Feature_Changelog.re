@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Feature.Changelog"));
 
@@ -10,6 +11,7 @@ type commit = {
   pr: option(int),
   typ: option(string),
   scope: option(string),
+  issue: option(int),
   summary: string,
   breaking: list(string),
 };
@@ -53,11 +55,24 @@ let read = () => {
           try(List.assoc("time", attrs) |> float_of_string) {
           | Not_found => failwith("time is required")
           };
-        let pr = List.assoc_opt("pr", attrs) |> Option.map(int_of_string);
+        let pr =
+          List.assoc_opt("pr", attrs) |> OptionEx.flatMap(int_of_string_opt);
         let typ = List.assoc_opt("type", attrs);
         let scope = List.assoc_opt("scope", attrs);
+        let issue =
+          List.assoc_opt("issue", attrs)
+          |> OptionEx.flatMap(int_of_string_opt);
 
-        let commit = {hash, time, pr, typ, scope, summary: "", breaking: []};
+        let commit = {
+          hash,
+          time,
+          pr,
+          typ,
+          scope,
+          issue,
+          summary: "",
+          breaking: [],
+        };
 
         List.fold_left(
           commit =>
