@@ -122,6 +122,13 @@ module View = {
       overflow(`Hidden),
     ];
 
+    let header = (font: UiFont.t, ~theme) => [
+      fontFamily(font.fontFile),
+      fontSize(20.),
+      color(Colors.foreground.from(theme)),
+      marginTop(16),
+    ];
+
     let commit = [flexDirection(`Row), marginTop(10)];
 
     let groupHeader = (font: UiFont.t, ~theme) => [
@@ -251,6 +258,7 @@ module View = {
       | Ok(commits) =>
         <ScrollView style=Styles.scrollContainer>
           <View style=Styles.content>
+            <Text text="Changelog" style={Styles.header(uiFont, ~theme)} />
             {commits
              |> List.filter(isSignificantCommit)
              |> Base.List.group(~break=(a, b) =>
@@ -384,6 +392,10 @@ module View = {
 
         <ScrollView style=Styles.scrollContainer>
           <View style=Styles.content>
+            <Text
+              text={"Changes since " ++ since}
+              style={Styles.header(uiFont, ~theme)}
+            />
             <Parts.Breaking items=breaking uiFont theme />
             <Parts.Features items=features uiFont theme />
             <Parts.Fixes items=fixes uiFont theme />
