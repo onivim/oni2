@@ -106,6 +106,22 @@ let start = () => {
       };
     });
 
+  let openChangelogEffect = _ =>
+    Isolinear.Effect.createWithDispatch(~name="oni.changelog", dispatch => {
+      Vim.init();
+      let _: unit = Vim.command("e oni://Changelog");
+
+      let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
+      dispatch(
+        Actions.BufferRenderer(
+          BufferRenderer.RendererAvailable(
+            bufferId,
+            BufferRenderer.FullChangelog,
+          ),
+        ),
+      );
+    });
+
   let commands = [
     ("system.addToPath", _ => togglePathEffect),
     ("system.removeFromPath", _ => togglePathEffect),
@@ -128,6 +144,7 @@ let start = () => {
       "workbench.action.zoomReset",
       state => zoomEffect(state, _zoom => Constants.defaultZoomValue),
     ),
+    ("oni.changelog", _ => openChangelogEffect),
   ];
 
   let commandMap =
