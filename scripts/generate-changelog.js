@@ -34,16 +34,20 @@ function getLastCommit(xml) {
 // PARSING
 
 function parseSubject(str) {
-    let result = str.match(/^([a-z]+)(?:\(([^\)]+)\))?:\s*(.*)$/)
-    return result
-        ? {
-              type: result[1],
-              scope: result[2],
-              subject: result[3],
-          }
-        : {
-              subject: str,
-          }
+    let result = str.match(/^([a-z]+)(?:\(([^\)^\/]+)(?:\/([^\)]+))?\))?:\s*(.*)$$/)
+
+    if (result) {
+        return {
+            type: result[1],
+            scope: result[2],
+            issue: (result[3] || "").replace(/^#/, ""),
+            subject: result[4],
+        }
+    } else {
+        return {
+            subject: str,
+        }
+    }
 }
 
 function extractPRNumber(str) {
@@ -102,11 +106,12 @@ function extractLogEntry(body) {
 
 // GENERATE XML
 
-function createCommitXml({ type, scope, hash, pr, time, content, subject }) {
+function createCommitXml({ type, scope, issue, hash, pr, time, content, subject }) {
     const typeAttr = type ? `type="${type}" ` : ""
     const scopeAttr = scope ? `scope="${scope}" ` : ""
+    const issueAttr = issue ? `issue="${issue}" ` : ""
 
-    return `  <commit ${typeAttr}${scopeAttr}hash="${hash}" pr=${pr} time=${time}>
+    return `  <commit ${typeAttr}${scopeAttr}${issueAttr}hash="${hash}" pr=${pr} time=${time}>
     ${content ? content.replace(/\n/g, "\n    ") : subject}
   </commit>\n`
 }
