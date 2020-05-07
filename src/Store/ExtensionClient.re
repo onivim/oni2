@@ -186,8 +186,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
        );
 
   let _onRegisterDefinitionProvider = (client, provider) => {
-    ()//    let id =
-      //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
+    ()//      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
       //    let definitionProvider =
       //      ExtensionDefinitionProvider.create(client, provider);
       //
@@ -195,7 +194,8 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //      Actions.LanguageFeature(
       //        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
       //      ),
-      ; // TODO
+      ; //    let id =
+ // TODO
       //    );
   };
 
@@ -215,8 +215,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let _onRegisterReferencesProvider = (client, provider) => {
-    ()//      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
-      //    let findAllReferencesProvider =
+    ()//    let findAllReferencesProvider =
       //      ExtensionFindAllReferencesProvider.create(client, provider);
       //
       //    dispatch(
@@ -226,13 +225,13 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //          findAllReferencesProvider,
       //        ),
       //      ),
-      ; //    let id =
+      ; //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
+ //    let id =
       //    );
   };
 
   let _onRegisterDocumentHighlightProvider = (client, provider) => {
-    ()//    let id =
-      //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
+    ()//      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
       //    let documentHighlightProvider =
       //      ExtensionDocumentHighlightProvider.create(client, provider);
       //
@@ -243,13 +242,13 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //          documentHighlightProvider,
       //        ),
       //      ),
-      ; // TODO
+      ; //    let id =
+ // TODO
       //    );
   };
 
   let _onRegisterSuggestProvider = (client, provider) => {
-    ()//    let id =
-      //      Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
+    ()//      Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
       //    let completionProvider =
       //      ExtensionCompletionProvider.create(client, provider);
       //
@@ -257,7 +256,8 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //      Actions.LanguageFeature(
       //        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
       //      ),
-      ; // TODO: Implement
+      ; //    let id =
+ // TODO: Implement
       //    );
   };
   let onDiagnosticsChangeMany =
@@ -282,7 +282,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   open Exthost.Msg;
 
   let handler = msg => {
-    prerr_endline ("GOT MESSAGE: " ++ Exthost.Msg.show(msg));
+    prerr_endline("GOT MESSAGE: " ++ Exthost.Msg.show(msg));
     switch (msg) {
     //    TODO
     //    | SCM(msg) =>
@@ -346,7 +346,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       None;
     | _ => None
     };
-    };
+  };
 
   let parentPid = Luv.Pid.getpid();
   let name = Printf.sprintf("exthost-client-%s", parentPid |> string_of_int);

@@ -423,14 +423,14 @@ module SuggestProvider = {
 };
 
 /*module DocumentSymbolProvider = {
-  type t = {
-    selector: DocumentSelector.t,
-    id: int,
-    label: string,
-  };
+    type t = {
+      selector: DocumentSelector.t,
+      id: int,
+      label: string,
+    };
 
-  let create = (~selector, ~label, id) => {selector, label, id};
-};*/
+    let create = (~selector, ~label, id) => {selector, label, id};
+  };*/
 
 module BasicProvider = {
   type t = {
@@ -496,17 +496,17 @@ module IncomingNotifications = {
     };
 
     /*let parseDocumentSymbolProvider = json => {
-      switch (json) {
-      | [`Int(id), documentSelector, `String(label)] =>
-        documentSelector
-        |> DocumentSelector.of_yojson
-        |> Stdlib.Result.to_option
-        |> Option.map(selector => {
-             DocumentSymbolProvider.create(~selector, ~label, id)
-           })
-      | _ => None
-      };
-    };*/
+        switch (json) {
+        | [`Int(id), documentSelector, `String(label)] =>
+          documentSelector
+          |> DocumentSelector.of_yojson
+          |> Stdlib.Result.to_option
+          |> Option.map(selector => {
+               DocumentSymbolProvider.create(~selector, ~label, id)
+             })
+        | _ => None
+        };
+      };*/
 
     let parseRegisterSuggestSupport = json => {
       switch (json) {
