@@ -20,6 +20,7 @@ let noopErrorHandler = _ => ();
 
 let startWithExtensions =
     (
+      ~initialConfiguration=Exthost.Configuration.empty,
       ~pid=Luv.Pid.getpid(),
       ~handler=noopHandler,
       ~onError=noopErrorHandler,
@@ -72,6 +73,7 @@ let startWithExtensions =
   let pipeStr = NamedPipe.toString(pipe);
   let client =
     Client.start(
+      ~initialConfiguration,
       ~namedPipe=pipe,
       ~initData,
       ~handler=wrappedHandler,
