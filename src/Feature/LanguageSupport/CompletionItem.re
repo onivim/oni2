@@ -1,8 +1,6 @@
-module Ext = Oni_Extensions;
-
 type t = {
   label: string,
-  kind: option(Ext.CompletionItemKind.t),
+  kind: option(Exthost.CompletionKind.t),
   detail: option(string),
 };
 

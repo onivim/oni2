@@ -13,31 +13,29 @@ module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 module Workspace = Protocol.Workspace;
 
-// TODO: Bring back language features
-/*module ExtensionCompletionProvider = {
+module ExtensionCompletionProvider = {
     let suggestionItemToCompletionItem:
-      Protocol.SuggestionItem.t => CompletionItem.t =
+      Exthost.SuggestItem.t => CompletionItem.t =
       suggestion => {
-        let completionKind =
-          Option.bind(suggestion.kind, CompletionItemKind.ofInt);
 
         {
           label: suggestion.label,
-          kind: completionKind,
+          kind: suggestion.kind,
           detail: suggestion.detail,
         };
       };
 
     let suggestionsToCompletionItems:
-      option(Protocol.Suggestions.t) => list(CompletionItem.t) =
-      fun
-      | Some(suggestions) =>
-        List.map(suggestionItemToCompletionItem, suggestions)
-      | None => [];
+      Exthost.SuggestResult.t => list(CompletionItem.t) =
+      ({completions, _}) => {
+      
+      completions
+      |> List.map(suggestionItemToCompletionItem);
+      };
 
     let create =
         (
-          client: ExtHostClient.t,
+          client: Exthost.Client.t,
           {id, selector}: Protocol.SuggestProvider.t,
           (buffer, _completionMeet, location),
         ) =>
@@ -46,13 +44,26 @@ module Workspace = Protocol.Workspace;
         ~selector,
         () => {
           let uri = Buffer.getUri(buffer);
-          let position = Protocol.OneBasedPosition.ofPosition(location);
-          ExtHostClient.provideCompletions(id, uri, position, client)
+          let position = Exthost.OneBasedPosition.ofPosition(location);
+          Exthost.Request.LanguageFeatures.provideCompletionItems(
+            ~handle=id,
+            ~resource=uri,
+            ~position,
+            // TODO: Properly populate context
+            ~context=Exthost.CompletionContext.{
+              triggerKind: Invoke,
+              triggerCharacter: None,
+            },
+            client,
+          )
           |> Lwt.map(suggestionsToCompletionItems);
         },
       );
   };
 
+  // TODO: Bring back language features
+
+  /*
   module ExtensionDefinitionProvider = {
     let definitionToModel = def => {
       let Protocol.DefinitionLink.{uri, range, originSelectionRange} = def;
