@@ -589,7 +589,7 @@ module Request: {
     let executeContributedCommand:
       (~arguments: list(Json.t), ~command: string, Client.t) => unit;
   };
-  
+
   module Configuration: {
     let acceptConfigurationChanged:
       (

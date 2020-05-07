@@ -111,7 +111,7 @@ module Decorations = {
       ~method="$provideDecorations",
       ~args=`List([`List(requestItems)]),
       client,
-   );
+    );
   };
 };
 
