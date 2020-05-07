@@ -422,7 +422,7 @@ module SuggestProvider = {
   let create = (~selector, id) => {selector, id};
 };
 
-module DocumentSymbolProvider = {
+/*module DocumentSymbolProvider = {
   type t = {
     selector: DocumentSelector.t,
     id: int,
@@ -430,7 +430,7 @@ module DocumentSymbolProvider = {
   };
 
   let create = (~selector, ~label, id) => {selector, label, id};
-};
+};*/
 
 module BasicProvider = {
   type t = {
@@ -495,7 +495,7 @@ module IncomingNotifications = {
       };
     };
 
-    let parseDocumentSymbolProvider = json => {
+    /*let parseDocumentSymbolProvider = json => {
       switch (json) {
       | [`Int(id), documentSelector, `String(label)] =>
         documentSelector
@@ -506,7 +506,7 @@ module IncomingNotifications = {
            })
       | _ => None
       };
-    };
+    };*/
 
     let parseRegisterSuggestSupport = json => {
       switch (json) {

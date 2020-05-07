@@ -199,7 +199,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //    );
   };
 
-  let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
+  let _onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
     let id = "exthost." ++ string_of_int(handle);
     let documentSymbolProvider =
       ExtensionDocumentSymbolProvider.create(handle, selector, label, client);
@@ -281,7 +281,8 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   open Exthost.Extension;
   open Exthost.Msg;
 
-  let handler = msg =>
+  let handler = msg => {
+    prerr_endline ("GOT MESSAGE: " ++ Exthost.Msg.show(msg));
     switch (msg) {
     //    TODO
     //    | SCM(msg) =>
@@ -344,6 +345,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       Service_Terminal.handleExtensionMessage(msg);
       None;
     | _ => None
+    };
     };
 
   let parentPid = Luv.Pid.getpid();

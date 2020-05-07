@@ -8,7 +8,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 
-module SymbolKind = Oni_Extensions.SymbolKind;
+module SymbolKind = Exthost.SymbolKind;
 module LocationWithUri = Oni_Extensions.LocationWithUri;
 
 let joinAll: list(Lwt.t(list('a))) => Lwt.t(list('a)) =
