@@ -104,8 +104,8 @@ let start =
                )
              }
            })
-      | Incoming.Acknowledged({ requestId }) =>
-        Log.tracef(m => m("Received ack: %d", requestId));
+      | Incoming.Acknowledged({requestId}) =>
+        Log.tracef(m => m("Received ack: %d", requestId))
       | _ =>
         Log.warn(
           "Unhandled message: " ++ Protocol.Message.Incoming.show(msg),
