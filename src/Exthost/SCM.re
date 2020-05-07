@@ -18,7 +18,7 @@ module Resource = {
   };
 
   [@deriving show({with_path: false})]
-  type resource = {
+  type t = {
     handle: int,
     resourceUri: Uri.t,
     icons: Icons.t,
@@ -28,11 +28,10 @@ module Resource = {
   };
 
   module Splice = {
-    [@deriving show({with_path: false})]
-    type t = {
+    type nonrec t = {
       start: int,
       deleteCount: int,
-      resources: list(resource),
+      resources: list(t),
     };
   };
 
@@ -40,7 +39,7 @@ module Resource = {
     [@deriving show({with_path: false})]
     type t = {
       handle: int,
-      resourceSplices: list(Splice.t),
+      resourceSplices: [@opaque] list(Splice.t),
     };
   };
 
@@ -91,6 +90,8 @@ module Resource = {
         )
       );
   };
+
+  let decode = Decode.resource;
 };
 
 module Decode = {

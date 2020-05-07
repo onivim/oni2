@@ -131,7 +131,7 @@ module SCM: {
     };
 
     [@deriving show({with_path: false})]
-    type resource = {
+    type t = {
       handle: int,
       resourceUri: Uri.t,
       icons: Icons.t,
@@ -140,12 +140,13 @@ module SCM: {
       faded: bool,
     };
 
+    let decode: Json.decoder(t);
+
     module Splice: {
-      [@deriving show({with_path: false})]
-      type t = {
+      type nonrec t = {
         start: int,
         deleteCount: int,
-        resources: list(resource),
+        resources: list(t),
       };
     };
 
@@ -153,14 +154,11 @@ module SCM: {
       [@deriving show({with_path: false})]
       type t = {
         handle: int,
-        resourceSplices: list(Splice.t),
+        resourceSplices: [@opaque] list(Splice.t),
       };
     };
 
-    module Decode: {
-      let resource: Json.decoder(resource);
-      let splices: Json.decoder(Splices.t);
-    };
+    module Decode: {let splices: Json.decoder(Splices.t);};
   };
 
   module Decode: {
