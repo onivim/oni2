@@ -1,6 +1,6 @@
 type t = {
   label: string,
-  kind: option(Exthost.CompletionKind.t),
+  kind: Exthost.CompletionKind.t,
   detail: option(string),
 };
 

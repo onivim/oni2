@@ -39,12 +39,17 @@ let initial = {
 
 module Effects = {
   let getOriginalUri = (extHostClient, model, path, toMsg) =>
+    // TODO
+    Isolinear.Effect.none
+    /*Exthost.Request.SCM.provideOriginalResource(
+      ~handle
+    )
     ExtHostClient.SCM.Effects.provideOriginalResource(
       extHostClient,
       model.providers,
       path,
       toMsg,
-    );
+    );*/
 };
 
 // UPDATE
