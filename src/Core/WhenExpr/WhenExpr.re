@@ -7,7 +7,7 @@ type t =
   | Defined(string)
   | Eq(string, Value.t)
   | Neq(string, Value.t)
-  | Regex(string, option(Re.re))
+  | Regex(string, option([@opaque] Oniguruma.OnigRegExp.t))
   | And(list(t))
   | Or(list(t))
   | Not(t)
@@ -20,7 +20,8 @@ let evaluate = (expr, getValue) => {
     | Eq(key, value) => getValue(key) == value
     | Neq(key, value) => getValue(key) != value
     | Regex(_, None) => false
-    | Regex(key, Some(re)) => Re.execp(re, key |> getValue |> Value.asString)
+    | Regex(key, Some(re)) =>
+      Oniguruma.OnigRegExp.test(key |> getValue |> Value.asString, re)
     | And(exprs) => List.for_all(eval, exprs)
     | Or(exprs) => List.exists(eval, exprs)
     | Not(expr) => !eval(expr)
@@ -59,11 +60,11 @@ module Parse = {
 
       | (Some(start), Some(stop)) =>
         let pattern = String.sub(str, start + 1, stop - start - 1);
-        switch (Re.Pcre.re(pattern) |> Re.compile) {
-        | regex => Some(regex)
-        | exception Re.Perl.Parse_error when strict =>
+        switch (Oniguruma.OnigRegExp.create(pattern)) {
+        | Ok(regex) => Some(regex)
+        | Error(str) when strict =>
           failwith("invalid regexp '" ++ str ++ "', ")
-        | exception Re.Perl.Parse_error => None
+        | Error(_) => None
         };
 
       | (None, None) when strict =>
