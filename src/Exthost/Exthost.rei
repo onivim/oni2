@@ -113,6 +113,60 @@ module ReferenceContext: {
   let encode: Json.encoder(t);
 };
 
+module SCM: {
+  type command = {
+    id: string,
+    title: string,
+    tooltip: option(string),
+    arguments: list([@opaque] Json.t),
+  };
+
+  module Resource: {
+    module Icons: {
+      [@deriving show({with_path: false})]
+      type t = {
+        light: Uri.t,
+        dark: Uri.t,
+      };
+    };
+
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      resourceUri: Uri.t,
+      icons: Icons.t,
+      tooltip: string,
+      strikeThrough: bool,
+      faded: bool,
+    };
+
+    let decode: Json.decoder(t);
+
+    module Splice: {
+      type nonrec t = {
+        start: int,
+        deleteCount: int,
+        resources: list(t),
+      };
+    };
+
+    module Splices: {
+      [@deriving show({with_path: false})]
+      type t = {
+        handle: int,
+        resourceSplices: [@opaque] list(Splice.t),
+      };
+    };
+
+    module Decode: {let splices: Json.decoder(Splices.t);};
+  };
+
+  module Decode: {
+    //let resource: Yojson.Safe.t => Resource.t;
+    let command: Yojson.Safe.t => option(command);
+  };
+};
+
 module SuggestResult: {
   type t = {
     completions: list(SuggestItem.t),
@@ -341,6 +395,12 @@ module WorkspaceData: {
   let decode: Json.decoder(t);
 };
 
+module ThemeColor: {
+  type t = {id: string};
+
+  let decode: Json.decoder(t);
+};
+
 module Msg: {
   module Commands: {
     [@deriving show]
@@ -482,6 +542,40 @@ module Msg: {
         });
   };
 
+  module SCM: {
+    [@deriving show]
+    type msg =
+      | RegisterSourceControl({
+          handle: int,
+          id: string,
+          label: string,
+          rootUri: option(Uri.t),
+        })
+      | UnregisterSourceControl({handle: int})
+      | UpdateSourceControl({
+          handle: int,
+          hasQuickDiffProvider: option(bool),
+          count: option(int),
+          commitTemplate: option(string),
+          acceptInputCommand: option(SCM.command),
+        })
+      // statusBarCommands: option(_),
+      | RegisterSCMResourceGroup({
+          provider: int,
+          handle: int,
+          id: string,
+          label: string,
+        })
+      | UnregisterSCMResourceGroup({
+          provider: int,
+          handle: int,
+        })
+      | SpliceSCMResourceStates({
+          handle: int,
+          splices: list(SCM.Resource.Splices.t),
+        });
+  };
+
   module Telemetry: {
     [@deriving show]
     type msg =
@@ -545,6 +639,7 @@ module Msg: {
     | ExtensionService(ExtensionService.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
+    | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
@@ -602,6 +697,27 @@ module Request: {
         Client.t
       ) =>
       unit;
+  };
+
+  module Decorations: {
+    type request = {
+      id: int,
+      handle: int,
+      uri: Uri.t,
+    };
+
+    type decoration = {
+      priority: int,
+      bubble: bool,
+      title: string,
+      letter: string,
+      color: ThemeColor.t,
+    };
+
+    type reply = IntMap.t(decoration);
+
+    let provideDecorations:
+      (~requests: list(request), Client.t) => Lwt.t(reply);
   };
 
   module DocumentContentProvider: {
@@ -706,6 +822,14 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(Location.t));
+  };
+
+  module SCM: {
+    let provideOriginalResource:
+      (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(Uri.t));
+
+    let onInputBoxValueChange:
+      (~handle: int, ~value: string, Client.t) => unit;
   };
 
   module TerminalService: {
