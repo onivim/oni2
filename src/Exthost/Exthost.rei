@@ -113,6 +113,58 @@ module ReferenceContext: {
   let encode: Json.encoder(t);
 };
 
+module SCM: {
+  type command = {
+    id: string,
+    title: string,
+    tooltip: option(string),
+    arguments: list([@opaque] Json.t),
+  };
+
+  module Resource: {
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      uri: Uri.t,
+      icons: list(string),
+      tooltip: string,
+      strikeThrough: bool,
+      faded: bool,
+    };
+  };
+
+  module ResourceGroup: {
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      id: string,
+      label: string,
+      hideWhenEmpty: bool,
+      resources: list(Resource.t),
+    };
+  };
+
+  module Provider: {
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      id: string,
+      label: string,
+      rootUri: option(Uri.t),
+      resourceGroups: list(ResourceGroup.t),
+      hasQuickDiffProvider: bool,
+      count: int,
+      commitTemplate: string,
+      acceptInputCommand: option(command),
+    };
+  };
+
+  module Decode: {
+    let resource: Yojson.Safe.t => Resource.t;
+    let command: Yojson.Safe.t => option(command);
+  };
+};
+
 module SuggestResult: {
   type t = {
     completions: list(SuggestItem.t),
@@ -472,6 +524,43 @@ module Msg: {
         });
   };
 
+  module SCM: {
+    [@deriving show]
+    type msg =
+      | RegisterSourceControl({
+          handle: int,
+          id: string,
+          label: string,
+          rootUri: option(Uri.t),
+        })
+      | UnregisterSourceControl({handle: int})
+      | UpdateSourceControl({
+          handle: int,
+          hasQuickDiffProvider: option(bool),
+          count: option(int),
+          commitTemplate: option(string),
+          acceptInputCommand: option(SCM.command),
+        })
+      // statusBarCommands: option(_),
+      | RegisterSCMResourceGroup({
+          provider: int,
+          handle: int,
+          id: string,
+          label: string,
+        })
+      | UnregisterSCMResourceGroup({
+          provider: int,
+          handle: int,
+        })
+      | SpliceSCMResourceStates({
+          provider: int,
+          group: int,
+          start: int,
+          deleteCount: int,
+          additions: list(SCM.Resource.t),
+        });
+  };
+
   module Telemetry: {
     [@deriving show]
     type msg =
@@ -535,6 +624,7 @@ module Msg: {
     | ExtensionService(ExtensionService.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
+    | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)

@@ -502,6 +502,144 @@ module Telemetry = {
     };
   };
 };
+
+module SCM = {
+  [@deriving show]
+  type msg =
+    | RegisterSourceControl({
+        handle: int,
+        id: string,
+        label: string,
+        rootUri: option(Uri.t),
+      })
+    | UnregisterSourceControl({handle: int})
+    | UpdateSourceControl({
+        handle: int,
+        hasQuickDiffProvider: option(bool),
+        count: option(int),
+        commitTemplate: option(string),
+        acceptInputCommand: option(SCM.command),
+      })
+    // statusBarCommands: option(_),
+    | RegisterSCMResourceGroup({
+        provider: int,
+        handle: int,
+        id: string,
+        label: string,
+      })
+    | UnregisterSCMResourceGroup({
+        provider: int,
+        handle: int,
+      })
+    | SpliceSCMResourceStates({
+        provider: int,
+        group: int,
+        start: int,
+        deleteCount: int,
+        additions: list(SCM.Resource.t),
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method) {
+    | "$registerSourceControl" =>
+      switch (args) {
+      | `List([`Int(handle), `String(id), `String(label), rootUri]) =>
+        let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
+        Ok(RegisterSourceControl({handle, id, label, rootUri}));
+
+      | _ => Error("Unexpected arguments for $registerSourceControl")
+      }
+
+    | "$unregisterSourceControl" =>
+      switch (args) {
+      | `List([`Int(handle)]) =>
+        Ok(UnregisterSourceControl({handle: handle}))
+
+      | _ => Error("Unexpected arguments for $unregisterSourceControl")
+      }
+
+    | "$updateSourceControl" =>
+      switch (args) {
+      | `List([`Int(handle), features]) =>
+        Yojson.Safe.Util.(
+          Ok(
+            UpdateSourceControl({
+              handle,
+              hasQuickDiffProvider:
+                features |> member("hasQuickDiffProvider") |> to_bool_option,
+              count: features |> member("count") |> to_int_option,
+              commitTemplate:
+                features |> member("commitTemplate") |> to_string_option,
+              acceptInputCommand:
+                features |> member("acceptInputCommand") |> SCM.Decode.command,
+            }),
+          )
+        )
+
+      | _ => Error("Unexpected arguments for $updateSourceControl")
+      }
+
+    | "$registerGroup" =>
+      switch (args) {
+      | `List([`Int(provider), `Int(handle), `String(id), `String(label)]) =>
+        Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
+
+      | _ => Error("Unexpected arguments for $registerGroup")
+      }
+
+    | "$unregisterGroup" =>
+      switch (args) {
+      | `List([`Int(handle), `Int(provider)]) =>
+        Ok(UnregisterSCMResourceGroup({provider, handle}))
+
+      | _ => Error("Unexpected arguments for $unregisterGroup")
+      }
+
+    // TODO:
+    /*| "$spliceResourceStates" =>
+        switch (args) {
+        | `List([`Int(provider), `List(groupSplices)]) =>
+          List.map(
+            fun
+            | `List([`Int(group), `List(splices)]) =>
+              List.map(
+                splice =>
+                  switch (splice) {
+                  | `List([`Int(start), `Int(deleteCount), `List(additions)]) =>
+                    let additions = List.map(SCM.Decode.resource, additions);
+                    Ok(
+                      SpliceSCMResourceStates({
+                        provider,
+                        group,
+                        start,
+                        deleteCount,
+                        additions,
+                      }),
+                    );
+
+                  | _ => Error("spliceResourceStates: Unexpected json")
+                  },
+                splices,
+              )
+            | _ => Error("spliceResourceStates: Unexpected json"),
+            groupSplices,
+          )
+
+        | _ => Error("Unexpected arguments for $spliceResourceStates")
+      };
+      */
+    | _ =>
+      Error(
+        Printf.sprintf(
+          "Unhandled SCM message - %s: %s",
+          method,
+          Yojson.Safe.to_string(args),
+        ),
+      )
+    };
+  };
+};
+
 module TerminalService = {
   [@deriving show]
   type msg =
@@ -578,6 +716,7 @@ type t =
   | ExtensionService(ExtensionService.msg)
   | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
+  | SCM(SCM.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)
   | TerminalService(TerminalService.msg)
