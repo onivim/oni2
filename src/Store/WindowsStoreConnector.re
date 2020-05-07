@@ -28,8 +28,25 @@ let start = () => {
       )
     });
 
+  let resize = (axis, factor, state: State.t) =>
+    switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+    | Some((editorGroup: EditorGroup.t)) => {
+        ...state,
+        layout:
+          Feature_Layout.resizeWindow(
+            axis,
+            editorGroup.editorGroupId,
+            factor,
+            state.layout,
+          ),
+      }
+    | None => state
+    };
+
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
+    | EditorGroupSelected(_) => FocusManager.push(Editor, s)
+
     | AddSplit(direction, split) => {
         ...s,
         // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
@@ -94,6 +111,29 @@ let start = () => {
             ),
         }
       | None => s
+      }
+
+    | Command("workbench.action.decreaseViewSize") =>
+      s |> resize(`Horizontal, 0.95) |> resize(`Vertical, 0.95)
+
+    | Command("workbench.action.increaseViewSize") =>
+      s |> resize(`Horizontal, 1.05) |> resize(`Vertical, 1.05)
+
+    | Command("vim.decreaseHorizontalWindowSize") =>
+      s |> resize(`Horizontal, 0.95)
+
+    | Command("vim.increaseHorizontalWindowSize") =>
+      s |> resize(`Horizontal, 1.05)
+
+    | Command("vim.decreaseVerticalWindowSize") =>
+      s |> resize(`Vertical, 0.95)
+
+    | Command("vim.increaseVerticalWindowSize") =>
+      s |> resize(`Vertical, 1.05)
+
+    | Command("workbench.action.evenEditorWidths") => {
+        ...s,
+        layout: Feature_Layout.resetWeights(s.layout),
       }
 
     | _ => s

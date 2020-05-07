@@ -955,20 +955,19 @@ let start =
         copyActiveFilepathToClipboardEffect,
       )
 
-    | VimDirectoryChanged(directory) =>
+    | VimDirectoryChanged(workingDirectory) =>
       let newState = {
         ...state,
-        workspace:
-          Some({
-            workingDirectory: directory,
-            rootName: Filename.basename(directory),
-          }),
+        workspace: {
+          workingDirectory,
+          rootName: Filename.basename(workingDirectory),
+        },
       };
       (
         newState,
         Isolinear.Effect.batch([
           FileExplorerStore.Effects.load(
-            directory,
+            workingDirectory,
             state.languageInfo,
             state.iconTheme,
             state.configuration,

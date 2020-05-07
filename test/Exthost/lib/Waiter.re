@@ -1,9 +1,11 @@
-let wait = (~timeout=5.0, ~name="TODO", condition) => {
+let wait = (~timeout=10.0, ~name="TODO", condition) => {
   let start = Unix.gettimeofday();
   let delta = () => Unix.gettimeofday() -. start;
 
   while (!condition() && delta() < timeout) {
-    let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
+    for (_i in 0 to 100) {
+      ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+    };
     Unix.sleepf(0.1);
   };
 

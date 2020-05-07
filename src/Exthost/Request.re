@@ -1,3 +1,4 @@
+module ExtConfig = Configuration;
 open Oni_Core;
 module Commands = {
   let executeContributedCommand = (~arguments, ~command, client) => {
@@ -5,6 +6,35 @@ module Commands = {
       ~rpcName="ExtHostCommands",
       ~method="$executeContributedCommand",
       ~args=`List([`String(command), ...arguments]),
+      client,
+    );
+  };
+};
+
+module Configuration = {
+  open Json.Encode;
+  let acceptConfigurationChanged = (~configuration, ~changed, client) => {
+    Client.notify(
+      ~rpcName="ExtHostConfiguration",
+      ~method="$acceptConfigurationChanged",
+      ~args=
+        `List([
+          configuration |> encode_value(ExtConfig.encode),
+          changed |> encode_value(ExtConfig.Model.encode),
+        ]),
+      client,
+    );
+  };
+};
+
+module DocumentContentProvider = {
+  let provideTextDocumentContent = (~handle, ~uri, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(maybe(string)),
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostDocumentContentProviders",
+      ~method="$provideTextDocumentContent",
+      ~args=`List([`Int(handle), Uri.to_yojson(uri)]),
       client,
     );
   };
@@ -89,14 +119,8 @@ module LanguageFeatures = {
         ~context: CompletionContext.t,
         client,
       ) => {
-    let parser = json => {
-      json
-      |> Json.Decode.decode_value(SuggestResult.decode)
-      |> Result.map_error(Json.Decode.string_of_error);
-    };
-
     Client.request(
-      ~parser,
+      ~decoder=SuggestResult.decode,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideCompletionItems",
@@ -106,6 +130,101 @@ module LanguageFeatures = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           CompletionContext.to_yojson(context),
+        ]),
+      client,
+    );
+  };
+
+  module Internal = {
+    let provideDefinitionLink =
+        (~handle, ~resource, ~position, method, client) => {
+      Client.request(
+        ~decoder=Json.Decode.(list(Location.decode)),
+        ~usesCancellationToken=true,
+        ~rpcName="ExtHostLanguageFeatures",
+        ~method,
+        ~args=
+          `List([
+            `Int(handle),
+            Uri.to_yojson(resource),
+            OneBasedPosition.to_yojson(position),
+          ]),
+        client,
+      );
+    };
+  };
+  let provideDocumentHighlights = (~handle, ~resource, ~position, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(list(DocumentHighlight.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentHighlights",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
+      client,
+    );
+  };
+
+  let provideDocumentSymbols = (~handle, ~resource, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(list(DocumentSymbol.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentSymbols",
+      ~args=`List([`Int(handle), Uri.to_yojson(resource)]),
+      client,
+    );
+  };
+
+  let provideDefinition = (~handle, ~resource, ~position, client) =>
+    Internal.provideDefinitionLink(
+      ~handle,
+      ~resource,
+      ~position,
+      "$provideDefinition",
+      client,
+    );
+  let provideDeclaration = (~handle, ~resource, ~position, client) =>
+    Internal.provideDefinitionLink(
+      ~handle,
+      ~resource,
+      ~position,
+      "$provideDeclaration",
+      client,
+    );
+  let provideImplementation = (~handle, ~resource, ~position, client) =>
+    Internal.provideDefinitionLink(
+      ~handle,
+      ~resource,
+      ~position,
+      "$provideImplementation",
+      client,
+    );
+  let provideTypeDefinition = (~handle, ~resource, ~position, client) =>
+    Internal.provideDefinitionLink(
+      ~handle,
+      ~resource,
+      ~position,
+      "$provideTypeDefinition",
+      client,
+    );
+
+  let provideReferences = (~handle, ~resource, ~position, ~context, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(list(Location.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideReferences",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          context |> Json.Encode.encode_value(ReferenceContext.encode),
         ]),
       client,
     );
@@ -162,6 +281,31 @@ module TerminalService = {
       ~rpcName="ExtHostTerminalService",
       ~method="$acceptProcessShutdown",
       ~args=`List([`Int(id), `Bool(immediate)]),
+      client,
+    );
+  };
+};
+
+module Workspace = {
+  let initializeWorkspace = (~workspace, client) => {
+    let json =
+      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+
+    Client.notify(
+      ~rpcName="ExtHostWorkspace",
+      ~method="$initializeWorkspace",
+      ~args=`List([json]),
+      client,
+    );
+  };
+  let acceptWorkspaceData = (~workspace, client) => {
+    let json =
+      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+
+    Client.notify(
+      ~rpcName="ExtHostWorkspace",
+      ~method="$acceptWorkspaceData",
+      ~args=`List([json]),
       client,
     );
   };

@@ -51,12 +51,43 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module Location: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module DocumentFilter: {
   [@deriving show]
   type t = {
     language: option(string),
     scheme: option(string),
     exclusive: bool,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module DocumentHighlight: {
+  module Kind: {
+    [@deriving show]
+    type t =
+      | Text
+      | Read
+      | Write;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+    let decode: Json.decoder(t);
+  };
+
+  [@deriving show]
+  type t = {
+    range: OneBasedRange.t,
+    kind: Kind.t,
   };
 
   let decode: Json.decoder(t);
@@ -76,10 +107,67 @@ module SuggestItem: {
   let decode: Json.decoder(t);
 };
 
+module ReferenceContext: {
+  type t = {includeDeclaration: bool};
+
+  let encode: Json.encoder(t);
+};
+
 module SuggestResult: {
   type t = {
     completions: list(SuggestItem.t),
     isIncomplete: bool,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module SymbolKind: {
+  [@deriving show]
+  type t =
+    | File
+    | Module
+    | Namespace
+    | Package
+    | Class
+    | Method
+    | Property
+    | Field
+    | Constructor
+    | Enum
+    | Interface
+    | Function
+    | Variable
+    | Constant
+    | String
+    | Number
+    | Boolean
+    | Array
+    | Object
+    | Key
+    | Null
+    | EnumMember
+    | Struct
+    | Event
+    | Operator
+    | TypeParameter;
+
+  let toInt: t => int;
+  let ofInt: int => option(t);
+  let decode: Json.decoder(t);
+};
+
+module DocumentSymbol: {
+  [@deriving show]
+  type t = {
+    name: string,
+    detail: string,
+    kind: SymbolKind.t,
+    // TODO: tags
+    containerName: option(string),
+    range: OneBasedRange.t,
+    selectionRange: OneBasedRange.t,
+    children: list(t),
   };
 
   let decode: Json.decoder(t);
@@ -163,6 +251,16 @@ module DocumentsAndEditorsDelta: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
+module OneBasedPosition: {
+  type t = {
+    lineNumber: int,
+    column: int,
+  };
+
+  let ofPosition: EditorCoreTypes.Location.t => t;
+  let to_yojson: t => Yojson.Safe.t;
+};
+
 module ModelContentChange: {
   type t = {
     range: OneBasedRange.t,
@@ -185,6 +283,7 @@ module ModelChangedEvent: {
 };
 
 module OneBasedRange: {
+  [@deriving show]
   type t = {
     startLineNumber: int,
     endLineNumber: int,
@@ -194,6 +293,8 @@ module OneBasedRange: {
 
   let ofRange: Range.t => t;
   let toRange: t => Range.t;
+
+  let decode: Json.decoder(t);
 };
 
 module ShellLaunchConfig: {
@@ -206,14 +307,28 @@ module ShellLaunchConfig: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
-module OneBasedPosition: {
-  type t = {
-    lineNumber: int,
-    column: int,
+module WorkspaceData: {
+  module Folder: {
+    type t = {
+      uri: Uri.t,
+      name: string,
+      index: int,
+    };
+
+    let encode: Json.encoder(t);
+    let decode: Json.decoder(t);
   };
 
-  let ofPosition: Location.t => t;
-  let to_yojson: t => Yojson.Safe.t;
+  type t = {
+    folders: list(Folder.t),
+    id: string,
+    name: string,
+    configuration: option(Uri.t),
+    isUntitled: bool,
+  };
+
+  let encode: Json.encoder(t);
+  let decode: Json.decoder(t);
 };
 
 module Msg: {
@@ -302,12 +417,41 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | RegisterDocumentHighlightProvider({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterDocumentSymbolProvider({
+          handle: int,
+          selector: list(DocumentFilter.t),
+          label: string,
+        })
+      | RegisterDefinitionSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterDeclarationSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterImplementationSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
+      | RegisterTypeDefinitionSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
+        })
       | RegisterSuggestSupport({
           handle: int,
           selector: list(DocumentFilter.t),
           triggerCharacters: list(string),
           supportsResolveDetails: bool,
           extensionId: string,
+        })
+      | RegisterReferenceSupport({
+          handle: int,
+          selector: list(DocumentFilter.t),
         })
       | Unregister({handle: int});
   };
@@ -440,6 +584,21 @@ module Request: {
       (~arguments: list(Json.t), ~command: string, Client.t) => unit;
   };
 
+  module Configuration: {
+    let acceptConfigurationChanged:
+      (
+        ~configuration: Configuration.t,
+        ~changed: Configuration.Model.t,
+        Client.t
+      ) =>
+      unit;
+  };
+
+  module DocumentContentProvider: {
+    let provideTextDocumentContent:
+      (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(string));
+  };
+
   module Documents: {
     let acceptModelModeChanged:
       (~uri: Uri.t, ~oldModeId: string, ~newModeId: string, Client.t) => unit;
@@ -478,6 +637,65 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let provideDocumentHighlights:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DocumentHighlight.t));
+
+    let provideDocumentSymbols:
+      (~handle: int, ~resource: Uri.t, Client.t) =>
+      Lwt.t(list(DocumentSymbol.t));
+
+    let provideDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideDeclaration:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideImplementation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideReferences:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: ReferenceContext.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideTypeDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
   };
 
   module TerminalService: {
@@ -497,5 +715,12 @@ module Request: {
     let acceptProcessResize:
       (~id: int, ~cols: int, ~rows: int, Client.t) => unit;
     let acceptProcessShutdown: (~id: int, ~immediate: bool, Client.t) => unit;
+  };
+
+  module Workspace: {
+    let initializeWorkspace:
+      (~workspace: option(WorkspaceData.t), Client.t) => unit;
+    let acceptWorkspaceData:
+      (~workspace: option(WorkspaceData.t), Client.t) => unit;
   };
 };

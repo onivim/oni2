@@ -8,11 +8,12 @@
  * - Per-workspace configuration
  */
 
-type workspace = {
+type t = {
   workingDirectory: string,
   rootName: string,
 };
 
-type t = option(workspace);
-
-let initial: t = None;
+let initial = workingDirectory => {
+  workingDirectory,
+  rootName: Filename.basename(workingDirectory),
+};

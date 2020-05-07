@@ -157,7 +157,7 @@ module Message = {
   let requestJsonArgsWithCancellation = 2;
   let requestMixedArgs = 3;
   let requestMixedArgsWithCancellation = 4;
-  //  let acknowledged = 5;
+  let acknowledged = 5;
   //  let cancel = 6;
   let replyOkEmpty = 7;
   //  let replyOkBuffer = 8;
@@ -219,6 +219,8 @@ module Message = {
             );
           } else if (messageType == replyOkEmpty) {
             Ok(ReplyOk({requestId, payload: Empty}));
+          } else if (messageType == acknowledged) {
+            Ok(Acknowledged({requestId: requestId}));
           } else if (messageType == replyOkJSON) {
             let (msg, _bytes) = ByteParser.readLongString(bytes);
             let json = msg |> Yojson.Safe.from_string;

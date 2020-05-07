@@ -26,24 +26,17 @@ let getTemplateVariables: State.t => StringMap.t(string) =
       )
       |> withTag("dirty");
 
-    let (rootName, rootPath) =
-      switch (state.workspace) {
-      | Some({rootName, workingDirectory}) => (
-          Some(rootName) |> withTag("rootName"),
-          Some(workingDirectory) |> withTag("rootPath"),
-        )
-      | None => (None, None)
-      };
-
     let activeEditorShort =
       Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
       |> withTag("activeEditorShort");
+
     let activeEditorMedium =
-      Option.bind(maybeBuffer, buf => {
-        Option.bind(rootPath, ((_, nestedRootPath)) => {
-          Buffer.getMediumFriendlyName(~workingDirectory=nestedRootPath, buf)
-        })
-      })
+      Option.bind(maybeBuffer, buf =>
+        Buffer.getMediumFriendlyName(
+          ~workingDirectory=state.workspace.workingDirectory,
+          buf,
+        )
+      )
       |> withTag("activeEditorMedium");
 
     let activeEditorLong =
@@ -55,16 +48,15 @@ let getTemplateVariables: State.t => StringMap.t(string) =
         maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
       )
       |> withTag("activeFolderShort");
+
     let activeFolderMedium =
       maybeFilePath
       |> Option.map(Filename.dirname)
       |> OptionEx.flatMap(fp =>
-           switch (rootPath) {
-           | Some((_, base)) => Some(Path.toRelative(~base, fp))
-           | _ => None
-           }
+           Some(Path.toRelative(~base=state.workspace.workingDirectory, fp))
          )
       |> withTag("activeFolderMedium");
+
     let activeFolderLong =
       maybeFilePath
       |> Option.map(Filename.dirname)
@@ -79,8 +71,8 @@ let getTemplateVariables: State.t => StringMap.t(string) =
       activeFolderShort,
       activeFolderMedium,
       activeFolderLong,
-      rootName,
-      rootPath,
+      Some(("rootName", state.workspace.rootName)),
+      Some(("rootPath", state.workspace.workingDirectory)),
     ]
     |> OptionEx.values
     |> List.to_seq
@@ -101,7 +93,7 @@ module Effects = {
     });
 };
 
-let start = setTitle => {
+let start = (setTitle, maximize) => {
   let _lastTitle = ref("");
 
   let internalSetTitleEffect = title =>
@@ -112,6 +104,9 @@ let start = setTitle => {
         setTitle(title);
       }
     );
+
+  let internalMaximizeEffect =
+    Isolinear.Effect.create(~name="maximize", () => maximize());
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
@@ -128,6 +123,7 @@ let start = setTitle => {
         {...state, windowTitle: title},
         internalSetTitleEffect(title),
       )
+    | TitleDoubleClicked => (state, internalMaximizeEffect)
 
     | _ => (state, Isolinear.Effect.none)
     };

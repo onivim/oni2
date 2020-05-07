@@ -56,14 +56,21 @@ module Parse = {
       switch (String.index_opt(str, '/'), String.rindex_opt(str, '/')) {
       | (Some(start), Some(stop)) when start == stop =>
         failwith("bad regexp-value '" ++ str ++ "', missing /-enclosure")
+
       | (Some(start), Some(stop)) =>
-        String.sub(str, start + 1, stop - start - 1)
-        |> Re.Pcre.re
-        |> Re.compile
-        |> Option.some
+        let pattern = String.sub(str, start + 1, stop - start - 1);
+        switch (Re.Pcre.re(pattern) |> Re.compile) {
+        | regex => Some(regex)
+        | exception Re.Perl.Parse_error when strict =>
+          failwith("invalid regexp '" ++ str ++ "', ")
+        | exception Re.Perl.Parse_error => None
+        };
+
       | (None, None) when strict =>
         failwith("bad regexp-value '" ++ str ++ "', missing /-enclosure")
+
       | (None, None) => None
+
       | _ => failwith("unreachable")
       }
     };

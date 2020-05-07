@@ -15,9 +15,6 @@ module Resource: {
     tooltip: string,
     strikeThrough: bool,
     faded: bool,
-    source: option(string),
-    letter: option(string),
-    color: option(string),
   };
 };
 
@@ -83,7 +80,7 @@ module Pane: {
   let make:
     (
       ~model: model,
-      ~workingDirectory: option(string),
+      ~workingDirectory: string,
       ~onItemClick: Resource.t => unit,
       ~isFocused: bool,
       ~theme: ColorTheme.Colors.t,
