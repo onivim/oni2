@@ -788,6 +788,14 @@ module Request: {
       Lwt.t(list(Location.t));
   };
 
+  module SCM: {
+    let provideOriginalResource:
+      (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(Uri.t));
+
+    let onInputBoxValueChange:
+      (~handle: int, ~value: string, Client.t) => unit;
+  };
+
   module TerminalService: {
     let spawnExtHostProcess:
       (
