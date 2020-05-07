@@ -42,7 +42,7 @@ type t =
   | Defined(string)
   | Eq(string, Value.t)
   | Neq(string, Value.t)
-  | Regex(string, option(Re.re))
+  | Regex(string, option([@opaque] Oniguruma.OnigRegExp.t))
   | And(list(t))
   | Or(list(t))
   | Not(t)
