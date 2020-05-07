@@ -35,14 +35,16 @@ module Decorations = {
     uri: Uri.t,
   };
 
-  let encodeRequest = request =>
-    Json.Encode.(
-      obj([
-        ("id", request.id |> int),
-        ("handle", request.handle |> int),
-        ("uri", request.uri |> Uri.encode),
-      ])
-    );
+  module Encode = {
+    let request = request =>
+      Json.Encode.(
+        obj([
+          ("id", request.id |> int),
+          ("handle", request.handle |> int),
+          ("uri", request.uri |> Uri.encode),
+        ])
+      );
+  };
 
   type decoration = {
     priority: int,
@@ -52,60 +54,44 @@ module Decorations = {
     color: ThemeColor.t,
   };
 
-  let (>>=::) = (fst, rest) => Json.Decode.uncons(rest, fst);
-
-  let decodeDecoration: Json.decoder(decoration) =
-    Json.Decode.(
-      int
-      >>=:: (
-        priority =>
-          bool
-          >>=:: (
-            bubble =>
-              string
-              >>=:: (
-                title =>
-                  string
-                  >>=:: (
-                    letter =>
-                      ThemeColor.decode
-                      >>=:: (
-                        color =>
-                          succeed({priority, bubble, title, letter, color})
-                      )
-                  )
-              )
-          )
+  module Decode = {
+    let decoration = Json.Decode.(
+      Pipeline.(
+        decode((priority, bubble, title, letter, color) =>
+        {priority, bubble, title, letter, color})
+        |> custom(index(0, int))
+        |> custom(index(1, bool))
+        |> custom(index(2, string))
+        |> custom(index(3, string))
+        |> custom(index(4, ThemeColor.decode))
       )
-    );
+    )
+
+    let reply =
+      Json.Decode.(
+          key_value_pairs(decoration)
+          |> map(items => 
+                 List.fold_left(
+                   (acc, (id, decoration)) => {
+                     let id = int_of_string(id);
+                     IntMap.add(id, decoration, acc);
+                   },
+                   IntMap.empty,
+                   items,
+                 ),
+               )
+             );
+
+  };
 
   type reply = IntMap.t(decoration);
 
-  let decodeReply =
-    Json.Decode.(
-      {
-        key_value_pairs(decodeDecoration)
-        |> and_then(items => {
-             succeed(
-               List.fold_left(
-                 (acc, (id, decoration)) => {
-                   let id = int_of_string(id);
-                   IntMap.add(id, decoration, acc);
-                 },
-                 IntMap.empty,
-                 items,
-               ),
-             )
-           });
-      }
-    );
-
   let provideDecorations = (~requests, client) => {
     let requestItems =
-      requests |> List.map(Json.Encode.encode_value(encodeRequest));
+      requests |> List.map(Json.Encode.encode_value(Encode.request));
 
     Client.request(
-      ~decoder=decodeReply,
+      ~decoder=Decode.reply,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostDecorations",
       ~method="$provideDecorations",
