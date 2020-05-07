@@ -9,7 +9,7 @@ type command = {
 };
 
 module Resource = {
-  module Icon = {
+  module Icons = {
     [@deriving show({with_path: false})]
     type t = {
       light: Uri.t,
@@ -21,8 +21,8 @@ module Resource = {
   type resource = {
     handle: int,
     resourceUri: Uri.t,
-    icon: Icon.t,
-    toolTip: string,
+    icons: Icons.t,
+    tooltip: string,
     strikeThrough: bool,
     faded: bool,
   };
@@ -45,10 +45,10 @@ module Resource = {
   };
 
   module Decode = {
-    let icon =
+    let icons =
       Json.Decode.(
         Pipeline.(
-          decode((light, dark) => Icon.{light, dark})
+          decode((light, dark) => Icons.{light, dark})
           |> custom(index(0, Uri.decode))
           |> custom(index(1, Uri.decode))
         )
@@ -57,12 +57,12 @@ module Resource = {
     let resource =
       Json.Decode.(
         Pipeline.(
-          decode((handle, resourceUri, icon, toolTip, strikeThrough, faded) =>
-            {handle, resourceUri, icon, toolTip, strikeThrough, faded}
+          decode((handle, resourceUri, icons, tooltip, strikeThrough, faded) =>
+            {handle, resourceUri, icons, tooltip, strikeThrough, faded}
           )
           |> custom(index(0, int))
           |> custom(index(1, Uri.decode))
-          |> custom(index(2, icon))
+          |> custom(index(2, icons))
           |> custom(index(3, string))
           |> custom(index(4, bool))
           |> custom(index(5, bool))

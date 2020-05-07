@@ -122,7 +122,7 @@ module SCM: {
   };
 
   module Resource: {
-    module Icon: {
+    module Icons: {
       [@deriving show({with_path: false})]
       type t = {
         light: Uri.t,
@@ -134,8 +134,8 @@ module SCM: {
     type resource = {
       handle: int,
       resourceUri: Uri.t,
-      icon: Icon.t,
-      toolTip: string,
+      icons: Icons.t,
+      tooltip: string,
       strikeThrough: bool,
       faded: bool,
     };
