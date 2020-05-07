@@ -306,6 +306,29 @@ module LanguageFeatures = {
   };
 };
 
+module SCM = {
+  let provideOriginalResource = (~handle, ~uri, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(maybe(Uri.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostSCM",
+      ~method="$provideOriginalResource",
+      ~args=`List([`Int(handle), Uri.to_yojson(uri)]),
+      client,
+    );
+  };
+
+  let onInputBoxValueChange = (~handle, ~value, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostSCM",
+      ~method="$onInputBoxValueChange",
+      ~args=`List([`Int(handle), `String(value)]),
+      client,
+    );
+  };
+};
+
 module TerminalService = {
   let spawnExtHostProcess =
       (

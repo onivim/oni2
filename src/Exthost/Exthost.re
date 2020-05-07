@@ -18,6 +18,7 @@ module ModelContentChange = ModelContentChange;
 module OneBasedPosition = OneBasedPosition;
 module OneBasedRange = OneBasedRange;
 module ReferenceContext = ReferenceContext;
+module SCM = SCM;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
 module SymbolKind = SymbolKind;
