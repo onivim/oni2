@@ -138,40 +138,37 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
   let changeWorkspaceEffect = path =>
     Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
       Exthost.Request.Workspace.acceptWorkspaceData(
-      ~workspace=Some(Exthost.WorkspaceData.fromPath(path)),
-      extHostClient,
+        ~workspace=Some(Exthost.WorkspaceData.fromPath(path)),
+        extHostClient,
       )
     });
 
   let getOriginalContent = (bufferId, uri, providers) =>
     Isolinear.Effect.createWithDispatch(
       ~name="scm.getOriginalSourceLines", dispatch => {
-            let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
-            providers
-            |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
-            |> Option.iter(provider => {
-                 let (handle, _) = provider;
-                 let promise =
-                   Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
-                     ~handle,
-                     ~uri,
-                     extHostClient,
-                   );
-      
-                 Lwt.on_success(
-                   promise,
-                   maybeContent => {
-                      switch (maybeContent) {
-                      | None => () 
-                      | Some(content) => 
-                         let lines =
-                           content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
-          
-                         dispatch(Actions.GotOriginalContent({bufferId, lines}));
-                      }
-                   },
-                 );
-               });
+      let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
+      providers
+      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+      |> Option.iter(provider => {
+           let (handle, _) = provider;
+           let promise =
+             Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
+               ~handle,
+               ~uri,
+               extHostClient,
+             );
+
+           Lwt.on_success(promise, maybeContent => {
+             switch (maybeContent) {
+             | None => ()
+             | Some(content) =>
+               let lines =
+                 content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
+
+               dispatch(Actions.GotOriginalContent({bufferId, lines}));
+             }
+           });
+         });
     });
 
   let provideDecorationsEffect = (handle, uri) =>

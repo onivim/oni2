@@ -146,11 +146,11 @@ let itemView =
       ~editorFont,
       (),
     ) => {
-  let icon =
-    kind |> kindToIcon;
+  let icon = kind |> kindToIcon;
 
   let iconColor =
-    kind |> kindToColor(tokenTheme) 
+    kind
+    |> kindToColor(tokenTheme)
     |> Option.value(~default=colors.editorForeground);
 
   <View style={Styles.item(~isFocused, ~colors)}>

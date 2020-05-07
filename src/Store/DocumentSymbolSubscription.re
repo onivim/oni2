@@ -8,6 +8,8 @@ module Log = (
 );
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
+module DocumentSymbol = Exthost.DocumentSymbol;
+
 module Provider = {
   type action = Actions.t;
   type params = {
@@ -27,6 +29,7 @@ module Provider = {
       promise,
       items => {
         open LanguageFeatures;
+        open Exthost.OneBasedRange;
 
         let docSymbolToMenuItem = (docSymbol: DocumentSymbol.t) => {
           Actions.{
@@ -36,7 +39,9 @@ module Provider = {
               Model.Actions.OpenFileByPath(
                 Core.Buffer.getUri(buffer) |> Core.Uri.toFileSystemPath,
                 None,
-                Some(DocumentSymbol.(docSymbol.range.start)),
+                // TODO: Fix conversion here
+                None,
+                // Some(DocumentSymbol.(docSymbol.range.start)),
               ),
             icon: None,
             highlight: [],

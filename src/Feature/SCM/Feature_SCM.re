@@ -40,8 +40,8 @@ let initial = {
 module Effects = {
   let getOriginalUri = (extHostClient, model, path, toMsg) =>
     // TODO
-    Isolinear.Effect.none
-    /*Exthost.Request.SCM.provideOriginalResource(
+    Isolinear.Effect.none;
+  /*Exthost.Request.SCM.provideOriginalResource(
       ~handle
     )
     ExtHostClient.SCM.Effects.provideOriginalResource(
@@ -326,16 +326,13 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       },
       Effect(
         Isolinear.Effect.batch(
-          model.providers
-          |> List.map(provider
-               => Isolinear.Effect.none)
-               // TODO: Hook this back up!
-               //               ExtHostClient.SCM.Effects.onInputBoxValueChange(
-               //                 extHostClient,
-               //                 provider,
-               //                 value,
-               //               )
-,
+          model.providers |> List.map(provider => Isolinear.Effect.none),
+          // TODO: Hook this back up!
+          //               ExtHostClient.SCM.Effects.onInputBoxValueChange(
+          //                 extHostClient,
+          //                 provider,
+          //                 value,
+          //               )
         ),
       ),
     );

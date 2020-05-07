@@ -8,7 +8,6 @@ open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 
-module DocumentSymbol = Oni_Extensions.DocumentSymbol;
 module SymbolKind = Oni_Extensions.SymbolKind;
 module LocationWithUri = Oni_Extensions.LocationWithUri;
 
@@ -58,7 +57,7 @@ module DefinitionProvider =
 module DocumentSymbolProvider =
   LanguageFeature.Make({
     type params = Buffer.t;
-    type response = list(DocumentSymbol.t);
+    type response = list(Exthost.DocumentSymbol.t);
 
     let namespace = "Oni2.DocumentSymbolProvider";
     let aggregate = joinAll;

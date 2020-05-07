@@ -68,6 +68,8 @@ module DocumentFilter: {
     exclusive: bool,
   };
 
+  let matches: (~filetype: string, t) => bool;
+
   let decode: Json.decoder(t);
 };
 

@@ -14,150 +14,163 @@ module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Workspace = Protocol.Workspace;
 
 module ExtensionCompletionProvider = {
-    let suggestionItemToCompletionItem:
-      Exthost.SuggestItem.t => CompletionItem.t =
-      suggestion => {
-
-        {
-          label: suggestion.label,
-          kind: suggestion.kind,
-          detail: suggestion.detail,
-        };
+  let suggestionItemToCompletionItem: Exthost.SuggestItem.t => CompletionItem.t =
+    suggestion => {
+      {
+        label: suggestion.label,
+        kind: suggestion.kind,
+        detail: suggestion.detail,
       };
-
-    let suggestionsToCompletionItems:
-      Exthost.SuggestResult.t => list(CompletionItem.t) =
-      ({completions, _}) => {
-      
-      completions
-      |> List.map(suggestionItemToCompletionItem);
-      };
-
-    let create =
-        (
-          client: Exthost.Client.t,
-          {id, selector}: Protocol.SuggestProvider.t,
-          (buffer, _completionMeet, location),
-        ) =>
-      ProviderUtility.runIfSelectorPasses(
-        ~buffer,
-        ~selector,
-        () => {
-          let uri = Buffer.getUri(buffer);
-          let position = Exthost.OneBasedPosition.ofPosition(location);
-          Exthost.Request.LanguageFeatures.provideCompletionItems(
-            ~handle=id,
-            ~resource=uri,
-            ~position,
-            // TODO: Properly populate context
-            ~context=Exthost.CompletionContext.{
-              triggerKind: Invoke,
-              triggerCharacter: None,
-            },
-            client,
-          )
-          |> Lwt.map(suggestionsToCompletionItems);
-        },
-      );
-  };
-
-  
-  // TODO: Properly type definitoin provider...
-  /*
-  module ExtensionDefinitionProvider = {
-    let definitionToModel = def => {
-      let Protocol.DefinitionLink.{uri, range, originSelectionRange} = def;
-      let Range.{start, _} = Protocol.OneBasedRange.toRange(range);
-
-      let originRange =
-        originSelectionRange |> Option.map(Protocol.OneBasedRange.toRange);
-
-      LanguageFeatures.DefinitionResult.create(
-        ~originRange,
-        ~uri,
-        ~location=start,
-      );
     };
 
-    let create =
-        (client, {id, selector}: Protocol.BasicProvider.t, (buffer, location)) => {
-      ProviderUtility.runIfSelectorPasses(
-        ~buffer,
-        ~selector,
-        () => {
-          let uri = Buffer.getUri(buffer);
-          let position = Protocol.OneBasedPosition.ofPosition(location);
-          ExtHostClient.provideDefinition(id, uri, position, client)
-          |> Lwt.map(definitionToModel);
-        },
-      );
-    };
-  };
-  */
-
-  module ExtensionDocumentHighlightProvider = {
-    let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
-      highlights
-      |> List.map(highlight =>
-           Exthost.OneBasedRange.toRange(
-             Exthost.DocumentHighlight.(highlight.range),
-           )
-         );
+  let suggestionsToCompletionItems:
+    Exthost.SuggestResult.t => list(CompletionItem.t) =
+    ({completions, _}) => {
+      completions |> List.map(suggestionItemToCompletionItem);
     };
 
-    let create =
-        (client, {id, selector}: Protocol.BasicProvider.t, (buffer, location)) => {
-      ProviderUtility.runIfSelectorPasses(
-        ~buffer,
-        ~selector,
-        () => {
-          let uri = Buffer.getUri(buffer);
-          let position = Exthost.OneBasedPosition.ofPosition(location);
-
-          Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+  let create =
+      (
+        id: int,
+        selector: Exthost.DocumentFilter.t,
+        client: Exthost.Client.t,
+        (buffer, _completionMeet, location),
+      ) =>
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Buffer.getUri(buffer);
+        let position = Exthost.OneBasedPosition.ofPosition(location);
+        Exthost.Request.LanguageFeatures.provideCompletionItems(
           ~handle=id,
           ~resource=uri,
           ~position,
-          client
-          )
-          |> Lwt.map(definitionToModel);
-        },
-      );
-    };
-  };
+          // TODO: Properly populate context
+          ~context=
+            Exthost.CompletionContext.{
+              triggerKind: Invoke,
+              triggerCharacter: None,
+            },
+          client,
+        )
+        |> Lwt.map(suggestionsToCompletionItems);
+      },
+    );
+};
 
+// TODO: Properly type definitoin provider...
 /*
+ module ExtensionDefinitionProvider = {
+   let definitionToModel = def => {
+     let Protocol.DefinitionLink.{uri, range, originSelectionRange} = def;
+     let Range.{start, _} = Protocol.OneBasedRange.toRange(range);
 
-  module ExtensionFindAllReferencesProvider = {
-    let create =
-        (client, {id, selector}: Protocol.BasicProvider.t, (buffer, location)) => {
-      ProviderUtility.runIfSelectorPasses(
-        ~buffer,
-        ~selector,
-        () => {
-          let uri = Buffer.getUri(buffer);
-          let position = Protocol.OneBasedPosition.ofPosition(location);
+     let originRange =
+       originSelectionRange |> Option.map(Protocol.OneBasedRange.toRange);
 
-          ExtHostClient.provideReferences(id, uri, position, client);
-        },
-      );
-    };
+     LanguageFeatures.DefinitionResult.create(
+       ~originRange,
+       ~uri,
+       ~location=start,
+     );
+   };
+
+   let create =
+       (client, {id, selector}: Protocol.BasicProvider.t, (buffer, location)) => {
+     ProviderUtility.runIfSelectorPasses(
+       ~buffer,
+       ~selector,
+       () => {
+         let uri = Buffer.getUri(buffer);
+         let position = Protocol.OneBasedPosition.ofPosition(location);
+         ExtHostClient.provideDefinition(id, uri, position, client)
+         |> Lwt.map(definitionToModel);
+       },
+     );
+   };
+ };
+ */
+
+module ExtensionDocumentHighlightProvider = {
+  let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
+    highlights
+    |> List.map(highlight =>
+         Exthost.OneBasedRange.toRange(
+           Exthost.DocumentHighlight.(highlight.range),
+         )
+       );
   };
 
-  module ExtensionDocumentSymbolProvider = {
-    let create =
-        (client, {id, selector, _}: Protocol.DocumentSymbolProvider.t, buffer) => {
-      ProviderUtility.runIfSelectorPasses(
-        ~buffer,
-        ~selector,
-        () => {
-          let uri = Buffer.getUri(buffer);
-          ExtHostClient.provideDocumentSymbols(id, uri, client);
-        },
-      );
-    };
+  let create =
+      (
+        id: int,
+        selector: Exthost.DocumentFilter.t,
+        client,
+        (buffer, location),
+      ) => {
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Buffer.getUri(buffer);
+        let position = Exthost.OneBasedPosition.ofPosition(location);
+
+        Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+          ~handle=id,
+          ~resource=uri,
+          ~position,
+          client,
+        )
+        |> Lwt.map(definitionToModel);
+      },
+    );
   };
-  */
+};
+
+module ExtensionFindAllReferencesProvider = {
+  let create = (id, selector, client, (buffer, location)) => {
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Buffer.getUri(buffer);
+        let position = Exthost.OneBasedPosition.ofPosition(location);
+
+        Exthost.Request.LanguageFeatures.provideReferences(
+          ~handle=id,
+          ~resource=uri,
+          ~position,
+          client,
+        );
+      },
+    );
+  };
+};
+
+module ExtensionDocumentSymbolProvider = {
+  let create =
+      (
+        id,
+        selector,
+        _label, // TODO: What to do with label?
+        client,
+        buffer,
+      ) => {
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Buffer.getUri(buffer);
+        Exthost.Request.LanguageFeatures.provideDocumentSymbols(
+          ~handle=id,
+          ~resource=uri,
+          client,
+        );
+      },
+    );
+  };
+};
 
 let create = (~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -173,8 +186,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
        );
 
   let _onRegisterDefinitionProvider = (client, provider) => {
-    ()// TODO
-      //    let id =
+    ()//    let id =
       //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
       //    let definitionProvider =
       //      ExtensionDefinitionProvider.create(client, provider);
@@ -183,33 +195,27 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //      Actions.LanguageFeature(
       //        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
       //      ),
-      ;
+      ; // TODO
       //    );
   };
 
-  let _onRegisterDocumentSymbolProvider = (client, provider) => {
-    ()// TODO
-      //    let id =
-      //      Protocol.DocumentSymbolProvider.(
-      //        "exthost." ++ string_of_int(provider.id)
-      //      );
-      //    let documentSymbolProvider =
-      //      ExtensionDocumentSymbolProvider.create(client, provider);
-      //
-      //    dispatch(
-      //      Actions.LanguageFeature(
-      //        LanguageFeatures.DocumentSymbolProviderAvailable(
-      //          id,
-      //          documentSymbolProvider,
-      //        ),
-      //      ),
-      ;
-      //    );
+  let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
+    let id = "exthost." ++ string_of_int(handle);
+    let documentSymbolProvider =
+      ExtensionDocumentSymbolProvider.create(handle, selector, label, client);
+
+    dispatch(
+      Actions.LanguageFeature(
+        LanguageFeatures.DocumentSymbolProviderAvailable(
+          id,
+          documentSymbolProvider,
+        ),
+      ),
+    );
   };
 
   let _onRegisterReferencesProvider = (client, provider) => {
-    ()//    let id =
-      //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
+    ()//      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
       //    let findAllReferencesProvider =
       //      ExtensionFindAllReferencesProvider.create(client, provider);
       //
@@ -220,13 +226,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //          findAllReferencesProvider,
       //        ),
       //      ),
-      ;
+      ; //    let id =
       //    );
   };
 
   let _onRegisterDocumentHighlightProvider = (client, provider) => {
-    ()// TODO
-      //    let id =
+    ()//    let id =
       //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
       //    let documentHighlightProvider =
       //      ExtensionDocumentHighlightProvider.create(client, provider);
@@ -238,13 +243,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //          documentHighlightProvider,
       //        ),
       //      ),
-      ;
+      ; // TODO
       //    );
   };
 
   let _onRegisterSuggestProvider = (client, provider) => {
-    ()// TODO: Implement
-      //    let id =
+    ()//    let id =
       //      Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
       //    let completionProvider =
       //      ExtensionCompletionProvider.create(client, provider);
@@ -253,7 +257,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //      Actions.LanguageFeature(
       //        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
       //      ),
-      ;
+      ; // TODO: Implement
       //    );
   };
   let onDiagnosticsChangeMany =
@@ -285,6 +289,13 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     //        ~dispatch=msg => dispatch(Actions.SCM(msg)),
     //        msg,
     //      )
+
+    | LanguageFeatures(
+        RegisterDocumentSymbolProvider({handle, selector, label}),
+      ) =>
+      // TODO:
+      //onRegisterDocumentSymbolProvider(handle, selector, label, client);
+      None
 
     | Diagnostics(Clear({owner})) =>
       dispatch(Actions.DiagnosticsClear(owner));

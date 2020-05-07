@@ -18,3 +18,10 @@ let decode = {
     )
   );
 };
+
+let matches = (~filetype: string, selector) => {
+  switch (selector.language) {
+  | None => false
+  | Some(language) => String.equal(language, filetype)
+  };
+};
