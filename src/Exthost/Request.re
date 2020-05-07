@@ -1,5 +1,6 @@
 module ExtConfig = Configuration;
 open Oni_Core;
+
 module Commands = {
   let executeContributedCommand = (~arguments, ~command, client) => {
     Client.notify(
@@ -22,6 +23,80 @@ module Configuration = {
           configuration |> encode_value(ExtConfig.encode),
           changed |> encode_value(ExtConfig.Model.encode),
         ]),
+      client,
+    );
+  };
+};
+
+module Decorations = {
+  type request = {
+    id: int,
+    handle: int,
+    uri: Uri.t,
+  };
+
+  module Encode = {
+    let request = request =>
+      Json.Encode.(
+        obj([
+          ("id", request.id |> int),
+          ("handle", request.handle |> int),
+          ("uri", request.uri |> Uri.encode),
+        ])
+      );
+  };
+
+  type decoration = {
+    priority: int,
+    bubble: bool,
+    title: string,
+    letter: string,
+    color: ThemeColor.t,
+  };
+
+  module Decode = {
+    let decoration =
+      Json.Decode.(
+        Pipeline.(
+          decode((priority, bubble, title, letter, color) =>
+            {priority, bubble, title, letter, color}
+          )
+          |> custom(index(0, int))
+          |> custom(index(1, bool))
+          |> custom(index(2, string))
+          |> custom(index(3, string))
+          |> custom(index(4, ThemeColor.decode))
+        )
+      );
+
+    let reply =
+      Json.Decode.(
+        key_value_pairs(decoration)
+        |> map(items =>
+             List.fold_left(
+               (acc, (id, decoration)) => {
+                 let id = int_of_string(id);
+                 IntMap.add(id, decoration, acc);
+               },
+               IntMap.empty,
+               items,
+             )
+           )
+      );
+  };
+
+  type reply = IntMap.t(decoration);
+
+  let provideDecorations = (~requests, client) => {
+    let requestItems =
+      requests |> List.map(Json.Encode.encode_value(Encode.request));
+
+    Client.request(
+      ~decoder=Decode.reply,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostDecorations",
+      ~method="$provideDecorations",
+      ~args=`List([`List(requestItems)]),
       client,
     );
   };

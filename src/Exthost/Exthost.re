@@ -21,6 +21,7 @@ module ReferenceContext = ReferenceContext;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
 module SymbolKind = SymbolKind;
+module ThemeColor = ThemeColor;
 module WorkspaceData = WorkspaceData;
 
 module Client = Client;

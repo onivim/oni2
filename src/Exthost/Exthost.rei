@@ -331,6 +331,12 @@ module WorkspaceData: {
   let decode: Json.decoder(t);
 };
 
+module ThemeColor: {
+  type t = {id: string};
+
+  let decode: Json.decoder(t);
+};
+
 module Msg: {
   module Commands: {
     [@deriving show]
@@ -592,6 +598,27 @@ module Request: {
         Client.t
       ) =>
       unit;
+  };
+
+  module Decorations: {
+    type request = {
+      id: int,
+      handle: int,
+      uri: Uri.t,
+    };
+
+    type decoration = {
+      priority: int,
+      bubble: bool,
+      title: string,
+      letter: string,
+      color: ThemeColor.t,
+    };
+
+    type reply = IntMap.t(decoration);
+
+    let provideDecorations:
+      (~requests: list(request), Client.t) => Lwt.t(reply);
   };
 
   module DocumentContentProvider: {
