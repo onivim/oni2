@@ -46,7 +46,7 @@ where `type` can be one of
 * **docs:** Documentation only changes
 * **chore:** Changes to the build process or auxiliary tools and libraries such as documentation generation
 
-`scope` is optional, but "encouraged". It is typically one of the "area" [issue labels](https://github.com/onivim/oni2/labels) or the name of a feature project. Supplementary information, like associated issues, can be added to the scope following a `/`. For example, a PR that fixes issue #XXX regarding vim could have the type and scope `fix(vim/#XXX)`.
+`scope` is optional, but "encouraged". It is typically one of the ["area" issue labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) or the name of a feature project. Supplementary information, like associated issues, can be added to the scope following a `/`. For example, a PR that fixes issue #XXX regarding vim could have the type and scope `fix(vim/#XXX)`.
 
 `subject` should contain a succinct description of the change:
 
@@ -111,23 +111,16 @@ The following conventions are used to determine the priority level of log messag
 
 ### Branch Naming
 
-We recommend this scheme for naming branches: `<type>/<area>/<description>`
+We recommend this scheme for naming branches: `<type>/<scope>/<description>`
 
-`type` is one of:
-- `bugfix` - a change that fixes a bug
-- `feature` - a change that adds new functionality
-- `doc` - a change that modifies the documentation
-- `refactoring` - a code change that does not fix a bug or change a feature
-- `dependency` - a change to bring in a new dependency
+where `type` and `scope` are as defined in the [Pull Request title section](#PR_title) above
 
-`area` corresponds to our [Area Labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) 
-
-`description` is just a short, hyphen-delimited blurb to very briefly describe the change.
+`description` is a short, hyphen-delimited blurb to very briefly describe the change.
 
 Some examples:
-- `bugfix/vim/fix-gd-crash`
-- `feature/exthost/go-to-definition`
-- `refactoring/editor-component/remove-duplication`
+- `fix/vim/gd-crash`
+- `feat/exthost/go-to-definition`
+- `refactor/editor-component/remove-duplication`
 
 ## Discussion Etiquette
 
