@@ -21,9 +21,6 @@ module Resource = {
     tooltip: string,
     strikeThrough: bool,
     faded: bool,
-    source: option(string),
-    letter: option(string),
-    color: option(string),
   };
 };
 
@@ -65,9 +62,7 @@ module Decode = {
         `String(tooltip),
         `Bool(strikeThrough),
         `Bool(faded),
-        source,
-        letter,
-        color,
+        ..._additionalArgs,
       ]) =>
       Resource.{
         handle,
@@ -82,9 +77,6 @@ module Decode = {
         tooltip,
         strikeThrough,
         faded,
-        source: source |> to_string_option,
-        letter: letter |> to_string_option,
-        color: color |> member("id") |> to_string_option,
       }
 
     | _ => failwith("Unexpected json for scm resource");

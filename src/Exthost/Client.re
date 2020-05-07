@@ -1,5 +1,4 @@
 type reply = unit;
-
 module Protocol = Exthost_Protocol;
 module Extension = Exthost_Extension;
 
@@ -105,6 +104,8 @@ let start =
                )
              }
            })
+      | Incoming.Acknowledged({requestId}) =>
+        Log.tracef(m => m("Received ack: %d", requestId))
       | _ =>
         Log.warn(
           "Unhandled message: " ++ Protocol.Message.Incoming.show(msg),
@@ -161,7 +162,7 @@ let request =
       ~rpcName: string,
       ~method: string,
       ~args,
-      ~parser,
+      ~decoder,
       client,
     ) => {
   let newRequestId = client.lastRequestId^ + 1;
@@ -172,6 +173,11 @@ let request =
     Hashtbl.remove(client.requestIdToReply, newRequestId);
     Log.tracef(m => m("Request finalized: %d", newRequestId));
   };
+
+  let parser = json =>
+    Oni_Core.Json.Decode.(
+      json |> decode_value(decoder) |> Result.map_error(string_of_error)
+    );
 
   let onError = e => {
     finalize();

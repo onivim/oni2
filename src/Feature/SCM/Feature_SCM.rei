@@ -15,9 +15,6 @@ module Resource: {
     tooltip: string,
     strikeThrough: bool,
     faded: bool,
-    source: option(string),
-    letter: option(string),
-    color: option(string),
   };
 };
 

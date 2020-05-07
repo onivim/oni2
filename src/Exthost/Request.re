@@ -1,3 +1,4 @@
+module ExtConfig = Configuration;
 open Oni_Core;
 module Commands = {
   let executeContributedCommand = (~arguments, ~command, client) => {
@@ -10,18 +11,26 @@ module Commands = {
   };
 };
 
+module Configuration = {
+  open Json.Encode;
+  let acceptConfigurationChanged = (~configuration, ~changed, client) => {
+    Client.notify(
+      ~rpcName="ExtHostConfiguration",
+      ~method="$acceptConfigurationChanged",
+      ~args=
+        `List([
+          configuration |> encode_value(ExtConfig.encode),
+          changed |> encode_value(ExtConfig.Model.encode),
+        ]),
+      client,
+    );
+  };
+};
+
 module DocumentContentProvider = {
   let provideTextDocumentContent = (~handle, ~uri, client) => {
-    let parser = json => {
-      Json.Decode.(
-        json
-        |> decode_value(maybe(string))
-        |> Result.map_error(string_of_error)
-      );
-    };
-
     Client.request(
-      ~parser,
+      ~decoder=Json.Decode.(maybe(string)),
       ~usesCancellationToken=false,
       ~rpcName="ExtHostDocumentContentProviders",
       ~method="$provideTextDocumentContent",
@@ -110,14 +119,8 @@ module LanguageFeatures = {
         ~context: CompletionContext.t,
         client,
       ) => {
-    let parser = json => {
-      json
-      |> Json.Decode.decode_value(SuggestResult.decode)
-      |> Result.map_error(Json.Decode.string_of_error);
-    };
-
     Client.request(
-      ~parser,
+      ~decoder=SuggestResult.decode,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideCompletionItems",
@@ -135,16 +138,8 @@ module LanguageFeatures = {
   module Internal = {
     let provideDefinitionLink =
         (~handle, ~resource, ~position, method, client) => {
-      let parser = json => {
-        Json.Decode.(
-          json
-          |> decode_value(list(Location.decode))
-          |> Result.map_error(string_of_error)
-        );
-      };
-
       Client.request(
-        ~parser,
+        ~decoder=Json.Decode.(list(Location.decode)),
         ~usesCancellationToken=true,
         ~rpcName="ExtHostLanguageFeatures",
         ~method,
@@ -159,16 +154,8 @@ module LanguageFeatures = {
     };
   };
   let provideDocumentHighlights = (~handle, ~resource, ~position, client) => {
-    let parser = json => {
-      Json.Decode.(
-        json
-        |> decode_value(list(DocumentHighlight.decode))
-        |> Result.map_error(string_of_error)
-      );
-    };
-
     Client.request(
-      ~parser,
+      ~decoder=Json.Decode.(list(DocumentHighlight.decode)),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideDocumentHighlights",
@@ -183,16 +170,8 @@ module LanguageFeatures = {
   };
 
   let provideDocumentSymbols = (~handle, ~resource, client) => {
-    let parser = json => {
-      Json.Decode.(
-        json
-        |> decode_value(list(DocumentSymbol.decode))
-        |> Result.map_error(string_of_error)
-      );
-    };
-
     Client.request(
-      ~parser,
+      ~decoder=Json.Decode.(list(DocumentSymbol.decode)),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideDocumentSymbols",
@@ -235,16 +214,8 @@ module LanguageFeatures = {
     );
 
   let provideReferences = (~handle, ~resource, ~position, ~context, client) => {
-    let parser = json => {
-      Json.Decode.(
-        json
-        |> decode_value(list(Location.decode))
-        |> Result.map_error(string_of_error)
-      );
-    };
-
     Client.request(
-      ~parser,
+      ~decoder=Json.Decode.(list(Location.decode)),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideReferences",
