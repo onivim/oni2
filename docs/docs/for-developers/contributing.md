@@ -45,7 +45,6 @@ where `type` can be one of
 * **test:** Adding missing or correcting existing tests
 * **docs:** Documentation only changes
 * **chore:** Changes to the build process or auxiliary tools and libraries such as documentation generation
-* **style:** Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 
 `scope` is optional, but "encouraged". It is typically one of the "area" [issue labels](https://github.com/onivim/oni2/labels) or the name of a feature project.
 
