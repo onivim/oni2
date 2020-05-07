@@ -55,33 +55,34 @@ module Decorations = {
   };
 
   module Decode = {
-    let decoration = Json.Decode.(
-      Pipeline.(
-        decode((priority, bubble, title, letter, color) =>
-        {priority, bubble, title, letter, color})
-        |> custom(index(0, int))
-        |> custom(index(1, bool))
-        |> custom(index(2, string))
-        |> custom(index(3, string))
-        |> custom(index(4, ThemeColor.decode))
-      )
-    )
+    let decoration =
+      Json.Decode.(
+        Pipeline.(
+          decode((priority, bubble, title, letter, color) =>
+            {priority, bubble, title, letter, color}
+          )
+          |> custom(index(0, int))
+          |> custom(index(1, bool))
+          |> custom(index(2, string))
+          |> custom(index(3, string))
+          |> custom(index(4, ThemeColor.decode))
+        )
+      );
 
     let reply =
       Json.Decode.(
-          key_value_pairs(decoration)
-          |> map(items => 
-                 List.fold_left(
-                   (acc, (id, decoration)) => {
-                     let id = int_of_string(id);
-                     IntMap.add(id, decoration, acc);
-                   },
-                   IntMap.empty,
-                   items,
-                 ),
-               )
-             );
-
+        key_value_pairs(decoration)
+        |> map(items =>
+             List.fold_left(
+               (acc, (id, decoration)) => {
+                 let id = int_of_string(id);
+                 IntMap.add(id, decoration, acc);
+               },
+               IntMap.empty,
+               items,
+             )
+           )
+      );
   };
 
   type reply = IntMap.t(decoration);
