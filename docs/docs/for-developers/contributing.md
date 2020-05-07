@@ -46,7 +46,7 @@ where `type` can be one of
 * **docs:** Documentation only changes
 * **chore:** Changes to the build process or auxiliary tools and libraries such as documentation generation
 
-`scope` is optional, but "encouraged". It is typically one of the "area" [issue labels](https://github.com/onivim/oni2/labels) or the name of a feature project.
+`scope` is optional, but "encouraged". It is typically one of the "area" [issue labels](https://github.com/onivim/oni2/labels) or the name of a feature project. Supplementary information, like associated issues, can be added to the scope following a `/`. For example, a PR that fixes issue #XXX regarding vim could have the type and scope `fix(vim/#XXX)`.
 
 `subject` should contain a succinct description of the change:
 
