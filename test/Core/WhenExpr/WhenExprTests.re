@@ -61,5 +61,28 @@ describe("WhenExpr", ({describe, _}) => {
       testExpression("a && b", true && false);
       testExpression("a && !b && c == 5", true && !false && "5" == "5");
     })
-  })
+  });
+
+  describe("regex", ({test, _}) => {
+    test("1729-gitlens-regression", ({expect, _}) => {
+      let context = Hashtbl.create(2);
+      Hashtbl.add(
+        context,
+        "gitlens:activeFileStatus",
+        WhenExpr.Value.String("some revision or other"),
+      );
+      Hashtbl.add(context, "resourceScheme", WhenExpr.Value.String("file$"));
+
+      let getValue = name =>
+        switch (Hashtbl.find_opt(context, name)) {
+        | Some(value) => value
+        | None => WhenExpr.Value.False
+        };
+
+      let expr = "gitlens:activeFileStatus =~ /revision/ && resourceScheme =~ /^(?!(file|git)$).*$/";
+      let rules = WhenExpr.parse(expr);
+      Console.log(WhenExpr.show(rules));
+      expect.bool(WhenExpr.evaluate(rules, getValue)).toBe(true);
+    })
+  });
 });
