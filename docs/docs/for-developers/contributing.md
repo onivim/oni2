@@ -56,16 +56,23 @@ where `type` can be one of
 
 Do NOT add temporary tags, like `[WIP]`, to the title. Instead use GitHub's draft function and/or labels.
 
+Some examples:
+- `feat(scm): add support for multiple providers`
+- `fix(vim/#123): get_op_type error when using gcc`
+- `refactor(editor): remove duplication`
+- `chore(ci): fix build failure on CentOS VM`
+
 *Attribution: Adapted from [Angular's commit guidelines](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commit-message-format)*
 
 ##### Pull Request Body
 
 More details can be provided in a `changelog` code block in the body of the pull request if a longer description is needed or if there are beaking changes:
 
-    ```changelog
-    <breaking>This change breaks my brain</breaking>
-    
+    ```changelog    
     Detailed description of the change
+    Can span multiple lines
+    
+    <breaking>This change breaks my brain</breaking>
     ```
 
 Text inside `<breaking>` tags will be listed in the changelog as separate items so that they can be emphasized. ALL breaking changes MUST be listed in this way. If in doubt, list it anyway. We'll remove it later in the process if it's considered insignificant.
