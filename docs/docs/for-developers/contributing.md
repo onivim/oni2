@@ -54,6 +54,8 @@ where `type` can be one of
 * don't capitalize first letter
 * no dot (.) at the end
 
+Do NOT add temporary tags, like `[WIP]`, to the title. Instead use GitHub's draft function and/or labels.
+
 *Attribution: Adapted from [Angular's commit guidelines](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commit-message-format)*
 
 ##### PR body
