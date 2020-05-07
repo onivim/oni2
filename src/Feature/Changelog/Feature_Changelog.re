@@ -396,9 +396,20 @@ module View = {
               text={"Changes since " ++ since}
               style={Styles.header(uiFont, ~theme)}
             />
-            <Parts.Breaking items=breaking uiFont theme />
-            <Parts.Features items=features uiFont theme />
-            <Parts.Fixes items=fixes uiFont theme />
+            {if (breaking == [] && features == [] && fixes == []) {
+               <Text text="Nothing" style={Styles.summary(uiFont, ~theme)} />;
+             } else {
+               React.listToElement([
+                 breaking == []
+                   ? React.empty
+                   : <Parts.Breaking items=breaking uiFont theme />,
+                 features == []
+                   ? React.empty
+                   : <Parts.Features items=features uiFont theme />,
+                 fixes == []
+                   ? React.empty : <Parts.Fixes items=fixes uiFont theme />,
+               ]);
+             }}
           </View>
         </ScrollView>;
 
