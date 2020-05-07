@@ -9,72 +9,92 @@ type command = {
 };
 
 module Resource = {
+  module Icon = {
+    [@deriving show({with_path: false})]
+    type t = {
+      light: Uri.t,
+      dark: Uri.t,
+    };
+  };
+
   [@deriving show({with_path: false})]
-  type t = {
+  type resource = {
     handle: int,
-    uri: Uri.t,
-    icons: list(string),
-    tooltip: string,
+    resourceUri: Uri.t,
+    icon: Icon.t,
+    toolTip: string,
     strikeThrough: bool,
     faded: bool,
   };
-};
 
-module ResourceGroup = {
-  [@deriving show({with_path: false})]
-  type t = {
-    handle: int,
-    id: string,
-    label: string,
-    hideWhenEmpty: bool,
-    resources: list(Resource.t),
+  module Splice = {
+    [@deriving show({with_path: false})]
+    type t = {
+      start: int,
+      deleteCount: int,
+      resources: list(resource),
+    };
   };
-};
 
-module Provider = {
-  [@deriving show({with_path: false})]
-  type t = {
-    handle: int,
-    id: string,
-    label: string,
-    rootUri: option(Uri.t),
-    resourceGroups: list(ResourceGroup.t),
-    hasQuickDiffProvider: bool,
-    count: int,
-    commitTemplate: string,
-    acceptInputCommand: option(command),
+  module Splices = {
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      resourceSplices: list(Splice.t),
+    };
+  };
+
+  module Decode = {
+    let icon =
+      Json.Decode.(
+        Pipeline.(
+          decode((light, dark) => Icon.{light, dark})
+          |> custom(index(0, Uri.decode))
+          |> custom(index(1, Uri.decode))
+        )
+      );
+
+    let resource =
+      Json.Decode.(
+        Pipeline.(
+          decode((handle, resourceUri, icon, toolTip, strikeThrough, faded) =>
+            {handle, resourceUri, icon, toolTip, strikeThrough, faded}
+          )
+          |> custom(index(0, int))
+          |> custom(index(1, Uri.decode))
+          |> custom(index(2, icon))
+          |> custom(index(3, string))
+          |> custom(index(4, bool))
+          |> custom(index(5, bool))
+        )
+      );
+
+    let splice =
+      Json.Decode.(
+        Pipeline.(
+          decode((start, deleteCount, resources) =>
+            Splice.{start, deleteCount, resources}
+          )
+          |> custom(index(0, int))
+          |> custom(index(1, int))
+          |> custom(index(2, list(resource)))
+        )
+      );
+    let splices =
+      Json.Decode.(
+        Pipeline.(
+          decode((handle, resourceSplices) =>
+            Splices.{handle, resourceSplices}
+          )
+          |> custom(index(0, int))
+          |> custom(index(1, list(splice)))
+        )
+      );
   };
 };
 
 module Decode = {
   open Yojson.Safe.Util;
-
-  let resource =
-    fun
-    | `List([
-        `Int(handle),
-        uri,
-        `List(icons),
-        `String(tooltip),
-        `Bool(strikeThrough),
-        `Bool(faded),
-      ]) =>
-      Resource.{
-        handle,
-        uri: Uri.of_yojson(uri) |> Stdlib.Result.get_ok,
-        icons:
-          List.filter_map(
-            fun
-            | `String(icon) => Some(icon)
-            | _ => None,
-            icons,
-          ),
-        tooltip,
-        strikeThrough,
-        faded,
-      }
-
-    | _ => failwith("Unexpected json for scm resource");
 
   let listOrEmpty =
     fun

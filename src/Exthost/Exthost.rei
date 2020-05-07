@@ -122,45 +122,49 @@ module SCM: {
   };
 
   module Resource: {
+    module Icon: {
+      [@deriving show({with_path: false})]
+      type t = {
+        light: Uri.t,
+        dark: Uri.t,
+      };
+    };
+
     [@deriving show({with_path: false})]
-    type t = {
+    type resource = {
       handle: int,
-      uri: Uri.t,
-      icons: list(string),
-      tooltip: string,
+      resourceUri: Uri.t,
+      icon: Icon.t,
+      toolTip: string,
       strikeThrough: bool,
       faded: bool,
     };
-  };
 
-  module ResourceGroup: {
-    [@deriving show({with_path: false})]
-    type t = {
-      handle: int,
-      id: string,
-      label: string,
-      hideWhenEmpty: bool,
-      resources: list(Resource.t),
+    module Splice: {
+      [@deriving show({with_path: false})]
+      type t = {
+        start: int,
+        deleteCount: int,
+        resources: list(resource),
+      };
     };
-  };
 
-  module Provider: {
-    [@deriving show({with_path: false})]
-    type t = {
-      handle: int,
-      id: string,
-      label: string,
-      rootUri: option(Uri.t),
-      resourceGroups: list(ResourceGroup.t),
-      hasQuickDiffProvider: bool,
-      count: int,
-      commitTemplate: string,
-      acceptInputCommand: option(command),
+    module Splices: {
+      [@deriving show({with_path: false})]
+      type t = {
+        handle: int,
+        resourceSplices: list(Splice.t),
+      };
+    };
+
+    module Decode: {
+      let resource: Json.decoder(resource);
+      let splices: Json.decoder(Splices.t);
     };
   };
 
   module Decode: {
-    let resource: Yojson.Safe.t => Resource.t;
+    //let resource: Yojson.Safe.t => Resource.t;
     let command: Yojson.Safe.t => option(command);
   };
 };
@@ -553,11 +557,8 @@ module Msg: {
           handle: int,
         })
       | SpliceSCMResourceStates({
-          provider: int,
-          group: int,
-          start: int,
-          deleteCount: int,
-          additions: list(SCM.Resource.t),
+          handle: int,
+          splices: list(SCM.Resource.Splices.t),
         });
   };
 
@@ -788,13 +789,13 @@ module Request: {
       Lwt.t(list(Location.t));
   };
 
-  module SCM: {
-    let provideOriginalResource:
-      (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(Uri.t));
+  /*module SCM: {
+      let provideOriginalResource:
+        (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(Uri.t));
 
-    let onInputBoxValueChange:
-      (~handle: int, ~value: string, Client.t) => unit;
-  };
+      let onInputBoxValueChange:
+        (~handle: int, ~value: string, Client.t) => unit;
+    };*/
 
   module TerminalService: {
     let spawnExtHostProcess:

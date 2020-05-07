@@ -532,12 +532,10 @@ module SCM = {
         handle: int,
       })
     | SpliceSCMResourceStates({
-        provider: int,
-        group: int,
-        start: int,
-        deleteCount: int,
-        additions: list(SCM.Resource.t),
+        handle: int,
+        splices: list(SCM.Resource.Splices.t),
       });
+  //additions: list(SCM.Resource.t),
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method) {
@@ -595,39 +593,21 @@ module SCM = {
       | _ => Error("Unexpected arguments for $unregisterGroup")
       }
 
-    // TODO:
-    /*| "$spliceResourceStates" =>
-        switch (args) {
-        | `List([`Int(provider), `List(groupSplices)]) =>
-          List.map(
-            fun
-            | `List([`Int(group), `List(splices)]) =>
-              List.map(
-                splice =>
-                  switch (splice) {
-                  | `List([`Int(start), `Int(deleteCount), `List(additions)]) =>
-                    let additions = List.map(SCM.Decode.resource, additions);
-                    Ok(
-                      SpliceSCMResourceStates({
-                        provider,
-                        group,
-                        start,
-                        deleteCount,
-                        additions,
-                      }),
-                    );
+    | "$spliceResourceStates" =>
+      switch (args) {
+      | `List([`Int(handle), splicesJson]) =>
+        let splicesResult =
+          Json.Decode.(
+            splicesJson
+            |> Json.Decode.decode_value(list(SCM.Resource.Decode.splices))
+          );
 
-                  | _ => Error("spliceResourceStates: Unexpected json")
-                  },
-                splices,
-              )
-            | _ => Error("spliceResourceStates: Unexpected json"),
-            groupSplices,
-          )
-
-        | _ => Error("Unexpected arguments for $spliceResourceStates")
-      };
-      */
+        switch (splicesResult) {
+        | Ok(splices) => Ok(SpliceSCMResourceStates({handle, splices}))
+        | Error(err) => Error(Json.Decode.string_of_error(err))
+        };
+      | _ => Error("Unexpected arguments for $spliceResourceStates")
+      }
     | _ =>
       Error(
         Printf.sprintf(
