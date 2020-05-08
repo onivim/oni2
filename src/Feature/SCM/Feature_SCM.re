@@ -72,18 +72,16 @@ let initial = {
 // EFFECTS
 
 module Effects = {
-  let getOriginalUri = (extHostClient, model, path, toMsg) =>
-    // TODO: Bring back
-    /*Exthost.Request.SCM.provideOriginalResource(
-        ~handle
-      )
-      ExtHostClient.SCM.Effects.provideOriginalResource(
-        extHostClient,
-        model.providers,
-        path,
-        toMsg,
-      );*/
-    Isolinear.Effect.none;
+  let getOriginalUri = (extHostClient, model, path, toMsg) => {
+    let handles =
+      model.providers |> List.map((provider: Provider.t) => provider.handle);
+    ExtHostClient.SCM.Effects.provideOriginalResource(
+      ~handles,
+      extHostClient,
+      path,
+      toMsg,
+    );
+  };
 };
 
 // UPDATE

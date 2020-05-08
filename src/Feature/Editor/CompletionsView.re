@@ -3,12 +3,10 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Syntax;
 open Oni_Components;
-open Utility;
 
 open Feature_LanguageSupport.Completions;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
-module Ext = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 
 open Exthost.CompletionKind;

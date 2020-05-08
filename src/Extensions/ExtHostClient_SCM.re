@@ -233,15 +233,15 @@ let handleMessage = (~dispatch, method, args) =>
 // REQUESTS
 
 module Effects = {
-  let provideOriginalResource = (extHostClient, providers, path, toMsg) =>
+  let provideOriginalResource = (~handles, extHostClient, path, toMsg) =>
     Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
       // Try our luck with every provider. If several returns Last-Writer-Wins
       // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
-      providers
-      |> List.iter((provider: Provider.t) => {
+      handles
+      |> List.iter(handle => {
            let promise =
              Exthost.Request.SCM.provideOriginalResource(
-               ~handle=provider.handle,
+               ~handle,
                ~uri=Uri.fromPath(path),
                extHostClient,
              );
@@ -252,10 +252,10 @@ module Effects = {
          })
     });
 
-  let onInputBoxValueChange = (extHostClient, provider: Provider.t, value) =>
+  let onInputBoxValueChange = (~handle, ~value, extHostClient) =>
     Isolinear.Effect.create(~name="scm.onInputBoxValueChange", () =>
       Exthost.Request.SCM.onInputBoxValueChange(
-        ~handle=provider.handle,
+        ~handle,
         ~value,
         extHostClient,
       )

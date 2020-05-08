@@ -3,7 +3,6 @@
  *
  * Model for status bar items
  */
-open Exthost;
 open Exthost.Msg.StatusBar;
 
 [@deriving show({with_path: false})]

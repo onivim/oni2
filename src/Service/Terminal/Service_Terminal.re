@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Extensions;
 open Oni_Core.Utility;
 
 module Time = Revery.Time;
@@ -86,8 +85,8 @@ module Sub = {
             throttledCursorDispatch(CursorMoved({id: params.id, cursor}))
           | ReveryTerminal.Output(output) =>
             Exthost.Request.TerminalService.acceptProcessInput(
-              params.id,
-              output,
+              ~id=params.id,
+              ~data=output,
               params.extHostClient,
             )
           // TODO: Handle term prop changes
@@ -159,9 +158,9 @@ module Sub = {
             && columns > 0
             && (rows != state.rows || columns != state.columns)) {
           Exthost.Request.TerminalService.acceptProcessResize(
-            params.id,
-            columns,
-            rows,
+            ~id=params.id,
+            ~cols=columns,
+            ~rows=rows,
             params.extHostClient,
           );
 
