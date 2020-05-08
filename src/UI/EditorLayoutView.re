@@ -12,46 +12,52 @@ module Styles = {
   open Style;
 
   let container = [flexGrow(1), flexDirection(`Row)];
+
+  let split = direction => [
+    flexDirection(direction == `Vertical ? `Row : `Column),
+    backgroundColor(direction == `Vertical ? Colors.red : Colors.blue),
+    flexGrow(1),
+  ];
+
+  let handle = direction => [
+    direction == `Vertical ? width(3) : height(3),
+    cursor(
+      direction == `Vertical
+        ? MouseCursors.horizontalResize : MouseCursors.verticalResize,
+    ),
+  ];
 };
 
-let renderTree = (~width, ~height, state: State.t, theme, tree) => {
-  let items = Feature_Layout.layout(0, 0, width, height, tree);
+let rec nodeView =
+        (~state, ~theme, ~editorGroups, ~node: Feature_Layout.t(_), ()) => {
+  switch (node) {
+  | Split(direction, _, children) =>
+    <View style={Styles.split(direction)}>
+      {children
+       |> List.map(node => <nodeView state theme editorGroups node />)
+       |> Base.List.intersperse(
+            ~sep=<View style={Styles.handle(direction)} />,
+          )
+       |> React.listToElement}
+    </View>
 
-  items
-  |> List.map((item: Feature_Layout.sizedWindow(_)) =>
-       <View
-         style=Style.[
-           position(`Absolute),
-           top(item.y),
-           left(item.x),
-           width(item.width),
-           height(item.height),
-         ]>
-         {switch (
-            EditorGroups.getEditorGroupById(state.editorGroups, item.id)
-          ) {
-          | Some(editorGroup) => <EditorGroupView state theme editorGroup />
-          | None => React.empty
-          }}
-       </View>
-     )
-  |> React.listToElement;
-};
-
-let%component make = (~state: State.t, ~theme, ()) => {
-  let%hook (maybeDimensions, setDimensions) = Hooks.state(None);
-  let children =
-    switch (maybeDimensions) {
-    | Some((width, height)) =>
-      renderTree(~width, ~height, state, theme, state.layout)
+  | Window(_, id) =>
+    switch (EditorGroups.getEditorGroupById(editorGroups, id)) {
+    | Some(editorGroup) =>
+//      <EditorGroupView state theme editorGroup />
+      <View style=Style.[backgroundColor(Colors.green |> Color.multiplyAlpha(0.5)), flexGrow(1)] />
     | None => React.empty
-    };
+    }
+  };
+};
 
-  <View
-    style=Styles.container
-    onDimensionsChanged={dim =>
-      setDimensions(_ => Some((dim.width, dim.height)))
-    }>
-    children
+let make = (~state: State.t, ~theme, ()) => {
+  <View style=Styles.container>
+    <nodeView
+      state
+      theme
+      editorGroups={state.editorGroups}
+      node={state.layout}
+    />
   </View>;
 };
