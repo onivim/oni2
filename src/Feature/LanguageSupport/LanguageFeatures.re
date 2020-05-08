@@ -130,6 +130,10 @@ let requestDefinition = (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
 };
 let requestDocumentHighlights =
     (~buffer: Buffer.t, ~location: Location.t, lf: t) => {
+  prerr_endline(
+    "REQUESTING DOCUMENT HIGHLIGHTS!!!! Count: "
+    ++ string_of_int(List.length(lf.documentHighlightProviders)),
+  );
   lf.documentHighlightProviders
   |> DocumentHighlightProvider.request((buffer, location));
 };

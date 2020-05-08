@@ -280,14 +280,11 @@ module Message = {
       let bytes = Bytes.make(1, Char.chr(3));
       Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
     | Initialize({initData, _}) =>
-      let str =
-        initData
-        |> InitData.to_yojson
-        |> Yojson.Safe.to_string;
+      let str = initData |> InitData.to_yojson |> Yojson.Safe.to_string;
 
-      prerr_endline ("----");
-      prerr_endline (str);
-      prerr_endline ("----");
+      prerr_endline("----");
+      prerr_endline(str);
+      prerr_endline("----");
 
       let bytes = str |> Bytes.of_string;
 

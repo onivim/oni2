@@ -95,11 +95,14 @@ module ExtensionCompletionProvider = {
 module ExtensionDocumentHighlightProvider = {
   let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
     highlights
-    |> List.map(highlight =>
+    |> List.map(highlight => {
+         prerr_endline(
+           "HIGHLIGHT: " ++ Exthost.DocumentHighlight.show(highlight),
+         );
          Exthost.OneBasedRange.toRange(
            Exthost.DocumentHighlight.(highlight.range),
-         )
-       );
+         );
+       });
   };
 
   let create =
@@ -109,13 +112,21 @@ module ExtensionDocumentHighlightProvider = {
         client,
         (buffer, location),
       ) => {
+    prerr_endline("REQUESTING HIGHLIGHTS");
     ProviderUtility.runIfSelectorPasses(
       ~buffer,
       ~selector,
       () => {
+        prerr_endline("SELECTOR PASSED");
         let uri = Buffer.getUri(buffer);
         let position = Exthost.OneBasedPosition.ofPosition(location);
 
+        prerr_endline(
+          "Requesting highlights for: "
+          ++ Uri.toString(uri)
+          ++ " - position: "
+          ++ Exthost.OneBasedPosition.show(position),
+        );
         Exthost.Request.LanguageFeatures.provideDocumentHighlights(
           ~handle=id,
           ~resource=uri,
@@ -186,20 +197,20 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
        );
 
   let _onRegisterDefinitionProvider = (client, provider) => {
-    ()//      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
-      //    let definitionProvider =
+    ()//    let definitionProvider =
       //      ExtensionDefinitionProvider.create(client, provider);
       //
       //    dispatch(
       //      Actions.LanguageFeature(
       //        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
       //      ),
-      ; //    let id =
- // TODO
+      // TODO
+      ; //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
+ //    let id =
       //    );
   };
 
-  let _onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
+  let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
     let id = "exthost." ++ string_of_int(handle);
     let documentSymbolProvider =
       ExtensionDocumentSymbolProvider.create(handle, selector, label, client);
@@ -215,8 +226,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let _onRegisterReferencesProvider = (client, provider) => {
-    ()//    let findAllReferencesProvider =
-      //      ExtensionFindAllReferencesProvider.create(client, provider);
+    ()//      ExtensionFindAllReferencesProvider.create(client, provider);
       //
       //    dispatch(
       //      Actions.LanguageFeature(
@@ -225,39 +235,38 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       //          findAllReferencesProvider,
       //        ),
       //      ),
-      ; //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
- //    let id =
+      //    let id =
+      ; //    let findAllReferencesProvider =
+ //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
       //    );
   };
 
-  let _onRegisterDocumentHighlightProvider = (client, provider) => {
-    ()//      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
-      //    let documentHighlightProvider =
-      //      ExtensionDocumentHighlightProvider.create(client, provider);
-      //
-      //    dispatch(
-      //      Actions.LanguageFeature(
-      //        LanguageFeatures.DocumentHighlightProviderAvailable(
-      //          id,
-      //          documentHighlightProvider,
-      //        ),
-      //      ),
-      ; //    let id =
- // TODO
-      //    );
+  let onRegisterDocumentHighlightProvider = (handle, selector, client) => {
+    let id = "exthost." ++ string_of_int(handle);
+    let documentHighlightProvider =
+      ExtensionDocumentHighlightProvider.create(handle, selector, client);
+
+    dispatch(
+      Actions.LanguageFeature(
+        LanguageFeatures.DocumentHighlightProviderAvailable(
+          id,
+          documentHighlightProvider,
+        ),
+      ),
+    );
   };
 
   let _onRegisterSuggestProvider = (client, provider) => {
-    ()//      Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
-      //    let completionProvider =
+    ()//    let completionProvider =
       //      ExtensionCompletionProvider.create(client, provider);
       //
       //    dispatch(
       //      Actions.LanguageFeature(
       //        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
       //      ),
-      ; //    let id =
- // TODO: Implement
+      // TODO: Implement
+      ; //      Protocol.SuggestProvider.("exthost." ++ string_of_int(provider.id));
+ //    let id =
       //    );
   };
   let onDiagnosticsChangeMany =
@@ -281,6 +290,14 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   open Exthost.Extension;
   open Exthost.Msg;
 
+  let maybeClientRef = ref(None);
+
+  let withClient = f =>
+    switch (maybeClientRef^) {
+    | None => Log.warn("Warning - withClient does not have a client")
+    | Some(client) => f(client)
+    };
+
   let handler = msg => {
     prerr_endline("GOT MESSAGE: " ++ Exthost.Msg.show(msg));
     switch (msg) {
@@ -295,8 +312,13 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         RegisterDocumentSymbolProvider({handle, selector, label}),
       ) =>
       // TODO:
-      //onRegisterDocumentSymbolProvider(handle, selector, label, client);
-      None
+      withClient(onRegisterDocumentSymbolProvider(handle, selector, label));
+      None;
+
+    | LanguageFeatures(RegisterDocumentHighlightProvider({handle, selector})) =>
+      // TODO:
+      withClient(onRegisterDocumentHighlightProvider(handle, selector));
+      None;
 
     | Diagnostics(Clear({owner})) =>
       dispatch(Actions.DiagnosticsClear(owner));
@@ -366,9 +388,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      // TODO - proper extensions:
-      // extensionInfo
-      []
+      extensionInfo,
     );
 
   let onError = err => {
@@ -378,7 +398,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let client =
     Exthost.Client.start(
       ~initialConfiguration=Exthost.Configuration.empty,
-        /*Feature_Configuration.toExtensionConfiguration(
+      /*Feature_Configuration.toExtensionConfiguration(
           config,
           extensions,
           setup,
@@ -397,55 +417,59 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       "test/collateral/exthost/node_modules/@onivim/vscode-exthost/out/bootstrap-fork.js",
     );
 
-      let environment=[
-        ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
-        (
-          "AMD_ENTRYPOINT",
-          "vs/workbench/services/extensions/node/extensionHostProcess",
+  let environment = [
+    ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
+    (
+      "AMD_ENTRYPOINT",
+      "vs/workbench/services/extensions/node/extensionHostProcess",
+    ),
+    ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),
+    ("VSCODE_PARENT_PID", parentPid |> string_of_int),
+  ];
+
+  let getNodePath = () => {
+    let ic =
+      Sys.win32
+        // HACK: Not sure why this command doesn't work on Linux / macOS, and vice versa...
+        ? Unix.open_process_args_in(
+            "node",
+            [|"node", "-e", "console.log(process.execPath)"|],
+          )
+        : Unix.open_process_in("node -e 'console.log(process.execPath)'");
+    let nodePath = input_line(ic);
+    let _ = close_in(ic);
+    nodePath |> String.trim;
+  };
+  // TODO: Fix provisioning of exthost and use 'real' bundled node
+  let nodePath = getNodePath();
+
+  let _process =
+    Luv.Process.spawn(
+      ~environment,
+      ~redirect=[
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stdin,
+          ~from_parent_fd=Luv.Process.stdin,
+          (),
         ),
-        ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),
-        ("VSCODE_PARENT_PID", parentPid |> string_of_int),
-      ];
-
-let getNodePath = () => {
-  let ic =
-    Sys.win32
-      // HACK: Not sure why this command doesn't work on Linux / macOS, and vice versa...
-      ? Unix.open_process_args_in(
-          "node",
-          [|"node", "-e", "console.log(process.execPath)"|],
-        )
-      : Unix.open_process_in("node -e 'console.log(process.execPath)'");
-  let nodePath = input_line(ic);
-  let _ = close_in(ic);
-  nodePath |> String.trim;
-};
-    // TODO: Fix provisioning of exthost and use 'real' bundled node
-    let nodePath = getNodePath();
-
-    let _process =Luv.Process.spawn(
-      ~environment ,
-    ~redirect=[
-      Luv.Process.inherit_fd(
-        ~fd=Luv.Process.stdin,
-        ~from_parent_fd=Luv.Process.stdin,
-        (),
-      ),
-      Luv.Process.inherit_fd(
-        ~fd=Luv.Process.stdout,
-        ~from_parent_fd=Luv.Process.stderr,
-        (),
-      ),
-      Luv.Process.inherit_fd(
-        ~fd=Luv.Process.stderr,
-        ~from_parent_fd=Luv.Process.stderr,
-        (),
-      ),
-    ],
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stdout,
+          ~from_parent_fd=Luv.Process.stderr,
+          (),
+        ),
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stderr,
+          ~from_parent_fd=Luv.Process.stderr,
+          (),
+        ),
+      ],
       nodePath,
-      [nodePath, extHostScriptPath]
-    // TODO: More robust error handling
-    ) |> Result.get_ok;
+      [nodePath, extHostScriptPath],
+      // TODO: More robust error handling
+    )
+    |> Result.get_ok;
+
+  client |> Result.iter(c => maybeClientRef := Some(c));
 
   (client, stream);
 };

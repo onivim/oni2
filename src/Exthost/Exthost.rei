@@ -339,6 +339,7 @@ module DocumentsAndEditorsDelta: {
 };
 
 module OneBasedPosition: {
+  [@deriving show({with_path: false})]
   type t = {
     lineNumber: int,
     column: int,

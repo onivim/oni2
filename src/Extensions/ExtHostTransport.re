@@ -49,7 +49,9 @@ let send = (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t) => {
 let request =
     (~msgType=MessageType.requestJsonArgs, v: t, msg: Yojson.Safe.t, f) => {
   //Lwt.fail(Invalid_Argument("Not implemented"));
-  Lwt.fail_with("Not implemented");
+  Lwt.fail_with(
+    "Not implemented",
+  );
 };
 
 let close = (v: t) => {

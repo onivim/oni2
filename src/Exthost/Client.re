@@ -6,6 +6,7 @@ type t = {
   client: Protocol.t,
   lastRequestId: ref(int),
   requestIdToReply: Hashtbl.t(int, Lwt.u(Yojson.Safe.json)),
+  initPromise: Lwt.t(unit),
 };
 
 module Log = (val Timber.Log.withNamespace("Exthost.Client"));
@@ -25,6 +26,7 @@ let start =
       ~onError: string => unit,
       (),
     ) => {
+  let (initPromise, initResolver) = Lwt.task();
   let protocolClient: ref(option(Protocol.t)) = ref(None);
   let lastRequestId = ref(0);
   let requestIdToReply = Hashtbl.create(128);
@@ -41,8 +43,7 @@ let start =
   let dispatch = msg => {
     Protocol.Message.(
       switch (msg) {
-      | Incoming.Connected =>
-        Log.info("Connected");
+      | Incoming.Connected => Log.info("Connected")
       | Incoming.Ready =>
         Log.info("Ready");
 
@@ -82,13 +83,17 @@ let start =
             usesCancellationToken: false,
           }),
         );
+
+        Lwt.wakeup(initResolver, ());
       | Incoming.ReplyError({payload, _}) =>
         switch (payload) {
         | Message(str) => onError(str)
         | Empty => onError("Unknown / Empty")
         }
       | Incoming.RequestJSONArgs({requestId, rpcId, method, args, _}) =>
-        Log.tracef(m => m("RequestJSONArgs: %d %d %s", requestId, rpcId, method));
+        Log.tracef(m =>
+          m("RequestJSONArgs: %d %d %s", requestId, rpcId, method)
+        );
         let req = Handlers.handle(rpcId, method, args);
         switch (req) {
         | Ok(msg) =>
@@ -127,7 +132,7 @@ let start =
 
   protocol
   |> Result.map(protocol => {
-       {lastRequestId, client: protocol, requestIdToReply}
+       {lastRequestId, client: protocol, requestIdToReply, initPromise}
      });
 };
 
@@ -137,26 +142,31 @@ let notify =
       ~rpcName: string,
       ~method: string,
       ~args,
-      {lastRequestId, client, _}: t,
+      {lastRequestId, client, initPromise, _}: t,
     ) => {
-  open Protocol.Message;
-  let maybeId = Handlers.stringToId(rpcName);
-  maybeId
-  |> Option.iter(rpcId => {
-       incr(lastRequestId);
-       let requestId = lastRequestId^;
-       Protocol.send(
-         ~message=
-           Outgoing.RequestJSONArgs({
-             rpcId,
-             requestId,
-             method,
-             args,
-             usesCancellationToken,
-           }),
-         client,
-       );
-     });
+  Lwt.on_success(
+    initPromise,
+    () => {
+      open Protocol.Message;
+      let maybeId = Handlers.stringToId(rpcName);
+      maybeId
+      |> Option.iter(rpcId => {
+           incr(lastRequestId);
+           let requestId = lastRequestId^;
+           Protocol.send(
+             ~message=
+               Outgoing.RequestJSONArgs({
+                 rpcId,
+                 requestId,
+                 method,
+                 args,
+                 usesCancellationToken,
+               }),
+             client,
+           );
+         });
+    },
+  );
 };
 
 let request =
@@ -168,54 +178,60 @@ let request =
       ~decoder,
       client,
     ) => {
-  let newRequestId = client.lastRequestId^ + 1;
-  let (promise, resolver) = Lwt.task();
-  Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
+  Lwt.bind(
+    client.initPromise,
+    () => {
+      let newRequestId = client.lastRequestId^ + 1;
+      let (promise, resolver) = Lwt.task();
+      Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
 
-  let finalize = () => {
-    Hashtbl.remove(client.requestIdToReply, newRequestId);
-    Log.tracef(m => m("Request finalized: %d", newRequestId));
-  };
+      let finalize = () => {
+        Hashtbl.remove(client.requestIdToReply, newRequestId);
+        Log.tracef(m => m("Request finalized: %d", newRequestId));
+      };
 
-  let parser = json =>
-    Oni_Core.Json.Decode.(
-      json |> decode_value(decoder) |> Result.map_error(string_of_error)
-    );
+      let parser = json =>
+        Oni_Core.Json.Decode.(
+          json |> decode_value(decoder) |> Result.map_error(string_of_error)
+        );
 
-  let onError = e => {
-    finalize();
-    Log.warnf(m =>
-      m(
-        "Request %d failed with error: %s",
-        newRequestId,
-        Printexc.to_string(e),
-      )
-    );
-  };
-
-  let wrapper = json =>
-    try(
-      {
+      let onError = e => {
         finalize();
-        exception ParseFailedException(string);
+        Log.warnf(m =>
+          m(
+            "Request %d failed with error: %s",
+            newRequestId,
+            Printexc.to_string(e),
+          )
+        );
+      };
 
-        switch (parser(json)) {
-        | Ok(v) =>
-          Log.tracef(m => m("Request %d succeeded.", newRequestId));
-          Lwt.return(v);
-        | Error(msg) => Lwt.fail(ParseFailedException(msg))
+      let wrapper = json =>
+        try(
+          {
+            finalize();
+            exception ParseFailedException(string);
+
+            switch (parser(json)) {
+            | Ok(v) =>
+              Log.tracef(m => m("Request %d succeeded.", newRequestId));
+              Lwt.return(v);
+            | Error(msg) => Lwt.fail(ParseFailedException(msg))
+            };
+          }
+        ) {
+        | e =>
+          onError(e);
+          Lwt.fail(e);
         };
-      }
-    ) {
-    | e =>
-      onError(e);
-      Lwt.fail(e);
-    };
 
-  let () = notify(~usesCancellationToken, ~rpcName, ~method, ~args, client);
+      let () =
+        notify(~usesCancellationToken, ~rpcName, ~method, ~args, client);
 
-  Lwt.on_failure(promise, onError);
-  Lwt.bind(promise, wrapper);
+      Lwt.on_failure(promise, onError);
+      Lwt.bind(promise, wrapper);
+    },
+  );
 };
 
 let terminate = ({client, _}) => Protocol.send(~message=Terminate, client);
