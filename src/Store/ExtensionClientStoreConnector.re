@@ -207,6 +207,10 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
               |> Seq.map(toCoreDecoration)
               |> List.of_seq;
 
+            prerr_endline(
+              "GOT DECORATRIONS!!" ++ string_of_int(List.length(decorations)),
+            );
+            failwith("got them");
             dispatch(Actions.GotDecorations({handle, uri, decorations}));
           },
         );
