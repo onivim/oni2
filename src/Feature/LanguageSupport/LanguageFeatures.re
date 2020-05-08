@@ -9,7 +9,7 @@ open Oni_Core;
 open Utility;
 
 module SymbolKind = Exthost.SymbolKind;
-module LocationWithUri = Oni_Extensions.LocationWithUri;
+module LocationWithUri = Exthost.Location;
 
 let joinAll: list(Lwt.t(list('a))) => Lwt.t(list('a)) =
   promises => LwtEx.all((acc, curr) => acc @ curr, promises);

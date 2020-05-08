@@ -1,9 +1,4 @@
 module Core = Oni_Core;
-module Protocol = ExtHostProtocol;
-module Workspace = Protocol.Workspace;
-module Configuration = Exthost.Configuration;
-
-type t;
 
 // SCM
 
@@ -99,77 +94,15 @@ module SCM: {
 
   module Effects: {
     let provideOriginalResource:
-      (t, list(Provider.t), string, Core.Uri.t => 'msg) =>
+      (Exthost.Client.t, list(Provider.t), string, Core.Uri.t => 'msg) =>
       Isolinear.Effect.t('msg);
 
     let onInputBoxValueChange:
-      (t, Provider.t, string) => Isolinear.Effect.t(_);
+      (Exthost.Client.t, Provider.t, string) => Isolinear.Effect.t(_);
   };
 };
 
 // SCM
 
-module Terminal: {
-  // MODEL
-
-  module ShellLaunchConfig: {
-    [@deriving show({with_path: false})]
-    type t = {
-      name: string,
-      executable: string,
-      arguments: list(string),
-    };
-  };
-
-  type msg =
-    | SendProcessTitle({
-        terminalId: int,
-        title: string,
-      })
-    | SendProcessData({
-        terminalId: int,
-        data: string,
-      })
-    | SendProcessPid({
-        terminalId: int,
-        pid: int,
-      })
-    | SendProcessExit({
-        terminalId: int,
-        exitCode: int,
-      });
-
-  module Requests: {
-    let createProcess:
-      (int, ShellLaunchConfig.t, Core.Uri.t, int, int, t) => unit;
-
-    let acceptProcessResize: (int, int, int, t) => unit;
-
-    let acceptProcessInput: (int, string, t) => unit;
-
-    let acceptProcessShutdown: (~immediate: bool=?, int, t) => unit;
-  };
-};
-
 type msg =
-  | SCM(SCM.msg)
-  | Terminal(Terminal.msg)
-  | ShowMessage({
-      severity: [ | `Ignore | `Info | `Warning | `Error],
-      message: string,
-      extensionId: option(string),
-    })
-  | RegisterTextContentProvider({
-      handle: int,
-      scheme: string,
-    })
-  | UnregisterTextContentProvider({handle: int})
-  | RegisterDecorationProvider({
-      handle: int,
-      label: string,
-    })
-  | UnregisterDecorationProvider({handle: int})
-  | DecorationsDidChange({
-      handle: int,
-      uris: list(Core.Uri.t),
-    });
+  | SCM(SCM.msg);

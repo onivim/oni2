@@ -232,32 +232,6 @@ let handleMessage = (~dispatch, method, args) =>
 
 // REQUESTS
 
-module Requests = {
-  let provideOriginalResource = (handle, uri, client) =>
-    ExtHostTransport.request(
-      ~msgType=MessageType.requestJsonArgsWithCancellation,
-      client,
-      ExtHostProtocol.OutgoingNotifications._buildNotification(
-        "ExtHostSCM",
-        "$provideOriginalResource",
-        `List([`Int(handle), Uri.to_yojson(uri)]),
-      ),
-      json =>
-      Uri.of_yojson(json) |> Stdlib.Result.get_ok
-    );
-
-  let onInputBoxValueChange = (handle, value, client) =>
-    ExtHostTransport.send(
-      ~msgType=MessageType.requestJsonArgsWithCancellation,
-      client,
-      ExtHostProtocol.OutgoingNotifications._buildNotification(
-        "ExtHostSCM",
-        "$onInputBoxValueChange",
-        `List([`Int(handle), `String(value)]),
-      ),
-    );
-};
-
 module Effects = {
   let provideOriginalResource = (extHostClient, providers, path, toMsg) =>
     Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
@@ -266,18 +240,24 @@ module Effects = {
       providers
       |> List.iter((provider: Provider.t) => {
            let promise =
-             Requests.provideOriginalResource(
-               provider.handle,
-               Uri.fromPath(path),
+             Exthost.Request.SCM.provideOriginalResource(
+               ~handle=provider.handle,
+               ~uri=Uri.fromPath(path),
                extHostClient,
              );
 
-           Lwt.on_success(promise, uri => dispatch(toMsg(uri)));
+           Lwt.on_success(promise, maybeUri => {
+             maybeUri |> Option.iter(uri => dispatch(toMsg(uri)))
+           });
          })
     });
 
   let onInputBoxValueChange = (extHostClient, provider: Provider.t, value) =>
     Isolinear.Effect.create(~name="scm.onInputBoxValueChange", () =>
-      Requests.onInputBoxValueChange(provider.handle, value, extHostClient)
+      Exthost.Request.SCM.onInputBoxValueChange(
+        ~handle=provider.handle,
+        ~value,
+        extHostClient,
+      )
     );
 };

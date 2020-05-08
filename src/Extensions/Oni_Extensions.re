@@ -6,11 +6,8 @@
 
 module ExtHostClient = ExtHostClient;
 module ExtHostInitData = ExtHostInitData;
-module ExtHostProtocol = ExtHostProtocol;
-module ExtHostTransport = ExtHostTransport;
 module LanguageConfiguration = LanguageConfiguration;
 module LanguageConfigurationLoader = LanguageConfigurationLoader;
 module LanguageInfo = LanguageInfo;
-module LocationWithUri = LocationWithUri;
 module NodeTask = NodeTask;
 module ProviderUtility = ProviderUtility;

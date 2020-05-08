@@ -13,12 +13,9 @@ module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 open Oni_Extensions;
 module Extensions = Oni_Extensions;
-module Protocol = Extensions.ExtHostProtocol;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
-module Workspace = Protocol.Workspace;
 
 let start = (extensions, extHostClient: Exthost.Client.t) => {
   let _bufferMetadataToModelAddedDelta =
@@ -207,10 +204,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
               |> Seq.map(toCoreDecoration)
               |> List.of_seq;
 
-            prerr_endline(
-              "GOT DECORATRIONS!!" ++ string_of_int(List.length(decorations)),
-            );
-            failwith("got them");
             dispatch(Actions.GotDecorations({handle, uri, decorations}));
           },
         );
