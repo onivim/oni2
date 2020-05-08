@@ -41,6 +41,8 @@ let start =
   let dispatch = msg => {
     Protocol.Message.(
       switch (msg) {
+      | Incoming.Connected =>
+        Log.info("Connected");
       | Incoming.Ready =>
         Log.info("Ready");
 
@@ -86,6 +88,7 @@ let start =
         | Empty => onError("Unknown / Empty")
         }
       | Incoming.RequestJSONArgs({requestId, rpcId, method, args, _}) =>
+        Log.tracef(m => m("RequestJSONArgs: %d %d %s", requestId, rpcId, method));
         let req = Handlers.handle(rpcId, method, args);
         switch (req) {
         | Ok(msg) =>

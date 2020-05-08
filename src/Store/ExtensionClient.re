@@ -366,7 +366,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      extensionInfo,
+      // TODO - proper extensions:
+      // extensionInfo
+      []
     );
 
   let onError = err => {
@@ -375,12 +377,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
   let client =
     Exthost.Client.start(
-      ~initialConfiguration=
-        Feature_Configuration.toExtensionConfiguration(
+      ~initialConfiguration=Exthost.Configuration.empty,
+        /*Feature_Configuration.toExtensionConfiguration(
           config,
           extensions,
           setup,
-        ),
+        ),*/
       ~namedPipe,
       ~initData,
       ~handler,
@@ -405,7 +407,21 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         ("VSCODE_PARENT_PID", parentPid |> string_of_int),
       ];
 
-    let nodePath = Setup.(setup.nodePath);
+let getNodePath = () => {
+  let ic =
+    Sys.win32
+      // HACK: Not sure why this command doesn't work on Linux / macOS, and vice versa...
+      ? Unix.open_process_args_in(
+          "node",
+          [|"node", "-e", "console.log(process.execPath)"|],
+        )
+      : Unix.open_process_in("node -e 'console.log(process.execPath)'");
+  let nodePath = input_line(ic);
+  let _ = close_in(ic);
+  nodePath |> String.trim;
+};
+    // TODO: Fix provisioning of exthost and use 'real' bundled node
+    let nodePath = getNodePath();
 
     let _process =Luv.Process.spawn(
       ~environment ,
