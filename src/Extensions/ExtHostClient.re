@@ -5,10 +5,6 @@
  *
  */
 
-open Oni_Core;
-
-module Core = Oni_Core;
-
 module SCM = ExtHostClient_SCM;
 
 type msg =

@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Extensions;
 open Exthost;
 
 [@deriving show({with_path: false})]
