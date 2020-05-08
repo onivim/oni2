@@ -214,7 +214,7 @@ module LanguageFeatures = {
     let provideDefinitionLink =
         (~handle, ~resource, ~position, method, client) => {
       Client.request(
-        ~decoder=Json.Decode.(list(Location.decode)),
+        ~decoder=Json.Decode.(list(DefinitionLink.decode)),
         ~usesCancellationToken=true,
         ~rpcName="ExtHostLanguageFeatures",
         ~method,

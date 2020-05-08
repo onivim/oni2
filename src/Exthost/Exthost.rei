@@ -60,6 +60,17 @@ module Location: {
   let decode: Json.decoder(t);
 };
 
+module DefinitionLink: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+    originSelectionRange: option(OneBasedRange.t),
+    targetSelectionRange: option(OneBasedRange.t),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module DocumentFilter: {
   [@deriving show]
   type t = {
@@ -796,7 +807,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(Location.t));
+      Lwt.t(list(DefinitionLink.t));
 
     let provideDeclaration:
       (
@@ -805,7 +816,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(Location.t));
+      Lwt.t(list(DefinitionLink.t));
 
     let provideImplementation:
       (
@@ -814,7 +825,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(Location.t));
+      Lwt.t(list(DefinitionLink.t));
 
     let provideReferences:
       (
@@ -833,7 +844,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(Location.t));
+      Lwt.t(list(DefinitionLink.t));
   };
 
   module SCM: {

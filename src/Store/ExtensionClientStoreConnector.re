@@ -219,20 +219,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
 
     | BufferEnter({metadata, fileType, _}) =>
       let eff = sendBufferEnterEffect(metadata, fileType);
-      // TODO: SCM - implement getOriginalUri
-      //      let eff =
-      //        switch (metadata.filePath) {
-      //        | Some(path) =>
-      //          Isolinear.Effect.batch([
-      //            sendBufferEnterEffect(metadata, fileType),
-      //            Feature_SCM.Effects.getOriginalUri(
-      //              extHostClient, state.scm, path, uri =>
-      //              Actions.GotOriginalUri({bufferId: metadata.id, uri})
-      //            ),
-      //          ])
-      //
-      //        | None => sendBufferEnterEffect(metadata, fileType)
-      //        };
       (state, eff);
 
     | NewTextContentProvider({handle, scheme}) => (
