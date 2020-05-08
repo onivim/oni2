@@ -89,11 +89,7 @@ let startWithExtensions =
     processHasExited := true;
   };
 
-  let extHostScriptPath =
-    Rench.Path.join(
-      Sys.getcwd(),
-      "test/collateral/exthost/node_modules/@onivim/vscode-exthost/out/bootstrap-fork.js",
-    );
+  let extHostScriptPath = Setup.getNodeExtensionHostPath(Setup.init());
 
   let extensionProcess =
     Node.spawn(

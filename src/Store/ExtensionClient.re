@@ -403,13 +403,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       (),
     );
 
-  let extHostScriptPath =
-    // TODO: Fix this!
-    Rench.Path.join(
-      Sys.getcwd(),
-      "test/collateral/exthost/node_modules/@onivim/vscode-exthost/out/bootstrap-fork.js",
-    );
-
   let environment = [
     ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
     (
@@ -420,23 +413,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     ("VSCODE_PARENT_PID", parentPid |> string_of_int),
   ];
 
-  let getNodePath = () => {
-    let ic =
-      Sys.win32
-        // HACK: Not sure why this command doesn't work on Linux / macOS, and vice versa...
-        ? Unix.open_process_args_in(
-            "node",
-            [|"node", "-e", "console.log(process.execPath)"|],
-          )
-        : Unix.open_process_in("node -e 'console.log(process.execPath)'");
-    let nodePath = input_line(ic);
-    let _ = close_in(ic);
-    nodePath |> String.trim;
-  };
-  // TODO: Fix provisioning of exthost and use 'real' bundled node
-  let nodePath = getNodePath();
+  let nodePath = Setup.(setup.nodePath);
+  let extHostScriptPath = Setup.getNodeExtensionHostPath(setup);
 
-  let _process =
+  let _process: Luv.Process.t =
     Luv.Process.spawn(
       ~environment,
       ~redirect=[
@@ -458,8 +438,8 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ],
       nodePath,
       [nodePath, extHostScriptPath],
-      // TODO: More robust error handling
     )
+    // TODO: More robust error handling
     |> Result.get_ok;
 
   client |> Result.iter(c => maybeClientRef := Some(c));
