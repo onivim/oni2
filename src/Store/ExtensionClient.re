@@ -32,7 +32,7 @@ module ExtensionCompletionProvider = {
   let create =
       (
         id: int,
-        selector: Exthost.DocumentFilter.t,
+        selector: Exthost.DocumentSelector.t,
         client: Exthost.Client.t,
         (buffer, _completionMeet, location),
       ) =>
@@ -105,7 +105,7 @@ module ExtensionDocumentHighlightProvider = {
   let create =
       (
         id: int,
-        selector: Exthost.DocumentFilter.t,
+        selector: Exthost.DocumentSelector.t,
         client,
         (buffer, location),
       ) => {

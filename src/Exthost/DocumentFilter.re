@@ -19,8 +19,8 @@ let decode = {
   );
 };
 
-let matches = (~filetype: string, selector) => {
-  switch (selector.language) {
+let matches = (~filetype: string, filter) => {
+  switch (filter.language) {
   | None => false
   | Some(language) => String.equal(language, filetype)
   };

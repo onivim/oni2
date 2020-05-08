@@ -73,6 +73,15 @@ module DocumentFilter: {
   let decode: Json.decoder(t);
 };
 
+module DocumentSelector: {
+  [@deriving show]
+  type t = list(DocumentFilter.t);
+
+  let matches: (~filetype: string, t) => bool;
+
+  let decode: Json.decoder(t);
+};
+
 module OneBasedRange: {
   type t = {
     startLineNumber: int,
@@ -491,39 +500,39 @@ module Msg: {
     type msg =
       | RegisterDocumentHighlightProvider({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterDocumentSymbolProvider({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
           label: string,
         })
       | RegisterDefinitionSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterDeclarationSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterImplementationSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterTypeDefinitionSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterSuggestSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
           triggerCharacters: list(string),
           supportsResolveDetails: bool,
           extensionId: string,
         })
       | RegisterReferenceSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | Unregister({handle: int});
   };

@@ -10,6 +10,7 @@ module Diagnostic = Diagnostic;
 module DocumentsAndEditorsDelta = DocumentsAndEditorsDelta;
 module DocumentFilter = DocumentFilter;
 module DocumentHighlight = DocumentHighlight;
+module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module Eol = Eol;
 module Location = Location;
