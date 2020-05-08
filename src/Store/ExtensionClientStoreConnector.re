@@ -171,22 +171,47 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
          });
     });
 
-  let provideDecorationsEffect = (handle, uri) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="exthost.provideDecorations", _dispatch => {
-      // TODO: provideDecorations API
-      //      let promise =
-      //        Oni_Extensions.ExtHostClient.provideDecorations(
-      //          handle,
-      //          uri,
-      //          extHostClient,
-      //        );
-      //
-      //      Lwt.on_success(promise, decorations =>
-      //        dispatch(Actions.GotDecorations({handle, uri, decorations}))
-      //      );
-      ()
-    });
+  let provideDecorationsEffect = {
+    open Exthost.Request.Decorations;
+    let nextRequestId = ref(0);
+
+    (handle, uri) =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="exthost.provideDecorations", dispatch => {
+        let requests = [{id: nextRequestId^, handle, uri}];
+        incr(nextRequestId);
+
+        let promise =
+          Exthost.Request.Decorations.provideDecorations(
+            ~requests,
+            extHostClient,
+          );
+
+        let toCoreDecoration:
+          Exthost.Request.Decorations.decoration => Oni_Core.Decoration.t =
+          decoration => {
+            handle,
+            tooltip: decoration.title,
+            letter: decoration.letter,
+            color: decoration.color.id,
+          };
+
+        Lwt.on_success(
+          promise,
+          decorations => {
+            let decorations =
+              decorations
+              |> IntMap.bindings
+              |> List.to_seq
+              |> Seq.map(snd)
+              |> Seq.map(toCoreDecoration)
+              |> List.of_seq;
+
+            dispatch(Actions.GotDecorations({handle, uri, decorations}));
+          },
+        );
+      });
+  };
 
   let updater = (state: State.t, action: Actions.t) =>
     switch (action) {
