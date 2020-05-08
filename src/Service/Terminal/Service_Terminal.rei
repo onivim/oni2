@@ -1,5 +1,4 @@
 open Oni_Core;
-open Exthost;
 
 [@deriving show({with_path: false})]
 type msg =
