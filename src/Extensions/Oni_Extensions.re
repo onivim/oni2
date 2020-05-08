@@ -5,7 +5,6 @@
  */
 
 module ExtHostClient = ExtHostClient;
-module ExtHostInitData = ExtHostInitData;
 module LanguageConfiguration = LanguageConfiguration;
 module LanguageConfigurationLoader = LanguageConfigurationLoader;
 module LanguageInfo = LanguageInfo;
