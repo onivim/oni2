@@ -59,38 +59,41 @@ module ExtensionCompletionProvider = {
   };
 };
 
-// TODO: Properly type definitoin provider...
-/*
- module ExtensionDefinitionProvider = {
-   let definitionToModel = def => {
-     let Protocol.DefinitionLink.{uri, range, originSelectionRange} = def;
-     let Range.{start, _} = Protocol.OneBasedRange.toRange(range);
+module ExtensionDefinitionProvider = {
+  let definitionToModel = defs => {
+    let def = List.hd(defs);
+    let Exthost.DefinitionLink.{uri, range, originSelectionRange, _} = def;
+    let Range.{start, _}: EditorCoreTypes.Range.t =
+      Exthost.OneBasedRange.toRange(range);
 
-     let originRange =
-       originSelectionRange |> Option.map(Protocol.OneBasedRange.toRange);
+    let originRange: option(EditorCoreTypes.Range.t) =
+      originSelectionRange |> Option.map(Exthost.OneBasedRange.toRange);
 
-     LanguageFeatures.DefinitionResult.create(
-       ~originRange,
-       ~uri,
-       ~location=start,
-     );
-   };
+    LanguageFeatures.DefinitionResult.create(
+      ~originRange,
+      ~uri,
+      ~location=start,
+    );
+  };
 
-   let create =
-       (client, {id, selector}: Protocol.BasicProvider.t, (buffer, location)) => {
-     ProviderUtility.runIfSelectorPasses(
-       ~buffer,
-       ~selector,
-       () => {
-         let uri = Buffer.getUri(buffer);
-         let position = Protocol.OneBasedPosition.ofPosition(location);
-         ExtHostClient.provideDefinition(id, uri, position, client)
-         |> Lwt.map(definitionToModel);
-       },
-     );
-   };
- };
- */
+  let create = (id, selector, client, (buffer, location)) => {
+    ProviderUtility.runIfSelectorPasses(
+      ~buffer,
+      ~selector,
+      () => {
+        let uri = Buffer.getUri(buffer);
+        let position = Exthost.OneBasedPosition.ofPosition(location);
+        Exthost.Request.LanguageFeatures.provideDefinition(
+          ~handle=id,
+          ~resource=uri,
+          ~position,
+          client,
+        )
+        |> Lwt.map(definitionToModel);
+      },
+    );
+  };
+};
 
 module ExtensionDocumentHighlightProvider = {
   let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
@@ -186,18 +189,16 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
          )
        );
 
-  let _onRegisterDefinitionProvider = (client, provider) => {
-    ()//      ExtensionDefinitionProvider.create(client, provider);
-      //
-      //    dispatch(
-      //      Actions.LanguageFeature(
-      //        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
-      //      ),
-      // TODO
-      //    let id =
-      ; //    let definitionProvider =
- //      Protocol.BasicProvider.("exthost." ++ string_of_int(provider.id));
-      //    );
+  let onRegisterDefinitionProvider = (handle, selector, client) => {
+    let id = "exthost." ++ string_of_int(handle);
+    let definitionProvider =
+      ExtensionDefinitionProvider.create(handle, selector, client);
+
+    dispatch(
+      Actions.LanguageFeature(
+        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
+      ),
+    );
   };
 
   let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
@@ -301,6 +302,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ) =>
       withClient(onRegisterDocumentSymbolProvider(handle, selector, label));
       None;
+    | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
+      withClient(onRegisterDefinitionProvider(handle, selector));
+      None;
 
     | LanguageFeatures(RegisterDocumentHighlightProvider({handle, selector})) =>
       withClient(onRegisterDocumentHighlightProvider(handle, selector));
@@ -316,7 +320,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       dispatch(Actions.DiagnosticsClear(owner));
       None;
     | Diagnostics(ChangeMany({owner, entries})) =>
-      prerr_endline("Diagnostics - change many!");
       onDiagnosticsChangeMany(owner, entries);
       None;
 

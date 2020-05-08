@@ -12,8 +12,10 @@ let decode = {
       {
         uri: field.required("uri", Uri.decode),
         range: field.required("range", OneBasedRange.decode),
-        originSelectionRange: field.optional("originSelectionRange", OneBasedRange.decode),
-        targetSelectionRange: field.optional("targetSelectionRange", OneBasedRange.decode),
+        originSelectionRange:
+          field.optional("originSelectionRange", OneBasedRange.decode),
+        targetSelectionRange:
+          field.optional("targetSelectionRange", OneBasedRange.decode),
       }
     )
   );

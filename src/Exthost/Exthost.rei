@@ -51,6 +51,18 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module OneBasedRange: {
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
+
+  let ofRange: Range.t => t;
+  let toRange: t => Range.t;
+};
+
 module Location: {
   type t = {
     uri: Uri.t,
@@ -91,18 +103,6 @@ module DocumentSelector: {
   let matches: (~filetype: string, t) => bool;
 
   let decode: Json.decoder(t);
-};
-
-module OneBasedRange: {
-  type t = {
-    startLineNumber: int,
-    endLineNumber: int,
-    startColumn: int,
-    endColumn: int,
-  };
-
-  let ofRange: Range.t => t;
-  let toRange: t => Range.t;
 };
 
 module DocumentHighlight: {
