@@ -346,10 +346,6 @@ module LanguageFeatures = {
         ]),
       ) =>
       open Json.Decode;
-      prerr_endline(
-        "#### REIGSTER SUGGEST SUPPORT: " ++ Yojson.Safe.to_string(args),
-      );
-
       let nestedListDecoder = list(list(string)) |> map(List.flatten);
 
       let decodeTriggerCharacters =

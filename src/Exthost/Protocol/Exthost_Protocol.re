@@ -282,10 +282,6 @@ module Message = {
     | Initialize({initData, _}) =>
       let str = initData |> InitData.to_yojson |> Yojson.Safe.to_string;
 
-      prerr_endline("----");
-      prerr_endline(str);
-      prerr_endline("----");
-
       let bytes = str |> Bytes.of_string;
 
       Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
