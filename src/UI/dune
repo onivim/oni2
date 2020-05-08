@@ -19,6 +19,7 @@
         Oni2.feature.scm
         Oni2.feature.modals
         Oni2.feature.layout
+        Oni2.feature.changelog
         Rench
         Revery
         revery-terminal.lib

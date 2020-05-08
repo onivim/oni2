@@ -76,6 +76,14 @@ module List = {
 };
 
 module Oni = {
+  let changelog =
+    register(
+      ~category="Help",
+      ~title="Open changelog",
+      "oni.changelog",
+      Command("oni.changelog"),
+    );
+
   module Explorer = {
     let toggle =
       register(
