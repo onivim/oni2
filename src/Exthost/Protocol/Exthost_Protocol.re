@@ -1,7 +1,7 @@
 open Exthost_Transport;
 open Exthost_Extension;
 
-module Log = (val Timber.Log.withNamespace("Transport"));
+module Log = (val Timber.Log.withNamespace("Exthost.Protocol"));
 
 module ByteParser = {
   exception UInt32ConversionException;
@@ -280,11 +280,16 @@ module Message = {
       let bytes = Bytes.make(1, Char.chr(3));
       Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
     | Initialize({initData, _}) =>
-      let bytes =
+      let str =
         initData
         |> InitData.to_yojson
-        |> Yojson.Safe.to_string
-        |> Bytes.of_string;
+        |> Yojson.Safe.to_string;
+
+      prerr_endline ("----");
+      prerr_endline (str);
+      prerr_endline ("----");
+
+      let bytes = str |> Bytes.of_string;
 
       Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
     | RequestJSONArgs({rpcId, method, args, usesCancellationToken, _}) =>

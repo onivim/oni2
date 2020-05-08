@@ -8,7 +8,7 @@ type t = {
   requestIdToReply: Hashtbl.t(int, Lwt.u(Yojson.Safe.json)),
 };
 
-module Log = (val Timber.Log.withNamespace("Client"));
+module Log = (val Timber.Log.withNamespace("Exthost.Client"));
 
 module Testing = {
   let getPendingRequestCount = ({requestIdToReply, _}) => {

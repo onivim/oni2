@@ -12,6 +12,5 @@ module LanguageConfiguration = LanguageConfiguration;
 module LanguageConfigurationLoader = LanguageConfigurationLoader;
 module LanguageInfo = LanguageInfo;
 module LocationWithUri = LocationWithUri;
-module NodeProcess = NodeProcess;
 module NodeTask = NodeTask;
 module ProviderUtility = ProviderUtility;

@@ -351,6 +351,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let parentPid = Luv.Pid.getpid();
   let name = Printf.sprintf("exthost-client-%s", parentPid |> string_of_int);
   let namedPipe = name |> NamedPipe.create;
+  let pipeStr = NamedPipe.toString(namedPipe);
 
   let tempDir = Filename.get_temp_dir_name();
 
@@ -386,6 +387,49 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~onError,
       (),
     );
+
+  let extHostScriptPath =
+    // TODO: Fix this!
+    Rench.Path.join(
+      Sys.getcwd(),
+      "test/collateral/exthost/node_modules/@onivim/vscode-exthost/out/bootstrap-fork.js",
+    );
+
+      let environment=[
+        ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
+        (
+          "AMD_ENTRYPOINT",
+          "vs/workbench/services/extensions/node/extensionHostProcess",
+        ),
+        ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),
+        ("VSCODE_PARENT_PID", parentPid |> string_of_int),
+      ];
+
+    let nodePath = Setup.(setup.nodePath);
+
+    let _process =Luv.Process.spawn(
+      ~environment ,
+    ~redirect=[
+      Luv.Process.inherit_fd(
+        ~fd=Luv.Process.stdin,
+        ~from_parent_fd=Luv.Process.stdin,
+        (),
+      ),
+      Luv.Process.inherit_fd(
+        ~fd=Luv.Process.stdout,
+        ~from_parent_fd=Luv.Process.stderr,
+        (),
+      ),
+      Luv.Process.inherit_fd(
+        ~fd=Luv.Process.stderr,
+        ~from_parent_fd=Luv.Process.stderr,
+        (),
+      ),
+    ],
+      nodePath,
+      [nodePath, extHostScriptPath]
+    // TODO: More robust error handling
+    ) |> Result.get_ok;
 
   (client, stream);
 };
