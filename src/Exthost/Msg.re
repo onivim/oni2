@@ -346,6 +346,17 @@ module LanguageFeatures = {
         ]),
       ) =>
       open Json.Decode;
+      prerr_endline(
+        "#### REIGSTER SUGGEST SUPPORT: " ++ Yojson.Safe.to_string(args),
+      );
+
+      let nestedListDecoder = list(list(string)) |> map(List.flatten);
+
+      let decodeTriggerCharacters =
+        one_of([
+          ("nestedList", nestedListDecoder),
+          ("stringList", list(string)),
+        ]);
 
       let ret = {
         open Base.Result.Let_syntax;
@@ -353,9 +364,7 @@ module LanguageFeatures = {
           selectorJson |> decode_value(list(DocumentFilter.decode));
 
         let%bind triggerCharacters =
-          triggerCharactersJson
-          |> decode_value(list(list(string)))
-          |> Result.map(List.flatten);
+          triggerCharactersJson |> decode_value(decodeTriggerCharacters);
 
         Ok(
           RegisterSuggestSupport({

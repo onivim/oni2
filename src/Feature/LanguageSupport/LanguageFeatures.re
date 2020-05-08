@@ -82,7 +82,7 @@ module DocumentHighlightProvider =
 module FindAllReferencesProvider =
   LanguageFeature.Make({
     type params = (Buffer.t, Location.t);
-    type response = list(LocationWithUri.t);
+    type response = list(Exthost.Location.t);
 
     let namespace = "Oni2.FindAllReferencesProvider";
     let aggregate = joinAll;
