@@ -4,7 +4,6 @@
  * Top-level module for Oni_Extensions.
  */
 
-module DocumentSelector = DocumentSelector;
 module ExtHostClient = ExtHostClient;
 module ExtHostInitData = ExtHostInitData;
 module ExtHostProtocol = ExtHostProtocol;

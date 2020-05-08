@@ -413,34 +413,6 @@ module Workspace = {
     };
 };
 
-module SuggestProvider = {
-  type t = {
-    selector: DocumentSelector.t,
-    id: int,
-  };
-
-  let create = (~selector, id) => {selector, id};
-};
-
-/*module DocumentSymbolProvider = {
-    type t = {
-      selector: DocumentSelector.t,
-      id: int,
-      label: string,
-    };
-
-    let create = (~selector, ~label, id) => {selector, label, id};
-  };*/
-
-module BasicProvider = {
-  type t = {
-    selector: DocumentSelector.t,
-    id: int,
-  };
-
-  let create = (~selector, id) => {selector, id};
-};
-
 module IncomingNotifications = {
   module StatusBar = {
     let parseSetEntry = args => {
@@ -480,42 +452,6 @@ module IncomingNotifications = {
         | Ok(v) => Some(v)
         | Error(_) => None
         }
-      | _ => None
-      };
-    };
-
-    let parseBasicProvider = json => {
-      switch (json) {
-      | [`Int(id), documentSelector] =>
-        documentSelector
-        |> DocumentSelector.of_yojson
-        |> Stdlib.Result.to_option
-        |> Option.map(selector => {BasicProvider.create(~selector, id)})
-      | _ => None
-      };
-    };
-
-    /*let parseDocumentSymbolProvider = json => {
-        switch (json) {
-        | [`Int(id), documentSelector, `String(label)] =>
-          documentSelector
-          |> DocumentSelector.of_yojson
-          |> Stdlib.Result.to_option
-          |> Option.map(selector => {
-               DocumentSymbolProvider.create(~selector, ~label, id)
-             })
-        | _ => None
-        };
-      };*/
-
-    let parseRegisterSuggestSupport = json => {
-      switch (json) {
-      | [`Int(id), documentSelector, `List(_triggerCharacters), `Bool(_)] =>
-        documentSelector
-        |> DocumentSelector.of_yojson
-        |> Stdlib.Result.to_option
-        |> Option.map(selector => {SuggestProvider.create(~selector, id)})
-      // TODO: Finish parsing
       | _ => None
       };
     };
