@@ -8,17 +8,10 @@ open Revery;
 open UI;
 open Oni_Model;
 
-let splitContainer = Style.[flexGrow(1), flexDirection(`Row)];
+module Styles = {
+  open Style;
 
-let splitStyle = Style.[flexGrow(1)];
-
-let parentStyle = direction => {
-  let flexDir =
-    switch (direction) {
-    | `Vertical => `Row
-    | `Horizontal => `Column
-    };
-  Style.[flexGrow(1), flexDirection(flexDir)];
+  let container = [flexGrow(1), flexDirection(`Row)];
 };
 
 let renderTree = (~width, ~height, state: State.t, theme, tree) => {
@@ -54,17 +47,11 @@ let%component make = (~state: State.t, ~theme, ()) => {
     | None => React.empty
     };
 
-  let splits =
-    [
-      <View
-        onDimensionsChanged={dim =>
-          setDimensions(_ => Some((dim.width, dim.height)))
-        }
-        style=Style.[flexGrow(1)]>
-        children
-      </View>,
-    ]
-    |> React.listToElement;
-
-  <View style=splitContainer> splits </View>;
+  <View
+    style=Styles.container
+    onDimensionsChanged={dim =>
+      setDimensions(_ => Some((dim.width, dim.height)))
+    }>
+    children
+  </View>;
 };
