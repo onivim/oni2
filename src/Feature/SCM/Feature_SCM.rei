@@ -72,7 +72,7 @@ type outmsg =
 let update: (Exthost.Client.t, model, msg) => (model, outmsg);
 
 let handleExtensionMessage:
-  (~dispatch: msg => unit, ExtHostClient.SCM.msg) => unit;
+  (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;
 
 // VIEW
 

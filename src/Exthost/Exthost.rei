@@ -148,6 +148,7 @@ module ReferenceContext: {
 };
 
 module SCM: {
+  [@deriving show({with_path: false})]
   type command = {
     id: string,
     title: string,

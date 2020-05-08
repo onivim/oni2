@@ -290,12 +290,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let handler = msg => {
     prerr_endline("GOT MESSAGE: " ++ Exthost.Msg.show(msg));
     switch (msg) {
-    //    TODO
-    //    | SCM(msg) =>
-    //      Feature_SCM.handleExtensionMessage(
-    //        ~dispatch=msg => dispatch(Actions.SCM(msg)),
-    //        msg,
-    //      )
+    | SCM(msg) =>
+      Feature_SCM.handleExtensionMessage(
+        ~dispatch=msg => dispatch(Actions.SCM(msg)),
+        msg,
+      );
+      None;
 
     | LanguageFeatures(
         RegisterDocumentSymbolProvider({handle, selector, label}),

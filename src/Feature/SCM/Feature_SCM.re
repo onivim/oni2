@@ -7,12 +7,46 @@ module Selection = Oni_Components.Selection;
 
 // MODEL
 
-[@deriving show]
-type command = ExtHostClient.SCM.command;
+module Resource = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    uri: Uri.t,
+    icons: list(string),
+    tooltip: string,
+    strikeThrough: bool,
+    faded: bool,
+  };
+};
 
-module Resource = ExtHostClient.SCM.Resource;
-module ResourceGroup = ExtHostClient.SCM.ResourceGroup;
-module Provider = ExtHostClient.SCM.Provider;
+module ResourceGroup = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    hideWhenEmpty: bool,
+    resources: list(Resource.t),
+  };
+};
+
+[@deriving show]
+type command = Exthost.SCM.command;
+
+module Provider = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    rootUri: option(Uri.t),
+    resourceGroups: list(ResourceGroup.t),
+    hasQuickDiffProvider: bool,
+    count: int,
+    commitTemplate: string,
+    acceptInputCommand: option(command),
+  };
+};
 
 [@deriving show({with_path: false})]
 type model = {
@@ -94,7 +128,7 @@ type msg =
     })
   | AcceptInputCommandChanged({
       handle: int,
-      command,
+      command: Exthost.SCM.command,
     })
   | KeyPressed({key: string})
   | InputBoxClicked({selection: Selection.t});
@@ -349,7 +383,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
   };
 
-let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
+let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   switch (msg) {
   | RegisterSourceControl({handle, id, label, rootUri}) =>
     dispatch(NewProvider({handle, id, label, rootUri}))
@@ -363,16 +397,17 @@ let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
 
-  | SpliceSCMResourceStates({provider, group, start, deleteCount, additions}) =>
-    dispatch(
-      ResourceStatesChanged({
-        provider,
-        group,
-        spliceStart: start,
-        deleteCount,
-        additions,
-      }),
-    )
+  // TODO: Bring back!
+  //  | SpliceSCMResourceStates({provider, group, start, deleteCount, additions}) =>
+  //    dispatch(
+  //      ResourceStatesChanged({
+  //        provider,
+  //        group,
+  //        spliceStart: start,
+  //        deleteCount,
+  //        additions,
+  //      }),
+  //    )
 
   | UpdateSourceControl({
       handle,
@@ -394,6 +429,8 @@ let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
+  // TODO: REMOVE WHEN EXHAUSTIVE AGAIN
+  | _ => ()
   };
 
 // VIEW
