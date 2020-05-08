@@ -10,6 +10,7 @@ module SCM: {
       Isolinear.Effect.t('msg);
 
     let onInputBoxValueChange:
-      (~handle: int, ~value: string, Exthost.Client.t) => Isolinear.Effect.t(_);
+      (~handle: int, ~value: string, Exthost.Client.t) =>
+      Isolinear.Effect.t(_);
   };
 };

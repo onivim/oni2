@@ -160,7 +160,7 @@ module Sub = {
           Exthost.Request.TerminalService.acceptProcessResize(
             ~id=params.id,
             ~cols=columns,
-            ~rows=rows,
+            ~rows,
             params.extHostClient,
           );
 
