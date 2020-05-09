@@ -40,8 +40,8 @@ let startWithExtensions =
     handler(msg);
   };
 
-//  Timber.App.enable();
-//  Timber.App.setLevel(Timber.Level.trace);
+  //  Timber.App.enable();
+  //  Timber.App.setLevel(Timber.Level.trace);
 
   let extensions =
     extensions
