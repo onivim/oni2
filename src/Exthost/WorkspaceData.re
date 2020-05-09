@@ -56,7 +56,7 @@ let encode = workspace =>
       ("folders", workspace.folders |> list(Folder.encode)),
       ("id", workspace.id |> string),
       ("name", workspace.name |> string),
-      ("configuration", workspace.configuration |> option(Uri.encode)),
+      ("configuration", workspace.configuration |> nullable(Uri.encode)),
       ("isUntitled", workspace.isUntitled |> bool),
     ])
   );
