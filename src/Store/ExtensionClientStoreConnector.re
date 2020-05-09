@@ -11,7 +11,6 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-open Oni_Extensions;
 module Extensions = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
@@ -44,7 +43,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
          if (!Hashtbl.mem(activatedFileTypes, ft)) {
            // If no entry, we haven't activated yet
            Exthost.Request.ExtensionService.activateByEvent(
-             "onLanguage:" ++ ft,
+             ~event="onLanguage:" ++ ft,
              extHostClient,
            );
            Hashtbl.add(activatedFileTypes, ft, true);

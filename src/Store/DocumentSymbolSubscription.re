@@ -28,9 +28,6 @@ module Provider = {
     Lwt.on_success(
       promise,
       items => {
-        open LanguageFeatures;
-        open Exthost.OneBasedRange;
-
         let docSymbolToMenuItem = (docSymbol: DocumentSymbol.t) => {
           Actions.{
             category: Some(DocumentSymbol.(docSymbol.name)),
@@ -38,8 +35,8 @@ module Provider = {
             command: () =>
               Model.Actions.OpenFileByPath(
                 Core.Buffer.getUri(buffer) |> Core.Uri.toFileSystemPath,
+                // !! TODO: Fix conversion here
                 None,
-                // TODO: Fix conversion here
                 None,
                 // Some(DocumentSymbol.(docSymbol.range.start)),
               ),

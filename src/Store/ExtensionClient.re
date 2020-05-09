@@ -309,7 +309,14 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
       withClient(onRegisterReferencesProvider(handle, selector));
       None;
-    | LanguageFeatures(RegisterSuggestSupport({handle, selector})) =>
+    | LanguageFeatures(
+        RegisterSuggestSupport({
+          handle,
+          selector,
+          _,
+          // TODO: Handle additional configuration from suggest registration!
+        }),
+      ) =>
       withClient(onRegisterSuggestProvider(handle, selector));
       None;
 
@@ -348,7 +355,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       dispatch(ExtMessageReceived({severity, message, extensionId}));
       None;
 
-    | StatusBar(SetEntry({id, text, source, alignment, priority})) =>
+    | StatusBar(SetEntry({id, text, alignment, priority, _})) =>
       dispatch(
         Actions.StatusBarAddItem(
           StatusBarModel.Item.create(~id, ~text, ~alignment, ~priority, ()),

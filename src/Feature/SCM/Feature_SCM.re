@@ -348,13 +348,14 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       },
       Effect(
         Isolinear.Effect.batch(
-          model.providers |> List.map(provider => Isolinear.Effect.none),
-          // TODO: Hook this back up!
-          //               ExtHostClient.SCM.Effects.onInputBoxValueChange(
-          //                 extHostClient,
-          //                 provider,
-          //                 value,
-          //               )
+          model.providers
+          |> List.map((provider: Provider.t) =>
+               ExtHostClient.SCM.Effects.onInputBoxValueChange(
+                 ~handle=provider.handle,
+                 ~value,
+                 extHostClient,
+               )
+             ),
         ),
       ),
     );
@@ -391,6 +392,8 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
     let provider = handle;
     splices
     |> List.iter(({handle as group, resourceSplices}: Resource.Splices.t) => {
+         ignore(handle);
+
          resourceSplices
          |> List.iter(({start, deleteCount, resources}: Resource.Splice.t) => {
               dispatch(
@@ -402,7 +405,7 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
                   additions: resources,
                 }),
               )
-            })
+            });
        });
   | UpdateSourceControl({
       handle,
