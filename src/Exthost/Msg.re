@@ -661,7 +661,6 @@ module TerminalService = {
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
-    prerr_endline ("TERMINAL SERVICE: " ++ method ++ "|" ++ Yojson.Safe.to_string(args));
     switch (method) {
     | "$sendProcessTitle" =>
       switch (args) {
