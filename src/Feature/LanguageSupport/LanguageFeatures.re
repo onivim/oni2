@@ -138,8 +138,13 @@ let requestDocumentHighlights =
 };
 
 let requestCompletions = (~buffer: Buffer.t, ~meet: CompletionMeet.t, lf: t) => {
-  lf.completionProviders
+  prerr_endline (" -- LanguageFeatures: Requesting completions...")
+  let promise = lf.completionProviders
   |> CompletionProvider.request((buffer, meet, meet.location));
+
+  Lwt.on_success(promise, (_) => " -- LanguageFeatures: All completion providers finished!" |> prerr_endline);
+  Lwt.on_failure(promise, (_) => " -- LanguageFeatures: There was a failure..." |> prerr_endline);
+  promise;
 };
 
 let requestFindAllReferences =

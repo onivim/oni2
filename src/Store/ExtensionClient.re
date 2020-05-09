@@ -363,6 +363,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       None;
 
     | ExtensionService(DidActivateExtension({extensionId, _})) =>
+      prerr_endline (" -- Activated: " ++ extensionId);
       dispatch(
         Actions.Extension(Oni_Model.Extensions.Activated(extensionId)),
       );

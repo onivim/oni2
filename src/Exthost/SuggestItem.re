@@ -30,11 +30,13 @@ let decode = {
         |> Option.value(~default=CompletionKind.Method);
 
       let detail = field.optional("c", string);
-      let documentation = field.optional("d", string);
+      // TODO: Handle parsing correctly
+      // There are other types besides string that documentation can take..
+      //let documentation = field.optional("d", string);
       let sortText = field.optional("e", string);
       let filterText = field.optional("f", string);
       let insertText = field.optional("h", string);
-      {label, kind, detail, documentation, sortText, filterText, insertText};
+      {label, kind, detail, documentation: None, sortText, filterText, insertText};
     })
   );
 };

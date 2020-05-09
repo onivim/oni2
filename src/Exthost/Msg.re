@@ -420,8 +420,8 @@ module MessageService = {
         "$showMessage",
         `List([`Int(severity), `String(message), options, ..._]),
       ) =>
-      let extensionId =
-        Yojson.Safe.Util.(
+      try ({
+        let extensionId = Yojson.Safe.Util.(
           options
           |> member("extension")
           |> member("identifier")
@@ -433,7 +433,10 @@ module MessageService = {
           message,
           extensionId,
         }),
-      );
+      )
+      }) {
+      | exn => Error(Printexc.to_string(exn));
+      }
     | _ =>
       Error(
         "Unable to parse method: "
