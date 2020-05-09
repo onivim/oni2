@@ -33,27 +33,20 @@ module ExtensionCompletionProvider = {
         client: Exthost.Client.t,
         (buffer, _completionMeet, location),
       ) => {
-    ProviderUtility.runIfSelectorPasses(
-      ~buffer,
-      ~selector,
-      () => {
-        let uri = Buffer.getUri(buffer);
-        let position = Exthost.OneBasedPosition.ofPosition(location);
-
-        Exthost.Request.LanguageFeatures.provideCompletionItems(
-          ~handle=id,
-          ~resource=uri,
-          ~position,
-          ~context=
-            Exthost.CompletionContext.{
-              triggerKind: Invoke,
-              triggerCharacter: None,
-            },
-          client,
-        )
-        |> Lwt.map(items => {suggestionsToCompletionItems(items)});
-      },
-    );
+    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
+      Exthost.Request.LanguageFeatures.provideCompletionItems(
+        ~handle=id,
+        ~resource=Buffer.getUri(buffer),
+        ~position=Exthost.OneBasedPosition.ofPosition(location),
+        ~context=
+          Exthost.CompletionContext.{
+            triggerKind: Invoke,
+            triggerCharacter: None,
+          },
+        client,
+      )
+      |> Lwt.map(items => {suggestionsToCompletionItems(items)})
+    });
   };
 };
 
@@ -75,21 +68,15 @@ module ExtensionDefinitionProvider = {
   };
 
   let create = (id, selector, client, (buffer, location)) => {
-    ProviderUtility.runIfSelectorPasses(
-      ~buffer,
-      ~selector,
-      () => {
-        let uri = Buffer.getUri(buffer);
-        let position = Exthost.OneBasedPosition.ofPosition(location);
-        Exthost.Request.LanguageFeatures.provideDefinition(
-          ~handle=id,
-          ~resource=uri,
-          ~position,
-          client,
-        )
-        |> Lwt.map(definitionToModel);
-      },
-    );
+    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
+      Exthost.Request.LanguageFeatures.provideDefinition(
+        ~handle=id,
+        ~resource=Buffer.getUri(buffer),
+        ~position=Exthost.OneBasedPosition.ofPosition(location),
+        client,
+      )
+      |> Lwt.map(definitionToModel)
+    });
   };
 };
 
@@ -110,43 +97,29 @@ module ExtensionDocumentHighlightProvider = {
         client,
         (buffer, location),
       ) => {
-    ProviderUtility.runIfSelectorPasses(
-      ~buffer,
-      ~selector,
-      () => {
-        let uri = Buffer.getUri(buffer);
-        let position = Exthost.OneBasedPosition.ofPosition(location);
-
-        Exthost.Request.LanguageFeatures.provideDocumentHighlights(
-          ~handle=id,
-          ~resource=uri,
-          ~position,
-          client,
-        )
-        |> Lwt.map(definitionToModel);
-      },
-    );
+    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
+      Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+        ~handle=id,
+        ~resource=Buffer.getUri(buffer),
+        ~position=Exthost.OneBasedPosition.ofPosition(location),
+        client,
+      )
+      |> Lwt.map(definitionToModel)
+    });
   };
 };
 
 module ExtensionFindAllReferencesProvider = {
   let create = (id, selector, client, (buffer, location)) => {
-    ProviderUtility.runIfSelectorPasses(
-      ~buffer,
-      ~selector,
-      () => {
-        let uri = Buffer.getUri(buffer);
-        let position = Exthost.OneBasedPosition.ofPosition(location);
-
-        Exthost.Request.LanguageFeatures.provideReferences(
-          ~handle=id,
-          ~resource=uri,
-          ~position,
-          ~context=Exthost.ReferenceContext.{includeDeclaration: true},
-          client,
-        );
-      },
-    );
+    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
+      Exthost.Request.LanguageFeatures.provideReferences(
+        ~handle=id,
+        ~resource=Buffer.getUri(buffer),
+        ~position=Exthost.OneBasedPosition.ofPosition(location),
+        ~context=Exthost.ReferenceContext.{includeDeclaration: true},
+        client,
+      )
+    });
   };
 };
 
@@ -159,18 +132,13 @@ module ExtensionDocumentSymbolProvider = {
         client,
         buffer,
       ) => {
-    ProviderUtility.runIfSelectorPasses(
-      ~buffer,
-      ~selector,
-      () => {
-        let uri = Buffer.getUri(buffer);
-        Exthost.Request.LanguageFeatures.provideDocumentSymbols(
-          ~handle=id,
-          ~resource=uri,
-          client,
-        );
-      },
-    );
+    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
+      Exthost.Request.LanguageFeatures.provideDocumentSymbols(
+        ~handle=id,
+        ~resource=Buffer.getUri(buffer),
+        client,
+      )
+    });
   };
 };
 
@@ -426,7 +394,13 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let extHostScriptPath = Setup.getNodeExtensionHostPath(setup);
 
   let on_exit = (_, ~exit_status: int64, ~term_signal) => {
-    Log.infof(m => m("Extension host process exited with exit status: %Ld and signal: %d", exit_status, term_signal));
+    Log.infof(m =>
+      m(
+        "Extension host process exited with exit status: %Ld and signal: %d",
+        exit_status,
+        term_signal,
+      )
+    );
   };
 
   let _process: Luv.Process.t =

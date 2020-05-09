@@ -19,5 +19,5 @@ let decode = {
   );
 };
 
-let matches = (~filetype: string, filter) => 
+let matches = (~filetype: string, filter) =>
   filter.language == Some(filetype);
