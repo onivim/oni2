@@ -112,14 +112,13 @@ let start =
              switch (payload) {
              | Json(json) => Lwt.wakeup(resolver, json)
              | Empty =>
-               prerr_endline("EMPTY PAYLOAD!");
-               Log.tracef(m =>
+               Log.Log.tracef(m =>
                  m("Got empty payload for requestId: %d", requestId)
-               );
+               )
              | Bytes(bytes) =>
-               prerr_endline(
+               Log.warnf(
                  Printf.sprintf(
-                   "Got %d bytes for requestId: %d, but not sure what to do",
+                   "Got %d bytes for requestId: %d, but bytes handler is not implemented",
                    Bytes.length(bytes),
                    requestId,
                  ),
@@ -199,15 +198,12 @@ let request =
       let (promise, resolver) = Lwt.task();
       Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
 
-      prerr_endline("REQUEST: " ++ rpcName ++ " : " ++ method);
-
       let finalize = () => {
         Hashtbl.remove(client.requestIdToReply, newRequestId);
         Log.tracef(m => m("Request finalized: %d", newRequestId));
       };
 
       let parser = json => {
-        //prerr_endline("REQUEST - parsed result: " ++ Yojson.Safe.to_string(json));
         Oni_Core.Json.Decode.(
           json |> decode_value(decoder) |> Result.map_error(string_of_error)
         );
@@ -215,7 +211,6 @@ let request =
 
       let onError = e => {
         finalize();
-        prerr_endline("FAILED TO PARSE: " ++ Printexc.to_string(e));
         Log.errorf(m =>
           m(
             "Request %d for %s failed with error: %s",
@@ -226,10 +221,7 @@ let request =
         );
       };
 
-      let wrapper = json => {
-        prerr_endline(
-          "REQUEST " ++ method ++ " - GOT JSON RESPONSE - Trying to parse... ",
-        );
+      let wrapper = json =>
         try(
           {
             finalize();
@@ -237,18 +229,14 @@ let request =
 
             switch (parser(json)) {
             | Ok(v) =>
-              prerr_endline("Parsed successfully: " ++ method);
               Log.tracef(m => m("Request %d succeeded.", newRequestId));
               Lwt.return(v);
-            | Error(msg) =>
-              prerr_endline("Failed to parse result for: " ++ method);
-              Lwt.fail(ParseFailedException(msg));
+            | Error(msg) => Lwt.fail(ParseFailedException(msg))
             };
           }
         ) {
         | e => Lwt.fail(e)
         };
-      };
 
       let () =
         notify(~usesCancellationToken, ~rpcName, ~method, ~args, client);

@@ -11,15 +11,13 @@ let all = (join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
 };
 
 let some = (~default: 'a, join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
-    promises
-    |> List.map(p => {
-      try%lwt({
-        p 
-      }) {
-      | _exn => Lwt.return(default)
-      }
-    })
-    |> all(join);
+  promises
+  |> List.map(p => {
+       try%lwt(p) {
+       | _exn => Lwt.return(default)
+       }
+     })
+  |> all(join);
 };
 
 exception Timeout;

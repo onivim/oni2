@@ -274,9 +274,6 @@ module LanguageFeatures = {
   };
 
   let handle = (method, args: Yojson.Safe.t) => {
-    prerr_endline(
-      "LanguageFeature - " ++ method ++ " | " ++ Yojson.Safe.to_string(args),
-    );
     switch (method, args) {
     | ("$unregister", `List([`Int(handle)])) =>
       Ok(Unregister({handle: handle}))
@@ -367,10 +364,6 @@ module LanguageFeatures = {
 
         let%bind extensionId =
           extensionIdJson |> decode_value(ExtensionId.decode);
-          prerr_endline(Printf.sprintf("SUGGEST SUPPORT: - %d\n %s\n %s\n",
-          handle,
-          DocumentSelector.show(selector),
-          extensionId));
 
         Ok(
           RegisterSuggestSupport({
@@ -380,7 +373,6 @@ module LanguageFeatures = {
             supportsResolveDetails,
             extensionId,
           }),
-
         );
       };
 

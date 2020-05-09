@@ -21,7 +21,7 @@
   },
   "devDependencies": {},
   "resolutions": {
-    "vscode-languageserver-types": "3.14.0",
+    "vscode-languageserver-types": "3.15.1",
     "semver": "5.5.1",
     "vscode-nls": "4.1.2",
     "vscode-uri": "2.1.1"
