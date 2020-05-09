@@ -169,7 +169,7 @@ module SCM: {
     type t = {
       handle: int,
       uri: Uri.t,
-//      icons: Icons.t,
+      //      icons: Icons.t,
       tooltip: string,
       strikeThrough: bool,
       faded: bool,

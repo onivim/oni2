@@ -10,7 +10,7 @@ module Resource: {
   type t = {
     handle: int,
     uri: Uri.t,
-//    icons: Exthost.SCM.Resource.Icons.t,
+    //    icons: Exthost.SCM.Resource.Icons.t,
     tooltip: string,
     strikeThrough: bool,
     faded: bool,

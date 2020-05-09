@@ -18,9 +18,9 @@ module Effects = {
 
            Lwt.on_success(
              promise,
-             Option.iter(uri => dispatch(toMsg(uri)))
+             Option.iter(uri => dispatch(toMsg(uri))),
            );
-         });
+         })
     });
 
   let onInputBoxValueChange = (~handle, ~value, extHostClient) =>
