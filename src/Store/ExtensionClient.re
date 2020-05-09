@@ -425,9 +425,18 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let nodePath = Setup.(setup.nodePath);
   let extHostScriptPath = Setup.getNodeExtensionHostPath(setup);
 
+  let on_exit = (_, ~exit_status: int64, ~term_signal) => {
+    Log.infof(m => m("Extension host process exited with exit status: %Ld and signal: %d", exit_status, term_signal));
+  };
+
   let _process: Luv.Process.t =
     Luv.Process.spawn(
       ~environment,
+      ~on_exit,
+      ~detached=true,
+      ~windows_hide=true,
+      ~windows_hide_console=true,
+      ~windows_hide_gui=true,
       ~redirect=[
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,
