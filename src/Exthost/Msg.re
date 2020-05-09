@@ -342,9 +342,10 @@ module LanguageFeatures = {
           selectorJson,
           triggerCharactersJson,
           `Bool(supportsResolveDetails),
-          `String(extensionId),
+          extensionIdJson,
         ]),
       ) =>
+      prerr_endline ("REGISTER SUGGEST SUPPORT: " ++ Yojson.Safe.to_string(args));
       open Json.Decode;
       let nestedListDecoder = list(list(string)) |> map(List.flatten);
 
@@ -362,6 +363,9 @@ module LanguageFeatures = {
         let%bind triggerCharacters =
           triggerCharactersJson |> decode_value(decodeTriggerCharacters);
 
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+          
         Ok(
           RegisterSuggestSupport({
             handle,
@@ -375,7 +379,7 @@ module LanguageFeatures = {
 
       ret |> Result.map_error(string_of_error);
 
-    | _ => Error("Unhandled method: " ++ method)
+    | _ => Error(Printf.sprintf("Unhandled method: %s - Args: %s", method, Yojson.Safe.to_string(args)));
     };
   };
 };

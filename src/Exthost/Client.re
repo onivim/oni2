@@ -190,15 +190,19 @@ let request =
       let (promise, resolver) = Lwt.task();
       Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
 
+      prerr_endline ("REQUEST: " ++ rpcName ++ " : " ++ method);
+
       let finalize = () => {
         Hashtbl.remove(client.requestIdToReply, newRequestId);
         Log.tracef(m => m("Request finalized: %d", newRequestId));
       };
 
-      let parser = json =>
+      let parser = json => {
+        prerr_endline(Yojson.Safe.to_string(json));
         Oni_Core.Json.Decode.(
           json |> decode_value(decoder) |> Result.map_error(string_of_error)
         );
+      };
 
       let onError = e => {
         finalize();
@@ -209,9 +213,17 @@ let request =
             Printexc.to_string(e),
           )
         );
+
+        prerr_endline("ERROR: " ++ Printf.sprintf(
+            "Request %d failed with error: %s",
+            newRequestId,
+            Printexc.to_string(e),
+        ));
+        failwith("ERR");
       };
 
-      let wrapper = json =>
+      let wrapper = json => {
+        prerr_endline ("GOT JSON: " ++ Yojson.Safe.to_string(json));
         try(
           {
             finalize();
@@ -225,16 +237,16 @@ let request =
             };
           }
         ) {
-        | e =>
-          onError(e);
-          Lwt.fail(e);
+        | e => Lwt.fail(e);
         };
+      };
 
       let () =
         notify(~usesCancellationToken, ~rpcName, ~method, ~args, client);
 
-      Lwt.on_failure(promise, onError);
-      Lwt.bind(promise, wrapper);
+      let out = Lwt.bind(promise, wrapper);
+      Lwt.on_failure(out, onError);
+      out;
     },
   );
 };
