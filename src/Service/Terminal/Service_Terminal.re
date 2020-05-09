@@ -129,7 +129,7 @@ module Sub = {
                 terminalId,
                 ProcessTitleChanged({id: terminalId, title}),
               )
-            | SendProcessPid({terminalId, pid}) =>
+            | SendProcessReady({terminalId, pid, _}) =>
               dispatchIfMatches(
                 terminalId,
                 ProcessStarted({id: terminalId, pid}),

@@ -650,9 +650,10 @@ module TerminalService = {
         terminalId: int,
         data: string,
       })
-    | SendProcessPid({
+    | SendProcessReady({
         terminalId: int,
         pid: int,
+        workingDirectory: string,
       })
     | SendProcessExit({
         terminalId: int,
@@ -660,6 +661,7 @@ module TerminalService = {
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
+    prerr_endline ("TERMINAL SERVICE: " ++ method ++ "|" ++ Yojson.Safe.to_string(args));
     switch (method) {
     | "$sendProcessTitle" =>
       switch (args) {
@@ -675,12 +677,12 @@ module TerminalService = {
       | _ => Error("Unexpected arguments for $sendProcessData")
       }
 
-    | "$sendProcessPid" =>
+    | "$sendProcessReady" =>
       switch (args) {
-      | `List([`Int(terminalId), `Int(pid)]) =>
-        Ok(SendProcessPid({terminalId, pid}))
+      | `List([`Int(terminalId), `Int(pid), `String(workingDirectory)]) =>
+        Ok(SendProcessReady({terminalId, pid, workingDirectory}))
 
-      | _ => Error("Unexpected arguments for $sendProcessPid")
+      | _ => Error("Unexpected arguments for $sendProcessReady")
       }
 
     | "$sendProcessExit" =>

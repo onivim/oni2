@@ -626,9 +626,10 @@ module Msg: {
           terminalId: int,
           data: string,
         })
-      | SendProcessPid({
+      | SendProcessReady({
           terminalId: int,
           pid: int,
+          workingDirectory: string,
         })
       | SendProcessExit({
           terminalId: int,
