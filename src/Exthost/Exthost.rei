@@ -168,7 +168,7 @@ module SCM: {
     [@deriving show({with_path: false})]
     type t = {
       handle: int,
-      resourceUri: Uri.t,
+      uri: Uri.t,
       icons: Icons.t,
       tooltip: string,
       strikeThrough: bool,

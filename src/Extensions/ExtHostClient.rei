@@ -1,12 +1,15 @@
-module Core = Oni_Core;
-
 // SCM
 
 module SCM: {
   // EFFECTS
   module Effects: {
     let provideOriginalResource:
-      (~handles: list(int), Exthost.Client.t, string, Core.Uri.t => 'msg) =>
+      (
+        ~handles: list(int),
+        Exthost.Client.t,
+        string,
+        Oni_Core.Uri.t => 'msg
+      ) =>
       Isolinear.Effect.t('msg);
 
     let onInputBoxValueChange:

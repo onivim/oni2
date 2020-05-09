@@ -20,7 +20,7 @@ module Resource = {
   [@deriving show({with_path: false})]
   type t = {
     handle: int,
-    resourceUri: Uri.t,
+    uri: Uri.t,
     icons: Icons.t,
     tooltip: string,
     strikeThrough: bool,
@@ -56,8 +56,8 @@ module Resource = {
     let resource =
       Json.Decode.(
         Pipeline.(
-          decode((handle, resourceUri, icons, tooltip, strikeThrough, faded) =>
-            {handle, resourceUri, icons, tooltip, strikeThrough, faded}
+          decode((handle, uri, icons, tooltip, strikeThrough, faded) =>
+            {handle, uri, icons, tooltip, strikeThrough, faded}
           )
           |> custom(index(0, int))
           |> custom(index(1, Uri.decode))

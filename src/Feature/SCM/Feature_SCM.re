@@ -7,17 +7,7 @@ module Selection = Oni_Components.Selection;
 
 // MODEL
 
-module Resource = {
-  [@deriving show({with_path: false})]
-  type t = {
-    handle: int,
-    uri: Uri.t,
-    icons: list(string),
-    tooltip: string,
-    strikeThrough: bool,
-    faded: bool,
-  };
-};
+module Resource = Exthost.SCM.Resource;
 
 module ResourceGroup = {
   [@deriving show({with_path: false})]
@@ -395,18 +385,25 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
 
-  // TODO: Bring back!
-  //  | SpliceSCMResourceStates({provider, group, start, deleteCount, additions}) =>
-  //    dispatch(
-  //      ResourceStatesChanged({
-  //        provider,
-  //        group,
-  //        spliceStart: start,
-  //        deleteCount,
-  //        additions,
-  //      }),
-  //    )
+  | SpliceSCMResourceStates({handle, splices}) =>
+    open Exthost.SCM;
 
+    let provider = handle;
+    splices
+    |> List.iter(({handle as group, resourceSplices}: Resource.Splices.t) => {
+         resourceSplices
+         |> List.iter(({start, deleteCount, resources}: Resource.Splice.t) => {
+              dispatch(
+                ResourceStatesChanged({
+                  provider,
+                  group,
+                  spliceStart: start,
+                  deleteCount,
+                  additions: resources,
+                }),
+              )
+            })
+       });
   | UpdateSourceControl({
       handle,
       hasQuickDiffProvider,
@@ -427,8 +424,6 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
-  // TODO: REMOVE WHEN EXHAUSTIVE AGAIN
-  | _ => ()
   };
 
 // VIEW
