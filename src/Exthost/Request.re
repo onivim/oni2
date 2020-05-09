@@ -400,7 +400,7 @@ module TerminalService = {
 module Workspace = {
   let initializeWorkspace = (~workspace, client) => {
     let json =
-      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+      Json.Encode.(encode_value(nullable(WorkspaceData.encode), workspace));
 
     Client.notify(
       ~rpcName="ExtHostWorkspace",
@@ -411,7 +411,7 @@ module Workspace = {
   };
   let acceptWorkspaceData = (~workspace, client) => {
     let json =
-      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+      Json.Encode.(encode_value(nullable(WorkspaceData.encode), workspace));
 
     Client.notify(
       ~rpcName="ExtHostWorkspace",
