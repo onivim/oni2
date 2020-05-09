@@ -18,25 +18,14 @@ module Effects = {
   let requestCompletions =
       (~languageFeatures, ~buffer, ~meet: CompletionMeet.t) =>
     Isolinear.Effect.createWithDispatch(~name="requestCompletions", dispatch => {
-      prerr_endline(
-        "CompletionStoreConnector.requestCompletions  - requesting....",
-      );
       Log.info("Requesting for " ++ Uri.toString(Buffer.getUri(buffer)));
 
       let completionPromise =
         LanguageFeatures.requestCompletions(~buffer, ~meet, languageFeatures);
 
-      Lwt.on_success(
-        completionPromise,
-        completions => {
-          prerr_endline(
-            "CompletionStoreConnector.requestCompletions  - Got: "
-            ++ string_of_int(List.length(completions))
-            ++ " completoins.",
-          );
-          dispatch(CompletionAddItems(meet, completions));
-        },
-      );
+      Lwt.on_success(completionPromise, completions => {
+        dispatch(CompletionAddItems(meet, completions))
+      });
     });
 
   let applyCompletion =

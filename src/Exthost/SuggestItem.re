@@ -36,7 +36,15 @@ let decode = {
       let sortText = field.optional("e", string);
       let filterText = field.optional("f", string);
       let insertText = field.optional("h", string);
-      {label, kind, detail, documentation: None, sortText, filterText, insertText};
+      {
+        label,
+        kind,
+        detail,
+        documentation: None,
+        sortText,
+        filterText,
+        insertText,
+      };
     })
   );
 };

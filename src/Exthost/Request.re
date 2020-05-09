@@ -194,16 +194,18 @@ module LanguageFeatures = {
         ~context: CompletionContext.t,
         client,
       ) => {
-
     // It's possible to get a null result from completion providers,
     // so we need to handle that here - we just treat it as an
     // empty set of suggestions.
-    let decoder = Json.Decode.(
-    nullable(SuggestResult.decode)
-    |> map(fun
-    | Some(suggestResult) => suggestResult
-    | None => SuggestResult.empty
-    ));
+    let decoder =
+      Json.Decode.(
+        nullable(SuggestResult.decode)
+        |> map(
+             fun
+             | Some(suggestResult) => suggestResult
+             | None => SuggestResult.empty,
+           )
+      );
 
     Client.request(
       ~decoder,

@@ -123,7 +123,7 @@ let start =
              | Empty =>
                Log.tracef(m =>
                  m("Got empty payload for requestId: %d", requestId)
-               )
+               );
                Lwt.wakeup(resolver, `Null);
              | Bytes(bytes) =>
                Log.warnf(m =>
@@ -215,7 +215,6 @@ let request =
       };
 
       let parser = json => {
-        //prerr_endline ("Got json: " ++ Yojson.Safe.to_string(json));
         Oni_Core.Json.Decode.(
           json |> decode_value(decoder) |> Result.map_error(string_of_error)
         );

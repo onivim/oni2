@@ -420,22 +420,23 @@ module MessageService = {
         "$showMessage",
         `List([`Int(severity), `String(message), options, ..._]),
       ) =>
-      try ({
-        let extensionId = Yojson.Safe.Util.(
-          options
-          |> member("extension")
-          |> member("identifier")
-          |> to_string_option
+      try({
+        let extensionId =
+          Yojson.Safe.Util.(
+            options
+            |> member("extension")
+            |> member("identifier")
+            |> to_string_option
+          );
+        Ok(
+          ShowMessage({
+            severity: intToSeverity(severity),
+            message,
+            extensionId,
+          }),
         );
-      Ok(
-        ShowMessage({
-          severity: intToSeverity(severity),
-          message,
-          extensionId,
-        }),
-      )
       }) {
-      | exn => Error(Printexc.to_string(exn));
+      | exn => Error(Printexc.to_string(exn))
       }
     | _ =>
       Error(
