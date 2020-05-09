@@ -208,6 +208,8 @@ module SuggestResult: {
     isIncomplete: bool,
   };
 
+  let empty: t;
+
   let decode: Json.decoder(t);
 };
 

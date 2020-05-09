@@ -5,6 +5,11 @@ type t = {
   isIncomplete: bool,
 };
 
+let empty = {
+  completions: [],
+  isIncomplete: false,
+};
+
 let decode = {
   Json.Decode.(
     obj(({field, _}) =>
