@@ -20,6 +20,7 @@ module Testing = {
 let start =
     (
       ~initialConfiguration=Configuration.empty,
+      ~initialWorkspace=WorkspaceData.fromPath(Sys.getcwd()),
       ~namedPipe,
       ~initData: Extension.InitData.t,
       ~handler: Msg.t => option(reply),
@@ -79,7 +80,7 @@ let start =
             requestId: lastRequestId^,
             rpcId,
             method: "$initializeWorkspace",
-            args: `List([]),
+            args: `List([initialWorkspace |> Oni_Core.Json.Encode.encode_value(WorkspaceData.encode) ]),
             usesCancellationToken: false,
           }),
         );

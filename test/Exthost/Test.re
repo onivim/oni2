@@ -20,6 +20,7 @@ let noopErrorHandler = _ => ();
 
 let startWithExtensions =
     (
+      ~rootPath=Rench.Path.join(Sys.getcwd(), "test/collateral/extensions"),
       ~initialConfiguration=Exthost.Configuration.empty,
       ~pid=Luv.Pid.getpid(),
       ~handler=noopHandler,
@@ -41,8 +42,6 @@ let startWithExtensions =
 
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
-
-  let rootPath = Rench.Path.join(Sys.getcwd(), "test/collateral/extensions");
 
   let extensions =
     extensions

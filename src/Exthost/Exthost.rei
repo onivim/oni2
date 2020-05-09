@@ -692,6 +692,7 @@ module Client: {
   let start:
     (
       ~initialConfiguration: Configuration.t=?,
+      ~initialWorkspace: WorkspaceData.t=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
       ~handler: Msg.t => option(reply),

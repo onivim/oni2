@@ -410,14 +410,15 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       (),
     );
 
+  let env = Luv.Env.environ() |> Result.get_ok;
   let environment = [
-    ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
     (
       "AMD_ENTRYPOINT",
       "vs/workbench/services/extensions/node/extensionHostProcess",
     ),
     ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),
     ("VSCODE_PARENT_PID", parentPid |> string_of_int),
+    ...env,
   ];
 
   let nodePath = Setup.(setup.nodePath);
