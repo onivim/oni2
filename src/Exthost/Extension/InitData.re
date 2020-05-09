@@ -36,10 +36,10 @@ module Environment = {
   type t = {
     isExtensionDevelopmentDebug: bool,
     appName: string,
+    appLanguage: string,
     // TODO
     /*
      appRoot: option(Uri.t),
-     appLanguage: string,
      appUriScheme: string,
      appSettingsHome: option(Uri.t),
      globalStorageHome: Uri.t,
@@ -53,6 +53,8 @@ module Environment = {
   let default = {
     isExtensionDevelopmentDebug: false,
     appName: "reason-vscode-exthost",
+    // TODO - INTL: Get proper user language
+    appLanguage: "en-US",
   };
 };
 

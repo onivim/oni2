@@ -210,6 +210,9 @@ module Internal = {
 let stringToId = Hashtbl.find_opt(Internal.stringToId);
 
 let handle = (rpcId, method, args) => {
+  prerr_endline(
+    "Incoming message: " ++ method ++ "|" ++ Yojson.Safe.to_string(args),
+  );
   rpcId
   |> Hashtbl.find_opt(Internal.idToHandler)
   |> Option.to_result(

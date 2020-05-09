@@ -193,6 +193,7 @@ module InitData: {
     type t = {
       isExtensionDevelopmentDebug: bool,
       appName: string,
+      appLanguage: string,
       // TODO
       /*
        appRoot: option(Types.Uri.t),

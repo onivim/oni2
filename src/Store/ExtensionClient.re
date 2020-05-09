@@ -23,6 +23,15 @@ module ExtensionCompletionProvider = {
   let suggestionsToCompletionItems:
     Exthost.SuggestResult.t => list(CompletionItem.t) =
     ({completions, _}) => {
+      prerr_endline(
+        "Got: " ++ string_of_int(List.length(completions)) ++ " completions!",
+      );
+
+      completions
+      |> List.iter((completion: Exthost.SuggestItem.t) => {
+           prerr_endline("  - " ++ completion.label)
+         });
+
       completions |> List.map(suggestionItemToCompletionItem);
     };
 
@@ -39,6 +48,14 @@ module ExtensionCompletionProvider = {
       () => {
         let uri = Buffer.getUri(buffer);
         let position = Exthost.OneBasedPosition.ofPosition(location);
+        prerr_endline(
+          "Requesting completions at position: "
+          ++ Exthost.OneBasedPosition.show(position),
+        );
+        prerr_endline(
+          "Requesting completions for uri: " ++ Uri.toString(uri),
+        );
+
         Exthost.Request.LanguageFeatures.provideCompletionItems(
           ~handle=id,
           ~resource=uri,
@@ -382,12 +399,15 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
+  prerr_endline("-- LOGFILE: " ++ Uri.toString(logFile));
+
   let initData =
     InitData.create(
       ~version="1.44.5", // TODO: How to keep in sync with bundled version?
       ~parentPid,
       ~logsLocation,
       ~logFile,
+      ~logLevel=0,
       extensionInfo,
     );
 

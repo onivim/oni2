@@ -111,9 +111,18 @@ let start =
         |> Option.iter(resolver => {
              switch (payload) {
              | Json(json) => Lwt.wakeup(resolver, json)
-             | _ =>
-               Log.warnf(m =>
-                 m("Unhandled payload type for requestId: %d", requestId)
+             | Empty =>
+               prerr_endline("EMPTY PAYLOAD!");
+               Log.tracef(m =>
+                 m("Got empty payload for requestId: %d", requestId)
+               );
+             | Bytes(bytes) =>
+               prerr_endline(
+                 Printf.sprintf(
+                   "Got %d bytes for requestId: %d, but not sure what to do",
+                   Bytes.length(bytes),
+                   requestId,
+                 ),
                )
              }
            })
@@ -190,7 +199,7 @@ let request =
       let (promise, resolver) = Lwt.task();
       Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
 
-      //prerr_endline("REQUEST: " ++ rpcName ++ " : " ++ method);
+      prerr_endline("REQUEST: " ++ rpcName ++ " : " ++ method);
 
       let finalize = () => {
         Hashtbl.remove(client.requestIdToReply, newRequestId);
@@ -198,7 +207,7 @@ let request =
       };
 
       let parser = json => {
-        //prerr_endline(Yojson.Safe.to_string(json));
+        //prerr_endline("REQUEST - parsed result: " ++ Yojson.Safe.to_string(json));
         Oni_Core.Json.Decode.(
           json |> decode_value(decoder) |> Result.map_error(string_of_error)
         );
@@ -206,17 +215,21 @@ let request =
 
       let onError = e => {
         finalize();
+        prerr_endline("FAILED TO PARSE: " ++ Printexc.to_string(e));
         Log.errorf(m =>
           m(
-            "Request %d failed with error: %s",
+            "Request %d for %s failed with error: %s",
             newRequestId,
+            method,
             Printexc.to_string(e),
           )
         );
       };
 
       let wrapper = json => {
-        prerr_endline("GOT JSON: " ++ Yojson.Safe.to_string(json));
+        prerr_endline(
+          "REQUEST " ++ method ++ " - GOT JSON RESPONSE - Trying to parse... ",
+        );
         try(
           {
             finalize();
@@ -224,9 +237,12 @@ let request =
 
             switch (parser(json)) {
             | Ok(v) =>
+              prerr_endline("Parsed successfully: " ++ method);
               Log.tracef(m => m("Request %d succeeded.", newRequestId));
               Lwt.return(v);
-            | Error(msg) => Lwt.fail(ParseFailedException(msg))
+            | Error(msg) =>
+              prerr_endline("Failed to parse result for: " ++ method);
+              Lwt.fail(ParseFailedException(msg));
             };
           }
         ) {
