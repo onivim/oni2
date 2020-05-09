@@ -9,6 +9,8 @@ type t = {
   initPromise: Lwt.t(unit),
 };
 
+exception ReplyError(string);
+
 module Log = (val Timber.Log.withNamespace("Exthost.Client"));
 
 module Testing = {
@@ -90,11 +92,18 @@ let start =
         );
 
         Lwt.wakeup(initResolver, ());
-      | Incoming.ReplyError({payload, _}) =>
-        switch (payload) {
-        | Message(str) => onError(str)
-        | Empty => onError("Unknown / Empty")
-        }
+      | Incoming.ReplyError({payload, requestId}) =>
+        let message =
+          switch (payload) {
+          | Message(str) => str
+          | Empty => "Unknown / Empty"
+          };
+        Hashtbl.find_opt(requestIdToReply, requestId)
+        |> Option.iter(resolver => {
+             Lwt.wakeup_exn(resolver, ReplyError(message))
+           });
+        Hashtbl.remove(requestIdToReply, requestId);
+        onError(message);
       | Incoming.RequestJSONArgs({requestId, rpcId, method, args, _}) =>
         Log.tracef(m =>
           m("RequestJSONArgs: %d %d %s", requestId, rpcId, method)
@@ -112,19 +121,20 @@ let start =
              switch (payload) {
              | Json(json) => Lwt.wakeup(resolver, json)
              | Empty =>
-               Log.Log.tracef(m =>
+               Log.tracef(m =>
                  m("Got empty payload for requestId: %d", requestId)
                )
              | Bytes(bytes) =>
-               Log.warnf(
-                 Printf.sprintf(
+               Log.warnf(m =>
+                 m(
                    "Got %d bytes for requestId: %d, but bytes handler is not implemented",
                    Bytes.length(bytes),
                    requestId,
-                 ),
+                 )
                )
              }
-           })
+           });
+        Hashtbl.remove(requestIdToReply, requestId);
       | Incoming.Acknowledged({requestId}) =>
         Log.tracef(m => m("Received ack: %d", requestId))
       | _ =>
