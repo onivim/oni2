@@ -1,4 +1,4 @@
-let all = (join, promises) => {
+let all = (join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
   List.fold_left(
     (accPromise, promise) => {
       let%lwt acc = accPromise;
@@ -8,6 +8,18 @@ let all = (join, promises) => {
     Lwt.return([]),
     promises,
   );
+};
+
+let some = (~default: 'a, join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
+    promises
+    |> List.map(p => {
+      try%lwt({
+        p 
+      }) {
+      | _exn => Lwt.return(default)
+      }
+    })
+    |> all(join);
 };
 
 exception Timeout;

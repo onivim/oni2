@@ -367,6 +367,10 @@ module LanguageFeatures = {
 
         let%bind extensionId =
           extensionIdJson |> decode_value(ExtensionId.decode);
+          prerr_endline(Printf.sprintf("SUGGEST SUPPORT: - %d\n %s\n %s\n",
+          handle,
+          DocumentSelector.show(selector),
+          extensionId));
 
         Ok(
           RegisterSuggestSupport({
@@ -376,6 +380,7 @@ module LanguageFeatures = {
             supportsResolveDetails,
             extensionId,
           }),
+
         );
       };
 

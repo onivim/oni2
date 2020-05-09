@@ -27,11 +27,6 @@ module ExtensionCompletionProvider = {
         "Got: " ++ string_of_int(List.length(completions)) ++ " completions!",
       );
 
-      completions
-      |> List.iter((completion: Exthost.SuggestItem.t) => {
-           prerr_endline("  - " ++ completion.label)
-         });
-
       completions |> List.map(suggestionItemToCompletionItem);
     };
 
@@ -49,7 +44,7 @@ module ExtensionCompletionProvider = {
         let uri = Buffer.getUri(buffer);
         let position = Exthost.OneBasedPosition.ofPosition(location);
         prerr_endline(
-          "Requesting completions at position: "
+          "Requesting completions for id: " ++ string_of_int(id) ++ " at position: "
           ++ Exthost.OneBasedPosition.show(position),
         );
         prerr_endline(
@@ -67,7 +62,10 @@ module ExtensionCompletionProvider = {
             },
           client,
         )
-        |> Lwt.map(suggestionsToCompletionItems);
+        |> Lwt.map(items => {
+          prerr_endline ("Got completions for id: " ++ string_of_int(id));
+          suggestionsToCompletionItems(items);
+        })
       },
     );
   };

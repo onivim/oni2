@@ -20,7 +20,8 @@ module CompletionProvider =
     type response = list(CompletionItem.t);
 
     let namespace = "Oni2.CompletionProvider";
-    let aggregate = joinAll;
+    let default: response= [];
+    let aggregate = LwtEx.some(~default, (acc, curr) => acc @ curr);
   });
 
 module DefinitionResult = {
