@@ -63,15 +63,15 @@ let initial = {
 
 module Effects = {
   let getOriginalUri = (extHostClient, model, path, toMsg) => {
-    let handles =
-      model.providers |> List.map((provider: Provider.t) => provider.handle);
-    ExtHostClient.SCM.Effects.provideOriginalResource(
-      ~handles,
-      extHostClient,
-      path,
-      toMsg,
-    );
-  };
+      let handles =
+        model.providers |> List.map((provider: Provider.t) => provider.handle);
+      ExtHostClient.SCM.Effects.provideOriginalResource(
+        ~handles,
+        extHostClient,
+        path,
+        toMsg,
+      );
+};
 };
 
 // UPDATE

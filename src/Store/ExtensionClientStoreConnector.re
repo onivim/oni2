@@ -239,7 +239,19 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
     | BufferEnter({metadata, fileType, _}) =>
-      let eff = sendBufferEnterEffect(metadata, fileType);
+      let eff =
+        switch (metadata.filePath) {
+        | Some(path) =>
+          Isolinear.Effect.batch([
+            Feature_SCM.Effects.getOriginalUri(
+              extHostClient, state.scm, path, uri =>
+              Actions.GotOriginalUri({bufferId: metadata.id, uri})
+            ),
+            sendBufferEnterEffect(metadata, fileType),
+          ])
+
+        | None => sendBufferEnterEffect(metadata, fileType)
+        };
       (state, eff);
 
     | NewTextContentProvider({handle, scheme}) => (

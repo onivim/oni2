@@ -190,7 +190,7 @@ let request =
       let (promise, resolver) = Lwt.task();
       Hashtbl.add(client.requestIdToReply, newRequestId, resolver);
 
-      prerr_endline ("REQUEST: " ++ rpcName ++ " : " ++ method);
+      //prerr_endline("REQUEST: " ++ rpcName ++ " : " ++ method);
 
       let finalize = () => {
         Hashtbl.remove(client.requestIdToReply, newRequestId);
@@ -198,7 +198,7 @@ let request =
       };
 
       let parser = json => {
-        prerr_endline(Yojson.Safe.to_string(json));
+        //prerr_endline(Yojson.Safe.to_string(json));
         Oni_Core.Json.Decode.(
           json |> decode_value(decoder) |> Result.map_error(string_of_error)
         );
@@ -206,24 +206,17 @@ let request =
 
       let onError = e => {
         finalize();
-        Log.warnf(m =>
+        Log.errorf(m =>
           m(
             "Request %d failed with error: %s",
             newRequestId,
             Printexc.to_string(e),
           )
         );
-
-        prerr_endline("ERROR: " ++ Printf.sprintf(
-            "Request %d failed with error: %s",
-            newRequestId,
-            Printexc.to_string(e),
-        ));
-        failwith("ERR");
       };
 
       let wrapper = json => {
-        prerr_endline ("GOT JSON: " ++ Yojson.Safe.to_string(json));
+        prerr_endline("GOT JSON: " ++ Yojson.Safe.to_string(json));
         try(
           {
             finalize();
@@ -237,7 +230,7 @@ let request =
             };
           }
         ) {
-        | e => Lwt.fail(e);
+        | e => Lwt.fail(e)
         };
       };
 

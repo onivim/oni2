@@ -221,18 +221,17 @@ module InitData: {
     let default: t;
   };
 
-[@deriving (show, yojson({strict: false}))]
-module TelemetryInfo: {
-  
   [@deriving (show, yojson({strict: false}))]
-  type t = {
-    sessionId: int,
-    machineId: int,
-    instanceId: int,
-  };
+  module TelemetryInfo: {
+    [@deriving (show, yojson({strict: false}))]
+    type t = {
+      sessionId: int,
+      machineId: int,
+      instanceId: int,
+    };
 
-  let default: t;
-};
+    let default: t;
+  };
 
   [@deriving (show, yojson({strict: false}))]
   type t = {

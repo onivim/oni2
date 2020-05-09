@@ -23,6 +23,10 @@ let to_yojson = ({triggerKind, triggerCharacter}) => {
     | None => `Null
     | Some(v) => `String(v)
     };
-  let _ = `Assoc([("triggerKind", kindJson), ("triggerCharacter", characterJson)]);
-  `Null
+  let _ =
+    `Assoc([
+      ("triggerKind", kindJson),
+      ("triggerCharacter", characterJson),
+    ]);
+  `Null;
 };

@@ -16,10 +16,11 @@ module Effects = {
                extHostClient,
              );
 
-           Lwt.on_success(promise, maybeUri => {
-             maybeUri |> Option.iter(uri => dispatch(toMsg(uri)))
-           });
-         })
+           Lwt.on_success(
+             promise,
+             Option.iter(uri => dispatch(toMsg(uri)))
+           );
+         });
     });
 
   let onInputBoxValueChange = (~handle, ~value, extHostClient) =>

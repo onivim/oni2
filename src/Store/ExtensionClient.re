@@ -23,7 +23,6 @@ module ExtensionCompletionProvider = {
   let suggestionsToCompletionItems:
     Exthost.SuggestResult.t => list(CompletionItem.t) =
     ({completions, _}) => {
-      prerr_endline ("GOT COMPLETIONS BACK: " ++ string_of_int(List.length(completions)));
       completions |> List.map(suggestionItemToCompletionItem);
     };
 
@@ -34,12 +33,10 @@ module ExtensionCompletionProvider = {
         client: Exthost.Client.t,
         (buffer, _completionMeet, location),
       ) => {
-    prerr_endline ("Trying to call completion... " ++ string_of_int(id));
     ProviderUtility.runIfSelectorPasses(
       ~buffer,
       ~selector,
       () => {
-        prerr_endline ("INVOKING COMPLETION! " ++ string_of_int(id));
         let uri = Buffer.getUri(buffer);
         let position = Exthost.OneBasedPosition.ofPosition(location);
         Exthost.Request.LanguageFeatures.provideCompletionItems(
@@ -288,7 +285,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     };
 
   let handler = msg => {
-    prerr_endline("GOT MESSAGE: " ++ Exthost.Msg.show(msg));
+    //prerr_endline("GOT MESSAGE: " ++ Exthost.Msg.show(msg));
     switch (msg) {
     | SCM(msg) =>
       Feature_SCM.handleExtensionMessage(

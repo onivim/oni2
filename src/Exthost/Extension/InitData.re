@@ -70,7 +70,6 @@ module Remote = {
 
 [@deriving (show, yojson({strict: false}))]
 module TelemetryInfo = {
-  
   [@deriving (show, yojson({strict: false}))]
   type t = {
     sessionId: int,
@@ -78,11 +77,7 @@ module TelemetryInfo = {
     instanceId: int,
   };
 
-  let default = {
-    sessionId: 0,
-    machineId: 0,
-    instanceId: 0,
-  };
+  let default = {sessionId: 0, machineId: 0, instanceId: 0};
 };
 
 [@deriving (show, yojson({strict: false}))]
@@ -125,5 +120,5 @@ let create =
   logFile,
   autoStart,
   remote,
-  telemetryInfo
+  telemetryInfo,
 };
