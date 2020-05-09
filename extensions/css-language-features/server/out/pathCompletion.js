@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getPathCompletionParticipant = void 0;
 const path = require("path");
 const fs = require("fs");
 const vscode_uri_1 = require("vscode-uri");
@@ -55,7 +56,7 @@ function providePathSuggestions(pathValue, position, range, document, workspaceF
         ? fullValue.slice(0, position.character - (range.start.character + 1))
         : fullValue.slice(0, position.character - range.start.character);
     const workspaceRoot = resolveWorkspaceRoot(document, workspaceFolders);
-    const currentDocFsPath = vscode_uri_1.default.parse(document.uri).fsPath;
+    const currentDocFsPath = vscode_uri_1.URI.parse(document.uri).fsPath;
     const paths = providePaths(valueBeforeCursor, currentDocFsPath, workspaceRoot)
         .filter(p => {
         // Exclude current doc's path
@@ -136,10 +137,10 @@ function pathToReplaceRange(valueBeforeCursor, fullValue, fullValueRange) {
         const valueAfterLastSlash = fullValue.slice(lastIndexOfSlash + 1);
         const startPos = shiftPosition(fullValueRange.end, -valueAfterLastSlash.length);
         // If whitespace exists, replace until it
-        const whiteSpaceIndex = valueAfterLastSlash.indexOf(' ');
+        const whitespaceIndex = valueAfterLastSlash.indexOf(' ');
         let endPos;
-        if (whiteSpaceIndex !== -1) {
-            endPos = shiftPosition(startPos, whiteSpaceIndex);
+        if (whitespaceIndex !== -1) {
+            endPos = shiftPosition(startPos, whitespaceIndex);
         }
         else {
             endPos = fullValueRange.end;
@@ -176,7 +177,7 @@ function escapePath(p) {
 function resolveWorkspaceRoot(activeDoc, workspaceFolders) {
     for (const folder of workspaceFolders) {
         if (strings_1.startsWith(activeDoc.uri, folder.uri)) {
-            return path.resolve(vscode_uri_1.default.parse(folder.uri).fsPath);
+            return path.resolve(vscode_uri_1.URI.parse(folder.uri).fsPath);
         }
     }
     return undefined;
