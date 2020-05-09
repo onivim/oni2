@@ -21,7 +21,8 @@ module Resource = {
   type t = {
     handle: int,
     uri: Uri.t,
-    icons: Icons.t,
+    // TODO: Bring back
+    //icons: Icons.t,
     tooltip: string,
     strikeThrough: bool,
     faded: bool,
@@ -56,12 +57,13 @@ module Resource = {
     let resource =
       Json.Decode.(
         Pipeline.(
-          decode((handle, uri, icons, tooltip, strikeThrough, faded) =>
-            {handle, uri, icons, tooltip, strikeThrough, faded}
+          decode((handle, uri, /*icons,*/ tooltip, strikeThrough, faded) =>
+            {handle, uri, /*icons,*/ tooltip, strikeThrough, faded}
           )
           |> custom(index(0, int))
           |> custom(index(1, Uri.decode))
-          |> custom(index(2, icons))
+          // TODO: Bring back icons
+          //|> custom(index(2, icons))
           |> custom(index(3, string))
           |> custom(index(4, bool))
           |> custom(index(5, bool))

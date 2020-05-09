@@ -7,6 +7,7 @@ open Oni_Core.Utility;
 exception TaskFailed;
 module Log = (val Log.withNamespace("Oni2.Extensions.NodeTask"));
 
+
 let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   Log.info("Starting task: " ++ name);
   let (promise, resolver) = Lwt.task();
