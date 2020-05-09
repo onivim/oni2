@@ -80,7 +80,11 @@ let start =
             requestId: lastRequestId^,
             rpcId,
             method: "$initializeWorkspace",
-            args: `List([initialWorkspace |> Oni_Core.Json.Encode.encode_value(WorkspaceData.encode) ]),
+            args:
+              `List([
+                initialWorkspace
+                |> Oni_Core.Json.Encode.encode_value(WorkspaceData.encode),
+              ]),
             usesCancellationToken: false,
           }),
         );
