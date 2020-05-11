@@ -49,7 +49,7 @@ let update =
 
   | BufferUpdate({update, _}) =>
       let syntaxHighlights = Feature_Syntax.handleUpdate(
-        update
+        update,
         state.syntaxHighlights,
       );
     let state = {...state, syntaxHighlights};

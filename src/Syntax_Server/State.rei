@@ -23,9 +23,9 @@ let getActiveHighlighters: t => list(NativeSyntaxHighlights.t);
 
 let anyPendingWork: t => bool;
 
-let bufferEnter: (int, t) => t;
+let bufferEnter: (~bufferId: int, ~filetype: string, t) => t;
 let bufferUpdate:
-  (~scope: string, ~bufferUpdate: BufferUpdate.t, t) => result(t, string);
+  (~bufferUpdate: BufferUpdate.t, t) => result(t, string);
 
 let updateTheme: (TokenTheme.t, t) => t;
 let setUseTreeSitter: (bool, t) => t;

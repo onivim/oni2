@@ -103,7 +103,7 @@ let start = (~healthCheck) => {
               filetype,
             ),
           );
-          updateAndRestartTimer(State.bufferEnter(bufferId));
+          updateAndRestartTimer(State.bufferEnter(~bufferId, ~filetype));
         }
       | UseTreeSitter(useTreeSitter) => {
           updateAndRestartTimer(State.setUseTreeSitter(useTreeSitter));
@@ -116,7 +116,7 @@ let start = (~healthCheck) => {
           updateAndRestartTimer(State.updateTheme(theme));
           log("handled theme changed");
         }
-      | BufferUpdate(bufferUpdate, scope) => {
+      | BufferUpdate(bufferUpdate) => {
           let delta = bufferUpdate.isFull ? "(FULL)" : "(DELTA)";
           log(
             Printf.sprintf(
@@ -126,7 +126,7 @@ let start = (~healthCheck) => {
               delta,
             ),
           );
-          switch (State.bufferUpdate(~bufferUpdate, ~scope, state^)) {
+          switch (State.bufferUpdate(~bufferUpdate, state^)) {
           | Ok(newState) =>
             state := newState;
             log("Buffer update successfully applied.");

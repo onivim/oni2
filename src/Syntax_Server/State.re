@@ -16,6 +16,7 @@ type logFunc = string => unit;
 type bufferInfo = {
   lines: array(string),
   version: int,
+  filetype: string,
 };
 
 type t = {
@@ -65,16 +66,36 @@ let getActiveHighlighters = state => {
 
 let anyPendingWork = state => getActiveHighlighters(state) != [];
 
-let bufferEnter = (id: int, state: t) => {
-  let exists = List.exists(v => v == id, state.visibleBuffers);
+let getBufferScope = (~bufferId: int, state: t) => {
+  state.bufferInfo 
+  |> IntMap.find_opt(bufferId)
+  |> Option.map(({filetype, _}) => filetype)
+  |> Option.value(~default="plaintext");
+};
+
+let bufferEnter = (~bufferId: int, ~filetype: string, state: t) => {
+  let exists = List.exists(id => id == bufferId, state.visibleBuffers);
   let visibleBuffers =
     if (exists) {
       state.visibleBuffers;
     } else {
-      [id, ...state.visibleBuffers];
+      [bufferId, ...state.visibleBuffers];
     };
 
-  {...state, visibleBuffers};
+  let bufferInfo = state.bufferInfo
+  |> IntMap.update(bufferId, fun
+  | None => Some({
+    // TODO: Bring in lines!
+    lines: [||],
+    version: -1,
+    filetype,
+  })
+  | Some(bufInfo) => Some({
+      ...bufInfo,
+      filetype
+  }));
+
+  {...state, bufferInfo, visibleBuffers};
 };
 
 let updateTheme = (theme, state) => {
@@ -163,13 +184,13 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
          switch (current) {
          | None =>
            if (update.isFull) {
-             Some({lines: update.lines, version: update.version});
+             Some({filetype: "plaintext", lines: update.lines, version: update.version});
            } else {
              None;
            }
-         | Some({lines, _}) =>
+         | Some({filetype,lines, _}) =>
            if (update.isFull) {
-             Some({lines: update.lines, version: update.version});
+             Some({filetype,lines: update.lines, version: update.version});
            } else {
              let newLines =
                ArrayEx.replace(
@@ -178,7 +199,7 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
                  ~stop=update.endLine |> Index.toZeroBased,
                  lines,
                );
-             Some({lines: newLines, version: update.version});
+             Some({filetype,lines: newLines, version: update.version});
            }
          }
        );
@@ -191,6 +212,7 @@ let getBuffer = (~bufferId, state) => {
 
 let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
   let state = applyBufferUpdate(~update=bufferUpdate, state);
+  let scope = getBufferScope(bufferUpdate.id, state);
 
   state
   |> getBuffer(~bufferId=bufferUpdate.id)
