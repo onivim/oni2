@@ -52,7 +52,7 @@ module ClientToServer = {
         lines: array(string),
       })
     | BufferLeave(int)
-    | BufferUpdate([@opaque] Oni_Core.BufferUpdate.t, string)
+    | BufferUpdate([@opaque] Oni_Core.BufferUpdate.t)
     | UseTreeSitter(bool)
     | ThemeChanged([@opaque] TokenTheme.t)
     | RunHealthCheck

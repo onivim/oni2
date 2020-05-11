@@ -34,7 +34,7 @@ let notifyBufferEnter: (t, int, string, array(string)) => unit;
 let notifyBufferLeave: (t, int) => unit;
 let notifyThemeChanged: (t, TokenTheme.t) => unit;
 let notifyConfigurationChanged: (t, Configuration.t) => unit;
-let notifyBufferUpdate: (t, BufferUpdate.t, array(string), string) => unit;
+let notifyBufferUpdate: (t, BufferUpdate.t, string) => unit;
 
 let notifyVisibilityChanged: (t, list((int, list(Range.t)))) => unit;
 let healthCheck: t => unit;

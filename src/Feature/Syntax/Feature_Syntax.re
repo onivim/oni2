@@ -38,8 +38,7 @@ type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
   | ServerFailedToStart(string)
   | ServerStopped
-  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
-  | BufferUpdated([@opaque] BufferUpdate.t);
+  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t));
 //  | Service(Service_Syntax.serverMsg);
 
 type outmsg =
@@ -47,13 +46,13 @@ type outmsg =
   | ServerError(string);
 
 type t = {
-  syntaxClient: option(Oni_Syntax_Client.t),
+  maybeSyntaxClient: option(Oni_Syntax_Client.t),
   highlights: BufferMap.t(LineMap.t(list(ColorizedToken.t))),
   ignoredBuffers: BufferMap.t(bool),
 };
 
 let empty = {ignoredBuffers: BufferMap.empty, highlights: BufferMap.empty,
-syntaxClient: None};
+maybeSyntaxClient: None};
 
 let noTokens = [];
 
@@ -165,41 +164,45 @@ let update: (t, msg) => (t, outmsg) =
   (highlights: t, msg) =>
     switch (msg) {
     | TokensHighlighted(tokens) => (setTokens(tokens, highlights), Nothing)
-    | BufferUpdated(update) when !update.isFull => (
-        handleUpdate(update, highlights),
-        Nothing,
-      )
     | ServerFailedToStart(msg) => (highlights, ServerError(msg))
-    | ServerStarted(client) => ({ ...highlights, syntaxClient: Some(client)}, Nothing)
-    | ServerStopped => ({ ...highlights, syntaxClient: None }, Nothing)
-    | BufferUpdated(_update) => (highlights, Nothing)
+    | ServerStarted(client) => ({ ...highlights, maybeSyntaxClient: Some(client)}, Nothing)
+    | ServerStopped => ({ ...highlights, maybeSyntaxClient: None }, Nothing)
     //| Service(_) => (highlights, Nothing)
     };
 
-let subscription =
-    (
-      ~configuration,
-      ~enabled,
-      ~quitting,
-      ~languageInfo,
-      ~setup,
-      ~tokenTheme,
-      _highlights,
-    ) =>
-  if (enabled && !quitting) {
-    Service_Syntax.Sub.server(
-      ~configuration,
-      ~languageInfo,
-      ~setup,
-      ~tokenTheme,
-    )
-    |> Isolinear.Sub.map(
-         fun
-         | Service_Syntax.ServerStarted(client) => ServerStarted(client)
-         | Service_Syntax.ServerFailedToStart(msg) => ServerFailedToStart(msg)
-         | Service_Syntax.ServerClosed => ServerStopped,
-         //| Service_Syntax.ReceivedHighlights(hl) => TokensHighlighted(hl),
-       );
-  } else {
-    Isolinear.Sub.none;
+  let subscription =
+      (
+        ~configuration,
+        ~languageInfo,
+        ~setup,
+        ~tokenTheme,
+        _highlights,
+      ) =>
+      Service_Syntax.Sub.server(
+        ~configuration,
+        ~languageInfo,
+        ~setup,
+        ~tokenTheme,
+      )
+      |> Isolinear.Sub.map(
+           fun
+           | Service_Syntax.ServerStarted(client) => ServerStarted(client)
+           | Service_Syntax.ServerFailedToStart(msg) => ServerFailedToStart(msg)
+           | Service_Syntax.ServerClosed => ServerStopped
+         );
+
+
+
+module Effect = {
+  let bufferUpdate = (~bufferUpdate, {maybeSyntaxClient, _}) =>  {
+    Isolinear.Effect.create(~name="feature.syntax.bufferUpdate", () => {
+        maybeSyntaxClient
+        |> Option.iter((syntaxClient) => {
+          Oni_Syntax_Client.notifyBufferUpdate(
+            syntaxClient,
+            bufferUpdate,
+          );
+        });
+    });
   };
+};

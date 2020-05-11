@@ -189,7 +189,7 @@ let getBuffer = (~bufferId, state) => {
   IntMap.find_opt(bufferId, state.bufferInfo);
 };
 
-let bufferUpdate = (~scope, ~bufferUpdate: BufferUpdate.t, state) => {
+let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
   let state = applyBufferUpdate(~update=bufferUpdate, state);
 
   state

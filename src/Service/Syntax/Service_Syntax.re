@@ -173,27 +173,3 @@ module Sub = {
     BufferSubscription.create({client, buffer, visibleRanges});
   };
 };
-
-module Effect = {
-  let bufferUpdate =
-      (
-        maybeSyntaxClient,
-        bufferUpdate: Core.BufferUpdate.t,
-        lines,
-        scopeMaybe,
-      ) =>
-    Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
-      OptionEx.iter2(
-        (syntaxClient, scope) => {
-          Oni_Syntax_Client.notifyBufferUpdate(
-            syntaxClient,
-            bufferUpdate,
-            lines,
-            scope,
-          )
-        },
-        maybeSyntaxClient,
-        scopeMaybe,
-      )
-    });
-};
