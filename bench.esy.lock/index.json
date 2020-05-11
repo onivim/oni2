@@ -1,5 +1,5 @@
 {
-  "checksum": "8e93f433a8b4e95e92eebdd68034da7f",
+  "checksum": "299bd953ed34a25277db34f699b82225",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -131,20 +131,20 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#7853ddb@d41d8cd9",
+        "revery@github:revery-ui/revery#cd5911c@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#91bad1f@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#7853ddb@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#7853ddb@d41d8cd9",
+    "revery@github:revery-ui/revery#cd5911c@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#cd5911c@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#7853ddb",
+      "version": "github:revery-ui/revery#cd5911c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#7853ddb" ]
+        "source": [ "github:revery-ui/revery#cd5911c" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1157,7 +1157,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
-        "revery@github:revery-ui/revery#7853ddb@d41d8cd9",
+        "revery@github:revery-ui/revery#cd5911c@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
@@ -1558,12 +1558,12 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/dune@opam:2.5.1@a0c1e658",
-        "@opam/base@opam:v0.13.1@7d937ed0",
+        "@opam/base@opam:v0.13.2@c3150775",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/dune@opam:2.5.1@a0c1e658",
-        "@opam/base@opam:v0.13.1@7d937ed0"
+        "@opam/base@opam:v0.13.2@c3150775"
       ]
     },
     "@opam/sexplib0@opam:v0.13.0@3f54c2be": {
@@ -1825,7 +1825,7 @@
         "@opam/ppx_derivers@opam:1.2.1@ecf0aa45",
         "@opam/ocaml-migrate-parsetree@opam:1.7.3@dbcf3b47",
         "@opam/ocaml-compiler-libs@opam:v0.12.1@5c34eb0d",
-        "@opam/dune@opam:2.5.1@a0c1e658", "@opam/base@opam:v0.13.1@7d937ed0",
+        "@opam/dune@opam:2.5.1@a0c1e658", "@opam/base@opam:v0.13.2@c3150775",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -1833,7 +1833,7 @@
         "@opam/ppx_derivers@opam:1.2.1@ecf0aa45",
         "@opam/ocaml-migrate-parsetree@opam:1.7.3@dbcf3b47",
         "@opam/ocaml-compiler-libs@opam:v0.12.1@5c34eb0d",
-        "@opam/dune@opam:2.5.1@a0c1e658", "@opam/base@opam:v0.13.1@7d937ed0"
+        "@opam/dune@opam:2.5.1@a0c1e658", "@opam/base@opam:v0.13.2@c3150775"
       ]
     },
     "@opam/ppxfind@opam:1.4@1e01d2a5": {
@@ -1964,12 +1964,12 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/ppxlib@opam:0.13.0@65a9c7cc",
-        "@opam/dune@opam:2.5.1@a0c1e658", "@opam/base@opam:v0.13.1@7d937ed0",
+        "@opam/dune@opam:2.5.1@a0c1e658", "@opam/base@opam:v0.13.2@c3150775",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/ppxlib@opam:0.13.0@65a9c7cc",
-        "@opam/dune@opam:2.5.1@a0c1e658", "@opam/base@opam:v0.13.1@7d937ed0"
+        "@opam/dune@opam:2.5.1@a0c1e658", "@opam/base@opam:v0.13.2@c3150775"
       ]
     },
     "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe": {
@@ -3271,20 +3271,20 @@
         "ocaml@4.9.1000@d41d8cd9", "@opam/ocamlfind@opam:1.8.1@ff07b0f9"
       ]
     },
-    "@opam/base@opam:v0.13.1@7d937ed0": {
-      "id": "@opam/base@opam:v0.13.1@7d937ed0",
+    "@opam/base@opam:v0.13.2@c3150775": {
+      "id": "@opam/base@opam:v0.13.2@c3150775",
       "name": "@opam/base",
-      "version": "opam:v0.13.1",
+      "version": "opam:v0.13.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/29/296457416f9a8b75e6edfc3b1140e384#md5:296457416f9a8b75e6edfc3b1140e384",
-          "archive:https://github.com/janestreet/base/archive/v0.13.1.tar.gz#md5:296457416f9a8b75e6edfc3b1140e384"
+          "archive:https://opam.ocaml.org/cache/md5/f4/f43ce18d98fd0879e77ff671e077e607#md5:f43ce18d98fd0879e77ff671e077e607",
+          "archive:https://github.com/janestreet/base/archive/v0.13.2.tar.gz#md5:f43ce18d98fd0879e77ff671e077e607"
         ],
         "opam": {
           "name": "base",
-          "version": "v0.13.1",
-          "path": "bench.esy.lock/opam/base.v0.13.1"
+          "version": "v0.13.2",
+          "path": "bench.esy.lock/opam/base.v0.13.2"
         }
       },
       "overrides": [],

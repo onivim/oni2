@@ -17,6 +17,7 @@ let _currentZoom: ref(float) = ref(1.0);
 let _currentTitle: ref(string) = ref("");
 let _currentVsync: ref(Revery.Vsync.t) = ref(Revery.Vsync.Immediate);
 let _currentMaximized: ref(bool) = ref(false);
+let _currentMinimized: ref(bool) = ref(false);
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
@@ -32,6 +33,7 @@ let getZoom = () => _currentZoom^;
 let setVsync = vsync => _currentVsync := vsync;
 
 let maximize = () => _currentMaximized := true;
+let minimize = () => _currentMinimized := true;
 
 let quit = code => exit(code);
 
@@ -150,6 +152,7 @@ let runTest =
       ~setZoom,
       ~setVsync,
       ~maximize,
+      ~minimize,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
