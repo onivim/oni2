@@ -12,7 +12,6 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        reason-jsonrpc
         Oni2.core
         Oni2.extensions
     )

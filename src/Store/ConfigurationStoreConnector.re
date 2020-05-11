@@ -16,10 +16,11 @@ module Constants = {
 let start =
     (
       ~configurationFilePath: option(string),
-      ~cliOptions: Cli.t,
       ~getZoom,
       ~setZoom,
       ~setVsync,
+      ~shouldLoadConfiguration,
+      ~filesToOpen,
     ) => {
   let defaultConfigurationFileName = "configuration.json";
 
@@ -127,7 +128,7 @@ let start =
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
-      if (cliOptions.shouldLoadConfiguration) {
+      if (shouldLoadConfiguration) {
         dispatch(Actions.Configuration(UserSettingsChanged));
 
         defaultConfigurationFileName
@@ -150,7 +151,7 @@ let start =
                  configuration,
                );
 
-             if (zenModeSingleFile && List.length(cliOptions.filesToOpen) == 1) {
+             if (zenModeSingleFile && List.length(filesToOpen) == 1) {
                dispatch(Actions.EnableZenMode);
              };
            });

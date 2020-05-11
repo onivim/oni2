@@ -231,6 +231,31 @@ module ExtensionService = {
 module LanguageFeatures = {
   [@deriving show]
   type msg =
+    | RegisterDocumentHighlightProvider({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+    | RegisterDocumentSymbolProvider({
+        handle: int,
+        selector: list(DocumentFilter.t),
+        label: string,
+      })
+    | RegisterDefinitionSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+    | RegisterDeclarationSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+    | RegisterImplementationSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
+    | RegisterTypeDefinitionSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
     | RegisterSuggestSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -238,12 +263,78 @@ module LanguageFeatures = {
         supportsResolveDetails: bool,
         extensionId: string,
       })
+    | RegisterReferenceSupport({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
     | Unregister({handle: int});
+
+  let parseDocumentSelector = json => {
+    Json.Decode.(json |> decode_value(list(DocumentFilter.decode)));
+  };
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | ("$unregister", `List([`Int(handle)])) =>
       Ok(Unregister({handle: handle}))
+    | (
+        "$registerDocumentHighlightProvider",
+        `List([`Int(handle), selectorJson]),
+      ) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) =>
+        Ok(RegisterDocumentHighlightProvider({handle, selector}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
+    | (
+        "$registerDocumentSymbolProvider",
+        `List([`Int(handle), selectorJson, `String(label)]),
+      ) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) =>
+        Ok(RegisterDocumentSymbolProvider({handle, selector, label}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
+    | ("$registerDefinitionSupport", `List([`Int(handle), selectorJson])) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {
+           RegisterDefinitionSupport({handle, selector})
+         })
+      |> Result.map_error(Json.Decode.string_of_error)
+    | ("$registerDeclarationSupport", `List([`Int(handle), selectorJson])) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {
+           RegisterDeclarationSupport({handle, selector})
+         })
+      |> Result.map_error(Json.Decode.string_of_error)
+    | (
+        "$registerImplementationSupport",
+        `List([`Int(handle), selectorJson]),
+      ) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {
+           RegisterImplementationSupport({handle, selector})
+         })
+      |> Result.map_error(Json.Decode.string_of_error)
+    | (
+        "$registerTypeDefinitionSupport",
+        `List([`Int(handle), selectorJson]),
+      ) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) =>
+        Ok(RegisterImplementationSupport({handle, selector}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
+
+    | ("$registerReferenceSupport", `List([`Int(handle), selectorJson])) =>
+      switch (parseDocumentSelector(selectorJson)) {
+      | Ok(selector) => Ok(RegisterReferenceSupport({handle, selector}))
+      | Error(error) => Error(Json.Decode.string_of_error(error))
+      }
+
     | (
         "$registerSuggestSupport",
         `List([
@@ -251,21 +342,28 @@ module LanguageFeatures = {
           selectorJson,
           triggerCharactersJson,
           `Bool(supportsResolveDetails),
-          `String(extensionId),
+          extensionIdJson,
         ]),
       ) =>
       open Json.Decode;
+      let nestedListDecoder = list(list(string)) |> map(List.flatten);
+
+      let decodeTriggerCharacters =
+        one_of([
+          ("nestedList", nestedListDecoder),
+          ("stringList", list(string)),
+        ]);
 
       let ret = {
         open Base.Result.Let_syntax;
         let%bind selector =
-          selectorJson
-          |> Json.Decode.decode_value(list(DocumentFilter.decode));
+          selectorJson |> decode_value(list(DocumentFilter.decode));
 
         let%bind triggerCharacters =
-          triggerCharactersJson
-          |> Json.Decode.decode_value(list(list(string)))
-          |> Result.map(List.flatten);
+          triggerCharactersJson |> decode_value(decodeTriggerCharacters);
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
 
         Ok(
           RegisterSuggestSupport({
@@ -278,9 +376,16 @@ module LanguageFeatures = {
         );
       };
 
-      ret |> Result.map_error(Json.Decode.string_of_error);
+      ret |> Result.map_error(string_of_error);
 
-    | _ => Error("Unhandled method: " ++ method)
+    | _ =>
+      Error(
+        Printf.sprintf(
+          "Unhandled method: %s - Args: %s",
+          method,
+          Yojson.Safe.to_string(args),
+        ),
+      )
     };
   };
 };
@@ -315,20 +420,24 @@ module MessageService = {
         "$showMessage",
         `List([`Int(severity), `String(message), options, ..._]),
       ) =>
-      let extensionId =
-        Yojson.Safe.Util.(
-          options
-          |> member("extension")
-          |> member("identifier")
-          |> to_string_option
+      try({
+        let extensionId =
+          Yojson.Safe.Util.(
+            options
+            |> member("extension")
+            |> member("identifier")
+            |> to_string_option
+          );
+        Ok(
+          ShowMessage({
+            severity: intToSeverity(severity),
+            message,
+            extensionId,
+          }),
         );
-      Ok(
-        ShowMessage({
-          severity: intToSeverity(severity),
-          message,
-          extensionId,
-        }),
-      );
+      }) {
+      | exn => Error(Printexc.to_string(exn))
+      }
     | _ =>
       Error(
         "Unable to parse method: "
@@ -412,6 +521,124 @@ module Telemetry = {
     };
   };
 };
+
+module SCM = {
+  [@deriving show]
+  type msg =
+    | RegisterSourceControl({
+        handle: int,
+        id: string,
+        label: string,
+        rootUri: option(Uri.t),
+      })
+    | UnregisterSourceControl({handle: int})
+    | UpdateSourceControl({
+        handle: int,
+        hasQuickDiffProvider: option(bool),
+        count: option(int),
+        commitTemplate: option(string),
+        acceptInputCommand: option(SCM.command),
+      })
+    // statusBarCommands: option(_),
+    | RegisterSCMResourceGroup({
+        provider: int,
+        handle: int,
+        id: string,
+        label: string,
+      })
+    | UnregisterSCMResourceGroup({
+        provider: int,
+        handle: int,
+      })
+    | SpliceSCMResourceStates({
+        handle: int,
+        splices: list(SCM.Resource.Splices.t),
+      });
+  //additions: list(SCM.Resource.t),
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method) {
+    | "$registerSourceControl" =>
+      switch (args) {
+      | `List([`Int(handle), `String(id), `String(label), rootUri]) =>
+        let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
+        Ok(RegisterSourceControl({handle, id, label, rootUri}));
+
+      | _ => Error("Unexpected arguments for $registerSourceControl")
+      }
+
+    | "$unregisterSourceControl" =>
+      switch (args) {
+      | `List([`Int(handle)]) =>
+        Ok(UnregisterSourceControl({handle: handle}))
+
+      | _ => Error("Unexpected arguments for $unregisterSourceControl")
+      }
+
+    | "$updateSourceControl" =>
+      switch (args) {
+      | `List([`Int(handle), features]) =>
+        Yojson.Safe.Util.(
+          Ok(
+            UpdateSourceControl({
+              handle,
+              hasQuickDiffProvider:
+                features |> member("hasQuickDiffProvider") |> to_bool_option,
+              count: features |> member("count") |> to_int_option,
+              commitTemplate:
+                features |> member("commitTemplate") |> to_string_option,
+              acceptInputCommand:
+                features |> member("acceptInputCommand") |> SCM.Decode.command,
+            }),
+          )
+        )
+
+      | _ => Error("Unexpected arguments for $updateSourceControl")
+      }
+
+    | "$registerGroup" =>
+      switch (args) {
+      | `List([`Int(provider), `Int(handle), `String(id), `String(label)]) =>
+        Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
+
+      | _ => Error("Unexpected arguments for $registerGroup")
+      }
+
+    | "$unregisterGroup" =>
+      switch (args) {
+      | `List([`Int(handle), `Int(provider)]) =>
+        Ok(UnregisterSCMResourceGroup({provider, handle}))
+
+      | _ => Error("Unexpected arguments for $unregisterGroup")
+      }
+
+    | "$spliceResourceStates" =>
+      switch (args) {
+      | `List([`Int(handle), splicesJson]) =>
+        let splicesResult =
+          Json.Decode.(
+            splicesJson
+            |> Json.Decode.decode_value(list(SCM.Resource.Decode.splices))
+          );
+
+        switch (splicesResult) {
+        | Ok(splices) => Ok(SpliceSCMResourceStates({handle, splices}))
+        | Error(err) => Error(Json.Decode.string_of_error(err))
+        };
+      | _ => Error("Unexpected arguments for $spliceResourceStates")
+      }
+    | _ =>
+      Error(
+        Printf.sprintf(
+          "Unhandled SCM message - %s: %s",
+          method,
+          Yojson.Safe.to_string(args),
+        ),
+      )
+    };
+  };
+};
+
 module TerminalService = {
   [@deriving show]
   type msg =
@@ -423,9 +650,10 @@ module TerminalService = {
         terminalId: int,
         data: string,
       })
-    | SendProcessPid({
+    | SendProcessReady({
         terminalId: int,
         pid: int,
+        workingDirectory: string,
       })
     | SendProcessExit({
         terminalId: int,
@@ -448,12 +676,12 @@ module TerminalService = {
       | _ => Error("Unexpected arguments for $sendProcessData")
       }
 
-    | "$sendProcessPid" =>
+    | "$sendProcessReady" =>
       switch (args) {
-      | `List([`Int(terminalId), `Int(pid)]) =>
-        Ok(SendProcessPid({terminalId, pid}))
+      | `List([`Int(terminalId), `Int(pid), `String(workingDirectory)]) =>
+        Ok(SendProcessReady({terminalId, pid, workingDirectory}))
 
-      | _ => Error("Unexpected arguments for $sendProcessPid")
+      | _ => Error("Unexpected arguments for $sendProcessReady")
       }
 
     | "$sendProcessExit" =>
@@ -488,6 +716,7 @@ type t =
   | ExtensionService(ExtensionService.msg)
   | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
+  | SCM(SCM.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)
   | TerminalService(TerminalService.msg)

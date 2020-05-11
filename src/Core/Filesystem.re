@@ -367,6 +367,12 @@ let getExtensionsFolder = () =>
   >>= (dir => getPath(dir, "extensions"))
   >>= getOrCreateConfigFolder;
 
+let getStoreFolder = () =>
+  getUserDataDirectory()
+  >>= getOniDirectory
+  >>= (dir => getPath(dir, "store"))
+  >>= getOrCreateConfigFolder;
+
 let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
   switch (overridePath) {
   | Some(path) =>

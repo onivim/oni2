@@ -17,6 +17,7 @@ let _currentZoom: ref(float) = ref(1.0);
 let _currentTitle: ref(string) = ref("");
 let _currentVsync: ref(Revery.Vsync.t) = ref(Revery.Vsync.Immediate);
 let _currentMaximized: ref(bool) = ref(false);
+let _currentMinimized: ref(bool) = ref(false);
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
@@ -32,6 +33,7 @@ let getZoom = () => _currentZoom^;
 let setVsync = vsync => _currentVsync := vsync;
 
 let maximize = () => _currentMaximized := true;
+let minimize = () => _currentMinimized := true;
 
 let quit = code => exit(code);
 
@@ -57,7 +59,7 @@ let runTest =
     (
       ~configuration=None,
       ~keybindings=None,
-      ~cliOptions=None,
+      ~filesToOpen=[],
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
       test: testCallback,
@@ -94,7 +96,13 @@ let runTest =
   let getUserSettings = () => Ok(currentUserSettings^);
 
   let currentState =
-    ref(Model.State.initial(~getUserSettings, ~contributedCommands=[]));
+    ref(
+      Model.State.initial(
+        ~getUserSettings,
+        ~contributedCommands=[],
+        ~workingDirectory=Sys.getcwd(),
+      ),
+    );
 
   let headlessWindow =
     Revery.Utility.HeadlessWindow.create(
@@ -144,14 +152,15 @@ let runTest =
       ~setZoom,
       ~setVsync,
       ~maximize,
+      ~minimize,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
-      ~cliOptions,
       ~configurationFilePath=Some(configurationFilePath),
       ~keybindingsFilePath=Some(keybindingsFilePath),
       ~quit,
       ~window=None,
+      ~filesToOpen,
       (),
     );
 

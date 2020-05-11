@@ -51,12 +51,77 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module OneBasedRange: {
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
+
+  let ofRange: Range.t => t;
+  let toRange: t => Range.t;
+};
+
+module Location: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module DefinitionLink: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+    originSelectionRange: option(OneBasedRange.t),
+    targetSelectionRange: option(OneBasedRange.t),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module DocumentFilter: {
   [@deriving show]
   type t = {
     language: option(string),
     scheme: option(string),
     exclusive: bool,
+  };
+
+  let matches: (~filetype: string, t) => bool;
+
+  let decode: Json.decoder(t);
+};
+
+module DocumentSelector: {
+  [@deriving show]
+  type t = list(DocumentFilter.t);
+
+  let matches: (~filetype: string, t) => bool;
+
+  let decode: Json.decoder(t);
+};
+
+module DocumentHighlight: {
+  module Kind: {
+    [@deriving show]
+    type t =
+      | Text
+      | Read
+      | Write;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+    let decode: Json.decoder(t);
+  };
+
+  [@deriving show]
+  type t = {
+    range: OneBasedRange.t,
+    kind: Kind.t,
   };
 
   let decode: Json.decoder(t);
@@ -76,10 +141,124 @@ module SuggestItem: {
   let decode: Json.decoder(t);
 };
 
+module ReferenceContext: {
+  type t = {includeDeclaration: bool};
+
+  let encode: Json.encoder(t);
+};
+
+module SCM: {
+  [@deriving show({with_path: false})]
+  type command = {
+    id: string,
+    title: string,
+    tooltip: option(string),
+    arguments: list([@opaque] Json.t),
+  };
+
+  module Resource: {
+    module Icons: {
+      [@deriving show({with_path: false})]
+      type t = {
+        light: Uri.t,
+        dark: Uri.t,
+      };
+    };
+
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      uri: Uri.t,
+      //      icons: Icons.t,
+      tooltip: string,
+      strikeThrough: bool,
+      faded: bool,
+    };
+
+    let decode: Json.decoder(t);
+
+    module Splice: {
+      type nonrec t = {
+        start: int,
+        deleteCount: int,
+        resources: list(t),
+      };
+    };
+
+    module Splices: {
+      [@deriving show({with_path: false})]
+      type t = {
+        handle: int,
+        resourceSplices: [@opaque] list(Splice.t),
+      };
+    };
+
+    module Decode: {let splices: Json.decoder(Splices.t);};
+  };
+
+  module Decode: {
+    //let resource: Yojson.Safe.t => Resource.t;
+    let command: Yojson.Safe.t => option(command);
+  };
+};
+
 module SuggestResult: {
   type t = {
     completions: list(SuggestItem.t),
     isIncomplete: bool,
+  };
+
+  let empty: t;
+
+  let decode: Json.decoder(t);
+};
+
+module SymbolKind: {
+  [@deriving show]
+  type t =
+    | File
+    | Module
+    | Namespace
+    | Package
+    | Class
+    | Method
+    | Property
+    | Field
+    | Constructor
+    | Enum
+    | Interface
+    | Function
+    | Variable
+    | Constant
+    | String
+    | Number
+    | Boolean
+    | Array
+    | Object
+    | Key
+    | Null
+    | EnumMember
+    | Struct
+    | Event
+    | Operator
+    | TypeParameter;
+
+  let toInt: t => int;
+  let ofInt: int => option(t);
+  let decode: Json.decoder(t);
+};
+
+module DocumentSymbol: {
+  [@deriving show]
+  type t = {
+    name: string,
+    detail: string,
+    kind: SymbolKind.t,
+    // TODO: tags
+    containerName: option(string),
+    range: OneBasedRange.t,
+    selectionRange: OneBasedRange.t,
+    children: list(t),
   };
 
   let decode: Json.decoder(t);
@@ -107,6 +286,16 @@ module Configuration: {
   let empty: t;
   let create:
     (~defaults: Model.t=?, ~user: Model.t=?, ~workspace: Model.t=?, unit) => t;
+};
+
+module Diagnostic: {
+  type t = {
+    range: OneBasedRange.t,
+    message: string,
+    severity: int,
+  };
+
+  let decode: Json.decoder(t);
 };
 
 module Eol: {
@@ -164,12 +353,13 @@ module DocumentsAndEditorsDelta: {
 };
 
 module OneBasedPosition: {
+  [@deriving show({with_path: false})]
   type t = {
     lineNumber: int,
     column: int,
   };
 
-  let ofPosition: Location.t => t;
+  let ofPosition: EditorCoreTypes.Location.t => t;
   let to_yojson: t => Yojson.Safe.t;
 };
 
@@ -192,18 +382,6 @@ module ModelChangedEvent: {
   };
 
   let to_yojson: t => Yojson.Safe.t;
-};
-
-module OneBasedRange: {
-  type t = {
-    startLineNumber: int,
-    endLineNumber: int,
-    startColumn: int,
-    endColumn: int,
-  };
-
-  let ofRange: Range.t => t;
-  let toRange: t => Range.t;
 };
 
 module ShellLaunchConfig: {
@@ -236,7 +414,16 @@ module WorkspaceData: {
     isUntitled: bool,
   };
 
+  let fromUri: (~name: string, ~id: string, Uri.t) => t;
+  let fromPath: string => t;
+
   let encode: Json.encoder(t);
+  let decode: Json.decoder(t);
+};
+
+module ThemeColor: {
+  type t = {id: string};
+
   let decode: Json.decoder(t);
 };
 
@@ -326,12 +513,41 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | RegisterDocumentHighlightProvider({
+          handle: int,
+          selector: DocumentSelector.t,
+        })
+      | RegisterDocumentSymbolProvider({
+          handle: int,
+          selector: DocumentSelector.t,
+          label: string,
+        })
+      | RegisterDefinitionSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+        })
+      | RegisterDeclarationSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+        })
+      | RegisterImplementationSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+        })
+      | RegisterTypeDefinitionSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+        })
       | RegisterSuggestSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
           triggerCharacters: list(string),
           supportsResolveDetails: bool,
           extensionId: string,
+        })
+      | RegisterReferenceSupport({
+          handle: int,
+          selector: DocumentSelector.t,
         })
       | Unregister({handle: int});
   };
@@ -349,6 +565,40 @@ module Msg: {
           severity,
           message: string,
           extensionId: option(string),
+        });
+  };
+
+  module SCM: {
+    [@deriving show]
+    type msg =
+      | RegisterSourceControl({
+          handle: int,
+          id: string,
+          label: string,
+          rootUri: option(Uri.t),
+        })
+      | UnregisterSourceControl({handle: int})
+      | UpdateSourceControl({
+          handle: int,
+          hasQuickDiffProvider: option(bool),
+          count: option(int),
+          commitTemplate: option(string),
+          acceptInputCommand: option(SCM.command),
+        })
+      // statusBarCommands: option(_),
+      | RegisterSCMResourceGroup({
+          provider: int,
+          handle: int,
+          id: string,
+          label: string,
+        })
+      | UnregisterSCMResourceGroup({
+          provider: int,
+          handle: int,
+        })
+      | SpliceSCMResourceStates({
+          handle: int,
+          splices: list(SCM.Resource.Splices.t),
         });
   };
 
@@ -376,9 +626,10 @@ module Msg: {
           terminalId: int,
           data: string,
         })
-      | SendProcessPid({
+      | SendProcessReady({
           terminalId: int,
           pid: int,
+          workingDirectory: string,
         })
       | SendProcessExit({
           terminalId: int,
@@ -415,6 +666,7 @@ module Msg: {
     | ExtensionService(ExtensionService.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
+    | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
@@ -443,6 +695,7 @@ module Client: {
   let start:
     (
       ~initialConfiguration: Configuration.t=?,
+      ~initialWorkspace: WorkspaceData.t=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
       ~handler: Msg.t => option(reply),
@@ -462,6 +715,37 @@ module Request: {
   module Commands: {
     let executeContributedCommand:
       (~arguments: list(Json.t), ~command: string, Client.t) => unit;
+  };
+
+  module Configuration: {
+    let acceptConfigurationChanged:
+      (
+        ~configuration: Configuration.t,
+        ~changed: Configuration.Model.t,
+        Client.t
+      ) =>
+      unit;
+  };
+
+  module Decorations: {
+    type request = {
+      id: int,
+      handle: int,
+      uri: Uri.t,
+    };
+
+    type decoration = {
+      priority: int,
+      bubble: bool,
+      title: string,
+      letter: string,
+      color: ThemeColor.t,
+    };
+
+    type reply = IntMap.t(decoration);
+
+    let provideDecorations:
+      (~requests: list(request), Client.t) => Lwt.t(reply);
   };
 
   module DocumentContentProvider: {
@@ -507,6 +791,73 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let provideDocumentHighlights:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DocumentHighlight.t));
+
+    let provideDocumentSymbols:
+      (~handle: int, ~resource: Uri.t, Client.t) =>
+      Lwt.t(list(DocumentSymbol.t));
+
+    let provideDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideDeclaration:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideImplementation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+
+    let provideReferences:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: ReferenceContext.t,
+        Client.t
+      ) =>
+      Lwt.t(list(Location.t));
+
+    let provideTypeDefinition:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(list(DefinitionLink.t));
+  };
+
+  module SCM: {
+    let provideOriginalResource:
+      (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(option(Uri.t));
+
+    let onInputBoxValueChange:
+      (~handle: int, ~value: string, Client.t) => unit;
   };
 
   module TerminalService: {

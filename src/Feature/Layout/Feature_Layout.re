@@ -6,17 +6,33 @@ type direction =
   | Down
   | Right;
 
-type t('content) =
-  | Split([ | `Horizontal | `Vertical], list(t('content)))
-  | Window({
-      weight: float,
-      content: 'content,
-    })
-  | Empty;
+[@deriving show({with_path: false})]
+type size =
+  | Weight(float);
 
 [@deriving show({with_path: false})]
-type sizedWindow('content) = {
-  content: 'content,
+type t('id) =
+  | Split([ | `Horizontal | `Vertical], size, list(t('id)))
+  | Window(size, 'id);
+
+let nodeSize =
+  fun
+  | Split(_, size, _) => size
+  | Window(size, _) => size;
+
+let withSize = size =>
+  fun
+  | Split(direction, _, children) => Split(direction, size, children)
+  | Window(_, id) => Window(size, id);
+
+let nodeWeight =
+  fun
+  | Split(_, Weight(weight), _) => Some(weight)
+  | Window(Weight(weight), _) => Some(weight);
+
+[@deriving show({with_path: false})]
+type sizedWindow('id) = {
+  id: 'id,
   x: int,
   y: int,
   width: int,
@@ -33,7 +49,7 @@ module Internal = {
     + split.height;
   };
 
-  let move = (content, dirX, dirY, splits) => {
+  let move = (id, dirX, dirY, splits) => {
     let (minX, minY, maxX, maxY, deltaX, deltaY) =
       List.fold_left(
         (prev, cur) => {
@@ -52,7 +68,7 @@ module Internal = {
         splits,
       );
 
-    let splitInfo = List.filter(s => s.content == content, splits);
+    let splitInfo = List.filter(s => s.id == id, splits);
 
     if (splitInfo == []) {
       None;
@@ -74,12 +90,12 @@ module Internal = {
 
         let intersects =
           List.filter(
-            s => s.content != startSplit.content && intersects(x, y, s),
+            s => s.id != startSplit.id && intersects(x, y, s),
             splits,
           );
 
         if (intersects != []) {
-          result := Some(List.hd(intersects).content);
+          result := Some(List.hd(intersects).id);
           found := true;
         };
 
@@ -95,144 +111,182 @@ module Internal = {
     let findSplit = children => {
       let predicate =
         fun
-        | Window({content, _}) => content == target
+        | Window(_, id) => id == target
         | _ => false;
 
       List.exists(predicate, children);
     };
 
     switch (tree) {
-    | Split(direction, children) =>
+    | Split(direction, size, children) =>
       Split(
         direction,
+        size,
         List.map(
-          rotate(target, func),
+          child => rotate(target, func, child),
           findSplit(children) ? func(children) : children,
         ),
       )
     | Window(_) as window => window
-    | Empty => Empty
     };
   };
 };
 
-let initial = Split(`Vertical, [Empty]);
+let empty = Split(`Vertical, Weight(1.), []);
+let initial = empty;
 
 let windows = tree => {
   let rec traverse = (node, acc) => {
     switch (node) {
-    | Split(_, children) =>
+    | Split(_, _, children) =>
       List.fold_left((acc, child) => traverse(child, acc), acc, children)
-    | Window({content, _}) => [content, ...acc]
-    | Empty => acc
+    | Window(_, id) => [id, ...acc]
     };
   };
 
   traverse(tree, []);
 };
 
-let addWindow = (~target=None, ~position, direction, content, tree) => {
-  let newWindow = Window({weight: 1., content});
-
-  let rec f = (targetId, parent, split) => {
-    switch (split) {
-    | Split(direction, children) => [
-        Split(
-          direction,
-          List.concat(List.map(f(targetId, Some(split)), children)),
-        ),
-      ]
-    | Window({content, _}) as window =>
-      if (content == targetId) {
-        let children =
-          switch (position) {
-          | `Before => [newWindow, window]
-          | `After => [window, newWindow]
-          };
-
-        switch (parent) {
-        | Some(Split(dir, _)) =>
-          if (dir == direction) {
-            children;
-          } else {
-            [Split(direction, children)];
-          }
-        | _ => children
-        };
-      } else {
-        [window];
-      }
-    | Empty => [newWindow]
-    };
-  };
-
+let addWindow = (~target=None, ~position, direction, id, tree) => {
+  let newWindow = Window(Weight(1.), id);
   switch (target) {
-  | Some(targetId) => f(targetId, None, tree) |> List.hd
+  | Some(targetId) =>
+    let rec traverse = node => {
+      switch (node) {
+      | Split(_, size, []) => Window(size, id) // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
+      | Split(thisDirection, size, children) when thisDirection == direction =>
+        let onMatch = child =>
+          switch (position) {
+          | `Before => [newWindow, child]
+          | `After => [child, newWindow]
+          };
+        Split(thisDirection, size, traverseChildren(~onMatch, [], children));
+
+      | Split(thisDirection, size, children) =>
+        let onMatch = child =>
+          switch (position) {
+          | `Before => [
+              Split(
+                direction,
+                nodeSize(child),
+                [newWindow, child |> withSize(Weight(1.))],
+              ),
+            ]
+          | `After => [
+              Split(
+                direction,
+                nodeSize(child),
+                [child |> withSize(Weight(1.)), newWindow],
+              ),
+            ]
+          };
+        Split(thisDirection, size, traverseChildren(~onMatch, [], children));
+
+      | Window(size, id) when id == targetId =>
+        switch (position) {
+        | `Before =>
+          Split(direction, size, [newWindow, Window(Weight(1.), id)])
+        | `After =>
+          Split(direction, size, [Window(Weight(1.), id), newWindow])
+        }
+
+      | Window(_) as window => window
+      };
+    }
+
+    and traverseChildren = (~onMatch, before, after) =>
+      switch (after) {
+      | [] => List.rev(before)
+      | [head, ...rest] =>
+        switch (head) {
+        | Window(_, id) as child when id == targetId =>
+          traverseChildren(
+            ~onMatch,
+            List.rev(onMatch(child)) @ before,
+            rest,
+          )
+
+        | Split(_) as child =>
+          traverseChildren(~onMatch, [traverse(child), ...before], rest)
+
+        | child => traverseChildren(~onMatch, [child, ...before], rest)
+        }
+      };
+
+    traverse(tree);
+
   | None =>
     switch (tree) {
-    | Split(d, children) =>
-      Split(d, List.filter(node => node != Empty, [newWindow, ...children]))
-    | other => other
+    | Split(_, size, []) => Window(size, id)
+    | Split(d, size, children) => Split(d, size, [newWindow, ...children])
+    | Window(size, id) =>
+      Split(direction, size, [newWindow, Window(Weight(1.), id)])
     }
   };
 };
 
-let rec removeWindow = (target, tree) =>
-  switch (tree) {
-  | Split(direction, children) =>
-    let newChildren =
-      children
-      |> List.map(child => removeWindow(target, child))
-      |> List.filter(node => node != Empty);
+let removeWindow = (target, tree) => {
+  let rec traverse =
+    fun
+    | Split(direction, size, children) =>
+      switch (List.filter_map(traverse, children)) {
+      | [] => None
+      // BUG: Collapsing disabled as it doesn't preserve size properly.
+      // | [child] => Some(child)
+      | newChildren => Some(Split(direction, size, newChildren))
+      }
+    | Window(_, id) when id == target => None
+    | node => Some(node);
 
-    if (List.length(newChildren) > 0) {
-      Split(direction, newChildren);
-    } else {
-      Empty;
-    };
-  | Window({content, _}) when content == target => Empty
-  | Window(_) as window => window
-  | Empty => Empty
-  };
+  traverse(tree) |> Option.value(~default=empty);
+};
 
 let rec layout = (x, y, width, height, tree) => {
   switch (tree) {
-  | Split(direction, children) =>
-    let startX = x;
-    let startY = y;
-    let count = max(List.length(children), 1);
-    let individualWidth = width / count;
-    let individualHeight = height / count;
+  | Split(direction, _, children) =>
+    let totalWeight =
+      children
+      |> List.filter_map(nodeWeight)
+      |> List.fold_left((+.), 0.)
+      |> max(1.);
 
-    let result =
+    (
       switch (direction) {
       | `Horizontal =>
-        List.mapi(
-          i =>
-            layout(
-              startX,
-              startY + individualHeight * i,
-              width,
-              individualHeight,
-            ),
+        let unitHeight = float(height) /. totalWeight;
+        List.fold_left(
+          ((y, acc), child) => {
+            switch (nodeSize(child)) {
+            | Weight(weight) =>
+              let height = int_of_float(unitHeight *. weight);
+              let windows = layout(x, y, width, height, child);
+              (y + height, windows @ acc);
+            }
+          },
+          (y, []),
           children,
-        )
-      | `Vertical =>
-        List.mapi(
-          i =>
-            layout(
-              startX + individualWidth * i,
-              startY,
-              individualWidth,
-              height,
-            ),
-          children,
-        )
-      };
+        );
 
-    List.concat(result);
-  | Window({content, _}) => [{content, x, y, width, height}]
-  | Empty => []
+      | `Vertical =>
+        let unitWidth = float(width) /. totalWeight;
+        List.fold_left(
+          ((x, acc), child) => {
+            switch (nodeSize(child)) {
+            | Weight(weight) =>
+              let width = int_of_float(unitWidth *. weight);
+              let windows = layout(x, y, width, height, child);
+              (x + width, windows @ acc);
+            }
+          },
+          (x, []),
+          children,
+        );
+      }
+    )
+    |> snd
+    |> List.rev;
+
+  | Window(_, id) => [{id, x, y, width, height}]
   };
 };
 
@@ -282,3 +336,49 @@ let rotateBackward = (target, tree) => {
 
   Internal.rotate(target, f, tree);
 };
+
+let resizeWindow = (direction, target, factor, node) => {
+  let rec traverse = (~parentDirection=?) =>
+    fun
+    | Split(dir, Weight(weight) as size, children) => {
+        let (result, children) =
+          List.fold_left(
+            ((accResult, accChildren), child) => {
+              let (result, node) = traverse(~parentDirection=dir, child);
+              (
+                result == `NotFound ? accResult : result,
+                [node, ...accChildren],
+              );
+            },
+            (`NotFound, []),
+            List.rev(children),
+          );
+
+        switch (result, parentDirection) {
+        | (`NotAdjusted, Some(parentDirection))
+            when parentDirection != direction => (
+            `Adjusted,
+            Split(dir, Weight(weight *. factor), children),
+          )
+
+        | _ => (result, Split(dir, size, children))
+        };
+      }
+
+    | Window(Weight(weight), id) as window when id == target =>
+      if (parentDirection == Some(direction)) {
+        (`NotAdjusted, window);
+      } else {
+        (`Adjusted, Window(Weight(weight *. factor), id));
+      }
+
+    | Window(_) as window => (`NotFound, window);
+
+  traverse(node) |> snd;
+};
+
+let rec resetWeights =
+  fun
+  | Split(direction, Weight(_), children) =>
+    Split(direction, Weight(1.), List.map(resetWeights, children))
+  | Window(_, id) => Window(Weight(1.), id);

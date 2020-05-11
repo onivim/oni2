@@ -141,7 +141,11 @@ let handlers =
       ~mapper=msg => Msg.ExtensionService(msg),
       "MainThreadExtensionService",
     ),
-    mainNotImplemented("MainThreadSCM"),
+    main(
+      ~handler=Msg.SCM.handle,
+      ~mapper=msg => Msg.SCM(msg),
+      "MainThreadSCM",
+    ),
     mainNotImplemented("MainThreadSearch"),
     mainNotImplemented("MainThreadTask"),
     mainNotImplemented("MainThreadWindow"),

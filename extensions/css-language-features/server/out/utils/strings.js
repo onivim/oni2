@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.endsWith = exports.startsWith = void 0;
 function startsWith(haystack, needle) {
     if (haystack.length < needle.length) {
         return false;

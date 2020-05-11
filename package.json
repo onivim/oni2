@@ -208,7 +208,6 @@
     "isolinear": "^3.0.0",
     "ocaml": "~4.7.0",
     "reason-sdl2": "^2.10.2020",
-    "reason-jsonrpc": "1.5.0",
     "reason-libvim": "onivim/reason-libvim#2493884",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#ae1fd34",
     "reasonFuzz": "*",
@@ -233,7 +232,8 @@
     "@opam/luv": "~0.5.1",
     "@opam/fs": "*",
     "@opam/fp": "*",
-    "@opam/dir": "*"
+    "@opam/dir": "*",
+    "@opam/markup": "^0.8.2"
   },
   "resolutions": {
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
@@ -248,10 +248,9 @@
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#b17ce17",
     "revery-terminal": "revery-ui/revery-terminal#4e8ca1c",
-    "@opam/conf-pkg-config": "1.1",
-    "@opam/fs": "facebookexperimental/reason-native:fs.opam#bb80cbc",
-    "@opam/fp": "facebookexperimental/reason-native:fp.opam#bb80cbc",
-    "@opam/dir": "facebookexperimental/reason-native:dir.opam#bb80cbc"
+    "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
+    "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
+    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"
   },
   "devDependencies": {
     "ocaml": "~4.9",

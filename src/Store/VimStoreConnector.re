@@ -525,15 +525,36 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _ = Vim.command("e oni://Welcome");
-      hasInitialized := true;
 
-      let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
-      dispatch(
-        Actions.BufferRenderer(
-          BufferRenderer.RendererAvailable(bufferId, BufferRenderer.Welcome),
-        ),
-      );
+      if (Core.BuildInfo.commitId == Persistence.Global.version()) {
+        let _ = Vim.command("e oni://Welcome");
+        hasInitialized := true;
+
+        let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              bufferId,
+              BufferRenderer.Welcome,
+            ),
+          ),
+        );
+      } else {
+        let _ = Vim.command("e oni://UpdateChangelog");
+        hasInitialized := true;
+
+        let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              bufferId,
+              BufferRenderer.UpdateChangelog({
+                since: Persistence.Global.version(),
+              }),
+            ),
+          ),
+        );
+      };
     });
 
   let currentBufferId: ref(option(int)) = ref(None);
@@ -1140,20 +1161,19 @@ let start =
         copyActiveFilepathToClipboardEffect,
       )
 
-    | VimDirectoryChanged(directory) =>
+    | VimDirectoryChanged(workingDirectory) =>
       let newState = {
         ...state,
-        workspace:
-          Some({
-            workingDirectory: directory,
-            rootName: Filename.basename(directory),
-          }),
+        workspace: {
+          workingDirectory,
+          rootName: Filename.basename(workingDirectory),
+        },
       };
       (
         newState,
         Isolinear.Effect.batch([
           FileExplorerStore.Effects.load(
-            directory,
+            workingDirectory,
             state.languageInfo,
             state.iconTheme,
             state.configuration,

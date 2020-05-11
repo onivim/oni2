@@ -18,10 +18,11 @@ let kindToJson = kind => `Int(kindToInt(kind));
 
 let to_yojson = ({triggerKind, triggerCharacter}) => {
   let kindJson = kindToJson(triggerKind);
-  let characterJson =
-    switch (triggerCharacter) {
-    | None => `Null
-    | Some(v) => `String(v)
-    };
-  `Assoc([("triggerKind", kindJson), ("triggerCharacter", characterJson)]);
+  switch (triggerCharacter) {
+  | None =>
+    // If no trigger character - don't send at all.
+    `Assoc([("triggerKind", kindJson)])
+  | Some(v) =>
+    `Assoc([("triggerKind", kindJson), ("triggerCharacter", `String(v))])
+  };
 };

@@ -75,7 +75,7 @@ type t = {
   textContentProviders: list((int, string)),
 };
 
-let initial = (~getUserSettings, ~contributedCommands) => {
+let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
   buffers: Buffers.empty,
   bufferHighlights: BufferHighlights.initial,
   bufferRenderers: BufferRenderers.initial,
@@ -123,7 +123,7 @@ let initial = (~getUserSettings, ~contributedCommands) => {
   windowTitle: "",
   windowIsFocused: true,
   windowIsMaximized: false,
-  workspace: Workspace.initial,
+  workspace: Workspace.initial(workingDirectory),
   fileExplorer: FileExplorer.initial,
   zenMode: false,
   pane: Pane.initial,
