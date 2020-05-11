@@ -174,6 +174,8 @@ module Sub = {
       let update = (~params, ~state, ~dispatch) => {
         let currentVisibleRanges = state.visibleRanges;
 
+        // TODO: Check if ranges are different, and if they are, send an update to the syntax server!
+
         {lastVisibleRanges: params.visibleRanges};
       };
 
