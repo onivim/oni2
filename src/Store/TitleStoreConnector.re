@@ -93,7 +93,7 @@ module Effects = {
     });
 };
 
-let start = (setTitle, maximize) => {
+let start = (setTitle, maximize, minimize) => {
   let _lastTitle = ref("");
 
   let internalSetTitleEffect = title =>
@@ -105,8 +105,23 @@ let start = (setTitle, maximize) => {
       }
     );
 
-  let internalMaximizeEffect =
-    Isolinear.Effect.create(~name="maximize", () => maximize());
+  let internalDoubleClickEffect =
+    Isolinear.Effect.create(~name="maximize", () =>
+      switch (Revery.Environment.os) {
+      | Mac =>
+        let ic =
+          Unix.open_process_in(
+            "defaults read 'Apple Global Domain' AppleActionOnDoubleClick",
+          );
+        let operation = input_line(ic);
+        switch (operation) {
+        | "Maximize" => maximize()
+        | "Minimize" => minimize()
+        | _ => ()
+        };
+      | _ => ()
+      }
+    );
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
@@ -123,7 +138,7 @@ let start = (setTitle, maximize) => {
         {...state, windowTitle: title},
         internalSetTitleEffect(title),
       )
-    | TitleDoubleClicked => (state, internalMaximizeEffect)
+    | TitleDoubleClicked => (state, internalDoubleClickEffect)
 
     | _ => (state, Isolinear.Effect.none)
     };
