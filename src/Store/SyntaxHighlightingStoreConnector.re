@@ -81,14 +81,6 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
   let updater = (state: Model.State.t, action) => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
-    | Model.Actions.Syntax(Feature_Syntax.ServerStopped) => (
-        {...state, syntaxClient: None},
-        Isolinear.Effect.none,
-      )
-    | Model.Actions.Syntax(Feature_Syntax.ServerStarted(client)) => (
-        {...state, syntaxClient: Some(client)},
-        Isolinear.Effect.none,
-      )
     // When there is a buffer update, send it over to the syntax highlight
     // strategy to handle the parsing.
     | Model.Actions.BufferUpdate({update, newBuffer, _}) =>
@@ -129,7 +121,9 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
               state.syntaxHighlights;
             };
 
-          (
+          // TODO: Bring back in different form
+          (state, Isolinear.Effect.none);
+          /*(
             {...state, syntaxHighlights},
             Service_Syntax.Effect.bufferUpdate(
               state.syntaxClient,
@@ -138,7 +132,7 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
               Some(scope),
             )
             |> mapUnitEffect,
-          );
+          );*/
         };
       };
     | _ => default

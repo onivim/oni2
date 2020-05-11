@@ -16,8 +16,8 @@ type msg =
   | ServerFailedToStart(string)
   | ServerStopped
   | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
-  | BufferUpdated([@opaque] BufferUpdate.t)
-  | Service(Service_Syntax.serverMsg);
+  | BufferUpdated([@opaque] BufferUpdate.t);
+//  | Service(Service_Syntax.serverMsg);
 
 type outmsg =
   | Nothing

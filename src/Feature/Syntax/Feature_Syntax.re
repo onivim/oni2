@@ -39,19 +39,21 @@ type msg =
   | ServerFailedToStart(string)
   | ServerStopped
   | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
-  | BufferUpdated([@opaque] BufferUpdate.t)
-  | Service(Service_Syntax.serverMsg);
+  | BufferUpdated([@opaque] BufferUpdate.t);
+//  | Service(Service_Syntax.serverMsg);
 
 type outmsg =
   | Nothing
   | ServerError(string);
 
 type t = {
+  syntaxClient: option(Oni_Syntax_Client.t),
   highlights: BufferMap.t(LineMap.t(list(ColorizedToken.t))),
   ignoredBuffers: BufferMap.t(bool),
 };
 
-let empty = {ignoredBuffers: BufferMap.empty, highlights: BufferMap.empty};
+let empty = {ignoredBuffers: BufferMap.empty, highlights: BufferMap.empty,
+syntaxClient: None};
 
 let noTokens = [];
 
@@ -90,7 +92,7 @@ let setTokensForLine =
       ~bufferId: int,
       ~line: int,
       ~tokens: list(ColorizedToken.t),
-      {highlights, ignoredBuffers}: t,
+      {highlights, ignoredBuffers} as prev: t,
     ) => {
   let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {
     LineMap.update(line, _ => Some(tokens), lineMap);
@@ -104,7 +106,7 @@ let setTokensForLine =
       | Some(v) => Some(updateLineMap(v)),
       highlights,
     );
-  {ignoredBuffers, highlights};
+  {...prev, ignoredBuffers, highlights};
 };
 
 let setTokens = (tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
@@ -168,10 +170,10 @@ let update: (t, msg) => (t, outmsg) =
         Nothing,
       )
     | ServerFailedToStart(msg) => (highlights, ServerError(msg))
-    | ServerStarted(_client) => (highlights, Nothing)
-    | ServerStopped => (highlights, Nothing)
+    | ServerStarted(client) => ({ ...highlights, syntaxClient: Some(client)}, Nothing)
+    | ServerStopped => ({ ...highlights, syntaxClient: None }, Nothing)
     | BufferUpdated(_update) => (highlights, Nothing)
-    | Service(_) => (highlights, Nothing)
+    //| Service(_) => (highlights, Nothing)
     };
 
 let subscription =
