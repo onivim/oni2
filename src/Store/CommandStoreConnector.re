@@ -109,7 +109,7 @@ let start = () => {
   let openChangelogEffect = _ =>
     Isolinear.Effect.createWithDispatch(~name="oni.changelog", dispatch => {
       Vim.init();
-      let _: unit = Vim.command("e oni://Changelog");
+      let _: Vim.Context.t = Vim.command("e oni://Changelog");
 
       let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
       dispatch(
