@@ -208,7 +208,6 @@
     "isolinear": "^3.0.0",
     "ocaml": "~4.7.0",
     "reason-sdl2": "^2.10.2020",
-    "reason-jsonrpc": "1.5.0",
     "reason-libvim": "*",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#ae1fd34",
     "reasonFuzz": "*",
@@ -233,7 +232,8 @@
     "@opam/luv": "~0.5.1",
     "@opam/fs": "*",
     "@opam/fp": "*",
-    "@opam/dir": "*"
+    "@opam/dir": "*",
+    "@opam/markup": "^0.8.2"
   },
   "resolutions": {
     "@esy-ocaml/libffi": "onivim/libffi#590b041",

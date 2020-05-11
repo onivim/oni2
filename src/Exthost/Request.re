@@ -1,5 +1,6 @@
 module ExtConfig = Configuration;
 open Oni_Core;
+
 module Commands = {
   let executeContributedCommand = (~arguments, ~command, client) => {
     Client.notify(
@@ -22,6 +23,80 @@ module Configuration = {
           configuration |> encode_value(ExtConfig.encode),
           changed |> encode_value(ExtConfig.Model.encode),
         ]),
+      client,
+    );
+  };
+};
+
+module Decorations = {
+  type request = {
+    id: int,
+    handle: int,
+    uri: Uri.t,
+  };
+
+  module Encode = {
+    let request = request =>
+      Json.Encode.(
+        obj([
+          ("id", request.id |> int),
+          ("handle", request.handle |> int),
+          ("uri", request.uri |> Uri.encode),
+        ])
+      );
+  };
+
+  type decoration = {
+    priority: int,
+    bubble: bool,
+    title: string,
+    letter: string,
+    color: ThemeColor.t,
+  };
+
+  module Decode = {
+    let decoration =
+      Json.Decode.(
+        Pipeline.(
+          decode((priority, bubble, title, letter, color) =>
+            {priority, bubble, title, letter, color}
+          )
+          |> custom(index(0, int))
+          |> custom(index(1, bool))
+          |> custom(index(2, string))
+          |> custom(index(3, string))
+          |> custom(index(4, ThemeColor.decode))
+        )
+      );
+
+    let reply =
+      Json.Decode.(
+        key_value_pairs(decoration)
+        |> map(items =>
+             List.fold_left(
+               (acc, (id, decoration)) => {
+                 let id = int_of_string(id);
+                 IntMap.add(id, decoration, acc);
+               },
+               IntMap.empty,
+               items,
+             )
+           )
+      );
+  };
+
+  type reply = IntMap.t(decoration);
+
+  let provideDecorations = (~requests, client) => {
+    let requestItems =
+      requests |> List.map(Json.Encode.encode_value(Encode.request));
+
+    Client.request(
+      ~decoder=Decode.reply,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostDecorations",
+      ~method="$provideDecorations",
+      ~args=`List([`List(requestItems)]),
       client,
     );
   };
@@ -119,8 +194,21 @@ module LanguageFeatures = {
         ~context: CompletionContext.t,
         client,
       ) => {
+    // It's possible to get a null result from completion providers,
+    // so we need to handle that here - we just treat it as an
+    // empty set of suggestions.
+    let decoder =
+      Json.Decode.(
+        nullable(SuggestResult.decode)
+        |> map(
+             fun
+             | Some(suggestResult) => suggestResult
+             | None => SuggestResult.empty,
+           )
+      );
+
     Client.request(
-      ~decoder=SuggestResult.decode,
+      ~decoder,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideCompletionItems",
@@ -139,7 +227,7 @@ module LanguageFeatures = {
     let provideDefinitionLink =
         (~handle, ~resource, ~position, method, client) => {
       Client.request(
-        ~decoder=Json.Decode.(list(Location.decode)),
+        ~decoder=Json.Decode.(list(DefinitionLink.decode)),
         ~usesCancellationToken=true,
         ~rpcName="ExtHostLanguageFeatures",
         ~method,
@@ -231,6 +319,29 @@ module LanguageFeatures = {
   };
 };
 
+module SCM = {
+  let provideOriginalResource = (~handle, ~uri, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(maybe(Uri.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostSCM",
+      ~method="$provideOriginalResource",
+      ~args=`List([`Int(handle), Uri.to_yojson(uri)]),
+      client,
+    );
+  };
+
+  let onInputBoxValueChange = (~handle, ~value, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostSCM",
+      ~method="$onInputBoxValueChange",
+      ~args=`List([`Int(handle), `String(value)]),
+      client,
+    );
+  };
+};
+
 module TerminalService = {
   let spawnExtHostProcess =
       (
@@ -289,7 +400,7 @@ module TerminalService = {
 module Workspace = {
   let initializeWorkspace = (~workspace, client) => {
     let json =
-      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+      Json.Encode.(encode_value(nullable(WorkspaceData.encode), workspace));
 
     Client.notify(
       ~rpcName="ExtHostWorkspace",
@@ -300,7 +411,7 @@ module Workspace = {
   };
   let acceptWorkspaceData = (~workspace, client) => {
     let json =
-      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+      Json.Encode.(encode_value(nullable(WorkspaceData.encode), workspace));
 
     Client.notify(
       ~rpcName="ExtHostWorkspace",

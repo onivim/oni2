@@ -36,10 +36,10 @@ module Environment = {
   type t = {
     isExtensionDevelopmentDebug: bool,
     appName: string,
+    appLanguage: string,
     // TODO
     /*
      appRoot: option(Uri.t),
-     appLanguage: string,
      appUriScheme: string,
      appSettingsHome: option(Uri.t),
      globalStorageHome: Uri.t,
@@ -53,6 +53,8 @@ module Environment = {
   let default = {
     isExtensionDevelopmentDebug: false,
     appName: "reason-vscode-exthost",
+    // TODO - INTL: Get proper user language
+    appLanguage: "en-US",
   };
 };
 
@@ -69,6 +71,18 @@ module Remote = {
 };
 
 [@deriving (show, yojson({strict: false}))]
+module TelemetryInfo = {
+  [@deriving (show, yojson({strict: false}))]
+  type t = {
+    sessionId: int,
+    machineId: int,
+    instanceId: int,
+  };
+
+  let default = {sessionId: 0, machineId: 0, instanceId: 0};
+};
+
+[@deriving (show, yojson({strict: false}))]
 type t = {
   version: string,
   parentPid: int,
@@ -81,6 +95,7 @@ type t = {
   logFile: Uri.t,
   autoStart: bool,
   remote: Remote.t,
+  telemetryInfo: TelemetryInfo.t,
 };
 
 let create =
@@ -93,6 +108,7 @@ let create =
       ~logLevel=0,
       ~autoStart=true,
       ~remote=Remote.default,
+      ~telemetryInfo=TelemetryInfo.default,
       extensions,
     ) => {
   version,
@@ -106,4 +122,5 @@ let create =
   logFile,
   autoStart,
   remote,
+  telemetryInfo,
 };

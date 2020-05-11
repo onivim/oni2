@@ -46,8 +46,8 @@ suite('Completions', () => {
         }
     }
     test('CSS url() Path completion', function () {
-        let testUri = vscode_uri_1.default.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
-        let folders = [{ name: 'x', uri: vscode_uri_1.default.file(path.resolve(__dirname, '../../test')).toString() }];
+        let testUri = vscode_uri_1.URI.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
+        let folders = [{ name: 'x', uri: vscode_uri_1.URI.file(path.resolve(__dirname, '../../test')).toString() }];
         assertCompletions('html { background-image: url("./|")', {
             items: [
                 { label: 'about.html', resultText: 'html { background-image: url("./about.html")' }
@@ -96,8 +96,8 @@ suite('Completions', () => {
         }, testUri, folders);
     });
     test('CSS url() Path Completion - Unquoted url', function () {
-        let testUri = vscode_uri_1.default.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
-        let folders = [{ name: 'x', uri: vscode_uri_1.default.file(path.resolve(__dirname, '../../test')).toString() }];
+        let testUri = vscode_uri_1.URI.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
+        let folders = [{ name: 'x', uri: vscode_uri_1.URI.file(path.resolve(__dirname, '../../test')).toString() }];
         assertCompletions('html { background-image: url(./|)', {
             items: [
                 { label: 'about.html', resultText: 'html { background-image: url(./about.html)' }
@@ -120,8 +120,8 @@ suite('Completions', () => {
         }, testUri, folders);
     });
     test('CSS @import Path completion', function () {
-        let testUri = vscode_uri_1.default.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
-        let folders = [{ name: 'x', uri: vscode_uri_1.default.file(path.resolve(__dirname, '../../test')).toString() }];
+        let testUri = vscode_uri_1.URI.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
+        let folders = [{ name: 'x', uri: vscode_uri_1.URI.file(path.resolve(__dirname, '../../test')).toString() }];
         assertCompletions(`@import './|'`, {
             items: [
                 { label: 'about.html', resultText: `@import './about.html'` },
@@ -140,8 +140,8 @@ suite('Completions', () => {
      * For SCSS, `@import 'foo';` can be used for importing partial file `_foo.scss`
      */
     test('SCSS @import Path completion', function () {
-        let testCSSUri = vscode_uri_1.default.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
-        let folders = [{ name: 'x', uri: vscode_uri_1.default.file(path.resolve(__dirname, '../../test')).toString() }];
+        let testCSSUri = vscode_uri_1.URI.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
+        let folders = [{ name: 'x', uri: vscode_uri_1.URI.file(path.resolve(__dirname, '../../test')).toString() }];
         /**
          * We are in a CSS file, so no special treatment for SCSS partial files
         */
@@ -151,7 +151,7 @@ suite('Completions', () => {
                 { label: '_foo.scss', resultText: `@import '../scss/_foo.scss'` }
             ]
         }, testCSSUri, folders);
-        let testSCSSUri = vscode_uri_1.default.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/scss/main.scss')).toString();
+        let testSCSSUri = vscode_uri_1.URI.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/scss/main.scss')).toString();
         assertCompletions(`@import './|'`, {
             items: [
                 { label: '_foo.scss', resultText: `@import './foo'` }
@@ -159,8 +159,8 @@ suite('Completions', () => {
         }, testSCSSUri, folders, 'scss');
     });
     test('Completion should ignore files/folders starting with dot', function () {
-        let testUri = vscode_uri_1.default.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
-        let folders = [{ name: 'x', uri: vscode_uri_1.default.file(path.resolve(__dirname, '../../test')).toString() }];
+        let testUri = vscode_uri_1.URI.file(path.resolve(__dirname, '../../test/pathCompletionFixtures/about/about.css')).toString();
+        let folders = [{ name: 'x', uri: vscode_uri_1.URI.file(path.resolve(__dirname, '../../test')).toString() }];
         assertCompletions('html { background-image: url("../|")', {
             count: 4
         }, testUri, folders);

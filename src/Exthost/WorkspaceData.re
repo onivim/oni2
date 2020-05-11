@@ -56,7 +56,23 @@ let encode = workspace =>
       ("folders", workspace.folders |> list(Folder.encode)),
       ("id", workspace.id |> string),
       ("name", workspace.name |> string),
-      ("configuration", workspace.configuration |> option(Uri.encode)),
+      ("configuration", workspace.configuration |> nullable(Uri.encode)),
       ("isUntitled", workspace.isUntitled |> bool),
     ])
   );
+
+let fromUri = (~name, ~id, uri) => {
+  id,
+  name,
+  folders: [{uri, name, index: 0}],
+  isUntitled: false,
+  configuration: None,
+};
+
+let fromPath = path => {
+  id: path,
+  name: path,
+  configuration: None,
+  isUntitled: false,
+  folders: [{uri: Uri.fromPath(path), name: path, index: 0}],
+};

@@ -1,0 +1,136 @@
+<changelog>
+  <commit type="refactor" scope="exthost" hash="6ebe03ca" pr=1736 time=1588875205>
+    V2 - SCM - Port over SCM types / messages / requests
+  </commit>
+  <commit type="chore" scope="ci" hash="36eb8e81" pr=1738 time=1588873083>
+    Remove integration test clean-up (#1738)
+  </commit>
+  <commit hash="4b1479e0" pr=1734 time=1588865086>
+    refactor(exthost) - V2 - Decorations API
+  </commit>
+  <commit type="fix" scope="extensions" issue="1729" hash="b3e7fbbf" pr=1737 time=1588861553>
+    some gitlens regex patterns failed to parse
+    
+    <breaking>As this switches to a different regex engine, there's a chance that it might break other extension regexes.</breaking>
+  </commit>
+  <commit type="docs" hash="5822aaea" pr=1718 time=1588861510>
+    add changelog conventions to contribution guidelines (#1718)
+  </commit>
+  <commit type="fix" scope="extensions" issue="1729" hash="209ee404" pr=null time=1588837785>
+    don't crash if unable to parse regex
+  </commit>
+  <commit hash="6be50cf6" pr=1735 time=1588817417>
+    fix(exthost) - Handle acknowledged message type
+  </commit>
+  <commit hash="e4c56568" pr=1732 time=1588814866>
+    refactor(exthost) - V2 - SCM - Remove unused SCMRawResource properties
+  </commit>
+  <commit hash="c8fa1db0" pr=1727 time=1588809875>
+    refactor(exthost) - V2 - API - acceptConfiguration
+  </commit>
+  <commit hash="a0facccc" pr=1731 time=1588802210>
+    refactor(exthost) - V2 - use decoder for parsing
+  </commit>
+  <commit type="feat" scope="workspace" hash="3ce31076" pr=1668 time=1588790811>
+    window/split resizing, part 1 - basic functionality and commands
+  </commit>
+  <commit type="chore" hash="8556a5db" pr=1726 time=1588783526>
+    remove pkg-config workaround (#1726)
+  </commit>
+  <commit hash="ea1e82b4" pr=1725 time=1588775668>
+    refactor(exthost) - V2 - API - provideDocumentSymbols
+  </commit>
+  <commit hash="12952612" pr=1724 time=1588729527>
+    refactor(exthost) - v2 - API - reference provider
+  </commit>
+  <commit hash="c609e7c2" pr=1723 time=1588723287>
+    refactor(exhost) - v2 - API - provideDocumentHighlights
+  </commit>
+  <commit type="refactor" scope="exthost" hash="68a54e99" pr=1710 time=1588711111>
+    port definition provider to v2
+  </commit>
+  <commit type="feat" scope="workspace" issue="640" hash="9aac90b2" pr=1703 time=1588705176>
+    <breaking>
+      Oni2 will no longer open the working directory if no argument is passed. Instead you need to supply `.` 
+    </breaking>
+    
+    persistence infrastructure + persist workspace and window state
+    
+    Persists the last used version, the last opened workspace path and the window position and size for
+    each workspace.
+    
+    If no file or folder argument is given, the last workspace path will be opened. Or, if this is the first time
+    Oni2 is launched, open the Documents folder if possible, or fall back to the home folder if not.
+  </commit>
+  <commit type="perf" scope="terminal" hash="5c7d1971" pr=1689 time=1588694990>
+    input regression
+  </commit>
+  <commit type="feat" scope="other" issue="1631" hash="92bab00d" pr=1717 time=1588630193>
+    correct double click behavior on macOS (maximize)
+  </commit>
+  <commit type="feat" scope="Extension Host" hash="4edce141" pr=1709 time=1588627097>
+    Workspace APIs
+  </commit>
+  <commit type="refactor" scope="exthost" hash="89236cac" pr=1711 time=1588617053>
+    v2 - API - provideTextDocumentContent
+  </commit>
+  <commit type="chore" scope="dependency" hash="ea560d1d" pr=1714 time=1588519632>
+    add fs, fp, dir
+  </commit>
+  <commit type="fix" scope="search" issue="1693" hash="4b76ab42" pr=1713 time=1588516594>
+    closing the search pane doesn't "defocus it"
+  </commit>
+  <commit type="chore" scope="dependency" hash="996f6b48" pr=1712 time=1588503999>
+    revery -> 7853ddb
+  </commit>
+  <commit type="refactor" scope="exthost" hash="33790f4e" pr=1706 time=1588448480>
+    v2 - API - completion
+  </commit>
+  <commit type="fix" scope="file-explorer" issue="873" hash="cf6af66d" pr=1705 time=1588433491>
+    exit zen mode when toggling explorer
+  </commit>
+  <commit type="fix" scope="vim" hash="3890823d" pr=1704 time=1588433444>
+    linewise clipboard paste (yyp)
+  </commit>
+  <commit type="refactor" scope="exthost" hash="b3be9160" pr=1702 time=1588373057>
+    API - ExtHostDocuments: Document edit / update
+  </commit>
+  <commit type="refactor" scope="exthost" hash="ef4c6b33" pr=1701 time=1588357323>
+    move handlers to Msg module
+  </commit>
+  <commit type="chore" scope="dependency" hash="670657c4" pr=1700 time=1588345462>
+    esy-skia -> d60e5fe
+  </commit>
+  <commit type="fix" scope="workspace" hash="ccb322ff" pr=1699 time=1588343021>
+    broken save command
+  </commit>
+  <commit type="refactor" scope="exthost" hash="9838721d" pr=1697 time=1588341199>
+    DocumentContentProvider, Decorations, Diagnostics
+  </commit>
+  <commit type="fix" scope="vim" issue="1671" hash="7c6f4a78" pr=1685 time=1588298351>
+    buffer loses unsaved changes when switching
+  </commit>
+  <commit type="chore" scope="ci" hash="bc2ac4d2" pr=1698 time=1588298337>
+    Linux (CentOS) - remove cleanup prior to tests
+  </commit>
+  <commit type="chore" scope="dependency" hash="25539c48" pr=1696 time=1588294522>
+    revery -> 9f725e0
+  </commit>
+  <commit type="fix" scope="vim" issue="660" hash="ac39e58c" pr=1694 time=1588287421>
+    clipboard - specify character mode when not multiple lines
+  </commit>
+  <commit type="chore" hash="a6506982" pr=1690 time=1588262364>
+    Dependency: ocaml -> 4.9
+  </commit>
+  <commit type="fix" scope="configuration" hash="5d4c99a9" pr=1623 time=1588257227>
+    <breaking>
+      On Windows, git-bash, powershell-core and perhaps others now correctly
+      loads the config from %LOCALAPPDATA% instead of $HOME
+    </breaking>
+        
+    Always load Windows config from %LOCALAPPDATA% 
+  </commit>
+  <commit hash="2e704922" pr=1676 time=588206100>
+    Fix #1578 - Terminal command + args configuration settings
+  </commit>
+</changelog>

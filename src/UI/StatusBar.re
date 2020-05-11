@@ -26,6 +26,8 @@ module Editor = Feature_Editor.Editor;
 
 module Colors = Feature_Theme.Colors;
 
+open Exthost.Msg.StatusBar;
+
 module Styles = {
   open Style;
 
@@ -281,13 +283,13 @@ let%component make =
 
   let leftItems =
     state.statusBar
-    |> List.filter((item: Item.t) => item.alignment == Alignment.Left)
+    |> List.filter((item: Item.t) => item.alignment == Left)
     |> List.map(toStatusBarElement)
     |> React.listToElement;
 
   let rightItems =
     state.statusBar
-    |> List.filter((item: Item.t) => item.alignment == Alignment.Right)
+    |> List.filter((item: Item.t) => item.alignment == Right)
     |> List.map(toStatusBarElement)
     |> React.listToElement;
 

@@ -20,6 +20,7 @@ let noopErrorHandler = _ => ();
 
 let startWithExtensions =
     (
+      ~rootPath=Rench.Path.join(Sys.getcwd(), "test/collateral/extensions"),
       ~initialConfiguration=Exthost.Configuration.empty,
       ~pid=Luv.Pid.getpid(),
       ~handler=noopHandler,
@@ -39,10 +40,8 @@ let startWithExtensions =
     handler(msg);
   };
 
-  Timber.App.enable();
-  Timber.App.setLevel(Timber.Level.trace);
-
-  let rootPath = Rench.Path.join(Sys.getcwd(), "test/collateral/extensions");
+  //  Timber.App.enable();
+  //  Timber.App.setLevel(Timber.Level.trace);
 
   let extensions =
     extensions
@@ -89,11 +88,7 @@ let startWithExtensions =
     processHasExited := true;
   };
 
-  let extHostScriptPath =
-    Rench.Path.join(
-      Sys.getcwd(),
-      "test/collateral/exthost/node_modules/@onivim/vscode-exthost/out/bootstrap-fork.js",
-    );
+  let extHostScriptPath = Setup.getNodeExtensionHostPath(Setup.init());
 
   let extensionProcess =
     Node.spawn(

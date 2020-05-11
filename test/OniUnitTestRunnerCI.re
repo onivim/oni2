@@ -61,11 +61,9 @@ Exthost_Transport_Test.TestFramework.run(
   ),
 );
 
-// TODO: Bring this back once the 'exthost' upgrade is complete
-// In the meantime, run 'esy @test exthost'
-//Exthost_Test.TestFramework.run(
-//  Rely.RunConfig.withReporters(
-//    [Default, JUnit("./junit.xml")],
-//    Rely.RunConfig.initialize(),
-//  ),
-//);
+Exthost_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);

@@ -193,6 +193,7 @@ module InitData: {
     type t = {
       isExtensionDevelopmentDebug: bool,
       appName: string,
+      appLanguage: string,
       // TODO
       /*
        appRoot: option(Types.Uri.t),
@@ -222,6 +223,18 @@ module InitData: {
   };
 
   [@deriving (show, yojson({strict: false}))]
+  module TelemetryInfo: {
+    [@deriving (show, yojson({strict: false}))]
+    type t = {
+      sessionId: int,
+      machineId: int,
+      instanceId: int,
+    };
+
+    let default: t;
+  };
+
+  [@deriving (show, yojson({strict: false}))]
   type t = {
     version: string,
     parentPid: int,
@@ -234,6 +247,7 @@ module InitData: {
     logFile: Oni_Core.Uri.t,
     autoStart: bool,
     remote: Remote.t,
+    telemetryInfo: TelemetryInfo.t,
   };
 
   let create:
@@ -246,6 +260,7 @@ module InitData: {
       ~logLevel: int=?,
       ~autoStart: bool=?,
       ~remote: Remote.t=?,
+      ~telemetryInfo: TelemetryInfo.t=?,
       list(Extension.t)
     ) =>
     t;

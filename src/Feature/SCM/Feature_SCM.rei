@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Extensions;
 
 // MODEL
 
@@ -11,7 +10,7 @@ module Resource: {
   type t = {
     handle: int,
     uri: Uri.t,
-    icons: list(string),
+    //    icons: Exthost.SCM.Resource.Icons.t,
     tooltip: string,
     strikeThrough: bool,
     faded: bool,
@@ -53,7 +52,7 @@ let initial: model;
 
 module Effects: {
   let getOriginalUri:
-    (ExtHostClient.t, model, string, Uri.t => 'msg) =>
+    (Exthost.Client.t, model, string, Uri.t => 'msg) =>
     Isolinear.Effect.t('msg);
 };
 
@@ -69,10 +68,10 @@ type outmsg =
   | Focus
   | Nothing;
 
-let update: (ExtHostClient.t, model, msg) => (model, outmsg);
+let update: (Exthost.Client.t, model, msg) => (model, outmsg);
 
 let handleExtensionMessage:
-  (~dispatch: msg => unit, ExtHostClient.SCM.msg) => unit;
+  (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;
 
 // VIEW
 

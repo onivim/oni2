@@ -525,15 +525,36 @@ let start =
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
-      let _: Vim.Context.t = Vim.command("e oni://Welcome");
-      hasInitialized := true;
 
-      let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
-      dispatch(
-        Actions.BufferRenderer(
-          BufferRenderer.RendererAvailable(bufferId, BufferRenderer.Welcome),
-        ),
-      );
+      if (Core.BuildInfo.commitId == Persistence.Global.version()) {
+        let _ = Vim.command("e oni://Welcome");
+        hasInitialized := true;
+
+        let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              bufferId,
+              BufferRenderer.Welcome,
+            ),
+          ),
+        );
+      } else {
+        let _ = Vim.command("e oni://UpdateChangelog");
+        hasInitialized := true;
+
+        let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              bufferId,
+              BufferRenderer.UpdateChangelog({
+                since: Persistence.Global.version(),
+              }),
+            ),
+          ),
+        );
+      };
     });
 
   let updateActiveEditorCursors = cursors => {

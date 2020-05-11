@@ -1,7 +1,7 @@
 open Exthost_Transport;
 open Exthost_Extension;
 
-module Log = (val Timber.Log.withNamespace("Transport"));
+module Log = (val Timber.Log.withNamespace("Exthost.Protocol"));
 
 module ByteParser = {
   exception UInt32ConversionException;
@@ -160,10 +160,10 @@ module Message = {
   let acknowledged = 5;
   //  let cancel = 6;
   let replyOkEmpty = 7;
-  //  let replyOkBuffer = 8;
+  let replyOkBuffer = 8;
   let replyOkJSON = 9;
   let replyErrError = 10;
-  //  let replyErrEmpty = 11;
+  let replyErrEmpty = 11;
 
   let ofPacket: Packet.t => result(Incoming.t, string) =
     (packet: Packet.t) => {
@@ -221,10 +221,15 @@ module Message = {
             Ok(ReplyOk({requestId, payload: Empty}));
           } else if (messageType == acknowledged) {
             Ok(Acknowledged({requestId: requestId}));
+          } else if (messageType == replyOkBuffer) {
+            let (msg, _bytes) = ByteParser.readLongString(bytes);
+            Ok(ReplyOk({requestId, payload: Bytes(Bytes.of_string(msg))}));
           } else if (messageType == replyOkJSON) {
             let (msg, _bytes) = ByteParser.readLongString(bytes);
             let json = msg |> Yojson.Safe.from_string;
             Ok(ReplyOk({requestId, payload: Json(json)}));
+          } else if (messageType == replyErrEmpty) {
+            Ok(ReplyError({requestId, payload: Empty}));
           } else if (messageType == replyErrError) {
             let (msg, _bytes) = ByteParser.readLongString(bytes);
             Ok(ReplyError({requestId, payload: Message(msg)}));
@@ -280,11 +285,9 @@ module Message = {
       let bytes = Bytes.make(1, Char.chr(3));
       Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
     | Initialize({initData, _}) =>
-      let bytes =
-        initData
-        |> InitData.to_yojson
-        |> Yojson.Safe.to_string
-        |> Bytes.of_string;
+      let str = initData |> InitData.to_yojson |> Yojson.Safe.to_string;
+
+      let bytes = str |> Bytes.of_string;
 
       Packet.create(~bytes, ~packetType=Packet.Regular, ~id=packetId);
     | RequestJSONArgs({rpcId, method, args, usesCancellationToken, _}) =>
