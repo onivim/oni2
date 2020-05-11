@@ -114,18 +114,22 @@ let start = (setTitle, maximize, minimize) => {
     );
 
   let internalDoubleClickEffect =
-    Isolinear.Effect.create(~name="maximize", () => switch (Revery.Environment.os) {
-      | Mac => {
-        let ic = Unix.open_process_in("defaults read 'Apple Global Domain' AppleActionOnDoubleClick");
+    Isolinear.Effect.create(~name="maximize", () =>
+      switch (Revery.Environment.os) {
+      | Mac =>
+        let ic =
+          Unix.open_process_in(
+            "defaults read 'Apple Global Domain' AppleActionOnDoubleClick",
+          );
         let operation = input_line(ic);
         switch (operation) {
-          | "Maximize" => maximize()
-          | "Minimize" => minimize()
-          | _ => ()
-        }
-      }
+        | "Maximize" => maximize()
+        | "Minimize" => minimize()
+        | _ => ()
+        };
       | _ => ()
-    });
+      }
+    );
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {

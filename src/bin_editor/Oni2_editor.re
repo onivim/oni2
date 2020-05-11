@@ -176,7 +176,7 @@ if (cliOptions.syntaxHighlightService) {
 
     let minimize = () => {
       Window.minimize(w);
-    }
+    };
 
     let setVsync = vsync => Window.setVsync(w, vsync);
 
