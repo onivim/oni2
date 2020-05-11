@@ -190,17 +190,18 @@ let start =
     ]);
 
   let subscriptions = (state: Model.State.t) => {
-    let syntaxSubscription = shouldSyntaxHighlight
-    && !state.isQuitting ? 
-      Feature_Syntax.subscription(
-        ~configuration=state.configuration,
-        ~languageInfo,
-        ~setup,
-        ~tokenTheme=state.tokenTheme,
-        state.syntaxHighlights,
-      )
-      |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg))
-      : Isolinear.Sub.none;
+    let syntaxSubscription =
+      shouldSyntaxHighlight && !state.isQuitting
+        ? Feature_Syntax.subscription(
+            ~configuration=state.configuration,
+            ~languageInfo,
+            ~setup,
+            ~tokenTheme=state.tokenTheme,
+            ~bufferVisibility=[],
+            state.syntaxHighlights,
+          )
+          |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg))
+        : Isolinear.Sub.none;
 
     let terminalSubscription =
       Feature_Terminal.subscription(

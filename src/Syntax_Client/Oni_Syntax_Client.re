@@ -200,8 +200,7 @@ let healthCheck = (v: t) => {
   write(v, Protocol.ClientToServer.RunHealthCheck);
 };
 
-let notifyBufferUpdate =
-    (v: t, bufferUpdate: BufferUpdate.t) => {
+let notifyBufferUpdate = (v: t, bufferUpdate: BufferUpdate.t) => {
   ClientLog.trace("Sending bufferUpdate notification...");
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate));
 };

@@ -39,8 +39,8 @@ let update: (t, msg) => (t, outmsg);
 let ignore: (~bufferId: int, t) => t;
 
 module Effect: {
-  let bufferUpdate: (~bufferUpdate: BufferUpdate.t, t) => 
-    Isolinear.Effect.t(unit);
+  let bufferUpdate:
+    (~bufferUpdate: BufferUpdate.t, t) => Isolinear.Effect.t(unit);
 };
 
 let subscription:
@@ -49,6 +49,7 @@ let subscription:
     ~languageInfo: Oni_Extensions.LanguageInfo.t,
     ~setup: Setup.t,
     ~tokenTheme: Oni_Syntax.TokenTheme.t,
+    ~bufferVisibility: list((Buffer.t, list(Range.t))),
     t
   ) =>
   Isolinear.Sub.t(msg);

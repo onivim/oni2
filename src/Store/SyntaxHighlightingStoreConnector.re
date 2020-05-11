@@ -123,7 +123,7 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
 
           // TODO: Bring back in different form
           (state, Isolinear.Effect.none);
-          /*(
+        /*(
             {...state, syntaxHighlights},
             Service_Syntax.Effect.bufferUpdate(
               state.syntaxClient,

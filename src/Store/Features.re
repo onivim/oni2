@@ -48,10 +48,8 @@ let update =
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
   | BufferUpdate({update, _}) =>
-      let syntaxHighlights = Feature_Syntax.handleUpdate(
-        update,
-        state.syntaxHighlights,
-      );
+    let syntaxHighlights =
+      Feature_Syntax.handleUpdate(update, state.syntaxHighlights);
     let state = {...state, syntaxHighlights};
     (state, Effect.none);
 
