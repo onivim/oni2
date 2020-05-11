@@ -177,35 +177,44 @@ let update: (t, msg) => (t, outmsg) =
     };
 
 let subscription =
-    (~configuration, ~languageInfo, ~setup, ~tokenTheme, ~bufferVisibility,
-    {maybeSyntaxClient, _}) => {
-
-  let getBufferSubscriptions = (client) => {
+    (
+      ~configuration,
+      ~languageInfo,
+      ~setup,
+      ~tokenTheme,
+      ~bufferVisibility,
+      {maybeSyntaxClient, _},
+    ) => {
+  let getBufferSubscriptions = client => {
     bufferVisibility
     |> List.map(((buffer, visibleRanges)) => {
-      Service_Syntax.Sub.buffer(~client, ~buffer, ~visibleRanges)
-      |> Isolinear.Sub.map(fun
-      | Service_Syntax.ReceivedHighlights(updates) => TokensHighlighted(updates)
-      )
-    });
+         Service_Syntax.Sub.buffer(~client, ~buffer, ~visibleRanges)
+         |> Isolinear.Sub.map(
+              fun
+              | Service_Syntax.ReceivedHighlights(updates) =>
+                TokensHighlighted(updates),
+            )
+       });
   };
 
-  let bufferSubscriptions = maybeSyntaxClient
-  |> Option.map(getBufferSubscriptions)
-  |> Option.value(~default=[]);
+  let bufferSubscriptions =
+    maybeSyntaxClient
+    |> Option.map(getBufferSubscriptions)
+    |> Option.value(~default=[]);
 
-  let serverSubscription = Service_Syntax.Sub.server(
-    ~configuration,
-    ~languageInfo,
-    ~setup,
-    ~tokenTheme,
-  )
-  |> Isolinear.Sub.map(
-       fun
-       | Service_Syntax.ServerStarted(client) => ServerStarted(client)
-       | Service_Syntax.ServerFailedToStart(msg) => ServerFailedToStart(msg)
-       | Service_Syntax.ServerClosed => ServerStopped,
-     );
+  let serverSubscription =
+    Service_Syntax.Sub.server(
+      ~configuration,
+      ~languageInfo,
+      ~setup,
+      ~tokenTheme,
+    )
+    |> Isolinear.Sub.map(
+         fun
+         | Service_Syntax.ServerStarted(client) => ServerStarted(client)
+         | Service_Syntax.ServerFailedToStart(msg) => ServerFailedToStart(msg)
+         | Service_Syntax.ServerClosed => ServerStopped,
+       );
 
   Isolinear.Sub.batch([serverSubscription, ...bufferSubscriptions]);
 };
