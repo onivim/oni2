@@ -29,8 +29,7 @@ let bufferUpdate: (~bufferUpdate: BufferUpdate.t, t) => result(t, string);
 let updateTheme: (TokenTheme.t, t) => t;
 let setUseTreeSitter: (bool, t) => t;
 
-/* [updateVisibility(bufferRangeList)] sets the ranges that are visible per-buffer, which allows syntax highlight to only run necessary work */
-let updateVisibility: (list((int, list(Range.t))), t) => t;
+let updateBufferVisibility: (~bufferId: int, ~ranges: list(Range.t), t) => t;
 
 let doPendingWork: t => t;
 

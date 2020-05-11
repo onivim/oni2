@@ -95,7 +95,7 @@ let start = (~healthCheck) => {
           let res = healthCheck();
           write(Protocol.ServerToClient.HealthCheckPass(res == 0));
         }
-      | BufferEnter({bufferId, filetype, _}) => {
+      | BufferStartHighlighting({bufferId, filetype, _}) => {
           log(
             Printf.sprintf(
               "Buffer enter - id: %d filetype: %s",
@@ -135,8 +135,10 @@ let start = (~healthCheck) => {
 
           restartTimer();
         }
-      | VisibleRangesChanged(visibilityUpdate) => {
-          updateAndRestartTimer(State.updateVisibility(visibilityUpdate));
+      | BufferVisibilityChanged({bufferId, ranges}) => {
+          updateAndRestartTimer(
+            State.updateBufferVisibility(~bufferId, ~ranges),
+          );
         }
       | Close => {
           write(Protocol.ServerToClient.Closing);

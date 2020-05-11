@@ -262,23 +262,16 @@ let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
   |> Option.to_result(~none="Unable to apply update");
 };
 
-let updateVisibility = (visibility: list((int, list(Range.t))), state) => {
+let updateBufferVisibility =
+    (~bufferId, ~ranges: list(Range.t), {highlightsMap, _} as state) => {
+  let updateVisibility =
+    fun
+    | None => None
+    | Some(hl) =>
+      Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, hl));
+
   let highlightsMap =
-    visibility
-    |> List.fold_left(
-         (acc, curr) => {
-           let (bufferId, ranges) = curr;
-
-           let updateVisibility =
-             fun
-             | None => None
-             | Some(hl) =>
-               Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, hl));
-
-           IntMap.update(bufferId, updateVisibility, acc);
-         },
-         state.highlightsMap,
-       );
+    highlightsMap |> IntMap.update(bufferId, updateVisibility);
 
   {...state, highlightsMap};
 };

@@ -46,19 +46,20 @@ module ClientToServer = {
   type t =
     | Echo(string)
     | Initialize([@opaque] Ext.LanguageInfo.t, Setup.t)
-    | BufferEnter({
+    | BufferStartHighlighting({
         bufferId: int,
         filetype: string,
         lines: array(string),
       })
-    | BufferLeave(int)
+    | BufferStopHighlighting(int)
+    | BufferVisibilityChanged({
+        bufferId: int,
+        ranges: [@opaque] list(Range.t),
+      })
     | BufferUpdate([@opaque] Oni_Core.BufferUpdate.t)
     | UseTreeSitter(bool)
     | ThemeChanged([@opaque] TokenTheme.t)
     | RunHealthCheck
-    | VisibleRangesChanged(
-        [@opaque] list((int /* buffer id */, list(Range.t))),
-      )
     | Close
     // Debug
     | SimulateMessageException

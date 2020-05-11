@@ -30,13 +30,15 @@ let start:
   ) =>
   result(t, string);
 
-let notifyBufferEnter: (t, int, string, array(string)) => unit;
-let notifyBufferLeave: (t, int) => unit;
+let startHighlightingBuffer:
+  (~bufferId: int, ~filetype: string, ~lines: array(string), t) => unit;
+let stopHighlightingBuffer: (~bufferId: int, t) => unit;
+let notifyBufferUpdate: (~bufferUpdate: BufferUpdate.t, t) => unit;
+let notifyBufferVisibilityChanged:
+  (~bufferId: int, ~ranges: list(Range.t), t) => unit;
+
 let notifyThemeChanged: (t, TokenTheme.t) => unit;
 let notifyConfigurationChanged: (t, Configuration.t) => unit;
-let notifyBufferUpdate: (t, BufferUpdate.t) => unit;
-
-let notifyVisibilityChanged: (t, list((int, list(Range.t)))) => unit;
 let healthCheck: t => unit;
 let close: t => unit;
 

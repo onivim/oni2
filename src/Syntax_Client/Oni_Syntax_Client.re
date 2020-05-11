@@ -2,6 +2,7 @@
  Syntax client
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 module Transport = Exthost.Transport;
@@ -167,21 +168,17 @@ let start =
      });
 };
 
-let notifyBufferEnter =
-    (v: t, bufferId: int, filetype: string, lines: array(string)) => {
+let startHighlightingBuffer =
+    (~bufferId: int, ~filetype: string, ~lines: array(string), v: t) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
-    Oni_Syntax.Protocol.ClientToServer.BufferEnter({
-      bufferId,
-      filetype,
-      lines,
-    });
-  ClientLog.trace("Sending bufferUpdate notification...");
+    BufferStartHighlighting({bufferId, filetype, lines});
+  ClientLog.tracef(m => m("Sending startHighlightingBuffer: %d", bufferId));
   write(v, message);
 };
 
-let notifyBufferLeave = (v: t, bufferId: int) => {
-  write(v, BufferLeave(bufferId));
-  ClientLog.tracef(m => m("Sending buffer leave: %d", bufferId));
+let stopHighlightingBuffer = (~bufferId: int, v: t) => {
+  write(v, BufferStopHighlighting(bufferId));
+  ClientLog.tracef(m => m("Sending stopHighlightingBuffer: %d", bufferId));
 };
 
 let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
@@ -200,14 +197,18 @@ let healthCheck = (v: t) => {
   write(v, Protocol.ClientToServer.RunHealthCheck);
 };
 
-let notifyBufferUpdate = (v: t, bufferUpdate: BufferUpdate.t) => {
+let notifyBufferUpdate = (~bufferUpdate: BufferUpdate.t, v: t) => {
   ClientLog.trace("Sending bufferUpdate notification...");
   write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate));
 };
 
-let notifyVisibilityChanged = (v: t, visibility) => {
+let notifyBufferVisibilityChanged =
+    (~bufferId: int, ~ranges: list(Range.t), v: t) => {
   ClientLog.trace("Sending visibleRangesChanged notification...");
-  write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
+  write(
+    v,
+    Protocol.ClientToServer.BufferVisibilityChanged({bufferId, ranges}),
+  );
 };
 
 let close = (syntaxClient: t) => {

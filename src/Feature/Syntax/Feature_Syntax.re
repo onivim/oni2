@@ -224,7 +224,7 @@ module Effect = {
     Isolinear.Effect.create(~name="feature.syntax.bufferUpdate", () => {
       maybeSyntaxClient
       |> Option.iter(syntaxClient => {
-           Oni_Syntax_Client.notifyBufferUpdate(syntaxClient, bufferUpdate)
+           Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, syntaxClient)
          })
     });
   };
