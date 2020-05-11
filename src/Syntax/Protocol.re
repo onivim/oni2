@@ -46,7 +46,11 @@ module ClientToServer = {
   type t =
     | Echo(string)
     | Initialize([@opaque] Ext.LanguageInfo.t, Setup.t)
-    | BufferEnter(int, string)
+    | BufferEnter({
+        bufferId: int,
+        filetype: string,
+        lines: array(string),
+      })
     | BufferLeave(int)
     | BufferUpdate([@opaque] Oni_Core.BufferUpdate.t, string)
     | UseTreeSitter(bool)

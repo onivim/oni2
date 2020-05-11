@@ -95,15 +95,15 @@ let start = (~healthCheck) => {
           let res = healthCheck();
           write(Protocol.ServerToClient.HealthCheckPass(res == 0));
         }
-      | BufferEnter(id, filetype) => {
+      | BufferEnter({bufferId, filetype, _}) => {
           log(
             Printf.sprintf(
               "Buffer enter - id: %d filetype: %s",
-              id,
+              bufferId,
               filetype,
             ),
           );
-          updateAndRestartTimer(State.bufferEnter(id));
+          updateAndRestartTimer(State.bufferEnter(bufferId));
         }
       | UseTreeSitter(useTreeSitter) => {
           updateAndRestartTimer(State.setUseTreeSitter(useTreeSitter));

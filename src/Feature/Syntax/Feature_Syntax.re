@@ -40,7 +40,7 @@ type msg =
   | ServerStopped
   | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
   | BufferUpdated([@opaque] BufferUpdate.t)
-  | Service(Service_Syntax.msg);
+  | Service(Service_Syntax.serverMsg);
 
 type outmsg =
   | Nothing
@@ -185,7 +185,7 @@ let subscription =
       _highlights,
     ) =>
   if (enabled && !quitting) {
-    Service_Syntax.Sub.create(
+    Service_Syntax.Sub.server(
       ~configuration,
       ~languageInfo,
       ~setup,
@@ -195,8 +195,8 @@ let subscription =
          fun
          | Service_Syntax.ServerStarted(client) => ServerStarted(client)
          | Service_Syntax.ServerFailedToStart(msg) => ServerFailedToStart(msg)
-         | Service_Syntax.ServerClosed => ServerStopped
-         | Service_Syntax.ReceivedHighlights(hl) => TokensHighlighted(hl),
+         | Service_Syntax.ServerClosed => ServerStopped,
+         //| Service_Syntax.ReceivedHighlights(hl) => TokensHighlighted(hl),
        );
   } else {
     Isolinear.Sub.none;

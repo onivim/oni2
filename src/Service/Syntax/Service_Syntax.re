@@ -1,19 +1,23 @@
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Syntax = Oni_Syntax;
+module Protocol = Oni_Syntax.Protocol;
 module Ext = Oni_Extensions;
 module OptionEx = Core.Utility.OptionEx;
 
 module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
 
 [@deriving show({with_path: false})]
-type msg =
+type serverMsg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
   | ServerFailedToStart(string)
-  | ServerClosed
-  | ReceivedHighlights([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t));
+  | ServerClosed;
+
+type bufferMsg =
+  | ReceivedHighlights(list(Protocol.TokenUpdate.t));
 
 module Sub = {
-  type params = {
+  type serverParams = {
     id: string,
     languageInfo: Ext.LanguageInfo.t,
     setup: Core.Setup.t,
@@ -21,11 +25,14 @@ module Sub = {
     configuration: Core.Configuration.t,
   };
 
-  module SyntaxSubscription =
-    Isolinear.Sub.Make({
-      type nonrec msg = msg;
+  let highlightsEvent: Revery.Event.t(list(Protocol.TokenUpdate.t)) =
+    Revery.Event.create();
 
-      type nonrec params = params;
+  module SyntaxServerSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = serverMsg;
+
+      type nonrec params = serverParams;
 
       type state = {
         client: result(Oni_Syntax_Client.t, string),
@@ -49,7 +56,9 @@ module Sub = {
               },
             ~onClose=_ => dispatch(ServerClosed),
             ~onHighlights=
-              highlights => {dispatch(ReceivedHighlights(highlights))},
+              highlights => {
+                Revery.Event.dispatch(highlightsEvent, highlights)
+              },
             ~onHealthCheckResult=_ => (),
             params.languageInfo,
             params.setup,
@@ -112,8 +121,8 @@ module Sub = {
       };
     });
 
-  let create = (~configuration, ~languageInfo, ~setup, ~tokenTheme) => {
-    SyntaxSubscription.create({
+  let server = (~configuration, ~languageInfo, ~setup, ~tokenTheme) => {
+    SyntaxServerSubscription.create({
       id: "syntax-highligher",
       configuration,
       languageInfo,
@@ -121,24 +130,55 @@ module Sub = {
       tokenTheme,
     });
   };
+
+  type bufferParams = {
+    client: Oni_Syntax_Client.t,
+    buffer: Core.Buffer.t,
+    visibleRanges: list(Range.t),
+  };
+
+  module BufferSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = bufferMsg;
+      type nonrec params = bufferParams;
+
+      type state = {lastVisibleRanges: list(Range.t)};
+
+      let name = "BufferSubscription";
+      let id = params => {
+        let bufferId = params.buffer |> Core.Buffer.getId |> string_of_int;
+
+        let fileType =
+          params.buffer
+          |> Core.Buffer.getFileType
+          |> Option.value(~default="(none)");
+
+        bufferId ++ fileType;
+      };
+
+      let init = (~params, ~dispatch) => {
+        {lastVisibleRanges: params.visibleRanges};
+      };
+
+      let update = (~params, ~state, ~dispatch as _) => {
+        state;
+      };
+
+      let dispose = (~params as _, ~state) => {
+        ();
+      };
+    });
+
+  let buffer = (~client, ~buffer, ~visibleRanges) => {
+    BufferSubscription.create({client, buffer, visibleRanges});
+  };
 };
 
 module Effect = {
-  let bufferEnter = (maybeSyntaxClient, id: int, fileType) =>
-    Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
-      OptionEx.iter2(
-        (syntaxClient, fileType) => {
-          Oni_Syntax_Client.notifyBufferEnter(syntaxClient, id, fileType)
-        },
-        maybeSyntaxClient,
-        fileType,
-      )
-    });
-
   let bufferUpdate =
       (
         maybeSyntaxClient,
-        bufferUpdate: Oni_Core.BufferUpdate.t,
+        bufferUpdate: Core.BufferUpdate.t,
         lines,
         scopeMaybe,
       ) =>
@@ -154,18 +194,6 @@ module Effect = {
         },
         maybeSyntaxClient,
         scopeMaybe,
-      )
-    });
-
-  let visibilityChanged = (maybeSyntaxClient, visibleRanges) =>
-    Isolinear.Effect.create(~name="syntax.visibilityChange", () => {
-      Option.iter(
-        syntaxClient =>
-          Oni_Syntax_Client.notifyVisibilityChanged(
-            syntaxClient,
-            visibleRanges,
-          ),
-        maybeSyntaxClient,
       )
     });
 };

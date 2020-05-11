@@ -33,14 +33,9 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
        );
   };
 
-  let mapServiceEffect:
-    Isolinear.Effect.t(Service_Syntax.msg) =>
-    Isolinear.Effect.t(Model.Actions.t) =
-    effect =>
-      Isolinear.Effect.map(
-        msg => {Model.Actions.Syntax(Feature_Syntax.Service(msg))},
-        effect,
-      );
+  let mapUnitEffect:
+    Isolinear.Effect.t(unit) => Isolinear.Effect.t(Model.Actions.t) =
+    effect => Isolinear.Effect.map(() => Model.Actions.Nothing, effect);
 
   let syntaxGrammarRepository =
     Oni_Syntax.GrammarRepository.create(languageInfo);
@@ -94,45 +89,6 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
         {...state, syntaxClient: Some(client)},
         Isolinear.Effect.none,
       )
-    | Model.Actions.BufferEnter({metadata, fileType, _}) =>
-      let visibleBuffers =
-        Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
-
-      let combinedEffects =
-        Isolinear.Effect.batch([
-          Service_Syntax.Effect.visibilityChanged(
-            state.syntaxClient,
-            visibleBuffers,
-          ),
-          Service_Syntax.Effect.bufferEnter(
-            state.syntaxClient,
-            Vim.BufferMetadata.(metadata.id),
-            fileType,
-          ),
-        ]);
-
-      (state, combinedEffects |> mapServiceEffect);
-    // When the view changes, update our list of visible buffers,
-    // so we know which ones might have pending work!
-    | Model.Actions.EditorGroupAdd(_)
-    | Model.Actions.EditorScroll(_)
-    | Model.Actions.EditorScrollToLine(_)
-    | Model.Actions.EditorScrollToColumn(_)
-    | Model.Actions.AddSplit(_)
-    | Model.Actions.RemoveSplit(_)
-    | Model.Actions.ViewSetActiveEditor(_)
-    //| Model.Actions.BufferEnter(_)
-    | Model.Actions.ViewCloseEditor(_) =>
-      let visibleBuffers =
-        Model.EditorVisibleRanges.getVisibleBuffersAndRanges(state);
-      (
-        state,
-        Service_Syntax.Effect.visibilityChanged(
-          state.syntaxClient,
-          visibleBuffers,
-        )
-        |> mapServiceEffect,
-      );
     // When there is a buffer update, send it over to the syntax highlight
     // strategy to handle the parsing.
     | Model.Actions.BufferUpdate({update, newBuffer, _}) =>
@@ -181,7 +137,7 @@ let start = (~enabled, languageInfo: Ext.LanguageInfo.t) => {
               lines,
               Some(scope),
             )
-            |> mapServiceEffect,
+            |> mapUnitEffect,
           );
         };
       };

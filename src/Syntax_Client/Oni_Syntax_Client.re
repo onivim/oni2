@@ -167,15 +167,21 @@ let start =
      });
 };
 
-let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
+let notifyBufferEnter =
+    (v: t, bufferId: int, filetype: string, lines: array(string)) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
-    Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType);
+    Oni_Syntax.Protocol.ClientToServer.BufferEnter({
+      bufferId,
+      filetype,
+      lines,
+    });
   ClientLog.trace("Sending bufferUpdate notification...");
   write(v, message);
 };
 
-let notifyBufferLeave = (_v: t, _bufferId: int) => {
-  ClientLog.warn("TODO - Send Buffer leave.");
+let notifyBufferLeave = (v: t, bufferId: int) => {
+  write(v, BufferLeave(bufferId));
+  ClientLog.tracef(m => m("Sending buffer leave: %d", bufferId));
 };
 
 let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {

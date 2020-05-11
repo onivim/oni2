@@ -20,6 +20,7 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 [@deriving show({with_path: false})]
 type t =
   | Init
+  | Nothing
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)

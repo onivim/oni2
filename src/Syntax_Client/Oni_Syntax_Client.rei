@@ -30,7 +30,7 @@ let start:
   ) =>
   result(t, string);
 
-let notifyBufferEnter: (t, int, string) => unit;
+let notifyBufferEnter: (t, int, string, array(string)) => unit;
 let notifyBufferLeave: (t, int) => unit;
 let notifyThemeChanged: (t, TokenTheme.t) => unit;
 let notifyConfigurationChanged: (t, Configuration.t) => unit;
