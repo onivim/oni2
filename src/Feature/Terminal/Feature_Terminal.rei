@@ -1,7 +1,5 @@
 open Oni_Core;
 
-module ExtHostClient = Oni_Extensions.ExtHostClient;
-
 // MODEL
 
 type terminal =
@@ -68,7 +66,7 @@ let shouldHandleInput: string => bool;
 let update: (~config: Config.resolver, t, msg) => (t, outmsg);
 
 let subscription:
-  (~workspaceUri: Uri.t, ExtHostClient.t, t) => Isolinear.Sub.t(msg);
+  (~workspaceUri: Uri.t, Exthost.Client.t, t) => Isolinear.Sub.t(msg);
 
 let shellCmd: string;
 

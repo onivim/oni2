@@ -194,8 +194,21 @@ module LanguageFeatures = {
         ~context: CompletionContext.t,
         client,
       ) => {
+    // It's possible to get a null result from completion providers,
+    // so we need to handle that here - we just treat it as an
+    // empty set of suggestions.
+    let decoder =
+      Json.Decode.(
+        nullable(SuggestResult.decode)
+        |> map(
+             fun
+             | Some(suggestResult) => suggestResult
+             | None => SuggestResult.empty,
+           )
+      );
+
     Client.request(
-      ~decoder=SuggestResult.decode,
+      ~decoder,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideCompletionItems",
@@ -214,7 +227,7 @@ module LanguageFeatures = {
     let provideDefinitionLink =
         (~handle, ~resource, ~position, method, client) => {
       Client.request(
-        ~decoder=Json.Decode.(list(Location.decode)),
+        ~decoder=Json.Decode.(list(DefinitionLink.decode)),
         ~usesCancellationToken=true,
         ~rpcName="ExtHostLanguageFeatures",
         ~method,
@@ -387,7 +400,7 @@ module TerminalService = {
 module Workspace = {
   let initializeWorkspace = (~workspace, client) => {
     let json =
-      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+      Json.Encode.(encode_value(nullable(WorkspaceData.encode), workspace));
 
     Client.notify(
       ~rpcName="ExtHostWorkspace",
@@ -398,7 +411,7 @@ module Workspace = {
   };
   let acceptWorkspaceData = (~workspace, client) => {
     let json =
-      Json.Encode.(encode_value(option(WorkspaceData.encode), workspace));
+      Json.Encode.(encode_value(nullable(WorkspaceData.encode), workspace));
 
     Client.notify(
       ~rpcName="ExtHostWorkspace",

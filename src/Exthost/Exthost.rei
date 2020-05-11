@@ -51,10 +51,33 @@ module CompletionKind: {
   let ofInt: int => option(t);
 };
 
+module OneBasedRange: {
+  type t = {
+    startLineNumber: int,
+    endLineNumber: int,
+    startColumn: int,
+    endColumn: int,
+  };
+
+  let ofRange: Range.t => t;
+  let toRange: t => Range.t;
+};
+
 module Location: {
   type t = {
     uri: Uri.t,
     range: OneBasedRange.t,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module DefinitionLink: {
+  type t = {
+    uri: Uri.t,
+    range: OneBasedRange.t,
+    originSelectionRange: option(OneBasedRange.t),
+    targetSelectionRange: option(OneBasedRange.t),
   };
 
   let decode: Json.decoder(t);
@@ -67,6 +90,17 @@ module DocumentFilter: {
     scheme: option(string),
     exclusive: bool,
   };
+
+  let matches: (~filetype: string, t) => bool;
+
+  let decode: Json.decoder(t);
+};
+
+module DocumentSelector: {
+  [@deriving show]
+  type t = list(DocumentFilter.t);
+
+  let matches: (~filetype: string, t) => bool;
 
   let decode: Json.decoder(t);
 };
@@ -114,6 +148,7 @@ module ReferenceContext: {
 };
 
 module SCM: {
+  [@deriving show({with_path: false})]
   type command = {
     id: string,
     title: string,
@@ -133,8 +168,8 @@ module SCM: {
     [@deriving show({with_path: false})]
     type t = {
       handle: int,
-      resourceUri: Uri.t,
-      icons: Icons.t,
+      uri: Uri.t,
+      //      icons: Icons.t,
       tooltip: string,
       strikeThrough: bool,
       faded: bool,
@@ -172,6 +207,8 @@ module SuggestResult: {
     completions: list(SuggestItem.t),
     isIncomplete: bool,
   };
+
+  let empty: t;
 
   let decode: Json.decoder(t);
 };
@@ -251,6 +288,16 @@ module Configuration: {
     (~defaults: Model.t=?, ~user: Model.t=?, ~workspace: Model.t=?, unit) => t;
 };
 
+module Diagnostic: {
+  type t = {
+    range: OneBasedRange.t,
+    message: string,
+    severity: int,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module Eol: {
   type t =
     | LF
@@ -306,6 +353,7 @@ module DocumentsAndEditorsDelta: {
 };
 
 module OneBasedPosition: {
+  [@deriving show({with_path: false})]
   type t = {
     lineNumber: int,
     column: int,
@@ -334,21 +382,6 @@ module ModelChangedEvent: {
   };
 
   let to_yojson: t => Yojson.Safe.t;
-};
-
-module OneBasedRange: {
-  [@deriving show]
-  type t = {
-    startLineNumber: int,
-    endLineNumber: int,
-    startColumn: int,
-    endColumn: int,
-  };
-
-  let ofRange: Range.t => t;
-  let toRange: t => Range.t;
-
-  let decode: Json.decoder(t);
 };
 
 module ShellLaunchConfig: {
@@ -380,6 +413,9 @@ module WorkspaceData: {
     configuration: option(Uri.t),
     isUntitled: bool,
   };
+
+  let fromUri: (~name: string, ~id: string, Uri.t) => t;
+  let fromPath: string => t;
 
   let encode: Json.encoder(t);
   let decode: Json.decoder(t);
@@ -479,39 +515,39 @@ module Msg: {
     type msg =
       | RegisterDocumentHighlightProvider({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterDocumentSymbolProvider({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
           label: string,
         })
       | RegisterDefinitionSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterDeclarationSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterImplementationSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterTypeDefinitionSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | RegisterSuggestSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
           triggerCharacters: list(string),
           supportsResolveDetails: bool,
           extensionId: string,
         })
       | RegisterReferenceSupport({
           handle: int,
-          selector: list(DocumentFilter.t),
+          selector: DocumentSelector.t,
         })
       | Unregister({handle: int});
   };
@@ -590,9 +626,10 @@ module Msg: {
           terminalId: int,
           data: string,
         })
-      | SendProcessPid({
+      | SendProcessReady({
           terminalId: int,
           pid: int,
+          workingDirectory: string,
         })
       | SendProcessExit({
           terminalId: int,
@@ -658,6 +695,7 @@ module Client: {
   let start:
     (
       ~initialConfiguration: Configuration.t=?,
+      ~initialWorkspace: WorkspaceData.t=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
       ~handler: Msg.t => option(reply),
@@ -774,7 +812,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(Location.t));
+      Lwt.t(list(DefinitionLink.t));
 
     let provideDeclaration:
       (
@@ -783,7 +821,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(Location.t));
+      Lwt.t(list(DefinitionLink.t));
 
     let provideImplementation:
       (
@@ -792,7 +830,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(Location.t));
+      Lwt.t(list(DefinitionLink.t));
 
     let provideReferences:
       (
@@ -811,7 +849,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(Location.t));
+      Lwt.t(list(DefinitionLink.t));
   };
 
   module SCM: {

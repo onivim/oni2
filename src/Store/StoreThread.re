@@ -125,8 +125,11 @@ let start =
     );
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
-  let (extHostClient, extHostStream) =
+  let (extHostClientResult, extHostStream) =
     ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
+
+  // TODO: How to handle this correctly?
+  let extHostClient = extHostClientResult |> Result.get_ok;
 
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);

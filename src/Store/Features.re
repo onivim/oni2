@@ -14,7 +14,7 @@ module Internal = {
 
 let update =
     (
-      ~extHostClient,
+      ~extHostClient: Exthost.Client.t,
       ~getUserSettings,
       ~setup,
       state: State.t,
@@ -63,15 +63,21 @@ let update =
     let eff =
       switch (outmsg) {
       | ConfigurationChanged({changed}) =>
-        Oni_Extensions.ExtHostClient.Effects.acceptConfigurationChanged(
-          extHostClient,
-          Feature_Configuration.toExtensionConfiguration(
-            config,
-            state.extensions.extensions,
-            setup,
-          ),
-          ~changed=Exthost.Configuration.Model.fromSettings(changed),
-        )
+        Isolinear.Effect.create(
+          ~name="featuers.configuration$acceptConfigurationChanged", () => {
+          let configuration =
+            Feature_Configuration.toExtensionConfiguration(
+              config,
+              state.extensions.extensions,
+              setup,
+            );
+          let changed = Exthost.Configuration.Model.fromSettings(changed);
+          Exthost.Request.Configuration.acceptConfigurationChanged(
+            ~configuration,
+            ~changed,
+            extHostClient,
+          );
+        })
       | Nothing => Effect.none
       };
 

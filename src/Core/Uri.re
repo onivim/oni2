@@ -74,7 +74,7 @@ let encode = uri =>
     obj([
       ("scheme", uri.scheme |> Scheme.encode),
       ("path", uri.path |> string),
-      ("query", uri.query |> option(string)),
+      ("query", uri.query |> nullable(string)),
     ])
   );
 

@@ -208,7 +208,6 @@
     "isolinear": "^3.0.0",
     "ocaml": "~4.7.0",
     "reason-sdl2": "^2.10.2020",
-    "reason-jsonrpc": "1.5.0",
     "reason-libvim": "onivim/reason-libvim#2493884",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#ae1fd34",
     "reasonFuzz": "*",

@@ -51,7 +51,7 @@ module Schema = {
       };
       let option = codec => {
         equal: Option.equal(codec.equal),
-        encode: Json.Encode.option(codec.encode),
+        encode: Json.Encode.nullable(codec.encode),
         decode: Json.Decode.maybe(codec.decode),
       };
     };

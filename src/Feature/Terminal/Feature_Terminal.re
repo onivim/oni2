@@ -1,5 +1,4 @@
 open Oni_Core;
-module ExtHostClient = Oni_Extensions.ExtHostClient;
 
 // MODEL
 
