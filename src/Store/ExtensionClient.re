@@ -407,7 +407,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     Luv.Process.spawn(
       ~environment,
       ~on_exit,
-      ~detached=true,
       ~windows_hide=true,
       ~windows_hide_console=true,
       ~windows_hide_gui=true,
