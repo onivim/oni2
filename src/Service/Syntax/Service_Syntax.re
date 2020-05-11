@@ -157,15 +157,31 @@ module Sub = {
       };
 
       let init = (~params, ~dispatch) => {
+        params.buffer
+        |> Core.Buffer.getFileType
+        |> Option.iter(filetype => {
+             Oni_Syntax_Client.startHighlightingBuffer(
+               ~filetype,
+               ~bufferId=Core.Buffer.getId(params.buffer),
+               ~lines=Core.Buffer.getLines(params.buffer),
+               params.client,
+             )
+           });
+
         {lastVisibleRanges: params.visibleRanges};
       };
 
-      let update = (~params, ~state, ~dispatch as _) => {
-        state;
+      let update = (~params, ~state, ~dispatch) => {
+        let currentVisibleRanges = state.visibleRanges;
+
+        {lastVisibleRanges: params.visibleRanges};
       };
 
-      let dispose = (~params as _, ~state) => {
-        ();
+      let dispose = (~params, ~state) => {
+        Oni_Syntax_Client.stopHighlightingBuffer(
+          ~bufferId=Core.Buffer.getId(params.buffer),
+          params.client,
+        );
       };
     });
 
