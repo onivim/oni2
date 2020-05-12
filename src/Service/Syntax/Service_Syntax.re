@@ -211,11 +211,7 @@ module Sub = {
       let update = (~params, ~state, ~dispatch as _) => {
         let currentVisibleRanges = state.lastVisibleRanges;
 
-        if (!
-              RangeEx.areRangesEqual(
-                currentVisibleRanges,
-                params.visibleRanges,
-              )) {
+        if (currentVisibleRanges != params.visibleRanges) {
           Oni_Syntax_Client.notifyBufferVisibilityChanged(
             ~bufferId=Core.Buffer.getId(params.buffer),
             ~ranges=params.visibleRanges,
