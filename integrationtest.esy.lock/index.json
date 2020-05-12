@@ -1,5 +1,5 @@
 {
-  "checksum": "299bd953ed34a25277db34f699b82225",
+  "checksum": "b12dcb2545299645884955b7d7c2b635",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -131,20 +131,20 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#cd5911c@d41d8cd9",
+        "revery@github:revery-ui/revery#cf290df@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#91bad1f@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#cd5911c@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#cd5911c@d41d8cd9",
+    "revery@github:revery-ui/revery#cf290df@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#cf290df@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#cd5911c",
+      "version": "github:revery-ui/revery#cf290df",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#cd5911c" ]
+        "source": [ "github:revery-ui/revery#cf290df" ]
       },
       "overrides": [],
       "dependencies": [
@@ -153,7 +153,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9",
         "reason-skia@github:revery-ui/reason-skia#6b459c7@d41d8cd9",
-        "reason-sdl2@2.10.3029@d41d8cd9",
+        "reason-sdl2@2.10.3030@d41d8cd9",
         "reason-harfbuzz@1.91.8001@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
         "@reason-native/rely@3.2.1@d41d8cd9",
@@ -337,7 +337,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3029@d41d8cd9",
+        "refmterr@3.3.0@d41d8cd9", "reason-sdl2@2.10.3030@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
         "esy-sdl2@2.0.10006@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
@@ -347,14 +347,14 @@
       ],
       "devDependencies": [ "@opam/dune@opam:2.5.1@a0c1e658" ]
     },
-    "reason-sdl2@2.10.3029@d41d8cd9": {
-      "id": "reason-sdl2@2.10.3029@d41d8cd9",
+    "reason-sdl2@2.10.3030@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3030@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "2.10.3029",
+      "version": "2.10.3030",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3029.tgz#sha1:9978ba6f238ff2f9efb252b8f434cd07dfd70597"
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3030.tgz#sha1:a268fca497228667d89bfcc85929b9ec255c478d"
         ]
       },
       "overrides": [],
@@ -1157,12 +1157,12 @@
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
-        "revery@github:revery-ui/revery#cd5911c@d41d8cd9",
+        "revery@github:revery-ui/revery#cf290df@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.0@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3029@d41d8cd9",
+        "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3030@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#2493884@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9",
@@ -1187,7 +1187,7 @@
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.1@a0c1e658",
         "@opam/dir@github:bryphe/reason-native:dir.opam#fd0225@d41d8cd9",
-        "@opam/decoders-yojson@opam:0.4.0@cb39dea6",
+        "@opam/decoders-yojson@opam:0.3.0@b9081413",
         "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
         "@glennsl/timber@1.0.0@d41d8cd9", "@esy-ocaml/reason@3.5.2@d41d8cd9",
         "@esy-ocaml/libffi@github:onivim/libffi#590b041@d41d8cd9"
@@ -2976,20 +2976,20 @@
         "@opam/dune@opam:2.5.1@a0c1e658"
       ]
     },
-    "@opam/decoders-yojson@opam:0.4.0@cb39dea6": {
-      "id": "@opam/decoders-yojson@opam:0.4.0@cb39dea6",
+    "@opam/decoders-yojson@opam:0.3.0@b9081413": {
+      "id": "@opam/decoders-yojson@opam:0.3.0@b9081413",
       "name": "@opam/decoders-yojson",
-      "version": "opam:0.4.0",
+      "version": "opam:0.3.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/18/18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7#sha256:18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7",
-          "archive:https://github.com/mattjbray/ocaml-decoders/releases/download/v0.4.0/decoders-v0.4.0.tbz#sha256:18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7"
+          "archive:https://opam.ocaml.org/cache/sha256/a5/a50e613cfd18a584e765d8368ad0afe920482bf1e6745caf13f2b6a7d3634d9d#sha256:a50e613cfd18a584e765d8368ad0afe920482bf1e6745caf13f2b6a7d3634d9d",
+          "archive:https://github.com/mattjbray/ocaml-decoders/releases/download/v0.3.0/decoders-v0.3.0.tbz#sha256:a50e613cfd18a584e765d8368ad0afe920482bf1e6745caf13f2b6a7d3634d9d"
         ],
         "opam": {
           "name": "decoders-yojson",
-          "version": "0.4.0",
-          "path": "integrationtest.esy.lock/opam/decoders-yojson.0.4.0"
+          "version": "0.3.0",
+          "path": "integrationtest.esy.lock/opam/decoders-yojson.0.3.0"
         }
       },
       "overrides": [],

@@ -153,7 +153,7 @@ let%component make =
     let minimapLineSize =
       Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
     let linesInMinimap = editor.pixelHeight / minimapLineSize;
-    if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
+    if (evt.button == Revery.MouseButton.BUTTON_LEFT) {
       onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
 
       Mouse.setCapture(
