@@ -33,12 +33,33 @@ let highlight = (~scope, ~theme, ~grammars, lines) => {
   result;
 };
 
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let eagerMaxLines = setting("syntax.eagerMaxLines", int, ~default=500);
+
+  let eagerMaxLineLength =
+    setting("syntax.eagerMaxLineLength", int, ~default=1000);
+
+  module Experimental = {
+    let treeSitter = setting("experimental.treeSitter", bool, ~default=false);
+  };
+};
+
+module Contributions = {
+  let configuration = [
+    Configuration.eagerMaxLines.spec,
+    Configuration.eagerMaxLineLength.spec,
+    Configuration.Experimental.treeSitter.spec,
+  ];
+};
+
 module Internal = {
-  let eagerHighlight = (~grammars, ~scope, ~configuration, ~theme, lines) => {
-    let maxLines =
-      configuration |> Configuration.getValue(c => c.syntaxEagerMaxLines);
-    let maxLineLength =
-      configuration |> Configuration.getValue(c => c.syntaxEagerMaxLineLength);
+  let eagerHighlight =
+      (~grammars, ~scope, ~config: Config.resolver, ~theme, lines) => {
+    let maxLines = Configuration.eagerMaxLines.get(config);
+    let maxLineLength = Configuration.eagerMaxLineLength.get(config);
 
     let len = min(Array.length(lines), maxLines);
 
@@ -181,7 +202,7 @@ let handleUpdate =
       ~grammars,
       ~scope,
       ~theme,
-      ~configuration,
+      ~config: Config.resolver,
       bufferUpdate: BufferUpdate.t,
       bufferHighlights,
     ) =>
@@ -195,7 +216,7 @@ let handleUpdate =
     let highlights =
       Internal.eagerHighlight(
         ~scope,
-        ~configuration,
+        ~config,
         ~theme,
         ~grammars,
         bufferUpdate.lines,
@@ -258,7 +279,7 @@ let update: (t, msg) => (t, outmsg) =
 
 let subscription =
     (
-      ~configuration,
+      ~config: Config.resolver,
       ~languageInfo,
       ~setup,
       ~tokenTheme,
@@ -289,7 +310,7 @@ let subscription =
 
   let serverSubscription =
     Service_Syntax.Sub.server(
-      ~configuration,
+      ~useTreeSitter=Configuration.Experimental.treeSitter.get(config),
       ~languageInfo,
       ~setup,
       ~tokenTheme,

@@ -14,7 +14,7 @@ type bufferMsg =
 module Sub: {
   let server:
     (
-      ~configuration: Configuration.t,
+      ~useTreeSitter: bool,
       ~languageInfo: Oni_Extensions.LanguageInfo.t,
       ~setup: Oni_Core.Setup.t,
       ~tokenTheme: TokenTheme.t

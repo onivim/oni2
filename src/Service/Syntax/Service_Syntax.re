@@ -50,7 +50,7 @@ module Sub = {
     languageInfo: Ext.LanguageInfo.t,
     setup: Core.Setup.t,
     tokenTheme: Syntax.TokenTheme.t,
-    configuration: Core.Configuration.t,
+    useTreeSitter: bool,
   };
 
   module SyntaxServerSubscription =
@@ -62,7 +62,7 @@ module Sub = {
       type state = {
         client: result(Oni_Syntax_Client.t, string),
         lastSyncedTokenTheme: option(Syntax.TokenTheme.t),
-        lastConfiguration: option(Core.Configuration.t),
+        lastTreeSitterSetting: option(bool),
       };
 
       let name = "SyntaxSubscription";
@@ -96,7 +96,7 @@ module Sub = {
         {
           client: clientResult,
           lastSyncedTokenTheme: None,
-          lastConfiguration: None,
+          lastTreeSitterSetting: None,
         };
       };
 
@@ -120,15 +120,15 @@ module Sub = {
           state;
         };
 
-      let syncConfiguration = (configuration, state) =>
-        if (!compare(configuration, state.lastConfiguration)) {
+      let syncUseTreeSitter = (useTreeSitter, state) =>
+        if (!compare(useTreeSitter, state.lastTreeSitterSetting)) {
           state.client
           |> Result.map(client => {
-               Oni_Syntax_Client.notifyConfigurationChanged(
+               Oni_Syntax_Client.notifyTreeSitterChanged(
+                 ~useTreeSitter,
                  client,
-                 configuration,
                );
-               {...state, lastConfiguration: Some(configuration)};
+               {...state, lastTreeSitterSetting: Some(useTreeSitter)};
              })
           |> Result.value(~default=state);
         } else {
@@ -138,7 +138,7 @@ module Sub = {
       let update = (~params, ~state, ~dispatch as _) => {
         state
         |> syncTokenTheme(params.tokenTheme)
-        |> syncConfiguration(params.configuration);
+        |> syncUseTreeSitter(params.useTreeSitter);
       };
 
       let dispose = (~params as _, ~state) => {
@@ -146,10 +146,10 @@ module Sub = {
       };
     });
 
-  let server = (~configuration, ~languageInfo, ~setup, ~tokenTheme) => {
+  let server = (~useTreeSitter, ~languageInfo, ~setup, ~tokenTheme) => {
     SyntaxServerSubscription.create({
       id: "syntax-highligher",
-      configuration,
+      useTreeSitter,
       languageInfo,
       setup,
       tokenTheme,

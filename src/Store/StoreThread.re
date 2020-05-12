@@ -190,6 +190,7 @@ let start =
     ]);
 
   let subscriptions = (state: Model.State.t) => {
+    let config = Feature_Configuration.resolver(state.config);
     let visibleRanges =
       state
       |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges
@@ -201,7 +202,7 @@ let start =
     let syntaxSubscription =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
-            ~configuration=state.configuration,
+            ~config,
             ~languageInfo,
             ~setup,
             ~tokenTheme=state.tokenTheme,

@@ -68,7 +68,7 @@ let update =
             newBuffer,
           ),
         ~grammars=grammarRepository,
-        ~configuration=state.configuration,
+        ~config=Feature_Configuration.resolver(state.config),
         ~theme=state.tokenTheme,
         update,
         state.syntaxHighlights,

@@ -42,7 +42,7 @@ let notifyBufferVisibilityChanged:
   (~bufferId: int, ~ranges: list(Range.t), t) => unit;
 
 let notifyThemeChanged: (t, TokenTheme.t) => unit;
-let notifyConfigurationChanged: (t, Configuration.t) => unit;
+let notifyTreeSitterChanged: (~useTreeSitter: bool, t) => unit;
 let healthCheck: t => unit;
 let close: t => unit;
 

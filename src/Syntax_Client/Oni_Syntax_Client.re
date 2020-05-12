@@ -188,10 +188,8 @@ let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
   write(v, Protocol.ClientToServer.ThemeChanged(theme));
 };
 
-let notifyConfigurationChanged = (v: t, configuration: Configuration.t) => {
-  ClientLog.info("Notifying configuration changed.");
-  let useTreeSitter =
-    configuration |> Configuration.getValue(c => c.experimentalTreeSitter);
+let notifyTreeSitterChanged = (~useTreeSitter: bool, v: t) => {
+  ClientLog.infof(m => m("Notifying treeSitter changed: %b", useTreeSitter));
   write(v, Protocol.ClientToServer.UseTreeSitter(useTreeSitter));
 };
 

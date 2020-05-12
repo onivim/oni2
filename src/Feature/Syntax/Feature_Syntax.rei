@@ -34,7 +34,7 @@ let handleUpdate:
     ~grammars: Oni_Syntax.GrammarRepository.t,
     ~scope: string,
     ~theme: Oni_Syntax.TokenTheme.t,
-    ~configuration: Oni_Core.Configuration.t,
+    ~config: Config.resolver,
     BufferUpdate.t,
     t
   ) =>
@@ -56,7 +56,7 @@ module Effect: {
 
 let subscription:
   (
-    ~configuration: Configuration.t,
+    ~config: Config.resolver,
     ~languageInfo: Oni_Extensions.LanguageInfo.t,
     ~setup: Setup.t,
     ~tokenTheme: Oni_Syntax.TokenTheme.t,
@@ -64,3 +64,5 @@ let subscription:
     t
   ) =>
   Isolinear.Sub.t(msg);
+
+module Contributions: {let configuration: list(Config.Schema.spec);};
