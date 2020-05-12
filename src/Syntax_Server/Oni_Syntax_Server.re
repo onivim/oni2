@@ -105,7 +105,7 @@ let start = (~healthCheck) => {
           let res = healthCheck();
           write(Protocol.ServerToClient.HealthCheckPass(res == 0));
         }
-      | BufferStartHighlighting({bufferId, filetype, _}) => {
+      | BufferStartHighlighting({bufferId, filetype, lines, visibleRanges}) => {
           log(
             Printf.sprintf(
               "Buffer enter - id: %d filetype: %s",
@@ -113,7 +113,9 @@ let start = (~healthCheck) => {
               filetype,
             ),
           );
-          updateAndRestartTimer(State.bufferEnter(~bufferId, ~filetype));
+          updateAndRestartTimer(
+            State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges),
+          );
         }
       | UseTreeSitter(useTreeSitter) => {
           updateAndRestartTimer(State.setUseTreeSitter(useTreeSitter));

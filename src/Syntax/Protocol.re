@@ -46,7 +46,8 @@ module ClientToServer = {
     | BufferStartHighlighting({
         bufferId: int,
         filetype: string,
-        lines: array(string),
+        lines: [@opaque] array(string),
+        visibleRanges: [@opaque] list(Range.t),
       })
     | BufferStopHighlighting(int)
     | BufferVisibilityChanged({

@@ -28,7 +28,14 @@ let start:
   result(t, string);
 
 let startHighlightingBuffer:
-  (~bufferId: int, ~filetype: string, ~lines: array(string), t) => unit;
+  (
+    ~bufferId: int,
+    ~filetype: string,
+    ~visibleRanges: list(Range.t),
+    ~lines: array(string),
+    t
+  ) =>
+  unit;
 let stopHighlightingBuffer: (~bufferId: int, t) => unit;
 let notifyBufferUpdate: (~bufferUpdate: BufferUpdate.t, t) => unit;
 let notifyBufferVisibilityChanged:

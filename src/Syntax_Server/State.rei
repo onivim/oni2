@@ -23,8 +23,17 @@ let getActiveHighlighters: t => list(NativeSyntaxHighlights.t);
 
 let anyPendingWork: t => bool;
 
-let bufferEnter: (~bufferId: int, ~filetype: string, t) => t;
+let bufferEnter:
+  (
+    ~bufferId: int,
+    ~filetype: string,
+    ~lines: array(string),
+    ~visibleRanges: list(Range.t),
+    t
+  ) =>
+  t;
 let bufferUpdate: (~bufferUpdate: BufferUpdate.t, t) => result(t, string);
+let bufferLeave: (~bufferId: int, t) => t;
 
 let updateTheme: (TokenTheme.t, t) => t;
 let setUseTreeSitter: (bool, t) => t;

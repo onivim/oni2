@@ -165,9 +165,15 @@ let start =
 };
 
 let startHighlightingBuffer =
-    (~bufferId: int, ~filetype: string, ~lines: array(string), v: t) => {
+    (
+      ~bufferId: int,
+      ~filetype: string,
+      ~visibleRanges: list(Range.t),
+      ~lines: array(string),
+      v: t,
+    ) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
-    BufferStartHighlighting({bufferId, filetype, lines});
+    BufferStartHighlighting({bufferId, filetype, lines, visibleRanges});
   ClientLog.tracef(m => m("Sending startHighlightingBuffer: %d", bufferId));
   write(v, message);
 };

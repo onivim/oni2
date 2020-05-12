@@ -199,7 +199,7 @@ module Sub = {
              Oni_Syntax_Client.startHighlightingBuffer(
                ~filetype,
                ~bufferId,
-               // TODO: Send initial visibility
+               ~visibleRanges=params.visibleRanges,
                ~lines=Core.Buffer.getLines(params.buffer),
                params.client,
              )

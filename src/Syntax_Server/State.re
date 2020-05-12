@@ -64,41 +64,20 @@ let getActiveHighlighters = state => {
   |> List.filter(hl => NativeSyntaxHighlights.anyPendingWork(hl));
 };
 
-let anyPendingWork = state => getActiveHighlighters(state) != [];
+module Internal = {
+  let getBuffer = (~bufferId, state) => {
+    IntMap.find_opt(bufferId, state.bufferInfo);
+  };
 
-let getBufferScope = (~bufferId: int, state: t) => {
-  state.bufferInfo
-  |> IntMap.find_opt(bufferId)
-  |> Option.map(({filetype, _}) => filetype)
-  |> Option.value(~default="plaintext");
-};
-
-let bufferEnter = (~bufferId: int, ~filetype: string, state: t) => {
-  let exists = List.exists(id => id == bufferId, state.visibleBuffers);
-  let visibleBuffers =
-    if (exists) {
-      state.visibleBuffers;
-    } else {
-      [bufferId, ...state.visibleBuffers];
-    };
-
-  let bufferInfo =
+  let getBufferScope = (~bufferId: int, state: t) => {
     state.bufferInfo
-    |> IntMap.update(
-         bufferId,
-         fun
-         | None =>
-           Some({
-             // TODO: Bring in lines!
-             lines: [||],
-             version: (-1),
-             filetype,
-           })
-         | Some(bufInfo) => Some({...bufInfo, filetype}),
-       );
-
-  {...state, bufferInfo, visibleBuffers};
+    |> IntMap.find_opt(bufferId)
+    |> Option.map(({filetype, _}) => filetype)
+    |> Option.value(~default="plaintext");
+  };
 };
+
+let anyPendingWork = state => getActiveHighlighters(state) != [];
 
 let updateTheme = (theme, state) => {
   let highlightsMap =
@@ -216,16 +195,12 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
   {...state, bufferInfo};
 };
 
-let getBuffer = (~bufferId, state) => {
-  IntMap.find_opt(bufferId, state.bufferInfo);
-};
-
 let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
   let state = applyBufferUpdate(~update=bufferUpdate, state);
-  let scope = getBufferScope(bufferUpdate.id, state);
+  let scope = Internal.getBufferScope(bufferUpdate.id, state);
 
   state
-  |> getBuffer(~bufferId=bufferUpdate.id)
+  |> Internal.getBuffer(~bufferId=bufferUpdate.id)
   |> Option.map(({lines, _}) => {
        let highlightsMap =
          IntMap.update(
@@ -278,4 +253,55 @@ let updateBufferVisibility =
     highlightsMap |> IntMap.update(bufferId, updateVisibility);
 
   {...state, highlightsMap};
+};
+
+let bufferEnter =
+    (~bufferId: int, ~filetype: string, ~lines, ~visibleRanges, state: t) => {
+  let exists = List.exists(id => id == bufferId, state.visibleBuffers);
+  let visibleBuffers =
+    if (exists) {
+      state.visibleBuffers;
+    } else {
+      [bufferId, ...state.visibleBuffers];
+    };
+
+  let bufferInfo =
+    state.bufferInfo
+    |> IntMap.update(
+         bufferId,
+         fun
+         | None =>
+           Some({
+             // TODO: Bring in lines!
+             lines,
+             version: (-1),
+             filetype,
+           })
+         | Some(bufInfo) => Some({...bufInfo, filetype}),
+       );
+
+  let state = {...state, bufferInfo, visibleBuffers};
+
+  let update =
+    BufferUpdate.{
+      id: bufferId,
+      isFull: true,
+      lines,
+      startLine: Index.zero,
+      endLine: Index.(zero + Array.length(lines)),
+      version: 0,
+    };
+
+  state
+  |> applyBufferUpdate(~update)
+  |> updateBufferVisibility(~bufferId, ~ranges=visibleRanges);
+};
+
+let bufferLeave =
+    (~bufferId: int, {bufferInfo, visibleBuffers, highlightsMap} as state: t) => {
+  let bufferInfo = IntMap.remove(bufferId, bufferInfo);
+  let visibleBuffers = List.filter(id => id != bufferId, visibleBuffers);
+  let highlightsMap = IntMap.remove(bufferId, highlightsMap);
+
+  {...state, bufferInfo, visibleBuffers, highlightsMap};
 };
