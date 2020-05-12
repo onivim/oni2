@@ -1,5 +1,5 @@
 {
-  "checksum": "b12dcb2545299645884955b7d7c2b635",
+  "checksum": "661df2a5391d91327d39711dc3178dc8",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1187,7 +1187,7 @@
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.1@a0c1e658",
         "@opam/dir@github:bryphe/reason-native:dir.opam#fd0225@d41d8cd9",
-        "@opam/decoders-yojson@opam:0.3.0@b9081413",
+        "@opam/decoders-yojson@opam:0.4.0@cb39dea6",
         "@opam/charInfo_width@opam:1.1.0@9d8d61b2",
         "@glennsl/timber@1.0.0@d41d8cd9", "@esy-ocaml/reason@3.5.2@d41d8cd9",
         "@esy-ocaml/libffi@github:onivim/libffi#590b041@d41d8cd9"
@@ -2975,20 +2975,20 @@
         "@opam/dune@opam:2.5.1@a0c1e658"
       ]
     },
-    "@opam/decoders-yojson@opam:0.3.0@b9081413": {
-      "id": "@opam/decoders-yojson@opam:0.3.0@b9081413",
+    "@opam/decoders-yojson@opam:0.4.0@cb39dea6": {
+      "id": "@opam/decoders-yojson@opam:0.4.0@cb39dea6",
       "name": "@opam/decoders-yojson",
-      "version": "opam:0.3.0",
+      "version": "opam:0.4.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/a5/a50e613cfd18a584e765d8368ad0afe920482bf1e6745caf13f2b6a7d3634d9d#sha256:a50e613cfd18a584e765d8368ad0afe920482bf1e6745caf13f2b6a7d3634d9d",
-          "archive:https://github.com/mattjbray/ocaml-decoders/releases/download/v0.3.0/decoders-v0.3.0.tbz#sha256:a50e613cfd18a584e765d8368ad0afe920482bf1e6745caf13f2b6a7d3634d9d"
+          "archive:https://opam.ocaml.org/cache/sha256/18/18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7#sha256:18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7",
+          "archive:https://github.com/mattjbray/ocaml-decoders/releases/download/v0.4.0/decoders-v0.4.0.tbz#sha256:18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7"
         ],
         "opam": {
           "name": "decoders-yojson",
-          "version": "0.3.0",
-          "path": "esy.lock/opam/decoders-yojson.0.3.0"
+          "version": "0.4.0",
+          "path": "esy.lock/opam/decoders-yojson.0.4.0"
         }
       },
       "overrides": [],
