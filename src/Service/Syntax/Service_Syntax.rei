@@ -4,7 +4,6 @@ open Oni_Syntax;
 
 [@deriving show({with_path: false})]
 type serverMsg =
-  // TODO: Is this really needed?
   | ServerStarted(Oni_Syntax_Client.t)
   | ServerFailedToStart(string)
   | ServerClosed;

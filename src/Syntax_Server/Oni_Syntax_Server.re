@@ -49,10 +49,8 @@ let start = (~healthCheck) => {
     try(
       {
         if (State.anyPendingWork(state^)) {
-          log("Has pending work...");
           map(State.doPendingWork);
         } else {
-          log("Done with pending working!");
           let _: result(unit, Luv.Error.t) = _stopWork();
           ();
         };
@@ -61,7 +59,6 @@ let start = (~healthCheck) => {
         tokenUpdates
         |> List.iter(((bufferId, updates)) =>
              if (updates !== []) {
-               log("Sending token update...");
                write(
                  Protocol.ServerToClient.TokenUpdate({
                    bufferId,

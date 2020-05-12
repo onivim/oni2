@@ -51,6 +51,10 @@ let initialize = (~log, languageInfo, setup, state) => {
   setup: Some(setup),
 };
 
+module Constants = {
+  let defaultScope = "source.text";
+};
+
 let getVisibleBuffers = state => state.visibleBuffers;
 
 let getVisibleHighlighters = state => {
@@ -73,7 +77,7 @@ module Internal = {
     state.bufferInfo
     |> IntMap.find_opt(bufferId)
     |> Option.map(({scope, _}) => scope)
-    |> Option.value(~default="source.text");
+    |> Option.value(~default=Constants.defaultScope);
   };
 };
 
@@ -170,7 +174,7 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
          | None =>
            if (update.isFull) {
              Some({
-               scope: "source.text",
+               scope: Constants.defaultScope,
                lines: update.lines,
                version: update.version,
              });
@@ -269,20 +273,14 @@ let bufferEnter =
       state.languageInfo,
       filetype,
     )
-    |> Option.value(~default="source.text");
+    |> Option.value(~default=Constants.defaultScope);
 
   let bufferInfo =
     state.bufferInfo
     |> IntMap.update(
          bufferId,
          fun
-         | None =>
-           Some({
-             // TODO: Bring in lines!
-             lines,
-             version: (-1),
-             scope,
-           })
+         | None => Some({lines, version: (-1), scope})
          | Some(bufInfo) => Some({...bufInfo, scope}),
        );
 
@@ -304,7 +302,10 @@ let bufferEnter =
 };
 
 let bufferLeave =
-    (~bufferId: int, {bufferInfo, visibleBuffers, highlightsMap, _} as state: t) => {
+    (
+      ~bufferId: int,
+      {bufferInfo, visibleBuffers, highlightsMap, _} as state: t,
+    ) => {
   let bufferInfo = IntMap.remove(bufferId, bufferInfo);
   let visibleBuffers = List.filter(id => id != bufferId, visibleBuffers);
   let highlightsMap = IntMap.remove(bufferId, highlightsMap);
