@@ -226,7 +226,7 @@
     "@glennsl/timber": "1.0.0",
     "refmterr": "*",
     "@esy-ocaml/libffi": "*",
-    "@opam/decoders-yojson": "*",
+    "@opam/decoders-yojson": "^0.3.0",
     "@opam/uutf": "*",
     "@opam/uucp": "*",
     "@opam/luv": "~0.5.1",

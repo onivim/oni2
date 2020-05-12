@@ -35,9 +35,9 @@ depends: [
 ]
 url {
   src:
-    "https://github.com/mattjbray/ocaml-decoders/releases/download/v0.4.0/decoders-v0.4.0.tbz"
+    "https://github.com/mattjbray/ocaml-decoders/releases/download/v0.3.0/decoders-v0.3.0.tbz"
   checksum: [
-    "sha256=18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7"
-    "sha512=a6221b40cc1c3d9ea46c5e7cec6c5992b923e390ce004c23d7f36e99974c10f6d4a690113255b85d3895f357e0dd44562e9bc03ba8708223cb1e56ba182c10d3"
+    "sha256=a50e613cfd18a584e765d8368ad0afe920482bf1e6745caf13f2b6a7d3634d9d"
+    "sha512=2f596f444ec815759234b50a53e3a67e7413f871d5fce1ae950e145dd5e81c4507acf784334ca86c935344b59ea619baa96ac07a0207cfb70681986dd81e2079"
   ]
 }
