@@ -4,7 +4,8 @@ open Oni_Syntax;
 
 [@deriving show({with_path: false})]
 type serverMsg =
-  | ServerStarted(Oni_Syntax_Client.t)
+  | ServerStarted
+  | ServerInitialized(Oni_Syntax_Client.t)
   | ServerFailedToStart(string)
   | ServerClosed;
 
@@ -16,7 +17,7 @@ module Sub: {
     (
       ~useTreeSitter: bool,
       ~languageInfo: Oni_Extensions.LanguageInfo.t,
-      ~setup: Oni_Core.Setup.t,
+      ~setup: Setup.t,
       ~tokenTheme: TokenTheme.t
     ) =>
     Isolinear.Sub.t(serverMsg);
@@ -24,7 +25,7 @@ module Sub: {
   let buffer:
     (
       ~client: Oni_Syntax_Client.t,
-      ~buffer: Oni_Core.Buffer.t,
+      ~buffer: Buffer.t,
       ~visibleRanges: list(Range.t)
     ) =>
     Isolinear.Sub.t(bufferMsg);

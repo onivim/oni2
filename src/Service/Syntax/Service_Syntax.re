@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 module Core = Oni_Core;
-open Utility;
 module Syntax = Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
 module Ext = Oni_Extensions;
@@ -10,7 +9,8 @@ module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
 
 [@deriving show({with_path: false})]
 type serverMsg =
-  | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerStarted
+  | ServerInitialized([@opaque] Oni_Syntax_Client.t)
   | ServerFailedToStart(string)
   | ServerClosed;
 
@@ -77,7 +77,7 @@ module Sub = {
               () => {
                 Log.info("onConnected");
                 pendingResult^
-                |> Option.iter(server => dispatch(ServerStarted(server)));
+                |> Option.iter(server => dispatch(ServerInitialized(server)));
               },
             ~onClose=_ => dispatch(ServerClosed),
             ~onHighlights=
@@ -87,11 +87,14 @@ module Sub = {
             ~onHealthCheckResult=_ => (),
             params.languageInfo,
             params.setup,
-          )
-          |> Utility.ResultEx.tap(server => dispatch(ServerStarted(server)))
-          |> Utility.ResultEx.tapError(msg =>
-               dispatch(ServerFailedToStart(msg))
-             );
+          );
+
+        switch (clientResult) {
+        | Ok(_) => dispatch(ServerStarted)
+        | Error(msg) => dispatch(ServerFailedToStart(msg))
+        };
+
+        pendingResult := Result.to_option(clientResult);
 
         {
           client: clientResult,

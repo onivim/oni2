@@ -89,7 +89,8 @@ module Internal = {
 
 [@deriving show({with_path: false})]
 type msg =
-  | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerStarted
+  | ServerInitialized([@opaque] Oni_Syntax_Client.t)
   | ServerFailedToStart(string)
   | ServerStopped
   | TokensHighlighted({
@@ -269,8 +270,9 @@ let update: (t, msg) => (t, outmsg) =
         setTokens(bufferId, tokens, highlights),
         Nothing,
       )
+    | ServerStarted => (highlights, Nothing)
     | ServerFailedToStart(msg) => (highlights, ServerError(msg))
-    | ServerStarted(client) => (
+    | ServerInitialized(client) => (
         {...highlights, maybeSyntaxClient: Some(client)},
         Nothing,
       )
@@ -317,7 +319,9 @@ let subscription =
     )
     |> Isolinear.Sub.map(
          fun
-         | Service_Syntax.ServerStarted(client) => ServerStarted(client)
+         | Service_Syntax.ServerStarted => ServerStarted
+         | Service_Syntax.ServerInitialized(client) =>
+           ServerInitialized(client)
          | Service_Syntax.ServerFailedToStart(msg) => ServerFailedToStart(msg)
          | Service_Syntax.ServerClosed => ServerStopped,
        );

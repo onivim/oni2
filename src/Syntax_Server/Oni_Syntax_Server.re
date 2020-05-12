@@ -114,7 +114,12 @@ let start = (~healthCheck) => {
             ),
           );
           updateAndRestartTimer(
-            State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges),
+            State.bufferEnter(
+              ~bufferId,
+              ~filetype,
+              ~lines,
+              ~visibleRanges,
+            ),
           );
         }
 
