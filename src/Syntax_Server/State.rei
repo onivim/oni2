@@ -33,5 +33,5 @@ let updateBufferVisibility: (~bufferId: int, ~ranges: list(Range.t), t) => t;
 
 let doPendingWork: t => t;
 
-let getTokenUpdates: t => list(Protocol.TokenUpdate.t);
+let getTokenUpdates: t => list((int, list(Protocol.TokenUpdate.t)));
 let clearTokenUpdates: t => t;

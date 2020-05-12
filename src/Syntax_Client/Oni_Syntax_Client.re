@@ -18,10 +18,6 @@ module ServerToClient = Protocol.ServerToClient;
 module ClientLog = (val Log.withNamespace("Oni2.Syntax.Client"));
 module ServerLog = (val Log.withNamespace("Oni2.Syntax.Server"));
 
-type connectedCallback = unit => unit;
-type closeCallback = int => unit;
-type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
-
 module Defaults = {
   let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
   let executablePath = Revery.Environment.executingDirectory ++ executableName;
@@ -130,9 +126,9 @@ let start =
     | ServerToClient.Log(msg) => ServerLog.trace(msg)
     | ServerToClient.Closing => ServerLog.debug("Closing")
     | ServerToClient.HealthCheckPass(res) => onHealthCheckResult(res)
-    | ServerToClient.TokenUpdate(tokens) =>
+    | ServerToClient.TokenUpdate({bufferId, tokens}) =>
       ClientLog.info("Received token update");
-      onHighlights(tokens);
+      onHighlights(~bufferId, ~tokens);
       ClientLog.trace("Tokens applied");
     };
 

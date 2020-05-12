@@ -20,3 +20,18 @@ let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
       ranges,
     );
   };
+
+let areRangesEqual: (list(Range.t), list(Range.t)) => bool =
+  (rangesA, rangesB) => {
+    let rec loop = (rA, rB) => {
+      switch (rA, rB) {
+      | ([], []) => true
+      | ([hdA, ...tailA], [hdB, ...tailB]) =>
+        hdA == hdB && loop(tailA, tailB)
+      | ([], _) => false
+      | (_, []) => false
+      };
+    };
+
+    loop(rangesA, rangesB);
+  };

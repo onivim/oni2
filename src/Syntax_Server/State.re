@@ -140,23 +140,27 @@ let getTokenUpdates = state => {
         state.highlightsMap
         |> IntMap.find_opt(curr)
         |> Option.map(highlights => {
-             highlights
-             |> NativeSyntaxHighlights.getUpdatedLines
-             |> List.map(line => {
-                  let tokenColors =
-                    NativeSyntaxHighlights.getTokensForLine(highlights, line);
-                  let bufferId = curr;
-                  Protocol.TokenUpdate.create(~bufferId, ~line, tokenColors);
-                })
+             let tokenUpdates =
+               highlights
+               |> NativeSyntaxHighlights.getUpdatedLines
+               |> List.map(line => {
+                    let tokenColors =
+                      NativeSyntaxHighlights.getTokensForLine(
+                        highlights,
+                        line,
+                      );
+                    Protocol.TokenUpdate.create(~line, tokenColors);
+                  });
+
+             (curr, tokenUpdates);
            })
-        |> Option.value(~default=[]);
+        |> Option.value(~default=(curr, []));
 
       [tokenUpdatesForBuffer, ...acc];
     },
     [],
     state.visibleBuffers,
-  )
-  |> List.flatten;
+  );
 };
 
 let clearTokenUpdates = state => {

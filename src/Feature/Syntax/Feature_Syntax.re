@@ -38,8 +38,10 @@ type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
   | ServerFailedToStart(string)
   | ServerStopped
-  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t));
-//  | Service(Service_Syntax.serverMsg);
+  | TokensHighlighted({
+      bufferId: int,
+      tokens: [@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t),
+    });
 
 type outmsg =
   | Nothing
@@ -111,13 +113,14 @@ let setTokensForLine =
   {...prev, ignoredBuffers, highlights};
 };
 
-let setTokens = (tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
+let setTokens =
+    (bufferId, tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
   Protocol.TokenUpdate.(
     tokenUpdates
     |> List.fold_left(
          (acc, curr) => {
            setTokensForLine(
-             ~bufferId=curr.bufferId,
+             ~bufferId,
              ~line=curr.line,
              ~tokens=curr.tokenColors,
              acc,
@@ -166,7 +169,10 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) =>
 let update: (t, msg) => (t, outmsg) =
   (highlights: t, msg) =>
     switch (msg) {
-    | TokensHighlighted(tokens) => (setTokens(tokens, highlights), Nothing)
+    | TokensHighlighted({bufferId, tokens}) => (
+        setTokens(bufferId, tokens, highlights),
+        Nothing,
+      )
     | ServerFailedToStart(msg) => (highlights, ServerError(msg))
     | ServerStarted(client) => (
         {...highlights, maybeSyntaxClient: Some(client)},
@@ -191,8 +197,10 @@ let subscription =
          Service_Syntax.Sub.buffer(~client, ~buffer, ~visibleRanges)
          |> Isolinear.Sub.map(
               fun
-              | Service_Syntax.ReceivedHighlights(updates) =>
-                TokensHighlighted(updates),
+              | Service_Syntax.ReceivedHighlights(tokens) => {
+                  let bufferId = Buffer.getId(buffer);
+                  TokensHighlighted({bufferId, tokens});
+                },
             )
        });
   };

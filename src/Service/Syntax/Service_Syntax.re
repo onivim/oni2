@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 module Core = Oni_Core;
+open Utility;
 module Syntax = Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
 module Ext = Oni_Extensions;
@@ -16,6 +17,33 @@ type serverMsg =
 type bufferMsg =
   | ReceivedHighlights(list(Protocol.TokenUpdate.t));
 
+module Internal = {
+  let bufferToHighlightEvent:
+    Hashtbl.t(int, Revery.Event.t(list(Protocol.TokenUpdate.t))) =
+    Hashtbl.create(16);
+
+  let subscribe = (bufferId, tokenUpdateCallback) => {
+    // Create event if not already available for buffer
+    let tokenUpdateEvent =
+      switch (Hashtbl.find_opt(bufferToHighlightEvent, bufferId)) {
+      | None =>
+        let evt = Revery.Event.create();
+        Hashtbl.add(bufferToHighlightEvent, bufferId, evt);
+        evt;
+      | Some(evt) => evt
+      };
+
+    Revery.Event.subscribe(tokenUpdateEvent, tokenUpdateCallback);
+  };
+
+  let notifyTokensReceived = (bufferId, tokenUpdate) => {
+    switch (Hashtbl.find_opt(bufferToHighlightEvent, bufferId)) {
+    | None => Log.warnf(m => m("No listener for bufferId: %d", bufferId))
+    | Some(listener) => Revery.Event.dispatch(listener, tokenUpdate)
+    };
+  };
+};
+
 module Sub = {
   type serverParams = {
     id: string,
@@ -24,9 +52,6 @@ module Sub = {
     tokenTheme: Syntax.TokenTheme.t,
     configuration: Core.Configuration.t,
   };
-
-  let highlightsEvent: Revery.Event.t(list(Protocol.TokenUpdate.t)) =
-    Revery.Event.create();
 
   module SyntaxServerSubscription =
     Isolinear.Sub.Make({
@@ -56,8 +81,8 @@ module Sub = {
               },
             ~onClose=_ => dispatch(ServerClosed),
             ~onHighlights=
-              highlights => {
-                Revery.Event.dispatch(highlightsEvent, highlights)
+              (~bufferId, ~tokens) => {
+                Internal.notifyTokensReceived(bufferId, tokens)
               },
             ~onHealthCheckResult=_ => (),
             params.languageInfo,
@@ -142,7 +167,10 @@ module Sub = {
       type nonrec msg = bufferMsg;
       type nonrec params = bufferParams;
 
-      type state = {lastVisibleRanges: list(Range.t)};
+      type state = {
+        lastVisibleRanges: list(Range.t),
+        unsubscribe: unit => unit,
+      };
 
       let name = "BufferSubscription";
       let id = params => {
@@ -157,33 +185,52 @@ module Sub = {
       };
 
       let init = (~params, ~dispatch) => {
+        let bufferId = Core.Buffer.getId(params.buffer);
+        let unsubscribe =
+          Internal.subscribe(bufferId, tokenUpdates => {
+            dispatch(ReceivedHighlights(tokenUpdates))
+          });
+
+        Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
+
         params.buffer
         |> Core.Buffer.getFileType
         |> Option.iter(filetype => {
              Oni_Syntax_Client.startHighlightingBuffer(
                ~filetype,
-               ~bufferId=Core.Buffer.getId(params.buffer),
+               ~bufferId,
+               // TODO: Send initial visibility
                ~lines=Core.Buffer.getLines(params.buffer),
                params.client,
              )
            });
 
-        {lastVisibleRanges: params.visibleRanges};
+        {lastVisibleRanges: params.visibleRanges, unsubscribe};
       };
 
-      let update = (~params, ~state, ~dispatch) => {
-        let currentVisibleRanges = state.visibleRanges;
+      let update = (~params, ~state, ~dispatch as _) => {
+        let currentVisibleRanges = state.lastVisibleRanges;
 
-        // TODO: Check if ranges are different, and if they are, send an update to the syntax server!
+        if (!
+              RangeEx.areRangesEqual(
+                currentVisibleRanges,
+                params.visibleRanges,
+              )) {
+          Oni_Syntax_Client.notifyBufferVisibilityChanged(
+            ~bufferId=Core.Buffer.getId(params.buffer),
+            ~ranges=params.visibleRanges,
+            params.client,
+          );
+        };
 
-        {lastVisibleRanges: params.visibleRanges};
+        {...state, lastVisibleRanges: params.visibleRanges};
       };
 
       let dispose = (~params, ~state) => {
-        Oni_Syntax_Client.stopHighlightingBuffer(
-          ~bufferId=Core.Buffer.getId(params.buffer),
-          params.client,
-        );
+        state.unsubscribe();
+        let bufferId = Core.Buffer.getId(params.buffer);
+        Log.infof(m => m("Stopping buffer subscription for: %d", bufferId));
+        Oni_Syntax_Client.stopHighlightingBuffer(~bufferId, params.client);
       };
     });
 

@@ -56,7 +56,17 @@ let start = (~healthCheck) => {
         };
 
         let tokenUpdates = State.getTokenUpdates(state^);
-        write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+        tokenUpdates
+        |> List.iter(((bufferId, updates)) =>
+             if (updates !== []) {
+               write(
+                 Protocol.ServerToClient.TokenUpdate({
+                   bufferId,
+                   tokens: updates,
+                 }),
+               );
+             }
+           );
         map(State.clearTokenUpdates);
       }
     ) {

@@ -177,7 +177,7 @@ let mainChecks = [
         Oni_Syntax_Client.start(
           ~onConnected=() => {connected := true},
           ~onClose=_ => {closed := true},
-          ~onHighlights=_ => (),
+          ~onHighlights=(~bufferId as _, ~tokens as _) => (),
           ~onHealthCheckResult=res => {healthCheckResult := res},
           Oni_Extensions.LanguageInfo.initial,
           setup,

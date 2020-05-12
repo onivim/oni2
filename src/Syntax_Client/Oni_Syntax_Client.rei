@@ -13,17 +13,14 @@ module ServerToClient = Protocol.ServerToClient;
 
 type t;
 
-type connectedCallback = unit => unit;
-type closeCallback = int => unit;
-type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
-
 let start:
   (
     ~parentPid: string=?,
     ~executablePath: string=?,
-    ~onConnected: connectedCallback=?,
-    ~onClose: closeCallback=?,
-    ~onHighlights: highlightsCallback,
+    ~onConnected: unit => unit=?,
+    ~onClose: int => unit=?,
+    ~onHighlights: (~bufferId: int, ~tokens: list(Protocol.TokenUpdate.t)) =>
+                   unit,
     ~onHealthCheckResult: bool => unit,
     Oni_Extensions.LanguageInfo.t,
     Setup.t

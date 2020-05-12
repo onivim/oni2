@@ -9,32 +9,29 @@ module Ext = Oni_Extensions;
 
 module TokenUpdate = {
   type t = {
-    bufferId: int,
     line: int,
     tokenColors: list(ColorizedToken.t),
   };
 
   let show = tokenUpdate => {
     Printf.sprintf(
-      "Buffer id: %d line: %d token count: %d",
-      tokenUpdate.bufferId,
+      "Line: %d token count: %d",
       tokenUpdate.line,
       List.length(tokenUpdate.tokenColors),
     );
   };
 
-  let create = (~bufferId, ~line, tokenColors) => {
-    bufferId,
-    line,
-    tokenColors,
-  };
+  let create = (~line, tokenColors) => {line, tokenColors};
 };
 
 module ServerToClient = {
   [@deriving show({with_path: false})]
   type t =
     | Initialized
-    | TokenUpdate([@opaque] list(TokenUpdate.t))
+    | TokenUpdate({
+        bufferId: int,
+        tokens: [@opaque] list(TokenUpdate.t),
+      })
     | HealthCheckPass(bool)
     | EchoReply(string)
     | Log(string)
