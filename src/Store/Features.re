@@ -8,12 +8,21 @@ module Internal = {
     Feature_Notification.Effects.create(~kind, message)
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
+  let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
+    buffer
+    |> Oni_Core.Buffer.getFileType
+    |> Utility.OptionEx.flatMap(fileType =>
+         Oni_Extensions.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
+       )
+  |> Option.value(~default="source.plaintext")
+  };
 };
 
 // UPDATE
 
 let update =
     (
+      ~grammarRepository: Oni_Syntax.GrammarRepository.t,
       ~extHostClient: Exthost.Client.t,
       ~getUserSettings,
       ~setup,
@@ -47,9 +56,14 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
-  | BufferUpdate({update, _}) =>
+  | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
-      Feature_Syntax.handleUpdate(update, state.syntaxHighlights);
+      Feature_Syntax.handleUpdate(
+      ~scope=Internal.getScopeForBuffer(~languageInfo=state.languageInfo, newBuffer),
+      ~grammars=grammarRepository,
+      ~configuration=state.configuration,
+      ~theme=state.tokenTheme,
+      update, state.syntaxHighlights);
     let state = {...state, syntaxHighlights};
     (
       state,

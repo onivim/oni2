@@ -29,9 +29,15 @@ let getSyntaxScope:
 let setTokensForLine:
   (~bufferId: int, ~line: int, ~tokens: list(ColorizedToken.t), t) => t;
 
-let handleUpdate: (BufferUpdate.t, t) => t;
+let handleUpdate: (~grammars: Oni_Syntax.GrammarRepository.t,
+~scope: string,
+~theme: Oni_Syntax.TokenTheme.t,
+~configuration: Oni_Core.Configuration.t,
+BufferUpdate.t, t) => t;
 
 let update: (t, msg) => (t, outmsg);
+
+let isSyntaxServerRunning: t => bool;
 
 // [ignore(~bufferId, syntax)] marks a buffer to be ignored.
 // The only syntax highlight adjustment will come from explicit

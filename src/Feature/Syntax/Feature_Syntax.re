@@ -33,6 +33,39 @@ let highlight = (~scope, ~theme, ~grammars, lines) => {
   result;
 };
 
+module Internal = {
+  let eagerHighlight = (~grammars, ~scope, ~configuration, ~theme, lines) => {
+    let maxLines =
+      configuration |> Configuration.getValue(c => c.syntaxEagerMaxLines);
+    let maxLineLength =
+      configuration |> Configuration.getValue(c => c.syntaxEagerMaxLineLength);
+
+    let len = min(Array.length(lines), maxLines);
+
+    let numberOfLinesToHighlight = {
+      let rec iter = idx =>
+        if (idx >= len) {
+          idx;
+        } else if (String.length(lines[idx]) > maxLineLength) {
+          idx;
+        } else {
+          iter(idx + 1);
+        };
+
+      iter(0);
+    };
+
+    if (numberOfLinesToHighlight == 0) {
+      [||];
+    } else {
+      let linesToHighlight =
+        Array.sub(lines, 0, numberOfLinesToHighlight - 1);
+      let highlights = highlight(~scope, ~theme, ~grammars, linesToHighlight);
+      highlights;
+    };
+  };
+};
+
 [@deriving show({with_path: false})]
 type msg =
   | ServerStarted([@opaque] Oni_Syntax_Client.t)
@@ -91,6 +124,10 @@ let getSyntaxScope =
   loop(SyntaxScope.none, tokens);
 };
 
+let isSyntaxServerRunning = ({maybeSyntaxClient, _}) => {
+  maybeSyntaxClient != None;
+};
+
 let setTokensForLine =
     (
       ~bufferId: int,
@@ -139,10 +176,46 @@ let ignore = (~bufferId, bufferHighlights) => {
 };
 
 // When there is a buffer update, shift the lines to match
-let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) =>
+let handleUpdate =
+    (
+      ~grammars,
+      ~scope,
+      ~theme,
+      ~configuration,
+      bufferUpdate: BufferUpdate.t,
+      bufferHighlights,
+    ) =>
   if (BufferMap.mem(bufferUpdate.id, bufferHighlights.ignoredBuffers)) {
     bufferHighlights;
-  } else {
+  } else if (bufferUpdate.version == 1 && bufferUpdate.isFull) {
+    // Eager syntax highlighting - on the very first buffer update,
+    // we'll synchronousyl calculate syntax highlights for an initial
+    // chunk of the buffer.
+    let newHighlights = ref(bufferHighlights);
+    let highlights =
+      Internal.eagerHighlight(
+        ~scope,
+        ~configuration,
+        ~theme,
+        ~grammars,
+        bufferUpdate.lines,
+      );
+
+    let len = Array.length(highlights);
+
+    for (i in 0 to len - 1) {
+      newHighlights :=
+        setTokensForLine(
+          ~bufferId=bufferUpdate.id,
+          ~line=i,
+          ~tokens=highlights[i],
+          newHighlights^,
+        );
+    };
+    newHighlights^;
+  } else if (!bufferUpdate.isFull) {
+    // Otherwise, if not a full update, we'll pre-emptively shift highlights
+    // to give immediate feedback.
     let highlights =
       BufferMap.update(
         bufferUpdate.id,
@@ -164,6 +237,8 @@ let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) =>
         bufferHighlights.highlights,
       );
     {...bufferHighlights, highlights};
+  } else {
+    bufferHighlights;
   };
 
 let update: (t, msg) => (t, outmsg) =
@@ -188,10 +263,13 @@ let subscription =
       ~setup,
       ~tokenTheme,
       ~bufferVisibility,
-      {maybeSyntaxClient, _},
+      {maybeSyntaxClient, ignoredBuffers, _},
     ) => {
   let getBufferSubscriptions = client => {
     bufferVisibility
+    |> List.filter(((buffer, _)) =>
+         !BufferMap.mem(Oni_Core.Buffer.getId(buffer), ignoredBuffers)
+       )
     |> List.map(((buffer, visibleRanges)) => {
          Service_Syntax.Sub.buffer(~client, ~buffer, ~visibleRanges)
          |> Isolinear.Sub.map(
