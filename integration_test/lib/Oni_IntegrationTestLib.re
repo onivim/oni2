@@ -73,7 +73,6 @@ let runTest =
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
   Timber.App.setNamespaceFilter("Syntax");
-  
 
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
   | None => ()
@@ -113,17 +112,20 @@ let runTest =
     currentState := state;
   };
 
-  let _: unit => unit = Revery.Tick.interval((_) => {
-    let state = currentState^;
-    Revery.Utility.HeadlessWindow.render(
-      headlessWindow,
-      <Oni_UI.Root state />,
+  let _: unit => unit =
+    Revery.Tick.interval(
+      _ => {
+        let state = currentState^;
+        Revery.Utility.HeadlessWindow.render(
+          headlessWindow,
+          <Oni_UI.Root state />,
+        );
+      },
+      //    Revery.Utility.HeadlessWindow.takeScreenshot(
+      //      headlessWindow, "screenshot.png"
+      //    );
+      Revery.Time.zero,
     );
-
-//    Revery.Utility.HeadlessWindow.takeScreenshot(
-//      headlessWindow, "screenshot.png"
-//    );
-  }, Revery.Time.zero);
 
   InitLog.info("Starting store...");
 
