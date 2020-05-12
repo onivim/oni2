@@ -12,9 +12,12 @@ module Internal = {
     buffer
     |> Oni_Core.Buffer.getFileType
     |> Utility.OptionEx.flatMap(fileType =>
-         Oni_Extensions.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
+         Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+           languageInfo,
+           fileType,
+         )
        )
-  |> Option.value(~default="source.plaintext")
+    |> Option.value(~default="source.plaintext");
   };
 };
 
@@ -59,11 +62,17 @@ let update =
   | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(
-      ~scope=Internal.getScopeForBuffer(~languageInfo=state.languageInfo, newBuffer),
-      ~grammars=grammarRepository,
-      ~configuration=state.configuration,
-      ~theme=state.tokenTheme,
-      update, state.syntaxHighlights);
+        ~scope=
+          Internal.getScopeForBuffer(
+            ~languageInfo=state.languageInfo,
+            newBuffer,
+          ),
+        ~grammars=grammarRepository,
+        ~configuration=state.configuration,
+        ~theme=state.tokenTheme,
+        update,
+        state.syntaxHighlights,
+      );
     let state = {...state, syntaxHighlights};
     (
       state,

@@ -133,7 +133,7 @@ let setTokensForLine =
       ~bufferId: int,
       ~line: int,
       ~tokens: list(ColorizedToken.t),
-      {highlights, ignoredBuffers} as prev: t,
+      {highlights, ignoredBuffers, _} as prev: t,
     ) => {
   let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {
     LineMap.update(line, _ => Some(tokens), lineMap);

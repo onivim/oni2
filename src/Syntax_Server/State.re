@@ -197,7 +197,7 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
 
 let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
   let state = applyBufferUpdate(~update=bufferUpdate, state);
-  let scope = Internal.getBufferScope(bufferUpdate.id, state);
+  let scope = Internal.getBufferScope(~bufferId=bufferUpdate.id, state);
 
   state
   |> Internal.getBuffer(~bufferId=bufferUpdate.id)
@@ -304,7 +304,7 @@ let bufferEnter =
 };
 
 let bufferLeave =
-    (~bufferId: int, {bufferInfo, visibleBuffers, highlightsMap} as state: t) => {
+    (~bufferId: int, {bufferInfo, visibleBuffers, highlightsMap, _} as state: t) => {
   let bufferInfo = IntMap.remove(bufferId, bufferInfo);
   let visibleBuffers = List.filter(id => id != bufferId, visibleBuffers);
   let highlightsMap = IntMap.remove(bufferId, highlightsMap);

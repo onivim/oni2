@@ -29,11 +29,16 @@ let getSyntaxScope:
 let setTokensForLine:
   (~bufferId: int, ~line: int, ~tokens: list(ColorizedToken.t), t) => t;
 
-let handleUpdate: (~grammars: Oni_Syntax.GrammarRepository.t,
-~scope: string,
-~theme: Oni_Syntax.TokenTheme.t,
-~configuration: Oni_Core.Configuration.t,
-BufferUpdate.t, t) => t;
+let handleUpdate:
+  (
+    ~grammars: Oni_Syntax.GrammarRepository.t,
+    ~scope: string,
+    ~theme: Oni_Syntax.TokenTheme.t,
+    ~configuration: Oni_Core.Configuration.t,
+    BufferUpdate.t,
+    t
+  ) =>
+  t;
 
 let update: (t, msg) => (t, outmsg);
 

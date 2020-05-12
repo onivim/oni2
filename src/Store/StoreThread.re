@@ -119,11 +119,6 @@ let start =
       setClipboardText,
     );
 
-  let syntaxUpdater =
-    SyntaxHighlightingStoreConnector.start(
-      ~enabled=shouldSyntaxHighlight,
-      languageInfo,
-    );
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClientResult, extHostStream) =
@@ -171,7 +166,6 @@ let start =
       inputUpdater,
       quickmenuUpdater,
       vimUpdater,
-      syntaxUpdater,
       extHostUpdater,
       configurationUpdater,
       keyBindingsUpdater,
@@ -185,7 +179,12 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(~grammarRepository, ~extHostClient, ~getUserSettings, ~setup),
+      Features.update(
+        ~grammarRepository,
+        ~extHostClient,
+        ~getUserSettings,
+        ~setup,
+      ),
       PaneStore.update,
       contextMenuUpdater,
     ]);
