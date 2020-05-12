@@ -80,7 +80,7 @@ let update =
         ~bufferUpdate=update,
         state.syntaxHighlights,
       )
-      |> Isolinear.Effect.map(() => Actions.Nothing),
+      |> Isolinear.Effect.map(() => Actions.Noop),
     );
 
   | Configuration(msg) =>
