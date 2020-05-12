@@ -16,7 +16,7 @@ type logFunc = string => unit;
 type bufferInfo = {
   lines: array(string),
   version: int,
-  filetype: string,
+  scope: string,
 };
 
 type t = {
@@ -72,8 +72,8 @@ module Internal = {
   let getBufferScope = (~bufferId: int, state: t) => {
     state.bufferInfo
     |> IntMap.find_opt(bufferId)
-    |> Option.map(({filetype, _}) => filetype)
-    |> Option.value(~default="plaintext");
+    |> Option.map(({scope, _}) => scope)
+    |> Option.value(~default="source.text");
   };
 };
 
@@ -170,16 +170,16 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
          | None =>
            if (update.isFull) {
              Some({
-               filetype: "plaintext",
+               scope: "source.text",
                lines: update.lines,
                version: update.version,
              });
            } else {
              None;
            }
-         | Some({filetype, lines, _}) =>
+         | Some({scope, lines, _}) =>
            if (update.isFull) {
-             Some({filetype, lines: update.lines, version: update.version});
+             Some({scope, lines: update.lines, version: update.version});
            } else {
              let newLines =
                ArrayEx.replace(
@@ -188,7 +188,7 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
                  ~stop=update.endLine |> Index.toZeroBased,
                  lines,
                );
-             Some({filetype, lines: newLines, version: update.version});
+             Some({scope, lines: newLines, version: update.version});
            }
          }
        );
@@ -223,7 +223,6 @@ let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
                Some(
                  NativeSyntaxHighlights.create(
                    ~useTreeSitter=state.useTreeSitter,
-                   ~bufferUpdate,
                    ~theme=state.theme,
                    ~scope,
                    ~getTreesitterScope,
@@ -265,6 +264,13 @@ let bufferEnter =
       [bufferId, ...state.visibleBuffers];
     };
 
+  let scope =
+    Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+      state.languageInfo,
+      filetype,
+    )
+    |> Option.value(~default="source.text");
+
   let bufferInfo =
     state.bufferInfo
     |> IntMap.update(
@@ -275,9 +281,9 @@ let bufferEnter =
              // TODO: Bring in lines!
              lines,
              version: (-1),
-             filetype,
+             scope,
            })
-         | Some(bufInfo) => Some({...bufInfo, filetype}),
+         | Some(bufInfo) => Some({...bufInfo, scope}),
        );
 
   let state = {...state, bufferInfo, visibleBuffers};

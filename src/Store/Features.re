@@ -51,7 +51,14 @@ let update =
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(update, state.syntaxHighlights);
     let state = {...state, syntaxHighlights};
-    (state, Effect.none);
+    (
+      state,
+      Feature_Syntax.Effect.bufferUpdate(
+        ~bufferUpdate=update,
+        state.syntaxHighlights,
+      )
+      |> Isolinear.Effect.map(() => Actions.Nothing),
+    );
 
   | Configuration(msg) =>
     let (config, outmsg) =

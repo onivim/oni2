@@ -8,14 +8,25 @@ open Rench;
 open Exthost.Extension;
 open Scanner.ScanResult;
 
+[@deriving show]
 type t = {
   grammars: list(Contributions.Grammar.t),
   languages: list(Contributions.Language.t),
-  extToLanguage: StringMap.t(string),
-  languageToConfigurationPath: StringMap.t(string),
-  languageToScope: StringMap.t(string),
-  scopeToGrammarPath: StringMap.t(string),
-  scopeToTreesitterPath: StringMap.t(option(string)),
+  extToLanguage: [@opaque] StringMap.t(string),
+  languageToConfigurationPath: [@opaque] StringMap.t(string),
+  languageToScope: [@opaque] StringMap.t(string),
+  scopeToGrammarPath: [@opaque] StringMap.t(string),
+  scopeToTreesitterPath: [@opaque] StringMap.t(option(string)),
+};
+
+let toString = languageInfo => {
+  show(languageInfo)
+  ++ "\n Grammars: \n"
+  ++ StringMap.fold(
+       (key, v, acc) => {acc ++ "\n" ++ "key: " ++ key ++ " val: " ++ v},
+       languageInfo.scopeToGrammarPath,
+       "",
+     );
 };
 
 module Regexes = {

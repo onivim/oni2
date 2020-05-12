@@ -19,8 +19,11 @@ let create = (~log=_ => (), languageInfo) => {
 let empty = create(Ext.LanguageInfo.initial);
 
 let getGrammar = (~scope: string, gr: t) => {
+  gr.log("Trying to load grammar for scope: " ++ scope);
   switch (Hashtbl.find_opt(gr.scopeToGrammar, scope)) {
-  | Some(v) => Some(v)
+  | Some(v) =>
+    gr.log("Got grammar for: " ++ scope);
+    Some(v);
   | None =>
     switch (Ext.LanguageInfo.getGrammarPathFromScope(gr.languageInfo, scope)) {
     | Some(grammarPath) =>
@@ -52,7 +55,9 @@ let getGrammar = (~scope: string, gr: t) => {
         }
       };
 
-    | None => None
+    | None =>
+      gr.log("Unable to find grammar for: " ++ scope);
+      None;
     }
   };
 };

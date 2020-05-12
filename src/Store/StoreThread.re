@@ -190,6 +190,14 @@ let start =
     ]);
 
   let subscriptions = (state: Model.State.t) => {
+    let visibleRanges =
+      state
+      |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges
+      |> List.map(((bufferId, ranges)) => {
+           Model.Selectors.getBufferById(state, bufferId)
+           |> Option.map(buffer => {(buffer, ranges)})
+         })
+      |> Core.Utility.OptionEx.values;
     let syntaxSubscription =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
@@ -197,7 +205,7 @@ let start =
             ~languageInfo,
             ~setup,
             ~tokenTheme=state.tokenTheme,
-            ~bufferVisibility=[],
+            ~bufferVisibility=visibleRanges,
             state.syntaxHighlights,
           )
           |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg))

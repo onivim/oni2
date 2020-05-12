@@ -8,6 +8,8 @@ open Exthost.Extension;
 type t;
 let initial: t;
 
+let toString: t => string;
+
 let defaultLanguage: string;
 
 let getGrammars: t => list(Contributions.Grammar.t);

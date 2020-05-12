@@ -179,7 +179,6 @@ let update: (t, msg) => (t, outmsg) =
         Nothing,
       )
     | ServerStopped => ({...highlights, maybeSyntaxClient: None}, Nothing)
-    //| Service(_) => (highlights, Nothing)
     };
 
 let subscription =

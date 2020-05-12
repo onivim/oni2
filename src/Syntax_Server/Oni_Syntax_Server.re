@@ -49,8 +49,10 @@ let start = (~healthCheck) => {
     try(
       {
         if (State.anyPendingWork(state^)) {
+          log("Has pending work...");
           map(State.doPendingWork);
         } else {
+          log("Done with pending working!");
           let _: result(unit, Luv.Error.t) = _stopWork();
           ();
         };
@@ -59,6 +61,7 @@ let start = (~healthCheck) => {
         tokenUpdates
         |> List.iter(((bufferId, updates)) =>
              if (updates !== []) {
+               log("Sending token update...");
                write(
                  Protocol.ServerToClient.TokenUpdate({
                    bufferId,
@@ -117,6 +120,11 @@ let start = (~healthCheck) => {
             State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges),
           );
         }
+
+      | BufferStopHighlighting(bufferId) => {
+          log(Printf.sprintf("Buffer stop highlighting - id: %d", bufferId));
+          updateAndRestartTimer(State.bufferLeave(~bufferId));
+        }
       | UseTreeSitter(useTreeSitter) => {
           updateAndRestartTimer(State.setUseTreeSitter(useTreeSitter));
           log(
@@ -148,6 +156,7 @@ let start = (~healthCheck) => {
           restartTimer();
         }
       | BufferVisibilityChanged({bufferId, ranges}) => {
+          log("Visibility changed");
           updateAndRestartTimer(
             State.updateBufferVisibility(~bufferId, ~ranges),
           );
