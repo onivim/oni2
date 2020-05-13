@@ -89,7 +89,10 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
   config:
     Feature_Configuration.initial(
       ~getUserSettings,
-      [Feature_Editor.Contributions.configuration],
+      [
+        Feature_Editor.Contributions.configuration,
+        Feature_Syntax.Contributions.configuration,
+      ],
     ),
   configuration: Configuration.default,
   decorationProviders: [],
