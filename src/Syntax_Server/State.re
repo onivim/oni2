@@ -73,11 +73,35 @@ module Internal = {
     IntMap.find_opt(bufferId, state.bufferInfo);
   };
 
-  let getBufferScope = (~bufferId: int, state: t) => {
-    state.bufferInfo
-    |> IntMap.find_opt(bufferId)
-    |> Option.map(({scope, _}) => scope)
-    |> Option.value(~default=Constants.defaultScope);
+  let createHighlighter =
+      (
+        ~bufferId,
+        ~scope,
+        ~lines,
+        {highlightsMap, theme, useTreeSitter, _} as state: t,
+      ) => {
+    let getTextmateGrammar = scope =>
+      GrammarRepository.getGrammar(~scope, state.grammarRepository);
+
+    let getTreesitterScope = scope =>
+      TreesitterRepository.getScopeConverter(
+        ~scope,
+        state.treesitterRepository,
+      );
+
+    let highlighter =
+      NativeSyntaxHighlights.create(
+        ~useTreeSitter,
+        ~theme,
+        ~scope,
+        ~getTreesitterScope,
+        ~getTextmateGrammar,
+        lines,
+      );
+
+    let highlightsMap = highlightsMap |> IntMap.add(bufferId, highlighter);
+
+    {...state, highlightsMap};
   };
 };
 
@@ -201,7 +225,6 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
 
 let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
   let state = applyBufferUpdate(~update=bufferUpdate, state);
-  let scope = Internal.getBufferScope(~bufferId=bufferUpdate.id, state);
 
   state
   |> Internal.getBuffer(~bufferId=bufferUpdate.id)
@@ -209,34 +232,7 @@ let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
        let highlightsMap =
          IntMap.update(
            bufferUpdate.id,
-           current =>
-             switch (current) {
-             | None =>
-               let getTextmateGrammar = scope =>
-                 GrammarRepository.getGrammar(
-                   ~scope,
-                   state.grammarRepository,
-                 );
-
-               let getTreesitterScope = scope =>
-                 TreesitterRepository.getScopeConverter(
-                   ~scope,
-                   state.treesitterRepository,
-                 );
-
-               Some(
-                 NativeSyntaxHighlights.create(
-                   ~useTreeSitter=state.useTreeSitter,
-                   ~theme=state.theme,
-                   ~scope,
-                   ~getTreesitterScope,
-                   ~getTextmateGrammar,
-                   lines,
-                 ),
-               );
-             | Some(v) =>
-               Some(NativeSyntaxHighlights.update(~bufferUpdate, ~lines, v))
-             },
+           Option.map(NativeSyntaxHighlights.update(~bufferUpdate, ~lines)),
            state.highlightsMap,
          );
        {...state, highlightsMap};
@@ -280,24 +276,14 @@ let bufferEnter =
     |> IntMap.update(
          bufferId,
          fun
-         | None => Some({lines, version: (-1), scope})
+         | None => Some({lines, version: 0, scope})
          | Some(bufInfo) => Some({...bufInfo, scope}),
        );
 
   let state = {...state, bufferInfo, visibleBuffers};
 
-  let update =
-    BufferUpdate.{
-      id: bufferId,
-      isFull: true,
-      lines,
-      startLine: Index.zero,
-      endLine: Index.(zero + Array.length(lines)),
-      version: 0,
-    };
-
   state
-  |> applyBufferUpdate(~update)
+  |> Internal.createHighlighter(~bufferId, ~scope, ~lines)
   |> updateBufferVisibility(~bufferId, ~ranges=visibleRanges);
 };
 
