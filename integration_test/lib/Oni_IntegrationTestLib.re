@@ -74,7 +74,6 @@ let runTest =
   Core.Log.enableDebug();
   Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
-  Timber.App.setNamespaceFilter("Syntax");
 
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
   | None => ()
