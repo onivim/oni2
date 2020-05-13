@@ -62,6 +62,7 @@ module Contributions: {
   };
 
   module Language: {
+    [@deriving show]
     type t = {
       id: string,
       extensions: list(string),

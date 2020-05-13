@@ -74,7 +74,6 @@ let updateTheme = (theme, hl) => {
 
 let create =
     (
-      ~bufferUpdate,
       ~useTreeSitter,
       ~scope,
       ~theme,
@@ -82,7 +81,6 @@ let create =
       ~getTextmateGrammar,
       lines: array(string),
     ) => {
-  ignore(bufferUpdate);
   let maybeScopeConverter = getTreesitterScope(scope);
 
   let allowTreeSitter = _hasTreeSitterScope(useTreeSitter, scope);

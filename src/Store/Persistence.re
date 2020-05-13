@@ -39,11 +39,11 @@ module Workspace = {
       );
     let windowWidth =
       define("windowWidth", int, 800, ((_state, window)) =>
-        Window.getRawSize(window).width
+        Window.getSize(window).width
       );
     let windowHeight =
       define("windowHeight", int, 600, ((_state, window)) =>
-        Window.getRawSize(window).height
+        Window.getSize(window).height
       );
     let windowMaximized =
       define("windowMazimized", bool, false, ((_state, window)) =>
