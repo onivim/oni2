@@ -1,82 +1,85 @@
 <changelog>
-  <commit type="chore" scope="dependency" hash="fa0d3d69" pr="1753" time="1589302850">
+  <commit hash="10ba05e2" time="1589378010">
+    Changelog: Fix invalid XML attributes
+  </commit>
+  <commit type="chore" scope="dependency" pr="1753" hash="fa0d3d69" time="1589302850">
     ocaml-decoders -> 0.4.0
   </commit>
-  <commit type="fix" scope="technical" issue="1749" hash="41af189a" pr="1752" time="1589298221">
+  <commit type="fix" scope="technical" issue="1749" pr="1752" hash="41af189a" time="1589298221">
     ballooning window size
   </commit>
-  <commit type="refactor" scope="exthost" issue="1747" hash="b2edf70f" pr="null" time="1589292693">
+  <commit type="refactor" scope="exthost" issue="1747" hash="b2edf70f" time="1589292693">
     Upgrade exthost to 1.45.6
   </commit>
-  <commit type="bugfix" scope="osx" issue="1747" hash="c63401b8" pr="null" time="1589248589">
+  <commit type="bugfix" scope="osx" issue="1747" hash="c63401b8" time="1589248589">
     Gatekeeper reporting application bundle as damaged
   </commit>
-  <commit type="bugfix" scope="windows" issue="1744" hash="c714e114" pr="null" time="1589242700">
+  <commit type="bugfix" scope="windows" issue="1744" hash="c714e114" time="1589242700">
     Many console windows open on startup
   </commit>
-  <commit type="feat" scope="other" hash="3f50e8d5" pr="1719" time="1589232212">
+  <commit type="feat" scope="other" pr="1719" hash="3f50e8d5" time="1589232212">
     fix macOS titlebar double-click behavior to reflect system default
   </commit>
-  <commit type="chore" scope="osx" hash="b0966c1c" pr="1742" time="1589221589">
+  <commit type="chore" scope="osx" pr="1742" hash="b0966c1c" time="1589221589">
     Add code-signing for watchdog and spdlog (#1742)
   </commit>
-  <commit type="refactor" scope="exthost" hash="79edae57" pr="1708" time="1589207790">
+  <commit type="refactor" scope="exthost" pr="1708" hash="79edae57" time="1589207790">
     Upgrade from 1.33.5 -> 1.45.3
   </commit>
-  <commit type="feat" scope="other" hash="31cad445" pr="1730" time="1588885186">
+  <commit type="feat" scope="other" pr="1730" hash="31cad445" time="1588885186">
     add changelog
   </commit>
-  <commit type="refactor" scope="exthost" hash="6ebe03ca" pr="1736" time="1588875205">
+  <commit type="refactor" scope="exthost" pr="1736" hash="6ebe03ca" time="1588875205">
     V2 - SCM - Port over SCM types / messages / requests
   </commit>
-  <commit type="chore" scope="ci" hash="36eb8e81" pr="1738" time="1588873083">
+  <commit type="chore" scope="ci" pr="1738" hash="36eb8e81" time="1588873083">
     Remove integration test clean-up (#1738)
   </commit>
-  <commit hash="4b1479e0" pr="1734" time="1588865086">
+  <commit pr="1734" hash="4b1479e0" time="1588865086">
     refactor(exthost) - V2 - Decorations API
   </commit>
-  <commit type="fix" scope="extensions" issue="1729" hash="b3e7fbbf" pr="1737" time="1588861553">
+  <commit type="fix" scope="extensions" issue="1729" pr="1737" hash="b3e7fbbf" time="1588861553">
     some gitlens regex patterns failed to parse
     
     <breaking>As this switches to a different regex engine, there's a chance that it might break other extension regexes.</breaking>
   </commit>
-  <commit type="docs" hash="5822aaea" pr="1718" time="1588861510">
+  <commit type="docs" pr="1718" hash="5822aaea" time="1588861510">
     add changelog conventions to contribution guidelines (#1718)
   </commit>
-  <commit type="fix" scope="extensions" issue="1729" hash="209ee404" pr="null" time="1588837785">
+  <commit type="fix" scope="extensions" issue="1729" hash="209ee404" time="1588837785">
     don't crash if unable to parse regex
   </commit>
-  <commit hash="6be50cf6" pr="1735" time="1588817417">
+  <commit pr="1735" hash="6be50cf6" time="1588817417">
     fix(exthost) - Handle acknowledged message type
   </commit>
-  <commit hash="e4c56568" pr="1732" time="1588814866">
+  <commit pr="1732" hash="e4c56568" time="1588814866">
     refactor(exthost) - V2 - SCM - Remove unused SCMRawResource properties
   </commit>
-  <commit hash="c8fa1db0" pr="1727" time="1588809875">
+  <commit pr="1727" hash="c8fa1db0" time="1588809875">
     refactor(exthost) - V2 - API - acceptConfiguration
   </commit>
-  <commit hash="a0facccc" pr="1731" time="1588802210">
+  <commit pr="1731" hash="a0facccc" time="1588802210">
     refactor(exthost) - V2 - use decoder for parsing
   </commit>
-  <commit type="feat" scope="workspace" hash="3ce31076" pr="1668" time="1588790811">
+  <commit type="feat" scope="workspace" pr="1668" hash="3ce31076" time="1588790811">
     window/split resizing, part 1 - basic functionality and commands
   </commit>
-  <commit type="chore" hash="8556a5db" pr="1726" time="1588783526">
+  <commit type="chore" pr="1726" hash="8556a5db" time="1588783526">
     remove pkg-config workaround (#1726)
   </commit>
-  <commit hash="ea1e82b4" pr="1725" time="1588775668">
+  <commit pr="1725" hash="ea1e82b4" time="1588775668">
     refactor(exthost) - V2 - API - provideDocumentSymbols
   </commit>
-  <commit hash="12952612" pr="1724" time="1588729527">
+  <commit pr="1724" hash="12952612" time="1588729527">
     refactor(exthost) - v2 - API - reference provider
   </commit>
-  <commit hash="c609e7c2" pr="1723" time="1588723287">
+  <commit pr="1723" hash="c609e7c2" time="1588723287">
     refactor(exhost) - v2 - API - provideDocumentHighlights
   </commit>
-  <commit type="refactor" scope="exthost" hash="68a54e99" pr="1710" time="1588711111">
+  <commit type="refactor" scope="exthost" pr="1710" hash="68a54e99" time="1588711111">
     port definition provider to v2
   </commit>
-  <commit type="feat" scope="workspace" issue="640" hash="9aac90b2" pr="1703" time="1588705176">
+  <commit type="feat" scope="workspace" issue="640" pr="1703" hash="9aac90b2" time="1588705176">
     <breaking>
       Oni2 will no longer open the working directory if no argument is passed. Instead you need to supply `.` 
     </breaking>
@@ -89,67 +92,67 @@
     If no file or folder argument is given, the last workspace path will be opened. Or, if this is the first time
     Oni2 is launched, open the Documents folder if possible, or fall back to the home folder if not.
   </commit>
-  <commit type="perf" scope="terminal" hash="5c7d1971" pr="1689" time="1588694990">
+  <commit type="perf" scope="terminal" pr="1689" hash="5c7d1971" time="1588694990">
     input regression
   </commit>
-  <commit type="feat" scope="other" issue="1631" hash="92bab00d" pr="1717" time="1588630193">
+  <commit type="feat" scope="other" issue="1631" pr="1717" hash="92bab00d" time="1588630193">
     correct double click behavior on macOS (maximize)
   </commit>
-  <commit type="feat" scope="Extension Host" hash="4edce141" pr="1709" time="1588627097">
+  <commit type="feat" scope="Extension Host" pr="1709" hash="4edce141" time="1588627097">
     Workspace APIs
   </commit>
-  <commit type="refactor" scope="exthost" hash="89236cac" pr="1711" time="1588617053">
+  <commit type="refactor" scope="exthost" pr="1711" hash="89236cac" time="1588617053">
     v2 - API - provideTextDocumentContent
   </commit>
-  <commit type="chore" scope="dependency" hash="ea560d1d" pr="1714" time="1588519632">
+  <commit type="chore" scope="dependency" pr="1714" hash="ea560d1d" time="1588519632">
     add fs, fp, dir
   </commit>
-  <commit type="fix" scope="search" issue="1693" hash="4b76ab42" pr="1713" time="1588516594">
+  <commit type="fix" scope="search" issue="1693" pr="1713" hash="4b76ab42" time="1588516594">
     closing the search pane doesn't "defocus it"
   </commit>
-  <commit type="chore" scope="dependency" hash="996f6b48" pr="1712" time="1588503999">
+  <commit type="chore" scope="dependency" pr="1712" hash="996f6b48" time="1588503999">
     revery -> 7853ddb
   </commit>
-  <commit type="refactor" scope="exthost" hash="33790f4e" pr="1706" time="1588448480">
+  <commit type="refactor" scope="exthost" pr="1706" hash="33790f4e" time="1588448480">
     v2 - API - completion
   </commit>
-  <commit type="fix" scope="file-explorer" issue="873" hash="cf6af66d" pr="1705" time="1588433491">
+  <commit type="fix" scope="file-explorer" issue="873" pr="1705" hash="cf6af66d" time="1588433491">
     exit zen mode when toggling explorer
   </commit>
-  <commit type="fix" scope="vim" hash="3890823d" pr="1704" time="1588433444">
+  <commit type="fix" scope="vim" pr="1704" hash="3890823d" time="1588433444">
     linewise clipboard paste (yyp)
   </commit>
-  <commit type="refactor" scope="exthost" hash="b3be9160" pr="1702" time="1588373057">
+  <commit type="refactor" scope="exthost" pr="1702" hash="b3be9160" time="1588373057">
     API - ExtHostDocuments: Document edit / update
   </commit>
-  <commit type="refactor" scope="exthost" hash="ef4c6b33" pr="1701" time="1588357323">
+  <commit type="refactor" scope="exthost" pr="1701" hash="ef4c6b33" time="1588357323">
     move handlers to Msg module
   </commit>
-  <commit type="chore" scope="dependency" hash="670657c4" pr="1700" time="1588345462">
+  <commit type="chore" scope="dependency" pr="1700" hash="670657c4" time="1588345462">
     esy-skia -> d60e5fe
   </commit>
-  <commit type="fix" scope="workspace" hash="ccb322ff" pr="1699" time="1588343021">
+  <commit type="fix" scope="workspace" pr="1699" hash="ccb322ff" time="1588343021">
     broken save command
   </commit>
-  <commit type="refactor" scope="exthost" hash="9838721d" pr="1697" time="1588341199">
+  <commit type="refactor" scope="exthost" pr="1697" hash="9838721d" time="1588341199">
     DocumentContentProvider, Decorations, Diagnostics
   </commit>
-  <commit type="fix" scope="vim" issue="1671" hash="7c6f4a78" pr="1685" time="1588298351">
+  <commit type="fix" scope="vim" issue="1671" pr="1685" hash="7c6f4a78" time="1588298351">
     buffer loses unsaved changes when switching
   </commit>
-  <commit type="chore" scope="ci" hash="bc2ac4d2" pr="1698" time="1588298337">
+  <commit type="chore" scope="ci" pr="1698" hash="bc2ac4d2" time="1588298337">
     Linux (CentOS) - remove cleanup prior to tests
   </commit>
-  <commit type="chore" scope="dependency" hash="25539c48" pr="1696" time="1588294522">
+  <commit type="chore" scope="dependency" pr="1696" hash="25539c48" time="1588294522">
     revery -> 9f725e0
   </commit>
-  <commit type="fix" scope="vim" issue="660" hash="ac39e58c" pr="1694" time="1588287421">
+  <commit type="fix" scope="vim" issue="660" pr="1694" hash="ac39e58c" time="1588287421">
     clipboard - specify character mode when not multiple lines
   </commit>
-  <commit type="chore" hash="a6506982" pr="1690" time="1588262364">
+  <commit type="chore" pr="1690" hash="a6506982" time="1588262364">
     Dependency: ocaml -> 4.9
   </commit>
-  <commit type="fix" scope="configuration" hash="5d4c99a9" pr="1623" time="1588257227">
+  <commit type="fix" scope="configuration" pr="1623" hash="5d4c99a9" time="1588257227">
     <breaking>
       On Windows, git-bash, powershell-core and perhaps others now correctly
       loads the config from %LOCALAPPDATA% instead of $HOME
