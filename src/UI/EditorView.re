@@ -22,16 +22,28 @@ module Styles = {
   ];
 };
 
+let onFileDropped = (event: NodeEvents.fileDropEventParams) =>
+  List.iter(
+    path => {
+      let stats = Unix.stat(path);
+      // This tests if the path dropped is a file. We can't handle opening directories, etc. yet
+      if (stats.st_kind == S_REG) {
+        GlobalContext.current().dispatch(
+          Model.Actions.OpenFileByPath(path, None, None),
+        );
+      };
+    },
+    event.paths,
+  );
+
 let make = (~state: State.t, ~theme, ()) =>
-  if (state.zenMode) {
-    <View style={Styles.container(theme)}>
-      {switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+  <View onFileDropped style={Styles.container(theme)}>
+    {if (state.zenMode) {
+       switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
        | Some(editorGroup) => <EditorGroupView state theme editorGroup />
        | None => React.empty
-       }}
-    </View>;
-  } else {
-    <View style={Styles.container(theme)}>
-      <EditorLayoutView state theme />
-    </View>;
-  };
+       };
+     } else {
+       <EditorLayoutView state theme />;
+     }}
+  </View>;
