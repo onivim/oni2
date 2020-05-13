@@ -92,6 +92,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
       [
         Feature_Editor.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
+        Feature_Terminal.Contributions.configuration,
       ],
     ),
   configuration: Configuration.default,
