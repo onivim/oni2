@@ -9,6 +9,10 @@
  *      If the changelog file already exists, only commits after the last commit
  *      in the file will be retrieved and added. Existing commits will not be
  *      updated.
+ *
+ *      Note that if the changelog does *not* exist, this script may go over the
+ *      GitHub API rate limit. To fix this, add a dummy commit in the file with
+ *      a commit you would like to start from.
  */
 
 const childProcess = require("child_process")
@@ -111,7 +115,7 @@ function createCommitXml({ type, scope, issue, hash, pr, time, content, subject 
     const scopeAttr = scope ? `scope="${scope}" ` : ""
     const issueAttr = issue ? `issue="${issue}" ` : ""
 
-    return `  <commit ${typeAttr}${scopeAttr}${issueAttr}hash="${hash}" pr=${pr} time=${time}>
+    return `  <commit ${typeAttr}${scopeAttr}${issueAttr}hash="${hash}" pr="${pr}" time="${time}">
     ${content ? content.replace(/\n/g, "\n    ") : subject}
   </commit>\n`
 }
