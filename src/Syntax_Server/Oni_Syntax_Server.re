@@ -11,12 +11,22 @@ module Constants = {
   let checkPidInterval = 5000; /* ms */
 };
 
+module Log = (val Timber.Log.withNamespace("Oni_Syntax_Server"));
+
 type message =
   | Log(string)
   | Message(ClientToServer.t)
   | Exception(string);
 
 let start = (~healthCheck) => {
+
+  Log.info("Started!")
+
+  // TODO: Just enable log reporter!
+  Timber.App.enable();
+  Timber.App.setLogFile(~truncate=true, "oni-syntax-server.log");
+  Timber.App.setLevel(Timber.Level.trace);
+
   let transport = ref(None);
 
   let write = (msg: Protocol.ServerToClient.t) => {
@@ -26,13 +36,15 @@ let start = (~healthCheck) => {
     transport^ |> Option.iter(Transport.send(~packet));
   };
 
-  let log = msg => write(Protocol.ServerToClient.Log(msg));
-  let logError = exn =>
+  let log = Log.info;
+  let logError = exn => {
+    Log.error(Printexc.to_string(exn));
     write(
       Protocol.ServerToClient.Log(
         exn |> Printexc.to_string |> (str => "ERROR: " ++ str),
       ),
     );
+  };
 
   let parentPid = Unix.getenv("__ONI2_PARENT_PID__") |> int_of_string;
   let namedPipe = Unix.getenv("__ONI2_NAMED_PIPE__");
@@ -49,8 +61,10 @@ let start = (~healthCheck) => {
     try(
       {
         if (State.anyPendingWork(state^)) {
+          log("doing work");
           map(State.doPendingWork);
         } else {
+          log("stopping pending work");
           let _: result(unit, Luv.Error.t) = _stopWork();
           ();
         };
@@ -59,6 +73,7 @@ let start = (~healthCheck) => {
         tokenUpdates
         |> List.iter(((bufferId, updates)) =>
              if (updates !== []) {
+               Log.infof(m => m("Sending token update for buffer: %d", bufferId));
                write(
                  Protocol.ServerToClient.TokenUpdate({
                    bufferId,
@@ -76,14 +91,17 @@ let start = (~healthCheck) => {
     };
 
   let startWork = () => {
+    Log.info("startWork");
     Luv.Timer.start(~repeat=1, timer, 0, () => {doWork()}) |> Result.get_ok;
   };
 
   let restartTimer = () => {
+    Log.info("restartTimer");
     ignore(Luv.Timer.again(timer): result(unit, Luv.Error.t));
   };
 
   let updateAndRestartTimer = f => {
+    Log.info("updateAndRestartTimer");
     state := f(state^);
     restartTimer();
   };
@@ -108,14 +126,19 @@ let start = (~healthCheck) => {
       | BufferStartHighlighting({bufferId, filetype, lines, visibleRanges}) => {
           log(
             Printf.sprintf(
-              "Buffer enter - id: %d filetype: %s",
+              "Buffer enter - id: %d filetype: %s lines: %d",
               bufferId,
               filetype,
+              Array.length(lines),
             ),
           );
-          updateAndRestartTimer(
-            State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges),
-          );
+          switch ( State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges, state^)) {
+          | Ok(newState) =>
+            state := newState;
+            log("Buffer enter was successful");
+          | Error(msg) => log("Buffer update failed: " ++ msg)
+          };
+          restartTimer();
         }
 
       | BufferStopHighlighting(bufferId) => {

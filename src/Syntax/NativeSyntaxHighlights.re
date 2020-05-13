@@ -6,6 +6,8 @@ open EditorCoreTypes;
 module Core = Oni_Core;
 module ColorizedToken = Core.ColorizedToken;
 
+module Log = (val Core.Log.withNamespace("Syntax.NativeSyntaxHighlights"));
+
 module type SyntaxHighlighter = {
   type t;
 
@@ -54,12 +56,16 @@ let anyPendingWork = hl => {
 let doWork = hl => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
 
+  Log.info("doWork");
+
   let newState = SyntaxHighlighter.doWork(state);
   Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
 };
 
 let updateVisibleRanges = (ranges, hl) => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+  
+  Log.info("updateVisibleRanges");
 
   let newState = SyntaxHighlighter.updateVisibleRanges(ranges, state);
   Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
@@ -67,6 +73,8 @@ let updateVisibleRanges = (ranges, hl) => {
 
 let updateTheme = (theme, hl) => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  Log.info("updateTheme");
 
   let newState = SyntaxHighlighter.updateTheme(theme, state);
   Highlighter({highlighter: (module SyntaxHighlighter), state: newState});
@@ -81,6 +89,8 @@ let create =
       ~getTextmateGrammar,
       lines: array(string),
     ) => {
+
+  Log.infof(m => m("creating highlighter for scope: %s", scope));
   let maybeScopeConverter = getTreesitterScope(scope);
 
   let allowTreeSitter = _hasTreeSitterScope(useTreeSitter, scope);
@@ -108,6 +118,8 @@ let create =
 let update =
     (~bufferUpdate: Core.BufferUpdate.t, ~lines: array(string), hl: t) => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
+
+  Log.infof(m => m("Buffer update for: %d", bufferUpdate.id));
 
   let newState = SyntaxHighlighter.update(~bufferUpdate, ~lines, state);
   Highlighter({highlighter: (module SyntaxHighlighter), state: newState});

@@ -31,7 +31,7 @@ let bufferEnter:
     ~visibleRanges: list(Range.t),
     t
   ) =>
-  t;
+  result(t, string);
 let bufferUpdate: (~bufferUpdate: BufferUpdate.t, t) => result(t, string);
 let bufferLeave: (~bufferId: int, t) => t;
 

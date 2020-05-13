@@ -2,9 +2,12 @@
  * TreesitterRepository.re
  */
 
+open Oni_Core;
 open Oni_Syntax;
 
 module Ext = Oni_Extensions;
+
+module Log = (val Log.withNamespace("TreeSitterRepository"));
 
 type t = {
   scopeToConverter: Hashtbl.t(string, TreeSitterScopes.TextMateConverter.t),
@@ -23,17 +26,19 @@ let empty = create(Ext.LanguageInfo.initial);
 let getScopeConverter = (~scope: string, gr: t) => {
   switch (Hashtbl.find_opt(gr.scopeToConverter, scope)) {
   | Some(v) =>
-    gr.log("getScopeConverter - using cached grammar.");
+    Log.tracef( m => m("using cached grammar for scope: %s", scope));
     Some(v);
   | None =>
-    gr.log(
-      "getScopeConverter - querying language info for language: " ++ scope,
-    );
+    Log.tracef(m => m(
+      "getScopeConverter - querying language info for language: %s", scope,
+    ));
     switch (
       Ext.LanguageInfo.getTreesitterPathFromScope(gr.languageInfo, scope)
     ) {
     | Some(grammarPath) =>
-      gr.log("Loading tree sitter converter from: " ++ grammarPath);
+      Log.infof(m => m(
+      "Loading tree sitter converter from: %s", grammarPath
+      ));
       let json =
         Yojson.Safe.from_file(grammarPath)
         |> Yojson.Safe.Util.member("scopes");

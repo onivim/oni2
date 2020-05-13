@@ -4,10 +4,13 @@
  State modelled for the syntax server
  */
 
+
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Syntax;
+
+module Log = (val Timber.Log.withNamespace("Syntax_Server.State"));
 
 module Ext = Oni_Extensions;
 
@@ -275,6 +278,8 @@ let bufferEnter =
     )
     |> Option.value(~default=Constants.defaultScope);
 
+  Log.tracef(m => m("bufferEnter - scope is: %s", scope));
+
   let bufferInfo =
     state.bufferInfo
     |> IntMap.update(
@@ -297,8 +302,8 @@ let bufferEnter =
     };
 
   state
-  |> applyBufferUpdate(~update)
-  |> updateBufferVisibility(~bufferId, ~ranges=visibleRanges);
+  |> bufferUpdate(~bufferUpdate=update)
+  |> Result.map(updateBufferVisibility(~bufferId, ~ranges=visibleRanges));
 };
 
 let bufferLeave =
