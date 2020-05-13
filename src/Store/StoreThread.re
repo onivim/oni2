@@ -109,6 +109,7 @@ let start =
     );
   let languageInfo = LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
+  let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
 
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
@@ -119,11 +120,6 @@ let start =
       setClipboardText,
     );
 
-  let syntaxUpdater =
-    SyntaxHighlightingStoreConnector.start(
-      ~enabled=shouldSyntaxHighlight,
-      languageInfo,
-    );
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
   let (extHostClientResult, extHostStream) =
@@ -171,7 +167,6 @@ let start =
       inputUpdater,
       quickmenuUpdater,
       vimUpdater,
-      syntaxUpdater,
       extHostUpdater,
       configurationUpdater,
       keyBindingsUpdater,
@@ -185,23 +180,38 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(~extHostClient, ~getUserSettings, ~setup),
+      Features.update(
+        ~grammarRepository,
+        ~extHostClient,
+        ~getUserSettings,
+        ~setup,
+      ),
       PaneStore.update,
       contextMenuUpdater,
     ]);
 
   let subscriptions = (state: Model.State.t) => {
+    let config = Feature_Configuration.resolver(state.config);
+    let visibleRanges =
+      state
+      |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges
+      |> List.map(((bufferId, ranges)) => {
+           Model.Selectors.getBufferById(state, bufferId)
+           |> Option.map(buffer => {(buffer, ranges)})
+         })
+      |> Core.Utility.OptionEx.values;
     let syntaxSubscription =
-      Feature_Syntax.subscription(
-        ~configuration=state.configuration,
-        ~enabled=shouldSyntaxHighlight,
-        ~quitting=state.isQuitting,
-        ~languageInfo,
-        ~setup,
-        ~tokenTheme=state.tokenTheme,
-        state.syntaxHighlights,
-      )
-      |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg));
+      shouldSyntaxHighlight && !state.isQuitting
+        ? Feature_Syntax.subscription(
+            ~config,
+            ~languageInfo,
+            ~setup,
+            ~tokenTheme=state.tokenTheme,
+            ~bufferVisibility=visibleRanges,
+            state.syntaxHighlights,
+          )
+          |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg))
+        : Isolinear.Sub.none;
 
     let terminalSubscription =
       Feature_Terminal.subscription(

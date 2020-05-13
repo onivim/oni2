@@ -2,6 +2,7 @@
  Syntax client
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 module Transport = Exthost.Transport;
@@ -16,10 +17,6 @@ module ServerToClient = Protocol.ServerToClient;
 
 module ClientLog = (val Log.withNamespace("Oni2.Syntax.Client"));
 module ServerLog = (val Log.withNamespace("Oni2.Syntax.Server"));
-
-type connectedCallback = unit => unit;
-type closeCallback = int => unit;
-type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
 
 module Defaults = {
   let executableName = "Oni2_editor" ++ (Sys.win32 ? ".exe" : "");
@@ -129,9 +126,9 @@ let start =
     | ServerToClient.Log(msg) => ServerLog.trace(msg)
     | ServerToClient.Closing => ServerLog.debug("Closing")
     | ServerToClient.HealthCheckPass(res) => onHealthCheckResult(res)
-    | ServerToClient.TokenUpdate(tokens) =>
+    | ServerToClient.TokenUpdate({bufferId, tokens}) =>
       ClientLog.info("Received token update");
-      onHighlights(tokens);
+      onHighlights(~bufferId, ~tokens);
       ClientLog.trace("Tokens applied");
     };
 
@@ -167,15 +164,23 @@ let start =
      });
 };
 
-let notifyBufferEnter = (v: t, bufferId: int, fileType: string) => {
+let startHighlightingBuffer =
+    (
+      ~bufferId: int,
+      ~filetype: string,
+      ~visibleRanges: list(Range.t),
+      ~lines: array(string),
+      v: t,
+    ) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
-    Oni_Syntax.Protocol.ClientToServer.BufferEnter(bufferId, fileType);
-  ClientLog.trace("Sending bufferUpdate notification...");
+    BufferStartHighlighting({bufferId, filetype, lines, visibleRanges});
+  ClientLog.tracef(m => m("Sending startHighlightingBuffer: %d", bufferId));
   write(v, message);
 };
 
-let notifyBufferLeave = (_v: t, _bufferId: int) => {
-  ClientLog.warn("TODO - Send Buffer leave.");
+let stopHighlightingBuffer = (~bufferId: int, v: t) => {
+  write(v, BufferStopHighlighting(bufferId));
+  ClientLog.tracef(m => m("Sending stopHighlightingBuffer: %d", bufferId));
 };
 
 let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
@@ -183,10 +188,8 @@ let notifyThemeChanged = (v: t, theme: TokenTheme.t) => {
   write(v, Protocol.ClientToServer.ThemeChanged(theme));
 };
 
-let notifyConfigurationChanged = (v: t, configuration: Configuration.t) => {
-  ClientLog.info("Notifying configuration changed.");
-  let useTreeSitter =
-    configuration |> Configuration.getValue(c => c.experimentalTreeSitter);
+let notifyTreeSitterChanged = (~useTreeSitter: bool, v: t) => {
+  ClientLog.infof(m => m("Notifying treeSitter changed: %b", useTreeSitter));
   write(v, Protocol.ClientToServer.UseTreeSitter(useTreeSitter));
 };
 
@@ -194,15 +197,18 @@ let healthCheck = (v: t) => {
   write(v, Protocol.ClientToServer.RunHealthCheck);
 };
 
-let notifyBufferUpdate =
-    (v: t, bufferUpdate: BufferUpdate.t, _lines: array(string), scope) => {
+let notifyBufferUpdate = (~bufferUpdate: BufferUpdate.t, v: t) => {
   ClientLog.trace("Sending bufferUpdate notification...");
-  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate, scope));
+  write(v, Protocol.ClientToServer.BufferUpdate(bufferUpdate));
 };
 
-let notifyVisibilityChanged = (v: t, visibility) => {
+let notifyBufferVisibilityChanged =
+    (~bufferId: int, ~ranges: list(Range.t), v: t) => {
   ClientLog.trace("Sending visibleRangesChanged notification...");
-  write(v, Protocol.ClientToServer.VisibleRangesChanged(visibility));
+  write(
+    v,
+    Protocol.ClientToServer.BufferVisibilityChanged({bufferId, ranges}),
+  );
 };
 
 let close = (syntaxClient: t) => {
