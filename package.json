@@ -238,7 +238,7 @@
   "resolutions": {
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#3911d3c",
+    "revery": "revery-ui/revery#f9fedcbe",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
     "esy-skia": "revery-ui/esy-skia#d60e5fe",
