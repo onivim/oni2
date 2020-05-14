@@ -36,13 +36,6 @@ let start = () => {
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | EditorGroupSelected(_) => FocusManager.push(Editor, s)
-
-    | RemoveSplit(id) => {
-        ...s,
-        zenMode: false,
-        layout: Feature_Layout.removeWindow(id, s.layout),
-      }
-
     | ViewCloseEditor(_) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
