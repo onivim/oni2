@@ -64,12 +64,6 @@ let start = () => {
           ),
       }
 
-    | RemoveSplit(id) => {
-        ...s,
-        zenMode: false,
-        layout: Feature_Layout.removeWindow(id, s.layout),
-      }
-
     | ViewCloseEditor(_) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
