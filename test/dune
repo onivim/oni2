@@ -56,7 +56,9 @@
     (public_name OniUnitTestRunnerUI)
     (modules OniUnitTestRunnerUI)
     (package OniUnitTestRunner)
-    (libraries Oni_UI_Test))
+    (libraries 
+        Oni_Core_Test
+        Oni_UI_Test))
 
 (executable
     (name OniUnitTestRunnerExtHost)
@@ -64,6 +66,7 @@
     (modules OniUnitTestRunnerExtHost)
     (package OniUnitTestRunner)
     (libraries 
+        Oni_Core_Test
         Exthost_Transport_Test
         Exthost_Test))
 
