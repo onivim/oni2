@@ -87,7 +87,6 @@ type t =
   | KeyboardInput(string)
   | WindowTitleSet(string)
   | EditorGroupSelected(int)
-  | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSizeChanged({
       id: int,
       width: int,
