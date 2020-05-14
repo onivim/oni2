@@ -45,7 +45,7 @@ let setBufferFont = (~bufferId, ~font, group) => {
   let editors =
     group.editors
     |> IntMap.map((editor: Feature_Editor.Editor.t) =>
-         if (editor.bufferId == bufferId) {
+         if (Editor.getBufferId(editor) == bufferId) {
            Editor.setFont(~font, editor);
          } else {
            editor;

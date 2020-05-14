@@ -273,7 +273,7 @@ let%component make =
 
               let highlightRanges =
                 BufferHighlights.getHighlightsByLine(
-                  ~bufferId=editor.bufferId,
+                  ~bufferId=Editor.getBufferId(editor),
                   ~line=index,
                   bufferHighlights,
                 );

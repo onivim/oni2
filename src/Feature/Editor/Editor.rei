@@ -28,9 +28,10 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-let create: (~font: Service_Font.font, ~bufferId: int=?, unit) => t;
+let create: (~font: Service_Font.font, ~buffer: EditorBuffer.t, unit) => t;
 
 let getId: t => int;
+let getBufferId: t => int;
 let getTopVisibleLine: t => int;
 let getBottomVisibleLine: t => int;
 let getLeftVisibleColumn: t => int;
@@ -57,3 +58,5 @@ let getLineHeight: t => float;
 
 let setFont: (~font: Service_Font.font, t) => t;
 let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
+
+let updateBuffer: (~buffer: EditorBuffer.t, t) => t;

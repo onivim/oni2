@@ -6,3 +6,4 @@ type t;
 
 let id: t => int;
 let getEstimatedMaxLineLength: t => int;
+let numberOfLines: t => int;

@@ -5,7 +5,7 @@ let lastId = ref(0);
 
 [@deriving show]
 type t = {
-  bufferId: int,
+  buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
@@ -24,13 +24,13 @@ type t = {
   pixelHeight: int,
 };
 
-let create = (~font, ~bufferId=0, ()) => {
+let create = (~font, ~buffer, ()) => {
   let id = lastId^;
   incr(lastId);
 
   {
     editorId: id,
-    bufferId,
+    buffer,
     scrollX: 0.,
     scrollY: 0.,
     minimapMaxColumnWidth: Constants.minimapMaxColumn,
@@ -270,4 +270,16 @@ let scrollToColumn = (~column, view) => {
 let scrollDeltaPixelY = (~pixelY, view) => {
   let pixelY = view.scrollY +. pixelY;
   scrollToPixelY(~pixelY, view);
+};
+
+let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
+
+let updateBuffer = (~buffer, editor) => {
+  {
+    ...editor,
+    buffer,
+    // TODO: These will both change with word wrap
+    viewLines: EditorBuffer.numberOfLines(buffer),
+    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer)
+  }
 };
