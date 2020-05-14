@@ -156,6 +156,29 @@ let getUri = (buffer: t) => {
 
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
+
+// TODO: This method needs a lot of improvements:
+// - It's only estimated, as the byte length is quicker to calculate
+// - It always traverses the entire buffer - we could be much smarter
+//   by using buffer updates and only recalculating subsets.
+let getEstimatedMaxLineLength = (buffer) => {
+  let totalLines = getNumberOfLines(buffer);
+
+  let currentMax = ref(0);
+  for (idx in 0 to totalLines - 1) {
+  
+    let lengthInBytes = buffer
+    |> getLine(idx)
+    |> BufferLine.lengthInBytes;
+
+    if (lengthInBytes > currentMax^) {
+      currentMax := lengthInBytes;
+    }
+  }
+
+  currentMax^;
+};
+
 let applyUpdate =
     (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
   let updateLines = update.lines |> Array.map(BufferLine.make(~indentation));

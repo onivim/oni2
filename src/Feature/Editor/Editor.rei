@@ -3,7 +3,7 @@ open Oni_Core;
 
 [@deriving show]
 type t = {
-  bufferId: int,
+  buffer: EditorBuffer.t,
   editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
