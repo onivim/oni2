@@ -1025,8 +1025,8 @@ let start =
 
   let addSplit = (direction, state: State.t, editorGroup) => {
     ...state,
-    // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
-    zenMode: state.zenMode && Feature_Layout.windows(state.layout) == [],
+    // Fix #686: If we're adding a split, we should turn off Zen mode.
+    zenMode: false,
     layout:
       Feature_Layout.addWindow(
         ~target={
