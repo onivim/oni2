@@ -672,18 +672,13 @@ let start =
       }
     );
 
-  let openFileByPathEffect = (filePath, dir, location) =>
+  let openFileByPathEffect = (filePath, maybeEditorGroup, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      /* If a split was requested, create that first! */
-      switch (dir) {
-      | Some(direction) =>
-        let eg = EditorGroup.create();
-
-        dispatch(Actions.AddSplit(direction, eg.editorGroupId));
-
+      switch (maybeEditorGroup) {
+      | Some(editorGroup) =>
         // This needs to be dispatched after the split, since this will set the
         // active editor group, which is then used as the target for the split.
-        dispatch(Actions.EditorGroupAdd(eg));
+        dispatch(Actions.EditorGroupAdd(editorGroup))
       | None => ()
       };
 
@@ -721,7 +716,7 @@ let start =
        * If we're splitting, make sure a BufferEnter event gets dispatched.
        * (This wouldn't happen if we're splitting the same buffer we're already at)
        */
-      switch (dir) {
+      switch (maybeEditorGroup) {
       | Some(_) =>
         dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}))
       | None => ()
@@ -1028,6 +1023,23 @@ let start =
     });
   };
 
+  let addSplit = (direction, state: State.t, editorGroup) => {
+    ...state,
+    // Fix #686: If we're adding a split, we should turn off Zen mode.
+    zenMode: false,
+    layout:
+      Feature_Layout.addWindow(
+        ~target={
+          EditorGroups.getActiveEditorGroup(state.editorGroups)
+          |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+        },
+        ~position=`After,
+        direction,
+        editorGroup,
+        state.layout,
+      ),
+  };
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -1063,10 +1075,17 @@ let start =
 
     | Init => (state, initEffect)
     | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
-    | OpenFileByPath(path, direction, location) => (
-        state,
-        openFileByPathEffect(path, direction, location),
-      )
+    | OpenFileByPath(path, maybeDirection, location) =>
+      /* If a split was requested, create that first! */
+      let (state, maybeEditorGroup) =
+        switch (maybeDirection) {
+        | None => (state, None)
+        | Some(direction) =>
+          let editorGroup = EditorGroup.create();
+          let state' = addSplit(direction, state, editorGroup.editorGroupId);
+          (state', Some(editorGroup));
+        };
+      (state, openFileByPathEffect(path, maybeEditorGroup, location));
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | EditorGroupSelected(_)

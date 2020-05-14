@@ -129,7 +129,6 @@ type t =
       option([ | `Horizontal | `Vertical]),
       option(Location.t),
     )
-  | AddSplit([ | `Horizontal | `Vertical], int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)

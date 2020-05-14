@@ -18,16 +18,6 @@ let start = () => {
       dispatch(Model.Actions.Quit(false))
     );
 
-  let initializeDefaultViewEffect = (state: State.t) =>
-    Isolinear.Effect.createWithDispatch(~name="windows.init", dispatch => {
-      dispatch(
-        Actions.AddSplit(
-          `Vertical,
-          EditorGroups.activeGroupId(state.editorGroups),
-        ),
-      )
-    });
-
   let resize = (axis, factor, state: State.t) =>
     switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
     | Some((editorGroup: EditorGroup.t)) => {
@@ -46,24 +36,6 @@ let start = () => {
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | EditorGroupSelected(_) => FocusManager.push(Editor, s)
-
-    | AddSplit(direction, split) => {
-        ...s,
-        // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
-        zenMode: s.zenMode && Feature_Layout.windows(s.layout) == [],
-        layout:
-          Feature_Layout.addWindow(
-            ~target={
-              EditorGroups.getActiveEditorGroup(s.editorGroups)
-              |> Option.map((group: EditorGroup.t) => group.editorGroupId);
-            },
-            ~position=`After,
-            direction,
-            split,
-            s.layout,
-          ),
-      }
-
     | ViewCloseEditor(_) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
@@ -138,7 +110,6 @@ let start = () => {
 
     let effect =
       switch (action) {
-      | Init => initializeDefaultViewEffect(state)
       // When opening a file, ensure that the active editor is getting focus
       | ViewCloseEditor(_) =>
         if (Feature_Layout.windows(state.layout) == []) {
