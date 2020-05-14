@@ -25,6 +25,15 @@ let activeGroupId = model => model.activeId;
 
 let getEditorGroupById = (model, id) => IntMap.find_opt(id, model.idToGroup);
 
+let getFirstEditorGroup = ({idToGroup, _}) => {
+  // TODO: Move 'remove' gesture inside EditorGroups, so that we can maintain
+  // the invariant that there is _always_ at least one editor group.
+  idToGroup
+  |> IntMap.bindings
+  |> List.hd
+  |> snd;
+};
+
 let getActiveEditorGroup = model => getEditorGroupById(model, model.activeId);
 
 let isActive = (model, group: EditorGroup.t) =>

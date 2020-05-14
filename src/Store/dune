@@ -32,4 +32,4 @@
         textmate
         treesitter
     )
-    (preprocess (pps brisk-reconciler.ppx ppx_deriving_yojson ppx_deriving.show)))
+    (preprocess (pps ppx_let brisk-reconciler.ppx ppx_deriving_yojson ppx_deriving.show)))

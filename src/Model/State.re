@@ -74,7 +74,22 @@ type t = {
   textContentProviders: list((int, string)),
 };
 
+let initialLayout = (editorGroup: EditorGroup.t) => {
+    Feature_Layout.initial
+    |>
+          Feature_Layout.addWindow(
+            ~target=None,
+            ~position=`After,
+            `Vertical,
+            editorGroup.editorGroupId);
+};
+
 let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
+
+  let editorGroups = EditorGroups.create();
+  let initialEditorGroup = editorGroups |> EditorGroups.getFirstEditorGroup;
+
+  {
   buffers: Buffers.empty,
   bufferHighlights: BufferHighlights.initial,
   bufferRenderers: BufferRenderers.initial,
@@ -109,7 +124,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
   uiFont: UiFont.default,
   sideBar: SideBar.initial,
   tokenTheme: TokenTheme.empty,
-  editorGroups: EditorGroups.create(),
+  editorGroups,
   iconTheme: IconTheme.create(),
   isQuitting: false,
   keyBindings: Keybindings.empty,
@@ -121,7 +136,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
   sneak: Sneak.initial,
   statusBar: StatusBarModel.create(),
   syntaxHighlights: Feature_Syntax.empty,
-  layout: Feature_Layout.initial,
+  layout: initialLayout(initialEditorGroup),
   windowTitle: "",
   windowIsFocused: true,
   windowIsMaximized: false,
@@ -134,6 +149,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
   modal: None,
   terminals: Feature_Terminal.initial,
   textContentProviders: [],
+  };
 };
 
 let commands = state =>

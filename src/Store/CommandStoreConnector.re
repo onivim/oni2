@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core.Utility;
 
 open Oni_Model;
 open Oni_Model.Actions;
@@ -26,29 +27,32 @@ let start = () => {
 
   let splitEditorEffect = (state, direction, _) =>
     Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
-      let buffer = Selectors.getActiveBuffer(state);
+      let getBufferAndLocation = () => {
+      open Base.Option.Let_syntax;
+      let%bind buffer = state
+      |> Selectors.getActiveBuffer
 
-      let newEditorGroup =
-        switch (buffer) {
-        | Some(b) =>
-          let ec = EditorGroup.create();
-          let (g, editorId) =
-            EditorGroup.getOrCreateEditorForBuffer(
-              ~font=state.editorFont,
-              ~bufferId=Buffer.getId(b),
-              ec,
-            );
-          let g = EditorGroup.setActiveEditor(g, editorId);
-          g;
-        | None => EditorGroup.create()
-        };
+      let%bind path = buffer |> Buffer.getFilePath;
 
-      dispatch(AddSplit(direction, newEditorGroup.editorGroupId));
+      let%bind cursorLocation = state
+      |> Selectors.getActiveEditorGroup
+      |> Selectors.getActiveEditor
+      |> Option.map(Feature_Editor.Editor.getPrimaryCursor(~buffer));
 
-      // This needs to be dispatched after the split, since this will set the
-      // active editor group, which is then used as the target for the split.
-      dispatch(EditorGroupAdd(newEditorGroup));
-    });
+      Some((path, cursorLocation))
+      };
+
+      getBufferAndLocation()
+      |> Option.iter(((path, cursorLocation)) => {
+        dispatch(OpenFileByPath(
+          path,
+          Some(direction),
+          Some(cursorLocation),
+        ));
+      })
+      
+
+      });
 
   let windowMoveEffect = (state: State.t, direction, _) => {
     Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
