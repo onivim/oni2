@@ -23,7 +23,33 @@ let create = () => {
 
 let activeGroupId = model => model.activeId;
 
+let add = (~defaultFont, editorGroup, model) => {
+  let editorGroup =
+    switch (model.lastEditorFont) {
+    | Some(font) =>
+      EditorGroupReducer.reduce(
+        ~defaultFont,
+        editorGroup,
+        EditorFont(Service_Font.FontLoaded(font)),
+      )
+    | None => editorGroup
+    };
+
+  {
+    ...model,
+    activeId: editorGroup.editorGroupId,
+    idToGroup:
+      IntMap.add(editorGroup.editorGroupId, editorGroup, model.idToGroup),
+  };
+};
+
 let getEditorGroupById = (model, id) => IntMap.find_opt(id, model.idToGroup);
+
+let getFirstEditorGroup = ({idToGroup, _}) => {
+  // TODO: Move 'remove' gesture inside EditorGroups, so that we can maintain
+  // the invariant that there is _always_ at least one editor group.
+  idToGroup |> IntMap.bindings |> List.hd |> snd;
+};
 
 let getActiveEditorGroup = model => getEditorGroupById(model, model.activeId);
 
@@ -90,25 +116,6 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
     }
 
   | EditorGroupSelected(editorGroupId) => {...model, activeId: editorGroupId}
-
-  | EditorGroupAdd(editorGroup) =>
-    let editorGroup =
-      switch (model.lastEditorFont) {
-      | Some(font) =>
-        EditorGroupReducer.reduce(
-          ~defaultFont,
-          editorGroup,
-          EditorFont(Service_Font.FontLoaded(font)),
-        )
-      | None => editorGroup
-      };
-
-    {
-      ...model,
-      activeId: editorGroup.editorGroupId,
-      idToGroup:
-        IntMap.add(editorGroup.editorGroupId, editorGroup, model.idToGroup),
-    };
 
   | action =>
     let newModel =
