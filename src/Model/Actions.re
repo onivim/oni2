@@ -109,6 +109,7 @@ type t =
       message: string,
       extensionId: option(string),
     })
+  | FileDrop(Feature_FileDrop.msg)
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)

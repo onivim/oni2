@@ -1,7 +1,7 @@
 (library
     (name Oni_Model)
     (public_name Oni2.model)
-    (libraries 
+    (libraries
         str
         bigarray
         zed_oni
@@ -23,6 +23,7 @@
         Oni2.service.file-watcher
         Oni2.components
         Oni2.feature.configuration
+        Oni2.feature.filedrop
         Oni2.feature.theme
         Oni2.feature.notification
         Oni2.feature.commands

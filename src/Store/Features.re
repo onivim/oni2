@@ -186,6 +186,25 @@ let update =
     | None => (state, Effect.none)
     }
 
+  | FileDrop(msg) =>
+    let eff =
+      switch (msg) {
+      | FilesDroppedOnEditor({paths}) =>
+        Isolinear.Effect.createWithDispatch(
+          ~name="feature.filedrop.openFiles", dispatch => {
+          List.iter(
+            path => {
+              let stats = Unix.stat(path);
+              if (stats.st_kind == S_REG) {
+                dispatch(OpenFileByPath(path, None, None));
+              };
+            },
+            paths,
+          )
+        })
+      };
+    (state, eff);
+
   // TODO: This should live in the editor feature project
   | EditorFont(Service_Font.FontLoaded(font)) => (
       {...state, editorFont: font},

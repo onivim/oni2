@@ -22,18 +22,9 @@ module Styles = {
   ];
 };
 
-let onFileDropped = (event: NodeEvents.fileDropEventParams) =>
-  List.iter(
-    path => {
-      let stats = Unix.stat(path);
-      // This tests if the path dropped is a file. We can't handle opening directories, etc. yet
-      if (stats.st_kind == S_REG) {
-        GlobalContext.current().dispatch(
-          Model.Actions.OpenFileByPath(path, None, None),
-        );
-      };
-    },
-    event.paths,
+let onFileDropped = ({paths, _}: NodeEvents.fileDropEventParams) =>
+  GlobalContext.current().dispatch(
+    FileDrop(FilesDroppedOnEditor({paths: paths})),
   );
 
 let make = (~state: State.t, ~theme, ()) =>

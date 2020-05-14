@@ -1,0 +1,10 @@
+(library
+    (name Feature_FileDrop)
+    (public_name Oni2.feature.filedrop)
+    (libraries
+      Oni2.core
+      isolinear
+      base
+      Revery
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
