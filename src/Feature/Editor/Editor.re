@@ -280,6 +280,6 @@ let updateBuffer = (~buffer, editor) => {
     buffer,
     // TODO: These will both change with word wrap
     viewLines: EditorBuffer.numberOfLines(buffer),
-    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer)
-  }
+    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
+  };
 };
