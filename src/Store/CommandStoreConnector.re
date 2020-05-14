@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 
 open Oni_Model;
 open Oni_Model.Actions;
@@ -28,31 +27,27 @@ let start = () => {
   let splitEditorEffect = (state, direction, _) =>
     Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
       let getBufferAndLocation = () => {
-      open Base.Option.Let_syntax;
-      let%bind buffer = state
-      |> Selectors.getActiveBuffer
+        open Base.Option.Let_syntax;
+        let%bind buffer = state |> Selectors.getActiveBuffer;
 
-      let%bind path = buffer |> Buffer.getFilePath;
+        let%bind path = buffer |> Buffer.getFilePath;
 
-      let%bind cursorLocation = state
-      |> Selectors.getActiveEditorGroup
-      |> Selectors.getActiveEditor
-      |> Option.map(Feature_Editor.Editor.getPrimaryCursor(~buffer));
+        let%bind cursorLocation =
+          state
+          |> Selectors.getActiveEditorGroup
+          |> Selectors.getActiveEditor
+          |> Option.map(Feature_Editor.Editor.getPrimaryCursor(~buffer));
 
-      Some((path, cursorLocation))
+        Some((path, cursorLocation));
       };
 
       getBufferAndLocation()
       |> Option.iter(((path, cursorLocation)) => {
-        dispatch(OpenFileByPath(
-          path,
-          Some(direction),
-          Some(cursorLocation),
-        ));
-      })
-      
-
-      });
+           dispatch(
+             OpenFileByPath(path, Some(direction), Some(cursorLocation)),
+           )
+         });
+    });
 
   let windowMoveEffect = (state: State.t, direction, _) => {
     Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
