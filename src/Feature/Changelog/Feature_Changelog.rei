@@ -6,6 +6,11 @@ type msg =
   | PullRequestClicked(int)
   | CommitHashClicked(string);
 
+type outmsg =
+  | URL(string);
+
+let update: msg => outmsg;
+
 module View: {
   module Full: {
     let make:

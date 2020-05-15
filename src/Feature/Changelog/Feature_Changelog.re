@@ -21,6 +21,9 @@ type msg =
   | PullRequestClicked(int)
   | CommitHashClicked(string);
 
+type outmsg =
+  | URL(string);
+
 type simpleXml =
   | Element(string, list((string, string)), list(simpleXml))
   | Text(string);
@@ -31,6 +34,17 @@ let isSameDate = (a, b) => {
 
   a.tm_year == b.tm_year && a.tm_yday == b.tm_yday;
 };
+
+let update = msg =>
+  switch (msg) {
+  | PullRequestClicked(pr) =>
+    let url = Printf.sprintf("https://github.com/onivim/oni2/pull/%d", pr);
+    URL(url);
+  | CommitHashClicked(hash) =>
+    let url =
+      Printf.sprintf("https://github.com/onivim/oni2/commit/%s", hash);
+    URL(url);
+  };
 
 // READ
 

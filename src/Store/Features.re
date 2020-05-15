@@ -19,6 +19,12 @@ module Internal = {
        )
     |> Option.value(~default="source.plaintext");
   };
+
+  // Probably not the right place to put this :/
+  let openURL = url =>
+    Isolinear.Effect.create(~name="openURL", () => {
+      Revery.Native.Shell.openURL(url) |> (ignore: bool => unit)
+    });
 };
 
 // UPDATE
@@ -187,21 +193,10 @@ let update =
     }
 
   | Changelog(msg) =>
+    let outmsg = Feature_Changelog.update(msg);
     let eff =
-      switch (msg) {
-      | PullRequestClicked(pr) =>
-        Isolinear.Effect.create(~name="feature.changelog.openPR", () => {
-          let url =
-            Printf.sprintf("https://github.com/onivim/oni2/pull/%d", pr);
-          Revery.Native.Shell.openURL(url) |> ignore;
-        })
-
-      | CommitHashClicked(hash) =>
-        Isolinear.Effect.create(~name="feature.changelog.openCommit", () => {
-          let url =
-            Printf.sprintf("https://github.com/onivim/oni2/commit/%s", hash);
-          Revery.Native.Shell.openURL(url) |> ignore;
-        })
+      switch (outmsg) {
+      | URL(url) => Internal.openURL(url)
       };
     (state, eff);
 
