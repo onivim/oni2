@@ -78,7 +78,8 @@ let current:
     |> Selectors.getActiveEditorGroup
     |> Selectors.getActiveEditor
     |> Option.map((editor: Editor.t) => {
-         let {bufferId, cursors, _}: Editor.t = editor;
+         let bufferId = Editor.getBufferId(editor);
+         let {cursors, _}: Editor.t = editor;
 
          let maybeCursor =
            switch (Editor.getVimCursors(editor)) {

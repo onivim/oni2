@@ -7,14 +7,32 @@ open Oni_IntegrationTestLib;
 //
 // Verify some simple cases around the file modified flag
 runTestWithInput(
-  ~name="RegressionFileModifiedIndication", (input, _, wait, _) => {
+  ~name="RegressionFileModifiedIndication",
+  (input, dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     state.vimMode == Vim.Types.Normal
   );
 
-  ignore(
-    Vim.command("e regression-file-modified-indication.txt"): Vim.Context.t,
+  let initialBuffer = Vim.Buffer.getCurrent();
+
+  dispatch(
+    Actions.OpenFileByPath(
+      "regression-file-modified-indication.txt",
+      None,
+      None,
+    ),
   );
+  runEffects();
+
+  wait(~name="Wait for new buffer", (state: State.t) => {
+    let activeBufferId =
+      state
+      |> Selectors.getActiveBuffer
+      |> Option.map(Buffer.getId)
+      |> Option.value(~default=-1);
+
+    activeBufferId != Vim.Buffer.getId(initialBuffer);
+  });
 
   let id = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
 

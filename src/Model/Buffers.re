@@ -60,7 +60,7 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferDisableSyntaxHighlighting(id) =>
     IntMap.update(id, disableSyntaxHighlighting, state)
 
-  | BufferEnter({metadata, fileType, lineEndings}) =>
+  | BufferEnter({id, fileType, lineEndings, isModified, filePath, version, _}) =>
     let maybeSetLineEndings = (maybeLineEndings, buf) => {
       switch (maybeLineEndings) {
       | Some(le) => Buffer.setLineEndings(le, buf)
@@ -72,24 +72,38 @@ let reduce = (state: t, action: Actions.t) => {
       fun
       | Some(buffer) =>
         buffer
-        |> Buffer.setModified(metadata.modified)
-        |> Buffer.setFilePath(metadata.filePath)
-        |> Buffer.setVersion(metadata.version)
+        |> Buffer.setModified(isModified)
+        |> Buffer.setFilePath(filePath)
+        |> Buffer.setVersion(version)
         |> Buffer.stampLastUsed
         |> maybeSetLineEndings(lineEndings)
         |> Option.some
       | None =>
-        Buffer.ofMetadata(metadata)
+        Buffer.ofMetadata(~id, ~version, ~filePath, ~modified=isModified)
         |> Buffer.setFileType(fileType)
         |> Buffer.stampLastUsed
         |> maybeSetLineEndings(lineEndings)
         |> Option.some
     );
-    IntMap.update(metadata.id, updater, state);
+    IntMap.update(id, updater, state);
 
+  | BufferFilenameChanged({id, newFileType, newFilePath, version, isModified}) =>
+    let updater = (
+      fun
+      | Some(buffer) =>
+        buffer
+        |> Buffer.setModified(isModified)
+        |> Buffer.setFilePath(newFilePath)
+        |> Buffer.setFileType(newFileType)
+        |> Buffer.setVersion(version)
+        |> Buffer.stampLastUsed
+        |> Option.some
+      | None => None
+    );
+    IntMap.update(id, updater, state);
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
-  | BufferSetModified(id, modified) =>
-    IntMap.update(id, setModified(modified), state)
+  | BufferSetModified(id, isModified) =>
+    IntMap.update(id, setModified(isModified), state)
 
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)

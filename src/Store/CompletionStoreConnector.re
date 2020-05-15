@@ -76,7 +76,10 @@ module Actions = {
       state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
     let maybeBuffer =
       Option.bind(maybeEditor, editor =>
-        Buffers.getBuffer(editor.bufferId, state.buffers)
+        Buffers.getBuffer(
+          Feature_Editor.Editor.getBufferId(editor),
+          state.buffers,
+        )
       );
     let maybeCursor =
       OptionEx.map2(

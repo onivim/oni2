@@ -1,45 +1,13 @@
-open Oni_Core;
 open Feature_Editor;
 open Editor;
-
-module Internal = {
-  let getMaxLineLength = (buffer: Buffer.t) => {
-    let i = ref(0);
-    let lines = Buffer.getNumberOfLines(buffer);
-
-    let max = ref(0);
-
-    while (i^ < lines) {
-      let line = i^;
-      // TODO: This is approximate, beacuse the length in bytes isn't actually
-      // the max length. But the length in bytes is quicker to calculate.
-      let length = buffer |> Buffer.getLine(line) |> BufferLine.lengthInBytes;
-
-      if (length > max^) {
-        max := length;
-      };
-
-      incr(i);
-    };
-
-    max^;
-  };
-};
-
-let recalculate = (view, maybeBuffer) =>
-  switch (maybeBuffer) {
-  | Some(buffer) => {
-      ...view,
-      viewLines: Buffer.getNumberOfLines(buffer),
-      maxLineLength: Internal.getMaxLineLength(buffer),
-    }
-  | None => view
-  };
 
 let reduce = (view, action) =>
   switch ((action: Actions.t)) {
   | SelectionChanged(selection) => {...view, selection}
-  | RecalculateEditorView(buffer) => recalculate(view, buffer)
+  | BufferUpdate({newBuffer, _})
+      when Oni_Core.Buffer.getId(newBuffer) == Editor.getBufferId(view) =>
+    let buffer = EditorBuffer.ofBuffer(newBuffer);
+    Editor.updateBuffer(~buffer, view);
   | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) => {
       ...view,
       cursors,
