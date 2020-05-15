@@ -53,7 +53,7 @@ runTestWithInput(
 
   // Save file, should clear modified flag
   let _ = input("<esc>");
-  Vim.command("w");
+  Vim.command("w") |> ignore;
 
   wait(~name="Wait for modified flag to be set", (state: State.t) =>
     validateBufferCondition(b => Buffer.isModified(b) == false, state)
