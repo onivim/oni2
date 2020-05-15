@@ -30,7 +30,7 @@ let start = quit => {
       | None => ()
       | Some(editor) =>
         let bufferMeta = Vim.BufferMetadata.ofBuffer(buffer);
-        if (editor.bufferId == bufferMeta.id) {
+        if (Feature_Editor.Editor.getBufferId(editor) == bufferMeta.id) {
           if (force || !bufferMeta.modified) {
             dispatch(Actions.ViewCloseEditor(editor.editorId));
           };

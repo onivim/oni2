@@ -30,11 +30,13 @@ let toUiTabs =
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
     | Some(editor) =>
+      open Feature_Editor;
       let (modified, title, filePath) =
-        Model.Buffers.getBuffer(editor.bufferId, buffers) |> getBufferMetadata;
+        Model.Buffers.getBuffer(Editor.getBufferId(editor), buffers)
+        |> getBufferMetadata;
 
       let renderer =
-        Model.BufferRenderers.getById(editor.bufferId, renderers);
+        Model.BufferRenderers.getById(Editor.getBufferId(editor), renderers);
 
       Some(
         Tabs.{editorId: editor.editorId, filePath, title, modified, renderer},
@@ -113,7 +115,10 @@ module Parts = {
       let State.{uiFont, editorFont, _} = state;
 
       let renderer =
-        BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
+        BufferRenderers.getById(
+          Feature_Editor.Editor.getBufferId(editor),
+          state.bufferRenderers,
+        );
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
