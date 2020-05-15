@@ -28,7 +28,7 @@ type t =
       fileType: option(string),
       lineEndings: [@opaque] option(Vim.lineEnding),
       filePath: option(string),
-      modified: bool,
+      isModified: bool,
       version: int,
       // TODO: This duplication-of-truth is really awkward,
       // but I want to remove it shortly
@@ -39,7 +39,7 @@ type t =
       newFilePath: option(string),
       newFileType: option(string),
       version: int,
-      modified: bool,
+      isModified: bool,
     })
   | BufferUpdate({
       update: [@opaque] BufferUpdate.t,

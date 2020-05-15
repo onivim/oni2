@@ -222,16 +222,16 @@ let start =
           id: meta.id,
           newFileType: fileType,
           newFilePath: meta.filePath,
-          modified: meta.modified,
+          isModified: meta.modified,
           version: meta.version,
         }),
       );
     });
 
   let _: unit => unit =
-    Vim.Buffer.onModifiedChanged((id, modified) => {
-      Log.debugf(m => m("Buffer metadata changed: %n | %b", id, modified));
-      dispatch(Actions.BufferSetModified(id, modified));
+    Vim.Buffer.onModifiedChanged((id, isModified) => {
+      Log.debugf(m => m("Buffer metadata changed: %n | %b", id, isModified));
+      dispatch(Actions.BufferSetModified(id, isModified));
     });
 
   let _: unit => unit =
@@ -409,7 +409,7 @@ let start =
             lineEndings,
             // Version must be 0 so that a buffer update will be processed
             version: 0,
-            modified: metadata.modified,
+            isModified: metadata.modified,
             filePath: metadata.filePath,
           }),
         );
@@ -688,7 +688,7 @@ let start =
         // TODO: Will this be necessary with https://github.com/onivim/oni2/pull/1627?
         let fileType = Core.Buffer.getFileType(buffer);
         let lineEndings = Core.Buffer.getLineEndings(buffer);
-        let modified = Core.Buffer.isModified(buffer);
+        let isModified = Core.Buffer.isModified(buffer);
         let filePath = Core.Buffer.getFilePath(buffer);
         let version = Core.Buffer.getVersion(buffer);
         dispatch(
@@ -698,7 +698,7 @@ let start =
             fileType,
             lineEndings,
             filePath,
-            modified,
+            isModified,
             version,
           }),
         );
@@ -751,7 +751,7 @@ let start =
           fileType,
           lineEndings,
           filePath: metadata.filePath,
-          modified: metadata.modified,
+          isModified: metadata.modified,
           version: metadata.version,
         }),
       );
