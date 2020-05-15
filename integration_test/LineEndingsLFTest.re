@@ -30,7 +30,7 @@ runTest(~name="LineEndingsLFTest", (dispatch, wait, _runEffects) => {
   });
 
   // Switch line endings
-  Vim.command("set ff=dos");
+  dispatch(Actions.VimExecuteCommand("set ff=dos"));
 
   wait(
     ~name="Verify buffer is switched to CRLF", ~timeout=10.0, (state: State.t) => {

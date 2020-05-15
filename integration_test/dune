@@ -88,6 +88,7 @@
         InputIgnoreTest.exe
         LanguageCssTest.exe
         LanguageTypeScriptTest.exe
+        LineEndingsCRLFTest.exe
         LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
         Regression1671Test.exe
