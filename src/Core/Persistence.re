@@ -125,15 +125,24 @@ module Store = {
       | exception (Sys_error(message)) =>
         // Most likely because the file doesn't exist, which is expected, but log it just in case.
         Log.debug("Unable to read store file: " ++ message)
+      | exception exn =>
+        // Other exceptions would be unexpected here, but could happen with extraordinary circumstances,
+        // ie a corrupted store file: https://github.com/onivim/oni2/1766
+        Log.error(Printexc.to_string(exn))
       }
     | None =>
       Log.warn("Unable to read store due to no path. See previous error.")
     };
 
-  let instantiate = (name, entries) => {
+  let instantiate = (~storeFolder=?, name, entries) => {
     let hash = Internal.hash(name);
+    let storeFolderResult =
+      switch (storeFolder) {
+      | None => Filesystem.getStoreFolder()
+      | Some(folder) => Ok(folder)
+      };
     let maybeFilePath =
-      Filesystem.getStoreFolder()
+      storeFolderResult
       |> Result.map(storeFolder => Filename.concat(storeFolder, hash))
       |> ResultEx.flatMap(Filesystem.getOrCreateConfigFolder)
       |> Result.map(folder => Filename.concat(folder, "store.json"))
