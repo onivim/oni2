@@ -75,20 +75,13 @@ describe("SCM", ({test, _}) => {
     |> Test.terminate
     |> Test.waitForProcessClosed
   });
-  test("provideOriginalResource returns URI", ({expect, _}) => {
+  test("provideOriginalResource returns URI", _ => {
     let testUri = Uri.fromPath("a-test-file.txt");
     Test.startWithExtensions(["oni-scm"])
     |> Test.waitForExtensionActivation("oni-scm")
     |> Test.withClientRequest(
          ~name="provideOriginalResource",
-         ~validate=
-           maybeUri => {
-             switch (maybeUri) {
-             | Some(uri) => prerr_endline("URI: " ++ Uri.toString(uri))
-             | None => prerr_endline(" NO URI")
-             };
-             maybeUri == Some(testUri);
-           },
+         ~validate=maybeUri => maybeUri == Some(testUri),
          Exthost.Request.SCM.provideOriginalResource(~handle=0, ~uri=testUri),
        )
     |> Test.terminate
