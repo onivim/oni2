@@ -539,12 +539,16 @@ module View = {
   module Update = {
     module Parts = {
       let line = (~commit, ~uiFont, ~theme, ()) => {
-        let splitSummary = commit.summary |> String.split_on_char('\n');
+        let summaryText =
+          switch (String.index_opt(commit.summary, '\n')) {
+          | Some(i) => String.sub(commit.summary, 0, i)
+          | None => commit.summary
+          };
 
         <View style=Styles.commit>
           <typ commit uiFont theme />
           <scope commit uiFont theme />
-          <title text={splitSummary |> List.hd} uiFont theme />
+          <title text=summaryText uiFont theme />
         </View>;
       };
 
