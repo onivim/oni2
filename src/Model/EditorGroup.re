@@ -55,6 +55,8 @@ let setBufferFont = (~bufferId, ~font, group) => {
   {...group, editors};
 };
 
+let count = ({editors, _}) => IntMap.bindings(editors) |> List.length;
+
 let getOrCreateEditorForBuffer = (~font, ~buffer, state) => {
   let bufferId = Feature_Editor.EditorBuffer.id(buffer);
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {

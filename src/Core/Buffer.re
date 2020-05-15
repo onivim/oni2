@@ -91,12 +91,12 @@ let ofLines = (~id=0, rawLines: array(string)) => {
 
 let initial = ofLines([||]);
 
-let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
-  id: metadata.id,
-  version: metadata.version,
-  filePath: metadata.filePath,
+let ofMetadata = (~id, ~version, ~filePath, ~modified) => {
+  id,
+  version,
+  filePath,
   lineEndings: None,
-  modified: metadata.modified,
+  modified,
   fileType: None,
   lines: [||],
   originalUri: None,

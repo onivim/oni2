@@ -106,7 +106,7 @@ let start = () => {
 
   let openChangelogEffect = _ =>
     Isolinear.Effect.createWithDispatch(~name="oni.changelog", dispatch => {
-     dispatch(OpenFileByPath(BufferPath.changelog, None, None));
+      dispatch(OpenFileByPath(BufferPath.changelog, None, None))
     });
 
   let commands = [

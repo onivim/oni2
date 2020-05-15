@@ -24,9 +24,14 @@ type t =
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter({
-      metadata: [@opaque] Vim.BufferMetadata.t,
+      id: int,
       fileType: option(string),
       lineEndings: [@opaque] option(Vim.lineEnding),
+      filePath: option(string),
+      modified: bool,
+      version: int,
+      // TODO: This duplication-of-truth is really awkward,
+      // but I want to remove it shortly
       buffer: [@opaque] Buffer.t,
     })
   | BufferFilenameChanged({

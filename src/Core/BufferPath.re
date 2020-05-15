@@ -23,7 +23,7 @@ let welcome = "oni://Welcome";
 let version = "oni://Version";
 let terminalRegex = OnigRegExp.create("oni://terminal/([0-9]*)/(.*)");
 
-let parse = bufferPath => 
+let parse = bufferPath =>
   if (String.equal(bufferPath, welcome)) {
     Welcome;
   } else if (String.equal(bufferPath, version)) {
