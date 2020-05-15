@@ -6,6 +6,7 @@
 // buffer - so by testing that we aren't opening a new buffer at all,
 // we can avoid that particular issue.
 
+open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 module Editor = Feature_Editor.Editor;
@@ -14,6 +15,14 @@ runTest(~name="RegressionVspEmpty", (_, wait, _) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount = state.layout |> Feature_Layout.windows |> List.length;
     splitCount == 1;
+  });
+
+  // Wait for initial buffer
+  wait(~name="Initial buffer", state => {
+    let maybeFilePath =
+      state |> Selectors.getActiveBuffer |> Option.map(Buffer.getFilePath);
+
+    maybeFilePath != None;
   });
 
   /* :vsp with no arguments should create a second split w/ same buffer */
