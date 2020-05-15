@@ -558,6 +558,9 @@ let start =
         );
       } else {
         dispatch(
+          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
+        );
+        dispatch(
           Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
         );
       };
