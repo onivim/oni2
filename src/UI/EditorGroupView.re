@@ -123,6 +123,14 @@ module Parts = {
           Changelog(CommitHashClicked(hash)),
         );
 
+      let onChangeExpanded = commit =>
+        GlobalContext.current().dispatch(Changelog(ChangeExpanded(commit)));
+
+      let onChangeContracted = commit =>
+        GlobalContext.current().dispatch(
+          Changelog(ChangeContracted(commit)),
+        );
+
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
         let backgroundColor = Feature_Terminal.defaultBackground(theme);
@@ -154,9 +162,12 @@ module Parts = {
 
       | FullChangelog =>
         <Feature_Changelog.View.Full
+          state={state.changelog}
           theme
           onPullRequestClicked
           onCommitHashClicked
+          onChangeExpanded
+          onChangeContracted
           uiFont
         />
 

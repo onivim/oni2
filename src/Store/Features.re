@@ -193,12 +193,13 @@ let update =
     }
 
   | Changelog(msg) =>
-    let outmsg = Feature_Changelog.update(msg);
+    let (model, outmsg) = Feature_Changelog.update(state.changelog, msg);
     let eff =
-      switch (outmsg) {
+      switch ((outmsg: Feature_Changelog.outmsg)) {
       | URL(url) => Internal.openURL(url)
+      | _ => Effect.none
       };
-    (state, eff);
+    ({...state, changelog: model}, eff);
 
   // TODO: This should live in the editor feature project
   | EditorFont(Service_Font.FontLoaded(font)) => (

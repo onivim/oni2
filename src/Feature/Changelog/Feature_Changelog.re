@@ -5,6 +5,7 @@ module Log = (val Log.withNamespace("Oni2.Feature.Changelog"));
 
 // MODEL
 
+[@deriving show({with_path: false})]
 type commit = {
   hash: string,
   time: float,
@@ -16,12 +17,19 @@ type commit = {
   breaking: list(string),
 };
 
+type model = {expanded: list(commit)};
+
+let initial: model = {expanded: []};
+
 [@deriving show({with_path: false})]
 type msg =
   | PullRequestClicked(int)
-  | CommitHashClicked(string);
+  | CommitHashClicked(string)
+  | ChangeExpanded(commit)
+  | ChangeContracted(commit);
 
 type outmsg =
+  | Nothing
   | URL(string);
 
 type simpleXml =
@@ -35,15 +43,23 @@ let isSameDate = (a, b) => {
   a.tm_year == b.tm_year && a.tm_yday == b.tm_yday;
 };
 
-let update = msg =>
+let update = (model, msg) =>
   switch (msg) {
   | PullRequestClicked(pr) =>
     let url = Printf.sprintf("https://github.com/onivim/oni2/pull/%d", pr);
-    URL(url);
+    (model, URL(url));
   | CommitHashClicked(hash) =>
     let url =
       Printf.sprintf("https://github.com/onivim/oni2/commit/%s", hash);
-    URL(url);
+    (model, URL(url));
+  | ChangeExpanded(commit) => (
+      {expanded: [commit, ...model.expanded]},
+      Nothing,
+    )
+  | ChangeContracted(commit) => (
+      {expanded: model.expanded |> List.filter(c => c != commit)},
+      Nothing,
+    )
   };
 
 // READ
@@ -434,22 +450,26 @@ module View = {
   // FULL
 
   module Full = {
-    let%component change =
-                  (
-                    ~commit,
-                    ~uiFont,
-                    ~theme,
-                    ~onPullRequestClicked,
-                    ~onCommitHashClicked,
-                    (),
-                  ) => {
-      let%hook (isExpanded, setExpanded) = Hooks.state(false);
+    let change =
+        (
+          ~model,
+          ~commit,
+          ~uiFont,
+          ~theme,
+          ~onPullRequestClicked,
+          ~onCommitHashClicked,
+          ~onChangeExpanded,
+          ~onChangeContracted,
+          (),
+        ) => {
+      let isExpanded = model.expanded |> List.mem(commit);
       let summaryText =
         switch (String.index_opt(commit.summary, '\n')) {
         | Some(i) => String.sub(commit.summary, 0, i)
         | None => commit.summary
         };
-      let onCaretClick = _e => setExpanded(exp => !exp);
+      let onCaretClick = _e =>
+        isExpanded ? onChangeContracted(commit) : onChangeExpanded(commit);
 
       <View>
         <View style=Styles.commit>
@@ -487,11 +507,14 @@ module View = {
 
     let group =
         (
+          ~model,
           ~commits,
           ~uiFont,
           ~theme,
           ~onPullRequestClicked,
           ~onCommitHashClicked,
+          ~onChangeExpanded,
+          ~onChangeContracted,
           (),
         ) => {
       <View>
@@ -503,11 +526,14 @@ module View = {
           {commits
            |> List.map(commit =>
                 <change
+                  model
                   commit
                   uiFont
                   theme
                   onPullRequestClicked
                   onCommitHashClicked
+                  onChangeExpanded
+                  onChangeContracted
                 />
               )
            |> React.listToElement}
@@ -516,7 +542,16 @@ module View = {
     };
 
     let make =
-        (~theme, ~uiFont, ~onPullRequestClicked, ~onCommitHashClicked, ()) => {
+        (
+          ~state: model,
+          ~theme,
+          ~uiFont,
+          ~onPullRequestClicked,
+          ~onCommitHashClicked,
+          ~onChangeExpanded,
+          ~onChangeContracted,
+          (),
+        ) => {
       let isSignificantCommit = commit =>
         switch (commit.typ) {
         | Some("feat" | "fix" | "perf") => true
@@ -535,11 +570,14 @@ module View = {
                 )
              |> List.map(commits =>
                   <group
+                    model=state
                     commits
                     uiFont
                     theme
                     onPullRequestClicked
                     onCommitHashClicked
+                    onChangeExpanded
+                    onChangeContracted
                   />
                 )
              |> React.listToElement}

@@ -25,6 +25,7 @@ type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
+  changelog: Feature_Changelog.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: ContextMenu.t,
@@ -92,6 +93,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: BufferRenderers.initial,
+    changelog: Feature_Changelog.initial,
     colorTheme:
       Feature_Theme.initial([
         Feature_Terminal.Contributions.colors,
