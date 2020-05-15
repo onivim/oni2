@@ -209,23 +209,22 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
-      let metadata = {
-        ...meta,
-        /*
-             Set version to 0 so that a buffer update is processed.
-             If not - we'd ignore the first buffer update that came through!
-         */
-        version: 0,
-      };
-
       let fileType =
-        switch (metadata.filePath) {
+        switch (meta.filePath) {
         | Some(v) =>
           Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
-      dispatch(Actions.BufferEnter({metadata, fileType, lineEndings: None}));
+      dispatch(
+        Actions.BufferFilenameChanged({
+          id: meta.id,
+          newFileType: fileType,
+          newFilePath: meta.filePath,
+          modified: meta.modified,
+          version: meta.version,
+        }),
+      );
     });
 
   let _: unit => unit =
@@ -386,7 +385,21 @@ let start =
 
       let lineEndings: option(Vim.lineEnding) =
         Vim.Buffer.getLineEndings(buf);
-      dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}));
+
+      let state = getState();
+
+      let buffer =
+        (
+          switch (Selectors.getBufferById(state, metadata.id)) {
+          | Some(buf) => buf
+          | None => Oni_Core.Buffer.ofMetadata(metadata)
+          }
+        )
+        |> Oni_Core.Buffer.setFileType(fileType);
+
+      dispatch(
+        Actions.BufferEnter({buffer, metadata, fileType, lineEndings}),
+      );
     });
 
   let _: unit => unit =
@@ -527,34 +540,18 @@ let start =
       Vim.init();
 
       if (Core.BuildInfo.commitId == Persistence.Global.version()) {
-        let _ = Vim.command("e oni://Welcome");
-        hasInitialized := true;
-
-        let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
         dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              bufferId,
-              BufferRenderer.Welcome,
-            ),
-          ),
+          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
         );
       } else {
-        let _ = Vim.command("e oni://UpdateChangelog");
-        hasInitialized := true;
-
-        let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
         dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              bufferId,
-              BufferRenderer.UpdateChangelog({
-                since: Persistence.Global.version(),
-              }),
-            ),
-          ),
+          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
+        );
+        dispatch(
+          Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
         );
       };
+      hasInitialized := true;
     });
 
   let currentBufferId: ref(option(int)) = ref(None);
@@ -672,7 +669,7 @@ let start =
       }
     );
 
-  let openFileByPathEffect = (~isSplitting, filePath, location) =>
+  let openFileByPathEffect = (state, filePath, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
@@ -704,20 +701,28 @@ let start =
              ();
            });
 
+      let bufferId = Vim.Buffer.getId(buffer);
+      let defaultBuffer = Oni_Core.Buffer.ofLines(~id=bufferId, [||]);
+      let buffer =
+        Selectors.getBufferById(state, bufferId)
+        |> Option.value(~default=defaultBuffer);
+
       /*
        * If we're splitting, make sure a BufferEnter event gets dispatched.
        * (This wouldn't happen if we're splitting the same buffer we're already at)
        */
-      if (isSplitting) {
-        dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}));
-      };
+      //if (isSplitting) {
+      dispatch(
+        Actions.BufferEnter({buffer, metadata, fileType, lineEndings}),
+      );
+      //};
 
       switch (Core.BufferPath.parse(filePath)) {
       | Terminal({bufferId, _}) =>
         dispatch(
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
-              metadata.id,
+              bufferId,
               BufferRenderer.Terminal({
                 title: "Terminal",
                 id: bufferId,
@@ -730,12 +735,31 @@ let start =
         dispatch(
           Actions.BufferRenderer(
             BufferRenderer.RendererAvailable(
-              metadata.id,
+              bufferId,
               BufferRenderer.Version,
             ),
           ),
         )
-      | Welcome => ()
+      | UpdateChangelog =>
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              bufferId,
+              BufferRenderer.UpdateChangelog({
+                since: Persistence.Global.version(),
+              }),
+            ),
+          ),
+        )
+      | Welcome =>
+        dispatch(
+          Actions.BufferRenderer(
+            BufferRenderer.RendererAvailable(
+              bufferId,
+              BufferRenderer.Welcome,
+            ),
+          ),
+        )
       | FilePath(_) => ()
       };
     });
@@ -1080,8 +1104,7 @@ let start =
           let editorGroup = EditorGroup.create();
           addSplit(direction, state, editorGroup);
         };
-      let isSplitting = maybeDirection != None;
-      (state', openFileByPathEffect(~isSplitting, path, location));
+      (state', openFileByPathEffect(state', path, location));
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | EditorGroupSelected(_)

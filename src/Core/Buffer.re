@@ -37,6 +37,7 @@ let getMediumFriendlyName =
        | Welcome => "Welcome"
        | Version => "Version"
        | Terminal({cmd, _}) => "Terminal - " ++ cmd
+       | UpdateChangelog => "Updates"
        | FilePath(fp) =>
          switch (workingDirectory) {
          | Some(base) => Path.toRelative(~base, fp)
@@ -58,6 +59,7 @@ let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
        switch (BufferPath.parse(filePath)) {
        | Welcome => "Welcome"
        | Version => "Version"
+       | UpdateChangelog => "Updates"
        | Terminal({cmd, _}) => "Terminal - " ++ cmd
        | FilePath(fp) => fp
        }

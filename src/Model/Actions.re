@@ -27,6 +27,14 @@ type t =
       metadata: [@opaque] Vim.BufferMetadata.t,
       fileType: option(string),
       lineEndings: [@opaque] option(Vim.lineEnding),
+      buffer: [@opaque] Buffer.t,
+    })
+  | BufferFilenameChanged({
+      id: int,
+      newFilePath: option(string),
+      newFileType: option(string),
+      version: int,
+      modified: bool,
     })
   | BufferUpdate({
       update: [@opaque] BufferUpdate.t,

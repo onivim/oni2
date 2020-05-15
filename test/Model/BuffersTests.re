@@ -29,6 +29,9 @@ let getFileTypeOrFail = (v: option(Buffer.t)) => {
   };
 };
 
+
+let emptyBuffer = Oni_Core.Buffer.ofLines([||]);
+
 describe("Buffer List Tests", ({test, _}) => {
   test("Buffer enter should create metadata", ({expect, _}) => {
     let bufferList = Buffers.empty;
@@ -37,6 +40,7 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
+          buffer: emptyBuffer,
           metadata:
             BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
           fileType: None,
@@ -63,6 +67,7 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
+          buffer: emptyBuffer,
           metadata:
             BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
           fileType: None,
@@ -73,6 +78,7 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         added,
         BufferEnter({
+          buffer: emptyBuffer,
           metadata:
             BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
           fileType: None,
@@ -92,6 +98,7 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
+          buffer: emptyBuffer,
           metadata:
             BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
           fileType: None,
@@ -109,6 +116,7 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
+          buffer: emptyBuffer,
           metadata:
             BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
           fileType: Some("reason"),

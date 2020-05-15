@@ -55,11 +55,12 @@ let setBufferFont = (~bufferId, ~font, group) => {
   {...group, editors};
 };
 
-let getOrCreateEditorForBuffer = (~font, ~bufferId, state) => {
+let getOrCreateEditorForBuffer = (~font, ~buffer, state) => {
+  let bufferId = Feature_Editor.EditorBuffer.id(buffer);
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | Some(editor) => (state, editor)
   | None =>
-    let newEditor = Editor.create(~font, ~bufferId, ());
+    let newEditor = Editor.create(~font, ~buffer, ());
     let newState = {
       ...state,
       editors: IntMap.add(newEditor.editorId, newEditor, state.editors),
@@ -147,7 +148,7 @@ let removeEditorById = (state, editorId) => {
   switch (IntMap.find_opt(editorId, state.editors)) {
   | None => state
   | Some(editor) =>
-    let bufferId = editor.bufferId;
+    let bufferId = Feature_Editor.Editor.getBufferId(editor);
     let filteredTabList =
       List.filter(t => editorId != t, state.reverseTabOrder);
     let bufferIdToEditorId =

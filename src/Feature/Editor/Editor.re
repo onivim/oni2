@@ -35,8 +35,8 @@ let create = (~font, ~buffer, ()) => {
     scrollY: 0.,
     minimapMaxColumnWidth: Constants.minimapMaxColumn,
     minimapScrollY: 0.,
-    maxLineLength: 0,
-    viewLines: 0,
+    viewLines: EditorBuffer.numberOfLines(buffer),
+    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
     /*
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.

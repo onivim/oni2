@@ -37,11 +37,13 @@ let reduce = (~defaultFont, v: EditorGroup.t, action: Actions.t) => {
           editors,
         ),
     }
-  | BufferEnter({metadata: {id, _}, _}) =>
+  // TEMPORARY: Needs https://github.com/onivim/oni2/pull/1627 to remove
+  | BufferEnter({buffer, _}) =>
+    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
     let (newState, activeEditorId) =
       EditorGroup.getOrCreateEditorForBuffer(
         ~font=defaultFont,
-        ~bufferId=id,
+        ~buffer=editorBuffer,
         v,
       );
 

@@ -15,7 +15,7 @@ let getActiveEditor: t => option(Feature_Editor.Editor.t);
 let setActiveEditor: (t, int) => t;
 let getEditorById: (int, t) => option(Feature_Editor.Editor.t);
 let getOrCreateEditorForBuffer:
-  (~font: Service_Font.font, ~bufferId: int, t) =>
+  (~font: Service_Font.font, ~buffer: Feature_Editor.EditorBuffer.t, t) =>
   (t, Feature_Editor.EditorId.t);
 let nextEditor: t => t;
 let previousEditor: t => t;
