@@ -8,7 +8,7 @@ let waitForMessage = (~name, f, context) => {
   |> Test.waitForMessage(
        ~name,
        fun
-       | Msg.MessageService(ShowMessage({message, severity})) =>
+       | Msg.MessageService(ShowMessage({message, severity, _})) =>
          f(severity, message)
        | _ => false,
      );
