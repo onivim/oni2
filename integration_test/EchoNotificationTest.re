@@ -1,15 +1,12 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-// This test validates that certain keystrokes are ignored by our Vim layer
-runTest(~name="InputIgnore test", (_dispatch, wait, runEffects) => {
+runTest(~name="EchoNotificationTest", (dispatch, wait, _runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     state.vimMode == Vim.Types.Normal
   );
 
-  // Create notification - an echo should trigger onj
-  Vim.command("echo 'hi from test'");
-  runEffects();
+  dispatch(VimExecuteCommand("echo 'hi from test'"));
 
   wait(~name="notification shows up", (state: State.t) => {
     let notifications = (

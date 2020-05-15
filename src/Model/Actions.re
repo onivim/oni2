@@ -24,9 +24,22 @@ type t =
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter({
-      metadata: [@opaque] Vim.BufferMetadata.t,
+      id: int,
       fileType: option(string),
       lineEndings: [@opaque] option(Vim.lineEnding),
+      filePath: option(string),
+      isModified: bool,
+      version: int,
+      // TODO: This duplication-of-truth is really awkward,
+      // but I want to remove it shortly
+      buffer: [@opaque] Buffer.t,
+    })
+  | BufferFilenameChanged({
+      id: int,
+      newFilePath: option(string),
+      newFileType: option(string),
+      version: int,
+      isModified: bool,
     })
   | BufferUpdate({
       update: [@opaque] BufferUpdate.t,
@@ -82,7 +95,6 @@ type t =
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
-  | RecalculateEditorView([@opaque] option(Buffer.t))
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
@@ -165,6 +177,7 @@ type t =
   | PaneTabClicked(Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
+  | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
       title: string,

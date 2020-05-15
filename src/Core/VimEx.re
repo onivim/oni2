@@ -1,19 +1,23 @@
 module Zed_utf8 = ZedBundled;
 
 let repeatInput = (reps, input) => {
-  let rec loop = (reps, cursors) =>
+  let rec loop = (reps, context) =>
     if (reps > 0) {
-      loop(reps - 1, Vim.input(input));
+      let context = Vim.input(~context, input);
+      loop(reps - 1, context);
     } else {
-      cursors;
+      context;
     };
 
-  loop(reps, []);
+  loop(reps, Vim.Context.current());
 };
 
 let inputString = input =>
   Zed_utf8.fold(
-    (char, _) => Vim.input(Zed_utf8.singleton(char)),
+    (char, context) => {
+      let context = Vim.input(~context, Zed_utf8.singleton(char));
+      context;
+    },
     input,
-    [],
+    Vim.Context.current(),
   );
