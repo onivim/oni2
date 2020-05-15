@@ -385,7 +385,7 @@ module View = {
       | changes =>
         let text =
           List.fold_left(
-            (change, acc) => acc ++ "\n" ++ change,
+            (acc, change) => "• " ++ change ++ "\n" ++ acc,
             "",
             changes,
           );
