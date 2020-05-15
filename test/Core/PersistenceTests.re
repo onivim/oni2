@@ -28,12 +28,12 @@ describe("Persistence", ({test, _}) => {
   };
 
   test("get defaults", ({expect, _}) => {
-    let { store, testBool, _} = setup();
+    let {store, testBool, _} = setup();
     expect.bool(Store.get(testBool, store)).toBe(false);
   });
 
   test("empty file (regression test for #1766)", ({expect, _}) => {
-    let { storeFolder, testBool, _ } = setup();
+    let {storeFolder, testBool, _} = setup();
 
     // We'll write out an empty file...
     let oc = open_out(storeFolder ++ "/global/store.json");
