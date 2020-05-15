@@ -4,6 +4,7 @@ open Oni_Core;
 let lastId = ref(0);
 
 [@deriving show]
+// TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
 type t = {
   buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
