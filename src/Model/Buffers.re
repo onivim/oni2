@@ -60,7 +60,7 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferDisableSyntaxHighlighting(id) =>
     IntMap.update(id, disableSyntaxHighlighting, state)
 
-  | BufferEnter({id, fileType, lineEndings, isModified, filePath, version,  _}) =>
+  | BufferEnter({id, fileType, lineEndings, isModified, filePath, version, _}) =>
     let maybeSetLineEndings = (maybeLineEndings, buf) => {
       switch (maybeLineEndings) {
       | Some(le) => Buffer.setLineEndings(le, buf)

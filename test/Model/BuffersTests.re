@@ -1,7 +1,5 @@
 open TestFramework;
 
-open Vim;
-
 module Buffers = Oni_Model.Buffers;
 module Buffer = Oni_Core.Buffer;
 
@@ -45,7 +43,7 @@ describe("Buffer List Tests", ({test, _}) => {
           lineEndings: None,
           isModified: false,
           version: 0,
-          filePath: Some("/test1.re")
+          filePath: Some("/test1.re"),
         }),
       );
 
