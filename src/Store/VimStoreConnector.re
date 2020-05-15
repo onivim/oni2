@@ -551,9 +551,6 @@ let start =
         );
       } else {
         dispatch(
-          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
-        );
-        dispatch(
           Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
         );
       };
@@ -718,51 +715,26 @@ let start =
         Actions.BufferEnter({buffer, metadata, fileType, lineEndings}),
       );
 
-      switch (Core.BufferPath.parse(filePath)) {
+      let maybeRenderer = switch (Core.BufferPath.parse(filePath)) {
       | Terminal({bufferId, _}) =>
-        dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              bufferId,
-              BufferRenderer.Terminal({
+              Some(BufferRenderer.Terminal({
                 title: "Terminal",
                 id: bufferId,
                 insertMode: true,
-              }),
-            ),
-          ),
-        )
-      | Version =>
-        dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              bufferId,
-              BufferRenderer.Version,
-            ),
-          ),
-        )
-      | UpdateChangelog =>
-        dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              bufferId,
-              BufferRenderer.UpdateChangelog({
+              }))
+      | Version => Some(BufferRenderer.Version)
+      | UpdateChangelog => Some(BufferRenderer.UpdateChangelog({
                 since: Persistence.Global.version(),
-              }),
-            ),
-          ),
-        )
-      | Welcome =>
-        dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              bufferId,
-              BufferRenderer.Welcome,
-            ),
-          ),
-        )
-      | FilePath(_) => ()
+      }))
+      | Welcome => Some(BufferRenderer.Welcome)
+      | Changelog => Some(BufferRenderer.FullChangelog)
+      | FilePath(_) => None
       };
+
+      maybeRenderer
+      |> Option.iter(renderer => {
+        dispatch(Actions.BufferRenderer(RendererAvailable(bufferId, renderer))); 
+      });
     });
 
   let openTutorEffect =
