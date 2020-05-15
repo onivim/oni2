@@ -456,20 +456,22 @@ module View = {
           <breakingChangeIcon commit theme />
           <typ commit uiFont theme />
           <scope commit uiFont theme />
-          <Clickable onClick=onCaretClick style=Styles.caret>
-            {isExpanded
-               ? <FontIcon
-                   icon=FontAwesome.caretDown
-                   color={Colors.foreground.from(theme)}
-                   fontSize=12.
-                 />
-               : <FontIcon
-                   icon=FontAwesome.caretRight
-                   color={Colors.foreground.from(theme)}
-                   fontSize=12.
-                 />}
+          <Clickable style=Style.[flexDirection(`Row)] onClick=onCaretClick>
+            <View style=Styles.caret>
+              {isExpanded
+                 ? <FontIcon
+                     icon=FontAwesome.caretDown
+                     color={Colors.foreground.from(theme)}
+                     fontSize=12.
+                   />
+                 : <FontIcon
+                     icon=FontAwesome.caretRight
+                     color={Colors.foreground.from(theme)}
+                     fontSize=12.
+                   />}
+            </View>
+            <title text=summaryText uiFont theme />
           </Clickable>
-          <title text=summaryText uiFont theme />
         </View>
         {isExpanded
            ? <MoreInfo
