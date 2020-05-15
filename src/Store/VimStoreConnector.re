@@ -59,7 +59,7 @@ let start =
       setClipboardText,
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
-  let hasInitialized = ref(false);
+  let libvimHasInitialized = ref(false);
 
   let languageConfigLoader =
     Ext.LanguageConfigurationLoader.create(languageInfo);
@@ -371,7 +371,7 @@ let start =
     Vim.Buffer.onEnter(buf => {
       let metadata = Vim.BufferMetadata.ofBuffer(buf);
 
-      if (metadata.id == 1 && ! hasInitialized^) {
+      if (metadata.id == 1 && ! libvimHasInitialized^) {
         Log.info("Ignoring initial buffer");
       } else {
         let fileType =
@@ -561,7 +561,7 @@ let start =
           Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
         );
       };
-      hasInitialized := true;
+      libvimHasInitialized := true;
     });
 
   let currentBufferId: ref(option(int)) = ref(None);
@@ -853,7 +853,7 @@ let start =
   // TODO: Remove remaining 'synchronization'
   let synchronizeEditorEffect = state =>
     Isolinear.Effect.create(~name="vim.synchronizeEditor", () =>
-      switch (hasInitialized^) {
+      switch (libvimHasInitialized^) {
       | false => ()
       | true =>
         let editorGroup = Selectors.getActiveEditorGroup(state);
