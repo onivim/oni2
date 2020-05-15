@@ -205,7 +205,7 @@ module View = {
     let caret = [width(caretWidth), marginTop(2)];
 
     module MoreInfo = {
-      let main = (~theme) => [
+      let main = [
         marginTop(4),
         marginLeft(
           typWidth + scopeWidth + breakingChangeIconWidth + caretWidth,
@@ -332,7 +332,12 @@ module View = {
 
       <View style=Styles.MoreInfo.description>
         <Text text="Commit" style={Styles.MoreInfo.header(uiFont, ~theme)} />
-        <ClickableText text onClick activeStyle={Styles.MoreInfo.activeStyle(uiFont, ~theme)} inactiveStyle={Styles.MoreInfo.inactiveStyle(uiFont, ~theme)} />
+        <ClickableText
+          text
+          onClick
+          activeStyle={Styles.MoreInfo.activeStyle(uiFont, ~theme)}
+          inactiveStyle={Styles.MoreInfo.inactiveStyle(uiFont, ~theme)}
+        />
       </View>;
     };
 
@@ -356,14 +361,19 @@ module View = {
       switch (commit.pr) {
       | Some(pr) =>
         let text = Printf.sprintf("#%d", pr);
+        let onClick = _ => onPullRequestClicked(pr);
+
         <View style=Styles.MoreInfo.description>
           <Text
             text="Pull Request"
             style={Styles.MoreInfo.header(uiFont, ~theme)}
           />
-          <Clickable onClick={_ => onPullRequestClicked(pr)}>
-            <Text style={Styles.MoreInfo.body(uiFont, ~theme)} text />
-          </Clickable>
+          <ClickableText
+            text
+            onClick
+            activeStyle={Styles.MoreInfo.activeStyle(uiFont, ~theme)}
+            inactiveStyle={Styles.MoreInfo.inactiveStyle(uiFont, ~theme)}
+          />
         </View>;
       | None => React.empty
       };
@@ -398,7 +408,7 @@ module View = {
           ~onCommitHashClicked,
           (),
         ) => {
-      <View style={Styles.MoreInfo.main(~theme)}>
+      <View style=Styles.MoreInfo.main>
         <hash commit uiFont theme onCommitHashClicked />
         <pullRequest commit uiFont theme onPullRequestClicked />
         <description commit uiFont theme />
