@@ -34,20 +34,6 @@ let activeContrastBorder =
     {light: unspecified, dark: unspecified, hc: ref(focusBorder)},
   );
 
-module TextLink = {
-  let foreground =
-    define(
-      "textLink.foreground",
-      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
-    );
-
-  let activeForeground =
-    define(
-      "textLink.activeForeground",
-      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
-    );
-};
-
 module ActivityBar = {
   let background =
     define(
@@ -993,6 +979,22 @@ module Tab = {
     unfocusedActiveForeground,
     unfocusedInactiveForeground,
   ];
+};
+
+module TextLink = {
+  let foreground =
+    define(
+      "textLink.foreground",
+      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
+    );
+
+  let activeForeground =
+    define(
+      "textLink.activeForeground",
+      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
+    );
+
+  let defaults = [foreground, activeForeground];
 };
 
 module TitleBar = {
