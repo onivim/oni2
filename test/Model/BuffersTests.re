@@ -39,11 +39,13 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
+          id: 0,
           buffer: emptyBuffer,
-          metadata:
-            BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
           fileType: None,
           lineEndings: None,
+          isModified: false,
+          version: 0,
+          filePath: Some("/test1.re")
         }),
       );
 
@@ -66,9 +68,11 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
+          id: 0,
           buffer: emptyBuffer,
-          metadata:
-            BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          filePath: Some("/test1.re"),
+          isModified: false,
+          version: 0,
           fileType: None,
           lineEndings: None,
         }),
@@ -77,9 +81,11 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         added,
         BufferEnter({
+          id: 0,
           buffer: emptyBuffer,
-          metadata:
-            BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
+          filePath: Some("/test2.re"),
+          isModified: false,
+          version: 0,
           fileType: None,
           lineEndings: None,
         }),
@@ -97,9 +103,11 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
+          id: 4,
           buffer: emptyBuffer,
-          metadata:
-            BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          filePath: Some("/myfile.js"),
+          isModified: false,
+          version: 0,
           fileType: None,
           lineEndings: None,
         }),
@@ -115,9 +123,11 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
+          id: 4,
           buffer: emptyBuffer,
-          metadata:
-            BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          filePath: Some("/myfile.js"),
+          isModified: false,
+          version: 0,
           fileType: Some("reason"),
           lineEndings: None,
         }),
