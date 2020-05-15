@@ -30,6 +30,8 @@ let isSameDate = (a, b) => {
 // READ
 
 let read = () => {
+  open Base.Result.Let_syntax;
+
   let simplify = stream =>
     stream
     |> Markup.trim
@@ -103,8 +105,15 @@ let read = () => {
     | Text(_) => failwith("Unexpected text node");
 
   let path = Revery.Environment.getAssetPath("changelog.xml");
-  let simpleXml =
-    Markup.file(path) |> fst |> Markup.parse_xml |> Markup.signals |> simplify;
+
+  let%bind (stream, close) =
+    try(Markup.file(path) |> Result.ok) {
+    | exn => exn |> Printexc.to_string |> Result.error
+    };
+
+  let simpleXml = stream |> Markup.parse_xml |> Markup.signals |> simplify;
+
+  close();
 
   switch (parse(simpleXml)) {
   | commits => Ok(commits)
