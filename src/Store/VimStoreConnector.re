@@ -59,6 +59,7 @@ let start =
       setClipboardText,
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+  let hasInitialized = ref(false);
 
   let languageConfigLoader =
     Ext.LanguageConfigurationLoader.create(languageInfo);
@@ -368,6 +369,7 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onEnter(buf => {
+
       let metadata = {
         ...Vim.BufferMetadata.ofBuffer(buf),
         /*
@@ -376,30 +378,35 @@ let start =
          */
         version: 0,
       };
-      let fileType =
-        switch (metadata.filePath) {
-        | Some(v) =>
-          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-        | None => None
-        };
 
-      let lineEndings: option(Vim.lineEnding) =
-        Vim.Buffer.getLineEndings(buf);
+      if (metadata.id == 1 && !hasInitialized^) {
+        Log.info("Ignoring initial buffer");
+      } else {
+        let fileType =
+          switch (metadata.filePath) {
+          | Some(v) =>
+            Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          | None => None
+          };
 
-      let state = getState();
+        let lineEndings: option(Vim.lineEnding) =
+          Vim.Buffer.getLineEndings(buf);
 
-      let buffer =
-        (
-          switch (Selectors.getBufferById(state, metadata.id)) {
-          | Some(buf) => buf
-          | None => Oni_Core.Buffer.ofMetadata(metadata)
-          }
-        )
-        |> Oni_Core.Buffer.setFileType(fileType);
+        let state = getState();
 
-      dispatch(
-        Actions.BufferEnter({buffer, metadata, fileType, lineEndings}),
-      );
+        let buffer =
+          (
+            switch (Selectors.getBufferById(state, metadata.id)) {
+            | Some(buf) => buf
+            | None => Oni_Core.Buffer.ofMetadata(metadata)
+            }
+          )
+          |> Oni_Core.Buffer.setFileType(fileType);
+
+        dispatch(
+          Actions.BufferEnter({buffer, metadata, fileType, lineEndings}),
+        );
+      }
     });
 
   let _: unit => unit =
@@ -534,7 +541,6 @@ let start =
       dispatch(Actions.QuickmenuClose);
     });
 
-  let hasInitialized = ref(false);
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
@@ -707,15 +713,10 @@ let start =
         Selectors.getBufferById(state, bufferId)
         |> Option.value(~default=defaultBuffer);
 
-      /*
-       * If we're splitting, make sure a BufferEnter event gets dispatched.
-       * (This wouldn't happen if we're splitting the same buffer we're already at)
-       */
-      //if (isSplitting) {
+      // TODO: Will this be necessary with https://github.com/onivim/oni2/pull/1627?
       dispatch(
         Actions.BufferEnter({buffer, metadata, fileType, lineEndings}),
       );
-      //};
 
       switch (Core.BufferPath.parse(filePath)) {
       | Terminal({bufferId, _}) =>
