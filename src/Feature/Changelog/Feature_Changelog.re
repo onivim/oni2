@@ -430,7 +430,11 @@ module View = {
                     (),
                   ) => {
       let%hook (isExpanded, setExpanded) = Hooks.state(false);
-      let splitSummary = commit.summary |> String.split_on_char('\n');
+      let summaryText =
+        switch (String.index_opt(commit.summary, '\n')) {
+        | Some(i) => String.sub(commit.summary, 0, i)
+        | None => commit.summary
+        };
       let onCaretClick = _e => setExpanded(exp => !exp);
 
       <View>
@@ -451,7 +455,7 @@ module View = {
                    fontSize=12.
                  />}
           </Clickable>
-          <title text={splitSummary |> List.hd} uiFont theme />
+          <title text=summaryText uiFont theme />
         </View>
         {isExpanded
            ? <MoreInfo
