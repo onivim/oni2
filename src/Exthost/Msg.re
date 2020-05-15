@@ -563,7 +563,15 @@ module SCM = {
       | `List([`Int(handle), `String(id), `String(label), rootUri]) =>
         let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
         Ok(RegisterSourceControl({handle, id, label, rootUri}));
-
+      | `List([`String(handleStr), `String(id), `String(label), rootUri]) =>
+        let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
+        let maybeHandle = int_of_string_opt(handleStr);
+        switch (maybeHandle) {
+        | Some(handle) =>
+          Ok(RegisterSourceControl({handle, id, label, rootUri}))
+        | None =>
+          Error("Expected number for handle, but received: " ++ handleStr)
+        };
       | _ => Error("Unexpected arguments for $registerSourceControl")
       }
 
