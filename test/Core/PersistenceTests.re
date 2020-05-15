@@ -4,6 +4,12 @@ open TestFramework;
 module Store = Persistence.Store;
 open Persistence.Schema;
 
+type testContext = {
+  storeFolder: string,
+  store: Store.t(bool),
+  testBool: item(bool, bool),
+};
+
 describe("Persistence", ({test, _}) => {
   let setup = () => {
     let storeFolder =
@@ -18,16 +24,16 @@ describe("Persistence", ({test, _}) => {
 
     let store = instantiate("global", () => [Store.entry(testBool)]);
 
-    (storeFolder, store, testBool);
+    {storeFolder, store, testBool};
   };
 
   test("get defaults", ({expect, _}) => {
-    let (storeFolder, store, testBool) = setup();
+    let { store, testBool, _} = setup();
     expect.bool(Store.get(testBool, store)).toBe(false);
   });
 
   test("empty file (regression test for #1766)", ({expect, _}) => {
-    let (storeFolder, _ignoreStore, testBool) = setup();
+    let { storeFolder, testBool, _ } = setup();
 
     // We'll write out an empty file...
     let oc = open_out(storeFolder ++ "/global/store.json");
