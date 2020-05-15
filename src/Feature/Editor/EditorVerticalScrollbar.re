@@ -97,7 +97,10 @@ let make =
     ];
 
   let matchingPairElements =
-    BufferHighlights.getMatchingPair(editor.bufferId, bufferHighlights)
+    BufferHighlights.getMatchingPair(
+      Editor.getBufferId(editor),
+      bufferHighlights,
+    )
     |> Option.map(mp => {
          let (startPos, endPos) = mp;
          let topLine =
@@ -163,7 +166,7 @@ let make =
 
   let searchMatchElements =
     BufferHighlights.getHighlights(
-      ~bufferId=editor.bufferId,
+      ~bufferId=Editor.getBufferId(editor),
       bufferHighlights,
     )
     |> List.map(searchHighlightToElement)

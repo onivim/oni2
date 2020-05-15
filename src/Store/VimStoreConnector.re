@@ -59,6 +59,7 @@ let start =
       setClipboardText,
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+  let libvimHasInitialized = ref(false);
 
   let languageConfigLoader =
     Ext.LanguageConfigurationLoader.create(languageInfo);
@@ -209,29 +210,28 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
-      let metadata = {
-        ...meta,
-        /*
-             Set version to 0 so that a buffer update is processed.
-             If not - we'd ignore the first buffer update that came through!
-         */
-        version: 0,
-      };
-
       let fileType =
-        switch (metadata.filePath) {
+        switch (meta.filePath) {
         | Some(v) =>
           Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
-      dispatch(Actions.BufferEnter({metadata, fileType, lineEndings: None}));
+      dispatch(
+        Actions.BufferFilenameChanged({
+          id: meta.id,
+          newFileType: fileType,
+          newFilePath: meta.filePath,
+          isModified: meta.modified,
+          version: meta.version,
+        }),
+      );
     });
 
   let _: unit => unit =
-    Vim.Buffer.onModifiedChanged((id, modified) => {
-      Log.debugf(m => m("Buffer metadata changed: %n | %b", id, modified));
-      dispatch(Actions.BufferSetModified(id, modified));
+    Vim.Buffer.onModifiedChanged((id, isModified) => {
+      Log.debugf(m => m("Buffer metadata changed: %n | %b", id, isModified));
+      dispatch(Actions.BufferSetModified(id, isModified));
     });
 
   let _: unit => unit =
@@ -369,24 +369,51 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onEnter(buf => {
-      let metadata = {
-        ...Vim.BufferMetadata.ofBuffer(buf),
-        /*
-             Set version to 0 so that a buffer update is processed.
-             If not - we'd ignore the first buffer update that came through!
-         */
-        version: 0,
-      };
-      let fileType =
-        switch (metadata.filePath) {
-        | Some(v) =>
-          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-        | None => None
-        };
+      let metadata = Vim.BufferMetadata.ofBuffer(buf);
 
-      let lineEndings: option(Vim.lineEnding) =
-        Vim.Buffer.getLineEndings(buf);
-      dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}));
+      if (metadata.id == 1 && ! libvimHasInitialized^) {
+        Log.info("Ignoring initial buffer");
+      } else {
+        let fileType =
+          switch (metadata.filePath) {
+          | Some(v) =>
+            Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          | None => None
+          };
+
+        let lineEndings: option(Vim.lineEnding) =
+          Vim.Buffer.getLineEndings(buf);
+
+        let state = getState();
+
+        let buffer =
+          (
+            switch (Selectors.getBufferById(state, metadata.id)) {
+            | Some(buf) => buf
+            | None =>
+              Oni_Core.Buffer.ofMetadata(
+                ~id=metadata.id,
+                ~version=- metadata.version,
+                ~filePath=metadata.filePath,
+                ~modified=metadata.modified,
+              )
+            }
+          )
+          |> Oni_Core.Buffer.setFileType(fileType);
+
+        dispatch(
+          Actions.BufferEnter({
+            id: metadata.id,
+            buffer,
+            fileType,
+            lineEndings,
+            // Version must be 0 so that a buffer update will be processed
+            version: 0,
+            isModified: metadata.modified,
+            filePath: metadata.filePath,
+          }),
+        );
+      };
     });
 
   let _: unit => unit =
@@ -521,40 +548,20 @@ let start =
       dispatch(Actions.QuickmenuClose);
     });
 
-  let hasInitialized = ref(false);
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
 
       if (Core.BuildInfo.commitId == Persistence.Global.version()) {
-        let _ = Vim.command("e oni://Welcome");
-        hasInitialized := true;
-
-        let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
         dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              bufferId,
-              BufferRenderer.Welcome,
-            ),
-          ),
+          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
         );
       } else {
-        let _ = Vim.command("e oni://UpdateChangelog");
-        hasInitialized := true;
-
-        let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
         dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              bufferId,
-              BufferRenderer.UpdateChangelog({
-                since: Persistence.Global.version(),
-              }),
-            ),
-          ),
+          Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
         );
       };
+      libvimHasInitialized := true;
     });
 
   let currentBufferId: ref(option(int)) = ref(None);
@@ -672,21 +679,34 @@ let start =
       }
     );
 
-  let openFileByPathEffect = (filePath, dir, location) =>
+  let splitExistingBufferEffect = maybeBuffer =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="vim.splitExistingBuffer", dispatch => {
+      switch (maybeBuffer) {
+      | None => Log.warn("Unable to find existing buffer")
+      | Some(buffer) =>
+        // TODO: Will this be necessary with https://github.com/onivim/oni2/pull/1627?
+        let fileType = Core.Buffer.getFileType(buffer);
+        let lineEndings = Core.Buffer.getLineEndings(buffer);
+        let isModified = Core.Buffer.isModified(buffer);
+        let filePath = Core.Buffer.getFilePath(buffer);
+        let version = Core.Buffer.getVersion(buffer);
+        dispatch(
+          Actions.BufferEnter({
+            id: Oni_Core.Buffer.getId(buffer),
+            buffer,
+            fileType,
+            lineEndings,
+            filePath,
+            isModified,
+            version,
+          }),
+        );
+      }
+    });
+
+  let openFileByPathEffect = (state, filePath, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      /* If a split was requested, create that first! */
-      switch (dir) {
-      | Some(direction) =>
-        let eg = EditorGroup.create();
-
-        dispatch(Actions.AddSplit(direction, eg.editorGroupId));
-
-        // This needs to be dispatched after the split, since this will set the
-        // active editor group, which is then used as the target for the split.
-        dispatch(Actions.EditorGroupAdd(eg));
-      | None => ()
-      };
-
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
       let lineEndings = Vim.Buffer.getLineEndings(buffer);
@@ -717,42 +737,53 @@ let start =
              ();
            });
 
-      /*
-       * If we're splitting, make sure a BufferEnter event gets dispatched.
-       * (This wouldn't happen if we're splitting the same buffer we're already at)
-       */
-      switch (dir) {
-      | Some(_) =>
-        dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}))
-      | None => ()
-      };
+      let bufferId = Vim.Buffer.getId(buffer);
+      let defaultBuffer = Oni_Core.Buffer.ofLines(~id=bufferId, [||]);
+      let buffer =
+        Selectors.getBufferById(state, bufferId)
+        |> Option.value(~default=defaultBuffer);
 
-      switch (Core.BufferPath.parse(filePath)) {
-      | Terminal({bufferId, _}) =>
-        dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              metadata.id,
-              BufferRenderer.Terminal({
-                title: "Terminal",
-                id: bufferId,
-                insertMode: true,
-              }),
-            ),
-          ),
-        )
-      | Version =>
-        dispatch(
-          Actions.BufferRenderer(
-            BufferRenderer.RendererAvailable(
-              metadata.id,
-              BufferRenderer.Version,
-            ),
-          ),
-        )
-      | Welcome => ()
-      | FilePath(_) => ()
-      };
+      // TODO: Will this be necessary with https://github.com/onivim/oni2/pull/1627?
+      dispatch(
+        Actions.BufferEnter({
+          id: metadata.id,
+          buffer,
+          fileType,
+          lineEndings,
+          filePath: metadata.filePath,
+          isModified: metadata.modified,
+          version: metadata.version,
+        }),
+      );
+
+      let maybeRenderer =
+        switch (Core.BufferPath.parse(filePath)) {
+        | Terminal({bufferId, _}) =>
+          Some(
+            BufferRenderer.Terminal({
+              title: "Terminal",
+              id: bufferId,
+              insertMode: true,
+            }),
+          )
+        | Version => Some(BufferRenderer.Version)
+        | UpdateChangelog =>
+          Some(
+            BufferRenderer.UpdateChangelog({
+              since: Persistence.Global.version(),
+            }),
+          )
+        | Welcome => Some(BufferRenderer.Welcome)
+        | Changelog => Some(BufferRenderer.FullChangelog)
+        | FilePath(_) => None
+        };
+
+      maybeRenderer
+      |> Option.iter(renderer => {
+           dispatch(
+             Actions.BufferRenderer(RendererAvailable(bufferId, renderer)),
+           )
+         });
     });
 
   let openTutorEffect =
@@ -822,7 +853,7 @@ let start =
   // TODO: Remove remaining 'synchronization'
   let synchronizeEditorEffect = state =>
     Isolinear.Effect.create(~name="vim.synchronizeEditor", () =>
-      switch (hasInitialized^) {
+      switch (libvimHasInitialized^) {
       | false => ()
       | true =>
         let editorGroup = Selectors.getActiveEditorGroup(state);
@@ -1028,6 +1059,29 @@ let start =
     });
   };
 
+  let addSplit = (direction, state: State.t, editorGroup) => {
+    ...state,
+    // Fix #686: If we're adding a split, we should turn off Zen mode.
+    zenMode: false,
+    editorGroups:
+      EditorGroups.add(
+        ~defaultFont=state.editorFont,
+        editorGroup,
+        state.editorGroups,
+      ),
+    layout:
+      Feature_Layout.addWindow(
+        ~target={
+          EditorGroups.getActiveEditorGroup(state.editorGroups)
+          |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+        },
+        ~position=`After,
+        direction,
+        editorGroup.editorGroupId,
+        state.layout,
+      ),
+  };
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -1063,10 +1117,28 @@ let start =
 
     | Init => (state, initEffect)
     | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
-    | OpenFileByPath(path, direction, location) => (
-        state,
-        openFileByPathEffect(path, direction, location),
-      )
+    | Command("view.splitHorizontal") =>
+      let maybeBuffer = Selectors.getActiveBuffer(state);
+      let editorGroup = EditorGroup.create();
+      let state' = addSplit(`Horizontal, state, editorGroup);
+      (state', splitExistingBufferEffect(maybeBuffer));
+
+    | Command("view.splitVertical") =>
+      let maybeBuffer = Selectors.getActiveBuffer(state);
+      let editorGroup = EditorGroup.create();
+      let state' = addSplit(`Vertical, state, editorGroup);
+      (state', splitExistingBufferEffect(maybeBuffer));
+
+    | OpenFileByPath(path, maybeDirection, location) =>
+      /* If a split was requested, create that first! */
+      let state' =
+        switch (maybeDirection) {
+        | None => state
+        | Some(direction) =>
+          let editorGroup = EditorGroup.create();
+          addSplit(direction, state, editorGroup);
+        };
+      (state', openFileByPathEffect(state', path, location));
     | BufferEnter(_)
     | EditorFont(Service_Font.FontLoaded(_))
     | EditorGroupSelected(_)

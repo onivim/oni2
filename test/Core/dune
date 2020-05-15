@@ -7,5 +7,6 @@
         Oni_Core_Utility_Test
         Oni_Core_WhenExpr_Test
         rely.lib
+        luv
         editor-core-types
     ))

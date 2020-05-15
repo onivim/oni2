@@ -30,7 +30,7 @@ let getBufferById = (state: State.t, id: int) => {
 };
 
 let getBufferForEditor = (state: State.t, editor: Editor.t) => {
-  Buffers.getBuffer(editor.bufferId, state.buffers);
+  Buffers.getBuffer(Editor.getBufferId(editor), state.buffers);
 };
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {

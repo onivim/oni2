@@ -6,6 +6,10 @@ let activeGroupId: t => int; // TODO: Should return an option, or be removed ent
 let getEditorGroupById: (t, int) => option(EditorGroup.t);
 let getActiveEditorGroup: t => option(EditorGroup.t);
 
+let getFirstEditorGroup: t => EditorGroup.t;
+
+let add: (~defaultFont: Service_Font.font, EditorGroup.t, t) => t;
+
 let isActive: (t, EditorGroup.t) => bool;
 let isEmpty: (int, t) => bool;
 
