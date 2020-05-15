@@ -16,6 +16,11 @@ type commit = {
   breaking: list(string),
 };
 
+[@deriving show({with_path: false})]
+type msg =
+  | PullRequestClicked(int)
+  | CommitHashClicked(string);
+
 type simpleXml =
   | Element(string, list((string, string)), list(simpleXml))
   | Text(string);
@@ -128,6 +133,11 @@ module View = {
   module Styles = {
     open Style;
 
+    let typWidth = 60;
+    let scopeWidth = 100;
+    let caretWidth = 20;
+    let breakingChangeIconWidth = 30;
+
     let scrollContainer = [flexGrow(1)];
 
     let content = [
@@ -159,13 +169,13 @@ module View = {
       fontFamily(font.fontFile),
       fontSize(12.),
       Style.color(color),
-      width(60),
+      width(typWidth),
     ];
 
     let scope = (font: UiFont.t, ~theme) => [
       fontFamily(font.fontFile),
       fontSize(12.),
-      width(130),
+      width(scopeWidth),
       color(
         Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
       ),
@@ -189,17 +199,79 @@ module View = {
     ];
 
     let error = (font: UiFont.t) => [fontFamily(font.fontFile)];
+
+    let breakingChangeIcon = [width(breakingChangeIconWidth)];
+
+    let caret = [width(caretWidth), marginTop(2)];
+
+    module MoreInfo = {
+      let main = (~theme) => [
+        marginTop(4),
+        marginLeft(
+          typWidth + scopeWidth + breakingChangeIconWidth + caretWidth,
+        ),
+        marginBottom(12),
+      ];
+
+      let header = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(
+          Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
+        ),
+        width(140),
+      ];
+
+      let breakingChangesHeader = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(
+          Colors.EditorWarning.foreground.from(theme)
+          |> Revery.Color.multiplyAlpha(0.75),
+        ),
+        width(140),
+      ];
+
+      let body = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(Colors.foreground.from(theme)),
+      ];
+
+      let activeStyle = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(Colors.TextLink.activeForeground.from(theme)),
+      ];
+
+      let inactiveStyle = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(Colors.TextLink.foreground.from(theme)),
+      ];
+
+      let description = [marginVertical(6), flexDirection(`Row)];
+    };
   };
 
-  let date = (~commit, ~style, ()) => {
+  let date = (~commit, ~style, ~withTime=false, ()) => {
     let time = Unix.localtime(commit.time);
     let text =
-      Printf.sprintf(
-        "%u-%02u-%02u",
-        time.tm_year + 1900,
-        time.tm_mon + 1,
-        time.tm_mday,
-      );
+      withTime
+        ? Printf.sprintf(
+            "%u-%02u-%02u %02u:%02u",
+            time.tm_year + 1900,
+            time.tm_mon + 1,
+            time.tm_mday,
+            time.tm_hour,
+            time.tm_min,
+          )
+        : Printf.sprintf(
+            "%u-%02u-%02u",
+            time.tm_year + 1900,
+            time.tm_mon + 1,
+            time.tm_mday,
+          );
     <Text style text />;
   };
 
@@ -233,22 +305,165 @@ module View = {
     <Text style={Styles.scope(uiFont, ~theme)} text />;
   };
 
-  let summary = (~commit, ~uiFont, ~theme, ()) => {
-    <Text style={Styles.summary(uiFont, ~theme)} text={commit.summary} />;
+  let title = (~text, ~uiFont, ~theme, ()) => {
+    <Text style={Styles.summary(uiFont, ~theme)} text />;
+  };
+
+  let breakingChangeIcon = (~commit, ~theme, ()) => {
+    <View style=Styles.breakingChangeIcon>
+      {commit.breaking != []
+         ? <View style=Style.[marginRight(8)]>
+             <FontIcon
+               icon=FontAwesome.exclamationTriangle
+               color={Colors.EditorWarning.foreground.from(theme)}
+               fontSize=12.
+             />
+           </View>
+         : React.empty}
+    </View>;
+  };
+
+  // MOREINFO
+
+  module MoreInfo = {
+    let hash = (~commit, ~uiFont, ~theme, ~onCommitHashClicked, ()) => {
+      let text = Printf.sprintf("#%s", commit.hash);
+      let onClick = _ => onCommitHashClicked(commit.hash);
+
+      <View style=Styles.MoreInfo.description>
+        <Text text="Commit" style={Styles.MoreInfo.header(uiFont, ~theme)} />
+        <ClickableText text onClick activeStyle={Styles.MoreInfo.activeStyle(uiFont, ~theme)} inactiveStyle={Styles.MoreInfo.inactiveStyle(uiFont, ~theme)} />
+      </View>;
+    };
+
+    let description = (~commit, ~uiFont, ~theme, ()) => {
+      switch (String.index_opt(commit.summary, '\n')) {
+      | Some(i) =>
+        let text =
+          String.sub(commit.summary, i, String.length(commit.summary) - i);
+        <View style=Styles.MoreInfo.description>
+          <Text
+            text="Description"
+            style={Styles.MoreInfo.header(uiFont, ~theme)}
+          />
+          <Text style={Styles.MoreInfo.body(uiFont, ~theme)} text />
+        </View>;
+      | None => React.empty
+      };
+    };
+
+    let pullRequest = (~commit, ~uiFont, ~theme, ~onPullRequestClicked, ()) => {
+      switch (commit.pr) {
+      | Some(pr) =>
+        let text = Printf.sprintf("#%d", pr);
+        <View style=Styles.MoreInfo.description>
+          <Text
+            text="Pull Request"
+            style={Styles.MoreInfo.header(uiFont, ~theme)}
+          />
+          <Clickable onClick={_ => onPullRequestClicked(pr)}>
+            <Text style={Styles.MoreInfo.body(uiFont, ~theme)} text />
+          </Clickable>
+        </View>;
+      | None => React.empty
+      };
+    };
+
+    let breakingChanges = (~commit, ~uiFont, ~theme, ()) => {
+      switch (commit.breaking) {
+      | [] => React.empty
+      | changes =>
+        let text =
+          List.fold_left(
+            (change, acc) => acc ++ "\n" ++ change,
+            "",
+            changes,
+          );
+        <View style=Styles.MoreInfo.description>
+          <Text
+            text="Breaking Changes"
+            style={Styles.MoreInfo.breakingChangesHeader(uiFont, ~theme)}
+          />
+          <Text style={Styles.MoreInfo.body(uiFont, ~theme)} text />
+        </View>;
+      };
+    };
+
+    let make =
+        (
+          ~commit,
+          ~uiFont,
+          ~theme,
+          ~onPullRequestClicked,
+          ~onCommitHashClicked,
+          (),
+        ) => {
+      <View style={Styles.MoreInfo.main(~theme)}>
+        <hash commit uiFont theme onCommitHashClicked />
+        <pullRequest commit uiFont theme onPullRequestClicked />
+        <description commit uiFont theme />
+        <breakingChanges commit uiFont theme />
+      </View>;
+    };
   };
 
   // FULL
 
   module Full = {
-    let line = (~commit, ~uiFont, ~theme, ()) => {
-      <View style=Styles.commit>
-        <typ commit uiFont theme />
-        <scope commit uiFont theme />
-        <summary commit uiFont theme />
+    let%component change =
+                  (
+                    ~commit,
+                    ~uiFont,
+                    ~theme,
+                    ~onPullRequestClicked,
+                    ~onCommitHashClicked,
+                    (),
+                  ) => {
+      let%hook (isExpanded, setExpanded) = Hooks.state(false);
+      let splitSummary = commit.summary |> String.split_on_char('\n');
+      let onCaretClick = _e => setExpanded(exp => !exp);
+
+      <View>
+        <View style=Styles.commit>
+          <breakingChangeIcon commit theme />
+          <typ commit uiFont theme />
+          <scope commit uiFont theme />
+          <Clickable onClick=onCaretClick style=Styles.caret>
+            {isExpanded
+               ? <FontIcon
+                   icon=FontAwesome.caretDown
+                   color={Colors.foreground.from(theme)}
+                   fontSize=12.
+                 />
+               : <FontIcon
+                   icon=FontAwesome.caretRight
+                   color={Colors.foreground.from(theme)}
+                   fontSize=12.
+                 />}
+          </Clickable>
+          <title text={splitSummary |> List.hd} uiFont theme />
+        </View>
+        {isExpanded
+           ? <MoreInfo
+               commit
+               uiFont
+               theme
+               onPullRequestClicked
+               onCommitHashClicked
+             />
+           : React.empty}
       </View>;
     };
 
-    let group = (~commits, ~uiFont, ~theme, ()) => {
+    let group =
+        (
+          ~commits,
+          ~uiFont,
+          ~theme,
+          ~onPullRequestClicked,
+          ~onCommitHashClicked,
+          (),
+        ) => {
       <View>
         <date
           commit={List.hd(commits)}
@@ -256,13 +471,22 @@ module View = {
         />
         <View style=Styles.groupBody>
           {commits
-           |> List.map(commit => <line commit uiFont theme />)
+           |> List.map(commit =>
+                <change
+                  commit
+                  uiFont
+                  theme
+                  onPullRequestClicked
+                  onCommitHashClicked
+                />
+              )
            |> React.listToElement}
         </View>
       </View>;
     };
 
-    let make = (~theme, ~uiFont, ()) => {
+    let make =
+        (~theme, ~uiFont, ~onPullRequestClicked, ~onCommitHashClicked, ()) => {
       let isSignificantCommit = commit =>
         switch (commit.typ) {
         | Some("feat" | "fix" | "perf") => true
@@ -279,7 +503,15 @@ module View = {
              |> Base.List.group(~break=(a, b) =>
                   !isSameDate(a.time, b.time)
                 )
-             |> List.map(commits => <group commits uiFont theme />)
+             |> List.map(commits =>
+                  <group
+                    commits
+                    uiFont
+                    theme
+                    onPullRequestClicked
+                    onCommitHashClicked
+                  />
+                )
              |> React.listToElement}
           </View>
         </ScrollView>
@@ -293,10 +525,12 @@ module View = {
   module Update = {
     module Parts = {
       let line = (~commit, ~uiFont, ~theme, ()) => {
+        let splitSummary = commit.summary |> String.split_on_char('\n');
+
         <View style=Styles.commit>
           <typ commit uiFont theme />
           <scope commit uiFont theme />
-          <summary commit uiFont theme />
+          <title text={splitSummary |> List.hd} uiFont theme />
         </View>;
       };
 

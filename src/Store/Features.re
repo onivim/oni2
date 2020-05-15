@@ -186,6 +186,25 @@ let update =
     | None => (state, Effect.none)
     }
 
+  | Changelog(msg) =>
+    let eff =
+      switch (msg) {
+      | PullRequestClicked(pr) =>
+        Isolinear.Effect.create(~name="feature.changelog.openPR", () => {
+          let url =
+            Printf.sprintf("https://github.com/onivim/oni2/pull/%d", pr);
+          Revery.Native.Shell.openURL(url) |> ignore;
+        })
+
+      | CommitHashClicked(hash) =>
+        Isolinear.Effect.create(~name="feature.changelog.openCommit", () => {
+          let url =
+            Printf.sprintf("https://github.com/onivim/oni2/commit/%s", hash);
+          Revery.Native.Shell.openURL(url) |> ignore;
+        })
+      };
+    (state, eff);
+
   // TODO: This should live in the editor feature project
   | EditorFont(Service_Font.FontLoaded(font)) => (
       {...state, editorFont: font},

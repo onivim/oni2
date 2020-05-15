@@ -115,6 +115,14 @@ module Parts = {
       let renderer =
         BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
 
+      let onPullRequestClicked = pr =>
+        GlobalContext.current().dispatch(Changelog(PullRequestClicked(pr)));
+
+      let onCommitHashClicked = hash =>
+        GlobalContext.current().dispatch(
+          Changelog(CommitHashClicked(hash)),
+        );
+
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
         let backgroundColor = Feature_Terminal.defaultBackground(theme);
@@ -144,7 +152,13 @@ module Parts = {
 
       | Version => <VersionView theme uiFont editorFont />
 
-      | FullChangelog => <Feature_Changelog.View.Full theme uiFont />
+      | FullChangelog =>
+        <Feature_Changelog.View.Full
+          theme
+          onPullRequestClicked
+          onCommitHashClicked
+          uiFont
+        />
 
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />

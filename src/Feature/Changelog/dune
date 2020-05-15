@@ -1,7 +1,7 @@
 (library
     (name Feature_Changelog)
     (public_name Oni2.feature.changelog)
-    (libraries 
+    (libraries
       Oni2.core
       Oni2.components
       Oni2.feature.theme

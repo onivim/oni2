@@ -42,6 +42,7 @@ type t =
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
+  | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
   | CompletionAddItems(
