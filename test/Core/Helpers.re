@@ -1,6 +1,15 @@
 open EditorCoreTypes;
 open Oni_Core;
 
+let allocateConsoleIfNecessary = () =>
+  // On Windows, because this is linked against the '-mwindows' flag (for a GUI app)
+  // there is no console allocated by default, so we need to manually allocate one.
+  if (Sys.win32) {
+    let _: int = Sdl2.Platform.win32AttachConsole();
+    // Unfortunately, colors aren't showing up correctly in the allocated console...
+    Pastel.setMode(Pastel.Disabled);
+  };
+
 exception OptionInvalidException(string);
 let getOrThrow: option('a) => 'a =
   v =>

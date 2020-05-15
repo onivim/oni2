@@ -614,21 +614,8 @@ let start =
       }
     );
 
-  let openFileByPathEffect = (filePath, dir, location) =>
+  let openFileByPathEffect = (~isSplitting, filePath, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
-      /* If a split was requested, create that first! */
-      switch (dir) {
-      | Some(direction) =>
-        let eg = EditorGroup.create();
-
-        dispatch(Actions.AddSplit(direction, eg.editorGroupId));
-
-        // This needs to be dispatched after the split, since this will set the
-        // active editor group, which is then used as the target for the split.
-        dispatch(Actions.EditorGroupAdd(eg));
-      | None => ()
-      };
-
       let buffer = Vim.Buffer.openFile(filePath);
       let metadata = Vim.BufferMetadata.ofBuffer(buffer);
       let lineEndings = Vim.Buffer.getLineEndings(buffer);
@@ -663,10 +650,8 @@ let start =
        * If we're splitting, make sure a BufferEnter event gets dispatched.
        * (This wouldn't happen if we're splitting the same buffer we're already at)
        */
-      switch (dir) {
-      | Some(_) =>
-        dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}))
-      | None => ()
+      if (isSplitting) {
+        dispatch(Actions.BufferEnter({metadata, fileType, lineEndings}));
       };
 
       switch (Core.BufferPath.parse(filePath)) {
@@ -860,6 +845,29 @@ let start =
     });
   };
 
+  let addSplit = (direction, state: State.t, editorGroup) => {
+    ...state,
+    // Fix #686: If we're adding a split, we should turn off Zen mode.
+    zenMode: false,
+    editorGroups:
+      EditorGroups.add(
+        ~defaultFont=state.editorFont,
+        editorGroup,
+        state.editorGroups,
+      ),
+    layout:
+      Feature_Layout.addWindow(
+        ~target={
+          EditorGroups.getActiveEditorGroup(state.editorGroups)
+          |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+        },
+        ~position=`After,
+        direction,
+        editorGroup.editorGroupId,
+        state.layout,
+      ),
+  };
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -896,10 +904,17 @@ let start =
 
     | Init => (state, initEffect)
     | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
-    | OpenFileByPath(path, direction, location) => (
-        state,
-        openFileByPathEffect(path, direction, location),
-      )
+    | OpenFileByPath(path, maybeDirection, location) =>
+      /* If a split was requested, create that first! */
+      let state' =
+        switch (maybeDirection) {
+        | None => state
+        | Some(direction) =>
+          let editorGroup = EditorGroup.create();
+          addSplit(direction, state, editorGroup);
+        };
+      let isSplitting = maybeDirection != None;
+      (state', openFileByPathEffect(~isSplitting, path, location));
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state

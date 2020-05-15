@@ -31,7 +31,9 @@ module Store: {
   type entry('state);
   let entry: Schema.item('state, _) => entry('state);
 
-  let instantiate: (string, unit => list(entry('state))) => t('state);
+  let instantiate:
+    (~storeFolder: string=?, string, unit => list(entry('state))) =>
+    t('state);
 
   let isDirty: ('state, t('state)) => bool;
   let update: ('state, t('state)) => unit;

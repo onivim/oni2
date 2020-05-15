@@ -87,7 +87,6 @@ type t =
   | KeyboardInput(string)
   | WindowTitleSet(string)
   | EditorGroupSelected(int)
-  | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSizeChanged({
       id: int,
       width: int,
@@ -129,8 +128,6 @@ type t =
       option([ | `Horizontal | `Vertical]),
       option(Location.t),
     )
-  | AddSplit([ | `Horizontal | `Vertical], int)
-  | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
