@@ -29,7 +29,6 @@ let start = () => {
       let getBufferAndLocation = () => {
         open Base.Option.Let_syntax;
         let%bind buffer = state |> Selectors.getActiveBuffer;
-
         let%bind path = buffer |> Buffer.getFilePath;
 
         let%bind cursorLocation =

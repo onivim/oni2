@@ -29,7 +29,6 @@ let getFileTypeOrFail = (v: option(Buffer.t)) => {
   };
 };
 
-
 let emptyBuffer = Oni_Core.Buffer.ofLines([||]);
 
 describe("Buffer List Tests", ({test, _}) => {

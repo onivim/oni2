@@ -38,15 +38,19 @@ let simpleState =
     Actions.EditorFont(Service_Font.FontLoaded(defaultFont)),
   );
 
+let thousandLines =
+  Array.make(1000, "This is a buffer with a thousand lines!");
+
+let defaultBuffer = Oni_Core.Buffer.ofLines(~id=0, thousandLines);
+let defaultEditorBuffer =
+  defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
+
 let simpleEditor =
-  Editor.create(~font=defaultFont, ())
+  Editor.create(~font=defaultFont, ~buffer=defaultEditorBuffer, ())
   |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
 let editorGroup =
   EditorGroups.getActiveEditorGroup(simpleState.editorGroups)
   |> Option.value(~default=EditorGroup.create());
-
-let thousandLines =
-  Array.make(1000, "This is a buffer with a thousand lines!");
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
