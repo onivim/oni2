@@ -148,11 +148,8 @@ let isEmpty = model => IntMap.is_empty(model.editors);
 
 let removeEditorById = (state, editorId) => {
   switch (IntMap.find_opt(editorId, state.editors)) {
-  | None =>
-  prerr_endline ("NO EDITOR FOUND: " ++ string_of_int(editorId));
-  state
+  | None => state
   | Some(editor) =>
-    prerr_endline ("FOUND EDITOR: " ++ string_of_int(editorId));
     let bufferId = Feature_Editor.Editor.getBufferId(editor);
     let filteredTabList =
       List.filter(t => editorId != t, state.reverseTabOrder);

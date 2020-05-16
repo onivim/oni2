@@ -91,44 +91,44 @@ let isEmpty = (id, model) => {
 };
 
 let canClose = (id, model) => {
-  isEmpty(id, model) &&
-  true
-  // Don't close if this is the only editor group left!
-  //List.length(IntMap.bindings(model.idToGroup)) > 1;
+  isEmpty(id, model) && true; // Don't close if this is the only editor group left!
+                             //List.length(IntMap.bindings(model.idToGroup)) > 1;
 };
 
 let closeEditor = (~editorId, editorGroups) => {
-  
-    let idToGroup = editorGroups.idToGroup
-      |> IntMap.map(group => EditorGroup.removeEditorById(group, editorId))
+  let idToGroup =
+    editorGroups.idToGroup
+    |> IntMap.map(group => EditorGroup.removeEditorById(group, editorId));
 
   // Keep a handle on the active editor group - we should never
   // get completely empty!
   switch (IntMap.find_opt(editorGroups.activeId, idToGroup)) {
   // We shouldn't be in this state, ever
   | None => editorGroups
-  | Some(activeEditorGroup) => {
-      let idToGroup = idToGroup
-      |> IntMap.filter((_, group) => !EditorGroup.isEmpty(group));
+  | Some(activeEditorGroup) =>
+    let idToGroup =
+      idToGroup |> IntMap.filter((_, group) => !EditorGroup.isEmpty(group));
 
     let remainingGroupCount = List.length(IntMap.bindings(idToGroup));
     // We never let the editor groups get totally empty,
     // otherwise we run into the bad case of:
     // https://github.com/onivim/oni2/issues/733
-    let idToGroup = if (remainingGroupCount == 0) {
-      IntMap.add(activeEditorGroup.editorGroupId, activeEditorGroup, idToGroup);
-    } else {
-      idToGroup;
-    };
+    let idToGroup =
+      if (remainingGroupCount == 0) {
+        IntMap.add(
+          activeEditorGroup.editorGroupId,
+          activeEditorGroup,
+          idToGroup,
+        );
+      } else {
+        idToGroup;
+      };
 
-    { ...editorGroups, idToGroup }
+    {...editorGroups, idToGroup}
     // There's a chance the active group could've changed, so make sure
     // we point to one
     |> ensureActiveId;
-    }
-  }
-
-  
+  };
 };
 
 let reduce = (~defaultFont, model, action: Actions.t) => {
@@ -149,17 +149,17 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
   | EditorGroupSelected(editorGroupId) => {...model, activeId: editorGroupId}
 
   | action =>
-      switch (getActiveEditorGroup(model)) {
-      | Some(group) => {
-          ...model,
-          idToGroup:
-            IntMap.add(
-              model.activeId,
-              EditorGroupReducer.reduce(~defaultFont, group, action),
-              model.idToGroup,
-            ),
-        }
-      | None => model
-      };
+    switch (getActiveEditorGroup(model)) {
+    | Some(group) => {
+        ...model,
+        idToGroup:
+          IntMap.add(
+            model.activeId,
+            EditorGroupReducer.reduce(~defaultFont, group, action),
+            model.idToGroup,
+          ),
+      }
+    | None => model
+    }
   };
 };

@@ -554,7 +554,7 @@ let start =
       Vim.init();
 
       if (Core.BuildInfo.commitId == Persistence.Global.version()
-        || !showUpdateChangelog) {
+          || !showUpdateChangelog) {
         dispatch(
           Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
         );

@@ -175,7 +175,7 @@ module Styles = {
 };
 
 let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
-  let State.{vimMode: mode, uiFont, _} = state;
+  let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -193,7 +193,7 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
     let editorContainer =
       switch (EditorGroup.getActiveEditor(editorGroup)) {
       | Some(editor) => <Parts.EditorContainer editor state theme isActive />
-      | None => React.empty
+      | None => <WelcomeView theme editorFont uiFont />
       };
 
     if (showTabs) {

@@ -39,22 +39,23 @@ let start = () => {
     | ViewCloseEditor(editorId) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
-      let editorGroups = Model.EditorGroups.closeEditor(
-        ~editorId,
-        s.editorGroups
-      );
+      let editorGroups =
+        Model.EditorGroups.closeEditor(~editorId, s.editorGroups);
 
       /* Remove splits */
       let layout =
         s.layout
         |> Feature_Layout.windows
         |> List.fold_left(
-             (acc, editorGroupId) => 
-               if (Model.EditorGroups.getEditorGroupById(editorGroups, 
-               editorGroupId) == None) {
+             (acc, editorGroupId) =>
+               if (Model.EditorGroups.getEditorGroupById(
+                     editorGroups,
+                     editorGroupId,
+                   )
+                   == None) {
                  Feature_Layout.removeWindow(editorGroupId, acc);
                } else {
-                  acc
+                 acc;
                },
              s.layout,
            );
