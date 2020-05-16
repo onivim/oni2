@@ -181,9 +181,6 @@ let runTest =
   InitLog.info("Sending init event");
 
   Oni_UI.GlobalContext.set({
-    openEditorById: id => {
-      dispatch(Model.Actions.ViewSetActiveEditor(id));
-    },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
     editorScrollDelta: (~editorId, ~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
