@@ -90,11 +90,6 @@ let isEmpty = (id, model) => {
   };
 };
 
-let canClose = (id, model) => {
-  isEmpty(id, model) && true; // Don't close if this is the only editor group left!
-                             //List.length(IntMap.bindings(model.idToGroup)) > 1;
-};
-
 let closeEditor = (~editorId, editorGroups) => {
   let idToGroup =
     editorGroups.idToGroup
