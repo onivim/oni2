@@ -121,10 +121,10 @@ let runTest =
           headlessWindow,
           <Oni_UI.Root state />,
         );
-        Revery.Utility.HeadlessWindow.takeScreenshot(
-          headlessWindow,
-          "screenshot.png",
-        );
+//        Revery.Utility.HeadlessWindow.takeScreenshot(
+//          headlessWindow,
+//          "screenshot.png",
+//        );
       },
       Revery.Time.zero,
     );
