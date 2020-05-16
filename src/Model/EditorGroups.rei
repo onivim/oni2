@@ -10,8 +10,10 @@ let getFirstEditorGroup: t => EditorGroup.t;
 
 let add: (~defaultFont: Service_Font.font, EditorGroup.t, t) => t;
 
+let closeEditor: (~editorId: int, t) => t;
+
 let isActive: (t, EditorGroup.t) => bool;
-let isEmpty: (int, t) => bool;
+let canClose: (int, t) => bool;
 
 let reduce: (~defaultFont: Service_Font.font, t, Actions.t) => t;
 

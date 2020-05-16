@@ -36,23 +36,30 @@ let start = () => {
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | EditorGroupSelected(_) => FocusManager.push(Editor, s)
-    | ViewCloseEditor(_) =>
+    | ViewCloseEditor(editorId) =>
       /* When an editor is closed... lets see if any window splits are empty */
+
+      let editorGroups = Model.EditorGroups.closeEditor(
+        ~editorId,
+        s.editorGroups
+      );
 
       /* Remove splits */
       let layout =
         s.layout
         |> Feature_Layout.windows
-        |> List.filter(editorGroupId =>
-             Model.EditorGroups.isEmpty(editorGroupId, s.editorGroups)
-           )
         |> List.fold_left(
-             (acc, editorGroupId) =>
-               Feature_Layout.removeWindow(editorGroupId, acc),
+             (acc, editorGroupId) => 
+               if (Model.EditorGroups.getEditorGroupById(editorGroups, 
+               editorGroupId) == None) {
+                 Feature_Layout.removeWindow(editorGroupId, acc);
+               } else {
+                  acc
+               },
              s.layout,
            );
 
-      {...s, layout};
+      {...s, editorGroups, layout};
 
     | OpenFileByPath(_) => FocusManager.push(Editor, s)
 
