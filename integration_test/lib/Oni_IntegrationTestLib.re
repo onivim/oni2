@@ -115,18 +115,17 @@ let runTest =
 
   let _: unit => unit =
     Revery.Tick.interval(
-      _ =>
-        {
-          let state = currentState^;
-          Revery.Utility.HeadlessWindow.render(
-            headlessWindow,
-            <Oni_UI.Root state />,
-          );
-        },
-        //        Revery.Utility.HeadlessWindow.takeScreenshot(
-        //          headlessWindow,
-        //          "screenshot.png",
-        //        );
+      _ => {
+        let state = currentState^;
+        Revery.Utility.HeadlessWindow.render(
+          headlessWindow,
+          <Oni_UI.Root state />,
+        );
+      },
+      //        Revery.Utility.HeadlessWindow.takeScreenshot(
+      //          headlessWindow,
+      //          "screenshot.png",
+      //        );
       Revery.Time.zero,
     );
 
