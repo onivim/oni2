@@ -83,13 +83,6 @@ let ensureActiveId = model => {
   };
 };
 
-let isEmpty = (id, model) => {
-  switch (IntMap.find_opt(id, model.idToGroup)) {
-  | None => true
-  | Some(group) => EditorGroup.isEmpty(group)
-  };
-};
-
 let closeEditor = (~editorId, editorGroups) => {
   let idToGroup =
     editorGroups.idToGroup
