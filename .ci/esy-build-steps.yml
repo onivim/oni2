@@ -25,6 +25,10 @@ steps:
     displayName: 'Test: install'
   - script: esy @test run-ci
     displayName: 'Unit Tests: esy test-ci (round 1)'
+  - script: esy @test run-ci
+    displayName: 'Unit Tests: esy test-ci (round 2)'
+  - script: esy @test run-ci
+    displayName: 'Unit Tests: esy test-ci (round 3)'
   - script: esy @integrationtest install
     displayName: 'Integration Tests: install'
   - script: esy @integrationtest run

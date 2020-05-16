@@ -42,7 +42,7 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
     |> List.map(Contributions.Configuration.toSettings)
     |> Config.Settings.unionMany
     |> Config.Settings.union(Config.Schema.defaults(config.schema))
-    |> Oni_Extensions.Configuration.Model.fromSettings;
+    |> Exthost.Configuration.Model.fromSettings;
 
   let user =
     Config.Settings.fromList([
@@ -52,9 +52,9 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
       ("terminal.integrated.env.osx", Json.Encode.null),
     ])
     |> Config.Settings.union(config.user)
-    |> Oni_Extensions.Configuration.Model.fromSettings;
+    |> Exthost.Configuration.Model.fromSettings;
 
-  Oni_Extensions.Configuration.create(~defaults, ~user, ());
+  Exthost.Configuration.create(~defaults, ~user, ());
 };
 
 [@deriving show({with_path: false})]

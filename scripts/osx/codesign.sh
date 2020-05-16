@@ -40,6 +40,8 @@ else
    manual-codesign Contents/Frameworks/libSDL2-2.0.0.dylib
    manual-codesign Contents/Frameworks/libffi.6.dylib
    manual-codesign Contents/Resources/node/node_modules/node-pty/build/Release/pty.node
+   manual-codesign Contents/Resources/node/node_modules/spdlog/build/Release/spdlog.node
+   manual-codesign Contents/Resources/node/node_modules/native-watchdog/build/Release/watchdog.node
 
    # Finish by codesigning the root
    manual-codesign

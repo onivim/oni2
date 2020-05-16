@@ -26,28 +26,26 @@ let start = () => {
 
   let splitEditorEffect = (state, direction, _) =>
     Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
-      let buffer = Selectors.getActiveBuffer(state);
+      let getBufferAndLocation = () => {
+        open Base.Option.Let_syntax;
+        let%bind buffer = state |> Selectors.getActiveBuffer;
+        let%bind path = buffer |> Buffer.getFilePath;
 
-      let newEditorGroup =
-        switch (buffer) {
-        | Some(b) =>
-          let ec = EditorGroup.create();
-          let (g, editorId) =
-            EditorGroup.getOrCreateEditorForBuffer(
-              ~font=state.editorFont,
-              ~bufferId=Buffer.getId(b),
-              ec,
-            );
-          let g = EditorGroup.setActiveEditor(g, editorId);
-          g;
-        | None => EditorGroup.create()
-        };
+        let%bind cursorLocation =
+          state
+          |> Selectors.getActiveEditorGroup
+          |> Selectors.getActiveEditor
+          |> Option.map(Feature_Editor.Editor.getPrimaryCursor(~buffer));
 
-      dispatch(AddSplit(direction, newEditorGroup.editorGroupId));
+        Some((path, cursorLocation));
+      };
 
-      // This needs to be dispatched after the split, since this will set the
-      // active editor group, which is then used as the target for the split.
-      dispatch(EditorGroupAdd(newEditorGroup));
+      getBufferAndLocation()
+      |> Option.iter(((path, cursorLocation)) => {
+           dispatch(
+             OpenFileByPath(path, Some(direction), Some(cursorLocation)),
+           )
+         });
     });
 
   let windowMoveEffect = (state: State.t, direction, _) => {
@@ -106,6 +104,11 @@ let start = () => {
       };
     });
 
+  let openChangelogEffect = _ =>
+    Isolinear.Effect.createWithDispatch(~name="oni.changelog", dispatch => {
+      dispatch(OpenFileByPath(BufferPath.changelog, None, None))
+    });
+
   let commands = [
     ("system.addToPath", _ => togglePathEffect),
     ("system.removeFromPath", _ => togglePathEffect),
@@ -128,6 +131,7 @@ let start = () => {
       "workbench.action.zoomReset",
       state => zoomEffect(state, _zoom => Constants.defaultZoomValue),
     ),
+    ("oni.changelog", _ => openChangelogEffect),
   ];
 
   let commandMap =

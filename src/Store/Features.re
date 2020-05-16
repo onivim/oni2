@@ -8,13 +8,25 @@ module Internal = {
     Feature_Notification.Effects.create(~kind, message)
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
+  let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
+    buffer
+    |> Oni_Core.Buffer.getFileType
+    |> Utility.OptionEx.flatMap(fileType =>
+         Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+           languageInfo,
+           fileType,
+         )
+       )
+    |> Option.value(~default="source.plaintext");
+  };
 };
 
 // UPDATE
 
 let update =
     (
-      ~extHostClient,
+      ~grammarRepository: Oni_Syntax.GrammarRepository.t,
+      ~extHostClient: Exthost.Client.t,
       ~getUserSettings,
       ~setup,
       state: State.t,
@@ -47,14 +59,29 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
-  | BufferUpdate({update, _}) =>
-    let (syntaxHighlights, _) =
-      Feature_Syntax.update(
+  | BufferUpdate({update, newBuffer, _}) =>
+    let syntaxHighlights =
+      Feature_Syntax.handleUpdate(
+        ~scope=
+          Internal.getScopeForBuffer(
+            ~languageInfo=state.languageInfo,
+            newBuffer,
+          ),
+        ~grammars=grammarRepository,
+        ~config=Feature_Configuration.resolver(state.config),
+        ~theme=state.tokenTheme,
+        update,
         state.syntaxHighlights,
-        Feature_Syntax.BufferUpdated(update),
       );
     let state = {...state, syntaxHighlights};
-    (state, Effect.none);
+    (
+      state,
+      Feature_Syntax.Effect.bufferUpdate(
+        ~bufferUpdate=update,
+        state.syntaxHighlights,
+      )
+      |> Isolinear.Effect.map(() => Actions.Noop),
+    );
 
   | Configuration(msg) =>
     let (config, outmsg) =
@@ -63,15 +90,21 @@ let update =
     let eff =
       switch (outmsg) {
       | ConfigurationChanged({changed}) =>
-        Oni_Extensions.ExtHostClient.Effects.acceptConfigurationChanged(
-          extHostClient,
-          Feature_Configuration.toExtensionConfiguration(
-            config,
-            state.extensions.extensions,
-            setup,
-          ),
-          ~changed=Oni_Extensions.Configuration.Model.fromSettings(changed),
-        )
+        Isolinear.Effect.create(
+          ~name="featuers.configuration$acceptConfigurationChanged", () => {
+          let configuration =
+            Feature_Configuration.toExtensionConfiguration(
+              config,
+              state.extensions.extensions,
+              setup,
+            );
+          let changed = Exthost.Configuration.Model.fromSettings(changed);
+          Exthost.Request.Configuration.acceptConfigurationChanged(
+            ~configuration,
+            ~changed,
+            extHostClient,
+          );
+        })
       | Nothing => Effect.none
       };
 
@@ -99,7 +132,12 @@ let update =
     (state, effect);
 
   | Terminal(msg) =>
-    let (model, eff) = Feature_Terminal.update(state.terminals, msg);
+    let (model, eff) =
+      Feature_Terminal.update(
+        ~config=Feature_Configuration.resolver(state.config),
+        state.terminals,
+        msg,
+      );
 
     let effect: Isolinear.Effect.t(Actions.t) =
       switch ((eff: Feature_Terminal.outmsg)) {

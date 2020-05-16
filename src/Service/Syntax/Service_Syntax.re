@@ -1,36 +1,68 @@
+open EditorCoreTypes;
 module Core = Oni_Core;
 module Syntax = Oni_Syntax;
+module Protocol = Oni_Syntax.Protocol;
 module Ext = Oni_Extensions;
 module OptionEx = Core.Utility.OptionEx;
 
 module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
 
 [@deriving show({with_path: false})]
-type msg =
-  | ServerStarted([@opaque] Oni_Syntax_Client.t)
+type serverMsg =
+  | ServerStarted
+  | ServerInitialized([@opaque] Oni_Syntax_Client.t)
   | ServerFailedToStart(string)
-  | ServerClosed
-  | ReceivedHighlights([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t));
+  | ServerClosed;
+
+type bufferMsg =
+  | ReceivedHighlights(list(Protocol.TokenUpdate.t));
+
+module Internal = {
+  let bufferToHighlightEvent:
+    Hashtbl.t(int, Revery.Event.t(list(Protocol.TokenUpdate.t))) =
+    Hashtbl.create(16);
+
+  let subscribe = (bufferId, tokenUpdateCallback) => {
+    // Create event if not already available for buffer
+    let tokenUpdateEvent =
+      switch (Hashtbl.find_opt(bufferToHighlightEvent, bufferId)) {
+      | None =>
+        let evt = Revery.Event.create();
+        Hashtbl.add(bufferToHighlightEvent, bufferId, evt);
+        evt;
+      | Some(evt) => evt
+      };
+
+    Revery.Event.subscribe(tokenUpdateEvent, tokenUpdateCallback);
+  };
+
+  let notifyTokensReceived = (bufferId, tokenUpdate) => {
+    switch (Hashtbl.find_opt(bufferToHighlightEvent, bufferId)) {
+    | None => Log.warnf(m => m("No listener for bufferId: %d", bufferId))
+    | Some(listener) => Revery.Event.dispatch(listener, tokenUpdate)
+    };
+  };
+};
 
 module Sub = {
-  type params = {
+  type serverParams = {
     id: string,
     languageInfo: Ext.LanguageInfo.t,
     setup: Core.Setup.t,
     tokenTheme: Syntax.TokenTheme.t,
-    configuration: Core.Configuration.t,
+    useTreeSitter: bool,
   };
 
-  module SyntaxSubscription =
+  module SyntaxServerSubscription =
     Isolinear.Sub.Make({
-      type nonrec msg = msg;
+      type nonrec msg = serverMsg;
 
-      type nonrec params = params;
+      type nonrec params = serverParams;
 
       type state = {
         client: result(Oni_Syntax_Client.t, string),
         lastSyncedTokenTheme: option(Syntax.TokenTheme.t),
-        lastConfiguration: option(Core.Configuration.t),
+        lastTreeSitterSetting: option(bool),
       };
 
       let name = "SyntaxSubscription";
@@ -45,24 +77,29 @@ module Sub = {
               () => {
                 Log.info("onConnected");
                 pendingResult^
-                |> Option.iter(server => dispatch(ServerStarted(server)));
+                |> Option.iter(server => dispatch(ServerInitialized(server)));
               },
             ~onClose=_ => dispatch(ServerClosed),
             ~onHighlights=
-              highlights => {dispatch(ReceivedHighlights(highlights))},
+              (~bufferId, ~tokens) => {
+                Internal.notifyTokensReceived(bufferId, tokens)
+              },
             ~onHealthCheckResult=_ => (),
             params.languageInfo,
             params.setup,
-          )
-          |> Utility.ResultEx.tap(server => dispatch(ServerStarted(server)))
-          |> Utility.ResultEx.tapError(msg =>
-               dispatch(ServerFailedToStart(msg))
-             );
+          );
+
+        switch (clientResult) {
+        | Ok(_) => dispatch(ServerStarted)
+        | Error(msg) => dispatch(ServerFailedToStart(msg))
+        };
+
+        pendingResult := Result.to_option(clientResult);
 
         {
           client: clientResult,
           lastSyncedTokenTheme: None,
-          lastConfiguration: None,
+          lastTreeSitterSetting: None,
         };
       };
 
@@ -86,15 +123,15 @@ module Sub = {
           state;
         };
 
-      let syncConfiguration = (configuration, state) =>
-        if (!compare(configuration, state.lastConfiguration)) {
+      let syncUseTreeSitter = (useTreeSitter, state) =>
+        if (!compare(useTreeSitter, state.lastTreeSitterSetting)) {
           state.client
           |> Result.map(client => {
-               Oni_Syntax_Client.notifyConfigurationChanged(
+               Oni_Syntax_Client.notifyTreeSitterChanged(
+                 ~useTreeSitter,
                  client,
-                 configuration,
                );
-               {...state, lastConfiguration: Some(configuration)};
+               {...state, lastTreeSitterSetting: Some(useTreeSitter)};
              })
           |> Result.value(~default=state);
         } else {
@@ -104,7 +141,7 @@ module Sub = {
       let update = (~params, ~state, ~dispatch as _) => {
         state
         |> syncTokenTheme(params.tokenTheme)
-        |> syncConfiguration(params.configuration);
+        |> syncUseTreeSitter(params.useTreeSitter);
       };
 
       let dispose = (~params as _, ~state) => {
@@ -112,60 +149,91 @@ module Sub = {
       };
     });
 
-  let create = (~configuration, ~languageInfo, ~setup, ~tokenTheme) => {
-    SyntaxSubscription.create({
+  let server = (~useTreeSitter, ~languageInfo, ~setup, ~tokenTheme) => {
+    SyntaxServerSubscription.create({
       id: "syntax-highligher",
-      configuration,
+      useTreeSitter,
       languageInfo,
       setup,
       tokenTheme,
     });
   };
-};
 
-module Effect = {
-  let bufferEnter = (maybeSyntaxClient, id: int, fileType) =>
-    Isolinear.Effect.create(~name="syntax.bufferEnter", () => {
-      OptionEx.iter2(
-        (syntaxClient, fileType) => {
-          Oni_Syntax_Client.notifyBufferEnter(syntaxClient, id, fileType)
-        },
-        maybeSyntaxClient,
-        fileType,
-      )
+  type bufferParams = {
+    client: Oni_Syntax_Client.t,
+    buffer: Core.Buffer.t,
+    visibleRanges: list(Range.t),
+  };
+
+  module BufferSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = bufferMsg;
+      type nonrec params = bufferParams;
+
+      type state = {
+        lastVisibleRanges: list(Range.t),
+        unsubscribe: unit => unit,
+      };
+
+      let name = "BufferSubscription";
+      let id = params => {
+        let bufferId = params.buffer |> Core.Buffer.getId |> string_of_int;
+
+        let fileType =
+          params.buffer
+          |> Core.Buffer.getFileType
+          |> Option.value(~default="(none)");
+
+        bufferId ++ fileType;
+      };
+
+      let init = (~params, ~dispatch) => {
+        let bufferId = Core.Buffer.getId(params.buffer);
+        let unsubscribe =
+          Internal.subscribe(bufferId, tokenUpdates => {
+            dispatch(ReceivedHighlights(tokenUpdates))
+          });
+
+        Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
+
+        params.buffer
+        |> Core.Buffer.getFileType
+        |> Option.iter(filetype => {
+             Oni_Syntax_Client.startHighlightingBuffer(
+               ~filetype,
+               ~bufferId,
+               ~visibleRanges=params.visibleRanges,
+               ~lines=Core.Buffer.getLines(params.buffer),
+               params.client,
+             )
+           });
+
+        {lastVisibleRanges: params.visibleRanges, unsubscribe};
+      };
+
+      let update = (~params, ~state, ~dispatch as _) => {
+        let currentVisibleRanges = state.lastVisibleRanges;
+
+        if (currentVisibleRanges != params.visibleRanges) {
+          Oni_Syntax_Client.notifyBufferVisibilityChanged(
+            ~bufferId=Core.Buffer.getId(params.buffer),
+            ~ranges=params.visibleRanges,
+            params.client,
+          );
+        };
+
+        {...state, lastVisibleRanges: params.visibleRanges};
+      };
+
+      let dispose = (~params, ~state) => {
+        state.unsubscribe();
+        let bufferId = Core.Buffer.getId(params.buffer);
+        Log.infof(m => m("Stopping buffer subscription for: %d", bufferId));
+        Oni_Syntax_Client.stopHighlightingBuffer(~bufferId, params.client);
+      };
     });
 
-  let bufferUpdate =
-      (
-        maybeSyntaxClient,
-        bufferUpdate: Oni_Core.BufferUpdate.t,
-        lines,
-        scopeMaybe,
-      ) =>
-    Isolinear.Effect.create(~name="syntax.bufferUpdate", () => {
-      OptionEx.iter2(
-        (syntaxClient, scope) => {
-          Oni_Syntax_Client.notifyBufferUpdate(
-            syntaxClient,
-            bufferUpdate,
-            lines,
-            scope,
-          )
-        },
-        maybeSyntaxClient,
-        scopeMaybe,
-      )
-    });
-
-  let visibilityChanged = (maybeSyntaxClient, visibleRanges) =>
-    Isolinear.Effect.create(~name="syntax.visibilityChange", () => {
-      Option.iter(
-        syntaxClient =>
-          Oni_Syntax_Client.notifyVisibilityChanged(
-            syntaxClient,
-            visibleRanges,
-          ),
-        maybeSyntaxClient,
-      )
-    });
+  let buffer = (~client, ~buffer, ~visibleRanges) => {
+    BufferSubscription.create({client, buffer, visibleRanges});
+  };
 };

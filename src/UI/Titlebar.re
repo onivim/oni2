@@ -4,6 +4,7 @@
 
 open Revery;
 open Revery.UI;
+open Revery.UI.Components;
 
 open Oni_Core;
 module Model = Oni_Model;
@@ -50,9 +51,13 @@ let make = (~isFocused, ~isMaximized, ~title, ~theme, ~font: UiFont.t, ()) =>
   } else {
     switch (Revery.Environment.os) {
     | Mac =>
-      <View style={Styles.container(~isFocused, ~theme)}>
+      <Clickable
+        onDoubleClick={_ =>
+          GlobalContext.current().dispatch(Model.Actions.TitleDoubleClicked)
+        }
+        style={Styles.container(~isFocused, ~theme)}>
         <Text style={Styles.text(~isFocused, ~theme, ~font)} text=title />
-      </View>
+      </Clickable>
     | _ => React.empty
     };
   };

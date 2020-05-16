@@ -1,7 +1,5 @@
 open TestFramework;
 
-open Vim;
-
 module Buffers = Oni_Model.Buffers;
 module Buffer = Oni_Core.Buffer;
 
@@ -29,6 +27,8 @@ let getFileTypeOrFail = (v: option(Buffer.t)) => {
   };
 };
 
+let emptyBuffer = Oni_Core.Buffer.ofLines([||]);
+
 describe("Buffer List Tests", ({test, _}) => {
   test("Buffer enter should create metadata", ({expect, _}) => {
     let bufferList = Buffers.empty;
@@ -37,10 +37,13 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
-          metadata:
-            BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          id: 0,
+          buffer: emptyBuffer,
           fileType: None,
           lineEndings: None,
+          isModified: false,
+          version: 0,
+          filePath: Some("/test1.re"),
         }),
       );
 
@@ -63,8 +66,11 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
-          metadata:
-            BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
+          id: 0,
+          buffer: emptyBuffer,
+          filePath: Some("/test1.re"),
+          isModified: false,
+          version: 0,
           fileType: None,
           lineEndings: None,
         }),
@@ -73,8 +79,11 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         added,
         BufferEnter({
-          metadata:
-            BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
+          id: 0,
+          buffer: emptyBuffer,
+          filePath: Some("/test2.re"),
+          isModified: false,
+          version: 0,
           fileType: None,
           lineEndings: None,
         }),
@@ -92,8 +101,11 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
-          metadata:
-            BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          id: 4,
+          buffer: emptyBuffer,
+          filePath: Some("/myfile.js"),
+          isModified: false,
+          version: 0,
           fileType: None,
           lineEndings: None,
         }),
@@ -109,8 +121,11 @@ describe("Buffer List Tests", ({test, _}) => {
       Buffers.reduce(
         bufferList,
         BufferEnter({
-          metadata:
-            BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
+          id: 4,
+          buffer: emptyBuffer,
+          filePath: Some("/myfile.js"),
+          isModified: false,
+          version: 0,
           fileType: Some("reason"),
           lineEndings: None,
         }),

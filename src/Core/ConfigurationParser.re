@@ -404,22 +404,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, zenModeSingleFile: parseBool(json)},
   ),
   (
-    "syntax.eagerMaxLines",
-    (config, json) => {
-      ...config,
-      syntaxEagerMaxLines:
-        parseInt(~default=Constants.syntaxEagerMaxLines, json),
-    },
-  ),
-  (
-    "syntax.eagerMaxLineLength",
-    (config, json) => {
-      ...config,
-      syntaxEagerMaxLineLength:
-        parseInt(~default=Constants.syntaxEagerMaxLineLength, json),
-    },
-  ),
-  (
     "ui.shadows",
     (config, json) => {...config, uiShadows: parseBool(json)},
   ),
@@ -438,10 +422,6 @@ let configurationParsers: list(configurationTuple) = [
       vsync:
         parseBool(json) ? Revery.Vsync.Synchronized : Revery.Vsync.Immediate,
     },
-  ),
-  (
-    "experimental.treeSitter",
-    (config, json) => {...config, experimentalTreeSitter: parseBool(json)},
   ),
   (
     "experimental.viml",

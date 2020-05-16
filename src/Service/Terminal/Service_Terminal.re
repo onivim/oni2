@@ -1,8 +1,10 @@
 open Oni_Core;
-open Oni_Extensions;
+open Oni_Core.Utility;
+
+module Time = Revery.Time;
 
 module Internal = {
-  let onExtensionMessage: Revery.Event.t(ExtHostClient.Terminal.msg) =
+  let onExtensionMessage: Revery.Event.t(Exthost.Msg.TerminalService.msg) =
     Revery.Event.create();
 
   let idToTerminal: Hashtbl.t(int, ReveryTerminal.t) = Hashtbl.create(8);
@@ -31,7 +33,8 @@ module Sub = {
   type params = {
     id: int,
     cmd: string,
-    extHostClient: ExtHostClient.t,
+    arguments: list(string),
+    extHostClient: Exthost.Client.t,
     workspaceUri: Uri.t,
     rows: int,
     columns: int,
@@ -56,54 +59,34 @@ module Sub = {
 
       let init = (~params, ~dispatch) => {
         let launchConfig =
-          ExtHostClient.Terminal.ShellLaunchConfig.{
+          Exthost.ShellLaunchConfig.{
             name: "Terminal",
             executable: params.cmd,
-            arguments: [],
+            arguments: params.arguments,
           };
 
         let isResizing = ref(false);
 
-        let makeDebouncedDispatch = () => {
-          let scheduled = ref(false);
-          let latestAction = ref(None);
-          action => {
-            latestAction := Some(action);
-            if (! scheduled^) {
-              scheduled := true;
-
-              let _: unit => unit =
-                Revery.Tick.timeout(
-                  () => {
-                    latestAction^ |> Option.iter(dispatch);
-                    scheduled := false;
-                    latestAction := None;
-                  },
-                  Revery.Time.zero,
-                );
-              ();
-            };
-          };
-        };
-
-        let debouncedScreenDispatch = makeDebouncedDispatch();
-        let debouncedCursorDispatch = makeDebouncedDispatch();
+        let throttledScreenDispatch =
+          FunEx.throttle(~time=Time.zero, dispatch);
+        let throttledCursorDispatch =
+          FunEx.throttle(~time=Time.zero, dispatch);
 
         let onEffect = eff =>
           switch (eff) {
           | ReveryTerminal.ScreenResized(_) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
             if (! isResizing^) {
-              debouncedScreenDispatch(
+              throttledScreenDispatch(
                 ScreenUpdated({id: params.id, screen}),
               );
             }
           | ReveryTerminal.CursorMoved(cursor) =>
-            debouncedCursorDispatch(CursorMoved({id: params.id, cursor}))
+            throttledCursorDispatch(CursorMoved({id: params.id, cursor}))
           | ReveryTerminal.Output(output) =>
-            ExtHostClient.Terminal.Requests.acceptProcessInput(
-              params.id,
-              output,
+            Exthost.Request.TerminalService.acceptProcessInput(
+              ~id=params.id,
+              ~data=output,
               params.extHostClient,
             )
           // TODO: Handle term prop changes
@@ -126,25 +109,27 @@ module Sub = {
             dispatch(msg);
           };
 
-        ExtHostClient.Terminal.Requests.createProcess(
-          params.id,
-          launchConfig,
-          params.workspaceUri,
-          params.columns,
-          params.rows,
+        Exthost.Request.TerminalService.spawnExtHostProcess(
+          ~id=params.id,
+          ~shellLaunchConfig=launchConfig,
+          ~activeWorkspaceRoot=params.workspaceUri,
+          ~cols=params.columns,
+          ~rows=params.rows,
+          ~isWorkspaceShellAllowed=true,
           params.extHostClient,
         );
 
         let dispose =
           Revery.Event.subscribe(
-            Internal.onExtensionMessage, (msg: ExtHostClient.Terminal.msg) => {
+            Internal.onExtensionMessage,
+            (msg: Exthost.Msg.TerminalService.msg) => {
             switch (msg) {
             | SendProcessTitle({terminalId, title}) =>
               dispatchIfMatches(
                 terminalId,
                 ProcessTitleChanged({id: terminalId, title}),
               )
-            | SendProcessPid({terminalId, pid}) =>
+            | SendProcessReady({terminalId, pid, _}) =>
               dispatchIfMatches(
                 terminalId,
                 ProcessStarted({id: terminalId, pid}),
@@ -172,10 +157,10 @@ module Sub = {
         if (rows > 0
             && columns > 0
             && (rows != state.rows || columns != state.columns)) {
-          ExtHostClient.Terminal.Requests.acceptProcessResize(
-            params.id,
-            columns,
-            rows,
+          Exthost.Request.TerminalService.acceptProcessResize(
+            ~id=params.id,
+            ~cols=columns,
+            ~rows,
             params.extHostClient,
           );
 
@@ -190,9 +175,9 @@ module Sub = {
 
       let dispose = (~params, ~state) => {
         let () =
-          ExtHostClient.Terminal.Requests.acceptProcessShutdown(
+          Exthost.Request.TerminalService.acceptProcessShutdown(
             ~immediate=false,
-            params.id,
+            ~id=params.id,
             params.extHostClient,
           );
 
@@ -201,9 +186,11 @@ module Sub = {
       };
     });
 
-  let terminal = (~id, ~cmd, ~columns, ~rows, ~workspaceUri, ~extHostClient) =>
+  let terminal =
+      (~id, ~arguments, ~cmd, ~columns, ~rows, ~workspaceUri, ~extHostClient) =>
     TerminalSubscription.create({
       id,
+      arguments,
       cmd,
       columns,
       rows,
@@ -280,7 +267,7 @@ module Effect = {
   };
 };
 
-let handleExtensionMessage = (msg: ExtHostClient.Terminal.msg) => {
+let handleExtensionMessage = (msg: Exthost.Msg.TerminalService.msg) => {
   Revery.Event.dispatch(Internal.onExtensionMessage, msg);
 };
 

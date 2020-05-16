@@ -13,7 +13,6 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        reason-jsonrpc
         oniguruma
         Oni2.core
         Oni2.core.whenExpr

@@ -56,7 +56,17 @@ let start = (~healthCheck) => {
         };
 
         let tokenUpdates = State.getTokenUpdates(state^);
-        write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
+        tokenUpdates
+        |> List.iter(((bufferId, updates)) =>
+             if (updates !== []) {
+               write(
+                 Protocol.ServerToClient.TokenUpdate({
+                   bufferId,
+                   tokens: updates,
+                 }),
+               );
+             }
+           );
         map(State.clearTokenUpdates);
       }
     ) {
@@ -95,15 +105,22 @@ let start = (~healthCheck) => {
           let res = healthCheck();
           write(Protocol.ServerToClient.HealthCheckPass(res == 0));
         }
-      | BufferEnter(id, filetype) => {
+      | BufferStartHighlighting({bufferId, filetype, lines, visibleRanges}) => {
           log(
             Printf.sprintf(
               "Buffer enter - id: %d filetype: %s",
-              id,
+              bufferId,
               filetype,
             ),
           );
-          updateAndRestartTimer(State.bufferEnter(id));
+          updateAndRestartTimer(
+            State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges),
+          );
+        }
+
+      | BufferStopHighlighting(bufferId) => {
+          log(Printf.sprintf("Buffer stop highlighting - id: %d", bufferId));
+          updateAndRestartTimer(State.bufferLeave(~bufferId));
         }
       | UseTreeSitter(useTreeSitter) => {
           updateAndRestartTimer(State.setUseTreeSitter(useTreeSitter));
@@ -116,7 +133,7 @@ let start = (~healthCheck) => {
           updateAndRestartTimer(State.updateTheme(theme));
           log("handled theme changed");
         }
-      | BufferUpdate(bufferUpdate, scope) => {
+      | BufferUpdate(bufferUpdate) => {
           let delta = bufferUpdate.isFull ? "(FULL)" : "(DELTA)";
           log(
             Printf.sprintf(
@@ -126,7 +143,7 @@ let start = (~healthCheck) => {
               delta,
             ),
           );
-          switch (State.bufferUpdate(~bufferUpdate, ~scope, state^)) {
+          switch (State.bufferUpdate(~bufferUpdate, state^)) {
           | Ok(newState) =>
             state := newState;
             log("Buffer update successfully applied.");
@@ -135,8 +152,11 @@ let start = (~healthCheck) => {
 
           restartTimer();
         }
-      | VisibleRangesChanged(visibilityUpdate) => {
-          updateAndRestartTimer(State.updateVisibility(visibilityUpdate));
+      | BufferVisibilityChanged({bufferId, ranges}) => {
+          log("Visibility changed");
+          updateAndRestartTimer(
+            State.updateBufferVisibility(~bufferId, ~ranges),
+          );
         }
       | Close => {
           write(Protocol.ServerToClient.Closing);

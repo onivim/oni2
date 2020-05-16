@@ -18,41 +18,24 @@ let start = () => {
       dispatch(Model.Actions.Quit(false))
     );
 
-  let initializeDefaultViewEffect = (state: State.t) =>
-    Isolinear.Effect.createWithDispatch(~name="windows.init", dispatch => {
-      dispatch(
-        Actions.AddSplit(
-          `Vertical,
-          EditorGroups.activeGroupId(state.editorGroups),
-        ),
-      )
-    });
+  let resize = (axis, factor, state: State.t) =>
+    switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+    | Some((editorGroup: EditorGroup.t)) => {
+        ...state,
+        layout:
+          Feature_Layout.resizeWindow(
+            axis,
+            editorGroup.editorGroupId,
+            factor,
+            state.layout,
+          ),
+      }
+    | None => state
+    };
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | AddSplit(direction, split) => {
-        ...s,
-        // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
-        zenMode: s.zenMode && Feature_Layout.windows(s.layout) == [],
-        layout:
-          Feature_Layout.addWindow(
-            ~target={
-              EditorGroups.getActiveEditorGroup(s.editorGroups)
-              |> Option.map((group: EditorGroup.t) => group.editorGroupId);
-            },
-            ~position=`After,
-            direction,
-            split,
-            s.layout,
-          ),
-      }
-
-    | RemoveSplit(id) => {
-        ...s,
-        zenMode: false,
-        layout: Feature_Layout.removeWindow(id, s.layout),
-      }
-
+    | EditorGroupSelected(_) => FocusManager.push(Editor, s)
     | ViewCloseEditor(_) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
@@ -96,6 +79,29 @@ let start = () => {
       | None => s
       }
 
+    | Command("workbench.action.decreaseViewSize") =>
+      s |> resize(`Horizontal, 0.95) |> resize(`Vertical, 0.95)
+
+    | Command("workbench.action.increaseViewSize") =>
+      s |> resize(`Horizontal, 1.05) |> resize(`Vertical, 1.05)
+
+    | Command("vim.decreaseHorizontalWindowSize") =>
+      s |> resize(`Horizontal, 0.95)
+
+    | Command("vim.increaseHorizontalWindowSize") =>
+      s |> resize(`Horizontal, 1.05)
+
+    | Command("vim.decreaseVerticalWindowSize") =>
+      s |> resize(`Vertical, 0.95)
+
+    | Command("vim.increaseVerticalWindowSize") =>
+      s |> resize(`Vertical, 1.05)
+
+    | Command("workbench.action.evenEditorWidths") => {
+        ...s,
+        layout: Feature_Layout.resetWeights(s.layout),
+      }
+
     | _ => s
     };
 
@@ -104,7 +110,6 @@ let start = () => {
 
     let effect =
       switch (action) {
-      | Init => initializeDefaultViewEffect(state)
       // When opening a file, ensure that the active editor is getting focus
       | ViewCloseEditor(_) =>
         if (Feature_Layout.windows(state.layout) == []) {
