@@ -91,7 +91,7 @@ jobs:
   - template: .ci/clean-linux-deps.yml
   - script: docker build -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
-  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ls -a'
+  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'ls -a'
     displayName: 'docker: ls -a'
   - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/install-git.sh'
     displayName: 'docker: install git v2'
