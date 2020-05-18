@@ -5,11 +5,6 @@ RUN ls
 
 RUN yum -y update
 
-RUN yum -y remove git
-RUN yum -y install perl perl-Thread-Queue perl-devel
-RUN ./oni2/scripts/install-git.sh
-RUN git --version
-
 RUN yum -y install centos-release-scl
 RUN yum-config-manager --enable rhel-server-rhscl-7-rpms
 RUN yum -y install llvm-toolset-7.0
@@ -33,3 +28,4 @@ RUN npm install --global --unsafe-perm=true esy@0.6.2
 RUN npm install --global node-gyp
 
 RUN yum -y install nasm
+RUN yum -y remove git
