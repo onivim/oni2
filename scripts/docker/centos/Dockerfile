@@ -13,6 +13,8 @@ RUN yum -y install nodejs npm coreutils grep tar sed gawk diffutils autoconf
 
 RUN yum -y install file fuse fuse-devel wget bzip2-devel libXt-devel libSM-devel libICE-devel ncurses-devel libacl-devel libxrandr-devel libXinerama-devel libXcursor-devel libXi-devel mesa-libGL-devel mesa-libGLU-devel gtk3-devel perl-Digest-SHA bzip2 m4 patch which cmake3 git
 
+RUN yum -y install perl perl-Thread-Queue
+
 RUN yum -y install /usr/lib64/libasan.so.0.0.0
 
 RUN rpm -i https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/c/colm-0.13.0.4-2.el7.x86_64.rpm
