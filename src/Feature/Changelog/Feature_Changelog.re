@@ -483,8 +483,7 @@ module View = {
             <title text=summaryText uiFont theme />
           </Clickable>
         </View>
-        {isExpanded
-           ? <MoreInfo commit uiFont theme dispatch /> : React.empty}
+        {isExpanded ? <MoreInfo commit uiFont theme dispatch /> : React.empty}
       </View>;
     };
 
