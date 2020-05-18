@@ -12,6 +12,10 @@ module Internal = {
 
 [@deriving show({with_path: false})]
 type msg =
+  | ProcessExit({
+      id: int,
+      exitCode: int,
+    })
   | ProcessStarted({
       id: int,
       pid: int,
@@ -138,7 +142,11 @@ module Sub = {
               if (terminalId == params.id) {
                 ReveryTerminal.write(~input=data, terminal);
               }
-            | _ => ()
+            | SendProcessExit({ terminalId, exitCode }) =>
+              dispatchIfMatches(
+                terminalId,
+                ProcessExit({id: terminalId, exitCode }),
+              );
             }
           });
 

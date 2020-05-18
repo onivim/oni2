@@ -12,6 +12,7 @@ type terminal = {
   title: option(string),
   screen: ReveryTerminal.Screen.t,
   cursor: ReveryTerminal.Cursor.t,
+  closeOnExit: bool,
 };
 
 type t = {
@@ -67,7 +68,8 @@ type outmsg =
   | TerminalCreated({
       name: string,
       splitDirection,
-    });
+    })
+  | TerminalExit({terminalId: int, exitCode: int});
 
 let shellCmd = ShellUtility.getDefaultShell();
 
@@ -162,6 +164,7 @@ let update = (~config: Config.resolver, model: t, msg) => {
           title: None,
           screen: ReveryTerminal.Screen.initial,
           cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
+          closeOnExit: true,
         },
         model.idToTerminal,
       );
@@ -200,6 +203,9 @@ let update = (~config: Config.resolver, model: t, msg) => {
   | Service(CursorMoved({id, cursor})) =>
     let newModel = updateById(id, term => {...term, cursor}, model);
     (newModel, Nothing);
+
+  | Service(ProcessExit({id, exitCode})) =>
+    (model, TerminalClosed({terminalId: id, exitCode}))
   };
 };
 

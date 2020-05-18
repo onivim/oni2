@@ -155,6 +155,8 @@ let update =
           ~name="feature.terminal.openBuffer", dispatch => {
           dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
         });
+
+      | TerminalExit({ terminalId, exitCode }) => ();
       };
     ({...state, terminals: model}, effect);
 

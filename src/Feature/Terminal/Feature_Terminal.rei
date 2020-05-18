@@ -13,6 +13,7 @@ type terminal =
     title: option(string),
     screen: ReveryTerminal.Screen.t,
     cursor: ReveryTerminal.Cursor.t,
+    closeOnExit: bool,
   };
 
 type t;
@@ -59,7 +60,8 @@ type outmsg =
   | TerminalCreated({
       name: string,
       splitDirection,
-    });
+    })
+  | TerminalExit({terminalId: int, exitCode: int});
 
 let shouldHandleInput: string => bool;
 
