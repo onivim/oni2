@@ -4,7 +4,7 @@ RUN yum -y update
 
 RUN yum -y remove git
 RUN yum -y install perl perl-Thread-Queue perl-devel
-RUN sudo bash ./scripts/install-git.sh
+RUN ./scripts/install-git.sh
 RUN git --version
 
 RUN yum -y install centos-release-scl
