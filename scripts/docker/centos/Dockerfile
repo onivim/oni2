@@ -1,8 +1,5 @@
 FROM centos:7
 
-RUN pwd
-RUN ls
-
 RUN yum -y update
 
 RUN yum -y install centos-release-scl
@@ -21,9 +18,6 @@ RUN yum -y install /usr/lib64/libasan.so.0.0.0
 RUN rpm -i https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/c/colm-0.13.0.4-2.el7.x86_64.rpm
 RUN rpm -i https://download-ib01.fedoraproject.org/pub/epel/7/x86_64/Packages/r/ragel-7.0.0.9-2.el7.x86_64.rpm
 
-RUN node -v
-RUN npm -v
-
 RUN npm install --global --unsafe-perm=true esy@0.6.2
 RUN npm install --global node-gyp
 
@@ -32,4 +26,7 @@ RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm
 RUN yum -y remove git
 RUN yum -y install epel-release
 RUN yum -y install git222
+
+RUN node -v
+RUN npm -v
 RUN git --version
