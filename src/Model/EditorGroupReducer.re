@@ -51,11 +51,6 @@ let reduce = (~defaultFont, v: EditorGroup.t, action: Actions.t) => {
   | Command("workbench.action.nextEditor") => EditorGroup.nextEditor(v)
   | Command("workbench.action.previousEditor") =>
     EditorGroup.previousEditor(v)
-  | ViewSetActiveEditor(id) =>
-    switch (IntMap.find_opt(id, v.editors)) {
-    | None => v
-    | Some(_) => {...v, activeEditorId: Some(id)}
-    }
   | _ => v
   };
 };

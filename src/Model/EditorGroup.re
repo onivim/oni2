@@ -36,9 +36,15 @@ let getActiveEditor = model =>
   | None => None
   };
 
+let hasEditor = (~editorId, model) => {
+  IntMap.mem(editorId, model.editors);
+};
+
 let setActiveEditor = (model, editorId) => {
-  ...model,
-  activeEditorId: Some(editorId),
+  switch (IntMap.find_opt(editorId, model.editors)) {
+  | None => model
+  | Some(_) => {...model, activeEditorId: Some(editorId)}
+  };
 };
 
 let setBufferFont = (~bufferId, ~font, group) => {
