@@ -120,21 +120,8 @@ module Parts = {
           state.bufferRenderers,
         );
 
-      let onPullRequestClicked = pr =>
-        GlobalContext.current().dispatch(Changelog(PullRequestClicked(pr)));
-
-      let onCommitHashClicked = hash =>
-        GlobalContext.current().dispatch(
-          Changelog(CommitHashClicked(hash)),
-        );
-
-      let onChangeExpanded = commit =>
-        GlobalContext.current().dispatch(Changelog(ChangeExpanded(commit)));
-
-      let onChangeContracted = commit =>
-        GlobalContext.current().dispatch(
-          Changelog(ChangeContracted(commit)),
-        );
+      let changelogDispatch = msg =>
+        GlobalContext.current().dispatch(Changelog(msg));
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
@@ -169,10 +156,7 @@ module Parts = {
         <Feature_Changelog.View.Full
           state={state.changelog}
           theme
-          onPullRequestClicked
-          onCommitHashClicked
-          onChangeExpanded
-          onChangeContracted
+          dispatchMsg=changelogDispatch
           uiFont
         />
 

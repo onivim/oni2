@@ -8,11 +8,7 @@ type model;
 let initial: model;
 
 [@deriving show({with_path: false})]
-type msg =
-  | PullRequestClicked(int)
-  | CommitHashClicked(string)
-  | ChangeExpanded(commit)
-  | ChangeContracted(commit);
+type msg;
 
 type outmsg =
   | Nothing
@@ -27,10 +23,7 @@ module View: {
         ~state: model,
         ~theme: ColorTheme.Colors.t,
         ~uiFont: UiFont.t,
-        ~onPullRequestClicked: int => unit,
-        ~onCommitHashClicked: string => unit,
-        ~onChangeExpanded: commit => unit,
-        ~onChangeContracted: commit => unit,
+        ~dispatchMsg: msg => unit,
         unit
       ) =>
       element;
