@@ -28,4 +28,7 @@ RUN npm install --global --unsafe-perm=true esy@0.6.2
 RUN npm install --global node-gyp
 
 RUN yum -y install nasm
+RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm
 RUN yum -y remove git
+RUN yum -y install epel-release
+RUN yum -y install git222
