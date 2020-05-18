@@ -19,12 +19,6 @@ module Internal = {
        )
     |> Option.value(~default="source.plaintext");
   };
-
-  // Probably not the right place to put this :/
-  let openURL = url =>
-    Isolinear.Effect.create(~name="openURL", () => {
-      Revery.Native.Shell.openURL(url) |> (ignore: bool => unit)
-    });
 };
 
 // UPDATE
@@ -193,12 +187,7 @@ let update =
     }
 
   | Changelog(msg) =>
-    let (model, outmsg) = Feature_Changelog.update(state.changelog, msg);
-    let eff =
-      switch ((outmsg: Feature_Changelog.outmsg)) {
-      | URL(url) => Internal.openURL(url)
-      | _ => Effect.none
-      };
+    let (model, eff) = Feature_Changelog.update(state.changelog, msg);
     ({...state, changelog: model}, eff);
 
   // TODO: This should live in the editor feature project

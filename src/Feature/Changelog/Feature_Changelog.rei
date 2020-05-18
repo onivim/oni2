@@ -10,11 +10,7 @@ let initial: model;
 [@deriving show({with_path: false})]
 type msg;
 
-type outmsg =
-  | Nothing
-  | URL(string);
-
-let update: (model, msg) => (model, outmsg);
+let update: (model, msg) => (model, Isolinear.Effect.t(_));
 
 module View: {
   module Full: {
@@ -23,7 +19,7 @@ module View: {
         ~state: model,
         ~theme: ColorTheme.Colors.t,
         ~uiFont: UiFont.t,
-        ~dispatchMsg: msg => unit,
+        ~dispatch: msg => unit,
         unit
       ) =>
       element;

@@ -28,10 +28,6 @@ type msg =
   | ChangeExpanded(commit)
   | ChangeContracted(commit);
 
-type outmsg =
-  | Nothing
-  | URL(string);
-
 type simpleXml =
   | Element(string, list((string, string)), list(simpleXml))
   | Text(string);
@@ -47,18 +43,20 @@ let update = (model, msg) =>
   switch (msg) {
   | PullRequestClicked(pr) =>
     let url = Printf.sprintf("https://github.com/onivim/oni2/pull/%d", pr);
-    (model, URL(url));
+    let effect = Service_OS.Effect.openURL(url);
+    (model, effect);
   | CommitHashClicked(hash) =>
     let url =
       Printf.sprintf("https://github.com/onivim/oni2/commit/%s", hash);
-    (model, URL(url));
+    let effect = Service_OS.Effect.openURL(url);
+    (model, effect);
   | ChangeExpanded(commit) => (
       {expanded: [commit, ...model.expanded]},
-      Nothing,
+      Isolinear.Effect.none,
     )
   | ChangeContracted(commit) => (
       {expanded: model.expanded |> List.filter(c => c != commit)},
-      Nothing,
+      Isolinear.Effect.none,
     )
   };
 
@@ -365,9 +363,9 @@ module View = {
   // MOREINFO
 
   module MoreInfo = {
-    let hash = (~commit, ~uiFont, ~theme, ~dispatchMsg, ()) => {
+    let hash = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
       let text = Printf.sprintf("#%s", commit.hash);
-      let onClick = _ => dispatchMsg(CommitHashClicked(commit.hash));
+      let onClick = _ => dispatch(CommitHashClicked(commit.hash));
 
       <View style=Styles.MoreInfo.description>
         <Text text="Commit" style={Styles.MoreInfo.header(uiFont, ~theme)} />
@@ -396,11 +394,11 @@ module View = {
       };
     };
 
-    let pullRequest = (~commit, ~uiFont, ~theme, ~dispatchMsg, ()) => {
+    let pullRequest = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
       switch (commit.pr) {
       | Some(pr) =>
         let text = Printf.sprintf("#%d", pr);
-        let onClick = _ => dispatchMsg(PullRequestClicked(pr));
+        let onClick = _ => dispatch(PullRequestClicked(pr));
 
         <View style=Styles.MoreInfo.description>
           <Text
@@ -438,10 +436,10 @@ module View = {
       };
     };
 
-    let make = (~commit, ~uiFont, ~theme, ~dispatchMsg, ()) => {
+    let make = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
       <View style=Styles.MoreInfo.main>
-        <hash commit uiFont theme dispatchMsg />
-        <pullRequest commit uiFont theme dispatchMsg />
+        <hash commit uiFont theme dispatch />
+        <pullRequest commit uiFont theme dispatch />
         <description commit uiFont theme />
         <breakingChanges commit uiFont theme />
       </View>;
@@ -451,7 +449,7 @@ module View = {
   // FULL
 
   module Full = {
-    let change = (~model, ~commit, ~uiFont, ~theme, ~dispatchMsg, ()) => {
+    let change = (~model, ~commit, ~uiFont, ~theme, ~dispatch, ()) => {
       let isExpanded = model.expanded |> List.mem(commit);
       let summaryText =
         switch (String.index_opt(commit.summary, '\n')) {
@@ -460,8 +458,8 @@ module View = {
         };
       let onCaretClick = _e =>
         isExpanded
-          ? dispatchMsg(ChangeContracted(commit))
-          : dispatchMsg(ChangeExpanded(commit));
+          ? dispatch(ChangeContracted(commit))
+          : dispatch(ChangeExpanded(commit));
 
       <View>
         <View style=Styles.commit>
@@ -486,11 +484,11 @@ module View = {
           </Clickable>
         </View>
         {isExpanded
-           ? <MoreInfo commit uiFont theme dispatchMsg /> : React.empty}
+           ? <MoreInfo commit uiFont theme dispatch /> : React.empty}
       </View>;
     };
 
-    let group = (~model, ~commits, ~uiFont, ~theme, ~dispatchMsg, ()) => {
+    let group = (~model, ~commits, ~uiFont, ~theme, ~dispatch, ()) => {
       <View>
         <date
           commit={List.hd(commits)}
@@ -499,14 +497,14 @@ module View = {
         <View style=Styles.groupBody>
           {commits
            |> List.map(commit =>
-                <change model commit uiFont theme dispatchMsg />
+                <change model commit uiFont theme dispatch />
               )
            |> React.listToElement}
         </View>
       </View>;
     };
 
-    let make = (~state: model, ~theme, ~uiFont, ~dispatchMsg, ()) => {
+    let make = (~state: model, ~theme, ~uiFont, ~dispatch, ()) => {
       let isSignificantCommit = commit =>
         switch (commit.typ) {
         | Some("feat" | "fix" | "perf") => true
@@ -524,7 +522,7 @@ module View = {
                   !isSameDate(a.time, b.time)
                 )
              |> List.map(commits =>
-                  <group model=state commits uiFont theme dispatchMsg />
+                  <group model=state commits uiFont theme dispatch />
                 )
              |> React.listToElement}
           </View>

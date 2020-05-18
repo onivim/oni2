@@ -156,7 +156,7 @@ module Parts = {
         <Feature_Changelog.View.Full
           state={state.changelog}
           theme
-          dispatchMsg=changelogDispatch
+          dispatch=changelogDispatch
           uiFont
         />
 
