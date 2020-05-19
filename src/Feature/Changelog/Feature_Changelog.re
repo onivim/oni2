@@ -47,7 +47,8 @@ let update = (model, msg) =>
     let effect = Service_OS.Effect.openURL(url);
     (model, effect);
   | IssueClicked(issue) =>
-    let url = Printf.sprintf("https://github.com/onivim/oni2/issues/%d", issue);
+    let url =
+      Printf.sprintf("https://github.com/onivim/oni2/issues/%d", issue);
     let effect = Service_OS.Effect.openURL(url);
     (model, effect);
   | CommitHashClicked(hash) =>
@@ -280,19 +281,35 @@ module View = {
         color(Colors.foreground.from(theme)),
       ];
 
-      let activeStyle = (font: UiFont.t, ~theme) => [
+      let linkActiveStyle = (font: UiFont.t, ~theme) => [
         fontFamily(font.fontFile),
         fontSize(12.),
         color(Colors.TextLink.activeForeground.from(theme)),
       ];
 
-      let inactiveStyle = (font: UiFont.t, ~theme) => [
+      let linkInactiveStyle = (font: UiFont.t, ~theme) => [
         fontFamily(font.fontFile),
         fontSize(12.),
         color(Colors.TextLink.foreground.from(theme)),
       ];
 
       let description = [marginVertical(6), flexDirection(`Row)];
+    };
+
+    module Full = {
+      let titleActiveStyle = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(Colors.foreground.from(theme)),
+      ];
+
+      let titleInactiveStyle = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(
+          Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
+        ),
+      ];
     };
   };
 
@@ -377,8 +394,8 @@ module View = {
         <ClickableText
           text
           onClick
-          activeStyle={Styles.MoreInfo.activeStyle(uiFont, ~theme)}
-          inactiveStyle={Styles.MoreInfo.inactiveStyle(uiFont, ~theme)}
+          activeStyle={Styles.MoreInfo.linkActiveStyle(uiFont, ~theme)}
+          inactiveStyle={Styles.MoreInfo.linkInactiveStyle(uiFont, ~theme)}
         />
       </View>;
     };
@@ -413,8 +430,8 @@ module View = {
           <ClickableText
             text
             onClick
-            activeStyle={Styles.MoreInfo.activeStyle(uiFont, ~theme)}
-            inactiveStyle={Styles.MoreInfo.inactiveStyle(uiFont, ~theme)}
+            activeStyle={Styles.MoreInfo.linkActiveStyle(uiFont, ~theme)}
+            inactiveStyle={Styles.MoreInfo.linkInactiveStyle(uiFont, ~theme)}
           />
         </View>;
       | None => React.empty
@@ -428,15 +445,12 @@ module View = {
         let onClick = _ => dispatch(IssueClicked(issue));
 
         <View style=Styles.MoreInfo.description>
-          <Text
-            text="Issue"
-            style={Styles.MoreInfo.header(uiFont, ~theme)}
-          />
+          <Text text="Issue" style={Styles.MoreInfo.header(uiFont, ~theme)} />
           <ClickableText
             text
             onClick
-            activeStyle={Styles.MoreInfo.activeStyle(uiFont, ~theme)}
-            inactiveStyle={Styles.MoreInfo.inactiveStyle(uiFont, ~theme)}
+            activeStyle={Styles.MoreInfo.linkActiveStyle(uiFont, ~theme)}
+            inactiveStyle={Styles.MoreInfo.linkInactiveStyle(uiFont, ~theme)}
           />
         </View>;
       | None => React.empty
@@ -477,6 +491,14 @@ module View = {
   // FULL
 
   module Full = {
+    let title = (~text, ~uiFont, ~theme, ()) => {
+      <ClickableText
+        activeStyle={Styles.Full.titleActiveStyle(uiFont, ~theme)}
+        inactiveStyle={Styles.Full.titleInactiveStyle(uiFont, ~theme)}
+        text
+      />;
+    };
+
     let change = (~model, ~commit, ~uiFont, ~theme, ~dispatch, ()) => {
       let isExpanded = model.expanded |> List.mem(commit);
       let summaryText =
