@@ -281,13 +281,13 @@ module View = {
         color(Colors.foreground.from(theme)),
       ];
 
-      let linkActiveStyle = (font: UiFont.t, ~theme) => [
+      let linkActive = (font: UiFont.t, ~theme) => [
         fontFamily(font.fontFile),
         fontSize(12.),
         color(Colors.TextLink.activeForeground.from(theme)),
       ];
 
-      let linkInactiveStyle = (font: UiFont.t, ~theme) => [
+      let linkInactive = (font: UiFont.t, ~theme) => [
         fontFamily(font.fontFile),
         fontSize(12.),
         color(Colors.TextLink.foreground.from(theme)),
@@ -297,7 +297,7 @@ module View = {
     };
 
     module Full = {
-      let titleActiveStyle = (font: UiFont.t, ~theme) => [
+      let titleActive = (font: UiFont.t, ~theme) => [
         fontFamily(font.fontFile),
         fontSize(12.),
         color(
@@ -305,7 +305,7 @@ module View = {
         ),
       ];
 
-      let titleInactiveStyle = (font: UiFont.t, ~theme) => [
+      let titleInactive = (font: UiFont.t, ~theme) => [
         fontFamily(font.fontFile),
         fontSize(12.),
         color(Colors.foreground.from(theme)),
@@ -394,8 +394,8 @@ module View = {
         <ClickableText
           text
           onClick
-          activeStyle={Styles.MoreInfo.linkActiveStyle(uiFont, ~theme)}
-          inactiveStyle={Styles.MoreInfo.linkInactiveStyle(uiFont, ~theme)}
+          activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
+          inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
         />
       </View>;
     };
@@ -430,8 +430,8 @@ module View = {
           <ClickableText
             text
             onClick
-            activeStyle={Styles.MoreInfo.linkActiveStyle(uiFont, ~theme)}
-            inactiveStyle={Styles.MoreInfo.linkInactiveStyle(uiFont, ~theme)}
+            activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
+            inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
           />
         </View>;
       | None => React.empty
@@ -449,8 +449,8 @@ module View = {
           <ClickableText
             text
             onClick
-            activeStyle={Styles.MoreInfo.linkActiveStyle(uiFont, ~theme)}
-            inactiveStyle={Styles.MoreInfo.linkInactiveStyle(uiFont, ~theme)}
+            activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
+            inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
           />
         </View>;
       | None => React.empty
@@ -493,8 +493,8 @@ module View = {
   module Full = {
     let title = (~text, ~uiFont, ~theme, ()) => {
       <ClickableText
-        activeStyle={Styles.Full.titleActiveStyle(uiFont, ~theme)}
-        inactiveStyle={Styles.Full.titleInactiveStyle(uiFont, ~theme)}
+        activeStyle={Styles.Full.titleActive(uiFont, ~theme)}
+        inactiveStyle={Styles.Full.titleInactive(uiFont, ~theme)}
         text
       />;
     };
