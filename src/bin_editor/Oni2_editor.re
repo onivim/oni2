@@ -273,6 +273,10 @@ if (cliOptions.syntaxHighlightService) {
         dispatch(Model.Actions.WindowMaximized)
       );
     let _: Window.unsubscribe =
+      Window.onFullscreen(window, () =>
+        dispatch(Model.Actions.WindowFullscreen)
+      );
+    let _: Window.unsubscribe =
       Window.onMinimized(window, () =>
         dispatch(Model.Actions.WindowMinimized)
       );

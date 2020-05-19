@@ -53,8 +53,13 @@ let reduce: (State.t, Actions.t) => State.t =
       | WindowFocusGained => {...s, windowIsFocused: true}
       | WindowFocusLost => {...s, windowIsFocused: false}
       | WindowMaximized => {...s, windowIsMaximized: true}
+      | WindowFullscreen => {...s, windowIsFullscreen: true}
       | WindowRestored
-      | WindowMinimized => {...s, windowIsMaximized: false}
+      | WindowMinimized => {
+          ...s,
+          windowIsFullscreen: false,
+          windowIsMaximized: false,
+        }
       | _ => s
       };
     };

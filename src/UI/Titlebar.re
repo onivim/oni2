@@ -18,9 +18,9 @@ module Styles = {
     flexGrow(0),
     height(25),
     backgroundColor(
-      isFocused
-        ? Colors.activeBackground.from(theme)
-        : Colors.inactiveBackground.from(theme),
+      isFocused ?
+        Colors.activeBackground.from(theme) :
+        Colors.inactiveBackground.from(theme),
     ),
     flexDirection(`Row),
     justifyContent(`Center),
@@ -32,29 +32,30 @@ module Styles = {
     fontSize(12.),
     fontFamily(font.fontFileSemiBold),
     backgroundColor(
-      isFocused
-        ? Colors.activeBackground.from(theme)
-        : Colors.inactiveBackground.from(theme),
+      isFocused ?
+        Colors.activeBackground.from(theme) :
+        Colors.inactiveBackground.from(theme),
     ),
     color(
-      isFocused
-        ? Colors.activeForeground.from(theme)
-        : Colors.inactiveForeground.from(theme),
+      isFocused ?
+        Colors.activeForeground.from(theme) :
+        Colors.inactiveForeground.from(theme),
     ),
     textWrap(TextWrapping.NoWrap),
   ];
 };
 
-let make = (~isFocused, ~isMaximized, ~title, ~theme, ~font: UiFont.t, ()) =>
-  if (isMaximized) {
+let make = (~isFocused, ~isFullscreen, ~title, ~theme, ~font: UiFont.t, ()) =>
+  if (isFullscreen) {
     React.empty;
   } else {
     switch (Revery.Environment.os) {
     | Mac =>
       <Clickable
-        onDoubleClick={_ =>
-          GlobalContext.current().dispatch(Model.Actions.TitleDoubleClicked)
-        }
+        onDoubleClick=(
+          _ =>
+            GlobalContext.current().dispatch(Model.Actions.TitleDoubleClicked)
+        )
         style={Styles.container(~isFocused, ~theme)}>
         <Text style={Styles.text(~isFocused, ~theme, ~font)} text=title />
       </Clickable>

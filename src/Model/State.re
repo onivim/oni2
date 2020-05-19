@@ -64,6 +64,7 @@ type t = {
   windowTitle: string,
   windowIsFocused: bool,
   windowIsMaximized: bool,
+  windowIsFullscreen: bool,
   workspace: Workspace.t,
   zenMode: bool,
   // State of the bottom pane
@@ -139,6 +140,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     windowTitle: "",
     windowIsFocused: true,
     windowIsMaximized: false,
+    windowIsFullscreen: false,
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
     zenMode: false,
