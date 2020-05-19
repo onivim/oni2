@@ -410,18 +410,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~windows_hide=true,
       ~windows_hide_console=true,
       ~windows_hide_gui=true,
-      ~redirect=[
-        Luv.Process.inherit_fd(
-          ~fd=Luv.Process.stdin,
-          ~from_parent_fd=Luv.Process.stdin,
-          (),
-        ),
-        Luv.Process.inherit_fd(
-          ~fd=Luv.Process.stdout,
-          ~from_parent_fd=Luv.Process.stderr,
-          (),
-        ),
-      ],
       nodePath,
       [nodePath, extHostScriptPath],
     )
