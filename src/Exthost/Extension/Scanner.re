@@ -52,10 +52,7 @@ let load = (~category, packageFile) => {
 
   switch (Json.Decode.decode_value(Manifest.decode, json)) {
   | Ok(parsedManifest) =>
-    let manifest =
-      parsedManifest
-      |> remapManifest(directory)
-      |> localize;
+    let manifest = parsedManifest |> remapManifest(directory) |> localize;
 
     Some(ScanResult.{category, manifest, path: directory});
 

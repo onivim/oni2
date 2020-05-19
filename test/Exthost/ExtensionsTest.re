@@ -4,17 +4,11 @@ open Oni_Core;
 open Exthost;
 
 module TestExtensionsEvent = {
-  type t = {
-    name: string,
-  };
+  type t = {name: string};
 
   let decode = {
     Json.Decode.(
-      obj(({field, _}) =>
-        {
-          name: field.required("name", string),
-        }
-      )
+      obj(({field, _}) => {name: field.required("name", string)})
     );
   };
 };
@@ -47,10 +41,10 @@ describe("ExtensionsTest", ({test, _}) => {
            ~command="testExtensions.getPackageJSON",
          ),
        )
-    |> waitForExtensionsEvent(~name="Extensions PackageJSON", (json) => {
-       expect.string(json.name).toEqual("oni-extensions");
-       true;
-    })
+    |> waitForExtensionsEvent(~name="Extensions PackageJSON", json => {
+         expect.string(json.name).toEqual("oni-extensions");
+         true;
+       })
     |> Test.terminate
     |> Test.waitForProcessClosed
   })

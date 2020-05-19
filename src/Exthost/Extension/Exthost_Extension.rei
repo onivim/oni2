@@ -161,12 +161,8 @@ module Scanner: {
     };
   };
 
-  let load:
-    (~category: category, string) =>
-    option(ScanResult.t);
-  let scan:
-    (~category: category, string) =>
-    list(ScanResult.t);
+  let load: (~category: category, string) => option(ScanResult.t);
+  let scan: (~category: category, string) => list(ScanResult.t);
 };
 
 module InitData: {

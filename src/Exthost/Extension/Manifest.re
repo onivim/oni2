@@ -32,12 +32,11 @@ and kind =
   | Ui
   | Workspace;
 
-
-let identifier = (manifest) => {
+let identifier = manifest => {
   switch (manifest.publisher) {
   | Some(publisher) => publisher ++ "." ++ manifest.name
   | None => manifest.name
-  }
+  };
 };
 
 module Decode = {
