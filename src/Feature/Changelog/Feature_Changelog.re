@@ -300,15 +300,15 @@ module View = {
       let titleActiveStyle = (font: UiFont.t, ~theme) => [
         fontFamily(font.fontFile),
         fontSize(12.),
-        color(Colors.foreground.from(theme)),
+        color(
+          Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
+        ),
       ];
 
       let titleInactiveStyle = (font: UiFont.t, ~theme) => [
         fontFamily(font.fontFile),
         fontSize(12.),
-        color(
-          Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
-        ),
+        color(Colors.foreground.from(theme)),
       ];
     };
   };
