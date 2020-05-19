@@ -69,7 +69,7 @@ type t = {
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
-  windowDisplayMode: windowDisplayMode,
+  windowDisplayMode,
   workspace: Workspace.t,
   zenMode: bool,
   // State of the bottom pane
