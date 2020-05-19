@@ -47,7 +47,7 @@ let startWithExtensions =
     extensions
     |> List.map(Rench.Path.join(rootPath))
     |> List.map(p => Rench.Path.join(p, "package.json"))
-    |> List.map(Scanner.load(~prefix=None, ~category=Scanner.Bundled))
+    |> List.map(Scanner.load(~category=Scanner.Bundled))
     |> List.filter_map(v => v)
     |> List.map((Extension.Scanner.ScanResult.{manifest, path, _}) => {
          InitData.Extension.ofManifestAndPath(manifest, path)

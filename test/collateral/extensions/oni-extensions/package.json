@@ -1,7 +1,8 @@
 {
-	"name": "oni-workspace",
-	"description": "Minimal HelloWorld example for VS Code",
+	"name": "oni-extensions",
+	"description": "Test extension to exercise the vscode.extensions API",
 	"version": "0.0.1",
+	"publisher": "outrunlabs",
 	"repository": "https://github.com/Microsoft/vscode-extension-samples/helloworld-minimal-sample",
 	"engines": {
 		"vscode": "^1.25.0"
