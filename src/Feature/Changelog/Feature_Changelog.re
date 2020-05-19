@@ -25,6 +25,7 @@ let initial: model = {expanded: []};
 type msg =
   | PullRequestClicked(int)
   | CommitHashClicked(string)
+  | IssueClicked(int)
   | ChangeExpanded(commit)
   | ChangeContracted(commit);
 
@@ -43,6 +44,10 @@ let update = (model, msg) =>
   switch (msg) {
   | PullRequestClicked(pr) =>
     let url = Printf.sprintf("https://github.com/onivim/oni2/pull/%d", pr);
+    let effect = Service_OS.Effect.openURL(url);
+    (model, effect);
+  | IssueClicked(issue) =>
+    let url = Printf.sprintf("https://github.com/onivim/oni2/issues/%d", issue);
     let effect = Service_OS.Effect.openURL(url);
     (model, effect);
   | CommitHashClicked(hash) =>
@@ -416,6 +421,28 @@ module View = {
       };
     };
 
+    let issue = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+      switch (commit.issue) {
+      | Some(issue) =>
+        let text = Printf.sprintf("#%d", issue);
+        let onClick = _ => dispatch(IssueClicked(issue));
+
+        <View style=Styles.MoreInfo.description>
+          <Text
+            text="Issue"
+            style={Styles.MoreInfo.header(uiFont, ~theme)}
+          />
+          <ClickableText
+            text
+            onClick
+            activeStyle={Styles.MoreInfo.activeStyle(uiFont, ~theme)}
+            inactiveStyle={Styles.MoreInfo.inactiveStyle(uiFont, ~theme)}
+          />
+        </View>;
+      | None => React.empty
+      };
+    };
+
     let breakingChanges = (~commit, ~uiFont, ~theme, ()) => {
       switch (commit.breaking) {
       | [] => React.empty
@@ -440,6 +467,7 @@ module View = {
       <View style=Styles.MoreInfo.main>
         <hash commit uiFont theme dispatch />
         <pullRequest commit uiFont theme dispatch />
+        <issue commit uiFont theme dispatch />
         <description commit uiFont theme />
         <breakingChanges commit uiFont theme />
       </View>;
