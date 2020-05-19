@@ -53,6 +53,7 @@ let getCommandLineCompletionsMeet = (str: string, position: int) => {
 
 let start =
     (
+      ~showUpdateChangelog: bool,
       languageInfo: Ext.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
@@ -552,7 +553,8 @@ let start =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
 
-      if (Core.BuildInfo.commitId == Persistence.Global.version()) {
+      if (Core.BuildInfo.commitId == Persistence.Global.version()
+          || !showUpdateChangelog) {
         dispatch(
           Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
         );

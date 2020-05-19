@@ -115,6 +115,7 @@ type t =
   | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
+  | EditorTabClicked(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
       severity: [@opaque] Exthost.Msg.MessageService.severity,
@@ -163,7 +164,6 @@ type t =
   | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)
   | ViewCloseEditor(int)
-  | ViewSetActiveEditor(int)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
