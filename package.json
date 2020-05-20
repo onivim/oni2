@@ -349,7 +349,7 @@
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
-    "reason-sdl2": "2.10.3031"
+    "reason-sdl2": "2.10.3032"
   },
   "devDependencies": {
     "ocaml": "~4.9",

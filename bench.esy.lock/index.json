@@ -1,5 +1,5 @@
 {
-  "checksum": "066120a68803377dfea2652637cac680",
+  "checksum": "61664e140dc5a7ac769390041cf2e772",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -153,7 +153,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9",
         "reason-skia@github:revery-ui/reason-skia#6b459c7@d41d8cd9",
-        "reason-sdl2@2.10.3031@d41d8cd9",
+        "reason-sdl2@2.10.3032@d41d8cd9",
         "reason-harfbuzz@1.91.8001@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
@@ -336,7 +336,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "refmterr@3.3.2@d41d8cd9", "reason-sdl2@2.10.3031@d41d8cd9",
+        "refmterr@3.3.2@d41d8cd9", "reason-sdl2@2.10.3032@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
         "esy-sdl2@2.0.10007@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
@@ -346,14 +346,14 @@
       ],
       "devDependencies": [ "@opam/dune@opam:2.5.1@a0c1e658" ]
     },
-    "reason-sdl2@2.10.3031@d41d8cd9": {
-      "id": "reason-sdl2@2.10.3031@d41d8cd9",
+    "reason-sdl2@2.10.3032@d41d8cd9": {
+      "id": "reason-sdl2@2.10.3032@d41d8cd9",
       "name": "reason-sdl2",
-      "version": "2.10.3031",
+      "version": "2.10.3032",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3031.tgz#sha1:18f5212f834f0182b7cb43b126da12b920d3758b"
+          "archive:https://registry.npmjs.org/reason-sdl2/-/reason-sdl2-2.10.3032.tgz#sha1:fe9afec29bbad691a437726d918a27afbf02937e"
         ]
       },
       "overrides": [],
@@ -1162,7 +1162,7 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3031@d41d8cd9",
+        "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3032@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#b13865e@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9",
