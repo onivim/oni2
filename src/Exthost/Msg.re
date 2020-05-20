@@ -468,24 +468,23 @@ module StatusBar = {
         id: string,
         label: Label.t,
         source: string,
-        alignment: alignment,
+        alignment,
         command: option(ExtCommand.t),
         priority: int,
       })
     | Dispose({id: int});
 
-  let parseCommand = commandJson => switch(commandJson) {
-  | `String(jsonString) => jsonString
+  let parseCommand = commandJson =>
+    switch (commandJson) {
+    | `String(jsonString) =>
+      jsonString
       |> Yojson.Safe.from_string
       |> Json.Decode.decode_value(Json.Decode.nullable(ExtCommand.decode))
-      |> Result.map_error(Json.Decode.string_of_error);
-  | _ => Ok(None)
-  };
+      |> Result.map_error(Json.Decode.string_of_error)
+    | _ => Ok(None)
+    };
 
   let handle = (method, args: Yojson.Safe.t) => {
-    prerr_endline(
-      "METHOD: " ++ method ++ " JSON: " ++ Yojson.Safe.to_string(args),
-    );
     switch (method, args) {
     | (
         "$setEntry",
@@ -500,16 +499,16 @@ module StatusBar = {
           `String(alignment),
           `String(priority),
         ]),
-      ) => {
+      ) =>
       open Base.Result.Let_syntax;
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
       let%bind command = parseCommand(commandJson);
-      let%bind label = labelJson 
-      |> Json.Decode.decode_value(Label.decode)
-      |> Result.map_error(Json.Decode.string_of_error);
+      let%bind label =
+        labelJson
+        |> Json.Decode.decode_value(Label.decode)
+        |> Result.map_error(Json.Decode.string_of_error);
       Ok(SetEntry({id, source, label, alignment, priority, command}));
-      }
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>
       Error(

@@ -11,7 +11,10 @@ type action =
   | NotificationClearAllClicked
   | NotificationCountClicked
   | NotificationsContextMenu
-  | ContributedItemClicked({id: string, command: string});
+  | ContributedItemClicked({
+      id: string,
+      command: string,
+    });
 
 module Item = {
   type t = {

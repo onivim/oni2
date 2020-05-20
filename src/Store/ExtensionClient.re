@@ -323,11 +323,19 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       dispatch(ExtMessageReceived({severity, message, extensionId}));
       None;
 
-    | StatusBar(SetEntry({id, label, alignment, priority, command})) =>
-      let command = command |> Option.map(({id, _}: Exthost.Command.t) => id);
+    | StatusBar(SetEntry({id, label, alignment, priority, command, _})) =>
+      let command =
+        command |> Option.map(({id, _}: Exthost.Command.t) => id);
       dispatch(
         Actions.StatusBarAddItem(
-          StatusBarModel.Item.create(~command?, ~id, ~label, ~alignment, ~priority, ()),
+          StatusBarModel.Item.create(
+            ~command?,
+            ~id,
+            ~label,
+            ~alignment,
+            ~priority,
+            (),
+          ),
         ),
       );
       None;

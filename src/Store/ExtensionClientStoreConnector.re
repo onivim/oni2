@@ -246,7 +246,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
     | StatusBar(ContributedItemClicked({command, _})) => (
         state,
         executeContributedCommandEffect(command, []),
-    )
+      )
 
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 

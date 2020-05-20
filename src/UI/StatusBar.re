@@ -112,7 +112,7 @@ let item =
   if (onClick == None && onRightClick == None) {
     <View style> children </View>;
   } else {
-    <Clickable ?onClick ?onRightClick style> children </Clickable>
+    <Clickable ?onClick ?onRightClick style> children </Clickable>;
   };
 };
 
@@ -279,24 +279,26 @@ let%component make =
     Hooks.animation(transitionAnimation);
 
   let toStatusBarElement = (statusItem: Item.t) => {
-
-    let onClick = statusItem.command
-    |> Option.map((command) => {
-      () => GlobalContext.current().dispatch(Actions.StatusBar(
-        ContributedItemClicked({id: statusItem.id, command })
-      ));
-    });
+    let onClick =
+      statusItem.command
+      |> Option.map((command, ()) =>
+           GlobalContext.current().dispatch(
+             Actions.StatusBar(
+               ContributedItemClicked({id: statusItem.id, command}),
+             ),
+           )
+         );
 
     <item ?onClick>
-    <View
-      style=Style.[
-        flexDirection(`Row),
-        justifyContent(`Center),
-        alignItems(`Center),
-      ]>
-    <Label font color=Revery.Colors.white label={statusItem.label} />
-    </View>
-    </item>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
+        <Label font color=Revery.Colors.white label={statusItem.label} />
+      </View>
+    </item>;
   };
 
   let leftItems =
