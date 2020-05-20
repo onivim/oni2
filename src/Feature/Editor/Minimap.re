@@ -89,18 +89,6 @@ let getMinimapSize = (view: Editor.t) => {
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
 
-type mouseCaptureState = {isCapturing: bool};
-
-type action =
-  | IsCapturing(bool);
-
-let reducer = (action, _state) =>
-  switch (action) {
-  | IsCapturing(isCapturing) => {isCapturing: isCapturing}
-  };
-
-let initialState = {isCapturing: false};
-
 let%component make =
               (
                 ~editor: Editor.t,
@@ -111,7 +99,7 @@ let%component make =
                 ~diagnostics,
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection: Hashtbl.t(Index.t, list(Range.t)),
-                ~onScroll,
+                ~onScroll: float => unit,
                 ~showSlider,
                 ~colors: Colors.t,
                 ~bufferHighlights,
@@ -121,9 +109,6 @@ let%component make =
   let rowHeight =
     float(Constants.minimapCharacterHeight + Constants.minimapLineSpacing);
 
-  let%hook (mouseState, dispatch) =
-    React.Hooks.reducer(~initialState, reducer);
-
   let getScrollTo = (mouseY: float) => {
     let totalHeight: int = Editor.getTotalSizeInPixels(editor);
     let visibleHeight: int = Editor.(editor.pixelHeight);
@@ -131,22 +116,22 @@ let%component make =
     float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
   };
 
-  let scrollComplete = () => {
-    Mouse.releaseCapture();
-    dispatch(IsCapturing(false));
-  };
-
-  let%hook () =
-    React.Hooks.effect(OnMount, () => {
-      Some(
-        () =>
-          if (mouseState.isCapturing) {
-            Mouse.releaseCapture();
-          },
-      )
-    });
-
   let scrollY = editor.minimapScrollY;
+
+  let%hook (captureMouse, _state) =
+    Hooks.mouseCapture(
+      ~onMouseMove=
+        ((), evt) => {
+          let scrollTo = getScrollTo(evt.mouseY);
+          let minimapLineSize =
+            Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
+          let linesInMinimap = editor.pixelHeight / minimapLineSize;
+          onScroll(scrollTo -. float(linesInMinimap));
+          Some();
+        },
+      ~onMouseUp=(_, _) => None,
+      (),
+    );
 
   let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
     let scrollTo = getScrollTo(evt.mouseY);
@@ -155,20 +140,7 @@ let%component make =
     let linesInMinimap = editor.pixelHeight / minimapLineSize;
     if (evt.button == Revery.MouseButton.BUTTON_LEFT) {
       onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
-
-      Mouse.setCapture(
-        ~onMouseMove=
-          evt => {
-            let scrollTo = getScrollTo(evt.mouseY);
-            let minimapLineSize =
-              Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-            let linesInMinimap = editor.pixelHeight / minimapLineSize;
-            onScroll(scrollTo -. float(linesInMinimap));
-          },
-        ~onMouseUp=_evt => {scrollComplete()},
-        (),
-      );
-      dispatch(IsCapturing(true));
+      captureMouse();
     };
   };
 
