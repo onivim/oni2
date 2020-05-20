@@ -149,13 +149,13 @@ module ReferenceContext: {
 
 module Label: {
   type segment =
-  | Text(string)
-  | Icon(string);
+    | Text(string)
+    | Icon(string);
 
   type t = list(segment);
 
   let of_string: string => t;
-  
+
   let decode: Json.decoder(t);
 };
 
@@ -664,7 +664,7 @@ module Msg: {
           alignment,
           priority: int,
         })
-     | Dispose({ id: int});
+      | Dispose({id: int});
   };
 
   [@deriving show]

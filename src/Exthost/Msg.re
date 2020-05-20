@@ -472,8 +472,9 @@ module StatusBar = {
     | Dispose({id: int});
 
   let handle = (method, args: Yojson.Safe.t) => {
-    prerr_endline ("METHOD: " ++ method ++
-    " JSON: " ++ Yojson.Safe.to_string(args));
+    prerr_endline(
+      "METHOD: " ++ method ++ " JSON: " ++ Yojson.Safe.to_string(args),
+    );
     switch (method, args) {
     | (
         "$setEntry",
@@ -492,8 +493,7 @@ module StatusBar = {
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
       Ok(SetEntry({id, source, text, alignment, priority}));
-    | ("$dispose", `List([`Int(id)])) =>
-      Ok(Dispose({ id: id}))
+    | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>
       Error(
         "Unable to parse method: "
