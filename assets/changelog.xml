@@ -1,11 +1,35 @@
 <changelog>
-  <commit hash="10ba05e2" time="1589378010">
-    Changelog: Fix invalid XML attributes
+  <commit type="refactor" scope="editor" hash="d971dae8" time="1589475433">
+    Remove imperative EditorGroupAdd action
   </commit>
-  <commit type="chore" scope="dependency" pr="1753" hash="fa0d3d69" time="1589302850">
+  <commit type="refactor" scope="layout" pr="1763" prAuthor="bryphe" hash="7c7cd5a2" time="1589471188">
+    Remove imperative AddSplit action
+  </commit>
+  <commit type="refactor" scope="layout" hash="0ef0085b" time="1589466458">
+    remove unused, imperative RemoveSplit action
+  </commit>
+  <commit type="fix" scope="persistence" issue="1749" pr="1761" prAuthor="bryphe" hash="878db991" time="1589414580">
+    window growing on each launch in scaled display
+  </commit>
+  <commit type="fix" scope="syntax" hash="120d6625" time="1589409971">
+    regression in first-load syntax highlighting
+  </commit>
+  <commit type="fix" scope="configuration" pr="1757" prAuthor="bryphe" hash="b04078c9" time="1589398014">
+    'no default' errors for syntax/terminal configuration
+  </commit>
+  <commit hash="f6d0d8e1" time="1589386295">
+    bugfix(osx/#1755) - fix hang on maximize
+  </commit>
+  <commit type="fix" scope="changelog" pr="1754" prAuthor="zbaylin" hash="0818e53f" time="1589383794">
+    correct invalid XML attributes
+  </commit>
+  <commit type="refactor" scope="syntax" pr="1745" prAuthor="bryphe" hash="92c68dc1" time="1589379861">
+    Move visibility check to subscription
+  </commit>
+  <commit type="chore" scope="dependency" pr="1753" prAuthor="glennsl" hash="fa0d3d69" time="1589302850">
     ocaml-decoders -> 0.4.0
   </commit>
-  <commit type="fix" scope="technical" issue="1749" pr="1752" hash="41af189a" time="1589298221">
+  <commit type="fix" scope="technical" issue="1749" pr="1752" prAuthor="glennsl" hash="41af189a" time="1589298221">
     ballooning window size
   </commit>
   <commit type="refactor" scope="exthost" issue="1747" hash="b2edf70f" time="1589292693">
@@ -17,30 +41,30 @@
   <commit type="bugfix" scope="windows" issue="1744" hash="c714e114" time="1589242700">
     Many console windows open on startup
   </commit>
-  <commit type="feat" scope="other" pr="1719" hash="3f50e8d5" time="1589232212">
+  <commit type="feat" scope="other" pr="1719" prAuthor="zbaylin" hash="3f50e8d5" time="1589232212">
     fix macOS titlebar double-click behavior to reflect system default
   </commit>
   <commit type="chore" scope="osx" pr="1742" hash="b0966c1c" time="1589221589">
     Add code-signing for watchdog and spdlog (#1742)
   </commit>
-  <commit type="refactor" scope="exthost" pr="1708" hash="79edae57" time="1589207790">
+  <commit type="refactor" scope="exthost" pr="1708" prAuthor="bryphe" hash="79edae57" time="1589207790">
     Upgrade from 1.33.5 -> 1.45.3
   </commit>
-  <commit type="feat" scope="other" pr="1730" hash="31cad445" time="1588885186">
+  <commit type="feat" scope="other" pr="1730" prAuthor="glennsl" hash="31cad445" time="1588885186">
     add changelog
   </commit>
-  <commit type="refactor" scope="exthost" pr="1736" hash="6ebe03ca" time="1588875205">
+  <commit type="refactor" scope="exthost" pr="1736" prAuthor="bryphe" hash="6ebe03ca" time="1588875205">
     V2 - SCM - Port over SCM types / messages / requests
   </commit>
   <commit type="chore" scope="ci" pr="1738" hash="36eb8e81" time="1588873083">
     Remove integration test clean-up (#1738)
   </commit>
-  <commit pr="1734" hash="4b1479e0" time="1588865086">
-    refactor(exthost) - V2 - Decorations API
+  <commit type="refactor" scope="exthost" pr="1734" prAuthor="bryphe" hash="4b1479e0" time="1588865086">
+    V2 - Decorations API
   </commit>
-  <commit type="fix" scope="extensions" issue="1729" pr="1737" hash="b3e7fbbf" time="1588861553">
+  <commit type="fix" scope="extensions" issue="1729" pr="1737" prAuthor="glennsl" hash="b3e7fbbf" time="1588861553">
     some gitlens regex patterns failed to parse
-    
+
     <breaking>As this switches to a different regex engine, there's a chance that it might break other extension regexes.</breaking>
   </commit>
   <commit type="docs" pr="1718" hash="5822aaea" time="1588861510">
@@ -49,117 +73,118 @@
   <commit type="fix" scope="extensions" issue="1729" hash="209ee404" time="1588837785">
     don't crash if unable to parse regex
   </commit>
-  <commit pr="1735" hash="6be50cf6" time="1588817417">
-    fix(exthost) - Handle acknowledged message type
+  <commit type="fix" scope="exthost" pr="1735" prAuthor="bryphe" hash="6be50cf6" time="1588817417">
+    Handle acknowledged message type
   </commit>
-  <commit pr="1732" hash="e4c56568" time="1588814866">
-    refactor(exthost) - V2 - SCM - Remove unused SCMRawResource properties
+  <commit type="refactor" scope="exthost" pr="1732" prAuthor="bryphe" hash="e4c56568" time="1588814866">
+    V2 - SCM - Remove unused SCMRawResource properties
   </commit>
-  <commit pr="1727" hash="c8fa1db0" time="1588809875">
-    refactor(exthost) - V2 - API - acceptConfiguration
+  <commit type="refactor" scope="exthost" pr="1727" prAuthor="bryphe" hash="c8fa1db0" time="1588809875">
+    V2 - API - acceptConfiguration
   </commit>
-  <commit pr="1731" hash="a0facccc" time="1588802210">
-    refactor(exthost) - V2 - use decoder for parsing
+  <commit type="refactor" scope="exthost" pr="1731" prAuthor="bryphe" hash="a0facccc" time="1588802210">
+    V2 - use decoder for parsing
   </commit>
-  <commit type="feat" scope="workspace" pr="1668" hash="3ce31076" time="1588790811">
+  <commit type="feat" scope="workspace" pr="1668" prAuthor="glennsl" hash="3ce31076" time="1588790811">
     window/split resizing, part 1 - basic functionality and commands
   </commit>
   <commit type="chore" pr="1726" hash="8556a5db" time="1588783526">
     remove pkg-config workaround (#1726)
   </commit>
-  <commit pr="1725" hash="ea1e82b4" time="1588775668">
-    refactor(exthost) - V2 - API - provideDocumentSymbols
+  <commit type="refactor" scope="exthost" pr="1725" prAuthor="bryphe" hash="ea1e82b4" time="1588775668">
+    V2 - API - provideDocumentSymbols
   </commit>
-  <commit pr="1724" hash="12952612" time="1588729527">
-    refactor(exthost) - v2 - API - reference provider
+  <commit type="refactor" scope="exthost" pr="1724" prAuthor="bryphe" hash="12952612" time="1588729527">
+    v2 - API - reference provider
   </commit>
-  <commit pr="1723" hash="c609e7c2" time="1588723287">
-    refactor(exhost) - v2 - API - provideDocumentHighlights
+  <commit type="refactor" scope="exhost" pr="1723" prAuthor="bryphe" hash="c609e7c2" time="1588723287">
+    v2 - API - provideDocumentHighlights
   </commit>
-  <commit type="refactor" scope="exthost" pr="1710" hash="68a54e99" time="1588711111">
+  <commit type="refactor" scope="exthost" pr="1710" prAuthor="bryphe" hash="68a54e99" time="1588711111">
     port definition provider to v2
   </commit>
-  <commit type="feat" scope="workspace" issue="640" pr="1703" hash="9aac90b2" time="1588705176">
+  <commit type="feat" scope="workspace" issue="640" pr="1703" prAuthor="glennsl" hash="9aac90b2" time="1588705176">
     <breaking>
-      Oni2 will no longer open the working directory if no argument is passed. Instead you need to supply `.` 
+      Oni2 will no longer open the working directory if no argument is passed. Instead you need to supply `.`
     </breaking>
-    
+
     persistence infrastructure + persist workspace and window state
-    
+
     Persists the last used version, the last opened workspace path and the window position and size for
     each workspace.
-    
+
     If no file or folder argument is given, the last workspace path will be opened. Or, if this is the first time
     Oni2 is launched, open the Documents folder if possible, or fall back to the home folder if not.
   </commit>
-  <commit type="perf" scope="terminal" pr="1689" hash="5c7d1971" time="1588694990">
+  <commit type="perf" scope="terminal" pr="1689" prAuthor="bryphe" hash="5c7d1971" time="1588694990">
     input regression
   </commit>
-  <commit type="feat" scope="other" issue="1631" pr="1717" hash="92bab00d" time="1588630193">
+  <commit type="feat" scope="other" issue="1631" pr="1717" prAuthor="zbaylin" hash="92bab00d" time="1588630193">
     correct double click behavior on macOS (maximize)
   </commit>
-  <commit type="feat" scope="Extension Host" pr="1709" hash="4edce141" time="1588627097">
+  <commit type="feat" scope="Extension Host" pr="1709" prAuthor="bryphe" hash="4edce141" time="1588627097">
     Workspace APIs
   </commit>
-  <commit type="refactor" scope="exthost" pr="1711" hash="89236cac" time="1588617053">
+  <commit type="refactor" scope="exthost" pr="1711" prAuthor="bryphe" hash="89236cac" time="1588617053">
     v2 - API - provideTextDocumentContent
   </commit>
-  <commit type="chore" scope="dependency" pr="1714" hash="ea560d1d" time="1588519632">
+  <commit type="chore" scope="dependency" pr="1714" prAuthor="glennsl" hash="ea560d1d" time="1588519632">
     add fs, fp, dir
   </commit>
-  <commit type="fix" scope="search" issue="1693" pr="1713" hash="4b76ab42" time="1588516594">
+  <commit type="fix" scope="search" issue="1693" pr="1713" prAuthor="glennsl" hash="4b76ab42" time="1588516594">
     closing the search pane doesn't "defocus it"
   </commit>
-  <commit type="chore" scope="dependency" pr="1712" hash="996f6b48" time="1588503999">
+  <commit type="chore" scope="dependency" pr="1712" prAuthor="glennsl" hash="996f6b48" time="1588503999">
     revery -> 7853ddb
   </commit>
-  <commit type="refactor" scope="exthost" pr="1706" hash="33790f4e" time="1588448480">
+  <commit type="refactor" scope="exthost" pr="1706" prAuthor="bryphe" hash="33790f4e" time="1588448480">
     v2 - API - completion
   </commit>
-  <commit type="fix" scope="file-explorer" issue="873" pr="1705" hash="cf6af66d" time="1588433491">
+  <commit type="fix" scope="file-explorer" issue="873" pr="1705" prAuthor="bryphe" hash="cf6af66d" time="1588433491">
     exit zen mode when toggling explorer
   </commit>
-  <commit type="fix" scope="vim" pr="1704" hash="3890823d" time="1588433444">
+  <commit type="fix" scope="vim" pr="1704" prAuthor="bryphe" hash="3890823d" time="1588433444">
     linewise clipboard paste (yyp)
   </commit>
-  <commit type="refactor" scope="exthost" pr="1702" hash="b3be9160" time="1588373057">
+  <commit type="refactor" scope="exthost" pr="1702" prAuthor="bryphe" hash="b3be9160" time="1588373057">
     API - ExtHostDocuments: Document edit / update
   </commit>
-  <commit type="refactor" scope="exthost" pr="1701" hash="ef4c6b33" time="1588357323">
+  <commit type="refactor" scope="exthost" pr="1701" prAuthor="bryphe" hash="ef4c6b33" time="1588357323">
     move handlers to Msg module
   </commit>
-  <commit type="chore" scope="dependency" pr="1700" hash="670657c4" time="1588345462">
+  <commit type="chore" scope="dependency" pr="1700" prAuthor="glennsl" hash="670657c4" time="1588345462">
     esy-skia -> d60e5fe
   </commit>
-  <commit type="fix" scope="workspace" pr="1699" hash="ccb322ff" time="1588343021">
+  <commit type="fix" scope="workspace" pr="1699" prAuthor="glennsl" hash="ccb322ff" time="1588343021">
     broken save command
   </commit>
-  <commit type="refactor" scope="exthost" pr="1697" hash="9838721d" time="1588341199">
+  <commit type="refactor" scope="exthost" pr="1697" prAuthor="bryphe" hash="9838721d" time="1588341199">
     DocumentContentProvider, Decorations, Diagnostics
   </commit>
-  <commit type="fix" scope="vim" issue="1671" pr="1685" hash="7c6f4a78" time="1588298351">
+  <commit type="fix" scope="vim" issue="1671" pr="1685" prAuthor="bryphe" hash="7c6f4a78" time="1588298351">
     buffer loses unsaved changes when switching
   </commit>
-  <commit type="chore" scope="ci" pr="1698" hash="bc2ac4d2" time="1588298337">
+  <commit type="chore" scope="ci" pr="1698" prAuthor="bryphe" hash="bc2ac4d2" time="1588298337">
     Linux (CentOS) - remove cleanup prior to tests
   </commit>
-  <commit type="chore" scope="dependency" pr="1696" hash="25539c48" time="1588294522">
+  <commit type="chore" scope="dependency" pr="1696" prAuthor="glennsl" hash="25539c48" time="1588294522">
     revery -> 9f725e0
   </commit>
-  <commit type="fix" scope="vim" issue="660" pr="1694" hash="ac39e58c" time="1588287421">
+  <commit type="fix" scope="vim" issue="660" pr="1694" prAuthor="bryphe" hash="ac39e58c" time="1588287421">
     clipboard - specify character mode when not multiple lines
   </commit>
-  <commit type="chore" pr="1690" hash="a6506982" time="1588262364">
+  <commit type="chore" pr="1690" prAuthor="bryphe" hash="a6506982" time="1588262364">
     Dependency: ocaml -> 4.9
   </commit>
-  <commit type="fix" scope="configuration" pr="1623" hash="5d4c99a9" time="1588257227">
+  <commit type="fix" scope="configuration" pr="1623" prAuthor="CrossR" hash="5d4c99a9" time="1588257227">
     <breaking>
       On Windows, git-bash, powershell-core and perhaps others now correctly
       loads the config from %LOCALAPPDATA% instead of $HOME
     </breaking>
-        
-    Always load Windows config from %LOCALAPPDATA% 
+
+    Always load Windows config from %LOCALAPPDATA%
   </commit>
+
   <commit hash="2e704922" pr="1676" time="588206100">
     Fix #1578 - Terminal command + args configuration settings
   </commit>
