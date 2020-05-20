@@ -85,7 +85,7 @@ let start =
       ~minimize,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
-      ~overriddenExtensionsDir=?,
+      ~overriddenExtensionsDir=None,
       ~shouldLoadExtensions=true,
       ~shouldSyntaxHighlight=true,
       ~shouldLoadConfiguration=true,

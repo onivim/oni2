@@ -40,13 +40,13 @@ let spec =
     (
       "--disable-syntax-highlighting",
       passthrough,
-      "Turn off syntax highlighting.",
+      " Turn off syntax highlighting.",
     ),
-    ("--disable-extensions", passthrough, "Turn off extension loading."),
+    ("--disable-extensions", passthrough, " Turn off extension loading."),
     (
       "--disable-configuration",
       passthrough,
-      "Do not load user configuration (use default configuration).",
+      " Do not load user configuration (use default configuration).",
     ),
     (
       "--install-extension",
