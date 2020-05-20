@@ -112,7 +112,9 @@ let item =
   if (onClick == None && onRightClick == None) {
     <View style> children </View>;
   } else {
-    <Clickable ?onClick ?onRightClick style> children </Clickable>;
+    <Sneakable ?onClick>
+    <Clickable ?onClick ?onRightClick style> children </Clickable>
+    </Sneakable>
   };
 };
 
@@ -279,7 +281,15 @@ let%component make =
     Hooks.animation(transitionAnimation);
 
   let toStatusBarElement = (statusItem: Item.t) => {
-    <item>
+
+    let onClick = statusItem.command
+    |> Option.map((command) => {
+      () => GlobalContext.current().dispatch(Actions.StatusBar(
+        ContributedItemClicked({id: statusItem.id, command })
+      ));
+    });
+
+    <item ?onClick>
     <View
       style=Style.[
         flexDirection(`Row),

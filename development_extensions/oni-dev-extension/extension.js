@@ -16,13 +16,13 @@ function activate(context) {
     item.command = "open sesame";
     item.color = new vscode.ThemeColor("foreground");
     item.command = "oni.developer.statusBarClicked";
-    item.text = "$(alert) Developer";
+    item.text = "Developer";
     item.show();
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
     
     cleanup(vscode.commands.registerCommand('developer.oni.statusBarClicked', () => {
-        vscode.window.showWarningMessage('You clickded developer');
+        vscode.window.showWarningMessage('You clicked developer');
     }));
 
     cleanup(vscode.languages.registerDefinitionProvider('oni-dev', {

@@ -5,6 +5,15 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Command: {
+  type t = {
+    id: string,
+    title: option(string),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module CompletionContext: {
   type triggerKind =
     | Invoke
