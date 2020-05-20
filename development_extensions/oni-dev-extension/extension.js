@@ -15,10 +15,15 @@ function activate(context) {
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
     item.command = "open sesame";
     item.color = new vscode.ThemeColor("foreground");
-    item.text = "Developer";
+    item.command = "oni.developer.statusBarClicked";
+    item.text = "$(alert) Developer";
     item.show();
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.statusBarClicked', () => {
+        vscode.window.showWarningMessage('You clickded developer');
+    }));
 
     cleanup(vscode.languages.registerDefinitionProvider('oni-dev', {
         provideDefinition: (document, _position, _token) => {

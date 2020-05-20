@@ -280,7 +280,14 @@ let%component make =
 
   let toStatusBarElement = (statusItem: Item.t) => {
     <item>
+    <View
+      style=Style.[
+        flexDirection(`Row),
+        justifyContent(`Center),
+        alignItems(`Center),
+      ]>
     <Label font color=Revery.Colors.white label={statusItem.label} />
+    </View>
     </item>
   };
 

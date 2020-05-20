@@ -8,6 +8,7 @@
 open Revery;
 open Revery.UI;
 open Oni_Core;
+open Oni_Components;
 
 module Styles = {
   open Style;
@@ -23,6 +24,17 @@ module Styles = {
 let textToElement = (~color, ~font, ~text) => {
   <Text style=Styles.text(~color, font) text />
 };
+
+let iconNameToCharacter = fun
+| "alert" => Some(FontAwesome.exclamationTriangle)
+| _ => None;
+
+
+let iconToElement = (~color, icon) => {
+  <View style=Style.[margin(4)]>
+  <FontIcon icon color />
+  </View>
+};
   
 let make =
               (
@@ -37,7 +49,11 @@ let make =
   label
   |> List.map(fun
   | Text(text) => textToElement(~color, ~font, ~text)
-  | Icon(_) => React.empty
+  | Icon(iconName) => 
+      iconName
+      |> iconNameToCharacter
+      |> Option.map(iconToElement(~color))
+      |> Option.value(~default=React.empty)
   )
   |> React.listToElement;
 };
