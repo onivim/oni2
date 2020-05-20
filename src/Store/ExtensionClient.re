@@ -260,23 +260,23 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         ~dispatch=msg => dispatch(Actions.SCM(msg)),
         msg,
       );
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | LanguageFeatures(
         RegisterDocumentSymbolProvider({handle, selector, label}),
       ) =>
       withClient(onRegisterDocumentSymbolProvider(handle, selector, label));
-      None;
+      Lwt.return(Reply.okEmpty);
     | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
       withClient(onRegisterDefinitionProvider(handle, selector));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | LanguageFeatures(RegisterDocumentHighlightProvider({handle, selector})) =>
       withClient(onRegisterDocumentHighlightProvider(handle, selector));
-      None;
+      Lwt.return(Reply.okEmpty);
     | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
       withClient(onRegisterReferencesProvider(handle, selector));
-      None;
+      Lwt.return(Reply.okEmpty);
     | LanguageFeatures(
         RegisterSuggestSupport({
           handle,
@@ -286,42 +286,42 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         }),
       ) =>
       withClient(onRegisterSuggestProvider(handle, selector));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | Diagnostics(Clear({owner})) =>
       dispatch(Actions.DiagnosticsClear(owner));
-      None;
+      Lwt.return(Reply.okEmpty);
     | Diagnostics(ChangeMany({owner, entries})) =>
       onDiagnosticsChangeMany(owner, entries);
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | DocumentContentProvider(RegisterTextContentProvider({handle, scheme})) =>
       dispatch(NewTextContentProvider({handle, scheme}));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
       dispatch(LostTextContentProvider({handle: handle}));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | Decorations(RegisterDecorationProvider({handle, label})) =>
       dispatch(NewDecorationProvider({handle, label}));
-      None;
+      Lwt.return(Reply.okEmpty);
     | Decorations(UnregisterDecorationProvider({handle})) =>
       dispatch(LostDecorationProvider({handle: handle}));
-      None;
+      Lwt.return(Reply.okEmpty);
     | Decorations(DecorationsDidChange({handle, uris})) =>
       dispatch(DecorationsChanged({handle, uris}));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | ExtensionService(DidActivateExtension({extensionId, _})) =>
       dispatch(
         Actions.Extension(Oni_Model.Extensions.Activated(extensionId)),
       );
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | MessageService(ShowMessage({severity, message, extensionId})) =>
       dispatch(ExtMessageReceived({severity, message, extensionId}));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | StatusBar(SetEntry({id, text, alignment, priority, _})) =>
       dispatch(
@@ -329,12 +329,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           StatusBarModel.Item.create(~id, ~text, ~alignment, ~priority, ()),
         ),
       );
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | TerminalService(msg) =>
       Service_Terminal.handleExtensionMessage(msg);
-      None;
-    | _ => None
+      Lwt.return(Reply.okEmpty);
+    | _ => Lwt.return(Reply.okEmpty)
     };
   };
 

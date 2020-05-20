@@ -428,6 +428,13 @@ module ThemeColor: {
 };
 
 module Msg: {
+  module Clipboard: {
+    [@deriving show]
+    type msg =
+      | ReadText
+      | WriteText(string);
+  };
+
   module Commands: {
     [@deriving show]
     type msg =
@@ -658,6 +665,7 @@ module Msg: {
   type t =
     | Connected
     | Ready
+    | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
@@ -686,11 +694,20 @@ module NamedPipe: {
   let toString: t => string;
 };
 
-module Client: {
+module Reply: {
   type t;
 
-  // TODO
-  type reply = unit;
+  let none: t;
+
+  let error: string => t;
+
+  let okEmpty: t;
+
+  let okJson: Yojson.Safe.t => t;
+};
+
+module Client: {
+  type t;
 
   let start:
     (
@@ -698,7 +715,11 @@ module Client: {
       ~initialWorkspace: WorkspaceData.t=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
-      ~handler: Msg.t => option(reply),
+      // TODO:
+      // Is there a way to use GADT's to strongly-type the reply from the request?
+      // Right now, we take arbitrary JSON responses, without help from the type
+      // system that these are correct.
+      ~handler: Msg.t => Lwt.t(Reply.t),
       ~onError: string => unit,
       unit
     ) =>
