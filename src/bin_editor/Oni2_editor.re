@@ -263,6 +263,7 @@ if (cliOptions.syntaxHighlightService) {
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
         ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
         ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
+        ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
         ~quit,
         (),
       );
@@ -271,6 +272,10 @@ if (cliOptions.syntaxHighlightService) {
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>
         dispatch(Model.Actions.WindowMaximized)
+      );
+    let _: Window.unsubscribe =
+      Window.onFullscreen(window, () =>
+        dispatch(Model.Actions.WindowFullscreen)
       );
     let _: Window.unsubscribe =
       Window.onMinimized(window, () =>

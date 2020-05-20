@@ -34,7 +34,7 @@ let _getLocalizations = path =>
     LocalizationDictionary.initial;
   };
 
-let load = (~prefix=None, ~category, packageFile) => {
+let load = (~category, packageFile) => {
   let json = Yojson.Safe.from_file(packageFile);
   let directory = Filename.dirname(packageFile);
   let nlsPath = Path.join(directory, "package.nls.json");
@@ -52,15 +52,7 @@ let load = (~prefix=None, ~category, packageFile) => {
 
   switch (Json.Decode.decode_value(Manifest.decode, json)) {
   | Ok(parsedManifest) =>
-    let manifest =
-      parsedManifest
-      |> remapManifest(directory)
-      |> Manifest.updateName(name =>
-           prefix
-           |> Option.map(prefix => prefix ++ "." ++ name)
-           |> Option.value(~default=name)
-         )
-      |> localize;
+    let manifest = parsedManifest |> remapManifest(directory) |> localize;
 
     Some(ScanResult.{category, manifest, path: directory});
 
@@ -76,13 +68,13 @@ let load = (~prefix=None, ~category, packageFile) => {
   };
 };
 
-let scan = (~prefix=None, ~category, directory: string) => {
+let scan = (~category, directory: string) => {
   Sys.readdir(directory)
   |> Array.to_list
   |> List.map(Path.join(directory))
   |> List.filter(Sys.is_directory)
   |> List.map(dir => Path.join(dir, "package.json"))
   |> List.filter(Sys.file_exists)
-  |> List.map(load(~category, ~prefix))
+  |> List.map(load(~category))
   |> List.filter_map(Fun.id);
 };

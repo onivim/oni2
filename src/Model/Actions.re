@@ -186,6 +186,7 @@ type t =
   | WindowFocusGained
   | WindowFocusLost
   | WindowMaximized
+  | WindowFullscreen
   | WindowMinimized
   | WindowRestored
   | WindowCloseBlocked
