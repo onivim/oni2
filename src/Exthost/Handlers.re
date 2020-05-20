@@ -65,10 +65,10 @@ let handlers =
   [
     mainNotImplemented("MainThreadAuthentication"),
     main(
-    ~handler=Msg.Clipboard.handle,
-    ~mapper=msg => Msg.Clipboard(msg),
-    "MainThreadClipboard",
-   ),
+      ~handler=Msg.Clipboard.handle,
+      ~mapper=msg => Msg.Clipboard(msg),
+      "MainThreadClipboard",
+    ),
     main(
       ~handler=Msg.Commands.handle,
       ~mapper=msg => Msg.Commands(msg),

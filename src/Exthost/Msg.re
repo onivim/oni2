@@ -4,15 +4,13 @@ open Oni_Core.Utility;
 module Clipboard = {
   [@deriving show]
   type msg =
-  | ReadText
-  | WriteText(string);
-  
+    | ReadText
+    | WriteText(string);
+
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
-    | ("$readText", _) =>
-      Ok(ReadText);
-    | ("$writeText", `List([`String(text)])) =>
-      Ok(WriteText(text))
+    | ("$readText", _) => Ok(ReadText)
+    | ("$writeText", `List([`String(text)])) => Ok(WriteText(text))
     | _ => Error("Unhandled clipboard method: " ++ method)
     };
   };

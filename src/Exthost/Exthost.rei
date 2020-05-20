@@ -428,12 +428,11 @@ module ThemeColor: {
 };
 
 module Msg: {
-
   module Clipboard: {
     [@deriving show]
     type msg =
-    | ReadText
-    | WriteText(string);
+      | ReadText
+      | WriteText(string);
   };
 
   module Commands: {
