@@ -5,6 +5,7 @@ module Log = (val Log.withNamespace("Oni2.Feature.Changelog"));
 
 // MODEL
 
+[@deriving show({with_path: false})]
 type commit = {
   hash: string,
   time: float,
@@ -16,6 +17,18 @@ type commit = {
   breaking: list(string),
 };
 
+type model = {expanded: list(commit)};
+
+let initial: model = {expanded: []};
+
+[@deriving show({with_path: false})]
+type msg =
+  | PullRequestClicked(int)
+  | CommitHashClicked(string)
+  | IssueClicked(int)
+  | ChangeExpanded(commit)
+  | ChangeContracted(commit);
+
 type simpleXml =
   | Element(string, list((string, string)), list(simpleXml))
   | Text(string);
@@ -26,6 +39,32 @@ let isSameDate = (a, b) => {
 
   a.tm_year == b.tm_year && a.tm_yday == b.tm_yday;
 };
+
+let update = (model, msg) =>
+  switch (msg) {
+  | PullRequestClicked(pr) =>
+    let url = Printf.sprintf("https://github.com/onivim/oni2/pull/%d", pr);
+    let effect = Service_OS.Effect.openURL(url);
+    (model, effect);
+  | IssueClicked(issue) =>
+    let url =
+      Printf.sprintf("https://github.com/onivim/oni2/issues/%d", issue);
+    let effect = Service_OS.Effect.openURL(url);
+    (model, effect);
+  | CommitHashClicked(hash) =>
+    let url =
+      Printf.sprintf("https://github.com/onivim/oni2/commit/%s", hash);
+    let effect = Service_OS.Effect.openURL(url);
+    (model, effect);
+  | ChangeExpanded(commit) => (
+      {expanded: [commit, ...model.expanded]},
+      Isolinear.Effect.none,
+    )
+  | ChangeContracted(commit) => (
+      {expanded: model.expanded |> List.filter(c => c != commit)},
+      Isolinear.Effect.none,
+    )
+  };
 
 // READ
 
@@ -137,6 +176,11 @@ module View = {
   module Styles = {
     open Style;
 
+    let typWidth = 60;
+    let scopeWidth = 100;
+    let caretWidth = 20;
+    let breakingChangeIconWidth = 30;
+
     let scrollContainer = [flexGrow(1)];
 
     let content = [
@@ -168,13 +212,13 @@ module View = {
       fontFamily(font.fontFile),
       fontSize(12.),
       Style.color(color),
-      width(60),
+      width(typWidth),
     ];
 
     let scope = (font: UiFont.t, ~theme) => [
       fontFamily(font.fontFile),
       fontSize(12.),
-      width(130),
+      width(scopeWidth),
       color(
         Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
       ),
@@ -198,17 +242,95 @@ module View = {
     ];
 
     let error = (font: UiFont.t) => [fontFamily(font.fontFile)];
+
+    let breakingChangeIcon = [width(breakingChangeIconWidth)];
+
+    let caret = [width(caretWidth), marginTop(2)];
+
+    module MoreInfo = {
+      let main = [
+        marginTop(4),
+        marginLeft(
+          typWidth + scopeWidth + breakingChangeIconWidth + caretWidth,
+        ),
+        marginBottom(12),
+      ];
+
+      let header = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(
+          Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
+        ),
+        width(140),
+      ];
+
+      let breakingChangesHeader = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(
+          Colors.EditorWarning.foreground.from(theme)
+          |> Revery.Color.multiplyAlpha(0.75),
+        ),
+        width(140),
+      ];
+
+      let body = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(Colors.foreground.from(theme)),
+      ];
+
+      let linkActive = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(Colors.TextLink.activeForeground.from(theme)),
+      ];
+
+      let linkInactive = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(Colors.TextLink.foreground.from(theme)),
+      ];
+
+      let description = [marginVertical(6), flexDirection(`Row)];
+    };
+
+    module Full = {
+      let titleActive = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(
+          Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
+        ),
+      ];
+
+      let titleInactive = (font: UiFont.t, ~theme) => [
+        fontFamily(font.fontFile),
+        fontSize(12.),
+        color(Colors.foreground.from(theme)),
+      ];
+    };
   };
 
-  let date = (~commit, ~style, ()) => {
+  let date = (~commit, ~style, ~withTime=false, ()) => {
     let time = Unix.localtime(commit.time);
     let text =
-      Printf.sprintf(
-        "%u-%02u-%02u",
-        time.tm_year + 1900,
-        time.tm_mon + 1,
-        time.tm_mday,
-      );
+      withTime
+        ? Printf.sprintf(
+            "%u-%02u-%02u %02u:%02u",
+            time.tm_year + 1900,
+            time.tm_mon + 1,
+            time.tm_mday,
+            time.tm_hour,
+            time.tm_min,
+          )
+        : Printf.sprintf(
+            "%u-%02u-%02u",
+            time.tm_year + 1900,
+            time.tm_mon + 1,
+            time.tm_mday,
+          );
     <Text style text />;
   };
 
@@ -242,22 +364,180 @@ module View = {
     <Text style={Styles.scope(uiFont, ~theme)} text />;
   };
 
-  let summary = (~commit, ~uiFont, ~theme, ()) => {
-    <Text style={Styles.summary(uiFont, ~theme)} text={commit.summary} />;
+  let title = (~text, ~uiFont, ~theme, ()) => {
+    <Text style={Styles.summary(uiFont, ~theme)} text />;
+  };
+
+  let breakingChangeIcon = (~commit, ~theme, ()) => {
+    <View style=Styles.breakingChangeIcon>
+      {commit.breaking != []
+         ? <View style=Style.[marginRight(8)]>
+             <FontIcon
+               icon=FontAwesome.exclamationTriangle
+               color={Colors.EditorWarning.foreground.from(theme)}
+               fontSize=12.
+             />
+           </View>
+         : React.empty}
+    </View>;
+  };
+
+  // MOREINFO
+
+  module MoreInfo = {
+    let hash = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+      let text = Printf.sprintf("#%s", commit.hash);
+      let onClick = _ => dispatch(CommitHashClicked(commit.hash));
+
+      <View style=Styles.MoreInfo.description>
+        <Text text="Commit" style={Styles.MoreInfo.header(uiFont, ~theme)} />
+        <ClickableText
+          text
+          onClick
+          activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
+          inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
+        />
+      </View>;
+    };
+
+    let description = (~commit, ~uiFont, ~theme, ()) => {
+      switch (String.index_opt(commit.summary, '\n')) {
+      | Some(i) =>
+        let text =
+          String.sub(commit.summary, i, String.length(commit.summary) - i);
+        <View style=Styles.MoreInfo.description>
+          <Text
+            text="Description"
+            style={Styles.MoreInfo.header(uiFont, ~theme)}
+          />
+          <Text style={Styles.MoreInfo.body(uiFont, ~theme)} text />
+        </View>;
+      | None => React.empty
+      };
+    };
+
+    let pullRequest = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+      switch (commit.pr) {
+      | Some(pr) =>
+        let text = Printf.sprintf("#%d", pr);
+        let onClick = _ => dispatch(PullRequestClicked(pr));
+
+        <View style=Styles.MoreInfo.description>
+          <Text
+            text="Pull Request"
+            style={Styles.MoreInfo.header(uiFont, ~theme)}
+          />
+          <ClickableText
+            text
+            onClick
+            activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
+            inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
+          />
+        </View>;
+      | None => React.empty
+      };
+    };
+
+    let issue = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+      switch (commit.issue) {
+      | Some(issue) =>
+        let text = Printf.sprintf("#%d", issue);
+        let onClick = _ => dispatch(IssueClicked(issue));
+
+        <View style=Styles.MoreInfo.description>
+          <Text text="Issue" style={Styles.MoreInfo.header(uiFont, ~theme)} />
+          <ClickableText
+            text
+            onClick
+            activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
+            inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
+          />
+        </View>;
+      | None => React.empty
+      };
+    };
+
+    let breakingChanges = (~commit, ~uiFont, ~theme, ()) => {
+      switch (commit.breaking) {
+      | [] => React.empty
+      | changes =>
+        let text =
+          List.fold_left(
+            (acc, change) => "• " ++ change ++ "\n" ++ acc,
+            "",
+            changes,
+          );
+        <View style=Styles.MoreInfo.description>
+          <Text
+            text="Breaking Changes"
+            style={Styles.MoreInfo.breakingChangesHeader(uiFont, ~theme)}
+          />
+          <Text style={Styles.MoreInfo.body(uiFont, ~theme)} text />
+        </View>;
+      };
+    };
+
+    let make = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+      <View style=Styles.MoreInfo.main>
+        <hash commit uiFont theme dispatch />
+        <pullRequest commit uiFont theme dispatch />
+        <issue commit uiFont theme dispatch />
+        <description commit uiFont theme />
+        <breakingChanges commit uiFont theme />
+      </View>;
+    };
   };
 
   // FULL
 
   module Full = {
-    let line = (~commit, ~uiFont, ~theme, ()) => {
-      <View style=Styles.commit>
-        <typ commit uiFont theme />
-        <scope commit uiFont theme />
-        <summary commit uiFont theme />
+    let title = (~text, ~uiFont, ~theme, ()) => {
+      <ClickableText
+        activeStyle={Styles.Full.titleActive(uiFont, ~theme)}
+        inactiveStyle={Styles.Full.titleInactive(uiFont, ~theme)}
+        text
+      />;
+    };
+
+    let change = (~model, ~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+      let isExpanded = model.expanded |> List.mem(commit);
+      let summaryText =
+        switch (String.index_opt(commit.summary, '\n')) {
+        | Some(i) => String.sub(commit.summary, 0, i)
+        | None => commit.summary
+        };
+      let onCaretClick = _e =>
+        isExpanded
+          ? dispatch(ChangeContracted(commit))
+          : dispatch(ChangeExpanded(commit));
+
+      <View>
+        <View style=Styles.commit>
+          <breakingChangeIcon commit theme />
+          <typ commit uiFont theme />
+          <scope commit uiFont theme />
+          <Clickable style=Style.[flexDirection(`Row)] onClick=onCaretClick>
+            <View style=Styles.caret>
+              {isExpanded
+                 ? <FontIcon
+                     icon=FontAwesome.caretDown
+                     color={Colors.foreground.from(theme)}
+                     fontSize=12.
+                   />
+                 : <FontIcon
+                     icon=FontAwesome.caretRight
+                     color={Colors.foreground.from(theme)}
+                     fontSize=12.
+                   />}
+            </View>
+            <title text=summaryText uiFont theme />
+          </Clickable>
+        </View>
+        {isExpanded ? <MoreInfo commit uiFont theme dispatch /> : React.empty}
       </View>;
     };
 
-    let group = (~commits, ~uiFont, ~theme, ()) => {
+    let group = (~model, ~commits, ~uiFont, ~theme, ~dispatch, ()) => {
       <View>
         <date
           commit={List.hd(commits)}
@@ -265,13 +545,15 @@ module View = {
         />
         <View style=Styles.groupBody>
           {commits
-           |> List.map(commit => <line commit uiFont theme />)
+           |> List.map(commit =>
+                <change model commit uiFont theme dispatch />
+              )
            |> React.listToElement}
         </View>
       </View>;
     };
 
-    let make = (~theme, ~uiFont, ()) => {
+    let make = (~state: model, ~theme, ~uiFont, ~dispatch, ()) => {
       let isSignificantCommit = commit =>
         switch (commit.typ) {
         | Some("feat" | "fix" | "perf") => true
@@ -288,7 +570,9 @@ module View = {
              |> Base.List.group(~break=(a, b) =>
                   !isSameDate(a.time, b.time)
                 )
-             |> List.map(commits => <group commits uiFont theme />)
+             |> List.map(commits =>
+                  <group model=state commits uiFont theme dispatch />
+                )
              |> React.listToElement}
           </View>
         </ScrollView>
@@ -302,10 +586,16 @@ module View = {
   module Update = {
     module Parts = {
       let line = (~commit, ~uiFont, ~theme, ()) => {
+        let summaryText =
+          switch (String.index_opt(commit.summary, '\n')) {
+          | Some(i) => String.sub(commit.summary, 0, i)
+          | None => commit.summary
+          };
+
         <View style=Styles.commit>
           <typ commit uiFont theme />
           <scope commit uiFont theme />
-          <summary commit uiFont theme />
+          <title text=summaryText uiFont theme />
         </View>;
       };
 
