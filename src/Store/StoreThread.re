@@ -27,7 +27,6 @@ let discoverExtensions =
           Scanner.scan(
             // The extension host assumes bundled extensions start with 'vscode.'
             ~category=Bundled,
-            ~prefix=Some("vscode"),
             setup.bundledExtensionsPath,
           );
 

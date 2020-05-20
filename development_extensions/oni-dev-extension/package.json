@@ -2,7 +2,6 @@
 	"name": "oni-dev-extension",
 	"description": "Development Extension for Oni",
 	"version": "0.0.1",
-	"publisher": "Outrun Labs, LLC",
 	"repository": "https://github.com/onivim/oni2",
 	"engines": {
 		"vscode": "^1.25.0"
