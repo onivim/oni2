@@ -1,9 +1,11 @@
 open Oni_Core;
 
+  [@deriving show]
 type segment =
   | Text(string)
   | Icon(string);
 
+  [@deriving show]
 type t = list(segment);
 
 module Parse = {

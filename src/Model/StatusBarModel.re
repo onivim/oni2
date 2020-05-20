@@ -16,14 +16,14 @@ module Item = {
   type t = {
     id: string,
     priority: int,
-    text: string,
+    label: Exthost.Label.t,
     alignment: Exthost.Msg.StatusBar.alignment,
   };
 
-  let create = (~id, ~priority, ~text, ~alignment=Left, ()) => {
+  let create = (~id, ~priority, ~label, ~alignment=Left, ()) => {
     id,
     priority,
-    text,
+    label,
     alignment,
   };
 };

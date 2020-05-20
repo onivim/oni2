@@ -278,8 +278,11 @@ let%component make =
   let%hook (yOffset, _animationState, _reset) =
     Hooks.animation(transitionAnimation);
 
-  let toStatusBarElement = (statusBarItem: Item.t) =>
-    <textItem font background theme text={statusBarItem.text} />;
+  let toStatusBarElement = (statusItem: Item.t) => {
+    <item>
+    <Label font color=Revery.Colors.white label={statusItem.label} />
+    </item>
+  };
 
   let leftItems =
     state.statusBar

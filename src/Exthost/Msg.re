@@ -464,7 +464,7 @@ module StatusBar = {
   type msg =
     | SetEntry({
         id: string,
-        text: string,
+        label: Label.t,
         source: string,
         alignment,
         priority: int,
@@ -482,17 +482,22 @@ module StatusBar = {
           `String(id),
           _,
           `String(source),
-          `String(text),
+          labelJson,
           _,
           _,
           _,
           `String(alignment),
           `String(priority),
         ]),
-      ) =>
+      ) => {
+      open Base.Result.Let_syntax;
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
-      Ok(SetEntry({id, source, text, alignment, priority}));
+      let%bind label = labelJson 
+      |> Json.Decode.decode_value(Label.decode)
+      |> Result.map_error(Json.Decode.string_of_error);
+      Ok(SetEntry({id, source, label, alignment, priority}));
+      }
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>
       Error(

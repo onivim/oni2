@@ -148,10 +148,12 @@ module ReferenceContext: {
 };
 
 module Label: {
+  [@deriving show]
   type segment =
     | Text(string)
     | Icon(string);
 
+  [@deriving show]
   type t = list(segment);
 
   let of_string: string => t;
@@ -659,7 +661,7 @@ module Msg: {
     type msg =
       | SetEntry({
           id: string,
-          text: string,
+          label: Label.t,
           source: string,
           alignment,
           priority: int,

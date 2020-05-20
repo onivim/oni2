@@ -323,10 +323,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       dispatch(ExtMessageReceived({severity, message, extensionId}));
       None;
 
-    | StatusBar(SetEntry({id, text, alignment, priority, _})) =>
+    | StatusBar(SetEntry({id, label, alignment, priority, _})) =>
       dispatch(
         Actions.StatusBarAddItem(
-          StatusBarModel.Item.create(~id, ~text, ~alignment, ~priority, ()),
+          StatusBarModel.Item.create(~id, ~label, ~alignment, ~priority, ()),
         ),
       );
       None;
