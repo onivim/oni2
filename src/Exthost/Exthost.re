@@ -14,6 +14,7 @@ module DocumentHighlight = DocumentHighlight;
 module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module Eol = Eol;
+module Label = Label;
 module Location = Location;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;

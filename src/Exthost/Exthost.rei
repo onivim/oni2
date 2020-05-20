@@ -147,6 +147,18 @@ module ReferenceContext: {
   let encode: Json.encoder(t);
 };
 
+module Label: {
+  type segment =
+  | Text(string)
+  | Icon(string);
+
+  type t = list(segment);
+
+  let of_string: string => t;
+  
+  let decode: Json.decoder(t);
+};
+
 module SCM: {
   [@deriving show({with_path: false})]
   type command = {
@@ -651,7 +663,8 @@ module Msg: {
           source: string,
           alignment,
           priority: int,
-        });
+        })
+     | Dispose({ id: int});
   };
 
   [@deriving show]
