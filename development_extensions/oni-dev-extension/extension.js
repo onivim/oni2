@@ -13,9 +13,8 @@ function activate(context) {
     }
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
-    item.command = "open sesame";
     item.color = new vscode.ThemeColor("foreground");
-    item.command = "oni.developer.statusBarClicked";
+    item.command = "developer.oni.statusBarClicked";
     item.text = "Developer";
     item.show();
 

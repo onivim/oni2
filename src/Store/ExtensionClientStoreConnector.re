@@ -243,6 +243,11 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         executeContributedCommandEffect(command, arguments),
       )
 
+    | StatusBar(ContributedItemClicked({command, _})) => (
+        state,
+        executeContributedCommandEffect(command, []),
+    )
+
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
     | BufferEnter({id, version, filePath, fileType, _}) =>

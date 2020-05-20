@@ -1,5 +1,7 @@
+module ExtCommand = Command;
 open Oni_Core;
 open Oni_Core.Utility;
+
 module Commands = {
   [@deriving show]
   type msg =
@@ -466,10 +468,19 @@ module StatusBar = {
         id: string,
         label: Label.t,
         source: string,
-        alignment,
+        alignment: alignment,
+        command: option(ExtCommand.t),
         priority: int,
       })
     | Dispose({id: int});
+
+  let parseCommand = commandJson => switch(commandJson) {
+  | `String(jsonString) => jsonString
+      |> Yojson.Safe.from_string
+      |> Json.Decode.decode_value(Json.Decode.nullable(ExtCommand.decode))
+      |> Result.map_error(Json.Decode.string_of_error);
+  | _ => Ok(None)
+  };
 
   let handle = (method, args: Yojson.Safe.t) => {
     prerr_endline(
@@ -483,8 +494,8 @@ module StatusBar = {
           _,
           `String(source),
           labelJson,
-          _,
-          _,
+          _tooltip,
+          commandJson,
           _,
           `String(alignment),
           `String(priority),
@@ -493,10 +504,11 @@ module StatusBar = {
       open Base.Result.Let_syntax;
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
+      let%bind command = parseCommand(commandJson);
       let%bind label = labelJson 
       |> Json.Decode.decode_value(Label.decode)
       |> Result.map_error(Json.Decode.string_of_error);
-      Ok(SetEntry({id, source, label, alignment, priority}));
+      Ok(SetEntry({id, source, label, alignment, priority, command}));
       }
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>

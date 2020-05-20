@@ -6,6 +6,7 @@ module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
 module Command: {
+  [@deriving show]
   type t = {
     id: string,
     title: option(string),
@@ -673,6 +674,7 @@ module Msg: {
           label: Label.t,
           source: string,
           alignment,
+          command: option(Command.t),
           priority: int,
         })
       | Dispose({id: int});

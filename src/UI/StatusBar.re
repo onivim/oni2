@@ -112,9 +112,7 @@ let item =
   if (onClick == None && onRightClick == None) {
     <View style> children </View>;
   } else {
-    <Sneakable ?onClick>
     <Clickable ?onClick ?onRightClick style> children </Clickable>
-    </Sneakable>
   };
 };
 
