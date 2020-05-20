@@ -238,7 +238,7 @@
   "resolutions": {
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#f9fedcbe",
+    "revery": "revery-ui/revery#22155c7",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
     "esy-skia": "revery-ui/esy-skia#d60e5fe",
@@ -252,7 +252,7 @@
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
-    "reason-sdl2": "2.10.3031"
+    "reason-sdl2": "2.10.3032"
   },
   "devDependencies": {
     "ocaml": "~4.9",
