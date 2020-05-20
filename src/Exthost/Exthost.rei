@@ -428,6 +428,14 @@ module ThemeColor: {
 };
 
 module Msg: {
+
+  module Clipboard: {
+    [@deriving show]
+    type msg =
+    | ReadText
+    | WriteText(string);
+  };
+
   module Commands: {
     [@deriving show]
     type msg =
@@ -658,6 +666,7 @@ module Msg: {
   type t =
     | Connected
     | Ready
+    | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
