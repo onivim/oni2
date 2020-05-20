@@ -15,7 +15,7 @@ type t = {
   messages: ref(list(Msg.t)),
 };
 
-let noopHandler = _ => None;
+let noopHandler = _ => Lwt.return(Reply.okEmpty);
 let noopErrorHandler = _ => ();
 
 let startWithExtensions =
