@@ -52,9 +52,10 @@ let reduce: (State.t, Actions.t) => State.t =
       | ReallyQuitting => {...s, isQuitting: true}
       | WindowFocusGained => {...s, windowIsFocused: true}
       | WindowFocusLost => {...s, windowIsFocused: false}
-      | WindowMaximized => {...s, windowIsMaximized: true}
+      | WindowMaximized => {...s, windowDisplayMode: Maximized}
+      | WindowFullscreen => {...s, windowDisplayMode: Fullscreen}
       | WindowRestored
-      | WindowMinimized => {...s, windowIsMaximized: false}
+      | WindowMinimized => {...s, windowDisplayMode: Minimized}
       | _ => s
       };
     };

@@ -14,7 +14,7 @@ type t = {
   author: string,
   displayName: option(LocalizedToken.t),
   description: option(string),
-  // publisher: option(string),
+  publisher: option(string),
   main: option(string),
   icon: option(string),
   categories: list(string),
@@ -31,6 +31,13 @@ type t = {
 and kind =
   | Ui
   | Workspace;
+
+let identifier = manifest => {
+  switch (manifest.publisher) {
+  | Some(publisher) => publisher ++ "." ++ manifest.name
+  | None => manifest.name
+  };
+};
 
 module Decode = {
   open Json.Decode;
@@ -65,6 +72,7 @@ module Decode = {
             ),
           displayName: field.optional("displayName", LocalizedToken.decode),
           description: field.optional("description", string),
+          publisher: field.optional("publisher", string),
           main: field.optional("main", string),
           icon: field.optional("icon", string),
           categories: field.withDefault("categories", [], list(string)),
