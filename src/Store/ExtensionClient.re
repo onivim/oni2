@@ -314,7 +314,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       Lwt.return(Reply.okEmpty);
 
     | ExtensionService(ExtensionActivationError({extensionId, errorMessage})) =>
-      Log.errorf(m => m("Extension '%s' failed to activate: %s", extensionId, errorMessage));
+      Log.errorf(m =>
+        m("Extension '%s' failed to activate: %s", extensionId, errorMessage)
+      );
       Lwt.return(Reply.okEmpty);
     | ExtensionService(DidActivateExtension({extensionId, _})) =>
       dispatch(
