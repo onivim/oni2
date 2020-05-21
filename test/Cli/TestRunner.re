@@ -58,10 +58,14 @@ module Internal = {
 };
 
 let launcherExecutable = Sys.win32 ? "Oni2.exe" : "Oni2";
-//let editorExecutable = Sys.win32 ? "Oni2_editor.exe": "Oni2_editor";
+let editorExecutable = Sys.win32 ? "Oni2_editor.exe": "Oni2_editor";
 
 let startWithArgs = (args: list(string)) => {
   Internal.start(~executable=launcherExecutable, ~args);
+};
+
+let startEditorWithArgs = (args: list(string)) => {
+  Internal.start(~executable=editorExecutable, ~args);
 };
 
 let validateOutputContains = (query, {output, _} as context) => {

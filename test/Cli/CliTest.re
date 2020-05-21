@@ -7,7 +7,7 @@ describe("CLI", ({describe, _}) => {
   describe("launcher", ({test, _})
     => {
       test("--version should show output", _ => {
-        Test.(
+        TestRunner.(
           startWithArgs(["--version"])
           |> validateOutputContains("Onivim 2")
           |> validateExitStatus(WEXITED(0))
@@ -16,7 +16,7 @@ describe("CLI", ({describe, _}) => {
       });
 
       test("--list-extensions should show extensions", _ => {
-        Test.(
+        TestRunner.(
           startWithArgs([
             "--list-extensions",
             "--extensions-dir=" ++ developmentExtensions,
@@ -26,8 +26,18 @@ describe("CLI", ({describe, _}) => {
           |> finish
         )
       });
-    })
-    //	describe("editor", ({test, _}) => {
-    //
-    //	});
+    });
+    describe("editor", ({test, _}) => {
+    
+      test("rogue -psn argument shouldn't cause a failure", _ => {
+        TestRunner.(
+          startEditorWithArgs([
+            "-psn_0_989382",
+            "--list-extensions",
+          ])
+          |> validateExitStatus(WEXITED(0))
+          |> finish
+        )
+      });
+   });
 });
