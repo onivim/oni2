@@ -93,7 +93,8 @@ let parse =
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
-  Arg.parse_argv(sysArgs,
+  Arg.parse_argv(
+    sysArgs,
     [
       ("-f", Unit(Timber.App.enable), ""),
       ("--nofork", Unit(Timber.App.enable), ""),
