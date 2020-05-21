@@ -87,5 +87,7 @@ let validateExitStatus = (exitStatus, {status, _} as context) => {
 };
 
 let finish = _context => {
-  ();
+  ()// TODO:
+    ;
+    // Check for hanging / rogue processes?
 };
