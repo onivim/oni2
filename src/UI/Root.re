@@ -4,7 +4,6 @@
  * Root editor component - contains all UI elements
  */
 
-open Revery;
 open Revery.UI;
 open Oni_Model;
 
@@ -12,12 +11,19 @@ module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Tooltip = Oni_Components.Tooltip;
 
+module Colors = Feature_Theme.Colors;
+
+module Constants = {
+  let statusBarHeight = 25;
+  let titleBarHeight = 22;
+};
+
 module Styles = {
   open Style;
 
-  let root = (background, foreground) => [
-    backgroundColor(background),
-    color(foreground),
+  let root = theme => [
+    backgroundColor(Colors.Editor.background.from(theme)),
+    color(Colors.foreground.from(theme)),
     position(`Absolute),
     top(0),
     left(0),
@@ -31,20 +37,22 @@ module Styles = {
 
   let workspace = Style.[flexGrow(1), flexDirection(`Column)];
 
-  let statusBar = statusBarHeight => [
-    backgroundColor(Color.hex("#21252b")),
-    height(statusBarHeight),
+  let statusBar = [
+    Style.height(Constants.statusBarHeight),
     justifyContent(`Center),
     alignItems(`Center),
   ];
 
   let titleBar = background =>
-    Style.[flexGrow(0), height(22), backgroundColor(background)];
+    Style.[
+      flexGrow(0),
+      height(Constants.titleBarHeight),
+      backgroundColor(background),
+    ];
 };
 
 let make = (~state: State.t, ()) => {
   let State.{
-        theme,
         configuration,
         contextMenu,
         uiFont as font,
@@ -56,64 +64,56 @@ let make = (~state: State.t, ()) => {
         _,
       } = state;
 
+  let theme = Feature_Theme.colors(state.colorTheme);
+
   let onContextMenuItemSelect = item =>
     GlobalContext.current().dispatch(ContextMenuItemSelected(item));
 
-  let statusBarVisible =
-    Selectors.getActiveConfigurationValue(state, c =>
-      c.workbenchStatusBarVisible
-    )
-    && !zenMode;
+  let statusBar = () =>
+    if (Selectors.getActiveConfigurationValue(state, c =>
+          c.workbenchStatusBarVisible
+        )
+        && !zenMode) {
+      <View style=Styles.statusBar>
+        <StatusBar state contextMenu onContextMenuItemSelect theme />
+      </View>;
+    } else {
+      React.empty;
+    };
 
-  let activityBarVisible =
-    Selectors.getActiveConfigurationValue(state, c =>
-      c.workbenchActivityBarVisible
-    )
-    && !zenMode;
+  let activityBar = () =>
+    if (Selectors.getActiveConfigurationValue(state, c =>
+          c.workbenchActivityBarVisible
+        )
+        && !zenMode) {
+      React.listToElement([
+        <Dock theme sideBar pane />,
+        <WindowHandle direction=`Vertical />,
+      ]);
+    } else {
+      React.empty;
+    };
 
-  let sideBarVisible = !zenMode && sideBar.isOpen;
-
-  let statusBarHeight = statusBarVisible ? 25 : 0;
-
-  let statusBar =
-    statusBarVisible
-      ? <View style={Styles.statusBar(statusBarHeight)}>
-          <StatusBar state contextMenu onContextMenuItemSelect />
-        </View>
-      : React.empty;
-
-  let activityBar =
-    activityBarVisible
-      ? React.listToElement([
-          <Dock
-            theme={Feature_Theme.resolver(state.colorTheme)}
-            sideBar
-            pane
-          />,
-          <WindowHandle direction=Vertical theme />,
-        ])
-      : React.empty;
-
-  let sideBar =
-    sideBarVisible
-      ? React.listToElement([
-          <SideBarView state />,
-          <WindowHandle direction=Vertical theme />,
-        ])
-      : React.empty;
+  let sideBar = () =>
+    if (!zenMode && sideBar.isOpen) {
+      React.listToElement([
+        <SideBarView theme state />,
+        <WindowHandle direction=`Vertical />,
+      ]);
+    } else {
+      React.empty;
+    };
 
   let modals = () => {
     switch (state.modal) {
     | Some(model) =>
-      let workingDirectory =
-        Option.map(ws => ws.Workspace.workingDirectory, state.workspace);
       let dispatch = msg =>
         GlobalContext.current().dispatch(Actions.Modals(msg));
 
       <Feature_Modals.View
         model
         buffers
-        workingDirectory
+        workingDirectory={state.workspace.workingDirectory}
         theme
         font
         dispatch
@@ -123,19 +123,26 @@ let make = (~state: State.t, ()) => {
     };
   };
 
-  <View style={Styles.root(theme.editorBackground, theme.foreground)}>
+  let contextMenuOverlay = () => {
+    let onClick = () =>
+      GlobalContext.current().dispatch(ContextMenuOverlayClicked);
+
+    <ContextMenu.Overlay onClick />;
+  };
+
+  <View style={Styles.root(theme)}>
     <Titlebar
-      focused={state.windowIsFocused}
-      maximized={state.windowIsMaximized}
+      isFocused={state.windowIsFocused}
+      isFullscreen={state.windowDisplayMode == Fullscreen}
       font={state.uiFont}
       title={state.windowTitle}
-      theme={state.theme}
+      theme
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
-        activityBar
-        sideBar
-        <EditorView state />
+        <activityBar />
+        <sideBar />
+        <EditorView state theme />
       </View>
       <PaneView theme uiFont editorFont state />
     </View>
@@ -150,13 +157,10 @@ let make = (~state: State.t, ()) => {
        | None => React.empty
        }}
     </Overlay>
-    statusBar
-    {let onClick = () =>
-       GlobalContext.current().dispatch(ContextMenuOverlayClicked);
-
-     <ContextMenu.Overlay onClick />}
+    <statusBar />
+    <contextMenuOverlay />
     <Tooltip.Overlay theme font=uiFont />
     <modals />
-    <Overlay> <SneakView state /> </Overlay>
+    <Overlay> <SneakView model={state.sneak} theme font /> </Overlay>
   </View>;
 };

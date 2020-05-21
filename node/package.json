@@ -8,9 +8,9 @@
     "test": "jest"
   },
   "dependencies": {
+    "@onivim/vscode-exthost": "1.45.6",
     "fs-extra": "^8.1.0",
     "sudo-prompt": "^9.0.0",
-    "vscode-exthost": "1.33.5",
     "yauzl": "^2.5.1"
   },
   "jest": {
@@ -23,6 +23,9 @@
     "typescript": "^3.3.3333"
   },
   "resolutions": {
-    "graceful-fs": "4.1.11"
+    "graceful-fs": "4.1.11",
+    "debug": "3.2.6",
+    "ms": "2.1.2",
+    "agent-base": "4.3.0"
   }
 }

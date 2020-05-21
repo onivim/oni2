@@ -2,7 +2,6 @@
  * Accordion.re
  */
 
-open Revery;
 open Revery.UI;
 
 open Oni_Core;
@@ -10,6 +9,8 @@ open Oni_Components;
 
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
+
+module Colors = Feature_Theme.Colors;
 
 module Constants = {
   let arrowSize = 15.;
@@ -19,22 +20,21 @@ module Styles = {
   let container = expanded =>
     Style.[flexGrow(expanded ? 1 : 0), flexDirection(`Column)];
 
-  let titleBar = (theme: Theme.t) =>
+  let titleBar = theme =>
     Style.[
       flexGrow(0),
       height(25),
-      backgroundColor(theme.editorBackground),
-      color(theme.foreground),
+      backgroundColor(Colors.SideBar.background.from(theme)),
+      color(Colors.SideBar.foreground.from(theme)),
       flexDirection(`Row),
       alignItems(`Center),
     ];
 
-  let titleText = (~theme: Theme.t, ~font: UiFont.t) =>
+  let titleText = (~theme, ~font: UiFont.t) =>
     Style.[
       fontSize(font.fontSize),
       fontFamily(font.fontFile),
-      color(theme.foreground),
-      backgroundColor(theme.editorBackground),
+      color(Colors.SideBar.foreground.from(theme)),
     ];
 };
 
@@ -46,20 +46,20 @@ let make =
       ~count,
       ~renderItem,
       ~focused,
-      ~theme: Theme.t,
+      ~theme,
       ~uiFont: UiFont.t,
       (),
     ) => {
   let list =
     expanded
-      ? <FlatList rowHeight count focused> ...renderItem </FlatList>
+      ? <FlatList rowHeight count focused theme> ...renderItem </FlatList>
       : React.empty;
 
   <View style={Styles.container(expanded)}>
     <View style={Styles.titleBar(theme)}>
       <FontIcon
         fontSize=Constants.arrowSize
-        color=Colors.white
+        color={Colors.foreground.from(theme)}
         icon={expanded ? FontAwesome.caretDown : FontAwesome.caretRight}
       />
       <Text style={Styles.titleText(~theme, ~font=uiFont)} text=title />

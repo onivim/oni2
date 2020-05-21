@@ -1,7 +1,7 @@
 (library
     (name Oni_Model)
     (public_name Oni2.model)
-    (libraries 
+    (libraries
         str
         bigarray
         zed_oni
@@ -13,25 +13,28 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        reason-jsonrpc
         isolinear
         Oni2.core
         Oni2.extensions
         Oni2.input
         Oni2.syntax
         Oni2.syntax_client
+        Oni2.service.font
+        Oni2.service.file-watcher
         Oni2.components
         Oni2.feature.configuration
         Oni2.feature.theme
         Oni2.feature.notification
+        Oni2.feature.changelog
+        Oni2.feature.commands
         Oni2.feature.search
         Oni2.feature.syntax
         Oni2.feature.language_support
         Oni2.feature.editor
         Oni2.feature.scm
         Oni2.feature.terminal
-        Oni2.service.font
         Oni2.feature.modals
+        Oni2.feature.layout
         ReasonFuzz
         textmate
         editor-core-types

@@ -4,11 +4,14 @@ open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
-let metrics = EditorMetrics.{pixelWidth: 3440, pixelHeight: 1440};
-
 /* Create a state with some editor size */
 let simpleState = {
-  let state = State.initial(~getUserSettings=() => Ok(Config.Settings.empty));
+  let state =
+    State.initial(
+      ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~contributedCommands=[],
+      ~workingDirectory=Sys.getcwd(),
+    );
 
   Reducer.reduce(
     state,
@@ -35,13 +38,19 @@ let simpleState =
     Actions.EditorFont(Service_Font.FontLoaded(defaultFont)),
   );
 
-let simpleEditor = Editor.create(~font=defaultFont, ());
+let thousandLines =
+  Array.make(1000, "This is a buffer with a thousand lines!");
+
+let defaultBuffer = Oni_Core.Buffer.ofLines(~id=0, thousandLines);
+let defaultEditorBuffer =
+  defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
+
+let simpleEditor =
+  Editor.create(~font=defaultFont, ~buffer=defaultEditorBuffer, ())
+  |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
 let editorGroup =
   EditorGroups.getActiveEditorGroup(simpleState.editorGroups)
   |> Option.value(~default=EditorGroup.create());
-
-let thousandLines =
-  Array.make(1000, "This is a buffer with a thousand lines!");
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);

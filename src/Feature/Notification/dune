@@ -5,6 +5,7 @@
     (libraries 
       Oni2.core
       Oni2.components
+      Oni2.feature.theme
       isolinear
       base
       Revery

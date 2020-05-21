@@ -23,7 +23,54 @@ let create = () => {
 
 let activeGroupId = model => model.activeId;
 
+let add = (~defaultFont, editorGroup, model) => {
+  let editorGroup =
+    switch (model.lastEditorFont) {
+    | Some(font) =>
+      EditorGroupReducer.reduce(
+        ~defaultFont,
+        editorGroup,
+        EditorFont(Service_Font.FontLoaded(font)),
+      )
+    | None => editorGroup
+    };
+
+  {
+    ...model,
+    activeId: editorGroup.editorGroupId,
+    idToGroup:
+      IntMap.add(editorGroup.editorGroupId, editorGroup, model.idToGroup),
+  };
+};
+
+let setActiveEditor = (~editorId, model) => {
+  let (activeId, idToGroup) =
+    IntMap.fold(
+      (editorGroupId, editorGroup, acc) =>
+        if (EditorGroup.hasEditor(~editorId, editorGroup)) {
+          let (_, idToGroup) = acc;
+          let newEditorGroup =
+            EditorGroup.setActiveEditor(editorGroup, editorId);
+          let idToGroup' =
+            IntMap.add(editorGroup.editorGroupId, newEditorGroup, idToGroup);
+          (editorGroupId, idToGroup');
+        } else {
+          acc;
+        },
+      model.idToGroup,
+      (model.activeId, model.idToGroup),
+    );
+
+  {...model, activeId, idToGroup};
+};
+
 let getEditorGroupById = (model, id) => IntMap.find_opt(id, model.idToGroup);
+
+let getFirstEditorGroup = ({idToGroup, _}) => {
+  // TODO: Move 'remove' gesture inside EditorGroups, so that we can maintain
+  // the invariant that there is _always_ at least one editor group.
+  idToGroup |> IntMap.bindings |> List.hd |> snd;
+};
 
 let getActiveEditorGroup = model => getEditorGroupById(model, model.activeId);
 
@@ -57,21 +104,40 @@ let ensureActiveId = model => {
   };
 };
 
-let isEmpty = (id, model) => {
-  switch (IntMap.find_opt(id, model.idToGroup)) {
-  | None => true
-  | Some(group) => EditorGroup.isEmpty(group)
-  };
-};
-
-let removeEmptyEditorGroups = model => {
+let closeEditor = (~editorId, editorGroups) => {
   let idToGroup =
-    IntMap.filter(
-      (_, group) => !EditorGroup.isEmpty(group),
-      model.idToGroup,
-    );
+    editorGroups.idToGroup
+    |> IntMap.map(group => EditorGroup.removeEditorById(group, editorId));
 
-  {...model, idToGroup};
+  // Keep a handle on the active editor group - we should never
+  // get completely empty!
+  switch (IntMap.find_opt(editorGroups.activeId, idToGroup)) {
+  // We shouldn't be in this state, ever
+  | None => editorGroups
+  | Some(activeEditorGroup) =>
+    let idToGroup =
+      idToGroup |> IntMap.filter((_, group) => !EditorGroup.isEmpty(group));
+
+    let remainingGroupCount = List.length(IntMap.bindings(idToGroup));
+    // We never let the editor groups get totally empty,
+    // otherwise we run into the bad case of:
+    // https://github.com/onivim/oni2/issues/733
+    let idToGroup =
+      if (remainingGroupCount == 0) {
+        IntMap.add(
+          activeEditorGroup.editorGroupId,
+          activeEditorGroup,
+          idToGroup,
+        );
+      } else {
+        idToGroup;
+      };
+
+    {...editorGroups, idToGroup}
+    // There's a chance the active group could've changed, so make sure
+    // we point to one
+    |> ensureActiveId;
+  };
 };
 
 let reduce = (~defaultFont, model, action: Actions.t) => {
@@ -83,61 +149,26 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
       lastEditorFont: Some(font),
     }
 
-  | WindowSetActive(_, editorGroupId) => {...model, activeId: editorGroupId}
-
-  | EditorGroupAdd(editorGroup) =>
-    let editorGroup =
-      switch (model.lastEditorFont) {
-      | Some(font) =>
-        EditorGroupReducer.reduce(
-          ~defaultFont,
-          editorGroup,
-          EditorFont(Service_Font.FontLoaded(font)),
-        )
-      | None => editorGroup
-      };
-
-    {
+  | EditorSizeChanged(_) => {
       ...model,
-      activeId: editorGroup.editorGroupId,
       idToGroup:
-        IntMap.add(editorGroup.editorGroupId, editorGroup, model.idToGroup),
-    };
+        applyToAllEditorGroups(~defaultFont, model.idToGroup, action),
+    }
 
-  | EditorGroupSizeChanged({id, _}) =>
-    let idToGroup =
-      IntMap.update(
-        id,
-        editorGroup =>
-          switch (editorGroup) {
-          | Some(group) =>
-            Some(EditorGroupReducer.reduce(~defaultFont, group, action))
-          | None => None
-          },
-        model.idToGroup,
-      );
-
-    {...model, idToGroup};
+  | EditorGroupSelected(editorGroupId) => {...model, activeId: editorGroupId}
 
   | action =>
-    let newModel =
-      switch (getActiveEditorGroup(model)) {
-      | Some(group) => {
-          ...model,
-          idToGroup:
-            IntMap.add(
-              model.activeId,
-              EditorGroupReducer.reduce(~defaultFont, group, action),
-              model.idToGroup,
-            ),
-        }
-      | None => model
-      };
-
-    switch (action) {
-    | ViewCloseEditor(_) =>
-      newModel |> removeEmptyEditorGroups |> ensureActiveId
-    | _ => newModel
-    };
+    switch (getActiveEditorGroup(model)) {
+    | Some(group) => {
+        ...model,
+        idToGroup:
+          IntMap.add(
+            model.activeId,
+            EditorGroupReducer.reduce(~defaultFont, group, action),
+            model.idToGroup,
+          ),
+      }
+    | None => model
+    }
   };
 };

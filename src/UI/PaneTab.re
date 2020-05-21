@@ -4,58 +4,62 @@
  * A tab in the lower pane
  */
 
-open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
 open Oni_Core;
 module Model = Oni_Model;
 
-type tabAction = unit => unit;
+module Colors = Feature_Theme.Colors;
 
-let minWidth_ = 100;
+module Constants = {
+  let minWidth = 100;
+};
 
-let make = (~uiFont, ~theme, ~title, ~onClick, ~active, ()) => {
-  let (modeColor, _) = Theme.getColorsForMode(theme, Vim.Types.Normal);
-
-  let borderColor = active ? modeColor : Colors.transparentBlack;
+module Styles = {
+  open Style;
   open UiFont;
 
-  let containerStyle =
-    Style.[
+  let container = (~isActive, ~theme) => {
+    let borderColor =
+      isActive ? Colors.PanelTitle.activeBorder : Colors.Panel.background;
+
+    [
       overflow(`Hidden),
       paddingHorizontal(5),
-      backgroundColor(theme.editorBackground),
-      borderTop(~color=Colors.transparentBlack, ~width=2),
-      borderBottom(~color=borderColor, ~width=2),
+      backgroundColor(Colors.Panel.background.from(theme)),
+      borderBottom(~color=borderColor.from(theme), ~width=2),
       height(30),
-      minWidth(minWidth_),
+      minWidth(Constants.minWidth),
       flexDirection(`Row),
       justifyContent(`Center),
       alignItems(`Center),
     ];
+  };
 
-  let textStyle =
-    Style.[
-      textOverflow(`Ellipsis),
-      fontFamily(active ? uiFont.fontFileSemiBold : uiFont.fontFile),
-      fontSize(uiFont.fontSize),
-      color(theme.tabActiveForeground),
-      backgroundColor(theme.editorBackground),
-      justifyContent(`Center),
-      alignItems(`Center),
-    ];
+  let clickable = [
+    flexGrow(1),
+    flexDirection(`Row),
+    alignItems(`Center),
+    justifyContent(`Center),
+  ];
 
-  <View style=containerStyle>
-    <Clickable
-      onClick
-      style=Style.[
-        flexGrow(1),
-        flexDirection(`Row),
-        alignItems(`Center),
-        justifyContent(`Center),
-      ]>
-      <Text style=textStyle text=title />
+  let text = (~isActive, ~uiFont, ~theme) => [
+    textOverflow(`Ellipsis),
+    fontFamily(isActive ? uiFont.fontFileSemiBold : uiFont.fontFile),
+    fontSize(uiFont.fontSize),
+    isActive
+      ? color(Colors.PanelTitle.activeForeground.from(theme))
+      : color(Colors.PanelTitle.inactiveForeground.from(theme)),
+    justifyContent(`Center),
+    alignItems(`Center),
+  ];
+};
+
+let make = (~uiFont, ~theme, ~title, ~onClick, ~isActive, ()) => {
+  <View style={Styles.container(~isActive, ~theme)}>
+    <Clickable onClick style=Styles.clickable>
+      <Text style={Styles.text(~isActive, ~uiFont, ~theme)} text=title />
     </Clickable>
   </View>;
 };

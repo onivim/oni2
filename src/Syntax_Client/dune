@@ -5,6 +5,7 @@
         str
         bigarray
         zed_oni
+        luv
         lwt
         lwt.unix
         yojson
@@ -14,4 +15,5 @@
         Revery
         textmate
         treesitter
+        Oni2.exthost
     ))

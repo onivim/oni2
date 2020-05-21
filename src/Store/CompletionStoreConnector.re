@@ -36,8 +36,8 @@ module Effects = {
         Index.toZeroBased(cursor.column)
         - Index.toZeroBased(meet.location.column);
 
-      let _: list(Vim.Cursor.t) = VimEx.repeatInput(delta, "<BS>");
-      let cursors = VimEx.inputString(completion.label);
+      let _: Vim.Context.t = VimEx.repeatInput(delta, "<BS>");
+      let {cursors, _}: Vim.Context.t = VimEx.inputString(completion.label);
 
       dispatch(EditorCursorMove(Editor.getId(editor), cursors));
     });
@@ -76,9 +76,17 @@ module Actions = {
       state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
     let maybeBuffer =
       Option.bind(maybeEditor, editor =>
-        Buffers.getBuffer(editor.bufferId, state.buffers)
+        Buffers.getBuffer(
+          Feature_Editor.Editor.getBufferId(editor),
+          state.buffers,
+        )
       );
-    let maybeCursor = Option.map(Editor.getPrimaryCursor, maybeEditor);
+    let maybeCursor =
+      OptionEx.map2(
+        (buffer, editor) => Editor.getPrimaryCursor(~buffer, editor),
+        maybeBuffer,
+        maybeEditor,
+      );
 
     let suggestEnabled =
       state.configuration

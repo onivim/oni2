@@ -1,0 +1,5 @@
+(library
+    (name Exthost)
+    (libraries timber base Oni2.core Oni2.core.kernel Oni2.exthost.extension Oni2.exthost.protocol Oni2.exthost.transport luv yojson decoders-yojson)
+    (preprocess (pps ppx_let ppx_deriving.show ppx_deriving_yojson))
+    (public_name Oni2.exthost))

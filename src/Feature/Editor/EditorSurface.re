@@ -62,7 +62,6 @@ let minimap =
       ~onScroll,
       ~editor,
       ~diffMarkers,
-      ~metrics: EditorMetrics.t,
       ~diagnosticsMap,
       ~bufferWidthInCharacters,
       ~minimapWidthInPixels,
@@ -84,11 +83,11 @@ let minimap =
   <View style onMouseWheel>
     <Minimap
       editor
+      cursorPosition
       width=minimapPixelWidth
-      height={metrics.pixelHeight}
+      height={editor.pixelHeight}
       count={Buffer.getNumberOfLines(buffer)}
       diagnostics=diagnosticsMap
-      metrics
       getTokensForLine={getTokensForLine(
         ~buffer,
         ~bufferHighlights,
@@ -119,9 +118,8 @@ let%component make =
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
                 ~buffer,
-                ~onDimensionsChanged,
+                ~onEditorSizeChanged,
                 ~isActiveSplit: bool,
-                ~metrics: EditorMetrics.t,
                 ~editor: Editor.t,
                 ~theme,
                 ~mode: Vim.Mode.t,
@@ -138,6 +136,31 @@ let%component make =
                 (),
               ) => {
   let colors = Colors.precompute(theme);
+
+  let%hook lastDimensions = Hooks.ref(None);
+
+  // When the editor id changes, we need to make sure we're dispatching the resized
+  // event, too. The ideal fix would be to have this component 'keyed' on the `editor.editorId`
+  let%hook () =
+    React.Hooks.effect(
+      If((!=), editor.editorId),
+      () => {
+        lastDimensions^
+        |> Option.iter(((pixelWidth, pixelHeight)) => {
+             onEditorSizeChanged(editor.editorId, pixelWidth, pixelHeight)
+           });
+
+        None;
+      },
+    );
+
+  let onDimensionsChanged =
+      (
+        {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
+      ) => {
+    lastDimensions := Some((width, height));
+    onEditorSizeChanged(editor.editorId, width, height);
+  };
 
   let colors =
     backgroundColor
@@ -156,16 +179,16 @@ let%component make =
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
   let topVisibleLine = Editor.getTopVisibleLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
+  let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
 
-  let cursorPosition = Editor.getPrimaryCursor(editor);
+  let cursorPosition = Editor.getPrimaryCursor(~buffer, editor);
 
   let layout =
     EditorLayout.getLayout(
       ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
       ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      ~pixelWidth=float(metrics.pixelWidth),
-      ~pixelHeight=float(metrics.pixelHeight),
+      ~pixelWidth=float(editor.pixelWidth),
+      ~pixelHeight=float(editor.pixelHeight),
       ~isMinimapShown=Config.Minimap.enabled.get(config),
       ~characterWidth=editorFont.measuredWidth,
       ~characterHeight=editorFont.measuredHeight,
@@ -189,7 +212,7 @@ let%component make =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
       ? EditorDiffMarkers.generate(buffer) : None;
 
-  let smoothScroll = Config.Experimental.editorSmoothScroll.get(config);
+  let smoothScroll = Config.Experimental.smoothScroll.get(config);
 
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
@@ -211,7 +234,7 @@ let%component make =
   let (gutterWidth, gutterView) =
     <GutterView
       showLineNumbers={Config.lineNumbers.get(config)}
-      height={metrics.pixelHeight}
+      height={editor.pixelHeight}
       colors
       scrollY={editor.scrollY}
       lineHeight={editorFont.measuredHeight}
@@ -227,7 +250,6 @@ let%component make =
       onScroll
       buffer
       editor
-      metrics
       colors
       topVisibleLine
       onCursorChange
@@ -252,7 +274,6 @@ let%component make =
        ? <minimap
            editor
            diagnosticsMap
-           metrics
            buffer
            bufferHighlights
            cursorPosition
@@ -280,14 +301,15 @@ let%component make =
       editorFont
       completions
       colors
+      theme
       tokenTheme
     />
     <View style={Styles.verticalScrollBar(~colors)}>
       <EditorVerticalScrollbar
         editor
-        metrics
+        cursorPosition
         width=Constants.scrollBarThickness
-        height={metrics.pixelHeight}
+        height={editor.pixelHeight}
         diagnostics=diagnosticsMap
         colors
         editorFont

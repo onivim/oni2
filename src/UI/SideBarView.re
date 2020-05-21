@@ -4,28 +4,30 @@ open Oni_Model;
 module Core = Oni_Core;
 
 open Oni_Model.SideBar;
+
+module Colors = Feature_Theme.Colors;
+
 module Styles = {
   open Style;
 
-  let container = (~bg, ~transition) =>
+  let container = (~theme, ~transition) =>
     Style.[
-      backgroundColor(bg),
+      backgroundColor(Colors.SideBar.background.from(theme)),
       width(225),
       transform(Transform.[TranslateX(transition)]),
     ];
 
-  let title = (~fg, ~bg, ~font: Core.UiFont.t) => [
+  let title = (~theme, ~font: Core.UiFont.t) => [
     fontSize(font.fontSize),
     fontFamily(font.fontFileSemiBold),
-    backgroundColor(bg),
-    color(fg),
+    color(Colors.SideBar.foreground.from(theme)),
   ];
 
-  let heading = (theme: Core.Theme.t) => [
+  let heading = theme => [
     flexDirection(`Row),
     justifyContent(`Center),
     alignItems(`Center),
-    backgroundColor(theme.sideBarBackground),
+    backgroundColor(Colors.SideBar.background.from(theme)),
     height(Core.Constants.tabHeight),
   ];
 };
@@ -38,12 +40,8 @@ let animation =
     |> delay(Revery.Time.milliseconds(0))
   );
 
-let%component make = (~state: State.t, ()) => {
-  [@warning "-27"]
-  let State.{theme, sideBar, uiFont: font, _} = state;
-
-  let bg = theme.sideBarBackground;
-  let fg = theme.sideBarForeground;
+let%component make = (~theme, ~state: State.t, ()) => {
+  let State.{sideBar, uiFont: font, _} = state;
 
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
@@ -57,7 +55,9 @@ let%component make = (~state: State.t, ()) => {
 
   let elem =
     switch (sideBar.selected) {
-    | FileExplorer => <FileExplorerView state />
+    | FileExplorer =>
+      <FileExplorerView model={state.fileExplorer} theme font />
+
     | SCM =>
       let onItemClick = (resource: Feature_SCM.Resource.t) =>
         GlobalContext.current().dispatch(
@@ -68,25 +68,22 @@ let%component make = (~state: State.t, ()) => {
           ),
         );
 
-      let workingDirectory =
-        Option.map(w => w.Workspace.workingDirectory, state.workspace);
-
       <Feature_SCM.Pane
         model={state.scm}
-        workingDirectory
+        workingDirectory={state.workspace.workingDirectory}
         onItemClick
         isFocused={FocusManager.current(state) == Focus.SCM}
-        theme={Feature_Theme.resolver(state.colorTheme)}
+        theme
         font
         dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
       />;
 
-    | Extensions => <ExtensionListView state />
+    | Extensions => <ExtensionListView model={state.extensions} theme font />
     };
 
-  <View style={Styles.container(~bg, ~transition)}>
+  <View style={Styles.container(~theme, ~transition)}>
     <View style={Styles.heading(theme)}>
-      <Text text=title style={Styles.title(~fg, ~bg, ~font)} />
+      <Text text=title style={Styles.title(~theme, ~font)} />
     </View>
     elem
   </View>;

@@ -6,13 +6,10 @@
 
 open Oni_Core;
 open Utility;
-open Oni_Extensions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Utility"));
 
-let getUserExtensionsDirectory = (cli: Cli.t) => {
-  let overriddenExtensionsDir = cli.overriddenExtensionsDir;
-
+let getUserExtensionsDirectory = (~overriddenExtensionsDir) => {
   switch (overriddenExtensionsDir) {
   | Some(p) => Some(p)
   | None =>
@@ -25,14 +22,13 @@ let getUserExtensionsDirectory = (cli: Cli.t) => {
   };
 };
 
-let getUserExtensions = (cli: Cli.t) => {
-  cli
-  |> getUserExtensionsDirectory
+let getUserExtensions = (~overriddenExtensionsDir) => {
+  getUserExtensionsDirectory(~overriddenExtensionsDir)
   |> Option.map(
        FunEx.tap(p =>
          Log.infof(m => m("Searching for user extensions in: %s", p))
        ),
      )
-  |> Option.map(ExtensionScanner.scan(~category=User))
+  |> Option.map(Exthost.Extension.Scanner.scan(~category=User))
   |> Option.value(~default=[]);
 };

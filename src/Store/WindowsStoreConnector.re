@@ -10,116 +10,108 @@ module Model = Oni_Model;
 open Model;
 open Model.Actions;
 
+module OptionEx = Core.Utility.OptionEx;
+
 let start = () => {
   let quitEffect =
     Isolinear.Effect.createWithDispatch(~name="windows.quitEffect", dispatch =>
       dispatch(Model.Actions.Quit(false))
     );
 
-  let initializeDefaultViewEffect = (state: State.t) =>
-    Isolinear.Effect.createWithDispatch(~name="windows.init", dispatch => {
-      let editor =
-        WindowTree.createSplit(
-          ~editorGroupId=EditorGroups.activeGroupId(state.editorGroups),
-          (),
-        );
-
-      dispatch(Actions.AddSplit(Vertical, editor));
-    });
+  let resize = (axis, factor, state: State.t) =>
+    switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+    | Some((editorGroup: EditorGroup.t)) => {
+        ...state,
+        layout:
+          Feature_Layout.resizeWindow(
+            axis,
+            editorGroup.editorGroupId,
+            factor,
+            state.layout,
+          ),
+      }
+    | None => state
+    };
 
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | WindowSetActive(splitId, _) =>
-      {
+    | EditorGroupSelected(_) => FocusManager.push(Editor, s)
+    | EditorTabClicked(editorId) => {
         ...s,
-        windowManager: {
-          ...s.windowManager,
-          activeWindowId: splitId,
-        },
+        editorGroups: EditorGroups.setActiveEditor(~editorId, s.editorGroups),
       }
-      |> FocusManager.push(Editor)
-
-    | WindowTreeSetSize(width, height) => {
-        ...s,
-        windowManager:
-          WindowManager.setTreeSize(width, height, s.windowManager),
-      }
-
-    | AddSplit(direction, split) => {
-        ...s,
-        // Fix #686: If we're adding a split, we should turn off zen mode... unless it's the first split being added.
-        zenMode:
-          s.zenMode
-          && List.length(WindowTree.getSplits(s.windowManager.windowTree))
-          == 0,
-        windowManager: {
-          ...s.windowManager,
-          activeWindowId: split.id,
-          windowTree:
-            WindowTree.addSplit(
-              ~target=Some(s.windowManager.activeWindowId),
-              ~position=After,
-              direction,
-              split,
-              s.windowManager.windowTree,
-            ),
-        },
-      }
-
-    | RemoveSplit(id) => {
-        ...s,
-        zenMode: false,
-        windowManager: {
-          ...s.windowManager,
-          windowTree: WindowTree.removeSplit(id, s.windowManager.windowTree),
-        },
-      }
-
-    | ViewCloseEditor(_) =>
+    | ViewCloseEditor(editorId) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
+      let editorGroups =
+        Model.EditorGroups.closeEditor(~editorId, s.editorGroups);
+
       /* Remove splits */
-      let windowTree =
-        s.windowManager.windowTree
-        |> WindowTree.getSplits
-        |> List.filter((split: WindowTree.split) =>
-             Model.EditorGroups.isEmpty(split.editorGroupId, s.editorGroups)
-           )
+      let layout =
+        s.layout
+        |> Feature_Layout.windows
         |> List.fold_left(
-             (prev: WindowTree.t, curr: WindowTree.split) =>
-               WindowTree.removeSplit(curr.id, prev),
-             s.windowManager.windowTree,
+             (acc, editorGroupId) =>
+               if (Model.EditorGroups.getEditorGroupById(
+                     editorGroups,
+                     editorGroupId,
+                   )
+                   == None) {
+                 Feature_Layout.removeWindow(editorGroupId, acc);
+               } else {
+                 acc;
+               },
+             s.layout,
            );
 
-      let windowManager =
-        WindowManager.ensureActive({...s.windowManager, windowTree});
-
-      {...s, windowManager};
+      {...s, editorGroups, layout};
 
     | OpenFileByPath(_) => FocusManager.push(Editor, s)
 
-    | Command("view.rotateForward") => {
-        ...s,
-        windowManager: {
-          ...s.windowManager,
-          windowTree:
-            WindowTree.rotateForward(
-              s.windowManager.activeWindowId,
-              s.windowManager.windowTree,
-            ),
-        },
+    | Command("view.rotateForward") =>
+      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...s,
+          layout:
+            Feature_Layout.rotateForward(editorGroup.editorGroupId, s.layout),
+        }
+      | None => s
       }
 
-    | Command("view.rotateBackward") => {
-        ...s,
-        windowManager: {
-          ...s.windowManager,
-          windowTree:
-            WindowTree.rotateBackward(
-              s.windowManager.activeWindowId,
-              s.windowManager.windowTree,
+    | Command("view.rotateBackward") =>
+      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...s,
+          layout:
+            Feature_Layout.rotateBackward(
+              editorGroup.editorGroupId,
+              s.layout,
             ),
-        },
+        }
+      | None => s
+      }
+
+    | Command("workbench.action.decreaseViewSize") =>
+      s |> resize(`Horizontal, 0.95) |> resize(`Vertical, 0.95)
+
+    | Command("workbench.action.increaseViewSize") =>
+      s |> resize(`Horizontal, 1.05) |> resize(`Vertical, 1.05)
+
+    | Command("vim.decreaseHorizontalWindowSize") =>
+      s |> resize(`Horizontal, 0.95)
+
+    | Command("vim.increaseHorizontalWindowSize") =>
+      s |> resize(`Horizontal, 1.05)
+
+    | Command("vim.decreaseVerticalWindowSize") =>
+      s |> resize(`Vertical, 0.95)
+
+    | Command("vim.increaseVerticalWindowSize") =>
+      s |> resize(`Vertical, 1.05)
+
+    | Command("workbench.action.evenEditorWidths") => {
+        ...s,
+        layout: Feature_Layout.resetWeights(s.layout),
       }
 
     | _ => s
@@ -130,11 +122,9 @@ let start = () => {
 
     let effect =
       switch (action) {
-      | Init => initializeDefaultViewEffect(state)
       // When opening a file, ensure that the active editor is getting focus
       | ViewCloseEditor(_) =>
-        if (List.length(WindowTree.getSplits(state.windowManager.windowTree))
-            == 0) {
+        if (Feature_Layout.windows(state.layout) == []) {
           quitEffect;
         } else {
           Isolinear.Effect.none;

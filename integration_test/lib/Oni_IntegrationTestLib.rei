@@ -2,13 +2,14 @@ module Core = Oni_Core;
 module Model = Oni_Model;
 module TextSynchronization = TextSynchronization;
 module ExtensionHelpers = ExtensionHelpers;
+module SyntaxServerTest = SyntaxServerTest;
 open Types;
 
 let runTest:
   (
     ~configuration: option(string)=?,
     ~keybindings: option(string)=?,
-    ~cliOptions: option(Core.Cli.t)=?,
+    ~filesToOpen: list(string)=?,
     ~name: string=?,
     ~onAfterDispatch: Model.Actions.t => unit=?,
     testCallback

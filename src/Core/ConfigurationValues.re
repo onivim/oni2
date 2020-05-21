@@ -58,8 +58,6 @@ type t = {
   editorRenderIndentGuides: bool,
   editorRenderWhitespace,
   editorRulers: list(int),
-  syntaxEagerMaxLines: int,
-  syntaxEagerMaxLineLength: int,
   terminalIntegratedFontFamily: string,
   terminalIntegratedFontSize: float,
   terminalIntegratedFontSmoothing: fontSmoothing,
@@ -83,7 +81,6 @@ type t = {
   // These are 'use-at-your-own-risk' features
   // Turn on tree-sitter for supported filetypes:
   // - JSON
-  experimentalTreeSitter: bool,
   experimentalVimL: list(string),
 };
 
@@ -114,8 +111,6 @@ let default = {
   },
   editorRenderWhitespace: All,
   editorRulers: [],
-  syntaxEagerMaxLines: Constants.syntaxEagerMaxLines,
-  syntaxEagerMaxLineLength: Constants.syntaxEagerMaxLineLength,
   terminalIntegratedFontFamily: Constants.defaultFontFamily,
   terminalIntegratedFontSize: Constants.defaultTerminalFontSize,
   terminalIntegratedFontSmoothing: Default,
@@ -138,7 +133,5 @@ let default = {
   windowTitle: "${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}",
   zenModeHideTabs: true,
   zenModeSingleFile: true,
-
-  experimentalTreeSitter: false,
   experimentalVimL: [],
 };

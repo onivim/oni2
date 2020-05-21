@@ -20,7 +20,6 @@ let reduce: (State.t, Actions.t) => State.t =
         bufferHighlights:
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
-        commands: Commands.reduce(s.commands, a),
         definition: DefinitionReducer.reduce(a, s.definition),
         editorGroups:
           EditorGroups.reduce(~defaultFont=s.editorFont, s.editorGroups, a),
@@ -28,7 +27,7 @@ let reduce: (State.t, Actions.t) => State.t =
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
-        sideBar: SideBarReducer.reduce(s.sideBar, a),
+        sideBar: SideBarReducer.reduce(~zenMode=s.zenMode, s.sideBar, a),
         statusBar: StatusBarReducer.reduce(s.statusBar, a),
       };
 
@@ -44,20 +43,19 @@ let reduce: (State.t, Actions.t) => State.t =
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
-      | ThemeLoaded({colors, isDark, tokenTheme}) => {
-          ...s,
-          tokenTheme,
-          theme: colors,
-          darkMode: isDark,
-        }
+      | TokenThemeLoaded(tokenTheme) => {...s, tokenTheme}
+      | ActivityBar(ActivityBar.FileExplorerClick) => {...s, zenMode: false}
+      | ActivityBar(ActivityBar.SCMClick) => {...s, zenMode: false}
+      | ActivityBar(ActivityBar.ExtensionsClick) => {...s, zenMode: false}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}
       | WindowFocusGained => {...s, windowIsFocused: true}
       | WindowFocusLost => {...s, windowIsFocused: false}
-      | WindowMaximized => {...s, windowIsMaximized: true}
+      | WindowMaximized => {...s, windowDisplayMode: Maximized}
+      | WindowFullscreen => {...s, windowDisplayMode: Fullscreen}
       | WindowRestored
-      | WindowMinimized => {...s, windowIsMaximized: false}
+      | WindowMinimized => {...s, windowDisplayMode: Minimized}
       | _ => s
       };
     };

@@ -6,6 +6,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_languageserver_1 = require("vscode-languageserver");
 const vscode_uri_1 = require("vscode-uri");
+const fs_1 = require("fs");
 const vscode_css_languageservice_1 = require("vscode-css-languageservice");
 const languageModelCache_1 = require("./languageModelCache");
 const pathCompletion_1 = require("./pathCompletion");
@@ -19,9 +20,8 @@ console.error = connection.console.error.bind(connection.console);
 process.on('unhandledRejection', (e) => {
     connection.console.error(runner_1.formatError(`Unhandled exception`, e));
 });
-// Create a simple text document manager. The text document manager
-// supports full document sync only
-const documents = new vscode_languageserver_1.TextDocuments();
+// Create a text document manager.
+const documents = new vscode_languageserver_1.TextDocuments(vscode_css_languageservice_1.TextDocument);
 // Make the text document manager listen on the connection
 // for open, change and close text document events
 documents.listen(connection);
@@ -36,6 +36,44 @@ let scopedSettingsSupport = false;
 let foldingRangeLimit = Number.MAX_VALUE;
 let workspaceFolders;
 const languageServices = {};
+const fileSystemProvider = {
+    stat(documentUri) {
+        const filePath = vscode_uri_1.URI.parse(documentUri).fsPath;
+        return new Promise((c, e) => {
+            fs_1.stat(filePath, (err, stats) => {
+                if (err) {
+                    if (err.code === 'ENOENT') {
+                        return c({
+                            type: vscode_css_languageservice_1.FileType.Unknown,
+                            ctime: -1,
+                            mtime: -1,
+                            size: -1
+                        });
+                    }
+                    else {
+                        return e(err);
+                    }
+                }
+                let type = vscode_css_languageservice_1.FileType.Unknown;
+                if (stats.isFile()) {
+                    type = vscode_css_languageservice_1.FileType.File;
+                }
+                else if (stats.isDirectory()) {
+                    type = vscode_css_languageservice_1.FileType.Directory;
+                }
+                else if (stats.isSymbolicLink()) {
+                    type = vscode_css_languageservice_1.FileType.SymbolicLink;
+                }
+                c({
+                    type,
+                    ctime: stats.ctime.getTime(),
+                    mtime: stats.mtime.getTime(),
+                    size: stats.size
+                });
+            });
+        });
+    }
+};
 // After the server has started the client sends an initialize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilities.
 connection.onInitialize((params) => {
@@ -43,10 +81,10 @@ connection.onInitialize((params) => {
     if (!Array.isArray(workspaceFolders)) {
         workspaceFolders = [];
         if (params.rootPath) {
-            workspaceFolders.push({ name: '', uri: vscode_uri_1.default.file(params.rootPath).toString() });
+            workspaceFolders.push({ name: '', uri: vscode_uri_1.URI.file(params.rootPath).toString() });
         }
     }
-    const dataPaths = params.initializationOptions.dataPaths;
+    const dataPaths = params.initializationOptions.dataPaths || [];
     const customDataProviders = customData_1.getDataProviders(dataPaths);
     function getClientCapability(name, def) {
         const keys = name.split('.');
@@ -61,16 +99,13 @@ connection.onInitialize((params) => {
     }
     const snippetSupport = !!getClientCapability('textDocument.completion.completionItem.snippetSupport', false);
     scopedSettingsSupport = !!getClientCapability('workspace.configuration', false);
-    // TODO - ONIVIM - Support workspace configuration!
-    scopedSettingsSupport = false;
     foldingRangeLimit = getClientCapability('textDocument.foldingRange.rangeLimit', Number.MAX_VALUE);
-    languageServices.css = vscode_css_languageservice_1.getCSSLanguageService({ customDataProviders });
-    languageServices.scss = vscode_css_languageservice_1.getSCSSLanguageService({ customDataProviders });
-    languageServices.less = vscode_css_languageservice_1.getLESSLanguageService({ customDataProviders });
+    languageServices.css = vscode_css_languageservice_1.getCSSLanguageService({ customDataProviders, fileSystemProvider, clientCapabilities: params.capabilities });
+    languageServices.scss = vscode_css_languageservice_1.getSCSSLanguageService({ customDataProviders, fileSystemProvider, clientCapabilities: params.capabilities });
+    languageServices.less = vscode_css_languageservice_1.getLESSLanguageService({ customDataProviders, fileSystemProvider, clientCapabilities: params.capabilities });
     const capabilities = {
-        // Tell the client that the server works in FULL text document sync mode
-        textDocumentSync: documents.syncKind,
-        completionProvider: snippetSupport ? { resolveProvider: false, triggerCharacters: ['/'] } : undefined,
+        textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Incremental,
+        completionProvider: snippetSupport ? { resolveProvider: false, triggerCharacters: ['/', '-'] } : undefined,
         hoverProvider: true,
         documentSymbolProvider: true,
         referencesProvider: true,
@@ -82,7 +117,8 @@ connection.onInitialize((params) => {
         codeActionProvider: true,
         renameProvider: true,
         colorProvider: {},
-        foldingRangeProvider: true
+        foldingRangeProvider: true,
+        selectionRangeProvider: true
     };
     return { capabilities };
 });
@@ -220,13 +256,13 @@ connection.onDocumentHighlight((documentHighlightParams, token) => {
         return [];
     }, [], `Error while computing document highlights for ${documentHighlightParams.textDocument.uri}`, token);
 });
-connection.onDocumentLinks((documentLinkParams, token) => {
-    return runner_1.runSafe(() => {
+connection.onDocumentLinks(async (documentLinkParams, token) => {
+    return runner_1.runSafeAsync(async () => {
         const document = documents.get(documentLinkParams.textDocument.uri);
         if (document) {
             const documentContext = documentContext_1.getDocumentContext(document.uri, workspaceFolders);
             const stylesheet = stylesheets.get(document);
-            return getLanguageService(document).findDocumentLinks(document, stylesheet, documentContext);
+            return await getLanguageService(document).findDocumentLinks2(document, stylesheet, documentContext);
         }
         return [];
     }, [], `Error while computing document links for ${documentLinkParams.textDocument.uri}`, token);
@@ -290,7 +326,7 @@ connection.onFoldingRanges((params, token) => {
         return null;
     }, null, `Error while computing folding ranges for ${params.textDocument.uri}`, token);
 });
-connection.onRequest('$/textDocument/selectionRanges', async (params, token) => {
+connection.onSelectionRanges((params, token) => {
     return runner_1.runSafe(() => {
         const document = documents.get(params.textDocument.uri);
         const positions = params.positions;
@@ -298,8 +334,8 @@ connection.onRequest('$/textDocument/selectionRanges', async (params, token) => 
             const stylesheet = stylesheets.get(document);
             return getLanguageService(document).getSelectionRanges(document, positions, stylesheet);
         }
-        return Promise.resolve(null);
-    }, null, `Error while computing selection ranges for ${params.textDocument.uri}`, token);
+        return [];
+    }, [], `Error while computing selection ranges for ${params.textDocument.uri}`, token);
 });
 // Listen on the connection
 connection.listen();

@@ -140,12 +140,16 @@ Onivim-specific contexts:
 | Command+P / Control+P | Quick Open (File Picker) | `workbench.action.quickOpen` | 
 | Control+Tab | Navigate to next editor in group | `workbench.action.quickOpenNavigateNextInEditorPicker` |
 | Shift+Control+Tab | Navigate to previous editor in group | `workbench.action.quickOpenNavigatePreviousInEditorPicker` | 
+| Command+= / Control+= | Zoom In | `workbench.action.zoomIn` | 
+| Command+- / Control+- | Zoom Out | `workbench.action.zoomOut` | 
+| Command+0 / Control+0 | Zoom Reset | `workbench.action.zoomReset` | 
 
 ### Basic Editing
 
 | Default Key Binding | Description | Command |
 | --- | --- | --- |
 | Control+V / Command+V | Paste from clipboard | `editor.action.clipboardPasteAction` |
+| Control+S / Command+S | Save file | `workbench.action.files.save`
 
 ### List / Menu commands
 

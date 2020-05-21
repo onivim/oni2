@@ -3,11 +3,30 @@ open Oni_Core;
 open Oni_Model;
 open Actions;
 
+module Internal = {
+  let notificationEffect = (~kind, message) => {
+    Feature_Notification.Effects.create(~kind, message)
+    |> Isolinear.Effect.map(msg => Actions.Notification(msg));
+  };
+  let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
+    buffer
+    |> Oni_Core.Buffer.getFileType
+    |> Utility.OptionEx.flatMap(fileType =>
+         Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+           languageInfo,
+           fileType,
+         )
+       )
+    |> Option.value(~default="source.plaintext");
+  };
+};
+
 // UPDATE
 
 let update =
     (
-      ~extHostClient,
+      ~grammarRepository: Oni_Syntax.GrammarRepository.t,
+      ~extHostClient: Exthost.Client.t,
       ~getUserSettings,
       ~setup,
       state: State.t,
@@ -40,14 +59,29 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
-  | BufferUpdate({update, _}) =>
+  | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
-      Feature_Syntax.update(
+      Feature_Syntax.handleUpdate(
+        ~scope=
+          Internal.getScopeForBuffer(
+            ~languageInfo=state.languageInfo,
+            newBuffer,
+          ),
+        ~grammars=grammarRepository,
+        ~config=Feature_Configuration.resolver(state.config),
+        ~theme=state.tokenTheme,
+        update,
         state.syntaxHighlights,
-        Feature_Syntax.BufferUpdated(update),
       );
     let state = {...state, syntaxHighlights};
-    (state, Effect.none);
+    (
+      state,
+      Feature_Syntax.Effect.bufferUpdate(
+        ~bufferUpdate=update,
+        state.syntaxHighlights,
+      )
+      |> Isolinear.Effect.map(() => Actions.Noop),
+    );
 
   | Configuration(msg) =>
     let (config, outmsg) =
@@ -56,27 +90,54 @@ let update =
     let eff =
       switch (outmsg) {
       | ConfigurationChanged({changed}) =>
-        Oni_Extensions.ExtHostClient.Effects.acceptConfigurationChanged(
-          extHostClient,
-          Feature_Configuration.toExtensionConfiguration(
-            config,
-            state.extensions.extensions,
-            setup,
-          ),
-          ~changed=Oni_Extensions.Configuration.Model.fromSettings(changed),
-        )
+        Isolinear.Effect.create(
+          ~name="featuers.configuration$acceptConfigurationChanged", () => {
+          let configuration =
+            Feature_Configuration.toExtensionConfiguration(
+              config,
+              state.extensions.extensions,
+              setup,
+            );
+          let changed = Exthost.Configuration.Model.fromSettings(changed);
+          Exthost.Request.Configuration.acceptConfigurationChanged(
+            ~configuration,
+            ~changed,
+            extHostClient,
+          );
+        })
       | Nothing => Effect.none
       };
 
     (state, eff);
 
-  | Syntax(msg) =>
-    let syntaxHighlights = Feature_Syntax.update(state.syntaxHighlights, msg);
-    let state = {...state, syntaxHighlights};
+  | Commands(msg) =>
+    let commands = Feature_Commands.update(state.commands, msg);
+    let state = {...state, commands};
     (state, Effect.none);
 
+  | Syntax(msg) =>
+    let (syntaxHighlights, out) =
+      Feature_Syntax.update(state.syntaxHighlights, msg);
+    let state = {...state, syntaxHighlights};
+
+    let effect =
+      switch (out) {
+      | Nothing => Effect.none
+      | ServerError(msg) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          "Syntax Server error: " ++ msg,
+        )
+      };
+    (state, effect);
+
   | Terminal(msg) =>
-    let (model, eff) = Feature_Terminal.update(state.terminals, msg);
+    let (model, eff) =
+      Feature_Terminal.update(
+        ~config=Feature_Configuration.resolver(state.config),
+        state.terminals,
+        msg,
+      );
 
     let effect: Isolinear.Effect.t(Actions.t) =
       switch ((eff: Feature_Terminal.outmsg)) {
@@ -85,8 +146,8 @@ let update =
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
-          | Horizontal => Some(WindowTree.Horizontal)
-          | Vertical => Some(WindowTree.Vertical)
+          | Horizontal => Some(`Horizontal)
+          | Vertical => Some(`Vertical)
           | Current => None
           };
 
@@ -125,6 +186,10 @@ let update =
     | None => (state, Effect.none)
     }
 
+  | Changelog(msg) =>
+    let (model, eff) = Feature_Changelog.update(state.changelog, msg);
+    ({...state, changelog: model}, eff);
+
   // TODO: This should live in the editor feature project
   | EditorFont(Service_Font.FontLoaded(font)) => (
       {...state, editorFont: font},
@@ -132,8 +197,7 @@ let update =
     )
   | EditorFont(Service_Font.FontLoadError(message)) => (
       state,
-      Feature_Notification.Effects.create(~kind=Error, message)
-      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      Internal.notificationEffect(~kind=Error, message),
     )
 
   // TODO: This should live in the terminal feature project
@@ -143,8 +207,7 @@ let update =
     )
   | TerminalFont(Service_Font.FontLoadError(message)) => (
       state,
-      Feature_Notification.Effects.create(~kind=Error, message)
-      |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+      Internal.notificationEffect(~kind=Error, message),
     )
 
   | _ => (state, Effect.none)

@@ -4,13 +4,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
+exports.activate = void 0;
 const fs = require("fs");
-const nls = require("vscode-nls");
-const localize = nls.loadMessageBundle();
+const path = require("path");
 const vscode_1 = require("vscode");
 const vscode_languageclient_1 = require("vscode-languageclient");
+const nls = require("vscode-nls");
 const customData_1 = require("./customData");
+const localize = nls.loadMessageBundle();
 // this method is called when vs code is activated
 function activate(context) {
     let serverMain = readJSONFile(context.asAbsolutePath('./server/package.json')).main;
@@ -36,6 +37,39 @@ function activate(context) {
         },
         initializationOptions: {
             dataPaths
+        },
+        middleware: {
+            provideCompletionItem(document, position, context, token, next) {
+                // testing the replace / insert mode
+                function updateRanges(item) {
+                    const range = item.range;
+                    if (range instanceof vscode_1.Range && range.end.isAfter(position) && range.start.isBeforeOrEqual(position)) {
+                        item.range = { inserting: new vscode_1.Range(range.start, position), replacing: range };
+                    }
+                }
+                function updateLabel(item) {
+                    if (item.kind === vscode_1.CompletionItemKind.Color) {
+                        item.label2 = {
+                            name: item.label,
+                            type: item.documentation
+                        };
+                    }
+                }
+                // testing the new completion
+                function updateProposals(r) {
+                    if (r) {
+                        (Array.isArray(r) ? r : r.items).forEach(updateRanges);
+                        (Array.isArray(r) ? r : r.items).forEach(updateLabel);
+                    }
+                    return r;
+                }
+                const isThenable = (obj) => obj && obj['then'];
+                const r = next(document, position, context, token);
+                if (isThenable(r)) {
+                    return r.then(updateProposals);
+                }
+                return updateProposals(r);
+            }
         }
     };
     // Create the language client and start the client.
@@ -63,25 +97,6 @@ function activate(context) {
     });
     client.onReady().then(() => {
         context.subscriptions.push(initCompletionProvider());
-        documentSelector.forEach(selector => {
-            context.subscriptions.push(vscode_1.languages.registerSelectionRangeProvider(selector, {
-                async provideSelectionRanges(document, positions) {
-                    const textDocument = client.code2ProtocolConverter.asTextDocumentIdentifier(document);
-                    const rawResult = await client.sendRequest('$/textDocument/selectionRanges', { textDocument, positions: positions.map(client.code2ProtocolConverter.asPosition) });
-                    if (Array.isArray(rawResult)) {
-                        return rawResult.map(rawSelectionRanges => {
-                            return rawSelectionRanges.reduceRight((parent, selectionRange) => {
-                                return {
-                                    range: client.protocol2CodeConverter.asRange(selectionRange.range),
-                                    parent
-                                };
-                            }, undefined);
-                        });
-                    }
-                    return [];
-                }
-            }));
-        });
     });
     function initCompletionProvider() {
         const regionCompletionRegExpr = /^(\s*)(\/(\*\s*(#\w*)?)?)?$/;

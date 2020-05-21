@@ -6,6 +6,7 @@
 
 open Revery.UI;
 open Rench;
+open Oni_Core;
 
 module Model = Oni_Model;
 module Ext = Oni_Extensions;
@@ -41,8 +42,7 @@ let toTab =
 
   let language =
     Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, tabInfo.filePath);
-  let icon =
-    Model.IconTheme.getIconForFile(iconTheme, tabInfo.filePath, language);
+  let icon = IconTheme.getIconForFile(iconTheme, tabInfo.filePath, language);
 
   <Tab
     theme
@@ -53,7 +53,11 @@ let toTab =
     uiFont
     mode
     icon
-    onClick={() => GlobalContext.current().openEditorById(tabInfo.editorId)}
+    onClick={() =>
+      GlobalContext.current().dispatch(
+        Model.Actions.EditorTabClicked(tabInfo.editorId),
+      )
+    }
     onClose={() => GlobalContext.current().closeEditorById(tabInfo.editorId)}
   />;
 };
@@ -115,7 +119,7 @@ let schedulePostRender = f => postRenderQueue := [f, ...postRenderQueue^];
 
 let%component make =
               (
-                ~theme: Oni_Core.ColorTheme.resolver,
+                ~theme: Oni_Core.ColorTheme.Colors.t,
                 ~tabs: list(tabInfo),
                 ~activeEditorId: option(int),
                 ~mode: Vim.Mode.t,

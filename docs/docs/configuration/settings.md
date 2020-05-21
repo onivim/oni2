@@ -31,7 +31,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.fontSize` __(_int_ default: `14`)__ - The font size used by the editor surface.
 
-- `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialised"_)__ - The smoothing strategy used when rendering fonts. The `"antialised"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid. 
+- `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialiased"_)__ - The smoothing strategy used when rendering fonts. The `"antialiased"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid. 
 
 - `editor.hover.delay` __(_int_ default: `1000`)__ - The delay in milliseconds before showing the hover UI.
 

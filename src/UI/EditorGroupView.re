@@ -1,42 +1,19 @@
-/*
- * Editor.re
- *
- * Editor component - an 'Editor' encapsulates the following:
- * - a 'tabbar'
- * - an editor surface - usually a textual buffer view
- */
-
 open Revery.UI;
 open Oni_Core;
 open Oni_Model;
+open Actions;
 module Model = Oni_Model;
-
-module Window = WindowManager;
 
 module Colors = Feature_Theme.Colors;
 module EditorSurface = Feature_Editor.EditorSurface;
 
-let noop = () => ();
-
-let editorViewStyle = (background, foreground) =>
-  Style.[
-    backgroundColor(background),
-    color(foreground),
-    position(`Absolute),
-    top(0),
-    left(0),
-    right(0),
-    bottom(0),
-    flexDirection(`Column),
-  ];
-
 let getBufferMetadata = (buffer: option(Buffer.t)) => {
   switch (buffer) {
   | None => (false, "untitled", "untitled")
-  | Some(v) =>
+  | Some(buffer) =>
     let filePath =
-      Buffer.getFilePath(v) |> Option.value(~default="untitled");
-    let modified = Buffer.isModified(v);
+      Buffer.getFilePath(buffer) |> Option.value(~default="untitled");
+    let modified = Buffer.isModified(buffer);
 
     let title = filePath |> Filename.basename;
     (modified, title, filePath);
@@ -52,51 +29,164 @@ let toUiTabs =
   let f = (id: int) => {
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
-    | Some(v) =>
+    | Some(editor) =>
+      open Feature_Editor;
       let (modified, title, filePath) =
-        Model.Buffers.getBuffer(v.bufferId, buffers) |> getBufferMetadata;
+        Model.Buffers.getBuffer(Editor.getBufferId(editor), buffers)
+        |> getBufferMetadata;
 
-      let renderer = Model.BufferRenderers.getById(v.bufferId, renderers);
+      let renderer =
+        Model.BufferRenderers.getById(Editor.getBufferId(editor), renderers);
 
-      let ret: Tabs.tabInfo = {
-        editorId: v.editorId,
-        filePath,
-        title,
-        modified,
-        renderer,
-      };
-      Some(ret);
+      Some(
+        Tabs.{editorId: editor.editorId, filePath, title, modified, renderer},
+      );
     };
   };
 
   List.filter_map(f, editorGroup.reverseTabOrder) |> List.rev;
 };
 
-let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) => {
-  let theme = Feature_Theme.resolver(state.colorTheme);
-  let mode = state.vimMode;
+module Parts = {
+  module Editor = {
+    let make =
+        (
+          ~editor,
+          ~state: State.t,
+          ~theme,
+          ~isActive,
+          ~backgroundColor=?,
+          ~foregroundColor=?,
+          ~showDiffMarkers=true,
+          (),
+        ) => {
+      let buffer =
+        Selectors.getBufferForEditor(state, editor)
+        |> Option.value(~default=Buffer.initial);
 
-  let style =
-    editorViewStyle(
-      Colors.Editor.background.from(theme),
-      Colors.foreground.from(theme),
-    );
+      let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
+        GlobalContext.current().dispatch(
+          EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}),
+        );
+      let onScroll = deltaY =>
+        GlobalContext.current().editorScrollDelta(
+          ~editorId=editor.editorId,
+          ~deltaY,
+          (),
+        );
+      let onCursorChange = cursor =>
+        GlobalContext.current().dispatch(
+          EditorCursorMove(editor.editorId, [cursor]),
+        );
+
+      <EditorSurface
+        ?backgroundColor
+        ?foregroundColor
+        showDiffMarkers
+        isActiveSplit=isActive
+        editor
+        buffer
+        onCursorChange
+        onEditorSizeChanged
+        onScroll
+        theme
+        mode={state.vimMode}
+        bufferHighlights={state.bufferHighlights}
+        bufferSyntaxHighlights={state.syntaxHighlights}
+        diagnostics={state.diagnostics}
+        completions={state.completions}
+        tokenTheme={state.tokenTheme}
+        definition={state.definition}
+        windowIsFocused={state.windowIsFocused}
+        config={Feature_Configuration.resolver(state.config)}
+      />;
+    };
+  };
+
+  module EditorContainer = {
+    let make =
+        (
+          ~editor: Feature_Editor.Editor.t,
+          ~state: State.t,
+          ~theme,
+          ~isActive,
+          (),
+        ) => {
+      let State.{uiFont, editorFont, _} = state;
+
+      let renderer =
+        BufferRenderers.getById(
+          Feature_Editor.Editor.getBufferId(editor),
+          state.bufferRenderers,
+        );
+
+      let changelogDispatch = msg =>
+        GlobalContext.current().dispatch(Changelog(msg));
+
+      switch (renderer) {
+      | Terminal({insertMode, _}) when !insertMode =>
+        let backgroundColor = Feature_Terminal.defaultBackground(theme);
+        let foregroundColor = Feature_Terminal.defaultForeground(theme);
+
+        <Editor
+          editor
+          state
+          theme
+          isActive
+          backgroundColor
+          foregroundColor
+          showDiffMarkers=false
+        />;
+
+      | Terminal({id, _}) =>
+        state.terminals
+        |> Feature_Terminal.getTerminalOpt(id)
+        |> Option.map(terminal => {
+             <TerminalView theme font={state.terminalFont} terminal />
+           })
+        |> Option.value(~default=React.empty)
+
+      | Editor => <Editor editor state theme isActive />
+
+      | Welcome => <WelcomeView theme uiFont editorFont />
+
+      | Version => <VersionView theme uiFont editorFont />
+
+      | FullChangelog =>
+        <Feature_Changelog.View.Full
+          state={state.changelog}
+          theme
+          dispatch=changelogDispatch
+          uiFont
+        />
+
+      | UpdateChangelog({since}) =>
+        <Feature_Changelog.View.Update since theme uiFont />
+      };
+    };
+  };
+};
+
+module Styles = {
+  open Style;
+
+  let container = theme => [
+    backgroundColor(Colors.Editor.background.from(theme)),
+    color(Colors.foreground.from(theme)),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
+  ];
+
+  let editorContainer = [flexGrow(1), flexDirection(`Column)];
+};
+
+let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
+  let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
-
-  let overlayStyle =
-    Style.[
-      position(`Absolute),
-      top(0),
-      left(0),
-      right(0),
-      bottom(0),
-      pointerEvents(`Ignore),
-      backgroundColor(Revery.Color.rgba(0., 0., 0., isActive ? 0. : 0.1)),
-    ];
-
-  let absoluteStyle =
-    Style.[position(`Absolute), top(0), left(0), right(0), bottom(0)];
 
   let showTabs =
     if (state.zenMode) {
@@ -108,143 +198,36 @@ let make = (~state: State.t, ~windowId: int, ~editorGroup: EditorGroup.t, ()) =>
       );
     };
 
-  let onDimensionsChanged =
-      ({width, height}: NodeEvents.DimensionsChangedEventParams.t) => {
-    let height = showTabs ? height - Constants.tabHeight : height;
-    let height = max(height, 0); // BUGFIX: #1525
-
-    GlobalContext.current().dispatch(
-      EditorGroupSizeChanged({id: editorGroup.editorGroupId, width, height}),
-    );
-  };
-
   let children = {
-    let maybeEditor = EditorGroup.getActiveEditor(editorGroup);
-    let tabs = toUiTabs(editorGroup, state.buffers, state.bufferRenderers);
-    let uiFont = state.uiFont;
-
-    let metrics = editorGroup.metrics;
-    let editorView =
-      switch (maybeEditor) {
-      | Some(editor) =>
-        let onScroll = deltaY => {
-          let () =
-            GlobalContext.current().editorScrollDelta(
-              ~editorId=editor.editorId,
-              ~deltaY,
-              (),
-            );
-          ();
-        };
-        let onCursorChange = cursor =>
-          GlobalContext.current().dispatch(
-            Actions.EditorCursorMove(editor.editorId, [cursor]),
-          );
-        let renderer =
-          BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
-        switch (renderer) {
-        | BufferRenderer.Terminal({insertMode, _}) when !insertMode =>
-          let buffer =
-            Selectors.getBufferForEditor(state, editor)
-            |> Option.value(~default=Buffer.initial);
-
-          let defaultTerminalBackground =
-            Feature_Terminal.defaultBackground(theme);
-          let defaultTerminalForeground =
-            Feature_Terminal.defaultForeground(theme);
-
-          <EditorSurface
-            backgroundColor=defaultTerminalBackground
-            foregroundColor=defaultTerminalForeground
-            showDiffMarkers=false
-            isActiveSplit=isActive
-            metrics
-            editor
-            buffer
-            onCursorChange
-            onDimensionsChanged={_ => ()}
-            onScroll
-            theme
-            mode
-            bufferHighlights={state.bufferHighlights}
-            bufferSyntaxHighlights={state.syntaxHighlights}
-            diagnostics={state.diagnostics}
-            completions={state.completions}
-            tokenTheme={state.tokenTheme}
-            definition={state.definition}
-            windowIsFocused={state.windowIsFocused}
-            config={Feature_Configuration.resolver(state.config)}
-          />;
-        | BufferRenderer.Editor =>
-          let buffer =
-            Selectors.getBufferForEditor(state, editor)
-            |> Option.value(~default=Buffer.initial);
-
-          <EditorSurface
-            isActiveSplit=isActive
-            metrics
-            editor
-            buffer
-            onCursorChange
-            onDimensionsChanged={_ => ()}
-            onScroll
-            theme
-            mode
-            bufferHighlights={state.bufferHighlights}
-            bufferSyntaxHighlights={state.syntaxHighlights}
-            diagnostics={state.diagnostics}
-            completions={state.completions}
-            tokenTheme={state.tokenTheme}
-            definition={state.definition}
-            windowIsFocused={state.windowIsFocused}
-            config={Feature_Configuration.resolver(state.config)}
-          />;
-        | BufferRenderer.Welcome => <WelcomeView state />
-        | BufferRenderer.Version => <VersionView state />
-        | BufferRenderer.Terminal({id, _}) =>
-          state.terminals
-          |> Feature_Terminal.getTerminalOpt(id)
-          |> Option.map(terminal => {
-               <TerminalView
-                 theme
-                 font={state.terminalFont}
-                 metrics
-                 terminal
-               />
-             })
-          |> Option.value(~default=React.empty)
-        };
-      | None => React.empty
+    let editorContainer =
+      switch (EditorGroup.getActiveEditor(editorGroup)) {
+      | Some(editor) => <Parts.EditorContainer editor state theme isActive />
+      | None => <WelcomeView theme editorFont uiFont />
       };
 
-    switch (showTabs) {
-    | false => editorView
-    | true =>
-      React.listToElement([
+    if (showTabs) {
+      let tabs =
         <Tabs
           active=isActive
           activeEditorId={editorGroup.activeEditorId}
           theme
-          tabs
+          tabs={toUiTabs(editorGroup, state.buffers, state.bufferRenderers)}
           mode
           uiFont
           languageInfo={state.languageInfo}
           iconTheme={state.iconTheme}
-        />,
-        editorView,
-      ])
+        />;
+
+      <View style=Styles.editorContainer> tabs editorContainer </View>;
+    } else {
+      editorContainer;
     };
   };
 
-  let onMouseDown = _ => {
-    GlobalContext.current().setActiveWindow(
-      windowId,
-      editorGroup.editorGroupId,
+  let onMouseDown = _ =>
+    GlobalContext.current().dispatch(
+      EditorGroupSelected(editorGroup.editorGroupId),
     );
-  };
 
-  <View onMouseDown style onDimensionsChanged>
-    <View style=absoluteStyle> children </View>
-    <View style=overlayStyle />
-  </View>;
+  <View onMouseDown style={Styles.container(theme)}> children </View>;
 };

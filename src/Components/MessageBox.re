@@ -78,64 +78,53 @@ let update = (model, msg) =>
 open Revery.UI;
 open Revery.UI.Components;
 
+module Colors = Feature_Theme.Colors;
+
 module Styles = {
   open Style;
 
-  let container = (~theme: Theme.t) => [
-    backgroundColor(theme.editorBackground),
+  let container = (~theme) => [
+    backgroundColor(Colors.Oni.Modal.background.from(theme)),
   ];
 
   let message = [padding(20), paddingBottom(10)];
 
-  let actions = (~theme: Theme.t) => [
-    flexDirection(`Row),
-    borderTop(~width=1, ~color=theme.menuSelectionBackground),
-  ];
+  let actions = [flexDirection(`Row)];
 
-  let buttonOuter = (~isHovered, ~theme: Theme.t) => [
+  let buttonOuter = (~isHovered, ~theme) => [
     isHovered
-      ? backgroundColor(theme.menuSelectionBackground)
-      : backgroundColor(theme.editorBackground),
+      ? backgroundColor(Colors.Selection.background.from(theme))
+      : backgroundColor(Colors.Oni.Modal.background.from(theme)),
     flexGrow(1),
-    borderRight(~width=1, ~color=theme.menuSelectionBackground),
   ];
 
   let buttonInner = [padding(10), flexDirection(`Row)];
 
-  let buttonText = (~isHovered, ~theme: Theme.t, ~font: UiFont.t) => [
+  let buttonText = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(theme.foreground),
-    isHovered
-      ? backgroundColor(theme.menuSelectionBackground)
-      : backgroundColor(theme.editorBackground),
+    color(Colors.Oni.Modal.foreground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
 
   let shortcut = [flexDirection(`Row), marginLeft(6)];
 
-  let shortcutText = (~isHovered, ~theme: Theme.t, ~font: UiFont.t) => [
+  let shortcutText = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(Revery.Color.multiplyAlpha(0.75, theme.foreground)),
-    isHovered
-      ? backgroundColor(theme.menuSelectionBackground)
-      : backgroundColor(theme.editorBackground),
+    color(Colors.Oni.Modal.shortcutForeground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
 
-  let shortcutHighlight = (~isHovered, ~theme: Theme.t, ~font: UiFont.t) => [
+  let shortcutHighlight = (~theme, ~font: UiFont.t) => [
     fontFamily(font.fontFile),
-    color(theme.oniNormalModeBackground),
-    isHovered
-      ? backgroundColor(theme.menuSelectionBackground)
-      : backgroundColor(theme.editorBackground),
+    color(Colors.Oni.Modal.shortcutHighlightForeground.from(theme)),
     fontSize(14.),
     alignSelf(`Center),
   ];
 };
 
-let shortcutView = (~text, ~input="", ~isHovered, ~theme, ~font, ()) => {
+let shortcutView = (~text, ~input="", ~theme, ~font, ()) => {
   let text =
     String.sub(
       text,
@@ -144,11 +133,8 @@ let shortcutView = (~text, ~input="", ~isHovered, ~theme, ~font, ()) => {
     );
 
   <View style=Styles.shortcut>
-    <Text
-      style={Styles.shortcutHighlight(~isHovered, ~theme, ~font)}
-      text=input
-    />
-    <Text style={Styles.shortcutText(~isHovered, ~theme, ~font)} text />
+    <Text style={Styles.shortcutHighlight(~theme, ~font)} text=input />
+    <Text style={Styles.shortcutText(~theme, ~font)} text />
   </View>;
 };
 
@@ -157,13 +143,13 @@ let%component button = (~text, ~shortcut, ~input, ~onClick, ~theme, ~font, ()) =
 
   let shortcut = () => {
     switch (shortcut) {
-    | Key(key) => <shortcutView text=key isHovered theme font />
+    | Key(key) => <shortcutView text=key theme font />
 
     | Sequence(sequence) =>
       if (input != "" && StringEx.startsWith(~prefix=input, sequence)) {
-        <shortcutView text=sequence isHovered input theme font />;
+        <shortcutView text=sequence input theme font />;
       } else {
-        <shortcutView text=sequence isHovered theme font />;
+        <shortcutView text=sequence theme font />;
       }
     };
   };
@@ -173,7 +159,7 @@ let%component button = (~text, ~shortcut, ~input, ~onClick, ~theme, ~font, ()) =
 
   <Clickable onClick style={Styles.buttonOuter(~theme, ~isHovered)}>
     <View onMouseOver onMouseOut style=Styles.buttonInner>
-      <Text style={Styles.buttonText(~isHovered, ~theme, ~font)} text />
+      <Text style={Styles.buttonText(~theme, ~font)} text />
       <shortcut />
     </View>
   </Clickable>;
@@ -182,7 +168,7 @@ let%component button = (~text, ~shortcut, ~input, ~onClick, ~theme, ~font, ()) =
 let make = (~children as message, ~theme, ~font, ~model, ~onAction, ()) => {
   <View style={Styles.container(~theme)}>
     <View style=Styles.message> message </View>
-    <View style={Styles.actions(~theme)}>
+    <View style=Styles.actions>
       {model.actions
        |> List.map(action =>
             <button

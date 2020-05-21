@@ -23,18 +23,24 @@ let getActiveHighlighters: t => list(NativeSyntaxHighlights.t);
 
 let anyPendingWork: t => bool;
 
-let bufferEnter: (int, t) => t;
-let bufferUpdate:
-  (~scope: string, ~bufferUpdate: BufferUpdate.t, ~lines: array(string), t) =>
+let bufferEnter:
+  (
+    ~bufferId: int,
+    ~filetype: string,
+    ~lines: array(string),
+    ~visibleRanges: list(Range.t),
+    t
+  ) =>
   t;
+let bufferUpdate: (~bufferUpdate: BufferUpdate.t, t) => result(t, string);
+let bufferLeave: (~bufferId: int, t) => t;
 
 let updateTheme: (TokenTheme.t, t) => t;
-let updateConfiguration: (Configuration.t, t) => t;
+let setUseTreeSitter: (bool, t) => t;
 
-/* [updateVisibility(bufferRangeList)] sets the ranges that are visible per-buffer, which allows syntax highlight to only run necessary work */
-let updateVisibility: (list((int, list(Range.t))), t) => t;
+let updateBufferVisibility: (~bufferId: int, ~ranges: list(Range.t), t) => t;
 
 let doPendingWork: t => t;
 
-let getTokenUpdates: t => list(Protocol.TokenUpdate.t);
+let getTokenUpdates: t => list((int, list(Protocol.TokenUpdate.t)));
 let clearTokenUpdates: t => t;

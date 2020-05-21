@@ -17,7 +17,6 @@ type t = {
   editors: [@opaque] IntMap.t(Editor.t),
   bufferIdToEditorId: [@opaque] IntMap.t(int),
   reverseTabOrder: list(int),
-  metrics: EditorMetrics.t,
 };
 
 let create: unit => t =
@@ -27,12 +26,9 @@ let create: unit => t =
     bufferIdToEditorId: IntMap.empty,
     activeEditorId: None,
     reverseTabOrder: [],
-    metrics: EditorMetrics.create(),
   };
 
 let getEditorById = (id, model) => IntMap.find_opt(id, model.editors);
-
-let getMetrics = model => model.metrics;
 
 let getActiveEditor = model =>
   switch (model.activeEditorId) {
@@ -40,16 +36,22 @@ let getActiveEditor = model =>
   | None => None
   };
 
+let hasEditor = (~editorId, model) => {
+  IntMap.mem(editorId, model.editors);
+};
+
 let setActiveEditor = (model, editorId) => {
-  ...model,
-  activeEditorId: Some(editorId),
+  switch (IntMap.find_opt(editorId, model.editors)) {
+  | None => model
+  | Some(_) => {...model, activeEditorId: Some(editorId)}
+  };
 };
 
 let setBufferFont = (~bufferId, ~font, group) => {
   let editors =
     group.editors
     |> IntMap.map((editor: Feature_Editor.Editor.t) =>
-         if (editor.bufferId == bufferId) {
+         if (Editor.getBufferId(editor) == bufferId) {
            Editor.setFont(~font, editor);
          } else {
            editor;
@@ -59,11 +61,14 @@ let setBufferFont = (~bufferId, ~font, group) => {
   {...group, editors};
 };
 
-let getOrCreateEditorForBuffer = (~font, ~bufferId, state) => {
+let count = ({editors, _}) => IntMap.bindings(editors) |> List.length;
+
+let getOrCreateEditorForBuffer = (~font, ~buffer, state) => {
+  let bufferId = Feature_Editor.EditorBuffer.id(buffer);
   switch (IntMap.find_opt(bufferId, state.bufferIdToEditorId)) {
   | Some(editor) => (state, editor)
   | None =>
-    let newEditor = Editor.create(~font, ~bufferId, ());
+    let newEditor = Editor.create(~font, ~buffer, ());
     let newState = {
       ...state,
       editors: IntMap.add(newEditor.editorId, newEditor, state.editors),
@@ -151,7 +156,7 @@ let removeEditorById = (state, editorId) => {
   switch (IntMap.find_opt(editorId, state.editors)) {
   | None => state
   | Some(editor) =>
-    let bufferId = editor.bufferId;
+    let bufferId = Feature_Editor.Editor.getBufferId(editor);
     let filteredTabList =
       List.filter(t => editorId != t, state.reverseTabOrder);
     let bufferIdToEditorId =

@@ -2,7 +2,6 @@ open EditorCoreTypes;
 open Oni_Core;
 
 module Editor = Feature_Editor.Editor;
-module EditorMetrics = Feature_Editor.EditorMetrics;
 module EditorLayout = Feature_Editor.EditorLayout;
 
 type individualRange = {
@@ -10,14 +9,14 @@ type individualRange = {
   minimapRanges: list(Range.t),
 };
 
-let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => {
+let getVisibleRangesForEditor = (editor: Editor.t) => {
   let topVisibleLine = Editor.getTopVisibleLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleLine(editor, metrics);
+  let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
 
   let {bufferWidthInCharacters, minimapWidthInCharacters, _}: EditorLayout.t =
-    Editor.getLayout(editor, metrics);
+    Editor.getLayout(editor);
 
   let i = ref(max(topVisibleLine - 1, 0));
   let eRanges = ref([]);
@@ -52,15 +51,17 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
     int_of_float(editor.minimapScrollY /. float_of_int(minimapLineHeight));
   let minimapVisibleLines =
     int_of_float(
-      float_of_int(metrics.pixelHeight)
+      float_of_int(editor.pixelHeight)
       /. float_of_int(minimapLineHeight)
       +. 0.5,
     );
   let minimapBottomLine =
     min(minimapTopLine + minimapVisibleLines, editor.viewLines);
 
+  let ranges = max(0, minimapBottomLine - minimapTopLine);
+
   let minimapRanges =
-    List.init(minimapBottomLine - minimapTopLine, i => i + minimapTopLine)
+    List.init(ranges, i => i + minimapTopLine)
     |> List.map(i =>
          Range.{
            start:
@@ -77,38 +78,27 @@ let getVisibleRangesForEditor = (editor: Editor.t, metrics: EditorMetrics.t) => 
 };
 
 let getVisibleBuffers = (state: State.t) => {
-  WindowTree.getSplits(state.windowManager.windowTree)
-  |> List.map((split: WindowTree.split) => split.editorGroupId)
+  Feature_Layout.windows(state.layout)
   |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
   |> List.filter_map(EditorGroup.getActiveEditor)
-  |> List.map(e => e.Editor.bufferId);
+  |> List.map(editor => Editor.getBufferId(editor));
 };
 
 type t = list((int, list(Range.t)));
 
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   let editors =
-    WindowTree.getSplits(state.windowManager.windowTree)
-    |> List.map((split: WindowTree.split) => split.editorGroupId)
+    Feature_Layout.windows(state.layout)
     |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
-    |> List.filter_map(eg =>
-         switch (EditorGroup.getActiveEditor(eg)) {
-         | None => None
-         | Some(v) =>
-           let tup = (eg.metrics, v);
-           Some(tup);
-         }
-       )
-    |> List.filter(((_, editor)) => editor.Editor.bufferId == bufferId);
+    |> List.filter_map(EditorGroup.getActiveEditor)
+    |> List.filter(editor => Editor.getBufferId(editor) == bufferId);
 
   let flatten = (prev: list(list(Range.t)), curr: individualRange) => {
     [curr.editorRanges, curr.minimapRanges, ...prev];
   };
 
   editors
-  |> List.map(((metrics, editor)) =>
-       getVisibleRangesForEditor(editor, metrics)
-     )
+  |> List.map(getVisibleRangesForEditor)
   |> List.fold_left(flatten, [])
   |> List.flatten;
 };

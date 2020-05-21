@@ -13,10 +13,16 @@ function activate(context) {
     }
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
+    item.color = new vscode.ThemeColor("foreground");
+    item.command = "developer.oni.statusBarClicked";
     item.text = "Developer";
     //item.show();
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.statusBarClicked', () => {
+        vscode.window.showWarningMessage('You clicked developer');
+    }));
 
     cleanup(vscode.languages.registerDefinitionProvider('oni-dev', {
         provideDefinition: (document, _position, _token) => {

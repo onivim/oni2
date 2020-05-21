@@ -5,218 +5,215 @@
 module Protocol = Oni_Syntax.Protocol;
 module ClientToServer = Protocol.ClientToServer;
 
+module Transport = Exthost.Transport;
+
+module Constants = {
+  let checkPidInterval = 5000; /* ms */
+};
+
 type message =
   | Log(string)
   | Message(ClientToServer.t)
   | Exception(string);
 
 let start = (~healthCheck) => {
-  Stdlib.set_binary_mode_out(Stdlib.stdout, true);
-  Stdlib.set_binary_mode_in(Stdlib.stdin, true);
-
-  // A list of pending messages for us to handle
-  let messageQueue: ref(list(message)) = ref([]);
-  // Mutex to guard accessing the queue from multiple threads
-  let messageMutex = Mutex.create();
-  // And a semaphore for signaling when we have a new message
-  let messageCondition = Condition.create();
-
-  let outputMutex = Mutex.create();
-
-  let queue = msg => {
-    Mutex.lock(messageMutex);
-    messageQueue := [msg, ...messageQueue^];
-    Condition.signal(messageCondition);
-    Mutex.unlock(messageMutex);
-  };
+  let transport = ref(None);
 
   let write = (msg: Protocol.ServerToClient.t) => {
-    Mutex.lock(outputMutex);
-    Marshal.to_channel(Stdlib.stdout, msg, []);
-    Stdlib.flush(Stdlib.stdout);
-    Mutex.unlock(outputMutex);
+    let bytes = Marshal.to_bytes(msg, []);
+    let packet = Transport.Packet.create(~bytes, ~packetType=Regular, ~id=0);
+
+    transport^ |> Option.iter(Transport.send(~packet));
   };
 
   let log = msg => write(Protocol.ServerToClient.Log(msg));
-
-  let buffer = Buffer.create(0);
-
-  // Route Core.Log logging to be sent
-  // to main process.
-  let formatter =
-    Format.make_formatter(
-      Buffer.add_substring(buffer),
-      () => {
-        log(Buffer.contents(buffer));
-        Buffer.clear(buffer);
-      },
+  let logError = exn =>
+    write(
+      Protocol.ServerToClient.Log(
+        exn |> Printexc.to_string |> (str => "ERROR: " ++ str),
+      ),
     );
-  Logs.format_reporter(~app=formatter, ~dst=formatter, ())
-  |> Logs.set_reporter;
-
-  let hasPendingMessage = () =>
-    switch (messageQueue^) {
-    | [] => false
-    | _ => true
-    };
-
-  let flush = () => {
-    let result = messageQueue^;
-    messageQueue := [];
-    result;
-  };
-
-  let isRunning = ref(true);
 
   let parentPid = Unix.getenv("__ONI2_PARENT_PID__") |> int_of_string;
+  let namedPipe = Unix.getenv("__ONI2_NAMED_PIPE__");
 
-  let _runThread: Thread.t =
-    Thread.create(
-      () => {
-        log(
-          "Starting up server. Parent PID is: " ++ string_of_int(parentPid),
-        );
+  log("Starting up server. Parent PID is: " ++ string_of_int(parentPid));
 
-        write(Protocol.ServerToClient.Initialized);
+  let state = ref(State.empty);
+  let timer: Luv.Timer.t = Luv.Timer.init() |> Result.get_ok;
 
-        let state = ref(State.empty);
-        let map = f => state := f(state^);
+  let _stopWork = () => Luv.Timer.stop(timer);
+  let map = f => state := f(state^);
 
-        let handleProtocol =
-          ClientToServer.(
-            fun
-            | Echo(m) => {
-                write(Protocol.ServerToClient.EchoReply(m));
-                log("handled echo");
-              }
-            | Initialize(languageInfo, setup) => {
-                map(State.initialize(~log, languageInfo, setup));
-                log("Initialized!");
-              }
-            | RunHealthCheck => {
-                let res = healthCheck();
-                write(Protocol.ServerToClient.HealthCheckPass(res == 0));
-              }
-            | BufferEnter(id, filetype) => {
-                log(
-                  Printf.sprintf(
-                    "Buffer enter - id: %d filetype: %s",
-                    id,
-                    filetype,
-                  ),
-                );
-                map(State.bufferEnter(id));
-              }
-            | ConfigurationChanged(config) => {
-                map(State.updateConfiguration(config));
-                let treeSitterEnabled =
-                  Oni_Core.Configuration.getValue(
-                    c => c.experimentalTreeSitter,
-                    config,
-                  );
-                log(
-                  "got new config - treesitter enabled:"
-                  ++ (treeSitterEnabled ? "true" : "false"),
-                );
-              }
-            | ThemeChanged(theme) => {
-                map(State.updateTheme(theme));
-                log("handled theme changed");
-              }
-            | BufferUpdate(bufferUpdate, lines, scope) => {
-                map(State.bufferUpdate(~bufferUpdate, ~lines, ~scope));
-                log(
-                  Printf.sprintf(
-                    "Received buffer update - %d | %d lines",
-                    bufferUpdate.id,
-                    Array.length(lines),
-                  ),
-                );
-              }
-            | VisibleRangesChanged(visibilityUpdate) => {
-                map(State.updateVisibility(visibilityUpdate));
-              }
-            | Close => {
-                write(Protocol.ServerToClient.Closing);
-                exit(0);
-              }
-            | v => log("Unhandled message: " ++ ClientToServer.show(v))
-          );
-
-        let handleMessage =
-          fun
-          | Log(msg) => log(msg)
-          | Exception(msg) => log("Exception encountered: " ++ msg)
-          | Message(protocol) => handleProtocol(protocol);
-
-        while (isRunning^) {
-          log("Waiting for incoming message...");
-
-          // Wait for pending incoming messages
-          Mutex.lock(messageMutex);
-          while (!hasPendingMessage() && !State.anyPendingWork(state^)) {
-            Condition.wait(messageCondition, messageMutex);
-          };
-
-          // Once we have them, let's track and run them
-          let messages = flush();
-          Mutex.unlock(messageMutex);
-
-          // Handle messages
-          messages
-          // Messages are queued in inverse order, so we need to fix that...
-          |> List.rev
-          |> List.iter(handleMessage);
-
-          // TODO: Do this in a loop
-          // If the messages incurred work, do it!
-          if (State.anyPendingWork(state^)) {
-            log("Running unit of work...");
-            map(State.doPendingWork);
-            log("Unit of work completed.");
-          } else {
-            log("No pending work.");
-          };
-
-          let tokenUpdates = State.getTokenUpdates(state^);
-          write(Protocol.ServerToClient.TokenUpdate(tokenUpdates));
-          log("Token updates sent.");
-          map(State.clearTokenUpdates);
+  let doWork = () =>
+    try(
+      {
+        if (State.anyPendingWork(state^)) {
+          map(State.doPendingWork);
+        } else {
+          let _: result(unit, Luv.Error.t) = _stopWork();
+          ();
         };
-      },
-      (),
-    );
 
-  let _readThread: Thread.t =
-    Thread.create(
-      () => {
-        while (isRunning^) {
-          try({
-            let msg: Oni_Syntax.Protocol.ClientToServer.t =
-              Marshal.from_channel(Stdlib.stdin);
-            queue(Message(msg));
-          }) {
-          | ex => queue(Exception(Printexc.to_string(ex)))
-          };
-        }
-      },
-      (),
-    );
+        let tokenUpdates = State.getTokenUpdates(state^);
+        tokenUpdates
+        |> List.iter(((bufferId, updates)) =>
+             if (updates !== []) {
+               write(
+                 Protocol.ServerToClient.TokenUpdate({
+                   bufferId,
+                   tokens: updates,
+                 }),
+               );
+             }
+           );
+        map(State.clearTokenUpdates);
+      }
+    ) {
+    | ex =>
+      logError(ex);
+      exit(2);
+    };
 
-  // On Windows, we have to wait on the parent to close...
-  // If we don't do this, the app will never close.
-  if (Sys.win32) {
-    let (_exitCode, _status) = Thread.wait_pid(parentPid);
-    ();
-  } else {
-    // On Linux / OSX, the syntax process will close when
-    // the parent closes.
-    let () = Thread.join(_readThread);
-    ();
+  let startWork = () => {
+    Luv.Timer.start(~repeat=1, timer, 0, () => {doWork()}) |> Result.get_ok;
   };
 
-  isRunning := false;
-  Stdlib.close_out_noerr(Stdlib.stdout);
-  Stdlib.close_in_noerr(Stdlib.stdin);
+  let restartTimer = () => {
+    ignore(Luv.Timer.again(timer): result(unit, Luv.Error.t));
+  };
+
+  let updateAndRestartTimer = f => {
+    state := f(state^);
+    restartTimer();
+  };
+
+  startWork();
+
+  let handleProtocol =
+    ClientToServer.(
+      fun
+      | Echo(m) => {
+          write(Protocol.ServerToClient.EchoReply(m));
+        }
+      | Initialize(languageInfo, setup) => {
+          updateAndRestartTimer(State.initialize(~log, languageInfo, setup));
+          write(Protocol.ServerToClient.Initialized);
+          log("Initialized!");
+        }
+      | RunHealthCheck => {
+          let res = healthCheck();
+          write(Protocol.ServerToClient.HealthCheckPass(res == 0));
+        }
+      | BufferStartHighlighting({bufferId, filetype, lines, visibleRanges}) => {
+          log(
+            Printf.sprintf(
+              "Buffer enter - id: %d filetype: %s",
+              bufferId,
+              filetype,
+            ),
+          );
+          updateAndRestartTimer(
+            State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges),
+          );
+        }
+
+      | BufferStopHighlighting(bufferId) => {
+          log(Printf.sprintf("Buffer stop highlighting - id: %d", bufferId));
+          updateAndRestartTimer(State.bufferLeave(~bufferId));
+        }
+      | UseTreeSitter(useTreeSitter) => {
+          updateAndRestartTimer(State.setUseTreeSitter(useTreeSitter));
+          log(
+            "got new config - treesitter enabled:"
+            ++ string_of_bool(useTreeSitter),
+          );
+        }
+      | ThemeChanged(theme) => {
+          updateAndRestartTimer(State.updateTheme(theme));
+          log("handled theme changed");
+        }
+      | BufferUpdate(bufferUpdate) => {
+          let delta = bufferUpdate.isFull ? "(FULL)" : "(DELTA)";
+          log(
+            Printf.sprintf(
+              "Received buffer update - %d | %d lines %s",
+              bufferUpdate.id,
+              Array.length(bufferUpdate.lines),
+              delta,
+            ),
+          );
+          switch (State.bufferUpdate(~bufferUpdate, state^)) {
+          | Ok(newState) =>
+            state := newState;
+            log("Buffer update successfully applied.");
+          | Error(msg) => log("Buffer update failed: " ++ msg)
+          };
+
+          restartTimer();
+        }
+      | BufferVisibilityChanged({bufferId, ranges}) => {
+          log("Visibility changed");
+          updateAndRestartTimer(
+            State.updateBufferVisibility(~bufferId, ~ranges),
+          );
+        }
+      | Close => {
+          write(Protocol.ServerToClient.Closing);
+          exit(0);
+        }
+      | SimulateMessageException => failwith("Simulated Exception!")
+      | v => log("Unhandled message: " ++ ClientToServer.show(v))
+    );
+
+  let handleMessage =
+    fun
+    | Log(msg) => log(msg)
+    | Exception(msg) => log("Exception encountered: " ++ msg)
+    | Message(protocol) => handleProtocol(protocol);
+
+  let handlePacket = ({body, _}: Transport.Packet.t) => {
+    let msg: Protocol.ClientToServer.t = Marshal.from_bytes(body, 0);
+
+    try(handleMessage(Message(msg))) {
+    | exn =>
+      logError(exn);
+      exit(2);
+    };
+  };
+  let checkParentPid = pid => {
+    Luv.Process.kill_pid(~pid, 0)
+    |> Oni_Core.Utility.ResultEx.tap(() => log("Parent still active."))
+    |> Result.iter_error(_err => {
+         // If we couldn't send signal 0, the process is dead:
+         // https://stackoverflow.com/questions/3043978/how-to-check-if-a-process-id-pid-exists
+         exit(
+           3,
+         )
+       });
+  };
+
+  let processWatcherTimer: Luv.Timer.t = Luv.Timer.init() |> Result.get_ok;
+  // Start Process watcher
+  Luv.Timer.start(
+    ~repeat=Constants.checkPidInterval,
+    processWatcherTimer,
+    Constants.checkPidInterval,
+    () => {
+    checkParentPid(parentPid)
+  })
+  |> Result.get_ok;
+
+  let dispatch =
+    fun
+    | Transport.Connected => log("Connected!")
+    | Transport.Received(packet) => handlePacket(packet)
+    | _ => ();
+
+  let transportResult = Exthost.Transport.connect(~namedPipe, ~dispatch);
+
+  transport := transportResult |> Result.to_option;
+
+  let _: bool = Luv.Loop.run();
   ();
 };

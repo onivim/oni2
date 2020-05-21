@@ -21,9 +21,8 @@ let editorSurfaceMinimalState = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -32,7 +31,7 @@ let editorSurfaceMinimalState = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
+      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,
@@ -46,9 +45,8 @@ let editorSurfaceThousandLineState = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -57,7 +55,7 @@ let editorSurfaceThousandLineState = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
+      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,
@@ -71,9 +69,8 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -82,7 +79,7 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
+      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(
         Config.Settings.fromList([
@@ -100,9 +97,8 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -111,7 +107,7 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
+      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(
         Config.Settings.fromList([
@@ -129,9 +125,8 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       isActiveSplit=true
       editor=simpleEditor
       buffer=thousandLineBuffer
-      metrics
       onScroll={_ => ()}
-      onDimensionsChanged={_ => ()}
+      onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
       bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
@@ -140,7 +135,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
       mode={thousandLineState.vimMode}
-      theme={Feature_Theme.resolver(thousandLineState.colorTheme)}
+      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
     />,

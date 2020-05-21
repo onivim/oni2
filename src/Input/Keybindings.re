@@ -53,7 +53,7 @@ module Keybinding = {
 
 module Input =
   EditorInput.Make({
-    type context = Hashtbl.t(string, bool);
+    type context = WhenExpr.ContextKeys.t;
     type command = string;
   });
 
@@ -183,15 +183,8 @@ let getScancode = inputKey => {
 };
 
 let addBinding = ({key, command, condition}, bindings) => {
-  let evaluateCondition = (whenExpr, context) => {
-    let getValue = v =>
-      switch (Hashtbl.find_opt(context, v)) {
-      | Some(true) => WhenExpr.Value.True
-      | Some(false)
-      | None => WhenExpr.Value.False
-      };
-
-    WhenExpr.evaluate(whenExpr, getValue);
+  let evaluateCondition = (whenExpr, contextKeys) => {
+    WhenExpr.evaluate(whenExpr, WhenExpr.ContextKeys.getValue(contextKeys));
   };
 
   let matchers = EditorInput.Matcher.parse(~getKeycode, ~getScancode, key);
@@ -232,6 +225,7 @@ let of_yojson_with_errors = (~default=[], json) => {
     | `List(bindingsJson) =>
       let res = bindingsJson |> Internal.of_yojson_with_errors;
       Ok(res);
+
     // Legacy format:
     // { bindings: [ ..bindings. ] }
     | `Assoc([("bindings", `List(bindingsJson))]) =>
@@ -241,6 +235,7 @@ let of_yojson_with_errors = (~default=[], json) => {
       |> Stdlib.Result.map(((bindings, errors)) => {
            (Legacy.upgrade(bindings), errors)
          });
+
     | _ => Error("Unable to parse keybindings - not a JSON array.")
     };
 

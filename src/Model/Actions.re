@@ -23,26 +23,47 @@ type t =
   | ActivityBar(ActivityBar.action)
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
-  | BufferEnter([@opaque] Vim.BufferMetadata.t, option(string))
+  | BufferEnter({
+      id: int,
+      fileType: option(string),
+      lineEndings: [@opaque] option(Vim.lineEnding),
+      filePath: option(string),
+      isModified: bool,
+      version: int,
+      // TODO: This duplication-of-truth is really awkward,
+      // but I want to remove it shortly
+      buffer: [@opaque] Buffer.t,
+    })
+  | BufferFilenameChanged({
+      id: int,
+      newFilePath: option(string),
+      newFileType: option(string),
+      version: int,
+      isModified: bool,
+    })
   | BufferUpdate({
       update: [@opaque] BufferUpdate.t,
       oldBuffer: [@opaque] Buffer.t,
       newBuffer: [@opaque] Buffer.t,
+    })
+  | BufferLineEndingsChanged({
+      id: int,
+      lineEndings: [@opaque] Vim.lineEnding,
     })
   | BufferRenderer(BufferRenderer.action)
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
+  | Changelog(Feature_Changelog.msg)
   | Command(string)
-  | CommandsRegister(list(command))
-  // Execute a contribute command, from an extension
-  | CommandExecuteContributed(string)
+  | Commands(Feature_Commands.msg(t))
   | CompletionAddItems(
       [@opaque] CompletionMeet.t,
       [@opaque] list(CompletionItem.t),
     )
   | Configuration(Feature_Configuration.msg)
+  | ConfigurationParseError(string)
   | ConfigurationReload
   | ConfigurationSet([@opaque] Configuration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
@@ -56,11 +77,13 @@ type t =
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
+  | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
+  | KeybindingInvoked({command: string})
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
@@ -72,14 +95,11 @@ type t =
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
-  | RecalculateEditorView([@opaque] option(Buffer.t))
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
-  | WindowSetActive(int, int)
   | WindowTitleSet(string)
-  | WindowTreeSetSize(int, int)
-  | EditorGroupAdd(EditorGroup.t)
+  | EditorGroupSelected(int)
   | EditorGroupSizeChanged({
       id: int,
       width: int,
@@ -87,12 +107,18 @@ type t =
     })
   | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSetScroll(Feature_Editor.EditorId.t, float)
+  | EditorSizeChanged({
+      id: Feature_Editor.EditorId.t,
+      pixelWidth: int,
+      pixelHeight: int,
+    })
   | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
+  | EditorTabClicked(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
-      severity: [ | `Ignore | `Info | `Warning | `Error],
+      severity: [@opaque] Exthost.Msg.MessageService.severity,
       message: string,
       extensionId: option(string),
     })
@@ -111,9 +137,11 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenFileByPath(string, option(WindowTree.direction), option(Location.t))
-  | AddSplit(WindowTree.direction, WindowTree.split)
-  | RemoveSplit(int)
+  | OpenFileByPath(
+      string,
+      option([ | `Horizontal | `Vertical]),
+      option(Location.t),
+    )
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
@@ -131,18 +159,11 @@ type t =
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
-  | StatusBarDisposeItem(int)
+  | StatusBarDisposeItem(string)
   | StatusBar(StatusBarModel.action)
-  | ThemeLoaded({
-      [@opaque]
-      tokenTheme: TokenTheme.t,
-      isDark: bool,
-      [@opaque]
-      colors: Theme.t,
-    })
+  | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)
   | ViewCloseEditor(int)
-  | ViewSetActiveEditor(int)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
@@ -156,6 +177,7 @@ type t =
   | PaneTabClicked(Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
+  | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
       title: string,
@@ -164,6 +186,7 @@ type t =
   | WindowFocusGained
   | WindowFocusLost
   | WindowMaximized
+  | WindowFullscreen
   | WindowMinimized
   | WindowRestored
   | WindowCloseBlocked
@@ -176,6 +199,7 @@ type t =
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
+  | TitleDoubleClicked
   | GotOriginalUri({
       bufferId: int,
       uri: Uri.t,

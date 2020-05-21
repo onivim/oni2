@@ -190,35 +190,22 @@ let start = () => {
   (state: State.t, action: Actions.t) =>
     switch (action) {
     // TODO: Should be handled by a more general init mechanism
-    | Init =>
-      let cwd = Rench.Environment.getWorkingDirectory();
-      let newState = {
-        ...state,
-        workspace:
-          Some(
-            Workspace.{
-              workingDirectory: cwd,
-              rootName: Filename.basename(cwd),
-            },
-          ),
-      };
-
-      (
-        newState,
+    | Init => (
+        state,
         Isolinear.Effect.batch([
           Effects.load(
-            cwd,
+            state.workspace.workingDirectory,
             state.languageInfo,
             state.iconTheme,
             state.configuration,
             ~onComplete=tree =>
             Actions.FileExplorer(TreeLoaded(tree))
           ),
-          TitleStoreConnector.Effects.updateTitle(newState),
+          TitleStoreConnector.Effects.updateTitle(state),
         ]),
-      );
+      )
 
-    | BufferEnter({filePath, _}, _) =>
+    | BufferEnter({filePath, _}) =>
       switch (state.fileExplorer) {
       | {active, _} when active != filePath =>
         let state = setActive(filePath, state);

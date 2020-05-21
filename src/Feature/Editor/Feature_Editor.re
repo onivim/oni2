@@ -3,9 +3,9 @@ module BufferViewTokenizer = BufferViewTokenizer;
 module Selection = Selection;
 
 module Editor = Editor;
+module EditorBuffer = EditorBuffer;
 module EditorId = EditorId;
 module EditorLayout = EditorLayout;
-module EditorMetrics = EditorMetrics;
 module EditorSurface = EditorSurface;
 
 module EditorDiffMarkers = EditorDiffMarkers;

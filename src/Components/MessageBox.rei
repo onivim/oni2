@@ -30,7 +30,7 @@ open Revery.UI;
 let make:
   (
     ~children: React.element(React.node),
-    ~theme: Theme.t,
+    ~theme: ColorTheme.Colors.t,
     ~font: UiFont.t,
     ~model: model('msg),
     ~onAction: 'msg => unit,

@@ -23,16 +23,10 @@ module FontIcon = Oni_Components.FontIcon;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Editor = Feature_Editor.Editor;
-module Theme = Feature_Theme;
 
-module Colors = {
-  open ColorTheme.Schema;
+module Colors = Feature_Theme.Colors;
 
-  let transparent = Colors.transparentWhite;
-
-  let background = define("statusBar.background", all(unspecified));
-  let foreground = define("statusBar.foreground", all(unspecified));
-};
+open Exthost.Msg.StatusBar;
 
 module Styles = {
   open Style;
@@ -107,7 +101,7 @@ let section = (~children=React.empty, ~align, ()) =>
 let item =
     (
       ~children,
-      ~backgroundColor=Colors.transparent,
+      ~backgroundColor=Revery.Colors.transparentWhite,
       ~onClick=?,
       ~onRightClick=?,
       (),
@@ -122,11 +116,11 @@ let item =
   };
 };
 
-let textItem = (~background, ~font, ~colorTheme, ~text, ()) =>
+let textItem = (~background, ~font, ~theme, ~text, ()) =>
   <item>
     <Text
       style={Styles.text(
-        ~color=Colors.foreground.from(colorTheme),
+        ~color=Colors.StatusBar.foreground.from(theme),
         ~background,
         font,
       )}
@@ -201,8 +195,8 @@ let notificationCount =
   </item>;
 };
 
-let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
-  let color = Colors.foreground.from(colorTheme);
+let diagnosticCount = (~font, ~background, ~theme, ~diagnostics, ()) => {
+  let color = Colors.StatusBar.foreground.from(theme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
   let onClick = () =>
@@ -223,9 +217,9 @@ let diagnosticCount = (~font, ~background, ~colorTheme, ~diagnostics, ()) => {
   </item>;
 };
 
-let modeIndicator = (~font, ~colorTheme, ~mode, ()) => {
-  let background = Theme.Colors.Oni.backgroundFor(mode).from(colorTheme);
-  let foreground = Theme.Colors.Oni.foregroundFor(mode).from(colorTheme);
+let modeIndicator = (~font, ~theme, ~mode, ()) => {
+  let background = Colors.Oni.backgroundFor(mode).from(theme);
+  let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
   <item backgroundColor=background>
     <Text
@@ -241,11 +235,16 @@ let transitionAnimation =
   );
 
 let%component make =
-              (~state: State.t, ~contextMenu, ~onContextMenuItemSelect, ()) => {
-  let State.{colorTheme, theme, uiFont: font, diagnostics, notifications, _} = state;
+              (
+                ~state: State.t,
+                ~contextMenu,
+                ~onContextMenuItemSelect,
+                ~theme,
+                (),
+              ) => {
+  let State.{uiFont: font, diagnostics, notifications, _} = state;
 
   let mode = ModeManager.current(state);
-  let colorTheme = Theme.resolver(colorTheme);
 
   let%hook activeNotifications =
     CustomHooks.useExpiration(
@@ -257,11 +256,11 @@ let%component make =
   let (background, foreground) =
     switch (activeNotifications) {
     | [] =>
-      Colors.(background.from(colorTheme), foreground.from(colorTheme))
+      Colors.StatusBar.(background.from(theme), foreground.from(theme))
     | [last, ..._] =>
       Feature_Notification.Colors.(
-        backgroundFor(last).from(colorTheme),
-        foregroundFor(last).from(colorTheme),
+        backgroundFor(last).from(theme),
+        foregroundFor(last).from(theme),
       )
     };
 
@@ -279,18 +278,38 @@ let%component make =
   let%hook (yOffset, _animationState, _reset) =
     Hooks.animation(transitionAnimation);
 
-  let toStatusBarElement = (statusBarItem: Item.t) =>
-    <textItem font background colorTheme text={statusBarItem.text} />;
+  let toStatusBarElement = (statusItem: Item.t) => {
+    let onClick =
+      statusItem.command
+      |> Option.map((command, ()) =>
+           GlobalContext.current().dispatch(
+             Actions.StatusBar(
+               ContributedItemClicked({id: statusItem.id, command}),
+             ),
+           )
+         );
+
+    <item ?onClick>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
+        <Label font color=Revery.Colors.white label={statusItem.label} />
+      </View>
+    </item>;
+  };
 
   let leftItems =
     state.statusBar
-    |> List.filter((item: Item.t) => item.alignment == Alignment.Left)
+    |> List.filter((item: Item.t) => item.alignment == Left)
     |> List.map(toStatusBarElement)
     |> React.listToElement;
 
   let rightItems =
     state.statusBar
-    |> List.filter((item: Item.t) => item.alignment == Alignment.Right)
+    |> List.filter((item: Item.t) => item.alignment == Right)
     |> List.map(toStatusBarElement)
     |> React.listToElement;
 
@@ -298,7 +317,7 @@ let%component make =
     let text =
       Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
 
-    <textItem font background colorTheme text />;
+    <textItem font background theme text />;
   };
 
   let fileType = () => {
@@ -308,18 +327,40 @@ let%component make =
       |> OptionEx.flatMap(Buffer.getFileType)
       |> Option.value(~default="plaintext");
 
-    <textItem font background colorTheme text />;
+    <textItem font background theme text />;
+  };
+
+  let lineEndings = () => {
+    let toString =
+      fun
+      | Vim.Types.LF => "LF"
+      | Vim.Types.CR => "CR"
+      | Vim.Types.CRLF => "CRLF";
+
+    state
+    |> Selectors.getActiveBuffer
+    |> OptionEx.flatMap(Buffer.getLineEndings)
+    |> Option.map(toString)
+    |> Option.map(text => {<textItem font background theme text />})
+    |> Option.value(~default=React.empty);
   };
 
   let position = () => {
-    let text =
-      state
-      |> Selectors.getActiveEditorGroup
-      |> Selectors.getActiveEditor
-      |> Option.map(Editor.getPrimaryCursor)
-      |> positionToString;
+    let text = {
+      let editor =
+        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
 
-    <textItem font background colorTheme text />;
+      let buffer = state |> Selectors.getActiveBuffer;
+
+      OptionEx.map2(
+        (editor, buffer) => {Editor.getPrimaryCursor(~buffer, editor)},
+        editor,
+        buffer,
+      )
+      |> positionToString;
+    };
+
+    <textItem font background theme text />;
   };
 
   let notificationPopups = () =>
@@ -345,17 +386,18 @@ let%component make =
     <sectionGroup>
       <section align=`FlexStart> leftItems </section>
       <section align=`FlexStart>
-        <diagnosticCount font background colorTheme diagnostics />
+        <diagnosticCount font background theme diagnostics />
       </section>
       <section align=`Center />
       <section align=`FlexEnd> rightItems </section>
       <section align=`FlexEnd>
+        <lineEndings />
         <indentation />
         <fileType />
         <position />
       </section>
       <notificationPopups />
     </sectionGroup>
-    <section align=`FlexEnd> <modeIndicator font colorTheme mode /> </section>
+    <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
   </View>;
 };

@@ -5,16 +5,14 @@
  */
 
 open Revery.UI;
-open Oni_Model;
 open Oni_Core;
 
-module Model = Oni_Model;
+module Colors = Feature_Theme.Colors;
 
 module Styles = {
-  let container = (~theme: Theme.t) =>
+  let container = (~theme) =>
     Style.[
-      backgroundColor(theme.editorBackground),
-      color(theme.foreground),
+      backgroundColor(Colors.Editor.background.from(theme)),
       flexDirection(`Column),
       flexGrow(1),
       justifyContent(`Center),
@@ -22,11 +20,11 @@ module Styles = {
       overflow(`Hidden),
     ];
 
-  let versionText = (~theme: Theme.t, ~font: UiFont.t) =>
+  let versionText = (~theme, ~font: UiFont.t) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(12.),
-      color(theme.foreground),
+      color(Colors.foreground.from(theme)),
       marginTop(0),
     ];
 };
@@ -46,8 +44,8 @@ module HeaderView = {
       ];
   };
 
-  let make = (~text, ~state: State.t, ()) => {
-    <Text style={Styles.header(~uiFont=state.uiFont)} text />;
+  let make = (~text, ~uiFont, ()) => {
+    <Text style={Styles.header(~uiFont)} text />;
   };
 };
 
@@ -66,10 +64,10 @@ module VersionView = {
       borderBottom(~color=Revery.Color.rgba(1.0, 1.0, 1.0, 0.2), ~width=1),
     ];
 
-    let versionText = (~theme: Theme.t, ~fontFile, ~fontSize) => [
+    let versionText = (~theme, ~fontFile, ~fontSize) => [
       fontFamily(fontFile),
       Style.fontSize(fontSize),
-      color(theme.foreground),
+      color(Colors.foreground.from(theme)),
     ];
 
     let versionValue = [flexGrow(0), alignItems(`FlexEnd)];
@@ -77,9 +75,15 @@ module VersionView = {
     let spacer = Style.[flexGrow(1)];
   };
 
-  let make = (~name: string, ~version: string, ~state: State.t, ()) => {
-    let {theme, editorFont, uiFont, _}: State.t = state;
-
+  let make =
+      (
+        ~name: string,
+        ~version: string,
+        ~theme,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        (),
+      ) => {
     <View style=Styles.container>
       <Text
         style={Styles.versionText(
@@ -119,11 +123,9 @@ let sdlVersionToString = ({major, minor, patch}: Sdl2.Version.t) => {
   Printf.sprintf("%d.%d.%d", major, minor, patch);
 };
 
-let make = (~state: State.t, ()) => {
-  let theme = state.theme;
-
-  let version = VersionView.make(~state);
-  let header = HeaderView.make(~state);
+let make = (~theme, ~uiFont, ~editorFont, ()) => {
+  let version = VersionView.make(~theme, ~uiFont, ~editorFont);
+  let header = HeaderView.make(~uiFont);
 
   <View style={Styles.container(~theme)}>
     <header text="Onivim 2" />
@@ -132,6 +134,8 @@ let make = (~state: State.t, ()) => {
     // spacer
     <header text="OCaml" />
     <version name="Compiler Version " version=Sys.ocaml_version />
+    <header text="libuv" />
+    <version name="Version " version={Luv.Version.string()} />
     // spacer
     <header text="SDL" />
     <version

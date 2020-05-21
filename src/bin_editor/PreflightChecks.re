@@ -7,11 +7,11 @@
 
 open Oni_Core;
 
-let checkHomeDirectoryOrThrow = () => {
-  let _ = Filesystem.unsafeFindHome();
+let checkUserDataDirectoryOrThrow = () => {
+  let _ = Filesystem.getUserDataDirectoryExn();
   ();
 };
 
 let run = () => {
-  checkHomeDirectoryOrThrow();
+  checkUserDataDirectoryOrThrow();
 };

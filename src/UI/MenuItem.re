@@ -1,32 +1,33 @@
 open Revery;
 open Revery.UI;
 open Oni_Core;
-open Oni_Model;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
+
+module Colors = Feature_Theme.Colors;
 
 module Constants = {
   let iconSize = 20.;
 };
 
 module Styles = {
-  let bg = (~theme: Theme.t, ~isFocused) =>
-    isFocused ? theme.listFocusBackground : theme.menuBackground;
+  let bg = (~isFocused) =>
+    isFocused ? Colors.List.focusBackground : Colors.Menu.background;
 
-  let text = (~theme: Theme.t, ~font: UiFont.t, ~isFocused) =>
+  let text = (~theme, ~font: UiFont.t, ~isFocused) =>
     Style.[
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
-      color(theme.menuForeground),
-      backgroundColor(bg(~theme, ~isFocused)),
+      color(Colors.Menu.foreground.from(theme)),
+      backgroundColor(bg(~isFocused).from(theme)),
     ];
 
   let container = (~theme, ~isFocused) =>
     Style.[
       padding(10),
       flexDirection(`Row),
-      backgroundColor(bg(~theme, ~isFocused)),
+      backgroundColor(bg(~isFocused).from(theme)),
     ];
 
   let icon = fg =>
@@ -40,7 +41,7 @@ module Styles = {
       marginRight(10),
     ];
 
-  let label = (~font: UiFont.t, ~theme: Theme.t, ~isFocused, ~custom) =>
+  let label = (~font: UiFont.t, ~theme, ~isFocused, ~custom) =>
     Style.(
       merge(
         ~source=
@@ -48,8 +49,8 @@ module Styles = {
             fontFamily(font.fontFile),
             textOverflow(`Ellipsis),
             fontSize(12.),
-            color(theme.menuForeground),
-            backgroundColor(bg(~theme, ~isFocused)),
+            color(Colors.Menu.foreground.from(theme)),
+            backgroundColor(bg(~isFocused).from(theme)),
           ],
         ~target=custom,
       )
@@ -82,7 +83,8 @@ let make =
         />
       )
 
-    | None => <Text style={Styles.icon(Colors.transparentWhite)} text="" />
+    | None =>
+      <Text style={Styles.icon(Revery.Colors.transparentWhite)} text="" />
     };
 
   let labelView =

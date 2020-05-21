@@ -2,6 +2,8 @@ open Oni_Core;
 open Revery;
 open Revery.UI;
 
+module Colors = Feature_Theme.Colors.Menu;
+
 module Constants = {
   let delay = Time.ms(400);
   let offsetX = 10;
@@ -22,11 +24,11 @@ module Tooltip = {
   module Styles = {
     open Style;
 
-    let tooltip = (~theme: Theme.t, ~x, ~y) => [
+    let tooltip = (~theme, ~x, ~y) => [
       position(`Absolute),
       left(int_of_float(x) + Constants.offsetX),
       top(int_of_float(y) + Constants.offsetY),
-      backgroundColor(theme.menuBackground),
+      backgroundColor(Colors.background.from(theme)),
       paddingVertical(3),
       paddingHorizontal(8),
       boxShadow(
@@ -38,10 +40,10 @@ module Tooltip = {
       ),
     ];
 
-    let tooltipText = (~theme: Theme.t, ~font: UiFont.t) => [
+    let tooltipText = (~theme, ~font: UiFont.t) => [
       fontFamily(font.fontFile),
       fontSize(font.fontSize),
-      color(theme.menuForeground),
+      color(Colors.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
     ];
   };
@@ -59,7 +61,13 @@ module Overlay: {
   let clearTooltip: unit => unit;
 
   let make:
-    (~key: React.Key.t=?, ~theme: Theme.t, ~font: UiFont.t, unit) => element;
+    (
+      ~key: React.Key.t=?,
+      ~theme: ColorTheme.Colors.t,
+      ~font: UiFont.t,
+      unit
+    ) =>
+    element;
 } = {
   let internalSetTooltip = ref(_ => ());
   let debouncedSetTooltip = {

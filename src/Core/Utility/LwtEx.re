@@ -1,4 +1,4 @@
-let all = (join, promises) => {
+let all = (join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
   List.fold_left(
     (accPromise, promise) => {
       let%lwt acc = accPromise;
@@ -8,6 +8,16 @@ let all = (join, promises) => {
     Lwt.return([]),
     promises,
   );
+};
+
+let some = (~default: 'a, join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
+  promises
+  |> List.map(p => {
+       try%lwt(p) {
+       | _exn => Lwt.return(default)
+       }
+     })
+  |> all(join);
 };
 
 exception Timeout;
@@ -20,7 +30,13 @@ let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) =
 
     Lwt.on_failure(promise, v => {completed := Some(Error(v))});
 
-    ThreadEx.waitForCondition(~timeout, () => {completed^ != None});
+    ThreadEx.waitForCondition(
+      ~timeout,
+      () => {
+        let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
+        completed^ != None;
+      },
+    );
 
     Option.value(~default=Error(Timeout), completed^);
   };

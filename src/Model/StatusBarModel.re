@@ -3,39 +3,34 @@
  *
  * Model for status bar items
  */
+open Exthost.Msg.StatusBar;
 
 [@deriving show({with_path: false})]
 type action =
   | DiagnosticsClicked
   | NotificationClearAllClicked
   | NotificationCountClicked
-  | NotificationsContextMenu;
-
-module Alignment = {
-  type t =
-    | Left
-    | Right;
-
-  let ofInt = i =>
-    switch (i) {
-    | 0 => Left
-    | _ => Right
-    };
-};
+  | NotificationsContextMenu
+  | ContributedItemClicked({
+      id: string,
+      command: string,
+    });
 
 module Item = {
   type t = {
-    id: int,
+    id: string,
     priority: int,
-    text: string,
-    alignment: Alignment.t,
+    label: Exthost.Label.t,
+    alignment: Exthost.Msg.StatusBar.alignment,
+    command: option(string),
   };
 
-  let create = (~id, ~priority, ~text, ~alignment=Alignment.Left, ()) => {
+  let create = (~command=?, ~id, ~priority, ~label, ~alignment=Left, ()) => {
     id,
     priority,
-    text,
+    label,
     alignment,
+    command,
   };
 };
 

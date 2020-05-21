@@ -5,6 +5,7 @@
     (package OniUnitTestRunner)
     (libraries
         yojson
+        Oni_Cli_Test
         Oni_Core_Test
         Oni_Components_Test
         Oni_Extensions_Test
@@ -15,6 +16,18 @@
         Oni_Syntax_Test
         Feature_Editor_Test
         Feature_LanguageSupport_Test
+        Exthost_Transport_Test
+        Exthost_Test
+            ))
+
+(executable
+    (name OniUnitTestRunnerCLI)
+    (public_name OniUnitTestRunnerCLI)
+    (modules OniUnitTestRunnerCLI)
+    (package OniUnitTestRunner)
+    (libraries
+        yojson
+        Oni_Cli_Test
             ))
 
 (executable
@@ -54,7 +67,19 @@
     (public_name OniUnitTestRunnerUI)
     (modules OniUnitTestRunnerUI)
     (package OniUnitTestRunner)
-    (libraries Oni_UI_Test))
+    (libraries 
+        Oni_Core_Test
+        Oni_UI_Test))
+
+(executable
+    (name OniUnitTestRunnerExtHost)
+    (public_name OniUnitTestRunnerExtHost)
+    (modules OniUnitTestRunnerExtHost)
+    (package OniUnitTestRunner)
+    (libraries 
+        Oni_Core_Test
+        Exthost_Transport_Test
+        Exthost_Test))
 
 (executable
     (name OniUnitTestRunnerCI)
@@ -63,6 +88,7 @@
     (package OniUnitTestRunner)
     (libraries
         yojson
+        Oni_Cli_Test
         Oni_Core_Test
         Oni_Components_Test
         Oni_ExtensionManagement_Test
@@ -70,4 +96,6 @@
         Oni_Input_Test
         Oni_Syntax_Test
         Oni_Model_Test
+        Exthost_Transport_Test
+        Exthost_Test
             ))

@@ -30,7 +30,7 @@ let getBufferById = (state: State.t, id: int) => {
 };
 
 let getBufferForEditor = (state: State.t, editor: Editor.t) => {
-  Buffers.getBuffer(editor.bufferId, state.buffers);
+  Buffers.getBuffer(Editor.getBufferId(editor), state.buffers);
 };
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
@@ -83,9 +83,7 @@ let getActiveTerminal = (state: State.t) => {
 };
 
 let getActiveTerminalId = (state: State.t) => {
-  state
-  |> getActiveTerminal
-  |> Option.map(({id, _}: BufferRenderer.terminal) => id);
+  state |> getActiveTerminal |> Option.map((Feature_Terminal.{id, _}) => id);
 };
 
 let terminalIsActive = (state: State.t) =>

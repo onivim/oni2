@@ -4,6 +4,8 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Components;
 
+module Colors = Feature_Theme.Colors;
+
 module Constants = {
   let menuWidth = 400;
   let menuHeight = 320;
@@ -12,41 +14,39 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let container = (theme: Theme.t) => [
-    backgroundColor(theme.menuBackground),
-    color(theme.menuForeground),
+  let container = theme => [
+    backgroundColor(Colors.Menu.background.from(theme)),
+    color(Colors.Menu.foreground.from(theme)),
     width(Constants.menuWidth),
   ];
 
   let inputContainer = [padding(5)];
 
-  let input = font => [
-    border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-    backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-    color(Colors.white),
-    fontFamily(font),
-    fontSize(14.),
-  ];
+  let input = (~font) => [fontFamily(font), fontSize(14.)];
 
   let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
 
   let menuItem = [fontSize(14.), cursor(Revery.MouseCursors.pointer)];
 
-  let label = (~font: UiFont.t, ~theme: Theme.t, ~highlighted) => [
+  let label = (~font: UiFont.t, ~theme, ~highlighted) => [
     fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
     textOverflow(`Ellipsis),
     fontSize(12.),
-    color(highlighted ? theme.oniNormalModeBackground : theme.menuForeground),
+    color(
+      highlighted
+        ? Colors.Oni.normalModeBackground.from(theme)
+        : Colors.Menu.foreground.from(theme),
+    ),
     textWrap(TextWrapping.NoWrap),
   ];
 
   let progressBarTrack = [height(2), overflow(`Hidden)];
 
-  let progressBarIndicator = (~width, ~offset, ~theme: Theme.t) => [
+  let progressBarIndicator = (~width, ~offset, ~theme) => [
     height(2),
     Style.width(width),
     transform(Transform.[TranslateX(offset)]),
-    backgroundColor(theme.oniNormalModeBackground),
+    backgroundColor(Colors.Oni.normalModeBackground.from(theme)),
   ];
 };
 
@@ -93,7 +93,7 @@ let%component busyBar = (~theme, ()) => {
 let make =
     (
       ~font: UiFont.t,
-      ~theme: Theme.t,
+      ~theme,
       ~configuration: Configuration.t,
       ~state: Quickmenu.t,
       ~placeholder: string="type here to search the menu",
@@ -157,18 +157,18 @@ let make =
       <Input
         placeholder
         ?prefix
-        cursorColor=Colors.white
-        style={Styles.input(font.fontFile)}
+        style={Styles.input(~font=font.fontFile)}
         isFocused=true
         onClick=onInputClicked
         value=query
         selection
+        theme
       />
     </View>;
 
   let dropdown = () =>
     <View style=Styles.dropdown>
-      <FlatList rowHeight=40 count={Array.length(items)} focused>
+      <FlatList rowHeight=40 count={Array.length(items)} focused theme>
         ...renderItem
       </FlatList>
       {switch (progress) {

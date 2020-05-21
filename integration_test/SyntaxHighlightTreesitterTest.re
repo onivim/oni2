@@ -17,6 +17,10 @@ runTest(
       state.vimMode == Vim.Types.Normal
     );
 
+    wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
+      Feature_Syntax.isSyntaxServerRunning(state.syntaxHighlights)
+    });
+
     let testFile = getAssetPath("some-test-file.json");
 
     // Create a buffer

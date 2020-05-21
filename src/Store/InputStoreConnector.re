@@ -6,7 +6,6 @@
 
 open Oni_Core;
 open Oni_Input;
-open Oni_Components;
 
 module Model = Oni_Model;
 module State = Model.State;
@@ -14,74 +13,6 @@ module Actions = Model.Actions;
 module Completions = Feature_LanguageSupport.Completions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Input"));
-
-let isQuickmenuOpen = (state: State.t) => state.quickmenu != None;
-
-let conditionsOfState = (state: State.t) => {
-  // Not functional, but we'll use the hashtable for performance
-  let ret: Hashtbl.t(string, bool) = Hashtbl.create(16);
-
-  switch (state.quickmenu) {
-  | Some({variant, query, selection, _}) =>
-    Hashtbl.add(ret, "listFocus", true);
-    Hashtbl.add(ret, "inQuickOpen", true);
-
-    if (Selection.isCollapsed(selection)
-        && selection.focus == String.length(query)) {
-      Hashtbl.add(ret, "quickmenuCursorEnd", true);
-    };
-
-    if (variant == EditorsPicker) {
-      Hashtbl.add(ret, "inEditorsPicker", true);
-    };
-
-  | None => ()
-  };
-
-  if (Completions.isActive(state.completions)) {
-    Hashtbl.add(ret, "suggestWidgetVisible", true);
-  };
-
-  switch (state.configuration.default.editorAcceptSuggestionOnEnter) {
-  | `on
-  | `smart => Hashtbl.add(ret, "acceptSuggestionOnEnter", true)
-  | `off => ()
-  };
-
-  let mode = Model.ModeManager.current(state);
-
-  // HACK: Because we don't have AND conditions yet for input
-  // (the conditions array are OR's), we are making `insertMode`
-  // only true when the editor is insert mode AND we are in the
-  // editor (editorTextFocus is set)
-  switch (isQuickmenuOpen(state), mode) {
-  | (false, Mode.TerminalInsert) =>
-    Hashtbl.add(ret, "insertMode", true);
-    Hashtbl.add(ret, "terminalFocus", true);
-  | (false, Mode.TerminalNormal) =>
-    Hashtbl.add(ret, "normalMode", true);
-    Hashtbl.add(ret, "terminalFocus", true);
-  | (false, Mode.TerminalVisual) =>
-    Hashtbl.add(ret, "visualMode", true);
-    Hashtbl.add(ret, "terminalFocus", true);
-  | (false, Mode.Insert) =>
-    Hashtbl.add(ret, "insertMode", true);
-    Hashtbl.add(ret, "editorTextFocus", true);
-  | (false, Mode.Normal) =>
-    Hashtbl.add(ret, "normalMode", true);
-    Hashtbl.add(ret, "editorTextFocus", true);
-  | (false, Mode.Visual) => Hashtbl.add(ret, "visualMode", true)
-  | (false, _) => Hashtbl.add(ret, "editorTextFocus", true)
-  | (true, Mode.CommandLine) => Hashtbl.add(ret, "commandLineFocus", true)
-  | _ => ()
-  };
-
-  if (state.sneak |> Model.Sneak.isActive) {
-    Hashtbl.add(ret, "sneakMode", true);
-  };
-
-  ret;
-};
 
 let start = (window: option(Revery.Window.t), runEffects) => {
   let (stream, dispatch) = Isolinear.Stream.create();
@@ -140,7 +71,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Keybindings.Execute(command) => [Actions.Command(command)]
+    | Keybindings.Execute(command) => [
+        Actions.KeybindingInvoked({command: command}),
+      ]
     | Keybindings.Text(text) => handleTextEffect(state, text)
     | Keybindings.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();
@@ -203,10 +136,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      a revery element is focused oni2 should defer to revery
    */
   let handleKeyPress = (state: State.t, key) => {
-    let conditions = conditionsOfState(state);
+    let context =
+      WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all, state);
 
     let (keyBindings, effects) =
-      Keybindings.keyDown(~context=conditions, ~key, state.keyBindings);
+      Keybindings.keyDown(~context, ~key, state.keyBindings);
 
     let newState = {...state, keyBindings};
 
@@ -228,11 +162,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   let handleKeyUp = (state: State.t, key) => {
-    let conditions = conditionsOfState(state);
+    let context =
+      WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all, state);
 
     //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
-      Keybindings.keyUp(~context=conditions, ~key, state.keyBindings);
+      Keybindings.keyUp(~context, ~key, state.keyBindings);
 
     let newState = {...state, keyBindings};
 

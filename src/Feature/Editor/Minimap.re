@@ -83,35 +83,23 @@ let absoluteStyle =
     cursor(Revery.MouseCursors.pointer),
   ];
 
-let getMinimapSize = (view: Editor.t, metrics) => {
-  let currentViewSize = Editor.getVisibleView(view, metrics);
+let getMinimapSize = (view: Editor.t) => {
+  let currentViewSize = Editor.getVisibleView(view);
 
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
 
-type mouseCaptureState = {isCapturing: bool};
-
-type action =
-  | IsCapturing(bool);
-
-let reducer = (action, _state) =>
-  switch (action) {
-  | IsCapturing(isCapturing) => {isCapturing: isCapturing}
-  };
-
-let initialState = {isCapturing: false};
-
 let%component make =
               (
                 ~editor: Editor.t,
+                ~cursorPosition: Location.t,
                 ~width: int,
                 ~height: int,
                 ~count,
                 ~diagnostics,
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection: Hashtbl.t(Index.t, list(Range.t)),
-                ~metrics,
-                ~onScroll,
+                ~onScroll: float => unit,
                 ~showSlider,
                 ~colors: Colors.t,
                 ~bufferHighlights,
@@ -121,54 +109,38 @@ let%component make =
   let rowHeight =
     float(Constants.minimapCharacterHeight + Constants.minimapLineSpacing);
 
-  let%hook (mouseState, dispatch) =
-    React.Hooks.reducer(~initialState, reducer);
-
   let getScrollTo = (mouseY: float) => {
     let totalHeight: int = Editor.getTotalSizeInPixels(editor);
-    let visibleHeight: int = EditorMetrics.(metrics.pixelHeight);
+    let visibleHeight: int = Editor.(editor.pixelHeight);
     let offsetMouseY: int = int_of_float(mouseY) - Constants.tabHeight;
     float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
   };
 
-  let scrollComplete = () => {
-    Mouse.releaseCapture();
-    dispatch(IsCapturing(false));
-  };
-
-  let%hook () =
-    React.Hooks.effect(OnMount, () => {
-      Some(
-        () =>
-          if (mouseState.isCapturing) {
-            Mouse.releaseCapture();
-          },
-      )
-    });
-
   let scrollY = editor.minimapScrollY;
+
+  let%hook (captureMouse, _state) =
+    Hooks.mouseCapture(
+      ~onMouseMove=
+        ((), evt) => {
+          let scrollTo = getScrollTo(evt.mouseY);
+          let minimapLineSize =
+            Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
+          let linesInMinimap = editor.pixelHeight / minimapLineSize;
+          onScroll(scrollTo -. float(linesInMinimap));
+          Some();
+        },
+      ~onMouseUp=(_, _) => None,
+      (),
+    );
 
   let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
     let scrollTo = getScrollTo(evt.mouseY);
     let minimapLineSize =
       Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-    let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-    if (evt.button == Revery_Core.MouseButton.BUTTON_LEFT) {
+    let linesInMinimap = editor.pixelHeight / minimapLineSize;
+    if (evt.button == Revery.MouseButton.BUTTON_LEFT) {
       onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
-
-      Mouse.setCapture(
-        ~onMouseMove=
-          evt => {
-            let scrollTo = getScrollTo(evt.mouseY);
-            let minimapLineSize =
-              Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-            let linesInMinimap = metrics.pixelHeight / minimapLineSize;
-            onScroll(scrollTo -. float(linesInMinimap));
-          },
-        ~onMouseUp=_evt => {scrollComplete()},
-        (),
-      );
-      dispatch(IsCapturing(true));
+      captureMouse();
     };
   };
 
@@ -180,7 +152,7 @@ let%component make =
           /* Draw slider/viewport */
           Skia.Paint.setColor(
             minimapPaint,
-            Revery.Color.toSkia(colors.scrollbarSliderHoverBackground),
+            Revery.Color.toSkia(colors.minimapSliderBackground),
           );
           CanvasContext.drawRectLtwh(
             ~left=0.,
@@ -188,14 +160,13 @@ let%component make =
               rowHeight
               *. float(Editor.getTopVisibleLine(editor) - 1)
               -. scrollY,
-            ~height=rowHeight *. float(getMinimapSize(editor, metrics)),
+            ~height=rowHeight *. float(getMinimapSize(editor)),
             ~width=float(width),
             ~paint=minimapPaint,
             canvasContext,
           );
         };
 
-        let cursorPosition = Editor.getPrimaryCursor(editor);
         /* Draw cursor line */
         Skia.Paint.setColor(
           minimapPaint,
@@ -205,7 +176,7 @@ let%component make =
           ~left=Constants.leftMargin,
           ~top=
             rowHeight
-            *. float(Index.toZeroBased(cursorPosition.line))
+            *. float(Index.toZeroBased(Location.(cursorPosition.line)))
             -. scrollY,
           ~height=float(Constants.minimapCharacterHeight),
           ~width=float(width),
@@ -266,7 +237,7 @@ let%component make =
               switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
-                let color = colors.selectionBackground;
+                let color = colors.minimapSelectionHighlight;
                 List.iter(renderRange(~color, ~offset), v);
               };
 
@@ -274,7 +245,7 @@ let%component make =
 
               let highlightRanges =
                 BufferHighlights.getHighlightsByLine(
-                  ~bufferId=editor.bufferId,
+                  ~bufferId=Editor.getBufferId(editor),
                   ~line=index,
                   bufferHighlights,
                 );

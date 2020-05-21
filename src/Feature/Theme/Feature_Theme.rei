@@ -12,10 +12,10 @@ type msg =
 
 let update: (model, msg) => model;
 
-let resolver:
+let colors:
   (
     ~extensionDefaults: list(ColorTheme.Defaults.t)=?,
     ~customizations: ColorTheme.Colors.t=?,
     model
   ) =>
-  ColorTheme.resolver;
+  ColorTheme.Colors.t;

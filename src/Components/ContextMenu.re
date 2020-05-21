@@ -4,6 +4,8 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
+module Colors = Feature_Theme.Colors;
+
 module Constants = {
   let menuWidth = 200;
   // let maxMenuHeight = 600;
@@ -28,13 +30,13 @@ module MenuItem = {
   module Styles = {
     open Style;
 
-    let bg = (~theme: Theme.t, ~isFocused) =>
-      isFocused ? theme.menuSelectionBackground : theme.menuBackground;
+    let bg = (~isFocused) =>
+      isFocused ? Colors.Menu.selectionBackground : Colors.Menu.background;
 
     let container = (~theme, ~isFocused) => [
       padding(10),
       flexDirection(`Row),
-      backgroundColor(bg(~theme, ~isFocused)),
+      backgroundColor(bg(~isFocused).from(theme)),
     ];
 
     // let icon = fgColor => [
@@ -44,12 +46,12 @@ module MenuItem = {
     //   color(fgColor),
     // ];
 
-    let label = (~font: UiFont.t, ~theme: Theme.t, ~isFocused) => [
+    let label = (~font: UiFont.t, ~theme, ~isFocused) => [
       fontFamily(font.fontFile),
       textOverflow(`Ellipsis),
       fontSize(Constants.fontSize),
-      color(theme.menuForeground),
-      backgroundColor(bg(~theme, ~isFocused)),
+      color(Colors.Menu.foreground.from(theme)),
+      backgroundColor(bg(~isFocused).from(theme)),
     ];
   };
 
@@ -58,7 +60,7 @@ module MenuItem = {
     'data.
     (
       ~item: item('data),
-      ~theme: Theme.t,
+      ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~onClick: unit => unit,
       unit
@@ -107,12 +109,12 @@ module Menu = {
   module Styles = {
     open Style;
 
-    let container = (~x, ~y, ~theme: Theme.t) => [
+    let container = (~x, ~y, ~theme) => [
       position(`Absolute),
       top(y),
       left(x),
-      backgroundColor(theme.menuBackground),
-      color(theme.menuForeground),
+      backgroundColor(Colors.Menu.background.from(theme)),
+      color(Colors.Menu.foreground.from(theme)),
       width(Constants.menuWidth),
       boxShadow(
         ~xOffset=3.,
@@ -178,7 +180,7 @@ module Overlay = {
   module Styles = {
     open Style;
 
-    let overlay = [
+    let backdrop = [
       position(`Absolute),
       top(0),
       bottom(0),
@@ -196,7 +198,7 @@ module Overlay = {
     if (IntMap.is_empty(menus)) {
       React.empty;
     } else {
-      <Clickable onClick style=Styles.overlay>
+      <Clickable onClick style=Styles.backdrop>
         {IntMap.bindings(menus) |> List.map(snd) |> React.listToElement}
       </Clickable>;
     };

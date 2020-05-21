@@ -7,17 +7,20 @@ type t = {
   editors: [@opaque] IntMap.t(Feature_Editor.Editor.t), // TODO: internal
   bufferIdToEditorId: [@opaque] IntMap.t(int), // TODO: internal
   reverseTabOrder: list(int),
-  metrics: Feature_Editor.EditorMetrics.t,
 };
 
 let create: unit => t;
 
-let getMetrics: t => Feature_Editor.EditorMetrics.t;
+// [count] gets the number of editors in the group
+let count: t => int;
+
+let hasEditor: (~editorId: int, t) => bool;
+
 let getActiveEditor: t => option(Feature_Editor.Editor.t);
 let setActiveEditor: (t, int) => t;
 let getEditorById: (int, t) => option(Feature_Editor.Editor.t);
 let getOrCreateEditorForBuffer:
-  (~font: Service_Font.font, ~bufferId: int, t) =>
+  (~font: Service_Font.font, ~buffer: Feature_Editor.EditorBuffer.t, t) =>
   (t, Feature_Editor.EditorId.t);
 let nextEditor: t => t;
 let previousEditor: t => t;

@@ -4,7 +4,10 @@
     (libraries 
         Oni2.core.kernel
         libvim
+        oniguruma
         str
+        luv
         lwt
+        Revery
         timber)
     (preprocess (pps lwt_ppx)))

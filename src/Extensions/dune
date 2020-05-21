@@ -5,6 +5,7 @@
         str
         bigarray
         zed_oni
+        luv
         lwt
         lwt.unix
         Rench
@@ -12,9 +13,10 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        reason-jsonrpc
         oniguruma
         Oni2.core
+        Oni2.core.whenExpr
+        Oni2.exthost
         isolinear
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

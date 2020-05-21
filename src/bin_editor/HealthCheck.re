@@ -64,6 +64,13 @@ let commonChecks = [
       );
     },
   ),
+  (
+    "Verify libuv dependency",
+    _ => {
+      Log.infof(m => m("libuv version: %s", Luv.Version.string()));
+      true;
+    },
+  ),
 ];
 
 let mainChecks = [
@@ -74,11 +81,7 @@ let mainChecks = [
   (
     "Verify node dependencies",
     (setup: Setup.t) => {
-      Oni_Extensions.NodeTask.run(
-        ~scheduler=Scheduler.immediate,
-        ~setup,
-        "check-health.js",
-      )
+      Oni_Extensions.NodeTask.run(~setup, "check-health.js")
       |> LwtEx.sync
       |> (
         fun
@@ -172,14 +175,14 @@ let mainChecks = [
       let healthCheckResult = ref(false);
       let syntaxClient =
         Oni_Syntax_Client.start(
-          ~scheduler=Scheduler.immediate,
-          ~onConnected=() => connected := true,
-          ~onClose=_ => closed := true,
-          ~onHighlights=_ => (),
-          ~onHealthCheckResult=res => healthCheckResult := res,
+          ~onConnected=() => {connected := true},
+          ~onClose=_ => {closed := true},
+          ~onHighlights=(~bufferId as _, ~tokens as _) => (),
+          ~onHealthCheckResult=res => {healthCheckResult := res},
           Oni_Extensions.LanguageInfo.initial,
           setup,
-        );
+        )
+        |> Result.get_ok;
 
       let waitForRef = (condition: ref(bool)) => {
         let tries = ref(0);
@@ -188,6 +191,7 @@ let mainChecks = [
             ~name="HealthCheck.waitThread",
             () => {
               while (condition^ == false && tries^ < 10) {
+                let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
                 Unix.sleepf(0.2);
                 incr(tries);
               }

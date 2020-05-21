@@ -12,7 +12,7 @@ let%component make =
               (
                 ~scrollX,
                 ~scrollY,
-                ~metrics: EditorMetrics.t,
+                ~editor: Editor.t,
                 ~editorFont: Service_Font.font,
                 ~buffer,
                 ~mode: Vim.Mode.t,
@@ -50,7 +50,7 @@ let%component make =
   let durationFunc = (~current, ~target) =>
     if (Float.abs(target -. current) < 2. *. editorFont.measuredHeight) {
       if (mode == Insert) {
-        Revery.Time.milliseconds(0);
+        Revery.Time.milliseconds(50);
       } else {
         Revery.Time.zero;
       };
@@ -58,12 +58,10 @@ let%component make =
       Revery.Time.milliseconds(100);
     };
 
-  let animatedCursor = Config.Experimental.editorSmoothCursor.get(config);
+  let animatedCursor =
+    Config.Experimental.cursorSmoothCaretAnimation.get(config);
 
-  // When in insert mode, we use a negative delay to give some anticipation
-  let delay =
-    mode == Insert ? Revery.Time.milliseconds(-50) : Revery.Time.zero;
-
+  let delay = Revery.Time.zero;
   let defaultDuration = Revery.Time.milliseconds(100);
   let easing = Easing.easeIn;
 
@@ -109,8 +107,8 @@ let%component make =
       let context =
         Draw.createContext(
           ~canvasContext,
-          ~width=metrics.pixelWidth,
-          ~height=metrics.pixelHeight,
+          ~width=editor.pixelWidth,
+          ~height=editor.pixelHeight,
           ~scrollX,
           ~scrollY,
           ~lineHeight=editorFont.measuredHeight,

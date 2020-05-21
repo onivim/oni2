@@ -7,6 +7,8 @@ open Utility;
 
 module Log = (val Log.withNamespace("Oni2.UI.LocationListView"));
 
+module Colors = Feature_Theme.Colors;
+
 type item = {
   file: string,
   location: Location.t,
@@ -35,27 +37,33 @@ module Styles = {
 
   let clickable = [cursor(Revery.MouseCursors.pointer)];
 
-  let result = (~theme: Theme.t, ~isHovered) => [
+  let result = (~theme, ~isHovered) => [
     flexDirection(`Row),
     overflow(`Hidden),
     paddingVertical(4),
     paddingHorizontal(8),
     backgroundColor(
-      isHovered ? theme.menuSelectionBackground : Colors.transparentWhite,
+      isHovered
+        ? Colors.Menu.selectionBackground.from(theme)
+        : Revery.Colors.transparentWhite,
     ),
   ];
 
-  let locationText = (~font: UiFont.t, ~theme: Theme.t) => [
+  let locationText = (~font: UiFont.t, ~theme) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
-    color(theme.editorActiveLineNumberForeground),
+    color(Colors.EditorLineNumber.activeForeground.from(theme)),
     textWrap(TextWrapping.NoWrap),
   ];
 
-  let snippet = (~font: Service_Font.font, ~theme: Theme.t, ~isHighlighted) => [
+  let snippet = (~font: Service_Font.font, ~theme, ~isHighlighted) => [
     fontFamily(font.fontFile),
     fontSize(font.fontSize),
-    color(isHighlighted ? theme.oniNormalModeBackground : theme.foreground),
+    color(
+      isHighlighted
+        ? Colors.Oni.normalModeBackground.from(theme)
+        : Colors.foreground.from(theme),
+    ),
     textWrap(TextWrapping.NoWrap),
   ];
 };
@@ -160,7 +168,7 @@ let item =
 
 let%component make =
               (
-                ~theme: Theme.t,
+                ~theme,
                 ~uiFont: UiFont.t,
                 ~editorFont: Service_Font.font,
                 ~items: array(item),
@@ -186,7 +194,7 @@ let%component make =
          ~default=
            Revery.UI.getActiveWindow()
            |> Option.map((window: Window.t) =>
-                Revery.Window.getRawSize(window).width
+                Revery.Window.getSize(window).width
               )
            |> Option.value(~default=4000),
        );
@@ -212,6 +220,7 @@ let%component make =
     rowHeight=20
     count={Array.length(items)}
     focused=None
+    theme
     ref={ref => outerRef := Some(ref)}>
     ...renderItem
   </FlatList>;

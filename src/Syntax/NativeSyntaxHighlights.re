@@ -33,11 +33,8 @@ type t =
     })
     : t;
 
-let _hasTreeSitterScope = (configuration, scope: string) => {
-  let treeSitterEnabled =
-    Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
-
-  if (!treeSitterEnabled) {
+let _hasTreeSitterScope = (useTreeSitter, scope: string) =>
+  if (!useTreeSitter) {
     false;
   } else {
     switch (scope) {
@@ -47,7 +44,6 @@ let _hasTreeSitterScope = (configuration, scope: string) => {
     | _ => false
     };
   };
-};
 
 let anyPendingWork = hl => {
   let Highlighter({highlighter: (module SyntaxHighlighter), state}) = hl;
@@ -78,23 +74,16 @@ let updateTheme = (theme, hl) => {
 
 let create =
     (
-      ~bufferUpdate,
-      ~configuration,
+      ~useTreeSitter,
       ~scope,
       ~theme,
       ~getTreesitterScope,
       ~getTextmateGrammar,
       lines: array(string),
     ) => {
-  ignore(bufferUpdate);
   let maybeScopeConverter = getTreesitterScope(scope);
 
-  let allowTreeSitter =
-    Core.Configuration.getValue(
-      config => config.experimentalTreeSitter,
-      configuration,
-    )
-    && _hasTreeSitterScope(configuration, scope);
+  let allowTreeSitter = _hasTreeSitterScope(useTreeSitter, scope);
 
   switch (maybeScopeConverter) {
   | Some(scopeConverter) when allowTreeSitter =>

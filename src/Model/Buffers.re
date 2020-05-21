@@ -52,35 +52,64 @@ let disableSyntaxHighlighting =
 let setModified = modified =>
   Option.map(buffer => Buffer.setModified(modified, buffer));
 
+let setLineEndings = le =>
+  Option.map(buffer => Buffer.setLineEndings(le, buffer));
+
 let reduce = (state: t, action: Actions.t) => {
   switch (action) {
   | BufferDisableSyntaxHighlighting(id) =>
     IntMap.update(id, disableSyntaxHighlighting, state)
 
-  | BufferEnter(metadata, fileType) =>
+  | BufferEnter({id, fileType, lineEndings, isModified, filePath, version, _}) =>
+    let maybeSetLineEndings = (maybeLineEndings, buf) => {
+      switch (maybeLineEndings) {
+      | Some(le) => Buffer.setLineEndings(le, buf)
+      | None => buf
+      };
+    };
+
     let updater = (
       fun
       | Some(buffer) =>
         buffer
-        |> Buffer.setModified(metadata.modified)
-        |> Buffer.setFilePath(metadata.filePath)
-        |> Buffer.setVersion(metadata.version)
+        |> Buffer.setModified(isModified)
+        |> Buffer.setFilePath(filePath)
+        |> Buffer.setVersion(version)
         |> Buffer.stampLastUsed
+        |> maybeSetLineEndings(lineEndings)
         |> Option.some
       | None =>
-        Buffer.ofMetadata(metadata)
+        Buffer.ofMetadata(~id, ~version, ~filePath, ~modified=isModified)
         |> Buffer.setFileType(fileType)
         |> Buffer.stampLastUsed
+        |> maybeSetLineEndings(lineEndings)
         |> Option.some
     );
-    IntMap.update(metadata.id, updater, state);
+    IntMap.update(id, updater, state);
 
+  | BufferFilenameChanged({id, newFileType, newFilePath, version, isModified}) =>
+    let updater = (
+      fun
+      | Some(buffer) =>
+        buffer
+        |> Buffer.setModified(isModified)
+        |> Buffer.setFilePath(newFilePath)
+        |> Buffer.setFileType(newFileType)
+        |> Buffer.setVersion(version)
+        |> Buffer.stampLastUsed
+        |> Option.some
+      | None => None
+    );
+    IntMap.update(id, updater, state);
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
-  | BufferSetModified(id, modified) =>
-    IntMap.update(id, setModified(modified), state)
+  | BufferSetModified(id, isModified) =>
+    IntMap.update(id, setModified(isModified), state)
 
   | BufferSetIndentation(id, indent) =>
     IntMap.update(id, setIndentation(indent), state)
+
+  | BufferLineEndingsChanged({id, lineEndings}) =>
+    IntMap.update(id, setLineEndings(lineEndings), state)
 
   | BufferUpdate({update, newBuffer, _}) =>
     IntMap.add(update.id, newBuffer, state)

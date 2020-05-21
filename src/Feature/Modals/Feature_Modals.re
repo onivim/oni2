@@ -64,18 +64,20 @@ let update = (model, msg) =>
 
 // VIEW
 
-open Revery;
-open Revery.UI;
-
-open Oni_Core;
-open Utility;
-
 module View = {
+  open Revery;
+  open Revery.UI;
+
+  open Oni_Core;
+  open Utility;
+
+  module Colors = Feature_Theme.Colors;
+
   module Styles = {
     open Style;
 
-    let overlay = [
-      backgroundColor(Color.hex("#0004")),
+    let backdrop = (~theme) => [
+      backgroundColor(Colors.Oni.Modal.backdrop.from(theme)),
       position(`Absolute),
       top(0),
       left(0),
@@ -88,20 +90,20 @@ module View = {
       pointerEvents(`Allow),
     ];
 
-    let text = (~theme: Theme.t, ~font: UiFont.t) => [
+    let text = (~theme, ~font: UiFont.t) => [
       fontFamily(font.fontFile),
-      color(theme.foreground),
-      backgroundColor(theme.editorBackground),
+      color(Colors.Oni.Modal.foreground.from(theme)),
       fontSize(14.),
       textWrap(TextWrapping.NoWrap),
     ];
 
     let files = [padding(10)];
 
-    let file = (~theme: Theme.t, ~font: UiFont.t) => [
+    let file = (~theme, ~font: UiFont.t) => [
       fontFamily(font.fontFile),
-      color(theme.foreground),
-      backgroundColor(theme.editorBackground),
+      color(
+        Colors.Oni.Modal.foreground.from(theme) |> Color.multiplyAlpha(0.75),
+      ),
       fontSize(14.),
       textWrap(TextWrapping.NoWrap),
     ];
@@ -117,11 +119,7 @@ module View = {
       |> Seq.map(Buffer.getFilePath)
       |> List.of_seq
       |> OptionEx.values
-      |> List.map(
-           Path.toRelative(
-             ~base=Option.value(workingDirectory, ~default=""),
-           ),
-         );
+      |> List.map(Path.toRelative(~base=workingDirectory));
 
     <MessageBox model onAction=dispatch theme font>
       <Text
@@ -157,7 +155,7 @@ module View = {
 
   let make =
       (~model, ~buffers, ~workingDirectory, ~theme, ~font, ~dispatch, ()) => {
-    <View style=Styles.overlay>
+    <View style={Styles.backdrop(~theme)}>
       {switch (model) {
        | UnsavedBuffersWarning(model) =>
          <unsavedBuffersWarning

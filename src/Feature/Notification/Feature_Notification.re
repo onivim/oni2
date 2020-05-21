@@ -1,3 +1,4 @@
+open Revery;
 open Oni_Core;
 
 module Internal = {
@@ -15,7 +16,6 @@ module Internal = {
 
 [@deriving show({with_path: false})]
 type kind =
-  | Success
   | Info
   | Warning
   | Error;
@@ -72,27 +72,23 @@ module Effects = {
 
 module Colors = {
   open ColorTheme.Schema;
+  include Feature_Theme.Colors;
 
-  let successBackground =
-    define("notification.successBackground", all(unspecified));
-  let successForeground =
-    define("notification.successForeground", all(unspecified));
   let infoBackground =
-    define("notification.infoBackground", all(unspecified));
+    define("oni.notification.infoBackground", all(hex("#209CEE")));
   let infoForeground =
-    define("notification.infoForeground", all(unspecified));
+    define("oni.notification.infoForeground", all(hex("#FFF")));
   let warningBackground =
-    define("notification.warningBackground", all(unspecified));
+    define("oni.notification.warningBackground", all(hex("#FFDD57")));
   let warningForeground =
-    define("notification.warningForeground", all(unspecified));
+    define("oni.notification.warningForeground", all(hex("#333")));
   let errorBackground =
-    define("notification.errorBackground", all(unspecified));
+    define("oni.notification.errorBackground", all(hex("#FF3860")));
   let errorForeground =
-    define("notification.errorForeground", all(unspecified));
+    define("oni.notification.errorForeground", all(hex("#FFF")));
 
   let backgroundFor = notification =>
     switch (notification.kind) {
-    | Success => successBackground
     | Warning => warningBackground
     | Error => errorBackground
     | Info => infoBackground
@@ -100,7 +96,6 @@ module Colors = {
 
   let foregroundFor = notification =>
     switch (notification.kind) {
-    | Success => successForeground
     | Warning => warningForeground
     | Error => errorForeground
     | Info => infoForeground
@@ -110,7 +105,6 @@ module Colors = {
 // VIEW
 
 module View = {
-  open Revery;
   open Revery.UI;
   open Revery.UI.Components;
 
@@ -168,7 +162,6 @@ module View = {
 
     let iconFor = item =>
       switch (item.kind) {
-      | Success => FontAwesome.checkCircle
       | Warning => FontAwesome.exclamationTriangle
       | Error => FontAwesome.exclamationCircle
       | Info => FontAwesome.infoCircle
@@ -227,24 +220,22 @@ module View = {
         let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
       };
 
-      let colorFor = (item, ~theme: Theme.t) =>
+      let colorFor = (item, ~theme) =>
         switch (item.kind) {
-        | Success => theme.notificationSuccessBackground
-        | Warning => theme.notificationWarningBackground
-        | Error => theme.notificationErrorBackground
-        | Info => theme.notificationInfoBackground
+        | Warning => Colors.warningBackground.from(theme)
+        | Error => Colors.errorBackground.from(theme)
+        | Info => Colors.infoBackground.from(theme)
         };
 
       let iconFor = item =>
         switch (item.kind) {
-        | Success => FontAwesome.checkCircle
         | Warning => FontAwesome.exclamationTriangle
         | Error => FontAwesome.exclamationCircle
         | Info => FontAwesome.infoCircle
         };
 
-      let make = (~item, ~theme: Theme.t, ~font, ~dispatch, ()) => {
-        let foreground = theme.foreground;
+      let make = (~item, ~theme, ~font, ~dispatch, ()) => {
+        let foreground = Colors.foreground.from(theme);
 
         let icon = () =>
           <FontIcon
@@ -300,10 +291,10 @@ module View = {
         right(0),
       ];
 
-      let title = (~theme: Theme.t, ~font: UiFont.t) => [
+      let title = (~theme, ~font: UiFont.t) => [
         fontFamily(font.fontFile),
         fontSize(font.fontSize),
-        color(theme.foreground),
+        color(Colors.PanelTitle.activeForeground.from(theme)),
         margin(8),
       ];
     };
@@ -328,4 +319,18 @@ module View = {
       <View style=Styles.pane> innerElement </View>;
     };
   };
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let colors =
+    Colors.[
+      infoBackground,
+      infoForeground,
+      warningBackground,
+      warningForeground,
+      errorBackground,
+      errorForeground,
+    ];
 };

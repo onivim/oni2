@@ -11,18 +11,13 @@
  */
 
 [@deriving show({with_path: false})]
-type terminal = {
-  title: string,
-  id: int,
-  insertMode: bool,
-};
-
-[@deriving show({with_path: false})]
 type t =
   | Editor
   | Welcome
   | Version
-  | Terminal(terminal);
+  | FullChangelog
+  | UpdateChangelog({since: string})
+  | Terminal(Feature_Terminal.rendererState);
 
 [@deriving show({with_path: false})]
 type action =

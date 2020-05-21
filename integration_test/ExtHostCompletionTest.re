@@ -7,7 +7,7 @@ open Oni_IntegrationTestLib;
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, we get some completion results
 runTestWithInput(
-  ~name="ExtHostCompletionTest", (input, _dispatch, wait, _runEffects) => {
+  ~name="ExtHostCompletionTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.vimMode == Vim.Types.Normal
   );
@@ -25,7 +25,7 @@ runTestWithInput(
   );
 
   // Create a buffer
-  Vim.command("new test.oni-dev");
+  dispatch(Actions.OpenFileByPath("test.oni-dev", None, None));
 
   // Wait for the oni-dev filetype
   wait(

@@ -78,9 +78,16 @@ const getRlsPath = () => {
 const updateIcon = (rcedit, exe, iconFile) => {
     console.log(`Updating ${exe} icon`)
 
+    // HACK: `rcedit` crashes with an assertion failure on windows:
+    // Assertion failed: len < MAX_ENV_VAR_LENGTH, file c:\ws\deps\uv\src\win\util.c, line 1476
+    let oldEnv = process.env;
+    process.env = {
+        "PATH": process.env.PATH,
+    };
     rcedit(exe, {
         icon: iconFile
     })
+    process.env = oldEnv;
 
     console.log(`Successfully updated icon.`)
 }

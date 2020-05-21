@@ -13,7 +13,12 @@ type model = {
 let defaults =
   [
     Colors.ActivityBar.defaults,
+    Colors.Dropdown.defaults,
     Colors.Editor.defaults,
+    Colors.EditorError.defaults,
+    Colors.EditorWarning.defaults,
+    Colors.EditorInfo.defaults,
+    Colors.EditorHint.defaults,
     Colors.EditorCursor.defaults,
     Colors.EditorGroupHeader.defaults,
     Colors.EditorGutter.defaults,
@@ -25,13 +30,26 @@ let defaults =
     Colors.EditorSuggestWidget.defaults,
     Colors.EditorWhitespace.defaults,
     Colors.EditorWidget.defaults,
+    Colors.Input.defaults,
     Colors.List.defaults,
+    Colors.Menu.defaults,
+    Colors.Minimap.defaults,
+    Colors.MinimapSlider.defaults,
+    Colors.MinimapGutter.defaults,
     Colors.Oni.defaults,
+    Colors.Oni.Modal.defaults,
+    Colors.Oni.Sneak.defaults,
+    Colors.Panel.defaults,
+    Colors.PanelTitle.defaults,
+    Colors.PanelInput.defaults,
     Colors.ScrollbarSlider.defaults,
+    Colors.Selection.defaults,
     Colors.SideBar.defaults,
+    Colors.StatusBar.defaults,
     Colors.Tab.defaults,
+    Colors.TextLink.defaults,
+    Colors.TitleBar.defaults,
     Colors.defaults,
-    Colors.remaining,
   ]
   |> List.map(ColorTheme.Schema.fromList)
   |> ColorTheme.Schema.unionMany;
@@ -45,7 +63,7 @@ let initial = contributions => {
   theme: ColorTheme.{variant: Dark, colors: ColorTheme.Colors.empty},
 };
 
-let resolver =
+let colors =
     (
       ~extensionDefaults as _=[], // TODO
       ~customizations=ColorTheme.Colors.empty, // TODO
@@ -53,26 +71,42 @@ let resolver =
     ) => {
   let {schema, theme} = model;
 
-  let resolve = key => {
+  let rec resolve = key => {
     switch (ColorTheme.Colors.get(key, customizations)) {
-    | Some(color) => `Color(color)
+    | Some(color) => Some(color)
     | None =>
       switch (ColorTheme.Colors.get(key, theme.colors)) {
-      | Some(color) => `Color(color)
+      | Some(color) => Some(color)
       | None =>
         switch (ColorTheme.Schema.get(key, schema)) {
         | Some(definition) =>
-          `Default(
-            ColorTheme.Defaults.get(theme.variant, definition.defaults),
-          )
+          definition.defaults
+          |> ColorTheme.Defaults.get(theme.variant)
+          |> ColorTheme.Defaults.evaluate(resolve)
 
-        | None => `NotRegistered
+        | None => None
         }
       }
     };
   };
 
-  resolve;
+  let defaults =
+    schema
+    |> ColorTheme.Schema.toList
+    |> List.map(
+         ColorTheme.Schema.(
+           definition => (
+             definition.key,
+             definition.defaults
+             |> ColorTheme.Defaults.get(theme.variant)
+             |> ColorTheme.Defaults.evaluate(resolve)
+             |> Option.value(~default=Color.hex("#0000")),
+           )
+         ),
+       )
+    |> ColorTheme.Colors.fromList;
+
+  ColorTheme.Colors.unionMany([defaults, theme.colors, customizations]);
 };
 
 [@deriving show({with_path: false})]
@@ -87,9 +121,9 @@ let update = (model, msg) => {
         variant,
         colors:
           Textmate.ColorTheme.fold(
-            (key, color, acc) => {
-              color == "" ? acc : [(key, Color.hex(color)), ...acc]
-            },
+            (key, color, acc) =>
+              color == ""
+                ? acc : [(ColorTheme.key(key), Color.hex(color)), ...acc],
             colors,
             [],
           )

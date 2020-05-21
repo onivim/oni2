@@ -13,29 +13,31 @@ module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
 open Oni_Extensions;
+open Exthost.Extension;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
 module DispatchLog = (val Core.Log.withNamespace("Oni2.Store.dispatch"));
 
-let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
-  if (cli.shouldLoadExtensions) {
+let discoverExtensions =
+    (setup: Core.Setup.t, ~shouldLoadExtensions, ~overriddenExtensionsDir) =>
+  if (shouldLoadExtensions) {
     let extensions =
       Core.Log.perf("Discover extensions", () => {
         let extensions =
-          ExtensionScanner.scan(
+          Scanner.scan(
             // The extension host assumes bundled extensions start with 'vscode.'
             ~category=Bundled,
-            ~prefix=Some("vscode"),
             setup.bundledExtensionsPath,
           );
 
         let developmentExtensions =
           switch (setup.developmentExtensionsPath) {
-          | Some(p) => ExtensionScanner.scan(~category=Development, p)
+          | Some(p) => Scanner.scan(~category=Development, p)
           | None => []
           };
 
-        let userExtensions = Utility.getUserExtensions(cli);
+        let userExtensions =
+          Utility.getUserExtensions(~overriddenExtensionsDir);
 
         Log.infof(m =>
           m("Discovered %n user extensions.", List.length(userExtensions))
@@ -54,8 +56,16 @@ let discoverExtensions = (setup: Core.Setup.t, cli: Core.Cli.t) =>
     [];
   };
 
+let registerCommands = (~dispatch, commands) => {
+  List.iter(
+    command => dispatch(Model.Actions.Commands(NewCommand(command))),
+    commands,
+  );
+};
+
 let start =
     (
+      ~showUpdateChangelog=true,
       ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
@@ -71,17 +81,17 @@ let start =
       ~quit,
       ~setTitle,
       ~setVsync,
+      ~maximize,
+      ~minimize,
       ~window: option(Revery.Window.t),
-      ~cliOptions: option(Oni_Core.Cli.t),
+      ~filesToOpen=[],
+      ~overriddenExtensionsDir=None,
+      ~shouldLoadExtensions=true,
+      ~shouldSyntaxHighlight=true,
+      ~shouldLoadConfiguration=true,
       (),
     ) => {
   ignore(executingDirectory);
-
-  let cliOptions =
-    Option.value(
-      ~default=Core.Cli.create(~folder="", ~filesToOpen=[], ()),
-      cliOptions,
-    );
 
   let latestRunEffects: ref(option(unit => unit)) = ref(None);
 
@@ -91,30 +101,33 @@ let start =
     | None => ()
     };
 
-  let extensions = discoverExtensions(setup, cliOptions);
+  let extensions =
+    discoverExtensions(
+      setup,
+      ~shouldLoadExtensions,
+      ~overriddenExtensionsDir,
+    );
   let languageInfo = LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
-  let contributedCommands = Model.Commands.ofExtensions(extensions);
+  let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
 
-  let commandUpdater =
-    CommandStoreConnector.start(getState, contributedCommands);
+  let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
+      ~showUpdateChangelog,
       languageInfo,
       getState,
       getClipboardText,
       setClipboardText,
     );
 
-  let syntaxUpdater =
-    SyntaxHighlightingStoreConnector.start(
-      ~enabled=cliOptions.shouldSyntaxHighlight,
-      languageInfo,
-    );
   let themeUpdater = ThemeStoreConnector.start(themeInfo);
 
-  let (extHostClient, extHostStream) =
+  let (extHostClientResult, extHostStream) =
     ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
+
+  // TODO: How to handle this correctly?
+  let extHostClient = extHostClientResult |> Result.get_ok;
 
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);
@@ -124,10 +137,11 @@ let start =
   let configurationUpdater =
     ConfigurationStoreConnector.start(
       ~configurationFilePath,
-      ~cliOptions,
       ~getZoom,
       ~setZoom,
       ~setVsync,
+      ~shouldLoadConfiguration,
+      ~filesToOpen,
     );
   let keyBindingsUpdater =
     KeyBindingsStoreConnector.start(keybindingsFilePath);
@@ -145,7 +159,7 @@ let start =
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater = TitleStoreConnector.start(setTitle);
+  let titleUpdater = TitleStoreConnector.start(setTitle, maximize, minimize);
   let sneakUpdater = SneakStore.start();
   let contextMenuUpdater = ContextMenuStore.start();
   let updater =
@@ -154,7 +168,6 @@ let start =
       inputUpdater,
       quickmenuUpdater,
       vimUpdater,
-      syntaxUpdater,
       extHostUpdater,
       configurationUpdater,
       keyBindingsUpdater,
@@ -168,31 +181,42 @@ let start =
       completionUpdater,
       titleUpdater,
       sneakUpdater,
-      Features.update(~extHostClient, ~getUserSettings, ~setup),
+      Features.update(
+        ~grammarRepository,
+        ~extHostClient,
+        ~getUserSettings,
+        ~setup,
+      ),
       PaneStore.update,
       contextMenuUpdater,
     ]);
 
   let subscriptions = (state: Model.State.t) => {
+    let config = Feature_Configuration.resolver(state.config);
+    let visibleRanges =
+      state
+      |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges
+      |> List.map(((bufferId, ranges)) => {
+           Model.Selectors.getBufferById(state, bufferId)
+           |> Option.map(buffer => {(buffer, ranges)})
+         })
+      |> Core.Utility.OptionEx.values;
     let syntaxSubscription =
-      Feature_Syntax.subscription(
-        ~enabled=cliOptions.shouldSyntaxHighlight,
-        ~quitting=state.isQuitting,
-        ~languageInfo,
-        ~setup,
-        state.syntaxHighlights,
-      )
-      |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg));
-
-    let workspaceUri =
-      state.workspace
-      |> Option.map((ws: Model.Workspace.workspace) => ws.workingDirectory)
-      |> Option.value(~default=Sys.getcwd())
-      |> Oni_Core.Uri.fromPath;
+      shouldSyntaxHighlight && !state.isQuitting
+        ? Feature_Syntax.subscription(
+            ~config,
+            ~languageInfo,
+            ~setup,
+            ~tokenTheme=state.tokenTheme,
+            ~bufferVisibility=visibleRanges,
+            state.syntaxHighlights,
+          )
+          |> Isolinear.Sub.map(msg => Model.Actions.Syntax(msg))
+        : Isolinear.Sub.none;
 
     let terminalSubscription =
       Feature_Terminal.subscription(
-        ~workspaceUri,
+        ~workspaceUri=Core.Uri.fromPath(state.workspace.workingDirectory),
         extHostClient,
         state.terminals,
       )
@@ -251,6 +275,7 @@ let start =
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
+      Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
     ]
     |> Isolinear.Sub.batch;
   };
@@ -264,8 +289,6 @@ let start =
       let updater = updater;
       let subscriptions = subscriptions;
     });
-
-  let storeStream = Store.Deprecated.getStoreStream();
 
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
@@ -306,27 +329,18 @@ let start =
     window,
   );
 
-  // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
-  let editorEventStream =
-    Isolinear.Stream.filterMap(storeStream, ((state, action)) =>
-      switch (action) {
-      | Model.Actions.BufferUpdate(bs) =>
-        let buffer = Model.Selectors.getBufferById(state, bs.update.id);
-        Some(Model.Actions.RecalculateEditorView(buffer));
-      | Model.Actions.BufferEnter({id, _}, _) =>
-        let buffer = Model.Selectors.getBufferById(state, id);
-        Some(Model.Actions.RecalculateEditorView(buffer));
-      | _ => None
-      }
-    );
+  registerCommands(~dispatch, Model.GlobalCommands.registrations());
+  registerCommands(
+    ~dispatch,
+    Feature_Terminal.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
+  );
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, inputStream);
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, vimStream);
-  let _: Isolinear.unsubscribe =
-    Isolinear.Stream.connect(dispatch, editorEventStream);
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
@@ -337,11 +351,11 @@ let start =
   let setIconTheme = s => {
     let iconThemeInfo =
       extensions
-      |> List.map((ext: ExtensionScanner.t) =>
+      |> List.map((ext: Scanner.ScanResult.t) =>
            ext.manifest.contributes.iconThemes
          )
       |> List.flatten
-      |> List.filter((iconTheme: ExtensionContributions.IconTheme.t) =>
+      |> List.filter((iconTheme: Contributions.IconTheme.t) =>
            String.equal(iconTheme.id, s)
          );
 
@@ -350,7 +364,7 @@ let start =
     switch (iconThemeInfo) {
     | Some(iconThemeInfo) =>
       let iconTheme =
-        Yojson.Safe.from_file(iconThemeInfo.path) |> Model.IconTheme.ofJson;
+        Yojson.Safe.from_file(iconThemeInfo.path) |> Core.IconTheme.ofJson;
 
       switch (iconTheme) {
       | Some(iconTheme) => dispatch(Model.Actions.SetIconTheme(iconTheme))

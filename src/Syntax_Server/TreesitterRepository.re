@@ -26,7 +26,9 @@ let getScopeConverter = (~scope: string, gr: t) => {
     gr.log("getScopeConverter - using cached grammar.");
     Some(v);
   | None =>
-    gr.log("getScopeConverter - querying language info");
+    gr.log(
+      "getScopeConverter - querying language info for language: " ++ scope,
+    );
     switch (
       Ext.LanguageInfo.getTreesitterPathFromScope(gr.languageInfo, scope)
     ) {

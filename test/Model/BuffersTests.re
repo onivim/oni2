@@ -1,7 +1,5 @@
 open TestFramework;
 
-open Vim;
-
 module Buffers = Oni_Model.Buffers;
 module Buffer = Oni_Core.Buffer;
 
@@ -29,6 +27,8 @@ let getFileTypeOrFail = (v: option(Buffer.t)) => {
   };
 };
 
+let emptyBuffer = Oni_Core.Buffer.ofLines([||]);
+
 describe("Buffer List Tests", ({test, _}) => {
   test("Buffer enter should create metadata", ({expect, _}) => {
     let bufferList = Buffers.empty;
@@ -36,10 +36,15 @@ describe("Buffer List Tests", ({test, _}) => {
     let added =
       Buffers.reduce(
         bufferList,
-        BufferEnter(
-          BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
-          None,
-        ),
+        BufferEnter({
+          id: 0,
+          buffer: emptyBuffer,
+          fileType: None,
+          lineEndings: None,
+          isModified: false,
+          version: 0,
+          filePath: Some("/test1.re"),
+        }),
       );
 
     expect.string(Buffers.getBuffer(0, added) |> getFilePathOrFail).toMatch(
@@ -60,18 +65,28 @@ describe("Buffer List Tests", ({test, _}) => {
     let added =
       Buffers.reduce(
         bufferList,
-        BufferEnter(
-          BufferMetadata.create(~id=0, ~filePath=Some("/test1.re"), ()),
-          None,
-        ),
+        BufferEnter({
+          id: 0,
+          buffer: emptyBuffer,
+          filePath: Some("/test1.re"),
+          isModified: false,
+          version: 0,
+          fileType: None,
+          lineEndings: None,
+        }),
       );
     let addedAgain =
       Buffers.reduce(
         added,
-        BufferEnter(
-          BufferMetadata.create(~id=0, ~filePath=Some("/test2.re"), ()),
-          None,
-        ),
+        BufferEnter({
+          id: 0,
+          buffer: emptyBuffer,
+          filePath: Some("/test2.re"),
+          isModified: false,
+          version: 0,
+          fileType: None,
+          lineEndings: None,
+        }),
       );
 
     expect.string(Buffers.getBuffer(0, addedAgain) |> getFilePathOrFail).
@@ -85,10 +100,15 @@ describe("Buffer List Tests", ({test, _}) => {
     let updated =
       Buffers.reduce(
         bufferList,
-        BufferEnter(
-          BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
-          None,
-        ),
+        BufferEnter({
+          id: 4,
+          buffer: emptyBuffer,
+          filePath: Some("/myfile.js"),
+          isModified: false,
+          version: 0,
+          fileType: None,
+          lineEndings: None,
+        }),
       );
     let activeBuffer = Buffers.getBuffer(4, updated);
     let path = getFilePathOrFail(activeBuffer);
@@ -100,10 +120,15 @@ describe("Buffer List Tests", ({test, _}) => {
     let updated =
       Buffers.reduce(
         bufferList,
-        BufferEnter(
-          BufferMetadata.create(~filePath=Some("/myfile.js"), ~id=4, ()),
-          Some("reason"),
-        ),
+        BufferEnter({
+          id: 4,
+          buffer: emptyBuffer,
+          filePath: Some("/myfile.js"),
+          isModified: false,
+          version: 0,
+          fileType: Some("reason"),
+          lineEndings: None,
+        }),
       );
     let activeBuffer = Buffers.getBuffer(4, updated);
     let fileType = getFileTypeOrFail(activeBuffer);
