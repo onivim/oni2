@@ -30,6 +30,12 @@ let nodeWeight =
   | Split(_, Weight(weight), _) => Some(weight)
   | Window(Weight(weight), _) => Some(weight);
 
+let updateWeight = f =>
+  fun
+  | Split(direction, Weight(weight), children) =>
+    Split(direction, Weight(f(weight)), children)
+  | Window(Weight(weight), id) => Window(Weight(f(weight)), id);
+
 [@deriving show({with_path: false})]
 type sized('id) = {
   x: int,
@@ -387,6 +393,53 @@ let resizeWindow = (direction, target, factor, node) => {
     | Window(_) as window => (`NotFound, window);
 
   traverse(node) |> snd;
+};
+
+let rec resizeSplit = (~path, ~delta, model) => {
+  switch (path) {
+  | [] => model
+  | [index] =>
+    switch (model) {
+    | Split(direction, size, children) =>
+      let totalWeight =
+        children
+        |> List.filter_map(nodeWeight)
+        |> List.fold_left((+.), 0.)
+        |> max(1.);
+
+      let deltaWeight = totalWeight *. delta;
+
+      Split(
+        direction,
+        size,
+        children
+        |> List.mapi((i, child) =>
+             if (i == index) {
+               updateWeight(weight => weight +. deltaWeight, child);
+             } else if (i == index + 1) {
+               updateWeight(weight => weight -. deltaWeight, child);
+             } else {
+               child;
+             }
+           ),
+      );
+    | Window(_) => model
+    }
+  | [index, ...rest] =>
+    switch (model) {
+    | Split(direction, size, children) =>
+      Split(
+        direction,
+        size,
+        List.mapi(
+          (i, child) =>
+            i == index ? resizeSplit(~path=rest, ~delta, child) : child,
+          children,
+        ),
+      )
+    | Window(_) => model
+    }
+  };
 };
 
 let rec resetWeights =
