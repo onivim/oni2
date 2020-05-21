@@ -72,7 +72,7 @@ let cliOptions =
           print_endline(ext.manifest.name);
         };
         List.iter(printExtension, extensions);
-        1;
+        0;
       },
     ~printVersion,
   );
