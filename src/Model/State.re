@@ -135,7 +135,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     iconTheme: IconTheme.create(),
     isQuitting: false,
     keyBindings: Keybindings.empty,
-    keyDisplayer: None,
+    keyDisplayer: Some(KeyDisplayer.initial),
     languageInfo: Ext.LanguageInfo.initial,
     notifications: Feature_Notification.initial,
     references: References.initial,
