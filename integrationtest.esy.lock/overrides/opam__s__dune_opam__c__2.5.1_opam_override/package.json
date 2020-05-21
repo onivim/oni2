@@ -1,0 +1,32 @@
+{
+  "source": "https://github.com/ocaml/dune/releases/download/2.5.1/dune-2.5.1.tbz#6c09f4d53e9169498ab017597c4343ceb00f6ead",
+  "buildsInSource": true,
+  "build": [
+    [
+      "ocaml",
+      "configure.ml",
+      "--libdir",
+      "#{self.lib}"
+    ],
+    [
+      "ocaml",
+      "bootstrap.ml"
+    ],
+    [
+      "./dune.exe",
+      "build",
+      "-p",
+      "dune",
+      "--profile",
+      "dune-bootstrap"
+    ]
+  ],
+  "install": "esy-installer dune.install",
+  "buildEnv": {
+    "OCAMLFIND_CONF": "$SECONDARY_OCAMLFIND_CONF"
+  },
+  "dependencies": {
+    "esy-secondary-toolchain-findlib-conf": "*",
+    "@opam/ocaml-secondary-compiler": "esy-ocaml/ocaml#a5a77246b60f3"
+  }
+}

@@ -1032,12 +1032,23 @@ module TitleBar = {
       {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
     );
 
+  let buttonActiveBackground =
+    define(
+      "titleBar.buttonActiveBackground",
+      {
+        dark: hex("#FFFFFF") |> transparent(0.1),
+        light: hex("#000000") |> transparent(0.1),
+        hc: unspecified,
+      },
+    );
+
   let defaults = [
     activeForeground,
     inactiveForeground,
     activeBackground,
     inactiveBackground,
     border,
+    buttonActiveBackground,
   ];
 };
 
