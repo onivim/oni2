@@ -142,11 +142,11 @@ module Sub = {
               if (terminalId == params.id) {
                 ReveryTerminal.write(~input=data, terminal);
               }
-            | SendProcessExit({ terminalId, exitCode }) =>
+            | SendProcessExit({terminalId, exitCode}) =>
               dispatchIfMatches(
                 terminalId,
-                ProcessExit({id: terminalId, exitCode }),
-              );
+                ProcessExit({id: terminalId, exitCode}),
+              )
             }
           });
 

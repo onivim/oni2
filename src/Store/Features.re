@@ -139,10 +139,15 @@ let update =
         msg,
       );
 
-    let effect: Isolinear.Effect.t(Actions.t) =
+    let state = {...state, terminals: model};
+
+    let (state, effect) =
       switch ((eff: Feature_Terminal.outmsg)) {
-      | Nothing => Effect.none
-      | Effect(eff) => eff |> Effect.map(msg => Actions.Terminal(msg))
+      | Nothing => (state, Effect.none)
+      | Effect(eff) => (
+          state,
+          eff |> Effect.map(msg => Actions.Terminal(msg)),
+        )
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
@@ -151,14 +156,32 @@ let update =
           | Current => None
           };
 
-        Isolinear.Effect.createWithDispatch(
-          ~name="feature.terminal.openBuffer", dispatch => {
-          dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
-        });
+        let eff =
+          Isolinear.Effect.createWithDispatch(
+            ~name="feature.terminal.openBuffer", dispatch => {
+            dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
+          });
+        (state, eff);
 
-      | TerminalExit({ terminalId, exitCode }) => Effect.none
+      | TerminalExit({terminalId, exitCode, shouldClose})
+          when shouldClose == true =>
+        let maybeTerminalBuffer =
+          state |> Selectors.getBufferForTerminal(~terminalId);
+
+        let editorGroups' =
+          maybeTerminalBuffer
+          |> Option.map(bufferId =>
+               EditorGroups.closeBuffer(~bufferId, state.editorGroups)
+             )
+          |> Option.value(~default=state.editorGroups);
+
+        let state' = {...state, editorGroups: editorGroups'};
+
+        (state', Effect.none);
+      | TerminalExit(_) => (state, Effect.none)
       };
-    ({...state, terminals: model}, effect);
+
+    (state, effect);
 
   | Theme(msg) =>
     let model' = Feature_Theme.update(state.colorTheme, msg);

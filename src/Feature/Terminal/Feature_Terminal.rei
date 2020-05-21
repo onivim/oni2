@@ -62,7 +62,11 @@ type outmsg =
       name: string,
       splitDirection,
     })
-  | TerminalExit({terminalId: int, exitCode: int});
+  | TerminalExit({
+      terminalId: int,
+      exitCode: int,
+      shouldClose: bool,
+    });
 
 let shouldHandleInput: string => bool;
 

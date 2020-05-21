@@ -10,6 +10,8 @@ let getFirstEditorGroup: t => EditorGroup.t;
 
 let add: (~defaultFont: Service_Font.font, EditorGroup.t, t) => t;
 
+// [closeBuffer(~bufferId, groups)] closes buffer with id [bufferId] across all groups
+let closeBuffer: (~bufferId: int, t) => t;
 let closeEditor: (~editorId: int, t) => t;
 
 let isActive: (t, EditorGroup.t) => bool;

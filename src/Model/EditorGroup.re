@@ -180,3 +180,20 @@ let removeEditorById = (state, editorId) => {
     };
   };
 };
+
+let removeEditorsForBuffer = (~bufferId, group) => {
+  IntMap.fold(
+    (id, editor, acc) => {
+      let editorBufferId = Editor.getBufferId(editor);
+      let editorId = Editor.getId(editor);
+
+      if (editorBufferId == bufferId) {
+        removeEditorById(acc, editorId);
+      } else {
+        acc;
+      };
+    },
+    group.editors,
+    group,
+  );
+};

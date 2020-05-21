@@ -70,7 +70,11 @@ type outmsg =
       name: string,
       splitDirection,
     })
-  | TerminalExit({terminalId: int, exitCode: int});
+  | TerminalExit({
+      terminalId: int,
+      exitCode: int,
+      shouldClose: bool,
+    });
 
 let shellCmd = ShellUtility.getDefaultShell();
 
@@ -205,8 +209,10 @@ let update = (~config: Config.resolver, model: t, msg) => {
     let newModel = updateById(id, term => {...term, cursor}, model);
     (newModel, Nothing);
 
-  | Service(ProcessExit({id, exitCode})) =>
-    (model, TerminalExit({terminalId: id, exitCode}))
+  | Service(ProcessExit({id, exitCode})) => (
+      model,
+      TerminalExit({terminalId: id, exitCode, shouldClose: false}),
+    )
   };
 };
 
@@ -497,21 +503,39 @@ module Commands = {
         ~category="Terminal",
         ~title="Open terminal in new horizontal split",
         "terminal.new.horizontal",
-        Command(NewTerminal({cmd: None, splitDirection: Horizontal, closeOnExit: true})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Horizontal,
+            closeOnExit: true,
+          }),
+        ),
       );
     let vertical =
       define(
         ~category="Terminal",
         ~title="Open terminal in new vertical split",
         "terminal.new.vertical",
-        Command(NewTerminal({cmd: None, splitDirection: Vertical, closeOnExit: true})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Vertical,
+            closeOnExit: true,
+          }),
+        ),
       );
     let current =
       define(
         ~category="Terminal",
         ~title="Open terminal in current window",
         "terminal.new.current",
-        Command(NewTerminal({cmd: None, splitDirection: Current, closeOnExit: true})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Current,
+            closeOnExit: true,
+          }),
+        ),
       );
   };
 

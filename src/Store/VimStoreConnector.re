@@ -280,7 +280,11 @@ let start =
         };
 
       dispatch(
-        Actions.Terminal(Command(NewTerminal({cmd, splitDirection, closeOnExit: closeOnFinish}))),
+        Actions.Terminal(
+          Command(
+            NewTerminal({cmd, splitDirection, closeOnExit: closeOnFinish}),
+          ),
+        ),
       );
     });
 

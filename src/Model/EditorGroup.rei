@@ -20,9 +20,11 @@ let getEditorById: (int, t) => option(Feature_Editor.Editor.t);
 let getOrCreateEditorForBuffer:
   (~font: Service_Font.font, ~buffer: Feature_Editor.EditorBuffer.t, t) =>
   (t, Feature_Editor.EditorId.t);
+
 let nextEditor: t => t;
 let previousEditor: t => t;
 let removeEditorById: (t, int) => t;
+let removeEditorsForBuffer: (~bufferId: int, t) => t;
 
 let setBufferFont: (~bufferId: int, ~font: Service_Font.font, t) => t;
 
