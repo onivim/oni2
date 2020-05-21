@@ -5,6 +5,7 @@
     (package OniUnitTestRunner)
     (libraries
         yojson
+        Oni_Cli_Test
         Oni_Core_Test
         Oni_Components_Test
         Oni_Extensions_Test
@@ -17,6 +18,16 @@
         Feature_LanguageSupport_Test
         Exthost_Transport_Test
         Exthost_Test
+            ))
+
+(executable
+    (name OniUnitTestRunnerCLI)
+    (public_name OniUnitTestRunnerCLI)
+    (modules OniUnitTestRunnerCLI)
+    (package OniUnitTestRunner)
+    (libraries
+        yojson
+        Oni_Cli_Test
             ))
 
 (executable
