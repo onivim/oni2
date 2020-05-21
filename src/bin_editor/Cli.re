@@ -31,6 +31,24 @@ let setWorkingDirectory = s => {
 let setRef: (ref(option('a)), 'a) => unit =
   (someRef, v) => someRef := Some(v);
 
+/* NOTE: On MacOS, when launching the app through GateKeeper,
+ * there is a legacy parameter parsed in: -psn_X_XXXXXX
+ * Apparently this is a legacy ProcessSerialNumber - more info here:
+ * http://mirror.informatimago.com/next/developer.apple.com/documentation/Carbon/Reference/Process_Manager/prmref_main/data_type_5.html#//apple_ref/doc/uid/TP30000208/C001951
+ * https://stackoverflow.com/questions/10242115/os-x-strange-psn-command-line-parameter-when-launched-from-finder
+ *
+ * We fail and show an error message if we get an unrecognized parameter, so we need to filter this out, otherwise we get a crash on first launch:
+ * https://github.com/onivim/oni2/issues/552
+ */
+let filterPsnArgument = args => {
+  let psnRegex = Str.regexp("^-psn.*");
+  let f = s => {
+    !Str.string_match(psnRegex, s, 0);
+  };
+
+  args |> Array.to_list |> List.filter(f) |> Array.of_list;
+};
+
 let parse =
     (
       ~checkHealth,
@@ -39,6 +57,8 @@ let parse =
       ~uninstallExtension,
       ~printVersion,
     ) => {
+  let sysArgs = Sys.argv |> filterPsnArgument;
+
   let args: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
@@ -73,7 +93,7 @@ let parse =
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
-  Arg.parse(
+  Arg.parse_argv(sysArgs,
     [
       ("-f", Unit(Timber.App.enable), ""),
       ("--nofork", Unit(Timber.App.enable), ""),
