@@ -88,6 +88,7 @@
     (package OniUnitTestRunner)
     (libraries
         yojson
+        Oni_Cli_Test
         Oni_Core_Test
         Oni_Components_Test
         Oni_ExtensionManagement_Test
