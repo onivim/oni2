@@ -406,7 +406,11 @@ let rec resizeSplit = (~path, ~delta, model) => {
         |> List.filter_map(nodeWeight)
         |> List.fold_left((+.), 0.)
         |> max(1.);
-
+      let minimumWeight =
+        min(
+          0.1 *. totalWeight,
+          totalWeight /. float(List.length(children)),
+        );
       let deltaWeight = totalWeight *. delta;
 
       Split(
@@ -415,9 +419,15 @@ let rec resizeSplit = (~path, ~delta, model) => {
         children
         |> List.mapi((i, child) =>
              if (i == index) {
-               updateWeight(weight => weight +. deltaWeight, child);
+               updateWeight(
+                 weight => max(weight +. deltaWeight, minimumWeight),
+                 child,
+               );
              } else if (i == index + 1) {
-               updateWeight(weight => weight -. deltaWeight, child);
+               updateWeight(
+                 weight => max(weight -. deltaWeight, minimumWeight),
+                 child,
+               );
              } else {
                child;
              }
