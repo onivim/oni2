@@ -4,6 +4,7 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Command = Command;
 module CompletionContext = CompletionContext;
 module CompletionKind = CompletionKind;
 module DefinitionLink = DefinitionLink;
@@ -14,6 +15,7 @@ module DocumentHighlight = DocumentHighlight;
 module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module Eol = Eol;
+module Label = Label;
 module Location = Location;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;

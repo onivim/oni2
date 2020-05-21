@@ -5,6 +5,16 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Command: {
+  [@deriving show]
+  type t = {
+    id: string,
+    title: option(string),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module CompletionContext: {
   type triggerKind =
     | Invoke
@@ -145,6 +155,20 @@ module ReferenceContext: {
   type t = {includeDeclaration: bool};
 
   let encode: Json.encoder(t);
+};
+
+module Label: {
+  [@deriving show]
+  type segment =
+    | Text(string)
+    | Icon(string);
+
+  [@deriving show]
+  type t = list(segment);
+
+  let of_string: string => t;
+
+  let decode: Json.decoder(t);
 };
 
 module SCM: {
@@ -654,11 +678,13 @@ module Msg: {
     type msg =
       | SetEntry({
           id: string,
-          text: string,
+          label: Label.t,
           source: string,
           alignment,
+          command: option(Command.t),
           priority: int,
-        });
+        })
+      | Dispose({id: int});
   };
 
   [@deriving show]

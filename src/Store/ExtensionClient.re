@@ -313,6 +313,11 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       dispatch(DecorationsChanged({handle, uris}));
       Lwt.return(Reply.okEmpty);
 
+    | ExtensionService(ExtensionActivationError({extensionId, errorMessage})) =>
+      Log.errorf(m =>
+        m("Extension '%s' failed to activate: %s", extensionId, errorMessage)
+      );
+      Lwt.return(Reply.okEmpty);
     | ExtensionService(DidActivateExtension({extensionId, _})) =>
       dispatch(
         Actions.Extension(Oni_Model.Extensions.Activated(extensionId)),
@@ -323,10 +328,19 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       dispatch(ExtMessageReceived({severity, message, extensionId}));
       Lwt.return(Reply.okEmpty);
 
-    | StatusBar(SetEntry({id, text, alignment, priority, _})) =>
+    | StatusBar(SetEntry({id, label, alignment, priority, command, _})) =>
+      let command =
+        command |> Option.map(({id, _}: Exthost.Command.t) => id);
       dispatch(
         Actions.StatusBarAddItem(
-          StatusBarModel.Item.create(~id, ~text, ~alignment, ~priority, ()),
+          StatusBarModel.Item.create(
+            ~command?,
+            ~id,
+            ~label,
+            ~alignment,
+            ~priority,
+            (),
+          ),
         ),
       );
       Lwt.return(Reply.okEmpty);
