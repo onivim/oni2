@@ -36,6 +36,7 @@ type command =
   | NewTerminal({
       cmd: option(string),
       splitDirection,
+      closeOnExit: bool,
     })
   | NormalMode
   | InsertMode;

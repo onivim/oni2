@@ -156,7 +156,7 @@ let update =
           dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
         });
 
-      | TerminalExit({ terminalId, exitCode }) => ();
+      | TerminalExit({ terminalId, exitCode }) => Effect.none
       };
     ({...state, terminals: model}, effect);
 
