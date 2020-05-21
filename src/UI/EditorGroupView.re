@@ -30,11 +30,13 @@ let toUiTabs =
     switch (Model.EditorGroup.getEditorById(id, editorGroup)) {
     | None => None
     | Some(editor) =>
+      open Feature_Editor;
       let (modified, title, filePath) =
-        Model.Buffers.getBuffer(editor.bufferId, buffers) |> getBufferMetadata;
+        Model.Buffers.getBuffer(Editor.getBufferId(editor), buffers)
+        |> getBufferMetadata;
 
       let renderer =
-        Model.BufferRenderers.getById(editor.bufferId, renderers);
+        Model.BufferRenderers.getById(Editor.getBufferId(editor), renderers);
 
       Some(
         Tabs.{editorId: editor.editorId, filePath, title, modified, renderer},
@@ -113,7 +115,13 @@ module Parts = {
       let State.{uiFont, editorFont, _} = state;
 
       let renderer =
-        BufferRenderers.getById(editor.bufferId, state.bufferRenderers);
+        BufferRenderers.getById(
+          Feature_Editor.Editor.getBufferId(editor),
+          state.bufferRenderers,
+        );
+
+      let changelogDispatch = msg =>
+        GlobalContext.current().dispatch(Changelog(msg));
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
@@ -144,7 +152,13 @@ module Parts = {
 
       | Version => <VersionView theme uiFont editorFont />
 
-      | FullChangelog => <Feature_Changelog.View.Full theme uiFont />
+      | FullChangelog =>
+        <Feature_Changelog.View.Full
+          state={state.changelog}
+          theme
+          dispatch=changelogDispatch
+          uiFont
+        />
 
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />
@@ -170,7 +184,7 @@ module Styles = {
 };
 
 let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
-  let State.{vimMode: mode, uiFont, _} = state;
+  let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -188,7 +202,7 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
     let editorContainer =
       switch (EditorGroup.getActiveEditor(editorGroup)) {
       | Some(editor) => <Parts.EditorContainer editor state theme isActive />
-      | None => React.empty
+      | None => <WelcomeView theme editorFont uiFont />
       };
 
     if (showTabs) {

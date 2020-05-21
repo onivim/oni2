@@ -9,7 +9,7 @@ open Feature_Editor;
 // - The 'oni-dev' extension gets activated
 // - We get a definition response
 runTestWithInput(
-  ~name="ExtHostDefinitionTest", (input, _dispatch, wait, _runEffects) => {
+  ~name="ExtHostDefinitionTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     state.vimMode == Vim.Types.Normal
   );
@@ -27,7 +27,7 @@ runTestWithInput(
   );
 
   // Create a buffer
-  Vim.command("new test.oni-dev");
+  dispatch(Actions.OpenFileByPath("test.oni-dev", None, None));
 
   // Wait for the oni-dev filetype
   wait(

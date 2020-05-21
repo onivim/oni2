@@ -45,8 +45,8 @@ module Styles = {
   ];
 };
 
-let make = (~isFocused, ~isMaximized, ~title, ~theme, ~font: UiFont.t, ()) =>
-  if (isMaximized) {
+let make = (~isFocused, ~isFullscreen, ~title, ~theme, ~font: UiFont.t, ()) =>
+  if (isFullscreen) {
     React.empty;
   } else {
     switch (Revery.Environment.os) {

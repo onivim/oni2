@@ -981,6 +981,22 @@ module Tab = {
   ];
 };
 
+module TextLink = {
+  let foreground =
+    define(
+      "textLink.foreground",
+      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
+    );
+
+  let activeForeground =
+    define(
+      "textLink.activeForeground",
+      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
+    );
+
+  let defaults = [foreground, activeForeground];
+};
+
 module TitleBar = {
   let activeForeground =
     define(

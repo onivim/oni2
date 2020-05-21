@@ -16,16 +16,16 @@ module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-let start = (extensions, extHostClient: Exthost.Client.t) => {
-  let _bufferMetadataToModelAddedDelta =
-      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
-    switch (bm.filePath, fileType) {
+module Internal = {
+  let bufferMetadataToModelAddedDelta =
+      (~version, ~filePath, ~fileType: option(string)) =>
+    switch (filePath, fileType) {
     | (Some(fp), Some(ft)) =>
       Log.trace("Creating model for filetype: " ++ ft);
 
       Some(
         Exthost.ModelAddedDelta.create(
-          ~versionId=bm.version,
+          ~versionId=version,
           ~lines=[""],
           ~modeId=ft,
           ~isDirty=true,
@@ -34,7 +34,9 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
       );
     | _ => None
     };
+};
 
+let start = (extensions, extHostClient: Exthost.Client.t) => {
   let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
 
   let activateFileType = (fileType: option(string)) =>
@@ -50,10 +52,15 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
          }
        );
 
-  let sendBufferEnterEffect =
-      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
+  let sendBufferEnterEffect = (~version, ~filePath, ~fileType) =>
     Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
-      switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
+      switch (
+        Internal.bufferMetadataToModelAddedDelta(
+          ~version,
+          ~filePath,
+          ~fileType,
+        )
+      ) {
       | None => ()
       | Some((v: Exthost.ModelAddedDelta.t)) =>
         activateFileType(fileType);
@@ -236,21 +243,26 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         executeContributedCommandEffect(command, arguments),
       )
 
+    | StatusBar(ContributedItemClicked({command, _})) => (
+        state,
+        executeContributedCommandEffect(command, []),
+      )
+
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
-    | BufferEnter({metadata, fileType, _}) =>
+    | BufferEnter({id, version, filePath, fileType, _}) =>
       let eff =
-        switch (metadata.filePath) {
+        switch (filePath) {
         | Some(path) =>
           Isolinear.Effect.batch([
             Feature_SCM.Effects.getOriginalUri(
               extHostClient, state.scm, path, uri =>
-              Actions.GotOriginalUri({bufferId: metadata.id, uri})
+              Actions.GotOriginalUri({bufferId: id, uri})
             ),
-            sendBufferEnterEffect(metadata, fileType),
+            sendBufferEnterEffect(~version, ~filePath, ~fileType),
           ])
 
-        | None => sendBufferEnterEffect(metadata, fileType)
+        | None => sendBufferEnterEffect(~version, ~filePath, ~fileType)
         };
       (state, eff);
 

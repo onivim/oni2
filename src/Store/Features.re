@@ -186,6 +186,10 @@ let update =
     | None => (state, Effect.none)
     }
 
+  | Changelog(msg) =>
+    let (model, eff) = Feature_Changelog.update(state.changelog, msg);
+    ({...state, changelog: model}, eff);
+
   // TODO: This should live in the editor feature project
   | EditorFont(Service_Font.FontLoaded(font)) => (
       {...state, editorFont: font},

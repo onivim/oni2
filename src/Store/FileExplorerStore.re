@@ -205,7 +205,7 @@ let start = () => {
         ]),
       )
 
-    | BufferEnter({metadata: {filePath, _}, _}) =>
+    | BufferEnter({filePath, _}) =>
       switch (state.fileExplorer) {
       | {active, _} when active != filePath =>
         let state = setActive(filePath, state);

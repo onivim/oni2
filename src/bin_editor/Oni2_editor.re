@@ -72,7 +72,7 @@ let cliOptions =
           print_endline(ext.manifest.name);
         };
         List.iter(printExtension, extensions);
-        1;
+        0;
       },
     ~printVersion,
   );
@@ -263,6 +263,7 @@ if (cliOptions.syntaxHighlightService) {
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
         ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
         ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
+        ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
         ~quit,
         (),
       );
@@ -271,6 +272,10 @@ if (cliOptions.syntaxHighlightService) {
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>
         dispatch(Model.Actions.WindowMaximized)
+      );
+    let _: Window.unsubscribe =
+      Window.onFullscreen(window, () =>
+        dispatch(Model.Actions.WindowFullscreen)
       );
     let _: Window.unsubscribe =
       Window.onMinimized(window, () =>
@@ -292,9 +297,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.onMoved(window, _ => persistWorkspace());
 
     GlobalContext.set({
-      openEditorById: id => {
-        dispatch(Model.Actions.ViewSetActiveEditor(id));
-      },
       closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
       editorScrollDelta: (~editorId, ~deltaY, ()) =>
         dispatch(Model.Actions.EditorScroll(editorId, deltaY)),

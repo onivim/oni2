@@ -64,7 +64,11 @@ let ext = name => {
 let handlers =
   [
     mainNotImplemented("MainThreadAuthentication"),
-    mainNotImplemented("MainThreadClipboard"),
+    main(
+      ~handler=Msg.Clipboard.handle,
+      ~mapper=msg => Msg.Clipboard(msg),
+      "MainThreadClipboard",
+    ),
     main(
       ~handler=Msg.Commands.handle,
       ~mapper=msg => Msg.Commands(msg),

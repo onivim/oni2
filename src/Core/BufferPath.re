@@ -7,14 +7,18 @@ open Oniguruma;
 module OptionEx = Utility.OptionEx;
 
 type t =
+  | Changelog
   | FilePath(string)
   | Terminal({
       bufferId: int,
       cmd: string,
     })
+  | UpdateChangelog
   | Welcome
   | Version;
 
+let changelog = "oni://Changelog";
+let updateChangelog = "oni://UpdateChangelog";
 let welcome = "oni://Welcome";
 let version = "oni://Version";
 let terminalRegex = OnigRegExp.create("oni://terminal/([0-9]*)/(.*)");
@@ -24,6 +28,10 @@ let parse = bufferPath =>
     Welcome;
   } else if (String.equal(bufferPath, version)) {
     Version;
+  } else if (String.equal(bufferPath, changelog)) {
+    Changelog;
+  } else if (String.equal(bufferPath, updateChangelog)) {
+    UpdateChangelog;
   } else {
     terminalRegex
     |> Result.to_option

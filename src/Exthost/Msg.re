@@ -1,5 +1,22 @@
+module ExtCommand = Command;
 open Oni_Core;
 open Oni_Core.Utility;
+
+module Clipboard = {
+  [@deriving show]
+  type msg =
+    | ReadText
+    | WriteText(string);
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$readText", _) => Ok(ReadText)
+    | ("$writeText", `List([`String(text)])) => Ok(WriteText(text))
+    | _ => Error("Unhandled clipboard method: " ++ method)
+    };
+  };
+};
+
 module Commands = {
   [@deriving show]
   type msg =
@@ -464,11 +481,23 @@ module StatusBar = {
   type msg =
     | SetEntry({
         id: string,
-        text: string,
+        label: Label.t,
         source: string,
         alignment,
+        command: option(ExtCommand.t),
         priority: int,
-      });
+      })
+    | Dispose({id: int});
+
+  let parseCommand = commandJson =>
+    switch (commandJson) {
+    | `String(jsonString) =>
+      jsonString
+      |> Yojson.Safe.from_string
+      |> Json.Decode.decode_value(Json.Decode.nullable(ExtCommand.decode))
+      |> Result.map_error(Json.Decode.string_of_error)
+    | _ => Ok(None)
+    };
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
@@ -478,17 +507,24 @@ module StatusBar = {
           `String(id),
           _,
           `String(source),
-          `String(text),
-          _,
-          _,
+          labelJson,
+          _tooltip,
+          commandJson,
           _,
           `String(alignment),
           `String(priority),
         ]),
       ) =>
+      open Base.Result.Let_syntax;
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
-      Ok(SetEntry({id, source, text, alignment, priority}));
+      let%bind command = parseCommand(commandJson);
+      let%bind label =
+        labelJson
+        |> Json.Decode.decode_value(Label.decode)
+        |> Result.map_error(Json.Decode.string_of_error);
+      Ok(SetEntry({id, source, label, alignment, priority, command}));
+    | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>
       Error(
         "Unable to parse method: "
@@ -716,6 +752,7 @@ module TerminalService = {
 type t =
   | Connected
   | Ready
+  | Clipboard(Clipboard.msg)
   | Commands(Commands.msg)
   | DebugService(DebugService.msg)
   | Decorations(Decorations.msg)

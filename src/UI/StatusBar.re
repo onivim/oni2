@@ -278,8 +278,28 @@ let%component make =
   let%hook (yOffset, _animationState, _reset) =
     Hooks.animation(transitionAnimation);
 
-  let toStatusBarElement = (statusBarItem: Item.t) =>
-    <textItem font background theme text={statusBarItem.text} />;
+  let toStatusBarElement = (statusItem: Item.t) => {
+    let onClick =
+      statusItem.command
+      |> Option.map((command, ()) =>
+           GlobalContext.current().dispatch(
+             Actions.StatusBar(
+               ContributedItemClicked({id: statusItem.id, command}),
+             ),
+           )
+         );
+
+    <item ?onClick>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
+        <Label font color=Revery.Colors.white label={statusItem.label} />
+      </View>
+    </item>;
+  };
 
   let leftItems =
     state.statusBar

@@ -27,7 +27,6 @@ let discoverExtensions =
           Scanner.scan(
             // The extension host assumes bundled extensions start with 'vscode.'
             ~category=Bundled,
-            ~prefix=Some("vscode"),
             setup.bundledExtensionsPath,
           );
 
@@ -66,6 +65,7 @@ let registerCommands = (~dispatch, commands) => {
 
 let start =
     (
+      ~showUpdateChangelog=true,
       ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
@@ -85,7 +85,7 @@ let start =
       ~minimize,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
-      ~overriddenExtensionsDir=?,
+      ~overriddenExtensionsDir=None,
       ~shouldLoadExtensions=true,
       ~shouldSyntaxHighlight=true,
       ~shouldLoadConfiguration=true,
@@ -114,6 +114,7 @@ let start =
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
+      ~showUpdateChangelog,
       languageInfo,
       getState,
       getClipboardText,
@@ -289,8 +290,6 @@ let start =
       let subscriptions = subscriptions;
     });
 
-  let storeStream = Store.Deprecated.getStoreStream();
-
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
   let _unsubscribe: unit => unit =
@@ -337,27 +336,11 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
   );
 
-  // TODO: Remove this wart. There is a complicated timing dependency that shouldn't be necessary.
-  let editorEventStream =
-    Isolinear.Stream.filterMap(storeStream, ((state, action)) =>
-      switch (action) {
-      | Model.Actions.BufferUpdate(bs) =>
-        let buffer = Model.Selectors.getBufferById(state, bs.update.id);
-        Some(Model.Actions.RecalculateEditorView(buffer));
-      | Model.Actions.BufferEnter({metadata: {id, _}, _}) =>
-        let buffer = Model.Selectors.getBufferById(state, id);
-        Some(Model.Actions.RecalculateEditorView(buffer));
-      | _ => None
-      }
-    );
-
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, inputStream);
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, vimStream);
-  let _: Isolinear.unsubscribe =
-    Isolinear.Stream.connect(dispatch, editorEventStream);
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, extHostStream);
 

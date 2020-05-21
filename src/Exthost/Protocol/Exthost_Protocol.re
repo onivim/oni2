@@ -310,7 +310,7 @@ module Message = {
       bufferToPacket(~buffer);
     | ReplyError({error, _}) =>
       writePreamble(~buffer, ~msgType=replyErrError, ~requestId);
-      writeLongString(buffer, error);
+      writeLongString(buffer, "\"" ++ error ++ "\"");
       bufferToPacket(~buffer);
     };
   };

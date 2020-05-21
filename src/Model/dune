@@ -1,7 +1,7 @@
 (library
     (name Oni_Model)
     (public_name Oni2.model)
-    (libraries 
+    (libraries
         str
         bigarray
         zed_oni
@@ -25,6 +25,7 @@
         Oni2.feature.configuration
         Oni2.feature.theme
         Oni2.feature.notification
+        Oni2.feature.changelog
         Oni2.feature.commands
         Oni2.feature.search
         Oni2.feature.syntax

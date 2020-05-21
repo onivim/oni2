@@ -91,8 +91,8 @@ jobs:
   - template: .ci/clean-linux-deps.yml
   - script: docker build -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
-  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ls -a'
-    displayName: 'docker: ls -a'
+  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
+    displayName: 'docker: git version (after updating)'
   - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
     displayName: 'docker: build Onivim 2'
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth

@@ -6,8 +6,8 @@ describe("StatusBar", ({test, _}) => {
   test("receives status bar message on activation", _ => {
     let waitForStatusBar =
       fun
-      | Msg.StatusBar(SetEntry({text, _})) => {
-          String.equal(text, "\"Hello!\"");
+      | Msg.StatusBar(SetEntry({label, _})) => {
+          label == Label.[Text("Hello!")];
         }
       | _ => false;
 

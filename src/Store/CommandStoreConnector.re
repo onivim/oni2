@@ -29,7 +29,6 @@ let start = () => {
       let getBufferAndLocation = () => {
         open Base.Option.Let_syntax;
         let%bind buffer = state |> Selectors.getActiveBuffer;
-
         let%bind path = buffer |> Buffer.getFilePath;
 
         let%bind cursorLocation =
@@ -107,18 +106,7 @@ let start = () => {
 
   let openChangelogEffect = _ =>
     Isolinear.Effect.createWithDispatch(~name="oni.changelog", dispatch => {
-      Vim.init();
-      let _: unit = Vim.command("e oni://Changelog");
-
-      let bufferId = Vim.Buffer.getCurrent() |> Vim.Buffer.getId;
-      dispatch(
-        Actions.BufferRenderer(
-          BufferRenderer.RendererAvailable(
-            bufferId,
-            BufferRenderer.FullChangelog,
-          ),
-        ),
-      );
+      dispatch(OpenFileByPath(BufferPath.changelog, None, None))
     });
 
   let commands = [
