@@ -8,6 +8,10 @@ open Revery;
 open UI;
 open Oni_Model;
 
+module Constants = {
+  let handleSize = 10;
+};
+
 module Styles = {
   open Style;
 
@@ -22,9 +26,9 @@ module Styles = {
   let verticalHandle = (node: Feature_Layout.sized(_)) => [
     cursor(MouseCursors.horizontalResize),
     position(`Absolute),
-    left(node.x + node.width - 5),
+    left(node.x + node.width - Constants.handleSize / 2),
     top(node.y),
-    width(10),
+    width(Constants.handleSize),
     height(node.height),
   ];
 
@@ -32,9 +36,9 @@ module Styles = {
     cursor(MouseCursors.verticalResize),
     position(`Absolute),
     left(node.x),
-    top(node.y + node.height - 5),
+    top(node.y + node.height - Constants.handleSize / 2),
     width(node.width),
-    height(10),
+    height(Constants.handleSize),
   ];
 };
 
