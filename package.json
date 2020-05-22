@@ -337,7 +337,6 @@
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "revery": "revery-ui/revery#8b399ed",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
-    "esy-cmake": "prometheansacrifice/esy-cmake#2a47392def755",
     "esy-skia": "revery-ui/esy-skia#d60e5fe",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
@@ -348,8 +347,7 @@
     "revery-terminal": "revery-ui/revery-terminal#4e8ca1c",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
-    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
-    "reason-sdl2": "2.10.3032"
+    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"
   },
   "devDependencies": {
     "ocaml": "~4.9",
