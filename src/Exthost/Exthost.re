@@ -15,6 +15,7 @@ module DocumentHighlight = DocumentHighlight;
 module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module Eol = Eol;
+module Files = Files;
 module Label = Label;
 module Location = Location;
 module ModelAddedDelta = ModelAddedDelta;

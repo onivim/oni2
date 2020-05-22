@@ -336,25 +336,30 @@ module Eol: {
 
 module Files: {
   module FileSystemProviderCapabilities: {
-    type capability = 
-    | `FileReadWrite
-    | `FileOpenReadWriteClose
-    | `FileReadStream
-    | `FileFolderCopy
-    | `PathCaseSensitive
-    | `Readonly
-    | `Trash;
+    type capability = [
+      | `FileReadWrite
+      | `FileOpenReadWriteClose
+      | `FileReadStream
+      | `FileFolderCopy
+      | `PathCaseSensitive
+      | `Readonly
+      | `Trash
+    ];
 
-    type t = list(capability);
+    [@deriving show]
+    type t;
+
+    let test: (capability, t) => bool;
 
     let decode: Json.decoder(t);
   };
 
   module FileChangeType: {
+    [@deriving show]
     type t =
-    | Updated
-    | Added
-    | Deleted;
+      | Updated
+      | Added
+      | Deleted;
 
     let ofInt: int => option(t);
     let toInt: t => int;
@@ -363,44 +368,60 @@ module Files: {
   };
 
   module FileChange: {
+    [@deriving show]
     type t = {
       resource: Uri.t,
-      type: FileChangeType.t
+      changeType: FileChangeType.t,
     };
 
     let decode: Json.decoder(t);
   };
 
   module FileType: {
+    [@deriving show]
     type t =
-    | Unknown
-    | File
-    | Directory
-    | SymbolicLink;
+      | Unknown
+      | File
+      | Directory
+      | SymbolicLink;
 
     let ofInt: int => option(t);
     let toInt: t => int;
 
-    let decoder: Json.decoder(t);
-    let encoder: Json.encoder(t);
+    let decode: Json.decoder(t);
+    let encode: Json.encoder(t);
+  };
+
+  module FileOverwriteOptions: {
+    [@deriving show]
+    type t = {overwrite: bool};
+
+    let decode: Json.decoder(t);
   };
 
   module FileWriteOptions: {
+    [@deriving show]
     type t = {
       overwrite: bool,
-      create: bool
+      create: bool,
     };
+
+    let decode: Json.decoder(t);
   };
   module FileOpenOptions: {
-    type t = {
-      create: bool
-    };
+    [@deriving show]
+    type t = {create: bool};
+
+    let decode: Json.decoder(t);
   };
   module FileDeleteOptions: {
+    [@deriving show]
     type t = {
       recursive: bool,
-      useTrash: bool
+      useTrash: bool,
     };
+
+    let decode: Json.decoder(t);
   };
 };
 
@@ -612,16 +633,42 @@ module Msg: {
   };
 
   module FileSystem: {
-
     open Files;
 
     [@deriving show]
     type msg =
-    | RegisterFileSystemProvider({ handle: int, scheme: string, capabilities: FileSystemProviderCapabilities.t })
-    | UnregisterProvider({ handle: int})
-    | OnFileSystemChange({handle: int, resource: })
-
-  
+      | RegisterFileSystemProvider({
+          handle: int,
+          scheme: string,
+          capabilities: FileSystemProviderCapabilities.t,
+        })
+      | UnregisterProvider({handle: int})
+      | OnFileSystemChange({
+          handle: int,
+          resource: list(FileChange.t),
+        })
+      | Stat({uri: Uri.t})
+      | ReadDir({uri: Uri.t})
+      | ReadFile({uri: Uri.t})
+      | WriteFile({
+          uri: Uri.t,
+          buffer: Bytes.t,
+        })
+      | Rename({
+          source: Uri.t,
+          target: Uri.t,
+          opts: FileOverwriteOptions.t,
+        })
+      | Copy({
+          source: Uri.t,
+          target: Uri.t,
+          opts: FileOverwriteOptions.t,
+        })
+      | Mkdir({uri: Uri.t})
+      | Delete({
+          uri: Uri.t,
+          opts: FileDeleteOptions.t,
+        });
   };
 
   module LanguageFeatures: {
@@ -781,6 +828,7 @@ module Msg: {
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
     | ExtensionService(ExtensionService.msg)
+    | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
     | SCM(SCM.msg)

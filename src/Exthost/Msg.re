@@ -245,6 +245,45 @@ module ExtensionService = {
   };
 };
 
+module FileSystem = {
+  open Files;
+
+  [@deriving show]
+  type msg =
+    | RegisterFileSystemProvider({
+        handle: int,
+        scheme: string,
+        capabilities: FileSystemProviderCapabilities.t,
+      })
+    | UnregisterProvider({handle: int})
+    | OnFileSystemChange({
+        handle: int,
+        resource: list(FileChange.t),
+      })
+    | Stat({uri: Uri.t})
+    | ReadDir({uri: Uri.t})
+    | ReadFile({uri: Uri.t})
+    | WriteFile({
+        uri: Uri.t,
+        buffer: Bytes.t,
+      })
+    | Rename({
+        source: Uri.t,
+        target: Uri.t,
+        opts: FileOverwriteOptions.t,
+      })
+    | Copy({
+        source: Uri.t,
+        target: Uri.t,
+        opts: FileOverwriteOptions.t,
+      })
+    | Mkdir({uri: Uri.t})
+    | Delete({
+        uri: Uri.t,
+        opts: FileDeleteOptions.t,
+      });
+};
+
 module LanguageFeatures = {
   [@deriving show]
   type msg =
@@ -759,6 +798,7 @@ type t =
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
   | ExtensionService(ExtensionService.msg)
+  | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
   | SCM(SCM.msg)
