@@ -192,9 +192,9 @@
     "clean-extensions": "esy b bash ./scripts/clean-extensions.sh"
   },
   "dependencies": {
-    "@esy-ocaml/reason": "3.5.2",
+    "@opam/reason": "^3.6.0",
     "@opam/charInfo_width": "*",
-    "@opam/dune": "^2.0.0",
+    "@opam/dune": "2.4.0",
     "@opam/dune-configurator": "*",
     "@opam/lwt": "*",
     "@opam/ocamlbuild": "*",
