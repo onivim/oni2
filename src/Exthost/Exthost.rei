@@ -423,6 +423,19 @@ module Files: {
 
     let decode: Json.decoder(t);
   };
+
+  module StatResult: {
+    [@deriving show]
+    type t = {
+      fileType: FileType.t,
+      mtime: int,
+      ctime: int,
+      size: int,
+    };
+
+    let decode: Json.decoder(t);
+    let encode: Json.encoder(t);
+  };
 };
 
 module ModelAddedDelta: {

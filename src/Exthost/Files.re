@@ -193,3 +193,36 @@ module FileDeleteOptions = {
     );
   };
 };
+
+module StatResult = {
+  [@deriving show]
+  type t = {
+    fileType: FileType.t,
+    mtime: int,
+    ctime: int,
+    size: int,
+  };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          fileType: field.required("type", FileType.decode),
+          mtime: field.required("mtime", int),
+          ctime: field.required("ctime", int),
+          size: field.required("size", int),
+        }
+      )
+    );
+
+  let encode = statResult => {
+    Json.Encode.(
+      obj([
+        ("type", statResult.fileType |> FileType.encode),
+        ("mtime", statResult.mtime |> int),
+        ("ctime", statResult.ctime |> int),
+        ("size", statResult.size |> int),
+      ])
+    );
+  };
+};
