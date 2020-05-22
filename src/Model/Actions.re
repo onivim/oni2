@@ -194,6 +194,10 @@ type t =
   | WindowMaximizeClicked
   | WindowRestoreClicked
   | WindowCloseBlocked
+  | WindowHandleDragged({
+      path: list(int),
+      delta: float,
+    })
   | WriteFailure
   | NewTextContentProvider({
       handle: int,

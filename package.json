@@ -19,6 +19,70 @@
     "productName": "Onivim2",
     "fileAssociations": [
       {
+        "name": "Plain text",
+        "role": "Editor",
+        "ext": [
+          ".txt",
+          ".README",
+          ".LICENSE"
+        ]
+      },
+      {
+        "name": "YAML document",
+        "role": "Editor",
+        "ext": [
+          ".yml",
+          ".yaml"
+        ]
+      },
+      {
+        "name": "Git configuration",
+        "role": "Editor",
+        "ext": [
+          ".gitignore",
+          ".gitconfig",
+          ".gitattributes"
+        ]
+      },
+      {
+        "name": "Docker configuration",
+        "role": "Editor",
+        "ext": [
+          ".Dockerfile"
+        ]
+      },
+      {
+        "name": "OPAM configuration",
+        "role": "Editor",
+        "ext": [
+          ".opam"
+        ]
+      },
+      {
+        "name": "Dune configuration",
+        "role": "Editor",
+        "ext": [
+          ".dune",
+          ".dune-project"
+        ]
+      },
+      {
+        "name": "ReasonML source",
+        "role": "Editor",
+        "ext": [
+          ".re",
+          ".rei"
+        ]
+      },
+      {
+        "name": "OCaml source",
+        "role": "Editor",
+        "ext": [
+          ".ml",
+          ".mli"
+        ]
+      },
+      {
         "name": "C source",
         "role": "Editor",
         "ext": [
@@ -39,6 +103,13 @@
           ".ino",
           ".inl",
           ".ipp"
+        ]
+      },
+      {
+        "name": "Make configuration",
+        "role": "Editor",
+        "ext": [
+          ".Makefile"
         ]
       },
       {
@@ -64,6 +135,31 @@
           ".volt",
           ".ejs",
           ".rhtml"
+        ]
+      },
+      {
+        "name": "PHP source",
+        "role": "Editor",
+        "ext": [
+          ".php",
+          ".php5",
+          ".php7"
+        ]
+      },
+      {
+        "name": "XML document",
+        "role": "Editor",
+        "ext": [
+          ".xml",
+          ".xaml"
+        ]
+      },
+      {
+        "name": "SVG image",
+        "role": "Editor",
+        "ext": [
+          ".svg",
+          ".svgz"
         ]
       },
       {
@@ -160,7 +256,8 @@
           ".zlogout",
           ".zshenv",
           ".zsh-theme",
-          ".ksh"
+          ".ksh",
+          ".command"
         ]
       },
       {
@@ -192,9 +289,9 @@
     "clean-extensions": "esy b bash ./scripts/clean-extensions.sh"
   },
   "dependencies": {
-    "@esy-ocaml/reason": "3.5.2",
+    "@opam/reason": "^3.6.0",
     "@opam/charInfo_width": "*",
-    "@opam/dune": "2.4.0",
+    "@opam/dune": "2.5.0",
     "@opam/dune-configurator": "*",
     "@opam/lwt": "*",
     "@opam/ocamlbuild": "*",
