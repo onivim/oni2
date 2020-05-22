@@ -819,4 +819,5 @@ let stringToGlyph = name =>
   | "github-inverted" => githubInverted
   | "server-process" => serverProcess
   | "server-environment" => serverEnvironment
+  | _ => 0x0
   };

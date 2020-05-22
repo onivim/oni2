@@ -243,6 +243,14 @@ if (cliOptions.syntaxHighlightService) {
       Window.minimize(window);
     };
 
+    let close = () => {
+      App.quit(~askNicely=true, app);
+    };
+
+    let restore = () => {
+      Window.restore(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -265,6 +273,8 @@ if (cliOptions.syntaxHighlightService) {
         ~setVsync,
         ~maximize,
         ~minimize,
+        ~restore,
+        ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,

@@ -94,10 +94,10 @@ module Styles = {
         alignItems(`Center),
       ];
 
-      let hoverClose = [
+      let hoverClose = (~theme) => [
         height(30),
         width(46),
-        backgroundColor(Color.rgba(0.91, 0.07, 0.14, 0.9)),
+        backgroundColor(Colors.hoverCloseBackground.from(theme)),
         justifyContent(`Center),
         alignItems(`Center),
       ];
@@ -105,7 +105,7 @@ module Styles = {
       let hover = (~theme) => [
         height(30),
         width(46),
-        backgroundColor(Colors.buttonActiveBackground.from(theme)),
+        backgroundColor(Colors.hoverBackground.from(theme)),
         justifyContent(`Center),
         alignItems(`Center),
       ];
@@ -114,8 +114,9 @@ module Styles = {
 };
 
 module Mac = {
-  let make = (~isFocused, ~isFullscreen, ~title, ~theme, ~font: UiFont.t, ()) =>
-    if (isFullscreen) {
+  let make =
+      (~isFocused, ~windowDisplayMode, ~title, ~theme, ~font: UiFont.t, ()) =>
+    if (windowDisplayMode == Model.State.Fullscreen) {
       React.empty;
     } else {
       <Clickable
@@ -134,12 +135,16 @@ module Windows = {
       let%component make = (~theme, ()) => {
         let%hook (isHovered, setHovered) = Hooks.state(false);
 
+        let onMouseUp = _ =>
+          GlobalContext.current().dispatch(Model.Actions.WindowCloseClicked);
+
         <View
           style={
             isHovered
-              ? Styles.Windows.Button.hoverClose
+              ? Styles.Windows.Button.hoverClose(theme)
               : Styles.Windows.Button.container
           }
+          onMouseUp
           onMouseEnter={_ => setHovered(_ => true)}
           onMouseLeave={_ => setHovered(_ => false)}>
           <FontIcon
@@ -153,8 +158,20 @@ module Windows = {
     };
 
     module MaximizeRestore = {
-      let%component make = (~theme, ~isMaximized, ()) => {
+      let%component make = (~theme, ~windowDisplayMode, ()) => {
         let%hook (isHovered, setHovered) = Hooks.state(false);
+
+        let onMouseUp = _ =>
+          switch (windowDisplayMode) {
+          | Model.State.Maximized =>
+            GlobalContext.current().dispatch(
+              Model.Actions.WindowRestoreClicked,
+            )
+          | _ =>
+            GlobalContext.current().dispatch(
+              Model.Actions.WindowMaximizeClicked,
+            )
+          };
 
         <View
           style={
@@ -162,9 +179,10 @@ module Windows = {
               ? Styles.Windows.Button.hover(theme)
               : Styles.Windows.Button.container
           }
+          onMouseUp
           onMouseEnter={_ => setHovered(_ => true)}
           onMouseLeave={_ => setHovered(_ => false)}>
-          {isMaximized
+          {windowDisplayMode == Model.State.Maximized
              ? <FontIcon
                  icon=Codicon.chromeRestore
                  fontFamily=Codicon.fontFamily
@@ -185,12 +203,18 @@ module Windows = {
       let%component make = (~theme, ()) => {
         let%hook (isHovered, setHovered) = Hooks.state(false);
 
+        let onMouseUp = _ =>
+          GlobalContext.current().dispatch(
+            Model.Actions.WindowMinimizeClicked,
+          );
+
         <View
           style={
             isHovered
               ? Styles.Windows.Button.hover(theme)
               : Styles.Windows.Button.container
           }
+          onMouseUp
           onMouseEnter={_ => setHovered(_ => true)}
           onMouseLeave={_ => setHovered(_ => false)}>
           <FontIcon
@@ -204,7 +228,8 @@ module Windows = {
     };
   };
 
-  let make = (~isFocused, ~isMaximized, ~title, ~theme, ~font: UiFont.t, ()) =>
+  let make =
+      (~isFocused, ~windowDisplayMode, ~title, ~theme, ~font: UiFont.t, ()) =>
     <View
       mouseBehavior=Draggable
       style={Styles.Windows.container(~isFocused, ~theme)}>
@@ -217,25 +242,17 @@ module Windows = {
       </View>
       <View style=Styles.Windows.buttons>
         <Buttons.Minimize theme />
-        <Buttons.MaximizeRestore theme isMaximized />
+        <Buttons.MaximizeRestore theme windowDisplayMode />
         <Buttons.Close theme />
       </View>
     </View>;
 };
 
 let make =
-    (
-      ~isFocused,
-      ~isMaximized,
-      ~isFullscreen,
-      ~title,
-      ~theme,
-      ~font: UiFont.t,
-      (),
-    ) => {
+    (~isFocused, ~windowDisplayMode, ~title, ~theme, ~font: UiFont.t, ()) => {
   switch (Revery.Environment.os) {
-  | Mac => <Mac isFocused isFullscreen font title theme />
-  | Windows => <Windows isFocused isMaximized font title theme />
+  | Mac => <Mac isFocused windowDisplayMode font title theme />
+  | Windows => <Windows isFocused windowDisplayMode font title theme />
   | _ => React.empty
   };
 };

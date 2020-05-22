@@ -83,6 +83,8 @@ let start =
       ~setVsync,
       ~maximize,
       ~minimize,
+      ~close,
+      ~restore,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
@@ -159,7 +161,8 @@ let start =
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater = TitleStoreConnector.start(setTitle, maximize, minimize);
+  let titleUpdater =
+    TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
   let sneakUpdater = SneakStore.start();
   let contextMenuUpdater = ContextMenuStore.start();
   let updater =

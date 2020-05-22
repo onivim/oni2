@@ -133,8 +133,7 @@ let make = (~state: State.t, ()) => {
   <View style={Styles.root(theme)}>
     <Titlebar
       isFocused={state.windowIsFocused}
-      isMaximized={state.windowDisplayMode == Maximized}
-      isFullscreen={state.windowDisplayMode == Fullscreen}
+      windowDisplayMode={state.windowDisplayMode}
       font={state.uiFont}
       title={state.windowTitle}
       theme
