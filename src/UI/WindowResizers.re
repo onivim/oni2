@@ -3,7 +3,6 @@
   Since we have the frame disabled, we have to write our own
   behavior for this.
 */
-open Revery;
 open Revery.UI;
 
 module Styles = {

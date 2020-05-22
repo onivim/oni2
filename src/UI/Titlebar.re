@@ -1,7 +1,6 @@
 /*
  * Titlebar.re
  */
-
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
@@ -142,7 +141,7 @@ module Windows = {
         <View
           style={
             isHovered
-              ? Styles.Windows.Button.hoverClose(theme)
+              ? Styles.Windows.Button.hoverClose(~theme)
               : Styles.Windows.Button.container
           }
           onMouseUp
@@ -177,7 +176,7 @@ module Windows = {
         <View
           style={
             isHovered
-              ? Styles.Windows.Button.hover(theme)
+              ? Styles.Windows.Button.hover(~theme)
               : Styles.Windows.Button.container
           }
           onMouseUp
@@ -212,7 +211,7 @@ module Windows = {
         <View
           style={
             isHovered
-              ? Styles.Windows.Button.hover(theme)
+              ? Styles.Windows.Button.hover(~theme)
               : Styles.Windows.Button.container
           }
           onMouseUp
