@@ -63,14 +63,15 @@ module Styles = {
     let iconAndTitle = [
       flexDirection(`Row),
       alignItems(`Center),
-      marginHorizontal(8),
+      marginHorizontal(16),
     ];
 
     let title = (~isFocused, ~theme, ~font: UiFont.t) => [
       flexGrow(0),
       fontSize(12.),
       fontFamily(font.fontFile),
-      marginLeft(4),
+      marginLeft(16),
+      marginTop(2),
       backgroundColor(
         isFocused
           ? Colors.activeBackground.from(theme)
@@ -234,7 +235,7 @@ module Windows = {
       mouseBehavior=Draggable
       style={Styles.Windows.container(~isFocused, ~theme)}>
       <View mouseBehavior=Draggable style=Styles.Windows.iconAndTitle>
-        <Image src="./logo.png" width=18 height=18 />
+        <Image src="./logo-titlebar.png" width=18 height=18 />
         <Text
           style={Styles.Windows.title(~isFocused, ~theme, ~font)}
           text=title
