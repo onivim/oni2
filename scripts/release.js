@@ -123,8 +123,15 @@ if (process.platform == "linux") {
       CFBundleVersion: `${package.version}`,
       CFBundlePackageType: "APPL",
       CFBundleSignature: "????",
-      CFBundleExecutable: "Oni2",
+      CFBundleExecutable: "Oni2_editor",
       NSHighResolutionCapable: true,
+      CFBundleDocumentTypes: package.build.fileAssociations.map(fileAssoc => {
+            return {
+                CFBundleTypeExtensions: fileAssoc.ext.map(ext => ext.substr(1)),
+                CFBundleTypeName: fileAssoc.name,
+                CFBundleTypeRole: fileAssoc.role
+            }
+        })
   };
 
   fs.mkdirpSync(frameworksDirectory);
