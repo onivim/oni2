@@ -3,8 +3,6 @@
   Since we have the frame disabled, we have to write our own
   behavior for this.
 */
-
-
 open Revery;
 open Revery.UI;
 
@@ -20,7 +18,6 @@ module Styles = {
     Style.top(0),
     height(size),
     backgroundColor(Revery.Colors.yellow),
-    cursor
   ];
 
   let left = [
@@ -87,10 +84,6 @@ module Styles = {
   ];
 };
 
-/* This can't be a component itself, because it would draw over the rest
-   root, making the rest of the view non-clickable. In the root we render
-   these through `React.listToElement`.
-*/
 let resizers = [
   <View style=Styles.topLeft mouseBehavior=Revery.UI.ResizeTopLeft />,
   <View style=Styles.left mouseBehavior=Revery.UI.ResizeLeft />,
@@ -101,3 +94,5 @@ let resizers = [
   <View style=Styles.topRight mouseBehavior=Revery.UI.ResizeTopRight />,
   <View style=Styles.top mouseBehavior=Revery.UI.ResizeTop />,
 ];
+
+let make = () => resizers |> React.listToElement;

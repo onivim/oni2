@@ -162,7 +162,6 @@ let make = (~state: State.t, ()) => {
     <Tooltip.Overlay theme font=uiFont />
     <modals />
     <Overlay> <SneakView model={state.sneak} theme font /> </Overlay>
-    {Revery.Environment.os == Windows
-       ? WindowResizers.resizers |> React.listToElement : React.empty}
+    {Revery.Environment.os == Windows ? <WindowResizers /> : React.empty}
   </View>;
 };
