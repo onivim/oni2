@@ -190,6 +190,10 @@ type t =
   | WindowMinimized
   | WindowRestored
   | WindowCloseBlocked
+  | WindowHandleDragged({
+      path: list(int),
+      delta: float,
+    })
   | WriteFailure
   | NewTextContentProvider({
       handle: int,

@@ -269,6 +269,10 @@ if (cliOptions.syntaxHighlightService) {
       );
     Log.debug("Startup: StoreThread started!");
 
+    let _: App.unsubscribe =
+      App.onFileOpen(app, path => {
+        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+      });
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>
         dispatch(Model.Actions.WindowMaximized)
