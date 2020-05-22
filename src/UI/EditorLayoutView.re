@@ -17,12 +17,6 @@ module Styles = {
 
   let container = [flexGrow(1), flexDirection(`Row)];
 
-  let split = direction => [
-    flexDirection(direction == `Vertical ? `Row : `Column),
-    backgroundColor(direction == `Vertical ? Colors.red : Colors.blue),
-    flexGrow(1),
-  ];
-
   let verticalHandle = (node: Feature_Layout.sized(_)) => [
     cursor(MouseCursors.horizontalResize),
     position(`Absolute),
