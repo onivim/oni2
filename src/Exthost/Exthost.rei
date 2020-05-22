@@ -334,6 +334,76 @@ module Eol: {
   let to_yojson: t => Yojson.Safe.t;
 };
 
+module Files: {
+  module FileSystemProviderCapabilities: {
+    type capability = 
+    | `FileReadWrite
+    | `FileOpenReadWriteClose
+    | `FileReadStream
+    | `FileFolderCopy
+    | `PathCaseSensitive
+    | `Readonly
+    | `Trash;
+
+    type t = list(capability);
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileChangeType: {
+    type t =
+    | Updated
+    | Added
+    | Deleted;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileChange: {
+    type t = {
+      resource: Uri.t,
+      type: FileChangeType.t
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileType: {
+    type t =
+    | Unknown
+    | File
+    | Directory
+    | SymbolicLink;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+
+    let decoder: Json.decoder(t);
+    let encoder: Json.encoder(t);
+  };
+
+  module FileWriteOptions: {
+    type t = {
+      overwrite: bool,
+      create: bool
+    };
+  };
+  module FileOpenOptions: {
+    type t = {
+      create: bool
+    };
+  };
+  module FileDeleteOptions: {
+    type t = {
+      recursive: bool,
+      useTrash: bool
+    };
+  };
+};
+
 module ModelAddedDelta: {
   type t = {
     uri: Uri.t,
@@ -539,6 +609,19 @@ module Msg: {
           errorMessage: string,
         })
       | ExtensionRuntimeError({extensionId: string});
+  };
+
+  module FileSystem: {
+
+    open Files;
+
+    [@deriving show]
+    type msg =
+    | RegisterFileSystemProvider({ handle: int, scheme: string, capabilities: FileSystemProviderCapabilities.t })
+    | UnregisterProvider({ handle: int})
+    | OnFileSystemChange({handle: int, resource: })
+
+  
   };
 
   module LanguageFeatures: {
