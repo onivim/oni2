@@ -194,7 +194,7 @@
   "dependencies": {
     "@opam/reason": "^3.6.0",
     "@opam/charInfo_width": "*",
-    "@opam/dune": "2.5.0",
+    "@opam/dune": "^2.5.1",
     "@opam/dune-configurator": "*",
     "@opam/lwt": "*",
     "@opam/ocamlbuild": "*",
