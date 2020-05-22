@@ -1,11 +1,5 @@
 open Utility;
 
-type direction =
-  | Up
-  | Left
-  | Down
-  | Right;
-
 [@deriving show({with_path: false})]
 type size =
   | Weight(float);
@@ -302,26 +296,17 @@ let removeWindow = (target, tree) => {
   traverse(tree) |> Option.value(~default=empty);
 };
 
-let moveCore = (current, dirX, dirY, tree) => {
+let move = (current, dirX, dirY, tree) => {
   let layout = layout(0, 0, 200, 200, tree);
 
   Internal.move(current, dirX, dirY, layout)
   |> Option.value(~default=current);
 };
 
-let moveLeft = current => moveCore(current, -1, 0);
-let moveRight = current => moveCore(current, 1, 0);
-let moveUp = current => moveCore(current, 0, -1);
-let moveDown = current => moveCore(current, 0, 1);
-
-let move = (direction: direction, current, v) => {
-  switch (direction) {
-  | Up => moveUp(current, v)
-  | Down => moveDown(current, v)
-  | Left => moveLeft(current, v)
-  | Right => moveRight(current, v)
-  };
-};
+let moveLeft = current => move(current, -1, 0);
+let moveRight = current => move(current, 1, 0);
+let moveUp = current => move(current, 0, -1);
+let moveDown = current => move(current, 0, 1);
 
 let rotateForward = (target, tree) => {
   let f =

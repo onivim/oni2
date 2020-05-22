@@ -335,33 +335,18 @@ let start =
   let _: unit => unit =
     Vim.Window.onMovement((movementType, _count) => {
       Log.trace("Vim.Window.onMovement");
-      let state = getState();
-
-      let move = moveFunc => {
-        let maybeEditorGroupId =
-          EditorGroups.getActiveEditorGroup(state.editorGroups)
-          |> Option.map((group: EditorGroup.t) =>
-               moveFunc(group.editorGroupId, state.layout)
-             );
-
-        switch (maybeEditorGroupId) {
-        | Some(editorGroupId) =>
-          dispatch(Actions.EditorGroupSelected(editorGroupId))
-        | None => ()
-        };
-      };
 
       switch (movementType) {
       | FullLeft
-      | OneLeft => move(Feature_Layout.moveLeft)
+      | OneLeft => dispatch(Actions.WindowMoveLeft)
       | FullRight
-      | OneRight => move(Feature_Layout.moveRight)
+      | OneRight => dispatch(Actions.WindowMoveRight)
       | FullDown
-      | OneDown => move(Feature_Layout.moveDown)
+      | OneDown => dispatch(Actions.WindowMoveDown)
       | FullUp
-      | OneUp => move(Feature_Layout.moveUp)
-      | RotateDownwards => dispatch(Actions.Command("view.rotateForward"))
-      | RotateUpwards => dispatch(Actions.Command("view.rotateBackward"))
+      | OneUp => dispatch(Actions.WindowMoveUp)
+      | RotateDownwards => dispatch(Actions.WindowRotateForward)
+      | RotateUpwards => dispatch(Actions.WindowRotateBackward)
       | TopLeft
       | BottomRight
       | Previous => Log.error("Window movement not implemented")

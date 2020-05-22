@@ -33,22 +33,84 @@ let start = () => {
     | None => state
     };
 
-  let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
+  let windowUpdater = (state: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | EditorGroupSelected(_) => FocusManager.push(Editor, s)
+    | EditorGroupSelected(_) => FocusManager.push(Editor, state)
+
+    | WindowMoveLeft =>
+      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...state,
+          editorGroups:
+            EditorGroups.setActiveEditorGroup(
+              Feature_Layout.moveLeft(
+                editorGroup.editorGroupId,
+                state.layout,
+              ),
+              state.editorGroups,
+            ),
+        }
+      | None => state
+      }
+
+    | WindowMoveRight =>
+      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...state,
+          editorGroups:
+            EditorGroups.setActiveEditorGroup(
+              Feature_Layout.moveRight(
+                editorGroup.editorGroupId,
+                state.layout,
+              ),
+              state.editorGroups,
+            ),
+        }
+      | None => state
+      }
+
+    | WindowMoveUp =>
+      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...state,
+          editorGroups:
+            EditorGroups.setActiveEditorGroup(
+              Feature_Layout.moveUp(editorGroup.editorGroupId, state.layout),
+              state.editorGroups,
+            ),
+        }
+      | None => state
+      }
+
+    | WindowMoveDown =>
+      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+      | Some((editorGroup: EditorGroup.t)) => {
+          ...state,
+          editorGroups:
+            EditorGroups.setActiveEditorGroup(
+              Feature_Layout.moveDown(
+                editorGroup.editorGroupId,
+                state.layout,
+              ),
+              state.editorGroups,
+            ),
+        }
+      | None => state
+      }
     | EditorTabClicked(editorId) => {
-        ...s,
-        editorGroups: EditorGroups.setActiveEditor(~editorId, s.editorGroups),
+        ...state,
+        editorGroups:
+          EditorGroups.setActiveEditor(~editorId, state.editorGroups),
       }
     | ViewCloseEditor(editorId) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
       let editorGroups =
-        Model.EditorGroups.closeEditor(~editorId, s.editorGroups);
+        Model.EditorGroups.closeEditor(~editorId, state.editorGroups);
 
       /* Remove splits */
       let layout =
-        s.layout
+        state.layout
         |> Feature_Layout.windows
         |> List.fold_left(
              (acc, editorGroupId) =>
@@ -61,65 +123,68 @@ let start = () => {
                } else {
                  acc;
                },
-             s.layout,
+             state.layout,
            );
 
-      {...s, editorGroups, layout};
+      {...state, editorGroups, layout};
 
-    | OpenFileByPath(_) => FocusManager.push(Editor, s)
+    | OpenFileByPath(_) => FocusManager.push(Editor, state)
 
-    | Command("view.rotateForward") =>
-      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+    | WindowRotateForward =>
+      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
       | Some((editorGroup: EditorGroup.t)) => {
-          ...s,
+          ...state,
           layout:
-            Feature_Layout.rotateForward(editorGroup.editorGroupId, s.layout),
+            Feature_Layout.rotateForward(
+              editorGroup.editorGroupId,
+              state.layout,
+            ),
         }
-      | None => s
+      | None => state
       }
 
-    | Command("view.rotateBackward") =>
-      switch (EditorGroups.getActiveEditorGroup(s.editorGroups)) {
+    | WindowRotateBackward =>
+      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
       | Some((editorGroup: EditorGroup.t)) => {
-          ...s,
+          ...state,
           layout:
             Feature_Layout.rotateBackward(
               editorGroup.editorGroupId,
-              s.layout,
+              state.layout,
             ),
         }
-      | None => s
+      | None => state
       }
 
     | Command("workbench.action.decreaseViewSize") =>
-      s |> resize(`Horizontal, 0.95) |> resize(`Vertical, 0.95)
+      state |> resize(`Horizontal, 0.95) |> resize(`Vertical, 0.95)
 
     | Command("workbench.action.increaseViewSize") =>
-      s |> resize(`Horizontal, 1.05) |> resize(`Vertical, 1.05)
+      state |> resize(`Horizontal, 1.05) |> resize(`Vertical, 1.05)
 
     | Command("vim.decreaseHorizontalWindowSize") =>
-      s |> resize(`Horizontal, 0.95)
+      state |> resize(`Horizontal, 0.95)
 
     | Command("vim.increaseHorizontalWindowSize") =>
-      s |> resize(`Horizontal, 1.05)
+      state |> resize(`Horizontal, 1.05)
 
     | Command("vim.decreaseVerticalWindowSize") =>
-      s |> resize(`Vertical, 0.95)
+      state |> resize(`Vertical, 0.95)
 
     | Command("vim.increaseVerticalWindowSize") =>
-      s |> resize(`Vertical, 1.05)
+      state |> resize(`Vertical, 1.05)
 
     | Command("workbench.action.evenEditorWidths") => {
-        ...s,
-        layout: Feature_Layout.resetWeights(s.layout),
+        ...state,
+        layout: Feature_Layout.resetWeights(state.layout),
       }
 
     | WindowHandleDragged({path, delta}) => {
-        ...s,
-        layout: Feature_Layout.resizeSplit(~path, ~delta, s.layout),
+        ...state,
+        layout: Feature_Layout.resizeSplit(~path, ~delta, state.layout),
       }
 
-    | _ => s
+    | _ => state
     };
 
   let updater = (state: Model.State.t, action: Model.Actions.t) => {

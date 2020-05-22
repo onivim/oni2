@@ -199,6 +199,12 @@ type t =
       path: list(int),
       delta: float,
     })
+  | WindowMoveLeft
+  | WindowMoveRight
+  | WindowMoveUp
+  | WindowMoveDown
+  | WindowRotateForward
+  | WindowRotateBackward
   | WriteFailure
   | NewTextContentProvider({
       handle: int,

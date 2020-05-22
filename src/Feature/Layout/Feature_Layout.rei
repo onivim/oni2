@@ -1,9 +1,3 @@
-type direction =
-  | Up
-  | Left
-  | Down
-  | Right;
-
 // definition only used for tests
 [@deriving show({with_path: false})]
 type size =
@@ -47,7 +41,7 @@ let removeWindow: ('id, t('id)) => t('id);
 
 let layout: (int, int, int, int, t('id)) => sized('id);
 
-let move: (direction, 'id, t('id)) => 'id;
+let move: ('id, int, int, t('id)) => 'id;
 let moveLeft: ('id, t('id)) => 'id;
 let moveRight: ('id, t('id)) => 'id;
 let moveUp: ('id, t('id)) => 'id;
