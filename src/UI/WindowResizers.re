@@ -17,7 +17,6 @@ module Styles = {
     width(size),
     Style.top(0),
     height(size),
-    backgroundColor(Revery.Colors.yellow),
   ];
 
   let left = [
@@ -26,7 +25,6 @@ module Styles = {
     width(size),
     Style.top(size),
     Style.bottom(size),
-    backgroundColor(Revery.Colors.red),
   ];
 
   let bottomLeft = [
@@ -35,7 +33,6 @@ module Styles = {
     width(size),
     Style.bottom(0),
     height(size),
-    backgroundColor(Revery.Colors.green),
   ];
 
   let bottom = [
@@ -44,7 +41,6 @@ module Styles = {
     Style.right(size),
     Style.bottom(0),
     height(size),
-    backgroundColor(Revery.Colors.orange),
   ];
 
   let bottomRight = [
@@ -53,7 +49,6 @@ module Styles = {
     Style.bottom(0),
     width(size),
     height(size),
-    backgroundColor(Revery.Colors.violet),
   ];
 
   let right = [
@@ -62,7 +57,6 @@ module Styles = {
     width(size),
     Style.top(size),
     Style.bottom(size),
-    backgroundColor(Revery.Colors.blue),
   ];
 
   let topRight = [
@@ -71,7 +65,6 @@ module Styles = {
     Style.top(0),
     width(size),
     height(size),
-    backgroundColor(Revery.Colors.pink),
   ];
 
   let top = [
@@ -80,7 +73,6 @@ module Styles = {
     Style.left(size),
     Style.top(0),
     height(size),
-    backgroundColor(Revery.Colors.black),
   ];
 };
 
