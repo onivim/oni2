@@ -298,6 +298,30 @@ module FileSystem = {
     | ("$stat", `List([uriJson])) =>
       let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
       Ok(Stat({uri: uri}));
+    | ("$readdir", `List([uriJson])) =>
+      let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+      Ok(ReadDir({uri: uri}));
+    | ("$readFile", `List([uriJson])) =>
+      failwith ("TODO - buffer format");
+    | ("$writeFile", `List([uriJson, bufferJson])) =>
+      failwith ("TODO - buffer format");
+    | ("$rename", `List([sourceJson, targetJson, optsJson])) =>
+      let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
+      let%bind target = targetJson |> Internal.decode_value(Uri.decode);
+      let%bind opts = optsJson |> Internal.decode_value(FileOverwriteOptions.decode);
+      Ok(Rename({ source: source, target: target, opts: opts}));
+    | ("$copy", `List([sourceJson, targetJson, optsJson])) =>
+      let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
+      let%bind target = targetJson |> Internal.decode_value(Uri.decode);
+      let%bind opts = optsJson |> Internal.decode_value(FileOverwriteOptions.decode);
+      Ok(Copy({ source: source, target: target, opts: opts}));
+    | ("$mkdir", `List([uriJson])) =>
+      let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+      Ok(Mkdir({uri: uri}));
+    | ("$delete", `List([uriJson, deleteOptsJson])) =>
+      let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+      let%bind opts = deleteOptsJson |> Internal.decode_value(FileDeleteOptions.decode);
+      Ok(Delete({uri: uri, opts: opts}));
     | _ => Error("Unhandled FileSystem method: " ++ method);
     }
   };
