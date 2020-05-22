@@ -30,12 +30,6 @@ let nodeWeight =
   | Split(_, Weight(weight), _) => Some(weight)
   | Window(Weight(weight), _) => Some(weight);
 
-let updateWeight = f =>
-  fun
-  | Split(direction, Weight(weight), children) =>
-    Split(direction, Weight(f(weight)), children)
-  | Window(Weight(weight), id) => Window(Weight(f(weight)), id);
-
 [@deriving show({with_path: false})]
 type sized('id) = {
   x: int,
@@ -401,38 +395,43 @@ let rec resizeSplit = (~path, ~delta, model) => {
   | [index] =>
     switch (model) {
     | Split(direction, size, children) =>
+      let childCount = List.length(children);
       let totalWeight =
         children
         |> List.filter_map(nodeWeight)
         |> List.fold_left((+.), 0.)
         |> max(1.);
       let minimumWeight =
-        min(
-          0.1 *. totalWeight,
-          totalWeight /. float(List.length(children)),
-        );
+        min(0.1 *. totalWeight, totalWeight /. float(childCount));
       let deltaWeight = totalWeight *. delta;
 
-      Split(
-        direction,
-        size,
-        children
-        |> List.mapi((i, child) =>
-             if (i == index) {
-               updateWeight(
-                 weight => max(weight +. deltaWeight, minimumWeight),
-                 child,
-               );
-             } else if (i == index + 1) {
-               updateWeight(
-                 weight => max(weight -. deltaWeight, minimumWeight),
-                 child,
-               );
-             } else {
-               child;
-             }
-           ),
+      let rec resizeChildren = i => (
+        fun
+        | [] => [] // shouldn't happen
+        | [node] => [node] // shouldn't happen
+        | [node, next, ...rest] when index == i => {
+            let weight = Option.get(nodeWeight(node));
+            let nextWeight = Option.get(nodeWeight(next));
+            let deltaWeight =
+              if (weight +. deltaWeight < minimumWeight) {
+                -. (weight -. minimumWeight);
+              } else if (nextWeight -. deltaWeight < minimumWeight) {
+                nextWeight -. minimumWeight;
+              } else {
+                deltaWeight;
+              };
+
+            [
+              node |> withSize(Weight(weight +. deltaWeight)),
+              next |> withSize(Weight(nextWeight -. deltaWeight)),
+              ...rest,
+            ];
+          }
+        | [node, ...rest] => [node, ...resizeChildren(i + 1, rest)]
       );
+
+      Split(direction, size, resizeChildren(0, children));
+
     | Window(_) => model
     }
   | [index, ...rest] =>
