@@ -114,6 +114,11 @@ let start = () => {
         layout: Feature_Layout.resetWeights(s.layout),
       }
 
+    | WindowHandleDragged({path, delta}) => {
+        ...s,
+        layout: Feature_Layout.resizeSplit(~path, ~delta, s.layout),
+      }
+
     | _ => s
     };
 
