@@ -2,6 +2,15 @@ module ExtCommand = Command;
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Internal = {
+  
+  let decode_value = (decoder, json) => {
+      json
+      |> Json.Decode.decode_value(decoder)
+     |> Result.map_error(Json.Decode.string_of_error)
+  };
+}
+
 module Clipboard = {
   [@deriving show]
   type msg =
@@ -282,6 +291,16 @@ module FileSystem = {
         uri: Uri.t,
         opts: FileDeleteOptions.t,
       });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    open Base.Result.Let_syntax;
+    switch (method, args) {
+    | ("$stat", `List([uriJson])) =>
+      let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+      Ok(Stat({uri: uri}));
+    | _ => Error("Unhandled FileSystem method: " ++ method);
+    }
+  };
 };
 
 module LanguageFeatures = {
