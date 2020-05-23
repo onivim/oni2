@@ -59,6 +59,18 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | Sneak(msg) =>
+    let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
+
+    let state = {...state, sneak: model};
+
+    let eff =
+      switch ((maybeOutmsg: Feature_Sneak.outmsg)) {
+      | Nothing => Effect.none
+      | Effect(eff) => eff |> Effect.map(msg => Actions.Sneak(msg))
+      };
+    (state, eff);
+
   | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(

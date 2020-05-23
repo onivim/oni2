@@ -16,18 +16,7 @@ type model;
 
 let initial: model;
 
-let getTextHighlight: (string, model) => (string, string);
-
-let reset: model => model;
-let hide: model => model;
-
 let isActive: model => bool;
-
-let refine: (string, model) => model;
-
-let add: (list(sneakInfo), model) => model;
-
-let getFiltered: model => list(sneak);
 
 // UPDATE
 [@deriving show({with_path: false})]
@@ -48,10 +37,6 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 let update: (model, msg) => (model, outmsg);
-
-// REGISTRY
-
-module Registry: {let getSneaks: unit => list(sneakInfo);};
 
 module View: {
   module Sneakable: {
@@ -88,6 +73,4 @@ module Commands: {
   let stop: Command.t(msg);
 };
 
-module Contributions: {
-  let commands: list(Command.t(msg));
-};
+module Contributions: {let commands: list(Command.t(msg));};

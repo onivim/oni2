@@ -190,14 +190,20 @@ module Commands = {
   open Feature_Commands.Schema;
 
   let start =
-    define(~category="Sneak",
-    ~title="Enter sneak mode (keyboard-accessible UI)",
-    "sneak.start", Command(Start));
+    define(
+      ~category="Sneak",
+      ~title="Enter sneak mode (keyboard-accessible UI)",
+      "sneak.start",
+      Command(Start),
+    );
 
   let stop =
-    define(~category="Sneak",
-    ~title="Exit sneak mode",
-    "sneak.stop", Command(Stop));
+    define(
+      ~category="Sneak",
+      ~title="Exit sneak mode",
+      "sneak.stop",
+      Command(Stop),
+    );
 };
 
 type outmsg =
@@ -363,10 +369,5 @@ module View = {
 };
 
 module Contributions = {
-  
-  let commands =
-    Commands.[
-      start,
-      stop,
-    ];
+  let commands = Commands.[start, stop];
 };
