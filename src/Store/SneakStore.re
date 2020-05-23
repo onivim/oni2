@@ -6,7 +6,6 @@ module Core = Oni_Core;
 module Ext = Oni_Extensions;
 module Model = Oni_Model;
 module Actions = Model.Actions;
-module Sneak = Model.Sneak;
 
 module SneakRegistry = Feature_Sneak.Registry;
 
