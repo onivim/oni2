@@ -112,6 +112,7 @@ if (process.platform == "linux") {
 
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconSourcePath = path.join(imageSourceDirectory, "Onivim2.icns");
+  const documentIconSourcePath = path.join(imageSourceDirectory, "macDocumentIcons");
 
   const plistFile = path.join(contentsDirectory, "Info.plist");
 
@@ -129,7 +130,8 @@ if (process.platform == "linux") {
             return {
                 CFBundleTypeExtensions: fileAssoc.ext.map(ext => ext.substr(1)),
                 CFBundleTypeName: fileAssoc.name,
-                CFBundleTypeRole: fileAssoc.role
+                CFBundleTypeRole: fileAssoc.role,
+                CFBundleTypeIconFile: "macDocumentIcons/" + fileAssoc.icon.mac
             }
         })
   };
@@ -146,6 +148,7 @@ if (process.platform == "linux") {
 
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(nodeScriptSourceDirectory, resourcesDirectory);
+  copy(documentIconSourcePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
   copy(getRlsPath(), path.join(binaryDirectory, "rls"));
