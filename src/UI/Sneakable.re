@@ -40,14 +40,14 @@ let%component make =
       OnMount,
       () => {
         switch (onSneak) {
-        | Some(cb) => SneakRegistry.register(holder, cb)
-        | None => SneakRegistry.register(holder, onClick)
+        | Some(cb) => Feature_Sneak.Registry.register(holder, cb)
+        | None => Feature_Sneak.Registry.register(holder, onClick)
         };
 
         Some(
           () => {
             holder := None;
-            SneakRegistry.unregister(holder);
+            Feature_Sneak.Registry.unregister(holder);
           },
         );
       },

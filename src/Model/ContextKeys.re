@@ -84,7 +84,7 @@ let other =
       bool("isWin", _state =>
         Revery.Environment.os == Revery.Environment.Windows
       ),
-      bool("sneakMode", state => Sneak.isActive(state.sneak)),
+      bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
       bool("zenMode", state => state.zenMode),
       bool("keyDisplayerEnabled", state => state.keyDisplayer != None),
     ],

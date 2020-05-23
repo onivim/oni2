@@ -8,25 +8,25 @@ module Model = Oni_Model;
 module Actions = Model.Actions;
 module Sneak = Model.Sneak;
 
-module SneakRegistry = Oni_UI.SneakRegistry;
+module SneakRegistry = Feature_Sneak.Registry;
 
 let start = () => {
   let discoverSneakEffect =
     Isolinear.Effect.createWithDispatch(~name="sneak.discover", _dispatch => {
       let sneaks = SneakRegistry.getSneaks();
-      _dispatch(Model.Actions.Sneak(Sneak.Discovered(sneaks)));
+      _dispatch(Model.Actions.Sneak(Feature_Sneak.Discovered(sneaks)));
     });
 
   let completeSneakEffect = (state: Model.State.t) =>
     Isolinear.Effect.createWithDispatch(~name="sneak.discover", dispatch => {
-      let filteredSneaks = Sneak.getFiltered(state.sneak);
+      let filteredSneaks = Feature_Sneak.getFiltered(state.sneak);
 
       switch (filteredSneaks) {
-      | [] => dispatch(Model.Actions.Sneak(Sneak.NoneAvailable))
+      | [] => dispatch(Model.Actions.Sneak(Feature_Sneak.NoneAvailable))
       | [sneak] =>
-        let {callback, _}: Sneak.sneak = sneak;
+        let {callback, _}: Feature_Sneak.sneak = sneak;
         callback();
-        dispatch(Model.Actions.Sneak(Sneak.Executed(sneak)));
+        dispatch(Model.Actions.Sneak(Feature_Sneak.Executed(sneak)));
       | _ => ()
       };
     });
@@ -35,25 +35,28 @@ let start = () => {
     let default = (state, Isolinear.Effect.none);
     switch (action) {
     | Actions.Command("sneak.start") => (
-        {...state, sneak: Model.Sneak.reset(state.sneak)},
+        {...state, sneak: Feature_Sneak.reset(state.sneak)},
         discoverSneakEffect,
       )
     | Actions.Command("sneak.stop") => (
-        {...state, sneak: Model.Sneak.hide(state.sneak)},
+        {...state, sneak: Feature_Sneak.hide(state.sneak)},
         Isolinear.Effect.none,
       )
     | Actions.Sneak(sneakAction) =>
       switch (sneakAction) {
-      | Sneak.Executed(_)
-      | Sneak.NoneAvailable => (
-          {...state, sneak: Model.Sneak.hide(state.sneak)},
+      | Feature_Sneak.Executed(_)
+      | Feature_Sneak.NoneAvailable => (
+          {...state, sneak: Feature_Sneak.hide(state.sneak)},
           Isolinear.Effect.none,
         )
-      | Sneak.KeyboardInput(k) =>
-        let newState = {...state, sneak: Model.Sneak.refine(k, state.sneak)};
+      | Feature_Sneak.KeyboardInput(k) =>
+        let newState = {
+          ...state,
+          sneak: Feature_Sneak.refine(k, state.sneak),
+        };
         (newState, completeSneakEffect(newState));
-      | Sneak.Discovered(sneaks) => (
-          {...state, sneak: Model.Sneak.add(sneaks, state.sneak)},
+      | Feature_Sneak.Discovered(sneaks) => (
+          {...state, sneak: Feature_Sneak.add(sneaks, state.sneak)},
           Isolinear.Effect.none,
         )
       }

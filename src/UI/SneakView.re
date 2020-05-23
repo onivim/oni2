@@ -64,22 +64,23 @@ let make = (~model, ~theme, ~font, ()) => {
   let makeSneak = (bbox, text) => {
     let (x, y, _width, _height) = BoundingBox2d.getBounds(bbox);
 
-    let (highlightText, remainingText) = Sneak.getTextHighlight(text, model);
+    let (highlightText, remainingText) =
+      Feature_Sneak.getTextHighlight(text, model);
     <View style={Styles.item(int_of_float(x), int_of_float(y), theme)}>
       <Text style={Styles.highlight(theme, font)} text=highlightText />
       <Text style={Styles.text(theme, font)} text=remainingText />
     </View>;
   };
 
-  let sneaks = Sneak.getFiltered(model);
+  let sneaks = Feature_Sneak.getFiltered(model);
   let sneakViews =
     List.map(
-      (Sneak.{boundingBox, id, _}) => makeSneak(boundingBox, id),
+      (Feature_Sneak.{boundingBox, id, _}) => makeSneak(boundingBox, id),
       sneaks,
     )
     |> React.listToElement;
 
-  let isActive = Sneak.isActive(model);
+  let isActive = Feature_Sneak.isActive(model);
   isActive
     ? <View style={Styles.backdrop(theme)}> sneakViews </View> : React.empty;
 };
