@@ -168,6 +168,15 @@ let update =
         let maybeTerminalBuffer =
           state |> Selectors.getBufferForTerminal(~terminalId);
 
+        // TODO:
+        // This is really duplicated logic from the WindowsStoreConnector
+        // - the fact that the window layout needs to be adjusted along
+        // with the editor groups. We need to consolidate this to a 
+        // unified concept, once the window layout work has completed:
+        // Something like `Feature_EditorLayout`, which contains
+        // both the editor groups and layout concepts (dependent on
+        // `Feature_Layout`) - and could include the `WindowsStoreConnector`.
+
         let editorGroups' =
           maybeTerminalBuffer
           |> Option.map(bufferId =>
@@ -175,7 +184,24 @@ let update =
              )
           |> Option.value(~default=state.editorGroups);
 
-        let state' = {...state, editorGroups: editorGroups'};
+          let layout' =
+            state.layout
+            |> Feature_Layout.windows
+            |> List.fold_left(
+                 (acc, editorGroupId) =>
+                   if (Oni_Model.EditorGroups.getEditorGroupById(
+                         editorGroups',
+                         editorGroupId,
+                       )
+                       == None) {
+                     Feature_Layout.removeWindow(editorGroupId, acc);
+                   } else {
+                     acc;
+                   },
+                 state.layout,
+               );
+
+        let state' = {...state, layout: layout', editorGroups: editorGroups'};
 
         (state', Effect.none);
       | TerminalExit(_) => (state, Effect.none)

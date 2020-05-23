@@ -211,7 +211,7 @@ let update = (~config: Config.resolver, model: t, msg) => {
 
   | Service(ProcessExit({id, exitCode})) => (
       model,
-      TerminalExit({terminalId: id, exitCode, shouldClose: false}),
+      TerminalExit({terminalId: id, exitCode, shouldClose: true}),
     )
   };
 };
