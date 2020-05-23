@@ -37,7 +37,7 @@ let minimize = () => _currentMinimized := true;
 let restore = () => {
   _currentMaximized := false;
   _currentMinimized := false;
-}
+};
 
 let quit = code => exit(code);
 
