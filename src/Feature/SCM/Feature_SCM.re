@@ -65,7 +65,7 @@ module Effects = {
   let getOriginalUri = (extHostClient, model, path, toMsg) => {
     let handles =
       model.providers |> List.map((provider: Provider.t) => provider.handle);
-    ExtHostClient.SCM.Effects.provideOriginalResource(
+    Service_Exthost.Effects.SCM.provideOriginalResource(
       ~handles,
       extHostClient,
       path,
@@ -350,7 +350,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
-               ExtHostClient.SCM.Effects.onInputBoxValueChange(
+               Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
                  ~value,
                  extHostClient,
