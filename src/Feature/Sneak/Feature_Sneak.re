@@ -5,7 +5,6 @@ module StringEx = Oni_Core.Utility.StringEx;
 module Selection = Oni_Components.Selection;
 
 type callback = unit => unit;
-type bounds = unit => option(BoundingBox2d.t);
 
 type sneakInfo = {
   callback,
@@ -156,10 +155,8 @@ module Registry = {
 };
 
 module View = {
-  open Revery;
   open Revery.UI;
   open Revery.UI.Components;
-  open Oni_Components;
 
   module Colors = Feature_Theme.Colors;
 
