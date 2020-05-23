@@ -1032,12 +1032,30 @@ module TitleBar = {
       {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
     );
 
+  let hoverBackground =
+    define(
+      "oni.titleBar.hoverBackground",
+      {
+        dark: hex("#FFFFFF") |> transparent(0.1),
+        light: hex("#000000") |> transparent(0.1),
+        hc: unspecified,
+      },
+    );
+
+  let hoverCloseBackground =
+    define(
+      "oni.titleBar.hoverCloseBackground",
+      hex("#E81123") |> transparent(0.9) |> all,
+    );
+
   let defaults = [
     activeForeground,
     inactiveForeground,
     activeBackground,
     inactiveBackground,
     border,
+    hoverBackground,
+    hoverCloseBackground,
   ];
 };
 

@@ -189,6 +189,10 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | WindowCloseClicked
+  | WindowMinimizeClicked
+  | WindowMaximizeClicked
+  | WindowRestoreClicked
   | WindowCloseBlocked
   | WindowHandleDragged({
       path: list(int),
