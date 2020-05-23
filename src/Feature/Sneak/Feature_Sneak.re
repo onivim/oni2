@@ -1,3 +1,4 @@
+open Oni_Core;
 open Revery.Math;
 
 module InputModel = Oni_Components.InputModel;
@@ -16,13 +17,6 @@ type sneak = {
   boundingBox: BoundingBox2d.t,
   id: string,
 };
-
-[@deriving show({with_path: false})]
-type msg =
-  | NoneAvailable
-  | Executed([@opaque] sneak)
-  | Discovered([@opaque] list(sneakInfo))
-  | KeyboardInput(string);
 
 type model = {
   active: bool,
@@ -153,7 +147,78 @@ module Registry = {
        });
   };
 };
+// UPDATE
 
+[@deriving show({with_path: false})]
+type command =
+  | Start
+  | Stop;
+
+[@deriving show({with_path: false})]
+type msg =
+  | NoneAvailable
+  | Command(command)
+  | Executed([@opaque] sneak)
+  | Discovered([@opaque] list(sneakInfo))
+  | KeyboardInput(string);
+
+// EFFECTS
+module Effects = {
+  let discoverSneak =
+    Isolinear.Effect.createWithDispatch(~name="sneak.discover", dispatch => {
+      let sneaks = Registry.getSneaks();
+      dispatch(Discovered(sneaks));
+    });
+
+  let completeSneak = model =>
+    Isolinear.Effect.createWithDispatch(~name="sneak.discover", dispatch => {
+      let filteredSneaks = getFiltered(model);
+
+      switch (filteredSneaks) {
+      | [] => dispatch(NoneAvailable)
+      | [sneak] =>
+        let {callback, _}: sneak = sneak;
+        callback();
+        dispatch(Executed(sneak));
+      | _ => ()
+      };
+    });
+};
+
+// COMMANDS
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let start =
+    define(~category="Sneak",
+    ~title="Enter sneak mode (keyboard-accessible UI)",
+    "sneak.start", Command(Start));
+
+  let stop =
+    define(~category="Sneak",
+    ~title="Exit sneak mode",
+    "sneak.stop", Command(Stop));
+};
+
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update = (model, action) => {
+  switch (action) {
+  | Command(Start) => (reset(model), Effect(Effects.discoverSneak))
+  | Command(Stop) => (hide(model), Nothing)
+  | Executed(_)
+  | NoneAvailable => (hide(model), Nothing)
+  | KeyboardInput(k) =>
+    let newState = refine(k, model);
+    (newState, Effect(Effects.completeSneak(newState)));
+  | Discovered(sneaks) => (add(sneaks, model), Nothing)
+  //    | _ => default
+  };
+};
+
+// VIEW
 module View = {
   open Revery.UI;
   open Revery.UI.Components;
@@ -295,4 +360,13 @@ module View = {
       </Clickable>;
     };
   };
+};
+
+module Contributions = {
+  
+  let commands =
+    Commands.[
+      start,
+      stop,
+    ];
 };

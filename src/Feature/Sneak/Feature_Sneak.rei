@@ -12,13 +12,6 @@ type sneak = {
   id: string,
 };
 
-[@deriving show({with_path: false})]
-type msg =
-  | NoneAvailable
-  | Executed([@opaque] sneak)
-  | Discovered([@opaque] list(sneakInfo))
-  | KeyboardInput(string);
-
 type model;
 
 let initial: model;
@@ -36,11 +29,29 @@ let add: (list(sneakInfo), model) => model;
 
 let getFiltered: model => list(sneak);
 
+// UPDATE
+[@deriving show({with_path: false})]
+type command =
+  | Start
+  | Stop;
+
+[@deriving show({with_path: false})]
+type msg =
+  | NoneAvailable
+  | Command(command)
+  | Executed([@opaque] sneak)
+  | Discovered([@opaque] list(sneakInfo))
+  | KeyboardInput(string);
+
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update: (model, msg) => (model, outmsg);
+
 // REGISTRY
 
-module Registry: {
-  let getSneaks: unit => list(sneakInfo);
-};
+module Registry: {let getSneaks: unit => list(sneakInfo);};
 
 module View: {
   module Sneakable: {
@@ -70,4 +81,13 @@ module View: {
       (~model: model, ~theme: ColorTheme.Colors.t, ~font: UiFont.t, unit) =>
       Revery.UI.element;
   };
+};
+
+module Commands: {
+  let start: Command.t(msg);
+  let stop: Command.t(msg);
+};
+
+module Contributions: {
+  let commands: list(Command.t(msg));
 };
