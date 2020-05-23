@@ -133,7 +133,10 @@ if (process.platform == "linux") {
                 CFBundleTypeRole: fileAssoc.role,
                 CFBundleTypeIconFile: "macDocumentIcons/" + fileAssoc.icon.mac
             }
-        })
+        }),
+      LSEnvironment: {
+          "ONI2_BUNDLED": "1"
+      }
   };
 
   fs.mkdirpSync(frameworksDirectory);
