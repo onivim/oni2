@@ -146,7 +146,7 @@ let parse =
       s;
     };
   };
-  
+
   let isDrive = s => {
     // Check for a path of the form [a-z]:
     Sys.win32 && String.length(s) == 3 && s.[1] == ':';
@@ -164,15 +164,17 @@ let parse =
       if (Path.isAbsolute(p) || isAbsolutePathWithTilde(p)) {
         p;
       } else {
-        Path.join(workingDirectory, p);
-      }
-      |> Path.normalize;
+        {
+          Path.join(workingDirectory, p);
+        }
+        |> Path.normalize;
+      };
 
-     if (!isDrive(p)) {
-       stripTrailingPathCharacter(p);
-     } else {
-      p; 
-     }
+    if (!isDrive(p)) {
+      stripTrailingPathCharacter(p);
+    } else {
+      p;
+    };
   };
 
   let absolutePaths = List.map(resolvePath, paths);
