@@ -68,7 +68,7 @@ module View: {
       Revery.UI.element;
   };
 
-  module SneakOverlay: {
+  module Overlay: {
     let make:
       (~model: model, ~theme: ColorTheme.Colors.t, ~font: UiFont.t, unit) =>
       Revery.UI.element;

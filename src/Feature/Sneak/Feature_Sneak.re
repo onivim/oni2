@@ -211,7 +211,7 @@ module View = {
     ];
   };
 
-  module SneakOverlay = {
+  module Overlay = {
     let make = (~model, ~theme, ~font, ()) => {
       let makeSneak = (bbox, text) => {
         let (x, y, _width, _height) = BoundingBox2d.getBounds(bbox);
