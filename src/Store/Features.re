@@ -163,8 +163,7 @@ let update =
           });
         (state, eff);
 
-      | TerminalExit({terminalId, shouldClose, _})
-          when shouldClose == true =>
+      | TerminalExit({terminalId, shouldClose, _}) when shouldClose == true =>
         let maybeTerminalBuffer =
           state |> Selectors.getBufferForTerminal(~terminalId);
 
