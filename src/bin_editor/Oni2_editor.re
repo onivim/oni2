@@ -18,6 +18,13 @@ module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
+
+Core.SuperLog.write("args:");
+Sys.argv
+|> Array.iter(Core.SuperLog.write);
+
+Core.SuperLog.write("Executing directory: " ++ Revery.Environment.executingDirectory);
+
 let installExtension = (path, Cli.{overriddenExtensionsDir, _}) => {
   switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
   | Some(extensionsFolder) =>
@@ -186,14 +193,22 @@ if (cliOptions.syntaxHighlightService) {
         ),
       );
 
-    let persistGlobal = () => Store.Persistence.Global.persist(currentState^);
-    let persistWorkspace = () =>
+    let persistGlobal = () =>{
+      Core.SuperLog.write("starting persist global...");
+      Store.Persistence.Global.persist(currentState^);
+      Core.SuperLog.write("finishing persist global...");
+    };
+    
+    let persistWorkspace = () => {
+      Core.SuperLog.write("starting persist workspace...");
       Store.Persistence.Workspace.(
         persist(
           (currentState^, window),
           storeFor(currentState^.workspace.workingDirectory),
         )
       );
+      Core.SuperLog.write("finished persist workspace...");
+    }
 
     let update = UI.start(window, <Root state=currentState^ />);
 
@@ -288,6 +303,7 @@ if (cliOptions.syntaxHighlightService) {
 
     let _: App.unsubscribe =
       App.onFileOpen(app, path => {
+        Oni_Core.SuperLog.write("onFileOpen: " ++ path);
         dispatch(Model.Actions.OpenFileByPath(path, None, None))
       });
     let _: Window.unsubscribe =

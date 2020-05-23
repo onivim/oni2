@@ -296,13 +296,18 @@ let start =
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
   let _unsubscribe: unit => unit =
-    Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
+    Store.onBeforeMsg(msg => {
+    Core.SuperLog.write("Before msg: " ++ Model.Actions.show(msg));
+    DispatchLog.info(Model.Actions.show(msg))
+    });
 
   let dispatch = Store.dispatch;
 
   let _unsubscribe: unit => unit =
     Store.onAfterMsg((msg, model) => {
+    Core.SuperLog.write("After msg, before update subscriptions: " ++ Model.Actions.show(msg));
       Features.updateSubscriptions(setup, model, dispatch);
+    Core.SuperLog.write("After msg, after update subscriptions: " ++ Model.Actions.show(msg));
       onAfterDispatch(msg);
       DispatchLog.debugf(m => m("After: %s", Model.Actions.show(msg)));
     });
