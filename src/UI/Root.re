@@ -161,7 +161,9 @@ let make = (~state: State.t, ()) => {
     <contextMenuOverlay />
     <Tooltip.Overlay theme font=uiFont />
     <modals />
-    <Overlay> <SneakView model={state.sneak} theme font /> </Overlay>
+    <Overlay>
+      <Feature_Sneak.View.Overlay model={state.sneak} theme font />
+    </Overlay>
     {Revery.Environment.os == Windows ? <WindowResizers /> : React.empty}
   </View>;
 };

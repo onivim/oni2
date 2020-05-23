@@ -1,0 +1,13 @@
+(library
+    (name Feature_Sneak)
+    (public_name Oni2.feature.sneak)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Oni2.components
+      Oni2.feature.commands
+      isolinear
+      Revery
+      base
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

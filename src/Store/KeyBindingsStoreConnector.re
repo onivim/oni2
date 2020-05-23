@@ -221,12 +221,12 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<C-G>",
-        command: Commands.Oni.Sneak.start.id,
+        command: Feature_Sneak.Commands.start.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<ESC>",
-        command: Commands.Oni.Sneak.stop.id,
+        command: Feature_Sneak.Commands.stop.id,
         condition: "sneakMode" |> WhenExpr.parse,
       },
       {

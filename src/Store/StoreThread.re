@@ -163,7 +163,6 @@ let start =
 
   let titleUpdater =
     TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
-  let sneakUpdater = SneakStore.start();
   let contextMenuUpdater = ContextMenuStore.start();
   let updater =
     Isolinear.Updater.combine([
@@ -183,7 +182,6 @@ let start =
       languageFeatureUpdater,
       completionUpdater,
       titleUpdater,
-      sneakUpdater,
       Features.update(
         ~grammarRepository,
         ~extHostClient,
@@ -337,6 +335,11 @@ let start =
     ~dispatch,
     Feature_Terminal.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
+  );
+  registerCommands(
+    ~dispatch,
+    Feature_Sneak.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
   );
 
   // TODO: These should all be replaced with isolinear subscriptions.

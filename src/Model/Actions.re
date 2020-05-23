@@ -171,7 +171,7 @@ type t =
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
-  | Sneak(Sneak.action)
+  | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | PaneTabClicked(Pane.pane)
