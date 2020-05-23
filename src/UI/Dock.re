@@ -6,6 +6,7 @@ open Oni_Model;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Colors = Feature_Theme.Colors.ActivityBar;
+module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Styles = {
   open Style;

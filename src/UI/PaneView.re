@@ -3,6 +3,7 @@ open Oni_Model;
 
 module FontIcon = Oni_Components.FontIcon;
 module FontAwesome = Oni_Components.FontAwesome;
+module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Colors = Feature_Theme.Colors;
 
