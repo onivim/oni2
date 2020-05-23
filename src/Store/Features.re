@@ -163,7 +163,7 @@ let update =
           });
         (state, eff);
 
-      | TerminalExit({terminalId, exitCode, shouldClose})
+      | TerminalExit({terminalId, shouldClose, _})
           when shouldClose == true =>
         let maybeTerminalBuffer =
           state |> Selectors.getBufferForTerminal(~terminalId);
@@ -171,7 +171,7 @@ let update =
         // TODO:
         // This is really duplicated logic from the WindowsStoreConnector
         // - the fact that the window layout needs to be adjusted along
-        // with the editor groups. We need to consolidate this to a 
+        // with the editor groups. We need to consolidate this to a
         // unified concept, once the window layout work has completed:
         // Something like `Feature_EditorLayout`, which contains
         // both the editor groups and layout concepts (dependent on
@@ -184,22 +184,22 @@ let update =
              )
           |> Option.value(~default=state.editorGroups);
 
-          let layout' =
-            state.layout
-            |> Feature_Layout.windows
-            |> List.fold_left(
-                 (acc, editorGroupId) =>
-                   if (Oni_Model.EditorGroups.getEditorGroupById(
-                         editorGroups',
-                         editorGroupId,
-                       )
-                       == None) {
-                     Feature_Layout.removeWindow(editorGroupId, acc);
-                   } else {
-                     acc;
-                   },
-                 state.layout,
-               );
+        let layout' =
+          state.layout
+          |> Feature_Layout.windows
+          |> List.fold_left(
+               (acc, editorGroupId) =>
+                 if (Oni_Model.EditorGroups.getEditorGroupById(
+                       editorGroups',
+                       editorGroupId,
+                     )
+                     == None) {
+                   Feature_Layout.removeWindow(editorGroupId, acc);
+                 } else {
+                   acc;
+                 },
+               state.layout,
+             );
 
         let state' = {...state, layout: layout', editorGroups: editorGroups'};
 

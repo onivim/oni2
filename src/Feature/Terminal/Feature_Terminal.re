@@ -127,6 +127,12 @@ let shouldHandleInput = str => {
     // HACK: Let the window motion keys pass through, so that
 };
 
+let shouldClose = (~id, {idToTerminal, _}) => {
+  IntMap.find_opt(id, idToTerminal)
+  |> Option.map(({closeOnExit, _}) => closeOnExit)
+  |> Option.value(~default=true);
+};
+
 let updateById = (id, f, model) => {
   let idToTerminal = IntMap.update(id, Option.map(f), model.idToTerminal);
   {...model, idToTerminal};
@@ -134,7 +140,7 @@ let updateById = (id, f, model) => {
 
 let update = (~config: Config.resolver, model: t, msg) => {
   switch (msg) {
-  | Command(NewTerminal({cmd, splitDirection})) =>
+  | Command(NewTerminal({cmd, splitDirection, closeOnExit})) =>
     let cmdToUse =
       switch (cmd) {
       | None =>
@@ -169,7 +175,7 @@ let update = (~config: Config.resolver, model: t, msg) => {
           title: None,
           screen: ReveryTerminal.Screen.initial,
           cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
-          closeOnExit: true,
+          closeOnExit,
         },
         model.idToTerminal,
       );
@@ -211,7 +217,11 @@ let update = (~config: Config.resolver, model: t, msg) => {
 
   | Service(ProcessExit({id, exitCode})) => (
       model,
-      TerminalExit({terminalId: id, exitCode, shouldClose: true}),
+      TerminalExit({
+        terminalId: id,
+        exitCode,
+        shouldClose: shouldClose(~id, model),
+      }),
     )
   };
 };

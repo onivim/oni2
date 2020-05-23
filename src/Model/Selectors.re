@@ -84,7 +84,7 @@ let getActiveTerminal = (state: State.t) => {
 
 let getBufferForTerminal = (~terminalId: int, state: State.t) => {
   state.bufferRenderers.rendererById
-  |> IntMap.filter((bufferId, renderer) => {
+  |> IntMap.filter((_bufferId, renderer) => {
        switch (renderer) {
        | BufferRenderer.Terminal({id, _}) => id == terminalId
        | _ => false
