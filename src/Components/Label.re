@@ -7,7 +7,6 @@
 open Revery;
 open Revery.UI;
 open Oni_Core;
-open Oni_Components;
 
 module Styles = {
   open Style;
@@ -23,13 +22,18 @@ let textToElement = (~color, ~font, ~text) => {
   <Text style={Styles.text(~color, font)} text />;
 };
 
-let iconNameToCharacter =
-  fun
-  | "alert" => Some(FontAwesome.exclamationTriangle)
-  | _ => None;
+let iconNameToCharacter = name => {
+  let iconCode = name |> Codicon.stringToGlyph;
+
+  if (iconCode == Codicon.Constants.none) {
+    None;
+  } else {
+    Some(iconCode);
+  };
+};
 
 let iconToElement = (~color, icon) => {
-  <View style=Style.[margin(4)]> <FontIcon icon color /> </View>;
+  <View style=Style.[margin(4)]> <Codicon icon color /> </View>;
 };
 
 let make = (~font, ~color, ~label: Exthost.Label.t, ()) => {
