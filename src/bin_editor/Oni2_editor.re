@@ -124,11 +124,7 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
     switch (Revery.Environment.os) {
     | Mac =>
       switch (Sys.getenv_opt("ONI2_BUNDLED")) {
-      | Some(bundled) =>
-        switch (bundled) {
-        | "1" => None
-        | _ => Some("logo.png")
-        }
+      | Some(_) => None
       | None => Some("logo.png")
       }
     | _ => Some("logo.png")
