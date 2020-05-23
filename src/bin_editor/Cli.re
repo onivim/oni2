@@ -140,7 +140,7 @@ let parse =
 
   let stripTrailingPathCharacter = s => {
     let len = String.length(s);
-    if (len > 1 && s.[len - 1] == '/') {
+    if (len > 1 && (s.[len - 1] == '/' || s.[len - 1] == '\\')) {
       String.sub(s, 0, len - 1);
     } else {
       s;
@@ -167,11 +167,12 @@ let parse =
 
   let absolutePaths = List.map(resolvePath, paths);
 
-  let isDirectory = p =>
+  let isDirectory = p => {
     switch (Sys.is_directory(p)) {
     | v => v
     | exception (Sys_error(_)) => false
     };
+  };
 
   let directories = List.filter(isDirectory, absolutePaths);
   let filesToOpen = List.filter(p => !isDirectory(p), absolutePaths);

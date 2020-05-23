@@ -16,7 +16,13 @@ let toRelative = (~base, path) => {
   Str.replace_first(Str.regexp_string(base), "", path);
 };
 
-let explode = String.split_on_char(Filename.dir_sep.[0]);
+let normalizePathSeparator = {
+  let backSlashRegex = Str.regexp("\\\\");
+  pathStr => pathStr |> Str.global_replace(backSlashRegex, "/");
+};
+
+let explode = path =>
+  path |> normalizePathSeparator |> String.split_on_char(Filename.dir_sep.[0]);
 
 let join = paths => {
   let sep = Filename.dir_sep;

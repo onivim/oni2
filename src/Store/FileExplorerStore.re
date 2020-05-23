@@ -54,9 +54,9 @@ let revealPath = (path, state: State.t) => {
           state.languageInfo,
           state.iconTheme,
           state.configuration,
-          ~onComplete=node =>
+          ~onComplete=node => {
           Actions.FileExplorer(FocusNodeLoaded(node))
-        ),
+        }),
       )
 
     // Open ALL the nodes (in the path)!
