@@ -23,14 +23,13 @@ let textToElement = (~color, ~font, ~text) => {
 };
 
 let iconNameToCharacter = name => {
-  let iconCode = name
-  |> Codicon.stringToGlyph
+  let iconCode = name |> Codicon.stringToGlyph;
 
   if (iconCode == Codicon.Constants.none) {
-      None
+    None;
   } else {
-      Some(iconCode);
-  }
+    Some(iconCode);
+  };
 };
 
 let iconToElement = (~color, icon) => {
