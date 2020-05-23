@@ -31,7 +31,6 @@ module Pane = Pane;
 module References = References;
 module Selectors = Selectors;
 module SideBar = SideBar;
-module Sneak = Sneak;
 module StatusBarModel = StatusBarModel;
 module StatusBarReducer = StatusBarReducer;
 module State = State;
