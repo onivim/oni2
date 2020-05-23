@@ -1,8 +1,6 @@
-// SCM
-
-module SCM: {
-  // EFFECTS
-  module Effects: {
+// EFFECTS
+module Effects: {
+  module SCM: {
     let provideOriginalResource:
       (
         ~handles: list(int),
