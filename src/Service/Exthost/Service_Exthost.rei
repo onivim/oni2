@@ -1,6 +1,3 @@
-open EditorCoreTypes;
-open Oni_Core;
-
 // EFFECTS
 module Effects: {
   module SCM: {

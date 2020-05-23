@@ -2,7 +2,6 @@ open Oni_Core;
 open Utility;
 
 module InputModel = Oni_Components.InputModel;
-module ExtHostClient = Oni_Extensions.ExtHostClient;
 module Selection = Oni_Components.Selection;
 
 // MODEL
