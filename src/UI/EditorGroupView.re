@@ -120,6 +120,9 @@ module Parts = {
           state.bufferRenderers,
         );
 
+      let changelogDispatch = msg =>
+        GlobalContext.current().dispatch(Changelog(msg));
+
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
         let backgroundColor = Feature_Terminal.defaultBackground(theme);
@@ -149,7 +152,13 @@ module Parts = {
 
       | Version => <VersionView theme uiFont editorFont />
 
-      | FullChangelog => <Feature_Changelog.View.Full theme uiFont />
+      | FullChangelog =>
+        <Feature_Changelog.View.Full
+          state={state.changelog}
+          theme
+          dispatch=changelogDispatch
+          uiFont
+        />
 
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />

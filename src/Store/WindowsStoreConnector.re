@@ -36,6 +36,10 @@ let start = () => {
   let windowUpdater = (s: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | EditorGroupSelected(_) => FocusManager.push(Editor, s)
+    | EditorTabClicked(editorId) => {
+        ...s,
+        editorGroups: EditorGroups.setActiveEditor(~editorId, s.editorGroups),
+      }
     | ViewCloseEditor(editorId) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
@@ -108,6 +112,11 @@ let start = () => {
     | Command("workbench.action.evenEditorWidths") => {
         ...s,
         layout: Feature_Layout.resetWeights(s.layout),
+      }
+
+    | WindowHandleDragged({path, delta}) => {
+        ...s,
+        layout: Feature_Layout.resizeSplit(~path, ~delta, s.layout),
       }
 
     | _ => s

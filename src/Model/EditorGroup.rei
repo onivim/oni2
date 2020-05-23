@@ -14,6 +14,8 @@ let create: unit => t;
 // [count] gets the number of editors in the group
 let count: t => int;
 
+let hasEditor: (~editorId: int, t) => bool;
+
 let getActiveEditor: t => option(Feature_Editor.Editor.t);
 let setActiveEditor: (t, int) => t;
 let getEditorById: (int, t) => option(Feature_Editor.Editor.t);

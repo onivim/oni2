@@ -72,7 +72,7 @@ let cliOptions =
           print_endline(ext.manifest.name);
         };
         List.iter(printExtension, extensions);
-        1;
+        0;
       },
     ~printVersion,
   );
@@ -114,6 +114,12 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
     );
   };
 
+  let decorated =
+    switch (Revery.Environment.os) {
+    | Windows => false
+    | _ => true
+    };
+
   let window =
     App.createWindow(
       ~createOptions=
@@ -127,6 +133,7 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
           ~y,
           ~width,
           ~height,
+          ~decorated,
           (),
         ),
       app,
@@ -236,6 +243,14 @@ if (cliOptions.syntaxHighlightService) {
       Window.minimize(window);
     };
 
+    let close = () => {
+      App.quit(~askNicely=true, app);
+    };
+
+    let restore = () => {
+      Window.restore(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -258,19 +273,30 @@ if (cliOptions.syntaxHighlightService) {
         ~setVsync,
         ~maximize,
         ~minimize,
+        ~restore,
+        ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
         ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
         ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
+        ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
         ~quit,
         (),
       );
     Log.debug("Startup: StoreThread started!");
 
+    let _: App.unsubscribe =
+      App.onFileOpen(app, path => {
+        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+      });
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>
         dispatch(Model.Actions.WindowMaximized)
+      );
+    let _: Window.unsubscribe =
+      Window.onFullscreen(window, () =>
+        dispatch(Model.Actions.WindowFullscreen)
       );
     let _: Window.unsubscribe =
       Window.onMinimized(window, () =>
@@ -292,9 +318,6 @@ if (cliOptions.syntaxHighlightService) {
       Window.onMoved(window, _ => persistWorkspace());
 
     GlobalContext.set({
-      openEditorById: id => {
-        dispatch(Model.Actions.ViewSetActiveEditor(id));
-      },
       closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
       editorScrollDelta: (~editorId, ~deltaY, ()) =>
         dispatch(Model.Actions.EditorScroll(editorId, deltaY)),

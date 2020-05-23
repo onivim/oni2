@@ -34,8 +34,14 @@ let setVsync = vsync => _currentVsync := vsync;
 
 let maximize = () => _currentMaximized := true;
 let minimize = () => _currentMinimized := true;
+let restore = () => {
+  _currentMaximized := false;
+  _currentMinimized := false;
+};
 
 let quit = code => exit(code);
+
+let close = () => quit(0) |> ignore;
 
 exception TestAssetNotFound(string);
 
@@ -165,6 +171,8 @@ let runTest =
       ~setVsync,
       ~maximize,
       ~minimize,
+      ~restore,
+      ~close,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
@@ -181,9 +189,6 @@ let runTest =
   InitLog.info("Sending init event");
 
   Oni_UI.GlobalContext.set({
-    openEditorById: id => {
-      dispatch(Model.Actions.ViewSetActiveEditor(id));
-    },
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
     editorScrollDelta: (~editorId, ~deltaY, ()) =>
       dispatch(Model.Actions.EditorScroll(editorId, deltaY)),

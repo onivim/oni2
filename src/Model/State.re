@@ -21,10 +21,17 @@ module ContextMenu = {
     | Nothing;
 };
 
+type windowDisplayMode =
+  | Minimized
+  | Windowed
+  | Maximized
+  | Fullscreen;
+
 type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
+  changelog: Feature_Changelog.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: ContextMenu.t,
@@ -63,7 +70,7 @@ type t = {
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
-  windowIsMaximized: bool,
+  windowDisplayMode,
   workspace: Workspace.t,
   zenMode: bool,
   // State of the bottom pane
@@ -92,6 +99,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: BufferRenderers.initial,
+    changelog: Feature_Changelog.initial,
     colorTheme:
       Feature_Theme.initial([
         Feature_Terminal.Contributions.colors,
@@ -138,7 +146,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     layout: initialLayout(initialEditorGroup),
     windowTitle: "",
     windowIsFocused: true,
-    windowIsMaximized: false,
+    windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
     zenMode: false,

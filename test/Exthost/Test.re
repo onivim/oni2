@@ -15,7 +15,7 @@ type t = {
   messages: ref(list(Msg.t)),
 };
 
-let noopHandler = _ => None;
+let noopHandler = _ => Lwt.return(Reply.okEmpty);
 let noopErrorHandler = _ => ();
 
 let startWithExtensions =
@@ -35,7 +35,6 @@ let startWithExtensions =
   };
 
   let wrappedHandler = msg => {
-    Msg.show(msg) |> prerr_endline;
     messages := [msg, ...messages^];
     handler(msg);
   };
@@ -47,7 +46,7 @@ let startWithExtensions =
     extensions
     |> List.map(Rench.Path.join(rootPath))
     |> List.map(p => Rench.Path.join(p, "package.json"))
-    |> List.map(Scanner.load(~prefix=None, ~category=Scanner.Bundled))
+    |> List.map(Scanner.load(~category=Scanner.Bundled))
     |> List.filter_map(v => v)
     |> List.map((Extension.Scanner.ScanResult.{manifest, path, _}) => {
          InitData.Extension.ofManifestAndPath(manifest, path)

@@ -27,7 +27,6 @@ let discoverExtensions =
           Scanner.scan(
             // The extension host assumes bundled extensions start with 'vscode.'
             ~category=Bundled,
-            ~prefix=Some("vscode"),
             setup.bundledExtensionsPath,
           );
 
@@ -84,9 +83,11 @@ let start =
       ~setVsync,
       ~maximize,
       ~minimize,
+      ~close,
+      ~restore,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
-      ~overriddenExtensionsDir=?,
+      ~overriddenExtensionsDir=None,
       ~shouldLoadExtensions=true,
       ~shouldSyntaxHighlight=true,
       ~shouldLoadConfiguration=true,
@@ -160,7 +161,8 @@ let start =
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater = TitleStoreConnector.start(setTitle, maximize, minimize);
+  let titleUpdater =
+    TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
   let sneakUpdater = SneakStore.start();
   let contextMenuUpdater = ContextMenuStore.start();
   let updater =

@@ -43,6 +43,27 @@ let add = (~defaultFont, editorGroup, model) => {
   };
 };
 
+let setActiveEditor = (~editorId, model) => {
+  let (activeId, idToGroup) =
+    IntMap.fold(
+      (editorGroupId, editorGroup, acc) =>
+        if (EditorGroup.hasEditor(~editorId, editorGroup)) {
+          let (_, idToGroup) = acc;
+          let newEditorGroup =
+            EditorGroup.setActiveEditor(editorGroup, editorId);
+          let idToGroup' =
+            IntMap.add(editorGroup.editorGroupId, newEditorGroup, idToGroup);
+          (editorGroupId, idToGroup');
+        } else {
+          acc;
+        },
+      model.idToGroup,
+      (model.activeId, model.idToGroup),
+    );
+
+  {...model, activeId, idToGroup};
+};
+
 let getEditorGroupById = (model, id) => IntMap.find_opt(id, model.idToGroup);
 
 let getFirstEditorGroup = ({idToGroup, _}) => {
