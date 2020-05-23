@@ -1,3 +1,5 @@
+// MODEL
+
 // definition only used for tests
 [@deriving show({with_path: false})]
 type size =
@@ -54,3 +56,24 @@ let resizeWindow:
   ([ | `Horizontal | `Vertical], 'id, float, t('id)) => t('id);
 let resizeSplit: (~path: list(int), ~delta: float, t('id)) => t('id);
 let resetWeights: t('id) => t('id);
+
+// UPDATE
+
+[@deriving show]
+type msg =
+  | HandleDragged({
+      path: list(int),
+      delta: float,
+    })
+  | MoveLeft
+  | MoveRight
+  | MoveUp
+  | MoveDown
+  | RotateForward
+  | RotateBackward;
+
+type outmsg('id) =
+  | Nothing
+  | Focus('id);
+
+let update: (~focus: option('id), t('id), msg) => (t('id), outmsg('id));

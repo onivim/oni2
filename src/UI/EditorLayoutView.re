@@ -92,10 +92,12 @@ let rec nodeView =
         let onDrag = delta => {
           let total = direction == `Vertical ? parent.width : parent.height;
           GlobalContext.current().dispatch(
-            Actions.WindowHandleDragged({
-              path: List.rev(path),
-              delta: delta /. float(total) // normalized
-            }),
+            Actions.Layout(
+              HandleDragged({
+                path: List.rev(path),
+                delta: delta /. float(total) // normalized
+              }),
+            ),
           );
         };
         [

@@ -1,5 +1,7 @@
 open Utility;
 
+// MODEL
+
 [@deriving show({with_path: false})]
 type size =
   | Weight(float);
@@ -441,3 +443,67 @@ let rec resetWeights =
   | Split(direction, Weight(_), children) =>
     Split(direction, Weight(1.), List.map(resetWeights, children))
   | Window(_, id) => Window(Weight(1.), id);
+
+// UPDATE
+
+[@deriving show({with_path: false})]
+type msg =
+  | HandleDragged({
+      path: list(int),
+      delta: float,
+    })
+  | MoveLeft
+  | MoveRight
+  | MoveUp
+  | MoveDown
+  | RotateForward
+  | RotateBackward;
+
+type outmsg('id) =
+  | Nothing
+  | Focus('id);
+
+let update = (~focus, model, msg) => {
+  switch (msg) {
+  | MoveLeft =>
+    switch (focus) {
+    | Some(focus) => (model, Focus(moveLeft(focus, model)))
+    | None => (model, Nothing)
+    }
+
+  | MoveRight =>
+    switch (focus) {
+    | Some(focus) => (model, Focus(moveRight(focus, model)))
+    | None => (model, Nothing)
+    }
+
+  | MoveUp =>
+    switch (focus) {
+    | Some(focus) => (model, Focus(moveUp(focus, model)))
+    | None => (model, Nothing)
+    }
+
+  | MoveDown =>
+    switch (focus) {
+    | Some(focus) => (model, Focus(moveDown(focus, model)))
+    | None => (model, Nothing)
+    }
+
+  | RotateForward =>
+    switch (focus) {
+    | Some(focus) => (rotateForward(focus, model), Nothing)
+    | None => (model, Nothing)
+    }
+
+  | RotateBackward =>
+    switch (focus) {
+    | Some(focus) => (rotateBackward(focus, model), Nothing)
+    | None => (model, Nothing)
+    }
+
+  | HandleDragged({path, delta}) => (
+      resizeSplit(~path, ~delta, model),
+      Nothing,
+    )
+  };
+};

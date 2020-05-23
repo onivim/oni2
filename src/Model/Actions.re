@@ -195,16 +195,7 @@ type t =
   | WindowMaximizeClicked
   | WindowRestoreClicked
   | WindowCloseBlocked
-  | WindowHandleDragged({
-      path: list(int),
-      delta: float,
-    })
-  | WindowMoveLeft
-  | WindowMoveRight
-  | WindowMoveUp
-  | WindowMoveDown
-  | WindowRotateForward
-  | WindowRotateBackward
+  | Layout(Feature_Layout.msg)
   | WriteFailure
   | NewTextContentProvider({
       handle: int,

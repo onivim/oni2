@@ -338,15 +338,15 @@ let start =
 
       switch (movementType) {
       | FullLeft
-      | OneLeft => dispatch(Actions.WindowMoveLeft)
+      | OneLeft => dispatch(Actions.Layout(MoveLeft))
       | FullRight
-      | OneRight => dispatch(Actions.WindowMoveRight)
+      | OneRight => dispatch(Actions.Layout(MoveRight))
       | FullDown
-      | OneDown => dispatch(Actions.WindowMoveDown)
+      | OneDown => dispatch(Actions.Layout(MoveDown))
       | FullUp
-      | OneUp => dispatch(Actions.WindowMoveUp)
-      | RotateDownwards => dispatch(Actions.WindowRotateForward)
-      | RotateUpwards => dispatch(Actions.WindowRotateBackward)
+      | OneUp => dispatch(Actions.Layout(MoveUp))
+      | RotateDownwards => dispatch(Actions.Layout(RotateForward))
+      | RotateUpwards => dispatch(Actions.Layout(RotateBackward))
       | TopLeft
       | BottomRight
       | Previous => Log.error("Window movement not implemented")

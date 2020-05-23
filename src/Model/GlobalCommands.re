@@ -140,7 +140,7 @@ module Oni = {
         ~category="View",
         ~title="Rotate Windows (Forwards)",
         "view.rotateForward",
-        WindowRotateForward,
+        Layout(RotateForward),
       );
 
     let rotateBackward =
@@ -148,7 +148,7 @@ module Oni = {
         ~category="View",
         ~title="Rotate Windows (Backwards)",
         "view.rotateBackward",
-        WindowRotateBackward,
+        Layout(RotateBackward),
       );
 
     let moveLeft =
@@ -156,7 +156,7 @@ module Oni = {
         ~category="View",
         ~title="Move Window Focus Left",
         "window.moveLeft",
-        WindowMoveLeft,
+        Layout(MoveLeft),
       );
 
     let moveRight =
@@ -164,7 +164,7 @@ module Oni = {
         ~category="View",
         ~title="Move Window Focus Right",
         "window.moveRight",
-        WindowMoveRight,
+        Layout(MoveRight),
       );
 
     let moveUp =
@@ -172,7 +172,7 @@ module Oni = {
         ~category="View",
         ~title="Move Window Focus Up",
         "window.moveUp",
-        WindowMoveUp,
+        Layout(MoveUp),
       );
 
     let moveDown =
@@ -180,7 +180,7 @@ module Oni = {
         ~category="View",
         ~title="Move Window Focus Down",
         "window.moveDown",
-        WindowMoveDown,
+        Layout(MoveDown),
       );
   };
 
