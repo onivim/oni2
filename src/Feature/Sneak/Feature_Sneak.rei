@@ -40,9 +40,6 @@ let getFiltered: model => list(sneak);
 
 module Registry: {
   let getSneaks: unit => list(sneakInfo);
-
-  let register: (ref(option(Revery.UI.node)), unit => unit) => unit;
-  let unregister: ref(option(Revery.UI.node)) => unit;
 };
 
 module View: {
