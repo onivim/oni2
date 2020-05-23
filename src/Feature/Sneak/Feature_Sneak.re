@@ -1,4 +1,3 @@
-open Oni_Core;
 open Revery.Math;
 
 module InputModel = Oni_Components.InputModel;
