@@ -507,3 +507,148 @@ let update = (~focus, model, msg) => {
     )
   };
 };
+
+// VIEW
+
+module View = {
+  open Revery;
+  open UI;
+
+  module Constants = {
+    let handleSize = 10;
+  };
+
+  module Styles = {
+    open Style;
+
+    let container = [flexGrow(1), flexDirection(`Row)];
+
+    let verticalHandle = (node: sized(_)) => [
+      cursor(MouseCursors.horizontalResize),
+      position(`Absolute),
+      left(node.x + node.width - Constants.handleSize / 2),
+      top(node.y),
+      width(Constants.handleSize),
+      height(node.height),
+    ];
+
+    let horizontalHandle = (node: sized(_)) => [
+      cursor(MouseCursors.verticalResize),
+      position(`Absolute),
+      left(node.x),
+      top(node.y + node.height - Constants.handleSize / 2),
+      width(node.width),
+      height(Constants.handleSize),
+    ];
+  };
+
+  let component = React.Expert.component("handleView");
+  let handleView = (~direction, ~node: sized(_), ~onDrag, ()) =>
+    component(hooks => {
+      let ((captureMouse, _state), hooks) =
+        Hooks.mouseCapture(
+          ~onMouseMove=
+            ((lastX, lastY), evt) => {
+              let delta =
+                switch (direction) {
+                | `Vertical => evt.mouseX -. lastX
+                | `Horizontal => evt.mouseY -. lastY
+                };
+
+              onDrag(delta);
+              Some((evt.mouseX, evt.mouseY));
+            },
+          ~onMouseUp=(_, _) => None,
+          (),
+          hooks,
+        );
+
+      let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+        captureMouse((evt.mouseX, evt.mouseY));
+      };
+
+      (
+        <View
+          onMouseDown
+          style={
+            direction == `Vertical
+              ? Styles.verticalHandle(node) : Styles.horizontalHandle(node)
+          }
+        />,
+        hooks,
+      );
+    });
+
+  let rec nodeView = (~theme, ~path=[], ~node, ~renderWindow, ~dispatch, ()) => {
+    switch (node.kind) {
+    | `Split(direction, children) =>
+      let parent = node;
+
+      let rec loop = (index, children) => {
+        let path = [index, ...path];
+
+        switch (children) {
+        | [] => []
+        | [node] => [<nodeView theme path node renderWindow dispatch />]
+
+        | [node, ...[_, ..._] as rest] =>
+          let onDrag = delta => {
+            let total = direction == `Vertical ? parent.width : parent.height;
+            dispatch(
+              HandleDragged({
+                path: List.rev(path),
+                delta: delta /. float(total) // normalized
+              }),
+            );
+          };
+          [
+            <nodeView theme path node renderWindow dispatch />,
+            <handleView direction node onDrag />,
+            ...loop(index + 1, rest),
+          ];
+        };
+      };
+
+      loop(0, children) |> React.listToElement;
+
+    | `Window(id) =>
+      <View
+        style=Style.[
+          position(`Absolute),
+          left(node.x),
+          top(node.y),
+          width(node.width),
+          height(node.height),
+        ]>
+        {renderWindow(id)}
+      </View>
+    };
+  };
+
+  let component = React.Expert.component("Feature_Layout.View");
+  let make = (~children as renderWindow, ~model, ~theme, ~dispatch, ()) =>
+    component(hooks => {
+      let ((maybeDimensions, setDimensions), hooks) =
+        Hooks.state(None, hooks);
+      let children =
+        switch (maybeDimensions) {
+        | Some((width, height)) =>
+          let sizedLayout = layout(0, 0, width, height, model);
+
+          <nodeView theme node=sizedLayout renderWindow dispatch />;
+
+        | None => React.empty
+        };
+
+      (
+        <View
+          onDimensionsChanged={dim =>
+            setDimensions(_ => Some((dim.width, dim.height)))
+          }
+          style=Styles.container>
+          children
+        </View>,
+        hooks,
+      );
+    });
+};

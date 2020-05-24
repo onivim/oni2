@@ -8,7 +8,6 @@
 
 open Revery.UI;
 open Oni_Model;
-module Model = Oni_Model;
 
 module Colors = Feature_Theme.Colors;
 
@@ -33,7 +32,25 @@ let make = (~state: State.t, ~theme, ()) => {
        | None => React.empty
        };
      } else {
-       <EditorLayoutView state theme />;
+       let dispatch = msg =>
+         GlobalContext.current().dispatch(Actions.Layout(msg));
+
+       <View style={Styles.container(theme)}>
+         <Feature_Layout.View theme model={state.layout} dispatch>
+           ...{editorGroupId =>
+             switch (
+               EditorGroups.getEditorGroupById(
+                 state.editorGroups,
+                 editorGroupId,
+               )
+             ) {
+             | Some(editorGroup) =>
+               <EditorGroupView state theme editorGroup />
+             | None => React.empty
+             }
+           }
+         </Feature_Layout.View>
+       </View>;
      }}
   </View>;
 };

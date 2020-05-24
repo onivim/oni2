@@ -77,3 +77,20 @@ type outmsg('id) =
   | Focus('id);
 
 let update: (~focus: option('id), t('id), msg) => (t('id), outmsg('id));
+
+// VIEW
+
+module View: {
+  open Oni_Core;
+  open Revery.UI;
+
+  let make:
+    (
+      ~children: 'id => element,
+      ~model: t('id),
+      ~theme: ColorTheme.Colors.t,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
+    element;
+};

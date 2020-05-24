@@ -6,4 +6,4 @@
       isolinear
       base
     )
-    (preprocess (pps ppx_let ppx_deriving.show)))
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
