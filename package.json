@@ -379,7 +379,7 @@
     "esy-macdylibbundler": "*",
     "isolinear": "^3.0.0",
     "ocaml": "~4.7.0",
-    "reason-fzy": "CrossR/reason-fzy#aff60d7",
+    "reason-fzy": "CrossR/reason-fzy#802eced",
     "reason-sdl2": "^2.10.2020",
     "reason-libvim": "*",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#ae1fd34",

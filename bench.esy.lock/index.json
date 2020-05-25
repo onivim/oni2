@@ -1,5 +1,5 @@
 {
-  "checksum": "c19cb1c8f73b47ae4dd4f0c264e8ddd3",
+  "checksum": "b61c4565d664db69b93f71e513c94bc0",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -440,18 +440,18 @@
       ],
       "devDependencies": []
     },
-    "reason-fzy@github:CrossR/reason-fzy#aff60d7@d41d8cd9": {
-      "id": "reason-fzy@github:CrossR/reason-fzy#aff60d7@d41d8cd9",
+    "reason-fzy@github:CrossR/reason-fzy#802eced@d41d8cd9": {
+      "id": "reason-fzy@github:CrossR/reason-fzy#802eced@d41d8cd9",
       "name": "reason-fzy",
-      "version": "github:CrossR/reason-fzy#aff60d7",
+      "version": "github:CrossR/reason-fzy#802eced",
       "source": {
         "type": "install",
-        "source": [ "github:CrossR/reason-fzy#aff60d7" ]
+        "source": [ "github:CrossR/reason-fzy#802eced" ]
       },
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.2@d41d8cd9", "ocaml@4.9.1000@d41d8cd9",
-        "esy-fzy@github:CrossR/esy-fzy#8b7e4c0@d41d8cd9",
+        "esy-fzy@github:CrossR/esy-fzy#c42c543@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
@@ -956,13 +956,13 @@
       "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
-    "esy-fzy@github:CrossR/esy-fzy#8b7e4c0@d41d8cd9": {
-      "id": "esy-fzy@github:CrossR/esy-fzy#8b7e4c0@d41d8cd9",
+    "esy-fzy@github:CrossR/esy-fzy#c42c543@d41d8cd9": {
+      "id": "esy-fzy@github:CrossR/esy-fzy#c42c543@d41d8cd9",
       "name": "esy-fzy",
-      "version": "github:CrossR/esy-fzy#8b7e4c0",
+      "version": "github:CrossR/esy-fzy#c42c543",
       "source": {
         "type": "install",
-        "source": [ "github:CrossR/esy-fzy#8b7e4c0" ]
+        "source": [ "github:CrossR/esy-fzy#c42c543" ]
       },
       "overrides": [],
       "dependencies": [],
@@ -1171,7 +1171,7 @@
         "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3032@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "reason-libvim@github:onivim/reason-libvim#b13865e@d41d8cd9",
-        "reason-fzy@github:CrossR/reason-fzy#aff60d7@d41d8cd9",
+        "reason-fzy@github:CrossR/reason-fzy#802eced@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
