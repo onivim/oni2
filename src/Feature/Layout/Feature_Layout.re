@@ -797,3 +797,130 @@ module View = {
       );
     });
 };
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let rotateForward =
+    define(
+      ~category="View",
+      ~title="Rotate Windows (Forwards)",
+      "view.rotateForward",
+      Command(RotateForward),
+    );
+
+  let rotateBackward =
+    define(
+      ~category="View",
+      ~title="Rotate Windows (Backwards)",
+      "view.rotateBackward",
+      Command(RotateBackward),
+    );
+
+  let moveLeft =
+    define(
+      ~category="View",
+      ~title="Move Window Focus Left",
+      "window.moveLeft",
+      Command(MoveLeft),
+    );
+
+  let moveRight =
+    define(
+      ~category="View",
+      ~title="Move Window Focus Right",
+      "window.moveRight",
+      Command(MoveRight),
+    );
+
+  let moveUp =
+    define(
+      ~category="View",
+      ~title="Move Window Focus Up",
+      "window.moveUp",
+      Command(MoveUp),
+    );
+
+  let moveDown =
+    define(
+      ~category="View",
+      ~title="Move Window Focus Down",
+      "window.moveDown",
+      Command(MoveDown),
+    );
+
+  let decreaseSize =
+    define(
+      ~category="View",
+      ~title="Decrease Current Window/View Size",
+      "workbench.action.decreaseViewSize",
+      Command(DecreaseSize),
+    );
+
+  let increaseSize =
+    define(
+      ~category="View",
+      ~title="Increase Current Window/View Size",
+      "workbench.action.increaseViewSize",
+      Command(IncreaseSize),
+    );
+
+  let decreaseHorizontalSize =
+    define(
+      ~category="View",
+      ~title="Decrease Horizontal Window Size",
+      "vim.decreaseHorizontalWindowSize",
+      Command(DecreaseHorizontalSize),
+    );
+
+  let increaseHorizontalSize =
+    define(
+      ~category="View",
+      ~title="Increase Horizontal Window Size",
+      "vim.increaseHorizontalWindowSize",
+      Command(IncreaseHorizontalSize),
+    );
+
+  let decreaseVerticalSize =
+    define(
+      ~category="View",
+      ~title="Decrease Vertical Window Size",
+      "vim.decreaseVerticalWindowSize",
+      Command(DecreaseVerticalSize),
+    );
+
+  let increaseVerticalSize =
+    define(
+      ~category="View",
+      ~title="Increase Vertical Window Size",
+      "vim.increaseVerticalWindowSize",
+      Command(IncreaseVerticalSize),
+    );
+
+  let resetSizes =
+    define(
+      ~category="View",
+      ~title="Reset Window Sizes",
+      "workbench.action.evenEditorWidths",
+      Command(ResetSizes),
+    );
+};
+
+module Contributions = {
+  let commands =
+    Commands.[
+      rotateForward,
+      rotateBackward,
+      moveLeft,
+      moveRight,
+      moveUp,
+      moveDown,
+      increaseSize,
+      decreaseSize,
+      increaseHorizontalSize,
+      decreaseHorizontalSize,
+      increaseVerticalSize,
+      decreaseVerticalSize,
+      resetSizes,
+    ];
+};

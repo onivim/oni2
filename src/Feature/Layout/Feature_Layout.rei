@@ -1,3 +1,5 @@
+open Oni_Core;
+
 // MODEL
 
 // definition only used for tests
@@ -93,7 +95,6 @@ let update: (~focus: option('id), t('id), msg) => (t('id), outmsg('id));
 // VIEW
 
 module View: {
-  open Oni_Core;
   open Revery.UI;
 
   let make:
@@ -106,3 +107,7 @@ module View: {
     ) =>
     element;
 };
+
+// CONTRIBUTIONS
+
+module Contributions: {let commands: list(Command.t(msg));};

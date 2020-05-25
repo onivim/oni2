@@ -341,6 +341,11 @@ let start =
     Feature_Sneak.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
   );
+  registerCommands(
+    ~dispatch,
+    Feature_Layout.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
+  );
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
