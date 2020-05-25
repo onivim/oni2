@@ -18,21 +18,6 @@ let start = () => {
       dispatch(Model.Actions.Quit(false))
     );
 
-  let resize = (axis, factor, state: State.t) =>
-    switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
-    | Some((editorGroup: EditorGroup.t)) => {
-        ...state,
-        layout:
-          Feature_Layout.resizeWindow(
-            axis,
-            editorGroup.editorGroupId,
-            factor,
-            state.layout,
-          ),
-      }
-    | None => state
-    };
-
   let windowUpdater = (state: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
     | EditorGroupSelected(_) => FocusManager.push(Editor, state)
@@ -42,6 +27,7 @@ let start = () => {
         editorGroups:
           EditorGroups.setActiveEditor(~editorId, state.editorGroups),
       }
+
     | ViewCloseEditor(editorId) =>
       /* When an editor is closed... lets see if any window splits are empty */
 
@@ -69,29 +55,6 @@ let start = () => {
       {...state, editorGroups, layout};
 
     | OpenFileByPath(_) => FocusManager.push(Editor, state)
-
-    | Command("workbench.action.decreaseViewSize") =>
-      state |> resize(`Horizontal, 0.95) |> resize(`Vertical, 0.95)
-
-    | Command("workbench.action.increaseViewSize") =>
-      state |> resize(`Horizontal, 1.05) |> resize(`Vertical, 1.05)
-
-    | Command("vim.decreaseHorizontalWindowSize") =>
-      state |> resize(`Horizontal, 0.95)
-
-    | Command("vim.increaseHorizontalWindowSize") =>
-      state |> resize(`Horizontal, 1.05)
-
-    | Command("vim.decreaseVerticalWindowSize") =>
-      state |> resize(`Vertical, 0.95)
-
-    | Command("vim.increaseVerticalWindowSize") =>
-      state |> resize(`Vertical, 1.05)
-
-    | Command("workbench.action.evenEditorWidths") => {
-        ...state,
-        layout: Feature_Layout.resetWeights(state.layout),
-      }
 
     | _ => state
     };

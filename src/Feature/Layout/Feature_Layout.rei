@@ -61,18 +61,28 @@ let resetWeights: t('id) => t('id);
 
 // UPDATE
 
+type command =
+  | MoveLeft
+  | MoveRight
+  | MoveUp
+  | MoveDown
+  | RotateForward
+  | RotateBackward
+  | DecreaseSize
+  | IncreaseSize
+  | DecreaseHorizontalSize
+  | IncreaseHorizontalSize
+  | DecreaseVerticalSize
+  | IncreaseVerticalSize
+  | ResetSizes;
+
 [@deriving show]
 type msg =
   | HandleDragged({
       path: list(int),
       delta: float,
     })
-  | MoveLeft
-  | MoveRight
-  | MoveUp
-  | MoveDown
-  | RotateForward
-  | RotateBackward;
+  | Command(command);
 
 type outmsg('id) =
   | Nothing

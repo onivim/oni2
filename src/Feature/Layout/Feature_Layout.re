@@ -520,17 +520,28 @@ let rec resetWeights = node =>
 // UPDATE
 
 [@deriving show({with_path: false})]
-type msg =
-  | HandleDragged({
-      path: list(int),
-      delta: float,
-    })
+type command =
   | MoveLeft
   | MoveRight
   | MoveUp
   | MoveDown
   | RotateForward
-  | RotateBackward;
+  | RotateBackward
+  | DecreaseSize
+  | IncreaseSize
+  | DecreaseHorizontalSize
+  | IncreaseHorizontalSize
+  | DecreaseVerticalSize
+  | IncreaseVerticalSize
+  | ResetSizes;
+
+[@deriving show({with_path: false})]
+type msg =
+  | HandleDragged({
+      path: list(int),
+      delta: float,
+    })
+  | Command(command);
 
 type outmsg('id) =
   | Nothing
@@ -538,41 +549,101 @@ type outmsg('id) =
 
 let update = (~focus, model, msg) => {
   switch (msg) {
-  | MoveLeft =>
+  | Command(MoveLeft) =>
     switch (focus) {
     | Some(focus) => (model, Focus(moveLeft(focus, model)))
     | None => (model, Nothing)
     }
 
-  | MoveRight =>
+  | Command(MoveRight) =>
     switch (focus) {
     | Some(focus) => (model, Focus(moveRight(focus, model)))
     | None => (model, Nothing)
     }
 
-  | MoveUp =>
+  | Command(MoveUp) =>
     switch (focus) {
     | Some(focus) => (model, Focus(moveUp(focus, model)))
     | None => (model, Nothing)
     }
 
-  | MoveDown =>
+  | Command(MoveDown) =>
     switch (focus) {
     | Some(focus) => (model, Focus(moveDown(focus, model)))
     | None => (model, Nothing)
     }
 
-  | RotateForward =>
+  | Command(RotateForward) =>
     switch (focus) {
     | Some(focus) => (rotateForward(focus, model), Nothing)
     | None => (model, Nothing)
     }
 
-  | RotateBackward =>
+  | Command(RotateBackward) =>
     switch (focus) {
     | Some(focus) => (rotateBackward(focus, model), Nothing)
     | None => (model, Nothing)
     }
+
+  | Command(DecreaseSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model
+        |> resizeWindow(`Horizontal, focus, 0.95)
+        |> resizeWindow(`Vertical, focus, 0.95),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(IncreaseSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model
+        |> resizeWindow(`Horizontal, focus, 1.05)
+        |> resizeWindow(`Vertical, focus, 1.05),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(DecreaseHorizontalSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> resizeWindow(`Horizontal, focus, 0.95),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(IncreaseHorizontalSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> resizeWindow(`Horizontal, focus, 1.05),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(DecreaseVerticalSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> resizeWindow(`Vertical, focus, 0.95),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(IncreaseVerticalSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> resizeWindow(`Vertical, focus, 1.05),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(ResetSizes) => (resetWeights(model), Nothing)
 
   | HandleDragged({path, delta}) => (
       resizeSplit(~path, ~delta, model),

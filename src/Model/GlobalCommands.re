@@ -140,7 +140,7 @@ module Oni = {
         ~category="View",
         ~title="Rotate Windows (Forwards)",
         "view.rotateForward",
-        Layout(RotateForward),
+        Layout(Command(RotateForward)),
       );
 
     let rotateBackward =
@@ -148,7 +148,7 @@ module Oni = {
         ~category="View",
         ~title="Rotate Windows (Backwards)",
         "view.rotateBackward",
-        Layout(RotateBackward),
+        Layout(Command(RotateBackward)),
       );
 
     let moveLeft =
@@ -156,7 +156,7 @@ module Oni = {
         ~category="View",
         ~title="Move Window Focus Left",
         "window.moveLeft",
-        Layout(MoveLeft),
+        Layout(Command(MoveLeft)),
       );
 
     let moveRight =
@@ -164,7 +164,7 @@ module Oni = {
         ~category="View",
         ~title="Move Window Focus Right",
         "window.moveRight",
-        Layout(MoveRight),
+        Layout(Command(MoveRight)),
       );
 
     let moveUp =
@@ -172,7 +172,7 @@ module Oni = {
         ~category="View",
         ~title="Move Window Focus Up",
         "window.moveUp",
-        Layout(MoveUp),
+        Layout(Command(MoveUp)),
       );
 
     let moveDown =
@@ -180,7 +180,7 @@ module Oni = {
         ~category="View",
         ~title="Move Window Focus Down",
         "window.moveDown",
-        Layout(MoveDown),
+        Layout(Command(MoveDown)),
       );
   };
 
@@ -199,7 +199,7 @@ module Oni = {
         ~category="View",
         ~title="Decrease Horizontal Window Size",
         "vim.decreaseHorizontalWindowSize",
-        Command("vim.decreaseHorizontalWindowSize"),
+        Layout(Command(DecreaseHorizontalSize)),
       );
 
     let increaseHorizontalWindowSize =
@@ -207,7 +207,7 @@ module Oni = {
         ~category="View",
         ~title="Increase Horizontal Window Size",
         "vim.increaseHorizontalWindowSize",
-        Command("vim.increaseHorizontalWindowSize"),
+        Layout(Command(IncreaseHorizontalSize)),
       );
 
     let decreaseVerticalWindowSize =
@@ -215,7 +215,7 @@ module Oni = {
         ~category="View",
         ~title="Decrease Vertical Window Size",
         "vim.decreaseVerticalWindowSize",
-        Command("vim.decreaseVerticalWindowSize"),
+        Layout(Command(DecreaseVerticalSize)),
       );
 
     let increaseVerticalWindowSize =
@@ -223,7 +223,7 @@ module Oni = {
         ~category="View",
         ~title="Increase Vertical Window Size",
         "vim.increaseVerticalWindowSize",
-        Command("vim.increaseVerticalWindowSize"),
+        Layout(Command(IncreaseVerticalSize)),
       );
   };
 
@@ -436,7 +436,7 @@ module Workbench = {
         ~category="View",
         ~title="Reset Window Sizes",
         "workbench.action.evenEditorWidths",
-        Command("workbench.action.evenEditorWidths"),
+        Layout(Command(ResetSizes)),
       );
 
     module Files = {
