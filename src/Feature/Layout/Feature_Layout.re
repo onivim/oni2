@@ -2,50 +2,35 @@ open Utility;
 
 // MODEL
 
-[@deriving show({with_path: false})]
-type size =
-  | Weight(float);
-
-[@deriving show({with_path: false})]
-type t('id) =
-  | Split([ | `Horizontal | `Vertical], size, list(t('id)))
-  | Window(size, 'id);
-
-let nodeSize =
-  fun
-  | Split(_, size, _) => size
-  | Window(size, _) => size;
-
-let withSize = size =>
-  fun
-  | Split(direction, _, children) => Split(direction, size, children)
-  | Window(_, id) => Window(size, id);
-
-let nodeWeight =
-  fun
-  | Split(_, Weight(weight), _) => Some(weight)
-  | Window(Weight(weight), _) => Some(weight);
-
-[@deriving show({with_path: false})]
-type sized('id) = {
-  x: int,
-  y: int,
-  width: int,
-  height: int,
+type node('id, 'meta) = {
+  meta: 'meta,
   kind: [
-    | `Split([ | `Horizontal | `Vertical], list(sized('id)))
+    | `Split([ | `Horizontal | `Vertical], list(node('id, 'meta)))
     | `Window('id)
   ],
 };
 
+type metadata = {size: float};
+
+type t('id) = node('id, metadata);
+
+type sizedMetadata = {
+  x: int,
+  y: int,
+  width: int,
+  height: int,
+};
+
+type sized('id) = node('id, sizedMetadata);
+
 module Internal = {
-  let contains = (x, y, split) => {
-    x >= split.x
-    && x <= split.x
-    + split.width
-    && y >= split.y
-    && y <= split.y
-    + split.height;
+  let contains = (x, y, {meta, _}) => {
+    x >= meta.x
+    && x <= meta.x
+    + meta.width
+    && y >= meta.y
+    && y <= meta.y
+    + meta.height;
   };
 
   let rec sizedWindows = node =>
@@ -60,15 +45,17 @@ module Internal = {
 
     let (minX, minY, maxX, maxY, deltaX, deltaY) =
       List.fold_left(
-        (prev, cur) => {
+        (prev, {meta, _}) => {
           let (minX, minY, maxX, maxY, deltaX, deltaY) = prev;
 
-          let newMinX = cur.x < minX ? cur.x : minX;
-          let newMinY = cur.y < minY ? cur.y : minY;
-          let newMaxX = cur.x + cur.width > maxX ? cur.x + cur.width : maxX;
-          let newMaxY = cur.y + cur.height > maxY ? cur.y + cur.height : maxY;
-          let newDeltaX = cur.width / 2 < deltaX ? cur.width / 2 : deltaX;
-          let newDeltaY = cur.height / 2 < deltaY ? cur.height / 2 : deltaY;
+          let newMinX = meta.x < minX ? meta.x : minX;
+          let newMinY = meta.y < minY ? meta.y : minY;
+          let newMaxX =
+            meta.x + meta.width > maxX ? meta.x + meta.width : maxX;
+          let newMaxY =
+            meta.y + meta.height > maxY ? meta.y + meta.height : maxY;
+          let newDeltaX = meta.width / 2 < deltaX ? meta.width / 2 : deltaX;
+          let newDeltaY = meta.height / 2 < deltaY ? meta.height / 2 : deltaY;
 
           (newMinX, newMinY, newMaxX, newMaxY, newDeltaX, newDeltaY);
         },
@@ -78,9 +65,9 @@ module Internal = {
 
     switch (List.find_opt(split => split.kind == `Window(targetId), splits)) {
     | None => None
-    | Some(target) =>
-      let curX = ref(target.x + target.width / 2);
-      let curY = ref(target.y + target.height / 2);
+    | Some({meta, _}) =>
+      let curX = ref(meta.x + meta.width / 2);
+      let curY = ref(meta.y + meta.height / 2);
       let found = ref(false);
       let result = ref(None);
 
@@ -112,52 +99,46 @@ module Internal = {
     };
   };
 
-  let rec rotate = (target, func, tree) => {
-    let findSplit = children => {
-      let predicate =
-        fun
-        | Window(_, id) => id == target
-        | _ => false;
+  let rec rotate = (targetId, f, node) => {
+    switch (node.kind) {
+    | `Split(direction, children) =>
+      let children =
+        List.exists(({kind, _}) => kind == `Window(targetId), children)
+          ? f(children) : List.map(rotate(targetId, f), children);
 
-      List.exists(predicate, children);
-    };
+      {...node, kind: `Split((direction, children))};
 
-    switch (tree) {
-    | Split(direction, size, children) =>
-      Split(
-        direction,
-        size,
-        List.map(
-          child => rotate(target, func, child),
-          findSplit(children) ? func(children) : children,
-        ),
-      )
-    | Window(_) as window => window
+    | `Window(_) => node
     };
   };
 };
 
-let empty = Split(`Vertical, Weight(1.), []);
+let empty = {
+  meta: {
+    size: 1.,
+  },
+  kind: `Split((`Vertical, [])),
+};
 let initial = empty;
 
 let windows = tree => {
   let rec traverse = (node, acc) => {
-    switch (node) {
-    | Split(_, _, children) =>
+    switch (node.kind) {
+    | `Split(_, children) =>
       List.fold_left((acc, child) => traverse(child, acc), acc, children)
-    | Window(_, id) => [id, ...acc]
+    | `Window(id) => [id, ...acc]
     };
   };
 
   traverse(tree, []);
 };
 
-let rec layout = (x, y, width, height, tree) => {
-  switch (tree) {
-  | Split(direction, _, children) =>
+let rec layout = (x, y, width, height, node) => {
+  switch (node.kind) {
+  | `Split(direction, children) =>
     let totalWeight =
       children
-      |> List.filter_map(nodeWeight)
+      |> List.map(child => child.meta.size)
       |> List.fold_left((+.), 0.)
       |> max(1.);
 
@@ -168,12 +149,9 @@ let rec layout = (x, y, width, height, tree) => {
           let unitHeight = float(height) /. totalWeight;
           List.fold_left(
             ((y, acc), child) => {
-              switch (nodeSize(child)) {
-              | Weight(weight) =>
-                let height = int_of_float(unitHeight *. weight);
-                let sized = layout(x, y, width, height, child);
-                (y + height, [sized, ...acc]);
-              }
+              let height = int_of_float(unitHeight *. child.meta.size);
+              let sized = layout(x, y, width, height, child);
+              (y + height, [sized, ...acc]);
             },
             (y, []),
             children,
@@ -183,12 +161,9 @@ let rec layout = (x, y, width, height, tree) => {
           let unitWidth = float(width) /. totalWeight;
           List.fold_left(
             ((x, acc), child) => {
-              switch (nodeSize(child)) {
-              | Weight(weight) =>
-                let width = int_of_float(unitWidth *. weight);
-                let sized = layout(x, y, width, height, child);
-                (x + width, [sized, ...acc]);
-              }
+              let width = int_of_float(unitWidth *. child.meta.size);
+              let sized = layout(x, y, width, height, child);
+              (x + width, [sized, ...acc]);
             },
             (x, []),
             children,
@@ -198,102 +173,167 @@ let rec layout = (x, y, width, height, tree) => {
       |> snd
       |> List.rev;
 
-    {x, y, width, height, kind: `Split((direction, sizedChildren))};
+    {
+      meta: {
+        x,
+        y,
+        width,
+        height,
+      },
+      kind: `Split((direction, sizedChildren)),
+    };
 
-  | Window(_, id) => {x, y, width, height, kind: `Window(id)}
+  | `Window(id) => {
+      meta: {
+        x,
+        y,
+        width,
+        height,
+      },
+      kind: `Window(id),
+    }
   };
 };
 
 let addWindow = (~target=None, ~position, direction, id, tree) => {
-  let newWindow = Window(Weight(1.), id);
+  let newWindow = {
+    meta: {
+      size: 1.,
+    },
+    kind: `Window(id),
+  };
   switch (target) {
   | Some(targetId) =>
     let rec traverse = node => {
-      switch (node) {
-      | Split(_, size, []) => Window(size, id) // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
-      | Split(thisDirection, size, children) when thisDirection == direction =>
+      switch (node.kind) {
+      | `Split(_, []) => {...node, kind: `Window(id)} // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
+      | `Split(thisDirection, children) when thisDirection == direction =>
         let onMatch = child =>
           switch (position) {
           | `Before => [newWindow, child]
           | `After => [child, newWindow]
           };
-        Split(thisDirection, size, traverseChildren(~onMatch, [], children));
+        {
+          ...node,
+          kind:
+            `Split((
+              thisDirection,
+              traverseChildren(~onMatch, [], children),
+            )),
+        };
 
-      | Split(thisDirection, size, children) =>
-        let onMatch = child =>
+      | `Split(thisDirection, children) =>
+        let onMatch = ({meta, kind}) => {
+          let children =
+            switch (position) {
+            | `Before => [newWindow, {
+                                       meta: {
+                                         size: 1.,
+                                       },
+                                       kind,
+                                     }]
+            | `After => [{
+                           meta: {
+                             size: 1.,
+                           },
+                           kind,
+                         }, newWindow]
+            };
+
+          [{meta, kind: `Split((direction, children))}];
+        };
+
+        {
+          ...node,
+          kind:
+            `Split((
+              thisDirection,
+              traverseChildren(~onMatch, [], children),
+            )),
+        };
+
+      | `Window(id) when id == targetId =>
+        let children =
           switch (position) {
-          | `Before => [
-              Split(
-                direction,
-                nodeSize(child),
-                [newWindow, child |> withSize(Weight(1.))],
-              ),
-            ]
-          | `After => [
-              Split(
-                direction,
-                nodeSize(child),
-                [child |> withSize(Weight(1.)), newWindow],
-              ),
-            ]
+          | `Before => [newWindow, {
+                                     meta: {
+                                       size: 1.,
+                                     },
+                                     kind: node.kind,
+                                   }]
+          | `After => [{
+                         meta: {
+                           size: 1.,
+                         },
+                         kind: node.kind,
+                       }, newWindow]
           };
-        Split(thisDirection, size, traverseChildren(~onMatch, [], children));
 
-      | Window(size, id) when id == targetId =>
-        switch (position) {
-        | `Before =>
-          Split(direction, size, [newWindow, Window(Weight(1.), id)])
-        | `After =>
-          Split(direction, size, [Window(Weight(1.), id), newWindow])
-        }
+        {meta: node.meta, kind: `Split((direction, children))};
 
-      | Window(_) as window => window
+      | `Window(_) => node
       };
     }
 
     and traverseChildren = (~onMatch, before, after) =>
       switch (after) {
       | [] => List.rev(before)
-      | [head, ...rest] =>
-        switch (head) {
-        | Window(_, id) as child when id == targetId =>
+      | [child, ...rest] =>
+        switch (child.kind) {
+        | `Window(id) when id == targetId =>
           traverseChildren(
             ~onMatch,
             List.rev(onMatch(child)) @ before,
             rest,
           )
 
-        | Split(_) as child =>
-          traverseChildren(~onMatch, [traverse(child), ...before], rest)
+        | `Window(_) => traverseChildren(~onMatch, [child, ...before], rest)
 
-        | child => traverseChildren(~onMatch, [child, ...before], rest)
+        | `Split(_) =>
+          traverseChildren(~onMatch, [traverse(child), ...before], rest)
         }
       };
 
     traverse(tree);
 
   | None =>
-    switch (tree) {
-    | Split(_, size, []) => Window(size, id)
-    | Split(d, size, children) => Split(d, size, [newWindow, ...children])
-    | Window(size, id) =>
-      Split(direction, size, [newWindow, Window(Weight(1.), id)])
+    switch (tree.kind) {
+    | `Split(_, []) => {...tree, kind: `Window(id)}
+    | `Split(d, children) => {
+        ...tree,
+        kind: `Split((d, [newWindow, ...children])),
+      }
+    | `Window(id) => {
+        ...tree,
+        kind:
+          `Split((
+            direction,
+            [newWindow, {
+                          meta: {
+                            size: 1.,
+                          },
+                          kind: `Window(id),
+                        }],
+          )),
+      }
     }
   };
 };
 
 let removeWindow = (target, tree) => {
-  let rec traverse =
-    fun
-    | Split(direction, size, children) =>
+  let rec traverse = node =>
+    switch (node.kind) {
+    | `Split(direction, children) =>
       switch (List.filter_map(traverse, children)) {
       | [] => None
       // BUG: Collapsing disabled as it doesn't preserve size properly.
       // | [child] => Some(child)
-      | newChildren => Some(Split(direction, size, newChildren))
+      | newChildren =>
+        Some({...node, kind: `Split((direction, newChildren))})
       }
-    | Window(_, id) when id == target => None
-    | node => Some(node);
+    | `Window(id) when id == target => None
+    | `Window(_) => Some(node)
+    };
 
   traverse(tree) |> Option.value(~default=empty);
 };
@@ -336,56 +376,67 @@ let rotateBackward = (target, tree) => {
   Internal.rotate(target, f, tree);
 };
 
-let resizeWindow = (direction, target, factor, node) => {
-  let rec traverse = (~parentDirection=?) =>
-    fun
-    | Split(dir, Weight(weight) as size, children) => {
-        let (result, children) =
-          List.fold_left(
-            ((accResult, accChildren), child) => {
-              let (result, node) = traverse(~parentDirection=dir, child);
-              (
-                result == `NotFound ? accResult : result,
-                [node, ...accChildren],
-              );
+let resizeWindow = (direction, targetId, factor, node) => {
+  let rec traverse = (~parentDirection=?, node) =>
+    switch (node.kind) {
+    | `Split(dir, children) =>
+      let (result, children) =
+        List.fold_left(
+          ((accResult, accChildren), child) => {
+            let (result, newChild) = traverse(~parentDirection=dir, child);
+
+            (
+              result == `NotFound ? accResult : result,
+              [newChild, ...accChildren],
+            );
+          },
+          (`NotFound, []),
+          List.rev(children),
+        );
+
+      switch (result, parentDirection) {
+      | (`NotAdjusted, Some(parentDirection))
+          when parentDirection != direction => (
+          `Adjusted,
+          {
+            meta: {
+              size: node.meta.size *. factor,
             },
-            (`NotFound, []),
-            List.rev(children),
-          );
+            kind: `Split((dir, children)),
+          },
+        )
 
-        switch (result, parentDirection) {
-        | (`NotAdjusted, Some(parentDirection))
-            when parentDirection != direction => (
-            `Adjusted,
-            Split(dir, Weight(weight *. factor), children),
-          )
+      | _ => (result, {...node, kind: `Split((dir, children))})
+      };
 
-        | _ => (result, Split(dir, size, children))
-        };
-      }
-
-    | Window(Weight(weight), id) as window when id == target =>
+    | `Window(id) when id == targetId =>
       if (parentDirection == Some(direction)) {
-        (`NotAdjusted, window);
+        (`NotAdjusted, node);
       } else {
-        (`Adjusted, Window(Weight(weight *. factor), id));
+        (`Adjusted, {
+                      ...node,
+                      meta: {
+                        size: node.meta.size *. factor,
+                      },
+                    });
       }
 
-    | Window(_) as window => (`NotFound, window);
+    | `Window(_) => (`NotFound, node)
+    };
 
   traverse(node) |> snd;
 };
 
-let rec resizeSplit = (~path, ~delta, model) => {
+let rec resizeSplit = (~path, ~delta, node) => {
   switch (path) {
-  | [] => model
+  | [] => node
   | [index] =>
-    switch (model) {
-    | Split(direction, size, children) =>
+    switch (node.kind) {
+    | `Split(direction, children) =>
       let childCount = List.length(children);
       let totalWeight =
         children
-        |> List.filter_map(nodeWeight)
+        |> List.map(child => child.meta.size)
         |> List.fold_left((+.), 0.)
         |> max(1.);
       let minimumWeight =
@@ -397,8 +448,8 @@ let rec resizeSplit = (~path, ~delta, model) => {
         | [] => [] // shouldn't happen
         | [node] => [node] // shouldn't happen
         | [node, next, ...rest] when index == i => {
-            let weight = Option.get(nodeWeight(node));
-            let nextWeight = Option.get(nodeWeight(next));
+            let weight = node.meta.size;
+            let nextWeight = next.meta.size;
             let deltaWeight =
               if (weight +. deltaWeight < minimumWeight) {
                 -. (weight -. minimumWeight);
@@ -409,40 +460,62 @@ let rec resizeSplit = (~path, ~delta, model) => {
               };
 
             [
-              node |> withSize(Weight(weight +. deltaWeight)),
-              next |> withSize(Weight(nextWeight -. deltaWeight)),
+              {
+                ...node,
+                meta: {
+                  size: weight +. deltaWeight,
+                },
+              },
+              {
+                ...next,
+                meta: {
+                  size: nextWeight -. deltaWeight,
+                },
+              },
               ...rest,
             ];
           }
         | [node, ...rest] => [node, ...resizeChildren(i + 1, rest)]
       );
 
-      Split(direction, size, resizeChildren(0, children));
+      {...node, kind: `Split((direction, resizeChildren(0, children)))};
 
-    | Window(_) => model
+    | `Window(_) => node
     }
   | [index, ...rest] =>
-    switch (model) {
-    | Split(direction, size, children) =>
-      Split(
-        direction,
-        size,
-        List.mapi(
-          (i, child) =>
-            i == index ? resizeSplit(~path=rest, ~delta, child) : child,
-          children,
-        ),
-      )
-    | Window(_) => model
+    switch (node.kind) {
+    | `Split(direction, children) => {
+        ...node,
+        kind:
+          `Split((
+            direction,
+            List.mapi(
+              (i, child) =>
+                i == index ? resizeSplit(~path=rest, ~delta, child) : child,
+              children,
+            ),
+          )),
+      }
+    | `Window(_) => node
     }
   };
 };
 
-let rec resetWeights =
-  fun
-  | Split(direction, Weight(_), children) =>
-    Split(direction, Weight(1.), List.map(resetWeights, children))
-  | Window(_, id) => Window(Weight(1.), id);
+let rec resetWeights = node =>
+  switch (node.kind) {
+  | `Split(direction, children) => {
+      meta: {
+        size: 1.,
+      },
+      kind: `Split((direction, List.map(resetWeights, children))),
+    }
+  | `Window(_) => {
+      ...node,
+      meta: {
+        size: 1.,
+      },
+    }
+  };
 
 // UPDATE
 
@@ -526,18 +599,18 @@ module View = {
     let verticalHandle = (node: sized(_)) => [
       cursor(MouseCursors.horizontalResize),
       position(`Absolute),
-      left(node.x + node.width - Constants.handleSize / 2),
-      top(node.y),
+      left(node.meta.x + node.meta.width - Constants.handleSize / 2),
+      top(node.meta.y),
       width(Constants.handleSize),
-      height(node.height),
+      height(node.meta.height),
     ];
 
     let horizontalHandle = (node: sized(_)) => [
       cursor(MouseCursors.verticalResize),
       position(`Absolute),
-      left(node.x),
-      top(node.y + node.height - Constants.handleSize / 2),
-      width(node.width),
+      left(node.meta.x),
+      top(node.meta.y + node.meta.height - Constants.handleSize / 2),
+      width(node.meta.width),
       height(Constants.handleSize),
     ];
   };
@@ -593,7 +666,8 @@ module View = {
 
         | [node, ...[_, ..._] as rest] =>
           let onDrag = delta => {
-            let total = direction == `Vertical ? parent.width : parent.height;
+            let total =
+              direction == `Vertical ? parent.meta.width : parent.meta.height;
             dispatch(
               HandleDragged({
                 path: List.rev(path),
@@ -615,10 +689,10 @@ module View = {
       <View
         style=Style.[
           position(`Absolute),
-          left(node.x),
-          top(node.y),
-          width(node.width),
-          height(node.height),
+          left(node.meta.x),
+          top(node.meta.y),
+          width(node.meta.width),
+          height(node.meta.height),
         ]>
         {renderWindow(id)}
       </View>
