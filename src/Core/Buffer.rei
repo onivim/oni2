@@ -11,12 +11,15 @@ let initial: t;
 let show: t => string;
 
 let ofLines: (~id: int=?, array(string)) => t;
-let ofMetadata: Vim.BufferMetadata.t => t;
+let ofMetadata:
+  (~id: int, ~version: int, ~filePath: option(string), ~modified: bool) => t;
 
 let getId: t => int;
 let getUri: t => Uri.t;
 let getFilePath: t => option(string);
 let setFilePath: (option(string), t) => t;
+
+let getEstimatedMaxLineLength: t => int;
 
 let getLineEndings: t => option(Vim.lineEnding);
 let setLineEndings: (Vim.lineEnding, t) => t;

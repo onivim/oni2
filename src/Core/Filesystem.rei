@@ -34,4 +34,8 @@ let getOniDirectory: string => t(string);
 
 let getExtensionsFolder: unit => t(string);
 
+let getStoreFolder: unit => t(string);
+
+let getOrCreateConfigFolder: string => t(string);
+
 let getOrCreateConfigFile: (~overridePath: string=?, string) => t(string);

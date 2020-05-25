@@ -73,7 +73,7 @@ describe("WorkspaceTest", ({test, _}) => {
          ),
        )
     |> waitForWorkspaceEvent(~name="Workspace showActive", evt => {
-         evt.eventType == "workspace.show" && evt.workspacePath == None
+         evt.eventType == "workspace.show" && evt.workspacePath != None
        })
     |> Test.withClient(
          Request.Workspace.acceptWorkspaceData(~workspace=Some(workspace1)),

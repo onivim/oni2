@@ -72,9 +72,10 @@ type t = {
 let encode = uri =>
   Json.Encode.(
     obj([
+      ("$mid", Json.Encode.int(1)), // Magic marshaling id for Uri
       ("scheme", uri.scheme |> Scheme.encode),
       ("path", uri.path |> string),
-      ("query", uri.query |> option(string)),
+      ("query", uri.query |> nullable(string)),
     ])
   );
 

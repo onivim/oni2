@@ -11,13 +11,7 @@ let highlight:
   array(list(ColorizedToken.t));
 
 [@deriving show({with_path: false})]
-type msg =
-  | ServerStarted([@opaque] Oni_Syntax_Client.t)
-  | ServerFailedToStart(string)
-  | ServerStopped
-  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
-  | BufferUpdated([@opaque] BufferUpdate.t)
-  | Service(Service_Syntax.msg);
+type msg;
 
 type outmsg =
   | Nothing
@@ -35,21 +29,40 @@ let getSyntaxScope:
 let setTokensForLine:
   (~bufferId: int, ~line: int, ~tokens: list(ColorizedToken.t), t) => t;
 
+let handleUpdate:
+  (
+    ~grammars: Oni_Syntax.GrammarRepository.t,
+    ~scope: string,
+    ~theme: Oni_Syntax.TokenTheme.t,
+    ~config: Config.resolver,
+    BufferUpdate.t,
+    t
+  ) =>
+  t;
+
 let update: (t, msg) => (t, outmsg);
+
+let isSyntaxServerRunning: t => bool;
 
 // [ignore(~bufferId, syntax)] marks a buffer to be ignored.
 // The only syntax highlight adjustment will come from explicit
 // calls to [setTokensForLine];
 let ignore: (~bufferId: int, t) => t;
 
+module Effect: {
+  let bufferUpdate:
+    (~bufferUpdate: BufferUpdate.t, t) => Isolinear.Effect.t(unit);
+};
+
 let subscription:
   (
-    ~configuration: Configuration.t,
-    ~enabled: bool,
-    ~quitting: bool,
+    ~config: Config.resolver,
     ~languageInfo: Oni_Extensions.LanguageInfo.t,
     ~setup: Setup.t,
     ~tokenTheme: Oni_Syntax.TokenTheme.t,
+    ~bufferVisibility: list((Buffer.t, list(Range.t))),
     t
   ) =>
   Isolinear.Sub.t(msg);
+
+module Contributions: {let configuration: list(Config.Schema.spec);};

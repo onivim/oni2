@@ -3,15 +3,13 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Syntax;
 open Oni_Components;
-open Utility;
 
 open Feature_LanguageSupport.Completions;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
-module Ext = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 
-open Ext.CompletionItemKind;
+open Exthost.CompletionKind;
 
 module Constants = {
   let maxCompletionWidth = 225;
@@ -56,13 +54,6 @@ let kindToColor = (tokenTheme: TokenTheme.t) =>
   | Property => Some(tokenTheme.entityColor)
   | Interface => Some(tokenTheme.entityColor)
   | _ => None;
-
-let completionKindToIcon: option(Ext.CompletionItemKind.t) => int =
-  maybeCompletionKind => {
-    maybeCompletionKind
-    |> Option.map(kindToIcon)
-    |> Option.value(~default=FontAwesome.question);
-  };
 
 module Styles = {
   open Style;
@@ -153,14 +144,11 @@ let itemView =
       ~editorFont,
       (),
     ) => {
-  let icon =
-    kind
-    |> Option.map(kindToIcon)
-    |> Option.value(~default=FontAwesome.question);
+  let icon = kind |> kindToIcon;
 
   let iconColor =
     kind
-    |> OptionEx.flatMap(kindToColor(tokenTheme))
+    |> kindToColor(tokenTheme)
     |> Option.value(~default=colors.editorForeground);
 
   <View style={Styles.item(~isFocused, ~colors)}>

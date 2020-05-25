@@ -62,6 +62,7 @@ module Contributions: {
   };
 
   module Language: {
+    [@deriving show]
     type t = {
       id: string,
       extensions: list(string),
@@ -120,7 +121,7 @@ module Manifest: {
     author: string,
     displayName: option(LocalizedToken.t),
     description: option(string),
-    // publisher: option(string),
+    publisher: option(string),
     main: option(string),
     icon: option(string),
     categories: list(string),
@@ -130,7 +131,6 @@ module Manifest: {
     extensionDependencies: list(string),
     extensionPack: list(string),
     extensionKind: kind,
-    // TODO: Bring back
     contributes: Contributions.t,
     enableProposedApi: bool,
   }
@@ -161,12 +161,8 @@ module Scanner: {
     };
   };
 
-  let load:
-    (~prefix: option(string)=?, ~category: category, string) =>
-    option(ScanResult.t);
-  let scan:
-    (~prefix: option(string)=?, ~category: category, string) =>
-    list(ScanResult.t);
+  let load: (~category: category, string) => option(ScanResult.t);
+  let scan: (~category: category, string) => list(ScanResult.t);
 };
 
 module InitData: {
@@ -193,6 +189,7 @@ module InitData: {
     type t = {
       isExtensionDevelopmentDebug: bool,
       appName: string,
+      appLanguage: string,
       // TODO
       /*
        appRoot: option(Types.Uri.t),
@@ -222,6 +219,18 @@ module InitData: {
   };
 
   [@deriving (show, yojson({strict: false}))]
+  module TelemetryInfo: {
+    [@deriving (show, yojson({strict: false}))]
+    type t = {
+      sessionId: int,
+      machineId: int,
+      instanceId: int,
+    };
+
+    let default: t;
+  };
+
+  [@deriving (show, yojson({strict: false}))]
   type t = {
     version: string,
     parentPid: int,
@@ -234,6 +243,7 @@ module InitData: {
     logFile: Oni_Core.Uri.t,
     autoStart: bool,
     remote: Remote.t,
+    telemetryInfo: TelemetryInfo.t,
   };
 
   let create:
@@ -246,6 +256,7 @@ module InitData: {
       ~logLevel: int=?,
       ~autoStart: bool=?,
       ~remote: Remote.t=?,
+      ~telemetryInfo: TelemetryInfo.t=?,
       list(Extension.t)
     ) =>
     t;

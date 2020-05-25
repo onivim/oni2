@@ -38,7 +38,7 @@ module Command = {
       obj([
         ("command", command.command |> string),
         ("title", null),
-        ("category", command.category |> option(string)),
+        ("category", command.category |> nullable(string)),
       ])
     );
 };
@@ -144,7 +144,7 @@ module Language = {
         ("id", language.id |> string),
         ("extensions", language.extensions |> list(string)),
         ("aliases", language.aliases |> list(string)),
-        ("configuration", language.configuration |> option(string)),
+        ("configuration", language.configuration |> nullable(string)),
       ])
     );
 };
@@ -173,10 +173,10 @@ module Grammar = {
   let encode = grammar =>
     Json.Encode.(
       obj([
-        ("language", grammar.language |> option(string)),
+        ("language", grammar.language |> nullable(string)),
         ("scopeName", grammar.scopeName |> string),
         ("path", grammar.path |> string),
-        ("treeSitterPath", grammar.treeSitterPath |> option(string)),
+        ("treeSitterPath", grammar.treeSitterPath |> nullable(string)),
       ])
     );
 

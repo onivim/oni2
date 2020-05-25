@@ -18,8 +18,8 @@ module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
-let installExtension = (path, cli) => {
-  switch (Store.Utility.getUserExtensionsDirectory(cli)) {
+let installExtension = (path, Cli.{overriddenExtensionsDir, _}) => {
+  switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
   | Some(extensionsFolder) =>
     let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
 
@@ -44,8 +44,8 @@ let uninstallExtension = (_extensionId, _cli) => {
   1;
 };
 
-let listExtensions = cli => {
-  let extensions = Store.Utility.getUserExtensions(cli);
+let listExtensions = (Cli.{overriddenExtensionsDir, _}) => {
+  let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
   let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
     print_endline(ext.manifest.name);
   };
@@ -58,22 +58,103 @@ let printVersion = _cli => {
   0;
 };
 
+Log.debug("Startup: Parsing CLI options");
 let cliOptions =
-  Core.Cli.parse(
+  Cli.parse(
     ~installExtension,
     ~uninstallExtension,
     ~checkHealth=HealthCheck.run(~checks=All),
     ~listExtensions=
-      cli => {
-        let extensions = Store.Utility.getUserExtensions(cli);
+      ({overriddenExtensionsDir, _}) => {
+        let extensions =
+          Store.Utility.getUserExtensions(~overriddenExtensionsDir);
         let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
           print_endline(ext.manifest.name);
         };
         List.iter(printExtension, extensions);
-        1;
+        0;
       },
     ~printVersion,
   );
+
+let initWorkingDirectory = () => {
+  let path =
+    switch (cliOptions.folder) {
+    | Some(folder) => folder
+    | None =>
+      switch (Store.Persistence.Global.workspace()) {
+      | Some(path) => path
+      | None =>
+        Dir.User.document()
+        |> Option.value(~default=Dir.home())
+        |> Fp.toString
+      }
+    };
+
+  Log.info("Startup: Changing folder to: " ++ path);
+  try(Sys.chdir(path)) {
+  | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
+  };
+
+  path;
+};
+
+let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
+  let (x, y, width, height, maximized) = {
+    open Store.Persistence.Workspace;
+    let store = storeFor(workingDirectory);
+
+    (
+      windowX(store) |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+      windowY(store)
+      |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
+      windowWidth(store),
+      windowHeight(store),
+      windowMaximized(store),
+    );
+  };
+
+  let decorated =
+    switch (Revery.Environment.os) {
+    | Windows => false
+    | _ => true
+    };
+
+  let icon =
+    switch (Revery.Environment.os) {
+    | Mac =>
+      switch (Sys.getenv_opt("ONI2_BUNDLED")) {
+      | Some(_) => None
+      | None => Some("logo.png")
+      }
+    | _ => Some("logo.png")
+    };
+
+  let window =
+    App.createWindow(
+      ~createOptions=
+        WindowCreateOptions.create(
+          ~forceScaleFactor,
+          ~maximized,
+          ~vsync=Vsync.Immediate,
+          ~icon,
+          ~titlebarStyle=WindowStyles.Transparent,
+          ~x,
+          ~y,
+          ~width,
+          ~height,
+          ~decorated,
+          (),
+        ),
+      app,
+      "Oni2",
+    );
+
+  Window.setBackgroundColor(window, Colors.black);
+
+  window;
+};
+
 if (cliOptions.syntaxHighlightService) {
   Oni_Syntax_Server.start(~healthCheck=() =>
     HealthCheck.run(~checks=Common, cliOptions)
@@ -91,33 +172,16 @@ if (cliOptions.syntaxHighlightService) {
   let init = app => {
     Log.debug("Init");
 
-    let w =
-      App.createWindow(
-        ~createOptions=
-          WindowCreateOptions.create(
-            ~forceScaleFactor=cliOptions.forceScaleFactor,
-            ~maximized=false,
-            ~vsync=Vsync.Immediate,
-            ~icon=Some("logo.png"),
-            ~titlebarStyle=WindowStyles.Transparent,
-            (),
-          ),
+    let initialWorkingDirectory = initWorkingDirectory();
+    let window =
+      createWindow(
+        ~forceScaleFactor=cliOptions.forceScaleFactor,
+        ~workingDirectory=initialWorkingDirectory,
         app,
-        "Oni2",
       );
 
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
-    Log.debug("Startup: Parsing CLI options");
-
-    Log.info("Startup: Changing folder to: " ++ cliOptions.folder);
-    switch (Sys.chdir(cliOptions.folder)) {
-    | exception (Sys_error(msg)) =>
-      Log.error("Folder does not exist: " ++ msg)
-    | v => v
-    };
-
-    Revery.Window.setBackgroundColor(w, Colors.black);
 
     PreflightChecks.run();
 
@@ -127,11 +191,21 @@ if (cliOptions.syntaxHighlightService) {
       ref(
         Model.State.initial(
           ~getUserSettings,
-          ~contributedCommands=[] // TODO
+          ~contributedCommands=[], // TODO
+          ~workingDirectory=initialWorkingDirectory,
         ),
       );
 
-    let update = UI.start(w, <Root state=currentState^ />);
+    let persistGlobal = () => Store.Persistence.Global.persist(currentState^);
+    let persistWorkspace = () =>
+      Store.Persistence.Workspace.(
+        persist(
+          (currentState^, window),
+          storeFor(currentState^.workspace.workingDirectory),
+        )
+      );
+
+    let update = UI.start(window, <Root state=currentState^ />);
 
     let isDirty = ref(false);
     let onStateChanged = state => {
@@ -156,25 +230,38 @@ if (cliOptions.syntaxHighlightService) {
       if (isDirty^) {
         update(<Root state=currentState^ />);
         isDirty := false;
+        persistGlobal();
       };
     };
     let _: unit => unit = Tick.interval(tick, Time.zero);
 
     let getZoom = () => {
-      Window.getZoom(w);
+      Window.getZoom(window);
     };
 
-    let setZoom = zoomFactor => Window.setZoom(w, zoomFactor);
+    let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
 
     let setTitle = title => {
-      Window.setTitle(w, title);
+      Window.setTitle(window, title);
     };
 
     let maximize = () => {
-      Window.maximize(w);
+      Window.maximize(window);
     };
 
-    let setVsync = vsync => Window.setVsync(w, vsync);
+    let minimize = () => {
+      Window.minimize(window);
+    };
+
+    let close = () => {
+      App.quit(~askNicely=true, app);
+    };
+
+    let restore = () => {
+      Window.restore(window);
+    };
+
+    let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
       App.quit(~askNicely=false, ~code, app);
@@ -195,30 +282,52 @@ if (cliOptions.syntaxHighlightService) {
         ~setTitle,
         ~setVsync,
         ~maximize,
-        ~window=Some(w),
-        ~cliOptions=Some(cliOptions),
+        ~minimize,
+        ~restore,
+        ~close,
+        ~window=Some(window),
+        ~filesToOpen=cliOptions.filesToOpen,
+        ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
+        ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
+        ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
+        ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
         ~quit,
         (),
       );
     Log.debug("Startup: StoreThread started!");
 
+    let _: App.unsubscribe =
+      App.onFileOpen(app, path => {
+        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+      });
     let _: Window.unsubscribe =
-      Window.onMaximized(w, () => dispatch(Model.Actions.WindowMaximized));
+      Window.onMaximized(window, () =>
+        dispatch(Model.Actions.WindowMaximized)
+      );
     let _: Window.unsubscribe =
-      Window.onMinimized(w, () => dispatch(Model.Actions.WindowMinimized));
+      Window.onFullscreen(window, () =>
+        dispatch(Model.Actions.WindowFullscreen)
+      );
     let _: Window.unsubscribe =
-      Window.onRestored(w, () => dispatch(Model.Actions.WindowRestored));
+      Window.onMinimized(window, () =>
+        dispatch(Model.Actions.WindowMinimized)
+      );
     let _: Window.unsubscribe =
-      Window.onFocusGained(w, () =>
+      Window.onRestored(window, () => dispatch(Model.Actions.WindowRestored));
+    let _: Window.unsubscribe =
+      Window.onFocusGained(window, () =>
         dispatch(Model.Actions.WindowFocusGained)
       );
     let _: Window.unsubscribe =
-      Window.onFocusLost(w, () => dispatch(Model.Actions.WindowFocusLost));
+      Window.onFocusLost(window, () =>
+        dispatch(Model.Actions.WindowFocusLost)
+      );
+    let _: Window.unsubscribe =
+      Window.onSizeChanged(window, _ => persistWorkspace());
+    let _: Window.unsubscribe =
+      Window.onMoved(window, _ => persistWorkspace());
 
     GlobalContext.set({
-      openEditorById: id => {
-        dispatch(Model.Actions.ViewSetActiveEditor(id));
-      },
       closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
       editorScrollDelta: (~editorId, ~deltaY, ()) =>
         dispatch(Model.Actions.EditorScroll(editorId, deltaY)),

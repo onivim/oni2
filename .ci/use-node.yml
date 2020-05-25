@@ -4,6 +4,3 @@ steps:
       versionSpec: "12.13.0"
   - script: npm install -g rimraf
     displayName: "Install rimraf"
-  - script: npm install
-    workingDirectory: test/collateral/exthost
-    displayName: "Install new exthost"

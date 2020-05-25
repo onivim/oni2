@@ -10,7 +10,7 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
     state.vimMode == Vim.Types.Normal
   );
   wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
-    state.syntaxClient |> Option.is_some
+    Feature_Syntax.isSyntaxServerRunning(state.syntaxHighlights)
   });
 
   let testFile = getAssetPath("large-c-file.c");

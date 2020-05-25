@@ -72,7 +72,7 @@ let getNodeExtensionHostPath = (v: t) => {
     Rench.Path.join(extHostPath, "out/bootstrap-fork.js")
   | None =>
     getNodeScriptPath(
-      ~script="node_modules/vscode-exthost/out/bootstrap-fork.js",
+      ~script="node_modules/@onivim/vscode-exthost/out/bootstrap-fork.js",
       v,
     )
   };

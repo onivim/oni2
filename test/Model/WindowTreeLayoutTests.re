@@ -28,11 +28,21 @@ describe("WindowTreeLayout", ({describe, _}) => {
       let layoutItems = Layout.layout(0, 0, 300, 300, splits);
 
       expect.equal(
-        Layout.[
-          {content: 3, width: 300, height: 100, x: 0, y: 0},
-          {content: 2, width: 300, height: 100, x: 0, y: 100},
-          {content: 1, width: 300, height: 100, x: 0, y: 200},
-        ],
+        Layout.{
+          x: 0,
+          y: 0,
+          width: 300,
+          height: 300,
+          kind:
+            `Split((
+              `Horizontal,
+              [
+                {kind: `Window(3), x: 0, y: 0, width: 300, height: 100},
+                {kind: `Window(2), x: 0, y: 100, width: 300, height: 100},
+                {kind: `Window(1), x: 0, y: 200, width: 300, height: 100},
+              ],
+            )),
+        },
         layoutItems,
       );
 
@@ -60,10 +70,20 @@ describe("WindowTreeLayout", ({describe, _}) => {
       let layoutItems = Layout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
-        Layout.[
-          {content: 2, width: 100, height: 200, x: 0, y: 0},
-          {content: 1, width: 100, height: 200, x: 100, y: 0},
-        ],
+        Layout.{
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 200,
+          kind:
+            `Split((
+              `Vertical,
+              [
+                {kind: `Window(2), x: 0, y: 0, width: 100, height: 200},
+                {kind: `Window(1), x: 100, y: 0, width: 100, height: 200},
+              ],
+            )),
+        },
         layoutItems,
       );
     });
@@ -82,10 +102,20 @@ describe("WindowTreeLayout", ({describe, _}) => {
       let layoutItems = Layout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
-        Layout.[
-          {content: 2, width: 200, height: 100, x: 0, y: 0},
-          {content: 1, width: 200, height: 100, x: 0, y: 100},
-        ],
+        Layout.{
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 200,
+          kind:
+            `Split((
+              `Horizontal,
+              [
+                {kind: `Window(2), x: 0, y: 0, width: 200, height: 100},
+                {kind: `Window(1), x: 0, y: 100, width: 200, height: 100},
+              ],
+            )),
+        },
         layoutItems,
       );
     });
@@ -105,11 +135,45 @@ describe("WindowTreeLayout", ({describe, _}) => {
       let layoutItems = Layout.layout(0, 0, 200, 200, splits);
 
       expect.equal(
-        Layout.[
-          {content: 2, width: 200, height: 100, x: 0, y: 0},
-          {content: 3, width: 100, height: 100, x: 0, y: 100},
-          {content: 1, width: 100, height: 100, x: 100, y: 100},
-        ],
+        Layout.{
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 200,
+          kind:
+            `Split((
+              `Horizontal,
+              [
+                {kind: `Window(2), x: 0, y: 0, width: 200, height: 100},
+                {
+                  x: 0,
+                  y: 100,
+                  width: 200,
+                  height: 100,
+                  kind:
+                    `Split((
+                      `Vertical,
+                      [
+                        {
+                          kind: `Window(3),
+                          x: 0,
+                          y: 100,
+                          width: 100,
+                          height: 100,
+                        },
+                        {
+                          kind: `Window(1),
+                          x: 100,
+                          y: 100,
+                          width: 100,
+                          height: 100,
+                        },
+                      ],
+                    )),
+                },
+              ],
+            )),
+        },
         layoutItems,
       );
     });

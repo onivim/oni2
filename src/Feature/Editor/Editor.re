@@ -4,8 +4,9 @@ open Oni_Core;
 let lastId = ref(0);
 
 [@deriving show]
+// TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
 type t = {
-  bufferId: int,
+  buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
@@ -24,19 +25,19 @@ type t = {
   pixelHeight: int,
 };
 
-let create = (~font, ~bufferId=0, ()) => {
+let create = (~font, ~buffer, ()) => {
   let id = lastId^;
   incr(lastId);
 
   {
     editorId: id,
-    bufferId,
+    buffer,
     scrollX: 0.,
     scrollY: 0.,
     minimapMaxColumnWidth: Constants.minimapMaxColumn,
     minimapScrollY: 0.,
-    maxLineLength: 0,
-    viewLines: 0,
+    viewLines: EditorBuffer.numberOfLines(buffer),
+    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
     /*
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
@@ -270,4 +271,16 @@ let scrollToColumn = (~column, view) => {
 let scrollDeltaPixelY = (~pixelY, view) => {
   let pixelY = view.scrollY +. pixelY;
   scrollToPixelY(~pixelY, view);
+};
+
+let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
+
+let updateBuffer = (~buffer, editor) => {
+  {
+    ...editor,
+    buffer,
+    // TODO: These will both change with word wrap
+    viewLines: EditorBuffer.numberOfLines(buffer),
+    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
+  };
 };

@@ -107,15 +107,13 @@ let make = (~state: State.t, ()) => {
   let modals = () => {
     switch (state.modal) {
     | Some(model) =>
-      let workingDirectory =
-        Option.map(ws => ws.Workspace.workingDirectory, state.workspace);
       let dispatch = msg =>
         GlobalContext.current().dispatch(Actions.Modals(msg));
 
       <Feature_Modals.View
         model
         buffers
-        workingDirectory
+        workingDirectory={state.workspace.workingDirectory}
         theme
         font
         dispatch
@@ -135,7 +133,7 @@ let make = (~state: State.t, ()) => {
   <View style={Styles.root(theme)}>
     <Titlebar
       isFocused={state.windowIsFocused}
-      isMaximized={state.windowIsMaximized}
+      windowDisplayMode={state.windowDisplayMode}
       font={state.uiFont}
       title={state.windowTitle}
       theme
@@ -163,6 +161,9 @@ let make = (~state: State.t, ()) => {
     <contextMenuOverlay />
     <Tooltip.Overlay theme font=uiFont />
     <modals />
-    <Overlay> <SneakView model={state.sneak} theme font /> </Overlay>
+    <Overlay>
+      <Feature_Sneak.View.Overlay model={state.sneak} theme font />
+    </Overlay>
+    {Revery.Environment.os == Windows ? <WindowResizers /> : React.empty}
   </View>;
 };

@@ -24,9 +24,22 @@ type t =
   | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter({
-      metadata: [@opaque] Vim.BufferMetadata.t,
+      id: int,
       fileType: option(string),
       lineEndings: [@opaque] option(Vim.lineEnding),
+      filePath: option(string),
+      isModified: bool,
+      version: int,
+      // TODO: This duplication-of-truth is really awkward,
+      // but I want to remove it shortly
+      buffer: [@opaque] Buffer.t,
+    })
+  | BufferFilenameChanged({
+      id: int,
+      newFilePath: option(string),
+      newFileType: option(string),
+      version: int,
+      isModified: bool,
     })
   | BufferUpdate({
       update: [@opaque] BufferUpdate.t,
@@ -42,6 +55,7 @@ type t =
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
+  | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
   | CompletionAddItems(
@@ -81,13 +95,11 @@ type t =
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | SelectionChanged([@opaque] VisualRange.t)
-  | RecalculateEditorView([@opaque] option(Buffer.t))
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
   | WindowTitleSet(string)
   | EditorGroupSelected(int)
-  | EditorGroupAdd(EditorGroup.t)
   | EditorGroupSizeChanged({
       id: int,
       width: int,
@@ -103,9 +115,10 @@ type t =
   | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
+  | EditorTabClicked(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
-      severity: [ | `Ignore | `Info | `Warning | `Error],
+      severity: [@opaque] Exthost.Msg.MessageService.severity,
       message: string,
       extensionId: option(string),
     })
@@ -129,8 +142,6 @@ type t =
       option([ | `Horizontal | `Vertical]),
       option(Location.t),
     )
-  | AddSplit([ | `Horizontal | `Vertical], int)
-  | RemoveSplit(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
@@ -148,12 +159,11 @@ type t =
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
-  | StatusBarDisposeItem(int)
+  | StatusBarDisposeItem(string)
   | StatusBar(StatusBarModel.action)
   | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)
   | ViewCloseEditor(int)
-  | ViewSetActiveEditor(int)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
@@ -161,12 +171,13 @@ type t =
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
-  | Sneak(Sneak.action)
+  | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | PaneTabClicked(Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
+  | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
       title: string,
@@ -175,9 +186,18 @@ type t =
   | WindowFocusGained
   | WindowFocusLost
   | WindowMaximized
+  | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | WindowCloseClicked
+  | WindowMinimizeClicked
+  | WindowMaximizeClicked
+  | WindowRestoreClicked
   | WindowCloseBlocked
+  | WindowHandleDragged({
+      path: list(int),
+      delta: float,
+    })
   | WriteFailure
   | NewTextContentProvider({
       handle: int,

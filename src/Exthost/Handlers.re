@@ -64,7 +64,11 @@ let ext = name => {
 let handlers =
   [
     mainNotImplemented("MainThreadAuthentication"),
-    mainNotImplemented("MainThreadClipboard"),
+    main(
+      ~handler=Msg.Clipboard.handle,
+      ~mapper=msg => Msg.Clipboard(msg),
+      "MainThreadClipboard",
+    ),
     main(
       ~handler=Msg.Commands.handle,
       ~mapper=msg => Msg.Commands(msg),
@@ -141,7 +145,11 @@ let handlers =
       ~mapper=msg => Msg.ExtensionService(msg),
       "MainThreadExtensionService",
     ),
-    mainNotImplemented("MainThreadSCM"),
+    main(
+      ~handler=Msg.SCM.handle,
+      ~mapper=msg => Msg.SCM(msg),
+      "MainThreadSCM",
+    ),
     mainNotImplemented("MainThreadSearch"),
     mainNotImplemented("MainThreadTask"),
     mainNotImplemented("MainThreadWindow"),

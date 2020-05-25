@@ -18,7 +18,7 @@ runTest(
     );
 
     wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
-      state.syntaxClient |> Option.is_some
+      Feature_Syntax.isSyntaxServerRunning(state.syntaxHighlights)
     });
 
     let testFile = getAssetPath("some-test-file.json");

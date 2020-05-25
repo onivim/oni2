@@ -8,9 +8,8 @@ open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 
-module DocumentSymbol = Oni_Extensions.DocumentSymbol;
-module SymbolKind = Oni_Extensions.SymbolKind;
-module LocationWithUri = Oni_Extensions.LocationWithUri;
+module SymbolKind = Exthost.SymbolKind;
+module LocationWithUri = Exthost.Location;
 
 let joinAll: list(Lwt.t(list('a))) => Lwt.t(list('a)) =
   promises => LwtEx.all((acc, curr) => acc @ curr, promises);
@@ -21,6 +20,9 @@ module CompletionProvider =
     type response = list(CompletionItem.t);
 
     let namespace = "Oni2.CompletionProvider";
+    //    let default: response= [];
+    //    let aggregate = LwtEx.some(~default, (acc, curr) => acc @ curr);
+
     let aggregate = joinAll;
   });
 
@@ -58,7 +60,7 @@ module DefinitionProvider =
 module DocumentSymbolProvider =
   LanguageFeature.Make({
     type params = Buffer.t;
-    type response = list(DocumentSymbol.t);
+    type response = list(Exthost.DocumentSymbol.t);
 
     let namespace = "Oni2.DocumentSymbolProvider";
     let aggregate = joinAll;
@@ -83,7 +85,7 @@ module DocumentHighlightProvider =
 module FindAllReferencesProvider =
   LanguageFeature.Make({
     type params = (Buffer.t, Location.t);
-    type response = list(LocationWithUri.t);
+    type response = list(Exthost.Location.t);
 
     let namespace = "Oni2.FindAllReferencesProvider";
     let aggregate = joinAll;

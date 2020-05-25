@@ -21,10 +21,17 @@ module ContextMenu = {
     | Nothing;
 };
 
+type windowDisplayMode =
+  | Minimized
+  | Windowed
+  | Maximized
+  | Fullscreen;
+
 type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
+  changelog: Feature_Changelog.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: ContextMenu.t,
@@ -54,9 +61,8 @@ type t = {
   notifications: Feature_Notification.model,
   references: References.t,
   scm: Feature_SCM.model,
-  sneak: Sneak.t,
+  sneak: Feature_Sneak.model,
   statusBar: StatusBarModel.t,
-  syntaxClient: option(Oni_Syntax_Client.t),
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.t(int),
@@ -64,7 +70,7 @@ type t = {
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
-  windowIsMaximized: bool,
+  windowDisplayMode,
   workspace: Workspace.t,
   zenMode: bool,
   // State of the bottom pane
@@ -75,63 +81,82 @@ type t = {
   textContentProviders: list((int, string)),
 };
 
-let initial = (~getUserSettings, ~contributedCommands) => {
-  buffers: Buffers.empty,
-  bufferHighlights: BufferHighlights.initial,
-  bufferRenderers: BufferRenderers.initial,
-  colorTheme:
-    Feature_Theme.initial([
-      Feature_Terminal.Contributions.colors,
-      Feature_Notification.Contributions.colors,
-    ]),
-  commands: Feature_Commands.initial(contributedCommands),
-  contextMenu: ContextMenu.Nothing,
-  completions: Completions.initial,
-  config:
-    Feature_Configuration.initial(
-      ~getUserSettings,
-      [Feature_Editor.Contributions.configuration],
-    ),
-  configuration: Configuration.default,
-  decorationProviders: [],
-  definition: Definition.empty,
-  diagnostics: Diagnostics.create(),
-  vimMode: Normal,
-  quickmenu: None,
-  editorFont: Service_Font.default,
-  terminalFont: Service_Font.default,
-  extensions: Extensions.empty,
-  languageFeatures: LanguageFeatures.empty,
-  lifecycle: Lifecycle.create(),
-  uiFont: UiFont.default,
-  sideBar: SideBar.initial,
-  tokenTheme: TokenTheme.empty,
-  editorGroups: EditorGroups.create(),
-  iconTheme: IconTheme.create(),
-  isQuitting: false,
-  keyBindings: Keybindings.empty,
-  keyDisplayer: None,
-  languageInfo: Ext.LanguageInfo.initial,
-  notifications: Feature_Notification.initial,
-  references: References.initial,
-  scm: Feature_SCM.initial,
-  sneak: Sneak.initial,
-  statusBar: StatusBarModel.create(),
-  syntaxClient: None,
-  syntaxHighlights: Feature_Syntax.empty,
-  layout: Feature_Layout.initial,
-  windowTitle: "",
-  windowIsFocused: true,
-  windowIsMaximized: false,
-  workspace: Workspace.initial,
-  fileExplorer: FileExplorer.initial,
-  zenMode: false,
-  pane: Pane.initial,
-  searchPane: Feature_Search.initial,
-  focus: Focus.initial,
-  modal: None,
-  terminals: Feature_Terminal.initial,
-  textContentProviders: [],
+let initialLayout = (editorGroup: EditorGroup.t) => {
+  Feature_Layout.initial
+  |> Feature_Layout.addWindow(
+       ~target=None,
+       ~position=`After,
+       `Vertical,
+       editorGroup.editorGroupId,
+     );
+};
+
+let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
+  let editorGroups = EditorGroups.create();
+  let initialEditorGroup = editorGroups |> EditorGroups.getFirstEditorGroup;
+
+  {
+    buffers: Buffers.empty,
+    bufferHighlights: BufferHighlights.initial,
+    bufferRenderers: BufferRenderers.initial,
+    changelog: Feature_Changelog.initial,
+    colorTheme:
+      Feature_Theme.initial([
+        Feature_Terminal.Contributions.colors,
+        Feature_Notification.Contributions.colors,
+      ]),
+    commands: Feature_Commands.initial(contributedCommands),
+    contextMenu: ContextMenu.Nothing,
+    completions: Completions.initial,
+    config:
+      Feature_Configuration.initial(
+        ~getUserSettings,
+        [
+          Feature_Editor.Contributions.configuration,
+          Feature_Syntax.Contributions.configuration,
+          Feature_Terminal.Contributions.configuration,
+        ],
+      ),
+    configuration: Configuration.default,
+    decorationProviders: [],
+    definition: Definition.empty,
+    diagnostics: Diagnostics.create(),
+    vimMode: Normal,
+    quickmenu: None,
+    editorFont: Service_Font.default,
+    terminalFont: Service_Font.default,
+    extensions: Extensions.empty,
+    languageFeatures: LanguageFeatures.empty,
+    lifecycle: Lifecycle.create(),
+    uiFont: UiFont.default,
+    sideBar: SideBar.initial,
+    tokenTheme: TokenTheme.empty,
+    editorGroups,
+    iconTheme: IconTheme.create(),
+    isQuitting: false,
+    keyBindings: Keybindings.empty,
+    keyDisplayer: None,
+    languageInfo: Ext.LanguageInfo.initial,
+    notifications: Feature_Notification.initial,
+    references: References.initial,
+    scm: Feature_SCM.initial,
+    sneak: Feature_Sneak.initial,
+    statusBar: StatusBarModel.create(),
+    syntaxHighlights: Feature_Syntax.empty,
+    layout: initialLayout(initialEditorGroup),
+    windowTitle: "",
+    windowIsFocused: true,
+    windowDisplayMode: Windowed,
+    workspace: Workspace.initial(workingDirectory),
+    fileExplorer: FileExplorer.initial,
+    zenMode: false,
+    pane: Pane.initial,
+    searchPane: Feature_Search.initial,
+    focus: Focus.initial,
+    modal: None,
+    terminals: Feature_Terminal.initial,
+    textContentProviders: [],
+  };
 };
 
 let commands = state =>

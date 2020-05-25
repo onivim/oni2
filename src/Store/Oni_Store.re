@@ -11,3 +11,4 @@
 module StoreThread = StoreThread;
 module Reducer = Reducer;
 module Utility = Utility;
+module Persistence = Persistence;

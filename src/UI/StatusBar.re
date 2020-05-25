@@ -20,11 +20,14 @@ module ContextMenu = Oni_Components.ContextMenu;
 module CustomHooks = Oni_Components.CustomHooks;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
+module Label = Oni_Components.Label;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Editor = Feature_Editor.Editor;
 
 module Colors = Feature_Theme.Colors;
+
+open Exthost.Msg.StatusBar;
 
 module Styles = {
   open Style;
@@ -276,18 +279,38 @@ let%component make =
   let%hook (yOffset, _animationState, _reset) =
     Hooks.animation(transitionAnimation);
 
-  let toStatusBarElement = (statusBarItem: Item.t) =>
-    <textItem font background theme text={statusBarItem.text} />;
+  let toStatusBarElement = (statusItem: Item.t) => {
+    let onClick =
+      statusItem.command
+      |> Option.map((command, ()) =>
+           GlobalContext.current().dispatch(
+             Actions.StatusBar(
+               ContributedItemClicked({id: statusItem.id, command}),
+             ),
+           )
+         );
+
+    <item ?onClick>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
+        <Label font color=Revery.Colors.white label={statusItem.label} />
+      </View>
+    </item>;
+  };
 
   let leftItems =
     state.statusBar
-    |> List.filter((item: Item.t) => item.alignment == Alignment.Left)
+    |> List.filter((item: Item.t) => item.alignment == Left)
     |> List.map(toStatusBarElement)
     |> React.listToElement;
 
   let rightItems =
     state.statusBar
-    |> List.filter((item: Item.t) => item.alignment == Alignment.Right)
+    |> List.filter((item: Item.t) => item.alignment == Right)
     |> List.map(toStatusBarElement)
     |> React.listToElement;
 

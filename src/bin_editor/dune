@@ -18,6 +18,8 @@
         Oni2.syntax_server
         Oni2.ui
         sdl2
+        fp
+        dir.lib
     )
     (preprocess (
         pps

@@ -2,17 +2,40 @@ open Oni_Core;
 open Utility;
 
 module InputModel = Oni_Components.InputModel;
-module ExtHostClient = Oni_Extensions.ExtHostClient;
 module Selection = Oni_Components.Selection;
 
 // MODEL
 
-[@deriving show]
-type command = ExtHostClient.SCM.command;
+module Resource = Exthost.SCM.Resource;
 
-module Resource = ExtHostClient.SCM.Resource;
-module ResourceGroup = ExtHostClient.SCM.ResourceGroup;
-module Provider = ExtHostClient.SCM.Provider;
+module ResourceGroup = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    hideWhenEmpty: bool,
+    resources: list(Resource.t),
+  };
+};
+
+[@deriving show]
+type command = Exthost.SCM.command;
+
+module Provider = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    rootUri: option(Uri.t),
+    resourceGroups: list(ResourceGroup.t),
+    hasQuickDiffProvider: bool,
+    count: int,
+    commitTemplate: string,
+    acceptInputCommand: option(command),
+  };
+};
 
 [@deriving show({with_path: false})]
 type model = {
@@ -38,13 +61,16 @@ let initial = {
 // EFFECTS
 
 module Effects = {
-  let getOriginalUri = (extHostClient, model, path, toMsg) =>
-    ExtHostClient.SCM.Effects.provideOriginalResource(
+  let getOriginalUri = (extHostClient, model, path, toMsg) => {
+    let handles =
+      model.providers |> List.map((provider: Provider.t) => provider.handle);
+    Service_Exthost.Effects.SCM.provideOriginalResource(
+      ~handles,
       extHostClient,
-      model.providers,
       path,
       toMsg,
     );
+  };
 };
 
 // UPDATE
@@ -89,7 +115,7 @@ type msg =
     })
   | AcceptInputCommandChanged({
       handle: int,
-      command,
+      command: Exthost.SCM.command,
     })
   | KeyPressed({key: string})
   | InputBoxClicked({selection: Selection.t});
@@ -103,7 +129,7 @@ type outmsg =
   | Focus
   | Nothing;
 
-let update = (extHostClient, model, msg) =>
+let update = (extHostClient: Exthost.Client.t, model, msg) =>
   switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
       {
@@ -288,11 +314,13 @@ let update = (extHostClient, model, msg) =>
           |> List.map((provider: Provider.t) =>
                switch (provider.acceptInputCommand) {
                | Some(command) =>
-                 ExtHostClient.Effects.executeContributedCommand(
-                   extHostClient,
-                   command.id,
-                   ~arguments=command.arguments,
-                 )
+                 Isolinear.Effect.create(~name="acceptInputCommand", () => {
+                   Exthost.Request.Commands.executeContributedCommand(
+                     ~command=command.id,
+                     ~arguments=command.arguments,
+                     extHostClient,
+                   )
+                 })
                | None => Isolinear.Effect.none
                }
              ),
@@ -320,11 +348,11 @@ let update = (extHostClient, model, msg) =>
       Effect(
         Isolinear.Effect.batch(
           model.providers
-          |> List.map(provider =>
-               ExtHostClient.SCM.Effects.onInputBoxValueChange(
+          |> List.map((provider: Provider.t) =>
+               Service_Exthost.Effects.SCM.onInputBoxValueChange(
+                 ~handle=provider.handle,
+                 ~value,
                  extHostClient,
-                 provider,
-                 value,
                )
              ),
         ),
@@ -343,7 +371,7 @@ let update = (extHostClient, model, msg) =>
     )
   };
 
-let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
+let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   switch (msg) {
   | RegisterSourceControl({handle, id, label, rootUri}) =>
     dispatch(NewProvider({handle, id, label, rootUri}))
@@ -357,17 +385,27 @@ let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
 
-  | SpliceSCMResourceStates({provider, group, start, deleteCount, additions}) =>
-    dispatch(
-      ResourceStatesChanged({
-        provider,
-        group,
-        spliceStart: start,
-        deleteCount,
-        additions,
-      }),
-    )
+  | SpliceSCMResourceStates({handle, splices}) =>
+    open Exthost.SCM;
 
+    let provider = handle;
+    splices
+    |> List.iter(({handle as group, resourceSplices}: Resource.Splices.t) => {
+         ignore(handle);
+
+         resourceSplices
+         |> List.iter(({start, deleteCount, resources}: Resource.Splice.t) => {
+              dispatch(
+                ResourceStatesChanged({
+                  provider,
+                  group,
+                  spliceStart: start,
+                  deleteCount,
+                  additions: resources,
+                }),
+              )
+            });
+       });
   | UpdateSourceControl({
       handle,
       hasQuickDiffProvider,
@@ -449,7 +487,7 @@ module Pane = {
                   ~resource: Resource.t,
                   ~theme,
                   ~font,
-                  ~workingDirectory: option(string),
+                  ~workingDirectory,
                   ~onClick,
                   (),
                 ) => {
@@ -459,11 +497,9 @@ module Pane = {
     let onMouseOut = _ => setHovered(_ => false);
 
     let base =
-      Option.first_some(
-        Option.map(provider.rootUri, ~f=Uri.toFileSystemPath),
-        workingDirectory,
-      )
-      |> Option.value(~default="/");
+      provider.rootUri
+      |> Option.map(~f=Uri.toFileSystemPath)
+      |> Option.value(~default=workingDirectory);
 
     let path = Uri.toFileSystemPath(resource.uri);
     let displayName = Path.toRelative(~base, path);

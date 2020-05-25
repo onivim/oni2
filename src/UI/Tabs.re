@@ -53,7 +53,11 @@ let toTab =
     uiFont
     mode
     icon
-    onClick={() => GlobalContext.current().openEditorById(tabInfo.editorId)}
+    onClick={() =>
+      GlobalContext.current().dispatch(
+        Model.Actions.EditorTabClicked(tabInfo.editorId),
+      )
+    }
     onClose={() => GlobalContext.current().closeEditorById(tabInfo.editorId)}
   />;
 };

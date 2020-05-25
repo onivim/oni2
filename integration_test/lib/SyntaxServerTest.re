@@ -58,7 +58,7 @@ let run = (~parentPid=?, ~name, f) => {
         Revery.Environment.executingDirectory ++ "SyntaxServer.exe",
       ~onConnected,
       ~onClose,
-      ~onHighlights=_ => (),
+      ~onHighlights=(~bufferId as _, ~tokens as _) => (),
       ~onHealthCheckResult=_ => (),
       LanguageInfo.initial,
       Setup.default(),

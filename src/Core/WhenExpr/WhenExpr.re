@@ -7,7 +7,7 @@ type t =
   | Defined(string)
   | Eq(string, Value.t)
   | Neq(string, Value.t)
-  | Regex(string, option(Re.re))
+  | Regex(string, option([@opaque] Oniguruma.OnigRegExp.t))
   | And(list(t))
   | Or(list(t))
   | Not(t)
@@ -20,7 +20,8 @@ let evaluate = (expr, getValue) => {
     | Eq(key, value) => getValue(key) == value
     | Neq(key, value) => getValue(key) != value
     | Regex(_, None) => false
-    | Regex(key, Some(re)) => Re.execp(re, key |> getValue |> Value.asString)
+    | Regex(key, Some(re)) =>
+      Oniguruma.OnigRegExp.test(key |> getValue |> Value.asString, re)
     | And(exprs) => List.for_all(eval, exprs)
     | Or(exprs) => List.exists(eval, exprs)
     | Not(expr) => !eval(expr)
@@ -56,14 +57,21 @@ module Parse = {
       switch (String.index_opt(str, '/'), String.rindex_opt(str, '/')) {
       | (Some(start), Some(stop)) when start == stop =>
         failwith("bad regexp-value '" ++ str ++ "', missing /-enclosure")
+
       | (Some(start), Some(stop)) =>
-        String.sub(str, start + 1, stop - start - 1)
-        |> Re.Pcre.re
-        |> Re.compile
-        |> Option.some
+        let pattern = String.sub(str, start + 1, stop - start - 1);
+        switch (Oniguruma.OnigRegExp.create(pattern)) {
+        | Ok(regex) => Some(regex)
+        | Error(str) when strict =>
+          failwith("invalid regexp '" ++ str ++ "', ")
+        | Error(_) => None
+        };
+
       | (None, None) when strict =>
         failwith("bad regexp-value '" ++ str ++ "', missing /-enclosure")
+
       | (None, None) => None
+
       | _ => failwith("unreachable")
       }
     };
