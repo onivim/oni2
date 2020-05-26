@@ -2,7 +2,8 @@ open EditorCoreTypes;
 open Vim;
 open TestFramework;
 
-let resetBuffer = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
+let resetBuffer = () =>
+  Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
 describe("Options", ({describe, _}) => {
