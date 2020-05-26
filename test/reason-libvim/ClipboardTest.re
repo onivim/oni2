@@ -4,7 +4,7 @@ open TestFramework;
 
 open Types;
 
-let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
+let resetBuffer = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
 let makeFun = (s, _) => Some({lines: [|s|], blockType: Line});

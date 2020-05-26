@@ -2,7 +2,7 @@ open EditorCoreTypes;
 open Vim;
 open TestFramework;
 
-let resetBuffer = () => Helpers.resetBuffer("test/lines_100.txt");
+let resetBuffer = () => Helpers.resetBuffer("test/reason-libvim/lines_100.txt");
 let input = s => ignore(Vim.input(s));
 
 describe("Window", ({describe, _}) => {

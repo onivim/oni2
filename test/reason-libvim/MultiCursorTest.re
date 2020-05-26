@@ -2,7 +2,7 @@ open EditorCoreTypes;
 open Vim;
 open TestFramework;
 
-let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
+let resetBuffer = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 
 let input = (~autoClosingPairs=AutoClosingPairs.empty, ~cursors=[], key) => {
   let out =

@@ -18,7 +18,7 @@
         Feature_LanguageSupport_Test
         Exthost_Transport_Test
         Exthost_Test
-	Libvim_Test
+        Libvim_Test
             ))
 
 (executable
@@ -83,6 +83,15 @@
         Exthost_Test))
 
 (executable
+    (name OniUnitTestRunnerLibvim)
+    (public_name OniUnitTestRunnerLibvim)
+    (modules OniUnitTestRunnerLibvim)
+    (package OniUnitTestRunner)
+    (libraries 
+        Oni_Core_Test
+        Libvim_Test))
+
+(executable
     (name OniUnitTestRunnerCI)
     (public_name OniUnitTestRunnerCI)
     (modules OniUnitTestRunnerCI)
@@ -99,4 +108,5 @@
         Oni_Model_Test
         Exthost_Transport_Test
         Exthost_Test
+        Libvim_Test
             ))

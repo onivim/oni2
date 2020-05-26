@@ -2,7 +2,7 @@ open EditorCoreTypes;
 open Vim;
 open TestFramework;
 
-let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
+let resetBuffer = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
 describe("Buffer", ({describe, _}) => {
@@ -19,13 +19,13 @@ describe("Buffer", ({describe, _}) => {
       expect.equal(lineEndings, Some(LF));
     });
     test("get: crlf", ({expect, _}) => {
-      let buffer = Helpers.resetBuffer("test/test.crlf");
+      let buffer = Helpers.resetBuffer("test/reason-libvim/test.crlf");
       let lineEndings = Buffer.getLineEndings(buffer);
 
       expect.equal(lineEndings, Some(CRLF));
     });
     test("get: lf", ({expect, _}) => {
-      let buffer = Helpers.resetBuffer("test/test.lf");
+      let buffer = Helpers.resetBuffer("test/reason-libvim/test.lf");
       let lineEndings = Buffer.getLineEndings(buffer);
 
       expect.equal(lineEndings, Some(LF));
@@ -156,7 +156,7 @@ describe("Buffer", ({describe, _}) => {
   describe("getLine", ({test, _}) =>
     test("single file", ({expect, _}) => {
       let _ = resetBuffer();
-      let buffer = Buffer.openFile("test/testfile.txt");
+      let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
       let line = Buffer.getLine(buffer, Index.fromOneBased(1));
       expect.string(line).toEqual("This is the first line of a test file");
     })
@@ -164,7 +164,7 @@ describe("Buffer", ({describe, _}) => {
   describe("getLineCount", ({test, _}) =>
     test("single file", ({expect, _}) => {
       let _ = resetBuffer();
-      let buffer = Buffer.openFile("test/testfile.txt");
+      let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
       expect.int(Buffer.getLineCount(buffer)).toBe(3);
     })
   );
@@ -307,7 +307,7 @@ describe("Buffer", ({describe, _}) => {
       let updates: ref(list(Buffer.t)) = ref([]);
       let dispose = Buffer.onEnter(upd => updates := [upd, ...updates^]);
 
-      let _ = Buffer.openFile("test/some_random_file.txt");
+      let _ = Buffer.openFile("test/reason-libvim/some_random_file.txt");
 
       expect.int(List.length(updates^)).toBe(1);
       dispose();
@@ -318,9 +318,9 @@ describe("Buffer", ({describe, _}) => {
       ({expect, _}) => {
       let _ = resetBuffer();
 
-      let buf1 = Buffer.openFile("test/lines_100.txt");
+      let buf1 = Buffer.openFile("test/reason-libvim/lines_100.txt");
 
-      let buf2 = Buffer.openFile("test/some_random_file.txt");
+      let buf2 = Buffer.openFile("test/reason-libvim/some_random_file.txt");
 
       let updates: ref(list(Buffer.t)) = ref([]);
       let dispose = Buffer.onEnter(upd => updates := [upd, ...updates^]);

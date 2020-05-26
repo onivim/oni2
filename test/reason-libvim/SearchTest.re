@@ -3,8 +3,8 @@ open Vim;
 open TestFramework;
 open Range;
 
-let resetBrackets = () => Helpers.resetBuffer("test/brackets.txt");
-let reset = () => Helpers.resetBuffer("test/testfile.txt");
+let resetBrackets = () => Helpers.resetBuffer("test/reason-libvim/brackets.txt");
+let reset = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
 describe("Search", ({describe, _}) => {

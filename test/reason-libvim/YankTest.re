@@ -1,7 +1,7 @@
 open TestFramework;
 open Vim;
 
-let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
+let resetBuffer = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
 describe("Yank", ({test, _}) => {

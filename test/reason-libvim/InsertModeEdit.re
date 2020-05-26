@@ -2,10 +2,10 @@ open EditorCoreTypes;
 open Vim;
 open TestFramework;
 
-let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
+let resetBuffer = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
-describe("Edit", ({describe, _}) =>
+describe("InsertModeEdit", ({describe, _}) =>
   describe("insert mode", ({test, _}) => {
     test("insert mode should flip modified flag", ({expect, _}) => {
       let buffer = resetBuffer();

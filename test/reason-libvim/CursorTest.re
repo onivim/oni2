@@ -2,12 +2,13 @@ open EditorCoreTypes;
 open Vim;
 open TestFramework;
 
-let resetBuffer = () => Helpers.resetBuffer("test/lines_100.txt");
+let resetBuffer = () => Helpers.resetBuffer("test/reason-libvim/lines_100.txt");
 let input = s => ignore(Vim.input(s));
 
 describe("Cursor", ({describe, _}) => {
   describe("setLocation", ({test, _}) => {
     test("cursor location gets updated", ({expect, _}) => {
+      let _ = resetBuffer();
       Cursor.setLocation(~line=Index.zero, ~column=Index.(zero + 1));
       expect.int((Cursor.getLine() :> int)).toBe(0);
       expect.int((Cursor.getColumn() :> int)).toBe(1);
