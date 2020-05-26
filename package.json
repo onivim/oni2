@@ -123,15 +123,7 @@
         },
         "role": "Editor",
         "ext": [
-          ".cpp",
-          ".cc",
-          ".cxx",
-          ".hpp",
-          ".hh",
-          ".hxx",
-          ".h",
-          ".ino",
-          ".inl",
+          ".cpp", ".cc", ".cxx", ".hpp", ".hh", ".hxx", ".h", ".ino", ".inl",
           ".ipp"
         ]
       },
@@ -221,6 +213,7 @@
           ".jav"
         ]
       },
+      { "name": "Java source", "role": "Editor", "ext": [ ".java", ".jav" ] },
       {
         "name": "Javascript source",
         "role": "Editor",
@@ -241,15 +234,8 @@
           "mac": "json.icns"
         },
         "ext": [
-          ".json",
-          ".bowerrc",
-          ".jshintrc",
-          ".jscsrc",
-          ".eslintrc",
-          ".swcrc",
-          ".webmanifest",
-          ".js.map",
-          ".css.map"
+          ".json", ".bowerrc", ".jshintrc", ".jscsrc", ".eslintrc", ".swcrc",
+          ".webmanifest", ".js.map", ".css.map"
         ]
       },
       {
@@ -271,15 +257,8 @@
         },
         "role": "Editor",
         "ext": [
-          ".md",
-          ".mkd",
-          ".mdwn",
-          ".mdown",
-          ".markdown",
-          ".markdn",
-          ".mdtxt",
-          ".mdtext",
-          ".workbook"
+          ".md", ".mkd", ".mdwn", ".mdown", ".markdown", ".markdn", ".mdtxt",
+          ".mdtext", ".workbook"
         ]
       },
       {
@@ -289,16 +268,8 @@
         },
         "role": "Editor",
         "ext": [
-          ".py",
-          ".rpy",
-          ".pyw",
-          ".cpy",
-          ".gyp",
-          ".gypi",
-          ".snakefile",
-          ".smk",
-          ".pyi",
-          ".ipy"
+          ".py", ".rpy", ".pyw", ".cpy", ".gyp", ".gypi", ".snakefile",
+          ".smk", ".pyi", ".ipy"
         ]
       },
       {
@@ -368,44 +339,41 @@
     "@opam/charInfo_width": "*",
     "@opam/dune": "2.5.0",
     "@opam/dune-configurator": "*",
+    "@opam/fmt": "^0.8.8",
+    "@opam/fp": "*",
+    "@opam/fs": "*",
+    "@opam/logs": "^0.7.0",
+    "@opam/luv": "~0.5.1",
     "@opam/lwt": "*",
+    "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
+    "@opam/ppx_inline_test": "v0.13.1",
     "@opam/ppx_let": "v0.13.0",
     "@opam/ppxlib": ">=0.10.0",
+    "@opam/re": "*",
+    "@opam/uucp": "*",
+    "@opam/uutf": "*",
     "@opam/yojson": "1.7.0",
     "axios": "^0.19.0",
+    "editor-core-types": "*",
+    "editor-input": "*",
     "esy-macdylibbundler": "*",
+    "esy-sdl2": "*",
+    "esy-skia": "*",
     "isolinear": "^3.0.0",
     "libvim": "8.10869.44",
     "ocaml": "~4.7.0",
     "reason-sdl2": "^2.10.2020",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#ae1fd34",
+    "reason-textmate": "^3.1.2",
+    "reason-tree-sitter": "^1.0.1001",
     "reasonFuzz": "*",
+    "refmterr": "*",
     "rench": "1.7.1",
     "revery": "0.30.0",
-    "revery-terminal": "*",
-    "reason-tree-sitter": "^1.0.1001",
-    "reason-textmate": "^3.1.2",
-    "esy-sdl2": "*",
-    "esy-skia": "*",
-    "@opam/fmt": "^0.8.8",
-    "@opam/logs": "^0.7.0",
-    "@opam/re": "*",
-    "editor-core-types": "*",
-    "editor-input": "*",
-    "@glennsl/timber": "1.0.0",
-    "refmterr": "*",
-    "@esy-ocaml/libffi": "*",
-    "@opam/decoders-yojson": "^0.4.0",
-    "@opam/uutf": "*",
-    "@opam/uucp": "*",
-    "@opam/luv": "~0.5.1",
-    "@opam/fs": "*",
-    "@opam/fp": "*",
-    "@opam/dir": "*",
-    "@opam/markup": "^0.8.2"
+    "revery-terminal": "*"
   },
   "resolutions": {
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
