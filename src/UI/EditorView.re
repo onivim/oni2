@@ -22,16 +22,18 @@ module Styles = {
   ];
 };
 
-let make = (~state: State.t, ~theme, ()) =>
-  if (state.zenMode) {
-    <View style={Styles.container(theme)}>
-      {switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+let make = (~state: State.t, ~theme, ()) => {
+  let onFileDropped = ({paths, _}: NodeEvents.fileDropEventParams) =>
+    GlobalContext.current().dispatch(Editor(FilesDropped({paths: paths})));
+
+  <View onFileDropped style={Styles.container(theme)}>
+    {if (state.zenMode) {
+       switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
        | Some(editorGroup) => <EditorGroupView state theme editorGroup />
        | None => React.empty
-       }}
-    </View>;
-  } else {
-    <View style={Styles.container(theme)}>
-      <EditorLayoutView state theme />
-    </View>;
-  };
+       };
+     } else {
+       <EditorLayoutView state theme />;
+     }}
+  </View>;
+};

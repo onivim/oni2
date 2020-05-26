@@ -122,6 +122,7 @@ type t =
       message: string,
       extensionId: option(string),
     })
+  | Editor(Feature_Editor.msg)
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)

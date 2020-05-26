@@ -197,7 +197,14 @@ let update =
 
     | None => (state, Effect.none)
     }
-
+  | Editor(msg) =>
+    let eff =
+      Feature_Editor.update(
+        msg,
+        path => OpenFileByPath(path, None, None),
+        Noop,
+      );
+    (state, eff);
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);
     ({...state, changelog: model}, eff);
