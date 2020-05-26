@@ -1,6 +1,6 @@
 // MODEL
 
-type model('id) = Layout.t('id);
+type model = Layout.t(int);
 
 let initial = id => Layout.singleton(id);
 
@@ -46,9 +46,9 @@ type msg =
     })
   | Command(command);
 
-type outmsg('id) =
+type outmsg =
   | Nothing
-  | Focus('id);
+  | Focus(int);
 
 let update = (~focus, model, msg) => {
   switch (msg) {

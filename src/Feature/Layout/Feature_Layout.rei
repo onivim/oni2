@@ -24,26 +24,26 @@ open Oni_Core;
 //    | `Window('id)
 //  ],
 //};
-type model('id);
+type model;
 
 //
 //module Internal: {
 //  let move: ('id, int, int, sized('id)) => option('id); // only used for tests
 //};
 //
-let initial: 'id => model('id);
+let initial: int => model;
 //
-let windows: model('id) => list('id);
+let windows: model => list(int);
 let addWindow:
   (
-    ~target: option('id)=?,
+    ~target: option(int)=?,
     ~position: [ | `Before | `After],
     [ | `Horizontal | `Vertical],
-    'id,
-    model('id)
+    int,
+    model
   ) =>
-  model('id);
-let removeWindow: ('id, model('id)) => model('id);
+  model;
+let removeWindow: (int, model) => model;
 
 //let layout: (int, int, int, int, t('id)) => sized('id);
 
@@ -86,12 +86,11 @@ type msg =
     })
   | Command(command);
 
-type outmsg('id) =
+type outmsg =
   | Nothing
-  | Focus('id);
+  | Focus(int);
 
-let update:
-  (~focus: option('id), model('id), msg) => (model('id), outmsg('id));
+let update: (~focus: option(int), model, msg) => (model, outmsg);
 
 // VIEW
 
@@ -100,8 +99,8 @@ module View: {
 
   let make:
     (
-      ~children: 'id => element,
-      ~model: model('id),
+      ~children: int => element,
+      ~model: model,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       unit

@@ -65,7 +65,7 @@ type t = {
   statusBar: StatusBarModel.t,
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
-  layout: Feature_Layout.model(int),
+  layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
