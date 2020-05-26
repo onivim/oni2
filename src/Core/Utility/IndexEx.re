@@ -85,6 +85,4 @@ module Tests = {
 
   let%test "ranges" =
     ranges([|1, 3, 4, 5, 7, 8|]) == [(1, 1), (3, 5), (7, 8)];
-
-  let%test "failure" = false;
 };
