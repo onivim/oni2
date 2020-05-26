@@ -46,7 +46,7 @@ module Workspace = {
         Window.getSize(window).height
       );
     let windowMaximized =
-      define("windowMazimized", bool, false, ((_state, window)) =>
+      define("windowMaximized", bool, false, ((_state, window)) =>
         Window.isMaximized(window)
       );
   };
