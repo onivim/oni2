@@ -1,5 +1,5 @@
 {
-  "checksum": "696484669c273e4ff36e8f859e0e7350",
+  "checksum": "a0f6964dd4e6f5632edba7d438578e4d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -131,20 +131,20 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#a0ec051@d41d8cd9",
+        "revery@github:revery-ui/revery#bd3d702@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#91bad1f@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#a0ec051@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#a0ec051@d41d8cd9",
+    "revery@github:revery-ui/revery#bd3d702@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#bd3d702@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#a0ec051",
+      "version": "github:revery-ui/revery#bd3d702",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#a0ec051" ]
+        "source": [ "github:revery-ui/revery#bd3d702" ]
       },
       "overrides": [],
       "dependencies": [
@@ -157,7 +157,7 @@
         "reason-harfbuzz@1.91.8001@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/lwt_ppx@opam:2.0.1@ab0debb8", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
@@ -994,7 +994,7 @@
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.2@d41d8cd9", "ocaml@4.9.1000@d41d8cd9",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/menhir@opam:20200211@26571604",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
@@ -1012,7 +1012,7 @@
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.2@d41d8cd9", "ocaml@4.9.1000@d41d8cd9",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.9.1000@d41d8cd9" ]
@@ -1151,7 +1151,7 @@
       "overrides": [],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
-        "revery@github:revery-ui/revery#a0ec051@d41d8cd9",
+        "revery@github:revery-ui/revery#bd3d702@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
@@ -1172,7 +1172,7 @@
         "@opam/ppxlib@opam:0.13.0@65a9c7cc",
         "@opam/ppx_let@opam:v0.13.0@5703d2be",
         "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/markup@opam:0.8.2@87975241", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/luv@opam:0.5.2@bfb5a32a", "@opam/logs@opam:0.7.0@1d03143e",
@@ -1988,7 +1988,7 @@
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/result@opam:1.5@6b753c82", "@opam/ppxfind@opam:1.4@1e01d2a5",
         "@opam/ppx_tools@opam:6.0+4.08.0@5f5453f4",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/dune@opam:2.5.0@aef1678b", "@opam/cppo@opam:1.6.6@f4f83858",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
@@ -1996,24 +1996,24 @@
         "ocaml@4.9.1000@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/result@opam:1.5@6b753c82",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/dune@opam:2.5.0@aef1678b"
       ]
     },
-    "@opam/ppx_deriving@opam:4.4.1@208c6c8f": {
-      "id": "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+    "@opam/ppx_deriving@opam:4.5@bb81afdc": {
+      "id": "@opam/ppx_deriving@opam:4.5@bb81afdc",
       "name": "@opam/ppx_deriving",
-      "version": "opam:4.4.1",
+      "version": "opam:4.5",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/27/27bc57774724fc4f48775f2011375a5ee1439570204abbf6607761c472757e2f#sha256:27bc57774724fc4f48775f2011375a5ee1439570204abbf6607761c472757e2f",
-          "archive:https://github.com/ocaml-ppx/ppx_deriving/archive/v4.4.1.tar.gz#sha256:27bc57774724fc4f48775f2011375a5ee1439570204abbf6607761c472757e2f"
+          "archive:https://opam.ocaml.org/cache/sha512/f7/f79153c5231ba1e03a3491fde95ca82ecb62fe05b60a649a374d2fbc5ea5dd9242126de7dfbe917c22fd7077c026c940e18c6b36c5ce0ec4bb6e07f11d2b710b#sha512:f79153c5231ba1e03a3491fde95ca82ecb62fe05b60a649a374d2fbc5ea5dd9242126de7dfbe917c22fd7077c026c940e18c6b36c5ce0ec4bb6e07f11d2b710b",
+          "archive:https://github.com/ocaml-ppx/ppx_deriving/archive/v4.5.tar.gz#sha512:f79153c5231ba1e03a3491fde95ca82ecb62fe05b60a649a374d2fbc5ea5dd9242126de7dfbe917c22fd7077c026c940e18c6b36c5ce0ec4bb6e07f11d2b710b"
         ],
         "opam": {
           "name": "ppx_deriving",
-          "version": "4.4.1",
-          "path": "esy.lock/opam/ppx_deriving.4.4.1"
+          "version": "4.5",
+          "path": "esy.lock/opam/ppx_deriving.4.5"
         }
       },
       "overrides": [],
