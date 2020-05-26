@@ -15,3 +15,4 @@ Feature_LanguageSupport_Test.TestFramework.cli();
 Oni_Components_Test.TestFramework.cli();
 Exthost_Transport_Test.TestFramework.cli();
 Exthost_Test.TestFramework.cli();
+Libvim_Test.TestFramework.cli();

@@ -18,6 +18,7 @@
         Feature_LanguageSupport_Test
         Exthost_Transport_Test
         Exthost_Test
+	Libvim_Test
             ))
 
 (executable

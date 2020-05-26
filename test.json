@@ -10,7 +10,7 @@
     "watch": "esy '@test' dune build --watch --root . -j4"
   },
   "override": {
-      "build": ["dune build -p Oni2,OniUnitTestRunner -j4"],
+      "build": ["dune build -p libvim,Oni2,OniUnitTestRunner -j4"],
       "dependencies": {
         "@reason-native/rely": "^3.2.1"
       },
