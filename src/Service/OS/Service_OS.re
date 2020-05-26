@@ -5,8 +5,7 @@ module Effect = {
     );
 
   let stat = (path, onResult) =>
-    Isolinear.Effect.createWithDispatch(~name="os.stat", dispatch => {
-      let stats = Unix.stat(path);
-      stats |> onResult |> dispatch;
-    });
+    Isolinear.Effect.createWithDispatch(~name="os.stat", dispatch =>
+      Unix.stat(path) |> onResult |> dispatch
+    );
 };
