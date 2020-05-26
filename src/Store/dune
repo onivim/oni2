@@ -22,7 +22,6 @@
         Oni2.components
         Oni2.ui
         Oni2.feature.commands
-        Oni2.feature.filedrop
         Oni2.feature.menus
         Oni2.feature.notification
         Oni2.feature.theme

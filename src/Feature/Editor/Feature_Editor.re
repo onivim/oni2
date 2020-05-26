@@ -13,3 +13,19 @@ module EditorDiffMarkers = EditorDiffMarkers;
 module Contributions = {
   let configuration = EditorConfiguration.contributions;
 };
+
+[@deriving show({with_path: false})]
+type msg =
+  | FilesDroppedOnEditor({paths: list(string)});
+
+let update = (msg, openFileEffect, noopEffect) =>
+  switch (msg) {
+  | FilesDroppedOnEditor({paths}) =>
+    Service_OS.Effect.statMultiple(paths, (path, stats) =>
+      if (stats.st_kind == S_REG) {
+        openFileEffect(path);
+      } else {
+        noopEffect;
+      }
+    )
+  };

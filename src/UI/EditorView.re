@@ -24,7 +24,7 @@ module Styles = {
 
 let onFileDropped = ({paths, _}: NodeEvents.fileDropEventParams) =>
   GlobalContext.current().dispatch(
-    FileDrop(FilesDroppedOnEditor({paths: paths})),
+    Editor(FilesDroppedOnEditor({paths: paths})),
   );
 
 let make = (~state: State.t, ~theme, ()) =>

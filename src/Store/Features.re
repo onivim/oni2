@@ -197,24 +197,13 @@ let update =
 
     | None => (state, Effect.none)
     }
-
-  | FileDrop(msg) =>
+  | Editor(msg) =>
     let eff =
-      switch (msg) {
-      | FilesDroppedOnEditor({paths}) =>
-        Isolinear.Effect.createWithDispatch(
-          ~name="feature.filedrop.openFiles", dispatch => {
-          List.iter(
-            path => {
-              let stats = Unix.stat(path);
-              if (stats.st_kind == S_REG) {
-                dispatch(OpenFileByPath(path, None, None));
-              };
-            },
-            paths,
-          )
-        })
-      };
+      Feature_Editor.update(
+        msg,
+        path => OpenFileByPath(path, None, None),
+        Noop,
+      );
     (state, eff);
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);
