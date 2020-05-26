@@ -333,27 +333,6 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.Window.onMovement((movementType, _count) => {
-      Log.trace("Vim.Window.onMovement");
-
-      switch (movementType) {
-      | FullLeft
-      | OneLeft => dispatch(Actions.Layout(Command(MoveLeft)))
-      | FullRight
-      | OneRight => dispatch(Actions.Layout(Command(MoveRight)))
-      | FullDown
-      | OneDown => dispatch(Actions.Layout(Command(MoveDown)))
-      | FullUp
-      | OneUp => dispatch(Actions.Layout(Command(MoveUp)))
-      | RotateDownwards => dispatch(Actions.Layout(Command(RotateForward)))
-      | RotateUpwards => dispatch(Actions.Layout(Command(RotateBackward)))
-      | TopLeft
-      | BottomRight
-      | Previous => Log.error("Window movement not implemented")
-      };
-    });
-
-  let _: unit => unit =
     Vim.Buffer.onEnter(buf => {
       let metadata = Vim.BufferMetadata.ofBuffer(buf);
 

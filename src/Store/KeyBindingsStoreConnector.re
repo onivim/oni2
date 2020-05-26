@@ -338,6 +338,37 @@ let start = maybeKeyBindingsFilePath => {
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
+      //LAYOUT
+      {
+        key: "<C-W>LEFT",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>RIGHT",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>UP",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>DOWN",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>R",
+        command: Feature_Layout.Commands.rotateForward.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W><S-R>",
+        command: Feature_Layout.Commands.rotateBackward.id,
+        condition: WhenExpr.Value(True),
+      },
     ];
 
   let getKeybindingsFile = () => {

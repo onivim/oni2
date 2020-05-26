@@ -108,6 +108,18 @@ module View: {
     element;
 };
 
+// COMMANDS
+
+module Commands: {
+  let moveLeft: Command.t(msg);
+  let moveRight: Command.t(msg);
+  let moveUp: Command.t(msg);
+  let moveDown: Command.t(msg);
+
+  let rotateForward: Command.t(msg);
+  let rotateBackward: Command.t(msg);
+};
+
 // CONTRIBUTIONS
 
 module Contributions: {let commands: list(Command.t(msg));};
