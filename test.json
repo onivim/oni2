@@ -1,7 +1,7 @@
 {
   "source": "./package.json",
   "scripts": {
-    "run": "esy '@test' x OniUnitTestRunner",
+    "run": "bash -c \"esy @test inline && esy '@test' x OniUnitTestRunner\"",
     "run-ci": "esy '@test' x OniUnitTestRunnerCI",
     "core": "esy '@test' x OniUnitTestRunnerCore",
     "cli": "esy '@test' x OniUnitTestRunnerCLI",
