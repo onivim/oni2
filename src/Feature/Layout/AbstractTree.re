@@ -1,5 +1,3 @@
-open Utility;
-
 type node('id, 'meta) = {
   meta: 'meta,
   kind: [
@@ -20,41 +18,28 @@ let rec windows = node =>
   | `Split(_, children) => children |> List.map(windows) |> List.concat
   };
 
-let rec rotate = (targetId, f, node) => {
-  switch (node.kind) {
-  | `Split(direction, children) =>
-    let children =
-      List.exists(({kind, _}) => kind == `Window(targetId), children)
-        ? f(children) : List.map(rotate(targetId, f), children);
+let rec rotate = (direction, targetId, node) => {
+  let rotateList =
+    fun
+    | [] => []
+    | [a] => [a]
+    | [a, b] => [b, a]
+    | [head, ...tail] => tail |> List.rev |> List.cons(head) |> List.rev;
 
-    {...node, kind: `Split((direction, children))};
+  switch (node.kind) {
+  | `Split(dir, children) =>
+    let children =
+      if (List.exists(child => child.kind == `Window(targetId), children)) {
+        switch (direction) {
+        | `Backward => children |> rotateList
+        | `Forward => children |> List.rev |> rotateList |> List.rev
+        };
+      } else {
+        List.map(rotate(direction, targetId), children);
+      };
+
+    {...node, kind: `Split((dir, children))};
 
   | `Window(_) => node
   };
-};
-
-let rotateForward = (target, tree) => {
-  let f =
-    fun
-    | [] => []
-    | [a] => [a]
-    | [a, b] => [b, a]
-    | list =>
-      switch (ListEx.last(list)) {
-      | Some(x) => [x, ...ListEx.dropLast(list)]
-      | None => []
-      };
-
-  rotate(target, f, tree);
-};
-
-let rotateBackward = (target, tree) => {
-  let f =
-    fun
-    | [] => []
-    | [a] => [a]
-    | [a, b] => [b, a]
-    | [head, ...tail] => tail @ [head];
-
-  rotate(target, f, tree);
 };

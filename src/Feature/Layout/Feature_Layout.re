@@ -78,13 +78,13 @@ let update = (~focus, model, msg) => {
 
   | Command(RotateForward) =>
     switch (focus) {
-    | Some(focus) => (Layout.rotateForward(focus, model), Nothing)
+    | Some(focus) => (Layout.rotate(`Forward, focus, model), Nothing)
     | None => (model, Nothing)
     }
 
   | Command(RotateBackward) =>
     switch (focus) {
-    | Some(focus) => (Layout.rotateBackward(focus, model), Nothing)
+    | Some(focus) => (Layout.rotate(`Backward, focus, model), Nothing)
     | None => (model, Nothing)
     }
 
