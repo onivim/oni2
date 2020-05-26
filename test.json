@@ -1,16 +1,16 @@
 {
   "source": "./package.json",
   "scripts": {
-    "run": "esy '@test' x OniUnitTestRunner && esy @test inline",
-    "run-ci": "esy '@test' x OniUnitTestRunnerCI && esy @test inline",
+    "run": "esy '@test' x OniUnitTestRunner",
+    "run-ci": "esy '@test' x OniUnitTestRunnerCI",
     "core": "esy '@test' x OniUnitTestRunnerCore",
     "cli": "esy '@test' x OniUnitTestRunnerCLI",
     "libvim": "esy '@test' x OniUnitTestRunnerLibvim",
     "model": "esy '@test' x OniUnitTestRunnerModel",
     "exthost": "esy '@test' x OniUnitTestRunnerExtHost",
     "watch": "esy '@test' dune build --watch --root . -j4",
-    "inline": "esy dune runtest",
-    "watch:inline": "esy dune runtest --watch"
+    "inline": "esy b dune runtest",
+    "watch:inline": "esy b dune runtest --watch"
   },
   "override": {
       "build": ["dune build -p libvim,Oni2,OniUnitTestRunner -j4"],
