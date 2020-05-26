@@ -24,42 +24,42 @@ open Oni_Core;
 //    | `Window('id)
 //  ],
 //};
-type t('id);
+type model('id);
 
 //
 //module Internal: {
 //  let move: ('id, int, int, sized('id)) => option('id); // only used for tests
 //};
 //
-let initial: t('id);
+let initial: 'id => model('id);
 //
-let windows: t('id) => list('id);
+let windows: model('id) => list('id);
 let addWindow:
   (
     ~target: option('id)=?,
     ~position: [ | `Before | `After],
     [ | `Horizontal | `Vertical],
     'id,
-    t('id)
+    model('id)
   ) =>
-  t('id);
-let removeWindow: ('id, t('id)) => t('id);
+  model('id);
+let removeWindow: ('id, model('id)) => model('id);
 
 //let layout: (int, int, int, int, t('id)) => sized('id);
 
-let move: ('id, int, int, t('id)) => 'id;
-let moveLeft: ('id, t('id)) => 'id;
-let moveRight: ('id, t('id)) => 'id;
-let moveUp: ('id, t('id)) => 'id;
-let moveDown: ('id, t('id)) => 'id;
+// let move: ('id, int, int, t('id)) => 'id;
+// let moveLeft: ('id, t('id)) => 'id;
+// let moveRight: ('id, t('id)) => 'id;
+// let moveUp: ('id, t('id)) => 'id;
+// let moveDown: ('id, t('id)) => 'id;
 
-let rotateForward: ('id, t('id)) => t('id);
-let rotateBackward: ('id, t('id)) => t('id);
+// let rotateForward: ('id, t('id)) => t('id);
+// let rotateBackward: ('id, t('id)) => t('id);
 
-let resizeWindow:
-  ([ | `Horizontal | `Vertical], 'id, float, t('id)) => t('id);
-let resizeSplit: (~path: list(int), ~delta: float, t('id)) => t('id);
-let resetWeights: t('id) => t('id);
+// let resizeWindow:
+//   ([ | `Horizontal | `Vertical], 'id, float, t('id)) => t('id);
+// let resizeSplit: (~path: list(int), ~delta: float, t('id)) => t('id);
+// let resetWeights: t('id) => t('id);
 
 // UPDATE
 
@@ -90,7 +90,8 @@ type outmsg('id) =
   | Nothing
   | Focus('id);
 
-let update: (~focus: option('id), t('id), msg) => (t('id), outmsg('id));
+let update:
+  (~focus: option('id), model('id), msg) => (model('id), outmsg('id));
 
 // VIEW
 
@@ -100,7 +101,7 @@ module View: {
   let make:
     (
       ~children: 'id => element,
-      ~model: t('id),
+      ~model: model('id),
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       unit
