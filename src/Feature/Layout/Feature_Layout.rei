@@ -32,12 +32,12 @@ type model;
 //};
 //
 let initial: int => model;
-//
+
 let windows: model => list(int);
-let addWindow:
+let addWindow: ([ | `Horizontal | `Vertical], int, model) => model;
+let insertWindow:
   (
-    ~target: option(int)=?,
-    ~position: [ | `Before | `After],
+    [ | `Before(int) | `After(int)],
     [ | `Horizontal | `Vertical],
     int,
     model

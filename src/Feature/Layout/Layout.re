@@ -35,87 +35,83 @@ let empty = vertical([]);
 
 let singleton = id => vertical([window(id)]);
 
-let addWindow = (~target=None, ~position, direction, idToInsert, tree) => {
+let addWindow = (direction, idToInsert, tree) => {
+  switch (tree.kind) {
+  | `Split(_, []) => window(~size=tree.meta.size, idToInsert)
+
+  | `Split(direction, children) =>
+    split(
+      ~size=tree.meta.size,
+      direction,
+      [window(idToInsert), ...children],
+    )
+
+  | `Window(id) =>
+    split(
+      ~size=tree.meta.size,
+      direction,
+      [window(idToInsert), window(id)],
+    )
+  };
+};
+
+let insertWindow = (position, direction, idToInsert, tree) => {
+  let `Before(targetId) | `After(targetId) = position;
+
   let splitWindow = node =>
     split(
       ~size=node.meta.size,
       direction,
       switch (position) {
-      | `Before => [window(idToInsert), node |> withSize(1.)]
-      | `After => [node |> withSize(1.), window(idToInsert)]
+      | `Before(_) => [window(idToInsert), node |> withSize(1.)]
+      | `After(_) => [node |> withSize(1.), window(idToInsert)]
       },
     );
 
-  switch (target) {
-  | Some(targetId) =>
-    let rec traverse = node =>
-      switch (node.kind) {
-      | `Split(_, []) => {...node, kind: `Window(idToInsert)} // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
-      | `Split(thisDirection, children) when thisDirection == direction =>
-        let onMatch = child =>
-          switch (position) {
-          | `Before => [window(idToInsert), child]
-          | `After => [child, window(idToInsert)]
-          };
-        split(
-          ~size=node.meta.size,
-          thisDirection,
-          traverseChildren(~onMatch, [], children),
-        );
-
-      | `Split(thisDirection, children) =>
-        let onMatch = node => [splitWindow(node)];
-        split(
-          ~size=node.meta.size,
-          thisDirection,
-          traverseChildren(~onMatch, [], children),
-        );
-
-      | `Window(id) when id == targetId => splitWindow(node)
-
-      | `Window(_) => node
-      }
-
-    and traverseChildren = (~onMatch, before, after) =>
-      switch (after) {
-      | [] => List.rev(before)
-      | [child, ...rest] =>
-        switch (child.kind) {
-        | `Window(id) when id == targetId =>
-          traverseChildren(
-            ~onMatch,
-            List.rev(onMatch(child)) @ before,
-            rest,
-          )
-
-        | `Window(_) => traverseChildren(~onMatch, [child, ...before], rest)
-
-        | `Split(_) =>
-          traverseChildren(~onMatch, [traverse(child), ...before], rest)
-        }
-      };
-
-    traverse(tree);
-
-  | None =>
-    switch (tree.kind) {
-    | `Split(_, []) => window(~size=tree.meta.size, idToInsert)
-
-    | `Split(direction, children) =>
+  let rec traverse = node =>
+    switch (node.kind) {
+    | `Split(_, []) => {...node, kind: `Window(idToInsert)} // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
+    | `Split(thisDirection, children) when thisDirection == direction =>
+      let onMatch = child =>
+        switch (position) {
+        | `Before(_) => [window(idToInsert), child]
+        | `After(_) => [child, window(idToInsert)]
+        };
       split(
-        ~size=tree.meta.size,
-        direction,
-        [window(idToInsert), ...children],
-      )
+        ~size=node.meta.size,
+        thisDirection,
+        traverseChildren(~onMatch, [], children),
+      );
 
-    | `Window(id) =>
+    | `Split(thisDirection, children) =>
+      let onMatch = node => [splitWindow(node)];
       split(
-        ~size=tree.meta.size,
-        direction,
-        [window(idToInsert), window(id)],
-      )
+        ~size=node.meta.size,
+        thisDirection,
+        traverseChildren(~onMatch, [], children),
+      );
+
+    | `Window(id) when id == targetId => splitWindow(node)
+
+    | `Window(_) => node
     }
-  };
+
+  and traverseChildren = (~onMatch, before, after) =>
+    switch (after) {
+    | [] => List.rev(before)
+    | [child, ...rest] =>
+      switch (child.kind) {
+      | `Window(id) when id == targetId =>
+        traverseChildren(~onMatch, List.rev(onMatch(child)) @ before, rest)
+
+      | `Window(_) => traverseChildren(~onMatch, [child, ...before], rest)
+
+      | `Split(_) =>
+        traverseChildren(~onMatch, [traverse(child), ...before], rest)
+      }
+    };
+
+  traverse(tree);
 };
 
 let removeWindow = (target, tree) => {

@@ -6,6 +6,7 @@ let initial = id => Layout.singleton(id);
 
 let windows = Layout.windows;
 let addWindow = Layout.addWindow;
+let insertWindow = Layout.insertWindow;
 let removeWindow = Layout.removeWindow;
 
 let move = (focus, dirX, dirY, layout) => {

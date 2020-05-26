@@ -883,8 +883,7 @@ let start =
 
   let addSplit = (direction, state: State.t, editorGroup) => {
     ...state,
-    // Fix #686: If we're adding a split, we should turn off Zen mode.
-    zenMode: false,
+    zenMode: false, // Fix #686: If we're adding a split, we should turn off Zen mode.
     editorGroups:
       EditorGroups.add(
         ~defaultFont=state.editorFont,
@@ -892,16 +891,22 @@ let start =
         state.editorGroups,
       ),
     layout:
-      Feature_Layout.addWindow(
-        ~target={
-          EditorGroups.getActiveEditorGroup(state.editorGroups)
-          |> Option.map((group: EditorGroup.t) => group.editorGroupId);
-        },
-        ~position=`After,
-        direction,
-        editorGroup.editorGroupId,
-        state.layout,
-      ),
+      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+      | Some(target) =>
+        Feature_Layout.insertWindow(
+          `After(target.editorGroupId),
+          direction,
+          editorGroup.editorGroupId,
+          state.layout,
+        )
+
+      | None =>
+        Feature_Layout.addWindow(
+          direction,
+          editorGroup.editorGroupId,
+          state.layout,
+        )
+      },
   };
 
   let updater = (state: State.t, action: Actions.t) => {
