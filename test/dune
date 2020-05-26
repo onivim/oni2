@@ -19,6 +19,7 @@
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
+        reason-native-crash-utils.asan
             ))
 
 (executable
@@ -89,7 +90,9 @@
     (package OniUnitTestRunner)
     (libraries 
         Oni_Core_Test
-        Libvim_Test))
+        Libvim_Test
+        reason-native-crash-utils.asan
+        ))
 
 (executable
     (name OniUnitTestRunnerCI)
@@ -109,4 +112,5 @@
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
+        reason-native-crash-utils.asan
             ))
