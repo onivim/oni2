@@ -172,6 +172,8 @@ let make = (~state: State.t, ()) => {
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />
     </Overlay>
-    {Revery.Environment.os == Windows ? <WindowResizers /> : React.empty}
+    {Revery.Environment.os == Windows
+     && state.windowDisplayMode != State.Maximized
+       ? <WindowResizers /> : React.empty}
   </View>;
 };
