@@ -6,6 +6,19 @@ type node('id, 'meta) = {
   ],
 };
 
+let rec fold = (f, acc, node) =>
+  switch (node.kind) {
+  | `Window(_) => f(node, acc)
+  | `Split(_, children) => List.fold_left(fold(f), acc, children)
+  };
+
+let rec map = (f, node) =>
+  switch (node.kind) {
+  | `Window(_) => f(node)
+  | `Split(direction, children) =>
+    f({...node, kind: `Split((direction, List.map(map(f), children)))})
+  };
+
 let rec windowNodes = node =>
   switch (node.kind) {
   | `Window(_) => [node]

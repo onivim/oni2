@@ -240,10 +240,4 @@ let rec resizeSplit = (~path, ~delta, node) => {
   };
 };
 
-let rec resetWeights = node =>
-  switch (node.kind) {
-  | `Split(direction, children) =>
-    split(direction, List.map(resetWeights, children))
-
-  | `Window(id) => window(id)
-  };
+let resetWeights = tree => AbstractTree.map(withSize(1.), tree);
