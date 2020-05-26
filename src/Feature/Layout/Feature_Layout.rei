@@ -63,28 +63,8 @@ let removeWindow: (int, model) => model;
 
 // UPDATE
 
-type command =
-  | MoveLeft
-  | MoveRight
-  | MoveUp
-  | MoveDown
-  | RotateForward
-  | RotateBackward
-  | DecreaseSize
-  | IncreaseSize
-  | DecreaseHorizontalSize
-  | IncreaseHorizontalSize
-  | DecreaseVerticalSize
-  | IncreaseVerticalSize
-  | ResetSizes;
-
 [@deriving show]
-type msg =
-  | HandleDragged({
-      path: list(int),
-      delta: float,
-    })
-  | Command(command);
+type msg;
 
 type outmsg =
   | Nothing
