@@ -22,12 +22,10 @@ module Styles = {
   ];
 };
 
-let onFileDropped = ({paths, _}: NodeEvents.fileDropEventParams) =>
-  GlobalContext.current().dispatch(
-    Editor(FilesDroppedOnEditor({paths: paths})),
-  );
+let make = (~state: State.t, ~theme, ()) => {
+  let onFileDropped = ({paths, _}: NodeEvents.fileDropEventParams) =>
+    GlobalContext.current().dispatch(Editor(FilesDropped({paths: paths})));
 
-let make = (~state: State.t, ~theme, ()) =>
   <View onFileDropped style={Styles.container(theme)}>
     {if (state.zenMode) {
        switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
@@ -38,3 +36,4 @@ let make = (~state: State.t, ~theme, ()) =>
        <EditorLayoutView state theme />;
      }}
   </View>;
+};

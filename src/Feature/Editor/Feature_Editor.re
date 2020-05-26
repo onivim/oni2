@@ -16,11 +16,11 @@ module Contributions = {
 
 [@deriving show({with_path: false})]
 type msg =
-  | FilesDroppedOnEditor({paths: list(string)});
+  | FilesDropped({paths: list(string)});
 
 let update = (msg, openFileEffect, noopEffect) =>
   switch (msg) {
-  | FilesDroppedOnEditor({paths}) =>
+  | FilesDropped({paths}) =>
     Service_OS.Effect.statMultiple(paths, (path, stats) =>
       if (stats.st_kind == S_REG) {
         openFileEffect(path);
