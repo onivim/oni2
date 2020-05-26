@@ -27,7 +27,6 @@ let discoverExtensions =
           Scanner.scan(
             // The extension host assumes bundled extensions start with 'vscode.'
             ~category=Bundled,
-            ~prefix=Some("vscode"),
             setup.bundledExtensionsPath,
           );
 
@@ -66,6 +65,7 @@ let registerCommands = (~dispatch, commands) => {
 
 let start =
     (
+      ~showUpdateChangelog=true,
       ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
@@ -83,9 +83,11 @@ let start =
       ~setVsync,
       ~maximize,
       ~minimize,
+      ~close,
+      ~restore,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
-      ~overriddenExtensionsDir=?,
+      ~overriddenExtensionsDir=None,
       ~shouldLoadExtensions=true,
       ~shouldSyntaxHighlight=true,
       ~shouldLoadConfiguration=true,
@@ -114,6 +116,7 @@ let start =
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
+      ~showUpdateChangelog,
       languageInfo,
       getState,
       getClipboardText,
@@ -158,8 +161,8 @@ let start =
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater = TitleStoreConnector.start(setTitle, maximize, minimize);
-  let sneakUpdater = SneakStore.start();
+  let titleUpdater =
+    TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
   let contextMenuUpdater = ContextMenuStore.start();
   let updater =
     Isolinear.Updater.combine([
@@ -179,7 +182,6 @@ let start =
       languageFeatureUpdater,
       completionUpdater,
       titleUpdater,
-      sneakUpdater,
       Features.update(
         ~grammarRepository,
         ~extHostClient,
@@ -333,6 +335,11 @@ let start =
     ~dispatch,
     Feature_Terminal.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
+  );
+  registerCommands(
+    ~dispatch,
+    Feature_Sneak.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
   );
 
   // TODO: These should all be replaced with isolinear subscriptions.

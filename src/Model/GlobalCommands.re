@@ -114,24 +114,6 @@ module Oni = {
       );
   };
 
-  module Sneak = {
-    let start =
-      register(
-        ~category="Sneak",
-        ~title="Enter sneak mode (keyboard-accessible UI)",
-        "sneak.start",
-        Command("sneak.start"),
-      );
-
-    let stop =
-      register(
-        ~category="Sneak",
-        ~title="Exit sneak mode",
-        "sneak.stop",
-        Command("sneak.stop"),
-      );
-  };
-
   module System = {
     let addToPath =
       register(

@@ -120,6 +120,9 @@ module Parts = {
           state.bufferRenderers,
         );
 
+      let changelogDispatch = msg =>
+        GlobalContext.current().dispatch(Changelog(msg));
+
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
         let backgroundColor = Feature_Terminal.defaultBackground(theme);
@@ -149,7 +152,13 @@ module Parts = {
 
       | Version => <VersionView theme uiFont editorFont />
 
-      | FullChangelog => <Feature_Changelog.View.Full theme uiFont />
+      | FullChangelog =>
+        <Feature_Changelog.View.Full
+          state={state.changelog}
+          theme
+          dispatch=changelogDispatch
+          uiFont
+        />
 
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />
@@ -175,7 +184,7 @@ module Styles = {
 };
 
 let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
-  let State.{vimMode: mode, uiFont, _} = state;
+  let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -193,7 +202,7 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
     let editorContainer =
       switch (EditorGroup.getActiveEditor(editorGroup)) {
       | Some(editor) => <Parts.EditorContainer editor state theme isActive />
-      | None => React.empty
+      | None => <WelcomeView theme editorFont uiFont />
       };
 
     if (showTabs) {

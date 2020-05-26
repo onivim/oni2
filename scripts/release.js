@@ -112,6 +112,7 @@ if (process.platform == "linux") {
 
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconSourcePath = path.join(imageSourceDirectory, "Onivim2.icns");
+  const documentIconSourcePath = path.join(imageSourceDirectory, "macDocumentIcons");
 
   const plistFile = path.join(contentsDirectory, "Info.plist");
 
@@ -125,6 +126,17 @@ if (process.platform == "linux") {
       CFBundleSignature: "????",
       CFBundleExecutable: "Oni2",
       NSHighResolutionCapable: true,
+      CFBundleDocumentTypes: package.build.fileAssociations.map(fileAssoc => {
+            return {
+                CFBundleTypeExtensions: fileAssoc.ext.map(ext => ext.substr(1)),
+                CFBundleTypeName: fileAssoc.name,
+                CFBundleTypeRole: fileAssoc.role,
+                CFBundleTypeIconFile: "macDocumentIcons/" + fileAssoc.icon.mac
+            }
+        }),
+      LSEnvironment: {
+          "ONI2_BUNDLED": "1"
+      }
   };
 
   fs.mkdirpSync(frameworksDirectory);
@@ -139,6 +151,7 @@ if (process.platform == "linux") {
 
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(nodeScriptSourceDirectory, resourcesDirectory);
+  copy(documentIconSourcePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
   copy(getRlsPath(), path.join(binaryDirectory, "rls"));

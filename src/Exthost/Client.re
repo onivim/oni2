@@ -1,4 +1,3 @@
-type reply = unit;
 module Protocol = Exthost_Protocol;
 module Extension = Exthost_Extension;
 
@@ -25,7 +24,7 @@ let start =
       ~initialWorkspace=WorkspaceData.fromPath(Sys.getcwd()),
       ~namedPipe,
       ~initData: Extension.InitData.t,
-      ~handler: Msg.t => option(reply),
+      ~handler: Msg.t => Lwt.t(Reply.t),
       ~onError: string => unit,
       (),
     ) => {
@@ -52,7 +51,7 @@ let start =
 
         incr(lastRequestId);
         send(Outgoing.Initialize({requestId: lastRequestId^, initData}));
-        handler(Ready) |> ignore;
+        ignore(handler(Ready): Lwt.t(Reply.t));
 
       | Incoming.Initialized =>
         Log.info("Initialized");
@@ -73,7 +72,7 @@ let start =
             usesCancellationToken: false,
           }),
         );
-        handler(Initialized) |> ignore;
+        ignore(handler(Initialized): Lwt.t(Reply.t));
 
         incr(lastRequestId);
         let rpcId = "ExtHostWorkspace" |> Handlers.stringToId |> Option.get;
@@ -111,8 +110,40 @@ let start =
         let req = Handlers.handle(rpcId, method, args);
         switch (req) {
         | Ok(msg) =>
-          handler(msg) |> ignore; // TODO: Hook up to reply!
-          send(Outgoing.ReplyOKEmpty({requestId: requestId}));
+          let reply = handler(msg);
+
+          let sendReply = (reply: Reply.t) => {
+            switch (reply) {
+            | Nothing =>
+              Log.tracef(m => m("Not responding to request %d", requestId))
+            | OkEmpty =>
+              Log.tracef(m =>
+                m("Responding to request %d with OkEmpty", requestId)
+              );
+              send(ReplyOKEmpty({requestId: requestId}));
+
+            | OkJson({json}) =>
+              Log.tracef(m =>
+                m("Responding to request %d with OkJson", requestId)
+              );
+              send(ReplyOKJSON({requestId, json}));
+            | ErrorMessage({message}) =>
+              Log.tracef(m =>
+                m(
+                  "Responding to request %d with error: %s",
+                  requestId,
+                  message,
+                )
+              );
+              send(Outgoing.ReplyError({requestId, error: message}));
+            };
+          };
+
+          let sendError = (error: exn) => {
+            sendReply(Reply.error(Printexc.to_string(error)));
+          };
+
+          Lwt.on_any(reply, sendReply, sendError);
         | Error(msg) => onError(msg)
         };
       | Incoming.ReplyOk({requestId, payload}) =>

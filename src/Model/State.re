@@ -21,10 +21,17 @@ module ContextMenu = {
     | Nothing;
 };
 
+type windowDisplayMode =
+  | Minimized
+  | Windowed
+  | Maximized
+  | Fullscreen;
+
 type t = {
   buffers: Buffers.t,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
+  changelog: Feature_Changelog.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: ContextMenu.t,
@@ -54,7 +61,7 @@ type t = {
   notifications: Feature_Notification.model,
   references: References.t,
   scm: Feature_SCM.model,
-  sneak: Sneak.t,
+  sneak: Feature_Sneak.model,
   statusBar: StatusBarModel.t,
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
@@ -63,7 +70,7 @@ type t = {
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
-  windowIsMaximized: bool,
+  windowDisplayMode,
   workspace: Workspace.t,
   zenMode: bool,
   // State of the bottom pane
@@ -92,6 +99,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: BufferRenderers.initial,
+    changelog: Feature_Changelog.initial,
     colorTheme:
       Feature_Theme.initial([
         Feature_Terminal.Contributions.colors,
@@ -132,13 +140,13 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     notifications: Feature_Notification.initial,
     references: References.initial,
     scm: Feature_SCM.initial,
-    sneak: Sneak.initial,
+    sneak: Feature_Sneak.initial,
     statusBar: StatusBarModel.create(),
     syntaxHighlights: Feature_Syntax.empty,
     layout: initialLayout(initialEditorGroup),
     windowTitle: "",
     windowIsFocused: true,
-    windowIsMaximized: false,
+    windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
     zenMode: false,

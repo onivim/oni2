@@ -93,7 +93,7 @@ module Effects = {
     });
 };
 
-let start = (setTitle, maximize, minimize) => {
+let start = (setTitle, maximize, minimize, restore, close) => {
   let _lastTitle = ref("");
 
   let internalSetTitleEffect = title =>
@@ -123,6 +123,15 @@ let start = (setTitle, maximize, minimize) => {
       }
     );
 
+  let internalWindowCloseEffect =
+    Isolinear.Effect.create(~name="window.close", () => close());
+  let internalWindowMaximizeEffect =
+    Isolinear.Effect.create(~name="window.maximize", () => maximize());
+  let internalWindowMinimizeEffect =
+    Isolinear.Effect.create(~name="window.minimize", () => minimize());
+  let internalWindowRestoreEffect =
+    Isolinear.Effect.create(~name="window.restore", () => restore());
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Init => (state, Effects.updateTitle(state))
@@ -139,6 +148,10 @@ let start = (setTitle, maximize, minimize) => {
         internalSetTitleEffect(title),
       )
     | TitleDoubleClicked => (state, internalDoubleClickEffect)
+    | WindowCloseClicked => (state, internalWindowCloseEffect)
+    | WindowMaximizeClicked => (state, internalWindowMaximizeEffect)
+    | WindowRestoreClicked => (state, internalWindowRestoreEffect)
+    | WindowMinimizeClicked => (state, internalWindowMinimizeEffect)
 
     | _ => (state, Isolinear.Effect.none)
     };

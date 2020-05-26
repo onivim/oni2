@@ -18,7 +18,6 @@ type editorSetScroll =
 type t = {
   editorScrollDelta,
   editorSetScroll,
-  openEditorById: int => unit,
   closeEditorById: int => unit,
   dispatch: Actions.t => unit,
 };
@@ -29,7 +28,6 @@ let viewNoop: Views.viewOperation =
 let default = {
   editorScrollDelta: (~editorId as _, ~deltaY as _, ()) => (),
   editorSetScroll: (~editorId as _, ~scrollY as _, ()) => (),
-  openEditorById: _ => (),
   dispatch: _ => (),
   closeEditorById: _ => (),
 };

@@ -16,8 +16,7 @@ module Extension = {
   };
 
   let ofManifestAndPath = (manifest: Manifest.t, path: string) => {
-    // TODO: Is identifier right?
-    identifier: manifest.name,
+    identifier: Manifest.identifier(manifest),
     extensionLocation: path |> Uri.fromPath,
     name: manifest.name,
     main: manifest.main,

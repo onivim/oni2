@@ -981,6 +981,22 @@ module Tab = {
   ];
 };
 
+module TextLink = {
+  let foreground =
+    define(
+      "textLink.foreground",
+      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
+    );
+
+  let activeForeground =
+    define(
+      "textLink.activeForeground",
+      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
+    );
+
+  let defaults = [foreground, activeForeground];
+};
+
 module TitleBar = {
   let activeForeground =
     define(
@@ -1016,12 +1032,30 @@ module TitleBar = {
       {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
     );
 
+  let hoverBackground =
+    define(
+      "oni.titleBar.hoverBackground",
+      {
+        dark: hex("#FFFFFF") |> transparent(0.1),
+        light: hex("#000000") |> transparent(0.1),
+        hc: unspecified,
+      },
+    );
+
+  let hoverCloseBackground =
+    define(
+      "oni.titleBar.hoverCloseBackground",
+      hex("#E81123") |> transparent(0.9) |> all,
+    );
+
   let defaults = [
     activeForeground,
     inactiveForeground,
     activeBackground,
     inactiveBackground,
     border,
+    hoverBackground,
+    hoverCloseBackground,
   ];
 };
 

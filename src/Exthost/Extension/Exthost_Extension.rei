@@ -121,7 +121,7 @@ module Manifest: {
     author: string,
     displayName: option(LocalizedToken.t),
     description: option(string),
-    // publisher: option(string),
+    publisher: option(string),
     main: option(string),
     icon: option(string),
     categories: list(string),
@@ -131,7 +131,6 @@ module Manifest: {
     extensionDependencies: list(string),
     extensionPack: list(string),
     extensionKind: kind,
-    // TODO: Bring back
     contributes: Contributions.t,
     enableProposedApi: bool,
   }
@@ -162,12 +161,8 @@ module Scanner: {
     };
   };
 
-  let load:
-    (~prefix: option(string)=?, ~category: category, string) =>
-    option(ScanResult.t);
-  let scan:
-    (~prefix: option(string)=?, ~category: category, string) =>
-    list(ScanResult.t);
+  let load: (~category: category, string) => option(ScanResult.t);
+  let scan: (~category: category, string) => list(ScanResult.t);
 };
 
 module InitData: {

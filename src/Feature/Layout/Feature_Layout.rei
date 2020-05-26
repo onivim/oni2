@@ -16,16 +16,19 @@ type t('id) =
   | Window(size, 'id);
 
 [@deriving show]
-type sizedWindow('id) = {
-  id: 'id,
+type sized('id) = {
   x: int,
   y: int,
   width: int,
   height: int,
+  kind: [
+    | `Split([ | `Horizontal | `Vertical], list(sized('id)))
+    | `Window('id)
+  ],
 };
 
 module Internal: {
-  let move: ('id, int, int, list(sizedWindow('id))) => option('id); // only used for tests
+  let move: ('id, int, int, sized('id)) => option('id); // only used for tests
 };
 
 let initial: t('id);
@@ -42,7 +45,7 @@ let addWindow:
   t('id);
 let removeWindow: ('id, t('id)) => t('id);
 
-let layout: (int, int, int, int, t('id)) => list(sizedWindow('id));
+let layout: (int, int, int, int, t('id)) => sized('id);
 
 let move: (direction, 'id, t('id)) => 'id;
 let moveLeft: ('id, t('id)) => 'id;
@@ -55,4 +58,5 @@ let rotateBackward: ('id, t('id)) => t('id);
 
 let resizeWindow:
   ([ | `Horizontal | `Vertical], 'id, float, t('id)) => t('id);
+let resizeSplit: (~path: list(int), ~delta: float, t('id)) => t('id);
 let resetWeights: t('id) => t('id);

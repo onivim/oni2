@@ -5,6 +5,16 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Command: {
+  [@deriving show]
+  type t = {
+    id: string,
+    title: option(string),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module CompletionContext: {
   type triggerKind =
     | Invoke
@@ -145,6 +155,20 @@ module ReferenceContext: {
   type t = {includeDeclaration: bool};
 
   let encode: Json.encoder(t);
+};
+
+module Label: {
+  [@deriving show]
+  type segment =
+    | Text(string)
+    | Icon(string);
+
+  [@deriving show]
+  type t = list(segment);
+
+  let of_string: string => t;
+
+  let decode: Json.decoder(t);
 };
 
 module SCM: {
@@ -428,6 +452,13 @@ module ThemeColor: {
 };
 
 module Msg: {
+  module Clipboard: {
+    [@deriving show]
+    type msg =
+      | ReadText
+      | WriteText(string);
+  };
+
   module Commands: {
     [@deriving show]
     type msg =
@@ -647,17 +678,20 @@ module Msg: {
     type msg =
       | SetEntry({
           id: string,
-          text: string,
+          label: Label.t,
           source: string,
           alignment,
+          command: option(Command.t),
           priority: int,
-        });
+        })
+      | Dispose({id: int});
   };
 
   [@deriving show]
   type t =
     | Connected
     | Ready
+    | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
@@ -686,11 +720,20 @@ module NamedPipe: {
   let toString: t => string;
 };
 
-module Client: {
+module Reply: {
   type t;
 
-  // TODO
-  type reply = unit;
+  let none: t;
+
+  let error: string => t;
+
+  let okEmpty: t;
+
+  let okJson: Yojson.Safe.t => t;
+};
+
+module Client: {
+  type t;
 
   let start:
     (
@@ -698,7 +741,11 @@ module Client: {
       ~initialWorkspace: WorkspaceData.t=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
-      ~handler: Msg.t => option(reply),
+      // TODO:
+      // Is there a way to use GADT's to strongly-type the reply from the request?
+      // Right now, we take arbitrary JSON responses, without help from the type
+      // system that these are correct.
+      ~handler: Msg.t => Lwt.t(Reply.t),
       ~onError: string => unit,
       unit
     ) =>
