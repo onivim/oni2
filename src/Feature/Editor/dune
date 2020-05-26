@@ -10,6 +10,7 @@
       Oni2.feature.language_support
       Oni2.feature.syntax
       Oni2.service.font
+      Oni2.service.os
       Revery
       libvim
     )

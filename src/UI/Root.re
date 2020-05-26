@@ -21,17 +21,25 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let root = theme => [
-    backgroundColor(Colors.Editor.background.from(theme)),
-    color(Colors.foreground.from(theme)),
-    position(`Absolute),
-    top(0),
-    left(0),
-    right(0),
-    bottom(0),
-    justifyContent(`Center),
-    alignItems(`Stretch),
-  ];
+  let root = (theme, windowDisplayMode) => {
+    let style =
+      ref([
+        backgroundColor(Colors.Editor.background.from(theme)),
+        color(Colors.foreground.from(theme)),
+        position(`Absolute),
+        top(0),
+        left(0),
+        right(0),
+        bottom(0),
+        justifyContent(`Center),
+        alignItems(`Stretch),
+      ]);
+    if (Revery.Environment.os == Windows
+        && windowDisplayMode == State.Maximized) {
+      style := [margin(6), ...style^];
+    };
+    style^;
+  };
 
   let surface = [flexGrow(1), flexDirection(`Row)];
 
@@ -130,7 +138,7 @@ let make = (~state: State.t, ()) => {
     <ContextMenu.Overlay onClick />;
   };
 
-  <View style={Styles.root(theme)}>
+  <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Titlebar
       isFocused={state.windowIsFocused}
       windowDisplayMode={state.windowDisplayMode}
@@ -164,6 +172,8 @@ let make = (~state: State.t, ()) => {
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />
     </Overlay>
-    {Revery.Environment.os == Windows ? <WindowResizers /> : React.empty}
+    {Revery.Environment.os == Windows
+     && state.windowDisplayMode != State.Maximized
+       ? <WindowResizers /> : React.empty}
   </View>;
 };
