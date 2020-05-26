@@ -403,14 +403,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     );
   };
 
-  let _process: Luv.Process.t =
-    Luv.Process.spawn(
-      ~environment,
-      ~on_exit,
-      ~windows_hide=true,
-      ~windows_hide_console=true,
-      ~windows_hide_gui=true,
-      ~redirect=[
+  let redirect =
+    if (Timber.App.isEnabled()) {
+      [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,
           ~from_parent_fd=Luv.Process.stdin,
@@ -426,7 +421,19 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           ~from_parent_fd=Luv.Process.stderr,
           (),
         ),
-      ],
+      ];
+    } else {
+      [];
+    };
+
+  let _process: Luv.Process.t =
+    Luv.Process.spawn(
+      ~environment,
+      ~on_exit,
+      ~windows_hide=true,
+      ~windows_hide_console=true,
+      ~windows_hide_gui=true,
+      ~redirect,
       nodePath,
       [nodePath, extHostScriptPath],
     )
