@@ -402,6 +402,6 @@ let rec resizeSplit = (~path, ~delta, node) => {
 };
 
 /**
- * resetWeight
+ * resetWeights
  */
 let resetWeights = tree => AbstractTree.map(withSize(1.), tree);
