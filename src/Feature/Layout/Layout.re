@@ -45,10 +45,21 @@ let addWindow = (direction, idToInsert, tree) => {
   switch (tree.kind) {
   | `Split(_, []) => window(~size=tree.meta.size, idToInsert)
 
-  | `Split(direction, children) =>
+  | `Split(thisDirection, [firstChild, ...remainingChildren])
+      when thisDirection != direction =>
     split(
       ~size=tree.meta.size,
-      direction,
+      thisDirection,
+      [
+        split(direction, [window(idToInsert), firstChild]),
+        ...remainingChildren,
+      ],
+    )
+
+  | `Split(thisDirection, children) =>
+    split(
+      ~size=tree.meta.size,
+      thisDirection,
       [window(idToInsert), ...children],
     )
 
@@ -74,9 +85,7 @@ let%test_module "addWindow" =
        let actual =
          hsplit([window(2), window(1)]) |> addWindow(`Vertical, 3);
 
-       // TODO: Bug
-       actual == hsplit([window(3), window(2), window(1)]);
-       //hsplit([window(1), vsplit([window(3), window(2)])]);
+       actual == hsplit([vsplit([window(3), window(2)]), window(1)]);
      };
    });
 
