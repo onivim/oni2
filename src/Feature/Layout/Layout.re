@@ -9,27 +9,15 @@ type t('id) = AbstractTree.node('id, metadata);
 // DSL
 
 module DSL = {
-  let split = (~size=1., direction, children) => {
-    meta: {
-      size: size,
-    },
-    kind: `Split((direction, children)),
-  };
+  open AbstractTree.DSL;
+
+  let split = (~size=1., direction, children) =>
+    split(~meta={size: size}, direction, children);
   let vsplit = (~size=1., children) => split(~size, `Vertical, children);
   let hsplit = (~size=1., children) => split(~size, `Horizontal, children);
-  let window = (~size=1., id) => {
-    meta: {
-      size: size,
-    },
-    kind: `Window(id),
-  };
+  let window = (~size=1., id) => window(~meta={size: size}, id);
 
-  let withSize = (size, node) => {
-    ...node,
-    meta: {
-      size: size,
-    },
-  };
+  let withSize = (size, node) => node |> withMetadata({size: size});
 };
 
 include DSL;
