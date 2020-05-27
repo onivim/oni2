@@ -378,7 +378,7 @@
     "axios": "^0.19.0",
     "esy-macdylibbundler": "*",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.43",
+    "libvim": "8.10869.44",
     "ocaml": "~4.7.0",
     "reason-sdl2": "^2.10.2020",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#ae1fd34",
