@@ -55,6 +55,14 @@ module Commands: {
 
   let rotateForward: Command.t(msg);
   let rotateBackward: Command.t(msg);
+
+  let decreaseSize: Command.t(msg);
+  let increaseSize: Command.t(msg);
+  let decreaseVerticalSize: Command.t(msg);
+  let increaseVerticalSize: Command.t(msg);
+  let decreaseHorizontalSize: Command.t(msg);
+  let increaseHorizontalSize: Command.t(msg);
+  let resetSizes: Command.t(msg);
 };
 
 // CONTRIBUTIONS
