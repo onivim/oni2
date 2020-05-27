@@ -21,7 +21,7 @@ let pop = (focusable: Focus.focusable, state: State.t) =>
   };
 
 let current = (state: State.t) =>
-  if (Sneak.isActive(state.sneak)) {
+  if (Feature_Sneak.isActive(state.sneak)) {
     Focus.Sneak;
   } else if (state.modal != None) {
     Focus.Modal;

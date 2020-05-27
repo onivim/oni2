@@ -83,6 +83,8 @@ let start =
       ~setVsync,
       ~maximize,
       ~minimize,
+      ~close,
+      ~restore,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
@@ -159,8 +161,8 @@ let start =
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater = TitleStoreConnector.start(setTitle, maximize, minimize);
-  let sneakUpdater = SneakStore.start();
+  let titleUpdater =
+    TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
   let contextMenuUpdater = ContextMenuStore.start();
   let updater =
     Isolinear.Updater.combine([
@@ -180,7 +182,6 @@ let start =
       languageFeatureUpdater,
       completionUpdater,
       titleUpdater,
-      sneakUpdater,
       Features.update(
         ~grammarRepository,
         ~extHostClient,
@@ -193,14 +194,24 @@ let start =
 
   let subscriptions = (state: Model.State.t) => {
     let config = Feature_Configuration.resolver(state.config);
+    let visibleBuffersAndRanges =
+      state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
+
     let visibleRanges =
-      state
-      |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges
+      visibleBuffersAndRanges
       |> List.map(((bufferId, ranges)) => {
            Model.Selectors.getBufferById(state, bufferId)
            |> Option.map(buffer => {(buffer, ranges)})
          })
       |> Core.Utility.OptionEx.values;
+
+    let visibleBuffers =
+      visibleBuffersAndRanges
+      |> List.map(fst)
+      |> Base.List.dedup_and_sort(~compare)
+      |> List.map(bufferId => Model.Selectors.getBufferById(state, bufferId))
+      |> Core.Utility.OptionEx.values;
+
     let syntaxSubscription =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
@@ -270,11 +281,20 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
+    let extHostSubscriptions =
+      visibleBuffers
+      |> List.map(buffer => {
+           Service_Exthost.Sub.buffer(~buffer, ~client=extHostClient)
+           |> Isolinear.Sub.map(() => Model.Actions.Noop)
+         })
+      |> Isolinear.Sub.batch;
+
     [
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
+      extHostSubscriptions,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
     ]
     |> Isolinear.Sub.batch;
@@ -334,6 +354,16 @@ let start =
     ~dispatch,
     Feature_Terminal.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
+  );
+  registerCommands(
+    ~dispatch,
+    Feature_Sneak.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
+  );
+  registerCommands(
+    ~dispatch,
+    Feature_Layout.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
   );
 
   // TODO: These should all be replaced with isolinear subscriptions.

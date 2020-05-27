@@ -114,6 +114,22 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
     );
   };
 
+  let decorated =
+    switch (Revery.Environment.os) {
+    | Windows => false
+    | _ => true
+    };
+
+  let icon =
+    switch (Revery.Environment.os) {
+    | Mac =>
+      switch (Sys.getenv_opt("ONI2_BUNDLED")) {
+      | Some(_) => None
+      | None => Some("logo.png")
+      }
+    | _ => Some("logo.png")
+    };
+
   let window =
     App.createWindow(
       ~createOptions=
@@ -121,12 +137,13 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
           ~forceScaleFactor,
           ~maximized,
           ~vsync=Vsync.Immediate,
-          ~icon=Some("logo.png"),
+          ~icon,
           ~titlebarStyle=WindowStyles.Transparent,
           ~x,
           ~y,
           ~width,
           ~height,
+          ~decorated,
           (),
         ),
       app,
@@ -236,6 +253,14 @@ if (cliOptions.syntaxHighlightService) {
       Window.minimize(window);
     };
 
+    let close = () => {
+      App.quit(~askNicely=true, app);
+    };
+
+    let restore = () => {
+      Window.restore(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -258,6 +283,8 @@ if (cliOptions.syntaxHighlightService) {
         ~setVsync,
         ~maximize,
         ~minimize,
+        ~restore,
+        ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
