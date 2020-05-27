@@ -11,9 +11,8 @@ module DSL = {
     },
     kind: `Split((direction, children)),
   };
-  let vertical = (~size=1., children) => split(~size, `Vertical, children);
-  let horizontal = (~size=1., children) =>
-    split(~size, `Horizontal, children);
+  let vsplit = (~size=1., children) => split(~size, `Vertical, children);
+  let hsplit = (~size=1., children) => split(~size, `Horizontal, children);
   let window = (~size=1., id) => {
     meta: {
       size: size,
@@ -31,9 +30,9 @@ module DSL = {
 
 include DSL;
 
-let empty = vertical([]);
+let empty = vsplit([]);
 
-let singleton = id => vertical([window(id)]);
+let singleton = id => vsplit([window(id)]);
 
 let addWindow = (direction, idToInsert, tree) => {
   switch (tree.kind) {
