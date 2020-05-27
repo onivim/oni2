@@ -1,9 +1,22 @@
+[@deriving show({with_path: false})]
 type node('id, 'meta) = {
   meta: 'meta,
   kind: [
     | `Split([ | `Horizontal | `Vertical], list(node('id, 'meta)))
     | `Window('id)
   ],
+};
+
+module DSL = {
+  let split = (~meta, direction, children) => {
+    meta,
+    kind: `Split((direction, children)),
+  };
+  let vsplit = (~meta, children) => split(~meta, `Vertical, children);
+  let hsplit = (~meta, children) => split(~meta, `Horizontal, children);
+  let window = (~meta, id) => {meta, kind: `Window(id)};
+
+  let withMetadata = (meta, node) => {...node, meta};
 };
 
 let rec fold = (f, acc, node) =>
@@ -56,3 +69,51 @@ let rec rotate = (direction, targetId, node) => {
   | `Window(_) => node
   };
 };
+
+let%test_module "rotate" =
+  (module
+   {
+     module DSL = {
+       include DSL;
+       let hsplit = hsplit(~meta=());
+       let vsplit = vsplit(~meta=());
+       let window = window(~meta=());
+     };
+     open DSL;
+
+     let%test "forward - simple tree" = {
+       let initial = vsplit([window(3), window(2), window(1)]);
+
+       let actual = rotate(`Forward, 3, initial);
+
+       actual == vsplit([window(1), window(3), window(2)]);
+     };
+
+     let%test "forward - nested tree" = {
+       let initial =
+         vsplit([window(4), hsplit([window(3), window(2), window(1)])]);
+
+       let actual = rotate(`Forward, 1, initial);
+
+       actual
+       == vsplit([window(4), hsplit([window(1), window(3), window(2)])]);
+     };
+
+     let%test "backward - simple tree" = {
+       let initial = vsplit([window(3), window(2), window(1)]);
+
+       let actual = rotate(`Backward, 3, initial);
+
+       actual == vsplit([window(2), window(1), window(3)]);
+     };
+
+     let%test "backward - nested tree" = {
+       let initial =
+         vsplit([window(4), hsplit([window(3), window(2), window(1)])]);
+
+       let actual = rotate(`Backward, 1, initial);
+
+       actual
+       == vsplit([window(4), hsplit([window(2), window(1), window(3)])]);
+     };
+   });

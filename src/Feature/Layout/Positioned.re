@@ -18,6 +18,9 @@ let contains = (x, y, {meta, _}: t(_)) => {
   + meta.height;
 };
 
+/**
+ * move
+ */
 let move = (targetId, dirX, dirY, node) => {
   let windows = windowNodes(node);
 
@@ -76,6 +79,34 @@ let move = (targetId, dirX, dirY, node) => {
   };
 };
 
+let%test_module "move" =
+  (module
+   {
+     open DSL;
+
+     let%test_module "regression test for #603 - navigation across splits not working" =
+       (module
+        {
+          let initial =
+            hsplit(
+              ~meta={x: 0, y: 0, width: 300, height: 300},
+              [
+                window(3, ~meta={x: 0, y: 0, width: 300, height: 100}),
+                window(2, ~meta={x: 0, y: 100, width: 300, height: 100}),
+                window(1, ~meta={x: 0, y: 200, width: 300, height: 100}),
+              ],
+            );
+
+          let%test "3, 0, 1" = move(3, 0, 1, initial) == Some(2);
+          let%test "2, 0, 1" = move(2, 0, 1, initial) == Some(1);
+          let%test "1, 0, -1" = move(1, 0, -1, initial) == Some(2);
+          let%test "2, 0, -1" = move(2, 0, -1, initial) == Some(3);
+        });
+   });
+
+/**
+ * fromLayout
+ */
 let rec fromLayout = (x, y, width, height, node) => {
   Layout.(
     switch (node.kind) {
@@ -139,3 +170,61 @@ let rec fromLayout = (x, y, width, height, node) => {
     }
   );
 };
+
+let%test_module "fromLayout" =
+  (module
+   {
+     open DSL;
+
+     let%test "layout vertical splits" = {
+       let initial = Layout.(vsplit([window(2), window(1)]));
+
+       let actual = fromLayout(0, 0, 200, 200, initial);
+
+       actual
+       == vsplit(
+            ~meta={x: 0, y: 0, width: 200, height: 200},
+            [
+              window(2, ~meta={x: 0, y: 0, width: 100, height: 200}),
+              window(1, ~meta={x: 100, y: 0, width: 100, height: 200}),
+            ],
+          );
+     };
+
+     let%test "layout horizontal splits" = {
+       let initial = Layout.(hsplit([window(2), window(1)]));
+
+       let actual = fromLayout(0, 0, 200, 200, initial);
+
+       actual
+       == hsplit(
+            ~meta={x: 0, y: 0, width: 200, height: 200},
+            [
+              window(2, ~meta={x: 0, y: 0, width: 200, height: 100}),
+              window(1, ~meta={x: 0, y: 100, width: 200, height: 100}),
+            ],
+          );
+     };
+
+     let%test "layout mixed splits" = {
+       let initial =
+         Layout.(hsplit([window(2), vsplit([window(3), window(1)])]));
+
+       let actual = fromLayout(0, 0, 200, 200, initial);
+
+       actual
+       == hsplit(
+            ~meta={x: 0, y: 0, width: 200, height: 200},
+            [
+              window(2, ~meta={x: 0, y: 0, width: 200, height: 100}),
+              vsplit(
+                ~meta={x: 0, y: 100, width: 200, height: 100},
+                [
+                  window(3, ~meta={x: 0, y: 100, width: 100, height: 100}),
+                  window(1, ~meta={x: 100, y: 100, width: 100, height: 100}),
+                ],
+              ),
+            ],
+          );
+     };
+   });

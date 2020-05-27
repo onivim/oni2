@@ -1,10 +1,11 @@
 (library
     (name Feature_Layout)
     (public_name Oni2.feature.layout)
+    (inline_tests)
     (libraries 
       Oni2.core
       isolinear
       base
       Oni2.feature.commands
     )
-    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))

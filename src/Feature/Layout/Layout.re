@@ -1,8 +1,12 @@
 include AbstractTree;
 
+[@deriving show({with_path: false})]
 type metadata = {size: float};
 
+[@deriving show({with_path: false})]
 type t('id) = AbstractTree.node('id, metadata);
+
+// DSL
 
 module DSL = {
   let split = (~size=1., direction, children) => {
@@ -34,6 +38,9 @@ let empty = vsplit([]);
 
 let singleton = id => vsplit([window(id)]);
 
+/**
+ * addWindow
+ */
 let addWindow = (direction, idToInsert, tree) => {
   switch (tree.kind) {
   | `Split(_, []) => window(~size=tree.meta.size, idToInsert)
@@ -54,6 +61,28 @@ let addWindow = (direction, idToInsert, tree) => {
   };
 };
 
+let%test_module "addWindow" =
+  (module
+   {
+     let%test "add vertical split" = {
+       let actual = empty |> addWindow(`Vertical, 1);
+
+       actual == window(1);
+     };
+
+     let%test "parent split changes direction if needed" = {
+       let actual =
+         hsplit([window(2), window(1)]) |> addWindow(`Vertical, 3);
+
+       // TODO: Bug
+       actual == hsplit([window(3), window(2), window(1)]);
+       //hsplit([window(1), vsplit([window(3), window(2)])]);
+     };
+   });
+
+/**
+ * insertWindow
+ */
 let insertWindow = (position, direction, idToInsert, tree) => {
   let `Before(targetId) | `After(targetId) = position;
 
@@ -113,6 +142,33 @@ let insertWindow = (position, direction, idToInsert, tree) => {
   traverse(tree);
 };
 
+let%test_module "insertWindow" =
+  (module
+   {
+     let%test "insert vertical split" = {
+       let actual = window(1) |> insertWindow(`Before(1), `Vertical, 2);
+
+       actual == vsplit([window(2), window(1)]);
+     };
+
+     let%test "insert vertical split - after" = {
+       let actual = window(1) |> insertWindow(`After(1), `Vertical, 2);
+
+       actual == vsplit([window(1), window(2)]);
+     };
+
+     let%test "parent split changes direction if needed" = {
+       let actual =
+         hsplit([window(2), window(1)])
+         |> insertWindow(`Before(1), `Vertical, 3);
+
+       actual == hsplit([window(2), vsplit([window(3), window(1)])]);
+     };
+   });
+
+/**
+ * removeWindow
+ */
 let removeWindow = (target, tree) => {
   let rec traverse = node =>
     switch (node.kind) {
@@ -131,6 +187,41 @@ let removeWindow = (target, tree) => {
   traverse(tree) |> Option.value(~default=empty);
 };
 
+let%test_module "removeWindow" =
+  (module
+   {
+     let%test "nested - remove 4" = {
+       let initial =
+         vsplit([
+           hsplit([window(3), window(2)]),
+           hsplit([window(4), window(1)]),
+         ]);
+
+       let actual = initial |> removeWindow(4);
+
+       actual
+       == vsplit([hsplit([window(3), window(2)]), hsplit([window(1)])]);
+     };
+     let%test "nested - remove 3" = {
+       let initial =
+         vsplit([hsplit([window(3), window(2)]), hsplit([window(1)])]);
+
+       let actual = initial |> removeWindow(3);
+
+       actual == vsplit([hsplit([window(2)]), hsplit([window(1)])]);
+     };
+     let%test "nested - remove 2 - empty parent split removed" = {
+       let initial = vsplit([hsplit([window(2)]), hsplit([window(1)])]);
+
+       let actual = initial |> removeWindow(2);
+
+       actual == vsplit([hsplit([window(1)])]);
+     };
+   });
+
+/**
+ * resizeWindow
+ */
 let resizeWindow = (direction, targetId, factor, node) => {
   let rec traverse = (~parentDirection=?, node) =>
     switch (node.kind) {
@@ -172,6 +263,81 @@ let resizeWindow = (direction, targetId, factor, node) => {
   traverse(node) |> snd;
 };
 
+let%test_module "resizeWindow" =
+  (module
+   {
+     let%test "vsplit  - vresize" = {
+       let initial = vsplit([window(1), window(2)]);
+
+       let actual = resizeWindow(`Vertical, 2, 5., initial);
+
+       actual == vsplit([window(1), window(2)]);
+     };
+
+     let%test "vsplit  - hresize" = {
+       let initial = vsplit([window(1), window(2)]);
+
+       let actual = resizeWindow(`Horizontal, 2, 5., initial);
+
+       actual == vsplit([window(1), window(~size=5., 2)]);
+     };
+
+     let%test "hsplit  - hresize" = {
+       let initial = hsplit([window(1), window(2)]);
+
+       let actual = resizeWindow(`Horizontal, 2, 5., initial);
+
+       actual == hsplit([window(1), window(2)]);
+     };
+
+     let%test "hsplit  - vresize" = {
+       let initial = hsplit([window(1), window(2)]);
+
+       let actual = resizeWindow(`Vertical, 2, 5., initial);
+
+       actual == hsplit([window(1), window(~size=5., 2)]);
+     };
+
+     let%test "vsplit+hsplit - hresize" = {
+       let initial = vsplit([window(1), hsplit([window(2), window(3)])]);
+
+       let actual = resizeWindow(`Horizontal, 2, 5., initial);
+
+       actual
+       == vsplit([window(1), hsplit(~size=5., [window(2), window(3)])]);
+     };
+
+     let%test "vsplit+hsplit - vresize" = {
+       let initial = vsplit([window(1), hsplit([window(2), window(3)])]);
+
+       let actual = resizeWindow(`Vertical, 2, 5., initial);
+
+       actual
+       == vsplit([window(1), hsplit([window(~size=5., 2), window(3)])]);
+     };
+
+     let%test "hsplit+vsplit - hresize" = {
+       let initial = hsplit([window(1), vsplit([window(2), window(3)])]);
+
+       let actual = resizeWindow(`Horizontal, 2, 5., initial);
+
+       actual
+       == hsplit([window(1), vsplit([window(~size=5., 2), window(3)])]);
+     };
+
+     let%test "hsplit+vsplit - vresize" = {
+       let initial = hsplit([window(1), vsplit([window(2), window(3)])]);
+
+       let actual = resizeWindow(`Vertical, 2, 5., initial);
+
+       actual
+       == hsplit([window(1), vsplit(~size=5., [window(2), window(3)])]);
+     };
+   });
+
+/**
+ * resizeSplit
+ */
 let rec resizeSplit = (~path, ~delta, node) => {
   switch (path) {
   | [] => node
@@ -235,4 +401,7 @@ let rec resizeSplit = (~path, ~delta, node) => {
   };
 };
 
+/**
+ * resetWeight
+ */
 let resetWeights = tree => AbstractTree.map(withSize(1.), tree);
