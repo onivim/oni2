@@ -15,3 +15,10 @@ module Effects: {
       Isolinear.Effect.t(_);
   };
 };
+
+module Sub: {
+  let buffer: (
+    ~buffer: Oni_Core.Buffer.t,
+    ~client: Exthost.Client.t,
+  ) => Isolinear.Sub.t(_);
+};
