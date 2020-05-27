@@ -148,25 +148,12 @@ let rec fromLayout = (x, y, width, height, node) => {
         |> snd
         |> List.rev;
 
-      {
-        meta: {
-          x,
-          y,
-          width,
-          height,
-        },
-        kind: `Split((direction, sizedChildren)),
-      };
+      AbstractTree.DSL.(
+        split(~meta={x, y, width, height}, direction, sizedChildren)
+      );
 
-    | `Window(id) => {
-        meta: {
-          x,
-          y,
-          width,
-          height,
-        },
-        kind: `Window(id),
-      }
+    | `Window(id) =>
+      AbstractTree.DSL.(window(~meta={x, y, width, height}, id))
     }
   );
 };
