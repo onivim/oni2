@@ -17,8 +17,7 @@ module Effects: {
 };
 
 module Sub: {
-  let buffer: (
-    ~buffer: Oni_Core.Buffer.t,
-    ~client: Exthost.Client.t,
-  ) => Isolinear.Sub.t(_);
+  let buffer:
+    (~buffer: Oni_Core.Buffer.t, ~client: Exthost.Client.t) =>
+    Isolinear.Sub.t(unit);
 };

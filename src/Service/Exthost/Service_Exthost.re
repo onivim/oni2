@@ -37,20 +37,32 @@ module Effects = {
 
 module MutableState = {
   let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
-
 };
 
 module Internal = {
-  let bufferMetadataToModelAddedDelta =
-      (~version, ~filePath, ~fileType: option(string)) =>
+  let bufferMetadataToModelAddedDelta = buffer => {
+    let lines = Buffer.getLines(buffer) |> Array.to_list;
+    let version = Buffer.getVersion(buffer);
+    let filePath = Buffer.getFilePath(buffer);
+    let fileType = Buffer.getFileType(buffer);
+
+    // The extension host does not like a completely empty buffer,
+    // so at least send a single line with an empty string.
+    let lines =
+      if (lines == []) {
+        [""];
+      } else {
+        lines;
+      };
+
     switch (filePath, fileType) {
     | (Some(fp), Some(ft)) =>
-      Log.trace("Creating model for filetype: " ++ ft);
+      Log.tracef(m => m("Creating model for filetype: %s", ft));
 
       Some(
         Exthost.ModelAddedDelta.create(
           ~versionId=version,
-          ~lines=[""],
+          ~lines,
           ~modeId=ft,
           ~isDirty=true,
           Uri.fromPath(fp),
@@ -58,9 +70,10 @@ module Internal = {
       );
     | _ => None
     };
+  };
 
-  let activateFileType = (~client,fileType: option(string)) =>
-    fileType
+  let activateFileType = (~client, maybeFileType: option(string)) =>
+    maybeFileType
     |> Option.iter(ft =>
          if (!Hashtbl.mem(MutableState.activatedFileTypes, ft)) {
            // If no entry, we haven't activated yet
@@ -74,8 +87,73 @@ module Internal = {
 };
 
 module Sub = {
-  let buffer = (
-    ~buffer,
-    ~client,
-  ) => Isolinear.Sub.none;
-}
+  type bufferParams = {
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+  };
+
+  module BufferSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = unit;
+      type nonrec params = bufferParams;
+      type state = {didAdd: bool};
+
+      let name = "ExtHostBufferSubscription";
+      let id = params => {
+        params.buffer |> Oni_Core.Buffer.getId |> string_of_int;
+      };
+
+      let init = (~params, ~dispatch as _) => {
+        let bufferId = Oni_Core.Buffer.getId(params.buffer);
+
+        Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
+
+        params.buffer
+        |> Oni_Core.Buffer.getFileType
+        |> Internal.activateFileType(~client=params.client);
+
+        let maybeMetadata =
+          Internal.bufferMetadataToModelAddedDelta(params.buffer);
+
+        switch (maybeMetadata) {
+        | Some(metadata) =>
+          let addedDelta =
+            Exthost.DocumentsAndEditorsDelta.create(
+              ~removedDocuments=[],
+              ~addedDocuments=[metadata],
+            );
+
+          Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+            ~delta=addedDelta,
+            params.client,
+          );
+          {didAdd: true};
+        | None => {didAdd: false}
+        };
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => {
+        state;
+      };
+
+      let dispose = (~params, ~state) =>
+        if (state.didAdd) {
+          params.buffer
+          |> Oni_Core.Buffer.getFilePath
+          |> Option.iter(filePath => {
+               let removedDelta =
+                 Exthost.DocumentsAndEditorsDelta.create(
+                   ~removedDocuments=[Uri.fromPath(filePath)],
+                   ~addedDocuments=[],
+                 );
+               Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+                 ~delta=removedDelta,
+                 params.client,
+               );
+             });
+        };
+    });
+
+  let buffer = (~buffer, ~client) =>
+    BufferSubscription.create({buffer, client});
+};

@@ -194,14 +194,24 @@ let start =
 
   let subscriptions = (state: Model.State.t) => {
     let config = Feature_Configuration.resolver(state.config);
+    let visibleBuffersAndRanges =
+      state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
+
     let visibleRanges =
-      state
-      |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges
+      visibleBuffersAndRanges
       |> List.map(((bufferId, ranges)) => {
            Model.Selectors.getBufferById(state, bufferId)
            |> Option.map(buffer => {(buffer, ranges)})
          })
       |> Core.Utility.OptionEx.values;
+
+    let visibleBuffers =
+      visibleBuffersAndRanges
+      |> List.map(fst)
+      |> Base.List.dedup_and_sort(~compare)
+      |> List.map(bufferId => Model.Selectors.getBufferById(state, bufferId))
+      |> Core.Utility.OptionEx.values;
+
     let syntaxSubscription =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
@@ -271,11 +281,20 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
+    let extHostSubscriptions =
+      visibleBuffers
+      |> List.map(buffer => {
+           Service_Exthost.Sub.buffer(~buffer, ~client=extHostClient)
+           |> Isolinear.Sub.map(() => Model.Actions.Noop)
+         })
+      |> Isolinear.Sub.batch;
+
     [
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
+      extHostSubscriptions,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
     ]
     |> Isolinear.Sub.batch;
