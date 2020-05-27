@@ -405,7 +405,8 @@
     "@opam/fs": "*",
     "@opam/fp": "*",
     "@opam/dir": "*",
-    "@opam/markup": "^0.8.2"
+    "@opam/markup": "^0.8.2",
+    "@opam/ppx_inline_test": "v0.13.1"
   },
   "resolutions": {
     "@esy-ocaml/libffi": "onivim/libffi#590b041",

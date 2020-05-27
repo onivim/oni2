@@ -8,7 +8,9 @@
     "libvim": "esy '@test' x OniUnitTestRunnerLibvim",
     "model": "esy '@test' x OniUnitTestRunnerModel",
     "exthost": "esy '@test' x OniUnitTestRunnerExtHost",
-    "watch": "esy '@test' dune build --watch --root . -j4"
+    "watch": "esy '@test' dune build --watch --root . -j4",
+    "inline": "esy b dune runtest",
+    "watch:inline": "esy b dune runtest --watch"
   },
   "override": {
       "build": ["dune build -p libvim,Oni2,OniUnitTestRunner -j4"],
