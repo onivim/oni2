@@ -350,12 +350,22 @@ let start = maybeKeyBindingsFilePath => {
         condition: "!insertMode" |> WhenExpr.parse,
       },
       {
+        key: "<C-W><LEFT>",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: "!insertMode" |> WhenExpr.parse,
+      },
+      {
         key: "<C-W>L",
         command: Feature_Layout.Commands.moveRight.id,
         condition: "!insertMode" |> WhenExpr.parse,
       },
       {
         key: "<C-W><C-L>",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: "!insertMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<C-W><RIGHT>",
         command: Feature_Layout.Commands.moveRight.id,
         condition: "!insertMode" |> WhenExpr.parse,
       },
@@ -370,12 +380,22 @@ let start = maybeKeyBindingsFilePath => {
         condition: "!insertMode" |> WhenExpr.parse,
       },
       {
+        key: "<C-W><UP>",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: "!insertMode" |> WhenExpr.parse,
+      },
+      {
         key: "<C-W>J",
         command: Feature_Layout.Commands.moveDown.id,
         condition: "!insertMode" |> WhenExpr.parse,
       },
       {
         key: "<C-W><C-J>",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: "!insertMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<C-W><DOWN>",
         command: Feature_Layout.Commands.moveDown.id,
         condition: "!insertMode" |> WhenExpr.parse,
       },
