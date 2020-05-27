@@ -143,6 +143,29 @@ let update =
       };
     (state, effect);
 
+  | Layout(msg) =>
+    open Feature_Layout;
+
+    let focus =
+      EditorGroups.getActiveEditorGroup(state.editorGroups)
+      |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+    let (model, maybeOutmsg) = update(~focus, state.layout, msg);
+    let state = {...state, layout: model};
+
+    let state =
+      switch (maybeOutmsg) {
+      | Focus(editorGroupId) => {
+          ...state,
+          editorGroups:
+            EditorGroups.setActiveEditorGroup(
+              editorGroupId,
+              state.editorGroups,
+            ),
+        }
+      | Nothing => state
+      };
+    (state, Effect.none);
+
   | Terminal(msg) =>
     let (model, eff) =
       Feature_Terminal.update(
