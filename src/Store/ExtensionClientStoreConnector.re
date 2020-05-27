@@ -68,6 +68,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
           Exthost.DocumentsAndEditorsDelta.create(
             ~removedDocuments=[],
             ~addedDocuments=[v],
+            (),
           );
         Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
           ~delta=addedDelta,

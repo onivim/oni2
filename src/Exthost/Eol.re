@@ -1,3 +1,5 @@
+open Oni_Core;
+
 [@deriving (show({with_path: false}), yojson({strict: false}))]
 type t =
   | [@name "\n"] LF
@@ -10,3 +12,5 @@ let toString = (v: t) =>
   | CRLF => "\r\n"
   | LF => "\n"
   };
+
+let encode = eol => eol |> toString |> Json.Encode.string;
