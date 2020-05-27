@@ -59,6 +59,18 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | Sneak(msg) =>
+    let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
+
+    let state = {...state, sneak: model};
+
+    let eff =
+      switch ((maybeOutmsg: Feature_Sneak.outmsg)) {
+      | Nothing => Effect.none
+      | Effect(eff) => eff |> Effect.map(msg => Actions.Sneak(msg))
+      };
+    (state, eff);
+
   | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(
@@ -130,6 +142,29 @@ let update =
         )
       };
     (state, effect);
+
+  | Layout(msg) =>
+    open Feature_Layout;
+
+    let focus =
+      EditorGroups.getActiveEditorGroup(state.editorGroups)
+      |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+    let (model, maybeOutmsg) = update(~focus, state.layout, msg);
+    let state = {...state, layout: model};
+
+    let state =
+      switch (maybeOutmsg) {
+      | Focus(editorGroupId) => {
+          ...state,
+          editorGroups:
+            EditorGroups.setActiveEditorGroup(
+              editorGroupId,
+              state.editorGroups,
+            ),
+        }
+      | Nothing => state
+      };
+    (state, Effect.none);
 
   | Terminal(msg) =>
     let (model, eff) =
@@ -235,7 +270,14 @@ let update =
 
     | None => (state, Effect.none)
     }
-
+  | Editor(msg) =>
+    let eff =
+      Feature_Editor.update(
+        msg,
+        path => OpenFileByPath(path, None, None),
+        Noop,
+      );
+    (state, eff);
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);
     ({...state, changelog: model}, eff);

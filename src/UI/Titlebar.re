@@ -147,9 +147,8 @@ module Windows = {
           onMouseUp
           onMouseEnter={_ => setHovered(_ => true)}
           onMouseLeave={_ => setHovered(_ => false)}>
-          <FontIcon
+          <Codicon
             icon=Codicon.chromeClose
-            fontFamily=Codicon.fontFamily
             color={Colors.activeForeground.from(theme)}
             fontSize=14.
           />
@@ -183,15 +182,13 @@ module Windows = {
           onMouseEnter={_ => setHovered(_ => true)}
           onMouseLeave={_ => setHovered(_ => false)}>
           {windowDisplayMode == Model.State.Maximized
-             ? <FontIcon
+             ? <Codicon
                  icon=Codicon.chromeRestore
-                 fontFamily=Codicon.fontFamily
                  color={Colors.activeForeground.from(theme)}
                  fontSize=14.
                />
-             : <FontIcon
+             : <Codicon
                  icon=Codicon.chromeMaximize
-                 fontFamily=Codicon.fontFamily
                  color={Colors.activeForeground.from(theme)}
                  fontSize=14.
                />}
@@ -217,9 +214,8 @@ module Windows = {
           onMouseUp
           onMouseEnter={_ => setHovered(_ => true)}
           onMouseLeave={_ => setHovered(_ => false)}>
-          <FontIcon
+          <Codicon
             icon=Codicon.chromeMinimize
-            fontFamily=Codicon.fontFamily
             color={Colors.activeForeground.from(theme)}
             fontSize=14.
           />

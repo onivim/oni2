@@ -61,11 +61,11 @@ type t = {
   notifications: Feature_Notification.model,
   references: References.t,
   scm: Feature_SCM.model,
-  sneak: Sneak.t,
+  sneak: Feature_Sneak.model,
   statusBar: StatusBarModel.t,
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
-  layout: Feature_Layout.t(int),
+  layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
   // [windowTitle] is the title of the window
   windowTitle: string,
@@ -79,16 +79,6 @@ type t = {
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
   textContentProviders: list((int, string)),
-};
-
-let initialLayout = (editorGroup: EditorGroup.t) => {
-  Feature_Layout.initial
-  |> Feature_Layout.addWindow(
-       ~target=None,
-       ~position=`After,
-       `Vertical,
-       editorGroup.editorGroupId,
-     );
 };
 
 let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
@@ -140,10 +130,10 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     notifications: Feature_Notification.initial,
     references: References.initial,
     scm: Feature_SCM.initial,
-    sneak: Sneak.initial,
+    sneak: Feature_Sneak.initial,
     statusBar: StatusBarModel.create(),
     syntaxHighlights: Feature_Syntax.empty,
-    layout: initialLayout(initialEditorGroup),
+    layout: Feature_Layout.initial(initialEditorGroup.editorGroupId),
     windowTitle: "",
     windowIsFocused: true,
     windowDisplayMode: Windowed,

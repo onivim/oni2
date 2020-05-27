@@ -114,24 +114,6 @@ module Oni = {
       );
   };
 
-  module Sneak = {
-    let start =
-      register(
-        ~category="Sneak",
-        ~title="Enter sneak mode (keyboard-accessible UI)",
-        "sneak.start",
-        Command("sneak.start"),
-      );
-
-    let stop =
-      register(
-        ~category="Sneak",
-        ~title="Exit sneak mode",
-        "sneak.stop",
-        Command("sneak.stop"),
-      );
-  };
-
   module System = {
     let addToPath =
       register(
@@ -152,24 +134,6 @@ module Oni = {
       );
   };
 
-  module View = {
-    let rotateForward =
-      register(
-        ~category="View",
-        ~title="Rotate Windows (Forwards)",
-        "view.rotateForward",
-        Command("view.rotateForward"),
-      );
-
-    let rotateBackward =
-      register(
-        ~category="View",
-        ~title="Rotate Windows (Backwards)",
-        "view.rotateBackward",
-        Command("view.rotateBackward"),
-      );
-  };
-
   module Vim = {
     let esc = register("vim.esc", Command("vim.esc"));
     let tutor =
@@ -178,38 +142,6 @@ module Oni = {
         ~title="Open Vim Tutor",
         "vim.tutor",
         Command("vim.tutor"),
-      );
-
-    let decreaseHorizontalWindowSize =
-      register(
-        ~category="View",
-        ~title="Decrease Horizontal Window Size",
-        "vim.decreaseHorizontalWindowSize",
-        Command("vim.decreaseHorizontalWindowSize"),
-      );
-
-    let increaseHorizontalWindowSize =
-      register(
-        ~category="View",
-        ~title="Increase Horizontal Window Size",
-        "vim.increaseHorizontalWindowSize",
-        Command("vim.increaseHorizontalWindowSize"),
-      );
-
-    let decreaseVerticalWindowSize =
-      register(
-        ~category="View",
-        ~title="Decrease Vertical Window Size",
-        "vim.decreaseVerticalWindowSize",
-        Command("vim.decreaseVerticalWindowSize"),
-      );
-
-    let increaseVerticalWindowSize =
-      register(
-        ~category="View",
-        ~title="Increase Vertical Window Size",
-        "vim.increaseVerticalWindowSize",
-        Command("vim.increaseVerticalWindowSize"),
       );
   };
 
@@ -399,30 +331,6 @@ module Workbench = {
         ~title="Reset Zoom",
         "workbench.action.zoomReset",
         Command("workbench.action.zoomReset"),
-      );
-
-    let decreaseViewSize =
-      register(
-        ~category="View",
-        ~title="Decrease Current Window/View Size",
-        "workbench.action.decreaseViewSize",
-        Command("workbench.action.decreaseViewSize"),
-      );
-
-    let increaseViewSize =
-      register(
-        ~category="View",
-        ~title="Increase Current Window/View Size",
-        "workbench.action.increaseViewSize",
-        Command("workbench.action.increaseViewSize"),
-      );
-
-    let evenEditorWidths =
-      register(
-        ~category="View",
-        ~title="Reset Window Sizes",
-        "workbench.action.evenEditorWidths",
-        Command("workbench.action.evenEditorWidths"),
       );
 
     module Files = {

@@ -48,22 +48,6 @@ let start = () => {
          });
     });
 
-  let windowMoveEffect = (state: State.t, direction, _) => {
-    Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
-      let maybeEditorGroupId =
-        EditorGroups.getActiveEditorGroup(state.editorGroups)
-        |> Option.map((group: EditorGroup.t) =>
-             Feature_Layout.move(direction, group.editorGroupId, state.layout)
-           );
-
-      switch (maybeEditorGroupId) {
-      | Some(editorGroupId) =>
-        dispatch(Actions.EditorGroupSelected(editorGroupId))
-      | None => ()
-      };
-    });
-  };
-
   let togglePathEffect = name =>
     Isolinear.Effect.create(
       ~name,
@@ -115,10 +99,6 @@ let start = () => {
     ("view.closeEditor", state => closeEditorEffect(state)),
     ("view.splitVertical", state => splitEditorEffect(state, `Vertical)),
     ("view.splitHorizontal", state => splitEditorEffect(state, `Horizontal)),
-    ("window.moveLeft", state => windowMoveEffect(state, Left)),
-    ("window.moveRight", state => windowMoveEffect(state, Right)),
-    ("window.moveUp", state => windowMoveEffect(state, Up)),
-    ("window.moveDown", state => windowMoveEffect(state, Down)),
     (
       "workbench.action.zoomIn",
       state => zoomEffect(state, zoom => zoom +. Constants.zoomStep),

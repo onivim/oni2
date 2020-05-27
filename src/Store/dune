@@ -1,7 +1,7 @@
 (library
     (name Oni_Store)
     (public_name Oni2.store)
-    (libraries 
+    (libraries
         Rench
         Revery
         yojson

@@ -221,12 +221,12 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<C-G>",
-        command: Commands.Oni.Sneak.start.id,
+        command: Feature_Sneak.Commands.start.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<ESC>",
-        command: Commands.Oni.Sneak.stop.id,
+        command: Feature_Sneak.Commands.stop.id,
         condition: "sneakMode" |> WhenExpr.parse,
       },
       {
@@ -337,6 +337,62 @@ let start = maybeKeyBindingsFilePath => {
         command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
+      },
+      //LAYOUT
+      {
+        key: "<C-W>LEFT",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>RIGHT",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>UP",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>DOWN",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>R",
+        command: Feature_Layout.Commands.rotateForward.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W><S-R>", // TODO: Does not work, blocked by bug in editor-input
+        command: Feature_Layout.Commands.rotateBackward.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>-",
+        command: Feature_Layout.Commands.decreaseVerticalSize.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>+", // TODO: Does not work, blocked by bug in editor-input
+        command: Feature_Layout.Commands.increaseVerticalSize.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W><S-,>", // TODO: Does not work and should be `<`, but blocked by bugs in editor-input,
+        command: Feature_Layout.Commands.increaseHorizontalSize.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W><S-.>", // TODO: Does not work and should be `>`, but blocked by bugs in editor-input
+        command: Feature_Layout.Commands.decreaseHorizontalSize.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-W>=",
+        command: Feature_Layout.Commands.resetSizes.id,
+        condition: WhenExpr.Value(True),
       },
     ];
 

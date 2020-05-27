@@ -122,6 +122,7 @@ type t =
       message: string,
       extensionId: option(string),
     })
+  | Editor(Feature_Editor.msg)
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
@@ -171,7 +172,7 @@ type t =
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
-  | Sneak(Sneak.action)
+  | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | PaneTabClicked(Pane.pane)
@@ -194,10 +195,7 @@ type t =
   | WindowMaximizeClicked
   | WindowRestoreClicked
   | WindowCloseBlocked
-  | WindowHandleDragged({
-      path: list(int),
-      delta: float,
-    })
+  | Layout(Feature_Layout.msg)
   | WriteFailure
   | NewTextContentProvider({
       handle: int,

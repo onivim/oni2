@@ -120,6 +120,16 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
     | _ => true
     };
 
+  let icon =
+    switch (Revery.Environment.os) {
+    | Mac =>
+      switch (Sys.getenv_opt("ONI2_BUNDLED")) {
+      | Some(_) => None
+      | None => Some("logo.png")
+      }
+    | _ => Some("logo.png")
+    };
+
   let window =
     App.createWindow(
       ~createOptions=
@@ -127,7 +137,7 @@ let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
           ~forceScaleFactor,
           ~maximized,
           ~vsync=Vsync.Immediate,
-          ~icon=Some("logo.png"),
+          ~icon,
           ~titlebarStyle=WindowStyles.Transparent,
           ~x,
           ~y,
