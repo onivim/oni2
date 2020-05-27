@@ -43,8 +43,9 @@ module Internal = {
   let bufferMetadataToModelAddedDelta = buffer => {
     let lines = Buffer.getLines(buffer) |> Array.to_list;
     let version = Buffer.getVersion(buffer);
-    let filePath = Buffer.getFilePath(buffer);
-    let fileType = Buffer.getFileType(buffer);
+    let maybeFilePath = Buffer.getFilePath(buffer);
+    let modeId =
+      Buffer.getFileType(buffer) |> Option.value(~default="plaintext");
 
     // The extension host does not like a completely empty buffer,
     // so at least send a single line with an empty string.
@@ -55,21 +56,17 @@ module Internal = {
         lines;
       };
 
-    switch (filePath, fileType) {
-    | (Some(fp), Some(ft)) =>
-      Log.tracef(m => m("Creating model for filetype: %s", ft));
-
-      Some(
-        Exthost.ModelAddedDelta.create(
-          ~versionId=version,
-          ~lines,
-          ~modeId=ft,
-          ~isDirty=true,
-          Uri.fromPath(fp),
-        ),
-      );
-    | _ => None
-    };
+    maybeFilePath
+    |> Option.map(filePath => {
+         Log.tracef(m => m("Creating model for filetype: %s", modeId));
+         Exthost.ModelAddedDelta.create(
+           ~versionId=version,
+           ~lines,
+           ~modeId,
+           ~isDirty=true,
+           Uri.fromPath(filePath),
+         );
+       });
   };
 
   let activateFileType = (~client, maybeFileType: option(string)) =>
@@ -98,7 +95,7 @@ module Sub = {
       type nonrec params = bufferParams;
       type state = {didAdd: bool};
 
-      let name = "ExtHostBufferSubscription";
+      let name = "Service_Exthost.BufferSubscription";
       let id = params => {
         params.buffer |> Oni_Core.Buffer.getId |> string_of_int;
       };
