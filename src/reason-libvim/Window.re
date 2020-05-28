@@ -25,4 +25,3 @@ let setTopLeft = (top, left) => {
 let onLeftColumnChanged = f => Event.add(f, Listeners.leftColumnChanged);
 let onTopLineChanged = f => Event.add(f, Listeners.topLineChanged);
 let onSplit = f => Event.add2(f, Listeners.windowSplit);
-let onMovement = f => Event.add2(f, Listeners.windowMovement);
