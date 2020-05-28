@@ -134,6 +134,7 @@ module Diagnostics = {
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
+      prerr_endline ("GOT HERE: ");
       diagnosticsJson
       |> List.map(decodeEntry)
       |> Base.Result.all
@@ -141,6 +142,16 @@ module Diagnostics = {
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
     };
+  };
+  let%test "null list (regression test for #1839)" = {
+    let json = {|
+      ["typescript",[[{"$mid":1,"fsPath":"/Users/onivim/bootstrap.js","external":"file:///Users/onivim/scripts/bootstrap.js","path":"/Users/onivim/bootstrap.js","scheme":"file"},null]]]
+    |} |> Yojson.Safe.from_string;
+
+    let parsedResult = handle("$changeMany", json);
+    parsedResult == Ok(ChangeMany({ owner: "typescript", entries: [
+      (Uri.fromPath("/Users/onivim/bootstrap.js"), [])
+    ]}))
   };
 };
 

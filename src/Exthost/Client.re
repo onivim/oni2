@@ -107,6 +107,8 @@ let start =
         Log.tracef(m =>
           m("RequestJSONArgs: %d %d %s", requestId, rpcId, method)
         );
+        prerr_endline ("before args");
+        prerr_endline ("ARGS: " ++ Yojson.Safe.to_string(args));
         let req = Handlers.handle(rpcId, method, args);
         switch (req) {
         | Ok(msg) =>
