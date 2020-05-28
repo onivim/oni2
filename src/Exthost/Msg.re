@@ -1,6 +1,5 @@
 module ExtCommand = Command;
 open Oni_Core;
-open Oni_Core.Utility;
 
 module Clipboard = {
   [@deriving show]
@@ -107,21 +106,23 @@ module Diagnostics = {
   [@deriving show]
   type entry = (Uri.t, [@opaque] list(Diagnostic.t));
 
-  let decodeEntry = json =>
-    switch (json) {
-    | `List([uriJson, diagnosticListJson]) =>
-      uriJson
-      |> Uri.of_yojson
-      |> ResultEx.flatMap(uri => {
-           diagnosticListJson
-           |> Yojson.Safe.Util.to_list
-           |> List.map(Json.Decode.decode_value(Diagnostic.decode))
-           |> Base.Result.all
-           |> Result.map(diagList => (uri, diagList))
-           |> Result.map_error(Json.Decode.string_of_error)
-         })
-    | _ => Error("Expected 2-element tuple")
-    };
+  module Decode = {
+    open Json.Decode;
+
+    let emptyDiagnostics = null |> map(_ => []);
+    let diagnostics =
+      one_of([
+        ("list", list(Diagnostic.decode)),
+        ("empty", emptyDiagnostics),
+      ]);
+
+    let entry =
+      Pipeline.(
+        decode((uri, diagnostics) => (uri, diagnostics))
+        |> custom(index(0, Uri.decode))
+        |> custom(index(1, diagnostics))
+      );
+  };
 
   [@deriving show]
   type msg =
@@ -133,25 +134,31 @@ module Diagnostics = {
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
-    | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
-      prerr_endline ("GOT HERE: ");
+    | ("$changeMany", `List([`String(owner), diagnosticsJson])) =>
       diagnosticsJson
-      |> List.map(decodeEntry)
-      |> Base.Result.all
+      |> Json.Decode.decode_value(Json.Decode.list(Decode.entry))
       |> Result.map(entries => ChangeMany({owner, entries}))
+      |> Result.map_error(Json.Decode.string_of_error)
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
     };
   };
+
   let%test "null list (regression test for #1839)" = {
-    let json = {|
+    let json =
+      {|
       ["typescript",[[{"$mid":1,"fsPath":"/Users/onivim/bootstrap.js","external":"file:///Users/onivim/scripts/bootstrap.js","path":"/Users/onivim/bootstrap.js","scheme":"file"},null]]]
-    |} |> Yojson.Safe.from_string;
+    |}
+      |> Yojson.Safe.from_string;
 
     let parsedResult = handle("$changeMany", json);
-    parsedResult == Ok(ChangeMany({ owner: "typescript", entries: [
-      (Uri.fromPath("/Users/onivim/bootstrap.js"), [])
-    ]}))
+    parsedResult
+    == Ok(
+         ChangeMany({
+           owner: "typescript",
+           entries: [(Uri.fromPath("/Users/onivim/bootstrap.js"), [])],
+         }),
+       );
   };
 };
 
