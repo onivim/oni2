@@ -18,6 +18,7 @@ module Eol = Eol;
 module Files = Files;
 module Label = Label;
 module Location = Location;
+module Middleware = Middleware;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;
 module ModelContentChange = ModelContentChange;

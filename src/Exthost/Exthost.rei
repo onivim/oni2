@@ -864,6 +864,8 @@ module NamedPipe: {
   let toString: t => string;
 };
 
+module Middleware = Middleware;
+
 module Reply: {
   type t;
 
