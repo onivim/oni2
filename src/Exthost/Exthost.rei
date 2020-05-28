@@ -864,8 +864,6 @@ module NamedPipe: {
   let toString: t => string;
 };
 
-module Middleware = Middleware;
-
 module Reply: {
   type t;
 
@@ -876,6 +874,29 @@ module Reply: {
   let okEmpty: t;
 
   let okJson: Yojson.Safe.t => t;
+};
+
+module Middleware: {
+  type t = (Msg.t => Lwt.t(Reply.t), Msg.t) => Lwt.t(Reply.t);
+
+  let filesystem:
+    (
+      ~stat: Uri.t => Lwt.t(Files.StatResult.t),
+      ~readdir: Uri.t => Lwt.t(list((string, Files.FileType.t))),
+      ~readFile: Uri.t => Lwt.t(Bytes.t),
+      ~writeFile: (Uri.t, Bytes.t) => Lwt.t(unit),
+      ~rename: (
+                 ~source: Uri.t,
+                 ~target: Uri.t,
+                 Files.FileOverwriteOptions.t
+               ) =>
+               Lwt.t(unit),
+      ~copy: (~source: Uri.t, ~target: Uri.t, Files.FileOverwriteOptions.t) =>
+             Lwt.t(unit),
+      ~mkdir: Uri.t => Lwt.t(unit),
+      ~delete: (Uri.t, Files.FileDeleteOptions.t) => Lwt.t(unit)
+    ) =>
+    t;
 };
 
 module Client: {

@@ -140,9 +140,9 @@ let handlers =
     mainNotImplemented("MainThreadUrls"),
     mainNotImplemented("MainThreadWorkspace"),
     main(
-    ~handler=Msg.FileSystem.handle,
-    ~mapper=msg => Msg.FileSystem(msg),
-    "MainThreadFileSystem",
+      ~handler=Msg.FileSystem.handle,
+      ~mapper=msg => Msg.FileSystem(msg),
+      "MainThreadFileSystem",
     ),
     main(
       ~handler=Msg.ExtensionService.handle,

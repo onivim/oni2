@@ -3,13 +3,12 @@ open Oni_Core;
 open Oni_Core.Utility;
 
 module Internal = {
-  
   let decode_value = (decoder, json) => {
-      json
-      |> Json.Decode.decode_value(decoder)
-     |> Result.map_error(Json.Decode.string_of_error)
+    json
+    |> Json.Decode.decode_value(decoder)
+    |> Result.map_error(Json.Decode.string_of_error);
   };
-}
+};
 
 module Clipboard = {
   [@deriving show]
@@ -293,37 +292,41 @@ module FileSystem = {
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
-    open Base.Result.Let_syntax;
-    switch (method, args) {
-    | ("$stat", `List([uriJson])) =>
-      let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
-      Ok(Stat({uri: uri}));
-    | ("$readdir", `List([uriJson])) =>
-      let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
-      Ok(ReadDir({uri: uri}));
-    | ("$readFile", `List([uriJson])) =>
-      failwith ("TODO - buffer format");
-    | ("$writeFile", `List([uriJson, bufferJson])) =>
-      failwith ("TODO - buffer format");
-    | ("$rename", `List([sourceJson, targetJson, optsJson])) =>
-      let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
-      let%bind target = targetJson |> Internal.decode_value(Uri.decode);
-      let%bind opts = optsJson |> Internal.decode_value(FileOverwriteOptions.decode);
-      Ok(Rename({ source: source, target: target, opts: opts}));
-    | ("$copy", `List([sourceJson, targetJson, optsJson])) =>
-      let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
-      let%bind target = targetJson |> Internal.decode_value(Uri.decode);
-      let%bind opts = optsJson |> Internal.decode_value(FileOverwriteOptions.decode);
-      Ok(Copy({ source: source, target: target, opts: opts}));
-    | ("$mkdir", `List([uriJson])) =>
-      let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
-      Ok(Mkdir({uri: uri}));
-    | ("$delete", `List([uriJson, deleteOptsJson])) =>
-      let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
-      let%bind opts = deleteOptsJson |> Internal.decode_value(FileDeleteOptions.decode);
-      Ok(Delete({uri: uri, opts: opts}));
-    | _ => Error("Unhandled FileSystem method: " ++ method);
-    }
+    Base.Result.Let_syntax.(
+      switch (method, args) {
+      | ("$stat", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        Ok(Stat({uri: uri}));
+      | ("$readdir", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        Ok(ReadDir({uri: uri}));
+      | ("$readFile", `List([uriJson])) =>
+        failwith("TODO - buffer format: readFile")
+      | ("$writeFile", `List([uriJson, bufferJson])) =>
+        failwith("TODO - buffer format: writeFile")
+      | ("$rename", `List([sourceJson, targetJson, optsJson])) =>
+        let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
+        let%bind target = targetJson |> Internal.decode_value(Uri.decode);
+        let%bind opts =
+          optsJson |> Internal.decode_value(FileOverwriteOptions.decode);
+        Ok(Rename({source, target, opts}));
+      | ("$copy", `List([sourceJson, targetJson, optsJson])) =>
+        let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
+        let%bind target = targetJson |> Internal.decode_value(Uri.decode);
+        let%bind opts =
+          optsJson |> Internal.decode_value(FileOverwriteOptions.decode);
+        Ok(Copy({source, target, opts}));
+      | ("$mkdir", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        Ok(Mkdir({uri: uri}));
+      | ("$delete", `List([uriJson, deleteOptsJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        let%bind opts =
+          deleteOptsJson |> Internal.decode_value(FileDeleteOptions.decode);
+        Ok(Delete({uri, opts}));
+      | _ => Error("Unhandled FileSystem method: " ++ method)
+      }
+    );
   };
 };
 

@@ -253,104 +253,197 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     | Some(client) => f(client)
     };
 
-  let handler = msg => {
-    switch (msg) {
-    | SCM(msg) =>
-      Feature_SCM.handleExtensionMessage(
-        ~dispatch=msg => dispatch(Actions.SCM(msg)),
-        msg,
+  let fileTypeFromStat: Luv.File.Stat.t => Exthost.Files.FileType.t =
+    (statResult: Luv.File.Stat.t) => {
+      Luv.File.(
+        Luv.File.Stat.(
+          Exthost.Files.FileType.(
+            if (Mode.test([`IFMT], statResult.mode)) {
+              File;
+            } else if (Mode.test([`IFDIR], statResult.mode)) {
+              Directory;
+            } else if (Mode.test([`IFLNK], statResult.mode)) {
+              SymbolicLink;
+            } else {
+              Unknown;
+            }
+          )
+        )
       );
-      Lwt.return(Reply.okEmpty);
-
-    | LanguageFeatures(
-        RegisterDocumentSymbolProvider({handle, selector, label}),
-      ) =>
-      withClient(onRegisterDocumentSymbolProvider(handle, selector, label));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
-      withClient(onRegisterDefinitionProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-
-    | LanguageFeatures(RegisterDocumentHighlightProvider({handle, selector})) =>
-      withClient(onRegisterDocumentHighlightProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
-      withClient(onRegisterReferencesProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(
-        RegisterSuggestSupport({
-          handle,
-          selector,
-          _,
-          // TODO: Handle additional configuration from suggest registration!
-        }),
-      ) =>
-      withClient(onRegisterSuggestProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-
-    | Diagnostics(Clear({owner})) =>
-      dispatch(Actions.DiagnosticsClear(owner));
-      Lwt.return(Reply.okEmpty);
-    | Diagnostics(ChangeMany({owner, entries})) =>
-      onDiagnosticsChangeMany(owner, entries);
-      Lwt.return(Reply.okEmpty);
-
-    | DocumentContentProvider(RegisterTextContentProvider({handle, scheme})) =>
-      dispatch(NewTextContentProvider({handle, scheme}));
-      Lwt.return(Reply.okEmpty);
-
-    | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
-      dispatch(LostTextContentProvider({handle: handle}));
-      Lwt.return(Reply.okEmpty);
-
-    | Decorations(RegisterDecorationProvider({handle, label})) =>
-      dispatch(NewDecorationProvider({handle, label}));
-      Lwt.return(Reply.okEmpty);
-    | Decorations(UnregisterDecorationProvider({handle})) =>
-      dispatch(LostDecorationProvider({handle: handle}));
-      Lwt.return(Reply.okEmpty);
-    | Decorations(DecorationsDidChange({handle, uris})) =>
-      dispatch(DecorationsChanged({handle, uris}));
-      Lwt.return(Reply.okEmpty);
-
-    | ExtensionService(ExtensionActivationError({extensionId, errorMessage})) =>
-      Log.errorf(m =>
-        m("Extension '%s' failed to activate: %s", extensionId, errorMessage)
-      );
-      Lwt.return(Reply.okEmpty);
-    | ExtensionService(DidActivateExtension({extensionId, _})) =>
-      dispatch(
-        Actions.Extension(Oni_Model.Extensions.Activated(extensionId)),
-      );
-      Lwt.return(Reply.okEmpty);
-
-    | MessageService(ShowMessage({severity, message, extensionId})) =>
-      dispatch(ExtMessageReceived({severity, message, extensionId}));
-      Lwt.return(Reply.okEmpty);
-
-    | StatusBar(SetEntry({id, label, alignment, priority, command, _})) =>
-      let command =
-        command |> Option.map(({id, _}: Exthost.Command.t) => id);
-      dispatch(
-        Actions.StatusBarAddItem(
-          StatusBarModel.Item.create(
-            ~command?,
-            ~id,
-            ~label,
-            ~alignment,
-            ~priority,
-            (),
-          ),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
-
-    | TerminalService(msg) =>
-      Service_Terminal.handleExtensionMessage(msg);
-      Lwt.return(Reply.okEmpty);
-    | _ => Lwt.return(Reply.okEmpty)
     };
-  };
+
+  let mapLuvStat: Luv.File.Stat.t => Exthost.Files.StatResult.t =
+    statResult => {
+      Exthost.Files.(
+        (
+          {
+            fileType: fileTypeFromStat(statResult),
+            mtime: statResult.mtim.sec |> Signed.Long.to_int,
+            ctime: statResult.ctim.sec |> Signed.Long.to_int,
+            size: statResult.size |> Unsigned.UInt64.to_int,
+          }: StatResult.t
+        )
+      );
+    };
+
+  let mapLuvDirents = _dirents => [];
+
+  let filesystemHandler =
+    Exthost.Middleware.filesystem(
+      ~stat=
+        uri =>
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Imperative.stat
+          |> Lwt.map(mapLuvStat),
+      ~readdir=
+        uri =>
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Imperative.readdir
+          |> Lwt.map(mapLuvDirents),
+      ~readFile=
+        uri => uri |> Uri.toFileSystemPath |> Service_OS.Imperative.readFile,
+      ~writeFile=
+        (uri, bytes) => {
+          Service_OS.Imperative.writeFile(Uri.toFileSystemPath(uri), bytes)
+        },
+      ~rename=
+        (~source, ~target, opts) => {
+          Service_OS.Imperative.rename(
+            ~source=Uri.toFileSystemPath(source),
+            ~target=Uri.toFileSystemPath(target),
+            ~overwrite=opts.overwrite,
+          )
+        },
+      ~copy=
+        (~source, ~target, opts) => {
+          Service_OS.Imperative.copy(
+            ~source=Uri.toFileSystemPath(source),
+            ~target=Uri.toFileSystemPath(target),
+            ~overwrite=opts.overwrite,
+          )
+        },
+      ~mkdir=uri => uri |> Uri.toFileSystemPath |> Service_OS.Imperative.mkdir,
+      ~delete=
+        (uri, {recursive, useTrash}) => {
+          uri
+          |> Uri.toFileSystemPath
+          |> Service_OS.Imperative.delete(~recursive, ~useTrash)
+        },
+    );
+
+  let handler: Msg.t => Lwt.t(Reply.t) =
+    msg => {
+      switch (msg) {
+      | SCM(msg) =>
+        Feature_SCM.handleExtensionMessage(
+          ~dispatch=msg => dispatch(Actions.SCM(msg)),
+          msg,
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | LanguageFeatures(
+          RegisterDocumentSymbolProvider({handle, selector, label}),
+        ) =>
+        withClient(
+          onRegisterDocumentSymbolProvider(handle, selector, label),
+        );
+        Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
+        withClient(onRegisterDefinitionProvider(handle, selector));
+        Lwt.return(Reply.okEmpty);
+
+      | LanguageFeatures(
+          RegisterDocumentHighlightProvider({handle, selector}),
+        ) =>
+        withClient(onRegisterDocumentHighlightProvider(handle, selector));
+        Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
+        withClient(onRegisterReferencesProvider(handle, selector));
+        Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(
+          RegisterSuggestSupport({
+            handle,
+            selector,
+            _,
+            // TODO: Handle additional configuration from suggest registration!
+          }),
+        ) =>
+        withClient(onRegisterSuggestProvider(handle, selector));
+        Lwt.return(Reply.okEmpty);
+
+      | Diagnostics(Clear({owner})) =>
+        dispatch(Actions.DiagnosticsClear(owner));
+        Lwt.return(Reply.okEmpty);
+      | Diagnostics(ChangeMany({owner, entries})) =>
+        onDiagnosticsChangeMany(owner, entries);
+        Lwt.return(Reply.okEmpty);
+
+      | DocumentContentProvider(
+          RegisterTextContentProvider({handle, scheme}),
+        ) =>
+        dispatch(NewTextContentProvider({handle, scheme}));
+        Lwt.return(Reply.okEmpty);
+
+      | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
+        dispatch(LostTextContentProvider({handle: handle}));
+        Lwt.return(Reply.okEmpty);
+
+      | Decorations(RegisterDecorationProvider({handle, label})) =>
+        dispatch(NewDecorationProvider({handle, label}));
+        Lwt.return(Reply.okEmpty);
+      | Decorations(UnregisterDecorationProvider({handle})) =>
+        dispatch(LostDecorationProvider({handle: handle}));
+        Lwt.return(Reply.okEmpty);
+      | Decorations(DecorationsDidChange({handle, uris})) =>
+        dispatch(DecorationsChanged({handle, uris}));
+        Lwt.return(Reply.okEmpty);
+
+      | ExtensionService(
+          ExtensionActivationError({extensionId, errorMessage}),
+        ) =>
+        Log.errorf(m =>
+          m(
+            "Extension '%s' failed to activate: %s",
+            extensionId,
+            errorMessage,
+          )
+        );
+        Lwt.return(Reply.okEmpty);
+      | ExtensionService(DidActivateExtension({extensionId, _})) =>
+        dispatch(
+          Actions.Extension(Oni_Model.Extensions.Activated(extensionId)),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | MessageService(ShowMessage({severity, message, extensionId})) =>
+        dispatch(ExtMessageReceived({severity, message, extensionId}));
+        Lwt.return(Reply.okEmpty);
+
+      | StatusBar(SetEntry({id, label, alignment, priority, command, _})) =>
+        let command =
+          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+        dispatch(
+          Actions.StatusBarAddItem(
+            StatusBarModel.Item.create(
+              ~command?,
+              ~id,
+              ~label,
+              ~alignment,
+              ~priority,
+              (),
+            ),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | TerminalService(msg) =>
+        Service_Terminal.handleExtensionMessage(msg);
+        Lwt.return(Reply.okEmpty);
+      | _ => Lwt.return(Reply.okEmpty)
+      };
+    };
 
   let parentPid = Luv.Pid.getpid();
   let name = Printf.sprintf("exthost-client-%s", parentPid |> string_of_int);
@@ -388,7 +481,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         ),
       ~namedPipe,
       ~initData,
-      ~handler,
+      ~handler=filesystemHandler(handler),
       ~onError,
       (),
     );
