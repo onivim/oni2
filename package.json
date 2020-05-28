@@ -212,7 +212,7 @@
     "@opam/fp": "*",
     "@opam/fs": "*",
     "@opam/logs": "^0.7.0",
-    "@opam/luv": "~0.5.1",
+    "@opam/luv": "aantron/luv:luv.opam#dfab9df",
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
