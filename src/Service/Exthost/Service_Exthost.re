@@ -2,6 +2,8 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Service_Exthost"));
 
+// EFFECTS
+
 module Effects = {
   module SCM = {
     let provideOriginalResource = (~handles, extHostClient, path, toMsg) =>
@@ -83,6 +85,8 @@ module Internal = {
        );
 };
 
+// SUBSCRIPTIONS
+
 module Sub = {
   type bufferParams = {
     client: Exthost.Client.t,
@@ -155,4 +159,54 @@ module Sub = {
 
   let buffer = (~buffer, ~client) =>
     BufferSubscription.create({buffer, client});
+
+  type editorParams = {
+    client: Exthost.Client.t,
+    editor: Exthost.TextEditor.AddData.t,
+  };
+  module EditorSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = unit;
+      type nonrec params = editorParams;
+
+      type state = {id: string};
+
+      let name = "Service_Exthost.EditorSubscription";
+      let id = params => {
+        params.editor.id;
+      };
+
+      let init = (~params, ~dispatch as _) => {
+        let addedDelta =
+          Exthost.DocumentsAndEditorsDelta.create(
+            ~addedEditors=[params.editor],
+            (),
+          );
+
+        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+          ~delta=addedDelta,
+          params.client,
+        );
+        {id: params.editor.id};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => {
+        state;
+      };
+
+      let dispose = (~params, ~state) => {
+        let removedDelta =
+          Exthost.DocumentsAndEditorsDelta.create(
+            ~removedEditors=[state.id],
+            (),
+          );
+        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+          ~delta=removedDelta,
+          params.client,
+        );
+      };
+    });
+
+  let editor = (~editor, ~client) =>
+    EditorSubscription.create({editor, client});
 };
