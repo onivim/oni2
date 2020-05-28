@@ -209,4 +209,58 @@ module Sub = {
 
   let editor = (~editor, ~client) =>
     EditorSubscription.create({editor, client});
+
+  type activeEditorParams = {
+    client: Exthost.Client.t,
+    activeEditorId: string,
+  };
+
+  module ActiveEditorSubscription = 
+    Isolinear.Sub.Make({
+      type nonrec msg = unit;
+      type nonrec params = activeEditorParams;
+
+      type state = { lastId: string };
+
+      let name = "Service_Exthost.ActiveEditorSubscription";
+      let id = _ => "ActiveEditorSubscription";
+
+      let init = (~params, ~dispatch as _) => {
+        let activeEditor =
+          Exthost.DocumentsAndEditorsDelta.create(
+            ~newActiveEditor=Some(params.activeEditorId),
+            (),
+          );
+
+        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+          ~delta=activeEditor,
+          params.client,
+        );
+        {lastId: params.activeEditorId};
+      };
+
+      let update = (~params, ~state, ~dispatch as _) => {
+        if (params.activeEditorId != state.lastId) {
+          let activeEditor =
+            Exthost.DocumentsAndEditorsDelta.create(
+              ~newActiveEditor=Some(params.activeEditorId),
+              (),
+            );
+
+          Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+            ~delta=activeEditor,
+            params.client,
+          );
+          {lastId: params.activeEditorId};
+        } else {
+          state
+        }
+      };
+
+      let dispose = (~params as _, ~state as _) => { (); };
+    });
+
+    let activeEditor = (~activeEditorId, ~client) => {
+      ActiveEditorSubscription.create({activeEditorId, client});
+    }
 };
