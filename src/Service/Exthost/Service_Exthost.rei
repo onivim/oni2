@@ -23,9 +23,9 @@ module Sub: {
 
   let editor:
     (~editor: Exthost.TextEditor.AddData.t, ~client: Exthost.Client.t) =>
-      Isolinear.Sub.t(unit);
+    Isolinear.Sub.t(unit);
 
   let activeEditor:
     (~activeEditorId: string, ~client: Exthost.Client.t) =>
-      Isolinear.Sub.t(unit);
+    Isolinear.Sub.t(unit);
 };
