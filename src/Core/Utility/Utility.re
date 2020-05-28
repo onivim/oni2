@@ -6,6 +6,7 @@ module IndexEx = IndexEx;
 module IntEx = IntEx;
 module JsonEx = JsonEx;
 module ListEx = ListEx;
+module LuvEx = LuvEx;
 module LwtEx = LwtEx;
 module OptionEx = OptionEx;
 module Path = Path;

@@ -1,3 +1,42 @@
+open Oni_Core;
+module Log = (val Log.withNamespace("Oni2.Service.OS"));
+module Imperative = {
+  exception NotImplemented;
+
+  let stat = (path) => {
+    Luv.File.stat(path)
+    |> Oni_Core.Utility.LuvEx.wrapPromise;
+  }
+
+  let readdir = (path) => {
+    Lwt.fail(NotImplemented);
+  };
+
+  let readFile = (path) => {
+    Lwt.fail(NotImplemented);
+  }
+
+  let writeFile = (path, bytes) => {
+    Lwt.fail(NotImplemented);
+  }
+
+  let rename = (~source as _, ~target as _, ~overwrite as _) => {
+    Lwt.fail(NotImplemented);
+  };
+
+  let copy = (~source as _, ~target as _, ~overwrite as _) => {
+    Lwt.fail(NotImplemented);
+  };
+
+  let mkdir = (_path) => {
+    Lwt.fail(NotImplemented);
+  }
+
+  let delete = (~recursive as _, ~useTrash as _, _path) => {
+    Lwt.fail(NotImplemented);
+  };
+}
+
 module Effect = {
   let openURL = url =>
     Isolinear.Effect.create(~name="os.openurl", () =>
