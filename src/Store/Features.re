@@ -174,10 +174,15 @@ let update =
         msg,
       );
 
-    let effect: Isolinear.Effect.t(Actions.t) =
+    let state = {...state, terminals: model};
+
+    let (state, effect) =
       switch ((eff: Feature_Terminal.outmsg)) {
-      | Nothing => Effect.none
-      | Effect(eff) => eff |> Effect.map(msg => Actions.Terminal(msg))
+      | Nothing => (state, Effect.none)
+      | Effect(eff) => (
+          state,
+          eff |> Effect.map(msg => Actions.Terminal(msg)),
+        )
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
@@ -186,12 +191,57 @@ let update =
           | Current => None
           };
 
-        Isolinear.Effect.createWithDispatch(
-          ~name="feature.terminal.openBuffer", dispatch => {
-          dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
-        });
+        let eff =
+          Isolinear.Effect.createWithDispatch(
+            ~name="feature.terminal.openBuffer", dispatch => {
+            dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
+          });
+        (state, eff);
+
+      | TerminalExit({terminalId, shouldClose, _}) when shouldClose == true =>
+        let maybeTerminalBuffer =
+          state |> Selectors.getBufferForTerminal(~terminalId);
+
+        // TODO:
+        // This is really duplicated logic from the WindowsStoreConnector
+        // - the fact that the window layout needs to be adjusted along
+        // with the editor groups. We need to consolidate this to a
+        // unified concept, once the window layout work has completed:
+        // Something like `Feature_EditorLayout`, which contains
+        // both the editor groups and layout concepts (dependent on
+        // `Feature_Layout`) - and could include the `WindowsStoreConnector`.
+
+        let editorGroups' =
+          maybeTerminalBuffer
+          |> Option.map(bufferId =>
+               EditorGroups.closeBuffer(~bufferId, state.editorGroups)
+             )
+          |> Option.value(~default=state.editorGroups);
+
+        let layout' =
+          state.layout
+          |> Feature_Layout.windows
+          |> List.fold_left(
+               (acc, editorGroupId) =>
+                 if (Oni_Model.EditorGroups.getEditorGroupById(
+                       editorGroups',
+                       editorGroupId,
+                     )
+                     == None) {
+                   Feature_Layout.removeWindow(editorGroupId, acc);
+                 } else {
+                   acc;
+                 },
+               state.layout,
+             );
+
+        let state' = {...state, layout: layout', editorGroups: editorGroups'};
+
+        (state', Effect.none);
+      | TerminalExit(_) => (state, Effect.none)
       };
-    ({...state, terminals: model}, effect);
+
+    (state, effect);
 
   | Theme(msg) =>
     let model' = Feature_Theme.update(state.colorTheme, msg);

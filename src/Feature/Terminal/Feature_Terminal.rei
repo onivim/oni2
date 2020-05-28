@@ -13,6 +13,7 @@ type terminal =
     title: option(string),
     screen: ReveryTerminal.Screen.t,
     cursor: ReveryTerminal.Cursor.t,
+    closeOnExit: bool,
   };
 
 type t;
@@ -35,6 +36,7 @@ type command =
   | NewTerminal({
       cmd: option(string),
       splitDirection,
+      closeOnExit: bool,
     })
   | NormalMode
   | InsertMode;
@@ -59,6 +61,11 @@ type outmsg =
   | TerminalCreated({
       name: string,
       splitDirection,
+    })
+  | TerminalExit({
+      terminalId: int,
+      exitCode: int,
+      shouldClose: bool,
     });
 
 let shouldHandleInput: string => bool;

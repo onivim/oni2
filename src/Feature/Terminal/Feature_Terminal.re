@@ -12,6 +12,7 @@ type terminal = {
   title: option(string),
   screen: ReveryTerminal.Screen.t,
   cursor: ReveryTerminal.Cursor.t,
+  closeOnExit: bool,
 };
 
 type t = {
@@ -43,6 +44,7 @@ type command =
   | NewTerminal({
       cmd: option(string),
       splitDirection,
+      closeOnExit: bool,
     })
   | NormalMode
   | InsertMode;
@@ -67,6 +69,11 @@ type outmsg =
   | TerminalCreated({
       name: string,
       splitDirection,
+    })
+  | TerminalExit({
+      terminalId: int,
+      exitCode: int,
+      shouldClose: bool,
     });
 
 let shellCmd = ShellUtility.getDefaultShell();
@@ -120,6 +127,12 @@ let shouldHandleInput = str => {
     // HACK: Let the window motion keys pass through, so that
 };
 
+let shouldClose = (~id, {idToTerminal, _}) => {
+  IntMap.find_opt(id, idToTerminal)
+  |> Option.map(({closeOnExit, _}) => closeOnExit)
+  |> Option.value(~default=true);
+};
+
 let updateById = (id, f, model) => {
   let idToTerminal = IntMap.update(id, Option.map(f), model.idToTerminal);
   {...model, idToTerminal};
@@ -127,7 +140,7 @@ let updateById = (id, f, model) => {
 
 let update = (~config: Config.resolver, model: t, msg) => {
   switch (msg) {
-  | Command(NewTerminal({cmd, splitDirection})) =>
+  | Command(NewTerminal({cmd, splitDirection, closeOnExit})) =>
     let cmdToUse =
       switch (cmd) {
       | None =>
@@ -162,6 +175,7 @@ let update = (~config: Config.resolver, model: t, msg) => {
           title: None,
           screen: ReveryTerminal.Screen.initial,
           cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
+          closeOnExit,
         },
         model.idToTerminal,
       );
@@ -200,6 +214,15 @@ let update = (~config: Config.resolver, model: t, msg) => {
   | Service(CursorMoved({id, cursor})) =>
     let newModel = updateById(id, term => {...term, cursor}, model);
     (newModel, Nothing);
+
+  | Service(ProcessExit({id, exitCode})) => (
+      model,
+      TerminalExit({
+        terminalId: id,
+        exitCode,
+        shouldClose: shouldClose(~id, model),
+      }),
+    )
   };
 };
 
@@ -490,21 +513,39 @@ module Commands = {
         ~category="Terminal",
         ~title="Open terminal in new horizontal split",
         "terminal.new.horizontal",
-        Command(NewTerminal({cmd: None, splitDirection: Horizontal})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Horizontal,
+            closeOnExit: true,
+          }),
+        ),
       );
     let vertical =
       define(
         ~category="Terminal",
         ~title="Open terminal in new vertical split",
         "terminal.new.vertical",
-        Command(NewTerminal({cmd: None, splitDirection: Vertical})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Vertical,
+            closeOnExit: true,
+          }),
+        ),
       );
     let current =
       define(
         ~category="Terminal",
         ~title="Open terminal in current window",
         "terminal.new.current",
-        Command(NewTerminal({cmd: None, splitDirection: Current})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Current,
+            closeOnExit: true,
+          }),
+        ),
       );
   };
 
