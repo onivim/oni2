@@ -134,7 +134,6 @@ module Diagnostics = {
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
-      prerr_endline ("GOT HERE: ");
       diagnosticsJson
       |> List.map(decodeEntry)
       |> Base.Result.all
