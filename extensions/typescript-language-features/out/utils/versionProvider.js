@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.TypeScriptVersionProvider = exports.TypeScriptVersion = void 0;
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -12,21 +13,40 @@ const api_1 = require("./api");
 const relativePathResolver_1 = require("./relativePathResolver");
 const localize = nls.loadMessageBundle();
 class TypeScriptVersion {
-    constructor(path, _pathLabel) {
+    constructor(source, path, _pathLabel) {
+        this.source = source;
         this.path = path;
         this._pathLabel = _pathLabel;
+        this.apiVersion = TypeScriptVersion.getApiVersion(this.tsServerPath);
     }
     get tsServerPath() {
         return path.join(this.path, 'tsserver.js');
     }
     get pathLabel() {
-        return typeof this._pathLabel === 'undefined' ? this.path : this._pathLabel;
+        var _a;
+        return (_a = this._pathLabel) !== null && _a !== void 0 ? _a : this.path;
     }
     get isValid() {
-        return this.version !== undefined;
+        return this.apiVersion !== undefined;
     }
-    get version() {
-        const version = this.getTypeScriptVersion(this.tsServerPath);
+    eq(other) {
+        if (this.path !== other.path) {
+            return false;
+        }
+        if (this.apiVersion === other.apiVersion) {
+            return true;
+        }
+        if (!this.apiVersion || !other.apiVersion) {
+            return false;
+        }
+        return this.apiVersion.eq(other.apiVersion);
+    }
+    get displayName() {
+        const version = this.apiVersion;
+        return version ? version.displayName : localize('couldNotLoadTsVersion', 'Could not load the TypeScript version at this path');
+    }
+    static getApiVersion(serverPath) {
+        const version = TypeScriptVersion.getTypeScriptVersion(serverPath);
         if (version) {
             return version;
         }
@@ -37,11 +57,7 @@ class TypeScriptVersion {
         }
         return undefined;
     }
-    get versionString() {
-        const version = this.version;
-        return version ? version.versionString : localize('couldNotLoadTsVersion', 'Could not load the TypeScript version at this path');
-    }
-    getTypeScriptVersion(serverPath) {
+    static getTypeScriptVersion(serverPath) {
         if (!fs.existsSync(serverPath)) {
             return undefined;
         }
@@ -79,7 +95,6 @@ exports.TypeScriptVersion = TypeScriptVersion;
 class TypeScriptVersionProvider {
     constructor(configuration) {
         this.configuration = configuration;
-        this.relativePathResolver = new relativePathResolver_1.RelativeWorkspacePathResolver();
     }
     updateConfiguration(configuration) {
         this.configuration = configuration;
@@ -89,12 +104,12 @@ class TypeScriptVersionProvider {
     }
     get globalVersion() {
         if (this.configuration.globalTsdk) {
-            const globals = this.loadVersionsFromSetting(this.configuration.globalTsdk);
+            const globals = this.loadVersionsFromSetting("user-setting" /* UserSetting */, this.configuration.globalTsdk);
             if (globals && globals.length) {
                 return globals[0];
             }
         }
-        return undefined;
+        return this.contributedTsNextVersion;
     }
     get localVersion() {
         const tsdkVersions = this.localTsdkVersions;
@@ -119,49 +134,61 @@ class TypeScriptVersionProvider {
         });
     }
     get bundledVersion() {
-        try {
-            const { extensionPath } = vscode.extensions.getExtension('vscode.typescript-language-features');
-            const typescriptPath = path.join(extensionPath, '../node_modules/typescript/lib');
-            const bundledVersion = new TypeScriptVersion(typescriptPath, '');
-            if (bundledVersion.isValid) {
-                return bundledVersion;
-            }
-        }
-        catch (e) {
-            // noop
+        const version = this.getContributedVersion("bundled" /* Bundled */, 'vscode.typescript-language-features', ['..', 'node_modules']);
+        if (version) {
+            return version;
         }
         vscode.window.showErrorMessage(localize('noBundledServerFound', 'VS Code\'s tsserver was deleted by another application such as a misbehaving virus detection tool. Please reinstall VS Code.'));
         throw new Error('Could not find bundled tsserver.js');
     }
+    get contributedTsNextVersion() {
+        return this.getContributedVersion("ts-nightly-extension" /* TsNightlyExtension */, 'ms-vscode.vscode-typescript-next', ['node_modules']);
+    }
+    getContributedVersion(source, extensionId, pathToTs) {
+        try {
+            const extension = vscode.extensions.getExtension(extensionId);
+            if (extension) {
+                const typescriptPath = path.join(extension.extensionPath, ...pathToTs, 'typescript', 'lib');
+                const bundledVersion = new TypeScriptVersion(source, typescriptPath, '');
+                if (bundledVersion.isValid) {
+                    return bundledVersion;
+                }
+            }
+        }
+        catch (_a) {
+            // noop
+        }
+        return undefined;
+    }
     get localTsdkVersions() {
         const localTsdk = this.configuration.localTsdk;
-        return localTsdk ? this.loadVersionsFromSetting(localTsdk) : [];
+        return localTsdk ? this.loadVersionsFromSetting("workspace-setting" /* WorkspaceSetting */, localTsdk) : [];
     }
-    loadVersionsFromSetting(tsdkPathSetting) {
+    loadVersionsFromSetting(source, tsdkPathSetting) {
         if (path.isAbsolute(tsdkPathSetting)) {
-            return [new TypeScriptVersion(tsdkPathSetting)];
+            return [new TypeScriptVersion(source, tsdkPathSetting)];
         }
-        const workspacePath = this.relativePathResolver.asAbsoluteWorkspacePath(tsdkPathSetting);
+        const workspacePath = relativePathResolver_1.RelativeWorkspacePathResolver.asAbsoluteWorkspacePath(tsdkPathSetting);
         if (workspacePath !== undefined) {
-            return [new TypeScriptVersion(workspacePath, tsdkPathSetting)];
+            return [new TypeScriptVersion(source, workspacePath, tsdkPathSetting)];
         }
-        return this.loadTypeScriptVersionsFromPath(tsdkPathSetting);
+        return this.loadTypeScriptVersionsFromPath(source, tsdkPathSetting);
     }
     get localNodeModulesVersions() {
-        return this.loadTypeScriptVersionsFromPath(path.join('node_modules', 'typescript', 'lib'))
+        return this.loadTypeScriptVersionsFromPath("node-modules" /* NodeModules */, path.join('node_modules', 'typescript', 'lib'))
             .filter(x => x.isValid);
     }
-    loadTypeScriptVersionsFromPath(relativePath) {
+    loadTypeScriptVersionsFromPath(source, relativePath) {
         if (!vscode.workspace.workspaceFolders) {
             return [];
         }
         const versions = [];
         for (const root of vscode.workspace.workspaceFolders) {
             let label = relativePath;
-            if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 1) {
+            if (vscode.workspace.workspaceFolders.length > 1) {
                 label = path.join(root.name, relativePath);
             }
-            versions.push(new TypeScriptVersion(path.join(root.uri.fsPath, relativePath), label));
+            versions.push(new TypeScriptVersion(source, path.join(root.uri.fsPath, relativePath), label));
         }
         return versions;
     }
