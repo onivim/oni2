@@ -281,20 +281,22 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
-    let extHostSubscriptions =
-      visibleBuffers
-      |> List.map(buffer => {
-           Service_Exthost.Sub.buffer(~buffer, ~client=extHostClient)
-           |> Isolinear.Sub.map(() => Model.Actions.Noop)
-         })
-      |> Isolinear.Sub.batch;
+    let extHostSubscription =
+      Feature_Exthost.subscription(
+        ~buffers=visibleBuffers,
+        //      ~editors=visibleEditors,
+        ~editors=[],
+        ~activeEditorId=1,
+        ~client=extHostClient,
+      )
+      |> Isolinear.Sub.map(() => Model.Actions.Noop);
 
     [
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
-      extHostSubscriptions,
+      extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
     ]
     |> Isolinear.Sub.batch;
