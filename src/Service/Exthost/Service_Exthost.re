@@ -118,6 +118,7 @@ module Sub = {
             Exthost.DocumentsAndEditorsDelta.create(
               ~removedDocuments=[],
               ~addedDocuments=[metadata],
+              (),
             );
 
           Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
@@ -142,6 +143,7 @@ module Sub = {
                  Exthost.DocumentsAndEditorsDelta.create(
                    ~removedDocuments=[Uri.fromPath(filePath)],
                    ~addedDocuments=[],
+                   (),
                  );
                Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
                  ~delta=removedDelta,
