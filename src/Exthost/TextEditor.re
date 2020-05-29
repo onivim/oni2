@@ -78,6 +78,9 @@ module AddData = {
         ("id", id |> string),
         ("documentUri", documentUri |> Uri.encode),
         ("options", options |> ResolvedConfiguration.encode),
+        // TODO:
+        ("selections", [] |> list(int)),
+        ("visibleRanges", [] |> list(int)),
       ])
     );
 };

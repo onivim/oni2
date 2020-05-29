@@ -10,8 +10,16 @@ module Internal = {
   let editorToAddData:
     (IntMap.t(Buffer.t), Editor.t) => option(TextEditor.AddData.t) =
     (bufferMap, editor) => {
-      bufferMap
-      |> IntMap.find_opt(Feature_Editor.Editor.getBufferId(editor))
+      let maybeBuffer =
+        bufferMap
+        |> IntMap.find_opt(Feature_Editor.Editor.getBufferId(editor));
+
+      let indentationSettings: IndentationSettings.t =
+        maybeBuffer
+        |> OptionEx.flatMap(Buffer.getIndentation)
+        |> Option.value(~default=IndentationSettings.default);
+
+      maybeBuffer
       |> OptionEx.flatMap(Oni_Core.Buffer.getFilePath)
       |> Option.map(Uri.fromPath)
       |> Option.map(uri => {
@@ -20,9 +28,11 @@ module Internal = {
 
            let options =
              ResolvedConfiguration.{
-               tabSize: 0,
-               indentSize: 0,
-               insertSpaces: 1,
+               tabSize: indentationSettings.tabSize,
+               indentSize: indentationSettings.size,
+               insertSpaces:
+                 indentationSettings.mode == IndentationSettings.Spaces
+                   ? 1 : 0,
                cursorStyle: CursorStyle.Solid,
                lineNumbers: LineNumbersStyle.On,
              };

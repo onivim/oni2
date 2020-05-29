@@ -183,6 +183,9 @@ module Sub = {
             (),
           );
 
+        Log.infof(m =>
+          m("Starting editor subscription for: %s", params.editor.id)
+        );
         Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
           ~delta=addedDelta,
           params.client,
@@ -195,6 +198,9 @@ module Sub = {
       };
 
       let dispose = (~params, ~state) => {
+        Log.infof(m =>
+          m("Stopping editor subscription for: %s", params.editor.id)
+        );
         let removedDelta =
           Exthost.DocumentsAndEditorsDelta.create(
             ~removedEditors=[state.id],
@@ -225,31 +231,34 @@ module Sub = {
       let name = "Service_Exthost.ActiveEditorSubscription";
       let id = _ => "ActiveEditorSubscription";
 
-      let init = (~params, ~dispatch as _) => {
+      let setActiveEditor = (~activeEditorId, ~client) => {
+        Log.infof(m => m("Setting active editor id: %s", activeEditorId));
         let activeEditor =
           Exthost.DocumentsAndEditorsDelta.create(
-            ~newActiveEditor=Some(params.activeEditorId),
+            ~newActiveEditor=Some(activeEditorId),
             (),
           );
 
         Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
           ~delta=activeEditor,
-          params.client,
+          client,
         );
+      };
+
+      let init = (~params, ~dispatch as _) => {
+        setActiveEditor(
+          ~activeEditorId=params.activeEditorId,
+          ~client=params.client,
+        );
+
         {lastId: params.activeEditorId};
       };
 
       let update = (~params, ~state, ~dispatch as _) =>
         if (params.activeEditorId != state.lastId) {
-          let activeEditor =
-            Exthost.DocumentsAndEditorsDelta.create(
-              ~newActiveEditor=Some(params.activeEditorId),
-              (),
-            );
-
-          Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-            ~delta=activeEditor,
-            params.client,
+          setActiveEditor(
+            ~activeEditorId=params.activeEditorId,
+            ~client=params.client,
           );
           {lastId: params.activeEditorId};
         } else {
