@@ -19,6 +19,7 @@ let addedDelta =
   DocumentsAndEditorsDelta.create(
     ~removedDocuments=[],
     ~addedDocuments=[model(~lines=["Hello", "World"])],
+    (),
   );
 
 describe("LanguageFeaturesTest", ({describe, _}) => {

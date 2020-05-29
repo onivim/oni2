@@ -19,3 +19,5 @@ Libvim_Test.TestFramework.cli();
 
 Exthost_Transport_Test.TestFramework.cli();
 Exthost_Test.TestFramework.cli();
+
+Textmate_Test.TestFramework.cli();

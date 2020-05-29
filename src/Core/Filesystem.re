@@ -12,6 +12,20 @@ module Log = (val Log.withNamespace("Oni2.Filesystem"));
 
 type t('a) = result('a, string);
 
+module Internal = {
+  let getUserDataDirectoryExn = () =>
+    Revery.(
+      switch (Environment.os) {
+      | Environment.Windows => Sys.getenv("LOCALAPPDATA")
+      | _ =>
+        switch (Sys.getenv_opt("HOME")) {
+        | Some(dir) => dir
+        | None => failwith("Could not find user data directory")
+        }
+      }
+    );
+};
+
 /** [on_success] executes [f] unless we already hit an error. In
   that case the error is passed on. */
 let onSuccess = (t: t('a), f: 'a => t('b)) =>
@@ -213,18 +227,6 @@ let rmdir = path =>
     }
   );
 
-let getUserDataDirectoryExn = () =>
-  Revery.(
-    switch (Environment.os) {
-    | Environment.Windows => Sys.getenv("LOCALAPPDATA")
-    | _ =>
-      switch (Sys.getenv_opt("HOME")) {
-      | Some(dir) => dir
-      | None => failwith("Could not find user data directory")
-      }
-    }
-  );
-
 let getOniDirectory = dataDirectory =>
   Revery.(
     switch (Environment.os) {
@@ -235,7 +237,7 @@ let getOniDirectory = dataDirectory =>
 
 let getUserDataDirectory = () =>
   Unix.(
-    try(getUserDataDirectoryExn() |> return) {
+    try(Internal.getUserDataDirectoryExn() |> return) {
     | Unix_error(err, _, _) =>
       error("Cannot find data directory because: '%s'", error_message(err))
     | Failure(reason) => error("The OS could not be identified %s", reason)

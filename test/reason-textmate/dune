@@ -1,0 +1,16 @@
+(library
+    (name Textmate_Test)
+    (flags (:standard (-w -39)))
+    (ocamlopt_flags -linkall -g)
+    (libraries rely.lib textmate)
+    (preprocess (pps ppx_deriving_yojson))
+)
+
+(install
+    (section bin)
+    (package OniUnitTestRunner)
+    (files
+        json.json
+        haskell.tmLanguage
+        lua.tmLanguage
+))
