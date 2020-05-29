@@ -21,6 +21,14 @@ type t = {
   shouldLoadConfiguration: bool,
 };
 
+type eff =
+  | PrintVersion
+  | CheckHealth
+  | ListExtensions
+  | InstallExtension(string)
+  | UninstallExtension(string)
+  | Run;
+
 let noop = () => ();
 
 let setWorkingDirectory = s => {
@@ -49,51 +57,35 @@ let filterPsnArgument = args => {
   args |> Array.to_list |> List.filter(f) |> Array.of_list;
 };
 
-let parse =
-    (
-      ~checkHealth,
-      ~listExtensions,
-      ~installExtension,
-      ~uninstallExtension,
-      ~printVersion,
-    ) => {
-  let sysArgs = Sys.argv |> filterPsnArgument;
+let parse = args => {
+  let sysArgs = args |> filterPsnArgument;
 
-  let args: ref(list(string)) = ref([]);
+  let additionalArgs: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
   let syntaxHighlightService = ref(false);
   let extensionsDir = ref(None);
   let shouldClose = ref(false);
+  let eff = ref(Run);
 
   let shouldLoadExtensions = ref(true);
   let shouldLoadConfiguration = ref(true);
   let shouldSyntaxHighlight = ref(true);
 
-  let needsConsole = ref(false);
+  let setEffect = effect => {
+    Arg.Unit(() => {eff := effect});
+  };
 
-  let queuedJob = ref(None);
-  let runAndExitUnit = f =>
-    Arg.Unit(
-      () => {
-        needsConsole := true;
-        queuedJob := Some(cli => {f(cli) |> exit});
-      },
-    );
-
-  let runAndExitString = f =>
-    Arg.String(
-      s => {
-        needsConsole := true;
-        queuedJob := Some(cli => {f(s, cli) |> exit});
-      },
-    );
+  let setStringEffect = (f: string => eff) => {
+    Arg.String(s => {eff := f(s)});
+  };
 
   let disableExtensionLoading = () => shouldLoadExtensions := false;
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
   Arg.parse_argv(
+    ~current=ref(0),
     sysArgs,
     [
       ("-f", Unit(Timber.App.enable), ""),
@@ -101,17 +93,21 @@ let parse =
       ("--debug", Unit(CoreLog.enableDebug), ""),
       ("--trace", Unit(CoreLog.enableTrace), ""),
       ("--quiet", Unit(CoreLog.enableQuiet), ""),
-      ("--version", printVersion |> runAndExitUnit, ""),
+      ("--version", setEffect(PrintVersion), ""),
       ("--no-log-colors", Unit(Timber.App.disableColors), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
       ("--disable-configuration", Unit(disableLoadConfiguration), ""),
       ("--disable-syntax-highlighting", Unit(disableSyntaxHighlight), ""),
       ("--log-file", String(Timber.App.setLogFile), ""),
       ("--log-filter", String(Timber.App.setNamespaceFilter), ""),
-      ("--checkhealth", checkHealth |> runAndExitUnit, ""),
-      ("--list-extensions", listExtensions |> runAndExitUnit, ""),
-      ("--install-extension", installExtension |> runAndExitString, ""),
-      ("--uninstall-extension", uninstallExtension |> runAndExitString, ""),
+      ("--checkhealth", setEffect(CheckHealth), ""),
+      ("--list-extensions", setEffect(ListExtensions), ""),
+      ("--install-extension", setStringEffect(s => InstallExtension(s)), ""),
+      (
+        "--uninstall-extension",
+        setStringEffect(s => UninstallExtension(s)),
+        "",
+      ),
       ("--working-directory", String(setWorkingDirectory), ""),
       (
         "--force-device-scale-factor",
@@ -126,16 +122,18 @@ let parse =
       ("--extensions-dir", String(setRef(extensionsDir)), ""),
       ("--force-device-scale-factor", Float(setRef(scaleFactor)), ""),
     ],
-    arg => args := [arg, ...args^],
+    arg => additionalArgs := [arg, ...additionalArgs^],
     "",
   );
 
-  if (Timber.App.isEnabled() || needsConsole^) {
+  let needsConsole = eff^ != Run;
+  if (Timber.App.isEnabled() || needsConsole) {
     /* On Windows, we need to create a console instance if possible */
     Revery.App.initConsole();
   };
 
-  let paths = args^ |> List.rev;
+  let paths = additionalArgs^ |> List.rev;
+
   let workingDirectory = Environment.getWorkingDirectory();
 
   let stripTrailingPathCharacter = s => {
@@ -179,11 +177,12 @@ let parse =
 
   let absolutePaths = List.map(resolvePath, paths);
 
-  let isDirectory = p =>
+  let isDirectory = p => {
     switch (isDrive(p) || Sys.is_directory(p)) {
     | v => v
     | exception (Sys_error(_)) => false
     };
+  };
 
   let directories = List.filter(isDirectory, absolutePaths);
   let filesToOpen = List.filter(p => !isDirectory(p), absolutePaths);
@@ -210,10 +209,5 @@ let parse =
     shouldLoadConfiguration: shouldLoadConfiguration^,
   };
 
-  switch (queuedJob^) {
-  | None => ()
-  | Some(job) => job(cli)
-  };
-
-  cli;
+  (cli, eff^);
 };
