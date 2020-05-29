@@ -10,7 +10,25 @@ module Internal = {
   let editorToAddData:
     (IntMap.t(Buffer.t), Editor.t) => option(TextEditor.AddData.t) =
     (bufferMap, editor) => {
-      None;
+      bufferMap
+      |> IntMap.find_opt(Feature_Editor.Editor.getBufferId(editor))
+      |> OptionEx.flatMap(Oni_Core.Buffer.getFilePath)
+      |> Option.map(Uri.fromPath)
+      |> Option.map(uri => {
+           let id = getVscodeEditorId(editor.editorId);
+           open TextEditor;
+
+           let options =
+             ResolvedConfiguration.{
+               tabSize: 0,
+               indentSize: 0,
+               insertSpaces: 1,
+               cursorStyle: CursorStyle.Solid,
+               lineNumbers: LineNumbersStyle.On,
+             };
+
+           AddData.{id, documentUri: uri, options};
+         });
     };
 };
 
