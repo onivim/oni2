@@ -179,6 +179,10 @@ let mainChecks = [
           ~onClose=_ => {closed := true},
           ~onHighlights=(~bufferId as _, ~tokens as _) => (),
           ~onHealthCheckResult=res => {healthCheckResult := res},
+          ~additionalEnv=[
+            // Get stack trace on crash
+            ("OCAMLRUNPARAM", "b"),
+          ],
           Oni_Extensions.LanguageInfo.initial,
           setup,
         )
@@ -249,6 +253,22 @@ let run = (~checks, _cli) => {
   };
 
   Log.info("");
+
+  let printCrashLog = () => {
+    Log.info("Checking for crash log...");
+
+    if (File.exists("onivim2-crash.log")) {
+      Log.error("Crash log found:");
+      Log.error("---");
+      let lines = File.readAllLines("onivim2-crash.log");
+      lines |> List.iter(Log.error);
+      Log.error("---");
+    } else {
+      Log.info("No crash log found!");
+    };
+  };
+
+  printCrashLog();
 
   Log.info("All systems go.");
   Log.info("Checking for remaining threads...");
