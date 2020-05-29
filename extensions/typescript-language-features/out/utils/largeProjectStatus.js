@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.create = void 0;
 const vscode = require("vscode");
 const vscode_nls_1 = require("vscode-nls");
 const tsconfig_1 = require("./tsconfig");
@@ -11,7 +12,12 @@ const localize = vscode_nls_1.loadMessageBundle();
 class ExcludeHintItem {
     constructor(telemetryReporter) {
         this.telemetryReporter = telemetryReporter;
-        this._item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 98 /* to the right of typescript version status (99) */);
+        this._item = vscode.window.createStatusBarItem({
+            id: 'status.typescript.exclude',
+            name: localize('statusExclude', "TypeScript: Configure Excludes"),
+            alignment: vscode.StatusBarAlignment.Right,
+            priority: 98 /* to the right of typescript version status (99) */
+        });
         this._item.command = 'js.projectStatus.command';
     }
     getCurrentHint() {
@@ -71,7 +77,7 @@ function onConfigureExcludesSelected(client, configFileName) {
     else {
         const root = client.getWorkspaceRootForResource(vscode.Uri.file(configFileName));
         if (root) {
-            tsconfig_1.openOrCreateConfigFile(configFileName.match(/tsconfig\.?.*\.json/) !== null, root, client.configuration);
+            tsconfig_1.openOrCreateConfig(/tsconfig\.?.*\.json/.test(configFileName) ? 0 /* TypeScript */ : 1 /* JavaScript */, root, client.configuration);
         }
     }
 }
@@ -89,4 +95,4 @@ function create(client, telemetryReporter) {
     return vscode.Disposable.from(...toDispose);
 }
 exports.create = create;
-//# sourceMappingURL=projectStatus.js.map
+//# sourceMappingURL=largeProjectStatus.js.map
