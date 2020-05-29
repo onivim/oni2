@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Reader = void 0;
 const vscode = require("vscode");
 const dispose_1 = require("./dispose");
 const defaultSize = 8192;

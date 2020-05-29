@@ -10,75 +10,81 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
 const nls = require("vscode-nls");
 const api_1 = require("../utils/api");
 const cancellation_1 = require("../utils/cancellation");
 const codeAction_1 = require("../utils/codeAction");
-const dependentRegistration_1 = require("../utils/dependentRegistration");
 const memoize_1 = require("../utils/memoize");
 const typeConverters = require("../utils/typeConverters");
 const localize = nls.loadMessageBundle();
-class ApplyCodeActionCommand {
-    constructor(client, telemetryReporter) {
-        this.client = client;
-        this.telemetryReporter = telemetryReporter;
-        this.id = ApplyCodeActionCommand.ID;
-    }
-    async execute(action) {
-        /* __GDPR__
-            "quickFix.execute" : {
-                "fixName" : { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight" },
-                "${include}": [
-                    "${TypeScriptCommonProperties}"
-                ]
-            }
-        */
-        this.telemetryReporter.logTelemetry('quickFix.execute', {
-            fixName: action.fixName
-        });
-        return codeAction_1.applyCodeActionCommands(this.client, action.commands, cancellation_1.nulToken);
-    }
-}
-ApplyCodeActionCommand.ID = '_typescript.applyCodeActionCommand';
-class ApplyFixAllCodeAction {
-    constructor(client, telemetryReporter) {
-        this.client = client;
-        this.telemetryReporter = telemetryReporter;
-        this.id = ApplyFixAllCodeAction.ID;
-    }
-    async execute(file, tsAction) {
-        if (!tsAction.fixId) {
-            return;
+let ApplyCodeActionCommand = /** @class */ (() => {
+    class ApplyCodeActionCommand {
+        constructor(client, telemetryReporter) {
+            this.client = client;
+            this.telemetryReporter = telemetryReporter;
+            this.id = ApplyCodeActionCommand.ID;
         }
-        /* __GDPR__
-            "quickFixAll.execute" : {
-                "fixName" : { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight" },
-                "${include}": [
-                    "${TypeScriptCommonProperties}"
-                ]
-            }
-        */
-        this.telemetryReporter.logTelemetry('quickFixAll.execute', {
-            fixName: tsAction.fixName
-        });
-        const args = {
-            scope: {
-                type: 'file',
-                args: { file }
-            },
-            fixId: tsAction.fixId,
-        };
-        const response = await this.client.execute('getCombinedCodeFix', args, cancellation_1.nulToken);
-        if (response.type !== 'response' || !response.body) {
-            return undefined;
+        async execute(action) {
+            /* __GDPR__
+                "quickFix.execute" : {
+                    "fixName" : { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight" },
+                    "${include}": [
+                        "${TypeScriptCommonProperties}"
+                    ]
+                }
+            */
+            this.telemetryReporter.logTelemetry('quickFix.execute', {
+                fixName: action.fixName
+            });
+            return codeAction_1.applyCodeActionCommands(this.client, action.commands, cancellation_1.nulToken);
         }
-        const edit = typeConverters.WorkspaceEdit.fromFileCodeEdits(this.client, response.body.changes);
-        await vscode.workspace.applyEdit(edit);
-        await codeAction_1.applyCodeActionCommands(this.client, response.body.commands, cancellation_1.nulToken);
     }
-}
-ApplyFixAllCodeAction.ID = '_typescript.applyFixAllCodeAction';
+    ApplyCodeActionCommand.ID = '_typescript.applyCodeActionCommand';
+    return ApplyCodeActionCommand;
+})();
+let ApplyFixAllCodeAction = /** @class */ (() => {
+    class ApplyFixAllCodeAction {
+        constructor(client, telemetryReporter) {
+            this.client = client;
+            this.telemetryReporter = telemetryReporter;
+            this.id = ApplyFixAllCodeAction.ID;
+        }
+        async execute(file, tsAction) {
+            if (!tsAction.fixId) {
+                return;
+            }
+            /* __GDPR__
+                "quickFixAll.execute" : {
+                    "fixName" : { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight" },
+                    "${include}": [
+                        "${TypeScriptCommonProperties}"
+                    ]
+                }
+            */
+            this.telemetryReporter.logTelemetry('quickFixAll.execute', {
+                fixName: tsAction.fixName
+            });
+            const args = {
+                scope: {
+                    type: 'file',
+                    args: { file }
+                },
+                fixId: tsAction.fixId,
+            };
+            const response = await this.client.execute('getCombinedCodeFix', args, cancellation_1.nulToken);
+            if (response.type !== 'response' || !response.body) {
+                return undefined;
+            }
+            const edit = typeConverters.WorkspaceEdit.fromFileCodeEdits(this.client, response.body.changes);
+            await vscode.workspace.applyEdit(edit);
+            await codeAction_1.applyCodeActionCommands(this.client, response.body.commands, cancellation_1.nulToken);
+        }
+    }
+    ApplyFixAllCodeAction.ID = '_typescript.applyFixAllCodeAction';
+    return ApplyFixAllCodeAction;
+})();
 /**
  * Unique set of diagnostics keyed on diagnostic range and error code.
  */
@@ -128,101 +134,123 @@ class CodeActionSet {
         return this._fixAllActions.has(fixId);
     }
 }
-class SupportedCodeActionProvider {
-    constructor(client) {
-        this.client = client;
-    }
-    async getFixableDiagnosticsForContext(context) {
-        const fixableCodes = await this.fixableDiagnosticCodes;
-        return DiagnosticsSet.from(context.diagnostics.filter(diagnostic => typeof diagnostic.code !== 'undefined' && fixableCodes.has(diagnostic.code + '')));
-    }
-    get fixableDiagnosticCodes() {
-        return this.client.execute('getSupportedCodeFixes', null, cancellation_1.nulToken)
-            .then(response => response.type === 'response' ? response.body || [] : [])
-            .then(codes => new Set(codes));
-    }
-}
-__decorate([
-    memoize_1.memoize
-], SupportedCodeActionProvider.prototype, "fixableDiagnosticCodes", null);
-class TypeScriptQuickFixProvider {
-    constructor(client, formattingConfigurationManager, commandManager, diagnosticsManager, telemetryReporter) {
-        this.client = client;
-        this.formattingConfigurationManager = formattingConfigurationManager;
-        this.diagnosticsManager = diagnosticsManager;
-        commandManager.register(new ApplyCodeActionCommand(client, telemetryReporter));
-        commandManager.register(new ApplyFixAllCodeAction(client, telemetryReporter));
-        this.supportedCodeActionProvider = new SupportedCodeActionProvider(client);
-    }
-    async provideCodeActions(document, _range, context, token) {
-        const file = this.client.toOpenedFilePath(document);
-        if (!file) {
-            return [];
+let SupportedCodeActionProvider = /** @class */ (() => {
+    class SupportedCodeActionProvider {
+        constructor(client) {
+            this.client = client;
         }
-        const fixableDiagnostics = await this.supportedCodeActionProvider.getFixableDiagnosticsForContext(context);
-        if (!fixableDiagnostics.size) {
-            return [];
+        async getFixableDiagnosticsForContext(context) {
+            const fixableCodes = await this.fixableDiagnosticCodes;
+            return DiagnosticsSet.from(context.diagnostics.filter(diagnostic => typeof diagnostic.code !== 'undefined' && fixableCodes.has(diagnostic.code + '')));
         }
-        if (this.client.bufferSyncSupport.hasPendingDiagnostics(document.uri)) {
-            return [];
+        get fixableDiagnosticCodes() {
+            return this.client.execute('getSupportedCodeFixes', null, cancellation_1.nulToken)
+                .then(response => response.type === 'response' ? response.body || [] : [])
+                .then(codes => new Set(codes));
         }
-        await this.formattingConfigurationManager.ensureConfigurationForDocument(document, token);
-        const results = new CodeActionSet();
-        for (const diagnostic of fixableDiagnostics.values) {
-            await this.getFixesForDiagnostic(document, file, diagnostic, results, token);
-        }
-        return Array.from(results.values);
     }
-    async getFixesForDiagnostic(document, file, diagnostic, results, token) {
-        const args = Object.assign({}, typeConverters.Range.toFileRangeRequestArgs(file, diagnostic.range), { errorCodes: [+(diagnostic.code)] });
-        const response = await this.client.execute('getCodeFixes', args, token);
-        if (response.type !== 'response' || !response.body) {
+    __decorate([
+        memoize_1.memoize
+    ], SupportedCodeActionProvider.prototype, "fixableDiagnosticCodes", null);
+    return SupportedCodeActionProvider;
+})();
+let TypeScriptQuickFixProvider = /** @class */ (() => {
+    class TypeScriptQuickFixProvider {
+        constructor(client, formattingConfigurationManager, commandManager, diagnosticsManager, telemetryReporter) {
+            this.client = client;
+            this.formattingConfigurationManager = formattingConfigurationManager;
+            this.diagnosticsManager = diagnosticsManager;
+            commandManager.register(new ApplyCodeActionCommand(client, telemetryReporter));
+            commandManager.register(new ApplyFixAllCodeAction(client, telemetryReporter));
+            this.supportedCodeActionProvider = new SupportedCodeActionProvider(client);
+        }
+        async provideCodeActions(document, _range, context, token) {
+            const file = this.client.toOpenedFilePath(document);
+            if (!file) {
+                return [];
+            }
+            const fixableDiagnostics = await this.supportedCodeActionProvider.getFixableDiagnosticsForContext(context);
+            if (!fixableDiagnostics.size) {
+                return [];
+            }
+            if (this.client.bufferSyncSupport.hasPendingDiagnostics(document.uri)) {
+                return [];
+            }
+            await this.formattingConfigurationManager.ensureConfigurationForDocument(document, token);
+            const results = new CodeActionSet();
+            for (const diagnostic of fixableDiagnostics.values) {
+                await this.getFixesForDiagnostic(document, file, diagnostic, results, token);
+            }
+            return Array.from(results.values);
+        }
+        async getFixesForDiagnostic(document, file, diagnostic, results, token) {
+            const args = {
+                ...typeConverters.Range.toFileRangeRequestArgs(file, diagnostic.range),
+                errorCodes: [+(diagnostic.code)]
+            };
+            const response = await this.client.execute('getCodeFixes', args, token);
+            if (response.type !== 'response' || !response.body) {
+                return results;
+            }
+            for (const tsCodeFix of response.body) {
+                this.addAllFixesForTsCodeAction(results, document, file, diagnostic, tsCodeFix);
+            }
             return results;
         }
-        for (const tsCodeFix of response.body) {
-            this.addAllFixesForTsCodeAction(results, document, file, diagnostic, tsCodeFix);
-        }
-        return results;
-    }
-    addAllFixesForTsCodeAction(results, document, file, diagnostic, tsAction) {
-        results.addAction(this.getSingleFixForTsCodeAction(diagnostic, tsAction));
-        this.addFixAllForTsCodeAction(results, document, file, diagnostic, tsAction);
-        return results;
-    }
-    getSingleFixForTsCodeAction(diagnostic, tsAction) {
-        const codeAction = new vscode.CodeAction(tsAction.description, vscode.CodeActionKind.QuickFix);
-        codeAction.edit = codeAction_1.getEditForCodeAction(this.client, tsAction);
-        codeAction.diagnostics = [diagnostic];
-        codeAction.command = {
-            command: ApplyCodeActionCommand.ID,
-            arguments: [tsAction],
-            title: ''
-        };
-        codeAction.isPreferred = isPreferredFix(tsAction);
-        return codeAction;
-    }
-    addFixAllForTsCodeAction(results, document, file, diagnostic, tsAction) {
-        if (!tsAction.fixId || this.client.apiVersion.lt(api_1.default.v270) || results.hasFixAllAction(tsAction.fixId)) {
+        addAllFixesForTsCodeAction(results, document, file, diagnostic, tsAction) {
+            results.addAction(this.getSingleFixForTsCodeAction(diagnostic, tsAction));
+            this.addFixAllForTsCodeAction(results, document, file, diagnostic, tsAction);
             return results;
         }
-        // Make sure there are multiple diagnostics of the same type in the file
-        if (!this.diagnosticsManager.getDiagnostics(document.uri).some(x => x.code === diagnostic.code && x !== diagnostic)) {
+        getSingleFixForTsCodeAction(diagnostic, tsAction) {
+            const codeAction = new vscode.CodeAction(tsAction.description, vscode.CodeActionKind.QuickFix);
+            codeAction.edit = codeAction_1.getEditForCodeAction(this.client, tsAction);
+            codeAction.diagnostics = [diagnostic];
+            codeAction.command = {
+                command: ApplyCodeActionCommand.ID,
+                arguments: [tsAction],
+                title: ''
+            };
+            codeAction.isPreferred = isPreferredFix(tsAction);
+            return codeAction;
+        }
+        addFixAllForTsCodeAction(results, document, file, diagnostic, tsAction) {
+            if (!tsAction.fixId || this.client.apiVersion.lt(api_1.default.v270) || results.hasFixAllAction(tsAction.fixId)) {
+                return results;
+            }
+            // Make sure there are multiple diagnostics of the same type in the file
+            if (!this.diagnosticsManager.getDiagnostics(document.uri).some(x => {
+                if (x === diagnostic) {
+                    return false;
+                }
+                return x.code === diagnostic.code
+                    || (fixAllErrorCodes.has(x.code) && fixAllErrorCodes.get(x.code) === fixAllErrorCodes.get(diagnostic.code));
+            })) {
+                return results;
+            }
+            const action = new vscode.CodeAction(tsAction.fixAllDescription || localize('fixAllInFileLabel', '{0} (Fix all in file)', tsAction.description), vscode.CodeActionKind.QuickFix);
+            action.diagnostics = [diagnostic];
+            action.command = {
+                command: ApplyFixAllCodeAction.ID,
+                arguments: [file, tsAction],
+                title: ''
+            };
+            results.addFixAllAction(tsAction.fixId, action);
             return results;
         }
-        const action = new vscode.CodeAction(tsAction.fixAllDescription || localize('fixAllInFileLabel', '{0} (Fix all in file)', tsAction.description), vscode.CodeActionKind.QuickFix);
-        action.diagnostics = [diagnostic];
-        action.command = {
-            command: ApplyFixAllCodeAction.ID,
-            arguments: [file, tsAction],
-            title: ''
-        };
-        results.addFixAllAction(tsAction.fixId, action);
-        return results;
     }
-}
-TypeScriptQuickFixProvider.metadata = {
-    providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
-};
+    TypeScriptQuickFixProvider.metadata = {
+        providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
+    };
+    return TypeScriptQuickFixProvider;
+})();
+// Some fix all actions can actually fix multiple differnt diagnostics. Make sure we still show the fix all action
+// in such cases
+const fixAllErrorCodes = new Map([
+    // Missing async
+    [2339, 2339],
+    [2345, 2339],
+]);
 const preferredFixes = new Set([
     'annotateWithTypeFromJSDoc',
     'constructorForDerivedNeedSuperCall',
@@ -233,12 +261,13 @@ const preferredFixes = new Set([
     'forgottenThisPropertyAccess',
     'spelling',
     'unusedIdentifier',
+    'addMissingAwait',
 ]);
 function isPreferredFix(tsAction) {
     return preferredFixes.has(tsAction.fixName);
 }
 function register(selector, client, fileConfigurationManager, commandManager, diagnosticsManager, telemetryReporter) {
-    return new dependentRegistration_1.VersionDependentRegistration(client, api_1.default.v213, () => vscode.languages.registerCodeActionsProvider(selector, new TypeScriptQuickFixProvider(client, fileConfigurationManager, commandManager, diagnosticsManager, telemetryReporter), TypeScriptQuickFixProvider.metadata));
+    return vscode.languages.registerCodeActionsProvider(selector, new TypeScriptQuickFixProvider(client, fileConfigurationManager, commandManager, diagnosticsManager, telemetryReporter), TypeScriptQuickFixProvider.metadata);
 }
 exports.register = register;
 //# sourceMappingURL=quickFix.js.map
