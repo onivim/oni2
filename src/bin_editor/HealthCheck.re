@@ -251,19 +251,17 @@ let run = (~checks, _cli) => {
   Log.info("");
 
   let printCrashLog = () => {
-  Log.info("Checking for crash log...");
-    
+    Log.info("Checking for crash log...");
+
     if (File.exists("onivim2-crash.log")) {
       Log.error("Crash log found:");
-      Log.error ("---")
+      Log.error("---");
       let lines = File.readAllLines("onivim2-crash.log");
-      lines
-      |> List.iter(Log.error);
-      Log.error ("---")
+      lines |> List.iter(Log.error);
+      Log.error("---");
     } else {
-      Log.info ("No crash log found!")
-    }
-  
+      Log.info("No crash log found!");
+    };
   };
 
   printCrashLog();
