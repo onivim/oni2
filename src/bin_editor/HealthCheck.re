@@ -181,7 +181,7 @@ let mainChecks = [
           ~onHealthCheckResult=res => {healthCheckResult := res},
           ~additionalEnv=[
             // Get stack trace on crash
-            ("OCAMLRUNPARAM", "b")
+            ("OCAMLRUNPARAM", "b"),
           ],
           Oni_Extensions.LanguageInfo.initial,
           setup,

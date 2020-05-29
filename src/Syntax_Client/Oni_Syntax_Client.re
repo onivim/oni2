@@ -53,11 +53,12 @@ let getEnvironment = (~namedPipe, ~parentPid, ~additionalEnv) => {
          (EnvironmentVariables.parentPid, parentPid),
          ...items,
        ]
-       @ additionalEnv,
+       @ additionalEnv
      );
 };
 
-let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose, ~additionalEnv) => {
+let startProcess =
+    (~executablePath, ~namedPipe, ~parentPid, ~onClose, ~additionalEnv) => {
   getEnvironment(~namedPipe, ~parentPid, ~additionalEnv)
   |> Utility.ResultEx.flatMap(environment => {
        ClientLog.debugf(m =>
@@ -161,7 +162,13 @@ let start =
   Transport.start(~namedPipe, ~dispatch)
   |> Utility.ResultEx.tap(transport => _transport := Some(transport))
   |> Utility.ResultEx.flatMap(transport => {
-       startProcess(~executablePath, ~parentPid, ~namedPipe, ~onClose, ~additionalEnv)
+       startProcess(
+         ~executablePath,
+         ~parentPid,
+         ~namedPipe,
+         ~onClose,
+         ~additionalEnv,
+       )
        |> Result.map(process => {transport, process, nextId: ref(0)})
      });
 };
