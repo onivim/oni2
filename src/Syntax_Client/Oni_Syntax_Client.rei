@@ -22,6 +22,7 @@ let start:
     ~onHighlights: (~bufferId: int, ~tokens: list(Protocol.TokenUpdate.t)) =>
                    unit,
     ~onHealthCheckResult: bool => unit,
+    ~additionalEnv: list((string, string))=?,
     Oni_Extensions.LanguageInfo.t,
     Setup.t
   ) =>

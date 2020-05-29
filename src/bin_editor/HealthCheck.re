@@ -179,6 +179,10 @@ let mainChecks = [
           ~onClose=_ => {closed := true},
           ~onHighlights=(~bufferId as _, ~tokens as _) => (),
           ~onHealthCheckResult=res => {healthCheckResult := res},
+          ~additionalEnv=[
+            // Get stack trace on crash
+            ("OCAMLRUNPARAM", "b")
+          ],
           Oni_Extensions.LanguageInfo.initial,
           setup,
         )
