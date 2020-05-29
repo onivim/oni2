@@ -183,8 +183,6 @@ if (cliOptions.syntaxHighlightService) {
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
 
-    PreflightChecks.run();
-
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
 
     let currentState =
