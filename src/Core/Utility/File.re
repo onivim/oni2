@@ -1,6 +1,7 @@
-let exists = filePath => {
-  Unix.stat(filePath).st_kind == S_REG;
-};
+let exists = filePath =>
+  try(Unix.stat(filePath).st_kind == S_REG) {
+  | Unix.Unix_error(_) => false
+  };
 
 let readAllLines = filePath => {
   let lines = ref([]);
