@@ -172,7 +172,7 @@ switch (eff) {
     /* The 'main' function for our app */
     let init = app => {
       Log.debug("Init");
-      
+
       let initialWorkingDirectory = initWorkingDirectory();
       let window =
         createWindow(
