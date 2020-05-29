@@ -124,7 +124,7 @@ if (process.platform == "linux") {
       CFBundleVersion: `${package.version}`,
       CFBundlePackageType: "APPL",
       CFBundleSignature: "????",
-      CFBundleExecutable: "Oni2",
+      CFBundleExecutable: "Oni2_editor",
       NSHighResolutionCapable: true,
       CFBundleDocumentTypes: package.build.fileAssociations.map(fileAssoc => {
             return {

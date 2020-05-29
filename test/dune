@@ -19,6 +19,7 @@
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
+        Textmate_Test
         reason-native-crash-utils.asan
             ))
 
@@ -95,6 +96,17 @@
         ))
 
 (executable
+    (name OniUnitTestRunnerTextmate)
+    (public_name OniUnitTestRunnerTextmate)
+    (modules OniUnitTestRunnerTextmate)
+    (package OniUnitTestRunner)
+    (libraries 
+        Oni_Core_Test
+        Textmate_Test
+        reason-native-crash-utils.asan
+        ))
+
+(executable
     (name OniUnitTestRunnerCI)
     (public_name OniUnitTestRunnerCI)
     (modules OniUnitTestRunnerCI)
@@ -112,5 +124,6 @@
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
+        Textmate_Test
         reason-native-crash-utils.asan
             ))

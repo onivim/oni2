@@ -1,0 +1,21 @@
+{
+	"name": "hello",
+	"scopeName": "source.hello",
+	"fileTypes": [
+		"world"
+	],
+	"patterns": [
+		{
+			"comment": "Handle non-consuming matches correctly",
+			"begin": "(?=h)",
+			"end": "$",
+			"name": "hello.outer",
+			"patterns": [
+				{
+					"match": "hello",
+					"name": "hello.inner"
+				}	
+			]
+		}
+	]
+}

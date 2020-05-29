@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Oni_Core.Utility;
 
 type t = {
   idToGroup: IntMap.t(EditorGroup.t),
@@ -41,6 +42,19 @@ let add = (~defaultFont, editorGroup, model) => {
     idToGroup:
       IntMap.add(editorGroup.editorGroupId, editorGroup, model.idToGroup),
   };
+};
+
+let getAllVisibleEditors = ({idToGroup, _}) => {
+  IntMap.fold(
+    (_key, curr, acc) => {
+      switch (EditorGroup.getActiveEditor(curr)) {
+      | Some(editor) => [editor, ...acc]
+      | None => acc
+      }
+    },
+    idToGroup,
+    [],
+  );
 };
 
 let setActiveEditor = (~editorId, model) => {
@@ -195,4 +209,10 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
     | None => model
     }
   };
+};
+
+let getActiveEditor = editorGroups => {
+  editorGroups.idToGroup
+  |> IntMap.find_opt(editorGroups.activeId)
+  |> OptionEx.flatMap(EditorGroup.getActiveEditor);
 };
