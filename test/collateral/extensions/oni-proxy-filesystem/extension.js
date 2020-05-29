@@ -18,6 +18,8 @@ function activate(context) {
 		showData("Command executed: " + JSON.stringify(args));
 
 
+		//vscode.workspace.fs.writeFile(vscode.Uri.file("write.test"), new Uint8Array(1234), { create: true, overwrite: true});
+
 		vscode.workspace.fs.stat(vscode.Uri.file("test.txt"))
 		.then((statResult) => {
 			showData({
