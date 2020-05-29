@@ -77,13 +77,28 @@ let make = (~state: State.t, ()) => {
   let onContextMenuItemSelect = item =>
     GlobalContext.current().dispatch(ContextMenuItemSelected(item));
 
+  let mode = ModeManager.current(state);
+
   let statusBar = () =>
     if (Selectors.getActiveConfigurationValue(state, c =>
           c.workbenchStatusBarVisible
         )
         && !zenMode) {
       <View style=Styles.statusBar>
-        <StatusBar state contextMenu onContextMenuItemSelect theme />
+        <Feature_StatusBar.View
+          mode
+          notifications={state.notifications}
+          diagnostics={state.diagnostics}
+          font={state.uiFont}
+          statusBar={state.statusBar}
+          activeBuffer=None
+          activeEditor=None
+          onContextMenuItemSelect={_ => ()}
+          theme
+          dispatch={msg =>
+            GlobalContext.current().dispatch(Actions.StatusBar(msg))
+          }
+        />
       </View>;
     } else {
       React.empty;

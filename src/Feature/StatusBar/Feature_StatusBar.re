@@ -11,6 +11,7 @@ module ContextMenuType = {
 // MODEL
 
 module Item = {
+  [@deriving show]
   type t = {
     id: string,
     priority: int,
@@ -30,6 +31,7 @@ module Item = {
 
 // MSG
 
+[@deriving show]
 type msg =
   | ItemAdded(Item.t)
   | ItemDisposed(string)
@@ -42,25 +44,25 @@ type msg =
       command: string,
     });
 
+type model = {
+  items: list(Item.t),
+  contextMenu: ContextMenuType.t,
+};
 
-type model = list(Item.t);
-
-let initial = [];
+let initial = {items: [], contextMenu: Nothing};
 
 // UPDATE
 
-
 let update = (model, msg) => {
-  
   let removeItemById = (items: list(Item.t), id) =>
     List.filter(si => Item.(si.id) != id, items);
 
   switch (msg) {
   | ItemAdded(item) =>
     /* Replace the old item with the new one */
-    let newState = removeItemById(model, item.id);
-    [item, ...newState];
-  | ItemDisposed(id) => removeItemById(model, id)
+    let newItems = removeItemById(model.items, item.id);
+    {...model, items: [item, ...newItems]};
+  | ItemDisposed(id) => {...model, items: removeItemById(model.items, id)}
   | _ => model
   };
 };
@@ -202,14 +204,8 @@ let notificationCount =
     |> List.length
     |> string_of_int;
 
-  let onClick = () =>
-    dispatch(
-      NotificationCountClicked,
-    );
-  let onRightClick = () =>
-    dispatch(
-      NotificationsContextMenu,
-    );
+  let onClick = () => dispatch(NotificationCountClicked);
+  let onRightClick = () => dispatch(NotificationsContextMenu);
 
   let menu = () => {
     let items =
@@ -253,12 +249,12 @@ let notificationCount =
   </item>;
 };
 
-let diagnosticCount = (~font, ~background, ~theme, ~diagnostics, ~dispatch, ()) => {
+let diagnosticCount =
+    (~font, ~background, ~theme, ~diagnostics, ~dispatch, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
-  let onClick = () =>
-    dispatch(DiagnosticsClicked);
+  let onClick = () => dispatch(DiagnosticsClicked);
 
   <item onClick>
     <View
@@ -298,7 +294,6 @@ module View = {
                   ~mode: Oni_Core.Mode.t,
                   ~notifications: Feature_Notification.model,
                   ~diagnostics: Diagnostics.t,
-                  ~contextMenu,
                   ~font: UiFont.t,
                   ~onContextMenuItemSelect,
                   ~activeBuffer: option(Oni_Core.Buffer.t),
@@ -308,7 +303,6 @@ module View = {
                   ~dispatch,
                   (),
                 ) => {
-
     let%hook activeNotifications =
       CustomHooks.useExpiration(
         ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
@@ -345,9 +339,7 @@ module View = {
       let onClick =
         statusItem.command
         |> Option.map((command, ()) =>
-             dispatch(
-                 ContributedItemClicked({id: statusItem.id, command}),
-             )
+             dispatch(ContributedItemClicked({id: statusItem.id, command}))
            );
 
       <item ?onClick>
@@ -363,25 +355,25 @@ module View = {
     };
 
     let leftItems =
-      statusBar
+      statusBar.items
       |> List.filter((item: Item.t) => item.alignment == Left)
       |> List.map(toStatusBarElement)
       |> React.listToElement;
 
     let rightItems =
-      statusBar
+      statusBar.items
       |> List.filter((item: Item.t) => item.alignment == Right)
       |> List.map(toStatusBarElement)
       |> React.listToElement;
 
-// TODO: Hook up indentation
+    // TODO: Hook up indentation
 
-//    let indentation = () => {
-//      let text =
-//        Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
-//
-//      <textItem font background theme text />;
-//    };
+    //    let indentation = () => {
+    //      let text =
+    //        Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
+    //
+    //      <textItem font background theme text />;
+    //    };
 
     let indentation = () => React.empty;
 
@@ -411,7 +403,9 @@ module View = {
     let position = () => {
       let text = {
         OptionEx.map2(
-          (editor, buffer) => {Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)},
+          (editor, buffer) => {
+            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
+          },
           activeEditor,
           activeBuffer,
         )
@@ -438,7 +432,7 @@ module View = {
           foreground
           background
           notifications
-          contextMenu
+          contextMenu={statusBar.contextMenu}
           onContextMenuItemSelect
         />
       </section>
@@ -460,4 +454,4 @@ module View = {
       <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
     </View>;
   };
-}
+};
