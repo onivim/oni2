@@ -18,6 +18,3 @@ extensions/* linguist-generated
 # Test files
 integration_test/test.crlf text eol=crlf
 integration_test/test.lf text eol=lf
-
-test/reason-libvim/test.crlf text eol=crlf
-test/reason-libvim/test.lf text eol=lf

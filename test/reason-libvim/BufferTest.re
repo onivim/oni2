@@ -20,13 +20,13 @@ describe("Buffer", ({describe, _}) => {
       expect.equal(lineEndings, Some(LF));
     });
     test("get: crlf", ({expect, _}) => {
-      let buffer = Helpers.resetBuffer("test/reason-libvim/test.crlf");
+      let buffer = Helpers.resetBuffer("integration_test/test.crlf");
       let lineEndings = Buffer.getLineEndings(buffer);
 
       expect.equal(lineEndings, Some(CRLF));
     });
     test("get: lf", ({expect, _}) => {
-      let buffer = Helpers.resetBuffer("test/reason-libvim/test.lf");
+      let buffer = Helpers.resetBuffer("integration_test/test.lf");
       let lineEndings = Buffer.getLineEndings(buffer);
 
       expect.equal(lineEndings, Some(LF));

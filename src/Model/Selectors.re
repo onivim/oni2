@@ -82,6 +82,18 @@ let getActiveTerminal = (state: State.t) => {
      );
 };
 
+let getBufferForTerminal = (~terminalId: int, state: State.t) => {
+  state.bufferRenderers.rendererById
+  |> IntMap.filter((_bufferId, renderer) => {
+       switch (renderer) {
+       | BufferRenderer.Terminal({id, _}) => id == terminalId
+       | _ => false
+       }
+     })
+  |> IntMap.choose_opt
+  |> Option.map(fst);
+};
+
 let getActiveTerminalId = (state: State.t) => {
   state |> getActiveTerminal |> Option.map((Feature_Terminal.{id, _}) => id);
 };

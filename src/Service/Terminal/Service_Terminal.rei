@@ -2,6 +2,10 @@ open Oni_Core;
 
 [@deriving show({with_path: false})]
 type msg =
+  | ProcessExit({
+      id: int,
+      exitCode: int,
+    })
   | ProcessStarted({
       id: int,
       pid: int,

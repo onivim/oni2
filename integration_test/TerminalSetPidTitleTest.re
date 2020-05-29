@@ -18,7 +18,11 @@ runTest(~name="TerminalSetPidTitle", (dispatch, wait, _) => {
   dispatch(
     Actions.Terminal(
       Feature_Terminal.Command(
-        NewTerminal({cmd: None, splitDirection: Vertical}),
+        NewTerminal({
+          cmd: None,
+          splitDirection: Vertical,
+          closeOnExit: false,
+        }),
       ),
     ),
   );
