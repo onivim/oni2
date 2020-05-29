@@ -73,8 +73,9 @@ module ByteParser = {
           // https://github.com/onivim/vscode-exthost/blob/923c38b016c87a205957456e13c62f8dfd3bdc62/src/vs/workbench/services/extensions/common/rpcProtocol.ts#L710
 
           // If it isn't meant to be JSON, we'll return it as a `String (which is the closet thing we have to 'buffer')
-          let result = argType == argString
-            ? Yojson.Safe.from_string(str) : `String(str);
+          let result =
+            argType == argString
+              ? Yojson.Safe.from_string(str) : `String(str);
           [result, ...loop(bytes, idx + 1)];
         } else {
           [`Null, ...loop(bytes, idx + 1)];

@@ -321,8 +321,8 @@ module FileSystem = {
       | ("$readFile", `List([uriJson])) =>
         failwith("TODO - buffer format: readFile")
       | ("$writeFile", `List([uriJson, bufferJson])) =>
-        prerr_endline ("BUFFER JSON: " ++ Yojson.Safe.to_string(bufferJson));
-        failwith("TODO - buffer format: writeFile")
+        prerr_endline("Buffer JSON: " ++ Yojson.Safe.to_string(bufferJson));
+        failwith("TODO - buffer format: writeFile");
       | ("$rename", `List([sourceJson, targetJson, optsJson])) =>
         let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
         let%bind target = targetJson |> Internal.decode_value(Uri.decode);
