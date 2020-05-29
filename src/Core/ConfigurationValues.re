@@ -99,7 +99,7 @@ let default = {
   editorMinimapShowSlider: true,
   editorMinimapMaxColumn: Constants.minimapMaxColumn,
   editorLineNumbers: On,
-  editorInsertSpaces: false,
+  editorInsertSpaces: true,
   editorIndentSize: 4,
   editorTabSize: 4,
   editorRenderIndentGuides: true,

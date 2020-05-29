@@ -10,4 +10,5 @@
         lwt
         Revery
         timber)
-    (preprocess (pps lwt_ppx)))
+    (inline_tests)
+    (preprocess (pps lwt_ppx ppx_inline_test)))

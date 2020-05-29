@@ -13,5 +13,9 @@ Oni_Syntax_Test.TestFramework.cli();
 Feature_Editor_Test.TestFramework.cli();
 Feature_LanguageSupport_Test.TestFramework.cli();
 Oni_Components_Test.TestFramework.cli();
+
+Vim.init();
+Libvim_Test.TestFramework.cli();
+
 Exthost_Transport_Test.TestFramework.cli();
 Exthost_Test.TestFramework.cli();

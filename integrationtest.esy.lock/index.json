@@ -1,5 +1,5 @@
 {
-  "checksum": "953f1d3234c7bd7d0d70de14d94f03c1",
+  "checksum": "b49549447f15abd31f276e392dbcdf10",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -131,20 +131,20 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#8b399ed@d41d8cd9",
+        "revery@github:revery-ui/revery#bd3d702@d41d8cd9",
         "reason-libvterm@github:revery-ui/reason-libvterm#91bad1f@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "@glennsl/timber@1.0.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#8b399ed@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#8b399ed@d41d8cd9",
+    "revery@github:revery-ui/revery#bd3d702@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#bd3d702@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#8b399ed",
+      "version": "github:revery-ui/revery#bd3d702",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#8b399ed" ]
+        "source": [ "github:revery-ui/revery#bd3d702" ]
       },
       "overrides": [],
       "dependencies": [
@@ -157,7 +157,7 @@
         "reason-harfbuzz@1.91.8001@d41d8cd9",
         "reason-font-manager@2.1.1@d41d8cd9", "flex@1.2.3@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/lwt_ppx@opam:2.0.1@ab0debb8", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
@@ -420,24 +420,6 @@
       ],
       "devDependencies": []
     },
-    "reason-libvim@github:onivim/reason-libvim#b13865e@d41d8cd9": {
-      "id": "reason-libvim@github:onivim/reason-libvim#b13865e@d41d8cd9",
-      "name": "reason-libvim",
-      "version": "github:onivim/reason-libvim#b13865e",
-      "source": {
-        "type": "install",
-        "source": [ "github:onivim/reason-libvim#b13865e" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "refmterr@3.3.2@d41d8cd9", "ocaml@4.9.1000@d41d8cd9",
-        "libvim@8.10869.43@d41d8cd9",
-        "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
-        "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
-        "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.5.2@d41d8cd9"
-      ],
-      "devDependencies": [ "ocaml@4.9.1000@d41d8cd9" ]
-    },
     "reason-harfbuzz@1.91.8001@d41d8cd9": {
       "id": "reason-harfbuzz@1.91.8001@d41d8cd9",
       "name": "reason-harfbuzz",
@@ -602,14 +584,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.43@d41d8cd9": {
-      "id": "libvim@8.10869.43@d41d8cd9",
+    "libvim@8.10869.44@d41d8cd9": {
+      "id": "libvim@8.10869.44@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.43",
+      "version": "8.10869.44",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.43.tgz#sha1:bea17634cc9bb797fe0abf90973ba7813efd055e"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.44.tgz#sha1:de132ad7a82ae8214e29084ec2c97854ac6071f3"
         ]
       },
       "overrides": [],
@@ -994,7 +976,7 @@
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.2@d41d8cd9", "ocaml@4.9.1000@d41d8cd9",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/menhir@opam:20200211@26571604",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
@@ -1012,7 +994,7 @@
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.2@d41d8cd9", "ocaml@4.9.1000@d41d8cd9",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.9.1000@d41d8cd9" ]
@@ -1151,15 +1133,14 @@
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#4e8ca1c@d41d8cd9",
-        "revery@github:revery-ui/revery#8b399ed@d41d8cd9",
+        "revery@github:revery-ui/revery#bd3d702@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3032@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
-        "reason-libvim@github:onivim/reason-libvim#b13865e@d41d8cd9",
-        "ocaml@4.9.1000@d41d8cd9",
+        "ocaml@4.9.1000@d41d8cd9", "libvim@8.10869.44@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
         "esy-sdl2@2.0.10007@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
@@ -1171,8 +1152,9 @@
         "@opam/reason@opam:3.6.0@2da53ff9", "@opam/re@opam:1.9.0@d4d5e13d",
         "@opam/ppxlib@opam:0.13.0@65a9c7cc",
         "@opam/ppx_let@opam:v0.13.0@5703d2be",
+        "@opam/ppx_inline_test@opam:v0.13.1@45efd1b1",
         "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/markup@opam:0.8.2@87975241", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/luv@opam:0.5.2@bfb5a32a", "@opam/logs@opam:0.7.0@1d03143e",
@@ -1966,6 +1948,33 @@
         "@opam/dune@opam:2.5.0@aef1678b", "@opam/base@opam:v0.13.2@c3150775"
       ]
     },
+    "@opam/ppx_inline_test@opam:v0.13.1@45efd1b1": {
+      "id": "@opam/ppx_inline_test@opam:v0.13.1@45efd1b1",
+      "name": "@opam/ppx_inline_test",
+      "version": "opam:v0.13.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/sha256/e7/e75c9df9b33e20655fd2f728df5e332794bdd9a2f5a62fc08e44fb6ca1beda6c#sha256:e75c9df9b33e20655fd2f728df5e332794bdd9a2f5a62fc08e44fb6ca1beda6c",
+          "archive:https://github.com/janestreet/ppx_inline_test/releases/download/v0.13.1/ppx_inline_test-v0.13.1.tbz#sha256:e75c9df9b33e20655fd2f728df5e332794bdd9a2f5a62fc08e44fb6ca1beda6c"
+        ],
+        "opam": {
+          "name": "ppx_inline_test",
+          "version": "v0.13.1",
+          "path": "integrationtest.esy.lock/opam/ppx_inline_test.v0.13.1"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.9.1000@d41d8cd9", "@opam/ppxlib@opam:0.13.0@65a9c7cc",
+        "@opam/dune@opam:2.5.0@aef1678b", "@opam/base@opam:v0.13.2@c3150775",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.9.1000@d41d8cd9", "@opam/ppxlib@opam:0.13.0@65a9c7cc",
+        "@opam/dune@opam:2.5.0@aef1678b", "@opam/base@opam:v0.13.2@c3150775"
+      ]
+    },
     "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe": {
       "id": "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
       "name": "@opam/ppx_deriving_yojson",
@@ -1988,7 +1997,7 @@
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/result@opam:1.5@6b753c82", "@opam/ppxfind@opam:1.4@1e01d2a5",
         "@opam/ppx_tools@opam:6.0+4.08.0@5f5453f4",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/dune@opam:2.5.0@aef1678b", "@opam/cppo@opam:1.6.6@f4f83858",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
@@ -1996,24 +2005,24 @@
         "ocaml@4.9.1000@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/result@opam:1.5@6b753c82",
-        "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+        "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/dune@opam:2.5.0@aef1678b"
       ]
     },
-    "@opam/ppx_deriving@opam:4.4.1@208c6c8f": {
-      "id": "@opam/ppx_deriving@opam:4.4.1@208c6c8f",
+    "@opam/ppx_deriving@opam:4.5@bb81afdc": {
+      "id": "@opam/ppx_deriving@opam:4.5@bb81afdc",
       "name": "@opam/ppx_deriving",
-      "version": "opam:4.4.1",
+      "version": "opam:4.5",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/27/27bc57774724fc4f48775f2011375a5ee1439570204abbf6607761c472757e2f#sha256:27bc57774724fc4f48775f2011375a5ee1439570204abbf6607761c472757e2f",
-          "archive:https://github.com/ocaml-ppx/ppx_deriving/archive/v4.4.1.tar.gz#sha256:27bc57774724fc4f48775f2011375a5ee1439570204abbf6607761c472757e2f"
+          "archive:https://opam.ocaml.org/cache/sha512/f7/f79153c5231ba1e03a3491fde95ca82ecb62fe05b60a649a374d2fbc5ea5dd9242126de7dfbe917c22fd7077c026c940e18c6b36c5ce0ec4bb6e07f11d2b710b#sha512:f79153c5231ba1e03a3491fde95ca82ecb62fe05b60a649a374d2fbc5ea5dd9242126de7dfbe917c22fd7077c026c940e18c6b36c5ce0ec4bb6e07f11d2b710b",
+          "archive:https://github.com/ocaml-ppx/ppx_deriving/archive/v4.5.tar.gz#sha512:f79153c5231ba1e03a3491fde95ca82ecb62fe05b60a649a374d2fbc5ea5dd9242126de7dfbe917c22fd7077c026c940e18c6b36c5ce0ec4bb6e07f11d2b710b"
         ],
         "opam": {
           "name": "ppx_deriving",
-          "version": "4.4.1",
-          "path": "integrationtest.esy.lock/opam/ppx_deriving.4.4.1"
+          "version": "4.5",
+          "path": "integrationtest.esy.lock/opam/ppx_deriving.4.5"
         }
       },
       "overrides": [],

@@ -50,7 +50,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     | Quickmenu => [Actions.QuickmenuInput(k)]
 
-    | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
+    | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
     | FileExplorer => [
         Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),

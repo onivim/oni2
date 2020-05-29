@@ -4,7 +4,6 @@
  * Top-level module for Oni_Extensions.
  */
 
-module ExtHostClient = ExtHostClient;
 module LanguageConfiguration = LanguageConfiguration;
 module LanguageConfigurationLoader = LanguageConfigurationLoader;
 module LanguageInfo = LanguageInfo;

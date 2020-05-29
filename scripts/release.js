@@ -124,7 +124,7 @@ if (process.platform == "linux") {
       CFBundleVersion: `${package.version}`,
       CFBundlePackageType: "APPL",
       CFBundleSignature: "????",
-      CFBundleExecutable: "Oni2_editor",
+      CFBundleExecutable: "Oni2",
       NSHighResolutionCapable: true,
       CFBundleDocumentTypes: package.build.fileAssociations.map(fileAssoc => {
             return {
@@ -133,7 +133,10 @@ if (process.platform == "linux") {
                 CFBundleTypeRole: fileAssoc.role,
                 CFBundleTypeIconFile: "macDocumentIcons/" + fileAssoc.icon.mac
             }
-        })
+        }),
+      LSEnvironment: {
+          "ONI2_BUNDLED": "1"
+      }
   };
 
   fs.mkdirpSync(frameworksDirectory);

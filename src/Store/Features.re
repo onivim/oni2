@@ -59,6 +59,18 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | Sneak(msg) =>
+    let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
+
+    let state = {...state, sneak: model};
+
+    let eff =
+      switch ((maybeOutmsg: Feature_Sneak.outmsg)) {
+      | Nothing => Effect.none
+      | Effect(eff) => eff |> Effect.map(msg => Actions.Sneak(msg))
+      };
+    (state, eff);
+
   | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(
@@ -131,6 +143,29 @@ let update =
       };
     (state, effect);
 
+  | Layout(msg) =>
+    open Feature_Layout;
+
+    let focus =
+      EditorGroups.getActiveEditorGroup(state.editorGroups)
+      |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+    let (model, maybeOutmsg) = update(~focus, state.layout, msg);
+    let state = {...state, layout: model};
+
+    let state =
+      switch (maybeOutmsg) {
+      | Focus(editorGroupId) => {
+          ...state,
+          editorGroups:
+            EditorGroups.setActiveEditorGroup(
+              editorGroupId,
+              state.editorGroups,
+            ),
+        }
+      | Nothing => state
+      };
+    (state, Effect.none);
+
   | Terminal(msg) =>
     let (model, eff) =
       Feature_Terminal.update(
@@ -139,10 +174,15 @@ let update =
         msg,
       );
 
-    let effect: Isolinear.Effect.t(Actions.t) =
+    let state = {...state, terminals: model};
+
+    let (state, effect) =
       switch ((eff: Feature_Terminal.outmsg)) {
-      | Nothing => Effect.none
-      | Effect(eff) => eff |> Effect.map(msg => Actions.Terminal(msg))
+      | Nothing => (state, Effect.none)
+      | Effect(eff) => (
+          state,
+          eff |> Effect.map(msg => Actions.Terminal(msg)),
+        )
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
@@ -151,12 +191,57 @@ let update =
           | Current => None
           };
 
-        Isolinear.Effect.createWithDispatch(
-          ~name="feature.terminal.openBuffer", dispatch => {
-          dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
-        });
+        let eff =
+          Isolinear.Effect.createWithDispatch(
+            ~name="feature.terminal.openBuffer", dispatch => {
+            dispatch(Actions.OpenFileByPath(name, windowTreeDirection, None))
+          });
+        (state, eff);
+
+      | TerminalExit({terminalId, shouldClose, _}) when shouldClose == true =>
+        let maybeTerminalBuffer =
+          state |> Selectors.getBufferForTerminal(~terminalId);
+
+        // TODO:
+        // This is really duplicated logic from the WindowsStoreConnector
+        // - the fact that the window layout needs to be adjusted along
+        // with the editor groups. We need to consolidate this to a
+        // unified concept, once the window layout work has completed:
+        // Something like `Feature_EditorLayout`, which contains
+        // both the editor groups and layout concepts (dependent on
+        // `Feature_Layout`) - and could include the `WindowsStoreConnector`.
+
+        let editorGroups' =
+          maybeTerminalBuffer
+          |> Option.map(bufferId =>
+               EditorGroups.closeBuffer(~bufferId, state.editorGroups)
+             )
+          |> Option.value(~default=state.editorGroups);
+
+        let layout' =
+          state.layout
+          |> Feature_Layout.windows
+          |> List.fold_left(
+               (acc, editorGroupId) =>
+                 if (Oni_Model.EditorGroups.getEditorGroupById(
+                       editorGroups',
+                       editorGroupId,
+                     )
+                     == None) {
+                   Feature_Layout.removeWindow(editorGroupId, acc);
+                 } else {
+                   acc;
+                 },
+               state.layout,
+             );
+
+        let state' = {...state, layout: layout', editorGroups: editorGroups'};
+
+        (state', Effect.none);
+      | TerminalExit(_) => (state, Effect.none)
       };
-    ({...state, terminals: model}, effect);
+
+    (state, effect);
 
   | Theme(msg) =>
     let model' = Feature_Theme.update(state.colorTheme, msg);
@@ -185,7 +270,14 @@ let update =
 
     | None => (state, Effect.none)
     }
-
+  | Editor(msg) =>
+    let eff =
+      Feature_Editor.update(
+        msg,
+        path => OpenFileByPath(path, None, None),
+        Noop,
+      );
+    (state, eff);
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);
     ({...state, changelog: model}, eff);
