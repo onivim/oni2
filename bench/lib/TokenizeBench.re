@@ -1,10 +1,14 @@
 open Textmate;
 open BenchFramework;
 
-let reasonJson = Yojson.Safe.from_file("test/reason-textmate/onivim/fixtures/reason.json");
+let reasonJson =
+  Yojson.Safe.from_file("test/reason-textmate/onivim/fixtures/reason.json");
 let javascriptJson =
-  Yojson.Safe.from_file("test/reason-textmate/first-mate/fixtures/javascript.json");
-let cssJson = Yojson.Safe.from_file("test/reason-textmate/first-mate/fixtures/css.json");
+  Yojson.Safe.from_file(
+    "test/reason-textmate/first-mate/fixtures/javascript.json",
+  );
+let cssJson =
+  Yojson.Safe.from_file("test/reason-textmate/first-mate/fixtures/css.json");
 
 let getGrammar = json =>
   switch (Grammar.Json.of_yojson(json)) {

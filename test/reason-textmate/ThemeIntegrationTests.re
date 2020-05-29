@@ -20,7 +20,8 @@ let resultValue =
 
 describe("invalid", ({test, _}) => {
   test("should give error", ({expect, _}) => {
-    let loadResult = Theme.from_file("test/reason-textmate/onivim/fixtures/invalid.json");
+    let loadResult =
+      Theme.from_file("test/reason-textmate/onivim/fixtures/invalid.json");
     expect.equal(true, Result.is_error(loadResult));
   })
 });
@@ -29,15 +30,19 @@ describe("invalid", ({test, _}) => {
 
 describe("OneDark", ({test, _}) => {
   let oneDark =
-    Theme.from_file("test/reason-textmate/onivim/fixtures/OneDark-Pro.json") |> resultValue;
+    Theme.from_file("test/reason-textmate/onivim/fixtures/OneDark-Pro.json")
+    |> resultValue;
   let oneDarkLight =
-    Theme.from_file("test/reason-textmate/onivim/fixtures/OneDarkPro-Light.json")
+    Theme.from_file(
+      "test/reason-textmate/onivim/fixtures/OneDarkPro-Light.json",
+    )
     |> resultValue;
   let oneDarkTheme = Theme.getTokenColors(oneDark);
   let oneDarkColors = Theme.getColors(oneDark);
 
   let darkPlus =
-    Theme.from_file("test/reason-textmate/onivim/fixtures/dark_plus.json") |> resultValue;
+    Theme.from_file("test/reason-textmate/onivim/fixtures/dark_plus.json")
+    |> resultValue;
   let darkPlusTheme = Theme.getTokenColors(darkPlus);
   let darkPlusColors = Theme.getColors(darkPlus);
 
@@ -119,7 +124,10 @@ describe("OneDark", ({test, _}) => {
 describe("XML", ({describe, _}) => {
   describe("Duotone", ({test, _}) => {
     let theme =
-      Theme.from_file(~isDark=true, "test/reason-textmate/onivim/fixtures/duotone-earth.xml")
+      Theme.from_file(
+        ~isDark=true,
+        "test/reason-textmate/onivim/fixtures/duotone-earth.xml",
+      )
       |> resultValue;
 
     let colors = Theme.getColors(theme);

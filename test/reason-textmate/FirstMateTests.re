@@ -44,7 +44,9 @@ module FirstMateTest = {
 
   let _loadGrammar = (rootPath: string, grammarPath: string) => {
     let json =
-      Yojson.Safe.from_file("test/reason-textmate/" ++ rootPath ++ "/" ++ grammarPath);
+      Yojson.Safe.from_file(
+        "test/reason-textmate/" ++ rootPath ++ "/" ++ grammarPath,
+      );
     switch (Grammar.Json.of_yojson(json)) {
     | Ok(v) => v
     | Error(msg) =>
@@ -209,7 +211,10 @@ module FirstMateTestSuite = {
   };
 
   let ofDirectory = (rootPath: string) => {
-    let json = Yojson.Safe.from_file("test/reason-textmate/" ++ rootPath ++ "/tests.json");
+    let json =
+      Yojson.Safe.from_file(
+        "test/reason-textmate/" ++ rootPath ++ "/tests.json",
+      );
     let tests =
       switch (tests_of_yojson(json)) {
       | Ok(v) => v
