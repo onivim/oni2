@@ -284,9 +284,9 @@ let start =
     let extHostSubscription =
       Feature_Exthost.subscription(
         ~buffers=visibleBuffers,
-        //      ~editors=visibleEditors,
+        //~editors=visibleEditors,
         ~editors=[],
-        ~activeEditorId=1,
+        ~activeEditorId=Some(1),
         ~client=extHostClient,
       )
       |> Isolinear.Sub.map(() => Model.Actions.Noop);
