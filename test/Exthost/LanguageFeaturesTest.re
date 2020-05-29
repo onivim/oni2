@@ -353,4 +353,33 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> finishTest;
     })
   });
+  describe("hover", ({test, _}) => {
+    test("gets hover", ({expect, _}) => {
+      let hoverHandle = ref(-1);
+
+//      let getHover = client =>
+//        Request.LanguageFeatures.provideReferences(
+//          ~handle=referencesHandle^,
+//          ~resource=testUri,
+//          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+//          ~context=Exthost.ReferenceContext.{includeDeclaration: true},
+//          client,
+//        );
+
+      let waitForRegisterHoverProvider =
+        fun
+        | Msg.LanguageFeatures(RegisterReferenceSupport({handle, _})) => {
+            hoverHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterHoverProvider",
+           waitForRegisterHoverProvider,
+         )
+     |> finishTest;
+  });
+});
 });

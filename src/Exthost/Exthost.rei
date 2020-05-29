@@ -615,6 +615,10 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
+      | RegisterHoverProvider({
+          handle: int,
+          selector: DocumentSelector.t,
+      })
       | RegisterImplementationSupport({
           handle: int,
           selector: DocumentSelector.t,
