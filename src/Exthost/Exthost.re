@@ -28,6 +28,7 @@ module SCM = SCM;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
 module SymbolKind = SymbolKind;
+module TextEditor = TextEditor;
 module ThemeColor = ThemeColor;
 module WorkspaceData = WorkspaceData;
 

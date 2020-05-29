@@ -164,11 +164,12 @@ module Documents = {
 };
 
 module DocumentsAndEditors = {
+  open Json.Encode;
   let acceptDocumentsAndEditorsDelta = (~delta, client) => {
     Client.notify(
       ~rpcName="ExtHostDocumentsAndEditors",
       ~method="$acceptDocumentsAndEditorsDelta",
-      ~args=`List([DocumentsAndEditorsDelta.to_yojson(delta)]),
+      ~args=`List([delta |> encode_value(DocumentsAndEditorsDelta.encode)]),
       client,
     );
   };
