@@ -3,5 +3,5 @@
     (public_name OniBench.lib)
     (ocamlopt_flags -linkall)
     (preprocess (pps brisk-reconciler.ppx))
-    (libraries Oni2.core Oni2.store Oni2.syntax Oni2.ui reperf.lib)
+    (libraries Oni2.core Oni2.store Oni2.syntax Oni2.ui reperf.lib textmate)
 )
