@@ -28,7 +28,6 @@ let reduce: (State.t, Actions.t) => State.t =
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
         sideBar: SideBarReducer.reduce(~zenMode=s.zenMode, s.sideBar, a),
-        statusBar: StatusBarReducer.reduce(s.statusBar, a),
       };
 
       switch (a) {
