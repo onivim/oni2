@@ -24,8 +24,7 @@ module Internal = {
         }
       }
     );
-
-}
+};
 
 /** [on_success] executes [f] unless we already hit an error. In
   that case the error is passed on. */
