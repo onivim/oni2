@@ -82,6 +82,12 @@ module Location: {
   let decode: Json.decoder(t);
 };
 
+module MarkdownString: {
+  type t = string;
+
+  let decode: Json.decoder(t);
+};
+
 module DefinitionLink: {
   type t = {
     uri: Uri.t,
@@ -132,6 +138,15 @@ module DocumentHighlight: {
   type t = {
     range: OneBasedRange.t,
     kind: Kind.t,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module Hover: {
+  type t = {
+    contents: list(MarkdownString.t),
+    range: option(OneBasedRange.t),
   };
 
   let decode: Json.decoder(t);
@@ -615,6 +630,10 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
+      | RegisterHoverProvider({
+          handle: int,
+          selector: DocumentSelector.t,
+        })
       | RegisterImplementationSupport({
           handle: int,
           selector: DocumentSelector.t,
@@ -923,6 +942,15 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(DefinitionLink.t));
+
+    let provideHover:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(option(Hover.t));
 
     let provideImplementation:
       (
