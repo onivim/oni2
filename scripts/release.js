@@ -222,6 +222,7 @@ if (process.platform == "linux") {
   const dmgJson = {
     title: "Onivim 2",
     background: path.join(imageSourceDirectory, "dmg-background.png"),
+    icon: path.join(imageSourceDirectory, "dmg-icon.icns"),
     format: "ULFO",
     window: {
         size: {
