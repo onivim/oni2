@@ -51,13 +51,11 @@ describe("Pattern", ({describe, _}) => {
 
       expect.result(maybePattern).toBeOk();
 
-      let pattern = maybePattern |> Result.get_ok;
-
-      switch (pattern) {
-      | Match({ matchName, captures, _}) =>
+      switch (maybePattern) {
+      | Ok(Match({ matchName, captures, _})) =>
         expect.bool(matchName == Some("match2")).toBe(true);
         expect.equal(captures, [
-          (0, "a.meta.capture")
+          (0, "a.meta.group")
         ]);
       | _ => failwith("Unexpected pattern type.");
       };

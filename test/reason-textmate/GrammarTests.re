@@ -41,14 +41,14 @@ describe("Grammar", ({describe, _}) => {
       };
     });
 
-    test("regression test: nim grammar", ({ expect, _}) => {
-      let maybeGrammar = Grammar.Json.of_file("test/reason-textmate/onivim/fixtures/nim.json");
+    test("regression test: nim grammar", ({expect, _}) => {
+      let maybeGrammar =
+        Grammar.Json.of_file("test/reason-textmate/onivim/fixtures/nim.json");
 
       expect.result(maybeGrammar).toBeOk();
 
       let grammar = Result.get_ok(maybeGrammar);
       expect.string(grammar.scopeName).toEqual("source.nim");
-
     });
   });
 
