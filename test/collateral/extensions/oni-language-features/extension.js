@@ -33,21 +33,25 @@ function activate(context) {
 		return new vscode.Location(document.uri, pos);
 	};
 
-	const format = (_document, _options, _token) => {
+	const commonFormat = (str) => {
 		return [
 			new vscode.TextEdit(
 				new vscode.Range(1, 2, 3, 4),
-				"insert-indentation-here"
+				str,
 			)
 		];
 	};
 
 	const asYouTypeFormat = (_document, _position, _ch, _options, _token) => {
-		format(_document, _options, _token);
+		return commonFormat("as-you-type");
 	};
 
 	const rangeFormat = (_document, _range, _options, _token) => {
-		format(_document, _options, _token);
+		return commonFormat("range");
+	};
+
+	const format = (_document, _options, _token) => {
+		return commonFormat("document");
 	};
 
 	const documentFormattingProvider = {

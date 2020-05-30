@@ -316,19 +316,19 @@ module LanguageFeatures = {
         selector: DocumentSelector.t,
         extensionId: ExtensionId.t,
         displayName: string,
-    })
+      })
     | RegisterRangeFormattingSupport({
         handle: int,
         selector: DocumentSelector.t,
         extensionId: ExtensionId.t,
         displayName: string,
-    })
+      })
     | RegisterOnTypeFormattingSupport({
         handle: int,
         selector: DocumentSelector.t,
         autoFormatTriggerCharacters: list(string),
         extensionId: ExtensionId.t,
-    })
+      })
     | Unregister({handle: int});
 
   let parseDocumentSelector = json => {
@@ -464,8 +464,13 @@ module LanguageFeatures = {
       ret |> Result.map_error(string_of_error);
     | (
         "$registerDocumentFormattingSupport",
-        `List([`Int(handle), selectorJson, extensionIdJson, displayNameJson]),
-      ) => 
+        `List([
+          `Int(handle),
+          selectorJson,
+          extensionIdJson,
+          displayNameJson,
+        ]),
+      ) =>
       open Json.Decode;
 
       let ret = {
@@ -476,21 +481,27 @@ module LanguageFeatures = {
         let%bind extensionId =
           extensionIdJson |> decode_value(ExtensionId.decode);
 
-        let%bind displayName =
-          displayNameJson |> decode_value(string);
+        let%bind displayName = displayNameJson |> decode_value(string);
 
-        Ok(RegisterDocumentFormattingSupport({
-          handle,
-          selector,
-          extensionId,
-          displayName,
-        }));
+        Ok(
+          RegisterDocumentFormattingSupport({
+            handle,
+            selector,
+            extensionId,
+            displayName,
+          }),
+        );
       };
       ret |> Result.map_error(string_of_error);
     | (
         "$registerRangeFormattingSupport",
-        `List([`Int(handle), selectorJson, extensionIdJson, displayNameJson]),
-      ) => 
+        `List([
+          `Int(handle),
+          selectorJson,
+          extensionIdJson,
+          displayNameJson,
+        ]),
+      ) =>
       open Json.Decode;
 
       let ret = {
@@ -501,21 +512,27 @@ module LanguageFeatures = {
         let%bind extensionId =
           extensionIdJson |> decode_value(ExtensionId.decode);
 
-        let%bind displayName =
-          displayNameJson |> decode_value(string);
+        let%bind displayName = displayNameJson |> decode_value(string);
 
-        Ok(RegisterRangeFormattingSupport({
-          handle,
-          selector,
-          extensionId,
-          displayName,
-        }));
+        Ok(
+          RegisterRangeFormattingSupport({
+            handle,
+            selector,
+            extensionId,
+            displayName,
+          }),
+        );
       };
       ret |> Result.map_error(string_of_error);
     | (
         "$registerOnTypeFormattingSupport",
-        `List([`Int(handle), selectorJson,  triggerCharacterJson, extensionIdJson]),
-      ) => 
+        `List([
+          `Int(handle),
+          selectorJson,
+          triggerCharacterJson,
+          extensionIdJson,
+        ]),
+      ) =>
       open Json.Decode;
 
       let ret = {
@@ -523,18 +540,19 @@ module LanguageFeatures = {
         let%bind selector =
           selectorJson |> decode_value(list(DocumentFilter.decode));
 
-        let%bind triggerCharacters = triggerCharacterJson
-        |> decode_value(list(string));
+        let%bind triggerCharacters =
+          triggerCharacterJson |> decode_value(list(string));
         let%bind extensionId =
           extensionIdJson |> decode_value(ExtensionId.decode);
 
-
-        Ok(RegisterOnTypeFormattingSupport({
-          handle,
-          selector,
-          autoFormatTriggerCharacters: triggerCharacters,
-          extensionId,
-        }));
+        Ok(
+          RegisterOnTypeFormattingSupport({
+            handle,
+            selector,
+            autoFormatTriggerCharacters: triggerCharacters,
+            extensionId,
+          }),
+        );
       };
       ret |> Result.map_error(string_of_error);
     | _ =>

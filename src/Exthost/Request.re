@@ -366,9 +366,8 @@ module LanguageFeatures = {
         ),
       client,
     );
-  
-  let provideDocumentFormattingEdits =
-  (~handle, ~resource, ~options, client) => {
+
+  let provideDocumentFormattingEdits = (~handle, ~resource, ~options, client) => {
     Client.request(
       ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
       ~usesCancellationToken=true,
@@ -378,15 +377,14 @@ module LanguageFeatures = {
         `List([
           `Int(handle),
           Uri.to_yojson(resource),
-          options
-          |> Json.Encode.encode_value(FormattingOptions.encode)
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
         ]),
       client,
     );
   };
-  
+
   let provideDocumentRangeFormattingEdits =
-  (~handle, ~resource, ~range, ~options, client) => {
+      (~handle, ~resource, ~range, ~options, client) => {
     Client.request(
       ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
       ~usesCancellationToken=true,
@@ -397,15 +395,14 @@ module LanguageFeatures = {
           `Int(handle),
           Uri.to_yojson(resource),
           OneBasedRange.to_yojson(range),
-          options
-          |> Json.Encode.encode_value(FormattingOptions.encode)
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
         ]),
       client,
     );
   };
 
   let provideOnTypeFormattingEdits =
-  (~handle, ~resource, ~position, ~character, ~options, client) => {
+      (~handle, ~resource, ~position, ~character, ~options, client) => {
     Client.request(
       ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
       ~usesCancellationToken=true,
@@ -417,8 +414,7 @@ module LanguageFeatures = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           `String(character),
-          options
-          |> Json.Encode.encode_value(FormattingOptions.encode)
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
         ]),
       client,
     );
