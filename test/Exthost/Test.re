@@ -30,11 +30,11 @@ let startWithExtensions =
   let messages = ref([]);
 
   let errorHandler = err => {
-    prerr_endline("ERROR: " ++ err);
     onError(err);
   };
 
   let wrappedHandler = msg => {
+    prerr_endline ("MSG: " ++ Msg.show(msg));
     messages := [msg, ...messages^];
     handler(msg);
   };
