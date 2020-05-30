@@ -33,21 +33,22 @@ function activate(context) {
 		return new vscode.Location(document.uri, pos);
 	};
 
-	const signatureHelpProvider = (_document, _position, _token, _context) => {
+	const signatureHelpProvider = {
+		provideSignatureHelp: (_document, _position, _token, _context) => {
+			const signature1 = new vscode.SignatureInformation("signature 1", null);
+			signature1.parameters = [
+				new vscode.ParameterInformation("parameter 1", null)
+			];
 
-		const signature1 = new vscode.SignatureInformation("signature 1", null);
-		signature1.parameters = [
-			new vscode.ParameterInformation("parameter 1", null)
-		];
-
-		// Signature Help
-		return {
-			activeParameter: 0,
-			activeSignature: 0,
-			signatures: [
-				signature1,
-			]
-		};
+			// Signature Help
+			return {
+				activeParameter: 0,
+				activeSignature: 0,
+				signatures: [
+					signature1,
+				]
+			};
+		}
 	};
 
 	const referenceProvider =  {

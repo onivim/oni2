@@ -357,12 +357,18 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
     test("get signature help", ({expect, _}) => {
       let signatureHelpHandle = ref(-1);
 
-      //      let getSymbols = client =>
-      //        Request.LanguageFeatures.provideDocumentSymbols(
-      //          ~handle=symbolsHandle^,
-      //          ~resource=testUri,
-      //          client,
-      //        );
+    let getSignatureHelp = client =>
+      Request.LanguageFeatures.provideSignatureHelp(
+        ~handle=signatureHelpHandle^,
+        ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+        ~resource=testUri,
+        ~context=SignatureHelp.RequestContext.{
+          triggerKind: SignatureHelp.TriggerKind.Invoke,
+          triggerCharacter: None,
+          isRetrigger: false,
+        },
+        client,
+      );
 
       let waitForRegisterSignatureHelpProvider =
         fun
@@ -381,28 +387,33 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
            ~name="RegisterSignatureHelpProvider",
            waitForRegisterSignatureHelpProvider,
          )
-      //      |> Test.withClient(
-      //           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-      //             ~delta=addedDelta,
-      //           ),
-      //         )
-      //      |> Test.withClientRequest(
-      //           ~name="Get symbols",
-      //           ~validate=
-      //             (symbols: list(Exthost.DocumentSymbol.t)) => {
-      //               expect.int(List.length(symbols)).toBe(2);
-      //               let symbol0: Exthost.DocumentSymbol.t = List.nth(symbols, 0);
-      //               let symbol1: Exthost.DocumentSymbol.t = List.nth(symbols, 1);
-      //
-      //               expect.equal(symbol0.name, "symbol1");
-      //               expect.equal(symbol0.kind, Exthost.SymbolKind.File);
-      //               expect.equal(symbol1.name, "symbol2");
-      //               expect.equal(symbol1.kind, Exthost.SymbolKind.TypeParameter);
-      //
-      //               true;
-      //             },
-      //           getSymbols,
-      //         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+         ~name="Get signature help",
+         ~validate=
+           (signatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
+            open Exthost.SignatureHelp;
+
+            expect.equal(signatureHelp, Some({
+              id: 1,
+              signatures: [Signature.{
+                  label: "signature 1",
+                  parameters: [ParameterInformation.{
+                    label: "parameter 1",
+                  }]
+              }],
+              activeSignature: 0,
+              activeParameter: 0,
+            }));
+
+             true;
+           },
+         getSignatureHelp,
+       )
       |> finishTest;
     })
   });
