@@ -10,8 +10,7 @@ describe("Goto", ({test, _}) => {
 
     let updates = ref([]);
 
-    let dispose =
-      onEffect((gotoType) => updates := [gotoType, ...updates^]);
+    let dispose = onEffect(gotoType => updates := [gotoType, ...updates^]);
 
     input("gd");
     let gotoType = List.hd(updates^);
@@ -26,8 +25,7 @@ describe("Goto", ({test, _}) => {
 
     let updates = ref([]);
 
-    let dispose =
-      onEffect((gotoType) => updates := [gotoType, ...updates^]);
+    let dispose = onEffect(gotoType => updates := [gotoType, ...updates^]);
 
     input("gD");
     let gotoType = List.hd(updates^);
@@ -42,8 +40,7 @@ describe("Goto", ({test, _}) => {
 
     let updates = ref([]);
 
-    let dispose =
-      onEffect((gotoType) => updates := [gotoType, ...updates^]);
+    let dispose = onEffect(gotoType => updates := [gotoType, ...updates^]);
 
     input("gh");
     let gotoType = List.hd(updates^);
