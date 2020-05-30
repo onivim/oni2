@@ -46,10 +46,10 @@ let kindToIcon =
   | Reference => Codicon.symbolReference
   | Customcolor => Codicon.symbolColor
   | Folder => Codicon.symbolFolder
-  | TypeParameter  => Codicon.symbolTypeParameter
+  | TypeParameter => Codicon.symbolTypeParameter
   | User => Codicon.symbolMisc
   | Issue => Codicon.symbolMisc
-  | Snippet =>Codicon.symbolText;
+  | Snippet => Codicon.symbolText;
 
 let kindToColor = (tokenTheme: TokenTheme.t) =>
   fun
