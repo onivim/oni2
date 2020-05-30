@@ -43,7 +43,7 @@ describe("Pattern", ({describe, _}) => {
       };
     });
     test("match with un-nested capture group", ({expect, _}) => {
-      let maybePattern  =
+      let maybePattern =
         Pattern.Json.of_string(
           "source",
           {|{ "match": "a|b|c", name: "match2", captures: { "0": "a.meta.group" } }|},
@@ -52,12 +52,10 @@ describe("Pattern", ({describe, _}) => {
       expect.result(maybePattern).toBeOk();
 
       switch (maybePattern) {
-      | Ok(Match({ matchName, captures, _})) =>
+      | Ok(Match({matchName, captures, _})) =>
         expect.bool(matchName == Some("match2")).toBe(true);
-        expect.equal(captures, [
-          (0, "a.meta.group")
-        ]);
-      | _ => failwith("Unexpected pattern type.");
+        expect.equal(captures, [(0, "a.meta.group")]);
+      | _ => failwith("Unexpected pattern type.")
       };
     });
     test("matchRange", ({expect, _}) => {
