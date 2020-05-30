@@ -1,0 +1,6 @@
+(library
+    (name textmate)
+    (public_name textmate)
+    (libraries str oniguruma yojson Rench markup)
+    (preprocess (pps ppx_let ppx_deriving.show)))
+

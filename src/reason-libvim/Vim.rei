@@ -181,6 +181,18 @@ module Buffer: {
   let onWrite: Listeners.bufferWriteListener => Event.unsubscribe;
 };
 
+module Goto: {
+  type t =
+    | Definition
+    | Declaration
+    | Hover;
+};
+
+module Effect: {
+  type t =
+    | Goto(Goto.t);
+};
+
 /**
 [init] must be called prior to [input] or [command], and must only be called once.
 
@@ -219,13 +231,6 @@ via a [command("cd some-new-directory")].
 */
 let onDirectoryChanged:
   Listeners.directoryChangedListener => Event.unsubscribe;
-
-/**
-[onGoto(f)] registers a handler for the goto command [f].
-[f] is called whenever a goto command is executed, for example,
-"gd" (go-to definition) or "gD" (go-to declaration)
-*/
-let onGoto: Listeners.gotoListener => Event.unsubscribe;
 
 /**
 [onMessage(f)] registers a message listener [f].
@@ -280,6 +285,8 @@ let onYank: Listeners.yankListener => Event.unsubscribe;
 [f] is called whenever a buffer fails to write to disk.
 */
 let onWriteFailure: Listeners.writeFailureListener => Event.unsubscribe;
+
+let onEffect: (Effect.t => unit) => Event.unsubscribe;
 
 module AutoCommands = AutoCommands;
 module BufferMetadata = BufferMetadata;

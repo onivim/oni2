@@ -20,4 +20,12 @@ module Sub: {
   let buffer:
     (~buffer: Oni_Core.Buffer.t, ~client: Exthost.Client.t) =>
     Isolinear.Sub.t(unit);
+
+  let editor:
+    (~editor: Exthost.TextEditor.AddData.t, ~client: Exthost.Client.t) =>
+    Isolinear.Sub.t(unit);
+
+  let activeEditor:
+    (~activeEditorId: string, ~client: Exthost.Client.t) =>
+    Isolinear.Sub.t(unit);
 };

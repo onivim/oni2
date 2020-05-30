@@ -25,6 +25,14 @@
 				"title": "Onivim - Developer: Buffer Text"
 			},
 			{
+				"command": "developer.oni.showActiveEditor",
+				"title": "Onivim - Developer: Show Active Editor"
+			},
+			{
+				"command": "developer.oni.showVisibleTextEditors",
+				"title": "Onivim - Developer: Show Visible Editors"
+			},
+			{
 				"command": "developer.oni.showWorkspaceRootPath",
 				"title": "Onivim - Developer: Show Workspace Root Path"
 			},

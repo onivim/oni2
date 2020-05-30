@@ -2,6 +2,8 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Service_Exthost"));
 
+// EFFECTS
+
 module Effects = {
   module SCM = {
     let provideOriginalResource = (~handles, extHostClient, path, toMsg) =>
@@ -83,6 +85,8 @@ module Internal = {
        );
 };
 
+// SUBSCRIPTIONS
+
 module Sub = {
   type bufferParams = {
     client: Exthost.Client.t,
@@ -118,6 +122,7 @@ module Sub = {
             Exthost.DocumentsAndEditorsDelta.create(
               ~removedDocuments=[],
               ~addedDocuments=[metadata],
+              (),
             );
 
           Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
@@ -142,6 +147,7 @@ module Sub = {
                  Exthost.DocumentsAndEditorsDelta.create(
                    ~removedDocuments=[Uri.fromPath(filePath)],
                    ~addedDocuments=[],
+                   (),
                  );
                Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
                  ~delta=removedDelta,
@@ -153,4 +159,118 @@ module Sub = {
 
   let buffer = (~buffer, ~client) =>
     BufferSubscription.create({buffer, client});
+
+  type editorParams = {
+    client: Exthost.Client.t,
+    editor: Exthost.TextEditor.AddData.t,
+  };
+  module EditorSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = unit;
+      type nonrec params = editorParams;
+
+      type state = {id: string};
+
+      let name = "Service_Exthost.EditorSubscription";
+      let id = params => {
+        params.editor.id;
+      };
+
+      let init = (~params, ~dispatch as _) => {
+        let addedDelta =
+          Exthost.DocumentsAndEditorsDelta.create(
+            ~addedEditors=[params.editor],
+            (),
+          );
+
+        Log.infof(m =>
+          m("Starting editor subscription for: %s", params.editor.id)
+        );
+        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+          ~delta=addedDelta,
+          params.client,
+        );
+        {id: params.editor.id};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => {
+        state;
+      };
+
+      let dispose = (~params, ~state) => {
+        Log.infof(m =>
+          m("Stopping editor subscription for: %s", params.editor.id)
+        );
+        let removedDelta =
+          Exthost.DocumentsAndEditorsDelta.create(
+            ~removedEditors=[state.id],
+            (),
+          );
+        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+          ~delta=removedDelta,
+          params.client,
+        );
+      };
+    });
+
+  let editor = (~editor, ~client) =>
+    EditorSubscription.create({editor, client});
+
+  type activeEditorParams = {
+    client: Exthost.Client.t,
+    activeEditorId: string,
+  };
+
+  module ActiveEditorSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = unit;
+      type nonrec params = activeEditorParams;
+
+      type state = {lastId: string};
+
+      let name = "Service_Exthost.ActiveEditorSubscription";
+      let id = _ => "ActiveEditorSubscription";
+
+      let setActiveEditor = (~activeEditorId, ~client) => {
+        Log.infof(m => m("Setting active editor id: %s", activeEditorId));
+        let activeEditor =
+          Exthost.DocumentsAndEditorsDelta.create(
+            ~newActiveEditor=Some(activeEditorId),
+            (),
+          );
+
+        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+          ~delta=activeEditor,
+          client,
+        );
+      };
+
+      let init = (~params, ~dispatch as _) => {
+        setActiveEditor(
+          ~activeEditorId=params.activeEditorId,
+          ~client=params.client,
+        );
+
+        {lastId: params.activeEditorId};
+      };
+
+      let update = (~params, ~state, ~dispatch as _) =>
+        if (params.activeEditorId != state.lastId) {
+          setActiveEditor(
+            ~activeEditorId=params.activeEditorId,
+            ~client=params.client,
+          );
+          {lastId: params.activeEditorId};
+        } else {
+          state;
+        };
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+
+  let activeEditor = (~activeEditorId, ~client) => {
+    ActiveEditorSubscription.create({activeEditorId, client});
+  };
 };

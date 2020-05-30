@@ -57,12 +57,14 @@ describe("DocumentsTest", ({test, _}) => {
       DocumentsAndEditorsDelta.create(
         ~removedDocuments=[],
         ~addedDocuments=[model(~lines=[])],
+        (),
       );
 
     let removedDelta =
       DocumentsAndEditorsDelta.create(
         ~removedDocuments=[testUri],
         ~addedDocuments=[],
+        (),
       );
 
     Test.startWithExtensions(["oni-document-sync"])
@@ -92,6 +94,7 @@ describe("DocumentsTest", ({test, _}) => {
       DocumentsAndEditorsDelta.create(
         ~removedDocuments=[],
         ~addedDocuments=[model(~lines=["Hello", "World"])],
+        (),
       );
 
     Test.startWithExtensions(["oni-document-sync"])
@@ -114,6 +117,7 @@ describe("DocumentsTest", ({test, _}) => {
       DocumentsAndEditorsDelta.create(
         ~removedDocuments=[],
         ~addedDocuments=[model(~lines=["hello", "world"])],
+        (),
       );
 
     let change: ModelContentChange.t = {

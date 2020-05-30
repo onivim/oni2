@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
 const arrays_1 = require("../utils/arrays");
 const typeConverters = require("../utils/typeConverters");
@@ -16,7 +17,10 @@ class TypeScriptDocumentHighlightProvider {
         if (!file) {
             return [];
         }
-        const args = Object.assign({}, typeConverters.Position.toFileLocationRequestArgs(file, position), { filesToSearch: [file] });
+        const args = {
+            ...typeConverters.Position.toFileLocationRequestArgs(file, position),
+            filesToSearch: [file]
+        };
         const response = await this.client.execute('documentHighlights', args, token);
         if (response.type !== 'response' || !response.body) {
             return [];

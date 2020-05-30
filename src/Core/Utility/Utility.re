@@ -1,6 +1,7 @@
 module ArrayEx = ArrayEx;
 module ChunkyQueue = ChunkyQueue;
 module Cache = Cache;
+module File = File;
 module FunEx = FunEx;
 module IndexEx = IndexEx;
 module IntEx = IntEx;

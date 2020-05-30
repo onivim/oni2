@@ -64,6 +64,9 @@ int onGoto(gotoRequest_T gotoInfo) {
   case DECLARATION:
     target = 1;
     break;
+  case HOVER:
+    target = 2;
+    break;
   default:
     target = 0;
   }
