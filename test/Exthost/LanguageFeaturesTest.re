@@ -480,4 +480,172 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> finishTest;
     })
   });
+  describe("formatting", ({test, _}) => {
+    let formattingOptions =
+      FormattingOptions.{tabSize: 2, insertSpaces: true};
+
+    let expectedRange =
+      OneBasedRange.{
+        startLineNumber: 2,
+        endLineNumber: 4,
+        startColumn: 3,
+        endColumn: 5,
+      };
+
+    test("document formatting", ({expect, _}) => {
+      let documentFormattingHandle = ref(-1);
+
+      let getDocumentFormatEdits = client =>
+        Request.LanguageFeatures.provideDocumentFormattingEdits(
+          ~handle=documentFormattingHandle^,
+          ~resource=testUri,
+          ~options=formattingOptions,
+          client,
+        );
+
+      let waitForRegisterDocumentFormattingSupport =
+        fun
+        | Msg.LanguageFeatures(
+            RegisterDocumentFormattingSupport({handle, _}),
+          ) => {
+            documentFormattingHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterDocumentFormattingSupport",
+           waitForRegisterDocumentFormattingSupport,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="get document formatting",
+           ~validate=
+             (edits: option(list(Edit.SingleEditOperation.t))) => {
+               expect.equal(
+                 edits,
+                 Some([
+                   Edit.SingleEditOperation.{
+                     range: expectedRange,
+                     text: Some("document"),
+                     forceMoveMarkers: false,
+                   },
+                 ]),
+               );
+
+               true;
+             },
+           getDocumentFormatEdits,
+         )
+      |> finishTest;
+    });
+    test("range formatting", ({expect, _}) => {
+      let documentRangeFormattingHandle = ref(-1);
+
+      let getDocumentRangeFormattingEdits = client =>
+        Request.LanguageFeatures.provideDocumentRangeFormattingEdits(
+          ~handle=documentRangeFormattingHandle^,
+          ~range=expectedRange,
+          ~resource=testUri,
+          ~options=formattingOptions,
+          client,
+        );
+
+      let waitForRegisterRangeFormattingSupport =
+        fun
+        | Msg.LanguageFeatures(RegisterRangeFormattingSupport({handle, _})) => {
+            documentRangeFormattingHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterRangeFormattingSupport",
+           waitForRegisterRangeFormattingSupport,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="get document range formatting",
+           ~validate=
+             (edits: option(list(Edit.SingleEditOperation.t))) => {
+               expect.equal(
+                 edits,
+                 Some([
+                   Edit.SingleEditOperation.{
+                     range: expectedRange,
+                     text: Some("range"),
+                     forceMoveMarkers: false,
+                   },
+                 ]),
+               );
+
+               true;
+             },
+           getDocumentRangeFormattingEdits,
+         )
+      |> finishTest;
+    });
+    test("on type formatting", ({expect, _}) => {
+      let onTypeFormattingHandle = ref(-1);
+
+      let getOnTypeFormattingEdits = client =>
+        Request.LanguageFeatures.provideOnTypeFormattingEdits(
+          ~handle=onTypeFormattingHandle^,
+          ~resource=testUri,
+          ~position=OneBasedPosition.{lineNumber: 1, column: 1},
+          ~character="{",
+          ~options=formattingOptions,
+          client,
+        );
+
+      let waitForRegisterOnTypeFormattingSupport =
+        fun
+        | Msg.LanguageFeatures(RegisterOnTypeFormattingSupport({handle, _})) => {
+            onTypeFormattingHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterOnTypeFormattingSupport",
+           waitForRegisterOnTypeFormattingSupport,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="get on type formatting",
+           ~validate=
+             (edits: option(list(Edit.SingleEditOperation.t))) => {
+               expect.equal(
+                 edits,
+                 Some([
+                   Edit.SingleEditOperation.{
+                     range: expectedRange,
+                     text: Some("as-you-type"),
+                     forceMoveMarkers: false,
+                   },
+                 ]),
+               );
+
+               true;
+             },
+           getOnTypeFormattingEdits,
+         )
+      |> finishTest;
+    });
+  });
 });

@@ -88,6 +88,25 @@ module MarkdownString: {
   let decode: Json.decoder(t);
 };
 
+module Edit: {
+  module SingleEditOperation: {
+    type t = {
+      range: OneBasedRange.t,
+      text: option(string),
+      forceMoveMarkers: bool,
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
+module ExtensionId: {
+  [@deriving show]
+  type t = string;
+
+  let decode: Json.decoder(t);
+};
+
 module DefinitionLink: {
   type t = {
     uri: Uri.t,
@@ -415,6 +434,15 @@ module Eol: {
   let encode: Json.encoder(t);
 };
 
+module FormattingOptions: {
+  type t = {
+    tabSize: int,
+    insertSpaces: bool,
+  };
+
+  let encode: Json.encoder(t);
+};
+
 module ModelAddedDelta: {
   type t = {
     uri: Uri.t,
@@ -723,6 +751,24 @@ module Msg: {
       | RegisterReferenceSupport({
           handle: int,
           selector: DocumentSelector.t,
+        })
+      | RegisterDocumentFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          extensionId: ExtensionId.t,
+          displayName: string,
+        })
+      | RegisterRangeFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          extensionId: ExtensionId.t,
+          displayName: string,
+        })
+      | RegisterOnTypeFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          autoFormatTriggerCharacters: list(string),
+          extensionId: ExtensionId.t,
         })
       | Unregister({handle: int});
   };
@@ -1060,6 +1106,36 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(option(SignatureHelp.Response.t));
+
+    let provideDocumentFormattingEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~options: FormattingOptions.t,
+        Client.t
+      ) =>
+      Lwt.t(option(list(Edit.SingleEditOperation.t)));
+
+    let provideDocumentRangeFormattingEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~range: OneBasedRange.t,
+        ~options: FormattingOptions.t,
+        Client.t
+      ) =>
+      Lwt.t(option(list(Edit.SingleEditOperation.t)));
+
+    let provideOnTypeFormattingEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~character: string,
+        ~options: FormattingOptions.t,
+        Client.t
+      ) =>
+      Lwt.t(option(list(Edit.SingleEditOperation.t)));
 
     let releaseSignatureHelp: (~handle: int, ~id: int, Client.t) => unit;
   };
