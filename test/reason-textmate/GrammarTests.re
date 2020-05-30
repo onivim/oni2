@@ -39,7 +39,17 @@ describe("Grammar", ({describe, _}) => {
         List.iter(t => prerr_endline(Token.show(t)), tokens);
       | _ => failwith("Unable to load grammar")
       };
-    })
+    });
+
+    test("regression test: nim grammar", ({ expect, _}) => {
+      let maybeGrammar = Grammar.Json.of_file("test/reason-textmate/onivim/fixtures/nim.json");
+
+      expect.result(maybeGrammar).toBeOk();
+
+      let grammar = Result.get_ok(maybeGrammar);
+      expect.string(grammar.scopeName).toEqual("source.nim");
+
+    });
   });
 
   describe("xml parsing", ({test, _}) => {
