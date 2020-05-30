@@ -16,6 +16,7 @@ module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module Edit = Edit;
 module Eol = Eol;
+module ExtensionId = ExtensionId;
 module Hover = Hover;
 module Label = Label;
 module Location = Location;

@@ -100,6 +100,13 @@ module Edit: {
   }
 };
 
+module ExtensionId: {
+  [@deriving show]
+  type t = string;
+
+  let decode: Json.decoder(t);
+};
+
 module DefinitionLink: {
   type t = {
     uri: Uri.t,
@@ -736,6 +743,24 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
+      | RegisterDocumentFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          extensionId: ExtensionId.t,
+          displayName: string,
+      })
+      | RegisterRangeFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          extensionId: ExtensionId.t,
+          displayName: string,
+      })
+      | RegisterOnTypeFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          autoFormatTriggerCharacters: list(string),
+          extensionId: ExtensionId.t,
+      })
       | Unregister({handle: int});
   };
 
