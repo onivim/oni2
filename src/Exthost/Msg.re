@@ -295,6 +295,11 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
+    | RegisterSignatureHelpProvider({
+        handle: int,
+        selector: DocumentSelector.t,
+        metadata: SignatureHelp.ProviderMetadata.t,
+      })
     | RegisterSuggestSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -379,6 +384,24 @@ module LanguageFeatures = {
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
 
+    | (
+        "$registerSignatureHelpProvider",
+        `List([`Int(handle), selectorJson, metadataJson]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind metadata =
+          metadataJson |> decode_value(SignatureHelp.ProviderMetadata.decode);
+
+        Ok(RegisterSignatureHelpProvider({handle, selector, metadata}));
+      };
+
+      ret |> Result.map_error(string_of_error);
     | (
         "$registerSuggestSupport",
         `List([

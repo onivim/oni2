@@ -11,7 +11,9 @@ module Clipboard = Clipboard;
 module CommandLine = CommandLine;
 module Context = Context;
 module Cursor = Cursor;
+module Effect = Effect;
 module Event = Event;
+module Goto = Goto;
 module Mode = Mode;
 module Options = Options;
 module Search = Search;
@@ -245,13 +247,8 @@ let _clipboardGet = (regname: int) => {
   };
 };
 
-let _onGoto = (line: int, column: int, gotoType: Types.gotoType) => {
-  let location =
-    Location.create(
-      ~line=Index.fromOneBased(line),
-      ~column=Index.fromZeroBased(column),
-    );
-  queue(() => Event.dispatch2(location, gotoType, Listeners.goto));
+let _onGoto = (_line: int, _column: int, gotoType: Goto.t) => {
+  queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
 
 let _onTerminal = terminalRequest => {
@@ -402,8 +399,8 @@ let onDirectoryChanged = f => {
   Event.add(f, Listeners.directoryChanged);
 };
 
-let onGoto = f => {
-  Event.add2(f, Listeners.goto);
+let onEffect = f => {
+  Event.add(f, Listeners.effect);
 };
 
 let onIntro = f => {
