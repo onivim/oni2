@@ -28,8 +28,6 @@ let mkTempDir: (~prefix: string=?, unit) => string;
 
 let rmdir: string => t(unit);
 
-let getUserDataDirectoryExn: unit => string;
-
 let getOniDirectory: string => t(string);
 
 let getExtensionsFolder: unit => t(string);

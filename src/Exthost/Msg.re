@@ -369,6 +369,10 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
+    | RegisterHoverProvider({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
     | RegisterImplementationSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -376,6 +380,11 @@ module LanguageFeatures = {
     | RegisterTypeDefinitionSupport({
         handle: int,
         selector: list(DocumentFilter.t),
+      })
+    | RegisterSignatureHelpProvider({
+        handle: int,
+        selector: DocumentSelector.t,
+        metadata: SignatureHelp.ProviderMetadata.t,
       })
     | RegisterSuggestSupport({
         handle: int,
@@ -387,6 +396,24 @@ module LanguageFeatures = {
     | RegisterReferenceSupport({
         handle: int,
         selector: list(DocumentFilter.t),
+      })
+    | RegisterDocumentFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        extensionId: ExtensionId.t,
+        displayName: string,
+      })
+    | RegisterRangeFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        extensionId: ExtensionId.t,
+        displayName: string,
+      })
+    | RegisterOnTypeFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        autoFormatTriggerCharacters: list(string),
+        extensionId: ExtensionId.t,
       })
     | Unregister({handle: int});
 
@@ -430,6 +457,11 @@ module LanguageFeatures = {
            RegisterDeclarationSupport({handle, selector})
          })
       |> Result.map_error(Json.Decode.string_of_error)
+    | ("$registerHoverProvider", `List([`Int(handle), selectorJson])) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {RegisterHoverProvider({handle, selector})})
+      |> Result.map_error(Json.Decode.string_of_error)
     | (
         "$registerImplementationSupport",
         `List([`Int(handle), selectorJson]),
@@ -456,6 +488,24 @@ module LanguageFeatures = {
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
 
+    | (
+        "$registerSignatureHelpProvider",
+        `List([`Int(handle), selectorJson, metadataJson]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind metadata =
+          metadataJson |> decode_value(SignatureHelp.ProviderMetadata.decode);
+
+        Ok(RegisterSignatureHelpProvider({handle, selector, metadata}));
+      };
+
+      ret |> Result.map_error(string_of_error);
     | (
         "$registerSuggestSupport",
         `List([
@@ -498,7 +548,99 @@ module LanguageFeatures = {
       };
 
       ret |> Result.map_error(string_of_error);
+    | (
+        "$registerDocumentFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          extensionIdJson,
+          displayNameJson,
+        ]),
+      ) =>
+      open Json.Decode;
 
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        let%bind displayName = displayNameJson |> decode_value(string);
+
+        Ok(
+          RegisterDocumentFormattingSupport({
+            handle,
+            selector,
+            extensionId,
+            displayName,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
+    | (
+        "$registerRangeFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          extensionIdJson,
+          displayNameJson,
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        let%bind displayName = displayNameJson |> decode_value(string);
+
+        Ok(
+          RegisterRangeFormattingSupport({
+            handle,
+            selector,
+            extensionId,
+            displayName,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
+    | (
+        "$registerOnTypeFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          triggerCharacterJson,
+          extensionIdJson,
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind triggerCharacters =
+          triggerCharacterJson |> decode_value(list(string));
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        Ok(
+          RegisterOnTypeFormattingSupport({
+            handle,
+            selector,
+            autoFormatTriggerCharacters: triggerCharacters,
+            extensionId,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
     | _ =>
       Error(
         Printf.sprintf(
