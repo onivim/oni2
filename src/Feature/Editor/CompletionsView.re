@@ -22,22 +22,34 @@ module Constants = {
 
 let kindToIcon =
   fun
-  | Text => FontAwesome.alignJustify
-  | Method => FontAwesome.bolt
-  | Function => FontAwesome.cog
-  | Constructor => FontAwesome.wrench
-  | Module => FontAwesome.cubes
-  | Unit => FontAwesome.cubes
-  | Struct => FontAwesome.cube
-  | File => FontAwesome.file
-  | Keyword => FontAwesome.key
-  | Reference => FontAwesome.link
-  | Enum => FontAwesome.sitemap
-  | Constant => FontAwesome.lock
-  | Property => FontAwesome.code
-  | Interface => FontAwesome.plug
-  | Color => FontAwesome.paintBrush
-  | _ => FontAwesome.code;
+  | Method => Codicon.symbolMethod
+  | Function => Codicon.symbolFunction
+  | Constructor => Codicon.symbolConstructor
+  | Field => Codicon.symbolField
+  | Variable => Codicon.symbolVariable
+  | Class => Codicon.symbolClass
+  | Struct => Codicon.symbolStruct
+  | Interface => Codicon.symbolInterface
+  | Module => Codicon.symbolModule
+  | Property => Codicon.symbolProperty
+  | Event => Codicon.symbolEvent
+  | Operator => Codicon.symbolOperator
+  | Unit => Codicon.symbolUnit
+  | Value => Codicon.symbolValue
+  | Constant => Codicon.symbolConstant
+  | Enum => Codicon.symbolEnum
+  | EnumMember => Codicon.symbolEnumMember
+  | Keyword => Codicon.symbolKeyword
+  | Text => Codicon.symbolText
+  | Color => Codicon.symbolColor
+  | File => Codicon.symbolFile
+  | Reference => Codicon.symbolReference
+  | Customcolor => Codicon.symbolColor
+  | Folder => Codicon.symbolFolder
+  | TypeParameter => Codicon.symbolTypeParameter
+  | User => Codicon.symbolMisc
+  | Issue => Codicon.symbolMisc
+  | Snippet => Codicon.symbolText;
 
 let kindToColor = (tokenTheme: TokenTheme.t) =>
   fun
@@ -153,7 +165,7 @@ let itemView =
 
   <View style={Styles.item(~isFocused, ~colors)}>
     <View style={Styles.icon(~color=iconColor)}>
-      <FontIcon
+      <Codicon
         icon
         color={colors.suggestWidgetBackground}
         // Not sure why, but specifying a font size fails to render the icon!
