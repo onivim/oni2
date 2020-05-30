@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isTypeScriptDocument = exports.isSupportedLanguageMode = exports.jsxTags = exports.javascriptreact = exports.javascript = exports.typescriptreact = exports.typescript = void 0;
 const vscode = require("vscode");
 exports.typescript = 'typescript';
 exports.typescriptreact = 'typescriptreact';

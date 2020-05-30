@@ -19,6 +19,7 @@ let addedDelta =
   DocumentsAndEditorsDelta.create(
     ~removedDocuments=[],
     ~addedDocuments=[model(~lines=["Hello", "World"])],
+    (),
   );
 
 describe("LanguageFeaturesTest", ({describe, _}) => {
@@ -348,6 +349,63 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                true;
              },
            getSymbols,
+         )
+      |> finishTest;
+    })
+  });
+  describe("hover", ({test, _}) => {
+    test("gets hover", ({expect, _}) => {
+      let hoverHandle = ref(-1);
+
+      let getHover = client =>
+        Request.LanguageFeatures.provideHover(
+          ~handle=hoverHandle^,
+          ~resource=testUri,
+          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+          client,
+        );
+
+      let waitForRegisterHoverProvider =
+        fun
+        | Msg.LanguageFeatures(RegisterHoverProvider({handle, _})) => {
+            hoverHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterHoverProvider",
+           waitForRegisterHoverProvider,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="Get symbols",
+           ~validate=
+             (maybeHover: option(Exthost.Hover.t)) => {
+               expect.equal(
+                 maybeHover,
+                 Some({
+                   contents: ["Hover Content"],
+                   range:
+                     Some(
+                       OneBasedRange.{
+                         startLineNumber: 2,
+                         endLineNumber: 2,
+                         startColumn: 1,
+                         endColumn: 6,
+                       },
+                     ),
+                 }),
+               );
+
+               true;
+             },
+           getHover,
          )
       |> finishTest;
     })

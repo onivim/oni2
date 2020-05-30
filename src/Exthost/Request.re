@@ -164,11 +164,12 @@ module Documents = {
 };
 
 module DocumentsAndEditors = {
+  open Json.Encode;
   let acceptDocumentsAndEditorsDelta = (~delta, client) => {
     Client.notify(
       ~rpcName="ExtHostDocumentsAndEditors",
       ~method="$acceptDocumentsAndEditorsDelta",
-      ~args=`List([DocumentsAndEditorsDelta.to_yojson(delta)]),
+      ~args=`List([delta |> encode_value(DocumentsAndEditorsDelta.encode)]),
       client,
     );
   };
@@ -284,6 +285,22 @@ module LanguageFeatures = {
       "$provideDeclaration",
       client,
     );
+
+  let provideHover = (~handle, ~resource, ~position, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(Hover.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideHover",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
+      client,
+    );
+  };
   let provideImplementation = (~handle, ~resource, ~position, client) =>
     Internal.provideDefinitionLink(
       ~handle,

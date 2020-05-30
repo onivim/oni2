@@ -42,7 +42,7 @@ let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
   writeTransport(~id, transport, msg);
 };
 
-let getEnvironment = (~namedPipe, ~parentPid) => {
+let getEnvironment = (~namedPipe, ~parentPid, ~additionalEnv) => {
   let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
 
   Luv.Env.environ()
@@ -53,11 +53,13 @@ let getEnvironment = (~namedPipe, ~parentPid) => {
          (EnvironmentVariables.parentPid, parentPid),
          ...items,
        ]
+       @ additionalEnv
      );
 };
 
-let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
-  getEnvironment(~namedPipe, ~parentPid)
+let startProcess =
+    (~executablePath, ~namedPipe, ~parentPid, ~onClose, ~additionalEnv) => {
+  getEnvironment(~namedPipe, ~parentPid, ~additionalEnv)
   |> Utility.ResultEx.flatMap(environment => {
        ClientLog.debugf(m =>
          m(
@@ -104,6 +106,7 @@ let start =
       ~onClose=_ => (),
       ~onHighlights,
       ~onHealthCheckResult,
+      ~additionalEnv=[],
       languageInfo,
       setup,
     ) => {
@@ -159,7 +162,13 @@ let start =
   Transport.start(~namedPipe, ~dispatch)
   |> Utility.ResultEx.tap(transport => _transport := Some(transport))
   |> Utility.ResultEx.flatMap(transport => {
-       startProcess(~executablePath, ~parentPid, ~namedPipe, ~onClose)
+       startProcess(
+         ~executablePath,
+         ~parentPid,
+         ~namedPipe,
+         ~onClose,
+         ~additionalEnv,
+       )
        |> Result.map(process => {transport, process, nextId: ref(0)})
      });
 };

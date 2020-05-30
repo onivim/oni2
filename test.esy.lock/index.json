@@ -1,5 +1,5 @@
 {
-  "checksum": "04deaadfcc24b6cf603666b129961e9f",
+  "checksum": "235c50c0b08c9a0b58d76e281d55b1e6",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -300,29 +300,6 @@
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.5.2@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "reason-textmate@3.1.2@d41d8cd9": {
-      "id": "reason-textmate@3.1.2@d41d8cd9",
-      "name": "reason-textmate",
-      "version": "3.1.2",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/reason-textmate/-/reason-textmate-3.1.2.tgz#sha1:50bc0ec73c3e3edaf30d392040949965e7f39732"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "rench@github:bryphe/rench#a976fe5@d41d8cd9",
-        "refmterr@3.3.2@d41d8cd9", "reason-oniguruma@6.94.1002@d41d8cd9",
-        "ocaml@4.9.1000@d41d8cd9",
-        "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
-        "@opam/ppx_let@opam:v0.13.0@5703d2be",
-        "@opam/ppx_deriving_yojson@opam:3.5.2@ca415fbe",
-        "@opam/markup@opam:0.8.2@87975241", "@opam/dune@opam:2.5.0@aef1678b",
-        "@esy-ocaml/reason@3.5.2@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -1138,7 +1115,8 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-textmate@3.1.2@d41d8cd9", "reason-sdl2@2.10.3032@d41d8cd9",
+        "reason-sdl2@2.10.3032@d41d8cd9",
+        "reason-oniguruma@6.94.1002@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#ae1fd34@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9", "libvim@8.10869.44@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#b17ce17@d41d8cd9",

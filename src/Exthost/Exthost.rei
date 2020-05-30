@@ -82,6 +82,12 @@ module Location: {
   let decode: Json.decoder(t);
 };
 
+module MarkdownString: {
+  type t = string;
+
+  let decode: Json.decoder(t);
+};
+
 module DefinitionLink: {
   type t = {
     uri: Uri.t,
@@ -132,6 +138,15 @@ module DocumentHighlight: {
   type t = {
     range: OneBasedRange.t,
     kind: Kind.t,
+  };
+
+  let decode: Json.decoder(t);
+};
+
+module Hover: {
+  type t = {
+    contents: list(MarkdownString.t),
+    range: option(OneBasedRange.t),
   };
 
   let decode: Json.decoder(t);
@@ -331,7 +346,7 @@ module Eol: {
 
   let toString: t => string;
 
-  let to_yojson: t => Yojson.Safe.t;
+  let encode: Json.encoder(t);
 };
 
 module ModelAddedDelta: {
@@ -355,7 +370,56 @@ module ModelAddedDelta: {
     ) =>
     t;
 
-  let to_yojson: t => Yojson.Safe.t;
+  let encode: Json.encoder(t);
+};
+
+module TextEditor: {
+  module CursorStyle: {
+    type t =
+      | Hidden // 0
+      | Blink // 1
+      | Smooth // 2
+      | Phase // 3
+      | Expand // 4
+      | Solid; // 5;
+
+    let encode: Json.encoder(t);
+  };
+
+  module LineNumbersStyle: {
+    type t =
+      | Off // 0
+      | On // 1
+      | Relative; // 2
+
+    let encode: Json.encoder(t);
+  };
+
+  module ResolvedConfiguration: {
+    type t = {
+      tabSize: int,
+      indentSize: int,
+      insertSpaces: int,
+      cursorStyle: CursorStyle.t,
+      lineNumbers: LineNumbersStyle.t,
+    };
+
+    let encode: Json.encoder(t);
+  };
+
+  module AddData: {
+    type t = {
+      id: string,
+      documentUri: Uri.t,
+      options: ResolvedConfiguration.t,
+      // TODO:
+      // selections: list(Selection.t),
+      // visibleRanges: list(Range.t),
+      // editorPosition: option(EditorViewColumn.t),
+    };
+
+    let encode: Json.encoder(t);
+  };
 };
 
 module DocumentsAndEditorsDelta: {
@@ -363,17 +427,22 @@ module DocumentsAndEditorsDelta: {
     removedDocuments: list(Uri.t),
     addedDocuments: list(ModelAddedDelta.t),
     removedEditors: list(string),
-    addedEditors: list(string),
+    addedEditors: list(TextEditor.AddData.t),
+    newActiveEditor: option(string),
   };
 
   let create:
     (
-      ~removedDocuments: list(Uri.t),
-      ~addedDocuments: list(ModelAddedDelta.t)
+      ~removedDocuments: list(Uri.t)=?,
+      ~addedDocuments: list(ModelAddedDelta.t)=?,
+      ~removedEditors: list(string)=?,
+      ~addedEditors: list(TextEditor.AddData.t)=?,
+      ~newActiveEditor: option(string)=?,
+      unit
     ) =>
     t;
 
-  let to_yojson: t => Yojson.Safe.t;
+  let encode: Json.encoder(t);
 };
 
 module OneBasedPosition: {
@@ -558,6 +627,10 @@ module Msg: {
           selector: DocumentSelector.t,
         })
       | RegisterDeclarationSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+        })
+      | RegisterHoverProvider({
           handle: int,
           selector: DocumentSelector.t,
         })
@@ -869,6 +942,15 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(DefinitionLink.t));
+
+    let provideHover:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(option(Hover.t));
 
     let provideImplementation:
       (
