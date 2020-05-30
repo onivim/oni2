@@ -79,5 +79,29 @@ describe("FileSystem", ({describe, _}) => {
         |> Test.waitForProcessClosed
       });
     });
+    describe("$writeFile", ({test, _}) => {
+      test("gets buffer from request", ({expect, _}) => {
+        Test.startWithExtensions(["oni-proxy-filesystem"])
+        |> Test.waitForExtensionActivation("oni-proxy-filesystem")
+        |> Test.withClient(
+             Exthost.Request.Commands.executeContributedCommand(
+               ~arguments=[`String("test-file")],
+               ~command="fs.write",
+             ),
+           )
+        |> Test.waitForMessage(
+             ~name="$writeFile",
+             fun
+             | Msg.FileSystem(WriteFile({bytes, _})) => {
+                 let len = bytes |> Bytes.length;
+                 expect.equal(len, 1234);
+                 true;
+               }
+             | _ => false,
+           )
+        |> Test.terminate
+        |> Test.waitForProcessClosed
+      })
+    });
   })
 });

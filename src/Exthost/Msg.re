@@ -291,7 +291,7 @@ module FileSystem = {
     | ReadFile({uri: Uri.t})
     | WriteFile({
         uri: Uri.t,
-        buffer: Bytes.t,
+        bytes: Bytes.t,
       })
     | Rename({
         source: Uri.t,
@@ -320,9 +320,10 @@ module FileSystem = {
         Ok(ReadDir({uri: uri}));
       | ("$readFile", `List([uriJson])) =>
         failwith("TODO - buffer format: readFile")
-      | ("$writeFile", `List([uriJson, bufferJson])) =>
-        prerr_endline("Buffer JSON: " ++ Yojson.Safe.to_string(bufferJson));
-        failwith("TODO - buffer format: writeFile");
+      | ("$writeFile", `List([uriJson, `String(buffer)])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        let bytes = Bytes.of_string(buffer);
+        Ok(WriteFile({uri, bytes}));
       | ("$rename", `List([sourceJson, targetJson, optsJson])) =>
         let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
         let%bind target = targetJson |> Internal.decode_value(Uri.decode);

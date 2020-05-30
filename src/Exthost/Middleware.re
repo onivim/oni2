@@ -36,8 +36,8 @@ let filesystem =
       | ReadDir({uri}) => readdir(uri) |> Lwt.map(mapEmpty)
       // TODO: How to serialize buffer?
       | ReadFile({uri}) => readFile(uri) |> Lwt.map(mapEmpty)
-      | WriteFile({uri, buffer}) =>
-        writeFile(uri, buffer) |> Lwt.map(mapEmpty)
+      | WriteFile({uri, bytes}) =>
+        writeFile(uri, bytes) |> Lwt.map(mapEmpty)
       | Rename({source, target, opts}) =>
         rename(~source, ~target, opts) |> Lwt.map(mapEmpty)
       | Copy({source, target, opts}) =>

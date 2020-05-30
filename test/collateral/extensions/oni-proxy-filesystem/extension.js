@@ -34,7 +34,16 @@ function activate(context) {
 		});
 	});
 
+	const disposable1 = vscode.commands.registerCommand("fs.write", (args) => {
+		showData("Command executed: " + JSON.stringify(args));
+
+
+		const uint8Array = new Uint8Array(1234);
+		vscode.workspace.fs.writeFile(vscode.Uri.file("write.test"), uint8Array, { create: true, overwrite: true});
+	});
+
 	context.subscriptions.push(disposable0);
+	context.subscriptions.push(disposable1);
 }
 
 // this method is called when your extension is deactivated

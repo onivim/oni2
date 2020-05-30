@@ -828,7 +828,7 @@ module Msg: {
       | ReadFile({uri: Uri.t})
       | WriteFile({
           uri: Uri.t,
-          buffer: Bytes.t,
+          bytes: Bytes.t,
         })
       | Rename({
           source: Uri.t,
