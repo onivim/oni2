@@ -136,8 +136,11 @@ let start =
       Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
 
-  let _: unit => unit =
-    Vim.onGoto((_position, _definitionType) => {
+  let handleGoto = gotoType => {
+    switch (gotoType) {
+    | Vim.Goto.Hover => Log.debug("TODO")
+    | Vim.Goto.Definition
+    | Vim.Goto.Declaration =>
       Log.debug("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
@@ -162,7 +165,14 @@ let start =
       OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
       |> Option.join
       |> Option.iter(action => dispatch(action));
-    });
+    };
+  };
+
+  let _: unit => unit =
+    Vim.onEffect(
+      fun
+      | Goto(gotoType) => handleGoto(gotoType),
+    );
 
   let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
