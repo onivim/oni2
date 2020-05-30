@@ -462,7 +462,81 @@ module LanguageFeatures = {
       };
 
       ret |> Result.map_error(string_of_error);
+    | (
+        "$registerDocumentFormattingSupport",
+        `List([`Int(handle), selectorJson, extensionIdJson, displayNameJson]),
+      ) => 
+      open Json.Decode;
 
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        let%bind displayName =
+          displayNameJson |> decode_value(string);
+
+        Ok(RegisterDocumentFormattingSupport({
+          handle,
+          selector,
+          extensionId,
+          displayName,
+        }));
+      };
+      ret |> Result.map_error(string_of_error);
+    | (
+        "$registerRangeFormattingSupport",
+        `List([`Int(handle), selectorJson, extensionIdJson, displayNameJson]),
+      ) => 
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        let%bind displayName =
+          displayNameJson |> decode_value(string);
+
+        Ok(RegisterRangeFormattingSupport({
+          handle,
+          selector,
+          extensionId,
+          displayName,
+        }));
+      };
+      ret |> Result.map_error(string_of_error);
+    | (
+        "$registerOnTypeFormattingSupport",
+        `List([`Int(handle), selectorJson,  triggerCharacterJson, extensionIdJson]),
+      ) => 
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind triggerCharacters = triggerCharacterJson
+        |> decode_value(list(string));
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+
+        Ok(RegisterOnTypeFormattingSupport({
+          handle,
+          selector,
+          autoFormatTriggerCharacters: triggerCharacters,
+          extensionId,
+        }));
+      };
+      ret |> Result.map_error(string_of_error);
     | _ =>
       Error(
         Printf.sprintf(

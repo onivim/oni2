@@ -547,5 +547,137 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
 //         )
       |> finishTest;
     })
+    test("range formatting", ({expect, _}) => {
+      let documentRangeFormattingHandle = ref(-1);
+
+//      let getSignatureHelp = client =>
+//        Request.LanguageFeatures.provideSignatureHelp(
+//          ~handle=signatureHelpHandle^,
+//          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+//          ~resource=testUri,
+//          ~context=
+//            SignatureHelp.RequestContext.{
+//              triggerKind: SignatureHelp.TriggerKind.Invoke,
+//              triggerCharacter: None,
+//              isRetrigger: false,
+//            },
+//          client,
+//        );
+
+      let waitForRegisterRangeFormattingSupport =
+        fun
+        | Msg.LanguageFeatures(
+            RegisterRangeFormattingSupport({handle,  _}),
+          ) => {
+            documentRangeFormattingHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterRangeFormattingSupport",
+           waitForRegisterRangeFormattingSupport,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+//      |> Test.withClientRequest(
+//           ~name="Get signature help",
+//           ~validate=
+//             (signatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
+//               open Exthost.SignatureHelp;
+//
+//               expect.equal(
+//                 signatureHelp,
+//                 Some({
+//                   id: 1,
+//                   signatures: [
+//                     Signature.{
+//                       label: "signature 1",
+//                       parameters: [
+//                         ParameterInformation.{label: "parameter 1"},
+//                       ],
+//                     },
+//                   ],
+//                   activeSignature: 0,
+//                   activeParameter: 0,
+//                 }),
+//               );
+//
+//               true;
+//             },
+//           getSignatureHelp,
+//         )
+      |> finishTest;
+    });
+    test("on type formatting", ({expect, _}) => {
+      let onTypeFormattingHandle = ref(-1);
+
+//      let getSignatureHelp = client =>
+//        Request.LanguageFeatures.provideSignatureHelp(
+//          ~handle=signatureHelpHandle^,
+//          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+//          ~resource=testUri,
+//          ~context=
+//            SignatureHelp.RequestContext.{
+//              triggerKind: SignatureHelp.TriggerKind.Invoke,
+//              triggerCharacter: None,
+//              isRetrigger: false,
+//            },
+//          client,
+//        );
+
+      let waitForRegisterOnTypeFormattingSupport =
+        fun
+        | Msg.LanguageFeatures(
+            RegisterOnTypeFormattingSupport({handle,  _}),
+          ) => {
+            onTypeFormattingHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterOnTypeFormattingSupport",
+           waitForRegisterOnTypeFormattingSupport,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+//      |> Test.withClientRequest(
+//           ~name="Get signature help",
+//           ~validate=
+//             (signatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
+//               open Exthost.SignatureHelp;
+//
+//               expect.equal(
+//                 signatureHelp,
+//                 Some({
+//                   id: 1,
+//                   signatures: [
+//                     Signature.{
+//                       label: "signature 1",
+//                       parameters: [
+//                         ParameterInformation.{label: "parameter 1"},
+//                       ],
+//                     },
+//                   ],
+//                   activeSignature: 0,
+//                   activeParameter: 0,
+//                 }),
+//               );
+//
+//               true;
+//             },
+//           getSignatureHelp,
+//         )
+      |> finishTest;
+    })
   });
 });
