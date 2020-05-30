@@ -357,18 +357,19 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
     test("get signature help", ({expect, _}) => {
       let signatureHelpHandle = ref(-1);
 
-    let getSignatureHelp = client =>
-      Request.LanguageFeatures.provideSignatureHelp(
-        ~handle=signatureHelpHandle^,
-        ~position=OneBasedPosition.{lineNumber: 2, column: 2},
-        ~resource=testUri,
-        ~context=SignatureHelp.RequestContext.{
-          triggerKind: SignatureHelp.TriggerKind.Invoke,
-          triggerCharacter: None,
-          isRetrigger: false,
-        },
-        client,
-      );
+      let getSignatureHelp = client =>
+        Request.LanguageFeatures.provideSignatureHelp(
+          ~handle=signatureHelpHandle^,
+          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+          ~resource=testUri,
+          ~context=
+            SignatureHelp.RequestContext.{
+              triggerKind: SignatureHelp.TriggerKind.Invoke,
+              triggerCharacter: None,
+              isRetrigger: false,
+            },
+          client,
+        );
 
       let waitForRegisterSignatureHelpProvider =
         fun
@@ -393,27 +394,32 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
            ),
          )
       |> Test.withClientRequest(
-         ~name="Get signature help",
-         ~validate=
-           (signatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
-            open Exthost.SignatureHelp;
+           ~name="Get signature help",
+           ~validate=
+             (signatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
+               open Exthost.SignatureHelp;
 
-            expect.equal(signatureHelp, Some({
-              id: 1,
-              signatures: [Signature.{
-                  label: "signature 1",
-                  parameters: [ParameterInformation.{
-                    label: "parameter 1",
-                  }]
-              }],
-              activeSignature: 0,
-              activeParameter: 0,
-            }));
+               expect.equal(
+                 signatureHelp,
+                 Some({
+                   id: 1,
+                   signatures: [
+                     Signature.{
+                       label: "signature 1",
+                       parameters: [
+                         ParameterInformation.{label: "parameter 1"},
+                       ],
+                     },
+                   ],
+                   activeSignature: 0,
+                   activeParameter: 0,
+                 }),
+               );
 
-             true;
-           },
-         getSignatureHelp,
-       )
+               true;
+             },
+           getSignatureHelp,
+         )
       |> finishTest;
     })
   });

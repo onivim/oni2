@@ -1032,6 +1032,8 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(option(SignatureHelp.Response.t));
+
+    let releaseSignatureHelp: (~handle: int, ~id: int, Client.t) => unit;
   };
 
   module SCM: {
