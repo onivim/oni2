@@ -42,6 +42,26 @@ describe("Pattern", ({describe, _}) => {
       | _ => failwith("Parse failed for match")
       };
     });
+    test("match with un-nested capture group", ({expect, _}) => {
+      let maybePattern  =
+        Pattern.Json.of_string(
+          "source",
+          {|{ "match": "a|b|c", name: "match2", captures: { "0": "a.meta.group" } }|},
+        );
+
+      expect.result(maybePattern).toBeOk();
+
+      let pattern = maybePattern |> Result.get_ok;
+
+      switch (pattern) {
+      | Match({ matchName, captures, _}) =>
+        expect.bool(matchName == Some("match2")).toBe(true);
+        expect.equal(captures, [
+          (0, "a.meta.capture")
+        ]);
+      | _ => failwith("Unexpected pattern type.");
+      };
+    });
     test("matchRange", ({expect, _}) => {
       let matchRange1 =
         Pattern.Json.of_string(
