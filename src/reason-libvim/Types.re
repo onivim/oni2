@@ -16,10 +16,6 @@ type lineEnding =
   | LF
   | CRLF;
 
-type gotoType =
-  | Definition
-  | Declaration;
-
 type mode =
   | Normal
   | Insert

@@ -334,6 +334,38 @@ module LanguageFeatures = {
       client,
     );
   };
+
+  let provideSignatureHelp = (~handle, ~resource, ~position, ~context, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(SignatureHelp.Response.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideSignatureHelp",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          context
+          |> Json.Encode.encode_value(SignatureHelp.RequestContext.encode),
+        ]),
+      client,
+    );
+  };
+
+  let releaseSignatureHelp = (~handle, ~id, client) =>
+    Client.notify(
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseSignatureHelp",
+      ~args=
+        `List(
+          Json.Encode.[
+            handle |> encode_value(int),
+            id |> encode_value(int),
+          ],
+        ),
+      client,
+    );
 };
 
 module SCM = {

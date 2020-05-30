@@ -241,6 +241,72 @@ module SCM: {
   };
 };
 
+module SignatureHelp: {
+  module ProviderMetadata: {
+    [@deriving show]
+    type t = {
+      triggerCharacters: list(string),
+      retriggerCharacters: list(string),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module TriggerKind: {
+    [@deriving show]
+    type t =
+      | Invoke
+      | TriggerCharacter
+      | ContentChange;
+  };
+
+  module RequestContext: {
+    [@deriving show]
+    type t = {
+      triggerKind: TriggerKind.t,
+      triggerCharacter: option(string),
+      isRetrigger: bool,
+      // TODO: Active signature help?
+      //activate
+    };
+
+    let encode: Json.encoder(t);
+  };
+
+  module ParameterInformation: {
+    [@deriving show]
+    type t = {
+      label: string,
+      // TODO
+      //documentation: option(string),
+    };
+    let decode: Json.decoder(t);
+  };
+
+  module Signature: {
+    [@deriving show]
+    type t = {
+      label: string,
+      // TODO:
+      //documentation: options(MarkdownString.t),
+      parameters: list(ParameterInformation.t),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module Response: {
+    type t = {
+      id: int,
+      signatures: list(Signature.t),
+      activeSignature: int,
+      activeParameter: int,
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
 module SuggestResult: {
   type t = {
     completions: list(SuggestItem.t),
@@ -642,6 +708,11 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
+      | RegisterSignatureHelpProvider({
+          handle: int,
+          selector: DocumentSelector.t,
+          metadata: SignatureHelp.ProviderMetadata.t,
+        })
       | RegisterSuggestSupport({
           handle: int,
           selector: DocumentSelector.t,
@@ -979,6 +1050,18 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(DefinitionLink.t));
+
+    let provideSignatureHelp:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: SignatureHelp.RequestContext.t,
+        Client.t
+      ) =>
+      Lwt.t(option(SignatureHelp.Response.t));
+
+    let releaseSignatureHelp: (~handle: int, ~id: int, Client.t) => unit;
   };
 
   module SCM: {
