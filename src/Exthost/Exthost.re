@@ -25,6 +25,7 @@ module OneBasedRange = OneBasedRange;
 module ReferenceContext = ReferenceContext;
 module Reply = Reply;
 module SCM = SCM;
+module SignatureHelp = SignatureHelp;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
 module SymbolKind = SymbolKind;

@@ -226,6 +226,17 @@ module SCM: {
   };
 };
 
+module SignatureHelp: {
+  module ProviderMetadata: {
+    type t = {
+      triggerCharacters: list(string),
+      retriggerCharacters: list(string),
+    };
+
+    let decode: Json.decoder(t);
+  }
+};
+
 module SuggestResult: {
   type t = {
     completions: list(SuggestItem.t),
@@ -622,6 +633,11 @@ module Msg: {
       | RegisterTypeDefinitionSupport({
           handle: int,
           selector: DocumentSelector.t,
+        })
+      | RegisterSignatureHelpProvider({
+          handle: int,
+          selector: DocumentSelector.t,
+          metadata: SignatureHelp.ProviderMetadata.t,
         })
       | RegisterSuggestSupport({
           handle: int,
