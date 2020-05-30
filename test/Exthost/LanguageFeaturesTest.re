@@ -357,18 +357,17 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
     test("gets hover", ({expect, _}) => {
       let hoverHandle = ref(-1);
 
-//      let getHover = client =>
-//        Request.LanguageFeatures.provideReferences(
-//          ~handle=referencesHandle^,
-//          ~resource=testUri,
-//          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
-//          ~context=Exthost.ReferenceContext.{includeDeclaration: true},
-//          client,
-//        );
+      let getHover = client =>
+        Request.LanguageFeatures.provideHover(
+          ~handle=hoverHandle^,
+          ~resource=testUri,
+          ~position=OneBasedPosition.{lineNumber: 2, column: 2},
+          client,
+        );
 
       let waitForRegisterHoverProvider =
         fun
-        | Msg.LanguageFeatures(RegisterReferenceSupport({handle, _})) => {
+        | Msg.LanguageFeatures(RegisterHoverProvider({handle, _})) => {
             hoverHandle := handle;
             true;
           }
@@ -379,7 +378,36 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
            ~name="RegisterHoverProvider",
            waitForRegisterHoverProvider,
          )
-     |> finishTest;
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="Get symbols",
+           ~validate=
+             (maybeHover: option(Exthost.Hover.t)) => {
+               expect.equal(
+                 maybeHover,
+                 Some({
+                   contents: ["Hover Content"],
+                   range:
+                     Some(
+                       OneBasedRange.{
+                         startLineNumber: 2,
+                         endLineNumber: 2,
+                         startColumn: 1,
+                         endColumn: 6,
+                       },
+                     ),
+                 }),
+               );
+
+               true;
+             },
+           getHover,
+         )
+      |> finishTest;
+    })
   });
-});
 });

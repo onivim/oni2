@@ -286,7 +286,7 @@ module LanguageFeatures = {
     | RegisterHoverProvider({
         handle: int,
         selector: list(DocumentFilter.t),
-    })
+      })
     | RegisterImplementationSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -351,9 +351,7 @@ module LanguageFeatures = {
     | ("$registerHoverProvider", `List([`Int(handle), selectorJson])) =>
       selectorJson
       |> parseDocumentSelector
-      |> Result.map(selector => {
-           RegisterHoverProvider({handle, selector})
-         })
+      |> Result.map(selector => {RegisterHoverProvider({handle, selector})})
       |> Result.map_error(Json.Decode.string_of_error)
     | (
         "$registerImplementationSupport",
