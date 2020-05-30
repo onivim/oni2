@@ -285,6 +285,22 @@ module LanguageFeatures = {
       "$provideDeclaration",
       client,
     );
+
+  let provideHover = (~handle, ~resource, ~position, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(Hover.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideHover",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
+      client,
+    );
+  };
   let provideImplementation = (~handle, ~resource, ~position, client) =>
     Internal.provideDefinitionLink(
       ~handle,

@@ -59,6 +59,14 @@ function activate(context) {
 		}
 	};
 
+	const hoverProvider = {
+		provideHover: (_document, _position, _token) => {
+			return {
+				contents: ['Hover Content'],
+			}
+		}
+	};
+
 	const definitionProvider = {
 		provideDefinition: hardcodedLocationProvider(new vscode.Position(0, 0))
 	};
@@ -95,6 +103,7 @@ function activate(context) {
 		triggerCharacters: ["("],
 		retriggerCharacters: [","]
 	});
+	const disposable9 = vscode.languages.registerHoverProvider("plaintext", hoverProvider);
 
 	context.subscriptions.push(disposable0);
 	context.subscriptions.push(disposable1);
@@ -105,6 +114,7 @@ function activate(context) {
 	context.subscriptions.push(disposable6);
 	context.subscriptions.push(disposable7);
 	context.subscriptions.push(disposable8);
+	context.subscriptions.push(disposable9);
 }
 
 // this method is called when your extension is deactivated
