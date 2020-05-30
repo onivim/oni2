@@ -353,4 +353,55 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> finishTest;
     })
   });
+  describe("signature help", ({test, _}) => {
+    test("get signature help", ({expect, _}) => {
+      let signatureHelpHandle = ref(-1);
+
+//      let getSymbols = client =>
+//        Request.LanguageFeatures.provideDocumentSymbols(
+//          ~handle=symbolsHandle^,
+//          ~resource=testUri,
+//          client,
+//        );
+
+      let waitForRegisterSignatureHelpProvider =
+        fun
+        | Msg.LanguageFeatures(RegisterSignatureHelpProvider({handle, metadata, _})) => {
+            signatureHelpHandle := handle;
+            expect.equal(metadata.triggerCharacters, ["("]);
+            expect.equal(metadata.retriggerCharacters, [","]);
+            true;
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterSignatureHelpProvider",
+           waitForRegisterSignatureHelpProvider,
+         )
+//      |> Test.withClient(
+//           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+//             ~delta=addedDelta,
+//           ),
+//         )
+//      |> Test.withClientRequest(
+//           ~name="Get symbols",
+//           ~validate=
+//             (symbols: list(Exthost.DocumentSymbol.t)) => {
+//               expect.int(List.length(symbols)).toBe(2);
+//               let symbol0: Exthost.DocumentSymbol.t = List.nth(symbols, 0);
+//               let symbol1: Exthost.DocumentSymbol.t = List.nth(symbols, 1);
+//
+//               expect.equal(symbol0.name, "symbol1");
+//               expect.equal(symbol0.kind, Exthost.SymbolKind.File);
+//               expect.equal(symbol1.name, "symbol2");
+//               expect.equal(symbol1.kind, Exthost.SymbolKind.TypeParameter);
+//
+//               true;
+//             },
+//           getSymbols,
+//         )
+      |> finishTest;
+    })
+  });
 });
