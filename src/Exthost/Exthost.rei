@@ -1064,6 +1064,8 @@ module Reply: {
   let okEmpty: t;
 
   let okJson: Yojson.Safe.t => t;
+
+  let okBuffer: Bytes.t => t;
 };
 
 module Middleware: {

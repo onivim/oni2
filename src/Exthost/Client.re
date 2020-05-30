@@ -127,6 +127,11 @@ let start =
                 m("Responding to request %d with OkJson", requestId)
               );
               send(ReplyOKJSON({requestId, json}));
+            | OkBuffer({bytes}) =>
+              Log.tracef(m =>
+                m("Responding to request %d with OkBuffer", requestId)
+              );
+              send(ReplyOKBuffer({requestId, bytes}));
             | ErrorMessage({message}) =>
               Log.tracef(m =>
                 m(

@@ -149,6 +149,10 @@ module Message = {
           requestId: int,
           json: Yojson.Safe.t,
         })
+      | ReplyOKBuffer({
+          requestId: int,
+          args: list(mixedArg),
+        })
       | ReplyError({
           requestId: int,
           error: string,
@@ -256,6 +260,7 @@ module Message = {
       | RequestJSONArgs({requestId, _}) => requestId
       | ReplyOKEmpty({requestId, _}) => requestId
       | ReplyOKJSON({requestId, _}) => requestId
+      | ReplyOKBuffer({requestId}) => requestId
       | ReplyError({requestId, _}) => requestId
       | Terminate => Int.max_int;
     let requestId = getRequestId(msg) |> Int32.of_int;
@@ -311,6 +316,10 @@ module Message = {
       writePreamble(~buffer, ~msgType=replyOkJSON, ~requestId);
       let reply = json |> Yojson.Safe.to_string;
       writeLongString(buffer, reply);
+      bufferToPacket(~buffer);
+    | ReplyOKBuffer({bytes, _}) =>
+      writePreamble(~buffer, ~msgType=replyOkBuffer, ~requestId);
+      writeLongString(buffer, Bytes.to_string(bytes));
       bufferToPacket(~buffer);
     | ReplyError({error, _}) =>
       writePreamble(~buffer, ~msgType=replyErrError, ~requestId);

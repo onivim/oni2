@@ -64,6 +64,10 @@ module Message: {
           requestId: int,
           json: Yojson.Safe.t,
         })
+      | ReplyOKBuffer({
+          requestId: int,
+          bytes: Bytes.t,
+        })
       | ReplyError({
           requestId: int,
           error: string,
