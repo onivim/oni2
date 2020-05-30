@@ -1,6 +1,6 @@
 open TestFramework;
 
-describe("CLI", ({describe, test}) => {
+describe("CLI", ({describe, test, _}) => {
   test("no files, no folders", ({expect, _}) => {
     let (options, eff) = Oni_CLI.parse([|"Oni2_editor"|]);
     expect.equal(eff, Run);

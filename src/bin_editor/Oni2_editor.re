@@ -45,19 +45,11 @@ let uninstallExtension = (_extensionId, _cli) => {
   1;
 };
 
-let listExtensions = (Oni_CLI.{overriddenExtensionsDir, _}) => {
-  let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
-  let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
-    print_endline(ext.manifest.name);
-  };
-  List.iter(printExtension, extensions);
-  0;
-};
-
 let printVersion = () => {
   print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
   0;
 };
+
 let listExtensions = ({overriddenExtensionsDir, _}) => {
   let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
   let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {

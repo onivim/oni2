@@ -29,8 +29,6 @@ type eff =
   | UninstallExtension(string)
   | Run;
 
-let noop = () => ();
-
 let setWorkingDirectory = s => {
   Log.debug("--working-directory - chdir: " ++ s);
   Sys.chdir(s);
