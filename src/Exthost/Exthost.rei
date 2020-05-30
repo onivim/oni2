@@ -88,6 +88,18 @@ module MarkdownString: {
   let decode: Json.decoder(t);
 };
 
+module Edit: {
+  module SingleEditOperation: {
+    type t = {
+      range: OneBasedRange.t,
+      text: option(string),
+      forceMoveMarkers: bool,
+    };
+
+    let decode: Json.decoder(t);
+  }
+};
+
 module DefinitionLink: {
   type t = {
     uri: Uri.t,

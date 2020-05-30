@@ -14,6 +14,7 @@ module DocumentFilter = DocumentFilter;
 module DocumentHighlight = DocumentHighlight;
 module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
+module Edit = Edit;
 module Eol = Eol;
 module Hover = Hover;
 module Label = Label;
