@@ -245,7 +245,7 @@ module SignatureHelp: {
       | ContentChange;
   };
 
-  module Context: {
+  module RequestContext: {
     [@deriving show]
     type t = {
       triggerKind: TriggerKind.t,
@@ -280,7 +280,7 @@ module SignatureHelp: {
     let decode: Json.decoder(t);
   };
 
-  module SignatureHelp: {
+  module Response: {
     type t = {
       id: int,
       signatures: list(Signature.t),
@@ -1022,6 +1022,16 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(DefinitionLink.t));
+
+    let provideSignatureHelp:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: SignatureHelp.RequestContext.t,
+        Client.t
+      ) =>
+      Lwt.t(option(SignatureHelp.Response.t));
   };
 
   module SCM: {

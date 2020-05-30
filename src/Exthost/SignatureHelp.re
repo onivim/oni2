@@ -43,7 +43,7 @@ module TriggerKind = {
   let encode = triggerKind => triggerKind |> toInt |> Json.Encode.int;
 };
 
-module Context = {
+module RequestContext = {
   [@deriving show]
   type t = {
     triggerKind: TriggerKind.t,
@@ -106,7 +106,7 @@ module Signature = {
     );
 };
 
-module SignatureHelp = {
+module Response = {
   [@deriving show]
   type t = {
     id: int,
