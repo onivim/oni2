@@ -366,6 +366,63 @@ module LanguageFeatures = {
         ),
       client,
     );
+  
+  let provideDocumentFormattingEdits =
+  (~handle, ~resource, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          options
+          |> Json.Encode.encode_value(FormattingOptions.encode)
+        ]),
+      client,
+    );
+  };
+  
+  let provideDocumentRangeFormattingEdits =
+  (~handle, ~resource, ~range, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentRangeFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedRange.to_yojson(range),
+          options
+          |> Json.Encode.encode_value(FormattingOptions.encode)
+        ]),
+      client,
+    );
+  };
+
+  let provideOnTypeFormattingEdits =
+  (~handle, ~resource, ~position, ~character, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideOnTypeFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `String(character),
+          options
+          |> Json.Encode.encode_value(FormattingOptions.encode)
+        ]),
+      client,
+    );
+  };
 };
 
 module SCM = {
