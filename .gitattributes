@@ -6,7 +6,7 @@
 *.sh text eol=lf
 
 # Windows executables
-*.exe binary
+*.exe      binary
 
 # Archives
 *.7z       binary
