@@ -9,6 +9,7 @@
         lwt
         lwt.unix
         oniguruma
+        Oni2.cli
         Oni2.core
         Oni2.extensionManagement
         Oni2.extensions

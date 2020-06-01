@@ -1,38 +1,33 @@
 open TestFramework;
 
-let developmentExtensions =
-  Rench.Path.join(Sys.getcwd(), "development_extensions");
-
-describe("CLI", ({describe, _}) => {
-  describe("launcher", ({test, _}) => {
-    test("--version should show output", _ => {
-      TestRunner.(
-        startWithArgs(["--version"])
-        |> validateOutputContains("Onivim 2")
-        |> validateExitStatus(WEXITED(0))
-        |> finish
-      )
+describe("CLI", ({describe, test, _}) => {
+  test("no files, no folders", ({expect, _}) => {
+    let (options, eff) = Oni_CLI.parse([|"Oni2_editor"|]);
+    expect.equal(eff, Run);
+    expect.equal(options.folder, None);
+    expect.equal(options.filesToOpen, []);
+  });
+  describe("folder tests", ({test, _}) => {
+    test(". should be a folder", ({expect, _}) => {
+      let (options, eff) = Oni_CLI.parse([|"Oni2_editor", "."|]);
+      expect.equal(eff, Run);
+      expect.equal(options.folder != None, true);
+      expect.equal(options.filesToOpen, []);
     });
 
-    test("--list-extensions should show extensions", _ => {
-      TestRunner.(
-        startWithArgs([
-          "--list-extensions",
-          "--extensions-dir=" ++ developmentExtensions,
-        ])
-        |> validateOutputContains("dev-extension")
-        |> validateExitStatus(WEXITED(0))
-        |> finish
-      )
+    test(".. should be a folder", ({expect, _}) => {
+      let (options, eff) = Oni_CLI.parse([|"Oni2_editor", ".."|]);
+      expect.equal(eff, Run);
+      expect.equal(options.folder != None, true);
+      expect.equal(options.filesToOpen, []);
     });
   });
-  describe("editor", ({test, _}) => {
-    test("rogue -psn argument shouldn't cause a failure", _ => {
-      TestRunner.(
-        startEditorWithArgs(["-psn_0_989382", "--list-extensions"])
-        |> validateExitStatus(WEXITED(0))
-        |> finish
-      )
+  describe("file tests", ({test, _}) => {
+    // NOTE: This test relies on the working directory being the repo root
+    test("README.md should be a file", ({expect, _}) => {
+      let (options, eff) = Oni_CLI.parse([|"Oni2_editor", "README.md"|]);
+      expect.equal(eff, Run);
+      expect.equal(options.filesToOpen |> List.length, 1);
     })
   });
 });
