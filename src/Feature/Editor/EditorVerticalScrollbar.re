@@ -13,7 +13,7 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 let absoluteStyle =
   Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
 
-let make =
+let%component make =
     (
       ~editor: Editor.t,
       ~cursorPosition: Location.t,
@@ -25,6 +25,20 @@ let make =
       ~bufferHighlights,
       (),
     ) => {
+
+  let%hook (captureMouse, captureState) = Hooks.mouseCapture(
+    ~onMouseMove=(origin, evt: NodeEvents.mouseMoveEventParams) => {
+  
+      prerr_endline ("evt: " ++ string_of_float(evt.mouseY));
+      Some(origin)
+    },
+    ~onMouseUp=(origin, _evt) => {
+      prerr_endline ("done!");
+      None
+    },
+    (),
+  );
+
   let scrollMetrics = Editor.getVerticalScrollbarMetrics(editor, totalHeight);
 
   let scrollThumbStyle =
@@ -172,7 +186,12 @@ let make =
     |> List.map(searchHighlightToElement)
     |> React.listToElement;
 
-  <View style=absoluteStyle>
+  let onMouseDown = (scroll) => {
+    prerr_endline ("mouse down");
+    captureMouse(1);
+  };
+
+  <View style=absoluteStyle onMouseDown>
     <View style=scrollThumbStyle />
     <View style=scrollCursorStyle />
     <View style=absoluteStyle> selectionElements </View>
