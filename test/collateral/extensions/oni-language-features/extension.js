@@ -33,6 +33,33 @@ function activate(context) {
 		return new vscode.Location(document.uri, pos);
 	};
 
+	const commonFormat = (str) => {
+		return [
+			new vscode.TextEdit(
+				new vscode.Range(1, 2, 3, 4),
+				str,
+			)
+		];
+	};
+
+	const asYouTypeFormat = (_document, _position, _ch, _options, _token) => {
+		return commonFormat("as-you-type");
+	};
+
+	const rangeFormat = (_document, _range, _options, _token) => {
+		return commonFormat("range");
+	};
+
+	const format = (_document, _options, _token) => {
+		return commonFormat("document");
+	};
+
+	const documentFormattingProvider = {
+		provideDocumentFormattingEdits: format,
+		provideDocumentRangeFormattingEdits: rangeFormat,
+		provideOnTypeFormattingEdits: asYouTypeFormat,
+	};
+
 	const signatureHelpProvider = {
 		provideSignatureHelp: (_document, _position, _token, _context) => {
 			const signature1 = new vscode.SignatureInformation("signature 1", null);
@@ -89,32 +116,26 @@ function activate(context) {
 				new vscode.SymbolInformation("symbol2", vscode.SymbolKind.TypeParameter, "symbol2-container", new vscode.Location(document.uri, position)),
 			];
 		},
-	}
+	};
 
-	const disposable0 = vscode.languages.registerCompletionItemProvider("plaintext", completionProvider, ["."])
-	const disposable1 = vscode.languages.registerDefinitionProvider("plaintext", definitionProvider);
-	const disposable2 = vscode.languages.registerDeclarationProvider("plaintext", declarationProvider);
-	const disposable3 = vscode.languages.registerTypeDefinitionProvider("plaintext", typeDefinitionProvider);
-	const disposable4 = vscode.languages.registerImplementationProvider("plaintext", implementationProvider);
-	const disposable5 = vscode.languages.registerDocumentHighlightProvider("plaintext", documentHighlightProvider);
-	const disposable6 = vscode.languages.registerReferenceProvider("plaintext", referenceProvider);
-	const disposable7 = vscode.languages.registerDocumentSymbolProvider("plaintext", documentSymbolProvider);
-	const disposable8 = vscode.languages.registerSignatureHelpProvider("plaintext", signatureHelpProvider, {
-		triggerCharacters: ["("],
-		retriggerCharacters: [","]
-	});
-	const disposable9 = vscode.languages.registerHoverProvider("plaintext", hoverProvider);
-
-	context.subscriptions.push(disposable0);
-	context.subscriptions.push(disposable1);
-	context.subscriptions.push(disposable2);
-	context.subscriptions.push(disposable3);
-	context.subscriptions.push(disposable4);
-	context.subscriptions.push(disposable5);
-	context.subscriptions.push(disposable6);
-	context.subscriptions.push(disposable7);
-	context.subscriptions.push(disposable8);
-	context.subscriptions.push(disposable9);
+	[
+		vscode.languages.registerCompletionItemProvider("plaintext", completionProvider, ["."]),
+		vscode.languages.registerDefinitionProvider("plaintext", definitionProvider),
+		vscode.languages.registerDeclarationProvider("plaintext", declarationProvider),
+		vscode.languages.registerTypeDefinitionProvider("plaintext", typeDefinitionProvider),
+		vscode.languages.registerImplementationProvider("plaintext", implementationProvider),
+		vscode.languages.registerDocumentHighlightProvider("plaintext", documentHighlightProvider),
+		vscode.languages.registerReferenceProvider("plaintext", referenceProvider),
+		vscode.languages.registerDocumentSymbolProvider("plaintext", documentSymbolProvider),
+		vscode.languages.registerSignatureHelpProvider("plaintext", signatureHelpProvider, {
+			triggerCharacters: ["("],
+			retriggerCharacters: [","]
+		}),
+		vscode.languages.registerHoverProvider("plaintext", hoverProvider),
+		vscode.languages.registerOnTypeFormattingEditProvider("plaintext", documentFormattingProvider, "{"),
+		vscode.languages.registerDocumentFormattingEditProvider("plaintext", documentFormattingProvider, "{"),
+		vscode.languages.registerDocumentRangeFormattingEditProvider("plaintext", documentFormattingProvider, "{")
+	].forEach(subscription => context.subscriptions.push(subscription));
 }
 
 // this method is called when your extension is deactivated
