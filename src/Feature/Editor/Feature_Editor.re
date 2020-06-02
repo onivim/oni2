@@ -22,6 +22,10 @@ type outmsg =
 
 type model = Editor.t;
 
+module Constants = {
+  let scrollbarWheelMultiplier = 300.;
+};
+
 let update = (editor, msg) => {
   switch (msg) {
   | Msg.VerticalScrollbarAfterTrackClicked({newPixelScrollY})
@@ -30,6 +34,14 @@ let update = (editor, msg) => {
       Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
       Nothing,
     )
+  | Msg.VerticalScrollbarMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelY(
+        ~pixelY=deltaWheel *. Constants.scrollbarWheelMultiplier,
+        editor,
+      ),
+      Nothing,
+    )
+
   | Msg.VerticalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseDown => (editor, Nothing)
   };

@@ -70,6 +70,7 @@ module Common = {
                   ~dragStart,
                   ~dragMove,
                   ~dragStop,
+                  ~wheel,
                   ~thumbPosition: float,
                   ~thumbSize: float,
                   ~render,
@@ -125,6 +126,10 @@ module Common = {
       setHovering(_ => false);
     };
 
+    let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+      wheel(wheelEvent.deltaY);
+    };
+
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
       maybeBbox
       |> Option.iter(bbox => {
@@ -148,6 +153,7 @@ module Common = {
       onMouseDown
       onMouseOver
       onMouseLeave
+      onMouseWheel
       onBoundingBoxChanged={bbox => setBbox(_ => Some(bbox))}>
       {render()}
     </View>;
@@ -351,6 +357,10 @@ module Vertical = {
       );
     };
     let dragStop = () => dispatch(Msg.VerticalScrollbarMouseRelease);
+    let wheel = deltaWheel =>
+      dispatch(
+        Msg.VerticalScrollbarMouseWheel({deltaWheel: (-1.0) *. deltaWheel}),
+      );
 
     <Common
       background={colors.scrollbarSliderBackground}
@@ -363,6 +373,7 @@ module Vertical = {
       dragStart
       dragMove
       dragStop
+      wheel
       render={() => {
         <View style=Styles.absolute>
           <View
