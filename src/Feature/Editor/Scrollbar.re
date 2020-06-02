@@ -23,13 +23,12 @@ module Styles = {
 
   let background = color => [backgroundColor(color), ...absolute];
 
-  let commonContainer = [cursor(Revery.MouseCursors.pointer), ...absolute];
-
-  let container = (~opacity, ~colors: Colors.t) => {
-    let color =
-      colors.scrollbarSliderBackground |> Revery.Color.multiplyAlpha(opacity);
-
-    [backgroundColor(color), ...commonContainer];
+  let container = (~color) => {
+    [
+      backgroundColor(color),
+      cursor(Revery.MouseCursors.pointer),
+      ...absolute,
+    ];
   };
 
   let verticalThumb =
@@ -63,6 +62,8 @@ module Common = {
 
   let%component make =
                 (
+                  ~background,
+                  ~hoverBackground,
                   ~isVertical,
                   ~beforeTrackClicked,
                   ~afterTrackClicked,
@@ -94,7 +95,8 @@ module Common = {
       mousePos -. pos;
     };
 
-    let%hook (opacity, setOpacity) = Hooks.state(0.8);
+    let%hook (isHovering, setHovering) = Hooks.state(false);
+    //let opacity = isHovering ? 1.0 : 0.8;
 
     let%hook (captureMouse, captureState) =
       Hooks.mouseCapture(
@@ -116,32 +118,33 @@ module Common = {
     let%hook (maybeBbox, setBbox) = Hooks.state(None);
 
     let onMouseOver = _ => {
-      setOpacity(_ => 1.0);
+      setHovering(_ => true);
     };
 
     let onMouseLeave = _ => {
-      setOpacity(_ => 0.8);
+      setHovering(_ => false);
     };
 
     let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-      switch (maybeBbox) {
-      | None => ()
-      | Some(bbox) =>
-        let mousePosition =
-          windowSpaceToScrollSpace(bbox, evt.mouseX, evt.mouseY);
-        if (mousePosition < thumbPosition) {
-          beforeTrackClicked(mousePosition);
-        } else if (mousePosition > thumbPosition +. thumbSize) {
-          afterTrackClicked(mousePosition);
-        } else {
-          dragStart();
-          captureMouse({bbox, offset: mousePosition -. thumbPosition});
-        };
-      };
+      maybeBbox
+      |> Option.iter(bbox => {
+           let mousePosition =
+             windowSpaceToScrollSpace(bbox, evt.mouseX, evt.mouseY);
+           if (mousePosition < thumbPosition) {
+             beforeTrackClicked(mousePosition);
+           } else if (mousePosition > thumbPosition +. thumbSize) {
+             afterTrackClicked(mousePosition);
+           } else {
+             dragStart();
+             captureMouse({bbox, offset: mousePosition -. thumbPosition});
+           };
+         });
     };
 
+    let color = isHovering ? hoverBackground : background;
+
     <View
-      style=Styles.commonContainer
+      style={Styles.container(~color)}
       onMouseDown
       onMouseOver
       onMouseLeave
@@ -288,35 +291,19 @@ module Vertical = {
     getSelectionElements(editor.selection) |> React.listToElement;
   };
 
-  let%component make =
-                (
-                  ~dispatch: Msg.t => unit,
-                  ~editor: Editor.t,
-                  ~cursorPosition: Location.t,
-                  ~height as totalHeight,
-                  ~width as totalWidth,
-                  ~diagnostics: IntMap.t(list(Diagnostic.t)),
-                  ~colors: Colors.t,
-                  ~editorFont: Service_Font.font,
-                  ~bufferHighlights,
-                  (),
-                ) => {
-    let%hook (opacity, setOpacity) = Hooks.state(0.8);
-
-    let%hook (captureMouse, captureState) =
-      Hooks.mouseCapture(
-        ~onMouseMove=
-          (origin, evt: NodeEvents.mouseMoveEventParams) => {Some(origin)},
-        ~onMouseUp=
-          (origin, _evt) => {
-            dispatch(Msg.VerticalScrollbarMouseRelease);
-            None;
-          },
+  let make =
+      (
+        ~dispatch: Msg.t => unit,
+        ~editor: Editor.t,
+        ~cursorPosition: Location.t,
+        ~height as totalHeight,
+        ~width as totalWidth,
+        ~diagnostics: IntMap.t(list(Diagnostic.t)),
+        ~colors: Colors.t,
+        ~editorFont: Service_Font.font,
+        ~bufferHighlights,
         (),
-      );
-
-    let%hook (maybeBbox, setBbox) = Hooks.state(None);
-
+      ) => {
     let scrollMetrics =
       Editor.getVerticalScrollbarMetrics(editor, totalHeight);
 
@@ -367,6 +354,8 @@ module Vertical = {
     let dragStop = () => dispatch(Msg.VerticalScrollbarMouseRelease);
 
     <Common
+      background={colors.scrollbarSliderBackground}
+      hoverBackground={colors.scrollbarSliderHoverBackground}
       isVertical=true
       thumbPosition={scrollMetrics.thumbOffset |> float_of_int}
       thumbSize={scrollMetrics.thumbSize |> float_of_int}
