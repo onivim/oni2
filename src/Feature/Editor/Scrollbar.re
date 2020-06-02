@@ -320,10 +320,6 @@ module Vertical = {
     let scrollMetrics =
       Editor.getVerticalScrollbarMetrics(editor, totalHeight);
 
-    //  let projectLine = line => {
-    //    Editor.projectLine(~line, ~pixelHeight=totalHeight, editor);
-    //  };
-
     let cursorLine =
       Editor.projectLine(
         ~line=Index.toZeroBased(Location.(cursorPosition.line)),
