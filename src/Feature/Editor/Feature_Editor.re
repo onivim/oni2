@@ -23,13 +23,14 @@ type outmsg =
 type model = Editor.t;
 
 let update = (editor, msg) => {
-  let outmsg =
-    switch (msg) {
-    | Msg.VerticalScrollbarMouseRelease
-    | Msg.VerticalScrollbarMouseDrag(_)
-    | Msg.VerticalScrollbarMouseDown(_) =>
-      failwith("Got here");
-      Nothing;
-    };
-  (editor, outmsg);
+  switch (msg) {
+  | Msg.VerticalScrollbarAfterTrackClicked({newPixelScrollY})
+  | Msg.VerticalScrollbarBeforeTrackClicked({newPixelScrollY})
+  | Msg.VerticalScrollbarMouseDrag({newPixelScrollY}) => (
+      Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
+      Nothing,
+    )
+  | Msg.VerticalScrollbarMouseRelease
+  | Msg.VerticalScrollbarMouseDown => (editor, Nothing)
+  };
 };

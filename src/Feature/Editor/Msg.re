@@ -1,5 +1,7 @@
 [@deriving show({with_path: false})]
 type t =
-  | VerticalScrollbarMouseDown({newPixelScrollY: float})
+  | VerticalScrollbarBeforeTrackClicked({newPixelScrollY: float})
+  | VerticalScrollbarAfterTrackClicked({newPixelScrollY: float})
+  | VerticalScrollbarMouseDown
   | VerticalScrollbarMouseDrag({newPixelScrollY: float})
   | VerticalScrollbarMouseRelease;

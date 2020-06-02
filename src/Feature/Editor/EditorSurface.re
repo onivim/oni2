@@ -305,7 +305,7 @@ let%component make =
       tokenTheme
     />
     <View style={Styles.verticalScrollBar(~colors)}>
-      <EditorVerticalScrollbar
+      <Scrollbar.Vertical
         dispatch
         editor
         cursorPosition

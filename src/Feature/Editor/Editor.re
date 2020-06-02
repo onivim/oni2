@@ -292,10 +292,13 @@ let projectLine = (~line, ~pixelHeight, editor) => {
   y;
 };
 
-let unprojectToPixel = (~pixelX, ~pixelY, ~pixelWidth, ~pixelHeight, editor) => (
-  0.,
-  0.,
-);
+let unprojectToPixel =
+    (~pixelX: float, ~pixelY, ~pixelWidth: int, ~pixelHeight, editor) => {
+  let totalHeight = getTotalHeightInPixels(editor) |> float_of_int;
+  let y = totalHeight *. pixelY /. float_of_int(pixelHeight);
+
+  (0., y);
+};
 
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
