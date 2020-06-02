@@ -270,14 +270,24 @@ let update =
 
     | None => (state, Effect.none)
     }
-  | Editor(msg) =>
+  | FilesDropped({paths}) =>
+    let eff = Service_OS.Effect.statMultiple(paths, (path, stats) =>
+      if (stats.st_kind == S_REG) {
+        OpenFileByPath(path, None, None);
+      } else {
+        Noop
+      }
+    );
+    (state, eff);
+  | Editor({ editorId, msg}) =>
     let eff =
       Feature_Editor.update(
         msg,
-        path => OpenFileByPath(path, None, None),
-        Noop,
       );
-    (state, eff);
+      let eff' = switch (eff) {
+      | Nothing => Effect.none
+      };
+    (state, eff');
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);
     ({...state, changelog: model}, eff);

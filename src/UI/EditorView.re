@@ -23,7 +23,7 @@ module Styles = {
 
 let make = (~state: State.t, ~theme, ()) => {
   let onFileDropped = ({paths, _}: NodeEvents.fileDropEventParams) =>
-    GlobalContext.current().dispatch(Editor(FilesDropped({paths: paths})));
+    GlobalContext.current().dispatch(FilesDropped({paths: paths}));
 
   <View onFileDropped style={Styles.container(theme)}>
     {if (state.zenMode) {

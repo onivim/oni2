@@ -16,16 +16,19 @@ module Contributions = {
 
 [@deriving show({with_path: false})]
 type msg =
-  | FilesDropped({paths: list(string)});
+  | VerticalScrollbarMouseDown({ newPixelScrollY: float })
+  | VerticalScrollbarMouseDrag({ newPixelScrollY: float })
+  | VerticalScrollbarMouseRelease
 
-let update = (msg, openFileEffect, noopEffect) =>
+type outmsg = 
+| Nothing;
+
+type model = Editor.t;
+
+let update = (msg) =>
   switch (msg) {
-  | FilesDropped({paths}) =>
-    Service_OS.Effect.statMultiple(paths, (path, stats) =>
-      if (stats.st_kind == S_REG) {
-        openFileEffect(path);
-      } else {
-        noopEffect;
-      }
-    )
+  | VerticalScrollbarMouseRelease
+  | VerticalScrollbarMouseDrag(_)
+  | VerticalScrollbarMouseDown(_) => Nothing
   };
+
