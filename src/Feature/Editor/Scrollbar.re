@@ -90,7 +90,7 @@ module Common = {
     };
 
     let windowSpaceToScrollSpace = (bbox, mouseX, mouseY) => {
-      let (pos, size) = getRelevantBoxDimensions(bbox);
+      let (pos, _size) = getRelevantBoxDimensions(bbox);
       let mousePos = getRelevantMousePosition(mouseX, mouseY);
       mousePos -. pos;
     };
@@ -98,7 +98,7 @@ module Common = {
     let%hook (isHovering, setHovering) = Hooks.state(false);
     //let opacity = isHovering ? 1.0 : 0.8;
 
-    let%hook (captureMouse, captureState) =
+    let%hook (captureMouse, _captureState) =
       Hooks.mouseCapture(
         ~onMouseMove=
           (state, evt: NodeEvents.mouseMoveEventParams) => {
@@ -108,7 +108,7 @@ module Common = {
             Some(state);
           },
         ~onMouseUp=
-          (origin, _evt) => {
+          (_state, _evt) => {
             dragStop();
             None;
           },
@@ -300,7 +300,6 @@ module Vertical = {
         ~width as totalWidth,
         ~diagnostics: IntMap.t(list(Diagnostic.t)),
         ~colors: Colors.t,
-        ~editorFont: Service_Font.font,
         ~bufferHighlights,
         (),
       ) => {

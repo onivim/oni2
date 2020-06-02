@@ -39,7 +39,7 @@ module Styles = {
     flexGrow(1),
   ];
 
-  let verticalScrollBar = (~colors: Colors.t) => [
+  let verticalScrollBar = [
     position(`Absolute),
     top(0),
     right(0),
@@ -304,7 +304,7 @@ let%component make =
       theme
       tokenTheme
     />
-    <View style={Styles.verticalScrollBar(~colors)}>
+    <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical
         dispatch
         editor
@@ -313,7 +313,6 @@ let%component make =
         height={editor.pixelHeight}
         diagnostics=diagnosticsMap
         colors
-        editorFont
         bufferHighlights
       />
     </View>

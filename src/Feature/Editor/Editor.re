@@ -276,6 +276,10 @@ let scrollDeltaPixelY = (~pixelY, view) => {
 // PROJECTION
 
 let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
+  // TODO: Horizontal scrolling
+  ignore(column);
+  ignore(pixelWidth);
+
   let editorPixelY = float_of_int(line) *. editor.font.measuredHeight;
   let totalEditorHeight = getTotalHeightInPixels(editor) |> float_of_int;
   let transformedPixelY =
@@ -294,6 +298,10 @@ let projectLine = (~line, ~pixelHeight, editor) => {
 
 let unprojectToPixel =
     (~pixelX: float, ~pixelY, ~pixelWidth: int, ~pixelHeight, editor) => {
+  // TODO: Horizontal scrolling
+  ignore(pixelX);
+  ignore(pixelWidth);
+
   let totalHeight = getTotalHeightInPixels(editor) |> float_of_int;
   let y = totalHeight *. pixelY /. float_of_int(pixelHeight);
 
