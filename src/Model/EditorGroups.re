@@ -218,27 +218,26 @@ let getActiveEditor = editorGroups => {
 };
 
 let updateEditor = (~editorId, msg, {idToGroup, _} as editorGroups) => {
-  
-  let (idToGroup', effects) = IntMap.fold(
-    (key, curr, acc) => {
+  let (idToGroup', effects) =
+    IntMap.fold(
+      (key, curr, acc) => {
+        let (groups, effects) = acc;
 
-      let (groups, effects) = acc;
+        let (group, maybeEffect) =
+          curr |> EditorGroup.updateEditor(~editorId, msg);
 
-      let (group, maybeEffect) =
-      curr
-      |> EditorGroup.updateEditor(~editorId, msg);
+        let groups' = IntMap.add(key, group, groups);
+        let effects' =
+          switch (maybeEffect) {
+          | Some(eff) => [eff, ...effects]
+          | None => effects
+          };
 
-      let groups' = IntMap.add(key, group, groups);
-      let effects' = switch (maybeEffect) {
-      | Some(eff) => [eff, ...effects]
-      | None => effects
-      };
+        (groups', effects');
+      },
+      idToGroup,
+      (idToGroup, []),
+    );
 
-      (groups', effects')
-    },
-    idToGroup,
-    (idToGroup, [])
-  );
-
-  ({...editorGroups, idToGroup: idToGroup'}, effects)
+  ({...editorGroups, idToGroup: idToGroup'}, effects);
 };

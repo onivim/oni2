@@ -17,16 +17,19 @@ module Contributions = {
 [@deriving show({with_path: false})]
 type msg = Msg.t;
 
-type outmsg = 
-| Nothing;
+type outmsg =
+  | Nothing;
 
 type model = Editor.t;
 
 let update = (editor, msg) => {
-  let outmsg = switch (msg) {
-  | Msg.VerticalScrollbarMouseRelease
-  | Msg.VerticalScrollbarMouseDrag(_)
-  | Msg.VerticalScrollbarMouseDown(_) => Nothing
-  };
+  let outmsg =
+    switch (msg) {
+    | Msg.VerticalScrollbarMouseRelease
+    | Msg.VerticalScrollbarMouseDrag(_)
+    | Msg.VerticalScrollbarMouseDown(_) =>
+      failwith("Got here");
+      Nothing;
+    };
   (editor, outmsg);
 };

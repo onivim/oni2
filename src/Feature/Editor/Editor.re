@@ -276,23 +276,26 @@ let scrollDeltaPixelY = (~pixelY, view) => {
 // PROJECTION
 
 let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
-    let editorPixelY = float_of_int(line) *. editor.font.measuredHeight;
-    let totalEditorHeight = getTotalHeightInPixels(editor) |> float_of_int;
-    let transformedPixelY = 
-      editorPixelY
-      /. (totalEditorHeight +. float_of_int(editor.pixelHeight))
-      *. float_of_int(pixelHeight);
+  let editorPixelY = float_of_int(line) *. editor.font.measuredHeight;
+  let totalEditorHeight = getTotalHeightInPixels(editor) |> float_of_int;
+  let transformedPixelY =
+    editorPixelY
+    /. (totalEditorHeight +. float_of_int(editor.pixelHeight))
+    *. float_of_int(pixelHeight);
 
-    (0., transformedPixelY)
+  (0., transformedPixelY);
 };
 
 let projectLine = (~line, ~pixelHeight, editor) => {
-  let (_x, y) = project(~line, ~column=0, ~pixelWidth=1, ~pixelHeight, editor);
+  let (_x, y) =
+    project(~line, ~column=0, ~pixelWidth=1, ~pixelHeight, editor);
   y;
-}
+};
 
-let unprojectToPixel = (~pixelX, ~pixelY, ~pixelWidth, ~pixelHeight, editor) => 
-(0., 0.);
+let unprojectToPixel = (~pixelX, ~pixelY, ~pixelWidth, ~pixelHeight, editor) => (
+  0.,
+  0.,
+);
 
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 

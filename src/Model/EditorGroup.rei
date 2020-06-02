@@ -28,7 +28,9 @@ let previousEditor: t => t;
 let removeEditorById: (t, int) => t;
 let removeEditorsForBuffer: (~bufferId: int, t) => t;
 
-let updateEditor: (~editorId: int, Feature_Editor.msg, t) => (t, option(Feature_Editor.outmsg));
+let updateEditor:
+  (~editorId: int, Feature_Editor.msg, t) =>
+  (t, option(Feature_Editor.outmsg));
 
 let setBufferFont: (~bufferId: int, ~font: Service_Font.font, t) => t;
 

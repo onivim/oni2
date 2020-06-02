@@ -271,23 +271,27 @@ let update =
     | None => (state, Effect.none)
     }
   | FilesDropped({paths}) =>
-    let eff = Service_OS.Effect.statMultiple(paths, (path, stats) =>
-      if (stats.st_kind == S_REG) {
-        OpenFileByPath(path, None, None);
-      } else {
-        Noop
-      }
-    );
+    let eff =
+      Service_OS.Effect.statMultiple(paths, (path, stats) =>
+        if (stats.st_kind == S_REG) {
+          OpenFileByPath(path, None, None);
+        } else {
+          Noop;
+        }
+      );
     (state, eff);
-  | Editor({ editorId, msg}) =>
+  | Editor({editorId, msg}) =>
     let (editorGroups', effects) =
-    EditorGroups.updateEditor(~editorId, msg, state.editorGroups);
-    
-      let effect = effects
-      |> List.map(fun
-      | Feature_Editor.Nothing => Effect.none)
+      EditorGroups.updateEditor(~editorId, msg, state.editorGroups);
+
+    let effect =
+      effects
+      |> List.map(
+           fun
+           | Feature_Editor.Nothing => Effect.none,
+         )
       |> Isolinear.Effect.batch;
-      
+
     ({...state, editorGroups: editorGroups'}, effect);
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);

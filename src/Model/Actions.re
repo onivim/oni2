@@ -122,8 +122,11 @@ type t =
       message: string,
       extensionId: option(string),
     })
-  | Editor({ editorId: int, msg: Feature_Editor.msg})
-  | FilesDropped({ paths: list(string) })
+  | Editor({
+      editorId: int,
+      msg: Feature_Editor.msg,
+    })
+  | FilesDropped({paths: list(string)})
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)

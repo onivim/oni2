@@ -206,15 +206,11 @@ let removeEditorsForBuffer = (~bufferId, group) => {
 let updateEditor = (~editorId, msg, group) => {
   group.editors
   |> IntMap.find_opt(editorId)
-  |> Option.map((editor) => {
-    let (editor', outmsg) = Feature_Editor.update(
-      editor,
-      msg
-    );
-    let editors' = group.editors
-    |> IntMap.add(editorId, editor');
+  |> Option.map(editor => {
+       let (editor', outmsg) = Feature_Editor.update(editor, msg);
+       let editors' = group.editors |> IntMap.add(editorId, editor');
 
-    ({...group, editors: editors'}, Some(outmsg))
-  })
+       ({...group, editors: editors'}, Some(outmsg));
+     })
   |> Option.value(~default=(group, None));
 };

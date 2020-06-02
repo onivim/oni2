@@ -81,10 +81,7 @@ module Parts = {
 
       let editorDispatch = editorMsg =>
         GlobalContext.current().dispatch(
-          Editor({
-            editorId: editor.editorId,
-            msg: editorMsg,
-          })
+          Editor({editorId: editor.editorId, msg: editorMsg}),
         );
 
       <EditorSurface
