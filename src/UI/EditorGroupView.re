@@ -79,7 +79,16 @@ module Parts = {
           EditorCursorMove(editor.editorId, [cursor]),
         );
 
+      let editorDispatch = editorMsg =>
+        GlobalContext.current().dispatch(
+          Editor({
+            editorId: editor.editorId,
+            msg: editorMsg,
+          })
+        );
+
       <EditorSurface
+        dispatch=editorDispatch
         ?backgroundColor
         ?foregroundColor
         showDiffMarkers

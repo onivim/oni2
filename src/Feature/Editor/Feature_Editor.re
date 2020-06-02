@@ -15,10 +15,7 @@ module Contributions = {
 };
 
 [@deriving show({with_path: false})]
-type msg =
-  | VerticalScrollbarMouseDown({ newPixelScrollY: float })
-  | VerticalScrollbarMouseDrag({ newPixelScrollY: float })
-  | VerticalScrollbarMouseRelease
+type msg = Msg.t;
 
 type outmsg = 
 | Nothing;
@@ -27,8 +24,8 @@ type model = Editor.t;
 
 let update = (msg) =>
   switch (msg) {
-  | VerticalScrollbarMouseRelease
-  | VerticalScrollbarMouseDrag(_)
-  | VerticalScrollbarMouseDown(_) => Nothing
+  | Msg.VerticalScrollbarMouseRelease
+  | Msg.VerticalScrollbarMouseDrag(_)
+  | Msg.VerticalScrollbarMouseDown(_) => Nothing
   };
 

@@ -114,6 +114,7 @@ let scrollSpringOptions =
 
 let%component make =
               (
+                ~dispatch,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -306,6 +307,7 @@ let%component make =
     />
     <View style={Styles.verticalScrollBar(~colors)}>
       <EditorVerticalScrollbar
+        dispatch
         editor
         cursorPosition
         width=Constants.scrollBarThickness

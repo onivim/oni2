@@ -15,6 +15,7 @@ let absoluteStyle =
 
 let%component make =
     (
+      ~dispatch: Msg.t => unit,
       ~editor: Editor.t,
       ~cursorPosition: Location.t,
       ~height as totalHeight,
