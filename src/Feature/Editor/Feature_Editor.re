@@ -22,10 +22,11 @@ type outmsg =
 
 type model = Editor.t;
 
-let update = (msg) =>
-  switch (msg) {
+let update = (editor, msg) => {
+  let outmsg = switch (msg) {
   | Msg.VerticalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseDrag(_)
   | Msg.VerticalScrollbarMouseDown(_) => Nothing
   };
-
+  (editor, outmsg);
+};

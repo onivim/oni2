@@ -10,83 +10,61 @@ open Oni_Core;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
-let absoluteStyle =
-  Style.[position(`Absolute), top(0), bottom(0), left(0), right(0)];
+module Styles = {
+  open Style;
 
-let%component make =
-    (
-      ~dispatch: Msg.t => unit,
-      ~editor: Editor.t,
-      ~cursorPosition: Location.t,
-      ~height as totalHeight,
-      ~width as totalWidth,
-      ~diagnostics: IntMap.t(list(Diagnostic.t)),
-      ~colors: Colors.t,
-      ~editorFont: Service_Font.font,
-      ~bufferHighlights,
-      (),
-    ) => {
+  let absolute = [
+    position(`Absolute), top(0), bottom(0), left(0), right(0),
+  ];
 
-  let%hook (captureMouse, captureState) = Hooks.mouseCapture(
-    ~onMouseMove=(origin, evt: NodeEvents.mouseMoveEventParams) => {
+  let background = (color) => [
+    backgroundColor(color),
+    ...absolute,
+  ];
   
-      prerr_endline ("evt: " ++ string_of_float(evt.mouseY));
-      Some(origin)
-    },
-    ~onMouseUp=(origin, _evt) => {
-      prerr_endline ("done!");
-      None
-    },
-    (),
-  );
+  let container = (~opacity, ~colors: Colors.t) => {
+    let color = colors.scrollbarSliderBackground
+    |> Revery.Color.multiplyAlpha(opacity);
 
-  let scrollMetrics = Editor.getVerticalScrollbarMetrics(editor, totalHeight);
-
-  let scrollThumbStyle =
-    Style.[
+    [
+      backgroundColor(color),
+      cursor(Revery.MouseCursors.pointer),
+      ...absolute,
+    ];
+  };
+  
+  let verticalThumb = (~width, ~scrollMetrics: Editor.scrollbarMetrics, ~color) =>
+    [
       position(`Absolute),
       top(scrollMetrics.thumbOffset),
       left(0),
-      width(totalWidth),
+      Style.width(width),
       height(scrollMetrics.thumbSize),
-      backgroundColor(colors.scrollbarSliderBackground),
+      backgroundColor(color),
     ];
 
-  let totalPixel = Editor.getTotalSizeInPixels(editor) |> float_of_int;
-
-  let bufferLineToScrollbarPixel = line => {
-    let pixelY = float_of_int(line) *. editorFont.measuredHeight;
-    int_of_float(
-      pixelY
-      /. (totalPixel +. float_of_int(editor.pixelHeight))
-      *. float_of_int(totalHeight),
-    );
-  };
-
-  let cursorLine =
-    bufferLineToScrollbarPixel(
-      Index.toZeroBased(Location.(cursorPosition.line)),
-    );
-  let cursorSize = 2;
-
-  let scrollCursorStyle =
-    Style.[
+  let cursor = (~cursorLine, ~totalWidth, ~colors: Colors.t) => {
+    [
       position(`Absolute),
       top(cursorLine),
       left(0),
       width(totalWidth),
-      height(cursorSize),
+      height(Constants.scrollBarCursorSize),
       backgroundColor(colors.editorForeground),
     ];
+  };
+}
 
-  let diagnosticElements =
+let diagnosticMarkers = (~diagnostics, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
     IntMap.bindings(diagnostics)
     |> List.map(binding => {
          let (key, _) = binding;
          key;
        })
     |> List.map(line => {
-         let diagTop = bufferLineToScrollbarPixel(line);
+         let diagTop =
+         Editor.projectLine(~line, ~pixelHeight=totalHeight, editor)
+        |> int_of_float;
 
          let diagnosticStyle =
            Style.[
@@ -94,13 +72,15 @@ let%component make =
              top(diagTop),
              right(0),
              width(Constants.scrollBarThickness / 3),
-             height(cursorSize),
+             height(Constants.scrollBarCursorSize),
              backgroundColor(colors.errorForeground),
            ];
          <View style=diagnosticStyle />;
        })
     |> React.listToElement;
+};
 
+let matchingPairMarkers = (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
   let matchingPairStyle = t =>
     Style.[
       position(`Absolute),
@@ -111,28 +91,64 @@ let%component make =
       backgroundColor(colors.overviewRulerBracketMatchForeground),
     ];
 
-  let matchingPairElements =
     BufferHighlights.getMatchingPair(
       Editor.getBufferId(editor),
       bufferHighlights,
     )
     |> Option.map(mp => {
+         open Location;
          let (startPos, endPos) = mp;
+
          let topLine =
-           bufferLineToScrollbarPixel(
-             Index.toZeroBased(Location.(startPos.line)),
-           );
-         let botLine =
-           bufferLineToScrollbarPixel(
-             Index.toZeroBased(Location.(endPos.line)),
-           );
+         Editor.projectLine(
+         ~line=Index.toZeroBased(startPos.line),
+         ~pixelHeight=totalHeight, editor)
+         |> int_of_float;
+
+         let botLine = Editor.projectLine(
+         ~line=Index.toZeroBased(endPos.line),
+         ~pixelHeight=totalHeight, editor)
+         |> int_of_float;
+         
          React.listToElement([
            <View style={matchingPairStyle(topLine)} />,
            <View style={matchingPairStyle(botLine)} />,
          ]);
        })
     |> Option.value(~default=React.empty);
+};
 
+let searchMarkers = (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+
+  let searchMatches = t =>
+    Style.[
+      position(`Absolute),
+      top(t - 3),
+      left(4),
+      right(4),
+      height(8),
+      backgroundColor(colors.findMatchBackground),
+    ];
+
+  let searchHighlightToElement = line => {
+    let line = Index.toZeroBased(line);
+    let position = Editor.projectLine(
+        ~line,
+        ~pixelHeight=totalHeight,
+        editor
+    ) |> int_of_float;
+    <View style={searchMatches(position)} />;
+  };
+
+    BufferHighlights.getHighlights(
+      ~bufferId=Editor.getBufferId(editor),
+      bufferHighlights,
+    )
+    |> List.map(searchHighlightToElement)
+    |> React.listToElement;
+};
+
+let selectionMarkers = (~totalHeight, ~editor, ~colors: Colors.t, ()) => {
   let selectionStyle = (t, bot) => {
     Style.[
       position(`Absolute),
@@ -149,55 +165,93 @@ let%component make =
     switch (selection.mode) {
     | Vim.Types.None => []
     | _ =>
-      let topLine =
-        bufferLineToScrollbarPixel(
-          Index.toZeroBased(selection.range.start.line),
-        );
-      let botLine =
-        bufferLineToScrollbarPixel(
-          Index.toZeroBased(selection.range.stop.line) + 1,
-        );
+      let topLine = Editor.projectLine(
+        ~line= Index.toZeroBased(selection.range.start.line),
+        ~pixelHeight=totalHeight,
+        editor
+      ) |> int_of_float;
+      let botLine = Editor.projectLine(
+          ~line=Index.toZeroBased(selection.range.stop.line) + 1,
+          ~pixelHeight=totalHeight,
+          editor
+      ) |> int_of_float;
       [<View style={selectionStyle(topLine, botLine)} />];
     };
   };
 
-  let selectionElements =
-    getSelectionElements(editor.selection) |> React.listToElement;
+  getSelectionElements(editor.selection) |> React.listToElement;
+};
 
-  let searchMatches = t =>
-    Style.[
-      position(`Absolute),
-      top(t - 3),
-      left(4),
-      right(4),
-      height(8),
-      backgroundColor(colors.findMatchBackground),
-    ];
+let%component make =
+    (
+      ~dispatch: Msg.t => unit,
+      ~editor: Editor.t,
+      ~cursorPosition: Location.t,
+      ~height as totalHeight,
+      ~width as totalWidth,
+      ~diagnostics: IntMap.t(list(Diagnostic.t)),
+      ~colors: Colors.t,
+      ~editorFont: Service_Font.font,
+      ~bufferHighlights,
+      (),
+    ) => {
 
-  let searchHighlightToElement = line => {
-    let line = Index.toZeroBased(line);
-    <View style={searchMatches(bufferLineToScrollbarPixel(line))} />;
+  let%hook (opacity, setOpacity) = Hooks.state(0.8);
+
+  let%hook (captureMouse, captureState) = Hooks.mouseCapture(
+    ~onMouseMove=(origin, evt: NodeEvents.mouseMoveEventParams) => {
+  
+      prerr_endline ("evt: " ++ string_of_float(evt.mouseY));
+      Some(origin)
+    },
+    ~onMouseUp=(origin, _evt) => {
+      prerr_endline ("done!");
+      None
+    },
+    (),
+  );
+
+  let%hook (maybeBbox, setBbox) = Hooks.state(None);
+
+  let scrollMetrics = Editor.getVerticalScrollbarMetrics(editor, totalHeight);
+
+//  let projectLine = line => {
+//    Editor.projectLine(~line, ~pixelHeight=totalHeight, editor);
+//  };
+
+  let cursorLine = Editor.projectLine(
+      ~line=Index.toZeroBased(Location.(cursorPosition.line)),
+      ~pixelHeight=totalHeight,
+      editor
+    ) |> int_of_float;
+
+  let onMouseOver = (_) => {
+    prerr_endline ("over");
+    setOpacity(_ => 1.0);
+  };
+  
+  let onMouseLeave = (_) => {
+    prerr_endline ("leave");
+    setOpacity(_ => 0.8)
   };
 
-  let searchMatchElements =
-    BufferHighlights.getHighlights(
-      ~bufferId=Editor.getBufferId(editor),
-      bufferHighlights,
-    )
-    |> List.map(searchHighlightToElement)
-    |> React.listToElement;
-
-  let onMouseDown = (scroll) => {
-    prerr_endline ("mouse down");
+  let onMouseDown = ({mouseY, _}: Revery.UI.NodeEvents.mouseButtonEventParams) => {
+    prerr_endline ("mouse down: " ++ string_of_float(mouseY));
     captureMouse(1);
   };
 
-  <View style=absoluteStyle onMouseDown>
-    <View style=scrollThumbStyle />
-    <View style=scrollCursorStyle />
-    <View style=absoluteStyle> selectionElements </View>
-    <View style=absoluteStyle> diagnosticElements </View>
-    <View style=absoluteStyle> matchingPairElements </View>
-    <View style=absoluteStyle> searchMatchElements </View>
-  </View>;
+  <View style=Styles.container(~opacity, ~colors) onMouseDown onMouseOver onMouseLeave
+    onBoundingBoxChanged={bbox => setBbox(_ => Some(bbox))}
+  >
+  <Opacity opacity>
+    <View style=Styles.verticalThumb(~width=totalWidth, ~scrollMetrics, ~color=colors.scrollbarSliderBackground)/>
+    <View style=Styles.cursor(~cursorLine, ~totalWidth, ~colors) />
+    <View style=Styles.absolute>
+      <selectionMarkers totalHeight editor colors />
+      <diagnosticMarkers totalHeight editor diagnostics colors />
+      <matchingPairMarkers bufferHighlights editor totalHeight colors />
+      <searchMarkers bufferHighlights editor totalHeight colors />
+    </View>
+  </Opacity>
+  </View>
 };

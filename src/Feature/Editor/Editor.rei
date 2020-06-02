@@ -39,7 +39,7 @@ let getLayout: t => EditorLayout.t;
 let getCharacterUnderCursor: (~buffer: Buffer.t, t) => option(Uchar.t);
 let getPrimaryCursor: (~buffer: Buffer.t, t) => Location.t;
 let getVisibleView: t => int;
-let getTotalSizeInPixels: t => int;
+let getTotalHeightInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let pixelPositionToBufferLineByte:
@@ -55,6 +55,32 @@ let scrollDeltaPixelY: (~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
+
+// PROJECTION
+
+// Convert (or unconvent) a (line, column) to a different coordinate space
+
+// [project] - given a zero-based [line] and [column], and a pixel space
+// defined by [pixelWidth] and [pixelHeight], return the [(pixelX, pixelY)]
+// corresponding to the top-left of the line and column.
+let project: (~line: int, ~column: int, ~pixelWidth: int, ~pixelHeight: int, t)
+=> (float, float)
+
+// [projectLine] - like [project], but ignoring the [column]/[width]
+let projectLine: (~line: int, ~pixelHeight: int, t) => float;
+
+// [unproject] - given a pixel space defined by [pixelWidth] and [pixelHeight],
+// map the [pixelX] and [pixelY] of that space to a pixel position on the editor
+// surface - [(surfacePixelX, surfacePixelY)]
+
+let unprojectToPixel: (
+~pixelX: float,
+~pixelY: float, 
+~pixelWidth: int,
+~pixelHeight: int,
+t
+) => (float, float);
+
 
 let setFont: (~font: Service_Font.font, t) => t;
 let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;

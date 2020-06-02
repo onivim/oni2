@@ -44,7 +44,6 @@ module Styles = {
     top(0),
     right(0),
     width(Constants.scrollBarThickness),
-    backgroundColor(colors.scrollbarSliderBackground),
     bottom(0),
   ];
 };

@@ -110,7 +110,7 @@ let%component make =
     float(Constants.minimapCharacterHeight + Constants.minimapLineSpacing);
 
   let getScrollTo = (mouseY: float) => {
-    let totalHeight: int = Editor.getTotalSizeInPixels(editor);
+    let totalHeight: int = Editor.getTotalHeightInPixels(editor);
     let visibleHeight: int = Editor.(editor.pixelHeight);
     let offsetMouseY: int = int_of_float(mouseY) - Constants.tabHeight;
     float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
