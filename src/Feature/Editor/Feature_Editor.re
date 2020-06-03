@@ -15,17 +15,34 @@ module Contributions = {
 };
 
 [@deriving show({with_path: false})]
-type msg =
-  | FilesDropped({paths: list(string)});
+type msg = Msg.t;
 
-let update = (msg, openFileEffect, noopEffect) =>
+type outmsg =
+  | Nothing;
+
+type model = Editor.t;
+
+module Constants = {
+  let scrollbarWheelMultiplier = 300.;
+};
+
+let update = (editor, msg) => {
   switch (msg) {
-  | FilesDropped({paths}) =>
-    Service_OS.Effect.statMultiple(paths, (path, stats) =>
-      if (stats.st_kind == S_REG) {
-        openFileEffect(path);
-      } else {
-        noopEffect;
-      }
+  | Msg.VerticalScrollbarAfterTrackClicked({newPixelScrollY})
+  | Msg.VerticalScrollbarBeforeTrackClicked({newPixelScrollY})
+  | Msg.VerticalScrollbarMouseDrag({newPixelScrollY}) => (
+      Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
+      Nothing,
     )
+  | Msg.VerticalScrollbarMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelY(
+        ~pixelY=deltaWheel *. Constants.scrollbarWheelMultiplier,
+        editor,
+      ),
+      Nothing,
+    )
+
+  | Msg.VerticalScrollbarMouseRelease
+  | Msg.VerticalScrollbarMouseDown => (editor, Nothing)
   };
+};

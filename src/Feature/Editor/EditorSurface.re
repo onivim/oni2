@@ -39,12 +39,11 @@ module Styles = {
     flexGrow(1),
   ];
 
-  let verticalScrollBar = (~colors: Colors.t) => [
+  let verticalScrollBar = [
     position(`Absolute),
     top(0),
     right(0),
     width(Constants.scrollBarThickness),
-    backgroundColor(colors.scrollbarSliderBackground),
     bottom(0),
   ];
 };
@@ -114,6 +113,7 @@ let scrollSpringOptions =
 
 let%component make =
               (
+                ~dispatch,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -304,15 +304,15 @@ let%component make =
       theme
       tokenTheme
     />
-    <View style={Styles.verticalScrollBar(~colors)}>
-      <EditorVerticalScrollbar
+    <View style=Styles.verticalScrollBar>
+      <Scrollbar.Vertical
+        dispatch
         editor
         cursorPosition
         width=Constants.scrollBarThickness
         height={editor.pixelHeight}
         diagnostics=diagnosticsMap
         colors
-        editorFont
         bufferHighlights
       />
     </View>
