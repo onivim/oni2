@@ -91,6 +91,7 @@ let getMinimapSize = (view: Editor.t) => {
 
 let%component make =
               (
+                ~dispatch: Msg.t => unit,
                 ~editor: Editor.t,
                 ~cursorPosition: Location.t,
                 ~width: int,
@@ -99,7 +100,6 @@ let%component make =
                 ~diagnostics,
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection: Hashtbl.t(Index.t, list(Range.t)),
-                ~onScroll: float => unit,
                 ~showSlider,
                 ~colors: Colors.t,
                 ~bufferHighlights,
@@ -118,6 +118,8 @@ let%component make =
 
   let scrollY = editor.minimapScrollY;
 
+  let onScroll = _ => prerr_endline("Scrolling...");
+
   let%hook (captureMouse, _state) =
     Hooks.mouseCapture(
       ~onMouseMove=
@@ -126,7 +128,11 @@ let%component make =
           let minimapLineSize =
             Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
           let linesInMinimap = editor.pixelHeight / minimapLineSize;
-          onScroll(scrollTo -. float(linesInMinimap));
+          dispatch(
+            Msg.MinimapDragged({
+              newPixelScrollY: scrollTo -. float(linesInMinimap),
+            }),
+          );
           Some();
         },
       ~onMouseUp=(_, _) => None,
@@ -139,7 +145,11 @@ let%component make =
       Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
     let linesInMinimap = editor.pixelHeight / minimapLineSize;
     if (evt.button == Revery.MouseButton.BUTTON_LEFT) {
-      onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
+      dispatch(
+        Msg.MinimapClicked({
+          newPixelScrollY: scrollTo -. float(linesInMinimap),
+        }),
+      );
       captureMouse();
     };
   };

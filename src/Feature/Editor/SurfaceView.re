@@ -42,10 +42,10 @@ let renderRulers = (~context, ~colors: Colors.t, rulers) =>
 
 let%component make =
               (
-                ~onScroll,
                 ~buffer,
                 ~editor,
                 ~colors,
+                ~dispatch,
                 ~topVisibleLine,
                 ~onCursorChange,
                 ~cursorPosition: Location.t,
@@ -76,7 +76,7 @@ let%component make =
     };
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-    onScroll(wheelEvent.deltaY *. (-50.));
+    dispatch(Msg.EditorMouseWheel({deltaWheel: wheelEvent.deltaY *. (-1.)}));
 
   let {scrollX, scrollY, _}: Editor.t = editor;
 

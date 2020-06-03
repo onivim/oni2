@@ -23,6 +23,8 @@ type outmsg =
 type model = Editor.t;
 
 module Constants = {
+  let editorWheelMultiplier = 50.;
+  let minimapWheelMultiplier = 150.;
   let scrollbarWheelMultiplier = 300.;
 };
 
@@ -32,6 +34,25 @@ let update = (editor, msg) => {
   | Msg.VerticalScrollbarBeforeTrackClicked({newPixelScrollY})
   | Msg.VerticalScrollbarMouseDrag({newPixelScrollY}) => (
       Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
+      Nothing,
+    )
+  | Msg.MinimapMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelY(
+        ~pixelY=deltaWheel *. Constants.minimapWheelMultiplier,
+        editor,
+      ),
+      Nothing,
+    )
+  | Msg.MinimapDragged({newPixelScrollY})
+  | Msg.MinimapClicked({newPixelScrollY}) => (
+      Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
+      Nothing,
+    )
+  | Msg.EditorMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelY(
+        ~pixelY=deltaWheel *. Constants.editorWheelMultiplier,
+        editor,
+      ),
       Nothing,
     )
   | Msg.VerticalScrollbarMouseWheel({deltaWheel}) => (
