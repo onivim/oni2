@@ -41,6 +41,15 @@ module Styles = {
     backgroundColor(color),
   ];
 
+  let horizontalThumb = (~scrollMetrics: Editor.scrollbarMetrics, ~color) => [
+    position(`Absolute),
+    bottom(0),
+    left(scrollMetrics.thumbOffset),
+    width(scrollMetrics.thumbSize),
+    top(0),
+    backgroundColor(color),
+  ];
+
   let cursor = (~cursorLine, ~totalWidth, ~colors: Colors.t) => {
     [
       position(`Absolute),
@@ -397,30 +406,56 @@ module Vertical = {
 };
 
 module Horizontal = {
-  let make = (~dispatch, ~editor: Editor.t, ~width as totalWidth, ~colors: Colors.t, ()) => {
+  let make =
+      (
+        ~dispatch,
+        ~editor: Editor.t,
+        ~width as totalWidth,
+        ~colors: Colors.t,
+        (),
+      ) => {
     let scrollMetrics =
       Editor.getHorizontalScrollbarMetrics(editor, totalWidth);
 
-    let scrollThumbStyle =
-      Style.[
-        position(`Absolute),
-        bottom(0),
-        left(scrollMetrics.thumbOffset),
-        width(scrollMetrics.thumbSize),
-        top(0),
-        backgroundColor(colors.scrollbarSliderBackground),
-      ];
+    let thumbColor =
+      colors.scrollbarSliderBackground |> Revery.Color.multiplyAlpha(0.9);
+
+    let scrollbarPixelToEditorPixel = pixelPosition => {
+      let (editorPixelX, _editorPixelY) =
+        Editor.unprojectToPixel(
+          ~pixelX=pixelPosition,
+          ~pixelY=0.,
+          ~pixelWidth=totalWidth - scrollMetrics.thumbSize,
+          ~pixelHeight=1,
+          editor,
+        );
+      editorPixelX;
+    };
+
     let beforeTrackClicked = pos => {
-      prerr_endline ("Before track clicked");
+      let newScrollX = scrollbarPixelToEditorPixel(pos);
+      dispatch(
+        Msg.HorizontalScrollbarBeforeTrackClicked({
+          newPixelScrollX: newScrollX,
+        }),
+      );
     };
     let afterTrackClicked = pos => {
-      prerr_endline ("After track clicked");
+      let newScrollX = scrollbarPixelToEditorPixel(pos);
+      dispatch(
+        Msg.HorizontalScrollbarAfterTrackClicked({
+          newPixelScrollX: newScrollX,
+        }),
+      );
     };
-    let dragStart = () => prerr_endline ("Drag start");
+    let dragStart = () => dispatch(Msg.HorizontalScrollbarMouseDown);
     let dragMove = pos => {
-      prerr_endline ("Drag move");
+      let newScrollX = scrollbarPixelToEditorPixel(pos);
+      dispatch(
+        Msg.HorizontalScrollbarMouseDrag({newPixelScrollX: newScrollX}),
+      );
     };
-    let dragStop = () => prerr_endline ("Drag stop");
+    let dragStop = () => dispatch(Msg.HorizontalScrollbarMouseRelease);
     let wheel = deltaWheel =>
       dispatch(
         Msg.HorizontalScrollbarMouseWheel({deltaWheel: (-1.0) *. deltaWheel}),
@@ -429,22 +464,26 @@ module Horizontal = {
     switch (scrollMetrics.visible) {
     | false => React.empty
     | true =>
-    <Common
-      background={colors.scrollbarSliderBackground}
-      hoverBackground={colors.scrollbarSliderHoverBackground}
-      isVertical=false
-      thumbPosition={scrollMetrics.thumbOffset |> float_of_int}
-      thumbSize={scrollMetrics.thumbSize |> float_of_int}
-      beforeTrackClicked
-      afterTrackClicked
-      dragStart
-      dragMove
-      dragStop
-      wheel
-      render={() => {
-
-        <View style=scrollThumbStyle />
-     }} />
+      <Common
+        background={
+          colors.scrollbarSliderBackground |> Revery.Color.multiplyAlpha(0.5)
+        }
+        hoverBackground={colors.scrollbarSliderHoverBackground}
+        isVertical=false
+        thumbPosition={scrollMetrics.thumbOffset |> float_of_int}
+        thumbSize={scrollMetrics.thumbSize |> float_of_int}
+        beforeTrackClicked
+        afterTrackClicked
+        dragStart
+        dragMove
+        dragStop
+        wheel
+        render={() => {
+          <View
+            style={Styles.horizontalThumb(~scrollMetrics, ~color=thumbColor)}
+          />
+        }}
+      />
     };
   };
-}
+};

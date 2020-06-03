@@ -47,12 +47,12 @@ module Styles = {
     bottom(0),
   ];
 
-  let horizontalScrollBar = (gutterOffset, width) =>[
+  let horizontalScrollBar = (gutterOffset, width) => [
     position(`Absolute),
     bottom(0),
     left(gutterOffset),
     Style.width(width),
-    height(Constants.editorHorizontalScrollBarThickness)
+    height(Constants.editorHorizontalScrollBarThickness),
   ];
 };
 
@@ -324,9 +324,17 @@ let%component make =
         bufferHighlights
       />
     </View>
-    <View style=Styles.horizontalScrollBar(
-    int_of_float(gutterWidth), int_of_float(layout.bufferWidthInPixels))>
-      <Scrollbar.Horizontal dispatch editor width={int_of_float(layout.bufferWidthInPixels)} colors />
+    <View
+      style={Styles.horizontalScrollBar(
+        int_of_float(gutterWidth),
+        int_of_float(layout.bufferWidthInPixels),
+      )}>
+      <Scrollbar.Horizontal
+        dispatch
+        editor
+        width={int_of_float(layout.bufferWidthInPixels)}
+        colors
+      />
     </View>
   </View>;
 };
