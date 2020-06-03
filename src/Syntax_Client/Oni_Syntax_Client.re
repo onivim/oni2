@@ -43,55 +43,45 @@ let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
 };
 
 let getEnvironment = (~namedPipe, ~parentPid, ~additionalEnv) => {
-  Luv.Env.getenv("PATH")
-  |> Result.map(path =>
-       [
-         (EnvironmentVariables.namedPipe, namedPipe),
-         (EnvironmentVariables.parentPid, parentPid),
-         ("PATH", path),
-       ]
-       @ additionalEnv
-     );
+  [
+    (EnvironmentVariables.namedPipe, namedPipe),
+    (EnvironmentVariables.parentPid, parentPid),
+    ...additionalEnv,
+  ];
 };
 
 let startProcess =
     (~executablePath, ~namedPipe, ~parentPid, ~onClose, ~additionalEnv) => {
-  getEnvironment(~namedPipe, ~parentPid, ~additionalEnv)
-  |> Utility.ResultEx.flatMap(environment => {
-       ClientLog.debugf(m =>
-         m(
-           "Starting executable: %s and parentPid: %s",
-           executablePath,
-           parentPid,
-         )
-       );
+  let environment = getEnvironment(~namedPipe, ~parentPid, ~additionalEnv);
+  ClientLog.debugf(m =>
+    m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
+  );
 
-       let on_exit = (_proc, ~exit_status, ~term_signal) => {
-         let exitCode = exit_status |> Int64.to_int;
-         if (exitCode == 0) {
-           ClientLog.debug("Syntax process exited safely.");
-         } else {
-           ClientLog.errorf(m =>
-             m(
-               "Syntax process exited with code: %d and signal: %d",
-               exitCode,
-               term_signal,
-             )
-           );
-         };
-         onClose(exitCode);
-       };
+  let on_exit = (_proc, ~exit_status, ~term_signal) => {
+    let exitCode = exit_status |> Int64.to_int;
+    if (exitCode == 0) {
+      ClientLog.debug("Syntax process exited safely.");
+    } else {
+      ClientLog.errorf(m =>
+        m(
+          "Syntax process exited with code: %d and signal: %d",
+          exitCode,
+          term_signal,
+        )
+      );
+    };
+    onClose(exitCode);
+  };
 
-       Luv.Process.spawn(
-         ~on_exit,
-         ~environment,
-         ~windows_hide=true,
-         ~windows_hide_console=true,
-         ~windows_hide_gui=true,
-         executablePath,
-         [executablePath, "--syntax-highlight-service"],
-       );
-     })
+  Luv.Process.spawn(
+    ~on_exit,
+    ~environment,
+    ~windows_hide=true,
+    ~windows_hide_console=true,
+    ~windows_hide_gui=true,
+    executablePath,
+    [executablePath, "--syntax-highlight-service"],
+  )
   |> Result.map_error(Luv.Error.strerror);
 };
 
