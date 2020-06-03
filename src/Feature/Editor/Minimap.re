@@ -6,6 +6,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+module OptionEx = Utility.OptionEx;
 open Revery.Draw;
 open Revery.UI;
 
@@ -109,11 +110,18 @@ let%component make =
   let rowHeight =
     float(Constants.minimapCharacterHeight + Constants.minimapLineSpacing);
 
+  let%hook (maybeBbox, setBbox) = Hooks.state(None);
+
   let getScrollTo = (mouseY: float) => {
-    let totalHeight: int = Editor.getTotalHeightInPixels(editor);
-    let visibleHeight: int = Editor.(editor.pixelHeight);
-    let offsetMouseY: int = int_of_float(mouseY) - Constants.tabHeight;
-    float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
+    maybeBbox
+    |> Option.map(bbox => {
+         let (_x, y, _width, _height) =
+           Revery.Math.BoundingBox2d.getBounds(bbox);
+         let totalHeight: int = Editor.getTotalHeightInPixels(editor);
+         let visibleHeight: int = Editor.(editor.pixelHeight);
+         let offsetMouseY = mouseY -. y;
+         offsetMouseY /. float(visibleHeight) *. float(totalHeight);
+       });
   };
 
   let scrollY = editor.minimapScrollY;
@@ -122,37 +130,47 @@ let%component make =
     Hooks.mouseCapture(
       ~onMouseMove=
         ((), evt) => {
-          let scrollTo = getScrollTo(evt.mouseY);
-          let minimapLineSize =
-            Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-          let linesInMinimap = editor.pixelHeight / minimapLineSize;
-          dispatch(
-            Msg.MinimapDragged({
-              newPixelScrollY: scrollTo -. float(linesInMinimap),
-            }),
-          );
-          Some();
+          evt.mouseY
+          |> getScrollTo
+          |> OptionEx.tap(scrollTo => {
+               let minimapLineSize =
+                 Constants.minimapLineSpacing
+                 + Constants.minimapCharacterHeight;
+               let linesInMinimap = editor.pixelHeight / minimapLineSize;
+               dispatch(
+                 Msg.MinimapDragged({
+                   newPixelScrollY: scrollTo -. float(linesInMinimap),
+                 }),
+               );
+             })
+          |> Option.map(_ => ())
         },
       ~onMouseUp=(_, _) => None,
       (),
     );
 
   let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-    let scrollTo = getScrollTo(evt.mouseY);
-    let minimapLineSize =
-      Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-    let linesInMinimap = editor.pixelHeight / minimapLineSize;
-    if (evt.button == Revery.MouseButton.BUTTON_LEFT) {
-      dispatch(
-        Msg.MinimapClicked({
-          newPixelScrollY: scrollTo -. float(linesInMinimap),
-        }),
-      );
-      captureMouse();
-    };
+    evt.mouseY
+    |> getScrollTo
+    |> Option.iter(scrollTo => {
+         let minimapLineSize =
+           Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
+         let linesInMinimap = editor.pixelHeight / minimapLineSize;
+         if (evt.button == Revery.MouseButton.BUTTON_LEFT) {
+           dispatch(
+             Msg.MinimapClicked({
+               newPixelScrollY: scrollTo -. float(linesInMinimap),
+             }),
+           );
+           captureMouse();
+         };
+       });
   };
 
-  <View style=absoluteStyle onMouseDown>
+  <View
+    style=absoluteStyle
+    onMouseDown
+    onBoundingBoxChanged={bbox => setBbox(_ => Some(bbox))}>
     <Canvas
       style=absoluteStyle
       render={canvasContext => {
