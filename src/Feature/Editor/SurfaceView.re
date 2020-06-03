@@ -186,7 +186,7 @@ let%component make =
       colors
     />
     <View style=Styles.horizontalScrollBar>
-      <EditorHorizontalScrollbar editor width={editor.pixelWidth} colors />
+      <Scrollbar.Horizontal editor width={editor.pixelWidth} colors />
     </View>
   </View>;
 };

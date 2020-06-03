@@ -395,3 +395,28 @@ module Vertical = {
     />;
   };
 };
+
+module Horizontal = {
+  let make = (~editor: Editor.t, ~width as totalWidth, ~colors: Colors.t, ()) => {
+    let scrollMetrics =
+      Editor.getHorizontalScrollbarMetrics(editor, totalWidth);
+
+    let scrollThumbStyle =
+      Style.[
+        position(`Absolute),
+        bottom(0),
+        left(scrollMetrics.thumbOffset),
+        width(scrollMetrics.thumbSize),
+        top(0),
+        backgroundColor(colors.scrollbarSliderBackground),
+      ];
+
+    switch (scrollMetrics.visible) {
+    | false => React.empty
+    | true =>
+      <View style=Styles.absolute>
+        <Opacity opacity=0.5> <View style=scrollThumbStyle /> </Opacity>
+      </View>
+    };
+  };
+}
