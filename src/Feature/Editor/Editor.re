@@ -165,11 +165,15 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
 };
 
 let getHorizontalScrollbarMetrics = (view, availableWidth) => {
-  let totalViewWidthInPixels =
-    float_of_int(view.maxLineLength) *. getCharacterWidth(view);
+  
   let availableWidthF = float_of_int(availableWidth);
+  let totalViewWidthInPixels =
+    (float_of_int(view.maxLineLength) *. getCharacterWidth(view)) +. availableWidthF;
+  prerr_endline ("getHSM: " ++ Printf.sprintf(
+    "maxLineLength: %d availableWidth: %f totalWidthInPixels: %f"
+  , view.maxLineLength, availableWidthF, totalViewWidthInPixels));
 
-  totalViewWidthInPixels <= availableWidthF
+  let ret = totalViewWidthInPixels <= availableWidthF
     ? {visible: false, thumbSize: 0, thumbOffset: 0}
     : {
       let thumbPercentage = availableWidthF /. totalViewWidthInPixels;
@@ -180,6 +184,9 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
 
       {thumbSize, thumbOffset, visible: true};
     };
+
+  prerr_endline(Printf.sprintf("visible: %b", ret.visible));
+  ret;
 };
 
 let getLayout = view => {
@@ -254,13 +261,17 @@ let scrollToPixelX = (~pixelX as newScrollX, view) => {
   let availableScroll =
     max(
       0.,
-      float_of_int(view.maxLineLength)
-      *. getCharacterWidth(view)
-      -. float(view.pixelWidth),
+      (float_of_int(view.maxLineLength)
+      *. getCharacterWidth(view))
     );
   let scrollX = min(newScrollX, availableScroll);
 
   {...view, scrollX};
+};
+
+let scrollDeltaPixelX = (~pixelX, editor) => {
+  let pixelX = editor.scrollX +. pixelX;
+  scrollToPixelX(~pixelX, editor);
 };
 
 let scrollToColumn = (~column, view) => {

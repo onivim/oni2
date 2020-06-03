@@ -397,7 +397,7 @@ module Vertical = {
 };
 
 module Horizontal = {
-  let make = (~editor: Editor.t, ~width as totalWidth, ~colors: Colors.t, ()) => {
+  let make = (~dispatch, ~editor: Editor.t, ~width as totalWidth, ~colors: Colors.t, ()) => {
     let scrollMetrics =
       Editor.getHorizontalScrollbarMetrics(editor, totalWidth);
 
@@ -410,13 +410,41 @@ module Horizontal = {
         top(0),
         backgroundColor(colors.scrollbarSliderBackground),
       ];
+    let beforeTrackClicked = pos => {
+      prerr_endline ("Before track clicked");
+    };
+    let afterTrackClicked = pos => {
+      prerr_endline ("After track clicked");
+    };
+    let dragStart = () => prerr_endline ("Drag start");
+    let dragMove = pos => {
+      prerr_endline ("Drag move");
+    };
+    let dragStop = () => prerr_endline ("Drag stop");
+    let wheel = deltaWheel =>
+      dispatch(
+        Msg.HorizontalScrollbarMouseWheel({deltaWheel: (-1.0) *. deltaWheel}),
+      );
 
     switch (scrollMetrics.visible) {
     | false => React.empty
     | true =>
-      <View style=Styles.absolute>
-        <Opacity opacity=0.5> <View style=scrollThumbStyle /> </Opacity>
-      </View>
+    <Common
+      background={colors.scrollbarSliderBackground}
+      hoverBackground={colors.scrollbarSliderHoverBackground}
+      isVertical=false
+      thumbPosition={scrollMetrics.thumbOffset |> float_of_int}
+      thumbSize={scrollMetrics.thumbSize |> float_of_int}
+      beforeTrackClicked
+      afterTrackClicked
+      dragStart
+      dragMove
+      dragStop
+      wheel
+      render={() => {
+
+        <View style=scrollThumbStyle />
+     }} />
     };
   };
 }

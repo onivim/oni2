@@ -5,4 +5,10 @@ type t =
   | VerticalScrollbarMouseDown
   | VerticalScrollbarMouseDrag({newPixelScrollY: float})
   | VerticalScrollbarMouseRelease
-  | VerticalScrollbarMouseWheel({deltaWheel: float});
+  | VerticalScrollbarMouseWheel({deltaWheel: float})
+  | HorizontalScrollbarBeforeTrackClicked({newPixelScrollX: float})
+  | HorizontalScrollbarAfterTrackClicked({newPixelScrollX: float})
+  | HorizontalScrollbarMouseDown
+  | HorizontalScrollbarMouseDrag({newPixelScrollX: float})
+  | HorizontalScrollbarMouseRelease
+  | HorizontalScrollbarMouseWheel({deltaWheel: float});

@@ -46,6 +46,14 @@ module Styles = {
     width(Constants.scrollBarThickness),
     bottom(0),
   ];
+
+  let horizontalScrollBar = (gutterOffset, width) =>[
+    position(`Absolute),
+    bottom(0),
+    left(gutterOffset),
+    Style.width(width),
+    height(Constants.editorHorizontalScrollBarThickness)
+  ];
 };
 
 let minimap =
@@ -315,6 +323,10 @@ let%component make =
         colors
         bufferHighlights
       />
+    </View>
+    <View style=Styles.horizontalScrollBar(
+    int_of_float(gutterWidth), int_of_float(layout.bufferWidthInPixels))>
+      <Scrollbar.Horizontal dispatch editor width={int_of_float(layout.bufferWidthInPixels)} colors />
     </View>
   </View>;
 };

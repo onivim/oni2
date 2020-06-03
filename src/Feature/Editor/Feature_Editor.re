@@ -41,7 +41,18 @@ let update = (editor, msg) => {
       ),
       Nothing,
     )
-
+  | Msg.HorizontalScrollbarMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelX(
+        ~pixelX=deltaWheel *. Constants.scrollbarWheelMultiplier,
+        editor,
+      ),
+      Nothing,
+  )
+  | Msg.HorizontalScrollbarBeforeTrackClicked(_) 
+  | Msg.HorizontalScrollbarAfterTrackClicked(_) 
+  | Msg.HorizontalScrollbarMouseDrag(_) 
+  | Msg.HorizontalScrollbarMouseDown
+  | Msg.HorizontalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseDown => (editor, Nothing)
   };
