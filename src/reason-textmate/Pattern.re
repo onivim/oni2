@@ -77,6 +77,22 @@ module Json = {
       };
     };
 
+  module Decode = {
+    open Oni_Core;
+    open Json.Decode;
+
+    let capture = {
+      let captureSimplified = string;
+      let captureNested =
+        obj(({field, _}) => {field.required("name", string)});
+
+      one_of([
+        ("simplified", captureSimplified),
+        ("nested", captureNested),
+      ]);
+    };
+  };
+
   let captures_of_yojson: Yojson.Safe.t => list(Capture.t) =
     json => {
       open Yojson.Safe.Util;
@@ -84,10 +100,7 @@ module Json = {
         let (key, json) = keyValuePair;
         let captureGroup = int_of_string_opt(key);
         let captureName =
-          switch (member("name", json)) {
-          | `String(v) => Ok(v)
-          | _ => Error("Capture name must be a string")
-          };
+          json |> Oni_Core.Json.Decode.decode_value(Decode.capture);
 
         switch (captureGroup, captureName) {
         | (Some(n), Ok(name)) => Ok((n, name))
