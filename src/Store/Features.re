@@ -270,14 +270,29 @@ let update =
 
     | None => (state, Effect.none)
     }
-  | Editor(msg) =>
+  | FilesDropped({paths}) =>
     let eff =
-      Feature_Editor.update(
-        msg,
-        path => OpenFileByPath(path, None, None),
-        Noop,
+      Service_OS.Effect.statMultiple(paths, (path, stats) =>
+        if (stats.st_kind == S_REG) {
+          OpenFileByPath(path, None, None);
+        } else {
+          Noop;
+        }
       );
     (state, eff);
+  | Editor({editorId, msg}) =>
+    let (editorGroups', effects) =
+      EditorGroups.updateEditor(~editorId, msg, state.editorGroups);
+
+    let effect =
+      effects
+      |> List.map(
+           fun
+           | Feature_Editor.Nothing => Effect.none,
+         )
+      |> Isolinear.Effect.batch;
+
+    ({...state, editorGroups: editorGroups'}, effect);
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);
     ({...state, changelog: model}, eff);
