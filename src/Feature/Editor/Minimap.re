@@ -118,8 +118,6 @@ let%component make =
 
   let scrollY = editor.minimapScrollY;
 
-  let onScroll = _ => prerr_endline("Scrolling...");
-
   let%hook (captureMouse, _state) =
     Hooks.mouseCapture(
       ~onMouseMove=
