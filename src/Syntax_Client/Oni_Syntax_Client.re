@@ -43,15 +43,12 @@ let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
 };
 
 let getEnvironment = (~namedPipe, ~parentPid, ~additionalEnv) => {
-  let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
-
-  Luv.Env.environ()
-  |> Result.map(filterOutLogFile)
-  |> Result.map(items =>
+  Luv.Env.getenv("PATH")
+  |> Result.map(path =>
        [
          (EnvironmentVariables.namedPipe, namedPipe),
          (EnvironmentVariables.parentPid, parentPid),
-         ...items,
+         ("PATH", path),
        ]
        @ additionalEnv
      );
