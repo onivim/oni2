@@ -70,7 +70,6 @@ let minimap =
   let style =
     Style.[
       position(`Absolute),
-      //      overflow(`Hidden),
       top(0),
       right(Constants.scrollBarThickness),
       width(minimapPixelWidth),
