@@ -11,4 +11,8 @@ type t =
   | HorizontalScrollbarMouseDown
   | HorizontalScrollbarMouseDrag({newPixelScrollX: float})
   | HorizontalScrollbarMouseRelease
-  | HorizontalScrollbarMouseWheel({deltaWheel: float});
+  | HorizontalScrollbarMouseWheel({deltaWheel: float})
+  | MinimapMouseWheel({deltaWheel: float})
+  | MinimapClicked({viewLine: int})
+  | MinimapDragged({newPixelScrollY: float})
+  | EditorMouseWheel({deltaWheel: float});
