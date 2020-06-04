@@ -55,6 +55,7 @@
            ZenModeSplitTest
     )
     (libraries
+        Oni_CLI
         Oni_IntegrationTestLib
         reason-native-crash-utils.asan
 ))

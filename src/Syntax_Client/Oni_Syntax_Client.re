@@ -43,8 +43,14 @@ let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
 };
 
 let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
+  let arg = "--syntax-highlight-service=" ++ parentPid ++ ":" ++ namedPipe;
   ClientLog.debugf(m =>
-    m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
+    m(
+      "Starting executable: %s and parentPid: %s with args: %s",
+      executablePath,
+      parentPid,
+      arg,
+    )
   );
 
   let on_exit = (_proc, ~exit_status, ~term_signal) => {
@@ -69,10 +75,7 @@ let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
     ~windows_hide_console=true,
     ~windows_hide_gui=true,
     executablePath,
-    [
-      executablePath,
-      "--syntax-highlight-service=" ++ parentPid ++ ":" ++ namedPipe,
-    ],
+    [executablePath, arg],
   )
   |> Result.map_error(Luv.Error.strerror);
 };
