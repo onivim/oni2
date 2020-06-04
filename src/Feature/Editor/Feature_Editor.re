@@ -43,8 +43,11 @@ let update = (editor, msg) => {
       ),
       Nothing,
     )
-  | Msg.MinimapDragged({newPixelScrollY})
-  | Msg.MinimapClicked({newPixelScrollY}) => (
+  | Msg.MinimapClicked({viewLine}) => (
+      Editor.scrollToLine(~line=viewLine, editor),
+      Nothing,
+    )
+  | Msg.MinimapDragged({newPixelScrollY}) => (
       Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
       Nothing,
     )
