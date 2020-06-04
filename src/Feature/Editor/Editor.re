@@ -130,6 +130,8 @@ let pixelPositionToBufferLineByte =
     };
 
   if (line >= 0 && line < totalLinesInBuffer) {
+    prerr_endline ("line: " ++ string_of_int(line));
+    prerr_endline ("rawColumn: " ++ string_of_int(rawColumn));
     let bufferLine = Buffer.getLine(line, buffer);
     let byte = BufferLine.getByte(~index=rawColumn, bufferLine);
     (line, byte);

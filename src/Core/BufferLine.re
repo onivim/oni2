@@ -167,7 +167,7 @@ let getUcharExn = (~index, bufferLine) => {
   };
 };
 
-let getByte = (~index, bufferLine) => {
+let getByteFromIndex = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let rawLength = String.length(bufferLine.raw);
   let characters = bufferLine.characters;
@@ -180,6 +180,8 @@ let getByte = (~index, bufferLine) => {
     };
   };
 };
+
+
 
 let subExn = (~index: int, ~length: int, bufferLine) => {
   let startOffset = getByte(~index, bufferLine);
@@ -202,5 +204,29 @@ let getPositionAndWidth = (~index: int, bufferLine: t) => {
       | None => (0, 1)
       }
     };
+  };
+};
+
+
+module Slow = {
+  let getByteFromPosition = (~position, bufferLine) => {
+
+    let rec loop = (byteIndex, lastPostiion) => {
+      if (byteIndex >= length(bufferLine)) {
+        lastPosition
+      } else {
+        let index = getIndex(~byte=byteIndex);
+        let (characterPosition, width) = getPositionAndWidth(~index, bufferLine);
+
+        if (position >= characterPosition && position < characterPosition + width) {
+          index
+        } else {
+          loop(byteIndex + 1, characterPosition + width)
+        }
+      }
+
+  };
+
+  loop(0, 0);
   };
 };
