@@ -2,12 +2,11 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  syntaxHighlightService: bool,
   overriddenExtensionsDir: option(string),
   shouldClose: bool,
   shouldLoadExtensions: bool,
-  shouldSyntaxHighlight: bool,
   shouldLoadConfiguration: bool,
+  shouldSyntaxHighlight: bool,
 };
 
 type eff =
@@ -16,6 +15,10 @@ type eff =
   | ListExtensions
   | InstallExtension(string)
   | UninstallExtension(string)
+  | StartSyntaxServer({
+      parentPid: string,
+      namedPipe: string,
+    })
   | Run;
 
 let parse: array(string) => (t, eff);

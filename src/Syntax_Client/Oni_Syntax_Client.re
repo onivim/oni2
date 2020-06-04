@@ -42,17 +42,7 @@ let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
   writeTransport(~id, transport, msg);
 };
 
-let getEnvironment = (~namedPipe, ~parentPid, ~additionalEnv) => {
-  [
-    (EnvironmentVariables.namedPipe, namedPipe),
-    (EnvironmentVariables.parentPid, parentPid),
-    ...additionalEnv,
-  ];
-};
-
-let startProcess =
-    (~executablePath, ~namedPipe, ~parentPid, ~onClose, ~additionalEnv) => {
-  let environment = getEnvironment(~namedPipe, ~parentPid, ~additionalEnv);
+let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
   ClientLog.debugf(m =>
     m("Starting executable: %s and parentPid: %s", executablePath, parentPid)
   );
@@ -75,12 +65,14 @@ let startProcess =
 
   Luv.Process.spawn(
     ~on_exit,
-    ~environment,
     ~windows_hide=true,
     ~windows_hide_console=true,
     ~windows_hide_gui=true,
     executablePath,
-    [executablePath, "--syntax-highlight-service"],
+    [
+      executablePath,
+      "--syntax-highlight-service=" ++ parentPid ++ ":" ++ namedPipe,
+    ],
   )
   |> Result.map_error(Luv.Error.strerror);
 };
@@ -93,7 +85,6 @@ let start =
       ~onClose=_ => (),
       ~onHighlights,
       ~onHealthCheckResult,
-      ~additionalEnv=[],
       languageInfo,
       setup,
     ) => {
@@ -103,9 +94,7 @@ let start =
     | Some(pid) => pid
     };
 
-  let name = Printf.sprintf("syntax-client-%s", parentPid);
-  let namedPipe = name |> NamedPipe.create |> NamedPipe.toString;
-
+  let namedPipe = Protocol.pidToNamedPipe(parentPid);
   let handleMessage = msg =>
     switch (msg) {
     | ServerToClient.Initialized =>
@@ -149,13 +138,7 @@ let start =
   Transport.start(~namedPipe, ~dispatch)
   |> Utility.ResultEx.tap(transport => _transport := Some(transport))
   |> Utility.ResultEx.flatMap(transport => {
-       startProcess(
-         ~executablePath,
-         ~parentPid,
-         ~namedPipe,
-         ~onClose,
-         ~additionalEnv,
-       )
+       startProcess(~executablePath, ~namedPipe, ~parentPid, ~onClose)
        |> Result.map(process => {transport, process, nextId: ref(0)})
      });
 };

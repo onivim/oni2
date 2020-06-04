@@ -68,6 +68,10 @@ switch (eff) {
 | UninstallExtension(name) => uninstallExtension(name, cliOptions) |> exit
 | CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
 | ListExtensions => listExtensions(cliOptions) |> exit
+| StartSyntaxServer({parentPid, namedPipe}) =>
+  Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
+    HealthCheck.run(~checks=Common, cliOptions)
+  )
 | Run =>
   let initWorkingDirectory = () => {
     let path =
@@ -147,208 +151,198 @@ switch (eff) {
 
     window;
   };
+  Log.infof(m =>
+    m(
+      "Starting Onivim 2.%s (%s)",
+      Core.BuildInfo.version,
+      Core.BuildInfo.commitId,
+    )
+  );
 
-  if (cliOptions.syntaxHighlightService) {
-    Oni_Syntax_Server.start(~healthCheck=() =>
-      HealthCheck.run(~checks=Common, cliOptions)
-    );
-  } else {
-    Log.infof(m =>
-      m(
-        "Starting Onivim 2.%s (%s)",
-        Core.BuildInfo.version,
-        Core.BuildInfo.commitId,
-      )
-    );
+  /* The 'main' function for our app */
+  let init = app => {
+    Log.debug("Init");
 
-    /* The 'main' function for our app */
-    let init = app => {
-      Log.debug("Init");
-
-      let initialWorkingDirectory = initWorkingDirectory();
-      let window =
-        createWindow(
-          ~forceScaleFactor=cliOptions.forceScaleFactor,
-          ~workingDirectory=initialWorkingDirectory,
-          app,
-        );
-
-      Log.debug("Initializing setup.");
-      let setup = Core.Setup.init();
-
-      let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
-
-      let currentState =
-        ref(
-          Model.State.initial(
-            ~getUserSettings,
-            ~contributedCommands=[], // TODO
-            ~workingDirectory=initialWorkingDirectory,
-          ),
-        );
-
-      let persistGlobal = () =>
-        Store.Persistence.Global.persist(currentState^);
-      let persistWorkspace = () =>
-        Store.Persistence.Workspace.(
-          persist(
-            (currentState^, window),
-            storeFor(currentState^.workspace.workingDirectory),
-          )
-        );
-
-      let update = UI.start(window, <Root state=currentState^ />);
-
-      let isDirty = ref(false);
-      let onStateChanged = state => {
-        currentState := state;
-        isDirty := true;
-      };
-
-      let runEventLoop = () => {
-        // TODO: How many times should we run it?
-        // The ideal amount would be just enough to do pending work,
-        // but not too much to just spin. Unfortunately, it seems
-        // Luv.Loop.run always returns [true] for us, so we don't
-        // have a reliable way to know we're done (at the moment).
-        for (_ in 1 to 100) {
-          ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
-        };
-      };
-
-      let tick = _dt => {
-        runEventLoop();
-
-        if (isDirty^) {
-          update(<Root state=currentState^ />);
-          isDirty := false;
-          persistGlobal();
-        };
-      };
-      let _: unit => unit = Tick.interval(tick, Time.zero);
-
-      let getZoom = () => {
-        Window.getZoom(window);
-      };
-
-      let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
-
-      let setTitle = title => {
-        Window.setTitle(window, title);
-      };
-
-      let maximize = () => {
-        Window.maximize(window);
-      };
-
-      let minimize = () => {
-        Window.minimize(window);
-      };
-
-      let close = () => {
-        App.quit(~askNicely=true, app);
-      };
-
-      let restore = () => {
-        Window.restore(window);
-      };
-
-      let setVsync = vsync => Window.setVsync(window, vsync);
-
-      let quit = code => {
-        App.quit(~askNicely=false, ~code, app);
-      };
-
-      Log.debug("Startup: Starting StoreThread");
-      let (dispatch, runEffects) =
-        Store.StoreThread.start(
-          ~getUserSettings,
-          ~setup,
-          ~getClipboardText=() => Sdl2.Clipboard.getText(),
-          ~setClipboardText=text => Sdl2.Clipboard.setText(text),
-          ~executingDirectory=Revery.Environment.executingDirectory,
-          ~getState=() => currentState^,
-          ~onStateChanged,
-          ~getZoom,
-          ~setZoom,
-          ~setTitle,
-          ~setVsync,
-          ~maximize,
-          ~minimize,
-          ~restore,
-          ~close,
-          ~window=Some(window),
-          ~filesToOpen=cliOptions.filesToOpen,
-          ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
-          ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
-          ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
-          ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
-          ~quit,
-          (),
-        );
-      Log.debug("Startup: StoreThread started!");
-
-      let _: App.unsubscribe =
-        App.onFileOpen(app, path => {
-          dispatch(Model.Actions.OpenFileByPath(path, None, None))
-        });
-      let _: Window.unsubscribe =
-        Window.onMaximized(window, () =>
-          dispatch(Model.Actions.WindowMaximized)
-        );
-      let _: Window.unsubscribe =
-        Window.onFullscreen(window, () =>
-          dispatch(Model.Actions.WindowFullscreen)
-        );
-      let _: Window.unsubscribe =
-        Window.onMinimized(window, () =>
-          dispatch(Model.Actions.WindowMinimized)
-        );
-      let _: Window.unsubscribe =
-        Window.onRestored(window, () =>
-          dispatch(Model.Actions.WindowRestored)
-        );
-      let _: Window.unsubscribe =
-        Window.onFocusGained(window, () =>
-          dispatch(Model.Actions.WindowFocusGained)
-        );
-      let _: Window.unsubscribe =
-        Window.onFocusLost(window, () =>
-          dispatch(Model.Actions.WindowFocusLost)
-        );
-      let _: Window.unsubscribe =
-        Window.onSizeChanged(window, _ => persistWorkspace());
-      let _: Window.unsubscribe =
-        Window.onMoved(window, _ => persistWorkspace());
-
-      GlobalContext.set({
-        closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-        editorSetScroll: (~editorId, ~scrollY, ()) =>
-          dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-        dispatch,
-      });
-
-      dispatch(Model.Actions.Init);
-      runEffects();
-
-      // Add a quit handler, so that regardless of how we quit -
-      // we have the opportunity to clean up
-      Revery.App.onBeforeQuit(app, () =>
-        if (!currentState^.isQuitting) {
-          dispatch(Model.Actions.Quit(true));
-        }
-      )
-      |> (ignore: Revery.App.unsubscribe => unit);
-
-      List.iter(
-        v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
-        cliOptions.filesToOpen,
+    let initialWorkingDirectory = initWorkingDirectory();
+    let window =
+      createWindow(
+        ~forceScaleFactor=cliOptions.forceScaleFactor,
+        ~workingDirectory=initialWorkingDirectory,
+        app,
       );
+
+    Log.debug("Initializing setup.");
+    let setup = Core.Setup.init();
+
+    let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
+
+    let currentState =
+      ref(
+        Model.State.initial(
+          ~getUserSettings,
+          ~contributedCommands=[], // TODO
+          ~workingDirectory=initialWorkingDirectory,
+        ),
+      );
+
+    let persistGlobal = () => Store.Persistence.Global.persist(currentState^);
+    let persistWorkspace = () =>
+      Store.Persistence.Workspace.(
+        persist(
+          (currentState^, window),
+          storeFor(currentState^.workspace.workingDirectory),
+        )
+      );
+
+    let update = UI.start(window, <Root state=currentState^ />);
+
+    let isDirty = ref(false);
+    let onStateChanged = state => {
+      currentState := state;
+      isDirty := true;
     };
 
-    /* Let's get this party started! */
-    Log.debug("Calling App.start");
-    let () = App.start(init);
-    ();
+    let runEventLoop = () => {
+      // TODO: How many times should we run it?
+      // The ideal amount would be just enough to do pending work,
+      // but not too much to just spin. Unfortunately, it seems
+      // Luv.Loop.run always returns [true] for us, so we don't
+      // have a reliable way to know we're done (at the moment).
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      };
+    };
+
+    let tick = _dt => {
+      runEventLoop();
+
+      if (isDirty^) {
+        update(<Root state=currentState^ />);
+        isDirty := false;
+        persistGlobal();
+      };
+    };
+    let _: unit => unit = Tick.interval(tick, Time.zero);
+
+    let getZoom = () => {
+      Window.getZoom(window);
+    };
+
+    let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
+
+    let setTitle = title => {
+      Window.setTitle(window, title);
+    };
+
+    let maximize = () => {
+      Window.maximize(window);
+    };
+
+    let minimize = () => {
+      Window.minimize(window);
+    };
+
+    let close = () => {
+      App.quit(~askNicely=true, app);
+    };
+
+    let restore = () => {
+      Window.restore(window);
+    };
+
+    let setVsync = vsync => Window.setVsync(window, vsync);
+
+    let quit = code => {
+      App.quit(~askNicely=false, ~code, app);
+    };
+
+    Log.debug("Startup: Starting StoreThread");
+    let (dispatch, runEffects) =
+      Store.StoreThread.start(
+        ~getUserSettings,
+        ~setup,
+        ~getClipboardText=() => Sdl2.Clipboard.getText(),
+        ~setClipboardText=text => Sdl2.Clipboard.setText(text),
+        ~executingDirectory=Revery.Environment.executingDirectory,
+        ~getState=() => currentState^,
+        ~onStateChanged,
+        ~getZoom,
+        ~setZoom,
+        ~setTitle,
+        ~setVsync,
+        ~maximize,
+        ~minimize,
+        ~restore,
+        ~close,
+        ~window=Some(window),
+        ~filesToOpen=cliOptions.filesToOpen,
+        ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
+        ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
+        ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
+        ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
+        ~quit,
+        (),
+      );
+    Log.debug("Startup: StoreThread started!");
+
+    let _: App.unsubscribe =
+      App.onFileOpen(app, path => {
+        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+      });
+    let _: Window.unsubscribe =
+      Window.onMaximized(window, () =>
+        dispatch(Model.Actions.WindowMaximized)
+      );
+    let _: Window.unsubscribe =
+      Window.onFullscreen(window, () =>
+        dispatch(Model.Actions.WindowFullscreen)
+      );
+    let _: Window.unsubscribe =
+      Window.onMinimized(window, () =>
+        dispatch(Model.Actions.WindowMinimized)
+      );
+    let _: Window.unsubscribe =
+      Window.onRestored(window, () => dispatch(Model.Actions.WindowRestored));
+    let _: Window.unsubscribe =
+      Window.onFocusGained(window, () =>
+        dispatch(Model.Actions.WindowFocusGained)
+      );
+    let _: Window.unsubscribe =
+      Window.onFocusLost(window, () =>
+        dispatch(Model.Actions.WindowFocusLost)
+      );
+    let _: Window.unsubscribe =
+      Window.onSizeChanged(window, _ => persistWorkspace());
+    let _: Window.unsubscribe =
+      Window.onMoved(window, _ => persistWorkspace());
+
+    GlobalContext.set({
+      closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
+      editorSetScroll: (~editorId, ~scrollY, ()) =>
+        dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
+      dispatch,
+    });
+
+    dispatch(Model.Actions.Init);
+    runEffects();
+
+    // Add a quit handler, so that regardless of how we quit -
+    // we have the opportunity to clean up
+    Revery.App.onBeforeQuit(app, () =>
+      if (!currentState^.isQuitting) {
+        dispatch(Model.Actions.Quit(true));
+      }
+    )
+    |> (ignore: Revery.App.unsubscribe => unit);
+
+    List.iter(
+      v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
+      cliOptions.filesToOpen,
+    );
   };
+
+  /* Let's get this party started! */
+  Log.debug("Calling App.start");
+  let () = App.start(init);
+  ();
 };
