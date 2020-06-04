@@ -6,6 +6,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+module OptionEx = Utility.OptionEx;
 open Revery.Draw;
 open Revery.UI;
 
@@ -19,6 +20,39 @@ module Constants = {
   let diffMarkerWidth = 2.;
   let gutterMargin = 2.;
   let gutterWidth = diffMarkerWidth +. gutterMargin;
+};
+
+module Styles = {
+  open Style;
+  let absolute = [
+    position(`Absolute),
+    top(0),
+    bottom(0),
+    left(0),
+    right(0),
+  ];
+
+  let absoluteWithCursor = [
+    cursor(Revery.MouseCursors.pointer),
+    ...absolute,
+  ];
+  let color = Revery.Color.rgba(0., 0., 0., 0.5);
+  let shadow =
+    boxShadow(
+      ~xOffset=-6.,
+      ~yOffset=6.,
+      ~blurRadius=12.,
+      ~spreadRadius=0.,
+      ~color,
+    );
+  let container = (drawShadow, backgroundColor) =>
+    drawShadow
+      ? [
+        shadow,
+        Style.backgroundColor(backgroundColor),
+        ...absoluteWithCursor,
+      ]
+      : [Style.backgroundColor(backgroundColor), ...absoluteWithCursor];
 };
 
 let lineStyle = Style.[position(`Absolute), top(0)];
@@ -73,16 +107,6 @@ let renderLine =
   List.iter(f, tokens);
 };
 
-let absoluteStyle =
-  Style.[
-    position(`Absolute),
-    top(0),
-    bottom(0),
-    left(0),
-    right(0),
-    cursor(Revery.MouseCursors.pointer),
-  ];
-
 let getMinimapSize = (view: Editor.t) => {
   let currentViewSize = Editor.getVisibleView(view);
 
@@ -91,6 +115,8 @@ let getMinimapSize = (view: Editor.t) => {
 
 let%component make =
               (
+                ~dropShadow=false,
+                ~dispatch: Msg.t => unit,
                 ~editor: Editor.t,
                 ~cursorPosition: Location.t,
                 ~width: int,
@@ -99,7 +125,6 @@ let%component make =
                 ~diagnostics,
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection: Hashtbl.t(Index.t, list(Range.t)),
-                ~onScroll: float => unit,
                 ~showSlider,
                 ~colors: Colors.t,
                 ~bufferHighlights,
@@ -109,69 +134,156 @@ let%component make =
   let rowHeight =
     float(Constants.minimapCharacterHeight + Constants.minimapLineSpacing);
 
-  let getScrollTo = (mouseY: float) => {
-    let totalHeight: int = Editor.getTotalHeightInPixels(editor);
-    let visibleHeight: int = Editor.(editor.pixelHeight);
-    let offsetMouseY: int = int_of_float(mouseY) - Constants.tabHeight;
-    float(offsetMouseY) /. float(visibleHeight) *. float(totalHeight);
+  let scrollY = editor.minimapScrollY;
+
+  let thumbTop =
+    rowHeight *. float(Editor.getTopVisibleLine(editor) - 1) -. scrollY;
+  let thumbSize = rowHeight *. float(getMinimapSize(editor));
+
+  let%hook (maybeBbox, setBbox) = Hooks.state(None);
+  let%hook (maybeHoverLine, setHoverLine) = Hooks.state(None);
+
+  let isHovering = maybeHoverLine != None;
+
+  let getRelativeMousePosition = (mouseY: float) => {
+    maybeBbox
+    |> Option.map(bbox => {
+         let (_x, y, _width, _height) =
+           Revery.Math.BoundingBox2d.getBounds(bbox);
+         mouseY -. y;
+       });
   };
 
-  let scrollY = editor.minimapScrollY;
+  let getScrollTo = (screenMouseY: float) => {
+    getRelativeMousePosition(screenMouseY)
+    |> Option.map(mouseY => {
+         let (_pixelX, pixelY) =
+           Editor.unprojectToPixel(
+             ~pixelX=0.,
+             ~pixelY=mouseY,
+             ~pixelWidth=width,
+             ~pixelHeight=height,
+             editor,
+           );
+         pixelY;
+       });
+  };
 
   let%hook (captureMouse, _state) =
     Hooks.mouseCapture(
       ~onMouseMove=
         ((), evt) => {
-          let scrollTo = getScrollTo(evt.mouseY);
-          let minimapLineSize =
-            Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-          let linesInMinimap = editor.pixelHeight / minimapLineSize;
-          onScroll(scrollTo -. float(linesInMinimap));
-          Some();
+          evt.mouseY
+          |> getScrollTo
+          |> OptionEx.tap(scrollTo => {
+               let minimapLineSize =
+                 Constants.minimapLineSpacing
+                 + Constants.minimapCharacterHeight;
+               let linesInMinimap = editor.pixelHeight / minimapLineSize;
+               dispatch(
+                 Msg.MinimapDragged({
+                   newPixelScrollY: scrollTo -. float(linesInMinimap),
+                 }),
+               );
+             })
+          |> Option.map(_ => ())
         },
       ~onMouseUp=(_, _) => None,
       (),
     );
 
   let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-    let scrollTo = getScrollTo(evt.mouseY);
-    let minimapLineSize =
-      Constants.minimapLineSpacing + Constants.minimapCharacterHeight;
-    let linesInMinimap = editor.pixelHeight / minimapLineSize;
-    if (evt.button == Revery.MouseButton.BUTTON_LEFT) {
-      onScroll(scrollTo -. editor.scrollY -. float(linesInMinimap));
-      captureMouse();
-    };
+    evt.mouseY
+    |> getRelativeMousePosition
+    |> Option.iter((position: float) =>
+         if (evt.button == Revery.MouseButton.BUTTON_LEFT) {
+           let line = int_of_float((position +. scrollY) /. rowHeight);
+           if (position < thumbTop) {
+             dispatch(Msg.MinimapClicked({viewLine: line}));
+           } else if (position > thumbTop +. thumbSize) {
+             dispatch(Msg.MinimapClicked({viewLine: line}));
+           } else {
+             captureMouse();
+           };
+         }
+       );
   };
 
-  <View style=absoluteStyle onMouseDown>
+  let setHighlightLine = (evt: NodeEvents.mouseMoveEventParams) => {
+    evt.mouseY
+    |> getRelativeMousePosition
+    |> Option.iter((position: float) => {
+         let line = int_of_float((position +. scrollY) /. rowHeight);
+         setHoverLine(_ => Some(line));
+       });
+  };
+
+  let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
+    setHighlightLine(evt);
+  };
+
+  let onMouseOver = evt => {
+    setHighlightLine(evt);
+  };
+
+  let onMouseLeave = _ => {
+    setHoverLine(_ => None);
+  };
+
+  let backgroundColor =
+    isHovering
+      ? colors.minimapBackground
+      : colors.minimapBackground |> Revery.Color.multiplyAlpha(0.8);
+
+  let sliderBackground =
+    isHovering
+      ? colors.minimapSliderHoverBackground : colors.minimapSliderBackground;
+
+  <View
+    style={Styles.container(dropShadow, backgroundColor)}
+    onMouseDown
+    onMouseMove
+    onMouseOver
+    onMouseLeave
+    onBoundingBoxChanged={bbox => setBbox(_ => Some(bbox))}>
     <Canvas
-      style=absoluteStyle
+      style=Styles.absolute
       render={canvasContext => {
+        Skia.Paint.setColor(
+          minimapPaint,
+          Revery.Color.toSkia(sliderBackground),
+        );
         if (showSlider) {
           /* Draw slider/viewport */
-          Skia.Paint.setColor(
-            minimapPaint,
-            Revery.Color.toSkia(colors.minimapSliderBackground),
-          );
           CanvasContext.drawRectLtwh(
             ~left=0.,
-            ~top=
-              rowHeight
-              *. float(Editor.getTopVisibleLine(editor) - 1)
-              -. scrollY,
-            ~height=rowHeight *. float(getMinimapSize(editor)),
+            ~top=thumbTop,
+            ~height=thumbSize,
             ~width=float(width),
             ~paint=minimapPaint,
             canvasContext,
           );
         };
 
-        /* Draw cursor line */
+        /* Draw hover line */
+
+        maybeHoverLine
+        |> Option.iter(hoverLine => {
+             CanvasContext.drawRectLtwh(
+               ~left=Constants.leftMargin,
+               ~top=rowHeight *. float(hoverLine) -. scrollY,
+               ~height=float(Constants.minimapCharacterHeight),
+               ~width=float(width),
+               ~paint=minimapPaint,
+               canvasContext,
+             )
+           });
+
         Skia.Paint.setColor(
           minimapPaint,
           Revery.Color.toSkia(colors.lineHighlightBackground),
         );
+        /* Draw cursor line */
         CanvasContext.drawRectLtwh(
           ~left=Constants.leftMargin,
           ~top=

@@ -22,7 +22,6 @@ let editorSurfaceMinimalState = hwnd => {
       dispatch={_ => ()}
       editor=simpleEditor
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -47,7 +46,6 @@ let editorSurfaceThousandLineState = hwnd => {
       dispatch={_ => ()}
       editor=simpleEditor
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -72,7 +70,6 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       dispatch={_ => ()}
       editor=simpleEditor
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -101,7 +98,6 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       dispatch={_ => ()}
       editor=simpleEditor
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -130,7 +126,6 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       editor=simpleEditor
       dispatch={_ => ()}
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}

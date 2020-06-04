@@ -5,4 +5,8 @@ type t =
   | VerticalScrollbarMouseDown
   | VerticalScrollbarMouseDrag({newPixelScrollY: float})
   | VerticalScrollbarMouseRelease
-  | VerticalScrollbarMouseWheel({deltaWheel: float});
+  | VerticalScrollbarMouseWheel({deltaWheel: float})
+  | MinimapMouseWheel({deltaWheel: float})
+  | MinimapClicked({viewLine: int})
+  | MinimapDragged({newPixelScrollY: float})
+  | EditorMouseWheel({deltaWheel: float});
