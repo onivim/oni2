@@ -725,7 +725,8 @@ module Minimap = {
     );
   let warningHighlight =
     define("minimap.warningHighlight", all(ref(EditorWarning.foreground)));
-  let background = define("minimap.background", all(unspecified));
+  let background =
+    define("minimap.background", all(ref(Editor.background)));
 
   let defaults = [
     findMatchHighlight,
