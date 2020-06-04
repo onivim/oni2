@@ -72,6 +72,7 @@ jobs:
   - script: sudo apt-get update
   - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev nasm
   - template: .ci/js-build-steps.yml
+  - template: .ci/esy-build-steps.yml
   - template: .ci/run-integration-tests.yml
 
 - job: CentOS
