@@ -35,7 +35,7 @@ let startWithExtensions =
   };
 
   let wrappedHandler = msg => {
-    prerr_endline ("Received msg: " ++ Msg.show(msg));
+    prerr_endline("Received msg: " ++ Msg.show(msg));
     messages := [msg, ...messages^];
     handler(msg);
   };
