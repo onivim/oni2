@@ -65,7 +65,21 @@ let update = (editor, msg) => {
       ),
       Nothing,
     )
-
+  | Msg.HorizontalScrollbarBeforeTrackClicked({newPixelScrollX})
+  | Msg.HorizontalScrollbarAfterTrackClicked({newPixelScrollX})
+  | Msg.HorizontalScrollbarMouseDrag({newPixelScrollX}) => (
+      Editor.scrollToPixelX(~pixelX=newPixelScrollX, editor),
+      Nothing,
+    )
+  | Msg.HorizontalScrollbarMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelX(
+        ~pixelX=deltaWheel *. Constants.scrollbarWheelMultiplier,
+        editor,
+      ),
+      Nothing,
+    )
+  | Msg.HorizontalScrollbarMouseDown
+  | Msg.HorizontalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseDown => (editor, Nothing)
   };
