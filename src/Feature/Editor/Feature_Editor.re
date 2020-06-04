@@ -23,6 +23,8 @@ type outmsg =
 type model = Editor.t;
 
 module Constants = {
+  let editorWheelMultiplier = 50.;
+  let minimapWheelMultiplier = 150.;
   let scrollbarWheelMultiplier = 300.;
 };
 
@@ -34,6 +36,28 @@ let update = (editor, msg) => {
       Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
       Nothing,
     )
+  | Msg.MinimapMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelY(
+        ~pixelY=deltaWheel *. Constants.minimapWheelMultiplier,
+        editor,
+      ),
+      Nothing,
+    )
+  | Msg.MinimapClicked({viewLine}) => (
+      Editor.scrollToLine(~line=viewLine, editor),
+      Nothing,
+    )
+  | Msg.MinimapDragged({newPixelScrollY}) => (
+      Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
+      Nothing,
+    )
+  | Msg.EditorMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelY(
+        ~pixelY=deltaWheel *. Constants.editorWheelMultiplier,
+        editor,
+      ),
+      Nothing,
+    )
   | Msg.VerticalScrollbarMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelY(
         ~pixelY=deltaWheel *. Constants.scrollbarWheelMultiplier,
@@ -41,7 +65,21 @@ let update = (editor, msg) => {
       ),
       Nothing,
     )
-
+  | Msg.HorizontalScrollbarBeforeTrackClicked({newPixelScrollX})
+  | Msg.HorizontalScrollbarAfterTrackClicked({newPixelScrollX})
+  | Msg.HorizontalScrollbarMouseDrag({newPixelScrollX}) => (
+      Editor.scrollToPixelX(~pixelX=newPixelScrollX, editor),
+      Nothing,
+    )
+  | Msg.HorizontalScrollbarMouseWheel({deltaWheel}) => (
+      Editor.scrollDeltaPixelX(
+        ~pixelX=deltaWheel *. Constants.scrollbarWheelMultiplier,
+        editor,
+      ),
+      Nothing,
+    )
+  | Msg.HorizontalScrollbarMouseDown
+  | Msg.HorizontalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseDown => (editor, Nothing)
   };

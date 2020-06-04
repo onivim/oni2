@@ -112,7 +112,6 @@ type t =
       pixelWidth: int,
       pixelHeight: int,
     })
-  | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | EditorTabClicked(int)

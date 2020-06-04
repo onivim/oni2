@@ -30,6 +30,7 @@ let minimapCharacterHeight = 2;
  */
 let minimapLineSpacing = 1;
 let scrollBarThickness = 15;
+let editorHorizontalScrollBarThickness = 8;
 let scrollBarCursorSize = 2;
 let minimapMaxColumn = 120;
 let tabHeight = 35;

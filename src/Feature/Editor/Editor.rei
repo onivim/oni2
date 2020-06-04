@@ -48,6 +48,7 @@ let getVimCursors: t => list(Vim.Cursor.t);
 
 let scrollToColumn: (~column: int, t) => t;
 let scrollToPixelX: (~pixelX: float, t) => t;
+let scrollDeltaPixelX: (~pixelX: float, t) => t;
 
 let scrollToLine: (~line: int, t) => t;
 let scrollToPixelY: (~pixelY: float, t) => t;
