@@ -15,12 +15,6 @@ module Styles = {
 
   let container = [flexGrow(1)];
 
-  let title = (~fg, ~font: UiFont.t) => [
-    fontSize(font.fontSize),
-    fontFamily(font.fontFile),
-    color(fg),
-  ];
-
   let heading = theme => [
     flexDirection(`Row),
     justifyContent(`Center),
@@ -44,9 +38,7 @@ module Styles = {
     ),
   ];
 
-  let text = (~isFocus, ~isActive, ~decoration, ~theme, ~font: UiFont.t) => [
-    fontSize(11.),
-    fontFamily(font.fontFile),
+  let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
     color(
       switch (
         Option.bind(decoration, (decoration: Decoration.t) =>
@@ -70,18 +62,18 @@ module Styles = {
   ];
 };
 
-let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
+let setiIcon = (~icon, ~fontSize, ~fg, ()) => {
   <Text
     text={FontIcon.codeToIcon(icon)}
     style=Style.[
-      fontFamily("seti.ttf"),
-      fontSize(size *. 2.),
       color(fg),
-      width(int_of_float(size *. 1.5)),
-      height(int_of_float(size *. 1.75)),
+      width(int_of_float(fontSize *. 1.5)),
+      height(int_of_float(fontSize *. 1.75)),
       textWrap(TextWrapping.NoWrap),
       marginLeft(-4),
     ]
+    fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
+    fontSize={fontSize *. 2.}
   />;
 };
 
@@ -99,7 +91,7 @@ let nodeView =
     switch (node.icon) {
     | Some(icon) =>
       <setiIcon
-        fontSize={font.fontSize}
+        fontSize={font.size}
         fg={icon.fontColor}
         icon={icon.fontCharacter}
       />
@@ -135,7 +127,9 @@ let nodeView =
     <icon />
     <Text
       text={node.displayName}
-      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme, ~font)}
+      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
+      fontFamily={font.normal}
+      fontSize=11.
     />
   </Tooltip>;
 };

@@ -10,16 +10,19 @@ open Oni_Core;
 
 module Styles = {
   open Style;
-  let text = (~fontSize=11., ~color, uiFont: UiFont.t) => [
-    fontFamily(uiFont.fontFile),
-    Style.fontSize(fontSize),
+  let text = (~color) => [
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
   ];
 };
 
-let textToElement = (~color, ~font, ~text) => {
-  <Text style={Styles.text(~color, font)} text />;
+let textToElement = (~color, ~font: UiFont.t, ~text) => {
+  <Text
+    style={Styles.text(~color)}
+    fontSize=11.
+    fontFamily={font.normal}
+    text
+  />;
 };
 
 let iconNameToCharacter = name => {

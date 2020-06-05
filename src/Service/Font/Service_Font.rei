@@ -2,6 +2,7 @@ open Oni_Core;
 
 type font = {
   fontFile: string,
+  fontFamily: Revery.Font.Family.t,
   fontSize: float,
   measuredWidth: float,
   measuredHeight: float,

@@ -22,16 +22,12 @@ module Styles = {
 
   let inputContainer = [padding(5)];
 
-  let input = (~font) => [fontFamily(font), fontSize(14.)];
-
   let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
 
-  let menuItem = [fontSize(14.), cursor(Revery.MouseCursors.pointer)];
+  let menuItem = [cursor(Revery.MouseCursors.pointer)];
 
-  let label = (~font: UiFont.t, ~theme, ~highlighted) => [
-    fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
+  let label = (~theme, ~highlighted) => [
     textOverflow(`Ellipsis),
-    fontSize(12.),
     color(
       highlighted
         ? Colors.Oni.normalModeBackground.from(theme)
@@ -132,7 +128,7 @@ let make =
     let item = items[index];
     let isFocused = Some(index) == focused;
 
-    let style = Styles.label(~font, ~theme);
+    let style = Styles.label(~theme);
     let text = Quickmenu.getLabel(item);
     let highlights = item.highlight;
     let normalStyle = style(~highlighted=false);
@@ -147,6 +143,7 @@ let make =
       label={`Custom(labelView)}
       icon={item.icon}
       font
+      fontSize=14.
       onMouseOver={() => onFocusedChange(index)}
       isFocused
     />;
@@ -157,7 +154,8 @@ let make =
       <Input
         placeholder
         ?prefix
-        style={Styles.input(~font=font.fontFile)}
+        fontFamily={font.normal}
+        fontSize=14.
         isFocused=true
         onClick=onInputClicked
         value=query
