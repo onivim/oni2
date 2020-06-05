@@ -1,5 +1,5 @@
 {
-  "checksum": "99d19bfc048535c4c5300b9ca5701d32",
+  "checksum": "c79f5bc510ccd35c0425f1df6b263e65",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -120,30 +120,31 @@
       "dependencies": [ "@opam/dune@opam:2.5.0@aef1678b" ],
       "devDependencies": []
     },
-    "revery-terminal@github:glennsl/revery-terminal#e1e8d96@d41d8cd9": {
-      "id": "revery-terminal@github:glennsl/revery-terminal#e1e8d96@d41d8cd9",
+    "revery-terminal@github:revery-ui/revery-terminal#82db1eb@d41d8cd9": {
+      "id":
+        "revery-terminal@github:revery-ui/revery-terminal#82db1eb@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:glennsl/revery-terminal#e1e8d96",
+      "version": "github:revery-ui/revery-terminal#82db1eb",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/revery-terminal#e1e8d96" ]
+        "source": [ "github:revery-ui/revery-terminal#82db1eb" ]
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:glennsl/revery#7405191@d41d8cd9",
-        "reason-libvterm@github:glennsl/reason-libvterm#ad3eb30@d41d8cd9",
-        "isolinear@github:glennsl/isolinear#c2065e0@d41d8cd9",
+        "revery@github:revery-ui/revery#6255331@d41d8cd9",
+        "reason-libvterm@github:revery-ui/reason-libvterm#eec9bf9@d41d8cd9",
+        "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "@glennsl/timber@1.2.0@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "revery@github:glennsl/revery#7405191@d41d8cd9": {
-      "id": "revery@github:glennsl/revery#7405191@d41d8cd9",
+    "revery@github:revery-ui/revery#6255331@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#6255331@d41d8cd9",
       "name": "revery",
-      "version": "github:glennsl/revery#7405191",
+      "version": "github:revery-ui/revery#6255331",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/revery#7405191" ]
+        "source": [ "github:revery-ui/revery#6255331" ]
       },
       "overrides": [],
       "dependencies": [
@@ -158,6 +159,7 @@
         "esy-freetype2@2.9.1007@d41d8cd9",
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/ppx_deriving@opam:4.5@bb81afdc",
+        "@opam/omd@github:ocaml/omd:omd.opam#1535e3c@d41d8cd9",
         "@opam/lwt_ppx@opam:2.0.1@ab0debb8", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
@@ -342,13 +344,14 @@
       ],
       "devDependencies": [ "ocaml@4.9.1000@d41d8cd9" ]
     },
-    "reason-libvterm@github:glennsl/reason-libvterm#ad3eb30@d41d8cd9": {
-      "id": "reason-libvterm@github:glennsl/reason-libvterm#ad3eb30@d41d8cd9",
+    "reason-libvterm@github:revery-ui/reason-libvterm#eec9bf9@d41d8cd9": {
+      "id":
+        "reason-libvterm@github:revery-ui/reason-libvterm#eec9bf9@d41d8cd9",
       "name": "reason-libvterm",
-      "version": "github:glennsl/reason-libvterm#ad3eb30",
+      "version": "github:revery-ui/reason-libvterm#eec9bf9",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/reason-libvterm#ad3eb30" ]
+        "source": [ "github:revery-ui/reason-libvterm#eec9bf9" ]
       },
       "overrides": [],
       "dependencies": [
@@ -517,13 +520,13 @@
       "dependencies": [ "graceful-fs@4.2.4@d41d8cd9" ],
       "devDependencies": []
     },
-    "isolinear@github:glennsl/isolinear#c2065e0@d41d8cd9": {
-      "id": "isolinear@github:glennsl/isolinear#c2065e0@d41d8cd9",
+    "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9": {
+      "id": "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
       "name": "isolinear",
-      "version": "github:glennsl/isolinear#c2065e0",
+      "version": "github:revery-ui/isolinear#8cad3b0",
       "source": {
         "type": "install",
-        "source": [ "github:glennsl/isolinear#c2065e0" ]
+        "source": [ "github:revery-ui/isolinear#8cad3b0" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1037,8 +1040,8 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery-terminal@github:glennsl/revery-terminal#e1e8d96@d41d8cd9",
-        "revery@github:glennsl/revery#7405191@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#82db1eb@d41d8cd9",
+        "revery@github:revery-ui/revery#6255331@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
@@ -1047,7 +1050,7 @@
         "reason-oniguruma@6.94.1002@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9", "libvim@8.10869.44@d41d8cd9",
-        "isolinear@github:glennsl/isolinear#c2065e0@d41d8cd9",
+        "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
         "esy-sdl2@2.0.10008@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-input@github:onivim/editor-input#c494950@d41d8cd9",
@@ -1972,6 +1975,27 @@
       ],
       "devDependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/dune@opam:2.5.0@aef1678b"
+      ]
+    },
+    "@opam/omd@github:ocaml/omd:omd.opam#1535e3c@d41d8cd9": {
+      "id": "@opam/omd@github:ocaml/omd:omd.opam#1535e3c@d41d8cd9",
+      "name": "@opam/omd",
+      "version": "github:ocaml/omd:omd.opam#1535e3c",
+      "source": {
+        "type": "install",
+        "source": [ "github:ocaml/omd:omd.opam#1535e3c" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "@opam/uchar@opam:0.0.2@c8218eea", "@opam/dune@opam:2.5.0@aef1678b",
+        "@opam/base-bytes@opam:base@19d0c2ff",
+        "@opam/base-bigarray@opam:base@b03491b0",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "@opam/uchar@opam:0.0.2@c8218eea",
+        "@opam/base-bytes@opam:base@19d0c2ff",
+        "@opam/base-bigarray@opam:base@b03491b0"
       ]
     },
     "@opam/ocplib-endian@opam:1.1@84c1ca88": {
@@ -3179,6 +3203,23 @@
       "devDependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/ocamlfind@opam:1.8.1@ff07b0f9"
       ]
+    },
+    "@opam/base-bigarray@opam:base@b03491b0": {
+      "id": "@opam/base-bigarray@opam:base@b03491b0",
+      "name": "@opam/base-bigarray",
+      "version": "opam:base",
+      "source": {
+        "type": "install",
+        "source": [ "no-source:" ],
+        "opam": {
+          "name": "base-bigarray",
+          "version": "base",
+          "path": "bench.esy.lock/opam/base-bigarray.base"
+        }
+      },
+      "overrides": [],
+      "dependencies": [ "@esy-ocaml/substs@0.0.1@d41d8cd9" ],
+      "devDependencies": []
     },
     "@opam/base@opam:v0.13.2@c3150775": {
       "id": "@opam/base@opam:v0.13.2@c3150775",
