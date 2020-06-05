@@ -24,11 +24,8 @@ let simpleState = {
 };
 
 let defaultFont: Service_Font.font = {
-  fontFile: Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
-  fontFamily:
-    Revery.Font.Family.fromFile(
-      Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
-    ),
+  fontFile: "FiraCode-Regular.ttf",
+  fontFamily: Revery.Font.Family.fromFile("FiraCode-Regular.ttf"),
   fontSize: 10.,
   measuredWidth: 10.,
   measuredHeight: 10.,
