@@ -134,7 +134,14 @@ let make =
     let normalStyle = style(~highlighted=false);
     let highlightStyle = style(~highlighted=true);
     let labelView =
-      <HighlightText style=normalStyle highlightStyle text highlights />;
+      <HighlightText
+        fontFamily={font.normal}
+        fontSize=12.
+        style=normalStyle
+        highlightStyle
+        text
+        highlights
+      />;
 
     <MenuItem
       onClick={() => onSelect(index)}

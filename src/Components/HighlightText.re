@@ -17,7 +17,12 @@ let make =
     let rec highlighter = last =>
       fun
       | [] => [
-          <Text style text={String.sub(text, last, textLength - last)} />,
+          <Text
+            ?fontFamily
+            ?fontSize
+            style
+            text={String.sub(text, last, textLength - last)}
+          />,
         ]
 
       | [(low, high), ...rest] => [
