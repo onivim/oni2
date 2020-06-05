@@ -108,7 +108,7 @@ let%component make =
                 ~theme,
                 ~style=Styles.default(~theme),
                 ~fontSize=18.,
-                ~fontFamily=Revery.Font.Family.fromFile("Roboto.Regular.ttf"),
+                ~fontFamily=Revery.Font.Family.fromFile("Roboto-Regular.ttf"),
                 ~placeholderColor=Colors.placeholderForeground(theme),
                 ~cursorColor=Colors.foreground(theme),
                 ~selectionColor=Colors.selection(theme),
