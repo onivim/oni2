@@ -12,11 +12,19 @@ type testContext = {
 
 describe("Persistence", ({test, _}) => {
   let setup = () => {
+    let temp = Filename.get_temp_dir_name();
+
+    prerr_endline("Persistence.setup - creating temp folder: " ++ temp);
+    let _: result(unit, Luv.Error.t) = temp |> Luv.File.Sync.mkdir;
+
+    let storeFolderTemplate = Rench.Path.join(temp, "store-testXXXXXX");
+    prerr_endline(
+      "Persistence.setup - creating storeFolderTemplate: "
+      ++ storeFolderTemplate,
+    );
     let storeFolder =
-      Filename.get_temp_dir_name()
-      ++ "store-testXXXXXX"
-      |> Luv.File.Sync.mkdtemp
-      |> Result.get_ok;
+      storeFolderTemplate |> Luv.File.Sync.mkdtemp |> Result.get_ok;
+    prerr_endline("Persistence.setup - created storeFolder: " ++ storeFolder);
 
     let instantiate = Store.instantiate(~storeFolder);
 

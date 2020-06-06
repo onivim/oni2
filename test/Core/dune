@@ -6,6 +6,7 @@
         Oni2.core
         Oni_Core_Utility_Test
         Oni_Core_WhenExpr_Test
+        fp
         rely.lib
         luv
         editor-core-types

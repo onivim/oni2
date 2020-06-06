@@ -30,4 +30,18 @@ describe("CLI", ({describe, test, _}) => {
       expect.equal(options.filesToOpen |> List.length, 1);
     })
   });
+  describe("syntax server", ({test, _}) => {
+    test("Syntax server with PID", ({expect, _}) => {
+      let (_options, eff) =
+        Oni_CLI.parse([|
+          "Oni2_editor",
+          "--syntax-highlight-service",
+          "1234:named-pipe",
+        |]);
+      expect.equal(
+        eff,
+        StartSyntaxServer({parentPid: "1234", namedPipe: "named-pipe"}),
+      );
+    })
+  });
 });
