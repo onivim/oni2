@@ -12,11 +12,13 @@ type testContext = {
 
 describe("Persistence", ({test, _}) => {
   let setup = () => {
+    prerr_endline("Persistence.setup - creating storeFolder");
     let storeFolder =
       Filename.get_temp_dir_name()
       ++ "store-testXXXXXX"
       |> Luv.File.Sync.mkdtemp
       |> Result.get_ok;
+    prerr_endline("Persistence.setup - created storeFolder: " ++ storeFolder);
 
     let instantiate = Store.instantiate(~storeFolder);
 
