@@ -52,7 +52,7 @@ const getRipgrepPath = () => {
 }
 
 const getNodePath = () => {
-    const nodeDir = "node-v10.15.1";
+    const nodeDir = "node-v12.17.0";
 
     if (process.platform == "darwin") {
         return path.join(rootDirectory, "vendor", nodeDir, "osx", "node");
