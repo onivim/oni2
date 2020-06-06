@@ -74,7 +74,8 @@ module Styles = {
     color(Colors.white),
   ];
 
-  let arrow = size => [width(size), height(size)];
+  // Margin applied to center vertically
+  let arrow = size => [width(size), height(size), marginTop(4)];
 };
 
 module Make = (Model: TreeModel) => {
@@ -83,7 +84,7 @@ module Make = (Model: TreeModel) => {
       <FontIcon
         fontSize=Constants.arrowSize
         color
-        icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
+        icon={isOpen ? FontAwesome.angleDown : FontAwesome.angleRight}
       />
     </View>;
 
