@@ -23,6 +23,9 @@ module Styles = {
     height(Constants.tabHeight),
   ];
 
+  // Minor adjustment to align with text
+  let folder = [marginTop(4)];
+
   let item = (~isFocus, ~isActive, ~theme) => [
     flexDirection(`Row),
     flexGrow(1),
@@ -33,6 +36,7 @@ module Styles = {
       } else if (isFocus) {
         Colors.List.focusBackground.from(theme);
       } else {
+        // NOTE: Could use, `Colors.SideBar.background.from(theme)`
         Revery.Colors.transparentWhite;
       },
     ),
@@ -52,12 +56,13 @@ module Styles = {
         } else if (isFocus) {
           Colors.List.focusForeground.from(theme);
         } else {
-          Colors.foreground.from(theme);
+          Colors.SideBar.foreground.from(theme);
         }
       },
     ),
     marginLeft(10),
-    marginVertical(2),
+    // Minor adjustment to align with seti-icon
+    marginTop(4),
     textWrap(TextWrapping.NoWrap),
   ];
 };
@@ -70,6 +75,8 @@ let setiIcon = (~icon, ~fontSize, ~fg, ()) => {
       width(int_of_float(fontSize *. 1.5)),
       height(int_of_float(fontSize *. 1.75)),
       textWrap(TextWrapping.NoWrap),
+      // Minor adjustment to center vertically
+      marginTop(-2),
       marginLeft(-4),
     ]
     fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
@@ -103,10 +110,12 @@ let nodeView =
   let icon = () =>
     switch (node.kind) {
     | Directory({isOpen, _}) =>
-      <FontIcon
-        color={Colors.SideBar.foreground.from(theme)}
-        icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
-      />
+      <View style=Styles.folder>
+        <FontIcon
+          color={Colors.SideBar.foreground.from(theme)}
+          icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
+        />
+      </View>
     | _ => <icon />
     };
 
@@ -129,7 +138,7 @@ let nodeView =
       text={node.displayName}
       style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
       fontFamily={font.normal}
-      fontSize=11.
+      fontSize=12.
     />
   </Tooltip>;
 };
