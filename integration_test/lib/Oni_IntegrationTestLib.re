@@ -70,8 +70,14 @@ module Internal = {
 
     // To work around this, for the purpose of integration tests (which are run in the esy environment),
     // we'll unset some environment variables that can take up a lot of space, but aren't needed.
+    [
+      "CAML_LD_LIBRARY_PATH",
+      "MAN_PATH",
+      "PKG_CONFIG_PATH",
+      "OCAMLPATH'"
+    ] |> List.iter(p =>
     ignore(Luv.Env.unsetenv("CAML_LD_LIBRARY_PATH"): result(unit, Luv.Error.t));
-    ignore(Luv.Env.unsetenv("MAN_PATH"): result(unit, Luv.Error.t));
+    );
   
     Log.info("== Checking environment === ");
     Unix.environment() |> Array.to_list |> List.iter(Log.info);
