@@ -79,6 +79,11 @@ let make = (~state: State.t, ()) => {
 
   let mode = ModeManager.current(state);
 
+  let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+  let maybeActiveEditor =
+    Oni_Model.EditorGroups.getActiveEditor(state.editorGroups);
+  let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
+
   let statusBar = () =>
     if (Selectors.getActiveConfigurationValue(state, c =>
           c.workbenchStatusBarVisible
@@ -91,8 +96,9 @@ let make = (~state: State.t, ()) => {
           diagnostics={state.diagnostics}
           font={state.uiFont}
           statusBar={state.statusBar}
-          activeBuffer=None
-          activeEditor=None
+          activeBuffer=maybeActiveBuffer
+          activeEditor=maybeActiveEditor
+          indentationSettings
           onContextMenuItemSelect={_ => ()}
           theme
           dispatch={msg =>

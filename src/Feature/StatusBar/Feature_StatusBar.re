@@ -125,16 +125,12 @@ module Styles = {
   ];
 
   let text = (~color, ~background, uiFont: UiFont.t) => [
-    fontFamily(uiFont.fontFile),
-    fontSize(11.),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
   ];
 
   let textBold = (~color, ~background, font: UiFont.t) => [
-    fontFamily(font.fontFileSemiBold),
-    fontSize(11.),
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
@@ -175,7 +171,7 @@ let item =
   };
 };
 
-let textItem = (~background, ~font, ~theme, ~text, ()) =>
+let textItem = (~background, ~font: UiFont.t, ~theme, ~text, ()) =>
   <item>
     <Text
       style={Styles.text(
@@ -183,6 +179,8 @@ let textItem = (~background, ~font, ~theme, ~text, ()) =>
         ~background,
         font,
       )}
+      fontFamily={font.normal}
+      fontSize=11.
       text
     />
   </item>;
@@ -190,7 +188,7 @@ let textItem = (~background, ~font, ~theme, ~text, ()) =>
 let notificationCount =
     (
       ~theme,
-      ~font,
+      ~font: UiFont.t,
       ~foreground as color,
       ~background,
       ~notifications: Feature_Notification.model,
@@ -244,7 +242,12 @@ let notificationCount =
       <View style=Style.[margin(4)]>
         <FontIcon icon=FontAwesome.bell color />
       </View>
-      <Text style={Styles.text(~color, ~background, font)} text />
+      <Text
+        style={Styles.text(~color, ~background, font)}
+        text
+        fontFamily={font.normal}
+        fontSize=11.
+      />
     </View>
   </item>;
 };
@@ -266,19 +269,26 @@ let diagnosticCount =
       <View style=Style.[margin(4)]>
         <FontIcon icon=FontAwesome.timesCircle color />
       </View>
-      <Text style={Styles.text(~color, ~background, font)} text />
+      <Text
+        style={Styles.text(~color, ~background, font)}
+        text
+        fontFamily={font.normal}
+        fontSize=11.
+      />
     </View>
   </item>;
 };
 
-let modeIndicator = (~font, ~theme, ~mode, ()) => {
+let modeIndicator = (~font: UiFont.t, ~theme, ~mode, ()) => {
   let background = Colors.Oni.backgroundFor(mode).from(theme);
   let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
   <item backgroundColor=background>
     <Text
-      style={Styles.textBold(~color=foreground, ~background, font)}
+      style={Styles.text(~color=foreground, ~background, font)}
       text={Mode.toString(mode)}
+      fontFamily={font.semiBold}
+      fontSize=11.
     />
   </item>;
 };
@@ -287,6 +297,13 @@ let transitionAnimation =
   Animation.(
     animate(Time.ms(150)) |> ease(Easing.ease) |> tween(50.0, 0.)
   );
+
+let indentationToString = (indentation: IndentationSettings.t) => {
+  switch (indentation.mode) {
+  | Tabs => "Tabs: " ++ string_of_int(indentation.tabSize)
+  | Spaces => "Spaces: " ++ string_of_int(indentation.size)
+  };
+};
 
 module View = {
   let%component make =
@@ -298,6 +315,7 @@ module View = {
                   ~onContextMenuItemSelect,
                   ~activeBuffer: option(Oni_Core.Buffer.t),
                   ~activeEditor: option(Feature_Editor.Editor.t),
+                  ~indentationSettings: IndentationSettings.t,
                   ~statusBar: model,
                   ~theme,
                   ~dispatch,
@@ -366,16 +384,11 @@ module View = {
       |> List.map(toStatusBarElement)
       |> React.listToElement;
 
-    // TODO: Hook up indentation
+    let indentation = () => {
+      let text = indentationSettings |> indentationToString;
 
-    //    let indentation = () => {
-    //      let text =
-    //        Indentation.getForActiveBuffer(state) |> Indentation.toStatusString;
-    //
-    //      <textItem font background theme text />;
-    //    };
-
-    let indentation = () => React.empty;
+      <textItem font background theme text />;
+    };
 
     let fileType = () => {
       let text =
