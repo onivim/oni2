@@ -12,11 +12,15 @@ type testContext = {
 
 describe("Persistence", ({test, _}) => {
   let setup = () => {
-    let tempDir = Filename.get_temp_dir_name();
-    prerr_endline("Persistence.setup - creating temp folder: " ++ tempDir);
-    let _: result(unit, Luv.Error.t) = tempDir |> Luv.File.Sync.mkdir;
+    let temp = Fp.absoluteExn(Filename.get_temp_dir_name());
 
-    let storeFolderTemplate = tempDir ++ "store-testXXXXXX";
+    prerr_endline(
+      "Persistence.setup - creating temp folder: " ++ Fp.toString(temp),
+    );
+    let _: result(unit, Luv.Error.t) =
+      Fp.toString(temp) |> Luv.File.Sync.mkdir;
+
+    let storeFolderTemplate = Fp.At.(temp / "store-testXXXXXX") |> Fp.toString;
     prerr_endline(
       "Persistence.setup - creating storeFolderTemplate: "
       ++ storeFolderTemplate,
