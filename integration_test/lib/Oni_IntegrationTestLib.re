@@ -82,9 +82,7 @@ let runTest =
   Timber.App.setLevel(Timber.Level.trace);
 
   Log.info("== Checking environment === ");
-  Unix.environment()
-  |> Array.to_list
-  |> List.iter(Log.info);
+  Unix.environment() |> Array.to_list |> List.iter(Log.info);
   Log.info("== Environment check complete ===");
 
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
