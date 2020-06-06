@@ -222,7 +222,13 @@ let token =
       ~x=x +. context.charWidth /. 4. -. context.scrollX,
       ~y=y -. context.scrollY,
       ~color=colors.whitespaceForeground,
-      ~fontFamily=FontAwesome.FontFamily.solid,
+      ~fontFamily=
+        Revery.Font.Family.toPath(
+          FontAwesome.FontFamily.solid,
+          Normal,
+          false,
+          false,
+        ),
       ~fontSize=10.,
       ~text=FontIcon.codeToIcon(FontAwesome.longArrowAltRight),
       context.canvasContext,

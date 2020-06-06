@@ -16,14 +16,6 @@ module Styles = {
   let bg = (~isFocused) =>
     isFocused ? Colors.List.focusBackground : Colors.Menu.background;
 
-  let text = (~theme, ~font: UiFont.t, ~isFocused) =>
-    Style.[
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
-      color(Colors.Menu.foreground.from(theme)),
-      backgroundColor(bg(~isFocused).from(theme)),
-    ];
-
   let container = (~theme, ~isFocused) =>
     Style.[
       padding(10),
@@ -33,8 +25,6 @@ module Styles = {
 
   let icon = fg =>
     Style.[
-      fontFamily("seti.ttf"),
-      fontSize(Constants.iconSize),
       color(fg),
       width(int_of_float(Constants.iconSize *. 0.75)),
       height(int_of_float(Constants.iconSize *. 0.85)),
@@ -42,14 +32,12 @@ module Styles = {
       marginRight(10),
     ];
 
-  let label = (~font: UiFont.t, ~theme, ~isFocused, ~custom) =>
+  let label = (~theme, ~isFocused, ~custom) =>
     Style.(
       merge(
         ~source=
           Style.[
-            fontFamily(font.fontFile),
             textOverflow(`Ellipsis),
-            fontSize(12.),
             color(Colors.Menu.foreground.from(theme)),
             backgroundColor(bg(~isFocused).from(theme)),
           ],
@@ -66,7 +54,8 @@ let make =
     (
       ~style=[],
       ~icon=None,
-      ~font,
+      ~font: UiFont.t,
+      ~fontSize=12.,
       ~label,
       ~isFocused,
       ~theme,
@@ -80,6 +69,8 @@ let make =
       IconTheme.IconDefinition.(
         <Text
           style={Styles.icon(v.fontColor)}
+          fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
+          fontSize=Constants.iconSize
           text={FontIcon.codeToIcon(v.fontCharacter)}
         />
       )
@@ -91,8 +82,12 @@ let make =
   let labelView =
     switch (label) {
     | `Text(text) =>
-      let style = Styles.label(~font, ~theme, ~isFocused, ~custom=style);
-      <Text style text />;
+      <Text
+        style={Styles.label(~theme, ~isFocused, ~custom=style)}
+        fontFamily={font.normal}
+        fontSize
+        text
+      />
     | `Custom(view) => view
     };
 

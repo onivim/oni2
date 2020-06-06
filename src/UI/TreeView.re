@@ -68,12 +68,6 @@ module Styles = {
 
   let children = [transform(Transform.[TranslateX(Constants.indentSize)])];
 
-  let loading = [
-    fontFamily("selawk.ttf"),
-    fontSize(12),
-    color(Colors.white),
-  ];
-
   // Margin applied to center vertically
   let arrow = size => [width(size), height(size), marginTop(4)];
 };

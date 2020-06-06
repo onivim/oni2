@@ -112,9 +112,7 @@ module Styles = {
     flexGrow(0),
   ];
 
-  let text = (uiFont: UiFont.t) => [
-    fontFamily(uiFont.fontFile),
-    fontSize(24.),
+  let text = [
     textWrap(TextWrapping.NoWrap),
     Style.backgroundColor(backgroundColor),
     color(Colors.white),
@@ -124,8 +122,10 @@ module Styles = {
   ];
 };
 
-let keyGroupView = (~uiFont, ~text: string, ()) =>
-  <View style=Styles.group> <Text style={Styles.text(uiFont)} text /> </View>;
+let keyGroupView = (~uiFont: UiFont.t, ~text: string, ()) =>
+  <View style=Styles.group>
+    <Text style=Styles.text fontFamily={uiFont.normal} fontSize=24. text />
+  </View>;
 
 let%component make =
               (~model, ~uiFont, ~top=?, ~left=?, ~right=?, ~bottom=?, ()) => {

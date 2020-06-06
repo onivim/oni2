@@ -114,6 +114,7 @@ let add = (sneaksToAdd: list(sneakInfo), sneaks: model) => {
 let getFiltered = ({filteredSneaks, _}) => filteredSneaks;
 
 // REGISTRY
+
 module Registry = {
   type sneakInfo = {
     node: ref(option(Revery.UI.node)),
@@ -146,6 +147,7 @@ module Registry = {
        });
   };
 };
+
 // UPDATE
 
 [@deriving show({with_path: false})]
@@ -162,6 +164,7 @@ type msg =
   | KeyboardInput(string);
 
 // EFFECTS
+
 module Effects = {
   let discoverSneak =
     Isolinear.Effect.createWithDispatch(~name="sneak.discover", dispatch => {
@@ -185,6 +188,7 @@ module Effects = {
 };
 
 // COMMANDS
+
 module Commands = {
   open Feature_Commands.Schema;
 
@@ -224,6 +228,7 @@ let update = (model, action) => {
 };
 
 // VIEW
+
 module View = {
   open Revery.UI;
   open Revery.UI.Components;
@@ -265,28 +270,32 @@ module View = {
       alignItems(`Center),
     ];
 
-    let text = (theme, font: Oni_Core.UiFont.t) => [
-      color(Colors.Oni.Sneak.foreground.from(theme)),
-      fontFamily(font.fontFile),
-      fontSize(12.),
-    ];
-    let highlight = (theme, font: Oni_Core.UiFont.t) => [
+    let text = theme => [color(Colors.Oni.Sneak.foreground.from(theme))];
+    let highlight = theme => [
       backgroundColor(Colors.Oni.Sneak.background.from(theme)),
       color(Colors.Oni.Sneak.highlight.from(theme)),
-      fontFamily(font.fontFile),
-      fontSize(12.),
     ];
   };
 
   module Overlay = {
-    let make = (~model, ~theme, ~font, ()) => {
+    let make = (~model, ~theme, ~font: Oni_Core.UiFont.t, ()) => {
       let makeSneak = (bbox, text) => {
         let (x, y, _width, _height) = BoundingBox2d.getBounds(bbox);
 
         let (highlightText, remainingText) = getTextHighlight(text, model);
         <View style={Styles.item(int_of_float(x), int_of_float(y), theme)}>
-          <Text style={Styles.highlight(theme, font)} text=highlightText />
-          <Text style={Styles.text(theme, font)} text=remainingText />
+          <Text
+            style={Styles.highlight(theme)}
+            text=highlightText
+            fontFamily={font.normal}
+            fontSize={font.size}
+          />
+          <Text
+            style={Styles.text(theme)}
+            text=remainingText
+            fontFamily={font.normal}
+            fontSize={font.size}
+          />
         </View>;
       };
 

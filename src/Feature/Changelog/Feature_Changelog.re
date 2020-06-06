@@ -190,58 +190,39 @@ module View = {
       overflow(`Hidden),
     ];
 
-    let header = (font: UiFont.t, ~theme) => [
-      fontFamily(font.fontFile),
-      fontSize(20.),
+    let header = (~theme) => [
       color(Colors.foreground.from(theme)),
       marginTop(16),
     ];
 
     let commit = [flexDirection(`Row), marginTop(10)];
 
-    let groupHeader = (font: UiFont.t, ~theme) => [
-      fontFamily(font.fontFile),
-      fontSize(16.),
+    let groupHeader = (~theme) => [
       color(Colors.foreground.from(theme)),
       marginTop(16),
     ];
 
     let groupBody = [paddingLeft(10)];
 
-    let typ = (font: UiFont.t, ~color) => [
-      fontFamily(font.fontFile),
-      fontSize(12.),
-      Style.color(color),
-      width(typWidth),
-    ];
+    let typ = (~color) => [Style.color(color), width(typWidth)];
 
-    let scope = (font: UiFont.t, ~theme) => [
-      fontFamily(font.fontFile),
-      fontSize(12.),
+    let scope = (~theme) => [
       width(scopeWidth),
       color(
         Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
       ),
     ];
 
-    let summary = (font: UiFont.t, ~theme) => [
-      fontFamily(font.fontFile),
-      fontSize(12.),
-      color(Colors.foreground.from(theme)),
-    ];
+    let summary = (~theme) => [color(Colors.foreground.from(theme))];
 
     let breakingCommit = [marginTop(10), marginBottom(6)];
 
     let breaking = [flexDirection(`Row), marginTop(4)];
 
-    let breakingText = (font: UiFont.t, ~theme) => [
-      fontFamily(font.fontFile),
-      fontSize(12.),
+    let breakingText = (~theme) => [
       color(Colors.foreground.from(theme)),
       marginLeft(10),
     ];
-
-    let error = (font: UiFont.t) => [fontFamily(font.fontFile)];
 
     let breakingChangeIcon = [width(breakingChangeIconWidth)];
 
@@ -256,18 +237,14 @@ module View = {
         marginBottom(12),
       ];
 
-      let header = (font: UiFont.t, ~theme) => [
-        fontFamily(font.fontFile),
-        fontSize(12.),
+      let header = (~theme) => [
         color(
           Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
         ),
         width(140),
       ];
 
-      let breakingChangesHeader = (font: UiFont.t, ~theme) => [
-        fontFamily(font.fontFile),
-        fontSize(12.),
+      let breakingChangesHeader = (~theme) => [
         color(
           Colors.EditorWarning.foreground.from(theme)
           |> Revery.Color.multiplyAlpha(0.75),
@@ -275,21 +252,13 @@ module View = {
         width(140),
       ];
 
-      let body = (font: UiFont.t, ~theme) => [
-        fontFamily(font.fontFile),
-        fontSize(12.),
-        color(Colors.foreground.from(theme)),
-      ];
+      let body = (~theme) => [color(Colors.foreground.from(theme))];
 
-      let linkActive = (font: UiFont.t, ~theme) => [
-        fontFamily(font.fontFile),
-        fontSize(12.),
+      let linkActive = (~theme) => [
         color(Colors.TextLink.activeForeground.from(theme)),
       ];
 
-      let linkInactive = (font: UiFont.t, ~theme) => [
-        fontFamily(font.fontFile),
-        fontSize(12.),
+      let linkInactive = (~theme) => [
         color(Colors.TextLink.foreground.from(theme)),
       ];
 
@@ -297,23 +266,20 @@ module View = {
     };
 
     module Full = {
-      let titleActive = (font: UiFont.t, ~theme) => [
-        fontFamily(font.fontFile),
-        fontSize(12.),
+      let titleActive = (~theme) => [
         color(
           Colors.foreground.from(theme) |> Revery.Color.multiplyAlpha(0.75),
         ),
       ];
 
-      let titleInactive = (font: UiFont.t, ~theme) => [
-        fontFamily(font.fontFile),
-        fontSize(12.),
+      let titleInactive = (~theme) => [
         color(Colors.foreground.from(theme)),
       ];
     };
   };
 
-  let date = (~commit, ~style, ~withTime=false, ()) => {
+  let date =
+      (~commit, ~style, ~fontFamily, ~fontSize=12., ~withTime=false, ()) => {
     let time = Unix.localtime(commit.time);
     let text =
       withTime
@@ -331,10 +297,10 @@ module View = {
             time.tm_mon + 1,
             time.tm_mday,
           );
-    <Text style text />;
+    <Text style text fontFamily fontSize />;
   };
 
-  let typ = (~commit, ~uiFont, ~theme, ()) => {
+  let typ = (~commit, ~uiFont: UiFont.t, ~theme, ()) => {
     let text =
       switch (commit.typ) {
       | Some("feat") => "feature"
@@ -351,21 +317,36 @@ module View = {
       | _ => Colors.foreground.from(theme)
       };
 
-    <Text style={Styles.typ(uiFont, ~color)} text />;
+    <Text
+      style={Styles.typ(~color)}
+      fontFamily={uiFont.normal}
+      fontSize=12.
+      text
+    />;
   };
 
-  let scope = (~commit, ~uiFont, ~theme, ()) => {
+  let scope = (~commit, ~uiFont: UiFont.t, ~theme, ()) => {
     let text =
       switch (commit.scope) {
       | Some(scope) => scope
       | None => "other"
       };
 
-    <Text style={Styles.scope(uiFont, ~theme)} text />;
+    <Text
+      style={Styles.scope(~theme)}
+      fontFamily={uiFont.normal}
+      fontSize=12.
+      text
+    />;
   };
 
-  let title = (~text, ~uiFont, ~theme, ()) => {
-    <Text style={Styles.summary(uiFont, ~theme)} text />;
+  let title = (~text, ~uiFont: UiFont.t, ~theme, ()) => {
+    <Text
+      style={Styles.summary(~theme)}
+      fontFamily={uiFont.normal}
+      fontSize=12.
+      text
+    />;
   };
 
   let breakingChangeIcon = (~commit, ~theme, ()) => {
@@ -385,22 +366,29 @@ module View = {
   // MOREINFO
 
   module MoreInfo = {
-    let hash = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+    let hash = (~commit, ~uiFont: UiFont.t, ~theme, ~dispatch, ()) => {
       let text = Printf.sprintf("#%s", commit.hash);
       let onClick = _ => dispatch(CommitHashClicked(commit.hash));
 
       <View style=Styles.MoreInfo.description>
-        <Text text="Commit" style={Styles.MoreInfo.header(uiFont, ~theme)} />
+        <Text
+          text="Commit"
+          style={Styles.MoreInfo.header(~theme)}
+          fontFamily={uiFont.normal}
+          fontSize=12.
+        />
         <ClickableText
           text
           onClick
-          activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
-          inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
+          activeStyle={Styles.MoreInfo.linkActive(~theme)}
+          inactiveStyle={Styles.MoreInfo.linkInactive(~theme)}
+          fontFamily={uiFont.normal}
+          fontSize=12.
         />
       </View>;
     };
 
-    let description = (~commit, ~uiFont, ~theme, ()) => {
+    let description = (~commit, ~uiFont: UiFont.t, ~theme, ()) => {
       switch (String.index_opt(commit.summary, '\n')) {
       | Some(i) =>
         let text =
@@ -408,15 +396,22 @@ module View = {
         <View style=Styles.MoreInfo.description>
           <Text
             text="Description"
-            style={Styles.MoreInfo.header(uiFont, ~theme)}
+            style={Styles.MoreInfo.header(~theme)}
+            fontFamily={uiFont.normal}
+            fontSize=12.
           />
-          <Text style={Styles.MoreInfo.body(uiFont, ~theme)} text />
+          <Text
+            style={Styles.MoreInfo.body(~theme)}
+            fontFamily={uiFont.normal}
+            fontSize=12.
+            text
+          />
         </View>;
       | None => React.empty
       };
     };
 
-    let pullRequest = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+    let pullRequest = (~commit, ~uiFont: UiFont.t, ~theme, ~dispatch, ()) => {
       switch (commit.pr) {
       | Some(pr) =>
         let text = Printf.sprintf("#%d", pr);
@@ -425,39 +420,50 @@ module View = {
         <View style=Styles.MoreInfo.description>
           <Text
             text="Pull Request"
-            style={Styles.MoreInfo.header(uiFont, ~theme)}
+            style={Styles.MoreInfo.header(~theme)}
+            fontFamily={uiFont.normal}
+            fontSize=12.
           />
           <ClickableText
             text
             onClick
-            activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
-            inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
+            activeStyle={Styles.MoreInfo.linkActive(~theme)}
+            inactiveStyle={Styles.MoreInfo.linkInactive(~theme)}
+            fontFamily={uiFont.normal}
+            fontSize=12.
           />
         </View>;
       | None => React.empty
       };
     };
 
-    let issue = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+    let issue = (~commit, ~uiFont: UiFont.t, ~theme, ~dispatch, ()) => {
       switch (commit.issue) {
       | Some(issue) =>
         let text = Printf.sprintf("#%d", issue);
         let onClick = _ => dispatch(IssueClicked(issue));
 
         <View style=Styles.MoreInfo.description>
-          <Text text="Issue" style={Styles.MoreInfo.header(uiFont, ~theme)} />
+          <Text
+            text="Issue"
+            style={Styles.MoreInfo.header(~theme)}
+            fontFamily={uiFont.normal}
+            fontSize=12.
+          />
           <ClickableText
             text
             onClick
-            activeStyle={Styles.MoreInfo.linkActive(uiFont, ~theme)}
-            inactiveStyle={Styles.MoreInfo.linkInactive(uiFont, ~theme)}
+            activeStyle={Styles.MoreInfo.linkActive(~theme)}
+            inactiveStyle={Styles.MoreInfo.linkInactive(~theme)}
+            fontFamily={uiFont.normal}
+            fontSize=12.
           />
         </View>;
       | None => React.empty
       };
     };
 
-    let breakingChanges = (~commit, ~uiFont, ~theme, ()) => {
+    let breakingChanges = (~commit, ~uiFont: UiFont.t, ~theme, ()) => {
       switch (commit.breaking) {
       | [] => React.empty
       | changes =>
@@ -470,14 +476,21 @@ module View = {
         <View style=Styles.MoreInfo.description>
           <Text
             text="Breaking Changes"
-            style={Styles.MoreInfo.breakingChangesHeader(uiFont, ~theme)}
+            style={Styles.MoreInfo.breakingChangesHeader(~theme)}
+            fontFamily={uiFont.normal}
+            fontSize=12.
           />
-          <Text style={Styles.MoreInfo.body(uiFont, ~theme)} text />
+          <Text
+            style={Styles.MoreInfo.body(~theme)}
+            fontFamily={uiFont.normal}
+            fontSize=12.
+            text
+          />
         </View>;
       };
     };
 
-    let make = (~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+    let make = (~commit, ~uiFont: UiFont.t, ~theme, ~dispatch, ()) => {
       <View style=Styles.MoreInfo.main>
         <hash commit uiFont theme dispatch />
         <pullRequest commit uiFont theme dispatch />
@@ -491,15 +504,17 @@ module View = {
   // FULL
 
   module Full = {
-    let title = (~text, ~uiFont, ~theme, ()) => {
+    let title = (~text, ~uiFont: UiFont.t, ~theme, ()) => {
       <ClickableText
-        activeStyle={Styles.Full.titleActive(uiFont, ~theme)}
-        inactiveStyle={Styles.Full.titleInactive(uiFont, ~theme)}
+        activeStyle={Styles.Full.titleActive(~theme)}
+        inactiveStyle={Styles.Full.titleInactive(~theme)}
         text
+        fontFamily={uiFont.normal}
+        fontSize=12.
       />;
     };
 
-    let change = (~model, ~commit, ~uiFont, ~theme, ~dispatch, ()) => {
+    let change = (~model, ~commit, ~uiFont: UiFont.t, ~theme, ~dispatch, ()) => {
       let isExpanded = model.expanded |> List.mem(commit);
       let summaryText =
         switch (String.index_opt(commit.summary, '\n')) {
@@ -537,11 +552,13 @@ module View = {
       </View>;
     };
 
-    let group = (~model, ~commits, ~uiFont, ~theme, ~dispatch, ()) => {
+    let group = (~model, ~commits, ~uiFont: UiFont.t, ~theme, ~dispatch, ()) => {
       <View>
         <date
           commit={List.hd(commits)}
-          style={Styles.groupHeader(uiFont, ~theme)}
+          style={Styles.groupHeader(~theme)}
+          fontFamily={uiFont.normal}
+          fontSize=16.
         />
         <View style=Styles.groupBody>
           {commits
@@ -553,7 +570,7 @@ module View = {
       </View>;
     };
 
-    let make = (~state: model, ~theme, ~uiFont, ~dispatch, ()) => {
+    let make = (~state: model, ~theme, ~uiFont: UiFont.t, ~dispatch, ()) => {
       let isSignificantCommit = commit =>
         switch (commit.typ) {
         | Some("feat" | "fix" | "perf") => true
@@ -564,7 +581,12 @@ module View = {
       | Ok(commits) =>
         <ScrollView style=Styles.scrollContainer>
           <View style=Styles.content>
-            <Text text="Changelog" style={Styles.header(uiFont, ~theme)} />
+            <Text
+              text="Changelog"
+              style={Styles.header(~theme)}
+              fontFamily={uiFont.normal}
+              fontSize=20.
+            />
             {commits
              |> List.filter(isSignificantCommit)
              |> Base.List.group(~break=(a, b) =>
@@ -576,7 +598,7 @@ module View = {
              |> React.listToElement}
           </View>
         </ScrollView>
-      | Error(message) => <Text style={Styles.error(uiFont)} text=message />
+      | Error(message) => <Text text=message />
       };
     };
   };
@@ -585,7 +607,7 @@ module View = {
 
   module Update = {
     module Parts = {
-      let line = (~commit, ~uiFont, ~theme, ()) => {
+      let line = (~commit, ~uiFont: UiFont.t, ~theme, ()) => {
         let summaryText =
           switch (String.index_opt(commit.summary, '\n')) {
           | Some(i) => String.sub(commit.summary, 0, i)
@@ -602,22 +624,29 @@ module View = {
       // BREAKING
 
       module Breaking = {
-        let breakingChange = (~text, ~uiFont, ~theme, ()) => {
+        let breakingChange = (~text, ~uiFont: UiFont.t, ~theme, ()) => {
           <View style=Styles.breaking>
             <FontIcon
               icon=FontAwesome.exclamationTriangle
               color={Colors.EditorWarning.foreground.from(theme)}
               fontSize=14.
             />
-            <Text text style={Styles.breakingText(uiFont, ~theme)} />
+            <Text
+              text
+              style={Styles.breakingText(~theme)}
+              fontFamily={uiFont.normal}
+              fontSize=12.
+            />
           </View>;
         };
 
-        let commit = (~item, ~uiFont, ~theme, ()) => {
+        let commit = (~item, ~uiFont: UiFont.t, ~theme, ()) => {
           <View style=Styles.breakingCommit>
             <Text
               text={item.summary |> Base.String.split(~on='\n') |> List.hd}
-              style={Styles.summary(uiFont, ~theme)}
+              style={Styles.summary(~theme)}
+              fontFamily={uiFont.normal}
+              fontSize=12.
             />
             {item.breaking
              |> List.map(text => <breakingChange text uiFont theme />)
@@ -625,11 +654,13 @@ module View = {
           </View>;
         };
 
-        let make = (~items, ~uiFont, ~theme, ()) => {
+        let make = (~items, ~uiFont: UiFont.t, ~theme, ()) => {
           <View>
             <Text
               text="Breaking Changes"
-              style={Styles.groupHeader(uiFont, ~theme)}
+              style={Styles.groupHeader(~theme)}
+              fontFamily={uiFont.normal}
+              fontSize=16.
             />
             <View style=Styles.groupBody>
               {items
@@ -643,11 +674,13 @@ module View = {
       // FEATURES
 
       module Features = {
-        let make = (~items, ~uiFont, ~theme, ()) => {
+        let make = (~items, ~uiFont: UiFont.t, ~theme, ()) => {
           <View>
             <Text
               text="Features"
-              style={Styles.groupHeader(uiFont, ~theme)}
+              style={Styles.groupHeader(~theme)}
+              fontFamily={uiFont.normal}
+              fontSize=16.
             />
             <View style=Styles.groupBody>
               {items
@@ -661,11 +694,13 @@ module View = {
       // FIXES
 
       module Fixes = {
-        let make = (~items, ~uiFont, ~theme, ()) => {
+        let make = (~items, ~uiFont: UiFont.t, ~theme, ()) => {
           <View>
             <Text
               text="Bugfixes"
-              style={Styles.groupHeader(uiFont, ~theme)}
+              style={Styles.groupHeader(~theme)}
+              fontFamily={uiFont.normal}
+              fontSize=16.
             />
             <View style=Styles.groupBody>
               {items
@@ -679,7 +714,7 @@ module View = {
 
     // Update.make
 
-    let make = (~since, ~theme, ~uiFont, ()) => {
+    let make = (~since, ~theme, ~uiFont: UiFont.t, ()) => {
       switch (Lazy.force(model)) {
       | Ok(commits) =>
         let commits =
@@ -708,10 +743,12 @@ module View = {
           <View style=Styles.content>
             <Text
               text={"Changes since " ++ since}
-              style={Styles.header(uiFont, ~theme)}
+              style={Styles.header(~theme)}
+              fontFamily={uiFont.normal}
+              fontSize=20.
             />
             {if (breaking == [] && features == [] && fixes == []) {
-               <Text text="Nothing" style={Styles.summary(uiFont, ~theme)} />;
+               <Text text="Nothing" style={Styles.summary(~theme)} />;
              } else {
                React.listToElement([
                  breaking == []
@@ -727,7 +764,7 @@ module View = {
           </View>
         </ScrollView>;
 
-      | Error(message) => <Text style={Styles.error(uiFont)} text=message />
+      | Error(message) => <Text text=message />
       };
     };
   };
