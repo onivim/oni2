@@ -39,13 +39,20 @@ module Styles = {
     flexGrow(1),
   ];
 
-  let verticalScrollBar = (~colors: Colors.t) => [
+  let verticalScrollBar = [
     position(`Absolute),
     top(0),
     right(0),
     width(Constants.scrollBarThickness),
-    backgroundColor(colors.scrollbarSliderBackground),
     bottom(0),
+  ];
+
+  let horizontalScrollBar = (gutterOffset, width) => [
+    position(`Absolute),
+    bottom(0),
+    left(gutterOffset),
+    Style.width(width),
+    height(Constants.editorHorizontalScrollBarThickness),
   ];
 };
 
@@ -55,11 +62,11 @@ let minimap =
       ~bufferHighlights,
       ~cursorPosition: Location.t,
       ~colors,
+      ~dispatch,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~selectionRanges,
       ~showMinimapSlider,
-      ~onScroll,
       ~editor,
       ~diffMarkers,
       ~diagnosticsMap,
@@ -71,19 +78,21 @@ let minimap =
   let style =
     Style.[
       position(`Absolute),
-      overflow(`Hidden),
       top(0),
       right(Constants.scrollBarThickness),
       width(minimapPixelWidth),
       bottom(0),
     ];
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-    onScroll(wheelEvent.deltaY *. (-150.));
+    dispatch(
+      Msg.MinimapMouseWheel({deltaWheel: wheelEvent.deltaY *. (-1.)}),
+    );
 
   <View style onMouseWheel>
     <Minimap
       editor
       cursorPosition
+      dispatch
       width=minimapPixelWidth
       height={editor.pixelHeight}
       count={Buffer.getNumberOfLines(buffer)}
@@ -100,7 +109,6 @@ let minimap =
       )}
       selection=selectionRanges
       showSlider=showMinimapSlider
-      onScroll
       colors
       bufferHighlights
       diffMarkers
@@ -114,6 +122,7 @@ let scrollSpringOptions =
 
 let%component make =
               (
+                ~dispatch,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -125,7 +134,6 @@ let%component make =
                 ~mode: Vim.Mode.t,
                 ~bufferHighlights,
                 ~bufferSyntaxHighlights,
-                ~onScroll,
                 ~diagnostics,
                 ~completions,
                 ~tokenTheme,
@@ -247,10 +255,10 @@ let%component make =
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
-      onScroll
       buffer
       editor
       colors
+      dispatch
       topVisibleLine
       onCursorChange
       cursorPosition
@@ -278,12 +286,12 @@ let%component make =
            bufferHighlights
            cursorPosition
            colors
+           dispatch
            matchingPairs
            bufferSyntaxHighlights
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}
            diffMarkers
-           onScroll
            bufferWidthInCharacters={layout.bufferWidthInCharacters}
            minimapWidthInPixels={layout.minimapWidthInPixels}
          />
@@ -304,16 +312,28 @@ let%component make =
       theme
       tokenTheme
     />
-    <View style={Styles.verticalScrollBar(~colors)}>
-      <EditorVerticalScrollbar
+    <View style=Styles.verticalScrollBar>
+      <Scrollbar.Vertical
+        dispatch
         editor
         cursorPosition
         width=Constants.scrollBarThickness
         height={editor.pixelHeight}
         diagnostics=diagnosticsMap
         colors
-        editorFont
         bufferHighlights
+      />
+    </View>
+    <View
+      style={Styles.horizontalScrollBar(
+        int_of_float(gutterWidth),
+        int_of_float(layout.bufferWidthInPixels),
+      )}>
+      <Scrollbar.Horizontal
+        dispatch
+        editor
+        width={int_of_float(layout.bufferWidthInPixels)}
+        colors
       />
     </View>
   </View>;

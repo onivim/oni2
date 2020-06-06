@@ -216,3 +216,28 @@ let getActiveEditor = editorGroups => {
   |> IntMap.find_opt(editorGroups.activeId)
   |> OptionEx.flatMap(EditorGroup.getActiveEditor);
 };
+
+let updateEditor = (~editorId, msg, {idToGroup, _} as editorGroups) => {
+  let (idToGroup', effects) =
+    IntMap.fold(
+      (key, curr, acc) => {
+        let (groups, effects) = acc;
+
+        let (group, maybeEffect) =
+          curr |> EditorGroup.updateEditor(~editorId, msg);
+
+        let groups' = IntMap.add(key, group, groups);
+        let effects' =
+          switch (maybeEffect) {
+          | Some(eff) => [eff, ...effects]
+          | None => effects
+          };
+
+        (groups', effects');
+      },
+      idToGroup,
+      (idToGroup, []),
+    );
+
+  ({...editorGroups, idToGroup: idToGroup'}, effects);
+};

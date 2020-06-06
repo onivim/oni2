@@ -115,18 +115,6 @@ module Configuration = {
   };
 };
 
-let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
-
-let shouldHandleInput = str => {
-  !
-    List.exists(s => str == s, inputToIgnore);
-    // pick what keys should be ignored by the terminal.
-    // One option would be a configuration setting that lets us
-    // better, more customizable way to manage this, though.
-    // the user can get out of the terminal. We should have a
-    // HACK: Let the window motion keys pass through, so that
-};
-
 let shouldClose = (~id, {idToTerminal, _}) => {
   IntMap.find_opt(id, idToTerminal)
   |> Option.map(({closeOnExit, _}) => closeOnExit)

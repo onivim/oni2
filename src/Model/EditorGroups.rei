@@ -25,3 +25,6 @@ let setBufferFont: (~bufferId: int, ~font: Service_Font.font, t) => t;
 
 let setActiveEditor: (~editorId: int, t) => t;
 let getActiveEditor: t => option(Feature_Editor.Editor.t);
+
+let updateEditor:
+  (~editorId: int, Feature_Editor.msg, t) => (t, list(Feature_Editor.outmsg));

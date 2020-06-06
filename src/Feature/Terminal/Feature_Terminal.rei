@@ -68,8 +68,6 @@ type outmsg =
       shouldClose: bool,
     });
 
-let shouldHandleInput: string => bool;
-
 let update: (~config: Config.resolver, t, msg) => (t, outmsg);
 
 let subscription:

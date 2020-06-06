@@ -112,7 +112,6 @@ type t =
       pixelWidth: int,
       pixelHeight: int,
     })
-  | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | EditorTabClicked(int)
@@ -122,7 +121,11 @@ type t =
       message: string,
       extensionId: option(string),
     })
-  | Editor(Feature_Editor.msg)
+  | Editor({
+      editorId: int,
+      msg: Feature_Editor.msg,
+    })
+  | FilesDropped({paths: list(string)})
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)

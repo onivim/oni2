@@ -147,13 +147,18 @@ let getVisibleView = editor => {
   int_of_float(float_of_int(pixelHeight) /. getLineHeight(editor));
 };
 
-let getTotalSizeInPixels = editor =>
+let getTotalHeightInPixels = editor =>
   int_of_float(float_of_int(editor.viewLines) *. getLineHeight(editor));
+
+let getTotalWidthInPixels = editor =>
+  int_of_float(
+    float_of_int(editor.maxLineLength) *. getCharacterWidth(editor),
+  );
 
 let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
   let {pixelHeight, _} = view;
   let totalViewSizeInPixels =
-    float_of_int(getTotalSizeInPixels(view) + pixelHeight);
+    float_of_int(getTotalHeightInPixels(view) + pixelHeight);
   let thumbPercentage = float_of_int(pixelHeight) /. totalViewSizeInPixels;
   let thumbSize =
     int_of_float(thumbPercentage *. float_of_int(scrollBarHeight));
@@ -165,9 +170,11 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
 };
 
 let getHorizontalScrollbarMetrics = (view, availableWidth) => {
-  let totalViewWidthInPixels =
-    float_of_int(view.maxLineLength) *. getCharacterWidth(view);
   let availableWidthF = float_of_int(availableWidth);
+  let totalViewWidthInPixels =
+    float_of_int(view.maxLineLength)
+    *. getCharacterWidth(view)
+    +. availableWidthF;
 
   totalViewWidthInPixels <= availableWidthF
     ? {visible: false, thumbSize: 0, thumbOffset: 0}
@@ -252,15 +259,15 @@ let scrollToPixelX = (~pixelX as newScrollX, view) => {
   let newScrollX = max(0., newScrollX);
 
   let availableScroll =
-    max(
-      0.,
-      float_of_int(view.maxLineLength)
-      *. getCharacterWidth(view)
-      -. float(view.pixelWidth),
-    );
+    max(0., float_of_int(view.maxLineLength) *. getCharacterWidth(view));
   let scrollX = min(newScrollX, availableScroll);
 
   {...view, scrollX};
+};
+
+let scrollDeltaPixelX = (~pixelX, editor) => {
+  let pixelX = editor.scrollX +. pixelX;
+  scrollToPixelX(~pixelX, editor);
 };
 
 let scrollToColumn = (~column, view) => {
@@ -271,6 +278,40 @@ let scrollToColumn = (~column, view) => {
 let scrollDeltaPixelY = (~pixelY, view) => {
   let pixelY = view.scrollY +. pixelY;
   scrollToPixelY(~pixelY, view);
+};
+
+// PROJECTION
+
+let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
+  // TODO: Horizontal scrolling
+  ignore(column);
+  ignore(pixelWidth);
+
+  let editorPixelY = float_of_int(line) *. editor.font.measuredHeight;
+  let totalEditorHeight = getTotalHeightInPixels(editor) |> float_of_int;
+  let transformedPixelY =
+    editorPixelY
+    /. (totalEditorHeight +. float_of_int(editor.pixelHeight))
+    *. float_of_int(pixelHeight);
+
+  (0., transformedPixelY);
+};
+
+let projectLine = (~line, ~pixelHeight, editor) => {
+  let (_x, y) =
+    project(~line, ~column=0, ~pixelWidth=1, ~pixelHeight, editor);
+  y;
+};
+
+let unprojectToPixel =
+    (~pixelX: float, ~pixelY, ~pixelWidth: int, ~pixelHeight, editor) => {
+  let totalWidth = getTotalWidthInPixels(editor) |> float_of_int;
+  let x = totalWidth *. pixelX /. float_of_int(pixelWidth);
+
+  let totalHeight = getTotalHeightInPixels(editor) |> float_of_int;
+  let y = totalHeight *. pixelY /. float_of_int(pixelHeight);
+
+  (x, y);
 };
 
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);

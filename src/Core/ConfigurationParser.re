@@ -209,8 +209,7 @@ let configurationParsers: list(configurationTuple) = [
     "editor.fontFamily",
     (config, json) => {
       ...config,
-      editorFontFamily:
-        parseString(~default=Constants.defaultFontFamily, json),
+      editorFontFile: parseString(~default=Constants.defaultFontFile, json),
     },
   ),
   (
@@ -342,8 +341,8 @@ let configurationParsers: list(configurationTuple) = [
     "terminal.integrated.fontFamily",
     (config, json) => {
       ...config,
-      terminalIntegratedFontFamily:
-        parseString(~default=Constants.defaultFontFamily, json),
+      terminalIntegratedFontFile:
+        parseString(~default=Constants.defaultFontFile, json),
     },
   ),
   (

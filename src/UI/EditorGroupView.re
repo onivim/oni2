@@ -68,18 +68,18 @@ module Parts = {
         GlobalContext.current().dispatch(
           EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}),
         );
-      let onScroll = deltaY =>
-        GlobalContext.current().editorScrollDelta(
-          ~editorId=editor.editorId,
-          ~deltaY,
-          (),
-        );
       let onCursorChange = cursor =>
         GlobalContext.current().dispatch(
           EditorCursorMove(editor.editorId, [cursor]),
         );
 
+      let editorDispatch = editorMsg =>
+        GlobalContext.current().dispatch(
+          Editor({editorId: editor.editorId, msg: editorMsg}),
+        );
+
       <EditorSurface
+        dispatch=editorDispatch
         ?backgroundColor
         ?foregroundColor
         showDiffMarkers
@@ -88,7 +88,6 @@ module Parts = {
         buffer
         onCursorChange
         onEditorSizeChanged
-        onScroll
         theme
         mode={state.vimMode}
         bufferHighlights={state.bufferHighlights}

@@ -26,13 +26,11 @@ module Styles = {
     right(0),
   ];
 
-  let text = (~colors: Colors.t, ~editorFont: Service_Font.font) => [
+  let text = (~colors: Colors.t) => [
     //width(width_),
     //height(height_),
     //textWrap(TextWrapping.NoWrap),
     textOverflow(`Ellipsis),
-    fontFamily(editorFont.fontFile),
-    fontSize(editorFont.fontSize),
     color(colors.editorForeground),
     backgroundColor(colors.hoverWidgetBackground),
   ];
@@ -66,7 +64,7 @@ let%component hoverItem =
                 ~location,
                 ~delay,
                 ~colors,
-                ~editorFont,
+                ~editorFont: Service_Font.font,
                 (),
               ) => {
   let%hook (opacity, _, _) =
@@ -126,7 +124,12 @@ let%component hoverItem =
     let elements =
       lines
       |> List.map(text =>
-           <Text style={Styles.text(~colors, ~editorFont)} text />
+           <Text
+             style={Styles.text(~colors)}
+             fontFamily={editorFont.fontFamily}
+             fontSize={editorFont.fontSize}
+             text
+           />
          )
       |> React.listToElement;
 
