@@ -14,8 +14,6 @@ let reduce = (view, action) =>
     }
   | EditorSetScroll(id, pixelY) when EditorId.equals(view.editorId, id) =>
     Editor.scrollToPixelY(~pixelY, view)
-  | EditorScroll(id, pixelY) when EditorId.equals(view.editorId, id) =>
-    Editor.scrollDeltaPixelY(~pixelY, view)
   | EditorScrollToLine(id, line) when EditorId.equals(view.editorId, id) =>
     Editor.scrollToLine(~line, view)
   | EditorScrollToColumn(id, column) when EditorId.equals(view.editorId, id) =>

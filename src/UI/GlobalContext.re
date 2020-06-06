@@ -10,13 +10,10 @@
 open Oni_Core;
 open Oni_Model;
 
-type editorScrollDelta =
-  (~editorId: Feature_Editor.EditorId.t, ~deltaY: float, unit) => unit;
 type editorSetScroll =
   (~editorId: Feature_Editor.EditorId.t, ~scrollY: float, unit) => unit;
 
 type t = {
-  editorScrollDelta,
   editorSetScroll,
   closeEditorById: int => unit,
   dispatch: Actions.t => unit,
@@ -26,7 +23,6 @@ let viewNoop: Views.viewOperation =
   (~path as _="", ~id as _=0, ~openMethod as _=Buffer, ()) => ();
 
 let default = {
-  editorScrollDelta: (~editorId as _, ~deltaY as _, ()) => (),
   editorSetScroll: (~editorId as _, ~scrollY as _, ()) => (),
   dispatch: _ => (),
   closeEditorById: _ => (),

@@ -235,7 +235,7 @@ let start =
 
     let fontFamily =
       Oni_Core.Configuration.getValue(
-        c => c.editorFontFamily,
+        c => c.editorFontFile,
         state.configuration,
       );
     let fontSize =
@@ -259,7 +259,7 @@ let start =
 
     let terminalFontFamily =
       Oni_Core.Configuration.getValue(
-        c => c.terminalIntegratedFontFamily,
+        c => c.terminalIntegratedFontFile,
         state.configuration,
       );
     let terminalFontSize =

@@ -10,9 +10,7 @@ module ZedBundled = Oni_Core.ZedBundled;
 module Styles = {
   open Style;
 
-  let text = (~fontFamily, ~fontSize, ~color) => [
-    Style.fontFamily(fontFamily),
-    Style.fontSize(fontSize),
+  let text = (~color) => [
     Style.color(color),
     textWrap(Revery.TextWrapping.NoWrap),
   ];
@@ -30,5 +28,7 @@ let make =
     ) =>
   <Text
     text={codeToIcon(icon)}
-    style={Styles.text(~fontFamily, ~fontSize, ~color)}
+    style={Styles.text(~color)}
+    fontSize
+    fontFamily
   />;

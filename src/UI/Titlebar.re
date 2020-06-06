@@ -27,10 +27,8 @@ module Styles = {
       justifyContent(`Center),
       alignItems(`Center),
     ];
-    let text = (~isFocused, ~theme, ~font: UiFont.t) => [
+    let text = (~isFocused, ~theme) => [
       flexGrow(0),
-      fontSize(12.),
-      fontFamily(font.fontFileSemiBold),
       backgroundColor(
         isFocused
           ? Colors.activeBackground.from(theme)
@@ -65,10 +63,8 @@ module Styles = {
       marginHorizontal(16),
     ];
 
-    let title = (~isFocused, ~theme, ~font: UiFont.t) => [
+    let title = (~isFocused, ~theme) => [
       flexGrow(0),
-      fontSize(12.),
-      fontFamily(font.fontFile),
       marginLeft(16),
       marginTop(2),
       backgroundColor(
@@ -124,7 +120,12 @@ module Mac = {
           GlobalContext.current().dispatch(Model.Actions.TitleDoubleClicked)
         }
         style={Styles.Mac.container(~isFocused, ~theme)}>
-        <Text style={Styles.Mac.text(~isFocused, ~theme, ~font)} text=title />
+        <Text
+          style={Styles.Mac.text(~isFocused, ~theme)}
+          fontFamily={font.semiBold}
+          fontSize=12.
+          text=title
+        />
       </Clickable>;
     };
 };
@@ -232,7 +233,9 @@ module Windows = {
       <View mouseBehavior=Draggable style=Styles.Windows.iconAndTitle>
         <Image src="./logo-titlebar.png" width=18 height=18 />
         <Text
-          style={Styles.Windows.title(~isFocused, ~theme, ~font)}
+          style={Styles.Windows.title(~isFocused, ~theme)}
+          fontFamily={font.normal}
+          fontSize=12.
           text=title
         />
       </View>
