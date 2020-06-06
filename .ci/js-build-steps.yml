@@ -1,7 +1,5 @@
 # Cross-platform set of build steps for building esy projects	
 
 steps:	
-  - script: npm install -g node-gyp
-    displayName: 'js deps: install node-gyp'
   - script: node install-node-deps.js --prod	
     displayName: 'js deps: node install-node-deps.js --prod'
