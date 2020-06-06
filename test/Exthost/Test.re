@@ -153,7 +153,7 @@ let waitForExtensionActivation = (expectedExtensionId, context) => {
   let waitForActivation =
     fun
     | Msg.ExtensionService(DidActivateExtension({extensionId, _})) =>
-      extensionId == expectedExtensionId
+      String.equal(extensionId, expectedExtensionId)
     | _ => false;
 
   context
