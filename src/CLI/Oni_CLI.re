@@ -13,12 +13,11 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  syntaxHighlightService: bool,
   overriddenExtensionsDir: option(string),
   shouldClose: bool,
   shouldLoadExtensions: bool,
-  shouldSyntaxHighlight: bool,
   shouldLoadConfiguration: bool,
+  shouldSyntaxHighlight: bool,
 };
 
 type eff =
@@ -27,7 +26,21 @@ type eff =
   | ListExtensions
   | InstallExtension(string)
   | UninstallExtension(string)
+  | StartSyntaxServer({
+      parentPid: string,
+      namedPipe: string,
+    })
   | Run;
+
+let parseSyntaxArgs = str => {
+  str
+  |> String.split_on_char(':')
+  |> (
+    fun
+    | [pid, namedPipe] => (pid, namedPipe)
+    | _ => failwith("Unexpected argument format for syntax server: " ++ str)
+  );
+};
 
 let setWorkingDirectory = s => {
   Log.debug("--working-directory - chdir: " ++ s);
@@ -61,7 +74,6 @@ let parse = args => {
   let additionalArgs: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
-  let syntaxHighlightService = ref(false);
   let extensionsDir = ref(None);
   let shouldClose = ref(false);
   let eff = ref(Run);
@@ -114,7 +126,14 @@ let parse = args => {
       ),
       (
         "--syntax-highlight-service",
-        Unit(() => syntaxHighlightService := true),
+        setStringEffect(syntaxArgs =>
+          syntaxArgs
+          |> parseSyntaxArgs
+          |> (
+            ((pid, namedPipe)) =>
+              StartSyntaxServer({parentPid: pid, namedPipe})
+          )
+        ),
         "",
       ),
       ("--extensions-dir", String(setRef(extensionsDir)), ""),
@@ -199,12 +218,11 @@ let parse = args => {
     folder,
     filesToOpen,
     forceScaleFactor: scaleFactor^,
-    syntaxHighlightService: syntaxHighlightService^,
     overriddenExtensionsDir: extensionsDir^,
     shouldClose: shouldClose^,
-    shouldSyntaxHighlight: shouldSyntaxHighlight^,
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,
+    shouldSyntaxHighlight: shouldSyntaxHighlight^,
   };
 
   (cli, eff^);
