@@ -6,6 +6,7 @@ module Log = (val Log.withNamespace("Oni2.Service.Font"));
 [@deriving show({with_path: false})]
 type font = {
   fontFile: string,
+  fontFamily: [@opaque] Revery.Font.Family.t,
   fontSize: float,
   measuredWidth: float,
   measuredHeight: float,
@@ -16,7 +17,8 @@ type font = {
 let toString = show_font;
 
 let default = {
-  fontFile: Constants.defaultFontFamily,
+  fontFile: Constants.defaultFontFile,
+  fontFamily: Revery.Font.Family.fromFile(Constants.defaultFontFile),
   fontSize: Constants.defaultFontSize,
   measuredWidth: 1.,
   measuredHeight: 1.,
@@ -50,11 +52,10 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
       let fontSize = max(fontSize, Constants.minimumFontSize);
 
       let (name, fullPath) =
-        if (fontFamily == Constants.defaultFontFamily) {
+        if (fontFamily == Constants.defaultFontFile) {
           (
-            Constants.defaultFontFamily,
-            Revery.Environment.executingDirectory
-            ++ Constants.defaultFontFamily,
+            Constants.defaultFontFile,
+            Revery.Environment.executingDirectory ++ Constants.defaultFontFile,
           );
         } else {
           Log.debug("Discovering font: " ++ fontFamily);
@@ -95,6 +96,7 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
           reqId,
           {
             fontFile,
+            fontFamily,
             fontSize,
             measuredWidth,
             measuredHeight,
@@ -107,6 +109,7 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
           dispatch(
             FontLoaded({
               fontFile,
+              fontFamily,
               fontSize,
               measuredWidth,
               measuredHeight,

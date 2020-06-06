@@ -107,6 +107,8 @@ let%component make =
               (
                 ~theme,
                 ~style=Styles.default(~theme),
+                ~fontSize=18.,
+                ~fontFamily=Revery.Font.Family.fromFile("Roboto-Regular.ttf"),
                 ~placeholderColor=Colors.placeholderForeground(theme),
                 ~cursorColor=Colors.foreground(theme),
                 ~selectionColor=Colors.selection(theme),
@@ -128,9 +130,7 @@ let%component make =
     open Style;
     include Styles;
 
-    let fontSize = Selector.select(style, FontSize, 18.);
     let textColor = Selector.select(style, Color, Colors.foreground(theme));
-    let fontFamily = Selector.select(style, FontFamily, "Roboto-Regular.ttf");
 
     let _all =
       merge(
@@ -170,8 +170,6 @@ let%component make =
 
     let text = [
       color(showPlaceholder ? placeholderColor : textColor),
-      Style.fontFamily(fontFamily),
-      Style.fontSize(fontSize),
       alignItems(`Center),
       justifyContent(`FlexStart),
       textWrap(TextWrapping.NoWrap),
@@ -183,8 +181,9 @@ let%component make =
     let dimensions =
       Revery_Draw.Text.measure(
         ~smoothing=Revery.Font.Smoothing.default,
-        ~fontFamily=Styles.fontFamily,
-        ~fontSize=Styles.fontSize,
+        ~fontFamily=
+          Revery.Font.Family.toPath(fontFamily, Normal, false, false),
+        ~fontSize,
         text,
       );
 
@@ -277,7 +276,7 @@ let%component make =
       <Opacity opacity=cursorOpacity>
         <Container
           width=Constants.cursorWidth
-          height={Styles.fontSize |> int_of_float}
+          height={fontSize |> int_of_float}
           color=cursorColor
         />
       </Opacity>
@@ -307,7 +306,7 @@ let%component make =
         <Opacity opacity=Constants.selectionOpacity>
           <Container
             width
-            height={Styles.fontSize |> int_of_float}
+            height={fontSize |> int_of_float}
             color=selectionColor
           />
         </Opacity>
@@ -319,6 +318,8 @@ let%component make =
       ref={node => textRef := Some(node)}
       text={showPlaceholder ? placeholder : displayValue}
       style=Styles.text
+      fontFamily
+      fontSize
     />;
 
   <Clickable onAnyClick=handleClick>

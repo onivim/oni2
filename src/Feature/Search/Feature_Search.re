@@ -114,19 +114,13 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let title = (~font: UiFont.t, ~theme) => [
-    fontFamily(font.fontFile),
-    fontSize(font.fontSize),
+  let title = (~theme) => [
     color(Colors.PanelTitle.activeForeground.from(theme)),
     marginVertical(8),
     marginHorizontal(8),
   ];
 
-  let input = (~font: UiFont.t) => [
-    fontFamily(font.fontFile),
-    fontSize(font.fontSize),
-    flexGrow(1),
-  ];
+  let input = [flexGrow(1)];
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
@@ -148,7 +142,7 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
 let make =
     (
       ~theme,
-      ~uiFont,
+      ~uiFont: UiFont.t,
       ~editorFont,
       ~isFocused,
       ~model,
@@ -166,17 +160,21 @@ let make =
     <View style={Styles.queryPane(~theme)}>
       <View style=Styles.row>
         <Text
-          style={Styles.title(~font=uiFont, ~theme)}
+          style={Styles.title(~theme)}
+          fontFamily={uiFont.normal}
+          fontSize={uiFont.size}
           text="Find in Files"
         />
       </View>
       <View style=Styles.row>
         <Input
-          style={Styles.input(~font=uiFont)}
+          style=Styles.input
           selection={model.selection}
           value={model.queryInput}
           placeholder="Search"
           isFocused
+          fontFamily={uiFont.normal}
+          fontSize={uiFont.size}
           onClick={selection => dispatch(InputClicked(selection))}
           theme
         />
@@ -184,7 +182,9 @@ let make =
     </View>
     <View style=Styles.resultsPane>
       <Text
-        style={Styles.title(~font=uiFont, ~theme)}
+        style={Styles.title(~theme)}
+        fontFamily={uiFont.normal}
+        fontSize={uiFont.size}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <LocationList theme uiFont editorFont items onSelectItem />

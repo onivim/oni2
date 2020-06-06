@@ -100,31 +100,25 @@ module Styles = {
 
   let buttonInner = [padding(10), flexDirection(`Row)];
 
-  let buttonText = (~theme, ~font: UiFont.t) => [
-    fontFamily(font.fontFile),
+  let buttonText = (~theme) => [
     color(Colors.Oni.Modal.foreground.from(theme)),
-    fontSize(14.),
     alignSelf(`Center),
   ];
 
   let shortcut = [flexDirection(`Row), marginLeft(6)];
 
-  let shortcutText = (~theme, ~font: UiFont.t) => [
-    fontFamily(font.fontFile),
+  let shortcutText = (~theme) => [
     color(Colors.Oni.Modal.shortcutForeground.from(theme)),
-    fontSize(14.),
     alignSelf(`Center),
   ];
 
-  let shortcutHighlight = (~theme, ~font: UiFont.t) => [
-    fontFamily(font.fontFile),
+  let shortcutHighlight = (~theme) => [
     color(Colors.Oni.Modal.shortcutHighlightForeground.from(theme)),
-    fontSize(14.),
     alignSelf(`Center),
   ];
 };
 
-let shortcutView = (~text, ~input="", ~theme, ~font, ()) => {
+let shortcutView = (~text, ~input="", ~theme, ~font: UiFont.t, ()) => {
   let text =
     String.sub(
       text,
@@ -133,12 +127,31 @@ let shortcutView = (~text, ~input="", ~theme, ~font, ()) => {
     );
 
   <View style=Styles.shortcut>
-    <Text style={Styles.shortcutHighlight(~theme, ~font)} text=input />
-    <Text style={Styles.shortcutText(~theme, ~font)} text />
+    <Text
+      style={Styles.shortcutHighlight(~theme)}
+      fontFamily={font.normal}
+      fontSize={font.size}
+      text=input
+    />
+    <Text
+      style={Styles.shortcutText(~theme)}
+      fontFamily={font.normal}
+      fontSize={font.size}
+      text
+    />
   </View>;
 };
 
-let%component button = (~text, ~shortcut, ~input, ~onClick, ~theme, ~font, ()) => {
+let%component button =
+              (
+                ~text,
+                ~shortcut,
+                ~input,
+                ~onClick,
+                ~theme,
+                ~font: UiFont.t,
+                (),
+              ) => {
   let%hook (isHovered, setHovered) = Hooks.state(false);
 
   let shortcut = () => {
@@ -159,7 +172,12 @@ let%component button = (~text, ~shortcut, ~input, ~onClick, ~theme, ~font, ()) =
 
   <Clickable onClick style={Styles.buttonOuter(~theme, ~isHovered)}>
     <View onMouseOver onMouseOut style=Styles.buttonInner>
-      <Text style={Styles.buttonText(~theme, ~font)} text />
+      <Text
+        style={Styles.buttonText(~theme)}
+        fontFamily={font.normal}
+        fontSize={font.size}
+        text
+      />
       <shortcut />
     </View>
   </Clickable>;
