@@ -15,7 +15,7 @@
 				"foo.bar": {
 					"type": "string",
 					"default": "value0",
-					"description": "description",
+					"description": "description"
 				}
 			}
 		}
