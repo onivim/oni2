@@ -56,7 +56,8 @@
     )
     (libraries
         Oni_IntegrationTestLib
-        reason-native-crash-utils.asan
+        ;TEMPORARILY disable ASAN while we find a way to suppress libfontconfig
+        ;reason-native-crash-utils.asan
 ))
 
 (install
