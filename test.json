@@ -10,8 +10,8 @@
     "exthost": "esy '@test' x OniUnitTestRunnerExtHost",
     "textmate": "esy '@test' x OniUnitTestRunnerTextmate",
     "watch": "esy '@test' dune build --watch --root . -j4",
-    "inline": "esy b dune runtest",
-    "watch:inline": "esy b dune runtest --watch"
+    "inline": "esy '@test' b dune runtest",
+    "watch:inline": "esy '@test' b dune runtest --watch"
   },
   "override": {
       "build": ["dune build -p libvim,textmate,Oni2,OniUnitTestRunner -j4"],
