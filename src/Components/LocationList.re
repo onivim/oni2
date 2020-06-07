@@ -89,11 +89,11 @@ let item =
     );
 
   let locationWidth = {
-    Revery.Draw.Text.measure(
+    Revery.Draw.Text.dimensions(
       ~smoothing=Revery.Font.Smoothing.default,
       ~fontSize=uiFont.size,
-      ~fontFamily=
-        Revery.Font.Family.toPath(uiFont.normal, Normal, false, false),
+      ~fontFamily=uiFont.normal,
+      ~fontWeight=Normal,
       locationText,
     ).
       width;
