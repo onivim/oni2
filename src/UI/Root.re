@@ -74,8 +74,12 @@ let make = (~state: State.t, ()) => {
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
-  let onContextMenuItemSelect = item =>
-    GlobalContext.current().dispatch(ContextMenuItemSelected(item));
+  let mode = ModeManager.current(state);
+
+  let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+  let maybeActiveEditor =
+    Oni_Model.EditorGroups.getActiveEditor(state.editorGroups);
+  let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
 
   let statusBar = () =>
     if (Selectors.getActiveConfigurationValue(state, c =>
@@ -83,7 +87,21 @@ let make = (~state: State.t, ()) => {
         )
         && !zenMode) {
       <View style=Styles.statusBar>
-        <StatusBar state contextMenu onContextMenuItemSelect theme />
+        <Feature_StatusBar.View
+          mode
+          notifications={state.notifications}
+          contextMenu
+          diagnostics={state.diagnostics}
+          font={state.uiFont}
+          statusBar={state.statusBar}
+          activeBuffer=maybeActiveBuffer
+          activeEditor=maybeActiveEditor
+          indentationSettings
+          theme
+          dispatch={msg =>
+            GlobalContext.current().dispatch(Actions.StatusBar(msg))
+          }
+        />
       </View>;
     } else {
       React.empty;
