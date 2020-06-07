@@ -15,12 +15,6 @@ module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-module ContextMenu = {
-  type t =
-    | NotificationStatusBarItem
-    | Nothing;
-};
-
 type windowDisplayMode =
   | Minimized
   | Windowed
@@ -34,7 +28,7 @@ type t = {
   changelog: Feature_Changelog.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
-  contextMenu: ContextMenu.t,
+  contextMenu: Feature_ContextMenu.model,
   vimMode: Vim.Mode.t,
   completions: Completions.t,
   config: Feature_Configuration.model,
@@ -62,7 +56,7 @@ type t = {
   references: References.t,
   scm: Feature_SCM.model,
   sneak: Feature_Sneak.model,
-  statusBar: StatusBarModel.t,
+  statusBar: Feature_StatusBar.model,
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
@@ -96,7 +90,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
         Feature_Notification.Contributions.colors,
       ]),
     commands: Feature_Commands.initial(contributedCommands),
-    contextMenu: ContextMenu.Nothing,
+    contextMenu: Feature_ContextMenu.initial,
     completions: Completions.initial,
     config:
       Feature_Configuration.initial(
@@ -131,7 +125,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     references: References.initial,
     scm: Feature_SCM.initial,
     sneak: Feature_Sneak.initial,
-    statusBar: StatusBarModel.create(),
+    statusBar: Feature_StatusBar.initial,
     syntaxHighlights: Feature_Syntax.empty,
     layout: Feature_Layout.initial(initialEditorGroup.editorGroupId),
     windowTitle: "",

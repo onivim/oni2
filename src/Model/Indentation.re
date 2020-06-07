@@ -16,10 +16,3 @@ let getForActiveBuffer = (state: State.t) => {
     };
   };
 };
-
-let toStatusString = (indentation: IndentationSettings.t) => {
-  switch (indentation.mode) {
-  | Tabs => "Tabs: " ++ string_of_int(indentation.tabSize)
-  | Spaces => "Spaces: " ++ string_of_int(indentation.size)
-  };
-};

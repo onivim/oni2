@@ -71,6 +71,19 @@ let update =
       };
     (state, eff);
 
+  | StatusBar(msg) =>
+    let (statusBar', maybeOutmsg) =
+      Feature_StatusBar.update(state.statusBar, msg);
+
+    let state' = {...state, statusBar: statusBar'};
+
+    let eff =
+      switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
+      | Nothing => Effect.none
+      };
+
+    (state', eff);
+
   | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(

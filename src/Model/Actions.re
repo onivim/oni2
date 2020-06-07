@@ -90,7 +90,6 @@ type t =
   | HoverShow
   | ModeChanged([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked
-  | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
@@ -162,9 +161,7 @@ type t =
   | ThemeLoadByName(string)
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
-  | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
-  | StatusBarDisposeItem(string)
-  | StatusBar(StatusBarModel.action)
+  | StatusBar(Feature_StatusBar.msg)
   | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)
   | EnableZenMode
