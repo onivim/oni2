@@ -12,16 +12,12 @@ open Oni_Model;
 
 
 type t = {
-  closeEditorById: int => unit,
   dispatch: Actions.t => unit,
 };
 
-let viewNoop: Views.viewOperation =
-  (~path as _="", ~id as _=0, ~openMethod as _=Buffer, ()) => ();
 
 let default = {
   dispatch: _ => (),
-  closeEditorById: _ => (),
 };
 
 let _current: ref(t) = ref(default);
