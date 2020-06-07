@@ -156,14 +156,15 @@ let make = (~state: State.t, ()) => {
     <ContextMenu.Overlay onClick />;
   };
 
-      let titleDispatch = msg =>
-        GlobalContext.current().dispatch(Actions.TitleBar(msg));
+  let titleDispatch = msg =>
+    GlobalContext.current().dispatch(Actions.TitleBar(msg));
 
-  let mapDisplayMode = fun
-  | Oni_Model.State.Minimized => Feature_TitleBar.Minimized
-  | Oni_Model.State.Maximized => Feature_TitleBar.Maximized
-  | Oni_Model.State.Windowed => Feature_TitleBar.Windowed
-  | Oni_Model.State.Fullscreen => Feature_TitleBar.Fullscreen;
+  let mapDisplayMode =
+    fun
+    | Oni_Model.State.Minimized => Feature_TitleBar.Minimized
+    | Oni_Model.State.Maximized => Feature_TitleBar.Maximized
+    | Oni_Model.State.Windowed => Feature_TitleBar.Windowed
+    | Oni_Model.State.Fullscreen => Feature_TitleBar.Fullscreen;
 
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
