@@ -212,8 +212,6 @@ let runTest =
 
   Oni_UI.GlobalContext.set({
     closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-    editorSetScroll: (~editorId, ~scrollY, ()) =>
-      dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
     dispatch,
   });
 

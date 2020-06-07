@@ -106,7 +106,6 @@ type t =
       height: int,
     })
   | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
-  | EditorSetScroll(Feature_Editor.EditorId.t, float)
   | EditorSizeChanged({
       id: Feature_Editor.EditorId.t,
       pixelWidth: int,

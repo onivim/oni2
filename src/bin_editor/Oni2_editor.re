@@ -318,8 +318,6 @@ switch (eff) {
 
     GlobalContext.set({
       closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-      editorSetScroll: (~editorId, ~scrollY, ()) =>
-        dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
       dispatch,
     });
 
