@@ -117,7 +117,8 @@ module Mac = {
     } else {
       <Clickable
         onDoubleClick={_ =>
-          GlobalContext.current().dispatch(Model.Actions.TitleDoubleClicked)
+          GlobalContext.current().dispatch(Model.Actions.TitleBar(
+            Feature_TitleBar.TitleDoubleClicked))
         }
         style={Styles.Mac.container(~isFocused, ~theme)}>
         <Text
@@ -137,7 +138,8 @@ module Windows = {
         let%hook (isHovered, setHovered) = Hooks.state(false);
 
         let onMouseUp = _ =>
-          GlobalContext.current().dispatch(Model.Actions.WindowCloseClicked);
+          GlobalContext.current().dispatch(Model.Actions.TitleBar(
+            Feature_TitleBar.WindowCloseClicked));
 
         <View
           style={
@@ -165,11 +167,11 @@ module Windows = {
           switch (windowDisplayMode) {
           | Model.State.Maximized =>
             GlobalContext.current().dispatch(
-              Model.Actions.WindowRestoreClicked,
+              Model.Actions.TitleBar(Feature_TitleBar.WindowRestoreClicked),
             )
           | _ =>
             GlobalContext.current().dispatch(
-              Model.Actions.WindowMaximizeClicked,
+              Model.Actions.TitleBar(Feature_TitleBar.WindowMaximizeClicked),
             )
           };
 
@@ -203,7 +205,7 @@ module Windows = {
 
         let onMouseUp = _ =>
           GlobalContext.current().dispatch(
-            Model.Actions.WindowMinimizeClicked,
+            Model.Actions.TitleBar(Feature_TitleBar.WindowMinimizeClicked),
           );
 
         <View

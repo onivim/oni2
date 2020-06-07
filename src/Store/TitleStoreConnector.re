@@ -147,11 +147,11 @@ let start = (setTitle, maximize, minimize, restore, close) => {
         {...state, windowTitle: title},
         internalSetTitleEffect(title),
       )
-    | TitleDoubleClicked => (state, internalDoubleClickEffect)
-    | WindowCloseClicked => (state, internalWindowCloseEffect)
-    | WindowMaximizeClicked => (state, internalWindowMaximizeEffect)
-    | WindowRestoreClicked => (state, internalWindowRestoreEffect)
-    | WindowMinimizeClicked => (state, internalWindowMinimizeEffect)
+    | TitleBar(Feature_TitleBar.TitleDoubleClicked) => (state, internalDoubleClickEffect)
+    | TitleBar(Feature_TitleBar.WindowCloseClicked) => (state, internalWindowCloseEffect)
+    | TitleBar(Feature_TitleBar.WindowMaximizeClicked) => (state, internalWindowMaximizeEffect)
+    | TitleBar(Feature_TitleBar.WindowRestoreClicked) => (state, internalWindowRestoreEffect)
+    | TitleBar(Feature_TitleBar.WindowMinimizeClicked) => (state, internalWindowMinimizeEffect)
 
     | _ => (state, Isolinear.Effect.none)
     };

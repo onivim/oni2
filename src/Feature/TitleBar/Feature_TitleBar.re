@@ -4,6 +4,7 @@ type windowDisplayMode =
   | Maximized
   | Fullscreen;
 
+[@deriving show]
 type msg =
 | WindowMinimizeClicked
 | WindowMaximizeClicked
