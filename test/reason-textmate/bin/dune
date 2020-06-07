@@ -3,5 +3,7 @@
     (package OniUnitTestRunner)
     (public_names TextmateCli)
     (libraries
+        Oni2.core
+        Oni2.core.utility
         textmate)
 )
