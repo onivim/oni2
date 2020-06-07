@@ -194,7 +194,10 @@ switch (eff) {
         )
       );
 
-    let update = UI.start(window, <Root state=currentState^ />);
+    let uiDispatch = ref(_ => ());
+
+    let update =
+      UI.start(window, <Root state=currentState^ dispatch=uiDispatch^ />);
 
     let isDirty = ref(false);
     let onStateChanged = state => {
@@ -217,7 +220,7 @@ switch (eff) {
       runEventLoop();
 
       if (isDirty^) {
-        update(<Root state=currentState^ />);
+        update(<Root state=currentState^ dispatch=uiDispatch^ />);
         isDirty := false;
         persistGlobal();
       };
@@ -283,6 +286,8 @@ switch (eff) {
         ~quit,
         (),
       );
+
+    uiDispatch := dispatch;
     Log.debug("Startup: StoreThread started!");
 
     let _: App.unsubscribe =
@@ -315,11 +320,6 @@ switch (eff) {
       Window.onSizeChanged(window, _ => persistWorkspace());
     let _: Window.unsubscribe =
       Window.onMoved(window, _ => persistWorkspace());
-
-    GlobalContext.set({
-      closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-      dispatch,
-    });
 
     dispatch(Model.Actions.Init);
     runEffects();

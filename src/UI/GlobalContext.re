@@ -10,15 +10,9 @@
 open Oni_Core;
 open Oni_Model;
 
+type t = {dispatch: Actions.t => unit};
 
-type t = {
-  dispatch: Actions.t => unit,
-};
-
-
-let default = {
-  dispatch: _ => (),
-};
+let default = {dispatch: _ => ()};
 
 let _current: ref(t) = ref(default);
 
