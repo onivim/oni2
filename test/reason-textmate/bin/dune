@@ -1,0 +1,7 @@
+(executables
+    (names TextmateCli)
+    (package OniUnitTestRunner)
+    (public_names TextmateCli)
+    (libraries
+        textmate)
+)
