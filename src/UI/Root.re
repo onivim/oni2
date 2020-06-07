@@ -93,6 +93,7 @@ let make = (~state: State.t, ()) => {
         <Feature_StatusBar.View
           mode
           notifications={state.notifications}
+          contextMenu
           diagnostics={state.diagnostics}
           font={state.uiFont}
           statusBar={state.statusBar}

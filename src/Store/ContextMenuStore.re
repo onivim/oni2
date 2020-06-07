@@ -13,17 +13,17 @@ let start = () => {
 
     switch (action) {
     | ContextMenuOverlayClicked => (
-        {...state, contextMenu: State.ContextMenu.Nothing},
+        {...state, contextMenu: Feature_ContextMenu.Nothing},
         Isolinear.Effect.none,
       )
 
     | ContextMenuItemSelected(item) => (
-        {...state, contextMenu: State.ContextMenu.Nothing},
+        {...state, contextMenu: Feature_ContextMenu.Nothing},
         selectItemEffect(item),
       )
 
     | StatusBar(NotificationsContextMenu) => (
-        {...state, contextMenu: State.ContextMenu.NotificationStatusBarItem},
+        {...state, contextMenu: Feature_ContextMenu.NotificationStatusBarItem},
         Isolinear.Effect.none,
       )
 

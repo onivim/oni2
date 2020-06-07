@@ -2,12 +2,6 @@ open Oni_Core;
 open Utility;
 open Exthost.Msg.StatusBar;
 
-module ContextMenuType = {
-  type t =
-    | NotificationStatusBarItem
-    | Nothing;
-};
-
 // MODEL
 
 module Item = {
@@ -46,10 +40,9 @@ type msg =
 
 type model = {
   items: list(Item.t),
-  contextMenu: ContextMenuType.t,
 };
 
-let initial = {items: [], contextMenu: Nothing};
+let initial = {items: []};
 
 // UPDATE
 
@@ -61,8 +54,8 @@ let update = (model, msg) => {
   | ItemAdded(item) =>
     /* Replace the old item with the new one */
     let newItems = removeItemById(model.items, item.id);
-    {...model, items: [item, ...newItems]};
-  | ItemDisposed(id) => {...model, items: removeItemById(model.items, id)}
+    { items: [item, ...newItems]};
+  | ItemDisposed(id) => { items: removeItemById(model.items, id)}
   | _ => model
   };
 };
@@ -231,7 +224,7 @@ let notificationCount =
   };
 
   <item onClick onRightClick>
-    {contextMenu == ContextMenuType.NotificationStatusBarItem
+    {contextMenu == Feature_ContextMenu.NotificationStatusBarItem
        ? <menu /> : React.empty}
     <View
       style=Style.[
@@ -312,6 +305,7 @@ module View = {
                   ~notifications: Feature_Notification.model,
                   ~diagnostics: Diagnostics.t,
                   ~font: UiFont.t,
+                  ~contextMenu: Feature_ContextMenu.model,
                   ~onContextMenuItemSelect,
                   ~activeBuffer: option(Oni_Core.Buffer.t),
                   ~activeEditor: option(Feature_Editor.Editor.t),
@@ -445,7 +439,7 @@ module View = {
           foreground
           background
           notifications
-          contextMenu={statusBar.contextMenu}
+          contextMenu
           onContextMenuItemSelect
         />
       </section>

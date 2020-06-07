@@ -4,6 +4,7 @@
     (libraries 
       editor-core-types
       Oni2.core
+      Oni2.feature.contextMenu
       Oni2.feature.editor
       Oni2.feature.language_support
       Oni2.feature.notification

@@ -15,12 +15,6 @@ module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-module ContextMenu = {
-  type t =
-    | NotificationStatusBarItem
-    | Nothing;
-};
-
 type windowDisplayMode =
   | Minimized
   | Windowed
@@ -34,7 +28,7 @@ type t = {
   changelog: Feature_Changelog.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
-  contextMenu: ContextMenu.t,
+  contextMenu: Feature_ContextMenu.model,
   vimMode: Vim.Mode.t,
   completions: Completions.t,
   config: Feature_Configuration.model,
@@ -96,7 +90,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
         Feature_Notification.Contributions.colors,
       ]),
     commands: Feature_Commands.initial(contributedCommands),
-    contextMenu: ContextMenu.Nothing,
+    contextMenu: Feature_ContextMenu.initial,
     completions: Completions.initial,
     config:
       Feature_Configuration.initial(
