@@ -92,7 +92,7 @@ let item =
     Revery.Draw.Text.dimensions(
       ~smoothing=Revery.Font.Smoothing.default,
       ~fontSize=uiFont.size,
-      ~fontFamily=uiFont.normal,
+      ~fontFamily=uiFont.family,
       ~fontWeight=Normal,
       locationText,
     ).
@@ -102,7 +102,7 @@ let item =
   let location = () =>
     <Text
       style={Styles.locationText(~theme)}
-      fontFamily={uiFont.normal}
+      fontFamily={uiFont.family}
       fontSize={uiFont.size}
       text=locationText
     />;

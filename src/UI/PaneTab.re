@@ -58,7 +58,8 @@ let make = (~uiFont: UiFont.t, ~theme, ~title, ~onClick, ~isActive, ()) => {
     <Clickable onClick style=Styles.clickable>
       <Text
         style={Styles.text(~isActive, ~theme)}
-        fontFamily={isActive ? uiFont.semiBold : uiFont.normal}
+        fontFamily={uiFont.family}
+        fontWeight={isActive ? Medium : Normal}
         fontSize={uiFont.size}
         text=title
       />

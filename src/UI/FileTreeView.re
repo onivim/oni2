@@ -137,7 +137,7 @@ let nodeView =
     <Text
       text={node.displayName}
       style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
-      fontFamily={font.normal}
+      fontFamily={font.family}
       fontSize=12.
     />
   </Tooltip>;
