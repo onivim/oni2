@@ -6,6 +6,7 @@
 
 open Revery;
 
+open Oni_CLI;
 open Oni_UI;
 
 module Core = Oni_Core;
@@ -18,7 +19,7 @@ module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
-let installExtension = (path, Cli.{overriddenExtensionsDir, _}) => {
+let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
   | Some(extensionsFolder) =>
     let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
@@ -44,7 +45,12 @@ let uninstallExtension = (_extensionId, _cli) => {
   1;
 };
 
-let listExtensions = (Cli.{overriddenExtensionsDir, _}) => {
+let printVersion = () => {
+  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
+  0;
+};
+
+let listExtensions = ({overriddenExtensionsDir, _}) => {
   let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
   let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
     print_endline(ext.manifest.name);
@@ -53,96 +59,98 @@ let listExtensions = (Cli.{overriddenExtensionsDir, _}) => {
   0;
 };
 
-let printVersion = _cli => {
-  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
-  0;
-};
-
 Log.debug("Startup: Parsing CLI options");
-let cliOptions =
-  Cli.parse(
-    ~installExtension,
-    ~uninstallExtension,
-    ~checkHealth=HealthCheck.run(~checks=All),
-    ~listExtensions=
-      ({overriddenExtensionsDir, _}) => {
-        let extensions =
-          Store.Utility.getUserExtensions(~overriddenExtensionsDir);
-        let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
-          print_endline(ext.manifest.name);
-        };
-        List.iter(printExtension, extensions);
-        1;
-      },
-    ~printVersion,
-  );
+let (cliOptions, eff) = Oni_CLI.parse(Sys.argv);
 
-let initWorkingDirectory = () => {
-  let path =
-    switch (cliOptions.folder) {
-    | Some(folder) => folder
-    | None =>
-      switch (Store.Persistence.Global.workspace()) {
-      | Some(path) => path
+switch (eff) {
+| PrintVersion => printVersion() |> exit
+| InstallExtension(name) => installExtension(name, cliOptions) |> exit
+| UninstallExtension(name) => uninstallExtension(name, cliOptions) |> exit
+| CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
+| ListExtensions => listExtensions(cliOptions) |> exit
+| StartSyntaxServer({parentPid, namedPipe}) =>
+  Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
+    HealthCheck.run(~checks=Common, cliOptions)
+  )
+| Run =>
+  let initWorkingDirectory = () => {
+    let path =
+      switch (Oni_CLI.(cliOptions.folder)) {
+      | Some(folder) => folder
       | None =>
-        Dir.User.document()
-        |> Option.value(~default=Dir.home())
-        |> Fp.toString
-      }
+        switch (Store.Persistence.Global.workspace()) {
+        | Some(path) => path
+        | None =>
+          Dir.User.document()
+          |> Option.value(~default=Dir.home())
+          |> Fp.toString
+        }
+      };
+
+    Log.info("Startup: Changing folder to: " ++ path);
+    try(Sys.chdir(path)) {
+    | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
     };
 
-  Log.info("Startup: Changing folder to: " ++ path);
-  try(Sys.chdir(path)) {
-  | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
+    path;
   };
 
-  path;
-};
+  let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
+    let (x, y, width, height, maximized) = {
+      open Store.Persistence.Workspace;
+      let store = storeFor(workingDirectory);
 
-let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
-  let (x, y, width, height, maximized) = {
-    open Store.Persistence.Workspace;
-    let store = storeFor(workingDirectory);
+      (
+        windowX(store)
+        |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+        windowY(store)
+        |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
+        windowWidth(store),
+        windowHeight(store),
+        windowMaximized(store),
+      );
+    };
 
-    (
-      windowX(store) |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
-      windowY(store)
-      |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
-      windowWidth(store),
-      windowHeight(store),
-      windowMaximized(store),
-    );
+    let decorated =
+      switch (Revery.Environment.os) {
+      | Windows => false
+      | _ => true
+      };
+
+    let icon =
+      switch (Revery.Environment.os) {
+      | Mac =>
+        switch (Sys.getenv_opt("ONI2_BUNDLED")) {
+        | Some(_) => None
+        | None => Some("logo.png")
+        }
+      | _ => Some("logo.png")
+      };
+
+    let window =
+      App.createWindow(
+        ~createOptions=
+          WindowCreateOptions.create(
+            ~forceScaleFactor,
+            ~maximized,
+            ~vsync=Vsync.Immediate,
+            ~icon,
+            ~titlebarStyle=WindowStyles.Transparent,
+            ~x,
+            ~y,
+            ~width,
+            ~height,
+            ~decorated,
+            (),
+          ),
+        app,
+        "Oni2",
+      );
+
+    Window.setBackgroundColor(window, Colors.black);
+
+    window;
   };
-
-  let window =
-    App.createWindow(
-      ~createOptions=
-        WindowCreateOptions.create(
-          ~forceScaleFactor,
-          ~maximized,
-          ~vsync=Vsync.Immediate,
-          ~icon=Some("logo.png"),
-          ~titlebarStyle=WindowStyles.Transparent,
-          ~x,
-          ~y,
-          ~width,
-          ~height,
-          (),
-        ),
-      app,
-      "Oni2",
-    );
-
-  Window.setBackgroundColor(window, Colors.black);
-
-  window;
-};
-
-if (cliOptions.syntaxHighlightService) {
-  Oni_Syntax_Server.start(~healthCheck=() =>
-    HealthCheck.run(~checks=Common, cliOptions)
-  );
-} else {
   Log.infof(m =>
     m(
       "Starting Onivim 2.%s (%s)",
@@ -165,8 +173,6 @@ if (cliOptions.syntaxHighlightService) {
 
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
-
-    PreflightChecks.run();
 
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
 
@@ -236,6 +242,14 @@ if (cliOptions.syntaxHighlightService) {
       Window.minimize(window);
     };
 
+    let close = () => {
+      App.quit(~askNicely=true, app);
+    };
+
+    let restore = () => {
+      Window.restore(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -258,19 +272,30 @@ if (cliOptions.syntaxHighlightService) {
         ~setVsync,
         ~maximize,
         ~minimize,
+        ~restore,
+        ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
         ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
         ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
+        ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
         ~quit,
         (),
       );
     Log.debug("Startup: StoreThread started!");
 
+    let _: App.unsubscribe =
+      App.onFileOpen(app, path => {
+        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+      });
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>
         dispatch(Model.Actions.WindowMaximized)
+      );
+    let _: Window.unsubscribe =
+      Window.onFullscreen(window, () =>
+        dispatch(Model.Actions.WindowFullscreen)
       );
     let _: Window.unsubscribe =
       Window.onMinimized(window, () =>
@@ -292,12 +317,7 @@ if (cliOptions.syntaxHighlightService) {
       Window.onMoved(window, _ => persistWorkspace());
 
     GlobalContext.set({
-      openEditorById: id => {
-        dispatch(Model.Actions.ViewSetActiveEditor(id));
-      },
       closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-      editorScrollDelta: (~editorId, ~deltaY, ()) =>
-        dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
       editorSetScroll: (~editorId, ~scrollY, ()) =>
         dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
       dispatch,
@@ -323,5 +343,6 @@ if (cliOptions.syntaxHighlightService) {
 
   /* Let's get this party started! */
   Log.debug("Calling App.start");
-  App.start(init);
+  let () = App.start(init);
+  ();
 };

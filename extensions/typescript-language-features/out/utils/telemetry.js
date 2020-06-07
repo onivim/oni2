@@ -10,25 +10,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.VSCodeTelemetryReporter = void 0;
 const vscode = require("vscode");
 const vscode_extension_telemetry_1 = require("vscode-extension-telemetry");
 const memoize_1 = require("./memoize");
-class TelemetryReporter {
-    constructor(clientVersionDelegate) {
-        this.clientVersionDelegate = clientVersionDelegate;
-        this._reporter = null;
-    }
-    dispose() {
-        if (this._reporter) {
-            this._reporter.dispose();
+let VSCodeTelemetryReporter = /** @class */ (() => {
+    class VSCodeTelemetryReporter {
+        constructor(clientVersionDelegate) {
+            this.clientVersionDelegate = clientVersionDelegate;
             this._reporter = null;
         }
-    }
-    logTelemetry(eventName, properties) {
-        const reporter = this.reporter;
-        if (reporter) {
-            if (!properties) {
-                properties = {};
+        logTelemetry(eventName, properties = {}) {
+            const reporter = this.reporter;
+            if (!reporter) {
+                return;
             }
             /* __GDPR__FRAGMENT__
                 "TypeScriptCommonProperties" : {
@@ -38,31 +33,38 @@ class TelemetryReporter {
             properties['version'] = this.clientVersionDelegate();
             reporter.sendTelemetryEvent(eventName, properties);
         }
-    }
-    get reporter() {
-        if (this.packageInfo && this.packageInfo.aiKey) {
-            this._reporter = new vscode_extension_telemetry_1.default(this.packageInfo.name, this.packageInfo.version, this.packageInfo.aiKey);
-            return this._reporter;
+        dispose() {
+            if (this._reporter) {
+                this._reporter.dispose();
+                this._reporter = null;
+            }
         }
-        return null;
-    }
-    get packageInfo() {
-        const { packageJSON } = vscode.extensions.getExtension('vscode.typescript-language-features');
-        if (packageJSON) {
-            return {
-                name: packageJSON.name,
-                version: packageJSON.version,
-                aiKey: packageJSON.aiKey
-            };
+        get reporter() {
+            if (this.packageInfo && this.packageInfo.aiKey) {
+                this._reporter = new vscode_extension_telemetry_1.default(this.packageInfo.name, this.packageInfo.version, this.packageInfo.aiKey);
+                return this._reporter;
+            }
+            return null;
         }
-        return null;
+        get packageInfo() {
+            const { packageJSON } = vscode.extensions.getExtension('vscode.typescript-language-features');
+            if (packageJSON) {
+                return {
+                    name: packageJSON.name,
+                    version: packageJSON.version,
+                    aiKey: packageJSON.aiKey
+                };
+            }
+            return null;
+        }
     }
-}
-__decorate([
-    memoize_1.memoize
-], TelemetryReporter.prototype, "reporter", null);
-__decorate([
-    memoize_1.memoize
-], TelemetryReporter.prototype, "packageInfo", null);
-exports.default = TelemetryReporter;
+    __decorate([
+        memoize_1.memoize
+    ], VSCodeTelemetryReporter.prototype, "reporter", null);
+    __decorate([
+        memoize_1.memoize
+    ], VSCodeTelemetryReporter.prototype, "packageInfo", null);
+    return VSCodeTelemetryReporter;
+})();
+exports.VSCodeTelemetryReporter = VSCodeTelemetryReporter;
 //# sourceMappingURL=telemetry.js.map

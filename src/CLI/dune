@@ -1,0 +1,10 @@
+(library
+    (name Oni_CLI)
+    (public_name Oni2.cli)
+    (inline_tests)
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx ppx_inline_test))
+    (libraries 
+        Oni2.core
+        Revery
+        ppx_deriving.runtime
+    ))

@@ -36,9 +36,15 @@ let getActiveEditor = model =>
   | None => None
   };
 
+let hasEditor = (~editorId, model) => {
+  IntMap.mem(editorId, model.editors);
+};
+
 let setActiveEditor = (model, editorId) => {
-  ...model,
-  activeEditorId: Some(editorId),
+  switch (IntMap.find_opt(editorId, model.editors)) {
+  | None => model
+  | Some(_) => {...model, activeEditorId: Some(editorId)}
+  };
 };
 
 let setBufferFont = (~bufferId, ~font, group) => {
@@ -179,4 +185,32 @@ let removeEditorById = (state, editorId) => {
       reverseTabOrder: filteredTabList,
     };
   };
+};
+
+let removeEditorsForBuffer = (~bufferId, group) => {
+  IntMap.fold(
+    (editorId, editor, acc) => {
+      let editorBufferId = Editor.getBufferId(editor);
+
+      if (editorBufferId == bufferId) {
+        removeEditorById(acc, editorId);
+      } else {
+        acc;
+      };
+    },
+    group.editors,
+    group,
+  );
+};
+
+let updateEditor = (~editorId, msg, group) => {
+  group.editors
+  |> IntMap.find_opt(editorId)
+  |> Option.map(editor => {
+       let (editor', outmsg) = Feature_Editor.update(editor, msg);
+       let editors' = group.editors |> IntMap.add(editorId, editor');
+
+       ({...group, editors: editors'}, Some(outmsg));
+     })
+  |> Option.value(~default=(group, None));
 };

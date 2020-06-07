@@ -16,12 +16,18 @@ module Global = {
   open Persistence.Store;
 
   let store =
-    instantiate("global", () => Schema.[entry(version), entry(workspace)]);
+    lazy(
+      {
+        instantiate("global", () =>
+          Schema.[entry(version), entry(workspace)]
+        );
+      }
+    );
 
-  let version = () => get(Schema.version, store);
-  let workspace = () => get(Schema.workspace, store);
+  let version = () => get(Schema.version, Lazy.force(store));
+  let workspace = () => get(Schema.workspace, Lazy.force(store));
 
-  let persist = state => persist(state, store);
+  let persist = state => persist(state, Lazy.force(store));
 };
 
 module Workspace = {
@@ -46,7 +52,7 @@ module Workspace = {
         Window.getSize(window).height
       );
     let windowMaximized =
-      define("windowMazimized", bool, false, ((_state, window)) =>
+      define("windowMaximized", bool, false, ((_state, window)) =>
         Window.isMaximized(window)
       );
   };

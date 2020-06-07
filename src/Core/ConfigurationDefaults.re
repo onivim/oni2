@@ -16,7 +16,7 @@ let getDefaultConfigString = configName =>
   "editor.largeFileOptimizations": true,
   "editor.highlightActiveIndentGuide": true,
   "editor.indentSize": 4,
-  "editor.insertSpaces": false,
+  "editor.insertSpaces": true,
   "editor.lineNumbers": "on",
   "editor.matchBrackets": true,
   "editor.minimap.enabled": true,

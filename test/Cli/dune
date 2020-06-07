@@ -1,0 +1,13 @@
+(library
+    (name Oni_Cli_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries
+        Oni2.cli
+        Oni2.core
+        Oni_Core_Test
+        rely.lib
+        luv
+        editor-core-types
+        unix
+    ))

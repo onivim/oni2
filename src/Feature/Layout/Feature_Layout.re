@@ -1,384 +1,438 @@
-open Utility;
+// MODEL
 
-type direction =
-  | Up
-  | Left
-  | Down
-  | Right;
+type model = Layout.t(int);
 
-[@deriving show({with_path: false})]
-type size =
-  | Weight(float);
+let initial = id => Layout.singleton(id);
 
-[@deriving show({with_path: false})]
-type t('id) =
-  | Split([ | `Horizontal | `Vertical], size, list(t('id)))
-  | Window(size, 'id);
+let windows = Layout.windows;
+let addWindow = Layout.addWindow;
+let insertWindow = Layout.insertWindow;
+let removeWindow = Layout.removeWindow;
 
-let nodeSize =
-  fun
-  | Split(_, size, _) => size
-  | Window(size, _) => size;
+let move = (focus, dirX, dirY, layout) => {
+  let positioned = Positioned.fromLayout(0, 0, 200, 200, layout);
 
-let withSize = size =>
-  fun
-  | Split(direction, _, children) => Split(direction, size, children)
-  | Window(_, id) => Window(size, id);
-
-let nodeWeight =
-  fun
-  | Split(_, Weight(weight), _) => Some(weight)
-  | Window(Weight(weight), _) => Some(weight);
-
-[@deriving show({with_path: false})]
-type sizedWindow('id) = {
-  id: 'id,
-  x: int,
-  y: int,
-  width: int,
-  height: int,
+  Positioned.move(focus, dirX, dirY, positioned)
+  |> Option.value(~default=focus);
 };
 
-module Internal = {
-  let intersects = (x, y, split) => {
-    x >= split.x
-    && x <= split.x
-    + split.width
-    && y >= split.y
-    && y <= split.y
-    + split.height;
-  };
+let moveLeft = current => move(current, -1, 0);
+let moveRight = current => move(current, 1, 0);
+let moveUp = current => move(current, 0, -1);
+let moveDown = current => move(current, 0, 1);
 
-  let move = (id, dirX, dirY, splits) => {
-    let (minX, minY, maxX, maxY, deltaX, deltaY) =
-      List.fold_left(
-        (prev, cur) => {
-          let (minX, minY, maxX, maxY, deltaX, deltaY) = prev;
+// UPDATE
 
-          let newMinX = cur.x < minX ? cur.x : minX;
-          let newMinY = cur.y < minY ? cur.y : minY;
-          let newMaxX = cur.x + cur.width > maxX ? cur.x + cur.width : maxX;
-          let newMaxY = cur.y + cur.height > maxY ? cur.y + cur.height : maxY;
-          let newDeltaX = cur.width / 2 < deltaX ? cur.width / 2 : deltaX;
-          let newDeltaY = cur.height / 2 < deltaY ? cur.height / 2 : deltaY;
+[@deriving show({with_path: false})]
+type command =
+  | MoveLeft
+  | MoveRight
+  | MoveUp
+  | MoveDown
+  | RotateForward
+  | RotateBackward
+  | DecreaseSize
+  | IncreaseSize
+  | DecreaseHorizontalSize
+  | IncreaseHorizontalSize
+  | DecreaseVerticalSize
+  | IncreaseVerticalSize
+  | ResetSizes;
 
-          (newMinX, newMinY, newMaxX, newMaxY, newDeltaX, newDeltaY);
-        },
-        (0, 0, 1, 1, 100, 100),
-        splits,
-      );
+[@deriving show({with_path: false})]
+type msg =
+  | HandleDragged({
+      path: list(int),
+      delta: float,
+    })
+  | Command(command);
 
-    let splitInfo = List.filter(s => s.id == id, splits);
+type outmsg =
+  | Nothing
+  | Focus(int);
 
-    if (splitInfo == []) {
-      None;
-    } else {
-      let startSplit = List.hd(splitInfo);
+let update = (~focus, model, msg) => {
+  switch (msg) {
+  | Command(MoveLeft) =>
+    switch (focus) {
+    | Some(focus) => (model, Focus(moveLeft(focus, model)))
+    | None => (model, Nothing)
+    }
 
-      let curX = ref(startSplit.x + startSplit.width / 2);
-      let curY = ref(startSplit.y + startSplit.height / 2);
-      let found = ref(false);
-      let result = ref(None);
+  | Command(MoveRight) =>
+    switch (focus) {
+    | Some(focus) => (model, Focus(moveRight(focus, model)))
+    | None => (model, Nothing)
+    }
 
-      while (! found^
-             && curX^ >= minX
-             && curX^ < maxX
-             && curY^ >= minY
-             && curY^ < maxY) {
-        let x = curX^;
-        let y = curY^;
+  | Command(MoveUp) =>
+    switch (focus) {
+    | Some(focus) => (model, Focus(moveUp(focus, model)))
+    | None => (model, Nothing)
+    }
 
-        let intersects =
-          List.filter(
-            s => s.id != startSplit.id && intersects(x, y, s),
-            splits,
-          );
+  | Command(MoveDown) =>
+    switch (focus) {
+    | Some(focus) => (model, Focus(moveDown(focus, model)))
+    | None => (model, Nothing)
+    }
 
-        if (intersects != []) {
-          result := Some(List.hd(intersects).id);
-          found := true;
-        };
+  | Command(RotateForward) =>
+    switch (focus) {
+    | Some(focus) => (Layout.rotate(`Forward, focus, model), Nothing)
+    | None => (model, Nothing)
+    }
 
-        curX := x + dirX * deltaX;
-        curY := y + dirY * deltaY;
-      };
+  | Command(RotateBackward) =>
+    switch (focus) {
+    | Some(focus) => (Layout.rotate(`Backward, focus, model), Nothing)
+    | None => (model, Nothing)
+    }
 
-      result^;
-    };
-  };
-
-  let rec rotate = (target, func, tree) => {
-    let findSplit = children => {
-      let predicate =
-        fun
-        | Window(_, id) => id == target
-        | _ => false;
-
-      List.exists(predicate, children);
-    };
-
-    switch (tree) {
-    | Split(direction, size, children) =>
-      Split(
-        direction,
-        size,
-        List.map(
-          child => rotate(target, func, child),
-          findSplit(children) ? func(children) : children,
-        ),
+  | Command(DecreaseSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model
+        |> Layout.resizeWindow(`Horizontal, focus, 0.95)
+        |> Layout.resizeWindow(`Vertical, focus, 0.95),
+        Nothing,
       )
-    | Window(_) as window => window
-    };
-  };
-};
-
-let empty = Split(`Vertical, Weight(1.), []);
-let initial = empty;
-
-let windows = tree => {
-  let rec traverse = (node, acc) => {
-    switch (node) {
-    | Split(_, _, children) =>
-      List.fold_left((acc, child) => traverse(child, acc), acc, children)
-    | Window(_, id) => [id, ...acc]
-    };
-  };
-
-  traverse(tree, []);
-};
-
-let addWindow = (~target=None, ~position, direction, id, tree) => {
-  let newWindow = Window(Weight(1.), id);
-  switch (target) {
-  | Some(targetId) =>
-    let rec traverse = node => {
-      switch (node) {
-      | Split(_, size, []) => Window(size, id) // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
-      | Split(thisDirection, size, children) when thisDirection == direction =>
-        let onMatch = child =>
-          switch (position) {
-          | `Before => [newWindow, child]
-          | `After => [child, newWindow]
-          };
-        Split(thisDirection, size, traverseChildren(~onMatch, [], children));
-
-      | Split(thisDirection, size, children) =>
-        let onMatch = child =>
-          switch (position) {
-          | `Before => [
-              Split(
-                direction,
-                nodeSize(child),
-                [newWindow, child |> withSize(Weight(1.))],
-              ),
-            ]
-          | `After => [
-              Split(
-                direction,
-                nodeSize(child),
-                [child |> withSize(Weight(1.)), newWindow],
-              ),
-            ]
-          };
-        Split(thisDirection, size, traverseChildren(~onMatch, [], children));
-
-      | Window(size, id) when id == targetId =>
-        switch (position) {
-        | `Before =>
-          Split(direction, size, [newWindow, Window(Weight(1.), id)])
-        | `After =>
-          Split(direction, size, [Window(Weight(1.), id), newWindow])
-        }
-
-      | Window(_) as window => window
-      };
+    | None => (model, Nothing)
     }
 
-    and traverseChildren = (~onMatch, before, after) =>
-      switch (after) {
-      | [] => List.rev(before)
-      | [head, ...rest] =>
-        switch (head) {
-        | Window(_, id) as child when id == targetId =>
-          traverseChildren(
-            ~onMatch,
-            List.rev(onMatch(child)) @ before,
-            rest,
-          )
-
-        | Split(_) as child =>
-          traverseChildren(~onMatch, [traverse(child), ...before], rest)
-
-        | child => traverseChildren(~onMatch, [child, ...before], rest)
-        }
-      };
-
-    traverse(tree);
-
-  | None =>
-    switch (tree) {
-    | Split(_, size, []) => Window(size, id)
-    | Split(d, size, children) => Split(d, size, [newWindow, ...children])
-    | Window(size, id) =>
-      Split(direction, size, [newWindow, Window(Weight(1.), id)])
+  | Command(IncreaseSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model
+        |> Layout.resizeWindow(`Horizontal, focus, 1.05)
+        |> Layout.resizeWindow(`Vertical, focus, 1.05),
+        Nothing,
+      )
+    | None => (model, Nothing)
     }
-  };
-};
 
-let removeWindow = (target, tree) => {
-  let rec traverse =
-    fun
-    | Split(direction, size, children) =>
-      switch (List.filter_map(traverse, children)) {
-      | [] => None
-      // BUG: Collapsing disabled as it doesn't preserve size properly.
-      // | [child] => Some(child)
-      | newChildren => Some(Split(direction, size, newChildren))
-      }
-    | Window(_, id) when id == target => None
-    | node => Some(node);
+  | Command(DecreaseHorizontalSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> Layout.resizeWindow(`Horizontal, focus, 0.95),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
 
-  traverse(tree) |> Option.value(~default=empty);
-};
+  | Command(IncreaseHorizontalSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> Layout.resizeWindow(`Horizontal, focus, 1.05),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
 
-let rec layout = (x, y, width, height, tree) => {
-  switch (tree) {
-  | Split(direction, _, children) =>
-    let totalWeight =
-      children
-      |> List.filter_map(nodeWeight)
-      |> List.fold_left((+.), 0.)
-      |> max(1.);
+  | Command(DecreaseVerticalSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> Layout.resizeWindow(`Vertical, focus, 0.95),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
 
-    (
-      switch (direction) {
-      | `Horizontal =>
-        let unitHeight = float(height) /. totalWeight;
-        List.fold_left(
-          ((y, acc), child) => {
-            switch (nodeSize(child)) {
-            | Weight(weight) =>
-              let height = int_of_float(unitHeight *. weight);
-              let windows = layout(x, y, width, height, child);
-              (y + height, windows @ acc);
-            }
-          },
-          (y, []),
-          children,
-        );
+  | Command(IncreaseVerticalSize) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> Layout.resizeWindow(`Vertical, focus, 1.05),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
 
-      | `Vertical =>
-        let unitWidth = float(width) /. totalWeight;
-        List.fold_left(
-          ((x, acc), child) => {
-            switch (nodeSize(child)) {
-            | Weight(weight) =>
-              let width = int_of_float(unitWidth *. weight);
-              let windows = layout(x, y, width, height, child);
-              (x + width, windows @ acc);
-            }
-          },
-          (x, []),
-          children,
-        );
-      }
+  | Command(ResetSizes) => (Layout.resetWeights(model), Nothing)
+
+  | HandleDragged({path, delta}) => (
+      Layout.resizeSplit(~path, ~delta, model),
+      Nothing,
     )
-    |> snd
-    |> List.rev;
-
-  | Window(_, id) => [{id, x, y, width, height}]
   };
 };
 
-let moveCore = (current, dirX, dirY, tree) => {
-  let layout = layout(0, 0, 200, 200, tree);
+// VIEW
 
-  Internal.move(current, dirX, dirY, layout)
-  |> Option.value(~default=current);
-};
+module View = {
+  open Revery;
+  open UI;
 
-let moveLeft = current => moveCore(current, -1, 0);
-let moveRight = current => moveCore(current, 1, 0);
-let moveUp = current => moveCore(current, 0, -1);
-let moveDown = current => moveCore(current, 0, 1);
-
-let move = (direction: direction, current, v) => {
-  switch (direction) {
-  | Up => moveUp(current, v)
-  | Down => moveDown(current, v)
-  | Left => moveLeft(current, v)
-  | Right => moveRight(current, v)
+  module Constants = {
+    let handleSize = 10;
   };
-};
 
-let rotateForward = (target, tree) => {
-  let f =
-    fun
-    | [] => []
-    | [a] => [a]
-    | [a, b] => [b, a]
-    | list =>
-      switch (ListEx.last(list)) {
-      | Some(x) => [x, ...ListEx.dropLast(list)]
-      | None => []
+  module Styles = {
+    open Style;
+
+    let container = [flexGrow(1), flexDirection(`Row)];
+
+    let verticalHandle = (node: Positioned.t(_)) => [
+      cursor(MouseCursors.horizontalResize),
+      position(`Absolute),
+      left(node.meta.x + node.meta.width - Constants.handleSize / 2),
+      top(node.meta.y),
+      width(Constants.handleSize),
+      height(node.meta.height),
+    ];
+
+    let horizontalHandle = (node: Positioned.t(_)) => [
+      cursor(MouseCursors.verticalResize),
+      position(`Absolute),
+      left(node.meta.x),
+      top(node.meta.y + node.meta.height - Constants.handleSize / 2),
+      width(node.meta.width),
+      height(Constants.handleSize),
+    ];
+  };
+
+  let component = React.Expert.component("handleView");
+  let handleView = (~direction, ~node: Positioned.t(_), ~onDrag, ()) =>
+    component(hooks => {
+      let ((captureMouse, _state), hooks) =
+        Hooks.mouseCapture(
+          ~onMouseMove=
+            ((lastX, lastY), evt) => {
+              let delta =
+                switch (direction) {
+                | `Vertical => evt.mouseX -. lastX
+                | `Horizontal => evt.mouseY -. lastY
+                };
+
+              onDrag(delta);
+              Some((evt.mouseX, evt.mouseY));
+            },
+          ~onMouseUp=(_, _) => None,
+          (),
+          hooks,
+        );
+
+      let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+        captureMouse((evt.mouseX, evt.mouseY));
       };
 
-  Internal.rotate(target, f, tree);
-};
+      (
+        <View
+          onMouseDown
+          style={
+            direction == `Vertical
+              ? Styles.verticalHandle(node) : Styles.horizontalHandle(node)
+          }
+        />,
+        hooks,
+      );
+    });
 
-let rotateBackward = (target, tree) => {
-  let f =
-    fun
-    | [] => []
-    | [a] => [a]
-    | [a, b] => [b, a]
-    | [head, ...tail] => tail @ [head];
+  let rec nodeView =
+          (
+            ~theme,
+            ~path=[],
+            ~node: Positioned.t(_),
+            ~renderWindow,
+            ~dispatch,
+            (),
+          ) => {
+    switch (node.kind) {
+    | `Split(direction, children) =>
+      let parent = node;
 
-  Internal.rotate(target, f, tree);
-};
+      let rec loop = (index, children) => {
+        let path = [index, ...path];
 
-let resizeWindow = (direction, target, factor, node) => {
-  let rec traverse = (~parentDirection=?) =>
-    fun
-    | Split(dir, Weight(weight) as size, children) => {
-        let (result, children) =
-          List.fold_left(
-            ((accResult, accChildren), child) => {
-              let (result, node) = traverse(~parentDirection=dir, child);
-              (
-                result == `NotFound ? accResult : result,
-                [node, ...accChildren],
-              );
-            },
-            (`NotFound, []),
-            List.rev(children),
-          );
+        switch (children) {
+        | [] => []
+        | [node] => [<nodeView theme path node renderWindow dispatch />]
 
-        switch (result, parentDirection) {
-        | (`NotAdjusted, Some(parentDirection))
-            when parentDirection != direction => (
-            `Adjusted,
-            Split(dir, Weight(weight *. factor), children),
-          )
-
-        | _ => (result, Split(dir, size, children))
+        | [node, ...[_, ..._] as rest] =>
+          let onDrag = delta => {
+            let total =
+              direction == `Vertical ? parent.meta.width : parent.meta.height;
+            dispatch(
+              HandleDragged({
+                path: List.rev(path),
+                delta: delta /. float(total) // normalized
+              }),
+            );
+          };
+          [
+            <nodeView theme path node renderWindow dispatch />,
+            <handleView direction node onDrag />,
+            ...loop(index + 1, rest),
+          ];
         };
-      }
+      };
 
-    | Window(Weight(weight), id) as window when id == target =>
-      if (parentDirection == Some(direction)) {
-        (`NotAdjusted, window);
-      } else {
-        (`Adjusted, Window(Weight(weight *. factor), id));
-      }
+      loop(0, children) |> React.listToElement;
 
-    | Window(_) as window => (`NotFound, window);
+    | `Window(id) =>
+      <View
+        style=Style.[
+          position(`Absolute),
+          left(node.meta.x),
+          top(node.meta.y),
+          width(node.meta.width),
+          height(node.meta.height),
+        ]>
+        {renderWindow(id)}
+      </View>
+    };
+  };
 
-  traverse(node) |> snd;
+  let component = React.Expert.component("Feature_Layout.View");
+  let make = (~children as renderWindow, ~model, ~theme, ~dispatch, ()) =>
+    component(hooks => {
+      let ((maybeDimensions, setDimensions), hooks) =
+        Hooks.state(None, hooks);
+      let children =
+        switch (maybeDimensions) {
+        | Some((width, height)) =>
+          let positioned = Positioned.fromLayout(0, 0, width, height, model);
+
+          <nodeView theme node=positioned renderWindow dispatch />;
+
+        | None => React.empty
+        };
+
+      (
+        <View
+          onDimensionsChanged={dim =>
+            setDimensions(_ => Some((dim.width, dim.height)))
+          }
+          style=Styles.container>
+          children
+        </View>,
+        hooks,
+      );
+    });
 };
 
-let rec resetWeights =
-  fun
-  | Split(direction, Weight(_), children) =>
-    Split(direction, Weight(1.), List.map(resetWeights, children))
-  | Window(_, id) => Window(Weight(1.), id);
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let rotateForward =
+    define(
+      ~category="View",
+      ~title="Rotate Windows (Forwards)",
+      "view.rotateForward",
+      Command(RotateForward),
+    );
+
+  let rotateBackward =
+    define(
+      ~category="View",
+      ~title="Rotate Windows (Backwards)",
+      "view.rotateBackward",
+      Command(RotateBackward),
+    );
+
+  let moveLeft =
+    define(
+      ~category="View",
+      ~title="Move Window Focus Left",
+      "window.moveLeft",
+      Command(MoveLeft),
+    );
+
+  let moveRight =
+    define(
+      ~category="View",
+      ~title="Move Window Focus Right",
+      "window.moveRight",
+      Command(MoveRight),
+    );
+
+  let moveUp =
+    define(
+      ~category="View",
+      ~title="Move Window Focus Up",
+      "window.moveUp",
+      Command(MoveUp),
+    );
+
+  let moveDown =
+    define(
+      ~category="View",
+      ~title="Move Window Focus Down",
+      "window.moveDown",
+      Command(MoveDown),
+    );
+
+  let decreaseSize =
+    define(
+      ~category="View",
+      ~title="Decrease Current Window/View Size",
+      "workbench.action.decreaseViewSize",
+      Command(DecreaseSize),
+    );
+
+  let increaseSize =
+    define(
+      ~category="View",
+      ~title="Increase Current Window/View Size",
+      "workbench.action.increaseViewSize",
+      Command(IncreaseSize),
+    );
+
+  let decreaseHorizontalSize =
+    define(
+      ~category="View",
+      ~title="Decrease Horizontal Window Size",
+      "vim.decreaseHorizontalWindowSize",
+      Command(DecreaseHorizontalSize),
+    );
+
+  let increaseHorizontalSize =
+    define(
+      ~category="View",
+      ~title="Increase Horizontal Window Size",
+      "vim.increaseHorizontalWindowSize",
+      Command(IncreaseHorizontalSize),
+    );
+
+  let decreaseVerticalSize =
+    define(
+      ~category="View",
+      ~title="Decrease Vertical Window Size",
+      "vim.decreaseVerticalWindowSize",
+      Command(DecreaseVerticalSize),
+    );
+
+  let increaseVerticalSize =
+    define(
+      ~category="View",
+      ~title="Increase Vertical Window Size",
+      "vim.increaseVerticalWindowSize",
+      Command(IncreaseVerticalSize),
+    );
+
+  let resetSizes =
+    define(
+      ~category="View",
+      ~title="Reset Window Sizes",
+      "workbench.action.evenEditorWidths",
+      Command(ResetSizes),
+    );
+};
+
+module Contributions = {
+  let commands =
+    Commands.[
+      rotateForward,
+      rotateBackward,
+      moveLeft,
+      moveRight,
+      moveUp,
+      moveDown,
+      increaseSize,
+      decreaseSize,
+      increaseHorizontalSize,
+      decreaseHorizontalSize,
+      increaseVerticalSize,
+      decreaseVerticalSize,
+      resetSizes,
+    ];
+};

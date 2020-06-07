@@ -53,6 +53,7 @@ let getCommandLineCompletionsMeet = (str: string, position: int) => {
 
 let start =
     (
+      ~showUpdateChangelog: bool,
       languageInfo: Ext.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
@@ -135,8 +136,11 @@ let start =
       Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
 
-  let _: unit => unit =
-    Vim.onGoto((_position, _definitionType) => {
+  let handleGoto = gotoType => {
+    switch (gotoType) {
+    | Vim.Goto.Hover => Log.debug("TODO")
+    | Vim.Goto.Definition
+    | Vim.Goto.Declaration =>
       Log.debug("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
@@ -161,7 +165,14 @@ let start =
       OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
       |> Option.join
       |> Option.iter(action => dispatch(action));
-    });
+    };
+  };
+
+  let _: unit => unit =
+    Vim.onEffect(
+      fun
+      | Goto(gotoType) => handleGoto(gotoType),
+    );
 
   let _: unit => unit =
     Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
@@ -272,14 +283,18 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onTerminal(({cmd, curwin, _}) => {
+    Vim.onTerminal(({cmd, curwin, closeOnFinish, _}) => {
       let splitDirection =
         if (curwin) {Feature_Terminal.Current} else {
           Feature_Terminal.Horizontal
         };
 
       dispatch(
-        Actions.Terminal(Command(NewTerminal({cmd, splitDirection}))),
+        Actions.Terminal(
+          Command(
+            NewTerminal({cmd, splitDirection, closeOnExit: closeOnFinish}),
+          ),
+        ),
       );
     });
 
@@ -329,42 +344,6 @@ let start =
         | Vim.Types.TabPage => Actions.OpenFileByPath(buf, None, None)
         };
       dispatch(command);
-    });
-
-  let _: unit => unit =
-    Vim.Window.onMovement((movementType, _count) => {
-      Log.trace("Vim.Window.onMovement");
-      let state = getState();
-
-      let move = moveFunc => {
-        let maybeEditorGroupId =
-          EditorGroups.getActiveEditorGroup(state.editorGroups)
-          |> Option.map((group: EditorGroup.t) =>
-               moveFunc(group.editorGroupId, state.layout)
-             );
-
-        switch (maybeEditorGroupId) {
-        | Some(editorGroupId) =>
-          dispatch(Actions.EditorGroupSelected(editorGroupId))
-        | None => ()
-        };
-      };
-
-      switch (movementType) {
-      | FullLeft
-      | OneLeft => move(Feature_Layout.moveLeft)
-      | FullRight
-      | OneRight => move(Feature_Layout.moveRight)
-      | FullDown
-      | OneDown => move(Feature_Layout.moveDown)
-      | FullUp
-      | OneUp => move(Feature_Layout.moveUp)
-      | RotateDownwards => dispatch(Actions.Command("view.rotateForward"))
-      | RotateUpwards => dispatch(Actions.Command("view.rotateBackward"))
-      | TopLeft
-      | BottomRight
-      | Previous => Log.error("Window movement not implemented")
-      };
     });
 
   let _: unit => unit =
@@ -552,7 +531,8 @@ let start =
     Isolinear.Effect.create(~name="vim.init", () => {
       Vim.init();
 
-      if (Core.BuildInfo.commitId == Persistence.Global.version()) {
+      if (Core.BuildInfo.commitId == Persistence.Global.version()
+          || !showUpdateChangelog) {
         dispatch(
           Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
         );
@@ -896,8 +876,7 @@ let start =
 
   let addSplit = (direction, state: State.t, editorGroup) => {
     ...state,
-    // Fix #686: If we're adding a split, we should turn off Zen mode.
-    zenMode: false,
+    zenMode: false, // Fix #686: If we're adding a split, we should turn off Zen mode.
     editorGroups:
       EditorGroups.add(
         ~defaultFont=state.editorFont,
@@ -905,16 +884,22 @@ let start =
         state.editorGroups,
       ),
     layout:
-      Feature_Layout.addWindow(
-        ~target={
-          EditorGroups.getActiveEditorGroup(state.editorGroups)
-          |> Option.map((group: EditorGroup.t) => group.editorGroupId);
-        },
-        ~position=`After,
-        direction,
-        editorGroup.editorGroupId,
-        state.layout,
-      ),
+      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+      | Some(target) =>
+        Feature_Layout.insertWindow(
+          `After(target.editorGroupId),
+          direction,
+          editorGroup.editorGroupId,
+          state.layout,
+        )
+
+      | None =>
+        Feature_Layout.addWindow(
+          direction,
+          editorGroup.editorGroupId,
+          state.layout,
+        )
+      },
   };
 
   let updater = (state: State.t, action: Actions.t) => {

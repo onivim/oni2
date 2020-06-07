@@ -16,7 +16,6 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        textmate
         editor-core-types
         timber
         ReasonFuzz

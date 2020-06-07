@@ -7,6 +7,7 @@ open Utility;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
+module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
 
@@ -67,13 +68,8 @@ module Styles = {
 
   let children = [transform(Transform.[TranslateX(Constants.indentSize)])];
 
-  let loading = [
-    fontFamily("selawk.ttf"),
-    fontSize(12),
-    color(Colors.white),
-  ];
-
-  let arrow = size => [width(size), height(size)];
+  // Margin applied to center vertically
+  let arrow = size => [width(size), height(size), marginTop(4)];
 };
 
 module Make = (Model: TreeModel) => {
@@ -82,7 +78,7 @@ module Make = (Model: TreeModel) => {
       <FontIcon
         fontSize=Constants.arrowSize
         color
-        icon={isOpen ? FontAwesome.caretDown : FontAwesome.caretRight}
+        icon={isOpen ? FontAwesome.angleDown : FontAwesome.angleRight}
       />
     </View>;
 

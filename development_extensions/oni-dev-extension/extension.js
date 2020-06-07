@@ -13,10 +13,16 @@ function activate(context) {
     }
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
-    item.text = "Developer";
+    item.color = new vscode.ThemeColor("foreground");
+    item.command = "developer.oni.statusBarClicked";
+    item.text = "$(wrench) Developer";
     item.show();
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.statusBarClicked', () => {
+        vscode.window.showWarningMessage('You clicked developer');
+    }));
 
     cleanup(vscode.languages.registerDefinitionProvider('oni-dev', {
         provideDefinition: (document, _position, _token) => {
@@ -115,6 +121,18 @@ function activate(context) {
     // This helps us create a test case to validate buffer manipulations
     cleanup(vscode.commands.registerCommand('developer.oni.getBufferText', () => {
         vscode.window.showInformationMessage("fulltext:" + latestText);
+    }));
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.showActiveEditor', () => {
+        vscode.window.showInformationMessage(
+        "Active editor: " + JSON.stringify(vscode.window.activeTextEditor)
+        );
+    }));
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.showVisibleTextEditors', () => {
+        vscode.window.showInformationMessage(
+        "Visible editors: " + JSON.stringify(vscode.window.visibleTextEditors)
+        );
     }));
     
     function createResourceUri(relativePath) {

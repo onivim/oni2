@@ -1,5 +1,21 @@
+module ExtCommand = Command;
 open Oni_Core;
-open Oni_Core.Utility;
+
+module Clipboard = {
+  [@deriving show]
+  type msg =
+    | ReadText
+    | WriteText(string);
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$readText", _) => Ok(ReadText)
+    | ("$writeText", `List([`String(text)])) => Ok(WriteText(text))
+    | _ => Error("Unhandled clipboard method: " ++ method)
+    };
+  };
+};
+
 module Commands = {
   [@deriving show]
   type msg =
@@ -90,21 +106,23 @@ module Diagnostics = {
   [@deriving show]
   type entry = (Uri.t, [@opaque] list(Diagnostic.t));
 
-  let decodeEntry = json =>
-    switch (json) {
-    | `List([uriJson, diagnosticListJson]) =>
-      uriJson
-      |> Uri.of_yojson
-      |> ResultEx.flatMap(uri => {
-           diagnosticListJson
-           |> Yojson.Safe.Util.to_list
-           |> List.map(Json.Decode.decode_value(Diagnostic.decode))
-           |> Base.Result.all
-           |> Result.map(diagList => (uri, diagList))
-           |> Result.map_error(Json.Decode.string_of_error)
-         })
-    | _ => Error("Expected 2-element tuple")
-    };
+  module Decode = {
+    open Json.Decode;
+
+    let emptyDiagnostics = null |> map(_ => []);
+    let diagnostics =
+      one_of([
+        ("list", list(Diagnostic.decode)),
+        ("empty", emptyDiagnostics),
+      ]);
+
+    let entry =
+      Pipeline.(
+        decode((uri, diagnostics) => (uri, diagnostics))
+        |> custom(index(0, Uri.decode))
+        |> custom(index(1, diagnostics))
+      );
+  };
 
   [@deriving show]
   type msg =
@@ -116,14 +134,31 @@ module Diagnostics = {
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
-    | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
+    | ("$changeMany", `List([`String(owner), diagnosticsJson])) =>
       diagnosticsJson
-      |> List.map(decodeEntry)
-      |> Base.Result.all
+      |> Json.Decode.decode_value(Json.Decode.list(Decode.entry))
       |> Result.map(entries => ChangeMany({owner, entries}))
+      |> Result.map_error(Json.Decode.string_of_error)
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
     };
+  };
+
+  let%test "null list (regression test for #1839)" = {
+    let json =
+      {|
+      ["typescript",[[{"$mid":1,"fsPath":"/Users/onivim/bootstrap.js","external":"file:///Users/onivim/scripts/bootstrap.js","path":"/Users/onivim/bootstrap.js","scheme":"file"},null]]]
+    |}
+      |> Yojson.Safe.from_string;
+
+    let parsedResult = handle("$changeMany", json);
+    parsedResult
+    == Ok(
+         ChangeMany({
+           owner: "typescript",
+           entries: [(Uri.fromPath("/Users/onivim/bootstrap.js"), [])],
+         }),
+       );
   };
 };
 
@@ -248,6 +283,10 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
+    | RegisterHoverProvider({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
     | RegisterImplementationSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -255,6 +294,11 @@ module LanguageFeatures = {
     | RegisterTypeDefinitionSupport({
         handle: int,
         selector: list(DocumentFilter.t),
+      })
+    | RegisterSignatureHelpProvider({
+        handle: int,
+        selector: DocumentSelector.t,
+        metadata: SignatureHelp.ProviderMetadata.t,
       })
     | RegisterSuggestSupport({
         handle: int,
@@ -266,6 +310,24 @@ module LanguageFeatures = {
     | RegisterReferenceSupport({
         handle: int,
         selector: list(DocumentFilter.t),
+      })
+    | RegisterDocumentFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        extensionId: ExtensionId.t,
+        displayName: string,
+      })
+    | RegisterRangeFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        extensionId: ExtensionId.t,
+        displayName: string,
+      })
+    | RegisterOnTypeFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        autoFormatTriggerCharacters: list(string),
+        extensionId: ExtensionId.t,
       })
     | Unregister({handle: int});
 
@@ -309,6 +371,11 @@ module LanguageFeatures = {
            RegisterDeclarationSupport({handle, selector})
          })
       |> Result.map_error(Json.Decode.string_of_error)
+    | ("$registerHoverProvider", `List([`Int(handle), selectorJson])) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {RegisterHoverProvider({handle, selector})})
+      |> Result.map_error(Json.Decode.string_of_error)
     | (
         "$registerImplementationSupport",
         `List([`Int(handle), selectorJson]),
@@ -335,6 +402,24 @@ module LanguageFeatures = {
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
 
+    | (
+        "$registerSignatureHelpProvider",
+        `List([`Int(handle), selectorJson, metadataJson]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind metadata =
+          metadataJson |> decode_value(SignatureHelp.ProviderMetadata.decode);
+
+        Ok(RegisterSignatureHelpProvider({handle, selector, metadata}));
+      };
+
+      ret |> Result.map_error(string_of_error);
     | (
         "$registerSuggestSupport",
         `List([
@@ -377,7 +462,99 @@ module LanguageFeatures = {
       };
 
       ret |> Result.map_error(string_of_error);
+    | (
+        "$registerDocumentFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          extensionIdJson,
+          displayNameJson,
+        ]),
+      ) =>
+      open Json.Decode;
 
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        let%bind displayName = displayNameJson |> decode_value(string);
+
+        Ok(
+          RegisterDocumentFormattingSupport({
+            handle,
+            selector,
+            extensionId,
+            displayName,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
+    | (
+        "$registerRangeFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          extensionIdJson,
+          displayNameJson,
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        let%bind displayName = displayNameJson |> decode_value(string);
+
+        Ok(
+          RegisterRangeFormattingSupport({
+            handle,
+            selector,
+            extensionId,
+            displayName,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
+    | (
+        "$registerOnTypeFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          triggerCharacterJson,
+          extensionIdJson,
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind triggerCharacters =
+          triggerCharacterJson |> decode_value(list(string));
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        Ok(
+          RegisterOnTypeFormattingSupport({
+            handle,
+            selector,
+            autoFormatTriggerCharacters: triggerCharacters,
+            extensionId,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
     | _ =>
       Error(
         Printf.sprintf(
@@ -464,11 +641,23 @@ module StatusBar = {
   type msg =
     | SetEntry({
         id: string,
-        text: string,
+        label: Label.t,
         source: string,
         alignment,
+        command: option(ExtCommand.t),
         priority: int,
-      });
+      })
+    | Dispose({id: int});
+
+  let parseCommand = commandJson =>
+    switch (commandJson) {
+    | `String(jsonString) =>
+      jsonString
+      |> Yojson.Safe.from_string
+      |> Json.Decode.decode_value(Json.Decode.nullable(ExtCommand.decode))
+      |> Result.map_error(Json.Decode.string_of_error)
+    | _ => Ok(None)
+    };
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
@@ -478,17 +667,24 @@ module StatusBar = {
           `String(id),
           _,
           `String(source),
-          `String(text),
-          _,
-          _,
+          labelJson,
+          _tooltip,
+          commandJson,
           _,
           `String(alignment),
           `String(priority),
         ]),
       ) =>
+      open Base.Result.Let_syntax;
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
-      Ok(SetEntry({id, source, text, alignment, priority}));
+      let%bind command = parseCommand(commandJson);
+      let%bind label =
+        labelJson
+        |> Json.Decode.decode_value(Label.decode)
+        |> Result.map_error(Json.Decode.string_of_error);
+      Ok(SetEntry({id, source, label, alignment, priority, command}));
+    | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>
       Error(
         "Unable to parse method: "
@@ -716,6 +912,7 @@ module TerminalService = {
 type t =
   | Connected
   | Ready
+  | Clipboard(Clipboard.msg)
   | Commands(Commands.msg)
   | DebugService(DebugService.msg)
   | Decorations(Decorations.msg)

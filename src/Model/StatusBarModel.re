@@ -10,21 +10,27 @@ type action =
   | DiagnosticsClicked
   | NotificationClearAllClicked
   | NotificationCountClicked
-  | NotificationsContextMenu;
+  | NotificationsContextMenu
+  | ContributedItemClicked({
+      id: string,
+      command: string,
+    });
 
 module Item = {
   type t = {
     id: string,
     priority: int,
-    text: string,
+    label: Exthost.Label.t,
     alignment: Exthost.Msg.StatusBar.alignment,
+    command: option(string),
   };
 
-  let create = (~id, ~priority, ~text, ~alignment=Left, ()) => {
+  let create = (~command=?, ~id, ~priority, ~label, ~alignment=Left, ()) => {
     id,
     priority,
-    text,
+    label,
     alignment,
+    command,
   };
 };
 

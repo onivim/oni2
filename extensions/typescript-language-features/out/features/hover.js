@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
 const previewer_1 = require("../utils/previewer");
 const typeConverters = require("../utils/typeConverters");
@@ -28,8 +29,7 @@ class TypeScriptHoverProvider {
         if (data.displayString) {
             parts.push({ language: 'typescript', value: data.displayString });
         }
-        const tags = previewer_1.tagsMarkdownPreview(data.tags);
-        parts.push(data.documentation + (tags ? '\n\n' + tags : ''));
+        parts.push(previewer_1.markdownDocumentation(data.documentation, data.tags));
         return parts;
     }
 }

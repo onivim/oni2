@@ -1,7 +1,7 @@
 (library
     (name Oni_Store)
     (public_name Oni2.store)
-    (libraries 
+    (libraries
         Rench
         Revery
         yojson
@@ -22,6 +22,7 @@
         Oni2.components
         Oni2.ui
         Oni2.feature.commands
+        Oni2.feature.exthost
         Oni2.feature.menus
         Oni2.feature.notification
         Oni2.feature.theme

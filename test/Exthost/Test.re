@@ -15,7 +15,7 @@ type t = {
   messages: ref(list(Msg.t)),
 };
 
-let noopHandler = _ => None;
+let noopHandler = _ => Lwt.return(Reply.okEmpty);
 let noopErrorHandler = _ => ();
 
 let startWithExtensions =
@@ -35,19 +35,18 @@ let startWithExtensions =
   };
 
   let wrappedHandler = msg => {
-    Msg.show(msg) |> prerr_endline;
+    prerr_endline("Received msg: " ++ Msg.show(msg));
     messages := [msg, ...messages^];
     handler(msg);
   };
 
-  //  Timber.App.enable();
-  //  Timber.App.setLevel(Timber.Level.trace);
+  Timber.App.enable();
 
   let extensions =
     extensions
     |> List.map(Rench.Path.join(rootPath))
     |> List.map(p => Rench.Path.join(p, "package.json"))
-    |> List.map(Scanner.load(~prefix=None, ~category=Scanner.Bundled))
+    |> List.map(Scanner.load(~category=Scanner.Bundled))
     |> List.filter_map(v => v)
     |> List.map((Extension.Scanner.ScanResult.{manifest, path, _}) => {
          InitData.Extension.ofManifestAndPath(manifest, path)
@@ -84,7 +83,14 @@ let startWithExtensions =
 
   let processHasExited = ref(false);
 
-  let onExit = (_, ~exit_status as _: int64, ~term_signal as _: int) => {
+  let onExit = (_, ~exit_status: int64, ~term_signal: int) => {
+    prerr_endline(
+      Printf.sprintf(
+        "Process exited: %d signal: %d",
+        Int64.to_int(exit_status),
+        term_signal,
+      ),
+    );
     processHasExited := true;
   };
 

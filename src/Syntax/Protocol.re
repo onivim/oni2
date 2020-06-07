@@ -5,7 +5,17 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+
 module Ext = Oni_Extensions;
+
+let pidToNamedPipe = pid => {
+  Exthost.(
+    {
+      let name = Printf.sprintf("syntax-client-%s", pid);
+      name |> NamedPipe.create |> NamedPipe.toString;
+    }
+  );
+};
 
 module TokenUpdate = {
   type t = {

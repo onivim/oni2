@@ -14,15 +14,23 @@ let create: unit => t;
 // [count] gets the number of editors in the group
 let count: t => int;
 
+let hasEditor: (~editorId: int, t) => bool;
+
 let getActiveEditor: t => option(Feature_Editor.Editor.t);
 let setActiveEditor: (t, int) => t;
 let getEditorById: (int, t) => option(Feature_Editor.Editor.t);
 let getOrCreateEditorForBuffer:
   (~font: Service_Font.font, ~buffer: Feature_Editor.EditorBuffer.t, t) =>
   (t, Feature_Editor.EditorId.t);
+
 let nextEditor: t => t;
 let previousEditor: t => t;
 let removeEditorById: (t, int) => t;
+let removeEditorsForBuffer: (~bufferId: int, t) => t;
+
+let updateEditor:
+  (~editorId: int, Feature_Editor.msg, t) =>
+  (t, option(Feature_Editor.outmsg));
 
 let setBufferFont: (~bufferId: int, ~font: Service_Font.font, t) => t;
 

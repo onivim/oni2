@@ -260,23 +260,23 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         ~dispatch=msg => dispatch(Actions.SCM(msg)),
         msg,
       );
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | LanguageFeatures(
         RegisterDocumentSymbolProvider({handle, selector, label}),
       ) =>
       withClient(onRegisterDocumentSymbolProvider(handle, selector, label));
-      None;
+      Lwt.return(Reply.okEmpty);
     | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
       withClient(onRegisterDefinitionProvider(handle, selector));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | LanguageFeatures(RegisterDocumentHighlightProvider({handle, selector})) =>
       withClient(onRegisterDocumentHighlightProvider(handle, selector));
-      None;
+      Lwt.return(Reply.okEmpty);
     | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
       withClient(onRegisterReferencesProvider(handle, selector));
-      None;
+      Lwt.return(Reply.okEmpty);
     | LanguageFeatures(
         RegisterSuggestSupport({
           handle,
@@ -286,55 +286,69 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         }),
       ) =>
       withClient(onRegisterSuggestProvider(handle, selector));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | Diagnostics(Clear({owner})) =>
       dispatch(Actions.DiagnosticsClear(owner));
-      None;
+      Lwt.return(Reply.okEmpty);
     | Diagnostics(ChangeMany({owner, entries})) =>
       onDiagnosticsChangeMany(owner, entries);
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | DocumentContentProvider(RegisterTextContentProvider({handle, scheme})) =>
       dispatch(NewTextContentProvider({handle, scheme}));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
       dispatch(LostTextContentProvider({handle: handle}));
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | Decorations(RegisterDecorationProvider({handle, label})) =>
       dispatch(NewDecorationProvider({handle, label}));
-      None;
+      Lwt.return(Reply.okEmpty);
     | Decorations(UnregisterDecorationProvider({handle})) =>
       dispatch(LostDecorationProvider({handle: handle}));
-      None;
+      Lwt.return(Reply.okEmpty);
     | Decorations(DecorationsDidChange({handle, uris})) =>
       dispatch(DecorationsChanged({handle, uris}));
-      None;
+      Lwt.return(Reply.okEmpty);
 
+    | ExtensionService(ExtensionActivationError({extensionId, errorMessage})) =>
+      Log.errorf(m =>
+        m("Extension '%s' failed to activate: %s", extensionId, errorMessage)
+      );
+      Lwt.return(Reply.okEmpty);
     | ExtensionService(DidActivateExtension({extensionId, _})) =>
       dispatch(
         Actions.Extension(Oni_Model.Extensions.Activated(extensionId)),
       );
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | MessageService(ShowMessage({severity, message, extensionId})) =>
       dispatch(ExtMessageReceived({severity, message, extensionId}));
-      None;
+      Lwt.return(Reply.okEmpty);
 
-    | StatusBar(SetEntry({id, text, alignment, priority, _})) =>
+    | StatusBar(SetEntry({id, label, alignment, priority, command, _})) =>
+      let command =
+        command |> Option.map(({id, _}: Exthost.Command.t) => id);
       dispatch(
         Actions.StatusBarAddItem(
-          StatusBarModel.Item.create(~id, ~text, ~alignment, ~priority, ()),
+          StatusBarModel.Item.create(
+            ~command?,
+            ~id,
+            ~label,
+            ~alignment,
+            ~priority,
+            (),
+          ),
         ),
       );
-      None;
+      Lwt.return(Reply.okEmpty);
 
     | TerminalService(msg) =>
       Service_Terminal.handleExtensionMessage(msg);
-      None;
-    | _ => None
+      Lwt.return(Reply.okEmpty);
+    | _ => Lwt.return(Reply.okEmpty)
     };
   };
 
@@ -403,6 +417,29 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     );
   };
 
+  let redirect =
+    if (Timber.App.isEnabled()) {
+      [
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stdin,
+          ~from_parent_fd=Luv.Process.stdin,
+          (),
+        ),
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stdout,
+          ~from_parent_fd=Luv.Process.stderr,
+          (),
+        ),
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stderr,
+          ~from_parent_fd=Luv.Process.stderr,
+          (),
+        ),
+      ];
+    } else {
+      [];
+    };
+
   let _process: Luv.Process.t =
     Luv.Process.spawn(
       ~environment,
@@ -410,6 +447,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~windows_hide=true,
       ~windows_hide_console=true,
       ~windows_hide_gui=true,
+      ~redirect,
       nodePath,
       [nodePath, extHostScriptPath],
     )

@@ -55,6 +55,7 @@ type t =
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
+  | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
   | CompletionAddItems(
@@ -111,15 +112,20 @@ type t =
       pixelWidth: int,
       pixelHeight: int,
     })
-  | EditorScroll(Feature_Editor.EditorId.t, float)
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
+  | EditorTabClicked(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
       severity: [@opaque] Exthost.Msg.MessageService.severity,
       message: string,
       extensionId: option(string),
     })
+  | Editor({
+      editorId: int,
+      msg: Feature_Editor.msg,
+    })
+  | FilesDropped({paths: list(string)})
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
@@ -162,7 +168,6 @@ type t =
   | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)
   | ViewCloseEditor(int)
-  | ViewSetActiveEditor(int)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
@@ -170,7 +175,7 @@ type t =
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
-  | Sneak(Sneak.action)
+  | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | PaneTabClicked(Pane.pane)
@@ -185,9 +190,15 @@ type t =
   | WindowFocusGained
   | WindowFocusLost
   | WindowMaximized
+  | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | WindowCloseClicked
+  | WindowMinimizeClicked
+  | WindowMaximizeClicked
+  | WindowRestoreClicked
   | WindowCloseBlocked
+  | Layout(Feature_Layout.msg)
   | WriteFailure
   | NewTextContentProvider({
       handle: int,

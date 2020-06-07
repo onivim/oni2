@@ -1,11 +1,9 @@
 open Oni_Core;
 
-[@deriving yojson({strict: false})]
 type t = {
   uri: Uri.t,
   versionId: int,
   lines: list(string),
-  [@key "EOL"]
   eol: Eol.t,
   modeId: string,
   isDirty: bool,
@@ -20,3 +18,15 @@ let create =
   modeId,
   isDirty,
 };
+
+let encode = ({uri, versionId, lines, eol, modeId, isDirty}) =>
+  Json.Encode.(
+    obj([
+      ("uri", uri |> Uri.encode),
+      ("versionId", versionId |> int),
+      ("lines", lines |> list(string)),
+      ("EOL", eol |> Eol.encode),
+      ("modeId", modeId |> string),
+      ("isDirty", isDirty |> bool),
+    ])
+  );

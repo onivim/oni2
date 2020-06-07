@@ -2,7 +2,6 @@ open Oni_Core;
 open Utility;
 
 module InputModel = Oni_Components.InputModel;
-module ExtHostClient = Oni_Extensions.ExtHostClient;
 module Selection = Oni_Components.Selection;
 
 // MODEL
@@ -65,7 +64,7 @@ module Effects = {
   let getOriginalUri = (extHostClient, model, path, toMsg) => {
     let handles =
       model.providers |> List.map((provider: Provider.t) => provider.handle);
-    ExtHostClient.SCM.Effects.provideOriginalResource(
+    Service_Exthost.Effects.SCM.provideOriginalResource(
       ~handles,
       extHostClient,
       path,
@@ -350,7 +349,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
-               ExtHostClient.SCM.Effects.onInputBoxValueChange(
+               Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
                  ~value,
                  extHostClient,
@@ -445,27 +444,19 @@ module Pane = {
 
     let container = [padding(10), flexGrow(1)];
 
-    let text = (~theme, ~font: UiFont.t) => [
-      fontSize(font.fontSize),
-      fontFamily(font.fontFile),
+    let text = (~theme) => [
       color(Colors.SideBar.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
 
-    let input = (~font: UiFont.t) => [
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
-      flexGrow(1),
-    ];
+    let input = [flexGrow(1)];
 
     let group = [];
 
     let groupLabel = [paddingVertical(3)];
 
-    let groupLabelText = (~theme, ~font: UiFont.t) => [
-      fontSize(font.fontSize *. 0.85),
-      fontFamily(font.fontFileBold),
+    let groupLabelText = (~theme) => [
       color(Colors.SideBar.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
@@ -487,7 +478,7 @@ module Pane = {
                   ~provider: Provider.t,
                   ~resource: Resource.t,
                   ~theme,
-                  ~font,
+                  ~font: UiFont.t,
                   ~workingDirectory,
                   ~onClick,
                   (),
@@ -507,7 +498,12 @@ module Pane = {
 
     <View style={Styles.item(~isHovered, ~theme)} onMouseOver onMouseOut>
       <Clickable onClick>
-        <Text style={Styles.text(~font, ~theme)} text=displayName />
+        <Text
+          style={Styles.text(~theme)}
+          text=displayName
+          fontFamily={font.normal}
+          fontSize={font.size}
+        />
       </Clickable>
     </View>;
   };
@@ -517,7 +513,7 @@ module Pane = {
         ~provider,
         ~group: ResourceGroup.t,
         ~theme,
-        ~font,
+        ~font: UiFont.t,
         ~workingDirectory,
         ~onItemClick,
         (),
@@ -525,7 +521,12 @@ module Pane = {
     let label = String.uppercase_ascii(group.label);
     <View style=Styles.group>
       <View style=Styles.groupLabel>
-        <Text style={Styles.groupLabelText(~font, ~theme)} text=label />
+        <Text
+          style={Styles.groupLabelText(~theme)}
+          text=label
+          fontFamily={font.bold}
+          fontSize={font.size *. 0.85}
+        />
       </View>
       <View style=Styles.groupItems>
         ...{
@@ -553,7 +554,7 @@ module Pane = {
         ~onItemClick,
         ~isFocused,
         ~theme,
-        ~font,
+        ~font: UiFont.t,
         ~dispatch,
         (),
       ) => {
@@ -568,11 +569,13 @@ module Pane = {
 
     <ScrollView style=Styles.container>
       <Input
-        style={Styles.input(~font)}
+        style=Styles.input
         value={model.inputBox.value}
         selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}
         isFocused
+        fontFamily={font.normal}
+        fontSize={font.size}
         onClick={selection =>
           dispatch(InputBoxClicked({selection: selection}))
         }

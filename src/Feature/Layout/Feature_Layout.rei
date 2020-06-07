@@ -1,58 +1,70 @@
-type direction =
-  | Up
-  | Left
-  | Down
-  | Right;
+open Oni_Core;
 
-// definition only used for tests
-[@deriving show({with_path: false})]
-type size =
-  | Weight(float);
+// MODEL
 
-// definition only used for tests
-[@deriving show({with_path: false})]
-type t('id) =
-  | Split([ | `Horizontal | `Vertical], size, list(t('id)))
-  | Window(size, 'id);
+type model;
+
+let initial: int => model;
+
+let windows: model => list(int);
+let addWindow: ([ | `Horizontal | `Vertical], int, model) => model;
+let insertWindow:
+  (
+    [ | `Before(int) | `After(int)],
+    [ | `Horizontal | `Vertical],
+    int,
+    model
+  ) =>
+  model;
+let removeWindow: (int, model) => model;
+
+// UPDATE
 
 [@deriving show]
-type sizedWindow('id) = {
-  id: 'id,
-  x: int,
-  y: int,
-  width: int,
-  height: int,
+type msg;
+
+type outmsg =
+  | Nothing
+  | Focus(int);
+
+let update: (~focus: option(int), model, msg) => (model, outmsg);
+
+// VIEW
+
+module View: {
+  open Revery.UI;
+
+  let make:
+    (
+      ~children: int => element,
+      ~model: model,
+      ~theme: ColorTheme.Colors.t,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
+    element;
 };
 
-module Internal: {
-  let move: ('id, int, int, list(sizedWindow('id))) => option('id); // only used for tests
+// COMMANDS
+
+module Commands: {
+  let moveLeft: Command.t(msg);
+  let moveRight: Command.t(msg);
+  let moveUp: Command.t(msg);
+  let moveDown: Command.t(msg);
+
+  let rotateForward: Command.t(msg);
+  let rotateBackward: Command.t(msg);
+
+  let decreaseSize: Command.t(msg);
+  let increaseSize: Command.t(msg);
+  let decreaseVerticalSize: Command.t(msg);
+  let increaseVerticalSize: Command.t(msg);
+  let decreaseHorizontalSize: Command.t(msg);
+  let increaseHorizontalSize: Command.t(msg);
+  let resetSizes: Command.t(msg);
 };
 
-let initial: t('id);
+// CONTRIBUTIONS
 
-let windows: t('id) => list('id);
-let addWindow:
-  (
-    ~target: option('id)=?,
-    ~position: [ | `Before | `After],
-    [ | `Horizontal | `Vertical],
-    'id,
-    t('id)
-  ) =>
-  t('id);
-let removeWindow: ('id, t('id)) => t('id);
-
-let layout: (int, int, int, int, t('id)) => list(sizedWindow('id));
-
-let move: (direction, 'id, t('id)) => 'id;
-let moveLeft: ('id, t('id)) => 'id;
-let moveRight: ('id, t('id)) => 'id;
-let moveUp: ('id, t('id)) => 'id;
-let moveDown: ('id, t('id)) => 'id;
-
-let rotateForward: ('id, t('id)) => t('id);
-let rotateBackward: ('id, t('id)) => t('id);
-
-let resizeWindow:
-  ([ | `Horizontal | `Vertical], 'id, float, t('id)) => t('id);
-let resetWeights: t('id) => t('id);
+module Contributions: {let commands: list(Command.t(msg));};

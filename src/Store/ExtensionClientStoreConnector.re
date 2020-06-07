@@ -37,45 +37,6 @@ module Internal = {
 };
 
 let start = (extensions, extHostClient: Exthost.Client.t) => {
-  let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
-
-  let activateFileType = (fileType: option(string)) =>
-    fileType
-    |> Option.iter(ft =>
-         if (!Hashtbl.mem(activatedFileTypes, ft)) {
-           // If no entry, we haven't activated yet
-           Exthost.Request.ExtensionService.activateByEvent(
-             ~event="onLanguage:" ++ ft,
-             extHostClient,
-           );
-           Hashtbl.add(activatedFileTypes, ft, true);
-         }
-       );
-
-  let sendBufferEnterEffect = (~version, ~filePath, ~fileType) =>
-    Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
-      switch (
-        Internal.bufferMetadataToModelAddedDelta(
-          ~version,
-          ~filePath,
-          ~fileType,
-        )
-      ) {
-      | None => ()
-      | Some((v: Exthost.ModelAddedDelta.t)) =>
-        activateFileType(fileType);
-        let addedDelta =
-          Exthost.DocumentsAndEditorsDelta.create(
-            ~removedDocuments=[],
-            ~addedDocuments=[v],
-          );
-        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-          ~delta=addedDelta,
-          extHostClient,
-        );
-      }
-    );
-
   let modelChangedEffect = (buffers: Buffers.t, update: BufferUpdate.t) =>
     Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
       switch (Buffers.getBuffer(update.id, buffers)) {
@@ -243,21 +204,23 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         executeContributedCommandEffect(command, arguments),
       )
 
+    | StatusBar(ContributedItemClicked({command, _})) => (
+        state,
+        executeContributedCommandEffect(command, []),
+      )
+
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
-    | BufferEnter({id, version, filePath, fileType, _}) =>
+    | BufferEnter({id, filePath, _}) =>
       let eff =
         switch (filePath) {
         | Some(path) =>
-          Isolinear.Effect.batch([
-            Feature_SCM.Effects.getOriginalUri(
-              extHostClient, state.scm, path, uri =>
-              Actions.GotOriginalUri({bufferId: id, uri})
-            ),
-            sendBufferEnterEffect(~version, ~filePath, ~fileType),
-          ])
+          Feature_SCM.Effects.getOriginalUri(
+            extHostClient, state.scm, path, uri =>
+            Actions.GotOriginalUri({bufferId: id, uri})
+          )
 
-        | None => sendBufferEnterEffect(~version, ~filePath, ~fileType)
+        | None => Isolinear.Effect.none
         };
       (state, eff);
 

@@ -1,0 +1,381 @@
+ 
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>DuoTone Dark Faithful Earth</string>
+	<key>settings</key>
+	<array>
+		<dict>
+			<key>settings</key>
+			<dict>
+				<key>background</key>
+				<string>#2c2826</string>
+				<key>caret</key>
+				<string>#fecb52</string>
+				<key>foreground</key>
+				<string>#bd987f</string>
+				<key>invisibles</key>
+				<string>#48413d</string>
+				<key>lineHighlight</key>
+				<string>#35302D</string>
+				<key>selection</key>
+				<string>#4D4642</string>
+			</dict>
+		</dict>
+
+		<!-- Base -->
+		<dict>
+			<key>name</key>
+			<string>Uno-1</string>
+			<key>scope</key>
+			<string>
+				entity.name.class,
+				entity.other.inherited-class,
+				entity.name.function,
+				entity.name.tag,
+				entity.other.attribute-name
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#ffdac2</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Uno-2</string>
+			<key>scope</key>
+			<string>
+				variable,
+				variable.language,
+				variable.other,
+				variable.parameter
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>
+				<key>foreground</key>
+				<string>#bd987f</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Uno-3</string>
+			<key>scope</key>
+			<string>
+				support.type,
+				support.class
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#98755d</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Uno-4</string>
+			<key>scope</key>
+			<string>
+				comment,
+				punctuation
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#705e51</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Duo-1</string>
+			<key>scope</key>
+			<string>
+				string,
+				constant.numeric,
+				constant.character,
+				constant.other,
+				storage.type,
+				support.constant,
+				constant.language,
+				support.function
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#fecb52</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Duo-2</string>
+			<key>scope</key>
+			<string>
+				keyword,
+				storage
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#b09045</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Duo-3</string>
+			<key>scope</key>
+			<string>
+				punctuation.definition.string,
+				punctuation.definition.variable,
+				punctuation.definition.parameters,
+				punctuation.definition.array
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#726546</string>
+			</dict>
+		</dict>
+
+		<!-- HTML -->
+		<dict>
+			<key>name</key>
+			<string>HTML Uno-2</string>
+			<key>scope</key>
+			<string>
+				entity.other.attribute-name.html
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>
+				<key>foreground</key>
+				<string>#bd987f</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>HTML Uno-3</string>
+			<key>scope</key>
+			<string>
+				text.html.mt
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#98755d</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>HTML Uno-4</string>
+			<key>scope</key>
+			<string>
+				text.html.mt meta.tag.sgml.html meta.tag.sgml.doctype.html,
+				text.html.mt meta.tag.sgml.html meta.tag.sgml.doctype.html,
+				entity.name.tag.doctype.html,
+				text.html.mt comment.block.html
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#705e51</string>
+			</dict>
+		</dict>
+
+		<!-- PHP -->
+		<dict>
+			<key>name</key>
+			<string>PHP Uno-1</string>
+			<key>scope</key>
+			<string>
+				entity.name.class,
+				entity.other.inherited-class,
+				entity.name.function,
+				entity.name.tag,
+				entity.other.attribute-name
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#ffdac2</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>PHP Uno-2</string>
+			<key>scope</key>
+			<string>
+				variable.other.php,
+				variable.other.php punctuation.definition.variable.php,
+				source.php source.php.embedded.block.html meta.function.php meta.function.arguments.php meta.function.argument.no-default.php variable.other.php,
+				source.php source.php.embedded.block.html variable.other.property.php,
+				source.php source.php.embedded.block.html meta.function.php
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>
+				<key>foreground</key>
+				<string>#bd987f</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>PHP Uno-4</string>
+			<key>scope</key>
+			<string>
+				punctuation.definition.comment.js,
+				source.php source.php.embedded.block.html punctuation.section.embedded.begin.php,
+				source.php source.php.embedded.block.html comment.line.double-slash.php punctuation.definition.comment.php,
+				source.php source.php.embedded.block.html variable.other.php
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#705e51</string>
+			</dict>
+		</dict>
+
+		<!-- JavaScript -->
+		<dict>
+			<key>name</key>
+			<string>JavaScript Uno-3</string>
+			<key>scope</key>
+			<string>
+				source.js support.function.dom.js
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#98755d</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>JavaScript Uno-4</string>
+			<key>scope</key>
+			<string>
+				source.js comment.line.double-slash.js punctuation.definition.comment.js
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#705e51</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>JavaScript Duo-2</string>
+			<key>scope</key>
+			<string>
+				source.js keyword.operator.js,
+				source.js meta.function.js
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#b09045</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>JavaScript Duo-3</string>
+			<key>scope</key>
+			<string>
+				source.js meta.brace.curly.js
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#726546</string>
+			</dict>
+		</dict>
+
+		<!-- Reason -->
+		<dict>
+			<key>name</key>
+			<string>Reason Uno-2</string>
+			<key>scope</key>
+			<string>
+				source.reason support.property-value
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>
+				<key>foreground</key>
+				<string>#bd987f</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Reason Uno-4</string>
+			<key>scope</key>
+			<string>
+				source.reason entity.name.class
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#705e51</string>
+			</dict>
+		</dict>
+
+		<!-- Ocaml -->
+		<dict>
+			<key>name</key>
+			<string>Reason Uno-2</string>
+			<key>scope</key>
+			<string>
+				source.ocaml support.constant.property-value
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string></string>
+				<key>foreground</key>
+				<string>#bd987f</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>OCaml Uno-4</string>
+			<key>scope</key>
+			<string>
+				source.ocaml constant.numeric
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#705e51</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Duo-1</string>
+			<key>scope</key>
+			<string>
+				entity.other.attribute-name
+			</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#fecb52</string>
+			</dict>
+		</dict>
+
+	</array>
+	<key>uuid</key>
+	<string>a929c582-5aa3-48fb-839b-21bbbc8416b6</string>
+	<key>colorSpaceName</key>
+	<string>sRGB</string>
+	<key>semanticClass</key>
+	<string>theme.duotone_dark_earth</string>
+	<key>author</key>
+	<string></string>
+</dict>
+</plist>

@@ -7,6 +7,7 @@
       Oni2.feature.theme
       Oni2.components
       Oni2.extensions
+      Oni2.service.exthost
       Revery
       isolinear
       base

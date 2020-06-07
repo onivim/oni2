@@ -5,6 +5,16 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Command: {
+  [@deriving show]
+  type t = {
+    id: string,
+    title: option(string),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module CompletionContext: {
   type triggerKind =
     | Invoke
@@ -72,6 +82,31 @@ module Location: {
   let decode: Json.decoder(t);
 };
 
+module MarkdownString: {
+  type t = string;
+
+  let decode: Json.decoder(t);
+};
+
+module Edit: {
+  module SingleEditOperation: {
+    type t = {
+      range: OneBasedRange.t,
+      text: option(string),
+      forceMoveMarkers: bool,
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
+module ExtensionId: {
+  [@deriving show]
+  type t = string;
+
+  let decode: Json.decoder(t);
+};
+
 module DefinitionLink: {
   type t = {
     uri: Uri.t,
@@ -127,6 +162,15 @@ module DocumentHighlight: {
   let decode: Json.decoder(t);
 };
 
+module Hover: {
+  type t = {
+    contents: list(MarkdownString.t),
+    range: option(OneBasedRange.t),
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module SuggestItem: {
   type t = {
     label: string,
@@ -145,6 +189,20 @@ module ReferenceContext: {
   type t = {includeDeclaration: bool};
 
   let encode: Json.encoder(t);
+};
+
+module Label: {
+  [@deriving show]
+  type segment =
+    | Text(string)
+    | Icon(string);
+
+  [@deriving show]
+  type t = list(segment);
+
+  let of_string: string => t;
+
+  let decode: Json.decoder(t);
 };
 
 module SCM: {
@@ -199,6 +257,72 @@ module SCM: {
   module Decode: {
     //let resource: Yojson.Safe.t => Resource.t;
     let command: Yojson.Safe.t => option(command);
+  };
+};
+
+module SignatureHelp: {
+  module ProviderMetadata: {
+    [@deriving show]
+    type t = {
+      triggerCharacters: list(string),
+      retriggerCharacters: list(string),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module TriggerKind: {
+    [@deriving show]
+    type t =
+      | Invoke
+      | TriggerCharacter
+      | ContentChange;
+  };
+
+  module RequestContext: {
+    [@deriving show]
+    type t = {
+      triggerKind: TriggerKind.t,
+      triggerCharacter: option(string),
+      isRetrigger: bool,
+      // TODO: Active signature help?
+      //activate
+    };
+
+    let encode: Json.encoder(t);
+  };
+
+  module ParameterInformation: {
+    [@deriving show]
+    type t = {
+      label: string,
+      // TODO
+      //documentation: option(string),
+    };
+    let decode: Json.decoder(t);
+  };
+
+  module Signature: {
+    [@deriving show]
+    type t = {
+      label: string,
+      // TODO:
+      //documentation: options(MarkdownString.t),
+      parameters: list(ParameterInformation.t),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module Response: {
+    type t = {
+      id: int,
+      signatures: list(Signature.t),
+      activeSignature: int,
+      activeParameter: int,
+    };
+
+    let decode: Json.decoder(t);
   };
 };
 
@@ -307,7 +431,16 @@ module Eol: {
 
   let toString: t => string;
 
-  let to_yojson: t => Yojson.Safe.t;
+  let encode: Json.encoder(t);
+};
+
+module FormattingOptions: {
+  type t = {
+    tabSize: int,
+    insertSpaces: bool,
+  };
+
+  let encode: Json.encoder(t);
 };
 
 module ModelAddedDelta: {
@@ -331,7 +464,56 @@ module ModelAddedDelta: {
     ) =>
     t;
 
-  let to_yojson: t => Yojson.Safe.t;
+  let encode: Json.encoder(t);
+};
+
+module TextEditor: {
+  module CursorStyle: {
+    type t =
+      | Hidden // 0
+      | Blink // 1
+      | Smooth // 2
+      | Phase // 3
+      | Expand // 4
+      | Solid; // 5;
+
+    let encode: Json.encoder(t);
+  };
+
+  module LineNumbersStyle: {
+    type t =
+      | Off // 0
+      | On // 1
+      | Relative; // 2
+
+    let encode: Json.encoder(t);
+  };
+
+  module ResolvedConfiguration: {
+    type t = {
+      tabSize: int,
+      indentSize: int,
+      insertSpaces: int,
+      cursorStyle: CursorStyle.t,
+      lineNumbers: LineNumbersStyle.t,
+    };
+
+    let encode: Json.encoder(t);
+  };
+
+  module AddData: {
+    type t = {
+      id: string,
+      documentUri: Uri.t,
+      options: ResolvedConfiguration.t,
+      // TODO:
+      // selections: list(Selection.t),
+      // visibleRanges: list(Range.t),
+      // editorPosition: option(EditorViewColumn.t),
+    };
+
+    let encode: Json.encoder(t);
+  };
 };
 
 module DocumentsAndEditorsDelta: {
@@ -339,17 +521,22 @@ module DocumentsAndEditorsDelta: {
     removedDocuments: list(Uri.t),
     addedDocuments: list(ModelAddedDelta.t),
     removedEditors: list(string),
-    addedEditors: list(string),
+    addedEditors: list(TextEditor.AddData.t),
+    newActiveEditor: option(string),
   };
 
   let create:
     (
-      ~removedDocuments: list(Uri.t),
-      ~addedDocuments: list(ModelAddedDelta.t)
+      ~removedDocuments: list(Uri.t)=?,
+      ~addedDocuments: list(ModelAddedDelta.t)=?,
+      ~removedEditors: list(string)=?,
+      ~addedEditors: list(TextEditor.AddData.t)=?,
+      ~newActiveEditor: option(string)=?,
+      unit
     ) =>
     t;
 
-  let to_yojson: t => Yojson.Safe.t;
+  let encode: Json.encoder(t);
 };
 
 module OneBasedPosition: {
@@ -428,6 +615,13 @@ module ThemeColor: {
 };
 
 module Msg: {
+  module Clipboard: {
+    [@deriving show]
+    type msg =
+      | ReadText
+      | WriteText(string);
+  };
+
   module Commands: {
     [@deriving show]
     type msg =
@@ -530,6 +724,10 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
+      | RegisterHoverProvider({
+          handle: int,
+          selector: DocumentSelector.t,
+        })
       | RegisterImplementationSupport({
           handle: int,
           selector: DocumentSelector.t,
@@ -537,6 +735,11 @@ module Msg: {
       | RegisterTypeDefinitionSupport({
           handle: int,
           selector: DocumentSelector.t,
+        })
+      | RegisterSignatureHelpProvider({
+          handle: int,
+          selector: DocumentSelector.t,
+          metadata: SignatureHelp.ProviderMetadata.t,
         })
       | RegisterSuggestSupport({
           handle: int,
@@ -548,6 +751,24 @@ module Msg: {
       | RegisterReferenceSupport({
           handle: int,
           selector: DocumentSelector.t,
+        })
+      | RegisterDocumentFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          extensionId: ExtensionId.t,
+          displayName: string,
+        })
+      | RegisterRangeFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          extensionId: ExtensionId.t,
+          displayName: string,
+        })
+      | RegisterOnTypeFormattingSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          autoFormatTriggerCharacters: list(string),
+          extensionId: ExtensionId.t,
         })
       | Unregister({handle: int});
   };
@@ -647,17 +868,20 @@ module Msg: {
     type msg =
       | SetEntry({
           id: string,
-          text: string,
+          label: Label.t,
           source: string,
           alignment,
+          command: option(Command.t),
           priority: int,
-        });
+        })
+      | Dispose({id: int});
   };
 
   [@deriving show]
   type t =
     | Connected
     | Ready
+    | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
@@ -686,11 +910,20 @@ module NamedPipe: {
   let toString: t => string;
 };
 
-module Client: {
+module Reply: {
   type t;
 
-  // TODO
-  type reply = unit;
+  let none: t;
+
+  let error: string => t;
+
+  let okEmpty: t;
+
+  let okJson: Yojson.Safe.t => t;
+};
+
+module Client: {
+  type t;
 
   let start:
     (
@@ -698,7 +931,11 @@ module Client: {
       ~initialWorkspace: WorkspaceData.t=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
-      ~handler: Msg.t => option(reply),
+      // TODO:
+      // Is there a way to use GADT's to strongly-type the reply from the request?
+      // Right now, we take arbitrary JSON responses, without help from the type
+      // system that these are correct.
+      ~handler: Msg.t => Lwt.t(Reply.t),
       ~onError: string => unit,
       unit
     ) =>
@@ -823,6 +1060,15 @@ module Request: {
       ) =>
       Lwt.t(list(DefinitionLink.t));
 
+    let provideHover:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(option(Hover.t));
+
     let provideImplementation:
       (
         ~handle: int,
@@ -850,6 +1096,48 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(DefinitionLink.t));
+
+    let provideSignatureHelp:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~context: SignatureHelp.RequestContext.t,
+        Client.t
+      ) =>
+      Lwt.t(option(SignatureHelp.Response.t));
+
+    let provideDocumentFormattingEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~options: FormattingOptions.t,
+        Client.t
+      ) =>
+      Lwt.t(option(list(Edit.SingleEditOperation.t)));
+
+    let provideDocumentRangeFormattingEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~range: OneBasedRange.t,
+        ~options: FormattingOptions.t,
+        Client.t
+      ) =>
+      Lwt.t(option(list(Edit.SingleEditOperation.t)));
+
+    let provideOnTypeFormattingEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~character: string,
+        ~options: FormattingOptions.t,
+        Client.t
+      ) =>
+      Lwt.t(option(list(Edit.SingleEditOperation.t)));
+
+    let releaseSignatureHelp: (~handle: int, ~id: int, Client.t) => unit;
   };
 
   module SCM: {

@@ -4,8 +4,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
-const api_1 = require("../utils/api");
 const typeConverters = require("../utils/typeConverters");
 class TypeScriptReferenceSupport {
     constructor(client) {
@@ -22,9 +22,8 @@ class TypeScriptReferenceSupport {
             return [];
         }
         const result = [];
-        const has203Features = this.client.apiVersion.gte(api_1.default.v203);
         for (const ref of response.body.refs) {
-            if (!options.includeDeclaration && has203Features && ref.isDefinition) {
+            if (!options.includeDeclaration && ref.isDefinition) {
                 continue;
             }
             const url = this.client.toResource(ref.file);

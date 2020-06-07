@@ -5,6 +5,7 @@
     (package OniUnitTestRunner)
     (libraries
         yojson
+        Oni_Cli_Test
         Oni_Core_Test
         Oni_Components_Test
         Oni_Extensions_Test
@@ -17,6 +18,19 @@
         Feature_LanguageSupport_Test
         Exthost_Transport_Test
         Exthost_Test
+        Libvim_Test
+        Textmate_Test
+        reason-native-crash-utils.asan
+            ))
+
+(executable
+    (name OniUnitTestRunnerCLI)
+    (public_name OniUnitTestRunnerCLI)
+    (modules OniUnitTestRunnerCLI)
+    (package OniUnitTestRunner)
+    (libraries
+        yojson
+        Oni_Cli_Test
             ))
 
 (executable
@@ -71,12 +85,35 @@
         Exthost_Test))
 
 (executable
+    (name OniUnitTestRunnerLibvim)
+    (public_name OniUnitTestRunnerLibvim)
+    (modules OniUnitTestRunnerLibvim)
+    (package OniUnitTestRunner)
+    (libraries 
+        Oni_Core_Test
+        Libvim_Test
+        reason-native-crash-utils.asan
+        ))
+
+(executable
+    (name OniUnitTestRunnerTextmate)
+    (public_name OniUnitTestRunnerTextmate)
+    (modules OniUnitTestRunnerTextmate)
+    (package OniUnitTestRunner)
+    (libraries 
+        Oni_Core_Test
+        Textmate_Test
+        reason-native-crash-utils.asan
+        ))
+
+(executable
     (name OniUnitTestRunnerCI)
     (public_name OniUnitTestRunnerCI)
     (modules OniUnitTestRunnerCI)
     (package OniUnitTestRunner)
     (libraries
         yojson
+        Oni_Cli_Test
         Oni_Core_Test
         Oni_Components_Test
         Oni_ExtensionManagement_Test
@@ -86,4 +123,7 @@
         Oni_Model_Test
         Exthost_Transport_Test
         Exthost_Test
+        Libvim_Test
+        Textmate_Test
+        reason-native-crash-utils.asan
             ))

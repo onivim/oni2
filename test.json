@@ -4,12 +4,17 @@
     "run": "esy '@test' x OniUnitTestRunner",
     "run-ci": "esy '@test' x OniUnitTestRunnerCI",
     "core": "esy '@test' x OniUnitTestRunnerCore",
+    "cli": "esy '@test' x OniUnitTestRunnerCLI",
+    "libvim": "esy '@test' x OniUnitTestRunnerLibvim",
     "model": "esy '@test' x OniUnitTestRunnerModel",
     "exthost": "esy '@test' x OniUnitTestRunnerExtHost",
-    "watch": "esy '@test' dune build --watch --root . -j4"
+    "textmate": "esy '@test' x OniUnitTestRunnerTextmate",
+    "watch": "esy '@test' dune build --watch --root . -j4",
+    "inline": "esy b dune runtest",
+    "watch:inline": "esy b dune runtest --watch"
   },
   "override": {
-      "build": ["dune build -p Oni2,OniUnitTestRunner -j4"],
+      "build": ["dune build -p libvim,textmate,Oni2,OniUnitTestRunner -j4"],
       "dependencies": {
         "@reason-native/rely": "^3.2.1"
       },

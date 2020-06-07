@@ -68,18 +68,18 @@ module Parts = {
         GlobalContext.current().dispatch(
           EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}),
         );
-      let onScroll = deltaY =>
-        GlobalContext.current().editorScrollDelta(
-          ~editorId=editor.editorId,
-          ~deltaY,
-          (),
-        );
       let onCursorChange = cursor =>
         GlobalContext.current().dispatch(
           EditorCursorMove(editor.editorId, [cursor]),
         );
 
+      let editorDispatch = editorMsg =>
+        GlobalContext.current().dispatch(
+          Editor({editorId: editor.editorId, msg: editorMsg}),
+        );
+
       <EditorSurface
+        dispatch=editorDispatch
         ?backgroundColor
         ?foregroundColor
         showDiffMarkers
@@ -88,7 +88,6 @@ module Parts = {
         buffer
         onCursorChange
         onEditorSizeChanged
-        onScroll
         theme
         mode={state.vimMode}
         bufferHighlights={state.bufferHighlights}
@@ -120,6 +119,9 @@ module Parts = {
           state.bufferRenderers,
         );
 
+      let changelogDispatch = msg =>
+        GlobalContext.current().dispatch(Changelog(msg));
+
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
         let backgroundColor = Feature_Terminal.defaultBackground(theme);
@@ -149,7 +151,13 @@ module Parts = {
 
       | Version => <VersionView theme uiFont editorFont />
 
-      | FullChangelog => <Feature_Changelog.View.Full theme uiFont />
+      | FullChangelog =>
+        <Feature_Changelog.View.Full
+          state={state.changelog}
+          theme
+          dispatch=changelogDispatch
+          uiFont
+        />
 
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />
@@ -175,7 +183,7 @@ module Styles = {
 };
 
 let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
-  let State.{vimMode: mode, uiFont, _} = state;
+  let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 
@@ -193,7 +201,7 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
     let editorContainer =
       switch (EditorGroup.getActiveEditor(editorGroup)) {
       | Some(editor) => <Parts.EditorContainer editor state theme isActive />
-      | None => React.empty
+      | None => <WelcomeView theme editorFont uiFont />
       };
 
     if (showTabs) {

@@ -8,7 +8,6 @@
 
 open Revery.UI;
 open Oni_Model;
-module Model = Oni_Model;
 
 module Colors = Feature_Theme.Colors;
 
@@ -22,16 +21,36 @@ module Styles = {
   ];
 };
 
-let make = (~state: State.t, ~theme, ()) =>
-  if (state.zenMode) {
-    <View style={Styles.container(theme)}>
-      {switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
+let make = (~state: State.t, ~theme, ()) => {
+  let onFileDropped = ({paths, _}: NodeEvents.fileDropEventParams) =>
+    GlobalContext.current().dispatch(FilesDropped({paths: paths}));
+
+  <View onFileDropped style={Styles.container(theme)}>
+    {if (state.zenMode) {
+       switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
        | Some(editorGroup) => <EditorGroupView state theme editorGroup />
        | None => React.empty
-       }}
-    </View>;
-  } else {
-    <View style={Styles.container(theme)}>
-      <EditorLayoutView state theme />
-    </View>;
-  };
+       };
+     } else {
+       let dispatch = msg =>
+         GlobalContext.current().dispatch(Actions.Layout(msg));
+
+       <View style={Styles.container(theme)}>
+         <Feature_Layout.View theme model={state.layout} dispatch>
+           ...{editorGroupId =>
+             switch (
+               EditorGroups.getEditorGroupById(
+                 state.editorGroups,
+                 editorGroupId,
+               )
+             ) {
+             | Some(editorGroup) =>
+               <EditorGroupView state theme editorGroup />
+             | None => React.empty
+             }
+           }
+         </Feature_Layout.View>
+       </View>;
+     }}
+  </View>;
+};

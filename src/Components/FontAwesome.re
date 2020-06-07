@@ -5,8 +5,8 @@
  */
 
 module FontFamily = {
-  let solid = "FontAwesome5FreeSolid.otf";
-  let regular = "FontAwesome5FreeRegular.otf";
+  let solid = Revery.Font.Family.fromFile("FontAwesome5FreeSolid.otf");
+  let regular = Revery.Font.Family.fromFile("FontAwesome5FreeRegular.otf");
 };
 
 let ad = 0xf641;

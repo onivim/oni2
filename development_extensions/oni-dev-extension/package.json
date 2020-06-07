@@ -2,7 +2,6 @@
 	"name": "oni-dev-extension",
 	"description": "Development Extension for Oni",
 	"version": "0.0.1",
-	"publisher": "Outrun Labs, LLC",
 	"repository": "https://github.com/onivim/oni2",
 	"engines": {
 		"vscode": "^1.25.0"
@@ -24,6 +23,14 @@
 			{
 				"command": "developer.oni.getBufferText",
 				"title": "Onivim - Developer: Buffer Text"
+			},
+			{
+				"command": "developer.oni.showActiveEditor",
+				"title": "Onivim - Developer: Show Active Editor"
+			},
+			{
+				"command": "developer.oni.showVisibleTextEditors",
+				"title": "Onivim - Developer: Show Visible Editors"
 			},
 			{
 				"command": "developer.oni.showWorkspaceRootPath",

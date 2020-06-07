@@ -20,6 +20,7 @@ module ContextMenu = Oni_Components.ContextMenu;
 module CustomHooks = Oni_Components.CustomHooks;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
+module Label = Oni_Components.Label;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Editor = Feature_Editor.Editor;
@@ -65,17 +66,7 @@ module Styles = {
     minWidth(50),
   ];
 
-  let text = (~color, ~background, uiFont: UiFont.t) => [
-    fontFamily(uiFont.fontFile),
-    fontSize(11.),
-    textWrap(TextWrapping.NoWrap),
-    Style.color(color),
-    backgroundColor(background),
-  ];
-
-  let textBold = (~color, ~background, font: UiFont.t) => [
-    fontFamily(font.fontFileSemiBold),
-    fontSize(11.),
+  let text = (~color, ~background) => [
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
@@ -116,14 +107,15 @@ let item =
   };
 };
 
-let textItem = (~background, ~font, ~theme, ~text, ()) =>
+let textItem = (~background, ~font: UiFont.t, ~theme, ~text, ()) =>
   <item>
     <Text
       style={Styles.text(
         ~color=Colors.StatusBar.foreground.from(theme),
         ~background,
-        font,
       )}
+      fontFamily={font.normal}
+      fontSize=11.
       text
     />
   </item>;
@@ -131,7 +123,7 @@ let textItem = (~background, ~font, ~theme, ~text, ()) =>
 let notificationCount =
     (
       ~theme,
-      ~font,
+      ~font: UiFont.t,
       ~foreground as color,
       ~background,
       ~notifications: Feature_Notification.model,
@@ -190,12 +182,17 @@ let notificationCount =
       <View style=Style.[margin(4)]>
         <FontIcon icon=FontAwesome.bell color />
       </View>
-      <Text style={Styles.text(~color, ~background, font)} text />
+      <Text
+        style={Styles.text(~color, ~background)}
+        fontFamily={font.normal}
+        fontSize=11.
+        text
+      />
     </View>
   </item>;
 };
 
-let diagnosticCount = (~font, ~background, ~theme, ~diagnostics, ()) => {
+let diagnosticCount = (~font: UiFont.t, ~background, ~theme, ~diagnostics, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
@@ -212,18 +209,25 @@ let diagnosticCount = (~font, ~background, ~theme, ~diagnostics, ()) => {
       <View style=Style.[margin(4)]>
         <FontIcon icon=FontAwesome.timesCircle color />
       </View>
-      <Text style={Styles.text(~color, ~background, font)} text />
+      <Text
+        style={Styles.text(~color, ~background)}
+        fontFamily={font.normal}
+        fontSize=11.
+        text
+      />
     </View>
   </item>;
 };
 
-let modeIndicator = (~font, ~theme, ~mode, ()) => {
+let modeIndicator = (~font: UiFont.t, ~theme, ~mode, ()) => {
   let background = Colors.Oni.backgroundFor(mode).from(theme);
   let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
   <item backgroundColor=background>
     <Text
-      style={Styles.textBold(~color=foreground, ~background, font)}
+      style={Styles.text(~color=foreground, ~background)}
+      fontFamily={font.semiBold}
+      fontSize=11.
       text={Mode.toString(mode)}
     />
   </item>;
@@ -278,8 +282,28 @@ let%component make =
   let%hook (yOffset, _animationState, _reset) =
     Hooks.animation(transitionAnimation);
 
-  let toStatusBarElement = (statusBarItem: Item.t) =>
-    <textItem font background theme text={statusBarItem.text} />;
+  let toStatusBarElement = (statusItem: Item.t) => {
+    let onClick =
+      statusItem.command
+      |> Option.map((command, ()) =>
+           GlobalContext.current().dispatch(
+             Actions.StatusBar(
+               ContributedItemClicked({id: statusItem.id, command}),
+             ),
+           )
+         );
+
+    <item ?onClick>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
+        <Label font color=Revery.Colors.white label={statusItem.label} />
+      </View>
+    </item>;
+  };
 
   let leftItems =
     state.statusBar

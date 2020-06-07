@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSymbolRange = exports.TypeScriptBaseCodeLensProvider = exports.ReferencesCodeLens = void 0;
 const vscode = require("vscode");
 const nls = require("vscode-nls");
 const regexp_1 = require("../utils/regexp");
@@ -17,51 +18,54 @@ class ReferencesCodeLens extends vscode.CodeLens {
     }
 }
 exports.ReferencesCodeLens = ReferencesCodeLens;
-class TypeScriptBaseCodeLensProvider {
-    constructor(client, cachedResponse) {
-        this.client = client;
-        this.cachedResponse = cachedResponse;
-        this.onDidChangeCodeLensesEmitter = new vscode.EventEmitter();
+let TypeScriptBaseCodeLensProvider = /** @class */ (() => {
+    class TypeScriptBaseCodeLensProvider {
+        constructor(client, cachedResponse) {
+            this.client = client;
+            this.cachedResponse = cachedResponse;
+            this.onDidChangeCodeLensesEmitter = new vscode.EventEmitter();
+        }
+        get onDidChangeCodeLenses() {
+            return this.onDidChangeCodeLensesEmitter.event;
+        }
+        async provideCodeLenses(document, token) {
+            const filepath = this.client.toOpenedFilePath(document);
+            if (!filepath) {
+                return [];
+            }
+            const response = await this.cachedResponse.execute(document, () => this.client.execute('navtree', { file: filepath }, token));
+            if (response.type !== 'response') {
+                return [];
+            }
+            const tree = response.body;
+            const referenceableSpans = [];
+            if (tree && tree.childItems) {
+                tree.childItems.forEach(item => this.walkNavTree(document, item, null, referenceableSpans));
+            }
+            return referenceableSpans.map(span => new ReferencesCodeLens(document.uri, filepath, span));
+        }
+        walkNavTree(document, item, parent, results) {
+            if (!item) {
+                return;
+            }
+            const range = this.extractSymbol(document, item, parent);
+            if (range) {
+                results.push(range);
+            }
+            (item.childItems || []).forEach(child => this.walkNavTree(document, child, item, results));
+        }
     }
-    get onDidChangeCodeLenses() {
-        return this.onDidChangeCodeLensesEmitter.event;
-    }
-    async provideCodeLenses(document, token) {
-        const filepath = this.client.toOpenedFilePath(document);
-        if (!filepath) {
-            return [];
-        }
-        const response = await this.cachedResponse.execute(document, () => this.client.execute('navtree', { file: filepath }, token));
-        if (response.type !== 'response') {
-            return [];
-        }
-        const tree = response.body;
-        const referenceableSpans = [];
-        if (tree && tree.childItems) {
-            tree.childItems.forEach(item => this.walkNavTree(document, item, null, referenceableSpans));
-        }
-        return referenceableSpans.map(span => new ReferencesCodeLens(document.uri, filepath, span));
-    }
-    walkNavTree(document, item, parent, results) {
-        if (!item) {
-            return;
-        }
-        const range = this.extractSymbol(document, item, parent);
-        if (range) {
-            results.push(range);
-        }
-        (item.childItems || []).forEach(child => this.walkNavTree(document, child, item, results));
-    }
-}
-TypeScriptBaseCodeLensProvider.cancelledCommand = {
-    // Cancellation is not an error. Just show nothing until we can properly re-compute the code lens
-    title: '',
-    command: ''
-};
-TypeScriptBaseCodeLensProvider.errorCommand = {
-    title: localize('referenceErrorLabel', 'Could not determine references'),
-    command: ''
-};
+    TypeScriptBaseCodeLensProvider.cancelledCommand = {
+        // Cancellation is not an error. Just show nothing until we can properly re-compute the code lens
+        title: '',
+        command: ''
+    };
+    TypeScriptBaseCodeLensProvider.errorCommand = {
+        title: localize('referenceErrorLabel', 'Could not determine references'),
+        command: ''
+    };
+    return TypeScriptBaseCodeLensProvider;
+})();
 exports.TypeScriptBaseCodeLensProvider = TypeScriptBaseCodeLensProvider;
 function getSymbolRange(document, item) {
     // TS 3.0+ provides a span for just the symbol

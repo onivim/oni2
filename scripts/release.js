@@ -52,7 +52,7 @@ const getRipgrepPath = () => {
 }
 
 const getNodePath = () => {
-    const nodeDir = "node-v10.15.1";
+    const nodeDir = "node-v12.17.0";
 
     if (process.platform == "darwin") {
         return path.join(rootDirectory, "vendor", nodeDir, "osx", "node");
@@ -112,6 +112,7 @@ if (process.platform == "linux") {
 
   const imageSourceDirectory = path.join(rootDirectory, "assets", "images");
   const iconSourcePath = path.join(imageSourceDirectory, "Onivim2.icns");
+  const documentIconSourcePath = path.join(imageSourceDirectory, "macDocumentIcons");
 
   const plistFile = path.join(contentsDirectory, "Info.plist");
 
@@ -123,8 +124,19 @@ if (process.platform == "linux") {
       CFBundleVersion: `${package.version}`,
       CFBundlePackageType: "APPL",
       CFBundleSignature: "????",
-      CFBundleExecutable: "Oni2",
+      CFBundleExecutable: "Oni2_editor",
       NSHighResolutionCapable: true,
+      CFBundleDocumentTypes: package.build.fileAssociations.map(fileAssoc => {
+            return {
+                CFBundleTypeExtensions: fileAssoc.ext.map(ext => ext.substr(1)),
+                CFBundleTypeName: fileAssoc.name,
+                CFBundleTypeRole: fileAssoc.role,
+                CFBundleTypeIconFile: "macDocumentIcons/" + fileAssoc.icon.mac
+            }
+        }),
+      LSEnvironment: {
+          "ONI2_BUNDLED": "1"
+      }
   };
 
   fs.mkdirpSync(frameworksDirectory);
@@ -139,6 +151,7 @@ if (process.platform == "linux") {
 
   copy(extensionsSourceDirectory, resourcesDirectory);
   copy(nodeScriptSourceDirectory, resourcesDirectory);
+  copy(documentIconSourcePath, resourcesDirectory);
   copy(getRipgrepPath(), path.join(binaryDirectory, "rg"));
   copy(getNodePath(), path.join(binaryDirectory, "node"));
   copy(getRlsPath(), path.join(binaryDirectory, "rls"));
@@ -209,6 +222,7 @@ if (process.platform == "linux") {
   const dmgJson = {
     title: "Onivim 2",
     background: path.join(imageSourceDirectory, "dmg-background.png"),
+    icon: path.join(imageSourceDirectory, "dmg-icon.icns"),
     format: "ULFO",
     window: {
         size: {
