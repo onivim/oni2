@@ -141,13 +141,15 @@ let runTest =
     currentState := state;
   };
 
+  let uiDispatch = ref(_ => ());
+
   let _: unit => unit =
     Revery.Tick.interval(
       _ => {
         let state = currentState^;
         Revery.Utility.HeadlessWindow.render(
           headlessWindow,
-          <Oni_UI.Root state />,
+          <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
       },
       //        Revery.Utility.HeadlessWindow.takeScreenshot(
@@ -206,14 +208,13 @@ let runTest =
       (),
     );
 
+  uiDispatch := dispatch;
+
   InitLog.info("Store started!");
 
   InitLog.info("Sending init event");
 
-  Oni_UI.GlobalContext.set({
-    closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-    dispatch,
-  });
+  Oni_UI.GlobalContext.set({dispatch: dispatch});
 
   dispatch(Model.Actions.Init);
 

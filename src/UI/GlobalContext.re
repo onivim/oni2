@@ -7,7 +7,6 @@
  *
  * Hopefully, once there is a context API, this can be wholly replaced with it!
  */
-open Oni_Core;
 open Oni_Model;
 
 type t = {dispatch: Actions.t => unit};

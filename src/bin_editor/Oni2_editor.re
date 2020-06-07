@@ -321,6 +321,8 @@ switch (eff) {
     let _: Window.unsubscribe =
       Window.onMoved(window, _ => persistWorkspace());
 
+    GlobalContext.set({dispatch: dispatch});
+
     dispatch(Model.Actions.Init);
     runEffects();
 
