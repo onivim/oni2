@@ -90,7 +90,6 @@ type t =
   | HoverShow
   | ModeChanged([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked
-  | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)

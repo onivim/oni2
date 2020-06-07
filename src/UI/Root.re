@@ -74,9 +74,6 @@ let make = (~state: State.t, ()) => {
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
-  let onContextMenuItemSelect = item =>
-    GlobalContext.current().dispatch(ContextMenuItemSelected(item));
-
   let mode = ModeManager.current(state);
 
   let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
@@ -100,7 +97,6 @@ let make = (~state: State.t, ()) => {
           activeBuffer=maybeActiveBuffer
           activeEditor=maybeActiveEditor
           indentationSettings
-          onContextMenuItemSelect={_ => ()}
           theme
           dispatch={msg =>
             GlobalContext.current().dispatch(Actions.StatusBar(msg))

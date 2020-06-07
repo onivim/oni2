@@ -30,17 +30,20 @@ type msg =
   | ItemAdded(Item.t)
   | ItemDisposed(string)
   | DiagnosticsClicked
-  | NotificationClearAllClicked
+  | ContextMenuNotificationClearAllClicked
+  | ContextMenuNotificationOpenClicked
   | NotificationCountClicked
-  | NotificationsContextMenu
+  | NotificationsCountRightClicked
   | ContributedItemClicked({
       id: string,
       command: string,
     });
 
-type model = {
-  items: list(Item.t),
-};
+// TODO: Wire these up to Pane / ContextMenu
+type outmsg =
+  | Nothing;
+
+type model = {items: list(Item.t)};
 
 let initial = {items: []};
 
@@ -54,9 +57,9 @@ let update = (model, msg) => {
   | ItemAdded(item) =>
     /* Replace the old item with the new one */
     let newItems = removeItemById(model.items, item.id);
-    { items: [item, ...newItems]};
-  | ItemDisposed(id) => { items: removeItemById(model.items, id)}
-  | _ => model
+    ({items: [item, ...newItems]}, Nothing);
+  | ItemDisposed(id) => ({items: removeItemById(model.items, id)}, Nothing)
+  | _ => (model, Nothing)
   };
 };
 
@@ -77,8 +80,6 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Editor = Feature_Editor.Editor;
 
 module Colors = Feature_Theme.Colors;
-
-open Exthost.Msg.StatusBar;
 
 module Styles = {
   open Style;
@@ -117,13 +118,7 @@ module Styles = {
     minWidth(50),
   ];
 
-  let text = (~color, ~background, uiFont: UiFont.t) => [
-    textWrap(TextWrapping.NoWrap),
-    Style.color(color),
-    backgroundColor(background),
-  ];
-
-  let textBold = (~color, ~background, font: UiFont.t) => [
+  let text = (~color, ~background) => [
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
     backgroundColor(background),
@@ -170,7 +165,6 @@ let textItem = (~background, ~font: UiFont.t, ~theme, ~text, ()) =>
       style={Styles.text(
         ~color=Colors.StatusBar.foreground.from(theme),
         ~background,
-        font,
       )}
       fontFamily={font.normal}
       fontSize=11.
@@ -186,7 +180,6 @@ let notificationCount =
       ~background,
       ~notifications: Feature_Notification.model,
       ~contextMenu,
-      ~onContextMenuItemSelect,
       ~dispatch,
       (),
     ) => {
@@ -196,7 +189,7 @@ let notificationCount =
     |> string_of_int;
 
   let onClick = () => dispatch(NotificationCountClicked);
-  let onRightClick = () => dispatch(NotificationsContextMenu);
+  let onRightClick = () => dispatch(NotificationsCountRightClicked);
 
   let menu = () => {
     let items =
@@ -204,12 +197,12 @@ let notificationCount =
         {
           label: "Clear All",
           // icon: None,
-          data: NotificationClearAllClicked,
+          data: ContextMenuNotificationClearAllClicked,
         },
         {
           label: "Open",
           // icon: None,
-          data: NotificationCountClicked,
+          data: ContextMenuNotificationOpenClicked,
         },
       ];
 
@@ -219,7 +212,7 @@ let notificationCount =
       items
       theme
       font // correct for item padding
-      onItemSelect=onContextMenuItemSelect
+      onItemSelect={({data, _}: ContextMenu.item(msg)) => dispatch(data)}
     />;
   };
 
@@ -236,7 +229,7 @@ let notificationCount =
         <FontIcon icon=FontAwesome.bell color />
       </View>
       <Text
-        style={Styles.text(~color, ~background, font)}
+        style={Styles.text(~color, ~background)}
         text
         fontFamily={font.normal}
         fontSize=11.
@@ -246,7 +239,7 @@ let notificationCount =
 };
 
 let diagnosticCount =
-    (~font, ~background, ~theme, ~diagnostics, ~dispatch, ()) => {
+    (~font: UiFont.t, ~background, ~theme, ~diagnostics, ~dispatch, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
@@ -263,7 +256,7 @@ let diagnosticCount =
         <FontIcon icon=FontAwesome.timesCircle color />
       </View>
       <Text
-        style={Styles.text(~color, ~background, font)}
+        style={Styles.text(~color, ~background)}
         text
         fontFamily={font.normal}
         fontSize=11.
@@ -278,7 +271,7 @@ let modeIndicator = (~font: UiFont.t, ~theme, ~mode, ()) => {
 
   <item backgroundColor=background>
     <Text
-      style={Styles.text(~color=foreground, ~background, font)}
+      style={Styles.text(~color=foreground, ~background)}
       text={Mode.toString(mode)}
       fontFamily={font.semiBold}
       fontSize=11.
@@ -306,7 +299,6 @@ module View = {
                   ~diagnostics: Diagnostics.t,
                   ~font: UiFont.t,
                   ~contextMenu: Feature_ContextMenu.model,
-                  ~onContextMenuItemSelect,
                   ~activeBuffer: option(Oni_Core.Buffer.t),
                   ~activeEditor: option(Feature_Editor.Editor.t),
                   ~indentationSettings: IndentationSettings.t,
@@ -440,7 +432,6 @@ module View = {
           background
           notifications
           contextMenu
-          onContextMenuItemSelect
         />
       </section>
       <sectionGroup>
