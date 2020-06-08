@@ -113,7 +113,7 @@ let%component make = (~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
     <Opacity opacity=transition>
       <View style=Styles.header>
         <Image
-          src=`File("./title-logo.png")
+          src={`File("./title-logo.png")}
           width=456
           height=250
           opacity=transition

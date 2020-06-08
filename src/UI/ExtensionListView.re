@@ -27,7 +27,7 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
     let icon =
       switch (extension.manifest.icon) {
       | None => <Container color=Revery.Colors.darkGray width=32 height=32 />
-      | Some(iconPath) => <Image src=`File(iconPath) width=32 height=32 />
+      | Some(iconPath) => <Image src={`File(iconPath)} width=32 height=32 />
       };
 
     <View
