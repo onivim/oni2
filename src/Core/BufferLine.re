@@ -181,11 +181,9 @@ let getByteFromIndex = (~index, bufferLine) => {
   };
 };
 
-
-
 let subExn = (~index: int, ~length: int, bufferLine) => {
-  let startOffset = getByte(~index, bufferLine);
-  let endOffset = getByte(~index=index + length, bufferLine);
+  let startOffset = getByteFromIndex(~index, bufferLine);
+  let endOffset = getByteFromIndex(~index=index + length, bufferLine);
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
 };
 
@@ -207,26 +205,25 @@ let getPositionAndWidth = (~index: int, bufferLine: t) => {
   };
 };
 
-
 module Slow = {
   let getByteFromPosition = (~position, bufferLine) => {
-
-    let rec loop = (byteIndex, lastPostiion) => {
-      if (byteIndex >= length(bufferLine)) {
-        lastPosition
+    let rec loop = (byteIndex, lastPosition) =>
+      if (byteIndex >= lengthInBytes(bufferLine)) {
+        lastPosition;
       } else {
-        let index = getIndex(~byte=byteIndex);
-        let (characterPosition, width) = getPositionAndWidth(~index, bufferLine);
+        let index = getIndex(~byte=byteIndex, bufferLine);
+        let (characterPosition, width) =
+          getPositionAndWidth(~index, bufferLine);
 
-        if (position >= characterPosition && position < characterPosition + width) {
-          index
+        if (position >= characterPosition
+            && position < characterPosition
+            + width) {
+          index;
         } else {
-          loop(byteIndex + 1, characterPosition + width)
-        }
-      }
+          loop(byteIndex + 1, characterPosition + width);
+        };
+      };
 
-  };
-
-  loop(0, 0);
+    loop(0, 0);
   };
 };

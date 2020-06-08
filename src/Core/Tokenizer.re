@@ -72,8 +72,8 @@ let _getNextBreak =
     let index1 = pos^ + 1;
     let char0 = BufferLine.getUcharExn(~index=index0, bufferLine);
     let char1 = BufferLine.getUcharExn(~index=index1, bufferLine);
-    let byte0 = BufferLine.getByte(~index=index0, bufferLine);
-    let byte1 = BufferLine.getByte(~index=index1, bufferLine);
+    let byte0 = BufferLine.getByteFromIndex(~index=index0, bufferLine);
+    let byte1 = BufferLine.getByteFromIndex(~index=index1, bufferLine);
 
     if (f(~index0, ~index1, ~char0, ~char1, ~byte0, ~byte1)) {
       found := true;
@@ -119,8 +119,9 @@ let tokenize =
           bufferLine,
         );
 
-      let startByte = BufferLine.getByte(~index=startToken, bufferLine);
-      let endByte = BufferLine.getByte(~index=endToken, bufferLine);
+      let startByte =
+        BufferLine.getByteFromIndex(~index=startToken, bufferLine);
+      let endByte = BufferLine.getByteFromIndex(~index=endToken, bufferLine);
 
       let textRun =
         TextRun.create(
