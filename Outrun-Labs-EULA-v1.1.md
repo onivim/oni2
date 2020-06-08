@@ -1,6 +1,6 @@
 # Outrun Labs End User License Agreement (EULA)
 
-Copyright 2019 Outrun Labs LLC
+Copyright 2020 Outrun Labs LLC
 
 Outrun Labs LLC
 END USER LICENSE AGREEMENT

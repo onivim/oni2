@@ -11,6 +11,7 @@ module Log = (val Log.withNamespace("Oni2.Service.FontLoader"));
 [@deriving show({with_path: false})]
 type t = {
   fontFile: string,
+  fontFamily: [@opaque] Revery.Font.Family.t,
   fontSize: float,
   font: [@opaque] Revery.Font.t,
   measuredWidth: float,
@@ -56,6 +57,7 @@ let loadAndValidateEditorFont =
               requestId,
               {
                 fontFile: fullPath,
+                fontFamily: Revery.Font.Family.fromFile(fullPath),
                 fontSize,
                 font,
                 measuredWidth,

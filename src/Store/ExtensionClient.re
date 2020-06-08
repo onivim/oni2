@@ -332,14 +332,16 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       let command =
         command |> Option.map(({id, _}: Exthost.Command.t) => id);
       dispatch(
-        Actions.StatusBarAddItem(
-          StatusBarModel.Item.create(
-            ~command?,
-            ~id,
-            ~label,
-            ~alignment,
-            ~priority,
-            (),
+        Actions.StatusBar(
+          Feature_StatusBar.ItemAdded(
+            Feature_StatusBar.Item.create(
+              ~command?,
+              ~id,
+              ~label,
+              ~alignment,
+              ~priority,
+              (),
+            ),
           ),
         ),
       );

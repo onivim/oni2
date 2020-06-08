@@ -113,6 +113,11 @@ let getMinimapSize = (view: Editor.t) => {
   view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
 };
 
+type captureState = {
+  bbox: Revery.Math.BoundingBox2d.t,
+  offset: float,
+};
+
 let%component make =
               (
                 ~dropShadow=false,
@@ -154,13 +159,13 @@ let%component make =
        });
   };
 
-  let getScrollTo = (screenMouseY: float) => {
+  let getScrollTo = (~offset=0., screenMouseY: float) => {
     getRelativeMousePosition(screenMouseY)
     |> Option.map(mouseY => {
          let (_pixelX, pixelY) =
            Editor.unprojectToPixel(
              ~pixelX=0.,
-             ~pixelY=mouseY,
+             ~pixelY=mouseY -. offset,
              ~pixelWidth=width,
              ~pixelHeight=height,
              editor,
@@ -169,24 +174,16 @@ let%component make =
        });
   };
 
-  let%hook (captureMouse, _state) =
+  let%hook (captureMouse, _captureState) =
     Hooks.mouseCapture(
       ~onMouseMove=
-        ((), evt) => {
+        (state, evt) => {
           evt.mouseY
-          |> getScrollTo
+          |> getScrollTo(~offset=state.offset)
           |> OptionEx.tap(scrollTo => {
-               let minimapLineSize =
-                 Constants.minimapLineSpacing
-                 + Constants.minimapCharacterHeight;
-               let linesInMinimap = editor.pixelHeight / minimapLineSize;
-               dispatch(
-                 Msg.MinimapDragged({
-                   newPixelScrollY: scrollTo -. float(linesInMinimap),
-                 }),
-               );
+               dispatch(Msg.MinimapDragged({newPixelScrollY: scrollTo}))
              })
-          |> Option.map(_ => ())
+          |> Option.map(_ => state)
         },
       ~onMouseUp=(_, _) => None,
       (),
@@ -203,7 +200,10 @@ let%component make =
            } else if (position > thumbTop +. thumbSize) {
              dispatch(Msg.MinimapClicked({viewLine: line}));
            } else {
-             captureMouse();
+             maybeBbox
+             |> Option.iter(bbox => {
+                  captureMouse({bbox, offset: position -. thumbTop})
+                });
            };
          }
        );

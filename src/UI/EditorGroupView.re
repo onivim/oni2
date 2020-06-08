@@ -58,6 +58,7 @@ module Parts = {
           ~backgroundColor=?,
           ~foregroundColor=?,
           ~showDiffMarkers=true,
+          ~dispatch,
           (),
         ) => {
       let buffer =
@@ -65,18 +66,12 @@ module Parts = {
         |> Option.value(~default=Buffer.initial);
 
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
-        GlobalContext.current().dispatch(
-          EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}),
-        );
+        dispatch(EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}));
       let onCursorChange = cursor =>
-        GlobalContext.current().dispatch(
-          EditorCursorMove(editor.editorId, [cursor]),
-        );
+        dispatch(EditorCursorMove(editor.editorId, [cursor]));
 
       let editorDispatch = editorMsg =>
-        GlobalContext.current().dispatch(
-          Editor({editorId: editor.editorId, msg: editorMsg}),
-        );
+        dispatch(Editor({editorId: editor.editorId, msg: editorMsg}));
 
       <EditorSurface
         dispatch=editorDispatch
@@ -109,6 +104,7 @@ module Parts = {
           ~state: State.t,
           ~theme,
           ~isActive,
+          ~dispatch,
           (),
         ) => {
       let State.{uiFont, editorFont, _} = state;
@@ -119,8 +115,7 @@ module Parts = {
           state.bufferRenderers,
         );
 
-      let changelogDispatch = msg =>
-        GlobalContext.current().dispatch(Changelog(msg));
+      let changelogDispatch = msg => dispatch(Changelog(msg));
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
@@ -135,6 +130,7 @@ module Parts = {
           backgroundColor
           foregroundColor
           showDiffMarkers=false
+          dispatch
         />;
 
       | Terminal({id, _}) =>
@@ -145,7 +141,7 @@ module Parts = {
            })
         |> Option.value(~default=React.empty)
 
-      | Editor => <Editor editor state theme isActive />
+      | Editor => <Editor editor state theme isActive dispatch />
 
       | Welcome => <WelcomeView theme uiFont editorFont />
 
@@ -182,7 +178,8 @@ module Styles = {
   let editorContainer = [flexGrow(1), flexDirection(`Column)];
 };
 
-let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
+let make =
+    (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ~dispatch, ()) => {
   let State.{vimMode: mode, uiFont, editorFont, _} = state;
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
@@ -200,7 +197,8 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
   let children = {
     let editorContainer =
       switch (EditorGroup.getActiveEditor(editorGroup)) {
-      | Some(editor) => <Parts.EditorContainer editor state theme isActive />
+      | Some(editor) =>
+        <Parts.EditorContainer editor state theme isActive dispatch />
       | None => <WelcomeView theme editorFont uiFont />
       };
 
@@ -215,6 +213,7 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
           uiFont
           languageInfo={state.languageInfo}
           iconTheme={state.iconTheme}
+          dispatch
         />;
 
       <View style=Styles.editorContainer> tabs editorContainer </View>;
@@ -224,9 +223,7 @@ let make = (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ()) => {
   };
 
   let onMouseDown = _ =>
-    GlobalContext.current().dispatch(
-      EditorGroupSelected(editorGroup.editorGroupId),
-    );
+    dispatch(EditorGroupSelected(editorGroup.editorGroupId));
 
   <View onMouseDown style={Styles.container(theme)}> children </View>;
 };

@@ -21,14 +21,6 @@ module Styles = {
     width(int_of_float(bufferPixelWidth)),
     bottom(0),
   ];
-
-  let horizontalScrollBar = [
-    position(`Absolute),
-    bottom(0),
-    left(0),
-    right(0),
-    height(Constants.scrollBarThickness),
-  ];
 };
 
 let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
@@ -185,8 +177,5 @@ let%component make =
       windowIsFocused
       colors
     />
-    <View style=Styles.horizontalScrollBar>
-      <EditorHorizontalScrollbar editor width={editor.pixelWidth} colors />
-    </View>
   </View>;
 };

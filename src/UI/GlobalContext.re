@@ -7,26 +7,11 @@
  *
  * Hopefully, once there is a context API, this can be wholly replaced with it!
  */
-open Oni_Core;
 open Oni_Model;
 
-type editorSetScroll =
-  (~editorId: Feature_Editor.EditorId.t, ~scrollY: float, unit) => unit;
+type t = {dispatch: Actions.t => unit};
 
-type t = {
-  editorSetScroll,
-  closeEditorById: int => unit,
-  dispatch: Actions.t => unit,
-};
-
-let viewNoop: Views.viewOperation =
-  (~path as _="", ~id as _=0, ~openMethod as _=Buffer, ()) => ();
-
-let default = {
-  editorSetScroll: (~editorId as _, ~scrollY as _, ()) => (),
-  dispatch: _ => (),
-  closeEditorById: _ => (),
-};
+let default = {dispatch: _ => ()};
 
 let _current: ref(t) = ref(default);
 

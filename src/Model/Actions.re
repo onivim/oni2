@@ -90,7 +90,6 @@ type t =
   | HoverShow
   | ModeChanged([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked
-  | ContextMenuItemSelected(ContextMenu.item(t))
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
@@ -106,7 +105,6 @@ type t =
       height: int,
     })
   | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
-  | EditorSetScroll(Feature_Editor.EditorId.t, float)
   | EditorSizeChanged({
       id: Feature_Editor.EditorId.t,
       pixelWidth: int,
@@ -115,6 +113,7 @@ type t =
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | EditorTabClicked(int)
+  | ViewCloseEditor(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
       severity: [@opaque] Exthost.Msg.MessageService.severity,
@@ -162,12 +161,9 @@ type t =
   | ThemeLoadByName(string)
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
-  | StatusBarAddItem([@opaque] StatusBarModel.Item.t)
-  | StatusBarDisposeItem(string)
-  | StatusBar(StatusBarModel.action)
+  | StatusBar(Feature_StatusBar.msg)
   | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)
-  | ViewCloseEditor(int)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard

@@ -152,6 +152,11 @@ let getVisibleView = editor => {
 let getTotalHeightInPixels = editor =>
   int_of_float(float_of_int(editor.viewLines) *. getLineHeight(editor));
 
+let getTotalWidthInPixels = editor =>
+  int_of_float(
+    float_of_int(editor.maxLineLength) *. getCharacterWidth(editor),
+  );
+
 let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
   let {pixelHeight, _} = view;
   let totalViewSizeInPixels =
@@ -167,9 +172,11 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
 };
 
 let getHorizontalScrollbarMetrics = (view, availableWidth) => {
-  let totalViewWidthInPixels =
-    float_of_int(view.maxLineLength) *. getCharacterWidth(view);
   let availableWidthF = float_of_int(availableWidth);
+  let totalViewWidthInPixels =
+    float_of_int(view.maxLineLength)
+    *. getCharacterWidth(view)
+    +. availableWidthF;
 
   totalViewWidthInPixels <= availableWidthF
     ? {visible: false, thumbSize: 0, thumbOffset: 0}
@@ -254,15 +261,15 @@ let scrollToPixelX = (~pixelX as newScrollX, view) => {
   let newScrollX = max(0., newScrollX);
 
   let availableScroll =
-    max(
-      0.,
-      float_of_int(view.maxLineLength)
-      *. getCharacterWidth(view)
-      -. float(view.pixelWidth),
-    );
+    max(0., float_of_int(view.maxLineLength) *. getCharacterWidth(view));
   let scrollX = min(newScrollX, availableScroll);
 
   {...view, scrollX};
+};
+
+let scrollDeltaPixelX = (~pixelX, editor) => {
+  let pixelX = editor.scrollX +. pixelX;
+  scrollToPixelX(~pixelX, editor);
 };
 
 let scrollToColumn = (~column, view) => {
@@ -300,14 +307,13 @@ let projectLine = (~line, ~pixelHeight, editor) => {
 
 let unprojectToPixel =
     (~pixelX: float, ~pixelY, ~pixelWidth: int, ~pixelHeight, editor) => {
-  // TODO: Horizontal scrolling
-  ignore(pixelX);
-  ignore(pixelWidth);
+  let totalWidth = getTotalWidthInPixels(editor) |> float_of_int;
+  let x = totalWidth *. pixelX /. float_of_int(pixelWidth);
 
   let totalHeight = getTotalHeightInPixels(editor) |> float_of_int;
   let y = totalHeight *. pixelY /. float_of_int(pixelHeight);
 
-  (0., y);
+  (x, y);
 };
 
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);

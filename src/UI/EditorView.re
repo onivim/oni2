@@ -21,22 +21,24 @@ module Styles = {
   ];
 };
 
-let make = (~state: State.t, ~theme, ()) => {
+let make =
+    (~state: State.t, ~dispatch: Oni_Model.Actions.t => unit, ~theme, ()) => {
   let onFileDropped = ({paths, _}: NodeEvents.fileDropEventParams) =>
-    GlobalContext.current().dispatch(FilesDropped({paths: paths}));
+    dispatch(Actions.FilesDropped({paths: paths}));
 
   <View onFileDropped style={Styles.container(theme)}>
     {if (state.zenMode) {
        switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
-       | Some(editorGroup) => <EditorGroupView state theme editorGroup />
+       | Some(editorGroup) =>
+         <EditorGroupView state theme editorGroup dispatch />
        | None => React.empty
        };
      } else {
-       let dispatch = msg =>
-         GlobalContext.current().dispatch(Actions.Layout(msg));
+       let layoutDispatch = msg => dispatch(Actions.Layout(msg));
 
        <View style={Styles.container(theme)}>
-         <Feature_Layout.View theme model={state.layout} dispatch>
+         <Feature_Layout.View
+           theme model={state.layout} dispatch=layoutDispatch>
            ...{editorGroupId =>
              switch (
                EditorGroups.getEditorGroupById(
@@ -45,7 +47,7 @@ let make = (~state: State.t, ~theme, ()) => {
                )
              ) {
              | Some(editorGroup) =>
-               <EditorGroupView state theme editorGroup />
+               <EditorGroupView state theme editorGroup dispatch />
              | None => React.empty
              }
            }
