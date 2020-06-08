@@ -201,8 +201,18 @@ if (process.platform == "linux") {
 
   const frameworks = fs.readdirSync(frameworksDirectory);
 
-  if (frameworks.length > 0) {
-    console.error("Found a dynamic library: " + JSON.stringify(frameworks));
+  // Make sure these are codesigned as well in codesign.sh
+  // Must be kept in sync with:
+  // src/scripts/osx/codesign.sh
+  const frameworksWhiteList = [
+    "libcrypto.1.1.dylib",
+    "libssl.1.1.dylib"
+  ];
+
+  const disallowedFrameworks = frameworks.filter(framework => !frameworksWhiteList.some(allowedFramework => framework.indexOf(allowedFramework) >= 0));
+
+  if (disallowedFrameworks.length > 0) {
+    console.error("Found a dynamic library: " + JSON.stringify(disallowedFrameworks));
     console.error("There should be only static libraries to successfully package.");
     throw "FrameworkFound";
   }
