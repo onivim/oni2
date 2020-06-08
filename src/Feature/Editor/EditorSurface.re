@@ -274,6 +274,7 @@ let%component make =
       mode
       isActiveSplit
       gutterWidth
+      bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
       bufferWidthInCharacters={layout.bufferWidthInCharacters}
       windowIsFocused
       config

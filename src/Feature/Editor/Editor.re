@@ -172,9 +172,8 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
 let getHorizontalScrollbarMetrics = (view, availableWidth) => {
   let availableWidthF = float_of_int(availableWidth);
   let totalViewWidthInPixels =
-    float_of_int(view.maxLineLength)
-    *. getCharacterWidth(view)
-    +. availableWidthF;
+    float_of_int(view.maxLineLength + 1) *. getCharacterWidth(view);
+  //+. availableWidthF;
 
   totalViewWidthInPixels <= availableWidthF
     ? {visible: false, thumbSize: 0, thumbOffset: 0}

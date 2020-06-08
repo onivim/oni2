@@ -40,6 +40,7 @@ let getCharacterUnderCursor: (~buffer: Buffer.t, t) => option(Uchar.t);
 let getPrimaryCursor: (~buffer: Buffer.t, t) => Location.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
+let getTotalWidthInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let pixelPositionToBufferLineByte:

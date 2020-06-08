@@ -53,6 +53,7 @@ let%component make =
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
+                ~bufferPixelWidth,
                 ~bufferWidthInCharacters,
                 ~windowIsFocused,
                 ~config,
@@ -163,13 +164,54 @@ let%component make =
           );
         };
 
+        let shadowSize = 18.;
         if (editor.scrollX > 1.) {
-        Draw.shadow(~context, ~x=0., ~y=0., ~width=20.0, ~height=float(editor.pixelHeight));
-        }
+          Draw.shadow(
+            ~context,
+            ~x=0.,
+            ~y=0.,
+            ~width=shadowSize,
+            ~height=float(editor.pixelHeight),
+          );
+        };
 
         if (editor.scrollY > 1.) {
-        Draw.shadow2(~context, ~x=0., ~y=0., ~width=float(editor.pixelWidth), ~height=20.0);
-        }
+          Draw.shadow2(
+            ~context,
+            ~x=0.,
+            ~y=-5.,
+            ~width=float(editor.pixelWidth),
+            ~height=shadowSize,
+          );
+        };
+
+        if (editor.scrollX
+            +. float(bufferPixelWidth)
+            < float(Editor.getTotalWidthInPixels(editor))) {
+          let () =
+            Draw.shadow3(
+              ~context,
+              ~x=float(bufferPixelWidth) -. shadowSize -. 1.0,
+              ~y=0.,
+              ~width=shadowSize,
+              ~height=float(editor.pixelHeight),
+            );
+          ();
+        };
+
+        if (editor.scrollY
+            +. float(editor.pixelHeight)
+            < float(Editor.getTotalHeightInPixels(editor))) {
+          let () =
+            Draw.shadow4(
+              ~context,
+              ~x=0.,
+              ~y=float(editor.pixelHeight) -. shadowSize -. 1.0,
+              ~width=float(editor.pixelWidth),
+              ~height=shadowSize,
+            );
+          ();
+        };
       }}
     />
     <CursorView
