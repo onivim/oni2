@@ -231,7 +231,7 @@ module Windows = {
       mouseBehavior=Draggable
       style={Styles.Windows.container(~isFocused, ~theme)}>
       <View mouseBehavior=Draggable style=Styles.Windows.iconAndTitle>
-        <Image src="./logo-titlebar.png" width=18 height=18 />
+        <Image src={`File("./logo-titlebar.png")} width=18 height=18 />
         <Text
           style={Styles.Windows.title(~isFocused, ~theme)}
           fontFamily={font.normal}
