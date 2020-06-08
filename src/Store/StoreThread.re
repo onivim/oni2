@@ -377,6 +377,11 @@ let start =
     Feature_Layout.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
   );
+  registerCommands(
+    ~dispatch,
+    Feature_Hover.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
+  );
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
