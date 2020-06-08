@@ -162,6 +162,14 @@ let%component make =
             indentation,
           );
         };
+
+        if (editor.scrollX > 1.) {
+        Draw.shadow(~context, ~x=0., ~y=0., ~width=20.0, ~height=float(editor.pixelHeight));
+        }
+
+        if (editor.scrollY > 1.) {
+        Draw.shadow2(~context, ~x=0., ~y=0., ~width=float(editor.pixelWidth), ~height=20.0);
+        }
       }}
     />
     <CursorView
