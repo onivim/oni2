@@ -59,7 +59,7 @@ module Styles = {
     ];
 };
 
-let make = (~state: State.t, ()) => {
+let make = (~dispatch, ~state: State.t, ()) => {
   let State.{
         configuration,
         contextMenu,
@@ -81,6 +81,8 @@ let make = (~state: State.t, ()) => {
     Oni_Model.EditorGroups.getActiveEditor(state.editorGroups);
   let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
 
+  let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
+
   let statusBar = () =>
     if (Selectors.getActiveConfigurationValue(state, c =>
           c.workbenchStatusBarVisible
@@ -98,9 +100,7 @@ let make = (~state: State.t, ()) => {
           activeEditor=maybeActiveEditor
           indentationSettings
           theme
-          dispatch={msg =>
-            GlobalContext.current().dispatch(Actions.StatusBar(msg))
-          }
+          dispatch=statusBarDispatch
         />
       </View>;
     } else {
@@ -133,8 +133,7 @@ let make = (~state: State.t, ()) => {
   let modals = () => {
     switch (state.modal) {
     | Some(model) =>
-      let dispatch = msg =>
-        GlobalContext.current().dispatch(Actions.Modals(msg));
+      let dispatch = msg => dispatch(Actions.Modals(msg));
 
       <Feature_Modals.View
         model
@@ -150,8 +149,7 @@ let make = (~state: State.t, ()) => {
   };
 
   let contextMenuOverlay = () => {
-    let onClick = () =>
-      GlobalContext.current().dispatch(ContextMenuOverlayClicked);
+    let onClick = () => dispatch(ContextMenuOverlayClicked);
 
     <ContextMenu.Overlay onClick />;
   };
@@ -168,7 +166,7 @@ let make = (~state: State.t, ()) => {
       <View style=Styles.surface>
         <activityBar />
         <sideBar />
-        <EditorView state theme />
+        <EditorView state theme dispatch />
       </View>
       <PaneView theme uiFont editorFont state />
     </View>
