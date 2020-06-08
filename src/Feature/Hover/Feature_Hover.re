@@ -4,8 +4,7 @@
 
 [@deriving show({with_path: false})]
 type command =
-  | Show
-  | Hide;
+  | Show;
 
 module Commands = {
   open Feature_Commands.Schema;
@@ -14,15 +13,7 @@ module Commands = {
     define(
       ~category="Hover",
       ~title="Show hover panel",
-      "hover.show",
+      "editor.action.showHover",
       Command(Show),
-    );
-
-  let hide =
-    define(
-      ~category="Hover",
-      ~title="Hide hover panel",
-      "hover.hide",
-      Command(Hide),
     );
 };
