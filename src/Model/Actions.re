@@ -113,6 +113,7 @@ type t =
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | EditorTabClicked(int)
+  | Formatting(Feature_Formatting.msg)
   | ViewCloseEditor(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
