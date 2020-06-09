@@ -16,9 +16,11 @@ type provider = {
 type model = {
   shown: bool,
   providers: list(provider),
+  contents: list(string),
+  range: option(EditorCoreTypes.Range.t),
 };
 
-let initial = {shown: false, providers: []};
+let initial = {shown: false, providers: [], contents: [], range: None};
 
 [@deriving show({with_path: false})]
 type command =
@@ -28,7 +30,12 @@ type command =
 type msg =
   | Command(command)
   | KeyPressed(string)
-  | ProviderRegistered(provider);
+  | ProviderRegistered(provider)
+  | HoverInfoReceived({
+      contents: list(string),
+      range: option(EditorCoreTypes.Range.t),
+    })
+  | HoverRequestFailed(string);
 
 type outmsg =
   | Nothing
@@ -62,12 +69,12 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
                extHostClient,
                res =>
                switch (res) {
-               | Ok(hover) =>
-                 List.iter(h => print_endline(h), hover.contents);
-                 failwith(
-                   "Got data from handle: " ++ string_of_int(provider.handle),
-                 );
-               | Error(s) => failwith(s)
+               | Ok({contents, range}) =>
+                 HoverInfoReceived({
+                   contents,
+                   range: Option.map(Exthost.OneBasedRange.toRange, range),
+                 })
+               | Error(s) => HoverRequestFailed(s)
                }
              )
            )
@@ -82,6 +89,11 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       {...model, providers: [provider, ...model.providers]},
       Nothing,
     )
+  | HoverInfoReceived({contents, range}) => (
+      {...model, contents, range},
+      Nothing,
+    )
+  | _ => (model, Nothing)
   };
 
 module Commands = {
@@ -114,22 +126,20 @@ module View = {
     let grammars = Oni_Syntax.GrammarRepository.create(languageInfo);
     model.shown
       ? <View>
-          <Oni_Components.Markdown
-            colorTheme
-            tokenTheme
-            languageInfo
-            fontFamily
-            codeFontFamily
-            grammars
-            markdown="
-```reason
-let x = 4;
-```
-```reasonml
-let x = 4;
-```
-            "
-          />
+          {List.map(
+             markdown =>
+               <Oni_Components.Markdown
+                 colorTheme
+                 tokenTheme
+                 languageInfo
+                 fontFamily
+                 codeFontFamily
+                 grammars
+                 markdown
+               />,
+             model.contents,
+           )
+           |> React.listToElement}
         </View>
       : React.empty;
   };

@@ -15,7 +15,12 @@ type command;
 type msg =
   | Command(command)
   | KeyPressed(string)
-  | ProviderRegistered(provider);
+  | ProviderRegistered(provider)
+  | HoverInfoReceived({
+      contents: list(string),
+      range: option(EditorCoreTypes.Range.t),
+    })
+  | HoverRequestFailed(string);
 
 type outmsg =
   | Nothing
