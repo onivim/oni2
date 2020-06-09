@@ -12,7 +12,7 @@ type t = {
   id: int,
   filePath: option(string),
   fileType: option(string),
-  lineEndings: option(Vim.lineEnding),
+  lineEndings: option(LineEnding.t),
   modified: bool,
   version: int,
   lines: array(BufferLine.t),

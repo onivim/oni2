@@ -45,7 +45,7 @@ let create = (~font, ~buffer, ()) => {
     cursors: [Vim.Cursor.create(~line=Index.zero, ~column=Index.zero)],
     selection:
       VisualRange.create(
-        ~mode=Vim.Types.None,
+        ~mode=None,
         Range.{
           start: Location.{line: Index.zero, column: Index.zero},
           stop: Location.{line: Index.zero, column: Index.zero},

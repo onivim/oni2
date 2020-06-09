@@ -283,7 +283,7 @@ module Vertical = {
     };
     let getSelectionElements = (selection: VisualRange.t) => {
       switch (selection.mode) {
-      | Vim.Types.None => []
+      | Oni_Core.VisualRange.None => []
       | _ =>
         let topLine =
           Editor.projectLine(

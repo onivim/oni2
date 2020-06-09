@@ -3,7 +3,7 @@ open Types;
 
 type autocmdListener = (autocmd, Native.buffer) => unit;
 type bufferListener = Native.buffer => unit;
-type bufferLineEndingsChangedListener = (int, lineEnding) => unit;
+type bufferLineEndingsChangedListener = (int, Oni_Core.LineEnding.t) => unit;
 type bufferModifiedChangedListener = (int, bool) => unit;
 type bufferMetadataChangedListener = BufferMetadata.t => unit;
 type bufferWriteListener = int => unit;
@@ -17,7 +17,7 @@ type messageListener = (Types.msgPriority, string, string) => unit;
 type modeChangedListener = mode => unit;
 type quitListener = (Types.quitType, bool) => unit;
 type topLineChangedListener = int => unit;
-type visualRangeChangedListener = VisualRange.t => unit;
+type visualRangeChangedListener = Oni_Core.VisualRange.t => unit;
 type windowMovementListener = (Types.windowMovementType, int) => unit;
 type windowSplitListener = (Types.windowSplitType, string) => unit;
 type yankListener = Yank.t => unit;

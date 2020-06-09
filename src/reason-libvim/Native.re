@@ -1,5 +1,5 @@
 type buffer = Types.buffer;
-type lineEnding = Types.lineEnding;
+type lineEnding = Oni_Core.LineEnding.t;
 
 external vimInit: unit => unit = "libvim_vimInit";
 external vimInput: string => unit = "libvim_vimInput";
@@ -72,7 +72,7 @@ external vimUndoSaveRegion: (int, int) => unit = "libvim_vimUndoSaveRegion";
 external vimVisualGetRange: unit => (int, int, int, int) =
   "libvim_vimVisualGetRange";
 
-external vimVisualGetType: unit => Types.visualType =
+external vimVisualGetType: unit => Oni_Core.VisualRange.mode =
   "libvim_vimVisualGetType";
 
 external vimWindowGetWidth: unit => int = "libvim_vimWindowGetWidth";

@@ -14,7 +14,7 @@ describe("Selection", ({test, _}) =>
     /* Visual range is one-based */
     let vr =
       VisualRange.create(
-        ~mode=Vim.Types.Line,
+        ~mode=VisualRange.Line,
         Range.{
           start: Location.{line: Index.zero, column: Index.zero},
           stop: Location.{line: Index.(zero + 1), column: Index.(zero + 4)},

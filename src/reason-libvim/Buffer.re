@@ -106,7 +106,7 @@ let onFiletypeChanged = (f: Listeners.bufferMetadataChangedListener) => {
   Event.add(f, Listeners.bufferFiletypeChanged);
 };
 
-let onLineEndingsChanged = (f: (int, Types.lineEnding) => unit) => {
+let onLineEndingsChanged = (f: (int, Oni_Core.LineEnding.t) => unit) => {
   Event.add2(f, Listeners.bufferLineEndingsChanged);
 };
 

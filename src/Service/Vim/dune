@@ -4,6 +4,7 @@
     (libraries 
       editor-core-types
       Oni2.core
+      libvim
       isolinear
     )
     (preprocess (pps ppx_let ppx_deriving.show)))

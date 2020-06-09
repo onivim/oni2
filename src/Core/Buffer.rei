@@ -21,8 +21,8 @@ let setFilePath: (option(string), t) => t;
 
 let getEstimatedMaxLineLength: t => int;
 
-let getLineEndings: t => option(Vim.lineEnding);
-let setLineEndings: (Vim.lineEnding, t) => t;
+let getLineEndings: t => option(LineEnding.t);
+let setLineEndings: (LineEnding.t, t) => t;
 
 let getShortFriendlyName: t => option(string);
 let getMediumFriendlyName: (~workingDirectory: string=?, t) => option(string);

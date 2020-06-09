@@ -1,7 +1,5 @@
 open EditorCoreTypes;
 
-type lineEnding = Types.lineEnding;
-
 module AutoClosingPairs: {
   module AutoPair: {
     type t = {
@@ -63,9 +61,9 @@ module Buffer: {
   */
   let getFiletype: t => option(string);
 
-  let getLineEndings: t => option(lineEnding);
+  let getLineEndings: t => option(Oni_Core.LineEnding.t);
 
-  let setLineEndings: (t, lineEnding) => unit;
+  let setLineEndings: (t, Oni_Core.LineEnding.t) => unit;
 
   /**
   [getVersion(buffer)] returns the latest changedtick of the buffer [buffer].
@@ -300,6 +298,5 @@ module Options = Options;
 module Search = Search;
 module Types = Types;
 module Visual = Visual;
-module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;

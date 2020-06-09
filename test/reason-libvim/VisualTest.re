@@ -72,7 +72,7 @@ describe("Visual", ({describe, _}) => {
       let rangeChanges: ref(list(Range.t)) = ref([]);
       let dispose =
         Visual.onRangeChanged(vr => {
-          open Vim.VisualRange;
+          open Oni_Core.VisualRange;
           let {range, _} = vr;
           rangeChanges := [range, ...rangeChanges^];
         });

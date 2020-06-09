@@ -1,7 +1,5 @@
 open EditorCoreTypes;
 
-type lineEnding = Types.lineEnding;
-
 module AutoClosingPairs = AutoClosingPairs;
 module AutoCommands = AutoCommands;
 module Buffer = Buffer;
@@ -20,7 +18,6 @@ module Search = Search;
 module Types = Types;
 module Undo = Undo;
 module Visual = Visual;
-module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
 
@@ -122,8 +119,7 @@ let runWith = (~context: Context.t, f) => {
       || newMode == Visual
       && prevMode != Visual
       || prevVisualMode != newVisualMode) {
-    let vr =
-      VisualRange.create(~range=newRange, ~visualType=newVisualMode, ());
+    let vr = Oni_Core.VisualRange.create(~mode=newVisualMode, newRange);
     Event.dispatch(vr, Listeners.visualRangeChanged);
   };
 

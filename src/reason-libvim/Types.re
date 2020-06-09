@@ -11,11 +11,6 @@ type clipboardContents = {
 
 type clipboardProvider = int => option(clipboardContents);
 
-type lineEnding =
-  | CR
-  | LF
-  | CRLF;
-
 type mode =
   | Normal
   | Insert
@@ -36,12 +31,6 @@ type cmdline = {
   text: string,
   position: int,
 };
-
-type visualType =
-  | Character
-  | Line
-  | Block
-  | None;
 
 type msgPriority =
   | Info

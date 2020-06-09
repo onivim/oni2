@@ -387,15 +387,9 @@ module View = {
     };
 
     let lineEndings = () => {
-      let toString =
-        fun
-        | Vim.Types.LF => "LF"
-        | Vim.Types.CR => "CR"
-        | Vim.Types.CRLF => "CRLF";
-
       activeBuffer
       |> OptionEx.flatMap(Buffer.getLineEndings)
-      |> Option.map(toString)
+      |> Option.map(LineEnding.toString)
       |> Option.map(text => {<textItem font background theme text />})
       |> Option.value(~default=React.empty);
     };

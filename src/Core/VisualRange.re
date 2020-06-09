@@ -1,6 +1,10 @@
 open EditorCoreTypes;
 
-type mode = Vim.Types.visualType;
+type mode =
+  | Character
+  | Line
+  | Block
+  | None;
 
 type t = {
   range: Range.t,

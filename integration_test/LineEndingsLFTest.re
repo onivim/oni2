@@ -25,7 +25,7 @@ runTest(~name="LineEndingsLFTest", (dispatch, wait, _runEffects) => {
     state
     |> Selectors.getActiveBuffer
     |> OptionEx.flatMap(Buffer.getLineEndings)
-    |> Option.map(lineEndings => lineEndings == Vim.Types.LF)
+    |> Option.map(lineEndings => lineEndings == LineEnding.LF)
     |> Option.value(~default=false)
   });
 
@@ -37,7 +37,7 @@ runTest(~name="LineEndingsLFTest", (dispatch, wait, _runEffects) => {
     state
     |> Selectors.getActiveBuffer
     |> OptionEx.flatMap(Buffer.getLineEndings)
-    |> Option.map(lineEndings => lineEndings == Vim.Types.CRLF)
+    |> Option.map(lineEndings => lineEndings == LineEnding.CRLF)
     |> Option.value(~default=false)
   });
 

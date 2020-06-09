@@ -26,7 +26,7 @@ type t =
   | BufferEnter({
       id: int,
       fileType: option(string),
-      lineEndings: [@opaque] option(Vim.lineEnding),
+      lineEndings: [@opaque] option(Oni_Core.LineEnding.t),
       filePath: option(string),
       isModified: bool,
       version: int,
@@ -48,7 +48,7 @@ type t =
     })
   | BufferLineEndingsChanged({
       id: int,
-      lineEndings: [@opaque] Vim.lineEnding,
+      lineEndings: [@opaque] Oni_Core.LineEnding.t,
     })
   | BufferRenderer(BufferRenderer.action)
   | BufferSaved(int)

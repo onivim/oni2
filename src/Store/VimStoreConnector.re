@@ -299,25 +299,8 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.Visual.onRangeChanged(vr => {
-      open Vim.VisualRange;
-
-      let {visualType, range} = vr;
-      let vr =
-        Core.VisualRange.create(
-          ~mode=visualType,
-          Range.{
-            start: {
-              ...range.start,
-              column: range.start.column,
-            },
-            stop: {
-              ...range.stop,
-              column: range.stop.column,
-            },
-          },
-        );
-      dispatch(SelectionChanged(vr));
+    Vim.Visual.onRangeChanged(visualRange => {
+      dispatch(SelectionChanged(visualRange))
     });
 
   let _: unit => unit =
@@ -360,7 +343,7 @@ let start =
           | None => None
           };
 
-        let lineEndings: option(Vim.lineEnding) =
+        let lineEndings: option(Core.LineEnding.t) =
           Vim.Buffer.getLineEndings(buf);
 
         let state = getState();
@@ -739,7 +722,7 @@ let start =
         };
 
         let completion = Path.trimTrailingSeparator(completion);
-        let latestContext: Vim.Context.t = Core.VimEx.inputString(completion);
+        let latestContext: Vim.Context.t = VimEx.inputString(completion);
         updateActiveEditorCursors(latestContext.cursors);
         isCompleting := false;
       }
@@ -757,8 +740,7 @@ let start =
                Vim.command("set paste") |> ignore;
              };
 
-             let latestContext: Vim.Context.t =
-               Oni_Core.VimEx.inputString(text);
+             let latestContext: Vim.Context.t = VimEx.inputString(text);
 
              if (!isCmdLineMode) {
                updateActiveEditorCursors(latestContext.cursors);

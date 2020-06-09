@@ -5,7 +5,7 @@
     (c_flags (:include c_flags.sexp))
     (c_names bindings)
     (cxx_flags (:include cxx_flags.sexp))
-    (libraries editor-core-types))
+    (libraries editor-core-types Oni2.core))
 
 (rule
     (targets c_flags.sexp cxx_flags.sexp flags.sexp)

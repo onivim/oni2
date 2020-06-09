@@ -3,6 +3,7 @@
     (public_name Oni2.extensions)
     (libraries
         str
+        libvim
         bigarray
         zed_oni
         luv

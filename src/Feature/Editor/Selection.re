@@ -159,7 +159,7 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
     let endCharacter = Index.toZeroBased(selection.range.stop.column);
 
     switch (selection.mode) {
-    | Vim.Types.Block =>
+    | VisualRange.Block =>
       getRangesForBlockSelection(
         startLine,
         startCharacter,
@@ -167,9 +167,9 @@ let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
         endCharacter,
         buffer,
       )
-    | Vim.Types.Line =>
+    | VisualRange.Line =>
       getRangesForLinewiseSelection(startLine, endLine, buffer)
-    | Vim.Types.Character =>
+    | VisualRange.Character =>
       getRangesForVisualSelection(
         startLine,
         startCharacter,
