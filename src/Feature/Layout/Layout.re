@@ -432,46 +432,20 @@ let%test_module "resizeWindow" =
  */
 let rec resizeSplit = (~path, ~delta, node) => {
   switch (path) {
-  | [] => node
+  | [] => node // shouldn't happen
+
   | [index] =>
     switch (node.kind) {
     | `Split(direction, children) =>
-      let childCount = List.length(children);
-      let totalWeight =
-        children
-        |> List.map(child => child.meta.size)
-        |> List.fold_left((+.), 0.)
-        |> max(1.);
-      let minimumWeight =
-        min(0.1 *. totalWeight, totalWeight /. float(childCount));
-      let deltaWeight = totalWeight *. delta;
-
-      let rec resizeChildren = i => (
-        fun
-        | [] => [] // shouldn't happen
-        | [node] => [node] // shouldn't happen
-        | [node, next, ...rest] when index == i => {
-            let weight = node.meta.size;
-            let nextWeight = next.meta.size;
-            let deltaWeight =
-              if (weight +. deltaWeight < minimumWeight) {
-                -. (weight -. minimumWeight);
-              } else if (nextWeight -. deltaWeight < minimumWeight) {
-                nextWeight -. minimumWeight;
-              } else {
-                deltaWeight;
-              };
-
-            [
-              node |> withSize(weight +. deltaWeight),
-              next |> withSize(nextWeight -. deltaWeight),
-              ...rest,
-            ];
-          }
-        | [node, ...rest] => [node, ...resizeChildren(i + 1, rest)]
-      );
-
-      split(~size=node.meta.size, direction, resizeChildren(0, children));
+      split(
+        ~size=node.meta.size,
+        direction,
+        shiftWeightRight(
+          ~delta=totalWeight(children) *. delta,
+          index,
+          children,
+        ),
+      )
 
     | `Window(_) => node
     }
@@ -483,8 +457,9 @@ let rec resizeSplit = (~path, ~delta, node) => {
         ~size=node.meta.size,
         direction,
         List.mapi(
-          (i, child) =>
-            i == index ? resizeSplit(~path=rest, ~delta, child) : child,
+          (i, child) => {
+            i == index ? resizeSplit(~path=rest, ~delta, child) : child
+          },
           children,
         ),
       )
