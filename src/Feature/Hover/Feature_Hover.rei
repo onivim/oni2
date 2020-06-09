@@ -1,3 +1,9 @@
+[@deriving show({with_path: false})]
+type provider = {
+  handle: int,
+  selector: list(Exthost.DocumentFilter.t),
+};
+
 type model;
 
 let initial: model;
@@ -8,7 +14,8 @@ type command;
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
-  | KeyPressed(string);
+  | KeyPressed(string)
+  | ProviderRegistered(provider);
 
 let update: (model, msg) => model;
 

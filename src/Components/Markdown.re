@@ -50,13 +50,12 @@ open {
                  TextmateTokenizerJob.getTokenColors(i, tokenizerJob);
                List.map(
                  (token: ColorizedToken.t) => {
-                   print_endline(string_of_int(token.index));
                    Markdown.SyntaxHighlight.makeHighlight(
                      ~byteIndex=token.index,
                      ~color=token.foregroundColor,
                      ~bold=false,
                      ~italic=false,
-                   );
+                   )
                  },
                  tokens,
                );

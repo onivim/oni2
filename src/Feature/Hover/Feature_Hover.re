@@ -2,10 +2,23 @@
      This feature project contains logic related to Hover
    */
 open Oni_Core;
+open Revery;
+open Revery.UI;
 
-type model = {shown: bool};
+module Log = (val Log.withNamespace("Oni.Feature.Hover"));
 
-let initial = {shown: false};
+[@deriving show({with_path: false})]
+type provider = {
+  handle: int,
+  selector: list(Exthost.DocumentFilter.t),
+};
+
+type model = {
+  shown: bool,
+  providers: list(provider),
+};
+
+let initial = {shown: false, providers: []};
 
 [@deriving show({with_path: false})]
 type command =
@@ -14,12 +27,17 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
-  | KeyPressed(string);
+  | KeyPressed(string)
+  | ProviderRegistered(provider);
 
 let update = (model, msg) =>
   switch (msg) {
-  | Command(Show) => {shown: true}
-  | KeyPressed(_) => {shown: false}
+  | Command(Show) => {...model, shown: true}
+  | KeyPressed(_) => {...model, shown: false}
+  | ProviderRegistered(provider) => {
+      ...model,
+      providers: [provider, ...model.providers],
+    }
   };
 
 module Commands = {
@@ -39,9 +57,6 @@ module Contributions = {
 };
 
 module View = {
-  open Revery;
-  open Revery.UI;
-
   let make =
       (
         ~colorTheme,
