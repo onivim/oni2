@@ -12,12 +12,23 @@ type command =
 type msg =
   | Command(command)
   | DocumentFormatterAvailable({
-    handle: int,
-    selector: Exthost.DocumentSelector.t,
-    displayName: string,
-  });
+      handle: int,
+      selector: Exthost.DocumentSelector.t,
+      displayName: string,
+    });
 
-let update: (model, msg) => model;
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update:
+  (
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~extHostClient: Exthost.Client.t,
+    model,
+    msg
+  ) =>
+  (model, outmsg);
 
 // COMMANDS
 

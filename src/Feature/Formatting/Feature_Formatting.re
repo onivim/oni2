@@ -1,6 +1,14 @@
-type model = unit;
+open Exthost;
 
-let initial = ();
+type documentFormatter = {
+  handle: int,
+  selector: DocumentSelector.t,
+  displayName: string,
+};
+
+type model = {availableDocumentFormatters: list(documentFormatter)};
+
+let initial = {availableDocumentFormatters: []};
 
 [@deriving show]
 type command =
@@ -10,13 +18,61 @@ type command =
 type msg =
   | Command(command)
   | DocumentFormatterAvailable({
-    handle: int,
-    selector: Exthost.DocumentSelector.t,
-    displayName: string,
-  });
+      handle: int,
+      selector: Exthost.DocumentSelector.t,
+      displayName: string,
+    });
 
-let update = (model, _msg) => {
-  model;
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update = (~maybeBuffer, ~extHostClient, model, msg) => {
+  switch (msg) {
+  | Command(FormatDocument) =>
+    switch (maybeBuffer) {
+    | None => (model, Nothing)
+    | Some(buf) =>
+      let filetype =
+        buf
+        |> Oni_Core.Buffer.getFileType
+        |> Option.value(~default="plaintext");
+
+      let matchingFormatters =
+        model.availableDocumentFormatters
+        |> List.filter(({selector, _}) =>
+             DocumentSelector.matches(~filetype, selector)
+           );
+
+      let effects =
+        matchingFormatters
+        |> List.map(formatter =>
+             Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits(
+               ~handle=formatter.handle,
+               ~uri=Oni_Core.Buffer.getUri(buf),
+               // TODO: Hook up to indentation settings
+               ~options=
+                 Exthost.FormattingOptions.{tabSize: 2, insertSpaces: true},
+               extHostClient,
+               _res
+               // TODO: Map back to formatting edits
+               // Json parse error?
+               => failwith("Got edits: " ++ string_of_int(formatter.handle)))
+           )
+        |> Isolinear.Effect.batch;
+
+      (model, Effect(effects));
+    }
+  | DocumentFormatterAvailable({handle, selector, displayName}) => (
+      {
+        availableDocumentFormatters: [
+          {handle, selector, displayName},
+          ...model.availableDocumentFormatters,
+        ],
+      },
+      Nothing,
+    )
+  };
 };
 
 // COMMANDS
