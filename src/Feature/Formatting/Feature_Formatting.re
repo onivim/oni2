@@ -21,7 +21,9 @@ type msg =
       handle: int,
       selector: Exthost.DocumentSelector.t,
       displayName: string,
-    });
+    })
+  | EditsReceived(list(Oni_Core.SingleEdit.t))
+  | EditRequestFailed(string);
 
 type outmsg =
   | Nothing
@@ -54,10 +56,17 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
                ~options=
                  Exthost.FormattingOptions.{tabSize: 2, insertSpaces: true},
                extHostClient,
-               _res
-               // TODO: Map back to formatting edits
-               // Json parse error?
-               => failwith("Got edits: " ++ string_of_int(formatter.handle)))
+               res => {
+                 prerr_endline(
+                   "Got edits: " ++ string_of_int(formatter.handle),
+                 );
+                 switch (res) {
+                 | Ok(_edits) => EditsReceived([])
+                 | Error(msg) => EditRequestFailed(msg)
+                 };
+                 // TODO: Map result edits to formatting edits
+               },
+             )
            )
         |> Isolinear.Effect.batch;
 
@@ -72,6 +81,12 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
       },
       Nothing,
     )
+  | EditsReceived(_) =>
+    // TODO: Handle formatting edits
+    (model, Nothing)
+  | EditRequestFailed(msg) =>
+    // TODO: Show error notificaiton
+    (model, Nothing)
   };
 };
 

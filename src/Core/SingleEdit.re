@@ -2,6 +2,7 @@ open EditorCoreTypes;
 
 module Log = (val Kernel.Log.withNamespace("SingleEdit"));
 
+[@deriving show]
 type t = {
   range: Range.t,
   text: option(string),

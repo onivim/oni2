@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 
+[@deriving show]
 type t = {
   range: Range.t,
   text: option(string),

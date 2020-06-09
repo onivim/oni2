@@ -15,7 +15,9 @@ type msg =
       handle: int,
       selector: Exthost.DocumentSelector.t,
       displayName: string,
-    });
+    })
+  | EditsReceived(list(Oni_Core.SingleEdit.t))
+  | EditRequestFailed(string);
 
 type outmsg =
   | Nothing
