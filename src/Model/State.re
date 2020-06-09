@@ -61,6 +61,7 @@ type t = {
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
+  hover: Feature_Hover.model,
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
@@ -133,6 +134,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
+    hover: Feature_Hover.initial,
     zenMode: false,
     pane: Pane.initial,
     searchPane: Feature_Search.initial,

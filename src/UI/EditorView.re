@@ -52,6 +52,7 @@ let make =
              }
            }
          </Feature_Layout.View>
+         <Feature_Hover.View theme model={state.hover} />
        </View>;
      }}
   </View>;

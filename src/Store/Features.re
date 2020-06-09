@@ -330,6 +330,11 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Hover(msg) => (
+      {...state, hover: Feature_Hover.update(state.hover, msg)},
+      Isolinear.Effect.none,
+    )
+
   | _ => (state, Effect.none)
   };
 
