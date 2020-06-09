@@ -7,6 +7,7 @@
       Oni2.extensions
       Oni2.syntax
       Oni2.feature.commands
+      Oni2.components
       uucp
     )
     (preprocess (pps ppx_deriving.show brisk-reconciler.ppx)))

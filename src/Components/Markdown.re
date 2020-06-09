@@ -9,9 +9,18 @@ open Revery.UI.Components;
 open Oni_Core;
 open Oni_Syntax;
 
+module Colors = Feature_Theme.Colors;
+
 open {
        let syntaxHighlighter =
-           (~theme, ~languageInfo, ~grammars, ~language, lines) => {
+           (
+             ~tokenTheme,
+             ~colorTheme,
+             ~languageInfo,
+             ~grammars,
+             ~language,
+             lines,
+           ) => {
          let grammarRepository =
            Textmate.GrammarRepository.create(scope =>
              GrammarRepository.getGrammar(~scope, grammars)
@@ -21,35 +30,51 @@ open {
            Oni_Extensions.LanguageInfo.getScopeFromLanguage(
              languageInfo,
              language,
-           )
-           |> Option.value(~default="source.plaintext");
+           );
 
-         let tokenizerJob =
-           TextmateTokenizerJob.create(
-             ~scope,
-             ~theme,
-             ~grammarRepository,
-             Array.of_list(lines),
-           )
-           |> Job.tick(~budget=Some(0.1));
+         switch (scope) {
+         | Some(scope) =>
+           let tokenizerJob =
+             TextmateTokenizerJob.create(
+               ~scope,
+               ~theme=tokenTheme,
+               ~grammarRepository,
+               Array.of_list(lines),
+             )
+             |> Job.tick(~budget=Some(0.1));
 
-         List.init(
-           List.length(lines),
-           i => {
-             let tokens =
-               TextmateTokenizerJob.getTokenColors(i, tokenizerJob);
-             List.map(
-               (token: ColorizedToken.t) =>
-                 Markdown.SyntaxHighlight.makeHighlight(
-                   ~byteIndex=token.index,
-                   ~color=token.foregroundColor,
-                   ~bold=false,
-                   ~italicized=false,
-                 ),
-               tokens,
-             );
-           },
-         );
+           List.init(
+             List.length(lines),
+             i => {
+               let tokens =
+                 TextmateTokenizerJob.getTokenColors(i, tokenizerJob);
+               List.map(
+                 (token: ColorizedToken.t) => {
+                   print_endline(string_of_int(token.index));
+                   Markdown.SyntaxHighlight.makeHighlight(
+                     ~byteIndex=token.index,
+                     ~color=token.foregroundColor,
+                     ~bold=false,
+                     ~italicized=false,
+                   );
+                 },
+                 tokens,
+               );
+             },
+           );
+         | None =>
+           // TODO: Replace this with SyntaxHighlight.default when revery#906 is merged
+           List.init(List.length(lines), _ =>
+             [
+               Markdown.SyntaxHighlight.makeHighlight(
+                 ~byteIndex=0,
+                 ~color=Colors.Editor.foreground.from(colorTheme),
+                 ~bold=false,
+                 ~italicized=false,
+               ),
+             ]
+           )
+         };
        };
 
        module Styles = {
@@ -82,7 +107,8 @@ let make =
   let textStyle = Styles.text(~theme=colorTheme);
   <Markdown
     syntaxHighlighter={syntaxHighlighter(
-      ~theme=tokenTheme,
+      ~tokenTheme,
+      ~colorTheme,
       ~languageInfo,
       ~grammars,
     )}

@@ -42,6 +42,44 @@ module View = {
   open Revery;
   open Revery.UI;
 
-  let make = (~theme, ~model, ()) =>
-    <View> {model.shown ? <Text text="Showing hover!!!" /> : <View />} </View>;
+  let make =
+      (
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~fontFamily,
+        ~codeFontFamily,
+        ~model,
+        (),
+      ) => {
+    let grammars = Oni_Syntax.GrammarRepository.create(languageInfo);
+    print_endline(
+      Revery.Font.Family.toPath(
+        codeFontFamily,
+        Revery.Font.Weight.Normal,
+        false,
+        true,
+      ),
+    );
+    model.shown
+      ? <View>
+          <Oni_Components.Markdown
+            colorTheme
+            tokenTheme
+            languageInfo
+            fontFamily
+            codeFontFamily
+            grammars
+            markdown="
+```reason
+let x = 4;
+```
+```reasonml
+let x = 4;
+```
+            "
+          />
+        </View>
+      : React.empty;
+  };
 };
