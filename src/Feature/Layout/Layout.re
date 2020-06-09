@@ -27,6 +27,102 @@ let empty = vsplit([]);
 
 let singleton = id => vsplit([window(id)]);
 
+// INTERNAL
+open {
+       let totalWeight = nodes =>
+         nodes
+         |> List.map(child => child.meta.size)
+         |> List.fold_left((+.), 0.)
+         |> max(1.);
+
+       /**
+        * shiftWeightRight
+        *
+        * Shifts weight from `nodes[index]` to `nodes[index+1]` if delta is positive,
+        * vice versa if negative.
+        */
+       let shiftWeightRight = (~delta, index, nodes) => {
+         let totalWeight = totalWeight(nodes);
+         let minimumWeight =
+           min(
+             0.1 *. totalWeight,
+             totalWeight /. float(List.length(nodes)),
+           );
+
+         let rec loop = i =>
+           fun
+           | [] => []
+           | [node] => [node]
+           | [node, next, ...rest] when i == index => {
+               let delta =
+                 if (node.meta.size +. delta < minimumWeight) {
+                   min(0., -. (node.meta.size -. minimumWeight));
+                 } else if (next.meta.size +. delta < minimumWeight) {
+                   min(0., -. (next.meta.size -. minimumWeight));
+                 } else {
+                   delta;
+                 };
+
+               [
+                 node |> withSize(node.meta.size +. delta),
+                 next |> withSize(next.meta.size -. delta),
+                 ...rest,
+               ];
+             }
+           | [node, ...rest] => [node, ...loop(i + 1, rest)];
+
+         loop(0, nodes);
+       };
+
+       let%test_module "shiftWeightRight" =
+         (module
+          {
+            let sizes = List.map(node => node.meta.size);
+
+            let%test "sanity check: sizes - even" =
+              sizes([window(1), window(2), window(3)]) == [1., 1., 1.];
+            let%test "sanity check: sizes - uneven" =
+              sizes([
+                window(~size=0.95, 1),
+                window(~size=1.05, 2),
+                window(3),
+              ])
+              == [0.95, 1.05, 1.];
+
+            let%test "positive delta" = {
+              let initial = [window(1), window(2), window(3)];
+
+              let actual = initial |> shiftWeightRight(~delta=0.05, 1);
+
+              sizes(actual) == [1., 1.05, 0.95];
+            };
+
+            let%test "negative delta" = {
+              let initial = [window(1), window(2), window(3)];
+
+              let actual = initial |> shiftWeightRight(~delta=-0.05, 1);
+
+              sizes(actual) == [1., 0.95, 1.05];
+            };
+
+            let%test "target below minimum" = {
+              let initial = [window(1), window(~size=0.1, 2), window(3)];
+
+              let actual = initial |> shiftWeightRight(~delta=0.05, 1);
+
+              sizes(actual) == sizes(initial);
+            };
+
+            let%test "next below minimum - negative delta" = {
+              let initial = [window(1), window(2), window(~size=0.1, 3)];
+
+              let actual = initial |> shiftWeightRight(~delta=-0.05, 1);
+
+              sizes(actual) == sizes(initial);
+            };
+          });
+     };
+
 /**
  * addWindow
  */
