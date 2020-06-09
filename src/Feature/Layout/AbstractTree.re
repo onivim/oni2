@@ -8,13 +8,13 @@ type node('id, 'meta) = {
 };
 
 module DSL = {
-  let split = (~meta, direction, children) => {
+  let split = (meta, direction, children) => {
     meta,
     kind: `Split((direction, children)),
   };
-  let vsplit = (~meta, children) => split(~meta, `Vertical, children);
-  let hsplit = (~meta, children) => split(~meta, `Horizontal, children);
-  let window = (~meta, id) => {meta, kind: `Window(id)};
+  let vsplit = (meta, children) => split(meta, `Vertical, children);
+  let hsplit = (meta, children) => split(meta, `Horizontal, children);
+  let window = (meta, id) => {meta, kind: `Window(id)};
 
   let withMetadata = (meta, node) => {...node, meta};
 };
@@ -75,9 +75,9 @@ let%test_module "rotate" =
    {
      module DSL = {
        include DSL;
-       let hsplit = hsplit(~meta=());
-       let vsplit = vsplit(~meta=());
-       let window = window(~meta=());
+       let hsplit = hsplit();
+       let vsplit = vsplit();
+       let window = window();
      };
      open DSL;
 

@@ -12,10 +12,10 @@ module DSL = {
   open AbstractTree.DSL;
 
   let split = (~size=1., direction, children) =>
-    split(~meta={size: size}, direction, children);
+    split({size: size}, direction, children);
   let vsplit = (~size=1., children) => split(~size, `Vertical, children);
   let hsplit = (~size=1., children) => split(~size, `Horizontal, children);
-  let window = (~size=1., id) => window(~meta={size: size}, id);
+  let window = (~size=1., id) => window({size: size}, id);
 
   let withSize = (size, node) => node |> withMetadata({size: size});
 };
