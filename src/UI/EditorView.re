@@ -52,14 +52,6 @@ let make =
              }
            }
          </Feature_Layout.View>
-         <Feature_Hover.View
-           colorTheme=theme
-           tokenTheme={state.tokenTheme}
-           model={state.hover}
-           fontFamily={state.uiFont.family}
-           codeFontFamily={state.editorFont.fontFamily}
-           languageInfo={state.languageInfo}
-         />
        </View>;
      }}
   </View>;

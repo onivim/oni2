@@ -4,6 +4,7 @@
 open Oni_Core;
 open Revery;
 open Revery.UI;
+open EditorCoreTypes;
 
 module Log = (val Log.withNamespace("Oni.Feature.Hover"));
 
@@ -112,35 +113,63 @@ module Contributions = {
   let commands = Commands.[show];
 };
 
+module Styles = {
+  open Style;
+
+  let container = (~x, ~y) => [position(`Absolute), top(y), left(x)];
+};
+
 module View = {
   let make =
       (
         ~colorTheme,
         ~tokenTheme,
         ~languageInfo,
-        ~fontFamily,
-        ~codeFontFamily,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
         ~model,
+        ~editor: Feature_Editor.Editor.t,
+        ~buffer,
+        ~gutterWidth,
+        ~cursorOffset,
         (),
-      ) => {
-    let grammars = Oni_Syntax.GrammarRepository.create(languageInfo);
-    model.shown
-      ? <View>
-          {List.map(
-             markdown =>
-               <Oni_Components.Markdown
-                 colorTheme
-                 tokenTheme
-                 languageInfo
-                 fontFamily
-                 codeFontFamily
-                 grammars
-                 markdown
-               />,
-             model.contents,
-           )
-           |> React.listToElement}
-        </View>
-      : React.empty;
-  };
+      ) =>
+    switch (model.range, model.shown) {
+    | (Some(range), true) =>
+      let grammars = Oni_Syntax.GrammarRepository.create(languageInfo);
+      let y =
+        int_of_float(
+          editorFont.measuredHeight
+          *. float(Index.toZeroBased(range.start.line) + 1)
+          -. editor.scrollY
+          +. 0.5,
+        );
+
+      let x =
+        int_of_float(
+          gutterWidth
+          +. editorFont.measuredWidth
+          *. float(Index.toZeroBased(range.start.column))
+          -. editor.scrollX
+          +. 0.5,
+        );
+
+      <View style={Styles.container(~x, ~y)}>
+        {List.map(
+           markdown =>
+             <Oni_Components.Markdown
+               colorTheme
+               tokenTheme
+               languageInfo
+               fontFamily={uiFont.family}
+               codeFontFamily={editorFont.fontFamily}
+               grammars
+               markdown
+             />,
+           model.contents,
+         )
+         |> React.listToElement}
+      </View>;
+    | _ => React.empty
+    };
 };

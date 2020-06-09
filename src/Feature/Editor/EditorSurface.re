@@ -141,6 +141,11 @@ let%component make =
                 ~definition,
                 ~windowIsFocused,
                 ~config,
+                ~renderHover=(
+                               ~gutterWidth as _: float,
+                               ~cursorOffset as _: int,
+                             ) =>
+                               <View />,
                 (),
               ) => {
   let colors = Colors.precompute(theme);
@@ -311,6 +316,7 @@ let%component make =
       colors
       theme
       tokenTheme
+      renderHover
     />
     <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical

@@ -3,7 +3,6 @@
     This adapts Revery's built in Markdown component to our code highlighters
    */
 
-open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open Oni_Core;
@@ -125,5 +124,8 @@ let make =
     inlineCodeStyle=textStyle
     activeLinkStyle={Styles.linkActive(~theme=colorTheme)}
     inactiveLinkStyle={Styles.linkInactive(~theme=colorTheme)}
+    codeBlockBackgroundColor={
+      Colors.EditorHoverWidget.background.from(colorTheme)
+    }
   />;
 };

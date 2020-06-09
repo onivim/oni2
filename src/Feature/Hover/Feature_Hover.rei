@@ -44,9 +44,13 @@ module View: {
       ~colorTheme: Oni_Core.ColorTheme.Colors.t,
       ~tokenTheme: Oni_Syntax.TokenTheme.t,
       ~languageInfo: Oni_Extensions.LanguageInfo.t,
-      ~fontFamily: Revery.Font.Family.t,
-      ~codeFontFamily: Revery.Font.Family.t,
+      ~uiFont: Oni_Core.UiFont.t,
+      ~editorFont: Service_Font.font,
       ~model: model,
+      ~editor: Feature_Editor.Editor.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~gutterWidth: float,
+      ~cursorOffset: int,
       unit
     ) =>
     Revery.UI.element;

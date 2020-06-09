@@ -65,6 +65,7 @@ let make =
       ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
+      ~renderHover,
       (),
     ) => {
   let cursorLine = Index.toZeroBased(cursorPosition.line);
@@ -103,6 +104,7 @@ let make =
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
+        {renderHover(~gutterWidth, ~cursorOffset)}
         <HoverView
           x=cursorPixelX
           y=cursorPixelY
