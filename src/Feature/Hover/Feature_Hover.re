@@ -53,14 +53,6 @@ module View = {
         (),
       ) => {
     let grammars = Oni_Syntax.GrammarRepository.create(languageInfo);
-    print_endline(
-      Revery.Font.Family.toPath(
-        codeFontFamily,
-        Revery.Font.Weight.Normal,
-        false,
-        true,
-      ),
-    );
     model.shown
       ? <View>
           <Oni_Components.Markdown

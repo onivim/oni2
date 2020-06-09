@@ -56,7 +56,7 @@ let make =
            colorTheme=theme
            tokenTheme={state.tokenTheme}
            model={state.hover}
-           fontFamily={state.uiFont.normal}
+           fontFamily={state.uiFont.family}
            codeFontFamily={state.editorFont.fontFamily}
            languageInfo={state.languageInfo}
          />

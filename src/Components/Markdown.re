@@ -55,7 +55,7 @@ open {
                      ~byteIndex=token.index,
                      ~color=token.foregroundColor,
                      ~bold=false,
-                     ~italicized=false,
+                     ~italic=false,
                    );
                  },
                  tokens,
@@ -70,7 +70,7 @@ open {
                  ~byteIndex=0,
                  ~color=Colors.Editor.foreground.from(colorTheme),
                  ~bold=false,
-                 ~italicized=false,
+                 ~italic=false,
                ),
              ]
            )
