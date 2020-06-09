@@ -17,6 +17,11 @@ module DSL = {
   let window = (meta, id) => {meta, kind: `Window(id)};
 
   let withMetadata = (meta, node) => {...node, meta};
+  let withChildren = (children, node) =>
+    switch (node.kind) {
+    | `Split(direction, _) => {...node, kind: `Split((direction, children))}
+    | `Window(_) => node
+    };
 };
 
 let rec fold = (f, acc, node) =>

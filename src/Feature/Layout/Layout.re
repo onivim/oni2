@@ -18,6 +18,7 @@ module DSL = {
   let window = (~size=1., id) => window({size: size}, id);
 
   let withSize = (size, node) => node |> withMetadata({size: size});
+  let withChildren = withChildren;
 };
 
 include DSL;
