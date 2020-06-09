@@ -8,7 +8,12 @@ type command =
 
 [@deriving show]
 type msg =
-  | Command(command);
+  | Command(command)
+  | DocumentFormatterAvailable({
+    handle: int,
+    selector: Exthost.DocumentSelector.t,
+    displayName: string,
+  });
 
 module Commands = {
   open Feature_Commands.Schema;

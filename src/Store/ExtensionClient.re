@@ -277,6 +277,18 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
       withClient(onRegisterReferencesProvider(handle, selector));
       Lwt.return(Reply.okEmpty);
+    | LanguageFeatures(RegisterDocumentFormattingSupport({
+        handle,
+        selector,
+        displayName,
+        _
+    })) =>
+      dispatch(Formatting(Feature_Formatting.DocumentFormatterAvailable({
+        handle,
+        selector,
+        displayName
+      })));
+      Lwt.return(Reply.okEmpty);
     | LanguageFeatures(
         RegisterSuggestSupport({
           handle,

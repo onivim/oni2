@@ -5,7 +5,17 @@ type model;
 let initial: model;
 
 [@deriving show]
-type msg;
+type command =
+  | FormatDocument;
+
+[@deriving show]
+type msg =
+  | Command(command)
+  | DocumentFormatterAvailable({
+    handle: int,
+    selector: Exthost.DocumentSelector.t,
+    displayName: string,
+  });
 
 module Commands: {let formatDocument: Command.t(msg);};
 
