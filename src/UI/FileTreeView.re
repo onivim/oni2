@@ -169,7 +169,7 @@ let make =
       tree
       itemHeight=22
       onClick=onNodeClick
-      arrowColor={Colors.foreground.from(theme)}>
+      arrowColor={Colors.SideBar.foreground.from(theme)}>
       ...{node => {
         let decorations = StringMap.find_opt(node.path, decorations);
 
