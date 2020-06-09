@@ -82,8 +82,6 @@ let%test_module "addWindow" =
  * insertWindow
  */
 let insertWindow = (position, insertDirection, idToInsert, tree) => {
-  let `Before(targetId) | `After(targetId) = position;
-
   let splitWindow = node =>
     split(
       ~size=node.meta.size,
@@ -94,50 +92,50 @@ let insertWindow = (position, insertDirection, idToInsert, tree) => {
       },
     );
 
-  let rec traverse = node =>
-    switch (node.kind) {
-    | `Split(_, []) => {...node, kind: `Window(idToInsert)} // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
-    | `Split(direction, children) when direction == insertDirection =>
-      let onMatch = child =>
+  let replace = (index, newNode) =>
+    List.mapi((i, node) => i == index ? newNode : node);
+
+  let insertBefore = (i, node, nodes) => {
+    let left = Base.List.take(nodes, i - 1);
+    let right = Base.List.drop(nodes, i - 1);
+    left @ [node] @ right;
+  };
+
+  let insertAfter = (i, node, nodes) => {
+    let left = Base.List.take(nodes, i);
+    let right = Base.List.drop(nodes, i);
+    left @ [node] @ right;
+  };
+
+  let rec traverse = (path, node) =>
+    switch (path, node.kind) {
+    | ([], _) => splitWindow(node)
+
+    | ([i], `Split(direction, children)) when direction == insertDirection =>
+      let children =
         switch (position) {
-        | `Before(_) => [window(idToInsert), child]
-        | `After(_) => [child, window(idToInsert)]
+        | `Before(_) => insertBefore(i, window(idToInsert), children)
+        | `After(_) => insertAfter(i, window(idToInsert), children)
         };
-      split(
-        ~size=node.meta.size,
-        direction,
-        traverseChildren(~onMatch, [], children),
-      );
+      node |> withChildren(children);
 
-    | `Split(direction, children) =>
-      let onMatch = node => [splitWindow(node)];
-      split(
-        ~size=node.meta.size,
-        direction,
-        traverseChildren(~onMatch, [], children),
-      );
-
-    | `Window(id) when id == targetId => splitWindow(node)
-
-    | `Window(_) => node
-    }
-
-  and traverseChildren = (~onMatch, before, after) =>
-    switch (after) {
-    | [] => List.rev(before)
-    | [child, ...rest] =>
-      switch (child.kind) {
-      | `Window(id) when id == targetId =>
-        traverseChildren(~onMatch, List.rev(onMatch(child)) @ before, rest)
-
-      | `Window(_) => traverseChildren(~onMatch, [child, ...before], rest)
-
-      | `Split(_) =>
-        traverseChildren(~onMatch, [traverse(child), ...before], rest)
+    | ([i, ...rest], `Split(_, children)) =>
+      switch (List.nth_opt(children, i)) {
+      | Some(child) =>
+        let children = replace(i, traverse(rest, child), children);
+        node |> withChildren(children);
+      | None => node
       }
+
+    // shouldn't happen
+    | (_, `Window(_)) => node
     };
 
-  traverse(tree);
+  let `Before(targetId) | `After(targetId) = position;
+  switch (AbstractTree.path(targetId, tree)) {
+  | Some(path) => traverse(path, tree)
+  | None => tree
+  };
 };
 
 let%test_module "insertWindow" =
