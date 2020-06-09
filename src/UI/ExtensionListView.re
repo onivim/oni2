@@ -42,7 +42,7 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
       <View style=Style.[flexDirection(`Column), flexGrow(1)]>
         <Text
           style={Styles.text(~theme)}
-          fontFamily={font.normal}
+          fontFamily={font.family}
           fontSize={font.size}
           text={Manifest.getDisplayName(extension.manifest)}
         />
@@ -55,7 +55,7 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
             ]>
             <Text
               style={Styles.text(~theme)}
-              fontFamily={font.normal}
+              fontFamily={font.family}
               fontSize={font.size}
               text={extension.manifest.author}
             />
@@ -68,7 +68,7 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
             ]>
             <Text
               style={Styles.text(~theme)}
-              fontFamily={font.normal}
+              fontFamily={font.family}
               fontSize={font.size}
               text={extension.manifest.version}
             />

@@ -501,7 +501,7 @@ module Pane = {
         <Text
           style={Styles.text(~theme)}
           text=displayName
-          fontFamily={font.normal}
+          fontFamily={font.family}
           fontSize={font.size}
         />
       </Clickable>
@@ -524,7 +524,8 @@ module Pane = {
         <Text
           style={Styles.groupLabelText(~theme)}
           text=label
-          fontFamily={font.bold}
+          fontFamily={font.family}
+          fontWeight=Bold
           fontSize={font.size *. 0.85}
         />
       </View>
@@ -574,7 +575,7 @@ module Pane = {
         selection={model.inputBox.selection}
         placeholder={model.inputBox.placeholder}
         isFocused
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize={font.size}
         onClick={selection =>
           dispatch(InputBoxClicked({selection: selection}))

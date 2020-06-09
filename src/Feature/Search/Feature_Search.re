@@ -161,7 +161,7 @@ let make =
       <View style=Styles.row>
         <Text
           style={Styles.title(~theme)}
-          fontFamily={uiFont.normal}
+          fontFamily={uiFont.family}
           fontSize={uiFont.size}
           text="Find in Files"
         />
@@ -173,7 +173,7 @@ let make =
           value={model.queryInput}
           placeholder="Search"
           isFocused
-          fontFamily={uiFont.normal}
+          fontFamily={uiFont.family}
           fontSize={uiFont.size}
           onClick={selection => dispatch(InputClicked(selection))}
           theme
@@ -183,7 +183,7 @@ let make =
     <View style=Styles.resultsPane>
       <Text
         style={Styles.title(~theme)}
-        fontFamily={uiFont.normal}
+        fontFamily={uiFont.family}
         fontSize={uiFont.size}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
