@@ -6,7 +6,7 @@ open Oni_Core;
 open Utility;
 
 module FontAwesome = Oni_Components.FontAwesome;
-module FontIcon = Oni_Components.FontIcon;
+module Codicon = Oni_Components.Codicon;
 module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
@@ -69,16 +69,21 @@ module Styles = {
   let children = [transform(Transform.[TranslateX(Constants.indentSize)])];
 
   // Margin applied to center vertically
-  let arrow = size => [width(size), height(size), marginTop(4)];
+  let arrow = size => [
+    width(size),
+    height(size),
+    marginTop(4),
+    marginRight(4),
+  ];
 };
 
 module Make = (Model: TreeModel) => {
   let arrow = (~isOpen, ~color, ()) =>
     <View style={Styles.arrow(int_of_float(Constants.arrowSize))}>
-      <FontIcon
-        fontSize=Constants.arrowSize
+      <Codicon
+        icon={isOpen ? Codicon.chevronDown : Codicon.chevronRight}
         color
-        icon={isOpen ? FontAwesome.angleDown : FontAwesome.angleRight}
+        fontSize=Constants.arrowSize
       />
     </View>;
 
