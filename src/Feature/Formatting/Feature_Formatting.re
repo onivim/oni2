@@ -23,7 +23,8 @@ type msg =
       displayName: string,
     })
   | EditsReceived(list(Oni_Core.SingleEdit.t))
-  | EditRequestFailed(string);
+  | EditRequestFailed(string)
+  | EditCompleted;
 
 type outmsg =
   | Nothing
@@ -81,12 +82,23 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
       },
       Nothing,
     )
-  | EditsReceived(_) =>
+  | EditsReceived(edits) =>
     // TODO: Handle formatting edits
-    (model, Nothing)
+    let effect = Service_Vim.Effects.applyEdits(
+      ~bufferId=0,
+      ~version=0,
+      ~edits,
+      fun
+      | Ok() => EditCompleted
+      | Error(msg) => EditRequestFailed(msg)
+    );
+    (model, Effect(effect))
   | EditRequestFailed(msg) =>
     // TODO: Show error notificaiton
     (model, Nothing)
+  | EditCompleted =>
+  // TODO: Clear format session info
+  (model, Nothing)
   };
 };
 

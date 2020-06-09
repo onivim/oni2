@@ -17,7 +17,8 @@ type msg =
       displayName: string,
     })
   | EditsReceived(list(Oni_Core.SingleEdit.t))
-  | EditRequestFailed(string);
+  | EditRequestFailed(string)
+  | EditCompleted;
 
 type outmsg =
   | Nothing
