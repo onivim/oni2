@@ -133,10 +133,10 @@ module View = {
         ~gutterWidth,
         ~cursorOffset,
         (),
-      ) =>
+      ) => {
+    let grammars = Oni_Syntax.GrammarRepository.create(languageInfo);
     switch (model.range, model.shown) {
     | (Some(range), true) =>
-      let grammars = Oni_Syntax.GrammarRepository.create(languageInfo);
       let y =
         int_of_float(
           editorFont.measuredHeight
@@ -170,6 +170,41 @@ module View = {
          )
          |> React.listToElement}
       </View>;
+    | (None, true) =>
+      let cursorPosition =
+        Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+      let y =
+        int_of_float(
+          editorFont.measuredHeight
+          *. float(Index.toZeroBased(cursorPosition.line) + 1)
+          -. editor.scrollY
+          +. 0.5,
+        );
+      let x =
+        int_of_float(
+          gutterWidth
+          +. editorFont.measuredWidth
+          *. float(cursorOffset)
+          -. editor.scrollX
+          +. 0.5,
+        );
+      <View style={Styles.container(~x, ~y)}>
+        {List.map(
+           markdown =>
+             <Oni_Components.Markdown
+               colorTheme
+               tokenTheme
+               languageInfo
+               fontFamily={uiFont.family}
+               codeFontFamily={editorFont.fontFamily}
+               grammars
+               markdown
+             />,
+           model.contents,
+         )
+         |> React.listToElement}
+      </View>;
     | _ => React.empty
     };
+  };
 };
