@@ -43,8 +43,6 @@ let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
-let pixelPositionToBufferLineByte:
-  (~buffer: Buffer.t, ~pixelX: float, ~pixelY: float, t) => (int, int);
 let getVimCursors: t => list(Vim.Cursor.t);
 
 let scrollToColumn: (~column: int, t) => t;
@@ -84,3 +82,8 @@ let setFont: (~font: Service_Font.font, t) => t;
 let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
 
 let updateBuffer: (~buffer: EditorBuffer.t, t) => t;
+
+module Slow: {
+  let pixelPositionToBufferLineByte:
+    (~buffer: Buffer.t, ~pixelX: float, ~pixelY: float, t) => (int, int);
+};
