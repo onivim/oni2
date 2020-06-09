@@ -37,6 +37,23 @@ let rec map = (f, node) =>
     f({...node, kind: `Split((direction, List.map(map(f), children)))})
   };
 
+let path = (targetId, node) => {
+  exception Found(list(int));
+
+  let rec traverse = (path, node) =>
+    switch (node.kind) {
+    | `Split(_, children) =>
+      List.iteri(i => traverse([i, ...path]), children)
+    | `Window(id) when id == targetId => raise(Found(List.rev(path)))
+    | `Window(_) => ()
+    };
+
+  switch (traverse([], node)) {
+  | () => None
+  | exception (Found(path)) => Some(path)
+  };
+};
+
 let rec windowNodes = node =>
   switch (node.kind) {
   | `Window(_) => [node]
