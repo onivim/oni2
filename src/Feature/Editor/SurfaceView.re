@@ -163,9 +163,10 @@ let%component make =
           );
         };
 
-        let shadowSize = 18.;
+        let shadowSize = 16.;
         if (editor.scrollX > 1.) {
-          Draw.shadow(
+          Draw.Shadow.render(
+            ~direction=Right,
             ~context,
             ~x=0.,
             ~y=0.,
@@ -175,7 +176,8 @@ let%component make =
         };
 
         if (editor.scrollY > 1.) {
-          Draw.shadow2(
+          Draw.Shadow.render(
+            ~direction=Down,
             ~context,
             ~x=0.,
             ~y=-5.,
@@ -188,7 +190,8 @@ let%component make =
             +. float(bufferPixelWidth)
             < float(Editor.getTotalWidthInPixels(editor))) {
           let () =
-            Draw.shadow3(
+            Draw.Shadow.render(
+              ~direction=Left,
               ~context,
               ~x=float(bufferPixelWidth) -. shadowSize -. 1.0,
               ~y=0.,
@@ -202,7 +205,8 @@ let%component make =
             +. float(editor.pixelHeight)
             < float(Editor.getTotalHeightInPixels(editor))) {
           let () =
-            Draw.shadow4(
+            Draw.Shadow.render(
+              ~direction=Up,
               ~context,
               ~x=0.,
               ~y=float(editor.pixelHeight) -. shadowSize -. 1.0,

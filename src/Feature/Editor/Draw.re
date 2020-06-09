@@ -274,24 +274,29 @@ let lineHighlight = (~context, ~color, line) =>
     ~color,
   );
 
-let shadow = {
+module Gradient = {
   let paint = Skia.Paint.make();
 
-  (~context, ~x, ~y, ~width, ~height) => {
-    //Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
-
+  let drawLeftToRight =
+      (
+        ~leftColor: Revery.Color.t,
+        ~rightColor: Revery.Color.t,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      ) => {
     let left = x;
     let top = y;
     let right = x +. width;
-    //let height = y +. height;
 
     let gradient =
       Skia.Shader.makeLinearGradient2(
         ~startPoint=Skia.Point.make(left, 0.0),
         ~stopPoint=Skia.Point.make(right, 0.0),
-        ~startColor=
-          Revery.Color.rgba(0., 0., 0., 0.35) |> Revery.Color.toSkia,
-        ~stopColor=Revery.Color.rgba(0., 0., 0., 0.0) |> Revery.Color.toSkia,
+        ~startColor=leftColor |> Revery.Color.toSkia,
+        ~stopColor=rightColor |> Revery.Color.toSkia,
         ~tileMode=`repeat,
       );
 
@@ -306,25 +311,27 @@ let shadow = {
       context.canvasContext,
     );
   };
-};
 
-let shadow2 = {
-  let paint = Skia.Paint.make();
-
-  (~context, ~x, ~y, ~width, ~height) => {
-    //Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
-
+  let drawTopToBottom =
+      (
+        ~topColor: Revery.Color.t,
+        ~bottomColor: Revery.Color.t,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      ) => {
     let left = x;
     let top = y;
-    let bot = y +. height;
+    let bottom = y +. height;
 
     let gradient =
       Skia.Shader.makeLinearGradient2(
         ~startPoint=Skia.Point.make(0.0, top),
-        ~stopPoint=Skia.Point.make(0.0, bot),
-        ~startColor=
-          Revery.Color.rgba(0., 0., 0., 0.25) |> Revery.Color.toSkia,
-        ~stopColor=Revery.Color.rgba(0., 0., 0., 0.0) |> Revery.Color.toSkia,
+        ~stopPoint=Skia.Point.make(0.0, bottom),
+        ~startColor=topColor |> Revery.Color.toSkia,
+        ~stopColor=bottomColor |> Revery.Color.toSkia,
         ~tileMode=`repeat,
       );
 
@@ -341,72 +348,58 @@ let shadow2 = {
   };
 };
 
-let shadow3 = {
-  let paint = Skia.Paint.make();
+module Shadow = {
+  let shadowStartColor = Revery.Color.rgba(0., 0., 0., 0.30);
+  let shadowStopColor = Revery.Color.rgba(0., 0., 0., 0.);
 
-  (~context, ~x, ~y, ~width, ~height) => {
-    //Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
+  type direction =
+    | Left
+    | Right
+    | Down
+    | Up;
 
-    let left = x;
-    let right = x +. width;
-    let top = y;
-    //let bot = y +. height;
-
-    let gradient =
-      Skia.Shader.makeLinearGradient2(
-        ~startPoint=Skia.Point.make(right, 0.0),
-        ~stopPoint=Skia.Point.make(left, 0.0),
-        ~startColor=
-          Revery.Color.rgba(0., 0., 0., 0.25) |> Revery.Color.toSkia,
-        ~stopColor=Revery.Color.rgba(0., 0., 0., 0.0) |> Revery.Color.toSkia,
-        ~tileMode=`repeat,
-      );
-
-    Skia.Paint.setShader(paint, gradient);
-
-    CanvasContext.drawRectLtwh(
-      ~left,
-      ~top,
-      ~width,
-      ~height,
-      ~paint,
-      context.canvasContext,
-    );
+  let render = (~direction, ~x, ~y, ~width, ~height, ~context) => {
+    switch (direction) {
+    | Right =>
+      Gradient.drawLeftToRight(
+        ~leftColor=shadowStartColor,
+        ~rightColor=shadowStopColor,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      )
+    | Left =>
+      Gradient.drawLeftToRight(
+        ~leftColor=shadowStopColor,
+        ~rightColor=shadowStartColor,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      )
+    | Down =>
+      Gradient.drawTopToBottom(
+        ~topColor=shadowStartColor,
+        ~bottomColor=shadowStopColor,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      )
+    | Up =>
+      Gradient.drawTopToBottom(
+        ~topColor=shadowStopColor,
+        ~bottomColor=shadowStartColor,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      )
+    };
   };
 };
-
-let shadow4 = {
-  let paint = Skia.Paint.make();
-
-  (~context, ~x, ~y, ~width, ~height) => {
-    //Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
-
-    let left = x;
-    //let right = x +. width;
-    let top = y;
-    let bot = y +. height;
-
-    let gradient =
-      Skia.Shader.makeLinearGradient2(
-        ~startPoint=Skia.Point.make(0.0, bot),
-        ~stopPoint=Skia.Point.make(0.0, top),
-        ~startColor=
-          Revery.Color.rgba(0., 0., 0., 0.25) |> Revery.Color.toSkia,
-        ~stopColor=Revery.Color.rgba(0., 0., 0., 0.0) |> Revery.Color.toSkia,
-        ~tileMode=`repeat,
-      );
-
-    Skia.Paint.setShader(paint, gradient);
-
-    CanvasContext.drawRectLtwh(
-      ~left,
-      ~top,
-      ~width,
-      ~height,
-      ~paint,
-      context.canvasContext,
-    );
-  };
-};
-
-let rect = drawRect;
