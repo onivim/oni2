@@ -1,8 +1,11 @@
 open Exthost;
 
 // A format [session] describes a currently in-progress format request.
-type session = { bufferId: int, bufferVersion: int, sessionId: int};
-  
+type session = {
+  bufferId: int,
+  bufferVersion: int,
+  sessionId: int,
+};
 
 type documentFormatter = {
   handle: int,
@@ -16,7 +19,11 @@ type model = {
   activeSession: option(session),
 };
 
-let initial = {nextSessionId: 0, availableDocumentFormatters: [], session: None};
+let initial = {
+  nextSessionId: 0,
+  availableDocumentFormatters: [],
+  session: None,
+};
 
 [@deriving show]
 type command =
@@ -30,8 +37,14 @@ type msg =
       selector: Exthost.DocumentSelector.t,
       displayName: string,
     })
-  | EditsReceived({ sessionId: int, edits: list(Oni_Core.SingleEdit.t) })
-  | EditRequestFailed({ sessionId: int, msg: string})
+  | EditsReceived({
+      sessionId: int,
+      edits: list(Oni_Core.SingleEdit.t),
+    })
+  | EditRequestFailed({
+      sessionId: int,
+      msg: string,
+    })
   | EditCompleted;
 
 type outmsg =
@@ -71,8 +84,8 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
                    "Got edits: " ++ string_of_int(formatter.handle),
                  );
                  switch (res) {
-                 | Ok(_edits) => EditsReceived({ sessionId, edits: [] })
-                 | Error(msg) => EditRequestFailed({ sessionId, msg })
+                 | Ok(_edits) => EditsReceived({sessionId, edits: []})
+                 | Error(msg) => EditRequestFailed({sessionId, msg})
                  };
                  // TODO: Map result edits to formatting edits
                },
@@ -83,11 +96,12 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
       let model' = {
         ...model,
         nextSessionId: sessionId + 1,
-        activeSession: Some({
-          bufferId: Oni_Core.Buffer.getId(buf),
-          bufferVersion: Oni_Core.Buffer.getVersion(buf),
-          sessionId,
-        })
+        activeSession:
+          Some({
+            bufferId: Oni_Core.Buffer.getId(buf),
+            bufferVersion: Oni_Core.Buffer.getVersion(buf),
+            sessionId,
+          }),
       };
 
       (model', Effect(effects));
@@ -102,23 +116,24 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
       },
       Nothing,
     )
-  | EditsReceived({ sessionId, edits}) =>
+  | EditsReceived({sessionId, edits}) =>
     // TODO: Handle formatting edits
-    let effect = Service_Vim.Effects.applyEdits(
-      ~bufferId=0,
-      ~version=0,
-      ~edits,
-      fun
-      | Ok() => EditCompleted
-      | Error(msg) => EditRequestFailed({ sessionId, msg})
-    );
-    (model, Effect(effect))
+    let effect =
+      Service_Vim.Effects.applyEdits(
+        ~bufferId=0,
+        ~version=0,
+        ~edits,
+        fun
+        | Ok () => EditCompleted
+        | Error(msg) => EditRequestFailed({sessionId, msg}),
+      );
+    (model, Effect(effect));
   | EditRequestFailed(msg) =>
     // TODO: Show error notificaiton
     (model, Nothing)
   | EditCompleted =>
-  // TODO: Clear format session info
-  (model, Nothing)
+    // TODO: Clear format session info
+    (model, Nothing)
   };
 };
 
