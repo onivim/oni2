@@ -30,32 +30,32 @@ let singleton = id => vsplit([window(id)]);
 /**
  * addWindow
  */
-let addWindow = (direction, idToInsert, tree) => {
+let addWindow = (insertDirection, idToInsert, tree) => {
   switch (tree.kind) {
   | `Split(_, []) => window(~size=tree.meta.size, idToInsert)
 
-  | `Split(thisDirection, [firstChild, ...remainingChildren])
-      when thisDirection != direction =>
+  | `Split(direction, [firstChild, ...remainingChildren])
+      when direction != insertDirection =>
     split(
       ~size=tree.meta.size,
-      thisDirection,
+      direction,
       [
-        split(direction, [window(idToInsert), firstChild]),
+        split(insertDirection, [window(idToInsert), firstChild]),
         ...remainingChildren,
       ],
     )
 
-  | `Split(thisDirection, children) =>
+  | `Split(direction, children) =>
     split(
       ~size=tree.meta.size,
-      thisDirection,
+      direction,
       [window(idToInsert), ...children],
     )
 
   | `Window(id) =>
     split(
       ~size=tree.meta.size,
-      direction,
+      insertDirection,
       [window(idToInsert), window(id)],
     )
   };
@@ -81,13 +81,13 @@ let%test_module "addWindow" =
 /**
  * insertWindow
  */
-let insertWindow = (position, direction, idToInsert, tree) => {
+let insertWindow = (position, insertDirection, idToInsert, tree) => {
   let `Before(targetId) | `After(targetId) = position;
 
   let splitWindow = node =>
     split(
       ~size=node.meta.size,
-      direction,
+      insertDirection,
       switch (position) {
       | `Before(_) => [window(idToInsert), node |> withSize(1.)]
       | `After(_) => [node |> withSize(1.), window(idToInsert)]
@@ -97,7 +97,7 @@ let insertWindow = (position, direction, idToInsert, tree) => {
   let rec traverse = node =>
     switch (node.kind) {
     | `Split(_, []) => {...node, kind: `Window(idToInsert)} // HACK: to work around this being intially called with an idea that doesn't yet exist in the tree
-    | `Split(thisDirection, children) when thisDirection == direction =>
+    | `Split(direction, children) when direction == insertDirection =>
       let onMatch = child =>
         switch (position) {
         | `Before(_) => [window(idToInsert), child]
@@ -105,15 +105,15 @@ let insertWindow = (position, direction, idToInsert, tree) => {
         };
       split(
         ~size=node.meta.size,
-        thisDirection,
+        direction,
         traverseChildren(~onMatch, [], children),
       );
 
-    | `Split(thisDirection, children) =>
+    | `Split(direction, children) =>
       let onMatch = node => [splitWindow(node)];
       split(
         ~size=node.meta.size,
-        thisDirection,
+        direction,
         traverseChildren(~onMatch, [], children),
       );
 
