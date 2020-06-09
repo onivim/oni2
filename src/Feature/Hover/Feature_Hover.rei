@@ -17,7 +17,19 @@ type msg =
   | KeyPressed(string)
   | ProviderRegistered(provider);
 
-let update: (model, msg) => model;
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update:
+  (
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~maybeEditor: option(Feature_Editor.Editor.t),
+    ~extHostClient: Exthost.Client.t,
+    model,
+    msg
+  ) =>
+  (model, outmsg);
 
 module Contributions: {let commands: list(Oni_Core.Command.t(msg));};
 

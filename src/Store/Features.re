@@ -330,10 +330,25 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
-  | Hover(msg) => (
-      {...state, hover: Feature_Hover.update(state.hover, msg)},
-      Isolinear.Effect.none,
-    )
+  | Hover(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (model', eff) =
+      Feature_Hover.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.hover,
+        msg,
+      );
+    let effect =
+      switch (eff) {
+      | Feature_Hover.Nothing => Effect.none
+      | Feature_Hover.Effect(eff) =>
+        Effect.map(msg => Actions.Hover(msg), eff)
+      };
+    ({...state, hover: model'}, effect);
 
   | _ => (state, Effect.none)
   };
