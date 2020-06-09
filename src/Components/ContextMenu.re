@@ -85,7 +85,7 @@ module MenuItem = {
         let labelView = {
           let style = Styles.label(~theme, ~isFocused);
           <Text
-            fontFamily={font.normal}
+            fontFamily={font.family}
             fontSize=Constants.fontSize
             style
             text={item.label}

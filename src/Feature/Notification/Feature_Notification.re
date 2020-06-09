@@ -180,7 +180,7 @@ module View = {
           <Text
             style={Styles.text(~foreground)}
             text
-            fontFamily={font.normal}
+            fontFamily={font.family}
             fontSize=11.
           />;
         | None => React.empty
@@ -191,7 +191,7 @@ module View = {
         <source />
         <Text
           style={Styles.text(~foreground)}
-          fontFamily={font.normal}
+          fontFamily={font.family}
           fontSize=11.
           text={model.message}
         />
@@ -254,7 +254,7 @@ module View = {
             let foreground = Color.multiplyAlpha(0.5, foreground);
             <Text
               style={Styles.text(~foreground)}
-              fontFamily={font.normal}
+              fontFamily={font.family}
               fontSize=11.
               text
             />;
@@ -274,7 +274,7 @@ module View = {
           <source />
           <Text
             style={Styles.message(~foreground)}
-            fontFamily={font.normal}
+            fontFamily={font.family}
             fontSize=11.
             text={item.message}
           />
@@ -317,7 +317,7 @@ module View = {
             <Text
               style={Styles.title(~theme)}
               text="No notifications, yet!"
-              fontFamily={font.normal}
+              fontFamily={font.family}
               fontSize={font.size}
             />
           </View>;

@@ -205,7 +205,8 @@ let%component make =
       <View style=Styles.icon> fileIconView </View>
       <Text
         style={Styles.text(~isGroupFocused, ~isActive, ~theme)}
-        fontFamily={isGroupFocused && isActive ? uiFont.italic : uiFont.normal}
+        fontFamily={uiFont.family}
+        italic={isGroupFocused && isActive}
         fontSize={uiFont.size}
         text=title
       />
