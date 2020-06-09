@@ -22,3 +22,21 @@ let quitAll = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>
     ignore(Vim.command("qa!"): Vim.Context.t)
   );
+
+module Effects = {
+  let applyEdits = (
+    ~bufferId: int,
+    ~version: int,
+    ~edits: list(Oni_Core.SingleEdit.t),
+    toMsg: result(unit, string) => 'msg,
+  ) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="vim.applyEdits",
+      (dispatch) => {
+        Error("Not implemented")
+        |> toMsg
+        |> dispatch;
+      }
+    )
+  }
+};
