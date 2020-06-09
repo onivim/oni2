@@ -40,6 +40,7 @@ module Decoration = Decoration;
 module Persistence = Persistence;
 module Setup = Setup;
 module ShellUtility = ShellUtility;
+module SingleEdit = SingleEdit;
 module StringMap = Kernel.StringMap;
 module Subscription = Subscription;
 module SyntaxScope = SyntaxScope;
