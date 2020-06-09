@@ -241,6 +241,7 @@ let%component make =
 
   let (gutterWidth, gutterView) =
     <GutterView
+      editor
       showLineNumbers={Config.lineNumbers.get(config)}
       height={editor.pixelHeight}
       colors

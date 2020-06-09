@@ -163,58 +163,19 @@ let%component make =
           );
         };
 
-        let shadowSize = 16.;
-        if (editor.scrollX > 1.) {
-          Draw.Shadow.render(
-            ~direction=Right,
+        let () =
+          ScrollShadow.renderVertical(
+            ~editor,
+            ~width=float(bufferPixelWidth),
             ~context,
-            ~x=0.,
-            ~y=0.,
-            ~width=shadowSize,
-            ~height=float(editor.pixelHeight),
           );
-        };
-
-        if (editor.scrollY > 1.) {
-          Draw.Shadow.render(
-            ~direction=Down,
+        let () =
+          ScrollShadow.renderHorizontal(
+            ~editor,
+            ~width=float(bufferPixelWidth),
             ~context,
-            ~x=0.,
-            ~y=-5.,
-            ~width=float(editor.pixelWidth),
-            ~height=shadowSize,
           );
-        };
-
-        if (editor.scrollX
-            +. float(bufferPixelWidth)
-            < float(Editor.getTotalWidthInPixels(editor))) {
-          let () =
-            Draw.Shadow.render(
-              ~direction=Left,
-              ~context,
-              ~x=float(bufferPixelWidth) -. shadowSize -. 1.0,
-              ~y=0.,
-              ~width=shadowSize,
-              ~height=float(editor.pixelHeight),
-            );
-          ();
-        };
-
-        if (editor.scrollY
-            +. float(editor.pixelHeight)
-            < float(Editor.getTotalHeightInPixels(editor))) {
-          let () =
-            Draw.Shadow.render(
-              ~direction=Up,
-              ~context,
-              ~x=0.,
-              ~y=float(editor.pixelHeight) -. shadowSize -. 1.0,
-              ~width=float(editor.pixelWidth),
-              ~height=shadowSize,
-            );
-          ();
-        };
+        ();
       }}
     />
     <CursorView
