@@ -35,6 +35,32 @@ module Effects = {
         )
       );
   };
+
+  module LanguageFeatures = {
+    let provideDocumentFormattingEdits = (
+      ~handle,
+      ~uri,
+      ~options,
+      client,
+      toMsg
+    ) => {
+      Isolinear.Effect.createWithDispatch(~name="language.provideFormattingEdits",
+      (dispatch) => {
+        let promise = Exthost.Request.LanguageFeatures.provideDocumentFormattingEdits(
+          ~handle, 
+          ~resource=uri,
+          ~options,
+          client
+        );
+
+        Lwt.on_success(promise, 
+        Option.iter(edits => dispatch(toMsg(Ok(edits)))));
+
+        Lwt.on_failure(promise,
+        err => dispatch(toMsg(Error(Printexc.to_string(err)))));
+      });
+    };
+  };
 };
 
 module MutableState = {

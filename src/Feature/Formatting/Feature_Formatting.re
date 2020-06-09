@@ -15,6 +15,12 @@ type msg =
     displayName: string,
   });
 
+let update = (model, _msg) => {
+  model;
+};
+
+// COMMANDS
+
 module Commands = {
   open Feature_Commands.Schema;
 
@@ -26,6 +32,8 @@ module Commands = {
       Command(FormatDocument),
     );
 };
+
+// CONTRIBUTIONS
 
 module Contributions = {
   let commands = [Commands.formatDocument];

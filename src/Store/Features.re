@@ -33,6 +33,10 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | Formatting(msg) =>
+    let model' = Feature_Formatting.update(state.formatting, msg);
+    let state' = { ...state, formatting: model'};
+    (state', Effect.none);
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};

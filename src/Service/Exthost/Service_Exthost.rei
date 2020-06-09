@@ -14,6 +14,16 @@ module Effects: {
       (~handle: int, ~value: string, Exthost.Client.t) =>
       Isolinear.Effect.t(_);
   };
+
+  module LanguageFeatures: {
+    let provideDocumentFormattingEdits: (
+      ~handle: int,
+      ~uri: Oni_Core.Uri.t,
+      ~options: Exthost.FormattingOptions.t,
+      Exthost.Client.t,
+      result(list(Exthost.Edit.SingleEditOperation.t), string) => 'msg
+    ) => Isolinear.Effect.t('msg)
+  }
 };
 
 module Sub: {

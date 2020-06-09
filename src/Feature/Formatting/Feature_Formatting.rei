@@ -17,6 +17,12 @@ type msg =
     displayName: string,
   });
 
+let update: (model, msg) => model;
+
+// COMMANDS
+
 module Commands: {let formatDocument: Command.t(msg);};
+
+// CONTRIBUTIONS
 
 module Contributions: {let commands: list(Command.t(msg));};
