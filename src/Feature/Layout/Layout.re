@@ -603,50 +603,66 @@ let%test_module "removeWindow" =
 /**
  * resizeWindow
  */
-let resizeWindow = (direction, targetId, factor, node) => {
-  let rec traverse = (~parentDirection=?, node) =>
-    switch (node.kind) {
-    | `Split(dir, children) =>
-      let (result, children) =
-        List.fold_left(
-          ((accResult, accChildren), child) => {
-            let (result, newChild) = traverse(~parentDirection=dir, child);
+let resizeWindow = (resizeDirection, targetId, factor, node) => {
+  let inflate = (i, nodes) => {
+    let total = totalWeight(nodes);
+    let delta = total *. factor -. total;
 
-            (
-              result == `NotFound ? accResult : result,
-              [newChild, ...accChildren],
-            );
-          },
-          (`NotFound, []),
-          List.rev(children),
+    let nodes = Array.of_list(nodes);
+    let reclaimed = reclaimRight(~limit=delta, i, nodes);
+    let reclaimed =
+      reclaimLeft(~limit=delta -. reclaimed, i, nodes) +. reclaimed;
+    let node = nodes[i];
+    nodes[i] = node |> withWeight(node.meta.weight +. reclaimed);
+    Array.to_list(nodes);
+  };
+
+  let rec loop = (path, node) =>
+    switch (path, node.kind) {
+    | ([], _) => node // shouldn't happen
+
+    | ([index], `Split(direction, children))
+        when direction != resizeDirection =>
+      node |> withChildren(inflate(index, children))
+
+    | ([parentIndex, _], `Split(direction, children))
+        when direction != resizeDirection =>
+      node |> withChildren(inflate(parentIndex, children))
+
+    | ([index, ...rest], `Split(_, children)) =>
+      let children =
+        List.mapi(
+          (i, child) => i == index ? loop(rest, child) : child,
+          children,
         );
+      node |> withChildren(children);
 
-      switch (result, parentDirection) {
-      | (`NotAdjusted, Some(parentDirection))
-          when parentDirection != direction => (
-          `Adjusted,
-          split(~weight=node.meta.weight *. factor, dir, children),
-        )
-
-      | _ => (result, split(~weight=node.meta.weight, dir, children))
-      };
-
-    | `Window(id) when id == targetId =>
-      if (parentDirection == Some(direction)) {
-        (`NotAdjusted, node);
-      } else {
-        (`Adjusted, node |> withWeight(node.meta.weight *. factor));
-      }
-
-    | `Window(_) => (`NotFound, node)
+    | _ => raise(Invalid_argument("path"))
     };
 
-  traverse(node) |> snd;
+  switch (AbstractTree.path(targetId, node)) {
+  | Some(path) => loop(path, node)
+  | None => node
+  };
 };
-
+//
 let%test_module "resizeWindow" =
   (module
    {
+     let rec compareNode = (actual, expected) =>
+       if (abs_float(actual.meta.weight -. expected.meta.weight) > 0.001) {
+         false;
+       } else {
+         switch (actual.kind, expected.kind) {
+         | (`Window(aid), `Window(bid)) => aid == bid
+         | (`Split(adir, achildren), `Split(bdir, bchildren)) =>
+           adir == bdir && List.for_all2(compareNode, achildren, bchildren)
+         | _ => false
+         };
+       };
+
+     let (==) = compareNode;
+
      let%test "vsplit  - vresize" = {
        let initial = vsplit([window(1), window(2)]);
 
@@ -660,7 +676,7 @@ let%test_module "resizeWindow" =
 
        let actual = resizeWindow(`Horizontal, 2, 5., initial);
 
-       actual == vsplit([window(1), window(~weight=5., 2)]);
+       actual == vsplit([window(~weight=0.2, 1), window(~weight=1.8, 2)]);
      };
 
      let%test "hsplit  - hresize" = {
@@ -676,7 +692,7 @@ let%test_module "resizeWindow" =
 
        let actual = resizeWindow(`Vertical, 2, 5., initial);
 
-       actual == hsplit([window(1), window(~weight=5., 2)]);
+       actual == hsplit([window(~weight=0.2, 1), window(~weight=1.8, 2)]);
      };
 
      let%test "vsplit+hsplit - hresize" = {
@@ -685,7 +701,10 @@ let%test_module "resizeWindow" =
        let actual = resizeWindow(`Horizontal, 2, 5., initial);
 
        actual
-       == vsplit([window(1), hsplit(~weight=5., [window(2), window(3)])]);
+       == vsplit([
+            window(~weight=0.2, 1),
+            hsplit(~weight=1.8, [window(2), window(3)]),
+          ]);
      };
 
      let%test "vsplit+hsplit - vresize" = {
@@ -694,7 +713,10 @@ let%test_module "resizeWindow" =
        let actual = resizeWindow(`Vertical, 2, 5., initial);
 
        actual
-       == vsplit([window(1), hsplit([window(~weight=5., 2), window(3)])]);
+       == vsplit([
+            window(1),
+            hsplit([window(~weight=1.8, 2), window(~weight=0.2, 3)]),
+          ]);
      };
 
      let%test "hsplit+vsplit - hresize" = {
@@ -703,7 +725,10 @@ let%test_module "resizeWindow" =
        let actual = resizeWindow(`Horizontal, 2, 5., initial);
 
        actual
-       == hsplit([window(1), vsplit([window(~weight=5., 2), window(3)])]);
+       == hsplit([
+            window(1),
+            vsplit([window(~weight=1.8, 2), window(~weight=0.2, 3)]),
+          ]);
      };
 
      let%test "hsplit+vsplit - vresize" = {
@@ -711,8 +736,26 @@ let%test_module "resizeWindow" =
 
        let actual = resizeWindow(`Vertical, 2, 5., initial);
 
+       Console.log(show(Fmt.int, actual));
        actual
-       == hsplit([window(1), vsplit(~weight=5., [window(2), window(3)])]);
+       == hsplit([
+            window(~weight=0.2, 1),
+            vsplit(~weight=1.8, [window(2), window(3)]),
+          ]);
+     };
+
+     let%test "hsplit+vsplit - vresize - cascading" = {
+       let initial =
+         hsplit([window(1), vsplit([window(2), window(3)]), window(4)]);
+
+       let actual = resizeWindow(`Vertical, 2, 5., initial);
+
+       actual
+       == hsplit([
+            window(~weight=0.23, 1),
+            vsplit(~weight=2.47, [window(2), window(3)]),
+            window(~weight=0.3, 4),
+          ]);
      };
    });
 
