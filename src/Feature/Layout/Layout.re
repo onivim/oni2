@@ -726,15 +726,22 @@ let rec resizeSplit = (~path, ~delta, node) => {
   | [index] =>
     switch (node.kind) {
     | `Split(direction, children) =>
-      split(
-        ~weight=node.meta.weight,
-        direction,
-        shiftWeightRight(
-          ~delta=totalWeight(children) *. delta,
-          index,
-          children,
-        ),
-      )
+      let children =
+        if (delta > 0.) {
+          shiftWeightRight(
+            ~delta=totalWeight(children) *. delta,
+            index,
+            children,
+          );
+        } else {
+          shiftWeightLeft(
+            ~delta=totalWeight(children) *. (-. delta),
+            index + 1,
+            children,
+          );
+        };
+
+      split(~weight=node.meta.weight, direction, children);
 
     | `Window(_) => node
     }
@@ -746,9 +753,8 @@ let rec resizeSplit = (~path, ~delta, node) => {
         ~weight=node.meta.weight,
         direction,
         List.mapi(
-          (i, child) => {
-            i == index ? resizeSplit(~path=rest, ~delta, child) : child
-          },
+          (i, child) =>
+            i == index ? resizeSplit(~path=rest, ~delta, child) : child,
           children,
         ),
       )
