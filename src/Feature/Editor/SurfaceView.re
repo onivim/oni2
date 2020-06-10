@@ -163,19 +163,21 @@ let%component make =
           );
         };
 
-        let () =
-          ScrollShadow.renderVertical(
-            ~editor,
-            ~width=float(bufferPixelWidth),
-            ~context,
-          );
-        let () =
-          ScrollShadow.renderHorizontal(
-            ~editor,
-            ~width=float(bufferPixelWidth),
-            ~context,
-          );
-        ();
+        if (Config.Experimental.scrollShadow.get(config)) {
+          let () =
+            ScrollShadow.renderVertical(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          let () =
+            ScrollShadow.renderHorizontal(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          ();
+        };
       }}
     />
     <CursorView
