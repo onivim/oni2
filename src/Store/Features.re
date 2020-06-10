@@ -330,6 +330,10 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Vim(msg) => (
+    ({...state, vim: Feature_Vim.update(msg, state.vim)}, Effect.none)
+  )
+
   | _ => (state, Effect.none)
   };
 
