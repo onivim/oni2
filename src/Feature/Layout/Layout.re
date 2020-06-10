@@ -36,7 +36,7 @@ open {
          |> List.fold_left((+.), 0.)
          |> max(1.);
 
-       let reclaimRight = (~limit, index, nodes) => {
+       let reclaim = (~limit, ~start, ~next, ~stopWhen, nodes) => {
          let length = Array.length(nodes);
          let total =
            Array.fold_left(
@@ -47,7 +47,7 @@ open {
          let minimum = min(0.1 *. total, total /. float(length));
 
          let rec loop = (i, reclaimed) =>
-           if (i >= length) {
+           if (stopWhen(i)) {
              reclaimed;
            } else {
              let node = nodes[i];
@@ -57,11 +57,20 @@ open {
 
              nodes[i] = node |> withWeight(node.meta.weight -. reclaim);
 
-             loop(i + 1, reclaimed +. reclaim);
+             loop(next(i), reclaimed +. reclaim);
            };
 
-         loop(index + 1, 0.);
+         loop(start, 0.);
        };
+
+       let reclaimRight = (~limit, index, nodes) =>
+         reclaim(
+           ~limit,
+           ~start=index + 1,
+           ~next=succ,
+           ~stopWhen=i => i >= Array.length(nodes),
+           nodes,
+         );
 
        let%test_module "reclaimRight" =
          (module
@@ -145,7 +154,7 @@ open {
 
               let reclaimed = reclaimRight(~limit=10., -1, nodes);
 
-              (reclaimed, nodes) == (0., [|1., 1., 1.|]);
+              (reclaimed, nodes) == (2.09, [|0.3, 0.3, 0.3|]);
             };
 
             let%test "target == 3 (out of bounds)" = {
