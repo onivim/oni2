@@ -41,7 +41,6 @@ module Contributions: {let commands: list(Oni_Core.Command.t(msg));};
 module View: {
   let make:
     (
-      ~key: Brisk_reconciler.Key.t=?,
       ~colorTheme: Oni_Core.ColorTheme.Colors.t,
       ~tokenTheme: Oni_Syntax.TokenTheme.t,
       ~languageInfo: Oni_Extensions.LanguageInfo.t,

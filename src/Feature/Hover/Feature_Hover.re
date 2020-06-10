@@ -6,7 +6,6 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 open EditorCoreTypes;
-open Utility;
 
 module Log = (val Log.withNamespace("Oni.Feature.Hover"));
 
@@ -116,6 +115,7 @@ module Contributions = {
 };
 
 module Constants = {
+  let scrollWheelMultiplier = 25;
   let scrollBarThickness = 10;
   let scrollTrackColor = Color.rgba(0., 0., 0., 0.4);
   let scrollThumbColor = Color.rgba(0.5, 0.5, 0.5, 0.4);
@@ -142,9 +142,10 @@ module Styles = {
     overflow(`Scroll),
   ];
 
-  let contents = (~theme, ~showScrollbar) => [
+  let contents = (~theme, ~showScrollbar, ~scrollTop) => [
     backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
     Style.maxWidth(maxWidth),
+    top(scrollTop),
     paddingLeft(6),
     {
       showScrollbar
@@ -165,8 +166,10 @@ module Styles = {
 };
 
 module View = {
-  let%component make =
+  let%component hover =
                 (
+                  ~x,
+                  ~y,
                   ~colorTheme,
                   ~tokenTheme,
                   ~languageInfo,
@@ -181,6 +184,7 @@ module View = {
                   (),
                 ) => {
     let%hook (maybeContents, setMaybeContents) = Hooks.state(None);
+    let%hook (scrollTop, setScrollTop) = Hooks.state(0);
     let setContents = c => setMaybeContents(_ => Some(c));
 
     let hoverMarkdown = (~markdown) =>
@@ -216,6 +220,8 @@ module View = {
         let thumbLength = Styles.maxHeight * Styles.maxHeight / height;
         <View style={Styles.scrollBar(~theme=colorTheme)}>
           <Slider
+            onValueChanged={v => setScrollTop(_ => int_of_float(v))}
+            value={float(scrollTop)}
             minimumValue=0.
             maximumValue={float(Styles.maxHeight - height)}
             sliderLength=Styles.maxHeight
@@ -230,6 +236,56 @@ module View = {
         </View>;
       };
 
+    let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
+      switch (maybeContents) {
+      | None => ()
+      | Some(contents) =>
+        let {height, _}: Revery.UI.Dimensions.t = contents#measurements();
+        let delta =
+          int_of_float(wheelEvent.deltaY) * Constants.scrollWheelMultiplier;
+        setScrollTop(st =>
+          st
+          + delta
+          |> Oni_Core.Utility.IntEx.clamp(
+               ~hi=0,
+               ~lo=Styles.maxHeight - height,
+             )
+        );
+      };
+
+    <View style={Styles.outer(~x, ~y)}>
+      <View style=Styles.container>
+        <View
+          style={Styles.contents(
+            ~theme=colorTheme,
+            ~showScrollbar,
+            ~scrollTop,
+          )}
+          onMouseWheel=scroll
+          ref={node => setContents(node)}>
+          {List.map(markdown => <hoverMarkdown markdown />, model.contents)
+           |> React.listToElement}
+        </View>
+      </View>
+      {showScrollbar ? <scrollbar /> : React.empty}
+    </View>;
+  };
+
+  let make =
+      (
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~model,
+        ~editor: Feature_Editor.Editor.t,
+        ~buffer,
+        ~gutterWidth,
+        ~cursorOffset,
+        ~grammars,
+        (),
+      ) => {
     let maybeCoords: option((int, int)) =
       switch (model.range, model.shown) {
       | (Some(range), true) =>
@@ -271,20 +327,23 @@ module View = {
         Some((x, y));
       | _ => None
       };
-
     switch (maybeCoords) {
     | Some((x, y)) =>
-      <View style={Styles.outer(~x, ~y)}>
-        <View style=Styles.container>
-          <View
-            style={Styles.contents(~theme=colorTheme, ~showScrollbar)}
-            ref={node => setContents(node)}>
-            {List.map(markdown => <hoverMarkdown markdown />, model.contents)
-             |> React.listToElement}
-          </View>
-        </View>
-        {showScrollbar ? <scrollbar /> : React.empty}
-      </View>
+      <hover
+        x
+        y
+        colorTheme
+        tokenTheme
+        languageInfo
+        uiFont
+        editorFont
+        model
+        editor
+        buffer
+        gutterWidth
+        cursorOffset
+        grammars
+      />
     | None => React.empty
     };
   };
