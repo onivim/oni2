@@ -81,7 +81,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
            )
         |> Isolinear.Effect.batch;
 
-      ({...model, shown: true}, Effect(effects));
+      ({...model, shown: true, contents: []}, Effect(effects));
 
     | _ => (model, Nothing)
     }
@@ -115,8 +115,23 @@ module Contributions = {
 
 module Styles = {
   open Style;
+  module Colors = Feature_Theme.Colors;
 
-  let container = (~x, ~y) => [position(`Absolute), top(y), left(x)];
+  let outer = (~x, ~y) => [
+    position(`Absolute),
+    left(x),
+    top(y),
+    border(~width=1, ~color=Revery.Colors.black),
+  ];
+
+  let container = (~theme) => [
+    position(`Relative),
+    maxWidth(500),
+    overflow(`Scroll),
+    maxHeight(200),
+    backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
+    padding(6),
+  ];
 };
 
 module View = {
@@ -135,6 +150,22 @@ module View = {
         (),
       ) => {
     let grammars = Oni_Syntax.GrammarRepository.create(languageInfo);
+    let hoverMarkdown = (~markdown) =>
+      Oni_Components.Markdown.make(
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~fontFamily={
+          uiFont.family;
+        },
+        ~codeFontFamily={
+          editorFont.fontFamily;
+        },
+        ~grammars,
+        ~markdown,
+        ~baseFontSize=14.,
+        ~codeBlockStyle=[],
+      );
     switch (model.range, model.shown) {
     | (Some(range), true) =>
       let y =
@@ -153,22 +184,11 @@ module View = {
           -. editor.scrollX
           +. 0.5,
         );
-
-      <View style={Styles.container(~x, ~y)}>
-        {List.map(
-           markdown =>
-             <Oni_Components.Markdown
-               colorTheme
-               tokenTheme
-               languageInfo
-               fontFamily={uiFont.family}
-               codeFontFamily={editorFont.fontFamily}
-               grammars
-               markdown
-             />,
-           model.contents,
-         )
-         |> React.listToElement}
+      <View style={Styles.outer(~x, ~y)}>
+        <View style={Styles.container(~theme=colorTheme)}>
+          {List.map(markdown => <hoverMarkdown markdown />, model.contents)
+           |> React.listToElement}
+        </View>
       </View>;
     | (None, true) =>
       let cursorPosition =
@@ -188,21 +208,11 @@ module View = {
           -. editor.scrollX
           +. 0.5,
         );
-      <View style={Styles.container(~x, ~y)}>
-        {List.map(
-           markdown =>
-             <Oni_Components.Markdown
-               colorTheme
-               tokenTheme
-               languageInfo
-               fontFamily={uiFont.family}
-               codeFontFamily={editorFont.fontFamily}
-               grammars
-               markdown
-             />,
-           model.contents,
-         )
-         |> React.listToElement}
+      <View style={Styles.outer(~x, ~y)}>
+        <View style={Styles.container(~theme=colorTheme)}>
+          {List.map(markdown => <hoverMarkdown markdown />, model.contents)
+           |> React.listToElement}
+        </View>
       </View>;
     | _ => React.empty
     };

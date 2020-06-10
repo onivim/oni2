@@ -100,6 +100,7 @@ let make =
       ~fontFamily,
       ~codeFontFamily,
       ~baseFontSize=16.,
+      ~codeBlockStyle=?,
       (),
     ) => {
   let textStyle = Styles.text(~theme=colorTheme);
@@ -124,8 +125,6 @@ let make =
     inlineCodeStyle=textStyle
     activeLinkStyle={Styles.linkActive(~theme=colorTheme)}
     inactiveLinkStyle={Styles.linkInactive(~theme=colorTheme)}
-    codeBlockBackgroundColor={
-      Colors.EditorHoverWidget.background.from(colorTheme)
-    }
+    ?codeBlockStyle
   />;
 };
