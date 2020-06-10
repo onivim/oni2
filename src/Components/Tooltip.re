@@ -50,7 +50,7 @@ module Tooltip = {
     <View style={Styles.tooltip(~theme, ~x, ~y)}>
       <Text
         style={Styles.tooltipText(~theme)}
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize={font.size}
         text
       />

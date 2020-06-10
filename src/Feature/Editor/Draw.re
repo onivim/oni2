@@ -224,10 +224,10 @@ let token =
       ~color=colors.whitespaceForeground,
       ~fontFamily=
         Revery.Font.Family.toPath(
-          FontAwesome.FontFamily.solid,
+          ~italic=false,
+          ~mono=false,
           Normal,
-          false,
-          false,
+          FontAwesome.FontFamily.solid,
         ),
       ~fontSize=10.,
       ~text=FontIcon.codeToIcon(FontAwesome.longArrowAltRight),

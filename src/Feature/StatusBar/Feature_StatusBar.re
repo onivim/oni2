@@ -166,7 +166,7 @@ let textItem = (~background, ~font: UiFont.t, ~theme, ~text, ()) =>
         ~color=Colors.StatusBar.foreground.from(theme),
         ~background,
       )}
-      fontFamily={font.normal}
+      fontFamily={font.family}
       fontSize=11.
       text
     />
@@ -231,7 +231,7 @@ let notificationCount =
       <Text
         style={Styles.text(~color, ~background)}
         text
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize=11.
       />
     </View>
@@ -258,7 +258,7 @@ let diagnosticCount =
       <Text
         style={Styles.text(~color, ~background)}
         text
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize=11.
       />
     </View>
@@ -273,7 +273,8 @@ let modeIndicator = (~font: UiFont.t, ~theme, ~mode, ()) => {
     <Text
       style={Styles.text(~color=foreground, ~background)}
       text={Mode.toString(mode)}
-      fontFamily={font.semiBold}
+      fontFamily={font.family}
+      fontWeight=Medium
       fontSize=11.
     />
   </item>;

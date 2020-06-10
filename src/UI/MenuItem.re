@@ -84,7 +84,7 @@ let make =
     | `Text(text) =>
       <Text
         style={Styles.label(~theme, ~isFocused, ~custom=style)}
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize
         text
       />

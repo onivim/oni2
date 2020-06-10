@@ -1,17 +1,18 @@
 type t = {
-  normal: Revery.Font.Family.t,
-  italic: Revery.Font.Family.t,
-  bold: Revery.Font.Family.t,
-  semiBold: Revery.Font.Family.t,
-  semiBoldItalic: Revery.Font.Family.t,
+  family: Revery.Font.Family.t,
   size: float,
 };
 
 let default = {
-  normal: Revery.Font.Family.fromFile("Inter-UI-Regular.ttf"),
-  bold: Revery.Font.Family.fromFile("Inter-UI-Bold.ttf"),
-  italic: Revery.Font.Family.fromFile("Inter-UI-Italic.ttf"),
-  semiBold: Revery.Font.Family.fromFile("Inter-UI-Medium.ttf"),
-  semiBoldItalic: Revery.Font.Family.fromFile("Inter-UI-MediumItalic.ttf"),
+  family:
+    Revery.Font.Family.fromFiles((~weight, ~italic, ~mono as _) =>
+      switch (weight, italic) {
+      | (Bold | UltraBold | Heavy, false) => "Inter-UI-Bold.ttf"
+      | (Medium | SemiBold, false) => "Inter-UI-Medium.ttf"
+      | (Medium | SemiBold | Bold | UltraBold | Heavy, true) => "Inter-UI-MediumItalic.ttf"
+      | (Normal | Light | UltraLight | Thin | Undefined, true) => "Inter-UI-Italic.ttf"
+      | (Normal | Light | UltraLight | Thin | Undefined, false) => "Inter-UI-Regular.ttf"
+      }
+    ),
   size: 12.,
 };

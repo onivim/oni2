@@ -135,7 +135,7 @@ let make =
     let highlightStyle = style(~highlighted=true);
     let labelView =
       <HighlightText
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize=12.
         style=normalStyle
         highlightStyle
@@ -161,7 +161,7 @@ let make =
       <Input
         placeholder
         ?prefix
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize=14.
         isFocused=true
         onClick=onInputClicked

@@ -319,7 +319,7 @@ module View = {
 
     <Text
       style={Styles.typ(~color)}
-      fontFamily={uiFont.normal}
+      fontFamily={uiFont.family}
       fontSize=12.
       text
     />;
@@ -334,7 +334,7 @@ module View = {
 
     <Text
       style={Styles.scope(~theme)}
-      fontFamily={uiFont.normal}
+      fontFamily={uiFont.family}
       fontSize=12.
       text
     />;
@@ -343,7 +343,7 @@ module View = {
   let title = (~text, ~uiFont: UiFont.t, ~theme, ()) => {
     <Text
       style={Styles.summary(~theme)}
-      fontFamily={uiFont.normal}
+      fontFamily={uiFont.family}
       fontSize=12.
       text
     />;
@@ -374,7 +374,7 @@ module View = {
         <Text
           text="Commit"
           style={Styles.MoreInfo.header(~theme)}
-          fontFamily={uiFont.normal}
+          fontFamily={uiFont.family}
           fontSize=12.
         />
         <ClickableText
@@ -382,7 +382,7 @@ module View = {
           onClick
           activeStyle={Styles.MoreInfo.linkActive(~theme)}
           inactiveStyle={Styles.MoreInfo.linkInactive(~theme)}
-          fontFamily={uiFont.normal}
+          fontFamily={uiFont.family}
           fontSize=12.
         />
       </View>;
@@ -397,12 +397,12 @@ module View = {
           <Text
             text="Description"
             style={Styles.MoreInfo.header(~theme)}
-            fontFamily={uiFont.normal}
+            fontFamily={uiFont.family}
             fontSize=12.
           />
           <Text
             style={Styles.MoreInfo.body(~theme)}
-            fontFamily={uiFont.normal}
+            fontFamily={uiFont.family}
             fontSize=12.
             text
           />
@@ -421,7 +421,7 @@ module View = {
           <Text
             text="Pull Request"
             style={Styles.MoreInfo.header(~theme)}
-            fontFamily={uiFont.normal}
+            fontFamily={uiFont.family}
             fontSize=12.
           />
           <ClickableText
@@ -429,7 +429,7 @@ module View = {
             onClick
             activeStyle={Styles.MoreInfo.linkActive(~theme)}
             inactiveStyle={Styles.MoreInfo.linkInactive(~theme)}
-            fontFamily={uiFont.normal}
+            fontFamily={uiFont.family}
             fontSize=12.
           />
         </View>;
@@ -447,7 +447,7 @@ module View = {
           <Text
             text="Issue"
             style={Styles.MoreInfo.header(~theme)}
-            fontFamily={uiFont.normal}
+            fontFamily={uiFont.family}
             fontSize=12.
           />
           <ClickableText
@@ -455,7 +455,7 @@ module View = {
             onClick
             activeStyle={Styles.MoreInfo.linkActive(~theme)}
             inactiveStyle={Styles.MoreInfo.linkInactive(~theme)}
-            fontFamily={uiFont.normal}
+            fontFamily={uiFont.family}
             fontSize=12.
           />
         </View>;
@@ -477,12 +477,12 @@ module View = {
           <Text
             text="Breaking Changes"
             style={Styles.MoreInfo.breakingChangesHeader(~theme)}
-            fontFamily={uiFont.normal}
+            fontFamily={uiFont.family}
             fontSize=12.
           />
           <Text
             style={Styles.MoreInfo.body(~theme)}
-            fontFamily={uiFont.normal}
+            fontFamily={uiFont.family}
             fontSize=12.
             text
           />
@@ -509,7 +509,7 @@ module View = {
         activeStyle={Styles.Full.titleActive(~theme)}
         inactiveStyle={Styles.Full.titleInactive(~theme)}
         text
-        fontFamily={uiFont.normal}
+        fontFamily={uiFont.family}
         fontSize=12.
       />;
     };
@@ -557,7 +557,7 @@ module View = {
         <date
           commit={List.hd(commits)}
           style={Styles.groupHeader(~theme)}
-          fontFamily={uiFont.normal}
+          fontFamily={uiFont.family}
           fontSize=16.
         />
         <View style=Styles.groupBody>
@@ -584,7 +584,7 @@ module View = {
             <Text
               text="Changelog"
               style={Styles.header(~theme)}
-              fontFamily={uiFont.normal}
+              fontFamily={uiFont.family}
               fontSize=20.
             />
             {commits
@@ -634,7 +634,7 @@ module View = {
             <Text
               text
               style={Styles.breakingText(~theme)}
-              fontFamily={uiFont.normal}
+              fontFamily={uiFont.family}
               fontSize=12.
             />
           </View>;
@@ -645,7 +645,7 @@ module View = {
             <Text
               text={item.summary |> Base.String.split(~on='\n') |> List.hd}
               style={Styles.summary(~theme)}
-              fontFamily={uiFont.normal}
+              fontFamily={uiFont.family}
               fontSize=12.
             />
             {item.breaking
@@ -659,7 +659,7 @@ module View = {
             <Text
               text="Breaking Changes"
               style={Styles.groupHeader(~theme)}
-              fontFamily={uiFont.normal}
+              fontFamily={uiFont.family}
               fontSize=16.
             />
             <View style=Styles.groupBody>
@@ -679,7 +679,7 @@ module View = {
             <Text
               text="Features"
               style={Styles.groupHeader(~theme)}
-              fontFamily={uiFont.normal}
+              fontFamily={uiFont.family}
               fontSize=16.
             />
             <View style=Styles.groupBody>
@@ -699,7 +699,7 @@ module View = {
             <Text
               text="Bugfixes"
               style={Styles.groupHeader(~theme)}
-              fontFamily={uiFont.normal}
+              fontFamily={uiFont.family}
               fontSize=16.
             />
             <View style=Styles.groupBody>
@@ -744,7 +744,7 @@ module View = {
             <Text
               text={"Changes since " ++ since}
               style={Styles.header(~theme)}
-              fontFamily={uiFont.normal}
+              fontFamily={uiFont.family}
               fontSize=20.
             />
             {if (breaking == [] && features == [] && fixes == []) {

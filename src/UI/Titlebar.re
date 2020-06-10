@@ -122,7 +122,8 @@ module Mac = {
         style={Styles.Mac.container(~isFocused, ~theme)}>
         <Text
           style={Styles.Mac.text(~isFocused, ~theme)}
-          fontFamily={font.semiBold}
+          fontFamily={font.family}
+          fontWeight=Medium
           fontSize=12.
           text=title
         />
@@ -234,7 +235,7 @@ module Windows = {
         <Image src={`File("./logo-titlebar.png")} width=18 height=18 />
         <Text
           style={Styles.Windows.title(~isFocused, ~theme)}
-          fontFamily={font.normal}
+          fontFamily={font.family}
           fontSize=12.
           text=title
         />

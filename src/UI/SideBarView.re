@@ -82,7 +82,8 @@ let%component make = (~theme, ~state: State.t, ()) => {
       <Text
         text=title
         style={Styles.title(~theme)}
-        fontFamily={font.semiBold}
+        fontFamily={font.family}
+        fontWeight=Medium
         fontSize={font.size}
       />
     </View>
