@@ -55,6 +55,14 @@ let scrollDeltaPixelY: (~pixelY: float, t) => t;
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
 
+let getCursorOffset:
+  (
+    ~buffer: Buffer.t,
+    ~cursorPosition: EditorCoreTypes.Location.t,
+    ~editor: t
+  ) =>
+  int;
+
 // PROJECTION
 
 // Convert (or unconvent) a (line, column) to a different coordinate space

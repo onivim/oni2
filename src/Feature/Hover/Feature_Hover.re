@@ -184,8 +184,7 @@ module View = {
           -. editor.scrollX
           +. 0.5,
         );
-      <View
-        style={Styles.outer(~x, ~y)} onMouseUp={_ => Log.info("ABC")}>
+      <View style={Styles.outer(~x, ~y)} onMouseUp={_ => Log.info("ABC")}>
         <View style={Styles.container(~theme=colorTheme)}>
           {List.map(markdown => <hoverMarkdown markdown />, model.contents)
            |> React.listToElement}

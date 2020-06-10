@@ -196,6 +196,9 @@ let%component make =
 
   let cursorPosition = Editor.getPrimaryCursor(~buffer, editor);
 
+  let cursorOffset =
+    Editor.getCursorOffset(~buffer, ~editor, ~cursorPosition);
+
   let layout =
     EditorLayout.getLayout(
       ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
@@ -318,6 +321,7 @@ let%component make =
       tokenTheme
       renderHover
     />
+    {renderHover(~gutterWidth, ~cursorOffset)}
     <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical
         dispatch

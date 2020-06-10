@@ -68,22 +68,8 @@ let make =
       ~renderHover,
       (),
     ) => {
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
-  let lineCount = Buffer.getNumberOfLines(buffer);
-
-  let (cursorOffset, _cursorCharacterWidth) =
-    if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorLine = Buffer.getLine(cursorLine, buffer);
-
-      let (cursorOffset, width) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          cursorLine,
-          Index.toZeroBased(cursorPosition.column),
-        );
-      (cursorOffset, width);
-    } else {
-      (0, 1);
-    };
+  let cursorOffset =
+    Editor.getCursorOffset(~buffer, ~cursorPosition, ~editor);
 
   let cursorPixelY =
     int_of_float(
@@ -104,7 +90,6 @@ let make =
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
-        {renderHover(~gutterWidth, ~cursorOffset)}
         <HoverView
           x=cursorPixelX
           y=cursorPixelY
