@@ -113,7 +113,7 @@ let rec fromLayout = (x, y, width, height, node) => {
     | `Split(direction, children) =>
       let totalWeight =
         children
-        |> List.map(child => child.meta.size)
+        |> List.map(child => child.meta.weight)
         |> List.fold_left((+.), 0.)
         |> max(1.);
 
@@ -124,7 +124,7 @@ let rec fromLayout = (x, y, width, height, node) => {
             let unitHeight = float(height) /. totalWeight;
             List.fold_left(
               ((y, acc), child) => {
-                let height = int_of_float(unitHeight *. child.meta.size);
+                let height = int_of_float(unitHeight *. child.meta.weight);
                 let sized = fromLayout(x, y, width, height, child);
                 (y + height, [sized, ...acc]);
               },
@@ -136,7 +136,7 @@ let rec fromLayout = (x, y, width, height, node) => {
             let unitWidth = float(width) /. totalWeight;
             List.fold_left(
               ((x, acc), child) => {
-                let width = int_of_float(unitWidth *. child.meta.size);
+                let width = int_of_float(unitWidth *. child.meta.weight);
                 let sized = fromLayout(x, y, width, height, child);
                 (x + width, [sized, ...acc]);
               },
