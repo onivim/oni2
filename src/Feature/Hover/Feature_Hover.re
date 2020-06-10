@@ -237,9 +237,8 @@ module View = {
       };
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-      switch (maybeContents) {
-      | None => ()
-      | Some(contents) =>
+      switch (maybeContents, showScrollbar) {
+      | (Some(contents), true) =>
         let {height, _}: Revery.UI.Dimensions.t = contents#measurements();
         let delta =
           int_of_float(wheelEvent.deltaY) * Constants.scrollWheelMultiplier;
@@ -251,6 +250,8 @@ module View = {
                ~lo=Styles.maxHeight - height,
              )
         );
+
+      | _ => ()
       };
 
     <View style={Styles.outer(~x, ~y)}>
