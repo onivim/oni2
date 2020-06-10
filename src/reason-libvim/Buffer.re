@@ -89,6 +89,15 @@ let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
 let applyEdits = (~edits, buffer) => {
   let provider = idx => Some(getLine(buffer, Index.(zero + idx)));
 
+  let previousBuffer = getCurrent();
+  let previousBufferId = getId(previousBuffer);
+  let bufferId = getId(buffer);
+
+  // Swap current buffer temporarily
+  if (bufferId != previousBufferId) {
+    setCurrent(buffer);
+  };
+
   // Sort edits prior to applying, such that last edits
   // are applied first.
   let edits = Edit.sort(edits);
@@ -100,6 +109,11 @@ let applyEdits = (~edits, buffer) => {
       let result = Edit.applyEdit(~provider, hd);
       switch (result) {
       | Ok({oldStartLine, oldEndLine, newLines}) =>
+        // Save previous lines for undo
+        Undo.saveRegion(
+          oldStartLine |> Index.toZeroBased,
+          (oldEndLine |> Index.toZeroBased) + 2,
+        );
         setLines(
           ~start=oldStartLine,
           ~stop=Index.(oldEndLine + 1),
@@ -112,7 +126,12 @@ let applyEdits = (~edits, buffer) => {
     };
   };
 
-  loop(edits);
+  let ret = loop(edits);
+
+  if (previousBufferId != bufferId) {
+    setCurrent(previousBuffer);
+  };
+  ret;
 };
 
 let onEnter = (f: Listeners.bufferListener) => {
