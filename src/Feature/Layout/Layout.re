@@ -79,6 +79,7 @@ open {
          (module
           {
             let weights = List.map(node => node.meta.weight);
+            let weights_int = List.map(node => int_of_float(node.meta.weight *. 100.));
 
             let%test "sanity check: weights - even" =
               weights([window(1), window(2), window(3)]) == [1., 1., 1.];
@@ -120,6 +121,14 @@ open {
               let actual = initial |> shiftWeightRight(~delta=-0.05, 1);
 
               weights(actual) == weights(initial);
+            };
+            
+            let%test "delta too large" = {
+              let initial = [window(1), window(2), window(3)];
+
+              let actual = initial |> shiftWeightRight(~delta=-4., 1);
+
+              weights_int(actual) == [100, 30, 170]
             };
           });
      };
