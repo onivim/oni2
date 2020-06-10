@@ -331,8 +331,9 @@ let update =
     )
 
   | Vim(msg) => (
-    ({...state, vim: Feature_Vim.update(msg, state.vim)}, Effect.none)
-  )
+      {...state, vim: Feature_Vim.update(msg, state.vim)},
+      Effect.none,
+    )
 
   | _ => (state, Effect.none)
   };
