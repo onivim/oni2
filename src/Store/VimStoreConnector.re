@@ -72,12 +72,6 @@ let start =
         c.vimUseSystemClipboard
       );
 
-    let removeWindowsNewLines = s =>
-      List.init(String.length(s), String.get(s))
-      |> List.filter(c => c != '\r')
-      |> List.map(c => String.make(1, c))
-      |> String.concat("");
-
     let isMultipleLines = s => String.contains(s, '\n');
 
     let removeTrailingNewLine = s => {
@@ -90,10 +84,7 @@ let start =
     };
 
     let splitNewLines = s =>
-      s
-      |> removeTrailingNewLine
-      |> String.split_on_char('\n')
-      |> Array.of_list;
+      s |> removeTrailingNewLine |> StringEx.splitNewLines;
 
     let starReg = Char.code('*');
     let plusReg = Char.code('+');
@@ -118,7 +109,7 @@ let start =
 
       clipboardValue
       |> Option.map(removeTrailingNewLine)
-      |> Option.map(removeWindowsNewLines)
+      |> Option.map(StringEx.removeWindowsNewLines)
       |> Option.map(splitNewLines)
       |> Option.map(lines => Vim.Types.{lines, blockType});
     } else {

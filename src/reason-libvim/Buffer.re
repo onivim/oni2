@@ -87,7 +87,14 @@ let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
 };
 
 let applyEdits = (~edits, buffer) => {
-  let provider = idx => Some(getLine(buffer, Index.(zero + idx)));
+  let provider = idx => {
+    let lineCount = getLineCount(buffer);
+    if (idx >= lineCount) {
+      None;
+    } else {
+      Some(getLine(buffer, Index.(zero + idx)));
+    };
+  };
 
   let previousBuffer = getCurrent();
   let previousBufferId = getId(previousBuffer);
@@ -114,12 +121,16 @@ let applyEdits = (~edits, buffer) => {
           oldStartLine |> Index.toZeroBased,
           (oldEndLine |> Index.toZeroBased) + 2,
         );
-        setLines(
-          ~start=oldStartLine,
-          ~stop=Index.(oldEndLine + 1),
-          ~lines=newLines,
-          buffer,
-        );
+
+        let lineCount = getLineCount(buffer);
+        let stop =
+          if (oldEndLine |> Index.toZeroBased >= lineCount) {
+            None;
+          } else {
+            Some(Index.(oldEndLine + 1));
+          };
+
+        setLines(~start=oldStartLine, ~stop?, ~lines=newLines, buffer);
         loop(tail);
       | Error(_) as err => err
       };

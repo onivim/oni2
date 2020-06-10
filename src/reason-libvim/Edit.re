@@ -5,13 +5,36 @@ module Log = (val Timber.Log.withNamespace("SingleEdit"));
 [@deriving show]
 type t = {
   range: Range.t,
-  text: option(string),
+  text: array(string),
 };
 
 type editResult = {
   oldStartLine: Index.t,
   oldEndLine: Index.t,
   newLines: array(string),
+};
+
+module Internal = {
+  let applyPrefix = (~prefix, lines) =>
+    if (String.length(prefix) == 0) {
+      lines;
+    } else {
+      let lines' = Array.length(lines) == 0 ? [|""|] : Array.copy(lines);
+      let firstLine = lines'[0];
+      lines'[0] = prefix ++ firstLine;
+      lines';
+    };
+
+  let applyPostfix = (~postfix, lines) =>
+    if (String.length(postfix) == 0) {
+      lines;
+    } else {
+      let lines' = Array.length(lines) == 0 ? [|""|] : Array.copy(lines);
+      let len = Array.length(lines');
+      let lastLine = lines'[len - 1];
+      lines'[len - 1] = lastLine ++ postfix;
+      lines';
+    };
 };
 
 let applyEdit = (~provider, edit) => {
@@ -23,27 +46,35 @@ let applyEdit = (~provider, edit) => {
   let startColumn = edit.range.start.column |> Index.toZeroBased;
   let endColumn = edit.range.stop.column |> Index.toZeroBased;
 
-  let insertText = edit.text |> Option.value(~default="");
+  try({
+    let prefix =
+      startColumn == 0
+        ? ""
+        : startLine
+          |> provider
+          |> Option.map(str => String.sub(str, 0, startColumn))
+          |> Option.value(~default="");
 
-  if (startLine == endLine) {
-    let lines' = Array.make(1, "");
-    let maybeStr = provider(startLine);
-    let line = edit.range.start.line;
+    let postfix =
+      endLine
+      |> provider
+      |> Option.map(str =>
+           String.sub(str, endColumn, String.length(str) - endColumn)
+         )
+      |> Option.value(~default="");
 
-    switch (maybeStr) {
-    | None =>
-      lines'[0] = insertText;
-      Ok({oldStartLine: line, oldEndLine: line, newLines: lines'});
-    | Some(lineStr) =>
-      let len = String.length(lineStr);
-      let before = String.sub(lineStr, 0, startColumn);
-      let after = String.sub(lineStr, endColumn, len - endColumn);
+    let lines' =
+      edit.text
+      |> Internal.applyPrefix(~prefix)
+      |> Internal.applyPostfix(~postfix);
 
-      lines'[0] = before ++ insertText ++ after;
-      Ok({oldStartLine: line, oldEndLine: line, newLines: lines'});
-    };
-  } else {
-    Error("Edits across lines are not yet supported");
+    Ok({
+      oldStartLine: edit.range.start.line,
+      oldEndLine: edit.range.stop.line,
+      newLines: lines',
+    });
+  }) {
+  | exn => Error(Printexc.to_string(exn))
   };
 };
 

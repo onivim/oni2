@@ -35,7 +35,7 @@ describe("Edit", ({describe, _}) => {
   describe("applyEdit", ({test, _}) => {
     test("no-op makes no changes", ({expect, _}) => {
       let provider = [|"Hello!"|] |> arrayProvider;
-      let noopEdit = Edit.{text: None, range: zeroRange};
+      let noopEdit = Edit.{text: [||], range: zeroRange};
 
       let result: Edit.editResult =
         Edit.applyEdit(~provider, noopEdit) |> Result.get_ok;
@@ -43,7 +43,7 @@ describe("Edit", ({describe, _}) => {
     });
     test("insert character at beginning of line", ({expect, _}) => {
       let provider = [|"Hello!"|] |> arrayProvider;
-      let edit = Edit.{text: Some("a"), range: zeroRange};
+      let edit = Edit.{text: [|"a"|], range: zeroRange};
 
       let result: Edit.editResult =
         Edit.applyEdit(~provider, edit) |> Result.get_ok;
@@ -51,7 +51,7 @@ describe("Edit", ({describe, _}) => {
     });
     test("remove character at end of line", ({expect, _}) => {
       let provider = [|"Hello!"|] |> arrayProvider;
-      let edit = Edit.{text: Some(""), range: range(0, 5, 0, 6)};
+      let edit = Edit.{text: [|""|], range: range(0, 5, 0, 6)};
 
       let result: Edit.editResult =
         Edit.applyEdit(~provider, edit) |> Result.get_ok;
@@ -60,8 +60,8 @@ describe("Edit", ({describe, _}) => {
   });
   describe("sort", ({test, _}) => {
     test("already sorted should be as-is", ({expect, _}) => {
-      let first = range(0, 1, 0, 1) |> edit(~text=None);
-      let second = range(0, 0, 0, 0) |> edit(~text=None);
+      let first = range(0, 1, 0, 1) |> edit(~text=[||]);
+      let second = range(0, 0, 0, 0) |> edit(~text=[||]);
 
       let edits = [first, second];
       let sortedEdits = Edit.sort(edits);
@@ -69,8 +69,8 @@ describe("Edit", ({describe, _}) => {
       expect.equal(sortedEdits, edits);
     });
     test("should get sorted", ({expect, _}) => {
-      let first = range(6, 0, 6, 0) |> edit(~text=None);
-      let second = range(6, 3, 6, 4) |> edit(~text=None);
+      let first = range(6, 0, 6, 0) |> edit(~text=[||]);
+      let second = range(6, 3, 6, 4) |> edit(~text=[||]);
 
       let edits = [first, second];
       let sortedEdits = Edit.sort(edits);

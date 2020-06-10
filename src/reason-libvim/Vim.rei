@@ -49,7 +49,7 @@ module Edit: {
   [@deriving show]
   type t = {
     range: Range.t,
-    text: option(string),
+    text: array(string),
   };
 
   type editResult = {

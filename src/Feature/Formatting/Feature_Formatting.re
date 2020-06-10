@@ -67,10 +67,18 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | FormatError(string);
 
+let textToArray =
+  fun
+  | None => [||]
+  | Some(text) =>
+    text
+    |> Utility.StringEx.removeWindowsNewLines
+    |> Utility.StringEx.splitNewLines;
+
 let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
   edit => {
     range: edit.range |> Exthost.OneBasedRange.toRange,
-    text: edit.text,
+    text: textToArray(edit.text),
   };
 
 let update = (~maybeBuffer, ~extHostClient, model, msg) => {
