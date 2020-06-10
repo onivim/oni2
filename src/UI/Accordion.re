@@ -62,7 +62,7 @@ let make =
       />
       <Text
         style={Styles.title(~theme)}
-        fontFamily={uiFont.normal}
+        fontFamily={uiFont.family}
         fontSize={uiFont.size}
         text=title
       />

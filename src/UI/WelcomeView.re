@@ -41,7 +41,7 @@ module KeyBindingView = {
     <View style=Styles.container>
       <Text
         style={Styles.command(~theme)}
-        fontFamily={uiFont.normal}
+        fontFamily={uiFont.family}
         fontSize=14.
         text=name
       />
@@ -113,20 +113,20 @@ let%component make = (~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
     <Opacity opacity=transition>
       <View style=Styles.header>
         <Image
-          src="./title-logo.png"
+          src={`File("./title-logo.png")}
           width=456
           height=250
           opacity=transition
         />
         <Text
           style={Styles.title(~theme)}
-          fontFamily={uiFont.normal}
+          fontFamily={uiFont.family}
           fontSize=20.
           text="Modal Editing from the Future"
         />
         <Text
           style={Styles.version(~theme)}
-          fontFamily={uiFont.normal}
+          fontFamily={uiFont.family}
           fontSize=12.
           text={Printf.sprintf("Version %s", Oni_Core.BuildInfo.version)}
         />

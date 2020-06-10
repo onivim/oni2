@@ -201,8 +201,18 @@ if (process.platform == "linux") {
 
   const frameworks = fs.readdirSync(frameworksDirectory);
 
-  if (frameworks.length > 0) {
-    console.error("Found a dynamic library: " + JSON.stringify(frameworks));
+  // Make sure these are codesigned as well in codesign.sh
+  // Must be kept in sync with:
+  // src/scripts/osx/codesign.sh
+  const frameworksWhiteList = [
+    "libcrypto.1.1.dylib",
+    "libssl.1.1.dylib"
+  ];
+
+  const disallowedFrameworks = frameworks.filter(framework => !frameworksWhiteList.some(allowedFramework => framework.indexOf(allowedFramework) >= 0));
+
+  if (disallowedFrameworks.length > 0) {
+    console.error("Found a dynamic library: " + JSON.stringify(disallowedFrameworks));
     console.error("There should be only static libraries to successfully package.");
     throw "FrameworkFound";
   }
@@ -212,6 +222,11 @@ if (process.platform == "linux") {
       "com.apple.security.cs.allow-jit": true,
       "com.apple.security.cs.allow-unsigned-executable-memory": true,
       "com.apple.security.cs.disable-library-validation": true,
+// Allow dyld environment variables. Needed because Onivim 2 uses	
+//         dyld variables (such as @executable_path) to load libaries from	
+//         within the .app bundle.	
+// See: https://github.com/onivim/oni2/issues/1397	
+      "com.apple.security.cs.allow-dyld-environment-variables": true,
   };
   fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents));
 

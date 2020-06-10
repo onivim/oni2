@@ -128,7 +128,7 @@ module View = {
     <MessageBox model onAction=dispatch theme font>
       <Text
         style={Styles.text(~theme)}
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize={font.size}
         text="You have unsaved changes in the following files:"
       />
@@ -137,7 +137,8 @@ module View = {
          |> List.map(text =>
               <Text
                 style={Styles.file(~theme)}
-                fontFamily={font.semiBold}
+                fontFamily={font.family}
+                fontWeight=Medium
                 fontSize={font.size}
                 text
               />
@@ -146,7 +147,7 @@ module View = {
       </View>
       <Text
         style={Styles.text(~theme)}
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize={font.size}
         text="Would you like to to save them before closing?"
       />
@@ -157,13 +158,13 @@ module View = {
     <MessageBox model onAction=dispatch theme font>
       <Text
         style={Styles.text(~theme)}
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize={font.size}
         text="Unable to save gracefully because the file has changed on disk."
       />
       <Text
         style={Styles.text(~theme)}
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize={font.size}
         text="Would you like to force overwrite or discard the unsaved changes?"
       />

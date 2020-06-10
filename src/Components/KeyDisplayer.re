@@ -124,7 +124,7 @@ module Styles = {
 
 let keyGroupView = (~uiFont: UiFont.t, ~text: string, ()) =>
   <View style=Styles.group>
-    <Text style=Styles.text fontFamily={uiFont.normal} fontSize=24. text />
+    <Text style=Styles.text fontFamily={uiFont.family} fontSize=24. text />
   </View>;
 
 let%component make =

@@ -36,7 +36,10 @@ let lengthBounded: (~max: int, t) => int;
  */
 let getIndex: (~byte: int, t) => int;
 
-let getByte: (~index: int, t) => int;
+/*
+ * [getByteFromIndex(~index, str)] returns the byte index at character [index].
+ */
+let getByteFromIndex: (~index: int, t) => int;
 
 /*
   * [getUcharExn(~index, str)] returns the [Uchar.t] at UTF-8 index [index].
@@ -47,3 +50,13 @@ let getUcharExn: (~index: int, t) => Uchar.t;
 let subExn: (~index: int, ~length: int, t) => string;
 
 let getPositionAndWidth: (~index: int, t) => (int, int);
+
+module Slow: {
+  /*
+   * [getByteFromPosition(~position, str)] returns the byte index as position [index].
+   * The position of a character is dependent on indentation settings, multi-width characters, etc.
+   *
+   * _slow_ because requires traversal of the string, currently.
+   */
+  let getByteFromPosition: (~position: int, t) => int;
+};
