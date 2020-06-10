@@ -30,6 +30,7 @@
         Oni2.feature.statusbar
         Oni2.feature.terminal
         Oni2.feature.modals
+        Oni2.feature.vim
         isolinear
         libvim
         textmate

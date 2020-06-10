@@ -84,7 +84,7 @@ module Parts = {
         onCursorChange
         onEditorSizeChanged
         theme
-        mode={state.vimMode}
+        mode={Feature_Vim.mode(state.vim)}
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
@@ -180,7 +180,9 @@ module Styles = {
 
 let make =
     (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ~dispatch, ()) => {
-  let State.{vimMode: mode, uiFont, editorFont, _} = state;
+  let State.{vim, uiFont, editorFont, _} = state;
+
+  let mode = Feature_Vim.mode(vim);
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 

@@ -164,12 +164,12 @@ let start = () => {
     fun
     | Command("acceptSelectedSuggestion") => Actions.applyCompletion(state)
 
-    | ModeChanged(mode) when mode == Vim.Types.Insert =>
+    | Vim(Feature_Vim.ModeChanged(mode)) when mode == Vim.Types.Insert =>
       Actions.checkCompletionMeet(state)
 
-    | ModeChanged(mode) when mode != Vim.Types.Insert => Actions.stop(state)
+    | Vim(Feature_Vim.ModeChanged(mode)) when mode != Vim.Types.Insert => Actions.stop(state)
 
-    | EditorCursorMove(_) when state.vimMode == Vim.Types.Insert =>
+    | EditorCursorMove(_) when Feature_Vim.mode(state.vim) == Vim.Types.Insert =>
       Actions.checkCompletionMeet(state)
 
     | CompletionAddItems(_meet, items) =>

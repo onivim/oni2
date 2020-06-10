@@ -29,7 +29,6 @@ type t = {
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: Feature_ContextMenu.model,
-  vimMode: Vim.Mode.t,
   completions: Completions.t,
   config: Feature_Configuration.model,
   configuration: Configuration.t,
@@ -73,6 +72,7 @@ type t = {
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
   textContentProviders: list((int, string)),
+  vim: Feature_Vim.model,
 };
 
 let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
@@ -105,7 +105,6 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     decorationProviders: [],
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
-    vimMode: Normal,
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
@@ -140,6 +139,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     modal: None,
     terminals: Feature_Terminal.initial,
     textContentProviders: [],
+    vim: Feature_Vim.initial,
   };
 };
 
