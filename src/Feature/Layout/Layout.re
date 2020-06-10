@@ -72,6 +72,101 @@ open {
            nodes,
          );
 
+       let%test_module "reclaimLeft" =
+         (module
+          {
+            // Because floats are tricky to compare, this inflates them by a
+            // magnitude of two, converts them to int and then compares,
+            // effectively comparing each float value with a tolerance of 0.01..
+            let (==) = (actual, expected) => {
+              let intify = n => int_of_float(n *. 100.);
+
+              let actual = (
+                intify(fst(actual)),
+                Array.map(node => intify(node.meta.weight), snd(actual)),
+              );
+              let expected = (
+                intify(fst(expected)),
+                Array.map(intify, snd(expected)),
+              );
+
+              actual == expected;
+            };
+
+            let%test "available < limit, target == 1" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimLeft(~limit=10., 1, nodes);
+
+              (reclaimed, nodes) == (0.7, [|0.3, 1., 1.|]);
+            };
+
+            let%test "available > limit, target == 1" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimLeft(~limit=0.5, 1, nodes);
+
+              (reclaimed, nodes) == (0.5, [|0.5, 1., 1.|]);
+            };
+
+            let%test "available < limit, target == 2" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimLeft(~limit=10., 2, nodes);
+
+              (reclaimed, nodes) == (1.4, [|0.3, 0.3, 1.|]);
+            };
+
+            let%test "available > limit, target == 2" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimLeft(~limit=0.5, 2, nodes);
+
+              (reclaimed, nodes) == (0.5, [|1., 0.5, 1.|]);
+            };
+
+            let%test "available > limit && single node, target == 2" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimLeft(~limit=1., 2, nodes);
+
+              (reclaimed, nodes) == (1., [|0.7, 0.3, 1.|]);
+            };
+
+            let%test "available < limit, target == 0" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimLeft(~limit=10., 0, nodes);
+
+              (reclaimed, nodes) == (0., [|1., 1., 1.|]);
+            };
+
+            let%test "available > limit, target == 0" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimLeft(~limit=0.5, 0, nodes);
+
+              (reclaimed, nodes) == (0., [|1., 1., 1.|]);
+            };
+
+            let%test "target == -3 (out of bounds)" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimLeft(~limit=10., -3, nodes);
+
+              (reclaimed, nodes) == (0., [|1., 1., 1.|]);
+            };
+
+            let%test "target == 6 (out of bounds)" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              switch (reclaimLeft(~limit=10., 6, nodes)) {
+              | _ => false
+              | exception (Invalid_argument(_)) => true
+              };
+            };
+          });
+
        let reclaimRight = (~limit, index, nodes) =>
          reclaim(
            ~limit,
