@@ -4,7 +4,9 @@
 open Oni_Core;
 open Revery;
 open Revery.UI;
+open Revery.UI.Components;
 open EditorCoreTypes;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni.Feature.Hover"));
 
@@ -113,6 +115,12 @@ module Contributions = {
   let commands = Commands.[show];
 };
 
+module Constants = {
+  let scrollBarThickness = 10;
+  let scrollTrackColor = Color.rgba(0., 0., 0., 0.4);
+  let scrollThumbColor = Color.rgba(0.5, 0.5, 0.5, 0.4);
+};
+
 module Styles = {
   open Style;
   module Colors = Feature_Theme.Colors;
@@ -129,25 +137,30 @@ module Styles = {
 
   let container = [
     position(`Relative),
-    Style.maxWidth(maxWidth),
+    Style.maxWidth(maxWidth + Constants.scrollBarThickness),
     Style.maxHeight(maxHeight),
     overflow(`Scroll),
   ];
 
-  let contents = (~theme) => [
+  let contents = (~theme, ~showScrollbar) => [
     backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
-    flexGrow(1),
-    padding(6),
+    Style.maxWidth(maxWidth),
+    paddingLeft(6),
+    {
+      showScrollbar
+        ? paddingRight(6 + Constants.scrollBarThickness) : paddingRight(6);
+    },
+    paddingBottom(4),
+    paddingTop(4),
   ];
-
-  let scrollBarWidth = 10;
 
   let scrollBar = (~theme) => [
     right(0),
     top(0),
     bottom(0),
-    backgroundColor(Revery.Colors.white),
-    width(scrollBarWidth),
+    position(`Absolute),
+    backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
+    width(Constants.scrollBarThickness),
   ];
 };
 
@@ -187,16 +200,35 @@ module View = {
         ~codeBlockStyle=[],
       );
 
-    let scrollbar = (~contents, ()) => {
-      let {height, width, top, left}: Revery.UI.Dimensions.t =
-        contents#measurements();
-      if (height >= Styles.maxHeight) {
-        Console.log("A:AOHFEH");
-        <View style={Styles.scrollBar(~theme=colorTheme)} />;
-      } else {
-        React.empty;
+    let showScrollbar =
+      switch (maybeContents) {
+      | None => false
+      | Some(contents) =>
+        let {height, _}: Revery.UI.Dimensions.t = contents#measurements();
+        height >= Styles.maxHeight;
       };
-    };
+
+    let scrollbar = () =>
+      switch (maybeContents) {
+      | None => React.empty
+      | Some(contents) =>
+        let {height, _}: Revery.UI.Dimensions.t = contents#measurements();
+        let thumbLength = Styles.maxHeight * Styles.maxHeight / height;
+        <View style={Styles.scrollBar(~theme=colorTheme)}>
+          <Slider
+            minimumValue=0.
+            maximumValue={float(Styles.maxHeight - height)}
+            sliderLength=Styles.maxHeight
+            thumbLength
+            trackThickness=Constants.scrollBarThickness
+            thumbThickness=Constants.scrollBarThickness
+            minimumTrackColor=Constants.scrollTrackColor
+            maximumTrackColor=Constants.scrollTrackColor
+            thumbColor=Constants.scrollThumbColor
+            vertical=true
+          />
+        </View>;
+      };
 
     let maybeCoords: option((int, int)) =
       switch (model.range, model.shown) {
@@ -244,17 +276,14 @@ module View = {
     | Some((x, y)) =>
       <View style={Styles.outer(~x, ~y)}>
         <View style=Styles.container>
-          {switch (maybeContents) {
-           | Some(contents) => <scrollbar contents />
-           | None => React.empty
-           }}
           <View
-            style={Styles.contents(~theme=colorTheme)}
+            style={Styles.contents(~theme=colorTheme, ~showScrollbar)}
             ref={node => setContents(node)}>
             {List.map(markdown => <hoverMarkdown markdown />, model.contents)
              |> React.listToElement}
           </View>
         </View>
+        {showScrollbar ? <scrollbar /> : React.empty}
       </View>
     | None => React.empty
     };
