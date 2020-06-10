@@ -60,6 +60,10 @@ module Edit: {
 
   let applyEdit:
     (~provider: int => option(string), t) => result(editResult, string);
+
+  // [sort(edits)] returns the edits in a list in order to be applied,
+  // edits later in the document first (reverse range order).
+  let sort: (list(t)) => list(t);
 };
 
 module Buffer: {

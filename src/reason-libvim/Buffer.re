@@ -89,6 +89,10 @@ let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
 let applyEdits = (~edits, buffer) => {
   let provider = idx => Some(getLine(buffer, Index.(zero + idx)));
 
+  // Sort edits prior to applying, such that last edits
+  // are applied first.
+  let edits = Edit.sort(edits);
+
   let rec loop = edits => {
     switch (edits) {
     | [] => Ok()

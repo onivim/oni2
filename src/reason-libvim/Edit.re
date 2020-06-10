@@ -46,3 +46,23 @@ let applyEdit = (~provider, edit) => {
     Error("Edits across lines are not yet supported");
   };
 };
+
+let sort = (edits) => {
+  let sortFn = (editA, editB) => {
+    let rangeA = editA.range;
+    let rangeB = editB.range;
+
+    let startLineA = rangeA.start.line |> Index.toZeroBased;
+    let startLineB = rangeB.start.line |> Index.toZeroBased;
+
+    let startColumnA = rangeA.start.column |> Index.toZeroBased;
+    let startColumnB = rangeB.start.column |> Index.toZeroBased;
+
+    if (startLineA == startLineB) {
+      startColumnB - startColumnA
+    } else {
+      startLineB - startLineA
+    }
+  };
+  List.sort(sortFn, edits);
+};
