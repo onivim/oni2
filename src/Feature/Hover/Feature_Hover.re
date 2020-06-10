@@ -124,32 +124,52 @@ module Styles = {
     border(~width=1, ~color=Revery.Colors.black),
   ];
 
-  let container = (~theme) => [
+  let maxHeight = 200;
+  let maxWidth = 500;
+
+  let container = [
     position(`Relative),
-    maxWidth(500),
+    Style.maxWidth(maxWidth),
+    Style.maxHeight(maxHeight),
     overflow(`Scroll),
-    maxHeight(200),
+  ];
+
+  let contents = (~theme) => [
     backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
+    flexGrow(1),
     padding(6),
+  ];
+
+  let scrollBarWidth = 10;
+
+  let scrollBar = (~theme) => [
+    right(0),
+    top(0),
+    bottom(0),
+    backgroundColor(Revery.Colors.white),
+    width(scrollBarWidth),
   ];
 };
 
 module View = {
-  let make =
-      (
-        ~colorTheme,
-        ~tokenTheme,
-        ~languageInfo,
-        ~uiFont: UiFont.t,
-        ~editorFont: Service_Font.font,
-        ~model,
-        ~editor: Feature_Editor.Editor.t,
-        ~buffer,
-        ~gutterWidth,
-        ~cursorOffset,
-        ~grammars,
-        (),
-      ) => {
+  let%component make =
+                (
+                  ~colorTheme,
+                  ~tokenTheme,
+                  ~languageInfo,
+                  ~uiFont: UiFont.t,
+                  ~editorFont: Service_Font.font,
+                  ~model,
+                  ~editor: Feature_Editor.Editor.t,
+                  ~buffer,
+                  ~gutterWidth,
+                  ~cursorOffset,
+                  ~grammars,
+                  (),
+                ) => {
+    let%hook (maybeContents, setMaybeContents) = Hooks.state(None);
+    let setContents = c => setMaybeContents(_ => Some(c));
+
     let hoverMarkdown = (~markdown) =>
       Oni_Components.Markdown.make(
         ~colorTheme,
@@ -166,55 +186,77 @@ module View = {
         ~baseFontSize=14.,
         ~codeBlockStyle=[],
       );
-    switch (model.range, model.shown) {
-    | (Some(range), true) =>
-      let y =
-        int_of_float(
-          editorFont.measuredHeight
-          *. float(Index.toZeroBased(range.start.line) + 1)
-          -. editor.scrollY
-          +. 0.5,
-        );
 
-      let x =
-        int_of_float(
-          gutterWidth
-          +. editorFont.measuredWidth
-          *. float(Index.toZeroBased(range.start.column))
-          -. editor.scrollX
-          +. 0.5,
-        );
-      <View style={Styles.outer(~x, ~y)} onMouseUp={_ => Log.info("ABC")}>
-        <View style={Styles.container(~theme=colorTheme)}>
-          {List.map(markdown => <hoverMarkdown markdown />, model.contents)
-           |> React.listToElement}
-        </View>
-      </View>;
-    | (None, true) =>
-      let cursorPosition =
-        Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
-      let y =
-        int_of_float(
-          editorFont.measuredHeight
-          *. float(Index.toZeroBased(cursorPosition.line) + 1)
-          -. editor.scrollY
-          +. 0.5,
-        );
-      let x =
-        int_of_float(
-          gutterWidth
-          +. editorFont.measuredWidth
-          *. float(cursorOffset)
-          -. editor.scrollX
-          +. 0.5,
-        );
+    let scrollbar = (~contents, ()) => {
+      let {height, width, top, left}: Revery.UI.Dimensions.t =
+        contents#measurements();
+      if (height >= Styles.maxHeight) {
+        Console.log("A:AOHFEH");
+        <View style={Styles.scrollBar(~theme=colorTheme)} />;
+      } else {
+        React.empty;
+      };
+    };
+
+    let maybeCoords: option((int, int)) =
+      switch (model.range, model.shown) {
+      | (Some(range), true) =>
+        let y =
+          int_of_float(
+            editorFont.measuredHeight
+            *. float(Index.toZeroBased(range.start.line) + 1)
+            -. editor.scrollY
+            +. 0.5,
+          );
+
+        let x =
+          int_of_float(
+            gutterWidth
+            +. editorFont.measuredWidth
+            *. float(Index.toZeroBased(range.start.column))
+            -. editor.scrollX
+            +. 0.5,
+          );
+        Some((x, y));
+      | (None, true) =>
+        let cursorPosition =
+          Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+        let y =
+          int_of_float(
+            editorFont.measuredHeight
+            *. float(Index.toZeroBased(cursorPosition.line) + 1)
+            -. editor.scrollY
+            +. 0.5,
+          );
+        let x =
+          int_of_float(
+            gutterWidth
+            +. editorFont.measuredWidth
+            *. float(cursorOffset)
+            -. editor.scrollX
+            +. 0.5,
+          );
+        Some((x, y));
+      | _ => None
+      };
+
+    switch (maybeCoords) {
+    | Some((x, y)) =>
       <View style={Styles.outer(~x, ~y)}>
-        <View style={Styles.container(~theme=colorTheme)}>
-          {List.map(markdown => <hoverMarkdown markdown />, model.contents)
-           |> React.listToElement}
+        <View style=Styles.container>
+          {switch (maybeContents) {
+           | Some(contents) => <scrollbar contents />
+           | None => React.empty
+           }}
+          <View
+            style={Styles.contents(~theme=colorTheme)}
+            ref={node => setContents(node)}>
+            {List.map(markdown => <hoverMarkdown markdown />, model.contents)
+             |> React.listToElement}
+          </View>
         </View>
-      </View>;
-    | _ => React.empty
+      </View>
+    | None => React.empty
     };
   };
 };
