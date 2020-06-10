@@ -51,6 +51,7 @@ module View: {
       ~buffer: Oni_Core.Buffer.t,
       ~gutterWidth: float,
       ~cursorOffset: int,
+      ~grammars: Oni_Syntax.GrammarRepository.t,
       unit
     ) =>
     Revery.UI.element;

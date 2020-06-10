@@ -130,6 +130,7 @@ module Parts = {
           uiFont={state.uiFont}
           editorFont={state.editorFont}
           languageInfo={state.languageInfo}
+          grammars={state.grammarRepository}
           editor
           buffer
           gutterWidth

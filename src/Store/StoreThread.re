@@ -392,6 +392,7 @@ let start =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
+  dispatch(Model.Actions.SetGrammarRepository(grammarRepository));
 
   /* Set icon theme */
 

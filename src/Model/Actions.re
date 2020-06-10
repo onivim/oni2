@@ -158,6 +158,7 @@ type t =
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
+  | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
   | ThemeChanged(string)
