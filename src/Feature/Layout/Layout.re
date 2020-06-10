@@ -63,6 +63,15 @@ open {
          loop(start, 0.);
        };
 
+       let reclaimLeft = (~limit, index, nodes) =>
+         reclaim(
+           ~limit,
+           ~start=index - 1,
+           ~next=pred,
+           ~stopWhen=i => i < 0,
+           nodes,
+         );
+
        let reclaimRight = (~limit, index, nodes) =>
          reclaim(
            ~limit,
