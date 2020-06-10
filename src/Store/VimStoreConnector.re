@@ -175,9 +175,9 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.Mode.onChanged(newMode => dispatch(Actions.Vim(
-      Feature_Vim.ModeChanged(newMode)
-      )));
+    Vim.Mode.onChanged(newMode =>
+      dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)))
+    );
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>

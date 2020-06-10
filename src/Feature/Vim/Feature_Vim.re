@@ -1,10 +1,8 @@
 // MODEL
 
-type model = {
-	mode: Vim.Mode.t,
-};
+type model = {mode: Vim.Mode.t};
 
-let initial = {mode: Vim.Types.Normal };
+let initial = {mode: Vim.Types.Normal};
 
 let mode = ({mode}) => mode;
 
@@ -12,10 +10,10 @@ let mode = ({mode}) => mode;
 
 [@deriving show]
 type msg =
-| ModeChanged([@opaque] Vim.Mode.t);
+  | ModeChanged([@opaque] Vim.Mode.t);
 
 let update = (msg, _model: model) => {
-	switch (msg) {
-	| ModeChanged(mode) => ({mode: mode}: model);
-	}
+  switch (msg) {
+  | ModeChanged(mode) => ({mode: mode}: model)
+  };
 };

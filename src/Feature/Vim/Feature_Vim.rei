@@ -1,4 +1,3 @@
-
 // MODEL
 
 type model;
@@ -11,7 +10,7 @@ let mode: model => Vim.Mode.t;
 
 [@deriving show]
 type msg =
-| ModeChanged([@opaque] Vim.Mode.t);
+  | ModeChanged([@opaque] Vim.Mode.t);
 
 // UPDATE
 
