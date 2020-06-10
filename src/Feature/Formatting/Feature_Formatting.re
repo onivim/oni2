@@ -22,7 +22,7 @@ type model = {
 let initial = {
   nextSessionId: 0,
   availableDocumentFormatters: [],
-  session: None,
+  activeSession: None,
 };
 
 [@deriving show]
@@ -39,7 +39,7 @@ type msg =
     })
   | EditsReceived({
       sessionId: int,
-      edits: list(Oni_Core.SingleEdit.t),
+      edits: [@opaque] list(Vim.Edit.t),
     })
   | EditRequestFailed({
       sessionId: int,
@@ -50,6 +50,12 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
+
+let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
+  edit => {
+    range: edit.range |> Exthost.OneBasedRange.toRange,
+    text: edit.text,
+  };
 
 let update = (~maybeBuffer, ~extHostClient, model, msg) => {
   switch (msg) {
@@ -84,10 +90,13 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
                    "Got edits: " ++ string_of_int(formatter.handle),
                  );
                  switch (res) {
-                 | Ok(_edits) => EditsReceived({sessionId, edits: []})
+                 | Ok(edits) =>
+                   EditsReceived({
+                     sessionId,
+                     edits: List.map(extHostEditToVimEdit, edits),
+                   })
                  | Error(msg) => EditRequestFailed({sessionId, msg})
                  };
-                 // TODO: Map result edits to formatting edits
                },
              )
            )
@@ -117,18 +126,25 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
       Nothing,
     )
   | EditsReceived({sessionId, edits}) =>
-    // TODO: Handle formatting edits
-    let effect =
-      Service_Vim.Effects.applyEdits(
-        ~bufferId=0,
-        ~version=0,
-        ~edits,
-        fun
-        | Ok () => EditCompleted
-        | Error(msg) => EditRequestFailed({sessionId, msg}),
-      );
-    (model, Effect(effect));
-  | EditRequestFailed(msg) =>
+    switch (model.activeSession) {
+    | None => (model, Nothing)
+    | Some(activeSession) =>
+      if (activeSession.sessionId != sessionId) {
+        (model, Nothing);
+      } else {
+        let effect =
+          Service_Vim.Effects.applyEdits(
+            ~bufferId=activeSession.bufferId,
+            ~version=activeSession.bufferVersion,
+            ~edits,
+            fun
+            | Ok () => EditCompleted
+            | Error(msg) => EditRequestFailed({sessionId, msg}),
+          );
+        (model, Effect(effect));
+      }
+    }
+  | EditRequestFailed(_) =>
     // TODO: Show error notificaiton
     (model, Nothing)
   | EditCompleted =>

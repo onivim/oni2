@@ -16,8 +16,14 @@ type msg =
       selector: Exthost.DocumentSelector.t,
       displayName: string,
     })
-  | EditsReceived(list(Oni_Core.SingleEdit.t))
-  | EditRequestFailed(string)
+  | EditsReceived({
+      sessionId: int,
+      edits: list(Vim.Edit.t),
+    })
+  | EditRequestFailed({
+      sessionId: int,
+      msg: string,
+    })
   | EditCompleted;
 
 type outmsg =

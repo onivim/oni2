@@ -45,6 +45,23 @@ module Context: {
   let current: unit => t;
 };
 
+module Edit: {
+  [@deriving show]
+  type t = {
+    range: Range.t,
+    text: option(string),
+  };
+
+  type editResult = {
+    oldStartLine: Index.t,
+    oldEndLine: Index.t,
+    newLines: array(string),
+  };
+
+  let applyEdit:
+    (~provider: int => option(string), t) => result(editResult, string);
+};
+
 module Buffer: {
   type t = Native.buffer;
 
@@ -126,6 +143,8 @@ module Buffer: {
   */
   let setLines:
     (~start: Index.t=?, ~stop: Index.t=?, ~lines: array(string), t) => unit;
+
+  let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
 
   /**
   [onEnter(f)] adds a listener [f] that is called whenever a new buffer is entered.

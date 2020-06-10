@@ -86,6 +86,31 @@ let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
   Native.vimBufferSetLines(buffer, startLine, endLine, lines);
 };
 
+let applyEdits = (~edits, buffer) => {
+  let provider = idx => Some(getLine(buffer, Index.(zero + idx)));
+
+  let rec loop = edits => {
+    switch (edits) {
+    | [] => Ok()
+    | [hd, ...tail] =>
+      let result = Edit.applyEdit(~provider, hd);
+      switch (result) {
+      | Ok({oldStartLine, oldEndLine, newLines}) =>
+        setLines(
+          ~start=oldStartLine,
+          ~stop=Index.(oldEndLine + 1),
+          ~lines=newLines,
+          buffer,
+        );
+        loop(tail);
+      | Error(_) as err => err
+      };
+    };
+  };
+
+  loop(edits);
+};
+
 let onEnter = (f: Listeners.bufferListener) => {
   Event.add(f, Listeners.bufferEnter);
 };

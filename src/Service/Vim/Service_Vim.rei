@@ -9,7 +9,7 @@ module Effects: {
     (
       ~bufferId: int,
       ~version: int,
-      ~edits: list(Oni_Core.SingleEdit.t),
+      ~edits: list(Vim.Edit.t),
       result(unit, string) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
