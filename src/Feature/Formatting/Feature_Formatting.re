@@ -25,6 +25,23 @@ let initial = {
   activeSession: None,
 };
 
+module Internal = {
+  let clearSession = (model) => {
+    ...model,
+    activeSession: None,
+  };
+
+  let startSession = (~sessionId, ~buffer, model) => {
+    ...model,
+    nextSessionId: sessionId + 1,
+    activeSession: Some({
+      sessionId,
+      bufferId: Oni_Core.Buffer.getId(buffer),
+      bufferVersion: Oni_Core.Buffer.getVersion(buffer),
+    })
+  };
+}
+
 [@deriving show]
 type command =
   | FormatDocument;
@@ -83,12 +100,9 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
                ~uri=Oni_Core.Buffer.getUri(buf),
                // TODO: Hook up to indentation settings
                ~options=
-                 Exthost.FormattingOptions.{tabSize: 2, insertSpaces: true},
+                 Exthost.FormattingOptions.{tabSize: 2, insertSpaces: false},
                extHostClient,
                res => {
-                 prerr_endline(
-                   "Got edits: " ++ string_of_int(formatter.handle),
-                 );
                  switch (res) {
                  | Ok(edits) =>
                    EditsReceived({
@@ -102,18 +116,8 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
            )
         |> Isolinear.Effect.batch;
 
-      let model' = {
-        ...model,
-        nextSessionId: sessionId + 1,
-        activeSession:
-          Some({
-            bufferId: Oni_Core.Buffer.getId(buf),
-            bufferVersion: Oni_Core.Buffer.getVersion(buf),
-            sessionId,
-          }),
-      };
 
-      (model', Effect(effects));
+      (model |> Internal.startSession(~sessionId, ~buffer=buf), Effect(effects));
     }
   | DocumentFormatterAvailable({handle, selector, displayName}) => (
       {
@@ -129,6 +133,8 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
     switch (model.activeSession) {
     | None => (model, Nothing)
     | Some(activeSession) =>
+      // If we received edits for an older session,
+      // just ignore.
       if (activeSession.sessionId != sessionId) {
         (model, Nothing);
       } else {
@@ -148,8 +154,7 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
     // TODO: Show error notificaiton
     (model, Nothing)
   | EditCompleted =>
-    // TODO: Clear format session info
-    (model, Nothing)
+    (model |> Internal.clearSession, Nothing)
   };
 };
 
