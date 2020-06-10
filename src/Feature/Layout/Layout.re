@@ -36,6 +36,127 @@ open {
          |> List.fold_left((+.), 0.)
          |> max(1.);
 
+       let reclaimRight = (~limit, index, nodes) => {
+         let length = Array.length(nodes);
+         let total =
+           Array.fold_left(
+             (acc, node) => acc +. node.meta.weight,
+             0.,
+             nodes,
+           );
+         let minimum = min(0.1 *. total, total /. float(length));
+
+         let rec loop = (i, reclaimed) =>
+           if (i >= length) {
+             reclaimed;
+           } else {
+             let node = nodes[i];
+             let remaining = limit -. reclaimed;
+             let available = max(0., node.meta.weight -. minimum);
+             let reclaim = remaining < available ? remaining : available;
+
+             nodes[i] = node |> withWeight(node.meta.weight -. reclaim);
+
+             loop(i + 1, reclaimed +. reclaim);
+           };
+
+         loop(index + 1, 0.);
+       };
+
+       let%test_module "reclaimRight" =
+         (module
+          {
+            // Because floats are tricky to compare, this inflates them by a
+            // magnitude of two, converts them to int and then compares,
+            // effectively comparing each float value with a tolerance of 0.01..
+            let (==) = (actual, expected) => {
+              let intify = n => int_of_float(n *. 100.);
+
+              let actual = (
+                intify(fst(actual)),
+                Array.map(node => intify(node.meta.weight), snd(actual)),
+              );
+              let expected = (
+                intify(fst(expected)),
+                Array.map(intify, snd(expected)),
+              );
+
+              actual == expected;
+            };
+
+            let%test "available < limit, target == 1" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=10., 1, nodes);
+
+              (reclaimed, nodes) == (0.7, [|1., 1., 0.3|]);
+            };
+
+            let%test "available > limit, target == 1" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=0.5, 1, nodes);
+
+              (reclaimed, nodes) == (0.5, [|1., 1., 0.5|]);
+            };
+
+            let%test "available < limit, target == 2" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=10., 2, nodes);
+
+              (reclaimed, nodes) == (0., [|1., 1., 1.|]);
+            };
+
+            let%test "available > limit, target == 2" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=0.5, 2, nodes);
+
+              (reclaimed, nodes) == (0., [|1., 1., 1.|]);
+            };
+
+            let%test "available < limit, target == 0" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=10., 0, nodes);
+
+              (reclaimed, nodes) == (1.4, [|1., 0.3, 0.3|]);
+            };
+
+            let%test "available > limit, target == 0" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=0.5, 0, nodes);
+
+              (reclaimed, nodes) == (0.5, [|1., 0.5, 1.0|]);
+            };
+
+            let%test "available > limit && single node, target == 0" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=1., 0, nodes);
+
+              (reclaimed, nodes) == (1., [|1., 0.3, 0.7|]);
+            };
+
+            let%test "target == -1 (out of bounds)" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=10., -1, nodes);
+
+              (reclaimed, nodes) == (0., [|1., 1., 1.|]);
+            };
+
+            let%test "target == 3 (out of bounds)" = {
+              let nodes = [|window(1), window(2), window(3)|];
+
+              let reclaimed = reclaimRight(~limit=10., 3, nodes);
+
+              (reclaimed, nodes) == (0., [|1., 1., 1.|]);
+            };
+          });
+
        /**
         * shiftWeightRight
         *
