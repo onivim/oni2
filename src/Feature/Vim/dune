@@ -1,0 +1,11 @@
+(library
+    (name Feature_Vim)
+    (public_name Oni2.feature.vim)
+    (libraries
+      libvim
+      Oni2.core
+      Oni2.service.vim
+      Revery
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

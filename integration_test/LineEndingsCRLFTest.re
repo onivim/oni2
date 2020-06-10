@@ -5,7 +5,7 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="LineEndingsCRLFTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   let testFile = getAssetPath("test.crlf");
