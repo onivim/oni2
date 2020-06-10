@@ -26,21 +26,19 @@ let initial = {
 };
 
 module Internal = {
-  let clearSession = (model) => {
-    ...model,
-    activeSession: None,
-  };
+  let clearSession = model => {...model, activeSession: None};
 
   let startSession = (~sessionId, ~buffer, model) => {
     ...model,
     nextSessionId: sessionId + 1,
-    activeSession: Some({
-      sessionId,
-      bufferId: Oni_Core.Buffer.getId(buffer),
-      bufferVersion: Oni_Core.Buffer.getVersion(buffer),
-    })
+    activeSession:
+      Some({
+        sessionId,
+        bufferId: Oni_Core.Buffer.getId(buffer),
+        bufferVersion: Oni_Core.Buffer.getVersion(buffer),
+      }),
   };
-}
+};
 
 [@deriving show]
 type command =
@@ -66,7 +64,8 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | FormatError(string);
 
 let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
   edit => {
@@ -103,21 +102,31 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
                  Exthost.FormattingOptions.{tabSize: 2, insertSpaces: false},
                extHostClient,
                res => {
-                 switch (res) {
-                 | Ok(edits) =>
-                   EditsReceived({
-                     sessionId,
-                     edits: List.map(extHostEditToVimEdit, edits),
-                   })
-                 | Error(msg) => EditRequestFailed({sessionId, msg})
-                 };
-               },
-             )
+               switch (res) {
+               | Ok(edits) =>
+                 EditsReceived({
+                   sessionId,
+                   edits: List.map(extHostEditToVimEdit, edits),
+                 })
+               | Error(msg) => EditRequestFailed({sessionId, msg})
+               }
+             })
            )
         |> Isolinear.Effect.batch;
 
-
-      (model |> Internal.startSession(~sessionId, ~buffer=buf), Effect(effects));
+      if (matchingFormatters == []) {
+        (
+          model,
+          FormatError(
+            Printf.sprintf("No format providers available for %s", filetype),
+          ),
+        );
+      } else {
+        (
+          model |> Internal.startSession(~sessionId, ~buffer=buf),
+          Effect(effects),
+        );
+      };
     }
   | DocumentFormatterAvailable({handle, selector, displayName}) => (
       {
@@ -150,11 +159,8 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
         (model, Effect(effect));
       }
     }
-  | EditRequestFailed(_) =>
-    // TODO: Show error notificaiton
-    (model, Nothing)
-  | EditCompleted =>
-    (model |> Internal.clearSession, Nothing)
+  | EditRequestFailed({msg, _}) => (model, FormatError(msg))
+  | EditCompleted => (model |> Internal.clearSession, Nothing)
   };
 };
 

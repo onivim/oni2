@@ -63,7 +63,7 @@ module Edit: {
 
   // [sort(edits)] returns the edits in a list in order to be applied,
   // edits later in the document first (reverse range order).
-  let sort: (list(t)) => list(t);
+  let sort: list(t) => list(t);
 };
 
 module Buffer: {

@@ -28,7 +28,8 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | FormatError(string);
 
 let update:
   (

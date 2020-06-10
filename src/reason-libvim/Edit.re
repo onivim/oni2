@@ -47,7 +47,7 @@ let applyEdit = (~provider, edit) => {
   };
 };
 
-let sort = (edits) => {
+let sort = edits => {
   let sortFn = (editA, editB) => {
     let rangeA = editA.range;
     let rangeB = editB.range;
@@ -59,10 +59,10 @@ let sort = (edits) => {
     let startColumnB = rangeB.start.column |> Index.toZeroBased;
 
     if (startLineA == startLineB) {
-      startColumnB - startColumnA
+      startColumnB - startColumnA;
     } else {
-      startLineB - startLineA
-    }
+      startLineB - startLineA;
+    };
   };
   List.sort(sortFn, edits);
 };

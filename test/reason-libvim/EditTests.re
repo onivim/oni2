@@ -12,25 +12,23 @@ let arrayProvider = (strArray, idx) =>
     Some(strArray[idx]);
   };
 
-let range  = (startLine, startColumn, endLine, endColumn) => {
+let range = (startLine, startColumn, endLine, endColumn) => {
   Range.{
-    start: Location.create(
-      ~line=Index.(zero + startLine),
-      ~column=Index.(zero + startColumn)
-    ),
+    start:
+      Location.create(
+        ~line=Index.(zero + startLine),
+        ~column=Index.(zero + startColumn),
+      ),
     stop:
       Location.create(
-        ~line= Index.(zero+endLine),
-        ~column= Index.(zero+endColumn),
-      )
-  }
+        ~line=Index.(zero + endLine),
+        ~column=Index.(zero + endColumn),
+      ),
+  };
 };
 
 let edit = (~text, range) => {
-  Edit.{
-    text,
-    range,
-  };
+  Edit.{text, range};
 };
 
 describe("Edit", ({describe, _}) => {
@@ -53,17 +51,13 @@ describe("Edit", ({describe, _}) => {
     });
     test("remove character at end of line", ({expect, _}) => {
       let provider = [|"Hello!"|] |> arrayProvider;
-      let edit =
-        Edit.{
-          text: Some(""),
-          range: range(0, 5, 0, 6),
-        };
+      let edit = Edit.{text: Some(""), range: range(0, 5, 0, 6)};
 
       let result: Edit.editResult =
         Edit.applyEdit(~provider, edit) |> Result.get_ok;
       expect.equal(result.newLines, [|"Hello"|]);
     });
-  })
+  });
   describe("sort", ({test, _}) => {
     test("already sorted should be as-is", ({expect, _}) => {
       let first = range(0, 1, 0, 1) |> edit(~text=None);
@@ -84,5 +78,5 @@ describe("Edit", ({describe, _}) => {
 
       expect.equal(sortedEdits, expectedEdits);
     });
-  })
+  });
 });

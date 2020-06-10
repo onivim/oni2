@@ -46,6 +46,8 @@ let update =
     let effect =
       switch (eff) {
       | Feature_Formatting.Nothing => Effect.none
+      | Feature_Formatting.FormatError(msg) =>
+        Internal.notificationEffect(~kind=Error, msg)
       | Feature_Formatting.Effect(eff) =>
         eff |> Effect.map(msg => Actions.Formatting(msg))
       };
