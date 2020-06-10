@@ -57,8 +57,8 @@ open {
                let delta =
                  if (node.meta.size +. delta < minimumWeight) {
                    min(0., -. (node.meta.size -. minimumWeight));
-                 } else if (next.meta.size +. delta < minimumWeight) {
-                   min(0., -. (next.meta.size -. minimumWeight));
+                 } else if (next.meta.size -. delta < minimumWeight) {
+                   max(0., next.meta.size -. minimumWeight);
                  } else {
                    delta;
                  };
