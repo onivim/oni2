@@ -242,7 +242,7 @@ open {
 
               let reclaimed = reclaimRight(~limit=0.5, 0, nodes);
 
-              (reclaimed, nodes) == (0.5, [|1., 0.5, 1.0|]);
+              (reclaimed, nodes) == (0.5, [|1., 0.5, 1.|]);
             };
 
             let%test "available > limit && single node, target == 0" = {
@@ -253,18 +253,19 @@ open {
               (reclaimed, nodes) == (1., [|1., 0.3, 0.7|]);
             };
 
-            let%test "target == -1 (out of bounds)" = {
+            let%test "target == -3 (out of bounds)" = {
               let nodes = [|window(1), window(2), window(3)|];
 
-              let reclaimed = reclaimRight(~limit=10., -1, nodes);
-
-              (reclaimed, nodes) == (2.09, [|0.3, 0.3, 0.3|]);
+              switch (reclaimRight(~limit=10., -3, nodes)) {
+              | _ => false
+              | exception (Invalid_argument(_)) => true
+              };
             };
 
-            let%test "target == 3 (out of bounds)" = {
+            let%test "target == 6 (out of bounds)" = {
               let nodes = [|window(1), window(2), window(3)|];
 
-              let reclaimed = reclaimRight(~limit=10., 3, nodes);
+              let reclaimed = reclaimRight(~limit=10., 6, nodes);
 
               (reclaimed, nodes) == (0., [|1., 1., 1.|]);
             };
