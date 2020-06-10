@@ -37,22 +37,10 @@ module Styles = {
     ...absolute,
   ];
   let color = Revery.Color.rgba(0., 0., 0., 0.5);
-  let shadow =
-    boxShadow(
-      ~xOffset=-6.,
-      ~yOffset=6.,
-      ~blurRadius=12.,
-      ~spreadRadius=0.,
-      ~color,
-    );
-  let container = (drawShadow, backgroundColor) =>
-    drawShadow
-      ? [
-        shadow,
-        Style.backgroundColor(backgroundColor),
-        ...absoluteWithCursor,
-      ]
-      : [Style.backgroundColor(backgroundColor), ...absoluteWithCursor];
+  let container = backgroundColor => [
+    Style.backgroundColor(backgroundColor),
+    ...absoluteWithCursor,
+  ];
 };
 
 let lineStyle = Style.[position(`Absolute), top(0)];
@@ -120,7 +108,6 @@ type captureState = {
 
 let%component make =
               (
-                ~dropShadow=false,
                 ~dispatch: Msg.t => unit,
                 ~editor: Editor.t,
                 ~cursorPosition: Location.t,
@@ -240,7 +227,7 @@ let%component make =
       ? colors.minimapSliderHoverBackground : colors.minimapSliderBackground;
 
   <View
-    style={Styles.container(dropShadow, backgroundColor)}
+    style={Styles.container(backgroundColor)}
     onMouseDown
     onMouseMove
     onMouseOver

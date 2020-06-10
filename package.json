@@ -247,7 +247,7 @@
   "resolutions": {
     "@esy-ocaml/libffi": "onivim/libffi#590b041",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#f2dce86",
+    "revery": "revery-ui/revery#a7921ed",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-skia": "revery-ui/esy-skia#d60e5fe",
     "rench": "bryphe/rench#a976fe5",
@@ -269,6 +269,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#04733ed"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#a83bd09"
   }
 }

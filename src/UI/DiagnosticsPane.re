@@ -49,7 +49,7 @@ let make = (~diagnostics, ~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
       <View style=Styles.noResultsContainer>
         <Text
           style={Styles.title(~theme)}
-          fontFamily={uiFont.normal}
+          fontFamily={uiFont.family}
           fontSize={uiFont.size}
           text="No problems, yet!"
         />

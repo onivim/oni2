@@ -287,13 +287,13 @@ module View = {
           <Text
             style={Styles.highlight(theme)}
             text=highlightText
-            fontFamily={font.normal}
+            fontFamily={font.family}
             fontSize={font.size}
           />
           <Text
             style={Styles.text(theme)}
             text=remainingText
-            fontFamily={font.normal}
+            fontFamily={font.family}
             fontSize={font.size}
           />
         </View>;

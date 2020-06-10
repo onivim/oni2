@@ -53,12 +53,13 @@ let%component make =
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
+                ~bufferPixelWidth,
                 ~bufferWidthInCharacters,
                 ~windowIsFocused,
                 ~config,
                 (),
               ) => {
-  let%hook elementRef = React.Hooks.ref(None);
+  let%hook maybeBbox = React.Hooks.ref(None);
 
   let lineCount = Buffer.getNumberOfLines(buffer);
   let indentation =
@@ -75,37 +76,36 @@ let%component make =
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     Log.trace("editorMouseUp");
 
-    switch (elementRef^) {
-    | None => ()
-    | Some(r) =>
-      let (minX, minY, _, _) = r#getBoundingBox() |> BoundingBox2d.getBounds;
+    maybeBbox^
+    |> Option.iter(bbox => {
+         let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
 
-      let relY = evt.mouseY -. minY;
-      let relX = evt.mouseX -. minX;
+         let relY = evt.mouseY -. minY;
+         let relX = evt.mouseX -. minX;
 
-      let (line, col) =
-        Editor.pixelPositionToBufferLineByte(
-          ~buffer,
-          ~pixelX=relX,
-          ~pixelY=relY,
-          editor,
-        );
+         let (line, col) =
+           Editor.Slow.pixelPositionToBufferLineByte(
+             ~buffer,
+             ~pixelX=relX,
+             ~pixelY=relY,
+             editor,
+           );
 
-      Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-      Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
+         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
+         Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
 
-      let cursor =
-        Vim.Cursor.create(
-          ~line=Index.fromOneBased(line + 1),
-          ~column=Index.fromZeroBased(col),
-        );
+         let cursor =
+           Vim.Cursor.create(
+             ~line=Index.fromOneBased(line + 1),
+             ~column=Index.fromZeroBased(col),
+           );
 
-      onCursorChange(cursor);
-    };
+         onCursorChange(cursor);
+       });
   };
 
   <View
-    ref={node => elementRef := Some(node)}
+    onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
       gutterWidth,
       float(Editor.(editor.pixelWidth)) -. gutterWidth,
@@ -161,6 +161,22 @@ let%component make =
             ~showActive=Config.highlightActiveIndentGuide.get(config),
             indentation,
           );
+        };
+
+        if (Config.Experimental.scrollShadow.get(config)) {
+          let () =
+            ScrollShadow.renderVertical(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          let () =
+            ScrollShadow.renderHorizontal(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          ();
         };
       }}
     />
