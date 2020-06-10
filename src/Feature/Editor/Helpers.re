@@ -68,11 +68,13 @@ let getTokensForLine =
           bufferSyntaxHighlights,
         );
 
-      let startByte = BufferLine.Slow.getByteFromPosition(~position=startIndex, line);
-      let endByte = BufferLine.Slow.getByteFromPosition(~position=endIndex, line);
+      let startByte =
+        BufferLine.Slow.getByteFromPosition(~position=startIndex, line);
+      let endByte =
+        BufferLine.Slow.getByteFromPosition(~position=endIndex, line);
 
       let startIndex = BufferLine.getIndex(~byte=startByte, line);
-      let endIndex = BufferLine.getIndex(~byte=endByte, line)+ 1;
+      let endIndex = BufferLine.getIndex(~byte=endByte, line) + 1;
 
       let colorizer =
         BufferLineColorizer.create(
