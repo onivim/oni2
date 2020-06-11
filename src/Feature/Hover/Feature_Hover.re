@@ -169,9 +169,19 @@ module Styles = {
     backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
     width(Constants.scrollBarThickness),
   ];
+
+  let hr = [
+    flexGrow(1),
+    height(2),
+    backgroundColor(Color.rgba(0., 0., 0., 0.25)),
+    marginTop(4),
+    marginBottom(4),
+  ];
 };
 
 module View = {
+  let horizontalRule = () => <Row> <View style=Styles.hr /> </Row>;
+
   type state = {
     scrollTop: int,
     maybeHeight: option(int),
@@ -300,6 +310,7 @@ module View = {
           }>
           {List.map(markdown => <hoverMarkdown markdown />, model.contents)
            |> React.listToElement}
+          <horizontalRule />
           {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
            |> React.listToElement}
         </View>
