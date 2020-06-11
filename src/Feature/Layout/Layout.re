@@ -811,6 +811,318 @@ let rec resizeSplit = (~path, ~delta, node) => {
 };
 
 /**
+ * increaseWindowSize
+ */
+let increaseWindowSize = (resizeDirection, targetId, factor, node) => {
+  let inflate = (i, nodes) => {
+    let total = totalWeight(nodes);
+    let delta = total *. factor -. total;
+
+    let nodes = Array.of_list(nodes);
+    let reclaimed =
+      switch (resizeDirection) {
+      | `Left
+      | `Up => reclaimLeft(~limit=delta, i, nodes)
+      | `Right
+      | `Down => reclaimRight(~limit=delta, i, nodes)
+      };
+    let node = nodes[i];
+    nodes[i] = node |> withWeight(node.meta.weight +. reclaimed);
+    Array.to_list(nodes);
+  };
+
+  let rec loop = (path, node) =>
+    switch (path, node.kind, resizeDirection) {
+    | ([index], `Split(`Vertical, children), `Left | `Right)
+    | ([index], `Split(`Horizontal, children), `Up | `Down) =>
+      node |> withChildren(inflate(index, children))
+
+    | ([parentIndex, _], `Split(`Vertical, children), `Left | `Right)
+    | ([parentIndex, _], `Split(`Horizontal, children), `Up | `Down) =>
+      node |> withChildren(inflate(parentIndex, children))
+
+    | ([index, ...rest], `Split(_, children), _) =>
+      let children =
+        List.mapi(
+          (i, child) => i == index ? loop(rest, child) : child,
+          children,
+        );
+      node |> withChildren(children);
+
+    | ([], _, _) => node
+
+    | _ => raise(Invalid_argument("path"))
+    };
+
+  switch (AbstractTree.path(targetId, node)) {
+  | Some(path) => loop(path, node)
+  | None => node
+  };
+};
+
+let%test_module "increaseWindowsSize" =
+  (module
+   {
+     let rec compareNode = (actual, expected) =>
+       if (abs_float(actual.meta.weight -. expected.meta.weight) > 0.001) {
+         false;
+       } else {
+         switch (actual.kind, expected.kind) {
+         | (`Window(aid), `Window(bid)) => aid == bid
+         | (`Split(adir, achildren), `Split(bdir, bchildren)) =>
+           adir == bdir && List.for_all2(compareNode, achildren, bchildren)
+         | _ => false
+         };
+       };
+
+     let (==) = compareNode;
+
+     let%test "vsplit - up" = {
+       let initial = vsplit([window(1), window(2), window(3)]);
+
+       let actual = increaseWindowSize(`Up, 2, 5., initial);
+
+       actual == vsplit([window(1), window(2), window(3)]);
+     };
+
+     let%test "vsplit - down" = {
+       let initial = vsplit([window(1), window(2), window(3)]);
+
+       let actual = increaseWindowSize(`Down, 2, 5., initial);
+
+       actual == vsplit([window(1), window(2), window(3)]);
+     };
+
+     let%test "vsplit - left" = {
+       let initial = vsplit([window(1), window(2), window(3)]);
+
+       let actual = increaseWindowSize(`Left, 2, 5., initial);
+
+       actual
+       == vsplit([
+            window(~weight=0.3, 1),
+            window(~weight=1.7, 2),
+            window(3),
+          ]);
+     };
+
+     let%test "vsplit - right" = {
+       let initial = vsplit([window(1), window(2), window(3)]);
+
+       let actual = increaseWindowSize(`Right, 2, 5., initial);
+
+       actual
+       == vsplit([
+            window(1),
+            window(~weight=1.7, 2),
+            window(~weight=0.3, 3),
+          ]);
+     };
+
+     let%test "hsplit - up" = {
+       let initial = hsplit([window(1), window(2), window(3)]);
+
+       let actual = increaseWindowSize(`Up, 2, 5., initial);
+
+       actual
+       == hsplit([
+            window(~weight=0.3, 1),
+            window(~weight=1.7, 2),
+            window(3),
+          ]);
+     };
+
+     let%test "hsplit - down" = {
+       let initial = hsplit([window(1), window(2), window(3)]);
+
+       let actual = increaseWindowSize(`Down, 2, 5., initial);
+
+       actual
+       == hsplit([
+            window(1),
+            window(~weight=1.7, 2),
+            window(~weight=0.3, 3),
+          ]);
+     };
+
+     let%test "hsplit - left" = {
+       let initial = hsplit([window(1), window(2), window(3)]);
+
+       let actual = increaseWindowSize(`Left, 2, 5., initial);
+
+       actual == hsplit([window(1), window(2), window(3)]);
+     };
+
+     let%test "hsplit - right" = {
+       let initial = hsplit([window(1), window(2), window(3)]);
+
+       let actual = increaseWindowSize(`Right, 2, 5., initial);
+
+       actual == hsplit([window(1), window(2), window(3)]);
+     };
+
+     let%test "vsplit+hsplit - up" = {
+       let initial =
+         vsplit([
+           window(1),
+           hsplit([window(2), window(3), window(4)]),
+           window(5),
+         ]);
+
+       let actual = increaseWindowSize(`Up, 3, 5., initial);
+
+       actual
+       == vsplit([
+            window(1),
+            hsplit([
+              window(~weight=0.3, 2),
+              window(~weight=1.7, 3),
+              window(4),
+            ]),
+            window(5),
+          ]);
+     };
+
+     let%test "vsplit+hsplit - down" = {
+       let initial =
+         vsplit([
+           window(1),
+           hsplit([window(2), window(3), window(4)]),
+           window(5),
+         ]);
+
+       let actual = increaseWindowSize(`Down, 3, 5., initial);
+
+       actual
+       == vsplit([
+            window(1),
+            hsplit([
+              window(2),
+              window(~weight=1.7, 3),
+              window(~weight=0.3, 4),
+            ]),
+            window(5),
+          ]);
+     };
+
+     let%test "vsplit+hsplit - left" = {
+       let initial =
+         vsplit([
+           window(1),
+           hsplit([window(2), window(3), window(4)]),
+           window(5),
+         ]);
+
+       let actual = increaseWindowSize(`Left, 3, 5., initial);
+
+       actual
+       == vsplit([
+            window(~weight=0.3, 1),
+            hsplit(~weight=1.7, [window(2), window(3), window(4)]),
+            window(5),
+          ]);
+     };
+
+     let%test "vsplit+hsplit - right" = {
+       let initial =
+         vsplit([
+           window(1),
+           hsplit([window(2), window(3), window(4)]),
+           window(5),
+         ]);
+
+       let actual = increaseWindowSize(`Right, 3, 5., initial);
+
+       actual
+       == vsplit([
+            window(1),
+            hsplit(~weight=1.7, [window(2), window(3), window(4)]),
+            window(~weight=0.3, 5),
+          ]);
+     };
+
+     let%test "hsplit+vsplit - up" = {
+       let initial =
+         hsplit([
+           window(1),
+           vsplit([window(2), window(3), window(4)]),
+           window(5),
+         ]);
+
+       let actual = increaseWindowSize(`Up, 3, 5., initial);
+
+       actual
+       == hsplit([
+            window(~weight=0.3, 1),
+            vsplit(~weight=1.7, [window(2), window(3), window(4)]),
+            window(5),
+          ]);
+     };
+
+     let%test "hsplit+vsplit - down" = {
+       let initial =
+         hsplit([
+           window(1),
+           vsplit([window(2), window(3), window(4)]),
+           window(5),
+         ]);
+
+       let actual = increaseWindowSize(`Down, 3, 5., initial);
+
+       actual
+       == hsplit([
+            window(1),
+            vsplit(~weight=1.7, [window(2), window(3), window(4)]),
+            window(~weight=0.3, 5),
+          ]);
+     };
+
+     let%test "hsplit+vsplit - left" = {
+       let initial =
+         hsplit([
+           window(1),
+           vsplit([window(2), window(3), window(4)]),
+           window(5),
+         ]);
+
+       let actual = increaseWindowSize(`Left, 3, 5., initial);
+
+       actual
+       == hsplit([
+            window(1),
+            vsplit([
+              window(~weight=0.3, 2),
+              window(~weight=1.7, 3),
+              window(4),
+            ]),
+            window(5),
+          ]);
+     };
+
+     let%test "hsplit+vsplit - right" = {
+       let initial =
+         hsplit([
+           window(1),
+           vsplit([window(2), window(3), window(4)]),
+           window(5),
+         ]);
+
+       let actual = increaseWindowSize(`Right, 3, 5., initial);
+
+       actual
+       == hsplit([
+            window(1),
+            vsplit([
+              window(2),
+              window(~weight=1.7, 3),
+              window(~weight=0.3, 4),
+            ]),
+            window(5),
+          ]);
+     };
+   });
+
+/**
  * resetWeights
  */
 let resetWeights = tree => AbstractTree.map(withWeight(1.), tree);
