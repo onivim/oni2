@@ -443,6 +443,18 @@ let start = maybeKeyBindingsFilePath => {
         condition: windowCommandCondition,
       },
     ];
+  // TODO: Fails to parse
+  // {
+  //   key: "<C-W>_",
+  //   command: Feature_Layout.Commands.maximizeVertical.id,
+  //   condition: windowCommandCondition,
+  // },
+  // TODO: Fails to parse
+  // {
+  //   key: "<C-W>|",
+  //   command: Feature_Layout.Commands.maximizeHorizontal.id,
+  //   condition: windowCommandCondition,
+  // },
 
   let getKeybindingsFile = () => {
     Filesystem.getOrCreateConfigFile(
