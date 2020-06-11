@@ -36,9 +36,11 @@
         Oni2.feature.sneak
         Oni2.feature.statusbar
         Oni2.feature.terminal
+        Oni2.feature.titlebar
         Oni2.feature.modals
         Oni2.feature.layout
         Oni2.feature.hover
+        Oni2.feature.vim
         ReasonFuzz
         textmate
         editor-core-types

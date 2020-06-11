@@ -22,6 +22,7 @@
         Oni2.feature.changelog
         Oni2.feature.statusbar
         Oni2.feature.hover
+        Oni2.feature.titlebar
         Rench
         Revery
         revery-terminal.lib

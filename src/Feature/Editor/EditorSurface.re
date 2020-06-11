@@ -248,6 +248,7 @@ let%component make =
 
   let (gutterWidth, gutterView) =
     <GutterView
+      editor
       showLineNumbers={Config.lineNumbers.get(config)}
       height={editor.pixelHeight}
       colors
@@ -281,6 +282,7 @@ let%component make =
       mode
       isActiveSplit
       gutterWidth
+      bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
       bufferWidthInCharacters={layout.bufferWidthInCharacters}
       windowIsFocused
       config

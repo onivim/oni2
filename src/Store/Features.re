@@ -349,6 +349,10 @@ let update =
         Effect.map(msg => Actions.Hover(msg), eff)
       };
     ({...state, hover: model'}, effect);
+  | Vim(msg) => (
+      {...state, vim: Feature_Vim.update(msg, state.vim)},
+      Effect.none,
+    )
 
   | _ => (state, Effect.none)
   };
