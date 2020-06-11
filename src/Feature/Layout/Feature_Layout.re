@@ -59,6 +59,8 @@ type command =
   | DecreaseVerticalSize
   | IncreaseVerticalSize
   | Maximize
+  | MaximizeHorizontal
+  | MaximizeVertical
   | ToggleMaximize
   | ResetSizes;
 
@@ -90,9 +92,10 @@ let resetWeights = model => {
   tree: Layout.resetWeights(activeTree(model)),
 };
 
-let maximize = (targetId, model) => {
+let maximize = (~direction=?, targetId, model) => {
   ...model,
-  uncommittedTree: `Maximized(Layout.maximize(targetId, activeTree(model))),
+  uncommittedTree:
+    `Maximized(Layout.maximize(~direction?, targetId, activeTree(model))),
 };
 
 let update = (~focus, model, msg) => {
@@ -212,6 +215,21 @@ let update = (~focus, model, msg) => {
   | Command(Maximize) =>
     switch (focus) {
     | Some(focus) => (maximize(focus, model), Nothing)
+    | None => (model, Nothing)
+    }
+
+  | Command(MaximizeHorizontal) =>
+    switch (focus) {
+    | Some(focus) => (
+        maximize(~direction=`Horizontal, focus, model),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(MaximizeVertical) =>
+    switch (focus) {
+    | Some(focus) => (maximize(~direction=`Vertical, focus, model), Nothing)
     | None => (model, Nothing)
     }
 
@@ -502,6 +520,22 @@ module Commands = {
       Command(Maximize),
     );
 
+  let maximizeHorizontal =
+    define(
+      ~category="View",
+      ~title="Maximize Editor Group Horizontally",
+      "vim.maximizeWindowWidth",
+      Command(MaximizeHorizontal),
+    );
+
+  let maximizeVertical =
+    define(
+      ~category="View",
+      ~title="Maximize Editor Group Vertically",
+      "vim.maximizeWindowHeight",
+      Command(MaximizeVertical),
+    );
+
   let toggleMaximize =
     define(
       ~category="View",
@@ -535,6 +569,8 @@ module Contributions = {
       increaseVerticalSize,
       decreaseVerticalSize,
       maximize,
+      maximizeHorizontal,
+      maximizeVertical,
       toggleMaximize,
       resetSizes,
     ];
