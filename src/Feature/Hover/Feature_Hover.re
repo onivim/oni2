@@ -116,7 +116,15 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       | Some(range) => EditorCoreTypes.Range.contains(location, range)
       | None => false
       };
-    ({...model, shown, range: shown ? model.range : None}, Nothing);
+    (
+      {
+        ...model,
+        shown,
+        range: shown ? model.range : None,
+        contents: shown ? model.contents : [],
+      },
+      Nothing,
+    );
   | KeyPressed(_) => ({...model, shown: false}, Nothing)
   | ProviderRegistered(provider) => (
       {...model, providers: [provider, ...model.providers]},
@@ -425,7 +433,7 @@ module View = {
             cursorPosition,
           );
 
-        (Some((x, y)), Some(diagnostic));
+        diagnostic == [] ? (None, None) : (Some((x, y)), Some(diagnostic));
       | _ => (None, None)
       };
     switch (maybeCoords, maybeDiagnostic) {
