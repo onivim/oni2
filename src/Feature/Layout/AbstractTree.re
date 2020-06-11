@@ -8,15 +8,20 @@ type node('id, 'meta) = {
 };
 
 module DSL = {
-  let split = (~meta, direction, children) => {
+  let split = (meta, direction, children) => {
     meta,
     kind: `Split((direction, children)),
   };
-  let vsplit = (~meta, children) => split(~meta, `Vertical, children);
-  let hsplit = (~meta, children) => split(~meta, `Horizontal, children);
-  let window = (~meta, id) => {meta, kind: `Window(id)};
+  let vsplit = (meta, children) => split(meta, `Vertical, children);
+  let hsplit = (meta, children) => split(meta, `Horizontal, children);
+  let window = (meta, id) => {meta, kind: `Window(id)};
 
   let withMetadata = (meta, node) => {...node, meta};
+  let withChildren = (children, node) =>
+    switch (node.kind) {
+    | `Split(direction, _) => {...node, kind: `Split((direction, children))}
+    | `Window(_) => node
+    };
 };
 
 let rec fold = (f, acc, node) =>
@@ -31,6 +36,23 @@ let rec map = (f, node) =>
   | `Split(direction, children) =>
     f({...node, kind: `Split((direction, List.map(map(f), children)))})
   };
+
+let path = (targetId, node) => {
+  exception Found(list(int));
+
+  let rec traverse = (path, node) =>
+    switch (node.kind) {
+    | `Split(_, children) =>
+      List.iteri(i => traverse([i, ...path]), children)
+    | `Window(id) when id == targetId => raise(Found(List.rev(path)))
+    | `Window(_) => ()
+    };
+
+  switch (traverse([], node)) {
+  | () => None
+  | exception (Found(path)) => Some(path)
+  };
+};
 
 let rec windowNodes = node =>
   switch (node.kind) {
@@ -75,9 +97,9 @@ let%test_module "rotate" =
    {
      module DSL = {
        include DSL;
-       let hsplit = hsplit(~meta=());
-       let vsplit = vsplit(~meta=());
-       let window = window(~meta=());
+       let hsplit = hsplit();
+       let vsplit = vsplit();
+       let window = window();
      };
      open DSL;
 
