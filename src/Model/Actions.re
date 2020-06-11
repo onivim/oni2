@@ -88,7 +88,6 @@ type t =
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | HoverShow
-  | ModeChanged([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
@@ -223,6 +222,7 @@ type t =
       uri: Uri.t,
       decorations: list(Decoration.t),
     })
+  | Vim(Feature_Vim.msg)
   | Noop
 and command = {
   commandCategory: option(string),

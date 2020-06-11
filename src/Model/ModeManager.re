@@ -16,11 +16,11 @@ let current: State.t => Oni_Core.Mode.t =
     |> Option.map((Feature_Terminal.{insertMode, _}) => {
          insertMode
            ? Mode.TerminalInsert
-           : Internal.getTerminalNormalMode(state.vimMode)
+           : Internal.getTerminalNormalMode(Feature_Vim.mode(state.vim))
        })
     |> Option.value(
          ~default=
-           switch (state.vimMode) {
+           switch (Feature_Vim.mode(state.vim)) {
            | Vim.Types.Insert => Mode.Insert
            | Vim.Types.Normal => Mode.Normal
            | Vim.Types.Visual => Mode.Visual

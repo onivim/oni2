@@ -273,3 +273,133 @@ let lineHighlight = (~context, ~color, line) =>
     ~width=float(context.width),
     ~color,
   );
+
+module Gradient = {
+  let paint = Skia.Paint.make();
+
+  let drawLeftToRight =
+      (
+        ~leftColor: Revery.Color.t,
+        ~rightColor: Revery.Color.t,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      ) => {
+    let left = x;
+    let top = y;
+    let right = x +. width;
+
+    let gradient =
+      Skia.Shader.makeLinearGradient2(
+        ~startPoint=Skia.Point.make(left, 0.0),
+        ~stopPoint=Skia.Point.make(right, 0.0),
+        ~startColor=leftColor |> Revery.Color.toSkia,
+        ~stopColor=rightColor |> Revery.Color.toSkia,
+        ~tileMode=`repeat,
+      );
+
+    Skia.Paint.setShader(paint, gradient);
+
+    CanvasContext.drawRectLtwh(
+      ~left,
+      ~top,
+      ~width,
+      ~height,
+      ~paint,
+      context.canvasContext,
+    );
+  };
+
+  let drawTopToBottom =
+      (
+        ~topColor: Revery.Color.t,
+        ~bottomColor: Revery.Color.t,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      ) => {
+    let left = x;
+    let top = y;
+    let bottom = y +. height;
+
+    let gradient =
+      Skia.Shader.makeLinearGradient2(
+        ~startPoint=Skia.Point.make(0.0, top),
+        ~stopPoint=Skia.Point.make(0.0, bottom),
+        ~startColor=topColor |> Revery.Color.toSkia,
+        ~stopColor=bottomColor |> Revery.Color.toSkia,
+        ~tileMode=`repeat,
+      );
+
+    Skia.Paint.setShader(paint, gradient);
+
+    CanvasContext.drawRectLtwh(
+      ~left,
+      ~top,
+      ~width,
+      ~height,
+      ~paint,
+      context.canvasContext,
+    );
+  };
+};
+
+module Shadow = {
+  let shadowStartColor = Revery.Color.rgba(0., 0., 0., 0.22);
+  let shadowStopColor = Revery.Color.rgba(0., 0., 0., 0.);
+
+  type direction =
+    | Left
+    | Right
+    | Down
+    | Up;
+
+  let render = (~direction, ~x, ~y, ~width, ~height, ~context) => {
+    switch (direction) {
+    | Right =>
+      Gradient.drawLeftToRight(
+        ~leftColor=shadowStartColor,
+        ~rightColor=shadowStopColor,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      )
+    | Left =>
+      Gradient.drawLeftToRight(
+        ~leftColor=shadowStopColor,
+        ~rightColor=shadowStartColor,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      )
+    | Down =>
+      Gradient.drawTopToBottom(
+        ~topColor=shadowStartColor,
+        ~bottomColor=shadowStopColor,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      )
+    | Up =>
+      Gradient.drawTopToBottom(
+        ~topColor=shadowStopColor,
+        ~bottomColor=shadowStartColor,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      )
+    };
+  };
+};

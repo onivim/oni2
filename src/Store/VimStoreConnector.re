@@ -175,7 +175,9 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.Mode.onChanged(newMode => dispatch(Actions.ModeChanged(newMode)));
+    Vim.Mode.onChanged(newMode =>
+      dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)))
+    );
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
@@ -937,7 +939,6 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-    | ModeChanged(vimMode) => ({...state, vimMode}, Isolinear.Effect.none)
     | Command("view.splitHorizontal") =>
       let maybeBuffer = Selectors.getActiveBuffer(state);
       let editorGroup = EditorGroup.create();

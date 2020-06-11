@@ -53,6 +53,7 @@ let%component make =
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
+                ~bufferPixelWidth,
                 ~bufferWidthInCharacters,
                 ~windowIsFocused,
                 ~config,
@@ -160,6 +161,22 @@ let%component make =
             ~showActive=Config.highlightActiveIndentGuide.get(config),
             indentation,
           );
+        };
+
+        if (Config.Experimental.scrollShadow.get(config)) {
+          let () =
+            ScrollShadow.renderVertical(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          let () =
+            ScrollShadow.renderHorizontal(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          ();
         };
       }}
     />

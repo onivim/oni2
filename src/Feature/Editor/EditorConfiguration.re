@@ -107,6 +107,9 @@ module Experimental = {
       bool,
       ~default=false,
     );
+
+  let scrollShadow =
+    setting("experimental.editor.scrollShadow", bool, ~default=false);
 };
 
 let contributions = [
@@ -132,4 +135,5 @@ let contributions = [
   ZenMode.singleFile.spec,
   Experimental.smoothScroll.spec,
   Experimental.cursorSmoothCaretAnimation.spec,
+  Experimental.scrollShadow.spec,
 ];

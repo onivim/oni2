@@ -37,7 +37,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
 
   dispatch(KeyboardInput("i"));
   wait(~name="Mode switches to insert", (state: State.t) =>
-    state.vimMode == Vim.Types.Insert
+    Feature_Vim.mode(state.vim) == Vim.Types.Insert
   );
 
   dispatch(KeyboardInput("a"));
@@ -47,7 +47,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
   runEffects();
 
   wait(~name="Mode switches back to normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   setClipboard(None);
