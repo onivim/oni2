@@ -251,8 +251,7 @@ let scrollDeltaPixelY = (~pixelY, view) => {
   scrollToPixelY(~pixelY, view);
 };
 
-let getCursorOffset =
-    (~buffer, ~cursorPosition: EditorCoreTypes.Location.t, ~editor) => {
+let getCursorOffset = (~buffer, ~cursorPosition: EditorCoreTypes.Location.t) => {
   let cursorLine = Index.toZeroBased(cursorPosition.line);
   let lineCount = Buffer.getNumberOfLines(buffer);
 

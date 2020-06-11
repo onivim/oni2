@@ -196,8 +196,7 @@ let%component make =
 
   let cursorPosition = Editor.getPrimaryCursor(~buffer, editor);
 
-  let cursorOffset =
-    Editor.getCursorOffset(~buffer, ~editor, ~cursorPosition);
+  let cursorOffset = Editor.getCursorOffset(~buffer, ~cursorPosition);
 
   let layout =
     EditorLayout.getLayout(
@@ -319,7 +318,6 @@ let%component make =
       colors
       theme
       tokenTheme
-      renderHover
     />
     {renderHover(~gutterWidth, ~cursorOffset)}
     <View style=Styles.verticalScrollBar>

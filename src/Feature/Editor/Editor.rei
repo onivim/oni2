@@ -56,12 +56,7 @@ let getCharacterWidth: t => float;
 let getLineHeight: t => float;
 
 let getCursorOffset:
-  (
-    ~buffer: Buffer.t,
-    ~cursorPosition: EditorCoreTypes.Location.t,
-    ~editor: t
-  ) =>
-  int;
+  (~buffer: Buffer.t, ~cursorPosition: EditorCoreTypes.Location.t) => int;
 
 // PROJECTION
 

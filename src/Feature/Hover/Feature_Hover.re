@@ -142,6 +142,12 @@ module Styles = {
     overflow(`Scroll),
   ];
 
+  let diagnostic = (~theme) => [
+    textOverflow(`Ellipsis),
+    color(Colors.Editor.foreground.from(theme)),
+    backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
+  ];
+
   let contents = (~theme, ~showScrollbar, ~scrollTop) => [
     backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
     Style.maxWidth(maxWidth),
@@ -185,11 +191,8 @@ module View = {
                   ~uiFont: UiFont.t,
                   ~editorFont: Service_Font.font,
                   ~model,
-                  ~editor: Feature_Editor.Editor.t,
-                  ~buffer,
-                  ~gutterWidth,
-                  ~cursorOffset,
                   ~grammars,
+                  ~diagnostic,
                   (),
                 ) => {
     let reducer = (action, state) =>
@@ -222,8 +225,18 @@ module View = {
         ~grammars,
         ~markdown,
         ~baseFontSize=14.,
-        ~codeBlockStyle=[],
+        ~codeBlockStyle=Style.[flexGrow(1)],
       );
+
+    let hoverDiagnostic =
+        (~diagnostic: Feature_LanguageSupport.Diagnostic.t, ()) => {
+      <Text
+        text={diagnostic.message}
+        fontFamily={editorFont.fontFamily}
+        fontSize={editorFont.fontSize}
+        style={Styles.diagnostic(~theme=colorTheme)}
+      />;
+    };
 
     let showScrollbar =
       switch (state.maybeHeight) {
@@ -287,6 +300,8 @@ module View = {
           }>
           {List.map(markdown => <hoverMarkdown markdown />, model.contents)
            |> React.listToElement}
+          {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
+           |> React.listToElement}
         </View>
       </View>
       {showScrollbar ? <scrollbar /> : React.empty}
@@ -306,9 +321,13 @@ module View = {
         ~gutterWidth,
         ~cursorOffset,
         ~grammars,
+        ~diagnostics,
         (),
       ) => {
-    let maybeCoords: option((int, int)) =
+    let (maybeCoords, maybeDiagnostic): (
+      option((int, int)),
+      option(list(Feature_LanguageSupport.Diagnostic.t)),
+    ) =
       switch (model.range, model.shown) {
       | (Some(range), true) =>
         let y =
@@ -327,7 +346,15 @@ module View = {
             -. editor.scrollX
             +. 0.5,
           );
-        Some((x, y));
+
+        let diagnostic =
+          Feature_LanguageSupport.Diagnostics.getDiagnosticsAtPosition(
+            diagnostics,
+            buffer,
+            range.start,
+          );
+
+        (Some((x, y)), Some(diagnostic));
       | (None, true) =>
         let cursorPosition =
           Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
@@ -346,11 +373,19 @@ module View = {
             -. editor.scrollX
             +. 0.5,
           );
-        Some((x, y));
-      | _ => None
+
+        let diagnostic =
+          Feature_LanguageSupport.Diagnostics.getDiagnosticsAtPosition(
+            diagnostics,
+            buffer,
+            cursorPosition,
+          );
+
+        (Some((x, y)), Some(diagnostic));
+      | _ => (None, None)
       };
-    switch (maybeCoords) {
-    | Some((x, y)) =>
+    switch (maybeCoords, maybeDiagnostic) {
+    | (Some((x, y)), Some(diagnostic)) =>
       <hover
         x
         y
@@ -360,13 +395,10 @@ module View = {
         uiFont
         editorFont
         model
-        editor
-        buffer
-        gutterWidth
-        cursorOffset
         grammars
+        diagnostic
       />
-    | None => React.empty
+    | _ => React.empty
     };
   };
 };

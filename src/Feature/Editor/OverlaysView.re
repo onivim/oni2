@@ -65,11 +65,9 @@ let make =
       ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
-      ~renderHover,
       (),
     ) => {
-  let cursorOffset =
-    Editor.getCursorOffset(~buffer, ~cursorPosition, ~editor);
+  let cursorOffset = Editor.getCursorOffset(~buffer, ~cursorPosition);
 
   let cursorPixelY =
     int_of_float(

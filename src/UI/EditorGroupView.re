@@ -131,6 +131,7 @@ module Parts = {
           editorFont={state.editorFont}
           languageInfo={state.languageInfo}
           grammars={state.grammarRepository}
+          diagnostics={state.diagnostics}
           editor
           buffer
           gutterWidth
