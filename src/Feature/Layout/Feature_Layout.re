@@ -88,8 +88,8 @@ let resizeWindow = (direction, focus, delta, model) => {
 };
 
 let resetWeights = model => {
-  ...model,
   tree: Layout.resetWeights(activeTree(model)),
+  uncommittedTree: `None,
 };
 
 let maximize = (~direction=?, targetId, model) => {
