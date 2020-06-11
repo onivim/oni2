@@ -306,10 +306,6 @@ let%component make =
     <OverlaysView
       buffer
       isActiveSplit
-      hoverDelay={Config.Hover.delay.get(config)}
-      isHoverEnabled={Config.Hover.enabled.get(config)}
-      diagnostics
-      mode
       cursorPosition
       editor
       gutterWidth

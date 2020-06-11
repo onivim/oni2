@@ -53,10 +53,6 @@ let make =
     (
       ~buffer,
       ~isActiveSplit,
-      ~hoverDelay,
-      ~isHoverEnabled,
-      ~diagnostics,
-      ~mode,
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
       ~gutterWidth,
@@ -88,18 +84,6 @@ let make =
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
-        <HoverView
-          x=cursorPixelX
-          y=cursorPixelY
-          delay=hoverDelay
-          isEnabled=isHoverEnabled
-          colors
-          editorFont
-          diagnostics
-          editor
-          buffer
-          mode
-        />
         <completionsView
           completions
           cursorPixelX
