@@ -188,10 +188,7 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
-  | WindowCloseClicked
-  | WindowMinimizeClicked
-  | WindowMaximizeClicked
-  | WindowRestoreClicked
+  | TitleBar(Feature_TitleBar.msg)
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
   | WriteFailure
@@ -203,7 +200,6 @@ type t =
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
-  | TitleDoubleClicked
   | GotOriginalUri({
       bufferId: int,
       uri: Uri.t,
