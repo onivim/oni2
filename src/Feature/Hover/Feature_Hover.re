@@ -183,9 +183,9 @@ module View = {
                   ~grammars,
                   (),
                 ) => {
-    let%hook (maybeContents, setMaybeContents) = Hooks.state(None);
+    let%hook (maybeHeight, setMaybeHeight) = Hooks.state(None);
     let%hook (scrollTop, setScrollTop) = Hooks.state(0);
-    let setContents = c => setMaybeContents(_ => Some(c));
+    let setHeight = h => setMaybeHeight(_ => Some(h));
 
     let hoverMarkdown = (~markdown) =>
       Oni_Components.Markdown.make(
@@ -205,18 +205,15 @@ module View = {
       );
 
     let showScrollbar =
-      switch (maybeContents) {
+      switch (maybeHeight) {
       | None => false
-      | Some(contents) =>
-        let {height, _}: Revery.UI.Dimensions.t = contents#measurements();
-        height >= Styles.maxHeight;
+      | Some(height) => height >= Styles.maxHeight
       };
 
     let scrollbar = () =>
-      switch (maybeContents) {
+      switch (maybeHeight) {
       | None => React.empty
-      | Some(contents) =>
-        let {height, _}: Revery.UI.Dimensions.t = contents#measurements();
+      | Some(height) =>
         let thumbLength = Styles.maxHeight * Styles.maxHeight / height;
         <View style={Styles.scrollBar(~theme=colorTheme)}>
           <Slider
@@ -237,9 +234,8 @@ module View = {
       };
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-      switch (maybeContents, showScrollbar) {
-      | (Some(contents), true) =>
-        let {height, _}: Revery.UI.Dimensions.t = contents#measurements();
+      switch (maybeHeight, showScrollbar) {
+      | (Some(height), true) =>
         let delta =
           int_of_float(wheelEvent.deltaY) * Constants.scrollWheelMultiplier;
         setScrollTop(st =>
@@ -263,7 +259,7 @@ module View = {
             ~scrollTop,
           )}
           onMouseWheel=scroll
-          ref={node => setContents(node)}>
+          onDimensionsChanged={({height, _}) => setHeight(height)}>
           {List.map(markdown => <hoverMarkdown markdown />, model.contents)
            |> React.listToElement}
         </View>
