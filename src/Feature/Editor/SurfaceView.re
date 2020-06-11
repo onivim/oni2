@@ -23,6 +23,10 @@ module Styles = {
   ];
 };
 
+module Constants = {
+  let hoverTime = 1.0;
+};
+
 let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
@@ -114,7 +118,10 @@ let%component make =
 
   let%hook () =
     Hooks.effect(
-      If((t, _) => Revery.Time.toFloatSeconds(t) > 1., hoverTimer),
+      If(
+        (t, _) => Revery.Time.toFloatSeconds(t) > Constants.hoverTime,
+        hoverTimer,
+      ),
       () => {
         lastMousePosition^
         |> Option.iter(((mouseX, mouseY)) => {
