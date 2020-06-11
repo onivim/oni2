@@ -811,9 +811,9 @@ let rec resizeSplit = (~path, ~delta, node) => {
 };
 
 /**
- * increaseWindowSize
+ * resizeWindowByDirection
  */
-let increaseWindowSize = (resizeDirection, targetId, factor, node) => {
+let resizeWindowByDirection = (resizeDirection, targetId, factor, node) => {
   let inflate = (i, nodes) => {
     let total = totalWeight(nodes);
     let delta = total *. factor -. total;
@@ -860,7 +860,7 @@ let increaseWindowSize = (resizeDirection, targetId, factor, node) => {
   };
 };
 
-let%test_module "increaseWindowsSize" =
+let%test_module "resizeWindowByDirection" =
   (module
    {
      let rec compareNode = (actual, expected) =>
@@ -880,7 +880,7 @@ let%test_module "increaseWindowsSize" =
      let%test "vsplit - up" = {
        let initial = vsplit([window(1), window(2), window(3)]);
 
-       let actual = increaseWindowSize(`Up, 2, 5., initial);
+       let actual = resizeWindowByDirection(`Up, 2, 5., initial);
 
        actual == vsplit([window(1), window(2), window(3)]);
      };
@@ -888,7 +888,7 @@ let%test_module "increaseWindowsSize" =
      let%test "vsplit - down" = {
        let initial = vsplit([window(1), window(2), window(3)]);
 
-       let actual = increaseWindowSize(`Down, 2, 5., initial);
+       let actual = resizeWindowByDirection(`Down, 2, 5., initial);
 
        actual == vsplit([window(1), window(2), window(3)]);
      };
@@ -896,7 +896,7 @@ let%test_module "increaseWindowsSize" =
      let%test "vsplit - left" = {
        let initial = vsplit([window(1), window(2), window(3)]);
 
-       let actual = increaseWindowSize(`Left, 2, 5., initial);
+       let actual = resizeWindowByDirection(`Left, 2, 5., initial);
 
        actual
        == vsplit([
@@ -909,7 +909,7 @@ let%test_module "increaseWindowsSize" =
      let%test "vsplit - right" = {
        let initial = vsplit([window(1), window(2), window(3)]);
 
-       let actual = increaseWindowSize(`Right, 2, 5., initial);
+       let actual = resizeWindowByDirection(`Right, 2, 5., initial);
 
        actual
        == vsplit([
@@ -922,7 +922,7 @@ let%test_module "increaseWindowsSize" =
      let%test "hsplit - up" = {
        let initial = hsplit([window(1), window(2), window(3)]);
 
-       let actual = increaseWindowSize(`Up, 2, 5., initial);
+       let actual = resizeWindowByDirection(`Up, 2, 5., initial);
 
        actual
        == hsplit([
@@ -935,7 +935,7 @@ let%test_module "increaseWindowsSize" =
      let%test "hsplit - down" = {
        let initial = hsplit([window(1), window(2), window(3)]);
 
-       let actual = increaseWindowSize(`Down, 2, 5., initial);
+       let actual = resizeWindowByDirection(`Down, 2, 5., initial);
 
        actual
        == hsplit([
@@ -948,7 +948,7 @@ let%test_module "increaseWindowsSize" =
      let%test "hsplit - left" = {
        let initial = hsplit([window(1), window(2), window(3)]);
 
-       let actual = increaseWindowSize(`Left, 2, 5., initial);
+       let actual = resizeWindowByDirection(`Left, 2, 5., initial);
 
        actual == hsplit([window(1), window(2), window(3)]);
      };
@@ -956,7 +956,7 @@ let%test_module "increaseWindowsSize" =
      let%test "hsplit - right" = {
        let initial = hsplit([window(1), window(2), window(3)]);
 
-       let actual = increaseWindowSize(`Right, 2, 5., initial);
+       let actual = resizeWindowByDirection(`Right, 2, 5., initial);
 
        actual == hsplit([window(1), window(2), window(3)]);
      };
@@ -969,7 +969,7 @@ let%test_module "increaseWindowsSize" =
            window(5),
          ]);
 
-       let actual = increaseWindowSize(`Up, 3, 5., initial);
+       let actual = resizeWindowByDirection(`Up, 3, 5., initial);
 
        actual
        == vsplit([
@@ -991,7 +991,7 @@ let%test_module "increaseWindowsSize" =
            window(5),
          ]);
 
-       let actual = increaseWindowSize(`Down, 3, 5., initial);
+       let actual = resizeWindowByDirection(`Down, 3, 5., initial);
 
        actual
        == vsplit([
@@ -1013,7 +1013,7 @@ let%test_module "increaseWindowsSize" =
            window(5),
          ]);
 
-       let actual = increaseWindowSize(`Left, 3, 5., initial);
+       let actual = resizeWindowByDirection(`Left, 3, 5., initial);
 
        actual
        == vsplit([
@@ -1031,7 +1031,7 @@ let%test_module "increaseWindowsSize" =
            window(5),
          ]);
 
-       let actual = increaseWindowSize(`Right, 3, 5., initial);
+       let actual = resizeWindowByDirection(`Right, 3, 5., initial);
 
        actual
        == vsplit([
@@ -1049,7 +1049,7 @@ let%test_module "increaseWindowsSize" =
            window(5),
          ]);
 
-       let actual = increaseWindowSize(`Up, 3, 5., initial);
+       let actual = resizeWindowByDirection(`Up, 3, 5., initial);
 
        actual
        == hsplit([
@@ -1067,7 +1067,7 @@ let%test_module "increaseWindowsSize" =
            window(5),
          ]);
 
-       let actual = increaseWindowSize(`Down, 3, 5., initial);
+       let actual = resizeWindowByDirection(`Down, 3, 5., initial);
 
        actual
        == hsplit([
@@ -1085,7 +1085,7 @@ let%test_module "increaseWindowsSize" =
            window(5),
          ]);
 
-       let actual = increaseWindowSize(`Left, 3, 5., initial);
+       let actual = resizeWindowByDirection(`Left, 3, 5., initial);
 
        actual
        == hsplit([
@@ -1107,7 +1107,7 @@ let%test_module "increaseWindowsSize" =
            window(5),
          ]);
 
-       let actual = increaseWindowSize(`Right, 3, 5., initial);
+       let actual = resizeWindowByDirection(`Right, 3, 5., initial);
 
        actual
        == hsplit([

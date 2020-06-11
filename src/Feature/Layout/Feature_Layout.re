@@ -86,13 +86,19 @@ let rotate = (direction, focus, model) => {
 
 let resizeWindowByAxis = (direction, focus, delta, model) => {
   ...model,
-  tree: Layout.resizeWindowByAxis(direction, focus, delta, activeTree(model)),
+  tree:
+    Layout.resizeWindowByAxis(direction, focus, delta, activeTree(model)),
 };
 
-let increaseWindowSize = (direction, focus, delta, model) => {
+let resizeWindowByDirection = (direction, focus, delta, model) => {
   ...model,
   tree:
-    Layout.increaseWindowSize(direction, focus, delta, activeTree(model)),
+    Layout.resizeWindowByDirection(
+      direction,
+      focus,
+      delta,
+      activeTree(model),
+    ),
 };
 
 let resetWeights = model => {
@@ -223,7 +229,7 @@ let update = (~focus, model, msg) => {
   | Command(IncreaseWindowSize(direction)) =>
     switch (focus) {
     | Some(focus) => (
-        model |> increaseWindowSize(direction, focus, 1.05),
+        model |> resizeWindowByDirection(direction, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)
@@ -232,7 +238,7 @@ let update = (~focus, model, msg) => {
   | Command(DecreaseWindowSize(direction)) =>
     switch (focus) {
     | Some(focus) => (
-        model |> increaseWindowSize(direction, focus, 0.95),
+        model |> resizeWindowByDirection(direction, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
