@@ -271,12 +271,13 @@ open {
           });
 
        /**
-        * shiftWeightLeft
+        * shiftWeightFromLeft
         *
-        * Shifts weight from `nodes[index]` to `nodes[index-1]`. `delta` is the
-        * share of the total weight of the target and siblings combined.
+        * Shifts weight to `nodes[index]` from the nodes left of it, consuming
+        * the nearest first `delta` is the share of the total weight of the
+        * target and siblings combined.
         */
-       let shiftWeightLeft = (~delta, index, nodes) => {
+       let shiftWeightFromLeft = (~delta, index, nodes) => {
          let nodes = Array.of_list(nodes);
 
          let reclaimed = reclaimLeft(~limit=delta, index, nodes);
@@ -287,7 +288,7 @@ open {
          Array.to_list(nodes);
        };
 
-       let%test_module "shiftWeightLeft" =
+       let%test_module "shiftWeightFromLeft" =
          (module
           {
             let weights = List.map(node => node.meta.weight);
@@ -297,7 +298,7 @@ open {
             let%test "positive delta" = {
               let initial = [window(1), window(2), window(3)];
 
-              let actual = initial |> shiftWeightLeft(~delta=0.05, 1);
+              let actual = initial |> shiftWeightFromLeft(~delta=0.05, 1);
 
               weights(actual) == [0.95, 1.05, 1.];
             };
@@ -305,7 +306,7 @@ open {
             let%test "negative delta" = {
               let initial = [window(1), window(2), window(3)];
 
-              let actual = initial |> shiftWeightLeft(~delta=-0.05, 1);
+              let actual = initial |> shiftWeightFromLeft(~delta=-0.05, 1);
 
               weights(actual) == [1.05, 0.95, 1.];
             };
@@ -317,7 +318,7 @@ open {
                 window(3),
               ];
 
-              let actual = initial |> shiftWeightLeft(~delta=0.05, 1);
+              let actual = initial |> shiftWeightFromLeft(~delta=0.05, 1);
 
               weights(actual) == weights(initial);
             };
@@ -326,7 +327,7 @@ open {
             //            let%test "next below minimum - negative delta" = {
             //              let initial = [window(1), window(2), window(~weight=0.1, 3)];
             //
-            //              let actual = initial |> shiftWeightLeft(~delta=-0.05, 1);
+            //              let actual = initial |> shiftWeightFromLeft(~delta=-0.05, 1);
             //
             //              weights(actual) == weights(initial);
             //            };
@@ -334,19 +335,20 @@ open {
             let%test "delta too large" = {
               let initial = [window(1), window(2), window(3)];
 
-              let actual = initial |> shiftWeightLeft(~delta=4., 1);
+              let actual = initial |> shiftWeightFromLeft(~delta=4., 1);
 
               weights_int(actual) == [30, 170, 100];
             };
           });
 
        /**
-        * shiftWeightRight
+        * shiftWeightFromRight
         *
-        * Shifts weight from `nodes[index]` to `nodes[index+1]`. `delta` is the
-        * share of the total weight of the target and siblings combined.
+        * Shifts weight to `nodes[index]` from the nodes right of it, consuming
+        * the nearest first `delta` is the share of the total weight of the
+        * target and siblings combined.
         */
-       let shiftWeightRight = (~delta, index, nodes) => {
+       let shiftWeightFromRight = (~delta, index, nodes) => {
          let nodes = Array.of_list(nodes);
 
          let reclaimed = reclaimRight(~limit=delta, index, nodes);
@@ -357,7 +359,7 @@ open {
          Array.to_list(nodes);
        };
 
-       let%test_module "shiftWeightRight" =
+       let%test_module "shiftWeightFromRight" =
          (module
           {
             let weights = List.map(node => node.meta.weight);
@@ -367,7 +369,7 @@ open {
             let%test "positive delta" = {
               let initial = [window(1), window(2), window(3)];
 
-              let actual = initial |> shiftWeightRight(~delta=0.05, 1);
+              let actual = initial |> shiftWeightFromRight(~delta=0.05, 1);
 
               weights(actual) == [1., 1.05, 0.95];
             };
@@ -375,7 +377,7 @@ open {
             let%test "negative delta" = {
               let initial = [window(1), window(2), window(3)];
 
-              let actual = initial |> shiftWeightRight(~delta=-0.05, 1);
+              let actual = initial |> shiftWeightFromRight(~delta=-0.05, 1);
 
               weights(actual) == [1., 0.95, 1.05];
             };
@@ -387,7 +389,7 @@ open {
                 window(~weight=0.1, 3),
               ];
 
-              let actual = initial |> shiftWeightRight(~delta=0.05, 1);
+              let actual = initial |> shiftWeightFromRight(~delta=0.05, 1);
 
               weights(actual) == weights(initial);
             };
@@ -396,7 +398,7 @@ open {
             //            let%test "next below minimum - negative delta" = {
             //              let initial = [window(1), window(2), window(~weight=0.1, 3)];
             //
-            //              let actual = initial |> shiftWeightRight(~delta=-0.05, 1);
+            //              let actual = initial |> shiftWeightFromRight(~delta=-0.05, 1);
             //
             //              weights(actual) == weights(initial);
             //            };
@@ -404,7 +406,7 @@ open {
             let%test "large delta" = {
               let initial = [window(1), window(2), window(3)];
 
-              let actual = initial |> shiftWeightRight(~delta=4., 1);
+              let actual = initial |> shiftWeightFromRight(~delta=4., 1);
 
               weights_int(actual) == [100, 170, 30];
             };
@@ -412,7 +414,7 @@ open {
             let%test "large weight" = {
               let initial = [window(1), window(2), window(~weight=10., 3)];
 
-              let actual = initial |> shiftWeightRight(~delta=0.5, 1);
+              let actual = initial |> shiftWeightFromRight(~delta=0.5, 1);
 
               weights_int(actual) == [100, 150, 950];
             };
@@ -1101,13 +1103,13 @@ let rec resizeSplit = (~path, ~delta, node) => {
     | `Split(_, children) =>
       let children =
         if (delta > 0.) {
-          shiftWeightRight(
+          shiftWeightFromRight(
             ~delta=totalWeight(children) *. delta,
             index,
             children,
           );
         } else {
-          shiftWeightLeft(
+          shiftWeightFromLeft(
             ~delta=totalWeight(children) *. (-. delta),
             index + 1,
             children,
