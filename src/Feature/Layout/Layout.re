@@ -818,25 +818,23 @@ let resetWeights = tree => AbstractTree.map(withWeight(1.), tree);
 /**
  * maximize
  */
-let maximize = (targetId, tree) => {
+let maximize = (~direction as targetDirection=?, targetId, tree) => {
   let rec loop = (path, node) =>
     switch (path, node.kind) {
-    | ([], _) => node
-
-    | ([index, ...rest], `Split(_, children)) =>
+    | ([index, ...rest], `Split(direction, children)) =>
       let children =
         List.mapi(
           (i, child) =>
-            if (i == index) {
-              child |> loop(rest) |> withWeight(10.);
+            if (i == index && targetDirection != Some(direction)) {
+              child |> withWeight(10.) |> loop(rest);
             } else {
-              child |> withWeight(1.);
+              child |> withWeight(1.) |> loop(rest);
             },
           children,
         );
       node |> withChildren(children);
 
-    | _ => raise(Invalid_argument("path"))
+    | _ => node
     };
 
   switch (AbstractTree.path(targetId, tree)) {
