@@ -609,6 +609,13 @@ let%test_module "removeWindow" =
 
 /**
  * resizeWindowByAxis
+ *
+ * Resizes the target along the given axis according to the given factor.
+ *
+ * A factor greater than 1.0 will increase the target size, and less than 1.0
+ * will decrease it.
+ *
+ * Space will be reclaimed rightwards/downwards before leftwards/upwards.
  */
 let resizeWindowByAxis = (resizeDirection, targetId, factor, node) => {
   let inflate = (i, nodes) => {
@@ -766,52 +773,12 @@ let%test_module "resizeWindowByAxis" =
    });
 
 /**
- * resizeSplit
- */
-let rec resizeSplit = (~path, ~delta, node) => {
-  switch (path) {
-  | [] => node // shouldn't happen
-
-  | [index] =>
-    switch (node.kind) {
-    | `Split(_, children) =>
-      let children =
-        if (delta > 0.) {
-          shiftWeightRight(
-            ~delta=totalWeight(children) *. delta,
-            index,
-            children,
-          );
-        } else {
-          shiftWeightLeft(
-            ~delta=totalWeight(children) *. (-. delta),
-            index + 1,
-            children,
-          );
-        };
-      node |> withChildren(children);
-
-    | `Window(_) => node
-    }
-
-  | [index, ...rest] =>
-    switch (node.kind) {
-    | `Split(_, children) =>
-      let children =
-        List.mapi(
-          (i, child) =>
-            i == index ? resizeSplit(~path=rest, ~delta, child) : child,
-          children,
-        );
-      node |> withChildren(children);
-
-    | `Window(_) => node
-    }
-  };
-};
-
-/**
  * resizeWindowByDirection
+ *
+ * Resizes the target in the fiven direction according to the given factor.
+ *
+ * A factor greater than 1.0 will increase the target size, and less than 1.0
+ * will decrease it.
  */
 let resizeWindowByDirection = (resizeDirection, targetId, factor, node) => {
   let inflate = (i, nodes) => {
@@ -1121,6 +1088,51 @@ let%test_module "resizeWindowByDirection" =
           ]);
      };
    });
+
+/**
+ * resizeSplit
+ */
+let rec resizeSplit = (~path, ~delta, node) => {
+  switch (path) {
+  | [] => node // shouldn't happen
+
+  | [index] =>
+    switch (node.kind) {
+    | `Split(_, children) =>
+      let children =
+        if (delta > 0.) {
+          shiftWeightRight(
+            ~delta=totalWeight(children) *. delta,
+            index,
+            children,
+          );
+        } else {
+          shiftWeightLeft(
+            ~delta=totalWeight(children) *. (-. delta),
+            index + 1,
+            children,
+          );
+        };
+      node |> withChildren(children);
+
+    | `Window(_) => node
+    }
+
+  | [index, ...rest] =>
+    switch (node.kind) {
+    | `Split(_, children) =>
+      let children =
+        List.mapi(
+          (i, child) =>
+            i == index ? resizeSplit(~path=rest, ~delta, child) : child,
+          children,
+        );
+      node |> withChildren(children);
+
+    | `Window(_) => node
+    }
+  };
+};
 
 /**
  * resetWeights
