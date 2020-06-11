@@ -342,7 +342,8 @@ module View = {
           }>
           {List.map(markdown => <hoverMarkdown markdown />, model.contents)
            |> React.listToElement}
-          <horizontalRule theme=colorTheme />
+          {model.contents != [] && diagnostic != []
+             ? <horizontalRule theme=colorTheme /> : React.empty}
           {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
            |> React.listToElement}
         </View>
