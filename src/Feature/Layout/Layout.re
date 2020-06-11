@@ -33,8 +33,7 @@ open {
        let totalWeight = nodes =>
          nodes
          |> List.map(child => child.meta.weight)
-         |> List.fold_left((+.), 0.)
-         |> max(1.);
+         |> List.fold_left((+.), 0.);
 
        let reclaim = (~limit, ~start, ~next, ~stopWhen, nodes) => {
          let length = Array.length(nodes);
@@ -402,12 +401,20 @@ open {
             //              weights(actual) == weights(initial);
             //            };
 
-            let%test "delta too large" = {
+            let%test "large delta" = {
               let initial = [window(1), window(2), window(3)];
 
               let actual = initial |> shiftWeightRight(~delta=4., 1);
 
               weights_int(actual) == [100, 170, 30];
+            };
+
+            let%test "large weight" = {
+              let initial = [window(1), window(2), window(~weight=10., 3)];
+
+              let actual = initial |> shiftWeightRight(~delta=0.5, 1);
+
+              weights_int(actual) == [100, 150, 950];
             };
           });
      };
@@ -767,7 +774,7 @@ let rec resizeSplit = (~path, ~delta, node) => {
 
   | [index] =>
     switch (node.kind) {
-    | `Split(direction, children) =>
+    | `Split(_, children) =>
       let children =
         if (delta > 0.) {
           shiftWeightRight(
@@ -782,24 +789,22 @@ let rec resizeSplit = (~path, ~delta, node) => {
             children,
           );
         };
-
-      split(~weight=node.meta.weight, direction, children);
+      node |> withChildren(children);
 
     | `Window(_) => node
     }
 
   | [index, ...rest] =>
     switch (node.kind) {
-    | `Split(direction, children) =>
-      split(
-        ~weight=node.meta.weight,
-        direction,
+    | `Split(_, children) =>
+      let children =
         List.mapi(
           (i, child) =>
             i == index ? resizeSplit(~path=rest, ~delta, child) : child,
           children,
-        ),
-      )
+        );
+      node |> withChildren(children);
+
     | `Window(_) => node
     }
   };
@@ -809,3 +814,33 @@ let rec resizeSplit = (~path, ~delta, node) => {
  * resetWeights
  */
 let resetWeights = tree => AbstractTree.map(withWeight(1.), tree);
+
+/**
+ * maximize
+ */
+let maximize = (targetId, tree) => {
+  let rec loop = (path, node) =>
+    switch (path, node.kind) {
+    | ([], _) => node
+
+    | ([index, ...rest], `Split(_, children)) =>
+      let children =
+        List.mapi(
+          (i, child) =>
+            if (i == index) {
+              child |> loop(rest) |> withWeight(10.);
+            } else {
+              child |> withWeight(1.);
+            },
+          children,
+        );
+      node |> withChildren(children);
+
+    | _ => raise(Invalid_argument("path"))
+    };
+
+  switch (AbstractTree.path(targetId, tree)) {
+  | Some(path) => tree |> loop(path)
+  | None => tree
+  };
+};
