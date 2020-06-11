@@ -301,7 +301,11 @@ let update =
       effects
       |> List.map(
            fun
-           | Feature_Editor.Nothing => Effect.none,
+           | Feature_Editor.Nothing => Effect.none
+           | Feature_Editor.MouseHovered(location) =>
+             Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
+               dispatch(Hover(Feature_Hover.MouseHovered(location)))
+             }),
          )
       |> Isolinear.Effect.batch;
 

@@ -60,6 +60,10 @@ let%component make =
                 (),
               ) => {
   let%hook maybeBbox = React.Hooks.ref(None);
+  let%hook hoverTimerActive = React.Hooks.ref(false);
+  let%hook lastMousePosition = React.Hooks.ref(None);
+  let%hook (hoverTimer, resetHoverTimer) =
+    Hooks.timer(~active=hoverTimerActive^, ());
 
   let lineCount = Buffer.getNumberOfLines(buffer);
   let indentation =
@@ -73,24 +77,59 @@ let%component make =
 
   let {scrollX, scrollY, _}: Editor.t = editor;
 
+  let getMaybeLocationFromMousePosition = (mouseX, mouseY) => {
+    maybeBbox^
+    |> Option.map(bbox => {
+         let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
+
+         let relX = mouseX -. minX;
+         let relY = mouseY -. minY;
+
+         Editor.Slow.pixelPositionToBufferLineByte(
+           ~buffer,
+           ~pixelX=relX,
+           ~pixelY=relY,
+           editor,
+         );
+       });
+  };
+
+  let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
+    hoverTimerActive := true;
+    lastMousePosition := Some((evt.mouseX, evt.mouseY));
+    resetHoverTimer();
+  };
+
+  let%hook () =
+    Hooks.effect(
+      If((t, _) => Revery.Time.toFloatSeconds(t) > 1., hoverTimer),
+      () => {
+        lastMousePosition^
+        |> Option.iter(((mouseX, mouseY)) => {
+             getMaybeLocationFromMousePosition(mouseX, mouseY)
+             |> Option.iter(((line, col)) => {
+                  dispatch(
+                    Msg.MouseHovered({
+                      location:
+                        EditorCoreTypes.Location.create(
+                          Index.fromZeroBased(line),
+                          Index.fromZeroBased(col),
+                        ),
+                    }),
+                  )
+                })
+           });
+        hoverTimerActive := false;
+        resetHoverTimer();
+        None;
+      },
+    );
+
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     Log.trace("editorMouseUp");
 
-    maybeBbox^
-    |> Option.iter(bbox => {
-         let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
-
-         let relY = evt.mouseY -. minY;
-         let relX = evt.mouseX -. minX;
-
-         let (line, col) =
-           Editor.Slow.pixelPositionToBufferLineByte(
-             ~buffer,
-             ~pixelX=relX,
-             ~pixelY=relY,
-             editor,
-           );
-
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((line, col)) => {
          Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
          Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
 
@@ -111,6 +150,7 @@ let%component make =
       float(Editor.(editor.pixelWidth)) -. gutterWidth,
     )}
     onMouseUp
+    onMouseMove
     onMouseWheel>
     <Canvas
       style={Styles.bufferViewClipped(

@@ -15,4 +15,5 @@ type t =
   | MinimapMouseWheel({deltaWheel: float})
   | MinimapClicked({viewLine: int})
   | MinimapDragged({newPixelScrollY: float})
-  | EditorMouseWheel({deltaWheel: float});
+  | EditorMouseWheel({deltaWheel: float})
+  | MouseHovered({location: EditorCoreTypes.Location.t});

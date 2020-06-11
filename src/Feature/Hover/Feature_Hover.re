@@ -37,53 +37,76 @@ type msg =
       contents: list(string),
       range: option(EditorCoreTypes.Range.t),
     })
-  | HoverRequestFailed(string);
+  | HoverRequestFailed(string)
+  | MouseHovered(EditorCoreTypes.Location.t);
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
+
+let getEffectsForLocation =
+    (~buffer, ~editor, ~location, ~extHostClient, ~model) => {
+  let filetype =
+    buffer
+    |> Oni_Core.Buffer.getFileType
+    |> Option.value(~default="plaintext");
+
+  let matchingProviders =
+    model.providers
+    |> List.filter(({selector, _}) =>
+         Exthost.DocumentSelector.matches(~filetype, selector)
+       );
+
+  matchingProviders
+  |> List.map(provider =>
+       Service_Exthost.Effects.LanguageFeatures.provideHover(
+         ~handle=provider.handle,
+         ~uri=Oni_Core.Buffer.getUri(buffer),
+         ~position=location,
+         extHostClient,
+         res =>
+         switch (res) {
+         | Ok({contents, range}) =>
+           HoverInfoReceived({
+             contents,
+             range: Option.map(Exthost.OneBasedRange.toRange, range),
+           })
+         | Error(s) => HoverRequestFailed(s)
+         }
+       )
+     )
+  |> Isolinear.Effect.batch;
+};
 
 let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   switch (msg) {
   | Command(Show) =>
     switch (maybeBuffer, maybeEditor) {
     | (Some(buffer), Some(editor)) =>
-      let filetype =
-        buffer
-        |> Oni_Core.Buffer.getFileType
-        |> Option.value(~default="plaintext");
-
-      let matchingProviders =
-        model.providers
-        |> List.filter(({selector, _}) =>
-             Exthost.DocumentSelector.matches(~filetype, selector)
-           );
-
-      let position = Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
-
       let effects =
-        matchingProviders
-        |> List.map(provider =>
-             Service_Exthost.Effects.LanguageFeatures.provideHover(
-               ~handle=provider.handle,
-               ~uri=Oni_Core.Buffer.getUri(buffer),
-               ~position,
-               extHostClient,
-               res =>
-               switch (res) {
-               | Ok({contents, range}) =>
-                 HoverInfoReceived({
-                   contents,
-                   range: Option.map(Exthost.OneBasedRange.toRange, range),
-                 })
-               | Error(s) => HoverRequestFailed(s)
-               }
-             )
-           )
-        |> Isolinear.Effect.batch;
+        getEffectsForLocation(
+          ~buffer,
+          ~editor,
+          ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+          ~extHostClient,
+          ~model,
+        );
+      ({...model, shown: true}, Effect(effects));
 
-      ({...model, shown: true, contents: []}, Effect(effects));
-
+    | _ => (model, Nothing)
+    }
+  | MouseHovered(location) =>
+    switch (maybeBuffer, maybeEditor) {
+    | (Some(buffer), Some(editor)) =>
+      let effects =
+        getEffectsForLocation(
+          ~buffer,
+          ~editor,
+          ~location,
+          ~extHostClient,
+          ~model,
+        );
+      ({...model, shown: true}, Effect(effects));
     | _ => (model, Nothing)
     }
   | KeyPressed(_) => ({...model, shown: false}, Nothing)

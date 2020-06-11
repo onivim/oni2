@@ -20,7 +20,8 @@ type msg =
       contents: list(string),
       range: option(EditorCoreTypes.Range.t),
     })
-  | HoverRequestFailed(string);
+  | HoverRequestFailed(string)
+  | MouseHovered(EditorCoreTypes.Location.t);
 
 type outmsg =
   | Nothing
