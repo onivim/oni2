@@ -736,7 +736,6 @@ let%test_module "resizeWindow" =
 
        let actual = resizeWindow(`Vertical, 2, 5., initial);
 
-       Console.log(show(Fmt.int, actual));
        actual
        == hsplit([
             window(~weight=0.2, 1),
