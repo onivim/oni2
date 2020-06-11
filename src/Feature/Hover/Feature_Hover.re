@@ -125,11 +125,11 @@ module Styles = {
   open Style;
   module Colors = Feature_Theme.Colors;
 
-  let outer = (~x, ~y) => [
+  let outer = (~x, ~y, ~theme) => [
     position(`Absolute),
     left(x),
     top(y),
-    border(~width=1, ~color=Revery.Colors.black),
+    border(~width=1, ~color=Colors.EditorHoverWidget.border.from(theme)),
   ];
 
   let maxHeight = 200;
@@ -170,17 +170,18 @@ module Styles = {
     width(Constants.scrollBarThickness),
   ];
 
-  let hr = [
+  let hr = (~theme) => [
     flexGrow(1),
-    height(2),
-    backgroundColor(Color.rgba(0., 0., 0., 0.25)),
-    marginTop(4),
-    marginBottom(4),
+    height(1),
+    backgroundColor(Colors.EditorHoverWidget.border.from(theme)),
+    marginTop(3),
+    marginBottom(3),
   ];
 };
 
 module View = {
-  let horizontalRule = () => <Row> <View style=Styles.hr /> </Row>;
+  let horizontalRule = (~theme, ()) =>
+    <Row> <View style={Styles.hr(~theme)} /> </Row>;
 
   type state = {
     scrollTop: int,
@@ -296,7 +297,7 @@ module View = {
       | _ => ()
       };
 
-    <View style={Styles.outer(~x, ~y)}>
+    <View style={Styles.outer(~x, ~y, ~theme=colorTheme)}>
       <View style=Styles.container>
         <View
           style={Styles.contents(
@@ -310,7 +311,7 @@ module View = {
           }>
           {List.map(markdown => <hoverMarkdown markdown />, model.contents)
            |> React.listToElement}
-          <horizontalRule />
+          <horizontalRule theme=colorTheme />
           {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
            |> React.listToElement}
         </View>
