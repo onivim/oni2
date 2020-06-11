@@ -53,6 +53,7 @@ type msg =
       displayName: string,
     })
   | EditsReceived({
+      displayName: string,
       sessionId: int,
       edits: [@opaque] list(Vim.Edit.t),
     })
@@ -60,11 +61,18 @@ type msg =
       sessionId: int,
       msg: string,
     })
-  | EditCompleted;
+  | EditCompleted({
+      editCount: int,
+      displayName: string,
+    });
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+    })
   | FormatError(string);
 
 let textToArray =
@@ -113,6 +121,7 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
                switch (res) {
                | Ok(edits) =>
                  EditsReceived({
+                   displayName: formatter.displayName,
                    sessionId,
                    edits: List.map(extHostEditToVimEdit, edits),
                  })
@@ -146,7 +155,7 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
       },
       Nothing,
     )
-  | EditsReceived({sessionId, edits}) =>
+  | EditsReceived({displayName, sessionId, edits}) =>
     switch (model.activeSession) {
     | None => (model, Nothing)
     | Some(activeSession) =>
@@ -161,14 +170,18 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
             ~version=activeSession.bufferVersion,
             ~edits,
             fun
-            | Ok () => EditCompleted
+            | Ok () =>
+              EditCompleted({editCount: List.length(edits), displayName})
             | Error(msg) => EditRequestFailed({sessionId, msg}),
           );
         (model, Effect(effect));
       }
     }
   | EditRequestFailed({msg, _}) => (model, FormatError(msg))
-  | EditCompleted => (model |> Internal.clearSession, Nothing)
+  | EditCompleted({displayName, editCount}) => (
+      model |> Internal.clearSession,
+      FormattingApplied({displayName, editCount}),
+    )
   };
 };
 

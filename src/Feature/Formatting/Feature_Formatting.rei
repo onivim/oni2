@@ -17,6 +17,7 @@ type msg =
       displayName: string,
     })
   | EditsReceived({
+      displayName: string,
       sessionId: int,
       edits: list(Vim.Edit.t),
     })
@@ -24,11 +25,18 @@ type msg =
       sessionId: int,
       msg: string,
     })
-  | EditCompleted;
+  | EditCompleted({
+      editCount: int,
+      displayName: string,
+    });
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+    })
   | FormatError(string);
 
 let update:

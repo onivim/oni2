@@ -46,6 +46,10 @@ let update =
     let effect =
       switch (eff) {
       | Feature_Formatting.Nothing => Effect.none
+      | Feature_Formatting.FormattingApplied({displayName, editCount}) =>
+        let msg =
+          Printf.sprintf("Applied %d edits from %s", editCount, displayName);
+        Internal.notificationEffect(~kind=Info, "Format: " ++ msg);
       | Feature_Formatting.FormatError(msg) =>
         Internal.notificationEffect(~kind=Error, "Format: " ++ msg)
       | Feature_Formatting.Effect(eff) =>
