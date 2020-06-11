@@ -21,7 +21,8 @@ type msg =
       range: option(EditorCoreTypes.Range.t),
     })
   | HoverRequestFailed(string)
-  | MouseHovered(EditorCoreTypes.Location.t);
+  | MouseHovered(EditorCoreTypes.Location.t)
+  | MouseMoved(EditorCoreTypes.Location.t);
 
 type outmsg =
   | Nothing

@@ -38,7 +38,8 @@ type msg =
       range: option(EditorCoreTypes.Range.t),
     })
   | HoverRequestFailed(string)
-  | MouseHovered(EditorCoreTypes.Location.t);
+  | MouseHovered(EditorCoreTypes.Location.t)
+  | MouseMoved(EditorCoreTypes.Location.t);
 
 type outmsg =
   | Nothing
@@ -109,6 +110,13 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       ({...model, shown: true}, Effect(effects));
     | _ => (model, Nothing)
     }
+  | MouseMoved(location) =>
+    let shown =
+      switch (model.range) {
+      | Some(range) => EditorCoreTypes.Range.contains(location, range)
+      | None => false
+      };
+    ({...model, shown, range: shown ? model.range : None}, Nothing);
   | KeyPressed(_) => ({...model, shown: false}, Nothing)
   | ProviderRegistered(provider) => (
       {...model, providers: [provider, ...model.providers]},

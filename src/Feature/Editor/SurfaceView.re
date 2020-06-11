@@ -95,6 +95,18 @@ let%component make =
   };
 
   let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((line, col)) => {
+         dispatch(
+           Msg.MouseMoved({
+             location:
+               EditorCoreTypes.Location.create(
+                 Index.fromZeroBased(line),
+                 Index.fromZeroBased(col),
+               ),
+           }),
+         )
+       });
     hoverTimerActive := true;
     lastMousePosition := Some((evt.mouseX, evt.mouseY));
     resetHoverTimer();

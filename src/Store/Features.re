@@ -305,6 +305,10 @@ let update =
            | Feature_Editor.MouseHovered(location) =>
              Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
                dispatch(Hover(Feature_Hover.MouseHovered(location)))
+             })
+           | Feature_Editor.MouseMoved(location) =>
+             Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
+               dispatch(Hover(Feature_Hover.MouseMoved(location)))
              }),
          )
       |> Isolinear.Effect.batch;
