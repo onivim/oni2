@@ -166,8 +166,14 @@ module Styles = {
 };
 
 module View = {
+  type state = {
+    scrollTop: int,
+    maybeHeight: option(int),
+  };
+  let initialState = {scrollTop: 0, maybeHeight: None};
   type action =
-    | SetScrollTop(int);
+    | SetScrollTop(int)
+    | SetHeight(int);
 
   let%component hover =
                 (
@@ -186,13 +192,12 @@ module View = {
                   ~grammars,
                   (),
                 ) => {
-    let%hook (maybeHeight, setMaybeHeight) = Hooks.state(None);
-    let reducer = (action, scrollTop) =>
+    let reducer = (action, state) =>
       switch (action) {
-      | SetScrollTop(scrollTop) => scrollTop
+      | SetScrollTop(scrollTop) => {...state, scrollTop}
+      | SetHeight(height) => {...state, maybeHeight: Some(height)}
       };
-    let%hook (scrollTop, dispatch) = Hooks.reducer(~initialState=0, reducer);
-    let setHeight = h => setMaybeHeight(_ => Some(h));
+    let%hook (state, dispatch) = Hooks.reducer(~initialState, reducer);
 
     let hoverMarkdown = (~markdown) =>
       Oni_Components.Markdown.make(
@@ -212,20 +217,20 @@ module View = {
       );
 
     let showScrollbar =
-      switch (maybeHeight) {
+      switch (state.maybeHeight) {
       | None => false
       | Some(height) => height >= Styles.maxHeight
       };
 
     let scrollbar = () =>
-      switch (maybeHeight) {
+      switch (state.maybeHeight) {
       | None => React.empty
       | Some(height) =>
         let thumbLength = Styles.maxHeight * Styles.maxHeight / height;
         <View style={Styles.scrollBar(~theme=colorTheme)}>
           <Slider
             onValueChanged={v => dispatch(SetScrollTop(int_of_float(v)))}
-            value={float(scrollTop)}
+            value={float(state.scrollTop)}
             minimumValue=0.
             maximumValue={float(Styles.maxHeight - height)}
             sliderLength=Styles.maxHeight
@@ -241,13 +246,13 @@ module View = {
       };
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-      switch (maybeHeight, showScrollbar) {
+      switch (state.maybeHeight, showScrollbar) {
       | (Some(height), true) =>
         let delta =
           int_of_float(wheelEvent.deltaY) * Constants.scrollWheelMultiplier;
         dispatch(
           SetScrollTop(
-            scrollTop
+            state.scrollTop
             + delta
             |> Oni_Core.Utility.IntEx.clamp(
                  ~hi=0,
@@ -265,10 +270,12 @@ module View = {
           style={Styles.contents(
             ~theme=colorTheme,
             ~showScrollbar,
-            ~scrollTop,
+            ~scrollTop=state.scrollTop,
           )}
           onMouseWheel=scroll
-          onDimensionsChanged={({height, _}) => setHeight(height)}>
+          onDimensionsChanged={({height, _}) =>
+            dispatch(SetHeight(height))
+          }>
           {List.map(markdown => <hoverMarkdown markdown />, model.contents)
            |> React.listToElement}
         </View>
