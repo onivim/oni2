@@ -84,9 +84,9 @@ let rotate = (direction, focus, model) => {
   tree: Layout.rotate(direction, focus, activeTree(model)),
 };
 
-let resizeWindow = (direction, focus, delta, model) => {
+let resizeWindowByAxis = (direction, focus, delta, model) => {
   ...model,
-  tree: Layout.resizeWindow(direction, focus, delta, activeTree(model)),
+  tree: Layout.resizeWindowByAxis(direction, focus, delta, activeTree(model)),
 };
 
 let increaseWindowSize = (direction, focus, delta, model) => {
@@ -166,8 +166,8 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(focus) => (
         model
-        |> resizeWindow(`Horizontal, focus, 0.95)
-        |> resizeWindow(`Vertical, focus, 0.95),
+        |> resizeWindowByAxis(`Horizontal, focus, 0.95)
+        |> resizeWindowByAxis(`Vertical, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -177,8 +177,8 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(focus) => (
         model
-        |> resizeWindow(`Horizontal, focus, 1.05)
-        |> resizeWindow(`Vertical, focus, 1.05),
+        |> resizeWindowByAxis(`Horizontal, focus, 1.05)
+        |> resizeWindowByAxis(`Vertical, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)
@@ -187,7 +187,7 @@ let update = (~focus, model, msg) => {
   | Command(DecreaseHorizontalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> resizeWindow(`Horizontal, focus, 0.95),
+        model |> resizeWindowByAxis(`Horizontal, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -196,7 +196,7 @@ let update = (~focus, model, msg) => {
   | Command(IncreaseHorizontalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> resizeWindow(`Horizontal, focus, 1.05),
+        model |> resizeWindowByAxis(`Horizontal, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)
@@ -205,7 +205,7 @@ let update = (~focus, model, msg) => {
   | Command(DecreaseVerticalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> resizeWindow(`Vertical, focus, 0.95),
+        model |> resizeWindowByAxis(`Vertical, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -214,7 +214,7 @@ let update = (~focus, model, msg) => {
   | Command(IncreaseVerticalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> resizeWindow(`Vertical, focus, 1.05),
+        model |> resizeWindowByAxis(`Vertical, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)

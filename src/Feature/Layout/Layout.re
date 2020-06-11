@@ -608,9 +608,9 @@ let%test_module "removeWindow" =
    });
 
 /**
- * resizeWindow
+ * resizeWindowByAxis
  */
-let resizeWindow = (resizeDirection, targetId, factor, node) => {
+let resizeWindowByAxis = (resizeDirection, targetId, factor, node) => {
   let inflate = (i, nodes) => {
     let total = totalWeight(nodes);
     let delta = total *. factor -. total;
@@ -653,7 +653,7 @@ let resizeWindow = (resizeDirection, targetId, factor, node) => {
   };
 };
 
-let%test_module "resizeWindow" =
+let%test_module "resizeWindowByAxis" =
   (module
    {
      let rec compareNode = (actual, expected) =>
@@ -673,7 +673,7 @@ let%test_module "resizeWindow" =
      let%test "vsplit - vresize" = {
        let initial = vsplit([window(1), window(2)]);
 
-       let actual = resizeWindow(`Vertical, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Vertical, 2, 5., initial);
 
        actual == vsplit([window(1), window(2)]);
      };
@@ -681,7 +681,7 @@ let%test_module "resizeWindow" =
      let%test "vsplit - hresize" = {
        let initial = vsplit([window(1), window(2)]);
 
-       let actual = resizeWindow(`Horizontal, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Horizontal, 2, 5., initial);
 
        actual == vsplit([window(~weight=0.2, 1), window(~weight=1.8, 2)]);
      };
@@ -689,7 +689,7 @@ let%test_module "resizeWindow" =
      let%test "hsplit - hresize" = {
        let initial = hsplit([window(1), window(2)]);
 
-       let actual = resizeWindow(`Horizontal, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Horizontal, 2, 5., initial);
 
        actual == hsplit([window(1), window(2)]);
      };
@@ -697,7 +697,7 @@ let%test_module "resizeWindow" =
      let%test "hsplit - vresize" = {
        let initial = hsplit([window(1), window(2)]);
 
-       let actual = resizeWindow(`Vertical, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Vertical, 2, 5., initial);
 
        actual == hsplit([window(~weight=0.2, 1), window(~weight=1.8, 2)]);
      };
@@ -705,7 +705,7 @@ let%test_module "resizeWindow" =
      let%test "vsplit+hsplit - hresize" = {
        let initial = vsplit([window(1), hsplit([window(2), window(3)])]);
 
-       let actual = resizeWindow(`Horizontal, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Horizontal, 2, 5., initial);
 
        actual
        == vsplit([
@@ -717,7 +717,7 @@ let%test_module "resizeWindow" =
      let%test "vsplit+hsplit - vresize" = {
        let initial = vsplit([window(1), hsplit([window(2), window(3)])]);
 
-       let actual = resizeWindow(`Vertical, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Vertical, 2, 5., initial);
 
        actual
        == vsplit([
@@ -729,7 +729,7 @@ let%test_module "resizeWindow" =
      let%test "hsplit+vsplit - hresize" = {
        let initial = hsplit([window(1), vsplit([window(2), window(3)])]);
 
-       let actual = resizeWindow(`Horizontal, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Horizontal, 2, 5., initial);
 
        actual
        == hsplit([
@@ -741,7 +741,7 @@ let%test_module "resizeWindow" =
      let%test "hsplit+vsplit - vresize" = {
        let initial = hsplit([window(1), vsplit([window(2), window(3)])]);
 
-       let actual = resizeWindow(`Vertical, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Vertical, 2, 5., initial);
 
        actual
        == hsplit([
@@ -754,7 +754,7 @@ let%test_module "resizeWindow" =
        let initial =
          hsplit([window(1), vsplit([window(2), window(3)]), window(4)]);
 
-       let actual = resizeWindow(`Vertical, 2, 5., initial);
+       let actual = resizeWindowByAxis(`Vertical, 2, 5., initial);
 
        actual
        == hsplit([
