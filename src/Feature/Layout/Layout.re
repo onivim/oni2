@@ -652,7 +652,7 @@ let resizeWindow = (resizeDirection, targetId, factor, node) => {
   | None => node
   };
 };
-//
+
 let%test_module "resizeWindow" =
   (module
    {
@@ -670,7 +670,7 @@ let%test_module "resizeWindow" =
 
      let (==) = compareNode;
 
-     let%test "vsplit  - vresize" = {
+     let%test "vsplit - vresize" = {
        let initial = vsplit([window(1), window(2)]);
 
        let actual = resizeWindow(`Vertical, 2, 5., initial);
@@ -678,7 +678,7 @@ let%test_module "resizeWindow" =
        actual == vsplit([window(1), window(2)]);
      };
 
-     let%test "vsplit  - hresize" = {
+     let%test "vsplit - hresize" = {
        let initial = vsplit([window(1), window(2)]);
 
        let actual = resizeWindow(`Horizontal, 2, 5., initial);
@@ -686,7 +686,7 @@ let%test_module "resizeWindow" =
        actual == vsplit([window(~weight=0.2, 1), window(~weight=1.8, 2)]);
      };
 
-     let%test "hsplit  - hresize" = {
+     let%test "hsplit - hresize" = {
        let initial = hsplit([window(1), window(2)]);
 
        let actual = resizeWindow(`Horizontal, 2, 5., initial);
@@ -694,7 +694,7 @@ let%test_module "resizeWindow" =
        actual == hsplit([window(1), window(2)]);
      };
 
-     let%test "hsplit  - vresize" = {
+     let%test "hsplit - vresize" = {
        let initial = hsplit([window(1), window(2)]);
 
        let actual = resizeWindow(`Vertical, 2, 5., initial);
@@ -842,3 +842,135 @@ let maximize = (~direction as targetDirection=?, targetId, tree) => {
   | None => tree
   };
 };
+
+let%test_module "maximize" =
+  (module
+   {
+     let rec compareNode = (actual, expected) =>
+       if (abs_float(actual.meta.weight -. expected.meta.weight) > 0.001) {
+         false;
+       } else {
+         switch (actual.kind, expected.kind) {
+         | (`Window(aid), `Window(bid)) => aid == bid
+         | (`Split(adir, achildren), `Split(bdir, bchildren)) =>
+           adir == bdir && List.for_all2(compareNode, achildren, bchildren)
+         | _ => false
+         };
+       };
+
+     let (==) = compareNode;
+
+     let%test "vsplit - both" = {
+       let initial = vsplit([window(1), window(2)]);
+
+       let actual = maximize(2, initial);
+
+       actual == vsplit([window(1), window(~weight=10., 2)]);
+     };
+
+     let%test "vsplit - horizontal" = {
+       let initial = vsplit([window(1), window(2)]);
+
+       let actual = maximize(~direction=`Horizontal, 2, initial);
+
+       actual == vsplit([window(1), window(~weight=10., 2)]);
+     };
+
+     let%test "vsplit - vertical" = {
+       let initial = vsplit([window(1), window(2)]);
+
+       let actual = maximize(~direction=`Vertical, 2, initial);
+
+       actual == vsplit([window(1), window(2)]);
+     };
+
+     let%test "hsplit - both" = {
+       let initial = hsplit([window(1), window(2)]);
+
+       let actual = maximize(2, initial);
+
+       actual == hsplit([window(1), window(~weight=10., 2)]);
+     };
+
+     let%test "hsplit - horizontal" = {
+       let initial = hsplit([window(1), window(2)]);
+
+       let actual = maximize(~direction=`Horizontal, 2, initial);
+
+       actual == hsplit([window(1), window(2)]);
+     };
+
+     let%test "hsplit - vertical" = {
+       let initial = hsplit([window(1), window(2)]);
+
+       let actual = maximize(~direction=`Vertical, 2, initial);
+
+       actual == hsplit([window(1), window(~weight=10., 2)]);
+     };
+
+     let%test "vsplit+hsplit - both" = {
+       let initial = vsplit([window(1), hsplit([window(2), window(3)])]);
+
+       let actual = maximize(2, initial);
+
+       actual
+       == vsplit([
+            window(1),
+            hsplit(~weight=10., [window(~weight=10., 2), window(3)]),
+          ]);
+     };
+
+     let%test "vsplit+hsplit - horizontal" = {
+       let initial = vsplit([window(1), hsplit([window(2), window(3)])]);
+
+       let actual = maximize(~direction=`Horizontal, 2, initial);
+
+       actual
+       == vsplit([
+            window(1),
+            hsplit(~weight=10., [window(2), window(3)]),
+          ]);
+     };
+
+     let%test "vsplit+hsplit - vertical" = {
+       let initial = vsplit([window(1), hsplit([window(2), window(3)])]);
+
+       let actual = maximize(~direction=`Vertical, 2, initial);
+
+       actual
+       == vsplit([window(1), hsplit([window(~weight=10., 2), window(3)])]);
+     };
+
+     let%test "hsplit+vsplit - both" = {
+       let initial = hsplit([window(1), vsplit([window(2), window(3)])]);
+
+       let actual = maximize(2, initial);
+
+       actual
+       == hsplit([
+            window(1),
+            vsplit(~weight=10., [window(~weight=10., 2), window(3)]),
+          ]);
+     };
+
+     let%test "hsplit+vsplit - horizontal" = {
+       let initial = hsplit([window(1), vsplit([window(2), window(3)])]);
+
+       let actual = maximize(~direction=`Horizontal, 2, initial);
+
+       actual
+       == hsplit([window(1), vsplit([window(~weight=10., 2), window(3)])]);
+     };
+
+     let%test "hsplit+vsplit - vertical" = {
+       let initial = hsplit([window(1), vsplit([window(2), window(3)])]);
+
+       let actual = maximize(~direction=`Vertical, 2, initial);
+
+       actual
+       == hsplit([
+            window(1),
+            vsplit(~weight=10., [window(2), window(3)]),
+          ]);
+     };
+   });
