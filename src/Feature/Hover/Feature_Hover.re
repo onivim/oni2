@@ -166,6 +166,9 @@ module Styles = {
 };
 
 module View = {
+  type action =
+    | SetScrollTop(int);
+
   let%component hover =
                 (
                   ~x,
@@ -184,7 +187,11 @@ module View = {
                   (),
                 ) => {
     let%hook (maybeHeight, setMaybeHeight) = Hooks.state(None);
-    let%hook (scrollTop, setScrollTop) = Hooks.state(0);
+    let reducer = (action, scrollTop) =>
+      switch (action) {
+      | SetScrollTop(scrollTop) => scrollTop
+      };
+    let%hook (scrollTop, dispatch) = Hooks.reducer(~initialState=0, reducer);
     let setHeight = h => setMaybeHeight(_ => Some(h));
 
     let hoverMarkdown = (~markdown) =>
@@ -217,7 +224,7 @@ module View = {
         let thumbLength = Styles.maxHeight * Styles.maxHeight / height;
         <View style={Styles.scrollBar(~theme=colorTheme)}>
           <Slider
-            onValueChanged={v => setScrollTop(_ => int_of_float(v))}
+            onValueChanged={v => dispatch(SetScrollTop(int_of_float(v)))}
             value={float(scrollTop)}
             minimumValue=0.
             maximumValue={float(Styles.maxHeight - height)}
@@ -238,13 +245,15 @@ module View = {
       | (Some(height), true) =>
         let delta =
           int_of_float(wheelEvent.deltaY) * Constants.scrollWheelMultiplier;
-        setScrollTop(st =>
-          st
-          + delta
-          |> Oni_Core.Utility.IntEx.clamp(
-               ~hi=0,
-               ~lo=Styles.maxHeight - height,
-             )
+        dispatch(
+          SetScrollTop(
+            scrollTop
+            + delta
+            |> Oni_Core.Utility.IntEx.clamp(
+                 ~hi=0,
+                 ~lo=Styles.maxHeight - height,
+               ),
+          ),
         );
 
       | _ => ()
