@@ -125,7 +125,10 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       },
       Nothing,
     );
-  | KeyPressed(_) => ({...model, shown: false}, Nothing)
+  | KeyPressed(_) => (
+      {...model, shown: false, contents: [], range: None},
+      Nothing,
+    )
   | ProviderRegistered(provider) => (
       {...model, providers: [provider, ...model.providers]},
       Nothing,
