@@ -1,13 +1,20 @@
 // MODEL
 
-type model = Layout.t(int);
+type model = {
+  tree: Layout.t(int),
+  uncommittedTree: option(Layout.t(int)),
+};
 
-let initial = id => Layout.singleton(id);
+let initial = id => {tree: Layout.singleton(id), uncommittedTree: None};
 
-let windows = Layout.windows;
-let addWindow = Layout.addWindow;
-let insertWindow = Layout.insertWindow;
-let removeWindow = Layout.removeWindow;
+let updateTree = (f, model) => {...model, tree: f(model.tree)};
+
+let windows = model => Layout.windows(model.tree);
+let addWindow = (direction, focus) =>
+  updateTree(Layout.addWindow(direction, focus));
+let insertWindow = (target, direction, focus) =>
+  updateTree(Layout.insertWindow(target, direction, focus));
+let removeWindow = target => updateTree(Layout.removeWindow(target));
 
 let move = (focus, dirX, dirY, layout) => {
   let positioned = Positioned.fromLayout(0, 0, 200, 200, layout);
@@ -41,51 +48,83 @@ type command =
 
 [@deriving show({with_path: false})]
 type msg =
-  | HandleDragged({
+  | SplitDragged({
       path: list(int),
       delta: float,
     })
+  | DragComplete
   | Command(command);
 
 type outmsg =
   | Nothing
   | Focus(int);
 
+let rotate = (direction, focus, model) => {
+  ...model,
+  tree: Layout.rotate(direction, focus, model.tree),
+};
+
+let resizeWindow = (direction, focus, delta, model) => {
+  ...model,
+  tree: Layout.resizeWindow(direction, focus, delta, model.tree),
+};
+
+let resetWeights = model => {
+  ...model,
+  tree: Layout.resetWeights(model.tree),
+};
+
 let update = (~focus, model, msg) => {
   switch (msg) {
+  | SplitDragged({path, delta}) => (
+      {
+        ...model,
+        uncommittedTree: Some(Layout.resizeSplit(~path, ~delta, model.tree)),
+      },
+      Nothing,
+    )
+
+  | DragComplete => (
+      switch (model.uncommittedTree) {
+      | Some(tree) => {tree, uncommittedTree: None}
+      | None => model
+      },
+      Nothing,
+    )
+
   | Command(MoveLeft) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveLeft(focus, model)))
+    | Some(focus) => (model, Focus(moveLeft(focus, model.tree)))
     | None => (model, Nothing)
     }
 
   | Command(MoveRight) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveRight(focus, model)))
+    | Some(focus) => (model, Focus(moveRight(focus, model.tree)))
     | None => (model, Nothing)
     }
 
   | Command(MoveUp) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveUp(focus, model)))
+    | Some(focus) => (model, Focus(moveUp(focus, model.tree)))
     | None => (model, Nothing)
     }
 
   | Command(MoveDown) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveDown(focus, model)))
+    | Some(focus) => (model, Focus(moveDown(focus, model.tree)))
     | None => (model, Nothing)
     }
 
   | Command(RotateForward) =>
     switch (focus) {
-    | Some(focus) => (Layout.rotate(`Forward, focus, model), Nothing)
+    | Some(focus) => (rotate(`Forward, focus, model), Nothing)
     | None => (model, Nothing)
     }
 
   | Command(RotateBackward) =>
     switch (focus) {
-    | Some(focus) => (Layout.rotate(`Backward, focus, model), Nothing)
+    | Some(focus) => (rotate(`Backward, focus, model), Nothing)
     | None => (model, Nothing)
     }
 
@@ -93,8 +132,8 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(focus) => (
         model
-        |> Layout.resizeWindow(`Horizontal, focus, 0.95)
-        |> Layout.resizeWindow(`Vertical, focus, 0.95),
+        |> resizeWindow(`Horizontal, focus, 0.95)
+        |> resizeWindow(`Vertical, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -104,8 +143,8 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(focus) => (
         model
-        |> Layout.resizeWindow(`Horizontal, focus, 1.05)
-        |> Layout.resizeWindow(`Vertical, focus, 1.05),
+        |> resizeWindow(`Horizontal, focus, 1.05)
+        |> resizeWindow(`Vertical, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)
@@ -114,7 +153,7 @@ let update = (~focus, model, msg) => {
   | Command(DecreaseHorizontalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> Layout.resizeWindow(`Horizontal, focus, 0.95),
+        model |> resizeWindow(`Horizontal, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -123,7 +162,7 @@ let update = (~focus, model, msg) => {
   | Command(IncreaseHorizontalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> Layout.resizeWindow(`Horizontal, focus, 1.05),
+        model |> resizeWindow(`Horizontal, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)
@@ -132,7 +171,7 @@ let update = (~focus, model, msg) => {
   | Command(DecreaseVerticalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> Layout.resizeWindow(`Vertical, focus, 0.95),
+        model |> resizeWindow(`Vertical, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -141,24 +180,21 @@ let update = (~focus, model, msg) => {
   | Command(IncreaseVerticalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> Layout.resizeWindow(`Vertical, focus, 1.05),
+        model |> resizeWindow(`Vertical, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)
     }
 
-  | Command(ResetSizes) => (Layout.resetWeights(model), Nothing)
-
-  | HandleDragged({path, delta}) => (
-      Layout.resizeSplit(~path, ~delta, model),
-      Nothing,
-    )
+  | Command(ResetSizes) => (resetWeights(model), Nothing)
   };
 };
-
 // VIEW
 
 module View = {
+  module Local = {
+    module Layout = Layout;
+  };
   open Revery;
   open UI;
 
@@ -191,22 +227,27 @@ module View = {
   };
 
   let component = React.Expert.component("handleView");
-  let handleView = (~direction, ~node: Positioned.t(_), ~onDrag, ()) =>
+  let handleView =
+      (~direction, ~node: Positioned.t(_), ~onDrag, ~onDragComplete, ()) =>
     component(hooks => {
       let ((captureMouse, _state), hooks) =
         Hooks.mouseCapture(
           ~onMouseMove=
-            ((lastX, lastY), evt) => {
+            ((originX, originY), evt) => {
               let delta =
                 switch (direction) {
-                | `Vertical => evt.mouseX -. lastX
-                | `Horizontal => evt.mouseY -. lastY
+                | `Vertical => evt.mouseX -. originX
+                | `Horizontal => evt.mouseY -. originY
                 };
 
               onDrag(delta);
-              Some((evt.mouseX, evt.mouseY));
+              Some((originX, originY));
             },
-          ~onMouseUp=(_, _) => None,
+          ~onMouseUp=
+            (_, _) => {
+              onDragComplete();
+              None;
+            },
           (),
           hooks,
         );
@@ -252,15 +293,18 @@ module View = {
             let total =
               direction == `Vertical ? parent.meta.width : parent.meta.height;
             dispatch(
-              HandleDragged({
+              SplitDragged({
                 path: List.rev(path),
                 delta: delta /. float(total) // normalized
               }),
             );
           };
+
+          let onDragComplete = () => dispatch(DragComplete);
+
           [
             <nodeView theme path node renderWindow dispatch />,
-            <handleView direction node onDrag />,
+            <handleView direction node onDrag onDragComplete />,
             ...loop(index + 1, rest),
           ];
         };
@@ -287,10 +331,13 @@ module View = {
     component(hooks => {
       let ((maybeDimensions, setDimensions), hooks) =
         Hooks.state(None, hooks);
+
+      let tree = model.uncommittedTree |> Option.value(~default=model.tree);
+
       let children =
         switch (maybeDimensions) {
         | Some((width, height)) =>
-          let positioned = Positioned.fromLayout(0, 0, width, height, model);
+          let positioned = Positioned.fromLayout(0, 0, width, height, tree);
 
           <nodeView theme node=positioned renderWindow dispatch />;
 

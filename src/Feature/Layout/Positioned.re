@@ -89,11 +89,11 @@ let%test_module "move" =
         {
           let initial =
             hsplit(
-              ~meta={x: 0, y: 0, width: 300, height: 300},
+              {x: 0, y: 0, width: 300, height: 300},
               [
-                window(3, ~meta={x: 0, y: 0, width: 300, height: 100}),
-                window(2, ~meta={x: 0, y: 100, width: 300, height: 100}),
-                window(1, ~meta={x: 0, y: 200, width: 300, height: 100}),
+                window({x: 0, y: 0, width: 300, height: 100}, 3),
+                window({x: 0, y: 100, width: 300, height: 100}, 2),
+                window({x: 0, y: 200, width: 300, height: 100}, 1),
               ],
             );
 
@@ -113,7 +113,7 @@ let rec fromLayout = (x, y, width, height, node) => {
     | `Split(direction, children) =>
       let totalWeight =
         children
-        |> List.map(child => child.meta.size)
+        |> List.map(child => child.meta.weight)
         |> List.fold_left((+.), 0.)
         |> max(1.);
 
@@ -124,7 +124,7 @@ let rec fromLayout = (x, y, width, height, node) => {
             let unitHeight = float(height) /. totalWeight;
             List.fold_left(
               ((y, acc), child) => {
-                let height = int_of_float(unitHeight *. child.meta.size);
+                let height = int_of_float(unitHeight *. child.meta.weight);
                 let sized = fromLayout(x, y, width, height, child);
                 (y + height, [sized, ...acc]);
               },
@@ -136,7 +136,7 @@ let rec fromLayout = (x, y, width, height, node) => {
             let unitWidth = float(width) /. totalWeight;
             List.fold_left(
               ((x, acc), child) => {
-                let width = int_of_float(unitWidth *. child.meta.size);
+                let width = int_of_float(unitWidth *. child.meta.weight);
                 let sized = fromLayout(x, y, width, height, child);
                 (x + width, [sized, ...acc]);
               },
@@ -149,11 +149,10 @@ let rec fromLayout = (x, y, width, height, node) => {
         |> List.rev;
 
       AbstractTree.DSL.(
-        split(~meta={x, y, width, height}, direction, sizedChildren)
+        split({x, y, width, height}, direction, sizedChildren)
       );
 
-    | `Window(id) =>
-      AbstractTree.DSL.(window(~meta={x, y, width, height}, id))
+    | `Window(id) => AbstractTree.DSL.(window({x, y, width, height}, id))
     }
   );
 };
@@ -170,10 +169,10 @@ let%test_module "fromLayout" =
 
        actual
        == vsplit(
-            ~meta={x: 0, y: 0, width: 200, height: 200},
+            {x: 0, y: 0, width: 200, height: 200},
             [
-              window(2, ~meta={x: 0, y: 0, width: 100, height: 200}),
-              window(1, ~meta={x: 100, y: 0, width: 100, height: 200}),
+              window({x: 0, y: 0, width: 100, height: 200}, 2),
+              window({x: 100, y: 0, width: 100, height: 200}, 1),
             ],
           );
      };
@@ -185,10 +184,10 @@ let%test_module "fromLayout" =
 
        actual
        == hsplit(
-            ~meta={x: 0, y: 0, width: 200, height: 200},
+            {x: 0, y: 0, width: 200, height: 200},
             [
-              window(2, ~meta={x: 0, y: 0, width: 200, height: 100}),
-              window(1, ~meta={x: 0, y: 100, width: 200, height: 100}),
+              window({x: 0, y: 0, width: 200, height: 100}, 2),
+              window({x: 0, y: 100, width: 200, height: 100}, 1),
             ],
           );
      };
@@ -201,14 +200,14 @@ let%test_module "fromLayout" =
 
        actual
        == hsplit(
-            ~meta={x: 0, y: 0, width: 200, height: 200},
+            {x: 0, y: 0, width: 200, height: 200},
             [
-              window(2, ~meta={x: 0, y: 0, width: 200, height: 100}),
+              window({x: 0, y: 0, width: 200, height: 100}, 2),
               vsplit(
-                ~meta={x: 0, y: 100, width: 200, height: 100},
+                {x: 0, y: 100, width: 200, height: 100},
                 [
-                  window(3, ~meta={x: 0, y: 100, width: 100, height: 100}),
-                  window(1, ~meta={x: 100, y: 100, width: 100, height: 100}),
+                  window({x: 0, y: 100, width: 100, height: 100}, 3),
+                  window({x: 100, y: 100, width: 100, height: 100}, 1),
                 ],
               ),
             ],
