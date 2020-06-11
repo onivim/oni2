@@ -7,39 +7,37 @@ open Oni_Core;
 open Oni_Model;
 open Utility;
 
-module Log = (val Core.Log.withNamespace("Oni2.Store.Title"));
+module Log = (val Log.withNamespace("Oni2.Store.Title"));
 
 module Internal = {
-  type titleClickBehavior =
+  
+    type titleClickBehavior =
     | Maximize
     | Minimize;
-
-  let getTitleDoubleClickBehavior = {
-    switch (Revery.Environment.os) {
-    | Mac =>
-      try({
-        let ic =
-          Unix.open_process_in(
-            "defaults read 'Apple Global Domain' AppleActionOnDoubleClick",
-          );
-        let operation = input_line(ic);
-        switch (operation) {
-        | "Maximize" => Maximize
-        | "Minimize" => Minimize
+    
+    let getTitleDoubleClickBehavior = () => {
+        switch (Revery.Environment.os) {
+        | Mac =>
+          try({
+          let ic =
+            Unix.open_process_in(
+              "defaults read 'Apple Global Domain' AppleActionOnDoubleClick",
+            );
+          let operation = input_line(ic);
+          switch (operation) {
+          | "Maximize" => Maximize
+          | "Minimize" => Minimize
+          | _ => Maximize
+          }
+          }) {
+          | _exn => Log.warn("
+          Unable to read default behavior for AppleActionOnDoubleClick");
+          Maximize
+          };
         | _ => Maximize
         };
-      }) {
-      | _exn =>
-        Log.warn(
-          "
-          Unable to read default behavior for AppleActionOnDoubleClick",
-        );
-        Maximize;
-      }
-    | _ => Maximize
     };
   };
-};
 
 let withTag = (tag: string, value: option(string)) =>
   Option.map(v => (tag, v), value);
@@ -143,7 +141,7 @@ let start = (setTitle, maximize, minimize, restore, close) => {
     Isolinear.Effect.create(~name="maximize", () =>
       switch (Internal.getTitleDoubleClickBehavior()) {
       | Maximize => maximize()
-      | Minimize => minimize()
+      | Minimize => minimize();
       }
     );
 
