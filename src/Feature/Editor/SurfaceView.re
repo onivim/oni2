@@ -124,20 +124,20 @@ let%component make =
       ),
       () => {
         lastMousePosition^
-        |> Option.iter(((mouseX, mouseY)) => {
+        |> Utility.OptionEx.flatMap(((mouseX, mouseY)) =>
              getMaybeLocationFromMousePosition(mouseX, mouseY)
-             |> Option.iter(((line, col)) => {
-                  dispatch(
-                    Msg.MouseHovered({
-                      location:
-                        EditorCoreTypes.Location.create(
-                          Index.fromZeroBased(line),
-                          Index.fromZeroBased(col),
-                        ),
-                    }),
-                  )
-                })
-           });
+           )
+        |> Option.iter(((line, col)) =>
+             dispatch(
+               Msg.MouseHovered({
+                 location:
+                   EditorCoreTypes.Location.create(
+                     Index.fromZeroBased(line),
+                     Index.fromZeroBased(col),
+                   ),
+               }),
+             )
+           );
         hoverTimerActive := false;
         resetHoverTimer();
         None;
