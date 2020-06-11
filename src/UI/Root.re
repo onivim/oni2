@@ -154,8 +154,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     <ContextMenu.Overlay onClick />;
   };
 
-  let titleDispatch = msg =>
-    GlobalContext.current().dispatch(Actions.TitleBar(msg));
+  let titleDispatch = msg => dispatch(Actions.TitleBar(msg));
 
   let mapDisplayMode =
     fun
