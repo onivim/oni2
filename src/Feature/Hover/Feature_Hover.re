@@ -199,6 +199,15 @@ module View = {
       };
     let%hook (state, dispatch) = Hooks.reducer(~initialState, reducer);
 
+    let%hook () =
+      Hooks.effect(
+        If((!=), model.contents),
+        () => {
+          dispatch(SetScrollTop(0));
+          None;
+        },
+      );
+
     let hoverMarkdown = (~markdown) =>
       Oni_Components.Markdown.make(
         ~colorTheme,
