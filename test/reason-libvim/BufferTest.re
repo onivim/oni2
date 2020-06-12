@@ -200,7 +200,7 @@ describe("Buffer", ({describe, _}) => {
 
       let edit = Edit.{range: range(0, 1, 0, 1), text: [|"a"|]};
 
-      Buffer.applyEdits(~edits=[edit], buffer);
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, Index.fromOneBased(1));
       expect.string(line).toEqual("Tahis is the first line of a test file");
@@ -216,7 +216,7 @@ describe("Buffer", ({describe, _}) => {
           text: [|"his is a whole new line", "T"|],
         };
 
-      Buffer.applyEdits(~edits=[edit], buffer);
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, Index.fromOneBased(1));
       expect.string(line).toEqual("This is a whole new line");
@@ -230,7 +230,7 @@ describe("Buffer", ({describe, _}) => {
 
       let edit = Edit.{range: range(0, 0, 1, 0), text: [||]};
 
-      Buffer.applyEdits(~edits=[edit], buffer);
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, Index.fromOneBased(1));
       expect.string(line).toEqual("This is the second line of a test file");
@@ -243,7 +243,7 @@ describe("Buffer", ({describe, _}) => {
 
       let edit = Edit.{range: range(0, 0, 2, 0), text: [||]};
 
-      Buffer.applyEdits(~edits=[edit], buffer);
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
       let line = Buffer.getLine(buffer, Index.fromOneBased(1));
       expect.string(line).toEqual("This is the third line of a test file");
