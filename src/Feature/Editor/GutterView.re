@@ -84,6 +84,7 @@ let render =
     (
       ~editor,
       ~showLineNumbers,
+      ~showScrollShadow,
       ~lineNumberWidth,
       ~width,
       ~height,
@@ -133,12 +134,15 @@ let render =
     diffMarkers,
   );
 
-  ScrollShadow.renderVertical(~editor, ~width=float(width), ~context);
+  if (showScrollShadow) {
+    ScrollShadow.renderVertical(~editor, ~width=float(width), ~context);
+  };
 };
 
 let make =
     (
       ~editor,
+      ~showScrollShadow,
       ~showLineNumbers,
       ~height,
       ~colors,
@@ -175,6 +179,7 @@ let make =
   let render =
     render(
       ~editor,
+      ~showScrollShadow,
       ~showLineNumbers,
       ~lineNumberWidth,
       ~width=int_of_float(totalWidth),

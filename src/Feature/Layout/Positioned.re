@@ -1,5 +1,6 @@
 include AbstractTree;
 
+[@deriving show({with_path: false})]
 type metadata = {
   x: int,
   y: int,
@@ -7,6 +8,7 @@ type metadata = {
   height: int,
 };
 
+[@deriving show({with_path: false})]
 type t('id) = node('id, metadata);
 
 let contains = (x, y, {meta, _}: t(_)) => {
@@ -114,8 +116,7 @@ let rec fromLayout = (x, y, width, height, node) => {
       let totalWeight =
         children
         |> List.map(child => child.meta.weight)
-        |> List.fold_left((+.), 0.)
-        |> max(1.);
+        |> List.fold_left((+.), 0.);
 
       let sizedChildren =
         (
@@ -211,6 +212,18 @@ let%test_module "fromLayout" =
                 ],
               ),
             ],
+          );
+     };
+
+     let%test "single low weight" = {
+       let initial = Layout.(hsplit([window(~weight=0.1, 1)]));
+
+       let actual = fromLayout(0, 0, 200, 200, initial);
+
+       actual
+       == hsplit(
+            {x: 0, y: 0, width: 200, height: 200},
+            [window({x: 0, y: 0, width: 200, height: 200}, 1)],
           );
      };
    });
