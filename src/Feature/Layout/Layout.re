@@ -1300,3 +1300,34 @@ let%test_module "maximize" =
           ]);
      };
    });
+
+let rec topmost = node =>
+  switch (node.kind) {
+  | `Window(id) => id
+  | `Split(_, [first, ..._]) => topmost(first)
+  | `Split(_, []) => failwith("encountered empty split")
+  };
+
+let rec bottommost = node =>
+  switch (node.kind) {
+  | `Window(id) => id
+  | `Split(`Horizontal, children) =>
+    children |> Base.List.last_exn |> bottommost
+  | `Split(`Vertical, [first, ..._]) => bottommost(first)
+  | `Split(_, []) => failwith("encountered empty split")
+  };
+
+let rec leftmost = node =>
+  switch (node.kind) {
+  | `Window(id) => id
+  | `Split(_, [first, ..._]) => leftmost(first)
+  | `Split(_, []) => failwith("encountered empty split")
+  };
+
+let rec rightmost = node =>
+  switch (node.kind) {
+  | `Window(id) => id
+  | `Split(`Vertical, children) => children |> Base.List.last_exn |> rightmost
+  | `Split(`Horizontal, [first, ..._]) => rightmost(first)
+  | `Split(_, []) => failwith("encountered empty split")
+  };
