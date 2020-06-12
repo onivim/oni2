@@ -242,6 +242,7 @@ let%component make =
   let (gutterWidth, gutterView) =
     <GutterView
       editor
+      showScrollShadow={Config.Experimental.scrollShadow.get(config)}
       showLineNumbers={Config.lineNumbers.get(config)}
       height={editor.pixelHeight}
       colors
