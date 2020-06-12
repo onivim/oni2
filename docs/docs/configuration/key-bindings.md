@@ -169,6 +169,27 @@ Onivim-specific contexts:
 | Control+W, Control+L | Move to right split | `window.moveRight` |
 | Control+W, Control+J | Move down a split | `window.moveDown` |
 | Control+W, Control+K | Move up a split | `window.moveUp` |
+| Control+W, Control+R | Rotate forwards | `view.rotateForward` |
+| ~~Control+W, Control+Shift+R~~ | Rotate backwards | `view.rotateBackward` |
+| | Decrease editor size | `workbench.action.decreaseViewSize` |
+| | Increase editor size | `workbench.action.increaseViewSize` |
+| ~~Control+W, <~~ | Decrease editor size horizontally | `vim.decreaseHorizontalWindowSize` |
+| ~~Control+W, >~~ | Increase editor size horizontally | `vim.increaseHorizontalWindowSize` |
+| Control+W, - | Decrease editor size vertically | `vim.decreaseVerticalWindowSize` |
+| ~~Control+W, +~~ | Increase editor size vertically | `vim.increaseVerticalWindowSize` |
+| | Decrease editor size up | `vim.decreaseWindowSizeUp` |
+| | Increase editor size up | `vim.increaseWindowSizeUo` |
+| | Decrease editor size down | `vim.decreaseWindowSizeDown` |
+| | Increase editor size down | `vim.increaseWindowSizeDown` |
+| | Decrease editor size left | `vim.decreaseWindowSizeLeft` |
+| | Increase editor size left | `vim.increaseWindowSizeLeft` |
+| | Decrease editor size right | `vim.decreaseWindowSizeRight` |
+| | Increase editor size right | `vim.increaseWindowSizeRight` |
+| Control+W, O | Maximize editor | `workbench.action.maximizeEditor` |
+| ~~Control+W, |~~ | Maximize editor horizontally | `vim.maximizeWindowWidth` |
+| ~~Control+W, _~~ | Maximize editor vertically | `vim.maximizeWindowHeight` |
+| | Toggle editor group sizes | `workbench.action.toggleEditorWidths` |
+| Control+W, = | Reset editor sizes | `workbench.action.evenEditorWidths` |
 
 ### Vim commands
 | Default Key Binding | Description | Command |
