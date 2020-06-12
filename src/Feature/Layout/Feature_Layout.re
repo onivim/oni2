@@ -58,6 +58,8 @@ type command =
   | IncreaseHorizontalSize
   | DecreaseVerticalSize
   | IncreaseVerticalSize
+  | IncreaseWindowSize([ | `Up | `Down | `Left | `Right])
+  | DecreaseWindowSize([ | `Up | `Down | `Left | `Right])
   | Maximize
   | MaximizeHorizontal
   | MaximizeVertical
@@ -82,9 +84,21 @@ let rotate = (direction, focus, model) => {
   tree: Layout.rotate(direction, focus, activeTree(model)),
 };
 
-let resizeWindow = (direction, focus, delta, model) => {
+let resizeWindowByAxis = (direction, focus, delta, model) => {
   ...model,
-  tree: Layout.resizeWindow(direction, focus, delta, activeTree(model)),
+  tree:
+    Layout.resizeWindowByAxis(direction, focus, delta, activeTree(model)),
+};
+
+let resizeWindowByDirection = (direction, focus, delta, model) => {
+  ...model,
+  tree:
+    Layout.resizeWindowByDirection(
+      direction,
+      focus,
+      delta,
+      activeTree(model),
+    ),
 };
 
 let resetWeights = model => {
@@ -158,8 +172,8 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(focus) => (
         model
-        |> resizeWindow(`Horizontal, focus, 0.95)
-        |> resizeWindow(`Vertical, focus, 0.95),
+        |> resizeWindowByAxis(`Horizontal, focus, 0.95)
+        |> resizeWindowByAxis(`Vertical, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -169,8 +183,8 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(focus) => (
         model
-        |> resizeWindow(`Horizontal, focus, 1.05)
-        |> resizeWindow(`Vertical, focus, 1.05),
+        |> resizeWindowByAxis(`Horizontal, focus, 1.05)
+        |> resizeWindowByAxis(`Vertical, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)
@@ -179,7 +193,7 @@ let update = (~focus, model, msg) => {
   | Command(DecreaseHorizontalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> resizeWindow(`Horizontal, focus, 0.95),
+        model |> resizeWindowByAxis(`Horizontal, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -188,7 +202,7 @@ let update = (~focus, model, msg) => {
   | Command(IncreaseHorizontalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> resizeWindow(`Horizontal, focus, 1.05),
+        model |> resizeWindowByAxis(`Horizontal, focus, 1.05),
         Nothing,
       )
     | None => (model, Nothing)
@@ -197,7 +211,7 @@ let update = (~focus, model, msg) => {
   | Command(DecreaseVerticalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> resizeWindow(`Vertical, focus, 0.95),
+        model |> resizeWindowByAxis(`Vertical, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -206,7 +220,25 @@ let update = (~focus, model, msg) => {
   | Command(IncreaseVerticalSize) =>
     switch (focus) {
     | Some(focus) => (
-        model |> resizeWindow(`Vertical, focus, 1.05),
+        model |> resizeWindowByAxis(`Vertical, focus, 1.05),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(IncreaseWindowSize(direction)) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> resizeWindowByDirection(direction, focus, 1.05),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(DecreaseWindowSize(direction)) =>
+    switch (focus) {
+    | Some(focus) => (
+        model |> resizeWindowByDirection(direction, focus, 0.95),
         Nothing,
       )
     | None => (model, Nothing)
@@ -423,7 +455,6 @@ module Commands = {
       "view.rotateForward",
       Command(RotateForward),
     );
-
   let rotateBackward =
     define(
       ~category="View",
@@ -439,7 +470,6 @@ module Commands = {
       "window.moveLeft",
       Command(MoveLeft),
     );
-
   let moveRight =
     define(
       ~category="View",
@@ -447,7 +477,6 @@ module Commands = {
       "window.moveRight",
       Command(MoveRight),
     );
-
   let moveUp =
     define(
       ~category="View",
@@ -455,7 +484,6 @@ module Commands = {
       "window.moveUp",
       Command(MoveUp),
     );
-
   let moveDown =
     define(
       ~category="View",
@@ -471,7 +499,6 @@ module Commands = {
       "workbench.action.decreaseViewSize",
       Command(DecreaseSize),
     );
-
   let increaseSize =
     define(
       ~category="View",
@@ -487,7 +514,6 @@ module Commands = {
       "vim.decreaseHorizontalWindowSize",
       Command(DecreaseHorizontalSize),
     );
-
   let increaseHorizontalSize =
     define(
       ~category="View",
@@ -495,7 +521,6 @@ module Commands = {
       "vim.increaseHorizontalWindowSize",
       Command(IncreaseHorizontalSize),
     );
-
   let decreaseVerticalSize =
     define(
       ~category="View",
@@ -503,13 +528,69 @@ module Commands = {
       "vim.decreaseVerticalWindowSize",
       Command(DecreaseVerticalSize),
     );
-
   let increaseVerticalSize =
     define(
       ~category="View",
       ~title="Increase Vertical Window Size",
       "vim.increaseVerticalWindowSize",
       Command(IncreaseVerticalSize),
+    );
+
+  let increaseWindowSizeUp =
+    define(
+      ~category="View",
+      ~title="Increase Window Size Up",
+      "vim.increaseWindowSizeUp",
+      Command(IncreaseWindowSize(`Up)),
+    );
+  let decreaseWindowSizeUp =
+    define(
+      ~category="View",
+      ~title="Decrease Window Size Up",
+      "vim.decreaseWindowSizeUp",
+      Command(DecreaseWindowSize(`Up)),
+    );
+  let increaseWindowSizeDown =
+    define(
+      ~category="View",
+      ~title="Increase Window Size Down",
+      "vim.increaseWindowSizeDown",
+      Command(IncreaseWindowSize(`Down)),
+    );
+  let decreaseWindowSizeDown =
+    define(
+      ~category="View",
+      ~title="Decrease Window Size Down",
+      "vim.decreaseWindowSizeDown",
+      Command(DecreaseWindowSize(`Down)),
+    );
+  let increaseWindowSizeLeft =
+    define(
+      ~category="View",
+      ~title="Increase Window Size Left",
+      "vim.increaseWindowSizeLeft",
+      Command(IncreaseWindowSize(`Left)),
+    );
+  let decreaseWindowSizeLeft =
+    define(
+      ~category="View",
+      ~title="Decrease Window Size Left",
+      "vim.decreaseWindowSizeLeft",
+      Command(DecreaseWindowSize(`Left)),
+    );
+  let increaseWindowSizeRight =
+    define(
+      ~category="View",
+      ~title="Increase Window Size Right",
+      "vim.increaseWindowSizeRight",
+      Command(IncreaseWindowSize(`Right)),
+    );
+  let decreaseWindowSizeRight =
+    define(
+      ~category="View",
+      ~title="Decrease Window Size Right",
+      "vim.decreaseWindowSizeRight",
+      Command(DecreaseWindowSize(`Right)),
     );
 
   let maximize =
@@ -519,7 +600,6 @@ module Commands = {
       "workbench.action.maximizeEditor",
       Command(Maximize),
     );
-
   let maximizeHorizontal =
     define(
       ~category="View",
@@ -527,7 +607,6 @@ module Commands = {
       "vim.maximizeWindowWidth",
       Command(MaximizeHorizontal),
     );
-
   let maximizeVertical =
     define(
       ~category="View",
@@ -535,7 +614,6 @@ module Commands = {
       "vim.maximizeWindowHeight",
       Command(MaximizeVertical),
     );
-
   let toggleMaximize =
     define(
       ~category="View",
@@ -568,6 +646,14 @@ module Contributions = {
       decreaseHorizontalSize,
       increaseVerticalSize,
       decreaseVerticalSize,
+      increaseWindowSizeUp,
+      decreaseWindowSizeUp,
+      increaseWindowSizeDown,
+      decreaseWindowSizeDown,
+      increaseWindowSizeLeft,
+      decreaseWindowSizeLeft,
+      increaseWindowSizeRight,
+      decreaseWindowSizeRight,
       maximize,
       maximizeHorizontal,
       maximizeVertical,
