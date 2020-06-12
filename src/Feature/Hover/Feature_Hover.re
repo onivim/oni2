@@ -20,9 +20,17 @@ type model = {
   providers: list(provider),
   contents: list(string),
   range: option(EditorCoreTypes.Range.t),
+  triggeredFrom:
+    option([ | `CommandPalette | `Mouse(EditorCoreTypes.Location.t)]),
 };
 
-let initial = {shown: false, providers: [], contents: [], range: None};
+let initial = {
+  shown: false,
+  providers: [],
+  contents: [],
+  range: None,
+  triggeredFrom: None,
+};
 
 [@deriving show({with_path: false})]
 type command =
@@ -92,7 +100,10 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           ~extHostClient,
           ~model,
         );
-      ({...model, shown: true}, Effect(effects));
+      (
+        {...model, shown: true, triggeredFrom: Some(`CommandPalette)},
+        Effect(effects),
+      );
 
     | _ => (model, Nothing)
     }
@@ -107,7 +118,10 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           ~extHostClient,
           ~model,
         );
-      ({...model, shown: true}, Effect(effects));
+      (
+        {...model, shown: true, triggeredFrom: Some(`Mouse(location))},
+        Effect(effects),
+      );
     | _ => (model, Nothing)
     }
   | MouseMoved(location) =>
@@ -122,11 +136,18 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         shown,
         range: shown ? model.range : None,
         contents: shown ? model.contents : [],
+        triggeredFrom: None,
       },
       Nothing,
     );
   | KeyPressed(_) => (
-      {...model, shown: false, contents: [], range: None},
+      {
+        ...model,
+        shown: false,
+        contents: [],
+        range: None,
+        triggeredFrom: None,
+      },
       Nothing,
     )
   | ProviderRegistered(provider) => (
@@ -383,12 +404,32 @@ module View = {
       option((int, int)),
       option(list(Feature_LanguageSupport.Diagnostic.t)),
     ) =
-      switch (model.range, model.shown) {
-      | (Some(range), true) =>
+      switch (model.range, model.triggeredFrom, model.shown) {
+      | (Some(range), Some(trigger), true) =>
+        let diagLocation =
+          switch (trigger) {
+          | `Mouse(location) => location
+          | `CommandPalette =>
+            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
+          };
+
+        let diagnostic =
+          Feature_LanguageSupport.Diagnostics.getDiagnosticsAtPosition(
+            diagnostics,
+            buffer,
+            diagLocation,
+          );
+
+        let hoverLocation =
+          switch (diagnostic) {
+          | [] => range.start
+          | [diag, ..._] => diag.range.start
+          };
+
         let y =
           int_of_float(
             editorFont.measuredHeight
-            *. float(Index.toZeroBased(range.start.line) + 1)
+            *. float(Index.toZeroBased(hoverLocation.line) + 1)
             -. editor.scrollY
             +. 0.5,
           );
@@ -397,26 +438,23 @@ module View = {
           int_of_float(
             gutterWidth
             +. editorFont.measuredWidth
-            *. float(Index.toZeroBased(range.start.column))
+            *. float(Index.toZeroBased(hoverLocation.column))
             -. editor.scrollX
             +. 0.5,
-          );
-
-        let diagnostic =
-          Feature_LanguageSupport.Diagnostics.getDiagnosticsAtPosition(
-            diagnostics,
-            buffer,
-            range.start,
           );
 
         (Some((x, y)), Some(diagnostic));
-      | (None, true) =>
-        let cursorPosition =
-          Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+      | (None, Some(trigger), true) =>
+        let location =
+          switch (trigger) {
+          | `Mouse(location) => location
+          | `CommandPalette =>
+            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
+          };
         let y =
           int_of_float(
             editorFont.measuredHeight
-            *. float(Index.toZeroBased(cursorPosition.line) + 1)
+            *. float(Index.toZeroBased(location.line) + 1)
             -. editor.scrollY
             +. 0.5,
           );
@@ -424,7 +462,7 @@ module View = {
           int_of_float(
             gutterWidth
             +. editorFont.measuredWidth
-            *. float(cursorOffset)
+            *. float(Index.toZeroBased(location.column))
             -. editor.scrollX
             +. 0.5,
           );
@@ -433,7 +471,7 @@ module View = {
           Feature_LanguageSupport.Diagnostics.getDiagnosticsAtPosition(
             diagnostics,
             buffer,
-            cursorPosition,
+            location,
           );
 
         diagnostic == [] ? (None, None) : (Some((x, y)), Some(diagnostic));

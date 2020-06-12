@@ -116,6 +116,12 @@ let%component make =
     resetHoverTimer();
   };
 
+  let onMouseLeave = _ => {
+    hoverTimerActive := false;
+    lastMousePosition := None;
+    resetHoverTimer();
+  };
+
   let%hook () =
     Hooks.effect(
       If(
@@ -170,6 +176,7 @@ let%component make =
     )}
     onMouseUp
     onMouseMove
+    onMouseLeave
     onMouseWheel>
     <Canvas
       style={Styles.bufferViewClipped(

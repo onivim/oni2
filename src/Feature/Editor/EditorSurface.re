@@ -32,7 +32,6 @@ module Constants = {
 
 module Styles = {
   open Style;
-
   let container = (~colors: Colors.t) => [
     backgroundColor(colors.editorBackground),
     color(colors.editorForeground),
