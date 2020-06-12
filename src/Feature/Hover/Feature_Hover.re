@@ -22,6 +22,7 @@ type model = {
   range: option(EditorCoreTypes.Range.t),
   triggeredFrom:
     option([ | `CommandPalette | `Mouse(EditorCoreTypes.Location.t)]),
+  lastRequestID: option(int),
 };
 
 let initial = {
@@ -30,6 +31,17 @@ let initial = {
   contents: [],
   range: None,
   triggeredFrom: None,
+  lastRequestID: None,
+};
+
+module IDGenerator = {
+  let current = ref(0);
+
+  let get = () => {
+    let id = current^;
+    current := id + 1;
+    id;
+  };
 };
 
 [@deriving show({with_path: false})]
@@ -44,6 +56,7 @@ type msg =
   | HoverInfoReceived({
       contents: list(string),
       range: option(EditorCoreTypes.Range.t),
+      requestID: int,
     })
   | HoverRequestFailed(string)
   | MouseHovered(EditorCoreTypes.Location.t)
@@ -54,7 +67,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 let getEffectsForLocation =
-    (~buffer, ~editor, ~location, ~extHostClient, ~model) => {
+    (~buffer, ~editor, ~location, ~extHostClient, ~model, ~requestID) => {
   let filetype =
     buffer
     |> Oni_Core.Buffer.getFileType
@@ -79,6 +92,7 @@ let getEffectsForLocation =
            HoverInfoReceived({
              contents,
              range: Option.map(Exthost.OneBasedRange.toRange, range),
+             requestID,
            })
          | Error(s) => HoverRequestFailed(s)
          }
@@ -92,6 +106,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | Command(Show) =>
     switch (maybeBuffer, maybeEditor) {
     | (Some(buffer), Some(editor)) =>
+      let requestID = IDGenerator.get();
       let effects =
         getEffectsForLocation(
           ~buffer,
@@ -99,9 +114,15 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
           ~extHostClient,
           ~model,
+          ~requestID,
         );
       (
-        {...model, shown: true, triggeredFrom: Some(`CommandPalette)},
+        {
+          ...model,
+          shown: true,
+          triggeredFrom: Some(`CommandPalette),
+          lastRequestID: Some(requestID),
+        },
         Effect(effects),
       );
 
@@ -110,6 +131,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | MouseHovered(location) =>
     switch (maybeBuffer, maybeEditor) {
     | (Some(buffer), Some(editor)) =>
+      let requestID = IDGenerator.get();
       let effects =
         getEffectsForLocation(
           ~buffer,
@@ -117,9 +139,15 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           ~location,
           ~extHostClient,
           ~model,
+          ~requestID,
         );
       (
-        {...model, shown: true, triggeredFrom: Some(`Mouse(location))},
+        {
+          ...model,
+          shown: true,
+          triggeredFrom: Some(`Mouse(location)),
+          lastRequestID: Some(requestID),
+        },
         Effect(effects),
       );
     | _ => (model, Nothing)
@@ -163,10 +191,14 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       {...model, providers: [provider, ...model.providers]},
       Nothing,
     )
-  | HoverInfoReceived({contents, range}) => (
-      {...model, contents, range},
-      Nothing,
-    )
+  | HoverInfoReceived({contents, range, requestID}) =>
+    switch (model.lastRequestID) {
+    | Some(id) when requestID == id => (
+        {...model, contents, range, lastRequestID: None},
+        Nothing,
+      )
+    | _ => (model, Nothing)
+    }
   | _ => (model, Nothing)
   };
 

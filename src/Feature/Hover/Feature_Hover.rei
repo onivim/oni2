@@ -19,6 +19,7 @@ type msg =
   | HoverInfoReceived({
       contents: list(string),
       range: option(EditorCoreTypes.Range.t),
+      requestID: int,
     })
   | HoverRequestFailed(string)
   | MouseHovered(EditorCoreTypes.Location.t)
