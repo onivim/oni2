@@ -105,8 +105,8 @@ let%component make =
            Msg.MouseMoved({
              location:
                EditorCoreTypes.Location.create(
-                 Index.fromZeroBased(line),
-                 Index.fromZeroBased(col),
+                 ~line=Index.fromZeroBased(line),
+                 ~column=Index.fromZeroBased(col),
                ),
            }),
          )
@@ -141,8 +141,8 @@ let%component make =
                Msg.MouseHovered({
                  location:
                    EditorCoreTypes.Location.create(
-                     Index.fromZeroBased(line),
-                     Index.fromZeroBased(col),
+                     ~line=Index.fromZeroBased(line),
+                     ~column=Index.fromZeroBased(col),
                    ),
                }),
              )

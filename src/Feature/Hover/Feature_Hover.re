@@ -67,7 +67,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 let getEffectsForLocation =
-    (~buffer, ~editor, ~location, ~extHostClient, ~model, ~requestID) => {
+    (~buffer, ~location, ~extHostClient, ~model, ~requestID) => {
   let filetype =
     buffer
     |> Oni_Core.Buffer.getFileType
@@ -110,7 +110,6 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       let effects =
         getEffectsForLocation(
           ~buffer,
-          ~editor,
           ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
           ~extHostClient,
           ~model,
@@ -130,12 +129,11 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
     }
   | MouseHovered(location) =>
     switch (maybeBuffer, maybeEditor) {
-    | (Some(buffer), Some(editor)) =>
+    | (Some(buffer), Some(_)) =>
       let requestID = IDGenerator.get();
       let effects =
         getEffectsForLocation(
           ~buffer,
-          ~editor,
           ~location,
           ~extHostClient,
           ~model,
@@ -436,7 +434,6 @@ module View = {
         ~editor: Feature_Editor.Editor.t,
         ~buffer,
         ~gutterWidth,
-        ~cursorOffset,
         ~grammars,
         ~diagnostics,
         (),

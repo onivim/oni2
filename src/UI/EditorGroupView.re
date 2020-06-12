@@ -122,7 +122,7 @@ module Parts = {
       let buffer =
         Selectors.getBufferForEditor(state, editor)
         |> Option.value(~default=Buffer.initial);
-      let renderHover = (~gutterWidth, ~cursorOffset) =>
+      let renderHover = (~gutterWidth) =>
         <Feature_Hover.View
           colorTheme=theme
           tokenTheme={state.tokenTheme}
@@ -135,7 +135,6 @@ module Parts = {
           editor
           buffer
           gutterWidth
-          cursorOffset
         />;
 
       switch (renderer) {

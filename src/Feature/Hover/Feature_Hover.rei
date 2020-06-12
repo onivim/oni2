@@ -53,7 +53,6 @@ module View: {
       ~editor: Feature_Editor.Editor.t,
       ~buffer: Oni_Core.Buffer.t,
       ~gutterWidth: float,
-      ~cursorOffset: int,
       ~grammars: Oni_Syntax.GrammarRepository.t,
       ~diagnostics: Feature_LanguageSupport.Diagnostics.t,
       unit

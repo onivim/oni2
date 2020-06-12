@@ -140,11 +140,7 @@ let%component make =
                 ~definition,
                 ~windowIsFocused,
                 ~config,
-                ~renderHover=(
-                               ~gutterWidth as _: float,
-                               ~cursorOffset as _: int,
-                             ) =>
-                               <View />,
+                ~renderHover=(~gutterWidth as _: float) => <View />,
                 (),
               ) => {
   let colors = Colors.precompute(theme);
@@ -194,8 +190,6 @@ let%component make =
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
 
   let cursorPosition = Editor.getPrimaryCursor(~buffer, editor);
-
-  let cursorOffset = Editor.getCursorOffset(~buffer, ~cursorPosition);
 
   let layout =
     EditorLayout.getLayout(
@@ -317,7 +311,7 @@ let%component make =
       theme
       tokenTheme
     />
-    {renderHover(~gutterWidth, ~cursorOffset)}
+    {renderHover(~gutterWidth)}
     <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical
         dispatch
