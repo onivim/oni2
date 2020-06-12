@@ -125,21 +125,30 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
     | _ => (model, Nothing)
     }
   | MouseMoved(location) =>
-    let shown =
+    let newModel =
       switch (model.range) {
-      | Some(range) => EditorCoreTypes.Range.contains(location, range)
-      | None => false
+      | Some(range) =>
+        if (EditorCoreTypes.Range.contains(location, range)) {
+          model;
+        } else {
+          {
+            ...model,
+            shown: false,
+            range: None,
+            contents: [],
+            triggeredFrom: None,
+          };
+        }
+
+      | None => {
+          ...model,
+          shown: false,
+          range: None,
+          contents: [],
+          triggeredFrom: None,
+        }
       };
-    (
-      {
-        ...model,
-        shown,
-        range: shown ? model.range : None,
-        contents: shown ? model.contents : [],
-        triggeredFrom: None,
-      },
-      Nothing,
-    );
+    (newModel, Nothing);
   | KeyPressed(_) => (
       {
         ...model,
