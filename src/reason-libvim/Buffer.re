@@ -105,6 +105,8 @@ let applyEdits = (~edits, buffer) => {
     setCurrent(buffer);
   };
 
+  Undo.sync(~force=true);
+
   // Sort edits prior to applying, such that last edits
   // are applied first.
   let edits = Edit.sort(edits);

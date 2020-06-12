@@ -180,25 +180,25 @@ describe("Buffer", ({describe, _}) => {
     });
   });
   describe("applyEdits", ({test, _}) => {
-
-    let range = (startLine, startColumn, endLine, endColumn) => Range.{
-      start: Location.create(
-      ~line=Index.(zero + startLine),
-      ~column=Index.(zero + startColumn)),
-      stop: Location.create(
-      ~line=Index.(zero+endLine),
-      ~column=Index.(zero+endColumn)
-      )
-    };
+    let range = (startLine, startColumn, endLine, endColumn) =>
+      Range.{
+        start:
+          Location.create(
+            ~line=Index.(zero + startLine),
+            ~column=Index.(zero + startColumn),
+          ),
+        stop:
+          Location.create(
+            ~line=Index.(zero + endLine),
+            ~column=Index.(zero + endColumn),
+          ),
+      };
 
     test("insert string inside line", ({expect, _}) => {
       let _ = resetBuffer();
       let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
 
-      let edit = Edit.{
-        range: range(0, 1, 0, 1),
-        text: [|"a"|]
-      };
+      let edit = Edit.{range: range(0, 1, 0, 1), text: [|"a"|]};
 
       Buffer.applyEdits(~edits=[edit], buffer);
 
@@ -210,10 +210,11 @@ describe("Buffer", ({describe, _}) => {
       let _ = resetBuffer();
       let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
 
-      let edit = Edit.{
-        range: range(0, 1, 0, 1),
-        text: [|"his is a whole new line", "T"|]
-      };
+      let edit =
+        Edit.{
+          range: range(0, 1, 0, 1),
+          text: [|"his is a whole new line", "T"|],
+        };
 
       Buffer.applyEdits(~edits=[edit], buffer);
 
@@ -227,10 +228,7 @@ describe("Buffer", ({describe, _}) => {
       let _ = resetBuffer();
       let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
 
-      let edit = Edit.{
-        range: range(0, 0, 1, 0),
-        text: [||]
-      };
+      let edit = Edit.{range: range(0, 0, 1, 0), text: [||]};
 
       Buffer.applyEdits(~edits=[edit], buffer);
 
@@ -243,10 +241,7 @@ describe("Buffer", ({describe, _}) => {
       let _ = resetBuffer();
       let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
 
-      let edit = Edit.{
-        range: range(0, 0, 2, 0),
-        text: [||]
-      };
+      let edit = Edit.{range: range(0, 0, 2, 0), text: [||]};
 
       Buffer.applyEdits(~edits=[edit], buffer);
 

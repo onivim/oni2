@@ -835,6 +835,14 @@ CAMLprim value libvim_vimUndoSaveCursor(value unit) {
   CAMLreturn(Val_unit);
 }
 
+CAMLprim value libvim_vimUndoSync(value force) {
+  CAMLparam0();
+
+  vimUndoSync(Int_val(force));
+
+  CAMLreturn(Val_unit);
+}
+
 CAMLprim value libvim_vimUndoSaveRegion(value startLine, value endLine) {
   CAMLparam2(startLine, endLine);
 
