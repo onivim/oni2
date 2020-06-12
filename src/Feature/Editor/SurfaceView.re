@@ -122,6 +122,9 @@ let%component make =
     resetHoverTimer();
   };
 
+  // Usually the If hook compares a value to a prior version of itself
+  // However, here we just want to compare it to a constant value,
+  // so we discard the second argument to the function.
   let%hook () =
     Hooks.effect(
       If(
