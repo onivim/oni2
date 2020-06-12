@@ -186,7 +186,7 @@ Onivim-specific contexts:
 | | Decrease editor size right | `vim.decreaseWindowSizeRight` |
 | | Increase editor size right | `vim.increaseWindowSizeRight` |
 | Control+W, O | Maximize editor | `workbench.action.maximizeEditor` |
-| ~~Control+W, |~~ | Maximize editor horizontally | `vim.maximizeWindowWidth` |
+| ~~Control+W, \|~~ | Maximize editor horizontally | `vim.maximizeWindowWidth` |
 | ~~Control+W, _~~ | Maximize editor vertically | `vim.maximizeWindowHeight` |
 | | Toggle editor group sizes | `workbench.action.toggleEditorWidths` |
 | Control+W, = | Reset editor sizes | `workbench.action.evenEditorWidths` |
