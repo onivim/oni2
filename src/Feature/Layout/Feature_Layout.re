@@ -2,14 +2,28 @@
 
 type model = {
   tree: Layout.t(int),
-  uncommittedTree: option(Layout.t(int)),
+  uncommittedTree: [
+    | `Resizing(Layout.t(int))
+    | `Maximized(Layout.t(int))
+    | `None
+  ],
 };
 
-let initial = id => {tree: Layout.singleton(id), uncommittedTree: None};
+let initial = id => {tree: Layout.singleton(id), uncommittedTree: `None};
 
-let updateTree = (f, model) => {...model, tree: f(model.tree)};
+let activeTree = model =>
+  switch (model.uncommittedTree) {
+  | `Resizing(tree)
+  | `Maximized(tree) => tree
+  | `None => model.tree
+  };
 
-let windows = model => Layout.windows(model.tree);
+let updateTree = (f, model) => {
+  tree: f(activeTree(model)),
+  uncommittedTree: `None,
+};
+
+let windows = model => Layout.windows(activeTree(model));
 let addWindow = (direction, focus) =>
   updateTree(Layout.addWindow(direction, focus));
 let insertWindow = (target, direction, focus) =>
@@ -44,6 +58,10 @@ type command =
   | IncreaseHorizontalSize
   | DecreaseVerticalSize
   | IncreaseVerticalSize
+  | Maximize
+  | MaximizeHorizontal
+  | MaximizeVertical
+  | ToggleMaximize
   | ResetSizes;
 
 [@deriving show({with_path: false})]
@@ -61,58 +79,66 @@ type outmsg =
 
 let rotate = (direction, focus, model) => {
   ...model,
-  tree: Layout.rotate(direction, focus, model.tree),
+  tree: Layout.rotate(direction, focus, activeTree(model)),
 };
 
 let resizeWindow = (direction, focus, delta, model) => {
   ...model,
-  tree: Layout.resizeWindow(direction, focus, delta, model.tree),
+  tree: Layout.resizeWindow(direction, focus, delta, activeTree(model)),
 };
 
 let resetWeights = model => {
+  tree: Layout.resetWeights(activeTree(model)),
+  uncommittedTree: `None,
+};
+
+let maximize = (~direction=?, targetId, model) => {
   ...model,
-  tree: Layout.resetWeights(model.tree),
+  uncommittedTree:
+    `Maximized(Layout.maximize(~direction?, targetId, activeTree(model))),
 };
 
 let update = (~focus, model, msg) => {
   switch (msg) {
-  | SplitDragged({path, delta}) => (
+  | SplitDragged({path, delta}) =>
+    let model =
+      switch (model.uncommittedTree) {
+      | `Maximized(tree) => {...model, tree}
+      | `Resizing(_)
+      | `None => model
+      };
+    (
       {
         ...model,
-        uncommittedTree: Some(Layout.resizeSplit(~path, ~delta, model.tree)),
+        uncommittedTree:
+          `Resizing(Layout.resizeSplit(~path, ~delta, model.tree)),
       },
       Nothing,
-    )
+    );
 
-  | DragComplete => (
-      switch (model.uncommittedTree) {
-      | Some(tree) => {tree, uncommittedTree: None}
-      | None => model
-      },
-      Nothing,
-    )
+  | DragComplete => (updateTree(Fun.id, model), Nothing)
 
   | Command(MoveLeft) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveLeft(focus, model.tree)))
+    | Some(focus) => (model, Focus(moveLeft(focus, activeTree(model))))
     | None => (model, Nothing)
     }
 
   | Command(MoveRight) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveRight(focus, model.tree)))
+    | Some(focus) => (model, Focus(moveRight(focus, activeTree(model))))
     | None => (model, Nothing)
     }
 
   | Command(MoveUp) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveUp(focus, model.tree)))
+    | Some(focus) => (model, Focus(moveUp(focus, activeTree(model))))
     | None => (model, Nothing)
     }
 
   | Command(MoveDown) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveDown(focus, model.tree)))
+    | Some(focus) => (model, Focus(moveDown(focus, activeTree(model))))
     | None => (model, Nothing)
     }
 
@@ -185,6 +211,36 @@ let update = (~focus, model, msg) => {
       )
     | None => (model, Nothing)
     }
+
+  | Command(Maximize) =>
+    switch (focus) {
+    | Some(focus) => (maximize(focus, model), Nothing)
+    | None => (model, Nothing)
+    }
+
+  | Command(MaximizeHorizontal) =>
+    switch (focus) {
+    | Some(focus) => (
+        maximize(~direction=`Horizontal, focus, model),
+        Nothing,
+      )
+    | None => (model, Nothing)
+    }
+
+  | Command(MaximizeVertical) =>
+    switch (focus) {
+    | Some(focus) => (maximize(~direction=`Vertical, focus, model), Nothing)
+    | None => (model, Nothing)
+    }
+
+  | Command(ToggleMaximize) =>
+    let model =
+      switch (focus, model.uncommittedTree) {
+      | (_, `Maximized(_)) => {...model, uncommittedTree: `None}
+      | (Some(focus), _) => maximize(focus, model)
+      | (None, _) => model
+      };
+    (model, Nothing);
 
   | Command(ResetSizes) => (resetWeights(model), Nothing)
   };
@@ -332,7 +388,7 @@ module View = {
       let ((maybeDimensions, setDimensions), hooks) =
         Hooks.state(None, hooks);
 
-      let tree = model.uncommittedTree |> Option.value(~default=model.tree);
+      let tree = activeTree(model);
 
       let children =
         switch (maybeDimensions) {
@@ -456,6 +512,38 @@ module Commands = {
       Command(IncreaseVerticalSize),
     );
 
+  let maximize =
+    define(
+      ~category="View",
+      ~title="Maximize Editor Group",
+      "workbench.action.maximizeEditor",
+      Command(Maximize),
+    );
+
+  let maximizeHorizontal =
+    define(
+      ~category="View",
+      ~title="Maximize Editor Group Horizontally",
+      "vim.maximizeWindowWidth",
+      Command(MaximizeHorizontal),
+    );
+
+  let maximizeVertical =
+    define(
+      ~category="View",
+      ~title="Maximize Editor Group Vertically",
+      "vim.maximizeWindowHeight",
+      Command(MaximizeVertical),
+    );
+
+  let toggleMaximize =
+    define(
+      ~category="View",
+      ~title="Toggle Editor Group Sizes",
+      "workbench.action.toggleEditorWidths",
+      Command(ToggleMaximize),
+    );
+
   let resetSizes =
     define(
       ~category="View",
@@ -480,6 +568,10 @@ module Contributions = {
       decreaseHorizontalSize,
       increaseVerticalSize,
       decreaseVerticalSize,
+      maximize,
+      maximizeHorizontal,
+      maximizeVertical,
+      toggleMaximize,
       resetSizes,
     ];
 };

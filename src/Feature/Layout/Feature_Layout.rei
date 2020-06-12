@@ -62,6 +62,10 @@ module Commands: {
   let increaseVerticalSize: Command.t(msg);
   let decreaseHorizontalSize: Command.t(msg);
   let increaseHorizontalSize: Command.t(msg);
+  let maximize: Command.t(msg);
+  let maximizeHorizontal: Command.t(msg);
+  let maximizeVertical: Command.t(msg);
+  let toggleMaximize: Command.t(msg);
   let resetSizes: Command.t(msg);
 };
 
