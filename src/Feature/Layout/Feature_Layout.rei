@@ -2,6 +2,11 @@ open Oni_Core;
 
 // MODEL
 
+type panel =
+  | Left
+  | Center(int)
+  | Bottom;
+
 type model;
 
 let initial: int => model;
@@ -25,9 +30,9 @@ type msg;
 
 type outmsg =
   | Nothing
-  | Focus(int);
+  | Focus(panel);
 
-let update: (~focus: option(int), model, msg) => (model, outmsg);
+let update: (~focus: option(panel), model, msg) => (model, outmsg);
 
 // VIEW
 

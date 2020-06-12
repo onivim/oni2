@@ -1,5 +1,10 @@
 // MODEL
 
+type panel =
+  | Left
+  | Center(int)
+  | Bottom;
+
 type model = {
   tree: Layout.t(int),
   uncommittedTree: [
@@ -77,7 +82,7 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Focus(int);
+  | Focus(panel);
 
 let rotate = (direction, focus, model) => {
   ...model,
@@ -134,143 +139,227 @@ let update = (~focus, model, msg) => {
 
   | Command(MoveLeft) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveLeft(focus, activeTree(model))))
+    | Some(Center(focus)) =>
+      let newFocus = model |> activeTree |> moveLeft(focus);
+      if (newFocus == focus) {
+        (model, Focus(Left));
+      } else {
+        (model, Focus(Center(focus)));
+      };
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(MoveRight) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveRight(focus, activeTree(model))))
+    | Some(Center(focus)) =>
+      let newFocus = model |> activeTree |> moveRight(focus);
+      (model, Focus(Center(newFocus)));
+
+    | Some(Left) =>
+      let focus = model |> activeTree |> Layout.leftmost;
+      (model, Focus(Center(focus)));
+
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(MoveUp) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveUp(focus, activeTree(model))))
+    | Some(Center(focus)) =>
+      let newFocus = model |> activeTree |> moveUp(focus);
+      (model, Focus(Center(newFocus)));
+
+    | Some(Bottom) =>
+      let focus = model |> activeTree |> Layout.bottommost;
+      (model, Focus(Center(focus)));
+
+    | Some(Left)
     | None => (model, Nothing)
     }
 
   | Command(MoveDown) =>
     switch (focus) {
-    | Some(focus) => (model, Focus(moveDown(focus, activeTree(model))))
+    | Some(Center(focus)) =>
+      let newFocus = model |> activeTree |> moveDown(focus);
+      if (newFocus == focus) {
+        (model, Focus(Bottom));
+      } else {
+        (model, Focus(Center(newFocus)));
+      };
+
+    | Some(Left) => (model, Focus(Bottom))
+
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(RotateForward) =>
     switch (focus) {
-    | Some(focus) => (rotate(`Forward, focus, model), Nothing)
+    | Some(Center(focus)) => (rotate(`Forward, focus, model), Nothing)
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(RotateBackward) =>
     switch (focus) {
-    | Some(focus) => (rotate(`Backward, focus, model), Nothing)
+    | Some(Center(focus)) => (rotate(`Backward, focus, model), Nothing)
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(DecreaseSize) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         model
         |> resizeWindowByAxis(`Horizontal, focus, 0.95)
         |> resizeWindowByAxis(`Vertical, focus, 0.95),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(IncreaseSize) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         model
         |> resizeWindowByAxis(`Horizontal, focus, 1.05)
         |> resizeWindowByAxis(`Vertical, focus, 1.05),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(DecreaseHorizontalSize) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         model |> resizeWindowByAxis(`Horizontal, focus, 0.95),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(IncreaseHorizontalSize) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         model |> resizeWindowByAxis(`Horizontal, focus, 1.05),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(DecreaseVerticalSize) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         model |> resizeWindowByAxis(`Vertical, focus, 0.95),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(IncreaseVerticalSize) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         model |> resizeWindowByAxis(`Vertical, focus, 1.05),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(IncreaseWindowSize(direction)) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         model |> resizeWindowByDirection(direction, focus, 1.05),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(DecreaseWindowSize(direction)) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         model |> resizeWindowByDirection(direction, focus, 0.95),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(Maximize) =>
     switch (focus) {
-    | Some(focus) => (maximize(focus, model), Nothing)
+    | Some(Center(focus)) => (maximize(focus, model), Nothing)
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(MaximizeHorizontal) =>
     switch (focus) {
-    | Some(focus) => (
+    | Some(Center(focus)) => (
         maximize(~direction=`Horizontal, focus, model),
         Nothing,
       )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(MaximizeVertical) =>
     switch (focus) {
-    | Some(focus) => (maximize(~direction=`Vertical, focus, model), Nothing)
+    | Some(Center(focus)) => (
+        maximize(~direction=`Vertical, focus, model),
+        Nothing,
+      )
+
+    | Some(Left)
+    | Some(Bottom)
     | None => (model, Nothing)
     }
 
   | Command(ToggleMaximize) =>
     let model =
-      switch (focus, model.uncommittedTree) {
-      | (_, `Maximized(_)) => {...model, uncommittedTree: `None}
-      | (Some(focus), _) => maximize(focus, model)
-      | (None, _) => model
+      switch (model.uncommittedTree) {
+      | `Maximized(_) => {...model, uncommittedTree: `None}
+
+      | _ =>
+        switch (focus) {
+        | Some(Center(focus)) => maximize(focus, model)
+
+        | Some(Left)
+        | Some(Bottom)
+        | None => model
+        }
       };
     (model, Nothing);
 

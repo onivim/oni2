@@ -160,14 +160,26 @@ let update =
     open Feature_Layout;
 
     let focus =
-      EditorGroups.getActiveEditorGroup(state.editorGroups)
-      |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+      switch (FocusManager.current(state)) {
+      | Editor
+      | Terminal(_) =>
+        EditorGroups.getActiveEditorGroup(state.editorGroups)
+        |> Option.map((group: EditorGroup.t) => Center(group.editorGroupId))
+
+      | FileExplorer
+      | SCM => Some(Left)
+
+      | Search => Some(Bottom)
+
+      | _ => None
+      };
     let (model, maybeOutmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 
     let state =
       switch (maybeOutmsg) {
-      | Focus(editorGroupId) => {
+      | Focus(Center(editorGroupId)) =>
+        {
           ...state,
           editorGroups:
             EditorGroups.setActiveEditorGroup(
@@ -175,6 +187,13 @@ let update =
               state.editorGroups,
             ),
         }
+        |> FocusManager.push(Editor)
+
+      | Focus(Left) =>
+        state.sideBar.isOpen ? SideBarReducer.focus(state) : state
+
+      | Focus(Bottom) => state.pane.isOpen ? PaneStore.focus(state) : state
+
       | Nothing => state
       };
     (state, Effect.none);
