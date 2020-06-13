@@ -19,21 +19,21 @@ let basicColorizer =
 
 let backgroundColor = Colors.black;
 let basicTokens = [
-  ColorizedToken.create(
+  ThemeToken.create(
     ~index=1,
     ~backgroundColor,
     ~foregroundColor=Colors.green,
     ~syntaxScope=SyntaxScope.none,
     (),
   ),
-  ColorizedToken.create(
+  ThemeToken.create(
     ~index=5,
     ~backgroundColor,
     ~foregroundColor=Colors.red,
     ~syntaxScope=SyntaxScope.none,
     (),
   ),
-  ColorizedToken.create(
+  ThemeToken.create(
     ~index=10,
     ~backgroundColor,
     ~foregroundColor=Colors.blue,
