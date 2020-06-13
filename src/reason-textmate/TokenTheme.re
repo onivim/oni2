@@ -109,14 +109,6 @@ let of_yojson = (~defaultBackground, ~defaultForeground, json: Yojson.Safe.t) =>
         | _ => None
         };
 
-      let boo = v =>
-        switch (v) {
-        | `Bool(s) => Some(s)
-        | _ => None
-        };
-
-      print_endline(json |> Yojson.Safe.to_string);
-
       let fontStyle = fs =>
         Yojson.Safe.Util.member("fontStyle", json)
         |> str
