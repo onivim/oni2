@@ -171,7 +171,8 @@ let start =
   let _: unit => unit =
     Vim.onEffect(
       fun
-      | Goto(gotoType) => handleGoto(gotoType),
+      | Goto(gotoType) => handleGoto(gotoType)
+      | Format(_) => Log.debug("Format provider not hooked up yet"),
     );
 
   let _: unit => unit =
