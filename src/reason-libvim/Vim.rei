@@ -182,15 +182,21 @@ module Buffer: {
 };
 
 module Goto: {
-  type t =
+  type effect =
     | Definition
     | Declaration
     | Hover;
 };
 
+module Format: {
+  type effect =
+  | Buffer({ bufferId: int, adjustCursor: bool})
+}
+
 module Effect: {
   type t =
-    | Goto(Goto.t);
+    | Goto(Goto.effect)
+    | Format(Format.effect);
 };
 
 /**

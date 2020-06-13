@@ -13,6 +13,7 @@ module Context = Context;
 module Cursor = Cursor;
 module Effect = Effect;
 module Event = Event;
+module Format = Format;
 module Goto = Goto;
 module Mode = Mode;
 module Options = Options;
@@ -247,6 +248,10 @@ let _clipboardGet = (regname: int) => {
   };
 };
 
+let _onFormat = formatRequest => {
+    queue(() => Event.dispatch(Effect.Format(formatRequest), Listeners.effect));
+};
+
 let _onGoto = (_line: int, _column: int, gotoType: Goto.t) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
@@ -264,6 +269,7 @@ let init = () => {
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
+  Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);

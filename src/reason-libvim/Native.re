@@ -1,6 +1,13 @@
 type buffer = Types.buffer;
 type lineEnding = Types.lineEnding;
 
+type formatRequest = {
+  bufferId: int,
+  startLine: int,
+  endLine: int,
+  returnCursor: int,
+};
+
 external vimInit: unit => unit = "libvim_vimInit";
 external vimInput: string => unit = "libvim_vimInput";
 external vimCommand: string => unit = "libvim_vimCommand";
