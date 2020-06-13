@@ -49,7 +49,7 @@ let setFocus = (maybePath, state) =>
 let setScrollOffset = (scrollOffset, state) =>
   updateFileExplorer(s => {...s, scrollOffset}, state);
 
-let revealPath = (path, state: State.t) => {
+let revealAndFocusPath = (path, state: State.t) => {
   switch (state.fileExplorer.tree) {
   | Some(tree) =>
     switch (FsTreeNode.findNodesByPath(path, tree)) {
@@ -80,7 +80,10 @@ let revealPath = (path, state: State.t) => {
         };
 
       (
-        state |> setTree(tree) |> setScrollOffset(offset),
+        state
+        |> setFocus(Some(path))
+        |> setTree(tree)
+        |> setScrollOffset(offset),
         Isolinear.Effect.none,
       );
     }
@@ -148,7 +151,7 @@ let start = () => {
     | FocusNodeLoaded(node) =>
       switch (state.fileExplorer.active) {
       | Some(activePath) =>
-        state |> replaceNode(node) |> revealPath(activePath)
+        state |> replaceNode(node) |> revealAndFocusPath(activePath)
 
       | None => (state, Isolinear.Effect.none)
       }
@@ -221,7 +224,7 @@ let start = () => {
       | {active, _} when active != filePath =>
         let state = setActive(filePath, state);
         switch (filePath) {
-        | Some(path) => revealPath(path, state)
+        | Some(path) => revealAndFocusPath(path, state)
         | None => (state, Isolinear.Effect.none)
         };
 
