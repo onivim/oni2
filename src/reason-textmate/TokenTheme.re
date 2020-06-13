@@ -109,17 +109,16 @@ let of_yojson = (~defaultBackground, ~defaultForeground, json: Yojson.Safe.t) =>
         | _ => None
         };
 
-      let boo = v =>
-        switch (v) {
-        | `Bool(s) => Some(s)
-        | _ => None
-        };
+      let fontStyle = fs =>
+        Yojson.Safe.Util.member("fontStyle", json)
+        |> str
+        |> Option.map(s => s == fs);
 
       TokenStyle.create(
         ~foreground=str(Yojson.Safe.Util.member("foreground", json)),
         ~background=str(Yojson.Safe.Util.member("background", json)),
-        ~bold=boo(Yojson.Safe.Util.member("bold", json)),
-        ~italic=boo(Yojson.Safe.Util.member("italic", json)),
+        ~bold=fontStyle("bold"),
+        ~italic=fontStyle("italic"),
         (),
       );
     };

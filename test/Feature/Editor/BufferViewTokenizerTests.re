@@ -6,16 +6,33 @@ open TestFramework;
 open Helpers;
 
 module BufferViewTokenizer = Feature_Editor.BufferViewTokenizer;
+module BufferLineColorizer = Feature_Editor.BufferLineColorizer;
 
 let indentation = IndentationSettings.default;
 
-let basicColorizer = _ => (Colors.black, Colors.white);
+let basicColorizer = _ =>
+  BufferLineColorizer.{
+    color: Colors.black,
+    backgroundColor: Colors.white,
+    bold: false,
+    italic: false,
+  };
 
 let splitColorizer = (split, idx) =>
   if (idx < split) {
-    (Colors.red, Colors.red);
+    BufferLineColorizer.{
+      color: Colors.red,
+      backgroundColor: Colors.red,
+      bold: false,
+      italic: false,
+    };
   } else {
-    (Colors.green, Colors.green);
+    BufferLineColorizer.{
+      color: Colors.green,
+      backgroundColor: Colors.green,
+      bold: false,
+      italic: false,
+    };
   };
 
 let makeLine = str => BufferLine.make(~indentation, str);
@@ -48,6 +65,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(5),
         color: Colors.red,
         backgroundColor: Colors.red,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Whitespace,
@@ -56,6 +75,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(6),
         color: Colors.green,
         backgroundColor: Colors.green,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Text,
@@ -64,6 +85,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(9),
         color: Colors.green,
         backgroundColor: Colors.green,
+        bold: false,
+        italic: false,
       },
     ];
     validateTokens(expect, result, expectedTokens);
@@ -88,6 +111,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
           endPosition: Index.fromZeroBased(4),
           color: Colors.red,
           backgroundColor: Colors.red,
+          bold: false,
+          italic: false,
         },
         {
           tokenType: Text,
@@ -96,6 +121,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
           endPosition: Index.fromZeroBased(7),
           color: Colors.red,
           backgroundColor: Colors.white,
+          bold: false,
+          italic: false,
         },
       ];
 
@@ -129,6 +156,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(8),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
     ];
 
@@ -151,6 +180,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(2),
         color: Colors.red,
         backgroundColor: Colors.red,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Text,
@@ -159,6 +190,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(10),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Whitespace,
@@ -167,6 +200,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(12),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
     ];
 
@@ -189,6 +224,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(1),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
     ];
 
@@ -197,7 +234,19 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   test("respects tokenColor breaks", ({expect, _}) => {
     let differentColorTokenizer = i =>
-      i > 0 ? (Colors.green, Colors.yellow) : (Colors.black, Colors.white);
+      i > 0
+        ? BufferLineColorizer.{
+            color: Colors.green,
+            backgroundColor: Colors.yellow,
+            bold: false,
+            italic: false,
+          }
+        : BufferLineColorizer.{
+            color: Colors.black,
+            backgroundColor: Colors.white,
+            bold: false,
+            italic: false,
+          };
 
     let result =
       BufferViewTokenizer.tokenize(
@@ -214,6 +263,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(1),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Text,
@@ -222,6 +273,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(2),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
     ];
 
@@ -244,6 +297,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(1),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Text,
@@ -252,6 +307,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(2),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Whitespace,
@@ -260,6 +317,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(3),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Text,
@@ -268,6 +327,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(8),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
       {
         tokenType: Whitespace,
@@ -276,6 +337,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         endPosition: Index.fromZeroBased(9),
         color: Colors.red,
         backgroundColor: Colors.white,
+        bold: false,
+        italic: false,
       },
     ];
 

@@ -24,6 +24,7 @@ let loadAndValidateEditorFont =
     (
       ~requestId: int,
       ~smoothing: Revery.Font.Smoothing.t,
+      ~fontFamily: Revery_Font.Family.t,
       fullPath,
       fontSize: float,
     ) => {
@@ -57,7 +58,7 @@ let loadAndValidateEditorFont =
               requestId,
               {
                 fontFile: fullPath,
-                fontFamily: Revery.Font.Family.fromFile(fullPath),
+                fontFamily,
                 fontSize,
                 font,
                 measuredWidth,

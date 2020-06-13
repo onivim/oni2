@@ -104,7 +104,7 @@ type outmsg =
 
 type t = {
   maybeSyntaxClient: option(Oni_Syntax_Client.t),
-  highlights: BufferMap.t(LineMap.t(list(ColorizedToken.t))),
+  highlights: BufferMap.t(LineMap.t(list(ThemeToken.t))),
   ignoredBuffers: BufferMap.t(bool),
 };
 
@@ -130,7 +130,7 @@ let getSyntaxScope =
   let tokens = getTokens(~bufferId, ~line, bufferHighlights);
 
   let rec loop = (syntaxScope, currentTokens) => {
-    ColorizedToken.(
+    ThemeToken.(
       switch (currentTokens) {
       // Reached the end... return what we have
       | [] => syntaxScope
@@ -154,10 +154,10 @@ let setTokensForLine =
     (
       ~bufferId: int,
       ~line: int,
-      ~tokens: list(ColorizedToken.t),
+      ~tokens: list(ThemeToken.t),
       {highlights, ignoredBuffers, _} as prev: t,
     ) => {
-  let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {
+  let updateLineMap = (lineMap: LineMap.t(list(ThemeToken.t))) => {
     LineMap.update(line, _ => Some(tokens), lineMap);
   };
 

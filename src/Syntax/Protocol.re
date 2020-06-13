@@ -20,7 +20,7 @@ let pidToNamedPipe = pid => {
 module TokenUpdate = {
   type t = {
     line: int,
-    tokenColors: list(ColorizedToken.t),
+    tokenColors: list(ThemeToken.t),
   };
 
   let show = tokenUpdate => {
