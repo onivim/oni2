@@ -5,6 +5,13 @@
 open Oni_Model;
 open Actions;
 
+let focus = (state: State.t) =>
+  if (state.pane.isOpen && state.pane.selected == Search) {
+    FocusManager.push(Search, state);
+  } else {
+    state;
+  };
+
 let showSearchPane = (state: State.t) =>
   {
     ...state,

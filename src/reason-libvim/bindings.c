@@ -98,6 +98,42 @@ void onDirectoryChanged(char_u *path) {
   CAMLreturn0;
 }
 
+void onFormat(formatRequest_T *pRequest) {
+  CAMLparam0();
+  CAMLlocal3(ret, commandString, commandOpt);
+
+  static const value *lv_onFormat = NULL;
+  if (lv_onFormat == NULL) {
+    lv_onFormat = caml_named_value("lv_onFormat");
+  }
+
+  if (pRequest->cmd != NULL) {
+    commandString = caml_copy_string(pRequest->cmd);
+    commandOpt = Val_some(commandString);
+  } else {
+    commandOpt = Val_none;
+  }
+
+  int id = vimBufferGetId(pRequest->buf);
+  int lineCount = vimBufferGetLineCount(pRequest->buf);
+  int formatType = 0;
+
+  if (pRequest->formatType == FORMATTING) {
+    formatType = 1;
+  }
+
+  ret = caml_alloc(6, 0);
+  Store_field(ret, 0, Val_int(pRequest->start.lnum));
+  Store_field(ret, 1, Val_int(pRequest->end.lnum));
+  Store_field(ret, 2, Val_int(id));
+  Store_field(ret, 3, Val_int(pRequest->returnCursor));
+  Store_field(ret, 4, Val_int(formatType));
+  Store_field(ret, 5, Val_int(lineCount));
+
+  caml_callback(*lv_onFormat, ret);
+  CAMLreturn0;
+}
+
 void onMessage(char_u *title, char_u *contents, msgPriority_T priority) {
   CAMLparam0();
   CAMLlocal2(titleString, contentsString);
@@ -344,6 +380,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetDirectoryChangedCallback(&onDirectoryChanged);
   vimSetDisplayIntroCallback(&onIntro);
   vimSetDisplayVersionCallback(&onVersion);
+  vimSetFormatCallback(&onFormat);
   vimSetGotoCallback(&onGoto);
   vimSetMessageCallback(&onMessage);
   vimSetQuitCallback(&onQuit);
