@@ -64,7 +64,7 @@ open CustomDecoders;
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
 let fontFamily =
-  setting("editor.fontFamily", string, ~default="FiraCode-Regular.ttf");
+  setting("editor.fontFamily", string, ~default="JetBrainsMono-Regular.ttf");
 let fontSize = setting("editor.fontSize", int, ~default=14);
 let largeFileOptimization =
   setting("editor.largeFileOptimizations", bool, ~default=true);

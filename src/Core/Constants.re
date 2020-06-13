@@ -7,8 +7,16 @@
 
 let minimumFontSize = 6.;
 let defaultFontSize = 14.;
-let defaultFontFile = "FiraCode-Regular.ttf";
-let defaultFontFamily = Revery.Font.Family.fromFile(defaultFontFile);
+let defaultFontFile = "JetBrainsMono-Regular.ttf";
+let defaultFontFamily =
+  Revery.Font.Family.fromFiles((~weight, ~italic, ~mono as _) => {
+    switch (weight, italic) {
+    | (Revery.Font.Weight.Bold, true) => "JetBrainsMono-Bold-Italic.ttf"
+    | (Revery.Font.Weight.Bold, false) => "JetBrainsMono-Bold.ttf"
+    | (Revery.Font.Weight.Normal, true) => "JetBrainsMono-Italic.ttf"
+    | _ => defaultFontFile
+    }
+  });
 let defaultTerminalFontSize = 12.;
 
 let syntaxEagerMaxLines = 500;
