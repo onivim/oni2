@@ -1,11 +1,16 @@
 type buffer = Types.buffer;
 type lineEnding = Types.lineEnding;
 
+type formatType =
+  | Indentation
+  | Formatting;
+
 type formatRequest = {
-  bufferId: int,
   startLine: int,
   endLine: int,
+  bufferId: int,
   returnCursor: int,
+  formatType,
 };
 
 external vimInit: unit => unit = "libvim_vimInit";

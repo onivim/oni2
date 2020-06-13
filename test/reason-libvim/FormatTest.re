@@ -12,16 +12,76 @@ describe("Format", ({test, _}) => {
 
     let effects = ref([]);
 
-    let dispose = onEffect(gotoType => updates := [gotoType, ...updates^]);
+    let dispose = onEffect(eff => effects := [eff, ...effects^]);
 
-    input("gg=G");
-    let formatEffect = List.hd(updates^);
+    input("gg");
+    input("=");
+    input("G");
+    let formatEffect = List.hd(effects^);
 
     expect.int(List.length(effects^)).toBe(1);
-    expect.equal(formateffect, Effect.Format(Buffer({
-      bufferId,
-      returnCursor: false,
-    });
+    expect.equal(
+      formatEffect,
+      Effect.Format(
+        Buffer({
+          formatType: Format.Indentation,
+          bufferId,
+          adjustCursor: false,
+        }),
+      ),
+    );
+
+    dispose();
+  });
+  test("gggqG", ({expect, _}) => {
+    let _ = resetBuffer();
+
+    let bufferId = Vim.Buffer.(getCurrent() |> getId);
+
+    let effects = ref([]);
+
+    let dispose = onEffect(eff => effects := [eff, ...effects^]);
+
+    input("gg");
+    input("gq");
+    input("G");
+    let formatEffect = List.hd(effects^);
+
+    expect.int(List.length(effects^)).toBe(1);
+    expect.equal(
+      formatEffect,
+      Effect.Format(
+        Buffer({
+          formatType: Format.Formatting,
+          bufferId,
+          adjustCursor: false,
+        }),
+      ),
+    );
+
+    dispose();
+  });
+  test("gggwG", ({expect, _}) => {
+    let _ = resetBuffer();
+
+    let bufferId = Vim.Buffer.(getCurrent() |> getId);
+
+    let effects = ref([]);
+
+    let dispose = onEffect(eff => effects := [eff, ...effects^]);
+
+    input("gg");
+    input("gw");
+    input("G");
+    let formatEffect = List.hd(effects^);
+
+    expect.int(List.length(effects^)).toBe(1);
+    expect.equal(
+      formatEffect,
+      Effect.Format(
+        Buffer({formatType: Format.Formatting, bufferId, adjustCursor: true}),
+      ),
+    );
 
     dispose();
   });

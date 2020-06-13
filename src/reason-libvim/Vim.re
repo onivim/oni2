@@ -248,13 +248,27 @@ let _clipboardGet = (regname: int) => {
   };
 };
 
+let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
+  ({bufferId, startLine, endLine, returnCursor, formatType}) => {
+    let adjustCursor = returnCursor == 0 ? false : true;
+    let formatType =
+      switch (formatType) {
+      | Native.Indentation => Format.Indentation
+      | Native.Formatting => Format.Formatting
+      };
+    Format.Buffer({formatType, bufferId, adjustCursor});
+  };
+
 let _onFormat = formatRequest => {
   queue(() =>
-    Event.dispatch(Effect.Format(formatRequest), Listeners.effect)
+    Event.dispatch(
+      Effect.Format(formatRequest |> nativeFormatRequestToEffect),
+      Listeners.effect,
+    )
   );
 };
 
-let _onGoto = (_line: int, _column: int, gotoType: Goto.t) => {
+let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
 

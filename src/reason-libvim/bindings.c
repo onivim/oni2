@@ -115,13 +115,20 @@ void onFormat(formatRequest_T *pRequest) {
   }
 
   int id = vimBufferGetId(pRequest->buf);
+  int formatType = 0;
 
-  ret = caml_alloc(4, 0);
+  if (pRequest->formatType == FORMATTING) {
+    formatType = 1;
+  }
+
+  ret = caml_alloc(5, 0);
   Store_field(ret, 0, Val_int(pRequest->start.lnum));
-  Store_field(ret, 1, Val_int(pRequest->end.lnum))
-  Store_field(ret, 2, Val_int(id))
+  Store_field(ret, 1, Val_int(pRequest->end.lnum));
+  Store_field(ret, 2, Val_int(id));
   Store_field(ret, 3, Val_int(pRequest->returnCursor));
+  Store_field(ret, 4, Val_int(formatType));
 
+  caml_callback(*lv_onFormat, ret);
   CAMLreturn0;
 }
 
