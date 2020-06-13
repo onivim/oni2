@@ -190,8 +190,11 @@ module Goto: {
 
 module Format: {
   type effect =
-  | Buffer({ bufferId: int, adjustCursor: bool})
-}
+    | Buffer({
+        bufferId: int,
+        adjustCursor: bool,
+      });
+};
 
 module Effect: {
   type t =

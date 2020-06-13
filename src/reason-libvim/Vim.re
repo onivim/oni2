@@ -249,7 +249,9 @@ let _clipboardGet = (regname: int) => {
 };
 
 let _onFormat = formatRequest => {
-    queue(() => Event.dispatch(Effect.Format(formatRequest), Listeners.effect));
+  queue(() =>
+    Event.dispatch(Effect.Format(formatRequest), Listeners.effect)
+  );
 };
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.t) => {
