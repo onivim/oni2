@@ -9,7 +9,7 @@ open Oni_Core;
 /*
  * Type [tokenTheme] is a record containing theme information
  */
-type tokenTheme = {
+type themedToken = {
   color: Color.t,
   backgroundColor: Color.t,
   italic: bool,
@@ -20,7 +20,7 @@ type tokenTheme = {
  * Type [t] is a function of [(int) => tokenTheme)].
  *
  */
-type t = int => tokenTheme;
+type t = int => themedToken;
 
 /*
  * [create] takes information about the line, like

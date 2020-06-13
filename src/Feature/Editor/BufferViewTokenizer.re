@@ -39,7 +39,7 @@ let filterRuns = (r: Tokenizer.TextRun.t) => ZedBundled.length(r.text) != 0;
 
 let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
   //let startIndex = Index.toZeroBased(r.startIndex);
-  let {color, backgroundColor, bold, italic}: BufferLineColorizer.tokenTheme =
+  let {color, backgroundColor, bold, italic}: BufferLineColorizer.themedToken =
     colorizer(r.startByte);
 
   let firstChar = ZedBundled.get(r.text, 0);
@@ -83,7 +83,7 @@ let tokenize =
       ~startIndex=0,
       ~endIndex,
       line,
-      colorizer: int => BufferLineColorizer.tokenTheme,
+      colorizer: int => BufferLineColorizer.themedToken,
     ) => {
   let split =
       (
@@ -94,9 +94,9 @@ let tokenize =
         ~byte1 as b1,
         ~char1 as c1,
       ) => {
-    let {backgroundColor: bg0, color: fg0, _}: BufferLineColorizer.tokenTheme =
+    let {backgroundColor: bg0, color: fg0, _}: BufferLineColorizer.themedToken =
       colorizer(b0);
-    let {backgroundColor: bg1, color: fg1, _}: BufferLineColorizer.tokenTheme =
+    let {backgroundColor: bg1, color: fg1, _}: BufferLineColorizer.themedToken =
       colorizer(b1);
 
     !Color.equals(bg0, bg1)
