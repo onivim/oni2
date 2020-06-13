@@ -1,2 +1,3 @@
 type t =
-  | Goto(Goto.t);
+  | Goto(Goto.effect)
+  | Format(Format.effect);

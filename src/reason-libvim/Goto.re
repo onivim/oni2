@@ -1,4 +1,4 @@
-type t =
+type effect =
   | Definition
   | Declaration
   | Hover;
