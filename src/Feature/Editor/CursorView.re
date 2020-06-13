@@ -161,12 +161,11 @@ let%component make =
             ()
           | text =>
             let font =
-              Revery.Font.Family.resolve(
+              Service_Font.resolveWithFallback(
                 ~italic=false,
                 Revery.Font.Weight.Normal,
                 context.fontFamily,
-              )
-              |> Stdlib.Result.get_ok;
+              );
             let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
             Draw.shapedText(
               ~context,

@@ -91,12 +91,11 @@ let drawShapedText = {
 
   (~context, ~x, ~y, ~color, ~bold, ~italic, text) => {
     let font =
-      Revery.Font.Family.resolve(
+      Service_Font.resolveWithFallback(
         ~italic,
         bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
         context.fontFamily,
-      )
-      |> Stdlib.Result.get_ok;
+      );
     let text = Revery.Font.(shape(font, text) |> ShapeResult.getGlyphString);
 
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
@@ -117,12 +116,11 @@ let drawUtf8Text = {
 
   (~context, ~x, ~y, ~color, ~bold, ~italic, text) => {
     let font =
-      Revery.Font.Family.resolve(
+      Service_Font.resolveWithFallback(
         ~italic,
         bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
         context.fontFamily,
-      )
-      |> Stdlib.Result.get_ok;
+      );
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
     Skia.Paint.setTextSize(paint, context.fontSize);
     Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(font));
@@ -220,12 +218,11 @@ let range =
 let token =
     (~context, ~offsetY, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
   let font =
-    Revery.Font.Family.resolve(
+    Service_Font.resolveWithFallback(
       ~italic=token.italic,
       token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
       context.fontFamily,
-    )
-    |> Stdlib.Result.get_ok;
+    );
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
   let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
   let y = offsetY -. fontMetrics.ascent;
