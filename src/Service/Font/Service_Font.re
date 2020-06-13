@@ -37,6 +37,20 @@ type msg =
   | FontLoaded(font)
   | FontLoadError(string);
 
+let resolveWithFallback = (~mono=false, ~italic=false, weight, family) =>
+  switch (Revery_Font.Family.resolve(~italic, ~mono, weight, family)) {
+  | Ok(font) => font
+  | Error(str) =>
+    Log.warnf(m => m("Unable to resolve font: %s", str));
+    Revery_Font.Family.resolve(
+      ~italic,
+      ~mono,
+      weight,
+      Constants.defaultFontFamily,
+    )
+    |> Result.get_ok;
+  };
+
 let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
   let dispatch = action => Revery.App.runOnMainThread(() => dispatch(action));
 
