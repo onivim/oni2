@@ -144,7 +144,7 @@ let update = (~focus, model, msg) => {
       if (newFocus == focus) {
         (model, Focus(Left));
       } else {
-        (model, Focus(Center(focus)));
+        (model, Focus(Center(newFocus)));
       };
 
     | Some(Left)
