@@ -4,7 +4,7 @@ type t = {
   foregroundColor: Revery.Color.t,
   syntaxScope: SyntaxScope.t,
   bold: bool,
-  italicized: bool,
+  italic: bool,
 };
 
 let create =
@@ -13,7 +13,7 @@ let create =
       ~backgroundColor,
       ~foregroundColor,
       ~syntaxScope,
-      ~italicized=false,
+      ~italic=false,
       ~bold=false,
       (),
     ) => {
@@ -22,20 +22,20 @@ let create =
   foregroundColor,
   syntaxScope,
   bold,
-  italicized,
+  italic,
 };
 
 let toString =
     (
-      {index, backgroundColor, foregroundColor, syntaxScope, bold, italicized},
+      {index, backgroundColor, foregroundColor, syntaxScope, bold, italic},
     ) => {
   Printf.sprintf(
-    "ColorizedToken - index: %d foreground: %s background: %s scope: %s bold: %b italicized: %b",
+    "ColorizedToken - index: %d foreground: %s background: %s scope: %s bold: %b italic: %b",
     index,
     backgroundColor |> Revery.Color.toString,
     foregroundColor |> Revery.Color.toString,
     syntaxScope |> SyntaxScope.toString,
     bold,
-    italicized,
+    italic,
   );
 };
