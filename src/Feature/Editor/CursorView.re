@@ -160,13 +160,23 @@ let%component make =
               when BufferViewTokenizer.isWhitespace(ZedBundled.get(text, 0)) =>
             ()
           | text =>
+            let font =
+              Revery.Font.Family.resolve(
+                ~italic=false,
+                Revery.Font.Weight.Normal,
+                context.fontFamily,
+              )
+              |> Stdlib.Result.get_ok;
+            let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
             Draw.shapedText(
               ~context,
               ~x=x -. 0.5,
-              ~y=y -. context.fontMetrics.ascent -. 0.5,
+              ~y=y -. fontMetrics.ascent -. 0.5,
+              ~bold=false,
+              ~italic=false,
               ~color=background |> Revery.Color.multiplyAlpha(textOpacity),
               text,
-            )
+            );
           };
         };
       };

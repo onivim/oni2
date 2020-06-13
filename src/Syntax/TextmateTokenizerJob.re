@@ -159,6 +159,8 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
              ~backgroundColor=Internal.hexToColor(resolvedColor.background),
              ~foregroundColor=Internal.hexToColor(resolvedColor.foreground),
              ~syntaxScope=SyntaxScope.ofScopes(scopes),
+             ~italic=resolvedColor.italic,
+             ~bold=resolvedColor.bold,
              (),
            );
          });

@@ -380,7 +380,7 @@ let addHighlightForCell =
       ~theme,
       cell,
     );
-  
+
   // TODO: Hook up the bold/italic in revery-terminal
   let newToken =
     ThemeToken.{
@@ -389,7 +389,7 @@ let addHighlightForCell =
       foregroundColor: fg,
       syntaxScope: SyntaxScope.none,
       bold: false,
-      italic: false
+      italic: false,
     };
 
   switch (tokens) {

@@ -26,9 +26,7 @@ let create =
 };
 
 let toString =
-    (
-      {index, backgroundColor, foregroundColor, syntaxScope, bold, italic},
-    ) => {
+    ({index, backgroundColor, foregroundColor, syntaxScope, bold, italic}) => {
   Printf.sprintf(
     "ColorizedToken - index: %d foreground: %s background: %s scope: %s bold: %b italic: %b",
     index,

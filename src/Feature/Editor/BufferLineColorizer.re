@@ -7,8 +7,13 @@ open Revery;
 
 open Oni_Core;
 
-type tokenColor = (Color.t, Color.t);
-type t = int => tokenColor;
+type tokenTheme = {
+  color: Color.t,
+  backgroundColor: Color.t,
+  italic: bool,
+  bold: bool,
+};
+type t = int => tokenTheme;
 
 let create =
     (
@@ -21,7 +26,7 @@ let create =
       ~matchingPair: option(int),
       ~searchHighlights: list(Range.t),
       ~searchHighlightColor: Color.t,
-      tokenColors: list(ThemeToken.t),
+      tokenThemes: list(ThemeToken.t),
     ) => {
   let defaultToken2 =
     ThemeToken.create(
@@ -34,7 +39,7 @@ let create =
 
   let length = max(endByte - startByte, 1);
 
-  let tokenColorArray: array(ThemeToken.t) =
+  let tokenThemeArray: array(ThemeToken.t) =
     Array.make(length, defaultToken2);
 
   let rec f = (tokens: list(ThemeToken.t), start) =>
@@ -46,7 +51,7 @@ let create =
       let pos = ref(start);
 
       while (pos^ >= adjIndex && pos^ >= 0 && pos^ < length) {
-        tokenColorArray[pos^] = hd;
+        tokenThemeArray[pos^] = hd;
         decr(pos);
       };
       if (hd.index < startByte) {
@@ -65,18 +70,18 @@ let create =
     | None => ((-1), (-1))
     };
 
-  let tokenColors = List.rev(tokenColors);
+  let tokenThemes = List.rev(tokenThemes);
 
-  f(tokenColors, length - 1);
+  f(tokenThemes, length - 1);
 
   i => {
     let colorIndex =
       if (i < startByte) {
-        tokenColorArray[0];
+        tokenThemeArray[0];
       } else if (i >= endByte) {
-        tokenColorArray[Array.length(tokenColorArray) - 1];
+        tokenThemeArray[Array.length(tokenThemeArray) - 1];
       } else {
-        tokenColorArray[i - startByte];
+        tokenThemeArray[i - startByte];
       };
 
     let matchingPair =
@@ -101,6 +106,11 @@ let create =
       isSearchHighlight ? searchHighlightColor : backgroundColor;
 
     let color = colorIndex.foregroundColor;
-    (backgroundColor, color);
+    {
+      backgroundColor,
+      color,
+      bold: colorIndex.bold,
+      italic: colorIndex.italic,
+    };
   };
 };

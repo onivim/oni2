@@ -19,8 +19,16 @@ let renderLineNumber =
       cursorLine: int,
       yOffset: float,
     ) => {
+  let font =
+    Revery.Font.Family.resolve(
+      ~italic=false,
+      Revery.Font.Weight.Normal,
+      context.fontFamily,
+    )
+    |> Stdlib.Result.get_ok;
+  let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
   let isActiveLine = lineNumber == cursorLine;
-  let y = yOffset -. context.fontMetrics.ascent;
+  let y = yOffset -. fontMetrics.ascent;
 
   let lineNumber =
     string_of_int(
@@ -45,7 +53,15 @@ let renderLineNumber =
     isActiveLine
       ? colors.lineNumberActiveForeground : colors.lineNumberForeground;
 
-  Draw.utf8Text(~context, ~x=lineNumberXOffset, ~y, ~color, lineNumber);
+  Draw.utf8Text(
+    ~context,
+    ~x=lineNumberXOffset,
+    ~y,
+    ~color,
+    ~bold=false,
+    ~italic=false,
+    lineNumber,
+  );
 };
 
 let renderLineNumbers =

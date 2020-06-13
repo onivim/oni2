@@ -19,6 +19,8 @@ type t = {
   endPosition: Index.t,
   color: Color.t,
   backgroundColor: Color.t,
+  bold: bool,
+  italic: bool,
 };
 
 let space = Uchar.of_char(' ');
@@ -37,7 +39,8 @@ let filterRuns = (r: Tokenizer.TextRun.t) => ZedBundled.length(r.text) != 0;
 
 let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
   //let startIndex = Index.toZeroBased(r.startIndex);
-  let (backgroundColor, color) = colorizer(r.startByte);
+  let {color, backgroundColor, bold, italic}: BufferLineColorizer.tokenTheme =
+    colorizer(r.startByte);
 
   let firstChar = ZedBundled.get(r.text, 0);
 
@@ -57,6 +60,8 @@ let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
     endPosition: r.endPosition,
     color,
     backgroundColor,
+    bold,
+    italic,
   };
 };
 
@@ -73,7 +78,13 @@ let getCharacterPositionAndWidth = (~viewOffset: int=0, line: BufferLine.t, i) =
   (actualOffset, width);
 };
 
-let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {
+let tokenize =
+    (
+      ~startIndex=0,
+      ~endIndex,
+      line,
+      colorizer: int => BufferLineColorizer.tokenTheme,
+    ) => {
   let split =
       (
         ~index0 as _,
@@ -83,8 +94,10 @@ let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {
         ~byte1 as b1,
         ~char1 as c1,
       ) => {
-    let (bg0, fg0) = colorizer(b0);
-    let (bg1, fg1) = colorizer(b1);
+    let {backgroundColor: bg0, color: fg0, _}: BufferLineColorizer.tokenTheme =
+      colorizer(b0);
+    let {backgroundColor: bg1, color: fg1, _}: BufferLineColorizer.tokenTheme =
+      colorizer(b1);
 
     !Color.equals(bg0, bg1)
     || !Color.equals(fg0, fg1)
