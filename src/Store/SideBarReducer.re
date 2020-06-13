@@ -6,6 +6,17 @@ open Oni_Core;
 open Oni_Model;
 open Actions;
 
+let focus = (state: State.t) =>
+  if (state.sideBar.isOpen) {
+    switch (state.sideBar.selected) {
+    | FileExplorer => FocusManager.push(FileExplorer, state)
+    | SCM => FocusManager.push(SCM, state)
+    | _ => state
+    };
+  } else {
+    state;
+  };
+
 let reduce = (~zenMode, state: SideBar.t, action: Actions.t) => {
   switch (action) {
   // When we're in Zen mode, we ignore toggling, and exit zen mode
