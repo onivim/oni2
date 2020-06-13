@@ -80,6 +80,7 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
         FontLoader.loadAndValidateEditorFont(
           ~requestId=req,
           ~smoothing,
+          ~familyName=fontFamily,
           fullPath,
           fontSize,
         );
