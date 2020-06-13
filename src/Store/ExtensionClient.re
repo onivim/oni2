@@ -287,6 +287,11 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ) =>
       withClient(onRegisterSuggestProvider(handle, selector));
       Lwt.return(Reply.okEmpty);
+    | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
+      dispatch(
+        Actions.Hover(Feature_Hover.ProviderRegistered({handle, selector})),
+      );
+      Lwt.return(Reply.okEmpty);
 
     | Diagnostics(Clear({owner})) =>
       dispatch(Actions.DiagnosticsClear(owner));

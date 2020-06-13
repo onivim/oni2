@@ -301,7 +301,15 @@ let update =
       effects
       |> List.map(
            fun
-           | Feature_Editor.Nothing => Effect.none,
+           | Feature_Editor.Nothing => Effect.none
+           | Feature_Editor.MouseHovered(location) =>
+             Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
+               dispatch(Hover(Feature_Hover.MouseHovered(location)))
+             })
+           | Feature_Editor.MouseMoved(location) =>
+             Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
+               dispatch(Hover(Feature_Hover.MouseMoved(location)))
+             }),
          )
       |> Isolinear.Effect.batch;
 
@@ -330,6 +338,25 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Hover(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (model', eff) =
+      Feature_Hover.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.hover,
+        msg,
+      );
+    let effect =
+      switch (eff) {
+      | Feature_Hover.Nothing => Effect.none
+      | Feature_Hover.Effect(eff) =>
+        Effect.map(msg => Actions.Hover(msg), eff)
+      };
+    ({...state, hover: model'}, effect);
   | Vim(msg) => (
       {...state, vim: Feature_Vim.update(msg, state.vim)},
       Effect.none,

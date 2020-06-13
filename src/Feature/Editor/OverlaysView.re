@@ -53,10 +53,6 @@ let make =
     (
       ~buffer,
       ~isActiveSplit,
-      ~hoverDelay,
-      ~isHoverEnabled,
-      ~diagnostics,
-      ~mode,
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
       ~gutterWidth,
@@ -67,22 +63,7 @@ let make =
       ~editorFont: Service_Font.font,
       (),
     ) => {
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
-  let lineCount = Buffer.getNumberOfLines(buffer);
-
-  let (cursorOffset, _cursorCharacterWidth) =
-    if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorLine = Buffer.getLine(cursorLine, buffer);
-
-      let (cursorOffset, width) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          cursorLine,
-          Index.toZeroBased(cursorPosition.column),
-        );
-      (cursorOffset, width);
-    } else {
-      (0, 1);
-    };
+  let cursorOffset = Editor.getCursorOffset(~buffer, ~cursorPosition);
 
   let cursorPixelY =
     int_of_float(
@@ -103,18 +84,6 @@ let make =
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
-        <HoverView
-          x=cursorPixelX
-          y=cursorPixelY
-          delay=hoverDelay
-          isEnabled=isHoverEnabled
-          colors
-          editorFont
-          diagnostics
-          editor
-          buffer
-          mode
-        />
         <completionsView
           completions
           cursorPixelX

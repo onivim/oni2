@@ -58,6 +58,7 @@ module Parts = {
           ~backgroundColor=?,
           ~foregroundColor=?,
           ~showDiffMarkers=true,
+          ~renderHover,
           ~dispatch,
           (),
         ) => {
@@ -93,6 +94,7 @@ module Parts = {
         definition={state.definition}
         windowIsFocused={state.windowIsFocused}
         config={Feature_Configuration.resolver(state.config)}
+        renderHover
       />;
     };
   };
@@ -117,6 +119,24 @@ module Parts = {
 
       let changelogDispatch = msg => dispatch(Changelog(msg));
 
+      let buffer =
+        Selectors.getBufferForEditor(state, editor)
+        |> Option.value(~default=Buffer.initial);
+      let renderHover = (~gutterWidth) =>
+        <Feature_Hover.View
+          colorTheme=theme
+          tokenTheme={state.tokenTheme}
+          model={state.hover}
+          uiFont={state.uiFont}
+          editorFont={state.editorFont}
+          languageInfo={state.languageInfo}
+          grammars={state.grammarRepository}
+          diagnostics={state.diagnostics}
+          editor
+          buffer
+          gutterWidth
+        />;
+
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
         let backgroundColor = Feature_Terminal.defaultBackground(theme);
@@ -131,6 +151,7 @@ module Parts = {
           foregroundColor
           showDiffMarkers=false
           dispatch
+          renderHover
         />;
 
       | Terminal({id, _}) =>
@@ -141,7 +162,7 @@ module Parts = {
            })
         |> Option.value(~default=React.empty)
 
-      | Editor => <Editor editor state theme isActive dispatch />
+      | Editor => <Editor editor state theme isActive dispatch renderHover />
 
       | Welcome => <WelcomeView theme uiFont editorFont />
 

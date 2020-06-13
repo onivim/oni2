@@ -32,7 +32,6 @@ module Constants = {
 
 module Styles = {
   open Style;
-
   let container = (~colors: Colors.t) => [
     backgroundColor(colors.editorBackground),
     color(colors.editorForeground),
@@ -141,6 +140,7 @@ let%component make =
                 ~definition,
                 ~windowIsFocused,
                 ~config,
+                ~renderHover=(~gutterWidth as _: float) => <View />,
                 (),
               ) => {
   let colors = Colors.precompute(theme);
@@ -302,10 +302,6 @@ let%component make =
     <OverlaysView
       buffer
       isActiveSplit
-      hoverDelay={Config.Hover.delay.get(config)}
-      isHoverEnabled={Config.Hover.enabled.get(config)}
-      diagnostics
-      mode
       cursorPosition
       editor
       gutterWidth
@@ -315,6 +311,7 @@ let%component make =
       theme
       tokenTheme
     />
+    {renderHover(~gutterWidth)}
     <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical
         dispatch
