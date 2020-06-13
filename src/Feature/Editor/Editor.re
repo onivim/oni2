@@ -250,6 +250,26 @@ let scrollDeltaPixelY = (~pixelY, view) => {
   scrollToPixelY(~pixelY, view);
 };
 
+let getCursorOffset = (~buffer, ~cursorPosition: EditorCoreTypes.Location.t) => {
+  let cursorLine = Index.toZeroBased(cursorPosition.line);
+  let lineCount = Buffer.getNumberOfLines(buffer);
+
+  let (cursorOffset, _cursorCharacterWidth) =
+    if (lineCount > 0 && cursorLine < lineCount) {
+      let cursorLine = Buffer.getLine(cursorLine, buffer);
+
+      let (cursorOffset, width) =
+        BufferViewTokenizer.getCharacterPositionAndWidth(
+          cursorLine,
+          Index.toZeroBased(cursorPosition.column),
+        );
+      (cursorOffset, width);
+    } else {
+      (0, 1);
+    };
+  cursorOffset;
+};
+
 // PROJECTION
 
 let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {

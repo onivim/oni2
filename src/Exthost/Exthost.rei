@@ -129,6 +129,8 @@ module DocumentFilter: {
   let matches: (~filetype: string, t) => bool;
 
   let decode: Json.decoder(t);
+
+  let toString: t => string;
 };
 
 module DocumentSelector: {
