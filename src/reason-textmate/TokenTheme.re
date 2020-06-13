@@ -112,13 +112,7 @@ let of_yojson = (~defaultBackground, ~defaultForeground, json: Yojson.Safe.t) =>
       let fontStyle = fs =>
         Yojson.Safe.Util.member("fontStyle", json)
         |> str
-        |> Option.map(s =>
-             {
-               print_endline(s);
-               s;
-             }
-             == fs
-           );
+        |> Option.map(s => s == fs);
 
       TokenStyle.create(
         ~foreground=str(Yojson.Safe.Util.member("foreground", json)),
