@@ -34,7 +34,18 @@ let setOpen = (isOpen, state) =>
 let setActive = (maybePath, state) =>
   updateFileExplorer(s => {...s, active: maybePath}, state);
 let setFocus = (maybePath, state) =>
-  updateFileExplorer(s => {...s, focus: maybePath}, state);
+  updateFileExplorer(
+    s =>
+      switch (maybePath, s.tree) {
+      | (Some(path), Some(tree)) =>
+        switch (FsTreeNode.findByPath(path, tree)) {
+        | Some(_) => {...s, focus: Some(path)}
+        | None => s
+        }
+      | _ => {...s, focus: None}
+      },
+    state,
+  );
 let setScrollOffset = (scrollOffset, state) =>
   updateFileExplorer(s => {...s, scrollOffset}, state);
 
