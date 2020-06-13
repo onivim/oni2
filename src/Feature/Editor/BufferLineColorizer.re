@@ -21,10 +21,10 @@ let create =
       ~matchingPair: option(int),
       ~searchHighlights: list(Range.t),
       ~searchHighlightColor: Color.t,
-      tokenColors: list(ColorizedToken.t),
+      tokenColors: list(ThemeToken.t),
     ) => {
   let defaultToken2 =
-    ColorizedToken.create(
+    ThemeToken.create(
       ~index=0,
       ~backgroundColor=defaultBackgroundColor,
       ~foregroundColor=defaultForegroundColor,
@@ -34,10 +34,10 @@ let create =
 
   let length = max(endByte - startByte, 1);
 
-  let tokenColorArray: array(ColorizedToken.t) =
+  let tokenColorArray: array(ThemeToken.t) =
     Array.make(length, defaultToken2);
 
-  let rec f = (tokens: list(ColorizedToken.t), start) =>
+  let rec f = (tokens: list(ThemeToken.t), start) =>
     switch (tokens) {
     | [] => ()
     | [hd, ...tail] =>

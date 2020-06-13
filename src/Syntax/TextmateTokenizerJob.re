@@ -26,7 +26,7 @@ type pendingWork = {
 };
 
 type lineInfo = {
-  tokens: list(ColorizedToken.t),
+  tokens: list(ThemeToken.t),
   scopeStack: Textmate.ScopeStack.t,
   version: int,
 };
@@ -154,7 +154,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
            let resolvedColor =
              TokenTheme.match(pending.theme, combinedScopes);
 
-           ColorizedToken.create(
+           ThemeToken.create(
              ~index=position,
              ~backgroundColor=Internal.hexToColor(resolvedColor.background),
              ~foregroundColor=Internal.hexToColor(resolvedColor.foreground),

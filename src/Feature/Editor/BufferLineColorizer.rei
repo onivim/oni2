@@ -34,6 +34,6 @@ let create:
     ~matchingPair: option(int),
     ~searchHighlights: list(Range.t),
     ~searchHighlightColor: Color.t, // theme.editorFindMatchBackground
-    list(ColorizedToken.t)
+    list(ThemeToken.t)
   ) =>
   t;

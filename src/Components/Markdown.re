@@ -48,7 +48,7 @@ open {
                let tokens =
                  TextmateTokenizerJob.getTokenColors(i, tokenizerJob);
                List.map(
-                 (token: ColorizedToken.t) => {
+                 (token: ThemeToken.t) => {
                    Markdown.SyntaxHighlight.makeHighlight(
                      ~byteIndex=token.index,
                      ~color=token.foregroundColor,
