@@ -138,7 +138,7 @@ let start =
 
   let handleGoto = gotoType => {
     switch (gotoType) {
-    | Vim.Goto.Hover => Log.debug("TODO")
+    | Vim.Goto.Hover => dispatch(Actions.Hover(Feature_Hover.Command(Show)))
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.debug("Goto definition requested");
