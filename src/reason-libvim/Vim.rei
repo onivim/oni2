@@ -200,7 +200,7 @@ module Format: {
         adjustCursor: bool,
       })
     | Range({
-        requestType: formatType,
+        formatType,
         bufferId: int,
         startLine: Index.t,
         endLine: Index.t,

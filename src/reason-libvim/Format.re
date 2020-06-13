@@ -11,9 +11,11 @@ type effect =
       adjustCursor: bool,
     })
   | Range({
-      requestType: formatType,
+      formatType,
       bufferId: int,
+      // The inclusive startline of the format
       startLine: Index.t,
+      // The inclusive endline of the format
       endLine: Index.t,
       adjustCursor: bool,
     });

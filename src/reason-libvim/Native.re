@@ -11,6 +11,7 @@ type formatRequest = {
   bufferId: int,
   returnCursor: int,
   formatType,
+  lineCount: int,
 };
 
 external vimInit: unit => unit = "libvim_vimInit";
