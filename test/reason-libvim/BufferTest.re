@@ -250,6 +250,19 @@ describe("Buffer", ({describe, _}) => {
 
       expect.int(Buffer.getLineCount(buffer)).toBe(1);
     });
+    test("utf8: delete character", ({expect, _}) => {
+      let _ = resetBuffer();
+      let buffer = Buffer.openFile("test/reason-libvim/testfile-utf8.txt");
+
+      let edit = Edit.{range: range(0, 14, 0, 15), text: [||]};
+
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+
+      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      expect.string(line).toEqual("import 'κόσμε'");
+
+      expect.int(Buffer.getLineCount(buffer)).toBe(1);
+    });
   });
   describe("getLine", ({test, _}) =>
     test("single file", ({expect, _}) => {

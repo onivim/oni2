@@ -52,14 +52,14 @@ let applyEdit = (~provider, edit) => {
         ? ""
         : startLine
           |> provider
-          |> Option.map(str => String.sub(str, 0, startColumn))
+          |> Option.map(str => Zed_utf8.sub(str, 0, startColumn))
           |> Option.value(~default="");
 
     let postfix =
       endLine
       |> provider
       |> Option.map(str =>
-           String.sub(str, endColumn, String.length(str) - endColumn)
+           Zed_utf8.sub(str, endColumn, Zed_utf8.length(str) - endColumn)
          )
       |> Option.value(~default="");
 
