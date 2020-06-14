@@ -76,6 +76,9 @@ let loadAndValidateEditorFont =
                     fontFamily,
                   );
                 } else {
+                  Log.warnf(m =>
+                    m("Unable to load monospace bold variant of %s", fullPath)
+                  );
                   fullPath;
                 };
               | Error(_) => fullPath
@@ -99,6 +102,12 @@ let loadAndValidateEditorFont =
                     fontFamily,
                   );
                 } else {
+                  Log.warnf(m =>
+                    m(
+                      "Unable to load monospace italic variant of %s",
+                      fullPath,
+                    )
+                  );
                   fullPath;
                 };
               | Error(_) => fullPath
