@@ -89,10 +89,11 @@ let drawShapedText = {
 
   Skia.Paint.setLcdRenderText(paint, true);
 
-  (~context, ~x, ~y, ~color, ~bold, ~italic, text) => {
+  (~context, ~x, ~y, ~color, ~bold, ~italic, ~mono, text) => {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
+        ~mono,
         bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
         context.fontFamily,
       );
@@ -114,10 +115,11 @@ let drawUtf8Text = {
 
   Skia.Paint.setLcdRenderText(paint, true);
 
-  (~context, ~x, ~y, ~color, ~bold, ~italic, text) => {
+  (~context, ~x, ~y, ~color, ~bold, ~italic, ~mono, text) => {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
+        ~mono,
         bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
         context.fontFamily,
       );
@@ -220,6 +222,7 @@ let token =
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
+      ~mono=true,
       token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
       context.fontFamily,
     );
@@ -236,6 +239,7 @@ let token =
       ~color=token.color,
       ~bold=token.bold,
       ~italic=token.italic,
+      ~mono=true,
       token.text,
     )
 
