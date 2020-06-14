@@ -68,7 +68,7 @@ let loadAndValidateEditorFont =
                 )
               ) {
               | Ok(f) =>
-                let (isMono, _, _) =
+                let (isMono, c1w, c2w) =
                   isMonospace(~smoothing, ~fontSize, ~font=f);
                 if (isMono) {
                   Revery_Font.Family.toPath(
@@ -77,7 +77,12 @@ let loadAndValidateEditorFont =
                   );
                 } else {
                   Log.warnf(m =>
-                    m("Unable to load monospace bold variant of %s", fullPath)
+                    m(
+                      "Unable to load monospace italic variant of %s: c1 width : %f c2 width : %f",
+                      fullPath,
+                      c1w,
+                      c2w,
+                    )
                   );
                   fullPath;
                 };
@@ -93,7 +98,7 @@ let loadAndValidateEditorFont =
                 )
               ) {
               | Ok(f) =>
-                let (isMono, _, _) =
+                let (isMono, c1w, c2w) =
                   isMonospace(~smoothing, ~fontSize, ~font=f);
                 if (isMono) {
                   Revery_Font.Family.toPath(
@@ -104,8 +109,10 @@ let loadAndValidateEditorFont =
                 } else {
                   Log.warnf(m =>
                     m(
-                      "Unable to load monospace italic variant of %s",
+                      "Unable to load monospace italic variant of %s: c1 width : %f c2 width : %f",
                       fullPath,
+                      c1w,
+                      c2w,
                     )
                   );
                   fullPath;
