@@ -73,6 +73,7 @@ let loadAndValidateEditorFont =
                   isMonospace(~smoothing, ~fontSize, ~font=f);
                 if (isMono) {
                   Revery_Font.Family.toPath(
+                    ~mono=true,
                     Revery_Font.Weight.Bold,
                     fontFamily,
                   );
@@ -104,6 +105,7 @@ let loadAndValidateEditorFont =
                   isMonospace(~smoothing, ~fontSize, ~font=f);
                 if (isMono) {
                   Revery_Font.Family.toPath(
+                    ~mono=true,
                     ~italic=true,
                     Revery_Font.Weight.Normal,
                     fontFamily,
