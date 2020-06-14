@@ -63,6 +63,7 @@ let loadAndValidateEditorFont =
             let boldPath =
               switch (
                 Revery_Font.Family.resolve(
+                  ~mono=true,
                   Revery_Font.Weight.Bold,
                   fontFamily,
                 )
@@ -92,6 +93,7 @@ let loadAndValidateEditorFont =
             let italicPath =
               switch (
                 Revery_Font.Family.resolve(
+                  ~mono=true,
                   ~italic=true,
                   Revery_Font.Weight.Normal,
                   fontFamily,
