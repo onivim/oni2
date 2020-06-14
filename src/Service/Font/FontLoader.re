@@ -20,6 +20,18 @@ type t = {
   smoothing: [@opaque] Revery.Font.Smoothing.t,
 };
 
+let isMonospace = (~smoothing, ~font, ~fontSize) => {
+  let character1 =
+    Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "H");
+  let character2 =
+    Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "i");
+  (
+    Float.equal(character1.width, character2.width),
+    character1.width,
+    character2.width,
+  );
+};
+
 let loadAndValidateEditorFont =
     (
       ~requestId: int,
@@ -39,21 +51,69 @@ let loadAndValidateEditorFont =
       Stdlib.Result.bind(
         r,
         font => {
-          let character1 =
-            Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "H");
-          let character2 =
-            Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "i");
-
-          if (!Float.equal(character1.width, character2.width)) {
+          let (isMono, c1width, c2width) =
+            isMonospace(~font, ~smoothing, ~fontSize);
+          if (!isMono) {
             Error("Not a monospace font");
           } else {
-            let measuredWidth = character1.width;
+            let measuredWidth = c1width;
             let {lineHeight, descent, _}: Revery.Font.FontMetrics.t =
               Revery.Font.getMetrics(font, fontSize);
 
+            let boldPath =
+              switch (
+                Revery_Font.Family.resolve(
+                  Revery_Font.Weight.Bold,
+                  fontFamily,
+                )
+              ) {
+              | Ok(f) =>
+                let (isMono, _, _) =
+                  isMonospace(~smoothing, ~fontSize, ~font=f);
+                if (isMono) {
+                  Revery_Font.Family.toPath(
+                    Revery_Font.Weight.Bold,
+                    fontFamily,
+                  );
+                } else {
+                  fullPath;
+                };
+              | Error(_) => fullPath
+              };
+
+            let italicPath =
+              switch (
+                Revery_Font.Family.resolve(
+                  ~italic=true,
+                  Revery_Font.Weight.Normal,
+                  fontFamily,
+                )
+              ) {
+              | Ok(f) =>
+                let (isMono, _, _) =
+                  isMonospace(~smoothing, ~fontSize, ~font=f);
+                if (isMono) {
+                  Revery_Font.Family.toPath(
+                    ~italic=true,
+                    Revery_Font.Weight.Normal,
+                    fontFamily,
+                  );
+                } else {
+                  fullPath;
+                };
+              | Error(_) => fullPath
+              };
+
             Log.debugf(m => m("Measured width: %f ", measuredWidth));
             Log.debugf(m => m("Line height: %f ", lineHeight));
-
+            let fontFamily =
+              Revery_Font.Family.fromFiles((~weight, ~italic, ~mono as _) =>
+                switch (italic, weight) {
+                | (true, _) => italicPath
+                | (_, Revery.Font.Weight.Bold) => boldPath
+                | _ => fullPath
+                }
+              );
             Ok((
               requestId,
               {
