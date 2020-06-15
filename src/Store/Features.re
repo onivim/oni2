@@ -376,6 +376,30 @@ let update =
         Effect.map(msg => Actions.Hover(msg), eff)
       };
     ({...state, hover: model'}, effect);
+  | SignatureHelp(msg) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (model', eff) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.signatureHelp,
+        msg,
+      );
+    let effect =
+      switch (eff) {
+      | Feature_SignatureHelp.Nothing => Effect.none
+      | Feature_SignatureHelp.Effect(eff) =>
+        Effect.map(msg => Actions.SignatureHelp(msg), eff)
+      | Feature_SignatureHelp.Error(str) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          "Signature help error: " ++ str,
+        )
+      };
+    ({...state, signatureHelp: model'}, effect);
   | Vim(msg) => (
       {...state, vim: Feature_Vim.update(msg, state.vim)},
       Effect.none,

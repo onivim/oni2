@@ -24,6 +24,17 @@ module Effects: {
         result(Exthost.Hover.t, string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+
+    let provideSignatureHelp:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.Location.t,
+        ~context: Exthost.SignatureHelp.RequestContext.t,
+        Exthost.Client.t,
+        result(Exthost.SignatureHelp.Response.t, string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
   };
 };
 

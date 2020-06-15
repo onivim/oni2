@@ -293,6 +293,20 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       );
       Lwt.return(Reply.okEmpty);
 
+    | LanguageFeatures(
+        RegisterSignatureHelpProvider({handle, selector, metadata}),
+      ) =>
+      dispatch(
+        Actions.SignatureHelp(
+          Feature_SignatureHelp.ProviderRegistered({
+            handle,
+            selector,
+            metadata,
+          }),
+        ),
+      );
+      Lwt.return(Reply.okEmpty);
+
     | Diagnostics(Clear({owner})) =>
       dispatch(Actions.DiagnosticsClear(owner));
       Lwt.return(Reply.okEmpty);
