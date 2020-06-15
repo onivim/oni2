@@ -154,7 +154,10 @@ let start =
     Vim.onEffect(
       fun
       | Goto(gotoType) => handleGoto(gotoType)
-      | Format(_) => Log.debug("Format provider not hooked up yet"),
+      | Format(Buffer(_)) => dispatch(Actions.Formatting(Feature_Formatting.Command(
+          FormatDocument
+      )))
+      | Format(_) => Log.debug("Format provider not hooked up yet")
     );
 
   let _: unit => unit =
