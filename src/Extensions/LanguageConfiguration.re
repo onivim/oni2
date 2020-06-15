@@ -10,6 +10,11 @@ module SyntaxScope = Oni_Core.SyntaxScope;
 
 module Log = (val Oni_Core.Log.withNamespace("Oni2.LanguageConfiguration"));
 
+type indentAction =
+  | KeepIndent
+  | DecreaseIndent
+  | IncreaseIndent;
+
 module AutoClosingPair = {
   type scopes =
     | String
@@ -113,16 +118,17 @@ module Decode = {
 
   let autoCloseBeforeDecode = string |> map(StringEx.explode);
 
-  let regexp = string
-  |> map(OnigRegExp.create)
-  |> and_then(
-  fun
-  | Ok(regexp) => succeed(Some(regexp))
-  | Error(msg) => {
-    Log.errorf(m => m("Error %s parsing regex", msg));
-    succeed(None);
-    }
-  );
+  let regexp =
+    string
+    |> map(OnigRegExp.create)
+    |> and_then(
+         fun
+         | Ok(regexp) => succeed(Some(regexp))
+         | Error(msg) => {
+             Log.errorf(m => m("Error %s parsing regex", msg));
+             succeed(None);
+           },
+       );
 
   let configuration =
     obj(({field, at, _}) =>
@@ -150,10 +156,18 @@ module Decode = {
                  | _ => fail("Expected pair"),
                ),
           ),
-        increaseIndentPattern: at.withDefault(["indentationRules",
-        "increaseIndentPattern"], None, regexp),
-        decreaseIndentPattern: at.withDefault(["indentationRules", "decreaseIndentPattern"],
-          None, regexp),
+        increaseIndentPattern:
+          at.withDefault(
+            ["indentationRules", "increaseIndentPattern"],
+            None,
+            regexp,
+          ),
+        decreaseIndentPattern:
+          at.withDefault(
+            ["indentationRules", "decreaseIndentPattern"],
+            None,
+            regexp,
+          ),
       }
     );
 };
@@ -184,6 +198,24 @@ let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
   );
 };
 
-//let toAutoIndent = (_configuration) => (str) => {
-//  Vim.AutoIndent.KeepIndent;
-//}
+let toAutoIndent = ({increaseIndentPattern, decreaseIndentPattern, _}, str) => {
+  let increase =
+    increaseIndentPattern
+    |> Option.map(regex => OnigRegExp.test(str, regex))
+    |> Option.value(~default=false);
+
+  let decrease =
+    decreaseIndentPattern
+    |> Option.map(regex => OnigRegExp.test(str, regex))
+    |> Option.value(~default=false);
+
+  if (increase && decrease) {
+    KeepIndent;
+  } else if (increase) {
+    IncreaseIndent;
+  } else if (decrease) {
+    DecreaseIndent;
+  } else {
+    KeepIndent;
+  };
+};

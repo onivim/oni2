@@ -22,6 +22,11 @@ module AutoClosingPair: {
   let decode: Json.decoder(t);
 };
 
+type indentAction =
+  | KeepIndent
+  | DecreaseIndent
+  | IncreaseIndent;
+
 type t = {
   autoCloseBefore: list(string),
   autoClosingPairs: list(AutoClosingPair.t),
@@ -37,4 +42,4 @@ let decode: Json.decoder(t);
 
 let toVimAutoClosingPairs: (SyntaxScope.t, t) => Vim.AutoClosingPairs.t;
 
-//let toAutoIndent: (t, string) => Vim.AutoIndent.action;
+let toAutoIndent: (t, string) => indentAction;
