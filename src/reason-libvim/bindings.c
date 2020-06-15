@@ -47,8 +47,7 @@ void onBufferChanged(bufferUpdate_T bu) {
   free(pArgs);
 }
 
-
-int onAutoIndent(buf_T *buf, char_u* prevLine, char_u *newLine) {
+int onAutoIndent(buf_T *buf, char_u *prevLine, char_u *newLine) {
   CAMLparam0();
   CAMLlocal2(vPrevLine, vNewLine);
   static const value *lv_onAutoIndent = NULL;
@@ -58,9 +57,8 @@ int onAutoIndent(buf_T *buf, char_u* prevLine, char_u *newLine) {
   }
 
   vPrevLine = caml_copy_string(prevLine);
-  vNewLine = caml_copy_string(newLine);
 
-  value vIndent = caml_callback3(*lv_onAutoIndent, (value)buf, vPrevLine, vNewLine);
+  value vIndent = caml_callback2(*lv_onAutoIndent, (value)buf, vPrevLine);
 
   int ret = Val_int(vIndent);
 

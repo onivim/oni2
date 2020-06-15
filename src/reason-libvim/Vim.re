@@ -25,6 +25,10 @@ module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
 
+module GlobalState = {
+  let queuedFunctions: ref(list(unit => unit)) = ref([]);
+};
+
 module Internal = {
   let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
     ({bufferId, startLine, endLine, returnCursor, formatType, lineCount}) => {
@@ -49,16 +53,13 @@ module Internal = {
     };
 };
 
-type fn = unit => unit;
-
-let queuedFunctions: ref(list(fn)) = ref([]);
-
-let queue = f => queuedFunctions := [f, ...queuedFunctions^];
+let queue = f =>
+  GlobalState.queuedFunctions := [f, ...GlobalState.queuedFunctions^];
 
 let flushQueue = () => {
-  queuedFunctions^ |> List.rev |> List.iter(f => f());
+  GlobalState.queuedFunctions^ |> List.rev |> List.iter(f => f());
 
-  queuedFunctions := [];
+  GlobalState.queuedFunctions := [];
 };
 
 let runWith = (~context: Context.t, f) => {
@@ -281,9 +282,9 @@ let _onFormat = formatRequest => {
   );
 };
 
-let _onAutoIndent = (buf: Types.buffer, prevLine: string, nextLine: string) => {
+let _onAutoIndent = (buf: Types.buffer, prevLine: string) => {
+  1;
   // TODO:
-  0;
 };
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
