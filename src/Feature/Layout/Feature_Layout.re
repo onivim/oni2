@@ -532,6 +532,8 @@ module View = {
         hooks,
       );
     });
+
+  module EditorTab = EditorTab;
 };
 
 module Commands = {

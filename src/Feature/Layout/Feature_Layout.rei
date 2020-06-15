@@ -48,6 +48,8 @@ module View: {
       unit
     ) =>
     element;
+
+  module EditorTab = EditorTab;
 };
 
 // COMMANDS

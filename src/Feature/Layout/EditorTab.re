@@ -1,17 +1,8 @@
-/*
- * Tab.re
- *
- */
-
 open Revery.UI;
-
 open Oni_Core;
-
-module Model = Oni_Model;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
-
 module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Theme = Feature_Theme;

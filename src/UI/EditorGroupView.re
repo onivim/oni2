@@ -285,7 +285,7 @@ let make =
                 language,
               );
 
-            <Tab
+            <Feature_Layout.View.EditorTab
               theme
               title
               isGroupFocused=isActive

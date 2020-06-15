@@ -6,6 +6,8 @@
       Oni2.core
       isolinear
       base
+      Oni2.components
+      Oni2.feature.sneak
       Oni2.feature.commands
     )
     (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))
