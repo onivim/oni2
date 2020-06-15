@@ -16,7 +16,7 @@ let squareBracketPair = AutoPair.{opening: "[", closing: "]"};
 let curlyBracketPair = AutoPair.{opening: "{", closing: "}"};
 let quotePair = AutoPair.{opening: quote, closing: quote};
 
-describe("AutoClosingPairs", ({test, _}) => {
+describe("AutoClosingPairs", ({test, describe, _}) => {
   test("no auto-closing pairs", ({expect, _}) => {
     let b = resetBuffer();
 
@@ -42,6 +42,41 @@ describe("AutoClosingPairs", ({test, _}) => {
 
     let line = Buffer.getLine(b, Index.zero);
     expect.string(line).toEqual("[(\"{]");
+  });
+
+  describe("enter", ({test, }) => {
+    test("pressing enter between auto-closing pairs should be indented", ({expect, _}) => {
+      let b = resetBuffer();
+      let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
+
+      input(~autoClosingPairs, "O");
+      input(~autoClosingPairs, "[");
+      input(~autoClosingPairs, "<CR>");
+      input(~autoClosingPairs, "a");
+
+      let line1 = Buffer.getLine(b, Index.zero);
+      let line2 = Buffer.getLine(b, Index.(zero + 1));
+      let line3 = Buffer.getLine(b, Index.(zero + 2));
+      expect.string(line1).toEqual("[");
+      expect.string(line2).toEqual("\ta");
+      expect.string(line3).toEqual("]");
+    });
+    test("indentation should be preserved", ({expect, _}) => {
+      let b = resetBuffer();
+      let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
+
+      input(~autoClosingPairs, "O");
+      input(~autoClosingPairs, "\t[");
+      input(~autoClosingPairs, "<CR>");
+      input(~autoClosingPairs, "a");
+
+      let line1 = Buffer.getLine(b, Index.zero);
+      let line2 = Buffer.getLine(b, Index.(zero + 1));
+      let line3 = Buffer.getLine(b, Index.(zero + 2));
+      expect.string(line1).toEqual("\t[");
+      expect.string(line2).toEqual("\t\ta");
+      expect.string(line3).toEqual("\t]");
+    });
   });
 
   test("isBetweenClosingPairs", ({expect, _}) => {
