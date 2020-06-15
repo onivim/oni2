@@ -8,11 +8,6 @@ open Utility;
 
 module Log = (val Kernel.Log.withNamespace("Oni2.LanguageConfiguration"));
 
-type indentAction =
-  | KeepIndent
-  | DecreaseIndent
-  | IncreaseIndent;
-
 module AutoClosingPair = {
   type scopes =
     | String
@@ -208,12 +203,12 @@ let toAutoIndent = ({increaseIndentPattern, decreaseIndentPattern, _}, str) => {
     |> Option.value(~default=false);
 
   if (increase && decrease) {
-    KeepIndent;
+    Vim.AutoIndent.KeepIndent;
   } else if (increase) {
-    IncreaseIndent;
+    Vim.AutoIndent.IncreaseIndent;
   } else if (decrease) {
-    DecreaseIndent;
+    Vim.AutoIndent.DecreaseIndent;
   } else {
-    KeepIndent;
+    Vim.AutoIndent.KeepIndent;
   };
 };
