@@ -2,6 +2,8 @@
  * LanguageConfiguration.re
  */
 
+open Oniguruma;
+
 open Oni_Core.Utility;
 module Json = Oni_Core.Json;
 module SyntaxScope = Oni_Core.SyntaxScope;
@@ -77,6 +79,8 @@ type t = {
   autoClosingPairs: list(AutoClosingPair.t),
   lineComment: option(string),
   blockComment: option((string, string)),
+  increaseIndentPattern: option(OnigRegExp.t),
+  decreaseIndentPattern: option(OnigRegExp.t),
 };
 
 let default = {
@@ -97,6 +101,8 @@ let default = {
   autoClosingPairs: [],
   lineComment: None,
   blockComment: None,
+  increaseIndentPattern: None,
+  decreaseIndentPattern: None,
 };
 
 module Decode = {
@@ -131,6 +137,8 @@ module Decode = {
                  | _ => fail("Expected pair"),
                ),
           ),
+        increaseIndentPattern: None,
+        decreaseIndentPattern: None,
       }
     );
 };
@@ -160,3 +168,7 @@ let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
     pairs,
   );
 };
+
+//let toAutoIndent = (_configuration) => (str) => {
+//  Vim.AutoIndent.KeepIndent;
+//}

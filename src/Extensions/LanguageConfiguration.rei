@@ -2,6 +2,8 @@
  * LanguageConfiguration.rei
  */
 
+open Oniguruma;
+
 module Json = Oni_Core.Json;
 module SyntaxScope = Oni_Core.SyntaxScope;
 
@@ -25,6 +27,8 @@ type t = {
   autoClosingPairs: list(AutoClosingPair.t),
   lineComment: option(string),
   blockComment: option((string, string)),
+  increaseIndentPattern: option(OnigRegExp.t),
+  decreaseIndentPattern: option(OnigRegExp.t),
 };
 
 let default: t;
@@ -32,3 +36,5 @@ let default: t;
 let decode: Json.decoder(t);
 
 let toVimAutoClosingPairs: (SyntaxScope.t, t) => Vim.AutoClosingPairs.t;
+
+//let toAutoIndent: (t, string) => Vim.AutoIndent.action;

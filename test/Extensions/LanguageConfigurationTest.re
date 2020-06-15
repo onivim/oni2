@@ -70,4 +70,24 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
     | _ => failwith("parse failed")
     };
   });
+
+  describe("IndentationRules", ({test, _}) => {
+    test("basic parsing", ({expect, _}) => {
+      
+      let parsedLangConfig =
+        json({|
+        {"indentationRules":
+          {
+          "increaseIndentPattern":"abc",
+          "decreaseIndentPattern":"def"
+          }
+        }|})
+        |> Json.Decode.decode_value(LanguageConfiguration.decode);
+
+      expect.equal(Result.is_ok(parsedLangConfig), true);
+      let langConfig: LanguageConfiguration.t = Result.get_ok(parsedLangConfig);
+      expect.equal(Option.is_some(langConfig.increaseIndentPattern), true);
+      expect.equal(Option.is_some(langConfig.decreaseIndentPattern), true);
+    });
+  });
 });
