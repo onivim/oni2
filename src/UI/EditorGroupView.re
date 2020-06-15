@@ -1,11 +1,21 @@
 open Revery.UI;
+open Rench;
 open Oni_Core;
 open Oni_Model;
 open Actions;
+open Oni_Components;
 module Model = Oni_Model;
 
 module Colors = Feature_Theme.Colors;
 module EditorSurface = Feature_Editor.EditorSurface;
+
+type tabInfo = {
+  editorId: int,
+  filePath: string,
+  title: string,
+  modified: bool,
+  renderer: Oni_Model.BufferRenderer.t,
+};
 
 let getBufferMetadata = (buffer: option(Buffer.t)) => {
   switch (buffer) {
@@ -38,15 +48,7 @@ let toUiTabs =
       let renderer =
         Model.BufferRenderers.getById(Editor.getBufferId(editor), renderers);
 
-      Some(
-        Tabs.{
-          editorId: Editor.getId(editor),
-          filePath,
-          title,
-          modified,
-          renderer,
-        },
-      );
+      Some({editorId: Editor.getId(editor), filePath, title, modified, renderer});
     };
   };
 
@@ -254,16 +256,53 @@ let make =
     if (showTabs) {
       let tabs =
         <Tabs
-          active=isActive
-          activeEditorId={editorGroup.activeEditorId}
-          theme
-          tabs={toUiTabs(editorGroup, state.buffers, state.bufferRenderers)}
-          mode
-          uiFont
-          languageInfo={state.languageInfo}
-          iconTheme={state.iconTheme}
-          dispatch
-        />;
+          style=Style.[
+            backgroundColor(
+              Colors.EditorGroupHeader.tabsBackground.from(theme),
+            ),
+          ]
+          isSelected={tabInfo =>
+            editorGroup.activeEditorId == Some(tabInfo.editorId)
+          }
+          items={toUiTabs(editorGroup, state.buffers, state.bufferRenderers)}>
+          ...{tabInfo => {
+            let title =
+              switch (tabInfo.renderer) {
+              | Welcome => "Welcome"
+              | Terminal({title, _}) => title
+              | _ => Path.filename(tabInfo.title)
+              };
+
+            let language =
+              Ext.LanguageInfo.getLanguageFromFilePath(
+                state.languageInfo,
+                tabInfo.filePath,
+              );
+            let icon =
+              IconTheme.getIconForFile(
+                state.iconTheme,
+                tabInfo.filePath,
+                language,
+              );
+
+            <Tab
+              theme
+              title
+              isGroupFocused=isActive
+              isActive={Some(tabInfo.editorId) == editorGroup.activeEditorId}
+              isModified={tabInfo.modified}
+              uiFont
+              mode
+              icon
+              onClick={() =>
+                dispatch(Model.Actions.EditorTabClicked(tabInfo.editorId))
+              }
+              onClose={() =>
+                dispatch(Model.Actions.ViewCloseEditor(tabInfo.editorId))
+              }
+            />;
+          }}
+        </Tabs>;
 
       <View style=Styles.editorContainer> tabs editorContainer </View>;
     } else {
