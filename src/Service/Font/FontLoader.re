@@ -51,7 +51,7 @@ let loadAndValidateEditorFont =
       Stdlib.Result.bind(
         r,
         font => {
-          let (isMono, c1width, c2width) =
+          let (isMono, c1width, _) =
             isMonospace(~font, ~smoothing, ~fontSize);
           if (!isMono) {
             Error("Not a monospace font");
