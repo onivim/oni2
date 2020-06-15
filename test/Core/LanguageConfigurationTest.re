@@ -128,12 +128,12 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
 
       expect.equal(
         LanguageConfiguration.toAutoIndent(langConfig, "abc")
-        == LanguageConfiguration.IncreaseIndent,
+        == Vim.AutoIndent.IncreaseIndent,
         true,
       );
       expect.equal(
         LanguageConfiguration.toAutoIndent(langConfig, "def")
-        == LanguageConfiguration.DecreaseIndent,
+        == Vim.AutoIndent.DecreaseIndent,
         true,
       );
     });
@@ -156,13 +156,13 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
 
       expect.equal(
         LanguageConfiguration.toAutoIndent(langConfig, "abc")
-        == LanguageConfiguration.KeepIndent,
+        == Vim.AutoIndent.KeepIndent,
         true,
       );
 
       expect.equal(
         LanguageConfiguration.toAutoIndent(langConfig, "def")
-        == LanguageConfiguration.KeepIndent,
+        == Vim.AutoIndent.KeepIndent,
         true,
       );
     });
