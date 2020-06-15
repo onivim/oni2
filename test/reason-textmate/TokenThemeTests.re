@@ -279,7 +279,7 @@ describe("TokenTheme", ({describe, _}) => {
         "scope": "constant.numeric.hex",
         "settings": {
             "foreground": "#bbbbbb",
-            "italic": true
+            "fontStyle": "italic"
         }
        },
        {
@@ -288,7 +288,7 @@ describe("TokenTheme", ({describe, _}) => {
         "settings": {
             "foreground": "#0f0",
             "background": "#f00",
-            "bold": true
+            "fontStyle": "bold"
         }
        }]
       |},
@@ -324,7 +324,7 @@ describe("TokenTheme", ({describe, _}) => {
         "scope": "constant.numeric.hex, constant.numeric.oct",
         "settings": {
             "foreground": "#bbbbbb",
-            "italic": true
+            "fontStyle": "italic"
         }
        }]
       |},
@@ -360,7 +360,7 @@ describe("TokenTheme", ({describe, _}) => {
         "scope": ["constant.numeric.hex", "constant.numeric.oct"],
         "settings": {
             "foreground": "#bbbbbb",
-            "italic": true
+            "fontStyle": "italic"
         }
        }]
       |},

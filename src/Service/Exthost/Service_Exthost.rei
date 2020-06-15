@@ -25,6 +25,16 @@ module Effects: {
         result(list(Exthost.Edit.SingleEditOperation.t), string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+
+    let provideHover:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.Location.t,
+        Exthost.Client.t,
+        result(Exthost.Hover.t, string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
   };
 };
 

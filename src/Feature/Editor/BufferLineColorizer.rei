@@ -7,19 +7,24 @@ open Revery;
 open Oni_Core;
 
 /*
- * Type [tokenColor] is a tuple of [(backgroundColor, foregroundColor)]
+ * Type [tokenTheme] is a record containing theme information
  */
-type tokenColor = (Color.t, Color.t);
+type themedToken = {
+  color: Color.t,
+  backgroundColor: Color.t,
+  italic: bool,
+  bold: bool,
+};
 
 /*
- * Type [t] is a function of [(int) => tokenColor)].
+ * Type [t] is a function of [(int) => tokenTheme)].
  *
  */
-type t = int => tokenColor;
+type t = int => themedToken;
 
 /*
  * [create] takes information about the line, like
- * the syntax highlighting ([tokenColors]), the selection,
+ * the syntax highlighting ([tokenThemes]), the selection,
  * and others - and consolidates it into a colorizer
  * function [t].
  */
@@ -34,6 +39,6 @@ let create:
     ~matchingPair: option(int),
     ~searchHighlights: list(Range.t),
     ~searchHighlightColor: Color.t, // theme.editorFindMatchBackground
-    list(ColorizedToken.t)
+    list(ThemeToken.t)
   ) =>
   t;

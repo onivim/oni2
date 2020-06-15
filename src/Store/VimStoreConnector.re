@@ -120,7 +120,7 @@ let start =
 
   let handleGoto = gotoType => {
     switch (gotoType) {
-    | Vim.Goto.Hover => Log.debug("TODO")
+    | Vim.Goto.Hover => dispatch(Actions.Hover(Feature_Hover.Command(Show)))
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.debug("Goto definition requested");
@@ -153,7 +153,8 @@ let start =
   let _: unit => unit =
     Vim.onEffect(
       fun
-      | Goto(gotoType) => handleGoto(gotoType),
+      | Goto(gotoType) => handleGoto(gotoType)
+      | Format(_) => Log.debug("Format provider not hooked up yet"),
     );
 
   let _: unit => unit =

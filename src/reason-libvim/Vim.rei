@@ -205,15 +205,36 @@ module Buffer: {
 };
 
 module Goto: {
-  type t =
+  type effect =
     | Definition
     | Declaration
     | Hover;
 };
 
+module Format: {
+  type formatType =
+    | Indentation
+    | Formatting;
+
+  type effect =
+    | Buffer({
+        formatType,
+        bufferId: int,
+        adjustCursor: bool,
+      })
+    | Range({
+        formatType,
+        bufferId: int,
+        startLine: Index.t,
+        endLine: Index.t,
+        adjustCursor: bool,
+      });
+};
+
 module Effect: {
   type t =
-    | Goto(Goto.t);
+    | Goto(Goto.effect)
+    | Format(Format.effect);
 };
 
 /**

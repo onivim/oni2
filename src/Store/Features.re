@@ -182,14 +182,26 @@ let update =
     open Feature_Layout;
 
     let focus =
-      EditorGroups.getActiveEditorGroup(state.editorGroups)
-      |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+      switch (FocusManager.current(state)) {
+      | Editor
+      | Terminal(_) =>
+        EditorGroups.getActiveEditorGroup(state.editorGroups)
+        |> Option.map((group: EditorGroup.t) => Center(group.editorGroupId))
+
+      | FileExplorer
+      | SCM => Some(Left)
+
+      | Search => Some(Bottom)
+
+      | _ => None
+      };
     let (model, maybeOutmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 
     let state =
       switch (maybeOutmsg) {
-      | Focus(editorGroupId) => {
+      | Focus(Center(editorGroupId)) =>
+        {
           ...state,
           editorGroups:
             EditorGroups.setActiveEditorGroup(
@@ -197,6 +209,13 @@ let update =
               state.editorGroups,
             ),
         }
+        |> FocusManager.push(Editor)
+
+      | Focus(Left) =>
+        state.sideBar.isOpen ? SideBarReducer.focus(state) : state
+
+      | Focus(Bottom) => state.pane.isOpen ? PaneStore.focus(state) : state
+
       | Nothing => state
       };
     (state, Effect.none);
@@ -323,7 +342,15 @@ let update =
       effects
       |> List.map(
            fun
-           | Feature_Editor.Nothing => Effect.none,
+           | Feature_Editor.Nothing => Effect.none
+           | Feature_Editor.MouseHovered(location) =>
+             Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
+               dispatch(Hover(Feature_Hover.MouseHovered(location)))
+             })
+           | Feature_Editor.MouseMoved(location) =>
+             Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
+               dispatch(Hover(Feature_Hover.MouseMoved(location)))
+             }),
          )
       |> Isolinear.Effect.batch;
 
@@ -352,6 +379,25 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Hover(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (model', eff) =
+      Feature_Hover.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.hover,
+        msg,
+      );
+    let effect =
+      switch (eff) {
+      | Feature_Hover.Nothing => Effect.none
+      | Feature_Hover.Effect(eff) =>
+        Effect.map(msg => Actions.Hover(msg), eff)
+      };
+    ({...state, hover: model'}, effect);
   | Vim(msg) => (
       {...state, vim: Feature_Vim.update(msg, state.vim)},
       Effect.none,

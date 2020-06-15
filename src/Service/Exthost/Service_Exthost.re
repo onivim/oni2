@@ -53,6 +53,27 @@ module Effects = {
           promise,
           Option.iter(edits => dispatch(toMsg(Ok(edits)))),
         );
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
+
+    let provideHover = (~handle, ~uri, ~position, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.provideHover", dispatch => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideHover(
+            ~handle,
+            ~resource=uri,
+            ~position=Exthost.OneBasedPosition.ofPosition(position),
+            client,
+          );
+
+        Lwt.on_success(
+          promise,
+          Option.iter(hover => dispatch(toMsg(Ok(hover)))),
+        );
 
         Lwt.on_failure(promise, err =>
           dispatch(toMsg(Error(Printexc.to_string(err))))

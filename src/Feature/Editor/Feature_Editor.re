@@ -18,7 +18,9 @@ module Contributions = {
 type msg = Msg.t;
 
 type outmsg =
-  | Nothing;
+  | Nothing
+  | MouseHovered(EditorCoreTypes.Location.t)
+  | MouseMoved(EditorCoreTypes.Location.t);
 
 type model = Editor.t;
 
@@ -82,5 +84,7 @@ let update = (editor, msg) => {
   | Msg.HorizontalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseRelease
   | Msg.VerticalScrollbarMouseDown => (editor, Nothing)
+  | Msg.MouseHovered({location}) => (editor, MouseHovered(location))
+  | Msg.MouseMoved({location}) => (editor, MouseMoved(location))
   };
 };

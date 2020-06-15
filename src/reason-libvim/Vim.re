@@ -14,6 +14,7 @@ module Cursor = Cursor;
 module Edit = Edit;
 module Effect = Effect;
 module Event = Event;
+module Format = Format;
 module Goto = Goto;
 module Mode = Mode;
 module Options = Options;
@@ -24,6 +25,30 @@ module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
+
+module Internal = {
+  let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
+    ({bufferId, startLine, endLine, returnCursor, formatType, lineCount}) => {
+      let adjustCursor = returnCursor == 0 ? false : true;
+      let formatType =
+        switch (formatType) {
+        | Native.Indentation => Format.Indentation
+        | Native.Formatting => Format.Formatting
+        };
+
+      if (startLine <= 1 && endLine >= lineCount) {
+        Format.Buffer({formatType, bufferId, adjustCursor});
+      } else {
+        Format.Range({
+          formatType,
+          bufferId,
+          adjustCursor,
+          startLine: Index.fromOneBased(startLine),
+          endLine: Index.fromOneBased(endLine),
+        });
+      };
+    };
+};
 
 type fn = unit => unit;
 
@@ -248,7 +273,16 @@ let _clipboardGet = (regname: int) => {
   };
 };
 
-let _onGoto = (_line: int, _column: int, gotoType: Goto.t) => {
+let _onFormat = formatRequest => {
+  queue(() =>
+    Event.dispatch(
+      Effect.Format(formatRequest |> Internal.nativeFormatRequestToEffect),
+      Listeners.effect,
+    )
+  );
+};
+
+let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
 
@@ -265,6 +299,7 @@ let init = () => {
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
+  Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);

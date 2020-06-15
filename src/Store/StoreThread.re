@@ -377,6 +377,11 @@ let start =
     Feature_Layout.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
   );
+  registerCommands(
+    ~dispatch,
+    Feature_Hover.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
+  );
 
   registerCommands(
     ~dispatch,
@@ -393,6 +398,7 @@ let start =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
+  dispatch(Model.Actions.SetGrammarRepository(grammarRepository));
 
   /* Set icon theme */
 

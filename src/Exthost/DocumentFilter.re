@@ -21,3 +21,11 @@ let decode = {
 
 let matches = (~filetype: string, filter) =>
   filter.language == Some(filetype);
+
+let toString = filter =>
+  Printf.sprintf(
+    "DocumentFilter : language = %s, scheme = %s, exclusive = %b",
+    filter.language |> Option.value(~default="(none)"),
+    filter.scheme |> Option.value(~default="(none)"),
+    filter.exclusive,
+  );

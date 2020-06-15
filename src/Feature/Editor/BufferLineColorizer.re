@@ -7,8 +7,13 @@ open Revery;
 
 open Oni_Core;
 
-type tokenColor = (Color.t, Color.t);
-type t = int => tokenColor;
+type themedToken = {
+  color: Color.t,
+  backgroundColor: Color.t,
+  italic: bool,
+  bold: bool,
+};
+type t = int => themedToken;
 
 let create =
     (
@@ -21,10 +26,10 @@ let create =
       ~matchingPair: option(int),
       ~searchHighlights: list(Range.t),
       ~searchHighlightColor: Color.t,
-      tokenColors: list(ColorizedToken.t),
+      themedTokens: list(ThemeToken.t),
     ) => {
   let defaultToken2 =
-    ColorizedToken.create(
+    ThemeToken.create(
       ~index=0,
       ~backgroundColor=defaultBackgroundColor,
       ~foregroundColor=defaultForegroundColor,
@@ -34,10 +39,10 @@ let create =
 
   let length = max(endByte - startByte, 1);
 
-  let tokenColorArray: array(ColorizedToken.t) =
+  let themedTokenArray: array(ThemeToken.t) =
     Array.make(length, defaultToken2);
 
-  let rec f = (tokens: list(ColorizedToken.t), start) =>
+  let rec f = (tokens: list(ThemeToken.t), start) =>
     switch (tokens) {
     | [] => ()
     | [hd, ...tail] =>
@@ -46,7 +51,7 @@ let create =
       let pos = ref(start);
 
       while (pos^ >= adjIndex && pos^ >= 0 && pos^ < length) {
-        tokenColorArray[pos^] = hd;
+        themedTokenArray[pos^] = hd;
         decr(pos);
       };
       if (hd.index < startByte) {
@@ -65,18 +70,18 @@ let create =
     | None => ((-1), (-1))
     };
 
-  let tokenColors = List.rev(tokenColors);
+  let themedTokens = List.rev(themedTokens);
 
-  f(tokenColors, length - 1);
+  f(themedTokens, length - 1);
 
   i => {
     let colorIndex =
       if (i < startByte) {
-        tokenColorArray[0];
+        themedTokenArray[0];
       } else if (i >= endByte) {
-        tokenColorArray[Array.length(tokenColorArray) - 1];
+        themedTokenArray[Array.length(themedTokenArray) - 1];
       } else {
-        tokenColorArray[i - startByte];
+        themedTokenArray[i - startByte];
       };
 
     let matchingPair =
@@ -101,6 +106,11 @@ let create =
       isSearchHighlight ? searchHighlightColor : backgroundColor;
 
     let color = colorIndex.foregroundColor;
-    (backgroundColor, color);
+    {
+      backgroundColor,
+      color,
+      bold: colorIndex.bold,
+      italic: colorIndex.italic,
+    };
   };
 };

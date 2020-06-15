@@ -360,7 +360,7 @@ let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
   getFirstNonEmptyLine(~start=Array.length(lines) - 1, ~direction=-1, lines);
 };
 
-type highlights = (int, list(ColorizedToken.t));
+type highlights = (int, list(ThemeToken.t));
 
 module TermScreen = ReveryTerminal.Screen;
 
@@ -381,16 +381,19 @@ let addHighlightForCell =
       cell,
     );
 
+  // TODO: Hook up the bold/italic in revery-terminal
   let newToken =
-    ColorizedToken.{
+    ThemeToken.{
       index: column,
       backgroundColor: bg,
       foregroundColor: fg,
       syntaxScope: SyntaxScope.none,
+      bold: false,
+      italic: false,
     };
 
   switch (tokens) {
-  | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail]
+  | [ThemeToken.{foregroundColor, backgroundColor, _} as ct, ...tail]
       when foregroundColor != fg && backgroundColor != bg => [
       newToken,
       ct,

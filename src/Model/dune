@@ -40,6 +40,7 @@
         Oni2.feature.titlebar
         Oni2.feature.modals
         Oni2.feature.layout
+        Oni2.feature.hover
         Oni2.feature.vim
         ReasonFuzz
         textmate
