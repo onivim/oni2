@@ -8,6 +8,8 @@ open Oni_Core.Utility;
 module Json = Oni_Core.Json;
 module SyntaxScope = Oni_Core.SyntaxScope;
 
+module Log = (val Oni_Core.Log.withNamespace("Oni2.LanguageConfiguration"));
+
 module AutoClosingPair = {
   type scopes =
     | String
@@ -111,6 +113,17 @@ module Decode = {
 
   let autoCloseBeforeDecode = string |> map(StringEx.explode);
 
+  let regexp = string
+  |> map(OnigRegExp.create)
+  |> and_then(
+  fun
+  | Ok(regexp) => succeed(Some(regexp))
+  | Error(msg) => {
+    Log.errorf(m => m("Error %s parsing regex", msg));
+    succeed(None);
+    }
+  );
+
   let configuration =
     obj(({field, at, _}) =>
       {
@@ -137,8 +150,10 @@ module Decode = {
                  | _ => fail("Expected pair"),
                ),
           ),
-        increaseIndentPattern: None,
-        decreaseIndentPattern: None,
+        increaseIndentPattern: at.withDefault(["indentationRules",
+        "increaseIndentPattern"], None, regexp),
+        decreaseIndentPattern: at.withDefault(["indentationRules", "decreaseIndentPattern"],
+          None, regexp),
       }
     );
 };

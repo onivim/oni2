@@ -89,5 +89,22 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
       expect.equal(Option.is_some(langConfig.increaseIndentPattern), true);
       expect.equal(Option.is_some(langConfig.decreaseIndentPattern), true);
     });
+    test("invalid regexp", ({expect, _}) => {
+      
+      let parsedLangConfig =
+        json({|
+        {"indentationRules":
+          {
+          "increaseIndentPattern":"(invalid",
+          "decreaseIndentPattern":"def"
+          }
+        }|})
+        |> Json.Decode.decode_value(LanguageConfiguration.decode);
+
+      expect.equal(Result.is_ok(parsedLangConfig), true);
+      let langConfig: LanguageConfiguration.t = Result.get_ok(parsedLangConfig);
+      expect.equal(Option.is_none(langConfig.increaseIndentPattern), true);
+      expect.equal(Option.is_some(langConfig.decreaseIndentPattern), true);
+    });
   });
 });
