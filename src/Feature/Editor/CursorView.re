@@ -173,6 +173,7 @@ let%component make =
               ~y=y -. fontMetrics.ascent -. 0.5,
               ~bold=false,
               ~italic=false,
+              ~mono=false,
               ~color=background |> Revery.Color.multiplyAlpha(textOpacity),
               text,
             );
