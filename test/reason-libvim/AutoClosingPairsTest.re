@@ -44,7 +44,7 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
     expect.string(line).toEqual("[(\"{]");
   });
 
-  describe("enter", ({test, }) => {
+  describe("enter", ({test, _}) => {
     test("pressing enter between auto-closing pairs should be indented", ({expect, _}) => {
       let b = resetBuffer();
       let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
@@ -66,7 +66,8 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
       let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
 
       input(~autoClosingPairs, "O");
-      input(~autoClosingPairs, "\t[");
+      input(~autoClosingPairs, "<TAB>");
+      input(~autoClosingPairs, "[");
       input(~autoClosingPairs, "<CR>");
       input(~autoClosingPairs, "a");
 
