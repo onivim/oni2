@@ -114,7 +114,10 @@ let current:
 
          let insertSpaces = indentation.mode == Spaces;
 
+         let autoIndent = _ => Vim.AutoIndent.KeepIndent;
+
          Vim.Context.{
+           autoIndent,
            bufferId,
            leftColumn,
            topLine,

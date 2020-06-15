@@ -4,6 +4,7 @@ type lineEnding = Types.lineEnding;
 
 module AutoClosingPairs = AutoClosingPairs;
 module AutoCommands = AutoCommands;
+module AutoIndent = AutoIndent;
 module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
@@ -26,6 +27,7 @@ module Window = Window;
 module Yank = Yank;
 
 module GlobalState = {
+  let autoIndent: ref(option(string => AutoIndent.action)) = ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
 };
 
@@ -100,7 +102,11 @@ let runWith = (~context: Context.t, f) => {
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
+  GlobalState.autoIndent := Some(context.autoIndent);
+
   let cursors = f();
+
+  GlobalState.autoIndent := None;
 
   let newBuf = Buffer.getCurrent();
   let newLocation = Cursor.getLocation();
@@ -283,8 +289,16 @@ let _onFormat = formatRequest => {
 };
 
 let _onAutoIndent = (buf: Types.buffer, prevLine: string) => {
-  1;
-  // TODO:
+  let indentAction =
+    GlobalState.autoIndent^
+    |> Option.map(fn => fn(prevLine))
+    |> Option.value(~default=AutoIndent.KeepIndent);
+
+  switch (indentAction) {
+  | AutoIndent.IncreaseIndent => 1
+  | AutoIndent.KeepIndent => 0
+  | AutoIndent.DecreaseIndent => (-1)
+  };
 };
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {

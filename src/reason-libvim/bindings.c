@@ -60,7 +60,7 @@ int onAutoIndent(buf_T *buf, char_u *prevLine, char_u *newLine) {
 
   value vIndent = caml_callback2(*lv_onAutoIndent, (value)buf, vPrevLine);
 
-  int ret = Val_int(vIndent);
+  int ret = Int_val(vIndent);
 
   CAMLreturnT(int, ret);
 };
