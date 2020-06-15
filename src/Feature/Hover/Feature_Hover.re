@@ -278,45 +278,20 @@ module View = {
   let horizontalRule = (~theme, ()) =>
     <Row> <View style={Styles.hr(~theme)} /> </Row>;
 
-  type state = {
-    scrollTop: int,
-    maybeHeight: option(int),
-  };
-  let initialState = {scrollTop: 0, maybeHeight: None};
-  type action =
-    | SetScrollTop(int)
-    | SetHeight(int);
-
-  let%component hover =
-                (
-                  ~x,
-                  ~y,
-                  ~colorTheme,
-                  ~tokenTheme,
-                  ~languageInfo,
-                  ~uiFont: UiFont.t,
-                  ~editorFont: Service_Font.font,
-                  ~model,
-                  ~grammars,
-                  ~diagnostic,
-                  (),
-                ) => {
-    let reducer = (action, state) =>
-      switch (action) {
-      | SetScrollTop(scrollTop) => {...state, scrollTop}
-      | SetHeight(height) => {...state, maybeHeight: Some(height)}
-      };
-    let%hook (state, dispatch) = Hooks.reducer(~initialState, reducer);
-
-    let%hook () =
-      Hooks.effect(
-        If((!=), model.contents),
-        () => {
-          dispatch(SetScrollTop(0));
-          None;
-        },
-      );
-
+  let hover =
+      (
+        ~x,
+        ~y,
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~model,
+        ~grammars,
+        ~diagnostic,
+        (),
+      ) => {
     let hoverMarkdown = (~markdown) =>
       Oni_Components.Markdown.make(
         ~colorTheme,
@@ -344,76 +319,14 @@ module View = {
       />;
     };
 
-    let showScrollbar =
-      switch (state.maybeHeight) {
-      | None => false
-      | Some(height) => height >= Styles.maxHeight
-      };
-
-    let scrollbar = () =>
-      switch (state.maybeHeight) {
-      | None => React.empty
-      | Some(height) =>
-        let thumbLength = Styles.maxHeight * Styles.maxHeight / height;
-        <View style={Styles.scrollBar(~theme=colorTheme)}>
-          <Slider
-            onValueChanged={v => dispatch(SetScrollTop(int_of_float(v)))}
-            value={float(state.scrollTop)}
-            minimumValue=0.
-            maximumValue={float(Styles.maxHeight - height)}
-            sliderLength=Styles.maxHeight
-            thumbLength
-            trackThickness=Constants.scrollBarThickness
-            thumbThickness=Constants.scrollBarThickness
-            minimumTrackColor=Constants.scrollTrackColor
-            maximumTrackColor=Constants.scrollTrackColor
-            thumbColor=Constants.scrollThumbColor
-            vertical=true
-          />
-        </View>;
-      };
-
-    let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-      switch (state.maybeHeight, showScrollbar) {
-      | (Some(height), true) =>
-        let delta =
-          int_of_float(wheelEvent.deltaY) * Constants.scrollWheelMultiplier;
-        dispatch(
-          SetScrollTop(
-            state.scrollTop
-            + delta
-            |> Oni_Core.Utility.IntEx.clamp(
-                 ~hi=0,
-                 ~lo=Styles.maxHeight - height,
-               ),
-          ),
-        );
-
-      | _ => ()
-      };
-
-    <View style={Styles.outer(~x, ~y, ~theme=colorTheme)}>
-      <View style=Styles.container>
-        <View
-          style={Styles.contents(
-            ~theme=colorTheme,
-            ~showScrollbar,
-            ~scrollTop=state.scrollTop,
-          )}
-          onMouseWheel=scroll
-          onDimensionsChanged={({height, _}) =>
-            dispatch(SetHeight(height))
-          }>
-          {List.map(markdown => <hoverMarkdown markdown />, model.contents)
-           |> React.listToElement}
-          {model.contents != [] && diagnostic != []
-             ? <horizontalRule theme=colorTheme /> : React.empty}
-          {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
-           |> React.listToElement}
-        </View>
-      </View>
-      {showScrollbar ? <scrollbar /> : React.empty}
-    </View>;
+    <Oni_Components.HoverView x y theme=colorTheme>
+      {List.map(markdown => <hoverMarkdown markdown />, model.contents)
+       |> React.listToElement}
+      {model.contents != [] && diagnostic != []
+         ? <horizontalRule theme=colorTheme /> : React.empty}
+      {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
+       |> React.listToElement}
+    </Oni_Components.HoverView>;
   };
 
   let make =
