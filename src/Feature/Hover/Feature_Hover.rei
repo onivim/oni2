@@ -9,7 +9,8 @@ type model;
 let initial: model;
 
 [@deriving show({with_path: false})]
-type command;
+type command =
+  | Show;
 
 [@deriving show({with_path: false})]
 type msg =
