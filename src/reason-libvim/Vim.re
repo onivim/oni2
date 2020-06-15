@@ -281,6 +281,11 @@ let _onFormat = formatRequest => {
   );
 };
 
+let _onAutoIndent = (buf: Types.buffer, prevLine: string, nextLine: string) => {
+  // TODO:
+  0;
+};
+
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
@@ -297,6 +302,7 @@ let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
+  Callback.register("lv_onAutoIndent", _onAutoIndent);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
