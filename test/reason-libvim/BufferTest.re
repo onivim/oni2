@@ -206,7 +206,7 @@ describe("Buffer", ({describe, _}) => {
       expect.string(line).toEqual("Tahis is the first line of a test file");
       expect.int(Buffer.getLineCount(buffer)).toBe(3);
     });
-    test("insert string, adding a line line", ({expect, _}) => {
+    test("insert string, adding a line", ({expect, _}) => {
       let _ = resetBuffer();
       let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
 
@@ -223,6 +223,28 @@ describe("Buffer", ({describe, _}) => {
       let line = Buffer.getLine(buffer, Index.fromOneBased(2));
       expect.string(line).toEqual("This is the first line of a test file");
       expect.int(Buffer.getLineCount(buffer)).toBe(4);
+    });
+    test("insert string, verify onModified gets called", ({expect, _}) => {
+      let _ = resetBuffer();
+      let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
+
+      let modifiedEvents = ref([]);
+      let dispose =
+        Buffer.onModifiedChanged((bufferId, modified) => {
+          modifiedEvents := [(bufferId, modified), ...modifiedEvents^]
+        });
+
+      let edit =
+        Edit.{
+          range: range(0, 1, 0, 1),
+          text: [|"his is a whole new line", "T"|],
+        };
+
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+
+      expect.int(modifiedEvents^ |> List.length).toBe(1);
+
+      dispose();
     });
     test("delete line", ({expect, _}) => {
       let _ = resetBuffer();

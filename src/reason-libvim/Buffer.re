@@ -105,6 +105,8 @@ let applyEdits = (~edits, buffer) => {
     setCurrent(buffer);
   };
 
+  let prevModified = isModified(buffer);
+
   Undo.sync(~force=true);
 
   // Sort edits prior to applying, such that last edits
@@ -140,6 +142,12 @@ let applyEdits = (~edits, buffer) => {
   };
 
   let ret = loop(edits);
+
+  let newModified = isModified(buffer);
+
+  if (prevModified != newModified) {
+    Event.dispatch2(bufferId, newModified, Listeners.bufferModifiedChanged);
+  };
 
   if (previousBufferId != bufferId) {
     setCurrent(previousBuffer);
