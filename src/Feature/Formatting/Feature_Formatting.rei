@@ -41,6 +41,7 @@ type outmsg =
 
 let update:
   (
+    ~configuration: Oni_Core.Configuration.t,
     ~maybeBuffer: option(Oni_Core.Buffer.t),
     ~extHostClient: Exthost.Client.t,
     model,

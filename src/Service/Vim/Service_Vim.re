@@ -43,7 +43,7 @@ module Effects = {
           Error("No buffer found with id: " ++ string_of_int(bufferId))
         | Some(buffer) =>
           let bufferVersion = Vim.Buffer.getVersion(buffer);
-          if (bufferVersion != version) {
+          if (bufferVersion < version) {
             Error(
               Printf.sprintf(
                 "Expected buffer version %d, got %d",

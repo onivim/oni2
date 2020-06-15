@@ -37,6 +37,7 @@ let update =
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let (model', eff) =
       Feature_Formatting.update(
+        ~configuration=state.configuration,
         ~maybeBuffer,
         ~extHostClient,
         state.formatting,

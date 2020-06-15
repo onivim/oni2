@@ -90,7 +90,7 @@ let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
     text: textToArray(edit.text),
   };
 
-let update = (~maybeBuffer, ~extHostClient, model, msg) => {
+let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
   switch (msg) {
   | Command(FormatDocument) =>
     switch (maybeBuffer) {
@@ -108,15 +108,21 @@ let update = (~maybeBuffer, ~extHostClient, model, msg) => {
            );
       let sessionId = model.nextSessionId;
 
+      let indentation =
+        Oni_Core.Indentation.getForBuffer(~buffer=buf, configuration);
+
       let effects =
         matchingFormatters
         |> List.map(formatter =>
              Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits(
                ~handle=formatter.handle,
                ~uri=Oni_Core.Buffer.getUri(buf),
-               // TODO: Hook up to indentation settings
                ~options=
-                 Exthost.FormattingOptions.{tabSize: 2, insertSpaces: false},
+                 Exthost.FormattingOptions.{
+                   tabSize: indentation.tabSize,
+                   insertSpaces:
+                     indentation.mode == Oni_Core.IndentationSettings.Spaces,
+                 },
                extHostClient,
                res => {
                switch (res) {
