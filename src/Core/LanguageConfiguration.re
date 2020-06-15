@@ -4,11 +4,9 @@
 
 open Oniguruma;
 
-open Oni_Core.Utility;
-module Json = Oni_Core.Json;
-module SyntaxScope = Oni_Core.SyntaxScope;
+open Utility;
 
-module Log = (val Oni_Core.Log.withNamespace("Oni2.LanguageConfiguration"));
+module Log = (val Kernel.Log.withNamespace("Oni2.LanguageConfiguration"));
 
 type indentAction =
   | KeepIndent

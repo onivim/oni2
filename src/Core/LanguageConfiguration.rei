@@ -4,9 +4,6 @@
 
 open Oniguruma;
 
-module Json = Oni_Core.Json;
-module SyntaxScope = Oni_Core.SyntaxScope;
-
 module AutoClosingPair: {
   type scopes =
     | String

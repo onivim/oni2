@@ -40,7 +40,7 @@ module Internal = {
     if (acpEnabled) {
       maybeLanguageConfig
       |> Option.map(
-           Ext.LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
+           LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
          )
       |> Option.value(~default=Vim.AutoClosingPairs.empty);
     } else {
@@ -50,7 +50,7 @@ module Internal = {
 
   let lineComment = (~maybeLanguageConfig) => {
     maybeLanguageConfig
-    |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+    |> OptionEx.flatMap((config: LanguageConfiguration.t) =>
          config.lineComment
        );
   };
@@ -89,8 +89,8 @@ let current:
          // TODO: Hook up to Vim context
          let _autoIndent =
            maybeLanguageConfig
-           |> Option.map(Ext.LanguageConfiguration.toAutoIndent)
-           |> Option.value(~default=_ => Ext.LanguageConfiguration.KeepIndent);
+           |> Option.map(LanguageConfiguration.toAutoIndent)
+           |> Option.value(~default=_ => LanguageConfiguration.KeepIndent);
 
          let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
          let autoClosingPairs =
