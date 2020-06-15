@@ -45,7 +45,9 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
   });
 
   describe("enter", ({test, _}) => {
-    test("pressing enter between auto-closing pairs should be indented", ({expect, _}) => {
+    test(
+      "pressing enter between auto-closing pairs should be indented",
+      ({expect, _}) => {
       let b = resetBuffer();
       let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
 

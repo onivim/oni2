@@ -48,34 +48,32 @@ module Internal = {
       };
     };
 
-let getDefaultCursors = (cursors: list(Cursor.t)) =>
-  if (cursors == []) {
-    [Cursor.get()];
-  } else {
-    cursors;
-  };
-
-let getPrecedingWhitespace = (~max: int, str) => {
-  let len = String.length(str);
-
-  let rec loop = idx => {
-    if (idx >= max || idx >= len) {
-      idx
+  let getDefaultCursors = (cursors: list(Cursor.t)) =>
+    if (cursors == []) {
+      [Cursor.get()];
     } else {
-      let c = str.[idx];
-      if (c == ' ' || c == '\t') {
-        loop(idx + 1);
+      cursors;
+    };
+
+  let getPrecedingWhitespace = (~max: int, str) => {
+    let len = String.length(str);
+
+    let rec loop = idx =>
+      if (idx >= max || idx >= len) {
+        idx;
       } else {
-        idx
-      }
-    }
-  }
+        let c = str.[idx];
+        if (c == ' ' || c == '\t') {
+          loop(idx + 1);
+        } else {
+          idx;
+        };
+      };
 
-  let lastWhitespaceIndex = loop(0);
+    let lastWhitespaceIndex = loop(0);
 
-  String.sub(str, 0, lastWhitespaceIndex);
-};
-
+    String.sub(str, 0, lastWhitespaceIndex);
+  };
 };
 
 type fn = unit => unit;
@@ -384,7 +382,11 @@ let input = (~context=Context.current(), v: string) => {
             Native.vimInput("<DEL>");
             Native.vimInput("<BS>");
           } else if (v == "<CR>" && isBetweenClosingPairs()) {
-            let precedingWhitespace = Internal.getPrecedingWhitespace(~max=location.column |> Index.toOneBased, line);
+            let precedingWhitespace =
+              Internal.getPrecedingWhitespace(
+                ~max=location.column |> Index.toOneBased,
+                line,
+              );
             Native.vimInput("<CR>");
             Native.vimInput("<CR>");
             Native.vimInput("<UP>");
