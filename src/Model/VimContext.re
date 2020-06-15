@@ -25,7 +25,7 @@ module Internal = {
     |> Option.value(~default=SyntaxScope.none);
   };
 
-  let autoClosingPairs = (~syntaxScope, ~languageConfigLoader, state: State.t) => {
+  let autoClosingPairs = (~syntaxScope, ~maybeLanguageConfig, state: State.t) => {
     let acpEnabled =
       Configuration.getValue(
         c => c.editorAutoClosingBrackets,
@@ -38,12 +38,7 @@ module Internal = {
       );
 
     if (acpEnabled) {
-      state
-      |> Selectors.getActiveBuffer
-      |> OptionEx.flatMap(Buffer.getFileType)
-      |> OptionEx.flatMap(
-           Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
-         )
+      maybeLanguageConfig
       |> Option.map(
            Ext.LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
          )
@@ -53,12 +48,8 @@ module Internal = {
     };
   };
 
-  let lineComment = (~buffer, ~languageConfigLoader) => {
-    buffer
-    |> OptionEx.flatMap(Buffer.getFileType)
-    |> OptionEx.flatMap(
-         Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
-       )
+  let lineComment = (~maybeLanguageConfig) => {
+    maybeLanguageConfig
     |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
          config.lineComment
        );
@@ -81,17 +72,31 @@ let current:
          let bufferId = Editor.getBufferId(editor);
          let {cursors, _}: Editor.t = editor;
 
+         let editorBuffer = Selectors.getActiveBuffer(state);
+         let maybeLanguageConfig =
+           editorBuffer
+           |> OptionEx.flatMap(Buffer.getFileType)
+           |> OptionEx.flatMap(
+                Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
+              );
+
          let maybeCursor =
            switch (Editor.getVimCursors(editor)) {
            | [hd, ..._] => Some(hd)
            | [] => None
            };
 
+         // TODO: Hook up to Vim context
+         let _autoIndent =
+           maybeLanguageConfig
+           |> Option.map(Ext.LanguageConfiguration.toAutoIndent)
+           |> Option.value(~default=_ => Ext.LanguageConfiguration.KeepIndent);
+
          let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
          let autoClosingPairs =
            Internal.autoClosingPairs(
              ~syntaxScope,
-             ~languageConfigLoader,
+             ~maybeLanguageConfig,
              state,
            );
 
@@ -104,11 +109,9 @@ let current:
 
          let leftColumn = Editor.getLeftVisibleColumn(editor);
          let topLine = Editor.getTopVisibleLine(editor);
-         let editorBuffer = Selectors.getActiveBuffer(state);
 
          // Set configured line comment
-         let lineComment =
-           Internal.lineComment(~buffer=editorBuffer, ~languageConfigLoader);
+         let lineComment = Internal.lineComment(~maybeLanguageConfig);
 
          let indentation = Internal.indentation(~buffer=editorBuffer);
 
