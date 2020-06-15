@@ -58,7 +58,7 @@ int onAutoIndent(buf_T *buf, char_u *prevLine, char_u *newLine) {
 
   vPrevLine = caml_copy_string(prevLine);
 
-  value vIndent = caml_callback2(*lv_onAutoIndent, (value)buf, vPrevLine);
+  value vIndent = caml_callback(*lv_onAutoIndent, vPrevLine);
 
   int ret = Int_val(vIndent);
 

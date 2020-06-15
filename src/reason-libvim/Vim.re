@@ -288,7 +288,7 @@ let _onFormat = formatRequest => {
   );
 };
 
-let _onAutoIndent = (buf: Types.buffer, prevLine: string) => {
+let _onAutoIndent = (prevLine: string) => {
   let indentAction =
     GlobalState.autoIndent^
     |> Option.map(fn => fn(prevLine))
