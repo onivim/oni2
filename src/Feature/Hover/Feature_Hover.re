@@ -34,15 +34,8 @@ let initial = {
   lastRequestID: None,
 };
 
-module IDGenerator = {
-  let current = ref(0);
-
-  let get = () => {
-    let id = current^;
-    current := id + 1;
-    id;
-  };
-};
+module IDGenerator =
+  Oni_Core.Utility.IDGenerator.Make({});
 
 [@deriving show({with_path: false})]
 type command =
