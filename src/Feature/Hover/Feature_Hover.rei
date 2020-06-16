@@ -18,7 +18,7 @@ type msg =
   | KeyPressed(string)
   | ProviderRegistered(provider)
   | HoverInfoReceived({
-      contents: list(string),
+      contents: list(Exthost.MarkdownString.t),
       range: option(EditorCoreTypes.Range.t),
       requestID: int,
     })
