@@ -2,14 +2,10 @@
    This feature project contains logic related to Signature Help
     */
 open Oni_Core;
-open Revery;
-open Revery.UI;
-open Revery.UI.Components;
-open EditorCoreTypes;
 
 module Log = (val Log.withNamespace("Oni.Feature.SignatureHelp"));
 module IDGenerator =
-  Oni_Core.Utility.IDGenerator.Make({});
+  Utility.IDGenerator.Make({});
 
 [@deriving show({with_path: false})]
 type provider = {
@@ -64,9 +60,9 @@ module Commands = {
 
   let show =
     define(
-      ~category="Signature Help",
-      ~title="Show signature help",
-      "editor.action.showSignatureHelp", // This doesn't exist in VSCode, but is similar to the hover command.
+      ~category="Parameter Hints",
+      ~title="Show parameter hints",
+      "editor.action.triggerParameterHints",
       Command(Show),
     );
 };
@@ -78,9 +74,7 @@ module Contributions = {
 let getEffectsForLocation =
     (~buffer, ~location, ~extHostClient, ~model, ~context, ~requestID) => {
   let filetype =
-    buffer
-    |> Oni_Core.Buffer.getFileType
-    |> Option.value(~default="plaintext");
+    buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
 
   let matchingProviders =
     model.providers
@@ -92,7 +86,7 @@ let getEffectsForLocation =
   |> List.map(provider =>
        Service_Exthost.Effects.LanguageFeatures.provideSignatureHelp(
          ~handle=provider.handle,
-         ~uri=Oni_Core.Buffer.getUri(buffer),
+         ~uri=Buffer.getUri(buffer),
          ~position=location,
          ~context,
          extHostClient,

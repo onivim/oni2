@@ -1,5 +1,4 @@
 open Oni_Core;
-open EditorCoreTypes;
 
 [@deriving show({with_path: false})]
 type provider = {

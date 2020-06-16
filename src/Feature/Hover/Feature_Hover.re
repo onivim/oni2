@@ -209,60 +209,14 @@ module Contributions = {
   let commands = Commands.[show];
 };
 
-module Constants = {
-  let scrollWheelMultiplier = 25;
-  let scrollBarThickness = 10;
-  let scrollTrackColor = Color.rgba(0., 0., 0., 0.4);
-  let scrollThumbColor = Color.rgba(0.5, 0.5, 0.5, 0.4);
-};
-
 module Styles = {
   open Style;
   module Colors = Feature_Theme.Colors;
-
-  let outer = (~x, ~y, ~theme) => [
-    position(`Absolute),
-    left(x),
-    top(y),
-    border(~width=1, ~color=Colors.EditorHoverWidget.border.from(theme)),
-  ];
-
-  let maxHeight = 200;
-  let maxWidth = 500;
-
-  let container = [
-    position(`Relative),
-    Style.maxWidth(maxWidth + Constants.scrollBarThickness),
-    Style.maxHeight(maxHeight),
-    overflow(`Scroll),
-  ];
 
   let diagnostic = (~theme) => [
     textOverflow(`Ellipsis),
     color(Colors.Editor.foreground.from(theme)),
     backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
-  ];
-
-  let contents = (~theme, ~showScrollbar, ~scrollTop) => [
-    backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
-    Style.maxWidth(maxWidth),
-    top(scrollTop),
-    paddingLeft(6),
-    {
-      showScrollbar
-        ? paddingRight(6 + Constants.scrollBarThickness) : paddingRight(6);
-    },
-    paddingBottom(4),
-    paddingTop(4),
-  ];
-
-  let scrollBar = (~theme) => [
-    right(0),
-    top(0),
-    bottom(0),
-    position(`Absolute),
-    backgroundColor(Colors.EditorHoverWidget.background.from(theme)),
-    width(Constants.scrollBarThickness),
   ];
 
   let hr = (~theme) => [
