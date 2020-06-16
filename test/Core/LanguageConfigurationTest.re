@@ -137,34 +137,5 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
         true,
       );
     });
-    test("both increase / decrease indent match", ({expect, _}) => {
-      let parsedLangConfig =
-        json(
-          {|
-        {"indentationRules":
-          {
-          "increaseIndentPattern":"abc",
-          "decreaseIndentPattern":"abc"
-          }
-        }|},
-        )
-        |> Json.Decode.decode_value(LanguageConfiguration.decode);
-
-      expect.equal(Result.is_ok(parsedLangConfig), true);
-      let langConfig: LanguageConfiguration.t =
-        Result.get_ok(parsedLangConfig);
-
-      expect.equal(
-        LanguageConfiguration.toAutoIndent(langConfig, "abc")
-        == Vim.AutoIndent.KeepIndent,
-        true,
-      );
-
-      expect.equal(
-        LanguageConfiguration.toAutoIndent(langConfig, "def")
-        == Vim.AutoIndent.KeepIndent,
-        true,
-      );
-    });
   });
 });

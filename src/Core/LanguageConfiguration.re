@@ -202,9 +202,7 @@ let toAutoIndent = ({increaseIndentPattern, decreaseIndentPattern, _}, str) => {
     |> Option.map(regex => OnigRegExp.test(str, regex))
     |> Option.value(~default=false);
 
-  if (increase && decrease) {
-    Vim.AutoIndent.KeepIndent;
-  } else if (increase) {
+  if (increase) {
     Vim.AutoIndent.IncreaseIndent;
   } else if (decrease) {
     Vim.AutoIndent.DecreaseIndent;
