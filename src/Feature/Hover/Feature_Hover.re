@@ -259,7 +259,7 @@ module View = {
         },
         ~grammars,
         ~markdown=Exthost.MarkdownString.toString(markdown),
-        ~baseFontSize=14.,
+        ~baseFontSize=uiFont.size,
         ~codeBlockStyle=Style.[flexGrow(1)],
       );
 

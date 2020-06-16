@@ -2,6 +2,7 @@
    This feature project contains logic related to Signature Help
     */
 open Oni_Core;
+open EditorCoreTypes;
 
 module Log = (val Log.withNamespace("Oni.Feature.SignatureHelp"));
 module IDGenerator =
@@ -161,3 +162,98 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
     Log.warnf(m => m("Request failed : %s", str));
     (model, Error(str));
   };
+
+module View = {
+  open Oni_Components;
+  open Revery;
+  open Revery.UI;
+
+  let signatureHelp =
+      (
+        ~x,
+        ~y,
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~model,
+        ~grammars,
+        (),
+      ) => {
+    let signatureHelpMarkdown = (~markdown) =>
+      Markdown.make(
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~fontFamily=uiFont.family,
+        ~codeFontFamily=editorFont.fontFamily,
+        ~grammars,
+        ~markdown=Exthost.MarkdownString.toString(markdown),
+        ~baseFontSize=uiFont.size,
+      );
+    <HoverView x y theme=colorTheme>
+      <Text text="SIGNATURE HELP" />
+    </HoverView>;
+  };
+
+  let make =
+      (
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~model,
+        ~editor,
+        ~buffer,
+        ~gutterWidth,
+        ~grammars,
+        (),
+      ) => {
+    let maybeCoords =
+      (
+        if (model.shown) {
+          let cursorLocation =
+            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+          Some(cursorLocation);
+        } else {
+          None;
+        }
+      )
+      |> Option.map((Location.{line, column}) => {
+           let y =
+             int_of_float(
+               editorFont.measuredHeight
+               *. float(Index.toZeroBased(line) + 1)
+               -. editor.scrollY
+               +. 0.5,
+             );
+
+           let x =
+             int_of_float(
+               gutterWidth
+               +. editorFont.measuredWidth
+               *. float(Index.toZeroBased(column))
+               -. editor.scrollX
+               +. 0.5,
+             );
+           (x, y);
+         });
+    switch (maybeCoords) {
+    | Some((x, y)) =>
+      <signatureHelp
+        x
+        y
+        colorTheme
+        tokenTheme
+        languageInfo
+        uiFont
+        editorFont
+        model
+        grammars
+      />
+    | None => React.empty
+    };
+  };
+};

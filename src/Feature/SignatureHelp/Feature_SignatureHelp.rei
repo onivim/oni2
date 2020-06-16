@@ -43,3 +43,21 @@ let update:
   (model, outmsg);
 
 module Contributions: {let commands: list(Command.t(msg));};
+
+module View: {
+  let make:
+    (
+      ~colorTheme: ColorTheme.Colors.t,
+      ~tokenTheme: Oni_Syntax.TokenTheme.t,
+      ~languageInfo: Oni_Extensions.LanguageInfo.t,
+      ~uiFont: UiFont.t,
+      ~editorFont: Service_Font.font,
+      ~model: model,
+      ~editor: Feature_Editor.Editor.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~gutterWidth: float,
+      ~grammars: Oni_Syntax.GrammarRepository.t,
+      unit
+    ) =>
+    Revery.UI.element;
+};
