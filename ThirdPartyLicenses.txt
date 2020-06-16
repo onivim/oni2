@@ -3741,7 +3741,7 @@ public licenses.
 
 Creative Commons may be contacted at creativecommons.org.
 ==============================================
-END OF vscode-codicons NOTICES AND INFORATION
+END OF vscode-codicons NOTICES AND INFORMATION
 
 %% openssl NOTICES AND INFORMATION BEGIN HERE
 ==============================================
@@ -3924,4 +3924,4 @@ END OF vscode-codicons NOTICES AND INFORATION
    END OF TERMS AND CONDITIONS
 
 ==============================================
-END OF openssl NOTICES AND INFORATION
+END OF openssl NOTICES AND INFORMATION
