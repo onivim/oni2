@@ -2,9 +2,16 @@
  * LanguageConfiguration.re
  */
 
-open Oni_Core.Utility;
-module Json = Oni_Core.Json;
-module SyntaxScope = Oni_Core.SyntaxScope;
+open Oniguruma;
+
+open Utility;
+
+module Log = (val Kernel.Log.withNamespace("Oni2.LanguageConfiguration"));
+
+type indentAction =
+  | KeepIndent
+  | DecreaseIndent
+  | IncreaseIndent;
 
 module AutoClosingPair = {
   type scopes =
@@ -77,6 +84,8 @@ type t = {
   autoClosingPairs: list(AutoClosingPair.t),
   lineComment: option(string),
   blockComment: option((string, string)),
+  increaseIndentPattern: option(OnigRegExp.t),
+  decreaseIndentPattern: option(OnigRegExp.t),
 };
 
 let default = {
@@ -97,6 +106,8 @@ let default = {
   autoClosingPairs: [],
   lineComment: None,
   blockComment: None,
+  increaseIndentPattern: None,
+  decreaseIndentPattern: None,
 };
 
 module Decode = {
@@ -104,6 +115,18 @@ module Decode = {
   open Json.Decode;
 
   let autoCloseBeforeDecode = string |> map(StringEx.explode);
+
+  let regexp =
+    string
+    |> map(OnigRegExp.create)
+    |> and_then(
+         fun
+         | Ok(regexp) => succeed(Some(regexp))
+         | Error(msg) => {
+             Log.errorf(m => m("Error %s parsing regex", msg));
+             succeed(None);
+           },
+       );
 
   let configuration =
     obj(({field, at, _}) =>
@@ -130,6 +153,18 @@ module Decode = {
                  | [start, stop] => succeed((start, stop))
                  | _ => fail("Expected pair"),
                ),
+          ),
+        increaseIndentPattern:
+          at.withDefault(
+            ["indentationRules", "increaseIndentPattern"],
+            None,
+            regexp,
+          ),
+        decreaseIndentPattern:
+          at.withDefault(
+            ["indentationRules", "decreaseIndentPattern"],
+            None,
+            regexp,
           ),
       }
     );
@@ -159,4 +194,26 @@ let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
     ~allowBefore=configuration.autoCloseBefore,
     pairs,
   );
+};
+
+let toAutoIndent = ({increaseIndentPattern, decreaseIndentPattern, _}, str) => {
+  let increase =
+    increaseIndentPattern
+    |> Option.map(regex => OnigRegExp.test(str, regex))
+    |> Option.value(~default=false);
+
+  let decrease =
+    decreaseIndentPattern
+    |> Option.map(regex => OnigRegExp.test(str, regex))
+    |> Option.value(~default=false);
+
+  if (increase && decrease) {
+    KeepIndent;
+  } else if (increase) {
+    IncreaseIndent;
+  } else if (decrease) {
+    DecreaseIndent;
+  } else {
+    KeepIndent;
+  };
 };
