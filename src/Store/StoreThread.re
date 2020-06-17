@@ -383,6 +383,12 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
   );
 
+  registerCommands(
+    ~dispatch,
+    Feature_Formatting.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
+  );
+
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, inputStream);

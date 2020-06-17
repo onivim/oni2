@@ -595,24 +595,19 @@ module MessageService = {
     switch (method, args) {
     | (
         "$showMessage",
-        `List([`Int(severity), `String(message), options, ..._]),
+        `List([`Int(severity), `String(message), _options, ..._]),
       ) =>
-      try({
-        let extensionId =
-          Yojson.Safe.Util.(
-            options
-            |> member("extension")
-            |> member("identifier")
-            |> to_string_option
-          );
+      try(
         Ok(
           ShowMessage({
             severity: intToSeverity(severity),
             message,
-            extensionId,
+            // TODO:
+            // Fix this up
+            extensionId: None,
           }),
-        );
-      }) {
+        )
+      ) {
       | exn => Error(Printexc.to_string(exn))
       }
     | _ =>

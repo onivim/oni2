@@ -12,6 +12,7 @@ module Clipboard = Clipboard;
 module CommandLine = CommandLine;
 module Context = Context;
 module Cursor = Cursor;
+module Edit = Edit;
 module Effect = Effect;
 module Event = Event;
 module Format = Format;
