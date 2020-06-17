@@ -284,6 +284,8 @@ module View = {
         Colors.EditorSuggestWidget.selectedBackground.from(theme),
       ),
     ];
+
+    let button = [cursor(MouseCursors.pointer)];
   };
 
   let horizontalRule = (~theme, ()) =>
@@ -291,21 +293,33 @@ module View = {
       <View style={Styles.hr(~theme)} />
     </UI.Components.Row>;
 
-  let signatureHelp =
-      (
-        ~x,
-        ~y,
-        ~colorTheme,
-        ~tokenTheme,
-        ~languageInfo,
-        ~uiFont: UiFont.t,
-        ~editorFont: Service_Font.font,
-        ~model,
-        ~grammars,
-        ~signatureIndex,
-        ~parameterIndex,
-        (),
-      ) => {
+  let%component signatureHelp =
+                (
+                  ~x,
+                  ~y,
+                  ~colorTheme,
+                  ~tokenTheme,
+                  ~languageInfo,
+                  ~uiFont: UiFont.t,
+                  ~editorFont: Service_Font.font,
+                  ~model,
+                  ~grammars,
+                  ~signatureIndex,
+                  ~parameterIndex,
+                  (),
+                ) => {
+    let%hook (signatureIndex, setSignatureIndex') =
+      Hooks.state(signatureIndex);
+    let setSignatureIndex = f =>
+      setSignatureIndex'(s =>
+        f(s)
+        |> Oni_Core.Utility.IntEx.clamp(
+             ~lo=0,
+             ~hi={
+               List.length(model.signatures) - 1;
+             },
+           )
+      );
     let signatureHelpMarkdown = (~markdown) =>
       Markdown.make(
         ~colorTheme,
@@ -379,6 +393,33 @@ module View = {
     };
     <HoverView x y theme=colorTheme>
       <View style=Styles.signatureLine> {renderLabel()} </View>
+      <UI.Components.Row>
+        <View
+          style=Styles.button onMouseUp={_ => setSignatureIndex(i => i - 1)}>
+          <Codicon
+            icon=Codicon.chevronLeft
+            color={Feature_Theme.Colors.foreground.from(colorTheme)}
+            fontSize={uiFont.size *. 0.9}
+          />
+        </View>
+        <Text
+          text={Printf.sprintf(
+            "%d/%d",
+            signatureIndex + 1,
+            List.length(model.signatures),
+          )}
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size *. 0.8}
+        />
+        <View
+          style=Styles.button onMouseUp={_ => setSignatureIndex(i => i + 1)}>
+          <Codicon
+            icon=Codicon.chevronRight
+            color={Feature_Theme.Colors.foreground.from(colorTheme)}
+            fontSize={uiFont.size *. 0.9}
+          />
+        </View>
+      </UI.Components.Row>
       {switch (parameter.documentation) {
        | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
          [
@@ -397,15 +438,6 @@ module View = {
          |> React.listToElement
        | _ => React.empty
        }}
-      <Text
-        text={Printf.sprintf(
-          "%d/%d",
-          signatureIndex + 1,
-          List.length(model.signatures),
-        )}
-        fontFamily={uiFont.family}
-        fontSize={uiFont.size *. 0.8}
-      />
     </HoverView>;
   };
 
