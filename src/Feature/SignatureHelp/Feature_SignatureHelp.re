@@ -165,23 +165,53 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | KeyPressed(k) =>
     switch (maybeBuffer, maybeEditor, model.shown) {
     | (Some(buffer), Some(editor), true) =>
-      let context =
-        Exthost.SignatureHelp.RequestContext.{
-          triggerKind: Exthost.SignatureHelp.TriggerKind.ContentChange,
-          triggerCharacter: None,
-          isRetrigger: true,
-        };
-      let requestID = IDGenerator.get();
-      let effects =
-        getEffectsForLocation(
-          ~buffer,
-          ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
-          ~extHostClient,
-          ~model,
-          ~context,
-          ~requestID,
+      let filetype =
+        buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
+      let matchingProviders =
+        model.providers
+        |> List.filter(({selector, _}) =>
+             Exthost.DocumentSelector.matches(~filetype, selector)
+           );
+      let retrigger =
+        matchingProviders
+        |> List.exists(({metadata, _}) =>
+             List.mem(k, metadata.retriggerCharacters)
+           );
+      if (retrigger) {
+        Log.infof(m => m("Retrigger character hit: %s", k));
+        let context =
+          Exthost.SignatureHelp.RequestContext.{
+            triggerKind: Exthost.SignatureHelp.TriggerKind.ContentChange,
+            triggerCharacter: Some(k),
+            isRetrigger: true,
+          };
+        let requestID = IDGenerator.get();
+        let effects =
+          getEffectsForLocation(
+            ~buffer,
+            ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+            ~extHostClient,
+            ~model,
+            ~context,
+            ~requestID,
+          );
+        ({...model, lastRequestID: Some(requestID)}, Effect(effects));
+      } else if (k == "<ESC>") {
+        (
+          {
+            ...model,
+            shown: false,
+            lastRequestID: None,
+            triggeredFrom: None,
+            signatures: [],
+            activeSignature: None,
+            activeParameter: None,
+          },
+          Nothing,
         );
-      ({...model, lastRequestID: Some(requestID)}, Effect(effects));
+      } else {
+        (model, Nothing);
+      };
     | (Some(buffer), Some(editor), false) =>
       let filetype =
         buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
@@ -196,6 +226,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
              List.mem(k, metadata.triggerCharacters)
            );
       if (trigger) {
+        Log.infof(m => m("Trigger character hit: %s", k));
         let requestID = IDGenerator.get();
         let context =
           Exthost.SignatureHelp.RequestContext.{
