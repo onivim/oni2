@@ -229,68 +229,65 @@ module View = {
     let signature: Signature.t = List.nth(model.signatures, signatureIndex);
     let parameter: ParameterInformation.t =
       List.nth(signature.parameters, parameterIndex);
-    let renderParameters = () =>
-      signature.parameters
-      |> List.mapi((i, param: ParameterInformation.t) =>
-           switch (param.label) {
-           | `String(label) =>
-             <View
-               style={
-                 i == parameterIndex
-                   ? Styles.activeParameter(~theme=colorTheme) : []
-               }>
-               <Text
-                 text=label
-                 fontFamily={editorFont.fontFamily}
-                 fontSize={editorFont.fontSize}
-               />
-             </View>
-           | `Range(_) => React.empty
-           }
-         )
-      |> React.listToElement;
-
+    let renderLabel = () => {
+      switch (parameter.label) {
+      | `Range(start, end_) =>
+        let s1 = String.sub(signature.label, 0, start);
+        let s2 = String.sub(signature.label, start, end_ - start);
+        let s3 =
+          String.sub(
+            signature.label,
+            end_,
+            String.length(signature.label) - end_,
+          );
+        [
+          <Text
+            text=s1
+            fontFamily={editorFont.fontFamily}
+            fontSize={editorFont.fontSize}
+          />,
+          <View style={Styles.activeParameter(~theme=colorTheme)}>
+            <Text
+              text=s2
+              fontFamily={editorFont.fontFamily}
+              fontSize={editorFont.fontSize}
+            />
+          </View>,
+          <Text
+            text=s3
+            fontFamily={editorFont.fontFamily}
+            fontSize={editorFont.fontSize}
+          />,
+        ]
+        |> React.listToElement;
+      | `String(str) =>
+        let regex = Str.quote(str) |> Str.regexp;
+        let strList = Str.full_split(regex, signature.label);
+        List.map(
+          res =>
+            switch (res) {
+            | Str.Text(s) =>
+              <Text
+                text=s
+                fontFamily={editorFont.fontFamily}
+                fontSize={editorFont.fontSize}
+              />
+            | Str.Delim(s) =>
+              <View style={Styles.activeParameter(~theme=colorTheme)}>
+                <Text
+                  text=s
+                  fontFamily={editorFont.fontFamily}
+                  fontSize={editorFont.fontSize}
+                />
+              </View>
+            },
+          strList,
+        )
+        |> React.listToElement;
+      };
+    };
     <HoverView x y theme=colorTheme>
-      <View style=Styles.signatureLine>
-        {switch (parameter.label) {
-         | `Range(start, end_) =>
-           let s1 = String.sub(signature.label, 0, start);
-           let s2 = String.sub(signature.label, start, end_ - start);
-           let s3 =
-             String.sub(
-               signature.label,
-               end_,
-               String.length(signature.label) - end_,
-             );
-           [
-             <Text
-               text=s1
-               fontFamily={editorFont.fontFamily}
-               fontSize={editorFont.fontSize}
-             />,
-             <View style={Styles.activeParameter(~theme=colorTheme)}>
-               <Text
-                 text=s2
-                 fontFamily={editorFont.fontFamily}
-                 fontSize={editorFont.fontSize}
-               />
-             </View>,
-             <Text
-               text=s3
-               fontFamily={editorFont.fontFamily}
-               fontSize={editorFont.fontSize}
-             />,
-           ]
-           |> React.listToElement;
-         | `String(_) =>
-           <Text
-             text={signature.label}
-             fontFamily={editorFont.fontFamily}
-             fontSize={editorFont.fontSize}
-           />
-         }}
-        {renderParameters()}
-      </View>
+      <View style=Styles.signatureLine> {renderLabel()} </View>
       {switch (parameter.documentation) {
        | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
          [
