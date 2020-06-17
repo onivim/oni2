@@ -95,10 +95,11 @@ let renderLine =
   List.iter(f, tokens);
 };
 
-let getMinimapSize = (view: Editor.t) => {
-  let currentViewSize = Editor.getVisibleView(view);
+let getMinimapSize = (editor: Editor.t) => {
+  let currentViewSize = Editor.getVisibleView(editor);
+  let totalLines = Editor.totalViewLines(editor);
 
-  view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
+  totalLines < currentViewSize ? 0 : currentViewSize + 1;
 };
 
 type captureState = {
@@ -126,7 +127,7 @@ let%component make =
   let rowHeight =
     float(Constants.minimapCharacterHeight + Constants.minimapLineSpacing);
 
-  let scrollY = editor.minimapScrollY;
+  let scrollY = Editor.minimapScrollY(editor);
 
   let thumbTop =
     rowHeight *. float(Editor.getTopVisibleLine(editor) - 1) -. scrollY;

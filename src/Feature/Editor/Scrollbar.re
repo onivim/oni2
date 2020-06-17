@@ -303,7 +303,7 @@ module Vertical = {
       };
     };
 
-    getSelectionElements(editor.selection) |> React.listToElement;
+    getSelectionElements(Editor.selection(editor)) |> React.listToElement;
   };
 
   let make =

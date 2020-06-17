@@ -79,7 +79,8 @@ let%component make =
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(Msg.EditorMouseWheel({deltaWheel: wheelEvent.deltaY *. (-1.)}));
 
-  let {scrollX, scrollY, _}: Editor.t = editor;
+  let scrollX = Editor.scrollX(editor);
+  let scrollY = Editor.scrollY(editor);
 
   let getMaybeLocationFromMousePosition = (mouseX, mouseY) => {
     maybeBbox^
@@ -171,11 +172,15 @@ let%component make =
        });
   };
 
+  let pixelWidth = Editor.visiblePixelWidth(editor);
+  let pixelHeight = Editor.visiblePixelHeight(editor);
+  let lineHeight = Editor.lineHeightInPixels(editor);
+
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(Editor.(editor.pixelWidth)) -. gutterWidth,
+      float(Editor.(pixelWidth)) -. gutterWidth,
     )}
     onMouseUp
     onMouseMove
@@ -184,17 +189,17 @@ let%component make =
     <Canvas
       style={Styles.bufferViewClipped(
         0.,
-        float(Editor.(editor.pixelWidth)) -. gutterWidth,
+        float(Editor.(pixelWidth)) -. gutterWidth,
       )}
       render={canvasContext => {
         let context =
           Draw.createContext(
             ~canvasContext,
-            ~width=editor.pixelWidth,
-            ~height=editor.pixelHeight,
+            ~width=pixelWidth,
+            ~height=pixelHeight,
             ~scrollX,
             ~scrollY,
-            ~lineHeight=editorFont.measuredHeight,
+            ~lineHeight,
             ~editorFont,
           );
 

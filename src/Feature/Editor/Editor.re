@@ -3,6 +3,11 @@ open Oni_Core;
 
 let lastId = ref(0);
 
+type pixelPosition = {
+  pixelX: float,
+  pixelY: float,
+};
+
 [@deriving show]
 // TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
 type t = {
@@ -23,6 +28,43 @@ type t = {
   font: [@opaque] Service_Font.font,
   pixelWidth: int,
   pixelHeight: int,
+};
+
+let id = ({editorId, _}) => editorId;
+
+let totalViewLines = ({viewLines, _}) => viewLines;
+let selection = ({selection, _}) => selection;
+let visiblePixelWidth = ({pixelWidth}) => pixelWidth;
+let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
+let scrollY = ({scrollY, _}) => scrollY;
+let scrollX = ({scrollX, _}) => scrollX;
+let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
+let lineHeightInPixels = ({font, _}) => font.measuredHeight;
+
+let bufferLineByteToPixel =
+    (~overrideScrollX=None, ~overrideScrollY=None, ~line, ~byteIndex, editor) => {
+  let scrollY =
+    switch (overrideScrollY) {
+    | Some(v) => v
+    | None => editor.scrollY
+    };
+  let scrollX =
+    switch (overrideScrollX) {
+    | Some(v) => v
+    | None => editor.scrollX
+    };
+
+  let (cursorOffset, _) =
+    editor.buffer
+    |> EditorBuffer.line(line)
+    |> BufferLine.getPositionAndWidth(~index=byteIndex);
+
+  let pixelX =
+    editor.font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+
+  let pixelY = editor.font.measuredHeight *. float(line) -. scrollY +. 0.5;
+
+  ({pixelX, pixelY}, 0.);
 };
 
 let create = (~font, ~buffer, ()) => {

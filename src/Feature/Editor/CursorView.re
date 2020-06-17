@@ -107,8 +107,8 @@ let%component make =
       let context =
         Draw.createContext(
           ~canvasContext,
-          ~width=editor.pixelWidth,
-          ~height=editor.pixelHeight,
+          ~width=Editor.visiblePixelWidth(editor),
+          ~height=Editor.visiblePixelHeight(editor),
           ~scrollX,
           ~scrollY,
           ~lineHeight=editorFont.measuredHeight,

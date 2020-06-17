@@ -2,24 +2,30 @@ open EditorCoreTypes;
 open Oni_Core;
 
 [@deriving show]
-type t = {
-  buffer: EditorBuffer.t,
-  editorId: EditorId.t,
-  scrollX: float,
-  scrollY: float,
-  minimapMaxColumnWidth: int,
-  minimapScrollY: float,
-  /*
-   * The maximum line visible in the view.
-   * TODO: This will be dependent on line-wrap settings.
-   */
-  maxLineLength: int,
-  viewLines: int,
-  cursors: [@opaque] list(Vim.Cursor.t),
-  selection: [@opaque] VisualRange.t,
-  font: [@opaque] Service_Font.font,
-  pixelWidth: int,
-  pixelHeight: int,
+type t;
+//type t;
+//  buffer: EditorBuffer.t,
+//  editorId: EditorId.t,
+//  scrollX: float,
+//  scrollY: float,
+//  minimapMaxColumnWidth: int,
+//  minimapScrollY: float,
+//  /*
+//   * The maximum line visible in the view.
+//   * TODO: This will be dependent on line-wrap settings.
+//   */
+//  maxLineLength: int,
+//  viewLines: int,
+//  cursors: [@opaque] list(Vim.Cursor.t),
+//  selection: [@opaque] VisualRange.t,
+//  font: [@opaque] Service_Font.font,
+//  pixelWidth: int,
+//  pixelHeight: int,
+//};
+
+type pixelPosition = {
+  pixelX: float,
+  pixelY: float,
 };
 
 type scrollbarMetrics = {
@@ -44,6 +50,29 @@ let getTotalWidthInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getVimCursors: t => list(Vim.Cursor.t);
+
+let visiblePixelWidth: t => int;
+let visiblePixelHeight: t => int;
+
+let scrollX: t => float;
+let scrollY: t => float;
+let minimapScrollY: t => float;
+
+let lineHeightInPixels: t => float;
+
+let bufferLineByteToPixel:
+  (
+    ~overrideScrollX: option(float)=?,
+    ~overrideScrollY: option(float)=?,
+    ~line: int,
+    ~byteIndex: int,
+    t
+  ) =>
+  (pixelPosition, float);
+
+let selection: t => VisualRange.t;
+
+let totalViewLines: t => int;
 
 let scrollToColumn: (~column: int, t) => t;
 let scrollToPixelX: (~pixelX: float, t) => t;

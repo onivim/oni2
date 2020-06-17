@@ -63,24 +63,15 @@ let make =
       ~editorFont: Service_Font.font,
       (),
     ) => {
-  let cursorOffset = Editor.getCursorOffset(~buffer, ~cursorPosition);
-
-  let cursorPixelY =
-    int_of_float(
-      editorFont.measuredHeight
-      *. float(Index.toZeroBased(cursorPosition.line))
-      -. editor.scrollY
-      +. 0.5,
+  let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+    Editor.bufferLineByteToPixel(
+      ~line=Index.toZeroBased(cursorPosition.line),
+      ~byteIndex=Index.toZeroBased(cursorPosition.column),
+      editor,
     );
 
-  let cursorPixelX =
-    int_of_float(
-      gutterWidth
-      +. editorFont.measuredWidth
-      *. float(cursorOffset)
-      -. editor.scrollX
-      +. 0.5,
-    );
+  let cursorPixelY = pixelY |> int_of_float;
+  let cursorPixelX = pixelX |> int_of_float;
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
