@@ -222,3 +222,19 @@ let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
     );
   };
 };
+
+let removeWindowsNewLines = s =>
+  List.init(String.length(s), String.get(s))
+  |> List.filter(c => c != '\r')
+  |> List.map(c => String.make(1, c))
+  |> String.concat("");
+let splitNewLines = s => s |> String.split_on_char('\n') |> Array.of_list;
+
+let removeTrailingNewLine = s => {
+  let len = String.length(s);
+  if (len > 0 && s.[len - 1] == '\n') {
+    String.sub(s, 0, len - 1);
+  } else {
+    s;
+  };
+};

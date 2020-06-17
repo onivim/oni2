@@ -33,6 +33,29 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | Formatting(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let (model', eff) =
+      Feature_Formatting.update(
+        ~configuration=state.configuration,
+        ~maybeBuffer,
+        ~extHostClient,
+        state.formatting,
+        msg,
+      );
+    let state' = {...state, formatting: model'};
+    let effect =
+      switch (eff) {
+      | Feature_Formatting.Nothing => Effect.none
+      | Feature_Formatting.FormattingApplied({editCount, _}) =>
+        let msg = Printf.sprintf("Applied %d edits", editCount);
+        Internal.notificationEffect(~kind=Info, "Format: " ++ msg);
+      | Feature_Formatting.FormatError(msg) =>
+        Internal.notificationEffect(~kind=Error, "Format: " ++ msg)
+      | Feature_Formatting.Effect(eff) =>
+        eff |> Effect.map(msg => Actions.Formatting(msg))
+      };
+    (state', effect);
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};

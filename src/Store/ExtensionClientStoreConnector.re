@@ -9,7 +9,7 @@
 open Oni_Core;
 open Oni_Model;
 
-module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
+module Log = (val Log.withNamespace("Oni2.Extension.ClientStoreConnector"));
 
 module Extensions = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
