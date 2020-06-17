@@ -19,6 +19,7 @@ type command =
 type msg =
   | Command(command)
   | ProviderRegistered(provider)
+  | KeyPressed(string)
   | InfoReceived({
       signatures: list(Exthost.SignatureHelp.Signature.t),
       activeSignature: int,

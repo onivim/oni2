@@ -43,6 +43,7 @@ type command =
 type msg =
   | Command(command)
   | ProviderRegistered(provider)
+  | KeyPressed(string)
   | InfoReceived({
       signatures: list(Exthost.SignatureHelp.Signature.t),
       activeSignature: int,
@@ -161,6 +162,65 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | RequestFailed(str) =>
     Log.warnf(m => m("Request failed : %s", str));
     (model, Error(str));
+  | KeyPressed(k) =>
+    switch (maybeBuffer, maybeEditor, model.shown) {
+    | (Some(buffer), Some(editor), true) =>
+      let context =
+        Exthost.SignatureHelp.RequestContext.{
+          triggerKind: Exthost.SignatureHelp.TriggerKind.ContentChange,
+          triggerCharacter: None,
+          isRetrigger: true,
+        };
+      let requestID = IDGenerator.get();
+      let effects =
+        getEffectsForLocation(
+          ~buffer,
+          ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+          ~extHostClient,
+          ~model,
+          ~context,
+          ~requestID,
+        );
+      ({...model, lastRequestID: Some(requestID)}, Effect(effects));
+    | (Some(buffer), Some(editor), false) =>
+      let filetype =
+        buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
+      let matchingProviders =
+        model.providers
+        |> List.filter(({selector, _}) =>
+             Exthost.DocumentSelector.matches(~filetype, selector)
+           );
+      let trigger =
+        matchingProviders
+        |> List.exists(({metadata, _}) =>
+             List.mem(k, metadata.triggerCharacters)
+           );
+      if (trigger) {
+        let requestID = IDGenerator.get();
+        let context =
+          Exthost.SignatureHelp.RequestContext.{
+            triggerKind: Exthost.SignatureHelp.TriggerKind.TriggerCharacter,
+            triggerCharacter: Some(k),
+            isRetrigger: false,
+          };
+        let effects =
+          getEffectsForLocation(
+            ~buffer,
+            ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+            ~extHostClient,
+            ~model,
+            ~context,
+            ~requestID,
+          );
+        (
+          {...model, shown: true, lastRequestID: Some(requestID)},
+          Effect(effects),
+        );
+      } else {
+        (model, Nothing);
+      };
+    | _ => (model, Nothing)
+    }
   };
 
 module View = {
