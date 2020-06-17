@@ -188,7 +188,7 @@ let%component make =
 
   let lineCount = Buffer.getNumberOfLines(buffer);
 
-  let editorFont = editor.font;
+  let editorFont = Editor.font(editor);
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
   let topVisibleLine = Editor.getTopVisibleLine(editor);
@@ -197,16 +197,11 @@ let%component make =
   let cursorPosition = Editor.getPrimaryCursor(~buffer, editor);
 
   let layout =
-    EditorLayout.getLayout(
+    Editor.getLayout(
       ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
       ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      ~pixelWidth=float(editor.pixelWidth),
-      ~pixelHeight=float(editor.pixelHeight),
       ~isMinimapShown=Config.Minimap.enabled.get(config),
-      ~characterWidth=editorFont.measuredWidth,
-      ~characterHeight=editorFont.measuredHeight,
-      ~bufferLineCount=lineCount,
-      (),
+      editor,
     );
 
   let matchingPairs =

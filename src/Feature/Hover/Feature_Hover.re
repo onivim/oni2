@@ -464,22 +464,18 @@ module View = {
           | [diag, ..._] => diag.range.start
           };
 
-        let y =
-          int_of_float(
-            editorFont.measuredHeight
-            *. float(Index.toZeroBased(hoverLocation.line) + 1)
-            -. editor.scrollY
-            +. 0.5,
+        // TODO: Index instead of byte
+        let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+          Feature_Editor.Editor.bufferLineByteToPixel(
+            ~line=hoverLocation.line |> Index.toZeroBased,
+            ~byteIndex=hoverLocation.column |> Index.toZeroBased,
+            editor,
           );
 
-        let x =
-          int_of_float(
-            gutterWidth
-            +. editorFont.measuredWidth
-            *. float(Index.toZeroBased(hoverLocation.column))
-            -. editor.scrollX
-            +. 0.5,
-          );
+        let x = int_of_float(pixelX);
+        let y = int_of_float(pixelY);
+
+        // TODO: Hover width?
 
         (Some((x, y)), Some(diagnostic));
       | (None, Some(trigger), true) =>
@@ -489,21 +485,16 @@ module View = {
           | `CommandPalette =>
             Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
           };
-        let y =
-          int_of_float(
-            editorFont.measuredHeight
-            *. float(Index.toZeroBased(location.line) + 1)
-            -. editor.scrollY
-            +. 0.5,
+
+        let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+          Feature_Editor.Editor.bufferLineByteToPixel(
+            ~line=(location.line |> Index.toZeroBased) + 1,
+            ~byteIndex=location.column |> Index.toZeroBased,
+            editor,
           );
-        let x =
-          int_of_float(
-            gutterWidth
-            +. editorFont.measuredWidth
-            *. float(Index.toZeroBased(location.column))
-            -. editor.scrollX
-            +. 0.5,
-          );
+
+        let x = int_of_float(pixelX);
+        let y = int_of_float(pixelY);
 
         let diagnostic =
           Feature_LanguageSupport.Diagnostics.getDiagnosticsAtPosition(

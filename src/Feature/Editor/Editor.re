@@ -34,12 +34,14 @@ let id = ({editorId, _}) => editorId;
 
 let totalViewLines = ({viewLines, _}) => viewLines;
 let selection = ({selection, _}) => selection;
+let setSelection = (~selection, editor) => {...editor, selection};
 let visiblePixelWidth = ({pixelWidth}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
 let scrollY = ({scrollY, _}) => scrollY;
 let scrollX = ({scrollX, _}) => scrollX;
 let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
 let lineHeightInPixels = ({font, _}) => font.measuredHeight;
+let font = ({font, _}) => font;
 
 let bufferLineByteToPixel =
     (~overrideScrollX=None, ~overrideScrollY=None, ~line, ~byteIndex, editor) => {
@@ -106,6 +108,8 @@ type scrollbarMetrics = {
 };
 
 let getVimCursors = model => model.cursors;
+
+let setVimCursors = (~cursors, editor) => {...editor, cursors};
 
 let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
   let byte = position.column |> Index.toZeroBased;
@@ -201,14 +205,16 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
     };
 };
 
-let getLayout = view => {
+let getLayout =
+    (~showLineNumbers, ~isMinimapShown, ~maxMinimapCharacters, view) => {
   let {pixelWidth, pixelHeight, _} = view;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
-      ~maxMinimapCharacters=view.minimapMaxColumnWidth,
+      ~showLineNumbers,
+      ~isMinimapShown,
+      ~maxMinimapCharacters,
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
-      ~isMinimapShown=true,
       ~characterWidth=getCharacterWidth(view),
       ~characterHeight=getLineHeight(view),
       ~bufferLineCount=view.viewLines,

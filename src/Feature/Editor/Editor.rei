@@ -41,7 +41,14 @@ let getBufferId: t => int;
 let getTopVisibleLine: t => int;
 let getBottomVisibleLine: t => int;
 let getLeftVisibleColumn: t => int;
-let getLayout: t => EditorLayout.t;
+let getLayout:
+  (
+    ~showLineNumbers: bool,
+    ~isMinimapShown: bool,
+    ~maxMinimapCharacters: int,
+    t
+  ) =>
+  EditorLayout.t;
 let getCharacterUnderCursor: (~buffer: Buffer.t, t) => option(Uchar.t);
 let getPrimaryCursor: (~buffer: Buffer.t, t) => Location.t;
 let getVisibleView: t => int;
@@ -50,9 +57,12 @@ let getTotalWidthInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getVimCursors: t => list(Vim.Cursor.t);
+let setVimCursors: (~cursors: list(Vim.Cursor.t), t) => t;
 
 let visiblePixelWidth: t => int;
 let visiblePixelHeight: t => int;
+
+let font: t => Service_Font.font;
 
 let scrollX: t => float;
 let scrollY: t => float;
@@ -71,6 +81,7 @@ let bufferLineByteToPixel:
   (pixelPosition, float);
 
 let selection: t => VisualRange.t;
+let setSelection: (~selection: VisualRange.t, t) => t;
 
 let totalViewLines: t => int;
 
