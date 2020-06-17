@@ -399,6 +399,10 @@ let update =
         Effect.map(msg => Actions.Hover(msg), eff)
       };
     ({...state, hover: model'}, effect);
+  | ExtensionBufferUpdateQueued(_) /* {triggerKey}*/ =>
+    // TODO: Engage features that require trigger characters
+    // (completion, signature help) here:
+    (state, Effect.none)
   | Vim(msg) => (
       {...state, vim: Feature_Vim.update(msg, state.vim)},
       Effect.none,
