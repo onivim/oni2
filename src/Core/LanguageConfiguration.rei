@@ -19,6 +19,15 @@ module AutoClosingPair: {
   let decode: Json.decoder(t);
 };
 
+module BracketPair: {
+  type t = {
+    openPair: string,
+    closePair: string,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 type indentAction =
   | KeepIndent
   | DecreaseIndent
@@ -27,6 +36,7 @@ type indentAction =
 type t = {
   autoCloseBefore: list(string),
   autoClosingPairs: list(AutoClosingPair.t),
+  brackets: list(BracketPair.t),
   lineComment: option(string),
   blockComment: option((string, string)),
   increaseIndentPattern: option(OnigRegExp.t),

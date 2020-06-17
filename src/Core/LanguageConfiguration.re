@@ -79,16 +79,40 @@ module AutoClosingPair = {
   let decode = Decode.decode;
 };
 
+module BracketPair = {
+  type t = {
+    openPair: string,
+    closePair: string,
+  };
+
+  let decode =
+    Json.Decode.(
+      Pipeline.(
+        decode((openPair, closePair) => {openPair, closePair})
+        |> custom(index(0, string))
+        |> custom(index(1, string))
+      )
+    );
+};
+
+let defaultBrackets: list(BracketPair.t) =
+  BracketPair.[
+    {openPair: "{", closePair: "}"},
+    {openPair: "[", closePair: "]"},
+    {openPair: "(", closePair: ")"},
+  ];
+
 type t = {
   autoCloseBefore: list(string),
   autoClosingPairs: list(AutoClosingPair.t),
+  brackets: list(BracketPair.t),
   lineComment: option(string),
   blockComment: option((string, string)),
   increaseIndentPattern: option(OnigRegExp.t),
   decreaseIndentPattern: option(OnigRegExp.t),
 };
 
-let default = {
+let default: t = {
   autoCloseBefore: [
     ";",
     ":",
@@ -104,6 +128,7 @@ let default = {
     "\t",
   ],
   autoClosingPairs: [],
+  brackets: defaultBrackets,
   lineComment: None,
   blockComment: None,
   increaseIndentPattern: None,
@@ -142,6 +167,12 @@ module Decode = {
             "autoClosingPairs",
             [],
             list(AutoClosingPair.decode),
+          ),
+        brackets:
+          field.withDefault(
+            "brackets",
+            defaultBrackets,
+            list(BracketPair.decode),
           ),
         lineComment: at.optional(["comments", "lineComment"], string),
         blockComment:
