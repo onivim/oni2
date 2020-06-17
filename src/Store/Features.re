@@ -423,8 +423,25 @@ let update =
         )
       };
     ({...state, signatureHelp: model'}, effect);
-  | ExtensionBufferUpdateQueued(_) /* {triggerKey}*/ =>
-    (state, Effect.none)
+  | ExtensionBufferUpdateQueued(buffer) /* {triggerKey}*/ =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (signatureHelp, shOutMsg) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.signatureHelp,
+        Feature_SignatureHelp.KeyPressed(buffer.triggerKey),
+      );
+    let shEffect =
+      switch (shOutMsg) {
+      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
+      | _ => Effect.none
+      };
+    let effect = [shEffect] |> Effect.batch;
+    ({...state, signatureHelp}, effect);
   | Vim(msg) => (
       {...state, vim: Feature_Vim.update(msg, state.vim)},
       Effect.none,

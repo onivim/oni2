@@ -49,7 +49,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Wildmenu => [
         Actions.KeyboardInput(k),
         Actions.Hover(Feature_Hover.KeyPressed(k)),
-        Actions.SignatureHelp(Feature_SignatureHelp.KeyPressed(k)),
       ]
 
     | Quickmenu => [Actions.QuickmenuInput(k)]

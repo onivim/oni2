@@ -43,7 +43,7 @@ type command =
 type msg =
   | Command(command)
   | ProviderRegistered(provider)
-  | KeyPressed(string)
+  | KeyPressed(option(string))
   | InfoReceived({
       signatures: list(Exthost.SignatureHelp.Signature.t),
       activeSignature: int,
@@ -162,9 +162,9 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | RequestFailed(str) =>
     Log.warnf(m => m("Request failed : %s", str));
     (model, Error(str));
-  | KeyPressed(k) =>
-    switch (maybeBuffer, maybeEditor, model.shown) {
-    | (Some(buffer), Some(editor), true) =>
+  | KeyPressed(maybeKey) =>
+    switch (maybeBuffer, maybeEditor, maybeKey, model.shown) {
+    | (Some(buffer), Some(editor), Some(key), true) =>
       let filetype =
         buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
       let matchingProviders =
@@ -175,14 +175,14 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       let retrigger =
         matchingProviders
         |> List.exists(({metadata, _}) =>
-             List.mem(k, metadata.retriggerCharacters)
+             List.mem(key, metadata.retriggerCharacters)
            );
       if (retrigger) {
-        Log.infof(m => m("Retrigger character hit: %s", k));
+        Log.infof(m => m("Retrigger character hit: %s", key));
         let context =
           Exthost.SignatureHelp.RequestContext.{
             triggerKind: Exthost.SignatureHelp.TriggerKind.ContentChange,
-            triggerCharacter: Some(k),
+            triggerCharacter: Some(key),
             isRetrigger: true,
           };
         let requestID = IDGenerator.get();
@@ -196,7 +196,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
             ~requestID,
           );
         ({...model, lastRequestID: Some(requestID)}, Effect(effects));
-      } else if (k == "<ESC>") {
+      } else if (key == "<ESC>") {
         (
           {
             ...model,
@@ -212,7 +212,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       } else {
         (model, Nothing);
       };
-    | (Some(buffer), Some(editor), false) =>
+    | (Some(buffer), Some(editor), Some(key), false) =>
       let filetype =
         buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
       let matchingProviders =
@@ -223,15 +223,15 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       let trigger =
         matchingProviders
         |> List.exists(({metadata, _}) =>
-             List.mem(k, metadata.triggerCharacters)
+             List.mem(key, metadata.triggerCharacters)
            );
       if (trigger) {
-        Log.infof(m => m("Trigger character hit: %s", k));
+        Log.infof(m => m("Trigger character hit: %s", key));
         let requestID = IDGenerator.get();
         let context =
           Exthost.SignatureHelp.RequestContext.{
             triggerKind: Exthost.SignatureHelp.TriggerKind.TriggerCharacter,
-            triggerCharacter: Some(k),
+            triggerCharacter: Some(key),
             isRetrigger: false,
           };
         let effects =
