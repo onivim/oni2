@@ -471,7 +471,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                          ),
                        parameters: [
                          ParameterInformation.{
-                           label: "gnat",
+                           label: `String("gnat"),
                            documentation:
                              Some(
                                MarkdownString.fromString(
