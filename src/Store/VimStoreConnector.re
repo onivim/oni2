@@ -61,6 +61,7 @@ let start =
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let libvimHasInitialized = ref(false);
+  let currentTriggerKey = ref(None);
 
   let languageConfigLoader =
     Ext.LanguageConfigurationLoader.create(languageInfo);
@@ -434,7 +435,12 @@ let start =
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
              dispatch(
-               Actions.BufferUpdate({update: bu, newBuffer, oldBuffer}),
+               Actions.BufferUpdate({
+                 update: bu,
+                 newBuffer,
+                 oldBuffer,
+                 triggerKey: currentTriggerKey^,
+               }),
              );
            });
       } else {
@@ -577,8 +583,10 @@ let start =
         let context =
           Oni_Model.VimContext.current(~languageConfigLoader, state);
 
+        currentTriggerKey := Some(key);
         let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
           Vim.input(~context, key);
+        currentTriggerKey := None;
 
         let () =
           editor

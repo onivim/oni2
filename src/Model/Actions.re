@@ -45,6 +45,7 @@ type t =
       update: [@opaque] BufferUpdate.t,
       oldBuffer: [@opaque] Buffer.t,
       newBuffer: [@opaque] Buffer.t,
+      triggerKey: option(string),
     })
   | BufferLineEndingsChanged({
       id: int,
@@ -78,6 +79,7 @@ type t =
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
+  | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
