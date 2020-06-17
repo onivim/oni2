@@ -48,6 +48,33 @@ module Internal = {
         });
       };
     };
+
+  let getDefaultCursors = (cursors: list(Cursor.t)) =>
+    if (cursors == []) {
+      [Cursor.get()];
+    } else {
+      cursors;
+    };
+
+  let getPrecedingWhitespace = (~max: int, str) => {
+    let len = String.length(str);
+
+    let rec loop = idx =>
+      if (idx >= max || idx >= len) {
+        idx;
+      } else {
+        let c = str.[idx];
+        if (c == ' ' || c == '\t') {
+          loop(idx + 1);
+        } else {
+          idx;
+        };
+      };
+
+    let lastWhitespaceIndex = loop(0);
+
+    String.sub(str, 0, lastWhitespaceIndex);
+  };
 };
 
 type fn = unit => unit;
@@ -319,13 +346,6 @@ let init = () => {
   BufferInternal.checkCurrentBufferForUpdate();
 };
 
-let _getDefaultCursors = (cursors: list(Cursor.t)) =>
-  if (cursors == []) {
-    [Cursor.get()];
-  } else {
-    cursors;
-  };
-
 let input = (~context=Context.current(), v: string) => {
   let {autoClosingPairs, cursors, _}: Context.t = context;
   runWith(
@@ -363,9 +383,17 @@ let input = (~context=Context.current(), v: string) => {
             Native.vimInput("<DEL>");
             Native.vimInput("<BS>");
           } else if (v == "<CR>" && isBetweenClosingPairs()) {
+            let precedingWhitespace =
+              Internal.getPrecedingWhitespace(
+                ~max=location.column |> Index.toOneBased,
+                line,
+              );
             Native.vimInput("<CR>");
             Native.vimInput("<CR>");
             Native.vimInput("<UP>");
+            if (String.length(precedingWhitespace) > 0) {
+              Native.vimInput(precedingWhitespace);
+            };
             Native.vimInput("<TAB>");
           } else if (AutoClosingPairs.isPassThrough(
                        v,
@@ -390,7 +418,7 @@ let input = (~context=Context.current(), v: string) => {
       };
 
       let mode = Mode.getCurrent();
-      let cursors = _getDefaultCursors(cursors);
+      let cursors = Internal.getDefaultCursors(cursors);
       if (mode == Types.Insert) {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
@@ -415,7 +443,7 @@ let input = (~context=Context.current(), v: string) => {
         | _ => ()
         };
         Native.vimInput(v);
-        _getDefaultCursors([]);
+        Internal.getDefaultCursors([]);
       };
     },
   );

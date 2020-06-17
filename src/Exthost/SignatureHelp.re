@@ -66,8 +66,7 @@ module ParameterInformation = {
   [@deriving show]
   type t = {
     label: string,
-    // TODO:
-    //documentation: option(MarkdownString.t),
+    documentation: option(MarkdownString.t),
   };
 
   let decode =
@@ -75,7 +74,8 @@ module ParameterInformation = {
       obj(({field, _}) =>
         {
           label: field.required("label", string),
-          //documentation: field.optional("documentation", string),
+          documentation:
+            field.optional("documentation", MarkdownString.decode),
         }
       )
     );
@@ -85,8 +85,7 @@ module Signature = {
   [@deriving show]
   type t = {
     label: string,
-    // TODO:
-    //documentation: options(MarkdownString.t),
+    documentation: option(MarkdownString.t),
     parameters: list(ParameterInformation.t),
   };
 
@@ -101,6 +100,8 @@ module Signature = {
               [],
               list(ParameterInformation.decode),
             ),
+          documentation:
+            field.optional("documentation", MarkdownString.decode),
         }
       )
     );

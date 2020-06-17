@@ -29,6 +29,7 @@ module IndentationSettings = IndentationSettings;
 module IntMap = Kernel.IntMap;
 module Json = Json;
 module Job = Job;
+module LanguageConfiguration = LanguageConfiguration;
 module LazyLoader = LazyLoader;
 module LineNumber = LineNumber;
 module Log = Kernel.Log;
