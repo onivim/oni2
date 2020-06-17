@@ -167,7 +167,7 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
 
       expect.equal(
         LanguageConfiguration.toAutoIndent(langConfig, "   {")
-        == LanguageConfiguration.IncreaseIndent,
+        == Vim.AutoIndent.IncreaseIndent,
         true,
       );
     });
