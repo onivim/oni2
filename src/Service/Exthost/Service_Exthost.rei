@@ -1,5 +1,15 @@
 // EFFECTS
 module Effects: {
+
+  module Documents: {
+    let modelChanged: (
+      ~buffer: Oni_Core.Buffer.t,
+      ~update: Oni_Core.BufferUpdate.t,
+      Exthost.Client.t,
+      unit => 'msg
+    ) => Isolinear.Effect.t('msg);
+  };
+
   module SCM: {
     let provideOriginalResource:
       (
