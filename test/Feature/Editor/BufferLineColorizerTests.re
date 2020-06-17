@@ -46,10 +46,10 @@ describe("BufferLineColorizer", ({test, _}) => {
   test("base case - cover all tokens", ({expect, _}) => {
     let colorize = basicColorizer(~startByte=0, ~endByte=11, basicTokens);
 
-    let BufferLineColorizer.{backgroundColor: color0, _} = colorize(0);
-    let BufferLineColorizer.{backgroundColor: color2, _} = colorize(2);
-    let BufferLineColorizer.{backgroundColor: color6, _} = colorize(6);
-    let BufferLineColorizer.{backgroundColor: color11, _} = colorize(11);
+    let BufferLineColorizer.{color: color0, _} = colorize(0);
+    let BufferLineColorizer.{color: color2, _} = colorize(2);
+    let BufferLineColorizer.{color: color6, _} = colorize(6);
+    let BufferLineColorizer.{color: color11, _} = colorize(11);
 
     expect.equal(color0, Colors.white);
     expect.equal(color2, Colors.green);
@@ -60,8 +60,8 @@ describe("BufferLineColorizer", ({test, _}) => {
   test("out of bounds", ({expect, _}) => {
     let colorize = basicColorizer(~startByte=4, ~endByte=6, basicTokens);
 
-    let BufferLineColorizer.{backgroundColor: color0, _} = colorize(0);
-    let BufferLineColorizer.{backgroundColor: color11, _} = colorize(11);
+    let BufferLineColorizer.{color: color0, _} = colorize(0);
+    let BufferLineColorizer.{color: color11, _} = colorize(11);
 
     expect.equal(color0, Colors.green);
     expect.equal(color11, Colors.red);
