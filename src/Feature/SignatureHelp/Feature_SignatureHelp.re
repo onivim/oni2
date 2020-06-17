@@ -167,6 +167,38 @@ module View = {
   open Oni_Components;
   open Revery;
   open Revery.UI;
+  open Exthost.SignatureHelp;
+
+  module Styles = {
+    open Style;
+    module Colors = Feature_Theme.Colors;
+
+    let signatureLine = [
+      flexDirection(`Row),
+      flexWrap(`Wrap),
+      alignItems(`FlexStart),
+      justifyContent(`FlexStart),
+    ];
+
+    let hr = (~theme) => [
+      flexGrow(1),
+      height(1),
+      backgroundColor(Colors.EditorHoverWidget.border.from(theme)),
+      marginTop(3),
+      marginBottom(3),
+    ];
+
+    let activeParameter = (~theme) => [
+      backgroundColor(
+        Colors.EditorSuggestWidget.selectedBackground.from(theme),
+      ),
+    ];
+  };
+
+  let horizontalRule = (~theme, ()) =>
+    <UI.Components.Row>
+      <View style={Styles.hr(~theme)} />
+    </UI.Components.Row>;
 
   let signatureHelp =
       (
@@ -179,6 +211,8 @@ module View = {
         ~editorFont: Service_Font.font,
         ~model,
         ~grammars,
+        ~signatureIndex,
+        ~parameterIndex,
         (),
       ) => {
     let signatureHelpMarkdown = (~markdown) =>
@@ -192,8 +226,98 @@ module View = {
         ~markdown=Exthost.MarkdownString.toString(markdown),
         ~baseFontSize=uiFont.size,
       );
+    let signature: Signature.t = List.nth(model.signatures, signatureIndex);
+    let parameter: ParameterInformation.t =
+      List.nth(signature.parameters, parameterIndex);
+    let renderParameters = () =>
+      signature.parameters
+      |> List.mapi((i, param: ParameterInformation.t) =>
+           switch (param.label) {
+           | `String(label) =>
+             <View
+               style={
+                 i == parameterIndex
+                   ? Styles.activeParameter(~theme=colorTheme) : []
+               }>
+               <Text
+                 text=label
+                 fontFamily={editorFont.fontFamily}
+                 fontSize={editorFont.fontSize}
+               />
+             </View>
+           | `Range(_) => React.empty
+           }
+         )
+      |> React.listToElement;
+
     <HoverView x y theme=colorTheme>
-      <Text text="SIGNATURE HELP" />
+      <View style=Styles.signatureLine>
+        {switch (parameter.label) {
+         | `Range(start, end_) =>
+           let s1 = String.sub(signature.label, 0, start);
+           let s2 = String.sub(signature.label, start, end_ - start);
+           let s3 =
+             String.sub(
+               signature.label,
+               end_,
+               String.length(signature.label) - end_,
+             );
+           [
+             <Text
+               text=s1
+               fontFamily={editorFont.fontFamily}
+               fontSize={editorFont.fontSize}
+             />,
+             <View style={Styles.activeParameter(~theme=colorTheme)}>
+               <Text
+                 text=s2
+                 fontFamily={editorFont.fontFamily}
+                 fontSize={editorFont.fontSize}
+               />
+             </View>,
+             <Text
+               text=s3
+               fontFamily={editorFont.fontFamily}
+               fontSize={editorFont.fontSize}
+             />,
+           ]
+           |> React.listToElement;
+         | `String(_) =>
+           <Text
+             text={signature.label}
+             fontFamily={editorFont.fontFamily}
+             fontSize={editorFont.fontSize}
+           />
+         }}
+        {renderParameters()}
+      </View>
+      {switch (parameter.documentation) {
+       | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
+         [
+           <horizontalRule theme=colorTheme />,
+           <signatureHelpMarkdown markdown=docs />,
+         ]
+         |> React.listToElement
+       | _ => React.empty
+       }}
+      {switch (signature.documentation) {
+       | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
+         [
+           <horizontalRule theme=colorTheme />,
+           <signatureHelpMarkdown markdown=docs />,
+         ]
+         |> React.listToElement
+       | _ => React.empty
+       }}
+      <Text
+        text={Printf.sprintf(
+          "%d/%d",
+          signatureIndex + 1,
+          List.length(model.signatures),
+        )}
+        fontFamily={uiFont.family}
+        fontSize={uiFont.size *. 0.8}
+      />
     </HoverView>;
   };
 
@@ -240,8 +364,8 @@ module View = {
              );
            (x, y);
          });
-    switch (maybeCoords) {
-    | Some((x, y)) =>
+    switch (maybeCoords, model.activeSignature, model.activeParameter) {
+    | (Some((x, y)), Some(signatureIndex), Some(parameterIndex)) =>
       <signatureHelp
         x
         y
@@ -252,8 +376,10 @@ module View = {
         editorFont
         model
         grammars
+        signatureIndex
+        parameterIndex
       />
-    | None => React.empty
+    | _ => React.empty
     };
   };
 };
