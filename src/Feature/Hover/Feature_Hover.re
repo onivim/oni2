@@ -18,7 +18,7 @@ type provider = {
 type model = {
   shown: bool,
   providers: list(provider),
-  contents: list(string),
+  contents: list(Exthost.MarkdownString.t),
   range: option(EditorCoreTypes.Range.t),
   triggeredFrom:
     option([ | `CommandPalette | `Mouse(EditorCoreTypes.Location.t)]),
@@ -54,7 +54,7 @@ type msg =
   | KeyPressed(string)
   | ProviderRegistered(provider)
   | HoverInfoReceived({
-      contents: list(string),
+      contents: list(Exthost.MarkdownString.t),
       range: option(EditorCoreTypes.Range.t),
       requestID: int,
     })
@@ -336,7 +336,7 @@ module View = {
           editorFont.fontFamily;
         },
         ~grammars,
-        ~markdown,
+        ~markdown=Exthost.MarkdownString.toString(markdown),
         ~baseFontSize=14.,
         ~codeBlockStyle=Style.[flexGrow(1)],
       );
