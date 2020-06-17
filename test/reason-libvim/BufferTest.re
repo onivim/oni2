@@ -95,6 +95,31 @@ describe("Buffer", ({describe, _}) => {
       expect.string(line1).toEqual("abc");
       expect.string(line2).toEqual("This is the third line of a test file");
     });
+    test("should increment version", ({expect, _}) => {
+      let buffer = resetBuffer();
+
+      let line1Index = Index.(zero + 1);
+      let line2Index = Index.(zero + 2);
+
+      let startVersion = Buffer.getVersion(buffer);
+
+      let lines = [|"abc"|];
+      Buffer.setLines(~start=line1Index, ~stop=line2Index, ~lines, buffer);
+      let newVersion = Buffer.getVersion(buffer);
+      expect.equal(newVersion > startVersion, true);
+    });
+    test("should be marked as modified", ({expect, _}) => {
+      let buffer = resetBuffer();
+
+      expect.bool(Buffer.isModified(buffer)).toBe(false);
+
+      let line1Index = Index.(zero + 1);
+      let line2Index = Index.(zero + 2);
+
+      let lines = [|"abc"|];
+      Buffer.setLines(~start=line1Index, ~stop=line2Index, ~lines, buffer);
+      expect.bool(Buffer.isModified(buffer)).toBe(true);
+    });
     test("replace whole buffer - set both start / stop", ({expect, _}) => {
       let buffer = resetBuffer();
 
@@ -152,6 +177,113 @@ describe("Buffer", ({describe, _}) => {
       expect.int(lineCount).toBe(4);
       expect.string(line3).toEqual("This is the third line of a test file");
       expect.string(line4).toEqual("abc");
+    });
+  });
+  describe("applyEdits", ({test, _}) => {
+    let range = (startLine, startColumn, endLine, endColumn) =>
+      Range.{
+        start:
+          Location.create(
+            ~line=Index.(zero + startLine),
+            ~column=Index.(zero + startColumn),
+          ),
+        stop:
+          Location.create(
+            ~line=Index.(zero + endLine),
+            ~column=Index.(zero + endColumn),
+          ),
+      };
+
+    test("insert string inside line", ({expect, _}) => {
+      let _ = resetBuffer();
+      let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
+
+      let edit = Edit.{range: range(0, 1, 0, 1), text: [|"a"|]};
+
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+
+      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      expect.string(line).toEqual("Tahis is the first line of a test file");
+      expect.int(Buffer.getLineCount(buffer)).toBe(3);
+    });
+    test("insert string, adding a line", ({expect, _}) => {
+      let _ = resetBuffer();
+      let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
+
+      let edit =
+        Edit.{
+          range: range(0, 1, 0, 1),
+          text: [|"his is a whole new line", "T"|],
+        };
+
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+
+      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      expect.string(line).toEqual("This is a whole new line");
+      let line = Buffer.getLine(buffer, Index.fromOneBased(2));
+      expect.string(line).toEqual("This is the first line of a test file");
+      expect.int(Buffer.getLineCount(buffer)).toBe(4);
+    });
+    test("insert string, verify onModified gets called", ({expect, _}) => {
+      let _ = resetBuffer();
+      let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
+
+      let modifiedEvents = ref([]);
+      let dispose =
+        Buffer.onModifiedChanged((bufferId, modified) => {
+          modifiedEvents := [(bufferId, modified), ...modifiedEvents^]
+        });
+
+      let edit =
+        Edit.{
+          range: range(0, 1, 0, 1),
+          text: [|"his is a whole new line", "T"|],
+        };
+
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+
+      expect.int(modifiedEvents^ |> List.length).toBe(1);
+
+      dispose();
+    });
+    test("delete line", ({expect, _}) => {
+      let _ = resetBuffer();
+      let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
+
+      let edit = Edit.{range: range(0, 0, 1, 0), text: [||]};
+
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+
+      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      expect.string(line).toEqual("This is the second line of a test file");
+
+      expect.int(Buffer.getLineCount(buffer)).toBe(2);
+    });
+    test("delete multiple lines", ({expect, _}) => {
+      let _ = resetBuffer();
+      let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
+
+      let edit = Edit.{range: range(0, 0, 2, 0), text: [||]};
+
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+
+      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      expect.string(line).toEqual("This is the third line of a test file");
+
+      expect.int(Buffer.getLineCount(buffer)).toBe(1);
+    });
+    test("utf8: delete character", ({expect, _}) => {
+      let _ = resetBuffer();
+      let buffer = Buffer.openFile("test/reason-libvim/testfile-utf8.txt");
+
+      let edit = Edit.{range: range(0, 14, 0, 15), text: [||]};
+
+      let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
+
+      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      expect.string(line).toEqual("import 'κόσμε'");
+
+      expect.int(Buffer.getLineCount(buffer)).toBe(1);
     });
   });
   describe("getLine", ({test, _}) =>

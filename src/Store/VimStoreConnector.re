@@ -61,6 +61,7 @@ let start =
     ) => {
   let (stream, dispatch) = Isolinear.Stream.create();
   let libvimHasInitialized = ref(false);
+  let currentTriggerKey = ref(None);
 
   let languageConfigLoader =
     Ext.LanguageConfigurationLoader.create(languageInfo);
@@ -72,28 +73,10 @@ let start =
         c.vimUseSystemClipboard
       );
 
-    let removeWindowsNewLines = s =>
-      List.init(String.length(s), String.get(s))
-      |> List.filter(c => c != '\r')
-      |> List.map(c => String.make(1, c))
-      |> String.concat("");
-
     let isMultipleLines = s => String.contains(s, '\n');
 
-    let removeTrailingNewLine = s => {
-      let len = String.length(s);
-      if (len > 0 && s.[len - 1] == '\n') {
-        String.sub(s, 0, len - 1);
-      } else {
-        s;
-      };
-    };
-
     let splitNewLines = s =>
-      s
-      |> removeTrailingNewLine
-      |> String.split_on_char('\n')
-      |> Array.of_list;
+      s |> StringEx.removeTrailingNewLine |> StringEx.splitNewLines;
 
     let starReg = Char.code('*');
     let plusReg = Char.code('+');
@@ -117,8 +100,8 @@ let start =
         |> Option.value(~default=Vim.Types.Line: Vim.Types.blockType);
 
       clipboardValue
-      |> Option.map(removeTrailingNewLine)
-      |> Option.map(removeWindowsNewLines)
+      |> Option.map(StringEx.removeTrailingNewLine)
+      |> Option.map(StringEx.removeWindowsNewLines)
       |> Option.map(splitNewLines)
       |> Option.map(lines => Vim.Types.{lines, blockType});
     } else {
@@ -172,6 +155,10 @@ let start =
     Vim.onEffect(
       fun
       | Goto(gotoType) => handleGoto(gotoType)
+      | Format(Buffer(_)) =>
+        dispatch(
+          Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
+        )
       | Format(_) => Log.debug("Format provider not hooked up yet"),
     );
 
@@ -448,7 +435,12 @@ let start =
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
              dispatch(
-               Actions.BufferUpdate({update: bu, newBuffer, oldBuffer}),
+               Actions.BufferUpdate({
+                 update: bu,
+                 newBuffer,
+                 oldBuffer,
+                 triggerKey: currentTriggerKey^,
+               }),
              );
            });
       } else {
@@ -591,8 +583,10 @@ let start =
         let context =
           Oni_Model.VimContext.current(~languageConfigLoader, state);
 
+        currentTriggerKey := Some(key);
         let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
           Vim.input(~context, key);
+        currentTriggerKey := None;
 
         let () =
           editor

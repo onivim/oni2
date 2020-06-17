@@ -55,7 +55,7 @@ let editorGroup =
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
-  Actions.BufferUpdate({update, oldBuffer, newBuffer});
+  Actions.BufferUpdate({update, oldBuffer, newBuffer, triggerKey: None});
 };
 
 let thousandLineBuffer = Buffer.ofLines(thousandLines);
