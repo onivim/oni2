@@ -6,9 +6,10 @@ module Log = (val Log.withNamespace("Service_Exthost"));
 
 module Effects = {
   module Documents = {
-  let modelChanged = (~buffer: Buffer.t, ~update: BufferUpdate.t,
-  client, toMsg) =>
-    Isolinear.Effect.createWithDispatch(~name="exthost.bufferUpdate", dispatch =>
+    let modelChanged =
+        (~buffer: Buffer.t, ~update: BufferUpdate.t, client, toMsg) =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="exthost.bufferUpdate", dispatch =>
         Oni_Core.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
             Exthost.ModelContentChange.ofBufferUpdate(
@@ -30,7 +31,7 @@ module Effects = {
           );
           dispatch(toMsg());
         })
-    );
+      );
   };
   module SCM = {
     let provideOriginalResource = (~handles, extHostClient, path, toMsg) =>

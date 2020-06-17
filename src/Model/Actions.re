@@ -79,9 +79,7 @@ type t =
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
-  | ExtensionBufferUpdateQueued({
-      triggerKey: option(string),
-  })
+  | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)

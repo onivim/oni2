@@ -435,8 +435,12 @@ let start =
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
              dispatch(
-               Actions.BufferUpdate({update: bu, newBuffer, oldBuffer,
-               triggerKey: currentTriggerKey^}),
+               Actions.BufferUpdate({
+                 update: bu,
+                 newBuffer,
+                 oldBuffer,
+                 triggerKey: currentTriggerKey^,
+               }),
              );
            });
       } else {

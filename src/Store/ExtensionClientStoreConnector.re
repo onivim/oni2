@@ -162,11 +162,9 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
     | BufferUpdate({update, newBuffer, triggerKey, _}) => (
         state,
         Service_Exthost.Effects.Documents.modelChanged(
-          ~buffer=newBuffer,
-          ~update,
-          extHostClient,
-          () => Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
-        )
+          ~buffer=newBuffer, ~update, extHostClient, () =>
+          Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
+        ),
       )
 
     | BufferSaved(_) => (
