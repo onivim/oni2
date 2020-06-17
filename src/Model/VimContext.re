@@ -87,10 +87,10 @@ let current:
            };
 
          // TODO: Hook up to Vim context
-         let _autoIndent =
+         let autoIndent =
            maybeLanguageConfig
            |> Option.map(LanguageConfiguration.toAutoIndent)
-           |> Option.value(~default=_ => LanguageConfiguration.KeepIndent);
+           |> Option.value(~default=_ => Vim.AutoIndent.KeepIndent);
 
          let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
          let autoClosingPairs =
@@ -118,6 +118,7 @@ let current:
          let insertSpaces = indentation.mode == Spaces;
 
          Vim.Context.{
+           autoIndent,
            bufferId,
            leftColumn,
            topLine,
