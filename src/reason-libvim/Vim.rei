@@ -28,9 +28,17 @@ module AutoClosingPairs: {
   let isBetweenDeletionPairs: (string, Index.t, t) => bool;
 };
 
+module AutoIndent: {
+  type action =
+    | IncreaseIndent
+    | KeepIndent
+    | DecreaseIndent;
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
+    autoIndent: string => AutoIndent.action,
     bufferId: int,
     width: int,
     height: int,

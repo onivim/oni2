@@ -47,6 +47,24 @@ void onBufferChanged(bufferUpdate_T bu) {
   free(pArgs);
 }
 
+int onAutoIndent(buf_T *buf, char_u *prevLine, char_u *newLine) {
+  CAMLparam0();
+  CAMLlocal2(vPrevLine, vNewLine);
+  static const value *lv_onAutoIndent = NULL;
+
+  if (lv_onAutoIndent == NULL) {
+    lv_onAutoIndent = caml_named_value("lv_onAutoIndent");
+  }
+
+  vPrevLine = caml_copy_string(prevLine);
+
+  value vIndent = caml_callback(*lv_onAutoIndent, vPrevLine);
+
+  int ret = Int_val(vIndent);
+
+  CAMLreturnT(int, ret);
+};
+
 int onGoto(gotoRequest_T gotoInfo) {
   static const value *lv_onGoto = NULL;
 
@@ -375,6 +393,7 @@ void onWriteFailure(writeFailureReason_T reason, buf_T *buf) {
 
 CAMLprim value libvim_vimInit(value unit) {
   vimSetAutoCommandCallback(&onAutocommand);
+  vimSetAutoIndentCallback(&onAutoIndent);
   vimSetBufferUpdateCallback(&onBufferChanged);
   vimSetClipboardGetCallback(&getClipboardCallback);
   vimSetDirectoryChangedCallback(&onDirectoryChanged);
