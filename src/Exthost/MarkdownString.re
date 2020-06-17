@@ -8,7 +8,16 @@
 //}
 open Oni_Core;
 
+[@deriving show]
 type t = string;
 
 let decode =
-  Json.Decode.(obj(({field, _}) => {field.required("value", string)}));
+  Json.Decode.(
+    one_of([
+      ("markdown", obj(({field, _}) => {field.required("value", string)})),
+      ("string", string),
+    ])
+  );
+
+let toString = str => str;
+let fromString = str => str;
