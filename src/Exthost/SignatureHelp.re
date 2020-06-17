@@ -65,15 +65,30 @@ module RequestContext = {
 module ParameterInformation = {
   [@deriving show]
   type t = {
-    label: string,
+    label: [ | `String(string) | `Range(int, int)],
     documentation: option(MarkdownString.t),
   };
+
+  let label =
+    Json.Decode.(
+      value
+      |> and_then(
+           fun
+           | `String(_) as s => succeed(s)
+           | `List(l) =>
+             switch (l) {
+             | [`Int(a), `Int(b)] => succeed(`Range((a, b)))
+             | _ => fail("Expected a list with form [start, end]")
+             }
+           | _ => fail("Expected either a list or a string"),
+         )
+    );
 
   let decode =
     Json.Decode.(
       obj(({field, _}) =>
         {
-          label: field.required("label", string),
+          label: field.required("label", label),
           documentation:
             field.optional("documentation", MarkdownString.decode),
         }
