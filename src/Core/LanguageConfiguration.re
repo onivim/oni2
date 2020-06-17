@@ -93,6 +93,10 @@ module BracketPair = {
         |> custom(index(1, string))
       )
     );
+
+  let endsWithOpenPair = ({openPair, _}, str) => {
+    StringEx.endsWith(~postfix=openPair, str);
+  };
 };
 
 let defaultBrackets: list(BracketPair.t) =
@@ -227,10 +231,20 @@ let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
   );
 };
 
-let toAutoIndent = ({increaseIndentPattern, decreaseIndentPattern, _}, str) => {
+let toAutoIndent =
+    ({increaseIndentPattern, decreaseIndentPattern, brackets, _}, str) => {
   let increase =
     increaseIndentPattern
     |> Option.map(regex => OnigRegExp.test(str, regex))
+    // If no indentation pattern, fall-back to bracket pair
+    |> OptionEx.or_lazy(() =>
+         Some(
+           List.exists(
+             bracket => BracketPair.endsWithOpenPair(bracket, str),
+             brackets,
+           ),
+         )
+       )
     |> Option.value(~default=false);
 
   let decrease =
