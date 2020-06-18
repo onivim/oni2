@@ -1,6 +1,7 @@
 open Revery.UI;
 open Oni_Core;
 open Oni_Components;
+open Model;
 
 module Colors = Feature_Theme.Colors;
 
@@ -39,15 +40,20 @@ let make =
       ~uiFont,
       ~theme,
       ~isActive,
-      ~model: Model.group,
-      ~dispatch as _,
+      ~model: group,
+      ~dispatch,
       (),
     ) => {
   let children = {
     let editorContainer =
-      switch (model.items) {
-      | [first, ..._] => first |> ContentModel.render
-      | [] => React.empty
+      switch (
+        List.find_opt(
+          item => ContentModel.id(item) == model.selected,
+          model.items,
+        )
+      ) {
+      | Some(item) => ContentModel.render(item)
+      | None => React.empty
       };
 
     if (showTabs) {
@@ -69,8 +75,9 @@ let make =
               isActive={ContentModel.isActive(item)}
               isModified={ContentModel.isModified(item)}
               icon={ContentModel.icon(item)}
-              onClick={() => ()}
-              // dispatch(Model.Actions.EditorTabClicked(tabInfo.editorId))
+              onClick={() =>
+                dispatch(Model.GroupTabClicked(ContentModel.id(item)))
+              }
               onClose={() => ()}
               // dispatch(Model.Actions.ViewCloseEditor(tabInfo.editorId))
             />

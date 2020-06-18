@@ -4,37 +4,6 @@ include Model;
 
 // UPDATE
 
-[@deriving show({with_path: false})]
-type command =
-  | MoveLeft
-  | MoveRight
-  | MoveUp
-  | MoveDown
-  | RotateForward
-  | RotateBackward
-  | DecreaseSize
-  | IncreaseSize
-  | DecreaseHorizontalSize
-  | IncreaseHorizontalSize
-  | DecreaseVerticalSize
-  | IncreaseVerticalSize
-  | IncreaseWindowSize([ | `Up | `Down | `Left | `Right])
-  | DecreaseWindowSize([ | `Up | `Down | `Left | `Right])
-  | Maximize
-  | MaximizeHorizontal
-  | MaximizeVertical
-  | ToggleMaximize
-  | ResetSizes;
-
-[@deriving show({with_path: false})]
-type msg =
-  | SplitDragged({
-      path: list(int),
-      delta: float,
-    })
-  | DragComplete
-  | Command(command);
-
 type outmsg =
   | Nothing
   | Focus(panel);
@@ -99,6 +68,20 @@ let update = (~focus, model, msg) => {
     );
 
   | DragComplete => (updateTree(Fun.id, model), Nothing)
+
+  | GroupTabClicked(id) => (
+      {
+        ...model,
+        groups:
+          List.map(
+            group =>
+              group.id == model.activeGroup
+                ? {...group, selected: id} : group,
+            model.groups,
+          ),
+      },
+      Nothing,
+    )
 
   | Command(MoveLeft) =>
     switch (focus) {
