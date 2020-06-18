@@ -191,9 +191,7 @@ let update =
     let focus =
       switch (FocusManager.current(state)) {
       | Editor
-      | Terminal(_) =>
-        EditorGroups.getActiveEditorGroup(state.editorGroups)
-        |> Option.map((group: EditorGroup.t) => Center(group.editorGroupId))
+      | Terminal(_) => Some(Center)
 
       | FileExplorer
       | SCM => Some(Left)
@@ -207,16 +205,7 @@ let update =
 
     let state =
       switch (maybeOutmsg) {
-      | Focus(Center(editorGroupId)) =>
-        {
-          ...state,
-          editorGroups:
-            EditorGroups.setActiveEditorGroup(
-              editorGroupId,
-              state.editorGroups,
-            ),
-        }
-        |> FocusManager.push(Editor)
+      | Focus(Center) => FocusManager.push(Editor, state)
 
       | Focus(Left) =>
         state.sideBar.isOpen ? SideBarReducer.focus(state) : state

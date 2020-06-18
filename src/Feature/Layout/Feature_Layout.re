@@ -1,51 +1,6 @@
 // MODEL
 
-type panel =
-  | Left
-  | Center(int)
-  | Bottom;
-
-type model = {
-  tree: Layout.t(int),
-  uncommittedTree: [
-    | `Resizing(Layout.t(int))
-    | `Maximized(Layout.t(int))
-    | `None
-  ],
-};
-
-let initial = id => {tree: Layout.singleton(id), uncommittedTree: `None};
-
-let activeTree = model =>
-  switch (model.uncommittedTree) {
-  | `Resizing(tree)
-  | `Maximized(tree) => tree
-  | `None => model.tree
-  };
-
-let updateTree = (f, model) => {
-  tree: f(activeTree(model)),
-  uncommittedTree: `None,
-};
-
-let windows = model => Layout.windows(activeTree(model));
-let addWindow = (direction, focus) =>
-  updateTree(Layout.addWindow(direction, focus));
-let insertWindow = (target, direction, focus) =>
-  updateTree(Layout.insertWindow(target, direction, focus));
-let removeWindow = target => updateTree(Layout.removeWindow(target));
-
-let move = (focus, dirX, dirY, layout) => {
-  let positioned = Positioned.fromLayout(0, 0, 200, 200, layout);
-
-  Positioned.move(focus, dirX, dirY, positioned)
-  |> Option.value(~default=focus);
-};
-
-let moveLeft = current => move(current, -1, 0);
-let moveRight = current => move(current, 1, 0);
-let moveUp = current => move(current, 0, -1);
-let moveDown = current => move(current, 0, 1);
+include Model;
 
 // UPDATE
 
@@ -84,37 +39,45 @@ type outmsg =
   | Nothing
   | Focus(panel);
 
-let rotate = (direction, focus, model) => {
+let rotate = (direction, model) => {
   ...model,
-  tree: Layout.rotate(direction, focus, activeTree(model)),
+  tree: Layout.rotate(direction, model.activeGroup, activeTree(model)),
 };
 
-let resizeWindowByAxis = (direction, focus, delta, model) => {
+let resizeWindowByAxis = (direction, delta, model) => {
   ...model,
   tree:
-    Layout.resizeWindowByAxis(direction, focus, delta, activeTree(model)),
+    Layout.resizeWindowByAxis(
+      direction,
+      model.activeGroup,
+      delta,
+      activeTree(model),
+    ),
 };
 
-let resizeWindowByDirection = (direction, focus, delta, model) => {
+let resizeWindowByDirection = (direction, delta, model) => {
   ...model,
   tree:
     Layout.resizeWindowByDirection(
       direction,
-      focus,
+      model.activeGroup,
       delta,
       activeTree(model),
     ),
 };
 
 let resetWeights = model => {
+  ...model,
   tree: Layout.resetWeights(activeTree(model)),
   uncommittedTree: `None,
 };
 
-let maximize = (~direction=?, targetId, model) => {
+let maximize = (~direction=?, model) => {
   ...model,
   uncommittedTree:
-    `Maximized(Layout.maximize(~direction?, targetId, activeTree(model))),
+    `Maximized(
+      Layout.maximize(~direction?, model.activeGroup, activeTree(model)),
+    ),
 };
 
 let update = (~focus, model, msg) => {
@@ -139,12 +102,12 @@ let update = (~focus, model, msg) => {
 
   | Command(MoveLeft) =>
     switch (focus) {
-    | Some(Center(focus)) =>
-      let newFocus = model |> activeTree |> moveLeft(focus);
-      if (newFocus == focus) {
+    | Some(Center) =>
+      let newActiveGroup = model |> activeTree |> moveLeft(model.activeGroup);
+      if (newActiveGroup == model.activeGroup) {
         (model, Focus(Left));
       } else {
-        (model, Focus(Center(newFocus)));
+        ({...model, activeGroup: newActiveGroup}, Nothing);
       };
 
     | Some(Left)
@@ -154,13 +117,14 @@ let update = (~focus, model, msg) => {
 
   | Command(MoveRight) =>
     switch (focus) {
-    | Some(Center(focus)) =>
-      let newFocus = model |> activeTree |> moveRight(focus);
-      (model, Focus(Center(newFocus)));
+    | Some(Center) =>
+      let newActiveGroup =
+        model |> activeTree |> moveRight(model.activeGroup);
+      ({...model, activeGroup: newActiveGroup}, Nothing);
 
     | Some(Left) =>
-      let focus = model |> activeTree |> Layout.leftmost;
-      (model, Focus(Center(focus)));
+      let newActiveGroup = model |> activeTree |> Layout.leftmost;
+      ({...model, activeGroup: newActiveGroup}, Focus(Center));
 
     | Some(Bottom)
     | None => (model, Nothing)
@@ -168,13 +132,13 @@ let update = (~focus, model, msg) => {
 
   | Command(MoveUp) =>
     switch (focus) {
-    | Some(Center(focus)) =>
-      let newFocus = model |> activeTree |> moveUp(focus);
-      (model, Focus(Center(newFocus)));
+    | Some(Center) =>
+      let newActiveGroup = model |> activeTree |> moveUp(model.activeGroup);
+      ({...model, activeGroup: newActiveGroup}, Nothing);
 
     | Some(Bottom) =>
-      let focus = model |> activeTree |> Layout.bottommost;
-      (model, Focus(Center(focus)));
+      let newActiveGroup = model |> activeTree |> Layout.bottommost;
+      ({...model, activeGroup: newActiveGroup}, Focus(Center));
 
     | Some(Left)
     | None => (model, Nothing)
@@ -182,12 +146,12 @@ let update = (~focus, model, msg) => {
 
   | Command(MoveDown) =>
     switch (focus) {
-    | Some(Center(focus)) =>
-      let newFocus = model |> activeTree |> moveDown(focus);
-      if (newFocus == focus) {
+    | Some(Center) =>
+      let newActiveGroup = model |> activeTree |> moveDown(model.activeGroup);
+      if (newActiveGroup == model.activeGroup) {
         (model, Focus(Bottom));
       } else {
-        (model, Focus(Center(newFocus)));
+        ({...model, activeGroup: newActiveGroup}, Nothing);
       };
 
     | Some(Left) => (model, Focus(Bottom))
@@ -198,7 +162,7 @@ let update = (~focus, model, msg) => {
 
   | Command(RotateForward) =>
     switch (focus) {
-    | Some(Center(focus)) => (rotate(`Forward, focus, model), Nothing)
+    | Some(Center) => (rotate(`Forward, model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -207,7 +171,7 @@ let update = (~focus, model, msg) => {
 
   | Command(RotateBackward) =>
     switch (focus) {
-    | Some(Center(focus)) => (rotate(`Backward, focus, model), Nothing)
+    | Some(Center) => (rotate(`Backward, model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -216,10 +180,10 @@ let update = (~focus, model, msg) => {
 
   | Command(DecreaseSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
+    | Some(Center) => (
         model
-        |> resizeWindowByAxis(`Horizontal, focus, 0.95)
-        |> resizeWindowByAxis(`Vertical, focus, 0.95),
+        |> resizeWindowByAxis(`Horizontal, 0.95)
+        |> resizeWindowByAxis(`Vertical, 0.95),
         Nothing,
       )
 
@@ -230,10 +194,10 @@ let update = (~focus, model, msg) => {
 
   | Command(IncreaseSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
+    | Some(Center) => (
         model
-        |> resizeWindowByAxis(`Horizontal, focus, 1.05)
-        |> resizeWindowByAxis(`Vertical, focus, 1.05),
+        |> resizeWindowByAxis(`Horizontal, 1.05)
+        |> resizeWindowByAxis(`Vertical, 1.05),
         Nothing,
       )
 
@@ -244,8 +208,8 @@ let update = (~focus, model, msg) => {
 
   | Command(DecreaseHorizontalSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByAxis(`Horizontal, focus, 0.95),
+    | Some(Center) => (
+        model |> resizeWindowByAxis(`Horizontal, 0.95),
         Nothing,
       )
 
@@ -256,8 +220,8 @@ let update = (~focus, model, msg) => {
 
   | Command(IncreaseHorizontalSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByAxis(`Horizontal, focus, 1.05),
+    | Some(Center) => (
+        model |> resizeWindowByAxis(`Horizontal, 1.05),
         Nothing,
       )
 
@@ -268,8 +232,8 @@ let update = (~focus, model, msg) => {
 
   | Command(DecreaseVerticalSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByAxis(`Vertical, focus, 0.95),
+    | Some(Center) => (
+        model |> resizeWindowByAxis(`Vertical, 0.95),
         Nothing,
       )
 
@@ -280,8 +244,8 @@ let update = (~focus, model, msg) => {
 
   | Command(IncreaseVerticalSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByAxis(`Vertical, focus, 1.05),
+    | Some(Center) => (
+        model |> resizeWindowByAxis(`Vertical, 1.05),
         Nothing,
       )
 
@@ -292,8 +256,8 @@ let update = (~focus, model, msg) => {
 
   | Command(IncreaseWindowSize(direction)) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByDirection(direction, focus, 1.05),
+    | Some(Center) => (
+        model |> resizeWindowByDirection(direction, 1.05),
         Nothing,
       )
 
@@ -304,8 +268,8 @@ let update = (~focus, model, msg) => {
 
   | Command(DecreaseWindowSize(direction)) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByDirection(direction, focus, 0.95),
+    | Some(Center) => (
+        model |> resizeWindowByDirection(direction, 0.95),
         Nothing,
       )
 
@@ -316,7 +280,7 @@ let update = (~focus, model, msg) => {
 
   | Command(Maximize) =>
     switch (focus) {
-    | Some(Center(focus)) => (maximize(focus, model), Nothing)
+    | Some(Center) => (maximize(model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -325,10 +289,7 @@ let update = (~focus, model, msg) => {
 
   | Command(MaximizeHorizontal) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        maximize(~direction=`Horizontal, focus, model),
-        Nothing,
-      )
+    | Some(Center) => (maximize(~direction=`Horizontal, model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -337,10 +298,7 @@ let update = (~focus, model, msg) => {
 
   | Command(MaximizeVertical) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        maximize(~direction=`Vertical, focus, model),
-        Nothing,
-      )
+    | Some(Center) => (maximize(~direction=`Vertical, model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -354,7 +312,7 @@ let update = (~focus, model, msg) => {
 
       | _ =>
         switch (focus) {
-        | Some(Center(focus)) => maximize(focus, model)
+        | Some(Center) => maximize(model)
 
         | Some(Left)
         | Some(Bottom)
@@ -367,6 +325,18 @@ let update = (~focus, model, msg) => {
   };
 };
 // VIEW
+
+module type ContentModel = {
+  type t = Feature_Editor.Editor.t;
+
+  let id: t => int;
+  let title: t => string;
+  let icon: t => option(Oni_Core.IconTheme.IconDefinition.t);
+  let isModified: t => bool;
+  let isActive: t => bool;
+
+  let render: t => Revery.UI.element;
+};
 
 module View = {
   module Local = {
@@ -504,7 +474,7 @@ module View = {
   };
 
   let component = React.Expert.component("Feature_Layout.View");
-  let make = (~children as renderWindow, ~model, ~theme, ~dispatch, ()) =>
+  let make = (~children as provider, ~model, ~uiFont, ~theme, ~dispatch, ()) =>
     component(hooks => {
       let ((maybeDimensions, setDimensions), hooks) =
         Hooks.state(None, hooks);
@@ -515,6 +485,22 @@ module View = {
         switch (maybeDimensions) {
         | Some((width, height)) =>
           let positioned = Positioned.fromLayout(0, 0, width, height, tree);
+
+          let renderWindow = id =>
+            switch (
+              List.find_opt(group => group.Group.id == id, model.groups)
+            ) {
+            | Some(group) =>
+              <EditorGroupView
+                provider
+                uiFont
+                isActive={group.id == model.activeGroup}
+                theme
+                model=group
+                dispatch
+              />
+            | None => React.empty
+            };
 
           <nodeView theme node=positioned renderWindow dispatch />;
 
@@ -533,7 +519,7 @@ module View = {
       );
     });
 
-  module EditorTab = EditorTab;
+  module EditorGroupView = EditorGroupView;
 };
 
 module Commands = {

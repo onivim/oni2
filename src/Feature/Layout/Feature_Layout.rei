@@ -4,7 +4,7 @@ open Oni_Core;
 
 type panel =
   | Left
-  | Center(int)
+  | Center
   | Bottom;
 
 type model;
@@ -36,20 +36,33 @@ let update: (~focus: option(panel), model, msg) => (model, outmsg);
 
 // VIEW
 
+module type ContentModel = {
+  type t = Feature_Editor.Editor.t;
+
+  let id: t => int;
+  let title: t => string;
+  let icon: t => option(IconTheme.IconDefinition.t);
+  let isModified: t => bool;
+  let isActive: t => bool;
+
+  let render: t => Revery.UI.element;
+};
+
 module View: {
   open Revery.UI;
 
   let make:
     (
-      ~children: int => element,
+      ~children: (module ContentModel),
       ~model: model,
+      ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       unit
     ) =>
     element;
 
-  module EditorTab = EditorTab;
+  module EditorGroupView = EditorGroupView;
 };
 
 // COMMANDS
