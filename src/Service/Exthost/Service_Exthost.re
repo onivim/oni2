@@ -122,10 +122,7 @@ module Effects = {
             client,
           );
 
-        Lwt.on_success(
-          promise,
-          Option.iter(sigHelp => dispatch(Ok(sigHelp) |> toMsg)),
-        );
+        Lwt.on_success(promise, sigHelp => dispatch(Ok(sigHelp) |> toMsg));
 
         Lwt.on_failure(promise, err =>
           dispatch(Error(Printexc.to_string(err)) |> toMsg)

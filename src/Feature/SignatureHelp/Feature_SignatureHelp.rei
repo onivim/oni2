@@ -26,6 +26,7 @@ type msg =
       activeParameter: int,
       requestID: int,
     })
+  | EmptyInfoReceived(int)
   | RequestFailed(string);
 
 type outmsg =

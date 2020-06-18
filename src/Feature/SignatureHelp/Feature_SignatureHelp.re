@@ -50,6 +50,7 @@ type msg =
       activeParameter: int,
       requestID: int,
     })
+  | EmptyInfoReceived(int)
   | RequestFailed(string);
 
 type outmsg =
@@ -94,13 +95,14 @@ let getEffectsForLocation =
          extHostClient,
          res =>
          switch (res) {
-         | Ok({signatures, activeSignature, activeParameter, _}) =>
+         | Ok(Some({signatures, activeSignature, activeParameter, _})) =>
            InfoReceived({
              signatures,
              activeSignature,
              activeParameter,
              requestID,
            })
+         | Ok(None) => EmptyInfoReceived(requestID)
          | Error(s) => RequestFailed(s)
          }
        )
@@ -154,6 +156,22 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           signatures,
           activeSignature: Some(activeSignature),
           activeParameter: Some(activeParameter),
+        },
+        Nothing,
+      )
+    | _ => (model, Nothing)
+    }
+  | EmptyInfoReceived(requestID) =>
+    switch (model.lastRequestID) {
+    | Some(reqID) when reqID == requestID => (
+        {
+          ...model,
+          signatures: [],
+          activeSignature: None,
+          activeParameter: None,
+          shown: false,
+          lastRequestID: None,
+          triggeredFrom: None,
         },
         Nothing,
       )

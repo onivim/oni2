@@ -54,7 +54,7 @@ module Effects: {
         ~position: EditorCoreTypes.Location.t,
         ~context: Exthost.SignatureHelp.RequestContext.t,
         Exthost.Client.t,
-        result(Exthost.SignatureHelp.Response.t, string) => 'msg
+        result(option(Exthost.SignatureHelp.Response.t), string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
   };

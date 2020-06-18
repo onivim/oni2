@@ -274,6 +274,7 @@ let request =
 
             switch (parser(json)) {
             | Ok(v) =>
+              Console.log(v);
               Log.tracef(m => m("Request %d succeeded.", newRequestId));
               Lwt.return(v);
             | Error(msg) => Lwt.fail(ParseFailedException(msg))
