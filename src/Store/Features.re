@@ -113,6 +113,26 @@ let update =
 
     (state', eff);
 
+  // TEMPORARY: Needs https://github.com/onivim/oni2/pull/1627 to remove
+  | BufferEnter({buffer, _}) =>
+    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+
+    (
+      {
+        ...state,
+        layout:
+          Feature_Layout.openEditor(
+            Feature_Editor.Editor.create(
+              ~font=state.editorFont,
+              ~buffer=editorBuffer,
+              (),
+            ),
+            state.layout,
+          ),
+      },
+      Effect.none,
+    );
+
   | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(

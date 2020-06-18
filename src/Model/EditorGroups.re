@@ -24,12 +24,11 @@ let create = () => {
 
 let activeGroupId = model => model.activeId;
 
-let add = (~defaultFont, editorGroup, model) => {
+let add = (editorGroup, model) => {
   let editorGroup =
     switch (model.lastEditorFont) {
     | Some(font) =>
       EditorGroupReducer.reduce(
-        ~defaultFont,
         editorGroup,
         EditorFont(Service_Font.FontLoaded(font)),
       )
@@ -104,11 +103,8 @@ let setBufferFont = (~bufferId, ~font, groups) => {
 /* Validate 'activeId' is set to a valid editor group,
    otherwise move to the first valid */
 module Internal = {
-  let applyToAllEditorGroups = (~defaultFont, editors, action: Actions.t) =>
-    IntMap.map(
-      group => EditorGroupReducer.reduce(~defaultFont, group, action),
-      editors,
-    );
+  let applyToAllEditorGroups = (editors, action: Actions.t) =>
+    IntMap.map(group => EditorGroupReducer.reduce(group, action), editors);
 
   let ensureActiveId = model => {
     switch (IntMap.find_opt(model.activeId, model.idToGroup)) {
@@ -170,27 +166,17 @@ let closeBuffer = (~bufferId, editorGroups) => {
      );
 };
 
-let reduce = (~defaultFont, model, action: Actions.t) => {
+let reduce = (model, action: Actions.t) => {
   switch (action) {
   | EditorFont(Service_Font.FontLoaded(font)) => {
       ...model,
-      idToGroup:
-        Internal.applyToAllEditorGroups(
-          ~defaultFont,
-          model.idToGroup,
-          action,
-        ),
+      idToGroup: Internal.applyToAllEditorGroups(model.idToGroup, action),
       lastEditorFont: Some(font),
     }
 
   | EditorSizeChanged(_) => {
       ...model,
-      idToGroup:
-        Internal.applyToAllEditorGroups(
-          ~defaultFont,
-          model.idToGroup,
-          action,
-        ),
+      idToGroup: Internal.applyToAllEditorGroups(model.idToGroup, action),
     }
 
   | EditorGroupSelected(editorGroupId) => {...model, activeId: editorGroupId}
@@ -202,7 +188,7 @@ let reduce = (~defaultFont, model, action: Actions.t) => {
         idToGroup:
           IntMap.add(
             model.activeId,
-            EditorGroupReducer.reduce(~defaultFont, group, action),
+            EditorGroupReducer.reduce(group, action),
             model.idToGroup,
           ),
       }

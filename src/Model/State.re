@@ -81,7 +81,6 @@ type t = {
 
 let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
   let editorGroups = EditorGroups.create();
-  let initialEditorGroup = editorGroups |> EditorGroups.getFirstEditorGroup;
 
   {
     buffers: Buffers.empty,
@@ -132,7 +131,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     sneak: Feature_Sneak.initial,
     statusBar: Feature_StatusBar.initial,
     syntaxHighlights: Feature_Syntax.empty,
-    layout: Feature_Layout.initial(initialEditorGroup.editorGroupId),
+    layout: Feature_Layout.initial,
     windowTitle: "",
     windowIsFocused: true,
     windowDisplayMode: Windowed,

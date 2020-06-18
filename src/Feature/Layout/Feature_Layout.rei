@@ -9,7 +9,7 @@ type panel =
 
 type model;
 
-let initial: int => model;
+let initial: model;
 
 let windows: model => list(int);
 let addWindow: ([ | `Horizontal | `Vertical], int, model) => model;
@@ -22,6 +22,8 @@ let insertWindow:
   ) =>
   model;
 let removeWindow: (int, model) => model;
+
+let openEditor: (Feature_Editor.Editor.t, model) => model;
 
 // UPDATE
 

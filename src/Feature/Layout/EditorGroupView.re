@@ -39,7 +39,7 @@ let make =
       ~uiFont,
       ~theme,
       ~isActive,
-      ~model: Model.Group.t,
+      ~model: Model.group,
       ~dispatch as _,
       (),
     ) => {
@@ -53,7 +53,7 @@ let make =
     if (showTabs) {
       let tabs =
         <Tabs
-          items={model.items}
+          items={model.items |> List.rev}
           style=Style.[
             backgroundColor(
               Colors.EditorGroupHeader.tabsBackground.from(theme),

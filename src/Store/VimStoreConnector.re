@@ -633,15 +633,6 @@ let start =
   let openFileByPathEffect = (state, filePath, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
       let buffer = Vim.Buffer.openFile(filePath);
-      let metadata = Vim.BufferMetadata.ofBuffer(buffer);
-      let lineEndings = Vim.Buffer.getLineEndings(buffer);
-
-      let fileType =
-        switch (metadata.filePath) {
-        | Some(v) =>
-          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-        | None => None
-        };
 
       let () =
         location
@@ -652,7 +643,7 @@ let start =
              let topLine: int = max(Index.toZeroBased(loc.line) - 10, 0);
 
              let () =
-               getState()
+               state
                |> Selectors.getActiveEditorGroup
                |> Selectors.getActiveEditor
                |> Option.map(Editor.getId)
@@ -663,23 +654,6 @@ let start =
            });
 
       let bufferId = Vim.Buffer.getId(buffer);
-      let defaultBuffer = Oni_Core.Buffer.ofLines(~id=bufferId, [||]);
-      let buffer =
-        Selectors.getBufferById(state, bufferId)
-        |> Option.value(~default=defaultBuffer);
-
-      // TODO: Will this be necessary with https://github.com/onivim/oni2/pull/1627?
-      dispatch(
-        Actions.BufferEnter({
-          id: metadata.id,
-          buffer,
-          fileType,
-          lineEndings,
-          filePath: metadata.filePath,
-          isModified: metadata.modified,
-          version: metadata.version,
-        }),
-      );
 
       let maybeRenderer =
         switch (Core.BufferPath.parse(filePath)) {
@@ -877,12 +851,7 @@ let start =
   let addSplit = (direction, state: State.t, editorGroup) => {
     ...state,
     zenMode: false, // Fix #686: If we're adding a split, we should turn off Zen mode.
-    editorGroups:
-      EditorGroups.add(
-        ~defaultFont=state.editorFont,
-        editorGroup,
-        state.editorGroups,
-      ),
+    editorGroups: EditorGroups.add(editorGroup, state.editorGroups),
     layout:
       switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
       | Some(target) =>

@@ -487,9 +487,7 @@ module View = {
           let positioned = Positioned.fromLayout(0, 0, width, height, tree);
 
           let renderWindow = id =>
-            switch (
-              List.find_opt(group => group.Group.id == id, model.groups)
-            ) {
+            switch (List.find_opt(group => group.id == id, model.groups)) {
             | Some(group) =>
               <EditorGroupView
                 provider

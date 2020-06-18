@@ -6,7 +6,7 @@
 
 open Oni_Core;
 
-let reduce = (~defaultFont, v: EditorGroup.t, action: Actions.t) => {
+let reduce = (v: EditorGroup.t, action: Actions.t) => {
   /* Only send updates to _active_ editor */
   let editors =
     switch (v.activeEditorId, EditorGroup.getActiveEditor(v)) {
@@ -37,17 +37,7 @@ let reduce = (~defaultFont, v: EditorGroup.t, action: Actions.t) => {
           editors,
         ),
     }
-  // TEMPORARY: Needs https://github.com/onivim/oni2/pull/1627 to remove
-  | BufferEnter({buffer, _}) =>
-    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
-    let (newState, activeEditorId) =
-      EditorGroup.getOrCreateEditorForBuffer(
-        ~font=defaultFont,
-        ~buffer=editorBuffer,
-        v,
-      );
 
-    {...newState, activeEditorId: Some(activeEditorId)};
   | Command("workbench.action.nextEditor") => EditorGroup.nextEditor(v)
   | Command("workbench.action.previousEditor") =>
     EditorGroup.previousEditor(v)

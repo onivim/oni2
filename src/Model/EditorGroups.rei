@@ -11,7 +11,7 @@ let getFirstEditorGroup: t => EditorGroup.t;
 
 let getAllVisibleEditors: t => list(Feature_Editor.Editor.t);
 
-let add: (~defaultFont: Service_Font.font, EditorGroup.t, t) => t;
+let add: (EditorGroup.t, t) => t;
 
 // [closeBuffer(~bufferId, groups)] closes buffer with id [bufferId] across all groups
 let closeBuffer: (~bufferId: int, t) => t;
@@ -19,7 +19,7 @@ let closeEditor: (~editorId: int, t) => t;
 
 let isActive: (t, EditorGroup.t) => bool;
 
-let reduce: (~defaultFont: Service_Font.font, t, Actions.t) => t;
+let reduce: (t, Actions.t) => t;
 
 let setBufferFont: (~bufferId: int, ~font: Service_Font.font, t) => t;
 
