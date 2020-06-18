@@ -144,6 +144,16 @@ let start = () => {
 
   let updater = (state: State.t, action: FileExplorer.action) => {
     switch (action) {
+    | ActiveFilePathChanged(maybeFilePath) => 
+      switch (state.fileExplorer) {
+      | {active, _} when active != maybeFilePath =>
+        let state = setActive(maybeFilePath, state);
+        switch (maybeFilePath) {
+        | Some(path) => revealAndFocusPath(path, state)
+        | None => (state, Isolinear.Effect.none)
+        };
+      | _ => (state, Isolinear.Effect.none)
+      }
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)
 
     | NodeLoaded(node) => (replaceNode(node, state), Isolinear.Effect.none)
@@ -201,7 +211,7 @@ let start = () => {
     };
   };
 
-  (state: State.t, action: Actions.t) =>
+  (state: State.t, action: Actions.t) => {
     switch (action) {
     // TODO: Should be handled by a more general init mechanism
     | Init => (
@@ -219,19 +229,9 @@ let start = () => {
         ]),
       )
 
-    | BufferEnter({filePath, _}) =>
-      switch (state.fileExplorer) {
-      | {active, _} when active != filePath =>
-        let state = setActive(filePath, state);
-        switch (filePath) {
-        | Some(path) => revealAndFocusPath(path, state)
-        | None => (state, Isolinear.Effect.none)
-        };
-
-      | _ => (state, Isolinear.Effect.none)
-      }
-
-    | FileExplorer(action) => updater(state, action)
+    | FileExplorer(action) =>
+      updater(state, action);
     | _ => (state, Isolinear.Effect.none)
     };
+  };
 };

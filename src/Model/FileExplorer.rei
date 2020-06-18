@@ -12,6 +12,7 @@ type t = {
 
 [@deriving show]
 type action =
+  | ActiveFilePathChanged(option(string))
   | TreeLoaded(FsTreeNode.t)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
