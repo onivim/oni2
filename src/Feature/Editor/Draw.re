@@ -226,7 +226,7 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
     );
 
   let y =
-    pixelY +. Editor.lineHeightInPixels(context.editor) -. fontMetrics.ascent;
+    pixelY -. fontMetrics.ascent;
   let x = pixelX;
 
   switch (token.tokenType) {
