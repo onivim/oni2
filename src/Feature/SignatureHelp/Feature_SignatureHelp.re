@@ -118,7 +118,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         Exthost.SignatureHelp.RequestContext.{
           triggerKind: Exthost.SignatureHelp.TriggerKind.Invoke,
           triggerCharacter: None,
-          isRetrigger: false // TODO: actually determine if it's a retrigger
+          isRetrigger: false,
         };
 
       let effects =
@@ -204,7 +204,29 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           {...model, shown: true, lastRequestID: Some(requestID)},
           Effect(effects),
         );
-      } else if (retrigger && model.shown || key == "<ESC>") {
+      } else if (retrigger && model.shown) {
+        Log.infof(m => m("Retrigger character hit: %s", key));
+        let requestID = IDGenerator.get();
+        let context =
+          Exthost.SignatureHelp.RequestContext.{
+            triggerKind: Exthost.SignatureHelp.TriggerKind.TriggerCharacter,
+            triggerCharacter: Some(key),
+            isRetrigger: true,
+          };
+        let effects =
+          getEffectsForLocation(
+            ~buffer,
+            ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+            ~extHostClient,
+            ~model,
+            ~context,
+            ~requestID,
+          );
+        (
+          {...model, shown: true, lastRequestID: Some(requestID)},
+          Effect(effects),
+        );
+      } else if (key == "<ESC>") {
         (
           {
             ...model,
