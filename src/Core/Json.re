@@ -18,12 +18,10 @@ module Decode = {
         string => result(value, string)
     );
 
-    let of_file = file => {
-      Console.log(file);
+    let of_file = file =>
       try(Ok(Yojson.Safe.from_file(file))) {
       | e => Error(Printexc.to_string(e))
       };
-    };
 
     let get_string =
       fun
