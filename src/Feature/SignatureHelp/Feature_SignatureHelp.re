@@ -445,7 +445,7 @@ module View = {
         |> React.listToElement;
       };
     };
-    <HoverView x y theme=colorTheme>
+    <HoverView x y displayAt=`Top theme=colorTheme>
       <View style=Styles.signatureLine> {renderLabel()} </View>
       <UI.Components.Row>
         <View
@@ -524,7 +524,7 @@ module View = {
            let y =
              int_of_float(
                editorFont.measuredHeight
-               *. float(Index.toZeroBased(line) + 1)
+               *. float(Index.toZeroBased(line))
                -. editor.scrollY
                +. 0.5,
              );

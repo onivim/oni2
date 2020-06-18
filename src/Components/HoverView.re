@@ -9,25 +9,28 @@ module Constants = {
   let scrollThumbColor = Color.rgba(0.5, 0.5, 0.5, 0.4);
 };
 
+type displayAt = [ | `Top | `Bottom];
+
 module Styles = {
   open Style;
   module Colors = Feature_Theme.Colors;
 
-  let outer = (~x, ~y, ~theme) => [
-    position(`Absolute),
-    left(x),
-    top(y),
-    border(~width=1, ~color=Colors.EditorHoverWidget.border.from(theme)),
-  ];
+  let outer = (~x, ~y) => [position(`Absolute), left(x), top(y)];
 
+  let inner = (~maybeHeight, ~displayAt) =>
+    switch (maybeHeight, displayAt) {
+    | (Some(height), `Top) => [top(- height)]
+    | _ => []
+    };
   let maxHeight = 200;
   let maxWidth = 500;
 
-  let container = [
+  let container = (~theme) => [
     position(`Relative),
     Style.maxWidth(maxWidth + Constants.scrollBarThickness),
     Style.maxHeight(maxHeight),
     overflow(`Scroll),
+    border(~width=1, ~color=Colors.EditorHoverWidget.border.from(theme)),
   ];
 
   let contents = (~theme, ~showScrollbar, ~scrollTop) => [
@@ -69,7 +72,15 @@ let reducer = (action, state) =>
   | SetHeight(height) => {...state, maybeHeight: Some(height)}
   };
 
-let%component make = (~x, ~y, ~theme, ~children=React.empty, ()) => {
+let%component make =
+              (
+                ~x,
+                ~y,
+                ~theme,
+                ~displayAt: displayAt=`Bottom,
+                ~children=React.empty,
+                (),
+              ) => {
   let%hook (state, dispatch) = Hooks.reducer(~initialState, reducer);
 
   let showScrollbar =
@@ -119,19 +130,23 @@ let%component make = (~x, ~y, ~theme, ~children=React.empty, ()) => {
 
     | _ => ()
     };
-  <View style={Styles.outer(~x, ~y, ~theme)}>
-    <View style=Styles.container>
-      <View
-        style={Styles.contents(
-          ~theme,
-          ~showScrollbar,
-          ~scrollTop=state.scrollTop,
-        )}
-        onMouseWheel=scroll
-        onDimensionsChanged={({height, _}) => dispatch(SetHeight(height))}>
-        ...children
+  <View style={Styles.outer(~x, ~y)}>
+    <View style={Styles.inner(~maybeHeight=state.maybeHeight, ~displayAt)}>
+      <View style={Styles.container(~theme)}>
+        <View
+          style={Styles.contents(
+            ~theme,
+            ~showScrollbar,
+            ~scrollTop=state.scrollTop,
+          )}
+          onMouseWheel=scroll
+          onDimensionsChanged={({height, _}) =>
+            dispatch(SetHeight(height))
+          }>
+          ...children
+        </View>
       </View>
+      {showScrollbar ? <scrollbar /> : React.empty}
     </View>
-    {showScrollbar ? <scrollbar /> : React.empty}
   </View>;
 };
