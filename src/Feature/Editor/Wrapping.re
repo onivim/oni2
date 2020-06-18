@@ -11,7 +11,7 @@ module Internal = {
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
     let wraps = Array.make(bufferLineCount, []);
 
-    for (idx in 0 to bufferLineCount) {
+    for (idx in 0 to bufferLineCount - 1) {
       let line = EditorBuffer.line(idx, buffer);
       wraps[idx] = wrap(line);
     };
