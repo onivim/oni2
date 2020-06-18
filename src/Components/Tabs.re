@@ -32,15 +32,6 @@ let measureChildOffset: (int, option(node)) => option((int, int)) =
       }
     | None => None;
 
-let findIndex = (predicate, list) => {
-  let rec loop = i =>
-    fun
-    | [] => None
-    | [head, ..._] when predicate(head) => Some(i)
-    | [_, ...tail] => loop(i + 1, tail);
-  loop(0, list);
-};
-
 let isPendingRender: option(node) => bool =
   fun
   | Some(outer) => outer#firstChild()#firstChild()#measurements().width < 0
@@ -60,7 +51,7 @@ let make =
     (
       ~children as render: 'a => element,
       ~items: list('a),
-      ~isSelected: 'a => bool,
+      ~selectedIndex: option(int),
       ~style,
       (),
     ) =>
@@ -70,7 +61,7 @@ let make =
       Hooks.state(None, hooks);
 
     let selectedChanged = () => {
-      switch (findIndex(isSelected, items)) {
+      switch (selectedIndex) {
       | Some(index) =>
         let f = () => {
           switch (measureChildOffset(index, outerRef)) {
@@ -97,11 +88,7 @@ let make =
     };
 
     let ((), hooks) =
-      Hooks.effect(
-        If((!=), List.map(isSelected, items)),
-        selectedChanged,
-        hooks,
-      );
+      Hooks.effect(If((!=), selectedIndex), selectedChanged, hooks);
 
     let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
       let maxOffset = measureOverflow(outerRef);

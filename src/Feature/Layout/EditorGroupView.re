@@ -1,5 +1,6 @@
 open Revery.UI;
 open Oni_Core;
+open Utility;
 open Oni_Components;
 open Model;
 
@@ -43,35 +44,32 @@ let make =
       ~dispatch,
       (),
     ) => {
+  let isSelected = item => ContentModel.id(item) == model.selected;
   let children = {
     let editorContainer =
-      switch (
-        List.find_opt(
-          item => ContentModel.id(item) == model.selected,
-          model.items,
-        )
-      ) {
+      switch (List.find_opt(isSelected, model.items)) {
       | Some(item) => ContentModel.render(item)
       | None => React.empty
       };
 
     if (showTabs) {
+      let items = model.items |> List.rev;
       let tabs =
         <Tabs
-          items={model.items |> List.rev}
+          items
           style=Style.[
             backgroundColor(
               Colors.EditorGroupHeader.tabsBackground.from(theme),
             ),
           ]
-          isSelected={item => ContentModel.id(item) == model.selected}>
+          selectedIndex={ListEx.findIndex(isSelected, items)}>
           ...{item => {
             <EditorTab
               uiFont
               theme
               title={ContentModel.title(item)}
               isGroupFocused=isActive
-              isActive={ContentModel.id(item) == model.selected}
+              isActive={isSelected(item)}
               isModified={ContentModel.isModified(item)}
               icon={ContentModel.icon(item)}
               onClick={() =>
