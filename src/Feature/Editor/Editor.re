@@ -44,29 +44,22 @@ let lineHeightInPixels = ({font, _}) => font.measuredHeight;
 let font = ({font, _}) => font;
 
 let bufferLineByteToPixel =
-    (~overrideScrollX=None, ~overrideScrollY=None, ~line, ~byteIndex, editor) => {
-  let scrollY =
-    switch (overrideScrollY) {
-    | Some(v) => v
-    | None => editor.scrollY
-    };
-  let scrollX =
-    switch (overrideScrollX) {
-    | Some(v) => v
-    | None => editor.scrollX
-    };
+    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  if (line < 0 || line >= lineCount) {
+    ({pixelX: 0., pixelY: 0.}, 0.);
+  } else {
+    let (cursorOffset, width) =
+      buffer
+      |> EditorBuffer.line(line)
+      |> BufferLine.getPositionAndWidth(~index=byteIndex);
 
-  let (cursorOffset, _) =
-    editor.buffer
-    |> EditorBuffer.line(line)
-    |> BufferLine.getPositionAndWidth(~index=byteIndex);
+    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
 
-  let pixelX =
-    editor.font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
 
-  let pixelY = editor.font.measuredHeight *. float(line) -. scrollY +. 0.5;
-
-  ({pixelX, pixelY}, 0.);
+    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+  };
 };
 
 let create = (~font, ~buffer, ()) => {
@@ -296,26 +289,6 @@ let scrollToColumn = (~column, view) => {
 let scrollDeltaPixelY = (~pixelY, view) => {
   let pixelY = view.scrollY +. pixelY;
   scrollToPixelY(~pixelY, view);
-};
-
-let getCursorOffset = (~buffer, ~cursorPosition: EditorCoreTypes.Location.t) => {
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
-  let lineCount = Buffer.getNumberOfLines(buffer);
-
-  let (cursorOffset, _cursorCharacterWidth) =
-    if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorLine = Buffer.getLine(cursorLine, buffer);
-
-      let (cursorOffset, width) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          cursorLine,
-          Index.toZeroBased(cursorPosition.column),
-        );
-      (cursorOffset, width);
-    } else {
-      (0, 1);
-    };
-  cursorOffset;
 };
 
 // PROJECTION

@@ -158,10 +158,10 @@ let renderDefinition =
      });
 
 let renderTokens =
-    (~context, ~offsetY, ~colors, ~tokens, ~shouldRenderWhitespace) => {
+    (~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
   tokens
   |> WhitespaceTokenFilter.filter(shouldRenderWhitespace)
-  |> List.iter(Draw.token(~context, ~offsetY, ~colors));
+  |> List.iter(Draw.token(~context, ~line, ~colors));
 };
 
 let renderText =
@@ -209,7 +209,7 @@ let renderText =
 
       renderTokens(
         ~context,
-        ~offsetY,
+        ~line=item,
         ~colors,
         ~tokens,
         ~shouldRenderWhitespace,

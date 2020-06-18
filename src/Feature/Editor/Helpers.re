@@ -3,12 +3,6 @@ open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 
-let bufferPositionToPixel = (~context: Draw.context, line, char) => {
-  let x = float(char) *. context.charWidth -. context.scrollX;
-  let y = float(line) *. context.charHeight -. context.scrollY;
-  (x, y);
-};
-
 let getTokensForLine =
     (
       ~buffer,

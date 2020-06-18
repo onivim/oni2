@@ -30,11 +30,14 @@ module Constants = {
 let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
-let renderRulers = (~context, ~colors: Colors.t, rulers) =>
-  rulers
-  |> List.map(bufferPositionToPixel(~context, 0))
-  |> List.map(fst)
-  |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
+let renderRulers = (~context, ~colors: Colors.t, rulers) => {
+  ()// TODO: Bring back
+    //  rulers
+    //  |> List.map(bufferPositionToPixel(~context, 0))
+    //  |> List.map(fst)
+    ;
+    //  |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
+};
 
 let%component make =
               (
@@ -197,13 +200,15 @@ let%component make =
             ~canvasContext,
             ~width=pixelWidth,
             ~height=pixelHeight,
-            ~scrollX,
-            ~scrollY,
-            ~lineHeight,
+            ~editor,
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(~context, ~colors, cursorPosition.line);
+        drawCurrentLineHighlight(
+          ~context,
+          ~colors,
+          cursorPosition.line |> Index.toZeroBased,
+        );
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
 
@@ -257,8 +262,6 @@ let%component make =
     <CursorView
       config
       editor
-      scrollX
-      scrollY
       editorFont
       buffer
       mode

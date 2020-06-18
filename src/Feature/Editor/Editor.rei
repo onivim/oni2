@@ -3,25 +3,6 @@ open Oni_Core;
 
 [@deriving show]
 type t;
-//type t;
-//  buffer: EditorBuffer.t,
-//  editorId: EditorId.t,
-//  scrollX: float,
-//  scrollY: float,
-//  minimapMaxColumnWidth: int,
-//  minimapScrollY: float,
-//  /*
-//   * The maximum line visible in the view.
-//   * TODO: This will be dependent on line-wrap settings.
-//   */
-//  maxLineLength: int,
-//  viewLines: int,
-//  cursors: [@opaque] list(Vim.Cursor.t),
-//  selection: [@opaque] VisualRange.t,
-//  font: [@opaque] Service_Font.font,
-//  pixelWidth: int,
-//  pixelHeight: int,
-//};
 
 type pixelPosition = {
   pixelX: float,
@@ -71,14 +52,7 @@ let minimapScrollY: t => float;
 let lineHeightInPixels: t => float;
 
 let bufferLineByteToPixel:
-  (
-    ~overrideScrollX: option(float)=?,
-    ~overrideScrollY: option(float)=?,
-    ~line: int,
-    ~byteIndex: int,
-    t
-  ) =>
-  (pixelPosition, float);
+  (~line: int, ~byteIndex: int, t) => (pixelPosition, float);
 
 let selection: t => VisualRange.t;
 let setSelection: (~selection: VisualRange.t, t) => t;
@@ -95,9 +69,6 @@ let scrollDeltaPixelY: (~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
-
-let getCursorOffset:
-  (~buffer: Buffer.t, ~cursorPosition: EditorCoreTypes.Location.t) => int;
 
 // PROJECTION
 
