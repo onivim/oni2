@@ -163,56 +163,8 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
     Log.warnf(m => m("Request failed : %s", str));
     (model, Error(str));
   | KeyPressed(maybeKey) =>
-    switch (maybeBuffer, maybeEditor, maybeKey, model.shown) {
-    | (Some(buffer), Some(editor), Some(key), true) =>
-      let filetype =
-        buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
-      let matchingProviders =
-        model.providers
-        |> List.filter(({selector, _}) =>
-             Exthost.DocumentSelector.matches(~filetype, selector)
-           );
-      let retrigger =
-        matchingProviders
-        |> List.exists(({metadata, _}) =>
-             List.mem(key, metadata.retriggerCharacters)
-           );
-      if (retrigger) {
-        Log.infof(m => m("Retrigger character hit: %s", key));
-        let context =
-          Exthost.SignatureHelp.RequestContext.{
-            triggerKind: Exthost.SignatureHelp.TriggerKind.ContentChange,
-            triggerCharacter: Some(key),
-            isRetrigger: true,
-          };
-        let requestID = IDGenerator.get();
-        let effects =
-          getEffectsForLocation(
-            ~buffer,
-            ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
-            ~extHostClient,
-            ~model,
-            ~context,
-            ~requestID,
-          );
-        ({...model, lastRequestID: Some(requestID)}, Effect(effects));
-      } else if (key == "<ESC>") {
-        (
-          {
-            ...model,
-            shown: false,
-            lastRequestID: None,
-            triggeredFrom: None,
-            signatures: [],
-            activeSignature: None,
-            activeParameter: None,
-          },
-          Nothing,
-        );
-      } else {
-        (model, Nothing);
-      };
-    | (Some(buffer), Some(editor), Some(key), false) =>
+    switch (maybeBuffer, maybeEditor, maybeKey) {
+    | (Some(buffer), Some(editor), Some(key)) =>
       let filetype =
         buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
       let matchingProviders =
@@ -224,6 +176,11 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         matchingProviders
         |> List.exists(({metadata, _}) =>
              List.mem(key, metadata.triggerCharacters)
+           );
+      let retrigger =
+        matchingProviders
+        |> List.exists(({metadata, _}) =>
+             List.mem(key, metadata.retriggerCharacters)
            );
       if (trigger) {
         Log.infof(m => m("Trigger character hit: %s", key));
@@ -246,6 +203,18 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         (
           {...model, shown: true, lastRequestID: Some(requestID)},
           Effect(effects),
+        );
+      } else if (retrigger && model.shown || key == "<ESC>") {
+        (
+          {
+            ...model,
+            shown: false,
+            lastRequestID: None,
+            activeSignature: None,
+            activeParameter: None,
+            triggeredFrom: None,
+          },
+          Nothing,
         );
       } else {
         (model, Nothing);
