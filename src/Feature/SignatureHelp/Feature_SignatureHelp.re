@@ -38,7 +38,8 @@ let initial = {
 [@deriving show({with_path: false})]
 type command =
   | Show
-  | IncrementSignature;
+  | IncrementSignature
+  | DecrementSignature;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -81,10 +82,18 @@ module Commands = {
       "editor.action.showNextParameterHint",
       Command(IncrementSignature),
     );
+
+  let decrementSignature =
+    define(
+      ~category="Parameter Hints",
+      ~title="Previous signature",
+      "editor.action.showPrevParameterHint",
+      Command(DecrementSignature),
+    );
 };
 
 module Contributions = {
-  let commands = Commands.[show];
+  let commands = Commands.[show, incrementSignature, decrementSignature];
 };
 
 let getEffectsForLocation =
@@ -291,6 +300,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       },
       Nothing,
     )
+  | Command(DecrementSignature)
   | SignatureDecremented => (
       {
         ...model,

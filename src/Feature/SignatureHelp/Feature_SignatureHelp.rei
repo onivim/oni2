@@ -14,7 +14,8 @@ let initial: model;
 [@deriving show({with_path: false})]
 type command =
   | Show
-  | IncrementSignature;
+  | IncrementSignature
+  | DecrementSignature;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -39,7 +40,10 @@ type outmsg =
 
 let isShown: model => bool;
 
-module Commands: {let incrementSignature: Command.t(msg);};
+module Commands: {
+  let incrementSignature: Command.t(msg);
+  let decrementSignature: Command.t(msg);
+};
 
 let update:
   (

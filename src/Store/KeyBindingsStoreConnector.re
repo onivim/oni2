@@ -462,7 +462,14 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<A-DOWN>",
         command: Feature_SignatureHelp.Commands.incrementSignature.id,
-        condition: "editorFocus" |> WhenExpr.parse, //TODO add the parameterHintsVisible condition
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+      },
+      {
+        key: "<A-UP>",
+        command: Feature_SignatureHelp.Commands.decrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
       },
     ];
 
