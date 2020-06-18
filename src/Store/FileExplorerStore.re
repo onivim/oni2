@@ -144,7 +144,7 @@ let start = () => {
 
   let updater = (state: State.t, action: FileExplorer.action) => {
     switch (action) {
-    | ActiveFilePathChanged(maybeFilePath) => 
+    | ActiveFilePathChanged(maybeFilePath) =>
       switch (state.fileExplorer) {
       | {active, _} when active != maybeFilePath =>
         let state = setActive(maybeFilePath, state);
@@ -229,8 +229,7 @@ let start = () => {
         ]),
       )
 
-    | FileExplorer(action) =>
-      updater(state, action);
+    | FileExplorer(action) => updater(state, action)
     | _ => (state, Isolinear.Effect.none)
     };
   };
