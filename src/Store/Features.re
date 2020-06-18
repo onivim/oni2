@@ -433,7 +433,7 @@ let update =
         ~maybeEditor,
         ~extHostClient,
         state.signatureHelp,
-        Feature_SignatureHelp.KeyPressed(buffer.triggerKey),
+        Feature_SignatureHelp.KeyPressed(buffer.triggerKey, false),
       );
     let shEffect =
       switch (shOutMsg) {

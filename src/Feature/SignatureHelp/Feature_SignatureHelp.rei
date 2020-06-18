@@ -21,7 +21,7 @@ type command =
 type msg =
   | Command(command)
   | ProviderRegistered(provider)
-  | KeyPressed(option(string))
+  | KeyPressed(option(string), bool)
   | InfoReceived({
       signatures: list(Exthost.SignatureHelp.Signature.t),
       activeSignature: int,

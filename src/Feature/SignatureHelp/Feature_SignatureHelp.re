@@ -45,7 +45,7 @@ type command =
 type msg =
   | Command(command)
   | ProviderRegistered(provider)
-  | KeyPressed(option(string))
+  | KeyPressed(option(string), bool)
   | InfoReceived({
       signatures: list(Exthost.SignatureHelp.Signature.t),
       activeSignature: int,
@@ -202,7 +202,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | RequestFailed(str) =>
     Log.warnf(m => m("Request failed : %s", str));
     (model, Error(str));
-  | KeyPressed(maybeKey) =>
+  | KeyPressed(maybeKey, before) =>
     switch (maybeBuffer, maybeEditor, maybeKey) {
     | (Some(buffer), Some(editor), Some(key)) =>
       let filetype =
@@ -222,6 +222,15 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         |> List.exists(({metadata, _}) =>
              List.mem(key, metadata.retriggerCharacters)
            );
+      let location =
+        if (before) {
+          open Index;
+          let Location.{line, column: col} =
+            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+          Location.create(~line, ~column=col + 1);
+        } else {
+          Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+        };
       if (trigger) {
         Log.infof(m => m("Trigger character hit: %s", key));
         let requestID = IDGenerator.get();
@@ -234,7 +243,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         let effects =
           getEffectsForLocation(
             ~buffer,
-            ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+            ~location,
             ~extHostClient,
             ~model,
             ~context,
@@ -256,7 +265,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         let effects =
           getEffectsForLocation(
             ~buffer,
-            ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+            ~location,
             ~extHostClient,
             ~model,
             ~context,
