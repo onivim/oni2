@@ -459,6 +459,11 @@ let start = maybeKeyBindingsFilePath => {
         command: Feature_Layout.Commands.toggleMaximize.id,
         condition: windowCommandCondition,
       },
+      {
+        key: "<A-DOWN>",
+        command: Feature_SignatureHelp.Commands.incrementSignature.id,
+        condition: "editorFocus" |> WhenExpr.parse, //TODO add the parameterHintsVisible condition
+      },
     ];
 
   let getKeybindingsFile = () => {

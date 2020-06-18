@@ -148,6 +148,7 @@ module Parts = {
             editor
             buffer
             gutterWidth
+            dispatch={msg => dispatch(SignatureHelp(msg))}
           />,
         ]
         |> React.listToElement;

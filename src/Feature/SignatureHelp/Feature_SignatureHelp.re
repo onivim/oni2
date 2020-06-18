@@ -37,7 +37,8 @@ let initial = {
 
 [@deriving show({with_path: false})]
 type command =
-  | Show;
+  | Show
+  | IncrementSignature;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -51,7 +52,9 @@ type msg =
       requestID: int,
     })
   | EmptyInfoReceived(int)
-  | RequestFailed(string);
+  | RequestFailed(string)
+  | SignatureIncremented
+  | SignatureDecremented;
 
 type outmsg =
   | Nothing
@@ -69,6 +72,14 @@ module Commands = {
       ~title="Show parameter hints",
       "editor.action.triggerParameterHints",
       Command(Show),
+    );
+
+  let incrementSignature =
+    define(
+      ~category="Parameter Hints",
+      ~title="Next signature",
+      "editor.action.showNextParameterHint",
+      Command(IncrementSignature),
     );
 };
 
@@ -263,6 +274,39 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       };
     | _ => (model, Nothing)
     }
+  | Command(IncrementSignature)
+  | SignatureIncremented => (
+      {
+        ...model,
+        activeSignature:
+          Option.map(
+            i =>
+              Oni_Core.Utility.IntEx.clamp(
+                ~lo=0,
+                ~hi=List.length(model.signatures) - 1,
+                i + 1,
+              ),
+            model.activeSignature,
+          ),
+      },
+      Nothing,
+    )
+  | SignatureDecremented => (
+      {
+        ...model,
+        activeSignature:
+          Option.map(
+            i =>
+              Oni_Core.Utility.IntEx.clamp(
+                ~lo=0,
+                ~hi=List.length(model.signatures) - 1,
+                i - 1,
+              ),
+            model.activeSignature,
+          ),
+      },
+      Nothing,
+    )
   };
 
 module View = {
@@ -304,33 +348,22 @@ module View = {
       <View style={Styles.hr(~theme)} />
     </UI.Components.Row>;
 
-  let%component signatureHelp =
-                (
-                  ~x,
-                  ~y,
-                  ~colorTheme,
-                  ~tokenTheme,
-                  ~languageInfo,
-                  ~uiFont: UiFont.t,
-                  ~editorFont: Service_Font.font,
-                  ~model,
-                  ~grammars,
-                  ~signatureIndex,
-                  ~parameterIndex,
-                  (),
-                ) => {
-    let%hook (signatureIndex, setSignatureIndex') =
-      Hooks.state(signatureIndex);
-    let setSignatureIndex = f =>
-      setSignatureIndex'(s =>
-        f(s)
-        |> Oni_Core.Utility.IntEx.clamp(
-             ~lo=0,
-             ~hi={
-               List.length(model.signatures) - 1;
-             },
-           )
-      );
+  let signatureHelp =
+      (
+        ~x,
+        ~y,
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~model,
+        ~grammars,
+        ~signatureIndex,
+        ~parameterIndex,
+        ~dispatch,
+        (),
+      ) => {
     let signatureHelpMarkdown = (~markdown) =>
       Markdown.make(
         ~colorTheme,
@@ -406,7 +439,7 @@ module View = {
       <View style=Styles.signatureLine> {renderLabel()} </View>
       <UI.Components.Row>
         <View
-          style=Styles.button onMouseUp={_ => setSignatureIndex(i => i - 1)}>
+          style=Styles.button onMouseUp={_ => dispatch(SignatureDecremented)}>
           <Codicon
             icon=Codicon.chevronLeft
             color={Feature_Theme.Colors.foreground.from(colorTheme)}
@@ -423,7 +456,7 @@ module View = {
           fontSize={uiFont.size *. 0.8}
         />
         <View
-          style=Styles.button onMouseUp={_ => setSignatureIndex(i => i + 1)}>
+          style=Styles.button onMouseUp={_ => dispatch(SignatureIncremented)}>
           <Codicon
             icon=Codicon.chevronRight
             color={Feature_Theme.Colors.foreground.from(colorTheme)}
@@ -464,6 +497,7 @@ module View = {
         ~buffer,
         ~gutterWidth,
         ~grammars,
+        ~dispatch,
         (),
       ) => {
     let maybeCoords =
@@ -509,6 +543,7 @@ module View = {
         grammars
         signatureIndex
         parameterIndex
+        dispatch
       />
     | _ => React.empty
     };

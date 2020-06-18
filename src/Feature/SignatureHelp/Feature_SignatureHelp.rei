@@ -13,7 +13,8 @@ let initial: model;
 
 [@deriving show({with_path: false})]
 type command =
-  | Show;
+  | Show
+  | IncrementSignature;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -27,7 +28,9 @@ type msg =
       requestID: int,
     })
   | EmptyInfoReceived(int)
-  | RequestFailed(string);
+  | RequestFailed(string)
+  | SignatureIncremented
+  | SignatureDecremented;
 
 type outmsg =
   | Nothing
@@ -35,6 +38,8 @@ type outmsg =
   | Error(string);
 
 let isShown: model => bool;
+
+module Commands: {let incrementSignature: Command.t(msg);};
 
 let update:
   (
@@ -61,6 +66,7 @@ module View: {
       ~buffer: Oni_Core.Buffer.t,
       ~gutterWidth: float,
       ~grammars: Oni_Syntax.GrammarRepository.t,
+      ~dispatch: msg => unit,
       unit
     ) =>
     Revery.UI.element;
