@@ -246,9 +246,6 @@ let request =
       };
 
       let parser = json => {
-        if (method == "$provideSignatureHelp") {
-          Console.log(Yojson.Safe.to_string(json));
-        };
         Oni_Core.Json.Decode.(
           json |> decode_value(decoder) |> Result.map_error(string_of_error)
         );
@@ -274,7 +271,6 @@ let request =
 
             switch (parser(json)) {
             | Ok(v) =>
-              Console.log(v);
               Log.tracef(m => m("Request %d succeeded.", newRequestId));
               Lwt.return(v);
             | Error(msg) => Lwt.fail(ParseFailedException(msg))
