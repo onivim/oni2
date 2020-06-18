@@ -58,6 +58,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | Error(string);
 
+let isShown = model => model.shown;
+
 module Commands = {
   open Feature_Commands.Schema;
 

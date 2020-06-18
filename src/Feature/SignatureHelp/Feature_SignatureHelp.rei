@@ -34,6 +34,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | Error(string);
 
+let isShown: model => bool;
+
 let update:
   (
     ~maybeBuffer: option(Buffer.t),
