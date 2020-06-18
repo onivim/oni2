@@ -69,12 +69,10 @@ let getTokensForLine =
         );
 
       let startByte = BufferLine.getByteFromIndex(~index=startIndex, line);
-      let endByte = BufferLine.getByteFromIndex(~index=endIndex, line);
 
       let colorizer =
         BufferLineColorizer.create(
           ~startByte,
-          ~endByte,
           ~defaultBackgroundColor=defaultBackground,
           ~defaultForegroundColor=colors.editorForeground,
           ~selectionHighlights=selection,
