@@ -18,6 +18,7 @@ open {
              ~languageInfo,
              ~grammars,
              ~language,
+             ~defaultLanguage,
              lines,
            ) => {
          let grammarRepository =
@@ -29,7 +30,13 @@ open {
            Oni_Extensions.LanguageInfo.getScopeFromLanguage(
              languageInfo,
              language,
-           );
+           )
+           |> Utility.OptionEx.or_(
+                Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+                  languageInfo,
+                  defaultLanguage,
+                ),
+              );
 
          switch (scope) {
          | Some(scope) =>
@@ -61,7 +68,6 @@ open {
              },
            );
          | None =>
-           // TODO: Replace this with SyntaxHighlight.default when revery#906 is merged
            List.init(List.length(lines), _ =>
              [
                Markdown.SyntaxHighlight.makeHighlight(
@@ -101,6 +107,7 @@ let make =
       ~codeFontFamily,
       ~baseFontSize=16.,
       ~codeBlockStyle=?,
+      ~defaultLanguage="",
       (),
     ) => {
   let textStyle = Styles.text(~theme=colorTheme);
@@ -110,6 +117,7 @@ let make =
       ~colorTheme,
       ~languageInfo,
       ~grammars,
+      ~defaultLanguage,
     )}
     markdown
     fontFamily
