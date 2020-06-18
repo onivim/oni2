@@ -82,9 +82,6 @@ let%component make =
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(Msg.EditorMouseWheel({deltaWheel: wheelEvent.deltaY *. (-1.)}));
 
-  let scrollX = Editor.scrollX(editor);
-  let scrollY = Editor.scrollY(editor);
-
   let getMaybeLocationFromMousePosition = (mouseX, mouseY) => {
     maybeBbox^
     |> Option.map(bbox => {

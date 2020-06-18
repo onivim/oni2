@@ -46,7 +46,7 @@ let renderImmediate = (~context, ~count, render) => {
     ~rowHeight=Editor.lineHeightInPixels(context.editor),
     ~height=float(context.height),
     ~count,
-    ~render=(i, offsetY) => render(i, offsetY +. scrollY),
+    ~render=(i, offsetY) => render(i, offsetY),
     (),
   );
 };
