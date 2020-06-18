@@ -27,19 +27,16 @@ open {
            );
 
          let scope =
-           switch (
-             Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-               languageInfo,
-               language,
-             )
-           ) {
-           | Some(scope) as s => s
-           | None =>
-             Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-               languageInfo,
-               defaultLanguage,
-             )
-           };
+           Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+             languageInfo,
+             language,
+           )
+           |> Utility.OptionEx.or_(
+                Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+                  languageInfo,
+                  defaultLanguage,
+                ),
+              );
 
          switch (scope) {
          | Some(scope) =>
@@ -71,7 +68,6 @@ open {
              },
            );
          | None =>
-           // TODO: Replace this with SyntaxHighlight.default when revery#906 is merged
            List.init(List.length(lines), _ =>
              [
                Markdown.SyntaxHighlight.makeHighlight(
