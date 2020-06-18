@@ -18,6 +18,7 @@ open {
              ~languageInfo,
              ~grammars,
              ~language,
+             ~defaultLanguage,
              lines,
            ) => {
          let grammarRepository =
@@ -26,10 +27,19 @@ open {
            );
 
          let scope =
-           Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-             languageInfo,
-             language,
-           );
+           switch (
+             Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+               languageInfo,
+               language,
+             )
+           ) {
+           | Some(scope) as s => s
+           | None =>
+             Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+               languageInfo,
+               defaultLanguage,
+             )
+           };
 
          switch (scope) {
          | Some(scope) =>
@@ -101,6 +111,7 @@ let make =
       ~codeFontFamily,
       ~baseFontSize=16.,
       ~codeBlockStyle=?,
+      ~defaultLanguage="",
       (),
     ) => {
   let textStyle = Styles.text(~theme=colorTheme);
@@ -110,6 +121,7 @@ let make =
       ~colorTheme,
       ~languageInfo,
       ~grammars,
+      ~defaultLanguage,
     )}
     markdown
     fontFamily

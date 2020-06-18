@@ -306,6 +306,7 @@ module View = {
                   ~model,
                   ~grammars,
                   ~diagnostic,
+                  ~buffer,
                   (),
                 ) => {
     let reducer = (action, state) =>
@@ -324,11 +325,15 @@ module View = {
         },
       );
 
+    let defaultLanguage =
+      Oni_Extensions.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
+
     let hoverMarkdown = (~markdown) =>
       Oni_Components.Markdown.make(
         ~colorTheme,
         ~tokenTheme,
         ~languageInfo,
+        ~defaultLanguage,
         ~fontFamily={
           uiFont.family;
         },
@@ -528,6 +533,7 @@ module View = {
         model
         grammars
         diagnostic
+        buffer
       />
     | _ => React.empty
     };
