@@ -60,6 +60,24 @@ let startsWith = (~prefix, str) => {
   };
 };
 
+let endsWith = (~postfix, str) => {
+  let postfixLength = String.length(postfix);
+  let strLength = String.length(str);
+
+  if (postfixLength > strLength) {
+    false;
+  } else {
+    let rec match = i =>
+      if (i == postfixLength) {
+        true;
+      } else {
+        postfix.[postfixLength - i - 1] == str.[strLength - i - 1]
+        && match(i + 1);
+      };
+    match(0);
+  };
+};
+
 let trimLeft = str => {
   let length = String.length(str);
 

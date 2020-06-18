@@ -321,6 +321,22 @@ describe("StringEx", ({describe, _}) => {
     );
   });
 
+  describe("endsWith", ({test, _}) => {
+    test("empty strings", ({expect, _}) => {
+      expect.bool(endsWith(~postfix="", "str")).toBe(true);
+      expect.bool(endsWith(~postfix="", "")).toBe(true);
+      expect.bool(endsWith(~postfix="str", "")).toBe(false);
+    });
+
+    test("matching string", ({expect, _}) =>
+      expect.bool(endsWith(~postfix="str", "str")).toBe(true)
+    );
+
+    test("matching substring", ({expect, _}) =>
+      expect.bool(endsWith(~postfix="r", "str")).toBe(true)
+    );
+  });
+
   describe("extractSnippet", ({test, _}) => {
     let text = " 123456789";
 

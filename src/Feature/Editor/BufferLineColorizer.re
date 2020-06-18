@@ -15,10 +15,47 @@ type themedToken = {
 };
 type t = int => themedToken;
 
+module Internal = {
+  let getFirstRelevantToken = (~default, ~startByte, tokens) => {
+    let rec loop = (default, tokens: list(ThemeToken.t)) => {
+      switch (tokens) {
+      | [] => (default, tokens)
+      | [_] => (default, tokens)
+      | [token, nextToken, ...tail] =>
+        if (token.index >= startByte) {
+          (default, tokens);
+        } else if (token.index < startByte && nextToken.index >= startByte) {
+          (token, [nextToken, ...tail]);
+        } else {
+          loop(token, [nextToken, ...tail]);
+        }
+      };
+    };
+
+    loop(default, tokens);
+  };
+
+  let getTokenAtByte = (~default, ~byteIndex, tokens) => {
+    let rec loop = (lastToken, tokens: list(ThemeToken.t)) => {
+      switch (tokens) {
+      | [] => lastToken
+      | [token] => token.index <= byteIndex ? token : lastToken
+      | [token, ...tail] =>
+        if (token.index > byteIndex) {
+          lastToken;
+        } else {
+          loop(token, tail);
+        }
+      };
+    };
+
+    loop(default, tokens);
+  };
+};
+
 let create =
     (
       ~startByte,
-      ~endByte,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
       ~selectionHighlights: option(Range.t),
@@ -28,7 +65,7 @@ let create =
       ~searchHighlightColor: Color.t,
       themedTokens: list(ThemeToken.t),
     ) => {
-  let defaultToken2 =
+  let initialDefaultToken =
     ThemeToken.create(
       ~index=0,
       ~backgroundColor=defaultBackgroundColor,
@@ -37,29 +74,12 @@ let create =
       (),
     );
 
-  let length = max(endByte - startByte, 1);
-
-  let themedTokenArray: array(ThemeToken.t) =
-    Array.make(length, defaultToken2);
-
-  let rec f = (tokens: list(ThemeToken.t), start) =>
-    switch (tokens) {
-    | [] => ()
-    | [hd, ...tail] =>
-      let adjIndex = hd.index - startByte;
-
-      let pos = ref(start);
-
-      while (pos^ >= adjIndex && pos^ >= 0 && pos^ < length) {
-        themedTokenArray[pos^] = hd;
-        decr(pos);
-      };
-      if (hd.index < startByte) {
-        ();
-      } else {
-        f(tail, pos^);
-      };
-    };
+  let (defaultToken, tokens) =
+    Internal.getFirstRelevantToken(
+      ~default=initialDefaultToken,
+      ~startByte,
+      themedTokens,
+    );
 
   let (selectionStart, selectionEnd) =
     switch (selectionHighlights) {
@@ -70,19 +90,9 @@ let create =
     | None => ((-1), (-1))
     };
 
-  let themedTokens = List.rev(themedTokens);
-
-  f(themedTokens, length - 1);
-
   i => {
     let colorIndex =
-      if (i < startByte) {
-        themedTokenArray[0];
-      } else if (i >= endByte) {
-        themedTokenArray[Array.length(themedTokenArray) - 1];
-      } else {
-        themedTokenArray[i - startByte];
-      };
+      Internal.getTokenAtByte(~byteIndex=i, ~default=defaultToken, tokens);
 
     let matchingPair =
       switch (matchingPair) {
