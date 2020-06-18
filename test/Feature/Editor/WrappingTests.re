@@ -23,6 +23,16 @@ describe("Wrapping", ({describe, _}) => {
         1,
       );
     });
+    test("viewLineToBufferPosition", ({expect, _}) => {
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=0, wrapping),
+        Wrapping.{line: 0, byteOffset: 0, characterOffset: 0},
+      );
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=1, wrapping),
+        Wrapping.{line: 1, byteOffset: 0, characterOffset: 0},
+      );
+    });
     test("numberOfLines", ({expect, _}) => {
       expect.int(Wrapping.numberOfLines(wrapping)).toBe(2)
     });
@@ -48,6 +58,24 @@ describe("Wrapping", ({describe, _}) => {
       ).
         toBe(
         2,
+      );
+    });
+    test("viewLineToBufferPosition", ({expect, _}) => {
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=0, wrapping),
+        Wrapping.{line: 0, byteOffset: 0, characterOffset: 0},
+      );
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=1, wrapping),
+        Wrapping.{line: 0, byteOffset: 3, characterOffset: 3},
+      );
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=2, wrapping),
+        Wrapping.{line: 1, byteOffset: 0, characterOffset: 0},
+      );
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=3, wrapping),
+        Wrapping.{line: 1, byteOffset: 3, characterOffset: 3},
       );
     });
     test("numberOfLines", ({expect, _}) => {
