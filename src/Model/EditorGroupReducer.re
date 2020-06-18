@@ -26,17 +26,6 @@ let reduce = (v: EditorGroup.t, action: Actions.t) => {
           editors,
         ),
     }
-  | EditorSizeChanged({id, pixelWidth, pixelHeight}) => {
-      ...v,
-      editors:
-        IntMap.update(
-          id,
-          Option.map(
-            Feature_Editor.Editor.setSize(~pixelWidth, ~pixelHeight),
-          ),
-          editors,
-        ),
-    }
 
   | Command("workbench.action.nextEditor") => EditorGroup.nextEditor(v)
   | Command("workbench.action.previousEditor") =>

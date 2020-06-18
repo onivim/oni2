@@ -25,6 +25,8 @@ let removeWindow: (int, model) => model;
 
 let openEditor: (Feature_Editor.Editor.t, model) => model;
 
+let map: (Feature_Editor.Editor.t => Feature_Editor.Editor.t, model) => model;
+
 // UPDATE
 
 [@deriving show]

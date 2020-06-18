@@ -93,3 +93,12 @@ let openEditor = (editor, model) => {
       ),
   };
 };
+
+let map = (f, model) => {
+  ...model,
+  groups:
+    List.map(
+      group => {...group, items: List.map(f, group.items)},
+      model.groups,
+    ),
+};

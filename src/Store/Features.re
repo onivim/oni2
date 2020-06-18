@@ -133,6 +133,25 @@ let update =
       Effect.none,
     );
 
+  | EditorSizeChanged({id, pixelWidth, pixelHeight}) => (
+      {
+        ...state,
+        layout:
+          Feature_Layout.map(
+            editor =>
+              Feature_Editor.Editor.getId(editor) == id
+                ? Feature_Editor.Editor.setSize(
+                    ~pixelWidth,
+                    ~pixelHeight,
+                    editor,
+                  )
+                : editor,
+            state.layout,
+          ),
+      },
+      Effect.none,
+    )
+
   | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(
