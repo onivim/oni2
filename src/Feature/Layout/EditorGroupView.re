@@ -28,7 +28,6 @@ module type ContentModel = {
   let title: t => string;
   let icon: t => option(IconTheme.IconDefinition.t);
   let isModified: t => bool;
-  let isActive: t => bool;
 
   let render: t => element;
 };
@@ -65,14 +64,14 @@ let make =
               Colors.EditorGroupHeader.tabsBackground.from(theme),
             ),
           ]
-          isSelected=ContentModel.isActive>
+          isSelected={item => ContentModel.id(item) == model.selected}>
           ...{item => {
             <EditorTab
               uiFont
               theme
               title={ContentModel.title(item)}
               isGroupFocused=isActive
-              isActive={ContentModel.isActive(item)}
+              isActive={ContentModel.id(item) == model.selected}
               isModified={ContentModel.isModified(item)}
               icon={ContentModel.icon(item)}
               onClick={() =>

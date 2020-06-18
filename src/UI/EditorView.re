@@ -206,7 +206,6 @@ let make =
       };
     };
 
-    let isActive = _ => true; // TODO
     let isModified = editor => {
       let (modified, _, _) =
         Buffers.getBuffer(Editor.getBufferId(editor), state.buffers)

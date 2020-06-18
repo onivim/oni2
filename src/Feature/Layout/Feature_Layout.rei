@@ -47,7 +47,6 @@ module type ContentModel = {
   let title: t => string;
   let icon: t => option(IconTheme.IconDefinition.t);
   let isModified: t => bool;
-  let isActive: t => bool;
 
   let render: t => Revery.UI.element;
 };
