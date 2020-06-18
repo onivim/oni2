@@ -54,8 +54,8 @@ type msg =
     })
   | EmptyInfoReceived(int)
   | RequestFailed(string)
-  | SignatureIncremented
-  | SignatureDecremented;
+  | SignatureIncrementClicked
+  | SignatureDecrementClicked;
 
 type outmsg =
   | Nothing
@@ -293,7 +293,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
     | _ => (model, Nothing)
     }
   | Command(IncrementSignature)
-  | SignatureIncremented => (
+  | SignatureIncrementClicked => (
       {
         ...model,
         activeSignature:
@@ -310,7 +310,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       Nothing,
     )
   | Command(DecrementSignature)
-  | SignatureDecremented => (
+  | SignatureDecrementClicked => (
       {
         ...model,
         activeSignature:
@@ -458,7 +458,8 @@ module View = {
       <View style=Styles.signatureLine> {renderLabel()} </View>
       <UI.Components.Row>
         <View
-          style=Styles.button onMouseUp={_ => dispatch(SignatureDecremented)}>
+          style=Styles.button
+          onMouseUp={_ => dispatch(SignatureDecrementClicked)}>
           <Codicon
             icon=Codicon.chevronLeft
             color={Feature_Theme.Colors.foreground.from(colorTheme)}
@@ -475,7 +476,8 @@ module View = {
           fontSize={uiFont.size *. 0.8}
         />
         <View
-          style=Styles.button onMouseUp={_ => dispatch(SignatureIncremented)}>
+          style=Styles.button
+          onMouseUp={_ => dispatch(SignatureIncrementClicked)}>
           <Codicon
             icon=Codicon.chevronRight
             color={Feature_Theme.Colors.foreground.from(colorTheme)}

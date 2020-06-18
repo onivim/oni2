@@ -30,8 +30,8 @@ type msg =
     })
   | EmptyInfoReceived(int)
   | RequestFailed(string)
-  | SignatureIncremented
-  | SignatureDecremented;
+  | SignatureIncrementClicked
+  | SignatureDecrementClicked;
 
 type outmsg =
   | Nothing
