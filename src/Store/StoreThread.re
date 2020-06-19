@@ -298,6 +298,12 @@ let start =
       )
       |> Isolinear.Sub.map(() => Model.Actions.Noop);
 
+    let fileExplorerActiveFileSub =
+      Model.Sub.activeFile(
+        ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
+        Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
+      );
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -305,6 +311,7 @@ let start =
       terminalFontSubscription,
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
+      fileExplorerActiveFileSub,
     ]
     |> Isolinear.Sub.batch;
   };
