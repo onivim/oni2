@@ -16,28 +16,15 @@ type documentFormatter = {
 type model = {
   nextSessionId: int,
   availableDocumentFormatters: list(documentFormatter),
+  availableRangeFormatters: list(documentFormatter),
   activeSession: option(session),
 };
 
 let initial = {
   nextSessionId: 0,
   availableDocumentFormatters: [],
+  availableRangeFormatters: [],
   activeSession: None,
-};
-
-module Internal = {
-  let clearSession = model => {...model, activeSession: None};
-
-  let startSession = (~sessionId, ~buffer, model) => {
-    ...model,
-    nextSessionId: sessionId + 1,
-    activeSession:
-      Some({
-        sessionId,
-        bufferId: Oni_Core.Buffer.getId(buffer),
-        bufferVersion: Oni_Core.Buffer.getVersion(buffer),
-      }),
-  };
 };
 
 [@deriving show]
@@ -81,6 +68,20 @@ type outmsg =
     })
   | FormatError(string);
 
+module Internal = {
+  let clearSession = model => {...model, activeSession: None};
+
+  let startSession = (~sessionId, ~buffer, model) => {
+    ...model,
+    nextSessionId: sessionId + 1,
+    activeSession:
+      Some({
+        sessionId,
+        bufferId: Oni_Core.Buffer.getId(buffer),
+        bufferVersion: Oni_Core.Buffer.getVersion(buffer),
+      }),
+  };
+
 let textToArray =
   fun
   | None => [||]
@@ -96,24 +97,13 @@ let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
     text: textToArray(edit.text),
   };
 
-let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
-  switch (msg) {
-  | Command(FormatRange) =>
-    (model, FormatError("Range formatting not handled yet!"))
-  | Command(FormatDocument) =>
-    switch (maybeBuffer) {
-    | None => (model, Nothing)
-    | Some(buf) =>
-      let filetype =
-        buf
-        |> Oni_Core.Buffer.getFileType
-        |> Option.value(~default="plaintext");
-
-      let matchingFormatters =
-        model.availableDocumentFormatters
-        |> List.filter(({selector, _}) =>
-             DocumentSelector.matches(~filetype, selector)
-           );
+  let runFormat = (
+    ~model, 
+      ~configuration,
+        ~matchingFormatters,
+          ~buf,
+            ~filetype,
+              ~extHostClient) => {
       let sessionId = model.nextSessionId;
 
       let indentation =
@@ -155,10 +145,40 @@ let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
         );
       } else {
         (
-          model |> Internal.startSession(~sessionId, ~buffer=buf),
+          model |> startSession(~sessionId, ~buffer=buf),
           Effect(effects),
         );
       };
+  }
+};
+
+let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
+  switch (msg) {
+  | Command(FormatRange) =>
+    (model, FormatError("Range formatting not handled yet!"))
+  | Command(FormatDocument) =>
+    switch (maybeBuffer) {
+    | None => (model, Nothing)
+    | Some(buf) =>
+      let filetype =
+        buf
+        |> Oni_Core.Buffer.getFileType
+        |> Option.value(~default="plaintext");
+
+      let matchingFormatters =
+        model.availableDocumentFormatters
+        |> List.filter(({selector, _}) =>
+             DocumentSelector.matches(~filetype, selector)
+           );
+
+  Internal.runFormat(
+    ~model, 
+      ~configuration,
+        ~matchingFormatters,
+          ~buf,
+            ~filetype,
+              ~extHostClient);
+        
     }
   | DocumentFormatterAvailable({handle, selector, displayName}) => (
       {
@@ -171,9 +191,17 @@ let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
       Nothing,
     )
 
-  | RangeFormatterAvailable(_) => 
-    // TODO
-    (model, Nothing);
+  | RangeFormatterAvailable({handle, selector, displayName}) => (
+      {
+        ...model,
+        availableRangeFormatters: [
+          {handle, selector, displayName},
+          ...model.availableRangeFormatters,
+        ],
+      },
+      Nothing,
+    )
+
   | EditsReceived({displayName, sessionId, edits}) =>
     switch (model.activeSession) {
     | None => (model, Nothing)
