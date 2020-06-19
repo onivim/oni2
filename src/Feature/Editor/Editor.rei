@@ -53,6 +53,8 @@ let lineHeightInPixels: t => float;
 
 let bufferLineByteToPixel:
   (~line: int, ~byteIndex: int, t) => (pixelPosition, float);
+let bufferLineCharacterToPixel:
+  (~line: int, ~characterIndex: int, t) => (pixelPosition, float);
 
 let selection: t => VisualRange.t;
 let setSelection: (~selection: VisualRange.t, t) => t;

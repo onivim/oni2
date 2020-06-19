@@ -328,18 +328,18 @@ module View = {
           | [diag, ..._] => diag.range.start
           };
 
-        // TODO: Index instead of byte
         let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
-          Feature_Editor.Editor.bufferLineByteToPixel(
-            ~line=(hoverLocation.line |> Index.toZeroBased),
-            ~byteIndex=hoverLocation.column |> Index.toZeroBased,
+          Feature_Editor.Editor.bufferLineCharacterToPixel(
+            ~line=hoverLocation.line |> Index.toZeroBased,
+            ~characterIndex=hoverLocation.column |> Index.toZeroBased,
             editor,
           );
 
-        Printf.sprintf("!! CASE 1: PIXELX: %f COLUMN: %d", pixelX, hoverLocation.column |> Index.toZeroBased) |> prerr_endline;
-
         let x = int_of_float(pixelX +. gutterWidth);
-        let y = int_of_float(pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor));
+        let y =
+          int_of_float(
+            pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor),
+          );
 
         // TODO: Hover width?
 
@@ -353,15 +353,17 @@ module View = {
           };
 
         let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
-          Feature_Editor.Editor.bufferLineByteToPixel(
-            ~line=(location.line |> Index.toZeroBased),
-            ~byteIndex=location.column |> Index.toZeroBased,
+          Feature_Editor.Editor.bufferLineCharacterToPixel(
+            ~line=location.line |> Index.toZeroBased,
+            ~characterIndex=location.column |> Index.toZeroBased,
             editor,
           );
 
-        Printf.sprintf("!! CASE 2: PIXELX: %f COLUMN: %d", pixelX, location.column |> Index.toZeroBased) |> prerr_endline;
         let x = int_of_float(pixelX +. gutterWidth);
-        let y = int_of_float(pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor));
+        let y =
+          int_of_float(
+            pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor),
+          );
 
         let diagnostic =
           Feature_LanguageSupport.Diagnostics.getDiagnosticsAtPosition(

@@ -532,13 +532,12 @@ module View = {
         }
       )
       |> Option.map((Location.{line, column}) => {
-        // TODO: Index instead of byte
-          let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
-            Feature_Editor.Editor.bufferLineByteToPixel(
-            ~line=line |> Index.toZeroBased,
-            ~byteIndex=column |> Index.toZeroBased,
-            editor,
-          );
+           let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+             Feature_Editor.Editor.bufferLineCharacterToPixel(
+               ~line=line |> Index.toZeroBased,
+               ~characterIndex=column |> Index.toZeroBased,
+               editor,
+             );
            (pixelX |> int_of_float, pixelY |> int_of_float);
          });
     switch (maybeCoords, model.activeSignature, model.activeParameter) {

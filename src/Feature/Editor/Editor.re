@@ -49,10 +49,30 @@ let bufferLineByteToPixel =
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
+      let bufferLine = buffer
+      |> EditorBuffer.line(line);
+
+      let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
+      let (cursorOffset, width) = BufferLine.getPositionAndWidth(~index, bufferLine);
+
+    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+
+    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+
+    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+  };
+};
+
+let bufferLineCharacterToPixel =
+    (~line, ~characterIndex, {scrollX, scrollY, buffer, font, _}) => {
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  if (line < 0 || line >= lineCount) {
+    ({pixelX: 0., pixelY: 0.}, 0.);
+  } else {
     let (cursorOffset, width) =
       buffer
       |> EditorBuffer.line(line)
-      |> BufferLine.getPositionAndWidth(~index=byteIndex);
+      |> BufferLine.getPositionAndWidth(~index=characterIndex);
 
     let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
 

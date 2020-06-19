@@ -31,11 +31,10 @@ let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
 let renderRulers = (~context, ~colors: Colors.t, rulers) => {
-  ()// TODO: Bring back
-    //  rulers
+  ()//  rulers
     //  |> List.map(bufferPositionToPixel(~context, 0))
     //  |> List.map(fst)
-    ;
+    ; // TODO: Bring back
     //  |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
 };
 
@@ -174,7 +173,6 @@ let%component make =
 
   let pixelWidth = Editor.visiblePixelWidth(editor);
   let pixelHeight = Editor.visiblePixelHeight(editor);
-  let lineHeight = Editor.lineHeightInPixels(editor);
 
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
