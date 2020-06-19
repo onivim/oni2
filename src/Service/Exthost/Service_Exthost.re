@@ -87,6 +87,29 @@ module Effects = {
       });
     };
 
+    let provideDocumentRangeFormattingEdits =
+        (~handle, ~uri,~range, ~options, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.provideRangeFormattingEdits", dispatch => {
+        let promise =
+          Exthost.(Request.LanguageFeatures.provideDocumentRangeFormattingEdits(
+            ~handle,
+            ~resource=uri,
+            ~options,
+            ~range=range |> OneBasedRange.ofRange,
+            client,
+          ));
+
+        Lwt.on_success(
+          promise,
+          Option.iter(edits => dispatch(toMsg(Ok(edits)))),
+        );
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
+
     let provideHover = (~handle, ~uri, ~position, client, toMsg) => {
       Isolinear.Effect.createWithDispatch(
         ~name="language.provideHover", dispatch => {
