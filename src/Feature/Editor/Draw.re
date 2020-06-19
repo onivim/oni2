@@ -124,40 +124,32 @@ let drawUtf8Text = {
 let utf8Text = drawUtf8Text;
 
 let underline =
-    (
-      ~context,
-      ~buffer,
-      ~leftVisibleColumn,
-      ~color=Revery.Colors.black,
-      r: Range.t,
-    ) => {
+    (~context, ~leftVisibleColumn, ~color=Revery.Colors.black, r: Range.t) => {
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
+  let endLine = Index.toZeroBased(r.stop.line);
   let endC = Index.toZeroBased(r.stop.column);
 
-  let text = Buffer.getLine(line, buffer);
-  let (startOffset, _) =
-    BufferViewTokenizer.getCharacterPositionAndWidth(
-      ~viewOffset=leftVisibleColumn,
-      text,
-      start,
+  let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line,
+      ~characterIndex=start,
+      context.editor,
     );
-  let (endOffset, _) =
-    BufferViewTokenizer.getCharacterPositionAndWidth(
-      ~viewOffset=leftVisibleColumn,
-      text,
-      endC,
+
+  let ({pixelX: stopPixelX}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line=endLine,
+      ~characterIndex=endC,
+      context.editor,
     );
 
   drawRect(
     ~context,
-    ~x=float(startOffset) *. context.charWidth,
-    ~y=
-      context.charHeight
-      *. float(Index.toZeroBased(r.start.line))
-      +. (context.charHeight -. 2.),
+    ~x=startPixelX,
+    ~y=startPixelY +. Editor.lineHeightInPixels(context.editor),
     ~height=1.,
-    ~width=max(float(endOffset - startOffset), 1.0) *. context.charWidth,
+    ~width=max(stopPixelX -. startPixelX, 1.0),
     ~color,
   );
 };

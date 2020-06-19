@@ -24,7 +24,6 @@ let renderLine =
   let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) =>
     Draw.underline(
       ~context,
-      ~buffer,
       ~leftVisibleColumn,
       ~color=colors.errorForeground,
       diagnostic.range,
@@ -146,7 +145,6 @@ let renderDefinition =
          };
        Draw.underline(
          ~context,
-         ~buffer,
          ~leftVisibleColumn,
          ~color=token.color,
          range,
