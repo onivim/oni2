@@ -180,7 +180,7 @@ let range = (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
     ~x=startPixelX,
     ~y=startPixelY,
     ~height=lineHeight +. doublePadding,
-    ~width=min(stopPixelX -. startPixelX, characterWidth),
+    ~width=max(stopPixelX -. startPixelX, characterWidth),
     ~color,
   );
 };
