@@ -1,8 +1,6 @@
 open EditorCoreTypes;
 open Revery.Draw;
 
-open Oni_Core;
-
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
@@ -123,8 +121,7 @@ let drawUtf8Text = {
 };
 let utf8Text = drawUtf8Text;
 
-let underline =
-    (~context, ~leftVisibleColumn, ~color=Revery.Colors.black, r: Range.t) => {
+let underline = (~context, ~color=Revery.Colors.black, r: Range.t) => {
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
   let endLine = Index.toZeroBased(r.stop.line);
@@ -137,7 +134,7 @@ let underline =
       context.editor,
     );
 
-  let ({pixelX: stopPixelX}: Editor.pixelPosition, _) =
+  let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
     Editor.bufferLineCharacterToPixel(
       ~line=endLine,
       ~characterIndex=endC,
@@ -154,49 +151,38 @@ let underline =
   );
 };
 
-let range =
-    (
-      ~context,
-      ~padding=0.,
-      ~buffer,
-      ~leftVisibleColumn,
-      ~color=Revery.Colors.black,
-      r: Range.t,
-    ) => {
+let range = (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
   let doublePadding = padding *. 2.;
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
   let endC = Index.toZeroBased(r.stop.column);
+  let endLine = Index.toZeroBased(r.stop.line);
 
-  let lines = Buffer.getNumberOfLines(buffer);
-  if (line < lines) {
-    let text = Buffer.getLine(line, buffer);
-    let (startOffset, _) =
-      BufferViewTokenizer.getCharacterPositionAndWidth(
-        ~viewOffset=leftVisibleColumn,
-        text,
-        start,
-      );
-    let (endOffset, _) =
-      BufferViewTokenizer.getCharacterPositionAndWidth(
-        ~viewOffset=leftVisibleColumn,
-        text,
-        endC,
-      );
-    let length = max(float(endOffset - startOffset), 1.0);
-
-    drawRect(
-      ~context,
-      ~x=float(startOffset) *. context.charWidth -. padding,
-      ~y=
-        context.charHeight
-        *. float(Index.toZeroBased(r.start.line))
-        -. padding,
-      ~height=context.charHeight +. doublePadding,
-      ~width=length *. context.charWidth +. doublePadding,
-      ~color,
+  let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line,
+      ~characterIndex=start,
+      context.editor,
     );
-  };
+
+  let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line=endLine,
+      ~characterIndex=endC,
+      context.editor,
+    );
+
+  let lineHeight = Editor.lineHeightInPixels(context.editor);
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
+
+  drawRect(
+    ~context,
+    ~x=startPixelX,
+    ~y=startPixelY,
+    ~height=lineHeight +. doublePadding,
+    ~width=min(stopPixelX -. startPixelX, characterWidth),
+    ~color,
+  );
 };
 
 let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) => {

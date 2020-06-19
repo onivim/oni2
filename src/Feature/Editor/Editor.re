@@ -30,8 +30,6 @@ type t = {
   pixelHeight: int,
 };
 
-let id = ({editorId, _}) => editorId;
-
 let totalViewLines = ({viewLines, _}) => viewLines;
 let selection = ({selection, _}) => selection;
 let setSelection = (~selection, editor) => {...editor, selection};
@@ -41,6 +39,7 @@ let scrollY = ({scrollY, _}) => scrollY;
 let scrollX = ({scrollX, _}) => scrollX;
 let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
 let lineHeightInPixels = ({font, _}) => font.measuredHeight;
+let characterWidthInPixels = ({font, _}) => font.measuredWidth;
 let font = ({font, _}) => font;
 
 let bufferLineByteToPixel =

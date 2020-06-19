@@ -11,7 +11,6 @@ let renderLine =
     (
       ~context,
       ~buffer,
-      ~leftVisibleColumn,
       ~colors: Colors.t,
       ~diagnosticsMap,
       ~selectionRanges,
@@ -22,12 +21,7 @@ let renderLine =
     ) => {
   let index = Index.fromZeroBased(item);
   let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) =>
-    Draw.underline(
-      ~context,
-      ~leftVisibleColumn,
-      ~color=colors.errorForeground,
-      diagnostic.range,
-    );
+    Draw.underline(~context, ~color=colors.errorForeground, diagnostic.range);
 
   /* Draw error markers */
   switch (IntMap.find_opt(item, diagnosticsMap)) {
@@ -39,12 +33,7 @@ let renderLine =
   | None => ()
   | Some(selections) =>
     List.iter(
-      Draw.range(
-        ~context,
-        ~buffer,
-        ~leftVisibleColumn,
-        ~color=colors.selectionBackground,
-      ),
+      Draw.range(~context, ~color=colors.selectionBackground),
       selections,
     )
   };
@@ -55,15 +44,11 @@ let renderLine =
   | Some((startPos, endPos)) =>
     Draw.range(
       ~context,
-      ~buffer,
-      ~leftVisibleColumn,
       ~color=colors.selectionBackground,
       Range.{start: startPos, stop: startPos},
     );
     Draw.range(
       ~context,
-      ~buffer,
-      ~leftVisibleColumn,
       ~color=colors.selectionBackground,
       Range.{start: endPos, stop: endPos},
     );
@@ -76,13 +61,7 @@ let renderLine =
     bufferHighlights,
   )
   |> List.iter(
-       Draw.range(
-         ~context,
-         ~buffer,
-         ~leftVisibleColumn,
-         ~padding=1.,
-         ~color=colors.findMatchBackground,
-       ),
+       Draw.range(~context, ~padding=1., ~color=colors.findMatchBackground),
      );
 };
 
@@ -91,7 +70,6 @@ let renderEmbellishments =
       ~context,
       ~count,
       ~buffer,
-      ~leftVisibleColumn,
       ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
@@ -104,7 +82,6 @@ let renderEmbellishments =
     renderLine(
       ~context,
       ~buffer,
-      ~leftVisibleColumn,
       ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
@@ -143,12 +120,7 @@ let renderDefinition =
              Location.{line: cursorPosition.line, column: token.startIndex},
            stop: Location.{line: cursorPosition.line, column: token.endIndex},
          };
-       Draw.underline(
-         ~context,
-         ~leftVisibleColumn,
-         ~color=token.color,
-         range,
-       );
+       Draw.underline(~context, ~color=token.color, range);
      });
 
 let renderTokens =
@@ -176,7 +148,7 @@ let renderText =
   Draw.renderImmediate(
     ~context,
     ~count,
-    (item, offsetY) => {
+    (item, _offsetY) => {
       let index = Index.fromZeroBased(item);
       let selectionRange =
         switch (Hashtbl.find_opt(selectionRanges, index)) {
@@ -232,7 +204,6 @@ let render =
     ~context,
     ~count,
     ~buffer,
-    ~leftVisibleColumn,
     ~colors,
     ~diagnosticsMap,
     ~selectionRanges,

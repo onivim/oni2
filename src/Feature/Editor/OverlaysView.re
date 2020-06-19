@@ -51,7 +51,6 @@ let completionsView =
 
 let make =
     (
-      ~buffer,
       ~isActiveSplit,
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
@@ -70,7 +69,7 @@ let make =
       editor,
     );
 
-  let cursorPixelY = pixelY |> int_of_float;
+  let cursorPixelY = pixelY +. gutterWidth |> int_of_float;
   let cursorPixelX = pixelX |> int_of_float;
 
   isActiveSplit

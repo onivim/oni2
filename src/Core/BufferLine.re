@@ -50,7 +50,7 @@ module Internal = {
     if (Uchar.equal(c, tab)) {
       indentationSettings.tabSize;
     } else {
-      Uucp.Break.tty_width_hint(c);
+      min(Uucp.Break.tty_width_hint(c), 1);
     };
 
   let resolveTo = (~index, cache: t) => {
@@ -190,8 +190,9 @@ let subExn = (~index: int, ~length: int, bufferLine) => {
 let getPositionAndWidth = (~index: int, bufferLine: t) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
+  let len = Array.length(characters);
 
-  if (index >= Array.length(characters)) {
+  if (index >= len || len == 0) {
     (bufferLine.nextPosition, 1);
   } else {
     switch (characters[index]) {

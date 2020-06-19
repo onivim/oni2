@@ -50,6 +50,7 @@ let scrollY: t => float;
 let minimapScrollY: t => float;
 
 let lineHeightInPixels: t => float;
+let characterWidthInPixels: t => float;
 
 let bufferLineByteToPixel:
   (~line: int, ~byteIndex: int, t) => (pixelPosition, float);

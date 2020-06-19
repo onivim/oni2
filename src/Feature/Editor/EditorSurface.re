@@ -306,7 +306,6 @@ let%component make =
          />
        : React.empty}
     <OverlaysView
-      buffer
       isActiveSplit
       cursorPosition
       editor
