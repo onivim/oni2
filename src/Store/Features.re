@@ -399,10 +399,49 @@ let update =
         Effect.map(msg => Actions.Hover(msg), eff)
       };
     ({...state, hover: model'}, effect);
-  | ExtensionBufferUpdateQueued(_) /* {triggerKey}*/ =>
-    // TODO: Engage features that require trigger characters
-    // (completion, signature help) here:
-    (state, Effect.none)
+  | SignatureHelp(msg) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (model', eff) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.signatureHelp,
+        msg,
+      );
+    let effect =
+      switch (eff) {
+      | Feature_SignatureHelp.Nothing => Effect.none
+      | Feature_SignatureHelp.Effect(eff) =>
+        Effect.map(msg => Actions.SignatureHelp(msg), eff)
+      | Feature_SignatureHelp.Error(str) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          "Signature help error: " ++ str,
+        )
+      };
+    ({...state, signatureHelp: model'}, effect);
+  | ExtensionBufferUpdateQueued(buffer) /* {triggerKey}*/ =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (signatureHelp, shOutMsg) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.signatureHelp,
+        Feature_SignatureHelp.KeyPressed(buffer.triggerKey, false),
+      );
+    let shEffect =
+      switch (shOutMsg) {
+      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
+      | _ => Effect.none
+      };
+    let effect = [shEffect] |> Effect.batch;
+    ({...state, signatureHelp}, effect);
   | Vim(msg) => (
       {...state, vim: Feature_Vim.update(msg, state.vim)},
       Effect.none,

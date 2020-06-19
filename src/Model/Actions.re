@@ -57,6 +57,7 @@ type t =
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
   | Hover(Feature_Hover.msg)
+  | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
