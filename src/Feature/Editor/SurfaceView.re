@@ -186,7 +186,7 @@ let%component make =
         0.,
         float(Editor.(editor.pixelWidth)) -. gutterWidth,
       )}
-      render={canvasContext => {
+      render={(canvasContext, _) => {
         let context =
           Draw.createContext(
             ~canvasContext,

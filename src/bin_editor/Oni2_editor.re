@@ -253,6 +253,10 @@ switch (eff) {
       Window.restore(window);
     };
 
+    let raise = () => {
+      Window.raise(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -276,6 +280,7 @@ switch (eff) {
         ~maximize,
         ~minimize,
         ~restore,
+        ~raise,
         ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,

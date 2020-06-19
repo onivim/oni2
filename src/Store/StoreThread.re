@@ -85,6 +85,7 @@ let start =
       ~minimize,
       ~close,
       ~restore,
+      ~raise,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
       ~overriddenExtensionsDir=None,

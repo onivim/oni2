@@ -235,7 +235,7 @@ let%component make =
     onBoundingBoxChanged={bbox => setBbox(_ => Some(bbox))}>
     <Canvas
       style=Styles.absolute
-      render={canvasContext => {
+      render={(canvasContext, _) => {
         Skia.Paint.setColor(
           minimapPaint,
           Revery.Color.toSkia(sliderBackground),

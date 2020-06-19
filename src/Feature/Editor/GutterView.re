@@ -112,6 +112,7 @@ let render =
       ~cursorLine,
       ~diffMarkers,
       canvasContext,
+      _,
     ) => {
   let context =
     Draw.createContext(

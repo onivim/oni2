@@ -103,7 +103,7 @@ let%component make =
       right(0),
       bottom(0),
     ]
-    render={canvasContext => {
+    render={(canvasContext, _) => {
       let context =
         Draw.createContext(
           ~canvasContext,
