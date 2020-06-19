@@ -30,12 +30,14 @@ module Constants = {
 let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
-let renderRulers = (~context, ~colors: Colors.t, rulers) => {
-  ()//  |> List.map(bufferPositionToPixel(~context, 0))
-    //  |> List.map(fst)
-    ; //  rulers
- // TODO: Bring back
-    //  |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
+let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
+  let characterWidth =Editor.characterWidthInPixels(context.editor);
+  let scrollX = Editor.scrollX(context.editor);
+  rulers
+  |> List.map(pos => (characterWidth *. float(pos)) -. scrollX)
+  |> List.iter(
+  Draw.ruler(~context, ~color=colors.rulerForeground)
+  );
 };
 
 let%component make =
