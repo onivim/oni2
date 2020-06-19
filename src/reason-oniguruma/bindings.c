@@ -6,6 +6,7 @@
 #include <caml/mlvalues.h>
 #include <caml/threads.h>
 
+#include <string.h>
 #include <oniguruma.h>
 
 typedef struct _regexp {
@@ -38,7 +39,7 @@ static value reonig_val_result_error(char *errorMsg) {
 }
 
 static value reonig_val_result_ok(value val) {
-  CAMLparam0();
+  CAMLparam1(val);
   CAMLlocal1(result);
   result = caml_alloc(1, 0);
   Store_field(result, 0, val);
@@ -62,7 +63,7 @@ CAMLprim value reonig_create(value vPattern) {
   regex_t *reg;
   OnigErrorInfo einfo;
 
-  char *pattern = String_val(vPattern);
+  const char *pattern = String_val(vPattern);
   int status =
       onig_new(&reg, (UChar *)pattern, (UChar *)(pattern + strlen(pattern)),
                ONIG_OPTION_CAPTURE_GROUP, ONIG_ENCODING_UTF8,
@@ -87,7 +88,7 @@ CAMLprim value reonig_create(value vPattern) {
   CAMLreturn(result);
 }
 
-CAMLprim value reonig_end() { onig_end(); };
+CAMLprim value reonig_end() { onig_end(); return Val_unit; };
 
 CAMLprim value reonig_search(value vStr, value vPos, value vRegExp) {
   CAMLparam3(vStr, vPos, vRegExp);

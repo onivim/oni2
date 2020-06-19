@@ -4,6 +4,31 @@ open Oniguruma;
 module Match = OnigRegExp.Match;
 
 describe("OnigRegExp", ({describe, _}) => {
+  describe("stress", ({test, _}) => {
+    test("heavy allocations", ({expect, _}) => {
+      let count = 100000;
+      let array = Array.make(count, None);
+
+      for (i in 0 to count - 1) {
+        let r =
+          OnigRegExp.create("abcdefghijklmnopqrstuvwxyz" ++ string_of_int(i))
+          |> Result.get_ok;
+        array[i] = Some(r);
+      };
+
+      for (i in 0 to count - 1) {
+        let regexp = array[i] |> Option.get;
+
+        expect.equal(
+          OnigRegExp.test(
+            "abcdefghijklmnopqrstuvwxyz" ++ string_of_int(i),
+            regexp,
+          ),
+          true,
+        );
+      };
+    })
+  });
   describe("allocation", ({test, _}) => {
     test("finalizer gets called for regexp", ({expect, _}) => {
       let regexp = OnigRegExp.create("\\w(\\d+)");
