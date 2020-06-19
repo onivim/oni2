@@ -83,7 +83,7 @@ module Actions = {
       );
     let maybeCursor =
       OptionEx.map2(
-        (buffer, editor) => Editor.getPrimaryCursor(~buffer, editor),
+        (buffer, editor) => Editor.getPrimaryCursor(editor),
         maybeBuffer,
         maybeEditor,
       );
