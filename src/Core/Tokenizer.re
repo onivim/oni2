@@ -17,15 +17,6 @@ module TextRun = {
      */
     startIndex: Index.t,
     endIndex: Index.t,
-    /*
-     * Positions refer to the 'visual' position of the string
-     *
-     * If there is a character, like `\t`, or characters
-     * with wcwidth > 1, then this would be different
-     * than startIndex / endIndex
-     */
-    startPosition: Index.t,
-    endPosition: Index.t,
   };
 
   let create =
@@ -35,8 +26,6 @@ module TextRun = {
         ~endByte,
         ~startIndex,
         ~endIndex,
-        ~startPosition,
-        ~endPosition,
         (),
       ) => {
     text,
@@ -44,8 +33,6 @@ module TextRun = {
     endByte,
     startIndex,
     endIndex,
-    startPosition,
-    endPosition,
   };
 };
 
@@ -96,21 +83,12 @@ let tokenize =
   } else {
     let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-    let (initialOffset, _) =
-      BufferLine.getPositionAndWidth(~index=startIndex, bufferLine);
-
     let idx = ref(startIndex);
     let tokens: ref(list(TextRun.t)) = ref([]);
 
-    let offset = ref(initialOffset);
-
     while (idx^ < maxIndex) {
       let startToken = idx^;
-      let startOffset = offset^;
       let endToken = _getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
-
-      let (endOffset, _) =
-        BufferLine.getPositionAndWidth(~index=endToken, bufferLine);
 
       let text =
         BufferLine.subExn(
@@ -130,14 +108,11 @@ let tokenize =
           ~endByte,
           ~startIndex=Index.fromZeroBased(startToken),
           ~endIndex=Index.fromZeroBased(endToken),
-          ~startPosition=Index.fromZeroBased(startOffset),
-          ~endPosition=Index.fromZeroBased(endOffset),
           (),
         );
 
       tokens := [textRun, ...tokens^];
       idx := endToken;
-      offset := endOffset;
     };
 
     tokens^ |> List.rev;

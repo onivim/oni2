@@ -143,10 +143,10 @@ let renderDefinition =
            start:
              Location.{
                line: cursorPosition.line,
-               column: token.startPosition,
+               column: token.startIndex,
              },
            stop:
-             Location.{line: cursorPosition.line, column: token.endPosition},
+             Location.{line: cursorPosition.line, column: token.endIndex},
          };
        Draw.underline(
          ~context,

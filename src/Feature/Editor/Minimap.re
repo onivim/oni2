@@ -57,8 +57,9 @@ let renderLine =
   let f = (token: BufferViewTokenizer.t) => {
     switch (token.tokenType) {
     | Text =>
-      let startPosition = Index.toZeroBased(token.startPosition);
-      let endPosition = Index.toZeroBased(token.endPosition);
+      // TODO: Fix this
+      let startPosition = Index.toZeroBased(token.startIndex);
+      let endPosition = Index.toZeroBased(token.endIndex);
       let tokenWidth = endPosition - startPosition;
 
       let x = float(Constants.minimapCharacterWidth * startPosition);

@@ -109,8 +109,8 @@ let getTokenAtPosition =
     lineNumber,
   )
   |> List.filter((token: BufferViewTokenizer.t) => {
-       let tokenStart = token.startPosition |> Index.toZeroBased;
-       let tokenEnd = token.endPosition |> Index.toZeroBased;
+       let tokenStart = token.startIndex |> Index.toZeroBased;
+       let tokenEnd = token.endIndex |> Index.toZeroBased;
        index >= tokenStart && index < tokenEnd;
      })
   |> Utility.OptionEx.of_list;

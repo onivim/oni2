@@ -218,10 +218,9 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
 
   let ({pixelY, pixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
+    Editor.bufferLineCharacterToPixel(
       ~line,
-      // TODO: Fix this
-      ~byteIndex=token.startPosition |> Index.toZeroBased,
+      ~characterIndex=token.startIndex |> Index.toZeroBased,
       context.editor,
     );
 
