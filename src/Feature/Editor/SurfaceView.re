@@ -4,8 +4,6 @@ open Revery.Math;
 
 open Oni_Core;
 
-open Helpers;
-
 module Log = (val Log.withNamespace("Oni2.Editor.SurfaceView"));
 
 module Config = EditorConfiguration;
@@ -31,13 +29,11 @@ let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
 let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
-  let characterWidth =Editor.characterWidthInPixels(context.editor);
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
   let scrollX = Editor.scrollX(context.editor);
   rulers
-  |> List.map(pos => (characterWidth *. float(pos)) -. scrollX)
-  |> List.iter(
-  Draw.ruler(~context, ~color=colors.rulerForeground)
-  );
+  |> List.map(pos => characterWidth *. float(pos) -. scrollX)
+  |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
 };
 
 let%component make =
@@ -180,17 +176,14 @@ let%component make =
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(Editor.(pixelWidth)) -. gutterWidth,
+      float(pixelWidth) -. gutterWidth,
     )}
     onMouseUp
     onMouseMove
     onMouseLeave
     onMouseWheel>
     <Canvas
-      style={Styles.bufferViewClipped(
-        0.,
-        float(Editor.(pixelWidth)) -. gutterWidth,
-      )}
+      style={Styles.bufferViewClipped(0., float(pixelWidth) -. gutterWidth)}
       render={canvasContext => {
         let context =
           Draw.createContext(

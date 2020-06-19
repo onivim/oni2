@@ -243,7 +243,6 @@ let%component make =
     |> Editor.scrollToPixelY(~pixelY=scrollY);
 
   let pixelHeight = Editor.getTotalHeightInPixels(editor);
-  let lineHeight = Editor.lineHeightInPixels(editor);
 
   let (gutterWidth, gutterView) =
     <GutterView
@@ -252,8 +251,6 @@ let%component make =
       showLineNumbers={Config.lineNumbers.get(config)}
       height=pixelHeight
       colors
-      scrollY
-      lineHeight
       count=lineCount
       editorFont
       cursorLine={Index.toZeroBased(cursorPosition.line)}

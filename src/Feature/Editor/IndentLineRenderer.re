@@ -8,8 +8,6 @@ open Revery.Draw;
 open EditorCoreTypes;
 open Oni_Core;
 
-open Helpers;
-
 let rec getIndentLevel =
         (
           ~reverse=false,

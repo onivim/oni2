@@ -50,7 +50,7 @@ module Internal = {
     if (Uchar.equal(c, tab)) {
       indentationSettings.tabSize;
     } else {
-      min(Uucp.Break.tty_width_hint(c), 1);
+      Uucp.Break.tty_width_hint(c);
     };
 
   let resolveTo = (~index, cache: t) => {

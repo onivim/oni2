@@ -538,7 +538,7 @@ module View = {
                ~characterIndex=column |> Index.toZeroBased,
                editor,
              );
-           (pixelX |> int_of_float, pixelY |> int_of_float);
+           (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
          });
     switch (maybeCoords, model.activeSignature, model.activeParameter) {
     | (Some((x, y)), Some(signatureIndex), Some(parameterIndex)) =>

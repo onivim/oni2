@@ -1,5 +1,4 @@
 open Feature_Editor;
-open Editor;
 
 let reduce = (view, action) =>
   switch ((action: Actions.t)) {

@@ -33,7 +33,7 @@ type t = {
 let totalViewLines = ({viewLines, _}) => viewLines;
 let selection = ({selection, _}) => selection;
 let setSelection = (~selection, editor) => {...editor, selection};
-let visiblePixelWidth = ({pixelWidth}) => pixelWidth;
+let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
 let scrollY = ({scrollY, _}) => scrollY;
 let scrollX = ({scrollX, _}) => scrollX;

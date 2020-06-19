@@ -153,8 +153,6 @@ let make =
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
