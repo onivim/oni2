@@ -64,7 +64,7 @@ function activate(context) {
 		provideSignatureHelp: (_document, _position, _token, _context) => {
 			const signature1 = new vscode.SignatureInformation("signature 1", "signature 1 documentation");
 			signature1.parameters = [
-				new vscode.ParameterInformation("parameter 1", "parameter 1 documentation")
+				new vscode.ParameterInformation("gnat", "parameter 1 documentation")
 			];
 
 			// Signature Help

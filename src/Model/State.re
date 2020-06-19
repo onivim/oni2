@@ -63,6 +63,7 @@ type t = {
   layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
   hover: Feature_Hover.model,
+  signatureHelp: Feature_SignatureHelp.model,
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
@@ -138,6 +139,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
     hover: Feature_Hover.initial,
+    signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Pane.initial,
     searchPane: Feature_Search.initial,
