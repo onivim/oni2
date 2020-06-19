@@ -64,7 +64,7 @@ module Parts = {
           ~backgroundColor=?,
           ~foregroundColor=?,
           ~showDiffMarkers=true,
-          ~renderHover,
+          ~renderOverlays,
           ~dispatch,
           (),
         ) => {
@@ -104,7 +104,7 @@ module Parts = {
         definition={state.definition}
         windowIsFocused={state.windowIsFocused}
         config={Feature_Configuration.resolver(state.config)}
-        renderHover
+        renderOverlays
       />;
     };
   };
@@ -132,20 +132,36 @@ module Parts = {
       let buffer =
         Selectors.getBufferForEditor(state, editor)
         |> Option.value(~default=Buffer.initial);
-      let renderHover = (~gutterWidth) =>
-        <Feature_Hover.View
-          colorTheme=theme
-          tokenTheme={state.tokenTheme}
-          model={state.hover}
-          uiFont={state.uiFont}
-          editorFont={state.editorFont}
-          languageInfo={state.languageInfo}
-          grammars={state.grammarRepository}
-          diagnostics={state.diagnostics}
-          editor
-          buffer
-          gutterWidth
-        />;
+      let renderOverlays = (~gutterWidth) =>
+        [
+          <Feature_Hover.View
+            colorTheme=theme
+            tokenTheme={state.tokenTheme}
+            model={state.hover}
+            uiFont={state.uiFont}
+            editorFont={state.editorFont}
+            languageInfo={state.languageInfo}
+            grammars={state.grammarRepository}
+            diagnostics={state.diagnostics}
+            editor
+            buffer
+            gutterWidth
+          />,
+          <Feature_SignatureHelp.View
+            colorTheme=theme
+            tokenTheme={state.tokenTheme}
+            model={state.signatureHelp}
+            uiFont={state.uiFont}
+            editorFont={state.editorFont}
+            languageInfo={state.languageInfo}
+            grammars={state.grammarRepository}
+            editor
+            buffer
+            gutterWidth
+            dispatch={msg => dispatch(SignatureHelp(msg))}
+          />,
+        ]
+        |> React.listToElement;
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
@@ -161,7 +177,7 @@ module Parts = {
           foregroundColor
           showDiffMarkers=false
           dispatch
-          renderHover
+          renderOverlays
         />;
 
       | Terminal({id, _}) =>
@@ -172,7 +188,8 @@ module Parts = {
            })
         |> Option.value(~default=React.empty)
 
-      | Editor => <Editor editor state theme isActive dispatch renderHover />
+      | Editor =>
+        <Editor editor state theme isActive dispatch renderOverlays />
 
       | Welcome => <WelcomeView theme uiFont editorFont />
 

@@ -143,7 +143,7 @@ let%component make =
                 ~definition,
                 ~windowIsFocused,
                 ~config,
-                ~renderHover=(~gutterWidth as _: float) => <View />,
+                ~renderOverlays=(~gutterWidth as _: float) => <View />,
                 (),
               ) => {
   let colors = Colors.precompute(theme);
@@ -317,7 +317,7 @@ let%component make =
       theme
       tokenTheme
     />
-    {renderHover(~gutterWidth)}
+    {renderOverlays(~gutterWidth)}
     <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical
         dispatch

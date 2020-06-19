@@ -1,5 +1,16 @@
 // EFFECTS
 module Effects: {
+  module Documents: {
+    let modelChanged:
+      (
+        ~buffer: Oni_Core.Buffer.t,
+        ~update: Oni_Core.BufferUpdate.t,
+        Exthost.Client.t,
+        unit => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+  };
+
   module SCM: {
     let provideOriginalResource:
       (
@@ -33,6 +44,17 @@ module Effects: {
         ~position: EditorCoreTypes.Location.t,
         Exthost.Client.t,
         result(Exthost.Hover.t, string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+
+    let provideSignatureHelp:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.Location.t,
+        ~context: Exthost.SignatureHelp.RequestContext.t,
+        Exthost.Client.t,
+        result(option(Exthost.SignatureHelp.Response.t), string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
   };

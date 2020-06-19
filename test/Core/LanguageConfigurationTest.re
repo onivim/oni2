@@ -69,6 +69,23 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
     | _ => failwith("parse failed")
     };
   });
+  describe("Brackets", ({test, _}) => {
+    test("basic parsing", ({expect, _}) => {
+      let parsedLangConfig =
+        json({|
+        {"brackets": [["{", "}"]]
+        }|})
+        |> Json.Decode.decode_value(LanguageConfiguration.decode);
+
+      expect.equal(Result.is_ok(parsedLangConfig), true);
+      let langConfig: LanguageConfiguration.t =
+        Result.get_ok(parsedLangConfig);
+      expect.equal(
+        langConfig.brackets,
+        LanguageConfiguration.BracketPair.[{openPair: "{", closePair: "}"}],
+      );
+    })
+  });
 
   describe("IndentationRules", ({test, _}) => {
     test("basic parsing", ({expect, _}) => {
@@ -134,6 +151,23 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
       expect.equal(
         LanguageConfiguration.toAutoIndent(langConfig, "def")
         == Vim.AutoIndent.DecreaseIndent,
+        true,
+      );
+    });
+    test("falls back to brackets", ({expect, _}) => {
+      let parsedLangConfig =
+        json({|
+        {"brackets": [["{", "}"]]}
+        |})
+        |> Json.Decode.decode_value(LanguageConfiguration.decode);
+
+      expect.equal(Result.is_ok(parsedLangConfig), true);
+      let langConfig: LanguageConfiguration.t =
+        Result.get_ok(parsedLangConfig);
+
+      expect.equal(
+        LanguageConfiguration.toAutoIndent(langConfig, "   {")
+        == Vim.AutoIndent.IncreaseIndent,
         true,
       );
     });

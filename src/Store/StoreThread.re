@@ -381,6 +381,11 @@ let start =
     Feature_Hover.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
   );
+  registerCommands(
+    ~dispatch,
+    Feature_SignatureHelp.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
+  );
 
   registerCommands(
     ~dispatch,
