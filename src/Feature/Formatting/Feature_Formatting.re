@@ -98,6 +98,7 @@ let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
   };
 
   let runFormat = (
+    ~formatFn,
     ~model, 
       ~configuration,
         ~matchingFormatters,
@@ -112,7 +113,7 @@ let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
       let effects =
         matchingFormatters
         |> List.map(formatter =>
-             Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits(
+             formatFn(
                ~handle=formatter.handle,
                ~uri=Oni_Core.Buffer.getUri(buf),
                ~options=
@@ -152,10 +153,38 @@ let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
   }
 };
 
-let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
+let update = (~configuration, ~maybeSelection, ~maybeBuffer, ~extHostClient, model, msg) => {
   switch (msg) {
   | Command(FormatRange) =>
-    (model, FormatError("Range formatting not handled yet!"))
+    switch((maybeBuffer, maybeSelection)) {
+    | (Some(buf), Some(range)) =>
+      
+      let filetype =
+        buf
+        |> Oni_Core.Buffer.getFileType
+        |> Option.value(~default="plaintext");
+
+      let matchingFormatters =
+        model.availableRangeFormatters
+        |> List.filter(({selector, _}) =>
+             DocumentSelector.matches(~filetype, selector)
+           );
+
+  Internal.runFormat(
+    ~formatFn=
+    Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
+      ~range
+    ),
+    ~model, 
+      ~configuration,
+        ~matchingFormatters,
+          ~buf,
+            ~filetype,
+              ~extHostClient);
+    | _ =>
+      (model, FormatError("No range selected."))
+    }
+
   | Command(FormatDocument) =>
     switch (maybeBuffer) {
     | None => (model, Nothing)
@@ -172,6 +201,7 @@ let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
            );
 
   Internal.runFormat(
+    ~formatFn=Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits,
     ~model, 
       ~configuration,
         ~matchingFormatters,

@@ -39,6 +39,7 @@ let update =
       Feature_Formatting.update(
         ~configuration=state.configuration,
         ~maybeBuffer,
+        ~maybeSelection=None,
         ~extHostClient,
         state.formatting,
         msg,
