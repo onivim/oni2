@@ -20,14 +20,6 @@ let start = () => {
 
   let windowUpdater = (state: Model.State.t, action: Model.Actions.t) =>
     switch (action) {
-    | EditorGroupSelected(_) => FocusManager.push(Editor, state)
-
-    | EditorTabClicked(editorId) => {
-        ...state,
-        editorGroups:
-          EditorGroups.setActiveEditor(~editorId, state.editorGroups),
-      }
-
     | ViewCloseEditor(editorId) =>
       /* When an editor is closed... lets see if any window splits are empty */
 

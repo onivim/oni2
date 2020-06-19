@@ -83,6 +83,8 @@ let update = (~focus, model, msg) => {
       Nothing,
     )
 
+  | GroupSelected(id) => ({...model, activeGroup: id}, Focus(Center))
+
   | Command(MoveLeft) =>
     switch (focus) {
     | Some(Center) =>

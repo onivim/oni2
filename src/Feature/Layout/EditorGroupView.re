@@ -87,7 +87,7 @@ let make =
     };
   };
 
-  let onMouseDown = _ => (); //dispatch(EditorGroupSelected(editorGroup.editorGroupId));
+  let onMouseDown = _ => dispatch(GroupSelected(model.id));
 
   <View onMouseDown style={Styles.container(theme)}> children </View>;
 };

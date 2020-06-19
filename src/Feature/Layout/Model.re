@@ -133,4 +133,5 @@ type msg =
     })
   | DragComplete
   | GroupTabClicked(int)
+  | GroupSelected(int)
   | Command(command);

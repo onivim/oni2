@@ -179,8 +179,6 @@ let reduce = (model, action: Actions.t) => {
       idToGroup: Internal.applyToAllEditorGroups(model.idToGroup, action),
     }
 
-  | EditorGroupSelected(editorGroupId) => {...model, activeId: editorGroupId}
-
   | action =>
     switch (getActiveEditorGroup(model)) {
     | Some(group) => {
