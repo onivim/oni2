@@ -532,23 +532,14 @@ module View = {
         }
       )
       |> Option.map((Location.{line, column}) => {
-           let y =
-             int_of_float(
-               editorFont.measuredHeight
-               *. float(Index.toZeroBased(line))
-               -. editor.scrollY
-               +. 0.5,
-             );
-
-           let x =
-             int_of_float(
-               gutterWidth
-               +. editorFont.measuredWidth
-               *. float(Index.toZeroBased(column))
-               -. editor.scrollX
-               +. 0.5,
-             );
-           (x, y);
+        // TODO: Index instead of byte
+          let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+            Feature_Editor.Editor.bufferLineByteToPixel(
+            ~line=line |> Index.toZeroBased,
+            ~byteIndex=column |> Index.toZeroBased,
+            editor,
+          );
+           (pixelX |> int_of_float, pixelY |> int_of_float);
          });
     switch (maybeCoords, model.activeSignature, model.activeParameter) {
     | (Some((x, y)), Some(signatureIndex), Some(parameterIndex)) =>
