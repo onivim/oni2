@@ -148,7 +148,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       let effects =
         getEffectsForLocation(
           ~buffer,
-          ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+          ~location=Feature_Editor.Editor.getPrimaryCursor(editor),
           ~extHostClient,
           ~model,
           ~context,
@@ -226,10 +226,10 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         if (before) {
           open Index;
           let Location.{line, column: col} =
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+            Feature_Editor.Editor.getPrimaryCursor(editor);
           Location.create(~line, ~column=col + 1);
         } else {
-          Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+          Feature_Editor.Editor.getPrimaryCursor(editor);
         };
       if (trigger) {
         Log.infof(m => m("Trigger character hit: %s", key));
@@ -524,8 +524,7 @@ module View = {
     let maybeCoords =
       (
         if (model.shown) {
-          let cursorLocation =
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+          let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
           Some(cursorLocation);
         } else {
           None;
