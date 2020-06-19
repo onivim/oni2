@@ -402,13 +402,8 @@ module View = {
 
     let position = () => {
       let text = {
-        OptionEx.map2(
-          (editor, buffer) => {
-            Feature_Editor.Editor.getPrimaryCursor(editor)
-          },
-          activeEditor,
-          activeBuffer,
-        )
+        activeEditor
+        |> Option.map(Feature_Editor.Editor.getPrimaryCursor)
         |> positionToString;
       };
 

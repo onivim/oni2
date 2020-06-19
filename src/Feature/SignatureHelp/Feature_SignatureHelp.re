@@ -515,7 +515,6 @@ module View = {
         ~editorFont: Service_Font.font,
         ~model,
         ~editor,
-        ~buffer,
         ~gutterWidth,
         ~grammars,
         ~dispatch,
