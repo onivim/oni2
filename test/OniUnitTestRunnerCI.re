@@ -88,6 +88,13 @@ Libvim_Test.TestFramework.run(
     Rely.RunConfig.initialize(),
   ),
 );
+  
+Oniguruma_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
 
 Textmate_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
