@@ -3,6 +3,7 @@ open Oni_Core;
 open Utility;
 open Oni_Components;
 open Model;
+open Msg;
 
 module Colors = Feature_Theme.Colors;
 
@@ -40,7 +41,7 @@ let make =
       ~uiFont,
       ~theme,
       ~isActive,
-      ~model: group,
+      ~model: Group.t,
       ~dispatch,
       (),
     ) => {
@@ -73,7 +74,7 @@ let make =
               isModified={ContentModel.isModified(item)}
               icon={ContentModel.icon(item)}
               onClick={() =>
-                dispatch(Model.GroupTabClicked(ContentModel.id(item)))
+                dispatch(GroupTabClicked(ContentModel.id(item)))
               }
               onClose={() => ()}
               // dispatch(Model.Actions.ViewCloseEditor(tabInfo.editorId))

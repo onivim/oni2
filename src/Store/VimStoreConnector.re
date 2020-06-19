@@ -604,32 +604,6 @@ let start =
       }
     );
 
-  let splitExistingBufferEffect = maybeBuffer =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="vim.splitExistingBuffer", dispatch => {
-      switch (maybeBuffer) {
-      | None => Log.warn("Unable to find existing buffer")
-      | Some(buffer) =>
-        // TODO: Will this be necessary with https://github.com/onivim/oni2/pull/1627?
-        let fileType = Core.Buffer.getFileType(buffer);
-        let lineEndings = Core.Buffer.getLineEndings(buffer);
-        let isModified = Core.Buffer.isModified(buffer);
-        let filePath = Core.Buffer.getFilePath(buffer);
-        let version = Core.Buffer.getVersion(buffer);
-        dispatch(
-          Actions.BufferEnter({
-            id: Oni_Core.Buffer.getId(buffer),
-            buffer,
-            fileType,
-            lineEndings,
-            filePath,
-            isModified,
-            version,
-          }),
-        );
-      }
-    });
-
   let openFileByPathEffect = (state, filePath, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
       let buffer = Vim.Buffer.openFile(filePath);
@@ -848,29 +822,6 @@ let start =
     });
   };
 
-  let addSplit = (direction, state: State.t, editorGroup) => {
-    ...state,
-    zenMode: false, // Fix #686: If we're adding a split, we should turn off Zen mode.
-    editorGroups: EditorGroups.add(editorGroup, state.editorGroups),
-    layout:
-      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
-      | Some(target) =>
-        Feature_Layout.insertWindow(
-          `After(target.editorGroupId),
-          direction,
-          editorGroup.editorGroupId,
-          state.layout,
-        )
-
-      | None =>
-        Feature_Layout.addWindow(
-          direction,
-          editorGroup.editorGroupId,
-          state.layout,
-        )
-      },
-  };
-
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | ConfigurationSet(configuration) => (
@@ -906,28 +857,19 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-    | Command("view.splitHorizontal") =>
-      let maybeBuffer = Selectors.getActiveBuffer(state);
-      let editorGroup = EditorGroup.create();
-      let state' = addSplit(`Horizontal, state, editorGroup);
-      (state', splitExistingBufferEffect(maybeBuffer));
-
-    | Command("view.splitVertical") =>
-      let maybeBuffer = Selectors.getActiveBuffer(state);
-      let editorGroup = EditorGroup.create();
-      let state' = addSplit(`Vertical, state, editorGroup);
-      (state', splitExistingBufferEffect(maybeBuffer));
 
     | OpenFileByPath(path, maybeDirection, location) =>
       /* If a split was requested, create that first! */
       let state' =
         switch (maybeDirection) {
         | None => state
-        | Some(direction) =>
-          let editorGroup = EditorGroup.create();
-          addSplit(direction, state, editorGroup);
+        | Some(direction) => {
+            ...state,
+            layout: Feature_Layout.split(direction, state.layout),
+          }
         };
       (state', openFileByPathEffect(state', path, location));
+
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state

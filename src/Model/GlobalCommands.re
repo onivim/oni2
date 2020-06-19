@@ -195,22 +195,6 @@ module View = {
       "view.closeEditor",
       Command("view.closeEditor"),
     );
-
-  let splitVertical =
-    register(
-      ~category="View",
-      ~title="Split Editor Vertically",
-      "view.splitVertical",
-      Command("view.splitVertical"),
-    );
-
-  let splitHorizontal =
-    register(
-      ~category="View",
-      ~title="Split Editor Horizontally",
-      "view.splitHorizontal",
-      Command("view.splitHorizontal"),
-    );
 };
 
 module Workbench = {

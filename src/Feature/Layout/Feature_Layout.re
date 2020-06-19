@@ -4,50 +4,63 @@ include Model;
 
 // UPDATE
 
+open Msg;
+
+[@deriving show({with_path: false})]
+type msg = Msg.t;
+
 type outmsg =
   | Nothing
+  | SplitAdded
   | Focus(panel);
 
-let rotate = (direction, model) => {
-  ...model,
-  tree: Layout.rotate(direction, model.activeGroup, activeTree(model)),
-};
+open {
+       let rotate = (direction, model) => {
+         ...model,
+         tree:
+           Layout.rotate(direction, model.activeGroup, activeTree(model)),
+       };
 
-let resizeWindowByAxis = (direction, delta, model) => {
-  ...model,
-  tree:
-    Layout.resizeWindowByAxis(
-      direction,
-      model.activeGroup,
-      delta,
-      activeTree(model),
-    ),
-};
+       let resizeWindowByAxis = (direction, delta, model) => {
+         ...model,
+         tree:
+           Layout.resizeWindowByAxis(
+             direction,
+             model.activeGroup,
+             delta,
+             activeTree(model),
+           ),
+       };
 
-let resizeWindowByDirection = (direction, delta, model) => {
-  ...model,
-  tree:
-    Layout.resizeWindowByDirection(
-      direction,
-      model.activeGroup,
-      delta,
-      activeTree(model),
-    ),
-};
+       let resizeWindowByDirection = (direction, delta, model) => {
+         ...model,
+         tree:
+           Layout.resizeWindowByDirection(
+             direction,
+             model.activeGroup,
+             delta,
+             activeTree(model),
+           ),
+       };
 
-let resetWeights = model => {
-  ...model,
-  tree: Layout.resetWeights(activeTree(model)),
-  uncommittedTree: `None,
-};
+       let resetWeights = model => {
+         ...model,
+         tree: Layout.resetWeights(activeTree(model)),
+         uncommittedTree: `None,
+       };
 
-let maximize = (~direction=?, model) => {
-  ...model,
-  uncommittedTree:
-    `Maximized(
-      Layout.maximize(~direction?, model.activeGroup, activeTree(model)),
-    ),
-};
+       let maximize = (~direction=?, model) => {
+         ...model,
+         uncommittedTree:
+           `Maximized(
+             Layout.maximize(
+               ~direction?,
+               model.activeGroup,
+               activeTree(model),
+             ),
+           ),
+       };
+     };
 
 let update = (~focus, model, msg) => {
   switch (msg) {
@@ -74,9 +87,8 @@ let update = (~focus, model, msg) => {
         ...model,
         groups:
           List.map(
-            group =>
-              group.id == model.activeGroup
-                ? {...group, selected: id} : group,
+            (group: Group.t) =>
+              group.id == model.activeGroup ? Group.select(id, group) : group,
             model.groups,
           ),
       },
@@ -84,6 +96,9 @@ let update = (~focus, model, msg) => {
     )
 
   | GroupSelected(id) => ({...model, activeGroup: id}, Focus(Center))
+
+  | Command(SplitVertical) => (split(`Vertical, model), SplitAdded)
+  | Command(SplitHorizontal) => (split(`Horizontal, model), SplitAdded)
 
   | Command(MoveLeft) =>
     switch (focus) {
@@ -471,7 +486,9 @@ module View = {
           let positioned = Positioned.fromLayout(0, 0, width, height, tree);
 
           let renderWindow = id =>
-            switch (List.find_opt(group => group.id == id, model.groups)) {
+            switch (
+              List.find_opt((group: Group.t) => group.id == id, model.groups)
+            ) {
             | Some(group) =>
               <EditorGroupView
                 provider
@@ -506,6 +523,22 @@ module View = {
 
 module Commands = {
   open Feature_Commands.Schema;
+
+  let splitVertical =
+    define(
+      ~category="View",
+      ~title="Split Editor Vertically",
+      "view.splitVertical",
+      Command(SplitVertical),
+    );
+
+  let splitHorizontal =
+    define(
+      ~category="View",
+      ~title="Split Editor Horizontally",
+      "view.splitHorizontal",
+      Command(SplitHorizontal),
+    );
 
   let rotateForward =
     define(
@@ -693,6 +726,8 @@ module Commands = {
 module Contributions = {
   let commands =
     Commands.[
+      splitVertical,
+      splitHorizontal,
       rotateForward,
       rotateBackward,
       moveLeft,

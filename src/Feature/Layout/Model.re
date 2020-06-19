@@ -1,7 +1,66 @@
-type group = {
-  id: int,
-  items: list(Feature_Editor.Editor.t),
-  selected: int,
+open Feature_Editor;
+
+module Group: {
+  type t =
+    pri {
+      id: int,
+      items: list(Editor.t),
+      selected: int,
+    };
+
+  let empty: t;
+  let create: Editor.t => t;
+
+  let selected: t => Editor.t;
+
+  let select: (int, t) => t;
+  let openEditor: (Editor.t, t) => t;
+
+  let map: (Editor.t => Editor.t, t) => t;
+} = {
+  type t = {
+    id: int,
+    items: list(Editor.t),
+    selected: int,
+  };
+
+  // TODO: remove
+  let empty = {id: (-1), items: [], selected: (-1)};
+
+  let create = {
+    let lastId = ref(-1);
+
+    editor => {
+      incr(lastId);
+
+      {id: lastId^, items: [editor], selected: Editor.getId(editor)};
+    };
+  };
+
+  let select = (id, group) => {
+    assert(List.exists(item => Editor.getId(item) == id, group.items));
+
+    {...group, selected: id};
+  };
+
+  let selected = group =>
+    List.find(editor => Editor.getId(editor) == group.selected, group.items);
+
+  let openEditor = (editor, group) => {
+    let bufferId = Editor.getBufferId(editor);
+    switch (
+      List.find_opt(e => Editor.getBufferId(e) == bufferId, group.items)
+    ) {
+    | Some(editor) => {...group, selected: Editor.getId(editor)}
+    | None => {
+        ...group,
+        items: [editor, ...group.items],
+        selected: Editor.getId(editor),
+      }
+    };
+  };
+
+  let map = (f, group) => {...group, items: List.map(f, group.items)};
 };
 
 type panel =
@@ -16,16 +75,12 @@ type model = {
     | `Maximized(Layout.t(int))
     | `None
   ],
-  groups: list(group),
+  groups: list(Group.t),
   activeGroup: int,
 };
 
 let initial = {
-  let initialGroup = {
-    id: 0,
-    items: [],
-    selected: (-1) // TODO
-  };
+  let initialGroup = Group.empty;
 
   {
     tree: Layout.singleton(initialGroup.id),
@@ -55,6 +110,29 @@ let insertWindow = (target, direction, focus) =>
   updateTree(Layout.insertWindow(target, direction, focus));
 let removeWindow = target => updateTree(Layout.removeWindow(target));
 
+let split = (direction, model) => {
+  let activeGroup =
+    List.find(
+      (group: Group.t) => group.id == model.activeGroup,
+      model.groups,
+    );
+  let activeEditor = Group.selected(activeGroup);
+  let group = Group.create(activeEditor);
+
+  {
+    ...model,
+    groups: [group, ...model.groups],
+    tree:
+      Layout.insertWindow(
+        `After(model.activeGroup),
+        direction,
+        group.id,
+        activeTree(model),
+      ),
+    uncommittedTree: `None,
+  };
+};
+
 let move = (focus, dirX, dirY, layout) => {
   let positioned = Positioned.fromLayout(0, 0, 200, 200, layout);
 
@@ -68,27 +146,13 @@ let moveUp = current => move(current, 0, -1);
 let moveDown = current => move(current, 0, 1);
 
 let openEditor = (editor, model) => {
-  open Feature_Editor;
-
-  let bufferId = Editor.getBufferId(editor);
-
-  let openInGroup = group =>
-    switch (
-      List.find_opt(e => Editor.getBufferId(e) == bufferId, group.items)
-    ) {
-    | Some(editor) => {...group, selected: Editor.getId(editor)}
-    | None => {
-        ...group,
-        items: [editor, ...group.items],
-        selected: Editor.getId(editor),
-      }
-    };
-
   {
     ...model,
     groups:
       List.map(
-        group => group.id == model.activeGroup ? openInGroup(group) : group,
+        (group: Group.t) =>
+          group.id == model.activeGroup
+            ? Group.openEditor(editor, group) : group,
         model.groups,
       ),
   };
@@ -96,42 +160,5 @@ let openEditor = (editor, model) => {
 
 let map = (f, model) => {
   ...model,
-  groups:
-    List.map(
-      group => {...group, items: List.map(f, group.items)},
-      model.groups,
-    ),
+  groups: List.map(Group.map(f), model.groups),
 };
-
-[@deriving show({with_path: false})]
-type command =
-  | MoveLeft
-  | MoveRight
-  | MoveUp
-  | MoveDown
-  | RotateForward
-  | RotateBackward
-  | DecreaseSize
-  | IncreaseSize
-  | DecreaseHorizontalSize
-  | IncreaseHorizontalSize
-  | DecreaseVerticalSize
-  | IncreaseVerticalSize
-  | IncreaseWindowSize([ | `Up | `Down | `Left | `Right])
-  | DecreaseWindowSize([ | `Up | `Down | `Left | `Right])
-  | Maximize
-  | MaximizeHorizontal
-  | MaximizeVertical
-  | ToggleMaximize
-  | ResetSizes;
-
-[@deriving show({with_path: false})]
-type msg =
-  | SplitDragged({
-      path: list(int),
-      delta: float,
-    })
-  | DragComplete
-  | GroupTabClicked(int)
-  | GroupSelected(int)
-  | Command(command);

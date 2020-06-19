@@ -23,6 +23,8 @@ let insertWindow:
   model;
 let removeWindow: (int, model) => model;
 
+let split: ([ | `Horizontal | `Vertical], model) => model;
+
 let openEditor: (Feature_Editor.Editor.t, model) => model;
 
 let map: (Feature_Editor.Editor.t => Feature_Editor.Editor.t, model) => model;
@@ -34,6 +36,7 @@ type msg;
 
 type outmsg =
   | Nothing
+  | SplitAdded
   | Focus(panel);
 
 let update: (~focus: option(panel), model, msg) => (model, outmsg);

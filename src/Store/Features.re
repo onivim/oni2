@@ -251,6 +251,8 @@ let update =
 
       | Focus(Bottom) => state.pane.isOpen ? PaneStore.focus(state) : state
 
+      | SplitAdded => {...state, zenMode: false}
+
       | Nothing => state
       };
     (state, Effect.none);
