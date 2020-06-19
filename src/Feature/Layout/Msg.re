@@ -1,5 +1,7 @@
 [@deriving show({with_path: false})]
 type command =
+  | NextEditor
+  | PreviousEditor
   | SplitVertical
   | SplitHorizontal
   | CloseActiveEditor

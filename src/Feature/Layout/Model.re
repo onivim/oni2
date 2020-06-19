@@ -16,6 +16,8 @@ module Group: {
   let selected: t => Editor.t;
 
   let select: (int, t) => t;
+  let nextEditor: t => t;
+  let previousEditor: t => t;
   let openEditor: (Editor.t, t) => t;
   let removeEditor: (int, t) => option(t);
 
@@ -44,6 +46,31 @@ module Group: {
     assert(List.exists(item => Editor.getId(item) == id, group.items));
 
     {...group, selected: id};
+  };
+
+  let nextEditor = group => {
+    let rec loop =
+      fun
+      | []
+      | [_] => group.selected
+      | [next, current, ..._] when Editor.getId(current) == group.selected =>
+        Editor.getId(next)
+      | [_, ...rest] => loop(rest);
+
+    {...group, selected: loop(group.items)};
+  };
+
+  let previousEditor = group => {
+    let rec loop =
+      fun
+      | []
+      | [_] => group.selected
+      | [current, previous, ..._]
+          when Editor.getId(current) == group.selected =>
+        Editor.getId(previous)
+      | [_, ...rest] => loop(rest);
+
+    {...group, selected: loop(group.items)};
   };
 
   let selected = group =>
@@ -135,6 +162,15 @@ let updateTree = (f, model) => {
   uncommittedTree: `None,
 };
 
+let updateActiveGroup = (f, model) => {
+  ...model,
+  groups:
+    List.map(
+      (group: Group.t) => group.id == model.activeGroupId ? f(group) : group,
+      model.groups,
+    ),
+};
+
 let windows = model => Layout.windows(activeTree(model));
 let addWindow = (direction, focus) =>
   updateTree(Layout.addWindow(direction, focus));
@@ -170,6 +206,10 @@ let moveLeft = current => move(current, -1, 0);
 let moveRight = current => move(current, 1, 0);
 let moveUp = current => move(current, 0, -1);
 let moveDown = current => move(current, 0, 1);
+
+let nextEditor = model => updateActiveGroup(Group.nextEditor, model);
+
+let previousEditor = model => updateActiveGroup(Group.previousEditor, model);
 
 let openEditor = (editor, model) => {
   {

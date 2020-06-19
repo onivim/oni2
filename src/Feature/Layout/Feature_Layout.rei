@@ -78,8 +78,12 @@ module View: {
 // COMMANDS
 
 module Commands: {
+  let nextEditor: Command.t(msg);
+  let previousEditor: Command.t(msg);
+
   let splitVertical: Command.t(msg);
   let splitHorizontal: Command.t(msg);
+
   let closeActiveEditor: Command.t(msg);
 
   let moveLeft: Command.t(msg);

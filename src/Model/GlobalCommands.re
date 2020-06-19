@@ -242,22 +242,6 @@ module Workbench = {
         QuickmenuShow(FilesPicker),
       );
 
-    let nextEditor =
-      register(
-        ~category="View",
-        ~title="Open Next Editor",
-        "workbench.action.nextEditor",
-        Command("workbench.action.nextEditor"),
-      );
-
-    let previousEditor =
-      register(
-        ~category="View",
-        ~title="Open Previous Editor",
-        "workbench.action.previousEditor",
-        Command("workbench.action.previousEditor"),
-      );
-
     let quickOpenNavigateNextInEditorPicker =
       register(
         ~title="Navigate Next in Quick Open",

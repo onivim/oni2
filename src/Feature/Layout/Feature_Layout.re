@@ -105,6 +105,9 @@ let update = (~focus, model, msg) => {
     | None => (model, RemoveLastBlocked)
     }
 
+  | Command(NextEditor) => (nextEditor(model), Nothing)
+  | Command(PreviousEditor) => (previousEditor(model), Nothing)
+
   | Command(SplitVertical) => (split(`Vertical, model), SplitAdded)
 
   | Command(SplitHorizontal) => (split(`Horizontal, model), SplitAdded)
@@ -542,6 +545,22 @@ module View = {
 module Commands = {
   open Feature_Commands.Schema;
 
+  let nextEditor =
+    define(
+      ~category="View",
+      ~title="Open Next Editor",
+      "workbench.action.nextEditor",
+      Command(NextEditor),
+    );
+
+  let previousEditor =
+    define(
+      ~category="View",
+      ~title="Open Previous Editor",
+      "workbench.action.previousEditor",
+      Command(PreviousEditor),
+    );
+
   let splitVertical =
     define(
       ~category="View",
@@ -752,6 +771,8 @@ module Commands = {
 module Contributions = {
   let commands =
     Commands.[
+      nextEditor,
+      previousEditor,
       splitVertical,
       splitHorizontal,
       closeActiveEditor,

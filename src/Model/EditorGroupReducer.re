@@ -27,9 +27,6 @@ let reduce = (v: EditorGroup.t, action: Actions.t) => {
         ),
     }
 
-  | Command("workbench.action.nextEditor") => EditorGroup.nextEditor(v)
-  | Command("workbench.action.previousEditor") =>
-    EditorGroup.previousEditor(v)
   | _ => v
   };
 };
