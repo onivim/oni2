@@ -6,12 +6,18 @@ let initial: model;
 
 [@deriving show]
 type command =
-  | FormatDocument;
+  | FormatDocument
+  | FormatRange;
 
 [@deriving show]
 type msg =
   | Command(command)
   | DocumentFormatterAvailable({
+      handle: int,
+      selector: Exthost.DocumentSelector.t,
+      displayName: string,
+    })
+  | RangeFormatterAvailable({
       handle: int,
       selector: Exthost.DocumentSelector.t,
       displayName: string,

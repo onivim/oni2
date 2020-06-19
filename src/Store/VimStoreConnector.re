@@ -159,7 +159,10 @@ let start =
         dispatch(
           Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
         )
-      | Format(_) => Log.debug("Format provider not hooked up yet"),
+      | Format(Range(_)) =>
+        dispatch(
+          Actions.Formatting(Feature_Formatting.Command(FormatRange)),
+        )
     );
 
   let _: unit => unit =

@@ -42,12 +42,18 @@ module Internal = {
 
 [@deriving show]
 type command =
-  | FormatDocument;
+  | FormatDocument
+  | FormatRange;
 
 [@deriving show]
 type msg =
   | Command(command)
   | DocumentFormatterAvailable({
+      handle: int,
+      selector: Exthost.DocumentSelector.t,
+      displayName: string,
+    })
+  | RangeFormatterAvailable({
       handle: int,
       selector: Exthost.DocumentSelector.t,
       displayName: string,
@@ -92,6 +98,8 @@ let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
 
 let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
   switch (msg) {
+  | Command(FormatRange) =>
+    (model, FormatError("Range formatting not handled yet!"))
   | Command(FormatDocument) =>
     switch (maybeBuffer) {
     | None => (model, Nothing)
@@ -162,6 +170,10 @@ let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
       },
       Nothing,
     )
+
+  | RangeFormatterAvailable(_) => 
+    // TODO
+    (model, Nothing);
   | EditsReceived({displayName, sessionId, edits}) =>
     switch (model.activeSession) {
     | None => (model, Nothing)
