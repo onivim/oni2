@@ -76,8 +76,9 @@ let make =
               onClick={() =>
                 dispatch(GroupTabClicked(ContentModel.id(item)))
               }
-              onClose={() => ()}
-              // dispatch(Model.Actions.ViewCloseEditor(tabInfo.editorId))
+              onClose={() =>
+                dispatch(EditorCloseButtonClicked(ContentModel.id(item)))
+              }
             />
           }}
         </Tabs>;

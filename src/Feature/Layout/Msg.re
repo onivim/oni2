@@ -2,6 +2,7 @@
 type command =
   | SplitVertical
   | SplitHorizontal
+  | CloseActiveEditor
   | MoveLeft
   | MoveRight
   | MoveUp
@@ -31,4 +32,5 @@ type t =
   | DragComplete
   | GroupTabClicked(int)
   | GroupSelected(int)
+  | EditorCloseButtonClicked(int)
   | Command(command);

@@ -187,16 +187,6 @@ module ReferencesView = {
     );
 };
 
-module View = {
-  let closeEditor =
-    register(
-      ~category="View",
-      ~title="Close Editor",
-      "view.closeEditor",
-      Command("view.closeEditor"),
-    );
-};
-
 module Workbench = {
   module Action = {
     let openSettings =

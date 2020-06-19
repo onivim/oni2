@@ -8,6 +8,7 @@ module Internal = {
     Feature_Notification.Effects.create(~kind, message)
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
+
   let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
     buffer
     |> Oni_Core.Buffer.getFileType
@@ -19,6 +20,11 @@ module Internal = {
        )
     |> Option.value(~default="source.plaintext");
   };
+
+  let quitEffect =
+    Isolinear.Effect.createWithDispatch(~name="quit", dispatch =>
+      dispatch(Actions.Quit(true))
+    );
 };
 
 // UPDATE
@@ -239,23 +245,28 @@ let update =
 
       | _ => None
       };
-    let (model, maybeOutmsg) = update(~focus, state.layout, msg);
+    let (model, outmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 
-    let state =
-      switch (maybeOutmsg) {
-      | Focus(Center) => FocusManager.push(Editor, state)
+    switch (outmsg) {
+    | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
-      | Focus(Left) =>
-        state.sideBar.isOpen ? SideBarReducer.focus(state) : state
+    | Focus(Left) => (
+        state.sideBar.isOpen ? SideBarReducer.focus(state) : state,
+        Effect.none,
+      )
 
-      | Focus(Bottom) => state.pane.isOpen ? PaneStore.focus(state) : state
+    | Focus(Bottom) => (
+        state.pane.isOpen ? PaneStore.focus(state) : state,
+        Effect.none,
+      )
 
-      | SplitAdded => {...state, zenMode: false}
+    | SplitAdded => ({...state, zenMode: false}, Effect.none)
 
-      | Nothing => state
-      };
-    (state, Effect.none);
+    | RemoveLastBlocked => (state, Internal.quitEffect)
+
+    | Nothing => (state, Effect.none)
+    };
 
   | Terminal(msg) =>
     let (model, eff) =

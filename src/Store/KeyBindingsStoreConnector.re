@@ -243,7 +243,7 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<D-W>",
-        command: Commands.View.closeEditor.id,
+        command: Feature_Layout.Commands.closeActiveEditor.id,
         condition: WhenExpr.Value(True),
       },
       {

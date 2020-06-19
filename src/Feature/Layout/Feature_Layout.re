@@ -12,13 +12,14 @@ type msg = Msg.t;
 type outmsg =
   | Nothing
   | SplitAdded
+  | RemoveLastBlocked
   | Focus(panel);
 
 open {
        let rotate = (direction, model) => {
          ...model,
          tree:
-           Layout.rotate(direction, model.activeGroup, activeTree(model)),
+           Layout.rotate(direction, model.activeGroupId, activeTree(model)),
        };
 
        let resizeWindowByAxis = (direction, delta, model) => {
@@ -26,7 +27,7 @@ open {
          tree:
            Layout.resizeWindowByAxis(
              direction,
-             model.activeGroup,
+             model.activeGroupId,
              delta,
              activeTree(model),
            ),
@@ -37,7 +38,7 @@ open {
          tree:
            Layout.resizeWindowByDirection(
              direction,
-             model.activeGroup,
+             model.activeGroupId,
              delta,
              activeTree(model),
            ),
@@ -55,7 +56,7 @@ open {
            `Maximized(
              Layout.maximize(
                ~direction?,
-               model.activeGroup,
+               model.activeGroupId,
                activeTree(model),
              ),
            ),
@@ -88,26 +89,41 @@ let update = (~focus, model, msg) => {
         groups:
           List.map(
             (group: Group.t) =>
-              group.id == model.activeGroup ? Group.select(id, group) : group,
+              group.id == model.activeGroupId
+                ? Group.select(id, group) : group,
             model.groups,
           ),
       },
       Nothing,
     )
 
-  | GroupSelected(id) => ({...model, activeGroup: id}, Focus(Center))
+  | GroupSelected(id) => ({...model, activeGroupId: id}, Focus(Center))
+
+  | EditorCloseButtonClicked(id) =>
+    switch (removeEditor(id, model)) {
+    | Some(model) => (model, Nothing)
+    | None => (model, RemoveLastBlocked)
+    }
 
   | Command(SplitVertical) => (split(`Vertical, model), SplitAdded)
+
   | Command(SplitHorizontal) => (split(`Horizontal, model), SplitAdded)
+
+  | Command(CloseActiveEditor) =>
+    switch (removeActiveEditor(model)) {
+    | Some(model) => (model, Nothing)
+    | None => (model, RemoveLastBlocked)
+    }
 
   | Command(MoveLeft) =>
     switch (focus) {
     | Some(Center) =>
-      let newActiveGroup = model |> activeTree |> moveLeft(model.activeGroup);
-      if (newActiveGroup == model.activeGroup) {
+      let newActiveGroupId =
+        model |> activeTree |> moveLeft(model.activeGroupId);
+      if (newActiveGroupId == model.activeGroupId) {
         (model, Focus(Left));
       } else {
-        ({...model, activeGroup: newActiveGroup}, Nothing);
+        ({...model, activeGroupId: newActiveGroupId}, Nothing);
       };
 
     | Some(Left)
@@ -118,13 +134,13 @@ let update = (~focus, model, msg) => {
   | Command(MoveRight) =>
     switch (focus) {
     | Some(Center) =>
-      let newActiveGroup =
-        model |> activeTree |> moveRight(model.activeGroup);
-      ({...model, activeGroup: newActiveGroup}, Nothing);
+      let newActiveGroupId =
+        model |> activeTree |> moveRight(model.activeGroupId);
+      ({...model, activeGroupId: newActiveGroupId}, Nothing);
 
     | Some(Left) =>
-      let newActiveGroup = model |> activeTree |> Layout.leftmost;
-      ({...model, activeGroup: newActiveGroup}, Focus(Center));
+      let newActiveGroupId = model |> activeTree |> Layout.leftmost;
+      ({...model, activeGroupId: newActiveGroupId}, Focus(Center));
 
     | Some(Bottom)
     | None => (model, Nothing)
@@ -133,12 +149,13 @@ let update = (~focus, model, msg) => {
   | Command(MoveUp) =>
     switch (focus) {
     | Some(Center) =>
-      let newActiveGroup = model |> activeTree |> moveUp(model.activeGroup);
-      ({...model, activeGroup: newActiveGroup}, Nothing);
+      let newActiveGroupId =
+        model |> activeTree |> moveUp(model.activeGroupId);
+      ({...model, activeGroupId: newActiveGroupId}, Nothing);
 
     | Some(Bottom) =>
-      let newActiveGroup = model |> activeTree |> Layout.bottommost;
-      ({...model, activeGroup: newActiveGroup}, Focus(Center));
+      let newActiveGroupId = model |> activeTree |> Layout.bottommost;
+      ({...model, activeGroupId: newActiveGroupId}, Focus(Center));
 
     | Some(Left)
     | None => (model, Nothing)
@@ -147,11 +164,12 @@ let update = (~focus, model, msg) => {
   | Command(MoveDown) =>
     switch (focus) {
     | Some(Center) =>
-      let newActiveGroup = model |> activeTree |> moveDown(model.activeGroup);
-      if (newActiveGroup == model.activeGroup) {
+      let newActiveGroupId =
+        model |> activeTree |> moveDown(model.activeGroupId);
+      if (newActiveGroupId == model.activeGroupId) {
         (model, Focus(Bottom));
       } else {
-        ({...model, activeGroup: newActiveGroup}, Nothing);
+        ({...model, activeGroupId: newActiveGroupId}, Nothing);
       };
 
     | Some(Left) => (model, Focus(Bottom))
@@ -493,7 +511,7 @@ module View = {
               <EditorGroupView
                 provider
                 uiFont
-                isActive={group.id == model.activeGroup}
+                isActive={group.id == model.activeGroupId}
                 theme
                 model=group
                 dispatch
@@ -538,6 +556,14 @@ module Commands = {
       ~title="Split Editor Horizontally",
       "view.splitHorizontal",
       Command(SplitHorizontal),
+    );
+
+  let closeActiveEditor =
+    define(
+      ~category="View",
+      ~title="Close Editor",
+      "view.closeEditor",
+      Command(CloseActiveEditor),
     );
 
   let rotateForward =
@@ -728,6 +754,7 @@ module Contributions = {
     Commands.[
       splitVertical,
       splitHorizontal,
+      closeActiveEditor,
       rotateForward,
       rotateBackward,
       moveLeft,

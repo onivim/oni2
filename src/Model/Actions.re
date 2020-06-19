@@ -115,7 +115,6 @@ type t =
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | Formatting(Feature_Formatting.msg)
-  | ViewCloseEditor(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
       severity: [@opaque] Exthost.Msg.MessageService.severity,

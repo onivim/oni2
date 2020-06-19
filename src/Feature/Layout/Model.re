@@ -1,3 +1,5 @@
+open Oni_Core;
+open Utility;
 open Feature_Editor;
 
 module Group: {
@@ -15,6 +17,7 @@ module Group: {
 
   let select: (int, t) => t;
   let openEditor: (Editor.t, t) => t;
+  let removeEditor: (int, t) => option(t);
 
   let map: (Editor.t => Editor.t, t) => t;
 } = {
@@ -60,6 +63,27 @@ module Group: {
     };
   };
 
+  let removeEditor = (editorId, group) => {
+    switch (List.filter(e => Editor.getId(e) != editorId, group.items)) {
+    | [] => None
+    | items =>
+      let selected =
+        if (group.selected == editorId) {
+          switch (
+            ListEx.findIndex(e => Editor.getId(e) == editorId, group.items)
+          ) {
+          | Some(0) => List.hd(items) |> Editor.getId
+          | Some(i) => List.nth(items, i - 1) |> Editor.getId
+          | None => group.selected
+          };
+        } else {
+          group.selected;
+        };
+
+      Some({...group, items, selected});
+    };
+  };
+
   let map = (f, group) => {...group, items: List.map(f, group.items)};
 };
 
@@ -76,7 +100,7 @@ type model = {
     | `None
   ],
   groups: list(Group.t),
-  activeGroup: int,
+  activeGroupId: int,
 };
 
 let initial = {
@@ -86,9 +110,17 @@ let initial = {
     tree: Layout.singleton(initialGroup.id),
     uncommittedTree: `None,
     groups: [initialGroup],
-    activeGroup: initialGroup.id,
+    activeGroupId: initialGroup.id,
   };
 };
+
+let activeGroup = model =>
+  List.find(
+    (group: Group.t) => group.id == model.activeGroupId,
+    model.groups,
+  );
+
+let activeEditor = model => model |> activeGroup |> Group.selected;
 
 let activeTree = model =>
   switch (model.uncommittedTree) {
@@ -111,20 +143,14 @@ let insertWindow = (target, direction, focus) =>
 let removeWindow = target => updateTree(Layout.removeWindow(target));
 
 let split = (direction, model) => {
-  let activeGroup =
-    List.find(
-      (group: Group.t) => group.id == model.activeGroup,
-      model.groups,
-    );
-  let activeEditor = Group.selected(activeGroup);
-  let group = Group.create(activeEditor);
+  let group = Group.create(model |> activeEditor);
 
   {
     ...model,
     groups: [group, ...model.groups],
     tree:
       Layout.insertWindow(
-        `After(model.activeGroup),
+        `After(model.activeGroupId),
         direction,
         group.id,
         activeTree(model),
@@ -151,10 +177,71 @@ let openEditor = (editor, model) => {
     groups:
       List.map(
         (group: Group.t) =>
-          group.id == model.activeGroup
+          group.id == model.activeGroupId
             ? Group.openEditor(editor, group) : group,
         model.groups,
       ),
+  };
+};
+
+let removeEditor = (editorId, model) => {
+  let groups =
+    List.filter_map(
+      (group: Group.t) =>
+        group.id == model.activeGroupId
+          ? Group.removeEditor(editorId, group) : Some(group),
+      model.groups,
+    );
+
+  if (groups == []) {
+    None;
+        // Group was removed, no groups left. Abort! Abort!
+  } else if (List.length(groups) != List.length(model.groups)) {
+    // Group was removed, remove from tree and make another active
+
+    let tree = Layout.removeWindow(model.activeGroupId, activeTree(model));
+
+    let activeGroupId =
+      switch (
+        ListEx.findIndex(
+          (g: Group.t) => g.id == model.activeGroupId,
+          model.groups,
+        )
+      ) {
+      | Some(0) => List.hd(groups).id
+      | Some(i) => List.nth(groups, i - 1).id
+      | None => model.activeGroupId
+      };
+
+    Some({...model, tree, groups, activeGroupId});
+  } else {
+    Some({...model, groups});
+  };
+};
+
+let removeActiveEditor = model => {
+  let activeEditorId = model |> activeEditor |> Editor.getId;
+  removeEditor(activeEditorId, model);
+};
+
+let closeBuffer = (~force, buffer, model) => {
+  let activeEditor = activeEditor(model);
+  let activeEditorId = Editor.getId(activeEditor);
+  let bufferMeta = Vim.BufferMetadata.ofBuffer(buffer);
+
+  Console.log((
+    Feature_Editor.Editor.getBufferId(activeEditor),
+    bufferMeta.id,
+    force,
+    bufferMeta.modified,
+  ));
+  if (Feature_Editor.Editor.getBufferId(activeEditor) == bufferMeta.id
+      && (force || !bufferMeta.modified)) {
+    Console.log("--true");
+    removeEditor(activeEditorId, model);
+  } else {
+    Console.log("--false");
+    Some(model);
   };
 };
 

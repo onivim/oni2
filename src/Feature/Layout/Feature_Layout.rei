@@ -25,7 +25,10 @@ let removeWindow: (int, model) => model;
 
 let split: ([ | `Horizontal | `Vertical], model) => model;
 
+let activeEditor: model => Feature_Editor.Editor.t;
+
 let openEditor: (Feature_Editor.Editor.t, model) => model;
+let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
 let map: (Feature_Editor.Editor.t => Feature_Editor.Editor.t, model) => model;
 
@@ -37,6 +40,7 @@ type msg;
 type outmsg =
   | Nothing
   | SplitAdded
+  | RemoveLastBlocked
   | Focus(panel);
 
 let update: (~focus: option(panel), model, msg) => (model, outmsg);
@@ -74,6 +78,10 @@ module View: {
 // COMMANDS
 
 module Commands: {
+  let splitVertical: Command.t(msg);
+  let splitHorizontal: Command.t(msg);
+  let closeActiveEditor: Command.t(msg);
+
   let moveLeft: Command.t(msg);
   let moveRight: Command.t(msg);
   let moveUp: Command.t(msg);
