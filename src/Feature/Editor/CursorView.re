@@ -26,7 +26,7 @@ let%component make =
   let column = Index.toZeroBased(cursorPosition.column);
 
   let ({pixelX, pixelY}: Editor.pixelPosition, characterWidth) =
-    Editor.bufferLineByteToPixel(~line, ~byteIndex=column, editor);
+    Editor.bufferLineCharacterToPixel(~line, ~characterIndex=column, editor);
 
   let originalX = pixelX;
   let originalY = pixelY;
