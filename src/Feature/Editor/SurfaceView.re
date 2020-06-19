@@ -31,10 +31,10 @@ let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
 let renderRulers = (~context, ~colors: Colors.t, rulers) => {
-  ()//  rulers
-    //  |> List.map(bufferPositionToPixel(~context, 0))
-    //  |> List.map(fst)
-    ; // TODO: Bring back
+  ()//  |> List.map(fst)
+    // TODO: Bring back
+    ; //  |> List.map(bufferPositionToPixel(~context, 0))
+ //  rulers
     //  |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
 };
 

@@ -19,15 +19,7 @@ module TextRun = {
     endIndex: Index.t,
   };
 
-  let create =
-      (
-        ~text,
-        ~startByte,
-        ~endByte,
-        ~startIndex,
-        ~endIndex,
-        (),
-      ) => {
+  let create = (~text, ~startByte, ~endByte, ~startIndex, ~endIndex, ()) => {
     text,
     startByte,
     endByte,

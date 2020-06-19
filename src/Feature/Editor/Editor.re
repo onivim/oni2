@@ -49,11 +49,11 @@ let bufferLineByteToPixel =
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
-      let bufferLine = buffer
-      |> EditorBuffer.line(line);
+    let bufferLine = buffer |> EditorBuffer.line(line);
 
-      let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
-      let (cursorOffset, width) = BufferLine.getPositionAndWidth(~index, bufferLine);
+    let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
+    let (cursorOffset, width) =
+      BufferLine.getPositionAndWidth(~index, bufferLine);
 
     let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
 
