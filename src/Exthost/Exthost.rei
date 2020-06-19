@@ -301,7 +301,7 @@ module SignatureHelp: {
   module ParameterInformation: {
     [@deriving show]
     type t = {
-      label: string,
+      label: [ | `String(string) | `Range(int, int)],
       documentation: option(MarkdownString.t),
     };
     let decode: Json.decoder(t);

@@ -31,7 +31,6 @@ type t = int => themedToken;
 let create:
   (
     ~startByte: int,
-    ~endByte: int,
     ~defaultBackgroundColor: Color.t,
     ~defaultForegroundColor: Color.t, // theme.editorForeground
     ~selectionHighlights: option(Range.t),
