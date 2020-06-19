@@ -162,7 +162,7 @@ let start =
       | Format(Range(_)) =>
         dispatch(
           Actions.Formatting(Feature_Formatting.Command(FormatRange)),
-        )
+        ),
     );
 
   let _: unit => unit =

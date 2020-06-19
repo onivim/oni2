@@ -88,17 +88,19 @@ module Effects = {
     };
 
     let provideDocumentRangeFormattingEdits =
-        (~handle, ~uri,~range, ~options, client, toMsg) => {
+        (~handle, ~uri, ~range, ~options, client, toMsg) => {
       Isolinear.Effect.createWithDispatch(
         ~name="language.provideRangeFormattingEdits", dispatch => {
         let promise =
-          Exthost.(Request.LanguageFeatures.provideDocumentRangeFormattingEdits(
-            ~handle,
-            ~resource=uri,
-            ~options,
-            ~range=range |> OneBasedRange.ofRange,
-            client,
-          ));
+          Exthost.(
+            Request.LanguageFeatures.provideDocumentRangeFormattingEdits(
+              ~handle,
+              ~resource=uri,
+              ~options,
+              ~range=range |> OneBasedRange.ofRange,
+              client,
+            )
+          );
 
         Lwt.on_success(
           promise,
