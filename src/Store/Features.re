@@ -1,5 +1,6 @@
 open Isolinear;
 open Oni_Core;
+open Oni_Core.Utility;
 open Oni_Model;
 open Actions;
 
@@ -35,11 +36,16 @@ let update =
   switch (action) {
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let maybeSelection =
+    state
+    |> Oni_Model.Selectors.getActiveEditorGroup
+    |> OptionEx.flatMap(Oni_Model.Selectors.getActiveEditor)
+    |> Option.map(Feature_Editor.Editor.selectionOrCursorRange);
     let (model', eff) =
       Feature_Formatting.update(
         ~configuration=state.configuration,
         ~maybeBuffer,
-        ~maybeSelection=None,
+        ~maybeSelection,
         ~extHostClient,
         state.formatting,
         msg,
