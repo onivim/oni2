@@ -90,7 +90,10 @@ let current:
          let autoIndent =
            maybeLanguageConfig
            |> Option.map(LanguageConfiguration.toAutoIndent)
-           |> Option.value(~default=_ => Vim.AutoIndent.KeepIndent);
+           |> Option.value(
+                ~default=(~previousLine as _, ~beforePreviousLine as _) =>
+                Vim.AutoIndent.KeepIndent
+              );
 
          let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
          let autoClosingPairs =
