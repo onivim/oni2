@@ -122,8 +122,6 @@ type scrollbarMetrics = {
 let getVimCursors = ({cursors, _}) => cursors;
 let setVimCursors = (~cursors, editor) => {...editor, cursors};
 
-let selection = ({selection, _}) => selection;
-
 let mapCursor = (~position: Vim.Cursor.t, editor) => {
   let byte = position.column |> Index.toZeroBased;
   let line = position.line |> Index.toZeroBased;
