@@ -19,5 +19,6 @@ Libvim_Test.TestFramework.cli();
 Exthost_Transport_Test.TestFramework.cli();
 Exthost_Test.TestFramework.cli();
 
+Oniguruma_Test.TestFramework.cli();
 Textmate_Test.TestFramework.cli();
 Oni_Cli_Test.TestFramework.cli();

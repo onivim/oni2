@@ -1,5 +1,5 @@
 {
-  "checksum": "de5db96d99ea34dc34783866df871842",
+  "checksum": "0f53606081efded440624269100a0e6c",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -302,26 +302,6 @@
         "reperf@1.5.0@d41d8cd9", "refmterr@3.3.2@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9", "esy-tree-sitter@1.4.1@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
-        "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
-        "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.6.0@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "reason-oniguruma@6.94.1002@d41d8cd9": {
-      "id": "reason-oniguruma@6.94.1002@d41d8cd9",
-      "name": "reason-oniguruma",
-      "version": "6.94.1002",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/reason-oniguruma/-/reason-oniguruma-6.94.1002.tgz#sha1:0a98cd24a2ff9887ce86af4191a1f7e3cd6b35b9"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "reperf@1.5.0@d41d8cd9", "refmterr@3.3.2@d41d8cd9",
-        "ocaml@4.9.1000@d41d8cd9",
-        "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.6.0@d41d8cd9"
       ],
@@ -1095,12 +1075,13 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-oniguruma@6.94.1002@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9", "libvim@8.10869.47@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
-        "esy-sdl2@2.0.10008@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
+        "esy-sdl2@2.0.10008@d41d8cd9",
+        "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
+        "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-input@github:onivim/editor-input#c494950@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "axios@0.19.2@d41d8cd9",
