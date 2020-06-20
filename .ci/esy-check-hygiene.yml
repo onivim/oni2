@@ -3,11 +3,15 @@
 steps:
   - task: NodeTool@0
     inputs:
-      versionSpec: '8.9'
+      versionSpec: "12.17.0"
   - script: npm install -g esy@0.6.4
     displayName: 'npm install -g esy@0.6.4'
   - script: npm install -g yarn
     displayName: 'npm install -g yarn'
+  - script: npm install -g prettier
+    displayName: 'npm install -g prettier'
+  - script: prettier --check **/*.js
+    displayName: 'prettier --check'
   - script: git diff --exit-code
     displayName: 'check that they are no .js.map/.ts files leftover in extensions. If this fails, run ./scripts/clean-extensions.sh and re-submit PR.'
   - script: esy install
