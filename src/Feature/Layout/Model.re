@@ -192,16 +192,20 @@ let insertWindow = (target, direction, focus) =>
 let removeWindow = target => updateTree(Layout.removeWindow(target));
 
 let split = (direction, model) => {
-  let group = Group.create([activeEditor(model)]);
+  let activeEditor = activeEditor(model);
+  let newGroup =
+    Group.create([
+      Editor.create(~font=activeEditor.font, ~buffer=activeEditor.buffer, ()),
+    ]);
 
   {
-    groups: [group, ...model.groups],
-    activeGroupId: group.id,
+    groups: [newGroup, ...model.groups],
+    activeGroupId: newGroup.id,
     tree:
       Layout.insertWindow(
         `After(model.activeGroupId),
         direction,
-        group.id,
+        newGroup.id,
         activeTree(model),
       ),
     uncommittedTree: `None,
