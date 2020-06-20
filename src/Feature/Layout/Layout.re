@@ -547,6 +547,18 @@ let%test_module "insertWindow" =
        actual == vsplit([window(1), window(2)]);
      };
 
+     let%test "insert horizontal split" = {
+       let actual = window(1) |> insertWindow(`Before(1), `Horizontal, 2);
+
+       actual == hsplit([window(2), window(1)]);
+     };
+
+     let%test "insert horizontal split - after" = {
+       let actual = window(1) |> insertWindow(`After(1), `Horizontal, 2);
+
+       actual == hsplit([window(1), window(2)]);
+     };
+
      let%test "parent split changes direction if needed" = {
        let actual =
          hsplit([window(2), window(1)])
