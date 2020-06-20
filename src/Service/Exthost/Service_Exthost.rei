@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 // EFFECTS
 module Effects: {
   module Documents: {
@@ -31,6 +32,17 @@ module Effects: {
       (
         ~handle: int,
         ~uri: Oni_Core.Uri.t,
+        ~options: Exthost.FormattingOptions.t,
+        Exthost.Client.t,
+        result(list(Exthost.Edit.SingleEditOperation.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+
+    let provideDocumentRangeFormattingEdits:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~range: Range.t,
         ~options: Exthost.FormattingOptions.t,
         Exthost.Client.t,
         result(list(Exthost.Edit.SingleEditOperation.t), string) => 'msg

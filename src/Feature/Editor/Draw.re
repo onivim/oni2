@@ -1,8 +1,6 @@
 open EditorCoreTypes;
 open Revery.Draw;
 
-open Oni_Core;
-
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 
@@ -10,9 +8,7 @@ type context = {
   canvasContext: CanvasContext.t,
   width: int,
   height: int,
-  scrollX: float,
-  scrollY: float,
-  lineHeight: float,
+  editor: Editor.t,
   fontFamily: Revery.Font.Family.t,
   fontSize: float,
   charWidth: float,
@@ -25,18 +21,14 @@ let createContext =
       ~canvasContext,
       ~width,
       ~height,
-      ~scrollX,
-      ~scrollY,
-      ~lineHeight,
+      ~editor: Editor.t,
       ~editorFont: Service_Font.font,
     ) => {
   {
     canvasContext,
     width,
     height,
-    scrollX,
-    scrollY,
-    lineHeight,
+    editor,
     fontFamily: editorFont.fontFamily,
     fontSize: editorFont.fontSize,
     charWidth: editorFont.measuredWidth,
@@ -45,15 +37,17 @@ let createContext =
   };
 };
 
-let renderImmediate = (~context, ~count, render) =>
+let renderImmediate = (~context, ~count, render) => {
+  let scrollY = Editor.scrollY(context.editor);
   ImmediateList.render(
-    ~scrollY=context.scrollY,
-    ~rowHeight=context.lineHeight,
+    ~scrollY,
+    ~rowHeight=Editor.lineHeightInPixels(context.editor),
     ~height=float(context.height),
     ~count,
-    ~render=(i, offsetY) => render(i, offsetY +. context.scrollY),
+    ~render=(i, offsetY) => render(i, offsetY),
     (),
   );
+};
 
 let drawRect = {
   let paint = Skia.Paint.make();
@@ -62,8 +56,8 @@ let drawRect = {
     Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
 
     CanvasContext.drawRectLtwh(
-      ~left=x -. context.scrollX,
-      ~top=y -. context.scrollY,
+      ~left=x,
+      ~top=y,
       ~width,
       ~height,
       ~paint,
@@ -74,13 +68,7 @@ let drawRect = {
 let rect = drawRect;
 
 let drawText = (~context, ~x, ~y, ~paint, text) =>
-  CanvasContext.drawText(
-    ~x=x -. context.scrollX,
-    ~y=y -. context.scrollY,
-    ~paint,
-    ~text,
-    context.canvasContext,
-  );
+  CanvasContext.drawText(~x, ~y, ~paint, ~text, context.canvasContext);
 let text = drawText;
 
 let drawShapedText = {
@@ -133,92 +121,71 @@ let drawUtf8Text = {
 };
 let utf8Text = drawUtf8Text;
 
-let underline =
-    (
-      ~context,
-      ~buffer,
-      ~leftVisibleColumn,
-      ~color=Revery.Colors.black,
-      r: Range.t,
-    ) => {
+let underline = (~context, ~color=Revery.Colors.black, r: Range.t) => {
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
+  let endLine = Index.toZeroBased(r.stop.line);
   let endC = Index.toZeroBased(r.stop.column);
 
-  let text = Buffer.getLine(line, buffer);
-  let (startOffset, _) =
-    BufferViewTokenizer.getCharacterPositionAndWidth(
-      ~viewOffset=leftVisibleColumn,
-      text,
-      start,
+  let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line,
+      ~characterIndex=start,
+      context.editor,
     );
-  let (endOffset, _) =
-    BufferViewTokenizer.getCharacterPositionAndWidth(
-      ~viewOffset=leftVisibleColumn,
-      text,
-      endC,
+
+  let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line=endLine,
+      ~characterIndex=endC,
+      context.editor,
     );
 
   drawRect(
     ~context,
-    ~x=float(startOffset) *. context.charWidth,
-    ~y=
-      context.charHeight
-      *. float(Index.toZeroBased(r.start.line))
-      +. (context.charHeight -. 2.),
+    ~x=startPixelX,
+    ~y=startPixelY +. Editor.lineHeightInPixels(context.editor),
     ~height=1.,
-    ~width=max(float(endOffset - startOffset), 1.0) *. context.charWidth,
+    ~width=max(stopPixelX -. startPixelX, 1.0),
     ~color,
   );
 };
 
-let range =
-    (
-      ~context,
-      ~padding=0.,
-      ~buffer,
-      ~leftVisibleColumn,
-      ~color=Revery.Colors.black,
-      r: Range.t,
-    ) => {
+let range = (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
   let doublePadding = padding *. 2.;
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
   let endC = Index.toZeroBased(r.stop.column);
+  let endLine = Index.toZeroBased(r.stop.line);
 
-  let lines = Buffer.getNumberOfLines(buffer);
-  if (line < lines) {
-    let text = Buffer.getLine(line, buffer);
-    let (startOffset, _) =
-      BufferViewTokenizer.getCharacterPositionAndWidth(
-        ~viewOffset=leftVisibleColumn,
-        text,
-        start,
-      );
-    let (endOffset, _) =
-      BufferViewTokenizer.getCharacterPositionAndWidth(
-        ~viewOffset=leftVisibleColumn,
-        text,
-        endC,
-      );
-    let length = max(float(endOffset - startOffset), 1.0);
-
-    drawRect(
-      ~context,
-      ~x=float(startOffset) *. context.charWidth -. padding,
-      ~y=
-        context.charHeight
-        *. float(Index.toZeroBased(r.start.line))
-        -. padding,
-      ~height=context.charHeight +. doublePadding,
-      ~width=length *. context.charWidth +. doublePadding,
-      ~color,
+  let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line,
+      ~characterIndex=start,
+      context.editor,
     );
-  };
+
+  let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line=endLine,
+      ~characterIndex=endC,
+      context.editor,
+    );
+
+  let lineHeight = Editor.lineHeightInPixels(context.editor);
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
+
+  drawRect(
+    ~context,
+    ~x=startPixelX,
+    ~y=startPixelY,
+    ~height=lineHeight +. doublePadding,
+    ~width=max(stopPixelX -. startPixelX, characterWidth),
+    ~color,
+  );
 };
 
-let token =
-    (~context, ~offsetY, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
+let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
@@ -227,8 +194,16 @@ let token =
       context.fontFamily,
     );
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
-  let x = context.charWidth *. float(Index.toZeroBased(token.startPosition));
-  let y = offsetY -. fontMetrics.ascent;
+
+  let ({pixelY, pixelX}: Editor.pixelPosition, _) =
+    Editor.bufferLineCharacterToPixel(
+      ~line,
+      ~characterIndex=token.startIndex |> Index.toZeroBased,
+      context.editor,
+    );
+
+  let y = pixelY -. fontMetrics.ascent;
+  let x = pixelX;
 
   switch (token.tokenType) {
   | Text =>
@@ -245,8 +220,8 @@ let token =
 
   | Tab =>
     CanvasContext.Deprecated.drawString(
-      ~x=x +. context.charWidth /. 4. -. context.scrollX,
-      ~y=y -. context.scrollY,
+      ~x=x +. context.charWidth /. 4.,
+      ~y,
       ~color=colors.whitespaceForeground,
       ~fontFamily=
         Revery.Font.Family.toPath(
@@ -284,21 +259,25 @@ let ruler = (~context, ~color, x) =>
   drawRect(
     ~context,
     ~x,
-    ~y=context.scrollY,
+    ~y=0.,
     ~height=float(context.height),
     ~width=1.,
     ~color,
   );
 
-let lineHighlight = (~context, ~color, line) =>
+let lineHighlight = (~context, ~color, line) => {
+  let ({pixelY, _}: Editor.pixelPosition, _) =
+    Editor.bufferLineByteToPixel(~line, ~byteIndex=0, context.editor);
+
   drawRect(
     ~context,
     ~x=0.,
-    ~y=context.lineHeight *. float(Index.toZeroBased(line)),
-    ~height=context.lineHeight,
+    ~y=pixelY,
+    ~height=Editor.lineHeightInPixels(context.editor),
     ~width=float(context.width),
     ~color,
   );
+};
 
 module Gradient = {
   let paint = Skia.Paint.make();

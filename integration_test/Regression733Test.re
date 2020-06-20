@@ -35,7 +35,8 @@ runTestWithInput(
 
   switch (activeEditorRef^) {
   | None => failwith("We should've had an editor now")
-  | Some(editor) => dispatch(ViewCloseEditor(editor.editorId))
+  | Some(editor) =>
+    dispatch(ViewCloseEditor(Feature_Editor.Editor.getId(editor)))
   };
 
   wait(~name="Verify there are no editors open...", (state: State.t) => {
