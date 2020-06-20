@@ -74,12 +74,11 @@ let getLineHeight: t => float;
 // These methods convert a buffer (line, byte) or (line, utf8 character index)
 // to a pixel position on-screen - accounting for word wrap, folding, scrolling, etc.
 
-// They return both the pixel position, as well as the character width of the targetcharacter.
+// They return both the pixel position, as well as the character width of the target character.
 let bufferLineByteToPixel:
   (~line: int, ~byteIndex: int, t) => (pixelPosition, float);
 let bufferLineCharacterToPixel:
   (~line: int, ~characterIndex: int, t) => (pixelPosition, float);
-
 
 // PROJECTION
 
