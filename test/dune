@@ -19,6 +19,7 @@
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
+        Oniguruma_Test
         Textmate_Test
         reason-native-crash-utils.asan
             ))
@@ -126,6 +127,7 @@
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
+        Oniguruma_Test
         Textmate_Test
         reason-native-crash-utils.asan
             ))
