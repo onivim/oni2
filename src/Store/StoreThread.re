@@ -151,7 +151,7 @@ let start =
 
   let fileExplorerUpdater = FileExplorerStore.start();
 
-  let lifecycleUpdater = LifecycleStoreConnector.start(quit);
+  let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raise);
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
@@ -368,6 +368,8 @@ let start =
       ),
     window,
   );
+
+  let signalHandle = Luv.Signal.init() |> Result.get_ok;
 
   registerCommands(~dispatch, Model.GlobalCommands.registrations());
   registerCommands(
