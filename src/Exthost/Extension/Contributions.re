@@ -96,8 +96,12 @@ module Configuration = {
       | Boolean => `Bool(false)
       | Unknown(_) => `Null;
 
-    let decode =
-      Json.Decode.(
+    module Decode = {
+      open Json.Decode;
+
+      let list = list(string) |> map(_ => Unknown("list"));
+
+      let single =
         string
         |> map(String.lowercase_ascii)
         |> and_then(
@@ -110,8 +114,12 @@ module Configuration = {
                  Log.warnf(m => m("Unknown configuration type: %s", unknown));
                  succeed(Unknown(unknown));
                },
-           )
-      );
+           );
+
+      let decode = one_of([("single", single), ("list", list)]);
+    };
+
+    let decode = Decode.decode;
   };
 
   [@deriving show]
@@ -137,18 +145,21 @@ module Configuration = {
     };
 
     let property = name =>
-      obj(({field, _}) =>
+      obj(({field, _}) => {
+        let propertyType =
+          field.withDefault(
+            "type",
+            PropertyType.Boolean,
+            PropertyType.decode,
+          );
+
+        let default = PropertyType.default(propertyType);
         {
           name,
-          default: field.withDefault("default", Json.Encode.null, value),
-          propertyType:
-            field.withDefault(
-              "type",
-              PropertyType.Boolean,
-              PropertyType.decode,
-            ),
-        }
-      )
+          default: field.withDefault("default", default, value),
+          propertyType,
+        };
+      })
       |> map(setDefaultIfNecessary);
 
     let properties = key_value_pairs_seq(property);
@@ -217,6 +228,27 @@ module Configuration = {
                 default: `List([]),
               });
          };
+
+         let%test "property: list of types, default already set" =
+           {
+             {|
+        {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "markdownDescription": "%typescript.tsdk.desc%",
+          "scope": "window"
+        }
+             |};
+           }
+           |> ofString(property("multiprop"))
+           |> expectEquals({
+                name: "multiprop",
+                propertyType: Unknown("list"),
+                default: `Null,
+              });
        });
   };
 
