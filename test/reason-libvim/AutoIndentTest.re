@@ -117,4 +117,51 @@ describe("AutoIndent", ({test, _}) => {
       Some("This is the second line of a test file"),
     );
   });
+    
+  test(
+    "open before line",
+    ({expect, _}) => {
+    let _ = resetBuffer();
+
+    let prevRef = ref("");
+    let beforePrevRef = ref(Some(""));
+
+    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
+      prevRef := previousLine;
+      beforePrevRef := beforePreviousLine;
+      AutoIndent.KeepIndent;
+    };
+
+    let input = input(~insertSpaces=true, ~autoIndent);
+    // Go to last line
+    input("j");
+    input("O");
+
+    expect.equal(prevRef^, "This is the first line of a test file");
+    expect.equal(
+      beforePrevRef^,
+      None,
+    );
+  });
+  test(
+    "auto-indent should not be called for first line",
+    ({expect, _}) => {
+    let _ = resetBuffer();
+
+    let prevRef = ref("");
+    let beforePrevRef = ref(Some(""));
+    let autoIndent = (~previousLine, ~beforePreviousLine) => {
+      prevRef := previousLine;
+      beforePrevRef := beforePreviousLine;
+      AutoIndent.KeepIndent;
+    };
+
+    let input = input(~insertSpaces=true, ~autoIndent);
+    // Open the very first line - auto-indent should not be called in this case
+    input("gg");
+    input("O");
+
+    expect.equal(prevRef^, "");
+    expect.equal(beforePrevRef^, None);
+  });
 });
