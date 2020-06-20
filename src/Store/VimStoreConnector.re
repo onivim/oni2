@@ -977,7 +977,9 @@ let start =
         state
         |> Selectors.getActiveEditorGroup
         |> Selectors.getActiveEditor
-        |> Option.map((editor: Feature_Editor.Editor.t) => editor.editorId);
+        |> Option.map((editor: Feature_Editor.Editor.t) =>
+             Editor.getId(editor)
+           );
 
       let (state, effect) =
         OptionEx.map3(
