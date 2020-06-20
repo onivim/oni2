@@ -150,9 +150,6 @@ module Configuration = {
         }
       )
       |> map(setDefaultIfNecessary);
-    //      field_opt("default", value)
-    //      |> default(Json.Encode.null)
-    //      |> map(default => {name, default, propertyType: Unknown("")});
 
     let properties = key_value_pairs_seq(property);
 
