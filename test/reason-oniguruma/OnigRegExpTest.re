@@ -31,11 +31,10 @@ describe("OnigRegExp", ({describe, _}) => {
   });
   describe("fast", ({test, _}) => {
     test("test", ({expect, _}) => {
-          let regex =  OnigRegExp.create("abc")
-          |> Result.get_ok;
-        expect.equal(OnigRegExp.Fast.test("abc", regex), true);
-        expect.equal(OnigRegExp.Fast.test("def", regex), false);
-    })
+      let regex = OnigRegExp.create("abc") |> Result.get_ok;
+      expect.equal(OnigRegExp.Fast.test("abc", regex), true);
+      expect.equal(OnigRegExp.Fast.test("def", regex), false);
+    });
     test("capture group test - multiple runs", ({expect, _}) => {
       let r = OnigRegExp.create("(@selector\\()(.*?)(\\))");
       switch (r) {
@@ -45,8 +44,7 @@ describe("OnigRegExp", ({describe, _}) => {
         let idx = ref(0);
         while (idx^ < 5) {
           let str = "@selector(windowWillClose:)";
-          let _: int =
-            OnigRegExp.Fast.search(str, 0, regex);
+          let _: int = OnigRegExp.Fast.search(str, 0, regex);
 
           let result = OnigRegExp.Fast.getLastMatches(str, regex);
           expect.string(Match.getText(result[1])).toEqual("@selector(");
@@ -62,7 +60,9 @@ describe("OnigRegExp", ({describe, _}) => {
 
         for (i in 0 to count - 1) {
           let r =
-            OnigRegExp.create("abcdefghijklmnopqrstuvwxyz" ++ string_of_int(i))
+            OnigRegExp.create(
+              "abcdefghijklmnopqrstuvwxyz" ++ string_of_int(i),
+            )
             |> Result.get_ok;
           array[i] = Some(r);
         };
@@ -78,10 +78,11 @@ describe("OnigRegExp", ({describe, _}) => {
             true,
           );
 
-          let matches = OnigRegExp.Fast.getLastMatches(
+          let matches =
+            OnigRegExp.Fast.getLastMatches(
               "abcdefghijklmnopqrstuvwxyz" ++ string_of_int(i),
               regexp,
-          );
+            );
           expect.equal(Array.length(matches), 1);
         };
       })
