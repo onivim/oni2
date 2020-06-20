@@ -39,7 +39,13 @@ let toUiTabs =
         Model.BufferRenderers.getById(Editor.getBufferId(editor), renderers);
 
       Some(
-        Tabs.{editorId: editor.editorId, filePath, title, modified, renderer},
+        Tabs.{
+          editorId: Editor.getId(editor),
+          filePath,
+          title,
+          modified,
+          renderer,
+        },
       );
     };
   };
@@ -58,6 +64,7 @@ module Parts = {
           ~backgroundColor=?,
           ~foregroundColor=?,
           ~showDiffMarkers=true,
+          ~renderOverlays,
           ~dispatch,
           (),
         ) => {
@@ -68,10 +75,14 @@ module Parts = {
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
         dispatch(EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}));
       let onCursorChange = cursor =>
-        dispatch(EditorCursorMove(editor.editorId, [cursor]));
+        Feature_Editor.(
+          dispatch(EditorCursorMove(Editor.getId(editor), [cursor]))
+        );
 
       let editorDispatch = editorMsg =>
-        dispatch(Editor({editorId: editor.editorId, msg: editorMsg}));
+        Feature_Editor.(
+          dispatch(Editor({editorId: Editor.getId(editor), msg: editorMsg}))
+        );
 
       <EditorSurface
         dispatch=editorDispatch
@@ -84,7 +95,7 @@ module Parts = {
         onCursorChange
         onEditorSizeChanged
         theme
-        mode={state.vimMode}
+        mode={Feature_Vim.mode(state.vim)}
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
@@ -93,6 +104,7 @@ module Parts = {
         definition={state.definition}
         windowIsFocused={state.windowIsFocused}
         config={Feature_Configuration.resolver(state.config)}
+        renderOverlays
       />;
     };
   };
@@ -117,6 +129,39 @@ module Parts = {
 
       let changelogDispatch = msg => dispatch(Changelog(msg));
 
+      let buffer =
+        Selectors.getBufferForEditor(state, editor)
+        |> Option.value(~default=Buffer.initial);
+      let renderOverlays = (~gutterWidth) =>
+        [
+          <Feature_Hover.View
+            colorTheme=theme
+            tokenTheme={state.tokenTheme}
+            model={state.hover}
+            uiFont={state.uiFont}
+            editorFont={state.editorFont}
+            languageInfo={state.languageInfo}
+            grammars={state.grammarRepository}
+            diagnostics={state.diagnostics}
+            editor
+            buffer
+            gutterWidth
+          />,
+          <Feature_SignatureHelp.View
+            colorTheme=theme
+            tokenTheme={state.tokenTheme}
+            model={state.signatureHelp}
+            uiFont={state.uiFont}
+            editorFont={state.editorFont}
+            languageInfo={state.languageInfo}
+            grammars={state.grammarRepository}
+            editor
+            gutterWidth
+            dispatch={msg => dispatch(SignatureHelp(msg))}
+          />,
+        ]
+        |> React.listToElement;
+
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
         let backgroundColor = Feature_Terminal.defaultBackground(theme);
@@ -131,6 +176,7 @@ module Parts = {
           foregroundColor
           showDiffMarkers=false
           dispatch
+          renderOverlays
         />;
 
       | Terminal({id, _}) =>
@@ -141,7 +187,8 @@ module Parts = {
            })
         |> Option.value(~default=React.empty)
 
-      | Editor => <Editor editor state theme isActive dispatch />
+      | Editor =>
+        <Editor editor state theme isActive dispatch renderOverlays />
 
       | Welcome => <WelcomeView theme uiFont editorFont />
 
@@ -180,7 +227,9 @@ module Styles = {
 
 let make =
     (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ~dispatch, ()) => {
-  let State.{vimMode: mode, uiFont, editorFont, _} = state;
+  let State.{vim, uiFont, editorFont, _} = state;
+
+  let mode = Feature_Vim.mode(vim);
 
   let isActive = EditorGroups.isActive(state.editorGroups, editorGroup);
 

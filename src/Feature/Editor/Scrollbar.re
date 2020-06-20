@@ -303,7 +303,7 @@ module Vertical = {
       };
     };
 
-    getSelectionElements(editor.selection) |> React.listToElement;
+    getSelectionElements(Editor.selection(editor)) |> React.listToElement;
   };
 
   let make =
@@ -420,12 +420,17 @@ module Horizontal = {
     let thumbColor =
       colors.scrollbarSliderBackground |> Revery.Color.multiplyAlpha(0.9);
 
-    let scrollbarPixelToEditorPixel = pixelPosition => {
+    let scrollbarPixelToEditorPixel = (pixelPosition: float) => {
+      let pixelWidth = totalWidth - scrollMetrics.thumbSize;
+      let normalizedPixelPosition =
+        pixelPosition < float(pixelWidth)
+          ? pixelPosition : float(pixelWidth);
+
       let (editorPixelX, _editorPixelY) =
         Editor.unprojectToPixel(
-          ~pixelX=pixelPosition,
+          ~pixelX=normalizedPixelPosition,
           ~pixelY=0.,
-          ~pixelWidth=totalWidth - scrollMetrics.thumbSize,
+          ~pixelWidth=totalWidth,
           ~pixelHeight=1,
           editor,
         );

@@ -442,6 +442,35 @@ let start = maybeKeyBindingsFilePath => {
         command: Feature_Layout.Commands.resetSizes.id,
         condition: windowCommandCondition,
       },
+      // TODO: Fails to parse
+      // {
+      //   key: "<C-W>_",
+      //   command: Feature_Layout.Commands.maximizeVertical.id,
+      //   condition: windowCommandCondition,
+      // },
+      // TODO: Fails to parse
+      // {
+      //   key: "<C-W>|",
+      //   command: Feature_Layout.Commands.maximizeHorizontal.id,
+      //   condition: windowCommandCondition,
+      // },
+      {
+        key: "<C-W>o",
+        command: Feature_Layout.Commands.toggleMaximize.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<A-DOWN>",
+        command: Feature_SignatureHelp.Commands.incrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+      },
+      {
+        key: "<A-UP>",
+        command: Feature_SignatureHelp.Commands.decrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+      },
     ];
 
   let getKeybindingsFile = () => {

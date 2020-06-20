@@ -71,12 +71,16 @@ let getOrCreateEditorForBuffer = (~font, ~buffer, state) => {
     let newEditor = Editor.create(~font, ~buffer, ());
     let newState = {
       ...state,
-      editors: IntMap.add(newEditor.editorId, newEditor, state.editors),
+      editors: IntMap.add(Editor.getId(newEditor), newEditor, state.editors),
       bufferIdToEditorId:
-        IntMap.add(bufferId, newEditor.editorId, state.bufferIdToEditorId),
-      reverseTabOrder: [newEditor.editorId, ...state.reverseTabOrder],
+        IntMap.add(
+          bufferId,
+          Editor.getId(newEditor),
+          state.bufferIdToEditorId,
+        ),
+      reverseTabOrder: [Editor.getId(newEditor), ...state.reverseTabOrder],
     };
-    (newState, newEditor.editorId);
+    (newState, Editor.getId(newEditor));
   };
 };
 

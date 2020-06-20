@@ -30,7 +30,7 @@ let editorSurfaceMinimalState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
@@ -54,7 +54,7 @@ let editorSurfaceThousandLineState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
@@ -78,7 +78,7 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(
@@ -106,7 +106,7 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(
@@ -134,7 +134,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}

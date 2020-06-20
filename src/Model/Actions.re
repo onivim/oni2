@@ -45,6 +45,7 @@ type t =
       update: [@opaque] BufferUpdate.t,
       oldBuffer: [@opaque] Buffer.t,
       newBuffer: [@opaque] Buffer.t,
+      triggerKey: option(string),
     })
   | BufferLineEndingsChanged({
       id: int,
@@ -55,6 +56,8 @@ type t =
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
+  | Hover(Feature_Hover.msg)
+  | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
@@ -77,6 +80,7 @@ type t =
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extension(Extensions.action)
+  | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
@@ -88,7 +92,6 @@ type t =
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | HoverShow
-  | ModeChanged([@opaque] Vim.Mode.t)
   | ContextMenuOverlayClicked
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
@@ -113,6 +116,7 @@ type t =
   | EditorScrollToLine(Feature_Editor.EditorId.t, int)
   | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | EditorTabClicked(int)
+  | Formatting(Feature_Formatting.msg)
   | ViewCloseEditor(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
@@ -157,6 +161,7 @@ type t =
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
+  | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
   | ThemeChanged(string)
@@ -189,10 +194,7 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
-  | WindowCloseClicked
-  | WindowMinimizeClicked
-  | WindowMaximizeClicked
-  | WindowRestoreClicked
+  | TitleBar(Feature_TitleBar.msg)
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
   | WriteFailure
@@ -204,7 +206,6 @@ type t =
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
-  | TitleDoubleClicked
   | GotOriginalUri({
       bufferId: int,
       uri: Uri.t,
@@ -227,6 +228,7 @@ type t =
       uri: Uri.t,
       decorations: list(Decoration.t),
     })
+  | Vim(Feature_Vim.msg)
   | Noop
 and command = {
   commandCategory: option(string),

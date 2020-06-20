@@ -1,6 +1,19 @@
 type buffer = Types.buffer;
 type lineEnding = Types.lineEnding;
 
+type formatType =
+  | Indentation
+  | Formatting;
+
+type formatRequest = {
+  startLine: int,
+  endLine: int,
+  bufferId: int,
+  returnCursor: int,
+  formatType,
+  lineCount: int,
+};
+
 external vimInit: unit => unit = "libvim_vimInit";
 external vimInput: string => unit = "libvim_vimInput";
 external vimCommand: string => unit = "libvim_vimCommand";
@@ -68,6 +81,7 @@ external vimSearchGetHighlights: (int, int) => array((int, int, int, int)) =
 
 external vimUndoSaveCursor: unit => unit = "libvim_vimUndoSaveCursor";
 external vimUndoSaveRegion: (int, int) => unit = "libvim_vimUndoSaveRegion";
+external vimUndoSync: int => unit = "libvim_vimUndoSync";
 
 external vimVisualGetRange: unit => (int, int, int, int) =
   "libvim_vimVisualGetRange";

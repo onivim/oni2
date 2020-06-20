@@ -4,6 +4,7 @@ type lineEnding = Types.lineEnding;
 
 module AutoClosingPairs = AutoClosingPairs;
 module AutoCommands = AutoCommands;
+module AutoIndent = AutoIndent;
 module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
@@ -11,8 +12,10 @@ module Clipboard = Clipboard;
 module CommandLine = CommandLine;
 module Context = Context;
 module Cursor = Cursor;
+module Edit = Edit;
 module Effect = Effect;
 module Event = Event;
+module Format = Format;
 module Goto = Goto;
 module Mode = Mode;
 module Options = Options;
@@ -24,16 +27,69 @@ module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
 
-type fn = unit => unit;
+module GlobalState = {
+  let autoIndent: ref(option(string => AutoIndent.action)) = ref(None);
+  let queuedFunctions: ref(list(unit => unit)) = ref([]);
+};
 
-let queuedFunctions: ref(list(fn)) = ref([]);
+module Internal = {
+  let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
+    ({bufferId, startLine, endLine, returnCursor, formatType, lineCount}) => {
+      let adjustCursor = returnCursor == 0 ? false : true;
+      let formatType =
+        switch (formatType) {
+        | Native.Indentation => Format.Indentation
+        | Native.Formatting => Format.Formatting
+        };
 
-let queue = f => queuedFunctions := [f, ...queuedFunctions^];
+      if (startLine <= 1 && endLine >= lineCount) {
+        Format.Buffer({formatType, bufferId, adjustCursor});
+      } else {
+        Format.Range({
+          formatType,
+          bufferId,
+          adjustCursor,
+          startLine: Index.fromOneBased(startLine),
+          endLine: Index.fromOneBased(endLine),
+        });
+      };
+    };
+
+  let getDefaultCursors = (cursors: list(Cursor.t)) =>
+    if (cursors == []) {
+      [Cursor.get()];
+    } else {
+      cursors;
+    };
+
+  let getPrecedingWhitespace = (~max: int, str) => {
+    let len = String.length(str);
+
+    let rec loop = idx =>
+      if (idx >= max || idx >= len) {
+        idx;
+      } else {
+        let c = str.[idx];
+        if (c == ' ' || c == '\t') {
+          loop(idx + 1);
+        } else {
+          idx;
+        };
+      };
+
+    let lastWhitespaceIndex = loop(0);
+
+    String.sub(str, 0, lastWhitespaceIndex);
+  };
+};
+
+let queue = f =>
+  GlobalState.queuedFunctions := [f, ...GlobalState.queuedFunctions^];
 
 let flushQueue = () => {
-  queuedFunctions^ |> List.rev |> List.iter(f => f());
+  GlobalState.queuedFunctions^ |> List.rev |> List.iter(f => f());
 
-  queuedFunctions := [];
+  GlobalState.queuedFunctions := [];
 };
 
 let runWith = (~context: Context.t, f) => {
@@ -74,7 +130,11 @@ let runWith = (~context: Context.t, f) => {
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
+  GlobalState.autoIndent := Some(context.autoIndent);
+
   let cursors = f();
+
+  GlobalState.autoIndent := None;
 
   let newBuf = Buffer.getCurrent();
   let newLocation = Cursor.getLocation();
@@ -247,7 +307,29 @@ let _clipboardGet = (regname: int) => {
   };
 };
 
-let _onGoto = (_line: int, _column: int, gotoType: Goto.t) => {
+let _onFormat = formatRequest => {
+  queue(() =>
+    Event.dispatch(
+      Effect.Format(formatRequest |> Internal.nativeFormatRequestToEffect),
+      Listeners.effect,
+    )
+  );
+};
+
+let _onAutoIndent = (prevLine: string) => {
+  let indentAction =
+    GlobalState.autoIndent^
+    |> Option.map(fn => fn(prevLine))
+    |> Option.value(~default=AutoIndent.KeepIndent);
+
+  switch (indentAction) {
+  | AutoIndent.IncreaseIndent => 1
+  | AutoIndent.KeepIndent => 0
+  | AutoIndent.DecreaseIndent => (-1)
+  };
+};
+
+let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
 
@@ -263,7 +345,9 @@ let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
+  Callback.register("lv_onAutoIndent", _onAutoIndent);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
+  Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);
@@ -282,13 +366,6 @@ let init = () => {
   Event.dispatch(Mode.getCurrent(), Listeners.modeChanged);
   BufferInternal.checkCurrentBufferForUpdate();
 };
-
-let _getDefaultCursors = (cursors: list(Cursor.t)) =>
-  if (cursors == []) {
-    [Cursor.get()];
-  } else {
-    cursors;
-  };
 
 let input = (~context=Context.current(), v: string) => {
   let {autoClosingPairs, cursors, _}: Context.t = context;
@@ -327,9 +404,17 @@ let input = (~context=Context.current(), v: string) => {
             Native.vimInput("<DEL>");
             Native.vimInput("<BS>");
           } else if (v == "<CR>" && isBetweenClosingPairs()) {
+            let precedingWhitespace =
+              Internal.getPrecedingWhitespace(
+                ~max=location.column |> Index.toOneBased,
+                line,
+              );
             Native.vimInput("<CR>");
             Native.vimInput("<CR>");
             Native.vimInput("<UP>");
+            if (String.length(precedingWhitespace) > 0) {
+              Native.vimInput(precedingWhitespace);
+            };
             Native.vimInput("<TAB>");
           } else if (AutoClosingPairs.isPassThrough(
                        v,
@@ -354,7 +439,7 @@ let input = (~context=Context.current(), v: string) => {
       };
 
       let mode = Mode.getCurrent();
-      let cursors = _getDefaultCursors(cursors);
+      let cursors = Internal.getDefaultCursors(cursors);
       if (mode == Types.Insert) {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
@@ -379,7 +464,7 @@ let input = (~context=Context.current(), v: string) => {
         | _ => ()
         };
         Native.vimInput(v);
-        _getDefaultCursors([]);
+        Internal.getDefaultCursors([]);
       };
     },
   );

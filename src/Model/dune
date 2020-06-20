@@ -24,6 +24,7 @@
         Oni2.components
         Oni2.feature.configuration
         Oni2.feature.contextMenu
+        Oni2.feature.formatting
         Oni2.feature.theme
         Oni2.feature.notification
         Oni2.feature.changelog
@@ -36,8 +37,12 @@
         Oni2.feature.sneak
         Oni2.feature.statusbar
         Oni2.feature.terminal
+        Oni2.feature.titlebar
         Oni2.feature.modals
         Oni2.feature.layout
+        Oni2.feature.hover
+        Oni2.feature.vim
+        Oni2.feature.signature_help
         ReasonFuzz
         textmate
         editor-core-types

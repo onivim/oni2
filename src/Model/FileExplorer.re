@@ -14,6 +14,7 @@ type t = {
 
 [@deriving show({with_path: false})]
 type action =
+  | ActiveFilePathChanged(option(string))
   | TreeLoaded(FsTreeNode.t)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)

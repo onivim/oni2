@@ -278,6 +278,32 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       withClient(onRegisterReferencesProvider(handle, selector));
       Lwt.return(Reply.okEmpty);
     | LanguageFeatures(
+        RegisterRangeFormattingSupport({handle, selector, displayName, _}),
+      ) =>
+      dispatch(
+        Formatting(
+          Feature_Formatting.RangeFormatterAvailable({
+            handle,
+            selector,
+            displayName,
+          }),
+        ),
+      );
+      Lwt.return(Reply.okEmpty);
+    | LanguageFeatures(
+        RegisterDocumentFormattingSupport({handle, selector, displayName, _}),
+      ) =>
+      dispatch(
+        Formatting(
+          Feature_Formatting.DocumentFormatterAvailable({
+            handle,
+            selector,
+            displayName,
+          }),
+        ),
+      );
+      Lwt.return(Reply.okEmpty);
+    | LanguageFeatures(
         RegisterSuggestSupport({
           handle,
           selector,
@@ -286,6 +312,25 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         }),
       ) =>
       withClient(onRegisterSuggestProvider(handle, selector));
+      Lwt.return(Reply.okEmpty);
+    | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
+      dispatch(
+        Actions.Hover(Feature_Hover.ProviderRegistered({handle, selector})),
+      );
+      Lwt.return(Reply.okEmpty);
+
+    | LanguageFeatures(
+        RegisterSignatureHelpProvider({handle, selector, metadata}),
+      ) =>
+      dispatch(
+        Actions.SignatureHelp(
+          Feature_SignatureHelp.ProviderRegistered({
+            handle,
+            selector,
+            metadata,
+          }),
+        ),
+      );
       Lwt.return(Reply.okEmpty);
 
     | Diagnostics(Clear({owner})) =>

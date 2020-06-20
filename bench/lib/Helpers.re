@@ -24,8 +24,8 @@ let simpleState = {
 };
 
 let defaultFont: Service_Font.font = {
-  fontFile: "FiraCode-Regular.ttf",
-  fontFamily: Revery.Font.Family.fromFile("FiraCode-Regular.ttf"),
+  fontFile: "JetBrainsMono-Regular.ttf",
+  fontFamily: Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf"),
   fontSize: 10.,
   measuredWidth: 10.,
   measuredHeight: 10.,
@@ -55,7 +55,7 @@ let editorGroup =
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
-  Actions.BufferUpdate({update, oldBuffer, newBuffer});
+  Actions.BufferUpdate({update, oldBuffer, newBuffer, triggerKey: None});
 };
 
 let thousandLineBuffer = Buffer.ofLines(thousandLines);

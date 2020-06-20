@@ -55,12 +55,6 @@ let validateToken =
   expect.int(Index.toZeroBased(actualToken.endIndex)).toBe(
     Index.toZeroBased(expectedToken.endIndex),
   );
-  expect.int(Index.toZeroBased(actualToken.startPosition)).toBe(
-    Index.toZeroBased(expectedToken.startPosition),
-  );
-  expect.int(Index.toZeroBased(actualToken.endPosition)).toBe(
-    Index.toZeroBased(expectedToken.endPosition),
-  );
 };
 
 let validateTokens =
@@ -124,8 +118,6 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=3,
           ~startIndex=Index.fromZeroBased(1),
           ~endIndex=Index.fromZeroBased(3),
-          ~startPosition=Index.fromZeroBased(1),
-          ~endPosition=Index.fromZeroBased(3),
           (),
         ),
       ];
@@ -149,8 +141,6 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=5,
           ~startIndex=Index.fromZeroBased(3),
           ~endIndex=Index.fromZeroBased(5),
-          ~startPosition=Index.fromZeroBased(6),
-          ~endPosition=Index.fromZeroBased(8),
           (),
         ),
       ];
@@ -172,8 +162,6 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=1,
           ~startIndex=Index.zero,
           ~endIndex=Index.fromZeroBased(1),
-          ~startPosition=Index.zero,
-          ~endPosition=Index.fromZeroBased(1),
           (),
         ),
         TextRun.create(
@@ -182,8 +170,6 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=2,
           ~startIndex=Index.fromZeroBased(1),
           ~endIndex=Index.fromZeroBased(2),
-          ~startPosition=Index.fromZeroBased(1),
-          ~endPosition=Index.fromZeroBased(3),
           (),
         ),
         TextRun.create(
@@ -192,8 +178,6 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=3,
           ~startIndex=Index.fromZeroBased(2),
           ~endIndex=Index.fromZeroBased(3),
-          ~startPosition=Index.fromZeroBased(3),
-          ~endPosition=Index.fromZeroBased(4),
           (),
         ),
         TextRun.create(
@@ -202,8 +186,6 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=4,
           ~startIndex=Index.fromZeroBased(3),
           ~endIndex=Index.fromZeroBased(4),
-          ~startPosition=Index.fromZeroBased(4),
-          ~endPosition=Index.fromZeroBased(6),
           (),
         ),
       ];
@@ -229,8 +211,6 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=1,
         ~startIndex=Index.zero,
         ~endIndex=Index.fromZeroBased(1),
-        ~startPosition=Index.zero,
-        ~endPosition=Index.fromZeroBased(1),
         (),
       ),
       TextRun.create(
@@ -239,8 +219,6 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=2,
         ~startIndex=Index.fromZeroBased(1),
         ~endIndex=Index.fromZeroBased(2),
-        ~startPosition=Index.fromZeroBased(1),
-        ~endPosition=Index.fromZeroBased(2),
         (),
       ),
       TextRun.create(
@@ -249,8 +227,6 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=3,
         ~startIndex=Index.fromZeroBased(2),
         ~endIndex=Index.fromZeroBased(3),
-        ~startPosition=Index.fromZeroBased(2),
-        ~endPosition=Index.fromZeroBased(3),
         (),
       ),
       TextRun.create(
@@ -259,8 +235,6 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=4,
         ~startIndex=Index.fromZeroBased(3),
         ~endIndex=Index.fromZeroBased(4),
-        ~startPosition=Index.fromZeroBased(3),
-        ~endPosition=Index.fromZeroBased(4),
         (),
       ),
     ];
@@ -283,8 +257,6 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=11,
         ~startIndex=Index.zero,
         ~endIndex=Index.fromZeroBased(5),
-        ~startPosition=Index.zero,
-        ~endPosition=Index.fromZeroBased(5),
         (),
       ),
     ];
@@ -308,8 +280,6 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=2,
         ~startIndex=Index.zero,
         ~endIndex=Index.fromZeroBased(2),
-        ~startPosition=Index.zero,
-        ~endPosition=Index.fromZeroBased(2),
         (),
       ),
       TextRun.create(
@@ -318,8 +288,6 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=6,
         ~startIndex=Index.fromZeroBased(2),
         ~endIndex=Index.fromZeroBased(6),
-        ~startPosition=Index.fromZeroBased(2),
-        ~endPosition=Index.fromZeroBased(6),
         (),
       ),
       TextRun.create(
@@ -328,8 +296,6 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=8,
         ~startIndex=Index.fromZeroBased(6),
         ~endIndex=Index.fromZeroBased(8),
-        ~startPosition=Index.fromZeroBased(6),
-        ~endPosition=Index.fromZeroBased(8),
         (),
       ),
     ];

@@ -287,8 +287,7 @@ let start =
     let maybeActiveEditor =
       Model.EditorGroups.getActiveEditor(state.editorGroups);
     let maybeActiveEditorId =
-      maybeActiveEditor
-      |> Option.map((editor: Feature_Editor.Editor.t) => editor.editorId);
+      Feature_Editor.(maybeActiveEditor |> Option.map(Editor.getId));
 
     let extHostSubscription =
       Feature_Exthost.subscription(
@@ -299,6 +298,12 @@ let start =
       )
       |> Isolinear.Sub.map(() => Model.Actions.Noop);
 
+    let fileExplorerActiveFileSub =
+      Model.Sub.activeFile(
+        ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
+        Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
+      );
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -306,6 +311,7 @@ let start =
       terminalFontSubscription,
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
+      fileExplorerActiveFileSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -377,6 +383,22 @@ let start =
     Feature_Layout.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
   );
+  registerCommands(
+    ~dispatch,
+    Feature_Hover.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
+  );
+  registerCommands(
+    ~dispatch,
+    Feature_SignatureHelp.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
+  );
+
+  registerCommands(
+    ~dispatch,
+    Feature_Formatting.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
+  );
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
@@ -387,6 +409,7 @@ let start =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
+  dispatch(Model.Actions.SetGrammarRepository(grammarRepository));
 
   /* Set icon theme */
 

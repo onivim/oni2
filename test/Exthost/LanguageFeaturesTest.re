@@ -384,13 +384,13 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
            ),
          )
       |> Test.withClientRequest(
-           ~name="Get symbols",
+           ~name="Get hover",
            ~validate=
              (maybeHover: option(Exthost.Hover.t)) => {
                expect.equal(
                  maybeHover,
                  Some({
-                   contents: ["Hover Content"],
+                   contents: [MarkdownString.fromString("Hover Content")],
                    range:
                      Some(
                        OneBasedRange.{
@@ -463,8 +463,22 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                    signatures: [
                      Signature.{
                        label: "signature 1",
+                       documentation:
+                         Some(
+                           MarkdownString.fromString(
+                             "signature 1 documentation",
+                           ),
+                         ),
                        parameters: [
-                         ParameterInformation.{label: "parameter 1"},
+                         ParameterInformation.{
+                           label: `String("gnat"),
+                           documentation:
+                             Some(
+                               MarkdownString.fromString(
+                                 "parameter 1 documentation",
+                               ),
+                             ),
+                         },
                        ],
                      },
                    ],

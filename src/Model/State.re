@@ -29,7 +29,6 @@ type t = {
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: Feature_ContextMenu.model,
-  vimMode: Vim.Mode.t,
   completions: Completions.t,
   config: Feature_Configuration.model,
   configuration: Configuration.t,
@@ -37,6 +36,7 @@ type t = {
   diagnostics: Diagnostics.t,
   definition: Definition.t,
   editorFont: Service_Font.font,
+  formatting: Feature_Formatting.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
@@ -51,6 +51,7 @@ type t = {
   keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
   languageInfo: Ext.LanguageInfo.t,
+  grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   notifications: Feature_Notification.model,
   references: References.t,
@@ -61,6 +62,8 @@ type t = {
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
+  hover: Feature_Hover.model,
+  signatureHelp: Feature_SignatureHelp.model,
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
@@ -73,6 +76,7 @@ type t = {
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
   textContentProviders: list((int, string)),
+  vim: Feature_Vim.model,
 };
 
 let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
@@ -105,11 +109,11 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     decorationProviders: [],
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
-    vimMode: Normal,
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
     extensions: Extensions.empty,
+    formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.default,
@@ -121,6 +125,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     keyBindings: Keybindings.empty,
     keyDisplayer: None,
     languageInfo: Ext.LanguageInfo.initial,
+    grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
     references: References.initial,
     scm: Feature_SCM.initial,
@@ -133,6 +138,8 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
+    hover: Feature_Hover.initial,
+    signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Pane.initial,
     searchPane: Feature_Search.initial,
@@ -140,6 +147,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     modal: None,
     terminals: Feature_Terminal.initial,
     textContentProviders: [],
+    vim: Feature_Vim.initial,
   };
 };
 

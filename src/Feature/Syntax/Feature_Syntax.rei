@@ -8,7 +8,7 @@ let highlight:
     ~grammars: Oni_Syntax.GrammarRepository.t,
     array(string)
   ) =>
-  array(list(ColorizedToken.t));
+  array(list(ThemeToken.t));
 
 [@deriving show({with_path: false})]
 type msg;
@@ -21,13 +21,13 @@ type t;
 
 let empty: t;
 
-let getTokens: (~bufferId: int, ~line: Index.t, t) => list(ColorizedToken.t);
+let getTokens: (~bufferId: int, ~line: Index.t, t) => list(ThemeToken.t);
 
 let getSyntaxScope:
   (~bufferId: int, ~line: Index.t, ~bytePosition: int, t) => SyntaxScope.t;
 
 let setTokensForLine:
-  (~bufferId: int, ~line: int, ~tokens: list(ColorizedToken.t), t) => t;
+  (~bufferId: int, ~line: int, ~tokens: list(ThemeToken.t), t) => t;
 
 let handleUpdate:
   (
