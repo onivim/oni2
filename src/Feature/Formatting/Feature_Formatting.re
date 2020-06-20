@@ -16,38 +16,31 @@ type documentFormatter = {
 type model = {
   nextSessionId: int,
   availableDocumentFormatters: list(documentFormatter),
+  availableRangeFormatters: list(documentFormatter),
   activeSession: option(session),
 };
 
 let initial = {
   nextSessionId: 0,
   availableDocumentFormatters: [],
+  availableRangeFormatters: [],
   activeSession: None,
-};
-
-module Internal = {
-  let clearSession = model => {...model, activeSession: None};
-
-  let startSession = (~sessionId, ~buffer, model) => {
-    ...model,
-    nextSessionId: sessionId + 1,
-    activeSession:
-      Some({
-        sessionId,
-        bufferId: Oni_Core.Buffer.getId(buffer),
-        bufferVersion: Oni_Core.Buffer.getVersion(buffer),
-      }),
-  };
 };
 
 [@deriving show]
 type command =
-  | FormatDocument;
+  | FormatDocument
+  | FormatRange;
 
 [@deriving show]
 type msg =
   | Command(command)
   | DocumentFormatterAvailable({
+      handle: int,
+      selector: Exthost.DocumentSelector.t,
+      displayName: string,
+    })
+  | RangeFormatterAvailable({
       handle: int,
       selector: Exthost.DocumentSelector.t,
       displayName: string,
@@ -75,23 +68,129 @@ type outmsg =
     })
   | FormatError(string);
 
-let textToArray =
-  fun
-  | None => [||]
-  | Some(text) =>
-    text
-    |> Utility.StringEx.removeWindowsNewLines
-    |> Utility.StringEx.removeTrailingNewLine
-    |> Utility.StringEx.splitNewLines;
+module Internal = {
+  let clearSession = model => {...model, activeSession: None};
 
-let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
-  edit => {
-    range: edit.range |> Exthost.OneBasedRange.toRange,
-    text: textToArray(edit.text),
+  let startSession = (~sessionId, ~buffer, model) => {
+    ...model,
+    nextSessionId: sessionId + 1,
+    activeSession:
+      Some({
+        sessionId,
+        bufferId: Oni_Core.Buffer.getId(buffer),
+        bufferVersion: Oni_Core.Buffer.getVersion(buffer),
+      }),
   };
 
-let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
+  let textToArray =
+    fun
+    | None => [||]
+    | Some(text) =>
+      text
+      |> Utility.StringEx.removeWindowsNewLines
+      |> Utility.StringEx.removeTrailingNewLine
+      |> Utility.StringEx.splitNewLines;
+
+  let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
+    edit => {
+      range: edit.range |> Exthost.OneBasedRange.toRange,
+      text: textToArray(edit.text),
+    };
+
+  let runFormat =
+      (
+        ~formatFn,
+        ~model,
+        ~configuration,
+        ~matchingFormatters,
+        ~buf,
+        ~filetype,
+        ~extHostClient,
+      ) => {
+    let sessionId = model.nextSessionId;
+
+    let indentation =
+      Oni_Core.Indentation.getForBuffer(~buffer=buf, configuration);
+
+    let effects =
+      matchingFormatters
+      |> List.map(formatter =>
+           formatFn(
+             ~handle=formatter.handle,
+             ~uri=Oni_Core.Buffer.getUri(buf),
+             ~options=
+               Exthost.FormattingOptions.{
+                 tabSize: indentation.tabSize,
+                 insertSpaces:
+                   indentation.mode == Oni_Core.IndentationSettings.Spaces,
+               },
+             extHostClient,
+             res => {
+             switch (res) {
+             | Ok(edits) =>
+               EditsReceived({
+                 displayName: formatter.displayName,
+                 sessionId,
+                 edits: List.map(extHostEditToVimEdit, edits),
+               })
+             | Error(msg) => EditRequestFailed({sessionId, msg})
+             }
+           })
+         )
+      |> Isolinear.Effect.batch;
+
+    if (matchingFormatters == []) {
+      (
+        model,
+        FormatError(
+          Printf.sprintf("No format providers available for %s", filetype),
+        ),
+      );
+    } else {
+      (model |> startSession(~sessionId, ~buffer=buf), Effect(effects));
+    };
+  };
+};
+
+let update =
+    (
+      ~configuration,
+      ~maybeSelection,
+      ~maybeBuffer,
+      ~extHostClient,
+      model,
+      msg,
+    ) => {
   switch (msg) {
+  | Command(FormatRange) =>
+    switch (maybeBuffer, maybeSelection) {
+    | (Some(buf), Some(range)) =>
+      let filetype =
+        buf
+        |> Oni_Core.Buffer.getFileType
+        |> Option.value(~default="plaintext");
+
+      let matchingFormatters =
+        model.availableRangeFormatters
+        |> List.filter(({selector, _}) =>
+             DocumentSelector.matches(~filetype, selector)
+           );
+
+      Internal.runFormat(
+        ~formatFn=
+          Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
+            ~range,
+          ),
+        ~model,
+        ~configuration,
+        ~matchingFormatters,
+        ~buf,
+        ~filetype,
+        ~extHostClient,
+      );
+    | _ => (model, FormatError("No range selected."))
+    }
+
   | Command(FormatDocument) =>
     switch (maybeBuffer) {
     | None => (model, Nothing)
@@ -106,51 +205,16 @@ let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
         |> List.filter(({selector, _}) =>
              DocumentSelector.matches(~filetype, selector)
            );
-      let sessionId = model.nextSessionId;
 
-      let indentation =
-        Oni_Core.Indentation.getForBuffer(~buffer=buf, configuration);
-
-      let effects =
-        matchingFormatters
-        |> List.map(formatter =>
-             Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits(
-               ~handle=formatter.handle,
-               ~uri=Oni_Core.Buffer.getUri(buf),
-               ~options=
-                 Exthost.FormattingOptions.{
-                   tabSize: indentation.tabSize,
-                   insertSpaces:
-                     indentation.mode == Oni_Core.IndentationSettings.Spaces,
-                 },
-               extHostClient,
-               res => {
-               switch (res) {
-               | Ok(edits) =>
-                 EditsReceived({
-                   displayName: formatter.displayName,
-                   sessionId,
-                   edits: List.map(extHostEditToVimEdit, edits),
-                 })
-               | Error(msg) => EditRequestFailed({sessionId, msg})
-               }
-             })
-           )
-        |> Isolinear.Effect.batch;
-
-      if (matchingFormatters == []) {
-        (
-          model,
-          FormatError(
-            Printf.sprintf("No format providers available for %s", filetype),
-          ),
-        );
-      } else {
-        (
-          model |> Internal.startSession(~sessionId, ~buffer=buf),
-          Effect(effects),
-        );
-      };
+      Internal.runFormat(
+        ~formatFn=Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits,
+        ~model,
+        ~configuration,
+        ~matchingFormatters,
+        ~buf,
+        ~filetype,
+        ~extHostClient,
+      );
     }
   | DocumentFormatterAvailable({handle, selector, displayName}) => (
       {
@@ -162,6 +226,18 @@ let update = (~configuration, ~maybeBuffer, ~extHostClient, model, msg) => {
       },
       Nothing,
     )
+
+  | RangeFormatterAvailable({handle, selector, displayName}) => (
+      {
+        ...model,
+        availableRangeFormatters: [
+          {handle, selector, displayName},
+          ...model.availableRangeFormatters,
+        ],
+      },
+      Nothing,
+    )
+
   | EditsReceived({displayName, sessionId, edits}) =>
     switch (model.activeSession) {
     | None => (model, Nothing)
