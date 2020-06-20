@@ -236,7 +236,7 @@
     "esy-sdl2": "*",
     "esy-skia": "*",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.47",
+    "libvim": "8.10869.48",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reason-tree-sitter": "^1.0.1001",
@@ -247,7 +247,6 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "libvim": "link:../libvim/src",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "revery": "revery-ui/revery#8fd2003",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
