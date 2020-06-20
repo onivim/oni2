@@ -69,7 +69,7 @@ let%component make =
   let%hook (hoverTimer, resetHoverTimer) =
     Hooks.timer(~active=hoverTimerActive^, ());
 
-  let lineCount = Buffer.getNumberOfLines(buffer);
+  let lineCount = editor |> Editor.totalViewLines;
   let indentation =
     switch (Buffer.getIndentation(buffer)) {
     | Some(v) => v
@@ -206,6 +206,7 @@ let%component make =
           ~context,
           ~count=lineCount,
           ~buffer,
+          ~editor,
           ~leftVisibleColumn,
           ~colors,
           ~diagnosticsMap,
