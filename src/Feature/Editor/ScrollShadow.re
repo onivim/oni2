@@ -53,7 +53,7 @@ let renderVertical = (~editor: Editor.t, ~width: float, ~context) => {
         ~direction=Up,
         ~context,
         ~x=0.,
-        ~y=float(editor.pixelHeight) -. Constants.shadowSize -. 1.0,
+        ~y=float(editor.pixelHeight) -. Constants.shadowSize,
         ~width,
         ~height=Constants.shadowSize,
       );
