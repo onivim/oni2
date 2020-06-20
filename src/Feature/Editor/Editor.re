@@ -63,16 +63,18 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-let getVimCursors = model => model.cursors;
+let getVimCursors = ({cursors, _}) => cursors;
 
-let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
+let selection = ({selection, _}) => selection;
+
+let mapCursor = (~position: Vim.Cursor.t, editor) => {
   let byte = position.column |> Index.toZeroBased;
   let line = position.line |> Index.toZeroBased;
 
-  let bufferLineCount = Buffer.getNumberOfLines(buffer);
+  let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
   if (line < bufferLineCount) {
-    let bufferLine = Buffer.getLine(line, buffer);
+    let bufferLine = EditorBuffer.line(line, editor.buffer);
 
     let column = BufferLine.getIndex(~byte, bufferLine);
 
@@ -82,17 +84,17 @@ let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
   };
 };
 
-let getCharacterUnderCursor = (~buffer, editor) => {
-  switch (editor.cursors) {
+let getCharacterUnderCursor = ({cursors, buffer, _}) => {
+  switch (cursors) {
   | [] => None
   | [cursor, ..._] =>
     let byte = cursor.column |> Index.toZeroBased;
     let line = cursor.line |> Index.toZeroBased;
 
-    let bufferLineCount = Buffer.getNumberOfLines(buffer);
+    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
     if (line < bufferLineCount) {
-      let bufferLine = Buffer.getLine(line, buffer);
+      let bufferLine = EditorBuffer.line(line, buffer);
       let index = BufferLine.getIndex(~byte, bufferLine);
       let character = BufferLine.getUcharExn(~index, bufferLine);
       Some(character);
@@ -102,11 +104,27 @@ let getCharacterUnderCursor = (~buffer, editor) => {
   };
 };
 
-let getPrimaryCursor = (~buffer, editor) =>
+let getPrimaryCursor = editor =>
   switch (editor.cursors) {
-  | [cursor, ..._] => mapCursor(~position=cursor, ~buffer)
+  | [cursor, ..._] => mapCursor(~position=cursor, editor)
   | [] => Location.{line: Index.zero, column: Index.zero}
   };
+
+let selectionOrCursorRange = editor => {
+  switch (editor.selection.mode) {
+  | None =>
+    let pos = getPrimaryCursor(editor);
+    let range =
+      Range.{
+        start: Location.{line: pos.line, column: Index.zero},
+        stop: Location.{line: Index.(pos.line + 1), column: Index.zero},
+      };
+    range;
+  | Line
+  | Block
+  | Character => editor.selection.range
+  };
+};
 
 let getId = model => model.editorId;
 
