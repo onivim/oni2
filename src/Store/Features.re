@@ -41,16 +41,15 @@ let update =
   switch (action) {
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
-    let maybeSelection =
-      state
-      |> Oni_Model.Selectors.getActiveEditorGroup
-      |> Oni_Model.Selectors.getActiveEditor
-      |> Option.map(Feature_Editor.Editor.selectionOrCursorRange);
+    let selection =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.selectionOrCursorRange;
     let (model', eff) =
       Feature_Formatting.update(
         ~configuration=state.configuration,
         ~maybeBuffer,
-        ~maybeSelection,
+        ~maybeSelection=Some(selection),
         ~extHostClient,
         state.formatting,
         msg,
@@ -68,6 +67,7 @@ let update =
         eff |> Effect.map(msg => Actions.Formatting(msg))
       };
     (state', effect);
+
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
@@ -323,45 +323,17 @@ let update =
         (state, eff);
 
       | TerminalExit({terminalId, shouldClose, _}) when shouldClose == true =>
-        let maybeTerminalBuffer =
-          state |> Selectors.getBufferForTerminal(~terminalId);
+        switch (Selectors.getBufferForTerminal(~terminalId, state)) {
+        | Some(buffer) =>
+          switch (
+            Feature_Layout.closeBuffer(~force=true, buffer, state.layout)
+          ) {
+          | Some(layout) => ({...state, layout}, Effect.none)
+          | None => (state, Internal.quitEffect)
+          }
+        | None => (state, Effect.none)
+        }
 
-        // TODO:
-        // This is really duplicated logic from the WindowsStoreConnector
-        // - the fact that the window layout needs to be adjusted along
-        // with the editor groups. We need to consolidate this to a
-        // unified concept, once the window layout work has completed:
-        // Something like `Feature_EditorLayout`, which contains
-        // both the editor groups and layout concepts (dependent on
-        // `Feature_Layout`) - and could include the `WindowsStoreConnector`.
-
-        let editorGroups' =
-          maybeTerminalBuffer
-          |> Option.map(bufferId =>
-               EditorGroups.closeBuffer(~bufferId, state.editorGroups)
-             )
-          |> Option.value(~default=state.editorGroups);
-
-        let layout' =
-          state.layout
-          |> Feature_Layout.windows
-          |> List.fold_left(
-               (acc, editorGroupId) =>
-                 if (Oni_Model.EditorGroups.getEditorGroupById(
-                       editorGroups',
-                       editorGroupId,
-                     )
-                     == None) {
-                   Feature_Layout.removeWindow(editorGroupId, acc);
-                 } else {
-                   acc;
-                 },
-               state.layout,
-             );
-
-        let state' = {...state, layout: layout', editorGroups: editorGroups'};
-
-        (state', Effect.none);
       | TerminalExit(_) => (state, Effect.none)
       };
 
@@ -475,12 +447,11 @@ let update =
 
   | Hover(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
-    let maybeEditor =
-      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let editor = Feature_Layout.activeEditor(state.layout);
     let (model', eff) =
       Feature_Hover.update(
         ~maybeBuffer,
-        ~maybeEditor,
+        ~maybeEditor=Some(editor),
         ~extHostClient,
         state.hover,
         msg,
@@ -492,14 +463,14 @@ let update =
         Effect.map(msg => Actions.Hover(msg), eff)
       };
     ({...state, hover: model'}, effect);
+
   | SignatureHelp(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
-    let maybeEditor =
-      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let editor = Feature_Layout.activeEditor(state.layout);
     let (model', eff) =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
-        ~maybeEditor,
+        ~maybeEditor=Some(editor),
         ~extHostClient,
         state.signatureHelp,
         msg,
@@ -516,14 +487,14 @@ let update =
         )
       };
     ({...state, signatureHelp: model'}, effect);
+
   | ExtensionBufferUpdateQueued(buffer) /* {triggerKey}*/ =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
-    let maybeEditor =
-      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let editor = Feature_Layout.activeEditor(state.layout);
     let (signatureHelp, shOutMsg) =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
-        ~maybeEditor,
+        ~maybeEditor=Some(editor),
         ~extHostClient,
         state.signatureHelp,
         Feature_SignatureHelp.KeyPressed(buffer.triggerKey, false),
@@ -535,6 +506,7 @@ let update =
       };
     let effect = [shEffect] |> Effect.batch;
     ({...state, signatureHelp}, effect);
+
   | Vim(msg) => (
       {...state, vim: Feature_Vim.update(msg, state.vim)},
       Effect.none,

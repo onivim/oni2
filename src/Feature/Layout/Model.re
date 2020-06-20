@@ -171,6 +171,20 @@ let updateActiveGroup = (f, model) => {
 };
 
 let windows = model => Layout.windows(activeTree(model));
+
+let visibleEditors = model =>
+  model
+  |> windows
+  |> List.filter_map(id =>
+       List.find_opt((group: Group.t) => group.id == id, model.groups)
+     )
+  |> List.map(Group.selected);
+
+let editorById = (id, model) =>
+  Base.List.find_map(model.groups, ~f=group =>
+    List.find_opt(editor => Editor.getId(editor) == id, group.items)
+  );
+
 let addWindow = (direction, focus) =>
   updateTree(Layout.addWindow(direction, focus));
 let insertWindow = (target, direction, focus) =>
@@ -268,18 +282,10 @@ let closeBuffer = (~force, buffer, model) => {
   let activeEditorId = Editor.getId(activeEditor);
   let bufferMeta = Vim.BufferMetadata.ofBuffer(buffer);
 
-  Console.log((
-    Feature_Editor.Editor.getBufferId(activeEditor),
-    bufferMeta.id,
-    force,
-    bufferMeta.modified,
-  ));
-  if (Feature_Editor.Editor.getBufferId(activeEditor) == bufferMeta.id
+  if (Editor.getBufferId(activeEditor) == bufferMeta.id
       && (force || !bufferMeta.modified)) {
-    Console.log("--true");
     removeEditor(activeEditorId, model);
   } else {
-    Console.log("--false");
     Some(model);
   };
 };

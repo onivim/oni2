@@ -13,6 +13,9 @@ type model;
 let initial: list(Editor.t) => model;
 
 let windows: model => list(int);
+let visibleEditors: model => list(Editor.t);
+let editorById: (int, model) => option(Editor.t);
+
 let addWindow: ([ | `Horizontal | `Vertical], int, model) => model;
 let insertWindow:
   (

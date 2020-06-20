@@ -43,7 +43,6 @@ type t = {
   sideBar: SideBar.t,
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
-  editorGroups: EditorGroups.t,
   extensions: Extensions.t,
   iconTheme: IconTheme.t,
   isQuitting: bool,
@@ -102,8 +101,6 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
          )
     );
 
-  let editorGroups = EditorGroups.create();
-
   {
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
@@ -140,7 +137,6 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     uiFont: UiFont.default,
     sideBar: SideBar.initial,
     tokenTheme: TokenTheme.empty,
-    editorGroups,
     iconTheme: IconTheme.create(),
     isQuitting: false,
     keyBindings: Keybindings.empty,

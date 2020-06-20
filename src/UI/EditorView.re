@@ -31,7 +31,7 @@ module Parts = {
           (),
         ) => {
       let buffer =
-        Selectors.getBufferForEditor(state, editor)
+        Selectors.getBufferForEditor(state.buffers, editor)
         |> Option.value(~default=Buffer.initial);
 
       let editorDispatch = msg =>
@@ -87,7 +87,7 @@ module Parts = {
       let changelogDispatch = msg => dispatch(Changelog(msg));
 
       let buffer =
-        Selectors.getBufferForEditor(state, editor)
+        Selectors.getBufferForEditor(state.buffers, editor)
         |> Option.value(~default=Buffer.initial);
       let renderOverlays = (~gutterWidth) =>
         [

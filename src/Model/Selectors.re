@@ -10,27 +10,12 @@ open Oni_Core.Utility;
 module Ext = Oni_Extensions;
 module Editor = Feature_Editor.Editor;
 
-let getActiveEditorGroup = (state: State.t) => {
-  EditorGroups.getActiveEditorGroup(state.editorGroups);
-};
-
-let getEditorGroupById = (state: State.t, id) => {
-  EditorGroups.getEditorGroupById(state.editorGroups, id);
-};
-
-let getActiveEditor = (editorGroup: option(EditorGroup.t)) => {
-  switch (editorGroup) {
-  | None => None
-  | Some(v) => EditorGroup.getActiveEditor(v)
-  };
-};
-
 let getBufferById = (state: State.t, id: int) => {
   Buffers.getBuffer(id, state.buffers);
 };
 
-let getBufferForEditor = (state: State.t, editor: Editor.t) => {
-  Buffers.getBuffer(Editor.getBufferId(editor), state.buffers);
+let getBufferForEditor = (buffers, editor: Editor.t) => {
+  Buffers.getBuffer(Editor.getBufferId(editor), buffers);
 };
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
@@ -40,12 +25,9 @@ let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
 };
 
 let getActiveBuffer = (state: State.t) => {
-  let editorOpt = state |> getActiveEditorGroup |> getActiveEditor;
-
-  switch (editorOpt) {
-  | Some(editor) => getBufferForEditor(state, editor)
-  | None => None
-  };
+  state.layout
+  |> Feature_Layout.activeEditor
+  |> getBufferForEditor(state.buffers);
 };
 
 let withActiveBufferAndFileType = (state: State.t, f) => {
@@ -91,7 +73,8 @@ let getBufferForTerminal = (~terminalId: int, state: State.t) => {
        }
      })
   |> IntMap.choose_opt
-  |> Option.map(fst);
+  |> Option.map(fst)
+  |> OptionEx.flatMap(Vim.Buffer.getById);
 };
 
 let getActiveTerminalId = (state: State.t) => {

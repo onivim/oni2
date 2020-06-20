@@ -91,11 +91,11 @@ let update = (editor, msg) => {
   | MouseHovered({location}) => (editor, MouseHovered(location))
   | MouseMoved({location}) => (editor, MouseMoved(location))
   | SelectionChanged(selection) => (
-      Editor.setSelection(selection, editor),
+      Editor.setSelection(~selection, editor),
       Nothing,
     )
   | CursorsChanged(cursors) => (
-      Editor.setVimCursors(cursors, editor),
+      Editor.setVimCursors(~cursors, editor),
       Nothing,
     )
   | ScrollToLine(line) => (Editor.scrollToLine(~line, editor), Nothing)

@@ -7,11 +7,9 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
-open Utility;
 open Actions;
 open Oni_Syntax;
 
-module Utility = Utility;
 module Ext = Oni_Extensions;
 
 module DefinitionResult = LanguageFeatures.DefinitionResult;
@@ -60,16 +58,15 @@ let start = () => {
       );
     });
 
-  let findAllReferences = state =>
+  let findAllReferences = (state: State.t) =>
     Isolinear.Effect.createWithDispatch(
       ~name="languageFeature.findAllReferences", dispatch => {
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      let maybeEditor =
-        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+      let editor = Feature_Layout.activeEditor(state.layout);
 
-      OptionEx.iter2(
-        (buffer, editor) => {
+      Option.iter(
+        buffer => {
           let location = Editor.getPrimaryCursor(editor);
           let promise =
             LanguageFeatures.requestFindAllReferences(
@@ -83,7 +80,6 @@ let start = () => {
           });
         },
         maybeBuffer,
-        maybeEditor,
       );
     });
 

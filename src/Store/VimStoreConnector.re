@@ -129,10 +129,9 @@ let start =
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      let maybeEditor =
-        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+      let editor = Feature_Layout.activeEditor(state.layout);
 
-      let getDefinition = (buffer, editor) => {
+      let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
         let position = Editor.getPrimaryCursor(editor);
         Definition.getAt(id, position, state.definition)
@@ -145,7 +144,7 @@ let start =
            });
       };
 
-      OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
+      Option.map(getDefinition, maybeBuffer)
       |> Option.join
       |> Option.iter(action => dispatch(action));
     };
@@ -877,17 +876,12 @@ let start =
              | _ => None,
            );
 
-      let maybeEditorId =
-        state
-        |> Selectors.getActiveEditorGroup
-        |> Selectors.getActiveEditor
-        |> Option.map((editor: Feature_Editor.Editor.t) =>
-             Editor.getId(editor)
-           );
+      let editorId =
+        Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
       let (state, effect) =
-        OptionEx.map3(
-          (bufferId, terminalId, editorId) => {
+        OptionEx.map2(
+          (bufferId, terminalId) => {
             let colorTheme = Feature_Theme.colors(state.colorTheme);
             let (lines, highlights) =
               Feature_Terminal.getLinesAndHighlights(
@@ -912,21 +906,22 @@ let start =
             let syntaxHighlights =
               syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
 
-            let editorGroups =
-              state.editorGroups
-              |> EditorGroups.setBufferFont(
-                   ~bufferId,
-                   ~font=state.terminalFont,
-                 );
+            let layout =
+              Feature_Layout.map(
+                editor =>
+                  Editor.getBufferId(editor) == bufferId
+                    ? Editor.setFont(~font=state.terminalFont, editor)
+                    : editor,
+                state.layout,
+              );
 
             (
-              {...state, editorGroups, syntaxHighlights},
+              {...state, layout, syntaxHighlights},
               setTerminalLinesEffect(~bufferId, ~editorId, lines),
             );
           },
           maybeBufferId,
           maybeTerminalId,
-          maybeEditorId,
         )
         |> Option.value(~default=(state, Isolinear.Effect.none));
 
