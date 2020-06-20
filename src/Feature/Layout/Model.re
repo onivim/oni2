@@ -195,8 +195,8 @@ let split = (direction, model) => {
   let group = Group.create([activeEditor(model)]);
 
   {
-    ...model,
     groups: [group, ...model.groups],
+    activeGroupId: group.id,
     tree:
       Layout.insertWindow(
         `After(model.activeGroupId),
