@@ -323,7 +323,7 @@ let _onFormat = formatRequest => {
   );
 };
 
-let _onAutoIndent = (lnum: int, prevLine: string) => {
+let _onAutoIndent = (lnum: int, _prevLine: string) => {
   let buf = Buffer.getCurrent();
   let lineCount = Buffer.getLineCount(buf);
 
@@ -335,12 +335,12 @@ let _onAutoIndent = (lnum: int, prevLine: string) => {
       None;
     };
 
-  let beforeLine = 
+  let beforeLine =
     if (lnum >= 2 && lnum <= lineCount) {
       lnum - 1 |> Index.fromOneBased |> Buffer.getLine(buf);
     } else {
-      "" // This should never happen... but follow the Vim convention for empty lines.
-    }
+      ""; // This should never happen... but follow the Vim convention for empty lines.
+    };
 
   let indentAction =
     GlobalState.autoIndent^

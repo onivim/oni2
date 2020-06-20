@@ -117,10 +117,8 @@ describe("AutoIndent", ({test, _}) => {
       Some("This is the second line of a test file"),
     );
   });
-    
-  test(
-    "open before line",
-    ({expect, _}) => {
+
+  test("open before line", ({expect, _}) => {
     let _ = resetBuffer();
 
     let prevRef = ref("");
@@ -138,14 +136,9 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
 
     expect.equal(prevRef^, "This is the first line of a test file");
-    expect.equal(
-      beforePrevRef^,
-      None,
-    );
+    expect.equal(beforePrevRef^, None);
   });
-  test(
-    "auto-indent should not be called for first line",
-    ({expect, _}) => {
+  test("auto-indent should not be called for first line", ({expect, _}) => {
     let _ = resetBuffer();
 
     let prevRef = ref("");
