@@ -17,20 +17,16 @@ type t = {
   scrollY: float,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
-  /*
-   * The maximum line visible in the view.
-   * TODO: This will be dependent on line-wrap settings.
-   */
-  maxLineLength: int,
-  viewLines: int,
   cursors: [@opaque] list(Vim.Cursor.t),
   selection: [@opaque] VisualRange.t,
   font: [@opaque] Service_Font.font,
   pixelWidth: int,
   pixelHeight: int,
+  wrapping: [@opaque] Wrapping.t,
 };
 
-let totalViewLines = ({viewLines, _}) => viewLines;
+let totalViewLines = ({wrapping, _}) => wrapping |> Wrapping.numberOfLines;
+let maxLineLength = ({wrapping, _}) => wrapping |> Wrapping.maxLineLength;
 let selection = ({selection, _}) => selection;
 let setSelection = (~selection, editor) => {...editor, selection};
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
@@ -92,8 +88,6 @@ let create = (~font, ~buffer, ()) => {
     scrollY: 0.,
     minimapMaxColumnWidth: Constants.minimapMaxColumn,
     minimapScrollY: 0.,
-    viewLines: EditorBuffer.numberOfLines(buffer),
-    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
     /*
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
@@ -110,6 +104,7 @@ let create = (~font, ~buffer, ()) => {
     font,
     pixelWidth: 1,
     pixelHeight: 1,
+    wrapping: Wrapping.make(~wrap=WordWrap.fixed(~columns=5), ~buffer),
   };
 };
 
@@ -191,13 +186,17 @@ let getVisibleView = editor => {
   int_of_float(float_of_int(pixelHeight) /. getLineHeight(editor));
 };
 
-let getTotalHeightInPixels = editor =>
-  int_of_float(float_of_int(editor.viewLines) *. getLineHeight(editor));
+let getTotalHeightInPixels = editor => {
+  let viewLines = editor |> totalViewLines;
+  int_of_float(float_of_int(viewLines) *. getLineHeight(editor));
+  }
 
-let getTotalWidthInPixels = editor =>
+let getTotalWidthInPixels = editor => {
+    let maxLineLength = editor |> maxLineLength;
   int_of_float(
-    float_of_int(editor.maxLineLength) *. getCharacterWidth(editor),
+    float_of_int(maxLineLength) *. getCharacterWidth(editor),
   );
+};
 
 let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
   let {pixelHeight, _} = view;
@@ -213,10 +212,12 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
   {thumbSize, thumbOffset, visible: true};
 };
 
-let getHorizontalScrollbarMetrics = (view, availableWidth) => {
+let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
+  
+  let maxLineLength = editor |> maxLineLength;
   let availableWidthF = float_of_int(availableWidth);
   let totalViewWidthInPixels =
-    float_of_int(view.maxLineLength + 1) *. getCharacterWidth(view);
+    float_of_int(maxLineLength + 1) *. getCharacterWidth(editor);
   //+. availableWidthF;
 
   totalViewWidthInPixels <= availableWidthF
@@ -225,7 +226,7 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
       let thumbPercentage = availableWidthF /. totalViewWidthInPixels;
       let thumbSize = int_of_float(thumbPercentage *. availableWidthF);
 
-      let topF = view.scrollX /. totalViewWidthInPixels;
+      let topF = editor.scrollX /. totalViewWidthInPixels;
       let thumbOffset = int_of_float(topF *. availableWidthF);
 
       {thumbSize, thumbOffset, visible: true};
@@ -233,8 +234,9 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
 };
 
 let getLayout =
-    (~showLineNumbers, ~isMinimapShown, ~maxMinimapCharacters, view) => {
-  let {pixelWidth, pixelHeight, _} = view;
+    (~showLineNumbers, ~isMinimapShown, ~maxMinimapCharacters, editor) => {
+  let viewLines = editor |> totalViewLines;
+  let {pixelWidth, pixelHeight, _} = editor;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~showLineNumbers,
@@ -242,9 +244,9 @@ let getLayout =
       ~maxMinimapCharacters,
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
-      ~characterWidth=getCharacterWidth(view),
-      ~characterHeight=getLineHeight(view),
-      ~bufferLineCount=view.viewLines,
+      ~characterWidth=getCharacterWidth(editor),
+      ~characterHeight=getLineHeight(editor),
+      ~bufferLineCount=viewLines,
       (),
     );
 
@@ -258,13 +260,14 @@ let getLeftVisibleColumn = view => {
 let getTopVisibleLine = view =>
   int_of_float(view.scrollY /. getLineHeight(view)) + 1;
 
-let getBottomVisibleLine = view => {
+let getBottomVisibleLine = editor => {
   let absoluteBottomLine =
     int_of_float(
-      (view.scrollY +. float_of_int(view.pixelHeight)) /. getLineHeight(view),
+      (editor.scrollY +. float_of_int(editor.pixelHeight)) /. getLineHeight(editor),
     );
 
-  absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
+  let viewLines = editor |> totalViewLines;
+  absoluteBottomLine > viewLines ? viewLines : absoluteBottomLine;
 };
 
 let setFont = (~font, editor) => {...editor, font};
@@ -275,11 +278,12 @@ let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   pixelHeight,
 };
 
-let scrollToPixelY = (~pixelY as newScrollY, view) => {
-  let {pixelHeight, _} = view;
+let scrollToPixelY = (~pixelY as newScrollY, editor) => {
+  let viewLines = editor |> totalViewLines;
+  let {pixelHeight, _} = editor;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
-    max(float_of_int(view.viewLines - 1), 0.) *. getLineHeight(view);
+    max(float_of_int(viewLines - 1), 0.) *. getLineHeight(editor);
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
@@ -288,11 +292,11 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
     Constants.minimapCharacterWidth + Constants.minimapCharacterHeight;
   let linesInMinimap = pixelHeight / minimapLineSize;
   let availableMinimapScroll =
-    max(view.viewLines - linesInMinimap, 0) * minimapLineSize;
+    max(viewLines - linesInMinimap, 0) * minimapLineSize;
   let newMinimapScroll =
     scrollPercentage *. float_of_int(availableMinimapScroll);
 
-  {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
+  {...editor, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
 };
 
 let scrollToLine = (~line, view) => {
@@ -300,14 +304,15 @@ let scrollToLine = (~line, view) => {
   scrollToPixelY(~pixelY, view);
 };
 
-let scrollToPixelX = (~pixelX as newScrollX, view) => {
+let scrollToPixelX = (~pixelX as newScrollX, editor) => {
+  let maxLineLength = editor |> maxLineLength;
   let newScrollX = max(0., newScrollX);
 
   let availableScroll =
-    max(0., float_of_int(view.maxLineLength) *. getCharacterWidth(view));
+    max(0., float_of_int(maxLineLength) *. getCharacterWidth(editor));
   let scrollX = min(newScrollX, availableScroll);
 
-  {...view, scrollX};
+  {...editor, scrollX};
 };
 
 let scrollDeltaPixelX = (~pixelX, editor) => {
@@ -361,13 +366,11 @@ let unprojectToPixel =
 
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
-let updateBuffer = (~buffer, editor) => {
+let updateBuffer = (~update, ~buffer, editor) => {
   {
     ...editor,
     buffer,
-    // TODO: These will both change with word wrap
-    viewLines: EditorBuffer.numberOfLines(buffer),
-    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
+    wrapping: Wrapping.update(~update, ~newBuffer=buffer, editor.wrapping),
   };
 };
 
