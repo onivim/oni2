@@ -1,4 +1,5 @@
 open Oni_Core;
+open Feature_Editor;
 
 // MODEL
 
@@ -9,7 +10,7 @@ type panel =
 
 type model;
 
-let initial: model;
+let initial: list(Editor.t) => model;
 
 let windows: model => list(int);
 let addWindow: ([ | `Horizontal | `Vertical], int, model) => model;
@@ -25,12 +26,12 @@ let removeWindow: (int, model) => model;
 
 let split: ([ | `Horizontal | `Vertical], model) => model;
 
-let activeEditor: model => Feature_Editor.Editor.t;
+let activeEditor: model => Editor.t;
 
-let openEditor: (Feature_Editor.Editor.t, model) => model;
+let openEditor: (Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
-let map: (Feature_Editor.Editor.t => Feature_Editor.Editor.t, model) => model;
+let map: (Editor.t => Editor.t, model) => model;
 
 // UPDATE
 
@@ -48,7 +49,7 @@ let update: (~focus: option(panel), model, msg) => (model, outmsg);
 // VIEW
 
 module type ContentModel = {
-  type t = Feature_Editor.Editor.t;
+  type t = Editor.t;
 
   let id: t => int;
   let title: t => string;

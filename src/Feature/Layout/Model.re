@@ -10,8 +10,7 @@ module Group: {
       selected: int,
     };
 
-  let empty: t;
-  let create: Editor.t => t;
+  let create: list(Editor.t) => t;
 
   let selected: t => Editor.t;
 
@@ -29,16 +28,16 @@ module Group: {
     selected: int,
   };
 
-  // TODO: remove
-  let empty = {id: (-1), items: [], selected: (-1)};
-
   let create = {
     let lastId = ref(-1);
 
-    editor => {
+    editors => {
+      assert(editors != []);
+
       incr(lastId);
 
-      {id: lastId^, items: [editor], selected: Editor.getId(editor)};
+      let selected = editors |> ListEx.last |> Option.get |> Editor.getId;
+      {id: lastId^, items: editors, selected};
     };
   };
 
@@ -130,8 +129,8 @@ type model = {
   activeGroupId: int,
 };
 
-let initial = {
-  let initialGroup = Group.empty;
+let initial = editors => {
+  let initialGroup = Group.create(editors);
 
   {
     tree: Layout.singleton(initialGroup.id),
@@ -179,7 +178,7 @@ let insertWindow = (target, direction, focus) =>
 let removeWindow = target => updateTree(Layout.removeWindow(target));
 
 let split = (direction, model) => {
-  let group = Group.create(model |> activeEditor);
+  let group = Group.create([activeEditor(model)]);
 
   {
     ...model,

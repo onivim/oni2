@@ -527,17 +527,8 @@ let start =
 
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
-      Vim.init();
-
-      if (Core.BuildInfo.commitId == Persistence.Global.version()
-          || !showUpdateChangelog) {
-        dispatch(
-          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
-        );
-      } else {
-        dispatch(
-          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
-        );
+      if (showUpdateChangelog
+          && Core.BuildInfo.commitId != Persistence.Global.version()) {
         dispatch(
           Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
         );
@@ -546,13 +537,10 @@ let start =
     });
 
   let updateActiveEditorCursors = cursors => {
-    let () =
-      getState()
-      |> Selectors.getActiveEditorGroup
-      |> Selectors.getActiveEditor
-      |> Option.map(Editor.getId)
-      |> Option.iter(id => {dispatch(Actions.EditorCursorMove(id, cursors))});
-    ();
+    let editorId =
+      Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
+
+    dispatch(Actions.EditorCursorMove(editorId, cursors));
   };
 
   let isVimKey = key => {

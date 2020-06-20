@@ -80,12 +80,34 @@ type t = {
 };
 
 let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
+  Vim.init();
+
+  let createEditor = path => {
+    open Feature_Editor;
+
+    let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+      Vim.Buffer.openFile(path) |> Vim.BufferMetadata.ofBuffer;
+    let buffer = Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    let editorBuffer = buffer |> EditorBuffer.ofBuffer;
+    Editor.create(~font=Service_Font.default, ~buffer=editorBuffer, ());
+  };
+
+  let initialEditor = createEditor(BufferPath.welcome);
+  let initialBufferRenderers =
+    BufferRenderers.(
+      initial
+      |> setById(
+           Feature_Editor.Editor.getBufferId(initialEditor),
+           BufferRenderer.Welcome,
+         )
+    );
+
   let editorGroups = EditorGroups.create();
 
   {
     buffers: Buffers.empty,
     bufferHighlights: BufferHighlights.initial,
-    bufferRenderers: BufferRenderers.initial,
+    bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     colorTheme:
       Feature_Theme.initial([
@@ -131,7 +153,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     sneak: Feature_Sneak.initial,
     statusBar: Feature_StatusBar.initial,
     syntaxHighlights: Feature_Syntax.empty,
-    layout: Feature_Layout.initial,
+    layout: Feature_Layout.initial([initialEditor]),
     windowTitle: "",
     windowIsFocused: true,
     windowDisplayMode: Windowed,
