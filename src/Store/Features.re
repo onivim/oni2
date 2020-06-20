@@ -172,14 +172,36 @@ let update =
         update,
         state.syntaxHighlights,
       );
+
     let state = {...state, syntaxHighlights};
-    (
+
+    let (state, eff) = (
       state,
       Feature_Syntax.Effect.bufferUpdate(
         ~bufferUpdate=update,
         state.syntaxHighlights,
       )
       |> Isolinear.Effect.map(() => Actions.Noop),
+    );
+    open Feature_Editor; // update editor
+
+    let buffer = EditorBuffer.ofBuffer(newBuffer);
+    let bufferId = Buffer.getId(newBuffer);
+    (
+      {
+        ...state,
+        layout:
+          Feature_Layout.map(
+            editor =>
+              if (Editor.getBufferId(editor) == bufferId) {
+                Editor.updateBuffer(~buffer, editor);
+              } else {
+                editor;
+              },
+            state.layout,
+          ),
+      },
+      eff,
     );
 
   | Configuration(msg) =>
@@ -372,6 +394,7 @@ let update =
 
     | None => (state, Effect.none)
     }
+
   | FilesDropped({paths}) =>
     let eff =
       Service_OS.Effect.statMultiple(paths, (path, stats) =>
@@ -382,35 +405,58 @@ let update =
         }
       );
     (state, eff);
+
   | Editor({editorId, msg}) =>
-    let (editorGroups', effects) =
-      EditorGroups.updateEditor(~editorId, msg, state.editorGroups);
+    switch (Feature_Layout.editorById(editorId, state.layout)) {
+    | Some(editor) =>
+      open Feature_Editor;
 
-    let effect =
-      effects
-      |> List.map(
-           fun
-           | Feature_Editor.Nothing => Effect.none
-           | Feature_Editor.MouseHovered(location) =>
-             Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
-               dispatch(Hover(Feature_Hover.MouseHovered(location)))
-             })
-           | Feature_Editor.MouseMoved(location) =>
-             Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
-               dispatch(Hover(Feature_Hover.MouseMoved(location)))
-             }),
-         )
-      |> Isolinear.Effect.batch;
+      let (updatedEditor, outmsg) = update(editor, msg);
 
-    ({...state, editorGroups: editorGroups'}, effect);
+      let state = {
+        ...state,
+        layout:
+          Feature_Layout.map(
+            editor =>
+              Editor.getId(editor) == editorId ? updatedEditor : editor,
+            state.layout,
+          ),
+      };
+
+      let effect =
+        switch (outmsg) {
+        | Nothing => Effect.none
+        | MouseHovered(location) =>
+          Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
+            dispatch(Hover(Feature_Hover.MouseHovered(location)))
+          })
+        | MouseMoved(location) =>
+          Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
+            dispatch(Hover(Feature_Hover.MouseMoved(location)))
+          })
+        };
+
+      (state, effect);
+
+    | None => (state, Effect.none)
+    }
+
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);
     ({...state, changelog: model}, eff);
 
   // TODO: This should live in the editor feature project
   | EditorFont(Service_Font.FontLoaded(font)) => (
-      {...state, editorFont: font},
-      Isolinear.Effect.none,
+      {
+        ...state,
+        editorFont: font,
+        layout:
+          Feature_Layout.map(
+            editor => Feature_Editor.Editor.setFont(~font, editor),
+            state.layout,
+          ),
+      },
+      Effect.none,
     )
   | EditorFont(Service_Font.FontLoadError(message)) => (
       state,

@@ -21,7 +21,6 @@ let reduce: (State.t, Actions.t) => State.t =
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
         definition: DefinitionReducer.reduce(a, s.definition),
-        editorGroups: EditorGroups.reduce(s.editorGroups, a),
         extensions: ExtensionsReducer.reduce(a, s.extensions),
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),

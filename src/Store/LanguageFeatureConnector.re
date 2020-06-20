@@ -97,7 +97,7 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | EditorCursorMove(_, cursors)
+    | Editor({msg: CursorsChanged(cursors), _})
         when Feature_Vim.mode(state.vim) != Vim.Types.Insert =>
       switch (Selectors.getActiveBuffer(state)) {
       | None => (state, Isolinear.Effect.none)

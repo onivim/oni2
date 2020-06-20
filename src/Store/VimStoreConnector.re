@@ -310,7 +310,10 @@ let start =
             },
           },
         );
-      dispatch(SelectionChanged(vr));
+
+      let editorId =
+        Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
+      dispatch(Editor({editorId, msg: SelectionChanged(vr)}));
     });
 
   let _: unit => unit =
@@ -540,7 +543,7 @@ let start =
     let editorId =
       Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
 
-    dispatch(Actions.EditorCursorMove(editorId, cursors));
+    dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
   };
 
   let isVimKey = key => {
@@ -568,8 +571,8 @@ let start =
       if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
-        let editor =
-          state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+        let editorId =
+          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
         let context =
           Oni_Model.VimContext.current(~languageConfigLoader, state);
@@ -579,20 +582,19 @@ let start =
           Vim.input(~context, key);
         currentTriggerKey := None;
 
-        let () =
-          editor
-          |> Option.map(Editor.getId)
-          |> Option.iter(id => {
-               dispatch(Actions.EditorCursorMove(id, cursors));
-               dispatch(Actions.EditorScrollToLine(id, newTopLine - 1));
-               dispatch(Actions.EditorScrollToColumn(id, newLeftColumn));
-             });
+        dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
+        dispatch(
+          Actions.Editor({editorId, msg: ScrollToLine(newTopLine - 1)}),
+        );
+        dispatch(
+          Actions.Editor({editorId, msg: ScrollToColumn(newLeftColumn)}),
+        );
 
         Log.debug("handled key: " ++ key);
       }
     );
 
-  let openFileByPathEffect = (state, filePath, location) =>
+  let openFileByPathEffect = (state: State.t, filePath, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
       let buffer = Vim.Buffer.openFile(filePath);
 
@@ -604,15 +606,11 @@ let start =
 
              let topLine: int = max(Index.toZeroBased(loc.line) - 10, 0);
 
-             let () =
-               state
-               |> Selectors.getActiveEditorGroup
-               |> Selectors.getActiveEditor
-               |> Option.map(Editor.getId)
-               |> Option.iter(id =>
-                    dispatch(Actions.EditorScrollToLine(id, topLine))
-                  );
-             ();
+             let editorId =
+               Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+             dispatch(
+               Actions.Editor({editorId, msg: ScrollToLine(topLine)}),
+             );
            });
 
       let bufferId = Vim.Buffer.getId(buffer);
@@ -804,9 +802,13 @@ let start =
         Vim.input("$");
 
       // Update the editor, which is the source of truth for cursor position
-      dispatch(Actions.EditorCursorMove(editorId, cursors));
-      dispatch(Actions.EditorScrollToLine(editorId, newTopLine - 1));
-      dispatch(Actions.EditorScrollToColumn(editorId, newLeftColumn));
+      dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
+      dispatch(
+        Actions.Editor({editorId, msg: ScrollToLine(newTopLine - 1)}),
+      );
+      dispatch(
+        Actions.Editor({editorId, msg: ScrollToColumn(newLeftColumn)}),
+      );
     });
   };
 

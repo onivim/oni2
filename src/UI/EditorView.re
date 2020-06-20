@@ -34,13 +34,12 @@ module Parts = {
         Selectors.getBufferForEditor(state, editor)
         |> Option.value(~default=Buffer.initial);
 
+      let editorDispatch = msg =>
+        dispatch(Editor({editorId: Editor.getId(editor), msg}));
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
         dispatch(EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}));
       let onCursorChange = cursor =>
-        dispatch(EditorCursorMove(Editor.getId(editor), [cursor]));
-
-      let editorDispatch = editorMsg =>
-        dispatch(Editor({editorId: Editor.getId(editor), msg: editorMsg}));
+        editorDispatch(CursorsChanged([cursor]));
 
       <EditorSurface
         dispatch=editorDispatch

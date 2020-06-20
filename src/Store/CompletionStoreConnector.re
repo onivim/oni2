@@ -39,7 +39,12 @@ module Effects = {
       let _: Vim.Context.t = VimEx.repeatInput(delta, "<BS>");
       let {cursors, _}: Vim.Context.t = VimEx.inputString(completion.label);
 
-      dispatch(EditorCursorMove(Editor.getId(editor), cursors));
+      dispatch(
+        Editor({
+          editorId: Editor.getId(editor),
+          msg: CursorsChanged(cursors),
+        }),
+      );
     });
 };
 
@@ -165,7 +170,8 @@ let start = () => {
     | Vim(Feature_Vim.ModeChanged(mode)) when mode != Vim.Types.Insert =>
       Actions.stop(state)
 
-    | EditorCursorMove(_) when Feature_Vim.mode(state.vim) == Vim.Types.Insert =>
+    | Editor({msg: CursorsChanged(_), _})
+        when Feature_Vim.mode(state.vim) == Vim.Types.Insert =>
       Actions.checkCompletionMeet(state)
 
     | CompletionAddItems(_meet, items) =>

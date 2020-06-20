@@ -96,7 +96,6 @@ type t =
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
-  | SelectionChanged([@opaque] VisualRange.t)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
@@ -106,14 +105,11 @@ type t =
       width: int,
       height: int,
     })
-  | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSizeChanged({
       id: Feature_Editor.EditorId.t,
       pixelWidth: int,
       pixelHeight: int,
     })
-  | EditorScrollToLine(Feature_Editor.EditorId.t, int)
-  | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
   | Formatting(Feature_Formatting.msg)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
