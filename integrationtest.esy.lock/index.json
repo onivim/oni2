@@ -1,5 +1,5 @@
 {
-  "checksum": "b43ae3943a165c2f7b07f3b2b521412c",
+  "checksum": "a3d4a44f0a38e8fa30625e447f26fd28",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -301,26 +301,6 @@
         "reperf@1.5.0@d41d8cd9", "refmterr@3.3.2@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9", "esy-tree-sitter@1.4.1@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
-        "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
-        "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.6.0@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "reason-oniguruma@6.94.1002@d41d8cd9": {
-      "id": "reason-oniguruma@6.94.1002@d41d8cd9",
-      "name": "reason-oniguruma",
-      "version": "6.94.1002",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/reason-oniguruma/-/reason-oniguruma-6.94.1002.tgz#sha1:0a98cd24a2ff9887ce86af4191a1f7e3cd6b35b9"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "reperf@1.5.0@d41d8cd9", "refmterr@3.3.2@d41d8cd9",
-        "ocaml@4.9.1000@d41d8cd9",
-        "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.6.0@d41d8cd9"
       ],
@@ -1094,12 +1074,13 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
-        "reason-oniguruma@6.94.1002@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9", "libvim@8.10869.47@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
-        "esy-sdl2@2.0.10008@d41d8cd9", "esy-macdylibbundler@0.4.5@d41d8cd9",
+        "esy-sdl2@2.0.10008@d41d8cd9",
+        "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
+        "esy-macdylibbundler@0.4.5@d41d8cd9",
         "editor-input@github:onivim/editor-input#c494950@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "axios@0.19.2@d41d8cd9",
@@ -3169,12 +3150,12 @@
         "@opam/result@opam:1.5@6b753c82",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/astring@opam:0.8.3@4e5e17d5",
+        "@opam/astring@opam:0.8.4@1215f84d",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
-        "@opam/astring@opam:0.8.3@4e5e17d5"
+        "@opam/astring@opam:0.8.4@1215f84d"
       ]
     },
     "@opam/fp@github:bryphe/reason-native:fp.opam#fd0225c@d41d8cd9": {
@@ -3744,7 +3725,7 @@
         "@opam/logs@opam:0.7.0@1d03143e", "@opam/fpath@opam:0.7.2@45477b93",
         "@opam/fmt@opam:0.8.8@01c3a23c",
         "@opam/base-unix@opam:base@87d0b2eb",
-        "@opam/astring@opam:0.8.3@4e5e17d5",
+        "@opam/astring@opam:0.8.4@1215f84d",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -3752,7 +3733,7 @@
         "@opam/logs@opam:0.7.0@1d03143e", "@opam/fpath@opam:0.7.2@45477b93",
         "@opam/fmt@opam:0.8.8@01c3a23c",
         "@opam/base-unix@opam:base@87d0b2eb",
-        "@opam/astring@opam:0.8.3@4e5e17d5"
+        "@opam/astring@opam:0.8.4@1215f84d"
       ]
     },
     "@opam/biniou@opam:1.2.1@d7570399": {
@@ -4058,20 +4039,20 @@
         "@opam/dune@opam:2.5.0@aef1678b"
       ]
     },
-    "@opam/astring@opam:0.8.3@4e5e17d5": {
-      "id": "@opam/astring@opam:0.8.3@4e5e17d5",
+    "@opam/astring@opam:0.8.4@1215f84d": {
+      "id": "@opam/astring@opam:0.8.4@1215f84d",
       "name": "@opam/astring",
-      "version": "opam:0.8.3",
+      "version": "opam:0.8.4",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/c5/c5bf6352b9ac27fbeab342740f4fa870#md5:c5bf6352b9ac27fbeab342740f4fa870",
-          "archive:http://erratique.ch/software/astring/releases/astring-0.8.3.tbz#md5:c5bf6352b9ac27fbeab342740f4fa870"
+          "archive:https://opam.ocaml.org/cache/md5/54/548fcbf501ca4cb816d219ca4f25f660#md5:548fcbf501ca4cb816d219ca4f25f660",
+          "archive:https://erratique.ch/software/astring/releases/astring-0.8.4.tbz#md5:548fcbf501ca4cb816d219ca4f25f660"
         ],
         "opam": {
           "name": "astring",
-          "version": "0.8.3",
-          "path": "integrationtest.esy.lock/opam/astring.0.8.3"
+          "version": "0.8.4",
+          "path": "integrationtest.esy.lock/opam/astring.0.8.4"
         }
       },
       "overrides": [],
@@ -4079,12 +4060,9 @@
         "ocaml@4.9.1000@d41d8cd9", "@opam/topkg@opam:1.0.1@a42c631e",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/base-bytes@opam:base@19d0c2ff",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
-      "devDependencies": [
-        "ocaml@4.9.1000@d41d8cd9", "@opam/base-bytes@opam:base@19d0c2ff"
-      ]
+      "devDependencies": [ "ocaml@4.9.1000@d41d8cd9" ]
     },
     "@opam/angstrom@opam:0.14.1@07e286b0": {
       "id": "@opam/angstrom@opam:0.14.1@07e286b0",
