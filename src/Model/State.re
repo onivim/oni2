@@ -81,17 +81,18 @@ type t = {
 let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
   Vim.init();
 
-  let createEditor = path => {
-    open Feature_Editor;
-
+  let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
-      Vim.Buffer.openFile(path) |> Vim.BufferMetadata.ofBuffer;
-    let buffer = Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
-    let editorBuffer = buffer |> EditorBuffer.ofBuffer;
+      Vim.Buffer.openFile(BufferPath.welcome) |> Vim.BufferMetadata.ofBuffer;
+    Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+  };
+
+  let initialEditor = {
+    open Feature_Editor;
+    let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
     Editor.create(~font=Service_Font.default, ~buffer=editorBuffer, ());
   };
 
-  let initialEditor = createEditor(BufferPath.welcome);
   let initialBufferRenderers =
     BufferRenderers.(
       initial
@@ -102,7 +103,8 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     );
 
   {
-    buffers: Buffers.empty,
+    buffers:
+      Buffers.empty |> IntMap.add(Buffer.getId(initialBuffer), initialBuffer),
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
