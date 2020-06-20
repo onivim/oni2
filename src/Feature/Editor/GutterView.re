@@ -17,7 +17,6 @@ let renderLineNumber =
       colors: Colors.t,
       lineSetting,
       cursorLine: int,
-      yOffset: float,
     ) => {
   let font =
     Service_Font.resolveWithFallback(
@@ -27,6 +26,12 @@ let renderLineNumber =
     );
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
   let isActiveLine = lineNumber == cursorLine;
+  let ({pixelY as yOffset, _}: Editor.pixelPosition, _) =
+    Editor.bufferLineByteToPixel(
+      ~line=lineNumber,
+      ~byteIndex=0,
+      context.editor,
+    );
   let y = yOffset -. fontMetrics.ascent;
 
   let lineNumber =
@@ -83,7 +88,7 @@ let renderLineNumbers =
     ~color=colors.gutterBackground,
   );
 
-  Draw.renderImmediate(~context, ~count, (item, offset) =>
+  Draw.renderImmediate(~context, ~count, (item, _) =>
     renderLineNumber(
       ~context,
       item,
@@ -91,7 +96,6 @@ let renderLineNumbers =
       colors,
       showLineNumbers,
       cursorLine,
-      offset,
     )
   );
 };
