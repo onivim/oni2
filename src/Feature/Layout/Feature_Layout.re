@@ -538,8 +538,6 @@ module View = {
         hooks,
       );
     });
-
-  module EditorGroupView = EditorGroupView;
 };
 
 module Commands = {

@@ -12,20 +12,8 @@ type model;
 
 let initial: list(Editor.t) => model;
 
-let windows: model => list(int);
 let visibleEditors: model => list(Editor.t);
 let editorById: (int, model) => option(Editor.t);
-
-let addWindow: ([ | `Horizontal | `Vertical], int, model) => model;
-let insertWindow:
-  (
-    [ | `Before(int) | `After(int)],
-    [ | `Horizontal | `Vertical],
-    int,
-    model
-  ) =>
-  model;
-let removeWindow: (int, model) => model;
 
 let split: ([ | `Horizontal | `Vertical], model) => model;
 
@@ -75,8 +63,6 @@ module View: {
       unit
     ) =>
     element;
-
-  module EditorGroupView = EditorGroupView;
 };
 
 // COMMANDS
