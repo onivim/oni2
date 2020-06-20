@@ -52,10 +52,20 @@ module Contributions: {
   };
 
   module Configuration: {
+    module PropertyType: {
+      type t =
+        | Array
+        | Boolean
+        | String
+        | Integer
+        | Unknown(string);
+    };
+
     type t = list(property)
     and property = {
       name: string,
       default: [@opaque] Oni_Core.Json.t,
+      propertyType: PropertyType.t,
     };
 
     let toSettings: t => Oni_Core.Config.Settings.t;
