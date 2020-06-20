@@ -30,8 +30,9 @@ let getLayout:
     t
   ) =>
   EditorLayout.t;
-let getCharacterUnderCursor: (~buffer: Buffer.t, t) => option(Uchar.t);
-let getPrimaryCursor: (~buffer: Buffer.t, t) => Location.t;
+let getCharacterUnderCursor: (t) => option(Uchar.t);
+let getPrimaryCursor: (t) => Location.t;
+let getLayout: t => EditorLayout.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => int;
@@ -61,6 +62,9 @@ let selection: t => VisualRange.t;
 let setSelection: (~selection: VisualRange.t, t) => t;
 
 let totalViewLines: t => int;
+
+let selection: t => VisualRange.t;
+let selectionOrCursorRange: t => Range.t;
 
 let scrollToColumn: (~column: int, t) => t;
 let scrollToPixelX: (~pixelX: float, t) => t;

@@ -194,7 +194,7 @@ let%component make =
   let topVisibleLine = Editor.getTopVisibleLine(editor);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
 
-  let cursorPosition = Editor.getPrimaryCursor(~buffer, editor);
+  let cursorPosition = Editor.getPrimaryCursor(editor);
 
   let layout =
     Editor.getLayout(

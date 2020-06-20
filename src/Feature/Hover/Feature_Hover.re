@@ -103,7 +103,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       let effects =
         getEffectsForLocation(
           ~buffer,
-          ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+          ~location=Feature_Editor.Editor.getPrimaryCursor(editor),
           ~extHostClient,
           ~model,
           ~requestID,
@@ -311,8 +311,7 @@ module View = {
         let diagLocation =
           switch (trigger) {
           | `Mouse(location) => location
-          | `CommandPalette =>
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
+          | `CommandPalette => Feature_Editor.Editor.getPrimaryCursor(editor)
           };
 
         let diagnostic =
@@ -348,8 +347,7 @@ module View = {
         let location =
           switch (trigger) {
           | `Mouse(location) => location
-          | `CommandPalette =>
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
+          | `CommandPalette => Feature_Editor.Editor.getPrimaryCursor(editor)
           };
 
         let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =

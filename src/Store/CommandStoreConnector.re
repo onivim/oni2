@@ -35,7 +35,7 @@ let start = () => {
           state
           |> Selectors.getActiveEditorGroup
           |> Selectors.getActiveEditor
-          |> Option.map(Feature_Editor.Editor.getPrimaryCursor(~buffer));
+          |> Option.map(Feature_Editor.Editor.getPrimaryCursor);
 
         Some((path, cursorLocation));
       };

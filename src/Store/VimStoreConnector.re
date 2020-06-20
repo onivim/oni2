@@ -134,7 +134,7 @@ let start =
 
       let getDefinition = (buffer, editor) => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(~buffer, editor);
+        let position = Editor.getPrimaryCursor(editor);
         Definition.getAt(id, position, state.definition)
         |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
              Actions.OpenFileByPath(
