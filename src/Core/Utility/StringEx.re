@@ -60,6 +60,24 @@ let startsWith = (~prefix, str) => {
   };
 };
 
+let endsWith = (~postfix, str) => {
+  let postfixLength = String.length(postfix);
+  let strLength = String.length(str);
+
+  if (postfixLength > strLength) {
+    false;
+  } else {
+    let rec match = i =>
+      if (i == postfixLength) {
+        true;
+      } else {
+        postfix.[postfixLength - i - 1] == str.[strLength - i - 1]
+        && match(i + 1);
+      };
+    match(0);
+  };
+};
+
 let trimLeft = str => {
   let length = String.length(str);
 
@@ -220,5 +238,21 @@ let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
       charStart,
       charEnd,
     );
+  };
+};
+
+let removeWindowsNewLines = s =>
+  List.init(String.length(s), String.get(s))
+  |> List.filter(c => c != '\r')
+  |> List.map(c => String.make(1, c))
+  |> String.concat("");
+let splitNewLines = s => s |> String.split_on_char('\n') |> Array.of_list;
+
+let removeTrailingNewLine = s => {
+  let len = String.length(s);
+  if (len > 0 && s.[len - 1] == '\n') {
+    String.sub(s, 0, len - 1);
+  } else {
+    s;
   };
 };

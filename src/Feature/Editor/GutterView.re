@@ -19,8 +19,15 @@ let renderLineNumber =
       cursorLine: int,
       yOffset: float,
     ) => {
+  let font =
+    Service_Font.resolveWithFallback(
+      ~italic=false,
+      Revery.Font.Weight.Normal,
+      context.fontFamily,
+    );
+  let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
   let isActiveLine = lineNumber == cursorLine;
-  let y = yOffset -. context.fontMetrics.ascent;
+  let y = yOffset -. fontMetrics.ascent;
 
   let lineNumber =
     string_of_int(
@@ -45,7 +52,16 @@ let renderLineNumber =
     isActiveLine
       ? colors.lineNumberActiveForeground : colors.lineNumberForeground;
 
-  Draw.utf8Text(~context, ~x=lineNumberXOffset, ~y, ~color, lineNumber);
+  Draw.utf8Text(
+    ~context,
+    ~x=lineNumberXOffset,
+    ~y,
+    ~color,
+    ~bold=false,
+    ~italic=false,
+    ~mono=false,
+    lineNumber,
+  );
 };
 
 let renderLineNumbers =
@@ -82,29 +98,21 @@ let renderLineNumbers =
 
 let render =
     (
+      ~editor,
       ~showLineNumbers,
+      ~showScrollShadow,
       ~lineNumberWidth,
       ~width,
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
       canvasContext,
     ) => {
   let context =
-    Draw.createContext(
-      ~canvasContext,
-      ~width,
-      ~height,
-      ~scrollX=0.,
-      ~scrollY,
-      ~lineHeight,
-      ~editorFont,
-    );
+    Draw.createContext(~canvasContext, ~width, ~height, ~editor, ~editorFont);
 
   if (showLineNumbers != `Off) {
     renderLineNumbers(
@@ -120,8 +128,8 @@ let render =
 
   Option.iter(
     EditorDiffMarkers.render(
-      ~scrollY=context.scrollY,
-      ~rowHeight=context.lineHeight,
+      ~scrollY=Editor.scrollY(editor),
+      ~rowHeight=Editor.lineHeightInPixels(editor),
       ~x=lineNumberWidth,
       ~height=float(height),
       ~width=Constants.diffMarkerWidth,
@@ -131,16 +139,20 @@ let render =
     ),
     diffMarkers,
   );
+
+  if (showScrollShadow) {
+    ScrollShadow.renderVertical(~editor, ~width=float(width), ~context);
+  };
 };
 
 let make =
     (
+      ~editor,
+      ~showScrollShadow,
       ~showLineNumbers,
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
@@ -170,14 +182,14 @@ let make =
 
   let render =
     render(
+      ~editor,
+      ~showScrollShadow,
       ~showLineNumbers,
       ~lineNumberWidth,
       ~width=int_of_float(totalWidth),
       ~height,
       ~colors,
       ~editorFont,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,

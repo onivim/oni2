@@ -10,7 +10,7 @@ runTestWithInput(
   ~name="RegressionFileModifiedIndication",
   (input, dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   let initialBuffer = Vim.Buffer.getCurrent();

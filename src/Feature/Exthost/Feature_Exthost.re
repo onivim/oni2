@@ -23,7 +23,7 @@ module Internal = {
       |> OptionEx.flatMap(Oni_Core.Buffer.getFilePath)
       |> Option.map(Uri.fromPath)
       |> Option.map(uri => {
-           let id = getVscodeEditorId(editor.editorId);
+           let id = getVscodeEditorId(Feature_Editor.Editor.getId(editor));
            open TextEditor;
 
            let options =

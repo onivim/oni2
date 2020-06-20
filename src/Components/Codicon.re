@@ -8,7 +8,7 @@ open Revery.UI;
 module ZedBundled = Oni_Core.ZedBundled;
 
 module Constants = {
-  let fontFamily = "codicon.ttf";
+  let fontFamily = Revery.Font.Family.fromFile("codicon.ttf");
   let none = 0x0;
 };
 
@@ -831,9 +831,7 @@ let stringToGlyph = name =>
 module Styles = {
   open Style;
 
-  let text = (~fontSize, ~color) => [
-    Style.fontFamily(Constants.fontFamily),
-    Style.fontSize(fontSize),
+  let text = (~color) => [
     Style.color(color),
     textWrap(Revery.TextWrapping.NoWrap),
   ];
@@ -842,4 +840,9 @@ module Styles = {
 let codeToIcon = icon => ZedBundled.singleton(Uchar.of_int(icon));
 
 let make = (~icon, ~fontSize=15., ~color, ()) =>
-  <Text text={codeToIcon(icon)} style={Styles.text(~fontSize, ~color)} />;
+  <Text
+    text={codeToIcon(icon)}
+    style={Styles.text(~color)}
+    fontSize
+    fontFamily=Constants.fontFamily
+  />;

@@ -11,7 +11,7 @@ open Feature_Editor;
 runTestWithInput(
   ~name="ExtHostDefinitionTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   // Wait until the extension is activated
@@ -67,10 +67,7 @@ runTestWithInput(
         state
         |> Selectors.getActiveEditorGroup
         |> Selectors.getActiveEditor
-        |> OptionEx.map2(
-             (buffer, editor) => Editor.getPrimaryCursor(~buffer, editor),
-             maybeBuffer,
-           );
+        |> Option.map(Editor.getPrimaryCursor);
 
       let isDefinitionAvailable = (buffer, location) => {
         Definition.isAvailable(

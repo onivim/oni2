@@ -105,24 +105,15 @@ module Styles = {
 
   let label = [flexGrow(1), margin(4)];
 
-  let text =
-      (
-        ~highlighted=false,
-        ~colors: Colors.t,
-        ~editorFont: Service_Font.font,
-        (),
-      ) => [
+  let text = (~highlighted=false, ~colors: Colors.t, ()) => [
     textOverflow(`Ellipsis),
-    fontFamily(editorFont.fontFile),
-    fontSize(editorFont.fontSize),
     textWrap(Revery.TextWrapping.NoWrap),
     color(
       highlighted ? colors.normalModeBackground : colors.editorForeground,
     ),
   ];
 
-  let highlightedText = (~colors, ~editorFont: Service_Font.font) =>
-    text(~highlighted=true, ~colors, ~editorFont, ());
+  let highlightedText = (~colors) => text(~highlighted=true, ~colors, ());
 
   let detail = (~width, ~lineHeight, ~colors: Colors.t) => [
     position(`Absolute),
@@ -136,10 +127,8 @@ module Styles = {
     backgroundColor(colors.suggestWidgetBackground),
   ];
 
-  let detailText = (~editorFont: Service_Font.font, ~tokenTheme: TokenTheme.t) => [
+  let detailText = (~tokenTheme: TokenTheme.t) => [
     textOverflow(`Ellipsis),
-    fontFamily(editorFont.fontFile),
-    fontSize(editorFont.fontSize),
     color(tokenTheme.commentColor),
     margin(3),
   ];
@@ -153,7 +142,7 @@ let itemView =
       ~highlight,
       ~colors: Colors.t,
       ~tokenTheme,
-      ~editorFont,
+      ~editorFont: Service_Font.font,
       (),
     ) => {
   let icon = kind |> kindToIcon;
@@ -175,8 +164,10 @@ let itemView =
     <View style=Styles.label>
       <HighlightText
         highlights=highlight
-        style={Styles.text(~colors, ~editorFont, ())}
-        highlightStyle={Styles.highlightedText(~colors, ~editorFont)}
+        style={Styles.text(~colors, ())}
+        highlightStyle={Styles.highlightedText(~colors)}
+        fontFamily={editorFont.fontFamily}
+        fontSize={editorFont.fontSize}
         text
       />
     </View>
@@ -184,9 +175,22 @@ let itemView =
 };
 
 let detailView =
-    (~text, ~width, ~lineHeight, ~editorFont, ~colors, ~tokenTheme, ()) =>
+    (
+      ~text,
+      ~width,
+      ~lineHeight,
+      ~editorFont: Service_Font.font,
+      ~colors,
+      ~tokenTheme,
+      (),
+    ) =>
   <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
-    <Text style={Styles.detailText(~editorFont, ~tokenTheme)} text />
+    <Text
+      style={Styles.detailText(~tokenTheme)}
+      fontFamily={editorFont.fontFamily}
+      fontSize={editorFont.fontSize}
+      text
+    />
   </View>;
 
 let make =

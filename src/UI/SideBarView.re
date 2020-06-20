@@ -17,11 +17,7 @@ module Styles = {
       transform(Transform.[TranslateX(transition)]),
     ];
 
-  let title = (~theme, ~font: Core.UiFont.t) => [
-    fontSize(font.fontSize),
-    fontFamily(font.fontFileSemiBold),
-    color(Colors.SideBar.foreground.from(theme)),
-  ];
+  let title = (~theme) => [color(Colors.SideBar.foreground.from(theme))];
 
   let heading = theme => [
     flexDirection(`Row),
@@ -83,7 +79,13 @@ let%component make = (~theme, ~state: State.t, ()) => {
 
   <View style={Styles.container(~theme, ~transition)}>
     <View style={Styles.heading(theme)}>
-      <Text text=title style={Styles.title(~theme, ~font)} />
+      <Text
+        text=title
+        style={Styles.title(~theme)}
+        fontFamily={font.family}
+        fontWeight=Medium
+        fontSize={font.size}
+      />
     </View>
     elem
   </View>;

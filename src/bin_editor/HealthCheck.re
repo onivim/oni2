@@ -102,14 +102,14 @@ let mainChecks = [
     "Verify bundled font exists",
     _ =>
       Sys.file_exists(
-        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+        Revery.Environment.executingDirectory ++ "JetBrainsMono-Regular.ttf",
       ),
   ),
   (
     "Revery: Verify can measure & shape font",
     _ => {
       let fontPath =
-        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf";
+        Revery.Environment.executingDirectory ++ "JetBrainsMono-Regular.ttf";
       switch (Revery.Font.load(fontPath)) {
       | Ok(font) =>
         let metrics = Revery.Font.getMetrics(font, 12.0);
@@ -179,10 +179,6 @@ let mainChecks = [
           ~onClose=_ => {closed := true},
           ~onHighlights=(~bufferId as _, ~tokens as _) => (),
           ~onHealthCheckResult=res => {healthCheckResult := res},
-          ~additionalEnv=[
-            // Get stack trace on crash
-            ("OCAMLRUNPARAM", "b"),
-          ],
           Oni_Extensions.LanguageInfo.initial,
           setup,
         )

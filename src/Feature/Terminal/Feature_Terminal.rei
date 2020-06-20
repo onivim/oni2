@@ -68,8 +68,6 @@ type outmsg =
       shouldClose: bool,
     });
 
-let shouldHandleInput: string => bool;
-
 let update: (~config: Config.resolver, t, msg) => (t, outmsg);
 
 let subscription:
@@ -104,7 +102,7 @@ let theme: ColorTheme.Colors.t => ReveryTerminal.Theme.t;
 let defaultBackground: ColorTheme.Colors.t => Revery.Color.t;
 let defaultForeground: ColorTheme.Colors.t => Revery.Color.t;
 
-type highlights = (int, list(ColorizedToken.t));
+type highlights = (int, list(ThemeToken.t));
 let getLinesAndHighlights:
   (~colorTheme: ColorTheme.Colors.t, ~terminalId: int) =>
   (array(string), list(highlights));

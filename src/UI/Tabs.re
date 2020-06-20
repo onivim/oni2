@@ -31,6 +31,7 @@ let toTab =
       activeEditorId,
       languageInfo,
       iconTheme,
+      dispatch,
       tabInfo,
     ) => {
   let title =
@@ -54,11 +55,9 @@ let toTab =
     mode
     icon
     onClick={() =>
-      GlobalContext.current().dispatch(
-        Model.Actions.EditorTabClicked(tabInfo.editorId),
-      )
+      dispatch(Model.Actions.EditorTabClicked(tabInfo.editorId))
     }
-    onClose={() => GlobalContext.current().closeEditorById(tabInfo.editorId)}
+    onClose={() => dispatch(Model.Actions.ViewCloseEditor(tabInfo.editorId))}
   />;
 };
 
@@ -127,6 +126,7 @@ let%component make =
                 ~active,
                 ~languageInfo,
                 ~iconTheme,
+                ~dispatch,
                 (),
               ) => {
   let%hook (actualScrollLeft, setScrollLeft) = Hooks.state(0);
@@ -184,6 +184,7 @@ let%component make =
            activeEditorId,
            languageInfo,
            iconTheme,
+           dispatch,
          ),
        )
     |> React.listToElement;

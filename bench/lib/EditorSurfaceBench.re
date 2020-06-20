@@ -19,9 +19,9 @@ let editorSurfaceMinimalState = hwnd => {
     hwnd,
     <EditorSurface
       isActiveSplit=true
+      dispatch={_ => ()}
       editor=simpleEditor
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -30,7 +30,7 @@ let editorSurfaceMinimalState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
@@ -43,9 +43,9 @@ let editorSurfaceThousandLineState = hwnd => {
     hwnd,
     <EditorSurface
       isActiveSplit=true
+      dispatch={_ => ()}
       editor=simpleEditor
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -54,7 +54,7 @@ let editorSurfaceThousandLineState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}
@@ -67,9 +67,9 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
     hwnd,
     <EditorSurface
       isActiveSplit=true
+      dispatch={_ => ()}
       editor=simpleEditor
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -78,7 +78,7 @@ let editorSurfaceThousandLineStateWithIndents = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(
@@ -95,9 +95,9 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
     hwnd,
     <EditorSurface
       isActiveSplit=true
+      dispatch={_ => ()}
       editor=simpleEditor
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -106,7 +106,7 @@ let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(
@@ -124,8 +124,8 @@ let editorSurfaceHundredThousandLineState = hwnd => {
     <EditorSurface
       isActiveSplit=true
       editor=simpleEditor
+      dispatch={_ => ()}
       buffer=thousandLineBuffer
-      onScroll={_ => ()}
       onEditorSizeChanged={(_, _, _) => ()}
       onCursorChange={_ => ()}
       bufferHighlights={thousandLineState.bufferHighlights}
@@ -134,7 +134,7 @@ let editorSurfaceHundredThousandLineState = hwnd => {
       completions={thousandLineState.completions}
       tokenTheme={thousandLineState.tokenTheme}
       definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
+      mode={Feature_Vim.mode(thousandLineState.vim)}
       theme={Feature_Theme.colors(thousandLineState.colorTheme)}
       windowIsFocused=true
       config={configResolver(Config.Settings.empty)}

@@ -108,7 +108,7 @@
 				},
 				"reason_language_server.show_module_path_on_hover": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"description": "Show the module path on hover"
 				},
 				"reason_language_server.reloadOnChange": {

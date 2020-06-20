@@ -115,18 +115,6 @@ module Configuration = {
   };
 };
 
-let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
-
-let shouldHandleInput = str => {
-  !
-    List.exists(s => str == s, inputToIgnore);
-    // pick what keys should be ignored by the terminal.
-    // One option would be a configuration setting that lets us
-    // better, more customizable way to manage this, though.
-    // the user can get out of the terminal. We should have a
-    // HACK: Let the window motion keys pass through, so that
-};
-
 let shouldClose = (~id, {idToTerminal, _}) => {
   IntMap.find_opt(id, idToTerminal)
   |> Option.map(({closeOnExit, _}) => closeOnExit)
@@ -372,7 +360,7 @@ let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
   getFirstNonEmptyLine(~start=Array.length(lines) - 1, ~direction=-1, lines);
 };
 
-type highlights = (int, list(ColorizedToken.t));
+type highlights = (int, list(ThemeToken.t));
 
 module TermScreen = ReveryTerminal.Screen;
 
@@ -393,16 +381,19 @@ let addHighlightForCell =
       cell,
     );
 
+  // TODO: Hook up the bold/italic in revery-terminal
   let newToken =
-    ColorizedToken.{
+    ThemeToken.{
       index: column,
       backgroundColor: bg,
       foregroundColor: fg,
       syntaxScope: SyntaxScope.none,
+      bold: false,
+      italic: false,
     };
 
   switch (tokens) {
-  | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail]
+  | [ThemeToken.{foregroundColor, backgroundColor, _} as ct, ...tail]
       when foregroundColor != fg && backgroundColor != bg => [
       newToken,
       ct,

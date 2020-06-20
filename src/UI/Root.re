@@ -59,7 +59,7 @@ module Styles = {
     ];
 };
 
-let make = (~state: State.t, ()) => {
+let make = (~dispatch, ~state: State.t, ()) => {
   let State.{
         configuration,
         contextMenu,
@@ -74,8 +74,14 @@ let make = (~state: State.t, ()) => {
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
-  let onContextMenuItemSelect = item =>
-    GlobalContext.current().dispatch(ContextMenuItemSelected(item));
+  let mode = ModeManager.current(state);
+
+  let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+  let maybeActiveEditor =
+    Oni_Model.EditorGroups.getActiveEditor(state.editorGroups);
+  let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
+
+  let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
 
   let statusBar = () =>
     if (Selectors.getActiveConfigurationValue(state, c =>
@@ -83,7 +89,19 @@ let make = (~state: State.t, ()) => {
         )
         && !zenMode) {
       <View style=Styles.statusBar>
-        <StatusBar state contextMenu onContextMenuItemSelect theme />
+        <Feature_StatusBar.View
+          mode
+          notifications={state.notifications}
+          contextMenu
+          diagnostics={state.diagnostics}
+          font={state.uiFont}
+          statusBar={state.statusBar}
+          activeBuffer=maybeActiveBuffer
+          activeEditor=maybeActiveEditor
+          indentationSettings
+          theme
+          dispatch=statusBarDispatch
+        />
       </View>;
     } else {
       React.empty;
@@ -115,8 +133,7 @@ let make = (~state: State.t, ()) => {
   let modals = () => {
     switch (state.modal) {
     | Some(model) =>
-      let dispatch = msg =>
-        GlobalContext.current().dispatch(Actions.Modals(msg));
+      let dispatch = msg => dispatch(Actions.Modals(msg));
 
       <Feature_Modals.View
         model
@@ -132,25 +149,34 @@ let make = (~state: State.t, ()) => {
   };
 
   let contextMenuOverlay = () => {
-    let onClick = () =>
-      GlobalContext.current().dispatch(ContextMenuOverlayClicked);
+    let onClick = () => dispatch(ContextMenuOverlayClicked);
 
     <ContextMenu.Overlay onClick />;
   };
 
+  let titleDispatch = msg => dispatch(Actions.TitleBar(msg));
+
+  let mapDisplayMode =
+    fun
+    | Oni_Model.State.Minimized => Feature_TitleBar.Minimized
+    | Oni_Model.State.Maximized => Feature_TitleBar.Maximized
+    | Oni_Model.State.Windowed => Feature_TitleBar.Windowed
+    | Oni_Model.State.Fullscreen => Feature_TitleBar.Fullscreen;
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
-    <Titlebar
+    <Feature_TitleBar.View
       isFocused={state.windowIsFocused}
-      windowDisplayMode={state.windowDisplayMode}
+      windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
       font={state.uiFont}
       title={state.windowTitle}
       theme
+      dispatch=titleDispatch
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
         <activityBar />
         <sideBar />
-        <EditorView state theme />
+        <EditorView state theme dispatch />
       </View>
       <PaneView theme uiFont editorFont state />
     </View>

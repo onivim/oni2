@@ -28,7 +28,6 @@ let reduce: (State.t, Actions.t) => State.t =
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
         sideBar: SideBarReducer.reduce(~zenMode=s.zenMode, s.sideBar, a),
-        statusBar: StatusBarReducer.reduce(s.statusBar, a),
       };
 
       switch (a) {
@@ -42,6 +41,7 @@ let reduce: (State.t, Actions.t) => State.t =
         }
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
+      | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | TokenThemeLoaded(tokenTheme) => {...s, tokenTheme}
       | ActivityBar(ActivityBar.FileExplorerClick) => {...s, zenMode: false}

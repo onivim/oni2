@@ -2,6 +2,11 @@ open Oni_Core;
 
 // MODEL
 
+type panel =
+  | Left
+  | Center(int)
+  | Bottom;
+
 type model;
 
 let initial: int => model;
@@ -25,9 +30,9 @@ type msg;
 
 type outmsg =
   | Nothing
-  | Focus(int);
+  | Focus(panel);
 
-let update: (~focus: option(int), model, msg) => (model, outmsg);
+let update: (~focus: option(panel), model, msg) => (model, outmsg);
 
 // VIEW
 
@@ -62,6 +67,18 @@ module Commands: {
   let increaseVerticalSize: Command.t(msg);
   let decreaseHorizontalSize: Command.t(msg);
   let increaseHorizontalSize: Command.t(msg);
+  let increaseWindowSizeUp: Command.t(msg);
+  let decreaseWindowSizeUp: Command.t(msg);
+  let increaseWindowSizeDown: Command.t(msg);
+  let decreaseWindowSizeDown: Command.t(msg);
+  let increaseWindowSizeLeft: Command.t(msg);
+  let decreaseWindowSizeLeft: Command.t(msg);
+  let increaseWindowSizeRight: Command.t(msg);
+  let decreaseWindowSizeRight: Command.t(msg);
+  let maximize: Command.t(msg);
+  let maximizeHorizontal: Command.t(msg);
+  let maximizeVertical: Command.t(msg);
+  let toggleMaximize: Command.t(msg);
   let resetSizes: Command.t(msg);
 };
 

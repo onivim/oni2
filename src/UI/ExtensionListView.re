@@ -10,10 +10,8 @@ open Exthost.Extension;
 module Colors = Feature_Theme.Colors;
 
 module Styles = {
-  let text = (~theme, ~font: UiFont.t) =>
+  let text = (~theme) =>
     Style.[
-      fontSize(font.fontSize),
-      fontFamily(font.fontFile),
       color(Colors.SideBar.foreground.from(theme)),
       marginLeft(10),
       marginVertical(2),
@@ -22,14 +20,14 @@ module Styles = {
     ];
 };
 
-let make = (~model, ~theme, ~font, ()) => {
+let make = (~model, ~theme, ~font: UiFont.t, ()) => {
   let renderItem = (extensions: array(Scanner.ScanResult.t), idx) => {
     let extension = extensions[idx];
 
     let icon =
       switch (extension.manifest.icon) {
       | None => <Container color=Revery.Colors.darkGray width=32 height=32 />
-      | Some(iconPath) => <Image src=iconPath width=32 height=32 />
+      | Some(iconPath) => <Image src={`File(iconPath)} width=32 height=32 />
       };
 
     <View
@@ -43,7 +41,9 @@ let make = (~model, ~theme, ~font, ()) => {
       icon
       <View style=Style.[flexDirection(`Column), flexGrow(1)]>
         <Text
-          style={Styles.text(~font, ~theme)}
+          style={Styles.text(~theme)}
+          fontFamily={font.family}
+          fontSize={font.size}
           text={Manifest.getDisplayName(extension.manifest)}
         />
         <View style=Style.[flexDirection(`Row), flexGrow(1)]>
@@ -54,7 +54,9 @@ let make = (~model, ~theme, ~font, ()) => {
               overflow(`Hidden),
             ]>
             <Text
-              style={Styles.text(~font, ~theme)}
+              style={Styles.text(~theme)}
+              fontFamily={font.family}
+              fontSize={font.size}
               text={extension.manifest.author}
             />
           </View>
@@ -65,7 +67,9 @@ let make = (~model, ~theme, ~font, ()) => {
               overflow(`Hidden),
             ]>
             <Text
-              style={Styles.text(~font, ~theme)}
+              style={Styles.text(~theme)}
+              fontFamily={font.family}
+              fontSize={font.size}
               text={extension.manifest.version}
             />
           </View>

@@ -47,6 +47,24 @@ void onBufferChanged(bufferUpdate_T bu) {
   free(pArgs);
 }
 
+int onAutoIndent(buf_T *buf, char_u *prevLine, char_u *newLine) {
+  CAMLparam0();
+  CAMLlocal2(vPrevLine, vNewLine);
+  static const value *lv_onAutoIndent = NULL;
+
+  if (lv_onAutoIndent == NULL) {
+    lv_onAutoIndent = caml_named_value("lv_onAutoIndent");
+  }
+
+  vPrevLine = caml_copy_string(prevLine);
+
+  value vIndent = caml_callback(*lv_onAutoIndent, vPrevLine);
+
+  int ret = Int_val(vIndent);
+
+  CAMLreturnT(int, ret);
+};
+
 int onGoto(gotoRequest_T gotoInfo) {
   static const value *lv_onGoto = NULL;
 
@@ -95,6 +113,42 @@ void onDirectoryChanged(char_u *path) {
 
   pathString = caml_copy_string(path);
   caml_callback(*lv_onDirectoryChanged, pathString);
+  CAMLreturn0;
+}
+
+void onFormat(formatRequest_T *pRequest) {
+  CAMLparam0();
+  CAMLlocal3(ret, commandString, commandOpt);
+
+  static const value *lv_onFormat = NULL;
+  if (lv_onFormat == NULL) {
+    lv_onFormat = caml_named_value("lv_onFormat");
+  }
+
+  if (pRequest->cmd != NULL) {
+    commandString = caml_copy_string(pRequest->cmd);
+    commandOpt = Val_some(commandString);
+  } else {
+    commandOpt = Val_none;
+  }
+
+  int id = vimBufferGetId(pRequest->buf);
+  int lineCount = vimBufferGetLineCount(pRequest->buf);
+  int formatType = 0;
+
+  if (pRequest->formatType == FORMATTING) {
+    formatType = 1;
+  }
+
+  ret = caml_alloc(6, 0);
+  Store_field(ret, 0, Val_int(pRequest->start.lnum));
+  Store_field(ret, 1, Val_int(pRequest->end.lnum));
+  Store_field(ret, 2, Val_int(id));
+  Store_field(ret, 3, Val_int(pRequest->returnCursor));
+  Store_field(ret, 4, Val_int(formatType));
+  Store_field(ret, 5, Val_int(lineCount));
+
+  caml_callback(*lv_onFormat, ret);
   CAMLreturn0;
 }
 
@@ -339,11 +393,13 @@ void onWriteFailure(writeFailureReason_T reason, buf_T *buf) {
 
 CAMLprim value libvim_vimInit(value unit) {
   vimSetAutoCommandCallback(&onAutocommand);
+  vimSetAutoIndentCallback(&onAutoIndent);
   vimSetBufferUpdateCallback(&onBufferChanged);
   vimSetClipboardGetCallback(&getClipboardCallback);
   vimSetDirectoryChangedCallback(&onDirectoryChanged);
   vimSetDisplayIntroCallback(&onIntro);
   vimSetDisplayVersionCallback(&onVersion);
+  vimSetFormatCallback(&onFormat);
   vimSetGotoCallback(&onGoto);
   vimSetMessageCallback(&onMessage);
   vimSetQuitCallback(&onQuit);
@@ -831,6 +887,14 @@ CAMLprim value libvim_vimUndoSaveCursor(value unit) {
   CAMLparam0();
 
   vimUndoSaveCursor();
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value libvim_vimUndoSync(value force) {
+  CAMLparam0();
+
+  vimUndoSync(Int_val(force));
 
   CAMLreturn(Val_unit);
 }

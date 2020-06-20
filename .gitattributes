@@ -5,6 +5,16 @@
 # gets choked up on the extra `\r` character.
 *.sh text eol=lf
 
+# Windows executables
+*.exe      binary
+
+# Archives
+*.7z       binary
+*.gz       binary
+*.tar      binary
+*.tgz      binary
+*.zip      binary
+
 # Linguist override
 *.re linguist-language=Reason
 *.rei linguist-language=Reason

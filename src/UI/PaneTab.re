@@ -18,7 +18,6 @@ module Constants = {
 
 module Styles = {
   open Style;
-  open UiFont;
 
   let container = (~isActive, ~theme) => {
     let borderColor =
@@ -44,10 +43,8 @@ module Styles = {
     justifyContent(`Center),
   ];
 
-  let text = (~isActive, ~uiFont, ~theme) => [
+  let text = (~isActive, ~theme) => [
     textOverflow(`Ellipsis),
-    fontFamily(isActive ? uiFont.fontFileSemiBold : uiFont.fontFile),
-    fontSize(uiFont.fontSize),
     isActive
       ? color(Colors.PanelTitle.activeForeground.from(theme))
       : color(Colors.PanelTitle.inactiveForeground.from(theme)),
@@ -56,10 +53,16 @@ module Styles = {
   ];
 };
 
-let make = (~uiFont, ~theme, ~title, ~onClick, ~isActive, ()) => {
+let make = (~uiFont: UiFont.t, ~theme, ~title, ~onClick, ~isActive, ()) => {
   <View style={Styles.container(~isActive, ~theme)}>
     <Clickable onClick style=Styles.clickable>
-      <Text style={Styles.text(~isActive, ~uiFont, ~theme)} text=title />
+      <Text
+        style={Styles.text(~isActive, ~theme)}
+        fontFamily={uiFont.family}
+        fontWeight={isActive ? Medium : Normal}
+        fontSize={uiFont.size}
+        text=title
+      />
     </Clickable>
   </View>;
 };

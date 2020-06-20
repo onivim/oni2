@@ -6,7 +6,7 @@ open Oni_IntegrationTestLib;
 runTestWithInput(
   ~name="Regression733Test", (input, dispatch, wait, _runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   let activeEditorRef = ref(None);
@@ -35,7 +35,8 @@ runTestWithInput(
 
   switch (activeEditorRef^) {
   | None => failwith("We should've had an editor now")
-  | Some(editor) => dispatch(ViewCloseEditor(editor.editorId))
+  | Some(editor) =>
+    dispatch(ViewCloseEditor(Feature_Editor.Editor.getId(editor)))
   };
 
   wait(~name="Verify there are no editors open...", (state: State.t) => {

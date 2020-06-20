@@ -16,3 +16,4 @@ module RangeEx = RangeEx;
 module ResultEx = ResultEx;
 module StringEx = StringEx;
 module ThreadEx = ThreadEx;
+module IDGenerator = IDGenerator;

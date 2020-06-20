@@ -83,7 +83,11 @@ module Location: {
 };
 
 module MarkdownString: {
-  type t = string;
+  [@deriving show]
+  type t;
+
+  let fromString: string => t;
+  let toString: t => string;
 
   let decode: Json.decoder(t);
 };
@@ -129,6 +133,8 @@ module DocumentFilter: {
   let matches: (~filetype: string, t) => bool;
 
   let decode: Json.decoder(t);
+
+  let toString: t => string;
 };
 
 module DocumentSelector: {
@@ -295,9 +301,8 @@ module SignatureHelp: {
   module ParameterInformation: {
     [@deriving show]
     type t = {
-      label: string,
-      // TODO
-      //documentation: option(string),
+      label: [ | `String(string) | `Range(int, int)],
+      documentation: option(MarkdownString.t),
     };
     let decode: Json.decoder(t);
   };
@@ -306,8 +311,7 @@ module SignatureHelp: {
     [@deriving show]
     type t = {
       label: string,
-      // TODO:
-      //documentation: options(MarkdownString.t),
+      documentation: option(MarkdownString.t),
       parameters: list(ParameterInformation.t),
     };
 

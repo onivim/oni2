@@ -25,7 +25,7 @@ module Internal = {
     |> Option.value(~default=SyntaxScope.none);
   };
 
-  let autoClosingPairs = (~syntaxScope, ~languageConfigLoader, state: State.t) => {
+  let autoClosingPairs = (~syntaxScope, ~maybeLanguageConfig, state: State.t) => {
     let acpEnabled =
       Configuration.getValue(
         c => c.editorAutoClosingBrackets,
@@ -38,14 +38,9 @@ module Internal = {
       );
 
     if (acpEnabled) {
-      state
-      |> Selectors.getActiveBuffer
-      |> OptionEx.flatMap(Buffer.getFileType)
-      |> OptionEx.flatMap(
-           Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
-         )
+      maybeLanguageConfig
       |> Option.map(
-           Ext.LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
+           LanguageConfiguration.toVimAutoClosingPairs(syntaxScope),
          )
       |> Option.value(~default=Vim.AutoClosingPairs.empty);
     } else {
@@ -53,13 +48,9 @@ module Internal = {
     };
   };
 
-  let lineComment = (~buffer, ~languageConfigLoader) => {
-    buffer
-    |> OptionEx.flatMap(Buffer.getFileType)
-    |> OptionEx.flatMap(
-         Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
-       )
-    |> OptionEx.flatMap((config: Ext.LanguageConfiguration.t) =>
+  let lineComment = (~maybeLanguageConfig) => {
+    maybeLanguageConfig
+    |> OptionEx.flatMap((config: LanguageConfiguration.t) =>
          config.lineComment
        );
   };
@@ -79,7 +70,15 @@ let current:
     |> Selectors.getActiveEditor
     |> Option.map((editor: Editor.t) => {
          let bufferId = Editor.getBufferId(editor);
-         let {cursors, _}: Editor.t = editor;
+         let cursors = Editor.getVimCursors(editor);
+
+         let editorBuffer = Selectors.getActiveBuffer(state);
+         let maybeLanguageConfig =
+           editorBuffer
+           |> OptionEx.flatMap(Buffer.getFileType)
+           |> OptionEx.flatMap(
+                Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
+              );
 
          let maybeCursor =
            switch (Editor.getVimCursors(editor)) {
@@ -87,11 +86,17 @@ let current:
            | [] => None
            };
 
+         // TODO: Hook up to Vim context
+         let autoIndent =
+           maybeLanguageConfig
+           |> Option.map(LanguageConfiguration.toAutoIndent)
+           |> Option.value(~default=_ => Vim.AutoIndent.KeepIndent);
+
          let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
          let autoClosingPairs =
            Internal.autoClosingPairs(
              ~syntaxScope,
-             ~languageConfigLoader,
+             ~maybeLanguageConfig,
              state,
            );
 
@@ -100,21 +105,26 @@ let current:
                bufferWidthInCharacters: width,
                _,
              } =
-           Editor.getLayout(editor);
+           // TODO: Fix this
+           Editor.getLayout(
+             ~isMinimapShown=true,
+             ~showLineNumbers=true,
+             ~maxMinimapCharacters=0,
+             editor,
+           );
 
          let leftColumn = Editor.getLeftVisibleColumn(editor);
          let topLine = Editor.getTopVisibleLine(editor);
-         let editorBuffer = Selectors.getActiveBuffer(state);
 
          // Set configured line comment
-         let lineComment =
-           Internal.lineComment(~buffer=editorBuffer, ~languageConfigLoader);
+         let lineComment = Internal.lineComment(~maybeLanguageConfig);
 
          let indentation = Internal.indentation(~buffer=editorBuffer);
 
          let insertSpaces = indentation.mode == Spaces;
 
          Vim.Context.{
+           autoIndent,
            bufferId,
            leftColumn,
            topLine,

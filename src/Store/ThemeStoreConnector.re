@@ -51,6 +51,8 @@ let start = (themeInfo: ThemeInfo.t) => {
       Oni_Core.Log.perf("theme.load", () => {
         let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
 
+        Log.infof(m => m("Loading theme: %s", themePath));
+
         themePath
         |> Textmate.Theme.from_file(~isDark=dark)
         |> Utility.ResultEx.tapError(err => {
@@ -78,6 +80,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     });
 
   let loadThemeByNameEffect = themeName => {
+    Log.infof(m => m("Loading theme by name: %s", themeName));
     let themeInfo = ThemeInfo.getThemeByName(themeInfo, themeName);
 
     switch (themeInfo) {

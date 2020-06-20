@@ -71,12 +71,16 @@ let getOrCreateEditorForBuffer = (~font, ~buffer, state) => {
     let newEditor = Editor.create(~font, ~buffer, ());
     let newState = {
       ...state,
-      editors: IntMap.add(newEditor.editorId, newEditor, state.editors),
+      editors: IntMap.add(Editor.getId(newEditor), newEditor, state.editors),
       bufferIdToEditorId:
-        IntMap.add(bufferId, newEditor.editorId, state.bufferIdToEditorId),
-      reverseTabOrder: [newEditor.editorId, ...state.reverseTabOrder],
+        IntMap.add(
+          bufferId,
+          Editor.getId(newEditor),
+          state.bufferIdToEditorId,
+        ),
+      reverseTabOrder: [Editor.getId(newEditor), ...state.reverseTabOrder],
     };
-    (newState, newEditor.editorId);
+    (newState, Editor.getId(newEditor));
   };
 };
 
@@ -201,4 +205,16 @@ let removeEditorsForBuffer = (~bufferId, group) => {
     group.editors,
     group,
   );
+};
+
+let updateEditor = (~editorId, msg, group) => {
+  group.editors
+  |> IntMap.find_opt(editorId)
+  |> Option.map(editor => {
+       let (editor', outmsg) = Feature_Editor.update(editor, msg);
+       let editors' = group.editors |> IntMap.add(editorId, editor');
+
+       ({...group, editors: editors'}, Some(outmsg));
+     })
+  |> Option.value(~default=(group, None));
 };

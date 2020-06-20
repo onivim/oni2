@@ -33,6 +33,35 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | Formatting(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let maybeSelection =
+      state
+      |> Oni_Model.Selectors.getActiveEditorGroup
+      |> Oni_Model.Selectors.getActiveEditor
+      |> Option.map(Feature_Editor.Editor.selectionOrCursorRange);
+    let (model', eff) =
+      Feature_Formatting.update(
+        ~configuration=state.configuration,
+        ~maybeBuffer,
+        ~maybeSelection,
+        ~extHostClient,
+        state.formatting,
+        msg,
+      );
+    let state' = {...state, formatting: model'};
+    let effect =
+      switch (eff) {
+      | Feature_Formatting.Nothing => Effect.none
+      | Feature_Formatting.FormattingApplied({editCount, _}) =>
+        let msg = Printf.sprintf("Applied %d edits", editCount);
+        Internal.notificationEffect(~kind=Info, "Format: " ++ msg);
+      | Feature_Formatting.FormatError(msg) =>
+        Internal.notificationEffect(~kind=Error, "Format: " ++ msg)
+      | Feature_Formatting.Effect(eff) =>
+        eff |> Effect.map(msg => Actions.Formatting(msg))
+      };
+    (state', effect);
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
@@ -70,6 +99,19 @@ let update =
       | Effect(eff) => eff |> Effect.map(msg => Actions.Sneak(msg))
       };
     (state, eff);
+
+  | StatusBar(msg) =>
+    let (statusBar', maybeOutmsg) =
+      Feature_StatusBar.update(state.statusBar, msg);
+
+    let state' = {...state, statusBar: statusBar'};
+
+    let eff =
+      switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
+      | Nothing => Effect.none
+      };
+
+    (state', eff);
 
   | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
@@ -147,14 +189,26 @@ let update =
     open Feature_Layout;
 
     let focus =
-      EditorGroups.getActiveEditorGroup(state.editorGroups)
-      |> Option.map((group: EditorGroup.t) => group.editorGroupId);
+      switch (FocusManager.current(state)) {
+      | Editor
+      | Terminal(_) =>
+        EditorGroups.getActiveEditorGroup(state.editorGroups)
+        |> Option.map((group: EditorGroup.t) => Center(group.editorGroupId))
+
+      | FileExplorer
+      | SCM => Some(Left)
+
+      | Search => Some(Bottom)
+
+      | _ => None
+      };
     let (model, maybeOutmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 
     let state =
       switch (maybeOutmsg) {
-      | Focus(editorGroupId) => {
+      | Focus(Center(editorGroupId)) =>
+        {
           ...state,
           editorGroups:
             EditorGroups.setActiveEditorGroup(
@@ -162,6 +216,13 @@ let update =
               state.editorGroups,
             ),
         }
+        |> FocusManager.push(Editor)
+
+      | Focus(Left) =>
+        state.sideBar.isOpen ? SideBarReducer.focus(state) : state
+
+      | Focus(Bottom) => state.pane.isOpen ? PaneStore.focus(state) : state
+
       | Nothing => state
       };
     (state, Effect.none);
@@ -270,14 +331,37 @@ let update =
 
     | None => (state, Effect.none)
     }
-  | Editor(msg) =>
+  | FilesDropped({paths}) =>
     let eff =
-      Feature_Editor.update(
-        msg,
-        path => OpenFileByPath(path, None, None),
-        Noop,
+      Service_OS.Effect.statMultiple(paths, (path, stats) =>
+        if (stats.st_kind == S_REG) {
+          OpenFileByPath(path, None, None);
+        } else {
+          Noop;
+        }
       );
     (state, eff);
+  | Editor({editorId, msg}) =>
+    let (editorGroups', effects) =
+      EditorGroups.updateEditor(~editorId, msg, state.editorGroups);
+
+    let effect =
+      effects
+      |> List.map(
+           fun
+           | Feature_Editor.Nothing => Effect.none
+           | Feature_Editor.MouseHovered(location) =>
+             Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
+               dispatch(Hover(Feature_Hover.MouseHovered(location)))
+             })
+           | Feature_Editor.MouseMoved(location) =>
+             Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
+               dispatch(Hover(Feature_Hover.MouseMoved(location)))
+             }),
+         )
+      |> Isolinear.Effect.batch;
+
+    ({...state, editorGroups: editorGroups'}, effect);
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);
     ({...state, changelog: model}, eff);
@@ -300,6 +384,73 @@ let update =
   | TerminalFont(Service_Font.FontLoadError(message)) => (
       state,
       Internal.notificationEffect(~kind=Error, message),
+    )
+
+  | Hover(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (model', eff) =
+      Feature_Hover.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.hover,
+        msg,
+      );
+    let effect =
+      switch (eff) {
+      | Feature_Hover.Nothing => Effect.none
+      | Feature_Hover.Effect(eff) =>
+        Effect.map(msg => Actions.Hover(msg), eff)
+      };
+    ({...state, hover: model'}, effect);
+  | SignatureHelp(msg) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (model', eff) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.signatureHelp,
+        msg,
+      );
+    let effect =
+      switch (eff) {
+      | Feature_SignatureHelp.Nothing => Effect.none
+      | Feature_SignatureHelp.Effect(eff) =>
+        Effect.map(msg => Actions.SignatureHelp(msg), eff)
+      | Feature_SignatureHelp.Error(str) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          "Signature help error: " ++ str,
+        )
+      };
+    ({...state, signatureHelp: model'}, effect);
+  | ExtensionBufferUpdateQueued(buffer) /* {triggerKey}*/ =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeEditor =
+      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let (signatureHelp, shOutMsg) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor,
+        ~extHostClient,
+        state.signatureHelp,
+        Feature_SignatureHelp.KeyPressed(buffer.triggerKey, false),
+      );
+    let shEffect =
+      switch (shOutMsg) {
+      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
+      | _ => Effect.none
+      };
+    let effect = [shEffect] |> Effect.batch;
+    ({...state, signatureHelp}, effect);
+  | Vim(msg) => (
+      {...state, vim: Feature_Vim.update(msg, state.vim)},
+      Effect.none,
     )
 
   | _ => (state, Effect.none)

@@ -119,7 +119,7 @@ module Styles = {
     ];
   };
 
-  let text = (~isGroupFocused, ~isActive, ~uiFont: UiFont.t, ~theme) => {
+  let text = (~isGroupFocused, ~isActive, ~theme) => {
     let foreground =
       switch (isActive, isGroupFocused) {
       | (false, false) => Colors.unfocusedInactiveForeground
@@ -130,10 +130,6 @@ module Styles = {
     [
       width(proportion(0.80) - 10),
       textOverflow(`Ellipsis),
-      fontFamily(
-        isGroupFocused && isActive ? uiFont.fontFileItalic : uiFont.fontFile,
-      ),
-      fontSize(uiFont.fontSize),
       color(foreground.from(theme)),
       justifyContent(`Center),
       alignItems(`Center),
@@ -168,11 +164,11 @@ let%component make =
     switch (icon) {
     | Some((icon: IconTheme.IconDefinition.t)) =>
       <FontIcon
-        fontFamily="seti.ttf"
+        fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
         icon={icon.fontCharacter}
         color={icon.fontColor}
         /* TODO: Use 'weight' value from IconTheme font */
-        fontSize={uiFont.fontSize *. 1.5}
+        fontSize={uiFont.size *. 1.5}
       />
     | None => React.empty
     };
@@ -208,7 +204,10 @@ let%component make =
       ]>
       <View style=Styles.icon> fileIconView </View>
       <Text
-        style={Styles.text(~isGroupFocused, ~isActive, ~uiFont, ~theme)}
+        style={Styles.text(~isGroupFocused, ~isActive, ~theme)}
+        fontFamily={uiFont.family}
+        italic={isGroupFocused && isActive}
+        fontSize={uiFont.size}
         text=title
       />
     </Sneakable>

@@ -5,6 +5,13 @@
 open Oni_Model;
 open Actions;
 
+let focus = (state: State.t) =>
+  if (state.pane.isOpen && state.pane.selected == Search) {
+    FocusManager.push(Search, state);
+  } else {
+    state;
+  };
+
 let showSearchPane = (state: State.t) =>
   {
     ...state,
@@ -68,7 +75,7 @@ let update = (state: State.t, action: Actions.t) =>
     )
 
   | DiagnosticsHotKey
-  | StatusBar(DiagnosticsClicked)
+  | StatusBar(Feature_StatusBar.DiagnosticsClicked)
       when Pane.isVisible(Diagnostics, state.pane) => (
       closePane(state),
       Isolinear.Effect.none,
@@ -76,24 +83,25 @@ let update = (state: State.t, action: Actions.t) =>
 
   | DiagnosticsHotKey
   | PaneTabClicked(Diagnostics)
-  | StatusBar(DiagnosticsClicked) => (
+  | StatusBar(Feature_StatusBar.DiagnosticsClicked) => (
       openDiagnosticsPane(state),
       Isolinear.Effect.none,
     )
 
-  | StatusBar(NotificationCountClicked)
+  | StatusBar(Feature_StatusBar.NotificationCountClicked)
       when Pane.isVisible(Notifications, state.pane) => (
       closePane(state),
       Isolinear.Effect.none,
     )
 
   | PaneTabClicked(Notifications)
-  | StatusBar(NotificationCountClicked) => (
+  | StatusBar(Feature_StatusBar.ContextMenuNotificationOpenClicked)
+  | StatusBar(Feature_StatusBar.NotificationCountClicked) => (
       openNotificationsPane(state),
       Isolinear.Effect.none,
     )
 
-  | StatusBar(NotificationClearAllClicked) => (
+  | StatusBar(Feature_StatusBar.ContextMenuNotificationClearAllClicked) => (
       state,
       Feature_Notification.Effects.dismissAll
       |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
