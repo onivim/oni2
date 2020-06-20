@@ -30,9 +30,8 @@ let getLayout:
     t
   ) =>
   EditorLayout.t;
-let getCharacterUnderCursor: (t) => option(Uchar.t);
-let getPrimaryCursor: (t) => Location.t;
-let getLayout: t => EditorLayout.t;
+let getCharacterUnderCursor: t => option(Uchar.t);
+let getPrimaryCursor: t => Location.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => int;
@@ -53,18 +52,11 @@ let minimapScrollY: t => float;
 let lineHeightInPixels: t => float;
 let characterWidthInPixels: t => float;
 
-let bufferLineByteToPixel:
-  (~line: int, ~byteIndex: int, t) => (pixelPosition, float);
-let bufferLineCharacterToPixel:
-  (~line: int, ~characterIndex: int, t) => (pixelPosition, float);
-
 let selection: t => VisualRange.t;
 let setSelection: (~selection: VisualRange.t, t) => t;
+let selectionOrCursorRange: t => Range.t;
 
 let totalViewLines: t => int;
-
-let selection: t => VisualRange.t;
-let selectionOrCursorRange: t => Range.t;
 
 let scrollToColumn: (~column: int, t) => t;
 let scrollToPixelX: (~pixelX: float, t) => t;
@@ -76,6 +68,18 @@ let scrollDeltaPixelY: (~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
+
+// PIXEL-SPACE CONVERSION
+
+// These methods convert a buffer (line, byte) or (line, utf8 character index)
+// to a pixel position on-screen - accounting for word wrap, folding, scrolling, etc.
+
+// They return both the pixel position, as well as the character width of the targetcharacter.
+let bufferLineByteToPixel:
+  (~line: int, ~byteIndex: int, t) => (pixelPosition, float);
+let bufferLineCharacterToPixel:
+  (~line: int, ~characterIndex: int, t) => (pixelPosition, float);
+
 
 // PROJECTION
 
