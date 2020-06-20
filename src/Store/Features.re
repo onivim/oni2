@@ -39,7 +39,7 @@ let update =
     let maybeSelection =
       state
       |> Oni_Model.Selectors.getActiveEditorGroup
-      |> OptionEx.flatMap(Oni_Model.Selectors.getActiveEditor)
+      |> Oni_Model.Selectors.getActiveEditor
       |> Option.map(Feature_Editor.Editor.selectionOrCursorRange);
     let (model', eff) =
       Feature_Formatting.update(
