@@ -106,23 +106,13 @@ let render =
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
       canvasContext,
     ) => {
   let context =
-    Draw.createContext(
-      ~canvasContext,
-      ~width,
-      ~height,
-      ~scrollX=0.,
-      ~scrollY,
-      ~lineHeight,
-      ~editorFont,
-    );
+    Draw.createContext(~canvasContext, ~width, ~height, ~editor, ~editorFont);
 
   if (showLineNumbers != `Off) {
     renderLineNumbers(
@@ -138,8 +128,8 @@ let render =
 
   Option.iter(
     EditorDiffMarkers.render(
-      ~scrollY=context.scrollY,
-      ~rowHeight=context.lineHeight,
+      ~scrollY=Editor.scrollY(editor),
+      ~rowHeight=Editor.lineHeightInPixels(editor),
       ~x=lineNumberWidth,
       ~height=float(height),
       ~width=Constants.diffMarkerWidth,
@@ -163,8 +153,6 @@ let make =
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
@@ -202,8 +190,6 @@ let make =
       ~height,
       ~colors,
       ~editorFont,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,

@@ -1,20 +1,20 @@
 open Feature_Editor;
-open Editor;
 
 let reduce = (view, action) =>
   switch ((action: Actions.t)) {
-  | SelectionChanged(selection) => {...view, selection}
+  | SelectionChanged(selection) => Editor.setSelection(~selection, view)
   | BufferUpdate({newBuffer, _})
       when Oni_Core.Buffer.getId(newBuffer) == Editor.getBufferId(view) =>
     let buffer = EditorBuffer.ofBuffer(newBuffer);
     Editor.updateBuffer(~buffer, view);
-  | EditorCursorMove(id, cursors) when EditorId.equals(view.editorId, id) => {
-      ...view,
-      cursors,
-    }
-  | EditorScrollToLine(id, line) when EditorId.equals(view.editorId, id) =>
+  | EditorCursorMove(id, cursors)
+      when EditorId.equals(Editor.getId(view), id) =>
+    Editor.setVimCursors(~cursors, view)
+  | EditorScrollToLine(id, line)
+      when EditorId.equals(Editor.getId(view), id) =>
     Editor.scrollToLine(~line, view)
-  | EditorScrollToColumn(id, column) when EditorId.equals(view.editorId, id) =>
+  | EditorScrollToColumn(id, column)
+      when EditorId.equals(Editor.getId(view), id) =>
     Editor.scrollToColumn(~column, view)
   | _ => view
   };

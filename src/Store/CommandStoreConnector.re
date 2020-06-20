@@ -20,7 +20,7 @@ let start = () => {
 
       switch (editor) {
       | None => ()
-      | Some(v) => dispatch(ViewCloseEditor(v.editorId))
+      | Some(v) => dispatch(ViewCloseEditor(Feature_Editor.Editor.getId(v)))
       };
     });
 

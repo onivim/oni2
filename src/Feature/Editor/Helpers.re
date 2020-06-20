@@ -3,12 +3,6 @@ open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 
-let bufferPositionToPixel = (~context: Draw.context, line, char) => {
-  let x = float(char) *. context.charWidth -. context.scrollX;
-  let y = float(line) *. context.charHeight -. context.scrollY;
-  (x, y);
-};
-
 let getTokensForLine =
     (
       ~buffer,
@@ -115,8 +109,8 @@ let getTokenAtPosition =
     lineNumber,
   )
   |> List.filter((token: BufferViewTokenizer.t) => {
-       let tokenStart = token.startPosition |> Index.toZeroBased;
-       let tokenEnd = token.endPosition |> Index.toZeroBased;
+       let tokenStart = token.startIndex |> Index.toZeroBased;
+       let tokenEnd = token.endIndex |> Index.toZeroBased;
        index >= tokenStart && index < tokenEnd;
      })
   |> Utility.OptionEx.of_list;

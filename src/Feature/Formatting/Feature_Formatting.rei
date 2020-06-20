@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 type model;
@@ -6,12 +7,18 @@ let initial: model;
 
 [@deriving show]
 type command =
-  | FormatDocument;
+  | FormatDocument
+  | FormatRange;
 
 [@deriving show]
 type msg =
   | Command(command)
   | DocumentFormatterAvailable({
+      handle: int,
+      selector: Exthost.DocumentSelector.t,
+      displayName: string,
+    })
+  | RangeFormatterAvailable({
       handle: int,
       selector: Exthost.DocumentSelector.t,
       displayName: string,
@@ -42,6 +49,7 @@ type outmsg =
 let update:
   (
     ~configuration: Oni_Core.Configuration.t,
+    ~maybeSelection: option(Range.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
     ~extHostClient: Exthost.Client.t,
     model,

@@ -8,8 +8,6 @@ open Revery.Draw;
 open EditorCoreTypes;
 open Oni_Core;
 
-open Helpers;
-
 let rec getIndentLevel =
         (
           ~reverse=false,
@@ -88,6 +86,17 @@ let render =
   let indentationWidthInPixels =
     float(indentationSettings.tabSize) *. context.charWidth;
 
+  let editor = context.editor;
+  let bufferPositionToPixel = line => {
+    let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+      Editor.bufferLineByteToPixel(~line, ~byteIndex=0, editor);
+
+    let x = pixelX;
+    let y = pixelY;
+    (x, y);
+  };
+
+  let lineHeight = Editor.lineHeightInPixels(editor);
   for (line in startLine to endLine - 1) {
     let level =
       getIndentLevel(
@@ -99,7 +108,7 @@ let render =
         previousIndentLevel^,
       );
 
-    let (x, y) = bufferPositionToPixel(~context, line, 0);
+    let (x, y) = bufferPositionToPixel(line);
 
     for (i in 0 to level - 1) {
       Skia.Paint.setColor(
@@ -110,7 +119,7 @@ let render =
         ~left=x +. indentationWidthInPixels *. float(i),
         ~top=y,
         ~width=1.,
-        ~height=context.lineHeight,
+        ~height=lineHeight,
         ~paint,
         context.canvasContext,
       );
@@ -172,8 +181,8 @@ let render =
       };
     };
 
-    let (x, topY) = bufferPositionToPixel(~context, topLine^, 0);
-    let (_, bottomY) = bufferPositionToPixel(~context, bottomLine^, 0);
+    let (x, topY) = bufferPositionToPixel(topLine^);
+    let (_, bottomY) = bufferPositionToPixel(bottomLine^);
 
     if (cursorLineIndentLevel^ >= 1) {
       Skia.Paint.setColor(
@@ -183,9 +192,9 @@ let render =
       CanvasContext.drawRectLtwh(
         ~left=
           x +. indentationWidthInPixels *. float(cursorLineIndentLevel^ - 1),
-        ~top=topY +. context.lineHeight,
+        ~top=topY +. lineHeight,
         ~width=1.,
-        ~height=bottomY -. topY -. context.lineHeight,
+        ~height=bottomY -. topY -. lineHeight,
         ~paint,
         context.canvasContext,
       );

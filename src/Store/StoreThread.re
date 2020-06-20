@@ -287,8 +287,7 @@ let start =
     let maybeActiveEditor =
       Model.EditorGroups.getActiveEditor(state.editorGroups);
     let maybeActiveEditorId =
-      maybeActiveEditor
-      |> Option.map((editor: Feature_Editor.Editor.t) => editor.editorId);
+      Feature_Editor.(maybeActiveEditor |> Option.map(Editor.getId));
 
     let extHostSubscription =
       Feature_Exthost.subscription(

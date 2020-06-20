@@ -10,18 +10,20 @@ module Constants = {
 };
 
 let renderHorizontal = (~editor: Editor.t, ~width: float, ~context) => {
-  if (editor.scrollX > 1.) {
+  let scrollX = Editor.scrollX(editor);
+  let pixelHeight = Editor.visiblePixelHeight(editor);
+  if (scrollX > 1.) {
     Draw.Shadow.render(
       ~direction=Right,
       ~context,
       ~x=0.,
       ~y=0.,
       ~width=Constants.shadowSize,
-      ~height=float(editor.pixelHeight),
+      ~height=float(pixelHeight),
     );
   };
 
-  if (editor.scrollX +. width < float(Editor.getTotalWidthInPixels(editor))) {
+  if (scrollX +. width < float(Editor.getTotalWidthInPixels(editor))) {
     let () =
       Draw.Shadow.render(
         ~direction=Left,
@@ -29,13 +31,15 @@ let renderHorizontal = (~editor: Editor.t, ~width: float, ~context) => {
         ~x=width -. Constants.shadowSize -. 1.0,
         ~y=0.,
         ~width=Constants.shadowSize,
-        ~height=float(editor.pixelHeight),
+        ~height=float(pixelHeight),
       );
     ();
   };
 };
 let renderVertical = (~editor: Editor.t, ~width: float, ~context) => {
-  if (editor.scrollY > 1.) {
+  let scrollY = Editor.scrollY(editor);
+  let pixelHeight = Editor.visiblePixelHeight(editor);
+  if (scrollY > 1.) {
     Draw.Shadow.render(
       ~direction=Down,
       ~context,
@@ -45,15 +49,14 @@ let renderVertical = (~editor: Editor.t, ~width: float, ~context) => {
       ~height=Constants.shadowSize,
     );
   };
-  if (editor.scrollY
-      +. float(editor.pixelHeight)
-      < float(Editor.getTotalHeightInPixels(editor))) {
+  if (scrollY
+      +. float(pixelHeight) < float(Editor.getTotalHeightInPixels(editor))) {
     let () =
       Draw.Shadow.render(
         ~direction=Up,
         ~context,
         ~x=0.,
-        ~y=float(editor.pixelHeight) -. Constants.shadowSize,
+        ~y=float(pixelHeight) -. Constants.shadowSize,
         ~width,
         ~height=Constants.shadowSize,
       );
