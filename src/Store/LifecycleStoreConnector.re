@@ -7,7 +7,7 @@
 
 open Oni_Model;
 
-let start = (~quit, ~raise) => {
+let start = (~quit, ~raiseWindow) => {
   let quitAllEffect = (state: State.t, force) => {
     let handlers = state.lifecycle.onQuitFunctions;
 
@@ -40,7 +40,7 @@ let start = (~quit, ~raise) => {
   };
 
   let internalWindowRaiseEffect =
-    Isolinear.Effect.create("raise", () => raise());
+    Isolinear.Effect.create(~name="window.raise", () => raiseWindow());
 
   let updater = (state: State.t, action) => {
     switch (action) {

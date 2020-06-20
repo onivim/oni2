@@ -253,7 +253,8 @@ switch (eff) {
       Window.restore(window);
     };
 
-    let raise = () => {
+    // This is called raiseWIndow because if it were simply raise, it would shadow the exception raising function
+    let raiseWindow = () => {
       Window.raise(window);
     };
 
@@ -280,7 +281,7 @@ switch (eff) {
         ~maximize,
         ~minimize,
         ~restore,
-        ~raise,
+        ~raiseWindow,
         ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,

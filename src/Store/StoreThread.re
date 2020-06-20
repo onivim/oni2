@@ -85,7 +85,7 @@ let start =
       ~minimize,
       ~close,
       ~restore,
-      ~raise,
+      ~raiseWindow,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
@@ -151,7 +151,7 @@ let start =
 
   let fileExplorerUpdater = FileExplorerStore.start();
 
-  let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raise);
+  let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
@@ -368,8 +368,6 @@ let start =
       ),
     window,
   );
-
-  let signalHandle = Luv.Signal.init() |> Result.get_ok;
 
   registerCommands(~dispatch, Model.GlobalCommands.registrations());
   registerCommands(
