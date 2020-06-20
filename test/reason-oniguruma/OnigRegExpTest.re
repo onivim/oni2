@@ -29,6 +29,64 @@ describe("OnigRegExp", ({describe, _}) => {
       };
     })
   });
+  describe("fast", ({test, _}) => {
+    test("test", ({expect, _}) => {
+          let regex =  OnigRegExp.create("abc")
+          |> Result.get_ok;
+        expect.equal(OnigRegExp.Fast.test("abc", regex), true);
+        expect.equal(OnigRegExp.Fast.test("def", regex), false);
+    })
+    test("capture group test - multiple runs", ({expect, _}) => {
+      let r = OnigRegExp.create("(@selector\\()(.*?)(\\))");
+      switch (r) {
+      | Error(_) => expect.string("Fail").toEqual("")
+      | Ok(regex) =>
+        // Run regexp with match group multiple times, verify we aren't leaking OnigRegions
+        let idx = ref(0);
+        while (idx^ < 5) {
+          let str = "@selector(windowWillClose:)";
+          let _: int =
+            OnigRegExp.Fast.search(str, 0, regex);
+
+          let result = OnigRegExp.Fast.getLastMatches(str, regex);
+          expect.string(Match.getText(result[1])).toEqual("@selector(");
+          expect.string(Match.getText(result[3])).toEqual(")");
+          incr(idx);
+        };
+      };
+    });
+    describe("stress", ({test, _}) => {
+      test("heavy allocations", ({expect, _}) => {
+        let count = 100000;
+        let array = Array.make(count, None);
+
+        for (i in 0 to count - 1) {
+          let r =
+            OnigRegExp.create("abcdefghijklmnopqrstuvwxyz" ++ string_of_int(i))
+            |> Result.get_ok;
+          array[i] = Some(r);
+        };
+
+        for (i in 0 to count - 1) {
+          let regexp = array[i] |> Option.get;
+
+          expect.equal(
+            OnigRegExp.Fast.test(
+              "abcdefghijklmnopqrstuvwxyz" ++ string_of_int(i),
+              regexp,
+            ),
+            true,
+          );
+
+          let matches = OnigRegExp.Fast.getLastMatches(
+              "abcdefghijklmnopqrstuvwxyz" ++ string_of_int(i),
+              regexp,
+          );
+          expect.equal(Array.length(matches), 1);
+        };
+      })
+    });
+  });
   describe("allocation", ({test, _}) => {
     test("finalizer gets called for regexp", ({expect, _}) => {
       let regexp = OnigRegExp.create("\\w(\\d+)");
