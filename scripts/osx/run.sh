@@ -13,4 +13,4 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
 export ONI2_BUNDLED=1
 
-"$DIR"/../MacOS/Oni2_editor --working-directory "$CWD" "$@"
+"$DIR"/../MacOS/Oni2 --working-directory "$CWD" "$@"
