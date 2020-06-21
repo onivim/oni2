@@ -2,24 +2,11 @@ open EditorCoreTypes;
 open Oni_Core;
 
 [@deriving show]
-type t = {
-  buffer: EditorBuffer.t,
-  editorId: EditorId.t,
-  scrollX: float,
-  scrollY: float,
-  minimapMaxColumnWidth: int,
-  minimapScrollY: float,
-  /*
-   * The maximum line visible in the view.
-   * TODO: This will be dependent on line-wrap settings.
-   */
-  maxLineLength: int,
-  viewLines: int,
-  cursors: [@opaque] list(Vim.Cursor.t),
-  selection: [@opaque] VisualRange.t,
-  font: [@opaque] Service_Font.font,
-  pixelWidth: int,
-  pixelHeight: int,
+type t;
+
+type pixelPosition = {
+  pixelX: float,
+  pixelY: float,
 };
 
 type scrollbarMetrics = {
@@ -35,15 +22,41 @@ let getBufferId: t => int;
 let getTopVisibleLine: t => int;
 let getBottomVisibleLine: t => int;
 let getLeftVisibleColumn: t => int;
-let getLayout: t => EditorLayout.t;
-let getCharacterUnderCursor: (~buffer: Buffer.t, t) => option(Uchar.t);
-let getPrimaryCursor: (~buffer: Buffer.t, t) => Location.t;
+let getLayout:
+  (
+    ~showLineNumbers: bool,
+    ~isMinimapShown: bool,
+    ~maxMinimapCharacters: int,
+    t
+  ) =>
+  EditorLayout.t;
+let getCharacterUnderCursor: t => option(Uchar.t);
+let getPrimaryCursor: t => Location.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getVimCursors: t => list(Vim.Cursor.t);
+let setVimCursors: (~cursors: list(Vim.Cursor.t), t) => t;
+
+let visiblePixelWidth: t => int;
+let visiblePixelHeight: t => int;
+
+let font: t => Service_Font.font;
+
+let scrollX: t => float;
+let scrollY: t => float;
+let minimapScrollY: t => float;
+
+let lineHeightInPixels: t => float;
+let characterWidthInPixels: t => float;
+
+let selection: t => VisualRange.t;
+let setSelection: (~selection: VisualRange.t, t) => t;
+let selectionOrCursorRange: t => Range.t;
+
+let totalViewLines: t => int;
 
 let scrollToColumn: (~column: int, t) => t;
 let scrollToPixelX: (~pixelX: float, t) => t;
@@ -56,8 +69,16 @@ let scrollDeltaPixelY: (~pixelY: float, t) => t;
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
 
-let getCursorOffset:
-  (~buffer: Buffer.t, ~cursorPosition: EditorCoreTypes.Location.t) => int;
+// PIXEL-SPACE CONVERSION
+
+// These methods convert a buffer (line, byte) or (line, utf8 character index)
+// to a pixel position on-screen - accounting for word wrap, folding, scrolling, etc.
+
+// They return both the pixel position, as well as the character width of the target character.
+let bufferLineByteToPixel:
+  (~line: int, ~byteIndex: int, t) => (pixelPosition, float);
+let bufferLineCharacterToPixel:
+  (~line: int, ~characterIndex: int, t) => (pixelPosition, float);
 
 // PROJECTION
 

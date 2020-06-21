@@ -148,7 +148,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       let effects =
         getEffectsForLocation(
           ~buffer,
-          ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+          ~location=Feature_Editor.Editor.getPrimaryCursor(editor),
           ~extHostClient,
           ~model,
           ~context,
@@ -226,10 +226,10 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         if (before) {
           open Index;
           let Location.{line, column: col} =
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+            Feature_Editor.Editor.getPrimaryCursor(editor);
           Location.create(~line, ~column=col + 1);
         } else {
-          Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+          Feature_Editor.Editor.getPrimaryCursor(editor);
         };
       if (trigger) {
         Log.infof(m => m("Trigger character hit: %s", key));
@@ -515,7 +515,6 @@ module View = {
         ~editorFont: Service_Font.font,
         ~model,
         ~editor,
-        ~buffer,
         ~gutterWidth,
         ~grammars,
         ~dispatch,
@@ -524,31 +523,20 @@ module View = {
     let maybeCoords =
       (
         if (model.shown) {
-          let cursorLocation =
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor);
+          let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
           Some(cursorLocation);
         } else {
           None;
         }
       )
       |> Option.map((Location.{line, column}) => {
-           let y =
-             int_of_float(
-               editorFont.measuredHeight
-               *. float(Index.toZeroBased(line))
-               -. editor.scrollY
-               +. 0.5,
+           let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+             Feature_Editor.Editor.bufferLineCharacterToPixel(
+               ~line=line |> Index.toZeroBased,
+               ~characterIndex=column |> Index.toZeroBased,
+               editor,
              );
-
-           let x =
-             int_of_float(
-               gutterWidth
-               +. editorFont.measuredWidth
-               *. float(Index.toZeroBased(column))
-               -. editor.scrollX
-               +. 0.5,
-             );
-           (x, y);
+           (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
          });
     switch (maybeCoords, model.activeSignature, model.activeParameter) {
     | (Some((x, y)), Some(signatureIndex), Some(parameterIndex)) =>

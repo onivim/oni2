@@ -39,7 +39,13 @@ let toUiTabs =
         Model.BufferRenderers.getById(Editor.getBufferId(editor), renderers);
 
       Some(
-        Tabs.{editorId: editor.editorId, filePath, title, modified, renderer},
+        Tabs.{
+          editorId: Editor.getId(editor),
+          filePath,
+          title,
+          modified,
+          renderer,
+        },
       );
     };
   };
@@ -69,10 +75,14 @@ module Parts = {
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
         dispatch(EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}));
       let onCursorChange = cursor =>
-        dispatch(EditorCursorMove(editor.editorId, [cursor]));
+        Feature_Editor.(
+          dispatch(EditorCursorMove(Editor.getId(editor), [cursor]))
+        );
 
       let editorDispatch = editorMsg =>
-        dispatch(Editor({editorId: editor.editorId, msg: editorMsg}));
+        Feature_Editor.(
+          dispatch(Editor({editorId: Editor.getId(editor), msg: editorMsg}))
+        );
 
       <EditorSurface
         dispatch=editorDispatch
@@ -146,7 +156,6 @@ module Parts = {
             languageInfo={state.languageInfo}
             grammars={state.grammarRepository}
             editor
-            buffer
             gutterWidth
             dispatch={msg => dispatch(SignatureHelp(msg))}
           />,

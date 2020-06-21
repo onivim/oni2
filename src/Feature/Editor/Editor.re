@@ -3,6 +3,11 @@ open Oni_Core;
 
 let lastId = ref(0);
 
+type pixelPosition = {
+  pixelX: float,
+  pixelY: float,
+};
+
 [@deriving show]
 // TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
 type t = {
@@ -23,6 +28,57 @@ type t = {
   font: [@opaque] Service_Font.font,
   pixelWidth: int,
   pixelHeight: int,
+};
+
+let totalViewLines = ({viewLines, _}) => viewLines;
+let selection = ({selection, _}) => selection;
+let setSelection = (~selection, editor) => {...editor, selection};
+let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
+let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
+let scrollY = ({scrollY, _}) => scrollY;
+let scrollX = ({scrollX, _}) => scrollX;
+let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
+let lineHeightInPixels = ({font, _}) => font.measuredHeight;
+let characterWidthInPixels = ({font, _}) => font.measuredWidth;
+let font = ({font, _}) => font;
+
+let bufferLineByteToPixel =
+    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  if (line < 0 || line >= lineCount) {
+    ({pixelX: 0., pixelY: 0.}, 0.);
+  } else {
+    let bufferLine = buffer |> EditorBuffer.line(line);
+
+    let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
+    let (cursorOffset, width) =
+      BufferLine.getPositionAndWidth(~index, bufferLine);
+
+    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+
+    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+
+    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+  };
+};
+
+let bufferLineCharacterToPixel =
+    (~line, ~characterIndex, {scrollX, scrollY, buffer, font, _}) => {
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  if (line < 0 || line >= lineCount) {
+    ({pixelX: 0., pixelY: 0.}, 0.);
+  } else {
+    let (cursorOffset, width) =
+      buffer
+      |> EditorBuffer.line(line)
+      |> BufferLine.getPositionAndWidth(~index=characterIndex);
+
+    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+
+    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+
+    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+  };
 };
 
 let create = (~font, ~buffer, ()) => {
@@ -63,16 +119,17 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-let getVimCursors = model => model.cursors;
+let getVimCursors = ({cursors, _}) => cursors;
+let setVimCursors = (~cursors, editor) => {...editor, cursors};
 
-let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
+let mapCursor = (~position: Vim.Cursor.t, editor) => {
   let byte = position.column |> Index.toZeroBased;
   let line = position.line |> Index.toZeroBased;
 
-  let bufferLineCount = Buffer.getNumberOfLines(buffer);
+  let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
   if (line < bufferLineCount) {
-    let bufferLine = Buffer.getLine(line, buffer);
+    let bufferLine = EditorBuffer.line(line, editor.buffer);
 
     let column = BufferLine.getIndex(~byte, bufferLine);
 
@@ -82,17 +139,17 @@ let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
   };
 };
 
-let getCharacterUnderCursor = (~buffer, editor) => {
-  switch (editor.cursors) {
+let getCharacterUnderCursor = ({cursors, buffer, _}) => {
+  switch (cursors) {
   | [] => None
   | [cursor, ..._] =>
     let byte = cursor.column |> Index.toZeroBased;
     let line = cursor.line |> Index.toZeroBased;
 
-    let bufferLineCount = Buffer.getNumberOfLines(buffer);
+    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
     if (line < bufferLineCount) {
-      let bufferLine = Buffer.getLine(line, buffer);
+      let bufferLine = EditorBuffer.line(line, buffer);
       let index = BufferLine.getIndex(~byte, bufferLine);
       let character = BufferLine.getUcharExn(~index, bufferLine);
       Some(character);
@@ -102,11 +159,27 @@ let getCharacterUnderCursor = (~buffer, editor) => {
   };
 };
 
-let getPrimaryCursor = (~buffer, editor) =>
+let getPrimaryCursor = editor =>
   switch (editor.cursors) {
-  | [cursor, ..._] => mapCursor(~position=cursor, ~buffer)
+  | [cursor, ..._] => mapCursor(~position=cursor, editor)
   | [] => Location.{line: Index.zero, column: Index.zero}
   };
+
+let selectionOrCursorRange = editor => {
+  switch (editor.selection.mode) {
+  | None =>
+    let pos = getPrimaryCursor(editor);
+    let range =
+      Range.{
+        start: Location.{line: pos.line, column: Index.zero},
+        stop: Location.{line: Index.(pos.line + 1), column: Index.zero},
+      };
+    range;
+  | Line
+  | Block
+  | Character => editor.selection.range
+  };
+};
 
 let getId = model => model.editorId;
 
@@ -159,14 +232,16 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
     };
 };
 
-let getLayout = view => {
+let getLayout =
+    (~showLineNumbers, ~isMinimapShown, ~maxMinimapCharacters, view) => {
   let {pixelWidth, pixelHeight, _} = view;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
-      ~maxMinimapCharacters=view.minimapMaxColumnWidth,
+      ~showLineNumbers,
+      ~isMinimapShown,
+      ~maxMinimapCharacters,
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
-      ~isMinimapShown=true,
       ~characterWidth=getCharacterWidth(view),
       ~characterHeight=getLineHeight(view),
       ~bufferLineCount=view.viewLines,
@@ -248,26 +323,6 @@ let scrollToColumn = (~column, view) => {
 let scrollDeltaPixelY = (~pixelY, view) => {
   let pixelY = view.scrollY +. pixelY;
   scrollToPixelY(~pixelY, view);
-};
-
-let getCursorOffset = (~buffer, ~cursorPosition: EditorCoreTypes.Location.t) => {
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
-  let lineCount = Buffer.getNumberOfLines(buffer);
-
-  let (cursorOffset, _cursorCharacterWidth) =
-    if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorLine = Buffer.getLine(cursorLine, buffer);
-
-      let (cursorOffset, width) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          cursorLine,
-          Index.toZeroBased(cursorPosition.column),
-        );
-      (cursorOffset, width);
-    } else {
-      (0, 1);
-    };
-  cursorOffset;
 };
 
 // PROJECTION

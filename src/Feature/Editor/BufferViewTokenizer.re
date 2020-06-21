@@ -15,8 +15,8 @@ type tokenType =
 type t = {
   tokenType,
   text: string,
-  startPosition: Index.t,
-  endPosition: Index.t,
+  startIndex: Index.t,
+  endIndex: Index.t,
   color: Color.t,
   backgroundColor: Color.t,
   bold: bool,
@@ -56,8 +56,8 @@ let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
   {
     tokenType,
     text: r.text,
-    startPosition: r.startPosition,
-    endPosition: r.endPosition,
+    startIndex: r.startIndex,
+    endIndex: r.endIndex,
     color,
     backgroundColor,
     bold,

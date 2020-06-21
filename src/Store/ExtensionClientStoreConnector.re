@@ -16,26 +16,6 @@ module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-module Internal = {
-  let bufferMetadataToModelAddedDelta =
-      (~version, ~filePath, ~fileType: option(string)) =>
-    switch (filePath, fileType) {
-    | (Some(fp), Some(ft)) =>
-      Log.trace("Creating model for filetype: " ++ ft);
-
-      Some(
-        Exthost.ModelAddedDelta.create(
-          ~versionId=version,
-          ~lines=[""],
-          ~modeId=ft,
-          ~isDirty=true,
-          Uri.fromPath(fp),
-        ),
-      );
-    | _ => None
-    };
-};
-
 let start = (extensions, extHostClient: Exthost.Client.t) => {
   let executeContributedCommandEffect = (command, arguments) =>
     Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {

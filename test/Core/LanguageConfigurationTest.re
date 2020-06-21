@@ -144,12 +144,20 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
         Result.get_ok(parsedLangConfig);
 
       expect.equal(
-        LanguageConfiguration.toAutoIndent(langConfig, "abc")
+        LanguageConfiguration.toAutoIndent(
+          langConfig,
+          ~previousLine="abc",
+          ~beforePreviousLine=None,
+        )
         == Vim.AutoIndent.IncreaseIndent,
         true,
       );
       expect.equal(
-        LanguageConfiguration.toAutoIndent(langConfig, "def")
+        LanguageConfiguration.toAutoIndent(
+          langConfig,
+          ~previousLine="def",
+          ~beforePreviousLine=None,
+        )
         == Vim.AutoIndent.DecreaseIndent,
         true,
       );
@@ -166,7 +174,11 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
         Result.get_ok(parsedLangConfig);
 
       expect.equal(
-        LanguageConfiguration.toAutoIndent(langConfig, "   {")
+        LanguageConfiguration.toAutoIndent(
+          langConfig,
+          ~previousLine="   {",
+          ~beforePreviousLine=None,
+        )
         == Vim.AutoIndent.IncreaseIndent,
         true,
       );

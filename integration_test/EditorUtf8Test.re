@@ -30,12 +30,10 @@ runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
   let c4 = BufferLine.getUcharExn(~index=4, str);
 
   let validateCharacter = (expectedCharacter, state) => {
-    let buffer = state |> Selectors.getActiveBuffer |> Option.get;
-
     state
     |> Selectors.getActiveEditorGroup
     |> Selectors.getActiveEditor
-    |> OptionEx.flatMap(Editor.getCharacterUnderCursor(~buffer))
+    |> OptionEx.flatMap(Editor.getCharacterUnderCursor)
     |> Option.map(uchar => {Uchar.equal(expectedCharacter, uchar)})
     |> Option.value(~default=false);
   };

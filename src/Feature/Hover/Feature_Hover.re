@@ -103,7 +103,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       let effects =
         getEffectsForLocation(
           ~buffer,
-          ~location=Feature_Editor.Editor.getPrimaryCursor(~buffer, editor),
+          ~location=Feature_Editor.Editor.getPrimaryCursor(editor),
           ~extHostClient,
           ~model,
           ~requestID,
@@ -311,8 +311,7 @@ module View = {
         let diagLocation =
           switch (trigger) {
           | `Mouse(location) => location
-          | `CommandPalette =>
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
+          | `CommandPalette => Feature_Editor.Editor.getPrimaryCursor(editor)
           };
 
         let diagnostic =
@@ -328,45 +327,40 @@ module View = {
           | [diag, ..._] => diag.range.start
           };
 
-        let y =
-          int_of_float(
-            editorFont.measuredHeight
-            *. float(Index.toZeroBased(hoverLocation.line) + 1)
-            -. editor.scrollY
-            +. 0.5,
+        let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+          Feature_Editor.Editor.bufferLineCharacterToPixel(
+            ~line=hoverLocation.line |> Index.toZeroBased,
+            ~characterIndex=hoverLocation.column |> Index.toZeroBased,
+            editor,
           );
 
-        let x =
+        let x = int_of_float(pixelX +. gutterWidth);
+        let y =
           int_of_float(
-            gutterWidth
-            +. editorFont.measuredWidth
-            *. float(Index.toZeroBased(hoverLocation.column))
-            -. editor.scrollX
-            +. 0.5,
+            pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor),
           );
+
+        // TODO: Hover width?
 
         (Some((x, y)), Some(diagnostic));
       | (None, Some(trigger), true) =>
         let location =
           switch (trigger) {
           | `Mouse(location) => location
-          | `CommandPalette =>
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
+          | `CommandPalette => Feature_Editor.Editor.getPrimaryCursor(editor)
           };
+
+        let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+          Feature_Editor.Editor.bufferLineCharacterToPixel(
+            ~line=location.line |> Index.toZeroBased,
+            ~characterIndex=location.column |> Index.toZeroBased,
+            editor,
+          );
+
+        let x = int_of_float(pixelX +. gutterWidth);
         let y =
           int_of_float(
-            editorFont.measuredHeight
-            *. float(Index.toZeroBased(location.line) + 1)
-            -. editor.scrollY
-            +. 0.5,
-          );
-        let x =
-          int_of_float(
-            gutterWidth
-            +. editorFont.measuredWidth
-            *. float(Index.toZeroBased(location.column))
-            -. editor.scrollX
-            +. 0.5,
+            pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor),
           );
 
         let diagnostic =

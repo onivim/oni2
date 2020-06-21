@@ -70,7 +70,7 @@ let start = () => {
 
       OptionEx.iter2(
         (buffer, editor) => {
-          let location = Editor.getPrimaryCursor(~buffer, editor);
+          let location = Editor.getPrimaryCursor(editor);
           let promise =
             LanguageFeatures.requestFindAllReferences(
               ~buffer,

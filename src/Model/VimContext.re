@@ -70,7 +70,7 @@ let current:
     |> Selectors.getActiveEditor
     |> Option.map((editor: Editor.t) => {
          let bufferId = Editor.getBufferId(editor);
-         let {cursors, _}: Editor.t = editor;
+         let cursors = Editor.getVimCursors(editor);
 
          let editorBuffer = Selectors.getActiveBuffer(state);
          let maybeLanguageConfig =
@@ -90,7 +90,10 @@ let current:
          let autoIndent =
            maybeLanguageConfig
            |> Option.map(LanguageConfiguration.toAutoIndent)
-           |> Option.value(~default=_ => Vim.AutoIndent.KeepIndent);
+           |> Option.value(
+                ~default=(~previousLine as _, ~beforePreviousLine as _) =>
+                Vim.AutoIndent.KeepIndent
+              );
 
          let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
          let autoClosingPairs =
@@ -105,7 +108,13 @@ let current:
                bufferWidthInCharacters: width,
                _,
              } =
-           Editor.getLayout(editor);
+           // TODO: Fix this
+           Editor.getLayout(
+             ~isMinimapShown=true,
+             ~showLineNumbers=true,
+             ~maxMinimapCharacters=0,
+             editor,
+           );
 
          let leftColumn = Editor.getLeftVisibleColumn(editor);
          let topLine = Editor.getTopVisibleLine(editor);

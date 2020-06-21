@@ -134,7 +134,7 @@ let start =
 
       let getDefinition = (buffer, editor) => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(~buffer, editor);
+        let position = Editor.getPrimaryCursor(editor);
         Definition.getAt(id, position, state.definition)
         |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
              Actions.OpenFileByPath(
@@ -159,7 +159,10 @@ let start =
         dispatch(
           Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
         )
-      | Format(_) => Log.debug("Format provider not hooked up yet"),
+      | Format(Range(_)) =>
+        dispatch(
+          Actions.Formatting(Feature_Formatting.Command(FormatRange)),
+        ),
     );
 
   let _: unit => unit =
@@ -977,7 +980,9 @@ let start =
         state
         |> Selectors.getActiveEditorGroup
         |> Selectors.getActiveEditor
-        |> Option.map((editor: Feature_Editor.Editor.t) => editor.editorId);
+        |> Option.map((editor: Feature_Editor.Editor.t) =>
+             Editor.getId(editor)
+           );
 
       let (state, effect) =
         OptionEx.map3(

@@ -20,7 +20,7 @@ let start = () => {
 
       switch (editor) {
       | None => ()
-      | Some(v) => dispatch(ViewCloseEditor(v.editorId))
+      | Some(v) => dispatch(ViewCloseEditor(Feature_Editor.Editor.getId(v)))
       };
     });
 
@@ -35,7 +35,7 @@ let start = () => {
           state
           |> Selectors.getActiveEditorGroup
           |> Selectors.getActiveEditor
-          |> Option.map(Feature_Editor.Editor.getPrimaryCursor(~buffer));
+          |> Option.map(Feature_Editor.Editor.getPrimaryCursor);
 
         Some((path, cursorLocation));
       };

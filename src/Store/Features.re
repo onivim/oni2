@@ -35,10 +35,16 @@ let update =
   switch (action) {
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let maybeSelection =
+      state
+      |> Oni_Model.Selectors.getActiveEditorGroup
+      |> Oni_Model.Selectors.getActiveEditor
+      |> Option.map(Feature_Editor.Editor.selectionOrCursorRange);
     let (model', eff) =
       Feature_Formatting.update(
         ~configuration=state.configuration,
         ~maybeBuffer,
+        ~maybeSelection,
         ~extHostClient,
         state.formatting,
         msg,
