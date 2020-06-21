@@ -45,7 +45,7 @@ let make =
       ~dispatch,
       (),
     ) => {
-  let isSelected = item => ContentModel.id(item) == model.selected;
+  let isSelected = item => ContentModel.id(item) == model.selectedId;
   let children = {
     let editorContainer =
       switch (List.find_opt(isSelected, model.items)) {

@@ -7,7 +7,7 @@ module Group: {
     pri {
       id: int,
       items: list(Editor.t),
-      selected: int,
+      selectedId: int,
     };
 
   let create: list(Editor.t) => t;
@@ -25,7 +25,7 @@ module Group: {
   type t = {
     id: int,
     items: list(Editor.t),
-    selected: int,
+    selectedId: int,
   };
 
   let create = {
@@ -36,55 +36,58 @@ module Group: {
 
       incr(lastId);
 
-      let selected = editors |> ListEx.last |> Option.get |> Editor.getId;
-      {id: lastId^, items: editors, selected};
+      let selectedId = editors |> ListEx.last |> Option.get |> Editor.getId;
+      {id: lastId^, items: editors, selectedId};
     };
   };
 
   let select = (id, group) => {
     assert(List.exists(item => Editor.getId(item) == id, group.items));
 
-    {...group, selected: id};
+    {...group, selectedId: id};
   };
 
   let nextEditor = group => {
     let rec loop =
       fun
       | []
-      | [_] => group.selected
-      | [next, current, ..._] when Editor.getId(current) == group.selected =>
+      | [_] => group.selectedId
+      | [next, current, ..._] when Editor.getId(current) == group.selectedId =>
         Editor.getId(next)
       | [_, ...rest] => loop(rest);
 
-    {...group, selected: loop(group.items)};
+    {...group, selectedId: loop(group.items)};
   };
 
   let previousEditor = group => {
     let rec loop =
       fun
       | []
-      | [_] => group.selected
+      | [_] => group.selectedId
       | [current, previous, ..._]
-          when Editor.getId(current) == group.selected =>
+          when Editor.getId(current) == group.selectedId =>
         Editor.getId(previous)
       | [_, ...rest] => loop(rest);
 
-    {...group, selected: loop(group.items)};
+    {...group, selectedId: loop(group.items)};
   };
 
   let selected = group =>
-    List.find(editor => Editor.getId(editor) == group.selected, group.items);
+    List.find(
+      editor => Editor.getId(editor) == group.selectedId,
+      group.items,
+    );
 
   let openEditor = (editor, group) => {
     let bufferId = Editor.getBufferId(editor);
     switch (
       List.find_opt(e => Editor.getBufferId(e) == bufferId, group.items)
     ) {
-    | Some(editor) => {...group, selected: Editor.getId(editor)}
+    | Some(editor) => {...group, selectedId: Editor.getId(editor)}
     | None => {
         ...group,
         items: [editor, ...group.items],
-        selected: Editor.getId(editor),
+        selectedId: Editor.getId(editor),
       }
     };
   };
@@ -93,20 +96,20 @@ module Group: {
     switch (List.filter(e => Editor.getId(e) != editorId, group.items)) {
     | [] => None
     | items =>
-      let selected =
-        if (group.selected == editorId) {
+      let selectedId =
+        if (group.selectedId == editorId) {
           switch (
             ListEx.findIndex(e => Editor.getId(e) == editorId, group.items)
           ) {
           | Some(0) => List.hd(items) |> Editor.getId
           | Some(i) => List.nth(items, i - 1) |> Editor.getId
-          | None => group.selected
+          | None => group.selectedId
           };
         } else {
-          group.selected;
+          group.selectedId;
         };
 
-      Some({...group, items, selected});
+      Some({...group, items, selectedId});
     };
   };
 
