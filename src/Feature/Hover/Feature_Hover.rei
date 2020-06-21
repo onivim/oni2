@@ -21,6 +21,7 @@ type msg =
       contents: list(Exthost.MarkdownString.t),
       range: option(EditorCoreTypes.Range.t),
       requestID: int,
+      editor: Feature_Editor.Editor.t,
     })
   | HoverRequestFailed(string)
   | MouseHovered(EditorCoreTypes.Location.t)
