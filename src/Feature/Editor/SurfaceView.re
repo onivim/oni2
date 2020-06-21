@@ -232,7 +232,7 @@ let%component make =
           );
         };
 
-        if (Config.Experimental.scrollShadow.get(config)) {
+        if (Config.scrollShadow.get(config)) {
           let () =
             ScrollShadow.renderVertical(
               ~editor,
