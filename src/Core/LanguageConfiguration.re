@@ -227,7 +227,11 @@ let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
 };
 
 let toAutoIndent =
-    ({increaseIndentPattern, decreaseIndentPattern, brackets, _}, str) => {
+    (
+      {increaseIndentPattern, decreaseIndentPattern, brackets, _},
+      ~previousLine as str,
+      ~beforePreviousLine as _,
+    ) => {
   let increase =
     increaseIndentPattern
     |> Option.map(regex => OnigRegExp.test(str, regex))

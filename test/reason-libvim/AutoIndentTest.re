@@ -15,9 +15,20 @@ let input = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
 };
 
 describe("AutoIndent", ({test, _}) => {
-  let keepIndent = _ => Vim.AutoIndent.KeepIndent;
-  let increaseIndent = _ => Vim.AutoIndent.IncreaseIndent;
-  let decreaseIndent = _ => Vim.AutoIndent.DecreaseIndent;
+  let keepIndent = (~previousLine as _, ~beforePreviousLine: option(string)) => {
+    ignore(beforePreviousLine);
+    Vim.AutoIndent.KeepIndent;
+  };
+  let increaseIndent =
+      (~previousLine as _, ~beforePreviousLine: option(string)) => {
+    ignore(beforePreviousLine);
+    Vim.AutoIndent.IncreaseIndent;
+  };
+  let decreaseIndent =
+      (~previousLine as _, ~beforePreviousLine: option(string)) => {
+    ignore(beforePreviousLine);
+    Vim.AutoIndent.DecreaseIndent;
+  };
 
   test("keep indent (open line)", ({expect, _}) => {
     let buffer = resetBuffer();
@@ -60,5 +71,50 @@ describe("AutoIndent", ({test, _}) => {
 
     let line = Buffer.getLine(buffer, Index.(zero + 2));
     expect.string(line).toEqual("b");
+  });
+  test(
+    "previous line is set, before previous line is None for first line",
+    ({expect, _}) => {
+    let _ = resetBuffer();
+
+    let prevRef = ref("");
+    let beforePrevRef = ref(Some(""));
+
+    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
+      prevRef := previousLine;
+      beforePrevRef := beforePreviousLine;
+      AutoIndent.KeepIndent;
+    };
+
+    let input = input(~insertSpaces=true, ~autoIndent);
+    input("o");
+
+    expect.equal(prevRef^, "This is the first line of a test file");
+    expect.equal(beforePrevRef^, None);
+  });
+  test(
+    "previous line is set, before previous line is set for last line",
+    ({expect, _}) => {
+    let _ = resetBuffer();
+
+    let prevRef = ref("");
+    let beforePrevRef = ref(Some(""));
+
+    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
+      prevRef := previousLine;
+      beforePrevRef := beforePreviousLine;
+      AutoIndent.KeepIndent;
+    };
+
+    let input = input(~insertSpaces=true, ~autoIndent);
+    // Go to last line
+    input("G");
+    input("o");
+
+    expect.equal(prevRef^, "This is the third line of a test file");
+    expect.equal(
+      beforePrevRef^,
+      Some("This is the second line of a test file"),
+    );
   });
 });

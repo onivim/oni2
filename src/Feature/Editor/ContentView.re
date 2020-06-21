@@ -95,7 +95,7 @@ let renderDefinition =
       ~context,
       ~leftVisibleColumn,
       ~cursorPosition: Location.t,
-      ~buffer,
+      ~editor,
       ~bufferHighlights,
       ~colors,
       ~matchingPairs,
@@ -103,7 +103,7 @@ let renderDefinition =
       ~bufferWidthInCharacters,
     ) =>
   getTokenAtPosition(
-    ~buffer,
+    ~editor,
     ~bufferHighlights,
     ~cursorLine=Index.toZeroBased(cursorPosition.line),
     ~colors,
@@ -135,7 +135,7 @@ let renderText =
       ~context,
       ~count,
       ~selectionRanges,
-      ~buffer,
+      ~editor,
       ~bufferHighlights,
       ~cursorLine,
       ~colors,
@@ -161,7 +161,7 @@ let renderText =
         };
       let tokens =
         getTokensForLine(
-          ~buffer,
+          ~editor,
           ~bufferHighlights,
           ~cursorLine,
           ~colors,
@@ -188,6 +188,7 @@ let render =
       ~context,
       ~count,
       ~buffer,
+      ~editor,
       ~leftVisibleColumn,
       ~colors,
       ~diagnosticsMap,
@@ -218,9 +219,9 @@ let render =
       )) {
     renderDefinition(
       ~context,
+      ~editor,
       ~leftVisibleColumn,
       ~cursorPosition,
-      ~buffer,
       ~bufferHighlights,
       ~colors,
       ~matchingPairs,
@@ -233,7 +234,7 @@ let render =
     ~context,
     ~count,
     ~selectionRanges,
-    ~buffer,
+    ~editor,
     ~bufferHighlights,
     ~cursorLine=Index.toZeroBased(cursorPosition.line),
     ~colors,
