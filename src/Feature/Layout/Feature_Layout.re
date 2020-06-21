@@ -84,16 +84,7 @@ let update = (~focus, model, msg) => {
   | DragComplete => (updateTree(Fun.id, model), Nothing)
 
   | GroupTabClicked(id) => (
-      {
-        ...model,
-        groups:
-          List.map(
-            (group: Group.t) =>
-              group.id == model.activeGroupId
-                ? Group.select(id, group) : group,
-            model.groups,
-          ),
-      },
+      updateActiveGroup(Group.select(id), model),
       Nothing,
     )
 
@@ -507,9 +498,7 @@ module View = {
           let positioned = Positioned.fromLayout(0, 0, width, height, tree);
 
           let renderWindow = id =>
-            switch (
-              List.find_opt((group: Group.t) => group.id == id, model.groups)
-            ) {
+            switch (groupById(id, model)) {
             | Some(group) =>
               <EditorGroupView
                 provider

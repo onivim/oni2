@@ -143,11 +143,11 @@ let initial = editors => {
   };
 };
 
+let groupById = (id, model) =>
+  List.find_opt((group: Group.t) => group.id == id, model.groups);
+
 let activeGroup = model =>
-  List.find(
-    (group: Group.t) => group.id == model.activeGroupId,
-    model.groups,
-  );
+  groupById(model.activeGroupId, model) |> Option.get;
 
 let activeEditor = model => model |> activeGroup |> Group.selected;
 
@@ -178,9 +178,7 @@ let windows = model => Layout.windows(activeTree(model));
 let visibleEditors = model =>
   model
   |> windows
-  |> List.filter_map(id =>
-       List.find_opt((group: Group.t) => group.id == id, model.groups)
-     )
+  |> List.filter_map(id => groupById(id, model))
   |> List.map(Group.selected);
 
 let editorById = (id, model) =>
@@ -228,18 +226,8 @@ let nextEditor = model => updateActiveGroup(Group.nextEditor, model);
 
 let previousEditor = model => updateActiveGroup(Group.previousEditor, model);
 
-let openEditor = (editor, model) => {
-  {
-    ...model,
-    groups:
-      List.map(
-        (group: Group.t) =>
-          group.id == model.activeGroupId
-            ? Group.openEditor(editor, group) : group,
-        model.groups,
-      ),
-  };
-};
+let openEditor = (editor, model) =>
+  updateActiveGroup(Group.openEditor(editor), model);
 
 let removeEditor = (editorId, model) => {
   let groups =
@@ -251,8 +239,7 @@ let removeEditor = (editorId, model) => {
     );
 
   if (groups == []) {
-    None;
-        // Group was removed, no groups left. Abort! Abort!
+    None; // Group was removed, no groups left. Abort! Abort!
   } else if (List.length(groups) != List.length(model.groups)) {
     // Group was removed, remove from tree and make another active
 
