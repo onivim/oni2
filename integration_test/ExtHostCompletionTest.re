@@ -52,7 +52,7 @@ runTestWithInput(
   wait(
     ~timeout=30.0,
     ~name="Validate we get some completions from the 'oni-dev' extension",
-    (state: State.t)
+    (_state: State.t)
     // TODO
     // Array.length(state.completions.filtered) > 0
     => true);

@@ -74,7 +74,7 @@ runTestWithInput(
   wait(
     ~timeout=30.0,
     ~name="Validate we also got some completions",
-    (state: State.t)
+    (_state: State.t)
     // TODO
     // Array.length(state.completions.filtered) > 0
     => true);
