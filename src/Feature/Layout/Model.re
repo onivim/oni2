@@ -6,7 +6,7 @@ module Group: {
   type t =
     pri {
       id: int,
-      items: list(Editor.t),
+      editors: list(Editor.t),
       selectedId: int,
     };
 
@@ -24,7 +24,7 @@ module Group: {
 } = {
   type t = {
     id: int,
-    items: list(Editor.t),
+    editors: list(Editor.t),
     selectedId: int,
   };
 
@@ -37,12 +37,12 @@ module Group: {
       incr(lastId);
 
       let selectedId = editors |> ListEx.last |> Option.get |> Editor.getId;
-      {id: lastId^, items: editors, selectedId};
+      {id: lastId^, editors, selectedId};
     };
   };
 
   let select = (id, group) => {
-    assert(List.exists(item => Editor.getId(item) == id, group.items));
+    assert(List.exists(item => Editor.getId(item) == id, group.editors));
 
     {...group, selectedId: id};
   };
@@ -56,7 +56,7 @@ module Group: {
         Editor.getId(next)
       | [_, ...rest] => loop(rest);
 
-    {...group, selectedId: loop(group.items)};
+    {...group, selectedId: loop(group.editors)};
   };
 
   let previousEditor = group => {
@@ -69,51 +69,51 @@ module Group: {
         Editor.getId(previous)
       | [_, ...rest] => loop(rest);
 
-    {...group, selectedId: loop(group.items)};
+    {...group, selectedId: loop(group.editors)};
   };
 
   let selected = group =>
     List.find(
       editor => Editor.getId(editor) == group.selectedId,
-      group.items,
+      group.editors,
     );
 
   let openEditor = (editor, group) => {
     let bufferId = Editor.getBufferId(editor);
     switch (
-      List.find_opt(e => Editor.getBufferId(e) == bufferId, group.items)
+      List.find_opt(e => Editor.getBufferId(e) == bufferId, group.editors)
     ) {
     | Some(editor) => {...group, selectedId: Editor.getId(editor)}
     | None => {
         ...group,
-        items: [editor, ...group.items],
+        editors: [editor, ...group.editors],
         selectedId: Editor.getId(editor),
       }
     };
   };
 
   let removeEditor = (editorId, group) => {
-    switch (List.filter(e => Editor.getId(e) != editorId, group.items)) {
+    switch (List.filter(e => Editor.getId(e) != editorId, group.editors)) {
     | [] => None
-    | items =>
+    | editors =>
       let selectedId =
         if (group.selectedId == editorId) {
           switch (
-            ListEx.findIndex(e => Editor.getId(e) == editorId, group.items)
+            ListEx.findIndex(e => Editor.getId(e) == editorId, group.editors)
           ) {
-          | Some(0) => List.hd(items) |> Editor.getId
-          | Some(i) => List.nth(items, i - 1) |> Editor.getId
+          | Some(0) => List.hd(editors) |> Editor.getId
+          | Some(i) => List.nth(editors, i - 1) |> Editor.getId
           | None => group.selectedId
           };
         } else {
           group.selectedId;
         };
 
-      Some({...group, items, selectedId});
+      Some({...group, editors, selectedId});
     };
   };
 
-  let map = (f, group) => {...group, items: List.map(f, group.items)};
+  let map = (f, group) => {...group, editors: List.map(f, group.editors)};
 };
 
 type panel =
@@ -185,7 +185,7 @@ let visibleEditors = model =>
 
 let editorById = (id, model) =>
   Base.List.find_map(model.groups, ~f=group =>
-    List.find_opt(editor => Editor.getId(editor) == id, group.items)
+    List.find_opt(editor => Editor.getId(editor) == id, group.editors)
   );
 
 let addWindow = (direction, focus) =>

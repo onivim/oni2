@@ -48,22 +48,22 @@ let make =
   let isSelected = item => ContentModel.id(item) == model.selectedId;
   let children = {
     let editorContainer =
-      switch (List.find_opt(isSelected, model.items)) {
+      switch (List.find_opt(isSelected, model.editors)) {
       | Some(item) => ContentModel.render(item)
       | None => React.empty
       };
 
     if (showTabs) {
-      let items = model.items |> List.rev;
+      let editors = model.editors |> List.rev;
       let tabs =
         <Tabs
-          items
+          items=editors
           style=Style.[
             backgroundColor(
               Colors.EditorGroupHeader.tabsBackground.from(theme),
             ),
           ]
-          selectedIndex={ListEx.findIndex(isSelected, items)}>
+          selectedIndex={ListEx.findIndex(isSelected, editors)}>
           ...{item => {
             <EditorTab
               uiFont
