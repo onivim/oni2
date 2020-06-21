@@ -125,6 +125,8 @@ let create = (~font, ~buffer, ()) => {
   };
 };
 
+let copy = editor => create(~font=editor.font, ~buffer=editor.buffer, ());
+
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,

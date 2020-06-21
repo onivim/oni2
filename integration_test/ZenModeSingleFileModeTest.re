@@ -13,7 +13,8 @@ runTest(
   ~name="ZenMode: Single-file mode works as expected",
   (_dispatch, wait, _runEffects) => {
     wait(~name="Wait for split to be created 1", (state: State.t) => {
-      let splitCount = state.layout |> Feature_Layout.windows |> List.length;
+      let splitCount =
+        state.layout |> Feature_Layout.visibleEditors |> List.length;
       splitCount == 1;
     });
 

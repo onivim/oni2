@@ -193,10 +193,7 @@ let removeWindow = target => updateTree(Layout.removeWindow(target));
 
 let split = (direction, model) => {
   let activeEditor = activeEditor(model);
-  let newGroup =
-    Group.create([
-      Editor.create(~font=activeEditor.font, ~buffer=activeEditor.buffer, ()),
-    ]);
+  let newGroup = Group.create([Editor.copy(activeEditor)]);
 
   {
     groups: [newGroup, ...model.groups],

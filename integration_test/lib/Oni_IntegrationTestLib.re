@@ -288,3 +288,9 @@ let runTestWithInput =
     },
   );
 };
+
+let runCommand = (~dispatch, command: Core.Command.t(_)) =>
+  switch (command.msg) {
+  | `Arg0(msg) => dispatch(msg)
+  | `Arg1(_) => ()
+  };

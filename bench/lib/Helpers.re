@@ -15,11 +15,7 @@ let simpleState = {
 
   Reducer.reduce(
     state,
-    Actions.EditorGroupSizeChanged({
-      id: EditorGroups.activeGroupId(state.editorGroups),
-      width: 3440,
-      height: 1440,
-    }),
+    Actions.EditorGroupSizeChanged({id: 0, width: 3440, height: 1440}),
   );
 };
 
@@ -49,9 +45,6 @@ let defaultEditorBuffer =
 let simpleEditor =
   Editor.create(~font=defaultFont, ~buffer=defaultEditorBuffer, ())
   |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
-let editorGroup =
-  EditorGroups.getActiveEditorGroup(simpleState.editorGroups)
-  |> Option.value(~default=EditorGroup.create());
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
