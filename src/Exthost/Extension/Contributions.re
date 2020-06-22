@@ -185,7 +185,7 @@ module Configuration = {
          let expectEquals = (a, b) => {
            a == b;
          };
-           
+
          let%test "property: bool, no type" = {
            {|
             {
