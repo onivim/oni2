@@ -8,6 +8,12 @@ type pixelPosition = {
   pixelY: float,
 };
 
+type viewLine = {
+  contents: BufferLine.t,
+  byteOffset: int,
+  characterOffset: int,
+};
+
 [@deriving show]
 // TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
 type t = {
@@ -56,6 +62,12 @@ let bufferLineByteToPixel =
 
     ({pixelX, pixelY}, float(width) *. font.measuredWidth);
   };
+};
+
+let viewLine = (editor, lineNumber) => {
+  let contents = editor.buffer |> EditorBuffer.line(lineNumber);
+
+  {contents, byteOffset: 0, characterOffset: 0};
 };
 
 let bufferLineCharacterToPixel =

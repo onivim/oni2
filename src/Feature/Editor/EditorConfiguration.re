@@ -79,6 +79,7 @@ let renderIndentGuides =
 let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`All);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
+let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
 let tabSize = setting("editor.tabSize", int, ~default=4);
 
 module Hover = {
@@ -107,9 +108,6 @@ module Experimental = {
       bool,
       ~default=false,
     );
-
-  let scrollShadow =
-    setting("experimental.editor.scrollShadow", bool, ~default=false);
 };
 
 let contributions = [
@@ -125,6 +123,7 @@ let contributions = [
   renderIndentGuides.spec,
   renderWhitespace.spec,
   rulers.spec,
+  scrollShadow.spec,
   tabSize.spec,
   Hover.enabled.spec,
   Hover.delay.spec,
@@ -135,5 +134,4 @@ let contributions = [
   ZenMode.singleFile.spec,
   Experimental.smoothScroll.spec,
   Experimental.cursorSmoothCaretAnimation.spec,
-  Experimental.scrollShadow.spec,
 ];
