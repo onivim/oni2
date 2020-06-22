@@ -38,7 +38,9 @@ module AutoIndent: {
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
-    autoIndent: string => AutoIndent.action,
+    autoIndent:
+      (~previousLine: string, ~beforePreviousLine: option(string)) =>
+      AutoIndent.action,
     bufferId: int,
     width: int,
     height: int,

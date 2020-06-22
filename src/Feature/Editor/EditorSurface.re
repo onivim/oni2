@@ -57,7 +57,6 @@ module Styles = {
 
 let minimap =
     (
-      ~buffer,
       ~bufferHighlights,
       ~cursorPosition: Location.t,
       ~colors,
@@ -100,7 +99,7 @@ let minimap =
       count
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
-        ~buffer,
+        ~editor,
         ~bufferHighlights,
         ~cursorLine=Index.toZeroBased(cursorPosition.line),
         ~colors,
@@ -186,7 +185,7 @@ let%component make =
     |> Option.map(editorForeground => {...colors, editorForeground})
     |> Option.value(~default=colors);
 
-  let lineCount = Buffer.getNumberOfLines(buffer);
+  let lineCount = editor |> Editor.totalViewLines;
 
   let editorFont = Editor.font(editor);
 
@@ -247,7 +246,7 @@ let%component make =
   let (gutterWidth, gutterView) =
     <GutterView
       editor
-      showScrollShadow={Config.Experimental.scrollShadow.get(config)}
+      showScrollShadow={Config.scrollShadow.get(config)}
       showLineNumbers={Config.lineNumbers.get(config)}
       height=pixelHeight
       colors
@@ -288,7 +287,6 @@ let%component make =
        ? <minimap
            editor
            diagnosticsMap
-           buffer
            bufferHighlights
            cursorPosition
            colors

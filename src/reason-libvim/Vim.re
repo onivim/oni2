@@ -28,7 +28,14 @@ module Window = Window;
 module Yank = Yank;
 
 module GlobalState = {
-  let autoIndent: ref(option(string => AutoIndent.action)) = ref(None);
+  let autoIndent:
+    ref(
+      option(
+        (~previousLine: string, ~beforePreviousLine: option(string)) =>
+        AutoIndent.action,
+      ),
+    ) =
+    ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
 };
 
@@ -316,10 +323,28 @@ let _onFormat = formatRequest => {
   );
 };
 
-let _onAutoIndent = (prevLine: string) => {
+let _onAutoIndent = (lnum: int, _prevLine: string) => {
+  let buf = Buffer.getCurrent();
+  let lineCount = Buffer.getLineCount(buf);
+
+  // lnum is one-based, coming from Vim - we'd only have a beforePreviousLine if the current line is line 3
+  let beforePreviousLine =
+    if (lnum >= 3 && lnum <= lineCount) {
+      lnum - 2 |> Index.fromOneBased |> Buffer.getLine(buf) |> Option.some;
+    } else {
+      None;
+    };
+
+  let beforeLine =
+    if (lnum >= 2 && lnum <= lineCount) {
+      lnum - 1 |> Index.fromOneBased |> Buffer.getLine(buf);
+    } else {
+      ""; // This should never happen... but follow the Vim convention for empty lines.
+    };
+
   let indentAction =
     GlobalState.autoIndent^
-    |> Option.map(fn => fn(prevLine))
+    |> Option.map(fn => fn(~previousLine=beforeLine, ~beforePreviousLine))
     |> Option.value(~default=AutoIndent.KeepIndent);
 
   switch (indentAction) {
