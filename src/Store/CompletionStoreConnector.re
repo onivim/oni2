@@ -164,7 +164,7 @@ let start = () => {
     | Vim(Feature_Vim.ModeChanged(mode)) when mode != Vim.Types.Insert =>
       Actions.stop(state)
 
-    | Editor({msg: CursorsChanged(_), _})
+    | ExtensionBufferUpdateQueued(_)
         when Feature_Vim.mode(state.vim) == Vim.Types.Insert =>
       Actions.checkCompletionMeet(state)
 
