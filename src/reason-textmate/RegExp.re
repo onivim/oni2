@@ -47,7 +47,7 @@ let search = (stringToEvaluate: string, positionToEvaluate: int, v: t) => {
   | EvaluatedPosition({str, position})
   | EvaluatedMatches({str, position, _})
       when
-        (position >= positionToEvaluate || position == (-1))
+        (position >= positionToEvaluate /*|| position == (-1)*/)
         && String.equal(str, stringToEvaluate) => position
   | _ =>
     let newResult =
@@ -62,6 +62,7 @@ let matches = (v: t) => {
   switch (v.cachedResult) {
   | NotEvaluated => emptyMatches
   | EvaluatedMatches({matches, _}) => matches
+  | EvaluatedPosition({str, position}) when position == -1 => emptyMatches
   | EvaluatedPosition({str, position}) =>
     let matches = OnigRegExp.Fast.getLastMatches(str, v.regexp);
     v.cachedResult = EvaluatedMatches({str, position, matches});
