@@ -23,7 +23,7 @@ type model = {
   triggeredFrom:
     option([ | `CommandPalette | `Mouse(EditorCoreTypes.Location.t)]),
   lastRequestID: option(int),
-  editor: option(Feature_Editor.Editor.t),
+  editorID: option(int),
 };
 
 let initial = {
@@ -33,7 +33,7 @@ let initial = {
   range: None,
   triggeredFrom: None,
   lastRequestID: None,
-  editor: None,
+  editorID: None,
 };
 
 module IDGenerator =
@@ -52,7 +52,7 @@ type msg =
       contents: list(Exthost.MarkdownString.t),
       range: option(EditorCoreTypes.Range.t),
       requestID: int,
-      editor: Feature_Editor.Editor.t,
+      editorID: int,
     })
   | HoverRequestFailed(string)
   | MouseHovered(EditorCoreTypes.Location.t)
@@ -89,7 +89,7 @@ let getEffectsForLocation =
              contents,
              range: Option.map(Exthost.OneBasedRange.toRange, range),
              requestID,
-             editor,
+             editorID: Feature_Editor.Editor.getId(editor),
            })
          | Error(s) => HoverRequestFailed(s)
          }
@@ -188,7 +188,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       {...model, providers: [provider, ...model.providers]},
       Nothing,
     )
-  | HoverInfoReceived({contents, range, requestID, editor}) =>
+  | HoverInfoReceived({contents, range, requestID, editorID}) =>
     switch (model.lastRequestID) {
     | Some(id) when requestID == id => (
         {
@@ -196,7 +196,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           contents,
           range,
           lastRequestID: None,
-          editor: Some(editor),
+          editorID: Some(editorID),
         },
         Nothing,
       )
@@ -289,8 +289,8 @@ module View = {
         style={Styles.diagnostic(~theme=colorTheme)}
       />;
     };
-    switch (model.editor) {
-    | Some(editor') when editor' === editor =>
+    switch (model.editorID) {
+    | Some(editorID) when editorID == Feature_Editor.Editor.getId(editor) =>
       <Oni_Components.HoverView x y theme=colorTheme>
         {List.map(markdown => <hoverMarkdown markdown />, model.contents)
          |> React.listToElement}
