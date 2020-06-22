@@ -123,9 +123,19 @@ let runTest =
 
   let getUserSettings = () => Ok(currentUserSettings^);
 
+  Vim.init();
+
+  let initialBuffer = {
+    let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+      Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
+    Core.Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+  };
+
   let currentState =
     ref(
       Model.State.initial(
+        ~initialBuffer,
+        ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
         ~contributedCommands=[],
         ~workingDirectory=Sys.getcwd(),

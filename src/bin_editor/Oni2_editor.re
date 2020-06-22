@@ -163,6 +163,8 @@ switch (eff) {
   let init = app => {
     Log.debug("Init");
 
+    Vim.init();
+
     let initialWorkingDirectory = initWorkingDirectory();
     let window =
       createWindow(
@@ -176,9 +178,27 @@ switch (eff) {
 
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
 
+    let initialBuffer = {
+      let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+        Vim.Buffer.openFile(Core.BufferPath.welcome)
+        |> Vim.BufferMetadata.ofBuffer;
+      Core.Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    };
+
+    let initialBufferRenderers =
+      Model.BufferRenderers.(
+        initial
+        |> setById(
+             Core.Buffer.getId(initialBuffer),
+             Model.BufferRenderer.Welcome,
+           )
+      );
+
     let currentState =
       ref(
         Model.State.initial(
+          ~initialBuffer,
+          ~initialBufferRenderers,
           ~getUserSettings,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,

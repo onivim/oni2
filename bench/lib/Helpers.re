@@ -4,10 +4,20 @@ open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
+Vim.init();
+
 /* Create a state with some editor size */
 let simpleState = {
+  let initialBuffer = {
+    let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+      Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
+    Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+  };
+
   let state =
     State.initial(
+      ~initialBuffer,
+      ~initialBufferRenderers=BufferRenderers.initial,
       ~getUserSettings=() => Ok(Config.Settings.empty),
       ~contributedCommands=[],
       ~workingDirectory=Sys.getcwd(),
