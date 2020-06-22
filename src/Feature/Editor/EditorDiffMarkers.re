@@ -119,23 +119,25 @@ let render =
       ~colors,
       markers,
     ) =>
-  ImmediateList.render(
-    ~scrollY,
-    ~rowHeight,
-    ~height,
-    ~count,
-    ~render=
-      (i, y) =>
-        if (markers[i] != Unmodified) {
-          renderMarker(
-            ~x,
-            ~y,
-            ~rowHeight,
-            ~width,
-            ~canvasContext,
-            ~colors,
-            markers[i],
-          );
-        },
-    (),
-  );
+  // TODO: Bring back
+//  ImmediateList.render(
+//    ~scrollY,
+//    ~rowHeight,
+//    ~height,
+//    ~count,
+//    ~render=
+//      (i, y) =>
+//        if (markers[i] != Unmodified) {
+//          renderMarker(
+//            ~x,
+//            ~y,
+//            ~rowHeight,
+//            ~width,
+//            ~canvasContext,
+//            ~colors,
+//            markers[i],
+//          );
+//        },
+//    (),
+//  );
+  ();

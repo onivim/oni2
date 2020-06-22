@@ -64,8 +64,13 @@ let bufferLineByteToPixel =
   };
 };
 
-let viewLine = (editor, lineNumber) => {
-  let contents = editor.buffer |> EditorBuffer.line(lineNumber);
+let viewLine = (editor, line) => {
+  let bufferPosition = Wrapping.viewLineToBufferPosition(
+    ~line,
+    editor.wrapping,
+  );
+
+  let contents = editor.buffer |> EditorBuffer.line(bufferPosition.line);
 
   {contents, byteOffset: 0, characterOffset: 0};
 };
