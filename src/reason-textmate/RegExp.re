@@ -9,20 +9,15 @@
 
 open Oniguruma;
 
-let _allowCache = ref(true);
-
-let setAllowCache = v => _allowCache := v;
-
-type cachedResult = {
-  str: string,
-  position: int,
-  matches: array(OnigRegExp.Match.t),
-};
+type cachedResult = 
+| NotEvaluated
+| EvaluatedPosition({ str: string, position: int })
+| EvaluatedMatches({ str: string, position: int, matches: array(OnigRegExp.Match.t)});
 
 type t = {
-  mutable cachedResult: option(cachedResult),
+  mutable cachedResult: cachedResult,
   raw: string,
-  regexp: option(OnigRegExp.t),
+  regexp: OnigRegExp.t,
 };
 
 let raw = (v: t) => v.raw;
@@ -33,38 +28,32 @@ let emptyMatches = [||];
 let create = (str: string) => {
   let regexp =
     switch (OnigRegExp.create(str)) {
-    | Ok(v) => Some(v)
+    | Ok(v) => v
     | Error(msg) => failwith(msg)
     };
 
-  {cachedResult: None, raw: str, regexp};
+  {cachedResult: NotEvaluated, raw: str, regexp};
 };
 
-let search = (str: string, position: int, v: t) => {
-  let run = () => {
-    switch (v.regexp) {
-    | Some(re) => OnigRegExp.search(str, position, re)
-    | None => emptyMatches
-    };
-  };
-
-  if (! _allowCache^) {
-    run();
-  } else {
+let search = (stringToEvaluate: string, positionToEvaluate: int, v: t) => {
     switch (v.cachedResult) {
-    | Some(cachedResult)
-        when cachedResult.position >= position && cachedResult.str === str =>
-      cachedResult.matches
+    | EvaluatedPosition({ str, position })
+    | EvaluatedMatches({ str, position, _}) when (position >= positionToEvaluate || position == -1) && String.equal(str, stringToEvaluate) =>
+      position
     | _ =>
-      let newResult = run();
-      let len = Array.length(newResult);
-      if (len >= 1) {
-        v.cachedResult =
-          Some({str, position: newResult[0].startPos, matches: newResult});
-      } else {
-        v.cachedResult = None;
-      };
+      let newResult = OnigRegExp.Fast.search(stringToEvaluate, positionToEvaluate, v.regexp);
+      v.cachedResult = EvaluatedPosition({ str: stringToEvaluate, position: newResult });
       newResult;
     };
-  };
+};
+
+let matches = (v: t) => {
+    switch (v.cachedResult) {
+    | NotEvaluated => emptyMatches
+    | EvaluatedMatches({ matches, _}) => matches
+    | EvaluatedPosition({ str, position }) =>
+      let matches = OnigRegExp.Fast.getLastMatches(str, v.regexp);
+      v.cachedResult = EvaluatedMatches({ str, position, matches });
+      matches;
+    }
 };
