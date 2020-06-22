@@ -23,6 +23,7 @@ type model = {
   signatures: list(Exthost.SignatureHelp.Signature.t),
   activeSignature: option(int),
   activeParameter: option(int),
+  editorID: option(int),
 };
 
 let initial = {
@@ -33,6 +34,7 @@ let initial = {
   signatures: [],
   activeSignature: None,
   activeParameter: None,
+  editorID: None,
 };
 
 [@deriving show({with_path: false})]
@@ -51,6 +53,7 @@ type msg =
       activeSignature: int,
       activeParameter: int,
       requestID: int,
+      editorID: int,
     })
   | EmptyInfoReceived(int)
   | RequestFailed(string)
@@ -97,7 +100,15 @@ module Contributions = {
 };
 
 let getEffectsForLocation =
-    (~buffer, ~location, ~extHostClient, ~model, ~context, ~requestID) => {
+    (
+      ~buffer,
+      ~location,
+      ~extHostClient,
+      ~model,
+      ~context,
+      ~requestID,
+      ~editor,
+    ) => {
   let filetype =
     buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
 
@@ -123,6 +134,7 @@ let getEffectsForLocation =
              activeSignature,
              activeParameter,
              requestID,
+             editorID: Feature_Editor.Editor.getId(editor),
            })
          | Ok(None) => EmptyInfoReceived(requestID)
          | Error(s) => RequestFailed(s)
@@ -148,6 +160,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       let effects =
         getEffectsForLocation(
           ~buffer,
+          ~editor,
           ~location=Feature_Editor.Editor.getPrimaryCursor(editor),
           ~extHostClient,
           ~model,
@@ -170,7 +183,13 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       {...model, providers: [provider, ...model.providers]},
       Nothing,
     )
-  | InfoReceived({signatures, activeSignature, activeParameter, requestID}) =>
+  | InfoReceived({
+      signatures,
+      activeSignature,
+      activeParameter,
+      requestID,
+      editorID,
+    }) =>
     switch (model.lastRequestID) {
     | Some(reqID) when reqID == requestID => (
         {
@@ -178,6 +197,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           signatures,
           activeSignature: Some(activeSignature),
           activeParameter: Some(activeParameter),
+          editorID: Some(editorID),
         },
         Nothing,
       )
@@ -243,6 +263,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         let effects =
           getEffectsForLocation(
             ~buffer,
+            ~editor,
             ~location,
             ~extHostClient,
             ~model,
@@ -265,6 +286,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
         let effects =
           getEffectsForLocation(
             ~buffer,
+            ~editor,
             ~location,
             ~extHostClient,
             ~model,
@@ -377,6 +399,7 @@ module View = {
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
         ~model,
+        ~editor,
         ~grammars,
         ~signatureIndex,
         ~parameterIndex,
@@ -454,56 +477,60 @@ module View = {
         |> React.listToElement;
       };
     };
-    <HoverView x y displayAt=`Top theme=colorTheme>
-      <View style=Styles.signatureLine> {renderLabel()} </View>
-      <UI.Components.Row>
-        <View
-          style=Styles.button
-          onMouseUp={_ => dispatch(SignatureDecrementClicked)}>
-          <Codicon
-            icon=Codicon.chevronLeft
-            color={Feature_Theme.Colors.foreground.from(colorTheme)}
-            fontSize={uiFont.size *. 0.9}
+    switch (model.editorID) {
+    | Some(editorID) when editorID == Feature_Editor.Editor.getId(editor) =>
+      <HoverView x y displayAt=`Top theme=colorTheme>
+        <View style=Styles.signatureLine> {renderLabel()} </View>
+        <UI.Components.Row>
+          <View
+            style=Styles.button
+            onMouseUp={_ => dispatch(SignatureDecrementClicked)}>
+            <Codicon
+              icon=Codicon.chevronLeft
+              color={Feature_Theme.Colors.foreground.from(colorTheme)}
+              fontSize={uiFont.size *. 0.9}
+            />
+          </View>
+          <Text
+            text={Printf.sprintf(
+              "%d/%d",
+              signatureIndex + 1,
+              List.length(model.signatures),
+            )}
+            fontFamily={uiFont.family}
+            fontSize={uiFont.size *. 0.8}
           />
-        </View>
-        <Text
-          text={Printf.sprintf(
-            "%d/%d",
-            signatureIndex + 1,
-            List.length(model.signatures),
-          )}
-          fontFamily={uiFont.family}
-          fontSize={uiFont.size *. 0.8}
-        />
-        <View
-          style=Styles.button
-          onMouseUp={_ => dispatch(SignatureIncrementClicked)}>
-          <Codicon
-            icon=Codicon.chevronRight
-            color={Feature_Theme.Colors.foreground.from(colorTheme)}
-            fontSize={uiFont.size *. 0.9}
-          />
-        </View>
-      </UI.Components.Row>
-      {switch (parameter.documentation) {
-       | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
-         [
-           <horizontalRule theme=colorTheme />,
-           <signatureHelpMarkdown markdown=docs />,
-         ]
-         |> React.listToElement
-       | _ => React.empty
-       }}
-      {switch (signature.documentation) {
-       | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
-         [
-           <horizontalRule theme=colorTheme />,
-           <signatureHelpMarkdown markdown=docs />,
-         ]
-         |> React.listToElement
-       | _ => React.empty
-       }}
-    </HoverView>;
+          <View
+            style=Styles.button
+            onMouseUp={_ => dispatch(SignatureIncrementClicked)}>
+            <Codicon
+              icon=Codicon.chevronRight
+              color={Feature_Theme.Colors.foreground.from(colorTheme)}
+              fontSize={uiFont.size *. 0.9}
+            />
+          </View>
+        </UI.Components.Row>
+        {switch (parameter.documentation) {
+         | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
+           [
+             <horizontalRule theme=colorTheme />,
+             <signatureHelpMarkdown markdown=docs />,
+           ]
+           |> React.listToElement
+         | _ => React.empty
+         }}
+        {switch (signature.documentation) {
+         | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
+           [
+             <horizontalRule theme=colorTheme />,
+             <signatureHelpMarkdown markdown=docs />,
+           ]
+           |> React.listToElement
+         | _ => React.empty
+         }}
+      </HoverView>
+    | _ => React.empty
+    };
   };
 
   let make =
@@ -549,6 +576,7 @@ module View = {
         uiFont
         editorFont
         model
+        editor
         grammars
         signatureIndex
         parameterIndex
