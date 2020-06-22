@@ -13,11 +13,13 @@ type cachedResult =
   | NotEvaluated
   | EvaluatedPosition({
       str: string,
-      position: int,
+      evaluatedPosition: int,
+      matchPosition: int,
     })
   | EvaluatedMatches({
       str: string,
-      position: int,
+      matchPosition: int,
+      evaluatedPosition: int,
       matches: array(OnigRegExp.Match.t),
     });
 
@@ -44,16 +46,27 @@ let create = (str: string) => {
 
 let search = (stringToEvaluate: string, positionToEvaluate: int, v: t) => {
   switch (v.cachedResult) {
-  | EvaluatedPosition({str, position})
-  | EvaluatedMatches({str, position, _})
+  | EvaluatedPosition({str, matchPosition, evaluatedPosition})
+  | EvaluatedMatches({str, matchPosition, evaluatedPosition, _})
+      // We already have a match past this position, so we already evaluated:
       when
-        (position >= positionToEvaluate /*|| position == (-1)*/)
-        && String.equal(str, stringToEvaluate) => position
+        (
+          matchPosition >= positionToEvaluate
+          // or we've evaluated before this position, and we didn't get a match:
+          || evaluatedPosition <= positionToEvaluate
+          && matchPosition == (-1)
+        )
+        // and the string is equal to the one we tested before - return previous match
+        && String.equal(str, stringToEvaluate) => matchPosition
   | _ =>
     let newResult =
       OnigRegExp.Fast.search(stringToEvaluate, positionToEvaluate, v.regexp);
     v.cachedResult =
-      EvaluatedPosition({str: stringToEvaluate, position: newResult});
+      EvaluatedPosition({
+        str: stringToEvaluate,
+        evaluatedPosition: positionToEvaluate,
+        matchPosition: newResult,
+      });
     newResult;
   };
 };
@@ -61,11 +74,16 @@ let search = (stringToEvaluate: string, positionToEvaluate: int, v: t) => {
 let matches = (v: t) => {
   switch (v.cachedResult) {
   | NotEvaluated => emptyMatches
+
   | EvaluatedMatches({matches, _}) => matches
-  | EvaluatedPosition({str, position}) when position == -1 => emptyMatches
-  | EvaluatedPosition({str, position}) =>
+
+  // If no matches, don't bother calling out to Oniguruma FFI - we know we have nothing...
+  | EvaluatedPosition({matchPosition, _}) when matchPosition == (-1) => emptyMatches
+
+  | EvaluatedPosition({str, matchPosition, evaluatedPosition}) =>
     let matches = OnigRegExp.Fast.getLastMatches(str, v.regexp);
-    v.cachedResult = EvaluatedMatches({str, position, matches});
+    v.cachedResult =
+      EvaluatedMatches({str, matchPosition, matches, evaluatedPosition});
     matches;
   };
 };
