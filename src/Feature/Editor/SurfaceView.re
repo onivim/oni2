@@ -184,7 +184,7 @@ let%component make =
     onMouseWheel>
     <Canvas
       style={Styles.bufferViewClipped(0., float(pixelWidth) -. gutterWidth)}
-      render={canvasContext => {
+      render={(canvasContext, _) => {
         let context =
           Draw.createContext(
             ~canvasContext,
