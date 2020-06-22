@@ -58,7 +58,7 @@ module Contributions: {
         | Boolean
         | String
         | Integer
-        | Unknown(string);
+        | Unknown;
     };
 
     type t = list(property)

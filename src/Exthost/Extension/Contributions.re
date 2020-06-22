@@ -86,7 +86,7 @@ module Configuration = {
       | Boolean
       | String
       | Integer
-      | Unknown(string);
+      | Unknown;
 
     let default: t => Yojson.Safe.t =
       fun
@@ -94,12 +94,12 @@ module Configuration = {
       | String => `String("")
       | Integer => `Int(0)
       | Boolean => `Bool(false)
-      | Unknown(_) => `Null;
+      | Unknown => `Null;
 
     module Decode = {
       open Json.Decode;
 
-      let list = list(string) |> map(_ => Unknown("list"));
+      let list = list(string) |> map(_ => Unknown);
 
       let single =
         string
@@ -112,7 +112,7 @@ module Configuration = {
              | "integer" => succeed(Integer)
              | unknown => {
                  Log.warnf(m => m("Unknown configuration type: %s", unknown));
-                 succeed(Unknown(unknown));
+                 succeed(Unknown);
                },
            );
 
@@ -149,7 +149,7 @@ module Configuration = {
         let propertyType =
           field.withDefault(
             "type",
-            PropertyType.Boolean,
+            PropertyType.Unknown,
             PropertyType.decode,
           );
 
@@ -184,6 +184,38 @@ module Configuration = {
 
          let expectEquals = (a, b) => {
            a == b;
+         };
+           
+         let%test "property: bool, no type" = {
+           {|
+            {
+              "default": false
+            }
+          |}
+           |> ofString(property("boolprop"))
+           |> expectEquals({
+                name: "boolprop",
+                // TODO:
+                // The property could/should be inferred by the default value
+                propertyType: Unknown,
+                default: `Bool(false),
+              });
+         };
+
+         let%test "property: string, no type" = {
+           {|
+            {
+              "default": "set",
+            }
+          |}
+           |> ofString(property("stringprop"))
+           |> expectEquals({
+                name: "stringprop",
+                // TODO:
+                // The property could/should be inferred by the default value
+                propertyType: Unknown,
+                default: `String("set"),
+              });
          };
 
          let%test "property: boolean, default" = {
@@ -246,7 +278,7 @@ module Configuration = {
            |> ofString(property("multiprop"))
            |> expectEquals({
                 name: "multiprop",
-                propertyType: Unknown("list"),
+                propertyType: Unknown,
                 default: `Null,
               });
        });
