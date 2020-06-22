@@ -18,6 +18,7 @@ let _currentTitle: ref(string) = ref("");
 let _currentVsync: ref(Revery.Vsync.t) = ref(Revery.Vsync.Immediate);
 let _currentMaximized: ref(bool) = ref(false);
 let _currentMinimized: ref(bool) = ref(false);
+let _currentRaised: ref(bool) = ref(false);
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
@@ -38,6 +39,7 @@ let restore = () => {
   _currentMaximized := false;
   _currentMinimized := false;
 };
+let raiseWindow = () => _currentRaised := true;
 
 let quit = code => exit(code);
 
@@ -206,6 +208,7 @@ let runTest =
       ~maximize,
       ~minimize,
       ~restore,
+      ~raiseWindow,
       ~close,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,

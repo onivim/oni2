@@ -7,7 +7,7 @@
 
 open Oni_Model;
 
-let start = quit => {
+let start = (~quit, ~raiseWindow) => {
   let quitAllEffect = (state: State.t, force) => {
     let handlers = state.lifecycle.onQuitFunctions;
 
@@ -23,6 +23,9 @@ let start = quit => {
     );
   };
 
+  let internalWindowRaiseEffect =
+    Isolinear.Effect.create(~name="window.raise", () => raiseWindow());
+
   let updater = (state: State.t, action) => {
     switch (action) {
     | Actions.QuitBuffer(buffer, force) =>
@@ -35,7 +38,7 @@ let start = quit => {
 
     | WindowCloseBlocked => (
         {...state, modal: Some(Feature_Modals.unsavedBuffersWarning)},
-        Isolinear.Effect.none,
+        internalWindowRaiseEffect,
       )
 
     | _ => (state, Isolinear.Effect.none)

@@ -273,6 +273,11 @@ switch (eff) {
       Window.restore(window);
     };
 
+    // This is called raiseWIndow because if it were simply raise, it would shadow the exception raising function
+    let raiseWindow = () => {
+      Window.raise(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -296,6 +301,7 @@ switch (eff) {
         ~maximize,
         ~minimize,
         ~restore,
+        ~raiseWindow,
         ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,
