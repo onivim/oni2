@@ -9,13 +9,20 @@
 
 open Oniguruma;
 
-type cachedResult = 
-| NotEvaluated
-| EvaluatedPosition({ str: string, position: int })
-| EvaluatedMatches({ str: string, position: int, matches: array(OnigRegExp.Match.t)});
+type cachedResult =
+  | NotEvaluated
+  | EvaluatedPosition({
+      str: string,
+      position: int,
+    })
+  | EvaluatedMatches({
+      str: string,
+      position: int,
+      matches: array(OnigRegExp.Match.t),
+    });
 
 type t = {
-  mutable cachedResult: cachedResult,
+  mutable cachedResult,
   raw: string,
   regexp: OnigRegExp.t,
 };
@@ -36,24 +43,28 @@ let create = (str: string) => {
 };
 
 let search = (stringToEvaluate: string, positionToEvaluate: int, v: t) => {
-    switch (v.cachedResult) {
-    | EvaluatedPosition({ str, position })
-    | EvaluatedMatches({ str, position, _}) when (position >= positionToEvaluate || position == -1) && String.equal(str, stringToEvaluate) =>
-      position
-    | _ =>
-      let newResult = OnigRegExp.Fast.search(stringToEvaluate, positionToEvaluate, v.regexp);
-      v.cachedResult = EvaluatedPosition({ str: stringToEvaluate, position: newResult });
-      newResult;
-    };
+  switch (v.cachedResult) {
+  | EvaluatedPosition({str, position})
+  | EvaluatedMatches({str, position, _})
+      when
+        (position >= positionToEvaluate || position == (-1))
+        && String.equal(str, stringToEvaluate) => position
+  | _ =>
+    let newResult =
+      OnigRegExp.Fast.search(stringToEvaluate, positionToEvaluate, v.regexp);
+    v.cachedResult =
+      EvaluatedPosition({str: stringToEvaluate, position: newResult});
+    newResult;
+  };
 };
 
 let matches = (v: t) => {
-    switch (v.cachedResult) {
-    | NotEvaluated => emptyMatches
-    | EvaluatedMatches({ matches, _}) => matches
-    | EvaluatedPosition({ str, position }) =>
-      let matches = OnigRegExp.Fast.getLastMatches(str, v.regexp);
-      v.cachedResult = EvaluatedMatches({ str, position, matches });
-      matches;
-    }
+  switch (v.cachedResult) {
+  | NotEvaluated => emptyMatches
+  | EvaluatedMatches({matches, _}) => matches
+  | EvaluatedPosition({str, position}) =>
+    let matches = OnigRegExp.Fast.getLastMatches(str, v.regexp);
+    v.cachedResult = EvaluatedMatches({str, position, matches});
+    matches;
+  };
 };
