@@ -47,7 +47,6 @@ runTest(
         |> Option.map(Core.Buffer.getLines)
         |> Option.map(Array.to_list);
 
-      // TODO
       actual == Some([]);
     });
   },
