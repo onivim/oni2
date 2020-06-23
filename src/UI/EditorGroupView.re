@@ -59,6 +59,7 @@ module Parts = {
         (
           ~editor,
           ~state: State.t,
+          ~languageConfiguration,
           ~theme,
           ~isActive,
           ~backgroundColor=?,
@@ -88,6 +89,7 @@ module Parts = {
         dispatch=editorDispatch
         ?backgroundColor
         ?foregroundColor
+        languageConfiguration
         showDiffMarkers
         isActiveSplit=isActive
         editor
@@ -169,6 +171,7 @@ module Parts = {
 
         <Editor
           editor
+          languageConfiguration
           state
           theme
           isActive
@@ -226,7 +229,7 @@ module Styles = {
 };
 
 let make =
-    (~state: State.t, ~theme, ~editorGroup: EditorGroup.t, ~dispatch, ()) => {
+    (~state: State.t, ~languageConfiguration, ~theme, ~editorGroup: EditorGroup.t, ~dispatch, ()) => {
   let State.{vim, uiFont, editorFont, _} = state;
 
   let mode = Feature_Vim.mode(vim);
@@ -247,7 +250,7 @@ let make =
     let editorContainer =
       switch (EditorGroup.getActiveEditor(editorGroup)) {
       | Some(editor) =>
-        <Parts.EditorContainer editor state theme isActive dispatch />
+        <Parts.EditorContainer languageConfiguration editor state theme isActive dispatch />
       | None => <WelcomeView theme editorFont uiFont />
       };
 

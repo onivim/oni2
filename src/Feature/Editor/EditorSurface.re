@@ -124,6 +124,7 @@ let scrollSpringOptions =
 let%component make =
               (
                 ~dispatch,
+                ~languageConfiguration,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -147,21 +148,21 @@ let%component make =
               ) => {
   let colors = Colors.precompute(theme);
 
-  let charOpt = editor |> Editor.getCharacterUnderCursor;
+//  let charOpt = editor |> Editor.getCharacterUnderCursor;
 
-  prerr_endline("!!UNDER CHAR");
-  switch (charOpt) {
-  | Some(char) => prerr_endline(Zed_utf8.singleton(char))
-  | None => prerr_endline("NONE")
-  };
-
-  let charOpt = editor |> Editor.getCharacterBehindCursor;
-
-  prerr_endline("!!BEHIND CHAR");
-  switch (charOpt) {
-  | Some(char) => prerr_endline(Zed_utf8.singleton(char))
-  | None => prerr_endline("NONE")
-  };
+//  prerr_endline("!!UNDER CHAR");
+//  switch (charOpt) {
+//  | Some(char) => prerr_endline(Zed_utf8.singleton(char))
+//  | None => prerr_endline("NONE")
+//  };
+//
+//  let charOpt = editor |> Editor.getCharacterBehindCursor;
+//
+//  prerr_endline("!!BEHIND CHAR");
+//  switch (charOpt) {
+//  | Some(char) => prerr_endline(Zed_utf8.singleton(char))
+//  | None => prerr_endline("NONE")
+//  };
 
   let%hook lastDimensions = Hooks.ref(None);
 
@@ -219,15 +220,14 @@ let%component make =
       editor,
     );
 
-  let matchingPairs = None;
-
-  //  let matchingPairs =
-  //    !Config.matchBrackets.get(config)
-  //      ? None
-  //      : BufferHighlights.getMatchingPair(
-  //          Buffer.getId(buffer),
-  //          bufferHighlights,
-  //        );
+  let matchingPairs =
+    !Config.matchBrackets.get(config)
+        ? None
+        : Editor.getNearestMatchingPair(
+          ~location=cursorPosition,
+          ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
+          editor
+        );
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =

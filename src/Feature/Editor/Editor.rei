@@ -47,6 +47,12 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getVimCursors: t => list(Vim.Cursor.t);
 let setVimCursors: (~cursors: list(Vim.Cursor.t), t) => t;
 
+let getNearestMatchingPair: (
+~location: Location.t, 
+~pairs: list(LanguageConfiguration.BracketPair.t),
+t) => option((Location.t, Location.t));
+
+
 let visiblePixelWidth: t => int;
 let visiblePixelHeight: t => int;
 

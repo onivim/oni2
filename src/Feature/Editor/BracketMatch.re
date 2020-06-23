@@ -95,100 +95,199 @@ let find =
   });
 };
 
-let%test_module "find" =
-  (module
-   {
-     let create = lines =>
-       lines
-       |> Array.of_list
-       |> Oni_Core.Buffer.ofLines
-       |> EditorBuffer.ofBuffer;
+let findFirst = (
+  ~buffer,
+  ~line,
+  ~index,
+  ~pairs
+) => {
+  List.fold_left((acc, pair) => {
+    let LanguageConfiguration.BracketPair.{openPair, closePair} = pair;
 
-     let leftBracket = Uchar.of_char('{');
-     let rightBracket = Uchar.of_char('}');
+    // TODO: Handle longer brackets
+    if (String.length(openPair) != 1 || String.length(closePair) != 1) {
+      acc
+    } else {
 
-     let%test "empty buffer" = {
-       let buffer = create([""]);
+      let startCharacter = Uchar.of_char(openPair.[0]);
+      let stopCharacter = Uchar.of_char(closePair.[0]);
+      
+      let maybePair = find(
+      ~buffer,
+      ~line,
+      ~index,
+      ~start=startCharacter,
+      ~stop=stopCharacter);
 
-       None
-       == find(
-            ~buffer,
-            ~line=0,
-            ~index=0,
-            ~start=Uchar.of_int(0),
-            ~stop=Uchar.of_int(0),
-          );
-     };
-     let%test "out of bounds: line < 0" = {
-       let buffer = create([""]);
+      switch ((acc, maybePair)) {
+      | (Some(_) as acc, None) => acc
+      | (None, Some(_) as newPair) => newPair
+      | (Some(previousPair), Some(newPair)) =>
+          if(newPair.start.line > previousPair.start.line
+            || (newPair.start.line == previousPair.start.line &&
+                newPair.start.index > previousPair.start.index)) {
+                  Some(newPair)
+                } else {
+                  Some(previousPair)
+                };
+      | (None, None) => None
+      }
+    }
+    
+  }, None, pairs)
+};
 
-       None
-       == find(
-            ~buffer,
-            ~line=-1,
-            ~index=0,
-            ~start=Uchar.of_int(0),
-            ~stop=Uchar.of_int(0),
-          );
-     };
-     let%test "out of bounds: line > len0" = {
-       let buffer = create([""]);
+module Test = {
+ let create = lines =>
+   lines
+   |> Array.of_list
+   |> Oni_Core.Buffer.ofLines
+   |> EditorBuffer.ofBuffer;
+  let%test_module "findFirst" =
+    (module
+     {
+    
+      let pairs = LanguageConfiguration.BracketPair.[
+        {openPair: "{", closePair: "}"},
+        {openPair: "(", closePair: ")"},
+        {openPair: "[", closePair: "]"},
+      ];
 
-       None
-       == find(
-            ~buffer,
-            ~line=2,
-            ~index=0,
-            ~start=Uchar.of_int(0),
-            ~stop=Uchar.of_int(0),
-          );
-     };
-     let%test "find pair at start position" = {
-       let buffer = create(["{}"]);
+       let%test "empty buffer" = {
+         let buffer = create([""]);
 
-       Some({start: { line: 0, index: 0}, stop: {line: 0, index: 1}})
-       == find(
-            ~buffer,
-            ~line=0,
-            ~index=0,
-            ~start=leftBracket,
-            ~stop=rightBracket,
-          );
-     };
-     let%test "find before start position" = {
-       let buffer = create(["{a}"]);
+         None
+         == findFirst(
+              ~buffer,
+              ~line=0,
+              ~index=0,
+              ~pairs,
+            );
+       };
+       let%test "picks nearest" = {
+         let buffer = create(["({[a]})"]);
 
-       Some({start: { line: 0, index: 0}, stop: {line: 0, index: 2}})
-       == find(
-            ~buffer,
-            ~line=0,
-            ~index=1,
-            ~start=leftBracket,
-            ~stop=rightBracket,
-          );
-     };
-     let%test "find before/after line" = {
-       let buffer = create(["a{", "bc", "}d"]);
+         Some({start: { line: 0, index: 2}, stop: {line: 0, index: 4}})
+         == findFirst(
+              ~buffer,
+              ~line=0,
+              ~index=3,
+              ~pairs,
+            );
+       };
+       let%test "picks nearest, outside" = {
+         let buffer = create(["({[a]})"]);
 
-       Some({start: { line: 0, index: 1}, stop: {line: 2, index: 0}})
-       == find(
-            ~buffer,
-            ~line=1,
-            ~index=1,
-            ~start=leftBracket,
-            ~stop=rightBracket,
-          );
-     };
-     let%test "skip nested" = {
-       let buffer = create(["{a{}", "bc", "{}d}"]);
+          
+          
+         findFirst(
+              ~buffer,
+              ~line=0,
+              ~index=1,
+              ~pairs,
+            )
 
-       Some({start: { line: 0, index: 0}, stop: {line: 2, index: 3}})
-       == find(
-            ~buffer,
-            ~line=1,
-            ~index=0,
-            ~start=leftBracket,
-            ~stop=rightBracket,
-          );
-     };
-   });
+        |> Option.iter(debugPrint);
+
+         Some({start: { line: 0, index: 1}, stop: {line: 0, index: 5}})
+         == findFirst(
+              ~buffer,
+              ~line=0,
+              ~index=1,
+              ~pairs,
+            );
+       };
+       })
+
+  let%test_module "find" =
+    (module
+     {
+       let leftBracket = Uchar.of_char('{');
+       let rightBracket = Uchar.of_char('}');
+
+       let%test "empty buffer" = {
+         let buffer = create([""]);
+
+         None
+         == find(
+              ~buffer,
+              ~line=0,
+              ~index=0,
+              ~start=Uchar.of_int(0),
+              ~stop=Uchar.of_int(0),
+            );
+       };
+       let%test "out of bounds: line < 0" = {
+         let buffer = create([""]);
+
+         None
+         == find(
+              ~buffer,
+              ~line=-1,
+              ~index=0,
+              ~start=Uchar.of_int(0),
+              ~stop=Uchar.of_int(0),
+            );
+       };
+       let%test "out of bounds: line > len0" = {
+         let buffer = create([""]);
+
+         None
+         == find(
+              ~buffer,
+              ~line=2,
+              ~index=0,
+              ~start=Uchar.of_int(0),
+              ~stop=Uchar.of_int(0),
+            );
+       };
+       let%test "find pair at start position" = {
+         let buffer = create(["{}"]);
+
+         Some({start: { line: 0, index: 0}, stop: {line: 0, index: 1}})
+         == find(
+              ~buffer,
+              ~line=0,
+              ~index=0,
+              ~start=leftBracket,
+              ~stop=rightBracket,
+            );
+       };
+       let%test "find before start position" = {
+         let buffer = create(["{a}"]);
+
+         Some({start: { line: 0, index: 0}, stop: {line: 0, index: 2}})
+         == find(
+              ~buffer,
+              ~line=0,
+              ~index=1,
+              ~start=leftBracket,
+              ~stop=rightBracket,
+            );
+       };
+       let%test "find before/after line" = {
+         let buffer = create(["a{", "bc", "}d"]);
+
+         Some({start: { line: 0, index: 1}, stop: {line: 2, index: 0}})
+         == find(
+              ~buffer,
+              ~line=1,
+              ~index=1,
+              ~start=leftBracket,
+              ~stop=rightBracket,
+            );
+       };
+       let%test "skip nested" = {
+         let buffer = create(["{a{}", "bc", "{}d}"]);
+
+         Some({start: { line: 0, index: 0}, stop: {line: 2, index: 3}})
+         == find(
+              ~buffer,
+              ~line=1,
+              ~index=0,
+              ~start=leftBracket,
+              ~stop=rightBracket,
+            );
+       };
+     });
+};
