@@ -532,6 +532,6 @@ module Workspace = {
       ~method="$acceptWorkspaceData",
       ~args=`List([json]),
       client,
-     );
-    };
+    );
   };
+};
