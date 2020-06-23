@@ -208,38 +208,37 @@ module Vertical = {
         backgroundColor(colors.overviewRulerBracketMatchForeground),
       ];
 
-      React.empty;
-
-//    BufferHighlights.getMatchingPair(
-//      Editor.getBufferId(editor),
-//      bufferHighlights,
-//    )
-//    |> Option.map(mp => {
-//         open Location;
-//         let (startPos, endPos) = mp;
-//
-//         let topLine =
-//           Editor.projectLine(
-//             ~line=Index.toZeroBased(startPos.line),
-//             ~pixelHeight=totalHeight,
-//             editor,
-//           )
-//           |> int_of_float;
-//
-//         let botLine =
-//           Editor.projectLine(
-//             ~line=Index.toZeroBased(endPos.line),
-//             ~pixelHeight=totalHeight,
-//             editor,
-//           )
-//           |> int_of_float;
-//
-//         React.listToElement([
-//           <View style={matchingPairStyle(topLine)} />,
-//           <View style={matchingPairStyle(botLine)} />,
-//         ]);
-//       })
-//    |> Option.value(~default=React.empty);
+    React.empty;
+    //    BufferHighlights.getMatchingPair(
+    //      Editor.getBufferId(editor),
+    //      bufferHighlights,
+    //    )
+    //    |> Option.map(mp => {
+    //         open Location;
+    //         let (startPos, endPos) = mp;
+    //
+    //         let topLine =
+    //           Editor.projectLine(
+    //             ~line=Index.toZeroBased(startPos.line),
+    //             ~pixelHeight=totalHeight,
+    //             editor,
+    //           )
+    //           |> int_of_float;
+    //
+    //         let botLine =
+    //           Editor.projectLine(
+    //             ~line=Index.toZeroBased(endPos.line),
+    //             ~pixelHeight=totalHeight,
+    //             editor,
+    //           )
+    //           |> int_of_float;
+    //
+    //         React.listToElement([
+    //           <View style={matchingPairStyle(topLine)} />,
+    //           <View style={matchingPairStyle(botLine)} />,
+    //         ]);
+    //       })
+    //    |> Option.value(~default=React.empty);
   };
 
   let searchMarkers =
