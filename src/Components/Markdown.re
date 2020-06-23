@@ -27,16 +27,24 @@ open {
            );
 
          let scope =
-           Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-             languageInfo,
-             language,
-           )
-           |> Utility.OptionEx.or_(
-                Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-                  languageInfo,
-                  defaultLanguage,
-                ),
-              );
+           switch (language) {
+           | Some(language) =>
+             Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+               languageInfo,
+               language,
+             )
+             |> Utility.OptionEx.or_(
+                  Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+                    languageInfo,
+                    defaultLanguage,
+                  ),
+                )
+           | None =>
+             Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+               languageInfo,
+               defaultLanguage,
+             )
+           };
 
          switch (scope) {
          | Some(scope) =>
@@ -107,6 +115,7 @@ let make =
       ~codeFontFamily,
       ~baseFontSize=16.,
       ~codeBlockStyle=?,
+      ~codeBlockFontSize=16.,
       ~defaultLanguage="",
       (),
     ) => {
@@ -134,5 +143,6 @@ let make =
     activeLinkStyle={Styles.linkActive(~theme=colorTheme)}
     inactiveLinkStyle={Styles.linkInactive(~theme=colorTheme)}
     ?codeBlockStyle
+    codeBlockFontSize
   />;
 };

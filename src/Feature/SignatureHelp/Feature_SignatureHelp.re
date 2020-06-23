@@ -381,6 +381,12 @@ module View = {
       ),
     ];
 
+    let parameterText = (~theme) => [
+      color(Colors.Editor.foreground.from(theme)),
+    ];
+
+    let text = (~theme) => [color(Colors.foreground.from(theme))];
+
     let button = [cursor(MouseCursors.pointer)];
   };
 
@@ -407,7 +413,7 @@ module View = {
         (),
       ) => {
     let signatureHelpMarkdown = (~markdown) =>
-      Markdown.make(
+      Oni_Components.Markdown.make(
         ~colorTheme,
         ~tokenTheme,
         ~languageInfo,
@@ -416,6 +422,7 @@ module View = {
         ~grammars,
         ~markdown=Exthost.MarkdownString.toString(markdown),
         ~baseFontSize=uiFont.size,
+        ~codeBlockFontSize=editorFont.fontSize,
       );
     let signature: Signature.t = List.nth(model.signatures, signatureIndex);
     let parameter: ParameterInformation.t =
@@ -436,18 +443,21 @@ module View = {
             text=s1
             fontFamily={editorFont.fontFamily}
             fontSize={editorFont.fontSize}
+            style={Styles.parameterText(~theme=colorTheme)}
           />,
           <View style={Styles.activeParameter(~theme=colorTheme)}>
             <Text
               text=s2
               fontFamily={editorFont.fontFamily}
               fontSize={editorFont.fontSize}
+              style={Styles.parameterText(~theme=colorTheme)}
             />
           </View>,
           <Text
             text=s3
             fontFamily={editorFont.fontFamily}
             fontSize={editorFont.fontSize}
+            style={Styles.parameterText(~theme=colorTheme)}
           />,
         ]
         |> React.listToElement;
@@ -462,6 +472,7 @@ module View = {
                 text=s
                 fontFamily={editorFont.fontFamily}
                 fontSize={editorFont.fontSize}
+                style={Styles.parameterText(~theme=colorTheme)}
               />
             | Str.Delim(s) =>
               <View style={Styles.activeParameter(~theme=colorTheme)}>
@@ -469,6 +480,7 @@ module View = {
                   text=s
                   fontFamily={editorFont.fontFamily}
                   fontSize={editorFont.fontSize}
+                  style={Styles.parameterText(~theme=colorTheme)}
                 />
               </View>
             },
@@ -497,6 +509,7 @@ module View = {
               signatureIndex + 1,
               List.length(model.signatures),
             )}
+            style={Styles.text(~theme=colorTheme)}
             fontFamily={uiFont.family}
             fontSize={uiFont.size *. 0.8}
           />
