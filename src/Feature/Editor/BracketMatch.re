@@ -1,7 +1,5 @@
 open Oni_Core;
-type direction =
-  | Forwards
-  | Backwards;
+open Oni_Core.Utility;
 
 module Constants = {
   // TODO: Tune to ensure acceptable perf
@@ -9,9 +7,14 @@ module Constants = {
   let maxLineLength = 1000;
 };
 
-type t = {
+type position = {
   line: int,
   index: int,
+};
+
+type pair = {
+  start: position,
+  stop: position,
 };
 
 let find =
@@ -19,15 +22,12 @@ let find =
       ~buffer: EditorBuffer.t,
       ~line: int,
       ~index: int,
-      ~direction: direction,
-      ~current: Uchar.t,
-      ~destination: Uchar.t,
+      ~start: Uchar.t,
+      ~stop: Uchar.t,
     ) => {
   let bufferLen = EditorBuffer.numberOfLines(buffer);
 
-  let direction = direction == Forwards ? 1 : (-1);
-
-  let rec loop = (~count, ~line, ~index=None, ~travel) =>
+  let rec loop = (~direction, ~count, ~line, ~index=None, ~travel, ~startCharacter, ~stopCharacter) =>
     // Traveled as far as we could, didn't find a pair...
     if (travel > Constants.maxTravel) {
       None;
@@ -37,26 +37,28 @@ let find =
     } else if (line >= bufferLen) {
       None;
     } else {
-      let idx =
-        switch (index) {
-        | None => 0
-        | Some(i) => i
-        };
-
       let bufferLine = buffer |> EditorBuffer.line(line);
       let lineLength =
         bufferLine |> BufferLine.lengthBounded(~max=Constants.maxLineLength);
 
-      if (idx >= lineLength) {
-        loop(~count, ~line=line + 1, ~index=None, ~travel=travel + 1);
+      let idx =
+        switch (index) {
+        | None => direction > 0 ? 0 : lineLength - 1
+        | Some(i) => i
+        };
+
+      if (idx < 0) {
+        loop(~direction, ~count, ~line=line - 1, ~index=None, ~travel=travel + 1, ~startCharacter, ~stopCharacter);
+      } else if (idx >= lineLength) {
+        loop(~direction, ~count, ~line=line + 1, ~index=None, ~travel=travel + 1, ~startCharacter, ~stopCharacter);
       } else {
         let char: Uchar.t = bufferLine |> BufferLine.getUcharExn(~index=idx);
 
         let count =
-          if (char == current) {
-            count + 1;
-          } else if (char == destination) {
-            count - 1;
+          if (char == startCharacter) {
+            count + direction;
+          } else if (char == stopCharacter) {
+            count - direction;
           } else {
             count;
           };
@@ -66,108 +68,127 @@ let find =
         } else {
           loop(
             ~count,
+            ~direction,
             ~line,
             ~index=Some(idx + direction),
             ~travel=travel + 1,
+            ~startCharacter,
+            ~stopCharacter,
           );
         };
       };
     };
 
-  loop(~count=1, ~line, ~index=Some(index), ~travel=0);
+  // See if we can find the 'start' bracket
+
+  let maybeStart = loop(~count=1, ~line, ~index=Some(index), ~travel=0, ~direction=-1, ~startCharacter=start, ~stopCharacter=stop);
+
+  maybeStart
+  |> OptionEx.flatMap(startPos => {
+      let {line, index} = startPos;
+    
+    loop(~count=0, ~line, ~index=Some(index), ~travel=0, ~direction=1,~startCharacter=start, ~stopCharacter=stop)
+    |> Option.map(stop => {
+      start: startPos,
+      stop
+    });
+  });
 };
 
 let%test_module "find" =
   (module
    {
+     let create = lines =>
+       lines
+       |> Array.of_list
+       |> Oni_Core.Buffer.ofLines
+       |> EditorBuffer.ofBuffer;
 
-     let create = lines => lines
-     |> Array.of_list
-     |> Oni_Core.Buffer.ofLines
-     |> EditorBuffer.ofBuffer;
+     let leftBracket = Uchar.of_char('{');
+     let rightBracket = Uchar.of_char('}');
 
      let%test "empty buffer" = {
        let buffer = create([""]);
 
-       None == find(
-        ~buffer,
-        ~line=0,
-        ~index=0,
-        ~direction=Forwards,
-        ~current=Uchar.of_int(0),
-        ~destination=Uchar.of_int(0),
-       );
+       None
+       == find(
+            ~buffer,
+            ~line=0,
+            ~index=0,
+            ~start=Uchar.of_int(0),
+            ~stop=Uchar.of_int(0),
+          );
      };
      let%test "out of bounds: line < 0" = {
        let buffer = create([""]);
 
-       None == find(
-        ~buffer,
-        ~line=-1,
-        ~index=0,
-        ~direction=Forwards,
-        ~current=Uchar.of_int(0),
-        ~destination=Uchar.of_int(0),
-       );
+       None
+       == find(
+            ~buffer,
+            ~line=-1,
+            ~index=0,
+            ~start=Uchar.of_int(0),
+            ~stop=Uchar.of_int(0),
+          );
      };
      let%test "out of bounds: line > len0" = {
        let buffer = create([""]);
 
-       None == find(
-        ~buffer,
-        ~line=2,
-        ~index=0,
-        ~direction=Forwards,
-        ~current=Uchar.of_int(0),
-        ~destination=Uchar.of_int(0),
-       );
+       None
+       == find(
+            ~buffer,
+            ~line=2,
+            ~index=0,
+            ~start=Uchar.of_int(0),
+            ~stop=Uchar.of_int(0),
+          );
      };
-     let%test "forwards: find at start position" = {
-       let buffer = create(["}"]);
+     let%test "find pair at start position" = {
+       let buffer = create(["{}"]);
 
-       Some({line: 0, index: 0}) == find(
-        ~buffer,
-        ~line=0,
-        ~index=0,
-        ~direction=Forwards,
-        ~current=Uchar.of_char('{'),
-        ~destination=Uchar.of_char('}')
-       );
+       Some({start: { line: 0, index: 0}, stop: {line: 0, index: 1}})
+       == find(
+            ~buffer,
+            ~line=0,
+            ~index=0,
+            ~start=leftBracket,
+            ~stop=rightBracket,
+          );
      };
-     let%test "forward: find within same line" = {
-       let buffer = create(["abc}"]);
+     let%test "find before start position" = {
+       let buffer = create(["{a}"]);
 
-       Some({line: 0, index: 3}) == find(
-        ~buffer,
-        ~line=0,
-        ~index=0,
-        ~direction=Forwards,
-        ~current=Uchar.of_char('{'),
-        ~destination=Uchar.of_char('}')
-       );
+       Some({start: { line: 0, index: 0}, stop: {line: 0, index: 2}})
+       == find(
+            ~buffer,
+            ~line=0,
+            ~index=1,
+            ~start=leftBracket,
+            ~stop=rightBracket,
+          );
      };
-     let%test "forward: find on next line" = {
-       let buffer = create(["abc", "defg}"]);
+     let%test "find before/after line" = {
+       let buffer = create(["a{", "bc", "}d"]);
 
-       Some({line: 1, index: 4}) == find(
-        ~buffer,
-        ~line=0,
-        ~index=0,
-        ~direction=Forwards,
-        ~current=Uchar.of_char('{'),
-        ~destination=Uchar.of_char('}')
-       );
+       Some({start: { line: 0, index: 1}, stop: {line: 2, index: 0}})
+       == find(
+            ~buffer,
+            ~line=1,
+            ~index=1,
+            ~start=leftBracket,
+            ~stop=rightBracket,
+          );
      };
-     let%test "forward: skip nested" = {
-       let buffer = create(["a{}", "defg}"]);
+     let%test "skip nested" = {
+       let buffer = create(["{a{}", "bc", "{}d}"]);
 
-       Some({line: 1, index: 4}) == find(
-        ~buffer,
-        ~line=0,
-        ~index=0,
-        ~direction=Forwards,
-        ~current=Uchar.of_char('{'),
-        ~destination=Uchar.of_char('}')
-       );
+       Some({start: { line: 0, index: 0}, stop: {line: 2, index: 3}})
+       == find(
+            ~buffer,
+            ~line=1,
+            ~index=0,
+            ~start=leftBracket,
+            ~stop=rightBracket,
+          );
      };
-  });
+   });

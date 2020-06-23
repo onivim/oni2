@@ -1,10 +1,11 @@
-type direction =
-  | Forwards
-  | Backwards;
-
-type t = {
+type position = {
   line: int,
   index: int,
+};
+
+type pair = {
+  start: position,
+  stop: position,
 };
 
 let find:
@@ -12,8 +13,7 @@ let find:
     ~buffer: EditorBuffer.t,
     ~line: int,
     ~index: int,
-    ~direction: direction,
-    ~current: Uchar.t,
-    ~destination: Uchar.t
+    ~start: Uchar.t,
+    ~stop: Uchar.t
   ) =>
-  option(t);
+  option(pair);
