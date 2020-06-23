@@ -187,6 +187,18 @@ module ExtensionService = {
 };
 
 module LanguageFeatures = {
+  let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
+    let decoder = Json.Decode.(nullable(CodeLens.List.decode));
+
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideCodeLenses",
+      ~args=`List([`Int(handle), Uri.to_yojson(resource)]),
+      client,
+    );
+  };
   let provideCompletionItems =
       (
         ~handle: int,
@@ -520,6 +532,6 @@ module Workspace = {
       ~method="$acceptWorkspaceData",
       ~args=`List([json]),
       client,
-    );
+     );
+    };
   };
-};

@@ -266,6 +266,15 @@ module ExtensionService = {
 module LanguageFeatures = {
   [@deriving show]
   type msg =
+    | EmitCodeLensEvent({
+        eventHandle: int,
+        event: Yojson.Safe.t,
+      }) // ??
+    | RegisterCodeLensSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        eventHandle: option(int),
+      })
     | RegisterDocumentHighlightProvider({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -348,6 +357,24 @@ module LanguageFeatures = {
         Ok(RegisterDocumentHighlightProvider({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+    | ("$emitCodeLensEvent", `List([`Int(eventHandle), json])) =>
+      Ok(EmitCodeLensEvent({eventHandle, event: json}))
+    | (
+        "$registerCodeLensSupport",
+        `List([`Int(handle), selectorJson, eventHandleJson]),
+      ) =>
+      let ret = {
+        open Base.Result.Let_syntax;
+        open Json.Decode;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind eventHandle =
+          eventHandleJson |> decode_value(nullable(int));
+
+        Ok(RegisterCodeLensSupport({handle, selector, eventHandle}));
+      };
+      ret |> Result.map_error(Json.Decode.string_of_error);
     | (
         "$registerDocumentSymbolProvider",
         `List([`Int(handle), selectorJson, `String(label)]),
