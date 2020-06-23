@@ -69,8 +69,8 @@ let make =
       editor,
     );
 
-  let cursorPixelY = pixelY +. gutterWidth |> int_of_float;
-  let cursorPixelX = pixelX |> int_of_float;
+  let cursorPixelY = pixelY |> int_of_float;
+  let cursorPixelX = pixelX +. gutterWidth |> int_of_float;
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
