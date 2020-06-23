@@ -198,7 +198,7 @@ module Vertical = {
 
   let matchingPairMarkers =
       (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
-    let matchingPairStyle = t =>
+    let _matchingPairStyle = t =>
       Style.[
         position(`Absolute),
         top(t - 3),
@@ -208,36 +208,38 @@ module Vertical = {
         backgroundColor(colors.overviewRulerBracketMatchForeground),
       ];
 
-    BufferHighlights.getMatchingPair(
-      Editor.getBufferId(editor),
-      bufferHighlights,
-    )
-    |> Option.map(mp => {
-         open Location;
-         let (startPos, endPos) = mp;
+      React.empty;
 
-         let topLine =
-           Editor.projectLine(
-             ~line=Index.toZeroBased(startPos.line),
-             ~pixelHeight=totalHeight,
-             editor,
-           )
-           |> int_of_float;
-
-         let botLine =
-           Editor.projectLine(
-             ~line=Index.toZeroBased(endPos.line),
-             ~pixelHeight=totalHeight,
-             editor,
-           )
-           |> int_of_float;
-
-         React.listToElement([
-           <View style={matchingPairStyle(topLine)} />,
-           <View style={matchingPairStyle(botLine)} />,
-         ]);
-       })
-    |> Option.value(~default=React.empty);
+//    BufferHighlights.getMatchingPair(
+//      Editor.getBufferId(editor),
+//      bufferHighlights,
+//    )
+//    |> Option.map(mp => {
+//         open Location;
+//         let (startPos, endPos) = mp;
+//
+//         let topLine =
+//           Editor.projectLine(
+//             ~line=Index.toZeroBased(startPos.line),
+//             ~pixelHeight=totalHeight,
+//             editor,
+//           )
+//           |> int_of_float;
+//
+//         let botLine =
+//           Editor.projectLine(
+//             ~line=Index.toZeroBased(endPos.line),
+//             ~pixelHeight=totalHeight,
+//             editor,
+//           )
+//           |> int_of_float;
+//
+//         React.listToElement([
+//           <View style={matchingPairStyle(topLine)} />,
+//           <View style={matchingPairStyle(botLine)} />,
+//         ]);
+//       })
+//    |> Option.value(~default=React.empty);
   };
 
   let searchMarkers =

@@ -241,24 +241,24 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onWrite(id => {dispatch(Actions.BufferSaved(id))});
 
-  let _: unit => unit =
-    Vim.Cursor.onMoved(newPosition => {
-      let buffer = Vim.Buffer.getCurrent();
-      let id = Vim.Buffer.getId(buffer);
-
-      let result = Vim.Search.getMatchingPair();
-      switch (result) {
-      | None => dispatch(Actions.SearchClearMatchingPair(id))
-      | Some({line, column}) =>
-        dispatch(
-          Actions.SearchSetMatchingPair(
-            id,
-            newPosition,
-            Location.{line, column},
-          ),
-        )
-      };
-    });
+//  let _: unit => unit =
+//    Vim.Cursor.onMoved(newPosition => {
+//      let buffer = Vim.Buffer.getCurrent();
+//      let id = Vim.Buffer.getId(buffer);
+//
+//      let result = Vim.Search.getMatchingPair();
+//      switch (result) {
+//      | None => dispatch(Actions.SearchClearMatchingPair(id))
+//      | Some({line, column}) =>
+//        dispatch(
+//          Actions.SearchSetMatchingPair(
+//            id,
+//            newPosition,
+//            Location.{line, column},
+//          ),
+//        )
+//      };
+//    });
 
   let _: unit => unit =
     Vim.Search.onStopSearchHighlight(() => {
