@@ -14,7 +14,7 @@ type t = {
   index: int,
 };
 
-let matchingPair =
+let find =
     (
       ~buffer: EditorBuffer.t,
       ~line: int,
@@ -45,7 +45,7 @@ let matchingPair =
 
       let bufferLine = buffer |> EditorBuffer.line(line);
       let lineLength =
-        bufferLine |> BufferLine.lengthBounded(~max=Constants.maxTravel);
+        bufferLine |> BufferLine.lengthBounded(~max=Constants.maxLineLength);
 
       if (idx >= lineLength) {
         loop(~count, ~line=line + 1, ~index=None, ~travel=travel + 1);
@@ -74,5 +74,100 @@ let matchingPair =
       };
     };
 
-  loop(~count=1, ~line, ~index=Some(index + direction), ~travel=0);
+  loop(~count=1, ~line, ~index=Some(index), ~travel=0);
 };
+
+let%test_module "find" =
+  (module
+   {
+
+     let create = lines => lines
+     |> Array.of_list
+     |> Oni_Core.Buffer.ofLines
+     |> EditorBuffer.ofBuffer;
+
+     let%test "empty buffer" = {
+       let buffer = create([""]);
+
+       None == find(
+        ~buffer,
+        ~line=0,
+        ~index=0,
+        ~direction=Forwards,
+        ~current=Uchar.of_int(0),
+        ~destination=Uchar.of_int(0),
+       );
+     };
+     let%test "out of bounds: line < 0" = {
+       let buffer = create([""]);
+
+       None == find(
+        ~buffer,
+        ~line=-1,
+        ~index=0,
+        ~direction=Forwards,
+        ~current=Uchar.of_int(0),
+        ~destination=Uchar.of_int(0),
+       );
+     };
+     let%test "out of bounds: line > len0" = {
+       let buffer = create([""]);
+
+       None == find(
+        ~buffer,
+        ~line=2,
+        ~index=0,
+        ~direction=Forwards,
+        ~current=Uchar.of_int(0),
+        ~destination=Uchar.of_int(0),
+       );
+     };
+     let%test "forwards: find at start position" = {
+       let buffer = create(["}"]);
+
+       Some({line: 0, index: 0}) == find(
+        ~buffer,
+        ~line=0,
+        ~index=0,
+        ~direction=Forwards,
+        ~current=Uchar.of_char('{'),
+        ~destination=Uchar.of_char('}')
+       );
+     };
+     let%test "forward: find within same line" = {
+       let buffer = create(["abc}"]);
+
+       Some({line: 0, index: 3}) == find(
+        ~buffer,
+        ~line=0,
+        ~index=0,
+        ~direction=Forwards,
+        ~current=Uchar.of_char('{'),
+        ~destination=Uchar.of_char('}')
+       );
+     };
+     let%test "forward: find on next line" = {
+       let buffer = create(["abc", "defg}"]);
+
+       Some({line: 1, index: 4}) == find(
+        ~buffer,
+        ~line=0,
+        ~index=0,
+        ~direction=Forwards,
+        ~current=Uchar.of_char('{'),
+        ~destination=Uchar.of_char('}')
+       );
+     };
+     let%test "forward: skip nested" = {
+       let buffer = create(["a{}", "defg}"]);
+
+       Some({line: 1, index: 4}) == find(
+        ~buffer,
+        ~line=0,
+        ~index=0,
+        ~direction=Forwards,
+        ~current=Uchar.of_char('{'),
+        ~destination=Uchar.of_char('}')
+       );
+     };
+  });

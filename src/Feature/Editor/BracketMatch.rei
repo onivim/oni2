@@ -7,7 +7,7 @@ type t = {
   index: int,
 };
 
-let matchingPair:
+let find:
   (
     ~buffer: EditorBuffer.t,
     ~line: int,

@@ -198,6 +198,10 @@ module Vertical = {
 
   let matchingPairMarkers =
       (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+      ignore(bufferHighlights);
+      ignore(totalHeight);
+      ignore(editor);
+
     let _matchingPairStyle = t =>
       Style.[
         position(`Absolute),
