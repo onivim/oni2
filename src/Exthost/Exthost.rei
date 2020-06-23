@@ -76,7 +76,7 @@ module OneBasedRange: {
 module CodeLens: {
   [@deriving show]
   type t = {
-    cacheId: option(int),
+    cacheId: option(list(int)),
     range: OneBasedRange.t,
     command: option(Command.t),
   };

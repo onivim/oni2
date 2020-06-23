@@ -1,6 +1,6 @@
 [@deriving show]
 type t = {
-  cacheId: option(int),
+  cacheId: option(list(int)),
   range: OneBasedRange.t,
   command: option(Command.t),
 };
@@ -11,7 +11,7 @@ module Decode = {
   let decode =
     obj(({field, _}) =>
       {
-        cacheId: field.optional("cacheId", int),
+        cacheId: field.optional("cacheId", list(int)),
         range: field.required("range", OneBasedRange.decode),
         command: field.optional("command", Command.decode),
       }

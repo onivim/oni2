@@ -341,7 +341,46 @@ module LanguageFeatures = {
     | Unregister({handle: int});
 
   let parseDocumentSelector = json => {
-    Json.Decode.(json |> decode_value(list(DocumentFilter.decode)));
+    open Oni_Core.Utility;
+    open Json.Decode;
+
+    let decoder = list(DocumentFilter.decode);
+
+    // There must be a cleaner way to handle this...
+    let stringDecoder =
+      string
+      |> and_then(str => {
+           let result =
+             str
+             |> JsonEx.from_string
+             |> ResultEx.flatMap(v =>
+                  v
+                  |> decode_value(decoder)
+                  |> Result.map_error(Json.Decode.string_of_error)
+                );
+           switch (result) {
+           | Ok(v) => succeed(v)
+           | Error(m) => fail(m)
+           };
+         });
+
+    let composite = one_of([("json", decoder), ("string", stringDecoder)]);
+
+    json |> decode_value(composite);
+  };
+
+  let decodeStringOrInt = {
+    open Json.Decode;
+    let stringToInt =
+      string
+      |> map(int_of_string_opt)
+      |> and_then(
+           fun
+           | Some(i) => succeed(i)
+           | None => fail("Unable to parse int"),
+         );
+
+    one_of([("int", int), ("string", stringToInt)]);
   };
 
   let handle = (method, args: Yojson.Safe.t) => {
@@ -361,13 +400,13 @@ module LanguageFeatures = {
       Ok(EmitCodeLensEvent({eventHandle, event: json}))
     | (
         "$registerCodeLensSupport",
-        `List([`Int(handle), selectorJson, eventHandleJson]),
+        `List([handleJson, selectorJson, eventHandleJson]),
       ) =>
       let ret = {
         open Base.Result.Let_syntax;
         open Json.Decode;
-        let%bind selector =
-          selectorJson |> decode_value(list(DocumentFilter.decode));
+        let%bind handle = handleJson |> decode_value(decodeStringOrInt);
+        let%bind selector = parseDocumentSelector(selectorJson);
 
         let%bind eventHandle =
           eventHandleJson |> decode_value(nullable(int));

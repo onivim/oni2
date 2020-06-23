@@ -10,6 +10,25 @@ const vscode = require('vscode');
  */
 function activate(context) {
 
+	const codeLensProvider = {
+		provideCodeLenses: (document, token) => {
+			const range1 = new vscode.Range(1, 1, 1, 1);
+			const range2 = new vscode.Range(2, 2, 2, 2);
+			const command1 = {
+				command: "codelens.command1",
+				title: "codelens: command1"
+			};
+			const command2 = {
+				command: "codelens.command2",
+				title: "codelens: command2"
+			};
+			return [
+				new vscode.CodeLens(range1, command1),
+				new vscode.CodeLens(range2, command2),
+			];
+		}
+	};
+
 	const completionProvider = {
 		provideCompletionItems: (document, position, token, context) => {
 			return [{
@@ -119,6 +138,7 @@ function activate(context) {
 	};
 
 	[
+		vscode.languages.registerCodeLensProvider("plaintext", codeLensProvider),
 		vscode.languages.registerCompletionItemProvider("plaintext", completionProvider, ["."]),
 		vscode.languages.registerDefinitionProvider("plaintext", definitionProvider),
 		vscode.languages.registerDeclarationProvider("plaintext", declarationProvider),
