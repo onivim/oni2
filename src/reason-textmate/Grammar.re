@@ -209,24 +209,26 @@ let _getBestRule = (lastMatchedRange, rules: list(Rule.t), str, position) => {
     switch (rules) {
     | [] => prev
     | [hd, ...tail] =>
-      let matches = RegExp.search(str, position, hd.regex);
-      let matchPos = Array.length(matches) > 0 ? matches[0].startPos : (-1);
+      let regex = hd.regex;
+      let matchPos = RegExp.search(str, position, regex);
 
       switch (prev) {
       // Case 1: No match, but we have a match at the checked position -> apply rule
-      | None when matchPos == position => Some((matchPos, matches, hd))
+      | None when matchPos == position =>
+        Some((matchPos, RegExp.matches(regex), hd))
       // Case 2: No current match, and no new match -> check next rules
       | None when matchPos == (-1) => checkRule(None, tail)
       // Case 3: We have a match, and we didn't have one before, but we don't know it is the best one -> compare with next rules
-      | None => checkRule(Some((matchPos, matches, hd)), tail)
+      | None => checkRule(Some((matchPos, RegExp.matches(regex), hd)), tail)
       // Case 4: We had a previous match, but we now have a match that matches the current position -> use this match
-      | Some(_) when matchPos == position => Some((matchPos, matches, hd))
+      | Some(_) when matchPos == position =>
+        Some((matchPos, RegExp.matches(regex), hd))
       // Case 5: We had a previous match, and a new match, but there still could be a better rule.
       // Pick the best one out of the prev / new, and look for new matches.
       | Some(v) =>
         let (oldMatchPos, _, _) = v;
         if (matchPos < oldMatchPos && matchPos >= position) {
-          checkRule(Some((matchPos, matches, hd)), tail);
+          checkRule(Some((matchPos, RegExp.matches(regex), hd)), tail);
         } else {
           checkRule(Some(v), tail);
         };
