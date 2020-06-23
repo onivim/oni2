@@ -8,7 +8,11 @@ runTest(~name="ZenModeSplitTest", (dispatch, wait, _) => {
     state.zenMode == true
   );
 
-  dispatch(Command("view.splitVertical"));
+  runCommand(
+    ~dispatch,
+    Feature_Layout.Commands.splitVertical
+    |> Core.Command.map(msg => Model.Actions.Layout(msg)),
+  );
 
   wait(~name="Wait until Split is created", (state: State.t) =>
     state.zenMode == false

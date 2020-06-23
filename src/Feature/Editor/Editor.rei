@@ -22,6 +22,7 @@ type viewLine = {
 };
 
 let create: (~font: Service_Font.font, ~buffer: EditorBuffer.t, unit) => t;
+let copy: t => t;
 
 let getId: t => int;
 let getBufferId: t => int;

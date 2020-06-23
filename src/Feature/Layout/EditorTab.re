@@ -1,17 +1,8 @@
-/*
- * Tab.re
- *
- */
-
 open Revery.UI;
-
 open Oni_Core;
-
-module Model = Oni_Model;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
-
 module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Theme = Feature_Theme;
@@ -31,14 +22,7 @@ module Styles = {
   open Style;
 
   let container =
-      (
-        ~mode as _,
-        ~isGroupFocused,
-        ~isActive,
-        ~isHovered,
-        ~isModified,
-        ~theme,
-      ) => {
+      (~isGroupFocused, ~isActive, ~isHovered, ~isModified, ~theme) => {
     let background = {
       let unhovered =
         switch (isActive, isGroupFocused) {
@@ -154,7 +138,6 @@ let%component make =
                 ~onClose,
                 ~theme: ColorTheme.Colors.t,
                 ~uiFont: UiFont.t,
-                ~mode: Vim.Mode.t,
                 ~icon,
                 (),
               ) => {
@@ -185,7 +168,6 @@ let%component make =
     onMouseOver={_ => setHovered(_ => true)}
     onMouseOut={_ => setHovered(_ => false)}
     style={Styles.container(
-      ~mode,
       ~isGroupFocused,
       ~isActive,
       ~isHovered,

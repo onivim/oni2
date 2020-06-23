@@ -85,9 +85,7 @@ let getVisibleRangesForEditor = (editor: Editor.t) => {
 };
 
 let getVisibleBuffers = (state: State.t) => {
-  Feature_Layout.windows(state.layout)
-  |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
-  |> List.filter_map(EditorGroup.getActiveEditor)
+  Feature_Layout.visibleEditors(state.layout)
   |> List.map(editor => Editor.getBufferId(editor));
 };
 
@@ -95,9 +93,7 @@ type t = list((int, list(Range.t)));
 
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   let editors =
-    Feature_Layout.windows(state.layout)
-    |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
-    |> List.filter_map(EditorGroup.getActiveEditor)
+    Feature_Layout.visibleEditors(state.layout)
     |> List.filter(editor => Editor.getBufferId(editor) == bufferId);
 
   let flatten = (prev: list(list(Range.t)), curr: individualRange) => {

@@ -129,10 +129,9 @@ let start =
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      let maybeEditor =
-        state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+      let editor = Feature_Layout.activeEditor(state.layout);
 
-      let getDefinition = (buffer, editor) => {
+      let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
         let position = Editor.getPrimaryCursor(editor);
         Definition.getAt(id, position, state.definition)
@@ -145,7 +144,7 @@ let start =
            });
       };
 
-      OptionEx.map2(getDefinition, maybeBuffer, maybeEditor)
+      Option.map(getDefinition, maybeBuffer)
       |> Option.join
       |> Option.iter(action => dispatch(action));
     };
@@ -310,7 +309,10 @@ let start =
             },
           },
         );
-      dispatch(SelectionChanged(vr));
+
+      let editorId =
+        Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
+      dispatch(Editor({editorId, msg: SelectionChanged(vr)}));
     });
 
   let _: unit => unit =
@@ -527,17 +529,8 @@ let start =
 
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
-      Vim.init();
-
-      if (Core.BuildInfo.commitId == Persistence.Global.version()
-          || !showUpdateChangelog) {
-        dispatch(
-          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
-        );
-      } else {
-        dispatch(
-          Actions.OpenFileByPath(Core.BufferPath.welcome, None, None),
-        );
+      if (showUpdateChangelog
+          && Core.BuildInfo.commitId != Persistence.Global.version()) {
         dispatch(
           Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
         );
@@ -546,13 +539,10 @@ let start =
     });
 
   let updateActiveEditorCursors = cursors => {
-    let () =
-      getState()
-      |> Selectors.getActiveEditorGroup
-      |> Selectors.getActiveEditor
-      |> Option.map(Editor.getId)
-      |> Option.iter(id => {dispatch(Actions.EditorCursorMove(id, cursors))});
-    ();
+    let editorId =
+      Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
+
+    dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
   };
 
   let isVimKey = key => {
@@ -580,8 +570,8 @@ let start =
       if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
-        let editor =
-          state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+        let editorId =
+          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
         let context =
           Oni_Model.VimContext.current(~languageConfigLoader, state);
@@ -591,57 +581,21 @@ let start =
           Vim.input(~context, key);
         currentTriggerKey := None;
 
-        let () =
-          editor
-          |> Option.map(Editor.getId)
-          |> Option.iter(id => {
-               dispatch(Actions.EditorCursorMove(id, cursors));
-               dispatch(Actions.EditorScrollToLine(id, newTopLine - 1));
-               dispatch(Actions.EditorScrollToColumn(id, newLeftColumn));
-             });
+        dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
+        dispatch(
+          Actions.Editor({editorId, msg: ScrollToLine(newTopLine - 1)}),
+        );
+        dispatch(
+          Actions.Editor({editorId, msg: ScrollToColumn(newLeftColumn)}),
+        );
 
         Log.debug("handled key: " ++ key);
       }
     );
 
-  let splitExistingBufferEffect = maybeBuffer =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="vim.splitExistingBuffer", dispatch => {
-      switch (maybeBuffer) {
-      | None => Log.warn("Unable to find existing buffer")
-      | Some(buffer) =>
-        // TODO: Will this be necessary with https://github.com/onivim/oni2/pull/1627?
-        let fileType = Core.Buffer.getFileType(buffer);
-        let lineEndings = Core.Buffer.getLineEndings(buffer);
-        let isModified = Core.Buffer.isModified(buffer);
-        let filePath = Core.Buffer.getFilePath(buffer);
-        let version = Core.Buffer.getVersion(buffer);
-        dispatch(
-          Actions.BufferEnter({
-            id: Oni_Core.Buffer.getId(buffer),
-            buffer,
-            fileType,
-            lineEndings,
-            filePath,
-            isModified,
-            version,
-          }),
-        );
-      }
-    });
-
-  let openFileByPathEffect = (state, filePath, location) =>
+  let openFileByPathEffect = (state: State.t, filePath, location) =>
     Isolinear.Effect.create(~name="vim.openFileByPath", () => {
       let buffer = Vim.Buffer.openFile(filePath);
-      let metadata = Vim.BufferMetadata.ofBuffer(buffer);
-      let lineEndings = Vim.Buffer.getLineEndings(buffer);
-
-      let fileType =
-        switch (metadata.filePath) {
-        | Some(v) =>
-          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-        | None => None
-        };
 
       let () =
         location
@@ -651,35 +605,14 @@ let start =
 
              let topLine: int = max(Index.toZeroBased(loc.line) - 10, 0);
 
-             let () =
-               getState()
-               |> Selectors.getActiveEditorGroup
-               |> Selectors.getActiveEditor
-               |> Option.map(Editor.getId)
-               |> Option.iter(id =>
-                    dispatch(Actions.EditorScrollToLine(id, topLine))
-                  );
-             ();
+             let editorId =
+               Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+             dispatch(
+               Actions.Editor({editorId, msg: ScrollToLine(topLine)}),
+             );
            });
 
       let bufferId = Vim.Buffer.getId(buffer);
-      let defaultBuffer = Oni_Core.Buffer.ofLines(~id=bufferId, [||]);
-      let buffer =
-        Selectors.getBufferById(state, bufferId)
-        |> Option.value(~default=defaultBuffer);
-
-      // TODO: Will this be necessary with https://github.com/onivim/oni2/pull/1627?
-      dispatch(
-        Actions.BufferEnter({
-          id: metadata.id,
-          buffer,
-          fileType,
-          lineEndings,
-          filePath: metadata.filePath,
-          isModified: metadata.modified,
-          version: metadata.version,
-        }),
-      );
 
       let maybeRenderer =
         switch (Core.BufferPath.parse(filePath)) {
@@ -868,38 +801,14 @@ let start =
         Vim.input("$");
 
       // Update the editor, which is the source of truth for cursor position
-      dispatch(Actions.EditorCursorMove(editorId, cursors));
-      dispatch(Actions.EditorScrollToLine(editorId, newTopLine - 1));
-      dispatch(Actions.EditorScrollToColumn(editorId, newLeftColumn));
+      dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
+      dispatch(
+        Actions.Editor({editorId, msg: ScrollToLine(newTopLine - 1)}),
+      );
+      dispatch(
+        Actions.Editor({editorId, msg: ScrollToColumn(newLeftColumn)}),
+      );
     });
-  };
-
-  let addSplit = (direction, state: State.t, editorGroup) => {
-    ...state,
-    zenMode: false, // Fix #686: If we're adding a split, we should turn off Zen mode.
-    editorGroups:
-      EditorGroups.add(
-        ~defaultFont=state.editorFont,
-        editorGroup,
-        state.editorGroups,
-      ),
-    layout:
-      switch (EditorGroups.getActiveEditorGroup(state.editorGroups)) {
-      | Some(target) =>
-        Feature_Layout.insertWindow(
-          `After(target.editorGroupId),
-          direction,
-          editorGroup.editorGroupId,
-          state.layout,
-        )
-
-      | None =>
-        Feature_Layout.addWindow(
-          direction,
-          editorGroup.editorGroupId,
-          state.layout,
-        )
-      },
   };
 
   let updater = (state: State.t, action: Actions.t) => {
@@ -937,28 +846,19 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-    | Command("view.splitHorizontal") =>
-      let maybeBuffer = Selectors.getActiveBuffer(state);
-      let editorGroup = EditorGroup.create();
-      let state' = addSplit(`Horizontal, state, editorGroup);
-      (state', splitExistingBufferEffect(maybeBuffer));
-
-    | Command("view.splitVertical") =>
-      let maybeBuffer = Selectors.getActiveBuffer(state);
-      let editorGroup = EditorGroup.create();
-      let state' = addSplit(`Vertical, state, editorGroup);
-      (state', splitExistingBufferEffect(maybeBuffer));
 
     | OpenFileByPath(path, maybeDirection, location) =>
       /* If a split was requested, create that first! */
       let state' =
         switch (maybeDirection) {
         | None => state
-        | Some(direction) =>
-          let editorGroup = EditorGroup.create();
-          addSplit(direction, state, editorGroup);
+        | Some(direction) => {
+            ...state,
+            layout: Feature_Layout.split(direction, state.layout),
+          }
         };
       (state', openFileByPathEffect(state', path, location));
+
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state
@@ -976,17 +876,12 @@ let start =
              | _ => None,
            );
 
-      let maybeEditorId =
-        state
-        |> Selectors.getActiveEditorGroup
-        |> Selectors.getActiveEditor
-        |> Option.map((editor: Feature_Editor.Editor.t) =>
-             Editor.getId(editor)
-           );
+      let editorId =
+        Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
       let (state, effect) =
-        OptionEx.map3(
-          (bufferId, terminalId, editorId) => {
+        OptionEx.map2(
+          (bufferId, terminalId) => {
             let colorTheme = Feature_Theme.colors(state.colorTheme);
             let (lines, highlights) =
               Feature_Terminal.getLinesAndHighlights(
@@ -1011,21 +906,22 @@ let start =
             let syntaxHighlights =
               syntaxHighlights |> Feature_Syntax.ignore(~bufferId);
 
-            let editorGroups =
-              state.editorGroups
-              |> EditorGroups.setBufferFont(
-                   ~bufferId,
-                   ~font=state.terminalFont,
-                 );
+            let layout =
+              Feature_Layout.map(
+                editor =>
+                  Editor.getBufferId(editor) == bufferId
+                    ? Editor.setFont(~font=state.terminalFont, editor)
+                    : editor,
+                state.layout,
+              );
 
             (
-              {...state, editorGroups, syntaxHighlights},
+              {...state, layout, syntaxHighlights},
               setTerminalLinesEffect(~bufferId, ~editorId, lines),
             );
           },
           maybeBufferId,
           maybeTerminalId,
-          maybeEditorId,
         )
         |> Option.value(~default=(state, Isolinear.Effect.none));
 
