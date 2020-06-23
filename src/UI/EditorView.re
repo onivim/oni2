@@ -248,12 +248,16 @@ let make =
       <Parts.EditorContainer editor state theme isActive=true dispatch />;
   };
 
+  let hideZenModeTabs =
+    state.configuration |> Configuration.getValue(c => c.zenModeHideTabs);
+
   <View onFileDropped style={Styles.container(theme)}>
     <View style={Styles.container(theme)}>
       <Feature_Layout.View
         uiFont={state.uiFont}
         theme
-        zenMode={state.zenMode}
+        isZenMode={state.zenMode}
+        shouldShowTabsInZenMode={!hideZenModeTabs}
         model={state.layout}
         dispatch={msg => dispatch(Actions.Layout(msg))}>
         ...(module ContentProvider)

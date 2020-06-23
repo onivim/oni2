@@ -489,7 +489,8 @@ module View = {
       (
         ~children as provider,
         ~model,
-        ~zenMode,
+        ~isZenMode,
+        ~shouldShowTabsInZenMode,
         ~uiFont,
         ~theme,
         ~dispatch,
@@ -505,7 +506,7 @@ module View = {
         switch (maybeDimensions) {
         | Some((width, height)) =>
           let positioned =
-            zenMode
+            isZenMode
               ? Positioned.fromWindow(
                   0,
                   0,
@@ -521,6 +522,7 @@ module View = {
               <EditorGroupView
                 provider
                 uiFont
+                showTabs={!isZenMode || (isZenMode && shouldShowTabsInZenMode)}
                 isActive={group.id == model.activeGroupId}
                 theme
                 model=group

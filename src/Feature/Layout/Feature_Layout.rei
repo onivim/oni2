@@ -57,7 +57,8 @@ module View: {
     (
       ~children: (module ContentModel),
       ~model: model,
-      ~zenMode: bool,
+      ~isZenMode: bool,
+      ~shouldShowTabsInZenMode: bool,
       ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
