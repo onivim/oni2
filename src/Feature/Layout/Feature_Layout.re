@@ -522,7 +522,7 @@ module View = {
               <EditorGroupView
                 provider
                 uiFont
-                showTabs={!isZenMode || (isZenMode && shouldShowTabsInZenMode)}
+                showTabs={!isZenMode || isZenMode && shouldShowTabsInZenMode}
                 isActive={group.id == model.activeGroupId}
                 theme
                 model=group
