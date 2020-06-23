@@ -57,6 +57,7 @@ module View: {
     (
       ~children: (module ContentModel),
       ~model: model,
+      ~zenMode: bool,
       ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,

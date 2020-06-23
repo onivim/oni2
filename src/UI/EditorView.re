@@ -253,6 +253,7 @@ let make =
       <Feature_Layout.View
         uiFont={state.uiFont}
         theme
+        zenMode={state.zenMode}
         model={state.layout}
         dispatch={msg => dispatch(Actions.Layout(msg))}>
         ...(module ContentProvider)

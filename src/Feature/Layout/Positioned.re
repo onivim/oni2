@@ -106,6 +106,10 @@ let%test_module "move" =
         });
    });
 
+let fromWindow = (x, y, width, height, id) => {
+  AbstractTree.DSL.(window({x, y, width, height}, id))
+};
+
 /**
  * fromLayout
  */

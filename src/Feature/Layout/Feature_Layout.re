@@ -485,7 +485,7 @@ module View = {
   };
 
   let component = React.Expert.component("Feature_Layout.View");
-  let make = (~children as provider, ~model, ~uiFont, ~theme, ~dispatch, ()) =>
+  let make = (~children as provider, ~model, ~zenMode, ~uiFont, ~theme, ~dispatch, ()) =>
     component(hooks => {
       let ((maybeDimensions, setDimensions), hooks) =
         Hooks.state(None, hooks);
@@ -495,7 +495,10 @@ module View = {
       let children =
         switch (maybeDimensions) {
         | Some((width, height)) =>
-          let positioned = Positioned.fromLayout(0, 0, width, height, tree);
+          let positioned = zenMode ? 
+          Positioned.fromWindow(0, 0, width, height, model.activeGroupId)
+          : Positioned.fromLayout(0, 0, width, height, tree);
+
 
           let renderWindow = id =>
             switch (groupById(id, model)) {
