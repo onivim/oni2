@@ -490,7 +490,7 @@ module View = {
         ~children as provider,
         ~model,
         ~isZenMode,
-        ~shouldShowTabsInZenMode,
+        ~showTabs,
         ~uiFont,
         ~theme,
         ~dispatch,
@@ -522,7 +522,7 @@ module View = {
               <EditorGroupView
                 provider
                 uiFont
-                showTabs={!isZenMode || isZenMode && shouldShowTabsInZenMode}
+                showTabs
                 isActive={group.id == model.activeGroupId}
                 theme
                 model=group
