@@ -39,19 +39,19 @@ let update: (~focus: option(panel), model, msg) => (model, outmsg);
 
 // VIEW
 
-module type ContentModel = {
-  type t = Editor.t;
-
-  let id: t => int;
-  let title: t => string;
-  let icon: t => option(IconTheme.IconDefinition.t);
-  let isModified: t => bool;
-
-  let render: (~isActive: bool, t) => Revery.UI.element;
-};
-
 module View: {
   open Revery.UI;
+
+  module type ContentModel = {
+    type t = Editor.t;
+
+    let id: t => int;
+    let title: t => string;
+    let icon: t => option(IconTheme.IconDefinition.t);
+    let isModified: t => bool;
+
+    let render: (~isActive: bool, t) => Revery.UI.element;
+  };
 
   let make:
     (
