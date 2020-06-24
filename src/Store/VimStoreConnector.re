@@ -63,9 +63,6 @@ let start =
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
 
-  let languageConfigLoader =
-    Ext.LanguageConfigurationLoader.create(languageInfo);
-
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
@@ -573,8 +570,7 @@ let start =
         let editorId =
           Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
-        let context =
-          Oni_Model.VimContext.current(~languageConfigLoader, state);
+        let context = Oni_Model.VimContext.current(state);
 
         currentTriggerKey := Some(key);
         let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
