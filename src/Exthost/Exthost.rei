@@ -73,6 +73,19 @@ module OneBasedRange: {
   let toRange: t => Range.t;
 };
 
+module CodeLens: {
+  [@deriving show]
+  type t = {
+    cacheId: option(list(int)),
+    range: OneBasedRange.t,
+    command: option(Command.t),
+  };
+
+  let decode: Json.decoder(t);
+
+  module List: {let decode: Json.decoder(list(t));};
+};
+
 module Location: {
   type t = {
     uri: Uri.t,
@@ -711,6 +724,15 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | EmitCodeLensEvent({
+          eventHandle: int,
+          event: Yojson.Safe.t,
+        }) // ??
+      | RegisterCodeLensSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          eventHandle: option(int),
+        })
       | RegisterDocumentHighlightProvider({
           handle: int,
           selector: DocumentSelector.t,
@@ -1023,6 +1045,10 @@ module Request: {
   };
 
   module LanguageFeatures: {
+    let provideCodeLenses:
+      (~handle: int, ~resource: Uri.t, Client.t) =>
+      Lwt.t(option(list(CodeLens.t)));
+
     let provideCompletionItems:
       (
         ~handle: int,

@@ -22,6 +22,7 @@ type viewLine = {
 };
 
 let create: (~font: Service_Font.font, ~buffer: EditorBuffer.t, unit) => t;
+let copy: t => t;
 
 let getId: t => int;
 let getBufferId: t => int;
@@ -47,11 +48,13 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getVimCursors: t => list(Vim.Cursor.t);
 let setVimCursors: (~cursors: list(Vim.Cursor.t), t) => t;
 
-let getNearestMatchingPair: (
-~location: Location.t, 
-~pairs: list(LanguageConfiguration.BracketPair.t),
-t) => option((Location.t, Location.t));
-
+let getNearestMatchingPair:
+  (
+    ~location: Location.t,
+    ~pairs: list(LanguageConfiguration.BracketPair.t),
+    t
+  ) =>
+  option((Location.t, Location.t));
 
 let visiblePixelWidth: t => int;
 let visiblePixelHeight: t => int;

@@ -34,6 +34,7 @@
         Oni2.feature.hover
         Oni2.feature.vim
         Oni2.feature.signature_help
+        Oni2.feature.editor
         isolinear
         libvim
         textmate

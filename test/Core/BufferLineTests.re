@@ -103,6 +103,14 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(position).toBe(2);
       expect.int(width).toBe(1);
     });
+    test("negative index should not throw", ({expect, _}) => {
+      let bufferLine = makeLine("abc");
+      let (position, width) =
+        BufferLine.getPositionAndWidth(~index=-1, bufferLine);
+
+      expect.int(position).toBe(0);
+      expect.int(width).toBe(1);
+    });
     test("empty line", ({expect, _}) => {
       let bufferLine = makeLine("");
       let (position, width) =

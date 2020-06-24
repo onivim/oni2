@@ -14,13 +14,6 @@ type viewLine = {
   characterOffset: int,
 };
 
-type matchingPair = {
-  startLine: int,
-  startIndex: int,
-  stopLine: int,
-  stopIndex: int,
-};
-
 [@deriving show]
 // TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
 type t = {
@@ -132,6 +125,8 @@ let create = (~font, ~buffer, ()) => {
   };
 };
 
+let copy = editor => create(~font=editor.font, ~buffer=editor.buffer, ());
+
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,
@@ -141,27 +136,25 @@ type scrollbarMetrics = {
 let getVimCursors = ({cursors, _}) => cursors;
 let setVimCursors = (~cursors, editor) => {...editor, cursors};
 
-let getNearestMatchingPair = (
-  ~location: Location.t,
-  ~pairs,
-  {buffer, _}
-) => {
+let getNearestMatchingPair = (~location: Location.t, ~pairs, {buffer, _}) => {
   BracketMatch.findFirst(
     ~buffer,
     ~line=location.line |> Index.toZeroBased,
     ~index=location.column |> Index.toZeroBased,
     ~pairs,
   )
-  |> Option.map(({ start, stop}: BracketMatch.pair) => ((
-    Location.{
-      line: start.line |> Index.fromZeroBased,
-      column: start.index |> Index.fromZeroBased,
-    },
-    Location.{
-      line: stop.line |> Index.fromZeroBased,
-      column: stop.index |> Index.fromZeroBased,
-    }
-  )));
+  |> Option.map(({start, stop}: BracketMatch.pair) =>
+       (
+         Location.{
+           line: start.line |> Index.fromZeroBased,
+           column: start.index |> Index.fromZeroBased,
+         },
+         Location.{
+           line: stop.line |> Index.fromZeroBased,
+           column: stop.index |> Index.fromZeroBased,
+         },
+       )
+     );
 };
 
 let mapCursor = (~position: Vim.Cursor.t, editor) => {

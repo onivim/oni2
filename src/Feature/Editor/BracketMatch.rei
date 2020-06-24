@@ -24,6 +24,6 @@ let findFirst:
     ~buffer: EditorBuffer.t,
     ~line: int,
     ~index: int,
-    ~pairs: list(LanguageConfiguration.BracketPair.t),
+    ~pairs: list(LanguageConfiguration.BracketPair.t)
   ) =>
   option(pair);

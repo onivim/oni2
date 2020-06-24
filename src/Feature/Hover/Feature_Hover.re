@@ -278,6 +278,7 @@ module View = {
         ~markdown=Exthost.MarkdownString.toString(markdown),
         ~baseFontSize=uiFont.size,
         ~codeBlockStyle=Style.[flexGrow(1)],
+        ~codeBlockFontSize=editorFont.fontSize,
       );
 
     let hoverDiagnostic =

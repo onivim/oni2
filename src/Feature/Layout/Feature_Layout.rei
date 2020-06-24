@@ -1,27 +1,28 @@
 open Oni_Core;
+open Feature_Editor;
 
 // MODEL
 
 type panel =
   | Left
-  | Center(int)
+  | Center
   | Bottom;
 
 type model;
 
-let initial: int => model;
+let initial: list(Editor.t) => model;
 
-let windows: model => list(int);
-let addWindow: ([ | `Horizontal | `Vertical], int, model) => model;
-let insertWindow:
-  (
-    [ | `Before(int) | `After(int)],
-    [ | `Horizontal | `Vertical],
-    int,
-    model
-  ) =>
-  model;
-let removeWindow: (int, model) => model;
+let visibleEditors: model => list(Editor.t);
+let editorById: (int, model) => option(Editor.t);
+
+let split: ([ | `Horizontal | `Vertical], model) => model;
+
+let activeEditor: model => Editor.t;
+
+let openEditor: (Editor.t, model) => model;
+let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
+
+let map: (Editor.t => Editor.t, model) => model;
 
 // UPDATE
 
@@ -30,19 +31,33 @@ type msg;
 
 type outmsg =
   | Nothing
+  | SplitAdded
+  | RemoveLastBlocked
   | Focus(panel);
 
 let update: (~focus: option(panel), model, msg) => (model, outmsg);
 
 // VIEW
 
+module type ContentModel = {
+  type t = Editor.t;
+
+  let id: t => int;
+  let title: t => string;
+  let icon: t => option(IconTheme.IconDefinition.t);
+  let isModified: t => bool;
+
+  let render: (~isActive: bool, t) => Revery.UI.element;
+};
+
 module View: {
   open Revery.UI;
 
   let make:
     (
-      ~children: int => element,
+      ~children: (module ContentModel),
       ~model: model,
+      ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       unit
@@ -53,6 +68,14 @@ module View: {
 // COMMANDS
 
 module Commands: {
+  let nextEditor: Command.t(msg);
+  let previousEditor: Command.t(msg);
+
+  let splitVertical: Command.t(msg);
+  let splitHorizontal: Command.t(msg);
+
+  let closeActiveEditor: Command.t(msg);
+
   let moveLeft: Command.t(msg);
   let moveRight: Command.t(msg);
   let moveUp: Command.t(msg);
