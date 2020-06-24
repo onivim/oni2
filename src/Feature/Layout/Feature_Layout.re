@@ -1,3 +1,5 @@
+open Oni_Core.Utility;
+
 // MODEL
 
 include Model;
@@ -410,6 +412,30 @@ let update = (~focus, model, msg) => {
   | Command(ResetSizes) => (resetWeights(model), Nothing)
 
   | Command(AddLayout) => (addLayoutTab(model), Nothing)
+
+  | Command(PreviousLayout) => (
+      {
+        ...model,
+        activeLayoutIndex:
+          IndexEx.prevRollOver(
+            ~last=List.length(model.layouts) - 1,
+            model.activeLayoutIndex,
+          ),
+      },
+      Nothing,
+    )
+
+  | Command(NextLayout) => (
+      {
+        ...model,
+        activeLayoutIndex:
+          IndexEx.nextRollOver(
+            ~last=List.length(model.layouts) - 1,
+            model.activeLayoutIndex,
+          ),
+      },
+      Nothing,
+    )
   };
 };
 // VIEW
@@ -858,6 +884,20 @@ module Commands = {
       "oni.layout.add",
       Command(AddLayout),
     );
+  let previousLayout =
+    define(
+      ~category="View",
+      ~title="Previous Layout Tab",
+      "oni.layout.previous",
+      Command(PreviousLayout),
+    );
+  let nextLayout =
+    define(
+      ~category="View",
+      ~title="Next Layout Tab",
+      "oni.layout.next",
+      Command(NextLayout),
+    );
 };
 
 module Contributions = {
@@ -894,5 +934,7 @@ module Contributions = {
       toggleMaximize,
       resetSizes,
       addLayout,
+      previousLayout,
+      nextLayout,
     ];
 };

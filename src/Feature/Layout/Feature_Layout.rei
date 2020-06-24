@@ -107,6 +107,8 @@ module Commands: {
   let resetSizes: Command.t(msg);
 
   let addLayout: Command.t(msg);
+  let previousLayout: Command.t(msg);
+  let nextLayout: Command.t(msg);
 };
 
 // CONTRIBUTIONS
