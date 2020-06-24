@@ -3,16 +3,24 @@
  */
 
 open Oni_Core;
+open Oni_Core.Utility;
 open Rench;
 
 open Exthost.Extension;
 open Scanner.ScanResult;
+
+module Log = (val Log.withNamespace("Oni2.LanguageInfo"));
+
+type configurationLoadState =
+| Loaded(LanguageConfiguration.t)
+| NotFound;
 
 [@deriving show]
 type t = {
   grammars: list(Contributions.Grammar.t),
   languages: list(Contributions.Language.t),
   extToLanguage: [@opaque] StringMap.t(string),
+  languageCache: [@opaque] Hashtbl.t(string, configurationLoadState),
   languageToConfigurationPath: [@opaque] StringMap.t(string),
   languageToScope: [@opaque] StringMap.t(string),
   scopeToGrammarPath: [@opaque] StringMap.t(string),
@@ -36,6 +44,7 @@ module Regexes = {
 let initial = {
   grammars: [],
   languages: [],
+  languageCache: Hashtbl.create(16),
   extToLanguage: StringMap.empty,
   languageToConfigurationPath: StringMap.empty,
   languageToScope: StringMap.empty,
@@ -81,6 +90,49 @@ let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
 
 let getLanguageConfigurationPath = (li: t, languageId: string) => {
   StringMap.find_opt(languageId, li.languageToConfigurationPath);
+};
+
+module Internal = {
+
+  let loadLanguage = (path) => {
+    path
+    |> JsonEx.from_file
+    |> ResultEx.flatMap((json) =>
+      json
+      |> Json.Decode.decode_value(LanguageConfiguration.decode)
+      |> Stdlib.Result.map_error(Json.Decode.string_of_error)
+    )
+    |> Stdlib.Result.map_error(FunEx.tap(Log.error))
+  };
+  
+  let loadLanguageConfiguration = (~languageId, languageInfo: t) => {
+    languageId
+    |> getLanguageConfigurationPath(languageInfo)
+    |> Option.map(
+         FunEx.tap(p => Log.debugf(m => m("Got path for language: %s", p))),
+       )
+    |> OptionEx.flatMap((path) => {
+      
+       switch (loadLanguage(path)) {
+       | Ok(languageConfig) =>
+       Hashtbl.add(languageInfo.languageCache, languageId, Loaded(languageConfig));
+       Some(languageConfig)
+       | Error(_) =>
+       Hashtbl.add(languageInfo.languageCache, languageId, NotFound)
+       None
+       };
+    });
+  }
+};
+
+let getLanguageConfiguration = (~languageId: string, languageInfo: t) => {
+    languageId
+    |> Hashtbl.find_opt(languageInfo.languageCache)
+    |> OptionEx.flatMap(fun
+    | Some(Loaded(languageConfig)) => Some(languageConfig)
+    | Some(NotFound) => None
+    | None => Internal.loadLanguageConfiguration(~languageId, languageInfo)
+    );
 };
 
 let getScopeFromLanguage = (li: t, languageId: string) => {
