@@ -16,70 +16,93 @@ type outmsg =
   | Focus(panel);
 
 open {
-       let rotate = (direction, model) => {
-         ...model,
-         tree:
-           Layout.rotate(direction, model.activeGroupId, activeTree(model)),
-       };
+       let rotate = direction =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree:
+               Layout.rotate(
+                 direction,
+                 layout.activeGroupId,
+                 activeTree(layout),
+               ),
+           }
+         );
 
-       let resizeWindowByAxis = (direction, delta, model) => {
-         ...model,
-         tree:
-           Layout.resizeWindowByAxis(
-             direction,
-             model.activeGroupId,
-             delta,
-             activeTree(model),
-           ),
-       };
+       let resizeWindowByAxis = (direction, delta) =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree:
+               Layout.resizeWindowByAxis(
+                 direction,
+                 layout.activeGroupId,
+                 delta,
+                 activeTree(layout),
+               ),
+           }
+         );
 
-       let resizeWindowByDirection = (direction, delta, model) => {
-         ...model,
-         tree:
-           Layout.resizeWindowByDirection(
-             direction,
-             model.activeGroupId,
-             delta,
-             activeTree(model),
-           ),
-       };
+       let resizeWindowByDirection = (direction, delta) =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree:
+               Layout.resizeWindowByDirection(
+                 direction,
+                 layout.activeGroupId,
+                 delta,
+                 activeTree(layout),
+               ),
+           }
+         );
 
-       let resetWeights = model => {
-         ...model,
-         tree: Layout.resetWeights(activeTree(model)),
-         uncommittedTree: `None,
-       };
+       let resetWeights =
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree: Layout.resetWeights(activeTree(layout)),
+             uncommittedTree: `None,
+           }
+         );
 
-       let maximize = (~direction=?, model) => {
-         ...model,
-         uncommittedTree:
-           `Maximized(
-             Layout.maximize(
-               ~direction?,
-               model.activeGroupId,
-               activeTree(model),
-             ),
-           ),
-       };
+       let maximize = (~direction=?) =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             uncommittedTree:
+               `Maximized(
+                 Layout.maximize(
+                   ~direction?,
+                   layout.activeGroupId,
+                   activeTree(layout),
+                 ),
+               ),
+           }
+         );
      };
 
 let update = (~focus, model, msg) => {
   switch (msg) {
-  | SplitDragged({path, delta}) =>
-    let model =
-      switch (model.uncommittedTree) {
-      | `Maximized(tree) => {...model, tree}
-      | `Resizing(_)
-      | `None => model
-      };
-    (
-      {
-        ...model,
-        uncommittedTree:
-          `Resizing(Layout.resizeSplit(~path, ~delta, model.tree)),
-      },
+  | SplitDragged({path, delta}) => (
+      updateActiveLayout(
+        layout => {
+          let layout =
+            switch (layout.uncommittedTree) {
+            | `Maximized(tree) => {...layout, tree}
+            | `Resizing(_)
+            | `None => layout
+            };
+          {
+            ...layout,
+            uncommittedTree:
+              `Resizing(Layout.resizeSplit(~path, ~delta, layout.tree)),
+          };
+        },
+        model,
+      ),
       Nothing,
-    );
+    )
 
   | DragComplete => (updateTree(Fun.id, model), Nothing)
 
@@ -88,7 +111,10 @@ let update = (~focus, model, msg) => {
       Nothing,
     )
 
-  | GroupSelected(id) => ({...model, activeGroupId: id}, Focus(Center))
+  | GroupSelected(id) => (
+      updateActiveLayout(layout => {...layout, activeGroupId: id}, model),
+      Focus(Center),
+    )
 
   | EditorCloseButtonClicked(id) =>
     switch (removeEditor(id, model)) {
@@ -112,12 +138,20 @@ let update = (~focus, model, msg) => {
   | Command(MoveLeft) =>
     switch (focus) {
     | Some(Center) =>
+      let layout = model |> activeLayout;
       let newActiveGroupId =
-        model |> activeTree |> moveLeft(model.activeGroupId);
-      if (newActiveGroupId == model.activeGroupId) {
+        layout |> activeTree |> moveLeft(layout.activeGroupId);
+
+      if (newActiveGroupId == layout.activeGroupId) {
         (model, Focus(Left));
       } else {
-        ({...model, activeGroupId: newActiveGroupId}, Nothing);
+        (
+          updateActiveLayout(
+            layout => {...layout, activeGroupId: newActiveGroupId},
+            model,
+          ),
+          Nothing,
+        );
       };
 
     | Some(Left)
@@ -128,13 +162,27 @@ let update = (~focus, model, msg) => {
   | Command(MoveRight) =>
     switch (focus) {
     | Some(Center) =>
-      let newActiveGroupId =
-        model |> activeTree |> moveRight(model.activeGroupId);
-      ({...model, activeGroupId: newActiveGroupId}, Nothing);
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId =
+              layout |> activeTree |> moveRight(layout.activeGroupId);
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Nothing);
 
     | Some(Left) =>
-      let newActiveGroupId = model |> activeTree |> Layout.leftmost;
-      ({...model, activeGroupId: newActiveGroupId}, Focus(Center));
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId = layout |> activeTree |> Layout.leftmost;
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Focus(Center));
 
     | Some(Bottom)
     | None => (model, Nothing)
@@ -143,13 +191,27 @@ let update = (~focus, model, msg) => {
   | Command(MoveUp) =>
     switch (focus) {
     | Some(Center) =>
-      let newActiveGroupId =
-        model |> activeTree |> moveUp(model.activeGroupId);
-      ({...model, activeGroupId: newActiveGroupId}, Nothing);
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId =
+              layout |> activeTree |> moveUp(layout.activeGroupId);
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Nothing);
 
     | Some(Bottom) =>
-      let newActiveGroupId = model |> activeTree |> Layout.bottommost;
-      ({...model, activeGroupId: newActiveGroupId}, Focus(Center));
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId = layout |> activeTree |> Layout.bottommost;
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Focus(Center));
 
     | Some(Left)
     | None => (model, Nothing)
@@ -158,12 +220,20 @@ let update = (~focus, model, msg) => {
   | Command(MoveDown) =>
     switch (focus) {
     | Some(Center) =>
+      let layout = model |> activeLayout;
       let newActiveGroupId =
-        model |> activeTree |> moveDown(model.activeGroupId);
-      if (newActiveGroupId == model.activeGroupId) {
+        layout |> activeTree |> moveDown(layout.activeGroupId);
+
+      if (newActiveGroupId == layout.activeGroupId) {
         (model, Focus(Bottom));
       } else {
-        ({...model, activeGroupId: newActiveGroupId}, Nothing);
+        (
+          updateActiveLayout(
+            layout => {...layout, activeGroupId: newActiveGroupId},
+            model,
+          ),
+          Nothing,
+        );
       };
 
     | Some(Left) => (model, Focus(Bottom))
@@ -319,8 +389,12 @@ let update = (~focus, model, msg) => {
 
   | Command(ToggleMaximize) =>
     let model =
-      switch (model.uncommittedTree) {
-      | `Maximized(_) => {...model, uncommittedTree: `None}
+      switch (activeLayout(model).uncommittedTree) {
+      | `Maximized(_) =>
+        updateActiveLayout(
+          layout => {...layout, uncommittedTree: `None},
+          model,
+        )
 
       | _ =>
         switch (focus) {
@@ -500,7 +574,8 @@ module View = {
       let ((maybeDimensions, setDimensions), hooks) =
         Hooks.state(None, hooks);
 
-      let tree = activeTree(model);
+      let layout = activeLayout(model);
+      let tree = activeTree(layout);
 
       let children =
         switch (maybeDimensions) {
@@ -517,13 +592,13 @@ module View = {
               : Positioned.fromLayout(0, 0, width, height, tree);
 
           let renderWindow = id =>
-            switch (groupById(id, model)) {
+            switch (groupById(id, layout)) {
             | Some(group) =>
               <EditorGroupView
                 provider
                 uiFont
                 showTabs
-                isActive={group.id == model.activeGroupId}
+                isActive={group.id == layout.activeGroupId}
                 theme
                 model=group
                 dispatch
