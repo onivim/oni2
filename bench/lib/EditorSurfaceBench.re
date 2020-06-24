@@ -16,25 +16,25 @@ let setup = () => {
 let configResolver = (settings, key) => Config.Settings.get(key, settings);
 
 let editor = (editor, buffer, state: State.t) => {
-    <EditorSurface
-      isActiveSplit=true
-      languageConfiguration=LanguageConfiguration.default
-      dispatch={_ => ()}
-      editor
-      buffer
-      onEditorSizeChanged={(_, _, _) => ()}
-      onCursorChange={_ => ()}
-      bufferHighlights={state.bufferHighlights}
-      bufferSyntaxHighlights={state.syntaxHighlights}
-      diagnostics={state.diagnostics}
-      completions={state.completions}
-      tokenTheme={state.tokenTheme}
-      definition={state.definition}
-      mode={Feature_Vim.mode(state.vim)}
-      theme={Feature_Theme.colors(state.colorTheme)}
-      windowIsFocused=true
-      config={configResolver(Config.Settings.empty)}
-    />
+  <EditorSurface
+    isActiveSplit=true
+    languageConfiguration=LanguageConfiguration.default
+    dispatch={_ => ()}
+    editor
+    buffer
+    onEditorSizeChanged={(_, _, _) => ()}
+    onCursorChange={_ => ()}
+    bufferHighlights={state.bufferHighlights}
+    bufferSyntaxHighlights={state.syntaxHighlights}
+    diagnostics={state.diagnostics}
+    completions={state.completions}
+    tokenTheme={state.tokenTheme}
+    definition={state.definition}
+    mode={Feature_Vim.mode(state.vim)}
+    theme={Feature_Theme.colors(state.colorTheme)}
+    windowIsFocused=true
+    config={configResolver(Config.Settings.empty)}
+  />;
 };
 
 let editorSurfaceMinimalState = hwnd => {
