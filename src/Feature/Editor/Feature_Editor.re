@@ -1,3 +1,4 @@
+module BracketMatch = BracketMatch;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Selection = Selection;
