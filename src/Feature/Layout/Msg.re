@@ -23,7 +23,8 @@ type command =
   | MaximizeHorizontal
   | MaximizeVertical
   | ToggleMaximize
-  | ResetSizes;
+  | ResetSizes
+  | AddLayout;
 
 [@deriving show({with_path: false})]
 type t =

@@ -408,6 +408,8 @@ let update = (~focus, model, msg) => {
     (model, Nothing);
 
   | Command(ResetSizes) => (resetWeights(model), Nothing)
+
+  | Command(AddLayout) => (addLayoutTab(model), Nothing)
   };
 };
 // VIEW
@@ -848,6 +850,14 @@ module Commands = {
       "workbench.action.evenEditorWidths",
       Command(ResetSizes),
     );
+
+  let addLayout =
+    define(
+      ~category="View",
+      ~title="Add Layout Tab",
+      "oni.layout.add",
+      Command(AddLayout),
+    );
 };
 
 module Contributions = {
@@ -883,5 +893,6 @@ module Contributions = {
       maximizeVertical,
       toggleMaximize,
       resetSizes,
+      addLayout,
     ];
 };

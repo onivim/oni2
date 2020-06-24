@@ -105,6 +105,8 @@ module Commands: {
   let maximizeVertical: Command.t(msg);
   let toggleMaximize: Command.t(msg);
   let resetSizes: Command.t(msg);
+
+  let addLayout: Command.t(msg);
 };
 
 // CONTRIBUTIONS

@@ -318,6 +318,26 @@ let closeBuffer = (~force, buffer, model) => {
   };
 };
 
+let addLayoutTab = model => {
+  let newEditor = activeEditor(model) |> Editor.copy;
+  let newGroup = Group.create([newEditor]);
+
+  let newLayout = {
+    tree: Layout.singleton(newGroup.id),
+    uncommittedTree: `None,
+    groups: [newGroup],
+    activeGroupId: newGroup.id,
+  };
+
+  let left = Base.List.take(model.layouts, model.activeLayoutIndex + 1);
+  let right = Base.List.drop(model.layouts, model.activeLayoutIndex + 1);
+
+  {
+    layouts: left @ [newLayout] @ right,
+    activeLayoutIndex: model.activeLayoutIndex + 1,
+  };
+};
+
 let map = (f, model) => {
   ...model,
   layouts:
