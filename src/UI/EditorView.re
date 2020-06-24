@@ -248,8 +248,9 @@ let make =
       <Parts.EditorContainer editor state theme isActive=true dispatch />;
   };
 
-  let editorShowTabs = 
-    state.configuration |> Configuration.getValue(c => c.workbenchEditorShowTabs);
+  let editorShowTabs =
+    state.configuration
+    |> Configuration.getValue(c => c.workbenchEditorShowTabs);
 
   let hideZenModeTabs =
     state.configuration |> Configuration.getValue(c => c.zenModeHideTabs);
@@ -262,7 +263,7 @@ let make =
         uiFont={state.uiFont}
         theme
         isZenMode={state.zenMode}
-        showTabs=showTabs
+        showTabs
         model={state.layout}
         dispatch={msg => dispatch(Actions.Layout(msg))}>
         ...(module ContentProvider)
