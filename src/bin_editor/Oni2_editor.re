@@ -163,6 +163,8 @@ switch (eff) {
   let init = app => {
     Log.debug("Init");
 
+    Vim.init();
+
     let initialWorkingDirectory = initWorkingDirectory();
     let window =
       createWindow(
@@ -176,9 +178,27 @@ switch (eff) {
 
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
 
+    let initialBuffer = {
+      let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+        Vim.Buffer.openFile(Core.BufferPath.welcome)
+        |> Vim.BufferMetadata.ofBuffer;
+      Core.Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    };
+
+    let initialBufferRenderers =
+      Model.BufferRenderers.(
+        initial
+        |> setById(
+             Core.Buffer.getId(initialBuffer),
+             Model.BufferRenderer.Welcome,
+           )
+      );
+
     let currentState =
       ref(
         Model.State.initial(
+          ~initialBuffer,
+          ~initialBufferRenderers,
           ~getUserSettings,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,
@@ -253,6 +273,11 @@ switch (eff) {
       Window.restore(window);
     };
 
+    // This is called raiseWIndow because if it were simply raise, it would shadow the exception raising function
+    let raiseWindow = () => {
+      Window.raise(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -276,6 +301,7 @@ switch (eff) {
         ~maximize,
         ~minimize,
         ~restore,
+        ~raiseWindow,
         ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,

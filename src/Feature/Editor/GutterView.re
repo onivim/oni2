@@ -114,6 +114,7 @@ let render =
       ~cursorLine,
       ~diffMarkers,
       canvasContext,
+      _,
     ) => {
   let context =
     Draw.createContext(~canvasContext, ~width, ~height, ~editor, ~editorFont);

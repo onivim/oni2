@@ -27,6 +27,7 @@ type msg =
       activeSignature: int,
       activeParameter: int,
       requestID: int,
+      editorID: int,
     })
   | EmptyInfoReceived(int)
   | RequestFailed(string)

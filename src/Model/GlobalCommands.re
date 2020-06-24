@@ -187,32 +187,6 @@ module ReferencesView = {
     );
 };
 
-module View = {
-  let closeEditor =
-    register(
-      ~category="View",
-      ~title="Close Editor",
-      "view.closeEditor",
-      Command("view.closeEditor"),
-    );
-
-  let splitVertical =
-    register(
-      ~category="View",
-      ~title="Split Editor Vertically",
-      "view.splitVertical",
-      Command("view.splitVertical"),
-    );
-
-  let splitHorizontal =
-    register(
-      ~category="View",
-      ~title="Split Editor Horizontally",
-      "view.splitHorizontal",
-      Command("view.splitHorizontal"),
-    );
-};
-
 module Workbench = {
   module Action = {
     let openSettings =
@@ -266,22 +240,6 @@ module Workbench = {
         ~title="Go to File...",
         "workbench.action.quickOpen",
         QuickmenuShow(FilesPicker),
-      );
-
-    let nextEditor =
-      register(
-        ~category="View",
-        ~title="Open Next Editor",
-        "workbench.action.nextEditor",
-        Command("workbench.action.nextEditor"),
-      );
-
-    let previousEditor =
-      register(
-        ~category="View",
-        ~title="Open Previous Editor",
-        "workbench.action.previousEditor",
-        Command("workbench.action.previousEditor"),
       );
 
     let quickOpenNavigateNextInEditorPicker =
