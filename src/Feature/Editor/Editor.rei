@@ -75,6 +75,9 @@ let scrollToLine: (~line: int, t) => t;
 let scrollToPixelY: (~pixelY: float, t) => t;
 let scrollDeltaPixelY: (~pixelY: float, t) => t;
 
+let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
+let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
+
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
 

@@ -18,7 +18,10 @@ type t =
   | MinimapMouseWheel({deltaWheel: float})
   | MinimapClicked({viewLine: int})
   | MinimapDragged({newPixelScrollY: float})
-  | EditorMouseWheel({deltaWheel: float})
+  | EditorMouseWheel({
+      deltaX: float,
+      deltaY: float,
+    })
   | MouseHovered({location: Location.t})
   | MouseMoved({location: Location.t})
   | SelectionChanged([@opaque] VisualRange.t)

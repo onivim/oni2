@@ -339,6 +339,21 @@ let scrollDeltaPixelY = (~pixelY, view) => {
   scrollToPixelY(~pixelY, view);
 };
 
+let scrollToPixelXY = (~pixelX as newScrollX, ~pixelY as newScrollY, view) => {
+  let {scrollX, _} = scrollToPixelX(~pixelX=newScrollX, view);
+  let {scrollY, minimapScrollY, _} =
+    scrollToPixelY(~pixelY=newScrollY, view);
+
+  {...view, scrollX, scrollY, minimapScrollY};
+};
+
+let scrollDeltaPixelXY = (~pixelX, ~pixelY, view) => {
+  let {scrollX, _} = scrollDeltaPixelX(~pixelX, view);
+  let {scrollY, minimapScrollY, _} = scrollDeltaPixelY(~pixelY, view);
+
+  {...view, scrollX, scrollY, minimapScrollY};
+};
+
 // PROJECTION
 
 let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
