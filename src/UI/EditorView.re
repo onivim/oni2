@@ -244,8 +244,8 @@ let make =
       IconTheme.getIconForFile(state.iconTheme, filePath, language);
     };
 
-    let render = editor =>
-      <Parts.EditorContainer editor state theme isActive=true dispatch />;
+    let render = (~isActive, editor) =>
+      <Parts.EditorContainer editor state theme isActive dispatch />;
   };
 
   <View onFileDropped style={Styles.container(theme)}>
