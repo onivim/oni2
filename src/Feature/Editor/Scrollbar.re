@@ -197,12 +197,19 @@ module Vertical = {
   };
 
   let matchingPairMarkers =
-      (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+      (
+        ~matchingPair,
+        ~bufferHighlights,
+        ~totalHeight,
+        ~editor,
+        ~colors: Colors.t,
+        (),
+      ) => {
     ignore(bufferHighlights);
     ignore(totalHeight);
     ignore(editor);
 
-    let _matchingPairStyle = t =>
+    let matchingPairStyle = t =>
       Style.[
         position(`Absolute),
         top(t - 3),
@@ -212,37 +219,33 @@ module Vertical = {
         backgroundColor(colors.overviewRulerBracketMatchForeground),
       ];
 
-    React.empty;
-    //    BufferHighlights.getMatchingPair(
-    //      Editor.getBufferId(editor),
-    //      bufferHighlights,
-    //    )
-    //    |> Option.map(mp => {
-    //         open Location;
-    //         let (startPos, endPos) = mp;
-    //
-    //         let topLine =
-    //           Editor.projectLine(
-    //             ~line=Index.toZeroBased(startPos.line),
-    //             ~pixelHeight=totalHeight,
-    //             editor,
-    //           )
-    //           |> int_of_float;
-    //
-    //         let botLine =
-    //           Editor.projectLine(
-    //             ~line=Index.toZeroBased(endPos.line),
-    //             ~pixelHeight=totalHeight,
-    //             editor,
-    //           )
-    //           |> int_of_float;
-    //
-    //         React.listToElement([
-    //           <View style={matchingPairStyle(topLine)} />,
-    //           <View style={matchingPairStyle(botLine)} />,
-    //         ]);
-    //       })
-    //    |> Option.value(~default=React.empty);
+    matchingPair
+    |> Option.map(mp => {
+         open Location;
+         let (startPos, endPos) = mp;
+
+         let topLine =
+           Editor.projectLine(
+             ~line=Index.toZeroBased(startPos.line),
+             ~pixelHeight=totalHeight,
+             editor,
+           )
+           |> int_of_float;
+
+         let botLine =
+           Editor.projectLine(
+             ~line=Index.toZeroBased(endPos.line),
+             ~pixelHeight=totalHeight,
+             editor,
+           )
+           |> int_of_float;
+
+         React.listToElement([
+           <View style={matchingPairStyle(topLine)} />,
+           <View style={matchingPairStyle(botLine)} />,
+         ]);
+       })
+    |> Option.value(~default=React.empty);
   };
 
   let searchMarkers =
@@ -315,6 +318,7 @@ module Vertical = {
       (
         ~dispatch: Msg.t => unit,
         ~editor: Editor.t,
+        ~matchingPair: option((Location.t, Location.t)),
         ~cursorPosition: Location.t,
         ~height as totalHeight,
         ~width as totalWidth,
@@ -401,7 +405,13 @@ module Vertical = {
           <View style=Styles.absolute>
             <selectionMarkers totalHeight editor colors />
             <diagnosticMarkers totalHeight editor diagnostics colors />
-            <matchingPairMarkers bufferHighlights editor totalHeight colors />
+            <matchingPairMarkers
+              matchingPair
+              bufferHighlights
+              editor
+              totalHeight
+              colors
+            />
             <searchMarkers bufferHighlights editor totalHeight colors />
           </View>
         </View>

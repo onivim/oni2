@@ -148,22 +148,6 @@ let%component make =
               ) => {
   let colors = Colors.precompute(theme);
 
-  //  let charOpt = editor |> Editor.getCharacterUnderCursor;
-
-  //  prerr_endline("!!UNDER CHAR");
-  //  switch (charOpt) {
-  //  | Some(char) => prerr_endline(Zed_utf8.singleton(char))
-  //  | None => prerr_endline("NONE")
-  //  };
-  //
-  //  let charOpt = editor |> Editor.getCharacterBehindCursor;
-  //
-  //  prerr_endline("!!BEHIND CHAR");
-  //  switch (charOpt) {
-  //  | Some(char) => prerr_endline(Zed_utf8.singleton(char))
-  //  | None => prerr_endline("NONE")
-  //  };
-
   let%hook lastDimensions = Hooks.ref(None);
 
   let editorId = Editor.getId(editor);
@@ -220,11 +204,19 @@ let%component make =
       editor,
     );
 
+  let matchingPairCheckPosition =
+    mode == Vim.Types.Insert
+      ? Location.{
+          line: cursorPosition.line,
+          column: Index.(cursorPosition.column - 1),
+        }
+      : cursorPosition;
+
   let matchingPairs =
     !Config.matchBrackets.get(config)
       ? None
       : Editor.getNearestMatchingPair(
-          ~location=cursorPosition,
+          ~location=matchingPairCheckPosition,
           ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
           editor,
         );
@@ -334,6 +326,7 @@ let%component make =
       <Scrollbar.Vertical
         dispatch
         editor
+        matchingPair=matchingPairs
         cursorPosition
         width=Constants.scrollBarThickness
         height=pixelHeight
