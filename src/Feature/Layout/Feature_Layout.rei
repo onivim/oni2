@@ -59,6 +59,8 @@ module View: {
       ~model: model,
       ~isZenMode: bool,
       ~showTabs: bool,
+      ~showLayoutTabs: bool,
+      ~layoutTabPosition: [ | `Top | `Bottom],
       ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,

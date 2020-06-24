@@ -22,7 +22,7 @@ module type ContentModel = {
   let render: (~isActive: bool, t) => Revery.UI.element;
 };
 
-module EditorTab = {
+module Tab = {
   module FontAwesome = Oni_Components.FontAwesome;
   module FontIcon = Oni_Components.FontIcon;
   module Sneakable = Feature_Sneak.View.Sneakable;
@@ -290,13 +290,13 @@ module EditorGroupView = {
               ),
             ]
             selectedIndex={ListEx.findIndex(isSelected, editors)}>
-            ...{item => {
-              <EditorTab
+            ...{(~isSelected, _, item) => {
+              <Tab
                 uiFont
                 theme
                 title={ContentModel.title(item)}
                 isGroupFocused=isActive
-                isActive={isSelected(item)}
+                isActive=isSelected
                 isModified={ContentModel.isModified(item)}
                 icon={ContentModel.icon(item)}
                 onClick={() =>
@@ -453,8 +453,8 @@ module Layout = {
   let component = React.Expert.component("Feature_Layout.View");
   let make =
       (
-        ~children as provider,
-        ~model,
+        ~provider,
+        ~model as layout,
         ~isZenMode,
         ~showTabs,
         ~uiFont,
@@ -466,7 +466,6 @@ module Layout = {
       let ((maybeDimensions, setDimensions), hooks) =
         Hooks.state(None, hooks);
 
-      let layout = activeLayout(model);
       let tree = activeTree(layout);
 
       let children =
@@ -516,4 +515,94 @@ module Layout = {
     });
 };
 
-include Layout;
+module Styles = {
+  open Style;
+
+  let container = theme => [
+    backgroundColor(Colors.Editor.background.from(theme)),
+    color(Colors.foreground.from(theme)),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
+  ];
+
+  let editorContainer = [flexGrow(1), flexDirection(`Column)];
+};
+
+let make =
+    (
+      ~children as provider,
+      ~model,
+      ~isZenMode,
+      ~showTabs,
+      ~showLayoutTabs,
+      ~layoutTabPosition,
+      ~uiFont,
+      ~theme,
+      ~dispatch,
+      (),
+    ) => {
+  let activeLayout =
+    <Layout
+      provider
+      model={activeLayout(model)}
+      isZenMode
+      showTabs
+      uiFont
+      theme
+      dispatch
+    />;
+
+  if (showLayoutTabs && List.length(model.layouts) > 1) {
+    module ContentModel = (val provider);
+
+    let tabs =
+      <Tabs
+        items={model.layouts}
+        style=Style.[
+          backgroundColor(
+            Colors.EditorGroupHeader.tabsBackground.from(theme),
+          ),
+        ]
+        selectedIndex={Some(model.activeLayoutIndex)}>
+        ...{(~isSelected, index, layout) => {
+          let groupCount = List.length(layout.groups);
+          let activeGroup =
+            List.find(
+              (group: Group.t) => group.id == layout.activeGroupId,
+              layout.groups,
+            );
+          let activeEditor = Group.selected(activeGroup);
+          let title =
+            Printf.sprintf(
+              "%i - %s",
+              groupCount,
+              ContentModel.title(activeEditor),
+            );
+          let isModified =
+            List.exists(ContentModel.isModified, activeGroup.editors);
+
+          <Tab
+            uiFont
+            theme
+            title
+            isActive=isSelected
+            isGroupFocused=true
+            isModified
+            icon={ContentModel.icon(activeEditor)}
+            onClick={() => dispatch(LayoutTabClicked(index))}
+            onClose={() => dispatch(LayoutCloseButtonClicked(index))}
+          />;
+        }}
+      </Tabs>;
+
+    switch (layoutTabPosition) {
+    | `Top => <View style=Styles.editorContainer> tabs activeLayout </View>
+    | `Bottom => <View style=Styles.editorContainer> activeLayout tabs </View>
+    };
+  } else {
+    activeLayout;
+  };
+};

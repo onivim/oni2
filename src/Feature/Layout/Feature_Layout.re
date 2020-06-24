@@ -124,7 +124,29 @@ let update = (~focus, model, msg) => {
     | None => (model, RemoveLastBlocked)
     }
 
+  | LayoutTabClicked(index) => (
+      {...model, activeLayoutIndex: index},
+      Nothing,
+    )
+
+  | LayoutCloseButtonClicked(index) =>
+    if (List.length(model.layouts) == 1) {
+      (model, RemoveLastBlocked);
+    } else {
+      let left = Base.List.take(model.layouts, index);
+      let right = Base.List.drop(model.layouts, index + 1);
+
+      let model = {
+        layouts: left @ right,
+        activeLayoutIndex:
+          index < model.activeLayoutIndex
+            ? model.activeLayoutIndex - 1 : model.activeLayoutIndex,
+      };
+      (model, Nothing);
+    }
+
   | Command(NextEditor) => (nextEditor(model), Nothing)
+
   | Command(PreviousEditor) => (previousEditor(model), Nothing)
 
   | Command(SplitVertical) => (split(`Vertical, model), SplitAdded)

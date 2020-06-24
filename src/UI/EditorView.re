@@ -265,6 +265,8 @@ let make =
         isZenMode={state.zenMode}
         showTabs
         model={state.layout}
+        showLayoutTabs=true // TODO
+        layoutTabPosition=`Bottom // TODO
         dispatch={msg => dispatch(Actions.Layout(msg))}>
         ...(module ContentProvider)
       </Feature_Layout.View>

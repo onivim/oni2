@@ -38,4 +38,6 @@ type t =
   | GroupTabClicked(int)
   | GroupSelected(int)
   | EditorCloseButtonClicked(int)
+  | LayoutTabClicked(int)
+  | LayoutCloseButtonClicked(int)
   | Command(command);
