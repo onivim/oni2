@@ -333,7 +333,7 @@ let start =
           Actions.OpenFileByPath(buf, Some(`Vertical), None)
         | Vim.Types.Horizontal =>
           Actions.OpenFileByPath(buf, Some(`Horizontal), None)
-        | Vim.Types.TabPage => Actions.OpenFileByPath(buf, None, None)
+        | Vim.Types.TabPage => Actions.OpenFileInNewLayout(buf)
         };
       dispatch(command);
     });
@@ -589,55 +589,29 @@ let start =
       }
     );
 
-  let openFileByPathEffect = (state: State.t, filePath, location) =>
-    Isolinear.Effect.create(~name="vim.openFileByPath", () => {
+  let openBufferEffect = (~onComplete, filePath) =>
+    Isolinear.Effect.create(~name="vim.openBuffer", () => {
       let buffer = Vim.Buffer.openFile(filePath);
-
-      let () =
-        location
-        |> Option.iter((loc: Location.t) => {
-             let cursor = (loc :> Vim.Cursor.t);
-             let () = updateActiveEditorCursors([cursor]);
-
-             let topLine: int = max(Index.toZeroBased(loc.line) - 10, 0);
-
-             let editorId =
-               Feature_Layout.activeEditor(state.layout) |> Editor.getId;
-             dispatch(
-               Actions.Editor({editorId, msg: ScrollToLine(topLine)}),
-             );
-           });
-
       let bufferId = Vim.Buffer.getId(buffer);
 
-      let maybeRenderer =
-        switch (Core.BufferPath.parse(filePath)) {
-        | Terminal({bufferId, _}) =>
-          Some(
-            BufferRenderer.Terminal({
-              title: "Terminal",
-              id: bufferId,
-              insertMode: true,
-            }),
-          )
-        | Version => Some(BufferRenderer.Version)
-        | UpdateChangelog =>
-          Some(
-            BufferRenderer.UpdateChangelog({
-              since: Persistence.Global.version(),
-            }),
-          )
-        | Welcome => Some(BufferRenderer.Welcome)
-        | Changelog => Some(BufferRenderer.FullChangelog)
-        | FilePath(_) => None
-        };
+      dispatch(onComplete(bufferId));
+    });
 
-      maybeRenderer
-      |> Option.iter(renderer => {
-           dispatch(
-             Actions.BufferRenderer(RendererAvailable(bufferId, renderer)),
-           )
-         });
+  let gotoLocationEffect = (editorId, location: Location.t) =>
+    Isolinear.Effect.create(~name="vim.gotoLocation", () => {
+      let cursor = (location :> Vim.Cursor.t);
+      updateActiveEditorCursors([cursor]);
+
+      let topLine: int = max(Index.toZeroBased(location.line) - 10, 0);
+
+      dispatch(Actions.Editor({editorId, msg: ScrollToLine(topLine)}));
+    });
+
+  let addBufferRendererEffect = (bufferId, renderer) =>
+    Isolinear.Effect.create(~name="vim.addBufferRenderer", () => {
+      dispatch(
+        Actions.BufferRenderer(RendererAvailable(bufferId, renderer)),
+      )
     });
 
   let openTutorEffect =
@@ -843,7 +817,7 @@ let start =
 
     | Init => (state, initEffect)
 
-    | OpenFileByPath(path, maybeDirection, location) =>
+    | OpenFileByPath(path, maybeDirection, maybeLocation) =>
       /* If a split was requested, create that first! */
       let state' =
         switch (maybeDirection) {
@@ -853,7 +827,64 @@ let start =
             layout: Feature_Layout.split(direction, state.layout),
           }
         };
-      (state', openFileByPathEffect(state', path, location));
+      (
+        state',
+        openBufferEffect(
+          ~onComplete=bufferId => BufferOpened(path, maybeLocation, bufferId),
+          path,
+        ),
+      );
+    | BufferOpened(path, maybeLocation, bufferId) =>
+      let maybeRenderer =
+        switch (Core.BufferPath.parse(path)) {
+        | Terminal({bufferId, _}) =>
+          Some(
+            BufferRenderer.Terminal({
+              title: "Terminal",
+              id: bufferId,
+              insertMode: true,
+            }),
+          )
+        | Version => Some(BufferRenderer.Version)
+        | UpdateChangelog =>
+          Some(
+            BufferRenderer.UpdateChangelog({
+              since: Persistence.Global.version(),
+            }),
+          )
+        | Welcome => Some(BufferRenderer.Welcome)
+        | Changelog => Some(BufferRenderer.FullChangelog)
+        | FilePath(_) => None
+        };
+
+      let editorId =
+        Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+
+      (
+        state,
+        Isolinear.Effect.batch([
+          maybeRenderer
+          |> Option.map(addBufferRendererEffect(bufferId))
+          |> Option.value(~default=Isolinear.Effect.none),
+          maybeLocation
+          |> Option.map(gotoLocationEffect(editorId))
+          |> Option.value(~default=Isolinear.Effect.none),
+        ]),
+      );
+
+    | OpenFileInNewLayout(path) =>
+      let state = {
+        ...state,
+        layout: Feature_Layout.addLayoutTab(state.layout),
+      };
+      (
+        state,
+        openBufferEffect(
+          ~onComplete=bufferId => BufferOpenedForLayout(bufferId),
+          path,
+        ),
+      );
+    | BufferOpenedForLayout(_bufferId) => (state, Isolinear.Effect.none)
 
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =

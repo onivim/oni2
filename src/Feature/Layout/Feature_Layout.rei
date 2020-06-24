@@ -22,6 +22,8 @@ let activeEditor: model => Editor.t;
 let openEditor: (Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
+let addLayoutTab: model => model;
+
 let map: (Editor.t => Editor.t, model) => model;
 
 // UPDATE
