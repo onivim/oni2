@@ -218,7 +218,8 @@ module Goto: {
   type effect =
     | Definition
     | Declaration
-    | Hover;
+    | Hover
+    | TabPage(int);
 };
 
 module Format: {

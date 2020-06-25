@@ -223,6 +223,7 @@ type t =
       decorations: list(Decoration.t),
     })
   | Vim(Feature_Vim.msg)
+  | GotoTabPage(int)
   | Noop
 and command = {
   commandCategory: option(string),

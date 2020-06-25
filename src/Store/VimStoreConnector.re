@@ -89,6 +89,7 @@ let start =
   let handleGoto = gotoType => {
     switch (gotoType) {
     | Vim.Goto.Hover => dispatch(Actions.Hover(Feature_Hover.Command(Show)))
+
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.debug("Goto definition requested");
@@ -114,6 +115,10 @@ let start =
       Option.map(getDefinition, maybeBuffer)
       |> Option.join
       |> Option.iter(action => dispatch(action));
+
+    | Vim.Goto.TabPage(count) =>
+      let delta = count == 0 ? 1 : count;
+      dispatch(GotoTabPage(delta));
     };
   };
 
@@ -737,6 +742,7 @@ let start =
         state,
         synchronizeViml(configuration),
       )
+
     | Command("editor.action.clipboardPasteAction") => (
         state,
         pasteIntoEditorAction,
@@ -751,6 +757,7 @@ let start =
     | Command("vim.esc") => (state, escapeEffect)
     | Command("vim.tutor") => (state, openTutorEffect)
     | VimExecuteCommand(cmd) => (state, commandEffect(cmd))
+
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
@@ -905,6 +912,7 @@ let start =
       (state, effect);
 
     | KeyboardInput(s) => (state, inputEffect(s))
+
     | CopyActiveFilepathToClipboard => (
         state,
         copyActiveFilepathToClipboardEffect,
@@ -963,6 +971,14 @@ let start =
         )
       | _ => (state, Isolinear.Effect.none)
       }
+
+    | GotoTabPage(delta) => (
+        {
+          ...state,
+          layout: Feature_Layout.gotoLayoutTab(~delta, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

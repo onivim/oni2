@@ -367,6 +367,14 @@ let addLayoutTab = model => {
   };
 };
 
+let gotoLayoutTab = (~delta, model) => {
+  ...model,
+  activeLayoutIndex:
+    model.activeLayoutIndex
+    + delta
+    |> IntEx.clamp(~lo=0, ~hi=List.length(model.layouts) - 1),
+};
+
 let map = (f, model) => {
   ...model,
   layouts:

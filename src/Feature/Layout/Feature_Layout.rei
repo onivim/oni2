@@ -23,6 +23,7 @@ let openEditor: (~config: Config.resolver, Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
 let addLayoutTab: model => model;
+let gotoLayoutTab: (~delta: int, model) => model;
 
 let map: (Editor.t => Editor.t, model) => model;
 

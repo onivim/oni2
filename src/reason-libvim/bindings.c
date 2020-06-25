@@ -66,6 +66,8 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
 };
 
 int onGoto(gotoRequest_T gotoInfo) {
+  CAMLparam0();
+  CAMLlocal1(target);
   static const value *lv_onGoto = NULL;
 
   if (lv_onGoto == NULL) {
@@ -74,22 +76,26 @@ int onGoto(gotoRequest_T gotoInfo) {
 
   int line = gotoInfo.location.lnum;
   int col = gotoInfo.location.col;
-  int target = 0;
   switch (gotoInfo.target) {
   case DEFINITION:
-    target = 0;
+    target = Val_int(0);
     break;
   case DECLARATION:
-    target = 1;
+    target = Val_int(1);
     break;
   case HOVER:
-    target = 2;
+    target = Val_int(2);
+    break;
+  case TABPAGE:
+    target = caml_alloc(1, 0);
+    Store_field(target, 0, Val_int(gotoInfo.count));
     break;
   default:
-    target = 0;
+    target = Val_int(0);
   }
 
-  caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), Val_int(target));
+  caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), target);
+  CAMLreturn(0);
 }
 
 void onAutocommand(event_T event, buf_T *buf) {
