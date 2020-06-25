@@ -124,11 +124,7 @@ describe("AutoIndent", ({test, _}) => {
   test("open before indented line, keep indent", ({expect, _}) => {
     let buffer = resetBufferIndent2Spaces();
 
-    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
-      AutoIndent.KeepIndent;
-    };
-
-    let input = input(~insertSpaces=true, ~autoIndent);
+    let input = input(~insertSpaces=true, ~autoIndent=keepIndent);
     // Go to second line
     input("j");
     input("O");
@@ -141,11 +137,7 @@ describe("AutoIndent", ({test, _}) => {
   test("open before indented line, indent", ({expect, _}) => {
     let buffer = resetBufferIndent2Spaces();
 
-    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
-      AutoIndent.IncreaseIndent;
-    };
-
-    let input = input(~insertSpaces=true, ~autoIndent);
+    let input = input(~insertSpaces=true, ~autoIndent=increaseIndent);
     // Go to second line
     input("j");
     input("O");
@@ -158,11 +150,7 @@ describe("AutoIndent", ({test, _}) => {
   test("open before indented line, un-indent", ({expect, _}) => {
     let buffer = resetBufferIndent2Spaces();
 
-    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
-      AutoIndent.DecreaseIndent;
-    };
-
-    let input = input(~insertSpaces=true, ~autoIndent);
+    let input = input(~insertSpaces=true, ~autoIndent=decreaseIndent);
     // Go to second line
     input("j");
     input("j");
