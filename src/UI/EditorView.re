@@ -10,6 +10,7 @@ open Revery.UI;
 open Rench;
 open Oni_Core;
 open Oni_Model;
+module OptionEx = Oni_Core.Utility.OptionEx;
 open Actions;
 open Feature_Editor;
 
@@ -34,6 +35,14 @@ module Parts = {
         Selectors.getBufferForEditor(state.buffers, editor)
         |> Option.value(~default=Buffer.initial);
 
+      let languageConfiguration =
+        buffer
+        |> Oni_Core.Buffer.getFileType
+        |> OptionEx.flatMap(
+             Ext.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+           )
+        |> Option.value(~default=LanguageConfiguration.default);
+
       let editorDispatch = msg =>
         dispatch(Editor({editorId: Editor.getId(editor), msg}));
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
@@ -49,6 +58,7 @@ module Parts = {
         isActiveSplit=isActive
         editor
         buffer
+        languageConfiguration
         onCursorChange
         onEditorSizeChanged
         theme
