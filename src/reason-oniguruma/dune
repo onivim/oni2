@@ -1,0 +1,12 @@
+(library
+    (name oniguruma)
+    (public_name textmate.oniguruma)
+    (library_flags (:include flags.sexp))
+    (c_flags (:include c_flags.sexp))
+    (c_names bindings)
+    (cxx_flags (:include cxx_flags.sexp)))
+
+(rule
+    (targets c_flags.sexp cxx_flags.sexp flags.sexp)
+    (deps (:discover config/discover.exe))
+    (action (run %{discover})))

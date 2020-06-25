@@ -21,6 +21,14 @@ let map3 = (f, a, b, c) =>
   | _ => None
   };
 
+let tap = f =>
+  fun
+  | Some(v) as some => {
+      f(v);
+      some;
+    }
+  | None => None;
+
 let iter2 = (f, a, b) => {
   switch (a, b) {
   | (Some(a), Some(b)) => f(a, b)

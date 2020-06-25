@@ -11,12 +11,12 @@ let getDefaultConfigString = configName =>
       {|
 {
   "editor.detectIndentation": true,
-  "editor.fontFamily": "FiraCode-Regular.ttf",
+  "editor.fontFamily": "JetBrainsMono-Regular.ttf",
   "editor.fontSize": 14,
   "editor.largeFileOptimizations": true,
   "editor.highlightActiveIndentGuide": true,
   "editor.indentSize": 4,
-  "editor.insertSpaces": false,
+  "editor.insertSpaces": true,
   "editor.lineNumbers": "on",
   "editor.matchBrackets": true,
   "editor.minimap.enabled": true,

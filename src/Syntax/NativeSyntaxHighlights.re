@@ -4,7 +4,7 @@
 
 open EditorCoreTypes;
 module Core = Oni_Core;
-module ColorizedToken = Core.ColorizedToken;
+module ThemeToken = Core.ThemeToken;
 
 module type SyntaxHighlighter = {
   type t;
@@ -17,7 +17,7 @@ module type SyntaxHighlighter = {
   let update:
     (~bufferUpdate: Core.BufferUpdate.t, ~lines: array(string), t) => t;
 
-  let getTokenColors: (t, int) => list(ColorizedToken.t);
+  let getTokenColors: (t, int) => list(ThemeToken.t);
 
   // Get a list of lines that have been updated since last clear
   let getUpdatedLines: t => list(int);

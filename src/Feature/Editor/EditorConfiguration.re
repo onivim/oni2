@@ -64,7 +64,7 @@ open CustomDecoders;
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
 let fontFamily =
-  setting("editor.fontFamily", string, ~default="FiraCode-Regular.ttf");
+  setting("editor.fontFamily", string, ~default="JetBrainsMono-Regular.ttf");
 let fontSize = setting("editor.fontSize", int, ~default=14);
 let largeFileOptimization =
   setting("editor.largeFileOptimizations", bool, ~default=true);
@@ -79,6 +79,7 @@ let renderIndentGuides =
 let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`All);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
+let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
 let tabSize = setting("editor.tabSize", int, ~default=4);
 
 module Hover = {
@@ -122,6 +123,7 @@ let contributions = [
   renderIndentGuides.spec,
   renderWhitespace.spec,
   rulers.spec,
+  scrollShadow.spec,
   tabSize.spec,
   Hover.enabled.spec,
   Hover.delay.spec,

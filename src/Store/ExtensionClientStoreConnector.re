@@ -9,101 +9,14 @@
 open Oni_Core;
 open Oni_Model;
 
-module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
+module Log = (val Log.withNamespace("Oni2.Extension.ClientStoreConnector"));
 
 module Extensions = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-module Internal = {
-  let bufferMetadataToModelAddedDelta =
-      (~version, ~filePath, ~fileType: option(string)) =>
-    switch (filePath, fileType) {
-    | (Some(fp), Some(ft)) =>
-      Log.trace("Creating model for filetype: " ++ ft);
-
-      Some(
-        Exthost.ModelAddedDelta.create(
-          ~versionId=version,
-          ~lines=[""],
-          ~modeId=ft,
-          ~isDirty=true,
-          Uri.fromPath(fp),
-        ),
-      );
-    | _ => None
-    };
-};
-
 let start = (extensions, extHostClient: Exthost.Client.t) => {
-  let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
-
-  let activateFileType = (fileType: option(string)) =>
-    fileType
-    |> Option.iter(ft =>
-         if (!Hashtbl.mem(activatedFileTypes, ft)) {
-           // If no entry, we haven't activated yet
-           Exthost.Request.ExtensionService.activateByEvent(
-             ~event="onLanguage:" ++ ft,
-             extHostClient,
-           );
-           Hashtbl.add(activatedFileTypes, ft, true);
-         }
-       );
-
-  let sendBufferEnterEffect = (~version, ~filePath, ~fileType) =>
-    Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
-      switch (
-        Internal.bufferMetadataToModelAddedDelta(
-          ~version,
-          ~filePath,
-          ~fileType,
-        )
-      ) {
-      | None => ()
-      | Some((v: Exthost.ModelAddedDelta.t)) =>
-        activateFileType(fileType);
-        let addedDelta =
-          Exthost.DocumentsAndEditorsDelta.create(
-            ~removedDocuments=[],
-            ~addedDocuments=[v],
-          );
-        Exthost.Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
-          ~delta=addedDelta,
-          extHostClient,
-        );
-      }
-    );
-
-  let modelChangedEffect = (buffers: Buffers.t, update: BufferUpdate.t) =>
-    Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
-      switch (Buffers.getBuffer(update.id, buffers)) {
-      | None => ()
-      | Some(buffer) =>
-        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
-          let modelContentChange =
-            Exthost.ModelContentChange.ofBufferUpdate(
-              update,
-              Exthost.Eol.default,
-            );
-          let modelChangedEvent =
-            Exthost.ModelChangedEvent.{
-              changes: [modelContentChange],
-              eol: Exthost.Eol.default,
-              versionId: update.version,
-            };
-
-          Exthost.Request.Documents.acceptModelChanged(
-            ~uri=Buffer.getUri(buffer),
-            ~modelChangedEvent,
-            ~isDirty=Buffer.isModified(buffer),
-            extHostClient,
-          );
-        })
-      }
-    );
-
   let executeContributedCommandEffect = (command, arguments) =>
     Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
       Exthost.Request.Commands.executeContributedCommand(
@@ -226,11 +139,12 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ]),
       )
 
-    | BufferUpdate(bu) => (
+    | BufferUpdate({update, newBuffer, triggerKey, _}) => (
         state,
-        Isolinear.Effect.batch([
-          modelChangedEffect(state.buffers, bu.update),
-        ]),
+        Service_Exthost.Effects.Documents.modelChanged(
+          ~buffer=newBuffer, ~update, extHostClient, () =>
+          Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
+        ),
       )
 
     | BufferSaved(_) => (
@@ -250,19 +164,16 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
 
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
-    | BufferEnter({id, version, filePath, fileType, _}) =>
+    | BufferEnter({id, filePath, _}) =>
       let eff =
         switch (filePath) {
         | Some(path) =>
-          Isolinear.Effect.batch([
-            Feature_SCM.Effects.getOriginalUri(
-              extHostClient, state.scm, path, uri =>
-              Actions.GotOriginalUri({bufferId: id, uri})
-            ),
-            sendBufferEnterEffect(~version, ~filePath, ~fileType),
-          ])
+          Feature_SCM.Effects.getOriginalUri(
+            extHostClient, state.scm, path, uri =>
+            Actions.GotOriginalUri({bufferId: id, uri})
+          )
 
-        | None => sendBufferEnterEffect(~version, ~filePath, ~fileType)
+        | None => Isolinear.Effect.none
         };
       (state, eff);
 

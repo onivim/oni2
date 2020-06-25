@@ -15,12 +15,6 @@ module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-module ContextMenu = {
-  type t =
-    | NotificationStatusBarItem
-    | Nothing;
-};
-
 type windowDisplayMode =
   | Minimized
   | Windowed
@@ -34,8 +28,7 @@ type t = {
   changelog: Feature_Changelog.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
-  contextMenu: ContextMenu.t,
-  vimMode: Vim.Mode.t,
+  contextMenu: Feature_ContextMenu.model,
   completions: Completions.t,
   config: Feature_Configuration.model,
   configuration: Configuration.t,
@@ -43,13 +36,13 @@ type t = {
   diagnostics: Diagnostics.t,
   definition: Definition.t,
   editorFont: Service_Font.font,
+  formatting: Feature_Formatting.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: SideBar.t,
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
-  editorGroups: EditorGroups.t,
   extensions: Extensions.t,
   iconTheme: IconTheme.t,
   isQuitting: bool,
@@ -57,16 +50,19 @@ type t = {
   keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
   languageInfo: Ext.LanguageInfo.t,
+  grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   notifications: Feature_Notification.model,
   references: References.t,
   scm: Feature_SCM.model,
   sneak: Feature_Sneak.model,
-  statusBar: StatusBarModel.t,
+  statusBar: Feature_StatusBar.model,
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
-  layout: Feature_Layout.t(int),
+  layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
+  hover: Feature_Hover.model,
+  signatureHelp: Feature_SignatureHelp.model,
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
@@ -79,26 +75,28 @@ type t = {
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
   textContentProviders: list((int, string)),
+  vim: Feature_Vim.model,
 };
 
-let initialLayout = (editorGroup: EditorGroup.t) => {
-  Feature_Layout.initial
-  |> Feature_Layout.addWindow(
-       ~target=None,
-       ~position=`After,
-       `Vertical,
-       editorGroup.editorGroupId,
-     );
-};
-
-let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
-  let editorGroups = EditorGroups.create();
-  let initialEditorGroup = editorGroups |> EditorGroups.getFirstEditorGroup;
+let initial =
+    (
+      ~initialBuffer,
+      ~initialBufferRenderers,
+      ~getUserSettings,
+      ~contributedCommands,
+      ~workingDirectory,
+    ) => {
+  let initialEditor = {
+    open Feature_Editor;
+    let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
+    Editor.create(~font=Service_Font.default, ~buffer=editorBuffer, ());
+  };
 
   {
-    buffers: Buffers.empty,
+    buffers:
+      Buffers.empty |> IntMap.add(Buffer.getId(initialBuffer), initialBuffer),
     bufferHighlights: BufferHighlights.initial,
-    bufferRenderers: BufferRenderers.initial,
+    bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     colorTheme:
       Feature_Theme.initial([
@@ -106,7 +104,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
         Feature_Notification.Contributions.colors,
       ]),
     commands: Feature_Commands.initial(contributedCommands),
-    contextMenu: ContextMenu.Nothing,
+    contextMenu: Feature_ContextMenu.initial,
     completions: Completions.initial,
     config:
       Feature_Configuration.initial(
@@ -121,34 +119,36 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     decorationProviders: [],
     definition: Definition.empty,
     diagnostics: Diagnostics.create(),
-    vimMode: Normal,
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
     extensions: Extensions.empty,
+    formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.default,
     sideBar: SideBar.initial,
     tokenTheme: TokenTheme.empty,
-    editorGroups,
     iconTheme: IconTheme.create(),
     isQuitting: false,
     keyBindings: Keybindings.empty,
     keyDisplayer: None,
     languageInfo: Ext.LanguageInfo.initial,
+    grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
     references: References.initial,
     scm: Feature_SCM.initial,
     sneak: Feature_Sneak.initial,
-    statusBar: StatusBarModel.create(),
+    statusBar: Feature_StatusBar.initial,
     syntaxHighlights: Feature_Syntax.empty,
-    layout: initialLayout(initialEditorGroup),
+    layout: Feature_Layout.initial([initialEditor]),
     windowTitle: "",
     windowIsFocused: true,
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
+    hover: Feature_Hover.initial,
+    signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Pane.initial,
     searchPane: Feature_Search.initial,
@@ -156,6 +156,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     modal: None,
     terminals: Feature_Terminal.initial,
     textContentProviders: [],
+    vim: Feature_Vim.initial,
   };
 };
 

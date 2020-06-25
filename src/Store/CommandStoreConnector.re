@@ -13,57 +13,6 @@ module Constants = {
 };
 
 let start = () => {
-  let closeEditorEffect = (state, _) =>
-    Isolinear.Effect.createWithDispatch(~name="closeEditorEffect", dispatch => {
-      let editor =
-        Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
-
-      switch (editor) {
-      | None => ()
-      | Some(v) => dispatch(ViewCloseEditor(v.editorId))
-      };
-    });
-
-  let splitEditorEffect = (state, direction, _) =>
-    Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
-      let getBufferAndLocation = () => {
-        open Base.Option.Let_syntax;
-        let%bind buffer = state |> Selectors.getActiveBuffer;
-        let%bind path = buffer |> Buffer.getFilePath;
-
-        let%bind cursorLocation =
-          state
-          |> Selectors.getActiveEditorGroup
-          |> Selectors.getActiveEditor
-          |> Option.map(Feature_Editor.Editor.getPrimaryCursor(~buffer));
-
-        Some((path, cursorLocation));
-      };
-
-      getBufferAndLocation()
-      |> Option.iter(((path, cursorLocation)) => {
-           dispatch(
-             OpenFileByPath(path, Some(direction), Some(cursorLocation)),
-           )
-         });
-    });
-
-  let windowMoveEffect = (state: State.t, direction, _) => {
-    Isolinear.Effect.createWithDispatch(~name="window.move", dispatch => {
-      let maybeEditorGroupId =
-        EditorGroups.getActiveEditorGroup(state.editorGroups)
-        |> Option.map((group: EditorGroup.t) =>
-             Feature_Layout.move(direction, group.editorGroupId, state.layout)
-           );
-
-      switch (maybeEditorGroupId) {
-      | Some(editorGroupId) =>
-        dispatch(Actions.EditorGroupSelected(editorGroupId))
-      | None => ()
-      };
-    });
-  };
-
   let togglePathEffect = name =>
     Isolinear.Effect.create(
       ~name,
@@ -112,13 +61,6 @@ let start = () => {
   let commands = [
     ("system.addToPath", _ => togglePathEffect),
     ("system.removeFromPath", _ => togglePathEffect),
-    ("view.closeEditor", state => closeEditorEffect(state)),
-    ("view.splitVertical", state => splitEditorEffect(state, `Vertical)),
-    ("view.splitHorizontal", state => splitEditorEffect(state, `Horizontal)),
-    ("window.moveLeft", state => windowMoveEffect(state, Left)),
-    ("window.moveRight", state => windowMoveEffect(state, Right)),
-    ("window.moveUp", state => windowMoveEffect(state, Up)),
-    ("window.moveDown", state => windowMoveEffect(state, Down)),
     (
       "workbench.action.zoomIn",
       state => zoomEffect(state, zoom => zoom +. Constants.zoomStep),

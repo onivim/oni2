@@ -1,6 +1,5 @@
 module ExtCommand = Command;
 open Oni_Core;
-open Oni_Core.Utility;
 
 module Clipboard = {
   [@deriving show]
@@ -107,21 +106,23 @@ module Diagnostics = {
   [@deriving show]
   type entry = (Uri.t, [@opaque] list(Diagnostic.t));
 
-  let decodeEntry = json =>
-    switch (json) {
-    | `List([uriJson, diagnosticListJson]) =>
-      uriJson
-      |> Uri.of_yojson
-      |> ResultEx.flatMap(uri => {
-           diagnosticListJson
-           |> Yojson.Safe.Util.to_list
-           |> List.map(Json.Decode.decode_value(Diagnostic.decode))
-           |> Base.Result.all
-           |> Result.map(diagList => (uri, diagList))
-           |> Result.map_error(Json.Decode.string_of_error)
-         })
-    | _ => Error("Expected 2-element tuple")
-    };
+  module Decode = {
+    open Json.Decode;
+
+    let emptyDiagnostics = null |> map(_ => []);
+    let diagnostics =
+      one_of([
+        ("list", list(Diagnostic.decode)),
+        ("empty", emptyDiagnostics),
+      ]);
+
+    let entry =
+      Pipeline.(
+        decode((uri, diagnostics) => (uri, diagnostics))
+        |> custom(index(0, Uri.decode))
+        |> custom(index(1, diagnostics))
+      );
+  };
 
   [@deriving show]
   type msg =
@@ -133,14 +134,31 @@ module Diagnostics = {
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
-    | ("$changeMany", `List([`String(owner), `List(diagnosticsJson)])) =>
+    | ("$changeMany", `List([`String(owner), diagnosticsJson])) =>
       diagnosticsJson
-      |> List.map(decodeEntry)
-      |> Base.Result.all
+      |> Json.Decode.decode_value(Json.Decode.list(Decode.entry))
       |> Result.map(entries => ChangeMany({owner, entries}))
+      |> Result.map_error(Json.Decode.string_of_error)
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
     };
+  };
+
+  let%test "null list (regression test for #1839)" = {
+    let json =
+      {|
+      ["typescript",[[{"$mid":1,"fsPath":"/Users/onivim/bootstrap.js","external":"file:///Users/onivim/scripts/bootstrap.js","path":"/Users/onivim/bootstrap.js","scheme":"file"},null]]]
+    |}
+      |> Yojson.Safe.from_string;
+
+    let parsedResult = handle("$changeMany", json);
+    parsedResult
+    == Ok(
+         ChangeMany({
+           owner: "typescript",
+           entries: [(Uri.fromPath("/Users/onivim/bootstrap.js"), [])],
+         }),
+       );
   };
 };
 
@@ -248,6 +266,15 @@ module ExtensionService = {
 module LanguageFeatures = {
   [@deriving show]
   type msg =
+    | EmitCodeLensEvent({
+        eventHandle: int,
+        event: Yojson.Safe.t,
+      }) // ??
+    | RegisterCodeLensSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        eventHandle: option(int),
+      })
     | RegisterDocumentHighlightProvider({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -265,6 +292,10 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
+    | RegisterHoverProvider({
+        handle: int,
+        selector: list(DocumentFilter.t),
+      })
     | RegisterImplementationSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -272,6 +303,11 @@ module LanguageFeatures = {
     | RegisterTypeDefinitionSupport({
         handle: int,
         selector: list(DocumentFilter.t),
+      })
+    | RegisterSignatureHelpProvider({
+        handle: int,
+        selector: DocumentSelector.t,
+        metadata: SignatureHelp.ProviderMetadata.t,
       })
     | RegisterSuggestSupport({
         handle: int,
@@ -284,10 +320,67 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
+    | RegisterDocumentFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        extensionId: ExtensionId.t,
+        displayName: string,
+      })
+    | RegisterRangeFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        extensionId: ExtensionId.t,
+        displayName: string,
+      })
+    | RegisterOnTypeFormattingSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        autoFormatTriggerCharacters: list(string),
+        extensionId: ExtensionId.t,
+      })
     | Unregister({handle: int});
 
   let parseDocumentSelector = json => {
-    Json.Decode.(json |> decode_value(list(DocumentFilter.decode)));
+    open Oni_Core.Utility;
+    open Json.Decode;
+
+    let decoder = list(DocumentFilter.decode);
+
+    // There must be a cleaner way to handle this...
+    let stringDecoder =
+      string
+      |> and_then(str => {
+           let result =
+             str
+             |> JsonEx.from_string
+             |> ResultEx.flatMap(v =>
+                  v
+                  |> decode_value(decoder)
+                  |> Result.map_error(Json.Decode.string_of_error)
+                );
+           switch (result) {
+           | Ok(v) => succeed(v)
+           | Error(m) => fail(m)
+           };
+         });
+
+    let composite = one_of([("json", decoder), ("string", stringDecoder)]);
+
+    json |> decode_value(composite);
+  };
+
+  let decodeStringOrInt = {
+    open Json.Decode;
+    let stringToInt =
+      string
+      |> map(int_of_string_opt)
+      |> and_then(
+           fun
+           | Some(i) => succeed(i)
+           | None => fail("Unable to parse int"),
+         );
+
+    one_of([("int", int), ("string", stringToInt)]);
   };
 
   let handle = (method, args: Yojson.Safe.t) => {
@@ -303,6 +396,24 @@ module LanguageFeatures = {
         Ok(RegisterDocumentHighlightProvider({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+    | ("$emitCodeLensEvent", `List([`Int(eventHandle), json])) =>
+      Ok(EmitCodeLensEvent({eventHandle, event: json}))
+    | (
+        "$registerCodeLensSupport",
+        `List([handleJson, selectorJson, eventHandleJson]),
+      ) =>
+      let ret = {
+        open Base.Result.Let_syntax;
+        open Json.Decode;
+        let%bind handle = handleJson |> decode_value(decodeStringOrInt);
+        let%bind selector = parseDocumentSelector(selectorJson);
+
+        let%bind eventHandle =
+          eventHandleJson |> decode_value(nullable(int));
+
+        Ok(RegisterCodeLensSupport({handle, selector, eventHandle}));
+      };
+      ret |> Result.map_error(Json.Decode.string_of_error);
     | (
         "$registerDocumentSymbolProvider",
         `List([`Int(handle), selectorJson, `String(label)]),
@@ -325,6 +436,11 @@ module LanguageFeatures = {
       |> Result.map(selector => {
            RegisterDeclarationSupport({handle, selector})
          })
+      |> Result.map_error(Json.Decode.string_of_error)
+    | ("$registerHoverProvider", `List([`Int(handle), selectorJson])) =>
+      selectorJson
+      |> parseDocumentSelector
+      |> Result.map(selector => {RegisterHoverProvider({handle, selector})})
       |> Result.map_error(Json.Decode.string_of_error)
     | (
         "$registerImplementationSupport",
@@ -352,6 +468,24 @@ module LanguageFeatures = {
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
 
+    | (
+        "$registerSignatureHelpProvider",
+        `List([`Int(handle), selectorJson, metadataJson]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind metadata =
+          metadataJson |> decode_value(SignatureHelp.ProviderMetadata.decode);
+
+        Ok(RegisterSignatureHelpProvider({handle, selector, metadata}));
+      };
+
+      ret |> Result.map_error(string_of_error);
     | (
         "$registerSuggestSupport",
         `List([
@@ -394,7 +528,99 @@ module LanguageFeatures = {
       };
 
       ret |> Result.map_error(string_of_error);
+    | (
+        "$registerDocumentFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          extensionIdJson,
+          displayNameJson,
+        ]),
+      ) =>
+      open Json.Decode;
 
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        let%bind displayName = displayNameJson |> decode_value(string);
+
+        Ok(
+          RegisterDocumentFormattingSupport({
+            handle,
+            selector,
+            extensionId,
+            displayName,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
+    | (
+        "$registerRangeFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          extensionIdJson,
+          displayNameJson,
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        let%bind displayName = displayNameJson |> decode_value(string);
+
+        Ok(
+          RegisterRangeFormattingSupport({
+            handle,
+            selector,
+            extensionId,
+            displayName,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
+    | (
+        "$registerOnTypeFormattingSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          triggerCharacterJson,
+          extensionIdJson,
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(list(DocumentFilter.decode));
+
+        let%bind triggerCharacters =
+          triggerCharacterJson |> decode_value(list(string));
+        let%bind extensionId =
+          extensionIdJson |> decode_value(ExtensionId.decode);
+
+        Ok(
+          RegisterOnTypeFormattingSupport({
+            handle,
+            selector,
+            autoFormatTriggerCharacters: triggerCharacters,
+            extensionId,
+          }),
+        );
+      };
+      ret |> Result.map_error(string_of_error);
     | _ =>
       Error(
         Printf.sprintf(
@@ -435,24 +661,19 @@ module MessageService = {
     switch (method, args) {
     | (
         "$showMessage",
-        `List([`Int(severity), `String(message), options, ..._]),
+        `List([`Int(severity), `String(message), _options, ..._]),
       ) =>
-      try({
-        let extensionId =
-          Yojson.Safe.Util.(
-            options
-            |> member("extension")
-            |> member("identifier")
-            |> to_string_option
-          );
+      try(
         Ok(
           ShowMessage({
             severity: intToSeverity(severity),
             message,
-            extensionId,
+            // TODO:
+            // Fix this up
+            extensionId: None,
           }),
-        );
-      }) {
+        )
+      ) {
       | exn => Error(Printexc.to_string(exn))
       }
     | _ =>

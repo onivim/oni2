@@ -134,24 +134,6 @@ module Oni = {
       );
   };
 
-  module View = {
-    let rotateForward =
-      register(
-        ~category="View",
-        ~title="Rotate Windows (Forwards)",
-        "view.rotateForward",
-        Command("view.rotateForward"),
-      );
-
-    let rotateBackward =
-      register(
-        ~category="View",
-        ~title="Rotate Windows (Backwards)",
-        "view.rotateBackward",
-        Command("view.rotateBackward"),
-      );
-  };
-
   module Vim = {
     let esc = register("vim.esc", Command("vim.esc"));
     let tutor =
@@ -160,38 +142,6 @@ module Oni = {
         ~title="Open Vim Tutor",
         "vim.tutor",
         Command("vim.tutor"),
-      );
-
-    let decreaseHorizontalWindowSize =
-      register(
-        ~category="View",
-        ~title="Decrease Horizontal Window Size",
-        "vim.decreaseHorizontalWindowSize",
-        Command("vim.decreaseHorizontalWindowSize"),
-      );
-
-    let increaseHorizontalWindowSize =
-      register(
-        ~category="View",
-        ~title="Increase Horizontal Window Size",
-        "vim.increaseHorizontalWindowSize",
-        Command("vim.increaseHorizontalWindowSize"),
-      );
-
-    let decreaseVerticalWindowSize =
-      register(
-        ~category="View",
-        ~title="Decrease Vertical Window Size",
-        "vim.decreaseVerticalWindowSize",
-        Command("vim.decreaseVerticalWindowSize"),
-      );
-
-    let increaseVerticalWindowSize =
-      register(
-        ~category="View",
-        ~title="Increase Vertical Window Size",
-        "vim.increaseVerticalWindowSize",
-        Command("vim.increaseVerticalWindowSize"),
       );
   };
 
@@ -234,32 +184,6 @@ module ReferencesView = {
       ~title="Find all References",
       "references-view.find",
       References(References.Requested),
-    );
-};
-
-module View = {
-  let closeEditor =
-    register(
-      ~category="View",
-      ~title="Close Editor",
-      "view.closeEditor",
-      Command("view.closeEditor"),
-    );
-
-  let splitVertical =
-    register(
-      ~category="View",
-      ~title="Split Editor Vertically",
-      "view.splitVertical",
-      Command("view.splitVertical"),
-    );
-
-  let splitHorizontal =
-    register(
-      ~category="View",
-      ~title="Split Editor Horizontally",
-      "view.splitHorizontal",
-      Command("view.splitHorizontal"),
     );
 };
 
@@ -318,22 +242,6 @@ module Workbench = {
         QuickmenuShow(FilesPicker),
       );
 
-    let nextEditor =
-      register(
-        ~category="View",
-        ~title="Open Next Editor",
-        "workbench.action.nextEditor",
-        Command("workbench.action.nextEditor"),
-      );
-
-    let previousEditor =
-      register(
-        ~category="View",
-        ~title="Open Previous Editor",
-        "workbench.action.previousEditor",
-        Command("workbench.action.previousEditor"),
-      );
-
     let quickOpenNavigateNextInEditorPicker =
       register(
         ~title="Navigate Next in Quick Open",
@@ -381,30 +289,6 @@ module Workbench = {
         ~title="Reset Zoom",
         "workbench.action.zoomReset",
         Command("workbench.action.zoomReset"),
-      );
-
-    let decreaseViewSize =
-      register(
-        ~category="View",
-        ~title="Decrease Current Window/View Size",
-        "workbench.action.decreaseViewSize",
-        Command("workbench.action.decreaseViewSize"),
-      );
-
-    let increaseViewSize =
-      register(
-        ~category="View",
-        ~title="Increase Current Window/View Size",
-        "workbench.action.increaseViewSize",
-        Command("workbench.action.increaseViewSize"),
-      );
-
-    let evenEditorWidths =
-      register(
-        ~category="View",
-        ~title="Reset Window Sizes",
-        "workbench.action.evenEditorWidths",
-        Command("workbench.action.evenEditorWidths"),
       );
 
     module Files = {

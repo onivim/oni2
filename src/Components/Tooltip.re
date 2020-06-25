@@ -40,17 +40,20 @@ module Tooltip = {
       ),
     ];
 
-    let tooltipText = (~theme, ~font: UiFont.t) => [
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
+    let tooltipText = (~theme) => [
       color(Colors.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
     ];
   };
 
-  let make = (~text, ~x, ~y, ~theme, ~font, ()) =>
+  let make = (~text, ~x, ~y, ~theme, ~font: UiFont.t, ()) =>
     <View style={Styles.tooltip(~theme, ~x, ~y)}>
-      <Text style={Styles.tooltipText(~theme, ~font)} text />
+      <Text
+        style={Styles.tooltipText(~theme)}
+        fontFamily={font.family}
+        fontSize={font.size}
+        text
+      />
     </View>;
 };
 

@@ -85,6 +85,7 @@ let start =
       ~minimize,
       ~close,
       ~restore,
+      ~raiseWindow,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
@@ -150,7 +151,7 @@ let start =
 
   let fileExplorerUpdater = FileExplorerStore.start();
 
-  let lifecycleUpdater = LifecycleStoreConnector.start(quit);
+  let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
@@ -194,14 +195,24 @@ let start =
 
   let subscriptions = (state: Model.State.t) => {
     let config = Feature_Configuration.resolver(state.config);
+    let visibleBuffersAndRanges =
+      state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
+
     let visibleRanges =
-      state
-      |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges
+      visibleBuffersAndRanges
       |> List.map(((bufferId, ranges)) => {
            Model.Selectors.getBufferById(state, bufferId)
            |> Option.map(buffer => {(buffer, ranges)})
          })
       |> Core.Utility.OptionEx.values;
+
+    let visibleBuffers =
+      visibleBuffersAndRanges
+      |> List.map(fst)
+      |> Base.List.dedup_and_sort(~compare)
+      |> List.map(bufferId => Model.Selectors.getBufferById(state, bufferId))
+      |> Core.Utility.OptionEx.values;
+
     let syntaxSubscription =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
@@ -225,7 +236,7 @@ let start =
 
     let fontFamily =
       Oni_Core.Configuration.getValue(
-        c => c.editorFontFamily,
+        c => c.editorFontFile,
         state.configuration,
       );
     let fontSize =
@@ -249,7 +260,7 @@ let start =
 
     let terminalFontFamily =
       Oni_Core.Configuration.getValue(
-        c => c.terminalIntegratedFontFamily,
+        c => c.terminalIntegratedFontFile,
         state.configuration,
       );
     let terminalFontSize =
@@ -271,12 +282,34 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
+    let visibleEditors = Feature_Layout.visibleEditors(state.layout);
+
+    let activeEditor = Feature_Layout.activeEditor(state.layout);
+    let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
+
+    let extHostSubscription =
+      Feature_Exthost.subscription(
+        ~buffers=visibleBuffers,
+        ~editors=visibleEditors,
+        ~activeEditorId=Some(activeEditorId),
+        ~client=extHostClient,
+      )
+      |> Isolinear.Sub.map(() => Model.Actions.Noop);
+
+    let fileExplorerActiveFileSub =
+      Model.Sub.activeFile(
+        ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
+        Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
+      );
+
     [
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
+      extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
+      fileExplorerActiveFileSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -294,7 +327,9 @@ let start =
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
   let _unsubscribe: unit => unit =
-    Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
+    Store.onBeforeMsg(msg =>
+      DispatchLog.infof(m => m("dispatch: %s", Model.Actions.show(msg)))
+    );
 
   let dispatch = Store.dispatch;
 
@@ -341,6 +376,27 @@ let start =
     Feature_Sneak.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
   );
+  registerCommands(
+    ~dispatch,
+    Feature_Layout.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
+  );
+  registerCommands(
+    ~dispatch,
+    Feature_Hover.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
+  );
+  registerCommands(
+    ~dispatch,
+    Feature_SignatureHelp.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
+  );
+
+  registerCommands(
+    ~dispatch,
+    Feature_Formatting.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
+  );
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
@@ -351,6 +407,7 @@ let start =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
+  dispatch(Model.Actions.SetGrammarRepository(grammarRepository));
 
   /* Set icon theme */
 

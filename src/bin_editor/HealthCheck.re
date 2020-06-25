@@ -102,14 +102,14 @@ let mainChecks = [
     "Verify bundled font exists",
     _ =>
       Sys.file_exists(
-        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+        Revery.Environment.executingDirectory ++ "JetBrainsMono-Regular.ttf",
       ),
   ),
   (
     "Revery: Verify can measure & shape font",
     _ => {
       let fontPath =
-        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf";
+        Revery.Environment.executingDirectory ++ "JetBrainsMono-Regular.ttf";
       switch (Revery.Font.load(fontPath)) {
       | Ok(font) =>
         let metrics = Revery.Font.getMetrics(font, 12.0);
@@ -249,6 +249,22 @@ let run = (~checks, _cli) => {
   };
 
   Log.info("");
+
+  let printCrashLog = () => {
+    Log.info("Checking for crash log...");
+
+    if (File.exists("onivim2-crash.log")) {
+      Log.error("Crash log found:");
+      Log.error("---");
+      let lines = File.readAllLines("onivim2-crash.log");
+      lines |> List.iter(Log.error);
+      Log.error("---");
+    } else {
+      Log.info("No crash log found!");
+    };
+  };
+
+  printCrashLog();
 
   Log.info("All systems go.");
   Log.info("Checking for remaining threads...");

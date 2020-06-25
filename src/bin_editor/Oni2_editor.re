@@ -6,6 +6,7 @@
 
 open Revery;
 
+open Oni_CLI;
 open Oni_UI;
 
 module Core = Oni_Core;
@@ -18,7 +19,7 @@ module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
-let installExtension = (path, Cli.{overriddenExtensionsDir, _}) => {
+let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
   | Some(extensionsFolder) =>
     let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
@@ -44,7 +45,12 @@ let uninstallExtension = (_extensionId, _cli) => {
   1;
 };
 
-let listExtensions = (Cli.{overriddenExtensionsDir, _}) => {
+let printVersion = () => {
+  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
+  0;
+};
+
+let listExtensions = ({overriddenExtensionsDir, _}) => {
   let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
   let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
     print_endline(ext.manifest.name);
@@ -53,113 +59,98 @@ let listExtensions = (Cli.{overriddenExtensionsDir, _}) => {
   0;
 };
 
-let printVersion = _cli => {
-  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
-  0;
-};
-
 Log.debug("Startup: Parsing CLI options");
-let cliOptions =
-  Cli.parse(
-    ~installExtension,
-    ~uninstallExtension,
-    ~checkHealth=HealthCheck.run(~checks=All),
-    ~listExtensions=
-      ({overriddenExtensionsDir, _}) => {
-        let extensions =
-          Store.Utility.getUserExtensions(~overriddenExtensionsDir);
-        let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
-          print_endline(ext.manifest.name);
-        };
-        List.iter(printExtension, extensions);
-        0;
-      },
-    ~printVersion,
-  );
+let (cliOptions, eff) = Oni_CLI.parse(Sys.argv);
 
-let initWorkingDirectory = () => {
-  let path =
-    switch (cliOptions.folder) {
-    | Some(folder) => folder
-    | None =>
-      switch (Store.Persistence.Global.workspace()) {
-      | Some(path) => path
-      | None =>
-        Dir.User.document()
-        |> Option.value(~default=Dir.home())
-        |> Fp.toString
-      }
-    };
-
-  Log.info("Startup: Changing folder to: " ++ path);
-  try(Sys.chdir(path)) {
-  | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
-  };
-
-  path;
-};
-
-let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
-  let (x, y, width, height, maximized) = {
-    open Store.Persistence.Workspace;
-    let store = storeFor(workingDirectory);
-
-    (
-      windowX(store) |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
-      windowY(store)
-      |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
-      windowWidth(store),
-      windowHeight(store),
-      windowMaximized(store),
-    );
-  };
-
-  let decorated =
-    switch (Revery.Environment.os) {
-    | Windows => false
-    | _ => true
-    };
-
-  let icon =
-    switch (Revery.Environment.os) {
-    | Mac =>
-      switch (Sys.getenv_opt("ONI2_BUNDLED")) {
-      | Some(_) => None
-      | None => Some("logo.png")
-      }
-    | _ => Some("logo.png")
-    };
-
-  let window =
-    App.createWindow(
-      ~createOptions=
-        WindowCreateOptions.create(
-          ~forceScaleFactor,
-          ~maximized,
-          ~vsync=Vsync.Immediate,
-          ~icon,
-          ~titlebarStyle=WindowStyles.Transparent,
-          ~x,
-          ~y,
-          ~width,
-          ~height,
-          ~decorated,
-          (),
-        ),
-      app,
-      "Oni2",
-    );
-
-  Window.setBackgroundColor(window, Colors.black);
-
-  window;
-};
-
-if (cliOptions.syntaxHighlightService) {
-  Oni_Syntax_Server.start(~healthCheck=() =>
+switch (eff) {
+| PrintVersion => printVersion() |> exit
+| InstallExtension(name) => installExtension(name, cliOptions) |> exit
+| UninstallExtension(name) => uninstallExtension(name, cliOptions) |> exit
+| CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
+| ListExtensions => listExtensions(cliOptions) |> exit
+| StartSyntaxServer({parentPid, namedPipe}) =>
+  Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
     HealthCheck.run(~checks=Common, cliOptions)
-  );
-} else {
+  )
+| Run =>
+  let initWorkingDirectory = () => {
+    let path =
+      switch (Oni_CLI.(cliOptions.folder)) {
+      | Some(folder) => folder
+      | None =>
+        switch (Store.Persistence.Global.workspace()) {
+        | Some(path) => path
+        | None =>
+          Dir.User.document()
+          |> Option.value(~default=Dir.home())
+          |> Fp.toString
+        }
+      };
+
+    Log.info("Startup: Changing folder to: " ++ path);
+    try(Sys.chdir(path)) {
+    | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
+    };
+
+    path;
+  };
+
+  let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
+    let (x, y, width, height, maximized) = {
+      open Store.Persistence.Workspace;
+      let store = storeFor(workingDirectory);
+
+      (
+        windowX(store)
+        |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+        windowY(store)
+        |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
+        windowWidth(store),
+        windowHeight(store),
+        windowMaximized(store),
+      );
+    };
+
+    let decorated =
+      switch (Revery.Environment.os) {
+      | Windows => false
+      | _ => true
+      };
+
+    let icon =
+      switch (Revery.Environment.os) {
+      | Mac =>
+        switch (Sys.getenv_opt("ONI2_BUNDLED")) {
+        | Some(_) => None
+        | None => Some("logo.png")
+        }
+      | _ => Some("logo.png")
+      };
+
+    let window =
+      App.createWindow(
+        ~createOptions=
+          WindowCreateOptions.create(
+            ~forceScaleFactor,
+            ~maximized,
+            ~vsync=Vsync.Immediate,
+            ~icon,
+            ~titlebarStyle=WindowStyles.Transparent,
+            ~x,
+            ~y,
+            ~width,
+            ~height,
+            ~decorated,
+            (),
+          ),
+        app,
+        "Oni2",
+      );
+
+    Window.setBackgroundColor(window, Colors.black);
+
+    window;
+  };
   Log.infof(m =>
     m(
       "Starting Onivim 2.%s (%s)",
@@ -172,6 +163,8 @@ if (cliOptions.syntaxHighlightService) {
   let init = app => {
     Log.debug("Init");
 
+    Vim.init();
+
     let initialWorkingDirectory = initWorkingDirectory();
     let window =
       createWindow(
@@ -183,13 +176,29 @@ if (cliOptions.syntaxHighlightService) {
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
 
-    PreflightChecks.run();
-
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
+
+    let initialBuffer = {
+      let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+        Vim.Buffer.openFile(Core.BufferPath.welcome)
+        |> Vim.BufferMetadata.ofBuffer;
+      Core.Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    };
+
+    let initialBufferRenderers =
+      Model.BufferRenderers.(
+        initial
+        |> setById(
+             Core.Buffer.getId(initialBuffer),
+             Model.BufferRenderer.Welcome,
+           )
+      );
 
     let currentState =
       ref(
         Model.State.initial(
+          ~initialBuffer,
+          ~initialBufferRenderers,
           ~getUserSettings,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,
@@ -205,7 +214,10 @@ if (cliOptions.syntaxHighlightService) {
         )
       );
 
-    let update = UI.start(window, <Root state=currentState^ />);
+    let uiDispatch = ref(_ => ());
+
+    let update =
+      UI.start(window, <Root state=currentState^ dispatch=uiDispatch^ />);
 
     let isDirty = ref(false);
     let onStateChanged = state => {
@@ -228,7 +240,7 @@ if (cliOptions.syntaxHighlightService) {
       runEventLoop();
 
       if (isDirty^) {
-        update(<Root state=currentState^ />);
+        update(<Root state=currentState^ dispatch=uiDispatch^ />);
         isDirty := false;
         persistGlobal();
       };
@@ -261,6 +273,11 @@ if (cliOptions.syntaxHighlightService) {
       Window.restore(window);
     };
 
+    // This is called raiseWIndow because if it were simply raise, it would shadow the exception raising function
+    let raiseWindow = () => {
+      Window.raise(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -284,6 +301,7 @@ if (cliOptions.syntaxHighlightService) {
         ~maximize,
         ~minimize,
         ~restore,
+        ~raiseWindow,
         ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,
@@ -294,6 +312,8 @@ if (cliOptions.syntaxHighlightService) {
         ~quit,
         (),
       );
+
+    uiDispatch := dispatch;
     Log.debug("Startup: StoreThread started!");
 
     let _: App.unsubscribe =
@@ -327,14 +347,7 @@ if (cliOptions.syntaxHighlightService) {
     let _: Window.unsubscribe =
       Window.onMoved(window, _ => persistWorkspace());
 
-    GlobalContext.set({
-      closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-      editorScrollDelta: (~editorId, ~deltaY, ()) =>
-        dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
-      editorSetScroll: (~editorId, ~scrollY, ()) =>
-        dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-      dispatch,
-    });
+    GlobalContext.set({dispatch: dispatch});
 
     dispatch(Model.Actions.Init);
     runEffects();
@@ -356,5 +369,6 @@ if (cliOptions.syntaxHighlightService) {
 
   /* Let's get this party started! */
   Log.debug("Calling App.start");
-  App.start(init);
+  let () = App.start(init);
+  ();
 };

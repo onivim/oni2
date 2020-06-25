@@ -164,11 +164,12 @@ module Documents = {
 };
 
 module DocumentsAndEditors = {
+  open Json.Encode;
   let acceptDocumentsAndEditorsDelta = (~delta, client) => {
     Client.notify(
       ~rpcName="ExtHostDocumentsAndEditors",
       ~method="$acceptDocumentsAndEditorsDelta",
-      ~args=`List([DocumentsAndEditorsDelta.to_yojson(delta)]),
+      ~args=`List([delta |> encode_value(DocumentsAndEditorsDelta.encode)]),
       client,
     );
   };
@@ -186,6 +187,18 @@ module ExtensionService = {
 };
 
 module LanguageFeatures = {
+  let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
+    let decoder = Json.Decode.(nullable(CodeLens.List.decode));
+
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideCodeLenses",
+      ~args=`List([`Int(handle), Uri.to_yojson(resource)]),
+      client,
+    );
+  };
   let provideCompletionItems =
       (
         ~handle: int,
@@ -284,6 +297,22 @@ module LanguageFeatures = {
       "$provideDeclaration",
       client,
     );
+
+  let provideHover = (~handle, ~resource, ~position, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(Hover.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideHover",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
+      client,
+    );
+  };
   let provideImplementation = (~handle, ~resource, ~position, client) =>
     Internal.provideDefinitionLink(
       ~handle,
@@ -313,6 +342,91 @@ module LanguageFeatures = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           context |> Json.Encode.encode_value(ReferenceContext.encode),
+        ]),
+      client,
+    );
+  };
+
+  let provideSignatureHelp = (~handle, ~resource, ~position, ~context, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(SignatureHelp.Response.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideSignatureHelp",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          context
+          |> Json.Encode.encode_value(SignatureHelp.RequestContext.encode),
+        ]),
+      client,
+    );
+  };
+
+  let releaseSignatureHelp = (~handle, ~id, client) =>
+    Client.notify(
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseSignatureHelp",
+      ~args=
+        `List(
+          Json.Encode.[
+            handle |> encode_value(int),
+            id |> encode_value(int),
+          ],
+        ),
+      client,
+    );
+
+  let provideDocumentFormattingEdits = (~handle, ~resource, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
+        ]),
+      client,
+    );
+  };
+
+  let provideDocumentRangeFormattingEdits =
+      (~handle, ~resource, ~range, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentRangeFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedRange.to_yojson(range),
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
+        ]),
+      client,
+    );
+  };
+
+  let provideOnTypeFormattingEdits =
+      (~handle, ~resource, ~position, ~character, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideOnTypeFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `String(character),
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
         ]),
       client,
     );

@@ -13,6 +13,8 @@ module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 module Commands = GlobalCommands;
 
 let start = maybeKeyBindingsFilePath => {
+  let windowCommandCondition =
+    "!insertMode || terminalFocus" |> WhenExpr.parse;
   let default =
     Keybindings.[
       {
@@ -241,27 +243,27 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<D-W>",
-        command: Commands.View.closeEditor.id,
+        command: Feature_Layout.Commands.closeActiveEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<C-PAGEDOWN>",
-        command: Commands.Workbench.Action.nextEditor.id,
+        command: Feature_Layout.Commands.nextEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-]>",
-        command: Commands.Workbench.Action.nextEditor.id,
+        command: Feature_Layout.Commands.nextEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<C-PAGEUP>",
-        command: Commands.Workbench.Action.previousEditor.id,
+        command: Feature_Layout.Commands.previousEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-[>",
-        command: Commands.Workbench.Action.previousEditor.id,
+        command: Feature_Layout.Commands.previousEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
@@ -337,6 +339,137 @@ let start = maybeKeyBindingsFilePath => {
         command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
+      },
+      //LAYOUT
+      {
+        key: "<C-W>H",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-H>",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><LEFT>",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>L",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-L>",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><RIGHT>",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>K",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-K>",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><UP>",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>J",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-J>",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><DOWN>",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>R",
+        command: Feature_Layout.Commands.rotateForward.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-R>",
+        command: Feature_Layout.Commands.rotateForward.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-S-R>", // TODO: Does not work, blocked by bug in editor-input
+        command: Feature_Layout.Commands.rotateBackward.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>-",
+        command: Feature_Layout.Commands.decreaseVerticalSize.id,
+        condition: windowCommandCondition,
+      },
+      //      TODO: Does not work, blocked by bug in editor-input
+      //      {
+      //        key: "<C-W>+",
+      //        command: Feature_Layout.Commands.increaseVerticalSize.id,
+      //        condition: "!insertMode" |> WhenExpr.parse
+      //      },
+      {
+        key: "<C-W><S-,>", // TODO: Does not work and should be `<`, but blocked by bugs in editor-input,
+        command: Feature_Layout.Commands.increaseHorizontalSize.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><S-.>", // TODO: Does not work and should be `>`, but blocked by bugs in editor-input
+        command: Feature_Layout.Commands.decreaseHorizontalSize.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>=",
+        command: Feature_Layout.Commands.resetSizes.id,
+        condition: windowCommandCondition,
+      },
+      // TODO: Fails to parse
+      // {
+      //   key: "<C-W>_",
+      //   command: Feature_Layout.Commands.maximizeVertical.id,
+      //   condition: windowCommandCondition,
+      // },
+      // TODO: Fails to parse
+      // {
+      //   key: "<C-W>|",
+      //   command: Feature_Layout.Commands.maximizeHorizontal.id,
+      //   condition: windowCommandCondition,
+      // },
+      {
+        key: "<C-W>o",
+        command: Feature_Layout.Commands.toggleMaximize.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<A-DOWN>",
+        command: Feature_SignatureHelp.Commands.incrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+      },
+      {
+        key: "<A-UP>",
+        command: Feature_SignatureHelp.Commands.decrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
       },
     ];
 

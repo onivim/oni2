@@ -35,12 +35,12 @@ let startWithExtensions =
   };
 
   let wrappedHandler = msg => {
+    prerr_endline("Received msg: " ++ Msg.show(msg));
     messages := [msg, ...messages^];
     handler(msg);
   };
 
-  //  Timber.App.enable();
-  //  Timber.App.setLevel(Timber.Level.trace);
+  Timber.App.enable();
 
   let extensions =
     extensions
@@ -83,7 +83,14 @@ let startWithExtensions =
 
   let processHasExited = ref(false);
 
-  let onExit = (_, ~exit_status as _: int64, ~term_signal as _: int) => {
+  let onExit = (_, ~exit_status: int64, ~term_signal: int) => {
+    prerr_endline(
+      Printf.sprintf(
+        "Process exited: %d signal: %d",
+        Int64.to_int(exit_status),
+        term_signal,
+      ),
+    );
     processHasExited := true;
   };
 
@@ -146,7 +153,7 @@ let waitForExtensionActivation = (expectedExtensionId, context) => {
   let waitForActivation =
     fun
     | Msg.ExtensionService(DidActivateExtension({extensionId, _})) =>
-      extensionId == expectedExtensionId
+      String.equal(extensionId, expectedExtensionId)
     | _ => false;
 
   context

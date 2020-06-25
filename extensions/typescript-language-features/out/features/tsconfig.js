@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const jsonc = require("jsonc-parser");
 const path_1 = require("path");
 const vscode = require("vscode");
@@ -19,20 +20,22 @@ class TsconfigLinkProvider {
         if (!root) {
             return null;
         }
-        return [
-            this.getExendsLink(document, root),
+        return arrays_1.coalesce([
+            this.getExtendsLink(document, root),
             ...this.getFilesLinks(document, root),
             ...this.getReferencesLinks(document, root)
-        ].filter(x => !!x);
+        ]);
     }
-    getExendsLink(document, root) {
+    getExtendsLink(document, root) {
         const extendsNode = jsonc.findNodeAtLocation(root, ['extends']);
         if (!this.isPathValue(extendsNode)) {
             return undefined;
         }
-        return new vscode.DocumentLink(this.getRange(document, extendsNode), path_1.basename(extendsNode.value).match('.json$')
-            ? this.getFileTarget(document, extendsNode)
-            : vscode.Uri.file(path_1.join(path_1.dirname(document.uri.fsPath), extendsNode.value + '.json')));
+        if (extendsNode.value.startsWith('.')) {
+            return new vscode.DocumentLink(this.getRange(document, extendsNode), vscode.Uri.file(path_1.join(path_1.dirname(document.uri.fsPath), extendsNode.value + (extendsNode.value.endsWith('.json') ? '' : '.json'))));
+        }
+        const workspaceFolderPath = vscode.workspace.getWorkspaceFolder(document.uri).uri.fsPath;
+        return new vscode.DocumentLink(this.getRange(document, extendsNode), vscode.Uri.file(path_1.join(workspaceFolderPath, 'node_modules', extendsNode.value + (extendsNode.value.endsWith('.json') ? '' : '.json'))));
     }
     getFilesLinks(document, root) {
         return mapChildren(jsonc.findNodeAtLocation(root, ['files']), child => this.pathNodeToLink(document, child));
@@ -43,7 +46,7 @@ class TsconfigLinkProvider {
             if (!this.isPathValue(pathNode)) {
                 return undefined;
             }
-            return new vscode.DocumentLink(this.getRange(document, pathNode), path_1.basename(pathNode.value).match('.json$')
+            return new vscode.DocumentLink(this.getRange(document, pathNode), path_1.basename(pathNode.value).endsWith('.json')
                 ? this.getFileTarget(document, pathNode)
                 : this.getFolderTarget(document, pathNode));
         });

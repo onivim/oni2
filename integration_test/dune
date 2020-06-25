@@ -34,7 +34,6 @@
            SyntaxServerParentPidTest
            SyntaxServerParentPidCorrectTest
            SyntaxServerReadExceptionTest
-           Regression733Test
            Regression1671Test
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
@@ -55,6 +54,7 @@
            ZenModeSplitTest
     )
     (libraries
+        Oni_CLI
         Oni_IntegrationTestLib
         reason-native-crash-utils.asan
 ))
@@ -92,7 +92,6 @@
         LineEndingsCRLFTest.exe
         LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
-        Regression733Test.exe
         Regression1671Test.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionDeleteAllLinesTest.exe
@@ -119,6 +118,7 @@
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
         large-c-file.c
+        lsan.supp
         some-test-file.json
         some-test-file.txt
         test.crlf

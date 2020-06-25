@@ -1,6 +1,10 @@
+module Log = (val Timber.Log.withNamespace("Exthost.Waiter"));
+
 let wait = (~timeout=10.0, ~name="TODO", condition) => {
   let start = Unix.gettimeofday();
   let delta = () => Unix.gettimeofday() -. start;
+
+  Log.infof(m => m("Starting waiter '%s' at %f", name, start));
 
   while (!condition() && delta() < timeout) {
     for (_i in 0 to 100) {
@@ -11,6 +15,10 @@ let wait = (~timeout=10.0, ~name="TODO", condition) => {
 
   if (!condition()) {
     failwith("Condition failed: " ++ name);
+  } else {
+    Log.infof(m =>
+      m("Waiter completed '%s' after %f seconds", name, delta())
+    );
   };
 };
 

@@ -7,7 +7,16 @@
 
 let minimumFontSize = 6.;
 let defaultFontSize = 14.;
-let defaultFontFamily = "FiraCode-Regular.ttf";
+let defaultFontFile = "JetBrainsMono-Regular.ttf";
+let defaultFontFamily =
+  Revery.Font.Family.fromFiles((~weight, ~italic, ~mono as _) => {
+    switch (weight, italic) {
+    | (Revery.Font.Weight.Bold, true) => "JetBrainsMono-Bold-Italic.ttf"
+    | (Revery.Font.Weight.Bold, false) => "JetBrainsMono-Bold.ttf"
+    | (Revery.Font.Weight.Normal, true) => "JetBrainsMono-Italic.ttf"
+    | _ => defaultFontFile
+    }
+  });
 let defaultTerminalFontSize = 12.;
 
 let syntaxEagerMaxLines = 500;
@@ -30,6 +39,8 @@ let minimapCharacterHeight = 2;
  */
 let minimapLineSpacing = 1;
 let scrollBarThickness = 15;
+let editorHorizontalScrollBarThickness = 8;
+let scrollBarCursorSize = 2;
 let minimapMaxColumn = 120;
 let tabHeight = 35;
 let notificationWidth = 300;

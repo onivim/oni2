@@ -9,6 +9,7 @@ module Colors = Feature_Theme.Colors;
 module Constants = {
   let menuWidth = 400;
   let menuHeight = 320;
+  let rowHeight = 40;
 };
 
 module Styles = {
@@ -22,16 +23,18 @@ module Styles = {
 
   let inputContainer = [padding(5)];
 
-  let input = (~font) => [fontFamily(font), fontSize(14.)];
+  let dropdown = (~numItems) => [
+    height(
+      Constants.rowHeight * numItems > Constants.menuHeight
+        ? Constants.menuHeight : Constants.rowHeight * numItems,
+    ),
+    overflow(`Hidden),
+  ];
 
-  let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
+  let menuItem = [cursor(Revery.MouseCursors.pointer)];
 
-  let menuItem = [fontSize(14.), cursor(Revery.MouseCursors.pointer)];
-
-  let label = (~font: UiFont.t, ~theme, ~highlighted) => [
-    fontFamily(highlighted ? font.fontFileSemiBold : font.fontFile),
+  let label = (~theme, ~highlighted) => [
     textOverflow(`Ellipsis),
-    fontSize(12.),
     color(
       highlighted
         ? Colors.Oni.normalModeBackground.from(theme)
@@ -132,13 +135,20 @@ let make =
     let item = items[index];
     let isFocused = Some(index) == focused;
 
-    let style = Styles.label(~font, ~theme);
+    let style = Styles.label(~theme);
     let text = Quickmenu.getLabel(item);
     let highlights = item.highlight;
     let normalStyle = style(~highlighted=false);
     let highlightStyle = style(~highlighted=true);
     let labelView =
-      <HighlightText style=normalStyle highlightStyle text highlights />;
+      <HighlightText
+        fontFamily={font.family}
+        fontSize=12.
+        style=normalStyle
+        highlightStyle
+        text
+        highlights
+      />;
 
     <MenuItem
       onClick={() => onSelect(index)}
@@ -147,6 +157,7 @@ let make =
       label={`Custom(labelView)}
       icon={item.icon}
       font
+      fontSize=14.
       onMouseOver={() => onFocusedChange(index)}
       isFocused
     />;
@@ -157,7 +168,8 @@ let make =
       <Input
         placeholder
         ?prefix
-        style={Styles.input(~font=font.fontFile)}
+        fontFamily={font.family}
+        fontSize=14.
         isFocused=true
         onClick=onInputClicked
         value=query
@@ -167,8 +179,12 @@ let make =
     </View>;
 
   let dropdown = () =>
-    <View style=Styles.dropdown>
-      <FlatList rowHeight=40 count={Array.length(items)} focused theme>
+    <View style={Styles.dropdown(~numItems=Array.length(items))}>
+      <FlatList
+        rowHeight=Constants.rowHeight
+        count={Array.length(items)}
+        focused
+        theme>
         ...renderItem
       </FlatList>
       {switch (progress) {

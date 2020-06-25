@@ -278,6 +278,32 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       withClient(onRegisterReferencesProvider(handle, selector));
       Lwt.return(Reply.okEmpty);
     | LanguageFeatures(
+        RegisterRangeFormattingSupport({handle, selector, displayName, _}),
+      ) =>
+      dispatch(
+        Formatting(
+          Feature_Formatting.RangeFormatterAvailable({
+            handle,
+            selector,
+            displayName,
+          }),
+        ),
+      );
+      Lwt.return(Reply.okEmpty);
+    | LanguageFeatures(
+        RegisterDocumentFormattingSupport({handle, selector, displayName, _}),
+      ) =>
+      dispatch(
+        Formatting(
+          Feature_Formatting.DocumentFormatterAvailable({
+            handle,
+            selector,
+            displayName,
+          }),
+        ),
+      );
+      Lwt.return(Reply.okEmpty);
+    | LanguageFeatures(
         RegisterSuggestSupport({
           handle,
           selector,
@@ -286,6 +312,25 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         }),
       ) =>
       withClient(onRegisterSuggestProvider(handle, selector));
+      Lwt.return(Reply.okEmpty);
+    | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
+      dispatch(
+        Actions.Hover(Feature_Hover.ProviderRegistered({handle, selector})),
+      );
+      Lwt.return(Reply.okEmpty);
+
+    | LanguageFeatures(
+        RegisterSignatureHelpProvider({handle, selector, metadata}),
+      ) =>
+      dispatch(
+        Actions.SignatureHelp(
+          Feature_SignatureHelp.ProviderRegistered({
+            handle,
+            selector,
+            metadata,
+          }),
+        ),
+      );
       Lwt.return(Reply.okEmpty);
 
     | Diagnostics(Clear({owner})) =>
@@ -332,14 +377,16 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       let command =
         command |> Option.map(({id, _}: Exthost.Command.t) => id);
       dispatch(
-        Actions.StatusBarAddItem(
-          StatusBarModel.Item.create(
-            ~command?,
-            ~id,
-            ~label,
-            ~alignment,
-            ~priority,
-            (),
+        Actions.StatusBar(
+          Feature_StatusBar.ItemAdded(
+            Feature_StatusBar.Item.create(
+              ~command?,
+              ~id,
+              ~label,
+              ~alignment,
+              ~priority,
+              (),
+            ),
           ),
         ),
       );
@@ -417,6 +464,29 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     );
   };
 
+  let redirect =
+    if (Timber.App.isEnabled()) {
+      [
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stdin,
+          ~from_parent_fd=Luv.Process.stdin,
+          (),
+        ),
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stdout,
+          ~from_parent_fd=Luv.Process.stderr,
+          (),
+        ),
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stderr,
+          ~from_parent_fd=Luv.Process.stderr,
+          (),
+        ),
+      ];
+    } else {
+      [];
+    };
+
   let _process: Luv.Process.t =
     Luv.Process.spawn(
       ~environment,
@@ -424,6 +494,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~windows_hide=true,
       ~windows_hide_console=true,
       ~windows_hide_gui=true,
+      ~redirect,
       nodePath,
       [nodePath, extHostScriptPath],
     )

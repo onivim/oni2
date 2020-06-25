@@ -123,6 +123,18 @@ function activate(context) {
         vscode.window.showInformationMessage("fulltext:" + latestText);
     }));
     
+    cleanup(vscode.commands.registerCommand('developer.oni.showActiveEditor', () => {
+        vscode.window.showInformationMessage(
+        "Active editor: " + JSON.stringify(vscode.window.activeTextEditor)
+        );
+    }));
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.showVisibleTextEditors', () => {
+        vscode.window.showInformationMessage(
+        "Visible editors: " + JSON.stringify(vscode.window.visibleTextEditors)
+        );
+    }));
+    
     function createResourceUri(relativePath) {
         const absolutePath = path.join(vscode.workspace.rootPath, relativePath);
         return vscode.Uri.file(absolutePath);

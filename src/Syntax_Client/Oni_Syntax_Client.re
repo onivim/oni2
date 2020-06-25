@@ -42,57 +42,41 @@ let write = ({transport, nextId, _}: t, msg: Protocol.ClientToServer.t) => {
   writeTransport(~id, transport, msg);
 };
 
-let getEnvironment = (~namedPipe, ~parentPid) => {
-  let filterOutLogFile = List.filter(env => fst(env) != "ONI2_LOG_FILE");
-
-  Luv.Env.environ()
-  |> Result.map(filterOutLogFile)
-  |> Result.map(items =>
-       [
-         (EnvironmentVariables.namedPipe, namedPipe),
-         (EnvironmentVariables.parentPid, parentPid),
-         ...items,
-       ]
-     );
-};
-
 let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
-  getEnvironment(~namedPipe, ~parentPid)
-  |> Utility.ResultEx.flatMap(environment => {
-       ClientLog.debugf(m =>
-         m(
-           "Starting executable: %s and parentPid: %s",
-           executablePath,
-           parentPid,
-         )
-       );
+  let arg = "--syntax-highlight-service=" ++ parentPid ++ ":" ++ namedPipe;
+  ClientLog.debugf(m =>
+    m(
+      "Starting executable: %s and parentPid: %s with args: %s",
+      executablePath,
+      parentPid,
+      arg,
+    )
+  );
 
-       let on_exit = (_proc, ~exit_status, ~term_signal) => {
-         let exitCode = exit_status |> Int64.to_int;
-         if (exitCode == 0) {
-           ClientLog.debug("Syntax process exited safely.");
-         } else {
-           ClientLog.errorf(m =>
-             m(
-               "Syntax process exited with code: %d and signal: %d",
-               exitCode,
-               term_signal,
-             )
-           );
-         };
-         onClose(exitCode);
-       };
+  let on_exit = (_proc, ~exit_status, ~term_signal) => {
+    let exitCode = exit_status |> Int64.to_int;
+    if (exitCode == 0) {
+      ClientLog.debug("Syntax process exited safely.");
+    } else {
+      ClientLog.errorf(m =>
+        m(
+          "Syntax process exited with code: %d and signal: %d",
+          exitCode,
+          term_signal,
+        )
+      );
+    };
+    onClose(exitCode);
+  };
 
-       Luv.Process.spawn(
-         ~on_exit,
-         ~environment,
-         ~windows_hide=true,
-         ~windows_hide_console=true,
-         ~windows_hide_gui=true,
-         executablePath,
-         [executablePath, "--syntax-highlight-service"],
-       );
-     })
+  Luv.Process.spawn(
+    ~on_exit,
+    ~windows_hide=true,
+    ~windows_hide_console=true,
+    ~windows_hide_gui=true,
+    executablePath,
+    [executablePath, arg],
+  )
   |> Result.map_error(Luv.Error.strerror);
 };
 
@@ -113,9 +97,7 @@ let start =
     | Some(pid) => pid
     };
 
-  let name = Printf.sprintf("syntax-client-%s", parentPid);
-  let namedPipe = name |> NamedPipe.create |> NamedPipe.toString;
-
+  let namedPipe = Protocol.pidToNamedPipe(parentPid);
   let handleMessage = msg =>
     switch (msg) {
     | ServerToClient.Initialized =>
@@ -159,7 +141,7 @@ let start =
   Transport.start(~namedPipe, ~dispatch)
   |> Utility.ResultEx.tap(transport => _transport := Some(transport))
   |> Utility.ResultEx.flatMap(transport => {
-       startProcess(~executablePath, ~parentPid, ~namedPipe, ~onClose)
+       startProcess(~executablePath, ~namedPipe, ~parentPid, ~onClose)
        |> Result.map(process => {transport, process, nextId: ref(0)})
      });
 };
