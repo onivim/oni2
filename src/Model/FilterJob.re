@@ -135,35 +135,22 @@ module Make = (Config: Config) => {
     (false, newPendingWork, completed);
   };
 
+  /* Compare two ranked items. */
+  let compareItems = (a, b) => compare(a.Filter.score, b.Filter.score);
+
   let doActualWork =
       (
         {queue, shouldLower, filter, explodedFilter, _} as pendingWork: PendingWork.t,
-        {filtered, _}: CompletedWork.t,
+        {filtered, ranked}: CompletedWork.t,
       ) => {
     // Take out the items to process this frame
     let (items, queue) = Queue.take(Constants.itemsPerFrame, queue);
 
-    // Do a first filter pass to check if the item satisifies the regex
-    let filtered =
-      List.fold_left(
-        (acc, item) => {
-          let name = format(item, ~shouldLower);
-
-          if (Filter.fuzzyMatches(explodedFilter, name)) {
-            [item, ...acc];
-          } else {
-            acc;
-          };
-        },
-        filtered,
-        items,
-      );
-
     // Rank a limited nuumber of filtered items
     let ranked =
-      filtered
-      |> ListEx.firstk(Constants.maxItemsToFilter)
-      |> Filter.rank(filter, format);
+      items
+      |> Filter.rank(filter, format)
+      |> ListEx.mergeSortedList(compareItems, ranked);
 
     (
       Queue.isEmpty(queue),
@@ -176,7 +163,8 @@ module Make = (Config: Config) => {
   let doWork = (pending: PendingWork.t, completed) =>
     if (pending.filter == "") {
       let filtered = pending.allItems |> Queue.toList;
-      let ranked = filtered |> List.map(item => Filter.{highlight: [], item});
+      let ranked =
+        filtered |> List.map(item => Filter.{highlight: [], item, score: 0.0});
       (true, pending, CompletedWork.{filtered, ranked});
     } else {
       doActualWork(pending, completed);

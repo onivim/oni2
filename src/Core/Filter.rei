@@ -7,6 +7,7 @@
 type result('a) = {
   item: 'a,
   highlight: list((int, int)),
+  score: float,
 };
 
 let rank:

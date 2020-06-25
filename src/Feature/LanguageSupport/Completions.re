@@ -23,7 +23,9 @@ module Internal = {
   let filterItems = (maybeMeet, items) => {
     switch (maybeMeet) {
     | None =>
-      items |> List.map(item => Filter.{item, highlight: []}) |> Array.of_list
+      items
+      |> List.map(item => Filter.{item, highlight: [], score: 0.0})
+      |> Array.of_list
 
     | Some((meet: CompletionMeet.t)) =>
       open CompletionItem;

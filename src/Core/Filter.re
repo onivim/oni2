@@ -9,11 +9,13 @@ module IndexEx = Utility.IndexEx;
 type result('a) = {
   item: 'a,
   highlight: list((int, int)),
+  score: float,
 };
 
 let makeResult = ((item, match: Fzy.Result.t)) => {
   item,
   highlight: IndexEx.ranges(match.positions),
+  score: match.score,
 };
 
 let rank = (query, format, items) => {

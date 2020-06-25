@@ -77,3 +77,16 @@ let findIndex = (predicate, list) => {
     | [_, ...tail] => loop(i + 1, tail);
   loop(0, list);
 };
+
+let rec mergeSortedList = (compareItems, primary, secondary) => {
+  switch (primary, secondary) {
+  | (_, []) => primary
+  | ([], _) => secondary
+  | ([headPrimary, ...restPrimary], [headSecondary, ...restSecondary]) =>
+    if (compareItems(headPrimary, headSecondary) >= 0) {
+      [headPrimary, ...mergeSortedList(compareItems, restPrimary, secondary)];
+    } else {
+      [headSecondary, ...mergeSortedList(compareItems, primary, restSecondary)];
+    }
+  };
+};
