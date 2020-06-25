@@ -15,3 +15,7 @@ type msg =
 // UPDATE
 
 let update: (msg, model) => model;
+
+module CommandLine: {
+  let getCompletionMeet: (~byteIndex: int, string) => option(int);
+};
