@@ -18,6 +18,8 @@
         "editorGroupHeader.tabsBackground": "#242029",
         "tab.activeBorder": "#EB64B9",
         "tab.inactiveBackground": "#242029",
+        "editorIndentGuide.background": "#3b4048",
+        "editorIndentGuide.activeBackground": "#c8c8c859",
         "editor.wordHighlightBackground": "#eb64b927",
         "editor.selectionBackground":"#eb64b927",
         "editor.findMatchBackground":"#40b4c48c",
@@ -280,7 +282,8 @@
                 "punctuation.definition.comment"
             ],
             "settings": {
-                "foreground": "#91889b"
+                "foreground": "#91889b",
+                "fontStyle": "italic"
             }
         },
         {
