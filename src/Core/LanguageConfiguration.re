@@ -290,7 +290,7 @@ let toTypeAutoIndent = ({decreaseIndentPattern, brackets, _}, str) => {
              bracket => BracketPair.isJustClosingPair(bracket, str),
              brackets,
            ),
-         );
+         )
        })
     |> Option.value(~default=false);
 
