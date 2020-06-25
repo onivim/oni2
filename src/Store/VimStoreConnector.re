@@ -636,6 +636,7 @@ let start =
           currentPos := Vim.CommandLine.getPosition();
         };
 
+        let completion = Path.trimTrailingSeparator(completion);
         let latestContext: Vim.Context.t = Core.VimEx.inputString(completion);
         updateActiveEditorCursors(latestContext.cursors);
         isCompleting := false;
