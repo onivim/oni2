@@ -346,7 +346,7 @@ module type ContentModel = {
   let icon: t => option(Oni_Core.IconTheme.IconDefinition.t);
   let isModified: t => bool;
 
-  let render: t => Revery.UI.element;
+  let render: (~isActive: bool, t) => Revery.UI.element;
 };
 
 module View = {

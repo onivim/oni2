@@ -31,7 +31,7 @@ module type ContentModel = {
   let icon: t => option(IconTheme.IconDefinition.t);
   let isModified: t => bool;
 
-  let render: t => element;
+  let render: (~isActive: bool, t) => element;
 };
 
 let make =
@@ -49,7 +49,7 @@ let make =
   let children = {
     let editorContainer =
       switch (List.find_opt(isSelected, model.editors)) {
-      | Some(item) => ContentModel.render(item)
+      | Some(item) => ContentModel.render(~isActive, item)
       | None => React.empty
       };
 
