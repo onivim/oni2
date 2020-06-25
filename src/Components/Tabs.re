@@ -118,7 +118,8 @@ let make =
         style=outerStyle>
         <View onDimensionsChanged=postRender style=innerStyle>
           {List.mapi(
-             index => render(~isSelected=Some(index) == selectedIndex, ~index),
+             index =>
+               render(~isSelected=Some(index) == selectedIndex, ~index),
              items,
            )
            |> React.listToElement}

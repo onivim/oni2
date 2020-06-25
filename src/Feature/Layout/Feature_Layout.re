@@ -130,19 +130,9 @@ let update = (~focus, model, msg) => {
     )
 
   | LayoutCloseButtonClicked(index) =>
-    if (List.length(model.layouts) == 1) {
-      (model, RemoveLastWasBlocked);
-    } else {
-      let left = Base.List.take(model.layouts, index);
-      let right = Base.List.drop(model.layouts, index + 1);
-
-      let model = {
-        layouts: left @ right,
-        activeLayoutIndex:
-          index <= model.activeLayoutIndex
-            ? model.activeLayoutIndex - 1 : model.activeLayoutIndex,
-      };
-      (model, Nothing);
+    switch (removeLayoutTab(index, model)) {
+    | Some(model) => (model, Nothing)
+    | None => (model, RemoveLastWasBlocked)
     }
 
   | Command(NextEditor) => (nextEditor(model), Nothing)

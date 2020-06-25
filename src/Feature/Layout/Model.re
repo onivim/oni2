@@ -255,9 +255,60 @@ let previousEditor = updateActiveGroup(Group.previousEditor);
 
 let openEditor = editor => updateActiveGroup(Group.openEditor(editor));
 
+let removeLayoutTab = (index, model) => {
+  let left = Base.List.take(model.layouts, index);
+  let right = Base.List.drop(model.layouts, index + 1);
+  let layouts = left @ right;
+
+  if (layouts == []) {
+    None;
+  } else {
+    Some({
+      layouts,
+      activeLayoutIndex:
+        min(model.activeLayoutIndex, List.length(layouts) - 1),
+    });
+  };
+};
+
 let removeEditor = (editorId, model) => {
-  let layout = activeLayout(model);
-  let return = newLayout =>
+  let removeFromLayout = layout => {
+    let groups =
+      List.filter_map(
+        (group: Group.t) =>
+          group.id == layout.activeGroupId
+            ? Group.removeEditor(editorId, group) : Some(group),
+        layout.groups,
+      );
+
+    if (groups == []) {
+      None; // Group was removed, no groups left. Abort! Abort!
+    } else if (List.length(groups) != List.length(layout.groups)) {
+      // Group was removed, remove from tree and make another active
+
+      let tree =
+        Layout.removeWindow(layout.activeGroupId, activeTree(layout));
+
+      let activeGroupId =
+        switch (
+          ListEx.findIndex(
+            (g: Group.t) => g.id == layout.activeGroupId,
+            layout.groups,
+          )
+        ) {
+        | Some(0) => List.hd(groups).id
+        | Some(i) => List.nth(groups, i - 1).id
+        | None => layout.activeGroupId
+        };
+
+      Some({...layout, tree, groups, activeGroupId});
+    } else {
+      Some({...layout, groups});
+    };
+  };
+
+  switch (removeFromLayout(activeLayout(model))) {
+  | Some(newLayout) =>
     Some({
       ...model,
       layouts:
@@ -265,38 +316,9 @@ let removeEditor = (editorId, model) => {
           (i, layout) => i == model.activeLayoutIndex ? newLayout : layout,
           model.layouts,
         ),
-    });
+    })
 
-  let groups =
-    List.filter_map(
-      (group: Group.t) =>
-        group.id == layout.activeGroupId
-          ? Group.removeEditor(editorId, group) : Some(group),
-      layout.groups,
-    );
-
-  if (groups == []) {
-    None; // Group was removed, no groups left. Abort! Abort!
-  } else if (List.length(groups) != List.length(layout.groups)) {
-    // Group was removed, remove from tree and make another active
-
-    let tree = Layout.removeWindow(layout.activeGroupId, activeTree(layout));
-
-    let activeGroupId =
-      switch (
-        ListEx.findIndex(
-          (g: Group.t) => g.id == layout.activeGroupId,
-          layout.groups,
-        )
-      ) {
-      | Some(0) => List.hd(groups).id
-      | Some(i) => List.nth(groups, i - 1).id
-      | None => layout.activeGroupId
-      };
-
-    return({...layout, tree, groups, activeGroupId});
-  } else {
-    return({...layout, groups});
+  | None => removeLayoutTab(model.activeLayoutIndex, model)
   };
 };
 
