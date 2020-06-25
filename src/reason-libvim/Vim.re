@@ -36,8 +36,6 @@ module GlobalState = {
       ),
     ) =
     ref(None);
-  let onTypeAutoIndent: ref(option(string => AutoIndent.action)) =
-    ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
 };
 
