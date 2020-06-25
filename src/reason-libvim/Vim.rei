@@ -44,7 +44,7 @@ module Context: {
       (~previousLine: string, ~beforePreviousLine: option(string)) =>
       AutoIndent.action,
     // Auto-indentation engaged when the user is typing.
-    onTypeAutoIndent: (string) => AutoIndent.action,
+    onTypeAutoIndent: string => AutoIndent.action,
     bufferId: int,
     width: int,
     height: int,

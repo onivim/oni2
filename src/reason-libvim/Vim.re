@@ -36,7 +36,8 @@ module GlobalState = {
       ),
     ) =
     ref(None);
-  let onTypeAutoIndent: ref(option(string => AutoIndent.action)) = ref(None);
+  let onTypeAutoIndent: ref(option(string => AutoIndent.action)) =
+    ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
 };
 
@@ -433,7 +434,7 @@ let init = () => {
 };
 
 let input = (~context=Context.current(), v: string) => {
-  let {autoClosingPairs, cursors, _}: Context.t = context;
+  let {autoClosingPairs, cursors, onTypeAutoIndent, _}: Context.t = context;
   runWith(
     ~context,
     () => {
@@ -444,6 +445,9 @@ let input = (~context=Context.current(), v: string) => {
         if (Mode.getCurrent() == Types.Insert) {
           let location = Cursor.getLocation();
           let line = Buffer.getLine(Buffer.getCurrent(), location.line);
+
+          let beforeLineNumber = location.line;
+          let beforeIndentAction = context.onTypeAutoIndent(line);
 
           let isBetweenClosingPairs = () => {
             AutoClosingPairs.isBetweenClosingPairs(
@@ -496,6 +500,20 @@ let input = (~context=Context.current(), v: string) => {
             Native.vimInput("<LEFT>");
           } else {
             Native.vimInput(v);
+            // If we're still in insert mode, and still on the same line, check the onTypeAutoIndent for adjustments
+            let afterLineNumber = location.line;
+            let afterLine =
+              Buffer.getLine(Buffer.getCurrent(), location.line);
+            let afterIndentAction = onTypeAutoIndent(afterLine);
+
+            if (afterLineNumber == beforeLineNumber
+                && afterIndentAction != beforeIndentAction) {
+              if (afterIndentAction == AutoIndent.IncreaseIndent) {
+                Native.vimInput("<C-T>");
+              } else if (afterIndentAction == AutoIndent.DecreaseIndent) {
+                Native.vimInput("<C-D>");
+              };
+            };
           };
         } else {
           Native.vimInput(v);

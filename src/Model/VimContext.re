@@ -117,7 +117,7 @@ let current = (state: State.t) => {
 
   Vim.Context.{
     onOpenAutoIndent,
-    onTypeAutoIndent:(_) => Vim.AutoIndent.KeepIndent,
+    onTypeAutoIndent: _ => Vim.AutoIndent.KeepIndent,
     bufferId,
     leftColumn,
     topLine,
