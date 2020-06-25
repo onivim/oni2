@@ -752,4 +752,7 @@ module Contributions = {
       previousLayout,
       nextLayout,
     ];
+
+  let configuration =
+    Configuration.[showLayoutTabs.spec, layoutTabPosition.spec];
 };

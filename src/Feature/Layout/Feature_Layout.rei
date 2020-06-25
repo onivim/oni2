@@ -61,8 +61,7 @@ module View: {
       ~model: model,
       ~isZenMode: bool,
       ~showTabs: bool,
-      ~showLayoutTabs: bool,
-      ~layoutTabPosition: [ | `Top | `Bottom],
+      ~config: Config.resolver,
       ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
@@ -117,4 +116,7 @@ module Commands: {
 
 // CONTRIBUTIONS
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
+};

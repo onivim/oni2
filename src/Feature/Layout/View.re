@@ -1,5 +1,6 @@
 module Local = {
   module Layout = Layout;
+  module Configuration = Configuration;
 };
 open Revery;
 open Revery.UI;
@@ -537,8 +538,7 @@ let make =
       ~model,
       ~isZenMode,
       ~showTabs,
-      ~showLayoutTabs,
-      ~layoutTabPosition,
+      ~config,
       ~uiFont,
       ~theme,
       ~dispatch,
@@ -555,7 +555,15 @@ let make =
       dispatch
     />;
 
-  if (showLayoutTabs && List.length(model.layouts) > 1) {
+  let showLayoutTabs =
+    switch (Local.Configuration.showLayoutTabs.get(config)) {
+    | `always => true
+    | `smart when List.length(model.layouts) > 1 => true
+    | `smart
+    | `off => false
+    };
+
+  if (showLayoutTabs) {
     module ContentModel = (val provider);
 
     let tabs =
@@ -598,9 +606,9 @@ let make =
         }}
       </Tabs>;
 
-    switch (layoutTabPosition) {
-    | `Top => <View style=Styles.editorContainer> tabs activeLayout </View>
-    | `Bottom => <View style=Styles.editorContainer> activeLayout tabs </View>
+    switch (Local.Configuration.layoutTabPosition.get(config)) {
+    | `top => <View style=Styles.editorContainer> tabs activeLayout </View>
+    | `bottom => <View style=Styles.editorContainer> activeLayout tabs </View>
     };
   } else {
     activeLayout;
