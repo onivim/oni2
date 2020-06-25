@@ -37,7 +37,7 @@ module type ContentModel = {
 let make =
     (
       ~provider as module ContentModel: ContentModel,
-      ~showTabs=true,
+      ~showTabs,
       ~uiFont,
       ~theme,
       ~isActive,
