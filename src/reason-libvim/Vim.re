@@ -88,6 +88,24 @@ module Internal = {
 
     String.sub(str, 0, lastWhitespaceIndex);
   };
+
+  let getPrecedingWhitespaceCount = (~max: int, str) => {
+    let len = String.length(str);
+
+    let rec loop = (idx, count) =>
+      if (idx >= max || idx >= len) {
+        count;
+      } else {
+        let c = str.[idx];
+        if (c == ' ' || c == '\t') {
+          loop(idx + 1, count + 1);
+        } else {
+          count;
+        };
+      };
+
+    loop(0, 0);
+  };
 };
 
 let queue = f =>
@@ -323,7 +341,7 @@ let _onFormat = formatRequest => {
   );
 };
 
-let _onAutoIndent = (lnum: int, _prevLine: string) => {
+let _onAutoIndent = (lnum: int, sourceLine: string) => {
   let buf = Buffer.getCurrent();
   let lineCount = Buffer.getLineCount(buf);
 
@@ -347,10 +365,31 @@ let _onAutoIndent = (lnum: int, _prevLine: string) => {
     |> Option.map(fn => fn(~previousLine=beforeLine, ~beforePreviousLine))
     |> Option.value(~default=AutoIndent.KeepIndent);
 
+  // A note about [sourceLine]:
+  // This line could be the previous line (in the case of <CR> or `o`),
+  // or it could be the line _after_ the current line (in the case of `O`).
+  // The current indentation comes from the source line, which causes some
+  // challenge, as the auto-indent rules are based on the previous two lines -
+  let aboveWhitespace =
+    Internal.getPrecedingWhitespaceCount(~max=100, beforeLine);
+  let afterWhitespace =
+    Internal.getPrecedingWhitespaceCount(~max=100, sourceLine);
+
+  // The [indentOffset] is computed to offset the difference between the previous line and source line,
+  // to normalize the indentation provided by the callback function.
+  let indentOffset =
+    if (aboveWhitespace > afterWhitespace) {
+      1;
+    } else if (aboveWhitespace < afterWhitespace) {
+      (-1);
+    } else {
+      0;
+    };
+
   switch (indentAction) {
-  | AutoIndent.IncreaseIndent => 1
-  | AutoIndent.KeepIndent => 0
-  | AutoIndent.DecreaseIndent => (-1)
+  | AutoIndent.IncreaseIndent => 1 + indentOffset
+  | AutoIndent.KeepIndent => 0 + indentOffset
+  | AutoIndent.DecreaseIndent => (-1) + indentOffset
   };
 };
 

@@ -5,6 +5,9 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 
+let resetBufferIndent2Spaces = () =>
+  Helpers.resetBuffer("test/reason-libvim/indent-two-spaces.txt");
+
 let input = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
   ignore(
     Vim.input(
@@ -116,6 +119,46 @@ describe("AutoIndent", ({test, _}) => {
       beforePrevRef^,
       Some("This is the second line of a test file"),
     );
+  });
+
+  test("open before indented line, keep indent", ({expect, _}) => {
+    let buffer = resetBufferIndent2Spaces();
+
+    let input = input(~insertSpaces=true, ~autoIndent=keepIndent);
+    // Go to second line
+    input("j");
+    input("O");
+    input("a");
+
+    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    expect.string(line).toEqual("a");
+  });
+
+  test("open before indented line, indent", ({expect, _}) => {
+    let buffer = resetBufferIndent2Spaces();
+
+    let input = input(~insertSpaces=true, ~autoIndent=increaseIndent);
+    // Go to second line
+    input("j");
+    input("O");
+    input("a");
+
+    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    expect.string(line).toEqual("  a");
+  });
+
+  test("open before indented line, un-indent", ({expect, _}) => {
+    let buffer = resetBufferIndent2Spaces();
+
+    let input = input(~insertSpaces=true, ~autoIndent=decreaseIndent);
+    // Go to second line
+    input("j");
+    input("j");
+    input("O");
+    input("a");
+
+    let line = Buffer.getLine(buffer, Index.(zero + 2));
+    expect.string(line).toEqual("a");
   });
 
   test("open before line", ({expect, _}) => {
