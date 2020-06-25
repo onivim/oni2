@@ -38,9 +38,13 @@ module AutoIndent: {
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
-    autoIndent:
+    // Auto-indentation engaged when a new line is entered,
+    // via `o`, `O`, `<CR>`, etc.
+    onOpenAutoIndent:
       (~previousLine: string, ~beforePreviousLine: option(string)) =>
       AutoIndent.action,
+    // Auto-indentation engaged when the user is typing.
+    onTypeAutoIndent: (string) => AutoIndent.action,
     bufferId: int,
     width: int,
     height: int,

@@ -28,7 +28,7 @@ module Window = Window;
 module Yank = Yank;
 
 module GlobalState = {
-  let autoIndent:
+  let onOpenAutoIndent:
     ref(
       option(
         (~previousLine: string, ~beforePreviousLine: option(string)) =>
@@ -36,6 +36,7 @@ module GlobalState = {
       ),
     ) =
     ref(None);
+  let onTypeAutoIndent: ref(option(string => AutoIndent.action)) = ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
 };
 
@@ -155,11 +156,11 @@ let runWith = (~context: Context.t, f) => {
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
-  GlobalState.autoIndent := Some(context.autoIndent);
+  GlobalState.onOpenAutoIndent := Some(context.onOpenAutoIndent);
 
   let cursors = f();
 
-  GlobalState.autoIndent := None;
+  GlobalState.onOpenAutoIndent := None;
 
   let newBuf = Buffer.getCurrent();
   let newLocation = Cursor.getLocation();
@@ -361,7 +362,7 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
     };
 
   let indentAction =
-    GlobalState.autoIndent^
+    GlobalState.onOpenAutoIndent^
     |> Option.map(fn => fn(~previousLine=beforeLine, ~beforePreviousLine))
     |> Option.value(~default=AutoIndent.KeepIndent);
 

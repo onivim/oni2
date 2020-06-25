@@ -11,7 +11,7 @@ let resetBufferIndent2Spaces = () =>
 let input = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
   ignore(
     Vim.input(
-      ~context={...Context.current(), insertSpaces, tabSize, autoIndent},
+      ~context={...Context.current(), insertSpaces, tabSize, onOpenAutoIndent:autoIndent},
       s,
     ): Context.t,
   );

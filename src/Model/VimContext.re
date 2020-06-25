@@ -81,7 +81,7 @@ let current = (state: State.t) => {
     };
 
   // TODO: Hook up to Vim context
-  let autoIndent =
+  let onOpenAutoIndent =
     maybeLanguageConfig
     |> Option.map(LanguageConfiguration.toAutoIndent)
     |> Option.value(~default=(~previousLine as _, ~beforePreviousLine as _) =>
@@ -116,7 +116,8 @@ let current = (state: State.t) => {
   let insertSpaces = indentation.mode == Spaces;
 
   Vim.Context.{
-    autoIndent,
+    onOpenAutoIndent,
+    onTypeAutoIndent:(_) => Vim.AutoIndent.KeepIndent,
     bufferId,
     leftColumn,
     topLine,
