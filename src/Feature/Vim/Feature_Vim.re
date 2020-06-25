@@ -43,15 +43,23 @@ module CommandLine = {
     };
   };
 
-  let%test "empty command line returns None" = {
-    getCompletionMeet(~byteIndex=0, "") == None;
-  };
+ let%test "empty command line returns None" = {
+   getCompletionMeet(~byteIndex=0, "") == None
+ };
+ 
+ let%test "meet before command" = {
+   getCompletionMeet(~byteIndex=3, "vsp") == Some(0)
+ };
 
-  let%test "meet before command" = {
-    getCompletionMeet(~byteIndex=3, "vsp") == Some(0);
-  };
+ let%test "meet after command" = {
+   getCompletionMeet(~byteIndex=4, "vsp ") == Some(4)
+ };
 
-  let%test "meet after command" = {
-    getCompletionMeet(~byteIndex=4, "vsp ") == Some(4);
-  };
+ let%test "meet with a path, no spaces" = {
+   getCompletionMeet(~byteIndex=4, "vsp /path/") == Some(4)
+ };
+
+ let%test "meet with a path, spaces" = {
+   getCompletionMeet(~byteIndex=4, "vsp /path with spaces/") == Some(4)
+ };
 };
