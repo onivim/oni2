@@ -139,7 +139,7 @@ let update = (~focus, model, msg) => {
       let model = {
         layouts: left @ right,
         activeLayoutIndex:
-          index < model.activeLayoutIndex
+          index <= model.activeLayoutIndex
             ? model.activeLayoutIndex - 1 : model.activeLayoutIndex,
       };
       (model, Nothing);
