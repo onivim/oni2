@@ -463,12 +463,7 @@ let start =
           | Some(v) => v
           | None => ""
           };
-        let position = Vim.CommandLine.getPosition();
-        let meet =
-          Feature_Vim.CommandLine.getCompletionMeet(
-            ~byteIndex=position,
-            commandLine,
-          );
+        let meet = Feature_Vim.CommandLine.getCompletionMeet(text);
         lastCompletionMeet := meet;
 
         isCompleting^ ? () : checkCommandLineCompletions();
@@ -641,7 +636,6 @@ let start =
           currentPos := Vim.CommandLine.getPosition();
         };
 
-        let completion = Path.trimTrailingSeparator(completion);
         let latestContext: Vim.Context.t = Core.VimEx.inputString(completion);
         updateActiveEditorCursors(latestContext.cursors);
         isCompleting := false;
