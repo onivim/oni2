@@ -49,7 +49,7 @@ let schedulePostRender = f => postRenderQueue := [f, ...postRenderQueue^];
 let component = React.Expert.component("Tabs");
 let make =
     (
-      ~children as render: (~isSelected: bool, int, 'a) => element,
+      ~children as render: (~isSelected: bool, ~index: int, 'a) => element,
       ~items: list('a),
       ~selectedIndex: option(int),
       ~style,
@@ -118,7 +118,7 @@ let make =
         style=outerStyle>
         <View onDimensionsChanged=postRender style=innerStyle>
           {List.mapi(
-             i => render(~isSelected=Some(i) == selectedIndex, i),
+             index => render(~isSelected=Some(index) == selectedIndex, ~index),
              items,
            )
            |> React.listToElement}

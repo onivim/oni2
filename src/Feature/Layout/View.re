@@ -291,7 +291,7 @@ module EditorGroupView = {
               ),
             ]
             selectedIndex={ListEx.findIndex(isSelected, editors)}>
-            ...{(~isSelected, _, item) => {
+            ...{(~isSelected, ~index as _, item) => {
               <Tab
                 uiFont
                 theme
@@ -575,7 +575,7 @@ let make =
           ),
         ]
         selectedIndex={Some(model.activeLayoutIndex)}>
-        ...{(~isSelected, index, layout) => {
+        ...{(~isSelected, ~index, layout) => {
           let groupCount = List.length(layout.groups);
           let activeGroup =
             List.find(
