@@ -563,7 +563,7 @@ let make =
     | `off => false
     };
 
-  if (showLayoutTabs) {
+  if (showLayoutTabs && !isZenMode) {
     module ContentModel = (val provider);
 
     let tabs =
