@@ -66,8 +66,6 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
 };
 
 int onGoto(gotoRequest_T gotoInfo) {
-  CAMLparam0();
-  CAMLlocal1(target);
   static const value *lv_onGoto = NULL;
 
   if (lv_onGoto == NULL) {
@@ -76,26 +74,60 @@ int onGoto(gotoRequest_T gotoInfo) {
 
   int line = gotoInfo.location.lnum;
   int col = gotoInfo.location.col;
+  int target = 0;
   switch (gotoInfo.target) {
   case DEFINITION:
-    target = Val_int(0);
+    target = 0;
     break;
   case DECLARATION:
-    target = Val_int(1);
+    target = 1;
     break;
   case HOVER:
-    target = Val_int(2);
-    break;
-  case TABPAGE:
-    target = caml_alloc(1, 0);
-    Store_field(target, 0, Val_int(gotoInfo.count));
+    target = 2;
     break;
   default:
-    target = Val_int(0);
+    target = 0;
   }
 
-  caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), target);
-  CAMLreturn(0);
+  caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), Val_int(target));
+}
+
+int onTabPage(tabPageRequest_T request) {
+  CAMLparam0();
+  CAMLlocal1(msg);
+  static const value *tabPageCallback = NULL;
+
+  if (tabPageCallback == NULL) {
+    tabPageCallback = caml_named_value("lv_onTabPage");
+  }
+
+  switch (request.kind) {
+  case GOTO:
+    msg = caml_alloc(1, 0);
+    Store_field(msg, 0, Val_int(request.arg));
+    break;
+    
+  case PREVIOUS:
+    msg = caml_alloc(1, 1);
+    Store_field(msg, 0, Val_int(request.arg));
+    break;
+    
+  case NEXT:
+    msg = Val_int(0);
+    break;
+    
+  case MOVE:
+    msg = caml_alloc(1, 2);
+    Store_field(msg, 0, Val_int(request.arg));
+    break;
+  
+  case CLOSE:
+    msg = Val_int(1);
+    break;
+  }
+
+  caml_callback(*tabPageCallback, msg);
+  CAMLreturn(1);
 }
 
 void onAutocommand(event_T event, buf_T *buf) {
@@ -407,6 +439,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetDisplayVersionCallback(&onVersion);
   vimSetFormatCallback(&onFormat);
   vimSetGotoCallback(&onGoto);
+  vimSetTabPageCallback(&onTabPage);
   vimSetMessageCallback(&onMessage);
   vimSetQuitCallback(&onQuit);
   vimSetTerminalCallback(&onTerminal);

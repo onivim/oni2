@@ -115,17 +115,22 @@ let start =
       Option.map(getDefinition, maybeBuffer)
       |> Option.join
       |> Option.iter(action => dispatch(action));
-
-    | Vim.Goto.TabPage(count) =>
-      let delta = count == 0 ? 1 : count;
-      dispatch(GotoTabPage(delta));
     };
   };
+
+  let handleTabPage =
+    fun
+    | Vim.TabPage.Goto(index) => dispatch(TabPageGoto(index))
+    | Vim.TabPage.Previous(count) => dispatch(TabPagePrevious(count))
+    | Vim.TabPage.Next => dispatch(TabPageNext)
+    | Vim.TabPage.Move(index) => dispatch(TabPageMove(index))
+    | Vim.TabPage.Close => dispatch(TabPageClose);
 
   let _: unit => unit =
     Vim.onEffect(
       fun
       | Goto(gotoType) => handleGoto(gotoType)
+      | TabPage(msg) => handleTabPage(msg)
       | Format(Buffer(_)) =>
         dispatch(
           Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
@@ -972,11 +977,24 @@ let start =
       | _ => (state, Isolinear.Effect.none)
       }
 
-    | GotoTabPage(delta) => (
+    | TabPageGoto(index) => (
         {
           ...state,
-          layout: Feature_Layout.gotoLayoutTab(~delta, state.layout),
+          layout: Feature_Layout.gotoLayoutTab(index - 1, state.layout),
         },
+        Isolinear.Effect.none,
+      )
+
+    | TabPagePrevious(count) => (
+        {
+          ...state,
+          layout: Feature_Layout.previousLayoutTab(~count, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPageNext => (
+        {...state, layout: Feature_Layout.nextLayoutTab(state.layout)},
         Isolinear.Effect.none,
       )
 
