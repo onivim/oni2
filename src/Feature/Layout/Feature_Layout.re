@@ -14,7 +14,7 @@ type msg = Msg.t;
 type outmsg =
   | Nothing
   | SplitAdded
-  | RemoveLastBlocked
+  | RemoveLastWasBlocked
   | Focus(panel);
 
 open {
@@ -121,7 +121,7 @@ let update = (~focus, model, msg) => {
   | EditorCloseButtonClicked(id) =>
     switch (removeEditor(id, model)) {
     | Some(model) => (model, Nothing)
-    | None => (model, RemoveLastBlocked)
+    | None => (model, RemoveLastWasBlocked)
     }
 
   | LayoutTabClicked(index) => (
@@ -131,7 +131,7 @@ let update = (~focus, model, msg) => {
 
   | LayoutCloseButtonClicked(index) =>
     if (List.length(model.layouts) == 1) {
-      (model, RemoveLastBlocked);
+      (model, RemoveLastWasBlocked);
     } else {
       let left = Base.List.take(model.layouts, index);
       let right = Base.List.drop(model.layouts, index + 1);
@@ -156,7 +156,7 @@ let update = (~focus, model, msg) => {
   | Command(CloseActiveEditor) =>
     switch (removeActiveEditor(model)) {
     | Some(model) => (model, Nothing)
-    | None => (model, RemoveLastBlocked)
+    | None => (model, RemoveLastWasBlocked)
     }
 
   | Command(MoveLeft) =>

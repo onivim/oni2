@@ -34,7 +34,7 @@ type msg;
 type outmsg =
   | Nothing
   | SplitAdded
-  | RemoveLastBlocked
+  | RemoveLastWasBlocked
   | Focus(panel);
 
 let update: (~focus: option(panel), model, msg) => (model, outmsg);
