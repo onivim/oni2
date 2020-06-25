@@ -89,6 +89,26 @@ module Internal = {
     String.sub(str, 0, lastWhitespaceIndex);
   };
 
+  let isEmpty = (~max: int, str) => {
+    let len = String.length(str);
+
+    let rec loop = idx =>
+      if (idx >= max) {
+        false;
+      } else if (idx >= len) {
+        true;
+      } else {
+        let c = str.[idx];
+        if (c == ' ' || c == '\t') {
+          loop(idx + 1);
+        } else {
+          false;
+        };
+      };
+
+    loop(0);
+  };
+
   let getPrecedingWhitespaceCount = (~max: int, str) => {
     let len = String.length(str);
 
@@ -375,12 +395,14 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
   let afterWhitespace =
     Internal.getPrecedingWhitespaceCount(~max=100, sourceLine);
 
+  let isPreviousLineEmpty = Internal.isEmpty(~max=100, beforeLine);
+
   // The [indentOffset] is computed to offset the difference between the previous line and source line,
   // to normalize the indentation provided by the callback function.
   let indentOffset =
-    if (aboveWhitespace > afterWhitespace) {
+    if (!isPreviousLineEmpty && aboveWhitespace > afterWhitespace) {
       1;
-    } else if (aboveWhitespace < afterWhitespace) {
+    } else if (!isPreviousLineEmpty && aboveWhitespace < afterWhitespace) {
       (-1);
     } else {
       0;
