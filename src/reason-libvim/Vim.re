@@ -504,6 +504,7 @@ let input = (~context=Context.current(), v: string) => {
             if (String.length(precedingWhitespace) > 0) {
               Native.vimInput(precedingWhitespace);
             };
+            
             Native.vimInput("<TAB>");
           } else if (AutoClosingPairs.isPassThrough(
                        v,
@@ -523,7 +524,7 @@ let input = (~context=Context.current(), v: string) => {
             // If we're still in insert mode, and still on the same line, check the onTypeAutoIndent for adjustments
             let afterLineNumber = Cursor.getLocation().line;
             let afterLine =
-              Buffer.getLine(Buffer.getCurrent(), location.line);
+              Buffer.getLine(Buffer.getCurrent(), afterLineNumber);
             let afterIndentAction = onTypeAutoIndent(afterLine);
 
             if (afterLineNumber == beforeLineNumber
