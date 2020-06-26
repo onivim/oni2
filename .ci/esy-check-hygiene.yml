@@ -4,8 +4,8 @@ steps:
   - task: NodeTool@0
     inputs:
       versionSpec: "12.17.0"
-  - script: npm install -g esy@0.6.4
-    displayName: 'npm install -g esy@0.6.4'
+  - script: npm install -g esy@0.6.5
+    displayName: 'npm install -g esy@0.6.5'
   - script: npm install -g yarn
     displayName: 'npm install -g yarn'
   - script: npm install -g prettier
