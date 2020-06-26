@@ -227,7 +227,8 @@ type t =
   | TabPagePrevious(int)
   | TabPageNext
   | TabPageMove(int)
-  | TabPageClose
+  | TabPageClose(int)
+  | TabPageCloseActive
   | Noop
 and command = {
   commandCategory: option(string),

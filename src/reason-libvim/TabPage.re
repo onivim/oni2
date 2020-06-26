@@ -3,4 +3,4 @@ type effect =
   | Previous(int)
   | Next
   | Move(int)
-  | Close;
+  | Close(int);

@@ -122,7 +122,8 @@ int onTabPage(tabPageRequest_T request) {
     break;
   
   case CLOSE:
-    msg = Val_int(1);
+    msg = caml_alloc(1, 3);
+    Store_field(msg, 0, Val_int(request.arg));
     break;
   }
 

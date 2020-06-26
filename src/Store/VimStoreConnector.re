@@ -120,11 +120,16 @@ let start =
 
   let handleTabPage =
     fun
-    | Vim.TabPage.Goto(index) => dispatch(TabPageGoto(index))
+    | Vim.TabPage.Goto(index) => dispatch(TabPageGoto(index - 1))
     | Vim.TabPage.Previous(count) => dispatch(TabPagePrevious(count))
     | Vim.TabPage.Next => dispatch(TabPageNext)
-    | Vim.TabPage.Move(index) => dispatch(TabPageMove(index))
-    | Vim.TabPage.Close => dispatch(TabPageClose);
+    | Vim.TabPage.Move(index) => dispatch(TabPageMove(index - 1))
+    | Vim.TabPage.Close(index) =>
+      if (index == 0) {
+        dispatch(TabPageCloseActive);
+      } else {
+        dispatch(TabPageClose(index - 1));
+      };
 
   let _: unit => unit =
     Vim.onEffect(
@@ -980,7 +985,7 @@ let start =
     | TabPageGoto(index) => (
         {
           ...state,
-          layout: Feature_Layout.gotoLayoutTab(index - 1, state.layout),
+          layout: Feature_Layout.gotoLayoutTab(index, state.layout),
         },
         Isolinear.Effect.none,
       )
@@ -998,7 +1003,13 @@ let start =
         Isolinear.Effect.none,
       )
 
-    | TabPageClose =>
+    | TabPageClose(index) =>
+      switch (Feature_Layout.removeLayoutTab(index, state.layout)) {
+      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
+      | None => (state, Isolinear.Effect.none)
+      }
+
+    | TabPageCloseActive =>
       switch (Feature_Layout.removeActiveLayoutTab(state.layout)) {
       | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
       | None => (state, Isolinear.Effect.none)
