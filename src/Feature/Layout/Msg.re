@@ -1,7 +1,7 @@
 [@deriving show({with_path: false})]
 type command =
-  | NextEditor
   | PreviousEditor
+  | NextEditor
   | SplitVertical
   | SplitHorizontal
   | CloseActiveEditor
@@ -23,7 +23,10 @@ type command =
   | MaximizeHorizontal
   | MaximizeVertical
   | ToggleMaximize
-  | ResetSizes;
+  | ResetSizes
+  | AddLayout
+  | PreviousLayout
+  | NextLayout;
 
 [@deriving show({with_path: false})]
 type t =
@@ -35,4 +38,6 @@ type t =
   | GroupTabClicked(int)
   | GroupSelected(int)
   | EditorCloseButtonClicked(int)
+  | LayoutTabClicked(int)
+  | LayoutCloseButtonClicked(int)
   | Command(command);
