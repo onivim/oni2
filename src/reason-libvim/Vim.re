@@ -504,7 +504,7 @@ let input = (~context=Context.current(), v: string) => {
             if (String.length(precedingWhitespace) > 0) {
               Native.vimInput(precedingWhitespace);
             };
-            
+
             Native.vimInput("<TAB>");
           } else if (AutoClosingPairs.isPassThrough(
                        v,
