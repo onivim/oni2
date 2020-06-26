@@ -6,8 +6,8 @@ open Oni_Core;
 open Utility;
 
 module Constants = {
-  let itemsPerFrame = 250;
-  let maxItemsToFilter = 250;
+  let itemsPerFrame = 1000;
+  let maxItemsToFilter = 1000;
 };
 
 module type Config = {
@@ -83,6 +83,7 @@ module Make = (Config: Config) => {
     let currentMatches = ListEx.firstk(Constants.maxItemsToFilter, filtered);
 
     // If the new query matches the old one... we can re-use results
+    // TODO: This breaks new queries! The letter highlights will be wrong.
     if (pending.filter != ""
         && Filter.fuzzyMatches(oldExplodedFilter, filter)
         && List.length(currentMatches) < Constants.maxItemsToFilter) {
@@ -141,16 +142,22 @@ module Make = (Config: Config) => {
   let doActualWork =
       (
         {queue, shouldLower, filter, explodedFilter, _} as pendingWork: PendingWork.t,
-        {filtered, ranked}: CompletedWork.t,
+        {ranked, _}: CompletedWork.t,
       ) => {
     // Take out the items to process this frame
     let (items, queue) = Queue.take(Constants.itemsPerFrame, queue);
 
+    // TODO: Understand why this is needed.
+    let filtered = items;
+
     // Rank a limited nuumber of filtered items
+    // TODO: Should the mergeSortedList include a limit? Faster to quick return
+    // rather than merge then stop.
     let ranked =
       items
       |> Filter.rank(filter, format)
-      |> ListEx.mergeSortedList(compareItems, ranked);
+      |> ListEx.mergeSortedList(compareItems, ranked)
+      |> ListEx.firstk(Constants.maxItemsToFilter);
 
     (
       Queue.isEmpty(queue),

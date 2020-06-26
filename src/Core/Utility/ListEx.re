@@ -84,9 +84,15 @@ let rec mergeSortedList = (compareItems, primary, secondary) => {
   | ([], _) => secondary
   | ([headPrimary, ...restPrimary], [headSecondary, ...restSecondary]) =>
     if (compareItems(headPrimary, headSecondary) >= 0) {
-      [headPrimary, ...mergeSortedList(compareItems, restPrimary, secondary)];
+      [
+        headPrimary,
+        ...mergeSortedList(compareItems, restPrimary, secondary),
+      ];
     } else {
-      [headSecondary, ...mergeSortedList(compareItems, primary, restSecondary)];
+      [
+        headSecondary,
+        ...mergeSortedList(compareItems, primary, restSecondary),
+      ];
     }
   };
 };
