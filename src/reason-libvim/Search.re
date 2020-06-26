@@ -24,17 +24,4 @@ let getHighlights = () => {
   getHighlightsInRange(0, 0);
 };
 
-let getMatchingPair = () => {
-  switch (Native.vimSearchGetMatchingPair()) {
-  | Some((line, column)) =>
-    Some(
-      Location.create(
-        ~line=Index.fromOneBased(line),
-        ~column=Index.fromZeroBased(column),
-      ),
-    )
-  | None => None
-  };
-};
-
 let onStopSearchHighlight = f => Event.add(f, Listeners.stopSearchHighlight);

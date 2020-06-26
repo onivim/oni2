@@ -192,7 +192,7 @@ let getPositionAndWidth = (~index: int, bufferLine: t) => {
   let characters = bufferLine.characters;
   let len = Array.length(characters);
 
-  if (index >= len || len == 0) {
+  if (index < 0 || index >= len || len == 0) {
     (bufferLine.nextPosition, 1);
   } else {
     switch (characters[index]) {

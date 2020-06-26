@@ -1,3 +1,6 @@
+open EditorCoreTypes;
+open Oni_Core;
+
 [@deriving show({with_path: false})]
 type t =
   | VerticalScrollbarBeforeTrackClicked({newPixelScrollY: float})
@@ -15,6 +18,13 @@ type t =
   | MinimapMouseWheel({deltaWheel: float})
   | MinimapClicked({viewLine: int})
   | MinimapDragged({newPixelScrollY: float})
-  | EditorMouseWheel({deltaWheel: float})
-  | MouseHovered({location: EditorCoreTypes.Location.t})
-  | MouseMoved({location: EditorCoreTypes.Location.t});
+  | EditorMouseWheel({
+      deltaX: float,
+      deltaY: float,
+    })
+  | MouseHovered({location: Location.t})
+  | MouseMoved({location: Location.t})
+  | SelectionChanged([@opaque] VisualRange.t)
+  | CursorsChanged([@opaque] list(Vim.Cursor.t))
+  | ScrollToLine(int)
+  | ScrollToColumn(int);

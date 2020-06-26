@@ -21,8 +21,6 @@ let reduce: (State.t, Actions.t) => State.t =
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
         definition: DefinitionReducer.reduce(a, s.definition),
-        editorGroups:
-          EditorGroups.reduce(~defaultFont=s.editorFont, s.editorGroups, a),
         extensions: ExtensionsReducer.reduce(a, s.extensions),
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
@@ -31,6 +29,8 @@ let reduce: (State.t, Actions.t) => State.t =
       };
 
       switch (a) {
+      // Turn off zenMode with :vsp/:sp
+      | OpenFileByPath(_, Some(_), _) => {...s, zenMode: false}
       | DiagnosticsSet(buffer, key, diags) => {
           ...s,
           diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),

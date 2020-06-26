@@ -197,7 +197,18 @@ module Vertical = {
   };
 
   let matchingPairMarkers =
-      (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+      (
+        ~matchingPair,
+        ~bufferHighlights,
+        ~totalHeight,
+        ~editor,
+        ~colors: Colors.t,
+        (),
+      ) => {
+    ignore(bufferHighlights);
+    ignore(totalHeight);
+    ignore(editor);
+
     let matchingPairStyle = t =>
       Style.[
         position(`Absolute),
@@ -208,10 +219,7 @@ module Vertical = {
         backgroundColor(colors.overviewRulerBracketMatchForeground),
       ];
 
-    BufferHighlights.getMatchingPair(
-      Editor.getBufferId(editor),
-      bufferHighlights,
-    )
+    matchingPair
     |> Option.map(mp => {
          open Location;
          let (startPos, endPos) = mp;
@@ -310,6 +318,7 @@ module Vertical = {
       (
         ~dispatch: Msg.t => unit,
         ~editor: Editor.t,
+        ~matchingPair: option((Location.t, Location.t)),
         ~cursorPosition: Location.t,
         ~height as totalHeight,
         ~width as totalWidth,
@@ -396,7 +405,13 @@ module Vertical = {
           <View style=Styles.absolute>
             <selectionMarkers totalHeight editor colors />
             <diagnosticMarkers totalHeight editor diagnostics colors />
-            <matchingPairMarkers bufferHighlights editor totalHeight colors />
+            <matchingPairMarkers
+              matchingPair
+              bufferHighlights
+              editor
+              totalHeight
+              colors
+            />
             <searchMarkers bufferHighlights editor totalHeight colors />
           </View>
         </View>

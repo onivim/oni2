@@ -236,7 +236,7 @@
     "esy-sdl2": "*",
     "esy-skia": "*",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.48",
+    "libvim": "8.10869.50",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reason-tree-sitter": "^1.0.1001",
@@ -248,7 +248,7 @@
   },
   "resolutions": {
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#2ee8499",
+    "revery": "revery-ui/revery#464c5b7",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-skia": "revery-ui/esy-skia#d60e5fe",
     "rench": "bryphe/rench#a976fe5",
@@ -269,6 +269,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#a83bd09"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#578749c"
   }
 }

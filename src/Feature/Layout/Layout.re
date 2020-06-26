@@ -490,14 +490,14 @@ let insertWindow = (position, insertDirection, idToInsert, tree) => {
     List.mapi((i, node) => i == index ? newNode : node);
 
   let insertBefore = (i, node, nodes) => {
-    let left = Base.List.take(nodes, i - 1);
-    let right = Base.List.drop(nodes, i - 1);
+    let left = Base.List.take(nodes, i);
+    let right = Base.List.drop(nodes, i);
     left @ [node] @ right;
   };
 
   let insertAfter = (i, node, nodes) => {
-    let left = Base.List.take(nodes, i);
-    let right = Base.List.drop(nodes, i);
+    let left = Base.List.take(nodes, i + 1);
+    let right = Base.List.drop(nodes, i + 1);
     left @ [node] @ right;
   };
 
@@ -535,24 +535,92 @@ let insertWindow = (position, insertDirection, idToInsert, tree) => {
 let%test_module "insertWindow" =
   (module
    {
-     let%test "insert vertical split" = {
+     let%test "window - insert vertical - before" = {
        let actual = window(1) |> insertWindow(`Before(1), `Vertical, 2);
 
        actual == vsplit([window(2), window(1)]);
      };
 
-     let%test "insert vertical split - after" = {
+     let%test "window = insert vertical - after" = {
        let actual = window(1) |> insertWindow(`After(1), `Vertical, 2);
 
        actual == vsplit([window(1), window(2)]);
      };
 
-     let%test "parent split changes direction if needed" = {
-       let actual =
-         hsplit([window(2), window(1)])
-         |> insertWindow(`Before(1), `Vertical, 3);
+     let%test "window - insert horizontal - before" = {
+       let actual = window(1) |> insertWindow(`Before(1), `Horizontal, 2);
 
-       actual == hsplit([window(2), vsplit([window(3), window(1)])]);
+       actual == hsplit([window(2), window(1)]);
+     };
+
+     let%test "window - insert horizontal - after" = {
+       let actual = window(1) |> insertWindow(`After(1), `Horizontal, 2);
+
+       actual == hsplit([window(1), window(2)]);
+     };
+
+     let%test "vsplit - insert vertical - before" = {
+       let actual =
+         vsplit([window(1), window(2)])
+         |> insertWindow(`Before(2), `Vertical, 3);
+
+       actual == vsplit([window(1), window(3), window(2)]);
+     };
+
+     let%test "vsplit = insert vertical - after" = {
+       let actual =
+         vsplit([window(1), window(2)])
+         |> insertWindow(`After(2), `Vertical, 3);
+
+       actual == vsplit([window(1), window(2), window(3)]);
+     };
+
+     let%test "vsplit - insert horizontal - before" = {
+       let actual =
+         vsplit([window(1), window(2)])
+         |> insertWindow(`Before(2), `Horizontal, 3);
+
+       actual == vsplit([window(1), hsplit([window(3), window(2)])]);
+     };
+
+     let%test "vsplit = insert horizontal - after" = {
+       let actual =
+         vsplit([window(1), window(2)])
+         |> insertWindow(`After(2), `Horizontal, 3);
+
+       actual == vsplit([window(1), hsplit([window(2), window(3)])]);
+     };
+
+     let%test "hsplit - insert vertical - before" = {
+       let actual =
+         hsplit([window(1), window(2)])
+         |> insertWindow(`Before(2), `Vertical, 3);
+
+       actual == hsplit([window(1), vsplit([window(3), window(2)])]);
+     };
+
+     let%test "hsplit = insert vertical - after" = {
+       let actual =
+         hsplit([window(1), window(2)])
+         |> insertWindow(`After(2), `Vertical, 3);
+
+       actual == hsplit([window(1), vsplit([window(2), window(3)])]);
+     };
+
+     let%test "hsplit - insert horizontal - before" = {
+       let actual =
+         hsplit([window(1), window(2)])
+         |> insertWindow(`Before(2), `Horizontal, 3);
+
+       actual == hsplit([window(1), window(3), window(2)]);
+     };
+
+     let%test "hsplit = insert horizontal - after" = {
+       let actual =
+         hsplit([window(1), window(2)])
+         |> insertWindow(`After(2), `Horizontal, 3);
+
+       actual == hsplit([window(1), window(2), window(3)]);
      };
    });
 

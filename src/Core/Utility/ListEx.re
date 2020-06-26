@@ -68,3 +68,12 @@ let splice = (~start, ~deleteCount, ~additions, source) => {
 
   loop(0, source, deleteCount, additions, []);
 };
+
+let findIndex = (predicate, list) => {
+  let rec loop = i =>
+    fun
+    | [] => None
+    | [head, ..._] when predicate(head) => Some(i)
+    | [_, ...tail] => loop(i + 1, tail);
+  loop(0, list);
+};

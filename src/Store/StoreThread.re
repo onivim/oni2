@@ -282,19 +282,16 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
-    let visibleEditors =
-      Model.EditorGroups.getAllVisibleEditors(state.editorGroups);
+    let visibleEditors = Feature_Layout.visibleEditors(state.layout);
 
-    let maybeActiveEditor =
-      Model.EditorGroups.getActiveEditor(state.editorGroups);
-    let maybeActiveEditorId =
-      Feature_Editor.(maybeActiveEditor |> Option.map(Editor.getId));
+    let activeEditor = Feature_Layout.activeEditor(state.layout);
+    let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
 
     let extHostSubscription =
       Feature_Exthost.subscription(
         ~buffers=visibleBuffers,
         ~editors=visibleEditors,
-        ~activeEditorId=maybeActiveEditorId,
+        ~activeEditorId=Some(activeEditorId),
         ~client=extHostClient,
       )
       |> Isolinear.Sub.map(() => Model.Actions.Noop);
