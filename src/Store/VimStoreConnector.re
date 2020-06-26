@@ -129,7 +129,9 @@ let start =
         dispatch(TabPageCloseActive);
       } else {
         dispatch(TabPageClose(index - 1));
-      };
+      }
+    | Vim.TabPage.CloseOther(index) =>
+      dispatch(TabPageCloseOther(index - 1));
 
   let _: unit => unit =
     Vim.onEffect(
@@ -1014,6 +1016,17 @@ let start =
       | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
       | None => (state, Isolinear.Effect.none)
       }
+
+    | TabPageCloseOther(index) => (
+        {
+          ...state,
+          layout:
+            state.layout
+            |> Feature_Layout.gotoLayoutTab(index)
+            |> Feature_Layout.removeOtherLayoutTabs,
+        },
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

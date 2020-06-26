@@ -227,7 +227,8 @@ module TabPage: {
     | Previous(int)
     | Next
     | Move(int)
-    | Close(int);
+    | Close(int)
+    | CloseOther(int);
 };
 
 module Format: {

@@ -125,6 +125,11 @@ int onTabPage(tabPageRequest_T request) {
     msg = caml_alloc(1, 3);
     Store_field(msg, 0, Val_int(request.arg));
     break;
+
+  case CLOSE_OTHER:
+    msg = caml_alloc(1, 4);
+    Store_field(msg, 0, Val_int(request.arg));
+    break;
   }
 
   caml_callback(*tabPageCallback, msg);
