@@ -1,3 +1,4 @@
+module BracketMatch = BracketMatch;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
 module Selection = Selection;
@@ -57,9 +58,10 @@ let update = (editor, msg) => {
       Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
       Nothing,
     )
-  | EditorMouseWheel({deltaWheel}) => (
-      Editor.scrollDeltaPixelY(
-        ~pixelY=deltaWheel *. Constants.editorWheelMultiplier,
+  | EditorMouseWheel({deltaX, deltaY}) => (
+      Editor.scrollDeltaPixelXY(
+        ~pixelX=deltaX *. Constants.editorWheelMultiplier,
+        ~pixelY=deltaY *. Constants.editorWheelMultiplier,
         editor,
       ),
       Nothing,

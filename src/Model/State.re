@@ -113,6 +113,7 @@ let initial =
           Feature_Editor.Contributions.configuration,
           Feature_Syntax.Contributions.configuration,
           Feature_Terminal.Contributions.configuration,
+          Feature_Layout.Contributions.configuration,
         ],
       ),
     configuration: Configuration.default,

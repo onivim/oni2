@@ -285,7 +285,7 @@ let update =
 
     | SplitAdded => ({...state, zenMode: false}, Effect.none)
 
-    | RemoveLastBlocked => (state, Internal.quitEffect)
+    | RemoveLastWasBlocked => (state, Internal.quitEffect)
 
     | Nothing => (state, Effect.none)
     };

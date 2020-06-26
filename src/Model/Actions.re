@@ -142,6 +142,9 @@ type t =
       option([ | `Horizontal | `Vertical]),
       option(Location.t),
     )
+  | OpenFileInNewLayout(string)
+  | BufferOpened(string, option(Location.t), int)
+  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
@@ -149,8 +152,6 @@ type t =
   // to quit the app. This gives subscriptions the chance to clean up.
   | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
-  | SearchClearMatchingPair(int)
-  | SearchSetMatchingPair(int, Location.t, Location.t)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)

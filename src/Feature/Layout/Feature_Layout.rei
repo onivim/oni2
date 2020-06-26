@@ -22,6 +22,8 @@ let activeEditor: model => Editor.t;
 let openEditor: (Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
+let addLayoutTab: model => model;
+
 let map: (Editor.t => Editor.t, model) => model;
 
 // UPDATE
@@ -32,31 +34,34 @@ type msg;
 type outmsg =
   | Nothing
   | SplitAdded
-  | RemoveLastBlocked
+  | RemoveLastWasBlocked
   | Focus(panel);
 
 let update: (~focus: option(panel), model, msg) => (model, outmsg);
 
 // VIEW
 
-module type ContentModel = {
-  type t = Editor.t;
-
-  let id: t => int;
-  let title: t => string;
-  let icon: t => option(IconTheme.IconDefinition.t);
-  let isModified: t => bool;
-
-  let render: (~isActive: bool, t) => Revery.UI.element;
-};
-
 module View: {
   open Revery.UI;
+
+  module type ContentModel = {
+    type t = Editor.t;
+
+    let id: t => int;
+    let title: t => string;
+    let icon: t => option(IconTheme.IconDefinition.t);
+    let isModified: t => bool;
+
+    let render: (~isActive: bool, t) => Revery.UI.element;
+  };
 
   let make:
     (
       ~children: (module ContentModel),
       ~model: model,
+      ~isZenMode: bool,
+      ~showTabs: bool,
+      ~config: Config.resolver,
       ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
@@ -103,8 +108,15 @@ module Commands: {
   let maximizeVertical: Command.t(msg);
   let toggleMaximize: Command.t(msg);
   let resetSizes: Command.t(msg);
+
+  let addLayout: Command.t(msg);
+  let previousLayout: Command.t(msg);
+  let nextLayout: Command.t(msg);
 };
 
 // CONTRIBUTIONS
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
+};

@@ -38,6 +38,7 @@ let getLayout:
   ) =>
   EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
+let getCharacterBehindCursor: t => option(Uchar.t);
 let getPrimaryCursor: t => Location.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
@@ -46,6 +47,14 @@ let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getVimCursors: t => list(Vim.Cursor.t);
 let setVimCursors: (~cursors: list(Vim.Cursor.t), t) => t;
+
+let getNearestMatchingPair:
+  (
+    ~location: Location.t,
+    ~pairs: list(LanguageConfiguration.BracketPair.t),
+    t
+  ) =>
+  option((Location.t, Location.t));
 
 let visiblePixelWidth: t => int;
 let visiblePixelHeight: t => int;
@@ -74,6 +83,9 @@ let scrollDeltaPixelX: (~pixelX: float, t) => t;
 let scrollToLine: (~line: int, t) => t;
 let scrollToPixelY: (~pixelY: float, t) => t;
 let scrollDeltaPixelY: (~pixelY: float, t) => t;
+
+let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
+let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
