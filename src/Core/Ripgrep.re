@@ -62,7 +62,8 @@ type t = {
       ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
-      ~onComplete: unit => unit
+      ~onComplete: unit => unit,
+      ~onError: string => unit
     ) =>
     dispose,
   findInFiles:
@@ -70,7 +71,8 @@ type t = {
       ~directory: string,
       ~query: string,
       ~onUpdate: list(Match.t) => unit,
-      ~onComplete: unit => unit
+      ~onComplete: unit => unit,
+      ~onError: string => unit
     ) =>
     dispose,
 }
@@ -87,7 +89,6 @@ and dispose = unit => unit;
 module RipgrepProcessingJob = {
   type pendingWork = {
     onUpdate: list(string) => unit,
-    onComplete: unit => unit,
     queue: Queue.t(Bytes.t),
   };
 
@@ -110,21 +111,17 @@ module RipgrepProcessingJob = {
         queue;
       };
 
-    if (Queue.isEmpty(pending.queue)) {
-      pending.onComplete();
-    };
-
     (Queue.isEmpty(pending.queue), {...pending, queue}, completed);
   };
 
-  let create = (~onUpdate, ~onComplete) => {
+  let create = (~onUpdate) => {
     Job.create(
       ~f=doWork,
       ~initialCompletedWork=(),
       ~name="RipgrepProcessingJob",
       ~pendingWorkPrinter,
       ~budget=Time.ms(2),
-      {onUpdate, onComplete, queue: Queue.empty},
+      {onUpdate, queue: Queue.empty},
     );
   };
 
@@ -139,19 +136,13 @@ module RipgrepProcessingJob = {
   };
 };
 
-let process = (rgPath, args, onUpdate, onComplete) => {
+let process = (rgPath, args, onUpdate, onComplete, onError) => {
   let disposeTick = ref(None);
-
-  let disposeAll = () => {
-    disposeTick^ |> Option.iter(f => f());
-  };
 
   let on_exit = (_, ~exit_status: int64, ~term_signal as _) => {
     Log.debugf(m =>
       m("Process completed - exit code: %n", exit_status |> Int64.to_int)
     );
-    onComplete();
-    disposeAll();
   };
 
   Log.debugf(m =>
@@ -176,29 +167,36 @@ let process = (rgPath, args, onUpdate, onComplete) => {
       rgPath,
       [rgPath, ...args],
     )
+    // TODO: Handle this properly
     |> Result.get_ok;
 
-  let dispose = () => {
-    disposeAll();
+  let job = ref(RipgrepProcessingJob.create(~onUpdate));
+  let isRipgrepProcessDone = ref(false);
+
+  let disposeAll = () => {
+    disposeTick^ |> Option.iter(f => f());
     let _: result(unit, Luv.Error.t) = Luv.Process.kill(process, 2);
+    isRipgrepProcessDone := true;
     ();
   };
-
-  // Mutex to
-  let job = ref(RipgrepProcessingJob.create(~onUpdate, ~onComplete));
 
   Luv.Stream.read_start(
     pipe,
     fun
     | Error(`EOF) => {
-        Log.info("Done!");
+        Log.info("Read pipe done");
         Luv.Handle.close(pipe, ignore);
+        isRipgrepProcessDone := true;
       }
-    | Error(msg) => Log.error(Luv.Error.strerror(msg))
+    | Error(msg) => {
+        disposeAll();
+        let errMsg = msg |> Luv.Error.strerror;
+
+        onError(errMsg);
+      }
     | Ok(buffer) => {
         let bytes = Luv.Buffer.to_bytes(buffer);
         job := RipgrepProcessingJob.queueWork(bytes, job^);
-        Log.info(Luv.Buffer.to_string(buffer));
       },
   );
 
@@ -208,12 +206,15 @@ let process = (rgPath, args, onUpdate, onComplete) => {
         _ =>
           if (!Job.isComplete(job^)) {
             job := Job.tick(job^);
+          } else if (isRipgrepProcessDone^) {
+            onComplete();
+            disposeAll();
           },
         Time.zero,
       ),
     );
 
-  dispose;
+  disposeAll;
 };
 
 /**
@@ -222,7 +223,14 @@ let process = (rgPath, args, onUpdate, onComplete) => {
    path, modified, created
  */
 let search =
-    (~executablePath, ~filesExclude, ~directory, ~onUpdate, ~onComplete) => {
+    (
+      ~executablePath,
+      ~filesExclude,
+      ~directory,
+      ~onUpdate,
+      ~onComplete,
+      ~onError,
+    ) => {
   let dedup = {
     let seen = Hashtbl.create(1000);
 
@@ -249,11 +257,12 @@ let search =
     args,
     items => items |> dedup |> onUpdate,
     onComplete,
+    onError,
   );
 };
 
 let findInFiles =
-    (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete) => {
+    (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete, ~onError) => {
   process(
     executablePath,
     ["--smart-case", "--hidden", "--json", "--", query, directory],
@@ -264,6 +273,7 @@ let findInFiles =
       |> onUpdate
     },
     onComplete,
+    onError,
   );
 };
 

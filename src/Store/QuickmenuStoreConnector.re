@@ -438,6 +438,7 @@ let subscriptions = (ripgrep, dispatch) => {
           dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
         },
       ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
+      ~onError=_ => Actions.Noop,
     );
   };
 
