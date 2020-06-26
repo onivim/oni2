@@ -1,4 +1,5 @@
 open Exthost;
+open Oni_Core;
 
 // A format [session] describes a currently in-progress format request.
 type session = {
@@ -99,6 +100,7 @@ module Internal = {
 
   let runFormat =
       (
+        ~languageConfiguration,
         ~formatFn,
         ~model,
         ~configuration,
@@ -112,33 +114,6 @@ module Internal = {
     let indentation =
       Oni_Core.Indentation.getForBuffer(~buffer=buf, configuration);
 
-    let effects =
-      matchingFormatters
-      |> List.map(formatter =>
-           formatFn(
-             ~handle=formatter.handle,
-             ~uri=Oni_Core.Buffer.getUri(buf),
-             ~options=
-               Exthost.FormattingOptions.{
-                 tabSize: indentation.tabSize,
-                 insertSpaces:
-                   indentation.mode == Oni_Core.IndentationSettings.Spaces,
-               },
-             extHostClient,
-             res => {
-             switch (res) {
-             | Ok(edits) =>
-               EditsReceived({
-                 displayName: formatter.displayName,
-                 sessionId,
-                 edits: List.map(extHostEditToVimEdit, edits),
-               })
-             | Error(msg) => EditRequestFailed({sessionId, msg})
-             }
-           })
-         )
-      |> Isolinear.Effect.batch;
-
     if (matchingFormatters == []) {
       (
         model,
@@ -147,6 +122,33 @@ module Internal = {
         ),
       );
     } else {
+      let effects =
+        matchingFormatters
+        |> List.map(formatter =>
+             formatFn(
+               ~handle=formatter.handle,
+               ~uri=Oni_Core.Buffer.getUri(buf),
+               ~options=
+                 Exthost.FormattingOptions.{
+                   tabSize: indentation.tabSize,
+                   insertSpaces:
+                     indentation.mode == Oni_Core.IndentationSettings.Spaces,
+                 },
+               extHostClient,
+               res => {
+               switch (res) {
+               | Ok(edits) =>
+                 EditsReceived({
+                   displayName: formatter.displayName,
+                   sessionId,
+                   edits: List.map(extHostEditToVimEdit, edits),
+                 })
+               | Error(msg) => EditRequestFailed({sessionId, msg})
+               }
+             })
+           )
+        |> Isolinear.Effect.batch;
+
       (model |> startSession(~sessionId, ~buffer=buf), Effect(effects));
     };
   };
@@ -154,6 +156,8 @@ module Internal = {
 
 let update =
     (
+      // TODO
+      ~languageConfiguration,
       ~configuration,
       ~maybeSelection,
       ~maybeBuffer,
@@ -177,6 +181,7 @@ let update =
            );
 
       Internal.runFormat(
+        ~languageConfiguration,
         ~formatFn=
           Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
             ~range,
@@ -207,6 +212,7 @@ let update =
            );
 
       Internal.runFormat(
+        ~languageConfiguration,
         ~formatFn=Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits,
         ~model,
         ~configuration,

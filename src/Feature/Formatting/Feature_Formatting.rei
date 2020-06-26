@@ -48,6 +48,7 @@ type outmsg =
 
 let update:
   (
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~configuration: Oni_Core.Configuration.t,
     ~maybeSelection: option(Range.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),

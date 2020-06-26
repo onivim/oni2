@@ -47,6 +47,8 @@ let update =
       |> Feature_Editor.Editor.selectionOrCursorRange;
     let (model', eff) =
       Feature_Formatting.update(
+        // TODO:
+        ~languageConfiguration=LanguageConfiguration.default,
         ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=Some(selection),
