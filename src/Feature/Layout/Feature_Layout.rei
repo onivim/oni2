@@ -26,6 +26,7 @@ let addLayoutTab: model => model;
 let gotoLayoutTab: (int, model) => model;
 let previousLayoutTab: (~count: int=?, model) => model;
 let nextLayoutTab: (~count: int=?, model) => model;
+let removeActiveLayoutTab: model => option(model);
 
 let map: (Editor.t => Editor.t, model) => model;
 

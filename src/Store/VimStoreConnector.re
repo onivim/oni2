@@ -998,6 +998,12 @@ let start =
         Isolinear.Effect.none,
       )
 
+    | TabPageClose =>
+      switch (Feature_Layout.removeActiveLayoutTab(state.layout)) {
+      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
+      | None => (state, Isolinear.Effect.none)
+      }
+
     | _ => (state, Isolinear.Effect.none)
     };
   };

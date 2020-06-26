@@ -278,6 +278,9 @@ let removeLayoutTab = (index, model) => {
   };
 };
 
+let removeActiveLayoutTab = model =>
+  removeLayoutTab(model.activeLayoutIndex, model);
+
 let removeEditor = (editorId, model) => {
   let removeFromLayout = layout => {
     let groups =
