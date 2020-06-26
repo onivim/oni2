@@ -23,7 +23,7 @@ let getDefaultConfigString = configName =>
   "editor.minimap.maxColumn": 120,
   "editor.minimap.showSlider": true,
   "editor.renderIndentGuides": true,
-  "editor.renderWhitespace": "all",
+  "editor.renderWhitespace": "none",
   "editor.rulers": [],
   "editor.tabSize": 4,
   "editor.zenMode.hideTabs": true,
