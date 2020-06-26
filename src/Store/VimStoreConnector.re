@@ -1005,6 +1005,14 @@ let start =
         Isolinear.Effect.none,
       )
 
+    | TabPageMove(index) => (
+        {
+          ...state,
+          layout: Feature_Layout.moveActiveLayoutTabTo(index, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
+
     | TabPageClose(index) =>
       switch (Feature_Layout.removeLayoutTab(index, state.layout)) {
       | Some(layout) => ({...state, layout}, Isolinear.Effect.none)

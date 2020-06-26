@@ -77,3 +77,75 @@ let findIndex = (predicate, list) => {
     | [_, ...tail] => loop(i + 1, tail);
   loop(0, list);
 };
+
+/**
+ * removeAt
+ */
+let removeAt = (index, list) => {
+  let left = Base.List.take(list, index);
+  let right = Base.List.drop(list, index + 1);
+  left @ right;
+};
+
+let%test_module "removeAt" =
+  (module
+   {
+     let%test "0" = removeAt(0, [1, 2, 3]) == [2, 3];
+     let%test "1" = removeAt(1, [1, 2, 3]) == [1, 3];
+     let%test "2" = removeAt(2, [1, 2, 3]) == [1, 2];
+     let%test "-10 (out of bounds)" = removeAt(-10, [1, 2, 3]) == [1, 2, 3];
+     let%test "10 (out of bounds)" = removeAt(10, [1, 2, 3]) == [1, 2, 3];
+   });
+
+/**
+ * insertAt
+ */
+let insertAt = (index, element, list) => {
+  let (left, right) = Base.List.split_n(list, index);
+  left @ [element] @ right;
+};
+
+let%test_module "removeAt" =
+  (module
+   {
+     let%test "0" = insertAt(0, 42, [1, 2, 3]) == [42, 1, 2, 3];
+     let%test "1" = insertAt(1, 42, [1, 2, 3]) == [1, 42, 2, 3];
+     let%test "2" = insertAt(2, 42, [1, 2, 3]) == [1, 2, 42, 3];
+     let%test "3" = insertAt(3, 42, [1, 2, 3]) == [1, 2, 3, 42];
+     let%test "-10 (out of bounds)" =
+       insertAt(-10, 42, [1, 2, 3]) == [42, 1, 2, 3];
+     let%test "10 (out of bounds)" =
+       insertAt(10, 42, [1, 2, 3]) == [1, 2, 3, 42];
+   });
+
+/**
+ * move
+ */
+let move = (~fromi, ~toi, list) => {
+  let element = List.nth(list, fromi);
+  list |> removeAt(fromi) |> insertAt(toi, element);
+};
+
+let%test_module "move" =
+  (module
+   {
+     let%test "0 -> 0" = move(~fromi=0, ~toi=0, [1, 2, 3]) == [1, 2, 3];
+     let%test "0 -> 1" = move(~fromi=0, ~toi=1, [1, 2, 3]) == [2, 1, 3];
+     let%test "0 -> 2" = move(~fromi=0, ~toi=2, [1, 2, 3]) == [2, 3, 1];
+     let%test "1 -> 0" = move(~fromi=1, ~toi=0, [1, 2, 3]) == [2, 1, 3];
+     let%test "1 -> 1" = move(~fromi=1, ~toi=1, [1, 2, 3]) == [1, 2, 3];
+     let%test "1 -> 2" = move(~fromi=1, ~toi=2, [1, 2, 3]) == [1, 3, 2];
+     let%test "2 -> 0" = move(~fromi=2, ~toi=0, [1, 2, 3]) == [3, 1, 2];
+     let%test "2 -> 1" = move(~fromi=2, ~toi=1, [1, 2, 3]) == [1, 3, 2];
+     let%test "2 -> 2" = move(~fromi=2, ~toi=2, [1, 2, 3]) == [1, 2, 3];
+     let%test "-10 -> 1 (out of bounds)" =
+       switch (move(~fromi=-10, ~toi=1, [1, 2, 3])) {
+       | exception (Invalid_argument(_)) => true
+       | _ => false
+       };
+     let%test "10 -> 1 (out of bounds)" =
+       switch (move(~fromi=10, ~toi=1, [1, 2, 3])) {
+       | exception (Failure(_)) => true
+       | _ => false
+       };
+   });

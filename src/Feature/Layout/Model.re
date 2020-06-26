@@ -386,6 +386,17 @@ let previousLayoutTab = (~count=1, model) =>
 let nextLayoutTab = (~count=1, model) =>
   gotoLayoutTab(model.activeLayoutIndex + count, model);
 
+let moveActiveLayoutTabTo = (index, model) => {
+  let newLayouts =
+    ListEx.move(~fromi=model.activeLayoutIndex, ~toi=index, model.layouts);
+
+  {
+    layouts: newLayouts,
+    activeLayoutIndex:
+      IntEx.clamp(index, ~lo=0, ~hi=List.length(newLayouts) - 1),
+  };
+};
+
 let map = (f, model) => {
   ...model,
   layouts:
