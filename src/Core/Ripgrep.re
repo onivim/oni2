@@ -137,8 +137,6 @@ module RipgrepProcessingJob = {
 };
 
 let process = (rgPath, args, onUpdate, onComplete, onError) => {
-  let disposeTick = ref(None);
-
   let on_exit = (_, ~exit_status: int64, ~term_signal as _) => {
     Log.debugf(m =>
       m("Process completed - exit code: %n", exit_status |> Int64.to_int)
@@ -152,69 +150,79 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
       args |> String.concat(" "),
     )
   );
-  let pipe = Luv.Pipe.init() |> Result.get_ok;
 
-  let process =
-    LuvEx.Process.spawn(
-      ~on_exit,
-      ~redirect=[
-        Luv.Process.to_parent_pipe(
-          ~fd=Luv.Process.stdout,
-          ~parent_pipe=pipe,
-          (),
-        ),
-      ],
-      rgPath,
-      [rgPath, ...args],
-    )
-    // TODO: Handle this properly
-    |> Result.get_ok;
+  let processResult =
+    Luv.Pipe.init()
+    |> ResultEx.flatMap(pipe => {
+         LuvEx.Process.spawn(
+           ~on_exit,
+           ~redirect=[
+             Luv.Process.to_parent_pipe(
+               ~fd=Luv.Process.stdout,
+               ~parent_pipe=pipe,
+               (),
+             ),
+           ],
+           rgPath,
+           [rgPath, ...args],
+         )
+         |> Result.map(process => (process, pipe))
+       });
 
-  let job = ref(RipgrepProcessingJob.create(~onUpdate));
-  let isRipgrepProcessDone = ref(false);
+  switch (processResult) {
+  | Error(err) =>
+    let errMsg = err |> Luv.Error.strerror;
+    Log.error(errMsg);
+    onError(errMsg);
+    (() => ());
+  | Ok((process, pipe)) =>
+    let job = ref(RipgrepProcessingJob.create(~onUpdate));
+    let isRipgrepProcessDone = ref(false);
 
-  let disposeAll = () => {
-    disposeTick^ |> Option.iter(f => f());
-    let _: result(unit, Luv.Error.t) = Luv.Process.kill(process, 2);
-    isRipgrepProcessDone := true;
-    ();
-  };
+    let disposeTick = ref(None);
+    let disposeAll = () => {
+      disposeTick^ |> Option.iter(f => f());
+      let _: result(unit, Luv.Error.t) = Luv.Process.kill(process, 2);
+      isRipgrepProcessDone := true;
+      ();
+    };
 
-  Luv.Stream.read_start(
-    pipe,
-    fun
-    | Error(`EOF) => {
-        Log.info("Read pipe done");
-        Luv.Handle.close(pipe, ignore);
-        isRipgrepProcessDone := true;
-      }
-    | Error(msg) => {
-        disposeAll();
-        let errMsg = msg |> Luv.Error.strerror;
+    Luv.Stream.read_start(
+      pipe,
+      fun
+      | Error(`EOF) => {
+          Log.info("Read pipe done");
+          Luv.Handle.close(pipe, ignore);
+          isRipgrepProcessDone := true;
+        }
+      | Error(msg) => {
+          disposeAll();
+          let errMsg = msg |> Luv.Error.strerror;
 
-        onError(errMsg);
-      }
-    | Ok(buffer) => {
-        let bytes = Luv.Buffer.to_bytes(buffer);
-        job := RipgrepProcessingJob.queueWork(bytes, job^);
-      },
-  );
-
-  disposeTick :=
-    Some(
-      Revery.Tick.interval(
-        _ =>
-          if (!Job.isComplete(job^)) {
-            job := Job.tick(job^);
-          } else if (isRipgrepProcessDone^) {
-            onComplete();
-            disposeAll();
-          },
-        Time.zero,
-      ),
+          onError(errMsg);
+        }
+      | Ok(buffer) => {
+          let bytes = Luv.Buffer.to_bytes(buffer);
+          job := RipgrepProcessingJob.queueWork(bytes, job^);
+        },
     );
 
-  disposeAll;
+    disposeTick :=
+      Some(
+        Revery.Tick.interval(
+          _ =>
+            if (!Job.isComplete(job^)) {
+              job := Job.tick(job^);
+            } else if (isRipgrepProcessDone^) {
+              onComplete();
+              disposeAll();
+            },
+          Time.zero,
+        ),
+      );
+
+    disposeAll;
+  };
 };
 
 /**
