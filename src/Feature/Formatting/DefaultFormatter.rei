@@ -12,6 +12,6 @@ let format:
     ~indentation: IndentationSettings.t,
     ~languageConfiguration: LanguageConfiguration.t,
     ~startLineNumber: Index.t,
-    list(string)
+    array(string)
   ) =>
   list(Vim.Edit.t);

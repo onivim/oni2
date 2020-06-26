@@ -107,7 +107,7 @@ module Internal = {
         // TODO: Hook up range
         _range,
       ) => {
-    let lines = buffer |> Oni_Core.Buffer.getLines |> Array.to_list;
+    let lines = buffer |> Oni_Core.Buffer.getLines;
 
     let edits =
       DefaultFormatter.format(
