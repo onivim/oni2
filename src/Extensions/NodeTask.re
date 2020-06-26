@@ -26,12 +26,9 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
            };
 
          let process =
-           Luv.Process.spawn(
+           LuvEx.Process.spawn(
              ~on_exit,
              ~detached=true,
-             ~windows_hide=true,
-             ~windows_hide_console=true,
-             ~windows_hide_gui=true,
              ~redirect=[
                Luv.Process.to_parent_pipe(
                  ~fd=Luv.Process.stdout,

@@ -69,11 +69,8 @@ let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
     onClose(exitCode);
   };
 
-  Luv.Process.spawn(
+  LuvEx.Process.spawn(
     ~on_exit,
-    ~windows_hide=true,
-    ~windows_hide_console=true,
-    ~windows_hide_gui=true,
     executablePath,
     [executablePath, arg],
   )

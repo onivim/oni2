@@ -488,12 +488,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     };
 
   let _process: Luv.Process.t =
-    Luv.Process.spawn(
+    LuvEx.Process.spawn(
       ~environment,
       ~on_exit,
-      ~windows_hide=true,
-      ~windows_hide_console=true,
-      ~windows_hide_gui=true,
       ~redirect,
       nodePath,
       [nodePath, extHostScriptPath],

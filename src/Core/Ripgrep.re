@@ -155,7 +155,7 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
   let pipe = Luv.Pipe.init() |> Result.get_ok;
 
   let process =
-    Luv.Process.spawn(
+    LuvEx.Process.spawn(
       ~on_exit,
       ~redirect=[
         Luv.Process.to_parent_pipe(
