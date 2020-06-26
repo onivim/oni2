@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Exthost;
 open Oni_Core;
 
@@ -98,6 +99,43 @@ module Internal = {
       text: textToArray(edit.text),
     };
 
+  let fallBackToDefaultFormatter =
+      (
+        ~indentation,
+        ~languageConfiguration,
+        ~buffer,
+        // TODO: Hook up range
+        _range,
+      ) => {
+    let lines = buffer |> Oni_Core.Buffer.getLines |> Array.to_list;
+
+    let edits =
+      DefaultFormatter.format(
+        ~indentation,
+        ~languageConfiguration,
+        // TODO
+        ~startLineNumber=Index.zero,
+        lines,
+      );
+
+    let displayName = "Default";
+    if (edits == []) {
+      FormattingApplied({displayName, editCount: 0});
+    } else {
+      let effect =
+        Service_Vim.Effects.applyEdits(
+          ~bufferId=buffer |> Oni_Core.Buffer.getId,
+          ~version=buffer |> Oni_Core.Buffer.getVersion,
+          ~edits,
+          fun
+          | Ok () =>
+            EditCompleted({editCount: List.length(edits), displayName})
+          | Error(msg) => EditRequestFailed({sessionId: 0, msg}),
+        );
+      Effect(effect);
+    };
+  };
+
   let runFormat =
       (
         ~languageConfiguration,
@@ -117,8 +155,12 @@ module Internal = {
     if (matchingFormatters == []) {
       (
         model,
-        FormatError(
-          Printf.sprintf("No format providers available for %s", filetype),
+        fallBackToDefaultFormatter(
+          ~indentation,
+          ~languageConfiguration,
+          ~buffer=buf,
+          // TODO: Range
+          (),
         ),
       );
     } else {
@@ -155,8 +197,8 @@ module Internal = {
 };
 
 let update =
+    // TODO
     (
-      // TODO
       ~languageConfiguration,
       ~configuration,
       ~maybeSelection,
