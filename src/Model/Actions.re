@@ -142,6 +142,9 @@ type t =
       option([ | `Horizontal | `Vertical]),
       option(Location.t),
     )
+  | OpenFileInNewLayout(string)
+  | BufferOpened(string, option(Location.t), int)
+  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)

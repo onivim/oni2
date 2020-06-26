@@ -160,6 +160,32 @@ describe("AutoIndent", ({describe, _}) => {
         Some("This is the second line of a test file"),
       );
     });
+    
+    test(
+      "open before indented line, after empty line, keep indent", ({expect, _}) => {
+      let buffer = resetBufferIndent2Spaces();
+
+      buffer
+      |> Vim.Buffer.setLines(
+           ~lines=[|
+             "line 1",
+             "", // Add a line with spaces
+             "  line2",
+             "    line3",
+           |],
+         );
+
+      let input = input(~insertSpaces=true, ~autoIndent=keepIndent);
+      // Go to third line
+      input("gg");
+      input("j");
+      input("j");
+      input("O");
+      input("a");
+
+      let line = Buffer.getLine(buffer, Index.(zero + 2));
+      expect.string(line).toEqual("  a");
+    });
 
     test("open before indented line, keep indent", ({expect, _}) => {
       let buffer = resetBufferIndent2Spaces();
