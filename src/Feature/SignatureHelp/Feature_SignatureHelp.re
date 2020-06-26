@@ -424,71 +424,77 @@ module View = {
         ~baseFontSize=uiFont.size,
         ~codeBlockFontSize=editorFont.fontSize,
       );
-    let signature: Signature.t = List.nth(model.signatures, signatureIndex);
-    let parameter: ParameterInformation.t =
-      List.nth(signature.parameters, parameterIndex);
-    let renderLabel = () => {
-      switch (parameter.label) {
-      | `Range(start, end_) =>
-        let s1 = String.sub(signature.label, 0, start);
-        let s2 = String.sub(signature.label, start, end_ - start);
-        let s3 =
-          String.sub(
-            signature.label,
-            end_,
-            String.length(signature.label) - end_,
-          );
-        [
-          <Text
-            text=s1
-            fontFamily={editorFont.fontFamily}
-            fontSize={editorFont.fontSize}
-            style={Styles.parameterText(~theme=colorTheme)}
-          />,
-          <View style={Styles.activeParameter(~theme=colorTheme)}>
+    let maybeSignature: option(Signature.t) =
+      List.nth_opt(model.signatures, signatureIndex);
+    let maybeParameter: option(ParameterInformation.t) =
+      Option.bind(maybeSignature, signature =>
+        List.nth_opt(signature.parameters, parameterIndex)
+      );
+    let renderLabel = () =>
+      switch (maybeSignature, maybeParameter) {
+      | (Some(signature), Some(parameter)) =>
+        switch (parameter.label) {
+        | `Range(start, end_) =>
+          let s1 = String.sub(signature.label, 0, start);
+          let s2 = String.sub(signature.label, start, end_ - start);
+          let s3 =
+            String.sub(
+              signature.label,
+              end_,
+              String.length(signature.label) - end_,
+            );
+          [
             <Text
-              text=s2
+              text=s1
               fontFamily={editorFont.fontFamily}
               fontSize={editorFont.fontSize}
               style={Styles.parameterText(~theme=colorTheme)}
-            />
-          </View>,
-          <Text
-            text=s3
-            fontFamily={editorFont.fontFamily}
-            fontSize={editorFont.fontSize}
-            style={Styles.parameterText(~theme=colorTheme)}
-          />,
-        ]
-        |> React.listToElement;
-      | `String(str) =>
-        let regex = Str.quote(str) |> Str.regexp;
-        let strList = Str.full_split(regex, signature.label);
-        List.map(
-          res =>
-            switch (res) {
-            | Str.Text(s) =>
+            />,
+            <View style={Styles.activeParameter(~theme=colorTheme)}>
               <Text
-                text=s
+                text=s2
                 fontFamily={editorFont.fontFamily}
                 fontSize={editorFont.fontSize}
                 style={Styles.parameterText(~theme=colorTheme)}
               />
-            | Str.Delim(s) =>
-              <View style={Styles.activeParameter(~theme=colorTheme)}>
+            </View>,
+            <Text
+              text=s3
+              fontFamily={editorFont.fontFamily}
+              fontSize={editorFont.fontSize}
+              style={Styles.parameterText(~theme=colorTheme)}
+            />,
+          ]
+          |> React.listToElement;
+        | `String(str) =>
+          let regex = Str.quote(str) |> Str.regexp;
+          let strList = Str.full_split(regex, signature.label);
+          List.map(
+            res =>
+              switch (res) {
+              | Str.Text(s) =>
                 <Text
                   text=s
                   fontFamily={editorFont.fontFamily}
                   fontSize={editorFont.fontSize}
                   style={Styles.parameterText(~theme=colorTheme)}
                 />
-              </View>
-            },
-          strList,
-        )
-        |> React.listToElement;
+              | Str.Delim(s) =>
+                <View style={Styles.activeParameter(~theme=colorTheme)}>
+                  <Text
+                    text=s
+                    fontFamily={editorFont.fontFamily}
+                    fontSize={editorFont.fontSize}
+                    style={Styles.parameterText(~theme=colorTheme)}
+                  />
+                </View>
+              },
+            strList,
+          )
+          |> React.listToElement;
+        }
+      | _ => React.empty
       };
-    };
     switch (model.editorID) {
     | Some(editorID) when editorID == Feature_Editor.Editor.getId(editor) =>
       <HoverView x y displayAt=`Top theme=colorTheme>
@@ -523,8 +529,9 @@ module View = {
             />
           </View>
         </UI.Components.Row>
-        {switch (parameter.documentation) {
-         | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
+        {switch (maybeParameter) {
+         | Some({documentation: Some(docs), _})
+             when Exthost.MarkdownString.toString(docs) != "" =>
            [
              <horizontalRule theme=colorTheme />,
              <signatureHelpMarkdown markdown=docs />,
@@ -532,8 +539,9 @@ module View = {
            |> React.listToElement
          | _ => React.empty
          }}
-        {switch (signature.documentation) {
-         | Some(docs) when Exthost.MarkdownString.toString(docs) != "" =>
+        {switch (maybeSignature) {
+         | Some({documentation: Some(docs), _})
+             when Exthost.MarkdownString.toString(docs) != "" =>
            [
              <horizontalRule theme=colorTheme />,
              <signatureHelpMarkdown markdown=docs />,

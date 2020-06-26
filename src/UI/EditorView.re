@@ -275,6 +275,7 @@ let make =
         isZenMode={state.zenMode}
         showTabs
         model={state.layout}
+        config={Feature_Configuration.resolver(state.config)}
         dispatch={msg => dispatch(Actions.Layout(msg))}>
         ...(module ContentProvider)
       </Feature_Layout.View>
