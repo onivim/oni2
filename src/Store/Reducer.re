@@ -21,17 +21,16 @@ let reduce: (State.t, Actions.t) => State.t =
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
         definition: DefinitionReducer.reduce(a, s.definition),
-        editorGroups:
-          EditorGroups.reduce(~defaultFont=s.editorFont, s.editorGroups, a),
         extensions: ExtensionsReducer.reduce(a, s.extensions),
         languageFeatures:
           LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
         sideBar: SideBarReducer.reduce(~zenMode=s.zenMode, s.sideBar, a),
-        statusBar: StatusBarReducer.reduce(s.statusBar, a),
       };
 
       switch (a) {
+      // Turn off zenMode with :vsp/:sp
+      | OpenFileByPath(_, Some(_), _) => {...s, zenMode: false}
       | DiagnosticsSet(buffer, key, diags) => {
           ...s,
           diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),
@@ -42,6 +41,7 @@ let reduce: (State.t, Actions.t) => State.t =
         }
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
+      | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | TokenThemeLoaded(tokenTheme) => {...s, tokenTheme}
       | ActivityBar(ActivityBar.FileExplorerClick) => {...s, zenMode: false}

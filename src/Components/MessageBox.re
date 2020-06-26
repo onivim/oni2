@@ -129,13 +129,13 @@ let shortcutView = (~text, ~input="", ~theme, ~font: UiFont.t, ()) => {
   <View style=Styles.shortcut>
     <Text
       style={Styles.shortcutHighlight(~theme)}
-      fontFamily={font.normal}
+      fontFamily={font.family}
       fontSize={font.size}
       text=input
     />
     <Text
       style={Styles.shortcutText(~theme)}
-      fontFamily={font.normal}
+      fontFamily={font.family}
       fontSize={font.size}
       text
     />
@@ -174,7 +174,7 @@ let%component button =
     <View onMouseOver onMouseOut style=Styles.buttonInner>
       <Text
         style={Styles.buttonText(~theme)}
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize={font.size}
         text
       />

@@ -9,6 +9,7 @@ module Colors = Feature_Theme.Colors;
 module Constants = {
   let menuWidth = 400;
   let menuHeight = 320;
+  let rowHeight = 40;
 };
 
 module Styles = {
@@ -22,7 +23,13 @@ module Styles = {
 
   let inputContainer = [padding(5)];
 
-  let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
+  let dropdown = (~numItems) => [
+    height(
+      Constants.rowHeight * numItems > Constants.menuHeight
+        ? Constants.menuHeight : Constants.rowHeight * numItems,
+    ),
+    overflow(`Hidden),
+  ];
 
   let menuItem = [cursor(Revery.MouseCursors.pointer)];
 
@@ -135,7 +142,7 @@ let make =
     let highlightStyle = style(~highlighted=true);
     let labelView =
       <HighlightText
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize=12.
         style=normalStyle
         highlightStyle
@@ -161,7 +168,7 @@ let make =
       <Input
         placeholder
         ?prefix
-        fontFamily={font.normal}
+        fontFamily={font.family}
         fontSize=14.
         isFocused=true
         onClick=onInputClicked
@@ -172,8 +179,12 @@ let make =
     </View>;
 
   let dropdown = () =>
-    <View style=Styles.dropdown>
-      <FlatList rowHeight=40 count={Array.length(items)} focused theme>
+    <View style={Styles.dropdown(~numItems=Array.length(items))}>
+      <FlatList
+        rowHeight=Constants.rowHeight
+        count={Array.length(items)}
+        focused
+        theme>
         ...renderItem
       </FlatList>
       {switch (progress) {

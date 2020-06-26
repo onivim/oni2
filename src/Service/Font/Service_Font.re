@@ -37,6 +37,20 @@ type msg =
   | FontLoaded(font)
   | FontLoadError(string);
 
+let resolveWithFallback = (~mono=false, ~italic=false, weight, family) =>
+  switch (Revery_Font.Family.resolve(~italic, ~mono, weight, family)) {
+  | Ok(font) => font
+  | Error(str) =>
+    Log.warnf(m => m("Unable to resolve font: %s", str));
+    Revery_Font.Family.resolve(
+      ~italic,
+      ~mono,
+      weight,
+      Constants.defaultFontFamily,
+    )
+    |> Result.get_ok;
+  };
+
 let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
   let dispatch = action => Revery.App.runOnMainThread(() => dispatch(action));
 
@@ -51,17 +65,22 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
     () => {
       let fontSize = max(fontSize, Constants.minimumFontSize);
 
-      let (name, fullPath) =
+      let (name, fullPath, fontFamily) =
         if (fontFamily == Constants.defaultFontFile) {
           (
             Constants.defaultFontFile,
             Revery.Environment.executingDirectory ++ Constants.defaultFontFile,
+            Constants.defaultFontFamily,
           );
         } else {
           Log.debug("Discovering font: " ++ fontFamily);
 
           if (Rench.Path.isAbsolute(fontFamily)) {
-            (fontFamily, fontFamily);
+            (
+              fontFamily,
+              fontFamily,
+              Revery_Font.Family.fromFile(fontFamily),
+            );
           } else {
             let descriptor =
               Revery.Font.Discovery.find(
@@ -72,7 +91,11 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
 
             Log.debug("  at path: " ++ descriptor.path);
 
-            (fontFamily, descriptor.path);
+            (
+              fontFamily,
+              descriptor.path,
+              Revery_Font.Family.system(fontFamily),
+            );
           };
         };
 
@@ -80,6 +103,7 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
         FontLoader.loadAndValidateEditorFont(
           ~requestId=req,
           ~smoothing,
+          ~fontFamily,
           fullPath,
           fontSize,
         );

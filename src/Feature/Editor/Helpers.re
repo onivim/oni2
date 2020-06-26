@@ -3,15 +3,9 @@ open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 
-let bufferPositionToPixel = (~context: Draw.context, line, char) => {
-  let x = float(char) *. context.charWidth -. context.scrollX;
-  let y = float(line) *. context.charHeight -. context.scrollY;
-  (x, y);
-};
-
 let getTokensForLine =
     (
-      ~buffer,
+      ~editor,
       ~bufferHighlights,
       ~cursorLine,
       ~colors: Colors.t,
@@ -23,20 +17,23 @@ let getTokensForLine =
       endIndex,
       i,
     ) =>
-  if (i >= Buffer.getNumberOfLines(buffer)) {
+  if (i >= Editor.totalViewLines(editor)) {
     [];
   } else {
-    let line = Buffer.getLine(i, buffer);
+    let viewLine = Editor.viewLine(editor, i);
+    let line = viewLine.contents;
     let length = BufferLine.lengthInBytes(line);
     let startIndex = max(0, startIndex);
     let endIndex = max(0, endIndex);
+    let bufferId = Editor.getBufferId(editor);
+
     if (length == 0) {
       [];
     } else {
       let idx = Index.fromZeroBased(i);
       let highlights =
         BufferHighlights.getHighlightsByLine(
-          ~bufferId=Buffer.getId(buffer),
+          ~bufferId,
           ~line=idx,
           bufferHighlights,
         );
@@ -63,18 +60,16 @@ let getTokensForLine =
 
       let tokenColors =
         Feature_Syntax.getTokens(
-          ~bufferId=Buffer.getId(buffer),
+          ~bufferId,
           ~line=Index.fromZeroBased(i),
           bufferSyntaxHighlights,
         );
 
-      let startByte = BufferLine.getByte(~index=startIndex, line);
-      let endByte = BufferLine.getByte(~index=endIndex, line);
+      let startByte = BufferLine.getByteFromIndex(~index=startIndex, line);
 
       let colorizer =
         BufferLineColorizer.create(
           ~startByte,
-          ~endByte,
           ~defaultBackgroundColor=defaultBackground,
           ~defaultForegroundColor=colors.editorForeground,
           ~selectionHighlights=selection,
@@ -91,7 +86,7 @@ let getTokensForLine =
 
 let getTokenAtPosition =
     (
-      ~buffer,
+      ~editor,
       ~bufferHighlights,
       ~cursorLine,
       ~colors,
@@ -105,7 +100,7 @@ let getTokenAtPosition =
   let index = position.column |> Index.toZeroBased;
 
   getTokensForLine(
-    ~buffer,
+    ~editor,
     ~bufferHighlights,
     ~cursorLine,
     ~colors,
@@ -117,8 +112,8 @@ let getTokenAtPosition =
     lineNumber,
   )
   |> List.filter((token: BufferViewTokenizer.t) => {
-       let tokenStart = token.startPosition |> Index.toZeroBased;
-       let tokenEnd = token.endPosition |> Index.toZeroBased;
+       let tokenStart = token.startIndex |> Index.toZeroBased;
+       let tokenEnd = token.endIndex |> Index.toZeroBased;
        index >= tokenStart && index < tokenEnd;
      })
   |> Utility.OptionEx.of_list;

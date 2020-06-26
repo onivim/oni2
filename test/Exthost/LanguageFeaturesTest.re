@@ -35,6 +35,88 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
     |> Test.terminate
     |> Test.waitForProcessClosed;
   };
+  describe("codelens", ({test, _}) => {
+    test("gets codelens items", ({expect, _}) => {
+      let codeLensHandle = ref(-1);
+
+      let getCodeLenses = client =>
+        Request.LanguageFeatures.provideCodeLenses(
+          ~handle=codeLensHandle^,
+          ~resource=testUri,
+          client,
+        );
+
+      let waitForRegisterCodeLensSupport =
+        fun
+        | Msg.LanguageFeatures(RegisterCodeLensSupport({handle, _})) => {
+            codeLensHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      let range1 =
+        OneBasedRange.{
+          startLineNumber: 2,
+          endLineNumber: 2,
+          startColumn: 2,
+          endColumn: 2,
+        };
+      let range2 =
+        OneBasedRange.{
+          startLineNumber: 3,
+          endLineNumber: 3,
+          startColumn: 3,
+          endColumn: 3,
+        };
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterCodeLensSupport",
+           waitForRegisterCodeLensSupport,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="Get code lenses items",
+           ~validate=
+             (codeLenses: option(list(Exthost.CodeLens.t))) => {
+               expect.equal(
+                 codeLenses,
+                 Some([
+                   CodeLens.{
+                     cacheId: Some([1, 0]),
+                     range: range1,
+                     command:
+                       Some(
+                         Exthost.Command.{
+                           title: Some("codelens: command1"),
+                           id: "codelens.command1",
+                         },
+                       ),
+                   },
+                   CodeLens.{
+                     cacheId: Some([1, 1]),
+                     range: range2,
+                     command:
+                       Some(
+                         Exthost.Command.{
+                           title: Some("codelens: command2"),
+                           id: "codelens.command2",
+                         },
+                       ),
+                   },
+                 ]),
+               );
+               true;
+             },
+           getCodeLenses,
+         )
+      |> finishTest;
+    })
+  });
 
   describe("completion", ({test, _}) => {
     test("gets completion items", ({expect, _}) => {
@@ -384,13 +466,13 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
            ),
          )
       |> Test.withClientRequest(
-           ~name="Get symbols",
+           ~name="Get hover",
            ~validate=
              (maybeHover: option(Exthost.Hover.t)) => {
                expect.equal(
                  maybeHover,
                  Some({
-                   contents: ["Hover Content"],
+                   contents: [MarkdownString.fromString("Hover Content")],
                    range:
                      Some(
                        OneBasedRange.{
@@ -463,8 +545,22 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                    signatures: [
                      Signature.{
                        label: "signature 1",
+                       documentation:
+                         Some(
+                           MarkdownString.fromString(
+                             "signature 1 documentation",
+                           ),
+                         ),
                        parameters: [
-                         ParameterInformation.{label: "parameter 1"},
+                         ParameterInformation.{
+                           label: `String("gnat"),
+                           documentation:
+                             Some(
+                               MarkdownString.fromString(
+                                 "parameter 1 documentation",
+                               ),
+                             ),
+                         },
                        ],
                      },
                    ],

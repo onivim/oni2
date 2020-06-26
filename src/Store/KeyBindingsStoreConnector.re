@@ -243,27 +243,27 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<D-W>",
-        command: Commands.View.closeEditor.id,
+        command: Feature_Layout.Commands.closeActiveEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<C-PAGEDOWN>",
-        command: Commands.Workbench.Action.nextEditor.id,
+        command: Feature_Layout.Commands.nextEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-]>",
-        command: Commands.Workbench.Action.nextEditor.id,
+        command: Feature_Layout.Commands.nextEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<C-PAGEUP>",
-        command: Commands.Workbench.Action.previousEditor.id,
+        command: Feature_Layout.Commands.previousEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-[>",
-        command: Commands.Workbench.Action.previousEditor.id,
+        command: Feature_Layout.Commands.previousEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
@@ -441,6 +441,35 @@ let start = maybeKeyBindingsFilePath => {
         key: "<C-W>=",
         command: Feature_Layout.Commands.resetSizes.id,
         condition: windowCommandCondition,
+      },
+      // TODO: Fails to parse
+      // {
+      //   key: "<C-W>_",
+      //   command: Feature_Layout.Commands.maximizeVertical.id,
+      //   condition: windowCommandCondition,
+      // },
+      // TODO: Fails to parse
+      // {
+      //   key: "<C-W>|",
+      //   command: Feature_Layout.Commands.maximizeHorizontal.id,
+      //   condition: windowCommandCondition,
+      // },
+      {
+        key: "<C-W>o",
+        command: Feature_Layout.Commands.toggleMaximize.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<A-DOWN>",
+        command: Feature_SignatureHelp.Commands.incrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+      },
+      {
+        key: "<A-UP>",
+        command: Feature_SignatureHelp.Commands.decrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
       },
     ];
 

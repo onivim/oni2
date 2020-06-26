@@ -28,9 +28,19 @@ module AutoClosingPairs: {
   let isBetweenDeletionPairs: (string, Index.t, t) => bool;
 };
 
+module AutoIndent: {
+  type action =
+    | IncreaseIndent
+    | KeepIndent
+    | DecreaseIndent;
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
+    autoIndent:
+      (~previousLine: string, ~beforePreviousLine: option(string)) =>
+      AutoIndent.action,
     bufferId: int,
     width: int,
     height: int,
@@ -43,6 +53,27 @@ module Context: {
   };
 
   let current: unit => t;
+};
+
+module Edit: {
+  [@deriving show]
+  type t = {
+    range: Range.t,
+    text: array(string),
+  };
+
+  type editResult = {
+    oldStartLine: Index.t,
+    oldEndLine: Index.t,
+    newLines: array(string),
+  };
+
+  let applyEdit:
+    (~provider: int => option(string), t) => result(editResult, string);
+
+  // [sort(edits)] returns the edits in a list in order to be applied,
+  // edits later in the document first (reverse range order).
+  let sort: list(t) => list(t);
 };
 
 module Buffer: {
@@ -127,6 +158,8 @@ module Buffer: {
   let setLines:
     (~start: Index.t=?, ~stop: Index.t=?, ~lines: array(string), t) => unit;
 
+  let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
+
   /**
   [onEnter(f)] adds a listener [f] that is called whenever a new buffer is entered.
 
@@ -182,15 +215,36 @@ module Buffer: {
 };
 
 module Goto: {
-  type t =
+  type effect =
     | Definition
     | Declaration
     | Hover;
 };
 
+module Format: {
+  type formatType =
+    | Indentation
+    | Formatting;
+
+  type effect =
+    | Buffer({
+        formatType,
+        bufferId: int,
+        adjustCursor: bool,
+      })
+    | Range({
+        formatType,
+        bufferId: int,
+        startLine: Index.t,
+        endLine: Index.t,
+        adjustCursor: bool,
+      });
+};
+
 module Effect: {
   type t =
-    | Goto(Goto.t);
+    | Goto(Goto.effect)
+    | Format(Format.effect);
 };
 
 /**

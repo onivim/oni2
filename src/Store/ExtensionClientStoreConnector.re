@@ -9,62 +9,14 @@
 open Oni_Core;
 open Oni_Model;
 
-module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
+module Log = (val Log.withNamespace("Oni2.Extension.ClientStoreConnector"));
 
 module Extensions = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-module Internal = {
-  let bufferMetadataToModelAddedDelta =
-      (~version, ~filePath, ~fileType: option(string)) =>
-    switch (filePath, fileType) {
-    | (Some(fp), Some(ft)) =>
-      Log.trace("Creating model for filetype: " ++ ft);
-
-      Some(
-        Exthost.ModelAddedDelta.create(
-          ~versionId=version,
-          ~lines=[""],
-          ~modeId=ft,
-          ~isDirty=true,
-          Uri.fromPath(fp),
-        ),
-      );
-    | _ => None
-    };
-};
-
 let start = (extensions, extHostClient: Exthost.Client.t) => {
-  let modelChangedEffect = (buffers: Buffers.t, update: BufferUpdate.t) =>
-    Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
-      switch (Buffers.getBuffer(update.id, buffers)) {
-      | None => ()
-      | Some(buffer) =>
-        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
-          let modelContentChange =
-            Exthost.ModelContentChange.ofBufferUpdate(
-              update,
-              Exthost.Eol.default,
-            );
-          let modelChangedEvent =
-            Exthost.ModelChangedEvent.{
-              changes: [modelContentChange],
-              eol: Exthost.Eol.default,
-              versionId: update.version,
-            };
-
-          Exthost.Request.Documents.acceptModelChanged(
-            ~uri=Buffer.getUri(buffer),
-            ~modelChangedEvent,
-            ~isDirty=Buffer.isModified(buffer),
-            extHostClient,
-          );
-        })
-      }
-    );
-
   let executeContributedCommandEffect = (command, arguments) =>
     Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
       Exthost.Request.Commands.executeContributedCommand(
@@ -187,11 +139,12 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ]),
       )
 
-    | BufferUpdate(bu) => (
+    | BufferUpdate({update, newBuffer, triggerKey, _}) => (
         state,
-        Isolinear.Effect.batch([
-          modelChangedEffect(state.buffers, bu.update),
-        ]),
+        Service_Exthost.Effects.Documents.modelChanged(
+          ~buffer=newBuffer, ~update, extHostClient, () =>
+          Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
+        ),
       )
 
     | BufferSaved(_) => (

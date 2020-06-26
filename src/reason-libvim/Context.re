@@ -1,5 +1,8 @@
 type t = {
   autoClosingPairs: AutoClosingPairs.t,
+  autoIndent:
+    (~previousLine: string, ~beforePreviousLine: option(string)) =>
+    AutoIndent.action,
   bufferId: int,
   width: int,
   height: int,
@@ -13,6 +16,7 @@ type t = {
 
 let current = () => {
   autoClosingPairs: AutoClosingPairs.empty,
+  autoIndent: (~previousLine as _, ~beforePreviousLine as _) => AutoIndent.KeepIndent,
   bufferId: Buffer.getCurrent() |> Buffer.getId,
   width: Window.getWidth(),
   height: Window.getHeight(),

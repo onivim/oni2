@@ -34,11 +34,22 @@ let setOpen = (isOpen, state) =>
 let setActive = (maybePath, state) =>
   updateFileExplorer(s => {...s, active: maybePath}, state);
 let setFocus = (maybePath, state) =>
-  updateFileExplorer(s => {...s, focus: maybePath}, state);
+  updateFileExplorer(
+    s =>
+      switch (maybePath, s.tree) {
+      | (Some(path), Some(tree)) =>
+        switch (FsTreeNode.findByPath(path, tree)) {
+        | Some(_) => {...s, focus: Some(path)}
+        | None => s
+        }
+      | _ => {...s, focus: None}
+      },
+    state,
+  );
 let setScrollOffset = (scrollOffset, state) =>
   updateFileExplorer(s => {...s, scrollOffset}, state);
 
-let revealPath = (path, state: State.t) => {
+let revealAndFocusPath = (path, state: State.t) => {
   switch (state.fileExplorer.tree) {
   | Some(tree) =>
     switch (FsTreeNode.findNodesByPath(path, tree)) {
@@ -69,7 +80,10 @@ let revealPath = (path, state: State.t) => {
         };
 
       (
-        state |> setTree(tree) |> setScrollOffset(offset),
+        state
+        |> setFocus(Some(path))
+        |> setTree(tree)
+        |> setScrollOffset(offset),
         Isolinear.Effect.none,
       );
     }
@@ -130,6 +144,16 @@ let start = () => {
 
   let updater = (state: State.t, action: FileExplorer.action) => {
     switch (action) {
+    | ActiveFilePathChanged(maybeFilePath) =>
+      switch (state.fileExplorer) {
+      | {active, _} when active != maybeFilePath =>
+        let state = setActive(maybeFilePath, state);
+        switch (maybeFilePath) {
+        | Some(path) => revealAndFocusPath(path, state)
+        | None => (state, Isolinear.Effect.none)
+        };
+      | _ => (state, Isolinear.Effect.none)
+      }
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)
 
     | NodeLoaded(node) => (replaceNode(node, state), Isolinear.Effect.none)
@@ -137,7 +161,7 @@ let start = () => {
     | FocusNodeLoaded(node) =>
       switch (state.fileExplorer.active) {
       | Some(activePath) =>
-        state |> replaceNode(node) |> revealPath(activePath)
+        state |> replaceNode(node) |> revealAndFocusPath(activePath)
 
       | None => (state, Isolinear.Effect.none)
       }
@@ -187,7 +211,7 @@ let start = () => {
     };
   };
 
-  (state: State.t, action: Actions.t) =>
+  (state: State.t, action: Actions.t) => {
     switch (action) {
     // TODO: Should be handled by a more general init mechanism
     | Init => (
@@ -205,19 +229,8 @@ let start = () => {
         ]),
       )
 
-    | BufferEnter({filePath, _}) =>
-      switch (state.fileExplorer) {
-      | {active, _} when active != filePath =>
-        let state = setActive(filePath, state);
-        switch (filePath) {
-        | Some(path) => revealPath(path, state)
-        | None => (state, Isolinear.Effect.none)
-        };
-
-      | _ => (state, Isolinear.Effect.none)
-      }
-
     | FileExplorer(action) => updater(state, action)
     | _ => (state, Isolinear.Effect.none)
     };
+  };
 };

@@ -14,6 +14,15 @@ let toString: font => string;
 
 let default: font;
 
+let resolveWithFallback:
+  (
+    ~mono: bool=?,
+    ~italic: bool=?,
+    Revery_Font.Weight.t,
+    Revery_Font.Family.t
+  ) =>
+  Revery_Font.t;
+
 let measure: (~text: string, font) => float;
 
 let getHeight: font => float;

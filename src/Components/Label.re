@@ -20,7 +20,7 @@ let textToElement = (~color, ~font: UiFont.t, ~text) => {
   <Text
     style={Styles.text(~color)}
     fontSize=11.
-    fontFamily={font.normal}
+    fontFamily={font.family}
     text
   />;
 };

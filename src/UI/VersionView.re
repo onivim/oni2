@@ -24,7 +24,7 @@ module HeaderView = {
   };
 
   let make = (~text, ~uiFont: UiFont.t, ()) => {
-    <Text style=Styles.header fontFamily={uiFont.normal} fontSize=14. text />;
+    <Text style=Styles.header fontFamily={uiFont.family} fontSize=14. text />;
   };
 };
 
@@ -62,7 +62,7 @@ module VersionView = {
     <View style=Styles.container>
       <Text
         style={Styles.version(~theme)}
-        fontFamily={uiFont.normal}
+        fontFamily={uiFont.family}
         fontSize=12.
         text=name
       />

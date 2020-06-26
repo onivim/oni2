@@ -3,13 +3,13 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   dispatch(KeyboardInput(":"));
 
   wait(~name="Mode switches to command line", (state: State.t) =>
-    state.vimMode == Vim.Types.CommandLine
+    Feature_Vim.mode(state.vim) == Vim.Types.CommandLine
   );
 
   dispatch(KeyboardInput("e"));

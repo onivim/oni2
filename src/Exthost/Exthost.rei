@@ -73,6 +73,19 @@ module OneBasedRange: {
   let toRange: t => Range.t;
 };
 
+module CodeLens: {
+  [@deriving show]
+  type t = {
+    cacheId: option(list(int)),
+    range: OneBasedRange.t,
+    command: option(Command.t),
+  };
+
+  let decode: Json.decoder(t);
+
+  module List: {let decode: Json.decoder(list(t));};
+};
+
 module Location: {
   type t = {
     uri: Uri.t,
@@ -83,7 +96,11 @@ module Location: {
 };
 
 module MarkdownString: {
-  type t = string;
+  [@deriving show]
+  type t;
+
+  let fromString: string => t;
+  let toString: t => string;
 
   let decode: Json.decoder(t);
 };
@@ -129,6 +146,8 @@ module DocumentFilter: {
   let matches: (~filetype: string, t) => bool;
 
   let decode: Json.decoder(t);
+
+  let toString: t => string;
 };
 
 module DocumentSelector: {
@@ -295,9 +314,8 @@ module SignatureHelp: {
   module ParameterInformation: {
     [@deriving show]
     type t = {
-      label: string,
-      // TODO
-      //documentation: option(string),
+      label: [ | `String(string) | `Range(int, int)],
+      documentation: option(MarkdownString.t),
     };
     let decode: Json.decoder(t);
   };
@@ -306,8 +324,7 @@ module SignatureHelp: {
     [@deriving show]
     type t = {
       label: string,
-      // TODO:
-      //documentation: options(MarkdownString.t),
+      documentation: option(MarkdownString.t),
       parameters: list(ParameterInformation.t),
     };
 
@@ -707,6 +724,15 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | EmitCodeLensEvent({
+          eventHandle: int,
+          event: Yojson.Safe.t,
+        }) // ??
+      | RegisterCodeLensSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          eventHandle: option(int),
+        })
       | RegisterDocumentHighlightProvider({
           handle: int,
           selector: DocumentSelector.t,
@@ -1019,6 +1045,10 @@ module Request: {
   };
 
   module LanguageFeatures: {
+    let provideCodeLenses:
+      (~handle: int, ~resource: Uri.t, Client.t) =>
+      Lwt.t(option(list(CodeLens.t)));
+
     let provideCompletionItems:
       (
         ~handle: int,

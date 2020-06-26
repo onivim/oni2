@@ -46,7 +46,13 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleTextEffect = (state: State.t, k: string) => {
     switch (Model.FocusManager.current(state)) {
     | Editor
-    | Wildmenu => [Actions.KeyboardInput(k)]
+    | Wildmenu => [
+        Actions.KeyboardInput(k),
+        Actions.Hover(Feature_Hover.KeyPressed(k)),
+        Actions.SignatureHelp(
+          Feature_SignatureHelp.KeyPressed(Some(k), true),
+        ),
+      ]
 
     | Quickmenu => [Actions.QuickmenuInput(k)]
 

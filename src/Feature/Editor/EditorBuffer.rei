@@ -8,3 +8,4 @@ let ofBuffer: Oni_Core.Buffer.t => t;
 let id: t => int;
 let getEstimatedMaxLineLength: t => int;
 let numberOfLines: t => int;
+let line: (int, t) => Oni_Core.BufferLine.t;

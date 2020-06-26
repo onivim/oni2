@@ -4,10 +4,20 @@ open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
+Vim.init();
+
 /* Create a state with some editor size */
 let simpleState = {
+  let initialBuffer = {
+    let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+      Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
+    Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+  };
+
   let state =
     State.initial(
+      ~initialBuffer,
+      ~initialBufferRenderers=BufferRenderers.initial,
       ~getUserSettings=() => Ok(Config.Settings.empty),
       ~contributedCommands=[],
       ~workingDirectory=Sys.getcwd(),
@@ -15,17 +25,13 @@ let simpleState = {
 
   Reducer.reduce(
     state,
-    Actions.EditorGroupSizeChanged({
-      id: EditorGroups.activeGroupId(state.editorGroups),
-      width: 3440,
-      height: 1440,
-    }),
+    Actions.EditorGroupSizeChanged({id: 0, width: 3440, height: 1440}),
   );
 };
 
 let defaultFont: Service_Font.font = {
-  fontFile: "FiraCode-Regular.ttf",
-  fontFamily: Revery.Font.Family.fromFile("FiraCode-Regular.ttf"),
+  fontFile: "JetBrainsMono-Regular.ttf",
+  fontFamily: Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf"),
   fontSize: 10.,
   measuredWidth: 10.,
   measuredHeight: 10.,
@@ -49,13 +55,10 @@ let defaultEditorBuffer =
 let simpleEditor =
   Editor.create(~font=defaultFont, ~buffer=defaultEditorBuffer, ())
   |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
-let editorGroup =
-  EditorGroups.getActiveEditorGroup(simpleState.editorGroups)
-  |> Option.value(~default=EditorGroup.create());
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
-  Actions.BufferUpdate({update, oldBuffer, newBuffer});
+  Actions.BufferUpdate({update, oldBuffer, newBuffer, triggerKey: None});
 };
 
 let thousandLineBuffer = Buffer.ofLines(thousandLines);

@@ -10,6 +10,8 @@
         lwt.unix
         Oni2.core
         Oni2.input
+        Oni2.extensions
+        Oni2.syntax
         Oni2.exthost
         Oni2.service.font
         Oni2.feature.theme

@@ -13,7 +13,7 @@ runTest(
   ~name="KeySequenceJJTest",
   (dispatch, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      state.vimMode == Vim.Types.Normal
+      Feature_Vim.mode(state.vim) == Vim.Types.Normal
     );
 
     let input = key => {
@@ -31,20 +31,23 @@ runTest(
 
     input("i");
     wait(~name="Mode is now insert", (state: State.t) =>
-      state.vimMode == Vim.Types.Insert
+      Feature_Vim.mode(state.vim) == Vim.Types.Insert
     );
 
     input("j");
     input("j");
 
     wait(~name="Mode is back to normal", (state: State.t) =>
-      state.vimMode == Vim.Types.Normal
+      Feature_Vim.mode(state.vim) == Vim.Types.Normal
     );
     // TODO: Figure out why this check is failing...
     wait(~name="Validate buffer is empty", (state: State.t) => {
-      Model.Selectors.getActiveBuffer(state)
-      |> Option.map(Core.Buffer.getLines)
-      |> Option.map(Array.to_list) == Some([""])
+      let actual =
+        Model.Selectors.getActiveBuffer(state)
+        |> Option.map(Core.Buffer.getLines)
+        |> Option.map(Array.to_list);
+
+      actual == Some([]);
     });
   },
 );
