@@ -160,9 +160,10 @@ describe("AutoIndent", ({describe, _}) => {
         Some("This is the second line of a test file"),
       );
     });
-    
+
     test(
-      "open before indented line, after empty line, keep indent", ({expect, _}) => {
+      "open before indented line, after empty line, keep indent",
+      ({expect, _}) => {
       let buffer = resetBufferIndent2Spaces();
 
       buffer

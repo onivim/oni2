@@ -521,7 +521,7 @@ let input = (~context=Context.current(), v: string) => {
           } else {
             Native.vimInput(v);
             // If we're still in insert mode, and still on the same line, check the onTypeAutoIndent for adjustments
-            let afterLineNumber = location.line;
+            let afterLineNumber = Cursor.getLocation().line;
             let afterLine =
               Buffer.getLine(Buffer.getCurrent(), location.line);
             let afterIndentAction = onTypeAutoIndent(afterLine);
