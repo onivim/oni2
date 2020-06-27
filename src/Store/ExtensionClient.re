@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
@@ -488,12 +489,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     };
 
   let _process: Luv.Process.t =
-    Luv.Process.spawn(
+    LuvEx.Process.spawn(
       ~environment,
       ~on_exit,
-      ~windows_hide=true,
-      ~windows_hide_console=true,
-      ~windows_hide_gui=true,
       ~redirect,
       nodePath,
       [nodePath, extHostScriptPath],

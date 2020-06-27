@@ -119,9 +119,10 @@ let make =
   let progress =
     Actions.(
       switch (filterProgress, ripgrepProgress) {
-      | (Loading, _)
-      | (_, Loading) => Loading
-
+      // Evaluate ripgrep progress first, because it could still be processing jobs
+      // while the filter job is 'complete'.
+      | (_, Loading)
+      | (Loading, _) => Loading
       | (InProgress(a), InProgress(b)) => InProgress((a +. b) /. 2.)
 
       | (InProgress(value), _)
@@ -187,11 +188,6 @@ let make =
         theme>
         ...renderItem
       </FlatList>
-      {switch (progress) {
-       | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
-       | InProgress(progress) => <progressBar progress theme />
-       | Loading => <busyBar theme />
-       }}
     </View>;
 
   <AllowPointer>
@@ -204,6 +200,11 @@ let make =
         {switch (variant) {
          | Wildmenu(SearchForward | SearchReverse) => React.empty
          | _ => <dropdown />
+         }}
+        {switch (progress) {
+         | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
+         | InProgress(progress) => <progressBar progress theme />
+         | Loading => <busyBar theme />
          }}
       </View>
     </OniBoxShadow>
