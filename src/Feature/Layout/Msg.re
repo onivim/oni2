@@ -35,7 +35,10 @@ type t =
       delta: float,
     })
   | DragComplete
-  | GroupTabClicked(int)
+  | EditorTabClicked({
+      groupId: int,
+      editorId: int,
+    })
   | GroupSelected(int)
   | EditorCloseButtonClicked(int)
   | LayoutTabClicked(int)

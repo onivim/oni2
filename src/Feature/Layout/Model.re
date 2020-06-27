@@ -183,18 +183,17 @@ let updateTree = f =>
     {...layout, tree: f(activeTree(layout)), uncommittedTree: `None}
   );
 
+let updateGroup = (id, f, layout) => {
+  ...layout,
+  groups:
+    List.map(
+      (group: Group.t) => group.id == id ? f(group) : group,
+      layout.groups,
+    ),
+};
+
 let updateActiveGroup = f =>
-  updateActiveLayout(layout =>
-    {
-      ...layout,
-      groups:
-        List.map(
-          (group: Group.t) =>
-            group.id == layout.activeGroupId ? f(group) : group,
-          layout.groups,
-        ),
-    }
-  );
+  updateActiveLayout(layout => updateGroup(layout.activeGroupId, f, layout));
 
 let windows = model => Layout.windows(model |> activeLayout |> activeTree);
 
