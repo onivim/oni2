@@ -11,11 +11,14 @@ module Item = {
     priority: int,
     label: Exthost.Label.t,
     alignment: Exthost.Msg.StatusBar.alignment,
+    color: Exthost.Color.t,
     command: option(string),
   };
 
-  let create = (~command=?, ~id, ~priority, ~label, ~alignment=Left, ()) => {
+  let create =
+      (~command=?, ~id, ~priority, ~label, ~alignment=Left, ~color, ()) => {
     id,
+    color,
     priority,
     label,
     alignment,
@@ -340,12 +343,21 @@ module View = {
     let%hook (yOffset, _animationState, _reset) =
       Hooks.animation(transitionAnimation);
 
+    let defaultForeground = Colors.StatusBar.foreground.from(theme);
+
     let toStatusBarElement = (statusItem: Item.t) => {
       let onClick =
         statusItem.command
         |> Option.map((command, ()) =>
              dispatch(ContributedItemClicked({id: statusItem.id, command}))
            );
+
+      let color =
+        Exthost.Color.resolve(
+          ~default=defaultForeground,
+          theme,
+          statusItem.color,
+        );
 
       <item ?onClick>
         <View
@@ -354,7 +366,7 @@ module View = {
             justifyContent(`Center),
             alignItems(`Center),
           ]>
-          <Label font color=Revery.Colors.white label={statusItem.label} />
+          <Label font color label={statusItem.label} />
         </View>
       </item>;
     };

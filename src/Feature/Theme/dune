@@ -3,6 +3,7 @@
     (public_name Oni2.feature.theme)
     (libraries 
       Oni2.core
+      Oni2.exthost
       Revery
       isolinear
       base

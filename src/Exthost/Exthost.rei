@@ -626,9 +626,21 @@ module WorkspaceData: {
 };
 
 module ThemeColor: {
+  [@deriving show]
   type t = {id: string};
 
   let decode: Json.decoder(t);
+};
+
+module Color: {
+  [@deriving show]
+  type t;
+
+  let decode: Json.decoder(t);
+
+  let resolve:
+    (~default: Revery.Color.t, Oni_Core.ColorTheme.Colors.t, t) =>
+    Revery.Color.t;
 };
 
 module Msg: {
@@ -898,6 +910,7 @@ module Msg: {
           source: string,
           alignment,
           command: option(Command.t),
+          color: Color.t,
           priority: int,
         })
       | Dispose({id: int});

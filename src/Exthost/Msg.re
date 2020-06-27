@@ -706,6 +706,7 @@ module StatusBar = {
         source: string,
         alignment,
         command: option(ExtCommand.t),
+        color: Color.t,
         priority: int,
       })
     | Dispose({id: int});
@@ -731,7 +732,7 @@ module StatusBar = {
           labelJson,
           _tooltip,
           commandJson,
-          _,
+          colorJson,
           `String(alignment),
           `String(priority),
         ]),
@@ -740,11 +741,15 @@ module StatusBar = {
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
       let%bind command = parseCommand(commandJson);
+      let%bind color =
+        colorJson
+        |> Json.Decode.decode_value(Color.decode)
+        |> Result.map_error(Json.Decode.string_of_error);
       let%bind label =
         labelJson
         |> Json.Decode.decode_value(Label.decode)
         |> Result.map_error(Json.Decode.string_of_error);
-      Ok(SetEntry({id, source, label, alignment, priority, command}));
+      Ok(SetEntry({id, source, label, alignment, color, priority, command}));
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>
       Error(
