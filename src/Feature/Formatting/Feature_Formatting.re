@@ -311,13 +311,15 @@ let update =
         ~extHostClient,
         ~range=
           Range.{
-            start: {line: Index.zero, column: Index.zero},
-            stop:
-              {
-                line:
-                  Oni_Core.Buffer.getNumberOfLines(buf) |> Index.fromZeroBased,
-                column: Index.zero,
-              },
+            start: {
+              line: Index.zero,
+              column: Index.zero,
+            },
+            stop: {
+              line:
+                Oni_Core.Buffer.getNumberOfLines(buf) |> Index.fromZeroBased,
+              column: Index.zero,
+            },
           },
       );
     }

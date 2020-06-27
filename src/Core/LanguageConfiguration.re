@@ -92,7 +92,7 @@ module BracketPair = {
   let endsWithOpenPair = ({openPair, _}, str) => {
     StringEx.endsWith(~postfix=openPair, str);
   };
-  
+
   let isJustClosingPair = ({closePair, _}, str) => {
     let len = String.length(str);
 
@@ -274,7 +274,7 @@ let shouldIncreaseIndent =
   |> Option.value(~default=false);
 };
 
-let shouldDecreaseIndent = (~line, {decreaseIndentPattern, brackets,_}) => {
+let shouldDecreaseIndent = (~line, {decreaseIndentPattern, brackets, _}) => {
   decreaseIndentPattern
   |> Option.map(regex => OnigRegExp.test(line, regex))
   |> OptionEx.or_lazy(() => {
@@ -284,7 +284,7 @@ let shouldDecreaseIndent = (~line, {decreaseIndentPattern, brackets,_}) => {
            brackets,
          ),
        )
-  })
+     })
   |> Option.value(~default=false);
 };
 

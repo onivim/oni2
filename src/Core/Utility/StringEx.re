@@ -132,7 +132,7 @@ let isOnlyWhitespace = str => {
   switch (findNonWhitespace(str)) {
   | None => true
   | Some(_) => false
-  }
+  };
 };
 
 let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
