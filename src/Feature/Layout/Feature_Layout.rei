@@ -19,7 +19,7 @@ let split: ([ | `Horizontal | `Vertical], model) => model;
 
 let activeEditor: model => Editor.t;
 
-let openEditor: (Editor.t, model) => model;
+let openEditor: (~config: Config.resolver, Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
 let addLayoutTab: model => model;

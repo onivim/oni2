@@ -58,4 +58,4 @@ let layoutTabPosition =
     ~default=`bottom,
   );
 
-let singleTabMode = setting("oni.layout.singleTabMode", bool, ~default=true);
+let singleTabMode = setting("oni.layout.singleTabMode", bool, ~default=false);

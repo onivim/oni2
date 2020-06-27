@@ -1,3 +1,6 @@
+module Local = {
+  module Configuration = Configuration;
+};
 open Oni_Core;
 open Utility;
 open Feature_Editor;
@@ -18,6 +21,7 @@ module Group: {
   let nextEditor: t => t;
   let previousEditor: t => t;
   let openEditor: (Editor.t, t) => t;
+  let replaceAllWith: (Editor.t, t) => t;
   let removeEditor: (int, t) => option(t);
 
   let map: (Editor.t => Editor.t, t) => t;
@@ -90,6 +94,12 @@ module Group: {
         selectedId: Editor.getId(editor),
       }
     };
+  };
+
+  let replaceAllWith = (editor, group) => {
+    ...group,
+    editors: [editor],
+    selectedId: Editor.getId(editor),
   };
 
   let removeEditor = (editorId, group) => {
@@ -252,8 +262,6 @@ let moveDown = current => move(current, 0, 1);
 let nextEditor = updateActiveGroup(Group.nextEditor);
 
 let previousEditor = updateActiveGroup(Group.previousEditor);
-
-let openEditor = editor => updateActiveGroup(Group.openEditor(editor));
 
 let removeLayoutTab = (index, model) => {
   let left = Base.List.take(model.layouts, index);

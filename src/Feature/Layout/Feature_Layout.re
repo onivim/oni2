@@ -4,6 +4,13 @@ open Oni_Core.Utility;
 
 include Model;
 
+let openEditor = (~config, editor) =>
+  if (Local.Configuration.singleTabMode.get(config)) {
+    updateActiveGroup(Group.replaceAllWith(editor));
+  } else {
+    updateActiveGroup(Group.openEditor(editor));
+  };
+
 // UPDATE
 
 open Msg;
