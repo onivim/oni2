@@ -301,7 +301,12 @@ module EditorGroupView = {
                 isModified={ContentModel.isModified(item)}
                 icon={ContentModel.icon(item)}
                 onClick={() =>
-                  dispatch(GroupTabClicked(ContentModel.id(item)))
+                  dispatch(
+                    EditorTabClicked({
+                      groupId: model.id,
+                      editorId: ContentModel.id(item),
+                    }),
+                  )
                 }
                 onClose={() =>
                   dispatch(EditorCloseButtonClicked(ContentModel.id(item)))
