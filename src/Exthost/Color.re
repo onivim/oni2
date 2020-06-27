@@ -42,14 +42,14 @@ let decode =
     ])
   );
 
-let resolve = (~default, colors, color) => {
+let resolve = (colors, color) => {
   switch (color) {
   | String(str) =>
-    try(Revery.Color.hex(str)) {
-    | _exn => default
+    try(Some(Revery.Color.hex(str))) {
+    | _exn => None
     }
   | ThemeReference({id}) =>
     let key = ColorTheme.key(id);
-    ColorTheme.Colors.get(key, colors) |> Option.value(~default);
+    ColorTheme.Colors.get(key, colors);
   };
 };

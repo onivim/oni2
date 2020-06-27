@@ -706,7 +706,7 @@ module StatusBar = {
         source: string,
         alignment,
         command: option(ExtCommand.t),
-        color: Color.t,
+        color: option(Color.t),
         priority: int,
       })
     | Dispose({id: int});
@@ -743,7 +743,7 @@ module StatusBar = {
       let%bind command = parseCommand(commandJson);
       let%bind color =
         colorJson
-        |> Json.Decode.decode_value(Color.decode)
+        |> Json.Decode.(decode_value(nullable(Color.decode)))
         |> Result.map_error(Json.Decode.string_of_error);
       let%bind label =
         labelJson

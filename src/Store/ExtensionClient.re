@@ -383,7 +383,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           Feature_StatusBar.ItemAdded(
             Feature_StatusBar.Item.create(
               ~command?,
-              ~color,
+              ~color?,
               ~id,
               ~label,
               ~alignment,

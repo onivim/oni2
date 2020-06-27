@@ -638,9 +638,7 @@ module Color: {
 
   let decode: Json.decoder(t);
 
-  let resolve:
-    (~default: Revery.Color.t, Oni_Core.ColorTheme.Colors.t, t) =>
-    Revery.Color.t;
+  let resolve: (Oni_Core.ColorTheme.Colors.t, t) => option(Revery.Color.t);
 };
 
 module Msg: {
@@ -910,7 +908,7 @@ module Msg: {
           source: string,
           alignment,
           command: option(Command.t),
-          color: Color.t,
+          color: option(Color.t),
           priority: int,
         })
       | Dispose({id: int});
