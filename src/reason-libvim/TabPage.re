@@ -1,7 +1,10 @@
+[@deriving show({with_path: false})]
 type effect =
   | Goto(int)
-  | Previous(int)
-  | Next
+  | GotoRelative(int)
   | Move(int)
+  | MoveRelative(int)
   | Close(int)
-  | CloseOther(int);
+  | CloseRelative(int)
+  | Only(int)
+  | OnlyRelative(int);

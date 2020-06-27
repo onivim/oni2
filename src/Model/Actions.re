@@ -223,13 +223,7 @@ type t =
       decorations: list(Decoration.t),
     })
   | Vim(Feature_Vim.msg)
-  | TabPageGoto(int)
-  | TabPagePrevious(int)
-  | TabPageNext
-  | TabPageMove(int)
-  | TabPageClose(int)
-  | TabPageCloseActive
-  | TabPageCloseOther(int)
+  | TabPage(Vim.TabPage.effect)
   | Noop
 and command = {
   commandCategory: option(string),

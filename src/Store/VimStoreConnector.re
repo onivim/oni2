@@ -118,26 +118,11 @@ let start =
     };
   };
 
-  let handleTabPage =
-    fun
-    | Vim.TabPage.Goto(index) => dispatch(TabPageGoto(index - 1))
-    | Vim.TabPage.Previous(count) => dispatch(TabPagePrevious(count))
-    | Vim.TabPage.Next => dispatch(TabPageNext)
-    | Vim.TabPage.Move(index) => dispatch(TabPageMove(index - 1))
-    | Vim.TabPage.Close(index) =>
-      if (index == 0) {
-        dispatch(TabPageCloseActive);
-      } else {
-        dispatch(TabPageClose(index - 1));
-      }
-    | Vim.TabPage.CloseOther(index) =>
-      dispatch(TabPageCloseOther(index - 1));
-
   let _: unit => unit =
     Vim.onEffect(
       fun
       | Goto(gotoType) => handleGoto(gotoType)
-      | TabPage(msg) => handleTabPage(msg)
+      | TabPage(msg) => dispatch(TabPage(msg))
       | Format(Buffer(_)) =>
         dispatch(
           Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
@@ -984,53 +969,66 @@ let start =
       | _ => (state, Isolinear.Effect.none)
       }
 
-    | TabPageGoto(index) => (
+    | TabPage(Goto(index)) => (
         {
           ...state,
-          layout: Feature_Layout.gotoLayoutTab(index, state.layout),
+          layout: Feature_Layout.gotoLayoutTab(index - 1, state.layout),
         },
         Isolinear.Effect.none,
       )
 
-    | TabPagePrevious(count) => (
+    | TabPage(GotoRelative(count)) when count < 0 => (
         {
           ...state,
-          layout: Feature_Layout.previousLayoutTab(~count, state.layout),
+          layout:
+            Feature_Layout.previousLayoutTab(~count=- count, state.layout),
         },
         Isolinear.Effect.none,
       )
 
-    | TabPageNext => (
-        {...state, layout: Feature_Layout.nextLayoutTab(state.layout)},
-        Isolinear.Effect.none,
-      )
-
-    | TabPageMove(index) => (
+    | TabPage(GotoRelative(count)) => (
         {
           ...state,
-          layout: Feature_Layout.moveActiveLayoutTabTo(index, state.layout),
+          layout: Feature_Layout.nextLayoutTab(~count, state.layout),
         },
         Isolinear.Effect.none,
       )
 
-    | TabPageClose(index) =>
-      switch (Feature_Layout.removeLayoutTab(index, state.layout)) {
-      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
-      | None => (state, Isolinear.Effect.none)
-      }
+    | TabPage(Move(index)) => (
+        {
+          ...state,
+          layout:
+            Feature_Layout.moveActiveLayoutTabTo(index - 1, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
 
-    | TabPageCloseActive =>
+    | TabPage(Close(0)) =>
       switch (Feature_Layout.removeActiveLayoutTab(state.layout)) {
       | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
       | None => (state, Isolinear.Effect.none)
       }
 
-    | TabPageCloseOther(index) => (
+    | TabPage(Close(index)) =>
+      switch (Feature_Layout.removeLayoutTab(index - 1, state.layout)) {
+      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
+      | None => (state, Isolinear.Effect.none)
+      }
+
+    | TabPage(Only(0)) => (
+        {
+          ...state,
+          layout: state.layout |> Feature_Layout.removeOtherLayoutTabs,
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(Only(index)) => (
         {
           ...state,
           layout:
             state.layout
-            |> Feature_Layout.gotoLayoutTab(index)
+            |> Feature_Layout.gotoLayoutTab(index - 1)
             |> Feature_Layout.removeOtherLayoutTabs,
         },
         Isolinear.Effect.none,
