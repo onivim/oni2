@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Internal = {
   let doFormat = (~indentation, ~languageConfiguration, lines) => {
@@ -15,42 +16,108 @@ module Internal = {
       for (idx in 1 to len - 1) {
         let line = lines[idx];
 
-        let increaseIndentAmount =
-          LanguageConfiguration.shouldIncreaseIndent(
-            ~previousLine=previousLine^,
-            ~beforePreviousLine=beforePreviousLine^,
-            languageConfiguration,
-          )
-            ? 1 : 0;
+        if (StringEx.isOnlyWhitespace(line)) {
+          out[idx] = "";
+        } else {
+          let increaseIndentAmount =
+            LanguageConfiguration.shouldIncreaseIndent(
+              ~previousLine=previousLine^,
+              ~beforePreviousLine=beforePreviousLine^,
+              languageConfiguration,
+            )
+              ? 1 : 0;
 
-        let decreaseIndentAmount =
-          LanguageConfiguration.shouldDecreaseIndent(
-            ~line,
-            languageConfiguration,
-          )
-            ? (-1) : 0;
+          let decreaseIndentAmount =
+            LanguageConfiguration.shouldDecreaseIndent(
+              ~line,
+              languageConfiguration,
+            )
+              ? (-1) : 0;
 
-        let newIndentLevel =
-          // TODO: Fix this
-          currentIndentationlevel^
-          + increaseIndentAmount
-          + decreaseIndentAmount
-          + 1;
+          let newIndentLevel =
+            currentIndentationlevel^
+            + increaseIndentAmount
+            + decreaseIndentAmount;
 
-        out[idx] =
-          Indentation.applyLevel(
-            ~indentation,
-            ~level=newIndentLevel,
-            lines[idx],
-          );
+          out[idx] =
+            Indentation.applyLevel(
+              ~indentation,
+              ~level=newIndentLevel,
+              lines[idx],
+            );
 
-        currentIndentationlevel := newIndentLevel;
-        beforePreviousLine := Some(previousLine^);
-        previousLine := line;
+          currentIndentationlevel := newIndentLevel;
+          beforePreviousLine := Some(previousLine^);
+          previousLine := line;
+        }
       };
     };
     out;
   };
+
+  
+  let%test_module "format" =
+    (module
+     {
+       let buffer = lines => lines |> Array.of_list;
+
+       let indent2Spaces = IndentationSettings.{
+        mode: Spaces,
+        size: 2,
+        tabSize: 2,
+       };
+
+       let indentTabs = IndentationSettings.{
+        mode: Tabs,
+        size: 1,
+        tabSize: 2,
+       };
+
+       let languageConfiguration = LanguageConfiguration.default;
+//
+       let%test "empty array" = {
+          buffer([])
+          |> doFormat(
+          ~indentation=indent2Spaces,
+          ~languageConfiguration) == [||];
+       };
+       
+       let%test "no indent" = {
+          buffer(["abc"])
+          |> doFormat(
+          ~indentation=indent2Spaces,
+          ~languageConfiguration) == [|"abc"|];
+       };
+       
+       let%test "simple indent" = {
+          buffer(["{", "abc"])
+          |> doFormat(
+          ~indentation=indent2Spaces,
+          ~languageConfiguration) == [|"{", "  abc"|];
+       };
+
+       let%test "increase / decrease indent" = {
+          buffer(["{", "abc", "}"])
+          |> doFormat(
+          ~indentation=indent2Spaces,
+          ~languageConfiguration) == [|"{", "  abc", "}"|];
+       };
+       
+       let%test "extraneous whitespace is ignored" = {
+          buffer(["{", "      ", "abc", "}"])
+          |> doFormat(
+          ~indentation=indent2Spaces,
+          ~languageConfiguration) == [|"{", "", "  abc", "}"|];
+       };
+       
+       let%test "increase / decrease indent (tabs)" = {
+          buffer(["{", "abc", "}"])
+          |> doFormat(
+          ~indentation=indentTabs,
+          ~languageConfiguration) == [|"{", "\tabc", "}"|];
+       };
+     });
+
 };
 
 let format = (~indentation, ~languageConfiguration, ~startLineNumber, lines) => {

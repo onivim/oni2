@@ -92,6 +92,34 @@ module BracketPair = {
   let endsWithOpenPair = ({openPair, _}, str) => {
     StringEx.endsWith(~postfix=openPair, str);
   };
+  
+  let isJustClosingPair = ({closePair, _}, str) => {
+    let len = String.length(str);
+
+    let rec loop = (foundPair, idx) =>
+      if (idx >= len) {
+        foundPair;
+      } else if (foundPair) {
+        false;
+             // We found the closing pair... but there's other stuff after
+      } else {
+        let c = str.[idx];
+
+        if (c == ' ' || c == '\t') {
+          loop(foundPair, idx + 1);
+        } else if (c == closePair.[0]) {
+          loop(true, idx + 1);
+        } else {
+          false;
+        };
+      };
+
+    if (String.length(closePair) == 1) {
+      loop(false, 0);
+    } else {
+      false;
+    };
+  };
 };
 
 let defaultBrackets: list(BracketPair.t) =
@@ -246,9 +274,17 @@ let shouldIncreaseIndent =
   |> Option.value(~default=false);
 };
 
-let shouldDecreaseIndent = (~line, {decreaseIndentPattern, _}) => {
+let shouldDecreaseIndent = (~line, {decreaseIndentPattern, brackets,_}) => {
   decreaseIndentPattern
   |> Option.map(regex => OnigRegExp.test(line, regex))
+  |> OptionEx.or_lazy(() => {
+       Some(
+         List.exists(
+           bracket => BracketPair.isJustClosingPair(bracket, line),
+           brackets,
+         ),
+       )
+  })
   |> Option.value(~default=false);
 };
 

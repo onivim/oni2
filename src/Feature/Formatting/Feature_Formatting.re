@@ -154,7 +154,6 @@ module Internal = {
         ~configuration,
         ~matchingFormatters,
         ~buf,
-        ~filetype,
         ~extHostClient,
         ~range,
       ) => {
@@ -207,7 +206,6 @@ module Internal = {
 };
 
 let update =
-    // TODO
     (
       ~languageConfiguration,
       ~configuration,
@@ -253,7 +251,6 @@ let update =
         ~configuration,
         ~matchingFormatters,
         ~buf,
-        ~filetype,
         ~extHostClient,
         ~range,
       );
@@ -283,7 +280,6 @@ let update =
         ~configuration,
         ~matchingFormatters,
         ~buf,
-        ~filetype,
         ~extHostClient,
         ~range,
       );
@@ -312,13 +308,12 @@ let update =
         ~configuration,
         ~matchingFormatters,
         ~buf,
-        ~filetype,
         ~extHostClient,
         ~range=
           Range.{
-            start: Location.{line: Index.zero, column: Index.zero},
+            start: {line: Index.zero, column: Index.zero},
             stop:
-              Location.{
+              {
                 line:
                   Oni_Core.Buffer.getNumberOfLines(buf) |> Index.fromZeroBased,
                 column: Index.zero,

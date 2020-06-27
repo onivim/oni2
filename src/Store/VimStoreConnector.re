@@ -125,7 +125,7 @@ let start =
         dispatch(
           Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
         )
-      | Format(Range({startLine, endLine})) =>
+      | Format(Range({startLine, endLine, _})) =>
         dispatch(
           Actions.Formatting(
             Feature_Formatting.FormatRange({startLine, endLine}),
