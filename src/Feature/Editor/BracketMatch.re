@@ -60,7 +60,7 @@ let find =
         loop(
           ~direction,
           ~count,
-          ~line=line - 1,
+          ~line=line + direction,
           ~index=None,
           ~travel=travel + 1,
           ~startCharacter,
@@ -70,7 +70,7 @@ let find =
         loop(
           ~direction,
           ~count,
-          ~line=line + 1,
+          ~line=line + direction,
           ~index=None,
           ~travel=travel + 1,
           ~startCharacter,
@@ -104,13 +104,39 @@ let find =
       };
     };
 
-  // See if we can find the 'start' bracket
+  // If we're starting on the 'stop' character, rewind back once
+  // so we pick up that particular pair.
+  // A bunch of tedious logic to rewind a character safely, crossing line boundaries:
+  let (index', line') =
+    if (line < bufferLen && line >= 0) {
+      let bufferLine = buffer |> EditorBuffer.line(line);
+      let lineLength =
+        bufferLine |> BufferLine.lengthBounded(~max=Constants.maxLineLength);
 
+      if (index < lineLength && index >= 0) {
+        let char: Uchar.t = bufferLine |> BufferLine.getUcharExn(~index);
+        if (char != stop) {
+          (Some(index), line);
+        } else if (index > 0) {
+          (Some(index - 1), line);
+        } else if (line > 0) {
+          (None, line - 1);
+        } else {
+          (Some(index), line);
+        };
+      } else {
+        (Some(index), line);
+      };
+    } else {
+      (Some(index), line);
+    };
+
+  // See if we can find the 'start' bracket
   let maybeStart =
     loop(
       ~count=1,
-      ~line,
-      ~index=Some(index),
+      ~line=line',
+      ~index=index',
       ~travel=0,
       ~direction=-1,
       ~startCharacter=start,
@@ -193,6 +219,11 @@ module Test = {
 
          None == findFirst(~buffer, ~line=0, ~index=0, ~pairs);
        };
+       let%test "pair outside should not get picked up" = {
+         let buffer = create(["abc", "", "({[a]})"]);
+
+         None == findFirst(~buffer, ~line=1, ~index=0, ~pairs);
+       };
        let%test "picks nearest" = {
          let buffer = create(["({[a]})"]);
 
@@ -222,6 +253,21 @@ module Test = {
            },
          })
          == findFirst(~buffer, ~line=0, ~index=1, ~pairs);
+       };
+       let%test "uses closing character if cursor is on it" = {
+         let buffer = create(["({[a]})"]);
+
+         Some({
+           start: {
+             line: 0,
+             index: 2,
+           },
+           stop: {
+             line: 0,
+             index: 4,
+           },
+         })
+         == findFirst(~buffer, ~line=0, ~index=4, ~pairs);
        };
      });
 
