@@ -367,6 +367,26 @@ let start = maybeKeyBindingsFilePath => {
         condition: windowCommandCondition,
       },
       {
+        key: "<C-W><C-S>",
+        command: Feature_Layout.Commands.splitHorizontal.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>S",
+        command: Feature_Layout.Commands.splitHorizontal.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-V>",
+        command: Feature_Layout.Commands.splitVertical.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>V",
+        command: Feature_Layout.Commands.splitVertical.id,
+        condition: windowCommandCondition,
+      },
+      {
         key: "<C-W><RIGHT>",
         command: Feature_Layout.Commands.moveRight.id,
         condition: windowCommandCondition,
