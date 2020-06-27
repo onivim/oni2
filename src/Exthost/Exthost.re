@@ -4,6 +4,7 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module CodeLens = CodeLens;
 module Command = Command;
 module CompletionContext = CompletionContext;
 module CompletionKind = CompletionKind;

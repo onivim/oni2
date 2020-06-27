@@ -43,7 +43,6 @@ type t = {
   sideBar: SideBar.t,
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
-  editorGroups: EditorGroups.t,
   extensions: Extensions.t,
   iconTheme: IconTheme.t,
   isQuitting: bool,
@@ -79,14 +78,25 @@ type t = {
   vim: Feature_Vim.model,
 };
 
-let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
-  let editorGroups = EditorGroups.create();
-  let initialEditorGroup = editorGroups |> EditorGroups.getFirstEditorGroup;
+let initial =
+    (
+      ~initialBuffer,
+      ~initialBufferRenderers,
+      ~getUserSettings,
+      ~contributedCommands,
+      ~workingDirectory,
+    ) => {
+  let initialEditor = {
+    open Feature_Editor;
+    let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
+    Editor.create(~font=Service_Font.default, ~buffer=editorBuffer, ());
+  };
 
   {
-    buffers: Buffers.empty,
+    buffers:
+      Buffers.empty |> IntMap.add(Buffer.getId(initialBuffer), initialBuffer),
     bufferHighlights: BufferHighlights.initial,
-    bufferRenderers: BufferRenderers.initial,
+    bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     colorTheme:
       Feature_Theme.initial([
@@ -103,6 +113,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
           Feature_Editor.Contributions.configuration,
           Feature_Syntax.Contributions.configuration,
           Feature_Terminal.Contributions.configuration,
+          Feature_Layout.Contributions.configuration,
         ],
       ),
     configuration: Configuration.default,
@@ -119,7 +130,6 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     uiFont: UiFont.default,
     sideBar: SideBar.initial,
     tokenTheme: TokenTheme.empty,
-    editorGroups,
     iconTheme: IconTheme.create(),
     isQuitting: false,
     keyBindings: Keybindings.empty,
@@ -132,7 +142,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     sneak: Feature_Sneak.initial,
     statusBar: Feature_StatusBar.initial,
     syntaxHighlights: Feature_Syntax.empty,
-    layout: Feature_Layout.initial(initialEditorGroup.editorGroupId),
+    layout: Feature_Layout.initial([initialEditor]),
     windowTitle: "",
     windowIsFocused: true,
     windowDisplayMode: Windowed,

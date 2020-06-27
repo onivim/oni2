@@ -16,21 +16,38 @@ module Match = {
   };
 };
 
-external _create: string => result(t, string) = "reonig_create";
-external _search: (string, int, t) => array(Match.t) = "reonig_search";
-external _end: unit => unit = "reonig_end";
+module Bindings = {
+  external create: string => result(t, string) = "reonig_create";
+  external search: (string, int, t) => array(Match.t) = "reonig_search";
+  external finalize: unit => unit = "reonig_end";
+
+  external search_fast: (string, int, t) => int = "reonig_search_fast";
+  external get_last_matches: (string, t) => array(Match.t) =
+    "reonig_get_last_matches";
+};
 
 let create = (re: string) => {
-  _create(re);
+  Bindings.create(re);
 };
 
 let search = (str: string, startPosition: int, regexp: t) => {
-  _search(str, startPosition, regexp);
+  Bindings.search(str, startPosition, regexp);
 };
 
-let test = (str: string, regexp: t) => {
-  let matches = _search(str, 0, regexp);
-  Array.length(matches) > 0;
+module Fast = {
+  let search = (str, startPosition, regexp) => {
+    Bindings.search_fast(str, startPosition, regexp);
+  };
+
+  let getLastMatches = (str, regexp) => {
+    Bindings.get_last_matches(str, regexp);
+  };
+
+  let test = (str, regexp) => {
+    Bindings.search_fast(str, 0, regexp) >= 0;
+  };
 };
 
-at_exit(_end);
+let test = Fast.test;
+
+at_exit(Bindings.finalize);

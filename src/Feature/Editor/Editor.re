@@ -125,6 +125,8 @@ let create = (~font, ~buffer, ()) => {
   };
 };
 
+let copy = editor => create(~font=editor.font, ~buffer=editor.buffer, ());
+
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,
@@ -133,6 +135,27 @@ type scrollbarMetrics = {
 
 let getVimCursors = ({cursors, _}) => cursors;
 let setVimCursors = (~cursors, editor) => {...editor, cursors};
+
+let getNearestMatchingPair = (~location: Location.t, ~pairs, {buffer, _}) => {
+  BracketMatch.findFirst(
+    ~buffer,
+    ~line=location.line |> Index.toZeroBased,
+    ~index=location.column |> Index.toZeroBased,
+    ~pairs,
+  )
+  |> Option.map(({start, stop}: BracketMatch.pair) =>
+       (
+         Location.{
+           line: start.line |> Index.fromZeroBased,
+           column: start.index |> Index.fromZeroBased,
+         },
+         Location.{
+           line: stop.line |> Index.fromZeroBased,
+           column: stop.index |> Index.fromZeroBased,
+         },
+       )
+     );
+};
 
 let mapCursor = (~position: Vim.Cursor.t, editor) => {
   let byte = position.column |> Index.toZeroBased;
@@ -151,6 +174,27 @@ let mapCursor = (~position: Vim.Cursor.t, editor) => {
   };
 };
 
+let getCharacterBehindCursor = ({cursors, buffer, _}) => {
+  switch (cursors) {
+  | [] => None
+  | [cursor, ..._] =>
+    let byte = cursor.column |> Index.toZeroBased;
+    let line = cursor.line |> Index.toZeroBased;
+
+    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
+
+    if (line < bufferLineCount) {
+      let bufferLine = EditorBuffer.line(line, buffer);
+      let index = max(0, BufferLine.getIndex(~byte, bufferLine) - 1);
+      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+      | _exn => None
+      };
+    } else {
+      None;
+    };
+  };
+};
+
 let getCharacterUnderCursor = ({cursors, buffer, _}) => {
   switch (cursors) {
   | [] => None
@@ -163,8 +207,9 @@ let getCharacterUnderCursor = ({cursors, buffer, _}) => {
     if (line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
       let index = BufferLine.getIndex(~byte, bufferLine);
-      let character = BufferLine.getUcharExn(~index, bufferLine);
-      Some(character);
+      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+      | _exn => None
+      };
     } else {
       None;
     };
@@ -345,6 +390,21 @@ let scrollToColumn = (~column, view) => {
 let scrollDeltaPixelY = (~pixelY, view) => {
   let pixelY = view.scrollY +. pixelY;
   scrollToPixelY(~pixelY, view);
+};
+
+let scrollToPixelXY = (~pixelX as newScrollX, ~pixelY as newScrollY, view) => {
+  let {scrollX, _} = scrollToPixelX(~pixelX=newScrollX, view);
+  let {scrollY, minimapScrollY, _} =
+    scrollToPixelY(~pixelY=newScrollY, view);
+
+  {...view, scrollX, scrollY, minimapScrollY};
+};
+
+let scrollDeltaPixelXY = (~pixelX, ~pixelY, view) => {
+  let {scrollX, _} = scrollDeltaPixelX(~pixelX, view);
+  let {scrollY, minimapScrollY, _} = scrollDeltaPixelY(~pixelY, view);
+
+  {...view, scrollX, scrollY, minimapScrollY};
 };
 
 // PROJECTION

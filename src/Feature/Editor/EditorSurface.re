@@ -124,6 +124,7 @@ let scrollSpringOptions =
 let%component make =
               (
                 ~dispatch,
+                ~languageConfiguration,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -203,12 +204,21 @@ let%component make =
       editor,
     );
 
+  let matchingPairCheckPosition =
+    mode == Vim.Types.Insert
+      ? Location.{
+          line: cursorPosition.line,
+          column: Index.(cursorPosition.column - 1),
+        }
+      : cursorPosition;
+
   let matchingPairs =
     !Config.matchBrackets.get(config)
       ? None
-      : BufferHighlights.getMatchingPair(
-          Buffer.getId(buffer),
-          bufferHighlights,
+      : Editor.getNearestMatchingPair(
+          ~location=matchingPairCheckPosition,
+          ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
+          editor,
         );
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
@@ -316,6 +326,7 @@ let%component make =
       <Scrollbar.Vertical
         dispatch
         editor
+        matchingPair=matchingPairs
         cursorPosition
         width=Constants.scrollBarThickness
         height=pixelHeight

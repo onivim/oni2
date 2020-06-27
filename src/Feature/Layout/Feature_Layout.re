@@ -1,150 +1,174 @@
+open Oni_Core.Utility;
+
 // MODEL
 
-type panel =
-  | Left
-  | Center(int)
-  | Bottom;
-
-type model = {
-  tree: Layout.t(int),
-  uncommittedTree: [
-    | `Resizing(Layout.t(int))
-    | `Maximized(Layout.t(int))
-    | `None
-  ],
-};
-
-let initial = id => {tree: Layout.singleton(id), uncommittedTree: `None};
-
-let activeTree = model =>
-  switch (model.uncommittedTree) {
-  | `Resizing(tree)
-  | `Maximized(tree) => tree
-  | `None => model.tree
-  };
-
-let updateTree = (f, model) => {
-  tree: f(activeTree(model)),
-  uncommittedTree: `None,
-};
-
-let windows = model => Layout.windows(activeTree(model));
-let addWindow = (direction, focus) =>
-  updateTree(Layout.addWindow(direction, focus));
-let insertWindow = (target, direction, focus) =>
-  updateTree(Layout.insertWindow(target, direction, focus));
-let removeWindow = target => updateTree(Layout.removeWindow(target));
-
-let move = (focus, dirX, dirY, layout) => {
-  let positioned = Positioned.fromLayout(0, 0, 200, 200, layout);
-
-  Positioned.move(focus, dirX, dirY, positioned)
-  |> Option.value(~default=focus);
-};
-
-let moveLeft = current => move(current, -1, 0);
-let moveRight = current => move(current, 1, 0);
-let moveUp = current => move(current, 0, -1);
-let moveDown = current => move(current, 0, 1);
+include Model;
 
 // UPDATE
 
-[@deriving show({with_path: false})]
-type command =
-  | MoveLeft
-  | MoveRight
-  | MoveUp
-  | MoveDown
-  | RotateForward
-  | RotateBackward
-  | DecreaseSize
-  | IncreaseSize
-  | DecreaseHorizontalSize
-  | IncreaseHorizontalSize
-  | DecreaseVerticalSize
-  | IncreaseVerticalSize
-  | IncreaseWindowSize([ | `Up | `Down | `Left | `Right])
-  | DecreaseWindowSize([ | `Up | `Down | `Left | `Right])
-  | Maximize
-  | MaximizeHorizontal
-  | MaximizeVertical
-  | ToggleMaximize
-  | ResetSizes;
+open Msg;
 
 [@deriving show({with_path: false})]
-type msg =
-  | SplitDragged({
-      path: list(int),
-      delta: float,
-    })
-  | DragComplete
-  | Command(command);
+type msg = Msg.t;
 
 type outmsg =
   | Nothing
+  | SplitAdded
+  | RemoveLastWasBlocked
   | Focus(panel);
 
-let rotate = (direction, focus, model) => {
-  ...model,
-  tree: Layout.rotate(direction, focus, activeTree(model)),
-};
+open {
+       let rotate = direction =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree:
+               Layout.rotate(
+                 direction,
+                 layout.activeGroupId,
+                 activeTree(layout),
+               ),
+           }
+         );
 
-let resizeWindowByAxis = (direction, focus, delta, model) => {
-  ...model,
-  tree:
-    Layout.resizeWindowByAxis(direction, focus, delta, activeTree(model)),
-};
+       let resizeWindowByAxis = (direction, delta) =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree:
+               Layout.resizeWindowByAxis(
+                 direction,
+                 layout.activeGroupId,
+                 delta,
+                 activeTree(layout),
+               ),
+           }
+         );
 
-let resizeWindowByDirection = (direction, focus, delta, model) => {
-  ...model,
-  tree:
-    Layout.resizeWindowByDirection(
-      direction,
-      focus,
-      delta,
-      activeTree(model),
-    ),
-};
+       let resizeWindowByDirection = (direction, delta) =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree:
+               Layout.resizeWindowByDirection(
+                 direction,
+                 layout.activeGroupId,
+                 delta,
+                 activeTree(layout),
+               ),
+           }
+         );
 
-let resetWeights = model => {
-  tree: Layout.resetWeights(activeTree(model)),
-  uncommittedTree: `None,
-};
+       let resetWeights =
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             tree: Layout.resetWeights(activeTree(layout)),
+             uncommittedTree: `None,
+           }
+         );
 
-let maximize = (~direction=?, targetId, model) => {
-  ...model,
-  uncommittedTree:
-    `Maximized(Layout.maximize(~direction?, targetId, activeTree(model))),
-};
+       let maximize = (~direction=?) =>
+         updateActiveLayout(layout =>
+           {
+             ...layout,
+             uncommittedTree:
+               `Maximized(
+                 Layout.maximize(
+                   ~direction?,
+                   layout.activeGroupId,
+                   activeTree(layout),
+                 ),
+               ),
+           }
+         );
+     };
 
 let update = (~focus, model, msg) => {
   switch (msg) {
-  | SplitDragged({path, delta}) =>
-    let model =
-      switch (model.uncommittedTree) {
-      | `Maximized(tree) => {...model, tree}
-      | `Resizing(_)
-      | `None => model
-      };
-    (
-      {
-        ...model,
-        uncommittedTree:
-          `Resizing(Layout.resizeSplit(~path, ~delta, model.tree)),
-      },
+  | SplitDragged({path, delta}) => (
+      updateActiveLayout(
+        layout => {
+          let layout =
+            switch (layout.uncommittedTree) {
+            | `Maximized(tree) => {...layout, tree}
+            | `Resizing(_)
+            | `None => layout
+            };
+          {
+            ...layout,
+            uncommittedTree:
+              `Resizing(Layout.resizeSplit(~path, ~delta, layout.tree)),
+          };
+        },
+        model,
+      ),
       Nothing,
-    );
+    )
 
   | DragComplete => (updateTree(Fun.id, model), Nothing)
 
+  | EditorTabClicked({groupId, editorId}) => (
+      updateActiveLayout(
+        updateGroup(groupId, Group.select(editorId)),
+        model,
+      ),
+      Nothing,
+    )
+
+  | GroupSelected(id) => (
+      updateActiveLayout(layout => {...layout, activeGroupId: id}, model),
+      Focus(Center),
+    )
+
+  | EditorCloseButtonClicked(id) =>
+    switch (removeEditor(id, model)) {
+    | Some(model) => (model, Nothing)
+    | None => (model, RemoveLastWasBlocked)
+    }
+
+  | LayoutTabClicked(index) => (
+      {...model, activeLayoutIndex: index},
+      Nothing,
+    )
+
+  | LayoutCloseButtonClicked(index) =>
+    switch (removeLayoutTab(index, model)) {
+    | Some(model) => (model, Nothing)
+    | None => (model, RemoveLastWasBlocked)
+    }
+
+  | Command(NextEditor) => (nextEditor(model), Nothing)
+
+  | Command(PreviousEditor) => (previousEditor(model), Nothing)
+
+  | Command(SplitVertical) => (split(`Vertical, model), SplitAdded)
+
+  | Command(SplitHorizontal) => (split(`Horizontal, model), SplitAdded)
+
+  | Command(CloseActiveEditor) =>
+    switch (removeActiveEditor(model)) {
+    | Some(model) => (model, Nothing)
+    | None => (model, RemoveLastWasBlocked)
+    }
+
   | Command(MoveLeft) =>
     switch (focus) {
-    | Some(Center(focus)) =>
-      let newFocus = model |> activeTree |> moveLeft(focus);
-      if (newFocus == focus) {
+    | Some(Center) =>
+      let layout = model |> activeLayout;
+      let newActiveGroupId =
+        layout |> activeTree |> moveLeft(layout.activeGroupId);
+
+      if (newActiveGroupId == layout.activeGroupId) {
         (model, Focus(Left));
       } else {
-        (model, Focus(Center(newFocus)));
+        (
+          updateActiveLayout(
+            layout => {...layout, activeGroupId: newActiveGroupId},
+            model,
+          ),
+          Nothing,
+        );
       };
 
     | Some(Left)
@@ -154,13 +178,28 @@ let update = (~focus, model, msg) => {
 
   | Command(MoveRight) =>
     switch (focus) {
-    | Some(Center(focus)) =>
-      let newFocus = model |> activeTree |> moveRight(focus);
-      (model, Focus(Center(newFocus)));
+    | Some(Center) =>
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId =
+              layout |> activeTree |> moveRight(layout.activeGroupId);
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Nothing);
 
     | Some(Left) =>
-      let focus = model |> activeTree |> Layout.leftmost;
-      (model, Focus(Center(focus)));
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId = layout |> activeTree |> Layout.leftmost;
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Focus(Center));
 
     | Some(Bottom)
     | None => (model, Nothing)
@@ -168,13 +207,28 @@ let update = (~focus, model, msg) => {
 
   | Command(MoveUp) =>
     switch (focus) {
-    | Some(Center(focus)) =>
-      let newFocus = model |> activeTree |> moveUp(focus);
-      (model, Focus(Center(newFocus)));
+    | Some(Center) =>
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId =
+              layout |> activeTree |> moveUp(layout.activeGroupId);
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Nothing);
 
     | Some(Bottom) =>
-      let focus = model |> activeTree |> Layout.bottommost;
-      (model, Focus(Center(focus)));
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId = layout |> activeTree |> Layout.bottommost;
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Focus(Center));
 
     | Some(Left)
     | None => (model, Nothing)
@@ -182,12 +236,21 @@ let update = (~focus, model, msg) => {
 
   | Command(MoveDown) =>
     switch (focus) {
-    | Some(Center(focus)) =>
-      let newFocus = model |> activeTree |> moveDown(focus);
-      if (newFocus == focus) {
+    | Some(Center) =>
+      let layout = model |> activeLayout;
+      let newActiveGroupId =
+        layout |> activeTree |> moveDown(layout.activeGroupId);
+
+      if (newActiveGroupId == layout.activeGroupId) {
         (model, Focus(Bottom));
       } else {
-        (model, Focus(Center(newFocus)));
+        (
+          updateActiveLayout(
+            layout => {...layout, activeGroupId: newActiveGroupId},
+            model,
+          ),
+          Nothing,
+        );
       };
 
     | Some(Left) => (model, Focus(Bottom))
@@ -198,7 +261,7 @@ let update = (~focus, model, msg) => {
 
   | Command(RotateForward) =>
     switch (focus) {
-    | Some(Center(focus)) => (rotate(`Forward, focus, model), Nothing)
+    | Some(Center) => (rotate(`Forward, model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -207,7 +270,7 @@ let update = (~focus, model, msg) => {
 
   | Command(RotateBackward) =>
     switch (focus) {
-    | Some(Center(focus)) => (rotate(`Backward, focus, model), Nothing)
+    | Some(Center) => (rotate(`Backward, model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -216,10 +279,10 @@ let update = (~focus, model, msg) => {
 
   | Command(DecreaseSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
+    | Some(Center) => (
         model
-        |> resizeWindowByAxis(`Horizontal, focus, 0.95)
-        |> resizeWindowByAxis(`Vertical, focus, 0.95),
+        |> resizeWindowByAxis(`Horizontal, 0.95)
+        |> resizeWindowByAxis(`Vertical, 0.95),
         Nothing,
       )
 
@@ -230,10 +293,10 @@ let update = (~focus, model, msg) => {
 
   | Command(IncreaseSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
+    | Some(Center) => (
         model
-        |> resizeWindowByAxis(`Horizontal, focus, 1.05)
-        |> resizeWindowByAxis(`Vertical, focus, 1.05),
+        |> resizeWindowByAxis(`Horizontal, 1.05)
+        |> resizeWindowByAxis(`Vertical, 1.05),
         Nothing,
       )
 
@@ -244,8 +307,8 @@ let update = (~focus, model, msg) => {
 
   | Command(DecreaseHorizontalSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByAxis(`Horizontal, focus, 0.95),
+    | Some(Center) => (
+        model |> resizeWindowByAxis(`Horizontal, 0.95),
         Nothing,
       )
 
@@ -256,8 +319,8 @@ let update = (~focus, model, msg) => {
 
   | Command(IncreaseHorizontalSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByAxis(`Horizontal, focus, 1.05),
+    | Some(Center) => (
+        model |> resizeWindowByAxis(`Horizontal, 1.05),
         Nothing,
       )
 
@@ -268,8 +331,8 @@ let update = (~focus, model, msg) => {
 
   | Command(DecreaseVerticalSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByAxis(`Vertical, focus, 0.95),
+    | Some(Center) => (
+        model |> resizeWindowByAxis(`Vertical, 0.95),
         Nothing,
       )
 
@@ -280,8 +343,8 @@ let update = (~focus, model, msg) => {
 
   | Command(IncreaseVerticalSize) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByAxis(`Vertical, focus, 1.05),
+    | Some(Center) => (
+        model |> resizeWindowByAxis(`Vertical, 1.05),
         Nothing,
       )
 
@@ -292,8 +355,8 @@ let update = (~focus, model, msg) => {
 
   | Command(IncreaseWindowSize(direction)) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByDirection(direction, focus, 1.05),
+    | Some(Center) => (
+        model |> resizeWindowByDirection(direction, 1.05),
         Nothing,
       )
 
@@ -304,8 +367,8 @@ let update = (~focus, model, msg) => {
 
   | Command(DecreaseWindowSize(direction)) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        model |> resizeWindowByDirection(direction, focus, 0.95),
+    | Some(Center) => (
+        model |> resizeWindowByDirection(direction, 0.95),
         Nothing,
       )
 
@@ -316,7 +379,7 @@ let update = (~focus, model, msg) => {
 
   | Command(Maximize) =>
     switch (focus) {
-    | Some(Center(focus)) => (maximize(focus, model), Nothing)
+    | Some(Center) => (maximize(model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -325,10 +388,7 @@ let update = (~focus, model, msg) => {
 
   | Command(MaximizeHorizontal) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        maximize(~direction=`Horizontal, focus, model),
-        Nothing,
-      )
+    | Some(Center) => (maximize(~direction=`Horizontal, model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -337,10 +397,7 @@ let update = (~focus, model, msg) => {
 
   | Command(MaximizeVertical) =>
     switch (focus) {
-    | Some(Center(focus)) => (
-        maximize(~direction=`Vertical, focus, model),
-        Nothing,
-      )
+    | Some(Center) => (maximize(~direction=`Vertical, model), Nothing)
 
     | Some(Left)
     | Some(Bottom)
@@ -349,12 +406,16 @@ let update = (~focus, model, msg) => {
 
   | Command(ToggleMaximize) =>
     let model =
-      switch (model.uncommittedTree) {
-      | `Maximized(_) => {...model, uncommittedTree: `None}
+      switch (activeLayout(model).uncommittedTree) {
+      | `Maximized(_) =>
+        updateActiveLayout(
+          layout => {...layout, uncommittedTree: `None},
+          model,
+        )
 
       | _ =>
         switch (focus) {
-        | Some(Center(focus)) => maximize(focus, model)
+        | Some(Center) => maximize(model)
 
         | Some(Left)
         | Some(Bottom)
@@ -364,178 +425,81 @@ let update = (~focus, model, msg) => {
     (model, Nothing);
 
   | Command(ResetSizes) => (resetWeights(model), Nothing)
+
+  | Command(AddLayout) => (addLayoutTab(model), Nothing)
+
+  | Command(PreviousLayout) => (
+      {
+        ...model,
+        activeLayoutIndex:
+          IndexEx.prevRollOver(
+            ~last=List.length(model.layouts) - 1,
+            model.activeLayoutIndex,
+          ),
+      },
+      Nothing,
+    )
+
+  | Command(NextLayout) => (
+      {
+        ...model,
+        activeLayoutIndex:
+          IndexEx.nextRollOver(
+            ~last=List.length(model.layouts) - 1,
+            model.activeLayoutIndex,
+          ),
+      },
+      Nothing,
+    )
   };
 };
+
 // VIEW
 
-module View = {
-  module Local = {
-    module Layout = Layout;
-  };
-  open Revery;
-  open UI;
-
-  module Constants = {
-    let handleSize = 10;
-  };
-
-  module Styles = {
-    open Style;
-
-    let container = [flexGrow(1), flexDirection(`Row)];
-
-    let verticalHandle = (node: Positioned.t(_)) => [
-      cursor(MouseCursors.horizontalResize),
-      position(`Absolute),
-      left(node.meta.x + node.meta.width - Constants.handleSize / 2),
-      top(node.meta.y),
-      width(Constants.handleSize),
-      height(node.meta.height),
-    ];
-
-    let horizontalHandle = (node: Positioned.t(_)) => [
-      cursor(MouseCursors.verticalResize),
-      position(`Absolute),
-      left(node.meta.x),
-      top(node.meta.y + node.meta.height - Constants.handleSize / 2),
-      width(node.meta.width),
-      height(Constants.handleSize),
-    ];
-  };
-
-  let component = React.Expert.component("handleView");
-  let handleView =
-      (~direction, ~node: Positioned.t(_), ~onDrag, ~onDragComplete, ()) =>
-    component(hooks => {
-      let ((captureMouse, _state), hooks) =
-        Hooks.mouseCapture(
-          ~onMouseMove=
-            ((originX, originY), evt) => {
-              let delta =
-                switch (direction) {
-                | `Vertical => evt.mouseX -. originX
-                | `Horizontal => evt.mouseY -. originY
-                };
-
-              onDrag(delta);
-              Some((originX, originY));
-            },
-          ~onMouseUp=
-            (_, _) => {
-              onDragComplete();
-              None;
-            },
-          (),
-          hooks,
-        );
-
-      let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
-        captureMouse((evt.mouseX, evt.mouseY));
-      };
-
-      (
-        <View
-          onMouseDown
-          style={
-            direction == `Vertical
-              ? Styles.verticalHandle(node) : Styles.horizontalHandle(node)
-          }
-        />,
-        hooks,
-      );
-    });
-
-  let rec nodeView =
-          (
-            ~theme,
-            ~path=[],
-            ~node: Positioned.t(_),
-            ~renderWindow,
-            ~dispatch,
-            (),
-          ) => {
-    switch (node.kind) {
-    | `Split(direction, children) =>
-      let parent = node;
-
-      let rec loop = (index, children) => {
-        let path = [index, ...path];
-
-        switch (children) {
-        | [] => []
-        | [node] => [<nodeView theme path node renderWindow dispatch />]
-
-        | [node, ...[_, ..._] as rest] =>
-          let onDrag = delta => {
-            let total =
-              direction == `Vertical ? parent.meta.width : parent.meta.height;
-            dispatch(
-              SplitDragged({
-                path: List.rev(path),
-                delta: delta /. float(total) // normalized
-              }),
-            );
-          };
-
-          let onDragComplete = () => dispatch(DragComplete);
-
-          [
-            <nodeView theme path node renderWindow dispatch />,
-            <handleView direction node onDrag onDragComplete />,
-            ...loop(index + 1, rest),
-          ];
-        };
-      };
-
-      loop(0, children) |> React.listToElement;
-
-    | `Window(id) =>
-      <View
-        style=Style.[
-          position(`Absolute),
-          left(node.meta.x),
-          top(node.meta.y),
-          width(node.meta.width),
-          height(node.meta.height),
-        ]>
-        {renderWindow(id)}
-      </View>
-    };
-  };
-
-  let component = React.Expert.component("Feature_Layout.View");
-  let make = (~children as renderWindow, ~model, ~theme, ~dispatch, ()) =>
-    component(hooks => {
-      let ((maybeDimensions, setDimensions), hooks) =
-        Hooks.state(None, hooks);
-
-      let tree = activeTree(model);
-
-      let children =
-        switch (maybeDimensions) {
-        | Some((width, height)) =>
-          let positioned = Positioned.fromLayout(0, 0, width, height, tree);
-
-          <nodeView theme node=positioned renderWindow dispatch />;
-
-        | None => React.empty
-        };
-
-      (
-        <View
-          onDimensionsChanged={dim =>
-            setDimensions(_ => Some((dim.width, dim.height)))
-          }
-          style=Styles.container>
-          children
-        </View>,
-        hooks,
-      );
-    });
-};
+module View = View;
 
 module Commands = {
   open Feature_Commands.Schema;
+
+  let nextEditor =
+    define(
+      ~category="View",
+      ~title="Open Next Editor",
+      "workbench.action.nextEditor",
+      Command(NextEditor),
+    );
+
+  let previousEditor =
+    define(
+      ~category="View",
+      ~title="Open Previous Editor",
+      "workbench.action.previousEditor",
+      Command(PreviousEditor),
+    );
+
+  let splitVertical =
+    define(
+      ~category="View",
+      ~title="Split Editor Vertically",
+      "view.splitVertical",
+      Command(SplitVertical),
+    );
+
+  let splitHorizontal =
+    define(
+      ~category="View",
+      ~title="Split Editor Horizontally",
+      "view.splitHorizontal",
+      Command(SplitHorizontal),
+    );
+
+  let closeActiveEditor =
+    define(
+      ~category="View",
+      ~title="Close Editor",
+      "view.closeEditor",
+      Command(CloseActiveEditor),
+    );
 
   let rotateForward =
     define(
@@ -718,11 +682,40 @@ module Commands = {
       "workbench.action.evenEditorWidths",
       Command(ResetSizes),
     );
+
+  let addLayout =
+    define(
+      ~category="View",
+      ~title="Add Layout Tab",
+      "oni.layout.add",
+      Command(AddLayout),
+    );
+  let previousLayout =
+    define(
+      ~category="View",
+      ~title="Previous Layout Tab",
+      "oni.layout.previous",
+      Command(PreviousLayout),
+    );
+  let nextLayout =
+    define(
+      ~category="View",
+      ~title="Next Layout Tab",
+      "oni.layout.next",
+      Command(NextLayout),
+    );
 };
+
+// CONTRIBUTIONS
 
 module Contributions = {
   let commands =
     Commands.[
+      nextEditor,
+      previousEditor,
+      splitVertical,
+      splitHorizontal,
+      closeActiveEditor,
       rotateForward,
       rotateBackward,
       moveLeft,
@@ -748,5 +741,11 @@ module Contributions = {
       maximizeVertical,
       toggleMaximize,
       resetSizes,
+      addLayout,
+      previousLayout,
+      nextLayout,
     ];
+
+  let configuration =
+    Configuration.[showLayoutTabs.spec, layoutTabPosition.spec];
 };

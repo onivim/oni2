@@ -243,27 +243,27 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<D-W>",
-        command: Commands.View.closeEditor.id,
+        command: Feature_Layout.Commands.closeActiveEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<C-PAGEDOWN>",
-        command: Commands.Workbench.Action.nextEditor.id,
+        command: Feature_Layout.Commands.nextEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-]>",
-        command: Commands.Workbench.Action.nextEditor.id,
+        command: Feature_Layout.Commands.nextEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<C-PAGEUP>",
-        command: Commands.Workbench.Action.previousEditor.id,
+        command: Feature_Layout.Commands.previousEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-[>",
-        command: Commands.Workbench.Action.previousEditor.id,
+        command: Feature_Layout.Commands.previousEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
@@ -364,6 +364,26 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-W><C-L>",
         command: Feature_Layout.Commands.moveRight.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-S>",
+        command: Feature_Layout.Commands.splitHorizontal.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>S",
+        command: Feature_Layout.Commands.splitHorizontal.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-V>",
+        command: Feature_Layout.Commands.splitVertical.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>V",
+        command: Feature_Layout.Commands.splitVertical.id,
         condition: windowCommandCondition,
       },
       {

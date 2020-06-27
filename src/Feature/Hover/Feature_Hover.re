@@ -23,6 +23,7 @@ type model = {
   triggeredFrom:
     option([ | `CommandPalette | `Mouse(EditorCoreTypes.Location.t)]),
   lastRequestID: option(int),
+  editorID: option(int),
 };
 
 let initial = {
@@ -32,6 +33,7 @@ let initial = {
   range: None,
   triggeredFrom: None,
   lastRequestID: None,
+  editorID: None,
 };
 
 module IDGenerator =
@@ -50,6 +52,7 @@ type msg =
       contents: list(Exthost.MarkdownString.t),
       range: option(EditorCoreTypes.Range.t),
       requestID: int,
+      editorID: int,
     })
   | HoverRequestFailed(string)
   | MouseHovered(EditorCoreTypes.Location.t)
@@ -60,7 +63,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 let getEffectsForLocation =
-    (~buffer, ~location, ~extHostClient, ~model, ~requestID) => {
+    (~buffer, ~location, ~extHostClient, ~model, ~requestID, ~editor) => {
   let filetype =
     buffer
     |> Oni_Core.Buffer.getFileType
@@ -86,6 +89,7 @@ let getEffectsForLocation =
              contents,
              range: Option.map(Exthost.OneBasedRange.toRange, range),
              requestID,
+             editorID: Feature_Editor.Editor.getId(editor),
            })
          | Error(s) => HoverRequestFailed(s)
          }
@@ -107,6 +111,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           ~extHostClient,
           ~model,
           ~requestID,
+          ~editor,
         );
       (
         {
@@ -122,7 +127,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
     }
   | MouseHovered(location) =>
     switch (maybeBuffer, maybeEditor) {
-    | (Some(buffer), Some(_)) =>
+    | (Some(buffer), Some(editor)) =>
       let requestID = IDGenerator.get();
       let effects =
         getEffectsForLocation(
@@ -131,6 +136,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           ~extHostClient,
           ~model,
           ~requestID,
+          ~editor,
         );
       (
         {
@@ -182,10 +188,16 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       {...model, providers: [provider, ...model.providers]},
       Nothing,
     )
-  | HoverInfoReceived({contents, range, requestID}) =>
+  | HoverInfoReceived({contents, range, requestID, editorID}) =>
     switch (model.lastRequestID) {
     | Some(id) when requestID == id => (
-        {...model, contents, range, lastRequestID: None},
+        {
+          ...model,
+          contents,
+          range,
+          lastRequestID: None,
+          editorID: Some(editorID),
+        },
         Nothing,
       )
     | _ => (model, Nothing)
@@ -245,6 +257,7 @@ module View = {
         ~grammars,
         ~diagnostic,
         ~buffer,
+        ~editor,
         (),
       ) => {
     let defaultLanguage =
@@ -265,6 +278,7 @@ module View = {
         ~markdown=Exthost.MarkdownString.toString(markdown),
         ~baseFontSize=uiFont.size,
         ~codeBlockStyle=Style.[flexGrow(1)],
+        ~codeBlockFontSize=editorFont.fontSize,
       );
 
     let hoverDiagnostic =
@@ -276,15 +290,18 @@ module View = {
         style={Styles.diagnostic(~theme=colorTheme)}
       />;
     };
-
-    <Oni_Components.HoverView x y theme=colorTheme>
-      {List.map(markdown => <hoverMarkdown markdown />, model.contents)
-       |> React.listToElement}
-      {model.contents != [] && diagnostic != []
-         ? <horizontalRule theme=colorTheme /> : React.empty}
-      {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
-       |> React.listToElement}
-    </Oni_Components.HoverView>;
+    switch (model.editorID) {
+    | Some(editorID) when editorID == Feature_Editor.Editor.getId(editor) =>
+      <Oni_Components.HoverView x y theme=colorTheme>
+        {List.map(markdown => <hoverMarkdown markdown />, model.contents)
+         |> React.listToElement}
+        {model.contents != [] && diagnostic != []
+           ? <horizontalRule theme=colorTheme /> : React.empty}
+        {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
+         |> React.listToElement}
+      </Oni_Components.HoverView>
+    | _ => React.empty
+    };
   };
 
   let make =
@@ -387,6 +404,7 @@ module View = {
         grammars
         diagnostic
         buffer
+        editor
       />
     | _ => React.empty
     };
