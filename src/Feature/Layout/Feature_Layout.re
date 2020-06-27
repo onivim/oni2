@@ -108,8 +108,11 @@ let update = (~focus, model, msg) => {
 
   | DragComplete => (updateTree(Fun.id, model), Nothing)
 
-  | GroupTabClicked(id) => (
-      updateActiveGroup(Group.select(id), model),
+  | EditorTabClicked({groupId, editorId}) => (
+      updateActiveLayout(
+        updateGroup(groupId, Group.select(editorId)),
+        model,
+      ),
       Nothing,
     )
 
