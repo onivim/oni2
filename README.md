@@ -8,7 +8,7 @@
 :warning: Currently in alpha - may have bugs or instability - use with caution :warning: 
 
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/13532591/71643323-375b2900-2c6d-11ea-974e-03361046402d.png" alt="Onivim 2" />
+  <img src="https://user-images.githubusercontent.com/4527949/85928449-0c980900-b87b-11ea-9f6a-06907d4f6d80.png" alt="Onivim 2" />
  </p>
 
 
