@@ -4,6 +4,8 @@
  * Helpers for dealing with indentation level
  */
 
+open Utility;
+
 let getLeadingWhitespace = (s: string) => {
   let rec loop = (i, spaces, tabs) =>
     if (i >= String.length(s)) {
@@ -51,6 +53,22 @@ let getLevel = (settings: IndentationSettings.t, text: string) => {
   };
 
   allWhitespace^ ? 0 : indentLevel^;
+};
+
+let applyLevel =
+    (~indentation: IndentationSettings.t, ~level: int, str: string) => {
+  str
+  |> StringEx.findNonWhitespace
+  |> Option.map(idx => {
+       let desiredWhitespace =
+         switch (indentation.mode) {
+         | Tabs => String.make(level, '\t')
+         | Spaces => String.make(level * indentation.size, ' ')
+         };
+
+       desiredWhitespace ++ String.sub(str, idx, String.length(str) - idx);
+     })
+  |> Option.value(~default=str);
 };
 
 let getForBuffer = (~buffer, configuration: Configuration.t) => {

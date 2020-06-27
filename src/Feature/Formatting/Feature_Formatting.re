@@ -32,11 +32,15 @@ let initial = {
 [@deriving show]
 type command =
   | FormatDocument
-  | FormatRange;
+  | FormatSelection;
 
 [@deriving show]
 type msg =
   | Command(command)
+  | FormatRange({
+      startLine: Index.t,
+      endLine: Index.t,
+    })
   | DocumentFormatterAvailable({
       handle: int,
       selector: Exthost.DocumentSelector.t,
@@ -100,39 +104,45 @@ module Internal = {
     };
 
   let fallBackToDefaultFormatter =
-      (
-        ~indentation,
-        ~languageConfiguration,
-        ~buffer,
-        // TODO: Hook up range
-        _range,
-      ) => {
+      (~indentation, ~languageConfiguration, ~buffer, range: Range.t) => {
     let lines = buffer |> Oni_Core.Buffer.getLines;
 
-    let edits =
-      DefaultFormatter.format(
-        ~indentation,
-        ~languageConfiguration,
-        // TODO
-        ~startLineNumber=Index.zero,
-        lines,
-      );
+    let startLine = Index.toZeroBased(range.start.line);
+    let stopLine = Index.toZeroBased(range.stop.line);
 
-    let displayName = "Default";
-    if (edits == []) {
-      FormattingApplied({displayName, editCount: 0});
-    } else {
-      let effect =
-        Service_Vim.Effects.applyEdits(
-          ~bufferId=buffer |> Oni_Core.Buffer.getId,
-          ~version=buffer |> Oni_Core.Buffer.getVersion,
-          ~edits,
-          fun
-          | Ok () =>
-            EditCompleted({editCount: List.length(edits), displayName})
-          | Error(msg) => EditRequestFailed({sessionId: 0, msg}),
+    if (startLine >= 0
+        && startLine < Array.length(lines)
+        && stopLine < Array.length(lines)) {
+      let lines = Array.sub(lines, startLine, stopLine - startLine + 1);
+
+      lines |> Array.iter(prerr_endline);
+
+      let edits =
+        DefaultFormatter.format(
+          ~indentation,
+          ~languageConfiguration,
+          ~startLineNumber=range.start.line,
+          lines,
         );
-      Effect(effect);
+
+      let displayName = "Default";
+      if (edits == []) {
+        FormattingApplied({displayName, editCount: 0});
+      } else {
+        let effect =
+          Service_Vim.Effects.applyEdits(
+            ~bufferId=buffer |> Oni_Core.Buffer.getId,
+            ~version=buffer |> Oni_Core.Buffer.getVersion,
+            ~edits,
+            fun
+            | Ok () =>
+              EditCompleted({editCount: List.length(edits), displayName})
+            | Error(msg) => EditRequestFailed({sessionId: 0, msg}),
+          );
+        Effect(effect);
+      };
+    } else {
+      FormatError("Invalid range specified");
     };
   };
 
@@ -146,6 +156,7 @@ module Internal = {
         ~buf,
         ~filetype,
         ~extHostClient,
+        ~range,
       ) => {
     let sessionId = model.nextSessionId;
 
@@ -159,8 +170,7 @@ module Internal = {
           ~indentation,
           ~languageConfiguration,
           ~buffer=buf,
-          // TODO: Range
-          (),
+          range,
         ),
       );
     } else {
@@ -208,7 +218,48 @@ let update =
       msg,
     ) => {
   switch (msg) {
-  | Command(FormatRange) =>
+  | FormatRange({startLine, endLine}) =>
+    switch (maybeBuffer) {
+    | Some(buf) =>
+      let range =
+        Range.{
+          start: {
+            line: startLine,
+            column: Index.zero,
+          },
+          stop: {
+            line: endLine,
+            column: Index.zero,
+          },
+        };
+      let filetype =
+        buf
+        |> Oni_Core.Buffer.getFileType
+        |> Option.value(~default="plaintext");
+
+      let matchingFormatters =
+        model.availableRangeFormatters
+        |> List.filter(({selector, _}) =>
+             DocumentSelector.matches(~filetype, selector)
+           );
+
+      Internal.runFormat(
+        ~languageConfiguration,
+        ~formatFn=
+          Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
+            ~range,
+          ),
+        ~model,
+        ~configuration,
+        ~matchingFormatters,
+        ~buf,
+        ~filetype,
+        ~extHostClient,
+        ~range,
+      );
+    | None => (model, FormatError("No range selected"))
+    }
+  | Command(FormatSelection) =>
     switch (maybeBuffer, maybeSelection) {
     | (Some(buf), Some(range)) =>
       let filetype =
@@ -234,6 +285,7 @@ let update =
         ~buf,
         ~filetype,
         ~extHostClient,
+        ~range,
       );
     | _ => (model, FormatError("No range selected."))
     }
@@ -262,6 +314,16 @@ let update =
         ~buf,
         ~filetype,
         ~extHostClient,
+        ~range=
+          Range.{
+            start: Location.{line: Index.zero, column: Index.zero},
+            stop:
+              Location.{
+                line:
+                  Oni_Core.Buffer.getNumberOfLines(buf) |> Index.fromZeroBased,
+                column: Index.zero,
+              },
+          },
       );
     }
   | DocumentFormatterAvailable({handle, selector, displayName}) => (
