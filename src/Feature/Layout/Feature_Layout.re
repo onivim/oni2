@@ -744,5 +744,9 @@ module Contributions = {
     ];
 
   let configuration =
-    Configuration.[showLayoutTabs.spec, layoutTabPosition.spec];
+    Configuration.[
+      showLayoutTabs.spec,
+      layoutTabPosition.spec,
+      singleTabMode.spec,
+    ];
 };
