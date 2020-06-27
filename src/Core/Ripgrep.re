@@ -181,6 +181,7 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
 
     let disposeTick = ref(None);
     let disposeAll = () => {
+      Log.info("disposeAll");
       disposeTick^ |> Option.iter(f => f());
       let _: result(unit, Luv.Error.t) = Luv.Process.kill(process, 2);
       isRipgrepProcessDone := true;
@@ -191,7 +192,6 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
       pipe,
       fun
       | Error(`EOF) => {
-          Log.info("Read pipe done");
           Luv.Handle.close(pipe, ignore);
           isRipgrepProcessDone := true;
         }

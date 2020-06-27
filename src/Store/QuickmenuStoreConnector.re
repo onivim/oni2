@@ -160,6 +160,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(FilesPicker) => (
         Some({
           ...Quickmenu.defaults(FilesPicker),
+          filterProgress: Loading,
           ripgrepProgress: Loading,
           focused: Some(0),
         }),
