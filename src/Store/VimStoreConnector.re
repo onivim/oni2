@@ -977,19 +977,19 @@ let start =
         Isolinear.Effect.none,
       )
 
-    | TabPage(GotoRelative(count)) when count < 0 => (
+    | TabPage(GotoRelative(delta)) when delta < 0 => (
         {
           ...state,
           layout:
-            Feature_Layout.previousLayoutTab(~count=- count, state.layout),
+            Feature_Layout.previousLayoutTab(~count=- delta, state.layout),
         },
         Isolinear.Effect.none,
       )
 
-    | TabPage(GotoRelative(count)) => (
+    | TabPage(GotoRelative(delta)) => (
         {
           ...state,
-          layout: Feature_Layout.nextLayoutTab(~count, state.layout),
+          layout: Feature_Layout.nextLayoutTab(~count=delta, state.layout),
         },
         Isolinear.Effect.none,
       )
@@ -999,6 +999,15 @@ let start =
           ...state,
           layout:
             Feature_Layout.moveActiveLayoutTabTo(index - 1, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(MoveRelative(delta)) => (
+        {
+          ...state,
+          layout:
+            Feature_Layout.moveActiveLayoutTabRelative(delta, state.layout),
         },
         Isolinear.Effect.none,
       )

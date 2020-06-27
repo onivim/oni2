@@ -397,6 +397,9 @@ let moveActiveLayoutTabTo = (index, model) => {
   };
 };
 
+let moveActiveLayoutTabRelative = (delta, model) =>
+  moveActiveLayoutTabTo(model.activeLayoutIndex + delta, model);
+
 let map = (f, model) => {
   ...model,
   layouts:

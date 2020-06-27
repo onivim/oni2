@@ -30,6 +30,7 @@ let removeLayoutTab: (int, model) => option(model);
 let removeActiveLayoutTab: model => option(model);
 let removeOtherLayoutTabs: model => model;
 let moveActiveLayoutTabTo: (int, model) => model;
+let moveActiveLayoutTabRelative: (int, model) => model;
 
 let map: (Editor.t => Editor.t, model) => model;
 
