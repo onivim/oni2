@@ -57,3 +57,5 @@ let layoutTabPosition =
     Codec.layoutTabPosition,
     ~default=`bottom,
   );
+
+let singleTabMode = setting("oni.layout.singleTabMode", bool, ~default=false);

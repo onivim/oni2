@@ -264,6 +264,7 @@ module EditorGroupView = {
   let make =
       (
         ~provider as module ContentModel: ContentModel,
+        ~config,
         ~showTabs,
         ~uiFont,
         ~theme,
@@ -280,7 +281,7 @@ module EditorGroupView = {
         | None => React.empty
         };
 
-      if (showTabs) {
+      if (showTabs && !Local.Configuration.singleTabMode.get(config)) {
         let editors = model.editors |> List.rev;
         let tabs =
           <Tabs
@@ -461,6 +462,7 @@ module Layout = {
       (
         ~provider,
         ~model as layout,
+        ~config,
         ~isZenMode,
         ~showTabs,
         ~uiFont,
@@ -494,6 +496,7 @@ module Layout = {
               <EditorGroupView
                 provider
                 uiFont
+                config
                 showTabs
                 isActive={group.id == layout.activeGroupId}
                 theme
@@ -553,6 +556,7 @@ let make =
     <Layout
       provider
       model={activeLayout(model)}
+      config
       isZenMode
       showTabs
       uiFont
