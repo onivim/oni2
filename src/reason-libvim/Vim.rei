@@ -221,6 +221,19 @@ module Goto: {
     | Hover;
 };
 
+module TabPage: {
+  [@deriving show]
+  type effect =
+    | Goto(int)
+    | GotoRelative(int)
+    | Move(int)
+    | MoveRelative(int)
+    | Close(int)
+    | CloseRelative(int)
+    | Only(int)
+    | OnlyRelative(int);
+};
+
 module Format: {
   type formatType =
     | Indentation
@@ -244,6 +257,7 @@ module Format: {
 module Effect: {
   type t =
     | Goto(Goto.effect)
+    | TabPage(TabPage.effect)
     | Format(Format.effect);
 };
 

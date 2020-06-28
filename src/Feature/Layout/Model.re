@@ -278,6 +278,28 @@ let removeLayoutTab = (index, model) => {
   };
 };
 
+let removeLayoutTabRelative = (~delta, model) =>
+  removeLayoutTab(model.activeLayoutIndex + delta, model);
+
+let removeActiveLayoutTab = model =>
+  removeLayoutTab(model.activeLayoutIndex, model);
+
+let removeOtherLayoutTabs = model => {
+  layouts: [activeLayout(model)],
+  activeLayoutIndex: 0,
+};
+
+let removeOtherLayoutTabsRelative = (~count, model) => {
+  let (start, stop) =
+    count < 0
+      ? (model.activeLayoutIndex + count, model.activeLayoutIndex - 1)
+      : (model.activeLayoutIndex + 1, model.activeLayoutIndex + count);
+  {
+    layouts: ListEx.sublist(start, stop, model.layouts),
+    activeLayoutIndex: 0,
+  };
+};
+
 let removeEditor = (editorId, model) => {
   let removeFromLayout = layout => {
     let groups =
@@ -366,6 +388,32 @@ let addLayoutTab = model => {
     activeLayoutIndex: model.activeLayoutIndex + 1,
   };
 };
+
+let gotoLayoutTab = (index, model) => {
+  ...model,
+  activeLayoutIndex:
+    IntEx.clamp(index, ~lo=0, ~hi=List.length(model.layouts) - 1),
+};
+
+let previousLayoutTab = (~count=1, model) =>
+  gotoLayoutTab(model.activeLayoutIndex - count, model);
+
+let nextLayoutTab = (~count=1, model) =>
+  gotoLayoutTab(model.activeLayoutIndex + count, model);
+
+let moveActiveLayoutTabTo = (index, model) => {
+  let newLayouts =
+    ListEx.move(~fromi=model.activeLayoutIndex, ~toi=index, model.layouts);
+
+  {
+    layouts: newLayouts,
+    activeLayoutIndex:
+      IntEx.clamp(index, ~lo=0, ~hi=List.length(newLayouts) - 1),
+  };
+};
+
+let moveActiveLayoutTabRelative = (delta, model) =>
+  moveActiveLayoutTabTo(model.activeLayoutIndex + delta, model);
 
 let map = (f, model) => {
   ...model,
