@@ -1049,6 +1049,16 @@ let start =
         Isolinear.Effect.none,
       )
 
+    | TabPage(OnlyRelative(count)) => (
+        {
+          ...state,
+          layout:
+            state.layout
+            |> Feature_Layout.removeOtherLayoutTabsRelative(~count),
+        },
+        Isolinear.Effect.none,
+      )
+
     | _ => (state, Isolinear.Effect.none)
     };
   };

@@ -285,7 +285,19 @@ let removeActiveLayoutTab = model =>
   removeLayoutTab(model.activeLayoutIndex, model);
 
 let removeOtherLayoutTabs = model => {
-  {layouts: [activeLayout(model)], activeLayoutIndex: 0};
+  layouts: [activeLayout(model)],
+  activeLayoutIndex: 0,
+};
+
+let removeOtherLayoutTabsRelative = (~count, model) => {
+  let (start, stop) =
+    count < 0
+      ? (model.activeLayoutIndex + count, model.activeLayoutIndex - 1)
+      : (model.activeLayoutIndex + 1, model.activeLayoutIndex + count);
+  {
+    layouts: ListEx.sublist(start, stop, model.layouts),
+    activeLayoutIndex: 0,
+  };
 };
 
 let removeEditor = (editorId, model) => {
