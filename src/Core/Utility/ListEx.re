@@ -105,7 +105,7 @@ let insertAt = (index, element, list) => {
   left @ [element] @ right;
 };
 
-let%test_module "removeAt" =
+let%test_module "insertAt" =
   (module
    {
      let%test "0" = insertAt(0, 42, [1, 2, 3]) == [42, 1, 2, 3];
