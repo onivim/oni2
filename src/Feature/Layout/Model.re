@@ -278,6 +278,9 @@ let removeLayoutTab = (index, model) => {
   };
 };
 
+let removeLayoutTabRelative = (~delta, model) =>
+  removeLayoutTab(model.activeLayoutIndex + delta, model);
+
 let removeActiveLayoutTab = model =>
   removeLayoutTab(model.activeLayoutIndex, model);
 

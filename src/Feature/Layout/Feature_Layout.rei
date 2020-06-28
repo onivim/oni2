@@ -27,6 +27,7 @@ let gotoLayoutTab: (int, model) => model;
 let previousLayoutTab: (~count: int=?, model) => model;
 let nextLayoutTab: (~count: int=?, model) => model;
 let removeLayoutTab: (int, model) => option(model);
+let removeLayoutTabRelative: (~delta: int, model) => option(model);
 let removeActiveLayoutTab: model => option(model);
 let removeOtherLayoutTabs: model => model;
 let moveActiveLayoutTabTo: (int, model) => model;

@@ -1024,6 +1024,12 @@ let start =
       | None => (state, Isolinear.Effect.none)
       }
 
+    | TabPage(CloseRelative(delta)) =>
+      switch (Feature_Layout.removeLayoutTabRelative(~delta, state.layout)) {
+      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
+      | None => (state, Isolinear.Effect.none)
+      }
+
     | TabPage(Only(0)) => (
         {
           ...state,
