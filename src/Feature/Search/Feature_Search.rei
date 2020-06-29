@@ -12,7 +12,8 @@ type msg =
   | Input(string)
   | InputClicked(Selection.t)
   | Update([@opaque] list(Ripgrep.Match.t))
-  | Complete;
+  | Complete
+  | SearchError(string);
 
 type outmsg =
   | Focus;

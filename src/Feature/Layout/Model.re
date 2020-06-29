@@ -1,3 +1,6 @@
+module Local = {
+  module Configuration = Configuration;
+};
 open Oni_Core;
 open Utility;
 open Feature_Editor;
@@ -18,6 +21,7 @@ module Group: {
   let nextEditor: t => t;
   let previousEditor: t => t;
   let openEditor: (Editor.t, t) => t;
+  let replaceAllWith: (Editor.t, t) => t;
   let removeEditor: (int, t) => option(t);
 
   let map: (Editor.t => Editor.t, t) => t;
@@ -90,6 +94,12 @@ module Group: {
         selectedId: Editor.getId(editor),
       }
     };
+  };
+
+  let replaceAllWith = (editor, group) => {
+    ...group,
+    editors: [editor],
+    selectedId: Editor.getId(editor),
   };
 
   let removeEditor = (editorId, group) => {
@@ -252,8 +262,6 @@ let nextEditor = updateActiveGroup(Group.nextEditor);
 
 let previousEditor = updateActiveGroup(Group.previousEditor);
 
-let openEditor = editor => updateActiveGroup(Group.openEditor(editor));
-
 let removeLayoutTab = (index, model) => {
   let left = Base.List.take(model.layouts, index);
   let right = Base.List.drop(model.layouts, index + 1);
@@ -267,6 +275,28 @@ let removeLayoutTab = (index, model) => {
       activeLayoutIndex:
         min(model.activeLayoutIndex, List.length(layouts) - 1),
     });
+  };
+};
+
+let removeLayoutTabRelative = (~delta, model) =>
+  removeLayoutTab(model.activeLayoutIndex + delta, model);
+
+let removeActiveLayoutTab = model =>
+  removeLayoutTab(model.activeLayoutIndex, model);
+
+let removeOtherLayoutTabs = model => {
+  layouts: [activeLayout(model)],
+  activeLayoutIndex: 0,
+};
+
+let removeOtherLayoutTabsRelative = (~count, model) => {
+  let (start, stop) =
+    count < 0
+      ? (model.activeLayoutIndex + count, model.activeLayoutIndex - 1)
+      : (model.activeLayoutIndex + 1, model.activeLayoutIndex + count);
+  {
+    layouts: ListEx.sublist(start, stop, model.layouts),
+    activeLayoutIndex: 0,
   };
 };
 
@@ -358,6 +388,32 @@ let addLayoutTab = model => {
     activeLayoutIndex: model.activeLayoutIndex + 1,
   };
 };
+
+let gotoLayoutTab = (index, model) => {
+  ...model,
+  activeLayoutIndex:
+    IntEx.clamp(index, ~lo=0, ~hi=List.length(model.layouts) - 1),
+};
+
+let previousLayoutTab = (~count=1, model) =>
+  gotoLayoutTab(model.activeLayoutIndex - count, model);
+
+let nextLayoutTab = (~count=1, model) =>
+  gotoLayoutTab(model.activeLayoutIndex + count, model);
+
+let moveActiveLayoutTabTo = (index, model) => {
+  let newLayouts =
+    ListEx.move(~fromi=model.activeLayoutIndex, ~toi=index, model.layouts);
+
+  {
+    layouts: newLayouts,
+    activeLayoutIndex:
+      IntEx.clamp(index, ~lo=0, ~hi=List.length(newLayouts) - 1),
+  };
+};
+
+let moveActiveLayoutTabRelative = (delta, model) =>
+  moveActiveLayoutTabTo(model.activeLayoutIndex + delta, model);
 
 let map = (f, model) => {
   ...model,
