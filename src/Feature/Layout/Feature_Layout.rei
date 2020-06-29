@@ -19,10 +19,20 @@ let split: ([ | `Horizontal | `Vertical], model) => model;
 
 let activeEditor: model => Editor.t;
 
-let openEditor: (Editor.t, model) => model;
+let openEditor: (~config: Config.resolver, Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
 let addLayoutTab: model => model;
+let gotoLayoutTab: (int, model) => model;
+let previousLayoutTab: (~count: int=?, model) => model;
+let nextLayoutTab: (~count: int=?, model) => model;
+let removeLayoutTab: (int, model) => option(model);
+let removeLayoutTabRelative: (~delta: int, model) => option(model);
+let removeActiveLayoutTab: model => option(model);
+let removeOtherLayoutTabs: model => model;
+let removeOtherLayoutTabsRelative: (~count: int, model) => model;
+let moveActiveLayoutTabTo: (int, model) => model;
+let moveActiveLayoutTabRelative: (int, model) => model;
 
 let map: (Editor.t => Editor.t, model) => model;
 

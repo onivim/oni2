@@ -89,6 +89,7 @@ let start =
   let handleGoto = gotoType => {
     switch (gotoType) {
     | Vim.Goto.Hover => dispatch(Actions.Hover(Feature_Hover.Command(Show)))
+
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.debug("Goto definition requested");
@@ -121,6 +122,7 @@ let start =
     Vim.onEffect(
       fun
       | Goto(gotoType) => handleGoto(gotoType)
+      | TabPage(msg) => dispatch(TabPage(msg))
       | Format(Buffer(_)) =>
         dispatch(
           Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
@@ -739,6 +741,7 @@ let start =
         state,
         synchronizeViml(configuration),
       )
+
     | Command("editor.action.clipboardPasteAction") => (
         state,
         pasteIntoEditorAction,
@@ -753,6 +756,7 @@ let start =
     | Command("vim.esc") => (state, escapeEffect)
     | Command("vim.tutor") => (state, openTutorEffect)
     | VimExecuteCommand(cmd) => (state, commandEffect(cmd))
+
     | ListFocusUp
     | ListFocusDown
     | ListFocus(_) =>
@@ -907,6 +911,7 @@ let start =
       (state, effect);
 
     | KeyboardInput(s) => (state, inputEffect(s))
+
     | CopyActiveFilepathToClipboard => (
         state,
         copyActiveFilepathToClipboardEffect,
@@ -965,6 +970,96 @@ let start =
         )
       | _ => (state, Isolinear.Effect.none)
       }
+
+    | TabPage(Goto(index)) => (
+        {
+          ...state,
+          layout: Feature_Layout.gotoLayoutTab(index - 1, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(GotoRelative(delta)) when delta < 0 => (
+        {
+          ...state,
+          layout:
+            Feature_Layout.previousLayoutTab(~count=- delta, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(GotoRelative(delta)) => (
+        {
+          ...state,
+          layout: Feature_Layout.nextLayoutTab(~count=delta, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(Move(index)) => (
+        {
+          ...state,
+          layout:
+            Feature_Layout.moveActiveLayoutTabTo(index - 1, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(MoveRelative(delta)) => (
+        {
+          ...state,
+          layout:
+            Feature_Layout.moveActiveLayoutTabRelative(delta, state.layout),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(Close(0)) =>
+      switch (Feature_Layout.removeActiveLayoutTab(state.layout)) {
+      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
+      | None => (state, Isolinear.Effect.none)
+      }
+
+    | TabPage(Close(index)) =>
+      switch (Feature_Layout.removeLayoutTab(index - 1, state.layout)) {
+      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
+      | None => (state, Isolinear.Effect.none)
+      }
+
+    | TabPage(CloseRelative(delta)) =>
+      switch (Feature_Layout.removeLayoutTabRelative(~delta, state.layout)) {
+      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
+      | None => (state, Isolinear.Effect.none)
+      }
+
+    | TabPage(Only(0)) => (
+        {
+          ...state,
+          layout: state.layout |> Feature_Layout.removeOtherLayoutTabs,
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(Only(index)) => (
+        {
+          ...state,
+          layout:
+            state.layout
+            |> Feature_Layout.gotoLayoutTab(index - 1)
+            |> Feature_Layout.removeOtherLayoutTabs,
+        },
+        Isolinear.Effect.none,
+      )
+
+    | TabPage(OnlyRelative(count)) => (
+        {
+          ...state,
+          layout:
+            state.layout
+            |> Feature_Layout.removeOtherLayoutTabsRelative(~count),
+        },
+        Isolinear.Effect.none,
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

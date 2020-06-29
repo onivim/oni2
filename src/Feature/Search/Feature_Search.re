@@ -26,7 +26,8 @@ type msg =
   | Input(string)
   | InputClicked(Selection.t)
   | Update([@opaque] list(Ripgrep.Match.t))
-  | Complete;
+  | Complete
+  | SearchError(string);
 
 type outmsg =
   | Focus;
@@ -79,6 +80,7 @@ let subscriptions = (ripgrep, dispatch) => {
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
       ~onCompleted=() => Complete,
+      ~onError=msg => SearchError(msg),
     );
   };
 

@@ -17,6 +17,7 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
 module Search = Search;
@@ -419,6 +420,10 @@ let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
 
+let _onTabPage = (msg: TabPage.effect) => {
+  queue(() => Event.dispatch(Effect.TabPage(msg), Listeners.effect));
+};
+
 let _onTerminal = terminalRequest => {
   queue(() => Event.dispatch(terminalRequest, Listeners.terminalRequested));
 };
@@ -435,6 +440,7 @@ let init = () => {
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
+  Callback.register("lv_onTabPage", _onTabPage);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);
   Callback.register("lv_onQuit", _onQuit);

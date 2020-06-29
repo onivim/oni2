@@ -92,6 +92,62 @@ int onGoto(gotoRequest_T gotoInfo) {
   caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), Val_int(target));
 }
 
+int onTabPage(tabPageRequest_T request) {
+  CAMLparam0();
+  CAMLlocal1(msg);
+  static const value *tabPageCallback = NULL;
+
+  if (tabPageCallback == NULL) {
+    tabPageCallback = caml_named_value("lv_onTabPage");
+  }
+
+  switch (request.kind) {
+  case GOTO:
+    if (request.relative == 0) {
+      msg = caml_alloc(1, 0);
+      Store_field(msg, 0, Val_int(request.arg));
+    } else {
+      msg = caml_alloc(1, 1);
+      Store_field(msg, 0, Val_int(request.arg * request.relative));
+    }
+    break;
+    
+  case MOVE:
+    if (request.relative == 0) {
+      msg = caml_alloc(1, 2);
+      Store_field(msg, 0, Val_int(request.arg));
+    } else {
+      msg = caml_alloc(1, 3);
+      Store_field(msg, 0, Val_int(request.arg * request.relative));
+    }
+    break;
+  
+  case CLOSE:
+    if (request.relative == 0) {
+      msg = caml_alloc(1, 4);
+      Store_field(msg, 0, Val_int(request.arg));
+    } else {
+      msg = caml_alloc(1, 5);
+      Store_field(msg, 0, Val_int(request.arg * request.relative));
+    }
+    break;
+
+  case ONLY:
+    if (request.relative == 0) {
+      
+      msg = caml_alloc(1, 6);
+      Store_field(msg, 0, Val_int(request.arg));
+    } else {
+      msg = caml_alloc(1, 7);
+      Store_field(msg, 0, Val_int(request.arg * request.relative));
+    }
+    break;
+  }
+
+  caml_callback(*tabPageCallback, msg);
+  CAMLreturn(1);
+}
+
 void onAutocommand(event_T event, buf_T *buf) {
   static const value *lv_onAutocmd = NULL;
 
@@ -401,6 +457,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetDisplayVersionCallback(&onVersion);
   vimSetFormatCallback(&onFormat);
   vimSetGotoCallback(&onGoto);
+  vimSetTabPageCallback(&onTabPage);
   vimSetMessageCallback(&onMessage);
   vimSetQuitCallback(&onQuit);
   vimSetTerminalCallback(&onTerminal);

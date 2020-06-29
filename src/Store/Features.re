@@ -141,6 +141,7 @@ let update =
         ...state,
         layout:
           Feature_Layout.openEditor(
+            ~config=Feature_Configuration.resolver(state.config),
             Feature_Editor.Editor.create(
               ~font=state.editorFont,
               ~buffer=editorBuffer,
