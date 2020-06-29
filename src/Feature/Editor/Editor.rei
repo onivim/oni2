@@ -64,9 +64,9 @@ let visiblePixelHeight: t => int;
 
 let font: t => Service_Font.font;
 
-//let viewLine: (t, int) => viewLine;
-
-let viewTokens: (~line: int, ~position: int, t) => viewTokens;
+let viewTokens: (~line: int, ~position: int, ~colorizer:
+BufferLineColorizer.t,
+t) => viewTokens;
 
 let scrollX: t => float;
 let scrollY: t => float;

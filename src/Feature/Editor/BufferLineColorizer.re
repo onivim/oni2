@@ -13,7 +13,7 @@ type themedToken = {
   italic: bool,
   bold: bool,
 };
-type t = int => themedToken;
+type t = (~startByte: int, int) => themedToken;
 
 module Internal = {
   let getFirstRelevantToken = (~default, ~startByte, tokens) => {
@@ -55,7 +55,6 @@ module Internal = {
 
 let create =
     (
-      ~startByte,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
       ~selectionHighlights: option(Range.t),
@@ -65,22 +64,6 @@ let create =
       ~searchHighlightColor: Color.t,
       themedTokens: list(ThemeToken.t),
     ) => {
-  let initialDefaultToken =
-    ThemeToken.create(
-      ~index=0,
-      ~backgroundColor=defaultBackgroundColor,
-      ~foregroundColor=defaultForegroundColor,
-      ~syntaxScope=SyntaxScope.none,
-      (),
-    );
-
-  let (defaultToken, tokens) =
-    Internal.getFirstRelevantToken(
-      ~default=initialDefaultToken,
-      ~startByte,
-      themedTokens,
-    );
-
   let (selectionStart, selectionEnd) =
     switch (selectionHighlights) {
     | Some(range) =>
@@ -90,37 +73,55 @@ let create =
     | None => ((-1), (-1))
     };
 
-  i => {
-    let colorIndex =
-      Internal.getTokenAtByte(~byteIndex=i, ~default=defaultToken, tokens);
+  (~startByte: int) => {
+    let initialDefaultToken =
+      ThemeToken.create(
+        ~index=0,
+        ~backgroundColor=defaultBackgroundColor,
+        ~foregroundColor=defaultForegroundColor,
+        ~syntaxScope=SyntaxScope.none,
+        (),
+      );
 
-    let matchingPair =
-      switch (matchingPair) {
-      | None => (-1)
-      | Some(v) => v
+    let (defaultToken, tokens) =
+      Internal.getFirstRelevantToken(
+        ~default=initialDefaultToken,
+        ~startByte,
+        themedTokens,
+      );
+
+    i => {
+      let colorIndex =
+        Internal.getTokenAtByte(~byteIndex=i, ~default=defaultToken, tokens);
+
+      let matchingPair =
+        switch (matchingPair) {
+        | None => (-1)
+        | Some(v) => v
+        };
+
+      let backgroundColor =
+        i >= selectionStart && i < selectionEnd || i == matchingPair
+          ? selectionColor : defaultBackgroundColor;
+
+      let doesSearchIntersect = (range: Range.t) => {
+        Index.toZeroBased(range.start.column) <= i
+        && Index.toZeroBased(range.stop.column) > i;
       };
 
-    let backgroundColor =
-      i >= selectionStart && i < selectionEnd || i == matchingPair
-        ? selectionColor : defaultBackgroundColor;
+      let isSearchHighlight =
+        List.exists(doesSearchIntersect, searchHighlights);
 
-    let doesSearchIntersect = (range: Range.t) => {
-      Index.toZeroBased(range.start.column) <= i
-      && Index.toZeroBased(range.stop.column) > i;
-    };
+      let backgroundColor =
+        isSearchHighlight ? searchHighlightColor : backgroundColor;
 
-    let isSearchHighlight =
-      List.exists(doesSearchIntersect, searchHighlights);
-
-    let backgroundColor =
-      isSearchHighlight ? searchHighlightColor : backgroundColor;
-
-    let color = colorIndex.foregroundColor;
-    {
-      backgroundColor,
-      color,
-      bold: colorIndex.bold,
-      italic: colorIndex.italic,
+      let color = colorIndex.foregroundColor;
+      {
+        backgroundColor,
+        color,
+        bold: colorIndex.bold,
+        italic: colorIndex.italic,
+      };
     };
   };
 };

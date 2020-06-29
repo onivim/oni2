@@ -20,7 +20,21 @@ let getTokensForLine =
   if (i >= Editor.totalViewLines(editor)) {
     [];
   } else {
-    let {tokens, }: Editor.viewTokens = Editor.viewTokens(~line=1, ~position=0, editor);
+    let colorizer = (~startByte, position) => {
+      ignore(startByte);
+      ignore(position);
+      BufferLineColorizer.{
+        color: Revery.Colors.white,
+        backgroundColor: Revery.Colors.black,
+        italic: true,
+        bold: true
+      }
+    };
+    let {tokens, }: Editor.viewTokens = Editor.viewTokens(
+      ~colorizer,
+      ~line=1,
+      ~position=0,
+      editor);
     tokens;
 //    let line = viewLine.contents;
 //    let length = BufferLine.lengthInBytes(line);

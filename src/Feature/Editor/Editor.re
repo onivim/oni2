@@ -74,9 +74,10 @@ let bufferLineByteToPixel =
   };
 };
 
-let viewTokens = (~line, ~position, editor) => {
+let viewTokens = (~line, ~position, ~colorizer, editor) => {
   ignore(line);
   ignore(position);
+  ignore(colorizer);
 //  let bufferPosition = Wrapping.viewLineToBufferPosition(
 //    ~line,
 //    editor.wrapping,
@@ -103,7 +104,7 @@ let bufferLineCharacterToPixel =
   };
 };
 
-let create = (~wrap=WordWrap.none, ~font, ~buffer, ()) => {
+let create = (~wrap=WordWrap.fixed(~columns=5), ~font, ~buffer, ()) => {
   let id = lastId^;
   incr(lastId);
 

@@ -20,7 +20,7 @@ type themedToken = {
  * Type [t] is a function of [(int) => tokenTheme)].
  *
  */
-type t = int => themedToken;
+type t = (~startByte: int, int) => themedToken;
 
 /*
  * [create] takes information about the line, like
@@ -30,7 +30,6 @@ type t = int => themedToken;
  */
 let create:
   (
-    ~startByte: int,
     ~defaultBackgroundColor: Color.t,
     ~defaultForegroundColor: Color.t, // theme.editorForeground
     ~selectionHighlights: option(Range.t),
