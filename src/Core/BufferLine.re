@@ -207,7 +207,12 @@ let getPositionAndWidth = (~index: int, bufferLine: t) => {
 };
 
 module Slow = {
-  let getByteFromPosition = (~position, bufferLine) => {
+  let getByteFromPosition = (~startByte=0, ~position, bufferLine) => {
+    let startIndex = getIndex(~byte=startByte, bufferLine);
+    let (startPosition, _) =
+      getPositionAndWidth(~index=startIndex, bufferLine);
+    let position = startPosition + position;
+
     let length = lengthInBytes(bufferLine);
     let rec loop = byteIndex =>
       if (byteIndex >= length) {
@@ -226,6 +231,6 @@ module Slow = {
         };
       };
 
-    loop(0);
+    loop(startByte);
   };
 };

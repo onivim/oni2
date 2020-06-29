@@ -21,10 +21,14 @@ type viewTokens = {
   characterOffset: int,
 };
 
-let create: (
-  ~wrap: WordWrap.t=?,
-  ~font: Service_Font.font,
-  ~buffer: EditorBuffer.t, unit) => t;
+let create:
+  (
+    ~wrap: WordWrap.t=?,
+    ~font: Service_Font.font,
+    ~buffer: EditorBuffer.t,
+    unit
+  ) =>
+  t;
 let copy: t => t;
 
 let getId: t => int;
@@ -64,9 +68,9 @@ let visiblePixelHeight: t => int;
 
 let font: t => Service_Font.font;
 
-let viewTokens: (~line: int, ~position: int, ~colorizer:
-BufferLineColorizer.t,
-t) => viewTokens;
+let viewTokens:
+  (~line: int, ~position: int, ~colorizer: BufferLineColorizer.t, t) =>
+  viewTokens;
 
 let scrollX: t => float;
 let scrollY: t => float;
@@ -94,6 +98,10 @@ let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
 let getLineHeight: t => float;
+
+// VIEW-SPACE CONVERSION
+
+let viewLineToBufferLine: (~line: int, t) => int;
 
 // PIXEL-SPACE CONVERSION
 
@@ -131,7 +139,8 @@ let unprojectToPixel:
 let setFont: (~font: Service_Font.font, t) => t;
 let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
 
-let updateBuffer: (~update: Oni_Core.BufferUpdate.t, ~buffer: EditorBuffer.t, t) => t;
+let updateBuffer:
+  (~update: Oni_Core.BufferUpdate.t, ~buffer: EditorBuffer.t, t) => t;
 
 module Slow: {
   let pixelPositionToBufferLineByte:

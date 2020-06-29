@@ -15,7 +15,6 @@ type viewTokens = {
 };
 
 [@deriving show]
-// TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
 type t = {
   buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
@@ -52,21 +51,24 @@ let bufferLineByteToPixel =
   } else {
     let bufferLine = buffer |> EditorBuffer.line(line);
 
-    let viewLine = 
-    Wrapping.bufferLineByteToViewLine(~line, ~byteIndex, wrapping);
+    let viewLine =
+      Wrapping.bufferLineByteToViewLine(~line, ~byteIndex, wrapping);
 
     let {characterOffset, _}: Wrapping.bufferPosition =
-    Wrapping.viewLineToBufferPosition(~line=viewLine, wrapping);
+      Wrapping.viewLineToBufferPosition(~line=viewLine, wrapping);
 
-    let (startPosition, _) = BufferLine.getPositionAndWidth(
-      ~index=characterOffset, bufferLine
-    );
+    let (startPosition, _) =
+      BufferLine.getPositionAndWidth(~index=characterOffset, bufferLine);
 
     let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
     let (characterOffset, width) =
       BufferLine.getPositionAndWidth(~index, bufferLine);
 
-    let pixelX = font.measuredWidth *. float(characterOffset - startPosition) -. scrollX +. 0.5;
+    let pixelX =
+      font.measuredWidth
+      *. float(characterOffset - startPosition)
+      -. scrollX
+      +. 0.5;
 
     let pixelY = font.measuredHeight *. float(viewLine) -. scrollY +. 0.5;
 
@@ -74,19 +76,60 @@ let bufferLineByteToPixel =
   };
 };
 
+let viewLineToBufferLine = (~line, editor) => {
+  let bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line, editor.wrapping);
+  bufferPosition.line;
+};
+
 let viewTokens = (~line, ~position, ~colorizer, editor) => {
-  ignore(line);
-  ignore(position);
-  ignore(colorizer);
-//  let bufferPosition = Wrapping.viewLineToBufferPosition(
-//    ~line,
-//    editor.wrapping,
-//  );
+  let bufferPosition: Wrapping.bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line, editor.wrapping);
 
-  //let contents = editor.buffer |> EditorBuffer.line(bufferPosition.line);
-  let tokens = [];
+  let bufferLineIndex = bufferPosition.line;
+  let startByte = bufferPosition.byteOffset;
 
-  {tokens, byteOffset: 0, characterOffset: 0};
+  let bufferLine = EditorBuffer.line(bufferLineIndex, editor.buffer);
+
+  let viewStartByte =
+    BufferLine.Slow.getByteFromPosition(~position, ~startByte, bufferLine);
+
+  let visibleCharacterCount =
+    int_of_float(
+      float(editor.pixelWidth) /. characterWidthInPixels(editor) +. 0.5,
+    );
+
+  let nextLineBufferPosition =
+    Wrapping.viewLineToBufferPosition(~line=line + 1, editor.wrapping);
+
+  let viewEndByte =
+    if (nextLineBufferPosition.line == bufferPosition.line) {
+      nextLineBufferPosition.byteOffset;
+    } else {
+      BufferLine.Slow.getByteFromPosition(
+        ~position=position + visibleCharacterCount,
+        ~startByte=viewStartByte,
+        bufferLine,
+      )
+      + 1;
+    };
+
+  let startIndex = BufferLine.getIndex(~byte=viewStartByte, bufferLine);
+  let endIndex = BufferLine.getIndex(~byte=viewEndByte, bufferLine);
+
+  let tokens =
+    BufferViewTokenizer.tokenize(
+      ~startIndex,
+      ~endIndex,
+      bufferLine,
+      colorizer(~startByte=viewStartByte),
+    );
+
+  {
+    tokens,
+    byteOffset: bufferPosition.byteOffset,
+    characterOffset: bufferPosition.characterOffset,
+  };
 };
 
 let bufferLineCharacterToPixel =
@@ -100,7 +143,7 @@ let bufferLineCharacterToPixel =
       |> EditorBuffer.line(line)
       |> BufferLine.getByteFromIndex(~index=characterIndex);
 
-      bufferLineByteToPixel(~line, ~byteIndex, editor);
+    bufferLineByteToPixel(~line, ~byteIndex, editor);
   };
 };
 
@@ -261,13 +304,11 @@ let getVisibleView = editor => {
 let getTotalHeightInPixels = editor => {
   let viewLines = editor |> totalViewLines;
   int_of_float(float_of_int(viewLines) *. getLineHeight(editor));
-  }
+};
 
 let getTotalWidthInPixels = editor => {
-    let maxLineLength = editor |> maxLineLength;
-  int_of_float(
-    float_of_int(maxLineLength) *. getCharacterWidth(editor),
-  );
+  let maxLineLength = editor |> maxLineLength;
+  int_of_float(float_of_int(maxLineLength) *. getCharacterWidth(editor));
 };
 
 let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
@@ -285,7 +326,6 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
 };
 
 let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
-  
   let maxLineLength = editor |> maxLineLength;
   let availableWidthF = float_of_int(availableWidth);
   let totalViewWidthInPixels =
@@ -335,7 +375,8 @@ let getTopVisibleLine = view =>
 let getBottomVisibleLine = editor => {
   let absoluteBottomLine =
     int_of_float(
-      (editor.scrollY +. float_of_int(editor.pixelHeight)) /. getLineHeight(editor),
+      (editor.scrollY +. float_of_int(editor.pixelHeight))
+      /. getLineHeight(editor),
     );
 
   let viewLines = editor |> totalViewLines;

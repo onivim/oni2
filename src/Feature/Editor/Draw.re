@@ -195,13 +195,17 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
     );
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
 
-  let ({pixelY, pixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line,
-      ~characterIndex=token.startIndex |> Index.toZeroBased,
-      context.editor,
-    );
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
+  let pixelX = float(token.startIndex |> Index.toZeroBased) *. characterWidth;
+  let pixelY = Editor.lineHeightInPixels(context.editor) *. float(line);
 
+  //  let ({pixelY, pixelX}: Editor.pixelPosition, _) =
+  //    Editor.bufferLineCharacterToPixel(
+  //      ~line,
+  //      ~characterIndex=token.startIndex |> Index.toZeroBased,
+  //      context.editor,
+  //    );
+  //
   let y = pixelY -. fontMetrics.ascent;
   let x = pixelX;
 

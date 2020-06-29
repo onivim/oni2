@@ -58,5 +58,5 @@ module Slow: {
    *
    * _slow_ because requires traversal of the string, currently.
    */
-  let getByteFromPosition: (~position: int, t) => int;
+  let getByteFromPosition: (~startByte: int=?, ~position: int, t) => int;
 };

@@ -80,7 +80,8 @@ let tokenize =
 
     while (idx^ < maxIndex) {
       let startToken = idx^;
-      let endToken = Internal.getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
+      let endToken =
+        Internal.getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
 
       let text =
         BufferLine.subExn(

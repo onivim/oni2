@@ -120,24 +120,24 @@ let render =
       markers,
     ) =>
   // TODO: Bring back
-//  ImmediateList.render(
-//    ~scrollY,
-//    ~rowHeight,
-//    ~height,
-//    ~count,
-//    ~render=
-//      (i, y) =>
-//        if (markers[i] != Unmodified) {
-//          renderMarker(
-//            ~x,
-//            ~y,
-//            ~rowHeight,
-//            ~width,
-//            ~canvasContext,
-//            ~colors,
-//            markers[i],
-//          );
-//        },
-//    (),
-//  );
+  //  ImmediateList.render(
+  //    ~scrollY,
+  //    ~rowHeight,
+  //    ~height,
+  //    ~count,
+  //    ~render=
+  //      (i, y) =>
+  //        if (markers[i] != Unmodified) {
+  //          renderMarker(
+  //            ~x,
+  //            ~y,
+  //            ~rowHeight,
+  //            ~width,
+  //            ~canvasContext,
+  //            ~colors,
+  //            markers[i],
+  //          );
+  //        },
+  //    (),
+  //  );
   ();
