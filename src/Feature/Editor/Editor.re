@@ -159,7 +159,7 @@ let bufferLineCharacterToPixel =
   };
 };
 
-let create = (~wrap=WordWrap.fixed(~columns=5), ~font, ~buffer, ()) => {
+let create = (~wrap=WordWrap.fixed(~columns=20), ~font, ~buffer, ()) => {
   //let create = (~wrap=WordWrap.none, ~font, ~buffer, ()) => {
   let id = lastId^;
   incr(lastId);
@@ -426,7 +426,9 @@ let scrollToPixelY = (~pixelY as newScrollY, editor) => {
 };
 
 let scrollToLine = (~line, view) => {
-  let pixelY = float_of_int(line) *. getLineHeight(view);
+  let viewLine =
+    Wrapping.bufferLineByteToViewLine(~line, ~byteIndex=0, view.wrapping);
+  let pixelY = float_of_int(viewLine) *. getLineHeight(view);
   scrollToPixelY(~pixelY, view);
 };
 
