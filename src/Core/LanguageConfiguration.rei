@@ -44,6 +44,8 @@ let decode: Json.decoder(t);
 
 let toVimAutoClosingPairs: (SyntaxScope.t, t) => Vim.AutoClosingPairs.t;
 
-let toAutoIndent:
+let toOpenAutoIndent:
   (t, ~previousLine: string, ~beforePreviousLine: option(string)) =>
   Vim.AutoIndent.action;
+
+let toTypeAutoIndent: (t, string) => Vim.AutoIndent.action;

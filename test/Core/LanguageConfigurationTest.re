@@ -87,7 +87,7 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
     })
   });
 
-  describe("IndentationRules", ({test, _}) => {
+  describe("IndentationRules", ({test, describe, _}) => {
     test("basic parsing", ({expect, _}) => {
       let parsedLangConfig =
         json(
@@ -126,62 +126,95 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
       expect.equal(Option.is_none(langConfig.increaseIndentPattern), true);
       expect.equal(Option.is_some(langConfig.decreaseIndentPattern), true);
     });
-    test("increase / decrease indent", ({expect, _}) => {
-      let parsedLangConfig =
-        json(
-          {|
-        {"indentationRules":
-          {
-          "increaseIndentPattern":"abc",
-          "decreaseIndentPattern":"def"
-          }
-        }|},
-        )
-        |> Json.Decode.decode_value(LanguageConfiguration.decode);
+    describe("toTypeAutoIndent", ({test, _}) => {
+      test("decrease indent", ({expect, _}) => {
+        let parsedLangConfig =
+          json(
+            {|
+          {"indentationRules":
+            {
+            "increaseIndentPattern":"abc",
+            "decreaseIndentPattern":"def"
+            }
+          }|},
+          )
+          |> Json.Decode.decode_value(LanguageConfiguration.decode);
 
-      expect.equal(Result.is_ok(parsedLangConfig), true);
-      let langConfig: LanguageConfiguration.t =
-        Result.get_ok(parsedLangConfig);
+        expect.equal(Result.is_ok(parsedLangConfig), true);
+        let langConfig: LanguageConfiguration.t =
+          Result.get_ok(parsedLangConfig);
 
-      expect.equal(
-        LanguageConfiguration.toAutoIndent(
-          langConfig,
-          ~previousLine="abc",
-          ~beforePreviousLine=None,
-        )
-        == Vim.AutoIndent.IncreaseIndent,
-        true,
-      );
-      expect.equal(
-        LanguageConfiguration.toAutoIndent(
-          langConfig,
-          ~previousLine="def",
-          ~beforePreviousLine=None,
-        )
-        == Vim.AutoIndent.DecreaseIndent,
-        true,
-      );
+        expect.equal(
+          LanguageConfiguration.toTypeAutoIndent(langConfig, "def"),
+          Vim.AutoIndent.DecreaseIndent,
+        );
+      });
+      test("falls back to brackets", ({expect, _}) => {
+        let parsedLangConfig =
+          json({|
+          {"brackets": [["{", "}"]]}
+          |})
+          |> Json.Decode.decode_value(LanguageConfiguration.decode);
+
+        expect.equal(Result.is_ok(parsedLangConfig), true);
+        let langConfig: LanguageConfiguration.t =
+          Result.get_ok(parsedLangConfig);
+
+        expect.equal(
+          LanguageConfiguration.toTypeAutoIndent(langConfig, "  }"),
+          Vim.AutoIndent.DecreaseIndent,
+        );
+      });
     });
-    test("falls back to brackets", ({expect, _}) => {
-      let parsedLangConfig =
-        json({|
-        {"brackets": [["{", "}"]]}
-        |})
-        |> Json.Decode.decode_value(LanguageConfiguration.decode);
+    describe("toOpenAutoIndent", ({test, _}) => {
+      test("increase indent", ({expect, _}) => {
+        let parsedLangConfig =
+          json(
+            {|
+          {"indentationRules":
+            {
+            "increaseIndentPattern":"abc",
+            "decreaseIndentPattern":"def"
+            }
+          }|},
+          )
+          |> Json.Decode.decode_value(LanguageConfiguration.decode);
 
-      expect.equal(Result.is_ok(parsedLangConfig), true);
-      let langConfig: LanguageConfiguration.t =
-        Result.get_ok(parsedLangConfig);
+        expect.equal(Result.is_ok(parsedLangConfig), true);
+        let langConfig: LanguageConfiguration.t =
+          Result.get_ok(parsedLangConfig);
 
-      expect.equal(
-        LanguageConfiguration.toAutoIndent(
-          langConfig,
-          ~previousLine="   {",
-          ~beforePreviousLine=None,
-        )
-        == Vim.AutoIndent.IncreaseIndent,
-        true,
-      );
+        expect.equal(
+          LanguageConfiguration.toOpenAutoIndent(
+            langConfig,
+            ~previousLine="abc",
+            ~beforePreviousLine=None,
+          )
+          == Vim.AutoIndent.IncreaseIndent,
+          true,
+        );
+      });
+      test("falls back to brackets", ({expect, _}) => {
+        let parsedLangConfig =
+          json({|
+          {"brackets": [["{", "}"]]}
+          |})
+          |> Json.Decode.decode_value(LanguageConfiguration.decode);
+
+        expect.equal(Result.is_ok(parsedLangConfig), true);
+        let langConfig: LanguageConfiguration.t =
+          Result.get_ok(parsedLangConfig);
+
+        expect.equal(
+          LanguageConfiguration.toOpenAutoIndent(
+            langConfig,
+            ~previousLine="   {",
+            ~beforePreviousLine=None,
+          )
+          == Vim.AutoIndent.IncreaseIndent,
+          true,
+        );
+      });
     });
   });
 });

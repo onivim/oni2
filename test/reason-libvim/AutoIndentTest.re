@@ -8,222 +8,264 @@ let resetBuffer = () =>
 let resetBufferIndent2Spaces = () =>
   Helpers.resetBuffer("test/reason-libvim/indent-two-spaces.txt");
 
-let input = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
-  ignore(
-    Vim.input(
-      ~context={...Context.current(), insertSpaces, tabSize, autoIndent},
-      s,
-    ): Context.t,
-  );
-};
-
-describe("AutoIndent", ({test, _}) => {
-  let keepIndent = (~previousLine as _, ~beforePreviousLine: option(string)) => {
-    ignore(beforePreviousLine);
-    Vim.AutoIndent.KeepIndent;
-  };
-  let increaseIndent =
-      (~previousLine as _, ~beforePreviousLine: option(string)) => {
-    ignore(beforePreviousLine);
-    Vim.AutoIndent.IncreaseIndent;
-  };
-  let decreaseIndent =
-      (~previousLine as _, ~beforePreviousLine: option(string)) => {
-    ignore(beforePreviousLine);
-    Vim.AutoIndent.DecreaseIndent;
-  };
-
-  test("keep indent (open line)", ({expect, _}) => {
-    let buffer = resetBuffer();
-    input(~autoIndent=keepIndent, "o");
-    input(~autoIndent=keepIndent, "a");
-
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
-    expect.string(line).toEqual("a");
-  });
-
-  test("increase indent (open line)", ({expect, _}) => {
-    let buffer = resetBuffer();
-    input(~autoIndent=increaseIndent, "o");
-    input(~autoIndent=increaseIndent, "a");
-
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
-    expect.string(line).toEqual("\ta");
-  });
-
-  test("increase indent (open line, insert spaces)", ({expect, _}) => {
-    let buffer = resetBuffer();
-
-    let input = input(~insertSpaces=true, ~autoIndent=increaseIndent);
-    input("o");
-    input("a");
-
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
-    expect.string(line).toEqual("   a");
-  });
-
-  test("decrease indent (open line, insert spaces)", ({expect, _}) => {
-    let buffer = resetBuffer();
-
-    let input = input(~insertSpaces=true, ~autoIndent=decreaseIndent);
-    input("o");
-    input("\t");
-    input("a");
-    input("<CR>");
-    input("b");
-
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
-    expect.string(line).toEqual("b");
-  });
-  test(
-    "previous line is set, before previous line is None for first line",
-    ({expect, _}) => {
-    let _ = resetBuffer();
-
-    let prevRef = ref("");
-    let beforePrevRef = ref(Some(""));
-
-    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
-      prevRef := previousLine;
-      beforePrevRef := beforePreviousLine;
-      AutoIndent.KeepIndent;
+describe("AutoIndent", ({describe, _}) => {
+  describe("onTypeAutoIndent", ({test, _}) => {
+    let decreaseIndentWithCharacter = (c, str) => {
+      String.index_opt(str, c) == None
+        ? Vim.AutoIndent.KeepIndent : Vim.AutoIndent.DecreaseIndent;
+    };
+    let input = (~insertSpaces=true, ~tabSize=3, ~onTypeAutoIndent, s) => {
+      ignore(
+        Vim.input(
+          ~context={
+            ...Context.current(),
+            insertSpaces,
+            tabSize,
+            onTypeAutoIndent,
+          },
+          s,
+        ): Context.t,
+      );
     };
 
-    let input = input(~insertSpaces=true, ~autoIndent);
-    input("o");
+    test("decrease indent on type, conditionally", ({expect, _}) => {
+      let buffer = resetBuffer();
+      let input = input(~onTypeAutoIndent=decreaseIndentWithCharacter('}'));
 
-    expect.equal(prevRef^, "This is the first line of a test file");
-    expect.equal(beforePrevRef^, None);
+      input("O");
+      input("   a");
+
+      let line = Buffer.getLine(buffer, Index.(zero));
+      expect.string(line).toEqual("   a");
+
+      input("}");
+      let line = Buffer.getLine(buffer, Index.(zero));
+      expect.string(line).toEqual("a}");
+    });
   });
-  test(
-    "previous line is set, before previous line is set for last line",
-    ({expect, _}) => {
-    let _ = resetBuffer();
-
-    let prevRef = ref("");
-    let beforePrevRef = ref(Some(""));
-
-    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
-      prevRef := previousLine;
-      beforePrevRef := beforePreviousLine;
-      AutoIndent.KeepIndent;
+  describe("onOpenAutoIndent", ({test, _}) => {
+    let input = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
+      ignore(
+        Vim.input(
+          ~context={
+            ...Context.current(),
+            insertSpaces,
+            tabSize,
+            onOpenAutoIndent: autoIndent,
+          },
+          s,
+        ): Context.t,
+      );
+    };
+    let keepIndent =
+        (~previousLine as _, ~beforePreviousLine: option(string)) => {
+      ignore(beforePreviousLine);
+      Vim.AutoIndent.KeepIndent;
+    };
+    let increaseIndent =
+        (~previousLine as _, ~beforePreviousLine: option(string)) => {
+      ignore(beforePreviousLine);
+      Vim.AutoIndent.IncreaseIndent;
+    };
+    let decreaseIndent =
+        (~previousLine as _, ~beforePreviousLine: option(string)) => {
+      ignore(beforePreviousLine);
+      Vim.AutoIndent.DecreaseIndent;
     };
 
-    let input = input(~insertSpaces=true, ~autoIndent);
-    // Go to last line
-    input("G");
-    input("o");
+    test("keep indent (open line)", ({expect, _}) => {
+      let buffer = resetBuffer();
+      input(~autoIndent=keepIndent, "o");
+      input(~autoIndent=keepIndent, "a");
 
-    expect.equal(prevRef^, "This is the third line of a test file");
-    expect.equal(
-      beforePrevRef^,
-      Some("This is the second line of a test file"),
-    );
-  });
+      let line = Buffer.getLine(buffer, Index.(zero + 1));
+      expect.string(line).toEqual("a");
+    });
 
-  test(
-    "open before indented line, after empty line, keep indent", ({expect, _}) => {
-    let buffer = resetBufferIndent2Spaces();
+    test("increase indent (open line)", ({expect, _}) => {
+      let buffer = resetBuffer();
+      input(~autoIndent=increaseIndent, "o");
+      input(~autoIndent=increaseIndent, "a");
 
-    buffer
-    |> Vim.Buffer.setLines(
-         ~lines=[|
-           "line 1",
-           "", // Add a line with spaces
-           "  line2",
-           "    line3",
-         |],
-       );
+      let line = Buffer.getLine(buffer, Index.(zero + 1));
+      expect.string(line).toEqual("\ta");
+    });
 
-    let input = input(~insertSpaces=true, ~autoIndent=keepIndent);
-    // Go to third line
-    input("gg");
-    input("j");
-    input("j");
-    input("O");
-    input("a");
+    test("increase indent (open line, insert spaces)", ({expect, _}) => {
+      let buffer = resetBuffer();
 
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
-    expect.string(line).toEqual("  a");
-  });
+      let input = input(~insertSpaces=true, ~autoIndent=increaseIndent);
+      input("o");
+      input("a");
 
-  test("open before indented line, keep indent", ({expect, _}) => {
-    let buffer = resetBufferIndent2Spaces();
+      let line = Buffer.getLine(buffer, Index.(zero + 1));
+      expect.string(line).toEqual("   a");
+    });
 
-    let input = input(~insertSpaces=true, ~autoIndent=keepIndent);
-    // Go to second line
-    input("j");
-    input("O");
-    input("a");
+    test("decrease indent (open line, insert spaces)", ({expect, _}) => {
+      let buffer = resetBuffer();
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
-    expect.string(line).toEqual("a");
-  });
+      let input = input(~insertSpaces=true, ~autoIndent=decreaseIndent);
+      input("o");
+      input("\t");
+      input("a");
+      input("<CR>");
+      input("b");
 
-  test("open before indented line, indent", ({expect, _}) => {
-    let buffer = resetBufferIndent2Spaces();
+      let line = Buffer.getLine(buffer, Index.(zero + 2));
+      expect.string(line).toEqual("b");
+    });
+    test(
+      "previous line is set, before previous line is None for first line",
+      ({expect, _}) => {
+      let _ = resetBuffer();
 
-    let input = input(~insertSpaces=true, ~autoIndent=increaseIndent);
-    // Go to second line
-    input("j");
-    input("O");
-    input("a");
+      let prevRef = ref("");
+      let beforePrevRef = ref(Some(""));
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
-    expect.string(line).toEqual("  a");
-  });
+      let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
+        prevRef := previousLine;
+        beforePrevRef := beforePreviousLine;
+        AutoIndent.KeepIndent;
+      };
 
-  test("open before indented line, un-indent", ({expect, _}) => {
-    let buffer = resetBufferIndent2Spaces();
+      let input = input(~insertSpaces=true, ~autoIndent);
+      input("o");
 
-    let input = input(~insertSpaces=true, ~autoIndent=decreaseIndent);
-    // Go to second line
-    input("j");
-    input("j");
-    input("O");
-    input("a");
+      expect.equal(prevRef^, "This is the first line of a test file");
+      expect.equal(beforePrevRef^, None);
+    });
+    test(
+      "previous line is set, before previous line is set for last line",
+      ({expect, _}) => {
+      let _ = resetBuffer();
 
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
-    expect.string(line).toEqual("a");
-  });
+      let prevRef = ref("");
+      let beforePrevRef = ref(Some(""));
 
-  test("open before line", ({expect, _}) => {
-    let _ = resetBuffer();
+      let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
+        prevRef := previousLine;
+        beforePrevRef := beforePreviousLine;
+        AutoIndent.KeepIndent;
+      };
 
-    let prevRef = ref("");
-    let beforePrevRef = ref(Some(""));
+      let input = input(~insertSpaces=true, ~autoIndent);
+      // Go to last line
+      input("G");
+      input("o");
 
-    let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
-      prevRef := previousLine;
-      beforePrevRef := beforePreviousLine;
-      AutoIndent.KeepIndent;
-    };
+      expect.equal(prevRef^, "This is the third line of a test file");
+      expect.equal(
+        beforePrevRef^,
+        Some("This is the second line of a test file"),
+      );
+    });
 
-    let input = input(~insertSpaces=true, ~autoIndent);
-    // Go to last line
-    input("j");
-    input("O");
+    test(
+      "open before indented line, after empty line, keep indent",
+      ({expect, _}) => {
+      let buffer = resetBufferIndent2Spaces();
 
-    expect.equal(prevRef^, "This is the first line of a test file");
-    expect.equal(beforePrevRef^, None);
-  });
-  test("auto-indent should not be called for first line", ({expect, _}) => {
-    let _ = resetBuffer();
+      buffer
+      |> Vim.Buffer.setLines(
+           ~lines=[|
+             "line 1",
+             "", // Add a line with spaces
+             "  line2",
+             "    line3",
+           |],
+         );
 
-    let prevRef = ref("");
-    let beforePrevRef = ref(Some(""));
-    let autoIndent = (~previousLine, ~beforePreviousLine) => {
-      prevRef := previousLine;
-      beforePrevRef := beforePreviousLine;
-      AutoIndent.KeepIndent;
-    };
+      let input = input(~insertSpaces=true, ~autoIndent=keepIndent);
+      // Go to third line
+      input("gg");
+      input("j");
+      input("j");
+      input("O");
+      input("a");
 
-    let input = input(~insertSpaces=true, ~autoIndent);
-    // Open the very first line - auto-indent should not be called in this case
-    input("gg");
-    input("O");
+      let line = Buffer.getLine(buffer, Index.(zero + 2));
+      expect.string(line).toEqual("  a");
+    });
 
-    expect.equal(prevRef^, "");
-    expect.equal(beforePrevRef^, None);
+    test("open before indented line, keep indent", ({expect, _}) => {
+      let buffer = resetBufferIndent2Spaces();
+
+      let input = input(~insertSpaces=true, ~autoIndent=keepIndent);
+      // Go to second line
+      input("j");
+      input("O");
+      input("a");
+
+      let line = Buffer.getLine(buffer, Index.(zero + 1));
+      expect.string(line).toEqual("a");
+    });
+
+    test("open before indented line, indent", ({expect, _}) => {
+      let buffer = resetBufferIndent2Spaces();
+
+      let input = input(~insertSpaces=true, ~autoIndent=increaseIndent);
+      // Go to second line
+      input("j");
+      input("O");
+      input("a");
+
+      let line = Buffer.getLine(buffer, Index.(zero + 1));
+      expect.string(line).toEqual("  a");
+    });
+
+    test("open before indented line, un-indent", ({expect, _}) => {
+      let buffer = resetBufferIndent2Spaces();
+
+      let input = input(~insertSpaces=true, ~autoIndent=decreaseIndent);
+      // Go to second line
+      input("j");
+      input("j");
+      input("O");
+      input("a");
+
+      let line = Buffer.getLine(buffer, Index.(zero + 2));
+      expect.string(line).toEqual("a");
+    });
+
+    test("open before line", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let prevRef = ref("");
+      let beforePrevRef = ref(Some(""));
+
+      let autoIndent = (~previousLine, ~beforePreviousLine: option(string)) => {
+        prevRef := previousLine;
+        beforePrevRef := beforePreviousLine;
+        AutoIndent.KeepIndent;
+      };
+
+      let input = input(~insertSpaces=true, ~autoIndent);
+      // Go to last line
+      input("j");
+      input("O");
+
+      expect.equal(prevRef^, "This is the first line of a test file");
+      expect.equal(beforePrevRef^, None);
+    });
+    test("auto-indent should not be called for first line", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let prevRef = ref("");
+      let beforePrevRef = ref(Some(""));
+      let autoIndent = (~previousLine, ~beforePreviousLine) => {
+        prevRef := previousLine;
+        beforePrevRef := beforePreviousLine;
+        AutoIndent.KeepIndent;
+      };
+
+      let input = input(~insertSpaces=true, ~autoIndent);
+      // Open the very first line - auto-indent should not be called in this case
+      input("gg");
+      input("O");
+
+      expect.equal(prevRef^, "");
+      expect.equal(beforePrevRef^, None);
+    });
   });
 });

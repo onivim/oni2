@@ -29,7 +29,7 @@ module Window = Window;
 module Yank = Yank;
 
 module GlobalState = {
-  let autoIndent:
+  let onOpenAutoIndent:
     ref(
       option(
         (~previousLine: string, ~beforePreviousLine: option(string)) =>
@@ -176,11 +176,11 @@ let runWith = (~context: Context.t, f) => {
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
-  GlobalState.autoIndent := Some(context.autoIndent);
+  GlobalState.onOpenAutoIndent := Some(context.onOpenAutoIndent);
 
   let cursors = f();
 
-  GlobalState.autoIndent := None;
+  GlobalState.onOpenAutoIndent := None;
 
   let newBuf = Buffer.getCurrent();
   let newLocation = Cursor.getLocation();
@@ -382,7 +382,7 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
     };
 
   let indentAction =
-    GlobalState.autoIndent^
+    GlobalState.onOpenAutoIndent^
     |> Option.map(fn => fn(~previousLine=beforeLine, ~beforePreviousLine))
     |> Option.value(~default=AutoIndent.KeepIndent);
 
@@ -460,7 +460,7 @@ let init = () => {
 };
 
 let input = (~context=Context.current(), v: string) => {
-  let {autoClosingPairs, cursors, _}: Context.t = context;
+  let {autoClosingPairs, cursors, onTypeAutoIndent, _}: Context.t = context;
   runWith(
     ~context,
     () => {
@@ -471,6 +471,9 @@ let input = (~context=Context.current(), v: string) => {
         if (Mode.getCurrent() == Types.Insert) {
           let location = Cursor.getLocation();
           let line = Buffer.getLine(Buffer.getCurrent(), location.line);
+
+          let beforeLineNumber = location.line;
+          let beforeIndentAction = context.onTypeAutoIndent(line);
 
           let isBetweenClosingPairs = () => {
             AutoClosingPairs.isBetweenClosingPairs(
@@ -507,6 +510,7 @@ let input = (~context=Context.current(), v: string) => {
             if (String.length(precedingWhitespace) > 0) {
               Native.vimInput(precedingWhitespace);
             };
+
             Native.vimInput("<TAB>");
           } else if (AutoClosingPairs.isPassThrough(
                        v,
@@ -523,6 +527,20 @@ let input = (~context=Context.current(), v: string) => {
             Native.vimInput("<LEFT>");
           } else {
             Native.vimInput(v);
+            // If we're still in insert mode, and still on the same line, check the onTypeAutoIndent for adjustments
+            let afterLineNumber = Cursor.getLocation().line;
+            let afterLine =
+              Buffer.getLine(Buffer.getCurrent(), afterLineNumber);
+            let afterIndentAction = onTypeAutoIndent(afterLine);
+
+            if (afterLineNumber == beforeLineNumber
+                && afterIndentAction != beforeIndentAction) {
+              if (afterIndentAction == AutoIndent.IncreaseIndent) {
+                Native.vimInput("<C-T>");
+              } else if (afterIndentAction == AutoIndent.DecreaseIndent) {
+                Native.vimInput("<C-D>");
+              };
+            };
           };
         } else {
           Native.vimInput(v);
