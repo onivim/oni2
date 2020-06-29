@@ -39,31 +39,31 @@ type splitFunc =
   ) =>
   bool;
 
-//type splitFunc = (int, Uchar.t, int, Uchar.t) => bool;
+module Internal = {
+  let getNextBreak =
+      (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
+    let pos = ref(start);
+    let found = ref(false);
 
-let _getNextBreak =
-    (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
-  let pos = ref(start);
-  let found = ref(false);
+    while (pos^ < max - 1 && ! found^) {
+      let index0 = pos^;
+      let index1 = pos^ + 1;
+      let char0 = BufferLine.getUcharExn(~index=index0, bufferLine);
+      let char1 = BufferLine.getUcharExn(~index=index1, bufferLine);
+      let byte0 = BufferLine.getByteFromIndex(~index=index0, bufferLine);
+      let byte1 = BufferLine.getByteFromIndex(~index=index1, bufferLine);
 
-  while (pos^ < max - 1 && ! found^) {
-    let index0 = pos^;
-    let index1 = pos^ + 1;
-    let char0 = BufferLine.getUcharExn(~index=index0, bufferLine);
-    let char1 = BufferLine.getUcharExn(~index=index1, bufferLine);
-    let byte0 = BufferLine.getByteFromIndex(~index=index0, bufferLine);
-    let byte1 = BufferLine.getByteFromIndex(~index=index1, bufferLine);
+      if (f(~index0, ~index1, ~char0, ~char1, ~byte0, ~byte1)) {
+        found := true;
+      };
 
-    if (f(~index0, ~index1, ~char0, ~char1, ~byte0, ~byte1)) {
-      found := true;
+      if (! found^) {
+        incr(pos);
+      };
     };
 
-    if (! found^) {
-      incr(pos);
-    };
+    pos^;
   };
-
-  pos^;
 };
 
 let tokenize =
@@ -80,7 +80,7 @@ let tokenize =
 
     while (idx^ < maxIndex) {
       let startToken = idx^;
-      let endToken = _getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
+      let endToken = Internal.getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
 
       let text =
         BufferLine.subExn(

@@ -15,13 +15,16 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-type viewLine = {
-  contents: BufferLine.t,
+type viewTokens = {
+  tokens: list(BufferViewTokenizer.t),
   byteOffset: int,
   characterOffset: int,
 };
 
-let create: (~font: Service_Font.font, ~buffer: EditorBuffer.t, unit) => t;
+let create: (
+  ~wrap: WordWrap.t=?,
+  ~font: Service_Font.font,
+  ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
 let getId: t => int;
@@ -61,7 +64,9 @@ let visiblePixelHeight: t => int;
 
 let font: t => Service_Font.font;
 
-let viewLine: (t, int) => viewLine;
+//let viewLine: (t, int) => viewLine;
+
+let viewTokens: (~line: int, ~position: int, t) => viewTokens;
 
 let scrollX: t => float;
 let scrollY: t => float;

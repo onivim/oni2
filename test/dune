@@ -43,6 +43,16 @@
         yojson
         Oni_Core_Test
             ))
+            
+(executable
+    (name OniUnitTestRunnerEditor)
+    (public_name OniUnitTestRunnerEditor)
+    (modules OniUnitTestRunnerEditor)
+    (package OniUnitTestRunner)
+    (libraries
+        yojson
+        Feature_Editor_Test
+            ))
 
 (executable
     (name OniUnitTestRunnerInput)

@@ -8,8 +8,8 @@ type pixelPosition = {
   pixelY: float,
 };
 
-type viewLine = {
-  contents: BufferLine.t,
+type viewTokens = {
+  tokens: list(BufferViewTokenizer.t),
   byteOffset: int,
   characterOffset: int,
 };
@@ -45,56 +45,65 @@ let characterWidthInPixels = ({font, _}) => font.measuredWidth;
 let font = ({font, _}) => font;
 
 let bufferLineByteToPixel =
-    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
+    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, wrapping, _}) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
     let bufferLine = buffer |> EditorBuffer.line(line);
 
+    let viewLine = 
+    Wrapping.bufferLineByteToViewLine(~line, ~byteIndex, wrapping);
+
+    let {characterOffset, _}: Wrapping.bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line=viewLine, wrapping);
+
+    let (startPosition, _) = BufferLine.getPositionAndWidth(
+      ~index=characterOffset, bufferLine
+    );
+
     let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
-    let (cursorOffset, width) =
+    let (characterOffset, width) =
       BufferLine.getPositionAndWidth(~index, bufferLine);
 
-    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+    let pixelX = font.measuredWidth *. float(characterOffset - startPosition) -. scrollX +. 0.5;
 
-    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+    let pixelY = font.measuredHeight *. float(viewLine) -. scrollY +. 0.5;
 
     ({pixelX, pixelY}, float(width) *. font.measuredWidth);
   };
 };
 
-let viewLine = (editor, line) => {
-  let bufferPosition = Wrapping.viewLineToBufferPosition(
-    ~line,
-    editor.wrapping,
-  );
+let viewTokens = (~line, ~position, editor) => {
+  ignore(line);
+  ignore(position);
+//  let bufferPosition = Wrapping.viewLineToBufferPosition(
+//    ~line,
+//    editor.wrapping,
+//  );
 
-  let contents = editor.buffer |> EditorBuffer.line(bufferPosition.line);
+  //let contents = editor.buffer |> EditorBuffer.line(bufferPosition.line);
+  let tokens = [];
 
-  {contents, byteOffset: 0, characterOffset: 0};
+  {tokens, byteOffset: 0, characterOffset: 0};
 };
 
 let bufferLineCharacterToPixel =
-    (~line, ~characterIndex, {scrollX, scrollY, buffer, font, _}) => {
+    (~line, ~characterIndex, {scrollX, scrollY, buffer, font, _} as editor) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
-    let (cursorOffset, width) =
+    let byteIndex =
       buffer
       |> EditorBuffer.line(line)
-      |> BufferLine.getPositionAndWidth(~index=characterIndex);
+      |> BufferLine.getByteFromIndex(~index=characterIndex);
 
-    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
-
-    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
-
-    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+      bufferLineByteToPixel(~line, ~byteIndex, editor);
   };
 };
 
-let create = (~font, ~buffer, ()) => {
+let create = (~wrap=WordWrap.none, ~font, ~buffer, ()) => {
   let id = lastId^;
   incr(lastId);
 
@@ -121,7 +130,7 @@ let create = (~font, ~buffer, ()) => {
     font,
     pixelWidth: 1,
     pixelHeight: 1,
-    wrapping: Wrapping.make(~wrap=WordWrap.fixed(~columns=5), ~buffer),
+    wrapping: Wrapping.make(~wrap, ~buffer),
   };
 };
 
