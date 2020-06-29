@@ -117,8 +117,12 @@ let renderDefinition =
        let range =
          Range.{
            start:
-             Location.{line: cursorPosition.line, column: token.startIndex},
-           stop: Location.{line: cursorPosition.line, column: token.endIndex},
+             Location.{
+               line: cursorPosition.line,
+               column: token.startPosition,
+             },
+           stop:
+             Location.{line: cursorPosition.line, column: token.endPosition},
          };
        Draw.underline(~context, ~color=token.color, range);
      });

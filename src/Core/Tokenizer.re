@@ -17,14 +17,31 @@ module TextRun = {
      */
     startIndex: Index.t,
     endIndex: Index.t,
+    /*
+     * Positions refer to the physical column position
+     */
+    startPosition: Index.t,
+    endPosition: Index.t,
   };
 
-  let create = (~text, ~startByte, ~endByte, ~startIndex, ~endIndex, ()) => {
+  let create =
+      (
+        ~text,
+        ~startByte,
+        ~endByte,
+        ~startIndex,
+        ~endIndex,
+        ~startPosition,
+        ~endPosition,
+        (),
+      ) => {
     text,
     startByte,
     endByte,
     startIndex,
     endIndex,
+    startPosition,
+    endPosition,
   };
 };
 
@@ -94,6 +111,11 @@ let tokenize =
         BufferLine.getByteFromIndex(~index=startToken, bufferLine);
       let endByte = BufferLine.getByteFromIndex(~index=endToken, bufferLine);
 
+      let (startPosition, _) =
+        BufferLine.getPositionAndWidth(~index=startToken, bufferLine);
+      let (endPosition, _) =
+        BufferLine.getPositionAndWidth(~index=endToken, bufferLine);
+
       let textRun =
         TextRun.create(
           ~text,
@@ -101,6 +123,8 @@ let tokenize =
           ~endByte,
           ~startIndex=Index.fromZeroBased(startToken),
           ~endIndex=Index.fromZeroBased(endToken),
+          ~startPosition=Index.fromZeroBased(startPosition),
+          ~endPosition=Index.fromZeroBased(endPosition),
           (),
         );
 

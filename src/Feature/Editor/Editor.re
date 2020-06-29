@@ -82,6 +82,22 @@ let viewLineToBufferLine = (~line, editor) => {
   bufferPosition.line;
 };
 
+let viewLineToPositionOffset = (~line, {wrapping, buffer, _}) => {
+  let bufferPosition = Wrapping.viewLineToBufferPosition(~line, wrapping);
+  let bufferLineNumber = bufferPosition.line;
+  let index = bufferPosition.characterOffset;
+  if (bufferLineNumber >= 0
+      && bufferLineNumber < EditorBuffer.numberOfLines(buffer)) {
+    let (position, _) =
+      buffer
+      |> EditorBuffer.line(bufferLineNumber)
+      |> BufferLine.getPositionAndWidth(~index);
+    position;
+  } else {
+    0;
+  };
+};
+
 let viewTokens = (~line, ~position, ~colorizer, editor) => {
   let bufferPosition: Wrapping.bufferPosition =
     Wrapping.viewLineToBufferPosition(~line, editor.wrapping);
@@ -103,15 +119,11 @@ let viewTokens = (~line, ~position, ~colorizer, editor) => {
     Wrapping.viewLineToBufferPosition(~line=line + 1, editor.wrapping);
 
   let viewEndByte =
-    if (nextLineBufferPosition.line == bufferPosition.line) {
+    if (nextLineBufferPosition.line == bufferPosition.line
+        && nextLineBufferPosition.byteOffset > bufferPosition.byteOffset) {
       nextLineBufferPosition.byteOffset;
     } else {
-      BufferLine.Slow.getByteFromPosition(
-        ~position=position + visibleCharacterCount,
-        ~startByte=viewStartByte,
-        bufferLine,
-      )
-      + 1;
+      BufferLine.lengthInBytes(bufferLine);
     };
 
   let startIndex = BufferLine.getIndex(~byte=viewStartByte, bufferLine);
@@ -148,6 +160,7 @@ let bufferLineCharacterToPixel =
 };
 
 let create = (~wrap=WordWrap.fixed(~columns=5), ~font, ~buffer, ()) => {
+  //let create = (~wrap=WordWrap.none, ~font, ~buffer, ()) => {
   let id = lastId^;
   incr(lastId);
 

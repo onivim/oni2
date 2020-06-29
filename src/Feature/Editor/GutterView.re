@@ -12,7 +12,7 @@ module Constants = {
 let renderLineNumber =
     (
       ~context: Draw.context,
-      lineNumber: int,
+      viewLine: int,
       lineNumberWidth: float,
       colors: Colors.t,
       lineSetting,
@@ -24,49 +24,57 @@ let renderLineNumber =
       Revery.Font.Weight.Normal,
       context.fontFamily,
     );
-  let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
-  let isActiveLine = lineNumber == cursorLine;
-  let ({pixelY: yOffset, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=lineNumber,
-      ~byteIndex=0,
-      context.editor,
+  let bufferLine =
+    Editor.viewLineToBufferLine(~line=viewLine, context.editor);
+
+  let offset =
+    Editor.viewLineToPositionOffset(~line=viewLine, context.editor);
+
+  if (offset == 0) {
+    let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
+    let isActiveLine = bufferLine == cursorLine;
+    let ({pixelY: yOffset, _}: Editor.pixelPosition, _) =
+      Editor.bufferLineByteToPixel(
+        ~line=bufferLine,
+        ~byteIndex=0,
+        context.editor,
+      );
+    let y = yOffset -. fontMetrics.ascent;
+
+    let lineNumber =
+      string_of_int(
+        LineNumber.getLineNumber(
+          ~bufferLine=bufferLine + 1,
+          ~cursorLine=cursorLine + 1,
+          ~setting=lineSetting,
+          (),
+        ),
+      );
+
+    let lineNumberXOffset =
+      isActiveLine
+        ? 0.
+        : lineNumberWidth
+          /. 2.
+          -. float(String.length(lineNumber))
+          *. context.charWidth
+          /. 2.;
+
+    let color =
+      isActiveLine
+        ? colors.lineNumberActiveForeground : colors.lineNumberForeground;
+
+    Draw.utf8Text(
+      ~context,
+      ~x=lineNumberXOffset,
+      ~y,
+      ~color,
+      ~bold=false,
+      ~italic=false,
+      ~mono=false,
+      lineNumber,
     );
-  let y = yOffset -. fontMetrics.ascent;
-
-  let lineNumber =
-    string_of_int(
-      LineNumber.getLineNumber(
-        ~bufferLine=lineNumber + 1,
-        ~cursorLine=cursorLine + 1,
-        ~setting=lineSetting,
-        (),
-      ),
-    );
-
-  let lineNumberXOffset =
-    isActiveLine
-      ? 0.
-      : lineNumberWidth
-        /. 2.
-        -. float(String.length(lineNumber))
-        *. context.charWidth
-        /. 2.;
-
-  let color =
-    isActiveLine
-      ? colors.lineNumberActiveForeground : colors.lineNumberForeground;
-
-  Draw.utf8Text(
-    ~context,
-    ~x=lineNumberXOffset,
-    ~y,
-    ~color,
-    ~bold=false,
-    ~italic=false,
-    ~mono=false,
-    lineNumber,
-  );
+  };
 };
 
 let renderLineNumbers =

@@ -49,6 +49,7 @@ let minimapPaint = Skia.Paint.make();
 
 let renderLine =
     (
+      positionOffset,
       shouldHighlight,
       canvasContext,
       yOffset,
@@ -57,9 +58,9 @@ let renderLine =
   let f = (token: BufferViewTokenizer.t) => {
     switch (token.tokenType) {
     | Text =>
-      // TODO: Fix this
-      let startPosition = Index.toZeroBased(token.startIndex);
-      let endPosition = Index.toZeroBased(token.endIndex);
+      let startPosition =
+        Index.toZeroBased(token.startPosition) - positionOffset;
+      let endPosition = Index.toZeroBased(token.endPosition) - positionOffset;
       let tokenWidth = endPosition - startPosition;
 
       let x = float(Constants.minimapCharacterWidth * startPosition);
@@ -378,7 +379,16 @@ let%component make =
               | None => ()
               };
 
-              renderLine(shouldHighlight, canvasContext, offset, tokens);
+              let positionOffset =
+                Editor.viewLineToPositionOffset(~line=item, editor);
+
+              renderLine(
+                positionOffset,
+                shouldHighlight,
+                canvasContext,
+                offset,
+                tokens,
+              );
             },
           (),
         );

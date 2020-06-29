@@ -49,7 +49,7 @@ module Internal = {
           loop(
             bufferLine + 1,
             currentLine,
-            wraps[bufferLine + 1],
+            bufferLine + 1 >= len ? [] : wraps[bufferLine + 1],
             lastBufferPosition,
           )
         | [hd, ...tail] =>

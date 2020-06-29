@@ -102,6 +102,7 @@ let getLineHeight: t => float;
 // VIEW-SPACE CONVERSION
 
 let viewLineToBufferLine: (~line: int, t) => int;
+let viewLineToPositionOffset: (~line: int, t) => int;
 
 // PIXEL-SPACE CONVERSION
 

@@ -196,8 +196,14 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
 
   let characterWidth = Editor.characterWidthInPixels(context.editor);
-  let pixelX = float(token.startIndex |> Index.toZeroBased) *. characterWidth;
-  let pixelY = Editor.lineHeightInPixels(context.editor) *. float(line);
+  let startPosition = Editor.viewLineToPositionOffset(~line, context.editor);
+  let pixelX =
+    float((token.startPosition |> Index.toZeroBased) - startPosition)
+    *. characterWidth;
+  let pixelY =
+    Editor.lineHeightInPixels(context.editor)
+    *. float(line)
+    -. Editor.scrollY(context.editor);
 
   //  let ({pixelY, pixelX}: Editor.pixelPosition, _) =
   //    Editor.bufferLineCharacterToPixel(
