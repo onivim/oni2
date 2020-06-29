@@ -259,7 +259,6 @@ let%component make =
       config
       editor
       editorFont
-      buffer
       mode
       cursorPosition
       isActiveSplit

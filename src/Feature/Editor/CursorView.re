@@ -12,7 +12,6 @@ let%component make =
               (
                 ~editor: Editor.t,
                 ~editorFont: Service_Font.font,
-                ~buffer,
                 ~mode: Vim.Mode.t,
                 ~isActiveSplit,
                 ~cursorPosition: Location.t,
@@ -96,13 +95,8 @@ let%component make =
           ~editor,
           ~editorFont,
         );
-      let line = Index.toZeroBased(cursorPosition.line);
-      let column = Index.toZeroBased(cursorPosition.column);
-      let lineCount = Buffer.getNumberOfLines(buffer);
 
-      if (lineCount <= 0 || line >= lineCount || !isActiveSplit) {
-        ();
-      } else {
+      if (isActiveSplit) {
         let height = Editor.lineHeightInPixels(editor);
         let background = colors.cursorBackground;
         let foreground = colors.cursorForeground;
@@ -133,33 +127,33 @@ let%component make =
         } else {
           let width = characterWidth;
           Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
-          let bufferLine = Buffer.getLine(line, buffer);
 
-          switch (BufferLine.subExn(~index=column, ~length=1, bufferLine)) {
-          | exception _
-          | "" => ()
-          | text
-              when BufferViewTokenizer.isWhitespace(ZedBundled.get(text, 0)) =>
-            ()
-          | text =>
-            let font =
-              Service_Font.resolveWithFallback(
-                ~italic=false,
-                Revery.Font.Weight.Normal,
-                context.fontFamily,
-              );
-            let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
-            Draw.shapedText(
-              ~context,
-              ~x=x -. 0.5,
-              ~y=y -. fontMetrics.ascent -. 0.5,
-              ~bold=false,
-              ~italic=false,
-              ~mono=false,
-              ~color=background |> Revery.Color.multiplyAlpha(textOpacity),
-              text,
-            );
-          };
+          editor
+          |> Editor.getCharacterAtPosition(~line, ~index=column)
+          |> Option.iter(uchar =>
+               if (!BufferViewTokenizer.isWhitespace(uchar)) {
+                 let text = ZedBundled.make(1, uchar);
+                 let font =
+                   Service_Font.resolveWithFallback(
+                     ~italic=false,
+                     Revery.Font.Weight.Normal,
+                     context.fontFamily,
+                   );
+                 let fontMetrics =
+                   Revery.Font.getMetrics(font, context.fontSize);
+                 Draw.shapedText(
+                   ~context,
+                   ~x=x -. 0.5,
+                   ~y=y -. fontMetrics.ascent -. 0.5,
+                   ~bold=false,
+                   ~italic=false,
+                   ~mono=false,
+                   ~color=
+                     background |> Revery.Color.multiplyAlpha(textOpacity),
+                   text,
+                 );
+               }
+             );
         };
       };
     }}
