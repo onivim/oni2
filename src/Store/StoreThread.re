@@ -302,7 +302,15 @@ let start =
         Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
       );
 
+    let codelensSub =
+      Feature_Codelens.sub(
+        ~buffers=visibleBuffers,
+        ~client=extHostClient
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Codelens(msg));
+
     [
+      codelensSub,
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
