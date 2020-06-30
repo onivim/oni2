@@ -21,15 +21,9 @@ type viewTokens = {
   characterOffset: int,
 };
 
-type wrapMode = 
-| NoWrap
-| Viewport
-| WrapColumn(int)
-| Bounded(int);
-
 let create:
   (
-    ~wrap: WordWrap.t=?,
+    ~wrap: WrapMode.t=?,
     ~font: Service_Font.font,
     ~buffer: EditorBuffer.t,
     unit

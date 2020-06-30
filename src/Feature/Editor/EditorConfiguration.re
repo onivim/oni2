@@ -5,7 +5,8 @@ open Config.Schema;
 module CustomDecoders: {
   let whitespace: Config.Schema.codec([ | `All | `Boundary | `None]);
   let lineNumbers: Config.Schema.codec([ | `On | `Relative | `Off]);
-  let wordWrap: Config.Schema.codec([`WordWrapColumn| `Bounded| `Off| `On])
+  let wordWrap:
+    Config.Schema.codec([ | `WordWrapColumn | `Bounded | `Off | `On]);
   let time: Config.Schema.codec(Time.t);
 } = {
   let whitespace =
@@ -106,8 +107,6 @@ let renderWhitespace =
 let rulers = setting("editor.rulers", list(int), ~default=[]);
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
 let tabSize = setting("editor.tabSize", int, ~default=4);
-let wordWrap = setting("editor.wordWrap", wordWrap, ~default=`Off);
-let wordWrapColumn = setting("editor.wordWrapColumn", int, ~default=80);
 
 module Hover = {
   let enabled = setting("editor.hover.enabled", bool, ~default=true);
@@ -126,6 +125,11 @@ module ZenMode = {
 };
 
 module Experimental = {
+  let wordWrap =
+    setting("experimental.editor.wordWrap", wordWrap, ~default=`Off);
+  let wordWrapColumn =
+    setting("experimental.editor.wordWrapColumn", int, ~default=80);
+
   let smoothScroll =
     setting("experimental.editor.smoothScroll", bool, ~default=false);
 

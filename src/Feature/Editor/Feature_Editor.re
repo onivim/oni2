@@ -12,6 +12,7 @@ module EditorSurface = EditorSurface;
 module EditorDiffMarkers = EditorDiffMarkers;
 
 module Wrapping = Wrapping;
+module WrapMode = WrapMode;
 
 module Contributions = {
   let configuration = EditorConfiguration.contributions;

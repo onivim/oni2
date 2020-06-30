@@ -14,18 +14,98 @@ type viewTokens = {
   characterOffset: int,
 };
 
-type wrapMode = 
-| NoWrap
-| Viewport
-| WrapColumn(int)
-| Bounded(int);
+module WrapState = {
+  [@deriving show]
+  type t =
+    | NoWrap({
+        [@opaque]
+        wrapping: Wrapping.t,
+      })
+    | Viewport({
+        lastWrapColumn: int,
+        [@opaque]
+        wrapping: Wrapping.t,
+      })
+    | WrapColumn({
+        wrapColumn: int,
+        [@opaque]
+        wrapping: Wrapping.t,
+      })
+    | Bounded({
+        wrapColumn: int,
+        lastWrapColumn: int,
+        [@opaque]
+        wrapping: Wrapping.t,
+      });
 
-[@deriving show]
-type wrapState = 
-| NoWrap
-| Viewport({lastWrapColumn: int})
-| WrapColumn(int)
-| Bounded({wrapColumn: int, lastWrapColumn: int});
+  let make = (~wrapMode: WrapMode.t, ~buffer) => {
+    let initialWrapping = Wrapping.make(~wrap=WordWrap.none, ~buffer);
+    switch (wrapMode) {
+    | NoWrap => NoWrap({wrapping: initialWrapping})
+    | Viewport => Viewport({lastWrapColumn: 999, wrapping: initialWrapping})
+    | WrapColumn(wrapColumn) =>
+      WrapColumn({
+        wrapColumn,
+        wrapping:
+          Wrapping.make(~wrap=WordWrap.fixed(~columns=wrapColumn), ~buffer),
+      })
+    | Bounded(wrapColumn) =>
+      Bounded({
+        wrapColumn,
+        lastWrapColumn: wrapColumn,
+        wrapping:
+          Wrapping.make(~wrap=WordWrap.fixed(~columns=wrapColumn), ~buffer),
+      })
+    };
+  };
+
+  let wrapping =
+    fun
+    | NoWrap({wrapping}) => wrapping
+    | Viewport({wrapping, _}) => wrapping
+    | WrapColumn({wrapping, _}) => wrapping
+    | Bounded({wrapping, _}) => wrapping;
+
+  let resize = (~columns: int, ~buffer, wrapState) => {
+    switch (wrapState) {
+    // All the cases where we don't need to update wrapping...
+    | NoWrap(_) as nowrap => nowrap
+    | WrapColumn(_) as wrapcolumn => wrapcolumn
+    | Viewport({lastWrapColumn, _}) as viewport when lastWrapColumn == columns => viewport
+    | Bounded({lastWrapColumn, _}) as bounded when lastWrapColumn == columns => bounded
+    // And the cases where we may need to update wrapping
+    | Viewport(_) =>
+      let wrapping = Wrapping.make(~wrap=WordWrap.fixed(~columns), ~buffer);
+      Viewport({lastWrapColumn: columns, wrapping});
+    | Bounded({wrapColumn, lastWrapColumn, _}) as bounded =>
+      let newWrapColumn = min(wrapColumn, columns);
+      if (newWrapColumn == lastWrapColumn) {
+        bounded;
+      } else {
+        let wrapping =
+          Wrapping.make(
+            ~wrap=WordWrap.fixed(~columns=newWrapColumn),
+            ~buffer,
+          );
+        Bounded({wrapColumn, lastWrapColumn: newWrapColumn, wrapping});
+      };
+    };
+  };
+
+  let map = f =>
+    fun
+    | NoWrap({wrapping}) => NoWrap({wrapping: f(wrapping)})
+    | Viewport({wrapping, lastWrapColumn}) =>
+      Viewport({wrapping: f(wrapping), lastWrapColumn})
+    | WrapColumn({wrapping, wrapColumn}) =>
+      WrapColumn({wrapping: f(wrapping), wrapColumn})
+    | Bounded({wrapping, wrapColumn, lastWrapColumn}) =>
+      Bounded({wrapping: f(wrapping), wrapColumn, lastWrapColumn});
+
+  let update = (~update, ~buffer, wrapState) => {
+    wrapState |> map(Wrapping.update(~update, ~newBuffer=buffer));
+  };
+};
 
 [@deriving show]
 type t = {
@@ -40,12 +120,13 @@ type t = {
   font: [@opaque] Service_Font.font,
   pixelWidth: int,
   pixelHeight: int,
-  wrapState: wrapState,
-  wrapping: [@opaque] Wrapping.t,
+  wrapState: WrapState.t,
 };
 
-let totalViewLines = ({wrapping, _}) => wrapping |> Wrapping.numberOfLines;
-let maxLineLength = ({wrapping, _}) => wrapping |> Wrapping.maxLineLength;
+let totalViewLines = ({wrapState, _}) =>
+  wrapState |> WrapState.wrapping |> Wrapping.numberOfLines;
+let maxLineLength = ({wrapState, _}) =>
+  wrapState |> WrapState.wrapping |> Wrapping.maxLineLength;
 let selection = ({selection, _}) => selection;
 let setSelection = (~selection, editor) => {...editor, selection};
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
@@ -58,11 +139,12 @@ let characterWidthInPixels = ({font, _}) => font.measuredWidth;
 let font = ({font, _}) => font;
 
 let bufferLineByteToPixel =
-    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, wrapping, _}) => {
+    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, wrapState, _}) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
+    let wrapping = wrapState |> WrapState.wrapping;
     let bufferLine = buffer |> EditorBuffer.line(line);
 
     let viewLine =
@@ -91,12 +173,13 @@ let bufferLineByteToPixel =
 };
 
 let viewLineToBufferLine = (~line, editor) => {
-  let bufferPosition =
-    Wrapping.viewLineToBufferPosition(~line, editor.wrapping);
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let bufferPosition = Wrapping.viewLineToBufferPosition(~line, wrapping);
   bufferPosition.line;
 };
 
-let viewLineToPositionOffset = (~line, {wrapping, buffer, _}) => {
+let viewLineToPositionOffset = (~line, {wrapState, buffer, _}) => {
+  let wrapping = wrapState |> WrapState.wrapping;
   let bufferPosition = Wrapping.viewLineToBufferPosition(~line, wrapping);
   let bufferLineNumber = bufferPosition.line;
   let index = bufferPosition.characterOffset;
@@ -113,8 +196,9 @@ let viewLineToPositionOffset = (~line, {wrapping, buffer, _}) => {
 };
 
 let viewTokens = (~line, ~position, ~colorizer, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
   let bufferPosition: Wrapping.bufferPosition =
-    Wrapping.viewLineToBufferPosition(~line, editor.wrapping);
+    Wrapping.viewLineToBufferPosition(~line, wrapping);
 
   let bufferLineIndex = bufferPosition.line;
   let startByte = bufferPosition.byteOffset;
@@ -130,7 +214,7 @@ let viewTokens = (~line, ~position, ~colorizer, editor) => {
     );
 
   let nextLineBufferPosition =
-    Wrapping.viewLineToBufferPosition(~line=line + 1, editor.wrapping);
+    Wrapping.viewLineToBufferPosition(~line=line + 1, wrapping);
 
   let viewEndByte =
     if (nextLineBufferPosition.line == bufferPosition.line
@@ -173,10 +257,11 @@ let bufferLineCharacterToPixel =
   };
 };
 
-let create = (~wrap=WordWrap.fixed(~columns=20), ~font, ~buffer, ()) => {
-  //let create = (~wrap=WordWrap.none, ~font, ~buffer, ()) => {
+let create = (~wrap=WrapMode.Viewport, ~font, ~buffer, ()) => {
   let id = lastId^;
   incr(lastId);
+
+  let wrapState = WrapState.make(~wrapMode=wrap, ~buffer);
 
   {
     editorId: id,
@@ -201,8 +286,7 @@ let create = (~wrap=WordWrap.fixed(~columns=20), ~font, ~buffer, ()) => {
     font,
     pixelWidth: 1,
     pixelHeight: 1,
-    wrapState: NoWrap,
-    wrapping: Wrapping.make(~wrap, ~buffer),
+    wrapState,
   };
 };
 
@@ -414,9 +498,18 @@ let getBottomVisibleLine = editor => {
 let setFont = (~font, editor) => {...editor, font};
 
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
-  ...editor,
-  pixelWidth,
-  pixelHeight,
+  // TODO: Figure out correct columns, with minimap
+  let visibleColumns =
+    float(pixelWidth) /. characterWidthInPixels(editor) |> int_of_float;
+
+  let wrapState =
+    WrapState.resize(
+      ~columns=visibleColumns,
+      ~buffer=editor.buffer,
+      editor.wrapState,
+    );
+
+  {...editor, pixelWidth, pixelHeight, wrapState};
 };
 
 let scrollToPixelY = (~pixelY as newScrollY, editor) => {
@@ -440,11 +533,12 @@ let scrollToPixelY = (~pixelY as newScrollY, editor) => {
   {...editor, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
 };
 
-let scrollToLine = (~line, view) => {
+let scrollToLine = (~line, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
   let viewLine =
-    Wrapping.bufferLineByteToViewLine(~line, ~byteIndex=0, view.wrapping);
-  let pixelY = float_of_int(viewLine) *. getLineHeight(view);
-  scrollToPixelY(~pixelY, view);
+    Wrapping.bufferLineByteToViewLine(~line, ~byteIndex=0, wrapping);
+  let pixelY = float_of_int(viewLine) *. getLineHeight(editor);
+  scrollToPixelY(~pixelY, editor);
 };
 
 let scrollToPixelX = (~pixelX as newScrollX, editor) => {
@@ -528,7 +622,7 @@ let updateBuffer = (~update, ~buffer, editor) => {
   {
     ...editor,
     buffer,
-    wrapping: Wrapping.update(~update, ~newBuffer=buffer, editor.wrapping),
+    wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
   };
 };
 

@@ -171,6 +171,7 @@ let getByteFromIndex = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let rawLength = String.length(bufferLine.raw);
   let characters = bufferLine.characters;
+  prerr_endline("INDEX: " ++ string_of_int(index));
   if (index >= Array.length(characters)) {
     rawLength;
   } else {
