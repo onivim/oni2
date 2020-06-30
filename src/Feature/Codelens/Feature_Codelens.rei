@@ -1,7 +1,15 @@
 type model;
 
 [@deriving show]
-type msg;
+type msg = 
+| CodelensProviderAvailable({
+	handle: int,
+	selector: Exthost.DocumentSelector.t,
+})
+| CodelensesReceived({
+	bufferId: int, 
+	lenses:list(Exthost.CodeLens.t)
+	});
 
 let update: (model, msg) => model;
 

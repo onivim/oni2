@@ -305,6 +305,23 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       );
       Lwt.return(Reply.okEmpty);
     | LanguageFeatures(
+      RegisterCodeLensProvider({
+        handler,
+        selector,
+        _
+      }) =>
+      dispatch(
+        Actions.Codelens(
+          Feature_Codelens.CodelensProviderAvailable({
+            handle,
+            selector,
+            metadata,
+          }),
+        ),
+      );
+      Lwt.return(Reply.okEmpty);
+    )
+    | LanguageFeatures(
         RegisterSuggestSupport({
           handle,
           selector,
