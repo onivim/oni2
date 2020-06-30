@@ -1,7 +1,10 @@
 open Isolinear;
 open Oni_Core;
+open Oni_Core.Utility;
 open Oni_Model;
 open Actions;
+
+module Ext = Oni_Extensions;
 
 module Internal = {
   let notificationEffect = (~kind, message) => {
@@ -45,8 +48,18 @@ let update =
       state.layout
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.selectionOrCursorRange;
+
+    let languageConfiguration =
+      maybeBuffer
+      |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
+      |> OptionEx.flatMap(
+           Ext.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+         )
+      |> Option.value(~default=LanguageConfiguration.default);
+
     let (model', eff) =
       Feature_Formatting.update(
+        ~languageConfiguration,
         ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=Some(selection),
