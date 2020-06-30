@@ -152,15 +152,6 @@ describe("LanguageConfiguration", ({describe, test, _}) => {
         == Vim.AutoIndent.IncreaseIndent,
         true,
       );
-      expect.equal(
-        LanguageConfiguration.toAutoIndent(
-          langConfig,
-          ~previousLine="def",
-          ~beforePreviousLine=None,
-        )
-        == Vim.AutoIndent.DecreaseIndent,
-        true,
-      );
     });
     test("falls back to brackets", ({expect, _}) => {
       let parsedLangConfig =
