@@ -165,3 +165,51 @@ module Schema = {
 
   include DSL;
 };
+
+module Sub = {
+  module type Config = {
+    type configValue;
+    let schema: Schema.setting(configValue);
+    type msg; 
+  };
+  module Make = (C: Config) => {
+   type params = {
+        config: resolver,
+        name: string,
+        toMsg: C.configValue => C.msg,
+   };
+   module InnerSub = Isolinear.Sub.Make({
+      type nonrec msg = C.msg;
+      type nonrec params = params;
+      type state = {lastValue: C.configValue};
+
+      let name = "Config.Subscription";
+      let id = params => {
+        params.name
+      };
+
+      let init = (~params, ~dispatch) => {
+        let lastValue = C.schema.get(params.config);
+        dispatch(params.toMsg(lastValue));
+        {lastValue: lastValue}
+      };
+
+      let update = (~params, ~state, ~dispatch) => {
+        let newValue = C.schema.get(params.config);
+        if (newValue != state.lastValue) {
+          dispatch(params.toMsg(newValue));
+        };
+
+        {lastValue: newValue};
+      };
+
+      let dispose = (~params, ~state) => {
+        ();
+      }
+    });
+
+    let create = (~config, ~name, ~toMsg) => {
+      InnerSub.create({config, name, toMsg });
+    }
+  };
+}
