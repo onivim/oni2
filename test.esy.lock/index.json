@@ -1,5 +1,5 @@
 {
-  "checksum": "33657278a343994729c9aa4a31b5934b",
+  "checksum": "e8ed2f6906375c01c94011c89c19023d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -888,13 +888,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-autoconf@github:esy-packages/esy-autoconf#fb93edf@d41d8cd9": {
-      "id": "esy-autoconf@github:esy-packages/esy-autoconf#fb93edf@d41d8cd9",
+    "esy-autoconf@github:esy-packages/esy-autoconf#5d43f39@d41d8cd9": {
+      "id": "esy-autoconf@github:esy-packages/esy-autoconf#5d43f39@d41d8cd9",
       "name": "esy-autoconf",
-      "version": "github:esy-packages/esy-autoconf#fb93edf",
+      "version": "github:esy-packages/esy-autoconf#5d43f39",
       "source": {
         "type": "install",
-        "source": [ "github:esy-packages/esy-autoconf#fb93edf" ]
+        "source": [ "github:esy-packages/esy-autoconf#5d43f39" ]
       },
       "overrides": [],
       "dependencies": [
@@ -3641,7 +3641,7 @@
         }
       ],
       "dependencies": [
-        "esy-autoconf@github:esy-packages/esy-autoconf#fb93edf@d41d8cd9",
+        "esy-autoconf@github:esy-packages/esy-autoconf#5d43f39@d41d8cd9",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": []

@@ -258,7 +258,8 @@
     "revery-terminal": "revery-ui/revery-terminal#0e54d56",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
-    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"
+    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
+    "esy-autoconf": "esy-packages/esy-autoconf#5d43f39"
   },
   "devDependencies": {
     "ocaml": "~4.9",
