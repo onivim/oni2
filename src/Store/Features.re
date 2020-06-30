@@ -28,6 +28,60 @@ module Internal = {
     Isolinear.Effect.createWithDispatch(~name="quit", dispatch =>
       dispatch(Actions.Quit(true))
     );
+
+  let updateEditor = (~editorId, ~msg, layout) => {
+    switch (Feature_Layout.editorById(editorId, layout)) {
+    | Some(editor) =>
+      open Feature_Editor;
+
+      let (updatedEditor, outmsg) = update(editor, msg);
+      let layout =
+        Feature_Layout.map(
+          editor => Editor.getId(editor) == editorId ? updatedEditor : editor,
+          layout,
+        );
+
+      let effect =
+        switch (outmsg) {
+        | Nothing => Effect.none
+        | MouseHovered(location) =>
+          Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
+            dispatch(Hover(Feature_Hover.MouseHovered(location)))
+          })
+        | MouseMoved(location) =>
+          Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
+            dispatch(Hover(Feature_Hover.MouseMoved(location)))
+          })
+        };
+
+      (layout, effect);
+    | None => (layout, Effect.none)
+    };
+  };
+
+  let updateEditors =
+      (
+        ~scope: EditorScope.t,
+        ~msg: Feature_Editor.msg,
+        layout: Feature_Layout.model,
+      ) => {
+    switch (scope) {
+    | All =>
+      let (layout', effects) =
+        Feature_Layout.fold(
+          (prev, editor) => {
+            let (layout, effects) = prev;
+            let editorId = Feature_Editor.Editor.getId(editor);
+            let (layout', effect') = updateEditor(~editorId, ~msg, layout);
+            (layout', [effect', ...effects]);
+          },
+          (layout, []),
+          layout,
+        );
+      (layout', Isolinear.Effect.batch(effects));
+    | Editor(editorId) => updateEditor(~editorId, ~msg, layout)
+    };
+  };
 };
 
 // UPDATE
@@ -136,13 +190,15 @@ let update =
   | BufferEnter({buffer, _}) =>
     let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
 
+    let config = Feature_Configuration.resolver(state.config);
     (
       {
         ...state,
         layout:
           Feature_Layout.openEditor(
-            ~config=Feature_Configuration.resolver(state.config),
+            ~config,
             Feature_Editor.Editor.create(
+              ~config,
               ~font=state.editorFont,
               ~buffer=editorBuffer,
               (),
@@ -392,40 +448,11 @@ let update =
       );
     (state, eff);
 
-  | Editor({editorId, msg}) =>
-    switch (Feature_Layout.editorById(editorId, state.layout)) {
-    | Some(editor) =>
-      open Feature_Editor;
-
-      let (updatedEditor, outmsg) = update(editor, msg);
-
-      let state = {
-        ...state,
-        layout:
-          Feature_Layout.map(
-            editor =>
-              Editor.getId(editor) == editorId ? updatedEditor : editor,
-            state.layout,
-          ),
-      };
-
-      let effect =
-        switch (outmsg) {
-        | Nothing => Effect.none
-        | MouseHovered(location) =>
-          Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
-            dispatch(Hover(Feature_Hover.MouseHovered(location)))
-          })
-        | MouseMoved(location) =>
-          Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
-            dispatch(Hover(Feature_Hover.MouseMoved(location)))
-          })
-        };
-
-      (state, effect);
-
-    | None => (state, Effect.none)
-    }
+  | Editor({scope, msg}) =>
+    let (layout, effect) =
+      Internal.updateEditors(~scope, ~msg, state.layout);
+    let state = {...state, layout};
+    (state, effect);
 
   | Changelog(msg) =>
     let (model, eff) = Feature_Changelog.update(state.changelog, msg);

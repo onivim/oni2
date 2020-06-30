@@ -302,6 +302,12 @@ let start =
         Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
       );
 
+    let editorGlobalSub =
+      Feature_Editor.Sub.global(~config)
+      |> Isolinear.Sub.map(msg =>
+           Model.Actions.Editor({scope: Model.EditorScope.All, msg})
+         );
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -310,6 +316,7 @@ let start =
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
+      editorGlobalSub,
     ]
     |> Isolinear.Sub.batch;
   };

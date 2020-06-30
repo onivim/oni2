@@ -21,7 +21,14 @@ type viewLine = {
   characterOffset: int,
 };
 
-let create: (~font: Service_Font.font, ~buffer: EditorBuffer.t, unit) => t;
+let create:
+  (
+    ~config: Config.resolver,
+    ~font: Service_Font.font,
+    ~buffer: EditorBuffer.t,
+    unit
+  ) =>
+  t;
 let copy: t => t;
 
 let getId: t => int;
@@ -30,13 +37,7 @@ let getTopVisibleLine: t => int;
 let getBottomVisibleLine: t => int;
 let getLeftVisibleColumn: t => int;
 let getLayout:
-  (
-    ~showLineNumbers: bool,
-    ~isMinimapShown: bool,
-    ~maxMinimapCharacters: int,
-    t
-  ) =>
-  EditorLayout.t;
+  (~showLineNumbers: bool, ~maxMinimapCharacters: int, t) => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
 let getCharacterBehindCursor: t => option(Uchar.t);
 let getCharacterAtPosition: (~line: int, ~index: int, t) => option(Uchar.t);
@@ -48,6 +49,9 @@ let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getVimCursors: t => list(Vim.Cursor.t);
 let setVimCursors: (~cursors: list(Vim.Cursor.t), t) => t;
+
+let isMinimapEnabled: t => bool;
+let setMinimapEnabled: (~enabled: bool, t) => t;
 
 let getNearestMatchingPair:
   (

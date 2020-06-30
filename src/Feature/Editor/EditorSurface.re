@@ -200,7 +200,6 @@ let%component make =
     Editor.getLayout(
       ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
       ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      ~isMinimapShown=Config.Minimap.enabled.get(config),
       editor,
     );
 
@@ -293,7 +292,7 @@ let%component make =
       windowIsFocused
       config
     />
-    {Config.Minimap.enabled.get(config)
+    {Editor.isMinimapEnabled(editor)
        ? <minimap
            editor
            diagnosticsMap

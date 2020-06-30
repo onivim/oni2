@@ -264,7 +264,12 @@ let start =
 
       let editorId =
         Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-      dispatch(Editor({editorId, msg: SelectionChanged(vr)}));
+      dispatch(
+        Editor({
+          scope: Oni_Model.EditorScope.Editor(editorId),
+          msg: SelectionChanged(vr),
+        }),
+      );
     });
 
   let _: unit => unit =
@@ -493,7 +498,12 @@ let start =
     let editorId =
       Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
 
-    dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
+    dispatch(
+      Actions.Editor({
+        scope: EditorScope.Editor(editorId),
+        msg: CursorsChanged(cursors),
+      }),
+    );
   };
 
   let isVimKey = key => {
@@ -531,12 +541,23 @@ let start =
           Vim.input(~context, key);
         currentTriggerKey := None;
 
-        dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
         dispatch(
-          Actions.Editor({editorId, msg: ScrollToLine(newTopLine - 1)}),
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: CursorsChanged(cursors),
+          }),
         );
         dispatch(
-          Actions.Editor({editorId, msg: ScrollToColumn(newLeftColumn)}),
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: ScrollToLine(newTopLine - 1),
+          }),
+        );
+        dispatch(
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: ScrollToColumn(newLeftColumn),
+          }),
         );
 
         Log.debug("handled key: " ++ key);
@@ -558,7 +579,12 @@ let start =
 
       let topLine: int = max(Index.toZeroBased(location.line) - 10, 0);
 
-      dispatch(Actions.Editor({editorId, msg: ScrollToLine(topLine)}));
+      dispatch(
+        Actions.Editor({
+          scope: EditorScope.Editor(editorId),
+          msg: ScrollToLine(topLine),
+        }),
+      );
     });
 
   let addBufferRendererEffect = (bufferId, renderer) =>
@@ -725,13 +751,10 @@ let start =
         Vim.input("$");
 
       // Update the editor, which is the source of truth for cursor position
-      dispatch(Actions.Editor({editorId, msg: CursorsChanged(cursors)}));
-      dispatch(
-        Actions.Editor({editorId, msg: ScrollToLine(newTopLine - 1)}),
-      );
-      dispatch(
-        Actions.Editor({editorId, msg: ScrollToColumn(newLeftColumn)}),
-      );
+      let scope = EditorScope.Editor(editorId);
+      dispatch(Actions.Editor({scope, msg: CursorsChanged(cursors)}));
+      dispatch(Actions.Editor({scope, msg: ScrollToLine(newTopLine - 1)}));
+      dispatch(Actions.Editor({scope, msg: ScrollToColumn(newLeftColumn)}));
     });
   };
 
