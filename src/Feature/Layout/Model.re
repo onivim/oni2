@@ -25,11 +25,16 @@ module Group: {
   let removeEditor: (int, t) => option(t);
 
   let map: (Editor.t => Editor.t, t) => t;
+  let fold: ((Editor.t, 'acc) => 'acc, 'acc, model) => 'acc;
 } = {
   type t = {
     id: int,
     editors: list(Editor.t),
     selectedId: int,
+  };
+
+  let fold = (f, initial, group) => {
+    List.fold_left(f, initial, group.editors);
   };
 
   let create = {
@@ -422,4 +427,12 @@ let map = (f, model) => {
       layout => {...layout, groups: List.map(Group.map(f), layout.groups)},
       model.layouts,
     ),
+};
+
+let fold = (f, initial, model) => {
+  List.fold_left((layout, acc) => {
+    List.fold_left((group, acc) => {
+      Group.fold(f, acc, group);
+    }, acc, layout.groups);
+  }, initial, model.layouts);
 };

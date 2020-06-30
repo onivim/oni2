@@ -105,5 +105,21 @@ let update = (editor, msg) => {
       Editor.scrollToColumn(~column, editor),
       Nothing,
     )
+  | MinimapEnabledChanged(_) => (editor, Nothing);
+  };
+};
+
+module Sub = {
+  module MinimapEnabledSub = Oni_Core.Config.Sub.Make({
+    type configValue = bool;
+    let schema = EditorConfiguration.Minimap.enabled;
+    type msg = Msg.t;
+  });
+  let global = (~config) => {
+    MinimapEnabledSub.create(
+      ~config,
+      ~name="Feature_Editor.Config.minimapEnabled",
+      ~toMsg=enabled=>MinimapEnabledChanged(enabled)
+    );
   };
 };
