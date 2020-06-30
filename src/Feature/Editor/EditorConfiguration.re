@@ -5,6 +5,7 @@ open Config.Schema;
 module CustomDecoders: {
   let whitespace: Config.Schema.codec([ | `All | `Boundary | `None]);
   let lineNumbers: Config.Schema.codec([ | `On | `Relative | `Off]);
+  let wordWrap: Config.Schema.codec([`WordWrapColumn| `Bounded| `Off| `On])
   let time: Config.Schema.codec(Time.t);
 } = {
   let whitespace =
@@ -51,6 +52,30 @@ module CustomDecoders: {
         ),
     );
 
+  let wordWrap =
+    custom(
+      ~decode=
+        Json.Decode.(
+          string
+          |> map(
+               fun
+               | "wordWrapColumn" => `WordWrapColumn
+               | "bounded" => `Bounded
+               | "off" => `Off
+               | "on"
+               | _ => `On,
+             )
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | `Off => string("off")
+          | `Bounded => string("bounded")
+          | `WordWrapColumn => string("wordWrapColumn")
+          | `On => string("on")
+        ),
+    );
+
   let time =
     custom(
       ~decode=Json.Decode.(int |> map(Time.ms)),
@@ -81,6 +106,8 @@ let renderWhitespace =
 let rulers = setting("editor.rulers", list(int), ~default=[]);
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
 let tabSize = setting("editor.tabSize", int, ~default=4);
+let wordWrap = setting("editor.wordWrap", wordWrap, ~default=`Off);
+let wordWrapColumn = setting("editor.wordWrapColumn", int, ~default=80);
 
 module Hover = {
   let enabled = setting("editor.hover.enabled", bool, ~default=true);

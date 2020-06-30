@@ -14,6 +14,19 @@ type viewTokens = {
   characterOffset: int,
 };
 
+type wrapMode = 
+| NoWrap
+| Viewport
+| WrapColumn(int)
+| Bounded(int);
+
+[@deriving show]
+type wrapState = 
+| NoWrap
+| Viewport({lastWrapColumn: int})
+| WrapColumn(int)
+| Bounded({wrapColumn: int, lastWrapColumn: int});
+
 [@deriving show]
 type t = {
   buffer: [@opaque] EditorBuffer.t,
@@ -27,6 +40,7 @@ type t = {
   font: [@opaque] Service_Font.font,
   pixelWidth: int,
   pixelHeight: int,
+  wrapState: wrapState,
   wrapping: [@opaque] Wrapping.t,
 };
 
@@ -187,6 +201,7 @@ let create = (~wrap=WordWrap.fixed(~columns=20), ~font, ~buffer, ()) => {
     font,
     pixelWidth: 1,
     pixelHeight: 1,
+    wrapState: NoWrap,
     wrapping: Wrapping.make(~wrap, ~buffer),
   };
 };

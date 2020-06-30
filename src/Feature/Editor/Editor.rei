@@ -21,6 +21,12 @@ type viewTokens = {
   characterOffset: int,
 };
 
+type wrapMode = 
+| NoWrap
+| Viewport
+| WrapColumn(int)
+| Bounded(int);
+
 let create:
   (
     ~wrap: WordWrap.t=?,
@@ -29,6 +35,7 @@ let create:
     unit
   ) =>
   t;
+
 let copy: t => t;
 
 let getId: t => int;
