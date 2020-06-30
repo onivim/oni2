@@ -73,3 +73,24 @@ module Schema: {
 
   let setting: (string, codec('a), ~default: 'a) => setting('a);
 };
+
+module Sub: {
+  module type Config = {
+    type configValue;
+    let schema: Schema.setting(configValue);
+    type msg;
+  };
+
+  module type S = {
+    type configValue;
+    type msg;
+
+    let create:
+      (~config: resolver, ~name: string, ~toMsg: configValue => msg) =>
+      Isolinear.Sub.t(msg);
+  };
+
+  module Make:
+    (Config: Config) =>
+     S with type msg = Config.msg and type configValue = Config.configValue;
+};
