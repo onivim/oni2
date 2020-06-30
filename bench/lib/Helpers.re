@@ -6,6 +6,8 @@ open Feature_Editor;
 
 Vim.init();
 
+let config = _ => None;
+
 /* Create a state with some editor size */
 let simpleState = {
   let initialBuffer = {
@@ -53,7 +55,7 @@ let defaultEditorBuffer =
   defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
 
 let simpleEditor =
-  Editor.create(~font=defaultFont, ~buffer=defaultEditorBuffer, ())
+  Editor.create(~config, ~font=defaultFont, ~buffer=defaultEditorBuffer, ())
   |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {

@@ -118,7 +118,7 @@ type t =
       extensionId: option(string),
     })
   | Editor({
-      editorId: int,
+      scope: EditorScope.t,
       msg: Feature_Editor.msg,
     })
   | FilesDropped({paths: list(string)})

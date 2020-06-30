@@ -13,6 +13,7 @@ module BufferRenderer = BufferRenderer;
 module BufferRenderers = BufferRenderers;
 module ContextKeys = ContextKeys;
 module DecorationProvider = DecorationProvider;
+module EditorScope = EditorScope;
 module EditorVisibleRanges = EditorVisibleRanges;
 module Extensions = Extensions;
 module FileExplorer = FileExplorer;

@@ -35,7 +35,7 @@ let moveActiveLayoutTabTo: (int, model) => model;
 let moveActiveLayoutTabRelative: (int, model) => model;
 
 let map: (Editor.t => Editor.t, model) => model;
-let fold: ((Editor.t, 'acc) => 'acc, 'acc, model) => 'acc;
+let fold: (('acc, Editor.t) => 'acc, 'acc, model) => 'acc;
 
 // UPDATE
 

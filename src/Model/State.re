@@ -86,10 +86,26 @@ let initial =
       ~contributedCommands,
       ~workingDirectory,
     ) => {
+  let config =
+    Feature_Configuration.initial(
+      ~getUserSettings,
+      [
+        Feature_Editor.Contributions.configuration,
+        Feature_Syntax.Contributions.configuration,
+        Feature_Terminal.Contributions.configuration,
+        Feature_Layout.Contributions.configuration,
+      ],
+    );
   let initialEditor = {
     open Feature_Editor;
     let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
-    Editor.create(~font=Service_Font.default, ~buffer=editorBuffer, ());
+    let config = Feature_Configuration.resolver(config);
+    Editor.create(
+      ~config,
+      ~font=Service_Font.default,
+      ~buffer=editorBuffer,
+      (),
+    );
   };
 
   {
@@ -106,16 +122,7 @@ let initial =
     commands: Feature_Commands.initial(contributedCommands),
     contextMenu: Feature_ContextMenu.initial,
     completions: Completions.initial,
-    config:
-      Feature_Configuration.initial(
-        ~getUserSettings,
-        [
-          Feature_Editor.Contributions.configuration,
-          Feature_Syntax.Contributions.configuration,
-          Feature_Terminal.Contributions.configuration,
-          Feature_Layout.Contributions.configuration,
-        ],
-      ),
+    config,
     configuration: Configuration.default,
     decorationProviders: [],
     definition: Definition.empty,

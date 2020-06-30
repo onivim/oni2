@@ -1,7 +1,15 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-let lastId = ref(0);
+module GlobalState = {
+  let lastId = ref(0);
+
+  let generateId = () => {
+    let id = lastId^;
+    incr(lastId);
+    id;
+  };
+};
 
 type pixelPosition = {
   pixelX: float,
@@ -21,6 +29,7 @@ type t = {
   editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
+  isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
@@ -47,6 +56,13 @@ let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
 let lineHeightInPixels = ({font, _}) => font.measuredHeight;
 let characterWidthInPixels = ({font, _}) => font.measuredWidth;
 let font = ({font, _}) => font;
+
+let setMinimapEnabled = (~enabled, editor) => {
+  ...editor,
+  isMinimapEnabled: enabled,
+};
+
+let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
 
 let bufferLineByteToPixel =
     (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
@@ -93,12 +109,14 @@ let bufferLineCharacterToPixel =
   };
 };
 
-let create = (~font, ~buffer, ()) => {
-  let id = lastId^;
-  incr(lastId);
+let create = (~config, ~font, ~buffer, ()) => {
+  let id = GlobalState.generateId();
+
+  let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
 
   {
     editorId: id,
+    isMinimapEnabled,
     buffer,
     scrollX: 0.,
     scrollY: 0.,
@@ -125,7 +143,11 @@ let create = (~font, ~buffer, ()) => {
   };
 };
 
-let copy = editor => create(~font=editor.font, ~buffer=editor.buffer, ());
+let copy = editor => {
+  let id = GlobalState.generateId();
+
+  {...editor, editorId: id};
+};
 
 type scrollbarMetrics = {
   visible: bool,
@@ -302,13 +324,12 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
     };
 };
 
-let getLayout =
-    (~showLineNumbers, ~isMinimapShown, ~maxMinimapCharacters, view) => {
-  let {pixelWidth, pixelHeight, _} = view;
+let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
+  let {pixelWidth, pixelHeight, isMinimapEnabled, _} = view;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~showLineNumbers,
-      ~isMinimapShown,
+      ~isMinimapShown=isMinimapEnabled,
       ~maxMinimapCharacters,
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
