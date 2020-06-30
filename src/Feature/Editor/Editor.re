@@ -174,6 +174,19 @@ let mapCursor = (~position: Vim.Cursor.t, editor) => {
   };
 };
 
+let getCharacterAtPosition = (~line, ~index, {buffer, _}) => {
+  let bufferLineCount = EditorBuffer.numberOfLines(buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = EditorBuffer.line(line, buffer);
+    try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+    | _exn => None
+    };
+  } else {
+    None;
+  };
+};
+
 let getCharacterBehindCursor = ({cursors, buffer, _}) => {
   switch (cursors) {
   | [] => None

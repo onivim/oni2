@@ -39,6 +39,7 @@ let getLayout:
   EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
 let getCharacterBehindCursor: t => option(Uchar.t);
+let getCharacterAtPosition: (~line: int, ~index: int, t) => option(Uchar.t);
 let getPrimaryCursor: t => Location.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
