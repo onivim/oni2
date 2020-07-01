@@ -7,6 +7,7 @@
 open Oni_Core;
 
 open Exthost.Extension;
+open Feature_Extensions;
 
 type t = {
   activatedIds: list(string),
@@ -14,13 +15,7 @@ type t = {
 };
 
 [@deriving show({with_path: false})]
-type action =
-  | Activated(string /* id */)
-  | Discovered([@opaque] list(Scanner.ScanResult.t))
-  | ExecuteCommand({
-      command: string,
-      arguments: [@opaque] list(Json.t),
-    });
+type action = Feature_Extensions.msg;
 
 let empty = {activatedIds: [], extensions: []};
 

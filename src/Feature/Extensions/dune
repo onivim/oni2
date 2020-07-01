@@ -1,0 +1,12 @@
+(library
+    (name Feature_Extensions)
+    (public_name Oni2.feature.extensions)
+    (inline_tests)
+    (libraries
+      Oni2.core
+      Oni2.components
+      Oni2.exthost
+      Revery
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))
