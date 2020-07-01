@@ -29,6 +29,7 @@ type t = {
   editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
+  isScrollAnimated: bool,
   isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
@@ -63,6 +64,7 @@ let setMinimapEnabled = (~enabled, editor) => {
 };
 
 let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
+let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
 let bufferLineByteToPixel =
     (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
@@ -117,6 +119,7 @@ let create = (~config, ~font, ~buffer, ()) => {
   {
     editorId: id,
     isMinimapEnabled,
+    isScrollAnimated: false,
     buffer,
     scrollX: 0.,
     scrollY: 0.,
@@ -383,12 +386,17 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
   let newMinimapScroll =
     scrollPercentage *. float_of_int(availableMinimapScroll);
 
-  {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
+  {
+    ...view,
+    isScrollAnimated: false,
+    minimapScrollY: newMinimapScroll,
+    scrollY: newScrollY,
+  };
 };
 
 let scrollToLine = (~line, view) => {
   let pixelY = float_of_int(line) *. getLineHeight(view);
-  scrollToPixelY(~pixelY, view);
+  {...scrollToPixelY(~pixelY, view), isScrollAnimated: true};
 };
 
 let scrollToPixelX = (~pixelX as newScrollX, view) => {
@@ -398,7 +406,7 @@ let scrollToPixelX = (~pixelX as newScrollX, view) => {
     max(0., float_of_int(view.maxLineLength) *. getCharacterWidth(view));
   let scrollX = min(newScrollX, availableScroll);
 
-  {...view, scrollX};
+  {...view, isScrollAnimated: false, scrollX};
 };
 
 let scrollDeltaPixelX = (~pixelX, editor) => {
@@ -408,7 +416,7 @@ let scrollDeltaPixelX = (~pixelX, editor) => {
 
 let scrollToColumn = (~column, view) => {
   let pixelX = float_of_int(column) *. getCharacterWidth(view);
-  scrollToPixelX(~pixelX, view);
+  {...scrollToPixelX(~pixelX, view), isScrollAnimated: true};
 };
 
 let scrollDeltaPixelY = (~pixelY, view) => {
