@@ -22,4 +22,4 @@ const req = requestFn(url, (res) => {
             req.end()
         })
     }
-});
+})
