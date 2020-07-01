@@ -229,19 +229,20 @@ let%component make =
       ? EditorDiffMarkers.generate(buffer) : None;
 
   let smoothScroll = Config.Experimental.smoothScroll.get(config);
+  let isScrollAnimated = Editor.isScrollAnimated(editor);
 
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
       ~target=Editor.scrollY(editor),
       ~restThreshold=10.,
-      ~enabled=smoothScroll,
+      ~enabled=smoothScroll && isScrollAnimated,
       scrollSpringOptions,
     );
   let%hook (scrollX, _setScrollXImmediately) =
     Hooks.spring(
       ~target=Editor.scrollX(editor),
       ~restThreshold=10.,
-      ~enabled=smoothScroll,
+      ~enabled=smoothScroll && isScrollAnimated,
       scrollSpringOptions,
     );
 
