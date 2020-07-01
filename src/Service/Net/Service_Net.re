@@ -7,17 +7,14 @@ module Internal = {
     // TODO: De-syncify
     let ret = {
       let%bind tempDir = Luv.Path.tmpdir();
-      prerr_endline ("TEMPORARY FILE: " ++ tempDir);
-      let%bind (tempFile, _) = Luv.File.Sync.mkstemp(
-        tempDir ++ "/oni2-download-XXXXXX"
-      );
+      let%bind (tempFile, _) =
+        Luv.File.Sync.mkstemp(tempDir ++ "/oni2-download-XXXXXX");
       Ok(tempFile);
     };
 
-    ret
-    |> Result.map_error(Luv.Error.strerror);
+    ret |> Result.map_error(Luv.Error.strerror);
   };
-}
+};
 
 module Request = {
   let json = (~setup, ~decoder: Json.decoder('a), url) => {
@@ -38,20 +35,19 @@ module Request = {
       },
     );
   };
-  
-  let download = (
-    ~dest=?,
-    ~setup, url) => {
-      let maybeDest = switch (dest) {
+
+  let download = (~dest=?, ~setup, url) => {
+    let maybeDest =
+      switch (dest) {
       | None => Internal.getTemporaryFilePath()
-      | Some(path) => Ok(path);
+      | Some(path) => Ok(path)
       };
 
-      switch(maybeDest) {
-      | Error(msg) => Lwt.fail_with(msg)
-      | Ok(dest) => 
-        NodeTask.run(~args=[url, dest], ~setup, "download.js")
-        |> Lwt.map(_ => dest);
-      }
-  }
+    switch (maybeDest) {
+    | Error(msg) => Lwt.fail_with(msg)
+    | Ok(dest) =>
+      NodeTask.run(~args=[url, dest], ~setup, "download.js")
+      |> Lwt.map(_ => dest)
+    };
+  };
 };
