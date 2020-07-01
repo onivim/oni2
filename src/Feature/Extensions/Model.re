@@ -1,4 +1,4 @@
-open Oni_Core;
+//open Oni_Core;
 open Exthost.Extension;
 
 type model = {

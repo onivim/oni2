@@ -48,8 +48,7 @@ let update = (~extHostClient, msg, model) => {
   switch (msg) {
   | Activated(id) => (Internal.markActivated(id, model), Nothing)
   | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
-  | ExecuteCommand({command, arguments}) =>
-    (
+  | ExecuteCommand({command, arguments}) => (
       model,
       Effect(
         Service_Exthost.Effects.Commands.executeContributedCommand(

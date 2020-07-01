@@ -80,8 +80,7 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
   let bundledExtensions =
     Model.getExtensions(~category=Scanner.Bundled, model);
 
-  let userExtensions =
-    Model.getExtensions(~category=Scanner.User, model);
+  let userExtensions = Model.getExtensions(~category=Scanner.User, model);
 
   //let developmentExtensions =
   //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
@@ -102,15 +101,14 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
       theme
     />
   </View>;
-  
-//    <Accordion
-//      title="Bundled"
-//      expanded=false
-//      uiFont=font
-//      renderItem={renderItem(allExtensions)}
-//      rowHeight=50
-//      count={Array.length(allExtensions)}
-//      focused=None
-//      theme
-//    />
+  //    <Accordion
+  //      title="Bundled"
+  //      expanded=false
+  //      uiFont=font
+  //      renderItem={renderItem(allExtensions)}
+  //      rowHeight=50
+  //      count={Array.length(allExtensions)}
+  //      focused=None
+  //      theme
+  //    />
 };
