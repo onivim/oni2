@@ -2,10 +2,9 @@
  * NodeTask.re
  */
 
-open Oni_Core;
-open Oni_Core.Utility;
+open Utility;
 exception TaskFailed;
-module Log = (val Log.withNamespace("Oni2.Extensions.NodeTask"));
+module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
 
 let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   Log.info("Starting task: " ++ name);

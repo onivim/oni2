@@ -1,6 +1,6 @@
 open Oni_Core;
 
-module NodeTask = Oni_Extensions.NodeTask;
+module NodeTask = Oni_Core.NodeTask;
 
 module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionManagement"));
 

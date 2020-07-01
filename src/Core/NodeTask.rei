@@ -2,8 +2,6 @@
  * NodeTask.rei
  */
 
-open Oni_Core;
-
 exception TaskFailed;
 
 let run:

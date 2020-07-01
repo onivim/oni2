@@ -81,7 +81,7 @@ let mainChecks = [
   (
     "Verify node dependencies",
     (setup: Setup.t) => {
-      Oni_Extensions.NodeTask.run(~setup, "check-health.js")
+      NodeTask.run(~setup, "check-health.js")
       |> LwtEx.sync
       |> (
         fun
