@@ -91,6 +91,18 @@ let mainChecks = [
     },
   ),
   (
+    "Verify simple request",
+    (setup: Setup.t) => {
+      Service_Net.Request.json(
+        ~setup,
+        ~decoder=Json.Decode.value,
+        "https://httpbin.org/json",
+      )
+      |> LwtEx.sync
+      |> Result.is_ok;
+    },
+  ),
+  (
     "Verify ripgrep (rg) executable",
     (setup: Setup.t) => Sys.file_exists(setup.rgPath),
   ),

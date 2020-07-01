@@ -16,12 +16,23 @@
         Oni_Syntax_Test
         Feature_Editor_Test
         Feature_LanguageSupport_Test
+        Service_Net_Test
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
         Oniguruma_Test
         Textmate_Test
         reason-native-crash-utils.asan
+            ))
+    
+(executable
+    (name OniUnitTestRunnerServiceNet)
+    (public_name OniUnitTestRunnerServiceNet)
+    (modules OniUnitTestRunnerServiceNet)
+    (package OniUnitTestRunner)
+    (libraries
+        yojson
+        Service_Net_Test
             ))
 
 (executable
@@ -124,6 +135,7 @@
         Oni_Model_Test
         Feature_Editor_Test
         Feature_LanguageSupport_Test
+        Service_Net_Test
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
