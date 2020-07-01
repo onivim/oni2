@@ -64,17 +64,6 @@ let update = (~extHostClient, msg, model) => {
 let all = ({extensions, _}) => extensions;
 let activatedIds = ({activatedIds, _}) => activatedIds;
 
-let getExtensions = (~category, model) => {
-  let results =
-    model.extensions
-    |> List.filter((ext: Scanner.ScanResult.t) => ext.category == category);
-
-  switch (category) {
-  | Scanner.Bundled => List.filter(Internal.filterBundled, results)
-  | _ => results
-  };
-};
-
 // TODO: Should be stored as proper commands instead of converting every time
 let commands = model => {
   model.extensions
