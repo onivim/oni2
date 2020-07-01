@@ -90,26 +90,27 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
   let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
   //let developmentCount = Array.length(developmentExtensions);
 
-  
-            <View
-            style=Style.[
-              flexDirection(`Column),
-              flexGrow(1),
-              overflow(`Hidden),
-            ]>
-  <Accordion
-    title="Installed"
-    expanded=true
-    uiFont=font
-    renderItem=renderItem(allExtensions)
-    rowHeight=50 count={Array.length(allExtensions)} focused=None theme>
-  </Accordion>
-  <Accordion
-    title="Bundled"
-    expanded=false
-    uiFont=font
-    renderItem=renderItem(allExtensions)
-    rowHeight=50 count={Array.length(allExtensions)} focused=None theme>
-  </Accordion>
-  </View>
+  <View
+    style=Style.[flexDirection(`Column), flexGrow(1), overflow(`Hidden)]>
+    <Accordion
+      title="Installed"
+      expanded=true
+      uiFont=font
+      renderItem={renderItem(allExtensions)}
+      rowHeight=50
+      count={Array.length(allExtensions)}
+      focused=None
+      theme
+    />
+    <Accordion
+      title="Bundled"
+      expanded=false
+      uiFont=font
+      renderItem={renderItem(allExtensions)}
+      rowHeight=50
+      count={Array.length(allExtensions)}
+      focused=None
+      theme
+    />
+  </View>;
 };

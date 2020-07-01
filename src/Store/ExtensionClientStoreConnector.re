@@ -17,28 +17,21 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let start = (extensions, extHostClient: Exthost.Client.t) => {
-  let executeContributedCommandEffect = (command, arguments) =>
-    Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
-      Exthost.Request.Commands.executeContributedCommand(
-        ~command,
-        ~arguments,
-        extHostClient,
-      )
-    });
-
   let gitRefreshEffect = (scm: Feature_SCM.model) =>
     if (scm == Feature_SCM.initial) {
       Isolinear.Effect.none;
     } else {
-      executeContributedCommandEffect("git.refresh", []);
+      Service_Exthost.Effects.Commands.executeContributedCommand(
+        ~command="git.refresh",
+        ~arguments=[],
+        extHostClient,
+      );
     };
 
   let discoveredExtensionsEffect = extensions =>
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
-      dispatch(
-        Actions.Extension(Feature_Extensions.Discovered(extensions)),
-      )
+      dispatch(Actions.Extension(Feature_Extensions.Discovered(extensions)))
     );
 
   let registerQuitCleanupEffect =
@@ -154,12 +147,20 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
 
     | Extension(ExecuteCommand({command, arguments})) => (
         state,
-        executeContributedCommandEffect(command, arguments),
+        Service_Exthost.Effects.Commands.executeContributedCommand(
+          ~command,
+          ~arguments,
+          extHostClient,
+        ),
       )
 
     | StatusBar(ContributedItemClicked({command, _})) => (
         state,
-        executeContributedCommandEffect(command, []),
+        Service_Exthost.Effects.Commands.executeContributedCommand(
+          ~command,
+          ~arguments=[],
+          extHostClient,
+        ),
       )
 
     | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
