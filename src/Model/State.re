@@ -43,7 +43,7 @@ type t = {
   sideBar: SideBar.t,
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
-  extensions: Extensions.t,
+  extensions: Feature_Extensions.model,
   iconTheme: IconTheme.t,
   isQuitting: bool,
   keyBindings: Keybindings.t,
@@ -130,7 +130,7 @@ let initial =
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
-    extensions: Extensions.empty,
+    extensions: Feature_Extensions.empty,
     formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
@@ -171,13 +171,14 @@ let initial =
 let commands = state =>
   Command.Lookup.unionMany([
     Feature_Commands.all(state.commands),
-    Extensions.commands(state.extensions)
+    Feature_Extensions.commands(state.extensions)
     |> Command.Lookup.fromList
-    |> Command.Lookup.map(msg => Actions.Extension(msg)),
+    |> Command.Lookup.map(msg => Actions.Extensions(msg)),
   ]);
 
 let menus = state => {
   let commands = commands(state);
 
-  Extensions.menus(state.extensions) |> Menu.Lookup.fromSchema(commands);
+  Feature_Extensions.menus(state.extensions)
+  |> Menu.Lookup.fromSchema(commands);
 };

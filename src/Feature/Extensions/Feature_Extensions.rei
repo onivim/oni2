@@ -12,6 +12,19 @@ type msg =
       arguments: [@opaque] list(Json.t),
     });
 
-//let empty: t;
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
 
-//let update: (msg, model) => model;
+let empty: model;
+
+let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
+
+let all: model => list(Scanner.ScanResult.t);
+let activatedIds: model => list(string);
+
+let getExtensions:
+  (~category: Scanner.category, model) => list(Scanner.ScanResult.t);
+
+let menus: model => list(Menu.Schema.definition);
+let commands: model => list(Command.t(msg));

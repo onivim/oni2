@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Model;
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
@@ -79,10 +78,10 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
   };
 
   let bundledExtensions =
-    Extensions.getExtensions(~category=Scanner.Bundled, model);
+    Feature_Extensions.getExtensions(~category=Scanner.Bundled, model);
 
   let userExtensions =
-    Extensions.getExtensions(~category=Scanner.User, model);
+    Feature_Extensions.getExtensions(~category=Scanner.User, model);
 
   //let developmentExtensions =
   //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;

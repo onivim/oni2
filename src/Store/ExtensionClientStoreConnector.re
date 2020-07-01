@@ -31,7 +31,9 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
   let discoveredExtensionsEffect = extensions =>
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
-      dispatch(Actions.Extension(Feature_Extensions.Discovered(extensions)))
+      dispatch(
+        Actions.Extensions(Feature_Extensions.Discovered(extensions)),
+      )
     );
 
   let registerQuitCleanupEffect =
@@ -143,15 +145,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
     | BufferSaved(_) => (
         state,
         Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
-      )
-
-    | Extension(ExecuteCommand({command, arguments})) => (
-        state,
-        Service_Exthost.Effects.Commands.executeContributedCommand(
-          ~command,
-          ~arguments,
-          extHostClient,
-        ),
       )
 
     | StatusBar(ContributedItemClicked({command, _})) => (
