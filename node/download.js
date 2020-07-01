@@ -1,9 +1,9 @@
 const http = require("http")
 const https = require("https")
-const fs = require("fs");
+const fs = require("fs")
 
 const url = new URL(process.argv[2])
-const destPath = process.argv[3];
+const destPath = process.argv[3]
 
 let requestFn = null
 
@@ -15,8 +15,8 @@ if (url.protocol == "http:") {
     throw "Unrecognized protocol: " + url.protocol
 }
 
-const file = fs.createWriteStream(destPath);
+const file = fs.createWriteStream(destPath)
 
 requestFn(url, (response) => {
-    response.pipe(file);
+    response.pipe(file)
 })
