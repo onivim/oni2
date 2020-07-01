@@ -14,42 +14,21 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
 
-type model = {
-  activatedIds: list(string),
-  extensions: list(Scanner.ScanResult.t),
-};
+include Model;
 
 let empty = {activatedIds: [], extensions: []};
 
-let markActivated = (id: string, model) => {
-  ...model,
-  activatedIds: [id, ...model.activatedIds],
-};
-
-let add = (extensions, model) => {
-  ...model,
-  extensions: extensions @ model.extensions,
-};
-
-let update = (~extHostClient, msg, model) => {
-  switch (msg) {
-  | Activated(id) => (markActivated(id, model), Nothing)
-  | Discovered(extensions) => (add(extensions, model), Nothing)
-  | ExecuteCommand({command, arguments}) =>
-    (
-      model,
-      Effect(
-        Service_Exthost.Effects.Commands.executeContributedCommand(
-          ~command,
-          ~arguments,
-          extHostClient,
-        ),
-      ),
-    )
-  };
-};
-
 module Internal = {
+  let markActivated = (id: string, model) => {
+    ...model,
+    activatedIds: [id, ...model.activatedIds],
+  };
+
+  let add = (extensions, model) => {
+    ...model,
+    extensions: extensions @ model.extensions,
+  };
+
   let filterBundled = (scanner: Scanner.ScanResult.t) => {
     let name = scanner.manifest.name;
 
@@ -62,6 +41,24 @@ module Internal = {
     || name == "vscode.reason-vscode"
     || name == "vscode.gruvbox"
     || name == "vscode.nord-visual-studio-code";
+  };
+};
+
+let update = (~extHostClient, msg, model) => {
+  switch (msg) {
+  | Activated(id) => (Internal.markActivated(id, model), Nothing)
+  | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
+  | ExecuteCommand({command, arguments}) =>
+    (
+      model,
+      Effect(
+        Service_Exthost.Effects.Commands.executeContributedCommand(
+          ~command,
+          ~arguments,
+          extHostClient,
+        ),
+      ),
+    )
   };
 };
 
@@ -119,3 +116,5 @@ let menus = model =>
   |> StringMap.to_seq
   |> Seq.map(((id, items)) => Menu.Schema.{id, items})
   |> List.of_seq;
+
+module ListView = ListView;

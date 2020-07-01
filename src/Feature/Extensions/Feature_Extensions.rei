@@ -28,3 +28,12 @@ let getExtensions:
 
 let menus: model => list(Menu.Schema.definition);
 let commands: model => list(Command.t(msg));
+
+module ListView: {
+  let make: (
+    ~model: model,
+    ~theme: ColorTheme.Colors.t,
+    ~font: UiFont.t,
+    unit
+  ) => Revery.UI.element;
+};
