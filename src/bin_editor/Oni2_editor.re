@@ -50,9 +50,21 @@ let printVersion = () => {
   0;
 };
 
-let queryExtension = (_extension, _cli) => {
-  prerr_endline ("not implemented");
-  1;
+let queryExtension = (extension, _cli) => {
+  let setup = Core.Setup.init();
+  Service_Extensions.Catalog.query(~setup, extension)
+  |> LwtEx.sync
+  |> (
+    fun
+    | Ok(ext) => {
+        ext |> Service_Extensions.Catalog.Entry.toString |> print_endline;
+        0;
+      }
+    | Error(msg) => {
+        prerr_endline(Printexc.to_string(msg));
+        1;
+      }
+  );
 };
 
 let listExtensions = ({overriddenExtensionsDir, _}) => {

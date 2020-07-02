@@ -26,6 +26,16 @@ describe("CLI Integration Tests", ({describe, _}) => {
       )
     });
   });
+  describe("--query-extension", ({test, _}) => {
+    test("Query for Java extension", _ => {
+      TestRunner.(
+        startEditorWithArgs(["--query-extension", "redhat.java"])
+        |> validateOutputContains("Language Support for Java")
+        |> validateExitStatus(WEXITED(0))
+        |> finish
+      )
+    })
+  });
   describe("editor", ({test, _}) => {
     test("rogue -psn argument shouldn't cause a failure", _ => {
       TestRunner.(

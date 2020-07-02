@@ -10,23 +10,24 @@ module Catalog: {
   module Entry: {
     type t = {
       downloadUrl: string,
-//      name: string,
-//      namespace: string,
-//      downloadCount: int,
-//      displayName: string,
-//      descrption: string,
-//      categories: list(string),
-//      license: string,
-//      repositoryUrl: string,
-//      versions: list(VersionInfo.t),
-    }
+      repositoryUrl: string,
+      homepageUrl: string,
+      manifestUrl: string,
+      iconUrl: string,
+      readmeUrl: string,
+      licenseName: string,
+      //      licenseUrl: string,
+      //      name: string,
+      //      namespace: string,
+      //      downloadCount: int,
+      displayName: string,
+      description: string,
+      //      categories: list(string),
+      versions: list(VersionInfo.t),
+    };
 
     let toString: t => string;
   };
 
-  let query: (
-    ~setup: Setup.t,
-    ~publisher: string,
-    string) => Lwt.t(Entry.t);
-
+  let query: (~setup: Setup.t, string) => Lwt.t(Entry.t);
 };
