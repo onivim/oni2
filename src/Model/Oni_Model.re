@@ -15,7 +15,6 @@ module ContextKeys = ContextKeys;
 module DecorationProvider = DecorationProvider;
 module EditorScope = EditorScope;
 module EditorVisibleRanges = EditorVisibleRanges;
-module Extensions = Extensions;
 module FileExplorer = FileExplorer;
 module Focus = Focus;
 module FocusManager = FocusManager;

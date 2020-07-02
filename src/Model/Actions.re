@@ -79,7 +79,7 @@ type t =
     )
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
-  | Extension(Extensions.action)
+  | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | References(References.actions)

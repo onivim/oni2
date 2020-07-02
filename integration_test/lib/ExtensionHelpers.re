@@ -22,7 +22,10 @@ let waitForExtensionToActivate =
         ),
       ~timeout=30.0,
       (state: State.t) =>
-      List.exists(id => id == extensionId, state.extensions.activatedIds)
+      List.exists(
+        id => id == extensionId,
+        state.extensions |> Feature_Extensions.activatedIds,
+      )
     );
   ();
 };
