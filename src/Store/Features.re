@@ -96,6 +96,17 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | Extensions(msg) =>
+    let (model, outMsg) =
+      Feature_Extensions.update(~extHostClient, msg, state.extensions);
+    let state' = {...state, extensions: model};
+    let effect =
+      switch (outMsg) {
+      | Feature_Extensions.Nothing => Effect.none
+      | Feature_Extensions.Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg))
+      };
+    (state', effect);
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let selection =
@@ -286,7 +297,7 @@ let update =
           let configuration =
             Feature_Configuration.toExtensionConfiguration(
               config,
-              state.extensions.extensions,
+              Feature_Extensions.all(state.extensions),
               setup,
             );
           let changed = Exthost.Configuration.Model.fromSettings(changed);

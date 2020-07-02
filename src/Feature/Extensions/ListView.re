@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Model;
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
@@ -79,10 +78,9 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
   };
 
   let bundledExtensions =
-    Extensions.getExtensions(~category=Scanner.Bundled, model);
+    Model.getExtensions(~category=Scanner.Bundled, model);
 
-  let userExtensions =
-    Extensions.getExtensions(~category=Scanner.User, model);
+  let userExtensions = Model.getExtensions(~category=Scanner.User, model);
 
   //let developmentExtensions =
   //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
@@ -90,8 +88,27 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
   let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
   //let developmentCount = Array.length(developmentExtensions);
 
-  <FlatList
-    rowHeight=50 count={Array.length(allExtensions)} focused=None theme>
-    ...{renderItem(allExtensions)}
-  </FlatList>;
+  <View
+    style=Style.[flexDirection(`Column), flexGrow(1), overflow(`Hidden)]>
+    <Accordion
+      title="Installed"
+      expanded=true
+      uiFont=font
+      renderItem={renderItem(allExtensions)}
+      rowHeight=50
+      count={Array.length(allExtensions)}
+      focused=None
+      theme
+    />
+  </View>;
+  //    <Accordion
+  //      title="Bundled"
+  //      expanded=false
+  //      uiFont=font
+  //      renderItem={renderItem(allExtensions)}
+  //      rowHeight=50
+  //      count={Array.length(allExtensions)}
+  //      focused=None
+  //      theme
+  //    />
 };
