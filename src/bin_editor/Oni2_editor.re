@@ -50,6 +50,11 @@ let printVersion = () => {
   0;
 };
 
+let queryExtension = (_extension, _cli) => {
+  prerr_endline ("not implemented");
+  1;
+};
+
 let listExtensions = ({overriddenExtensionsDir, _}) => {
   let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
   let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
@@ -65,6 +70,7 @@ let (cliOptions, eff) = Oni_CLI.parse(Sys.argv);
 switch (eff) {
 | PrintVersion => printVersion() |> exit
 | InstallExtension(name) => installExtension(name, cliOptions) |> exit
+| QueryExtension(name) => queryExtension(name, cliOptions) |> exit
 | UninstallExtension(name) => uninstallExtension(name, cliOptions) |> exit
 | CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
 | ListExtensions => listExtensions(cliOptions) |> exit
