@@ -17,6 +17,7 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
 module Search = Search;
@@ -28,7 +29,14 @@ module Window = Window;
 module Yank = Yank;
 
 module GlobalState = {
-  let autoIndent: ref(option(string => AutoIndent.action)) = ref(None);
+  let autoIndent:
+    ref(
+      option(
+        (~previousLine: string, ~beforePreviousLine: option(string)) =>
+        AutoIndent.action,
+      ),
+    ) =
+    ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
 };
 
@@ -80,6 +88,44 @@ module Internal = {
     let lastWhitespaceIndex = loop(0);
 
     String.sub(str, 0, lastWhitespaceIndex);
+  };
+
+  let isEmpty = (~max: int, str) => {
+    let len = String.length(str);
+
+    let rec loop = idx =>
+      if (idx >= max) {
+        false;
+      } else if (idx >= len) {
+        true;
+      } else {
+        let c = str.[idx];
+        if (c == ' ' || c == '\t') {
+          loop(idx + 1);
+        } else {
+          false;
+        };
+      };
+
+    loop(0);
+  };
+
+  let getPrecedingWhitespaceCount = (~max: int, str) => {
+    let len = String.length(str);
+
+    let rec loop = (idx, count) =>
+      if (idx >= max || idx >= len) {
+        count;
+      } else {
+        let c = str.[idx];
+        if (c == ' ' || c == '\t') {
+          loop(idx + 1, count + 1);
+        } else {
+          count;
+        };
+      };
+
+    loop(0, 0);
   };
 };
 
@@ -316,21 +362,66 @@ let _onFormat = formatRequest => {
   );
 };
 
-let _onAutoIndent = (prevLine: string) => {
+let _onAutoIndent = (lnum: int, sourceLine: string) => {
+  let buf = Buffer.getCurrent();
+  let lineCount = Buffer.getLineCount(buf);
+
+  // lnum is one-based, coming from Vim - we'd only have a beforePreviousLine if the current line is line 3
+  let beforePreviousLine =
+    if (lnum >= 3 && lnum <= lineCount) {
+      lnum - 2 |> Index.fromOneBased |> Buffer.getLine(buf) |> Option.some;
+    } else {
+      None;
+    };
+
+  let beforeLine =
+    if (lnum >= 2 && lnum <= lineCount) {
+      lnum - 1 |> Index.fromOneBased |> Buffer.getLine(buf);
+    } else {
+      ""; // This should never happen... but follow the Vim convention for empty lines.
+    };
+
   let indentAction =
     GlobalState.autoIndent^
-    |> Option.map(fn => fn(prevLine))
+    |> Option.map(fn => fn(~previousLine=beforeLine, ~beforePreviousLine))
     |> Option.value(~default=AutoIndent.KeepIndent);
 
+  // A note about [sourceLine]:
+  // This line could be the previous line (in the case of <CR> or `o`),
+  // or it could be the line _after_ the current line (in the case of `O`).
+  // The current indentation comes from the source line, which causes some
+  // challenge, as the auto-indent rules are based on the previous two lines -
+  let aboveWhitespace =
+    Internal.getPrecedingWhitespaceCount(~max=100, beforeLine);
+  let afterWhitespace =
+    Internal.getPrecedingWhitespaceCount(~max=100, sourceLine);
+
+  let isPreviousLineEmpty = Internal.isEmpty(~max=100, beforeLine);
+
+  // The [indentOffset] is computed to offset the difference between the previous line and source line,
+  // to normalize the indentation provided by the callback function.
+  let indentOffset =
+    if (!isPreviousLineEmpty && aboveWhitespace > afterWhitespace) {
+      1;
+    } else if (!isPreviousLineEmpty && aboveWhitespace < afterWhitespace) {
+      (-1);
+    } else {
+      0;
+    };
+
   switch (indentAction) {
-  | AutoIndent.IncreaseIndent => 1
-  | AutoIndent.KeepIndent => 0
-  | AutoIndent.DecreaseIndent => (-1)
+  | AutoIndent.IncreaseIndent => 1 + indentOffset
+  | AutoIndent.KeepIndent => 0 + indentOffset
+  | AutoIndent.DecreaseIndent => (-1) + indentOffset
   };
 };
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
+};
+
+let _onTabPage = (msg: TabPage.effect) => {
+  queue(() => Event.dispatch(Effect.TabPage(msg), Listeners.effect));
 };
 
 let _onTerminal = terminalRequest => {
@@ -349,6 +440,7 @@ let init = () => {
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
+  Callback.register("lv_onTabPage", _onTabPage);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);
   Callback.register("lv_onQuit", _onQuit);

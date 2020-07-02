@@ -10,11 +10,8 @@ let cursorSpringOptions =
 
 let%component make =
               (
-                ~scrollX,
-                ~scrollY,
                 ~editor: Editor.t,
                 ~editorFont: Service_Font.font,
-                ~buffer,
                 ~mode: Vim.Mode.t,
                 ~isActiveSplit,
                 ~cursorPosition: Location.t,
@@ -26,26 +23,12 @@ let%component make =
   let%hook () = React.Hooks.effect(Always, () => None);
   let line = Index.toZeroBased(cursorPosition.line);
   let column = Index.toZeroBased(cursorPosition.column);
-  let lineCount = Buffer.getNumberOfLines(buffer);
 
-  let (originalX, originalY, characterWidth) =
-    if (lineCount <= 0 || line >= lineCount || !isActiveSplit) {
-      (
-        // If we don't have a line, we're not rendering anything anyway...
-        // ...but we still need to engange our hooks
-        0.,
-        0.,
-        0,
-      );
-    } else {
-      let bufferLine = Buffer.getLine(line, buffer);
-      let (offset, characterWidth) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(bufferLine, column);
+  let ({pixelX, pixelY}: Editor.pixelPosition, characterWidth) =
+    Editor.bufferLineCharacterToPixel(~line, ~characterIndex=column, editor);
 
-      let x = float(offset) *. editorFont.measuredWidth;
-      let y = float(line) *. editorFont.measuredHeight +. 0.5;
-      (x, y, characterWidth);
-    };
+  let originalX = pixelX;
+  let originalY = pixelY;
 
   let durationFunc = (~current, ~target) =>
     if (Float.abs(target -. current) < 2. *. editorFont.measuredHeight) {
@@ -103,30 +86,23 @@ let%component make =
       right(0),
       bottom(0),
     ]
-    render={canvasContext => {
+    render={(canvasContext, _) => {
       let context =
         Draw.createContext(
           ~canvasContext,
-          ~width=editor.pixelWidth,
-          ~height=editor.pixelHeight,
-          ~scrollX,
-          ~scrollY,
-          ~lineHeight=editorFont.measuredHeight,
+          ~width=Editor.visiblePixelWidth(editor),
+          ~height=Editor.visiblePixelHeight(editor),
+          ~editor,
           ~editorFont,
         );
-      let line = Index.toZeroBased(cursorPosition.line);
-      let column = Index.toZeroBased(cursorPosition.column);
-      let lineCount = Buffer.getNumberOfLines(buffer);
 
-      if (lineCount <= 0 || line >= lineCount || !isActiveSplit) {
-        ();
-      } else {
-        let height = context.lineHeight;
+      if (isActiveSplit) {
+        let height = Editor.lineHeightInPixels(editor);
         let background = colors.cursorBackground;
         let foreground = colors.cursorForeground;
 
         if (!windowIsFocused) {
-          let width = float(characterWidth) *. context.charWidth;
+          let width = characterWidth;
           Draw.rect(~context, ~x, ~y, ~width=1., ~height, ~color=foreground);
           Draw.rect(~context, ~x, ~y, ~width, ~height=1., ~color=foreground);
           Draw.rect(
@@ -149,35 +125,35 @@ let%component make =
           let width = 2.;
           Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
         } else {
-          let width = float(characterWidth) *. context.charWidth;
+          let width = characterWidth;
           Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
-          let bufferLine = Buffer.getLine(line, buffer);
 
-          switch (BufferLine.subExn(~index=column, ~length=1, bufferLine)) {
-          | exception _
-          | "" => ()
-          | text
-              when BufferViewTokenizer.isWhitespace(ZedBundled.get(text, 0)) =>
-            ()
-          | text =>
-            let font =
-              Service_Font.resolveWithFallback(
-                ~italic=false,
-                Revery.Font.Weight.Normal,
-                context.fontFamily,
-              );
-            let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
-            Draw.shapedText(
-              ~context,
-              ~x=x -. 0.5,
-              ~y=y -. fontMetrics.ascent -. 0.5,
-              ~bold=false,
-              ~italic=false,
-              ~mono=false,
-              ~color=background |> Revery.Color.multiplyAlpha(textOpacity),
-              text,
-            );
-          };
+          editor
+          |> Editor.getCharacterAtPosition(~line, ~index=column)
+          |> Option.iter(uchar =>
+               if (!BufferViewTokenizer.isWhitespace(uchar)) {
+                 let text = ZedBundled.make(1, uchar);
+                 let font =
+                   Service_Font.resolveWithFallback(
+                     ~italic=false,
+                     Revery.Font.Weight.Normal,
+                     context.fontFamily,
+                   );
+                 let fontMetrics =
+                   Revery.Font.getMetrics(font, context.fontSize);
+                 Draw.shapedText(
+                   ~context,
+                   ~x=x -. 0.5,
+                   ~y=y -. fontMetrics.ascent -. 0.5,
+                   ~bold=false,
+                   ~italic=false,
+                   ~mono=false,
+                   ~color=
+                     background |> Revery.Color.multiplyAlpha(textOpacity),
+                   text,
+                 );
+               }
+             );
         };
       };
     }}

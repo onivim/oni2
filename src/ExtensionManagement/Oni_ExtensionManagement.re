@@ -1,6 +1,6 @@
 open Oni_Core;
 
-module NodeTask = Oni_Extensions.NodeTask;
+module NodeTask = Oni_Core.NodeTask;
 
 module Log = (val Log.withNamespace("Oni2.Extensions.ExtensionManagement"));
 
@@ -17,7 +17,7 @@ let install = (~extensionsFolder, ~path) => {
 
   Log.debugf(m => m("Installing extension %s to %s", name, extensionsFolder));
 
-  let promise: Lwt.t(unit) =
+  let promise: Lwt.t(string) =
     NodeTask.run(
       ~name="Install",
       ~setup,
@@ -25,7 +25,7 @@ let install = (~extensionsFolder, ~path) => {
       "install-extension.js",
     );
 
-  Lwt.on_success(promise, () => {
+  Lwt.on_success(promise, _ => {
     Log.debugf(m => m("Successfully installed extension: %s", name))
   });
 

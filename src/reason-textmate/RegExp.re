@@ -9,20 +9,24 @@
 
 open Oniguruma;
 
-let _allowCache = ref(true);
-
-let setAllowCache = v => _allowCache := v;
-
-type cachedResult = {
-  str: string,
-  position: int,
-  matches: array(OnigRegExp.Match.t),
-};
+type cachedResult =
+  | NotEvaluated
+  | EvaluatedPosition({
+      str: string,
+      evaluatedPosition: int,
+      matchPosition: int,
+    })
+  | EvaluatedMatches({
+      str: string,
+      matchPosition: int,
+      evaluatedPosition: int,
+      matches: array(OnigRegExp.Match.t),
+    });
 
 type t = {
-  mutable cachedResult: option(cachedResult),
+  mutable cachedResult,
   raw: string,
-  regexp: option(OnigRegExp.t),
+  regexp: OnigRegExp.t,
 };
 
 let raw = (v: t) => v.raw;
@@ -33,38 +37,53 @@ let emptyMatches = [||];
 let create = (str: string) => {
   let regexp =
     switch (OnigRegExp.create(str)) {
-    | Ok(v) => Some(v)
+    | Ok(v) => v
     | Error(msg) => failwith(msg)
     };
 
-  {cachedResult: None, raw: str, regexp};
+  {cachedResult: NotEvaluated, raw: str, regexp};
 };
 
-let search = (str: string, position: int, v: t) => {
-  let run = () => {
-    switch (v.regexp) {
-    | Some(re) => OnigRegExp.search(str, position, re)
-    | None => emptyMatches
-    };
+let search = (stringToEvaluate: string, positionToEvaluate: int, v: t) => {
+  switch (v.cachedResult) {
+  | EvaluatedPosition({str, matchPosition, evaluatedPosition})
+  | EvaluatedMatches({str, matchPosition, evaluatedPosition, _})
+      // We already have a match past this position, so we already evaluated:
+      when
+        (
+          matchPosition >= positionToEvaluate
+          // or we've evaluated before this position, and we didn't get a match:
+          || evaluatedPosition <= positionToEvaluate
+          && matchPosition == (-1)
+        )
+        // and the string is equal to the one we tested before - return previous match
+        && String.equal(str, stringToEvaluate) => matchPosition
+  | _ =>
+    let newResult =
+      OnigRegExp.Fast.search(stringToEvaluate, positionToEvaluate, v.regexp);
+    v.cachedResult =
+      EvaluatedPosition({
+        str: stringToEvaluate,
+        evaluatedPosition: positionToEvaluate,
+        matchPosition: newResult,
+      });
+    newResult;
   };
+};
 
-  if (! _allowCache^) {
-    run();
-  } else {
-    switch (v.cachedResult) {
-    | Some(cachedResult)
-        when cachedResult.position >= position && cachedResult.str === str =>
-      cachedResult.matches
-    | _ =>
-      let newResult = run();
-      let len = Array.length(newResult);
-      if (len >= 1) {
-        v.cachedResult =
-          Some({str, position: newResult[0].startPos, matches: newResult});
-      } else {
-        v.cachedResult = None;
-      };
-      newResult;
-    };
+let matches = (v: t) => {
+  switch (v.cachedResult) {
+  | NotEvaluated => emptyMatches
+
+  | EvaluatedMatches({matches, _}) => matches
+
+  // If no matches, don't bother calling out to Oniguruma FFI - we know we have nothing...
+  | EvaluatedPosition({matchPosition, _}) when matchPosition == (-1) => emptyMatches
+
+  | EvaluatedPosition({str, matchPosition, evaluatedPosition}) =>
+    let matches = OnigRegExp.Fast.getLastMatches(str, v.regexp);
+    v.cachedResult =
+      EvaluatedMatches({str, matchPosition, matches, evaluatedPosition});
+    matches;
   };
 };

@@ -7,7 +7,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
-open Utility;
 open Actions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Completions"));
@@ -39,7 +38,13 @@ module Effects = {
       let _: Vim.Context.t = VimEx.repeatInput(delta, "<BS>");
       let {cursors, _}: Vim.Context.t = VimEx.inputString(completion.label);
 
-      dispatch(EditorCursorMove(Editor.getId(editor), cursors));
+      let editorId = editor |> Editor.getId;
+      dispatch(
+        Editor({
+          scope: EditorScope.Editor(editorId),
+          msg: CursorsChanged(cursors),
+        }),
+      );
     });
 };
 
@@ -72,31 +77,22 @@ module Actions = {
   );
 
   let checkCompletionMeet = (state: State.t) => {
-    let maybeEditor =
-      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+    let editor = Feature_Layout.activeEditor(state.layout);
     let maybeBuffer =
-      Option.bind(maybeEditor, editor =>
-        Buffers.getBuffer(
-          Feature_Editor.Editor.getBufferId(editor),
-          state.buffers,
-        )
+      Buffers.getBuffer(
+        Feature_Editor.Editor.getBufferId(editor),
+        state.buffers,
       );
-    let maybeCursor =
-      OptionEx.map2(
-        (buffer, editor) => Editor.getPrimaryCursor(~buffer, editor),
-        maybeBuffer,
-        maybeEditor,
-      );
+    let location = Editor.getPrimaryCursor(editor);
 
     let suggestEnabled =
       state.configuration
       |> Configuration.getValue(c => c.editorQuickSuggestions);
 
     let maybeMeet =
-      OptionEx.bind2(
-        maybeCursor,
+      Option.bind(
         maybeBuffer,
-        (location, buffer) => {
+        buffer => {
           let {isComment, isString}: SyntaxScope.t =
             Feature_Syntax.getSyntaxScope(
               ~bufferId=Buffer.getId(buffer),
@@ -139,9 +135,8 @@ module Actions = {
     };
   };
 
-  let applyCompletion = state => {
-    let maybeEditor =
-      state |> Selectors.getActiveEditorGroup |> Selectors.getActiveEditor;
+  let applyCompletion = (state: State.t) => {
+    let editor = Feature_Layout.activeEditor(state.layout);
 
     let maybeFocused =
       Option.map(
@@ -149,8 +144,8 @@ module Actions = {
         state.completions.focused,
       );
 
-    switch (maybeEditor, maybeFocused, state.completions.meet) {
-    | (Some(editor), Some(completion), Some(meet)) => (
+    switch (maybeFocused, state.completions.meet) {
+    | (Some(completion), Some(meet)) => (
         state,
         Effects.applyCompletion(~editor, ~meet, completion),
       )
@@ -170,7 +165,8 @@ let start = () => {
     | Vim(Feature_Vim.ModeChanged(mode)) when mode != Vim.Types.Insert =>
       Actions.stop(state)
 
-    | EditorCursorMove(_) when Feature_Vim.mode(state.vim) == Vim.Types.Insert =>
+    | ExtensionBufferUpdateQueued(_)
+        when Feature_Vim.mode(state.vim) == Vim.Types.Insert =>
       Actions.checkCompletionMeet(state)
 
     | CompletionAddItems(_meet, items) =>

@@ -57,8 +57,9 @@ let renderLine =
   let f = (token: BufferViewTokenizer.t) => {
     switch (token.tokenType) {
     | Text =>
-      let startPosition = Index.toZeroBased(token.startPosition);
-      let endPosition = Index.toZeroBased(token.endPosition);
+      // TODO: Fix this
+      let startPosition = Index.toZeroBased(token.startIndex);
+      let endPosition = Index.toZeroBased(token.endIndex);
       let tokenWidth = endPosition - startPosition;
 
       let x = float(Constants.minimapCharacterWidth * startPosition);
@@ -95,10 +96,11 @@ let renderLine =
   List.iter(f, tokens);
 };
 
-let getMinimapSize = (view: Editor.t) => {
-  let currentViewSize = Editor.getVisibleView(view);
+let getMinimapSize = (editor: Editor.t) => {
+  let currentViewSize = Editor.getVisibleView(editor);
+  let totalLines = Editor.totalViewLines(editor);
 
-  view.viewLines < currentViewSize ? 0 : currentViewSize + 1;
+  totalLines < currentViewSize ? 0 : currentViewSize + 1;
 };
 
 type captureState = {
@@ -126,7 +128,7 @@ let%component make =
   let rowHeight =
     float(Constants.minimapCharacterHeight + Constants.minimapLineSpacing);
 
-  let scrollY = editor.minimapScrollY;
+  let scrollY = Editor.minimapScrollY(editor);
 
   let thumbTop =
     rowHeight *. float(Editor.getTopVisibleLine(editor) - 1) -. scrollY;
@@ -235,7 +237,7 @@ let%component make =
     onBoundingBoxChanged={bbox => setBbox(_ => Some(bbox))}>
     <Canvas
       style=Styles.absolute
-      render={canvasContext => {
+      render={(canvasContext, _) => {
         Skia.Paint.setColor(
           minimapPaint,
           Revery.Color.toSkia(sliderBackground),

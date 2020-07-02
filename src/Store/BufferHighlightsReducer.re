@@ -18,14 +18,10 @@ let reduce = (state: BufferHighlights.t, action: Actions.t) => {
     | DocumentHighlightsCleared(bid) =>
       BufferHighlights.clearDocumentHighlights(bid, state)
     }
-  | SearchSetMatchingPair(bid, startPos, endPos) =>
-    BufferHighlights.setMatchingPair(bid, startPos, endPos, state)
   | SearchSetHighlights(bid, ranges) =>
     BufferHighlights.setSearchHighlights(bid, ranges, state)
   | SearchClearHighlights(bid) =>
     BufferHighlights.clearSearchHighlights(bid, state)
-  | SearchClearMatchingPair(bid) =>
-    BufferHighlights.clearMatchingPair(bid, state)
   | _ => state
   };
 };

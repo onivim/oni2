@@ -85,6 +85,7 @@ let start =
       ~minimize,
       ~close,
       ~restore,
+      ~raiseWindow,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
@@ -150,7 +151,7 @@ let start =
 
   let fileExplorerUpdater = FileExplorerStore.start();
 
-  let lifecycleUpdater = LifecycleStoreConnector.start(quit);
+  let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
@@ -281,23 +282,31 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
-    let visibleEditors =
-      Model.EditorGroups.getAllVisibleEditors(state.editorGroups);
+    let visibleEditors = Feature_Layout.visibleEditors(state.layout);
 
-    let maybeActiveEditor =
-      Model.EditorGroups.getActiveEditor(state.editorGroups);
-    let maybeActiveEditorId =
-      maybeActiveEditor
-      |> Option.map((editor: Feature_Editor.Editor.t) => editor.editorId);
+    let activeEditor = Feature_Layout.activeEditor(state.layout);
+    let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
 
     let extHostSubscription =
       Feature_Exthost.subscription(
         ~buffers=visibleBuffers,
         ~editors=visibleEditors,
-        ~activeEditorId=maybeActiveEditorId,
+        ~activeEditorId=Some(activeEditorId),
         ~client=extHostClient,
       )
       |> Isolinear.Sub.map(() => Model.Actions.Noop);
+
+    let fileExplorerActiveFileSub =
+      Model.Sub.activeFile(
+        ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
+        Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
+      );
+
+    let editorGlobalSub =
+      Feature_Editor.Sub.global(~config)
+      |> Isolinear.Sub.map(msg =>
+           Model.Actions.Editor({scope: Model.EditorScope.All, msg})
+         );
 
     [
       syntaxSubscription,
@@ -306,6 +315,8 @@ let start =
       terminalFontSubscription,
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
+      fileExplorerActiveFileSub,
+      editorGlobalSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -381,6 +392,11 @@ let start =
     ~dispatch,
     Feature_Hover.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
+  );
+  registerCommands(
+    ~dispatch,
+    Feature_SignatureHelp.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
   );
 
   registerCommands(

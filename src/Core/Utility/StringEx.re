@@ -60,6 +60,24 @@ let startsWith = (~prefix, str) => {
   };
 };
 
+let endsWith = (~postfix, str) => {
+  let postfixLength = String.length(postfix);
+  let strLength = String.length(str);
+
+  if (postfixLength > strLength) {
+    false;
+  } else {
+    let rec match = i =>
+      if (i == postfixLength) {
+        true;
+      } else {
+        postfix.[postfixLength - i - 1] == str.[strLength - i - 1]
+        && match(i + 1);
+      };
+    match(0);
+  };
+};
+
 let trimLeft = str => {
   let length = String.length(str);
 
@@ -94,17 +112,27 @@ let trimRight = str => {
   aux(length - 1);
 };
 
-let indentation = str => {
-  let rec loop = i =>
-    if (i >= String.length(str)) {
-      i;
-    } else if (isSpace(str.[i])) {
-      loop(i + 1);
+let findNonWhitespace = str => {
+  let len = String.length(str);
+  let rec loop = idx =>
+    if (idx >= len) {
+      None;
     } else {
-      i;
+      let char = str.[idx];
+      if (char != '\t' && char != ' ') {
+        Some(idx);
+      } else {
+        loop(idx + 1);
+      };
     };
-
   loop(0);
+};
+
+let isOnlyWhitespace = str => {
+  switch (findNonWhitespace(str)) {
+  | None => true
+  | Some(_) => false
+  };
 };
 
 let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {

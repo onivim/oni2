@@ -17,7 +17,6 @@ let renderLineNumber =
       colors: Colors.t,
       lineSetting,
       cursorLine: int,
-      yOffset: float,
     ) => {
   let font =
     Service_Font.resolveWithFallback(
@@ -27,6 +26,12 @@ let renderLineNumber =
     );
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
   let isActiveLine = lineNumber == cursorLine;
+  let ({pixelY: yOffset, _}: Editor.pixelPosition, _) =
+    Editor.bufferLineByteToPixel(
+      ~line=lineNumber,
+      ~byteIndex=0,
+      context.editor,
+    );
   let y = yOffset -. fontMetrics.ascent;
 
   let lineNumber =
@@ -83,7 +88,7 @@ let renderLineNumbers =
     ~color=colors.gutterBackground,
   );
 
-  Draw.renderImmediate(~context, ~count, (item, offset) =>
+  Draw.renderImmediate(~context, ~count, (item, _) =>
     renderLineNumber(
       ~context,
       item,
@@ -91,7 +96,6 @@ let renderLineNumbers =
       colors,
       showLineNumbers,
       cursorLine,
-      offset,
     )
   );
 };
@@ -106,23 +110,14 @@ let render =
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
       canvasContext,
+      _,
     ) => {
   let context =
-    Draw.createContext(
-      ~canvasContext,
-      ~width,
-      ~height,
-      ~scrollX=0.,
-      ~scrollY,
-      ~lineHeight,
-      ~editorFont,
-    );
+    Draw.createContext(~canvasContext, ~width, ~height, ~editor, ~editorFont);
 
   if (showLineNumbers != `Off) {
     renderLineNumbers(
@@ -138,8 +133,8 @@ let render =
 
   Option.iter(
     EditorDiffMarkers.render(
-      ~scrollY=context.scrollY,
-      ~rowHeight=context.lineHeight,
+      ~scrollY=Editor.scrollY(editor),
+      ~rowHeight=Editor.lineHeightInPixels(editor),
       ~x=lineNumberWidth,
       ~height=float(height),
       ~width=Constants.diffMarkerWidth,
@@ -163,8 +158,6 @@ let make =
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
@@ -202,8 +195,6 @@ let make =
       ~height,
       ~colors,
       ~editorFont,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,

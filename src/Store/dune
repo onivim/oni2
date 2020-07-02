@@ -23,6 +23,7 @@
         Oni2.ui
         Oni2.feature.commands
         Oni2.feature.contextMenu
+        Oni2.feature.extensions
         Oni2.feature.exthost
         Oni2.feature.formatting
         Oni2.feature.menus
@@ -33,6 +34,8 @@
         Oni2.feature.modals
         Oni2.feature.hover
         Oni2.feature.vim
+        Oni2.feature.signature_help
+        Oni2.feature.editor
         isolinear
         libvim
         textmate

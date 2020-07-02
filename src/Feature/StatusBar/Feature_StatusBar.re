@@ -11,11 +11,14 @@ module Item = {
     priority: int,
     label: Exthost.Label.t,
     alignment: Exthost.Msg.StatusBar.alignment,
+    color: option(Exthost.Color.t),
     command: option(string),
   };
 
-  let create = (~command=?, ~id, ~priority, ~label, ~alignment=Left, ()) => {
+  let create =
+      (~color=?, ~command=?, ~id, ~priority, ~label, ~alignment=Left, ()) => {
     id,
+    color,
     priority,
     label,
     alignment,
@@ -340,12 +343,19 @@ module View = {
     let%hook (yOffset, _animationState, _reset) =
       Hooks.animation(transitionAnimation);
 
+    let defaultForeground = Colors.StatusBar.foreground.from(theme);
+
     let toStatusBarElement = (statusItem: Item.t) => {
       let onClick =
         statusItem.command
         |> Option.map((command, ()) =>
              dispatch(ContributedItemClicked({id: statusItem.id, command}))
            );
+
+      let color =
+        statusItem.color
+        |> OptionEx.flatMap(Exthost.Color.resolve(theme))
+        |> Option.value(~default=defaultForeground);
 
       <item ?onClick>
         <View
@@ -354,7 +364,7 @@ module View = {
             justifyContent(`Center),
             alignItems(`Center),
           ]>
-          <Label font color=Revery.Colors.white label={statusItem.label} />
+          <Label font color label={statusItem.label} />
         </View>
       </item>;
     };
@@ -402,13 +412,8 @@ module View = {
 
     let position = () => {
       let text = {
-        OptionEx.map2(
-          (editor, buffer) => {
-            Feature_Editor.Editor.getPrimaryCursor(~buffer, editor)
-          },
-          activeEditor,
-          activeBuffer,
-        )
+        activeEditor
+        |> Option.map(Feature_Editor.Editor.getPrimaryCursor)
         |> positionToString;
       };
 

@@ -74,7 +74,8 @@ let%component make = (~theme, ~state: State.t, ()) => {
         dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
       />;
 
-    | Extensions => <ExtensionListView model={state.extensions} theme font />
+    | Extensions =>
+      <Feature_Extensions.ListView model={state.extensions} theme font />
     };
 
   <View style={Styles.container(~theme, ~transition)}>

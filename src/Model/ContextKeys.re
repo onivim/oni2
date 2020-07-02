@@ -25,48 +25,53 @@ let menus =
   );
 
 let editors =
-  fromList([
-    bool("editorTextFocus", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalInsert
-      | TerminalNormal
-      | TerminalVisual => false
-      | _ => true
-      }
-    ),
-    bool("terminalFocus", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalInsert
-      | TerminalNormal
-      | TerminalVisual => true
-      | _ => false
-      }
-    ),
-    bool("commandLineFocus", state =>
-      ModeManager.current(state) == CommandLine
-    ),
-    bool("insertMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalInsert
-      | Insert => true
-      | _ => false
-      }
-    ),
-    bool("normalMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalNormal
-      | Normal => true
-      | _ => false
-      }
-    ),
-    bool("visualMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalVisual
-      | Visual => true
-      | _ => false
-      }
-    ),
-  ]);
+  fromList(
+    State.[
+      bool("editorTextFocus", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalInsert
+        | TerminalNormal
+        | TerminalVisual => false
+        | _ => true
+        }
+      ),
+      bool("terminalFocus", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalInsert
+        | TerminalNormal
+        | TerminalVisual => true
+        | _ => false
+        }
+      ),
+      bool("commandLineFocus", state =>
+        ModeManager.current(state) == CommandLine
+      ),
+      bool("insertMode", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalInsert
+        | Insert => true
+        | _ => false
+        }
+      ),
+      bool("normalMode", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalNormal
+        | Normal => true
+        | _ => false
+        }
+      ),
+      bool("visualMode", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalVisual
+        | Visual => true
+        | _ => false
+        }
+      ),
+      bool("parameterHintsVisible", state =>
+        Feature_SignatureHelp.isShown(state.signatureHelp)
+      ),
+    ],
+  );
 
 let other =
   fromList(

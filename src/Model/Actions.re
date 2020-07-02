@@ -45,6 +45,7 @@ type t =
       update: [@opaque] BufferUpdate.t,
       oldBuffer: [@opaque] Buffer.t,
       newBuffer: [@opaque] Buffer.t,
+      triggerKey: option(string),
     })
   | BufferLineEndingsChanged({
       id: int,
@@ -56,6 +57,7 @@ type t =
   | BufferSetModified(int, bool)
   | Syntax(Feature_Syntax.msg)
   | Hover(Feature_Hover.msg)
+  | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
@@ -77,7 +79,8 @@ type t =
     )
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
-  | Extension(Extensions.action)
+  | Extensions(Feature_Extensions.msg)
+  | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
@@ -93,28 +96,21 @@ type t =
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
-  | SelectionChanged([@opaque] VisualRange.t)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
   | WindowTitleSet(string)
-  | EditorGroupSelected(int)
   | EditorGroupSizeChanged({
       id: int,
       width: int,
       height: int,
     })
-  | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSizeChanged({
       id: Feature_Editor.EditorId.t,
       pixelWidth: int,
       pixelHeight: int,
     })
-  | EditorScrollToLine(Feature_Editor.EditorId.t, int)
-  | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
-  | EditorTabClicked(int)
   | Formatting(Feature_Formatting.msg)
-  | ViewCloseEditor(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
       severity: [@opaque] Exthost.Msg.MessageService.severity,
@@ -122,7 +118,7 @@ type t =
       extensionId: option(string),
     })
   | Editor({
-      editorId: int,
+      scope: EditorScope.t,
       msg: Feature_Editor.msg,
     })
   | FilesDropped({paths: list(string)})
@@ -146,6 +142,9 @@ type t =
       option([ | `Horizontal | `Vertical]),
       option(Location.t),
     )
+  | OpenFileInNewLayout(string)
+  | BufferOpened(string, option(Location.t), int)
+  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
@@ -153,8 +152,6 @@ type t =
   // to quit the app. This gives subscriptions the chance to clean up.
   | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
-  | SearchClearMatchingPair(int)
-  | SearchSetMatchingPair(int, Location.t, Location.t)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
@@ -226,6 +223,7 @@ type t =
       decorations: list(Decoration.t),
     })
   | Vim(Feature_Vim.msg)
+  | TabPage(Vim.TabPage.effect)
   | Noop
 and command = {
   commandCategory: option(string),

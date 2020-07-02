@@ -1,7 +1,26 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-let lastId = ref(0);
+module GlobalState = {
+  let lastId = ref(0);
+
+  let generateId = () => {
+    let id = lastId^;
+    incr(lastId);
+    id;
+  };
+};
+
+type pixelPosition = {
+  pixelX: float,
+  pixelY: float,
+};
+
+type viewLine = {
+  contents: BufferLine.t,
+  byteOffset: int,
+  characterOffset: int,
+};
 
 [@deriving show]
 // TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
@@ -10,6 +29,8 @@ type t = {
   editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
+  isScrollAnimated: bool,
+  isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
@@ -25,12 +46,80 @@ type t = {
   pixelHeight: int,
 };
 
-let create = (~font, ~buffer, ()) => {
-  let id = lastId^;
-  incr(lastId);
+let totalViewLines = ({viewLines, _}) => viewLines;
+let selection = ({selection, _}) => selection;
+let setSelection = (~selection, editor) => {...editor, selection};
+let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
+let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
+let scrollY = ({scrollY, _}) => scrollY;
+let scrollX = ({scrollX, _}) => scrollX;
+let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
+let lineHeightInPixels = ({font, _}) => font.measuredHeight;
+let characterWidthInPixels = ({font, _}) => font.measuredWidth;
+let font = ({font, _}) => font;
+
+let setMinimapEnabled = (~enabled, editor) => {
+  ...editor,
+  isMinimapEnabled: enabled,
+};
+
+let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
+let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
+
+let bufferLineByteToPixel =
+    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  if (line < 0 || line >= lineCount) {
+    ({pixelX: 0., pixelY: 0.}, 0.);
+  } else {
+    let bufferLine = buffer |> EditorBuffer.line(line);
+
+    let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
+    let (cursorOffset, width) =
+      BufferLine.getPositionAndWidth(~index, bufferLine);
+
+    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+
+    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+
+    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+  };
+};
+
+let viewLine = (editor, lineNumber) => {
+  let contents = editor.buffer |> EditorBuffer.line(lineNumber);
+
+  {contents, byteOffset: 0, characterOffset: 0};
+};
+
+let bufferLineCharacterToPixel =
+    (~line, ~characterIndex, {scrollX, scrollY, buffer, font, _}) => {
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  if (line < 0 || line >= lineCount) {
+    ({pixelX: 0., pixelY: 0.}, 0.);
+  } else {
+    let (cursorOffset, width) =
+      buffer
+      |> EditorBuffer.line(line)
+      |> BufferLine.getPositionAndWidth(~index=characterIndex);
+
+    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+
+    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+
+    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+  };
+};
+
+let create = (~config, ~font, ~buffer, ()) => {
+  let id = GlobalState.generateId();
+
+  let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
 
   {
     editorId: id,
+    isMinimapEnabled,
+    isScrollAnimated: false,
     buffer,
     scrollX: 0.,
     scrollY: 0.,
@@ -57,22 +146,50 @@ let create = (~font, ~buffer, ()) => {
   };
 };
 
+let copy = editor => {
+  let id = GlobalState.generateId();
+
+  {...editor, editorId: id};
+};
+
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,
   thumbOffset: int,
 };
 
-let getVimCursors = model => model.cursors;
+let getVimCursors = ({cursors, _}) => cursors;
+let setVimCursors = (~cursors, editor) => {...editor, cursors};
 
-let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
+let getNearestMatchingPair = (~location: Location.t, ~pairs, {buffer, _}) => {
+  BracketMatch.findFirst(
+    ~buffer,
+    ~line=location.line |> Index.toZeroBased,
+    ~index=location.column |> Index.toZeroBased,
+    ~pairs,
+  )
+  |> Option.map(({start, stop}: BracketMatch.pair) =>
+       (
+         Location.{
+           line: start.line |> Index.fromZeroBased,
+           column: start.index |> Index.fromZeroBased,
+         },
+         Location.{
+           line: stop.line |> Index.fromZeroBased,
+           column: stop.index |> Index.fromZeroBased,
+         },
+       )
+     );
+};
+
+let mapCursor = (~position: Vim.Cursor.t, editor) => {
   let byte = position.column |> Index.toZeroBased;
   let line = position.line |> Index.toZeroBased;
 
-  let bufferLineCount = Buffer.getNumberOfLines(buffer);
+  let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
   if (line < bufferLineCount) {
-    let bufferLine = Buffer.getLine(line, buffer);
+    let bufferLine = EditorBuffer.line(line, editor.buffer);
 
     let column = BufferLine.getIndex(~byte, bufferLine);
 
@@ -82,31 +199,82 @@ let mapCursor = (~position: Vim.Cursor.t, ~buffer) => {
   };
 };
 
-let getCharacterUnderCursor = (~buffer, editor) => {
-  switch (editor.cursors) {
+let getCharacterAtPosition = (~line, ~index, {buffer, _}) => {
+  let bufferLineCount = EditorBuffer.numberOfLines(buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = EditorBuffer.line(line, buffer);
+    try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+    | _exn => None
+    };
+  } else {
+    None;
+  };
+};
+
+let getCharacterBehindCursor = ({cursors, buffer, _}) => {
+  switch (cursors) {
   | [] => None
   | [cursor, ..._] =>
     let byte = cursor.column |> Index.toZeroBased;
     let line = cursor.line |> Index.toZeroBased;
 
-    let bufferLineCount = Buffer.getNumberOfLines(buffer);
+    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
     if (line < bufferLineCount) {
-      let bufferLine = Buffer.getLine(line, buffer);
-      let index = BufferLine.getIndex(~byte, bufferLine);
-      let character = BufferLine.getUcharExn(~index, bufferLine);
-      Some(character);
+      let bufferLine = EditorBuffer.line(line, buffer);
+      let index = max(0, BufferLine.getIndex(~byte, bufferLine) - 1);
+      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+      | _exn => None
+      };
     } else {
       None;
     };
   };
 };
 
-let getPrimaryCursor = (~buffer, editor) =>
+let getCharacterUnderCursor = ({cursors, buffer, _}) => {
+  switch (cursors) {
+  | [] => None
+  | [cursor, ..._] =>
+    let byte = cursor.column |> Index.toZeroBased;
+    let line = cursor.line |> Index.toZeroBased;
+
+    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
+
+    if (line < bufferLineCount) {
+      let bufferLine = EditorBuffer.line(line, buffer);
+      let index = BufferLine.getIndex(~byte, bufferLine);
+      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+      | _exn => None
+      };
+    } else {
+      None;
+    };
+  };
+};
+
+let getPrimaryCursor = editor =>
   switch (editor.cursors) {
-  | [cursor, ..._] => mapCursor(~position=cursor, ~buffer)
+  | [cursor, ..._] => mapCursor(~position=cursor, editor)
   | [] => Location.{line: Index.zero, column: Index.zero}
   };
+
+let selectionOrCursorRange = editor => {
+  switch (editor.selection.mode) {
+  | None =>
+    let pos = getPrimaryCursor(editor);
+    let range =
+      Range.{
+        start: Location.{line: pos.line, column: Index.zero},
+        stop: Location.{line: Index.(pos.line + 1), column: Index.zero},
+      };
+    range;
+  | Line
+  | Block
+  | Character => editor.selection.range
+  };
+};
 
 let getId = model => model.editorId;
 
@@ -159,14 +327,15 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
     };
 };
 
-let getLayout = view => {
-  let {pixelWidth, pixelHeight, _} = view;
+let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
+  let {pixelWidth, pixelHeight, isMinimapEnabled, _} = view;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
-      ~maxMinimapCharacters=view.minimapMaxColumnWidth,
+      ~showLineNumbers,
+      ~isMinimapShown=isMinimapEnabled,
+      ~maxMinimapCharacters,
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
-      ~isMinimapShown=true,
       ~characterWidth=getCharacterWidth(view),
       ~characterHeight=getLineHeight(view),
       ~bufferLineCount=view.viewLines,
@@ -217,12 +386,17 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
   let newMinimapScroll =
     scrollPercentage *. float_of_int(availableMinimapScroll);
 
-  {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
+  {
+    ...view,
+    isScrollAnimated: false,
+    minimapScrollY: newMinimapScroll,
+    scrollY: newScrollY,
+  };
 };
 
 let scrollToLine = (~line, view) => {
   let pixelY = float_of_int(line) *. getLineHeight(view);
-  scrollToPixelY(~pixelY, view);
+  {...scrollToPixelY(~pixelY, view), isScrollAnimated: true};
 };
 
 let scrollToPixelX = (~pixelX as newScrollX, view) => {
@@ -232,7 +406,7 @@ let scrollToPixelX = (~pixelX as newScrollX, view) => {
     max(0., float_of_int(view.maxLineLength) *. getCharacterWidth(view));
   let scrollX = min(newScrollX, availableScroll);
 
-  {...view, scrollX};
+  {...view, isScrollAnimated: false, scrollX};
 };
 
 let scrollDeltaPixelX = (~pixelX, editor) => {
@@ -242,7 +416,7 @@ let scrollDeltaPixelX = (~pixelX, editor) => {
 
 let scrollToColumn = (~column, view) => {
   let pixelX = float_of_int(column) *. getCharacterWidth(view);
-  scrollToPixelX(~pixelX, view);
+  {...scrollToPixelX(~pixelX, view), isScrollAnimated: true};
 };
 
 let scrollDeltaPixelY = (~pixelY, view) => {
@@ -250,24 +424,19 @@ let scrollDeltaPixelY = (~pixelY, view) => {
   scrollToPixelY(~pixelY, view);
 };
 
-let getCursorOffset = (~buffer, ~cursorPosition: EditorCoreTypes.Location.t) => {
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
-  let lineCount = Buffer.getNumberOfLines(buffer);
+let scrollToPixelXY = (~pixelX as newScrollX, ~pixelY as newScrollY, view) => {
+  let {scrollX, _} = scrollToPixelX(~pixelX=newScrollX, view);
+  let {scrollY, minimapScrollY, _} =
+    scrollToPixelY(~pixelY=newScrollY, view);
 
-  let (cursorOffset, _cursorCharacterWidth) =
-    if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorLine = Buffer.getLine(cursorLine, buffer);
+  {...view, scrollX, scrollY, minimapScrollY};
+};
 
-      let (cursorOffset, width) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          cursorLine,
-          Index.toZeroBased(cursorPosition.column),
-        );
-      (cursorOffset, width);
-    } else {
-      (0, 1);
-    };
-  cursorOffset;
+let scrollDeltaPixelXY = (~pixelX, ~pixelY, view) => {
+  let {scrollX, _} = scrollDeltaPixelX(~pixelX, view);
+  let {scrollY, minimapScrollY, _} = scrollDeltaPixelY(~pixelY, view);
+
+  {...view, scrollX, scrollY, minimapScrollY};
 };
 
 // PROJECTION

@@ -196,7 +196,7 @@
     "checkhealth": "esy x Oni2 -f --checkhealth",
     "check": "esy b dune build @check",
     "run": "esy x Oni2",
-    "watch": "dune build --watch -p Oni2 -j4",
+    "watch": "dune build --watch -p libvim,textmate,Oni2 -j4",
     "create-release": "esy node ./scripts/release.js",
     "create-win-setup": "esy node ./scripts/windows/BuildSetupTemplate.js",
     "test": "esy @test run",
@@ -232,13 +232,13 @@
     "editor-core-types": "*",
     "editor-input": "*",
     "esy-macdylibbundler": "*",
+    "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "esy-sdl2": "*",
     "esy-skia": "*",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.47",
+    "libvim": "8.10869.51",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
-    "reason-oniguruma": "^6.94.1002",
     "reason-tree-sitter": "^1.0.1001",
     "reasonFuzz": "*",
     "refmterr": "*",
@@ -248,15 +248,14 @@
   },
   "resolutions": {
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#8fd2003",
+    "revery": "revery-ui/revery#464c5b7",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-skia": "revery-ui/esy-skia#d60e5fe",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
-    "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#8cad3b0",
-    "revery-terminal": "revery-ui/revery-terminal#82db1eb",
+    "revery-terminal": "revery-ui/revery-terminal#0e54d56",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"
@@ -270,6 +269,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#a83bd09"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a"
   }
 }

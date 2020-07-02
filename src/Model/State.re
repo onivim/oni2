@@ -43,8 +43,7 @@ type t = {
   sideBar: SideBar.t,
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
-  editorGroups: EditorGroups.t,
-  extensions: Extensions.t,
+  extensions: Feature_Extensions.model,
   iconTheme: IconTheme.t,
   isQuitting: bool,
   keyBindings: Keybindings.t,
@@ -63,6 +62,7 @@ type t = {
   layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
   hover: Feature_Hover.model,
+  signatureHelp: Feature_SignatureHelp.model,
   // [windowTitle] is the title of the window
   windowTitle: string,
   windowIsFocused: bool,
@@ -78,14 +78,41 @@ type t = {
   vim: Feature_Vim.model,
 };
 
-let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
-  let editorGroups = EditorGroups.create();
-  let initialEditorGroup = editorGroups |> EditorGroups.getFirstEditorGroup;
+let initial =
+    (
+      ~initialBuffer,
+      ~initialBufferRenderers,
+      ~getUserSettings,
+      ~contributedCommands,
+      ~workingDirectory,
+    ) => {
+  let config =
+    Feature_Configuration.initial(
+      ~getUserSettings,
+      [
+        Feature_Editor.Contributions.configuration,
+        Feature_Syntax.Contributions.configuration,
+        Feature_Terminal.Contributions.configuration,
+        Feature_Layout.Contributions.configuration,
+      ],
+    );
+  let initialEditor = {
+    open Feature_Editor;
+    let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
+    let config = Feature_Configuration.resolver(config);
+    Editor.create(
+      ~config,
+      ~font=Service_Font.default,
+      ~buffer=editorBuffer,
+      (),
+    );
+  };
 
   {
-    buffers: Buffers.empty,
+    buffers:
+      Buffers.empty |> IntMap.add(Buffer.getId(initialBuffer), initialBuffer),
     bufferHighlights: BufferHighlights.initial,
-    bufferRenderers: BufferRenderers.initial,
+    bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     colorTheme:
       Feature_Theme.initial([
@@ -95,15 +122,7 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     commands: Feature_Commands.initial(contributedCommands),
     contextMenu: Feature_ContextMenu.initial,
     completions: Completions.initial,
-    config:
-      Feature_Configuration.initial(
-        ~getUserSettings,
-        [
-          Feature_Editor.Contributions.configuration,
-          Feature_Syntax.Contributions.configuration,
-          Feature_Terminal.Contributions.configuration,
-        ],
-      ),
+    config,
     configuration: Configuration.default,
     decorationProviders: [],
     definition: Definition.empty,
@@ -111,14 +130,13 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
-    extensions: Extensions.empty,
+    extensions: Feature_Extensions.empty,
     formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.default,
     sideBar: SideBar.initial,
     tokenTheme: TokenTheme.empty,
-    editorGroups,
     iconTheme: IconTheme.create(),
     isQuitting: false,
     keyBindings: Keybindings.empty,
@@ -131,13 +149,14 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
     sneak: Feature_Sneak.initial,
     statusBar: Feature_StatusBar.initial,
     syntaxHighlights: Feature_Syntax.empty,
-    layout: Feature_Layout.initial(initialEditorGroup.editorGroupId),
+    layout: Feature_Layout.initial([initialEditor]),
     windowTitle: "",
     windowIsFocused: true,
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
     hover: Feature_Hover.initial,
+    signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Pane.initial,
     searchPane: Feature_Search.initial,
@@ -152,13 +171,14 @@ let initial = (~getUserSettings, ~contributedCommands, ~workingDirectory) => {
 let commands = state =>
   Command.Lookup.unionMany([
     Feature_Commands.all(state.commands),
-    Extensions.commands(state.extensions)
+    Feature_Extensions.commands(state.extensions)
     |> Command.Lookup.fromList
-    |> Command.Lookup.map(msg => Actions.Extension(msg)),
+    |> Command.Lookup.map(msg => Actions.Extensions(msg)),
   ]);
 
 let menus = state => {
   let commands = commands(state);
 
-  Extensions.menus(state.extensions) |> Menu.Lookup.fromSchema(commands);
+  Feature_Extensions.menus(state.extensions)
+  |> Menu.Lookup.fromSchema(commands);
 };

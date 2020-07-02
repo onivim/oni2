@@ -74,16 +74,72 @@ module AutoClosingPair = {
   let decode = Decode.decode;
 };
 
+module BracketPair = {
+  type t = {
+    openPair: string,
+    closePair: string,
+  };
+
+  let decode =
+    Json.Decode.(
+      Pipeline.(
+        decode((openPair, closePair) => {openPair, closePair})
+        |> custom(index(0, string))
+        |> custom(index(1, string))
+      )
+    );
+
+  let endsWithOpenPair = ({openPair, _}, str) => {
+    StringEx.endsWith(~postfix=openPair, str);
+  };
+
+  let isJustClosingPair = ({closePair, _}, str) => {
+    let len = String.length(str);
+
+    let rec loop = (foundPair, idx) =>
+      if (idx >= len) {
+        foundPair;
+      } else if (foundPair) {
+        false;
+             // We found the closing pair... but there's other stuff after
+      } else {
+        let c = str.[idx];
+
+        if (c == ' ' || c == '\t') {
+          loop(foundPair, idx + 1);
+        } else if (c == closePair.[0]) {
+          loop(true, idx + 1);
+        } else {
+          false;
+        };
+      };
+
+    if (String.length(closePair) == 1) {
+      loop(false, 0);
+    } else {
+      false;
+    };
+  };
+};
+
+let defaultBrackets: list(BracketPair.t) =
+  BracketPair.[
+    {openPair: "{", closePair: "}"},
+    {openPair: "[", closePair: "]"},
+    {openPair: "(", closePair: ")"},
+  ];
+
 type t = {
   autoCloseBefore: list(string),
   autoClosingPairs: list(AutoClosingPair.t),
+  brackets: list(BracketPair.t),
   lineComment: option(string),
   blockComment: option((string, string)),
   increaseIndentPattern: option(OnigRegExp.t),
   decreaseIndentPattern: option(OnigRegExp.t),
 };
 
-let default = {
+let default: t = {
   autoCloseBefore: [
     ";",
     ":",
@@ -99,6 +155,7 @@ let default = {
     "\t",
   ],
   autoClosingPairs: [],
+  brackets: defaultBrackets,
   lineComment: None,
   blockComment: None,
   increaseIndentPattern: None,
@@ -137,6 +194,12 @@ module Decode = {
             "autoClosingPairs",
             [],
             list(AutoClosingPair.decode),
+          ),
+        brackets:
+          field.withDefault(
+            "brackets",
+            defaultBrackets,
+            list(BracketPair.decode),
           ),
         lineComment: at.optional(["comments", "lineComment"], string),
         blockComment:
@@ -191,22 +254,45 @@ let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
   );
 };
 
-let toAutoIndent = ({increaseIndentPattern, decreaseIndentPattern, _}, str) => {
+let shouldIncreaseIndent =
+    (
+      ~previousLine as str,
+      ~beforePreviousLine as _,
+      {increaseIndentPattern, brackets, _},
+    ) => {
+  increaseIndentPattern
+  |> Option.map(regex => OnigRegExp.test(str, regex))
+  // If no indentation pattern, fall-back to bracket pair
+  |> OptionEx.or_lazy(() =>
+       Some(
+         List.exists(
+           bracket => BracketPair.endsWithOpenPair(bracket, str),
+           brackets,
+         ),
+       )
+     )
+  |> Option.value(~default=false);
+};
+
+let shouldDecreaseIndent = (~line, {decreaseIndentPattern, brackets, _}) => {
+  decreaseIndentPattern
+  |> Option.map(regex => OnigRegExp.test(line, regex))
+  |> OptionEx.or_lazy(() => {
+       Some(
+         List.exists(
+           bracket => BracketPair.isJustClosingPair(bracket, line),
+           brackets,
+         ),
+       )
+     })
+  |> Option.value(~default=false);
+};
+
+let toAutoIndent = (languageConfig, ~previousLine, ~beforePreviousLine) => {
   let increase =
-    increaseIndentPattern
-    |> Option.map(regex => OnigRegExp.test(str, regex))
-    |> Option.value(~default=false);
+    shouldIncreaseIndent(~previousLine, ~beforePreviousLine, languageConfig);
 
-  let decrease =
-    decreaseIndentPattern
-    |> Option.map(regex => OnigRegExp.test(str, regex))
-    |> Option.value(~default=false);
-
-  if (increase) {
-    Vim.AutoIndent.IncreaseIndent;
-  } else if (decrease) {
-    Vim.AutoIndent.DecreaseIndent;
-  } else {
-    Vim.AutoIndent.KeepIndent;
+  if (increase) {Vim.AutoIndent.IncreaseIndent} else {
+    Vim.AutoIndent.KeepIndent
   };
 };

@@ -16,7 +16,7 @@ let getVisibleRangesForEditor = (editor: Editor.t) => {
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
 
   let {bufferWidthInCharacters, minimapWidthInCharacters, _}: EditorLayout.t =
-    Editor.getLayout(editor);
+    Editor.getLayout(~showLineNumbers=false, ~maxMinimapCharacters=0, editor);
 
   let i = ref(max(topVisibleLine - 1, 0));
   let eRanges = ref([]);
@@ -48,15 +48,17 @@ let getVisibleRangesForEditor = (editor: Editor.t) => {
     Constants.minimapCharacterHeight + Constants.minimapLineSpacing;
 
   let minimapTopLine =
-    int_of_float(editor.minimapScrollY /. float_of_int(minimapLineHeight));
+    int_of_float(
+      Editor.minimapScrollY(editor) /. float_of_int(minimapLineHeight),
+    );
+  let pixelHeight = Editor.visiblePixelHeight(editor);
+  let viewLines = Editor.totalViewLines(editor);
   let minimapVisibleLines =
     int_of_float(
-      float_of_int(editor.pixelHeight)
-      /. float_of_int(minimapLineHeight)
-      +. 0.5,
+      float_of_int(pixelHeight) /. float_of_int(minimapLineHeight) +. 0.5,
     );
   let minimapBottomLine =
-    min(minimapTopLine + minimapVisibleLines, editor.viewLines);
+    min(minimapTopLine + minimapVisibleLines, viewLines);
 
   let ranges = max(0, minimapBottomLine - minimapTopLine);
 
@@ -78,9 +80,7 @@ let getVisibleRangesForEditor = (editor: Editor.t) => {
 };
 
 let getVisibleBuffers = (state: State.t) => {
-  Feature_Layout.windows(state.layout)
-  |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
-  |> List.filter_map(EditorGroup.getActiveEditor)
+  Feature_Layout.visibleEditors(state.layout)
   |> List.map(editor => Editor.getBufferId(editor));
 };
 
@@ -88,9 +88,7 @@ type t = list((int, list(Range.t)));
 
 let getVisibleRangesForBuffer = (bufferId: int, state: State.t) => {
   let editors =
-    Feature_Layout.windows(state.layout)
-    |> List.filter_map(EditorGroups.getEditorGroupById(state.editorGroups))
-    |> List.filter_map(EditorGroup.getActiveEditor)
+    Feature_Layout.visibleEditors(state.layout)
     |> List.filter(editor => Editor.getBufferId(editor) == bufferId);
 
   let flatten = (prev: list(list(Range.t)), curr: individualRange) => {

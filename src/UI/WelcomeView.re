@@ -105,6 +105,12 @@ let animation =
     |> delay(Revery.Time.milliseconds(150))
   );
 
+let cmdOrCtrl =
+  switch (Revery.Environment.os) {
+  | Mac => "Cmd"
+  | _ => "Ctrl"
+  };
+
 let%component make = (~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
@@ -134,14 +140,14 @@ let%component make = (~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
       <View style=Styles.controls>
         <KeyBindingView
           name="Quick open"
-          shortcut="Cmd + P"
+          shortcut={cmdOrCtrl ++ " + P"}
           theme
           uiFont
           editorFont
         />
         <KeyBindingView
           name="Command palette"
-          shortcut="Cmd + Shift + P"
+          shortcut={cmdOrCtrl ++ " + Shift + P"}
           theme
           uiFont
           editorFont

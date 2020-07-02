@@ -54,6 +54,19 @@ Oni_Components_Test.TestFramework.run(
   ),
 );
 
+Feature_Editor_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+Feature_LanguageSupport_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
 Exthost_Transport_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
@@ -76,6 +89,19 @@ Libvim_Test.TestFramework.run(
   ),
 );
 
+Oniguruma_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
+Service_Net_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
 Textmate_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],

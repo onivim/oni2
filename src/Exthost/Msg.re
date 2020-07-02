@@ -266,6 +266,15 @@ module ExtensionService = {
 module LanguageFeatures = {
   [@deriving show]
   type msg =
+    | EmitCodeLensEvent({
+        eventHandle: int,
+        event: Yojson.Safe.t,
+      }) // ??
+    | RegisterCodeLensSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        eventHandle: option(int),
+      })
     | RegisterDocumentHighlightProvider({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -332,7 +341,46 @@ module LanguageFeatures = {
     | Unregister({handle: int});
 
   let parseDocumentSelector = json => {
-    Json.Decode.(json |> decode_value(list(DocumentFilter.decode)));
+    open Oni_Core.Utility;
+    open Json.Decode;
+
+    let decoder = list(DocumentFilter.decode);
+
+    // There must be a cleaner way to handle this...
+    let stringDecoder =
+      string
+      |> and_then(str => {
+           let result =
+             str
+             |> JsonEx.from_string
+             |> ResultEx.flatMap(v =>
+                  v
+                  |> decode_value(decoder)
+                  |> Result.map_error(Json.Decode.string_of_error)
+                );
+           switch (result) {
+           | Ok(v) => succeed(v)
+           | Error(m) => fail(m)
+           };
+         });
+
+    let composite = one_of([("json", decoder), ("string", stringDecoder)]);
+
+    json |> decode_value(composite);
+  };
+
+  let decodeStringOrInt = {
+    open Json.Decode;
+    let stringToInt =
+      string
+      |> map(int_of_string_opt)
+      |> and_then(
+           fun
+           | Some(i) => succeed(i)
+           | None => fail("Unable to parse int"),
+         );
+
+    one_of([("int", int), ("string", stringToInt)]);
   };
 
   let handle = (method, args: Yojson.Safe.t) => {
@@ -348,6 +396,24 @@ module LanguageFeatures = {
         Ok(RegisterDocumentHighlightProvider({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+    | ("$emitCodeLensEvent", `List([`Int(eventHandle), json])) =>
+      Ok(EmitCodeLensEvent({eventHandle, event: json}))
+    | (
+        "$registerCodeLensSupport",
+        `List([handleJson, selectorJson, eventHandleJson]),
+      ) =>
+      let ret = {
+        open Base.Result.Let_syntax;
+        open Json.Decode;
+        let%bind handle = handleJson |> decode_value(decodeStringOrInt);
+        let%bind selector = parseDocumentSelector(selectorJson);
+
+        let%bind eventHandle =
+          eventHandleJson |> decode_value(nullable(int));
+
+        Ok(RegisterCodeLensSupport({handle, selector, eventHandle}));
+      };
+      ret |> Result.map_error(Json.Decode.string_of_error);
     | (
         "$registerDocumentSymbolProvider",
         `List([`Int(handle), selectorJson, `String(label)]),
@@ -640,6 +706,7 @@ module StatusBar = {
         source: string,
         alignment,
         command: option(ExtCommand.t),
+        color: option(Color.t),
         priority: int,
       })
     | Dispose({id: int});
@@ -665,7 +732,7 @@ module StatusBar = {
           labelJson,
           _tooltip,
           commandJson,
-          _,
+          colorJson,
           `String(alignment),
           `String(priority),
         ]),
@@ -674,11 +741,15 @@ module StatusBar = {
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
       let%bind command = parseCommand(commandJson);
+      let%bind color =
+        colorJson
+        |> Json.Decode.(decode_value(nullable(Color.decode)))
+        |> Result.map_error(Json.Decode.string_of_error);
       let%bind label =
         labelJson
         |> Json.Decode.decode_value(Label.decode)
         |> Result.map_error(Json.Decode.string_of_error);
-      Ok(SetEntry({id, source, label, alignment, priority, command}));
+      Ok(SetEntry({id, source, label, alignment, color, priority, command}));
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>
       Error(

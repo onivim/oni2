@@ -22,7 +22,7 @@ runTestWithInput(
     (state: State.t) =>
     List.exists(
       id => id == "oni-dev-extension",
-      state.extensions.activatedIds,
+      state.extensions |> Feature_Extensions.activatedIds,
     )
   );
 
@@ -61,27 +61,14 @@ runTestWithInput(
     ~timeout=30.0,
     ~name="Validate we get some completions from the 'oni-dev' extension",
     (state: State.t) => {
-      let maybeBuffer = Selectors.getActiveBuffer(state);
+      let editor = Feature_Layout.activeEditor(state.layout);
+      let location = Editor.getPrimaryCursor(editor);
 
-      let maybeEditor =
-        state
-        |> Selectors.getActiveEditorGroup
-        |> Selectors.getActiveEditor
-        |> OptionEx.map2(
-             (buffer, editor) => Editor.getPrimaryCursor(~buffer, editor),
-             maybeBuffer,
-           );
-
-      let isDefinitionAvailable = (buffer, location) => {
-        Definition.isAvailable(
-          Buffer.getId(buffer),
-          location,
-          state.definition,
-        );
-      };
-
-      OptionEx.map2(isDefinitionAvailable, maybeBuffer, maybeEditor)
-      |> Option.value(~default=false);
+      Definition.isAvailable(
+        Editor.getBufferId(editor),
+        location,
+        state.definition,
+      );
     },
   );
 });

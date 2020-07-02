@@ -4,8 +4,6 @@ open Revery.Math;
 
 open Oni_Core;
 
-open Helpers;
-
 module Log = (val Log.withNamespace("Oni2.Editor.SurfaceView"));
 
 module Config = EditorConfiguration;
@@ -30,11 +28,13 @@ module Constants = {
 let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
-let renderRulers = (~context, ~colors: Colors.t, rulers) =>
+let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
+  let scrollX = Editor.scrollX(context.editor);
   rulers
-  |> List.map(bufferPositionToPixel(~context, 0))
-  |> List.map(fst)
+  |> List.map(pos => characterWidth *. float(pos) -. scrollX)
   |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
+};
 
 let%component make =
               (
@@ -69,7 +69,7 @@ let%component make =
   let%hook (hoverTimer, resetHoverTimer) =
     Hooks.timer(~active=hoverTimerActive^, ());
 
-  let lineCount = Buffer.getNumberOfLines(buffer);
+  let lineCount = editor |> Editor.totalViewLines;
   let indentation =
     switch (Buffer.getIndentation(buffer)) {
     | Some(v) => v
@@ -77,9 +77,12 @@ let%component make =
     };
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-    dispatch(Msg.EditorMouseWheel({deltaWheel: wheelEvent.deltaY *. (-1.)}));
-
-  let {scrollX, scrollY, _}: Editor.t = editor;
+    dispatch(
+      Msg.EditorMouseWheel({
+        deltaY: wheelEvent.deltaY *. (-1.),
+        deltaX: wheelEvent.deltaX,
+      }),
+    );
 
   let getMaybeLocationFromMousePosition = (mouseX, mouseY) => {
     maybeBbox^
@@ -171,34 +174,36 @@ let%component make =
        });
   };
 
+  let pixelWidth = Editor.visiblePixelWidth(editor);
+  let pixelHeight = Editor.visiblePixelHeight(editor);
+
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(Editor.(editor.pixelWidth)) -. gutterWidth,
+      float(pixelWidth) -. gutterWidth,
     )}
     onMouseUp
     onMouseMove
     onMouseLeave
     onMouseWheel>
     <Canvas
-      style={Styles.bufferViewClipped(
-        0.,
-        float(Editor.(editor.pixelWidth)) -. gutterWidth,
-      )}
-      render={canvasContext => {
+      style={Styles.bufferViewClipped(0., float(pixelWidth) -. gutterWidth)}
+      render={(canvasContext, _) => {
         let context =
           Draw.createContext(
             ~canvasContext,
-            ~width=editor.pixelWidth,
-            ~height=editor.pixelHeight,
-            ~scrollX,
-            ~scrollY,
-            ~lineHeight=editorFont.measuredHeight,
+            ~width=pixelWidth,
+            ~height=pixelHeight,
+            ~editor,
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(~context, ~colors, cursorPosition.line);
+        drawCurrentLineHighlight(
+          ~context,
+          ~colors,
+          cursorPosition.line |> Index.toZeroBased,
+        );
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
 
@@ -206,6 +211,7 @@ let%component make =
           ~context,
           ~count=lineCount,
           ~buffer,
+          ~editor,
           ~leftVisibleColumn,
           ~colors,
           ~diagnosticsMap,
@@ -232,7 +238,7 @@ let%component make =
           );
         };
 
-        if (Config.Experimental.scrollShadow.get(config)) {
+        if (Config.scrollShadow.get(config)) {
           let () =
             ScrollShadow.renderVertical(
               ~editor,
@@ -252,10 +258,7 @@ let%component make =
     <CursorView
       config
       editor
-      scrollX
-      scrollY
       editorFont
-      buffer
       mode
       cursorPosition
       isActiveSplit

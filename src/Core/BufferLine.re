@@ -171,7 +171,10 @@ let getByteFromIndex = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let rawLength = String.length(bufferLine.raw);
   let characters = bufferLine.characters;
-  if (index >= Array.length(characters)) {
+  let len = Array.length(characters);
+  if (index < 0) {
+    0;
+  } else if (index >= len) {
     rawLength;
   } else {
     switch (characters[index]) {
@@ -190,8 +193,9 @@ let subExn = (~index: int, ~length: int, bufferLine) => {
 let getPositionAndWidth = (~index: int, bufferLine: t) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
+  let len = Array.length(characters);
 
-  if (index >= Array.length(characters)) {
+  if (index < 0 || index >= len || len == 0) {
     (bufferLine.nextPosition, 1);
   } else {
     switch (characters[index]) {

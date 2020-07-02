@@ -5,6 +5,45 @@ module Log = (val Log.withNamespace("Service_Exthost"));
 // EFFECTS
 
 module Effects = {
+  module Commands = {
+    let executeContributedCommand = (~command, ~arguments, client) =>
+      Isolinear.Effect.create(
+        ~name="exthost.commands.executeContributedCommand", () => {
+        Exthost.Request.Commands.executeContributedCommand(
+          ~command,
+          ~arguments,
+          client,
+        )
+      });
+  };
+  module Documents = {
+    let modelChanged =
+        (~buffer: Buffer.t, ~update: BufferUpdate.t, client, toMsg) =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="exthost.bufferUpdate", dispatch =>
+        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
+          let modelContentChange =
+            Exthost.ModelContentChange.ofBufferUpdate(
+              update,
+              Exthost.Eol.default,
+            );
+          let modelChangedEvent =
+            Exthost.ModelChangedEvent.{
+              changes: [modelContentChange],
+              eol: Exthost.Eol.default,
+              versionId: update.version,
+            };
+
+          Exthost.Request.Documents.acceptModelChanged(
+            ~uri=Buffer.getUri(buffer),
+            ~modelChangedEvent,
+            ~isDirty=Buffer.isModified(buffer),
+            client,
+          );
+          dispatch(toMsg());
+        })
+      );
+  };
   module SCM = {
     let provideOriginalResource = (~handles, extHostClient, path, toMsg) =>
       Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
@@ -59,6 +98,31 @@ module Effects = {
       });
     };
 
+    let provideDocumentRangeFormattingEdits =
+        (~handle, ~uri, ~range, ~options, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.provideRangeFormattingEdits", dispatch => {
+        let promise =
+          Exthost.(
+            Request.LanguageFeatures.provideDocumentRangeFormattingEdits(
+              ~handle,
+              ~resource=uri,
+              ~options,
+              ~range=range |> OneBasedRange.ofRange,
+              client,
+            )
+          );
+
+        Lwt.on_success(
+          promise,
+          Option.iter(edits => dispatch(toMsg(Ok(edits)))),
+        );
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
+
     let provideHover = (~handle, ~uri, ~position, client, toMsg) => {
       Isolinear.Effect.createWithDispatch(
         ~name="language.provideHover", dispatch => {
@@ -77,6 +141,27 @@ module Effects = {
 
         Lwt.on_failure(promise, err =>
           dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
+
+    let provideSignatureHelp =
+        (~handle, ~uri, ~position, ~context, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.provideSignatureHelp", dispatch => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideSignatureHelp(
+            ~handle,
+            ~resource=uri,
+            ~position=Exthost.OneBasedPosition.ofPosition(position),
+            ~context,
+            client,
+          );
+
+        Lwt.on_success(promise, sigHelp => dispatch(Ok(sigHelp) |> toMsg));
+
+        Lwt.on_failure(promise, err =>
+          dispatch(Error(Printexc.to_string(err)) |> toMsg)
         );
       });
     };

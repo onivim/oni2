@@ -77,8 +77,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let mode = ModeManager.current(state);
 
   let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
-  let maybeActiveEditor =
-    Oni_Model.EditorGroups.getActiveEditor(state.editorGroups);
+  let activeEditor = Feature_Layout.activeEditor(state.layout);
   let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
 
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
@@ -97,7 +96,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           font={state.uiFont}
           statusBar={state.statusBar}
           activeBuffer=maybeActiveBuffer
-          activeEditor=maybeActiveEditor
+          activeEditor={Some(activeEditor)}
           indentationSettings
           theme
           dispatch=statusBarDispatch
