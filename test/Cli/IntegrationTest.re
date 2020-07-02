@@ -47,32 +47,39 @@ describe("CLI Integration Tests", ({describe, _}) => {
   });
   describe("install / uninstall extensions", ({test, _}) => {
     test("install / uninstall extension from file system", _ => {
-      TestRunner.({
+      TestRunner.(
+        {
+          let extensionPath =
+            Rench.Path.join(
+              Sys.getcwd(),
+              "test/collateral/markdown-1.0.0.vsix",
+            );
 
-        let extensionPath = Rench.Path.join(Sys.getcwd(),
-        "test/collateral/markdown-1.0.0.vsix");
+          let () =
+            startEditorWithArgs(["--install-extension", extensionPath])
+            |> validateExitStatus(WEXITED(0))
+            |> finish;
 
-        let () = startEditorWithArgs(["--install-extension", extensionPath])
-        |> validateExitStatus(WEXITED(0))
-        |> finish;
+          let () =
+            startEditorWithArgs(["--list-extensions"])
+            |> validateOutputContains("vscode.markdown")
+            |> validateExitStatus(WEXITED(0))
+            |> finish;
 
-        let () = startEditorWithArgs(["--list-extensions"])
-        |> validateOutputContains("vscode.markdown")
-        |> validateExitStatus(WEXITED(0))
-        |> finish;
+          let () =
+            startEditorWithArgs(["--uninstall-extension", "vscode.markdown"])
+            |> validateOutputContains("vscode.markdown")
+            |> validateExitStatus(WEXITED(0))
+            |> finish;
 
-        let () = startEditorWithArgs(["--uninstall-extension", "vscode.markdown"])
-        |> validateOutputContains("vscode.markdown")
-        |> validateExitStatus(WEXITED(0))
-        |> finish;
-
-        let () = startEditorWithArgs(["--list-extensions"])
-        |> validateOutputDoesNotContain("vscode.markdown")
-        |> validateExitStatus(WEXITED(0))
-        |> finish;
-        
-      })
-      
-    });
+          let () =
+            startEditorWithArgs(["--list-extensions"])
+            |> validateOutputDoesNotContain("vscode.markdown")
+            |> validateExitStatus(WEXITED(0))
+            |> finish;
+          ();
+        }
+      )
+    })
   });
 });

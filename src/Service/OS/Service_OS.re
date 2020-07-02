@@ -26,16 +26,16 @@ module Api = {
     path => {
       Log.infof(m => m("Luv.unlink: %s", path));
       wrapped(path);
-    }
+    };
   };
 
   let rmdirNonRecursive = {
-   let wrapped = wrap(Luv.File.rmdir);
+    let wrapped = wrap(Luv.File.rmdir);
     path => {
       Log.infof(m => m("Luv.rmdir: %s", path));
       wrapped(path);
-    }
-   };
+    };
+  };
 
   let bind = (fst, snd) => Lwt.bind(snd, fst);
 
@@ -53,18 +53,18 @@ module Api = {
                   let name = Rench.Path.join(candidate, dirent.name);
                   switch (dirent.kind) {
                   | `LINK
-                  | `FILE =>
-                    unlink(Rench.Path.join(candidate, dirent.name));
-                  | `DIR =>
-                    loop(Rench.Path.join(candidate, name));
+                  | `FILE => unlink(Rench.Path.join(candidate, dirent.name))
+                  | `DIR => loop(Rench.Path.join(candidate, name))
                   | _ =>
-                    Log.warnf(m => m("Unknown file type encountered: %s", name));
+                    Log.warnf(m =>
+                      m("Unknown file type encountered: %s", name)
+                    );
                     Lwt.return();
                   };
                 })
              |> Lwt.join
              |> bind(_ => closedir(dir))
-             |> bind((_) => rmdirNonRecursive(candidate));
+             |> bind(_ => rmdirNonRecursive(candidate))
            })
          });
     };
