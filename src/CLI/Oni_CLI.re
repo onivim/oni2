@@ -25,6 +25,7 @@ type eff =
   | CheckHealth
   | ListExtensions
   | InstallExtension(string)
+  | QueryExtension(string)
   | UninstallExtension(string)
   | StartSyntaxServer({
       parentPid: string,
@@ -113,6 +114,7 @@ let parse = args => {
       ("--checkhealth", setEffect(CheckHealth), ""),
       ("--list-extensions", setEffect(ListExtensions), ""),
       ("--install-extension", setStringEffect(s => InstallExtension(s)), ""),
+      ("--query-extension", setStringEffect(s => QueryExtension(s)), ""),
       (
         "--uninstall-extension",
         setStringEffect(s => UninstallExtension(s)),
