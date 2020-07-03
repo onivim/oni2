@@ -54,6 +54,11 @@ let spec =
       " Install extension by specifying a path to the .vsix file",
     ),
     (
+      "--query-extension",
+      passthroughStringAndStayAttached,
+      " Query extension info by specifying an extension id.",
+    ),
+    (
       "--uninstall-extension",
       passthroughStringAndStayAttached,
       " Uninstall extension by specifying an extension id.",

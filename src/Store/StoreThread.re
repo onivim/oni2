@@ -308,6 +308,12 @@ let start =
         ~client=extHostClient
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Codelens(msg));
+      
+    let editorGlobalSub =
+      Feature_Editor.Sub.global(~config)
+      |> Isolinear.Sub.map(msg =>
+           Model.Actions.Editor({scope: Model.EditorScope.All, msg})
+         );
 
     [
       codelensSub,
@@ -318,6 +324,7 @@ let start =
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
+      editorGlobalSub,
     ]
     |> Isolinear.Sub.batch;
   };

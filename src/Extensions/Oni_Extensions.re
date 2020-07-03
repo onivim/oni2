@@ -5,5 +5,4 @@
  */
 
 module LanguageInfo = LanguageInfo;
-module NodeTask = NodeTask;
 module ProviderUtility = ProviderUtility;

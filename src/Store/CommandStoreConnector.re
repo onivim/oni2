@@ -18,7 +18,7 @@ let start = () => {
       ~name,
       () => {
         let _ =
-          Oni_Extensions.NodeTask.run(
+          Oni_Core.NodeTask.run(
             ~setup=Oni_Core.Setup.init(),
             "add-to-path.js",
           );

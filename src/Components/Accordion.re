@@ -5,10 +5,6 @@
 open Revery.UI;
 
 open Oni_Core;
-open Oni_Components;
-
-module Model = Oni_Model;
-module Ext = Oni_Extensions;
 
 module Colors = Feature_Theme.Colors;
 

@@ -383,7 +383,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       Lwt.return(Reply.okEmpty);
     | ExtensionService(DidActivateExtension({extensionId, _})) =>
       dispatch(
-        Actions.Extension(Oni_Model.Extensions.Activated(extensionId)),
+        Actions.Extensions(Feature_Extensions.Activated(extensionId)),
       );
       Lwt.return(Reply.okEmpty);
 

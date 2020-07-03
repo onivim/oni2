@@ -38,9 +38,10 @@ module Effects = {
       let _: Vim.Context.t = VimEx.repeatInput(delta, "<BS>");
       let {cursors, _}: Vim.Context.t = VimEx.inputString(completion.label);
 
+      let editorId = editor |> Editor.getId;
       dispatch(
         Editor({
-          editorId: Editor.getId(editor),
+          scope: EditorScope.Editor(editorId),
           msg: CursorsChanged(cursors),
         }),
       );

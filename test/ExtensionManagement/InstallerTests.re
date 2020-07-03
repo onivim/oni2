@@ -25,7 +25,7 @@ describe("Installer", ({test, _}) => {
     let result =
       ExtM.install(~extensionsFolder, ~path=markdownExtension) |> LwtEx.sync;
 
-    expect.equal(result, Ok());
+    expect.equal(Result.is_ok(result), true);
 
     let afterInstallExtensions =
       Scanner.scan(~category=Development, extensionsFolder);

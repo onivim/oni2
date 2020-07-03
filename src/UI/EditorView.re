@@ -44,7 +44,9 @@ module Parts = {
         |> Option.value(~default=LanguageConfiguration.default);
 
       let editorDispatch = msg =>
-        dispatch(Editor({editorId: Editor.getId(editor), msg}));
+        dispatch(
+          Editor({scope: EditorScope.Editor(Editor.getId(editor)), msg}),
+        );
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
         dispatch(EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}));
       let onCursorChange = cursor =>

@@ -98,12 +98,7 @@ let current = (state: State.t) => {
         _,
       } =
     // TODO: Fix this
-    Editor.getLayout(
-      ~isMinimapShown=true,
-      ~showLineNumbers=true,
-      ~maxMinimapCharacters=0,
-      editor,
-    );
+    Editor.getLayout(~showLineNumbers=true, ~maxMinimapCharacters=0, editor);
 
   let leftColumn = Editor.getLeftVisibleColumn(editor);
   let topLine = Editor.getTopVisibleLine(editor);
