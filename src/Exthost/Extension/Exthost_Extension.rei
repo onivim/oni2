@@ -58,6 +58,8 @@ module Contributions: {
         | Boolean
         | String
         | Integer
+        | Number
+        | Object
         | Unknown;
     };
 
