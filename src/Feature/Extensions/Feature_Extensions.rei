@@ -10,7 +10,8 @@ type msg =
   | ExecuteCommand({
       command: string,
       arguments: [@opaque] list(Json.t),
-    });
+    })
+  | KeyPressed(string);
 
 type outmsg =
   | Nothing

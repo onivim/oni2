@@ -8,7 +8,8 @@ type msg =
   | ExecuteCommand({
       command: string,
       arguments: [@opaque] list(Json.t),
-    });
+    })
+  | KeyPressed(string);
 
 type outmsg =
   | Nothing
@@ -44,6 +45,7 @@ let update = (~extHostClient, msg, model) => {
         ),
       ),
     )
+  | KeyPressed(_key) => (model, Nothing)
   };
 };
 

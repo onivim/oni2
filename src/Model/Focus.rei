@@ -4,6 +4,7 @@ type focusable =
   | Wildmenu
   | Quickmenu
   | Search
+  | ExtensionsPane
   | FileExplorer
   | SCM
   | Sneak
