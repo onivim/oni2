@@ -547,19 +547,6 @@ let start =
             msg: CursorsChanged(cursors),
           }),
         );
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: ScrollToLine(newTopLine - 1),
-          }),
-        );
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: ScrollToColumn(newLeftColumn),
-          }),
-        );
-
         Log.debug("handled key: " ++ key);
       }
     );
@@ -576,15 +563,6 @@ let start =
     Isolinear.Effect.create(~name="vim.gotoLocation", () => {
       let cursor = (location :> Vim.Cursor.t);
       updateActiveEditorCursors([cursor]);
-
-      let topLine: int = max(Index.toZeroBased(location.line) - 10, 0);
-
-      dispatch(
-        Actions.Editor({
-          scope: EditorScope.Editor(editorId),
-          msg: ScrollToLine(topLine),
-        }),
-      );
     });
 
   let addBufferRendererEffect = (bufferId, renderer) =>

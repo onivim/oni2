@@ -100,11 +100,6 @@ let update = (editor, msg) => {
       Editor.setVimCursors(~cursors, editor),
       Nothing,
     )
-  | ScrollToLine(line) => (Editor.scrollToLine(~line, editor), Nothing)
-  | ScrollToColumn(column) => (
-      Editor.scrollToColumn(~column, editor),
-      Nothing,
-    )
   | MinimapEnabledConfigChanged(enabled) => (
       Editor.setMinimapEnabled(~enabled, editor),
       Nothing,

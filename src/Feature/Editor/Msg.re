@@ -26,6 +26,4 @@ type t =
   | MouseMoved({location: Location.t})
   | SelectionChanged([@opaque] VisualRange.t)
   | CursorsChanged([@opaque] list(Vim.Cursor.t))
-  | ScrollToLine(int)
-  | ScrollToColumn(int)
   | MinimapEnabledConfigChanged(bool);
