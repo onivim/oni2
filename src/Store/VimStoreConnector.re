@@ -731,8 +731,6 @@ let start =
       // Update the editor, which is the source of truth for cursor position
       let scope = EditorScope.Editor(editorId);
       dispatch(Actions.Editor({scope, msg: CursorsChanged(cursors)}));
-      dispatch(Actions.Editor({scope, msg: ScrollToLine(newTopLine - 1)}));
-      dispatch(Actions.Editor({scope, msg: ScrollToColumn(newLeftColumn)}));
     });
   };
 
