@@ -1,5 +1,5 @@
 {
-  "checksum": "e8ee7673a5edbe36f074f9a56e37c486",
+  "checksum": "1a62810ab7e69d8612d977426954d4ee",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -120,14 +120,14 @@
       "dependencies": [ "@opam/dune@opam:2.5.0@aef1678b" ],
       "devDependencies": []
     },
-    "revery-terminal@github:revery-ui/revery-terminal#9b6da56@d41d8cd9": {
+    "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9": {
       "id":
-        "revery-terminal@github:revery-ui/revery-terminal#9b6da56@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:revery-ui/revery-terminal#9b6da56",
+      "version": "github:revery-ui/revery-terminal#1792c7c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery-terminal#9b6da56" ]
+        "source": [ "github:revery-ui/revery-terminal#1792c7c" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1035,7 +1035,7 @@
       },
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
-        "revery-terminal@github:revery-ui/revery-terminal#9b6da56@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9",
         "revery@github:revery-ui/revery#464c5b7@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
