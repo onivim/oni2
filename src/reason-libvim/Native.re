@@ -79,7 +79,7 @@ external vimSearchGetMatchingPair: unit => option((int, int)) =
 external vimSearchGetHighlights: (int, int) => array((int, int, int, int)) =
   "libvim_vimSearchGetHighlights";
 
-external vimUndoSaveRegion: (int, int) => unit = "libvim_vimUndoSaveRegion";
+external vimUndoSaveRegion: (int, int) => bool = "libvim_vimUndoSaveRegion";
 external vimUndoSync: int => unit = "libvim_vimUndoSync";
 
 external vimVisualGetRange: unit => (int, int, int, int) =
