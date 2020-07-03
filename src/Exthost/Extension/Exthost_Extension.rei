@@ -59,6 +59,7 @@ module Contributions: {
         | String
         | Integer
         | Number
+        | Object
         | Unknown;
     };
 

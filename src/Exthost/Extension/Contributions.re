@@ -87,6 +87,7 @@ module Configuration = {
       | String
       | Integer
       | Number
+      | Object
       | Unknown;
 
     let default: t => Yojson.Safe.t =
@@ -96,6 +97,7 @@ module Configuration = {
       | Integer => `Int(0)
       | Number => `Int(0)
       | Boolean => `Bool(false)
+      | Object => `Assoc([])
       | Unknown => `Null;
 
     module Decode = {
@@ -113,6 +115,7 @@ module Configuration = {
              | "string" => succeed(String)
              | "integer" => succeed(Integer)
              | "number" => succeed(Number)
+             | "object" => succeed(Object)
              | unknown => {
                  Log.warnf(m => m("Unknown configuration type: %s", unknown));
                  succeed(Unknown);
@@ -276,6 +279,20 @@ module Configuration = {
                 name: "prop",
                 propertyType: Number,
                 default: `Int(111),
+              });
+         };
+
+         let%test "property: number, no default" = {
+           {|
+            {
+              "type": "object",
+            }
+          |}
+           |> ofString(property("prop"))
+           |> expectEquals({
+                name: "prop",
+                propertyType: Object,
+                default: `Assoc([]),
               });
          };
 
