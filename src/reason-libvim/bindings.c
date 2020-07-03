@@ -940,14 +940,6 @@ CAMLprim value libvim_vimWindowSetTopLeft(value top, value left) {
   return Val_unit;
 }
 
-CAMLprim value libvim_vimUndoSaveCursor(value unit) {
-  CAMLparam0();
-
-  vimUndoSaveCursor();
-
-  CAMLreturn(Val_unit);
-}
-
 CAMLprim value libvim_vimUndoSync(value force) {
   CAMLparam0();
 
