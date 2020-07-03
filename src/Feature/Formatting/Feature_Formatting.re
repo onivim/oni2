@@ -115,8 +115,6 @@ module Internal = {
         && stopLine < Array.length(lines)) {
       let lines = Array.sub(lines, startLine, stopLine - startLine + 1);
 
-      lines |> Array.iter(prerr_endline);
-
       let edits =
         DefaultFormatter.format(
           ~indentation,
