@@ -33,7 +33,6 @@ let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) =
     ThreadEx.waitForCondition(
       ~timeout,
       () => {
-        let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
         completed^ != None;
       },
     );
