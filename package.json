@@ -255,7 +255,7 @@
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#8cad3b0",
-    "revery-terminal": "revery-ui/revery-terminal#12a36dd",
+    "revery-terminal": "revery-ui/revery-terminal#9b6da56",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"

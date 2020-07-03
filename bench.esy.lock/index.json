@@ -1,5 +1,5 @@
 {
-  "checksum": "4798fb1343590d2c06e41c3291811058",
+  "checksum": "e8ee7673a5edbe36f074f9a56e37c486",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -120,20 +120,20 @@
       "dependencies": [ "@opam/dune@opam:2.5.0@aef1678b" ],
       "devDependencies": []
     },
-    "revery-terminal@github:revery-ui/revery-terminal#12a36dd@d41d8cd9": {
+    "revery-terminal@github:revery-ui/revery-terminal#9b6da56@d41d8cd9": {
       "id":
-        "revery-terminal@github:revery-ui/revery-terminal#12a36dd@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#9b6da56@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:revery-ui/revery-terminal#12a36dd",
+      "version": "github:revery-ui/revery-terminal#9b6da56",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery-terminal#12a36dd" ]
+        "source": [ "github:revery-ui/revery-terminal#9b6da56" ]
       },
       "overrides": [],
       "dependencies": [
         "revery@github:revery-ui/revery#464c5b7@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
-        "esy-libvterm@github:revery-ui/esy-libvterm#6e8a15c@d41d8cd9",
+        "@revery/esy-libvterm@1.0.3@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
         "@glennsl/timber@1.2.0@d41d8cd9"
       ],
@@ -763,27 +763,13 @@
       "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
-    "esy-libvterm@github:revery-ui/esy-libvterm#6e8a15c@d41d8cd9": {
-      "id": "esy-libvterm@github:revery-ui/esy-libvterm#6e8a15c@d41d8cd9",
-      "name": "esy-libvterm",
-      "version": "github:revery-ui/esy-libvterm#6e8a15c",
-      "source": {
-        "type": "install",
-        "source": [ "github:revery-ui/esy-libvterm#6e8a15c" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "esy-libtools@github:bryphe/esy-libtools#c9eb685@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "esy-libtools@github:bryphe/esy-libtools#c9eb685@d41d8cd9": {
-      "id": "esy-libtools@github:bryphe/esy-libtools#c9eb685@d41d8cd9",
+    "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9": {
+      "id": "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9",
       "name": "esy-libtools",
-      "version": "github:bryphe/esy-libtools#c9eb685",
+      "version": "github:revery-ui/esy-libtools#c9eb685",
       "source": {
         "type": "install",
-        "source": [ "github:bryphe/esy-libtools#c9eb685" ]
+        "source": [ "github:revery-ui/esy-libtools#c9eb685" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1049,7 +1035,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery-terminal@github:revery-ui/revery-terminal#12a36dd@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#9b6da56@d41d8cd9",
         "revery@github:revery-ui/revery#464c5b7@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
@@ -1095,6 +1081,22 @@
         "innosetup-compiler@5.5.9@d41d8cd9", "fs-extra@7.0.1@d41d8cd9",
         "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a@d41d8cd9"
       ]
+    },
+    "@revery/esy-libvterm@1.0.3@d41d8cd9": {
+      "id": "@revery/esy-libvterm@1.0.3@d41d8cd9",
+      "name": "@revery/esy-libvterm",
+      "version": "1.0.3",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@revery/esy-libvterm/-/esy-libvterm-1.0.3.tgz#sha1:85c1fec989379124c7f1fb0eb015ceeea2659bbe"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9"
+      ],
+      "devDependencies": []
     },
     "@revery/esy-cmake@0.3.5001@d41d8cd9": {
       "id": "@revery/esy-cmake@0.3.5001@d41d8cd9",
