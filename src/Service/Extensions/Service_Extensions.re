@@ -136,14 +136,14 @@ module Internal = {
   };
 
   let getUserExtensions = (~overriddenExtensionsDir) => {
-      getUserExtensionsDirectory(~overriddenExtensionsDir)
-      |> Option.map(
-           FunEx.tap(p =>
-             Log.infof(m => m("Searching for user extensions in: %s", p))
-           ),
-         )
-      |> Option.map(Exthost.Extension.Scanner.scan(~category=User))
-      |> Option.value(~default=[])
+    getUserExtensionsDirectory(~overriddenExtensionsDir)
+    |> Option.map(
+         FunEx.tap(p =>
+           Log.infof(m => m("Searching for user extensions in: %s", p))
+         ),
+       )
+    |> Option.map(Exthost.Extension.Scanner.scan(~category=User))
+    |> Option.value(~default=[]);
   };
 
   let installByPath = (~setup, ~extensionsFolder, ~folderName, path) => {
