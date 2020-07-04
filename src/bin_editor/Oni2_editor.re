@@ -40,9 +40,56 @@ let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   };
 };
 
-let uninstallExtension = (_extensionId, _cli) => {
-  prerr_endline("Not implemented yet.");
-  1;
+let uninstallExtension = (extensionId, {overriddenExtensionsDir, _}) => {
+  Exthost.Extension.(
+    {
+      let extensions =
+        Store.Utility.getUserExtensions(~overriddenExtensionsDir);
+
+      let matchingExtensions =
+        extensions
+        |> List.map((ext: Scanner.ScanResult.t) => {
+             (
+               ext.manifest |> Manifest.identifier |> String.lowercase_ascii,
+               ext.path,
+             )
+           })
+        |> List.filter(((id, _)) =>
+             String.equal(extensionId |> String.lowercase_ascii, id)
+           );
+
+      if (List.length(matchingExtensions) == 0) {
+        prerr_endline("No matching extension found for: " ++ extensionId);
+        1;
+      } else {
+        let (_, path) = List.hd(matchingExtensions);
+
+        print_endline("Found matching extension at: " ++ path);
+
+        let result = Service_OS.Api.rmdir(path) |> LwtEx.sync;
+
+        switch (result) {
+        | Ok(_) =>
+          print_endline(
+            Printf.sprintf(
+              "Extension %s uninstalled successfully.",
+              extensionId,
+            ),
+          );
+          0;
+        | Error(msg) =>
+          prerr_endline(
+            Printf.sprintf(
+              "There was an error uninstalling extension %s: %s",
+              extensionId,
+              Printexc.to_string(msg),
+            ),
+          );
+          1;
+        };
+      };
+    }
+  );
 };
 
 let printVersion = () => {
@@ -68,12 +115,17 @@ let queryExtension = (extension, _cli) => {
 };
 
 let listExtensions = ({overriddenExtensionsDir, _}) => {
-  let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
-  let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
-    print_endline(ext.manifest.name);
-  };
-  List.iter(printExtension, extensions);
-  0;
+  Exthost.Extension.(
+    {
+      let extensions =
+        Store.Utility.getUserExtensions(~overriddenExtensionsDir);
+      let printExtension = (ext: Scanner.ScanResult.t) => {
+        print_endline(ext.manifest |> Manifest.identifier);
+      };
+      List.iter(printExtension, extensions);
+      0;
+    }
+  );
 };
 
 Log.debug("Startup: Parsing CLI options");

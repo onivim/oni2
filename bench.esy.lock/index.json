@@ -1,5 +1,5 @@
 {
-  "checksum": "43c19357c6538402f1fb208bdb80677b",
+  "checksum": "1a62810ab7e69d8612d977426954d4ee",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -120,20 +120,21 @@
       "dependencies": [ "@opam/dune@opam:2.5.0@aef1678b" ],
       "devDependencies": []
     },
-    "revery-terminal@github:revery-ui/revery-terminal#0e54d56@d41d8cd9": {
+    "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9": {
       "id":
-        "revery-terminal@github:revery-ui/revery-terminal#0e54d56@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:revery-ui/revery-terminal#0e54d56",
+      "version": "github:revery-ui/revery-terminal#1792c7c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery-terminal#0e54d56" ]
+        "source": [ "github:revery-ui/revery-terminal#1792c7c" ]
       },
       "overrides": [],
       "dependencies": [
         "revery@github:revery-ui/revery#464c5b7@d41d8cd9",
-        "reason-libvterm@github:revery-ui/reason-libvterm#eec9bf9@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
+        "@revery/esy-libvterm@1.0.3@d41d8cd9",
+        "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
         "@glennsl/timber@1.2.0@d41d8cd9"
       ],
       "devDependencies": []
@@ -323,25 +324,6 @@
         "@opam/dune@opam:2.5.0@aef1678b"
       ],
       "devDependencies": [ "ocaml@4.9.1000@d41d8cd9" ]
-    },
-    "reason-libvterm@github:revery-ui/reason-libvterm#eec9bf9@d41d8cd9": {
-      "id":
-        "reason-libvterm@github:revery-ui/reason-libvterm#eec9bf9@d41d8cd9",
-      "name": "reason-libvterm",
-      "version": "github:revery-ui/reason-libvterm#eec9bf9",
-      "source": {
-        "type": "install",
-        "source": [ "github:revery-ui/reason-libvterm#eec9bf9" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "refmterr@3.3.2@d41d8cd9",
-        "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "esy-libvterm@1.0.0@d41d8cd9",
-        "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
-        "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/reason@3.6.0@d41d8cd9"
-      ],
-      "devDependencies": []
     },
     "rcedit@2.0.0@d41d8cd9": {
       "id": "rcedit@2.0.0@d41d8cd9",
@@ -781,35 +763,19 @@
       "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
-    "esy-libvterm@1.0.0@d41d8cd9": {
-      "id": "esy-libvterm@1.0.0@d41d8cd9",
-      "name": "esy-libvterm",
-      "version": "1.0.0",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/esy-libvterm/-/esy-libvterm-1.0.0.tgz#sha1:7555a7e3192042cc327ada34340ba55d042064cd"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "esy-libtools@github:bryphe/esy-libtools#62766a2@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "esy-libtools@github:bryphe/esy-libtools#62766a2@d41d8cd9": {
-      "id": "esy-libtools@github:bryphe/esy-libtools#62766a2@d41d8cd9",
+    "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9": {
+      "id": "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9",
       "name": "esy-libtools",
-      "version": "github:bryphe/esy-libtools#62766a2",
+      "version": "github:revery-ui/esy-libtools#c9eb685",
       "source": {
         "type": "install",
-        "source": [ "github:bryphe/esy-libtools#62766a2" ]
+        "source": [ "github:revery-ui/esy-libtools#c9eb685" ]
       },
       "overrides": [],
       "dependencies": [
         "texinfo@github:esy-packages/esy-texinfo#4a05feafbbcc4c57d5d25899fbdab98961b9a69c@d41d8cd9",
-        "automake@github:esy-packages/esy-automake#f4fecab89169dd64cc363ec902d828c55c257fc0@d41d8cd9",
-        "autoconf@github:esy-packages/esy-autoconf#ea58671a08c7ebf89b0cebd41f4950ca67157b01@d41d8cd9"
+        "automake@github:esy-packages/esy-automake#e959059ccc1560a1565b16fb63ed7052c663fca0@d41d8cd9",
+        "autoconf@github:esy-packages/esy-autoconf#fb93edf57b0adc4b27b34a57a562395b224002d3@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -1022,34 +988,34 @@
       "dependencies": [ "follow-redirects@1.5.10@d41d8cd9" ],
       "devDependencies": []
     },
-    "automake@github:esy-packages/esy-automake#f4fecab89169dd64cc363ec902d828c55c257fc0@d41d8cd9": {
+    "automake@github:esy-packages/esy-automake#e959059ccc1560a1565b16fb63ed7052c663fca0@d41d8cd9": {
       "id":
-        "automake@github:esy-packages/esy-automake#f4fecab89169dd64cc363ec902d828c55c257fc0@d41d8cd9",
+        "automake@github:esy-packages/esy-automake#e959059ccc1560a1565b16fb63ed7052c663fca0@d41d8cd9",
       "name": "automake",
       "version":
-        "github:esy-packages/esy-automake#f4fecab89169dd64cc363ec902d828c55c257fc0",
+        "github:esy-packages/esy-automake#e959059ccc1560a1565b16fb63ed7052c663fca0",
       "source": {
         "type": "install",
         "source": [
-          "github:esy-packages/esy-automake#f4fecab89169dd64cc363ec902d828c55c257fc0"
+          "github:esy-packages/esy-automake#e959059ccc1560a1565b16fb63ed7052c663fca0"
         ]
       },
       "overrides": [],
       "dependencies": [
-        "autoconf@github:esy-packages/esy-autoconf#ea58671a08c7ebf89b0cebd41f4950ca67157b01@d41d8cd9"
+        "autoconf@github:esy-packages/esy-autoconf#fb93edf57b0adc4b27b34a57a562395b224002d3@d41d8cd9"
       ],
       "devDependencies": []
     },
-    "autoconf@github:esy-packages/esy-autoconf#ea58671a08c7ebf89b0cebd41f4950ca67157b01@d41d8cd9": {
+    "autoconf@github:esy-packages/esy-autoconf#fb93edf57b0adc4b27b34a57a562395b224002d3@d41d8cd9": {
       "id":
-        "autoconf@github:esy-packages/esy-autoconf#ea58671a08c7ebf89b0cebd41f4950ca67157b01@d41d8cd9",
+        "autoconf@github:esy-packages/esy-autoconf#fb93edf57b0adc4b27b34a57a562395b224002d3@d41d8cd9",
       "name": "autoconf",
       "version":
-        "github:esy-packages/esy-autoconf#ea58671a08c7ebf89b0cebd41f4950ca67157b01",
+        "github:esy-packages/esy-autoconf#fb93edf57b0adc4b27b34a57a562395b224002d3",
       "source": {
         "type": "install",
         "source": [
-          "github:esy-packages/esy-autoconf#ea58671a08c7ebf89b0cebd41f4950ca67157b01"
+          "github:esy-packages/esy-autoconf#fb93edf57b0adc4b27b34a57a562395b224002d3"
         ]
       },
       "overrides": [],
@@ -1069,7 +1035,7 @@
       },
       "overrides": [ "bench.json" ],
       "dependencies": [
-        "revery-terminal@github:revery-ui/revery-terminal#0e54d56@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9",
         "revery@github:revery-ui/revery#464c5b7@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
@@ -1115,6 +1081,22 @@
         "innosetup-compiler@5.5.9@d41d8cd9", "fs-extra@7.0.1@d41d8cd9",
         "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a@d41d8cd9"
       ]
+    },
+    "@revery/esy-libvterm@1.0.3@d41d8cd9": {
+      "id": "@revery/esy-libvterm@1.0.3@d41d8cd9",
+      "name": "@revery/esy-libvterm",
+      "version": "1.0.3",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@revery/esy-libvterm/-/esy-libvterm-1.0.3.tgz#sha1:85c1fec989379124c7f1fb0eb015ceeea2659bbe"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9"
+      ],
+      "devDependencies": []
     },
     "@revery/esy-cmake@0.3.5001@d41d8cd9": {
       "id": "@revery/esy-cmake@0.3.5001@d41d8cd9",
@@ -4095,6 +4077,24 @@
         "@opam/dune@opam:2.5.0@aef1678b",
         "@opam/bigstringaf@opam:0.6.1@35f5e6d1"
       ]
+    },
+    "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9": {
+      "id": "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
+      "name": "@onivim/reason-native-crash-utils",
+      "version": "1.0.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@onivim/reason-native-crash-utils/-/reason-native-crash-utils-1.0.1.tgz#sha1:909990e1f70742b62e1c922be74a879596c60f83"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.9.1000@d41d8cd9",
+        "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
+        "@opam/dune@opam:2.5.0@aef1678b"
+      ],
+      "devDependencies": []
     },
     "@glennsl/timber@1.2.0@d41d8cd9": {
       "id": "@glennsl/timber@1.2.0@d41d8cd9",

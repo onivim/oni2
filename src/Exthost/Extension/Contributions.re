@@ -86,6 +86,8 @@ module Configuration = {
       | Boolean
       | String
       | Integer
+      | Number
+      | Object
       | Unknown;
 
     let default: t => Yojson.Safe.t =
@@ -93,7 +95,9 @@ module Configuration = {
       | Array => `List([])
       | String => `String("")
       | Integer => `Int(0)
+      | Number => `Int(0)
       | Boolean => `Bool(false)
+      | Object => `Assoc([])
       | Unknown => `Null;
 
     module Decode = {
@@ -110,6 +114,8 @@ module Configuration = {
              | "boolean" => succeed(Boolean)
              | "string" => succeed(String)
              | "integer" => succeed(Integer)
+             | "number" => succeed(Number)
+             | "object" => succeed(Object)
              | unknown => {
                  Log.warnf(m => m("Unknown configuration type: %s", unknown));
                  succeed(Unknown);
@@ -244,6 +250,49 @@ module Configuration = {
                 name: "boolprop",
                 propertyType: Boolean,
                 default: `Bool(false),
+              });
+         };
+
+         let%test "property: number, no default" = {
+           {|
+            {
+              "type": "number",
+            }
+          |}
+           |> ofString(property("prop"))
+           |> expectEquals({
+                name: "prop",
+                propertyType: Number,
+                default: `Int(0),
+              });
+         };
+
+         let%test "property: number, with default" = {
+           {|
+            {
+              "type": "number",
+              "default": 111
+            }
+          |}
+           |> ofString(property("prop"))
+           |> expectEquals({
+                name: "prop",
+                propertyType: Number,
+                default: `Int(111),
+              });
+         };
+
+         let%test "property: number, no default" = {
+           {|
+            {
+              "type": "object",
+            }
+          |}
+           |> ofString(property("prop"))
+           |> expectEquals({
+                name: "prop",
+                propertyType: Object,
+                default: `Assoc([]),
               });
          };
 

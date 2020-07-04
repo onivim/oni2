@@ -371,3 +371,5 @@ module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
+
+module Testing: {module Undo: {let saveRegion: (int, int) => unit;};};
