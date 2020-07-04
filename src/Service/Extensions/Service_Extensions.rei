@@ -35,7 +35,9 @@ module Catalog: {
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: string, string) => Lwt.t(string);
+    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(string);
 
-  let uninstall: (~extensionsFolder: string, string) => Lwt.t(unit);
+  let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
+
+  let get: (~extensionsFolder: string=?, unit) => Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t))
 };
