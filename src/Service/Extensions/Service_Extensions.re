@@ -117,41 +117,42 @@ module Catalog = {
 };
 
 module Management = {
-let install = (~setup,~extensionsFolder, path) => {
-  let name = Rench.Path.filename(path);
+  let install = (~setup, ~extensionsFolder, path) => {
+    let name = Rench.Path.filename(path);
 
-  let absolutePath =
-    if (Rench.Path.isAbsolute(path)) {
-      path;
-    } else {
-      Rench.Path.join(Rench.Environment.getWorkingDirectory(), path);
-    };
+    let absolutePath =
+      if (Rench.Path.isAbsolute(path)) {
+        path;
+      } else {
+        Rench.Path.join(Rench.Environment.getWorkingDirectory(), path);
+      };
 
-  Log.debugf(m => m("Installing extension %s to %s", name, extensionsFolder));
-
-  let promise: Lwt.t(string) =
-    NodeTask.run(
-      ~name="Install",
-      ~setup,
-      ~args=[absolutePath, extensionsFolder],
-      "install-extension.js",
+    Log.debugf(m =>
+      m("Installing extension %s to %s", name, extensionsFolder)
     );
 
-  Lwt.on_success(promise, _ => {
-    Log.debugf(m => m("Successfully installed extension: %s", name))
-  });
+    let promise: Lwt.t(string) =
+      NodeTask.run(
+        ~name="Install",
+        ~setup,
+        ~args=[absolutePath, extensionsFolder],
+        "install-extension.js",
+      );
 
-  Lwt.on_failure(promise, _ => {
-    Log.errorf(m => m("Unable to install extension: %s", name))
-  });
-  promise;
-};
+    Lwt.on_success(promise, _ => {
+      Log.debugf(m => m("Successfully installed extension: %s", name))
+    });
 
-let uninstall = 
-  (~extensionsFolder, id) => {
+    Lwt.on_failure(promise, _ => {
+      Log.errorf(m => m("Unable to install extension: %s", name))
+    });
+    promise;
+  };
+
+  let uninstall = (~extensionsFolder, id) => {
     // TODO: Implement this
     ignore(extensionsFolder);
     ignore(id);
     Lwt.return();
   };
-}
+};

@@ -34,11 +34,8 @@ module Catalog: {
 };
 
 module Management: {
-  let install: (
-    ~setup: Setup.t,
-    ~extensionsFolder: string,
-    string
-  ) => Lwt.t(string);
+  let install:
+    (~setup: Setup.t, ~extensionsFolder: string, string) => Lwt.t(string);
 
   let uninstall: (~extensionsFolder: string, string) => Lwt.t(unit);
-}
+};
