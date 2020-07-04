@@ -99,19 +99,41 @@ let printVersion = () => {
 
 let queryExtension = (extension, _cli) => {
   let setup = Core.Setup.init();
-  Service_Extensions.Catalog.query(~setup, extension)
-  |> LwtEx.sync
-  |> (
-    fun
-    | Ok(ext) => {
-        ext |> Service_Extensions.Catalog.Entry.toString |> print_endline;
-        0;
+  Service_Extensions.
+    // Try to parse the extension id - either search, or
+    // get details
+    (
+      switch (Catalog.Identifier.fromString(extension)) {
+      | Some(identifier) =>
+        Catalog.details(~setup, identifier)
+        |> LwtEx.sync
+        |> (
+          fun
+          | Ok(ext) => {
+              ext |> Catalog.Details.toString |> print_endline;
+              0;
+            }
+          | Error(msg) => {
+              prerr_endline(Printexc.to_string(msg));
+              1;
+            }
+        )
+      | None =>
+        Catalog.search(~offset=0, ~setup, extension)
+        |> LwtEx.sync
+        |> (
+          fun
+          | Ok(response) => {
+              response |> Catalog.SearchResponse.toString |> print_endline;
+              0;
+            }
+          | Error(msg) => {
+              prerr_endline(Printexc.to_string(msg));
+              1;
+            }
+        )
       }
-    | Error(msg) => {
-        prerr_endline(Printexc.to_string(msg));
-        1;
-      }
-  );
+    );
 };
 
 let listExtensions = ({overriddenExtensionsDir, _}) => {
