@@ -21,36 +21,41 @@ module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   let setup = Core.Setup.init();
-    let result =
+  let result =
     ExtM.install(~setup, ~extensionsFolder=?overriddenExtensionsDir, path)
     |> LwtEx.sync;
 
-    switch (result) {
-    | Ok(_) =>
-      Printf.printf("Successfully installed extension: %s\n", path);
-      0;
+  switch (result) {
+  | Ok(_) =>
+    Printf.printf("Successfully installed extension: %s\n", path);
+    0;
 
-    | Error(_) =>
-      Printf.printf("Failed to install extension: %s\n", path);
-      1;
-    };
+  | Error(_) =>
+    Printf.printf("Failed to install extension: %s\n", path);
+    1;
+  };
 };
 
 let uninstallExtension = (extensionId, {overriddenExtensionsDir, _}) => {
-
-    let result =
+  let result =
     ExtM.uninstall(~extensionsFolder=?overriddenExtensionsDir, extensionId)
     |> LwtEx.sync;
 
-    switch (result) {
-    | Ok(_) =>
-      Printf.sprintf("Successfully uninstalled extension: %s\n", extensionId) |> print_endline;
-      0;
+  switch (result) {
+  | Ok(_) =>
+    Printf.sprintf("Successfully uninstalled extension: %s\n", extensionId)
+    |> print_endline;
+    0;
 
-    | Error(msg) =>
-      Printf.sprintf("Failed to uninstall extension: %s\n%s", extensionId, Printexc.to_string(msg)) |> prerr_endline;
-      1;
-    };
+  | Error(msg) =>
+    Printf.sprintf(
+      "Failed to uninstall extension: %s\n%s",
+      extensionId,
+      Printexc.to_string(msg),
+    )
+    |> prerr_endline;
+    1;
+  };
 };
 
 let printVersion = () => {
@@ -82,7 +87,7 @@ let listExtensions = ({overriddenExtensionsDir, _}) => {
         ExtM.get(~extensionsFolder=?overriddenExtensionsDir, ())
         |> LwtEx.sync
         |> Result.value(~default=[]);
-        
+
       let printExtension = (ext: Scanner.ScanResult.t) => {
         print_endline(ext.manifest |> Manifest.identifier);
       };

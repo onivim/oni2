@@ -40,12 +40,13 @@ module Catalog = {
       readmeUrl: string,
       licenseName: string,
       //      licenseUrl: string,
-      //      name: string,
-      //      namespace: string,
+      name: string,
+      namespace: string,
       //      downloadCount: int,
       displayName: string,
       description: string,
       //      categories: list(string),
+      version: string,
       versions: list(VersionInfo.t),
     };
 
@@ -91,6 +92,9 @@ module Catalog = {
             licenseName: field.required("license", string),
             displayName: field.required("displayName", string),
             description: field.required("description", string),
+            name: field.required("name", string),
+            namespace: field.required("namespace", string),
+            version: field.required("version", string),
             versions:
               field.withDefault("allVersions", [], VersionInfo.decode),
           }
@@ -118,7 +122,6 @@ module Catalog = {
 };
 
 module Internal = {
-  
   let getUserExtensionsDirectory = (~overriddenExtensionsDir) => {
     switch (overriddenExtensionsDir) {
     | Some(p) => Some(p)
@@ -133,22 +136,22 @@ module Internal = {
   };
 
   let getUserExtensions = (~overriddenExtensionsDir) => {
-    open Exthost.Extension;
-    getUserExtensionsDirectory(~overriddenExtensionsDir)
-    |> Option.map(
-         FunEx.tap(p =>
-           Log.infof(m => m("Searching for user extensions in: %s", p))
-         ),
-       )
-    |> Option.map(Exthost.Extension.Scanner.scan(~category=User))
-    |> Option.value(~default=[]);
+      getUserExtensionsDirectory(~overriddenExtensionsDir)
+      |> Option.map(
+           FunEx.tap(p =>
+             Log.infof(m => m("Searching for user extensions in: %s", p))
+           ),
+         )
+      |> Option.map(Exthost.Extension.Scanner.scan(~category=User))
+      |> Option.value(~default=[])
   };
-  
-  let installByPath = (~setup, ~extensionsFolder, path) => {
-    switch (getUserExtensionsDirectory(~overriddenExtensionsDir=extensionsFolder))
-    {
+
+  let installByPath = (~setup, ~extensionsFolder, ~folderName, path) => {
+    switch (
+      getUserExtensionsDirectory(~overriddenExtensionsDir=extensionsFolder)
+    ) {
     | None => Lwt.fail_with("Unable to get extensions folder.")
-    | Some(extensionsFolder) => 
+    | Some(extensionsFolder) =>
       let name = Rench.Path.filename(path);
       let absolutePath =
         if (Rench.Path.isAbsolute(path)) {
@@ -164,10 +167,10 @@ module Internal = {
       NodeTask.run(
         ~name="Install",
         ~setup,
-        ~args=[absolutePath, extensionsFolder],
+        ~args=[absolutePath, extensionsFolder, folderName],
         "install-extension.js",
       );
-    }
+    };
   };
 };
 
@@ -177,19 +180,34 @@ module Management = {
     // it must be a path.
     let promise =
       if (StringEx.endsWith(~postfix=".vsix", path) && Sys.file_exists(path)) {
-        Internal.installByPath(~setup, ~extensionsFolder, path);
+        let folderName = Rench.Path.filename(path);
+        Internal.installByPath(~setup, ~extensionsFolder, ~folderName, path);
       } else {
         // ...otherwise, query the extension store, download, and install
         Catalog.query(~setup, path)
-        |> LwtEx.flatMap(({downloadUrl, displayName, _}: Catalog.Entry.t) => {
+        |> LwtEx.flatMap(
+             (
+               {downloadUrl, displayName, name, namespace, version, _}: Catalog.Entry.t,
+             ) => {
              Log.infof(m =>
                m("Downloading %s from %s", displayName, downloadUrl)
              );
-             Service_Net.Request.download(~setup, downloadUrl);
+             Service_Net.Request.download(~setup, downloadUrl)
+             |> Lwt.map(downloadPath => {
+                  let folderName =
+                    Printf.sprintf("%s.%s-%s", namespace, name, version);
+
+                  (downloadPath, folderName);
+                });
            })
-        |> LwtEx.flatMap(downloadPath => {
+        |> LwtEx.flatMap(((downloadPath, folderName)) => {
              Log.infof(m => m("Downloaded successfully to %s", downloadPath));
-             Internal.installByPath(~setup, ~extensionsFolder, downloadPath);
+             Internal.installByPath(
+               ~setup,
+               ~extensionsFolder,
+               ~folderName,
+               downloadPath,
+             );
            });
       };
 
@@ -204,48 +222,50 @@ module Management = {
   };
 
   let uninstall = (~extensionsFolder=?, extensionId) => {
-      open Exthost.Extension;
+    open Exthost.Extension;
 
-      let extensions =
-        Internal.getUserExtensions(~overriddenExtensionsDir=extensionsFolder);
+    let extensions =
+      Internal.getUserExtensions(~overriddenExtensionsDir=extensionsFolder);
 
-        let matchingExtensions =
-          extensions
-          |> List.map((ext: Scanner.ScanResult.t) => {
-               (
-                 ext.manifest |> Manifest.identifier |> String.lowercase_ascii,
-                 ext.path,
-               )
-             })
-          |> List.filter(((id, _)) =>
-               String.equal(extensionId |> String.lowercase_ascii, id)
-             );
+    let matchingExtensions =
+      extensions
+      |> List.map((ext: Scanner.ScanResult.t) => {
+           (
+             ext.manifest |> Manifest.identifier |> String.lowercase_ascii,
+             ext.path,
+           )
+         })
+      |> List.filter(((id, _)) =>
+           String.equal(extensionId |> String.lowercase_ascii, id)
+         );
 
-        if (List.length(matchingExtensions) == 0) {
-          Log.info("No matching extension found for: " ++ extensionId);
-          Lwt.fail_with("No matching extension found.");
-        } else {
-          let (_, path) = List.hd(matchingExtensions);
+    if (List.length(matchingExtensions) == 0) {
+      Log.info("No matching extension found for: " ++ extensionId);
+      Lwt.fail_with("No matching extension found.");
+    } else {
+      let (_, path) = List.hd(matchingExtensions);
 
-          Log.info("Found matching extension at: " ++ path);
+      Log.info("Found matching extension at: " ++ path);
 
-          let promise = Service_OS.Api.rmdir(path);
+      let promise = Service_OS.Api.rmdir(path);
 
-        Lwt.on_success(promise, _ => {
-          Log.debugf(m => m("Successfully uninstalled extension: %s", extensionId))
-        });
+      Lwt.on_success(promise, _ => {
+        Log.debugf(m =>
+          m("Successfully uninstalled extension: %s", extensionId)
+        )
+      });
 
-        Lwt.on_failure(promise, _ => {
-          Log.errorf(m => m("Unable to install extension: %s", extensionId))
-        });
+      Lwt.on_failure(promise, _ => {
+        Log.errorf(m => m("Unable to install extension: %s", extensionId))
+      });
 
-        promise
-      }
-    }
+      promise;
+    };
+  };
 
   let get = (~extensionsFolder=?, ()) => {
     Lwt.return(
-      Internal.getUserExtensions(~overriddenExtensionsDir=extensionsFolder)
+      Internal.getUserExtensions(~overriddenExtensionsDir=extensionsFolder),
     );
-  }
   };
+};

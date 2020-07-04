@@ -28,15 +28,14 @@ describe("Management", ({describe, _}) => {
       expect.equal(Result.is_ok(installResult), true);
 
       let uninstallResult =
-        ExtM.uninstall(~extensionsFolder, "vscode.markdown")
-        |> LwtEx.sync;
+        ExtM.uninstall(~extensionsFolder, "vscode.markdown") |> LwtEx.sync;
 
       expect.equal(Result.is_ok(uninstallResult), true);
 
       let afterUninstallExtensions =
         Scanner.scan(~category=Development, extensionsFolder);
       expect.equal(List.length(afterUninstallExtensions), 0);
-    });
+    })
   });
   describe("install", ({test, _}) => {
     test("install from file test", ({expect, _}) => {
@@ -94,5 +93,5 @@ describe("Management", ({describe, _}) => {
         Scanner.scan(~category=Development, extensionsFolder);
       expect.equal(List.length(afterInstallExtensions), 0);
     });
-  })
+  });
 });

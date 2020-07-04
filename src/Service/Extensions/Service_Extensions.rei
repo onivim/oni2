@@ -18,12 +18,13 @@ module Catalog: {
       readmeUrl: string,
       licenseName: string,
       //      licenseUrl: string,
-      //      name: string,
-      //      namespace: string,
+      name: string,
+      namespace: string,
       //      downloadCount: int,
       displayName: string,
       description: string,
       //      categories: list(string),
+      version: string,
       versions: list(VersionInfo.t),
     };
 
@@ -39,5 +40,7 @@ module Management: {
 
   let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
 
-  let get: (~extensionsFolder: string=?, unit) => Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t))
+  let get:
+    (~extensionsFolder: string=?, unit) =>
+    Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };
