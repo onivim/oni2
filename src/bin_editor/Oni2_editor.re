@@ -14,15 +14,16 @@ module Ext = Oni_Extensions;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
-module ExtM = Oni_ExtensionManagement;
+module ExtM = Service_Extensions.Management;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
+  let setup = Core.Setup.init();
   switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
   | Some(extensionsFolder) =>
-    let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
+    let result = ExtM.install(~setup, ~extensionsFolder, path) |> LwtEx.sync;
 
     switch (result) {
     | Ok(_) =>

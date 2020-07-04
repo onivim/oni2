@@ -1,4 +1,5 @@
 open Oni_Core;
+
 module Catalog: {
   module VersionInfo: {
     type t = {
@@ -31,3 +32,13 @@ module Catalog: {
 
   let query: (~setup: Setup.t, string) => Lwt.t(Entry.t);
 };
+
+module Management: {
+  let install: (
+    ~setup: Setup.t,
+    ~extensionsFolder: string,
+    string
+  ) => Lwt.t(string);
+
+  let uninstall: (~extensionsFolder: string, string) => Lwt.t(unit);
+}
