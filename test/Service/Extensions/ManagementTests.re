@@ -17,6 +17,27 @@ let createExtensionsFolder = () =>
 let setup = Setup.init();
 
 describe("Management", ({describe, _}) => {
+  describe("uninstall", ({test, _}) => {
+    test("uninstall (from file)", ({expect, _}) => {
+      let extensionsFolder = createExtensionsFolder();
+
+      let installResult =
+        ExtM.install(~setup, ~extensionsFolder, markdownExtension)
+        |> LwtEx.sync;
+
+      expect.equal(Result.is_ok(installResult), true);
+
+      let uninstallResult =
+        ExtM.uninstall(~extensionsFolder, "vscode.markdown")
+        |> LwtEx.sync;
+
+      expect.equal(Result.is_ok(uninstallResult), true);
+
+      let afterUninstallExtensions =
+        Scanner.scan(~category=Development, extensionsFolder);
+      expect.equal(List.length(afterUninstallExtensions), 0);
+    });
+  });
   describe("install", ({test, _}) => {
     test("install from file test", ({expect, _}) => {
       let extensionsFolder = createExtensionsFolder();
