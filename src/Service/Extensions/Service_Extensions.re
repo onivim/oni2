@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Log = (val Log.withNamespace("Service.Extensions"));
 
@@ -116,10 +117,9 @@ module Catalog = {
   };
 };
 
-module Management = {
-  let install = (~setup, ~extensionsFolder, path) => {
+module Internal = {
+  let installByPath = (~setup, ~extensionsFolder, path) => {
     let name = Rench.Path.filename(path);
-
     let absolutePath =
       if (Rench.Path.isAbsolute(path)) {
         path;
@@ -131,20 +131,43 @@ module Management = {
       m("Installing extension %s to %s", name, extensionsFolder)
     );
 
-    let promise: Lwt.t(string) =
-      NodeTask.run(
-        ~name="Install",
-        ~setup,
-        ~args=[absolutePath, extensionsFolder],
-        "install-extension.js",
-      );
+    NodeTask.run(
+      ~name="Install",
+      ~setup,
+      ~args=[absolutePath, extensionsFolder],
+      "install-extension.js",
+    );
+  };
+};
+
+module Management = {
+  let install = (~setup, ~extensionsFolder, path) => {
+    // We assume if the requested extension ends with '.vsix',
+    // it must be a path.
+    let promise =
+      if (StringEx.endsWith(~postfix=".vsix", path) && Sys.file_exists(path)) {
+        Internal.installByPath(~setup, ~extensionsFolder, path);
+      } else {
+        // ...otherwise, query the extension store, download, and install
+        Catalog.query(~setup, path)
+        |> LwtEx.flatMap(({downloadUrl, displayName, _}: Catalog.Entry.t) => {
+             Log.infof(m =>
+               m("Downloading %s from %s", displayName, downloadUrl)
+             );
+             Service_Net.Request.download(~setup, downloadUrl);
+           })
+        |> LwtEx.flatMap(downloadPath => {
+             Log.infof(m => m("Downloaded successfully to %s", downloadPath));
+             Internal.installByPath(~setup, ~extensionsFolder, downloadPath);
+           });
+      };
 
     Lwt.on_success(promise, _ => {
-      Log.debugf(m => m("Successfully installed extension: %s", name))
+      Log.debugf(m => m("Successfully installed extension: %s", path))
     });
 
     Lwt.on_failure(promise, _ => {
-      Log.errorf(m => m("Unable to install extension: %s", name))
+      Log.errorf(m => m("Unable to install extension: %s", path))
     });
     promise;
   };

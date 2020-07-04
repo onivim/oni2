@@ -20,6 +20,8 @@ let some = (~default: 'a, join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
   |> all(join);
 };
 
+let flatMap = (f, promise) => Lwt.bind(promise, f);
+
 exception Timeout;
 
 let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) =
