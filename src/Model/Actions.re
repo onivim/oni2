@@ -10,7 +10,6 @@ open Oni_Input;
 open Oni_Syntax;
 open Oni_Components;
 
-module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
@@ -154,7 +153,7 @@ type t =
   | RegisterQuitCleanup(unit => unit)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
-  | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
+  | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)

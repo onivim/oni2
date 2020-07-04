@@ -13,6 +13,5 @@
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
         Oni2.core
-        Oni2.extensions
     )
     (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))

@@ -1,9 +1,9 @@
 /*
  * LanguageInfo.re
  */
-
 open Oni_Core;
-open Exthost.Extension;
+
+open Exthost_Extension;
 
 type t;
 let initial: t;

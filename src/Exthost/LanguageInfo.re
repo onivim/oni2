@@ -6,7 +6,7 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Rench;
 
-open Exthost.Extension;
+open Exthost_Extension;
 open Scanner.ScanResult;
 
 module Log = (val Log.withNamespace("Oni2.LanguageInfo"));

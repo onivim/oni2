@@ -4,8 +4,6 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Actions;
 
-module Ext = Oni_Extensions;
-
 module Internal = {
   let notificationEffect = (~kind, message) => {
     Feature_Notification.Effects.create(~kind, message)
@@ -16,10 +14,7 @@ module Internal = {
     buffer
     |> Oni_Core.Buffer.getFileType
     |> Utility.OptionEx.flatMap(fileType =>
-         Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-           languageInfo,
-           fileType,
-         )
+         Exthost.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
        )
     |> Option.value(~default="source.plaintext");
   };
@@ -118,7 +113,7 @@ let update =
       maybeBuffer
       |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
       |> OptionEx.flatMap(
-           Ext.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+           Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
          )
       |> Option.value(~default=LanguageConfiguration.default);
 

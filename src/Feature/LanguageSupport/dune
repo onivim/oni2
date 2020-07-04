@@ -4,7 +4,6 @@
     (libraries 
       editor-core-types
       Oni2.core
-      Oni2.extensions
       Oni2.syntax
       uucp
     )
