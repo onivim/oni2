@@ -940,14 +940,6 @@ CAMLprim value libvim_vimWindowSetTopLeft(value top, value left) {
   return Val_unit;
 }
 
-CAMLprim value libvim_vimUndoSaveCursor(value unit) {
-  CAMLparam0();
-
-  vimUndoSaveCursor();
-
-  CAMLreturn(Val_unit);
-}
-
 CAMLprim value libvim_vimUndoSync(value force) {
   CAMLparam0();
 
@@ -958,13 +950,14 @@ CAMLprim value libvim_vimUndoSync(value force) {
 
 CAMLprim value libvim_vimUndoSaveRegion(value startLine, value endLine) {
   CAMLparam2(startLine, endLine);
-
+  CAMLlocal1(ret);
+  
   int start = Int_val(startLine);
   int end = Int_val(endLine);
 
-  vimUndoSaveRegion(start, end);
+  int success = vimUndoSaveRegion(start, end);
 
-  CAMLreturn(Val_unit);
+  CAMLreturn(Val_bool(success != FAIL));
 }
 
 CAMLprim value libvim_vimVisualGetType(value unit) {

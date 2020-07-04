@@ -22,7 +22,9 @@ module Mode = Mode;
 module Options = Options;
 module Search = Search;
 module Types = Types;
-module Undo = Undo;
+module Testing = {
+  module Undo = Undo;
+};
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
