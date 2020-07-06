@@ -2,6 +2,7 @@
 (library
     (name Feature_Notification)
     (public_name Oni2.feature.notification)
+    (inline_tests)
     (libraries 
       Oni2.core
       Oni2.components
@@ -10,4 +11,4 @@
       base
       Revery
     )
-    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))
