@@ -11,7 +11,6 @@
         oniguruma
         Oni2.cli
         Oni2.core
-        Oni2.extensionManagement
         Oni2.extensions
         Oni2.model
         Oni2.service.extensions
