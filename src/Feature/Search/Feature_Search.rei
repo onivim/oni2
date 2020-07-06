@@ -10,10 +10,10 @@ let initial: model;
 [@deriving show]
 type msg =
   | Input(string)
-  | InputClicked(Selection.t)
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete
-  | SearchError(string);
+  | SearchError(string)
+  | FindInput(Feature_InputText.msg);
 
 type outmsg =
   | Focus;

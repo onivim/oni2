@@ -1,7 +1,6 @@
 open Oni_Core;
 open Utility;
 
-module InputModel = Oni_Components.InputModel;
 module Selection = Oni_Components.Selection;
 
 // MODEL
