@@ -40,22 +40,12 @@ module Provider = {
 [@deriving show({with_path: false})]
 type model = {
   providers: list(Provider.t),
-  inputBox,
-}
-
-and inputBox = {
-  value: string,
-  selection: Selection.t,
-  placeholder: string,
+  inputBox: Feature_InputText.model,
 };
 
 let initial = {
   providers: [],
-  inputBox: {
-    value: "",
-    selection: Selection.initial,
-    placeholder: "Do the commit thing!",
-  },
+  inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
 };
 
 // EFFECTS
@@ -118,7 +108,7 @@ type msg =
       command: Exthost.SCM.command,
     })
   | KeyPressed({key: string})
-  | InputBoxClicked({selection: Selection.t});
+  | InputBox(Feature_InputText.msg);
 
 module Msg = {
   let keyPressed = key => KeyPressed({key: key});
@@ -329,29 +319,16 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
 
   | KeyPressed({key}) =>
-    let (value, selection) =
-      InputModel.handleInput(
-        ~text=model.inputBox.value,
-        ~selection=model.inputBox.selection,
-        key,
-      );
-
+    let inputBox = Feature_InputText.handleInput(~key, model.inputBox);
     (
-      {
-        ...model,
-        inputBox: {
-          ...model.inputBox,
-          value,
-          selection,
-        },
-      },
+      {...model, inputBox},
       Effect(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
                Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
-                 ~value,
+                 ~value=inputBox |> Feature_InputText.value,
                  extHostClient,
                )
              ),
@@ -359,14 +336,8 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       ),
     );
 
-  | InputBoxClicked({selection}) => (
-      {
-        ...model,
-        inputBox: {
-          ...model.inputBox,
-          selection,
-        },
-      },
+  | InputBox(msg) => (
+      {...model, inputBox: Feature_InputText.update(msg, model.inputBox)},
       Focus,
     )
   };
@@ -569,17 +540,13 @@ module Pane = {
     };
 
     <ScrollView style=Styles.container>
-      <Input
+      <Feature_InputText.View
         style=Styles.input
-        value={model.inputBox.value}
-        selection={model.inputBox.selection}
-        placeholder={model.inputBox.placeholder}
+        model={model.inputBox}
         isFocused
         fontFamily={font.family}
         fontSize={font.size}
-        onClick={selection =>
-          dispatch(InputBoxClicked({selection: selection}))
-        }
+        dispatch={msg => dispatch(InputBox(msg))}
         theme
       />
       {groups
