@@ -1,5 +1,16 @@
 open Oni_Core;
+
 module Catalog: {
+  module Identifier: {
+    type t = {
+      publisher: string,
+      name: string,
+    };
+
+    let fromString: string => option(t);
+    let toString: t => string;
+  };
+
   module VersionInfo: {
     type t = {
       version: string,
@@ -7,7 +18,7 @@ module Catalog: {
     };
   };
 
-  module Entry: {
+  module Details: {
     type t = {
       downloadUrl: string,
       repositoryUrl: string,
@@ -17,17 +28,56 @@ module Catalog: {
       readmeUrl: string,
       licenseName: string,
       //      licenseUrl: string,
-      //      name: string,
-      //      namespace: string,
+      name: string,
+      namespace: string,
       //      downloadCount: int,
       displayName: string,
       description: string,
       //      categories: list(string),
+      version: string,
       versions: list(VersionInfo.t),
     };
 
     let toString: t => string;
   };
 
-  let query: (~setup: Setup.t, string) => Lwt.t(Entry.t);
+  module Summary: {
+    type t = {
+      url: string,
+      downloadUrl: string,
+      iconUrl: option(string),
+      version: string,
+      name: string,
+      namespace: string,
+      displayName: string,
+      description: string,
+    };
+
+    let toString: t => string;
+  };
+
+  module SearchResponse: {
+    type t = {
+      offset: int,
+      totalSize: int,
+      extensions: list(Summary.t),
+    };
+
+    let toString: t => string;
+  };
+
+  let details: (~setup: Setup.t, Identifier.t) => Lwt.t(Details.t);
+  let search:
+    (~offset: int, ~setup: Setup.t, string) => Lwt.t(SearchResponse.t);
+};
+
+module Management: {
+  let install:
+    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(string);
+
+  let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
+
+  let get:
+    (~extensionsFolder: string=?, unit) =>
+    Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };

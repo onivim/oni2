@@ -366,6 +366,7 @@ let getOrCreateConfigFolder = configDir =>
 let getExtensionsFolder = () =>
   getUserDataDirectory()
   >>= getOniDirectory
+  >>= getOrCreateConfigFolder
   >>= (dir => getPath(dir, "extensions"))
   >>= getOrCreateConfigFolder;
 

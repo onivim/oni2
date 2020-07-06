@@ -58,6 +58,8 @@ module Contributions: {
         | Boolean
         | String
         | Integer
+        | Number
+        | Object
         | Unknown;
     };
 
@@ -151,6 +153,7 @@ module Manifest: {
 
   let decode: Oni_Core.Json.decoder(t);
 
+  let identifier: t => string;
   let getDisplayName: t => string;
 
   module Encode: {let kind: Oni_Core.Json.encoder(kind);};

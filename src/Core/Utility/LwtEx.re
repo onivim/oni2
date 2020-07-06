@@ -10,6 +10,11 @@ let all = (join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
   );
 };
 
+let fromOption = (~errorMsg) =>
+  fun
+  | Some(v) => Lwt.return(v)
+  | None => Lwt.fail_with(errorMsg);
+
 let some = (~default: 'a, join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
   promises
   |> List.map(p => {
@@ -19,6 +24,8 @@ let some = (~default: 'a, join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
      })
   |> all(join);
 };
+
+let flatMap = (f, promise) => Lwt.bind(promise, f);
 
 exception Timeout;
 
@@ -30,13 +37,7 @@ let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) =
 
     Lwt.on_failure(promise, v => {completed := Some(Error(v))});
 
-    ThreadEx.waitForCondition(
-      ~timeout,
-      () => {
-        let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
-        completed^ != None;
-      },
-    );
+    ThreadEx.waitForCondition(~timeout, () => {completed^ != None});
 
     Option.value(~default=Error(Timeout), completed^);
   };

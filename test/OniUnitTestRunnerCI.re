@@ -40,13 +40,6 @@ Oni_Extensions_Test.TestFramework.run(
   ),
 );
 
-Oni_ExtensionManagement_Test.TestFramework.run(
-  Rely.RunConfig.withReporters(
-    [Default, JUnit("./junit.xml")],
-    Rely.RunConfig.initialize(),
-  ),
-);
-
 Oni_Components_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
@@ -90,6 +83,13 @@ Libvim_Test.TestFramework.run(
 );
 
 Oniguruma_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
+Service_Extensions_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
     Rely.RunConfig.initialize(),

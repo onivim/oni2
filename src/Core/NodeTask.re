@@ -29,7 +29,6 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
     let%bind _: Luv.Process.t =
       LuvEx.Process.spawn(
         ~on_exit,
-        ~detached=true,
         ~redirect=[
           Luv.Process.to_parent_pipe(
             ~fd=Luv.Process.stdout,
