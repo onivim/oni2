@@ -37,7 +37,13 @@ let discoverExtensions =
           };
 
         let userExtensions =
-          Utility.getUserExtensions(~overriddenExtensionsDir);
+          Service_Extensions.Management.get(
+            ~extensionsFolder=?overriddenExtensionsDir,
+            (),
+          )
+          // TODO: De-syncify!
+          |> Core.Utility.LwtEx.sync
+          |> Result.value(~default=[]);
 
         Log.infof(m =>
           m("Discovered %n user extensions.", List.length(userExtensions))
