@@ -338,21 +338,18 @@ describe("StringEx", ({describe, _}) => {
   });
 
   describe("isEmpty", ({test, _}) => {
-    
     test("large empty string", ({expect, _}) => {
-      let isEmpty = String.make(100000, ' ')
-      |> StringEx.isEmpty;
+      let isEmpty = String.make(100000, ' ') |> StringEx.isEmpty;
 
       expect.bool(isEmpty).toBe(true);
     });
-    
+
     test("large non-empty string", ({expect, _}) => {
-      let isEmpty = String.make(100000, 'a')
-      |> StringEx.isEmpty;
+      let isEmpty = String.make(100000, 'a') |> StringEx.isEmpty;
 
       expect.bool(isEmpty).toBe(false);
     });
-  })
+  });
 
   describe("extractSnippet", ({test, _}) => {
     let text = " 123456789";
