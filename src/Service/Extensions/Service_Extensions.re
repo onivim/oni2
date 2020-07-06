@@ -11,9 +11,35 @@ module Url = {
   let extensionInfo = (publisher, id) => {
     Printf.sprintf("%s/%s/%s", Constants.baseUrl, publisher, id);
   };
+
+  let search = (~offset, ~query) => {
+    Printf.sprintf(
+      "%s/-/search?query=%s&offset=%d",
+      Constants.baseUrl,
+      query,
+      offset,
+    );
+  };
 };
 
 module Catalog = {
+  module Identifier = {
+    type t = {
+      publisher: string,
+      name: string,
+    };
+
+    let fromString = str => {
+      let items = String.split_on_char('.', str);
+      switch (items) {
+      | [publisher, name] => Some({publisher, name})
+      | _ => None
+      };
+    };
+
+    let toString = ({publisher, name}) =>
+      String.concat("", [publisher, ".", name]);
+  };
   module VersionInfo = {
     type t = {
       version: string,
@@ -30,7 +56,7 @@ module Catalog = {
       Printf.sprintf(" - Version %s: %s", version, url);
   };
 
-  module Entry = {
+  module Details = {
     type t = {
       downloadUrl: string,
       repositoryUrl: string,
@@ -102,22 +128,100 @@ module Catalog = {
     };
   };
 
-  let toPublisherName = str => {
-    let items = String.split_on_char('.', str);
-    switch (items) {
-    | [publisher, id] => Some((publisher, id))
-    | _ => None
+  let details = (~setup, {publisher, name}: Identifier.t) => {
+    let url = Url.extensionInfo(publisher, name);
+    Service_Net.Request.json(~setup, ~decoder=Details.Decode.decode, url);
+  };
+
+  module Summary = {
+    type t = {
+      url: string,
+      downloadUrl: string,
+      iconUrl: option(string),
+      version: string,
+      name: string,
+      namespace: string,
+      displayName: string,
+      description: string,
+    };
+
+    let decode = {
+      open Json.Decode;
+
+      let downloadUrl = field("files", field("download", string));
+      let iconUrl = field("files", field("icon", nullable(string)));
+
+      obj(({field, whatever, _}) =>
+        {
+          url: field.required("url", string),
+          downloadUrl: whatever(downloadUrl),
+          iconUrl: whatever(iconUrl),
+          version: field.required("version", string),
+          name: field.required("name", string),
+          namespace: field.required("namespace", string),
+          displayName: field.required("displayName", string),
+          description: field.required("description", string),
+        }
+      );
+    };
+
+    let toString =
+        ({displayName, description, version, url, namespace, name, _}) => {
+      Printf.sprintf(
+        {|%s.%s:
+- Name: %s
+- Description: %s
+- Url: %s
+- Version: %s
+      |},
+        namespace,
+        name,
+        displayName,
+        description,
+        url,
+        version,
+      );
     };
   };
 
-  let query = (~setup, id) => {
-    switch (toPublisherName(id)) {
-    | None => Lwt.fail_with("Invalid id: " ++ id)
-    | Some((publisher, name)) =>
-      let url = Url.extensionInfo(publisher, name);
-
-      Service_Net.Request.json(~setup, ~decoder=Entry.Decode.decode, url);
+  module SearchResponse = {
+    type t = {
+      offset: int,
+      totalSize: int,
+      extensions: list(Summary.t),
     };
+
+    let decode = {
+      Json.Decode.(
+        obj(({field, _}) =>
+          {
+            offset: field.required("offset", int),
+            totalSize: field.required("totalSize", int),
+            extensions:
+              field.withDefault("extensions", [], list(Summary.decode)),
+          }
+        )
+      );
+    };
+
+    let toString = ({offset, totalSize, extensions}) => {
+      let extensionCount = List.length(extensions);
+
+      let extensionStrings =
+        extensions |> List.map(Summary.toString) |> String.concat("---\n");
+      Printf.sprintf(
+        "Showing extensions %d - %d of %d\n%s",
+        offset,
+        offset + extensionCount,
+        totalSize,
+        extensionStrings,
+      );
+    };
+  };
+
+  let search = (~offset, ~setup, query) => {
+    let url = Url.search(~query, ~offset);
+    Service_Net.Request.json(~setup, ~decoder=SearchResponse.decode, url);
   };
 };
 
