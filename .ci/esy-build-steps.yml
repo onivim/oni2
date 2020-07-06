@@ -30,6 +30,7 @@ steps:
     displayName: 'Unit Tests: esy test-ci (round 1)'
     env:
       ASAN_OPTIONS: use_sigaltstack=1
+      LSAN_OPTIONS: use_sigaltstack=1
 #  - script: esy @test run-ci
 #    displayName: 'Unit Tests: esy test-ci (round 2)'
 #  - script: esy @test run-ci
