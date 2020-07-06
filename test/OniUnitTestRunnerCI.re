@@ -47,13 +47,6 @@ Oni_ExtensionManagement_Test.TestFramework.run(
   ),
 );
 
-Oni_Components_Test.TestFramework.run(
-  Rely.RunConfig.withReporters(
-    [Default, JUnit("./junit.xml")],
-    Rely.RunConfig.initialize(),
-  ),
-);
-
 Feature_Editor_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
