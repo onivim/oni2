@@ -13,6 +13,7 @@
         Oni2.model
         Oni2.input
         Oni2.syntax_client
+        Oni2.service.extensions
         Oni2.service.font
         Oni2.service.file-watcher
         Oni2.service.syntax

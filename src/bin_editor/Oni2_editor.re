@@ -13,82 +13,48 @@ module Core = Oni_Core;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
-module ExtM = Oni_ExtensionManagement;
+module ExtM = Service_Extensions.Management;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
-  switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
-  | Some(extensionsFolder) =>
-    let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
+  let setup = Core.Setup.init();
+  let result =
+    ExtM.install(~setup, ~extensionsFolder=?overriddenExtensionsDir, path)
+    |> LwtEx.sync;
 
-    switch (result) {
-    | Ok(_) =>
-      Printf.printf("Successfully installed extension: %s\n", path);
-      0;
+  switch (result) {
+  | Ok(_) =>
+    Printf.printf("Successfully installed extension: %s\n", path);
+    0;
 
-    | Error(_) =>
-      Printf.printf("Failed to install extension: %s\n", path);
-      1;
-    };
-
-  | None =>
-    prerr_endline("Error locating user extension folder.");
+  | Error(_) =>
+    Printf.printf("Failed to install extension: %s\n", path);
     1;
   };
 };
 
 let uninstallExtension = (extensionId, {overriddenExtensionsDir, _}) => {
-  Exthost.Extension.(
-    {
-      let extensions =
-        Store.Utility.getUserExtensions(~overriddenExtensionsDir);
+  let result =
+    ExtM.uninstall(~extensionsFolder=?overriddenExtensionsDir, extensionId)
+    |> LwtEx.sync;
 
-      let matchingExtensions =
-        extensions
-        |> List.map((ext: Scanner.ScanResult.t) => {
-             (
-               ext.manifest |> Manifest.identifier |> String.lowercase_ascii,
-               ext.path,
-             )
-           })
-        |> List.filter(((id, _)) =>
-             String.equal(extensionId |> String.lowercase_ascii, id)
-           );
+  switch (result) {
+  | Ok(_) =>
+    Printf.sprintf("Successfully uninstalled extension: %s\n", extensionId)
+    |> print_endline;
+    0;
 
-      if (List.length(matchingExtensions) == 0) {
-        prerr_endline("No matching extension found for: " ++ extensionId);
-        1;
-      } else {
-        let (_, path) = List.hd(matchingExtensions);
-
-        print_endline("Found matching extension at: " ++ path);
-
-        let result = Service_OS.Api.rmdir(path) |> LwtEx.sync;
-
-        switch (result) {
-        | Ok(_) =>
-          print_endline(
-            Printf.sprintf(
-              "Extension %s uninstalled successfully.",
-              extensionId,
-            ),
-          );
-          0;
-        | Error(msg) =>
-          prerr_endline(
-            Printf.sprintf(
-              "There was an error uninstalling extension %s: %s",
-              extensionId,
-              Printexc.to_string(msg),
-            ),
-          );
-          1;
-        };
-      };
-    }
-  );
+  | Error(msg) =>
+    Printf.sprintf(
+      "Failed to uninstall extension: %s\n%s",
+      extensionId,
+      Printexc.to_string(msg),
+    )
+    |> prerr_endline;
+    1;
+  };
 };
 
 let printVersion = () => {
@@ -139,7 +105,10 @@ let listExtensions = ({overriddenExtensionsDir, _}) => {
   Exthost.Extension.(
     {
       let extensions =
-        Store.Utility.getUserExtensions(~overriddenExtensionsDir);
+        ExtM.get(~extensionsFolder=?overriddenExtensionsDir, ())
+        |> LwtEx.sync
+        |> Result.value(~default=[]);
+
       let printExtension = (ext: Scanner.ScanResult.t) => {
         print_endline(ext.manifest |> Manifest.identifier);
       };

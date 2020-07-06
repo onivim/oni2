@@ -1,4 +1,5 @@
 open Oni_Core;
+
 module Catalog: {
   module Identifier: {
     type t = {
@@ -27,12 +28,13 @@ module Catalog: {
       readmeUrl: string,
       licenseName: string,
       //      licenseUrl: string,
-      //      name: string,
-      //      namespace: string,
+      name: string,
+      namespace: string,
       //      downloadCount: int,
       displayName: string,
       description: string,
       //      categories: list(string),
+      version: string,
       versions: list(VersionInfo.t),
     };
 
@@ -67,4 +69,15 @@ module Catalog: {
   let details: (~setup: Setup.t, Identifier.t) => Lwt.t(Details.t);
   let search:
     (~offset: int, ~setup: Setup.t, string) => Lwt.t(SearchResponse.t);
+};
+
+module Management: {
+  let install:
+    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(string);
+
+  let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
+
+  let get:
+    (~extensionsFolder: string=?, unit) =>
+    Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };

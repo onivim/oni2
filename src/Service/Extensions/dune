@@ -4,7 +4,9 @@
     (libraries 
       editor-core-types
       Oni2.core
+      Oni2.exthost
       Oni2.service.net
+      Oni2.service.os
       Revery
       isolinear
       base
