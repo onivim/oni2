@@ -1,7 +1,6 @@
 open Revery.Math;
 
 module StringEx = Oni_Core.Utility.StringEx;
-module Selection = Oni_Components.Selection;
 
 type callback = unit => unit;
 

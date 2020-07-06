@@ -33,7 +33,6 @@ type outmsg =
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-
     let model =
       switch (key) {
       | "<CR>" =>
@@ -42,18 +41,19 @@ let update = (model, msg) => {
           model; // Do nothing if the query hasn't changed
         } else {
           {...model, query: findInputValue, hits: []};
-        }
+        };
 
       | _ =>
         let findInput = Feature_InputText.handleInput(~key, model.findInput);
-        {...model, findInput };
+        {...model, findInput};
       };
 
     (model, None);
 
-  | FindInput(msg) => ({...model,
-  findInput: Feature_InputText.update(msg, model.findInput),
-  }, Some(Focus))
+  | FindInput(msg) => (
+      {...model, findInput: Feature_InputText.update(msg, model.findInput)},
+      Some(Focus),
+    )
 
   | Update(items) => ({...model, hits: model.hits @ items}, None)
 

@@ -236,3 +236,15 @@ let handleInput = (~key, model) => {
 
   {...model, value, selection};
 };
+
+let set = (~text, ~cursor, model) => {
+  ...model,
+  value: text,
+  selection: Selection.collapsed(~text, cursor),
+};
+
+let isCursorAtEnd = ({value, selection, _}) => {
+  Selection.isCollapsed(selection) && selection.focus == String.length(value);
+};
+
+let cursorPosition = ({selection, _}) => selection.focus;

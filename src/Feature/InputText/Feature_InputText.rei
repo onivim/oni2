@@ -14,6 +14,12 @@ let update: (msg, model) => model;
 
 let handleInput: (~key: string, model) => model;
 
+let set: (~text: string, ~cursor: int, model) => model;
+
+let isCursorAtEnd: model => bool;
+
+let cursorPosition: model => int;
+
 module View: {
   let make:
     (

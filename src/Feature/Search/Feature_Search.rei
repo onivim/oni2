@@ -1,7 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Revery.UI;
-open Oni_Components;
 
 type model;
 

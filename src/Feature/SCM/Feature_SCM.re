@@ -1,8 +1,6 @@
 open Oni_Core;
 open Utility;
 
-module Selection = Oni_Components.Selection;
-
 // MODEL
 
 module Resource = Exthost.SCM.Resource;
@@ -403,8 +401,6 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
-
-module Input = Oni_Components.Input;
 
 module Colors = Feature_Theme.Colors;
 
