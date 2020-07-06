@@ -288,10 +288,12 @@ module Management = {
         Internal.installByPath(~setup, ~extensionsFolder, ~folderName, path);
       } else {
         // ...otherwise, query the extension store, download, and install
-        Catalog.query(~setup, path)
+        Catalog.Identifier.fromString(path)
+        |> LwtEx.fromOption(~errorMsg="Invalid extension id: " ++ path)
+        |> LwtEx.flatMap(Catalog.details(~setup))
         |> LwtEx.flatMap(
              (
-               {downloadUrl, displayName, name, namespace, version, _}: Catalog.Entry.t,
+               {downloadUrl, displayName, name, namespace, version, _}: Catalog.Details.t,
              ) => {
              Log.infof(m =>
                m("Downloading %s from %s", displayName, downloadUrl)
