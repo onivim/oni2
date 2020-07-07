@@ -41,7 +41,7 @@ let animation =
     |> delay(Revery.Time.milliseconds(0))
   );
 
-let%component make = (~theme, ~state: State.t, ()) => {
+let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
   let State.{sideBar, uiFont: font, _} = state;
 
   let dispatch = GlobalContext.current().dispatch;
@@ -82,7 +82,14 @@ let%component make = (~theme, ~state: State.t, ()) => {
       />;
 
     | Extensions =>
-      <Feature_Extensions.ListView model={state.extensions} theme font />
+      let extensionDispatch = msg => dispatch(Actions.Extensions(msg));
+      <Feature_Extensions.ListView
+        model={state.extensions}
+        theme
+        font
+        isFocused={FocusManager.current(state) == Focus.Extensions}
+        dispatch=extensionDispatch
+      />;
     };
 
   let width = Feature_SideBar.width(state.sideBar);

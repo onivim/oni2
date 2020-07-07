@@ -9,17 +9,18 @@ open Exthost.Extension;
 module Colors = Feature_Theme.Colors;
 
 module Styles = {
-  let text = (~theme) =>
-    Style.[
-      color(Colors.SideBar.foreground.from(theme)),
-      marginLeft(10),
-      marginVertical(2),
-      textWrap(TextWrapping.NoWrap),
-      textOverflow(`Ellipsis),
-    ];
+  open Style;
+  let text = (~theme) => [
+    color(Colors.SideBar.foreground.from(theme)),
+    marginLeft(10),
+    marginVertical(2),
+    textWrap(TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
+  ];
+  let input = [flexGrow(1), margin(12)];
 };
 
-let make = (~model, ~theme, ~font: UiFont.t, ()) => {
+let make = (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
   let renderItem = (extensions: array(Scanner.ScanResult.t), idx) => {
     let extension = extensions[idx];
 
@@ -90,6 +91,15 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
 
   <View
     style=Style.[flexDirection(`Column), flexGrow(1), overflow(`Hidden)]>
+    <Feature_InputText.View
+      style=Styles.input
+      model={model.searchText}
+      isFocused
+      fontFamily={font.family}
+      fontSize={font.size}
+      dispatch={msg => dispatch(Model.SearchText(msg))}
+      theme
+    />
     <Accordion
       title="Installed"
       expanded=true
@@ -101,14 +111,4 @@ let make = (~model, ~theme, ~font: UiFont.t, ()) => {
       theme
     />
   </View>;
-  //    <Accordion
-  //      title="Bundled"
-  //      expanded=false
-  //      uiFont=font
-  //      renderItem={renderItem(allExtensions)}
-  //      rowHeight=50
-  //      count={Array.length(allExtensions)}
-  //      focused=None
-  //      theme
-  //    />
 };

@@ -10,13 +10,16 @@ type msg =
   | ExecuteCommand({
       command: string,
       arguments: [@opaque] list(Json.t),
-    });
+    })
+  | KeyPressed(string)
+  | SearchText(Feature_InputText.msg);
 
 type outmsg =
   | Nothing
+  | Focus
   | Effect(Isolinear.Effect.t(msg));
 
-let empty: model;
+let initial: model;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 
@@ -28,6 +31,13 @@ let commands: model => list(Command.t(msg));
 
 module ListView: {
   let make:
-    (~model: model, ~theme: ColorTheme.Colors.t, ~font: UiFont.t, unit) =>
+    (
+      ~model: model,
+      ~theme: ColorTheme.Colors.t,
+      ~font: UiFont.t,
+      ~isFocused: bool,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
     Revery.UI.element;
 };

@@ -94,12 +94,18 @@ let update =
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
-    let state' = {...state, extensions: model};
-    let effect =
+    let state = {...state, extensions: model};
+    let (state', effect) =
       switch (outMsg) {
-      | Feature_Extensions.Nothing => Effect.none
-      | Feature_Extensions.Effect(eff) =>
-        eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg))
+      | Feature_Extensions.Nothing => (state, Effect.none)
+      | Feature_Extensions.Effect(eff) => (
+          state,
+          eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
+        )
+      | Feature_Extensions.Focus => (
+          FocusManager.push(Focus.Extensions, state),
+          Effect.none,
+        )
       };
     (state', effect);
   | Formatting(msg) =>

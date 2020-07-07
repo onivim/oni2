@@ -122,7 +122,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let sideBar = () =>
     if (!zenMode && Feature_SideBar.isOpen(sideBar)) {
       React.listToElement([
-        <SideBarView theme state />,
+        <SideBarView theme state dispatch />,
         <WindowHandle direction=`Vertical />,
       ]);
     } else {

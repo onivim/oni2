@@ -18,6 +18,8 @@ let create = (~placeholder) => {
   placeholder,
 };
 
+let empty = create(~placeholder="");
+
 let value = ({value, _}) => value;
 
 let update = (msg, model) =>
