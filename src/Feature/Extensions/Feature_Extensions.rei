@@ -28,6 +28,12 @@ let commands: model => list(Command.t(msg));
 
 module ListView: {
   let make:
-    (~model: model, ~theme: ColorTheme.Colors.t, ~font: UiFont.t, unit) =>
+    (
+      ~key: Brisk_reconciler.Key.t=?,
+      ~model: model,
+      ~theme: ColorTheme.Colors.t,
+      ~font: UiFont.t,
+      unit
+    ) =>
     Revery.UI.element;
 };
