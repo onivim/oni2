@@ -1,0 +1,9 @@
+(library
+    (name Feature_SideBar)
+    (public_name Oni2.feature.sideBar)
+    (libraries 
+      Oni2.core
+      isolinear
+      base
+    )
+    (preprocess (pps ppx_let ppx_deriving.show)))

@@ -3,7 +3,7 @@ open Revery.UI;
 open Oni_Model;
 module Core = Oni_Core;
 
-open Oni_Model.SideBar;
+open Feature_SideBar;
 open Oni_Components;
 
 module Colors = Feature_Theme.Colors;
@@ -54,14 +54,14 @@ let%component make = (~theme, ~state: State.t, ()) => {
     Hooks.animation(animation, ~active=true);
 
   let title =
-    switch (sideBar.selected) {
+    switch (sideBar |> selected) {
     | FileExplorer => "Explorer"
     | SCM => "Source Control"
     | Extensions => "Extensions"
     };
 
   let elem =
-    switch (sideBar.selected) {
+    switch (sideBar |> selected) {
     | FileExplorer =>
       <FileExplorerView model={state.fileExplorer} theme font />
 

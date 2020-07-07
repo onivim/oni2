@@ -39,7 +39,7 @@ type t = {
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
-  sideBar: SideBar.t,
+  sideBar: Feature_SideBar.model,
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
   extensions: Feature_Extensions.model,
@@ -134,7 +134,7 @@ let initial =
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.default,
-    sideBar: SideBar.initial,
+    sideBar: Feature_SideBar.initial,
     tokenTheme: TokenTheme.empty,
     iconTheme: IconTheme.create(),
     isQuitting: false,
