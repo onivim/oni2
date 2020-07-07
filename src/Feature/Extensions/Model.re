@@ -28,6 +28,12 @@ let initial = {
   latestQuery: None,
 };
 
+let searchResults = ({latestQuery, _}) =>
+  switch (latestQuery) {
+  | None => []
+  | Some(query) => query |> Service_Extensions.Query.results
+  };
+
 module Internal = {
   let filterBundled = (scanner: Scanner.ScanResult.t) => {
     let name = scanner.manifest.name;
