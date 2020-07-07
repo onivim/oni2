@@ -167,6 +167,9 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | SideBar(msg) =>
+    let sideBar' = Feature_SideBar.update(msg, state.sideBar);
+    ({...state, sideBar: sideBar'}, Effect.none);
   | Sneak(msg) =>
     let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
 

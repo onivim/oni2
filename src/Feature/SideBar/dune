@@ -3,7 +3,12 @@
     (public_name Oni2.feature.sideBar)
     (libraries 
       Oni2.core
+      Oni2.components
+      Oni2.feature.extensions
+      Oni2.feature.scm
+      Oni2.feature.theme
       isolinear
       base
+      Revery
     )
-    (preprocess (pps ppx_let ppx_deriving.show)))
+    (preprocess (pps brisk-reconciler.ppx ppx_deriving.show)))

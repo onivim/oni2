@@ -11,13 +11,12 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
 
-  let sidebar = (~theme, ~transition) =>
-    Style.[
-      flexDirection(`Row),
-      backgroundColor(Colors.SideBar.background.from(theme)),
-      width(225),
-      transform(Transform.[TranslateX(transition)]),
-    ];
+  let sidebar = (~width, ~theme, ~transition) => [
+    flexDirection(`Row),
+    backgroundColor(Colors.SideBar.background.from(theme)),
+    Style.width(width),
+    transform(Transform.[TranslateX(transition)]),
+  ];
 
   let contents = [flexDirection(`Column), flexGrow(1)];
 
@@ -50,6 +49,8 @@ let animation =
 let%component make = (~theme, ~state: State.t, ()) => {
   let State.{sideBar, uiFont: font, _} = state;
 
+  let dispatch = GlobalContext.current().dispatch;
+
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
 
@@ -67,7 +68,7 @@ let%component make = (~theme, ~state: State.t, ()) => {
 
     | SCM =>
       let onItemClick = (resource: Feature_SCM.Resource.t) =>
-        GlobalContext.current().dispatch(
+        dispatch(
           Actions.OpenFileByPath(
             Oni_Core.Uri.toFileSystemPath(resource.uri),
             None,
@@ -82,14 +83,16 @@ let%component make = (~theme, ~state: State.t, ()) => {
         isFocused={FocusManager.current(state) == Focus.SCM}
         theme
         font
-        dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
+        dispatch={msg => dispatch(Actions.SCM(msg))}
       />;
 
     | Extensions =>
       <Feature_Extensions.ListView model={state.extensions} theme font />
     };
 
-  <View style={Styles.sidebar(~theme, ~transition)}>
+  let width = Feature_SideBar.width(state.sideBar);
+
+  <View style={Styles.sidebar(~width, ~theme, ~transition)}>
     <View style=Styles.contents>
       <View style={Styles.heading(theme)}>
         <Text
@@ -104,8 +107,16 @@ let%component make = (~theme, ~state: State.t, ()) => {
     </View>
     <View style=Styles.resizer>
       <ResizeHandle.Vertical
-        onDrag={delta => prerr_endline(string_of_float(delta))}
-        onDragComplete={() => prerr_endline("DONE!")}
+        onDrag={delta =>
+          dispatch(
+            Actions.SideBar(
+              Feature_SideBar.ResizeInProgress(int_of_float(delta)),
+            ),
+          )
+        }
+        onDragComplete={() =>
+          dispatch(Actions.SideBar(Feature_SideBar.ResizeCommitted))
+        }
       />
     </View>
   </View>;
