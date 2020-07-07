@@ -44,8 +44,6 @@ let animation =
 let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
   let State.{sideBar, uiFont: font, _} = state;
 
-  let dispatch = GlobalContext.current().dispatch;
-
   let%hook (transition, _animationState, _reset) =
     Hooks.animation(animation, ~active=true);
 
