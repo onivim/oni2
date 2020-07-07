@@ -28,11 +28,7 @@ let make = (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
 
   let userExtensions = Model.getExtensions(~category=Scanner.User, model);
 
-  //let developmentExtensions =
-  //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
-
   let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
-  //let developmentCount = Array.length(developmentExtensions);
 
   let contents =
     if (Feature_InputText.isEmpty(model.searchText)) {
