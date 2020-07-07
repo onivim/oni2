@@ -8,15 +8,14 @@ type msg =
   | ExecuteCommand({
       command: string,
       arguments: [@opaque] list(Json.t),
-    });
+    })
+  | SearchInput(Feature_InputText.msg);
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
 
 include Model;
-
-let empty = {activatedIds: [], extensions: []};
 
 module Internal = {
   let markActivated = (id: string, model) => {
@@ -44,6 +43,7 @@ let update = (~extHostClient, msg, model) => {
         ),
       ),
     )
+  | SearchInput(_) => (model, Nothing);
   };
 };
 

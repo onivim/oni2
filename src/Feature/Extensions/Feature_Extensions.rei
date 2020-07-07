@@ -10,13 +10,14 @@ type msg =
   | ExecuteCommand({
       command: string,
       arguments: [@opaque] list(Json.t),
-    });
+    })
+  | SearchInput(Feature_InputText.msg);
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
 
-let empty: model;
+let initial: model;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 

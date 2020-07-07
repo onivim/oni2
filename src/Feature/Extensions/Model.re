@@ -4,7 +4,14 @@ open Exthost.Extension;
 type model = {
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
+  searchText: Feature_InputText.model,
 };
+
+let initial = {
+  activatedIds: [],
+  extensions: [],
+  searchText: Feature_InputText.empty,
+}
 
 module Internal = {
   let filterBundled = (scanner: Scanner.ScanResult.t) => {
