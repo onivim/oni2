@@ -18,12 +18,14 @@ type model = {
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
   searchText: Feature_InputText.model,
+  latestQuery: option(Service_Extensions.Query.t)
 };
 
 let initial = {
   activatedIds: [],
   extensions: [],
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
+  latestQuery: None,
 };
 
 module Internal = {

@@ -40,6 +40,11 @@ let update = (~extHostClient, msg, model) => {
   | SearchText(msg) =>
     let searchText' = Feature_InputText.update(msg, model.searchText);
     ({...model, searchText: searchText'}, Focus);
+  | SearchQueryResults(queryResults) =>
+    ({...model, latestQuery: Some(queryResults)}, Nothing})
+  | SearchQueryError(queryResults) =>
+    // TODO: Error experience?
+    ({...model, latestQuery: None}, Nothing})
   };
 };
 
@@ -89,4 +94,15 @@ let menus = model =>
 
 module ListView = ListView;
 
-let sub = (~setup, model) => Isolinear.Sub.none;
+let sub = (~setup, model) => {
+  let toMsg = fun
+  | Ok(query) => SearchQueryResults(query)
+  | Error(err) => SearchQueryError(err);
+
+  switch (model.latestQuery) {
+  | Some(query) when !Service_Extensions.Query.isComplete(query) =>
+  Service_Extensions.Sub.search(~setup, ~query, ~toMsg);
+  | Some(_)
+  | None => Isolinear.Sub.none;
+  }
+};
