@@ -8,7 +8,7 @@ module Sneakable = Feature_Sneak.View.Sneakable;
 module Colors = Feature_Theme.Colors;
 
 module Constants = {
-  let height = 225;
+  let height = 500;
 };
 
 module Styles = {
