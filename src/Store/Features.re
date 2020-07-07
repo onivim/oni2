@@ -350,7 +350,8 @@ let update =
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
     | Focus(Left) => (
-        Feature_SideBar.isOpen(state.sideBar) ? SideBarReducer.focus(state) : state,
+        Feature_SideBar.isOpen(state.sideBar)
+          ? SideBarReducer.focus(state) : state,
         Effect.none,
       )
 

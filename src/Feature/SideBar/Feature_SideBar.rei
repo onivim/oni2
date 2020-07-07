@@ -1,4 +1,3 @@
-
 type pane =
   | FileExplorer
   | SCM
