@@ -5,7 +5,7 @@ module Styles = {
   open Style;
   let vertical = [
     cursor(MouseCursors.horizontalResize),
-    backgroundColor(Color.rgba(0., 0., 0., 0.2)),
+    backgroundColor(Color.rgba(0., 0., 0., 0.1)),
     position(`Absolute),
     top(0),
     left(0),
