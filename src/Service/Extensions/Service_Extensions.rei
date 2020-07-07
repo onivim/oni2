@@ -81,3 +81,20 @@ module Management: {
     (~extensionsFolder: string=?, unit) =>
     Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };
+
+module Query: {
+  type t;
+  let create: (~searchText: string) => t;
+
+  let isComplete: t => bool;
+  let percentComplete: t => float;
+  let results: t => list(Catalog.Summary.t);
+};
+
+module Sub: {
+  let search: (
+    ~setup: Setup.t,
+    ~query: Query.t,
+    ~toMsg: result(Query.t, string) => 'a)
+    => Isolinear.Sub.t('a)
+}
