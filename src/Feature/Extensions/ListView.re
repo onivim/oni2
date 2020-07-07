@@ -1,7 +1,5 @@
 open Oni_Core;
-open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Components;
 
 open Exthost.Extension;
@@ -54,7 +52,8 @@ let make = (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
         |> List.map((summary: Service_Extensions.Catalog.Summary.t) => {
              let displayName =
                summary |> Service_Extensions.Catalog.Summary.name;
-             let {namespace as author, version, _}: Service_Extensions.Catalog.Summary.t = summary;
+             let {namespace, version, _}: Service_Extensions.Catalog.Summary.t = summary;
+             let author = namespace;
 
              <ItemView iconPath=None theme displayName author version font />;
            })
