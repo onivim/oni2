@@ -10,7 +10,6 @@ open Oni_CLI;
 open Oni_UI;
 
 module Core = Oni_Core;
-module Ext = Oni_Extensions;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;

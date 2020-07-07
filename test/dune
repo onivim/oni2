@@ -7,7 +7,6 @@
         yojson
         Oni_Cli_Test
         Oni_Core_Test
-        Oni_Extensions_Test
         Oni_Input_Test
         Oni_Model_Test
         Oni_UI_Test
@@ -136,7 +135,6 @@
         yojson
         Oni_Cli_Test
         Oni_Core_Test
-        Oni_Extensions_Test
         Oni_Input_Test
         Oni_Syntax_Test
         Oni_Model_Test

@@ -8,7 +8,6 @@ open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
 
-module Ext = Oni_Extensions;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
@@ -49,7 +48,7 @@ type t = {
   keyBindings: Keybindings.t,
   keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
-  languageInfo: Ext.LanguageInfo.t,
+  languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   notifications: Feature_Notification.model,
@@ -141,7 +140,7 @@ let initial =
     isQuitting: false,
     keyBindings: Keybindings.empty,
     keyDisplayer: None,
-    languageInfo: Ext.LanguageInfo.initial,
+    languageInfo: Exthost.LanguageInfo.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
     references: References.initial,

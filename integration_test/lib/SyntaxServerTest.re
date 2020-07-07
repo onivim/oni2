@@ -1,7 +1,7 @@
 open Oni_Core;
 open Oni_Core.Utility;
-open Oni_Extensions;
 open Timber;
+open Exthost;
 
 type testContext = {
   syntaxClient: Oni_Syntax_Client.t,

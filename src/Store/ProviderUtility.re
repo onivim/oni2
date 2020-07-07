@@ -2,10 +2,10 @@
  * ProviderUtility.re
  */
 
-module Core = Oni_Core;
+open Oni_Core;
 
 let runIfSelectorPasses = (~buffer, ~selector, f) => {
-  Core.Buffer.getFileType(buffer)
+  Buffer.getFileType(buffer)
   |> Option.map(filetype =>
        Exthost.DocumentSelector.matches(~filetype, selector)
      )

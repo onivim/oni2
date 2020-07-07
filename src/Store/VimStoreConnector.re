@@ -12,7 +12,6 @@ open Oni_Model;
 module Core = Oni_Core;
 open Core.Utility;
 
-module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module Definition = Feature_LanguageSupport.Definition;
@@ -24,7 +23,7 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 let start =
     (
       ~showUpdateChangelog: bool,
-      languageInfo: Ext.LanguageInfo.t,
+      languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
       setClipboardText,
@@ -187,7 +186,7 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
@@ -308,7 +307,9 @@ let start =
         let fileType =
           switch (metadata.filePath) {
           | Some(v) =>
-            Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+            Some(
+              Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v),
+            )
           | None => None
           };
 
