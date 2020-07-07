@@ -75,5 +75,3 @@ let toggle = (pane, state) =>
   } else {
     {...state, isOpen: true, selected: pane};
   };
-
-module View = {};
