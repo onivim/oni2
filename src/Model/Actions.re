@@ -168,6 +168,7 @@ type t =
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
+  | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
