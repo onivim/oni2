@@ -1,5 +1,16 @@
-//open Oni_Core;
+open Oni_Core;
 open Exthost.Extension;
+
+[@deriving show({with_path: false})]
+type msg =
+  | Activated(string /* id */)
+  | Discovered([@opaque] list(Scanner.ScanResult.t))
+  | ExecuteCommand({
+      command: string,
+      arguments: [@opaque] list(Json.t),
+    })
+  | KeyPressed(string)
+  | SearchText(Feature_InputText.msg);
 
 type model = {
   activatedIds: list(string),
@@ -10,8 +21,8 @@ type model = {
 let initial = {
   activatedIds: [],
   extensions: [],
-  searchText: Feature_InputText.empty,
-}
+  searchText: Feature_InputText.create(~placeholder="Type to search..."),
+};
 
 module Internal = {
   let filterBundled = (scanner: Scanner.ScanResult.t) => {
