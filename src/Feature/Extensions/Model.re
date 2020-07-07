@@ -10,6 +10,8 @@ type msg =
       arguments: [@opaque] list(Json.t),
     })
   | KeyPressed(string)
+  | SearchQueryResults(Service_Extensions.Query.t)
+  | SearchQueryError(string)
   | SearchText(Feature_InputText.msg);
 
 type model = {

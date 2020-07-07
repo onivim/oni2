@@ -88,3 +88,5 @@ let menus = model =>
   |> List.of_seq;
 
 module ListView = ListView;
+
+let sub = (~setup, model) => Isolinear.Sub.none;

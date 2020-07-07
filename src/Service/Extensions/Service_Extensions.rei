@@ -42,6 +42,7 @@ module Catalog: {
   };
 
   module Summary: {
+    [@deriving show]
     type t = {
       url: string,
       downloadUrl: string,
@@ -83,6 +84,7 @@ module Management: {
 };
 
 module Query: {
+[@deriving show]
   type t;
   let create: (~searchText: string) => t;
 
@@ -92,9 +94,11 @@ module Query: {
 };
 
 module Sub: {
-  let search: (
-    ~setup: Setup.t,
-    ~query: Query.t,
-    ~toMsg: result(Query.t, string) => 'a)
-    => Isolinear.Sub.t('a)
-}
+  let search:
+    (
+      ~setup: Setup.t,
+      ~query: Query.t,
+      ~toMsg: result(Query.t, string) => 'a
+    ) =>
+    Isolinear.Sub.t('a);
+};

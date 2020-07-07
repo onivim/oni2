@@ -12,7 +12,10 @@ type msg =
       arguments: [@opaque] list(Json.t),
     })
   | KeyPressed(string)
+  | SearchQueryResults(Service_Extensions.Query.t)
+  | SearchQueryError(string)
   | SearchText(Feature_InputText.msg);
+
 
 type outmsg =
   | Nothing
@@ -28,6 +31,8 @@ let activatedIds: model => list(string);
 
 let menus: model => list(Menu.Schema.definition);
 let commands: model => list(Command.t(msg));
+
+let sub: (~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
 
 module ListView: {
   let make:
