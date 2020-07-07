@@ -28,7 +28,6 @@ module ModeManager = ModeManager;
 module Pane = Pane;
 module References = References;
 module Selectors = Selectors;
-module SideBar = SideBar;
 module State = State;
 module Sub = Sub;
 module ThemeInfo = ThemeInfo;

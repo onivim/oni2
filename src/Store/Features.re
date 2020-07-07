@@ -173,6 +173,9 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | SideBar(msg) =>
+    let sideBar' = Feature_SideBar.update(msg, state.sideBar);
+    ({...state, sideBar: sideBar'}, Effect.none);
   | Sneak(msg) =>
     let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
 
@@ -356,7 +359,8 @@ let update =
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
     | Focus(Left) => (
-        state.sideBar.isOpen ? SideBarReducer.focus(state) : state,
+        Feature_SideBar.isOpen(state.sideBar)
+          ? SideBarReducer.focus(state) : state,
         Effect.none,
       )
 

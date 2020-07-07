@@ -3,19 +3,24 @@ open Revery.UI;
 open Oni_Model;
 module Core = Oni_Core;
 
-open Oni_Model.SideBar;
+open Feature_SideBar;
+open Oni_Components;
 
 module Colors = Feature_Theme.Colors;
 
 module Styles = {
   open Style;
 
-  let container = (~theme, ~transition) =>
-    Style.[
-      backgroundColor(Colors.SideBar.background.from(theme)),
-      width(225),
-      transform(Transform.[TranslateX(transition)]),
-    ];
+  let sidebar = (~width, ~theme, ~transition) => [
+    flexDirection(`Row),
+    backgroundColor(Colors.SideBar.background.from(theme)),
+    Style.width(width),
+    transform(Transform.[TranslateX(transition)]),
+  ];
+
+  let contents = [flexDirection(`Column), flexGrow(1)];
+
+  let resizer = [flexGrow(0), width(4), position(`Relative)];
 
   let title = (~theme) => [color(Colors.SideBar.foreground.from(theme))];
 
@@ -43,14 +48,14 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
     Hooks.animation(animation, ~active=true);
 
   let title =
-    switch (sideBar.selected) {
+    switch (sideBar |> selected) {
     | FileExplorer => "Explorer"
     | SCM => "Source Control"
     | Extensions => "Extensions"
     };
 
   let elem =
-    switch (sideBar.selected) {
+    switch (sideBar |> selected) {
     | FileExplorer =>
       <FileExplorerView model={state.fileExplorer} theme font />
 
@@ -85,16 +90,34 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
       />;
     };
 
-  <View style={Styles.container(~theme, ~transition)}>
-    <View style={Styles.heading(theme)}>
-      <Text
-        text=title
-        style={Styles.title(~theme)}
-        fontFamily={font.family}
-        fontWeight=Medium
-        fontSize={font.size}
+  let width = Feature_SideBar.width(state.sideBar);
+
+  <View style={Styles.sidebar(~width, ~theme, ~transition)}>
+    <View style=Styles.contents>
+      <View style={Styles.heading(theme)}>
+        <Text
+          text=title
+          style={Styles.title(~theme)}
+          fontFamily={font.family}
+          fontWeight=Medium
+          fontSize={font.size}
+        />
+      </View>
+      elem
+    </View>
+    <View style=Styles.resizer>
+      <ResizeHandle.Vertical
+        onDrag={delta =>
+          dispatch(
+            Actions.SideBar(
+              Feature_SideBar.ResizeInProgress(int_of_float(delta)),
+            ),
+          )
+        }
+        onDragComplete={() =>
+          dispatch(Actions.SideBar(Feature_SideBar.ResizeCommitted))
+        }
       />
     </View>
-    elem
   </View>;
 };

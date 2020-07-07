@@ -31,6 +31,7 @@
         Oni2.feature.commands
         Oni2.feature.inputText
         Oni2.feature.search
+        Oni2.feature.sideBar
         Oni2.feature.syntax
         Oni2.feature.language_support
         Oni2.feature.editor
