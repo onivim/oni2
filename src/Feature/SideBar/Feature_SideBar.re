@@ -10,6 +10,8 @@ type msg =
 
 module Constants = {
   let defaultWidth = 225;
+  let minWidth = 50;
+  let maxWidth = 800;
 };
 
 type model = {
@@ -33,19 +35,32 @@ let initial = {
   resizeDelta: 0,
 };
 
-let width = ({width, resizeDelta, _}) => width + resizeDelta;
+let width = ({width, resizeDelta, _}) => {
+  let candidate = width + resizeDelta;
+  if (candidate < Constants.minWidth) {
+    0;
+  } else if (candidate > Constants.maxWidth) {
+    Constants.maxWidth;
+  } else {
+    candidate;
+  };
+};
 
 let update = (msg, model) =>
   switch (msg) {
   | ResizeInProgress(delta) => {...model, resizeDelta: delta}
-  | ResizeCommitted => {
-      ...model,
-      width: model.width + model.resizeDelta,
-      resizeDelta: 0,
-    }
+  | ResizeCommitted =>
+    let newWidth = width(model);
+    if (newWidth == 0) {
+      {...model, isOpen: false, resizeDelta: 0};
+    } else {
+      {...model, width: newWidth, resizeDelta: 0};
+    };
   };
 
-let isVisible = (pane, model) => model.isOpen && model.selected == pane;
+let isVisible = (pane, model) => {
+  model.isOpen && model.selected == pane;
+};
 
 let setDefaultVisibility = (pane, defaultVisibility) =>
   if (pane.openByDefault == defaultVisibility) {

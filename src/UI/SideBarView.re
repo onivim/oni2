@@ -20,12 +20,7 @@ module Styles = {
 
   let contents = [flexDirection(`Column), flexGrow(1)];
 
-  let resizer = [
-    flexGrow(0),
-    backgroundColor(Revery.Colors.gray),
-    width(4),
-    position(`Relative),
-  ];
+  let resizer = [flexGrow(0), width(4), position(`Relative)];
 
   let title = (~theme) => [color(Colors.SideBar.foreground.from(theme))];
 
