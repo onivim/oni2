@@ -4,64 +4,43 @@
 
 open Oni_Model;
 open Actions;
+open Feature_Pane;
 
 let focus = (state: State.t) =>
-  if (state.pane.isOpen && state.pane.selected == Search) {
+  if (Feature_Pane.isOpen(state.pane)
+      && Feature_Pane.isVisible(Search, state.pane)) {
     FocusManager.push(Search, state);
   } else {
     state;
   };
 
 let showSearchPane = (state: State.t) =>
-  {
-    ...state,
-    pane: {
-      isOpen: true,
-      selected: Search,
-    },
-  }
+  {...state, pane: Feature_Pane.show(~pane=Search, state.pane)}
   |> FocusManager.push(Search);
 
 let hideSearchPane = (state: State.t) =>
-  {
-    ...state,
-    pane: {
-      ...state.pane,
-      isOpen: false,
-    },
-  }
+  {...state, pane: Feature_Pane.close(state.pane)}
   |> FocusManager.pop(Search);
 
 let openDiagnosticsPane = (state: State.t) => {
   ...state,
-  pane: {
-    isOpen: true,
-    selected: Diagnostics,
-  },
+  pane: Feature_Pane.show(~pane=Diagnostics, state.pane),
 };
 
 let openNotificationsPane = (state: State.t) => {
   ...state,
-  pane: {
-    isOpen: true,
-    selected: Notifications,
-  },
+  pane: Feature_Pane.show(~pane=Notifications, state.pane),
 };
 
 let closePane = (state: State.t) =>
-  {
-    ...state,
-    pane: {
-      ...state.pane,
-      isOpen: false,
-    },
-  }
+  {...state, pane: Feature_Pane.close(state.pane)}
+  // TODO: Generalize this
   |> FocusManager.pop(Search);
 
 let update = (state: State.t, action: Actions.t) =>
   switch (action) {
   | SearchHotkey
-  | ActivityBar(SearchClick) when Pane.isVisible(Search, state.pane) => (
+  | ActivityBar(SearchClick) when Feature_Pane.isVisible(Search, state.pane) => (
       FocusManager.current(state) == Search
         ? hideSearchPane(state) : showSearchPane(state),
       Isolinear.Effect.none,
@@ -76,7 +55,7 @@ let update = (state: State.t, action: Actions.t) =>
 
   | DiagnosticsHotKey
   | StatusBar(Feature_StatusBar.DiagnosticsClicked)
-      when Pane.isVisible(Diagnostics, state.pane) => (
+      when Feature_Pane.isVisible(Diagnostics, state.pane) => (
       closePane(state),
       Isolinear.Effect.none,
     )
@@ -89,7 +68,7 @@ let update = (state: State.t, action: Actions.t) =>
     )
 
   | StatusBar(Feature_StatusBar.NotificationCountClicked)
-      when Pane.isVisible(Notifications, state.pane) => (
+      when Feature_Pane.isVisible(Notifications, state.pane) => (
       closePane(state),
       Isolinear.Effect.none,
     )

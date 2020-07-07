@@ -111,20 +111,14 @@ let make = (~dispatch, ~state: State.t, ()) => {
           c.workbenchActivityBarVisible
         )
         && !zenMode) {
-      React.listToElement([
-        <Dock theme sideBar pane />,
-        <WindowHandle direction=`Vertical />,
-      ]);
+      <Dock theme sideBar pane />;
     } else {
       React.empty;
     };
 
   let sideBar = () =>
     if (!zenMode && Feature_SideBar.isOpen(sideBar)) {
-      React.listToElement([
-        <SideBarView theme state dispatch />,
-        <WindowHandle direction=`Vertical />,
-      ]);
+      <SideBarView theme state dispatch />;
     } else {
       React.empty;
     };

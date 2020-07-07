@@ -172,7 +172,8 @@ type t =
   | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
-  | PaneTabClicked(Pane.pane)
+  | Pane(Feature_Pane.msg)
+  | PaneTabClicked(Feature_Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
   | VimExecuteCommand(string)

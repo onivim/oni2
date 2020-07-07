@@ -15,7 +15,7 @@ module Styles = {
 
   let horizontal = [
     cursor(MouseCursors.verticalResize),
-    backgroundColor(Colors.blue),
+    //backgroundColor(Colors.blue),
     position(`Absolute),
     top(0),
     left(0),
@@ -27,7 +27,13 @@ module Styles = {
 
 let component = React.Expert.component("handleView");
 let handle =
-    (~direction, ~onDrag: float => unit, ~onDragComplete: unit => unit, ()) =>
+    (
+      ~visible=true,
+      ~direction,
+      ~onDrag: float => unit,
+      ~onDragComplete: unit => unit,
+      (),
+    ) =>
   component(hooks => {
     let ((captureMouse, _state), hooks) =
       Hooks.mouseCapture(
