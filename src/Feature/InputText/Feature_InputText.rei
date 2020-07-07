@@ -10,6 +10,8 @@ let value: model => string;
 
 let create: (~placeholder: string) => model;
 
+let empty: model;
+
 let update: (msg, model) => model;
 
 let handleInput: (~key: string, model) => model;

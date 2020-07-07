@@ -69,6 +69,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       ]
 
     | Search => [Actions.Search(Feature_Search.Input(k))]
+    | Extensions => [Actions.Extensions(Feature_Extensions.KeyPressed(k))]
 
     | Modal => [Actions.Modals(Feature_Modals.KeyPressed(k))]
     };

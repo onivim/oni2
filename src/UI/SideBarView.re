@@ -36,7 +36,7 @@ let animation =
     |> delay(Revery.Time.milliseconds(0))
   );
 
-let%component make = (~theme, ~state: State.t, ()) => {
+let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
   let State.{sideBar, uiFont: font, _} = state;
 
   let%hook (transition, _animationState, _reset) =
@@ -56,7 +56,7 @@ let%component make = (~theme, ~state: State.t, ()) => {
 
     | SCM =>
       let onItemClick = (resource: Feature_SCM.Resource.t) =>
-        GlobalContext.current().dispatch(
+        dispatch(
           Actions.OpenFileByPath(
             Oni_Core.Uri.toFileSystemPath(resource.uri),
             None,
@@ -71,11 +71,18 @@ let%component make = (~theme, ~state: State.t, ()) => {
         isFocused={FocusManager.current(state) == Focus.SCM}
         theme
         font
-        dispatch={msg => GlobalContext.current().dispatch(Actions.SCM(msg))}
+        dispatch={msg => dispatch(Actions.SCM(msg))}
       />;
 
     | Extensions =>
-      <Feature_Extensions.ListView model={state.extensions} theme font />
+      let extensionDispatch = msg => dispatch(Actions.Extensions(msg));
+      <Feature_Extensions.ListView
+        model={state.extensions}
+        theme
+        font
+        isFocused={FocusManager.current(state) == Focus.Extensions}
+        dispatch=extensionDispatch
+      />;
     };
 
   <View style={Styles.container(~theme, ~transition)}>
