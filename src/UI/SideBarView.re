@@ -4,18 +4,29 @@ open Oni_Model;
 module Core = Oni_Core;
 
 open Oni_Model.SideBar;
+open Oni_Components;
 
 module Colors = Feature_Theme.Colors;
 
 module Styles = {
   open Style;
 
-  let container = (~theme, ~transition) =>
+  let sidebar = (~theme, ~transition) =>
     Style.[
+      flexDirection(`Row),
       backgroundColor(Colors.SideBar.background.from(theme)),
       width(225),
       transform(Transform.[TranslateX(transition)]),
     ];
+
+  let contents = [flexDirection(`Column), flexGrow(1)];
+
+  let resizer = [
+    flexGrow(0),
+    backgroundColor(Revery.Colors.gray),
+    width(4),
+    position(`Relative),
+  ];
 
   let title = (~theme) => [color(Colors.SideBar.foreground.from(theme))];
 
@@ -78,16 +89,24 @@ let%component make = (~theme, ~state: State.t, ()) => {
       <Feature_Extensions.ListView model={state.extensions} theme font />
     };
 
-  <View style={Styles.container(~theme, ~transition)}>
-    <View style={Styles.heading(theme)}>
-      <Text
-        text=title
-        style={Styles.title(~theme)}
-        fontFamily={font.family}
-        fontWeight=Medium
-        fontSize={font.size}
+  <View style={Styles.sidebar(~theme, ~transition)}>
+    <View style=Styles.contents>
+      <View style={Styles.heading(theme)}>
+        <Text
+          text=title
+          style={Styles.title(~theme)}
+          fontFamily={font.family}
+          fontWeight=Medium
+          fontSize={font.size}
+        />
+      </View>
+      elem
+    </View>
+    <View style=Styles.resizer>
+      <ResizeHandle.Vertical
+        onDrag={delta => prerr_endline(string_of_float(delta))}
+        onDragComplete={() => prerr_endline("DONE!")}
       />
     </View>
-    elem
   </View>;
 };
