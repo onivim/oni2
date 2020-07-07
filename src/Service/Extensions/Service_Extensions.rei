@@ -50,9 +50,11 @@ module Catalog: {
       version: string,
       name: string,
       namespace: string,
-      displayName: string,
+      displayName: option(string),
       description: string,
     };
+
+    let name: t => string;
 
     let toString: t => string;
   };
@@ -84,7 +86,7 @@ module Management: {
 };
 
 module Query: {
-[@deriving show]
+  [@deriving show]
   type t;
   let create: (~searchText: string) => t;
 

@@ -139,8 +139,12 @@ module Summary = {
     version: string,
     name: string,
     namespace: string,
-    displayName: string,
+    displayName: option(string),
     description: string,
+  };
+
+  let name = ({displayName, name, namespace, _}) => {
+    displayName |> Option.value(~default=namespace ++ "." ++ name);
   };
 
   let decode = {
@@ -157,7 +161,7 @@ module Summary = {
         version: field.required("version", string),
         name: field.required("name", string),
         namespace: field.required("namespace", string),
-        displayName: field.required("displayName", string),
+        displayName: field.required("displayName", nullable(string)),
         description: field.required("description", string),
       }
     );
@@ -174,7 +178,7 @@ module Summary = {
       |},
       namespace,
       name,
-      displayName,
+      displayName |> Option.value(~default="(null)"),
       description,
       url,
       version,

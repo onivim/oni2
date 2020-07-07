@@ -16,7 +16,6 @@ type msg =
   | SearchQueryError(string)
   | SearchText(Feature_InputText.msg);
 
-
 type outmsg =
   | Nothing
   | Focus

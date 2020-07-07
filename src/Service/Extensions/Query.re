@@ -16,7 +16,7 @@ let create = (~searchText) => {
 let isComplete = ({maybeRemainingCount, _}) => {
   switch (maybeRemainingCount) {
   | None => false
-  | Some(remainingCount) => remainingCount > 0
+  | Some(remainingCount) => remainingCount <= 0
   };
 };
 
