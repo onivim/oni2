@@ -11,14 +11,17 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
 
-  let sidebar = (~width, ~theme, ~transition) => [
+  let sidebar = (~theme, ~transition) => [
     flexDirection(`Row),
     backgroundColor(Colors.SideBar.background.from(theme)),
-    Style.width(width),
     transform(Transform.[TranslateX(transition)]),
   ];
 
-  let contents = [flexDirection(`Column), flexGrow(1)];
+  let contents = (~width) => [
+    Style.width(width),
+    flexDirection(`Column),
+    flexGrow(1),
+  ];
 
   let resizer = [flexGrow(0), width(4), position(`Relative)];
 
@@ -92,9 +95,18 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
     };
 
   let width = Feature_SideBar.width(state.sideBar);
-
-  <View style={Styles.sidebar(~width, ~theme, ~transition)}>
-    <View style=Styles.contents>
+  let separator =
+    Feature_SideBar.isOpen(state.sideBar) && width > 4
+      ? <View
+          style=Style.[
+            width(4),
+            backgroundColor(Revery.Color.rgba(0., 0., 0., 0.1)),
+          ]
+        />
+      : React.empty;
+  <View style={Styles.sidebar(~theme, ~transition)}>
+    separator
+    <View style={Styles.contents(~width)}>
       <View style={Styles.heading(theme)}>
         <View style=Styles.titleContainer>
           <Text
