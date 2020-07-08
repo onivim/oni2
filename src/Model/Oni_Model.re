@@ -25,7 +25,6 @@ module Lifecycle = Lifecycle;
 module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
 module ModeManager = ModeManager;
-module Pane = Pane;
 module References = References;
 module Selectors = Selectors;
 module State = State;

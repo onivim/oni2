@@ -147,6 +147,18 @@ let update =
       };
     (state', effect);
 
+  | Pane(msg) =>
+    let (model, outmsg) = Feature_Pane.update(msg, state.pane);
+
+    let state = {...state, pane: model};
+
+    let state =
+      switch (outmsg) {
+      | Nothing => state
+      | PopFocus(_pane) => FocusManager.pop(Focus.Search, state)
+      };
+    (state, Effect.none);
+
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
@@ -365,7 +377,7 @@ let update =
       )
 
     | Focus(Bottom) => (
-        state.pane.isOpen ? PaneStore.focus(state) : state,
+        Feature_Pane.isOpen(state.pane) ? PaneStore.focus(state) : state,
         Effect.none,
       )
 
