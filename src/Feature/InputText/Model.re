@@ -20,6 +20,8 @@ let create = (~placeholder) => {
 
 let empty = create(~placeholder="");
 
+let isEmpty = ({value, _}) => value == "";
+
 let value = ({value, _}) => value;
 
 let update = (msg, model) =>
