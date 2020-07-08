@@ -60,8 +60,6 @@ let startWithExtensions =
 
   Timber.App.enable();
 
-  Timber.App.setLevel(Timber.Level.trace);
-
   let extensions =
     extensions
     |> List.map(Rench.Path.join(rootPath))
