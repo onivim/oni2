@@ -24,9 +24,10 @@ module Styles = {
 
   let title = (~theme) => [color(Colors.SideBar.foreground.from(theme))];
 
+  let titleContainer = [paddingLeft(23)];
+
   let heading = theme => [
     flexDirection(`Row),
-    justifyContent(`Center),
     alignItems(`Center),
     backgroundColor(Colors.SideBar.background.from(theme)),
     height(Core.Constants.tabHeight),
@@ -95,13 +96,15 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
   <View style={Styles.sidebar(~width, ~theme, ~transition)}>
     <View style=Styles.contents>
       <View style={Styles.heading(theme)}>
-        <Text
-          text=title
-          style={Styles.title(~theme)}
-          fontFamily={font.family}
-          fontWeight=Medium
-          fontSize={font.size}
-        />
+        <View style=Styles.titleContainer>
+          <Text
+            text=title
+            style={Styles.title(~theme)}
+            fontFamily={font.family}
+            fontWeight=Revery.Font.Weight.SemiBold
+            fontSize=13.
+          />
+        </View>
       </View>
       elem
     </View>
