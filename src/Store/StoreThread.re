@@ -312,6 +312,10 @@ let start =
            Model.Actions.Editor({scope: Model.EditorScope.All, msg})
          );
 
+    let extensionsSub =
+      Feature_Extensions.sub(~setup, state.extensions)
+      |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -321,6 +325,7 @@ let start =
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
       editorGlobalSub,
+      extensionsSub,
     ]
     |> Isolinear.Sub.batch;
   };

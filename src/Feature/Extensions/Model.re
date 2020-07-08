@@ -10,19 +10,29 @@ type msg =
       arguments: [@opaque] list(Json.t),
     })
   | KeyPressed(string)
+  | SearchQueryResults(Service_Extensions.Query.t)
+  | SearchQueryError(string)
   | SearchText(Feature_InputText.msg);
 
 type model = {
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
   searchText: Feature_InputText.model,
+  latestQuery: option(Service_Extensions.Query.t),
 };
 
 let initial = {
   activatedIds: [],
   extensions: [],
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
+  latestQuery: None,
 };
+
+let searchResults = ({latestQuery, _}) =>
+  switch (latestQuery) {
+  | None => []
+  | Some(query) => query |> Service_Extensions.Query.results
+  };
 
 module Internal = {
   let filterBundled = (scanner: Scanner.ScanResult.t) => {
