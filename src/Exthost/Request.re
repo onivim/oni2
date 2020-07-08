@@ -176,11 +176,28 @@ module DocumentsAndEditors = {
 };
 
 module ExtensionService = {
+  open Json.Encode;
   let activateByEvent = (~event, client) => {
     Client.notify(
       ~rpcName="ExtHostExtensionService",
       ~method="$activateByEvent",
       ~args=`List([`String(event)]),
+      client,
+    );
+  };
+
+  let deltaExtensions = (~toAdd, ~toRemove, client) => {
+    Client.request(
+      ~decoder=Json.Decode.null,
+      ~rpcName="ExtHostExtensionService",
+      ~method="$deltaExtensions",
+      ~args=
+        `List([
+          `List(
+            toAdd |> List.map(Exthost_Extension.InitData.Extension.to_yojson),
+          ),
+          `List(toRemove |> List.map(encode_value(ExtensionId.encode))),
+        ]),
       client,
     );
   };

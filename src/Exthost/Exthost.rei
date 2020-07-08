@@ -1053,6 +1053,14 @@ module Request: {
 
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => unit;
+
+    let deltaExtensions:
+      (
+        ~toAdd: list(Exthost_Extension.InitData.Extension.t),
+        ~toRemove: list(ExtensionId.t),
+        Client.t
+      ) =>
+      Lwt.t(unit);
   };
 
   module LanguageFeatures: {
