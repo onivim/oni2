@@ -35,6 +35,15 @@ module Styles = {
     backgroundColor(Colors.SideBar.background.from(theme)),
     height(Core.Constants.tabHeight),
   ];
+
+  let separator = [
+    width(4),
+    backgroundColor(Revery.Color.rgba(0., 0., 0., 0.1)),
+  ];
+};
+
+let separator = () => {
+  <View style=Styles.separator />;
 };
 
 let animation =
@@ -97,13 +106,7 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
   let width = Feature_SideBar.width(state.sideBar);
   let separator =
     Feature_SideBar.isOpen(state.sideBar) && width > 4
-      ? <View
-          style=Style.[
-            width(4),
-            backgroundColor(Revery.Color.rgba(0., 0., 0., 0.1)),
-          ]
-        />
-      : React.empty;
+      ? <separator /> : React.empty;
   <View style={Styles.sidebar(~theme, ~transition)}>
     separator
     <View style={Styles.contents(~width)}>
