@@ -79,7 +79,7 @@ module ActionButton = {
       ) => {
     // TODO
     ignore(color);
-    <Sneakable style={Styles.button(backgroundColor)} onClick=onAction>
+    <Sneakable style={Styles.button(~backgroundColor)} onClick=onAction>
       <View style=Styles.innerButton>
         <Text
           fontFamily={font.family}

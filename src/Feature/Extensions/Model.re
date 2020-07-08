@@ -136,7 +136,7 @@ let update = (~extHostClient, msg, model) => {
   | UninstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun
-      | Ok() => UninstallExtensionSuccess({extensionId: extensionId})
+      | Ok () => UninstallExtensionSuccess({extensionId: extensionId})
       | Error(msg) => UninstallExtensionFailed({extensionId, errorMsg: msg})
     );
     let eff =

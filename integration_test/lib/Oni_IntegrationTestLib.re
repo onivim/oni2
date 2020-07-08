@@ -141,6 +141,7 @@ let runTest =
         ~getUserSettings,
         ~contributedCommands=[],
         ~workingDirectory=Sys.getcwd(),
+        ~extensionsFolder=None,
       ),
     );
 
