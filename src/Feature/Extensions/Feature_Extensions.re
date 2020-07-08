@@ -1,22 +1,12 @@
 open Oni_Core;
 open Exthost.Extension;
 
-[@deriving show({with_path: false})]
-type msg =
-  | Activated(string /* id */)
-  | Discovered([@opaque] list(Scanner.ScanResult.t))
-  | ExecuteCommand({
-      command: string,
-      arguments: [@opaque] list(Json.t),
-    });
+include Model;
 
 type outmsg =
   | Nothing
+  | Focus
   | Effect(Isolinear.Effect.t(msg));
-
-include Model;
-
-let empty = {activatedIds: [], extensions: []};
 
 module Internal = {
   let markActivated = (id: string, model) => {
@@ -44,6 +34,12 @@ let update = (~extHostClient, msg, model) => {
         ),
       ),
     )
+  | KeyPressed(key) =>
+    let searchText' = Feature_InputText.handleInput(~key, model.searchText);
+    ({...model, searchText: searchText'}, Nothing);
+  | SearchText(msg) =>
+    let searchText' = Feature_InputText.update(msg, model.searchText);
+    ({...model, searchText: searchText'}, Focus);
   };
 };
 

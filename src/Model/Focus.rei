@@ -1,6 +1,7 @@
 [@deriving show]
 type focusable =
   | Editor
+  | Extensions
   | Wildmenu
   | Quickmenu
   | Search
