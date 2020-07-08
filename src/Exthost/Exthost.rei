@@ -117,6 +117,15 @@ module Edit: {
   };
 };
 
+module ExtensionActivationReason: {
+  type t;
+
+  let create:
+    (~startup: bool, ~extensionId: string, ~activationEvent: string) => t;
+
+  let encode: Json.encoder(t);
+};
+
 module ExtensionId: {
   [@deriving show]
   type t = string;
@@ -1053,6 +1062,10 @@ module Request: {
 
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => unit;
+
+    let activate:
+      (~extensionId: string, ~reason: ExtensionActivationReason.t, Client.t) =>
+      Lwt.t(bool);
 
     let deltaExtensions:
       (

@@ -186,6 +186,20 @@ module ExtensionService = {
     );
   };
 
+  let activate = (~extensionId, ~reason, client) => {
+    Client.request(
+      ~decoder=Json.Decode.bool,
+      ~rpcName="ExtHostExtensionService",
+      ~method="$activate",
+      ~args=
+        `List([
+          extensionId |> encode_value(string),
+          reason |> encode_value(ExtensionActivationReason.encode),
+        ]),
+      client,
+    );
+  };
+
   let deltaExtensions = (~toAdd, ~toRemove, client) => {
     Client.request(
       ~decoder=Json.Decode.null,
