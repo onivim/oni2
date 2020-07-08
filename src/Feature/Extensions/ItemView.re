@@ -77,6 +77,8 @@ module ActionButton = {
         ~onAction,
         (),
       ) => {
+    // TODO
+    ignore(color);
     <Sneakable style={Styles.button(backgroundColor)} onClick=onAction>
       <View style=Styles.innerButton>
         <Text
@@ -92,6 +94,7 @@ module ActionButton = {
 
 let make =
     (
+      ~actionButton=React.empty,
       ~width,
       ~iconPath,
       ~theme,
@@ -119,6 +122,13 @@ let make =
 
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;
+  //        <ActionButton
+  //          font
+  //          title="Uninstall"
+  //          backgroundColor=Revery.Colors.red
+  //          color=Revery.Colors.white
+  //          onAction={() => {prerr_endline("Clicked!")}}
+  //        />
 
   <View style={Styles.container(~width)}>
     <View style=Styles.imageContainer> icon </View>
@@ -155,13 +165,7 @@ let make =
           fontSize={font.size}
           text=author
         />
-        <ActionButton
-          font
-          title="Uninstall"
-          backgroundColor=Revery.Colors.red
-          color=Revery.Colors.white
-          onAction={() => {prerr_endline("Clicked!")}}
-        />
+        actionButton
       </View>
     </View>
   </View>;
