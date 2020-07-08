@@ -1,5 +1,4 @@
 open Oni_Core;
-open Revery;
 open Revery.UI;
 
 open Revery.UI.Components;
