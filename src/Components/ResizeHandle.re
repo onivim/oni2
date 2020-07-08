@@ -27,7 +27,6 @@ module Styles = {
 let component = React.Expert.component("handleView");
 let handle =
     (
-      ~visible=true,
       ~direction,
       ~onDrag: float => unit,
       ~onDragComplete: unit => unit,
