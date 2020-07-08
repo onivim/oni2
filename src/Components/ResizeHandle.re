@@ -26,12 +26,7 @@ module Styles = {
 
 let component = React.Expert.component("handleView");
 let handle =
-    (
-      ~direction,
-      ~onDrag: float => unit,
-      ~onDragComplete: unit => unit,
-      (),
-    ) =>
+    (~direction, ~onDrag: float => unit, ~onDragComplete: unit => unit, ()) =>
   component(hooks => {
     let ((captureMouse, _state), hooks) =
       Hooks.mouseCapture(
