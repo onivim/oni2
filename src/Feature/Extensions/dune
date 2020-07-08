@@ -7,9 +7,9 @@
       Oni2.components
       Oni2.exthost
       Oni2.feature.inputText
-      Oni2.feature.sneak
       Oni2.service.extensions
       Oni2.service.exthost
+      Oni2.feature.sneak
       Revery
       isolinear
     )
