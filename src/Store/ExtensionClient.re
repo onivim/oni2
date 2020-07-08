@@ -5,8 +5,6 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-open Oni_Extensions;
-module Extensions = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;

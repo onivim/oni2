@@ -1,7 +1,8 @@
+open Oni_Core;
+
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
-open Oni_Core;
 
 module Cursor = {
   type state = {
@@ -105,6 +106,7 @@ module Styles = {
 
 let%component make =
               (
+                ~model,
                 ~theme,
                 ~style=Styles.default(~theme),
                 ~fontSize=18.,
@@ -112,17 +114,15 @@ let%component make =
                 ~placeholderColor=Colors.placeholderForeground(theme),
                 ~cursorColor=Colors.foreground(theme),
                 ~selectionColor=Colors.selection(theme),
-                ~placeholder="",
                 ~prefix="",
                 ~isFocused,
-                ~value,
-                ~selection: Selection.t,
-                ~onClick,
+                ~dispatch,
                 (),
               ) => {
   let%hook textRef = Hooks.ref(None);
   let%hook scrollOffset = Hooks.ref(0);
 
+  let {placeholder, value, selection}: Model.t = model;
   let displayValue = prefix ++ value;
   let showPlaceholder = displayValue == "";
 
@@ -258,7 +258,7 @@ let%component make =
       let nearestOffset = indexNearestOffset(offset);
       let selection = Selection.collapsed(~text=value, nearestOffset);
       resetCursor();
-      onClick(selection);
+      dispatch(Model.Clicked({selection: selection}));
 
     | None => ()
     };

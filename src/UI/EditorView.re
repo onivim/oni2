@@ -39,7 +39,9 @@ module Parts = {
         buffer
         |> Oni_Core.Buffer.getFileType
         |> OptionEx.flatMap(
-             Ext.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+             Exthost.LanguageInfo.getLanguageConfiguration(
+               state.languageInfo,
+             ),
            )
         |> Option.value(~default=LanguageConfiguration.default);
 
@@ -248,7 +250,7 @@ let make =
         |> getBufferMetadata;
 
       let language =
-        Ext.LanguageInfo.getLanguageFromFilePath(
+        Exthost.LanguageInfo.getLanguageFromFilePath(
           state.languageInfo,
           filePath,
         );

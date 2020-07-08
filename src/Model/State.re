@@ -8,7 +8,6 @@ open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
 
-module Ext = Oni_Extensions;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
@@ -40,7 +39,7 @@ type t = {
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
-  sideBar: SideBar.t,
+  sideBar: Feature_SideBar.model,
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
   extensions: Feature_Extensions.model,
@@ -49,7 +48,7 @@ type t = {
   keyBindings: Keybindings.t,
   keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
-  languageInfo: Ext.LanguageInfo.t,
+  languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   notifications: Feature_Notification.model,
@@ -130,18 +129,18 @@ let initial =
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
-    extensions: Feature_Extensions.empty,
+    extensions: Feature_Extensions.initial,
     formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),
     uiFont: UiFont.default,
-    sideBar: SideBar.initial,
+    sideBar: Feature_SideBar.initial,
     tokenTheme: TokenTheme.empty,
     iconTheme: IconTheme.create(),
     isQuitting: false,
     keyBindings: Keybindings.empty,
     keyDisplayer: None,
-    languageInfo: Ext.LanguageInfo.initial,
+    languageInfo: Exthost.LanguageInfo.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
     references: References.initial,

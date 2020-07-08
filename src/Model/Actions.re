@@ -8,9 +8,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
-open Oni_Components;
 
-module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
@@ -126,7 +124,7 @@ type t =
   | LanguageFeature(LanguageFeatures.action)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputClicked(Selection.t)
+  | QuickmenuInputMessage(Feature_InputText.msg)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
@@ -154,7 +152,7 @@ type t =
   | RegisterQuitCleanup(unit => unit)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
-  | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
+  | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
@@ -170,6 +168,7 @@ type t =
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
+  | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)

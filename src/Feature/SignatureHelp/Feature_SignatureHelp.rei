@@ -63,7 +63,7 @@ module View: {
     (
       ~colorTheme: ColorTheme.Colors.t,
       ~tokenTheme: Oni_Syntax.TokenTheme.t,
-      ~languageInfo: Oni_Extensions.LanguageInfo.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~uiFont: UiFont.t,
       ~editorFont: Service_Font.font,
       ~model: model,

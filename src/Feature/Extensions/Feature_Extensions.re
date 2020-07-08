@@ -1,22 +1,12 @@
 open Oni_Core;
 open Exthost.Extension;
 
-[@deriving show({with_path: false})]
-type msg =
-  | Activated(string /* id */)
-  | Discovered([@opaque] list(Scanner.ScanResult.t))
-  | ExecuteCommand({
-      command: string,
-      arguments: [@opaque] list(Json.t),
-    });
+include Model;
 
 type outmsg =
   | Nothing
+  | Focus
   | Effect(Isolinear.Effect.t(msg));
-
-include Model;
-
-let empty = {activatedIds: [], extensions: []};
 
 module Internal = {
   let markActivated = (id: string, model) => {
@@ -29,6 +19,17 @@ module Internal = {
     extensions: extensions @ model.extensions,
   };
 };
+
+let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
+  if (previousText != newText) {
+    if (String.length(newText) == 0) {
+      None;
+    } else {
+      Some(Service_Extensions.Query.create(~searchText=newText));
+    };
+  } else {
+    query;
+  };
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
@@ -44,6 +45,35 @@ let update = (~extHostClient, msg, model) => {
         ),
       ),
     )
+  | KeyPressed(key) =>
+    let previousText = model.searchText |> Feature_InputText.value;
+    let searchText' = Feature_InputText.handleInput(~key, model.searchText);
+    let newText = searchText' |> Feature_InputText.value;
+    let latestQuery =
+      checkAndUpdateSearchText(
+        ~previousText,
+        ~newText,
+        ~query=model.latestQuery,
+      );
+    ({...model, searchText: searchText', latestQuery}, Nothing);
+  | SearchText(msg) =>
+    let previousText = model.searchText |> Feature_InputText.value;
+    let searchText' = Feature_InputText.update(msg, model.searchText);
+    let newText = searchText' |> Feature_InputText.value;
+    let latestQuery =
+      checkAndUpdateSearchText(
+        ~previousText,
+        ~newText,
+        ~query=model.latestQuery,
+      );
+    ({...model, searchText: searchText', latestQuery}, Focus);
+  | SearchQueryResults(queryResults) => (
+      {...model, latestQuery: Some(queryResults)},
+      Nothing,
+    )
+  | SearchQueryError(_queryResults) =>
+    // TODO: Error experience?
+    ({...model, latestQuery: None}, Nothing)
   };
 };
 
@@ -92,3 +122,17 @@ let menus = model =>
   |> List.of_seq;
 
 module ListView = ListView;
+
+let sub = (~setup, model) => {
+  let toMsg =
+    fun
+    | Ok(query) => SearchQueryResults(query)
+    | Error(err) => SearchQueryError(err);
+
+  switch (model.latestQuery) {
+  | Some(query) when !Service_Extensions.Query.isComplete(query) =>
+    Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
+  | Some(_)
+  | None => Isolinear.Sub.none
+  };
+};

@@ -9,10 +9,8 @@
 
 module Core = Oni_Core;
 
-module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
-open Oni_Extensions;
 open Exthost.Extension;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
@@ -116,7 +114,7 @@ let start =
       ~shouldLoadExtensions,
       ~overriddenExtensionsDir,
     );
-  let languageInfo = LanguageInfo.ofExtensions(extensions);
+  let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
   let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
 
@@ -314,6 +312,10 @@ let start =
            Model.Actions.Editor({scope: Model.EditorScope.All, msg})
          );
 
+    let extensionsSub =
+      Feature_Extensions.sub(~setup, state.extensions)
+      |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -323,6 +325,7 @@ let start =
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
       editorGlobalSub,
+      extensionsSub,
     ]
     |> Isolinear.Sub.batch;
   };

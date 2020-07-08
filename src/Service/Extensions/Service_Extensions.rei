@@ -42,6 +42,7 @@ module Catalog: {
   };
 
   module Summary: {
+    [@deriving show]
     type t = {
       url: string,
       downloadUrl: string,
@@ -49,9 +50,11 @@ module Catalog: {
       version: string,
       name: string,
       namespace: string,
-      displayName: string,
+      displayName: option(string),
       description: string,
     };
+
+    let name: t => string;
 
     let toString: t => string;
   };
@@ -80,4 +83,24 @@ module Management: {
   let get:
     (~extensionsFolder: string=?, unit) =>
     Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
+};
+
+module Query: {
+  [@deriving show]
+  type t;
+  let create: (~searchText: string) => t;
+
+  let isComplete: t => bool;
+  let percentComplete: t => float;
+  let results: t => list(Catalog.Summary.t);
+};
+
+module Sub: {
+  let search:
+    (
+      ~setup: Setup.t,
+      ~query: Query.t,
+      ~toMsg: result(Query.t, string) => 'a
+    ) =>
+    Isolinear.Sub.t('a);
 };

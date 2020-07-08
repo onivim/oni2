@@ -1,88 +1,14 @@
 open Oni_Core;
-open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Components;
 
 open Exthost.Extension;
 
 module Colors = Feature_Theme.Colors;
 
-module Constants = {
-  let itemHeight = 72;
-};
-
 module Styles = {
-  let text = (~theme) =>
-    Style.[
-      color(Colors.SideBar.foreground.from(theme)),
-      //marginLeft(10),
-      marginVertical(2),
-      textWrap(TextWrapping.NoWrap),
-      textOverflow(`Ellipsis),
-      width(250),
-    ];
-  //overflow(`Hidden),
-};
-
-module Extension = {
-  let make =
-      (
-        ~width as itemWidth,
-        ~theme,
-        ~font: UiFont.t,
-        ~extension: Scanner.ScanResult.t,
-        (),
-      ) => {
-    let icon =
-      switch (extension.manifest.icon) {
-      | None => <Container color=Revery.Colors.darkGray width=32 height=32 />
-      | Some(iconPath) => <Image src={`File(iconPath)} width=50 height=50 />
-      };
-
-    <View
-      style=Style.[
-        flexDirection(`Row),
-        alignItems(`Center),
-        width(itemWidth),
-        height(Constants.itemHeight),
-        overflow(`Hidden),
-        flexGrow(0),
-        position(`Relative),
-      ]>
-      <View
-        style=Style.[
-          width(64),
-          height(Constants.itemHeight),
-          flexGrow(0),
-          flexDirection(`Column),
-          justifyContent(`Center),
-          alignItems(`Center),
-        ]>
-        icon
-      </View>
-      <View style=Style.[flexDirection(`Column), width(300)]>
-        <Text
-          style={Styles.text(~theme)}
-          fontFamily={font.family}
-          fontSize={font.size}
-          text={Manifest.getDisplayName(extension.manifest)}
-        />
-        <Text
-          style={Styles.text(~theme)}
-          fontFamily={font.family}
-          fontSize={font.size}
-          text={extension.manifest.author}
-        />
-        <Text
-          style={Styles.text(~theme)}
-          fontFamily={font.family}
-          fontSize={font.size}
-          text={extension.manifest.version}
-        />
-      </View>
-    </View>;
-  };
+  open Style;
+  let input = [flexGrow(1), margin(12)];
 };
 
 type state = {
@@ -108,16 +34,20 @@ let reduce = (msg, model) =>
   | WidthChanged(width) => {...model, width}
   };
 
-let%component make = (~model, ~theme, ~font: UiFont.t, ()) => {
-  let%hook (state, dispatch) = Hooks.reducer(~initialState=default, reduce);
+let%component make =
+              (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
+  let%hook (state, localDispatch) =
+    Hooks.reducer(~initialState=default, reduce);
 
   let renderItem = (extensions: array(Scanner.ScanResult.t), idx) => {
-    <Extension
-      width={state.width}
-      theme
-      font
-      extension={Array.get(extensions, idx)}
-    />;
+    let extension = extensions[idx];
+
+    let iconPath = extension.manifest.icon;
+    let displayName = Manifest.getDisplayName(extension.manifest);
+    let author = extension.manifest.author;
+    let version = extension.manifest.version;
+
+    <ItemView iconPath theme displayName author version font />;
   };
 
   let bundledExtensions =
@@ -125,31 +55,65 @@ let%component make = (~model, ~theme, ~font: UiFont.t, ()) => {
 
   let userExtensions =
     Model.getExtensions(~category=Scanner.User, model) |> Array.of_list;
+  let contents =
+    if (Feature_InputText.isEmpty(model.searchText)) {
+      [
+        <Accordion
+          title="Installed"
+          expanded={state.installedExpanded}
+          uiFont=font
+          renderItem={renderItem(userExtensions)}
+          rowHeight=ItemView.Constants.itemHeight
+          count={Array.length(userExtensions)}
+          focused=None
+          theme
+          onClick={_ => localDispatch(InstalledTitleClicked)}
+        />,
+        <Accordion
+          title="Bundled"
+          expanded={state.bundledExpanded}
+          uiFont=font
+          renderItem={renderItem(bundledExtensions)}
+          rowHeight=ItemView.Constants.itemHeight
+          count={Array.length(bundledExtensions)}
+          focused=None
+          theme
+          onClick={_ => localDispatch(BundledTitleClicked)}
+        />,
+      ]
+      |> React.listToElement;
+    } else {
+      let results =
+        Model.searchResults(model)
+        |> List.map((summary: Service_Extensions.Catalog.Summary.t) => {
+             let displayName =
+               summary |> Service_Extensions.Catalog.Summary.name;
+             let {namespace, version, _}: Service_Extensions.Catalog.Summary.t = summary;
+             let author = namespace;
+
+             <ItemView iconPath=None theme displayName author version font />;
+           })
+        |> Array.of_list;
+
+      <FlatList rowHeight=50 theme focused=None count={Array.length(results)}>
+        ...{idx => results[idx]}
+      </FlatList>;
+    };
 
   <View
     style=Style.[flexDirection(`Column), flexGrow(1), overflow(`Hidden)]
-    onDimensionsChanged={({width, _}) => dispatch(WidthChanged(width))}>
-    <Accordion
-      title="Installed"
-      expanded={state.installedExpanded}
-      uiFont=font
-      renderItem={renderItem(userExtensions)}
-      rowHeight=Constants.itemHeight
-      count={Array.length(userExtensions)}
-      focused=None
+    onDimensionsChanged={({width, _}) =>
+      localDispatch(WidthChanged(width))
+    }>
+    <Feature_InputText.View
+      style=Styles.input
+      model={model.searchText}
+      isFocused
+      fontFamily={font.family}
+      fontSize={font.size}
+      dispatch={msg => dispatch(Model.SearchText(msg))}
       theme
-      onClick={_ => dispatch(InstalledTitleClicked)}
     />
-    <Accordion
-      title="Bundled"
-      expanded={state.bundledExpanded}
-      uiFont=font
-      renderItem={renderItem(bundledExtensions)}
-      rowHeight=Constants.itemHeight
-      count={Array.length(bundledExtensions)}
-      focused=None
-      theme
-      onClick={_ => dispatch(BundledTitleClicked)}
-    />
+    contents
   </View>;
 };
