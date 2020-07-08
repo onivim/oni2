@@ -8,6 +8,12 @@ module Colors = Feature_Theme.Colors;
 
 module Styles = {
   open Style;
+  let container = (~width) => [
+    Style.width(width),
+    flexDirection(`Column),
+    flexGrow(1),
+    overflow(`Hidden),
+  ];
   let input = [flexGrow(1), margin(12)];
 };
 
@@ -36,7 +42,7 @@ let reduce = (msg, model) =>
 
 let%component make =
               (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
-  let%hook (state, localDispatch) =
+  let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
     Hooks.reducer(~initialState=default, reduce);
 
   let renderItem = (extensions: array(Scanner.ScanResult.t), idx) => {
@@ -47,7 +53,7 @@ let%component make =
     let author = extension.manifest.author;
     let version = extension.manifest.version;
 
-    <ItemView iconPath theme displayName author version font />;
+    <ItemView width iconPath theme displayName author version font />;
   };
 
   let bundledExtensions =
@@ -60,7 +66,7 @@ let%component make =
       [
         <Accordion
           title="Installed"
-          expanded={state.installedExpanded}
+          expanded=installedExpanded
           uiFont=font
           renderItem={renderItem(userExtensions)}
           rowHeight=ItemView.Constants.itemHeight
@@ -71,7 +77,7 @@ let%component make =
         />,
         <Accordion
           title="Bundled"
-          expanded={state.bundledExpanded}
+          expanded=bundledExpanded
           uiFont=font
           renderItem={renderItem(bundledExtensions)}
           rowHeight=ItemView.Constants.itemHeight
@@ -91,17 +97,29 @@ let%component make =
              let {namespace, version, _}: Service_Extensions.Catalog.Summary.t = summary;
              let author = namespace;
 
-             <ItemView iconPath=None theme displayName author version font />;
+             <ItemView
+               width
+               iconPath=None
+               theme
+               displayName
+               author
+               version
+               font
+             />;
            })
         |> Array.of_list;
 
-      <FlatList rowHeight=50 theme focused=None count={Array.length(results)}>
+      <FlatList
+        rowHeight=ItemView.Constants.itemHeight
+        theme
+        focused=None
+        count={Array.length(results)}>
         ...{idx => results[idx]}
       </FlatList>;
     };
 
   <View
-    style=Style.[flexDirection(`Column), flexGrow(1), overflow(`Hidden)]
+    style={Styles.container(~width)}
     onDimensionsChanged={({width, _}) =>
       localDispatch(WidthChanged(width))
     }>
