@@ -1,50 +1,63 @@
 open Oni_Core;
 open Utility;
 
-module InputModel = Oni_Components.InputModel;
-module ExtHostClient = Oni_Extensions.ExtHostClient;
-module Selection = Oni_Components.Selection;
-
 // MODEL
 
-[@deriving show]
-type command = ExtHostClient.SCM.command;
+module Resource = Exthost.SCM.Resource;
 
-module Resource = ExtHostClient.SCM.Resource;
-module ResourceGroup = ExtHostClient.SCM.ResourceGroup;
-module Provider = ExtHostClient.SCM.Provider;
+module ResourceGroup = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    hideWhenEmpty: bool,
+    resources: list(Resource.t),
+  };
+};
+
+[@deriving show]
+type command = Exthost.SCM.command;
+
+module Provider = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    rootUri: option(Uri.t),
+    resourceGroups: list(ResourceGroup.t),
+    hasQuickDiffProvider: bool,
+    count: int,
+    commitTemplate: string,
+    acceptInputCommand: option(command),
+  };
+};
 
 [@deriving show({with_path: false})]
 type model = {
   providers: list(Provider.t),
-  inputBox,
-}
-
-and inputBox = {
-  value: string,
-  selection: Selection.t,
-  placeholder: string,
+  inputBox: Feature_InputText.model,
 };
 
 let initial = {
   providers: [],
-  inputBox: {
-    value: "",
-    selection: Selection.initial,
-    placeholder: "Do the commit thing!",
-  },
+  inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
 };
 
 // EFFECTS
 
 module Effects = {
-  let getOriginalUri = (extHostClient, model, path, toMsg) =>
-    ExtHostClient.SCM.Effects.provideOriginalResource(
+  let getOriginalUri = (extHostClient, model, path, toMsg) => {
+    let handles =
+      model.providers |> List.map((provider: Provider.t) => provider.handle);
+    Service_Exthost.Effects.SCM.provideOriginalResource(
+      ~handles,
       extHostClient,
-      model.providers,
       path,
       toMsg,
     );
+  };
 };
 
 // UPDATE
@@ -89,10 +102,10 @@ type msg =
     })
   | AcceptInputCommandChanged({
       handle: int,
-      command,
+      command: Exthost.SCM.command,
     })
   | KeyPressed({key: string})
-  | InputBoxClicked({selection: Selection.t});
+  | InputBox(Feature_InputText.msg);
 
 module Msg = {
   let keyPressed = key => KeyPressed({key: key});
@@ -103,7 +116,7 @@ type outmsg =
   | Focus
   | Nothing;
 
-let update = (extHostClient, model, msg) =>
+let update = (extHostClient: Exthost.Client.t, model, msg) =>
   switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
       {
@@ -288,11 +301,13 @@ let update = (extHostClient, model, msg) =>
           |> List.map((provider: Provider.t) =>
                switch (provider.acceptInputCommand) {
                | Some(command) =>
-                 ExtHostClient.Effects.executeContributedCommand(
-                   extHostClient,
-                   command.id,
-                   ~arguments=command.arguments,
-                 )
+                 Isolinear.Effect.create(~name="acceptInputCommand", () => {
+                   Exthost.Request.Commands.executeContributedCommand(
+                     ~command=command.id,
+                     ~arguments=command.arguments,
+                     extHostClient,
+                   )
+                 })
                | None => Isolinear.Effect.none
                }
              ),
@@ -301,49 +316,30 @@ let update = (extHostClient, model, msg) =>
     )
 
   | KeyPressed({key}) =>
-    let (value, selection) =
-      InputModel.handleInput(
-        ~text=model.inputBox.value,
-        ~selection=model.inputBox.selection,
-        key,
-      );
-
+    let inputBox = Feature_InputText.handleInput(~key, model.inputBox);
     (
-      {
-        ...model,
-        inputBox: {
-          ...model.inputBox,
-          value,
-          selection,
-        },
-      },
+      {...model, inputBox},
       Effect(
         Isolinear.Effect.batch(
           model.providers
-          |> List.map(provider =>
-               ExtHostClient.SCM.Effects.onInputBoxValueChange(
+          |> List.map((provider: Provider.t) =>
+               Service_Exthost.Effects.SCM.onInputBoxValueChange(
+                 ~handle=provider.handle,
+                 ~value=inputBox |> Feature_InputText.value,
                  extHostClient,
-                 provider,
-                 value,
                )
              ),
         ),
       ),
     );
 
-  | InputBoxClicked({selection}) => (
-      {
-        ...model,
-        inputBox: {
-          ...model.inputBox,
-          selection,
-        },
-      },
+  | InputBox(msg) => (
+      {...model, inputBox: Feature_InputText.update(msg, model.inputBox)},
       Focus,
     )
   };
 
-let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
+let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   switch (msg) {
   | RegisterSourceControl({handle, id, label, rootUri}) =>
     dispatch(NewProvider({handle, id, label, rootUri}))
@@ -357,17 +353,27 @@ let handleExtensionMessage = (~dispatch, msg: ExtHostClient.SCM.msg) =>
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
 
-  | SpliceSCMResourceStates({provider, group, start, deleteCount, additions}) =>
-    dispatch(
-      ResourceStatesChanged({
-        provider,
-        group,
-        spliceStart: start,
-        deleteCount,
-        additions,
-      }),
-    )
+  | SpliceSCMResourceStates({handle, splices}) =>
+    open Exthost.SCM;
 
+    let provider = handle;
+    splices
+    |> List.iter(({handle as group, resourceSplices}: Resource.Splices.t) => {
+         ignore(handle);
+
+         resourceSplices
+         |> List.iter(({start, deleteCount, resources}: Resource.Splice.t) => {
+              dispatch(
+                ResourceStatesChanged({
+                  provider,
+                  group,
+                  spliceStart: start,
+                  deleteCount,
+                  additions: resources,
+                }),
+              )
+            });
+       });
   | UpdateSourceControl({
       handle,
       hasQuickDiffProvider,
@@ -396,15 +402,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-module Input = Oni_Components.Input;
-
-module Theme = Feature_Theme;
-
-module Colors = {
-  let foreground = Theme.Colors.SideBar.foreground;
-  let background = Theme.Colors.SideBar.background;
-  let hoverBackground = Theme.Colors.List.hoverBackground;
-};
+module Colors = Feature_Theme.Colors;
 
 module Pane = {
   module Styles = {
@@ -412,31 +410,20 @@ module Pane = {
 
     let container = [padding(10), flexGrow(1)];
 
-    let text = (~theme, ~font: UiFont.t) => [
-      fontSize(font.fontSize),
-      fontFamily(font.fontFile),
-      color(Colors.foreground.from(theme)),
+    let text = (~theme) => [
+      color(Colors.SideBar.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
 
-    let input = (~theme, ~font: UiFont.t) => [
-      border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-      backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-      color(Colors.foreground.from(theme)),
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
-      flexGrow(1),
-    ];
+    let input = [flexGrow(1)];
 
     let group = [];
 
     let groupLabel = [paddingVertical(3)];
 
-    let groupLabelText = (~theme, ~font: UiFont.t) => [
-      fontSize(font.fontSize *. 0.85),
-      fontFamily(font.fontFileBold),
-      color(Colors.foreground.from(theme)),
+    let groupLabelText = (~theme) => [
+      color(Colors.SideBar.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
@@ -445,8 +432,8 @@ module Pane = {
 
     let item = (~isHovered, ~theme) => [
       isHovered
-        ? backgroundColor(Colors.hoverBackground.from(theme))
-        : backgroundColor(Colors.background.from(theme)),
+        ? backgroundColor(Colors.List.hoverBackground.from(theme))
+        : backgroundColor(Colors.SideBar.background.from(theme)),
       paddingVertical(2),
       cursor(MouseCursors.pointer),
     ];
@@ -457,8 +444,8 @@ module Pane = {
                   ~provider: Provider.t,
                   ~resource: Resource.t,
                   ~theme,
-                  ~font,
-                  ~workingDirectory: option(string),
+                  ~font: UiFont.t,
+                  ~workingDirectory,
                   ~onClick,
                   (),
                 ) => {
@@ -468,18 +455,21 @@ module Pane = {
     let onMouseOut = _ => setHovered(_ => false);
 
     let base =
-      Option.first_some(
-        Option.map(provider.rootUri, ~f=Uri.toFileSystemPath),
-        workingDirectory,
-      )
-      |> Option.value(~default="/");
+      provider.rootUri
+      |> Option.map(~f=Uri.toFileSystemPath)
+      |> Option.value(~default=workingDirectory);
 
     let path = Uri.toFileSystemPath(resource.uri);
     let displayName = Path.toRelative(~base, path);
 
     <View style={Styles.item(~isHovered, ~theme)} onMouseOver onMouseOut>
       <Clickable onClick>
-        <Text style={Styles.text(~font, ~theme)} text=displayName />
+        <Text
+          style={Styles.text(~theme)}
+          text=displayName
+          fontFamily={font.family}
+          fontSize={font.size}
+        />
       </Clickable>
     </View>;
   };
@@ -489,7 +479,7 @@ module Pane = {
         ~provider,
         ~group: ResourceGroup.t,
         ~theme,
-        ~font,
+        ~font: UiFont.t,
         ~workingDirectory,
         ~onItemClick,
         (),
@@ -497,7 +487,13 @@ module Pane = {
     let label = String.uppercase_ascii(group.label);
     <View style=Styles.group>
       <View style=Styles.groupLabel>
-        <Text style={Styles.groupLabelText(~font, ~theme)} text=label />
+        <Text
+          style={Styles.groupLabelText(~theme)}
+          text=label
+          fontFamily={font.family}
+          fontWeight=Bold
+          fontSize={font.size *. 0.85}
+        />
       </View>
       <View style=Styles.groupItems>
         ...{
@@ -525,7 +521,7 @@ module Pane = {
         ~onItemClick,
         ~isFocused,
         ~theme,
-        ~font,
+        ~font: UiFont.t,
         ~dispatch,
         (),
       ) => {
@@ -539,16 +535,14 @@ module Pane = {
     };
 
     <ScrollView style=Styles.container>
-      <Input
-        style={Styles.input(~theme, ~font)}
-        cursorColor={Colors.foreground.from(theme)}
-        value={model.inputBox.value}
-        selection={model.inputBox.selection}
-        placeholder={model.inputBox.placeholder}
+      <Feature_InputText.View
+        style=Styles.input
+        model={model.inputBox}
         isFocused
-        onClick={selection =>
-          dispatch(InputBoxClicked({selection: selection}))
-        }
+        fontFamily={font.family}
+        fontSize={font.size}
+        dispatch={msg => dispatch(InputBox(msg))}
+        theme
       />
       {groups
        |> List.map(((provider, group)) =>

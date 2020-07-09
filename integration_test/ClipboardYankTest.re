@@ -37,7 +37,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
 
   dispatch(KeyboardInput("i"));
   wait(~name="Mode switches to insert", (state: State.t) =>
-    state.vimMode == Vim.Types.Insert
+    Feature_Vim.mode(state.vim) == Vim.Types.Insert
   );
 
   dispatch(KeyboardInput("a"));
@@ -47,7 +47,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
   runEffects();
 
   wait(~name="Mode switches back to normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   setClipboard(None);
@@ -59,7 +59,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
 
   wait(~name="Yank 1 is sent to clipboard", _ => {
     print_endline("CLIPBOARD: " ++ printOpt(getClipboard()));
-    optEqual(getClipboard(), "abc");
+    optEqual(getClipboard(), "abc\n");
   });
 
   setClipboard(None);
@@ -72,7 +72,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
 
   wait(~name="Yank 2 is sent to clipboard", _ => {
     print_endline("CLIPBOARD: " ++ printOpt(getClipboard()));
-    optEqual(getClipboard(), "abc");
+    optEqual(getClipboard(), "abc\n");
   });
 
   wait(
@@ -129,6 +129,6 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
 
   wait(~name="Yank 4 w/ register '+' is still sent to clipboard", _ => {
     print_endline("CLIPBOARD: " ++ printOpt(getClipboard()));
-    optEqual(getClipboard(), "abc");
+    optEqual(getClipboard(), "abc\n");
   });
 });

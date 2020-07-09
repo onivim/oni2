@@ -2,14 +2,14 @@
 // These are Node-side health-checks to validate that
 // all required dependencies are available and installed.
 
-const os = require("os");
+const os = require("os")
 
 // TODO: Get exthost working again
 // const exthost = require('vscode-exthost');
-const sudo = require('sudo-prompt');
-const pty = require("node-pty");
+const sudo = require("sudo-prompt")
+const pty = require("node-pty")
 
-const shell = os.platform() == 'win32' ? 'powershell.exe' : 'bash';
+/*const shell = os.platform() == 'win32' ? 'cmd.exe' : 'bash';
 
 const ptyProcess = pty.spawn(shell, [], {
 	name: 'xterm-color',
@@ -24,6 +24,6 @@ ptyProcess.on('data', (data) => {
 	ptyProcess.destroy();
 });
 
-ptyProcess.write('ls\r\n');
+ptyProcess.write('ls\r\n');*/
 
-console.log("Success!");
+console.log("Success!")

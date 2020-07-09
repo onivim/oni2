@@ -76,8 +76,8 @@ module View = {
   module Styles = {
     open Style;
 
-    let overlay = [
-      backgroundColor(Color.hex("#0004")),
+    let backdrop = (~theme) => [
+      backgroundColor(Colors.Oni.Modal.backdrop.from(theme)),
       position(`Absolute),
       top(0),
       left(0),
@@ -90,25 +90,31 @@ module View = {
       pointerEvents(`Allow),
     ];
 
-    let text = (~theme, ~font: UiFont.t) => [
-      fontFamily(font.fontFile),
-      color(Colors.foreground.from(theme)),
-      fontSize(14.),
+    let text = (~theme) => [
+      color(Colors.Oni.Modal.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
     ];
 
     let files = [padding(10)];
 
-    let file = (~theme, ~font: UiFont.t) => [
-      fontFamily(font.fontFile),
-      color(Colors.foreground.from(theme)),
-      fontSize(14.),
+    let file = (~theme) => [
+      color(
+        Colors.Oni.Modal.foreground.from(theme) |> Color.multiplyAlpha(0.75),
+      ),
       textWrap(TextWrapping.NoWrap),
     ];
   };
 
   let unsavedBuffersWarning =
-      (~model, ~workingDirectory, ~buffers, ~theme, ~font, ~dispatch, ()) => {
+      (
+        ~model,
+        ~workingDirectory,
+        ~buffers,
+        ~theme,
+        ~font: UiFont.t,
+        ~dispatch,
+        (),
+      ) => {
     let modifiedFiles =
       buffers
       |> IntMap.to_seq
@@ -117,39 +123,49 @@ module View = {
       |> Seq.map(Buffer.getFilePath)
       |> List.of_seq
       |> OptionEx.values
-      |> List.map(
-           Path.toRelative(
-             ~base=Option.value(workingDirectory, ~default=""),
-           ),
-         );
+      |> List.map(Path.toRelative(~base=workingDirectory));
 
     <MessageBox model onAction=dispatch theme font>
       <Text
-        style={Styles.text(~theme, ~font)}
+        style={Styles.text(~theme)}
+        fontFamily={font.family}
+        fontSize={font.size}
         text="You have unsaved changes in the following files:"
       />
       <View style=Styles.files>
         {modifiedFiles
          |> List.map(text =>
-              <Text style={Styles.file(~theme, ~font)} text />
+              <Text
+                style={Styles.file(~theme)}
+                fontFamily={font.family}
+                fontWeight=Medium
+                fontSize={font.size}
+                text
+              />
             )
          |> React.listToElement}
       </View>
       <Text
-        style={Styles.text(~theme, ~font)}
+        style={Styles.text(~theme)}
+        fontFamily={font.family}
+        fontSize={font.size}
         text="Would you like to to save them before closing?"
       />
     </MessageBox>;
   };
 
-  let writeFailure = (~model, ~theme, ~font, ~dispatch, ()) => {
+  let writeFailure = (~model, ~theme, ~font: UiFont.t, ~dispatch, ()) => {
     <MessageBox model onAction=dispatch theme font>
       <Text
-        style={Styles.text(~theme, ~font)}
+        style={Styles.text(~theme)}
+        fontFamily={font.family}
+        fontSize={font.size}
         text="Unable to save gracefully because the file has changed on disk."
       />
       <Text
-        style={Styles.text(~theme, ~font)}
+        style={Styles.text(~theme)}
+        fontFamily={font.family}
+        fontSize={font.size}
         text="Would you like to force overwrite or discard the unsaved changes?"
       />
     </MessageBox>;
@@ -157,7 +173,7 @@ module View = {
 
   let make =
       (~model, ~buffers, ~workingDirectory, ~theme, ~font, ~dispatch, ()) => {
-    <View style=Styles.overlay>
+    <View style={Styles.backdrop(~theme)}>
       {switch (model) {
        | UnsavedBuffersWarning(model) =>
          <unsavedBuffersWarning

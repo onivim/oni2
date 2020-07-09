@@ -5,6 +5,59 @@ open TestFramework;
 let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
 
 describe("BufferLine", ({describe, _}) => {
+  describe("getIndexExn", ({test, _}) => {
+    test("simple ASCII string", ({expect, _}) => {
+      let line = "abc" |> makeLine;
+
+      let getByte = byte => BufferLine.getIndex(~byte, line);
+
+      expect.equal(getByte(0), 0);
+      expect.equal(getByte(1), 1);
+      expect.equal(getByte(2), 2);
+    });
+    test("UTF-8 text: κόσμε", ({expect, _}) => {
+      let line = "κόσμε" |> makeLine;
+
+      let getByte = byte => BufferLine.getIndex(~byte, line);
+
+      expect.equal(getByte(0), 0);
+      expect.equal(getByte(1), 0);
+
+      expect.equal(getByte(2), 1);
+      expect.equal(getByte(3), 1);
+      expect.equal(getByte(4), 1);
+
+      expect.equal(getByte(5), 2);
+      expect.equal(getByte(6), 2);
+
+      expect.equal(getByte(7), 3);
+      expect.equal(getByte(8), 3);
+
+      expect.equal(getByte(9), 4);
+      expect.equal(getByte(10), 4);
+    });
+
+    test("UTF-8 text (cached): κόσμε", ({expect, _}) => {
+      let line = "κόσμε" |> makeLine;
+
+      let getByte = byte => BufferLine.getIndex(~byte, line);
+
+      expect.equal(getByte(10), 4);
+      expect.equal(getByte(9), 4);
+      expect.equal(getByte(0), 0);
+      expect.equal(getByte(1), 0);
+
+      expect.equal(getByte(2), 1);
+      expect.equal(getByte(3), 1);
+      expect.equal(getByte(4), 1);
+
+      expect.equal(getByte(5), 2);
+      expect.equal(getByte(6), 2);
+
+      expect.equal(getByte(7), 3);
+      expect.equal(getByte(8), 3);
+    });
+  });
   describe("subExn", ({test, _}) => {
     test("sub in middle of string", ({expect, _}) => {
       let bufferLine = makeLine("abcd");
@@ -33,7 +86,38 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(len).toBe(3);
     });
   });
+  describe("getByteFromIndex", ({test, _}) => {
+    test("clamps to byte 0", ({expect, _}) => {
+      let bufferLine = makeLine("abc");
+      let byte = bufferLine |> BufferLine.getByteFromIndex(~index=-1);
+      expect.int(byte).toBe(0);
+    })
+  });
   describe("getPositionAndWidth", ({test, _}) => {
+    test("UTF-8: Hiragana あ", ({expect, _}) => {
+      let str = "あa";
+      let bufferLine = makeLine(str);
+
+      let (position, width) =
+        BufferLine.getPositionAndWidth(~index=0, bufferLine);
+
+      expect.int(position).toBe(0);
+      expect.int(width).toBe(2);
+
+      let (position, width) =
+        BufferLine.getPositionAndWidth(~index=1, bufferLine);
+
+      expect.int(position).toBe(2);
+      expect.int(width).toBe(1);
+    });
+    test("negative index should not throw", ({expect, _}) => {
+      let bufferLine = makeLine("abc");
+      let (position, width) =
+        BufferLine.getPositionAndWidth(~index=-1, bufferLine);
+
+      expect.int(position).toBe(0);
+      expect.int(width).toBe(1);
+    });
     test("empty line", ({expect, _}) => {
       let bufferLine = makeLine("");
       let (position, width) =
@@ -69,5 +153,28 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(width).toBe(1);
       expect.int(position).toBe(3);
     });
+  });
+  describe("getIndexFromPosition", ({test, _}) => {
+    test("position mapped to index", ({expect, _}) => {
+      let indentation =
+        IndentationSettings.create(~mode=Tabs, ~size=8, ~tabSize=8, ());
+
+      let bufferLine = BufferLine.make(~indentation, "\ta");
+      let byteIndex =
+        BufferLine.Slow.getByteFromPosition(~position=0, bufferLine);
+      expect.int(byteIndex).toBe(0);
+
+      let byteIndex =
+        BufferLine.Slow.getByteFromPosition(~position=7, bufferLine);
+      expect.int(byteIndex).toBe(0);
+
+      let byteIndex =
+        BufferLine.Slow.getByteFromPosition(~position=8, bufferLine);
+      expect.int(byteIndex).toBe(1);
+
+      let byteIndex =
+        BufferLine.Slow.getByteFromPosition(~position=9, bufferLine);
+      expect.int(byteIndex).toBe(1);
+    })
   });
 });

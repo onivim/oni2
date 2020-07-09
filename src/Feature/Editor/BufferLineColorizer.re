@@ -7,13 +7,55 @@ open Revery;
 
 open Oni_Core;
 
-type tokenColor = (Color.t, Color.t);
-type t = int => tokenColor;
+type themedToken = {
+  color: Color.t,
+  backgroundColor: Color.t,
+  italic: bool,
+  bold: bool,
+};
+type t = int => themedToken;
+
+module Internal = {
+  let getFirstRelevantToken = (~default, ~startByte, tokens) => {
+    let rec loop = (default, tokens: list(ThemeToken.t)) => {
+      switch (tokens) {
+      | [] => (default, tokens)
+      | [_] => (default, tokens)
+      | [token, nextToken, ...tail] =>
+        if (token.index >= startByte) {
+          (default, tokens);
+        } else if (token.index < startByte && nextToken.index >= startByte) {
+          (token, [nextToken, ...tail]);
+        } else {
+          loop(token, [nextToken, ...tail]);
+        }
+      };
+    };
+
+    loop(default, tokens);
+  };
+
+  let getTokenAtByte = (~default, ~byteIndex, tokens) => {
+    let rec loop = (lastToken, tokens: list(ThemeToken.t)) => {
+      switch (tokens) {
+      | [] => lastToken
+      | [token] => token.index <= byteIndex ? token : lastToken
+      | [token, ...tail] =>
+        if (token.index > byteIndex) {
+          lastToken;
+        } else {
+          loop(token, tail);
+        }
+      };
+    };
+
+    loop(default, tokens);
+  };
+};
 
 let create =
     (
-      ~startIndex,
-      ~endIndex,
+      ~startByte,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
       ~selectionHighlights: option(Range.t),
@@ -21,10 +63,10 @@ let create =
       ~matchingPair: option(int),
       ~searchHighlights: list(Range.t),
       ~searchHighlightColor: Color.t,
-      tokenColors: list(ColorizedToken.t),
+      themedTokens: list(ThemeToken.t),
     ) => {
-  let defaultToken2 =
-    ColorizedToken.create(
+  let initialDefaultToken =
+    ThemeToken.create(
       ~index=0,
       ~backgroundColor=defaultBackgroundColor,
       ~foregroundColor=defaultForegroundColor,
@@ -32,29 +74,12 @@ let create =
       (),
     );
 
-  let length = max(endIndex - startIndex, 1);
-
-  let tokenColorArray: array(ColorizedToken.t) =
-    Array.make(length, defaultToken2);
-
-  let rec f = (tokens: list(ColorizedToken.t), start) =>
-    switch (tokens) {
-    | [] => ()
-    | [hd, ...tail] =>
-      let adjIndex = hd.index - startIndex;
-
-      let pos = ref(start);
-
-      while (pos^ >= adjIndex && pos^ >= 0 && pos^ < length) {
-        tokenColorArray[pos^] = hd;
-        decr(pos);
-      };
-      if (hd.index < startIndex) {
-        ();
-      } else {
-        f(tail, pos^);
-      };
-    };
+  let (defaultToken, tokens) =
+    Internal.getFirstRelevantToken(
+      ~default=initialDefaultToken,
+      ~startByte,
+      themedTokens,
+    );
 
   let (selectionStart, selectionEnd) =
     switch (selectionHighlights) {
@@ -65,19 +90,9 @@ let create =
     | None => ((-1), (-1))
     };
 
-  let tokenColors = List.rev(tokenColors);
-
-  f(tokenColors, length - 1);
-
   i => {
     let colorIndex =
-      if (i < startIndex) {
-        tokenColorArray[0];
-      } else if (i >= endIndex) {
-        tokenColorArray[Array.length(tokenColorArray) - 1];
-      } else {
-        tokenColorArray[i - startIndex];
-      };
+      Internal.getTokenAtByte(~byteIndex=i, ~default=defaultToken, tokens);
 
     let matchingPair =
       switch (matchingPair) {
@@ -101,6 +116,11 @@ let create =
       isSearchHighlight ? searchHighlightColor : backgroundColor;
 
     let color = colorIndex.foregroundColor;
-    (backgroundColor, color);
+    {
+      backgroundColor,
+      color,
+      bold: colorIndex.bold,
+      italic: colorIndex.italic,
+    };
   };
 };

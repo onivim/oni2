@@ -10,298 +10,486 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 
+module Commands = GlobalCommands;
+
 let start = maybeKeyBindingsFilePath => {
+  let windowCommandCondition =
+    "!insertMode || terminalFocus" |> WhenExpr.parse;
   let default =
     Keybindings.[
       {
         key: "<UP>",
-        command: "list.focusUp",
+        command: Commands.List.focusUp.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<DOWN>",
-        command: "list.focusDown",
+        command: Commands.List.focusDown.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<RIGHT>",
-        command: "list.selectBackground",
+        command: Commands.List.selectBackground.id,
         condition: "quickmenuCursorEnd" |> WhenExpr.parse,
       },
       {
         key: "<S-C-F>",
-        command: "workbench.action.findInFiles",
+        command: Commands.Workbench.Action.findInFiles.id,
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S-F>",
-        command: "workbench.action.findInFiles",
+        command: Commands.Workbench.Action.findInFiles.id,
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-TAB>",
-        command: "workbench.action.openNextRecentlyUsedEditorInGroup",
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        command:
+          Commands.Workbench.Action.openNextRecentlyUsedEditorInGroup.id,
+        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
-        command: "workbench.action.quickOpen",
+        command: Commands.Workbench.Action.quickOpen.id,
         condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
-        command: "workbench.action.quickOpen",
+        command: Commands.Workbench.Action.quickOpen.id,
         condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-C-P>",
-        command: "workbench.action.showCommands",
+        command: Commands.Workbench.Action.showCommands.id,
         condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S-P>",
-        command: "workbench.action.showCommands",
+        command: Commands.Workbench.Action.showCommands.id,
         condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-V>",
-        command: "editor.action.clipboardPasteAction",
+        command: Commands.Editor.Action.clipboardPasteAction.id,
         condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-V>",
-        command: "editor.action.clipboardPasteAction",
+        command: Commands.Editor.Action.clipboardPasteAction.id,
         condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
       },
       {
         key: "<ESC>",
-        command: "workbench.action.closeQuickOpen",
+        command: Commands.Workbench.Action.closeQuickOpen.id,
         condition: "inQuickOpen" |> WhenExpr.parse,
       },
       {
         key: "<C-N>",
-        command: "list.focusDown",
+        command: Commands.List.focusDown.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
-        command: "list.focusUp",
+        command: Commands.List.focusUp.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-N>",
-        command: "list.focusDown",
+        command: Commands.List.focusDown.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
-        command: "list.focusUp",
+        command: Commands.List.focusUp.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<TAB>",
-        command: "list.focusDown",
+        command: Commands.List.focusDown.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-TAB>",
-        command: "list.focusUp",
+        command: Commands.List.focusUp.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-TAB>",
-        command: "workbench.action.quickOpenNavigateNextInEditorPicker",
+        command:
+          Commands.Workbench.Action.quickOpenNavigateNextInEditorPicker.id,
         condition: "inEditorsPicker" |> WhenExpr.parse,
       },
       {
         key: "<S-C-TAB>",
-        command: "workbench.action.quickOpenNavigatePreviousInEditorPicker",
+        command:
+          Commands.Workbench.Action.quickOpenNavigatePreviousInEditorPicker.id,
         condition: "inEditorsPicker" |> WhenExpr.parse,
       },
       {
         key: "<release>",
-        command: "list.select",
+        command: Commands.List.select.id,
         condition: "inEditorsPicker" |> WhenExpr.parse,
       },
       {
         key: "<CR>",
-        command: "list.select",
+        command: Commands.List.select.id,
         condition: "listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-C-B>",
-        command: "explorer.toggle",
+        command: Commands.Oni.Explorer.toggle.id,
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
-        command: "selectPrevSuggestion",
+        command: Commands.selectPrevSuggestion.id,
         condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<C-N>",
-        command: "selectNextSuggestion",
+        command: Commands.selectNextSuggestion.id,
         condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<CR>",
-        command: "acceptSelectedSuggestion",
+        command: Commands.acceptSelectedSuggestion.id,
         condition:
           "acceptSuggestionOnEnter && suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<TAB>",
-        command: "acceptSelectedSuggestion",
+        command: Commands.acceptSelectedSuggestion.id,
         condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<S-TAB>",
-        command: "acceptSelectedSuggestion",
+        command: Commands.acceptSelectedSuggestion.id,
         condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<S-CR>",
-        command: "acceptSelectedSuggestion",
+        command: Commands.acceptSelectedSuggestion.id,
         condition: "suggestWidgetVisible" |> WhenExpr.parse,
       },
       {
         key: "<D-Z>",
-        command: "undo",
+        command: Commands.undo.id,
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S-Z>",
-        command: "redo",
+        command: Commands.redo.id,
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-S>",
-        command: "workbench.action.files.save",
+        command: Commands.Workbench.Action.Files.save.id,
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-S>",
-        command: "workbench.action.files.save",
+        command: Commands.Workbench.Action.Files.save.id,
         condition: "editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-]>",
-        command: "editor.action.indentLines",
+        command: Commands.Editor.Action.indentLines.id,
         condition: "visualMode" |> WhenExpr.parse,
       },
       {
         key: "<C-[>",
-        command: "editor.action.outdentLines",
+        command: Commands.Editor.Action.outdentLines.id,
         condition: "visualMode" |> WhenExpr.parse,
       },
       {
         key: "<D-]>",
-        command: "editor.action.indentLines",
+        command: Commands.Editor.Action.indentLines.id,
         condition: "visualMode" |> WhenExpr.parse,
       },
       {
         key: "<D-[>",
-        command: "editor.action.outdentLines",
+        command: Commands.Editor.Action.outdentLines.id,
         condition: "visualMode" |> WhenExpr.parse,
       },
       {
         key: "<TAB>",
-        command: "indent",
+        command: Commands.indent.id,
         condition: "visualMode" |> WhenExpr.parse,
       },
       {
         key: "<S-TAB>",
-        command: "outdent",
+        command: Commands.outdent.id,
         condition: "visualMode" |> WhenExpr.parse,
       },
       {
         key: "<C-G>",
-        command: "sneak.start",
+        command: Feature_Sneak.Commands.start.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<ESC>",
-        command: "sneak.stop",
+        command: Feature_Sneak.Commands.stop.id,
         condition: "sneakMode" |> WhenExpr.parse,
       },
       {
         key: "<S-C-M>",
-        command: "workbench.actions.view.problems",
+        command: Commands.Workbench.Actions.View.problems.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-M>",
-        command: "workbench.actions.view.problems",
+        command: Commands.Workbench.Actions.View.problems.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-W>",
-        command: "view.closeEditor",
+        command: Feature_Layout.Commands.closeActiveEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<C-PAGEDOWN>",
-        command: "workbench.action.nextEditor",
+        command: Feature_Layout.Commands.nextEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-]>",
-        command: "workbench.action.nextEditor",
+        command: Feature_Layout.Commands.nextEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<C-PAGEUP>",
-        command: "workbench.action.previousEditor",
+        command: Feature_Layout.Commands.previousEditor.id,
         condition: WhenExpr.Value(True),
       },
       {
         key: "<D-S-[>",
-        command: "workbench.action.previousEditor",
+        command: Feature_Layout.Commands.previousEditor.id,
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-=>",
+        command: "workbench.action.zoomIn",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-=>",
+        command: "workbench.action.zoomIn",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-->",
+        command: "workbench.action.zoomOut",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-->",
+        command: "workbench.action.zoomOut",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<D-0>",
+        command: "workbench.action.zoomReset",
+        condition: WhenExpr.Value(True),
+      },
+      {
+        key: "<C-0>",
+        command: "workbench.action.zoomReset",
         condition: WhenExpr.Value(True),
       },
       // TERMINAL
       // Binding to open normal mode
       {
         key: "<C-\\><C-N>",
-        command: "terminal.normalMode",
+        command: Feature_Terminal.Commands.Oni.normalMode.id,
         condition: "terminalFocus && insertMode" |> WhenExpr.parse,
       },
       // Bindings to go from normal / visual mode -> insert mode
       {
         key: "o",
-        command: "terminal.insertMode",
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "<S-O>",
-        command: "terminal.insertMode",
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "Shift+a",
-        command: "terminal.insertMode",
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "a",
-        command: "terminal.insertMode",
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "i",
-        command: "terminal.insertMode",
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
       },
       {
         key: "Shift+i",
-        command: "terminal.insertMode",
+        command: Feature_Terminal.Commands.Oni.insertMode.id,
         condition:
           "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
+      },
+      //LAYOUT
+      {
+        key: "<C-W>H",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-H>",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><LEFT>",
+        command: Feature_Layout.Commands.moveLeft.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>L",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-L>",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-S>",
+        command: Feature_Layout.Commands.splitHorizontal.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>S",
+        command: Feature_Layout.Commands.splitHorizontal.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-V>",
+        command: Feature_Layout.Commands.splitVertical.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>V",
+        command: Feature_Layout.Commands.splitVertical.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><RIGHT>",
+        command: Feature_Layout.Commands.moveRight.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>K",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-K>",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><UP>",
+        command: Feature_Layout.Commands.moveUp.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>J",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-J>",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><DOWN>",
+        command: Feature_Layout.Commands.moveDown.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>R",
+        command: Feature_Layout.Commands.rotateForward.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-R>",
+        command: Feature_Layout.Commands.rotateForward.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><C-S-R>", // TODO: Does not work, blocked by bug in editor-input
+        command: Feature_Layout.Commands.rotateBackward.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>-",
+        command: Feature_Layout.Commands.decreaseVerticalSize.id,
+        condition: windowCommandCondition,
+      },
+      //      TODO: Does not work, blocked by bug in editor-input
+      //      {
+      //        key: "<C-W>+",
+      //        command: Feature_Layout.Commands.increaseVerticalSize.id,
+      //        condition: "!insertMode" |> WhenExpr.parse
+      //      },
+      {
+        key: "<C-W><S-,>", // TODO: Does not work and should be `<`, but blocked by bugs in editor-input,
+        command: Feature_Layout.Commands.increaseHorizontalSize.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W><S-.>", // TODO: Does not work and should be `>`, but blocked by bugs in editor-input
+        command: Feature_Layout.Commands.decreaseHorizontalSize.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<C-W>=",
+        command: Feature_Layout.Commands.resetSizes.id,
+        condition: windowCommandCondition,
+      },
+      // TODO: Fails to parse
+      // {
+      //   key: "<C-W>_",
+      //   command: Feature_Layout.Commands.maximizeVertical.id,
+      //   condition: windowCommandCondition,
+      // },
+      // TODO: Fails to parse
+      // {
+      //   key: "<C-W>|",
+      //   command: Feature_Layout.Commands.maximizeHorizontal.id,
+      //   condition: windowCommandCondition,
+      // },
+      {
+        key: "<C-W>o",
+        command: Feature_Layout.Commands.toggleMaximize.id,
+        condition: windowCommandCondition,
+      },
+      {
+        key: "<A-DOWN>",
+        command: Feature_SignatureHelp.Commands.incrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+      },
+      {
+        key: "<A-UP>",
+        command: Feature_SignatureHelp.Commands.decrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
       },
     ];
 
@@ -364,15 +552,38 @@ let start = maybeKeyBindingsFilePath => {
       dispatch(Actions.KeyBindingsSet(keyBindings));
     });
 
+  let executeCommandEffect = msg =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="keybindings.executeCommand", dispatch =>
+      switch (msg) {
+      | `Arg0(msg) => dispatch(msg)
+      | `Arg1(msgf) => dispatch(msgf(Json.Encode.null))
+      }
+    );
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.Init => (state, loadKeyBindingsEffect(true))
+
     | Actions.KeyBindingsReload => (state, loadKeyBindingsEffect(false))
+
     | Actions.KeyBindingsParseError(msg) => (
         state,
         Feature_Notification.Effects.create(~kind=Error, msg)
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       )
+
+    | KeybindingInvoked({command}) =>
+      switch (Command.Lookup.get(command, State.commands(state))) {
+      | Some((command: Command.t(_))) => (
+          state,
+          executeCommandEffect(command.msg),
+        )
+      | None =>
+        Log.errorf(m => m("Unknown command: %s", command));
+        (state, Isolinear.Effect.none);
+      }
+
     | _ => (state, Isolinear.Effect.none)
     };
   };

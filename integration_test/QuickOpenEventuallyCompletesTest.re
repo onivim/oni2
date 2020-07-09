@@ -3,18 +3,19 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   /* Switch to root directory */
-  if (Revery.Environment.os == Revery.Environment.Mac) {
-    // CI machines timeout with '/' - so we'll use home (which also reproduces the crash)
-    Vim.command(
-      "cd ~",
-    );
-  } else {
-    Vim.command("cd /");
-  };
+  let _: Vim.Context.t =
+    if (Revery.Environment.os == Revery.Environment.Mac) {
+      // CI machines timeout with '/' - so we'll use home (which also reproduces the crash)
+      Vim.command(
+        "cd ~",
+      );
+    } else {
+      Vim.command("cd /");
+    };
 
   /* Launch quick open */
   dispatch(QuickmenuShow(FilesPicker));

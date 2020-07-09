@@ -6,16 +6,22 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 open Oni_Syntax;
-
-module Ext = Oni_Extensions;
 
 type logFunc = string => unit;
 
+type bufferInfo = {
+  lines: array(string),
+  version: int,
+  scope: string,
+};
+
 type t = {
-  configuration: Configuration.t,
+  useTreeSitter: bool,
   setup: option(Setup.t),
-  languageInfo: Ext.LanguageInfo.t,
+  bufferInfo: IntMap.t(bufferInfo),
+  languageInfo: Exthost.LanguageInfo.t,
   treesitterRepository: TreesitterRepository.t,
   grammarRepository: GrammarRepository.t,
   theme: TokenTheme.t,
@@ -24,12 +30,13 @@ type t = {
 };
 
 let empty = {
-  configuration: Configuration.default,
+  useTreeSitter: false,
   setup: None,
+  bufferInfo: IntMap.empty,
   visibleBuffers: [],
   highlightsMap: IntMap.empty,
   theme: TokenTheme.empty,
-  languageInfo: Ext.LanguageInfo.initial,
+  languageInfo: Exthost.LanguageInfo.initial,
   grammarRepository: GrammarRepository.empty,
   treesitterRepository: TreesitterRepository.empty,
 };
@@ -40,6 +47,10 @@ let initialize = (~log, languageInfo, setup, state) => {
   grammarRepository: GrammarRepository.create(~log, languageInfo),
   treesitterRepository: TreesitterRepository.create(~log, languageInfo),
   setup: Some(setup),
+};
+
+module Constants = {
+  let defaultScope = "source.text";
 };
 
 let getVisibleBuffers = state => state.visibleBuffers;
@@ -55,14 +66,44 @@ let getActiveHighlighters = state => {
   |> List.filter(hl => NativeSyntaxHighlights.anyPendingWork(hl));
 };
 
-let anyPendingWork = state => getActiveHighlighters(state) != [];
+module Internal = {
+  let getBuffer = (~bufferId, state) => {
+    IntMap.find_opt(bufferId, state.bufferInfo);
+  };
 
-let bufferEnter = (id: int, state: t) => {
-  // TODO: Don't add duplicates...
-  let visibleBuffers = [id, ...state.visibleBuffers];
+  let createHighlighter =
+      (
+        ~bufferId,
+        ~scope,
+        ~lines,
+        {highlightsMap, theme, useTreeSitter, _} as state: t,
+      ) => {
+    let getTextmateGrammar = scope =>
+      GrammarRepository.getGrammar(~scope, state.grammarRepository);
 
-  {...state, visibleBuffers};
+    let getTreesitterScope = scope =>
+      TreesitterRepository.getScopeConverter(
+        ~scope,
+        state.treesitterRepository,
+      );
+
+    let highlighter =
+      NativeSyntaxHighlights.create(
+        ~useTreeSitter,
+        ~theme,
+        ~scope,
+        ~getTreesitterScope,
+        ~getTextmateGrammar,
+        lines,
+      );
+
+    let highlightsMap = highlightsMap |> IntMap.add(bufferId, highlighter);
+
+    {...state, highlightsMap};
+  };
 };
+
+let anyPendingWork = state => getActiveHighlighters(state) != [];
 
 let updateTheme = (theme, state) => {
   let highlightsMap =
@@ -74,8 +115,8 @@ let updateTheme = (theme, state) => {
   {...state, theme, highlightsMap};
 };
 
-let updateConfiguration = (configuration, state) => {
-  {...state, configuration};
+let setUseTreeSitter = (useTreeSitter, state) => {
+  {...state, useTreeSitter};
 };
 
 let doPendingWork = state => {
@@ -104,23 +145,27 @@ let getTokenUpdates = state => {
         state.highlightsMap
         |> IntMap.find_opt(curr)
         |> Option.map(highlights => {
-             highlights
-             |> NativeSyntaxHighlights.getUpdatedLines
-             |> List.map(line => {
-                  let tokenColors =
-                    NativeSyntaxHighlights.getTokensForLine(highlights, line);
-                  let bufferId = curr;
-                  Protocol.TokenUpdate.create(~bufferId, ~line, tokenColors);
-                })
+             let tokenUpdates =
+               highlights
+               |> NativeSyntaxHighlights.getUpdatedLines
+               |> List.map(line => {
+                    let tokenColors =
+                      NativeSyntaxHighlights.getTokensForLine(
+                        highlights,
+                        line,
+                      );
+                    Protocol.TokenUpdate.create(~line, tokenColors);
+                  });
+
+             (curr, tokenUpdates);
            })
-        |> Option.value(~default=[]);
+        |> Option.value(~default=(curr, []));
 
       [tokenUpdatesForBuffer, ...acc];
     },
     [],
     state.visibleBuffers,
-  )
-  |> List.flatten;
+  );
 };
 
 let clearTokenUpdates = state => {
@@ -143,59 +188,108 @@ let clearTokenUpdates = state => {
   {...state, highlightsMap};
 };
 
-let bufferUpdate =
-    (~scope, ~bufferUpdate: BufferUpdate.t, ~lines: array(string), state) => {
+let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
+  let bufferInfo =
+    state.bufferInfo
+    |> IntMap.update(update.id, current =>
+         switch (current) {
+         | None =>
+           if (update.isFull) {
+             Some({
+               scope: Constants.defaultScope,
+               lines: update.lines,
+               version: update.version,
+             });
+           } else {
+             None;
+           }
+         | Some({scope, lines, _}) =>
+           if (update.isFull) {
+             Some({scope, lines: update.lines, version: update.version});
+           } else {
+             let newLines =
+               ArrayEx.replace(
+                 ~replacement=update.lines,
+                 ~start=update.startLine |> Index.toZeroBased,
+                 ~stop=update.endLine |> Index.toZeroBased,
+                 lines,
+               );
+             Some({scope, lines: newLines, version: update.version});
+           }
+         }
+       );
+  {...state, bufferInfo};
+};
+
+let bufferUpdate = (~bufferUpdate: BufferUpdate.t, state) => {
+  let state = applyBufferUpdate(~update=bufferUpdate, state);
+
+  state
+  |> Internal.getBuffer(~bufferId=bufferUpdate.id)
+  |> Option.map(({lines, _}) => {
+       let highlightsMap =
+         IntMap.update(
+           bufferUpdate.id,
+           Option.map(NativeSyntaxHighlights.update(~bufferUpdate, ~lines)),
+           state.highlightsMap,
+         );
+       {...state, highlightsMap};
+     })
+  |> Option.to_result(~none="Unable to apply update");
+};
+
+let updateBufferVisibility =
+    (~bufferId, ~ranges: list(Range.t), {highlightsMap, _} as state) => {
+  let updateVisibility =
+    fun
+    | None => None
+    | Some(hl) =>
+      Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, hl));
+
   let highlightsMap =
-    IntMap.update(
-      bufferUpdate.id,
-      current =>
-        switch (current) {
-        | None =>
-          let getTextmateGrammar = scope =>
-            GrammarRepository.getGrammar(~scope, state.grammarRepository);
+    highlightsMap |> IntMap.update(bufferId, updateVisibility);
 
-          let getTreesitterScope = scope =>
-            TreesitterRepository.getScopeConverter(
-              ~scope,
-              state.treesitterRepository,
-            );
-
-          Some(
-            NativeSyntaxHighlights.create(
-              ~configuration=state.configuration,
-              ~bufferUpdate,
-              ~theme=state.theme,
-              ~scope,
-              ~getTreesitterScope,
-              ~getTextmateGrammar,
-              lines,
-            ),
-          );
-        | Some(v) =>
-          Some(NativeSyntaxHighlights.update(~bufferUpdate, ~lines, v))
-        },
-      state.highlightsMap,
-    );
   {...state, highlightsMap};
 };
 
-let updateVisibility = (visibility: list((int, list(Range.t))), state) => {
-  let highlightsMap =
-    visibility
-    |> List.fold_left(
-         (acc, curr) => {
-           let (bufferId, ranges) = curr;
+let bufferEnter =
+    (~bufferId: int, ~filetype: string, ~lines, ~visibleRanges, state: t) => {
+  let exists = List.exists(id => id == bufferId, state.visibleBuffers);
+  let visibleBuffers =
+    if (exists) {
+      state.visibleBuffers;
+    } else {
+      [bufferId, ...state.visibleBuffers];
+    };
 
-           let updateVisibility =
-             fun
-             | None => None
-             | Some(hl) =>
-               Some(NativeSyntaxHighlights.updateVisibleRanges(ranges, hl));
+  let scope =
+    Exthost.LanguageInfo.getScopeFromLanguage(state.languageInfo, filetype)
+    |> Option.value(~default=Constants.defaultScope);
 
-           IntMap.update(bufferId, updateVisibility, acc);
-         },
-         state.highlightsMap,
+  let bufferInfo =
+    state.bufferInfo
+    |> IntMap.update(
+         bufferId,
+         fun
+         | None => Some({lines, version: 0, scope})
+         | Some(bufInfo) => Some({...bufInfo, scope}),
        );
 
-  {...state, highlightsMap};
+  let state = {...state, bufferInfo, visibleBuffers};
+
+  state
+  |> Internal.createHighlighter(~bufferId, ~scope, ~lines)
+  |> updateBufferVisibility(~bufferId, ~ranges=visibleRanges);
+};
+
+let bufferLeave =
+    (
+      ~bufferId: int,
+      {bufferInfo, visibleBuffers, highlightsMap, _} as state: t,
+    ) => {
+  let bufferInfo = IntMap.remove(bufferId, bufferInfo);
+  let visibleBuffers = List.filter(id => id != bufferId, visibleBuffers);
+  let highlightsMap = IntMap.remove(bufferId, highlightsMap);
+
+  {...state, bufferInfo, visibleBuffers, highlightsMap};
 };

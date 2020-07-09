@@ -46,11 +46,17 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleTextEffect = (state: State.t, k: string) => {
     switch (Model.FocusManager.current(state)) {
     | Editor
-    | Wildmenu => [Actions.KeyboardInput(k)]
+    | Wildmenu => [
+        Actions.KeyboardInput(k),
+        Actions.Hover(Feature_Hover.KeyPressed(k)),
+        Actions.SignatureHelp(
+          Feature_SignatureHelp.KeyPressed(Some(k), true),
+        ),
+      ]
 
     | Quickmenu => [Actions.QuickmenuInput(k)]
 
-    | Sneak => [Actions.Sneak(Model.Sneak.KeyboardInput(k))]
+    | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
     | FileExplorer => [
         Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
@@ -58,12 +64,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
 
-    | Terminal(id) =>
-      Feature_Terminal.shouldHandleInput(k)
-        ? [Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k}))]
-        : [Actions.KeyboardInput(k)]
+    | Terminal(id) => [
+        Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
+      ]
 
     | Search => [Actions.Search(Feature_Search.Input(k))]
+    | Extensions => [Actions.Extensions(Feature_Extensions.KeyPressed(k))]
 
     | Modal => [Actions.Modals(Feature_Modals.KeyPressed(k))]
     };
@@ -71,7 +77,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Keybindings.Execute(command) => [Actions.Command(command)]
+    | Keybindings.Execute(command) => [
+        Actions.KeybindingInvoked({command: command}),
+      ]
     | Keybindings.Text(text) => handleTextEffect(state, text)
     | Keybindings.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();

@@ -4,9 +4,29 @@ open TestFramework;
 
 module TextRun = Tokenizer.TextRun;
 
-let alwaysSplit = (_, _, _, _) => true;
-let noSplit = (_, _, _, _) => false;
-let splitOnCharacter = (_, c1, _, c2) => !Uchar.equal(c1, c2);
+let alwaysSplit =
+    (
+      ~index0 as _,
+      ~byte0 as _,
+      ~char0 as _,
+      ~index1 as _,
+      ~byte1 as _,
+      ~char1 as _,
+    ) =>
+  true;
+let noSplit =
+    (
+      ~index0 as _,
+      ~byte0 as _,
+      ~char0 as _,
+      ~index1 as _,
+      ~byte1 as _,
+      ~char1 as _,
+    ) =>
+  false;
+let splitOnCharacter =
+    (~index0 as _, ~byte0 as _, ~char0, ~index1 as _, ~byte1 as _, ~char1) =>
+  !Uchar.equal(char0, char1);
 
 let thickB = c =>
   switch (Uchar.to_char(c)) {
@@ -27,17 +47,13 @@ let validateToken =
       expectedToken: TextRun.t,
     ) => {
   expect.string(actualToken.text).toEqual(expectedToken.text);
+  expect.int(actualToken.startByte).toBe(expectedToken.startByte);
+  expect.int(actualToken.endByte).toBe(expectedToken.endByte);
   expect.int(Index.toZeroBased(actualToken.startIndex)).toBe(
     Index.toZeroBased(expectedToken.startIndex),
   );
   expect.int(Index.toZeroBased(actualToken.endIndex)).toBe(
     Index.toZeroBased(expectedToken.endIndex),
-  );
-  expect.int(Index.toZeroBased(actualToken.startPosition)).toBe(
-    Index.toZeroBased(expectedToken.startPosition),
-  );
-  expect.int(Index.toZeroBased(actualToken.endPosition)).toBe(
-    Index.toZeroBased(expectedToken.endPosition),
   );
 };
 
@@ -98,10 +114,10 @@ describe("Tokenizer", ({test, describe, _}) => {
       let runs = [
         TextRun.create(
           ~text="bc",
+          ~startByte=1,
+          ~endByte=3,
           ~startIndex=Index.fromZeroBased(1),
           ~endIndex=Index.fromZeroBased(3),
-          ~startPosition=Index.fromZeroBased(1),
-          ~endPosition=Index.fromZeroBased(3),
           (),
         ),
       ];
@@ -121,10 +137,10 @@ describe("Tokenizer", ({test, describe, _}) => {
       let runs = [
         TextRun.create(
           ~text="cd",
+          ~startByte=3,
+          ~endByte=5,
           ~startIndex=Index.fromZeroBased(3),
           ~endIndex=Index.fromZeroBased(5),
-          ~startPosition=Index.fromZeroBased(6),
-          ~endPosition=Index.fromZeroBased(8),
           (),
         ),
       ];
@@ -142,34 +158,34 @@ describe("Tokenizer", ({test, describe, _}) => {
       let runs = [
         TextRun.create(
           ~text="a",
+          ~startByte=0,
+          ~endByte=1,
           ~startIndex=Index.zero,
           ~endIndex=Index.fromZeroBased(1),
-          ~startPosition=Index.zero,
-          ~endPosition=Index.fromZeroBased(1),
           (),
         ),
         TextRun.create(
           ~text="\t",
+          ~startByte=1,
+          ~endByte=2,
           ~startIndex=Index.fromZeroBased(1),
           ~endIndex=Index.fromZeroBased(2),
-          ~startPosition=Index.fromZeroBased(1),
-          ~endPosition=Index.fromZeroBased(3),
           (),
         ),
         TextRun.create(
           ~text="a",
+          ~startByte=2,
+          ~endByte=3,
           ~startIndex=Index.fromZeroBased(2),
           ~endIndex=Index.fromZeroBased(3),
-          ~startPosition=Index.fromZeroBased(3),
-          ~endPosition=Index.fromZeroBased(4),
           (),
         ),
         TextRun.create(
           ~text="\t",
+          ~startByte=3,
+          ~endByte=4,
           ~startIndex=Index.fromZeroBased(3),
           ~endIndex=Index.fromZeroBased(4),
-          ~startPosition=Index.fromZeroBased(4),
-          ~endPosition=Index.fromZeroBased(6),
           (),
         ),
       ];
@@ -191,34 +207,56 @@ describe("Tokenizer", ({test, describe, _}) => {
     let runs = [
       TextRun.create(
         ~text="a",
+        ~startByte=0,
+        ~endByte=1,
         ~startIndex=Index.zero,
         ~endIndex=Index.fromZeroBased(1),
-        ~startPosition=Index.zero,
-        ~endPosition=Index.fromZeroBased(1),
         (),
       ),
       TextRun.create(
         ~text="b",
+        ~startByte=1,
+        ~endByte=2,
         ~startIndex=Index.fromZeroBased(1),
         ~endIndex=Index.fromZeroBased(2),
-        ~startPosition=Index.fromZeroBased(1),
-        ~endPosition=Index.fromZeroBased(2),
         (),
       ),
       TextRun.create(
         ~text="a",
+        ~startByte=2,
+        ~endByte=3,
         ~startIndex=Index.fromZeroBased(2),
         ~endIndex=Index.fromZeroBased(3),
-        ~startPosition=Index.fromZeroBased(2),
-        ~endPosition=Index.fromZeroBased(3),
         (),
       ),
       TextRun.create(
         ~text="b",
+        ~startByte=3,
+        ~endByte=4,
         ~startIndex=Index.fromZeroBased(3),
         ~endIndex=Index.fromZeroBased(4),
-        ~startPosition=Index.fromZeroBased(3),
-        ~endPosition=Index.fromZeroBased(4),
+        (),
+      ),
+    ];
+
+    validateTokens(expect, result, runs);
+  });
+  test("simple multi-byte case", ({expect, _}) => {
+    let str = "κόσμε";
+    let result =
+      Tokenizer.tokenize(
+        ~endIndex=String.length(str),
+        ~f=noSplit,
+        str |> makeLine,
+      );
+
+    let runs = [
+      TextRun.create(
+        ~text="κόσμε",
+        ~startByte=0,
+        ~endByte=11,
+        ~startIndex=Index.zero,
+        ~endIndex=Index.fromZeroBased(5),
         (),
       ),
     ];
@@ -238,26 +276,26 @@ describe("Tokenizer", ({test, describe, _}) => {
     let runs = [
       TextRun.create(
         ~text="aa",
+        ~startByte=0,
+        ~endByte=2,
         ~startIndex=Index.zero,
         ~endIndex=Index.fromZeroBased(2),
-        ~startPosition=Index.zero,
-        ~endPosition=Index.fromZeroBased(2),
         (),
       ),
       TextRun.create(
         ~text="bbbb",
+        ~startByte=2,
+        ~endByte=6,
         ~startIndex=Index.fromZeroBased(2),
         ~endIndex=Index.fromZeroBased(6),
-        ~startPosition=Index.fromZeroBased(2),
-        ~endPosition=Index.fromZeroBased(6),
         (),
       ),
       TextRun.create(
         ~text="aa",
+        ~startByte=6,
+        ~endByte=8,
         ~startIndex=Index.fromZeroBased(6),
         ~endIndex=Index.fromZeroBased(8),
-        ~startPosition=Index.fromZeroBased(6),
-        ~endPosition=Index.fromZeroBased(8),
         (),
       ),
     ];

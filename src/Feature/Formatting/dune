@@ -1,0 +1,15 @@
+(library
+    (name Feature_Formatting)
+    (public_name Oni2.feature.formatting)
+    (inline_tests)
+    (libraries
+      Oni2.core
+      Oni2.components
+      Oni2.feature.commands
+      Oni2.service.exthost
+      Oni2.service.vim
+      Oni2.exthost
+      Revery
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))

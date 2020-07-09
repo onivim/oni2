@@ -3,15 +3,13 @@ open Revery.UI;
 open Oni_Core;
 open Oni_Syntax;
 open Oni_Components;
-open Utility;
 
 open Feature_LanguageSupport.Completions;
 
 module Zed_utf8 = Oni_Core.ZedBundled;
-module Ext = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 
-open Ext.CompletionItemKind;
+open Exthost.CompletionKind;
 
 module Constants = {
   let maxCompletionWidth = 225;
@@ -24,22 +22,34 @@ module Constants = {
 
 let kindToIcon =
   fun
-  | Text => FontAwesome.alignJustify
-  | Method => FontAwesome.bolt
-  | Function => FontAwesome.cog
-  | Constructor => FontAwesome.wrench
-  | Module => FontAwesome.cubes
-  | Unit => FontAwesome.cubes
-  | Struct => FontAwesome.cube
-  | File => FontAwesome.file
-  | Keyword => FontAwesome.key
-  | Reference => FontAwesome.link
-  | Enum => FontAwesome.sitemap
-  | Constant => FontAwesome.lock
-  | Property => FontAwesome.code
-  | Interface => FontAwesome.plug
-  | Color => FontAwesome.paintBrush
-  | _ => FontAwesome.code;
+  | Method => Codicon.symbolMethod
+  | Function => Codicon.symbolFunction
+  | Constructor => Codicon.symbolConstructor
+  | Field => Codicon.symbolField
+  | Variable => Codicon.symbolVariable
+  | Class => Codicon.symbolClass
+  | Struct => Codicon.symbolStruct
+  | Interface => Codicon.symbolInterface
+  | Module => Codicon.symbolModule
+  | Property => Codicon.symbolProperty
+  | Event => Codicon.symbolEvent
+  | Operator => Codicon.symbolOperator
+  | Unit => Codicon.symbolUnit
+  | Value => Codicon.symbolValue
+  | Constant => Codicon.symbolConstant
+  | Enum => Codicon.symbolEnum
+  | EnumMember => Codicon.symbolEnumMember
+  | Keyword => Codicon.symbolKeyword
+  | Text => Codicon.symbolText
+  | Color => Codicon.symbolColor
+  | File => Codicon.symbolFile
+  | Reference => Codicon.symbolReference
+  | Customcolor => Codicon.symbolColor
+  | Folder => Codicon.symbolFolder
+  | TypeParameter => Codicon.symbolTypeParameter
+  | User => Codicon.symbolMisc
+  | Issue => Codicon.symbolMisc
+  | Snippet => Codicon.symbolText;
 
 let kindToColor = (tokenTheme: TokenTheme.t) =>
   fun
@@ -56,13 +66,6 @@ let kindToColor = (tokenTheme: TokenTheme.t) =>
   | Property => Some(tokenTheme.entityColor)
   | Interface => Some(tokenTheme.entityColor)
   | _ => None;
-
-let completionKindToIcon: option(Ext.CompletionItemKind.t) => int =
-  maybeCompletionKind => {
-    maybeCompletionKind
-    |> Option.map(kindToIcon)
-    |> Option.value(~default=FontAwesome.question);
-  };
 
 module Styles = {
   open Style;
@@ -102,24 +105,15 @@ module Styles = {
 
   let label = [flexGrow(1), margin(4)];
 
-  let text =
-      (
-        ~highlighted=false,
-        ~colors: Colors.t,
-        ~editorFont: Service_Font.font,
-        (),
-      ) => [
+  let text = (~highlighted=false, ~colors: Colors.t, ()) => [
     textOverflow(`Ellipsis),
-    fontFamily(editorFont.fontFile),
-    fontSize(editorFont.fontSize),
     textWrap(Revery.TextWrapping.NoWrap),
     color(
       highlighted ? colors.normalModeBackground : colors.editorForeground,
     ),
   ];
 
-  let highlightedText = (~colors, ~editorFont: Service_Font.font) =>
-    text(~highlighted=true, ~colors, ~editorFont, ());
+  let highlightedText = (~colors) => text(~highlighted=true, ~colors, ());
 
   let detail = (~width, ~lineHeight, ~colors: Colors.t) => [
     position(`Absolute),
@@ -133,10 +127,8 @@ module Styles = {
     backgroundColor(colors.suggestWidgetBackground),
   ];
 
-  let detailText = (~editorFont: Service_Font.font, ~tokenTheme: TokenTheme.t) => [
+  let detailText = (~tokenTheme: TokenTheme.t) => [
     textOverflow(`Ellipsis),
-    fontFamily(editorFont.fontFile),
-    fontSize(editorFont.fontSize),
     color(tokenTheme.commentColor),
     margin(3),
   ];
@@ -150,22 +142,19 @@ let itemView =
       ~highlight,
       ~colors: Colors.t,
       ~tokenTheme,
-      ~editorFont,
+      ~editorFont: Service_Font.font,
       (),
     ) => {
-  let icon =
-    kind
-    |> Option.map(kindToIcon)
-    |> Option.value(~default=FontAwesome.question);
+  let icon = kind |> kindToIcon;
 
   let iconColor =
     kind
-    |> OptionEx.flatMap(kindToColor(tokenTheme))
+    |> kindToColor(tokenTheme)
     |> Option.value(~default=colors.editorForeground);
 
   <View style={Styles.item(~isFocused, ~colors)}>
     <View style={Styles.icon(~color=iconColor)}>
-      <FontIcon
+      <Codicon
         icon
         color={colors.suggestWidgetBackground}
         // Not sure why, but specifying a font size fails to render the icon!
@@ -175,8 +164,10 @@ let itemView =
     <View style=Styles.label>
       <HighlightText
         highlights=highlight
-        style={Styles.text(~colors, ~editorFont, ())}
-        highlightStyle={Styles.highlightedText(~colors, ~editorFont)}
+        style={Styles.text(~colors, ())}
+        highlightStyle={Styles.highlightedText(~colors)}
+        fontFamily={editorFont.fontFamily}
+        fontSize={editorFont.fontSize}
         text
       />
     </View>
@@ -184,9 +175,22 @@ let itemView =
 };
 
 let detailView =
-    (~text, ~width, ~lineHeight, ~editorFont, ~colors, ~tokenTheme, ()) =>
+    (
+      ~text,
+      ~width,
+      ~lineHeight,
+      ~editorFont: Service_Font.font,
+      ~colors,
+      ~tokenTheme,
+      (),
+    ) =>
   <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
-    <Text style={Styles.detailText(~editorFont, ~tokenTheme)} text />
+    <Text
+      style={Styles.detailText(~tokenTheme)}
+      fontFamily={editorFont.fontFamily}
+      fontSize={editorFont.fontSize}
+      text
+    />
   </View>;
 
 let make =
@@ -195,6 +199,7 @@ let make =
       ~y: int,
       ~lineHeight: float,
       ~colors,
+      ~theme,
       ~tokenTheme,
       ~editorFont,
       ~completions,
@@ -240,6 +245,7 @@ let make =
           rowHeight=Constants.itemHeight
           initialRowsToRender=5
           count={Array.length(items)}
+          theme
           focused={completions.focused}>
           ...{index => {
             let Filter.{highlight, item} = items[index];

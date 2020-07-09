@@ -4,12 +4,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
 const nls = require("vscode-nls");
 const api_1 = require("../utils/api");
-const dependentRegistration_1 = require("../utils/dependentRegistration");
 const localize = nls.loadMessageBundle();
-const directives = [
+const tsDirectives = [
     {
         value: '@ts-check',
         description: localize('ts-check', "Enables semantic checking in a JavaScript file. Must be at the top of a file.")
@@ -19,6 +19,13 @@ const directives = [
     }, {
         value: '@ts-ignore',
         description: localize('ts-ignore', "Suppresses @ts-check errors on the next line of a file.")
+    }
+];
+const tsDirectives390 = [
+    ...tsDirectives,
+    {
+        value: '@ts-expect-error',
+        description: localize('ts-expect-error', "Suppresses @ts-check errors on the next line of a file, expecting at least one to exist.")
     }
 ];
 class DirectiveCommentCompletionProvider {
@@ -34,6 +41,9 @@ class DirectiveCommentCompletionProvider {
         const prefix = line.slice(0, position.character);
         const match = prefix.match(/^\s*\/\/+\s?(@[a-zA-Z\-]*)?$/);
         if (match) {
+            const directives = this.client.apiVersion.gte(api_1.default.v390)
+                ? tsDirectives390
+                : tsDirectives;
             return directives.map(directive => {
                 const item = new vscode.CompletionItem(directive.value, vscode.CompletionItemKind.Snippet);
                 item.detail = directive.description;
@@ -45,9 +55,7 @@ class DirectiveCommentCompletionProvider {
     }
 }
 function register(selector, client) {
-    return new dependentRegistration_1.VersionDependentRegistration(client, api_1.default.v230, () => {
-        return vscode.languages.registerCompletionItemProvider(selector, new DirectiveCommentCompletionProvider(client), '@');
-    });
+    return vscode.languages.registerCompletionItemProvider(selector, new DirectiveCommentCompletionProvider(client), '@');
 }
 exports.register = register;
 //# sourceMappingURL=directiveCommentCompletions.js.map

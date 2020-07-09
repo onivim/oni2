@@ -9,18 +9,20 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Colors = Feature_Theme.Colors;
 
 module Styles = {
-  let pane = Style.[flexGrow(1), flexDirection(`Row)];
+  open Style;
 
-  let noResultsContainer =
-    Style.[flexGrow(1), alignItems(`Center), justifyContent(`Center)];
+  let pane = [flexGrow(1), flexDirection(`Row)];
 
-  let title = (~theme, ~font: UiFont.t) =>
-    Style.[
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
-      color(Colors.foreground.from(theme)),
-      margin(8),
-    ];
+  let noResultsContainer = [
+    flexGrow(1),
+    alignItems(`Center),
+    justifyContent(`Center),
+  ];
+
+  let title = (~theme) => [
+    color(Colors.PanelTitle.activeForeground.from(theme)),
+    margin(8),
+  ];
 };
 
 let toLocListItem = (diagWithUri: (Uri.t, Diagnostic.t)) => {
@@ -30,7 +32,7 @@ let toLocListItem = (diagWithUri: (Uri.t, Diagnostic.t)) => {
   LocationList.{file, location, text: diag.message, highlight: None};
 };
 
-let make = (~diagnostics, ~theme, ~uiFont, ~editorFont, ()) => {
+let make = (~diagnostics, ~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
   let items =
     diagnostics
     |> Diagnostics.getAllDiagnostics
@@ -46,7 +48,9 @@ let make = (~diagnostics, ~theme, ~uiFont, ~editorFont, ()) => {
     if (Array.length(items) == 0) {
       <View style=Styles.noResultsContainer>
         <Text
-          style={Styles.title(~theme, ~font=uiFont)}
+          style={Styles.title(~theme)}
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size}
           text="No problems, yet!"
         />
       </View>;

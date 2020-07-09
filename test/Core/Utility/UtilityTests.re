@@ -267,6 +267,24 @@ describe("JsonEx", ({describe, _}) => {
 describe("StringEx", ({describe, _}) => {
   open StringEx;
 
+  describe("forAll", ({test, _}) => {
+    let matchesA = c => c == 'a';
+
+    test("basic case", ({expect, _}) => {
+      expect.bool(StringEx.forAll(~f=matchesA, "aaa")).toBe(true)
+    });
+
+    test("start boundary case", ({expect, _}) => {
+      expect.bool(StringEx.forAll(~f=matchesA, "baa")).toBe(false);
+      expect.bool(StringEx.forAll(~start=1, ~f=matchesA, "baa")).toBe(true);
+    });
+
+    test("stop boundary case", ({expect, _}) => {
+      expect.bool(StringEx.forAll(~f=matchesA, "aab")).toBe(false);
+      expect.bool(StringEx.forAll(~stop=2, ~f=matchesA, "aab")).toBe(true);
+    });
+  });
+
   describe("trimLeft", ({test, _}) => {
     test("empty", ({expect, _}) =>
       expect.string(trimLeft("")).toEqual("")
@@ -301,6 +319,36 @@ describe("StringEx", ({describe, _}) => {
     test("whitespace beginning, middle and end", ({expect, _}) =>
       expect.string(trimRight(" foo bar ")).toEqual(" foo bar")
     );
+  });
+
+  describe("endsWith", ({test, _}) => {
+    test("empty strings", ({expect, _}) => {
+      expect.bool(endsWith(~postfix="", "str")).toBe(true);
+      expect.bool(endsWith(~postfix="", "")).toBe(true);
+      expect.bool(endsWith(~postfix="str", "")).toBe(false);
+    });
+
+    test("matching string", ({expect, _}) =>
+      expect.bool(endsWith(~postfix="str", "str")).toBe(true)
+    );
+
+    test("matching substring", ({expect, _}) =>
+      expect.bool(endsWith(~postfix="r", "str")).toBe(true)
+    );
+  });
+
+  describe("isEmpty", ({test, _}) => {
+    test("large empty string", ({expect, _}) => {
+      let isEmpty = String.make(100000, ' ') |> StringEx.isEmpty;
+
+      expect.bool(isEmpty).toBe(true);
+    });
+
+    test("large non-empty string", ({expect, _}) => {
+      let isEmpty = String.make(100000, 'a') |> StringEx.isEmpty;
+
+      expect.bool(isEmpty).toBe(false);
+    });
   });
 
   describe("extractSnippet", ({test, _}) => {

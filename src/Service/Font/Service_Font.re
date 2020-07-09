@@ -6,6 +6,7 @@ module Log = (val Log.withNamespace("Oni2.Service.Font"));
 [@deriving show({with_path: false})]
 type font = {
   fontFile: string,
+  fontFamily: [@opaque] Revery.Font.Family.t,
   fontSize: float,
   measuredWidth: float,
   measuredHeight: float,
@@ -16,7 +17,8 @@ type font = {
 let toString = show_font;
 
 let default = {
-  fontFile: Constants.defaultFontFamily,
+  fontFile: Constants.defaultFontFile,
+  fontFamily: Revery.Font.Family.fromFile(Constants.defaultFontFile),
   fontSize: Constants.defaultFontSize,
   measuredWidth: 1.,
   measuredHeight: 1.,
@@ -35,6 +37,20 @@ type msg =
   | FontLoaded(font)
   | FontLoadError(string);
 
+let resolveWithFallback = (~mono=false, ~italic=false, weight, family) =>
+  switch (Revery_Font.Family.resolve(~italic, ~mono, weight, family)) {
+  | Ok(font) => font
+  | Error(str) =>
+    Log.warnf(m => m("Unable to resolve font: %s", str));
+    Revery_Font.Family.resolve(
+      ~italic,
+      ~mono,
+      weight,
+      Constants.defaultFontFamily,
+    )
+    |> Result.get_ok;
+  };
+
 let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
   let dispatch = action => Revery.App.runOnMainThread(() => dispatch(action));
 
@@ -49,18 +65,22 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
     () => {
       let fontSize = max(fontSize, Constants.minimumFontSize);
 
-      let (name, fullPath) =
-        if (fontFamily == Constants.defaultFontFamily) {
+      let (name, fullPath, fontFamily) =
+        if (fontFamily == Constants.defaultFontFile) {
           (
+            Constants.defaultFontFile,
+            Revery.Environment.executingDirectory ++ Constants.defaultFontFile,
             Constants.defaultFontFamily,
-            Revery.Environment.executingDirectory
-            ++ Constants.defaultFontFamily,
           );
         } else {
           Log.debug("Discovering font: " ++ fontFamily);
 
           if (Rench.Path.isAbsolute(fontFamily)) {
-            (fontFamily, fontFamily);
+            (
+              fontFamily,
+              fontFamily,
+              Revery_Font.Family.fromFile(fontFamily),
+            );
           } else {
             let descriptor =
               Revery.Font.Discovery.find(
@@ -71,7 +91,11 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
 
             Log.debug("  at path: " ++ descriptor.path);
 
-            (fontFamily, descriptor.path);
+            (
+              fontFamily,
+              descriptor.path,
+              Revery_Font.Family.system(fontFamily),
+            );
           };
         };
 
@@ -79,6 +103,7 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
         FontLoader.loadAndValidateEditorFont(
           ~requestId=req,
           ~smoothing,
+          ~fontFamily,
           fullPath,
           fontSize,
         );
@@ -95,6 +120,7 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
           reqId,
           {
             fontFile,
+            fontFamily,
             fontSize,
             measuredWidth,
             measuredHeight,
@@ -107,6 +133,7 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
           dispatch(
             FontLoaded({
               fontFile,
+              fontFamily,
               fontSize,
               measuredWidth,
               measuredHeight,

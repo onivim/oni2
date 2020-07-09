@@ -97,6 +97,8 @@ let getDefaultShell = () => {
   |> Lazy.force;
 };
 
+let getPathFromEnvironment = Internal.getPathFromEnvironment;
+
 let getPathFromShell = () => {
   let path =
     switch (Revery.Environment.os) {

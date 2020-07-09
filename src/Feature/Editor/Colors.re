@@ -1,5 +1,7 @@
 open Revery;
-open Feature_Theme.Colors;
+
+module Colors = Feature_Theme.Colors;
+open Colors;
 
 type t = {
   editorBackground: Color.t,
@@ -8,6 +10,7 @@ type t = {
   findMatchBackground: Color.t,
   cursorBackground: Color.t,
   cursorForeground: Color.t,
+  errorForeground: Color.t,
   gutterBackground: Color.t,
   gutterModifiedBackground: Color.t,
   gutterAddedBackground: Color.t,
@@ -29,6 +32,11 @@ type t = {
   scrollbarSliderBackground: Color.t,
   scrollbarSliderHoverBackground: Color.t,
   normalModeBackground: Color.t,
+  // Minimap
+  minimapBackground: Color.t,
+  minimapSliderBackground: Color.t,
+  minimapSliderHoverBackground: Color.t,
+  minimapSelectionHighlight: Color.t,
 };
 
 let precompute = theme => {
@@ -39,6 +47,7 @@ let precompute = theme => {
   lineHighlightBackground: Editor.lineHighlightBackground.from(theme),
   cursorBackground: EditorCursor.background.from(theme),
   cursorForeground: EditorCursor.foreground.from(theme),
+  errorForeground: EditorError.foreground.from(theme),
   gutterBackground: EditorGutter.background.from(theme),
   indentGuideBackground: EditorIndentGuide.background.from(theme),
   indentGuideActiveBackground: EditorIndentGuide.activeBackground.from(theme),
@@ -61,4 +70,9 @@ let precompute = theme => {
   scrollbarSliderBackground: ScrollbarSlider.background.from(theme),
   scrollbarSliderHoverBackground: ScrollbarSlider.hoverBackground.from(theme),
   normalModeBackground: Oni.normalModeBackground.from(theme),
+  // Minimap
+  minimapSliderBackground: MinimapSlider.background.from(theme),
+  minimapSliderHoverBackground: MinimapSlider.hoverBackground.from(theme),
+  minimapSelectionHighlight: Colors.Minimap.selectionHighlight.from(theme),
+  minimapBackground: Colors.Minimap.background.from(theme),
 };

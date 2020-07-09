@@ -5,36 +5,41 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-module Ext = Oni_Extensions;
+
+let pidToNamedPipe = pid => {
+  Exthost.(
+    {
+      let name = Printf.sprintf("syntax-client-%s", pid);
+      name |> NamedPipe.create |> NamedPipe.toString;
+    }
+  );
+};
 
 module TokenUpdate = {
   type t = {
-    bufferId: int,
     line: int,
-    tokenColors: list(ColorizedToken.t),
+    tokenColors: list(ThemeToken.t),
   };
 
   let show = tokenUpdate => {
     Printf.sprintf(
-      "Buffer id: %d line: %d token count: %d",
-      tokenUpdate.bufferId,
+      "Line: %d token count: %d",
       tokenUpdate.line,
       List.length(tokenUpdate.tokenColors),
     );
   };
 
-  let create = (~bufferId, ~line, tokenColors) => {
-    bufferId,
-    line,
-    tokenColors,
-  };
+  let create = (~line, tokenColors) => {line, tokenColors};
 };
 
 module ServerToClient = {
   [@deriving show({with_path: false})]
   type t =
     | Initialized
-    | TokenUpdate([@opaque] list(TokenUpdate.t))
+    | TokenUpdate({
+        bufferId: int,
+        tokens: [@opaque] list(TokenUpdate.t),
+      })
     | HealthCheckPass(bool)
     | EchoReply(string)
     | Log(string)
@@ -45,19 +50,24 @@ module ClientToServer = {
   [@deriving show({with_path: false})]
   type t =
     | Echo(string)
-    | Initialize([@opaque] Ext.LanguageInfo.t, Setup.t)
-    | BufferEnter(int, string)
-    | BufferLeave(int)
-    | BufferUpdate(
-        [@opaque] Oni_Core.BufferUpdate.t,
-        [@opaque] array(string),
-        string,
-      )
-    | ConfigurationChanged([@opaque] Configuration.t)
+    | Initialize([@opaque] Exthost.LanguageInfo.t, Setup.t)
+    | BufferStartHighlighting({
+        bufferId: int,
+        filetype: string,
+        lines: [@opaque] array(string),
+        visibleRanges: [@opaque] list(Range.t),
+      })
+    | BufferStopHighlighting(int)
+    | BufferVisibilityChanged({
+        bufferId: int,
+        ranges: [@opaque] list(Range.t),
+      })
+    | BufferUpdate([@opaque] Oni_Core.BufferUpdate.t)
+    | UseTreeSitter(bool)
     | ThemeChanged([@opaque] TokenTheme.t)
     | RunHealthCheck
-    | VisibleRangesChanged(
-        [@opaque] list((int /* buffer id */, list(Range.t))),
-      )
-    | Close;
+    | Close
+    // Debug
+    | SimulateMessageException
+    | SimulateReadException;
 };

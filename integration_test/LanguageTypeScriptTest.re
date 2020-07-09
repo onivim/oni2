@@ -7,7 +7,7 @@ open Feature_LanguageSupport;
 runTestWithInput(
   ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   ExtensionHelpers.waitForExtensionToActivate(
@@ -49,7 +49,7 @@ runTestWithInput(
         (state: State.t) =>
         List.exists(
           id => id == "vscode.typescript-language-features",
-          state.extensions.activatedIds,
+          state.extensions |> Feature_Extensions.activatedIds,
         )
       );
     },

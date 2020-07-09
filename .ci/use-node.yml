@@ -1,7 +1,6 @@
 steps:
   - task: NodeTool@0
-    displayName: 'Use Node 10.x'
     inputs:
-      versionSpec: '10.x'
+      versionSpec: "12.17.0"
   - script: npm install -g rimraf
     displayName: "Install rimraf"

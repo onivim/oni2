@@ -12,7 +12,7 @@ module TS = TextSynchronization;
 runTestWithInput(
   ~name="ExtHostBufferUpdates", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   // Wait until the extension is activated
@@ -23,12 +23,12 @@ runTestWithInput(
     (state: State.t) =>
     List.exists(
       id => id == "oni-dev-extension",
-      state.extensions.activatedIds,
+      state.extensions |> Feature_Extensions.activatedIds,
     )
   );
 
   // Create a buffer
-  Vim.command("new test.oni-dev");
+  dispatch(Actions.OpenFileByPath("test.oni-dev", None, None));
 
   // Wait for the oni-dev filetype
   wait(

@@ -8,18 +8,54 @@ open Oni_Model;
 open Oni_UI;
 open Utility;
 
-module InputModel = Oni_Components.InputModel;
-module ExtensionContributions = Oni_Extensions.ExtensionContributions;
-module Selection = Oni_Components.Selection;
+module ExtensionContributions = Exthost.Extension.Contributions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Quickmenu"));
 
-let prefixFor: Vim.Types.cmdlineType => string =
-  fun
-  | SearchForward => "/"
-  | SearchReverse => "?"
-  | Ex
-  | Unknown => ":";
+module Internal = {
+  let prefixFor: Vim.Types.cmdlineType => string =
+    fun
+    | SearchForward => "/"
+    | SearchReverse => "?"
+    | Ex
+    | Unknown => ":";
+
+  let commandsToMenuItems = (commands, items) =>
+    items
+    |> List.map((item: Menu.item) =>
+         Actions.{
+           category: item.category,
+           name: item.label,
+           command: () =>
+             switch (Command.Lookup.get(item.command, commands)) {
+             | Some({msg: `Arg0(msg), _}) => msg
+             | Some({msg: `Arg1(msgf), _}) => msgf(Json.Encode.null)
+             | None => Actions.Noop
+             },
+           icon: item.icon,
+           highlight: [],
+         }
+       )
+    |> Array.of_list;
+
+  let commandPaletteItems = (commands, menus, contextKeys) => {
+    let contextKeys =
+      WhenExpr.ContextKeys.union(
+        contextKeys,
+        WhenExpr.ContextKeys.fromList([
+          (
+            "oni.symLinkExists",
+            WhenExpr.Value.(
+              Sys.file_exists("/usr/local/bin/oni2") ? True : False
+            ),
+          ),
+        ]),
+      );
+
+    Feature_Menus.commandPalette(contextKeys, commands, menus)
+    |> commandsToMenuItems(commands);
+  };
+};
 
 let start = (themeInfo: ThemeInfo.t) => {
   let selectItemEffect = (item: Actions.menuItem) =>
@@ -79,6 +115,9 @@ let start = (themeInfo: ThemeInfo.t) => {
     |> Array.of_list;
   };
 
+  let typeToSearchInput =
+    Feature_InputText.create(~placeholder="type to search...");
+
   let menuUpdater =
       (
         state: option(Quickmenu.t),
@@ -88,14 +127,17 @@ let start = (themeInfo: ThemeInfo.t) => {
         iconTheme,
         themeInfo,
         commands,
+        menus,
+        contextKeys,
       )
       : (option(Quickmenu.t), Isolinear.Effect.t(Actions.t)) => {
     switch (action) {
     | QuickmenuShow(CommandPalette) => (
         Some({
           ...Quickmenu.defaults(CommandPalette),
-          items: Commands.toQuickMenu(commands) |> Array.of_list,
+          items: Internal.commandPaletteItems(commands, menus, contextKeys),
           focused: Some(0),
+          inputText: typeToSearchInput,
         }),
         Isolinear.Effect.none,
       )
@@ -120,7 +162,9 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(FilesPicker) => (
         Some({
           ...Quickmenu.defaults(FilesPicker),
+          filterProgress: Loading,
           ripgrepProgress: Loading,
+          inputText: typeToSearchInput,
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -129,7 +173,7 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(Wildmenu(cmdType)) => (
         Some({
           ...Quickmenu.defaults(Wildmenu(cmdType)),
-          prefix: Some(prefixFor(cmdType)),
+          prefix: Some(Internal.prefixFor(cmdType)),
         }),
         Isolinear.Effect.none,
       )
@@ -155,23 +199,26 @@ let start = (themeInfo: ThemeInfo.t) => {
 
     | QuickmenuInput(key) => (
         Option.map(
-          (Quickmenu.{query, selection, _} as state) => {
-            let (text, selection) =
-              InputModel.handleInput(~text=query, ~selection, key);
+          (Quickmenu.{inputText, _} as state) => {
+            let inputText = Feature_InputText.handleInput(~key, inputText);
 
-            Quickmenu.{...state, query: text, selection, focused: Some(0)};
+            Quickmenu.{...state, inputText, focused: Some(0)};
           },
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuInputClicked((newSelection: Selection.t)) => (
+    | QuickmenuInputMessage(msg) => (
         Option.map(
-          (Quickmenu.{variant, selection, _} as state) => {
+          (Quickmenu.{variant, inputText, _} as state) => {
             switch (variant) {
             | Wildmenu(_) =>
-              let transition = selection.focus - newSelection.focus;
+              let oldPosition = inputText |> Feature_InputText.cursorPosition;
+
+              let inputText = Feature_InputText.update(msg, inputText);
+              let newPosition = inputText |> Feature_InputText.cursorPosition;
+              let transition = newPosition - oldPosition;
 
               if (transition > 0) {
                 for (_ in 0 to transition) {
@@ -189,20 +236,20 @@ let start = (themeInfo: ThemeInfo.t) => {
             | _ => ()
             };
 
-            Quickmenu.{...state, variant, selection: newSelection};
+            Quickmenu.{...state, variant, inputText};
           },
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuCommandlineUpdated(text, cursorPosition) => (
+    | QuickmenuCommandlineUpdated(text, cursor) => (
         Option.map(
           state =>
             Quickmenu.{
               ...state,
-              query: text,
-              selection: Selection.collapsed(~text, cursorPosition),
+              inputText:
+                Feature_InputText.set(~text, ~cursor, state.inputText),
             },
           state,
         ),
@@ -322,7 +369,9 @@ let start = (themeInfo: ThemeInfo.t) => {
         state.languageInfo,
         state.iconTheme,
         themeInfo,
-        state.commands,
+        State.commands(state),
+        State.menus(state),
+        WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);
@@ -396,19 +445,21 @@ let subscriptions = (ripgrep, dispatch) => {
           dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
         },
       ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
+      ~onError=_ => Actions.Noop,
     );
   };
 
   let updater = (state: State.t) => {
     switch (state.quickmenu) {
     | Some(quickmenu) =>
+      let query = quickmenu.inputText |> Feature_InputText.value;
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
-      | ThemesPicker => [filter(quickmenu.query, quickmenu.items)]
+      | ThemesPicker => [filter(query, quickmenu.items)]
 
       | FilesPicker => [
-          filter(quickmenu.query, quickmenu.items),
+          filter(query, quickmenu.items),
           ripgrep(state.languageInfo, state.iconTheme, state.configuration),
         ]
 
@@ -416,12 +467,12 @@ let subscriptions = (ripgrep, dispatch) => {
       | DocumentSymbols =>
         switch (Selectors.getActiveBuffer(state)) {
         | Some(buffer) => [
-            filter(quickmenu.query, quickmenu.items),
+            filter(query, quickmenu.items),
             documentSymbols(state.languageFeatures, buffer),
           ]
         | None => []
         }
-      }
+      };
 
     | None => []
     };

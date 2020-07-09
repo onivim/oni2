@@ -6,67 +6,70 @@ let menus =
       bool("listFocus", model => model != None),
       bool("inQuickOpen", model => model != None),
       bool(
-        "quickmenuCursorEnd",
-        fun
-        | Some({selection, query, _})
-            when
-              Selection.isCollapsed(selection)
-              && selection.focus == String.length(query) =>
-          true
-        | _ => false,
-      ),
-      bool(
         "inEditorsPicker",
         fun
         | Some({variant: EditorsPicker, _}) => true
+        | _ => false,
+      ),
+      bool(
+        "quickmenuCursorEnd",
+        fun
+        | Some({inputText, _})
+            when Feature_InputText.isCursorAtEnd(inputText) =>
+          true
         | _ => false,
       ),
     ],
   );
 
 let editors =
-  fromList([
-    bool("insertMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalInsert
-      | Insert => true
-      | _ => false
-      }
-    ),
-    bool("normalMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalNormal
-      | Normal => true
-      | _ => false
-      }
-    ),
-    bool("visualMode", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalVisual
-      | Visual => true
-      | _ => false
-      }
-    ),
-    bool("editorTextFocus", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalInsert
-      | TerminalNormal
-      | TerminalVisual => false
-      | _ => true
-      }
-    ),
-    bool("terminalFocus", state =>
-      switch (ModeManager.current(state)) {
-      | TerminalInsert
-      | TerminalNormal
-      | TerminalVisual => true
-      | _ => false
-      }
-    ),
-    bool("commandLineFocus", state =>
-      ModeManager.current(state) == CommandLine
-    ),
-  ]);
+  fromList(
+    State.[
+      bool("editorTextFocus", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalInsert
+        | TerminalNormal
+        | TerminalVisual => false
+        | _ => true
+        }
+      ),
+      bool("terminalFocus", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalInsert
+        | TerminalNormal
+        | TerminalVisual => true
+        | _ => false
+        }
+      ),
+      bool("commandLineFocus", state =>
+        ModeManager.current(state) == CommandLine
+      ),
+      bool("insertMode", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalInsert
+        | Insert => true
+        | _ => false
+        }
+      ),
+      bool("normalMode", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalNormal
+        | Normal => true
+        | _ => false
+        }
+      ),
+      bool("visualMode", state =>
+        switch (ModeManager.current(state)) {
+        | TerminalVisual
+        | Visual => true
+        | _ => false
+        }
+      ),
+      bool("parameterHintsVisible", state =>
+        Feature_SignatureHelp.isShown(state.signatureHelp)
+      ),
+    ],
+  );
 
 let other =
   fromList(
@@ -77,9 +80,22 @@ let other =
         | {completions, _} when Completions.isActive(completions) => true
         | _ => false,
       ),
-      bool("sneakMode", state => Sneak.isActive(state.sneak)),
+      bool("isLinux", _state =>
+        Revery.Environment.os == Revery.Environment.Linux
+      ),
+      bool("isMac", _state => Revery.Environment.os == Revery.Environment.Mac),
+      bool("isWin", _state =>
+        Revery.Environment.os == Revery.Environment.Windows
+      ),
+      bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
+      bool("zenMode", state => state.zenMode),
+      bool("keyDisplayerEnabled", state => state.keyDisplayer != None),
     ],
   );
 
 let all =
-  unionMany(State.[menus |> map(state => state.quickmenu), editors, other]);
+  unionMany([
+    menus |> map((state: State.t) => state.quickmenu),
+    editors,
+    other,
+  ]);

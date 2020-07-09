@@ -134,6 +134,74 @@ module Editor = {
   ];
 };
 
+module EditorError = {
+  let foreground =
+    define(
+      "editorError.foreground",
+      {dark: hex("#F48771"), light: hex("#E51400"), hc: unspecified},
+    );
+  let border =
+    define(
+      "editorError.border",
+      {dark: unspecified, light: unspecified, hc: hex("#E47777")},
+    );
+
+  let defaults = [foreground, border];
+};
+
+module EditorWarning = {
+  let foreground =
+    define(
+      "editorWarning.foreground",
+      {dark: hex("#CCA700"), light: hex("#E9A700"), hc: unspecified},
+    );
+  let border =
+    define(
+      "editorWarning.border",
+      {dark: unspecified, light: unspecified, hc: hex("#FFCC00")},
+    );
+
+  let defaults = [foreground, border];
+};
+
+module EditorInfo = {
+  let foreground =
+    define(
+      "editorInfo.foreground",
+      {dark: hex("#75BEFF"), light: hex("#75BEFF"), hc: unspecified},
+    );
+  let border =
+    define(
+      "editorInfo.border",
+      {dark: unspecified, light: unspecified, hc: hex("#75BEFF")},
+    );
+
+  let defaults = [foreground, border];
+};
+
+module EditorHint = {
+  let foreground =
+    define(
+      "editorHint.foreground",
+      {
+        dark: hex("#EEE") |> transparent(0.7),
+        light: hex("#6c6c6c"),
+        hc: unspecified,
+      },
+    );
+  let border =
+    define(
+      "editorHint.border",
+      {
+        dark: unspecified,
+        light: unspecified,
+        hc: hex("#EEE") |> transparent(0.8),
+      },
+    );
+
+  let defaults = [foreground, border];
+};
+
 module EditorCursor = {
   let foreground =
     define(
@@ -307,7 +375,8 @@ module List = {
       "list.focusBackground",
       {dark: hex("#062F4A"), light: hex("#D6EBFF"), hc: unspecified},
     );
-  let focusForeground = define("list.focusForeground", all(unspecified));
+  let focusForeground =
+    define("list.focusForeground", all(ref(foreground))); // actually: unspecified
   let activeSelectionBackground =
     define(
       "list.activeSelectionBackground",
@@ -368,6 +437,38 @@ module EditorSuggestWidget = {
     highlightForeground,
     selectedBackground,
   ];
+};
+
+module Selection = {
+  let background =
+    define("selection.background", all(ref(Editor.selectionBackground))); // actually: unspecified
+
+  let defaults = [background];
+};
+
+module Input = {
+  let background =
+    define(
+      "input.background",
+      {dark: hex("#3C3C3C"), light: hex("#FFF"), hc: hex("#000")},
+    );
+  let foreground = define("input.foreground", all(ref(foreground)));
+  let border =
+    define(
+      "input.border",
+      {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
+    );
+  let placeholderForeground =
+    define(
+      "input.placeholderForeground",
+      {
+        dark: ref(foreground) |> transparent(0.5),
+        light: ref(foreground) |> transparent(0.5),
+        hc: ref(foreground) |> transparent(0.7),
+      },
+    );
+
+  let defaults = [background, foreground, border, placeholderForeground];
 };
 
 module Menu = {
@@ -459,6 +560,31 @@ module Oni = {
     commandlineModeForeground,
   ];
 
+  module Modal = {
+    let backdrop = define("oni.modal.backdrop", all(hex("#0004")));
+    let background =
+      define("oni.modal.background", all(ref(Editor.background)));
+    let foreground = define("oni.modal.foreground", all(ref(foreground)));
+    let shortcutForeground =
+      define(
+        "oni.modal.shortcutForeground",
+        all(ref(foreground) |> transparent(0.7)),
+      );
+    let shortcutHighlightForeground =
+      define(
+        "oni.modal.shortcutHighlightForeground",
+        all(ref(normalModeBackground)),
+      );
+
+    let defaults = [
+      backdrop,
+      background,
+      foreground,
+      shortcutForeground,
+      shortcutHighlightForeground,
+    ];
+  };
+
   module Sneak = {
     let background =
       define("oni.sneak.background", all(ref(Menu.selectionBackground)));
@@ -469,6 +595,80 @@ module Oni = {
 
     let defaults = [background, foreground, highlight];
   };
+};
+
+module Panel = {
+  let background = define("panel.background", all(ref(Editor.background)));
+  let border =
+    define(
+      "panel.border",
+      {
+        dark: hex("#808080") |> transparent(0.35),
+        light: hex("#808080") |> transparent(0.35),
+        hc: ref(contrastBorder),
+      },
+    );
+
+  let defaults = [background, border];
+};
+
+module PanelTitle = {
+  let activeForeground =
+    define(
+      "panelTitle.activeForeground",
+      {dark: hex("#E7E7E7"), light: hex("#424242"), hc: hex("#FFF")},
+    );
+
+  let inactiveForeground =
+    define(
+      "panelTitle.inactiveForeground",
+      {
+        dark: ref(activeForeground) |> transparent(0.6),
+        light: ref(activeForeground) |> transparent(0.71),
+        hc: hex("#FFF"),
+      },
+    );
+
+  let activeBorder =
+    define(
+      "panelTitle.activeBorder",
+      {
+        dark: ref(activeForeground),
+        light: ref(activeForeground),
+        hc: ref(contrastBorder),
+      },
+    );
+
+  let dropBackground =
+    define(
+      "panelTitle.dropBackground",
+      {
+        dark: hex("#FFF") |> transparent(0.12),
+        light: hex("#2677CB") |> transparent(0.18),
+        hc: hex("#FFF") |> transparent(0.12),
+      },
+    );
+
+  let defaults = [
+    activeForeground,
+    inactiveForeground,
+    activeBorder,
+    dropBackground,
+  ];
+};
+
+module PanelInput = {
+  let border =
+    define(
+      "panelInput.border",
+      {
+        dark: ref(Input.border), // actually: unspecified
+        light: hex("#ddd"),
+        hc: unspecified,
+      },
+    );
+
+  let defaults = [border];
 };
 
 module ScrollbarSlider = {
@@ -503,6 +703,92 @@ module ScrollbarSlider = {
   let defaults = [background, activeBackground, hoverBackground];
 };
 
+module Minimap = {
+  let findMatchHighlight =
+    define(
+      "minimap.findMatchHighlight",
+      {light: hex("#d18616"), dark: hex("#d18616"), hc: hex("#AB5A00")},
+    );
+  let selectionHighlight =
+    define(
+      "minimap.selectionHighlight",
+      {light: hex("#ADD6FF"), dark: hex("#264F78"), hc: hex("#ffffff")},
+    );
+  let errorHighlight =
+    define(
+      "minimap.errorHighlight",
+      {
+        dark: color(Revery.Color.rgb_int(255, 18, 18)) |> transparent(0.7),
+        light: color(Revery.Color.rgb_int(255, 18, 18)) |> transparent(0.7),
+        hc: color(Revery.Color.rgb_int(255, 50, 50)),
+      },
+    );
+  let warningHighlight =
+    define("minimap.warningHighlight", all(ref(EditorWarning.foreground)));
+  let background =
+    define("minimap.background", all(ref(Editor.background)));
+
+  let defaults = [
+    findMatchHighlight,
+    selectionHighlight,
+    errorHighlight,
+    warningHighlight,
+    background,
+  ];
+};
+
+module MinimapSlider = {
+  let background =
+    define(
+      "minimapSlider.background",
+      all(ref(ScrollbarSlider.background) |> transparent(0.5)),
+    );
+  let hoverBackground =
+    define(
+      "minimapSlider.hoverBackground",
+      all(ref(ScrollbarSlider.hoverBackground) |> transparent(0.5)),
+    );
+  let activeBackground =
+    define(
+      "minimapSlider.activeBackground",
+      all(ref(ScrollbarSlider.activeBackground) |> transparent(0.5)),
+    );
+
+  let defaults = [background, hoverBackground, activeBackground];
+};
+
+module MinimapGutter = {
+  let addedBackground =
+    define(
+      "minimapGutter.addedBackground",
+      {
+        dark: color(Revery.Color.rgb_int(12, 125, 157)),
+        light: color(Revery.Color.rgb_int(102, 175, 224)),
+        hc: color(Revery.Color.rgb_int(0, 155, 249)),
+      },
+    );
+  let modifiedBackground =
+    define(
+      "minimapGutter.modifiedBackground",
+      {
+        dark: color(Revery.Color.rgb_int(88, 124, 12)),
+        light: color(Revery.Color.rgb_int(129, 184, 139)),
+        hc: color(Revery.Color.rgb_int(51, 171, 78)),
+      },
+    );
+  let deletedBackground =
+    define(
+      "minimapGutter.deletedBackground",
+      {
+        dark: color(Revery.Color.rgb_int(148, 21, 27)),
+        light: color(Revery.Color.rgb_int(202, 75, 81)),
+        hc: color(Revery.Color.rgb_int(252, 93, 109)),
+      },
+    );
+
+  let defaults = [addedBackground, modifiedBackground, deletedBackground];
+};
+
 module SideBar = {
   let background =
     define(
@@ -512,6 +798,32 @@ module SideBar = {
   let foreground = define("sideBar.foreground", all(ref(foreground))); // actually: all(unspecified)
 
   let defaults = [background, foreground];
+};
+
+module SideBarSectionHeader = {
+  let background =
+    define(
+      "sideBarSectionHeader.background",
+      {
+        dark: hex("#808080") |> transparent(0.2),
+        light: hex("#808080") |> transparent(0.2),
+        hc: unspecified,
+      },
+    );
+
+  let foreground =
+    define(
+      "sideBarSectionHeader.foreground",
+      {
+        dark: ref(SideBar.foreground),
+        light: ref(SideBar.foreground),
+        hc: ref(SideBar.foreground),
+      },
+    );
+
+  let border = contrastBorder;
+
+  let defaults = [background, foreground, border];
 };
 
 module StatusBar = {
@@ -696,6 +1008,22 @@ module Tab = {
   ];
 };
 
+module TextLink = {
+  let foreground =
+    define(
+      "textLink.foreground",
+      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
+    );
+
+  let activeForeground =
+    define(
+      "textLink.activeForeground",
+      {dark: hex("#3794FF"), light: hex("#006AB1"), hc: hex("#3794FF")},
+    );
+
+  let defaults = [foreground, activeForeground];
+};
+
 module TitleBar = {
   let activeForeground =
     define(
@@ -731,12 +1059,30 @@ module TitleBar = {
       {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
     );
 
+  let hoverBackground =
+    define(
+      "oni.titleBar.hoverBackground",
+      {
+        dark: hex("#FFFFFF") |> transparent(0.1),
+        light: hex("#000000") |> transparent(0.1),
+        hc: unspecified,
+      },
+    );
+
+  let hoverCloseBackground =
+    define(
+      "oni.titleBar.hoverCloseBackground",
+      hex("#E81123") |> transparent(0.9) |> all,
+    );
+
   let defaults = [
     activeForeground,
     inactiveForeground,
     activeBackground,
     inactiveBackground,
     border,
+    hoverBackground,
+    hoverCloseBackground,
   ];
 };
 

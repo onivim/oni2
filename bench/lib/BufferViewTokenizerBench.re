@@ -12,7 +12,13 @@ let options = Reperf.Options.create(~iterations=1000, ());
 let setup = () => ();
 
 let indentationSettings = IndentationSettings.default;
-let simpleColorizer = _ => (Colors.black, Colors.white);
+let simpleColorizer = _ =>
+  BufferLineColorizer.{
+    color: Colors.black,
+    backgroundColor: Colors.white,
+    bold: false,
+    italic: false,
+  };
 
 let tokenizeLine = () => {
   let _ =

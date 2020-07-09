@@ -5,18 +5,22 @@
     (libraries
         bigarray
         zed_oni
+        luv
         lwt
         lwt.unix
         oniguruma
+        Oni2.cli
         Oni2.core
-        Oni2.extensionManagement
-        Oni2.extensions
         Oni2.model
+        Oni2.service.extensions
+        Oni2.service.net
         Oni2.store
         Oni2.syntax_client
         Oni2.syntax_server
         Oni2.ui
-        sdl2
+        Revery.sdl2
+        fp
+        dir.lib
     )
     (preprocess (
         pps

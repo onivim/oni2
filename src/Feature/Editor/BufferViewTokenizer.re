@@ -15,10 +15,12 @@ type tokenType =
 type t = {
   tokenType,
   text: string,
-  startPosition: Index.t,
-  endPosition: Index.t,
+  startIndex: Index.t,
+  endIndex: Index.t,
   color: Color.t,
   backgroundColor: Color.t,
+  bold: bool,
+  italic: bool,
 };
 
 let space = Uchar.of_char(' ');
@@ -36,8 +38,8 @@ let isWhitespace = c => {
 let filterRuns = (r: Tokenizer.TextRun.t) => ZedBundled.length(r.text) != 0;
 
 let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
-  let startIndex = Index.toZeroBased(r.startIndex);
-  let (backgroundColor, color) = colorizer(startIndex);
+  let {color, backgroundColor, bold, italic}: BufferLineColorizer.themedToken =
+    colorizer(r.startByte);
 
   let firstChar = ZedBundled.get(r.text, 0);
 
@@ -53,30 +55,35 @@ let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
   {
     tokenType,
     text: r.text,
-    startPosition: r.startPosition,
-    endPosition: r.endPosition,
+    startIndex: r.startIndex,
+    endIndex: r.endIndex,
     color,
     backgroundColor,
+    bold,
+    italic,
   };
 };
 
-let getCharacterPositionAndWidth = (~viewOffset: int=0, line: BufferLine.t, i) => {
-  let (totalOffset, width) = BufferLine.getPositionAndWidth(~index=i, line);
-
-  let actualOffset =
-    if (viewOffset > 0) {
-      totalOffset - viewOffset;
-    } else {
-      totalOffset;
-    };
-
-  (actualOffset, width);
-};
-
-let tokenize = (~startIndex=0, ~endIndex, line, colorizer) => {
-  let split = (i0, c0, i1, c1) => {
-    let (bg0, fg0) = colorizer(i0);
-    let (bg1, fg1) = colorizer(i1);
+let tokenize =
+    (
+      ~startIndex=0,
+      ~endIndex,
+      line,
+      colorizer: int => BufferLineColorizer.themedToken,
+    ) => {
+  let split =
+      (
+        ~index0 as _,
+        ~byte0 as b0,
+        ~char0 as c0,
+        ~index1 as _,
+        ~byte1 as b1,
+        ~char1 as c1,
+      ) => {
+    let {backgroundColor: bg0, color: fg0, _}: BufferLineColorizer.themedToken =
+      colorizer(b0);
+    let {backgroundColor: bg1, color: fg1, _}: BufferLineColorizer.themedToken =
+      colorizer(b1);
 
     !Color.equals(bg0, bg1)
     || !Color.equals(fg0, fg1)

@@ -13,28 +13,40 @@ module ServerToClient = Protocol.ServerToClient;
 
 type t;
 
-type connectedCallback = unit => unit;
-type closeCallback = int => unit;
-type highlightsCallback = list(Protocol.TokenUpdate.t) => unit;
-
 let start:
   (
-    ~onConnected: connectedCallback=?,
-    ~onClose: closeCallback=?,
-    ~scheduler: Scheduler.t,
-    ~onHighlights: highlightsCallback,
+    ~parentPid: string=?,
+    ~executablePath: string=?,
+    ~onConnected: unit => unit=?,
+    ~onClose: int => unit=?,
+    ~onHighlights: (~bufferId: int, ~tokens: list(Protocol.TokenUpdate.t)) =>
+                   unit,
     ~onHealthCheckResult: bool => unit,
-    Oni_Extensions.LanguageInfo.t,
+    Exthost.LanguageInfo.t,
     Setup.t
   ) =>
-  t;
+  result(t, string);
 
-let notifyBufferEnter: (t, int, string) => unit;
-let notifyBufferLeave: (t, int) => unit;
+let startHighlightingBuffer:
+  (
+    ~bufferId: int,
+    ~filetype: string,
+    ~visibleRanges: list(Range.t),
+    ~lines: array(string),
+    t
+  ) =>
+  unit;
+let stopHighlightingBuffer: (~bufferId: int, t) => unit;
+let notifyBufferUpdate: (~bufferUpdate: BufferUpdate.t, t) => unit;
+let notifyBufferVisibilityChanged:
+  (~bufferId: int, ~ranges: list(Range.t), t) => unit;
+
 let notifyThemeChanged: (t, TokenTheme.t) => unit;
-let notifyConfigurationChanged: (t, Configuration.t) => unit;
-let notifyBufferUpdate: (t, BufferUpdate.t, array(string), string) => unit;
-
-let notifyVisibilityChanged: (t, list((int, list(Range.t)))) => unit;
+let notifyTreeSitterChanged: (~useTreeSitter: bool, t) => unit;
 let healthCheck: t => unit;
 let close: t => unit;
+
+module Testing: {
+  let simulateReadException: t => unit;
+  let simulateMessageException: t => unit;
+};

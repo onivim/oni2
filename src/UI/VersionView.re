@@ -9,43 +9,22 @@ open Oni_Core;
 
 module Colors = Feature_Theme.Colors;
 
-module Styles = {
-  let container = (~theme) =>
-    Style.[
-      backgroundColor(Colors.Editor.background.from(theme)),
-      flexDirection(`Column),
-      flexGrow(1),
-      justifyContent(`Center),
-      alignItems(`Center),
-      overflow(`Hidden),
-    ];
-
-  let versionText = (~theme, ~font: UiFont.t) =>
-    Style.[
-      fontFamily(font.fontFile),
-      fontSize(12.),
-      color(Colors.foreground.from(theme)),
-      marginTop(0),
-    ];
-};
-
 module HeaderView = {
   module Styles = {
-    let header = (~uiFont: UiFont.t) =>
-      Style.[
-        flexGrow(0),
-        flexDirection(`Column),
-        justifyContent(`Center),
-        alignItems(`Center),
-        marginTop(16),
-        marginBottom(0),
-        fontFamily(uiFont.fontFile),
-        fontSize(14.),
-      ];
+    open Style;
+
+    let header = [
+      flexGrow(0),
+      flexDirection(`Column),
+      justifyContent(`Center),
+      alignItems(`Center),
+      marginTop(16),
+      marginBottom(0),
+    ];
   };
 
-  let make = (~text, ~uiFont, ()) => {
-    <Text style={Styles.header(~uiFont)} text />;
+  let make = (~text, ~uiFont: UiFont.t, ()) => {
+    <Text style=Styles.header fontFamily={uiFont.family} fontSize=14. text />;
   };
 };
 
@@ -64,11 +43,7 @@ module VersionView = {
       borderBottom(~color=Revery.Color.rgba(1.0, 1.0, 1.0, 0.2), ~width=1),
     ];
 
-    let versionText = (~theme, ~fontFile, ~fontSize) => [
-      fontFamily(fontFile),
-      Style.fontSize(fontSize),
-      color(Colors.foreground.from(theme)),
-    ];
+    let version = (~theme) => [color(Colors.foreground.from(theme))];
 
     let versionValue = [flexGrow(0), alignItems(`FlexEnd)];
 
@@ -86,22 +61,18 @@ module VersionView = {
       ) => {
     <View style=Styles.container>
       <Text
-        style={Styles.versionText(
-          ~theme,
-          ~fontFile=uiFont.fontFile,
-          ~fontSize=12.,
-        )}
+        style={Styles.version(~theme)}
+        fontFamily={uiFont.family}
+        fontSize=12.
         text=name
       />
       <View style=Styles.spacer />
       <View style=Styles.spacer>
         <View style=Styles.versionValue>
           <Text
-            style={Styles.versionText(
-              ~theme,
-              ~fontFile=editorFont.fontFile,
-              ~fontSize=11.,
-            )}
+            style={Styles.version(~theme)}
+            fontFamily={editorFont.fontFamily}
+            fontSize=11.
             text=version
           />
         </View>
@@ -123,6 +94,19 @@ let sdlVersionToString = ({major, minor, patch}: Sdl2.Version.t) => {
   Printf.sprintf("%d.%d.%d", major, minor, patch);
 };
 
+module Styles = {
+  open Style;
+
+  let container = (~theme) => [
+    backgroundColor(Colors.Editor.background.from(theme)),
+    flexDirection(`Column),
+    flexGrow(1),
+    justifyContent(`Center),
+    alignItems(`Center),
+    overflow(`Hidden),
+  ];
+};
+
 let make = (~theme, ~uiFont, ~editorFont, ()) => {
   let version = VersionView.make(~theme, ~uiFont, ~editorFont);
   let header = HeaderView.make(~uiFont);
@@ -134,6 +118,8 @@ let make = (~theme, ~uiFont, ~editorFont, ()) => {
     // spacer
     <header text="OCaml" />
     <version name="Compiler Version " version=Sys.ocaml_version />
+    <header text="libuv" />
+    <version name="Version " version={Luv.Version.string()} />
     // spacer
     <header text="SDL" />
     <version

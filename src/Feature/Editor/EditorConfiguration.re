@@ -64,14 +64,14 @@ open CustomDecoders;
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
 let fontFamily =
-  setting("editor.fontFamily", string, ~default="FiraCode-Regular.ttf");
+  setting("editor.fontFamily", string, ~default="JetBrainsMono-Regular.ttf");
 let fontSize = setting("editor.fontSize", int, ~default=14);
 let largeFileOptimization =
   setting("editor.largeFileOptimizations", bool, ~default=true);
 let highlightActiveIndentGuide =
   setting("editor.highlightActiveIndentGuide", bool, ~default=true);
 let indentSize = setting("editor.indentSize", int, ~default=4);
-let insertSpaces = setting("editor.insertSpaces", bool, ~default=false);
+let insertSpaces = setting("editor.insertSpaces", bool, ~default=true);
 let lineNumbers = setting("editor.lineNumbers", lineNumbers, ~default=`On);
 let matchBrackets = setting("editor.matchBrackets", bool, ~default=true);
 let renderIndentGuides =
@@ -79,6 +79,7 @@ let renderIndentGuides =
 let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`All);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
+let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
 let tabSize = setting("editor.tabSize", int, ~default=4);
 
 module Hover = {
@@ -98,10 +99,10 @@ module ZenMode = {
 };
 
 module Experimental = {
-  let editorSmoothScroll =
+  let smoothScroll =
     setting("experimental.editor.smoothScroll", bool, ~default=false);
 
-  let editorSmoothCursor =
+  let cursorSmoothCaretAnimation =
     setting(
       "experimental.editor.cursorSmoothCaretAnimation",
       bool,
@@ -122,6 +123,7 @@ let contributions = [
   renderIndentGuides.spec,
   renderWhitespace.spec,
   rulers.spec,
+  scrollShadow.spec,
   tabSize.spec,
   Hover.enabled.spec,
   Hover.delay.spec,
@@ -130,4 +132,6 @@ let contributions = [
   Minimap.showSlider.spec,
   ZenMode.hideTabs.spec,
   ZenMode.singleFile.spec,
+  Experimental.smoothScroll.spec,
+  Experimental.cursorSmoothCaretAnimation.spec,
 ];

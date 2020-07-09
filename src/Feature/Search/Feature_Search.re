@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Revery;
 open Oni_Core;
 open Utility;
 open Oni_Components;
@@ -7,16 +6,14 @@ open Oni_Components;
 // MODEL
 
 type model = {
-  queryInput: string,
+  findInput: Feature_InputText.model,
   query: string,
-  selection: Selection.t,
   hits: list(Ripgrep.Match.t),
 };
 
 let initial = {
-  queryInput: "",
+  findInput: Feature_InputText.create(~placeholder="Search"),
   query: "",
-  selection: Selection.initial,
   hits: [],
 };
 
@@ -25,9 +22,10 @@ let initial = {
 [@deriving show({with_path: false})]
 type msg =
   | Input(string)
-  | InputClicked(Selection.t)
   | Update([@opaque] list(Ripgrep.Match.t))
-  | Complete;
+  | Complete
+  | SearchError(string)
+  | FindInput(Feature_InputText.msg);
 
 type outmsg =
   | Focus;
@@ -35,26 +33,27 @@ type outmsg =
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-    let {queryInput, selection, _} = model;
-
     let model =
       switch (key) {
       | "<CR>" =>
-        if (model.query == model.queryInput) {
+        let findInputValue = model.findInput |> Feature_InputText.value;
+        if (model.query == findInputValue) {
           model; // Do nothing if the query hasn't changed
         } else {
-          {...model, query: model.queryInput, hits: []};
-        }
+          {...model, query: findInputValue, hits: []};
+        };
 
       | _ =>
-        let (queryInput, selection) =
-          InputModel.handleInput(~text=queryInput, ~selection, key);
-        {...model, queryInput, selection};
+        let findInput = Feature_InputText.handleInput(~key, model.findInput);
+        {...model, findInput};
       };
 
     (model, None);
 
-  | InputClicked(selection) => ({...model, selection}, Some(Focus))
+  | FindInput(msg) => (
+      {...model, findInput: Feature_InputText.update(msg, model.findInput)},
+      Some(Focus),
+    )
 
   | Update(items) => ({...model, hits: model.hits @ items}, None)
 
@@ -80,6 +79,7 @@ let subscriptions = (ripgrep, dispatch) => {
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
       ~onCompleted=() => Complete,
+      ~onError=msg => SearchError(msg),
     );
   };
 
@@ -104,7 +104,7 @@ module Styles = {
 
   let queryPane = (~theme) => [
     width(300),
-    borderRight(~color=Colors.SideBar.background.from(theme), ~width=1),
+    borderRight(~color=Colors.Panel.border.from(theme), ~width=1),
   ];
 
   let resultsPane = [flexGrow(1)];
@@ -115,22 +115,13 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let title = (~font: UiFont.t, ~theme) => [
-    fontFamily(font.fontFile),
-    fontSize(font.fontSize),
-    color(Colors.SideBar.foreground.from(theme)),
+  let title = (~theme) => [
+    color(Colors.PanelTitle.activeForeground.from(theme)),
     marginVertical(8),
     marginHorizontal(8),
   ];
 
-  let input = (~font: UiFont.t) => [
-    border(~width=2, ~color=Color.rgba(0., 0., 0., 0.1)),
-    backgroundColor(Color.rgba(0., 0., 0., 0.3)),
-    color(Revery.Colors.white),
-    fontFamily(font.fontFile),
-    fontSize(font.fontSize),
-    flexGrow(1),
-  ];
+  let input = [flexGrow(1)];
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
@@ -152,7 +143,7 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
 let make =
     (
       ~theme,
-      ~uiFont,
+      ~uiFont: UiFont.t,
       ~editorFont,
       ~isFocused,
       ~model,
@@ -170,25 +161,29 @@ let make =
     <View style={Styles.queryPane(~theme)}>
       <View style=Styles.row>
         <Text
-          style={Styles.title(~font=uiFont, ~theme)}
+          style={Styles.title(~theme)}
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size}
           text="Find in Files"
         />
       </View>
       <View style=Styles.row>
-        <Input
-          style={Styles.input(~font=uiFont)}
-          cursorColor=Revery.Colors.gray
-          selection={model.selection}
-          value={model.queryInput}
-          placeholder="Search"
+        <Feature_InputText.View
+          style=Styles.input
+          model={model.findInput}
           isFocused
-          onClick={selection => dispatch(InputClicked(selection))}
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size}
+          dispatch={msg => dispatch(FindInput(msg))}
+          theme
         />
       </View>
     </View>
     <View style=Styles.resultsPane>
       <Text
-        style={Styles.title(~font=uiFont, ~theme)}
+        style={Styles.title(~theme)}
+        fontFamily={uiFont.family}
+        fontSize={uiFont.size}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <LocationList theme uiFont editorFont items onSelectItem />

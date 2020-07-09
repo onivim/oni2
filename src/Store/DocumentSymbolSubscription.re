@@ -8,6 +8,8 @@ module Log = (
 );
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
+module DocumentSymbol = Exthost.DocumentSymbol;
+
 module Provider = {
   type action = Actions.t;
   type params = {
@@ -26,8 +28,6 @@ module Provider = {
     Lwt.on_success(
       promise,
       items => {
-        open LanguageFeatures;
-
         let docSymbolToMenuItem = (docSymbol: DocumentSymbol.t) => {
           Actions.{
             category: Some(DocumentSymbol.(docSymbol.name)),
@@ -35,8 +35,10 @@ module Provider = {
             command: () =>
               Model.Actions.OpenFileByPath(
                 Core.Buffer.getUri(buffer) |> Core.Uri.toFileSystemPath,
+                // !! TODO: Fix conversion here
                 None,
-                Some(DocumentSymbol.(docSymbol.range.start)),
+                None,
+                // Some(DocumentSymbol.(docSymbol.range.start)),
               ),
             icon: None,
             highlight: [],

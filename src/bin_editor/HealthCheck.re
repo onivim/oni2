@@ -64,6 +64,13 @@ let commonChecks = [
       );
     },
   ),
+  (
+    "Verify libuv dependency",
+    _ => {
+      Log.infof(m => m("libuv version: %s", Luv.Version.string()));
+      true;
+    },
+  ),
 ];
 
 let mainChecks = [
@@ -74,17 +81,25 @@ let mainChecks = [
   (
     "Verify node dependencies",
     (setup: Setup.t) => {
-      Oni_Extensions.NodeTask.run(
-        ~scheduler=Scheduler.immediate,
-        ~setup,
-        "check-health.js",
-      )
+      NodeTask.run(~setup, "check-health.js")
       |> LwtEx.sync
       |> (
         fun
         | Ok(_) => true
         | Error(_) => false
       );
+    },
+  ),
+  (
+    "Verify simple request",
+    (setup: Setup.t) => {
+      Service_Net.Request.json(
+        ~setup,
+        ~decoder=Json.Decode.value,
+        "https://httpbin.org/json",
+      )
+      |> LwtEx.sync
+      |> Result.is_ok;
     },
   ),
   (
@@ -99,14 +114,14 @@ let mainChecks = [
     "Verify bundled font exists",
     _ =>
       Sys.file_exists(
-        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+        Revery.Environment.executingDirectory ++ "JetBrainsMono-Regular.ttf",
       ),
   ),
   (
     "Revery: Verify can measure & shape font",
     _ => {
       let fontPath =
-        Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf";
+        Revery.Environment.executingDirectory ++ "JetBrainsMono-Regular.ttf";
       switch (Revery.Font.load(fontPath)) {
       | Ok(font) =>
         let metrics = Revery.Font.getMetrics(font, 12.0);
@@ -172,14 +187,14 @@ let mainChecks = [
       let healthCheckResult = ref(false);
       let syntaxClient =
         Oni_Syntax_Client.start(
-          ~scheduler=Scheduler.immediate,
-          ~onConnected=() => connected := true,
-          ~onClose=_ => closed := true,
-          ~onHighlights=_ => (),
-          ~onHealthCheckResult=res => healthCheckResult := res,
-          Oni_Extensions.LanguageInfo.initial,
+          ~onConnected=() => {connected := true},
+          ~onClose=_ => {closed := true},
+          ~onHighlights=(~bufferId as _, ~tokens as _) => (),
+          ~onHealthCheckResult=res => {healthCheckResult := res},
+          Exthost.LanguageInfo.initial,
           setup,
-        );
+        )
+        |> Result.get_ok;
 
       let waitForRef = (condition: ref(bool)) => {
         let tries = ref(0);
@@ -188,6 +203,7 @@ let mainChecks = [
             ~name="HealthCheck.waitThread",
             () => {
               while (condition^ == false && tries^ < 10) {
+                let _: bool = Luv.Loop.run(~mode=`NOWAIT, ());
                 Unix.sleepf(0.2);
                 incr(tries);
               }
@@ -245,6 +261,22 @@ let run = (~checks, _cli) => {
   };
 
   Log.info("");
+
+  let printCrashLog = () => {
+    Log.info("Checking for crash log...");
+
+    if (File.exists("onivim2-crash.log")) {
+      Log.error("Crash log found:");
+      Log.error("---");
+      let lines = File.readAllLines("onivim2-crash.log");
+      lines |> List.iter(Log.error);
+      Log.error("---");
+    } else {
+      Log.info("No crash log found!");
+    };
+  };
+
+  printCrashLog();
 
   Log.info("All systems go.");
   Log.info("Checking for remaining threads...");

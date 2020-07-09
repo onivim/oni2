@@ -5,34 +5,48 @@
            ClipboardInsertModePasteEmptyTest
            ClipboardNormalModePasteTest
            ClipboardYankTest
+           ClipboardxpTest
+           ClipboardyypTest
            CopyActiveFilepathToClipboardTest
            EchoNotificationTest
            EditorFontFromPathTest
            EditorFontValidTest
+           EditorUtf8Test
            ExtConfigurationChangedTest
            ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
            ExtHostCompletionTest
            ExtHostDefinitionTest
+           FileWatcherTest
            FontSizeChangeTest
            KeybindingsInvalidJsonTest
            KeySequenceJJTest
            InputIgnoreTest
            LanguageCssTest
            LanguageTypeScriptTest
+           LineEndingsLFTest
+           LineEndingsCRLFTest
            QuickOpenEventuallyCompletesTest
            SearchShowClearHighlightsTest
+           SyntaxServer
+           SyntaxServerCloseTest
+           SyntaxServerMessageExceptionTest
+           SyntaxServerParentPidTest
+           SyntaxServerParentPidCorrectTest
+           SyntaxServerReadExceptionTest
+           Regression1671Test
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
            RegressionFileModifiedIndicationTest
+           RegressionNonExistentDirectory
            RegressionVspEmptyInitialBufferTest
            RegressionVspEmptyExistingBufferTest
-           Regression1097Test
            SCMGitTest
            SyntaxHighlightTextMateTest
            SyntaxHighlightTreesitterTest
            AddRemoveSplitTest
            TerminalSetPidTitleTest
+           TerminalConfigurationTest
            TypingBatchedTest
            TypingUnbatchedTest
            VimlConfigurationTest
@@ -40,9 +54,10 @@
            ZenModeSplitTest
     )
     (libraries
+        Oni_CLI
         Oni_IntegrationTestLib
         reason-native-crash-utils.asan
-            ))
+))
 
 (install
     (section bin)
@@ -55,39 +70,58 @@
         ClipboardInsertModePasteEmptyTest.exe
         ClipboardNormalModePasteTest.exe
         ClipboardYankTest.exe
+        ClipboardxpTest.exe
+        ClipboardyypTest.exe
         CopyActiveFilepathToClipboardTest.exe
         EchoNotificationTest.exe
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
+        EditorUtf8Test.exe
         ExtConfigurationChangedTest.exe
         ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
         ExtHostCompletionTest.exe
         ExtHostDefinitionTest.exe
+        FileWatcherTest.exe
         FontSizeChangeTest.exe
         KeybindingsInvalidJsonTest.exe
         KeySequenceJJTest.exe
         InputIgnoreTest.exe
         LanguageCssTest.exe
         LanguageTypeScriptTest.exe
+        LineEndingsCRLFTest.exe
+        LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
-        Regression1097Test.exe
+        Regression1671Test.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionVspEmptyInitialBufferTest.exe
+        RegressionNonExistentDirectory.exe
         RegressionVspEmptyExistingBufferTest.exe
         SCMGitTest.exe
         SearchShowClearHighlightsTest.exe
         SyntaxHighlightTextMateTest.exe
         SyntaxHighlightTreesitterTest.exe
+        SyntaxServer.exe
+        SyntaxServerCloseTest.exe
+        SyntaxServerMessageExceptionTest.exe
+        SyntaxServerParentPidTest.exe
+        SyntaxServerParentPidCorrectTest.exe
+        SyntaxServerReadExceptionTest.exe
         TerminalSetPidTitleTest.exe
+        TerminalConfigurationTest.exe
         AddRemoveSplitTest.exe
         TypingBatchedTest.exe
         TypingUnbatchedTest.exe
         VimlConfigurationTest.exe
         ZenModeSingleFileModeTest.exe
         ZenModeSplitTest.exe
+        large-c-file.c
+        lsan.supp
         some-test-file.json
         some-test-file.txt
-        ))
+        test.crlf
+        test.lf
+        utf8.txt
+))

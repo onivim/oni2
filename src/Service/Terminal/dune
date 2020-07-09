@@ -4,11 +4,11 @@
     (libraries 
       editor-core-types
       Oni2.core
-      Oni2.extensions
+      Oni2.exthost
       Revery
       revery-terminal.lib
+      revery-terminal.vterm
       isolinear
       base
-      vterm
     )
-    (preprocess (pps ppx_let ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx)))
+    (preprocess (pps ppx_let ppx_deriving.show)))

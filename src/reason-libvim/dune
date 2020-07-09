@@ -1,0 +1,20 @@
+(library
+    (name vim)
+    (public_name libvim)
+    (library_flags (:include flags.sexp))
+    (c_flags (:include c_flags.sexp))
+    (c_names bindings)
+    (cxx_flags (:include cxx_flags.sexp))
+    (preprocess (pps ppx_deriving.show))
+    (libraries
+        base
+        editor-core-types
+        timber
+        zed_oni
+        ppx_deriving.runtime
+))
+
+(rule
+    (targets c_flags.sexp cxx_flags.sexp flags.sexp)
+    (deps (:discover config/discover.exe))
+    (action (run %{discover})))

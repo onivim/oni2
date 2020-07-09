@@ -6,6 +6,7 @@
       Oni2.core
       Oni2.components
       Oni2.service.terminal
+      Oni2.feature.commands
       Revery
       revery-terminal.lib
       isolinear

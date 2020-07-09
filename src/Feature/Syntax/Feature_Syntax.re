@@ -33,20 +33,86 @@ let highlight = (~scope, ~theme, ~grammars, lines) => {
   result;
 };
 
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let eagerMaxLines = setting("syntax.eagerMaxLines", int, ~default=500);
+
+  let eagerMaxLineLength =
+    setting("syntax.eagerMaxLineLength", int, ~default=1000);
+
+  module Experimental = {
+    let treeSitter = setting("experimental.treeSitter", bool, ~default=false);
+  };
+};
+
+module Contributions = {
+  let configuration = [
+    Configuration.eagerMaxLines.spec,
+    Configuration.eagerMaxLineLength.spec,
+    Configuration.Experimental.treeSitter.spec,
+  ];
+};
+
+module Internal = {
+  let eagerHighlight =
+      (~grammars, ~scope, ~config: Config.resolver, ~theme, lines) => {
+    let maxLines = Configuration.eagerMaxLines.get(config);
+    let maxLineLength = Configuration.eagerMaxLineLength.get(config);
+
+    let len = min(Array.length(lines), maxLines);
+
+    let numberOfLinesToHighlight = {
+      let rec iter = idx =>
+        if (idx >= len) {
+          idx;
+        } else if (String.length(lines[idx]) > maxLineLength) {
+          idx;
+        } else {
+          iter(idx + 1);
+        };
+
+      iter(0);
+    };
+
+    if (numberOfLinesToHighlight == 0) {
+      [||];
+    } else {
+      let linesToHighlight =
+        Array.sub(lines, 0, numberOfLinesToHighlight - 1);
+      let highlights = highlight(~scope, ~theme, ~grammars, linesToHighlight);
+      highlights;
+    };
+  };
+};
+
 [@deriving show({with_path: false})]
 type msg =
-  | ServerStarted([@opaque] Oni_Syntax_Client.t)
+  | ServerStarted
+  | ServerInitialized([@opaque] Oni_Syntax_Client.t)
+  | ServerFailedToStart(string)
   | ServerStopped
-  | TokensHighlighted([@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t))
-  | BufferUpdated([@opaque] BufferUpdate.t)
-  | Service(Service_Syntax.msg);
+  | TokensHighlighted({
+      bufferId: int,
+      tokens: [@opaque] list(Oni_Syntax.Protocol.TokenUpdate.t),
+    });
+
+type outmsg =
+  | Nothing
+  | ServerError(string);
 
 type t = {
-  highlights: BufferMap.t(LineMap.t(list(ColorizedToken.t))),
+  maybeSyntaxClient: option(Oni_Syntax_Client.t),
+  highlights: BufferMap.t(LineMap.t(list(ThemeToken.t))),
   ignoredBuffers: BufferMap.t(bool),
 };
 
-let empty = {ignoredBuffers: BufferMap.empty, highlights: BufferMap.empty};
+let empty = {
+  ignoredBuffers: BufferMap.empty,
+  highlights: BufferMap.empty,
+  maybeSyntaxClient: None,
+};
 
 let noTokens = [];
 
@@ -64,7 +130,7 @@ let getSyntaxScope =
   let tokens = getTokens(~bufferId, ~line, bufferHighlights);
 
   let rec loop = (syntaxScope, currentTokens) => {
-    ColorizedToken.(
+    ThemeToken.(
       switch (currentTokens) {
       // Reached the end... return what we have
       | [] => syntaxScope
@@ -80,14 +146,18 @@ let getSyntaxScope =
   loop(SyntaxScope.none, tokens);
 };
 
+let isSyntaxServerRunning = ({maybeSyntaxClient, _}) => {
+  maybeSyntaxClient != None;
+};
+
 let setTokensForLine =
     (
       ~bufferId: int,
       ~line: int,
-      ~tokens: list(ColorizedToken.t),
-      {highlights, ignoredBuffers}: t,
+      ~tokens: list(ThemeToken.t),
+      {highlights, ignoredBuffers, _} as prev: t,
     ) => {
-  let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {
+  let updateLineMap = (lineMap: LineMap.t(list(ThemeToken.t))) => {
     LineMap.update(line, _ => Some(tokens), lineMap);
   };
 
@@ -99,16 +169,17 @@ let setTokensForLine =
       | Some(v) => Some(updateLineMap(v)),
       highlights,
     );
-  {ignoredBuffers, highlights};
+  {...prev, ignoredBuffers, highlights};
 };
 
-let setTokens = (tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
+let setTokens =
+    (bufferId, tokenUpdates: list(Protocol.TokenUpdate.t), highlights: t) => {
   Protocol.TokenUpdate.(
     tokenUpdates
     |> List.fold_left(
          (acc, curr) => {
            setTokensForLine(
-             ~bufferId=curr.bufferId,
+             ~bufferId,
              ~line=curr.line,
              ~tokens=curr.tokenColors,
              acc,
@@ -127,50 +198,144 @@ let ignore = (~bufferId, bufferHighlights) => {
 };
 
 // When there is a buffer update, shift the lines to match
-let handleUpdate = (bufferUpdate: BufferUpdate.t, bufferHighlights) =>
+let handleUpdate =
+    (
+      ~grammars,
+      ~scope,
+      ~theme,
+      ~config: Config.resolver,
+      bufferUpdate: BufferUpdate.t,
+      bufferHighlights,
+    ) =>
   if (BufferMap.mem(bufferUpdate.id, bufferHighlights.ignoredBuffers)) {
     bufferHighlights;
-  } else {
+  } else if (bufferUpdate.version == 1 && bufferUpdate.isFull) {
+    // Eager syntax highlighting - on the very first buffer update,
+    // we'll synchronousyl calculate syntax highlights for an initial
+    // chunk of the buffer.
+    let newHighlights = ref(bufferHighlights);
+    let highlights =
+      Internal.eagerHighlight(
+        ~scope,
+        ~config,
+        ~theme,
+        ~grammars,
+        bufferUpdate.lines,
+      );
+
+    let len = Array.length(highlights);
+
+    for (i in 0 to len - 1) {
+      newHighlights :=
+        setTokensForLine(
+          ~bufferId=bufferUpdate.id,
+          ~line=i,
+          ~tokens=highlights[i],
+          newHighlights^,
+        );
+    };
+    newHighlights^;
+  } else if (!bufferUpdate.isFull) {
+    // Otherwise, if not a full update, we'll pre-emptively shift highlights
+    // to give immediate feedback.
     let highlights =
       BufferMap.update(
         bufferUpdate.id,
         fun
         | None => None
-        | Some(lineMap) =>
-          Some(
-            LineMap.shift(
-              ~default=v => v,
-              ~startPos=bufferUpdate.startLine |> Index.toZeroBased,
-              ~endPos=bufferUpdate.endLine |> Index.toZeroBased,
-              ~delta=Array.length(bufferUpdate.lines),
-              lineMap,
-            ),
-          ),
+        | Some(lineMap) => {
+            let startPos = bufferUpdate.startLine |> Index.toZeroBased;
+            let endPos = bufferUpdate.endLine |> Index.toZeroBased;
+            Some(
+              LineMap.shift(
+                ~default=v => v,
+                ~startPos,
+                ~endPos,
+                ~delta=Array.length(bufferUpdate.lines) - (endPos - startPos),
+                lineMap,
+              ),
+            );
+          },
         bufferHighlights.highlights,
       );
     {...bufferHighlights, highlights};
+  } else {
+    bufferHighlights;
   };
 
-let update = (highlights: t, msg) =>
-  switch (msg) {
-  | TokensHighlighted(tokens) => setTokens(tokens, highlights)
-  | BufferUpdated(update) when !update.isFull =>
-    handleUpdate(update, highlights)
-  | ServerStarted(_client) => highlights
-  | ServerStopped => highlights
-  | BufferUpdated(_update) => highlights
-  | Service(_) => highlights
+let update: (t, msg) => (t, outmsg) =
+  (highlights: t, msg) =>
+    switch (msg) {
+    | TokensHighlighted({bufferId, tokens}) => (
+        setTokens(bufferId, tokens, highlights),
+        Nothing,
+      )
+    | ServerStarted => (highlights, Nothing)
+    | ServerFailedToStart(msg) => (highlights, ServerError(msg))
+    | ServerInitialized(client) => (
+        {...highlights, maybeSyntaxClient: Some(client)},
+        Nothing,
+      )
+    | ServerStopped => ({...highlights, maybeSyntaxClient: None}, Nothing)
+    };
+
+let subscription =
+    (
+      ~config: Config.resolver,
+      ~languageInfo,
+      ~setup,
+      ~tokenTheme,
+      ~bufferVisibility,
+      {maybeSyntaxClient, ignoredBuffers, _},
+    ) => {
+  let getBufferSubscriptions = client => {
+    bufferVisibility
+    |> List.filter(((buffer, _)) =>
+         !BufferMap.mem(Oni_Core.Buffer.getId(buffer), ignoredBuffers)
+       )
+    |> List.map(((buffer, visibleRanges)) => {
+         Service_Syntax.Sub.buffer(~client, ~buffer, ~visibleRanges)
+         |> Isolinear.Sub.map(
+              fun
+              | Service_Syntax.ReceivedHighlights(tokens) => {
+                  let bufferId = Buffer.getId(buffer);
+                  TokensHighlighted({bufferId, tokens});
+                },
+            )
+       });
   };
 
-let subscription = (~enabled, ~quitting, ~languageInfo, ~setup, _highlights) =>
-  if (enabled && !quitting) {
-    Service_Syntax.Sub.create(~languageInfo, ~setup)
+  let bufferSubscriptions =
+    maybeSyntaxClient
+    |> Option.map(getBufferSubscriptions)
+    |> Option.value(~default=[]);
+
+  let serverSubscription =
+    Service_Syntax.Sub.server(
+      ~useTreeSitter=Configuration.Experimental.treeSitter.get(config),
+      ~languageInfo,
+      ~setup,
+      ~tokenTheme,
+    )
     |> Isolinear.Sub.map(
          fun
-         | Service_Syntax.ServerStarted(client) => ServerStarted(client)
-         | Service_Syntax.ServerClosed => ServerStopped
-         | Service_Syntax.ReceivedHighlights(hl) => TokensHighlighted(hl),
+         | Service_Syntax.ServerStarted => ServerStarted
+         | Service_Syntax.ServerInitialized(client) =>
+           ServerInitialized(client)
+         | Service_Syntax.ServerFailedToStart(msg) => ServerFailedToStart(msg)
+         | Service_Syntax.ServerClosed => ServerStopped,
        );
-  } else {
-    Isolinear.Sub.none;
+
+  Isolinear.Sub.batch([serverSubscription, ...bufferSubscriptions]);
+};
+
+module Effect = {
+  let bufferUpdate = (~bufferUpdate, {maybeSyntaxClient, _}) => {
+    Isolinear.Effect.create(~name="feature.syntax.bufferUpdate", () => {
+      maybeSyntaxClient
+      |> Option.iter(syntaxClient => {
+           Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, syntaxClient)
+         })
+    });
   };
+};

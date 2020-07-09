@@ -10,8 +10,8 @@ In _normal mode_, the cursor can be moved with the following keys:
 
 - <kbd>h</kbd> - move left
 - <kbd>j</kbd> - move down
-- <kbd>k</kbd> - move right
-- <kbd>l</kbd> - move down
+- <kbd>l</kbd> - move right
+- <kbd>k</kbd> - move up
 
 These keys can be prefixed with a number: <kbd>1</kbd><kbd>0</kbd><kbd>j</kbd> would jump down 10 lines.
 
@@ -49,8 +49,8 @@ The search motion - <kbd>//</kbd> - can be used for moving the cursor to a parti
 
 - <kbd>//</kbd>`search-string`<kbd>Return</kbd> will search forward, moving the cursor the next instance of `search-string` found in the buffer
 - <kbd>?</kbd>`search-string`<kbd>Return</kbd> will search backward, moving the cursor to the previous instance of `search-string`
-- <kbd>N</kbd> will move the cursor to the next instance of the last used `search-string`
-- <kbd>n</kbd> will move the cursor to the previous instance of the last used `search-string`
+- <kbd>n</kbd> will move the cursor to the next instance of the last used `search-string`
+- <kbd>N</kbd> will move the cursor to the previous instance of the last used `search-string`
 
 - <kbd>*</kbd> will search for the next instance of the identifier under the cursor.
 - <kbd>%</kbd> will move the cursor to a matching bracket.

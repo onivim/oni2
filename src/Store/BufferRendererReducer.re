@@ -4,27 +4,6 @@
 
 open Oni_Model;
 
-let terminalReducer:
-  (BufferRenderer.terminal, Actions.t) => BufferRenderer.terminal =
-  (terminal, action) => {
-    switch (action) {
-    | Actions.Terminal(
-        Feature_Terminal.Service(
-          Service_Terminal.ProcessTitleChanged({id, title, _}),
-        ),
-      )
-        when terminal.id == id => {
-        ...terminal,
-        id,
-        title,
-      }
-    | Command("terminal.normalMode") => {...terminal, insertMode: false}
-    | Command("terminal.insertMode") => {...terminal, insertMode: true}
-
-    | _ => terminal
-    };
-  };
-
 let reduce = (state: BufferRenderers.t, action) => {
   switch (action) {
   | Actions.BufferRenderer(BufferRenderer.RendererAvailable(id, renderer)) =>
@@ -32,15 +11,13 @@ let reduce = (state: BufferRenderers.t, action) => {
   | action =>
     let reduceForBuffer = (id, renderer) => {
       BufferRenderer.(
-        switch (renderer) {
-        | Welcome =>
-          switch (action) {
-          | Actions.BufferUpdate(bu) when bu.update.id == id => Editor
-          | _ => Welcome
-          }
-        | Version => Version
-        | Editor => Editor
-        | Terminal(term) => Terminal(terminalReducer(term, action))
+        switch (renderer, action) {
+        | (Welcome, BufferUpdate(bu)) when bu.update.id == id => Editor
+        | (Version, _) => Version
+        | (Editor, _) => Editor
+        | (Terminal(state), Terminal(msg)) =>
+          Terminal(Feature_Terminal.bufferRendererReducer(state, msg))
+        | _ => renderer
         }
       );
     };

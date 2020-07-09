@@ -10,7 +10,7 @@ runTest(
   ~name="Viml Configuration Block",
   (dispatch, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      state.vimMode == Vim.Types.Normal
+      Feature_Vim.mode(state.vim) == Vim.Types.Normal
     );
 
     // Because of our 'experimental.viml' block, the ';' semicolon
@@ -18,13 +18,14 @@ runTest(
     dispatch(KeyboardInput(";"));
 
     wait(~name="Mode switches to command line", (state: State.t) =>
-      state.vimMode == Vim.Types.CommandLine
+      Feature_Vim.mode(state.vim) == Vim.Types.CommandLine
     );
 
     dispatch(KeyboardInput("e"));
     wait(~name="Mode switches to command line", (state: State.t) =>
       switch (state.quickmenu) {
-      | Some(quickmenu) => quickmenu.query == "e"
+      | Some(quickmenu) =>
+        quickmenu.inputText |> Feature_InputText.value == "e"
       | None => false
       }
     );
@@ -33,7 +34,8 @@ runTest(
 
     wait(~name="Mode switches to command line", (state: State.t) =>
       switch (state.quickmenu) {
-      | Some(quickmenu) => quickmenu.query == "eh"
+      | Some(quickmenu) =>
+        quickmenu.inputText |> Feature_InputText.value == "eh"
       | None => false
       }
     );

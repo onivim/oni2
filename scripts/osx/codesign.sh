@@ -33,13 +33,11 @@ else
    manual-codesign Contents/MacOS/node
    manual-codesign Contents/MacOS/Oni2_editor
    manual-codesign Contents/MacOS/Oni2
-   manual-codesign Contents/Frameworks/libonig.5.dylib
-   manual-codesign Contents/Frameworks/libpng16.16.dylib
-   manual-codesign Contents/Frameworks/libfreetype.6.dylib
-   manual-codesign Contents/Frameworks/libharfbuzz.0.dylib
-   manual-codesign Contents/Frameworks/libSDL2-2.0.0.dylib
-   manual-codesign Contents/Frameworks/libffi.6.dylib
+   manual-codesign Contents/Frameworks/libssl.1.1.dylib
+   manual-codesign Contents/Frameworks/libcrypto.1.1.dylib
    manual-codesign Contents/Resources/node/node_modules/node-pty/build/Release/pty.node
+   manual-codesign Contents/Resources/node/node_modules/spdlog/build/Release/spdlog.node
+   manual-codesign Contents/Resources/node/node_modules/native-watchdog/build/Release/watchdog.node
 
    # Finish by codesigning the root
    manual-codesign

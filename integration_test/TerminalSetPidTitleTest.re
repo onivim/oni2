@@ -10,14 +10,20 @@ runTest(~name="TerminalSetPidTitle", (dispatch, wait, _) => {
     (state: State.t) =>
     List.exists(
       id => id == "oni-dev-extension",
-      state.extensions.activatedIds,
+      state.extensions |> Feature_Extensions.activatedIds,
     )
   );
 
   // Spin up a terminal
   dispatch(
     Actions.Terminal(
-      Feature_Terminal.NewTerminal({cmd: None, splitDirection: Vertical}),
+      Feature_Terminal.Command(
+        NewTerminal({
+          cmd: None,
+          splitDirection: Vertical,
+          closeOnExit: false,
+        }),
+      ),
     ),
   );
 

@@ -21,7 +21,7 @@ command pallette, by pressing `Cmd-Shift-P` and searching for `System`.
 After selecting the option and giving admin permissions, the `oni2` executable
 should be accessible.
 
-> __NOTE:__ Admin access is required to add a symlink in `/usr/bin/local`. This
+> __NOTE:__ Admin access is required to add a symlink in `/usr/local/bin`. This
 > should already be in your default path, but if it is not it can be added to
 > your `.bashrc`/`.zshrc`, depending on your shell.
 
@@ -65,7 +65,7 @@ folder. The current folder can be changed once inside Oni2 by using the normal v
 You can set Oni2 as the [default text editor for git](https://www.git-scm.com/book/en/v2/Customizing-Git-Git-Configuration#_code_core_editor_code) by running: 
 
 ```bash
-git config --global core.editor "oni2 --nofork --quiet"
+git config --global core.editor "oni2 --nofork --silent"
 ```
 
 ## Extension Management

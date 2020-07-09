@@ -13,7 +13,7 @@ echo "!!! Starting integration tests"
 for file in ./*Test.exe;
 do
       echo "-- Running test $file"
-      "$file"
+      LSAN_OPTIONS=suppressions=lsan.supp "$file"
       echo "-- Test complete"
 done
 echo "!!! integration tests complete!"

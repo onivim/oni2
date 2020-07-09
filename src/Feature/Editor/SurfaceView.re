@@ -4,8 +4,6 @@ open Revery.Math;
 
 open Oni_Core;
 
-open Helpers;
-
 module Log = (val Log.withNamespace("Oni2.Editor.SurfaceView"));
 
 module Config = EditorConfiguration;
@@ -21,32 +19,29 @@ module Styles = {
     width(int_of_float(bufferPixelWidth)),
     bottom(0),
   ];
+};
 
-  let horizontalScrollBar = [
-    position(`Absolute),
-    bottom(0),
-    left(0),
-    right(0),
-    height(Constants.scrollBarThickness),
-  ];
+module Constants = {
+  let hoverTime = 1.0;
 };
 
 let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
-let renderRulers = (~context, ~colors: Colors.t, rulers) =>
+let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
+  let scrollX = Editor.scrollX(context.editor);
   rulers
-  |> List.map(bufferPositionToPixel(~context, 0))
-  |> List.map(fst)
+  |> List.map(pos => characterWidth *. float(pos) -. scrollX)
   |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
+};
 
 let%component make =
               (
-                ~onScroll,
                 ~buffer,
                 ~editor,
-                ~metrics,
                 ~colors,
+                ~dispatch,
                 ~topVisibleLine,
                 ~onCursorChange,
                 ~cursorPosition: Location.t,
@@ -62,14 +57,19 @@ let%component make =
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
+                ~bufferPixelWidth,
                 ~bufferWidthInCharacters,
                 ~windowIsFocused,
                 ~config,
                 (),
               ) => {
-  let%hook elementRef = React.Hooks.ref(None);
+  let%hook maybeBbox = React.Hooks.ref(None);
+  let%hook hoverTimerActive = React.Hooks.ref(false);
+  let%hook lastMousePosition = React.Hooks.ref(None);
+  let%hook (hoverTimer, resetHoverTimer) =
+    Hooks.timer(~active=hoverTimerActive^, ());
 
-  let lineCount = Buffer.getNumberOfLines(buffer);
+  let lineCount = editor |> Editor.totalViewLines;
   let indentation =
     switch (Buffer.getIndentation(buffer)) {
     | Some(v) => v
@@ -77,71 +77,133 @@ let%component make =
     };
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-    onScroll(wheelEvent.deltaY *. (-50.));
+    dispatch(
+      Msg.EditorMouseWheel({
+        deltaY: wheelEvent.deltaY *. (-1.),
+        deltaX: wheelEvent.deltaX,
+      }),
+    );
 
-  let {scrollX, scrollY, _}: Editor.t = editor;
+  let getMaybeLocationFromMousePosition = (mouseX, mouseY) => {
+    maybeBbox^
+    |> Option.map(bbox => {
+         let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
+
+         let relX = mouseX -. minX;
+         let relY = mouseY -. minY;
+
+         Editor.Slow.pixelPositionToBufferLineByte(
+           ~buffer,
+           ~pixelX=relX,
+           ~pixelY=relY,
+           editor,
+         );
+       });
+  };
+
+  let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((line, col)) => {
+         dispatch(
+           Msg.MouseMoved({
+             location:
+               EditorCoreTypes.Location.create(
+                 ~line=Index.fromZeroBased(line),
+                 ~column=Index.fromZeroBased(col),
+               ),
+           }),
+         )
+       });
+    hoverTimerActive := true;
+    lastMousePosition := Some((evt.mouseX, evt.mouseY));
+    resetHoverTimer();
+  };
+
+  let onMouseLeave = _ => {
+    hoverTimerActive := false;
+    lastMousePosition := None;
+    resetHoverTimer();
+  };
+
+  // Usually the If hook compares a value to a prior version of itself
+  // However, here we just want to compare it to a constant value,
+  // so we discard the second argument to the function.
+  let%hook () =
+    Hooks.effect(
+      If(
+        (t, _) => Revery.Time.toFloatSeconds(t) > Constants.hoverTime,
+        hoverTimer,
+      ),
+      () => {
+        lastMousePosition^
+        |> Utility.OptionEx.flatMap(((mouseX, mouseY)) =>
+             getMaybeLocationFromMousePosition(mouseX, mouseY)
+           )
+        |> Option.iter(((line, col)) =>
+             dispatch(
+               Msg.MouseHovered({
+                 location:
+                   EditorCoreTypes.Location.create(
+                     ~line=Index.fromZeroBased(line),
+                     ~column=Index.fromZeroBased(col),
+                   ),
+               }),
+             )
+           );
+        hoverTimerActive := false;
+        resetHoverTimer();
+        None;
+      },
+    );
 
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     Log.trace("editorMouseUp");
 
-    switch (elementRef^) {
-    | None => ()
-    | Some(r) =>
-      let (minX, minY, _, _) = r#getBoundingBox() |> BoundingBox2d.getBounds;
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((line, col)) => {
+         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
+         Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
 
-      let relY = evt.mouseY -. minY;
-      let relX = evt.mouseX -. minX;
+         let cursor =
+           Vim.Cursor.create(
+             ~line=Index.fromOneBased(line + 1),
+             ~column=Index.fromZeroBased(col),
+           );
 
-      let numberOfLines = Buffer.getNumberOfLines(buffer);
-      let (line, col) = Editor.pixelPositionToLineColumn(editor, relX, relY);
-
-      if (line < numberOfLines) {
-        Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-        Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
-
-        let cursor =
-          Vim.Cursor.create(
-            ~line=Index.fromOneBased(line + 1),
-            ~column=Index.fromZeroBased(col),
-          );
-
-        /*GlobalContext.current().dispatch(
-            Actions.EditorScrollToLine(editorId, topVisibleLine),
-          );
-          GlobalContext.current().dispatch(
-            Actions.EditorScrollToColumn(editorId, leftVisibleColumn),
-          );*/
-        onCursorChange(cursor);
-      };
-    };
+         onCursorChange(cursor);
+       });
   };
 
+  let pixelWidth = Editor.visiblePixelWidth(editor);
+  let pixelHeight = Editor.visiblePixelHeight(editor);
+
   <View
-    ref={node => elementRef := Some(node)}
+    onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(EditorMetrics.(metrics.pixelWidth)) -. gutterWidth,
+      float(pixelWidth) -. gutterWidth,
     )}
     onMouseUp
+    onMouseMove
+    onMouseLeave
     onMouseWheel>
     <Canvas
-      style={Styles.bufferViewClipped(
-        0.,
-        float(EditorMetrics.(metrics.pixelWidth)) -. gutterWidth,
-      )}
-      render={canvasContext => {
+      style={Styles.bufferViewClipped(0., float(pixelWidth) -. gutterWidth)}
+      render={(canvasContext, _) => {
         let context =
           Draw.createContext(
             ~canvasContext,
-            ~width=metrics.pixelWidth,
-            ~height=metrics.pixelHeight,
-            ~scrollX,
-            ~scrollY,
-            ~lineHeight=editorFont.measuredHeight,
+            ~width=pixelWidth,
+            ~height=pixelHeight,
+            ~editor,
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(~context, ~colors, cursorPosition.line);
+        drawCurrentLineHighlight(
+          ~context,
+          ~colors,
+          cursorPosition.line |> Index.toZeroBased,
+        );
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
 
@@ -149,6 +211,7 @@ let%component make =
           ~context,
           ~count=lineCount,
           ~buffer,
+          ~editor,
           ~leftVisibleColumn,
           ~colors,
           ~diagnosticsMap,
@@ -174,23 +237,33 @@ let%component make =
             indentation,
           );
         };
+
+        if (Config.scrollShadow.get(config)) {
+          let () =
+            ScrollShadow.renderVertical(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          let () =
+            ScrollShadow.renderHorizontal(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          ();
+        };
       }}
     />
     <CursorView
       config
-      scrollX
-      scrollY
-      metrics
+      editor
       editorFont
-      buffer
       mode
       cursorPosition
       isActiveSplit
       windowIsFocused
       colors
     />
-    <View style=Styles.horizontalScrollBar>
-      <EditorHorizontalScrollbar editor width={metrics.pixelWidth} colors />
-    </View>
   </View>;
 };

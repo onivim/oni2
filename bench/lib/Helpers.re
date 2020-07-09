@@ -4,24 +4,36 @@ open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
-let metrics = EditorMetrics.{pixelWidth: 3440, pixelHeight: 1440};
+Vim.init();
+
+let config = _ => None;
 
 /* Create a state with some editor size */
 let simpleState = {
-  let state = State.initial(~getUserSettings=() => Ok(Config.Settings.empty));
+  let initialBuffer = {
+    let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+      Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
+    Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+  };
+
+  let state =
+    State.initial(
+      ~initialBuffer,
+      ~initialBufferRenderers=BufferRenderers.initial,
+      ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~contributedCommands=[],
+      ~workingDirectory=Sys.getcwd(),
+    );
 
   Reducer.reduce(
     state,
-    Actions.EditorGroupSizeChanged({
-      id: EditorGroups.activeGroupId(state.editorGroups),
-      width: 3440,
-      height: 1440,
-    }),
+    Actions.EditorGroupSizeChanged({id: 0, width: 3440, height: 1440}),
   );
 };
 
 let defaultFont: Service_Font.font = {
-  fontFile: Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
+  fontFile: "JetBrainsMono-Regular.ttf",
+  fontFamily: Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf"),
   fontSize: 10.,
   measuredWidth: 10.,
   measuredHeight: 10.,
@@ -35,17 +47,20 @@ let simpleState =
     Actions.EditorFont(Service_Font.FontLoaded(defaultFont)),
   );
 
-let simpleEditor = Editor.create(~font=defaultFont, ());
-let editorGroup =
-  EditorGroups.getActiveEditorGroup(simpleState.editorGroups)
-  |> Option.value(~default=EditorGroup.create());
-
 let thousandLines =
   Array.make(1000, "This is a buffer with a thousand lines!");
 
+let defaultBuffer = Oni_Core.Buffer.ofLines(~id=0, thousandLines);
+let defaultEditorBuffer =
+  defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
+
+let simpleEditor =
+  Editor.create(~config, ~font=defaultFont, ~buffer=defaultEditorBuffer, ())
+  |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
+
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
-  Actions.BufferUpdate({update, oldBuffer, newBuffer});
+  Actions.BufferUpdate({update, oldBuffer, newBuffer, triggerKey: None});
 };
 
 let thousandLineBuffer = Buffer.ofLines(thousandLines);
