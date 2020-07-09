@@ -29,8 +29,8 @@ steps:
   - script: esy @test run-ci
     displayName: 'Unit Tests: esy test-ci (round 1)'
     env:
-      ASAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1
-      LSAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1:suppressions=integration_test/lsan.supp
+      ASAN_OPTIONS: use_sigaltstack=0:verbosity=1
+      LSAN_OPTIONS: verbosity=1:suppressions=integration_test/lsan.supp
 #  - script: esy @test run-ci
 #    displayName: 'Unit Tests: esy test-ci (round 2)'
 #  - script: esy @test run-ci
