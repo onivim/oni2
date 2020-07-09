@@ -10,33 +10,39 @@ type msg =
       arguments: [@opaque] list(Json.t),
     })
   | KeyPressed(string)
+  | SearchQueryResults(Service_Extensions.Query.t)
+  | SearchQueryError(string)
   | SearchText(Feature_InputText.msg);
 
 type model = {
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
   searchText: Feature_InputText.model,
+  latestQuery: option(Service_Extensions.Query.t),
 };
 
 let initial = {
   activatedIds: [],
   extensions: [],
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
+  latestQuery: None,
 };
+
+let searchResults = ({latestQuery, _}) =>
+  switch (latestQuery) {
+  | None => []
+  | Some(query) => query |> Service_Extensions.Query.results
+  };
 
 module Internal = {
   let filterBundled = (scanner: Scanner.ScanResult.t) => {
-    let name = scanner.manifest.name;
+    let name = scanner.manifest |> Manifest.identifier;
 
     name == "vscode.typescript-language-features"
-    || name == "vscode.markdown-language-features"
     || name == "vscode.css-language-features"
-    || name == "vscode.html-language-features"
-    || name == "vscode.laserwave"
-    || name == "vscode.Material-theme"
-    || name == "vscode.reason-vscode"
-    || name == "vscode.gruvbox"
-    || name == "vscode.nord-visual-studio-code";
+    || name == "jaredkent.laserwave"
+    || name == "jaredly.reason-vscode"
+    || name == "arcticicestudio.nord-visual-studio-code";
   };
 };
 

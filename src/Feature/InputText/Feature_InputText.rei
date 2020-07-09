@@ -22,6 +22,8 @@ let isCursorAtEnd: model => bool;
 
 let cursorPosition: model => int;
 
+let isEmpty: model => bool;
+
 module View: {
   let make:
     (

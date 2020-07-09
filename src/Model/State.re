@@ -69,7 +69,7 @@ type t = {
   workspace: Workspace.t,
   zenMode: bool,
   // State of the bottom pane
-  pane: Pane.t,
+  pane: Feature_Pane.model,
   searchPane: Feature_Search.model,
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
@@ -157,7 +157,7 @@ let initial =
     hover: Feature_Hover.initial,
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
-    pane: Pane.initial,
+    pane: Feature_Pane.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,

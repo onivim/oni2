@@ -86,13 +86,13 @@ let%component make =
               (
                 ~theme: ColorTheme.Colors.t,
                 ~sideBar: Feature_SideBar.model,
-                ~pane: Pane.t,
+                ~pane: Feature_Pane.model,
                 (),
               ) => {
   let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
 
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
-  let isPaneVisible = it => Pane.isVisible(it, pane);
+  let isPaneVisible = it => Feature_Pane.isVisible(it, pane);
 
   <View style={Styles.container(~theme, ~offsetX)}>
     <item
