@@ -29,8 +29,8 @@ steps:
   - script: esy @test run-ci
     displayName: 'Unit Tests: esy test-ci (round 1)'
     env:
-      ASAN_OPTIONS: use_sigaltstack=1:verbosity=1:help=1
-      LSAN_OPTIONS: use_sigaltstack=1:verbosity=1:help=1:suppressions=integration_test/lsan.supp
+      ASAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1
+      LSAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1:suppressions=integration_test/lsan.supp
 #  - script: esy @test run-ci
 #    displayName: 'Unit Tests: esy test-ci (round 2)'
 #  - script: esy @test run-ci
@@ -40,8 +40,8 @@ steps:
   - script: esy @integrationtest run
     displayName: 'Integration Tests: run'
     env:
-      ASAN_OPTIONS: use_sigaltstack=1:verbosity=1:help=1
-      LSAN_OPTIONS: use_sigaltstack=1:verbosity=1:help=1:suppressions=lsan.supp
+      ASAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1
+      LSAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1:suppressions=lsan.supp
   # TODO: Stabilize and bring back!
   # - script: esy x OniUnitTestRunner
   #  displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
