@@ -9,6 +9,7 @@ open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
+module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 
 module Colors = Feature_Theme.Colors;
@@ -117,7 +118,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     };
 
   let sideBar = () =>
-    if (!zenMode && Feature_SideBar.isOpen(sideBar)) {
+    if (!zenMode) {
       <SideBarView theme state dispatch />;
     } else {
       React.empty;
