@@ -13,3 +13,5 @@ let decode =
       one_of([("simple", simple), ("value", value)]);
     }
   );
+
+let encode = Json.Encode.string;
