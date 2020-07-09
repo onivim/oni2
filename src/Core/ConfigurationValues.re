@@ -117,7 +117,7 @@ let default = {
   workbenchActivityBarVisible: true,
   workbenchColorTheme: "LaserWave Italic",
   workbenchEditorShowTabs: true,
-  workbenchSideBarVisible: true,
+  workbenchSideBarVisible: false,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,

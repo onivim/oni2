@@ -139,7 +139,7 @@ let initial =
     iconTheme: IconTheme.create(),
     isQuitting: false,
     keyBindings: Keybindings.empty,
-    keyDisplayer: None,
+    keyDisplayer: Some(KeyDisplayer.initial),
     languageInfo: Exthost.LanguageInfo.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
