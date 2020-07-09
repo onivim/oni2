@@ -14,10 +14,8 @@ let menus =
       bool(
         "quickmenuCursorEnd",
         fun
-        | Some({selection, query, _})
-            when
-              Selection.isCollapsed(selection)
-              && selection.focus == String.length(query) =>
+        | Some({inputText, _})
+            when Feature_InputText.isCursorAtEnd(inputText) =>
           true
         | _ => false,
       ),

@@ -1,6 +1,0 @@
-(library
-    (name Oni_Extensions_Test)
-    (library_flags (-linkall -g))
-    (modules (:standard))
-    (preprocess (pps ppx_deriving_yojson ppx_deriving.show))
-    (libraries Oni2.extensions Oni_Core_Test rely.lib))

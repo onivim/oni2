@@ -1215,3 +1215,5 @@ module Request: {
       (~workspace: option(WorkspaceData.t), Client.t) => unit;
   };
 };
+
+module LanguageInfo = LanguageInfo;

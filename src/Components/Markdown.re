@@ -29,18 +29,15 @@ open {
          let scope =
            switch (language) {
            | Some(language) =>
-             Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-               languageInfo,
-               language,
-             )
+             Exthost.LanguageInfo.getScopeFromLanguage(languageInfo, language)
              |> Utility.OptionEx.or_(
-                  Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+                  Exthost.LanguageInfo.getScopeFromLanguage(
                     languageInfo,
                     defaultLanguage,
                   ),
                 )
            | None =>
-             Oni_Extensions.LanguageInfo.getScopeFromLanguage(
+             Exthost.LanguageInfo.getScopeFromLanguage(
                languageInfo,
                defaultLanguage,
              )

@@ -56,9 +56,6 @@ module Styles = {
 let onFocusedChange = index =>
   GlobalContext.current().dispatch(ListFocus(index));
 
-let onInputClicked = selection =>
-  GlobalContext.current().dispatch(QuickmenuInputClicked(selection));
-
 let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
 let progressBar = (~progress, ~theme, ()) => {
@@ -99,7 +96,7 @@ let make =
       ~theme,
       ~configuration: Configuration.t,
       ~state: Quickmenu.t,
-      ~placeholder: string="type here to search the menu",
+      //      ~placeholder: string="type here to search the menu",
       ~onFocusedChange: int => unit=onFocusedChange,
       ~onSelect: int => unit=onSelect,
       (),
@@ -109,8 +106,7 @@ let make =
         filterProgress,
         ripgrepProgress,
         focused,
-        query,
-        selection,
+        inputText,
         prefix,
         variant,
         _,
@@ -166,15 +162,17 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <Input
-        placeholder
+      <Feature_InputText.View
         ?prefix
         fontFamily={font.family}
         fontSize=14.
         isFocused=true
-        onClick=onInputClicked
-        value=query
-        selection
+        dispatch={msg =>
+          GlobalContext.current().dispatch(
+            Actions.QuickmenuInputMessage(msg),
+          )
+        }
+        model=inputText
         theme
       />
     </View>;
