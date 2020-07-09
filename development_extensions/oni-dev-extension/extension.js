@@ -16,7 +16,7 @@ function activate(context) {
     item.color = new vscode.ThemeColor("foreground");
     item.command = "developer.oni.statusBarClicked";
     item.text = "$(wrench) Developer";
-    item.show();
+    //item.show();
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
     

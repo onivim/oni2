@@ -192,14 +192,15 @@ switch (eff) {
         ~createOptions=
           WindowCreateOptions.create(
             ~forceScaleFactor,
-            ~maximized,
+            ~maximized=false,
             ~vsync=Vsync.Immediate,
             ~icon,
             ~titlebarStyle=WindowStyles.Transparent,
             ~x,
             ~y,
-            ~width,
-            ~height,
+            // Assuming high-DPI, 2x pixel density screen (for 1920 x 1080)
+            ~width=960,
+            ~height=540,
             ~decorated,
             (),
           ),
