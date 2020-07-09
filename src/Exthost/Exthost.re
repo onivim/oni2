@@ -18,6 +18,7 @@ module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module Edit = Edit;
 module Eol = Eol;
+module ExtensionActivationReason = ExtensionActivationReason;
 module ExtensionId = ExtensionId;
 module FormattingOptions = FormattingOptions;
 module Hover = Hover;
