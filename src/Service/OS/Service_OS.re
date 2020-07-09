@@ -17,6 +17,12 @@ module Api = {
     promise;
   };
 
+
+  let openFile = (filePath) => wrap(Luv.File.open_(filePath));
+  let closeFile = wrap(Luv.File.close);
+  
+
+
   let opendir = wrap(Luv.File.opendir);
   let closedir = wrap(Luv.File.closedir);
   let readdir = wrap(Luv.File.readdir);

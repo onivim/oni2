@@ -46,6 +46,19 @@ module KeyBindingView = {
         text=name
       />
       <View style=Styles.spacer />
+//      <Oni_Components.RemoteAsset
+//       flatMap={(path) => Lwt.return(
+//       Oni_Core.Utility.File.readAllLines(path) |> String.concat(""))}
+//       src="https://raw.githubusercontent.com/onivim/oni2/master/README.md"
+//       >
+//      ...{(sz) => React.empty}
+//      </Oni_Components.RemoteAsset>
+      <Oni_Components.RemoteAsset
+       flatMap={(path) => Lwt.return(path)}
+       src="https://cdn.akc.org/content/article-body-image/funny-basset_hound_yawning.jpg"
+       >
+      ...{(sz) => <Image src=`File(sz) width=100 height=100 />}
+      </Oni_Components.RemoteAsset>
       <Text
         style={Styles.command(~theme)}
         fontFamily={editorFont.fontFamily}
