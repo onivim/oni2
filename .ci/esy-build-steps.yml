@@ -41,7 +41,7 @@ steps:
     displayName: 'Integration Tests: run'
     env:
       ASAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1
-      LSAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1:suppressions=integration_test/lsan.supp
+      LSAN_OPTIONS: use_sigaltstack=0:verbosity=1:help=1:suppressions=lsan.supp
   # TODO: Stabilize and bring back!
   # - script: esy x OniUnitTestRunner
   #  displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'
