@@ -800,6 +800,32 @@ module SideBar = {
   let defaults = [background, foreground];
 };
 
+module SideBarSectionHeader = {
+  let background =
+    define(
+      "sideBarSectionHeader.background",
+      {
+        dark: hex("#808080") |> transparent(0.2),
+        light: hex("#808080") |> transparent(0.2),
+        hc: unspecified,
+      },
+    );
+
+  let foreground =
+    define(
+      "sideBarSectionHeader.foreground",
+      {
+        dark: ref(SideBar.foreground),
+        light: ref(SideBar.foreground),
+        hc: ref(SideBar.foreground),
+      },
+    );
+
+  let border = contrastBorder;
+
+  let defaults = [background, foreground, border];
+};
+
 module StatusBar = {
   let background =
     define(

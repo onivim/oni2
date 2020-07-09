@@ -36,6 +36,7 @@ let sub: (~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
 module ListView: {
   let make:
     (
+      ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,

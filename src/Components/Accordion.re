@@ -3,6 +3,7 @@
  */
 
 open Revery.UI;
+open Revery.UI.Components;
 
 open Oni_Core;
 
@@ -20,16 +21,19 @@ module Styles = {
     flexDirection(`Column),
   ];
 
+  let chevronContainer = [padding(4), flexGrow(0)];
+
   let titleBar = theme => [
     flexGrow(0),
     height(25),
-    backgroundColor(Colors.SideBar.background.from(theme)),
-    color(Colors.SideBar.foreground.from(theme)),
+    backgroundColor(Colors.SideBarSectionHeader.background.from(theme)),
     flexDirection(`Row),
     alignItems(`Center),
   ];
 
-  let title = (~theme) => [color(Colors.SideBar.foreground.from(theme))];
+  let title = (~theme) => [
+    color(Colors.SideBarSectionHeader.foreground.from(theme)),
+  ];
 };
 
 let make =
@@ -42,6 +46,7 @@ let make =
       ~focused,
       ~theme,
       ~uiFont: UiFont.t,
+      ~onClick,
       (),
     ) => {
   let list =
@@ -50,19 +55,24 @@ let make =
       : React.empty;
 
   <View style={Styles.container(expanded)}>
-    <View style={Styles.titleBar(theme)}>
-      <FontIcon
-        fontSize=Constants.arrowSize
-        color={Colors.foreground.from(theme)}
-        icon={expanded ? FontAwesome.caretDown : FontAwesome.caretRight}
-      />
-      <Text
-        style={Styles.title(~theme)}
-        fontFamily={uiFont.family}
-        fontSize={uiFont.size}
-        text=title
-      />
-    </View>
+    <Clickable style={Styles.titleBar(theme)} onClick>
+      <View style=Styles.chevronContainer>
+        <Codicon
+          fontSize=Constants.arrowSize
+          color={Colors.SideBarSectionHeader.foreground.from(theme)}
+          icon={expanded ? Codicon.chevronDown : Codicon.chevronRight}
+        />
+      </View>
+      <View style=Style.[paddingTop(2)]>
+        <Text
+          style={Styles.title(~theme)}
+          fontFamily={uiFont.family}
+          fontSize=13.
+          fontWeight=Revery.Font.Weight.Bold
+          text=title
+        />
+      </View>
+    </Clickable>
     list
   </View>;
 };

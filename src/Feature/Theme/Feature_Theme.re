@@ -45,6 +45,7 @@ let defaults =
     Colors.ScrollbarSlider.defaults,
     Colors.Selection.defaults,
     Colors.SideBar.defaults,
+    Colors.SideBarSectionHeader.defaults,
     Colors.StatusBar.defaults,
     Colors.Tab.defaults,
     Colors.TextLink.defaults,
