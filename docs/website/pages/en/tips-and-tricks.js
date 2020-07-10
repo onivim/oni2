@@ -24,7 +24,7 @@ const tips = [
   videoFile: "RodY2O1xFfI"
 },
 {
-  title: "Jump around the buffer",
+  title: "Move up and down a buffer",
   description: "Use gg and G to quickly move up and down the buffer.",
   keys: [
     <Key name="gg" description="move to first line in buffer" />,
@@ -32,6 +32,28 @@ const tips = [
     <Key name="50G" description="move to line 50 in buffer" />,
   ],
   videoFile: "xh4TTWy-okQ"
+},
+{
+  title: "Working with window splits",
+  description: "It's easy to create and navigate window splits in Onivim, without touching the mouse.",
+  keys: [
+    <Key name="Control+w v" description="Create new vertical split" />,
+    <Key name="Control+w s" description="Create new horizontal split" />,
+    <Key name="Control+w h" description="Move a split left" />,
+    <Key name="Control+w j" description="Move a split down" />,
+    <Key name="Control+w l" description="Move a split right" />,
+    <Key name="Control+w l" description="Move a split up" />,
+  ],
+  videoFile: "Xpfb2pMmeVg",
+},
+{
+  title: "Edit strings like a Ninja",
+  description: "The change operator, combined with the in-string motion, is a powerful combo - letting you strike and edit strings from afar.",
+  keys: [
+    <Key name="c" description="Change operator" />,
+    <Key name={`i"`} description="In string motion" />,
+  ],
+  videoFile: "DMgNUMfGAQ4",
 }
 //{
 //  title: "Jump around with G",
