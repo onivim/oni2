@@ -72,10 +72,14 @@ module Internal = {
     |> LwtEx.flatMap(Catalog.details(~setup))
     |> LwtEx.flatMap(
          (
-           {downloadUrl, displayName, name, namespace, version, _}: Catalog.Details.t,
+           {downloadUrl, name, namespace, version, _} as details: Catalog.Details.t,
          ) => {
          Log.infof(m =>
-           m("Downloading %s from %s", displayName, downloadUrl)
+           m(
+             "Downloading %s from %s",
+             details |> Catalog.Details.displayName,
+             downloadUrl,
+           )
          );
          Service_Net.Request.download(~setup, downloadUrl)
          |> Lwt.map(downloadPath => {

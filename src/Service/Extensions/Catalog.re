@@ -74,8 +74,16 @@ module Details = {
     versions: list(VersionInfo.t),
   };
 
+  let id = ({namespace, name, _}) => {
+    namespace ++ "." ++ name;
+  };
+
+  let displayName = ({displayName, _} as details) => {
+    displayName |> Option.value(~default=id(details));
+  };
+
   let toString =
-      ({downloadUrl, displayName, description, homepageUrl, versions, _}) => {
+      ({downloadUrl, description, homepageUrl, versions, _} as details) => {
     let versions =
       versions |> List.map(VersionInfo.toString) |> String.concat("\n");
     Printf.sprintf(
@@ -86,7 +94,7 @@ module Details = {
 - Versions:
 %s
       |},
-      displayName,
+      details |> displayName,
       description,
       homepageUrl,
       downloadUrl,
