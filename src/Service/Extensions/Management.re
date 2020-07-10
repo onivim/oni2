@@ -56,53 +56,51 @@ module Internal = {
   };
 
   let getUserExtensionById = (~overriddenExtensionsDir, id) => {
-    open Exthost.Extension;
-    getUserExtensions(~overriddenExtensionsDir)
-    |> List.filter((scanResult: Scanner.ScanResult.t) => {
-      (scanResult.manifest |> Manifest.identifier) == id
-    })
-    |> (list) => List.nth_opt(list, 0);
+    Exthost.Extension.(
+      getUserExtensions(~overriddenExtensionsDir)
+      |> List.filter((scanResult: Scanner.ScanResult.t) => {
+           scanResult.manifest |> Manifest.identifier == id
+         })
+      |> (list => List.nth_opt(list, 0))
+    );
   };
 
   let installFromOpenVSX = (~setup, ~extensionsFolder, extensionId) => {
-      // ...otherwise, query the extension store, download, and install
-      Catalog.Identifier.fromString(extensionId)
-      |> LwtEx.fromOption(~errorMsg="Invalid extension id: " ++ extensionId)
-      |> LwtEx.flatMap(Catalog.details(~setup))
-      |> LwtEx.flatMap(
-           (
-             {downloadUrl, displayName, name, namespace, version, _}: Catalog.Details.t,
-           ) => {
-           Log.infof(m =>
-             m("Downloading %s from %s", displayName, downloadUrl)
-           );
-           Service_Net.Request.download(~setup, downloadUrl)
-           |> Lwt.map(downloadPath => {
-                let folderName =
-                  Printf.sprintf("%s.%s-%s", namespace, name, version);
+    // ...otherwise, query the extension store, download, and install
+    Catalog.Identifier.fromString(extensionId)
+    |> LwtEx.fromOption(~errorMsg="Invalid extension id: " ++ extensionId)
+    |> LwtEx.flatMap(Catalog.details(~setup))
+    |> LwtEx.flatMap(
+         (
+           {downloadUrl, displayName, name, namespace, version, _}: Catalog.Details.t,
+         ) => {
+         Log.infof(m =>
+           m("Downloading %s from %s", displayName, downloadUrl)
+         );
+         Service_Net.Request.download(~setup, downloadUrl)
+         |> Lwt.map(downloadPath => {
+              let folderName =
+                Printf.sprintf("%s.%s-%s", namespace, name, version);
 
-                (downloadPath, folderName);
-              });
-         })
-      |> LwtEx.flatMap(((downloadPath, folderName)) => {
-           Log.infof(m => m("Downloaded successfully to %s", downloadPath));
-           installByPath(
-             ~setup,
-             ~extensionsFolder,
-             ~folderName,
-             downloadPath,
-           );
-         })
-      |> LwtEx.flatMap(_ => {
-        switch (getUserExtensionById(
-        ~overriddenExtensionsDir=extensionsFolder,
-        extensionId)) {
-        | None => Lwt.fail_with("Unable to locate extension after install.")
-        | Some(result) => Lwt.return(result)
-        }
-
-      });
-  }
+              (downloadPath, folderName);
+            });
+       })
+    |> LwtEx.flatMap(((downloadPath, folderName)) => {
+         Log.infof(m => m("Downloaded successfully to %s", downloadPath));
+         installByPath(~setup, ~extensionsFolder, ~folderName, downloadPath);
+       })
+    |> LwtEx.flatMap(_ => {
+         switch (
+           getUserExtensionById(
+             ~overriddenExtensionsDir=extensionsFolder,
+             extensionId,
+           )
+         ) {
+         | None => Lwt.fail_with("Unable to locate extension after install.")
+         | Some(result) => Lwt.return(result)
+         }
+       });
+  };
 };
 
 let install = (~setup, ~extensionsFolder=?, path) => {
@@ -112,7 +110,7 @@ let install = (~setup, ~extensionsFolder=?, path) => {
     if (StringEx.endsWith(~postfix=".vsix", path) && Sys.file_exists(path)) {
       let folderName = Rench.Path.filename(path);
       Internal.installByPath(~setup, ~extensionsFolder, ~folderName, path)
-      |> Lwt.map(_ => ())
+      |> Lwt.map(_ => ());
     } else {
       Internal.installFromOpenVSX(~setup, ~extensionsFolder, path)
       |> Lwt.map(_ => ());

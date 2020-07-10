@@ -78,8 +78,7 @@ module Catalog: {
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: string=?, string) =>
-    Lwt.t(unit);
+    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(unit);
 
   let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
 
@@ -108,11 +107,12 @@ module Effects: {
     Isolinear.Effect.t('a);
 
   let install:
-  (
-    ~extensionsFolder: option(string),
-    ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
-    string,
-  ) => Isolinear.Effect.t('a)
+    (
+      ~extensionsFolder: option(string),
+      ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
+      string
+    ) =>
+    Isolinear.Effect.t('a);
 };
 
 module Sub: {

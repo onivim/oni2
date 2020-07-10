@@ -144,10 +144,10 @@ module Summary = {
   };
 
   let id = ({namespace, name, _}) => {
-    namespace ++ "." ++ name
-  }
+    namespace ++ "." ++ name;
+  };
 
-  let name = ({displayName, _ } as summary) => {
+  let name = ({displayName, _} as summary) => {
     let default = summary |> id;
     displayName |> Option.value(~default);
   };

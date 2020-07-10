@@ -22,9 +22,9 @@ type msg =
   | InstallExtensionClicked({extensionId: string})
   | InstallExtensionSuccess({extensionId: string})
   | InstallExtensionFailed({
-    extensionId: string,
-    errorMsg: string,
-  });
+      extensionId: string,
+      errorMsg: string,
+    });
 
 type outmsg =
   | Nothing
@@ -156,9 +156,20 @@ let update = (~extHostClient, msg, model) => {
   | UninstallExtensionFailed(_) =>
     // TODO: Error / success experience
     (model, Nothing)
-  | InstallExtensionClicked(_)
+  | InstallExtensionClicked({extensionId}) =>
+    let toMsg = (
+      fun
+      | Ok(_) => InstallExtensionSuccess({extensionId: extensionId})
+      | Error(msg) => InstallExtensionFailed({extensionId, errorMsg: msg})
+    );
+    let eff =
+      Service_Extensions.Effects.install(
+        ~extensionsFolder=model.extensionsFolder,
+        ~toMsg,
+        extensionId,
+      );
+    (model, Effect(eff));
   | InstallExtensionSuccess(_)
-  | InstallExtensionFailed(_) =>
-    (model, Nothing)
+  | InstallExtensionFailed(_) => (model, Nothing)
   };
 };

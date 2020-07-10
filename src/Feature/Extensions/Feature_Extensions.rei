@@ -24,9 +24,9 @@ type msg =
   | InstallExtensionClicked({extensionId: string})
   | InstallExtensionSuccess({extensionId: string})
   | InstallExtensionFailed({
-    extensionId: string,
-    errorMsg: string,
-  });
+      extensionId: string,
+      errorMsg: string,
+    });
 
 type outmsg =
   | Nothing
