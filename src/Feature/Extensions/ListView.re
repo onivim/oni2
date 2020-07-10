@@ -40,6 +40,30 @@ let reduce = (msg, model) =>
   | WidthChanged(width) => {...model, width}
   };
 
+let installButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <ItemView.ActionButton
+    font
+    title="Install"
+    backgroundColor=Revery.Colors.green
+    color=Revery.Colors.white
+    onAction={() =>
+      dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
+    }
+  />;
+};
+
+let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <ItemView.ActionButton
+    font
+    title="Uninstall"
+    backgroundColor=Revery.Colors.red
+    color=Revery.Colors.white
+    onAction={() =>
+      dispatch(Model.UninstallExtensionClicked({extensionId: extensionId}))
+    }
+  />;
+};
+
 let%component make =
               (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
@@ -76,18 +100,10 @@ let%component make =
     let version = extension.manifest.version;
 
     let actionButton =
-      <ItemView.ActionButton
+      <uninstallButton
         font
-        title="Uninstall"
-        backgroundColor=Revery.Colors.red
-        color=Revery.Colors.white
-        onAction={() =>
-          dispatch(
-            Model.UninstallExtensionClicked({
-              extensionId: extension.manifest |> Manifest.identifier,
-            }),
-          )
-        }
+        extensionId={extension.manifest |> Manifest.identifier}
+        dispatch
       />;
 
     <ItemView
@@ -140,10 +156,14 @@ let%component make =
         |> List.map((summary: Service_Extensions.Catalog.Summary.t) => {
              let displayName =
                summary |> Service_Extensions.Catalog.Summary.name;
+             let extensionId =
+               summary |> Service_Extensions.Catalog.Summary.id;
              let {namespace, version, _}: Service_Extensions.Catalog.Summary.t = summary;
              let author = namespace;
 
+             let actionButton = <installButton dispatch font extensionId />;
              <ItemView
+               actionButton
                width
                iconPath=None
                theme
