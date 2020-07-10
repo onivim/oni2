@@ -80,7 +80,7 @@ module Notification = {
       | InProgress => (
           3,
           <Oni_Components.Codicon
-            icon=Oni_Components.Codicon.add
+            icon=Oni_Components.Codicon.refresh
             fontSize=10.
             color=foregroundColor
           />,
@@ -164,6 +164,7 @@ let%component make =
                 ~theme: ColorTheme.Colors.t,
                 ~sideBar: Feature_SideBar.model,
                 ~pane: Feature_Pane.model,
+                ~extensions: Feature_Extensions.model,
                 ~font: UiFont.t,
                 (),
               ) => {
@@ -171,6 +172,9 @@ let%component make =
 
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
   let isPaneVisible = it => Feature_Pane.isVisible(it, pane);
+
+  let extensionNotification =
+    Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
 
   <View style={Styles.container(~theme, ~offsetX)}>
     <item
@@ -201,6 +205,7 @@ let%component make =
       theme
       isActive={isSidebarVisible(Extensions)}
       icon=FontAwesome.thLarge
+      notification=?extensionNotification
     />
   </View>;
 };
