@@ -20,7 +20,13 @@ type msg =
   | UninstallExtensionFailed({
       extensionId: string,
       errorMsg: string,
-    });
+    })
+  | InstallExtensionClicked({extensionId: string})
+  | InstallExtensionSuccess({extensionId: string})
+  | InstallExtensionFailed({
+    extensionId: string,
+    errorMsg: string,
+  });
 
 type outmsg =
   | Nothing

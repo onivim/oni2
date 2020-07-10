@@ -143,8 +143,13 @@ module Summary = {
     description: string,
   };
 
-  let name = ({displayName, name, namespace, _}) => {
-    displayName |> Option.value(~default=namespace ++ "." ++ name);
+  let id = ({namespace, name, _}) => {
+    namespace ++ "." ++ name
+  }
+
+  let name = ({displayName, _ } as summary) => {
+    let default = summary |> id;
+    displayName |> Option.value(~default);
   };
 
   let decode = {

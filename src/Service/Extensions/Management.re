@@ -54,19 +54,20 @@ module Internal = {
       );
     };
   };
-};
 
-let install = (~setup, ~extensionsFolder=?, path) => {
-  // We assume if the requested extension ends with '.vsix',
-  // it must be a path.
-  let promise =
-    if (StringEx.endsWith(~postfix=".vsix", path) && Sys.file_exists(path)) {
-      let folderName = Rench.Path.filename(path);
-      Internal.installByPath(~setup, ~extensionsFolder, ~folderName, path);
-    } else {
+  let getUserExtensionById = (~overriddenExtensionsDir, id) => {
+    open Exthost.Extension;
+    getUserExtensions(~overriddenExtensionsDir)
+    |> List.filter((scanResult: Scanner.ScanResult.t) => {
+      (scanResult.manifest |> Manifest.identifier) == id
+    })
+    |> (list) => List.nth_opt(list, 0);
+  };
+
+  let installFromOpenVSX = (~setup, ~extensionsFolder, extensionId) => {
       // ...otherwise, query the extension store, download, and install
-      Catalog.Identifier.fromString(path)
-      |> LwtEx.fromOption(~errorMsg="Invalid extension id: " ++ path)
+      Catalog.Identifier.fromString(extensionId)
+      |> LwtEx.fromOption(~errorMsg="Invalid extension id: " ++ extensionId)
       |> LwtEx.flatMap(Catalog.details(~setup))
       |> LwtEx.flatMap(
            (
@@ -85,13 +86,36 @@ let install = (~setup, ~extensionsFolder=?, path) => {
          })
       |> LwtEx.flatMap(((downloadPath, folderName)) => {
            Log.infof(m => m("Downloaded successfully to %s", downloadPath));
-           Internal.installByPath(
+           installByPath(
              ~setup,
              ~extensionsFolder,
              ~folderName,
              downloadPath,
            );
-         });
+         })
+      |> LwtEx.flatMap(_ => {
+        switch (getUserExtensionById(
+        ~overriddenExtensionsDir=extensionsFolder,
+        extensionId)) {
+        | None => Lwt.fail_with("Unable to locate extension after install.")
+        | Some(result) => Lwt.return(result)
+        }
+
+      });
+  }
+};
+
+let install = (~setup, ~extensionsFolder=?, path) => {
+  // We assume if the requested extension ends with '.vsix',
+  // it must be a path.
+  let promise =
+    if (StringEx.endsWith(~postfix=".vsix", path) && Sys.file_exists(path)) {
+      let folderName = Rench.Path.filename(path);
+      Internal.installByPath(~setup, ~extensionsFolder, ~folderName, path)
+      |> Lwt.map(_ => ())
+    } else {
+      Internal.installFromOpenVSX(~setup, ~extensionsFolder, path)
+      |> Lwt.map(_ => ());
     };
 
   Lwt.on_success(promise, _ => {

@@ -18,7 +18,13 @@ type msg =
   | UninstallExtensionFailed({
       extensionId: string,
       errorMsg: string,
-    });
+    })
+  | InstallExtensionClicked({extensionId: string})
+  | InstallExtensionSuccess({extensionId: string})
+  | InstallExtensionFailed({
+    extensionId: string,
+    errorMsg: string,
+  });
 
 type outmsg =
   | Nothing
@@ -149,6 +155,10 @@ let update = (~extHostClient, msg, model) => {
   | UninstallExtensionSuccess(_)
   | UninstallExtensionFailed(_) =>
     // TODO: Error / success experience
+    (model, Nothing)
+  | InstallExtensionClicked(_)
+  | InstallExtensionSuccess(_)
+  | InstallExtensionFailed(_) =>
     (model, Nothing)
   };
 };
