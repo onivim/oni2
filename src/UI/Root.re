@@ -112,7 +112,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           c.workbenchActivityBarVisible
         )
         && !zenMode) {
-      <Dock theme sideBar pane />;
+      <Dock font={state.uiFont} theme sideBar pane />;
     } else {
       React.empty;
     };
