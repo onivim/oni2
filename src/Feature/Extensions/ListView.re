@@ -99,21 +99,6 @@ let%component make =
     let author = extension.manifest.author;
     let version = extension.manifest.version;
 
-    //    let actionButton =
-    //      <ItemView.ActionButton
-    //        font
-    //        title="Uninstall"
-    //        backgroundColor=Revery.Colors.red
-    //        color=Revery.Colors.white
-    //        onAction={() =>
-    //          dispatch(
-    //            Model.UninstallExtensionClicked({
-    //              extensionId: extension.manifest |> Manifest.identifier,
-    //            }),
-    //          )
-    //        }
-    //      />;
-
     let actionButton =
       <uninstallButton
         font

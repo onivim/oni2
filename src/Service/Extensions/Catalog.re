@@ -60,14 +60,14 @@ module Details = {
     repositoryUrl: string,
     homepageUrl: string,
     manifestUrl: string,
-    iconUrl: string,
+    iconUrl: option(string),
     readmeUrl: string,
     licenseName: string,
     //      licenseUrl: string,
     name: string,
     namespace: string,
     //      downloadCount: int,
-    displayName: string,
+    displayName: option(string),
     description: string,
     //      categories: list(string),
     version: string,
@@ -100,7 +100,7 @@ module Details = {
     let files = (name, decoder) => field("files", field(name, decoder));
     let downloadUrl = files("download", string);
     let manifestUrl = files("manifest", string);
-    let iconUrl = files("icon", string);
+    let iconUrl = files("icon", nullable(string));
     let readmeUrl = files("readme", string);
     let homepageUrl = field("publishedBy", field("homepage", string));
 
@@ -114,7 +114,7 @@ module Details = {
           repositoryUrl: field.required("repository", string),
           homepageUrl: whatever(homepageUrl),
           licenseName: field.required("license", string),
-          displayName: field.required("displayName", string),
+          displayName: field.required("displayName", nullable(string)),
           description: field.required("description", string),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
