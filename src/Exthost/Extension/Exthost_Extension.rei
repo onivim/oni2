@@ -179,13 +179,22 @@ module Scanner: {
 };
 
 module InitData: {
+  module Identifier: {
+    type t;
+
+    let fromString: string => t;
+  };
+
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
     type t = {
-      identifier: string,
+      identifier: Identifier.t,
       extensionLocation: Oni_Core.Uri.t,
       name: string,
+      displayName: option(string),
+      description: option(string),
       main: option(string),
+      icon: option(string),
       version: string,
       engines: string,
       activationEvents: list(string),
