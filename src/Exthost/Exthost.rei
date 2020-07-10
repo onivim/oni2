@@ -721,12 +721,12 @@ module Msg: {
     [@deriving show]
     type msg =
       | ActivateExtension({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           activationEvent: option(string),
         })
-      | WillActivateExtension({extensionId: string})
+      | WillActivateExtension({extensionId: ExtensionId.t})
       | DidActivateExtension({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           //startup: bool,
           codeLoadingTime: int,
           activateCallTime: int,
@@ -734,10 +734,10 @@ module Msg: {
         })
       //activationEvent: option(string),
       | ExtensionActivationError({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           errorMessage: string,
         })
-      | ExtensionRuntimeError({extensionId: string});
+      | ExtensionRuntimeError({extensionId: ExtensionId.t});
   };
 
   module LanguageFeatures: {
