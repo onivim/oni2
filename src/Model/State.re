@@ -84,6 +84,7 @@ let initial =
       ~getUserSettings,
       ~contributedCommands,
       ~workingDirectory,
+      ~extensionsFolder,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -129,7 +130,7 @@ let initial =
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
-    extensions: Feature_Extensions.initial,
+    extensions: Feature_Extensions.initial(~extensionsFolder),
     formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),

@@ -95,6 +95,16 @@ module Query: {
   let results: t => list(Catalog.Summary.t);
 };
 
+module Effects: {
+  let uninstall:
+    (
+      ~extensionsFolder: option(string),
+      ~toMsg: result(unit, string) => 'a,
+      string
+    ) =>
+    Isolinear.Effect.t('a);
+};
+
 module Sub: {
   let search:
     (

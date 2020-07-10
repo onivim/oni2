@@ -14,14 +14,20 @@ type msg =
   | KeyPressed(string)
   | SearchQueryResults(Service_Extensions.Query.t)
   | SearchQueryError(string)
-  | SearchText(Feature_InputText.msg);
+  | SearchText(Feature_InputText.msg)
+  | UninstallExtensionClicked({extensionId: string})
+  | UninstallExtensionSuccess({extensionId: string})
+  | UninstallExtensionFailed({
+      extensionId: string,
+      errorMsg: string,
+    });
 
 type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg));
 
-let initial: model;
+let initial: (~extensionsFolder: option(string)) => model;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 

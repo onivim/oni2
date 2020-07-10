@@ -4,6 +4,7 @@ open Revery.UI;
 open Revery.UI.Components;
 
 module Colors = Feature_Theme.Colors;
+module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Constants = {
   let itemHeight = 72;
@@ -21,13 +22,30 @@ module Styles = {
     height(Constants.itemHeight),
     flexGrow(0),
   ];
-  let text = (~width, ~theme) => [
+  let titleText = (~width, ~theme) => [
     color(Colors.SideBar.foreground.from(theme)),
     marginVertical(2),
     textOverflow(`Ellipsis),
     Style.width(width),
   ];
+  let versionText = (~width, ~theme) => [
+    color(
+      Colors.SideBar.foreground.from(theme)
+      |> Revery.Color.multiplyAlpha(0.75),
+    ),
+    marginTop(4),
+    Style.width(width),
+  ];
 
+  let text = (~theme) => [
+    color(
+      Colors.SideBar.foreground.from(theme)
+      |> Revery.Color.multiplyAlpha(0.75),
+    ),
+    marginVertical(2),
+    textOverflow(`Ellipsis),
+    textWrap(Revery.TextWrapping.NoWrap),
+  ];
   let imageContainer =
     Style.[
       width(Constants.imageContainerSize),
@@ -37,10 +55,46 @@ module Styles = {
       alignItems(`Center),
       flexDirection(`Column),
     ];
+  let input = [flexGrow(1), margin(12)];
+
+  let button = (~backgroundColor) => [
+    Style.backgroundColor(backgroundColor),
+    flexDirection(`Row),
+    justifyContent(`Center),
+    alignItems(`Center),
+    flexGrow(0),
+  ];
+  let innerButton = [margin(2)];
+};
+
+module ActionButton = {
+  let make =
+      (
+        ~font: UiFont.t,
+        ~title: string,
+        ~backgroundColor,
+        ~color,
+        ~onAction,
+        (),
+      ) => {
+    // TODO
+    ignore(color);
+    <Sneakable style={Styles.button(~backgroundColor)} onClick=onAction>
+      <View style=Styles.innerButton>
+        <Text
+          fontFamily={font.family}
+          fontSize=11.
+          fontWeight=Revery.Font.Weight.SemiBold
+          text=title
+        />
+      </View>
+    </Sneakable>;
+  };
 };
 
 let make =
     (
+      ~actionButton=React.empty,
       ~width,
       ~iconPath,
       ~theme,
@@ -68,16 +122,17 @@ let make =
 
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;
+  //        <ActionButton
+  //          font
+  //          title="Uninstall"
+  //          backgroundColor=Revery.Colors.red
+  //          color=Revery.Colors.white
+  //          onAction={() => {prerr_endline("Clicked!")}}
+  //        />
 
   <View style={Styles.container(~width)}>
     <View style=Styles.imageContainer> icon </View>
     <View>
-      <Text
-        style={Styles.text(~width=descriptionWidth, ~theme)}
-        fontFamily={font.family}
-        fontSize={font.size}
-        text=displayName
-      />
       <View
         style=Style.[
           flexDirection(`Row),
@@ -85,17 +140,32 @@ let make =
           width(descriptionWidth),
         ]>
         <Text
-          style={Styles.text(~width=defaultWidth, ~theme)}
+          style={Styles.titleText(~width=width - defaultWidth, ~theme)}
+          fontFamily={font.family}
+          fontSize=13.0
+          fontWeight=Revery.Font.Weight.Bold
+          text=displayName
+        />
+        <Text
+          style={Styles.versionText(~width=defaultWidth, ~theme)}
+          fontFamily={font.family}
+          fontSize=10.
+          text=version
+        />
+      </View>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          justifyContent(`SpaceBetween),
+          width(descriptionWidth),
+        ]>
+        <Text
+          style={Styles.text(~theme)}
           fontFamily={font.family}
           fontSize={font.size}
           text=author
         />
-        <Text
-          style={Styles.text(~width=defaultWidth, ~theme)}
-          fontFamily={font.family}
-          fontSize={font.size}
-          text=version
-        />
+        actionButton
       </View>
     </View>
   </View>;

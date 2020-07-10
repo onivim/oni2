@@ -23,6 +23,7 @@ let simpleState = {
       ~getUserSettings=() => Ok(Config.Settings.empty),
       ~contributedCommands=[],
       ~workingDirectory=Sys.getcwd(),
+      ~extensionsFolder=None,
     );
 
   Reducer.reduce(

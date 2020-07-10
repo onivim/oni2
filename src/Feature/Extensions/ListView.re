@@ -45,7 +45,7 @@ let%component make =
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
     Hooks.reducer(~initialState=default, reduce);
 
-  let renderItem = (extensions: array(Scanner.ScanResult.t), idx) => {
+  let renderBundled = (extensions: array(Scanner.ScanResult.t), idx) => {
     let extension = extensions[idx];
 
     let iconPath = extension.manifest.icon;
@@ -53,7 +53,53 @@ let%component make =
     let author = extension.manifest.author;
     let version = extension.manifest.version;
 
-    <ItemView width iconPath theme displayName author version font />;
+    let actionButton = React.empty;
+
+    <ItemView
+      actionButton
+      width
+      iconPath
+      theme
+      displayName
+      author
+      version
+      font
+    />;
+  };
+
+  let renderInstalled = (extensions: array(Scanner.ScanResult.t), idx) => {
+    let extension = extensions[idx];
+
+    let iconPath = extension.manifest.icon;
+    let displayName = Manifest.getDisplayName(extension.manifest);
+    let author = extension.manifest.author;
+    let version = extension.manifest.version;
+
+    let actionButton =
+      <ItemView.ActionButton
+        font
+        title="Uninstall"
+        backgroundColor=Revery.Colors.red
+        color=Revery.Colors.white
+        onAction={() =>
+          dispatch(
+            Model.UninstallExtensionClicked({
+              extensionId: extension.manifest |> Manifest.identifier,
+            }),
+          )
+        }
+      />;
+
+    <ItemView
+      actionButton
+      width
+      iconPath
+      theme
+      displayName
+      author
+      version
+      font
+    />;
   };
 
   let bundledExtensions =
@@ -68,7 +114,7 @@ let%component make =
           title="Installed"
           expanded=installedExpanded
           uiFont=font
-          renderItem={renderItem(userExtensions)}
+          renderItem={renderInstalled(userExtensions)}
           rowHeight=ItemView.Constants.itemHeight
           count={Array.length(userExtensions)}
           focused=None
@@ -79,7 +125,7 @@ let%component make =
           title="Bundled"
           expanded=bundledExpanded
           uiFont=font
-          renderItem={renderItem(bundledExtensions)}
+          renderItem={renderBundled(bundledExtensions)}
           rowHeight=ItemView.Constants.itemHeight
           count={Array.length(bundledExtensions)}
           focused=None
