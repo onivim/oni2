@@ -3,6 +3,10 @@ open Exthost.Extension;
 
 type model;
 
+type rendererState;
+
+let name: renderState => string;
+
 [@deriving show({with_path: false})]
 type msg =
   | Activated(string /* id */)

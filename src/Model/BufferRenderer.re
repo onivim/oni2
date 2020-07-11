@@ -17,7 +17,8 @@ type t =
   | Version
   | FullChangelog
   | UpdateChangelog({since: string})
-  | Terminal(Feature_Terminal.rendererState);
+  | Terminal(Feature_Terminal.rendererState)
+  | ExtensionDetails(Feature_Extensions.rendererState);
 
 [@deriving show({with_path: false})]
 type action =
