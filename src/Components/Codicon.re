@@ -854,7 +854,6 @@ let%component make = (~spin=false, ~icon, ~fontSize=15., ~color, ()) => {
       transform([
         Transform.Rotate(Revery.Math.Angle.from_radians(rotation)),
       ]),
-      backgroundColor(Revery.Colors.red),
       width(fontSize |> int_of_float),
       height(fontSize |> int_of_float),
     ]>
