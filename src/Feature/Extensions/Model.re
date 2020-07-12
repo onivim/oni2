@@ -211,11 +211,10 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingUninstall(~extensionId), Effect(eff));
   | UninstallExtensionSuccess({extensionId}) => (
       model |> Internal.uninstalled(~extensionId),
-      Nothing,
-    )
-  | UninstallExtensionFailed({extensionId, _}) =>
-    // TODO: Error / success experience
-    (model |> Internal.clearPendingUninstall(~extensionId), Nothing)
+      NotifyFailure(Printf.sprintf("Successfully uninstalled %s", extensionId)))
+  | UninstallExtensionFailed({extensionId, errorMsg}) =>
+    (model |> Internal.clearPendingUninstall(~extensionId),
+      NotifyFailure(Printf.sprintf("Extension %s failed to uninstall: %s", extensionId, errorMsg)))
   | InstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun
@@ -231,11 +230,9 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingInstall(~extensionId), Effect(eff));
   | InstallExtensionSuccess({extensionId, scanResult}) => (
       model |> Internal.installed(~extensionId, ~scanResult),
-      Nothing,
-    )
-  | InstallExtensionFailed({extensionId, _}) => (
+      NotifySuccess(Printf.sprintf("Extension %s was installed successfully and will be activated on restart.", extensionId)))
+  | InstallExtensionFailed({extensionId, errorMsg}) => (
       model |> Internal.clearPendingInstall(~extensionId),
-      Nothing,
-    )
+      NotifyFailure(Printf.sprintf("Extension %s failed to install: %s", extensionId, errorMsg)))
   };
 };
