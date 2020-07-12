@@ -13,6 +13,7 @@ type model = {
 let defaults =
   [
     Colors.ActivityBar.defaults,
+    Colors.ActivityBarBadge.defaults,
     Colors.Dropdown.defaults,
     Colors.Editor.defaults,
     Colors.EditorError.defaults,
