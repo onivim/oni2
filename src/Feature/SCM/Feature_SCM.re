@@ -419,16 +419,6 @@ module Pane = {
 
     let input = [flexGrow(1), margin(12)];
 
-    let group = [];
-
-    let groupLabel = [paddingVertical(3)];
-
-    let groupLabelText = (~theme) => [
-      color(Colors.SideBar.foreground.from(theme)),
-      textWrap(TextWrapping.NoWrap),
-      textOverflow(`Ellipsis),
-    ];
-
     let item = (~isHovered, ~theme) => [
       isHovered
         ? backgroundColor(Colors.List.hoverBackground.from(theme))
