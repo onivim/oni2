@@ -20,7 +20,10 @@ type msg =
       errorMsg: string,
     })
   | InstallExtensionClicked({extensionId: string})
-  | InstallExtensionSuccess({extensionId: string})
+  | InstallExtensionSuccess({
+      extensionId: string,
+      scanResult: [@opaque] Scanner.ScanResult.t,
+    })
   | InstallExtensionFailed({
       extensionId: string,
       errorMsg: string,
@@ -37,6 +40,8 @@ type model = {
   searchText: Feature_InputText.model,
   latestQuery: option(Service_Extensions.Query.t),
   extensionsFolder: option(string),
+  pendingInstalls: list(string),
+  pendingUninstalls: list(string),
 };
 
 let initial = (~extensionsFolder) => {
@@ -45,6 +50,12 @@ let initial = (~extensionsFolder) => {
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
   latestQuery: None,
   extensionsFolder,
+  pendingInstalls: [],
+  pendingUninstalls: [],
+};
+
+let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
+  pendingInstalls != [] || pendingUninstalls != [];
 };
 
 let searchResults = ({latestQuery, _}) =>
@@ -71,6 +82,50 @@ module Internal = {
   let add = (extensions, model) => {
     ...model,
     extensions: extensions @ model.extensions,
+  };
+
+  let addPendingInstall = (~extensionId, model) => {
+    ...model,
+    pendingInstalls: [extensionId, ...model.pendingInstalls],
+  };
+
+  let addPendingUninstall = (~extensionId, model) => {
+    ...model,
+    pendingUninstalls: [extensionId, ...model.pendingUninstalls],
+  };
+
+  let clearPendingInstall = (~extensionId, model) => {
+    ...model,
+    pendingInstalls:
+      List.filter(id => id != extensionId, model.pendingInstalls),
+  };
+
+  let clearPendingUninstall = (~extensionId, model) => {
+    ...model,
+    pendingUninstalls:
+      List.filter(id => id != extensionId, model.pendingUninstalls),
+  };
+
+  let installed = (~extensionId, ~scanResult, model) => {
+    let model' = model |> clearPendingInstall(~extensionId);
+
+    {...model', extensions: [scanResult, ...model'.extensions]};
+  };
+
+  let uninstalled = (~extensionId, model) => {
+    let model' = model |> clearPendingUninstall(~extensionId);
+
+    {
+      ...model',
+      extensions:
+        List.filter(
+          (scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
+            scanResult.manifest
+            |> Exthost.Extension.Manifest.identifier != extensionId
+          },
+          model'.extensions,
+        ),
+    };
   };
 };
 
@@ -151,15 +206,18 @@ let update = (~extHostClient, msg, model) => {
         ~toMsg,
         extensionId,
       );
-    (model, Effect(eff));
-  | UninstallExtensionSuccess(_)
-  | UninstallExtensionFailed(_) =>
+    (model |> Internal.addPendingUninstall(~extensionId), Effect(eff));
+  | UninstallExtensionSuccess({extensionId}) => (
+      model |> Internal.uninstalled(~extensionId),
+      Nothing,
+    )
+  | UninstallExtensionFailed({extensionId, _}) =>
     // TODO: Error / success experience
-    (model, Nothing)
+    (model |> Internal.clearPendingUninstall(~extensionId), Nothing)
   | InstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun
-      | Ok(_) => InstallExtensionSuccess({extensionId: extensionId})
+      | Ok(scanResult) => InstallExtensionSuccess({extensionId, scanResult})
       | Error(msg) => InstallExtensionFailed({extensionId, errorMsg: msg})
     );
     let eff =
@@ -168,8 +226,14 @@ let update = (~extHostClient, msg, model) => {
         ~toMsg,
         extensionId,
       );
-    (model, Effect(eff));
-  | InstallExtensionSuccess(_)
-  | InstallExtensionFailed(_) => (model, Nothing)
+    (model |> Internal.addPendingInstall(~extensionId), Effect(eff));
+  | InstallExtensionSuccess({extensionId, scanResult}) => (
+      model |> Internal.installed(~extensionId, ~scanResult),
+      Nothing,
+    )
+  | InstallExtensionFailed({extensionId, _}) => (
+      model |> Internal.clearPendingInstall(~extensionId),
+      Nothing,
+    )
   };
 };
