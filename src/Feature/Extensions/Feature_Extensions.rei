@@ -35,11 +35,14 @@ type msg =
 type outmsg =
   | Nothing
   | Focus
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | NotifySuccess(string)
+  | NotifyFailure(string);
 
 let initial: (~extensionsFolder: option(string)) => model;
 
 let isBusy: model => bool;
+let isSearchInProgress: model => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 
