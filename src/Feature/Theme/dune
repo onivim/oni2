@@ -8,5 +8,7 @@
       base
       textmate
       libvim
+      Oni2.exthost
+      Oni2.feature.commands
     )
     (preprocess (pps ppx_let ppx_deriving.show)))

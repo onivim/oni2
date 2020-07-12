@@ -57,7 +57,7 @@ module Internal = {
   };
 };
 
-let start = (themeInfo: ThemeInfo.t) => {
+let start = () => {
   let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
@@ -125,7 +125,6 @@ let start = (themeInfo: ThemeInfo.t) => {
         buffers,
         languageInfo,
         iconTheme,
-        themeInfo,
         commands,
         menus,
         contextKeys,
@@ -178,9 +177,9 @@ let start = (themeInfo: ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(ThemesPicker) =>
+    | QuickmenuShow(ThemesPicker(themes)) =>
       let items =
-        ThemeInfo.getThemes(themeInfo)
+        themes
         |> List.map((theme: ExtensionContributions.Theme.t) => {
              Actions.{
                category: Some("Theme"),
@@ -193,7 +192,7 @@ let start = (themeInfo: ThemeInfo.t) => {
         |> Array.of_list;
 
       (
-        Some({...Quickmenu.defaults(ThemesPicker), items}),
+        Some({...Quickmenu.defaults(ThemesPicker(themes)), items}),
         Isolinear.Effect.none,
       );
 
@@ -368,7 +367,6 @@ let start = (themeInfo: ThemeInfo.t) => {
         state.buffers,
         state.languageInfo,
         state.iconTheme,
-        themeInfo,
         State.commands(state),
         State.menus(state),
         WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
@@ -456,7 +454,7 @@ let subscriptions = (ripgrep, dispatch) => {
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
-      | ThemesPicker => [filter(query, quickmenu.items)]
+      | ThemesPicker(_) => [filter(query, quickmenu.items)]
 
       | FilesPicker => [
           filter(query, quickmenu.items),

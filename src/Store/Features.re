@@ -438,7 +438,7 @@ let update =
     (state, effect);
 
   | Theme(msg) =>
-    let model' = Feature_Theme.update(state.colorTheme, msg);
+    let (model', _outmsg) = Feature_Theme.update(state.colorTheme, msg);
     ({...state, colorTheme: model'}, Effect.none);
 
   | Notification(msg) =>

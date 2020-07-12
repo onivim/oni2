@@ -139,7 +139,7 @@ let start =
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);
 
-  let quickmenuUpdater = QuickmenuStoreConnector.start(themeInfo);
+  let quickmenuUpdater = QuickmenuStoreConnector.start();
 
   let configurationUpdater =
     ConfigurationStoreConnector.start(
@@ -412,6 +412,12 @@ let start =
     ~dispatch,
     Feature_Formatting.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
+  );
+
+  registerCommands(
+    ~dispatch,
+    Feature_Theme.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Theme(msg))),
   );
 
   // TODO: These should all be replaced with isolinear subscriptions.

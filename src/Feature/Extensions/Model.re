@@ -32,6 +32,8 @@ type msg =
 type outmsg =
   | Nothing
   | Focus
+  | ContributionsAdded(list(Exthost.Extension.Contributions.t))
+  | ContributionsRemoved(list(Exthost.Extension.Contributions.t))
   | Effect(Isolinear.Effect.t(msg));
 
 type model = {

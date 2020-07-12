@@ -16,13 +16,13 @@ and variant =
     | EditorsPicker
     | FilesPicker
     | Wildmenu(Vim.Types.cmdlineType)
-    | ThemesPicker
+    | ThemesPicker(list(Feature_Theme.theme))
     | DocumentSymbols;
 
 let placeholderText =
   fun
   | FilesPicker
-  | ThemesPicker
+  | ThemesPicker(_)
   | CommandPalette
   | DocumentSymbols => "type to search..."
   | _ => "";
