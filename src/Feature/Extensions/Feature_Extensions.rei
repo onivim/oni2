@@ -23,7 +23,10 @@ type msg =
       errorMsg: string,
     })
   | InstallExtensionClicked({extensionId: string})
-  | InstallExtensionSuccess({extensionId: string})
+  | InstallExtensionSuccess({
+      extensionId: string,
+      scanResult: [@opaque] Scanner.ScanResult.t,
+    })
   | InstallExtensionFailed({
       extensionId: string,
       errorMsg: string,
@@ -35,6 +38,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 let initial: (~extensionsFolder: option(string)) => model;
+
+let isBusy: model => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 

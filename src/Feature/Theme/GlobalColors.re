@@ -73,6 +73,17 @@ module ActivityBar = {
   ];
 };
 
+module ActivityBarBadge = {
+  let background =
+    define(
+      "activityBarBadge.background",
+      {dark: hex("#333333"), light: hex("#2C2C2C"), hc: hex("#000000")},
+    );
+  let foreground = define("activityBarBadge.foreground", all(hex("#FFF")));
+
+  let defaults = [background, foreground];
+};
+
 module Dropdown = {
   let background =
     define(
