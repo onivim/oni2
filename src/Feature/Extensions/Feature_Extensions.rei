@@ -41,6 +41,7 @@ type outmsg =
 let initial: (~extensionsFolder: option(string)) => model;
 
 let isBusy: model => bool;
+let isSearchInProgress: model => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 

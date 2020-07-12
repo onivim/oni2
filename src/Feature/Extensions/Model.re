@@ -66,6 +66,13 @@ let searchResults = ({latestQuery, _}) =>
   | Some(query) => query |> Service_Extensions.Query.results
   };
 
+let isSearchInProgress = ({latestQuery, _}) => {
+  switch (latestQuery) {
+  | None => false
+  | Some(query) => !(query |> Service_Extensions.Query.isComplete)
+  };
+};
+
 module Internal = {
   let filterBundled = (scanner: Scanner.ScanResult.t) => {
     let name = scanner.manifest |> Manifest.identifier;
@@ -211,10 +218,20 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingUninstall(~extensionId), Effect(eff));
   | UninstallExtensionSuccess({extensionId}) => (
       model |> Internal.uninstalled(~extensionId),
-      NotifyFailure(Printf.sprintf("Successfully uninstalled %s", extensionId)))
-  | UninstallExtensionFailed({extensionId, errorMsg}) =>
-    (model |> Internal.clearPendingUninstall(~extensionId),
-      NotifyFailure(Printf.sprintf("Extension %s failed to uninstall: %s", extensionId, errorMsg)))
+      NotifyFailure(
+        Printf.sprintf("Successfully uninstalled %s", extensionId),
+      ),
+    )
+  | UninstallExtensionFailed({extensionId, errorMsg}) => (
+      model |> Internal.clearPendingUninstall(~extensionId),
+      NotifyFailure(
+        Printf.sprintf(
+          "Extension %s failed to uninstall: %s",
+          extensionId,
+          errorMsg,
+        ),
+      ),
+    )
   | InstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun
@@ -230,9 +247,22 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingInstall(~extensionId), Effect(eff));
   | InstallExtensionSuccess({extensionId, scanResult}) => (
       model |> Internal.installed(~extensionId, ~scanResult),
-      NotifySuccess(Printf.sprintf("Extension %s was installed successfully and will be activated on restart.", extensionId)))
+      NotifySuccess(
+        Printf.sprintf(
+          "Extension %s was installed successfully and will be activated on restart.",
+          extensionId,
+        ),
+      ),
+    )
   | InstallExtensionFailed({extensionId, errorMsg}) => (
       model |> Internal.clearPendingInstall(~extensionId),
-      NotifyFailure(Printf.sprintf("Extension %s failed to install: %s", extensionId, errorMsg)))
+      NotifyFailure(
+        Printf.sprintf(
+          "Extension %s failed to install: %s",
+          extensionId,
+          errorMsg,
+        ),
+      ),
+    )
   };
 };

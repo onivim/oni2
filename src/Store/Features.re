@@ -107,13 +107,13 @@ let update =
           Effect.none,
         )
       | Feature_Extensions.NotifySuccess(msg) => (
-        state,
-        Internal.notificationEffect(~kind=Info, msg)
-      )
+          state,
+          Internal.notificationEffect(~kind=Info, msg),
+        )
       | Feature_Extensions.NotifyFailure(msg) => (
-        state,
-        Internal.notificationEffect(~kind=Error, msg)
-      )
+          state,
+          Internal.notificationEffect(~kind=Error, msg),
+        )
       };
     (state', effect);
   | Formatting(msg) =>
