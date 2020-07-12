@@ -75,6 +75,22 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
+//  let handlePasteEffect = (state: State.t, lines: list(string)) => {
+//    switch (Model.FocusManager.current(state)) {
+//    | Editor
+//    | Wildmenu => Actions.Noop
+//    | Quickmenu => Actions.Noop
+//    | Extensions => Actions.Noop
+//    | SCM => Actions.Noop
+//    | Terminal(_) => Actions.Noop
+//
+//    
+//    // No paste handling in these UIs, currently...
+//    | FileExplorer => Noop
+//    | Modal => Actions.Noop
+//    }
+//  };
+
   let effectToActions = (state, effect) =>
     switch (effect) {
     | Keybindings.Execute(command) => [

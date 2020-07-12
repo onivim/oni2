@@ -88,6 +88,7 @@ type t =
   | KeybindingInvoked({command: string})
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | Pasted({ lines: list(string)})
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | HoverShow
   | ContextMenuOverlayClicked
