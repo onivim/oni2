@@ -1,16 +1,22 @@
 open Oni_Core;
 
 type model;
+let initial: model;
 
+[@deriving show]
 type msg;
 
 type outmsg =
-| Pasted({ lines: list(string) });
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg))
+  | Pasted({
+      rawText: string,
+      isMultiLine: bool,
+      lines: array(string),
+    });
 
-module Commands: {
-    let paste: Command.t(msg);
-};
+let update: (msg, model) => (model, outmsg);
 
-module Contributions: {
-    let commands: list(Command.t(msg));
-}
+module Commands: {let paste: Command.t(msg);};
+
+module Contributions: {let commands: list(Command.t(msg));};

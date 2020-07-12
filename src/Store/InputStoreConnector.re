@@ -75,21 +75,27 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
-//  let handlePasteEffect = (state: State.t, lines: list(string)) => {
-//    switch (Model.FocusManager.current(state)) {
-//    | Editor
-//    | Wildmenu => Actions.Noop
-//    | Quickmenu => Actions.Noop
-//    | Extensions => Actions.Noop
-//    | SCM => Actions.Noop
-//    | Terminal(_) => Actions.Noop
-//
-//    
-//    // No paste handling in these UIs, currently...
-//    | FileExplorer => Noop
-//    | Modal => Actions.Noop
-//    }
-//  };
+  let pasteEffect = (~isMultiLine, ~lines, state) => {
+    let action =
+      switch (Model.FocusManager.current(state)) {
+      | Editor
+      | Wildmenu => Actions.Noop
+      | Quickmenu => Actions.Noop
+      | Extensions => Actions.Noop
+      | SCM => Actions.Noop
+      | Terminal(_) => Actions.Noop
+      | Search => Actions.Noop
+
+      // No paste handling in these UIs, currently...
+      | Sneak
+      | FileExplorer => Noop
+      | Modal => Actions.Noop
+      };
+
+    Isolinear.Effect.createWithDispatch("input.pasteEffect", dispatch => {
+      dispatch(action)
+    });
+  };
 
   let effectToActions = (state, effect) =>
     switch (effect) {
@@ -228,6 +234,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
            );
 
       handleTextInput({...state, keyDisplayer}, text);
+
+    | Pasted({isMultiLine, lines}) => (
+        state,
+        pasteEffect(~isMultiLine, ~lines, state),
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

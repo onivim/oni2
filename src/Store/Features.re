@@ -91,6 +91,21 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | Clipboard(msg) =>
+    let (model, outmsg) = Feature_Clipboard.update(msg, state.clipboard);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Clipboard(msg))
+      | Pasted({rawText, isMultiLine, lines}) =>
+        Isolinear.Effect.createWithDispatch(~name="Clipboard.Pasted", dispatch => {
+          dispatch(Actions.Pasted({rawText, isMultiLine, lines}))
+        })
+      };
+
+    ({...state, clipboard: model}, eff);
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);

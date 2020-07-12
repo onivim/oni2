@@ -39,11 +39,6 @@ let start =
         c.vimUseSystemClipboard
       );
 
-    let isMultipleLines = s => String.contains(s, '\n');
-
-    let splitNewLines = s =>
-      s |> StringEx.removeTrailingNewLine |> StringEx.splitNewLines;
-
     let starReg = Char.code('*');
     let plusReg = Char.code('+');
     let unnamedReg = 0;
@@ -54,22 +49,14 @@ let start =
       && yankConfig.paste; // or if 'paste' set, but unnamed
 
     if (shouldPullFromClipboard) {
-      let clipboardValue = getClipboardText();
-      let blockType: Vim.Types.blockType =
-        clipboardValue
-        |> Option.map(isMultipleLines)
-        |> Option.map(
-             multiLine => multiLine ? Vim.Types.Line : Vim.Types.Character:
-                                                                    bool =>
-                                                                    Vim.Types.blockType,
-           )
-        |> Option.value(~default=Vim.Types.Line: Vim.Types.blockType);
-
-      clipboardValue
-      |> Option.map(StringEx.removeTrailingNewLine)
-      |> Option.map(StringEx.removeWindowsNewLines)
-      |> Option.map(splitNewLines)
-      |> Option.map(lines => Vim.Types.{lines, blockType});
+      let maybeClipboardValue = getClipboardText();
+      maybeClipboardValue
+      |> Option.map(clipboardValue => {
+           let (multiLine, lines) = StringEx.splitLines(clipboardValue);
+           let blockType: Vim.Types.blockType =
+             multiLine ? Vim.Types.Line : Vim.Types.Character;
+           Vim.Types.{lines, blockType};
+         });
     } else {
       None;
     };
@@ -766,10 +753,10 @@ let start =
         synchronizeViml(configuration),
       )
 
-//    | Command("editor.action.clipboardPasteAction") => (
-//        state,
-//        pasteIntoEditorAction,
-//      )
+    //    | Command("editor.action.clipboardPasteAction") => (
+    //        state,
+    //        pasteIntoEditorAction,
+    //      )
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
     | Command("workbench.action.files.save") => (state, saveEffect)

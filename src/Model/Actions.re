@@ -53,6 +53,7 @@ type t =
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
+  | Clipboard(Feature_Clipboard.msg)
   | Syntax(Feature_Syntax.msg)
   | Hover(Feature_Hover.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
@@ -88,7 +89,6 @@ type t =
   | KeybindingInvoked({command: string})
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | Pasted({ lines: list(string)})
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | HoverShow
   | ContextMenuOverlayClicked
@@ -145,6 +145,11 @@ type t =
   | BufferOpened(string, option(Location.t), int)
   | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
+  | Pasted({
+      rawText: string,
+      isMultiLine: bool,
+      lines: array(string),
+    })
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_

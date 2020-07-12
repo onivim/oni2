@@ -70,13 +70,13 @@ let start = maybeKeyBindingsFilePath => {
       },
       {
         key: "<C-V>",
-        command: Commands.Editor.Action.clipboardPasteAction.id,
-        condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
+        command: Feature_Clipboard.Commands.paste.id,
+        condition: WhenExpr.Value(True),
       },
       {
         key: "<D-V>",
-        command: Commands.Editor.Action.clipboardPasteAction.id,
-        condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
+        command: Feature_Clipboard.Commands.paste.id,
+        condition: WhenExpr.Value(True),
       },
       {
         key: "<ESC>",
