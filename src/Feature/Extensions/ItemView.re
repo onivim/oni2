@@ -122,13 +122,6 @@ let make =
 
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;
-  //        <ActionButton
-  //          font
-  //          title="Uninstall"
-  //          backgroundColor=Revery.Colors.red
-  //          color=Revery.Colors.white
-  //          onAction={() => {prerr_endline("Clicked!")}}
-  //        />
 
   <View style={Styles.container(~width)}>
     <View style=Styles.imageContainer> icon </View>

@@ -37,6 +37,7 @@ module Effects = {
           Vim.command("set paste") |> ignore;
         };
 
+        Log.infof(m => m("Pasting: %s", text));
         let latestContext: Vim.Context.t = Oni_Core.VimEx.inputString(text);
 
         if (!isCmdLineMode) {

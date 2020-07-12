@@ -13,6 +13,10 @@ type msg =
   | PasteClipboardEmpty
   | PasteClipboardText({text: string});
 
+module Msg = {
+  let paste = Command(PasteAction);
+};
+
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))

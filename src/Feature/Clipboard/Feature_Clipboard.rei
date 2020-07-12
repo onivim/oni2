@@ -6,6 +6,8 @@ let initial: model;
 [@deriving show]
 type msg;
 
+module Msg: {let paste: msg;};
+
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
