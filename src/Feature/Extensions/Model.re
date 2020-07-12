@@ -32,7 +32,9 @@ type msg =
 type outmsg =
   | Nothing
   | Focus
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | NotifySuccess(string)
+  | NotifyFailure(string);
 
 type model = {
   activatedIds: list(string),
