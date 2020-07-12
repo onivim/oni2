@@ -31,13 +31,14 @@ module Cursor = {
       });
 
     let%hook () =
-      Hooks.effect(
-        OnMount,
-        () => {
+      Hooks.effect(OnMountAndIf((!=), isFocused), () =>
+        if (isFocused) {
           let clear =
             Tick.interval(time => dispatch(Tick(time)), Time.ms(16));
-          Some(clear);
-        },
+          Some(() => {clear()});
+        } else {
+          None;
+        }
       );
 
     let cursorOpacity = isFocused && state.isOn ? 1.0 : 0.0;

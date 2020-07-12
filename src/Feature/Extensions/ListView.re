@@ -184,11 +184,14 @@ let%component make =
       </FlatList>;
     };
 
+  let isBusy = Model.isSearchInProgress(model) || Model.isBusy(model);
+
   <View
     style={Styles.container(~width)}
     onDimensionsChanged={({width, _}) =>
       localDispatch(WidthChanged(width))
     }>
+    <BusyBar theme visible=isBusy />
     <Feature_InputText.View
       style=Styles.input
       model={model.searchText}

@@ -26,7 +26,7 @@ module Catalog: {
       manifestUrl: string,
       iconUrl: option(string),
       readmeUrl: string,
-      licenseName: string,
+      licenseName: option(string),
       //      licenseUrl: string,
       name: string,
       namespace: string,
