@@ -616,29 +616,6 @@ let start =
       }
     );
 
-  let pasteIntoEditorAction =
-    Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
-      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
-      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
-
-      if (isInsertMode || isCmdLineMode) {
-        getClipboardText()
-        |> Option.iter(text => {
-             if (!isCmdLineMode) {
-               Vim.command("set paste") |> ignore;
-             };
-
-             let latestContext: Vim.Context.t =
-               Oni_Core.VimEx.inputString(text);
-
-             if (!isCmdLineMode) {
-               updateActiveEditorCursors(latestContext.cursors);
-               Vim.command("set nopaste") |> ignore;
-             };
-           });
-      };
-    });
-
   let copyActiveFilepathToClipboardEffect =
     Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
       switch (Vim.Buffer.getCurrent() |> Vim.Buffer.getFilename) {

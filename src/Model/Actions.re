@@ -123,6 +123,7 @@ type t =
   | FilesDropped({paths: list(string)})
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
+  | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
   | QuickmenuInputMessage(Feature_InputText.msg)

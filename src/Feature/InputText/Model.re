@@ -241,6 +241,17 @@ let handleInput = (~key, model) => {
   {...model, value, selection};
 };
 
+let paste = (~text, model) => {
+  let (value', selection') =
+    if (Selection.isCollapsed(model.selection)) {
+      Internal.addCharacter(text, model.value, model.selection);
+    } else {
+      Internal.replacesSelection(text, model.value, model.selection);
+    };
+
+  {...model, value: value', selection: selection'};
+};
+
 let set = (~text, ~cursor, model) => {
   ...model,
   value: text,
@@ -272,6 +283,28 @@ let%test_module "Model" =
        selection: Selection.create(~text, ~anchor, ~focus),
        placeholder: "",
      };
+
+     let%test_module "paste" =
+       (module
+        {
+          let pasteText = "hello from clipboard";
+          let pasteTextLength = pasteText |> String.length;
+          let%test "empty" = {
+            collapsed(~text="", 0)
+            |> paste(~text=pasteText)
+            == collapsed(~text=pasteText, pasteTextLength);
+          };
+          let%test "into text, no selection" = {
+            collapsed(~text="abc", 1)
+            |> paste(~text=pasteText)
+            == collapsed(~text="a" ++ pasteText ++ "bc", pasteTextLength + 1);
+          };
+          let%test "into text, selection" = {
+            notCollapsed(~text="abc", ~anchor=3, ~focus=0, ())
+            |> paste(~text=pasteText)
+            == collapsed(~text=pasteText, pasteTextLength);
+          };
+        });
 
      let%test_module "handleInput" =
        (module

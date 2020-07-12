@@ -1,4 +1,3 @@
-open Oni_Core;
 open Oni_Core.Utility;
 
 type model = unit;
@@ -30,7 +29,7 @@ module Effects = {
       | None => PasteClipboardEmpty
       | Some(text) => PasteClipboardText({text: text});
 
-    Service_Clipboard.Effects.getClipboardText(toMsg);
+    Service_Clipboard.Effects.getClipboardText(~toMsg);
   };
 };
 

@@ -10,6 +10,7 @@ type msg =
       arguments: [@opaque] list(Json.t),
     })
   | KeyPressed(string)
+  | Pasted(string)
   | SearchQueryResults(Service_Extensions.Query.t)
   | SearchQueryError(string)
   | SearchText(Feature_InputText.msg)
@@ -113,6 +114,17 @@ let update = (~extHostClient, msg, model) => {
   | KeyPressed(key) =>
     let previousText = model.searchText |> Feature_InputText.value;
     let searchText' = Feature_InputText.handleInput(~key, model.searchText);
+    let newText = searchText' |> Feature_InputText.value;
+    let latestQuery =
+      checkAndUpdateSearchText(
+        ~previousText,
+        ~newText,
+        ~query=model.latestQuery,
+      );
+    ({...model, searchText: searchText', latestQuery}, Nothing);
+  | Pasted(text) =>
+    let previousText = model.searchText |> Feature_InputText.value;
+    let searchText' = Feature_InputText.paste(~text, model.searchText);
     let newText = searchText' |> Feature_InputText.value;
     let latestQuery =
       checkAndUpdateSearchText(

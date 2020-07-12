@@ -591,10 +591,32 @@ let update =
     let effect = [shEffect] |> Effect.batch;
     ({...state, signatureHelp}, effect);
 
-  | Vim(msg) => (
-      {...state, vim: Feature_Vim.update(msg, state.vim)},
-      Effect.none,
-    )
+  | Vim(msg) =>
+    let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
+    let state = {...state, vim};
+
+    let (state', eff) =
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | Effect(e) => (state, e)
+      | CursorsUpdated(cursors) =>
+        open Feature_Editor;
+        let activeEditorId =
+          state.layout |> Feature_Layout.activeEditor |> Editor.getId;
+
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               if (Editor.getId(editor) == activeEditorId) {
+                 Editor.setVimCursors(~cursors, editor);
+               } else {
+                 editor;
+               }
+             );
+        ({...state, layout: layout'}, Isolinear.Effect.none);
+      };
+
+    (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
   | _ => (state, Effect.none)
   };

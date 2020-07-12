@@ -27,6 +27,26 @@ let quitAll = () =>
   );
 
 module Effects = {
+  let paste = (~toMsg, text) => {
+    Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
+      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
+      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
+
+      if (isInsertMode || isCmdLineMode) {
+        if (!isCmdLineMode) {
+          Vim.command("set paste") |> ignore;
+        };
+
+        let latestContext: Vim.Context.t = Oni_Core.VimEx.inputString(text);
+
+        if (!isCmdLineMode) {
+          Vim.command("set nopaste") |> ignore;
+          dispatch(toMsg(latestContext.cursors));
+        };
+      };
+    });
+  };
+
   let applyEdits =
       (
         ~bufferId: int,
