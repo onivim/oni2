@@ -730,10 +730,6 @@ let start =
         synchronizeViml(configuration),
       )
 
-    //    | Command("editor.action.clipboardPasteAction") => (
-    //        state,
-    //        pasteIntoEditorAction,
-    //      )
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
     | Command("workbench.action.files.save") => (state, saveEffect)
