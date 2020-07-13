@@ -1,5 +1,6 @@
 open Oni_Core;
 open Utility;
+open Oni_Components;
 
 // MODEL
 
@@ -408,7 +409,7 @@ module Pane = {
   module Styles = {
     open Style;
 
-    let container = [padding(10), flexGrow(1)];
+    let container = [flexGrow(1)];
 
     let text = (~theme) => [
       color(Colors.SideBar.foreground.from(theme)),
@@ -416,25 +417,14 @@ module Pane = {
       textOverflow(`Ellipsis),
     ];
 
-    let input = [flexGrow(1)];
-
-    let group = [];
-
-    let groupLabel = [paddingVertical(3)];
-
-    let groupLabelText = (~theme) => [
-      color(Colors.SideBar.foreground.from(theme)),
-      textWrap(TextWrapping.NoWrap),
-      textOverflow(`Ellipsis),
-    ];
-
-    let groupItems = [marginLeft(6)];
+    let input = [flexGrow(1), margin(12)];
 
     let item = (~isHovered, ~theme) => [
       isHovered
         ? backgroundColor(Colors.List.hoverBackground.from(theme))
         : backgroundColor(Colors.SideBar.background.from(theme)),
       paddingVertical(2),
+      marginLeft(6),
       cursor(MouseCursors.pointer),
     ];
   };
@@ -482,49 +472,47 @@ module Pane = {
         ~font: UiFont.t,
         ~workingDirectory,
         ~onItemClick,
+        ~onTitleClick,
+        ~expanded,
         (),
       ) => {
-    let label = String.uppercase_ascii(group.label);
-    <View style=Styles.group>
-      <View style=Styles.groupLabel>
-        <Text
-          style={Styles.groupLabelText(~theme)}
-          text=label
-          fontFamily={font.family}
-          fontWeight=Bold
-          fontSize={font.size *. 0.85}
-        />
-      </View>
-      <View style=Styles.groupItems>
-        ...{
-             group.resources
-             |> List.map(resource =>
-                  <itemView
-                    provider
-                    resource
-                    theme
-                    font
-                    workingDirectory
-                    onClick={() => onItemClick(resource)}
-                  />
-                )
-             |> React.listToElement
-           }
-      </View>
-    </View>;
+    let label = group.label;
+    let items = Array.of_list(group.resources);
+    let renderItem = (items, idx) => {
+      let resource = items[idx];
+      <itemView
+        provider
+        resource
+        theme
+        font
+        workingDirectory
+        onClick={() => onItemClick(resource)}
+      />;
+    };
+    <Accordion
+      title=label
+      expanded
+      uiFont=font
+      rowHeight=20
+      count={Array.length(items)}
+      renderItem={renderItem(items)}
+      focused=None
+      theme
+      onClick=onTitleClick
+    />;
   };
 
-  let make =
-      (
-        ~model,
-        ~workingDirectory,
-        ~onItemClick,
-        ~isFocused,
-        ~theme,
-        ~font: UiFont.t,
-        ~dispatch,
-        (),
-      ) => {
+  let%component make =
+                (
+                  ~model,
+                  ~workingDirectory,
+                  ~onItemClick,
+                  ~isFocused,
+                  ~theme,
+                  ~font: UiFont.t,
+                  ~dispatch,
+                  (),
+                ) => {
     let groups = {
       open Base.List.Let_syntax;
 
@@ -534,7 +522,19 @@ module Pane = {
       return((provider, group));
     };
 
-    <ScrollView style=Styles.container>
+    let%hook (localState, localDispatch) =
+      Hooks.reducer(~initialState=StringMap.empty, (msg, model) => {
+        StringMap.update(
+          msg,
+          fun
+          | None => Some(false)
+          | Some(false) => Some(true)
+          | Some(true) => Some(false),
+          model,
+        )
+      });
+
+    <View style=Styles.container>
       <Feature_InputText.View
         style=Styles.input
         model={model.inputBox}
@@ -545,17 +545,23 @@ module Pane = {
         theme
       />
       {groups
-       |> List.map(((provider, group)) =>
+       |> List.map(((provider, group: ResourceGroup.t)) => {
+            let expanded =
+              StringMap.find_opt(group.label, localState)
+              |> Option.value(~default=true);
+
             <groupView
               provider
+              expanded
               group
               theme
               font
               workingDirectory
               onItemClick
-            />
-          )
+              onTitleClick={() => localDispatch(group.label)}
+            />;
+          })
        |> React.listToElement}
-    </ScrollView>;
+    </View>;
   };
 };

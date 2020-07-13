@@ -78,6 +78,7 @@ let handleExtensionMessage:
 module Pane: {
   let make:
     (
+      ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
       ~workingDirectory: string,
       ~onItemClick: Resource.t => unit,
