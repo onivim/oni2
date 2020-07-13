@@ -55,6 +55,10 @@ module Context: {
   let current: unit => t;
 };
 
+module Registers: {
+  let get: (~register: char) => option(array(string));
+};
+
 module Edit: {
   [@deriving show]
   type t = {

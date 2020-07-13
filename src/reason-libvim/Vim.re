@@ -564,6 +564,11 @@ let input = (~context=Context.current(), v: string) => {
   );
 };
 
+module Registers = {
+  let get = (~register) => Native.vimRegisterGet(
+      int_of_char(register));
+}
+
 let command = v => {
   runWith(
     ~context=Context.current(),

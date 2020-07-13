@@ -32,20 +32,21 @@ type outmsg =
     });
 
 let update = (msg, model) => {
-  switch(msg) {
-| Command(InsertRegister) => 
-    let toMsg = fun
-    | None => RegisterNotAvailable
-    | Some(text) => RegisterAvailable({ contents: text});
-    let eff = Service_Vim.Effects.getRegisterValue(
-        ~toMsg,
-        'a'
+  switch (msg) {
+  | Command(InsertRegister) =>
+    let toMsg = (
+      fun
+      | None => RegisterNotAvailable
+      | Some(text) => RegisterAvailable({contents: text})
     );
-      (model, Effect(eff));
- | RegisterAvailable({contents}) => 
-    (model, EmitRegister({contents, register: 'a'}))
- | RegisterNotAvailable => (model, Nothing)
- }
+    let eff = Service_Vim.Effects.getRegisterValue(~toMsg, 'a');
+    (model, Effect(eff));
+  | RegisterAvailable({contents}) => (
+      model,
+      EmitRegister({contents, register: 'a'}),
+    )
+  | RegisterNotAvailable => (model, Nothing)
+  };
 };
 
 module Commands = {

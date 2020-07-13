@@ -186,18 +186,22 @@ let update =
     let (model, outmsg) = Feature_Registers.update(msg, state.registers);
 
     let state = {...state, registers: model};
-    let eff = switch(outmsg) {
-    | Feature_Registers.EmitRegister({ contents, _}) => Isolinear.Effect.createWithDispatch(
-      ~name="register.paste",
-      (dispatch) => {
-        dispatch(Pasted({ rawText: contents, isMultiLine: false, 
-        lines: [|"abc"|]}));
-      }
-    )
-    | Effect(eff) => eff
-      |> Isolinear.Effect.map(msg => Actions.Registers(msg));
-    | Nothing => Isolinear.Effect.none
-    };
+    let eff =
+      switch (outmsg) {
+      | Feature_Registers.EmitRegister({contents, _}) =>
+        Isolinear.Effect.createWithDispatch(~name="register.paste", dispatch => {
+          dispatch(
+            Pasted({
+              rawText: contents,
+              isMultiLine: false,
+              lines: [|"abc"|],
+            }),
+          )
+        })
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Registers(msg))
+      | Nothing => Isolinear.Effect.none
+      };
     (state, eff);
 
   | Search(msg) =>

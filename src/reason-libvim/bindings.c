@@ -901,6 +901,31 @@ CAMLprim value libvim_vimVisualGetRange(value unit) {
   CAMLreturn(ret);
 }
 
+CAMLprim value libvim_vimRegisterGet(value vChar) {
+  CAMLparam1(vChar);
+  CAMLlocal2(ret, vArray);
+
+  
+  int reg = Int_val(vChar);
+  int numLines = 0;
+  char_u **lines = NULL;
+  vimRegisterGet(reg, &numLines, &lines);
+
+  if (numLines == 0 || lines == NULL) {
+    ret = Val_none;
+  } else {
+    vArray = caml_alloc(numLines, 0);
+
+    for (int i = 0; i < numLines; i++) {
+      Store_field(vArray, i, caml_copy_string(lines[i]));
+    }
+
+    ret = Val_some(vArray);
+  }
+
+  CAMLreturn(ret);
+}
+
 CAMLprim value libvim_vimWindowGetWidth(value unit) {
   int width = vimWindowGetWidth();
   return Val_int(width);
