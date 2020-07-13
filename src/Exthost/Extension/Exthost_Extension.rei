@@ -142,21 +142,16 @@ module Manifest: {
     activationEvents: list(string),
     extensionDependencies: list(string),
     extensionPack: list(string),
-    extensionKind: kind,
+    extensionKind: list(string),
     contributes: Contributions.t,
     enableProposedApi: bool,
   }
-
-  and kind =
-    | Ui
-    | Workspace;
 
   let decode: Oni_Core.Json.decoder(t);
 
   let identifier: t => string;
   let getDisplayName: t => string;
 
-  module Encode: {let kind: Oni_Core.Json.encoder(kind);};
 };
 
 module Scanner: {
@@ -199,7 +194,7 @@ module InitData: {
       engines: string,
       activationEvents: list(string),
       extensionDependencies: list(string),
-      extensionKind: string,
+      extensionKind: list(string),
       enableProposedApi: bool,
     };
 

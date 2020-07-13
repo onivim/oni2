@@ -24,7 +24,7 @@ module Extension = {
     engines: string,
     activationEvents: list(string),
     extensionDependencies: list(string),
-    extensionKind: string,
+    extensionKind: list(string),
     enableProposedApi: bool,
   };
 
@@ -41,7 +41,7 @@ module Extension = {
     activationEvents: manifest.activationEvents,
     extensionDependencies: manifest.extensionDependencies,
     // TODO: Convert correctly
-    extensionKind: "ui",
+    extensionKind: ["ui"],
     enableProposedApi: manifest.enableProposedApi,
   };
 };

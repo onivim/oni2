@@ -23,7 +23,7 @@ type t = {
   activationEvents: list(string),
   extensionDependencies: list(string),
   extensionPack: list(string),
-  extensionKind: kind,
+  extensionKind: list(string),
   contributes: Contributions.t,
   enableProposedApi: bool,
 }
@@ -45,15 +45,6 @@ let displayName = ({displayName, _}) => {
 
 module Decode = {
   open Json.Decode;
-
-  let kind =
-    string
-    |> map(
-         fun
-         | "ui" => Ui
-         | "workspace" => Workspace
-         | _ => Ui,
-       );
 
   let author =
     one_of([("string", string), ("object", field("name", string))]);
@@ -88,7 +79,7 @@ module Decode = {
             field.withDefault("extensionDependencies", [], list(string)),
           extensionPack:
             field.withDefault("extensionPack", [], list(string)),
-          extensionKind: field.withDefault("extensionKind", Ui, kind),
+          extensionKind: field.withDefault("extensionKind", [], list(string)),
           contributes:
             field.withDefault(
               "contributes",
@@ -103,12 +94,6 @@ module Decode = {
 };
 
 module Encode = {
-  let kind =
-    Json.Encode.(
-      fun
-      | Ui => string("ui")
-      | Workspace => string("workspace")
-    );
 };
 
 let decode = Decode.manifest;
