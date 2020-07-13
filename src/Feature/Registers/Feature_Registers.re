@@ -118,10 +118,7 @@ let update = (msg, model) => {
       | WaitingForRegister => WaitingForRegister
       };
     ({mode: mode}, Nothing);
-  | RegisterAvailable({raw, lines}) => (
-      model,
-      EmitRegister({raw, lines }),
-    )
+  | RegisterAvailable({raw, lines}) => (model, EmitRegister({raw, lines}))
   | RegisterNotAvailable => (model, Nothing)
   };
 };
