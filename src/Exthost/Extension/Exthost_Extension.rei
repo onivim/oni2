@@ -126,6 +126,12 @@ module Contributions: {
 };
 
 module Manifest: {
+  module Kind: {
+    [@deriving show]
+    type t =
+      | Ui
+      | Workspace;
+  };
   [@deriving show]
   type t = {
     name: string,
@@ -142,16 +148,15 @@ module Manifest: {
     activationEvents: list(string),
     extensionDependencies: list(string),
     extensionPack: list(string),
-    extensionKind: list(string),
+    extensionKind: list(Kind.t),
     contributes: Contributions.t,
     enableProposedApi: bool,
-  }
+  };
 
   let decode: Oni_Core.Json.decoder(t);
 
   let identifier: t => string;
   let getDisplayName: t => string;
-
 };
 
 module Scanner: {
