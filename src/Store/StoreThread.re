@@ -316,6 +316,10 @@ let start =
       Feature_Extensions.sub(~setup, state.extensions)
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
 
+    let registersSub =
+      Feature_Registers.sub(state.registers)
+      |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -326,6 +330,7 @@ let start =
       fileExplorerActiveFileSub,
       editorGlobalSub,
       extensionsSub,
+      registersSub,
     ]
     |> Isolinear.Sub.batch;
   };

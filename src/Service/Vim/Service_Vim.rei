@@ -9,7 +9,8 @@ module Effects: {
     (~toMsg: list(Vim.Cursor.t) => 'msg, string) => Isolinear.Effect.t('msg);
 
   let getRegisterValue:
-    (~toMsg: option(array(string)) => 'msg, char) => Isolinear.Effect.t('msg);
+    (~toMsg: option(array(string)) => 'msg, char) =>
+    Isolinear.Effect.t('msg);
 
   let applyEdits:
     (
@@ -19,4 +20,8 @@ module Effects: {
       result(unit, string) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
+};
+
+module Sub: {
+  let eval: (~toMsg: string => 'msg, string) => Isolinear.Sub.t('msg);
 };

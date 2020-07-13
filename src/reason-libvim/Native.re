@@ -73,7 +73,8 @@ external vimOptionGetInsertSpaces: unit => bool =
   "libvim_vimOptionGetInsertSpaces";
 external vimOptionGetTabSize: unit => int = "libvim_vimOptionGetTabSize";
 
-external vimRegisterGet: int => option(array(string)) = "libvim_vimRegisterGet";
+external vimRegisterGet: int => option(array(string)) =
+  "libvim_vimRegisterGet";
 
 external vimSearchGetMatchingPair: unit => option((int, int)) =
   "libvim_vimSearchGetMatchingPair";

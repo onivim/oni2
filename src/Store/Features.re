@@ -194,7 +194,7 @@ let update =
             Pasted({
               rawText: raw,
               isMultiLine: String.contains(raw, '\n'),
-              lines: lines,
+              lines,
             }),
           )
         })

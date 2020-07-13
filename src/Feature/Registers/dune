@@ -8,6 +8,9 @@
       base
       libvim
       Oni2.feature.commands
+      Oni2.feature.inputText
+      Oni2.feature.theme
+      Oni2.service.font
       Oni2.service.vim
     )
-    (preprocess (pps ppx_let ppx_deriving.show)))
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
