@@ -53,6 +53,7 @@ type t =
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
+  | Clipboard(Feature_Clipboard.msg)
   | Syntax(Feature_Syntax.msg)
   | Hover(Feature_Hover.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
@@ -122,6 +123,7 @@ type t =
   | FilesDropped({paths: list(string)})
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
+  | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
   | QuickmenuInputMessage(Feature_InputText.msg)
@@ -144,6 +146,11 @@ type t =
   | BufferOpened(string, option(Location.t), int)
   | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
+  | Pasted({
+      rawText: string,
+      isMultiLine: bool,
+      lines: array(string),
+    })
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_

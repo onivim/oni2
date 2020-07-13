@@ -25,6 +25,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   changelog: Feature_Changelog.model,
+  clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: Feature_ContextMenu.model,
@@ -114,6 +115,7 @@ let initial =
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
+    clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
         Feature_Terminal.Contributions.colors,

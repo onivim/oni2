@@ -61,7 +61,10 @@ module Effects: {
 [@deriving show]
 type msg;
 
-module Msg: {let keyPressed: string => msg;};
+module Msg: {
+  let keyPressed: string => msg;
+  let paste: string => msg;
+};
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
