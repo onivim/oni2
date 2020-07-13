@@ -188,13 +188,13 @@ let update =
     let state = {...state, registers: model};
     let eff =
       switch (outmsg) {
-      | Feature_Registers.EmitRegister({contents, _}) =>
+      | Feature_Registers.EmitRegister({raw, lines, _}) =>
         Isolinear.Effect.createWithDispatch(~name="register.paste", dispatch => {
           dispatch(
             Pasted({
-              rawText: contents,
-              isMultiLine: false,
-              lines: [|"abc"|],
+              rawText: raw,
+              isMultiLine: String.contains(raw, '\n'),
+              lines: lines,
             }),
           )
         })

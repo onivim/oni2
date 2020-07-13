@@ -20,14 +20,15 @@ type command =
 [@deriving show]
 type msg =
   | RegisterNotAvailable
-  | RegisterAvailable({contents: string})
+  | RegisterAvailable({raw: string, lines: array(string)})
   | Command(command);
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | EmitRegister({
-      contents: string,
+      raw: string,
+      lines: array(string),
       register: Register.t,
     });
 
@@ -37,13 +38,18 @@ let update = (msg, model) => {
     let toMsg = (
       fun
       | None => RegisterNotAvailable
-      | Some(text) => RegisterAvailable({contents: text})
+      | Some(lines) => {
+        let raw = lines
+        |> Array.to_list
+        |> String.concat("\n");
+        RegisterAvailable({raw, lines})
+      }
     );
     let eff = Service_Vim.Effects.getRegisterValue(~toMsg, 'a');
     (model, Effect(eff));
-  | RegisterAvailable({contents}) => (
+  | RegisterAvailable({raw, lines}) => (
       model,
-      EmitRegister({contents, register: 'a'}),
+      EmitRegister({raw, lines, register: 'a'}),
     )
   | RegisterNotAvailable => (model, Nothing)
   };

@@ -18,7 +18,8 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | EmitRegister({
-      contents: string,
+      raw: string,
+      lines: array(string),
       register: Register.t,
     });
 

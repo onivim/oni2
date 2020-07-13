@@ -48,9 +48,10 @@ module Effects = {
     });
   };
 
-  let getRegisterValue = (~toMsg, _char) =>
+  let getRegisterValue = (~toMsg, char) =>
     Isolinear.Effect.createWithDispatch(~name="vim.getRegisterValue", dispatch => {
-      dispatch(toMsg(Some("some register")))
+      let result = Vim.Registers.get(~register=char);
+      dispatch(toMsg(result))
     });
 
   let applyEdits =
