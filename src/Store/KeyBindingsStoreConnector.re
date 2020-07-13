@@ -491,6 +491,13 @@ let start = maybeKeyBindingsFilePath => {
         condition:
           "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
       },
+      {
+        key: "<C-R>",
+        command: Feature_Registers.Commands.insert.id,
+        condition:
+          "insertMode || commandLineMode || inQuickOpen || terminalFocus"
+          |> WhenExpr.parse,
+      },
     ];
 
   let getKeybindingsFile = () => {
