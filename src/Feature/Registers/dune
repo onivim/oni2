@@ -8,5 +8,6 @@
       base
       libvim
       Oni2.feature.commands
+      Oni2.service.vim
     )
     (preprocess (pps ppx_let ppx_deriving.show)))

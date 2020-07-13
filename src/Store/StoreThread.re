@@ -420,6 +420,12 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
   );
 
+  registerCommands(
+    ~dispatch,
+    Feature_Registers.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
+  );
+
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, inputStream);

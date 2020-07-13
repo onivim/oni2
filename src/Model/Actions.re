@@ -151,6 +151,7 @@ type t =
       isMultiLine: bool,
       lines: array(string),
     })
+  | Registers(Feature_Registers.msg)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_

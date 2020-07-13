@@ -13,22 +13,39 @@ module Register = {
   let toChar = v => v;
 };
 
+[@deriving show]
+type command =
+  | InsertRegister;
+
+[@deriving show]
+type msg =
+  | RegisterNotAvailable
+  | RegisterAvailable({contents: string})
+  | Command(command);
+
 type outmsg =
   | Nothing
-  | Focus
+  | Effect(Isolinear.Effect.t(msg))
   | EmitRegister({
       contents: string,
       register: Register.t,
     });
 
-type command =
-  | InsertRegister;
-
-type msg =
-  | Command(command);
-
 let update = (msg, model) => {
-  (model, Nothing);
+  switch(msg) {
+| Command(InsertRegister) => 
+    let toMsg = fun
+    | None => RegisterNotAvailable
+    | Some(text) => RegisterAvailable({ contents: text});
+    let eff = Service_Vim.Effects.getRegisterValue(
+        ~toMsg,
+        'a'
+    );
+      (model, Effect(eff));
+ | RegisterAvailable({contents}) => 
+    (model, EmitRegister({contents, register: 'a'}))
+ | RegisterNotAvailable => (model, Nothing)
+ }
 };
 
 module Commands = {

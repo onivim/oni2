@@ -11,15 +11,16 @@ type model;
 
 let initial: model;
 
+[@deriving show]
+type msg;
+
 type outmsg =
   | Nothing
-  | Focus
+  | Effect(Isolinear.Effect.t(msg))
   | EmitRegister({
       contents: string,
       register: Register.t,
     });
-
-type msg;
 
 let update: (msg, model) => (model, outmsg);
 
