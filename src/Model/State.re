@@ -25,6 +25,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   changelog: Feature_Changelog.model,
+  clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: Feature_ContextMenu.model,
@@ -84,6 +85,7 @@ let initial =
       ~getUserSettings,
       ~contributedCommands,
       ~workingDirectory,
+      ~extensionsFolder,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -113,6 +115,7 @@ let initial =
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
+    clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
         Feature_Terminal.Contributions.colors,
@@ -129,7 +132,7 @@ let initial =
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
-    extensions: Feature_Extensions.initial,
+    extensions: Feature_Extensions.initial(~extensionsFolder),
     formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     lifecycle: Lifecycle.create(),

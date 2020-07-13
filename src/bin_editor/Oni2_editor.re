@@ -262,6 +262,7 @@ switch (eff) {
           ~getUserSettings,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,
+          ~extensionsFolder=cliOptions.overriddenExtensionsDir,
         ),
       );
 

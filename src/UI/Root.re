@@ -9,6 +9,7 @@ open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
+module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 
 module Colors = Feature_Theme.Colors;
@@ -111,13 +112,19 @@ let make = (~dispatch, ~state: State.t, ()) => {
           c.workbenchActivityBarVisible
         )
         && !zenMode) {
-      <Dock theme sideBar pane />;
+      <Dock
+        font={state.uiFont}
+        theme
+        sideBar
+        pane
+        extensions={state.extensions}
+      />;
     } else {
       React.empty;
     };
 
   let sideBar = () =>
-    if (!zenMode && Feature_SideBar.isOpen(sideBar)) {
+    if (!zenMode) {
       <SideBarView theme state dispatch />;
     } else {
       React.empty;

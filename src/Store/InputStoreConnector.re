@@ -75,6 +75,33 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
+  let pasteEffect = (~rawText, ~isMultiLine as _, ~lines, state) =>
+    if (Array.length(lines) >= 1) {
+      let firstLine = lines[0];
+      let action =
+        switch (Model.FocusManager.current(state)) {
+        | Editor => Actions.Vim(Feature_Vim.Pasted(rawText))
+        | Wildmenu => Actions.Vim(Feature_Vim.Pasted(firstLine))
+        | Quickmenu => Actions.QuickmenuPaste(firstLine)
+        | Extensions =>
+          Actions.Extensions(Feature_Extensions.Pasted(firstLine))
+        | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))
+        | Search => Actions.Search(Feature_Search.Pasted(firstLine))
+
+        // No paste handling in these UIs, currently...
+        | Terminal(_) => Actions.Noop
+        | Sneak
+        | FileExplorer => Noop
+        | Modal => Actions.Noop
+        };
+
+      Isolinear.Effect.createWithDispatch(~name="input.pasteEffect", dispatch => {
+        dispatch(action)
+      });
+    } else {
+      Isolinear.Effect.none;
+    };
+
   let effectToActions = (state, effect) =>
     switch (effect) {
     | Keybindings.Execute(command) => [
@@ -212,6 +239,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
            );
 
       handleTextInput({...state, keyDisplayer}, text);
+
+    | Pasted({rawText, isMultiLine, lines}) => (
+        state,
+        pasteEffect(~rawText, ~isMultiLine, ~lines, state),
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

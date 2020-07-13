@@ -1,0 +1,10 @@
+(library
+    (name Service_Clipboard)
+    (public_name Oni2.service.clipboard)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Revery
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show)))
