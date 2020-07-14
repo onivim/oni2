@@ -257,7 +257,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       Luv.File.(
         Luv.File.Stat.(
           Exthost.Files.FileType.(
-            if (Mode.test([`IFMT], statResult.mode)) {
+            if (Mode.test([`IFREG], statResult.mode)) {
               File;
             } else if (Mode.test([`IFDIR], statResult.mode)) {
               Directory;
