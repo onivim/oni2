@@ -141,7 +141,7 @@ module Make = (Config: Config) => {
 
   let doActualWork =
       (
-        {queue, shouldLower, filter, explodedFilter, _} as pendingWork: PendingWork.t,
+        {queue, filter, _} as pendingWork: PendingWork.t,
         {ranked, _}: CompletedWork.t,
       ) => {
     // Take out the items to process this frame
@@ -156,8 +156,11 @@ module Make = (Config: Config) => {
     let ranked =
       items
       |> Filter.rank(filter, format)
-      |> ListEx.mergeSortedList(compareItems, ranked)
-      |> ListEx.firstk(Constants.maxItemsToFilter);
+      |> ListEx.mergeSortedList(
+           ~len=Constants.maxItemsToFilter,
+           compareItems,
+           ranked,
+         );
 
     (
       Queue.isEmpty(queue),

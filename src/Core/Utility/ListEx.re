@@ -83,30 +83,24 @@ let findIndex = (predicate, list) => {
    Pass a length to early stop.
  */
 let mergeSortedList = (~len=?, compareItems, primary, secondary) => {
+  let len =
+    switch (len) {
+    | Some(l) => l
+    | None => List.length(primary) + List.length(secondary)
+    };
 
-  let len = switch(len) {
-  | Some(l) => l;
-  | None => List.length(primary) + List.length(secondary);
-  };
-
-  let rec merge = (i, primary, secondary) => 
-  switch (primary, secondary) {
-  | _ when i >= len => [];
-  | (_, []) => primary
-  | ([], _) => secondary
-  | ([headPrimary, ...restPrimary], [headSecondary, ...restSecondary]) =>
-    if (compareItems(headPrimary, headSecondary) >= 0) {
-      [
-        headPrimary,
-        ...merge(succ(i), restPrimary, secondary),
-      ];
-    } else {
-      [
-        headSecondary,
-        ...merge(succ(i), primary, restSecondary),
-      ];
-    }
-  };
+  let rec merge = (i, primary, secondary) =>
+    switch (primary, secondary) {
+    | _ when i >= len => []
+    | (_, []) => primary
+    | ([], _) => secondary
+    | ([headPrimary, ...restPrimary], [headSecondary, ...restSecondary]) =>
+      if (compareItems(headPrimary, headSecondary) >= 0) {
+        [headPrimary, ...merge(succ(i), restPrimary, secondary)];
+      } else {
+        [headSecondary, ...merge(succ(i), primary, restSecondary)];
+      }
+    };
 
   merge(0, primary, secondary);
 };
@@ -114,10 +108,16 @@ let mergeSortedList = (~len=?, compareItems, primary, secondary) => {
 let%test_module "mergeSortedList" =
   (module
    {
-     let%test "0" = mergeSortedList(compare, [50, 20, 10], [40, 20, 11]) == [50, 40, 20, 20, 11, 10];
-     let%test "1" = mergeSortedList(compare, [50, 20, 10], []) == [50, 20, 10];
-     let%test "2" = mergeSortedList(compare, [], [40, 20, 11]) == [40, 20, 11];
-     let%test "3" = mergeSortedList(~len=3, compare, [50, 20, 10], [40, 20, 11]) == [50, 40, 20];
+     let%test "0" =
+       mergeSortedList(compare, [50, 20, 10], [40, 20, 11])
+       == [50, 40, 20, 20, 11, 10];
+     let%test "1" =
+       mergeSortedList(compare, [50, 20, 10], []) == [50, 20, 10];
+     let%test "2" =
+       mergeSortedList(compare, [], [40, 20, 11]) == [40, 20, 11];
+     let%test "3" =
+       mergeSortedList(~len=3, compare, [50, 20, 10], [40, 20, 11])
+       == [50, 40, 20];
    });
 
 /**
