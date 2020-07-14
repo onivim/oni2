@@ -237,7 +237,7 @@
     "esy-sdl2": "*",
     "esy-skia": "*",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.52",
+    "libvim": "8.10869.53",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reason-tree-sitter": "^1.0.1001",

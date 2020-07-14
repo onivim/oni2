@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open Vim;
 open TestFramework;
 
