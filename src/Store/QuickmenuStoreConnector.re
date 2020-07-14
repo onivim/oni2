@@ -409,7 +409,7 @@ let subscriptions = (ripgrep, dispatch) => {
       ~onUpdate=(items, ~progress) => {
         let items =
           items
-          |> List.map((Filter.{item, highlight}) =>
+          |> List.map((Filter.{item, highlight, _}) =>
                ({...item, highlight}: Actions.menuItem)
              )
           |> Array.of_list;

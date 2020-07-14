@@ -248,7 +248,7 @@ let make =
           theme
           focused={completions.focused}>
           ...{index => {
-            let Filter.{highlight, item} = items[index];
+            let Filter.{highlight, item, _} = items[index];
             let CompletionItem.{label: text, kind, _} = item;
             <itemView
               isFocused={Some(index) == completions.focused}
