@@ -23,5 +23,6 @@ module Effects: {
 };
 
 module Sub: {
-  let eval: (~toMsg: string => 'msg, string) => Isolinear.Sub.t('msg);
+  let eval:
+    (~toMsg: result(string, string) => 'msg, string) => Isolinear.Sub.t('msg);
 };

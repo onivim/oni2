@@ -40,6 +40,10 @@ module GlobalState = {
     ) =
     ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
+
+  let overriddenMessageHandler:
+    ref(option((Types.msgPriority, string, string) => unit)) =
+    ref(None);
 };
 
 module Internal = {
@@ -288,7 +292,11 @@ let _onIntro = () => {
 };
 
 let _onMessage = (priority, title, message) => {
-  queue(() => Event.dispatch3(priority, title, message, Listeners.message));
+  switch (GlobalState.overriddenMessageHandler^) {
+  | None =>
+    queue(() => Event.dispatch3(priority, title, message, Listeners.message))
+  | Some(handler) => handler(priority, title, message)
+  };
 };
 
 let _onQuit = (q, f) => {
@@ -578,9 +586,27 @@ let command = v => {
   );
 };
 
-let eval = v => {
-  Native.vimEval(v) |> Option.to_result(~none="Unknown");
-};
+let eval = v =>
+  // Error messages come through the message handler,
+  // so we'll temporarily override it during the course of the eval
+  if (v == "") {
+    Ok("");
+  } else {
+    let lastMessage = ref(None);
+
+    GlobalState.overriddenMessageHandler :=
+      Some((_priority, _title, msg) => {lastMessage := Some(msg)});
+
+    let maybeEval = Native.vimEval(v);
+
+    GlobalState.overriddenMessageHandler := None;
+
+    switch (maybeEval, lastMessage^) {
+    | (Some(eval), _) => Ok(eval)
+    | (None, Some(msg)) => Error(msg)
+    | (None, None) => Error("Unknown error evaluating " ++ v)
+    };
+  };
 
 let onDirectoryChanged = f => {
   Event.add(f, Listeners.directoryChanged);

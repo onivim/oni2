@@ -93,12 +93,11 @@ module Sub = {
     Isolinear.Sub.Make({
       type state = unit;
       type params = string;
-      type msg = string;
+      type msg = result(string, string);
       let name = "Vim.Sub.Eval";
       let id = params => params;
       let init = (~params, ~dispatch) => {
-        // TODO: Actually eval
-        dispatch(params);
+        Vim.eval(params) |> dispatch;
       };
       let update = (~params as _, ~state as _, ~dispatch as _) => {
         ();

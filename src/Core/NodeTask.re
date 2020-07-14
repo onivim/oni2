@@ -1,7 +1,6 @@
 /*
  * NodeTask.re
  */
-
 open Utility;
 exception TaskFailed;
 module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));

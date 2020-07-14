@@ -7,7 +7,7 @@ type mode =
   | WaitingForRegister
   | ExpressionRegister({
       inputText: Feature_InputText.model,
-      evaluation: option(string),
+      evaluation: result(string, string),
     });
 
 type model = {mode};
@@ -30,6 +30,7 @@ type msg =
   | Command(command)
   | KeyPressed(string)
   | ExpressionEvaluated(string)
+  | ExpressionError(string)
   | InputText(Feature_InputText.msg);
 
 module Msg = {
@@ -62,7 +63,7 @@ let handleTextInput = (model, key) =>
               mode:
                 ExpressionRegister({
                   inputText: initialText,
-                  evaluation: None,
+                  evaluation: Ok(""),
                 }),
             },
             Nothing,
@@ -83,13 +84,24 @@ let handleTextInput = (model, key) =>
         (initial, Nothing);
       }
     | ExpressionRegister(expression) =>
-      let inputText' =
-        Feature_InputText.handleInput(~key, expression.inputText);
-
-      (
-        {mode: ExpressionRegister({...expression, inputText: inputText'})},
-        Nothing,
-      );
+      if (key == "<ESC>") {
+        (initial, Nothing);
+      } else if (key == "<CR>") {
+        let eff =
+          expression.evaluation
+          |> Result.map(eval => {
+               EmitRegister({raw: eval, lines: [|eval|]})
+             })
+          |> Result.value(~default=Nothing);
+        (initial, eff);
+      } else {
+        let inputText' =
+          Feature_InputText.handleInput(~key, expression.inputText);
+        (
+          {mode: ExpressionRegister({...expression, inputText: inputText'})},
+          Nothing,
+        );
+      }
     };
   };
 
@@ -113,13 +125,22 @@ let update = (msg, model) => {
     let mode =
       switch (model.mode) {
       | ExpressionRegister({inputText, _}) =>
-        ExpressionRegister({inputText, evaluation: Some(result)})
+        ExpressionRegister({inputText, evaluation: Ok(result)})
       | NotActive => NotActive
       | WaitingForRegister => WaitingForRegister
       };
     ({mode: mode}, Nothing);
   | RegisterAvailable({raw, lines}) => (model, EmitRegister({raw, lines}))
   | RegisterNotAvailable => (model, Nothing)
+  | ExpressionError(err) =>
+    let mode =
+      switch (model.mode) {
+      | ExpressionRegister({inputText, _}) =>
+        ExpressionRegister({inputText, evaluation: Error(err)})
+      | NotActive => NotActive
+      | WaitingForRegister => WaitingForRegister
+      };
+    ({mode: mode}, Nothing);
   };
 };
 
@@ -193,11 +214,20 @@ module View = {
             />
           </View>
           <View style=Style.[padding(5), flexDirection(`RowReverse)]>
-            <Text
-              text={Option.value(~default="", evaluation)}
-              fontFamily={font.family}
-              fontSize=12.
-            />
+            {let (text, textColor) =
+               switch (evaluation) {
+               | Ok(v) => (v, Colors.Menu.foreground.from(theme))
+               | Error(msg) => (
+                   msg,
+                   Colors.EditorError.foreground.from(theme),
+                 )
+               };
+             <Text
+               style=Style.[color(textColor)]
+               text
+               fontFamily={font.family}
+               fontSize=12.
+             />}
           </View>
         </View>
       </View>
@@ -210,7 +240,11 @@ let sub = registers => {
   | WaitingForRegister
   | NotActive => Isolinear.Sub.none
   | ExpressionRegister({inputText, _}) =>
-    let toMsg = str => ExpressionEvaluated(str);
+    let toMsg = (
+      fun
+      | Ok(str) => ExpressionEvaluated(str)
+      | Error(err) => ExpressionError(err)
+    );
     Service_Vim.Sub.eval(~toMsg, inputText |> Feature_InputText.value);
   };
 };
