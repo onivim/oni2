@@ -104,7 +104,7 @@ let update = (msg, model) => {
           initial,
           EmitRegister({raw: result, lines: [|result|]}),
         )
-      | Error(msg) => (initial, Nothing)
+      | Error(_msg) => (initial, Nothing)
       }
 
     | WaitingForRegister => (initial, Nothing)
