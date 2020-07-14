@@ -182,6 +182,33 @@ let update =
       };
     (state, Effect.none);
 
+  | Registers(msg) =>
+    let (model, outmsg) = Feature_Registers.update(msg, state.registers);
+
+    let state = {...state, registers: model};
+    let eff =
+      switch (outmsg) {
+      | Feature_Registers.EmitRegister({raw, lines, _}) =>
+        Isolinear.Effect.createWithDispatch(~name="register.paste", dispatch => {
+          dispatch(
+            Pasted({
+              rawText: raw,
+              isMultiLine: String.contains(raw, '\n'),
+              lines,
+            }),
+          )
+        })
+      | Feature_Registers.FailedToGetRegister(c) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          Printf.sprintf("No value at register %c", c),
+        )
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Registers(msg))
+      | Nothing => Isolinear.Effect.none
+      };
+    (state, eff);
+
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};

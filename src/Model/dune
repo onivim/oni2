@@ -37,6 +37,7 @@
         Oni2.feature.language_support
         Oni2.feature.editor
         Oni2.feature.pane
+        Oni2.feature.registers
         Oni2.feature.scm
         Oni2.feature.sneak
         Oni2.feature.statusbar
