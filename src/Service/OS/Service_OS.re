@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core.Utility;
 module Log = (val Log.withNamespace("Oni2.Service.OS"));
 
 module Api = {
@@ -27,13 +28,11 @@ module Api = {
     };
   };
 
-  let stat = path => {
-    Luv.File.stat(path) |> Oni_Core.Utility.LuvEx.wrapPromise;
-  };
+  let stat = Luv.File.stat |> wrap;
 
-  let readdir = _path => {
-    Lwt.fail(NotImplemented);
-  };
+  //  let readdir = _path => {
+  //    Lwt.fail(NotImplemented);
+  //  };
 
   let readFile = _path => {
     Lwt.fail(NotImplemented);
@@ -54,7 +53,7 @@ module Api = {
   let mkdir = _path => {
     Lwt.fail(NotImplemented);
   };
-  
+
   let bind = (fst, snd) => Lwt.bind(snd, fst);
 
   let rmdir = (~recursive=true, path) => {

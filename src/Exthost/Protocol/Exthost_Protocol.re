@@ -151,7 +151,7 @@ module Message = {
         })
       | ReplyOKBuffer({
           requestId: int,
-          args: list(mixedArg),
+          bytes: Bytes.t,
         })
       | ReplyError({
           requestId: int,

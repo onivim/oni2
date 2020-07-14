@@ -1,16 +1,14 @@
 exception LuvException(string);
 
-let wrapPromise = f => {
-  let (promise: Lwt.t('a), resolver: Lwt.u('a)) = Lwt.task();
+let wrapPromise = (f, arg) => {
+  let (promise, resolver) = Lwt.task();
 
-  let handler =
-    fun
+  f(arg, result => {
+    switch (result) {
     | Ok(v) => Lwt.wakeup(resolver, v)
-    | Error(err) =>
-      Lwt.wakeup_exn(resolver, LuvException(Luv.Error.strerror(err)));
-
-  f(handler);
-
+    | Error(err) => Lwt.wakeup_exn(resolver, LuvException(err))
+    }
+  });
   promise;
 };
 
