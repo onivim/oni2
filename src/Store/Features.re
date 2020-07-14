@@ -198,6 +198,11 @@ let update =
             }),
           )
         })
+      | Feature_Registers.FailedToGetRegister(c) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          Printf.sprintf("No value at register %c", c),
+        )
       | Effect(eff) =>
         eff |> Isolinear.Effect.map(msg => Actions.Registers(msg))
       | Nothing => Isolinear.Effect.none

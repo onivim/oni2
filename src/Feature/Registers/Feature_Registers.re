@@ -18,11 +18,13 @@ let isActive = ({mode}) => mode != NotActive;
 
 [@deriving show]
 type command =
-  | InsertRegister;
+  | InsertRegister
+  | Cancel
+  | Commit;
 
 [@deriving show]
 type msg =
-  | RegisterNotAvailable
+  | RegisterNotAvailable(char)
   | RegisterAvailable({
       raw: string,
       lines: array(string),
@@ -40,74 +42,74 @@ module Msg = {
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | FailedToGetRegister(char)
   | EmitRegister({
       raw: string,
       lines: array(string),
     });
 
 let handleTextInput = (model, key) =>
-  if (key == "<ESC>") {
-    (initial, Nothing);
-  } else {
-    switch (model.mode) {
-    | NotActive =>
-      // TODO: This shouldn't happen
-      (model, Nothing)
-    | WaitingForRegister =>
-      if (String.length(key) == 1) {
-        let char = key.[0];
+  switch (model.mode) {
+  | NotActive =>
+    // TODO: This shouldn't happen
+    (model, Nothing)
+  | WaitingForRegister =>
+    if (String.length(key) == 1) {
+      let char = key.[0];
 
-        if (char == '=') {
-          (
-            {
-              mode:
-                ExpressionRegister({
-                  inputText: initialText,
-                  evaluation: Ok(""),
-                }),
-            },
-            Nothing,
-          );
-        } else {
-          let toMsg = (
-            fun
-            | None => RegisterNotAvailable
-            | Some(lines) => {
-                let raw = lines |> Array.to_list |> String.concat("\n");
-                RegisterAvailable({raw, lines});
-              }
-          );
-          let eff = Service_Vim.Effects.getRegisterValue(~toMsg, char);
-          ({mode: NotActive}, Effect(eff));
-        };
-      } else {
-        (initial, Nothing);
-      }
-    | ExpressionRegister(expression) =>
-      if (key == "<ESC>") {
-        (initial, Nothing);
-      } else if (key == "<CR>") {
-        let eff =
-          expression.evaluation
-          |> Result.map(eval => {
-               EmitRegister({raw: eval, lines: [|eval|]})
-             })
-          |> Result.value(~default=Nothing);
-        (initial, eff);
-      } else {
-        let inputText' =
-          Feature_InputText.handleInput(~key, expression.inputText);
+      if (char == '=') {
         (
-          {mode: ExpressionRegister({...expression, inputText: inputText'})},
+          {
+            mode:
+              ExpressionRegister({
+                inputText: initialText,
+                evaluation: Ok(""),
+              }),
+          },
           Nothing,
         );
-      }
-    };
+      } else {
+        let toMsg = (
+          fun
+          | None => RegisterNotAvailable(char)
+          | Some(lines) => {
+              let raw = lines |> Array.to_list |> String.concat("\n");
+              RegisterAvailable({raw, lines});
+            }
+        );
+        let eff = Service_Vim.Effects.getRegisterValue(~toMsg, char);
+        ({mode: NotActive}, Effect(eff));
+      };
+    } else {
+      (initial, Nothing);
+    }
+  | ExpressionRegister(expression) =>
+    let inputText' =
+      Feature_InputText.handleInput(~key, expression.inputText);
+    (
+      {mode: ExpressionRegister({...expression, inputText: inputText'})},
+      Nothing,
+    );
   };
 
 let update = (msg, model) => {
   switch (msg) {
   | Command(InsertRegister) => ({mode: WaitingForRegister}, Nothing)
+  | Command(Cancel) => (initial, Nothing)
+  | Command(Commit) =>
+    switch (model.mode) {
+    | ExpressionRegister({evaluation, _}) =>
+      switch (evaluation) {
+      | Ok(result) => (
+          initial,
+          EmitRegister({raw: result, lines: [|result|]}),
+        )
+      | Error(msg) => (initial, Nothing)
+      }
+
+    | WaitingForRegister => (initial, Nothing)
+    | NotActive => (initial, Nothing)
+    }
 
   | KeyPressed(key) => handleTextInput(model, key)
   | InputText(msg) =>
@@ -131,7 +133,7 @@ let update = (msg, model) => {
       };
     ({mode: mode}, Nothing);
   | RegisterAvailable({raw, lines}) => (model, EmitRegister({raw, lines}))
-  | RegisterNotAvailable => (model, Nothing)
+  | RegisterNotAvailable(c) => (model, FailedToGetRegister(c))
   | ExpressionError(err) =>
     let mode =
       switch (model.mode) {
@@ -151,13 +153,49 @@ module Commands = {
     define(
       ~category="Vim",
       ~title="Insert register",
-      "vim.insertRegister",
+      "vim.register.insert",
       Command(InsertRegister),
     );
+
+  let cancel = define("vim.register.cancel", Command(Cancel));
+
+  let commit = define("vim.register.commit", Command(Commit));
+};
+
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let registerEvaluationFocus = bool("registerEvaluationFocus", isActive);
+};
+
+module Keybindings = {
+  open Oni_Input.Keybindings;
+
+  let condition = "registerEvaluationFocus" |> WhenExpr.parse;
+
+  let cancel = {key: "<ESC>", command: Commands.cancel.id, condition};
+
+  let commit = {key: "<CR>", command: Commands.commit.id, condition};
+
+  let insert = {
+    key: "<C-R>",
+    command: Commands.insert.id,
+    condition:
+      "insertMode || commandLineMode || inQuickOpen || terminalFocus"
+      |> WhenExpr.parse,
+  };
 };
 
 module Contributions = {
-  let commands = [Commands.insert];
+  let commands = [Commands.insert, Commands.cancel, Commands.commit];
+
+  let contextKeys = [ContextKeys.registerEvaluationFocus];
+
+  let keybindings = [
+    Keybindings.cancel,
+    Keybindings.commit,
+    Keybindings.insert,
+  ];
 };
 
 module Styles = {
