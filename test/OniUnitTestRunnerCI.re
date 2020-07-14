@@ -1,4 +1,3 @@
-// Is this enough to repro the OCaml 4.10 ASAN failure?
 Oni_Core_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
