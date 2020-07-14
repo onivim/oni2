@@ -1,4 +1,4 @@
-exception LuvException(string);
+exception LuvException(Luv.Error.t);
 
 let wrapPromise = (f, arg) => {
   let (promise, resolver) = Lwt.task();

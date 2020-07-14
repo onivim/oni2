@@ -15,7 +15,7 @@ module Message: {
 
   // Messages INCOMING from the node extension host -> reason
   module Incoming: {
-    [@deriving (show, yojson({strict: false}))]
+    [@deriving show]
     type t =
       | Connected
       | Initialized
@@ -46,7 +46,7 @@ module Message: {
 
   // Messages OUTGOING from reason -> node extension host
   module Outgoing: {
-    [@deriving (show, yojson({strict: false}))]
+    [@deriving show]
     type t =
       | Initialize({
           requestId: int,

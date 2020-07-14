@@ -2,15 +2,20 @@ open Oni_Core;
 open Oni_Core.Utility;
 module Log = (val Log.withNamespace("Oni2.Service.OS"));
 
+let wrap = LuvEx.wrapPromise;
+
+let bind = (fst, snd) => Lwt.bind(snd, fst);
+
+module Internal = {
+  let opendir = wrap(Luv.File.opendir);
+  let closedir = wrap(Luv.File.closedir);
+  let readdir = wrap(Luv.File.readdir);
+};
+
 module Api = {
   exception LuvException(Luv.Error.t);
   exception NotImplemented;
 
-  let wrap = LuvEx.wrapPromise;
-
-  let opendir = wrap(Luv.File.opendir);
-  let closedir = wrap(Luv.File.closedir);
-  let readdir = wrap(Luv.File.readdir);
   let unlink = {
     let wrapped = wrap(Luv.File.unlink);
 
@@ -28,11 +33,18 @@ module Api = {
     };
   };
 
-  let stat = Luv.File.stat |> wrap;
+  let stat = str => str |> wrap(Luv.File.stat);
 
-  //  let readdir = _path => {
-  //    Lwt.fail(NotImplemented);
-  //  };
+  let readDir = path => {
+    path
+    |> Internal.opendir
+    |> bind(dir => {
+         Internal.readdir(dir) |> Lwt.map(items => (dir, items))
+       })
+    |> bind(((dir, results: array(Luv.File.Dirent.t))) => {
+         Internal.closedir(dir) |> Lwt.map(() => results |> Array.to_list)
+       });
+  };
 
   let readFile = _path => {
     Lwt.fail(NotImplemented);
@@ -54,16 +66,14 @@ module Api = {
     Lwt.fail(NotImplemented);
   };
 
-  let bind = (fst, snd) => Lwt.bind(snd, fst);
-
   let rmdir = (~recursive=true, path) => {
     Log.tracef(m => m("rmdir called for path: %s", path));
     let rec loop = candidate => {
       Log.tracef(m => m("rmdir - recursing to: %s", path));
       candidate
-      |> opendir
+      |> Internal.opendir
       |> bind(dir => {
-           Lwt.bind(readdir(dir), dirents => {
+           Lwt.bind(Internal.readdir(dir), dirents => {
              dirents
              |> Array.to_list
              |> List.map((dirent: Luv.File.Dirent.t) => {
@@ -80,7 +90,7 @@ module Api = {
                   };
                 })
              |> Lwt.join
-             |> bind(_ => closedir(dir))
+             |> bind(_ => Internal.closedir(dir))
              |> bind(_ => rmdirNonRecursive(candidate))
            })
          });
@@ -91,6 +101,8 @@ module Api = {
       rmdirNonRecursive(path);
     };
   };
+
+  let delete = (~recursive, path) => rmdir(~recursive, path);
 };
 
 module Effect = {

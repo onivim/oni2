@@ -101,7 +101,7 @@ module Message = {
     | Message(string);
 
   module Incoming = {
-    [@deriving (show, yojson({strict: false}))]
+    [@deriving show]
     type t =
       | Connected
       | Initialized
@@ -131,7 +131,7 @@ module Message = {
   };
 
   module Outgoing = {
-    [@deriving (show, yojson({strict: false}))]
+    [@deriving show]
     type t =
       | Initialize({
           requestId: int,

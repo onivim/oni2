@@ -299,7 +299,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         uri =>
           uri
           |> Uri.toFileSystemPath
-          |> Service_OS.Api.readdir
+          |> Service_OS.Api.readDir
           |> Lwt.map(mapLuvDirents),
       ~readFile=uri => uri |> Uri.toFileSystemPath |> Service_OS.Api.readFile,
       ~writeFile=
@@ -415,25 +415,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         Lwt.return(Reply.okEmpty);
 
       | LanguageFeatures(
-          RegisterDocumentSymbolProvider({handle, selector, label}),
-        ) =>
-        withClient(
-          onRegisterDocumentSymbolProvider(handle, selector, label),
-        );
-        Lwt.return(Reply.okEmpty);
-      | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
-        withClient(onRegisterDefinitionProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
-          RegisterDocumentHighlightProvider({handle, selector}),
-        ) =>
-        withClient(onRegisterDocumentHighlightProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
-      | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
-        withClient(onRegisterReferencesProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
-      | LanguageFeatures(
           RegisterRangeFormattingSupport({handle, selector, displayName, _}),
         ) =>
         dispatch(
@@ -464,16 +445,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           ),
         );
         Lwt.return(Reply.okEmpty);
-      | LanguageFeatures(
-          RegisterSuggestSupport({
-            handle,
-            selector,
-            _,
-            // TODO: Handle additional configuration from suggest registration!
-          }),
-        ) =>
-        withClient(onRegisterSuggestProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
       | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
         dispatch(
           Actions.Hover(
@@ -493,50 +464,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
               metadata,
             }),
           ),
-        );
-        Lwt.return(Reply.okEmpty);
-
-      | Diagnostics(Clear({owner})) =>
-        dispatch(Actions.DiagnosticsClear(owner));
-        Lwt.return(Reply.okEmpty);
-      | Diagnostics(ChangeMany({owner, entries})) =>
-        onDiagnosticsChangeMany(owner, entries);
-        Lwt.return(Reply.okEmpty);
-
-      | DocumentContentProvider(
-          RegisterTextContentProvider({handle, scheme}),
-        ) =>
-        dispatch(NewTextContentProvider({handle, scheme}));
-        Lwt.return(Reply.okEmpty);
-
-      | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
-        dispatch(LostTextContentProvider({handle: handle}));
-        Lwt.return(Reply.okEmpty);
-
-      | Decorations(RegisterDecorationProvider({handle, label})) =>
-        dispatch(NewDecorationProvider({handle, label}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(UnregisterDecorationProvider({handle})) =>
-        dispatch(LostDecorationProvider({handle: handle}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(DecorationsDidChange({handle, uris})) =>
-        dispatch(DecorationsChanged({handle, uris}));
-        Lwt.return(Reply.okEmpty);
-
-      | ExtensionService(
-          ExtensionActivationError({extensionId, errorMessage}),
-        ) =>
-        Log.errorf(m =>
-          m(
-            "Extension '%s' failed to activate: %s",
-            extensionId,
-            errorMessage,
-          )
-        );
-        Lwt.return(Reply.okEmpty);
-      | ExtensionService(DidActivateExtension({extensionId, _})) =>
-        dispatch(
-          Actions.Extensions(Feature_Extensions.Activated(extensionId)),
         );
         Lwt.return(Reply.okEmpty);
 
