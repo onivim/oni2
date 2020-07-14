@@ -1,14 +1,16 @@
 module Api: {
   let rmdir: (~recursive: bool=?, string) => Lwt.t(unit);
   let stat: string => Lwt.t(Luv.File.Stat.t);
-  let readDir: string => Lwt.t(list(Luv.File.Dirent.t));
+  let readdir: string => Lwt.t(list(Luv.File.Dirent.t));
   let readFile: string => Lwt.t(Bytes.t);
-  let writeFile: (string, Bytes.t) => Lwt.t(unit);
+  let writeFile: (~contents: Bytes.t, string) => Lwt.t(unit);
   let rename:
     (~source: string, ~target: string, ~overwrite: bool) => Lwt.t(unit);
   let copy:
     (~source: string, ~target: string, ~overwrite: bool) => Lwt.t(unit);
   let mkdir: string => Lwt.t(unit);
+
+  let mktempdir: (~prefix: string=?, unit) => Lwt.t(string);
   let delete: (~recursive: bool, string) => Lwt.t(unit);
 };
 

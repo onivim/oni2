@@ -299,12 +299,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         uri =>
           uri
           |> Uri.toFileSystemPath
-          |> Service_OS.Api.readDir
+          |> Service_OS.Api.readdir
           |> Lwt.map(mapLuvDirents),
       ~readFile=uri => uri |> Uri.toFileSystemPath |> Service_OS.Api.readFile,
       ~writeFile=
         (uri, bytes) => {
-          Service_OS.Api.writeFile(Uri.toFileSystemPath(uri), bytes)
+          Service_OS.Api.writeFile(~contents=bytes, Uri.toFileSystemPath(uri))
         },
       ~rename=
         (~source, ~target, opts) => {

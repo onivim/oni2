@@ -1,5 +1,5 @@
 {
-  "checksum": "f312942f293dce339d7c73890620d798",
+  "checksum": "fe52a769a5497d450755441a7326ec7d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1062,8 +1062,7 @@
         "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/markup@opam:0.8.2@87975241", "@opam/lwt@opam:4.5.0@677655b4",
-        "@opam/luv@github:aantron/luv:luv.opam#dfab9df@d41d8cd9",
-        "@opam/logs@opam:0.7.0@1d03143e",
+        "@opam/luv@link:../luv", "@opam/logs@opam:0.7.0@1d03143e",
         "@opam/fs@github:bryphe/reason-native:fs.opam#fd0225c@d41d8cd9",
         "@opam/fp@github:bryphe/reason-native:fp.opam#fd0225c@d41d8cd9",
         "@opam/fmt@opam:0.8.8@01c3a23c",
@@ -2903,14 +2902,11 @@
         "@opam/dune@opam:2.5.0@aef1678b"
       ]
     },
-    "@opam/luv@github:aantron/luv:luv.opam#dfab9df@d41d8cd9": {
-      "id": "@opam/luv@github:aantron/luv:luv.opam#dfab9df@d41d8cd9",
+    "@opam/luv@link:../luv": {
+      "id": "@opam/luv@link:../luv",
       "name": "@opam/luv",
-      "version": "github:aantron/luv:luv.opam#dfab9df",
-      "source": {
-        "type": "install",
-        "source": [ "github:aantron/luv:luv.opam#dfab9df" ]
-      },
+      "version": "link:../luv",
+      "source": { "type": "link", "path": "../luv" },
       "overrides": [],
       "dependencies": [
         "ocaml@4.9.1000@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
