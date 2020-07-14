@@ -17,11 +17,14 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
 module Search = Search;
 module Types = Types;
-module Undo = Undo;
+module Testing = {
+  module Undo = Undo;
+};
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
@@ -37,6 +40,10 @@ module GlobalState = {
     ) =
     ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
+
+  let overriddenMessageHandler:
+    ref(option((Types.msgPriority, string, string) => unit)) =
+    ref(None);
 };
 
 module Internal = {
@@ -87,6 +94,26 @@ module Internal = {
     let lastWhitespaceIndex = loop(0);
 
     String.sub(str, 0, lastWhitespaceIndex);
+  };
+
+  let isEmpty = (~max: int, str) => {
+    let len = String.length(str);
+
+    let rec loop = idx =>
+      if (idx >= max) {
+        false;
+      } else if (idx >= len) {
+        true;
+      } else {
+        let c = str.[idx];
+        if (c == ' ' || c == '\t') {
+          loop(idx + 1);
+        } else {
+          false;
+        };
+      };
+
+    loop(0);
   };
 
   let getPrecedingWhitespaceCount = (~max: int, str) => {
@@ -265,7 +292,11 @@ let _onIntro = () => {
 };
 
 let _onMessage = (priority, title, message) => {
-  queue(() => Event.dispatch3(priority, title, message, Listeners.message));
+  switch (GlobalState.overriddenMessageHandler^) {
+  | None =>
+    queue(() => Event.dispatch3(priority, title, message, Listeners.message))
+  | Some(handler) => handler(priority, title, message)
+  };
 };
 
 let _onQuit = (q, f) => {
@@ -375,12 +406,14 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
   let afterWhitespace =
     Internal.getPrecedingWhitespaceCount(~max=100, sourceLine);
 
+  let isPreviousLineEmpty = Internal.isEmpty(~max=100, beforeLine);
+
   // The [indentOffset] is computed to offset the difference between the previous line and source line,
   // to normalize the indentation provided by the callback function.
   let indentOffset =
-    if (aboveWhitespace > afterWhitespace) {
+    if (!isPreviousLineEmpty && aboveWhitespace > afterWhitespace) {
       1;
-    } else if (aboveWhitespace < afterWhitespace) {
+    } else if (!isPreviousLineEmpty && aboveWhitespace < afterWhitespace) {
       (-1);
     } else {
       0;
@@ -395,6 +428,10 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
+};
+
+let _onTabPage = (msg: TabPage.effect) => {
+  queue(() => Event.dispatch(Effect.TabPage(msg), Listeners.effect));
 };
 
 let _onTerminal = terminalRequest => {
@@ -413,6 +450,7 @@ let init = () => {
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
+  Callback.register("lv_onTabPage", _onTabPage);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);
   Callback.register("lv_onQuit", _onQuit);
@@ -534,6 +572,10 @@ let input = (~context=Context.current(), v: string) => {
   );
 };
 
+module Registers = {
+  let get = (~register) => Native.vimRegisterGet(int_of_char(register));
+};
+
 let command = v => {
   runWith(
     ~context=Context.current(),
@@ -543,6 +585,28 @@ let command = v => {
     },
   );
 };
+
+let eval = v =>
+  // Error messages come through the message handler,
+  // so we'll temporarily override it during the course of the eval
+  if (v == "") {
+    Ok("");
+  } else {
+    let lastMessage = ref(None);
+
+    GlobalState.overriddenMessageHandler :=
+      Some((_priority, _title, msg) => {lastMessage := Some(msg)});
+
+    let maybeEval = Native.vimEval(v);
+
+    GlobalState.overriddenMessageHandler := None;
+
+    switch (maybeEval, lastMessage^) {
+    | (Some(eval), _) => Ok(eval)
+    | (None, Some(msg)) => Error(msg)
+    | (None, None) => Error("Unknown error evaluating " ++ v)
+    };
+  };
 
 let onDirectoryChanged = f => {
   Event.add(f, Listeners.directoryChanged);

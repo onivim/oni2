@@ -86,6 +86,13 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(len).toBe(3);
     });
   });
+  describe("getByteFromIndex", ({test, _}) => {
+    test("clamps to byte 0", ({expect, _}) => {
+      let bufferLine = makeLine("abc");
+      let byte = bufferLine |> BufferLine.getByteFromIndex(~index=-1);
+      expect.int(byte).toBe(0);
+    })
+  });
   describe("getPositionAndWidth", ({test, _}) => {
     test("UTF-8: Hiragana あ", ({expect, _}) => {
       let str = "あa";

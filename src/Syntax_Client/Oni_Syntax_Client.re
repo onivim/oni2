@@ -4,12 +4,11 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Transport = Exthost.Transport;
 module NamedPipe = Exthost.NamedPipe;
 module Packet = Exthost.Transport.Packet;
-
-module Ext = Oni_Extensions;
 
 open Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
@@ -69,14 +68,7 @@ let startProcess = (~executablePath, ~namedPipe, ~parentPid, ~onClose) => {
     onClose(exitCode);
   };
 
-  Luv.Process.spawn(
-    ~on_exit,
-    ~windows_hide=true,
-    ~windows_hide_console=true,
-    ~windows_hide_gui=true,
-    executablePath,
-    [executablePath, arg],
-  )
+  LuvEx.Process.spawn(~on_exit, executablePath, [executablePath, arg])
   |> Result.map_error(Luv.Error.strerror);
 };
 

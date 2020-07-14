@@ -112,18 +112,31 @@ let trimRight = str => {
   aux(length - 1);
 };
 
-let indentation = str => {
-  let rec loop = i =>
-    if (i >= String.length(str)) {
-      i;
-    } else if (isSpace(str.[i])) {
-      loop(i + 1);
+let findNonWhitespace = str => {
+  let len = String.length(str);
+  let rec loop = idx =>
+    if (idx >= len) {
+      None;
     } else {
-      i;
+      let char = str.[idx];
+      if (char != '\t' && char != ' ') {
+        Some(idx);
+      } else {
+        loop(idx + 1);
+      };
     };
-
   loop(0);
 };
+
+let isEmpty = str =>
+  if (String.equal(str, "")) {
+    true;
+  } else {
+    switch (findNonWhitespace(str)) {
+    | None => true
+    | Some(_) => false
+    };
+  };
 
 let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
   let originalLength = String.length(text);
@@ -256,3 +269,13 @@ let removeTrailingNewLine = s => {
     s;
   };
 };
+
+let splitLines: string => (bool, array(string)) =
+  text => {
+    let isMultipleLines = s => String.contains(s, '\n');
+
+    let out =
+      text |> removeTrailingNewLine |> removeWindowsNewLines |> splitNewLines;
+
+    (isMultipleLines(text), out);
+  };

@@ -9,10 +9,8 @@
 
 module Core = Oni_Core;
 
-module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
-open Oni_Extensions;
 open Exthost.Extension;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
@@ -37,7 +35,13 @@ let discoverExtensions =
           };
 
         let userExtensions =
-          Utility.getUserExtensions(~overriddenExtensionsDir);
+          Service_Extensions.Management.get(
+            ~extensionsFolder=?overriddenExtensionsDir,
+            (),
+          )
+          // TODO: De-syncify!
+          |> Core.Utility.LwtEx.sync
+          |> Result.value(~default=[]);
 
         Log.infof(m =>
           m("Discovered %n user extensions.", List.length(userExtensions))
@@ -110,7 +114,7 @@ let start =
       ~shouldLoadExtensions,
       ~overriddenExtensionsDir,
     );
-  let languageInfo = LanguageInfo.ofExtensions(extensions);
+  let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
   let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
 
@@ -302,6 +306,20 @@ let start =
         Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
       );
 
+    let editorGlobalSub =
+      Feature_Editor.Sub.global(~config)
+      |> Isolinear.Sub.map(msg =>
+           Model.Actions.Editor({scope: Model.EditorScope.All, msg})
+         );
+
+    let extensionsSub =
+      Feature_Extensions.sub(~setup, state.extensions)
+      |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
+
+    let registersSub =
+      Feature_Registers.sub(state.registers)
+      |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -310,6 +328,9 @@ let start =
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
+      editorGlobalSub,
+      extensionsSub,
+      registersSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -396,6 +417,18 @@ let start =
     ~dispatch,
     Feature_Formatting.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
+  );
+
+  registerCommands(
+    ~dispatch,
+    Feature_Clipboard.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
+  );
+
+  registerCommands(
+    ~dispatch,
+    Feature_Registers.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
   );
 
   // TODO: These should all be replaced with isolinear subscriptions.

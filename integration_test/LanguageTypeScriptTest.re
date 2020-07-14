@@ -49,7 +49,7 @@ runTestWithInput(
         (state: State.t) =>
         List.exists(
           id => id == "vscode.typescript-language-features",
-          state.extensions.activatedIds,
+          state.extensions |> Feature_Extensions.activatedIds,
         )
       );
     },

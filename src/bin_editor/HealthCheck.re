@@ -81,13 +81,25 @@ let mainChecks = [
   (
     "Verify node dependencies",
     (setup: Setup.t) => {
-      Oni_Extensions.NodeTask.run(~setup, "check-health.js")
+      NodeTask.run(~setup, "check-health.js")
       |> LwtEx.sync
       |> (
         fun
         | Ok(_) => true
         | Error(_) => false
       );
+    },
+  ),
+  (
+    "Verify simple request",
+    (setup: Setup.t) => {
+      Service_Net.Request.json(
+        ~setup,
+        ~decoder=Json.Decode.value,
+        "https://httpbin.org/json",
+      )
+      |> LwtEx.sync
+      |> Result.is_ok;
     },
   ),
   (
@@ -179,7 +191,7 @@ let mainChecks = [
           ~onClose=_ => {closed := true},
           ~onHighlights=(~bufferId as _, ~tokens as _) => (),
           ~onHealthCheckResult=res => {healthCheckResult := res},
-          Oni_Extensions.LanguageInfo.initial,
+          Exthost.LanguageInfo.initial,
           setup,
         )
         |> Result.get_ok;

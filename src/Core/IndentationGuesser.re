@@ -8,21 +8,6 @@ module Constants = {
   let minSpaces = 2;
 };
 
-let getLeadingWhitespace = (s: string) => {
-  let rec loop = (i, spaces, tabs) =>
-    if (i >= String.length(s)) {
-      (spaces, tabs, false);
-    } else {
-      switch (s.[i]) {
-      | ' ' => loop(i + 1, spaces + 1, tabs)
-      | '\t' => loop(i + 1, spaces, tabs + 1)
-      | _ => (spaces, tabs, true)
-      };
-    };
-
-  loop(0, 0, 0);
-};
-
 type t = {
   mode: IndentationSettings.mode,
   size: int,
@@ -62,7 +47,8 @@ let guessIndentation =
     let line = getLine(i);
     let prevLine = i == 0 ? "" : getLine(i - 1);
 
-    let (spaceCount, tabCount, foundChar) = getLeadingWhitespace(line);
+    let (spaceCount, tabCount, foundChar) =
+      Indentation.getLeadingWhitespace(line);
 
     /* Only consider lines with non-whitespace */
     if (foundChar) {
@@ -75,7 +61,7 @@ let guessIndentation =
       };
 
       let (prevSpaceCount, _, prevFoundChar) =
-        getLeadingWhitespace(prevLine);
+        Indentation.getLeadingWhitespace(prevLine);
       if (prevFoundChar) {
         let diff = abs(prevSpaceCount - spaceCount);
         if (diff >= Constants.minSpaces) {

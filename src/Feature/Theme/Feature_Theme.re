@@ -13,6 +13,7 @@ type model = {
 let defaults =
   [
     Colors.ActivityBar.defaults,
+    Colors.ActivityBarBadge.defaults,
     Colors.Dropdown.defaults,
     Colors.Editor.defaults,
     Colors.EditorError.defaults,
@@ -45,6 +46,7 @@ let defaults =
     Colors.ScrollbarSlider.defaults,
     Colors.Selection.defaults,
     Colors.SideBar.defaults,
+    Colors.SideBarSectionHeader.defaults,
     Colors.StatusBar.defaults,
     Colors.Tab.defaults,
     Colors.TextLink.defaults,

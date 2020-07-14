@@ -1,31 +1,46 @@
 open Oni_Core;
 
+module Identifier = {
+  [@deriving (show, yojson({strict: false}))]
+  type t = {
+    value: string,
+    _lower: string,
+  };
+
+  let fromString = str => {value: str, _lower: String.lowercase_ascii(str)};
+};
+
 module Extension = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
-    identifier: string,
+    identifier: Identifier.t,
     extensionLocation: Uri.t,
     name: string,
+    displayName: option(string),
+    description: option(string),
     main: option(string),
+    icon: option(string),
     version: string,
     engines: string,
     activationEvents: list(string),
     extensionDependencies: list(string),
-    extensionKind: string,
+    extensionKind: list(string),
     enableProposedApi: bool,
   };
 
   let ofManifestAndPath = (manifest: Manifest.t, path: string) => {
-    identifier: Manifest.identifier(manifest),
+    identifier: manifest |> Manifest.identifier |> Identifier.fromString,
     extensionLocation: path |> Uri.fromPath,
+    displayName: manifest |> Manifest.displayName,
+    description: manifest.description,
+    icon: manifest.icon,
     name: manifest.name,
     main: manifest.main,
     version: manifest.version,
     engines: manifest.engines,
     activationEvents: manifest.activationEvents,
     extensionDependencies: manifest.extensionDependencies,
-    // TODO: Convert correctly
-    extensionKind: "ui",
+    extensionKind: manifest.extensionKind |> List.map(Manifest.Kind.toString),
     enableProposedApi: manifest.enableProposedApi,
   };
 };

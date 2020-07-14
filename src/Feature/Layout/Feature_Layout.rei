@@ -19,10 +19,23 @@ let split: ([ | `Horizontal | `Vertical], model) => model;
 
 let activeEditor: model => Editor.t;
 
-let openEditor: (Editor.t, model) => model;
+let openEditor: (~config: Config.resolver, Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
 
+let addLayoutTab: model => model;
+let gotoLayoutTab: (int, model) => model;
+let previousLayoutTab: (~count: int=?, model) => model;
+let nextLayoutTab: (~count: int=?, model) => model;
+let removeLayoutTab: (int, model) => option(model);
+let removeLayoutTabRelative: (~delta: int, model) => option(model);
+let removeActiveLayoutTab: model => option(model);
+let removeOtherLayoutTabs: model => model;
+let removeOtherLayoutTabsRelative: (~count: int, model) => model;
+let moveActiveLayoutTabTo: (int, model) => model;
+let moveActiveLayoutTabRelative: (int, model) => model;
+
 let map: (Editor.t => Editor.t, model) => model;
+let fold: (('acc, Editor.t) => 'acc, 'acc, model) => 'acc;
 
 // UPDATE
 
@@ -32,26 +45,26 @@ type msg;
 type outmsg =
   | Nothing
   | SplitAdded
-  | RemoveLastBlocked
+  | RemoveLastWasBlocked
   | Focus(panel);
 
 let update: (~focus: option(panel), model, msg) => (model, outmsg);
 
 // VIEW
 
-module type ContentModel = {
-  type t = Editor.t;
-
-  let id: t => int;
-  let title: t => string;
-  let icon: t => option(IconTheme.IconDefinition.t);
-  let isModified: t => bool;
-
-  let render: (~isActive: bool, t) => Revery.UI.element;
-};
-
 module View: {
   open Revery.UI;
+
+  module type ContentModel = {
+    type t = Editor.t;
+
+    let id: t => int;
+    let title: t => string;
+    let icon: t => option(IconTheme.IconDefinition.t);
+    let isModified: t => bool;
+
+    let render: (~isActive: bool, t) => Revery.UI.element;
+  };
 
   let make:
     (
@@ -59,6 +72,7 @@ module View: {
       ~model: model,
       ~isZenMode: bool,
       ~showTabs: bool,
+      ~config: Config.resolver,
       ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
@@ -105,8 +119,15 @@ module Commands: {
   let maximizeVertical: Command.t(msg);
   let toggleMaximize: Command.t(msg);
   let resetSizes: Command.t(msg);
+
+  let addLayout: Command.t(msg);
+  let previousLayout: Command.t(msg);
+  let nextLayout: Command.t(msg);
 };
 
 // CONTRIBUTIONS
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
+};

@@ -197,12 +197,12 @@ module ExtensionService = {
   [@deriving show]
   type msg =
     | ActivateExtension({
-        extensionId: string,
+        extensionId: ExtensionId.t,
         activationEvent: option(string),
       })
-    | WillActivateExtension({extensionId: string})
+    | WillActivateExtension({extensionId: ExtensionId.t})
     | DidActivateExtension({
-        extensionId: string,
+        extensionId: ExtensionId.t,
         //startup: bool,
         codeLoadingTime: int,
         activateCallTime: int,
@@ -210,54 +210,72 @@ module ExtensionService = {
       })
     //activationEvent: option(string),
     | ExtensionActivationError({
-        extensionId: string,
+        extensionId: ExtensionId.t,
         errorMessage: string,
       })
-    | ExtensionRuntimeError({extensionId: string});
-  // TODO: Error?
+    | ExtensionRuntimeError({extensionId: ExtensionId.t});
+  let withExtensionId = (f, extensionIdJson) => {
+    extensionIdJson
+    |> Json.Decode.decode_value(ExtensionId.decode)
+    |> Result.map(f)
+    |> Result.map_error(Json.Decode.string_of_error);
+  };
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
-    | ("$activateExtension", `List([`String(extensionId)])) =>
-      Ok(ActivateExtension({extensionId, activationEvent: None}))
-    | (
-        "$activateExtension",
-        `List([`String(extensionId), activationEventJson]),
-      ) =>
+    | ("$activateExtension", `List([extensionIdJson])) =>
+      extensionIdJson
+      |> withExtensionId(extensionId => {
+           ActivateExtension({extensionId, activationEvent: None})
+         })
+    | ("$activateExtension", `List([extensionIdJson, activationEventJson])) =>
       let activationEvent =
         switch (activationEventJson) {
         | `String(v) => Some(v)
         | _ => None
         };
 
-      Ok(ActivateExtension({extensionId, activationEvent}));
+      extensionIdJson
+      |> withExtensionId(extensionId => {
+           ActivateExtension({extensionId, activationEvent})
+         });
     | (
         "$onExtensionActivationError",
-        `List([`String(extensionId), `String(errorMessage)]),
+        `List([extensionIdJson, `String(errorMessage)]),
       ) =>
-      Ok(ExtensionActivationError({extensionId, errorMessage}))
-    | ("$onWillActivateExtension", `List([`String(extensionId)])) =>
-      Ok(WillActivateExtension({extensionId: extensionId}))
+      extensionIdJson
+      |> withExtensionId(extensionId => {
+           ExtensionActivationError({extensionId, errorMessage})
+         })
+    | ("$onWillActivateExtension", `List([extensionIdJson])) =>
+      extensionIdJson
+      |> withExtensionId(extensionId => {
+           WillActivateExtension({extensionId: extensionId})
+         })
     | (
         "$onDidActivateExtension",
         `List([
-          `String(extensionId),
+          extensionIdJson,
           `Int(codeLoadingTime),
           `Int(activateCallTime),
           `Int(activateResolvedTime),
           ..._args,
         ]),
       ) =>
-      Ok(
-        DidActivateExtension({
-          extensionId,
-          codeLoadingTime,
-          activateCallTime,
-          activateResolvedTime,
-        }),
-      )
-    | ("$onExtensionRuntimeError", `List([`String(extensionId), ..._args])) =>
-      Ok(ExtensionRuntimeError({extensionId: extensionId}))
+      extensionIdJson
+      |> withExtensionId(extensionId => {
+           DidActivateExtension({
+             extensionId,
+             codeLoadingTime,
+             activateCallTime,
+             activateResolvedTime,
+           })
+         })
+    | ("$onExtensionRuntimeError", `List([extensionIdJson, ..._args])) =>
+      extensionIdJson
+      |> withExtensionId(extensionId => {
+           ExtensionRuntimeError({extensionId: extensionId})
+         })
     | _ => Error("Unhandled method: " ++ method)
     };
   };
@@ -706,6 +724,7 @@ module StatusBar = {
         source: string,
         alignment,
         command: option(ExtCommand.t),
+        color: option(Color.t),
         priority: int,
       })
     | Dispose({id: int});
@@ -731,7 +750,7 @@ module StatusBar = {
           labelJson,
           _tooltip,
           commandJson,
-          _,
+          colorJson,
           `String(alignment),
           `String(priority),
         ]),
@@ -740,11 +759,15 @@ module StatusBar = {
       let alignment = stringToAlignment(alignment);
       let priority = int_of_string_opt(priority) |> Option.value(~default=0);
       let%bind command = parseCommand(commandJson);
+      let%bind color =
+        colorJson
+        |> Json.Decode.(decode_value(nullable(Color.decode)))
+        |> Result.map_error(Json.Decode.string_of_error);
       let%bind label =
         labelJson
         |> Json.Decode.decode_value(Label.decode)
         |> Result.map_error(Json.Decode.string_of_error);
-      Ok(SetEntry({id, source, label, alignment, priority, command}));
+      Ok(SetEntry({id, source, label, alignment, color, priority, command}));
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>
       Error(

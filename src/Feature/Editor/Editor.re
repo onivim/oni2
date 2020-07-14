@@ -1,7 +1,15 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-let lastId = ref(0);
+module GlobalState = {
+  let lastId = ref(0);
+
+  let generateId = () => {
+    let id = lastId^;
+    incr(lastId);
+    id;
+  };
+};
 
 type pixelPosition = {
   pixelX: float,
@@ -21,6 +29,8 @@ type t = {
   editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
+  isScrollAnimated: bool,
+  isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
@@ -47,6 +57,14 @@ let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
 let lineHeightInPixels = ({font, _}) => font.measuredHeight;
 let characterWidthInPixels = ({font, _}) => font.measuredWidth;
 let font = ({font, _}) => font;
+
+let setMinimapEnabled = (~enabled, editor) => {
+  ...editor,
+  isMinimapEnabled: enabled,
+};
+
+let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
+let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
 let bufferLineByteToPixel =
     (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
@@ -93,12 +111,15 @@ let bufferLineCharacterToPixel =
   };
 };
 
-let create = (~font, ~buffer, ()) => {
-  let id = lastId^;
-  incr(lastId);
+let create = (~config, ~font, ~buffer, ()) => {
+  let id = GlobalState.generateId();
+
+  let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
 
   {
     editorId: id,
+    isMinimapEnabled,
+    isScrollAnimated: false,
     buffer,
     scrollX: 0.,
     scrollY: 0.,
@@ -125,7 +146,11 @@ let create = (~font, ~buffer, ()) => {
   };
 };
 
-let copy = editor => create(~font=editor.font, ~buffer=editor.buffer, ());
+let copy = editor => {
+  let id = GlobalState.generateId();
+
+  {...editor, editorId: id};
+};
 
 type scrollbarMetrics = {
   visible: bool,
@@ -171,6 +196,19 @@ let mapCursor = (~position: Vim.Cursor.t, editor) => {
     Location.{line: Index.(zero + line), column: Index.(zero + column)};
   } else {
     Location.{line: Index.zero, column: Index.zero};
+  };
+};
+
+let getCharacterAtPosition = (~line, ~index, {buffer, _}) => {
+  let bufferLineCount = EditorBuffer.numberOfLines(buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = EditorBuffer.line(line, buffer);
+    try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+    | _exn => None
+    };
+  } else {
+    None;
   };
 };
 
@@ -289,13 +327,12 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
     };
 };
 
-let getLayout =
-    (~showLineNumbers, ~isMinimapShown, ~maxMinimapCharacters, view) => {
-  let {pixelWidth, pixelHeight, _} = view;
+let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
+  let {pixelWidth, pixelHeight, isMinimapEnabled, _} = view;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~showLineNumbers,
-      ~isMinimapShown,
+      ~isMinimapShown=isMinimapEnabled,
       ~maxMinimapCharacters,
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
@@ -349,12 +386,17 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
   let newMinimapScroll =
     scrollPercentage *. float_of_int(availableMinimapScroll);
 
-  {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
+  {
+    ...view,
+    isScrollAnimated: false,
+    minimapScrollY: newMinimapScroll,
+    scrollY: newScrollY,
+  };
 };
 
 let scrollToLine = (~line, view) => {
   let pixelY = float_of_int(line) *. getLineHeight(view);
-  scrollToPixelY(~pixelY, view);
+  {...scrollToPixelY(~pixelY, view), isScrollAnimated: true};
 };
 
 let scrollToPixelX = (~pixelX as newScrollX, view) => {
@@ -364,7 +406,7 @@ let scrollToPixelX = (~pixelX as newScrollX, view) => {
     max(0., float_of_int(view.maxLineLength) *. getCharacterWidth(view));
   let scrollX = min(newScrollX, availableScroll);
 
-  {...view, scrollX};
+  {...view, isScrollAnimated: false, scrollX};
 };
 
 let scrollDeltaPixelX = (~pixelX, editor) => {
@@ -374,7 +416,7 @@ let scrollDeltaPixelX = (~pixelX, editor) => {
 
 let scrollToColumn = (~column, view) => {
   let pixelX = float_of_int(column) *. getCharacterWidth(view);
-  scrollToPixelX(~pixelX, view);
+  {...scrollToPixelX(~pixelX, view), isScrollAnimated: true};
 };
 
 let scrollDeltaPixelY = (~pixelY, view) => {

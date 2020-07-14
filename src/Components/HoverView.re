@@ -15,15 +15,16 @@ module Styles = {
   open Style;
   module Colors = Feature_Theme.Colors;
 
-  let outer = (~x, ~y) => [position(`Absolute), left(x), top(y)];
-
-  let inner = (~maybeHeight, ~displayAt) =>
-    switch (maybeHeight, displayAt) {
-    | (Some(height), `Top) => [top(- height)]
-    | _ => []
-    };
   let maxHeight = 200;
   let maxWidth = 500;
+
+  let outer = (~x, ~y, ~maybeHeight, ~displayAt) =>
+    switch (maybeHeight, displayAt) {
+    | (Some(height), `Top) =>
+      let height = min(height, maxHeight);
+      [position(`Absolute), left(x), top(y - height)];
+    | _ => [position(`Absolute), left(x), top(y)]
+    };
 
   let container = (~theme) => [
     position(`Relative),
@@ -130,23 +131,20 @@ let%component make =
 
     | _ => ()
     };
-  <View style={Styles.outer(~x, ~y)}>
-    <View style={Styles.inner(~maybeHeight=state.maybeHeight, ~displayAt)}>
-      <View style={Styles.container(~theme)}>
-        <View
-          style={Styles.contents(
-            ~theme,
-            ~showScrollbar,
-            ~scrollTop=state.scrollTop,
-          )}
-          onMouseWheel=scroll
-          onDimensionsChanged={({height, _}) =>
-            dispatch(SetHeight(height))
-          }>
-          ...children
-        </View>
+  <View
+    style={Styles.outer(~x, ~y, ~maybeHeight=state.maybeHeight, ~displayAt)}>
+    <View style={Styles.container(~theme)}>
+      <View
+        style={Styles.contents(
+          ~theme,
+          ~showScrollbar,
+          ~scrollTop=state.scrollTop,
+        )}
+        onMouseWheel=scroll
+        onDimensionsChanged={({height, _}) => dispatch(SetHeight(height))}>
+        ...children
       </View>
-      {showScrollbar ? <scrollbar /> : React.empty}
     </View>
+    {showScrollbar ? <scrollbar /> : React.empty}
   </View>;
 };

@@ -11,6 +11,7 @@
         Oni2.core.kernel
         Oni2.core.utility
         Oni2.core.whenExpr
+        isolinear
         Rench
         Revery
         yojson
@@ -21,4 +22,4 @@
         Fzy
         decoders-yojson
     )
-    (preprocess (pps ppx_deriving_yojson ppx_deriving.show)))
+    (preprocess (pps ppx_let ppx_deriving_yojson ppx_deriving.show)))

@@ -1,6 +1,8 @@
 open Revery;
 open Oni_Core;
 
+module Log = (val Log.withNamespace("Feature.Notification"));
+
 module Internal = {
   let generateId = {
     let lastId = ref(0);
@@ -53,7 +55,14 @@ let update = (model, msg) => {
 module Effects = {
   let create = (~kind=Info, ~source=?, message) =>
     Isolinear.Effect.createWithDispatch(~name="notification.create", dispatch =>
-      dispatch(Created({id: Internal.generateId(), kind, message, source}))
+      if (Oni_Core.Utility.StringEx.isEmpty(message)) {
+        let source = source |> Option.value(~default="Unknown");
+        Log.warnf(m => m("Received empty notification from %s", source));
+      } else {
+        dispatch(
+          Created({id: Internal.generateId(), kind, message, source}),
+        );
+      }
     );
 
   let dismiss = notification =>

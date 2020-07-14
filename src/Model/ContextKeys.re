@@ -14,10 +14,8 @@ let menus =
       bool(
         "quickmenuCursorEnd",
         fun
-        | Some({selection, query, _})
-            when
-              Selection.isCollapsed(selection)
-              && selection.focus == String.length(query) =>
+        | Some({inputText, _})
+            when Feature_InputText.isCursorAtEnd(inputText) =>
           true
         | _ => false,
       ),
@@ -97,6 +95,9 @@ let other =
 
 let all =
   unionMany([
+    Feature_Registers.Contributions.contextKeys
+    |> fromList
+    |> map(({registers, _}: State.t) => registers),
     menus |> map((state: State.t) => state.quickmenu),
     editors,
     other,

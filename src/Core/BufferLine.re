@@ -171,7 +171,10 @@ let getByteFromIndex = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let rawLength = String.length(bufferLine.raw);
   let characters = bufferLine.characters;
-  if (index >= Array.length(characters)) {
+  let len = Array.length(characters);
+  if (index < 0) {
+    0;
+  } else if (index >= len) {
     rawLength;
   } else {
     switch (characters[index]) {

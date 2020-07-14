@@ -73,6 +73,17 @@ module ActivityBar = {
   ];
 };
 
+module ActivityBarBadge = {
+  let background =
+    define(
+      "activityBarBadge.background",
+      {dark: hex("#333333"), light: hex("#2C2C2C"), hc: hex("#000000")},
+    );
+  let foreground = define("activityBarBadge.foreground", all(hex("#FFF")));
+
+  let defaults = [background, foreground];
+};
+
 module Dropdown = {
   let background =
     define(
@@ -798,6 +809,32 @@ module SideBar = {
   let foreground = define("sideBar.foreground", all(ref(foreground))); // actually: all(unspecified)
 
   let defaults = [background, foreground];
+};
+
+module SideBarSectionHeader = {
+  let background =
+    define(
+      "sideBarSectionHeader.background",
+      {
+        dark: hex("#808080") |> transparent(0.2),
+        light: hex("#808080") |> transparent(0.2),
+        hc: unspecified,
+      },
+    );
+
+  let foreground =
+    define(
+      "sideBarSectionHeader.foreground",
+      {
+        dark: ref(SideBar.foreground),
+        light: ref(SideBar.foreground),
+        hc: ref(SideBar.foreground),
+      },
+    );
+
+  let border = contrastBorder;
+
+  let defaults = [background, foreground, border];
 };
 
 module StatusBar = {

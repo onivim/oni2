@@ -1,7 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Revery.UI;
-open Oni_Components;
 
 type model;
 
@@ -10,9 +9,11 @@ let initial: model;
 [@deriving show]
 type msg =
   | Input(string)
-  | InputClicked(Selection.t)
+  | Pasted(string)
   | Update([@opaque] list(Ripgrep.Match.t))
-  | Complete;
+  | Complete
+  | SearchError(string)
+  | FindInput(Feature_InputText.msg);
 
 type outmsg =
   | Focus;

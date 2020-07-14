@@ -15,24 +15,29 @@
         ppx_deriving_yojson.runtime
         isolinear
         Oni2.core
-        Oni2.extensions
         Oni2.input
         Oni2.syntax
         Oni2.syntax_client
         Oni2.service.font
         Oni2.service.file-watcher
         Oni2.components
+        Oni2.feature.clipboard
         Oni2.feature.configuration
         Oni2.feature.contextMenu
+        Oni2.feature.extensions
         Oni2.feature.formatting
         Oni2.feature.theme
         Oni2.feature.notification
         Oni2.feature.changelog
         Oni2.feature.commands
+        Oni2.feature.inputText
         Oni2.feature.search
+        Oni2.feature.sideBar
         Oni2.feature.syntax
         Oni2.feature.language_support
         Oni2.feature.editor
+        Oni2.feature.pane
+        Oni2.feature.registers
         Oni2.feature.scm
         Oni2.feature.sneak
         Oni2.feature.statusbar

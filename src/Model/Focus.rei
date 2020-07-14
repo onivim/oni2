@@ -1,6 +1,7 @@
 [@deriving show]
 type focusable =
   | Editor
+  | Extensions
   | Wildmenu
   | Quickmenu
   | Search
@@ -8,6 +9,7 @@ type focusable =
   | SCM
   | Sneak
   | Modal
+  | InsertRegister
   | Terminal(int);
 
 type stack;

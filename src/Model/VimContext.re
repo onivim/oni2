@@ -3,8 +3,6 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Feature_Editor;
 
-module Ext = Oni_Extensions;
-
 module Internal = {
   let syntaxScope = (~cursor: option(Vim.Cursor.t), state: State.t) => {
     state
@@ -71,7 +69,7 @@ let current = (state: State.t) => {
     editorBuffer
     |> OptionEx.flatMap(Buffer.getFileType)
     |> OptionEx.flatMap(
-         Ext.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+         Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
        );
 
   let maybeCursor =
@@ -98,12 +96,7 @@ let current = (state: State.t) => {
         _,
       } =
     // TODO: Fix this
-    Editor.getLayout(
-      ~isMinimapShown=true,
-      ~showLineNumbers=true,
-      ~maxMinimapCharacters=0,
-      editor,
-    );
+    Editor.getLayout(~showLineNumbers=true, ~maxMinimapCharacters=0, editor);
 
   let leftColumn = Editor.getLeftVisibleColumn(editor);
   let topLine = Editor.getTopVisibleLine(editor);

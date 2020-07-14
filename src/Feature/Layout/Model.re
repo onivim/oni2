@@ -1,3 +1,6 @@
+module Local = {
+  module Configuration = Configuration;
+};
 open Oni_Core;
 open Utility;
 open Feature_Editor;
@@ -18,14 +21,20 @@ module Group: {
   let nextEditor: t => t;
   let previousEditor: t => t;
   let openEditor: (Editor.t, t) => t;
+  let replaceAllWith: (Editor.t, t) => t;
   let removeEditor: (int, t) => option(t);
 
   let map: (Editor.t => Editor.t, t) => t;
+  let fold: (('acc, Editor.t) => 'acc, 'acc, t) => 'acc;
 } = {
   type t = {
     id: int,
     editors: list(Editor.t),
     selectedId: int,
+  };
+
+  let fold = (f, initial, group) => {
+    List.fold_left(f, initial, group.editors);
   };
 
   let create = {
@@ -92,6 +101,12 @@ module Group: {
     };
   };
 
+  let replaceAllWith = (editor, group) => {
+    ...group,
+    editors: [editor],
+    selectedId: Editor.getId(editor),
+  };
+
   let removeEditor = (editorId, group) => {
     switch (List.filter(e => Editor.getId(e) != editorId, group.editors)) {
     | [] => None
@@ -121,7 +136,7 @@ type panel =
   | Center
   | Bottom;
 
-type model = {
+type layout = {
   tree: Layout.t(int),
   uncommittedTree: [
     | `Resizing(Layout.t(int))
@@ -132,57 +147,79 @@ type model = {
   activeGroupId: int,
 };
 
+let activeTree = layout =>
+  switch (layout.uncommittedTree) {
+  | `Resizing(tree)
+  | `Maximized(tree) => tree
+  | `None => layout.tree
+  };
+
+type model = {
+  layouts: list(layout),
+  activeLayoutIndex: int,
+};
+
 let initial = editors => {
   let initialGroup = Group.create(editors);
 
-  {
+  let initialLayout = {
     tree: Layout.singleton(initialGroup.id),
     uncommittedTree: `None,
     groups: [initialGroup],
     activeGroupId: initialGroup.id,
   };
+
+  {layouts: [initialLayout], activeLayoutIndex: 0};
 };
 
-let groupById = (id, model) =>
-  List.find_opt((group: Group.t) => group.id == id, model.groups);
+let groupById = (id, layout) =>
+  List.find_opt((group: Group.t) => group.id == id, layout.groups);
+
+let activeLayout = model => List.nth(model.layouts, model.activeLayoutIndex);
 
 let activeGroup = model =>
-  groupById(model.activeGroupId, model) |> Option.get;
+  model
+  |> activeLayout
+  |> (layout => groupById(layout.activeGroupId, layout) |> Option.get);
 
 let activeEditor = model => model |> activeGroup |> Group.selected;
 
-let activeTree = model =>
-  switch (model.uncommittedTree) {
-  | `Resizing(tree)
-  | `Maximized(tree) => tree
-  | `None => model.tree
-  };
-
-let updateTree = (f, model) => {
+let updateActiveLayout = (f, model) => {
   ...model,
-  tree: f(activeTree(model)),
-  uncommittedTree: `None,
-};
-
-let updateActiveGroup = (f, model) => {
-  ...model,
-  groups:
-    List.map(
-      (group: Group.t) => group.id == model.activeGroupId ? f(group) : group,
-      model.groups,
+  layouts:
+    List.mapi(
+      (i, layout) => i == model.activeLayoutIndex ? f(layout) : layout,
+      model.layouts,
     ),
 };
 
-let windows = model => Layout.windows(activeTree(model));
+let updateTree = f =>
+  updateActiveLayout(layout =>
+    {...layout, tree: f(activeTree(layout)), uncommittedTree: `None}
+  );
+
+let updateGroup = (id, f, layout) => {
+  ...layout,
+  groups:
+    List.map(
+      (group: Group.t) => group.id == id ? f(group) : group,
+      layout.groups,
+    ),
+};
+
+let updateActiveGroup = f =>
+  updateActiveLayout(layout => updateGroup(layout.activeGroupId, f, layout));
+
+let windows = model => Layout.windows(model |> activeLayout |> activeTree);
 
 let visibleEditors = model =>
   model
   |> windows
-  |> List.filter_map(id => groupById(id, model))
+  |> List.filter_map(id => model |> activeLayout |> groupById(id))
   |> List.map(Group.selected);
 
 let editorById = (id, model) =>
-  Base.List.find_map(model.groups, ~f=group =>
+  Base.List.find_map(activeLayout(model).groups, ~f=group =>
     List.find_opt(editor => Editor.getId(editor) == id, group.editors)
   );
 
@@ -196,18 +233,22 @@ let split = (direction, model) => {
   let activeEditor = activeEditor(model);
   let newGroup = Group.create([Editor.copy(activeEditor)]);
 
-  {
-    groups: [newGroup, ...model.groups],
-    activeGroupId: newGroup.id,
-    tree:
-      Layout.insertWindow(
-        `After(model.activeGroupId),
-        direction,
-        newGroup.id,
-        activeTree(model),
-      ),
-    uncommittedTree: `None,
-  };
+  updateActiveLayout(
+    layout =>
+      {
+        groups: [newGroup, ...layout.groups],
+        activeGroupId: newGroup.id,
+        tree:
+          Layout.insertWindow(
+            `After(layout.activeGroupId),
+            direction,
+            newGroup.id,
+            activeTree(layout),
+          ),
+        uncommittedTree: `None,
+      },
+    model,
+  );
 };
 
 let move = (focus, dirX, dirY, layout) => {
@@ -222,44 +263,96 @@ let moveRight = current => move(current, 1, 0);
 let moveUp = current => move(current, 0, -1);
 let moveDown = current => move(current, 0, 1);
 
-let nextEditor = model => updateActiveGroup(Group.nextEditor, model);
+let nextEditor = updateActiveGroup(Group.nextEditor);
 
-let previousEditor = model => updateActiveGroup(Group.previousEditor, model);
+let previousEditor = updateActiveGroup(Group.previousEditor);
 
-let openEditor = (editor, model) =>
-  updateActiveGroup(Group.openEditor(editor), model);
+let removeLayoutTab = (index, model) => {
+  let left = Base.List.take(model.layouts, index);
+  let right = Base.List.drop(model.layouts, index + 1);
+  let layouts = left @ right;
+
+  if (layouts == []) {
+    None;
+  } else {
+    Some({
+      layouts,
+      activeLayoutIndex:
+        min(model.activeLayoutIndex, List.length(layouts) - 1),
+    });
+  };
+};
+
+let removeLayoutTabRelative = (~delta, model) =>
+  removeLayoutTab(model.activeLayoutIndex + delta, model);
+
+let removeActiveLayoutTab = model =>
+  removeLayoutTab(model.activeLayoutIndex, model);
+
+let removeOtherLayoutTabs = model => {
+  layouts: [activeLayout(model)],
+  activeLayoutIndex: 0,
+};
+
+let removeOtherLayoutTabsRelative = (~count, model) => {
+  let (start, stop) =
+    count < 0
+      ? (model.activeLayoutIndex + count, model.activeLayoutIndex - 1)
+      : (model.activeLayoutIndex + 1, model.activeLayoutIndex + count);
+  {
+    layouts: ListEx.sublist(start, stop, model.layouts),
+    activeLayoutIndex: 0,
+  };
+};
 
 let removeEditor = (editorId, model) => {
-  let groups =
-    List.filter_map(
-      (group: Group.t) =>
-        group.id == model.activeGroupId
-          ? Group.removeEditor(editorId, group) : Some(group),
-      model.groups,
-    );
+  let removeFromLayout = layout => {
+    let groups =
+      List.filter_map(
+        (group: Group.t) =>
+          group.id == layout.activeGroupId
+            ? Group.removeEditor(editorId, group) : Some(group),
+        layout.groups,
+      );
 
-  if (groups == []) {
-    None; // Group was removed, no groups left. Abort! Abort!
-  } else if (List.length(groups) != List.length(model.groups)) {
-    // Group was removed, remove from tree and make another active
+    if (groups == []) {
+      None; // Group was removed, no groups left. Abort! Abort!
+    } else if (List.length(groups) != List.length(layout.groups)) {
+      // Group was removed, remove from tree and make another active
 
-    let tree = Layout.removeWindow(model.activeGroupId, activeTree(model));
+      let tree =
+        Layout.removeWindow(layout.activeGroupId, activeTree(layout));
 
-    let activeGroupId =
-      switch (
-        ListEx.findIndex(
-          (g: Group.t) => g.id == model.activeGroupId,
-          model.groups,
-        )
-      ) {
-      | Some(0) => List.hd(groups).id
-      | Some(i) => List.nth(groups, i - 1).id
-      | None => model.activeGroupId
-      };
+      let activeGroupId =
+        switch (
+          ListEx.findIndex(
+            (g: Group.t) => g.id == layout.activeGroupId,
+            layout.groups,
+          )
+        ) {
+        | Some(0) => List.hd(groups).id
+        | Some(i) => List.nth(groups, i - 1).id
+        | None => layout.activeGroupId
+        };
 
-    Some({...model, tree, groups, activeGroupId});
-  } else {
-    Some({...model, groups});
+      Some({...layout, tree, groups, activeGroupId});
+    } else {
+      Some({...layout, groups});
+    };
+  };
+
+  switch (removeFromLayout(activeLayout(model))) {
+  | Some(newLayout) =>
+    Some({
+      ...model,
+      layouts:
+        List.mapi(
+          (i, layout) => i == model.activeLayoutIndex ? newLayout : layout,
+          model.layouts,
+        ),
+    })
+
+  | None => removeLayoutTab(model.activeLayoutIndex, model)
   };
 };
 
@@ -281,7 +374,71 @@ let closeBuffer = (~force, buffer, model) => {
   };
 };
 
+let addLayoutTab = model => {
+  let newEditor = activeEditor(model) |> Editor.copy;
+  let newGroup = Group.create([newEditor]);
+
+  let newLayout = {
+    tree: Layout.singleton(newGroup.id),
+    uncommittedTree: `None,
+    groups: [newGroup],
+    activeGroupId: newGroup.id,
+  };
+
+  let left = Base.List.take(model.layouts, model.activeLayoutIndex + 1);
+  let right = Base.List.drop(model.layouts, model.activeLayoutIndex + 1);
+
+  {
+    layouts: left @ [newLayout] @ right,
+    activeLayoutIndex: model.activeLayoutIndex + 1,
+  };
+};
+
+let gotoLayoutTab = (index, model) => {
+  ...model,
+  activeLayoutIndex:
+    IntEx.clamp(index, ~lo=0, ~hi=List.length(model.layouts) - 1),
+};
+
+let previousLayoutTab = (~count=1, model) =>
+  gotoLayoutTab(model.activeLayoutIndex - count, model);
+
+let nextLayoutTab = (~count=1, model) =>
+  gotoLayoutTab(model.activeLayoutIndex + count, model);
+
+let moveActiveLayoutTabTo = (index, model) => {
+  let newLayouts =
+    ListEx.move(~fromi=model.activeLayoutIndex, ~toi=index, model.layouts);
+
+  {
+    layouts: newLayouts,
+    activeLayoutIndex:
+      IntEx.clamp(index, ~lo=0, ~hi=List.length(newLayouts) - 1),
+  };
+};
+
+let moveActiveLayoutTabRelative = (delta, model) =>
+  moveActiveLayoutTabTo(model.activeLayoutIndex + delta, model);
+
 let map = (f, model) => {
   ...model,
-  groups: List.map(Group.map(f), model.groups),
+  layouts:
+    List.map(
+      layout => {...layout, groups: List.map(Group.map(f), layout.groups)},
+      model.layouts,
+    ),
+};
+
+let fold = (f, initial, model) => {
+  List.fold_left(
+    (initial', layout) => {
+      List.fold_left(
+        (acc, group) => {Group.fold(f, acc, group)},
+        initial',
+        layout.groups,
+      )
+    },
+    initial,
+    model.layouts,
+  );
 };

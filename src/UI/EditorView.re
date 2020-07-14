@@ -39,12 +39,16 @@ module Parts = {
         buffer
         |> Oni_Core.Buffer.getFileType
         |> OptionEx.flatMap(
-             Ext.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+             Exthost.LanguageInfo.getLanguageConfiguration(
+               state.languageInfo,
+             ),
            )
         |> Option.value(~default=LanguageConfiguration.default);
 
       let editorDispatch = msg =>
-        dispatch(Editor({editorId: Editor.getId(editor), msg}));
+        dispatch(
+          Editor({scope: EditorScope.Editor(Editor.getId(editor)), msg}),
+        );
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
         dispatch(EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}));
       let onCursorChange = cursor =>
@@ -246,7 +250,7 @@ let make =
         |> getBufferMetadata;
 
       let language =
-        Ext.LanguageInfo.getLanguageFromFilePath(
+        Exthost.LanguageInfo.getLanguageFromFilePath(
           state.languageInfo,
           filePath,
         );
@@ -275,6 +279,7 @@ let make =
         isZenMode={state.zenMode}
         showTabs
         model={state.layout}
+        config={Feature_Configuration.resolver(state.config)}
         dispatch={msg => dispatch(Actions.Layout(msg))}>
         ...(module ContentProvider)
       </Feature_Layout.View>

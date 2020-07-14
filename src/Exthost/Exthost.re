@@ -5,6 +5,7 @@ module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
 module CodeLens = CodeLens;
+module Color = Color;
 module Command = Command;
 module CompletionContext = CompletionContext;
 module CompletionKind = CompletionKind;
@@ -17,6 +18,7 @@ module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module Edit = Edit;
 module Eol = Eol;
+module ExtensionActivationReason = ExtensionActivationReason;
 module ExtensionId = ExtensionId;
 module FormattingOptions = FormattingOptions;
 module Hover = Hover;
@@ -45,3 +47,4 @@ module Request = Request;
 module NamedPipe = NamedPipe;
 
 module Msg = Msg;
+module LanguageInfo = LanguageInfo;

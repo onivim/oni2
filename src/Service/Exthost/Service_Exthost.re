@@ -5,6 +5,17 @@ module Log = (val Log.withNamespace("Service_Exthost"));
 // EFFECTS
 
 module Effects = {
+  module Commands = {
+    let executeContributedCommand = (~command, ~arguments, client) =>
+      Isolinear.Effect.create(
+        ~name="exthost.commands.executeContributedCommand", () => {
+        Exthost.Request.Commands.executeContributedCommand(
+          ~command,
+          ~arguments,
+          client,
+        )
+      });
+  };
   module Documents = {
     let modelChanged =
         (~buffer: Buffer.t, ~update: BufferUpdate.t, client, toMsg) =>

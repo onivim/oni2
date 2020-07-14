@@ -6,6 +6,7 @@
       Oni2.core
       Oni2.components
       Oni2.feature.commands
+      Oni2.feature.inputText
       isolinear
       Revery
       base

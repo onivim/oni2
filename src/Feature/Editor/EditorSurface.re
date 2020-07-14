@@ -200,7 +200,6 @@ let%component make =
     Editor.getLayout(
       ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
       ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      ~isMinimapShown=Config.Minimap.enabled.get(config),
       editor,
     );
 
@@ -230,19 +229,20 @@ let%component make =
       ? EditorDiffMarkers.generate(buffer) : None;
 
   let smoothScroll = Config.Experimental.smoothScroll.get(config);
+  let isScrollAnimated = Editor.isScrollAnimated(editor);
 
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
       ~target=Editor.scrollY(editor),
       ~restThreshold=10.,
-      ~enabled=smoothScroll,
+      ~enabled=smoothScroll && isScrollAnimated,
       scrollSpringOptions,
     );
   let%hook (scrollX, _setScrollXImmediately) =
     Hooks.spring(
       ~target=Editor.scrollX(editor),
       ~restThreshold=10.,
-      ~enabled=smoothScroll,
+      ~enabled=smoothScroll && isScrollAnimated,
       scrollSpringOptions,
     );
 
@@ -293,7 +293,7 @@ let%component make =
       windowIsFocused
       config
     />
-    {Config.Minimap.enabled.get(config)
+    {Editor.isMinimapEnabled(editor)
        ? <minimap
            editor
            diagnosticsMap
