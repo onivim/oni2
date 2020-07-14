@@ -578,6 +578,10 @@ let command = v => {
   );
 };
 
+let eval = v => {
+  Native.vimEval(v) |> Option.to_result(~none="Unknown");
+};
+
 let onDirectoryChanged = f => {
   Event.add(f, Listeners.directoryChanged);
 };

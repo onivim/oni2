@@ -480,6 +480,22 @@ CAMLprim value libvim_vimInput(value v) {
   return Val_unit;
 }
 
+CAMLprim value libvim_vimEval(value vStr) {
+  CAMLparam1(vStr);
+  CAMLlocal2(vOut, vRet);
+
+  char_u *result = vimEval(String_val(vStr));
+
+  if (result == NULL) {
+    vRet = Val_none;
+  } else {
+    vOut = caml_copy_string(result);
+    vRet = Val_some(vOut);
+    free(result);
+  }
+  CAMLreturn(vRet);
+}
+
 CAMLprim value libvim_vimCommand(value v) {
   char_u *s;
   s = (char_u *)String_val(v);
