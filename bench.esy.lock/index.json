@@ -1,5 +1,5 @@
 {
-  "checksum": "232349fd6ced36e0fe0ad5092330f6b0",
+  "checksum": "7f42d20d4afb9f53e0e19be98b64be4d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1068,6 +1068,7 @@
         "@opam/fs@github:bryphe/reason-native:fs.opam#fd0225c@d41d8cd9",
         "@opam/fp@github:bryphe/reason-native:fp.opam#fd0225c@d41d8cd9",
         "@opam/fmt@opam:0.8.8@01c3a23c",
+        "@opam/dune-private-libs@opam:2.5.1@60c1661f",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@aef1678b",
         "@opam/dir@github:bryphe/reason-native:dir.opam#fd0225@d41d8cd9",
@@ -3320,20 +3321,20 @@
         "ocaml@4.9.1000@d41d8cd9", "@opam/dune@opam:2.5.0@aef1678b"
       ]
     },
-    "@opam/dune-private-libs@opam:2.6.1@31997d39": {
-      "id": "@opam/dune-private-libs@opam:2.6.1@31997d39",
+    "@opam/dune-private-libs@opam:2.5.1@60c1661f": {
+      "id": "@opam/dune-private-libs@opam:2.5.1@60c1661f",
       "name": "@opam/dune-private-libs",
-      "version": "opam:2.6.1",
+      "version": "opam:2.5.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/5e/5ef959f286448ee172f1cffc86c439a6f7b662676e6015b282db071bb88899a0#sha256:5ef959f286448ee172f1cffc86c439a6f7b662676e6015b282db071bb88899a0",
-          "archive:https://github.com/ocaml/dune/releases/download/2.6.1/dune-2.6.1.tbz#sha256:5ef959f286448ee172f1cffc86c439a6f7b662676e6015b282db071bb88899a0"
+          "archive:https://opam.ocaml.org/cache/sha256/8f/8f77d3a87f208e0d7cccaa1c48c4bb1bb87d62d07c3f25e9b8ba298e028ce52b#sha256:8f77d3a87f208e0d7cccaa1c48c4bb1bb87d62d07c3f25e9b8ba298e028ce52b",
+          "archive:https://github.com/ocaml/dune/releases/download/2.5.1/dune-2.5.1.tbz#sha256:8f77d3a87f208e0d7cccaa1c48c4bb1bb87d62d07c3f25e9b8ba298e028ce52b"
         ],
         "opam": {
           "name": "dune-private-libs",
-          "version": "2.6.1",
-          "path": "bench.esy.lock/opam/dune-private-libs.2.6.1"
+          "version": "2.5.1",
+          "path": "bench.esy.lock/opam/dune-private-libs.2.5.1"
         }
       },
       "overrides": [],
@@ -3363,11 +3364,11 @@
       },
       "overrides": [],
       "dependencies": [
-        "@opam/dune-private-libs@opam:2.6.1@31997d39",
+        "@opam/dune-private-libs@opam:2.5.1@60c1661f",
         "@opam/dune@opam:2.5.0@aef1678b", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "@opam/dune-private-libs@opam:2.6.1@31997d39",
+        "@opam/dune-private-libs@opam:2.5.1@60c1661f",
         "@opam/dune@opam:2.5.0@aef1678b"
       ]
     },
