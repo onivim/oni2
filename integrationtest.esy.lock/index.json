@@ -1,5 +1,5 @@
 {
-  "checksum": "65e7cc6fe266fa481d9e8a0d785ad011",
+  "checksum": "9513d4b78abcfd8888eb2caef17b65c4",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1079,7 +1079,7 @@
         "rcedit@2.0.0@d41d8cd9", "plist@3.0.1@d41d8cd9",
         "ocaml@4.9.1000@d41d8cd9", "lodash@4.17.19@d41d8cd9",
         "innosetup-compiler@5.5.9@d41d8cd9", "fs-extra@7.0.1@d41d8cd9",
-        "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a@d41d8cd9"
+        "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5@d41d8cd9"
       ]
     },
     "@revery/esy-libvterm@1.0.3@d41d8cd9": {
@@ -2490,16 +2490,14 @@
         "@opam/dune@opam:2.5.0@aef1678b"
       ]
     },
-    "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a@d41d8cd9": {
+    "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5@d41d8cd9": {
       "id":
-        "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a@d41d8cd9",
+        "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5@d41d8cd9",
       "name": "@opam/ocaml-lsp-server",
-      "version": "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a",
+      "version": "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5",
       "source": {
         "type": "install",
-        "source": [
-          "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a"
-        ]
+        "source": [ "github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5" ]
       },
       "overrides": [],
       "dependencies": [
