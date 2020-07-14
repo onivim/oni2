@@ -72,6 +72,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Extensions => [Actions.Extensions(Feature_Extensions.KeyPressed(k))]
 
     | Modal => [Actions.Modals(Feature_Modals.KeyPressed(k))]
+    | InsertRegister => [
+        Actions.Registers(Feature_Registers.Msg.keyPressed(k)),
+      ]
     };
   };
 
@@ -90,8 +93,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
         // No paste handling in these UIs, currently...
         | Terminal(_) => Actions.Noop
+        | InsertRegister
         | Sneak
-        | FileExplorer => Noop
+        | FileExplorer
         | Modal => Actions.Noop
         };
 
