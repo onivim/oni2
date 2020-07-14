@@ -9,6 +9,7 @@ type focusable =
   | SCM
   | Sneak
   | Modal
+  | InsertRegister
   | Terminal(int);
 
 type stack = list(focusable);

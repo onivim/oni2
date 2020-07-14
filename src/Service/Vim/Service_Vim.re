@@ -48,6 +48,12 @@ module Effects = {
     });
   };
 
+  let getRegisterValue = (~toMsg, char) =>
+    Isolinear.Effect.createWithDispatch(~name="vim.getRegisterValue", dispatch => {
+      let result = Vim.Registers.get(~register=char);
+      dispatch(toMsg(result));
+    });
+
   let applyEdits =
       (
         ~bufferId: int,
@@ -79,5 +85,28 @@ module Effects = {
 
       result |> toMsg |> dispatch;
     });
+  };
+};
+
+module Sub = {
+  module EvalSubscription =
+    Isolinear.Sub.Make({
+      type state = unit;
+      type params = string;
+      type msg = result(string, string);
+      let name = "Vim.Sub.Eval";
+      let id = params => params;
+      let init = (~params, ~dispatch) => {
+        Vim.eval(params) |> dispatch;
+      };
+      let update = (~params as _, ~state as _, ~dispatch as _) => {
+        ();
+      };
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+  let eval = (~toMsg, expression) => {
+    EvalSubscription.create(expression) |> Isolinear.Sub.map(toMsg);
   };
 };

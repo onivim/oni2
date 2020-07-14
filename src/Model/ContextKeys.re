@@ -95,6 +95,9 @@ let other =
 
 let all =
   unionMany([
+    Feature_Registers.Contributions.contextKeys
+    |> fromList
+    |> map(({registers, _}: State.t) => registers),
     menus |> map((state: State.t) => state.quickmenu),
     editors,
     other,
