@@ -34,10 +34,16 @@ let start =
   let requestIdToReply = Hashtbl.create(128);
   let send = message =>
     switch (protocolClient^) {
-    | None => ()
+    | None =>
+      Log.warnf(m =>
+        m(
+          "Tried to send message before protocolClient: %s, could not send",
+          Protocol.Message.Outgoing.show(message),
+        )
+      )
     | Some(protocol) =>
-      Log.info(
-        "Sending message: " ++ Protocol.Message.Outgoing.show(message),
+      Log.infof(m =>
+        m("Sending message: %s", Protocol.Message.Outgoing.show(message))
       );
       Protocol.send(~message, protocol);
     };
@@ -204,6 +210,14 @@ let notify =
       ~args,
       {lastRequestId, client, initPromise, _}: t,
     ) => {
+  Log.tracef(m =>
+    m(
+      "Sending request to %s:%s with args %s",
+      rpcName,
+      method,
+      args |> Yojson.Safe.to_string,
+    )
+  );
   Lwt.on_success(
     initPromise,
     () => {

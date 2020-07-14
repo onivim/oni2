@@ -12,8 +12,8 @@
         Oni2.core.whenExpr
         Oni2.model
         Oni2.input
-        Oni2.extensions
         Oni2.syntax_client
+        Oni2.service.extensions
         Oni2.service.font
         Oni2.service.file-watcher
         Oni2.service.syntax
@@ -21,8 +21,10 @@
         Oni2.service.vim
         Oni2.components
         Oni2.ui
+        Oni2.feature.clipboard
         Oni2.feature.commands
         Oni2.feature.contextMenu
+        Oni2.feature.extensions
         Oni2.feature.exthost
         Oni2.feature.formatting
         Oni2.feature.menus
@@ -34,6 +36,7 @@
         Oni2.feature.hover
         Oni2.feature.vim
         Oni2.feature.signature_help
+        Oni2.feature.editor
         isolinear
         libvim
         textmate

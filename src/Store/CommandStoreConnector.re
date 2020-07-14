@@ -13,47 +13,12 @@ module Constants = {
 };
 
 let start = () => {
-  let closeEditorEffect = (state, _) =>
-    Isolinear.Effect.createWithDispatch(~name="closeEditorEffect", dispatch => {
-      let editor =
-        Selectors.getActiveEditorGroup(state) |> Selectors.getActiveEditor;
-
-      switch (editor) {
-      | None => ()
-      | Some(v) => dispatch(ViewCloseEditor(Feature_Editor.Editor.getId(v)))
-      };
-    });
-
-  let splitEditorEffect = (state, direction, _) =>
-    Isolinear.Effect.createWithDispatch(~name="splitEditorEffect", dispatch => {
-      let getBufferAndLocation = () => {
-        open Base.Option.Let_syntax;
-        let%bind buffer = state |> Selectors.getActiveBuffer;
-        let%bind path = buffer |> Buffer.getFilePath;
-
-        let%bind cursorLocation =
-          state
-          |> Selectors.getActiveEditorGroup
-          |> Selectors.getActiveEditor
-          |> Option.map(Feature_Editor.Editor.getPrimaryCursor);
-
-        Some((path, cursorLocation));
-      };
-
-      getBufferAndLocation()
-      |> Option.iter(((path, cursorLocation)) => {
-           dispatch(
-             OpenFileByPath(path, Some(direction), Some(cursorLocation)),
-           )
-         });
-    });
-
   let togglePathEffect = name =>
     Isolinear.Effect.create(
       ~name,
       () => {
         let _ =
-          Oni_Extensions.NodeTask.run(
+          Oni_Core.NodeTask.run(
             ~setup=Oni_Core.Setup.init(),
             "add-to-path.js",
           );
@@ -96,9 +61,6 @@ let start = () => {
   let commands = [
     ("system.addToPath", _ => togglePathEffect),
     ("system.removeFromPath", _ => togglePathEffect),
-    ("view.closeEditor", state => closeEditorEffect(state)),
-    ("view.splitVertical", state => splitEditorEffect(state, `Vertical)),
-    ("view.splitHorizontal", state => splitEditorEffect(state, `Horizontal)),
     (
       "workbench.action.zoomIn",
       state => zoomEffect(state, zoom => zoom +. Constants.zoomStep),

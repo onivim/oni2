@@ -10,39 +10,51 @@ open Oni_CLI;
 open Oni_UI;
 
 module Core = Oni_Core;
-module Ext = Oni_Extensions;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
-module ExtM = Oni_ExtensionManagement;
+module ExtM = Service_Extensions.Management;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
-  switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
-  | Some(extensionsFolder) =>
-    let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
+  let setup = Core.Setup.init();
+  let result =
+    ExtM.install(~setup, ~extensionsFolder=?overriddenExtensionsDir, path)
+    |> LwtEx.sync;
 
-    switch (result) {
-    | Ok(_) =>
-      Printf.printf("Successfully installed extension: %s\n", path);
-      0;
+  switch (result) {
+  | Ok(_) =>
+    Printf.printf("Successfully installed extension: %s\n", path);
+    0;
 
-    | Error(_) =>
-      Printf.printf("Failed to install extension: %s\n", path);
-      1;
-    };
-
-  | None =>
-    prerr_endline("Error locating user extension folder.");
+  | Error(_) =>
+    Printf.printf("Failed to install extension: %s\n", path);
     1;
   };
 };
 
-let uninstallExtension = (_extensionId, _cli) => {
-  prerr_endline("Not implemented yet.");
-  1;
+let uninstallExtension = (extensionId, {overriddenExtensionsDir, _}) => {
+  let result =
+    ExtM.uninstall(~extensionsFolder=?overriddenExtensionsDir, extensionId)
+    |> LwtEx.sync;
+
+  switch (result) {
+  | Ok(_) =>
+    Printf.sprintf("Successfully uninstalled extension: %s\n", extensionId)
+    |> print_endline;
+    0;
+
+  | Error(msg) =>
+    Printf.sprintf(
+      "Failed to uninstall extension: %s\n%s",
+      extensionId,
+      Printexc.to_string(msg),
+    )
+    |> prerr_endline;
+    1;
+  };
 };
 
 let printVersion = () => {
@@ -50,13 +62,60 @@ let printVersion = () => {
   0;
 };
 
+let queryExtension = (extension, _cli) => {
+  let setup = Core.Setup.init();
+  Service_Extensions.
+    // Try to parse the extension id - either search, or
+    // get details
+    (
+      switch (Catalog.Identifier.fromString(extension)) {
+      | Some(identifier) =>
+        Catalog.details(~setup, identifier)
+        |> LwtEx.sync
+        |> (
+          fun
+          | Ok(ext) => {
+              ext |> Catalog.Details.toString |> print_endline;
+              0;
+            }
+          | Error(msg) => {
+              prerr_endline(Printexc.to_string(msg));
+              1;
+            }
+        )
+      | None =>
+        Catalog.search(~offset=0, ~setup, extension)
+        |> LwtEx.sync
+        |> (
+          fun
+          | Ok(response) => {
+              response |> Catalog.SearchResponse.toString |> print_endline;
+              0;
+            }
+          | Error(msg) => {
+              prerr_endline(Printexc.to_string(msg));
+              1;
+            }
+        )
+      }
+    );
+};
+
 let listExtensions = ({overriddenExtensionsDir, _}) => {
-  let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
-  let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
-    print_endline(ext.manifest.name);
-  };
-  List.iter(printExtension, extensions);
-  0;
+  Exthost.Extension.(
+    {
+      let extensions =
+        ExtM.get(~extensionsFolder=?overriddenExtensionsDir, ())
+        |> LwtEx.sync
+        |> Result.value(~default=[]);
+
+      let printExtension = (ext: Scanner.ScanResult.t) => {
+        print_endline(ext.manifest |> Manifest.identifier);
+      };
+      List.iter(printExtension, extensions);
+      0;
+    }
+  );
 };
 
 Log.debug("Startup: Parsing CLI options");
@@ -65,6 +124,7 @@ let (cliOptions, eff) = Oni_CLI.parse(Sys.argv);
 switch (eff) {
 | PrintVersion => printVersion() |> exit
 | InstallExtension(name) => installExtension(name, cliOptions) |> exit
+| QueryExtension(name) => queryExtension(name, cliOptions) |> exit
 | UninstallExtension(name) => uninstallExtension(name, cliOptions) |> exit
 | CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
 | ListExtensions => listExtensions(cliOptions) |> exit
@@ -163,6 +223,8 @@ switch (eff) {
   let init = app => {
     Log.debug("Init");
 
+    Vim.init();
+
     let initialWorkingDirectory = initWorkingDirectory();
     let window =
       createWindow(
@@ -176,12 +238,31 @@ switch (eff) {
 
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
 
+    let initialBuffer = {
+      let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+        Vim.Buffer.openFile(Core.BufferPath.welcome)
+        |> Vim.BufferMetadata.ofBuffer;
+      Core.Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    };
+
+    let initialBufferRenderers =
+      Model.BufferRenderers.(
+        initial
+        |> setById(
+             Core.Buffer.getId(initialBuffer),
+             Model.BufferRenderer.Welcome,
+           )
+      );
+
     let currentState =
       ref(
         Model.State.initial(
+          ~initialBuffer,
+          ~initialBufferRenderers,
           ~getUserSettings,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,
+          ~extensionsFolder=cliOptions.overriddenExtensionsDir,
         ),
       );
 
@@ -253,6 +334,11 @@ switch (eff) {
       Window.restore(window);
     };
 
+    // This is called raiseWIndow because if it were simply raise, it would shadow the exception raising function
+    let raiseWindow = () => {
+      Window.raise(window);
+    };
+
     let setVsync = vsync => Window.setVsync(window, vsync);
 
     let quit = code => {
@@ -276,6 +362,7 @@ switch (eff) {
         ~maximize,
         ~minimize,
         ~restore,
+        ~raiseWindow,
         ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,

@@ -3,8 +3,6 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Feature_Editor;
 
-module Ext = Oni_Extensions;
-
 module Internal = {
   let syntaxScope = (~cursor: option(Vim.Cursor.t), state: State.t) => {
     state
@@ -61,81 +59,66 @@ module Internal = {
     |> Option.value(~default=IndentationSettings.default);
 };
 
-let current:
-  (~languageConfigLoader: Ext.LanguageConfigurationLoader.t, State.t) =>
-  Vim.Context.t =
-  (~languageConfigLoader, state) => {
-    state
-    |> Selectors.getActiveEditorGroup
-    |> Selectors.getActiveEditor
-    |> Option.map((editor: Editor.t) => {
-         let bufferId = Editor.getBufferId(editor);
-         let cursors = Editor.getVimCursors(editor);
+let current = (state: State.t) => {
+  let editor = Feature_Layout.activeEditor(state.layout);
+  let bufferId = Editor.getBufferId(editor);
+  let cursors = Editor.getVimCursors(editor);
 
-         let editorBuffer = Selectors.getActiveBuffer(state);
-         let maybeLanguageConfig =
-           editorBuffer
-           |> OptionEx.flatMap(Buffer.getFileType)
-           |> OptionEx.flatMap(
-                Ext.LanguageConfigurationLoader.get_opt(languageConfigLoader),
-              );
+  let editorBuffer = Selectors.getActiveBuffer(state);
+  let maybeLanguageConfig: option(LanguageConfiguration.t) =
+    editorBuffer
+    |> OptionEx.flatMap(Buffer.getFileType)
+    |> OptionEx.flatMap(
+         Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+       );
 
-         let maybeCursor =
-           switch (Editor.getVimCursors(editor)) {
-           | [hd, ..._] => Some(hd)
-           | [] => None
-           };
+  let maybeCursor =
+    switch (Editor.getVimCursors(editor)) {
+    | [hd, ..._] => Some(hd)
+    | [] => None
+    };
 
-         // TODO: Hook up to Vim context
-         let autoIndent =
-           maybeLanguageConfig
-           |> Option.map(LanguageConfiguration.toAutoIndent)
-           |> Option.value(~default=_ => Vim.AutoIndent.KeepIndent);
+  // TODO: Hook up to Vim context
+  let autoIndent =
+    maybeLanguageConfig
+    |> Option.map(LanguageConfiguration.toAutoIndent)
+    |> Option.value(~default=(~previousLine as _, ~beforePreviousLine as _) =>
+         Vim.AutoIndent.KeepIndent
+       );
 
-         let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
-         let autoClosingPairs =
-           Internal.autoClosingPairs(
-             ~syntaxScope,
-             ~maybeLanguageConfig,
-             state,
-           );
+  let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
+  let autoClosingPairs =
+    Internal.autoClosingPairs(~syntaxScope, ~maybeLanguageConfig, state);
 
-         let Feature_Editor.EditorLayout.{
-               bufferHeightInCharacters: height,
-               bufferWidthInCharacters: width,
-               _,
-             } =
-           // TODO: Fix this
-           Editor.getLayout(
-             ~isMinimapShown=true,
-             ~showLineNumbers=true,
-             ~maxMinimapCharacters=0,
-             editor,
-           );
+  let Feature_Editor.EditorLayout.{
+        bufferHeightInCharacters: height,
+        bufferWidthInCharacters: width,
+        _,
+      } =
+    // TODO: Fix this
+    Editor.getLayout(~showLineNumbers=true, ~maxMinimapCharacters=0, editor);
 
-         let leftColumn = Editor.getLeftVisibleColumn(editor);
-         let topLine = Editor.getTopVisibleLine(editor);
+  let leftColumn = Editor.getLeftVisibleColumn(editor);
+  let topLine = Editor.getTopVisibleLine(editor);
 
-         // Set configured line comment
-         let lineComment = Internal.lineComment(~maybeLanguageConfig);
+  // Set configured line comment
+  let lineComment = Internal.lineComment(~maybeLanguageConfig);
 
-         let indentation = Internal.indentation(~buffer=editorBuffer);
+  let indentation = Internal.indentation(~buffer=editorBuffer);
 
-         let insertSpaces = indentation.mode == Spaces;
+  let insertSpaces = indentation.mode == Spaces;
 
-         Vim.Context.{
-           autoIndent,
-           bufferId,
-           leftColumn,
-           topLine,
-           width,
-           height,
-           cursors,
-           autoClosingPairs,
-           lineComment,
-           insertSpaces,
-           tabSize: indentation.size,
-         };
-       })
-    |> Option.value(~default=Vim.Context.current());
+  Vim.Context.{
+    autoIndent,
+    bufferId,
+    leftColumn,
+    topLine,
+    width,
+    height,
+    cursors,
+    autoClosingPairs,
+    lineComment,
+    insertSpaces,
+    tabSize: indentation.size,
   };
+};

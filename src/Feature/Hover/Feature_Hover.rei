@@ -21,6 +21,7 @@ type msg =
       contents: list(Exthost.MarkdownString.t),
       range: option(EditorCoreTypes.Range.t),
       requestID: int,
+      editorID: int,
     })
   | HoverRequestFailed(string)
   | MouseHovered(EditorCoreTypes.Location.t)
@@ -47,7 +48,7 @@ module View: {
     (
       ~colorTheme: Oni_Core.ColorTheme.Colors.t,
       ~tokenTheme: Oni_Syntax.TokenTheme.t,
-      ~languageInfo: Oni_Extensions.LanguageInfo.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~uiFont: Oni_Core.UiFont.t,
       ~editorFont: Service_Font.font,
       ~model: model,

@@ -73,6 +73,19 @@ module OneBasedRange: {
   let toRange: t => Range.t;
 };
 
+module CodeLens: {
+  [@deriving show]
+  type t = {
+    cacheId: option(list(int)),
+    range: OneBasedRange.t,
+    command: option(Command.t),
+  };
+
+  let decode: Json.decoder(t);
+
+  module List: {let decode: Json.decoder(list(t));};
+};
+
 module Location: {
   type t = {
     uri: Uri.t,
@@ -102,6 +115,15 @@ module Edit: {
 
     let decode: Json.decoder(t);
   };
+};
+
+module ExtensionActivationReason: {
+  type t;
+
+  let create:
+    (~startup: bool, ~extensionId: string, ~activationEvent: string) => t;
+
+  let encode: Json.encoder(t);
 };
 
 module ExtensionId: {
@@ -717,9 +739,19 @@ module WorkspaceData: {
 };
 
 module ThemeColor: {
+  [@deriving show]
   type t = {id: string};
 
   let decode: Json.decoder(t);
+};
+
+module Color: {
+  [@deriving show]
+  type t;
+
+  let decode: Json.decoder(t);
+
+  let resolve: (Oni_Core.ColorTheme.Colors.t, t) => option(Revery.Color.t);
 };
 
 module Msg: {
@@ -793,12 +825,12 @@ module Msg: {
     [@deriving show]
     type msg =
       | ActivateExtension({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           activationEvent: option(string),
         })
-      | WillActivateExtension({extensionId: string})
+      | WillActivateExtension({extensionId: ExtensionId.t})
       | DidActivateExtension({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           //startup: bool,
           codeLoadingTime: int,
           activateCallTime: int,
@@ -806,10 +838,10 @@ module Msg: {
         })
       //activationEvent: option(string),
       | ExtensionActivationError({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           errorMessage: string,
         })
-      | ExtensionRuntimeError({extensionId: string});
+      | ExtensionRuntimeError({extensionId: ExtensionId.t});
   };
 
   module FileSystem: {
@@ -854,6 +886,15 @@ module Msg: {
   module LanguageFeatures: {
     [@deriving show]
     type msg =
+      | EmitCodeLensEvent({
+          eventHandle: int,
+          event: Yojson.Safe.t,
+        }) // ??
+      | RegisterCodeLensSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          eventHandle: option(int),
+        })
       | RegisterDocumentHighlightProvider({
           handle: int,
           selector: DocumentSelector.t,
@@ -1019,6 +1060,7 @@ module Msg: {
           source: string,
           alignment,
           command: option(Command.t),
+          color: option(Color.t),
           priority: int,
         })
       | Dispose({id: int});
@@ -1189,9 +1231,25 @@ module Request: {
 
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => unit;
+
+    let activate:
+      (~extensionId: string, ~reason: ExtensionActivationReason.t, Client.t) =>
+      Lwt.t(bool);
+
+    let deltaExtensions:
+      (
+        ~toAdd: list(Exthost_Extension.InitData.Extension.t),
+        ~toRemove: list(ExtensionId.t),
+        Client.t
+      ) =>
+      Lwt.t(unit);
   };
 
   module LanguageFeatures: {
+    let provideCodeLenses:
+      (~handle: int, ~resource: Uri.t, Client.t) =>
+      Lwt.t(option(list(CodeLens.t)));
+
     let provideCompletionItems:
       (
         ~handle: int,
@@ -1347,3 +1405,5 @@ module Request: {
       (~workspace: option(WorkspaceData.t), Client.t) => unit;
   };
 };
+
+module LanguageInfo = LanguageInfo;

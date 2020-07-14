@@ -22,7 +22,7 @@ let start:
     ~onHighlights: (~bufferId: int, ~tokens: list(Protocol.TokenUpdate.t)) =>
                    unit,
     ~onHealthCheckResult: bool => unit,
-    Oni_Extensions.LanguageInfo.t,
+    Exthost.LanguageInfo.t,
     Setup.t
   ) =>
   result(t, string);

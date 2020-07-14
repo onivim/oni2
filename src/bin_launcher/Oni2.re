@@ -29,6 +29,7 @@ let spec =
     ("--debug", passthrough, " Enable debug logging."),
     ("--trace", passthrough, " Enable trace logging."),
     ("--quiet", passthrough, " Print only error log messages."),
+    ("--silent", passthrough, " Do not print any logging."),
     ("--log-file", passthroughString, " Specify a file for the output logs."),
     ("--log-filter", passthroughString, " Filter log output."),
     (
@@ -52,6 +53,11 @@ let spec =
       "--install-extension",
       passthroughStringAndStayAttached,
       " Install extension by specifying a path to the .vsix file",
+    ),
+    (
+      "--query-extension",
+      passthroughStringAndStayAttached,
+      " Query extension info by specifying an extension id.",
     ),
     (
       "--uninstall-extension",

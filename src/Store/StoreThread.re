@@ -9,10 +9,8 @@
 
 module Core = Oni_Core;
 
-module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
-open Oni_Extensions;
 open Exthost.Extension;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
@@ -37,7 +35,13 @@ let discoverExtensions =
           };
 
         let userExtensions =
-          Utility.getUserExtensions(~overriddenExtensionsDir);
+          Service_Extensions.Management.get(
+            ~extensionsFolder=?overriddenExtensionsDir,
+            (),
+          )
+          // TODO: De-syncify!
+          |> Core.Utility.LwtEx.sync
+          |> Result.value(~default=[]);
 
         Log.infof(m =>
           m("Discovered %n user extensions.", List.length(userExtensions))
@@ -85,6 +89,7 @@ let start =
       ~minimize,
       ~close,
       ~restore,
+      ~raiseWindow,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
@@ -109,7 +114,7 @@ let start =
       ~shouldLoadExtensions,
       ~overriddenExtensionsDir,
     );
-  let languageInfo = LanguageInfo.ofExtensions(extensions);
+  let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
   let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
   let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
 
@@ -150,7 +155,7 @@ let start =
 
   let fileExplorerUpdater = FileExplorerStore.start();
 
-  let lifecycleUpdater = LifecycleStoreConnector.start(quit);
+  let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
@@ -281,19 +286,16 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
-    let visibleEditors =
-      Model.EditorGroups.getAllVisibleEditors(state.editorGroups);
+    let visibleEditors = Feature_Layout.visibleEditors(state.layout);
 
-    let maybeActiveEditor =
-      Model.EditorGroups.getActiveEditor(state.editorGroups);
-    let maybeActiveEditorId =
-      Feature_Editor.(maybeActiveEditor |> Option.map(Editor.getId));
+    let activeEditor = Feature_Layout.activeEditor(state.layout);
+    let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
 
     let extHostSubscription =
       Feature_Exthost.subscription(
         ~buffers=visibleBuffers,
         ~editors=visibleEditors,
-        ~activeEditorId=maybeActiveEditorId,
+        ~activeEditorId=Some(activeEditorId),
         ~client=extHostClient,
       )
       |> Isolinear.Sub.map(() => Model.Actions.Noop);
@@ -304,6 +306,16 @@ let start =
         Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
       );
 
+    let editorGlobalSub =
+      Feature_Editor.Sub.global(~config)
+      |> Isolinear.Sub.map(msg =>
+           Model.Actions.Editor({scope: Model.EditorScope.All, msg})
+         );
+
+    let extensionsSub =
+      Feature_Extensions.sub(~setup, state.extensions)
+      |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -312,6 +324,8 @@ let start =
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
+      editorGlobalSub,
+      extensionsSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -398,6 +412,12 @@ let start =
     ~dispatch,
     Feature_Formatting.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
+  );
+
+  registerCommands(
+    ~dispatch,
+    Feature_Clipboard.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
   );
 
   // TODO: These should all be replaced with isolinear subscriptions.

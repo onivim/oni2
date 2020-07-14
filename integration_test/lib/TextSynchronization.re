@@ -52,7 +52,7 @@ let validateTextIsSynchronized =
     (state: Model.State.t) => {
       // Request the latest buffer text from the extension
       dispatch(
-        Model.Actions.Extension(
+        Model.Actions.Extensions(
           ExecuteCommand({
             command: "developer.oni.getBufferText",
             arguments: [],

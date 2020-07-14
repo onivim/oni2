@@ -39,6 +39,10 @@ let identifier = manifest => {
   };
 };
 
+let displayName = ({displayName, _}) => {
+  displayName |> Option.map(LocalizedToken.toString);
+};
+
 module Decode = {
   open Json.Decode;
 

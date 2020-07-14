@@ -29,7 +29,7 @@ let waitForExtensionsEvent = (~name, f, context) => {
      );
 };
 
-// Test cases for the vscode extesnsions API:
+// Test cases for the vscode extensions API:
 // https://code.visualstudio.com/api/references/vscode-api#extensions
 describe("ExtensionsTest", ({test, _}) => {
   test("change workspaces", ({expect, _}) => {

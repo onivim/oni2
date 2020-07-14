@@ -1,27 +1,41 @@
 open Oni_Core;
+open Feature_Editor;
 
 // MODEL
 
 type panel =
   | Left
-  | Center(int)
+  | Center
   | Bottom;
 
 type model;
 
-let initial: int => model;
+let initial: list(Editor.t) => model;
 
-let windows: model => list(int);
-let addWindow: ([ | `Horizontal | `Vertical], int, model) => model;
-let insertWindow:
-  (
-    [ | `Before(int) | `After(int)],
-    [ | `Horizontal | `Vertical],
-    int,
-    model
-  ) =>
-  model;
-let removeWindow: (int, model) => model;
+let visibleEditors: model => list(Editor.t);
+let editorById: (int, model) => option(Editor.t);
+
+let split: ([ | `Horizontal | `Vertical], model) => model;
+
+let activeEditor: model => Editor.t;
+
+let openEditor: (~config: Config.resolver, Editor.t, model) => model;
+let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
+
+let addLayoutTab: model => model;
+let gotoLayoutTab: (int, model) => model;
+let previousLayoutTab: (~count: int=?, model) => model;
+let nextLayoutTab: (~count: int=?, model) => model;
+let removeLayoutTab: (int, model) => option(model);
+let removeLayoutTabRelative: (~delta: int, model) => option(model);
+let removeActiveLayoutTab: model => option(model);
+let removeOtherLayoutTabs: model => model;
+let removeOtherLayoutTabsRelative: (~count: int, model) => model;
+let moveActiveLayoutTabTo: (int, model) => model;
+let moveActiveLayoutTabRelative: (int, model) => model;
+
+let map: (Editor.t => Editor.t, model) => model;
+let fold: (('acc, Editor.t) => 'acc, 'acc, model) => 'acc;
 
 // UPDATE
 
@@ -30,6 +44,8 @@ type msg;
 
 type outmsg =
   | Nothing
+  | SplitAdded
+  | RemoveLastWasBlocked
   | Focus(panel);
 
 let update: (~focus: option(panel), model, msg) => (model, outmsg);
@@ -39,10 +55,25 @@ let update: (~focus: option(panel), model, msg) => (model, outmsg);
 module View: {
   open Revery.UI;
 
+  module type ContentModel = {
+    type t = Editor.t;
+
+    let id: t => int;
+    let title: t => string;
+    let icon: t => option(IconTheme.IconDefinition.t);
+    let isModified: t => bool;
+
+    let render: (~isActive: bool, t) => Revery.UI.element;
+  };
+
   let make:
     (
-      ~children: int => element,
+      ~children: (module ContentModel),
       ~model: model,
+      ~isZenMode: bool,
+      ~showTabs: bool,
+      ~config: Config.resolver,
+      ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       unit
@@ -53,6 +84,14 @@ module View: {
 // COMMANDS
 
 module Commands: {
+  let nextEditor: Command.t(msg);
+  let previousEditor: Command.t(msg);
+
+  let splitVertical: Command.t(msg);
+  let splitHorizontal: Command.t(msg);
+
+  let closeActiveEditor: Command.t(msg);
+
   let moveLeft: Command.t(msg);
   let moveRight: Command.t(msg);
   let moveUp: Command.t(msg);
@@ -80,8 +119,15 @@ module Commands: {
   let maximizeVertical: Command.t(msg);
   let toggleMaximize: Command.t(msg);
   let resetSizes: Command.t(msg);
+
+  let addLayout: Command.t(msg);
+  let previousLayout: Command.t(msg);
+  let nextLayout: Command.t(msg);
 };
 
 // CONTRIBUTIONS
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
+};

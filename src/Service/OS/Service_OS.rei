@@ -1,4 +1,5 @@
-module Imperative: {
+module Api: {
+  let rmdir: (~recursive: bool=?, string) => Lwt.t(unit);
   let stat: string => Lwt.t(Luv.File.Stat.t);
   let readdir: string => Lwt.t(list(Luv.File.Dirent.Kind.t));
   let readFile: string => Lwt.t(Bytes.t);

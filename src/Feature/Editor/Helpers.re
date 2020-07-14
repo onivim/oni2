@@ -5,7 +5,7 @@ module BufferHighlights = Oni_Syntax.BufferHighlights;
 
 let getTokensForLine =
     (
-      ~buffer,
+      ~editor,
       ~bufferHighlights,
       ~cursorLine,
       ~colors: Colors.t,
@@ -17,20 +17,23 @@ let getTokensForLine =
       endIndex,
       i,
     ) =>
-  if (i >= Buffer.getNumberOfLines(buffer)) {
+  if (i >= Editor.totalViewLines(editor)) {
     [];
   } else {
-    let line = Buffer.getLine(i, buffer);
+    let viewLine = Editor.viewLine(editor, i);
+    let line = viewLine.contents;
     let length = BufferLine.lengthInBytes(line);
     let startIndex = max(0, startIndex);
     let endIndex = max(0, endIndex);
+    let bufferId = Editor.getBufferId(editor);
+
     if (length == 0) {
       [];
     } else {
       let idx = Index.fromZeroBased(i);
       let highlights =
         BufferHighlights.getHighlightsByLine(
-          ~bufferId=Buffer.getId(buffer),
+          ~bufferId,
           ~line=idx,
           bufferHighlights,
         );
@@ -57,7 +60,7 @@ let getTokensForLine =
 
       let tokenColors =
         Feature_Syntax.getTokens(
-          ~bufferId=Buffer.getId(buffer),
+          ~bufferId,
           ~line=Index.fromZeroBased(i),
           bufferSyntaxHighlights,
         );
@@ -83,7 +86,7 @@ let getTokensForLine =
 
 let getTokenAtPosition =
     (
-      ~buffer,
+      ~editor,
       ~bufferHighlights,
       ~cursorLine,
       ~colors,
@@ -97,7 +100,7 @@ let getTokenAtPosition =
   let index = position.column |> Index.toZeroBased;
 
   getTokensForLine(
-    ~buffer,
+    ~editor,
     ~bufferHighlights,
     ~cursorLine,
     ~colors,

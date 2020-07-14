@@ -1,0 +1,12 @@
+(library
+    (name Service_Net)
+    (public_name Oni2.service.net)
+    (inline_tests)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Revery
+      isolinear
+      base
+    )
+    (preprocess (pps ppx_let ppx_deriving.show ppx_inline_test)))

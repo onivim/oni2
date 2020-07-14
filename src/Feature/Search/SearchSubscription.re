@@ -14,6 +14,7 @@ module Make = (Config: {type action;}) => {
       ripgrep: Ripgrep.t, // TODO: Necessary dependency?
       onUpdate: list(Ripgrep.Match.t) => unit, // TODO: Should return action
       onCompleted: unit => action,
+      onError: string => action,
     };
 
     let jobs = Hashtbl.create(10);
@@ -21,16 +22,26 @@ module Make = (Config: {type action;}) => {
     let start =
         (
           ~id,
-          ~params as {directory, query, ripgrep, onUpdate, onCompleted},
+          ~params as {
+            directory,
+            query,
+            ripgrep,
+            onUpdate,
+            onCompleted,
+            onError,
+          },
           ~dispatch: _,
         ) => {
       Log.info("Starting " ++ id);
 
       let dispose =
         ripgrep.Ripgrep.findInFiles(
-          ~directory, ~query, ~onUpdate, ~onComplete=() => {
-          dispatch(onCompleted())
-        });
+          ~directory,
+          ~query,
+          ~onUpdate,
+          ~onComplete=() => {dispatch(onCompleted())},
+          ~onError=msg => dispatch(onError(msg)),
+        );
 
       Hashtbl.replace(jobs, id, (query, dispose));
     };
@@ -60,10 +71,11 @@ module Make = (Config: {type action;}) => {
     };
   };
 
-  let create = (~id, ~directory, ~query, ~ripgrep, ~onUpdate, ~onCompleted) =>
+  let create =
+      (~id, ~directory, ~query, ~ripgrep, ~onUpdate, ~onCompleted, ~onError) =>
     Subscription.create(
       id,
       (module Provider),
-      {directory, query, ripgrep, onUpdate, onCompleted},
+      {directory, query, ripgrep, onUpdate, onCompleted, onError},
     );
 };

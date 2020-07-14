@@ -5,7 +5,14 @@
     (c_flags (:include c_flags.sexp))
     (c_names bindings)
     (cxx_flags (:include cxx_flags.sexp))
-    (libraries base editor-core-types timber zed_oni))
+    (preprocess (pps ppx_deriving.show))
+    (libraries
+        base
+        editor-core-types
+        timber
+        zed_oni
+        ppx_deriving.runtime
+))
 
 (rule
     (targets c_flags.sexp cxx_flags.sexp flags.sexp)

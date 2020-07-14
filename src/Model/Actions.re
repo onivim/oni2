@@ -8,9 +8,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
-open Oni_Components;
 
-module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
@@ -55,6 +53,7 @@ type t =
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
+  | Clipboard(Feature_Clipboard.msg)
   | Syntax(Feature_Syntax.msg)
   | Hover(Feature_Hover.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
@@ -79,7 +78,7 @@ type t =
     )
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
-  | Extension(Extensions.action)
+  | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | References(References.actions)
@@ -96,28 +95,21 @@ type t =
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
-  | SelectionChanged([@opaque] VisualRange.t)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   | KeyboardInput(string)
   | WindowTitleSet(string)
-  | EditorGroupSelected(int)
   | EditorGroupSizeChanged({
       id: int,
       width: int,
       height: int,
     })
-  | EditorCursorMove(Feature_Editor.EditorId.t, [@opaque] list(Vim.Cursor.t))
   | EditorSizeChanged({
       id: Feature_Editor.EditorId.t,
       pixelWidth: int,
       pixelHeight: int,
     })
-  | EditorScrollToLine(Feature_Editor.EditorId.t, int)
-  | EditorScrollToColumn(Feature_Editor.EditorId.t, int)
-  | EditorTabClicked(int)
   | Formatting(Feature_Formatting.msg)
-  | ViewCloseEditor(int)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
       severity: [@opaque] Exthost.Msg.MessageService.severity,
@@ -125,15 +117,16 @@ type t =
       extensionId: option(string),
     })
   | Editor({
-      editorId: int,
+      scope: EditorScope.t,
       msg: Feature_Editor.msg,
     })
   | FilesDropped({paths: list(string)})
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
+  | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputClicked(Selection.t)
+  | QuickmenuInputMessage(Feature_InputText.msg)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
@@ -149,18 +142,24 @@ type t =
       option([ | `Horizontal | `Vertical]),
       option(Location.t),
     )
+  | OpenFileInNewLayout(string)
+  | BufferOpened(string, option(Location.t), int)
+  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
+  | Pasted({
+      rawText: string,
+      isMultiLine: bool,
+      lines: array(string),
+    })
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_
   // to quit the app. This gives subscriptions the chance to clean up.
   | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
-  | SearchClearMatchingPair(int)
-  | SearchSetMatchingPair(int, Location.t, Location.t)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
-  | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
+  | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
@@ -176,10 +175,12 @@ type t =
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
+  | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
-  | PaneTabClicked(Pane.pane)
+  | Pane(Feature_Pane.msg)
+  | PaneTabClicked(Feature_Pane.pane)
   | PaneCloseButtonClicked
   | VimDirectoryChanged(string)
   | VimExecuteCommand(string)
@@ -229,6 +230,7 @@ type t =
       decorations: list(Decoration.t),
     })
   | Vim(Feature_Vim.msg)
+  | TabPage(Vim.TabPage.effect)
   | Noop
 and command = {
   commandCategory: option(string),

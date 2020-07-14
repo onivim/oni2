@@ -5,6 +5,9 @@ let saveAllAndQuit: unit => Isolinear.Effect.t(_);
 let quitAll: unit => Isolinear.Effect.t(_);
 
 module Effects: {
+  let paste:
+    (~toMsg: list(Vim.Cursor.t) => 'msg, string) => Isolinear.Effect.t('msg);
+
   let applyEdits:
     (
       ~bufferId: int,

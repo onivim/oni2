@@ -1,7 +1,31 @@
 open Oni_Core;
 module Log = (val Log.withNamespace("Oni2.Service.OS"));
-module Imperative = {
+
+module Api = {
+  exception LuvException(Luv.Error.t);
   exception NotImplemented;
+
+  let wrap = LuvEx.wrapPromise;
+
+  let opendir = wrap(Luv.File.opendir);
+  let closedir = wrap(Luv.File.closedir);
+  let readdir = wrap(Luv.File.readdir);
+  let unlink = {
+    let wrapped = wrap(Luv.File.unlink);
+
+    path => {
+      Log.infof(m => m("Luv.unlink: %s", path));
+      wrapped(path);
+    };
+  };
+
+  let rmdirNonRecursive = {
+    let wrapped = wrap(Luv.File.rmdir);
+    path => {
+      Log.infof(m => m("Luv.rmdir: %s", path));
+      wrapped(path);
+    };
+  };
 
   let stat = path => {
     Luv.File.stat(path) |> Oni_Core.Utility.LuvEx.wrapPromise;
@@ -30,9 +54,43 @@ module Imperative = {
   let mkdir = _path => {
     Lwt.fail(NotImplemented);
   };
+  
+  let bind = (fst, snd) => Lwt.bind(snd, fst);
 
-  let delete = (~recursive as _, ~useTrash as _, _path) => {
-    Lwt.fail(NotImplemented);
+  let rmdir = (~recursive=true, path) => {
+    Log.tracef(m => m("rmdir called for path: %s", path));
+    let rec loop = candidate => {
+      Log.tracef(m => m("rmdir - recursing to: %s", path));
+      candidate
+      |> opendir
+      |> bind(dir => {
+           Lwt.bind(readdir(dir), dirents => {
+             dirents
+             |> Array.to_list
+             |> List.map((dirent: Luv.File.Dirent.t) => {
+                  let name = Rench.Path.join(candidate, dirent.name);
+                  switch (dirent.kind) {
+                  | `LINK
+                  | `FILE => unlink(Rench.Path.join(candidate, dirent.name))
+                  | `DIR => loop(Rench.Path.join(candidate, name))
+                  | _ =>
+                    Log.warnf(m =>
+                      m("Unknown file type encountered: %s", name)
+                    );
+                    Lwt.return();
+                  };
+                })
+             |> Lwt.join
+             |> bind(_ => closedir(dir))
+             |> bind(_ => rmdirNonRecursive(candidate))
+           })
+         });
+    };
+    if (recursive) {
+      loop(path);
+    } else {
+      rmdirNonRecursive(path);
+    };
   };
 };
 

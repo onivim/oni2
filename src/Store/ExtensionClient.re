@@ -1,11 +1,10 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-open Oni_Extensions;
-module Extensions = Oni_Extensions;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
@@ -520,7 +519,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       Lwt.return(Reply.okEmpty);
     | ExtensionService(DidActivateExtension({extensionId, _})) =>
       dispatch(
-        Actions.Extension(Oni_Model.Extensions.Activated(extensionId)),
+        Actions.Extensions(Feature_Extensions.Activated(extensionId)),
       );
       Lwt.return(Reply.okEmpty);
 
@@ -528,7 +527,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       dispatch(ExtMessageReceived({severity, message, extensionId}));
       Lwt.return(Reply.okEmpty);
 
-    | StatusBar(SetEntry({id, label, alignment, priority, command, _})) =>
+    | StatusBar(
+        SetEntry({id, label, alignment, priority, color, command, _}),
+      ) =>
       let command =
         command |> Option.map(({id, _}: Exthost.Command.t) => id);
       dispatch(
@@ -536,6 +537,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           Feature_StatusBar.ItemAdded(
             Feature_StatusBar.Item.create(
               ~command?,
+              ~color?,
               ~id,
               ~label,
               ~alignment,
@@ -642,12 +644,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     };
 
   let _process: Luv.Process.t =
-    Luv.Process.spawn(
+    LuvEx.Process.spawn(
       ~environment,
       ~on_exit,
-      ~windows_hide=true,
-      ~windows_hide_console=true,
-      ~windows_hide_gui=true,
       ~redirect,
       nodePath,
       [nodePath, extHostScriptPath],

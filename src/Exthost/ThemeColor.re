@@ -1,5 +1,6 @@
 open Oni_Core;
 
+[@deriving show]
 type t = {id: string};
 
 let decode =

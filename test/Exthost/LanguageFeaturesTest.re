@@ -35,6 +35,88 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
     |> Test.terminate
     |> Test.waitForProcessClosed;
   };
+  describe("codelens", ({test, _}) => {
+    test("gets codelens items", ({expect, _}) => {
+      let codeLensHandle = ref(-1);
+
+      let getCodeLenses = client =>
+        Request.LanguageFeatures.provideCodeLenses(
+          ~handle=codeLensHandle^,
+          ~resource=testUri,
+          client,
+        );
+
+      let waitForRegisterCodeLensSupport =
+        fun
+        | Msg.LanguageFeatures(RegisterCodeLensSupport({handle, _})) => {
+            codeLensHandle := handle;
+            true;
+          }
+        | _ => false;
+
+      let range1 =
+        OneBasedRange.{
+          startLineNumber: 2,
+          endLineNumber: 2,
+          startColumn: 2,
+          endColumn: 2,
+        };
+      let range2 =
+        OneBasedRange.{
+          startLineNumber: 3,
+          endLineNumber: 3,
+          startColumn: 3,
+          endColumn: 3,
+        };
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterCodeLensSupport",
+           waitForRegisterCodeLensSupport,
+         )
+      |> Test.withClient(
+           Request.DocumentsAndEditors.acceptDocumentsAndEditorsDelta(
+             ~delta=addedDelta,
+           ),
+         )
+      |> Test.withClientRequest(
+           ~name="Get code lenses items",
+           ~validate=
+             (codeLenses: option(list(Exthost.CodeLens.t))) => {
+               expect.equal(
+                 codeLenses,
+                 Some([
+                   CodeLens.{
+                     cacheId: Some([1, 0]),
+                     range: range1,
+                     command:
+                       Some(
+                         Exthost.Command.{
+                           title: Some("codelens: command1"),
+                           id: "codelens.command1",
+                         },
+                       ),
+                   },
+                   CodeLens.{
+                     cacheId: Some([1, 1]),
+                     range: range2,
+                     command:
+                       Some(
+                         Exthost.Command.{
+                           title: Some("codelens: command2"),
+                           id: "codelens.command2",
+                         },
+                       ),
+                   },
+                 ]),
+               );
+               true;
+             },
+           getCodeLenses,
+         )
+      |> finishTest;
+    })
+  });
 
   describe("completion", ({test, _}) => {
     test("gets completion items", ({expect, _}) => {
@@ -558,6 +640,25 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
          )
       |> finishTest;
     });
+    test("range formatting: extension ID is correct", _ => {
+      let waitForRegisterRangeFormattingSupport =
+        fun
+        | Msg.LanguageFeatures(
+            RegisterRangeFormattingSupport({extensionId, displayName, _}),
+          ) => {
+            extensionId == "oni-language-features"
+            && displayName == "oni-language-features";
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterRangeFormattingSupport",
+           waitForRegisterRangeFormattingSupport,
+         )
+      |> finishTest;
+    });
+
     test("range formatting", ({expect, _}) => {
       let documentRangeFormattingHandle = ref(-1);
 

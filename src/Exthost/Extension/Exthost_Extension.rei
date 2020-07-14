@@ -52,10 +52,22 @@ module Contributions: {
   };
 
   module Configuration: {
+    module PropertyType: {
+      type t =
+        | Array
+        | Boolean
+        | String
+        | Integer
+        | Number
+        | Object
+        | Unknown;
+    };
+
     type t = list(property)
     and property = {
       name: string,
       default: [@opaque] Oni_Core.Json.t,
+      propertyType: PropertyType.t,
     };
 
     let toSettings: t => Oni_Core.Config.Settings.t;
@@ -141,6 +153,7 @@ module Manifest: {
 
   let decode: Oni_Core.Json.decoder(t);
 
+  let identifier: t => string;
   let getDisplayName: t => string;
 
   module Encode: {let kind: Oni_Core.Json.encoder(kind);};
@@ -166,13 +179,22 @@ module Scanner: {
 };
 
 module InitData: {
+  module Identifier: {
+    type t;
+
+    let fromString: string => t;
+  };
+
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
     type t = {
-      identifier: string,
+      identifier: Identifier.t,
       extensionLocation: Oni_Core.Uri.t,
       name: string,
+      displayName: option(string),
+      description: option(string),
       main: option(string),
+      icon: option(string),
       version: string,
       engines: string,
       activationEvents: list(string),

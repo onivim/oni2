@@ -69,7 +69,7 @@ let%component make =
   let%hook (hoverTimer, resetHoverTimer) =
     Hooks.timer(~active=hoverTimerActive^, ());
 
-  let lineCount = Buffer.getNumberOfLines(buffer);
+  let lineCount = editor |> Editor.totalViewLines;
   let indentation =
     switch (Buffer.getIndentation(buffer)) {
     | Some(v) => v
@@ -77,7 +77,12 @@ let%component make =
     };
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-    dispatch(Msg.EditorMouseWheel({deltaWheel: wheelEvent.deltaY *. (-1.)}));
+    dispatch(
+      Msg.EditorMouseWheel({
+        deltaY: wheelEvent.deltaY *. (-1.),
+        deltaX: wheelEvent.deltaX,
+      }),
+    );
 
   let getMaybeLocationFromMousePosition = (mouseX, mouseY) => {
     maybeBbox^
@@ -184,7 +189,7 @@ let%component make =
     onMouseWheel>
     <Canvas
       style={Styles.bufferViewClipped(0., float(pixelWidth) -. gutterWidth)}
-      render={canvasContext => {
+      render={(canvasContext, _) => {
         let context =
           Draw.createContext(
             ~canvasContext,
@@ -206,6 +211,7 @@ let%component make =
           ~context,
           ~count=lineCount,
           ~buffer,
+          ~editor,
           ~leftVisibleColumn,
           ~colors,
           ~diagnosticsMap,
@@ -232,7 +238,7 @@ let%component make =
           );
         };
 
-        if (Config.Experimental.scrollShadow.get(config)) {
+        if (Config.scrollShadow.get(config)) {
           let () =
             ScrollShadow.renderVertical(
               ~editor,
@@ -253,7 +259,6 @@ let%component make =
       config
       editor
       editorFont
-      buffer
       mode
       cursorPosition
       isActiveSplit

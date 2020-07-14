@@ -9,6 +9,7 @@ module Colors = Feature_Theme.Colors;
 module Constants = {
   let menuWidth = 400;
   let menuHeight = 320;
+  let rowHeight = 40;
 };
 
 module Styles = {
@@ -22,7 +23,13 @@ module Styles = {
 
   let inputContainer = [padding(5)];
 
-  let dropdown = [height(Constants.menuHeight), overflow(`Hidden)];
+  let dropdown = (~numItems) => [
+    height(
+      Constants.rowHeight * numItems > Constants.menuHeight
+        ? Constants.menuHeight : Constants.rowHeight * numItems,
+    ),
+    overflow(`Hidden),
+  ];
 
   let menuItem = [cursor(Revery.MouseCursors.pointer)];
 
@@ -48,9 +55,6 @@ module Styles = {
 
 let onFocusedChange = index =>
   GlobalContext.current().dispatch(ListFocus(index));
-
-let onInputClicked = selection =>
-  GlobalContext.current().dispatch(QuickmenuInputClicked(selection));
 
 let onSelect = _ => GlobalContext.current().dispatch(ListSelect);
 
@@ -92,7 +96,7 @@ let make =
       ~theme,
       ~configuration: Configuration.t,
       ~state: Quickmenu.t,
-      ~placeholder: string="type here to search the menu",
+      //      ~placeholder: string="type here to search the menu",
       ~onFocusedChange: int => unit=onFocusedChange,
       ~onSelect: int => unit=onSelect,
       (),
@@ -102,8 +106,7 @@ let make =
         filterProgress,
         ripgrepProgress,
         focused,
-        query,
-        selection,
+        inputText,
         prefix,
         variant,
         _,
@@ -112,9 +115,10 @@ let make =
   let progress =
     Actions.(
       switch (filterProgress, ripgrepProgress) {
-      | (Loading, _)
-      | (_, Loading) => Loading
-
+      // Evaluate ripgrep progress first, because it could still be processing jobs
+      // while the filter job is 'complete'.
+      | (_, Loading)
+      | (Loading, _) => Loading
       | (InProgress(a), InProgress(b)) => InProgress((a +. b) /. 2.)
 
       | (InProgress(value), _)
@@ -158,29 +162,30 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <Input
-        placeholder
+      <Feature_InputText.View
         ?prefix
         fontFamily={font.family}
         fontSize=14.
         isFocused=true
-        onClick=onInputClicked
-        value=query
-        selection
+        dispatch={msg =>
+          GlobalContext.current().dispatch(
+            Actions.QuickmenuInputMessage(msg),
+          )
+        }
+        model=inputText
         theme
       />
     </View>;
 
   let dropdown = () =>
-    <View style=Styles.dropdown>
-      <FlatList rowHeight=40 count={Array.length(items)} focused theme>
+    <View style={Styles.dropdown(~numItems=Array.length(items))}>
+      <FlatList
+        rowHeight=Constants.rowHeight
+        count={Array.length(items)}
+        focused
+        theme>
         ...renderItem
       </FlatList>
-      {switch (progress) {
-       | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
-       | InProgress(progress) => <progressBar progress theme />
-       | Loading => <busyBar theme />
-       }}
     </View>;
 
   <AllowPointer>
@@ -193,6 +198,11 @@ let make =
         {switch (variant) {
          | Wildmenu(SearchForward | SearchReverse) => React.empty
          | _ => <dropdown />
+         }}
+        {switch (progress) {
+         | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
+         | InProgress(progress) => <progressBar progress theme />
+         | Loading => <busyBar theme />
          }}
       </View>
     </OniBoxShadow>

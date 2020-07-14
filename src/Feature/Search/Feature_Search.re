@@ -6,16 +6,14 @@ open Oni_Components;
 // MODEL
 
 type model = {
-  queryInput: string,
+  findInput: Feature_InputText.model,
   query: string,
-  selection: Selection.t,
   hits: list(Ripgrep.Match.t),
 };
 
 let initial = {
-  queryInput: "",
+  findInput: Feature_InputText.create(~placeholder="Search"),
   query: "",
-  selection: Selection.initial,
   hits: [],
 };
 
@@ -24,9 +22,11 @@ let initial = {
 [@deriving show({with_path: false})]
 type msg =
   | Input(string)
-  | InputClicked(Selection.t)
+  | Pasted(string)
   | Update([@opaque] list(Ripgrep.Match.t))
-  | Complete;
+  | Complete
+  | SearchError(string)
+  | FindInput(Feature_InputText.msg);
 
 type outmsg =
   | Focus;
@@ -34,26 +34,31 @@ type outmsg =
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-    let {queryInput, selection, _} = model;
-
     let model =
       switch (key) {
       | "<CR>" =>
-        if (model.query == model.queryInput) {
+        let findInputValue = model.findInput |> Feature_InputText.value;
+        if (model.query == findInputValue) {
           model; // Do nothing if the query hasn't changed
         } else {
-          {...model, query: model.queryInput, hits: []};
-        }
+          {...model, query: findInputValue, hits: []};
+        };
 
       | _ =>
-        let (queryInput, selection) =
-          InputModel.handleInput(~text=queryInput, ~selection, key);
-        {...model, queryInput, selection};
+        let findInput = Feature_InputText.handleInput(~key, model.findInput);
+        {...model, findInput};
       };
 
     (model, None);
 
-  | InputClicked(selection) => ({...model, selection}, Some(Focus))
+  | Pasted(text) =>
+    let findInput = Feature_InputText.paste(~text, model.findInput);
+    ({...model, findInput}, None);
+
+  | FindInput(msg) => (
+      {...model, findInput: Feature_InputText.update(msg, model.findInput)},
+      Some(Focus),
+    )
 
   | Update(items) => ({...model, hits: model.hits @ items}, None)
 
@@ -79,6 +84,7 @@ let subscriptions = (ripgrep, dispatch) => {
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
       ~onCompleted=() => Complete,
+      ~onError=msg => SearchError(msg),
     );
   };
 
@@ -167,15 +173,13 @@ let make =
         />
       </View>
       <View style=Styles.row>
-        <Input
+        <Feature_InputText.View
           style=Styles.input
-          selection={model.selection}
-          value={model.queryInput}
-          placeholder="Search"
+          model={model.findInput}
           isFocused
           fontFamily={uiFont.family}
           fontSize={uiFont.size}
-          onClick={selection => dispatch(InputClicked(selection))}
+          dispatch={msg => dispatch(FindInput(msg))}
           theme
         />
       </View>

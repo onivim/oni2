@@ -92,6 +92,34 @@ module BracketPair = {
   let endsWithOpenPair = ({openPair, _}, str) => {
     StringEx.endsWith(~postfix=openPair, str);
   };
+
+  let isJustClosingPair = ({closePair, _}, str) => {
+    let len = String.length(str);
+
+    let rec loop = (foundPair, idx) =>
+      if (idx >= len) {
+        foundPair;
+      } else if (foundPair) {
+        false;
+             // We found the closing pair... but there's other stuff after
+      } else {
+        let c = str.[idx];
+
+        if (c == ' ' || c == '\t') {
+          loop(foundPair, idx + 1);
+        } else if (c == closePair.[0]) {
+          loop(true, idx + 1);
+        } else {
+          false;
+        };
+      };
+
+    if (String.length(closePair) == 1) {
+      loop(false, 0);
+    } else {
+      false;
+    };
+  };
 };
 
 let defaultBrackets: list(BracketPair.t) =
@@ -226,32 +254,45 @@ let toVimAutoClosingPairs = (syntaxScope: SyntaxScope.t, configuration: t) => {
   );
 };
 
-let toAutoIndent =
-    ({increaseIndentPattern, decreaseIndentPattern, brackets, _}, str) => {
-  let increase =
-    increaseIndentPattern
-    |> Option.map(regex => OnigRegExp.test(str, regex))
-    // If no indentation pattern, fall-back to bracket pair
-    |> OptionEx.or_lazy(() =>
-         Some(
-           List.exists(
-             bracket => BracketPair.endsWithOpenPair(bracket, str),
-             brackets,
-           ),
-         )
+let shouldIncreaseIndent =
+    (
+      ~previousLine as str,
+      ~beforePreviousLine as _,
+      {increaseIndentPattern, brackets, _},
+    ) => {
+  increaseIndentPattern
+  |> Option.map(regex => OnigRegExp.test(str, regex))
+  // If no indentation pattern, fall-back to bracket pair
+  |> OptionEx.or_lazy(() =>
+       Some(
+         List.exists(
+           bracket => BracketPair.endsWithOpenPair(bracket, str),
+           brackets,
+         ),
        )
-    |> Option.value(~default=false);
+     )
+  |> Option.value(~default=false);
+};
 
-  let decrease =
-    decreaseIndentPattern
-    |> Option.map(regex => OnigRegExp.test(str, regex))
-    |> Option.value(~default=false);
+let shouldDecreaseIndent = (~line, {decreaseIndentPattern, brackets, _}) => {
+  decreaseIndentPattern
+  |> Option.map(regex => OnigRegExp.test(line, regex))
+  |> OptionEx.or_lazy(() => {
+       Some(
+         List.exists(
+           bracket => BracketPair.isJustClosingPair(bracket, line),
+           brackets,
+         ),
+       )
+     })
+  |> Option.value(~default=false);
+};
 
-  if (increase) {
-    Vim.AutoIndent.IncreaseIndent;
-  } else if (decrease) {
-    Vim.AutoIndent.DecreaseIndent;
-  } else {
-    Vim.AutoIndent.KeepIndent;
+let toAutoIndent = (languageConfig, ~previousLine, ~beforePreviousLine) => {
+  let increase =
+    shouldIncreaseIndent(~previousLine, ~beforePreviousLine, languageConfig);
+
+  if (increase) {Vim.AutoIndent.IncreaseIndent} else {
+    Vim.AutoIndent.KeepIndent
   };
 };
