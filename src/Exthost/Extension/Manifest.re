@@ -13,6 +13,11 @@ module Kind = {
     | Ui
     | Workspace;
 
+  let toString =
+    fun
+    | Ui => "ui"
+    | Workspace => "workspace";
+
   module Decode = {
     open Json.Decode;
 
