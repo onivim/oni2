@@ -248,7 +248,6 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "@opam/luv": "link:../luv",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "revery": "revery-ui/revery#464c5b7",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",

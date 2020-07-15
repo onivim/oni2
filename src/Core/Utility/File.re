@@ -24,6 +24,6 @@ let readAllLines = filePath => {
 
 let write = (~contents, filePath) => {
   let oc = open_out(filePath);
-  Printf.fprintf(oc, "%s\n", contents);
+  Printf.fprintf(oc, "%s", contents);
   close_out(oc);
-}
+};

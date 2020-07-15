@@ -20,3 +20,24 @@ module Process = {
       ~windows_hide_gui=true,
     );
 };
+
+module Buffer = {
+  
+  let toBytesRev = (buffers: list(Luv.Buffer.t)) => {
+    let totalSize = Luv.Buffer.total_size(buffers);
+
+    let bytes = Bytes.create(totalSize);
+    let rec loop = (offset, buffers) => {
+    switch (buffers) {
+    | [] => ()
+    | [hd, ...tail] =>
+      let size = Luv.Buffer.size(hd);
+      Luv.Buffer.blit_to_bytes(hd, bytes, ~destination_offset=offset - size);
+      loop(offset - size, tail);
+    } 
+    };
+
+    loop(totalSize, buffers);
+    bytes;
+  };
+}

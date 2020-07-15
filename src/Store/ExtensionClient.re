@@ -304,7 +304,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~readFile=uri => uri |> Uri.toFileSystemPath |> Service_OS.Api.readFile,
       ~writeFile=
         (uri, bytes) => {
-          Service_OS.Api.writeFile(~contents=bytes, Uri.toFileSystemPath(uri))
+          Service_OS.Api.writeFile(
+            ~contents=bytes,
+            Uri.toFileSystemPath(uri),
+          )
         },
       ~rename=
         (~source, ~target, opts) => {

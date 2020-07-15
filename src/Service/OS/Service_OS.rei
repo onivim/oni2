@@ -2,7 +2,7 @@ module Api: {
   let rmdir: (~recursive: bool=?, string) => Lwt.t(unit);
   let stat: string => Lwt.t(Luv.File.Stat.t);
   let readdir: string => Lwt.t(list(Luv.File.Dirent.t));
-  let readFile: string => Lwt.t(Bytes.t);
+  let readFile: (~chunkSize: int=?, string) => Lwt.t(Bytes.t);
   let writeFile: (~contents: Bytes.t, string) => Lwt.t(unit);
   let rename:
     (~source: string, ~target: string, ~overwrite: bool) => Lwt.t(unit);

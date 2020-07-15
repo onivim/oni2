@@ -7,15 +7,22 @@ let wrap = LuvEx.wrapPromise;
 let bind = (fst, snd) => Lwt.bind(snd, fst);
 
 module Internal = {
+  let copy = (~overwrite=true, ~source, ~target) => {
+    source
+    |> wrap(Luv.File.copyfile(
+      ~excl=!overwrite,
+      ~to_=target,
+    ));
+  };
+  let openfile = (~flags, path) => flags |> wrap(Luv.File.open_(path));
+  let closefile = wrap(Luv.File.close);
+  let readfile = (~buffers, file) => buffers |> wrap(Luv.File.read(file));
   let opendir = wrap(Luv.File.opendir);
   let closedir = wrap(Luv.File.closedir);
   let readdir = wrap(Luv.File.readdir);
 };
 
 module Api = {
-  exception LuvException(Luv.Error.t);
-  exception NotImplemented;
-
   let unlink = {
     let wrapped = wrap(Luv.File.unlink);
 
@@ -46,32 +53,60 @@ module Api = {
        });
   };
 
-  let readFile = _path => {
-    Lwt.fail(NotImplemented);
+  let readFile = (~chunkSize=4096, path) => {
+    let rec loop = (acc, file) => {
+      let buffer = Luv.Buffer.create(chunkSize);
+      Internal.readfile(~buffers=[buffer], file)
+      |> bind((size: Unsigned.Size_t.t) => {
+           let size = Unsigned.Size_t.to_int(size);
+
+           if (size == 0) {
+             Lwt.return(acc);
+           } else {
+             let bufferSub =
+               if (size < chunkSize) {
+                 Luv.Buffer.sub(buffer, ~offset=0, ~length=size);
+               } else {
+                 buffer;
+               };
+             loop([bufferSub, ...acc], file);
+           };
+         });
+    };
+    path
+    |> Internal.openfile(~flags=[`RDONLY])
+    |> bind(file => {
+         loop([], file)
+         |> bind((acc: list(Luv.Buffer.t)) => {
+              file |> Internal.closefile |> Lwt.map(_ => acc)
+            })
+       })
+    |> Lwt.map((buffers: list(Luv.Buffer.t)) => {
+         LuvEx.Buffer.toBytesRev(buffers)
+       });
   };
 
   let writeFile = (~contents, path) => {
     let buffer = Luv.Buffer.from_bytes(contents);
-    [`CREAT, `WRONLY]
-    |> wrap(Luv.File.open_(path))
+    path
+    |> Internal.openfile(~flags=[`CREAT, `WRONLY])
     |> bind(file => {
-    [buffer]
-    |> wrap(Luv.File.write(file))
-    |> Lwt.map(_ => file)
-    })
-    |> bind(wrap(Luv.File.close));
-  };
-
-  let rename = (~source as _, ~target as _, ~overwrite as _) => {
-    Lwt.fail(NotImplemented);
+         [buffer] |> wrap(Luv.File.write(file)) |> Lwt.map(_ => file)
+       })
+    |> bind(Internal.closefile);
   };
 
   let copy = (~source as _, ~target as _, ~overwrite as _) => {
-    Lwt.fail(NotImplemented);
+    Internal.copyfile(~source, ~target, ~overwrite);
   };
 
+
+  let rename = (~source, ~target, ~overwrite) => {
+    copy(~source, ~target, ~overwrite)
+    |> bind(() => unlink(source));
+  };
   let mkdir = path => {
-    path |> wrap(Luv.File.mkdir)
+    path |> wrap(Luv.File.mkdir);
   };
 
   let rmdir = (~recursive=true, path) => {
@@ -112,18 +147,9 @@ module Api = {
 
   let mktempdir = (~prefix="temp-", ()) => {
     let rootTempPath = Filename.get_temp_dir_name();
-    prerr_endline ("rootTempPath: " ++ rootTempPath);
-    let tempFolderTemplate = Rench.Path.join(rootTempPath, 
-    Printf.sprintf("%sXXXXXX", prefix)
-    );
-    
-    prerr_endline ("template: " ++ tempFolderTemplate);
-
-//    mkdir(rootTempPath)
-//    |> bind(() => {
-//      prerr_endline ("mkdir succeeded, now trying mkdtemp...");
-      tempFolderTemplate |> wrap(Luv.File.mkdtemp)
-//    });
+    let tempFolderTemplate =
+      Rench.Path.join(rootTempPath, Printf.sprintf("%sXXXXXX", prefix));
+    tempFolderTemplate |> wrap(Luv.File.mkdtemp);
   };
 
   let delete = (~recursive, path) => rmdir(~recursive, path);

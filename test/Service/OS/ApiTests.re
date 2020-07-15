@@ -1,4 +1,3 @@
-open Oni_Core;
 open Oni_Core.Utility;
 open TestFramework;
 
@@ -83,6 +82,38 @@ describe("Service.OS.Api", ({describe, _}) => {
         |> Result.get_ok;
 
       expect.equal(File.readAllLines(outPath), [contents]);
+    });
+  });
+  describe("readFile", ({test, _}) => {
+    test("basic file read", ({expect, _}) => {
+      let str =
+        mktempdir()
+        |> bind(tempPath => {
+             let filePath = Rench.Path.join(tempPath, "testfile.txt");
+             File.write(~contents="Hello, world!", filePath);
+             Lwt.return(filePath);
+           })
+        |> bind(readFile)
+        |> LwtEx.sync
+        |> Result.get_ok
+        |> Bytes.to_string;
+
+      expect.equal(str, "Hello, world!");
+    });
+    test("basic file read, chunksize 1", ({expect, _}) => {
+      let str =
+        mktempdir()
+        |> bind(tempPath => {
+             let filePath = Rench.Path.join(tempPath, "testfile.txt");
+             File.write(~contents="Hello, world!", filePath);
+             Lwt.return(filePath);
+           })
+        |> bind(readFile(~chunkSize=1))
+        |> LwtEx.sync
+        |> Result.get_ok
+        |> Bytes.to_string;
+
+      expect.equal(str, "Hello, world!");
     });
   });
 });
