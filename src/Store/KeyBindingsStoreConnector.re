@@ -71,7 +71,7 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-V>",
         command: Feature_Clipboard.Commands.paste.id,
-        condition: WhenExpr.Value(True),
+        condition: "insertMode || commandLineFocus" |> WhenExpr.parse, 
       },
       {
         key: "<D-V>",
