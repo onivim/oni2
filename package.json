@@ -262,7 +262,7 @@
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"
   },
   "devDependencies": {
-    "ocaml": "~4.9",
+    "ocaml": "~4.10",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
