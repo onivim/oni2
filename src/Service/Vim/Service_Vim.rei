@@ -8,6 +8,10 @@ module Effects: {
   let paste:
     (~toMsg: list(Vim.Cursor.t) => 'msg, string) => Isolinear.Effect.t('msg);
 
+  let getRegisterValue:
+    (~toMsg: option(array(string)) => 'msg, char) =>
+    Isolinear.Effect.t('msg);
+
   let applyEdits:
     (
       ~bufferId: int,
@@ -16,4 +20,9 @@ module Effects: {
       result(unit, string) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
+};
+
+module Sub: {
+  let eval:
+    (~toMsg: result(string, string) => 'msg, string) => Isolinear.Sub.t('msg);
 };
