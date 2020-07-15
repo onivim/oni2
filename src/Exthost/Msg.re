@@ -9,6 +9,28 @@ module Internal = {
   };
 };
 
+module Decode = {
+  open Json.Decode;
+
+  let int =
+    one_of([
+      ("int", int),
+      (
+        "string",
+        string
+        |> map(int_of_string_opt)
+        |> and_then(
+             fun
+             | Some(num) => succeed(num)
+             | None => fail("Unable to parse number"),
+           ),
+      ),
+    ]);
+
+  let id =
+    one_of([("string", string), ("int", int |> map(string_of_int))]);
+};
+
 module Clipboard = {
   [@deriving show]
   type msg =
@@ -798,10 +820,10 @@ module StatusBar = {
     | Left
     | Right;
 
-  let stringToAlignment =
+  let intToAlignment =
     fun
-    | "0" => Left
-    | "1" => Right
+    | 0 => Left
+    | 1 => Right
     | _ => Left;
 
   [@deriving show]
@@ -832,29 +854,29 @@ module StatusBar = {
     | (
         "$setEntry",
         `List([
-          `String(id),
+          idJson,
           _,
           `String(source),
           labelJson,
           _tooltip,
           commandJson,
           colorJson,
-          `String(alignment),
-          `String(priority),
+          alignmentJson,
+          priorityJson,
         ]),
       ) =>
       open Base.Result.Let_syntax;
-      let alignment = stringToAlignment(alignment);
-      let priority = int_of_string_opt(priority) |> Option.value(~default=0);
+      let%bind id = idJson |> Internal.decode_value(Decode.id);
       let%bind command = parseCommand(commandJson);
       let%bind color =
         colorJson
-        |> Json.Decode.(decode_value(nullable(Color.decode)))
-        |> Result.map_error(Json.Decode.string_of_error);
-      let%bind label =
-        labelJson
-        |> Json.Decode.decode_value(Label.decode)
-        |> Result.map_error(Json.Decode.string_of_error);
+        |> Internal.decode_value(Json.Decode.nullable(Color.decode));
+      let%bind label = labelJson |> Internal.decode_value(Label.decode);
+
+      let%bind alignmentNumber =
+        alignmentJson |> Internal.decode_value(Decode.int);
+      let alignment = alignmentNumber |> intToAlignment;
+      let%bind priority = priorityJson |> Internal.decode_value(Decode.int);
       Ok(SetEntry({id, source, label, alignment, color, priority, command}));
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
     | _ =>

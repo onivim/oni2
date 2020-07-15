@@ -1115,8 +1115,6 @@ module Reply: {
 };
 
 module Middleware: {
-  type t = (Msg.t => Lwt.t(Reply.t), Msg.t) => Lwt.t(Reply.t);
-
   let filesystem:
     (
       ~stat: Uri.t => Lwt.t(Files.StatResult.t),
@@ -1132,9 +1130,10 @@ module Middleware: {
       ~copy: (~source: Uri.t, ~target: Uri.t, Files.FileOverwriteOptions.t) =>
              Lwt.t(unit),
       ~mkdir: Uri.t => Lwt.t(unit),
-      ~delete: (Uri.t, Files.FileDeleteOptions.t) => Lwt.t(unit)
+      ~delete: (Uri.t, Files.FileDeleteOptions.t) => Lwt.t(unit),
+      Msg.FileSystem.msg
     ) =>
-    t;
+    Lwt.t(Reply.t);
 };
 
 module Client: {

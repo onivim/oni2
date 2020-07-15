@@ -287,7 +287,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
   let mapLuvDirents = _dirents => [];
 
-  let filesystemHandler =
+  let fileSystemHandler =
     Exthost.Middleware.filesystem(
       ~stat=
         uri =>
@@ -336,6 +336,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
+      | FileSystem(msg) => fileSystemHandler(msg)
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
           ~dispatch=msg => dispatch(Actions.SCM(msg)),
@@ -539,7 +540,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         ),
       ~namedPipe,
       ~initData,
-      ~handler=filesystemHandler(handler),
+      ~handler,
       ~onError,
       (),
     );
