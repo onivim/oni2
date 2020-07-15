@@ -918,6 +918,7 @@ module Msg: {
           alignment,
           command: option(Command.t),
           color: option(Color.t),
+          tooltip: option(string),
           priority: int,
         })
       | Dispose({id: int});

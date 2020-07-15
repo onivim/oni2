@@ -373,7 +373,16 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       Lwt.return(Reply.okEmpty);
 
     | StatusBar(
-        SetEntry({id, label, alignment, priority, color, command, _}),
+        SetEntry({
+          id,
+          label,
+          alignment,
+          priority,
+          color,
+          command,
+          tooltip,
+          _,
+        }),
       ) =>
       let command =
         command |> Option.map(({id, _}: Exthost.Command.t) => id);
@@ -383,6 +392,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
             Feature_StatusBar.Item.create(
               ~command?,
               ~color?,
+              ~tooltip?,
               ~id,
               ~label,
               ~alignment,
