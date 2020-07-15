@@ -64,6 +64,8 @@ external vimCursorGetColumn: unit => int = "libvim_vimCursorGetColumn";
 external vimCursorSetPosition: (int, int) => unit =
   "libvim_vimCursorSetPosition";
 
+external vimEval: string => option(string) = "libvim_vimEval";
+
 external vimOptionSetTabSize: int => unit = "libvim_vimOptionSetTabSize";
 external vimOptionSetInsertSpaces: bool => unit =
   "libvim_vimOptionSetInsertSpaces";
@@ -72,6 +74,9 @@ external vimOptionSetLineComment: string => unit =
 external vimOptionGetInsertSpaces: unit => bool =
   "libvim_vimOptionGetInsertSpaces";
 external vimOptionGetTabSize: unit => int = "libvim_vimOptionGetTabSize";
+
+external vimRegisterGet: int => option(array(string)) =
+  "libvim_vimRegisterGet";
 
 external vimSearchGetMatchingPair: unit => option((int, int)) =
   "libvim_vimSearchGetMatchingPair";

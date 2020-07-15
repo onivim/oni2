@@ -208,7 +208,8 @@
     "@opam/decoders-yojson": "^0.4.0",
     "@opam/dir": "*",
     "@opam/dune": "2.5.0",
-    "@opam/dune-configurator": "*",
+    "@opam/dune-configurator": "2.5.1",
+    "@opam/dune-private-libs": "2.5.1",
     "@opam/fmt": "^0.8.8",
     "@opam/fp": "*",
     "@opam/fs": "*",
@@ -236,7 +237,7 @@
     "esy-sdl2": "*",
     "esy-skia": "*",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.51",
+    "libvim": "8.10869.53",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reason-tree-sitter": "^1.0.1001",
@@ -261,7 +262,7 @@
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"
   },
   "devDependencies": {
-    "ocaml": "~4.9",
+    "ocaml": "~4.10",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
@@ -269,6 +270,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5"
   }
 }

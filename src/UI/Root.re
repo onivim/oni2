@@ -190,6 +190,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
        | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
        | None => React.empty
        }}
+      <Feature_Registers.View
+        theme
+        registers={state.registers}
+        font
+        dispatch={msg => dispatch(Actions.Registers(msg))}
+      />
     </Overlay>
     <statusBar />
     <contextMenuOverlay />

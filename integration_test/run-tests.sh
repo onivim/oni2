@@ -10,10 +10,12 @@ cd $CWD
 echo "wd: $CWD"
 ls
 echo "!!! Starting integration tests"
+echo "ASAN_OPTIONS: $ASAN_OPTIONS"
+echo "LSAN_OPTIONS: $LSAN_OPTIONS"
 for file in ./*Test.exe;
 do
       echo "-- Running test $file"
-      LSAN_OPTIONS=suppressions=lsan.supp "$file"
+      "$file"
       echo "-- Test complete"
 done
 echo "!!! integration tests complete!"

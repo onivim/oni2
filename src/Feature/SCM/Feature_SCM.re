@@ -106,9 +106,11 @@ type msg =
       command: Exthost.SCM.command,
     })
   | KeyPressed({key: string})
+  | Pasted({text: string})
   | InputBox(Feature_InputText.msg);
 
 module Msg = {
+  let paste = text => Pasted({text: text});
   let keyPressed = key => KeyPressed({key: key});
 };
 
@@ -318,6 +320,24 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
 
   | KeyPressed({key}) =>
     let inputBox = Feature_InputText.handleInput(~key, model.inputBox);
+    (
+      {...model, inputBox},
+      Effect(
+        Isolinear.Effect.batch(
+          model.providers
+          |> List.map((provider: Provider.t) =>
+               Service_Exthost.Effects.SCM.onInputBoxValueChange(
+                 ~handle=provider.handle,
+                 ~value=inputBox |> Feature_InputText.value,
+                 extHostClient,
+               )
+             ),
+        ),
+      ),
+    );
+
+  | Pasted({text}) =>
+    let inputBox = Feature_InputText.paste(~text, model.inputBox);
     (
       {...model, inputBox},
       Effect(
