@@ -1114,27 +1114,7 @@ module Reply: {
   let okBuffer: Bytes.t => t;
 };
 
-module Middleware: {
-  let filesystem:
-    (
-      ~stat: Uri.t => Lwt.t(Files.StatResult.t),
-      ~readdir: Uri.t => Lwt.t(list((string, Files.FileType.t))),
-      ~readFile: Uri.t => Lwt.t(Bytes.t),
-      ~writeFile: (Uri.t, Bytes.t) => Lwt.t(unit),
-      ~rename: (
-                 ~source: Uri.t,
-                 ~target: Uri.t,
-                 Files.FileOverwriteOptions.t
-               ) =>
-               Lwt.t(unit),
-      ~copy: (~source: Uri.t, ~target: Uri.t, Files.FileOverwriteOptions.t) =>
-             Lwt.t(unit),
-      ~mkdir: Uri.t => Lwt.t(unit),
-      ~delete: (Uri.t, Files.FileDeleteOptions.t) => Lwt.t(unit),
-      Msg.FileSystem.msg
-    ) =>
-    Lwt.t(Reply.t);
-};
+module Middleware: {let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);};
 
 module Client: {
   type t;

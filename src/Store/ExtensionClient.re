@@ -252,91 +252,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     | Some(client) => f(client)
     };
 
-  let fileTypeFromStat: Luv.File.Stat.t => Exthost.Files.FileType.t =
-    (statResult: Luv.File.Stat.t) => {
-      Luv.File.(
-        Luv.File.Stat.(
-          Exthost.Files.FileType.(
-            if (Mode.test([`IFREG], statResult.mode)) {
-              File;
-            } else if (Mode.test([`IFDIR], statResult.mode)) {
-              Directory;
-            } else if (Mode.test([`IFLNK], statResult.mode)) {
-              SymbolicLink;
-            } else {
-              Unknown;
-            }
-          )
-        )
-      );
-    };
-
-  let mapLuvStat: Luv.File.Stat.t => Exthost.Files.StatResult.t =
-    statResult => {
-      Exthost.Files.(
-        (
-          {
-            fileType: fileTypeFromStat(statResult),
-            mtime: statResult.mtim.sec |> Signed.Long.to_int,
-            ctime: statResult.ctim.sec |> Signed.Long.to_int,
-            size: statResult.size |> Unsigned.UInt64.to_int,
-          }: StatResult.t
-        )
-      );
-    };
-
-  let mapLuvDirents = _dirents => [];
-
-  let fileSystemHandler =
-    Exthost.Middleware.filesystem(
-      ~stat=
-        uri =>
-          uri
-          |> Uri.toFileSystemPath
-          |> Service_OS.Api.stat
-          |> Lwt.map(mapLuvStat),
-      ~readdir=
-        uri =>
-          uri
-          |> Uri.toFileSystemPath
-          |> Service_OS.Api.readdir
-          |> Lwt.map(mapLuvDirents),
-      ~readFile=uri => uri |> Uri.toFileSystemPath |> Service_OS.Api.readFile,
-      ~writeFile=
-        (uri, bytes) => {
-          Service_OS.Api.writeFile(
-            ~contents=bytes,
-            Uri.toFileSystemPath(uri),
-          )
-        },
-      ~rename=
-        (~source, ~target, opts) => {
-          Service_OS.Api.rename(
-            ~source=Uri.toFileSystemPath(source),
-            ~target=Uri.toFileSystemPath(target),
-            ~overwrite=opts.overwrite,
-          )
-        },
-      ~copy=
-        (~source, ~target, opts) => {
-          Service_OS.Api.copy(
-            ~source=Uri.toFileSystemPath(source),
-            ~target=Uri.toFileSystemPath(target),
-            ~overwrite=opts.overwrite,
-          )
-        },
-      ~mkdir=uri => uri |> Uri.toFileSystemPath |> Service_OS.Api.mkdir,
-      ~delete=
-        (uri, {recursive, useTrash}) => {
-          ignore(useTrash);
-          uri |> Uri.toFileSystemPath |> Service_OS.Api.rmdir(~recursive);
-        },
-    );
-
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
-      | FileSystem(msg) => fileSystemHandler(msg)
+      | FileSystem(msg) => Middleware.filesystem(msg)
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
           ~dispatch=msg => dispatch(Actions.SCM(msg)),

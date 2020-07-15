@@ -226,3 +226,13 @@ module StatResult = {
     );
   };
 };
+
+module ReadDirResult = {
+  [@deriving show]
+  type t = (string, FileType.t);
+
+  let encode = ((name, fileType): t) =>
+    Json.Encode.(
+      value(`List([name |> string, fileType |> FileType.encode]))
+    );
+};
