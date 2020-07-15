@@ -1,5 +1,5 @@
 {
-  "checksum": "9409e4926a95be8cc4b9ae8226c021ae",
+  "checksum": "c137e6e288b345ce0843bfc5a994b938",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -107,31 +107,18 @@
       ],
       "devDependencies": []
     },
-    "revery-text-wrap@github:revery-ui/revery-text-wrap#966383e@d41d8cd9": {
+    "revery-terminal@github:revery-ui/revery-terminal#3cb342f@d41d8cd9": {
       "id":
-        "revery-text-wrap@github:revery-ui/revery-text-wrap#966383e@d41d8cd9",
-      "name": "revery-text-wrap",
-      "version": "github:revery-ui/revery-text-wrap#966383e",
-      "source": {
-        "type": "install",
-        "source": [ "github:revery-ui/revery-text-wrap#966383e" ]
-      },
-      "overrides": [],
-      "dependencies": [ "@opam/dune@opam:2.5.0@aef1678b" ],
-      "devDependencies": []
-    },
-    "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9": {
-      "id":
-        "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#3cb342f@d41d8cd9",
       "name": "revery-terminal",
-      "version": "github:revery-ui/revery-terminal#1792c7c",
+      "version": "github:revery-ui/revery-terminal#3cb342f",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery-terminal#1792c7c" ]
+        "source": [ "github:revery-ui/revery-terminal#3cb342f" ]
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#464c5b7@d41d8cd9",
+        "revery@github:revery-ui/revery#7ccd20c@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
@@ -139,25 +126,25 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#464c5b7@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#464c5b7@d41d8cd9",
+    "revery@github:revery-ui/revery#7ccd20c@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#7ccd20c@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#464c5b7",
+      "version": "github:revery-ui/revery#7ccd20c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#464c5b7" ]
+        "source": [ "github:revery-ui/revery#7ccd20c" ]
       },
       "overrides": [],
       "dependencies": [
-        "revery-text-wrap@github:revery-ui/revery-text-wrap#966383e@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "flex@1.2.3@d41d8cd9", "fetch-native-lwt@0.1.0-alpha.5@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
-        "esy-sdl2@2.0.10008@d41d8cd9", "esy-harfbuzz@1.9.1008@d41d8cd9",
-        "esy-freetype2@2.9.1007@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
+        "esy-sdl2@2.0.10008@d41d8cd9", "esy-freetype2@2.9.1007@d41d8cd9",
+        "@revery/esy-harfbuzz@2.6.8000@d41d8cd9",
+        "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
         "@opam/ppx_deriving@opam:4.5@bb81afdc",
         "@opam/omd@github:ocaml/omd:omd.opam#1535e3c@d41d8cd9",
         "@opam/markup@opam:0.8.2@87975241",
@@ -165,8 +152,10 @@
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@aef1678b",
-        "@opam/ctypes@opam:0.15.1@b0227b2f", "@opam/bos@opam:0.2.0@df49e63f",
-        "@glennsl/timber@1.2.0@d41d8cd9", "@esy-ocaml/reason@3.6.0@d41d8cd9",
+        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/charInfo_width@opam:1.1.0@b400bb29",
+        "@opam/bos@opam:0.2.0@df49e63f", "@glennsl/timber@1.2.0@d41d8cd9",
+        "@esy-ocaml/reason@3.6.0@d41d8cd9",
         "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#10cab2d@d41d8cd9"
       ],
       "devDependencies": []
@@ -696,13 +685,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9": {
-      "id": "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
+    "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9": {
+      "id": "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
       "name": "esy-skia",
-      "version": "github:revery-ui/esy-skia#d60e5fe",
+      "version": "github:revery-ui/esy-skia#a3785f9",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/esy-skia#d60e5fe" ]
+        "source": [ "github:revery-ui/esy-skia#a3785f9" ]
       },
       "overrides": [],
       "dependencies": [
@@ -810,20 +799,6 @@
       },
       "overrides": [],
       "dependencies": [],
-      "devDependencies": []
-    },
-    "esy-harfbuzz@1.9.1008@d41d8cd9": {
-      "id": "esy-harfbuzz@1.9.1008@d41d8cd9",
-      "name": "esy-harfbuzz",
-      "version": "1.9.1008",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/esy-harfbuzz/-/esy-harfbuzz-1.9.1008.tgz#sha1:b83d1e80752d6f334f6c3e37b5b857d7d13adb67"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
     "esy-freetype2@2.9.1007@d41d8cd9": {
@@ -1035,8 +1010,8 @@
       },
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
-        "revery-terminal@github:revery-ui/revery-terminal#1792c7c@d41d8cd9",
-        "revery@github:revery-ui/revery#464c5b7@d41d8cd9",
+        "revery-terminal@github:revery-ui/revery-terminal#3cb342f@d41d8cd9",
+        "revery@github:revery-ui/revery#7ccd20c@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
@@ -1044,7 +1019,7 @@
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.53@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#d60e5fe@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
         "esy-sdl2@2.0.10008@d41d8cd9",
         "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
@@ -1096,6 +1071,20 @@
       "dependencies": [
         "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9"
       ],
+      "devDependencies": []
+    },
+    "@revery/esy-harfbuzz@2.6.8000@d41d8cd9": {
+      "id": "@revery/esy-harfbuzz@2.6.8000@d41d8cd9",
+      "name": "@revery/esy-harfbuzz",
+      "version": "2.6.8000",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@revery/esy-harfbuzz/-/esy-harfbuzz-2.6.8000.tgz#sha1:2a78f826c54b1244accec6c8d07c3968efe6ced2"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
     "@revery/esy-cmake@0.3.5001@d41d8cd9": {
