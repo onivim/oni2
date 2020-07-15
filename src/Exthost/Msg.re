@@ -337,7 +337,8 @@ module FileSystem = {
         let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
         Ok(ReadDir({uri: uri}));
       | ("$readFile", `List([uriJson])) =>
-        failwith("TODO - buffer format: readFile")
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        Ok(ReadFile({uri: uri}));
       | ("$writeFile", `List([uriJson, `String(buffer)])) =>
         let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
         let bytes = Bytes.of_string(buffer);

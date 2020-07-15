@@ -1,7 +1,5 @@
 open Oni_Core;
 
-open Files;
-
 type t = (Msg.t => Lwt.t(Reply.t), Msg.t) => Lwt.t(Reply.t);
 
 let filesystem =

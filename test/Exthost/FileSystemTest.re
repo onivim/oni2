@@ -3,6 +3,44 @@ open TestFramework;
 
 open Exthost;
 
+module TestResponse = {
+  type t('a) = result('a, string);
+
+  let decode = decoder => {
+    Json.Decode.(
+      {
+        obj(({field, _}) => {
+          let result = field.required("result", string);
+
+          if (result == "success") {
+            let value = field.required("payload", decoder);
+            Ok(value);
+          } else {
+            let errMsg = field.required("error", decoder);
+            Error(errMsg);
+          };
+        });
+      }
+    );
+  };
+};
+
+let waitForFilesystemEvent = (~name, ~decoder, f, context) => {
+  context
+  |> Test.waitForMessage(
+       ~name,
+       fun
+       | Msg.MessageService(ShowMessage({message, _})) => {
+           message
+           |> Yojson.Safe.from_string
+           |> Json.Decode.decode_value(TestResponse.decode(decoder))
+           |> Result.map(f)
+           |> Result.value(~default=false);
+         }
+       | _ => false,
+     );
+};
+
 describe("FileSystem", ({describe, _}) => {
   describe("proxy (exthost -> main)", ({test, _}) => {
     test("oni-proxy-filesystem extension activates", _ => {
@@ -23,8 +61,7 @@ describe("FileSystem", ({describe, _}) => {
 
       let successHandler =
         fun
-        | Msg.FileSystem(Stat({uri})) => {
-            prerr_endline("Got request!");
+        | Msg.FileSystem(Stat(_)) => {
             let json =
               statSuccess |> Json.Encode.encode_value(Files.StatResult.encode);
             Lwt.return(Reply.okJson(json));
@@ -48,11 +85,12 @@ describe("FileSystem", ({describe, _}) => {
                ~command="fs.stat",
              ),
            )
-        |> Test.waitForMessage(
-             ~name="UnregisterSCMResourceGroup",
+        |> waitForFilesystemEvent(
+             ~name="success result",
+             ~decoder=Json.Decode.value,
              fun
-             | Msg.SCM(UnregisterSCMResourceGroup(_)) => true
-             | _ => false,
+             | Ok(_) => true
+             | Error(_) => false,
            )
         |> Test.terminate
         |> Test.waitForProcessClosed
@@ -69,11 +107,12 @@ describe("FileSystem", ({describe, _}) => {
                ~command="fs.stat",
              ),
            )
-        |> Test.waitForMessage(
-             ~name="UnregisterSCMResourceGroup",
+        |> waitForFilesystemEvent(
+             ~name="success result",
+             ~decoder=Json.Decode.value,
              fun
-             | Msg.SCM(UnregisterSCMResourceGroup(_)) => true
-             | _ => false,
+             | Ok(_) => false
+             | Error(_) => true,
            )
         |> Test.terminate
         |> Test.waitForProcessClosed
@@ -103,5 +142,38 @@ describe("FileSystem", ({describe, _}) => {
         |> Test.waitForProcessClosed
       })
     });
-  })
+  });
+  describe("$readFile", ({test, _}) => {
+    let successHandler =
+      fun
+      | Msg.FileSystem(ReadFile(_)) => {
+          Lwt.return(Reply.okBuffer(Bytes.of_string("Hello from Reason!")));
+        }
+      | _ => Lwt.return(Reply.okEmpty);
+
+    test("success case", _ => {
+      Test.startWithExtensions(
+        ~handler=successHandler,
+        ["oni-proxy-filesystem"],
+      )
+      |> Test.waitForExtensionActivation("oni-proxy-filesystem")
+      |> Test.withClient(
+           Exthost.Request.Commands.executeContributedCommand(
+             ~arguments=[],
+             ~command="fs.read",
+           ),
+         )
+      |> waitForFilesystemEvent(
+           ~name="success result",
+           ~decoder=Json.Decode.string,
+           fun
+           | Ok(msg) => {
+               String.equal(msg, "Hello from Reason!");
+             }
+           | Error(_) => false,
+         )
+      |> Test.terminate
+      |> Test.waitForProcessClosed
+    });
+  });
 });

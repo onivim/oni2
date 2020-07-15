@@ -126,14 +126,14 @@ describe("Service.OS.Api", ({describe, _}) => {
              Lwt.return((tempPath, filePath));
            })
         |> bind(((tempPath, filePath)) => {
-          let copiedFilePath = Rench.Path.join(tempPath, "copied.txt")
-          copy(~overwrite=true, ~source=filePath, ~target=copiedFilePath)
-          |> Lwt.map(_ => copiedFilePath);
-        })
+             let copiedFilePath = Rench.Path.join(tempPath, "copied.txt");
+             copy(~overwrite=true, ~source=filePath, ~target=copiedFilePath)
+             |> Lwt.map(_ => copiedFilePath);
+           })
         |> LwtEx.sync
         |> Result.get_ok;
 
       expect.equal(File.readAllLines(copiedFilePath), ["Hello, world!"]);
-    });
+    })
   });
 });

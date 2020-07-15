@@ -8,11 +8,7 @@ let bind = (fst, snd) => Lwt.bind(snd, fst);
 
 module Internal = {
   let copyfile = (~overwrite=true, ~source, ~target) => {
-    source
-    |> wrap(Luv.File.copyfile(
-      ~excl=!overwrite,
-      ~to_=target,
-    ));
+    source |> wrap(Luv.File.copyfile(~excl=!overwrite, ~to_=target));
   };
   let openfile = (~flags, path) => flags |> wrap(Luv.File.open_(path));
   let closefile = wrap(Luv.File.close);
@@ -101,8 +97,7 @@ module Api = {
   };
 
   let rename = (~source, ~target, ~overwrite) => {
-    copy(~source, ~target, ~overwrite)
-    |> bind(() => unlink(source));
+    copy(~source, ~target, ~overwrite) |> bind(() => unlink(source));
   };
   let mkdir = path => {
     path |> wrap(Luv.File.mkdir);

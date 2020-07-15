@@ -42,8 +42,25 @@ function activate(context) {
 		vscode.workspace.fs.writeFile(vscode.Uri.file("write.test"), uint8Array, { create: true, overwrite: true});
 	});
 
+	const disposable2 = vscode.commands.registerCommand("fs.read", (args) => {
+		showData("Command executed: " + JSON.stringify(args));
+
+		vscode.workspace.fs.readFile(vscode.Uri.file("read.test"))
+		.then((readResult) => {
+			showData({
+				result: "success",
+				payload: readResult.toString(),
+			})
+		}, (err) => {
+			showData({
+				result: "error",
+				payload: err,
+			})
+		});
+	});
 	context.subscriptions.push(disposable0);
 	context.subscriptions.push(disposable1);
+	context.subscriptions.push(disposable2);
 }
 
 // this method is called when your extension is deactivated
