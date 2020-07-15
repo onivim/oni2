@@ -6,7 +6,7 @@
         bigarray
         editor-input
         reason-sdl2
-        zed_oni
+        Revery.zed
         lwt
         lwt.unix
         Oni2.core

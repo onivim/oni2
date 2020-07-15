@@ -4,7 +4,7 @@
     (public_name Oni2_editor)
     (libraries
         bigarray
-        zed_oni
+        Revery.zed
         luv
         lwt
         lwt.unix
