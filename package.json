@@ -214,6 +214,7 @@
     "@opam/fp": "*",
     "@opam/fs": "*",
     "@opam/logs": "^0.7.0",
+    "@opam/lru": "bryphe/lru:lru.opam#2708c70",
     "@opam/luv": "~0.5.1",
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
