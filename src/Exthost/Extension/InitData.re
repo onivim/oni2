@@ -25,6 +25,7 @@ module Extension = {
     activationEvents: list(string),
     extensionDependencies: list(string),
     extensionKind: list(string),
+    contributes: Contributions.t,
     enableProposedApi: bool,
   };
 
@@ -42,6 +43,7 @@ module Extension = {
     extensionDependencies: manifest.extensionDependencies,
     extensionKind: manifest.extensionKind |> List.map(Manifest.Kind.toString),
     enableProposedApi: manifest.enableProposedApi,
+    contributes: manifest.contributes,
   };
 };
 
