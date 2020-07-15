@@ -5,7 +5,7 @@
         str
         bigarray
         editor-input
-        Revery.sdl2
+        reason-sdl2
         zed_oni
         lwt
         lwt.unix

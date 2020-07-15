@@ -18,7 +18,7 @@
         Oni2.syntax_client
         Oni2.syntax_server
         Oni2.ui
-        Revery.sdl2
+        reason-sdl2
         fp
         dir.lib
     )
