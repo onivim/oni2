@@ -116,4 +116,24 @@ describe("Service.OS.Api", ({describe, _}) => {
       expect.equal(str, "Hello, world!");
     });
   });
+  describe("copy file", ({test, _}) => {
+    test("copy simple file", ({expect, _}) => {
+      let copiedFilePath =
+        mktempdir()
+        |> bind(tempPath => {
+             let filePath = Rench.Path.join(tempPath, "testfile.txt");
+             File.write(~contents="Hello, world!", filePath);
+             Lwt.return((tempPath, filePath));
+           })
+        |> bind(((tempPath, filePath)) => {
+          let copiedFilePath = Rench.Path.join(tempPath, "copied.txt")
+          copy(~overwrite=true, ~source=filePath, ~target=copiedFilePath)
+          |> Lwt.map(_ => copiedFilePath);
+        })
+        |> LwtEx.sync
+        |> Result.get_ok;
+
+      expect.equal(File.readAllLines(copiedFilePath), ["Hello, world!"]);
+    });
+  });
 });
