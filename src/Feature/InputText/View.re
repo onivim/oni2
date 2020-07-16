@@ -4,6 +4,8 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
+module Sneakable = Feature_Sneak.View.Sneakable;
+
 module Cursor = {
   type state = {
     time: Time.t,
@@ -265,6 +267,10 @@ let%component make =
     };
   };
 
+  let onSneak = () => {
+    dispatch(Model.Sneaked);
+  };
+
   let cursor = () => {
     let (startStr, _) =
       getStringParts(selection.focus + String.length(prefix), displayValue);
@@ -323,7 +329,7 @@ let%component make =
       fontSize
     />;
 
-  <Clickable onAnyClick=handleClick>
+  <Sneakable onAnyClick=handleClick onSneak>
     <View style=Styles.box>
       <View style=Styles.marginContainer>
         <selectionView />
@@ -331,5 +337,5 @@ let%component make =
         <View style=Styles.textContainer> <text /> </View>
       </View>
     </View>
-  </Clickable>;
+  </Sneakable>;
 };
