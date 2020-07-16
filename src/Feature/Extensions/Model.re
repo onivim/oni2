@@ -208,10 +208,12 @@ let update = (~extHostClient, msg, model) => {
         ~query=model.latestQuery,
       );
     ({...model, searchText: searchText', latestQuery}, Focus);
-  | SearchQueryResults(queryResults) => (
-      {...model, latestQuery: Some(queryResults)},
-      Nothing,
-    )
+  | SearchQueryResults(queryResults) =>
+    queryResults
+    |> Service_Extensions.Query.searchText
+    == (model.searchText |> Feature_InputText.value)
+      ? ({...model, latestQuery: Some(queryResults)}, Nothing)
+      : (model, Nothing)
   | SearchQueryError(_queryResults) =>
     // TODO: Error experience?
     ({...model, latestQuery: None}, Nothing)
