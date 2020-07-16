@@ -20,6 +20,7 @@ type t = {
   grammars: list(Contributions.Grammar.t),
   languages: list(Contributions.Language.t),
   extToLanguage: [@opaque] StringMap.t(string),
+  fileNameToLanguage: [@opaque] StringMap.t(string),
   languageCache: [@opaque] Hashtbl.t(string, configurationLoadState),
   languageToConfigurationPath: [@opaque] StringMap.t(string),
   languageToScope: [@opaque] StringMap.t(string),
@@ -46,6 +47,7 @@ let initial = {
   languages: [],
   languageCache: Hashtbl.create(16),
   extToLanguage: StringMap.empty,
+  fileNameToLanguage: StringMap.empty,
   languageToConfigurationPath: StringMap.empty,
   languageToScope: StringMap.empty,
   scopeToGrammarPath: StringMap.empty,
@@ -60,6 +62,13 @@ let defaultLanguage = "plaintext";
 
 let getLanguageFromExtension = (li: t, ext: string) => {
   switch (StringMap.find_opt(ext, li.extToLanguage)) {
+  | Some(v) => v
+  | None => defaultLanguage
+  };
+};
+
+let getLanguageFromFileName = (li: t, fileName: string) => {
+  switch (StringMap.find_opt(fileName, li.fileNameToLanguage)) {
   | Some(v) => v
   | None => defaultLanguage
   };
@@ -147,6 +156,10 @@ let getScopeFromLanguage = (li: t, languageId: string) => {
   StringMap.find_opt(languageId, li.languageToScope);
 };
 
+let getScopeFromFileName = (li: t, fileName: string) => {
+  getLanguageFromFileName(li, fileName) |> getScopeFromLanguage(li);
+};
+
 let getScopeFromExtension = (li: t, ext: string) => {
   getLanguageFromExtension(li, ext) |> getScopeFromLanguage(li);
 };
@@ -161,6 +174,10 @@ let getTreesitterPathFromScope = (li: t, scope: string) => {
 
 let _getLanguageTuples = (lang: Contributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
+};
+
+let _getFileNameTuples = (lang: Contributions.Language.t) => {
+  List.map(fileName => (fileName, lang.id), lang.filenames);
 };
 
 let _getGrammars = (extensions: list(Scanner.ScanResult.t)) => {
@@ -183,6 +200,18 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
          (prev, v) => {
            let (extension, language) = v;
            StringMap.add(extension, language, prev);
+         },
+         StringMap.empty,
+       );
+
+  let fileNameToLanguage =
+    languages
+    |> List.map(_getFileNameTuples)
+    |> List.flatten
+    |> List.fold_left(
+         (prev, v) => {
+           let (fileName, language) = v;
+           StringMap.add(fileName, language, prev);
          },
          StringMap.empty,
        );
@@ -231,6 +260,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
     grammars,
     languages,
     extToLanguage,
+    fileNameToLanguage,
     languageToConfigurationPath,
     languageToScope,
     scopeToGrammarPath,

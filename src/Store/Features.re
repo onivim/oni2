@@ -10,6 +10,16 @@ module Internal = {
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
 
+  /* TODO: I always use the fileType from Core.Buffer.getFileType, which is bad!
+   *
+   *       This should now take into account the full filename, or the extension.
+   *       Should be future proof enough to do "ext or filename or pattern match or
+   *       first line or default."
+   *
+   *       I think this actually might be causing the current issues with .bashrc etc
+   *       now as well. .bashrc should work, but I expect the filetype is empty,
+   *       and this doesn't use the extension (which would work).
+   */
   let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
     buffer
     |> Oni_Core.Buffer.getFileType
