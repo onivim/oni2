@@ -142,14 +142,16 @@ type t = {
 
 let paint = Skia.Paint.make();
 
-let isFontMonospace = font => {
-  let metrics = Skia.FontMetrics.make();
-  Skia.Paint.setTypeface(paint, font |> Revery_Font.getSkiaTypeface);
-  Skia.Paint.getFontMetrics(paint, metrics, 1.0) |> (ignore: float => unit);
-  let avgCharWidth = Skia.FontMetrics.getAvgCharacterWidth(metrics);
-  let maxCharWidth = Skia.FontMetrics.getMaxCharacterWidth(metrics);
-
-  maxCharWidth -. avgCharWidth < 0.1;
+let isFontMonospace = (~smoothing, ~fontSize, font) => {
+  let character1 =
+    Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "H");
+  let character2 =
+    Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "i");
+  (
+    Float.equal(character1.width, character2.width),
+    character1.width,
+    character2.width,
+  );
 };
 
 let loadAndValidateEditorFont =
@@ -168,7 +170,8 @@ let loadAndValidateEditorFont =
   Result.bind(
     result,
     font => {
-      let isMono = isFontMonospace(font);
+      let (isMono, measuredWidth, _) =
+        isFontMonospace(~smoothing, ~fontSize, font);
       if (!isMono) {
         Error("Not a monospace font.");
       } else {
@@ -187,7 +190,8 @@ let loadAndValidateEditorFont =
 
         switch (maybeItalicFont) {
         | Ok(italicFont) =>
-          let isMono = isFontMonospace(italicFont);
+          let (isMono, _, _) =
+            isFontMonospace(~smoothing, ~fontSize, italicFont);
           if (isMono) {
             FontResolutionCache.add(
               (family, Weight.Normal, true),
@@ -212,7 +216,8 @@ let loadAndValidateEditorFont =
 
         switch (maybeBoldFont) {
         | Ok(boldFont) =>
-          let isMono = isFontMonospace(boldFont);
+          let (isMono, _, _) =
+            isFontMonospace(~smoothing, ~fontSize, boldFont);
           if (isMono) {
             FontResolutionCache.add(
               (family, Weight.Bold, false),
@@ -232,8 +237,6 @@ let loadAndValidateEditorFont =
 
         FontResolutionCache.trim(fontCache);
 
-        let FontRenderer.{width: measuredWidth, _} =
-          Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "x");
         Ok((
           requestId,
           {
