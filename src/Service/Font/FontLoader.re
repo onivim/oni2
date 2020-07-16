@@ -144,6 +144,7 @@ let paint = Skia.Paint.make();
 
 let isFontMonospace = font => {
   let metrics = Skia.FontMetrics.make();
+  Skia.Paint.setTypeface(paint, font |> Revery_Font.getSkiaTypeface);
   Skia.Paint.getFontMetrics(paint, metrics, 1.0) |> (ignore: float => unit);
   let avgCharWidth = Skia.FontMetrics.getAvgCharacterWidth(metrics);
   let maxCharWidth = Skia.FontMetrics.getMaxCharacterWidth(metrics);
