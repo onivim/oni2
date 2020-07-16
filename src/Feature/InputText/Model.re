@@ -3,6 +3,7 @@ open Utility;
 
 [@deriving show]
 type msg =
+  | Sneaked
   | Clicked({selection: Selection.t});
 
 [@deriving show]
@@ -26,6 +27,7 @@ let value = ({value, _}) => value;
 
 let update = (msg, model) =>
   switch (msg) {
+  | Sneaked => model
   | Clicked({selection}) => {...model, selection}
   };
 

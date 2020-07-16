@@ -214,7 +214,7 @@
     "@opam/fp": "*",
     "@opam/fs": "*",
     "@opam/logs": "^0.7.0",
-    "@opam/luv": "~0.5.1",
+    "@opam/luv": "bryphe/luv:luv.opam#207d3f6",
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
