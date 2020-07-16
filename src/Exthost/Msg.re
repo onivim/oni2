@@ -163,20 +163,13 @@ module Diagnostics = {
     | Clear({owner: string});
 
   let handle = (method, args: Yojson.Safe.t) => {
-    prerr_endline ("DIAGNOSTICS METHOD: " ++ method);
-    prerr_endline ("DIAGNOSTICS ARGS: " ++ Yojson.Safe.to_string(args));
     switch (method, args) {
     | ("$changeMany", `List([`String(owner), diagnosticsJson])) =>
-      let ret = diagnosticsJson
+      diagnosticsJson
       |> Json.Decode.decode_value(Json.Decode.list(Decode.entry))
       |> Result.map(entries => ChangeMany({owner, entries}))
       |> Result.map_error(Json.Decode.string_of_error)
 
-      switch (ret) {
-      | Ok(d) => prerr_endline ("-- PARSED SUCCESSFULLY!");
-      | Error(msg) => prerr_endline ("-- NOT PARSED!");
-      };
-      ret;
     | ("$clear", `List([`String(owner)])) => Ok(Clear({owner: owner}))
     | _ => Error("Unhandled method: " ++ method)
     };
@@ -520,8 +513,6 @@ module LanguageFeatures = {
   };
 
   let handle = (method, args: Yojson.Safe.t) => {
-    prerr_endline ("METHOD: " ++ method);
-    prerr_endline ("JSON: " ++ Yojson.Safe.to_string(args));
     switch (method, args) {
     | ("$unregister", `List([`Int(handle)])) =>
       Ok(Unregister({handle: handle}))
@@ -849,14 +840,18 @@ module StatusBar = {
       })
     | Dispose({id: int});
 
-  let parseCommand = commandJson => { 
-  prerr_endline ("!! Parsing command: " ++ Yojson.Safe.to_string(commandJson));
+  let parseCommand = commandJson => {
     switch (commandJson) {
     | `String(jsonString) =>
       jsonString
       |> Utility.JsonEx.from_string
-      |> Utility.ResultEx.flatMap(json => Json.Decode.decode_value(Json.Decode.nullable(ExtCommand.decode), json) 
-      |> Result.map_error(Json.Decode.string_of_error))
+      |> Utility.ResultEx.flatMap(json =>
+           Json.Decode.decode_value(
+             Json.Decode.nullable(ExtCommand.decode),
+             json,
+           )
+           |> Result.map_error(Json.Decode.string_of_error)
+         )
     | _ => Ok(None)
     };
   };
@@ -879,9 +874,7 @@ module StatusBar = {
       ) =>
       open Base.Result.Let_syntax;
       let%bind id = idJson |> Internal.decode_value(Decode.id);
-      prerr_endline ("---- BEFORE PARSE");
       let%bind command = parseCommand(commandJson);
-      prerr_endline ("---- AFTER PARSE");
       let%bind color =
         colorJson
         |> Internal.decode_value(Json.Decode.nullable(Color.decode));
