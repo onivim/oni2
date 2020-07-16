@@ -53,24 +53,33 @@ module Environment = {
     isExtensionDevelopmentDebug: bool,
     appName: string,
     appLanguage: string,
+    appRoot: Uri.t,
+    globalStorageHome: option(Uri.t),
+    userHome: option(Uri.t),
     // TODO
     /*
-     appRoot: option(Uri.t),
      appUriScheme: string,
      appSettingsHome: option(Uri.t),
-     globalStorageHome: Uri.t,
-     userHome: Uri.t,
      webviewResourceRoot: string,
      webviewCspSource: string,
      useHostProxy: boolean,
      */
   };
 
-  let default = {
+  let default = () => {
     isExtensionDevelopmentDebug: false,
-    appName: "reason-vscode-exthost",
+    appName: "Onivim 2",
     // TODO - INTL: Get proper user language
     appLanguage: "en-US",
+    appRoot: Revery.Environment.getExecutingDirectory() |> Uri.fromPath,
+    globalStorageHome:
+      Oni_Core.Filesystem.getGlobalStorageFolder()
+      |> Result.to_option
+      |> Option.map(Uri.fromPath),
+    userHome:
+      Oni_Core.Filesystem.getUserDataDirectory()
+      |> Result.to_option
+      |> Option.map(Uri.fromPath),
   };
 };
 
@@ -120,23 +129,30 @@ let create =
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      ~environment=Environment.default,
+      ~environment=?,
       ~logLevel=0,
       ~autoStart=true,
       ~remote=Remote.default,
       ~telemetryInfo=TelemetryInfo.default,
       extensions,
     ) => {
-  version,
-  parentPid,
-  logLevel,
-  extensions,
-  resolvedExtensions: [],
-  hostExtensions: [],
-  environment,
-  logsLocation,
-  logFile,
-  autoStart,
-  remote,
-  telemetryInfo,
+  let environment =
+    switch (environment) {
+    | None => Environment.default()
+    | Some(env) => env
+    };
+  {
+    version,
+    parentPid,
+    logLevel,
+    extensions,
+    resolvedExtensions: [],
+    hostExtensions: [],
+    environment,
+    logsLocation,
+    logFile,
+    autoStart,
+    remote,
+    telemetryInfo,
+  };
 };

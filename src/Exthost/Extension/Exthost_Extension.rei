@@ -225,21 +225,21 @@ module InitData: {
       isExtensionDevelopmentDebug: bool,
       appName: string,
       appLanguage: string,
+      appRoot: Oni_Core.Uri.t,
+      globalStorageHome: option(Oni_Core.Uri.t),
+      userHome: option(Oni_Core.Uri.t),
       // TODO
       /*
-       appRoot: option(Types.Uri.t),
        appLanguage: string,
        appUriScheme: string,
        appSettingsHome: option(Uri.t),
-       globalStorageHome: Uri.t,
-       userHome: Uri.t,
        webviewResourceRoot: string,
        webviewCspSource: string,
        useHostProxy: boolean,
        */
     };
 
-    let default: t;
+    let default: unit => t;
   };
 
   module Remote: {
