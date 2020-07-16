@@ -36,7 +36,12 @@ module Api = {
     };
   };
 
-  let stat = str => str |> wrap(Luv.File.stat);
+  let stat = path => {
+    Log.infof(m => m("Luv.stat: %s", path));
+    path
+    |> wrap(Luv.File.stat)
+    |> LwtEx.tap(_ => Log.infof(m => m("Stat completed: %s", path)));
+  };
 
   let readdir = path => {
     path
