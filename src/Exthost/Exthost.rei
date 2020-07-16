@@ -469,6 +469,110 @@ module FormattingOptions: {
   let encode: Json.encoder(t);
 };
 
+module Files: {
+  module FileSystemProviderCapabilities: {
+    type capability = [
+      | `FileReadWrite
+      | `FileOpenReadWriteClose
+      | `FileReadStream
+      | `FileFolderCopy
+      | `PathCaseSensitive
+      | `Readonly
+      | `Trash
+    ];
+
+    [@deriving show]
+    type t;
+
+    let test: (capability, t) => bool;
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileChangeType: {
+    [@deriving show]
+    type t =
+      | Updated
+      | Added
+      | Deleted;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileChange: {
+    [@deriving show]
+    type t = {
+      resource: Uri.t,
+      changeType: FileChangeType.t,
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileType: {
+    [@deriving show]
+    type t =
+      | Unknown
+      | File
+      | Directory
+      | SymbolicLink;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+
+    let decode: Json.decoder(t);
+    let encode: Json.encoder(t);
+  };
+
+  module FileOverwriteOptions: {
+    [@deriving show]
+    type t = {overwrite: bool};
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileWriteOptions: {
+    [@deriving show]
+    type t = {
+      overwrite: bool,
+      create: bool,
+    };
+
+    let decode: Json.decoder(t);
+  };
+  module FileOpenOptions: {
+    [@deriving show]
+    type t = {create: bool};
+
+    let decode: Json.decoder(t);
+  };
+  module FileDeleteOptions: {
+    [@deriving show]
+    type t = {
+      recursive: bool,
+      useTrash: bool,
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module StatResult: {
+    [@deriving show]
+    type t = {
+      fileType: FileType.t,
+      mtime: int,
+      ctime: int,
+      size: int,
+    };
+
+    let decode: Json.decoder(t);
+    let encode: Json.encoder(t);
+  };
+};
+
 module ModelAddedDelta: {
   type t = {
     uri: Uri.t,
@@ -740,6 +844,45 @@ module Msg: {
       | ExtensionRuntimeError({extensionId: ExtensionId.t});
   };
 
+  module FileSystem: {
+    open Files;
+
+    [@deriving show]
+    type msg =
+      | RegisterFileSystemProvider({
+          handle: int,
+          scheme: string,
+          capabilities: FileSystemProviderCapabilities.t,
+        })
+      | UnregisterProvider({handle: int})
+      | OnFileSystemChange({
+          handle: int,
+          resource: list(FileChange.t),
+        })
+      | Stat({uri: Uri.t})
+      | ReadDir({uri: Uri.t})
+      | ReadFile({uri: Uri.t})
+      | WriteFile({
+          uri: Uri.t,
+          bytes: Bytes.t,
+        })
+      | Rename({
+          source: Uri.t,
+          target: Uri.t,
+          opts: FileOverwriteOptions.t,
+        })
+      | Copy({
+          source: Uri.t,
+          target: Uri.t,
+          opts: FileOverwriteOptions.t,
+        })
+      | Mkdir({uri: Uri.t})
+      | Delete({
+          uri: Uri.t,
+          opts: FileDeleteOptions.t,
+        });
+  };
+
   module LanguageFeatures: {
     [@deriving show]
     type msg =
@@ -934,6 +1077,7 @@ module Msg: {
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
     | ExtensionService(ExtensionService.msg)
+    | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
     | SCM(SCM.msg)
@@ -966,7 +1110,11 @@ module Reply: {
   let okEmpty: t;
 
   let okJson: Yojson.Safe.t => t;
+
+  let okBuffer: Bytes.t => t;
 };
+
+module Middleware: {let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);};
 
 module Client: {
   type t;
