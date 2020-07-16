@@ -1,6 +1,36 @@
 module ExtCommand = Command;
 open Oni_Core;
 
+module Internal = {
+  let decode_value = (decoder, json) => {
+    json
+    |> Json.Decode.decode_value(decoder)
+    |> Result.map_error(Json.Decode.string_of_error);
+  };
+};
+
+module Decode = {
+  open Json.Decode;
+
+  let int =
+    one_of([
+      ("int", int),
+      (
+        "string",
+        string
+        |> map(int_of_string_opt)
+        |> and_then(
+             fun
+             | Some(num) => succeed(num)
+             | None => fail("Unable to parse number"),
+           ),
+      ),
+    ]);
+
+  let id =
+    one_of([("string", string), ("int", int |> map(string_of_int))]);
+};
+
 module Clipboard = {
   [@deriving show]
   type msg =
@@ -278,6 +308,86 @@ module ExtensionService = {
          })
     | _ => Error("Unhandled method: " ++ method)
     };
+  };
+};
+
+module FileSystem = {
+  open Files;
+
+  [@deriving show]
+  type msg =
+    | RegisterFileSystemProvider({
+        handle: int,
+        scheme: string,
+        capabilities: FileSystemProviderCapabilities.t,
+      })
+    | UnregisterProvider({handle: int})
+    | OnFileSystemChange({
+        handle: int,
+        resource: list(FileChange.t),
+      })
+    | Stat({uri: Uri.t})
+    | ReadDir({uri: Uri.t})
+    | ReadFile({uri: Uri.t})
+    | WriteFile({
+        uri: Uri.t,
+        bytes: Bytes.t,
+      })
+    | Rename({
+        source: Uri.t,
+        target: Uri.t,
+        opts: FileOverwriteOptions.t,
+      })
+    | Copy({
+        source: Uri.t,
+        target: Uri.t,
+        opts: FileOverwriteOptions.t,
+      })
+    | Mkdir({uri: Uri.t})
+    | Delete({
+        uri: Uri.t,
+        opts: FileDeleteOptions.t,
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method, args) {
+      | ("$stat", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        Ok(Stat({uri: uri}));
+      | ("$readdir", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        Ok(ReadDir({uri: uri}));
+      | ("$readFile", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        Ok(ReadFile({uri: uri}));
+      | ("$writeFile", `List([uriJson, `String(buffer)])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        let bytes = Bytes.of_string(buffer);
+        Ok(WriteFile({uri, bytes}));
+      | ("$rename", `List([sourceJson, targetJson, optsJson])) =>
+        let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
+        let%bind target = targetJson |> Internal.decode_value(Uri.decode);
+        let%bind opts =
+          optsJson |> Internal.decode_value(FileOverwriteOptions.decode);
+        Ok(Rename({source, target, opts}));
+      | ("$copy", `List([sourceJson, targetJson, optsJson])) =>
+        let%bind source = sourceJson |> Internal.decode_value(Uri.decode);
+        let%bind target = targetJson |> Internal.decode_value(Uri.decode);
+        let%bind opts =
+          optsJson |> Internal.decode_value(FileOverwriteOptions.decode);
+        Ok(Copy({source, target, opts}));
+      | ("$mkdir", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        Ok(Mkdir({uri: uri}));
+      | ("$delete", `List([uriJson, deleteOptsJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Uri.decode);
+        let%bind opts =
+          deleteOptsJson |> Internal.decode_value(FileDeleteOptions.decode);
+        Ok(Delete({uri, opts}));
+      | _ => Error("Unhandled FileSystem method: " ++ method)
+      }
+    );
   };
 };
 
@@ -710,10 +820,10 @@ module StatusBar = {
     | Left
     | Right;
 
-  let stringToAlignment =
+  let intToAlignment =
     fun
-    | "0" => Left
-    | "1" => Right
+    | 0 => Left
+    | 1 => Right
     | _ => Left;
 
   [@deriving show]
@@ -745,33 +855,32 @@ module StatusBar = {
     | (
         "$setEntry",
         `List([
-          `String(id),
+          idJson,
           _,
           `String(source),
           labelJson,
           tooltipJson,
           commandJson,
           colorJson,
-          `String(alignment),
-          `String(priority),
+          alignmentJson,
+          priorityJson,
         ]),
       ) =>
       open Base.Result.Let_syntax;
-      let alignment = stringToAlignment(alignment);
-      let priority = int_of_string_opt(priority) |> Option.value(~default=0);
+      open Json.Decode;
+
+      let%bind id = idJson |> Internal.decode_value(Decode.id);
       let%bind command = parseCommand(commandJson);
       let%bind color =
-        colorJson
-        |> Json.Decode.(decode_value(nullable(Color.decode)))
-        |> Result.map_error(Json.Decode.string_of_error);
+        colorJson |> Internal.decode_value(nullable(Color.decode));
       let%bind tooltip =
-        tooltipJson
-        |> Json.Decode.(decode_value(nullable(string)))
-        |> Result.map_error(Json.Decode.string_of_error);
-      let%bind label =
-        labelJson
-        |> Json.Decode.decode_value(Label.decode)
-        |> Result.map_error(Json.Decode.string_of_error);
+        tooltipJson |> Internal.decode_value(nullable(string));
+      let%bind label = labelJson |> Internal.decode_value(Label.decode);
+
+      let%bind alignmentNumber =
+        alignmentJson |> Internal.decode_value(Decode.int);
+      let alignment = alignmentNumber |> intToAlignment;
+      let%bind priority = priorityJson |> Internal.decode_value(Decode.int);
       Ok(
         SetEntry({
           id,
@@ -779,12 +888,14 @@ module StatusBar = {
           label,
           alignment,
           color,
-          tooltip,
           priority,
+          tooltip,
           command,
         }),
       );
+
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
+
     | _ =>
       Error(
         "Unable to parse method: "
@@ -1019,6 +1130,7 @@ type t =
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
   | ExtensionService(ExtensionService.msg)
+  | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
   | SCM(SCM.msg)

@@ -252,164 +252,186 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     | Some(client) => f(client)
     };
 
-  let handler = msg => {
-    switch (msg) {
-    | SCM(msg) =>
-      Feature_SCM.handleExtensionMessage(
-        ~dispatch=msg => dispatch(Actions.SCM(msg)),
-        msg,
-      );
-      Lwt.return(Reply.okEmpty);
+  let handler: Msg.t => Lwt.t(Reply.t) =
+    msg => {
+      switch (msg) {
+      | FileSystem(msg) => Middleware.filesystem(msg)
+      | SCM(msg) =>
+        Feature_SCM.handleExtensionMessage(
+          ~dispatch=msg => dispatch(Actions.SCM(msg)),
+          msg,
+        );
+        Lwt.return(Reply.okEmpty);
 
-    | LanguageFeatures(
-        RegisterDocumentSymbolProvider({handle, selector, label}),
-      ) =>
-      withClient(onRegisterDocumentSymbolProvider(handle, selector, label));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
-      withClient(onRegisterDefinitionProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(
+          RegisterDocumentSymbolProvider({handle, selector, label}),
+        ) =>
+        withClient(
+          onRegisterDocumentSymbolProvider(handle, selector, label),
+        );
+        Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
+        withClient(onRegisterDefinitionProvider(handle, selector));
+        Lwt.return(Reply.okEmpty);
 
-    | LanguageFeatures(RegisterDocumentHighlightProvider({handle, selector})) =>
-      withClient(onRegisterDocumentHighlightProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
-      withClient(onRegisterReferencesProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(
-        RegisterRangeFormattingSupport({handle, selector, displayName, _}),
-      ) =>
-      dispatch(
-        Formatting(
-          Feature_Formatting.RangeFormatterAvailable({
+      | LanguageFeatures(
+          RegisterDocumentHighlightProvider({handle, selector}),
+        ) =>
+        withClient(onRegisterDocumentHighlightProvider(handle, selector));
+        Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
+        withClient(onRegisterReferencesProvider(handle, selector));
+        Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(
+          RegisterSuggestSupport({
+            handle,
+            selector,
+            _,
+            // TODO: Handle additional configuration from suggest registration!
+          }),
+        ) =>
+        withClient(onRegisterSuggestProvider(handle, selector));
+        Lwt.return(Reply.okEmpty);
+
+      | Diagnostics(Clear({owner})) =>
+        dispatch(Actions.DiagnosticsClear(owner));
+        Lwt.return(Reply.okEmpty);
+      | Diagnostics(ChangeMany({owner, entries})) =>
+        onDiagnosticsChangeMany(owner, entries);
+        Lwt.return(Reply.okEmpty);
+
+      | DocumentContentProvider(
+          RegisterTextContentProvider({handle, scheme}),
+        ) =>
+        dispatch(NewTextContentProvider({handle, scheme}));
+        Lwt.return(Reply.okEmpty);
+
+      | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
+        dispatch(LostTextContentProvider({handle: handle}));
+        Lwt.return(Reply.okEmpty);
+
+      | Decorations(RegisterDecorationProvider({handle, label})) =>
+        dispatch(NewDecorationProvider({handle, label}));
+        Lwt.return(Reply.okEmpty);
+      | Decorations(UnregisterDecorationProvider({handle})) =>
+        dispatch(LostDecorationProvider({handle: handle}));
+        Lwt.return(Reply.okEmpty);
+      | Decorations(DecorationsDidChange({handle, uris})) =>
+        dispatch(DecorationsChanged({handle, uris}));
+        Lwt.return(Reply.okEmpty);
+
+      | ExtensionService(
+          ExtensionActivationError({extensionId, errorMessage}),
+        ) =>
+        Log.errorf(m =>
+          m(
+            "Extension '%s' failed to activate: %s",
+            extensionId,
+            errorMessage,
+          )
+        );
+        Lwt.return(Reply.okEmpty);
+      | ExtensionService(DidActivateExtension({extensionId, _})) =>
+        dispatch(
+          Actions.Extensions(Feature_Extensions.Activated(extensionId)),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | LanguageFeatures(
+          RegisterRangeFormattingSupport({handle, selector, displayName, _}),
+        ) =>
+        dispatch(
+          Formatting(
+            Feature_Formatting.RangeFormatterAvailable({
+              handle,
+              selector,
+              displayName,
+            }),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(
+          RegisterDocumentFormattingSupport({
             handle,
             selector,
             displayName,
+            _,
           }),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(
-        RegisterDocumentFormattingSupport({handle, selector, displayName, _}),
-      ) =>
-      dispatch(
-        Formatting(
-          Feature_Formatting.DocumentFormatterAvailable({
-            handle,
-            selector,
-            displayName,
+        ) =>
+        dispatch(
+          Formatting(
+            Feature_Formatting.DocumentFormatterAvailable({
+              handle,
+              selector,
+              displayName,
+            }),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
+        dispatch(
+          Actions.Hover(
+            Feature_Hover.ProviderRegistered({handle, selector}),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | LanguageFeatures(
+          RegisterSignatureHelpProvider({handle, selector, metadata}),
+        ) =>
+        dispatch(
+          Actions.SignatureHelp(
+            Feature_SignatureHelp.ProviderRegistered({
+              handle,
+              selector,
+              metadata,
+            }),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | MessageService(ShowMessage({severity, message, extensionId})) =>
+        dispatch(ExtMessageReceived({severity, message, extensionId}));
+        Lwt.return(Reply.okEmpty);
+
+      | StatusBar(
+          SetEntry({
+            id,
+            label,
+            alignment,
+            priority,
+            color,
+            command,
+            tooltip,
+            _,
           }),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(
-        RegisterSuggestSupport({
-          handle,
-          selector,
-          _,
-          // TODO: Handle additional configuration from suggest registration!
-        }),
-      ) =>
-      withClient(onRegisterSuggestProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
-      dispatch(
-        Actions.Hover(Feature_Hover.ProviderRegistered({handle, selector})),
-      );
-      Lwt.return(Reply.okEmpty);
-
-    | LanguageFeatures(
-        RegisterSignatureHelpProvider({handle, selector, metadata}),
-      ) =>
-      dispatch(
-        Actions.SignatureHelp(
-          Feature_SignatureHelp.ProviderRegistered({
-            handle,
-            selector,
-            metadata,
-          }),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
-
-    | Diagnostics(Clear({owner})) =>
-      dispatch(Actions.DiagnosticsClear(owner));
-      Lwt.return(Reply.okEmpty);
-    | Diagnostics(ChangeMany({owner, entries})) =>
-      onDiagnosticsChangeMany(owner, entries);
-      Lwt.return(Reply.okEmpty);
-
-    | DocumentContentProvider(RegisterTextContentProvider({handle, scheme})) =>
-      dispatch(NewTextContentProvider({handle, scheme}));
-      Lwt.return(Reply.okEmpty);
-
-    | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
-      dispatch(LostTextContentProvider({handle: handle}));
-      Lwt.return(Reply.okEmpty);
-
-    | Decorations(RegisterDecorationProvider({handle, label})) =>
-      dispatch(NewDecorationProvider({handle, label}));
-      Lwt.return(Reply.okEmpty);
-    | Decorations(UnregisterDecorationProvider({handle})) =>
-      dispatch(LostDecorationProvider({handle: handle}));
-      Lwt.return(Reply.okEmpty);
-    | Decorations(DecorationsDidChange({handle, uris})) =>
-      dispatch(DecorationsChanged({handle, uris}));
-      Lwt.return(Reply.okEmpty);
-
-    | ExtensionService(ExtensionActivationError({extensionId, errorMessage})) =>
-      Log.errorf(m =>
-        m("Extension '%s' failed to activate: %s", extensionId, errorMessage)
-      );
-      Lwt.return(Reply.okEmpty);
-    | ExtensionService(DidActivateExtension({extensionId, _})) =>
-      dispatch(
-        Actions.Extensions(Feature_Extensions.Activated(extensionId)),
-      );
-      Lwt.return(Reply.okEmpty);
-
-    | MessageService(ShowMessage({severity, message, extensionId})) =>
-      dispatch(ExtMessageReceived({severity, message, extensionId}));
-      Lwt.return(Reply.okEmpty);
-
-    | StatusBar(
-        SetEntry({
-          id,
-          label,
-          alignment,
-          priority,
-          color,
-          command,
-          tooltip,
-          _,
-        }),
-      ) =>
-      let command =
-        command |> Option.map(({id, _}: Exthost.Command.t) => id);
-      dispatch(
-        Actions.StatusBar(
-          Feature_StatusBar.ItemAdded(
-            Feature_StatusBar.Item.create(
-              ~command?,
-              ~color?,
-              ~tooltip?,
-              ~id,
-              ~label,
-              ~alignment,
-              ~priority,
-              (),
+        ) =>
+        let command =
+          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+        dispatch(
+          Actions.StatusBar(
+            Feature_StatusBar.ItemAdded(
+              Feature_StatusBar.Item.create(
+                ~command?,
+                ~color?,
+                ~tooltip?,
+                ~id,
+                ~label,
+                ~alignment,
+                ~priority,
+                (),
+              ),
             ),
           ),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
+        );
+        Lwt.return(Reply.okEmpty);
 
-    | TerminalService(msg) =>
-      Service_Terminal.handleExtensionMessage(msg);
-      Lwt.return(Reply.okEmpty);
-    | _ => Lwt.return(Reply.okEmpty)
+      | TerminalService(msg) =>
+        Service_Terminal.handleExtensionMessage(msg);
+        Lwt.return(Reply.okEmpty);
+      | _ => Lwt.return(Reply.okEmpty)
+      };
     };
-  };
 
   let parentPid = Luv.Pid.getpid();
   let name = Printf.sprintf("exthost-client-%s", parentPid |> string_of_int);
