@@ -41,3 +41,8 @@ let sync: (~timeout: float=?, Lwt.t('a)) => result('a, exn) =
 
     Option.value(~default=Error(Timeout), completed^);
   };
+
+let tap: ('a => unit, Lwt.t('a)) => Lwt.t('a) = (f, promise) => {
+  Lwt.on_success(promise, f);
+  promise;
+};

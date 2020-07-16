@@ -14,9 +14,9 @@ module Internal = {
         |> and_then((str: string) => {
              let result: result('a, string) =
                str
-               |> Yojson.Safe.from_string
-               |> decode_value(decoder)
-               |> Result.map_error(Json.Decode.string_of_error);
+               |> Utility.JsonEx.from_string
+               |> Utility.ResultEx.flatMap(json => decode_value(decoder, json)
+               |> Result.map_error(Json.Decode.string_of_error));
 
              switch (result) {
              | Ok(parsed) => succeed(parsed)
