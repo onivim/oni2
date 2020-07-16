@@ -18,18 +18,18 @@ type sneak = {
 type model = {
   active: bool,
   allSneaks: list(sneak),
-  inputText: Feature_InputText.model,
+  inputText: string,
   filteredSneaks: list(sneak),
 };
 
 let initial: model = {
   active: false,
   allSneaks: [],
-  inputText: Feature_InputText.create(~placeholder=""),
+  inputText: "",
   filteredSneaks: [],
 };
 
-let prefix = ({inputText, _}) => inputText |> Feature_InputText.value;
+let prefix = ({inputText, _}) => inputText;
 
 let getTextHighlight = (text: string, model) => {
   let prefix = model |> prefix;
@@ -81,10 +81,22 @@ module Internal = {
 let refine = (characterToAdd: string, sneaks: model) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
 
-  let inputText =
-    Feature_InputText.handleInput(~key=characterToAdd, sneaks.inputText);
-
-  {...sneaks, inputText} |> Internal.applyFilter;
+  if (String.length(characterToAdd) == 1) {
+    let inputText = sneaks.inputText ++ characterToAdd;
+    {...sneaks, inputText} |> Internal.applyFilter;
+  } else if (characterToAdd == "<BS>" || characterToAdd == "<C-H>") {
+    let inputText =
+      String.length(sneaks.inputText) >= 1
+        ? String.sub(
+            sneaks.inputText,
+            0,
+            String.length(sneaks.inputText) - 1,
+          )
+        : sneaks.inputText;
+    {...sneaks, inputText} |> Internal.applyFilter;
+  } else {
+    sneaks;
+  };
 };
 
 let add = (sneaksToAdd: list(sneakInfo), sneaks: model) => {
