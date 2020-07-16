@@ -172,19 +172,19 @@ let getTreesitterPathFromScope = (li: t, scope: string) => {
   li.scopeToTreesitterPath |> StringMap.find_opt(scope) |> Option.join;
 };
 
-let _getLanguageTuples = (lang: Contributions.Language.t) => {
+let getLanguageTuples = (lang: Contributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
 };
 
-let _getFileNameTuples = (lang: Contributions.Language.t) => {
+let getFileNameTuples = (lang: Contributions.Language.t) => {
   List.map(fileName => (fileName, lang.id), lang.filenames);
 };
 
-let _getGrammars = (extensions: list(Scanner.ScanResult.t)) => {
+let getGrammars = (extensions: list(Scanner.ScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.grammars) |> List.flatten;
 };
 
-let _getLanguages = (extensions: list(Scanner.ScanResult.t)) => {
+let getLanguages = (extensions: list(Scanner.ScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
 };
 

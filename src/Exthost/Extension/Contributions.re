@@ -375,7 +375,8 @@ module Language = {
           id: field.required("id", string),
           extensions: field.withDefault("extensions", [], list(string)),
           filenames: field.withDefault("filenames", [], list(string)),
-          filenamePatterns: field.withDefault("filenamePatterns", [], list(string)),
+          filenamePatterns:
+            field.withDefault("filenamePatterns", [], list(string)),
           firstLine: field.optional("firstLine", string),
           aliases: field.withDefault("aliases", [], list(string)),
           configuration: field.optional("configuration", string),
