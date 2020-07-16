@@ -35,6 +35,11 @@ module LocalizedToken: {
 };
 
 module Contributions: {
+  module Breakpoint: {
+    [@deriving show]
+    type t;
+  };
+
   [@deriving show]
   module Command: {
     type t = {
@@ -43,6 +48,11 @@ module Contributions: {
       category: option(string),
       condition: WhenExpr.t,
     };
+  };
+
+  module Debugger: {
+    [@deriving show]
+    type t;
   };
 
   module Menu: {
@@ -113,7 +123,9 @@ module Contributions: {
 
   [@deriving show]
   type t = {
+    breakpoints: list(Breakpoint.t),
     commands: list(Command.t),
+    debuggers: list(Debugger.t),
     menus: list(Menu.t),
     languages: list(Language.t),
     grammars: list(Grammar.t),
@@ -200,6 +212,7 @@ module InitData: {
       activationEvents: list(string),
       extensionDependencies: list(string),
       extensionKind: list(string),
+      contributes: Contributions.t,
       enableProposedApi: bool,
     };
 
