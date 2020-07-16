@@ -88,6 +88,9 @@ module Contributions: {
     type t = {
       id: string,
       extensions: list(string),
+      filenames: list(string),
+      filenamePatterns: list(string),
+      firstLine: option(string),
       aliases: list(string),
       configuration: option(string),
     };
