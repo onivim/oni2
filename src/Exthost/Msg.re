@@ -835,6 +835,7 @@ module StatusBar = {
         alignment,
         command: option(ExtCommand.t),
         color: option(Color.t),
+        tooltip: option(string),
         priority: int,
       })
     | Dispose({id: int});
@@ -858,7 +859,7 @@ module StatusBar = {
           _,
           `String(source),
           labelJson,
-          _tooltip,
+          tooltipJson,
           commandJson,
           colorJson,
           alignmentJson,
@@ -866,19 +867,35 @@ module StatusBar = {
         ]),
       ) =>
       open Base.Result.Let_syntax;
+      open Json.Decode;
+
       let%bind id = idJson |> Internal.decode_value(Decode.id);
       let%bind command = parseCommand(commandJson);
       let%bind color =
-        colorJson
-        |> Internal.decode_value(Json.Decode.nullable(Color.decode));
+        colorJson |> Internal.decode_value(nullable(Color.decode));
+      let%bind tooltip =
+        tooltipJson |> Internal.decode_value(nullable(string));
       let%bind label = labelJson |> Internal.decode_value(Label.decode);
 
       let%bind alignmentNumber =
         alignmentJson |> Internal.decode_value(Decode.int);
       let alignment = alignmentNumber |> intToAlignment;
       let%bind priority = priorityJson |> Internal.decode_value(Decode.int);
-      Ok(SetEntry({id, source, label, alignment, color, priority, command}));
+      Ok(
+        SetEntry({
+          id,
+          source,
+          label,
+          alignment,
+          color,
+          priority,
+          tooltip,
+          command,
+        }),
+      );
+
     | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
+
     | _ =>
       Error(
         "Unable to parse method: "
