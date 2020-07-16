@@ -192,12 +192,6 @@ let range = (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
 };
 
 let tabPaint = Skia.Paint.make();
-FontAwesome.FontFamily.solid
-|> Revery.Font.Family.toSkia(Normal)
-|> Revery.Font.load
-|> Result.get_ok
-|> Revery.Font.getSkiaTypeface
-|> Skia.Paint.setTypeface(tabPaint);
 Skia.Paint.setTextEncoding(tabPaint, GlyphId);
 Skia.Paint.setLcdRenderText(tabPaint, true);
 Skia.Paint.setAntiAlias(tabPaint, true);
@@ -239,6 +233,12 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
       tabPaint,
       Revery_Core.Color.toSkia(colors.whitespaceForeground),
     );
+    FontAwesome.FontFamily.solid
+    |> Revery.Font.Family.toSkia(Normal)
+    |> Revery.Font.load
+    |> Result.get_ok
+    |> Revery.Font.getSkiaTypeface
+    |> Skia.Paint.setTypeface(tabPaint);
     CanvasContext.drawText(
       ~paint=tabPaint,
       ~x=x +. context.charWidth /. 4.,
