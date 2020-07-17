@@ -430,7 +430,11 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       | TerminalService(msg) =>
         Service_Terminal.handleExtensionMessage(msg);
         Lwt.return(Reply.okEmpty);
-      | _ => Lwt.return(Reply.okEmpty)
+      | unhandledMsg =>
+        Log.warnf(m =>
+          m("Unhandled message: %s", Exthost.Msg.show(unhandledMsg))
+        );
+        Lwt.return(Reply.okEmpty);
       };
     };
 
