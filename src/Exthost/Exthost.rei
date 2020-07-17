@@ -233,6 +233,44 @@ module Label: {
   let decode: Json.decoder(t);
 };
 
+module Progress: {
+  module Location: {
+    type t = 
+    | Explorer
+    | SCM
+    | Extensions
+    | Window
+    | Notification
+    | Dialog
+    | Other(string);
+
+    let decode: Json.decoder(t);
+  };
+
+  module Options: {
+    type t = {
+        location: Location.t,
+        title: option(string),
+        source: option(string),
+        total: option(int),
+        cancellable: bool,
+        buttons: list(string),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module Step: {
+    type t = {
+        message: option(string),
+        increment: option(int),
+        total: option(int),
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
 module SCM: {
   [@deriving show({with_path: false})]
   type command = {
