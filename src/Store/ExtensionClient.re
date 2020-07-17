@@ -392,13 +392,15 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
       | MessageService(msg) =>
         Feature_Messages.Msg.exthost(
-          ~dispatch=(msg) => dispatch(Actions.Messages(msg)),
-          msg
+          ~dispatch=msg => dispatch(Actions.Messages(msg)),
+          msg,
         )
-        |> Lwt.map(fun
-        | None => Reply.okEmpty
-        | Some(handle) => Reply.okJson(Exthost.Message.handleToJson(handle))
-        );
+        |> Lwt.map(
+             fun
+             | None => Reply.okEmpty
+             | Some(handle) =>
+               Reply.okJson(Exthost.Message.handleToJson(handle)),
+           )
 
       | StatusBar(
           SetEntry({

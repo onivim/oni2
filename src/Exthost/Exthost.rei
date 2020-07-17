@@ -207,11 +207,13 @@ module Message: {
     | Warning
     | Error;
 
+  [@deriving show]
   type handle;
 
-  let handleToJson : handle => Yojson.Safe.t;
+  let handleToJson: handle => Yojson.Safe.t;
 
   module Command: {
+    [@deriving show]
     type t = {
       title: string,
       isCloseAffordance: bool,

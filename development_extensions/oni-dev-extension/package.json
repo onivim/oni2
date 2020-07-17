@@ -13,6 +13,10 @@
 	"contributes": {
 		"commands": [
 			{
+				"command": "developer.oni.showChoiceMessage",
+				"title": "Onivim - Developer: Show Choice Message"
+			},
+			{
 				"command": "developer.oni.showWarning",
 				"title": "Onivim - Developer: Show Warning"
 			},

@@ -20,9 +20,9 @@ function activate(context) {
     item.show();
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
-    
+
     cleanup(vscode.commands.registerCommand('developer.oni.statusBarClicked', () => {
-        vscode.window.showWarningMessage('You clicked developer');
+        vscode.window.showWarningMessage('You clicked developer', []);
     }));
 
     cleanup(vscode.languages.registerDefinitionProvider('oni-dev', {
@@ -99,6 +99,13 @@ function activate(context) {
                 relatedInformation: []
            }]);
         }
+    }));
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.showChoiceMessage', () => {
+        vscode.window.showInformationMessage('Hello!', "Option 1", "Option 2", "Option 3")
+        .then((result) => {
+           vscode.window.showInformationMessage('You picked: ' + result); 
+        });
     }));
 
     cleanup(vscode.commands.registerCommand('developer.oni.showWarning', () => {
