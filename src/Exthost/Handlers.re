@@ -106,7 +106,8 @@ let handlers =
     main(
       ~handler=Msg.DownloadService.handle,
       ~mapper=msg => Msg.DownloadService(msg),
-      "MainThreadDownloadService"),
+      "MainThreadDownloadService",
+    ),
     mainNotImplemented("MainThreadKeytar"),
     main(
       ~handler=Msg.LanguageFeatures.handle,
