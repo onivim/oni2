@@ -9,7 +9,7 @@ let minimumFontSize = 6.;
 let defaultFontSize = 14.;
 let defaultFontFile = "JetBrainsMono-Regular.ttf";
 let defaultFontFamily =
-  Revery.Font.Family.fromFiles((~weight, ~italic, ~mono as _) => {
+  Revery.Font.Family.fromFiles((~weight, ~italic) => {
     switch (weight, italic) {
     | (Revery.Font.Weight.Bold, true) => "JetBrainsMono-Bold-Italic.ttf"
     | (Revery.Font.Weight.Bold, false) => "JetBrainsMono-Bold.ttf"

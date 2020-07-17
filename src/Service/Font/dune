@@ -7,5 +7,7 @@
       Revery
       isolinear
       base
+      lru
+      reason-skia
     )
     (preprocess (pps ppx_let ppx_deriving.show)))
