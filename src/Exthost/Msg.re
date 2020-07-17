@@ -294,8 +294,8 @@ module Errors = {
     switch (method, args) {
     | ("$onUnexpectedError", args) => Ok(OnUnexpectedError(args))
     | _ => Error("Errors - unhandled method: " ++ method)
-  }
-  }
+    };
+  };
 };
 
 module ExtensionService = {
