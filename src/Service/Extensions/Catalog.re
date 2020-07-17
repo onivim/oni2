@@ -174,7 +174,7 @@ module Summary = {
         version: field.required("version", string),
         name: field.required("name", string),
         namespace: field.required("namespace", string),
-        displayName: field.required("displayName", nullable(string)),
+        displayName: field.optional("displayName", string),
         description: field.required("description", string),
       }
     );

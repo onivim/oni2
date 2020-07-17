@@ -257,9 +257,10 @@ module InitData: {
   module TelemetryInfo: {
     [@deriving (show, yojson({strict: false}))]
     type t = {
-      sessionId: int,
-      machineId: int,
-      instanceId: int,
+      sessionId: string,
+      machineId: string,
+      instanceId: string,
+      msftInternal: bool,
     };
 
     let default: t;

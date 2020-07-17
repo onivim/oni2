@@ -22,7 +22,8 @@
     "Languages": [
       "languages/overview",
       "languages/reason-ocaml",
-      "languages/go"
+      "languages/python",
+      "languages/go",
     ],
     "For Developers": [
       "for-developers/architecture",
