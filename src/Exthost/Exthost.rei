@@ -821,6 +821,15 @@ module Msg: {
         });
   };
 
+  module DownloadService: {
+    [@deriving show]
+    type msg =
+      | Download({
+          uri: Oni_Core.Uri.t,
+          dest: Oni_Core.Uri.t,
+        });
+  };
+
   module ExtensionService: {
     [@deriving show]
     type msg =
@@ -1102,6 +1111,7 @@ module Msg: {
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
+    | DownloadService(DownloadService.msg)
     | ExtensionService(ExtensionService.msg)
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
@@ -1141,7 +1151,10 @@ module Reply: {
   let okBuffer: Bytes.t => t;
 };
 
-module Middleware: {let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);};
+module Middleware: {
+  let download: Msg.DownloadService.msg => Lwt.t(Reply.t);
+  let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);
+};
 
 module Client: {
   type t;
