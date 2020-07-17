@@ -17,19 +17,15 @@ type item = {
 };
 
 // TODO: move to Revery
-let getFontAdvance = (fontFile, fontSize) => {
-  let dimensions =
-    switch (Revery.Font.load(fontFile)) {
-    | Ok(font) =>
-      Revery.Font.FontRenderer.measure(
-        ~smoothing=Revery.Font.Smoothing.default,
-        font,
-        fontSize,
-        "x",
-      )
-    | Error(_) => {width: 0., height: 0.}
-    };
-  dimensions;
+let getFontAdvance = (fontFamily, fontSize) => {
+  let font =
+    Service_Font.resolveWithFallback(Revery.Font.Weight.Normal, fontFamily);
+  Revery.Font.FontRenderer.measure(
+    ~smoothing=Revery.Font.Smoothing.default,
+    font,
+    fontSize,
+    "x",
+  );
 };
 
 module Styles = {
@@ -184,7 +180,7 @@ let%component make =
   let editorFont = {
     ...editorFont,
     fontSize: uiFont.size,
-    measuredWidth: getFontAdvance(editorFont.fontFile, uiFont.size).width,
+    measuredWidth: getFontAdvance(editorFont.fontFamily, uiFont.size).width,
     // measuredHeight:
     //   editorFont.measuredHeight
     //   *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),
