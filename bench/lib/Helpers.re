@@ -33,7 +33,6 @@ let simpleState = {
 };
 
 let defaultFont: Service_Font.font = {
-  fontFile: "JetBrainsMono-Regular.ttf",
   fontFamily: Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf"),
   fontSize: 10.,
   measuredWidth: 10.,

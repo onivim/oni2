@@ -64,8 +64,7 @@ let renderLineNumber =
     ~color,
     ~bold=false,
     ~italic=false,
-    ~mono=false,
-    lineNumber,
+    ~text=lineNumber,
   );
 };
 
