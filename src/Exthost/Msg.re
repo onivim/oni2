@@ -764,47 +764,36 @@ module LanguageFeatures = {
 
 module MessageService = {
   [@deriving show]
-  type severity =
-    | Ignore
-    | Info
-    | Warning
-    | Error;
-
-  let intToSeverity =
-    fun
-    | 0 => Ignore
-    | 1 => Info
-    | 2 => Warning
-    | 3 => Error
-    | _ => Ignore;
-
-  [@deriving show]
   type msg =
     | ShowMessage({
-        severity,
+        severity: Message.severity,
         message: string,
         extensionId: option(string),
+        commands: list(Message.Command.t),
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | (
         "$showMessage",
-        `List([`Int(severity), `String(message), _options, ..._]),
+        `List([`Int(severity), `String(message), _options, commandsJson]),
       ) =>
-      try(
-        Ok(
-          ShowMessage({
-            severity: intToSeverity(severity),
-            message,
-            // TODO:
-            // Fix this up
-            extensionId: None,
-          }),
-        )
-      ) {
-      | exn => Error(Printexc.to_string(exn))
-      }
+      open Base.Result.Let_syntax;
+      open Json.Decode;
+
+      let%bind commands =
+        commandsJson |> Internal.decode_value(list(Message.Command.decode));
+
+      Ok(
+        ShowMessage({
+          severity: Message.intToSeverity(severity),
+          message,
+          // TODO:
+          // Fix this up
+          commands,
+          extensionId: None,
+        }),
+      );
     | _ =>
       Error(
         "Unable to parse method: "

@@ -390,7 +390,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | MessageService(ShowMessage({severity, message, extensionId})) =>
+      | MessageService(ShowMessage({severity, message, extensionId, _})) =>
         dispatch(ExtMessageReceived({severity, message, extensionId}));
         Lwt.return(Reply.okEmpty);
 

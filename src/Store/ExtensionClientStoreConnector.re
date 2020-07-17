@@ -277,10 +277,10 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
     | ExtMessageReceived({severity, message, extensionId}) =>
       let kind: Feature_Notification.kind =
         switch (severity) {
-        | Exthost.Msg.MessageService.Ignore => Info
-        | Exthost.Msg.MessageService.Info => Info
-        | Exthost.Msg.MessageService.Warning => Warning
-        | Exthost.Msg.MessageService.Error => Error
+        | Exthost.Message.Ignore => Info
+        | Exthost.Message.Info => Info
+        | Exthost.Message.Warning => Warning
+        | Exthost.Message.Error => Error
         };
 
       (

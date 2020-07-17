@@ -112,7 +112,7 @@ type t =
   | Formatting(Feature_Formatting.msg)
   | Notification(Feature_Notification.msg)
   | ExtMessageReceived({
-      severity: [@opaque] Exthost.Msg.MessageService.severity,
+      severity: [@opaque] Exthost.Message.severity,
       message: string,
       extensionId: option(string),
     })

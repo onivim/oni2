@@ -199,6 +199,27 @@ module Hover: {
   let decode: Json.decoder(t);
 };
 
+module Message: {
+  [@deriving show]
+  type severity =
+    | Ignore
+    | Info
+    | Warning
+    | Error;
+
+  type handle;
+
+  module Command: {
+    type t = {
+      title: string,
+      isCloseAffordance: bool,
+      handle,
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
 module SuggestItem: {
   type t = {
     label: string,
@@ -962,18 +983,13 @@ module Msg: {
   };
 
   module MessageService: {
-    type severity =
-      | Ignore
-      | Info
-      | Warning
-      | Error;
-
     [@deriving show]
     type msg =
       | ShowMessage({
-          severity,
+          severity: Message.severity,
           message: string,
           extensionId: option(string),
+          commands: list(Message.Command.t),
         });
   };
 
