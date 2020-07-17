@@ -117,7 +117,11 @@ let handlers =
       ~mapper=msg => Msg.MessageService(msg),
       "MainThreadMessageService",
     ),
-    mainNotImplemented("MainThreadOutputService"),
+    main(
+      ~handler=Msg.OutputService.handle,
+      ~mapper=msg => Msg.OutputService(msg),
+      "MainThreadOutputService",
+    ),
     mainNotImplemented("MainThreadProgress"),
     mainNotImplemented("MainThreadQuickOpen"),
     main(

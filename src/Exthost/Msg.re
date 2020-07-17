@@ -815,6 +815,59 @@ module MessageService = {
     };
   };
 };
+
+module OutputService = {
+  [@deriving show]
+  type msg =
+    | Register({
+        label: string,
+        log: bool,
+        file: option(Oni_Core.Uri.t),
+      })
+    | Append({
+        channelId: string,
+        value: string,
+      })
+    | Update({channelId: string})
+    | Clear({
+        channelId: string,
+        till: int,
+      })
+    | Reveal({
+        channelId: string,
+        preserveFocus: bool,
+      })
+    | Close({channelId: string})
+    | Dispose({channelId: string});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      Json.Decode.(
+        switch (method, args) {
+        | ("$register", `List([`String(label), `Bool(log), maybeUriJson])) =>
+          let%bind maybeUri =
+            maybeUriJson
+            |> Internal.decode_value(nullable(Oni_Core.Uri.decode));
+          Ok(Register({label, log, file: maybeUri}));
+        | ("$append", `List([`String(channelId), `String(value)])) =>
+          Ok(Append({channelId, value}))
+        | ("$update", `List([`String(channelId)])) =>
+          Ok(Update({channelId: channelId}))
+        | ("$clear", `List([`String(channelId), `Int(till)])) =>
+          Ok(Clear({channelId, till}))
+        | ("$reveal", `List([`String(channelId), `Bool(preserveFocus)])) =>
+          Ok(Reveal({channelId, preserveFocus}))
+        | ("$close", `List([`String(channelId)])) =>
+          Ok(Close({channelId: channelId}))
+        | ("$dispose", `List([`String(channelId)])) =>
+          Ok(Dispose({channelId: channelId}))
+        | _ => Error("Unable to parse OutputService method: " ++ method)
+        }
+      )
+    );
+  };
+};
+
 module StatusBar = {
   [@deriving show]
   type alignment =
@@ -1140,6 +1193,7 @@ type t =
   | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
+  | OutputService(OutputService.msg)
   | SCM(SCM.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)
