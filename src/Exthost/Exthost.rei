@@ -775,6 +775,16 @@ module Msg: {
       | GetCommands;
   };
 
+  module Console: {
+    [@deriving show]
+    type msg =
+      | LogExtensionHostMessage({
+          logType: string,
+          severity: string,
+          arguments: Yojson.Safe.t,
+        });
+  };
+
   module DebugService: {
     [@deriving show]
     type msg =
@@ -819,6 +829,12 @@ module Msg: {
           uri: Oni_Core.Uri.t,
           value: string,
         });
+  };
+
+  module Errors: {
+    [@deriving show]
+    type msg =
+      | OnUnexpectedError(Yojson.Safe.t);
   };
 
   module ExtensionService: {
@@ -1073,10 +1089,12 @@ module Msg: {
     | Ready
     | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
+    | Console(Console.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
+    | Errors(Errors.msg)
     | ExtensionService(ExtensionService.msg)
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
