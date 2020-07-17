@@ -26,6 +26,7 @@
         Oni2.feature.contextMenu
         Oni2.feature.extensions
         Oni2.feature.formatting
+        Oni2.feature.messages
         Oni2.feature.theme
         Oni2.feature.notification
         Oni2.feature.changelog

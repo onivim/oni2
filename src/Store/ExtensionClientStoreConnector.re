@@ -274,25 +274,25 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         Isolinear.Effect.none,
       )
 
-    | ExtMessageReceived({severity, message, extensionId}) =>
-      let kind: Feature_Notification.kind =
-        switch (severity) {
-        | Exthost.Message.Ignore => Info
-        | Exthost.Message.Info => Info
-        | Exthost.Message.Warning => Warning
-        | Exthost.Message.Error => Error
-        };
-
-      (
-        state,
-        Feature_Notification.Effects.create(
-          ~kind,
-          ~source=?extensionId,
-          message,
-        )
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
-      );
-
+//    | ExtMessageReceived({severity, message, extensionId}) =>
+//      let kind: Feature_Notification.kind =
+//        switch (severity) {
+//        | Exthost.Message.Ignore => Info
+//        | Exthost.Message.Info => Info
+//        | Exthost.Message.Warning => Warning
+//        | Exthost.Message.Error => Error
+//        };
+//
+//      (
+//        state,
+//        Feature_Notification.Effects.create(
+//          ~kind,
+//          ~source=?extensionId,
+//          message,
+//        )
+//        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+//      );
+//
     | _ => (state, Isolinear.Effect.none)
     };
 

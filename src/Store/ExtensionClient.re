@@ -390,9 +390,15 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | MessageService(ShowMessage({severity, message, extensionId, _})) =>
-        dispatch(ExtMessageReceived({severity, message, extensionId}));
-        Lwt.return(Reply.okEmpty);
+      | MessageService(msg) =>
+        Feature_Messages.Msg.exthost(
+          ~dispatch=(msg) => dispatch(Actions.Messages(msg)),
+          msg
+        )
+        |> Lwt.map(fun
+        | None => Reply.okEmpty
+        | Some(handle) => Reply.okJson(Exthost.Message.handleToJson(handle))
+        );
 
       | StatusBar(
           SetEntry({

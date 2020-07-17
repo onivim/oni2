@@ -111,11 +111,7 @@ type t =
     })
   | Formatting(Feature_Formatting.msg)
   | Notification(Feature_Notification.msg)
-  | ExtMessageReceived({
-      severity: [@opaque] Exthost.Message.severity,
-      message: string,
-      extensionId: option(string),
-    })
+  | Messages(Feature_Messages.msg)
   | Editor({
       scope: EditorScope.t,
       msg: Feature_Editor.msg,

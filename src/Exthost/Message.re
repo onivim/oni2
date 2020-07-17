@@ -18,6 +18,8 @@ let intToSeverity =
 [@deriving show]
 type handle = int;
 
+let handleToJson = handle => `Int(handle);
+
 module Command = {
   [@deriving show]
   type t = {

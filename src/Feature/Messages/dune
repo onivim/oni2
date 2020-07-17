@@ -1,0 +1,10 @@
+(library
+    (name Feature_Messages)
+    (public_name Oni2.feature.messages)
+    (libraries 
+      Oni2.core
+      Oni2.exthost
+      isolinear
+      base
+    )
+    (preprocess (pps ppx_let ppx_deriving.show)))

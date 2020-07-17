@@ -209,6 +209,8 @@ module Message: {
 
   type handle;
 
+  let handleToJson : handle => Yojson.Safe.t;
+
   module Command: {
     type t = {
       title: string,
