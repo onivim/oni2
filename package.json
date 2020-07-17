@@ -250,7 +250,7 @@
   },
   "resolutions": {
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#7e72660",
+    "revery": "revery-ui/revery#96c68b4",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
