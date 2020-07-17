@@ -821,6 +821,15 @@ module Msg: {
         });
   };
 
+  module DownloadService: {
+    [@deriving show]
+    type msg =
+      | Download({
+          uri: Oni_Core.Uri.t,
+          dest: Oni_Core.Uri.t
+        })
+  };
+
   module ExtensionService: {
     [@deriving show]
     type msg =
@@ -1077,6 +1086,7 @@ module Msg: {
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
+    | DownloadService(DownloadService.msg)
     | ExtensionService(ExtensionService.msg)
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)

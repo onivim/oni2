@@ -103,7 +103,10 @@ let handlers =
     mainNotImplemented("MainThreadEditorInsets"),
     mainNotImplemented("MainThreadErrors"),
     mainNotImplemented("MainThreadTreeViews"),
-    mainNotImplemented("MainThreadDownloadService"),
+    main(
+      ~handler=Msg.DownloadService.handle,
+      ~mapper=msg => Msg.DownloadService(msg),
+      "MainThreadDownloadService"),
     mainNotImplemented("MainThreadKeytar"),
     main(
       ~handler=Msg.LanguageFeatures.handle,

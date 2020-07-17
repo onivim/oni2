@@ -224,6 +224,36 @@ module DocumentContentProvider = {
   };
 };
 
+module DownloadService = {
+    [@deriving show]
+    type msg =
+      | Download({
+          uri: Oni_Core.Uri.t,
+          dest: Oni_Core.Uri.t
+        })
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | (
+        "$download",
+        `List([uriJson, toUriJson]),
+      ) =>
+      {
+        open Base.Result.Let_syntax;
+
+        let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
+        let%bind dest = toUriJson |> Internal.decode_value(Oni_Core.Uri.decode);
+
+        Ok(Download({
+          uri,
+          dest
+        }));
+      }
+    | _ => Error("DownloadService - unhandled method: " ++ method)
+    };
+  };
+}
+
 module ExtensionService = {
   [@deriving show]
   type msg =
@@ -1136,6 +1166,7 @@ type t =
   | Decorations(Decorations.msg)
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
+  | DownloadService(DownloadService.msg)
   | ExtensionService(ExtensionService.msg)
   | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
