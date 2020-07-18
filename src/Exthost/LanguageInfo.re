@@ -121,6 +121,37 @@ let getLanguageFromOniPath = (fp: string) => {
   |> Stdlib.Option.value(~default=defaultLanguage);
 };
 
+let getLanguageFromFirstLine = (li: t, buffer: Buffer.t) => {
+  let firstLine =
+    if (Buffer.getNumberOfLines(buffer) > 0) {
+      Buffer.getLine(0, buffer) |> BufferLine.raw;
+    } else {
+      "";
+    };
+
+  let testPattern = (pattern, line) =>
+    switch (Oniguruma.OnigRegExp.create(pattern)) {
+    | Error(_) => false
+    | Ok(r) => Oniguruma.OnigRegExp.Fast.test(line, r)
+    };
+  
+  if (firstLine == "") {
+    defaultLanguage;
+  } else {
+    let result =
+      try(
+        List.find(
+          p => testPattern(p.pattern, firstLine),
+          li.firstLineToLanguage,
+        )
+      ) {
+      | Not_found => {pattern: "", language: defaultLanguage}
+      };
+
+    result.language;
+  };
+};
+
 let getLanguageFromFilePath = (li: t, fp: string) => {
   let fileName = Path.filename(fp);
   let extension = Utility.Path.getExtension(fp);
@@ -144,8 +175,16 @@ let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
     | Some(v) => v
     };
 
+  let updateIfDefault = (f, res) =>
+    if (res == defaultLanguage) {
+      f();
+    } else {
+      res;
+    };
+
   // TODO: this should then flow into updateIfDefault(firstLineCheck);
-  getLanguageFromFilePath(li, filePath);
+  getLanguageFromFilePath(li, filePath)
+  |> updateIfDefault(() => getLanguageFromFirstLine(li, buffer));
 };
 
 module Internal = {
@@ -281,13 +320,27 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
     |> List.fold_left(
          (prev, v) => {
            let (pattern, language) = v;
-           let curr = {pattern, language};
-           [curr, ...prev];
+           [{pattern, language}, ...prev];
          },
          [],
        );
 
-  let firstLineToLanguage = [];
+  let firstLineToLanguage =
+    languages
+    |> List.fold_left(
+         (prev, lang) => {
+           Contributions.Language.(
+             switch (lang.firstLine) {
+             | Some(p) =>
+               let pattern = p;
+               let language = lang.id;
+               [{pattern, language}, ...prev];
+             | None => prev
+             }
+           )
+         },
+         [],
+       );
   open Contributions.Grammar;
   let languageToScope =
     grammars
