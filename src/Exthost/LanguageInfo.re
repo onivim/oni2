@@ -16,7 +16,7 @@ type configurationLoadState =
   | ErrorLoading;
 
 type patternLanguagePair = {
-  pattern: option(Oniguruma.OnigRegExp.t),
+  pattern: string,
   language: string,
 };
 
@@ -78,9 +78,9 @@ let getLanguageFromExtension = (li: t, ext: string) => {
 
 let getLanguageFromFileNamePattern = (li: t, fileName: string) => {
   let testPattern = (pattern, name) =>
-    switch (pattern) {
-    | None => false
-    | Some(r) => Oniguruma.OnigRegExp.Fast.test(name, r)
+    switch (Oniguruma.OnigRegExp.create(pattern)) {
+    | Error(_) => false
+    | Ok(r) => Oniguruma.OnigRegExp.Fast.test(name, r)
     };
   let result =
     try(
@@ -89,7 +89,7 @@ let getLanguageFromFileNamePattern = (li: t, fileName: string) => {
         li.fileNamePatternToLanguage,
       )
     ) {
-    | Not_found => {pattern: None, language: defaultLanguage}
+    | Not_found => {pattern: "", language: defaultLanguage}
     };
 
   result.language;
@@ -280,9 +280,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
     |> List.flatten
     |> List.fold_left(
          (prev, v) => {
-           let (regex, language) = v;
-           let pattern =
-             Oniguruma.OnigRegExp.create(regex) |> Stdlib.Result.to_option;
+           let (pattern, language) = v;
            let curr = {pattern, language};
            [curr, ...prev];
          },
