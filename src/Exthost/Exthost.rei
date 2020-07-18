@@ -966,15 +966,6 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
-      | RegisterDocumentLinkProvider({
-        handle: int,
-        selector: DocumentSelector.t,
-        supportsResolve: bool,
-      })
-      | RegisterEvaluatableExpressionProvider({
-        handle: int,
-        selector: DocumentSelector.t,
-      })
       | RegisterRenameSupport({
           handle: int,
           selector: DocumentSelector.t,
@@ -1370,6 +1361,25 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(Location.t));
+
+    let provideRenameEdits: (
+      ~handle: int,
+      ~resource: Uri.t,
+      ~position: OneBasedPosition.t,
+      ~newName: string,
+      Client.t
+    ) =>
+    // TODO: https://github.com/onivim/vscode-exthost/blob/923c38b016c87a205957456e13c62f8dfd3bdc62/src/vs/workbench/api/common/extHost.protocol.ts#L1200
+    Lwt.t(WorkspaceEdit.t);
+
+    let resolveRenameLocation: (
+      ~handle: int,
+      ~resource: Uri.t,
+      ~position: OneBasedPosition.t,
+      Client.t
+    ) =>
+    // TODO: https://github.com/onivim/vscode-exthost/blob/923c38b016c87a205957456e13c62f8dfd3bdc62/src/vs/editor/common/modes.ts#L1380
+    Lwt.t(RenameLocation.t);
 
     let provideTypeDefinition:
       (

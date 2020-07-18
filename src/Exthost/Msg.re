@@ -523,15 +523,6 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
-    | RegisterDocumentLinkProvider({
-      handle: int,
-      selector: DocumentSelector.t,
-      supportsResolve: bool,
-    })
-    | RegisterEvaluatableExpressionProvider({
-      handle: int,
-      selector: DocumentSelector.t,
-    })
     | RegisterRenameSupport({
         handle: int,
         selector: DocumentSelector.t,
