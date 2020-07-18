@@ -1055,6 +1055,31 @@ module Msg: {
         });
   };
 
+  module OutputService: {
+    [@deriving show]
+    type msg =
+      | Register({
+          label: string,
+          log: bool,
+          file: option(Oni_Core.Uri.t),
+        })
+      | Append({
+          channelId: string,
+          value: string,
+        })
+      | Update({channelId: string})
+      | Clear({
+          channelId: string,
+          till: int,
+        })
+      | Reveal({
+          channelId: string,
+          preserveFocus: bool,
+        })
+      | Close({channelId: string})
+      | Dispose({channelId: string});
+  };
+
   module StatusBar: {
     [@deriving show]
     type alignment =
@@ -1091,6 +1116,7 @@ module Msg: {
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
+    | OutputService(OutputService.msg)
     | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
