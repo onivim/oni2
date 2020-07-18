@@ -18,7 +18,8 @@ type outmsg =
   | Focus
   | Effect(Isolinear.Effect.t(msg))
   | NotifySuccess(string)
-  | NotifyFailure(string);
+  | NotifyFailure(string)
+  | OpenExtensionDetails;
 
 let initial: (~extensionsFolder: option(string)) => model;
 
@@ -43,6 +44,18 @@ module ListView: {
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~isFocused: bool,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
+    Revery.UI.element;
+};
+
+module DetailsView: {
+  let make:
+    (
+      ~model: model,
+      ~theme: ColorTheme.Colors.t,
+      ~font: UiFont.t,
       ~dispatch: msg => unit,
       unit
     ) =>

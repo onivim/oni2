@@ -88,7 +88,9 @@ let%component make =
       author
       version
       font
-      onClick={_ => prerr_endline("onClick - bundled")}
+      onClick={_ =>
+        dispatch(Model.LocalExtensionSelected({extensionInfo: extension}))
+      }
     />;
   };
 
@@ -116,7 +118,9 @@ let%component make =
       author
       version
       font
-      onClick={_ => prerr_endline("CLICKED")}
+      onClick={_ =>
+        dispatch(Model.LocalExtensionSelected({extensionInfo: extension}))
+      }
     />;
   };
 

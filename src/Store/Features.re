@@ -111,25 +111,33 @@ let update =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
     let state = {...state, extensions: model};
     let (state', effect) =
-      switch (outMsg) {
-      | Feature_Extensions.Nothing => (state, Effect.none)
-      | Feature_Extensions.Effect(eff) => (
-          state,
-          eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
-        )
-      | Feature_Extensions.Focus => (
-          FocusManager.push(Focus.Extensions, state),
-          Effect.none,
-        )
-      | Feature_Extensions.NotifySuccess(msg) => (
-          state,
-          Internal.notificationEffect(~kind=Info, msg),
-        )
-      | Feature_Extensions.NotifyFailure(msg) => (
-          state,
-          Internal.notificationEffect(~kind=Error, msg),
-        )
-      };
+      Feature_Extensions.(
+        switch (outMsg) {
+        | Nothing => (state, Effect.none)
+        | Effect(eff) => (
+            state,
+            eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
+          )
+        | Focus => (FocusManager.push(Focus.Extensions, state), Effect.none)
+        | NotifySuccess(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Info, msg),
+          )
+        | NotifyFailure(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Error, msg),
+          )
+        | OpenExtensionDetails =>
+          let eff =
+            Isolinear.Effect.createWithDispatch(
+              ~name="feature.extensions.openDetails", dispatch => {
+              dispatch(
+                Actions.OpenFileByPath("oni://ExtensionDetails", None, None),
+              )
+            });
+          (state, eff);
+        }
+      );
     (state', effect);
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);

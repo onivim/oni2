@@ -28,7 +28,8 @@ type msg =
   | InstallExtensionFailed({
       extensionId: string,
       errorMsg: string,
-    });
+    })
+  | LocalExtensionSelected({extensionInfo: [@opaque] Scanner.ScanResult.t});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -42,9 +43,35 @@ type outmsg =
   | Focus
   | Effect(Isolinear.Effect.t(msg))
   | NotifySuccess(string)
-  | NotifyFailure(string);
+  | NotifyFailure(string)
+  | OpenExtensionDetails;
+
+module Selected = {
+  open Exthost_Extension;
+  open Exthost_Extension.Manifest;
+  type t =
+    | Local(Scanner.ScanResult.t)
+    | Remote(Service_Extensions.Catalog.Details.t);
+
+  let logo =
+    fun
+    | Local(scanResult) => scanResult.manifest.icon
+    // TODO
+    | Remote(_) => None;
+
+  let displayName =
+    fun
+    | Local(scanResult) => scanResult.manifest |> Manifest.getDisplayName
+    | Remote(_) => "TODO";
+
+  let description =
+    fun
+    | Local(scanResult) => scanResult.manifest.description
+    | Remote(_) => None;
+};
 
 type model = {
+  selected: option(Selected.t),
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
   searchText: Feature_InputText.model,
@@ -55,6 +82,7 @@ type model = {
 };
 
 let initial = (~extensionsFolder) => {
+  selected: None,
   activatedIds: [],
   extensions: [],
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
@@ -292,6 +320,10 @@ let update = (~extHostClient, msg, model) => {
           errorMsg,
         ),
       ),
+    )
+  | LocalExtensionSelected({extensionInfo}) => (
+      {...model, selected: Some(Selected.Local(extensionInfo))},
+      OpenExtensionDetails,
     )
   };
 };

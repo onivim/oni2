@@ -47,6 +47,7 @@ let menus = model =>
   |> Seq.map(((id, items)) => Menu.Schema.{id, items})
   |> List.of_seq;
 
+module DetailsView = DetailsView;
 module ListView = ListView;
 
 let sub = (~setup, model) => {

@@ -173,7 +173,13 @@ module Parts = {
           uiFont
         />
 
-      | ExtensionDetails => <View />
+      | ExtensionDetails =>
+        <Feature_Extensions.DetailsView
+          model={state.extensions}
+          theme
+          font=uiFont
+          dispatch={_ => ()}
+        />
 
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />
