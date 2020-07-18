@@ -76,7 +76,11 @@ let handlers =
     ),
     mainNotImplemented("MainThreadComments"),
     mainNotImplemented("MainThreadConfiguration"),
-    mainNotImplemented("MainThreadConsole"),
+    main(
+      ~handler=Msg.Console.handle,
+      ~mapper=msg => Msg.Console(msg),
+      "MainThreadConsole",
+    ),
     main(
       ~handler=Msg.DebugService.handle,
       ~mapper=msg => Msg.DebugService(msg),
@@ -101,7 +105,11 @@ let handlers =
     ),
     mainNotImplemented("MainThreadTextEditors"),
     mainNotImplemented("MainThreadEditorInsets"),
-    mainNotImplemented("MainThreadErrors"),
+    main(
+      ~handler=Msg.Errors.handle,
+      ~mapper=msg => Msg.Errors(msg),
+      "MainThreadErrors",
+    ),
     mainNotImplemented("MainThreadTreeViews"),
     main(
       ~handler=Msg.DownloadService.handle,

@@ -75,6 +75,45 @@ module Commands = {
   };
 };
 
+module Console = {
+  [@deriving show]
+  type msg =
+    | LogExtensionHostMessage({
+        logType: string,
+        severity: string,
+        arguments: Yojson.Safe.t,
+      });
+
+  type logMessage = {
+    logType: string,
+    severity: string,
+    arguments: Yojson.Safe.t,
+  };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          logType: field.required("type", string),
+          severity: field.required("severity", string),
+          arguments: field.withDefault("arguments", `Null, value),
+        }
+      )
+    );
+
+  let handle = (method, args) => {
+    switch (method) {
+    | "$logExtensionHostMessage" =>
+      open Base.Result.Let_syntax;
+
+      let%bind {logType, severity, arguments} =
+        args |> Internal.decode_value(decode);
+      Ok(LogExtensionHostMessage({logType, severity, arguments}));
+    | _ => Error("Console - unhandled method: " ++ method)
+    };
+  };
+};
+
 module DebugService = {
   [@deriving show]
   type msg =
@@ -242,6 +281,19 @@ module DownloadService = {
 
       Ok(Download({uri, dest}));
     | _ => Error("DownloadService - unhandled method: " ++ method)
+    };
+  };
+};
+
+module Errors = {
+  [@deriving show]
+  type msg =
+    | OnUnexpectedError(Yojson.Safe.t);
+
+  let handle = (method, args) => {
+    switch (method, args) {
+    | ("$onUnexpectedError", args) => Ok(OnUnexpectedError(args))
+    | _ => Error("Errors - unhandled method: " ++ method)
     };
   };
 };
@@ -1207,11 +1259,13 @@ type t =
   | Ready
   | Clipboard(Clipboard.msg)
   | Commands(Commands.msg)
+  | Console(Console.msg)
   | DebugService(DebugService.msg)
   | Decorations(Decorations.msg)
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
   | DownloadService(DownloadService.msg)
+  | Errors(Errors.msg)
   | ExtensionService(ExtensionService.msg)
   | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
