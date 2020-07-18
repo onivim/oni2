@@ -15,12 +15,19 @@ type configurationLoadState =
   | Loaded(LanguageConfiguration.t)
   | ErrorLoading;
 
+type patternLanguagePair = {
+  pattern: option(Oniguruma.OnigRegExp.t),
+  language: string,
+};
+
 [@deriving show]
 type t = {
   grammars: list(Contributions.Grammar.t),
   languages: list(Contributions.Language.t),
   extToLanguage: [@opaque] StringMap.t(string),
   fileNameToLanguage: [@opaque] StringMap.t(string),
+  fileNamePatternToLanguage: [@opaque] list(patternLanguagePair),
+  firstLineToLanguage: [@opaque] list(patternLanguagePair),
   languageCache: [@opaque] Hashtbl.t(string, configurationLoadState),
   languageToConfigurationPath: [@opaque] StringMap.t(string),
   languageToScope: [@opaque] StringMap.t(string),
@@ -48,6 +55,8 @@ let initial = {
   languageCache: Hashtbl.create(16),
   extToLanguage: StringMap.empty,
   fileNameToLanguage: StringMap.empty,
+  fileNamePatternToLanguage: [],
+  firstLineToLanguage: [],
   languageToConfigurationPath: StringMap.empty,
   languageToScope: StringMap.empty,
   scopeToGrammarPath: StringMap.empty,
@@ -67,15 +76,34 @@ let getLanguageFromExtension = (li: t, ext: string) => {
   };
 };
 
+let getLanguageFromFileNamePattern = (li: t, fileName: string) => {
+  let testPattern = (pattern, name) =>
+    switch (pattern) {
+    | None => false
+    | Some(r) => Oniguruma.OnigRegExp.Fast.test(name, r)
+    };
+  let result =
+    try(
+      List.find(
+        p => testPattern(p.pattern, fileName),
+        li.fileNamePatternToLanguage,
+      )
+    ) {
+    | Not_found => {pattern: None, language: defaultLanguage}
+    };
+
+  result.language;
+};
+
 let getLanguageFromFileName = (li: t, fileName: string) => {
-  switch (
-    StringMap.find_opt(
-      String.lowercase_ascii(fileName),
-      li.fileNameToLanguage,
-    )
-  ) {
+  let lowercaseFileName = String.lowercase_ascii(fileName);
+
+  let fileNameMatch =
+    StringMap.find_opt(lowercaseFileName, li.fileNameToLanguage);
+
+  switch (fileNameMatch) {
   | Some(v) => v
-  | None => defaultLanguage
+  | None => getLanguageFromFileNamePattern(li, fileName)
   };
 };
 
@@ -91,7 +119,7 @@ let getLanguageFromOniPath = (fp: string) => {
        };
      })
   |> Stdlib.Option.value(~default=defaultLanguage);
-}
+};
 
 let getLanguageFromFilePath = (li: t, fp: string) => {
   let fileName = Path.filename(fp);
@@ -116,8 +144,8 @@ let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
     | Some(v) => v
     };
 
-  getLanguageFromFilePath(li, filePath);
   // TODO: this should then flow into updateIfDefault(firstLineCheck);
+  getLanguageFromFilePath(li, filePath);
 };
 
 module Internal = {
@@ -206,6 +234,10 @@ let getFileNameLanguageTuples = (lang: Contributions.Language.t) => {
   );
 };
 
+let getFilenamePatternTuples = (lang: Contributions.Language.t) => {
+  List.map(pattern => (pattern, lang.id), lang.filenamePatterns);
+};
+
 let getListOfGrammars = (extensions: list(Scanner.ScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.grammars) |> List.flatten;
 };
@@ -241,6 +273,23 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
          },
          StringMap.empty,
        );
+
+  let fileNamePatternToLanguage =
+    languages
+    |> List.map(getFilenamePatternTuples)
+    |> List.flatten
+    |> List.fold_left(
+         (prev, v) => {
+           let (regex, language) = v;
+           let pattern =
+             Oniguruma.OnigRegExp.create(regex) |> Stdlib.Result.to_option;
+           let curr = {pattern, language};
+           [curr, ...prev];
+         },
+         [],
+       );
+
+  let firstLineToLanguage = [];
   open Contributions.Grammar;
   let languageToScope =
     grammars
@@ -287,6 +336,8 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
     languages,
     extToLanguage,
     fileNameToLanguage,
+    fileNamePatternToLanguage,
+    firstLineToLanguage,
     languageToConfigurationPath,
     languageToScope,
     scopeToGrammarPath,
