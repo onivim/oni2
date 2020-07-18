@@ -40,7 +40,9 @@ let trimTrailingSeparator = path => {
 };
 
 let getExtension = path => {
-  let fileName = Rench.Path.filename(path);
+  let fileName = try (Rench.Path.filename(path)) {
+    | Invalid_argument(_) => ""
+  };
 
   if (String.length(fileName) == 0) {
     "";
@@ -50,3 +52,11 @@ let getExtension = path => {
     Rench.Path.extname(fileName);
   };
 };
+
+let%test_module "getExtension" =
+  (module
+   {
+     let%test "Simple file" = getExtension("/home/oni/test.md") == ".md";
+     let%test "No file name, only extension" = getExtension("/home/oni/.bashrc") == ".bashrc";
+     let%test "No path" = getExtension("") == "";
+   });
