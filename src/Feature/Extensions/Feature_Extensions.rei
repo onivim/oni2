@@ -3,10 +3,6 @@ open Exthost.Extension;
 
 type model;
 
-type rendererState;
-
-let name: renderState => string;
-
 [@deriving show({with_path: false})]
 type msg =
   | Activated(string /* id */)
@@ -16,16 +12,37 @@ type msg =
       arguments: [@opaque] list(Json.t),
     })
   | KeyPressed(string)
+  | Pasted(string)
   | SearchQueryResults(Service_Extensions.Query.t)
   | SearchQueryError(string)
-  | SearchText(Feature_InputText.msg);
+  | SearchText(Feature_InputText.msg)
+  | UninstallExtensionClicked({extensionId: string})
+  | UninstallExtensionSuccess({extensionId: string})
+  | UninstallExtensionFailed({
+      extensionId: string,
+      errorMsg: string,
+    })
+  | InstallExtensionClicked({extensionId: string})
+  | InstallExtensionSuccess({
+      extensionId: string,
+      scanResult: [@opaque] Scanner.ScanResult.t,
+    })
+  | InstallExtensionFailed({
+      extensionId: string,
+      errorMsg: string,
+    });
 
 type outmsg =
   | Nothing
   | Focus
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | NotifySuccess(string)
+  | NotifyFailure(string);
 
-let initial: model;
+let initial: (~extensionsFolder: option(string)) => model;
+
+let isBusy: model => bool;
+let isSearchInProgress: model => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 

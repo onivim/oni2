@@ -15,14 +15,12 @@ type t =
     })
   | UpdateChangelog
   | Welcome
-  | Version
-  | ExtensionDetails""
+  | Version;
 
 let changelog = "oni://Changelog";
 let updateChangelog = "oni://UpdateChangelog";
 let welcome = "oni://Welcome";
 let version = "oni://Version";
-let extensionDetails = OnigRegExp.create("oni://extension/([a-zA-Z0-9]*\.[a-zA-Z0-9]*)");
 let terminalRegex = OnigRegExp.create("oni://terminal/([0-9]*)/(.*)");
 
 let parse = bufferPath =>

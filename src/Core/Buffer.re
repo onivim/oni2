@@ -44,7 +44,6 @@ let getMediumFriendlyName =
          | Some(base) => Path.toRelative(~base, fp)
          | _ => Sys.getcwd()
          }
-       | ExtensionDetails => "Extension: Details";
        }
      );
 };
