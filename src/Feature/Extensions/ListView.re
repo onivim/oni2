@@ -9,7 +9,6 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
   let container = (~width) => [
-    Style.width(width),
     flexDirection(`Column),
     flexGrow(1),
     overflow(`Hidden),
