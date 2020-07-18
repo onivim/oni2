@@ -68,33 +68,41 @@ let getLanguageFromExtension = (li: t, ext: string) => {
 };
 
 let getLanguageFromFileName = (li: t, fileName: string) => {
-  switch (StringMap.find_opt(String.lowercase_ascii(fileName), li.fileNameToLanguage)) {
+  switch (
+    StringMap.find_opt(
+      String.lowercase_ascii(fileName),
+      li.fileNameToLanguage,
+    )
+  ) {
   | Some(v) => v
   | None => defaultLanguage
   };
 };
 
 let getLanguageFromFilePath = (li: t, fp: string) => {
-  let default = Path.extname(fp) |> getLanguageFromExtension(li);
+  let fileName = Path.filename(fp);
+  let extension = Path.extname(fp);
 
-  Regexes.oniPath
-  |> Stdlib.Result.to_option
-  |> Utility.OptionEx.flatMap(regex => {
-       let matches = Oniguruma.OnigRegExp.search(fp, 0, regex);
-       if (Array.length(matches) == 0) {
-         None;
-       } else {
-         Some(Oniguruma.OnigRegExp.Match.getText(matches[1]));
-       };
-     })
-  |> Stdlib.Option.value(~default);
+  let updateIfDefault = (f, res) =>
+    if (res == defaultLanguage) {
+      f();
+    } else {
+      res;
+    };
+
+  getLanguageFromExtension(li, extension)
+  |> updateIfDefault(() => getLanguageFromFileName(li, fileName));
 };
 
 let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
-  switch (Buffer.getFilePath(buffer)) {
-  | None => defaultLanguage
-  | Some(v) => getLanguageFromFilePath(li, v)
-  };
+  let filePath =
+    switch (Buffer.getFilePath(buffer)) {
+    | None => ""
+    | Some(v) => v
+    };
+
+  getLanguageFromFilePath(li, filePath);
+  // TODO: this should then flow into updateIfDefault(firstLineCheck);
 };
 
 module Internal = {
@@ -172,12 +180,15 @@ let getTreesitterPathFromScope = (li: t, scope: string) => {
   li.scopeToTreesitterPath |> StringMap.find_opt(scope) |> Option.join;
 };
 
-let getLanguageTuples = (lang: Contributions.Language.t) => {
+let getExtensionLanguageTuples = (lang: Contributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
 };
 
-let getFileNameTuples = (lang: Contributions.Language.t) => {
-  List.map(fileName => (String.lowercase_ascii(fileName), lang.id), lang.filenames);
+let getFileNameLanguageTuples = (lang: Contributions.Language.t) => {
+  List.map(
+    fileName => (String.lowercase_ascii(fileName), lang.id),
+    lang.filenames,
+  );
 };
 
 let getListOfGrammars = (extensions: list(Scanner.ScanResult.t)) => {
@@ -194,7 +205,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
 
   let extToLanguage =
     languages
-    |> List.map(getLanguageTuples)
+    |> List.map(getExtensionLanguageTuples)
     |> List.flatten
     |> List.fold_left(
          (prev, v) => {
@@ -206,7 +217,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
 
   let fileNameToLanguage =
     languages
-    |> List.map(getFileNameTuples)
+    |> List.map(getFileNameLanguageTuples)
     |> List.flatten
     |> List.fold_left(
          (prev, v) => {
