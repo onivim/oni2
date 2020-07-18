@@ -88,6 +88,7 @@ let%component make =
       author
       version
       font
+      onClick={(_) => prerr_endline ("onClick - bundled")}
     />;
   };
 
@@ -115,6 +116,7 @@ let%component make =
       author
       version
       font
+      onClick={(_) => prerr_endline ("CLICKED")}
     />;
   };
 
@@ -171,6 +173,7 @@ let%component make =
                author
                version
                font
+               onClick={() => prerr_endline ("Click remote!")}
              />;
            })
         |> Array.of_list;

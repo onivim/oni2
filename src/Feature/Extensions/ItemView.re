@@ -102,6 +102,7 @@ let make =
       ~author,
       ~version,
       ~font: UiFont.t,
+      ~onClick,
       (),
     ) => {
   let icon =
@@ -123,7 +124,7 @@ let make =
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;
 
-  <View style={Styles.container(~width)}>
+  <Clickable style={Styles.container(~width)} onClick>
     <View style=Styles.imageContainer> icon </View>
     <View>
       <View
@@ -161,5 +162,5 @@ let make =
         actionButton
       </View>
     </View>
-  </View>;
+  </Clickable>;
 };
