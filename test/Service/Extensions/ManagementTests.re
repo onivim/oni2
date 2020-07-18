@@ -72,6 +72,21 @@ describe("Management", ({describe, _}) => {
         Scanner.scan(~category=Development, extensionsFolder);
       expect.equal(List.length(afterInstallExtensions), 1);
     });
+
+    // Regression test - this extension was failing to install
+    // due to case-insensitive matching.
+    test("install golang.Go", ({expect, _}) => {
+      let extensionsFolder = createExtensionsFolder();
+      let startExtensions =
+        Scanner.scan(~category=Development, extensionsFolder);
+
+      expect.equal(List.length(startExtensions), 0);
+
+      let result =
+        ExtM.install(~setup, ~extensionsFolder, "golang.Go") |> LwtEx.sync;
+
+      expect.equal(Result.is_ok(result), true);
+    });
     test("invalid id returns failure", ({expect, _}) => {
       let extensionsFolder = createExtensionsFolder();
       let startExtensions =

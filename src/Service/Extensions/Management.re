@@ -59,7 +59,8 @@ module Internal = {
     Exthost.Extension.(
       getUserExtensions(~overriddenExtensionsDir)
       |> List.filter((scanResult: Scanner.ScanResult.t) => {
-           scanResult.manifest |> Manifest.identifier == id
+           String.lowercase_ascii(scanResult.manifest |> Manifest.identifier)
+           == String.lowercase_ascii(id)
          })
       |> (list => List.nth_opt(list, 0))
     );
