@@ -61,6 +61,14 @@ let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
   pendingInstalls != [] || pendingUninstalls != [];
 };
 
+let isInstalling = (~extensionId, {pendingInstalls, _}) => {
+  pendingInstalls |> List.exists(id => id == extensionId);
+};
+
+let isUninstalling = (~extensionId, {pendingUninstalls, _}) => {
+  pendingUninstalls |> List.exists(id => id == extensionId);
+};
+
 let searchResults = ({latestQuery, _}) =>
   switch (latestQuery) {
   | None => []

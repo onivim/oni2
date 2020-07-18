@@ -64,6 +64,16 @@ let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
   />;
 };
 
+let progressButton = (~font, ~title, ()) => {
+  <ItemView.ActionButton
+    font
+    title
+    backgroundColor=Revery.Colors.blue
+    color=Revery.Colors.white
+    onAction={() => ()}
+  />;
+};
+
 let%component make =
               (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
@@ -98,13 +108,16 @@ let%component make =
     let displayName = Manifest.getDisplayName(extension.manifest);
     let author = extension.manifest.author;
     let version = extension.manifest.version;
+    let id = Manifest.identifier(extension.manifest);
 
     let actionButton =
-      <uninstallButton
-        font
-        extensionId={extension.manifest |> Manifest.identifier}
-        dispatch
-      />;
+      Model.isUninstalling(~extensionId=id, model)
+        ? <progressButton font title="Uninstalling" />
+        : <uninstallButton
+            font
+            extensionId={extension.manifest |> Manifest.identifier}
+            dispatch
+          />;
 
     <ItemView
       actionButton
@@ -161,7 +174,10 @@ let%component make =
              let {namespace, version, _}: Service_Extensions.Catalog.Summary.t = summary;
              let author = namespace;
 
-             let actionButton = <installButton dispatch font extensionId />;
+             let actionButton =
+               Model.isInstalling(~extensionId, model)
+                 ? <progressButton title="Installing" font />
+                 : <installButton dispatch font extensionId />;
              <ItemView
                actionButton
                width
