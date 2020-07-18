@@ -55,6 +55,8 @@ module Context: {
   let current: unit => t;
 };
 
+module Registers: {let get: (~register: char) => option(array(string));};
+
 module Edit: {
   [@deriving show]
   type t = {
@@ -279,6 +281,8 @@ The value [s] may be of the following form:
 The keystroke is processed synchronously.
 */
 let input: (~context: Context.t=?, string) => Context.t;
+
+let eval: string => result(string, string);
 
 /**
 [command(cmd)] executes [cmd] as an Ex command.

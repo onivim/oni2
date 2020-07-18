@@ -60,22 +60,30 @@ module Details = {
     repositoryUrl: string,
     homepageUrl: string,
     manifestUrl: string,
-    iconUrl: string,
+    iconUrl: option(string),
     readmeUrl: string,
-    licenseName: string,
+    licenseName: option(string),
     //      licenseUrl: string,
     name: string,
     namespace: string,
     //      downloadCount: int,
-    displayName: string,
+    displayName: option(string),
     description: string,
     //      categories: list(string),
     version: string,
     versions: list(VersionInfo.t),
   };
 
+  let id = ({namespace, name, _}) => {
+    namespace ++ "." ++ name;
+  };
+
+  let displayName = ({displayName, _} as details) => {
+    displayName |> Option.value(~default=id(details));
+  };
+
   let toString =
-      ({downloadUrl, displayName, description, homepageUrl, versions, _}) => {
+      ({downloadUrl, description, homepageUrl, versions, _} as details) => {
     let versions =
       versions |> List.map(VersionInfo.toString) |> String.concat("\n");
     Printf.sprintf(
@@ -86,7 +94,7 @@ module Details = {
 - Versions:
 %s
       |},
-      displayName,
+      details |> displayName,
       description,
       homepageUrl,
       downloadUrl,
@@ -100,7 +108,7 @@ module Details = {
     let files = (name, decoder) => field("files", field(name, decoder));
     let downloadUrl = files("download", string);
     let manifestUrl = files("manifest", string);
-    let iconUrl = files("icon", string);
+    let iconUrl = files("icon", nullable(string));
     let readmeUrl = files("readme", string);
     let homepageUrl = field("publishedBy", field("homepage", string));
 
@@ -113,8 +121,8 @@ module Details = {
           readmeUrl: whatever(readmeUrl),
           repositoryUrl: field.required("repository", string),
           homepageUrl: whatever(homepageUrl),
-          licenseName: field.required("license", string),
-          displayName: field.required("displayName", string),
+          licenseName: field.required("license", nullable(string)),
+          displayName: field.required("displayName", nullable(string)),
           description: field.required("description", string),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
@@ -143,8 +151,13 @@ module Summary = {
     description: string,
   };
 
-  let name = ({displayName, name, namespace, _}) => {
-    displayName |> Option.value(~default=namespace ++ "." ++ name);
+  let id = ({namespace, name, _}) => {
+    namespace ++ "." ++ name;
+  };
+
+  let name = ({displayName, _} as summary) => {
+    let default = summary |> id;
+    displayName |> Option.value(~default);
   };
 
   let decode = {
@@ -161,7 +174,7 @@ module Summary = {
         version: field.required("version", string),
         name: field.required("name", string),
         namespace: field.required("namespace", string),
-        displayName: field.required("displayName", nullable(string)),
+        displayName: field.optional("displayName", string),
         description: field.required("description", string),
       }
     );

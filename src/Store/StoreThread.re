@@ -316,6 +316,10 @@ let start =
       Feature_Extensions.sub(~setup, state.extensions)
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
 
+    let registersSub =
+      Feature_Registers.sub(state.registers)
+      |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -326,6 +330,7 @@ let start =
       fileExplorerActiveFileSub,
       editorGlobalSub,
       extensionsSub,
+      registersSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -412,6 +417,18 @@ let start =
     ~dispatch,
     Feature_Formatting.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
+  );
+
+  registerCommands(
+    ~dispatch,
+    Feature_Clipboard.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
+  );
+
+  registerCommands(
+    ~dispatch,
+    Feature_Registers.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
   );
 
   // TODO: These should all be replaced with isolinear subscriptions.

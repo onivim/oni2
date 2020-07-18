@@ -68,7 +68,7 @@ jobs:
 
   steps:
   - template: .ci/clean-linux-deps.yml
-#  - template: .ci/restore-build-cache.yml
+  #- template: .ci/restore-build-cache.yml
   - template: .ci/use-node.yml
   - script: sudo apt-get update
   - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev nasm
@@ -149,7 +149,7 @@ jobs:
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
     displayName: 'Validate signtool path'
-  - template: .ci/restore-build-cache.yml
+  #- template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-build-steps.yml
     parameters:
@@ -201,6 +201,8 @@ jobs:
   - script: echo $(ONI2_SHORT_COMMIT_ID)
   - script: 'echo ArtifactDir: $(System.ArtifactsDirectory)'
     displayName: 'Echo artifact dir'
+  - script: sudo apt-get update
+    displayName: 'sudo apt-get update'
   - script: sudo apt-get install libegl1-mesa
     displayName: 'Install dependencies'
   - task: DownloadBuildArtifacts@0

@@ -117,6 +117,15 @@ module Edit: {
   };
 };
 
+module ExtensionActivationReason: {
+  type t;
+
+  let create:
+    (~startup: bool, ~extensionId: string, ~activationEvent: string) => t;
+
+  let encode: Json.encoder(t);
+};
+
 module ExtensionId: {
   [@deriving show]
   type t = string;
@@ -460,6 +469,110 @@ module FormattingOptions: {
   let encode: Json.encoder(t);
 };
 
+module Files: {
+  module FileSystemProviderCapabilities: {
+    type capability = [
+      | `FileReadWrite
+      | `FileOpenReadWriteClose
+      | `FileReadStream
+      | `FileFolderCopy
+      | `PathCaseSensitive
+      | `Readonly
+      | `Trash
+    ];
+
+    [@deriving show]
+    type t;
+
+    let test: (capability, t) => bool;
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileChangeType: {
+    [@deriving show]
+    type t =
+      | Updated
+      | Added
+      | Deleted;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileChange: {
+    [@deriving show]
+    type t = {
+      resource: Uri.t,
+      changeType: FileChangeType.t,
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileType: {
+    [@deriving show]
+    type t =
+      | Unknown
+      | File
+      | Directory
+      | SymbolicLink;
+
+    let ofInt: int => option(t);
+    let toInt: t => int;
+
+    let decode: Json.decoder(t);
+    let encode: Json.encoder(t);
+  };
+
+  module FileOverwriteOptions: {
+    [@deriving show]
+    type t = {overwrite: bool};
+
+    let decode: Json.decoder(t);
+  };
+
+  module FileWriteOptions: {
+    [@deriving show]
+    type t = {
+      overwrite: bool,
+      create: bool,
+    };
+
+    let decode: Json.decoder(t);
+  };
+  module FileOpenOptions: {
+    [@deriving show]
+    type t = {create: bool};
+
+    let decode: Json.decoder(t);
+  };
+  module FileDeleteOptions: {
+    [@deriving show]
+    type t = {
+      recursive: bool,
+      useTrash: bool,
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module StatResult: {
+    [@deriving show]
+    type t = {
+      fileType: FileType.t,
+      mtime: int,
+      ctime: int,
+      size: int,
+    };
+
+    let decode: Json.decoder(t);
+    let encode: Json.encoder(t);
+  };
+};
+
 module ModelAddedDelta: {
   type t = {
     uri: Uri.t,
@@ -662,6 +775,16 @@ module Msg: {
       | GetCommands;
   };
 
+  module Console: {
+    [@deriving show]
+    type msg =
+      | LogExtensionHostMessage({
+          logType: string,
+          severity: string,
+          arguments: Yojson.Safe.t,
+        });
+  };
+
   module DebugService: {
     [@deriving show]
     type msg =
@@ -708,16 +831,31 @@ module Msg: {
         });
   };
 
+  module DownloadService: {
+    [@deriving show]
+    type msg =
+      | Download({
+          uri: Oni_Core.Uri.t,
+          dest: Oni_Core.Uri.t,
+        });
+  };
+
+  module Errors: {
+    [@deriving show]
+    type msg =
+      | OnUnexpectedError(Yojson.Safe.t);
+  };
+
   module ExtensionService: {
     [@deriving show]
     type msg =
       | ActivateExtension({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           activationEvent: option(string),
         })
-      | WillActivateExtension({extensionId: string})
+      | WillActivateExtension({extensionId: ExtensionId.t})
       | DidActivateExtension({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           //startup: bool,
           codeLoadingTime: int,
           activateCallTime: int,
@@ -725,10 +863,49 @@ module Msg: {
         })
       //activationEvent: option(string),
       | ExtensionActivationError({
-          extensionId: string,
+          extensionId: ExtensionId.t,
           errorMessage: string,
         })
-      | ExtensionRuntimeError({extensionId: string});
+      | ExtensionRuntimeError({extensionId: ExtensionId.t});
+  };
+
+  module FileSystem: {
+    open Files;
+
+    [@deriving show]
+    type msg =
+      | RegisterFileSystemProvider({
+          handle: int,
+          scheme: string,
+          capabilities: FileSystemProviderCapabilities.t,
+        })
+      | UnregisterProvider({handle: int})
+      | OnFileSystemChange({
+          handle: int,
+          resource: list(FileChange.t),
+        })
+      | Stat({uri: Uri.t})
+      | ReadDir({uri: Uri.t})
+      | ReadFile({uri: Uri.t})
+      | WriteFile({
+          uri: Uri.t,
+          bytes: Bytes.t,
+        })
+      | Rename({
+          source: Uri.t,
+          target: Uri.t,
+          opts: FileOverwriteOptions.t,
+        })
+      | Copy({
+          source: Uri.t,
+          target: Uri.t,
+          opts: FileOverwriteOptions.t,
+        })
+      | Mkdir({uri: Uri.t})
+      | Delete({
+          uri: Uri.t,
+          opts: FileDeleteOptions.t,
+        });
   };
 
   module LanguageFeatures: {
@@ -894,6 +1071,31 @@ module Msg: {
         });
   };
 
+  module OutputService: {
+    [@deriving show]
+    type msg =
+      | Register({
+          label: string,
+          log: bool,
+          file: option(Oni_Core.Uri.t),
+        })
+      | Append({
+          channelId: string,
+          value: string,
+        })
+      | Update({channelId: string})
+      | Clear({
+          channelId: string,
+          till: int,
+        })
+      | Reveal({
+          channelId: string,
+          preserveFocus: bool,
+        })
+      | Close({channelId: string})
+      | Dispose({channelId: string});
+  };
+
   module StatusBar: {
     [@deriving show]
     type alignment =
@@ -909,6 +1111,7 @@ module Msg: {
           alignment,
           command: option(Command.t),
           color: option(Color.t),
+          tooltip: option(string),
           priority: int,
         })
       | Dispose({id: int});
@@ -920,13 +1123,18 @@ module Msg: {
     | Ready
     | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
+    | Console(Console.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
+    | DownloadService(DownloadService.msg)
+    | Errors(Errors.msg)
     | ExtensionService(ExtensionService.msg)
+    | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
+    | OutputService(OutputService.msg)
     | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
@@ -957,6 +1165,13 @@ module Reply: {
   let okEmpty: t;
 
   let okJson: Yojson.Safe.t => t;
+
+  let okBuffer: Bytes.t => t;
+};
+
+module Middleware: {
+  let download: Msg.DownloadService.msg => Lwt.t(Reply.t);
+  let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);
 };
 
 module Client: {
@@ -1053,6 +1268,18 @@ module Request: {
 
   module ExtensionService: {
     let activateByEvent: (~event: string, Client.t) => unit;
+
+    let activate:
+      (~extensionId: string, ~reason: ExtensionActivationReason.t, Client.t) =>
+      Lwt.t(bool);
+
+    let deltaExtensions:
+      (
+        ~toAdd: list(Exthost_Extension.InitData.Extension.t),
+        ~toRemove: list(ExtensionId.t),
+        Client.t
+      ) =>
+      Lwt.t(unit);
   };
 
   module LanguageFeatures: {

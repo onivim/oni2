@@ -40,12 +40,36 @@ let reduce = (msg, model) =>
   | WidthChanged(width) => {...model, width}
   };
 
+let installButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <ItemView.ActionButton
+    font
+    title="Install"
+    backgroundColor=Revery.Colors.green
+    color=Revery.Colors.white
+    onAction={() =>
+      dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
+    }
+  />;
+};
+
+let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <ItemView.ActionButton
+    font
+    title="Uninstall"
+    backgroundColor=Revery.Colors.red
+    color=Revery.Colors.white
+    onAction={() =>
+      dispatch(Model.UninstallExtensionClicked({extensionId: extensionId}))
+    }
+  />;
+};
+
 let%component make =
               (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
     Hooks.reducer(~initialState=default, reduce);
 
-  let renderItem = (extensions: array(Scanner.ScanResult.t), idx) => {
+  let renderBundled = (extensions: array(Scanner.ScanResult.t), idx) => {
     let extension = extensions[idx];
 
     let iconPath = extension.manifest.icon;
@@ -53,7 +77,45 @@ let%component make =
     let author = extension.manifest.author;
     let version = extension.manifest.version;
 
-    <ItemView width iconPath theme displayName author version font />;
+    let actionButton = React.empty;
+
+    <ItemView
+      actionButton
+      width
+      iconPath
+      theme
+      displayName
+      author
+      version
+      font
+    />;
+  };
+
+  let renderInstalled = (extensions: array(Scanner.ScanResult.t), idx) => {
+    let extension = extensions[idx];
+
+    let iconPath = extension.manifest.icon;
+    let displayName = Manifest.getDisplayName(extension.manifest);
+    let author = extension.manifest.author;
+    let version = extension.manifest.version;
+
+    let actionButton =
+      <uninstallButton
+        font
+        extensionId={extension.manifest |> Manifest.identifier}
+        dispatch
+      />;
+
+    <ItemView
+      actionButton
+      width
+      iconPath
+      theme
+      displayName
+      author
+      version
+      font
+    />;
   };
 
   let bundledExtensions =
@@ -68,7 +130,7 @@ let%component make =
           title="Installed"
           expanded=installedExpanded
           uiFont=font
-          renderItem={renderItem(userExtensions)}
+          renderItem={renderInstalled(userExtensions)}
           rowHeight=ItemView.Constants.itemHeight
           count={Array.length(userExtensions)}
           focused=None
@@ -79,7 +141,7 @@ let%component make =
           title="Bundled"
           expanded=bundledExpanded
           uiFont=font
-          renderItem={renderItem(bundledExtensions)}
+          renderItem={renderBundled(bundledExtensions)}
           rowHeight=ItemView.Constants.itemHeight
           count={Array.length(bundledExtensions)}
           focused=None
@@ -94,10 +156,14 @@ let%component make =
         |> List.map((summary: Service_Extensions.Catalog.Summary.t) => {
              let displayName =
                summary |> Service_Extensions.Catalog.Summary.name;
+             let extensionId =
+               summary |> Service_Extensions.Catalog.Summary.id;
              let {namespace, version, _}: Service_Extensions.Catalog.Summary.t = summary;
              let author = namespace;
 
+             let actionButton = <installButton dispatch font extensionId />;
              <ItemView
+               actionButton
                width
                iconPath=None
                theme
@@ -118,11 +184,14 @@ let%component make =
       </FlatList>;
     };
 
+  let isBusy = Model.isSearchInProgress(model) || Model.isBusy(model);
+
   <View
     style={Styles.container(~width)}
     onDimensionsChanged={({width, _}) =>
       localDispatch(WidthChanged(width))
     }>
+    <BusyBar theme visible=isBusy />
     <Feature_InputText.View
       style=Styles.input
       model={model.searchText}

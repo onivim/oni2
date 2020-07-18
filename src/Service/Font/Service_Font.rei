@@ -1,7 +1,6 @@
 open Oni_Core;
 
 type font = {
-  fontFile: string,
   fontFamily: Revery.Font.Family.t,
   fontSize: float,
   measuredWidth: float,
@@ -15,12 +14,7 @@ let toString: font => string;
 let default: font;
 
 let resolveWithFallback:
-  (
-    ~mono: bool=?,
-    ~italic: bool=?,
-    Revery_Font.Weight.t,
-    Revery_Font.Family.t
-  ) =>
+  (~italic: bool=?, Revery_Font.Weight.t, Revery_Font.Family.t) =>
   Revery_Font.t;
 
 let measure: (~text: string, font) => float;

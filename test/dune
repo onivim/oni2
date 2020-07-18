@@ -15,6 +15,7 @@
         Feature_LanguageSupport_Test
         Service_Extensions_Test
         Service_Net_Test
+        Service_OS_Test
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
@@ -142,6 +143,7 @@
         Feature_LanguageSupport_Test
         Service_Extensions_Test
         Service_Net_Test
+        Service_OS_Test
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
