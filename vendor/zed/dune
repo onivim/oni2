@@ -1,6 +1,0 @@
-(library
-  (name zed_oni)
-  (public_name Oni2.zed)
-  (wrapped false)
-  (flags (:standard -safe-string))
-  (libraries bytes react uucp uutf result charInfo_width))

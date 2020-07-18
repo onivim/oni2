@@ -255,6 +255,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
+      | DownloadService(msg) => Middleware.download(msg)
       | FileSystem(msg) => Middleware.filesystem(msg)
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
@@ -429,7 +430,11 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       | TerminalService(msg) =>
         Service_Terminal.handleExtensionMessage(msg);
         Lwt.return(Reply.okEmpty);
-      | _ => Lwt.return(Reply.okEmpty)
+      | unhandledMsg =>
+        Log.warnf(m =>
+          m("Unhandled message: %s", Exthost.Msg.show(unhandledMsg))
+        );
+        Lwt.return(Reply.okEmpty);
       };
     };
 
