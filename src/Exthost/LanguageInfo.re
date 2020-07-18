@@ -79,6 +79,20 @@ let getLanguageFromFileName = (li: t, fileName: string) => {
   };
 };
 
+let getLanguageFromOniPath = (fp: string) => {
+  Regexes.oniPath
+  |> Stdlib.Result.to_option
+  |> Utility.OptionEx.flatMap(regex => {
+       let matches = Oniguruma.OnigRegExp.search(fp, 0, regex);
+       if (Array.length(matches) == 0) {
+         None;
+       } else {
+         Some(Oniguruma.OnigRegExp.Match.getText(matches[1]));
+       };
+     })
+  |> Stdlib.Option.value(~default=defaultLanguage);
+}
+
 let getLanguageFromFilePath = (li: t, fp: string) => {
   let fileName = Path.filename(fp);
   let extension = Utility.Path.getExtension(fp);
@@ -90,7 +104,8 @@ let getLanguageFromFilePath = (li: t, fp: string) => {
       res;
     };
 
-  getLanguageFromExtension(li, extension)
+  getLanguageFromOniPath(fp)
+  |> updateIfDefault(() => getLanguageFromExtension(li, extension))
   |> updateIfDefault(() => getLanguageFromFileName(li, fileName));
 };
 
