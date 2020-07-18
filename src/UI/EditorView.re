@@ -173,6 +173,8 @@ module Parts = {
           uiFont
         />
 
+      | ExtensionDetails => <View />
+
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />
       };

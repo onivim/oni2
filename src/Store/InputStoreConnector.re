@@ -69,7 +69,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       ]
 
     | Search => [Actions.Search(Feature_Search.Input(k))]
-    | Extensions => [Actions.Extensions(Feature_Extensions.KeyPressed(k))]
+    | Extensions => [
+        Actions.Extensions(Feature_Extensions.Msg.keyPressed(k)),
+      ]
 
     | Modal => [Actions.Modals(Feature_Modals.KeyPressed(k))]
     | InsertRegister => [
@@ -87,7 +89,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         | Wildmenu => Actions.Vim(Feature_Vim.Pasted(firstLine))
         | Quickmenu => Actions.QuickmenuPaste(firstLine)
         | Extensions =>
-          Actions.Extensions(Feature_Extensions.Pasted(firstLine))
+          Actions.Extensions(Feature_Extensions.Msg.pasted(firstLine))
         | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))
         | Search => Actions.Search(Feature_Search.Pasted(firstLine))
 

@@ -15,12 +15,14 @@ type t =
     })
   | UpdateChangelog
   | Welcome
-  | Version;
+  | Version
+  | ExtensionDetails;
 
 let changelog = "oni://Changelog";
 let updateChangelog = "oni://UpdateChangelog";
 let welcome = "oni://Welcome";
 let version = "oni://Version";
+let extensionDetails = "oni://ExtensionDetails";
 let terminalRegex = OnigRegExp.create("oni://terminal/([0-9]*)/(.*)");
 
 let parse = bufferPath =>
@@ -32,6 +34,8 @@ let parse = bufferPath =>
     Changelog;
   } else if (String.equal(bufferPath, updateChangelog)) {
     UpdateChangelog;
+  } else if (String.equal(bufferPath, extensionDetails)) {
+    ExtensionDetails;
   } else {
     terminalRegex
     |> Result.to_option

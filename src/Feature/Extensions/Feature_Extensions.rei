@@ -4,33 +4,14 @@ open Exthost.Extension;
 type model;
 
 [@deriving show({with_path: false})]
-type msg =
-  | Activated(string /* id */)
-  | Discovered([@opaque] list(Scanner.ScanResult.t))
-  | ExecuteCommand({
-      command: string,
-      arguments: [@opaque] list(Json.t),
-    })
-  | KeyPressed(string)
-  | Pasted(string)
-  | SearchQueryResults(Service_Extensions.Query.t)
-  | SearchQueryError(string)
-  | SearchText(Feature_InputText.msg)
-  | UninstallExtensionClicked({extensionId: string})
-  | UninstallExtensionSuccess({extensionId: string})
-  | UninstallExtensionFailed({
-      extensionId: string,
-      errorMsg: string,
-    })
-  | InstallExtensionClicked({extensionId: string})
-  | InstallExtensionSuccess({
-      extensionId: string,
-      scanResult: [@opaque] Scanner.ScanResult.t,
-    })
-  | InstallExtensionFailed({
-      extensionId: string,
-      errorMsg: string,
-    });
+type msg;
+
+module Msg: {
+  let discovered: list(Scanner.ScanResult.t) => msg;
+  let exthost: Exthost.Msg.ExtensionService.msg => msg;
+  let keyPressed: string => msg;
+  let pasted: string => msg;
+};
 
 type outmsg =
   | Nothing

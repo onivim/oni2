@@ -3,7 +3,7 @@ open Exthost.Extension;
 
 [@deriving show({with_path: false})]
 type msg =
-  | Activated(string /* id */)
+  | Exthost(Exthost.Msg.ExtensionService.msg)
   | Discovered([@opaque] list(Scanner.ScanResult.t))
   | ExecuteCommand({
       command: string,
@@ -29,6 +29,13 @@ type msg =
       extensionId: string,
       errorMsg: string,
     });
+
+module Msg = {
+  let exthost = msg => Exthost(msg);
+  let keyPressed = key => KeyPressed(key);
+  let pasted = contents => Pasted(contents);
+  let discovered = scanResult => Discovered(scanResult);
+};
 
 type outmsg =
   | Nothing
@@ -163,7 +170,15 @@ let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
-  | Activated(id) => (Internal.markActivated(id, model), Nothing)
+  | Exthost(ActivateExtension({extensionId, _})) => (
+      Internal.markActivated(extensionId, model),
+      Nothing,
+    )
+  | Exthost(WillActivateExtension(_))
+  | Exthost(DidActivateExtension(_))
+  | Exthost(ExtensionActivationError(_))
+  | Exthost(ExtensionRuntimeError(_)) => (model, Nothing)
+
   | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
   | ExecuteCommand({command, arguments}) => (
       model,

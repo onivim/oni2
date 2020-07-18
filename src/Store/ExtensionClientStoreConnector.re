@@ -31,7 +31,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
       dispatch(
-        Actions.Extensions(Feature_Extensions.Discovered(extensions)),
+        Actions.Extensions(Feature_Extensions.Msg.discovered(extensions)),
       )
     );
 
