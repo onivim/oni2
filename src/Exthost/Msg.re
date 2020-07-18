@@ -863,22 +863,6 @@ module StatusBar = {
       })
     | Dispose({id: int});
 
-  let parseCommand = commandJson => {
-    switch (commandJson) {
-    | `String(jsonString) =>
-      jsonString
-      |> Utility.JsonEx.from_string
-      |> Utility.ResultEx.flatMap(json =>
-           Json.Decode.decode_value(
-             Json.Decode.nullable(ExtCommand.decode),
-             json,
-           )
-           |> Result.map_error(Json.Decode.string_of_error)
-         )
-    | _ => Ok(None)
-    };
-  };
-
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | (
@@ -899,7 +883,8 @@ module StatusBar = {
       open Json.Decode;
 
       let%bind id = idJson |> Internal.decode_value(Decode.id);
-      let%bind command = parseCommand(commandJson);
+      let%bind command =
+        commandJson |> Internal.decode_value(nullable(ExtCommand.decode));
       let%bind color =
         colorJson |> Internal.decode_value(nullable(Color.decode));
       let%bind tooltip =

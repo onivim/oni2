@@ -228,7 +228,8 @@ module Label: {
   [@deriving show]
   type t = list(segment);
 
-  let of_string: string => t;
+  let ofString: string => t;
+  let toString: t => string;
 
   let decode: Json.decoder(t);
 };

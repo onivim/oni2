@@ -39,17 +39,15 @@ module Parse = {
   };
 
   let parse = str => {
+    prerr_endline("PARSE: " ++ str);
     let len = String.length(str);
 
     if (len == 0) {
       [];
     } else if (len == 1) {
       [Text(str)];
-    } else if (str.[0] == '"' && str.[len - 1] == '"') {
-      let text = String.sub(str, 1, len - 2);
-      loop(text);
     } else {
-      [Text(str)];
+      loop(str);
     };
   };
 };
@@ -60,4 +58,18 @@ module Decode = {
 };
 
 let decode = Decode.decode;
-let of_string = Parse.parse;
+let ofString = Parse.parse;
+
+let toString = label =>
+  List.fold_left(
+    (acc, curr) => {
+      let str =
+        switch (curr) {
+        | Text(text) => text
+        | Icon(str) => str
+        };
+      acc ++ str;
+    },
+    "",
+    label,
+  );
