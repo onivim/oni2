@@ -232,7 +232,7 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingUninstall(~extensionId), Effect(eff));
   | UninstallExtensionSuccess({extensionId}) => (
       model |> Internal.uninstalled(~extensionId),
-      NotifyFailure(
+      NotifySuccess(
         Printf.sprintf("Successfully uninstalled %s", extensionId),
       ),
     )
