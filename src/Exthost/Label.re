@@ -39,7 +39,6 @@ module Parse = {
   };
 
   let parse = str => {
-    prerr_endline("PARSE: " ++ str);
     let len = String.length(str);
 
     if (len == 0) {
