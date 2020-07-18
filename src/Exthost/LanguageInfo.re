@@ -68,7 +68,7 @@ let getLanguageFromExtension = (li: t, ext: string) => {
 };
 
 let getLanguageFromFileName = (li: t, fileName: string) => {
-  switch (StringMap.find_opt(fileName, li.fileNameToLanguage)) {
+  switch (StringMap.find_opt(String.lowercase_ascii(fileName), li.fileNameToLanguage)) {
   | Some(v) => v
   | None => defaultLanguage
   };
@@ -177,24 +177,24 @@ let getLanguageTuples = (lang: Contributions.Language.t) => {
 };
 
 let getFileNameTuples = (lang: Contributions.Language.t) => {
-  List.map(fileName => (fileName, lang.id), lang.filenames);
+  List.map(fileName => (String.lowercase_ascii(fileName), lang.id), lang.filenames);
 };
 
-let getGrammars = (extensions: list(Scanner.ScanResult.t)) => {
+let getListOfGrammars = (extensions: list(Scanner.ScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.grammars) |> List.flatten;
 };
 
-let getLanguages = (extensions: list(Scanner.ScanResult.t)) => {
+let getListOfLanguages = (extensions: list(Scanner.ScanResult.t)) => {
   extensions |> List.map(v => v.manifest.contributes.languages) |> List.flatten;
 };
 
 let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
-  let grammars = _getGrammars(extensions);
-  let languages = _getLanguages(extensions);
+  let grammars = getListOfGrammars(extensions);
+  let languages = getListOfLanguages(extensions);
 
   let extToLanguage =
     languages
-    |> List.map(_getLanguageTuples)
+    |> List.map(getLanguageTuples)
     |> List.flatten
     |> List.fold_left(
          (prev, v) => {
@@ -206,7 +206,7 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
 
   let fileNameToLanguage =
     languages
-    |> List.map(_getFileNameTuples)
+    |> List.map(getFileNameTuples)
     |> List.flatten
     |> List.fold_left(
          (prev, v) => {
