@@ -81,7 +81,7 @@ let getLanguageFromFileName = (li: t, fileName: string) => {
 
 let getLanguageFromFilePath = (li: t, fp: string) => {
   let fileName = Path.filename(fp);
-  let extension = Path.extname(fp);
+  let extension = Utility.Path.getExtension(fp);
 
   let updateIfDefault = (f, res) =>
     if (res == defaultLanguage) {

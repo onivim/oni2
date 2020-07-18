@@ -38,3 +38,15 @@ let trimTrailingSeparator = path => {
     path;
   };
 };
+
+let getExtension = path => {
+  let fileName = Rench.Path.filename(path);
+
+  if (String.length(fileName) == 0) {
+    "";
+  } else if (fileName.[0] == '.') {
+    fileName;
+  } else {
+    Rench.Path.extname(fileName);
+  };
+};
