@@ -736,48 +736,6 @@ module LanguageFeatures = {
       };
 
       ret |> Result.map_error(string_of_error);
-      
-    | (
-        "$registerDocumentLinkProvider",
-        `List([
-          `Int(handle),
-          selectorJson,
-          `Bool(supportsResolve)
-        ]),
-      ) => {
-      open Json.Decode;
-      open Base.Result.Let_syntax;
-        let%bind selector =
-          selectorJson |> Internal.decode_value(list(DocumentFilter.decode));
-
-        Ok(
-          RegisterDocumentLinkProvider({
-            handle,
-            selector,
-            supportsResolve
-          })
-        );
-        }
-
-    | (
-        "$registerEvaluatableExpressionProvider",
-        `List([
-          `Int(handle),
-          selectorJson,
-        ]),
-      ) => {
-      open Json.Decode;
-      open Base.Result.Let_syntax;
-        let%bind selector =
-          selectorJson |> Internal.decode_value(list(DocumentFilter.decode));
-
-        Ok(
-          RegisterEvaluatableExpressionProvider({
-            handle,
-            selector,
-          })
-        );
-        }
 
     | (
         "$registerRenameSupport",
