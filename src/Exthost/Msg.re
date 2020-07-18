@@ -742,23 +742,21 @@ module LanguageFeatures = {
         `List([
           `Int(handle),
           selectorJson,
-          `Bool(supportsResolveInitialValues)
+          `Bool(supportsResolveInitialValues),
         ]),
-      ) => {
+      ) =>
       open Json.Decode;
       open Base.Result.Let_syntax;
-        let%bind selector =
-          selectorJson |> Internal.decode_value(list(DocumentFilter.decode));
+      let%bind selector =
+        selectorJson |> Internal.decode_value(list(DocumentFilter.decode));
 
-        Ok(
-          RegisterRenameSupport({
-            handle,
-            selector,
-            supportsResolveInitialValues
-          })
-        );
-        }
-
+      Ok(
+        RegisterRenameSupport({
+          handle,
+          selector,
+          supportsResolveInitialValues,
+        }),
+      );
 
     | (
         "$registerDocumentFormattingSupport",

@@ -1362,24 +1362,26 @@ module Request: {
       ) =>
       Lwt.t(list(Location.t));
 
-    let provideRenameEdits: (
-      ~handle: int,
-      ~resource: Uri.t,
-      ~position: OneBasedPosition.t,
-      ~newName: string,
-      Client.t
-    ) =>
-    // TODO: https://github.com/onivim/vscode-exthost/blob/923c38b016c87a205957456e13c62f8dfd3bdc62/src/vs/workbench/api/common/extHost.protocol.ts#L1200
-    Lwt.t(WorkspaceEdit.t);
+    let provideRenameEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~newName: string,
+        Client.t
+      ) =>
+      // TODO: https://github.com/onivim/vscode-exthost/blob/923c38b016c87a205957456e13c62f8dfd3bdc62/src/vs/workbench/api/common/extHost.protocol.ts#L1200
+      Lwt.t(WorkspaceEdit.t);
 
-    let resolveRenameLocation: (
-      ~handle: int,
-      ~resource: Uri.t,
-      ~position: OneBasedPosition.t,
-      Client.t
-    ) =>
-    // TODO: https://github.com/onivim/vscode-exthost/blob/923c38b016c87a205957456e13c62f8dfd3bdc62/src/vs/editor/common/modes.ts#L1380
-    Lwt.t(RenameLocation.t);
+    let resolveRenameLocation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      // TODO: https://github.com/onivim/vscode-exthost/blob/923c38b016c87a205957456e13c62f8dfd3bdc62/src/vs/editor/common/modes.ts#L1380
+      Lwt.t(RenameLocation.t);
 
     let provideTypeDefinition:
       (
