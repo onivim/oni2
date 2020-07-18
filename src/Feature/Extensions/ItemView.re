@@ -25,7 +25,8 @@ module Styles = {
   let titleText = (~width, ~theme) => [
     color(Colors.SideBar.foreground.from(theme)),
     marginVertical(2),
-    textOverflow(`Ellipsis),
+    // TODO: Workaround for #2140
+    //textOverflow(`Ellipsis),
     Style.width(width),
   ];
   let versionText = (~width, ~theme) => [
@@ -43,7 +44,8 @@ module Styles = {
       |> Revery.Color.multiplyAlpha(0.75),
     ),
     marginVertical(2),
-    textOverflow(`Ellipsis),
+    // TODO: Workaround for #2140
+    //textOverflow(`Ellipsis),
     textWrap(Revery.TextWrapping.NoWrap),
   ];
   let imageContainer =
