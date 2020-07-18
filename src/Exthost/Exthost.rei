@@ -775,6 +775,16 @@ module Msg: {
       | GetCommands;
   };
 
+  module Console: {
+    [@deriving show]
+    type msg =
+      | LogExtensionHostMessage({
+          logType: string,
+          severity: string,
+          arguments: Yojson.Safe.t,
+        });
+  };
+
   module DebugService: {
     [@deriving show]
     type msg =
@@ -828,6 +838,12 @@ module Msg: {
           uri: Oni_Core.Uri.t,
           dest: Oni_Core.Uri.t,
         });
+  };
+
+  module Errors: {
+    [@deriving show]
+    type msg =
+      | OnUnexpectedError(Yojson.Safe.t);
   };
 
   module ExtensionService: {
@@ -1055,6 +1071,31 @@ module Msg: {
         });
   };
 
+  module OutputService: {
+    [@deriving show]
+    type msg =
+      | Register({
+          label: string,
+          log: bool,
+          file: option(Oni_Core.Uri.t),
+        })
+      | Append({
+          channelId: string,
+          value: string,
+        })
+      | Update({channelId: string})
+      | Clear({
+          channelId: string,
+          till: int,
+        })
+      | Reveal({
+          channelId: string,
+          preserveFocus: bool,
+        })
+      | Close({channelId: string})
+      | Dispose({channelId: string});
+  };
+
   module StatusBar: {
     [@deriving show]
     type alignment =
@@ -1082,15 +1123,18 @@ module Msg: {
     | Ready
     | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
+    | Console(Console.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
     | DownloadService(DownloadService.msg)
+    | Errors(Errors.msg)
     | ExtensionService(ExtensionService.msg)
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
+    | OutputService(OutputService.msg)
     | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)

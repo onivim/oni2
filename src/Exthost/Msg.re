@@ -75,6 +75,45 @@ module Commands = {
   };
 };
 
+module Console = {
+  [@deriving show]
+  type msg =
+    | LogExtensionHostMessage({
+        logType: string,
+        severity: string,
+        arguments: Yojson.Safe.t,
+      });
+
+  type logMessage = {
+    logType: string,
+    severity: string,
+    arguments: Yojson.Safe.t,
+  };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          logType: field.required("type", string),
+          severity: field.required("severity", string),
+          arguments: field.withDefault("arguments", `Null, value),
+        }
+      )
+    );
+
+  let handle = (method, args) => {
+    switch (method) {
+    | "$logExtensionHostMessage" =>
+      open Base.Result.Let_syntax;
+
+      let%bind {logType, severity, arguments} =
+        args |> Internal.decode_value(decode);
+      Ok(LogExtensionHostMessage({logType, severity, arguments}));
+    | _ => Error("Console - unhandled method: " ++ method)
+    };
+  };
+};
+
 module DebugService = {
   [@deriving show]
   type msg =
@@ -242,6 +281,19 @@ module DownloadService = {
 
       Ok(Download({uri, dest}));
     | _ => Error("DownloadService - unhandled method: " ++ method)
+    };
+  };
+};
+
+module Errors = {
+  [@deriving show]
+  type msg =
+    | OnUnexpectedError(Yojson.Safe.t);
+
+  let handle = (method, args) => {
+    switch (method, args) {
+    | ("$onUnexpectedError", args) => Ok(OnUnexpectedError(args))
+    | _ => Error("Errors - unhandled method: " ++ method)
     };
   };
 };
@@ -837,6 +889,59 @@ module MessageService = {
     };
   };
 };
+
+module OutputService = {
+  [@deriving show]
+  type msg =
+    | Register({
+        label: string,
+        log: bool,
+        file: option(Oni_Core.Uri.t),
+      })
+    | Append({
+        channelId: string,
+        value: string,
+      })
+    | Update({channelId: string})
+    | Clear({
+        channelId: string,
+        till: int,
+      })
+    | Reveal({
+        channelId: string,
+        preserveFocus: bool,
+      })
+    | Close({channelId: string})
+    | Dispose({channelId: string});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      Json.Decode.(
+        switch (method, args) {
+        | ("$register", `List([`String(label), `Bool(log), maybeUriJson])) =>
+          let%bind maybeUri =
+            maybeUriJson
+            |> Internal.decode_value(nullable(Oni_Core.Uri.decode));
+          Ok(Register({label, log, file: maybeUri}));
+        | ("$append", `List([`String(channelId), `String(value)])) =>
+          Ok(Append({channelId, value}))
+        | ("$update", `List([`String(channelId)])) =>
+          Ok(Update({channelId: channelId}))
+        | ("$clear", `List([`String(channelId), `Int(till)])) =>
+          Ok(Clear({channelId, till}))
+        | ("$reveal", `List([`String(channelId), `Bool(preserveFocus)])) =>
+          Ok(Reveal({channelId, preserveFocus}))
+        | ("$close", `List([`String(channelId)])) =>
+          Ok(Close({channelId: channelId}))
+        | ("$dispose", `List([`String(channelId)])) =>
+          Ok(Dispose({channelId: channelId}))
+        | _ => Error("Unable to parse OutputService method: " ++ method)
+        }
+      )
+    );
+  };
+};
+
 module StatusBar = {
   [@deriving show]
   type alignment =
@@ -1154,15 +1259,18 @@ type t =
   | Ready
   | Clipboard(Clipboard.msg)
   | Commands(Commands.msg)
+  | Console(Console.msg)
   | DebugService(DebugService.msg)
   | Decorations(Decorations.msg)
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
   | DownloadService(DownloadService.msg)
+  | Errors(Errors.msg)
   | ExtensionService(ExtensionService.msg)
   | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
+  | OutputService(OutputService.msg)
   | SCM(SCM.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)
