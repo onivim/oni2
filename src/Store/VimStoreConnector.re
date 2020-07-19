@@ -173,7 +173,7 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)) // TODO: I should be fromBuffer..but I use metadata right now.
         | None => None
         };
 
@@ -294,6 +294,8 @@ let start =
         let fileType =
           switch (metadata.filePath) {
           | Some(v) =>
+            // TODO: Can't be changed, as buffer is only made a few lines below.
+            // But we probably could re-run once the buffer is made, in BufferEnter?
             Some(
               Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v),
             )

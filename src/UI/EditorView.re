@@ -245,15 +245,16 @@ let make =
     };
 
     let icon = editor => {
-      let (_, _, filePath) =
-        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers)
-        |> getBufferMetadata;
+      let buffer =
+        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers);
+      let (_, _, filePath) = getBufferMetadata(buffer);
 
       let language =
-        Exthost.LanguageInfo.getLanguageFromFilePath(
-          state.languageInfo,
-          filePath,
-        );
+        switch (buffer) {
+        | Some(buf) =>
+          Exthost.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buf)
+        | None => Exthost.LanguageInfo.defaultLanguage
+        };
 
       IconTheme.getIconForFile(state.iconTheme, filePath, language);
     };
