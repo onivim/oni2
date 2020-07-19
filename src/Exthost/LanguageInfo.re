@@ -80,7 +80,7 @@ let getLanguageFromFileNamePattern = (li: t, fileName: string) => {
   let testPattern = (pattern, name) =>
     switch (Oniguruma.OnigRegExp.create(pattern)) {
     | Error(_) => false
-    | Ok(r) => Oniguruma.OnigRegExp.Fast.test(name, r)
+    | Ok(r) => Oniguruma.OnigRegExp.test(name, r)
     };
   let result =
     try(

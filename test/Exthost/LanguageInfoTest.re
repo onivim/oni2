@@ -1,14 +1,28 @@
 open Oni_Core;
 open TestFramework;
 
-open Exthost;
-
+// Language info, with multiple loaded extensions to check order of loading
+// works.
 let li =
-  Exthost.Extension.Scanner.load(
-    ~category=Exthost.Extension.Scanner.Default,
+  [
     "extensions/shellscript/package.json",
-  )
-  |> Option.to_list
+    "extensions/json/package.json",
+    "extensions/typescript-basics/package.json",
+  ]
+  |> List.fold_left(
+       (prev, curr) => {
+         switch (
+           Exthost.Extension.Scanner.load(
+             ~category=Exthost.Extension.Scanner.Default,
+             curr,
+           )
+         ) {
+         | Some(s) => [s, ...prev]
+         | None => prev
+         }
+       },
+       [],
+     )
   |> Exthost.LanguageInfo.ofExtensions;
 
 let buf = Buffer.ofLines([|"#!/bin/bash", "ls *"|]);
@@ -21,41 +35,29 @@ describe("LanguageInfo", ({describe, _}) => {
     //   expect.string(lang).toEqual("Welcome");
     // });
     test("get language from file path: extension", ({expect, _}) => {
+      // Extension match
       let fp = "/home/oni2/git/oni2/test.sh";
       let lang = Exthost.LanguageInfo.getLanguageFromFilePath(li, fp);
       expect.string(lang).toEqual("shellscript");
     });
     test(
       "get language from file path: extension (no file name)", ({expect, _}) => {
+      // "Extension" match
       let fp = "/home/oni2/git/oni2/.bash_profile";
       let lang = Exthost.LanguageInfo.getLanguageFromFilePath(li, fp);
       expect.string(lang).toEqual("shellscript");
     });
     test("get language from file path: file name", ({expect, _}) => {
+      // Exact file name match to shellscript
       let fp = "/home/oni2/git/oni2/PKGBUILD";
       let lang = Exthost.LanguageInfo.getLanguageFromFilePath(li, fp);
       expect.string(lang).toEqual("shellscript");
     });
     test("get language from file path: file name pattern", ({expect, _}) => {
-      // Load both the TS and JSON extensions, so we are sure that the ordering
-      // is correct. Pattern > extension, so this json file is a jsonc file
-      // as stated in the TS package.json.
-      let tsli =
-        Exthost.Extension.Scanner.load(
-          ~category=Exthost.Extension.Scanner.Default,
-          "extensions/typescript-basics/package.json",
-        )
-        |> Option.to_list;
-      let jsonli =
-        Exthost.Extension.Scanner.load(
-          ~category=Exthost.Extension.Scanner.Default,
-          "extensions/json/package.json",
-        )
-        |> Option.to_list;
-      let combinedli = jsonli @ tsli |> Exthost.LanguageInfo.ofExtensions;
-
+      // Pattern > extension, so this json file is a jsonc file as stated in the
+      // TS package.json.
       let fp = "/home/oni2/git/oni2/tsconfig.base.json";
-      let lang = Exthost.LanguageInfo.getLanguageFromFilePath(combinedli, fp);
+      let lang = Exthost.LanguageInfo.getLanguageFromFilePath(li, fp);
       expect.string(lang).toEqual("jsonc");
     });
   });
@@ -83,29 +85,16 @@ describe("LanguageInfo", ({describe, _}) => {
       expect.string(lang).toEqual("shellscript");
     });
     test("get language from buffer: file name pattern", ({expect, _}) => {
-      let tsli =
-        Exthost.Extension.Scanner.load(
-          ~category=Exthost.Extension.Scanner.Default,
-          "extensions/typescript-basics/package.json",
-        )
-        |> Option.to_list;
-      let jsonli =
-        Exthost.Extension.Scanner.load(
-          ~category=Exthost.Extension.Scanner.Default,
-          "extensions/json/package.json",
-        )
-        |> Option.to_list;
-      let combinedli = jsonli @ tsli |> Exthost.LanguageInfo.ofExtensions;
-
       let buf =
         Buffer.setFilePath(
           Some("/home/oni2/git/oni2/tsconfig.base.json"),
           buf,
         );
-      let lang = Exthost.LanguageInfo.getLanguageFromBuffer(combinedli, buf);
+      let lang = Exthost.LanguageInfo.getLanguageFromBuffer(li, buf);
       expect.string(lang).toEqual("jsonc");
     });
     test("get language from buffer: first line", ({expect, _}) => {
+      // Only unique buffer test. The rest are all fall throughs based on the file name, and the first line is the last resort.
       let buf =
         Buffer.setFilePath(Some("/home/oni2/git/oni2/my_script"), buf);
       let lang = Exthost.LanguageInfo.getLanguageFromBuffer(li, buf);
