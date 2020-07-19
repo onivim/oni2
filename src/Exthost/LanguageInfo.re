@@ -132,9 +132,9 @@ let getLanguageFromFirstLine = (li: t, buffer: Buffer.t) => {
   let testPattern = (pattern, line) =>
     switch (Oniguruma.OnigRegExp.create(pattern)) {
     | Error(_) => false
-    | Ok(r) => Oniguruma.OnigRegExp.Fast.test(line, r)
+    | Ok(r) => Oniguruma.OnigRegExp.test(line, r)
     };
-  
+
   if (firstLine == "") {
     defaultLanguage;
   } else {
@@ -182,7 +182,6 @@ let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
       res;
     };
 
-  // TODO: this should then flow into updateIfDefault(firstLineCheck);
   getLanguageFromFilePath(li, filePath)
   |> updateIfDefault(() => getLanguageFromFirstLine(li, buffer));
 };
