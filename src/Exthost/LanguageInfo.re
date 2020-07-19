@@ -164,8 +164,8 @@ let getLanguageFromFilePath = (li: t, fp: string) => {
     };
 
   getLanguageFromOniPath(fp)
-  |> updateIfDefault(() => getLanguageFromExtension(li, extension))
-  |> updateIfDefault(() => getLanguageFromFileName(li, fileName));
+  |> updateIfDefault(() => getLanguageFromFileName(li, fileName))
+  |> updateIfDefault(() => getLanguageFromExtension(li, extension));
 };
 
 let getLanguageFromBuffer = (li: t, buffer: Buffer.t) => {
