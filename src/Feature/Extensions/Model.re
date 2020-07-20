@@ -10,6 +10,7 @@ type msg =
       arguments: [@opaque] list(Json.t),
     })
   | KeyPressed(string)
+  | Pasted(string)
   | SearchQueryResults(Service_Extensions.Query.t)
   | SearchQueryError(string)
   | SearchText(Feature_InputText.msg)
@@ -34,7 +35,9 @@ type outmsg =
   | Focus
   | ContributionsAdded(list(Exthost.Extension.Contributions.t))
   | ContributionsRemoved(list(Exthost.Extension.Contributions.t))
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | NotifySuccess(string)
+  | NotifyFailure(string);
 
 type model = {
   activatedIds: list(string),
@@ -60,11 +63,26 @@ let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
   pendingInstalls != [] || pendingUninstalls != [];
 };
 
+let isInstalling = (~extensionId, {pendingInstalls, _}) => {
+  pendingInstalls |> List.exists(id => id == extensionId);
+};
+
+let isUninstalling = (~extensionId, {pendingUninstalls, _}) => {
+  pendingUninstalls |> List.exists(id => id == extensionId);
+};
+
 let searchResults = ({latestQuery, _}) =>
   switch (latestQuery) {
   | None => []
   | Some(query) => query |> Service_Extensions.Query.results
   };
+
+let isSearchInProgress = ({latestQuery, _}) => {
+  switch (latestQuery) {
+  | None => false
+  | Some(query) => !(query |> Service_Extensions.Query.isComplete)
+  };
+};
 
 module Internal = {
   let filterBundled = (scanner: Scanner.ScanResult.t) => {
@@ -178,6 +196,17 @@ let update = (~extHostClient, msg, model) => {
         ~query=model.latestQuery,
       );
     ({...model, searchText: searchText', latestQuery}, Nothing);
+  | Pasted(text) =>
+    let previousText = model.searchText |> Feature_InputText.value;
+    let searchText' = Feature_InputText.paste(~text, model.searchText);
+    let newText = searchText' |> Feature_InputText.value;
+    let latestQuery =
+      checkAndUpdateSearchText(
+        ~previousText,
+        ~newText,
+        ~query=model.latestQuery,
+      );
+    ({...model, searchText: searchText', latestQuery}, Nothing);
   | SearchText(msg) =>
     let previousText = model.searchText |> Feature_InputText.value;
     let searchText' = Feature_InputText.update(msg, model.searchText);
@@ -189,10 +218,12 @@ let update = (~extHostClient, msg, model) => {
         ~query=model.latestQuery,
       );
     ({...model, searchText: searchText', latestQuery}, Focus);
-  | SearchQueryResults(queryResults) => (
-      {...model, latestQuery: Some(queryResults)},
-      Nothing,
-    )
+  | SearchQueryResults(queryResults) =>
+    queryResults
+    |> Service_Extensions.Query.searchText
+    == (model.searchText |> Feature_InputText.value)
+      ? ({...model, latestQuery: Some(queryResults)}, Nothing)
+      : (model, Nothing)
   | SearchQueryError(_queryResults) =>
     // TODO: Error experience?
     ({...model, latestQuery: None}, Nothing)
@@ -211,11 +242,20 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingUninstall(~extensionId), Effect(eff));
   | UninstallExtensionSuccess({extensionId}) => (
       model |> Internal.uninstalled(~extensionId),
-      Nothing,
+      NotifySuccess(
+        Printf.sprintf("Successfully uninstalled %s", extensionId),
+      ),
     )
-  | UninstallExtensionFailed({extensionId, _}) =>
-    // TODO: Error / success experience
-    (model |> Internal.clearPendingUninstall(~extensionId), Nothing)
+  | UninstallExtensionFailed({extensionId, errorMsg}) => (
+      model |> Internal.clearPendingUninstall(~extensionId),
+      NotifyFailure(
+        Printf.sprintf(
+          "Extension %s failed to uninstall: %s",
+          extensionId,
+          errorMsg,
+        ),
+      ),
+    )
   | InstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun
@@ -231,11 +271,22 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingInstall(~extensionId), Effect(eff));
   | InstallExtensionSuccess({extensionId, scanResult}) => (
       model |> Internal.installed(~extensionId, ~scanResult),
-      Nothing,
+      NotifySuccess(
+        Printf.sprintf(
+          "Extension %s was installed successfully and will be activated on restart.",
+          extensionId,
+        ),
+      ),
     )
-  | InstallExtensionFailed({extensionId, _}) => (
+  | InstallExtensionFailed({extensionId, errorMsg}) => (
       model |> Internal.clearPendingInstall(~extensionId),
-      Nothing,
+      NotifyFailure(
+        Printf.sprintf(
+          "Extension %s failed to install: %s",
+          extensionId,
+          errorMsg,
+        ),
+      ),
     )
   };
 };

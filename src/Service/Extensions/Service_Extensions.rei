@@ -26,7 +26,7 @@ module Catalog: {
       manifestUrl: string,
       iconUrl: option(string),
       readmeUrl: string,
-      licenseName: string,
+      licenseName: option(string),
       //      licenseUrl: string,
       name: string,
       namespace: string,
@@ -93,6 +93,7 @@ module Query: {
   let create: (~searchText: string) => t;
 
   let isComplete: t => bool;
+  let searchText: t => string;
   let percentComplete: t => float;
   let results: t => list(Catalog.Summary.t);
 };

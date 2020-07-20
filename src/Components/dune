@@ -5,7 +5,7 @@
     (libraries 
         str
         bigarray
-        zed_oni
+        Revery.zed
         lwt
         lwt.unix
         Oni2.core
@@ -13,6 +13,7 @@
         Oni2.syntax
         Oni2.exthost
         Oni2.service.font
+        Oni2.service.net
         Oni2.feature.theme
         Rench
         Revery

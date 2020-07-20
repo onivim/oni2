@@ -47,6 +47,14 @@ let menus = model =>
   |> Seq.map(((id, items)) => Menu.Schema.{id, items})
   |> List.of_seq;
 
+let pick = (f, ({ extensions, _}))  => {
+
+  extensions
+  |> List.map((scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
+    f(scanResult.manifest)
+  });
+}
+
 module ListView = ListView;
 
 let sub = (~setup, model) => {

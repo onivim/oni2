@@ -5,25 +5,25 @@ module Log = (val Log.withNamespace("Oni2.Service.Font"));
 
 [@deriving show({with_path: false})]
 type font = {
-  fontFile: string,
   fontFamily: [@opaque] Revery.Font.Family.t,
   fontSize: float,
   measuredWidth: float,
   measuredHeight: float,
   descenderHeight: float,
   smoothing: [@opaque] Revery.Font.Smoothing.t,
+  features: [@opaque] list(Revery.Font.Feature.t),
 };
 
 let toString = show_font;
 
 let default = {
-  fontFile: Constants.defaultFontFile,
   fontFamily: Revery.Font.Family.fromFile(Constants.defaultFontFile),
   fontSize: Constants.defaultFontSize,
   measuredWidth: 1.,
   measuredHeight: 1.,
   descenderHeight: 0.,
   smoothing: Revery.Font.Smoothing.default,
+  features: [],
 };
 
 let measure = (~text, v: font) => {
@@ -37,27 +37,32 @@ type msg =
   | FontLoaded(font)
   | FontLoadError(string);
 
-let resolveWithFallback = (~mono=false, ~italic=false, weight, family) =>
-  switch (Revery_Font.Family.resolve(~italic, ~mono, weight, family)) {
-  | Ok(font) => font
-  | Error(str) =>
-    Log.warnf(m => m("Unable to resolve font: %s", str));
-    Revery_Font.Family.resolve(
-      ~italic,
-      ~mono,
-      weight,
-      Constants.defaultFontFamily,
-    )
+let fontCache = FontResolutionCache.create(~initialSize=1024, 128 * 1024);
+
+let resolveWithFallback = (~italic=false, weight, family) =>
+  switch (FontResolutionCache.find((family, weight, italic), fontCache)) {
+  | Some(font) => font
+  | None =>
+    Log.debug("Unable to find font in cache");
+    Revery_Font.Family.resolve(~italic, weight, Constants.defaultFontFamily)
     |> Result.get_ok;
   };
 
-let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
+let setFont =
+    (
+      ~requestId,
+      ~fontFamily as familyString,
+      ~fontSize,
+      ~fontLigatures,
+      ~smoothing,
+      ~dispatch,
+    ) => {
   let dispatch = action => Revery.App.runOnMainThread(() => dispatch(action));
 
   incr(requestId);
   let req = requestId^;
 
-  Log.infof(m => m("Loading font: %s %f %d", fontFamily, fontSize, req));
+  Log.infof(m => m("Loading font: %s %f %d", familyString, fontSize, req));
 
   // We load the font asynchronously
   ThreadHelper.create(
@@ -65,61 +70,55 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
     () => {
       let fontSize = max(fontSize, Constants.minimumFontSize);
 
-      let (name, fullPath, fontFamily) =
-        if (fontFamily == Constants.defaultFontFile) {
-          (
-            Constants.defaultFontFile,
-            Revery.Environment.executingDirectory ++ Constants.defaultFontFile,
-            Constants.defaultFontFamily,
-          );
+      let family =
+        if (familyString == Constants.defaultFontFile) {
+          Constants.defaultFontFamily;
+        } else if (Rench.Path.isAbsolute(familyString)) {
+          Revery_Font.Family.fromFile(familyString);
         } else {
-          Log.debug("Discovering font: " ++ fontFamily);
-
-          if (Rench.Path.isAbsolute(fontFamily)) {
-            (
-              fontFamily,
-              fontFamily,
-              Revery_Font.Family.fromFile(fontFamily),
-            );
-          } else {
-            let descriptor =
-              Revery.Font.Discovery.find(
-                ~mono=true,
-                ~weight=Revery.Font.Weight.Normal,
-                fontFamily,
-              );
-
-            Log.debug("  at path: " ++ descriptor.path);
-
-            (
-              fontFamily,
-              descriptor.path,
-              Revery_Font.Family.system(fontFamily),
-            );
-          };
+          Revery_Font.Family.system(familyString);
         };
+
+      // This is formatted this way to accomodate other future features
+      let features =
+        []
+        |> (
+          features =>
+            fontLigatures
+              ? features
+              : [
+                Revery.Font.Feature.make(
+                  ~tag=Revery.Font.Features.contextualAlternates,
+                  ~value=0,
+                ),
+                Revery.Font.Feature.make(
+                  ~tag=Revery.Font.Features.standardLigatures,
+                  ~value=0,
+                ),
+                ...features,
+              ]
+        );
 
       let res =
         FontLoader.loadAndValidateEditorFont(
           ~requestId=req,
           ~smoothing,
-          ~fontFamily,
-          fullPath,
+          ~family,
+          ~fontCache,
           fontSize,
         );
 
       switch (res) {
       | Error(msg) =>
-        Log.errorf(m => m("Error loading font: %s %s", name, msg));
+        Log.errorf(m => m("Error loading font: %s %s", familyString, msg));
         dispatch(
           FontLoadError(
-            Printf.sprintf("Unable to load font: %s: %s", name, msg),
+            Printf.sprintf("Unable to load font: %s: %s", familyString, msg),
           ),
         );
       | Ok((
           reqId,
           {
-            fontFile,
             fontFamily,
             fontSize,
             measuredWidth,
@@ -132,13 +131,13 @@ let setFont = (~requestId, ~fontFamily, ~fontSize, ~smoothing, ~dispatch) => {
         if (reqId == requestId^) {
           dispatch(
             FontLoaded({
-              fontFile,
               fontFamily,
               fontSize,
               measuredWidth,
               measuredHeight,
               descenderHeight,
               smoothing,
+              features,
             }),
           );
         }
@@ -153,6 +152,7 @@ module Sub = {
   type params = {
     fontFamily: string,
     fontSize: float,
+    fontLigatures: bool,
     fontSmoothing: ConfigurationValues.fontSmoothing,
     uniqueId: string,
   };
@@ -162,6 +162,7 @@ module Sub = {
       type state = {
         fontFamily: string,
         fontSize: float,
+        fontLigatures: bool,
         fontSmoothing: ConfigurationValues.fontSmoothing,
         requestId: ref(int),
       };
@@ -190,6 +191,7 @@ module Sub = {
           ~requestId,
           ~fontFamily=params.fontFamily,
           ~fontSize=params.fontSize,
+          ~fontLigatures=params.fontLigatures,
           ~smoothing=reveryFontSmoothing,
           ~dispatch,
         );
@@ -198,6 +200,7 @@ module Sub = {
           fontFamily: params.fontFamily,
           fontSize: params.fontSize,
           fontSmoothing: params.fontSmoothing,
+          fontLigatures: params.fontLigatures,
           requestId,
         };
       };
@@ -205,7 +208,8 @@ module Sub = {
       let update = (~params: params, ~state: state, ~dispatch: msg => unit) =>
         if (params.fontFamily != state.fontFamily
             || !Float.equal(params.fontSize, state.fontSize)
-            || params.fontSmoothing != state.fontSmoothing) {
+            || params.fontSmoothing != state.fontSmoothing
+            || params.fontLigatures != state.fontLigatures) {
           let reveryFontSmoothing =
             getReveryFontSmoothing(params.fontSmoothing);
           setFont(
@@ -213,6 +217,7 @@ module Sub = {
             ~fontFamily=params.fontFamily,
             ~fontSize=params.fontSize,
             ~smoothing=reveryFontSmoothing,
+            ~fontLigatures=params.fontLigatures,
             ~dispatch,
           );
           {
@@ -220,6 +225,7 @@ module Sub = {
             fontFamily: params.fontFamily,
             fontSize: params.fontSize,
             fontSmoothing: params.fontSmoothing,
+            fontLigatures: params.fontLigatures,
           };
         } else {
           state;
@@ -231,7 +237,14 @@ module Sub = {
       };
     });
 
-  let font = (~uniqueId, ~fontFamily, ~fontSize, ~fontSmoothing) => {
-    FontSubscription.create({uniqueId, fontFamily, fontSize, fontSmoothing});
+  let font =
+      (~uniqueId, ~fontFamily, ~fontSize, ~fontLigatures, ~fontSmoothing) => {
+    FontSubscription.create({
+      uniqueId,
+      fontFamily,
+      fontSize,
+      fontSmoothing,
+      fontLigatures,
+    });
   };
 };

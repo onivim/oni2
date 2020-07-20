@@ -253,12 +253,18 @@ let start =
         c => c.editorFontSmoothing,
         state.configuration,
       );
+    let fontLigatures =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontLigatures,
+        state.configuration,
+      );
     let editorFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="editorFont",
         ~fontFamily,
         ~fontSize,
         ~fontSmoothing,
+        ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
@@ -283,6 +289,7 @@ let start =
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
         ~fontSmoothing=terminalFontSmoothing,
+        ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
@@ -316,6 +323,10 @@ let start =
       Feature_Extensions.sub(~setup, state.extensions)
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
 
+    let registersSub =
+      Feature_Registers.sub(state.registers)
+      |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
+
     [
       syntaxSubscription,
       terminalSubscription,
@@ -326,6 +337,7 @@ let start =
       fileExplorerActiveFileSub,
       editorGlobalSub,
       extensionsSub,
+      registersSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -381,43 +393,33 @@ let start =
     window,
   );
 
-  registerCommands(~dispatch, Model.GlobalCommands.registrations());
-  registerCommands(
-    ~dispatch,
-    Feature_Terminal.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
-  );
-  registerCommands(
-    ~dispatch,
+  // Commands
+  [
+   Model.GlobalCommands.registrations(),
     Feature_Sneak.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
-  );
-  registerCommands(
-    ~dispatch,
+    Feature_Terminal.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
+    Feature_Sneak.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
     Feature_Layout.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
-  );
-  registerCommands(
-    ~dispatch,
     Feature_Hover.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
-  );
-  registerCommands(
-    ~dispatch,
     Feature_SignatureHelp.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
-  );
-
-  registerCommands(
-    ~dispatch,
     Feature_Formatting.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
-  );
-
-  registerCommands(
-    ~dispatch,
     Feature_Theme.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Theme(msg))),
+    Feature_Clipboard.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
+    Feature_Registers.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
+  ] |>
+  List.flatten
+  |> registerCommands(
+    ~dispatch,
   );
 
   // TODO: These should all be replaced with isolinear subscriptions.

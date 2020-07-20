@@ -88,6 +88,13 @@ Service_Net_Test.TestFramework.run(
     Rely.RunConfig.initialize(),
   ),
 );
+
+Service_OS_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
 Textmate_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],

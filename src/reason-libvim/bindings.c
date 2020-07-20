@@ -480,6 +480,22 @@ CAMLprim value libvim_vimInput(value v) {
   return Val_unit;
 }
 
+CAMLprim value libvim_vimEval(value vStr) {
+  CAMLparam1(vStr);
+  CAMLlocal2(vOut, vRet);
+
+  char_u *result = vimEval(String_val(vStr));
+
+  if (result == NULL) {
+    vRet = Val_none;
+  } else {
+    vOut = caml_copy_string(result);
+    vRet = Val_some(vOut);
+    free(result);
+  }
+  CAMLreturn(vRet);
+}
+
 CAMLprim value libvim_vimCommand(value v) {
   char_u *s;
   s = (char_u *)String_val(v);
@@ -897,6 +913,31 @@ CAMLprim value libvim_vimVisualGetRange(value unit) {
   Store_field(ret, 1, Val_int(start.col));
   Store_field(ret, 2, Val_int(end.lnum));
   Store_field(ret, 3, Val_int(end.col));
+
+  CAMLreturn(ret);
+}
+
+CAMLprim value libvim_vimRegisterGet(value vChar) {
+  CAMLparam1(vChar);
+  CAMLlocal2(ret, vArray);
+
+  
+  int reg = Int_val(vChar);
+  int numLines = 0;
+  char_u **lines = NULL;
+  vimRegisterGet(reg, &numLines, &lines);
+
+  if (numLines == 0 || lines == NULL) {
+    ret = Val_none;
+  } else {
+    vArray = caml_alloc(numLines, 0);
+
+    for (int i = 0; i < numLines; i++) {
+      Store_field(vArray, i, caml_copy_string(lines[i]));
+    }
+
+    ret = Val_some(vArray);
+  }
 
   CAMLreturn(ret);
 }

@@ -269,3 +269,13 @@ let removeTrailingNewLine = s => {
     s;
   };
 };
+
+let splitLines: string => (bool, array(string)) =
+  text => {
+    let isMultipleLines = s => String.contains(s, '\n');
+
+    let out =
+      text |> removeTrailingNewLine |> removeWindowsNewLines |> splitNewLines;
+
+    (isMultipleLines(text), out);
+  };

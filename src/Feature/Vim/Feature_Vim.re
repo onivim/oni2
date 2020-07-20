@@ -11,11 +11,26 @@ let mode = ({mode}) => mode;
 
 [@deriving show]
 type msg =
-  | ModeChanged([@opaque] Vim.Mode.t);
+  | ModeChanged([@opaque] Vim.Mode.t)
+  | PasteCompleted({cursors: [@opaque] list(Vim.Cursor.t)})
+  | Pasted(string);
 
-let update = (msg, _model: model) => {
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg))
+  | CursorsUpdated(list(Vim.Cursor.t));
+
+let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(mode) => ({mode: mode}: model)
+  | ModeChanged(mode) => ({mode: mode}: model, Nothing)
+  | Pasted(text) =>
+    let eff =
+      Service_Vim.Effects.paste(
+        ~toMsg=cursors => PasteCompleted({cursors: cursors}),
+        text,
+      );
+    (model, Effect(eff));
+  | PasteCompleted({cursors}) => (model, CursorsUpdated(cursors))
   };
 };
 

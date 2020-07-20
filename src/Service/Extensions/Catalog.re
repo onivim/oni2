@@ -62,7 +62,7 @@ module Details = {
     manifestUrl: string,
     iconUrl: option(string),
     readmeUrl: string,
-    licenseName: string,
+    licenseName: option(string),
     //      licenseUrl: string,
     name: string,
     namespace: string,
@@ -121,8 +121,8 @@ module Details = {
           readmeUrl: whatever(readmeUrl),
           repositoryUrl: field.required("repository", string),
           homepageUrl: whatever(homepageUrl),
-          licenseName: field.required("license", string),
-          displayName: field.required("displayName", nullable(string)),
+          licenseName: field.optional("license", string),
+          displayName: field.optional("displayName", string),
           description: field.required("description", string),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
@@ -174,7 +174,7 @@ module Summary = {
         version: field.required("version", string),
         name: field.required("name", string),
         namespace: field.required("namespace", string),
-        displayName: field.required("displayName", nullable(string)),
+        displayName: field.optional("displayName", string),
         description: field.required("description", string),
       }
     );

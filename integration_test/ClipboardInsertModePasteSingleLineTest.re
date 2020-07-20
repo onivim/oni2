@@ -23,7 +23,22 @@ runTest(
 
   /* Simulate multiple events getting dispatched before running effects */
   dispatch(KeyboardInput("A"));
-  dispatch(Command("editor.action.clipboardPasteAction"));
+  wait(~name="Should be a line available", (state: State.t) => {
+    switch (Selectors.getActiveBuffer(state)) {
+    | None => false
+    | Some(buf) => Buffer.getNumberOfLines(buf) >= 1
+    }
+  });
+  dispatch(Actions.Clipboard(Feature_Clipboard.Msg.paste));
+  wait(~name="Paste goes through", (state: State.t) =>
+    switch (Selectors.getActiveBuffer(state)) {
+    | None => false
+    | Some(buf) =>
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
+      Log.info("Current line is: |" ++ line ++ "|");
+      String.equal(line, "Adef");
+    }
+  );
   dispatch(KeyboardInput("B"));
 
   runEffects();

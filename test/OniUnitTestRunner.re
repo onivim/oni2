@@ -12,6 +12,7 @@ Feature_LanguageSupport_Test.TestFramework.cli();
 
 Service_Extensions_Test.TestFramework.cli();
 Service_Net_Test.TestFramework.cli();
+Service_OS_Test.TestFramework.cli();
 
 Vim.init();
 Libvim_Test.TestFramework.cli();

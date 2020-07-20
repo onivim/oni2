@@ -196,6 +196,17 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
+    | QuickmenuPaste(text) => (
+        Option.map(
+          (Quickmenu.{inputText, _} as state) => {
+            let inputText = Feature_InputText.paste(~text, inputText);
+
+            Quickmenu.{...state, inputText, focused: Some(0)};
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
     | QuickmenuInput(key) => (
         Option.map(
           (Quickmenu.{inputText, _} as state) => {

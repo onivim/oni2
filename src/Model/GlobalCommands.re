@@ -46,12 +46,6 @@ module Editor = {
         Command("editor.action.detectIndentation"),
       );
 
-    let clipboardPasteAction =
-      register(
-        "editor.action.clipboardPasteAction",
-        Command("editor.action.clipboardPasteAction"),
-      );
-
     let indentLines =
       register(
         "editor.action.indentLines",
