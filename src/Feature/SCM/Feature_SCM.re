@@ -415,6 +415,8 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
+  // TODO: Wire up new protocol
+  | _ => ()
   };
 
 // VIEW

@@ -1111,6 +1111,28 @@ module SCM = {
         provider: int,
         handle: int,
       })
+    | UpdateGroup({
+        provider: int,
+        handle: int,
+        features: SCM.GroupFeatures.t,
+      })
+    | UpdateGroupLabel({
+        provider: int,
+        handle: int,
+        label: string,
+      })
+    | SetInputBoxPlaceholder({
+        handle: int,
+        value: string,
+      })
+    | SetInputBoxVisibility({
+        handle: int,
+        visible: bool,
+      })
+    | SetValidationProviderIsEnabled({
+        handle: int,
+        enabled: bool,
+      })
     | SpliceSCMResourceStates({
         handle: int,
         splices: list(SCM.Resource.Splices.t),

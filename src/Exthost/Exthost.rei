@@ -324,6 +324,13 @@ module SCM: {
     module Decode: {let splices: Json.decoder(Splices.t);};
   };
 
+  module GroupFeatures: {
+    [@deriving show({with_path: false})]
+    type t = {hideWhenEmpty: bool};
+
+    let decode: Json.decoder(t);
+  };
+
   module Decode: {
     //let resource: Yojson.Safe.t => Resource.t;
     let command: Yojson.Safe.t => option(command);
@@ -1085,6 +1092,28 @@ module Msg: {
       | UnregisterSCMResourceGroup({
           provider: int,
           handle: int,
+        })
+      | UpdateGroup({
+          provider: int,
+          handle: int,
+          features: SCM.GroupFeatures.t,
+        })
+      | UpdateGroupLabel({
+          provider: int,
+          handle: int,
+          label: string,
+        })
+      | SetInputBoxPlaceholder({
+          handle: int,
+          value: string,
+        })
+      | SetInputBoxVisibility({
+          handle: int,
+          visible: bool,
+        })
+      | SetValidationProviderIsEnabled({
+          handle: int,
+          enabled: bool,
         })
       | SpliceSCMResourceStates({
           handle: int,
