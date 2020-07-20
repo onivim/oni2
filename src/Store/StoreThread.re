@@ -395,7 +395,7 @@ let start =
 
   // Commands
   [
-   Model.GlobalCommands.registrations(),
+    Model.GlobalCommands.registrations(),
     Feature_Sneak.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
     Feature_Terminal.Contributions.commands
@@ -416,11 +416,9 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
     Feature_Registers.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
-  ] |>
-  List.flatten
-  |> registerCommands(
-    ~dispatch,
-  );
+  ]
+  |> List.flatten
+  |> registerCommands(~dispatch);
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =

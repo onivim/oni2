@@ -111,40 +111,45 @@ let update =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
     let state = {...state, extensions: model};
     let (state', effect) =
-    Feature_Extensions.(
-      switch (outMsg) {
-      | Nothing => (state, Effect.none)
-      | Effect(eff) => (
-          state,
-          eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
-        )
-      | Focus => (
-          FocusManager.push(Focus.Extensions, state),
-          Effect.none,
-        )
-      | NotifySuccess(msg) => (
-          state,
-          Internal.notificationEffect(~kind=Info, msg),
-        )
-      | NotifyFailure(msg) => (
-          state,
-          Internal.notificationEffect(~kind=Error, msg),
-        )
-      | ContributionsAdded(contributions) => 
-        let themes = Exthost.Extension.Contributions.(
-          contributions
-          |> List.map(({themes, _}) => themes)
-          |> List.flatten
-        );
-        let effect = Isolinear.Effect.createWithDispatch(
-          ~name="feature.extensions.showThemeAfterInstall",
-          (dispatch) => {
-            dispatch(QuickmenuShow(ThemesPicker(themes)))
-          }
-        );
-        (state, effect);
-      | ContributionsRemoved(_) => (state, Isolinear.Effect.none)
-      });
+      Feature_Extensions.(
+        switch (outMsg) {
+        | Nothing => (state, Effect.none)
+        | Effect(eff) => (
+            state,
+            eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
+          )
+        | Focus => (FocusManager.push(Focus.Extensions, state), Effect.none)
+        | NotifySuccess(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Info, msg),
+          )
+        | NotifyFailure(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Error, msg),
+          )
+        | InstallSucceeded({ extensionId, contributions }) =>
+          let notificationEffect = Internal.notificationEffect(
+            ~kind=Info,
+          Printf.sprintf(
+            "Extension %s was installed successfully and will be activated on restart.",
+            extensionId,
+          ),
+          );
+          let themes: list(Exthost.Extension.Contributions.Theme.t) =
+            Exthost.Extension.Contributions.(
+              contributions.themes
+            );
+          let showThemePickerEffect = if(themes != []) {
+            Isolinear.Effect.createWithDispatch(
+              ~name="feature.extensions.showThemeAfterInstall", dispatch => {
+              dispatch(QuickmenuShow(ThemesPicker(themes)))
+            });
+          } else {
+            Isolinear.Effect.none
+          };
+          (state, Isolinear.Effect.batch([notificationEffect, showThemePickerEffect]));
+        }
+      );
     (state', effect);
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
@@ -505,27 +510,21 @@ let update =
   | Theme(msg) =>
     let (model', outmsg) = Feature_Theme.update(state.colorTheme, msg);
 
-    let eff = switch (outmsg) {
-    | OpenThemePicker(_) =>
+    let eff =
+      switch (outmsg) {
+      | OpenThemePicker(_) =>
+        let themes =
+          state.extensions
+          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+               Exthost.Extension.Contributions.(manifest.contributes.themes)
+             })
+          |> List.flatten;
 
-    let themes =
-    state.extensions
-    |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
-      open Exthost.Extension.Contributions;
-      manifest.contributes.themes
-    })
-    |> List.flatten;
-
-    Isolinear.Effect.createWithDispatch(
-      ~name="menu",
-      (dispatch) => {
-        dispatch(Actions.QuickmenuShow(
-          ThemesPicker(themes)
-        ));
-      }
-    );
-    | Nothing => Isolinear.Effect.none;
-    };
+        Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
+          dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
+        });
+      | Nothing => Isolinear.Effect.none
+      };
 
     ({...state, colorTheme: model'}, eff);
 

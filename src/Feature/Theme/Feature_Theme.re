@@ -10,7 +10,6 @@ type theme = Exthost.Extension.Contributions.Theme.t;
 type model = {
   schema: ColorTheme.Schema.t,
   theme: ColorTheme.t,
-  availableThemes: list(theme),
 };
 
 let defaults =
@@ -66,7 +65,6 @@ let initial = contributions => {
       ...List.map(ColorTheme.Schema.fromList, contributions),
     ]),
   theme: ColorTheme.{variant: Dark, colors: ColorTheme.Colors.empty},
-  availableThemes: [],
 };
 
 let colors =

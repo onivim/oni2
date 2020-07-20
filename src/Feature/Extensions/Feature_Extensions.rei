@@ -35,9 +35,11 @@ type msg =
 type outmsg =
   | Nothing
   | Focus
-  | ContributionsAdded(list(Exthost.Extension.Contributions.t))
-  | ContributionsRemoved(list(Exthost.Extension.Contributions.t))
   | Effect(Isolinear.Effect.t(msg))
+  | InstallSucceeded({
+    extensionId: string,
+    contributions: Exthost.Extension.Contributions.t
+  })
   | NotifySuccess(string)
   | NotifyFailure(string);
 
