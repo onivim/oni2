@@ -1048,6 +1048,41 @@ module Telemetry = {
   };
 };
 
+module Progress = {
+  [@deriving show]
+  type msg =
+    | StartProgress({
+        handle: int,
+        options: Progress.Options.t,
+      })
+    | ProgressReport({
+        handle: int,
+        message: Progress.Step.t,
+      })
+    | ProgressEnd({handle: int});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method, args) {
+      | ("$startProgress", `List([`Int(handle), optionsJson, ..._])) =>
+        let%bind options =
+          optionsJson |> Internal.decode_value(Progress.Options.decode);
+
+        Ok(StartProgress({handle, options}));
+
+      | ("$progressReport", `List([`Int(handle), messageJson])) =>
+        let%bind message =
+          messageJson |> Internal.decode_value(Progress.Step.decode);
+        Ok(ProgressReport({handle, message}));
+
+      | ("$progressEnd", `List([`Int(handle)])) =>
+        Ok(ProgressEnd({handle: handle}))
+      | _ => Error("Progress - unhandled method: " ++ method)
+      }
+    );
+  };
+};
+
 module SCM = {
   [@deriving show]
   type msg =
@@ -1256,6 +1291,7 @@ type t =
   | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
   | OutputService(OutputService.msg)
+  | Progress(Progress.msg)
   | SCM(SCM.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)

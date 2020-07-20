@@ -32,6 +32,7 @@ module ModelChangedEvent = ModelChangedEvent;
 module ModelContentChange = ModelContentChange;
 module OneBasedPosition = OneBasedPosition;
 module OneBasedRange = OneBasedRange;
+module Progress = Progress;
 module ReferenceContext = ReferenceContext;
 module Reply = Reply;
 module SCM = SCM;
