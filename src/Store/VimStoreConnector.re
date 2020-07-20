@@ -530,7 +530,7 @@ let start =
         currentTriggerKey := None;
 
         // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,
-        // and then the cursor changed. This is because the cursor changed may impact the scroll 
+        // and then the cursor changed. This is because the cursor changed may impact the scroll
         // (ensuring the cursor is visible).
         //
         // Ultimately - we want to get rid of those topline/columnline sync, and have Onivim wholly
