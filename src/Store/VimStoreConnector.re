@@ -529,12 +529,33 @@ let start =
           Vim.input(~context, key);
         currentTriggerKey := None;
 
+        // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,
+        // and then the cursor changed. This is because the cursor changed may impact the scroll 
+        // (ensuring the cursor is visible).
+        //
+        // Ultimately - we want to get rid of those topline/columnline sync, and have Onivim wholly
+        // own the 'scroll' experience.
+        // ie: https://github.com/onivim/oni2/pull/2067/commits/a1eb60dd3b9679d0aabda83616c4400ebe1eb3d3
+        dispatch(
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: ScrollToLine(newTopLine - 1),
+          }),
+        );
+        dispatch(
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: ScrollToColumn(newLeftColumn),
+          }),
+        );
+
         dispatch(
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
             msg: CursorsChanged(cursors),
           }),
         );
+
         Log.debug("handled key: " ++ key);
       }
     );
@@ -551,6 +572,15 @@ let start =
     Isolinear.Effect.create(~name="vim.gotoLocation", () => {
       let cursor = (location :> Vim.Cursor.t);
       updateActiveEditorCursors([cursor]);
+
+      let topLine: int = max(Index.toZeroBased(location.line) - 10, 0);
+
+      dispatch(
+        Actions.Editor({
+          scope: EditorScope.Editor(editorId),
+          msg: ScrollToLine(topLine),
+        }),
+      );
     });
 
   let addBufferRendererEffect = (bufferId, renderer) =>
@@ -696,6 +726,8 @@ let start =
       // Update the editor, which is the source of truth for cursor position
       let scope = EditorScope.Editor(editorId);
       dispatch(Actions.Editor({scope, msg: CursorsChanged(cursors)}));
+      dispatch(Actions.Editor({scope, msg: ScrollToLine(newTopLine - 1)}));
+      dispatch(Actions.Editor({scope, msg: ScrollToColumn(newLeftColumn)}));
     });
   };
 
