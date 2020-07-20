@@ -31,6 +31,68 @@ module Decode = {
     one_of([("string", string), ("int", int |> map(string_of_int))]);
 };
 
+module QuickOpen = {
+  [@deriving show]
+  type msg =
+    // TODO: How to handle incoming cancellation token?
+    | Show({
+        instance: int,
+        options: QuickOpen.Options.t,
+      }) // Returns a promise / id
+    | SetItems({
+        instance: int,
+        items: list(QuickOpen.Item.t),
+      })
+    | SetError({
+        instance: int,
+        error: Yojson.Safe.t,
+      })
+    | Input({
+        options: InputBoxOptions.t,
+        validateInput: bool,
+      }) // Returns a string promise
+    | CreateOrUpdate({params: QuickOpen.t})
+    | Dispose({id: int});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method, args) {
+      | (
+          "$show",
+          `List([`Int(instance), optionsJson, _cancellationTokenJson]),
+        ) =>
+        let%bind options =
+          optionsJson |> Internal.decode_value(QuickOpen.Options.decode);
+        Ok(Show({instance, options}));
+      | ("$setItems", `List([`Int(instance), itemsJson])) =>
+        let%bind items =
+          itemsJson
+          |> Internal.decode_value(Json.Decode.list(QuickOpen.Item.decode));
+        Ok(SetItems({instance, items}));
+      | ("$setError", `List([`Int(instance), errorJson])) =>
+        Ok(SetError({instance, error: errorJson}))
+      | (
+          "$input",
+          `List([
+            inputBoxOptionsJson,
+            `Bool(validateInput),
+            _cancellationTokenJson,
+          ]),
+        ) =>
+        let%bind inputBox =
+          inputBoxOptionsJson |> Internal.decode_value(InputBoxOptions.decode);
+        Ok(Input({options: inputBox, validateInput}));
+      | ("$createOrUpdate", `List([paramsJson])) =>
+        let%bind params =
+          paramsJson |> Internal.decode_value(QuickOpen.decode);
+        Ok(CreateOrUpdate({params: params}));
+      | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
+      | _ => Error("Unhandled quickOpen method: " ++ method)
+      }
+    );
+  };
+};
+
 module Clipboard = {
   [@deriving show]
   type msg =

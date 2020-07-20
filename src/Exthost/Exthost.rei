@@ -275,6 +275,115 @@ module Progress: {
   };
 };
 
+module InputBoxOptions: {
+  [@deriving show]
+  type t = {
+    ignoreFocusOut: bool,
+    password: bool,
+    placeHolder: option(string),
+    prompt: option(string),
+    value: option(string),
+    // TODO
+    // valueSelection: (int, int),
+  };
+};
+
+module QuickOpen: {
+  module Options: {
+    [@deriving show]
+    type t = {
+      placeholder: option(string),
+      matchOnDescription: bool,
+      matchOnDetail: bool,
+      matchOnLabel: bool, // default true
+      autoFocusOnList: bool, // default true
+      ignoreFocusLost: bool,
+      canPickMany: bool,
+      // TODO:
+      // https://github.com/onivim/vscode-exthost/blob/a25f426a04fe427beab7465be660f89a794605b5/src/vs/platform/quickinput/common/quickInput.ts#L78
+      //quickNavigate
+      contextKey: option(string),
+    };
+  };
+
+  module Button: {
+    [@deriving show]
+    type icon = {
+      dark: Oni_Core.Uri.t,
+      light: option(Oni_Core.Uri.t),
+    };
+
+    [@deriving show]
+    type t = {
+      iconPath: option(icon),
+      iconClass: option(string),
+      tooltip: option(string),
+    };
+  };
+
+  module Item: {
+    [@deriving show]
+    type t = {
+      // TransferQuickPickItems
+      handle: int,
+      // IQuickPickItem
+      id: option(string),
+      label: string,
+      description: option(string),
+      detail: option(string),
+      iconClasses: list(string),
+      buttons: list(Button.t),
+      picked: bool,
+      alwaysShow: bool,
+    };
+  };
+
+  module QuickPick: {
+    [@deriving show]
+    type t = {
+      // BaseTransferQuickInput
+      id: int,
+      enabled: bool,
+      busy: bool,
+      visible: bool,
+      // TransferQuickPick
+      value: option(string),
+      placeholder: option(string),
+      buttons: list(Button.t),
+      items: list(Item.t),
+      // TODO:
+      // activeItems
+      // selectedItems
+      // canSelectMany
+      // ignoreFocusOut
+      // matchOnDescription
+      // Match on Detail
+    };
+  };
+
+  module QuickInput: {
+    [@deriving show]
+    type t = {
+      // BaseTransferQuickInput
+      id: int,
+      enabled: bool,
+      busy: bool,
+      visible: bool,
+      // TransferInputBox
+      value: option(string),
+      placeholder: option(string),
+      buttons: list(Button.t),
+      prompt: option(string),
+      validationMessage: option(string),
+    };
+  };
+
+  [@deriving show]
+  type t =
+    | QuickPick(QuickPick.t)
+    | QuickInput(QuickInput.t);
+};
+
 module SCM: {
   [@deriving show({with_path: false})]
   type command = {
@@ -1056,6 +1165,30 @@ module Msg: {
           message: Progress.Step.t,
         })
       | ProgressEnd({handle: int});
+  };
+
+  module QuickOpen: {
+    [@deriving show]
+    type msg =
+      // TODO: How to handle incoming cancellation token?
+      | Show({
+          instance: int,
+          options: QuickOpen.Options.t,
+        }) // Returns a promise / id
+      | SetItems({
+          instance: int,
+          items: list(QuickOpen.Item.t),
+        })
+      | SetError({
+          instance: int,
+          error: Yojson.Safe.t,
+        })
+      | Input({
+          options: InputBoxOptions.t,
+          validateInput: bool,
+        })
+      | CreateOrUpdate({params: QuickOpen.t})
+      | Dispose({id: int});
   };
 
   module SCM: {
