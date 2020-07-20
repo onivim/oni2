@@ -253,12 +253,18 @@ let start =
         c => c.editorFontSmoothing,
         state.configuration,
       );
+    let fontLigatures =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontLigatures,
+        state.configuration,
+      );
     let editorFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="editorFont",
         ~fontFamily,
         ~fontSize,
         ~fontSmoothing,
+        ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
@@ -283,6 +289,7 @@ let start =
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
         ~fontSmoothing=terminalFontSmoothing,
+        ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 

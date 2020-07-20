@@ -61,6 +61,14 @@ let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
   pendingInstalls != [] || pendingUninstalls != [];
 };
 
+let isInstalling = (~extensionId, {pendingInstalls, _}) => {
+  pendingInstalls |> List.exists(id => id == extensionId);
+};
+
+let isUninstalling = (~extensionId, {pendingUninstalls, _}) => {
+  pendingUninstalls |> List.exists(id => id == extensionId);
+};
+
 let searchResults = ({latestQuery, _}) =>
   switch (latestQuery) {
   | None => []
@@ -232,7 +240,7 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingUninstall(~extensionId), Effect(eff));
   | UninstallExtensionSuccess({extensionId}) => (
       model |> Internal.uninstalled(~extensionId),
-      NotifyFailure(
+      NotifySuccess(
         Printf.sprintf("Successfully uninstalled %s", extensionId),
       ),
     )

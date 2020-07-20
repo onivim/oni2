@@ -234,6 +234,47 @@ module Label: {
   let decode: Json.decoder(t);
 };
 
+module Progress: {
+  module Location: {
+    [@deriving show]
+    type t =
+      | Explorer
+      | SCM
+      | Extensions
+      | Window
+      | Notification
+      | Dialog
+      | Other(string);
+
+    let decode: Json.decoder(t);
+  };
+
+  module Options: {
+    [@deriving show]
+    type t = {
+      location: Location.t,
+      title: option(string),
+      source: option(string),
+      total: option(int),
+      cancellable: bool,
+      buttons: list(string),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module Step: {
+    [@deriving show]
+    type t = {
+      message: option(string),
+      increment: option(int),
+      total: option(int),
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
 module SCM: {
   [@deriving show({with_path: false})]
   type command = {
@@ -1008,6 +1049,20 @@ module Msg: {
         });
   };
 
+  module Progress: {
+    [@deriving show]
+    type msg =
+      | StartProgress({
+          handle: int,
+          options: Progress.Options.t,
+        })
+      | ProgressReport({
+          handle: int,
+          message: Progress.Step.t,
+        })
+      | ProgressEnd({handle: int});
+  };
+
   module SCM: {
     [@deriving show]
     type msg =
@@ -1141,6 +1196,7 @@ module Msg: {
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
     | OutputService(OutputService.msg)
+    | Progress(Progress.msg)
     | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)

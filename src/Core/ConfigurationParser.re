@@ -213,6 +213,10 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
+    "editor.fontLigatures",
+    (config, json) => {...config, editorFontLigatures: parseBool(json)},
+  ),
+  (
     "editor.fontSize",
     (config, json) => {
       ...config,

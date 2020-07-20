@@ -44,6 +44,9 @@ let initial: (~extensionsFolder: option(string)) => model;
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
 
+let isInstalling: (~extensionId: string, model) => bool;
+let isUninstalling: (~extensionId: string, model) => bool;
+
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 
 let all: model => list(Scanner.ScanResult.t);

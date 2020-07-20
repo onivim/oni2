@@ -7,6 +7,7 @@ type font = {
   measuredHeight: float,
   descenderHeight: float,
   smoothing: Revery.Font.Smoothing.t,
+  features: list(Revery.Font.Feature.t),
 };
 
 let toString: font => string;
@@ -32,6 +33,7 @@ module Sub: {
       ~uniqueId: string,
       ~fontFamily: string,
       ~fontSize: float,
+      ~fontLigatures: bool,
       ~fontSmoothing: ConfigurationValues.fontSmoothing
     ) =>
     Isolinear.Sub.t(msg);
