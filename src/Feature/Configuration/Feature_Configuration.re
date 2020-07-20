@@ -47,6 +47,7 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
   let user =
     Config.Settings.fromList([
       ("reason_language_server.location", Json.Encode.string(setup.rlsPath)),
+      ("telemetry.enableTelemetry", Json.Encode.bool(false)),
       ("terminal.integrated.env.windows", Json.Encode.null),
       ("terminal.integrated.env.linux", Json.Encode.null),
       ("terminal.integrated.env.osx", Json.Encode.null),
