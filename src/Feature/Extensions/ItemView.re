@@ -1,8 +1,6 @@
 open Oni_Core;
 open Revery.UI;
 
-open Revery.UI.Components;
-
 module Colors = Feature_Theme.Colors;
 module Sneakable = Feature_Sneak.View.Sneakable;
 
@@ -10,6 +8,7 @@ module Constants = {
   let itemHeight = 72;
   let imageSize = 50;
   let imageContainerSize = 64;
+  let defaultIcon = "https://open-vsx.org/default-icon.png";
 };
 
 module Styles = {
@@ -106,21 +105,13 @@ let make =
       ~font: UiFont.t,
       (),
     ) => {
+  let url = iconPath |> Option.value(~default=Constants.defaultIcon);
   let icon =
-    switch (iconPath) {
-    | None =>
-      <Container
-        color=Revery.Colors.darkGray
-        width=Constants.imageSize
-        height=Constants.imageSize
-      />
-    | Some(iconPath) =>
-      <Image
-        src={`File(iconPath)}
-        width=Constants.imageSize
-        height=Constants.imageSize
-      />
-    };
+    <Oni_Components.RemoteImage
+      url
+      width=Constants.imageSize
+      height=Constants.imageSize
+    />;
 
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;

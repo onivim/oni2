@@ -158,14 +158,14 @@ let%component make =
                summary |> Service_Extensions.Catalog.Summary.name;
              let extensionId =
                summary |> Service_Extensions.Catalog.Summary.id;
-             let {namespace, version, _}: Service_Extensions.Catalog.Summary.t = summary;
+             let {namespace, version, iconUrl, _}: Service_Extensions.Catalog.Summary.t = summary;
              let author = namespace;
 
              let actionButton = <installButton dispatch font extensionId />;
              <ItemView
                actionButton
                width
-               iconPath=None
+               iconPath=iconUrl
                theme
                displayName
                author
