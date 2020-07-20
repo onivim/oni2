@@ -8,12 +8,7 @@ module Colors = Feature_Theme.Colors;
 
 module Styles = {
   open Style;
-  let container = (~width) => [
-    Style.width(width),
-    flexDirection(`Column),
-    flexGrow(1),
-    overflow(`Hidden),
-  ];
+  let container = [flexDirection(`Column), flexGrow(1), overflow(`Hidden)];
   let input = [flexGrow(1), margin(12)];
 };
 
@@ -187,7 +182,7 @@ let%component make =
   let isBusy = Model.isSearchInProgress(model) || Model.isBusy(model);
 
   <View
-    style={Styles.container(~width)}
+    style=Styles.container
     onDimensionsChanged={({width, _}) =>
       localDispatch(WidthChanged(width))
     }>
