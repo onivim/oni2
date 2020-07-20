@@ -32,7 +32,6 @@ module Provider = {
     count: int,
     commitTemplate: string,
     acceptInputCommand: option(command),
-    inputPlaceholder: string,
     inputVisible: bool,
     validationEnabled: bool,
   };
@@ -47,7 +46,6 @@ module Provider = {
     count: 0,
     commitTemplate: "",
     acceptInputCommand: None,
-    inputPlaceholder: "Press Enter to commit...",
     inputVisible: true,
     validationEnabled: false,
   };
@@ -133,10 +131,10 @@ type msg =
       handle: int,
       command: Exthost.SCM.command,
     })
-  | InputBoxPlaceholderChanged({
-      handle: int,
-      placeholder: string,
-    })
+  //  | InputBoxPlaceholderChanged({
+  //      handle: int,
+  //      placeholder: string,
+  //    })
   | InputBoxVisibilityChanged({
       handle: int,
       visible: bool,
@@ -226,13 +224,15 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  | InputBoxPlaceholderChanged({handle, placeholder}) => (
-      model
-      |> Internal.updateProvider(~handle, it =>
-           {...it, inputPlaceholder: placeholder}
-         ),
-      Nothing,
-    )
+  // TODO: Handle replacing '{0}' character in placeholder text
+  //  | InputBoxPlaceholderChanged({handle, placeholder}) => (
+  //      {
+  //        ...model,
+  //        inputBox:
+  //          Feature_InputText.setPlaceholder(~placeholder, model.inputBox),
+  //      },
+  //      Nothing,
+  //    )
 
   | InputBoxVisibilityChanged({handle, visible}) => (
       model
@@ -307,7 +307,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
   | GroupHideWhenEmptyChanged({provider, handle, hideWhenEmpty}) => (
       model
       |> Internal.updateResourceGroup(~provider, ~group=handle, group =>
-           {...group, hideWhenEmpty: true}
+           {...group, hideWhenEmpty}
          ),
       Nothing,
     )
@@ -476,9 +476,10 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
-  // TODO: Wire up new protocol
-  | SetInputBoxPlaceholder({handle, value}) =>
-    dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))
+  | SetInputBoxPlaceholder(_) =>
+    // TODO: Set up replacement for '{0}'
+    //dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))
+    ()
   | SetInputBoxVisibility({handle, visible}) =>
     dispatch(InputBoxVisibilityChanged({handle, visible}))
   | SetValidationProviderIsEnabled({handle, enabled}) =>
@@ -635,21 +636,27 @@ module Pane = {
         theme
       />
       {groups
-       |> List.map(((provider, group: ResourceGroup.t)) => {
+       |> List.filter_map(((provider, group: ResourceGroup.t)) => {
             let expanded =
               StringMap.find_opt(group.label, localState)
               |> Option.value(~default=true);
 
-            <groupView
-              provider
-              expanded
-              group
-              theme
-              font
-              workingDirectory
-              onItemClick
-              onTitleClick={() => localDispatch(group.label)}
-            />;
+            if (group.resources == [] && group.hideWhenEmpty) {
+              None;
+            } else {
+              Some(
+                <groupView
+                  provider
+                  expanded
+                  group
+                  theme
+                  font
+                  workingDirectory
+                  onItemClick
+                  onTitleClick={() => localDispatch(group.label)}
+                />,
+              );
+            };
           })
        |> React.listToElement}
     </View>;

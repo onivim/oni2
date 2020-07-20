@@ -166,7 +166,17 @@ module Decorations = {
              Uri.of_yojson(json) |> Stdlib.Result.to_option
            );
       Ok(DecorationsDidChange({handle, uris}));
-    | _ => Error("Unhandled method: " ++ method)
+
+    | ("$onDidChange", `List([`Int(handle), `Null])) =>
+      Ok(DecorationsDidChange({handle, uris: []}))
+
+    | _ =>
+      Error(
+        "Unhandled method: "
+        ++ method
+        ++ " json: "
+        ++ Yojson.Safe.to_string(args),
+      )
     };
   };
 };
@@ -1140,93 +1150,143 @@ module SCM = {
   //additions: list(SCM.Resource.t),
 
   let handle = (method, args: Yojson.Safe.t) => {
-    switch (method) {
-    | "$registerSourceControl" =>
-      switch (args) {
-      | `List([`Int(handle), `String(id), `String(label), rootUri]) =>
-        let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
-        Ok(RegisterSourceControl({handle, id, label, rootUri}));
-      | `List([`String(handleStr), `String(id), `String(label), rootUri]) =>
-        let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
-        let maybeHandle = int_of_string_opt(handleStr);
-        switch (maybeHandle) {
-        | Some(handle) =>
-          Ok(RegisterSourceControl({handle, id, label, rootUri}))
-        | None =>
-          Error("Expected number for handle, but received: " ++ handleStr)
-        };
-      | _ => Error("Unexpected arguments for $registerSourceControl")
-      }
+    Base.Result.Let_syntax.(
+      switch (method) {
+      | "$registerSourceControl" =>
+        switch (args) {
+        | `List([`Int(handle), `String(id), `String(label), rootUri]) =>
+          let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
+          Ok(RegisterSourceControl({handle, id, label, rootUri}));
+        | `List([`String(handleStr), `String(id), `String(label), rootUri]) =>
+          let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
+          let maybeHandle = int_of_string_opt(handleStr);
+          switch (maybeHandle) {
+          | Some(handle) =>
+            Ok(RegisterSourceControl({handle, id, label, rootUri}))
+          | None =>
+            Error("Expected number for handle, but received: " ++ handleStr)
+          };
+        | _ => Error("Unexpected arguments for $registerSourceControl")
+        }
 
-    | "$unregisterSourceControl" =>
-      switch (args) {
-      | `List([`Int(handle)]) =>
-        Ok(UnregisterSourceControl({handle: handle}))
+      | "$unregisterSourceControl" =>
+        switch (args) {
+        | `List([`Int(handle)]) =>
+          Ok(UnregisterSourceControl({handle: handle}))
 
-      | _ => Error("Unexpected arguments for $unregisterSourceControl")
-      }
+        | _ => Error("Unexpected arguments for $unregisterSourceControl")
+        }
 
-    | "$updateSourceControl" =>
-      switch (args) {
-      | `List([`Int(handle), features]) =>
-        Yojson.Safe.Util.(
-          Ok(
-            UpdateSourceControl({
-              handle,
-              hasQuickDiffProvider:
-                features |> member("hasQuickDiffProvider") |> to_bool_option,
-              count: features |> member("count") |> to_int_option,
-              commitTemplate:
-                features |> member("commitTemplate") |> to_string_option,
-              acceptInputCommand:
-                features |> member("acceptInputCommand") |> SCM.Decode.command,
-            }),
+      | "$updateSourceControl" =>
+        switch (args) {
+        | `List([`Int(handle), features]) =>
+          Yojson.Safe.Util.(
+            Ok(
+              UpdateSourceControl({
+                handle,
+                hasQuickDiffProvider:
+                  features |> member("hasQuickDiffProvider") |> to_bool_option,
+                count: features |> member("count") |> to_int_option,
+                commitTemplate:
+                  features |> member("commitTemplate") |> to_string_option,
+                acceptInputCommand:
+                  features
+                  |> member("acceptInputCommand")
+                  |> SCM.Decode.command,
+              }),
+            )
           )
+
+        | _ => Error("Unexpected arguments for $updateSourceControl")
+        }
+
+      | "$registerGroup" =>
+        switch (args) {
+        | `List([
+            `Int(provider),
+            `Int(handle),
+            `String(id),
+            `String(label),
+          ]) =>
+          Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
+
+        | _ => Error("Unexpected arguments for $registerGroup")
+        }
+
+      | "$updateGroup" =>
+        switch (args) {
+        | `List([`Int(provider), `Int(handle), featuresJson]) =>
+          let%bind features =
+            featuresJson |> Internal.decode_value(SCM.GroupFeatures.decode);
+          Ok(UpdateGroup({provider, handle, features}));
+        | _ => Error("Unexpected arguments for $updateGroup")
+        }
+
+      | "$updateGroupLabel" =>
+        switch (args) {
+        | `List([`Int(provider), `Int(handle), `String(label)]) =>
+          Ok(UpdateGroupLabel({provider, handle, label}))
+        | _ => Error("Unexpected arguments for $updateGroup")
+        }
+
+      | "$unregisterGroup" =>
+        switch (args) {
+        | `List([`Int(handle), `Int(provider)]) =>
+          Ok(UnregisterSCMResourceGroup({provider, handle}))
+
+        | _ => Error("Unexpected arguments for $unregisterGroup")
+        }
+
+      | "$setInputBoxPlaceholder" =>
+        switch (args) {
+        | `List([`Int(handle), `String(value)]) =>
+          Ok(SetInputBoxPlaceholder({handle, value}))
+
+        | _ => Error("Unexpected arguments for $setInputBoxPlaceholder")
+        }
+
+      | "$setInputBoxVisibility" =>
+        switch (args) {
+        | `List([`Int(handle), `Bool(visible)]) =>
+          Ok(SetInputBoxVisibility({handle, visible}))
+
+        | _ => Error("Unexpected arguments for $setInputBoxVisibility")
+        }
+
+      | "$setValidationProviderIsEnabled" =>
+        switch (args) {
+        | `List([`Int(handle), `Bool(enabled)]) =>
+          Ok(SetValidationProviderIsEnabled({handle, enabled}))
+
+        | _ =>
+          Error("Unexpected arguments for $setValidationProviderIsEnabled")
+        }
+
+      | "$spliceResourceStates" =>
+        switch (args) {
+        | `List([`Int(handle), splicesJson]) =>
+          let splicesResult =
+            Json.Decode.(
+              splicesJson
+              |> Json.Decode.decode_value(list(SCM.Resource.Decode.splices))
+            );
+
+          switch (splicesResult) {
+          | Ok(splices) => Ok(SpliceSCMResourceStates({handle, splices}))
+          | Error(err) => Error(Json.Decode.string_of_error(err))
+          };
+        | _ => Error("Unexpected arguments for $spliceResourceStates")
+        }
+      | _ =>
+        Error(
+          Printf.sprintf(
+            "Unhandled SCM message - %s: %s",
+            method,
+            Yojson.Safe.to_string(args),
+          ),
         )
-
-      | _ => Error("Unexpected arguments for $updateSourceControl")
       }
-
-    | "$registerGroup" =>
-      switch (args) {
-      | `List([`Int(provider), `Int(handle), `String(id), `String(label)]) =>
-        Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
-
-      | _ => Error("Unexpected arguments for $registerGroup")
-      }
-
-    | "$unregisterGroup" =>
-      switch (args) {
-      | `List([`Int(handle), `Int(provider)]) =>
-        Ok(UnregisterSCMResourceGroup({provider, handle}))
-
-      | _ => Error("Unexpected arguments for $unregisterGroup")
-      }
-
-    | "$spliceResourceStates" =>
-      switch (args) {
-      | `List([`Int(handle), splicesJson]) =>
-        let splicesResult =
-          Json.Decode.(
-            splicesJson
-            |> Json.Decode.decode_value(list(SCM.Resource.Decode.splices))
-          );
-
-        switch (splicesResult) {
-        | Ok(splices) => Ok(SpliceSCMResourceStates({handle, splices}))
-        | Error(err) => Error(Json.Decode.string_of_error(err))
-        };
-      | _ => Error("Unexpected arguments for $spliceResourceStates")
-      }
-    | _ =>
-      Error(
-        Printf.sprintf(
-          "Unhandled SCM message - %s: %s",
-          method,
-          Yojson.Safe.to_string(args),
-        ),
-      )
-    };
+    );
   };
 };
 
