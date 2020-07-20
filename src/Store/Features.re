@@ -127,27 +127,33 @@ let update =
             state,
             Internal.notificationEffect(~kind=Error, msg),
           )
-        | InstallSucceeded({ extensionId, contributions }) =>
-          let notificationEffect = Internal.notificationEffect(
-            ~kind=Info,
-          Printf.sprintf(
-            "Extension %s was installed successfully and will be activated on restart.",
-            extensionId,
-          ),
-          );
-          let themes: list(Exthost.Extension.Contributions.Theme.t) =
-            Exthost.Extension.Contributions.(
-              contributions.themes
+        | InstallSucceeded({extensionId, contributions}) =>
+          let notificationEffect =
+            Internal.notificationEffect(
+              ~kind=Info,
+              Printf.sprintf(
+                "Extension %s was installed successfully and will be activated on restart.",
+                extensionId,
+              ),
             );
-          let showThemePickerEffect = if(themes != []) {
-            Isolinear.Effect.createWithDispatch(
-              ~name="feature.extensions.showThemeAfterInstall", dispatch => {
-              dispatch(QuickmenuShow(ThemesPicker(themes)))
-            });
-          } else {
-            Isolinear.Effect.none
-          };
-          (state, Isolinear.Effect.batch([notificationEffect, showThemePickerEffect]));
+          let themes: list(Exthost.Extension.Contributions.Theme.t) =
+            Exthost.Extension.Contributions.(contributions.themes);
+          let showThemePickerEffect =
+            if (themes != []) {
+              Isolinear.Effect.createWithDispatch(
+                ~name="feature.extensions.showThemeAfterInstall", dispatch => {
+                dispatch(QuickmenuShow(ThemesPicker(themes)))
+              });
+            } else {
+              Isolinear.Effect.none;
+            };
+          (
+            state,
+            Isolinear.Effect.batch([
+              notificationEffect,
+              showThemePickerEffect,
+            ]),
+          );
         }
       );
     (state', effect);

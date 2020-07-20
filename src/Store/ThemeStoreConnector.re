@@ -79,7 +79,8 @@ let start = () => {
 
   let loadThemeByNameEffect = (~extensions, themeName) => {
     Log.infof(m => m("Loading theme by name: %s", themeName));
-    let themeInfo = Feature_Extensions.themeByName(~name=themeName, extensions);
+    let themeInfo =
+      Feature_Extensions.themeByName(~name=themeName, extensions);
 
     switch (themeInfo) {
     | Some({uiTheme, path, _}) => loadThemeByPathEffect(uiTheme, path)
@@ -118,7 +119,13 @@ let start = () => {
       switch (state.quickmenu) {
       | Some({variant: ThemesPicker(_), focused: Some(focused), items, _}) =>
         let focusedItem = items[focused];
-        (state, loadThemeByNameEffect(~extensions=state.extensions, focusedItem.name));
+        (
+          state,
+          loadThemeByNameEffect(
+            ~extensions=state.extensions,
+            focusedItem.name,
+          ),
+        );
       | _ => (state, Isolinear.Effect.none)
       }
 
@@ -135,7 +142,10 @@ let start = () => {
         ]),
       )
 
-    | ThemeChanged(name) => (state, loadThemeByNameEffect(~extensions=state.extensions, name))
+    | ThemeChanged(name) => (
+        state,
+        loadThemeByNameEffect(~extensions=state.extensions, name),
+      )
 
     | Actions.ThemeLoadError(errorMsg) => (
         state,
