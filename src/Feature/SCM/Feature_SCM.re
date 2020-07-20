@@ -34,29 +34,24 @@ module Provider = {
     acceptInputCommand: option(command),
     inputPlaceholder: string,
     inputVisible: bool,
-    validationProvider: bool,
+    validationEnabled: bool,
   };
 
-  let initial = (
-    ~handle,
-    ~id,
-    ~label,
-    ~rootUri
-  ) => {
-            handle,
-            id,
-            label,
-            rootUri,
-            resourceGroups: [],
-            hasQuickDiffProvider: false,
-            count: 0,
-            commitTemplate: "",
-            acceptInputCommand: None,
-            inputPlaceholder: "Press Enter to commit...",
-            inputVisible: true,
-            validationProvider: false,
-          }
+  let initial = (~handle, ~id, ~label, ~rootUri) => {
+    handle,
+    id,
+    label,
+    rootUri,
+    resourceGroups: [],
+    hasQuickDiffProvider: false,
+    count: 0,
+    commitTemplate: "",
+    acceptInputCommand: None,
+    inputPlaceholder: "Press Enter to commit...",
+    inputVisible: true,
+    validationEnabled: false,
   };
+};
 
 [@deriving show({with_path: false})]
 type model = {
@@ -101,6 +96,16 @@ type msg =
       id: string,
       label: string,
     })
+  | GroupHideWhenEmptyChanged({
+      provider: int,
+      handle: int,
+      hideWhenEmpty: bool,
+    })
+  | GroupLabelChanged({
+      provider: int,
+      handle: int,
+      label: string,
+    })
   | LostResourceGroup({
       provider: int,
       handle: int,
@@ -128,9 +133,18 @@ type msg =
       handle: int,
       command: Exthost.SCM.command,
     })
-  | InputBoxPlaceholderChanged({ handle: int, placeholder: string})
-  | InputBoxVisibilityChanged({ handle: int, visible: bool})
-  | ValidationProviderEnabledChanged({ handle: int, validationEnabled: bool})
+  | InputBoxPlaceholderChanged({
+      handle: int,
+      placeholder: string,
+    })
+  | InputBoxVisibilityChanged({
+      handle: int,
+      visible: bool,
+    })
+  | ValidationProviderEnabledChanged({
+      handle: int,
+      validationEnabled: bool,
+    })
   | KeyPressed({key: string})
   | Pasted({text: string})
   | InputBox(Feature_InputText.msg);
@@ -185,12 +199,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       {
         ...model,
         providers: [
-          Provider.initial(
-            ~handle,
-            ~id,
-            ~label,
-            ~rootUri,
-          ),
+          Provider.initial(~handle, ~id, ~label, ~rootUri),
           ...model.providers,
         ],
       },
@@ -214,6 +223,28 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       |> Internal.updateProvider(~handle, it =>
            {...it, hasQuickDiffProvider: available}
          ),
+      Nothing,
+    )
+
+  | InputBoxPlaceholderChanged({handle, placeholder}) => (
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, inputPlaceholder: placeholder}
+         ),
+      Nothing,
+    )
+
+  | InputBoxVisibilityChanged({handle, visible}) => (
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, inputVisible: visible}
+         ),
+      Nothing,
+    )
+
+  | ValidationProviderEnabledChanged({handle, validationEnabled}) => (
+      model
+      |> Internal.updateProvider(~handle, it => {...it, validationEnabled}),
       Nothing,
     )
 
@@ -269,6 +300,22 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
                  p.resourceGroups,
                ),
            }
+         ),
+      Nothing,
+    )
+
+  | GroupHideWhenEmptyChanged({provider, handle, hideWhenEmpty}) => (
+      model
+      |> Internal.updateResourceGroup(~provider, ~group=handle, group =>
+           {...group, hideWhenEmpty: true}
+         ),
+      Nothing,
+    )
+
+  | GroupLabelChanged({provider, handle, label}) => (
+      model
+      |> Internal.updateResourceGroup(~provider, ~group=handle, group =>
+           {...group, label}
          ),
       Nothing,
     )
@@ -374,6 +421,20 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
 
+  | UpdateGroup({provider, handle, features}) =>
+    Exthost.SCM.GroupFeatures.(
+      dispatch(
+        GroupHideWhenEmptyChanged({
+          provider,
+          handle,
+          hideWhenEmpty: features.hideWhenEmpty,
+        }),
+      )
+    )
+
+  | UpdateGroupLabel({provider, handle, label}) =>
+    dispatch(GroupLabelChanged({provider, handle, label}))
+
   | SpliceSCMResourceStates({handle, splices}) =>
     open Exthost.SCM;
 
@@ -416,13 +477,14 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       acceptInputCommand,
     );
   // TODO: Wire up new protocol
-  | SetInputBoxPlaceholder({ handle, value }) =>
-    dispatch(InputBoxPlaceholderChanged({ handle, placeholder: value}));
-  | SetInputBoxVisibility({ handle, visible }) =>
-    dispatch(InputBoxVisibilityChanged({ handle, visible }));
-  | SetValidationProviderIsEnabled({ handle, enabled }) =>
-    dispatch(ValidationProviderEnabledChanged({ handle, validationEnabled: enabled }));
-  | _ => ()
+  | SetInputBoxPlaceholder({handle, value}) =>
+    dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))
+  | SetInputBoxVisibility({handle, visible}) =>
+    dispatch(InputBoxVisibilityChanged({handle, visible}))
+  | SetValidationProviderIsEnabled({handle, enabled}) =>
+    dispatch(
+      ValidationProviderEnabledChanged({handle, validationEnabled: enabled}),
+    )
   };
 
 // VIEW
