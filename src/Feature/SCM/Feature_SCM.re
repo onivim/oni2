@@ -32,8 +32,31 @@ module Provider = {
     count: int,
     commitTemplate: string,
     acceptInputCommand: option(command),
+    inputPlaceholder: string,
+    inputVisible: bool,
+    validationProvider: bool,
   };
-};
+
+  let initial = (
+    ~handle,
+    ~id,
+    ~label,
+    ~rootUri
+  ) => {
+            handle,
+            id,
+            label,
+            rootUri,
+            resourceGroups: [],
+            hasQuickDiffProvider: false,
+            count: 0,
+            commitTemplate: "",
+            acceptInputCommand: None,
+            inputPlaceholder: "Press Enter to commit...",
+            inputVisible: true,
+            validationProvider: false,
+          }
+  };
 
 [@deriving show({with_path: false})]
 type model = {
@@ -105,6 +128,9 @@ type msg =
       handle: int,
       command: Exthost.SCM.command,
     })
+  | InputBoxPlaceholderChanged({ handle: int, placeholder: string})
+  | InputBoxVisibilityChanged({ handle: int, visible: bool})
+  | ValidationProviderEnabledChanged({ handle: int, validationEnabled: bool})
   | KeyPressed({key: string})
   | Pasted({text: string})
   | InputBox(Feature_InputText.msg);
@@ -159,17 +185,12 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       {
         ...model,
         providers: [
-          Provider.{
-            handle,
-            id,
-            label,
-            rootUri,
-            resourceGroups: [],
-            hasQuickDiffProvider: false,
-            count: 0,
-            commitTemplate: "",
-            acceptInputCommand: None,
-          },
+          Provider.initial(
+            ~handle,
+            ~id,
+            ~label,
+            ~rootUri,
+          ),
           ...model.providers,
         ],
       },
@@ -395,6 +416,12 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       acceptInputCommand,
     );
   // TODO: Wire up new protocol
+  | SetInputBoxPlaceholder({ handle, value }) =>
+    dispatch(InputBoxPlaceholderChanged({ handle, placeholder: value}));
+  | SetInputBoxVisibility({ handle, visible }) =>
+    dispatch(InputBoxVisibilityChanged({ handle, visible }));
+  | SetValidationProviderIsEnabled({ handle, enabled }) =>
+    dispatch(ValidationProviderEnabledChanged({ handle, validationEnabled: enabled }));
   | _ => ()
   };
 
