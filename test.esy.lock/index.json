@@ -1,5 +1,5 @@
 {
-  "checksum": "bcb436d2a8e6f5d3c7bc6c72b9577a9d",
+  "checksum": "832474c590d69e74e632e0f110e35579",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1049,6 +1049,7 @@
         "@opam/dir@github:bryphe/reason-native:dir.opam#fd0225@d41d8cd9",
         "@opam/decoders-yojson@opam:0.4.0@cb39dea6",
         "@opam/charInfo_width@opam:1.1.0@b400bb29",
+        "@opam/angstrom@opam:0.14.1@07e286b0",
         "@glennsl/timber@1.2.0@d41d8cd9"
       ],
       "devDependencies": [
