@@ -119,6 +119,40 @@ type outmsg =
   | Focus
   | Nothing;
 
+module Internal = {
+  let updateProvider = (~handle, f, model) => {
+    {
+      ...model,
+      providers:
+        List.map(
+          (it: Provider.t) => it.handle == handle ? f(it) : it,
+          model.providers,
+        ),
+    };
+  };
+
+  let updateResourceGroup = (~provider, ~group, f, model) => {
+    {
+      ...model,
+      providers:
+        List.map(
+          (p: Provider.t) =>
+            p.handle == provider
+              ? {
+                ...p,
+                resourceGroups:
+                  List.map(
+                    (g: ResourceGroup.t) => g.handle == group ? f(g) : g,
+                    p.resourceGroups,
+                  ),
+              }
+              : p,
+          model.providers,
+        ),
+    };
+  };
+};
+
 let update = (extHostClient: Exthost.Client.t, model, msg) =>
   switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
@@ -155,104 +189,66 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
 
   | QuickDiffProviderChanged({handle, available}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle
-                ? {...it, hasQuickDiffProvider: available} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, hasQuickDiffProvider: available}
+         ),
       Nothing,
     )
 
   | CountChanged({handle, count}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) => it.handle == handle ? {...it, count} : it,
-            model.providers,
-          ),
-      },
+      model |> Internal.updateProvider(~handle, it => {...it, count}),
       Nothing,
     )
 
   | CommitTemplateChanged({handle, template}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle ? {...it, commitTemplate: template} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, commitTemplate: template}
+         ),
       Nothing,
     )
 
   | AcceptInputCommandChanged({handle, command}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle
-                ? {...it, acceptInputCommand: Some(command)} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, acceptInputCommand: Some(command)}
+         ),
       Nothing,
     )
 
   | NewResourceGroup({provider, handle, id, label}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups: [
-                    ResourceGroup.{
-                      handle,
-                      id,
-                      label,
-                      hideWhenEmpty: false,
-                      resources: [],
-                    },
-                    ...p.resourceGroups,
-                  ],
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle=provider, p =>
+           {
+             ...p,
+             resourceGroups: [
+               ResourceGroup.{
+                 handle,
+                 id,
+                 label,
+                 hideWhenEmpty: false,
+                 resources: [],
+               },
+               ...p.resourceGroups,
+             ],
+           }
+         ),
       Nothing,
     )
 
   | LostResourceGroup({provider, handle}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups:
-                    List.filter(
-                      (g: ResourceGroup.t) => g.handle != handle,
-                      p.resourceGroups,
-                    ),
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle=provider, p =>
+           {
+             ...p,
+             resourceGroups:
+               List.filter(
+                 (g: ResourceGroup.t) => g.handle != handle,
+                 p.resourceGroups,
+               ),
+           }
+         ),
       Nothing,
     )
 
@@ -263,36 +259,19 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       deleteCount,
       additions,
     }) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups:
-                    List.map(
-                      (g: ResourceGroup.t) =>
-                        g.handle == group
-                          ? {
-                            ...g,
-                            resources:
-                              ListEx.splice(
-                                ~start=spliceStart,
-                                ~deleteCount,
-                                ~additions,
-                                g.resources,
-                              ),
-                          }
-                          : g,
-                      p.resourceGroups,
-                    ),
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateResourceGroup(~provider, ~group, g =>
+           {
+             ...g,
+             resources:
+               ListEx.splice(
+                 ~start=spliceStart,
+                 ~deleteCount,
+                 ~additions,
+                 g.resources,
+               ),
+           }
+         ),
       Nothing,
     )
 
