@@ -523,6 +523,11 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
+    | RegisterRenameSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        supportsResolveInitialValues: bool,
+      })
     | RegisterDocumentFormattingSupport({
         handle: int,
         selector: DocumentSelector.t,
@@ -731,6 +736,28 @@ module LanguageFeatures = {
       };
 
       ret |> Result.map_error(string_of_error);
+
+    | (
+        "$registerRenameSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          `Bool(supportsResolveInitialValues),
+        ]),
+      ) =>
+      open Json.Decode;
+      open Base.Result.Let_syntax;
+      let%bind selector =
+        selectorJson |> Internal.decode_value(list(DocumentFilter.decode));
+
+      Ok(
+        RegisterRenameSupport({
+          handle,
+          selector,
+          supportsResolveInitialValues,
+        }),
+      );
+
     | (
         "$registerDocumentFormattingSupport",
         `List([

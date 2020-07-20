@@ -1007,6 +1007,11 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
+      | RegisterRenameSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          supportsResolveInitialValues: bool,
+        })
       | RegisterDocumentFormattingSupport({
           handle: int,
           selector: DocumentSelector.t,
@@ -1412,6 +1417,25 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(Location.t));
+
+    let provideRenameEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~newName: string,
+        Client.t
+      ) =>
+      Lwt.t(option(WorkspaceEdit.t));
+
+    let resolveRenameLocation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(option(RenameLocation.t));
 
     let provideTypeDefinition:
       (

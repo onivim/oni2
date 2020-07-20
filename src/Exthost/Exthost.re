@@ -43,6 +43,7 @@ module SymbolKind = SymbolKind;
 module TextEditor = TextEditor;
 module ThemeColor = ThemeColor;
 module WorkspaceData = WorkspaceData;
+module WorkspaceEdit = WorkspaceEdit;
 
 module Client = Client;
 module Request = Request;
