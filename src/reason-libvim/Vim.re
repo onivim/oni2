@@ -22,7 +22,9 @@ module Mode = Mode;
 module Options = Options;
 module Search = Search;
 module Types = Types;
-module Undo = Undo;
+module Testing = {
+  module Undo = Undo;
+};
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
@@ -38,6 +40,10 @@ module GlobalState = {
     ) =
     ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
+
+  let overriddenMessageHandler:
+    ref(option((Types.msgPriority, string, string) => unit)) =
+    ref(None);
 };
 
 module Internal = {
@@ -286,7 +292,11 @@ let _onIntro = () => {
 };
 
 let _onMessage = (priority, title, message) => {
-  queue(() => Event.dispatch3(priority, title, message, Listeners.message));
+  switch (GlobalState.overriddenMessageHandler^) {
+  | None =>
+    queue(() => Event.dispatch3(priority, title, message, Listeners.message))
+  | Some(handler) => handler(priority, title, message)
+  };
 };
 
 let _onQuit = (q, f) => {
@@ -562,6 +572,10 @@ let input = (~context=Context.current(), v: string) => {
   );
 };
 
+module Registers = {
+  let get = (~register) => Native.vimRegisterGet(int_of_char(register));
+};
+
 let command = v => {
   runWith(
     ~context=Context.current(),
@@ -571,6 +585,28 @@ let command = v => {
     },
   );
 };
+
+let eval = v =>
+  // Error messages come through the message handler,
+  // so we'll temporarily override it during the course of the eval
+  if (v == "") {
+    Ok("");
+  } else {
+    let lastMessage = ref(None);
+
+    GlobalState.overriddenMessageHandler :=
+      Some((_priority, _title, msg) => {lastMessage := Some(msg)});
+
+    let maybeEval = Native.vimEval(v);
+
+    GlobalState.overriddenMessageHandler := None;
+
+    switch (maybeEval, lastMessage^) {
+    | (Some(eval), _) => Ok(eval)
+    | (None, Some(msg)) => Error(msg)
+    | (None, None) => Error("Unknown error evaluating " ++ v)
+    };
+  };
 
 let onDirectoryChanged = f => {
   Event.add(f, Listeners.directoryChanged);

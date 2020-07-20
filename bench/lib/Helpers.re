@@ -23,6 +23,7 @@ let simpleState = {
       ~getUserSettings=() => Ok(Config.Settings.empty),
       ~contributedCommands=[],
       ~workingDirectory=Sys.getcwd(),
+      ~extensionsFolder=None,
     );
 
   Reducer.reduce(
@@ -32,13 +33,13 @@ let simpleState = {
 };
 
 let defaultFont: Service_Font.font = {
-  fontFile: "JetBrainsMono-Regular.ttf",
   fontFamily: Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf"),
   fontSize: 10.,
   measuredWidth: 10.,
   measuredHeight: 10.,
   descenderHeight: 1.,
   smoothing: Revery.Font.Smoothing.default,
+  features: [],
 };
 
 let simpleState =

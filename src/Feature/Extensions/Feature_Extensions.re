@@ -1,51 +1,7 @@
 open Oni_Core;
 open Exthost.Extension;
 
-[@deriving show({with_path: false})]
-type msg =
-  | Activated(string /* id */)
-  | Discovered([@opaque] list(Scanner.ScanResult.t))
-  | ExecuteCommand({
-      command: string,
-      arguments: [@opaque] list(Json.t),
-    });
-
-type outmsg =
-  | Nothing
-  | Effect(Isolinear.Effect.t(msg));
-
 include Model;
-
-let empty = {activatedIds: [], extensions: []};
-
-module Internal = {
-  let markActivated = (id: string, model) => {
-    ...model,
-    activatedIds: [id, ...model.activatedIds],
-  };
-
-  let add = (extensions, model) => {
-    ...model,
-    extensions: extensions @ model.extensions,
-  };
-};
-
-let update = (~extHostClient, msg, model) => {
-  switch (msg) {
-  | Activated(id) => (Internal.markActivated(id, model), Nothing)
-  | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
-  | ExecuteCommand({command, arguments}) => (
-      model,
-      Effect(
-        Service_Exthost.Effects.Commands.executeContributedCommand(
-          ~command,
-          ~arguments,
-          extHostClient,
-        ),
-      ),
-    )
-  };
-};
 
 let all = ({extensions, _}) => extensions;
 let activatedIds = ({activatedIds, _}) => activatedIds;
@@ -92,3 +48,17 @@ let menus = model =>
   |> List.of_seq;
 
 module ListView = ListView;
+
+let sub = (~setup, model) => {
+  let toMsg =
+    fun
+    | Ok(query) => SearchQueryResults(query)
+    | Error(err) => SearchQueryError(err);
+
+  switch (model.latestQuery) {
+  | Some(query) when !Service_Extensions.Query.isComplete(query) =>
+    Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
+  | Some(_)
+  | None => Isolinear.Sub.none
+  };
+};

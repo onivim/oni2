@@ -1,8 +1,6 @@
 open Oni_Core;
 open Utility;
-
-module InputModel = Oni_Components.InputModel;
-module Selection = Oni_Components.Selection;
+open Oni_Components;
 
 // MODEL
 
@@ -40,22 +38,12 @@ module Provider = {
 [@deriving show({with_path: false})]
 type model = {
   providers: list(Provider.t),
-  inputBox,
-}
-
-and inputBox = {
-  value: string,
-  selection: Selection.t,
-  placeholder: string,
+  inputBox: Feature_InputText.model,
 };
 
 let initial = {
   providers: [],
-  inputBox: {
-    value: "",
-    selection: Selection.initial,
-    placeholder: "Do the commit thing!",
-  },
+  inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
 };
 
 // EFFECTS
@@ -118,9 +106,11 @@ type msg =
       command: Exthost.SCM.command,
     })
   | KeyPressed({key: string})
-  | InputBoxClicked({selection: Selection.t});
+  | Pasted({text: string})
+  | InputBox(Feature_InputText.msg);
 
 module Msg = {
+  let paste = text => Pasted({text: text});
   let keyPressed = key => KeyPressed({key: key});
 };
 
@@ -329,29 +319,16 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
 
   | KeyPressed({key}) =>
-    let (value, selection) =
-      InputModel.handleInput(
-        ~text=model.inputBox.value,
-        ~selection=model.inputBox.selection,
-        key,
-      );
-
+    let inputBox = Feature_InputText.handleInput(~key, model.inputBox);
     (
-      {
-        ...model,
-        inputBox: {
-          ...model.inputBox,
-          value,
-          selection,
-        },
-      },
+      {...model, inputBox},
       Effect(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
                Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
-                 ~value,
+                 ~value=inputBox |> Feature_InputText.value,
                  extHostClient,
                )
              ),
@@ -359,14 +336,26 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       ),
     );
 
-  | InputBoxClicked({selection}) => (
-      {
-        ...model,
-        inputBox: {
-          ...model.inputBox,
-          selection,
-        },
-      },
+  | Pasted({text}) =>
+    let inputBox = Feature_InputText.paste(~text, model.inputBox);
+    (
+      {...model, inputBox},
+      Effect(
+        Isolinear.Effect.batch(
+          model.providers
+          |> List.map((provider: Provider.t) =>
+               Service_Exthost.Effects.SCM.onInputBoxValueChange(
+                 ~handle=provider.handle,
+                 ~value=inputBox |> Feature_InputText.value,
+                 extHostClient,
+               )
+             ),
+        ),
+      ),
+    );
+
+  | InputBox(msg) => (
+      {...model, inputBox: Feature_InputText.update(msg, model.inputBox)},
       Focus,
     )
   };
@@ -434,15 +423,13 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-module Input = Oni_Components.Input;
-
 module Colors = Feature_Theme.Colors;
 
 module Pane = {
   module Styles = {
     open Style;
 
-    let container = [padding(10), flexGrow(1)];
+    let container = [flexGrow(1)];
 
     let text = (~theme) => [
       color(Colors.SideBar.foreground.from(theme)),
@@ -450,25 +437,14 @@ module Pane = {
       textOverflow(`Ellipsis),
     ];
 
-    let input = [flexGrow(1)];
-
-    let group = [];
-
-    let groupLabel = [paddingVertical(3)];
-
-    let groupLabelText = (~theme) => [
-      color(Colors.SideBar.foreground.from(theme)),
-      textWrap(TextWrapping.NoWrap),
-      textOverflow(`Ellipsis),
-    ];
-
-    let groupItems = [marginLeft(6)];
+    let input = [flexGrow(1), margin(12)];
 
     let item = (~isHovered, ~theme) => [
       isHovered
         ? backgroundColor(Colors.List.hoverBackground.from(theme))
         : backgroundColor(Colors.SideBar.background.from(theme)),
       paddingVertical(2),
+      marginLeft(6),
       cursor(MouseCursors.pointer),
     ];
   };
@@ -516,49 +492,47 @@ module Pane = {
         ~font: UiFont.t,
         ~workingDirectory,
         ~onItemClick,
+        ~onTitleClick,
+        ~expanded,
         (),
       ) => {
-    let label = String.uppercase_ascii(group.label);
-    <View style=Styles.group>
-      <View style=Styles.groupLabel>
-        <Text
-          style={Styles.groupLabelText(~theme)}
-          text=label
-          fontFamily={font.family}
-          fontWeight=Bold
-          fontSize={font.size *. 0.85}
-        />
-      </View>
-      <View style=Styles.groupItems>
-        ...{
-             group.resources
-             |> List.map(resource =>
-                  <itemView
-                    provider
-                    resource
-                    theme
-                    font
-                    workingDirectory
-                    onClick={() => onItemClick(resource)}
-                  />
-                )
-             |> React.listToElement
-           }
-      </View>
-    </View>;
+    let label = group.label;
+    let items = Array.of_list(group.resources);
+    let renderItem = (items, idx) => {
+      let resource = items[idx];
+      <itemView
+        provider
+        resource
+        theme
+        font
+        workingDirectory
+        onClick={() => onItemClick(resource)}
+      />;
+    };
+    <Accordion
+      title=label
+      expanded
+      uiFont=font
+      rowHeight=20
+      count={Array.length(items)}
+      renderItem={renderItem(items)}
+      focused=None
+      theme
+      onClick=onTitleClick
+    />;
   };
 
-  let make =
-      (
-        ~model,
-        ~workingDirectory,
-        ~onItemClick,
-        ~isFocused,
-        ~theme,
-        ~font: UiFont.t,
-        ~dispatch,
-        (),
-      ) => {
+  let%component make =
+                (
+                  ~model,
+                  ~workingDirectory,
+                  ~onItemClick,
+                  ~isFocused,
+                  ~theme,
+                  ~font: UiFont.t,
+                  ~dispatch,
+                  (),
+                ) => {
     let groups = {
       open Base.List.Let_syntax;
 
@@ -568,32 +542,46 @@ module Pane = {
       return((provider, group));
     };
 
-    <ScrollView style=Styles.container>
-      <Input
+    let%hook (localState, localDispatch) =
+      Hooks.reducer(~initialState=StringMap.empty, (msg, model) => {
+        StringMap.update(
+          msg,
+          fun
+          | None => Some(false)
+          | Some(false) => Some(true)
+          | Some(true) => Some(false),
+          model,
+        )
+      });
+
+    <View style=Styles.container>
+      <Feature_InputText.View
         style=Styles.input
-        value={model.inputBox.value}
-        selection={model.inputBox.selection}
-        placeholder={model.inputBox.placeholder}
+        model={model.inputBox}
         isFocused
         fontFamily={font.family}
         fontSize={font.size}
-        onClick={selection =>
-          dispatch(InputBoxClicked({selection: selection}))
-        }
+        dispatch={msg => dispatch(InputBox(msg))}
         theme
       />
       {groups
-       |> List.map(((provider, group)) =>
+       |> List.map(((provider, group: ResourceGroup.t)) => {
+            let expanded =
+              StringMap.find_opt(group.label, localState)
+              |> Option.value(~default=true);
+
             <groupView
               provider
+              expanded
               group
               theme
               font
               workingDirectory
               onItemClick
-            />
-          )
+              onTitleClick={() => localDispatch(group.label)}
+            />;
+          })
        |> React.listToElement}
-    </ScrollView>;
+    </View>;
   };
 };

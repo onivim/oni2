@@ -10,13 +10,42 @@ type msg =
   | ExecuteCommand({
       command: string,
       arguments: [@opaque] list(Json.t),
+    })
+  | KeyPressed(string)
+  | Pasted(string)
+  | SearchQueryResults(Service_Extensions.Query.t)
+  | SearchQueryError(string)
+  | SearchText(Feature_InputText.msg)
+  | UninstallExtensionClicked({extensionId: string})
+  | UninstallExtensionSuccess({extensionId: string})
+  | UninstallExtensionFailed({
+      extensionId: string,
+      errorMsg: string,
+    })
+  | InstallExtensionClicked({extensionId: string})
+  | InstallExtensionSuccess({
+      extensionId: string,
+      scanResult: [@opaque] Scanner.ScanResult.t,
+    })
+  | InstallExtensionFailed({
+      extensionId: string,
+      errorMsg: string,
     });
 
 type outmsg =
   | Nothing
-  | Effect(Isolinear.Effect.t(msg));
+  | Focus
+  | Effect(Isolinear.Effect.t(msg))
+  | NotifySuccess(string)
+  | NotifyFailure(string);
 
-let empty: model;
+let initial: (~extensionsFolder: option(string)) => model;
+
+let isBusy: model => bool;
+let isSearchInProgress: model => bool;
+
+let isInstalling: (~extensionId: string, model) => bool;
+let isUninstalling: (~extensionId: string, model) => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 
@@ -26,8 +55,18 @@ let activatedIds: model => list(string);
 let menus: model => list(Menu.Schema.definition);
 let commands: model => list(Command.t(msg));
 
+let sub: (~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
+
 module ListView: {
   let make:
-    (~model: model, ~theme: ColorTheme.Colors.t, ~font: UiFont.t, unit) =>
+    (
+      ~key: Brisk_reconciler.Key.t=?,
+      ~model: model,
+      ~theme: ColorTheme.Colors.t,
+      ~font: UiFont.t,
+      ~isFocused: bool,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
     Revery.UI.element;
 };

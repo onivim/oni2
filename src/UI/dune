@@ -5,7 +5,6 @@
     (libraries 
         str
         bigarray
-        zed_oni
         luv
         lwt
         lwt.unix
@@ -16,6 +15,7 @@
         Oni2.feature.notification
         Oni2.feature.search
         Oni2.feature.editor
+        Oni2.feature.sideBar
         Oni2.feature.scm
         Oni2.feature.modals
         Oni2.feature.layout
@@ -25,6 +25,7 @@
         Oni2.feature.titlebar
         Rench
         Revery
+        Revery.zed
         revery-terminal.lib
         editor-core-types
         ppx_deriving.runtime

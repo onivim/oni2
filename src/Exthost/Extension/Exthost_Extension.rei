@@ -35,6 +35,11 @@ module LocalizedToken: {
 };
 
 module Contributions: {
+  module Breakpoint: {
+    [@deriving show]
+    type t;
+  };
+
   [@deriving show]
   module Command: {
     type t = {
@@ -43,6 +48,11 @@ module Contributions: {
       category: option(string),
       condition: WhenExpr.t,
     };
+  };
+
+  module Debugger: {
+    [@deriving show]
+    type t;
   };
 
   module Menu: {
@@ -58,6 +68,8 @@ module Contributions: {
         | Boolean
         | String
         | Integer
+        | Number
+        | Object
         | Unknown;
     };
 
@@ -111,7 +123,9 @@ module Contributions: {
 
   [@deriving show]
   type t = {
+    breakpoints: list(Breakpoint.t),
     commands: list(Command.t),
+    debuggers: list(Debugger.t),
     menus: list(Menu.t),
     languages: list(Language.t),
     grammars: list(Grammar.t),
@@ -124,6 +138,12 @@ module Contributions: {
 };
 
 module Manifest: {
+  module Kind: {
+    [@deriving show]
+    type t =
+      | Ui
+      | Workspace;
+  };
   [@deriving show]
   type t = {
     name: string,
@@ -140,20 +160,15 @@ module Manifest: {
     activationEvents: list(string),
     extensionDependencies: list(string),
     extensionPack: list(string),
-    extensionKind: kind,
+    extensionKind: list(Kind.t),
     contributes: Contributions.t,
     enableProposedApi: bool,
-  }
-
-  and kind =
-    | Ui
-    | Workspace;
+  };
 
   let decode: Oni_Core.Json.decoder(t);
 
+  let identifier: t => string;
   let getDisplayName: t => string;
-
-  module Encode: {let kind: Oni_Core.Json.encoder(kind);};
 };
 
 module Scanner: {
@@ -176,18 +191,28 @@ module Scanner: {
 };
 
 module InitData: {
+  module Identifier: {
+    type t;
+
+    let fromString: string => t;
+  };
+
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
     type t = {
-      identifier: string,
+      identifier: Identifier.t,
       extensionLocation: Oni_Core.Uri.t,
       name: string,
+      displayName: option(string),
+      description: option(string),
       main: option(string),
+      icon: option(string),
       version: string,
       engines: string,
       activationEvents: list(string),
       extensionDependencies: list(string),
-      extensionKind: string,
+      extensionKind: list(string),
+      contributes: Contributions.t,
       enableProposedApi: bool,
     };
 
@@ -200,21 +225,21 @@ module InitData: {
       isExtensionDevelopmentDebug: bool,
       appName: string,
       appLanguage: string,
+      appRoot: Oni_Core.Uri.t,
+      globalStorageHome: option(Oni_Core.Uri.t),
+      userHome: option(Oni_Core.Uri.t),
       // TODO
       /*
-       appRoot: option(Types.Uri.t),
        appLanguage: string,
        appUriScheme: string,
        appSettingsHome: option(Uri.t),
-       globalStorageHome: Uri.t,
-       userHome: Uri.t,
        webviewResourceRoot: string,
        webviewCspSource: string,
        useHostProxy: boolean,
        */
     };
 
-    let default: t;
+    let default: unit => t;
   };
 
   module Remote: {
@@ -232,9 +257,10 @@ module InitData: {
   module TelemetryInfo: {
     [@deriving (show, yojson({strict: false}))]
     type t = {
-      sessionId: int,
-      machineId: int,
-      instanceId: int,
+      sessionId: string,
+      machineId: string,
+      instanceId: string,
+      msftInternal: bool,
     };
 
     let default: t;

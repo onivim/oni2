@@ -128,12 +128,15 @@ let findNonWhitespace = str => {
   loop(0);
 };
 
-let isOnlyWhitespace = str => {
-  switch (findNonWhitespace(str)) {
-  | None => true
-  | Some(_) => false
+let isEmpty = str =>
+  if (String.equal(str, "")) {
+    true;
+  } else {
+    switch (findNonWhitespace(str)) {
+    | None => true
+    | Some(_) => false
+    };
   };
-};
 
 let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
   let originalLength = String.length(text);
@@ -266,3 +269,13 @@ let removeTrailingNewLine = s => {
     s;
   };
 };
+
+let splitLines: string => (bool, array(string)) =
+  text => {
+    let isMultipleLines = s => String.contains(s, '\n');
+
+    let out =
+      text |> removeTrailingNewLine |> removeWindowsNewLines |> splitNewLines;
+
+    (isMultipleLines(text), out);
+  };

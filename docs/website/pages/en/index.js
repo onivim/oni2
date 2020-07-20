@@ -20,6 +20,7 @@ class HomeSplash extends React.Component {
     const docsPart = `${docsUrl ? `${docsUrl}/` : ''}`;
     const langPart = `${language ? `${language}/` : ''}`;
     const docUrl = doc => `${baseUrl}${docsPart}${langPart}${doc}`;
+    const pageUrl = page => page;
 
     const SplashContainer = props => (
       <div className="homeContainer" style={{color: "white"}}>
@@ -73,7 +74,7 @@ class HomeSplash extends React.Component {
           <PromoSection>
             <Button href="https://v2.onivim.io/early-access-portal">Early Access</Button>
             <Button href={docUrl('getting-started/why-onivim.html')}>Docs</Button>
-            <Button href={docUrl('doc2.html')}>Tips & Tricks</Button>
+            <Button href={pageUrl('tips-and-tricks')}>Tips & Tricks</Button>
           </PromoSection>
         </div>
       </SplashContainer>

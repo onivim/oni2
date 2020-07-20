@@ -4,13 +4,13 @@
     (libraries 
         str
         bigarray
-        zed_oni
+        Revery.zed
         lwt
         lwt.unix
         yojson
         ppx_deriving.runtime
         Oni2.core
-        Oni2.extensions
+        Oni2.exthost
         Rench
         Revery
         textmate

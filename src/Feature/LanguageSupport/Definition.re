@@ -7,8 +7,6 @@ open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 
-module Ext = Oni_Extensions;
-
 type definition = {
   bufferId: int,
   // The position the hover was requested

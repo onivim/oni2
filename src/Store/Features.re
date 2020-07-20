@@ -4,8 +4,6 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Actions;
 
-module Ext = Oni_Extensions;
-
 module Internal = {
   let notificationEffect = (~kind, message) => {
     Feature_Notification.Effects.create(~kind, message)
@@ -16,10 +14,7 @@ module Internal = {
     buffer
     |> Oni_Core.Buffer.getFileType
     |> Utility.OptionEx.flatMap(fileType =>
-         Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-           languageInfo,
-           fileType,
-         )
+         Exthost.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
        )
     |> Option.value(~default="source.plaintext");
   };
@@ -96,15 +91,44 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | Clipboard(msg) =>
+    let (model, outmsg) = Feature_Clipboard.update(msg, state.clipboard);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Clipboard(msg))
+      | Pasted({rawText, isMultiLine, lines}) =>
+        Isolinear.Effect.createWithDispatch(~name="Clipboard.Pasted", dispatch => {
+          dispatch(Actions.Pasted({rawText, isMultiLine, lines}))
+        })
+      };
+
+    ({...state, clipboard: model}, eff);
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
-    let state' = {...state, extensions: model};
-    let effect =
+    let state = {...state, extensions: model};
+    let (state', effect) =
       switch (outMsg) {
-      | Feature_Extensions.Nothing => Effect.none
-      | Feature_Extensions.Effect(eff) =>
-        eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg))
+      | Feature_Extensions.Nothing => (state, Effect.none)
+      | Feature_Extensions.Effect(eff) => (
+          state,
+          eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
+        )
+      | Feature_Extensions.Focus => (
+          FocusManager.push(Focus.Extensions, state),
+          Effect.none,
+        )
+      | Feature_Extensions.NotifySuccess(msg) => (
+          state,
+          Internal.notificationEffect(~kind=Info, msg),
+        )
+      | Feature_Extensions.NotifyFailure(msg) => (
+          state,
+          Internal.notificationEffect(~kind=Error, msg),
+        )
       };
     (state', effect);
   | Formatting(msg) =>
@@ -118,7 +142,7 @@ let update =
       maybeBuffer
       |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
       |> OptionEx.flatMap(
-           Ext.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+           Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
          )
       |> Option.value(~default=LanguageConfiguration.default);
 
@@ -146,6 +170,45 @@ let update =
       };
     (state', effect);
 
+  | Pane(msg) =>
+    let (model, outmsg) = Feature_Pane.update(msg, state.pane);
+
+    let state = {...state, pane: model};
+
+    let state =
+      switch (outmsg) {
+      | Nothing => state
+      | PopFocus(_pane) => FocusManager.pop(Focus.Search, state)
+      };
+    (state, Effect.none);
+
+  | Registers(msg) =>
+    let (model, outmsg) = Feature_Registers.update(msg, state.registers);
+
+    let state = {...state, registers: model};
+    let eff =
+      switch (outmsg) {
+      | Feature_Registers.EmitRegister({raw, lines, _}) =>
+        Isolinear.Effect.createWithDispatch(~name="register.paste", dispatch => {
+          dispatch(
+            Pasted({
+              rawText: raw,
+              isMultiLine: String.contains(raw, '\n'),
+              lines,
+            }),
+          )
+        })
+      | Feature_Registers.FailedToGetRegister(c) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          Printf.sprintf("No value at register %c", c),
+        )
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Registers(msg))
+      | Nothing => Isolinear.Effect.none
+      };
+    (state, eff);
+
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
@@ -172,6 +235,9 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | SideBar(msg) =>
+    let sideBar' = Feature_SideBar.update(msg, state.sideBar);
+    ({...state, sideBar: sideBar'}, Effect.none);
   | Sneak(msg) =>
     let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
 
@@ -355,12 +421,13 @@ let update =
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
     | Focus(Left) => (
-        state.sideBar.isOpen ? SideBarReducer.focus(state) : state,
+        Feature_SideBar.isOpen(state.sideBar)
+          ? SideBarReducer.focus(state) : state,
         Effect.none,
       )
 
     | Focus(Bottom) => (
-        state.pane.isOpen ? PaneStore.focus(state) : state,
+        Feature_Pane.isOpen(state.pane) ? PaneStore.focus(state) : state,
         Effect.none,
       )
 
@@ -559,10 +626,32 @@ let update =
     let effect = [shEffect] |> Effect.batch;
     ({...state, signatureHelp}, effect);
 
-  | Vim(msg) => (
-      {...state, vim: Feature_Vim.update(msg, state.vim)},
-      Effect.none,
-    )
+  | Vim(msg) =>
+    let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
+    let state = {...state, vim};
+
+    let (state', eff) =
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | Effect(e) => (state, e)
+      | CursorsUpdated(cursors) =>
+        open Feature_Editor;
+        let activeEditorId =
+          state.layout |> Feature_Layout.activeEditor |> Editor.getId;
+
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               if (Editor.getId(editor) == activeEditorId) {
+                 Editor.setVimCursors(~cursors, editor);
+               } else {
+                 editor;
+               }
+             );
+        ({...state, layout: layout'}, Isolinear.Effect.none);
+      };
+
+    (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
   | _ => (state, Effect.none)
   };

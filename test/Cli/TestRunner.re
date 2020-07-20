@@ -78,6 +78,16 @@ let validateOutputContains = (query, {output, _} as context) => {
   context;
 };
 
+let validateOutputDoesNotContain = (query, {output, _} as context) => {
+  if (StringEx.contains(query, output)) {
+    prerr_endline("Expected output to not contain: " ++ query);
+    prerr_endline("But received: " ++ output);
+    failwith("Output incorrect");
+  };
+
+  context;
+};
+
 let validateExitStatus = (exitStatus, {status, _} as context) => {
   if (exitStatus != status) {
     prerr_endline(

@@ -18,6 +18,24 @@ type t = {
 let noopHandler = _ => Lwt.return(Reply.okEmpty);
 let noopErrorHandler = _ => ();
 
+let getExtensionManifest =
+    (
+      ~rootPath=Rench.Path.join(Sys.getcwd(), "test/collateral/extensions"),
+      name,
+    ) => {
+  name
+  |> Rench.Path.join(rootPath)
+  |> (
+    p =>
+      Rench.Path.join(p, "package.json")
+      |> Scanner.load(~category=Scanner.Bundled)
+      |> Option.map(({manifest, path, _}: Extension.Scanner.ScanResult.t) => {
+           InitData.Extension.ofManifestAndPath(manifest, path)
+         })
+      |> Option.get
+  );
+};
+
 let startWithExtensions =
     (
       ~rootPath=Rench.Path.join(Sys.getcwd(), "test/collateral/extensions"),
@@ -149,6 +167,10 @@ let waitForReady = context => {
   waitForMessage(~name="Ready", msg => msg == Ready, context);
 };
 
+let waitForInitialized = context => {
+  waitForMessage(~name="Initialized", msg => msg == Initialized, context);
+};
+
 let waitForExtensionActivation = (expectedExtensionId, context) => {
   let waitForActivation =
     fun
@@ -189,6 +211,15 @@ let withClientRequest = (~name, ~validate, f, context) => {
   );
 
   context;
+};
+
+let activate = (~extensionId, ~reason, context) => {
+  context
+  |> withClientRequest(
+       ~name="Activating extension: " ++ extensionId,
+       ~validate=v => v,
+       Exthost.Request.ExtensionService.activate(~extensionId, ~reason),
+     );
 };
 
 let validateNoPendingRequests = context => {

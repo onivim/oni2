@@ -1,32 +1,49 @@
 open Oni_Core;
 
+module Identifier = {
+  [@deriving (show, yojson({strict: false}))]
+  type t = {
+    value: string,
+    _lower: string,
+  };
+
+  let fromString = str => {value: str, _lower: String.lowercase_ascii(str)};
+};
+
 module Extension = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
-    identifier: string,
+    identifier: Identifier.t,
     extensionLocation: Uri.t,
     name: string,
+    displayName: option(string),
+    description: option(string),
     main: option(string),
+    icon: option(string),
     version: string,
     engines: string,
     activationEvents: list(string),
     extensionDependencies: list(string),
-    extensionKind: string,
+    extensionKind: list(string),
+    contributes: Contributions.t,
     enableProposedApi: bool,
   };
 
   let ofManifestAndPath = (manifest: Manifest.t, path: string) => {
-    identifier: Manifest.identifier(manifest),
+    identifier: manifest |> Manifest.identifier |> Identifier.fromString,
     extensionLocation: path |> Uri.fromPath,
+    displayName: manifest |> Manifest.displayName,
+    description: manifest.description,
+    icon: manifest.icon,
     name: manifest.name,
     main: manifest.main,
     version: manifest.version,
     engines: manifest.engines,
     activationEvents: manifest.activationEvents,
     extensionDependencies: manifest.extensionDependencies,
-    // TODO: Convert correctly
-    extensionKind: "ui",
+    extensionKind: manifest.extensionKind |> List.map(Manifest.Kind.toString),
     enableProposedApi: manifest.enableProposedApi,
+    contributes: manifest.contributes,
   };
 };
 
@@ -36,24 +53,33 @@ module Environment = {
     isExtensionDevelopmentDebug: bool,
     appName: string,
     appLanguage: string,
+    appRoot: Uri.t,
+    globalStorageHome: option(Uri.t),
+    userHome: option(Uri.t),
     // TODO
     /*
-     appRoot: option(Uri.t),
      appUriScheme: string,
      appSettingsHome: option(Uri.t),
-     globalStorageHome: Uri.t,
-     userHome: Uri.t,
      webviewResourceRoot: string,
      webviewCspSource: string,
      useHostProxy: boolean,
      */
   };
 
-  let default = {
+  let default = () => {
     isExtensionDevelopmentDebug: false,
-    appName: "reason-vscode-exthost",
+    appName: "Onivim 2",
     // TODO - INTL: Get proper user language
     appLanguage: "en-US",
+    appRoot: Revery.Environment.getExecutingDirectory() |> Uri.fromPath,
+    globalStorageHome:
+      Oni_Core.Filesystem.getGlobalStorageFolder()
+      |> Result.to_option
+      |> Option.map(Uri.fromPath),
+    userHome:
+      Oni_Core.Filesystem.getUserDataDirectory()
+      |> Result.to_option
+      |> Option.map(Uri.fromPath),
   };
 };
 
@@ -73,12 +99,18 @@ module Remote = {
 module TelemetryInfo = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
-    sessionId: int,
-    machineId: int,
-    instanceId: int,
+    sessionId: string,
+    machineId: string,
+    instanceId: string,
+    msftInternal: bool,
   };
 
-  let default = {sessionId: 0, machineId: 0, instanceId: 0};
+  let default = {
+    sessionId: "Anonymous",
+    machineId: "Anonymous",
+    instanceId: "Anonymous",
+    msftInternal: false,
+  };
 };
 
 [@deriving (show, yojson({strict: false}))]
@@ -103,23 +135,30 @@ let create =
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      ~environment=Environment.default,
+      ~environment=?,
       ~logLevel=0,
       ~autoStart=true,
       ~remote=Remote.default,
       ~telemetryInfo=TelemetryInfo.default,
       extensions,
     ) => {
-  version,
-  parentPid,
-  logLevel,
-  extensions,
-  resolvedExtensions: [],
-  hostExtensions: [],
-  environment,
-  logsLocation,
-  logFile,
-  autoStart,
-  remote,
-  telemetryInfo,
+  let environment =
+    switch (environment) {
+    | None => Environment.default()
+    | Some(env) => env
+    };
+  {
+    version,
+    parentPid,
+    logLevel,
+    extensions,
+    resolvedExtensions: [],
+    hostExtensions: [],
+    environment,
+    logsLocation,
+    logFile,
+    autoStart,
+    remote,
+    telemetryInfo,
+  };
 };

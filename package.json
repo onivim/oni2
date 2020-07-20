@@ -208,12 +208,14 @@
     "@opam/decoders-yojson": "^0.4.0",
     "@opam/dir": "*",
     "@opam/dune": "2.5.0",
-    "@opam/dune-configurator": "*",
+    "@opam/dune-configurator": "2.5.1",
+    "@opam/dune-private-libs": "2.5.1",
     "@opam/fmt": "^0.8.8",
     "@opam/fp": "*",
     "@opam/fs": "*",
     "@opam/logs": "^0.7.0",
-    "@opam/luv": "~0.5.1",
+    "@opam/lru": "bryphe/lru:lru.opam#2708c70",
+    "@opam/luv": "bryphe/luv:luv.opam#207d3f6",
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
@@ -236,7 +238,7 @@
     "esy-sdl2": "*",
     "esy-skia": "*",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.51",
+    "libvim": "8.10869.53",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reason-tree-sitter": "^1.0.1001",
@@ -248,20 +250,20 @@
   },
   "resolutions": {
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#464c5b7",
+    "revery": "revery-ui/revery#96c68b4",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
-    "esy-skia": "revery-ui/esy-skia#d60e5fe",
+    "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "editor-input": "onivim/editor-input#c494950",
     "isolinear": "revery-ui/isolinear#8cad3b0",
-    "revery-terminal": "revery-ui/revery-terminal#0e54d56",
+    "revery-terminal": "revery-ui/revery-terminal#3cb342f",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225"
   },
   "devDependencies": {
-    "ocaml": "~4.9",
+    "ocaml": "~4.10",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",
@@ -269,6 +271,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#efedf8d6a"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5"
   }
 }

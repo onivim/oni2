@@ -1,7 +1,5 @@
 open Oni_Core;
-open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open Oni_Components;
 
 open Exthost.Extension;
@@ -9,106 +7,211 @@ open Exthost.Extension;
 module Colors = Feature_Theme.Colors;
 
 module Styles = {
-  let text = (~theme) =>
-    Style.[
-      color(Colors.SideBar.foreground.from(theme)),
-      marginLeft(10),
-      marginVertical(2),
-      textWrap(TextWrapping.NoWrap),
-      textOverflow(`Ellipsis),
-    ];
+  open Style;
+  let container = [flexDirection(`Column), flexGrow(1), overflow(`Hidden)];
+  let input = [flexGrow(1), margin(12)];
 };
 
-let make = (~model, ~theme, ~font: UiFont.t, ()) => {
-  let renderItem = (extensions: array(Scanner.ScanResult.t), idx) => {
+type state = {
+  installedExpanded: bool,
+  bundledExpanded: bool,
+  width: int,
+};
+
+let default = {installedExpanded: true, bundledExpanded: false, width: 225};
+
+type msg =
+  | InstalledTitleClicked
+  | BundledTitleClicked
+  | WidthChanged(int);
+
+let reduce = (msg, model) =>
+  switch (msg) {
+  | InstalledTitleClicked => {
+      ...model,
+      installedExpanded: !model.installedExpanded,
+    }
+  | BundledTitleClicked => {...model, bundledExpanded: !model.bundledExpanded}
+  | WidthChanged(width) => {...model, width}
+  };
+
+let installButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <ItemView.ActionButton
+    font
+    title="Install"
+    backgroundColor=Revery.Colors.green
+    color=Revery.Colors.white
+    onAction={() =>
+      dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
+    }
+  />;
+};
+
+let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <ItemView.ActionButton
+    font
+    title="Uninstall"
+    backgroundColor=Revery.Colors.red
+    color=Revery.Colors.white
+    onAction={() =>
+      dispatch(Model.UninstallExtensionClicked({extensionId: extensionId}))
+    }
+  />;
+};
+
+let progressButton = (~font, ~title, ()) => {
+  <ItemView.ActionButton
+    font
+    title
+    backgroundColor=Revery.Colors.blue
+    color=Revery.Colors.white
+    onAction={() => ()}
+  />;
+};
+
+let%component make =
+              (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
+  let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
+    Hooks.reducer(~initialState=default, reduce);
+
+  let renderBundled = (extensions: array(Scanner.ScanResult.t), idx) => {
     let extension = extensions[idx];
 
-    let icon =
-      switch (extension.manifest.icon) {
-      | None => <Container color=Revery.Colors.darkGray width=32 height=32 />
-      | Some(iconPath) => <Image src={`File(iconPath)} width=32 height=32 />
-      };
+    let iconPath = extension.manifest.icon;
+    let displayName = Manifest.getDisplayName(extension.manifest);
+    let author = extension.manifest.author;
+    let version = extension.manifest.version;
 
-    <View
-      style=Style.[
-        flexDirection(`Row),
-        justifyContent(`Center),
-        alignItems(`Center),
-        flexGrow(1),
-        height(45),
-      ]>
-      icon
-      <View style=Style.[flexDirection(`Column), flexGrow(1)]>
-        <Text
-          style={Styles.text(~theme)}
-          fontFamily={font.family}
-          fontSize={font.size}
-          text={Manifest.getDisplayName(extension.manifest)}
-        />
-        <View style=Style.[flexDirection(`Row), flexGrow(1)]>
-          <View
-            style=Style.[
-              flexDirection(`Column),
-              flexGrow(1),
-              overflow(`Hidden),
-            ]>
-            <Text
-              style={Styles.text(~theme)}
-              fontFamily={font.family}
-              fontSize={font.size}
-              text={extension.manifest.author}
-            />
-          </View>
-          <View
-            style=Style.[
-              flexDirection(`Column),
-              flexGrow(1),
-              overflow(`Hidden),
-            ]>
-            <Text
-              style={Styles.text(~theme)}
-              fontFamily={font.family}
-              fontSize={font.size}
-              text={extension.manifest.version}
-            />
-          </View>
-        </View>
-      </View>
-    </View>;
+    let actionButton = React.empty;
+
+    <ItemView
+      actionButton
+      width
+      iconPath
+      theme
+      displayName
+      author
+      version
+      font
+    />;
+  };
+
+  let renderInstalled = (extensions: array(Scanner.ScanResult.t), idx) => {
+    let extension = extensions[idx];
+
+    let iconPath = extension.manifest.icon;
+    let displayName = Manifest.getDisplayName(extension.manifest);
+    let author = extension.manifest.author;
+    let version = extension.manifest.version;
+    let id = Manifest.identifier(extension.manifest);
+
+    let actionButton =
+      Model.isUninstalling(~extensionId=id, model)
+        ? <progressButton font title="Uninstalling" />
+        : <uninstallButton
+            font
+            extensionId={extension.manifest |> Manifest.identifier}
+            dispatch
+          />;
+
+    <ItemView
+      actionButton
+      width
+      iconPath
+      theme
+      displayName
+      author
+      version
+      font
+    />;
   };
 
   let bundledExtensions =
-    Model.getExtensions(~category=Scanner.Bundled, model);
+    Model.getExtensions(~category=Scanner.Bundled, model) |> Array.of_list;
 
-  let userExtensions = Model.getExtensions(~category=Scanner.User, model);
+  let userExtensions =
+    Model.getExtensions(~category=Scanner.User, model) |> Array.of_list;
+  let contents =
+    if (Feature_InputText.isEmpty(model.searchText)) {
+      [
+        <Accordion
+          title="Installed"
+          expanded=installedExpanded
+          uiFont=font
+          renderItem={renderInstalled(userExtensions)}
+          rowHeight=ItemView.Constants.itemHeight
+          count={Array.length(userExtensions)}
+          focused=None
+          theme
+          onClick={_ => localDispatch(InstalledTitleClicked)}
+        />,
+        <Accordion
+          title="Bundled"
+          expanded=bundledExpanded
+          uiFont=font
+          renderItem={renderBundled(bundledExtensions)}
+          rowHeight=ItemView.Constants.itemHeight
+          count={Array.length(bundledExtensions)}
+          focused=None
+          theme
+          onClick={_ => localDispatch(BundledTitleClicked)}
+        />,
+      ]
+      |> React.listToElement;
+    } else {
+      let results =
+        Model.searchResults(model)
+        |> List.map((summary: Service_Extensions.Catalog.Summary.t) => {
+             let displayName =
+               summary |> Service_Extensions.Catalog.Summary.name;
+             let extensionId =
+               summary |> Service_Extensions.Catalog.Summary.id;
+             let {namespace, version, iconUrl, _}: Service_Extensions.Catalog.Summary.t = summary;
+             let author = namespace;
 
-  //let developmentExtensions =
-  //Extensions.getExtensions(~category=ExtensionScanner.Development, state.extensions) |> Array.of_list;
+             let actionButton =
+               Model.isInstalling(~extensionId, model)
+                 ? <progressButton title="Installing" font />
+                 : <installButton dispatch font extensionId />;
+             <ItemView
+               actionButton
+               width
+               iconPath=iconUrl
+               theme
+               displayName
+               author
+               version
+               font
+             />;
+           })
+        |> Array.of_list;
 
-  let allExtensions = bundledExtensions @ userExtensions |> Array.of_list;
-  //let developmentCount = Array.length(developmentExtensions);
+      <FlatList
+        rowHeight=ItemView.Constants.itemHeight
+        theme
+        focused=None
+        count={Array.length(results)}>
+        ...{idx => results[idx]}
+      </FlatList>;
+    };
+
+  let isBusy = Model.isSearchInProgress(model) || Model.isBusy(model);
 
   <View
-    style=Style.[flexDirection(`Column), flexGrow(1), overflow(`Hidden)]>
-    <Accordion
-      title="Installed"
-      expanded=true
-      uiFont=font
-      renderItem={renderItem(allExtensions)}
-      rowHeight=50
-      count={Array.length(allExtensions)}
-      focused=None
+    style=Styles.container
+    onDimensionsChanged={({width, _}) =>
+      localDispatch(WidthChanged(width))
+    }>
+    <BusyBar theme visible=isBusy />
+    <Feature_InputText.View
+      style=Styles.input
+      model={model.searchText}
+      isFocused
+      fontFamily={font.family}
+      fontSize={font.size}
+      dispatch={msg => dispatch(Model.SearchText(msg))}
       theme
     />
+    contents
   </View>;
-  //    <Accordion
-  //      title="Bundled"
-  //      expanded=false
-  //      uiFont=font
-  //      renderItem={renderItem(allExtensions)}
-  //      rowHeight=50
-  //      count={Array.length(allExtensions)}
-  //      focused=None
-  //      theme
-  //    />
 };

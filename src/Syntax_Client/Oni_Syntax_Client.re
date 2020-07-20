@@ -10,8 +10,6 @@ module Transport = Exthost.Transport;
 module NamedPipe = Exthost.NamedPipe;
 module Packet = Exthost.Transport.Packet;
 
-module Ext = Oni_Extensions;
-
 open Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
 module ServerToClient = Protocol.ServerToClient;
