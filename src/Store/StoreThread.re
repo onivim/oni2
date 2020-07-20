@@ -115,7 +115,6 @@ let start =
       ~overriddenExtensionsDir,
     );
   let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
-  let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
   let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
 
   let commandUpdater = CommandStoreConnector.start();
@@ -128,7 +127,7 @@ let start =
       setClipboardText,
     );
 
-  let themeUpdater = ThemeStoreConnector.start(themeInfo);
+  let themeUpdater = ThemeStoreConnector.start();
 
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(~config=getState().config, ~extensions, ~setup);

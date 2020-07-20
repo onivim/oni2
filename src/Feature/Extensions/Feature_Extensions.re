@@ -54,6 +54,19 @@ let pick = (f, {extensions, _}) => {
      });
 };
 
+let themeByName = (~name, model) => {
+  model
+  |> pick(manifest => manifest.contributes.themes)
+  |> List.flatten
+  |> List.fold_left((acc, curr: Contributions.Theme.t) => {
+    if (curr.label == name) {
+      Some(curr)
+    } else {
+      acc
+    };
+  }, None)
+};
+
 module ListView = ListView;
 
 let sub = (~setup, model) => {
