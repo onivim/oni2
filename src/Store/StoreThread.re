@@ -115,7 +115,6 @@ let start =
       ~overriddenExtensionsDir,
     );
   let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
-  let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
   let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
 
   let commandUpdater = CommandStoreConnector.start();
@@ -128,7 +127,7 @@ let start =
       setClipboardText,
     );
 
-  let themeUpdater = ThemeStoreConnector.start(themeInfo);
+  let themeUpdater = ThemeStoreConnector.start();
 
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
@@ -139,7 +138,7 @@ let start =
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);
 
-  let quickmenuUpdater = QuickmenuStoreConnector.start(themeInfo);
+  let quickmenuUpdater = QuickmenuStoreConnector.start();
 
   let configurationUpdater =
     ConfigurationStoreConnector.start(
@@ -393,50 +392,32 @@ let start =
     window,
   );
 
-  registerCommands(~dispatch, Model.GlobalCommands.registrations());
-  registerCommands(
-    ~dispatch,
-    Feature_Terminal.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
-  );
-  registerCommands(
-    ~dispatch,
+  // Commands
+  [
+    Model.GlobalCommands.registrations(),
     Feature_Sneak.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
-  );
-  registerCommands(
-    ~dispatch,
+    Feature_Terminal.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
+    Feature_Sneak.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
     Feature_Layout.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
-  );
-  registerCommands(
-    ~dispatch,
     Feature_Hover.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
-  );
-  registerCommands(
-    ~dispatch,
     Feature_SignatureHelp.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
-  );
-
-  registerCommands(
-    ~dispatch,
     Feature_Formatting.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
-  );
-
-  registerCommands(
-    ~dispatch,
+    Feature_Theme.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Theme(msg))),
     Feature_Clipboard.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
-  );
-
-  registerCommands(
-    ~dispatch,
     Feature_Registers.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
-  );
+  ]
+  |> List.flatten
+  |> registerCommands(~dispatch);
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =

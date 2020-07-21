@@ -258,7 +258,7 @@ and quickmenuVariant =
   | EditorsPicker
   | FilesPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
-  | ThemesPicker
+  | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | DocumentSymbols
 and progress =
   | Loading

@@ -111,25 +111,51 @@ let update =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
     let state = {...state, extensions: model};
     let (state', effect) =
-      switch (outMsg) {
-      | Feature_Extensions.Nothing => (state, Effect.none)
-      | Feature_Extensions.Effect(eff) => (
-          state,
-          eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
-        )
-      | Feature_Extensions.Focus => (
-          FocusManager.push(Focus.Extensions, state),
-          Effect.none,
-        )
-      | Feature_Extensions.NotifySuccess(msg) => (
-          state,
-          Internal.notificationEffect(~kind=Info, msg),
-        )
-      | Feature_Extensions.NotifyFailure(msg) => (
-          state,
-          Internal.notificationEffect(~kind=Error, msg),
-        )
-      };
+      Feature_Extensions.(
+        switch (outMsg) {
+        | Nothing => (state, Effect.none)
+        | Effect(eff) => (
+            state,
+            eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
+          )
+        | Focus => (FocusManager.push(Focus.Extensions, state), Effect.none)
+        | NotifySuccess(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Info, msg),
+          )
+        | NotifyFailure(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Error, msg),
+          )
+        | InstallSucceeded({extensionId, contributions}) =>
+          let notificationEffect =
+            Internal.notificationEffect(
+              ~kind=Info,
+              Printf.sprintf(
+                "Extension %s was installed successfully and will be activated on restart.",
+                extensionId,
+              ),
+            );
+          let themes: list(Exthost.Extension.Contributions.Theme.t) =
+            Exthost.Extension.Contributions.(contributions.themes);
+          let showThemePickerEffect =
+            if (themes != []) {
+              Isolinear.Effect.createWithDispatch(
+                ~name="feature.extensions.showThemeAfterInstall", dispatch => {
+                dispatch(QuickmenuShow(ThemesPicker(themes)))
+              });
+            } else {
+              Isolinear.Effect.none;
+            };
+          (
+            state,
+            Isolinear.Effect.batch([
+              notificationEffect,
+              showThemePickerEffect,
+            ]),
+          );
+        }
+      );
     (state', effect);
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
@@ -488,8 +514,25 @@ let update =
     (state, effect);
 
   | Theme(msg) =>
-    let model' = Feature_Theme.update(state.colorTheme, msg);
-    ({...state, colorTheme: model'}, Effect.none);
+    let (model', outmsg) = Feature_Theme.update(state.colorTheme, msg);
+
+    let eff =
+      switch (outmsg) {
+      | OpenThemePicker(_) =>
+        let themes =
+          state.extensions
+          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+               Exthost.Extension.Contributions.(manifest.contributes.themes)
+             })
+          |> List.flatten;
+
+        Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
+          dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
+        });
+      | Nothing => Isolinear.Effect.none
+      };
+
+    ({...state, colorTheme: model'}, eff);
 
   | Notification(msg) =>
     let model' = Feature_Notification.update(state.notifications, msg);
