@@ -33,7 +33,7 @@ module Sub: {
       ~uniqueId: string,
       ~fontFamily: string,
       ~fontSize: float,
-      ~fontLigatures: bool,
+      ~fontLigatures: ConfigurationValues.fontLigatures,
       ~fontSmoothing: ConfigurationValues.fontSmoothing
     ) =>
     Isolinear.Sub.t(msg);

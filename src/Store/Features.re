@@ -157,6 +157,13 @@ let update =
         }
       );
     (state', effect);
+
+  | LanguageSupport(msg) =>
+    let (model, _outmsg) =
+      Feature_LanguageSupport.update(msg, state.languageSupport);
+
+    ({...state, languageSupport: model}, Isolinear.Effect.none);
+
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let selection =

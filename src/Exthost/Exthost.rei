@@ -224,6 +224,15 @@ module Message: {
   };
 };
 
+module RenameLocation: {
+  type t = {
+    range: OneBasedRange.t,
+    text: string,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module SuggestItem: {
   type t = {
     label: string,
@@ -826,6 +835,21 @@ module Color: {
   let decode: Json.decoder(t);
 
   let resolve: (Oni_Core.ColorTheme.Colors.t, t) => option(Revery.Color.t);
+};
+
+module WorkspaceEdit: {
+  module FileEdit: {type t;};
+
+  module TextEdit: {type t;};
+
+  type edit =
+    | File(FileEdit.t)
+    | Text(TextEdit.t);
+
+  type t = {
+    edits: list(edit),
+    rejectReason: option(string),
+  };
 };
 
 module Msg: {

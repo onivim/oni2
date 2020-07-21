@@ -35,6 +35,7 @@ module OneBasedPosition = OneBasedPosition;
 module OneBasedRange = OneBasedRange;
 module Progress = Progress;
 module ReferenceContext = ReferenceContext;
+module RenameLocation = RenameLocation;
 module Reply = Reply;
 module SCM = SCM;
 module SignatureHelp = SignatureHelp;
