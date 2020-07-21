@@ -153,7 +153,7 @@ module View = {
 
     let text = (~theme) => [flexGrow(1)];
 
-    let buttons = [flexDirection(`Row)];
+    let buttons = [flexDirection(`Row), pointerEvents(`Allow)];
 
     let button = (~theme) => [
       border(~width=1, ~color=Colors.red),

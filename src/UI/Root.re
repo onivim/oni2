@@ -85,14 +85,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let messagesDispatch = msg => dispatch(Actions.Messages(msg));
 
   let messages = () => {
-    <View>
       <Feature_Messages.View
         theme
         font={state.uiFont}
         model={state.messages}
         dispatch=messagesDispatch
       />
-    </View>;
   };
 
   let statusBar = () =>
