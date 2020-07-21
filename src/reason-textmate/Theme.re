@@ -2,6 +2,8 @@
  Theme.re
  */
 
+open Oni_Core.Utility;
+
 open Rench;
 
 type t = {
@@ -164,10 +166,12 @@ let rec from_file = (~isDark=?, path: string) => {
       switch (Utility.JsonEx.from_file(path)) {
       | Ok(json) => Ok(of_yojson(~isDark?, ~themeLoader, json))
       | Error(_) =>
-        let%bind plist =
-          SimpleXml.of_file(path) |> Option.get |> XmlPlistParser.parse;
+          SimpleXml.of_file(path)
+          |> Option.to_result(~none="Unable to load file: " ++ path)
+          |> ResultEx.flatMap(XmlPlistParser.parse)
+          |> ResultEx.flatMap(
+        PlistDecoder.theme(~isDark?));
 
-        PlistDecoder.theme(~isDark?, plist);
       };
 
     Hashtbl.add(_themeCache, path, theme);
