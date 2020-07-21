@@ -192,6 +192,36 @@ let parseString = (~default="", json) =>
   | _ => default
   };
 
+let parseFontLigatures = json =>
+  switch (json) {
+  | `Bool(_) as bool => bool
+  | `String(str) =>
+    open Angstrom;
+
+    let quoted = p => char('\'') *> p <* char('\'');
+
+    let isAlphaNumeric = (
+      fun
+      | 'a'..'z'
+      | 'A'..'Z'
+      | '0'..'9' => true
+      | _ => false
+    );
+
+    let alphaString = take_while1(isAlphaNumeric);
+
+    let feature = quoted(alphaString);
+    let spaces = many(char(' '));
+
+    let parse = sep_by(char(',') <* spaces, feature);
+
+    switch (Angstrom.parse_string(~consume=All, parse, str)) {
+    | Ok(list) => `List(list)
+    | Error(_) => `Bool(true)
+    };
+  | _ => `Bool(true)
+  };
+
 type parseFunction =
   (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
 
@@ -214,7 +244,10 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "editor.fontLigatures",
-    (config, json) => {...config, editorFontLigatures: parseBool(json)},
+    (config, json) => {
+      ...config,
+      editorFontLigatures: parseFontLigatures(json),
+    },
   ),
   (
     "editor.fontSize",
