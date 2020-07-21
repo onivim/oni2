@@ -204,6 +204,7 @@
   },
   "dependencies": {
     "@glennsl/timber": "^1.2.0",
+    "@opam/angstrom": "^0.14.1",
     "@opam/charInfo_width": "*",
     "@opam/decoders-yojson": "^0.4.0",
     "@opam/dir": "*",

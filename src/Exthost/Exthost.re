@@ -36,6 +36,7 @@ module OneBasedRange = OneBasedRange;
 module Progress = Progress;
 module QuickOpen = QuickOpen;
 module ReferenceContext = ReferenceContext;
+module RenameLocation = RenameLocation;
 module Reply = Reply;
 module SCM = SCM;
 module SignatureHelp = SignatureHelp;
@@ -45,6 +46,7 @@ module SymbolKind = SymbolKind;
 module TextEditor = TextEditor;
 module ThemeColor = ThemeColor;
 module WorkspaceData = WorkspaceData;
+module WorkspaceEdit = WorkspaceEdit;
 
 module Client = Client;
 module Request = Request;

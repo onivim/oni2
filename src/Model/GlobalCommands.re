@@ -199,14 +199,6 @@ module Workbench = {
         OpenConfigFile("keybindings.json"),
       );
 
-    let selectTheme =
-      register(
-        ~category="Preferences",
-        ~title="Theme Picker",
-        "workbench.action.selectTheme",
-        QuickmenuShow(ThemesPicker),
-      );
-
     let showCommands =
       register(
         ~title="Show All Commands",

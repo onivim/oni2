@@ -34,6 +34,10 @@ type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg))
+  | InstallSucceeded({
+      extensionId: string,
+      contributions: Exthost.Extension.Contributions.t,
+    })
   | NotifySuccess(string)
   | NotifyFailure(string);
 
@@ -267,14 +271,14 @@ let update = (~extHostClient, msg, model) => {
         extensionId,
       );
     (model |> Internal.addPendingInstall(~extensionId), Effect(eff));
+
   | InstallExtensionSuccess({extensionId, scanResult}) => (
       model |> Internal.installed(~extensionId, ~scanResult),
-      NotifySuccess(
-        Printf.sprintf(
-          "Extension %s was installed successfully and will be activated on restart.",
-          extensionId,
-        ),
-      ),
+      InstallSucceeded({
+        extensionId,
+        contributions:
+          Exthost.Extension.Manifest.(scanResult.manifest.contributes),
+      }),
     )
   | InstallExtensionFailed({extensionId, errorMsg}) => (
       model |> Internal.clearPendingInstall(~extensionId),

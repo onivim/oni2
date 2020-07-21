@@ -40,6 +40,8 @@ module Provider: {
     count: int,
     commitTemplate: string,
     acceptInputCommand: option(command),
+    inputVisible: bool,
+    validationEnabled: bool,
   };
 };
 

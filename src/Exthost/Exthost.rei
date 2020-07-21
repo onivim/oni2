@@ -199,6 +199,15 @@ module Hover: {
   let decode: Json.decoder(t);
 };
 
+module RenameLocation: {
+  type t = {
+    range: OneBasedRange.t,
+    text: string,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module SuggestItem: {
   type t = {
     label: string,
@@ -431,6 +440,13 @@ module SCM: {
     };
 
     module Decode: {let splices: Json.decoder(Splices.t);};
+  };
+
+  module GroupFeatures: {
+    [@deriving show({with_path: false})]
+    type t = {hideWhenEmpty: bool};
+
+    let decode: Json.decoder(t);
   };
 
   module Decode: {
@@ -905,6 +921,21 @@ module Color: {
   let resolve: (Oni_Core.ColorTheme.Colors.t, t) => option(Revery.Color.t);
 };
 
+module WorkspaceEdit: {
+  module FileEdit: {type t;};
+
+  module TextEdit: {type t;};
+
+  type edit =
+    | File(FileEdit.t)
+    | Text(TextEdit.t);
+
+  type t = {
+    edits: list(edit),
+    rejectReason: option(string),
+  };
+};
+
 module Msg: {
   module Clipboard: {
     [@deriving show]
@@ -1116,6 +1147,11 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
+      | RegisterRenameSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          supportsResolveInitialValues: bool,
+        })
       | RegisterDocumentFormattingSupport({
           handle: int,
           selector: DocumentSelector.t,
@@ -1218,6 +1254,28 @@ module Msg: {
       | UnregisterSCMResourceGroup({
           provider: int,
           handle: int,
+        })
+      | UpdateGroup({
+          provider: int,
+          handle: int,
+          features: SCM.GroupFeatures.t,
+        })
+      | UpdateGroupLabel({
+          provider: int,
+          handle: int,
+          label: string,
+        })
+      | SetInputBoxPlaceholder({
+          handle: int,
+          value: string,
+        })
+      | SetInputBoxVisibility({
+          handle: int,
+          visible: bool,
+        })
+      | SetValidationProviderIsEnabled({
+          handle: int,
+          enabled: bool,
         })
       | SpliceSCMResourceStates({
           handle: int,
@@ -1545,6 +1603,25 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(list(Location.t));
+
+    let provideRenameEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~newName: string,
+        Client.t
+      ) =>
+      Lwt.t(option(WorkspaceEdit.t));
+
+    let resolveRenameLocation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(option(RenameLocation.t));
 
     let provideTypeDefinition:
       (
