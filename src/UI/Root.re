@@ -85,12 +85,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let messagesDispatch = msg => dispatch(Actions.Messages(msg));
 
   let messages = () => {
-      <Feature_Messages.View
-        theme
-        font={state.uiFont}
-        model={state.messages}
-        dispatch=messagesDispatch
-      />
+    <Feature_Messages.View
+      theme
+      font={state.uiFont}
+      model={state.messages}
+      dispatch=messagesDispatch
+    />;
   };
 
   let statusBar = () =>
@@ -207,11 +207,11 @@ let make = (~dispatch, ~state: State.t, ()) => {
         dispatch={msg => dispatch(Actions.Registers(msg))}
       />
     </Overlay>
-    <modals />
     <statusBar />
     <contextMenuOverlay />
-    <messages />
     <Tooltip.Overlay theme font=uiFont />
+    <messages />
+    <modals />
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />
     </Overlay>
