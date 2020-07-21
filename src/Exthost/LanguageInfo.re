@@ -16,7 +16,7 @@ type configurationLoadState =
   | ErrorLoading;
 
 type patternLanguagePair = {
-  pattern: string,
+  pattern: Oniguruma.OnigRegExp.t,
   language: string,
 };
 
@@ -76,24 +76,16 @@ let getLanguageFromExtension = (li: t, ext: string) => {
   };
 };
 
-let getLanguageFromFileNamePattern = (li: t, fileName: string) => {
-  let testPattern = (pattern, name) =>
-    switch (Oniguruma.OnigRegExp.create(pattern)) {
-    | Error(_) => false
-    | Ok(r) => Oniguruma.OnigRegExp.test(name, r)
-    };
-  let result =
-    try(
-      List.find(
-        p => testPattern(p.pattern, fileName),
-        li.fileNamePatternToLanguage,
-      )
-    ) {
-    | Not_found => {pattern: "", language: defaultLanguage}
-    };
-
-  result.language;
-};
+let getLanguageFromFileNamePattern = (li: t, fileName: string) =>
+  try(
+    List.find(
+      p => Oniguruma.OnigRegExp.test(fileName, p.pattern),
+      li.fileNamePatternToLanguage,
+    ).
+      language
+  ) {
+  | Not_found => defaultLanguage
+  };
 
 let getLanguageFromFileName = (li: t, fileName: string) => {
   let lowercaseFileName = String.lowercase_ascii(fileName);
@@ -129,26 +121,18 @@ let getLanguageFromFirstLine = (li: t, buffer: Buffer.t) => {
       "";
     };
 
-  let testPattern = (pattern, line) =>
-    switch (Oniguruma.OnigRegExp.create(pattern)) {
-    | Error(_) => false
-    | Ok(r) => Oniguruma.OnigRegExp.test(line, r)
-    };
-
   if (firstLine == "") {
     defaultLanguage;
   } else {
-    let result =
-      try(
-        List.find(
-          p => testPattern(p.pattern, firstLine),
-          li.firstLineToLanguage,
-        )
-      ) {
-      | Not_found => {pattern: "", language: defaultLanguage}
-      };
-
-    result.language;
+    try(
+      List.find(
+        p => Oniguruma.OnigRegExp.test(firstLine, p.pattern),
+        li.firstLineToLanguage,
+      ).
+        language
+    ) {
+    | Not_found => defaultLanguage
+    };
   };
 };
 
@@ -318,8 +302,11 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
     |> List.flatten
     |> List.fold_left(
          (prev, v) => {
-           let (pattern, language) = v;
-           [{pattern, language}, ...prev];
+           let (regex, language) = v;
+           switch (Oniguruma.OnigRegExp.create(regex)) {
+           | Error(_) => prev
+           | Ok(pattern) => [{pattern, language}, ...prev]
+           };
          },
          [],
        );
@@ -330,10 +317,12 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
          (prev, lang) => {
            Contributions.Language.(
              switch (lang.firstLine) {
-             | Some(p) =>
-               let pattern = p;
+             | Some(regex) =>
                let language = lang.id;
-               [{pattern, language}, ...prev];
+               switch (Oniguruma.OnigRegExp.create(regex)) {
+               | Error(_) => prev
+               | Ok(pattern) => [{pattern, language}, ...prev]
+               };
              | None => prev
              }
            )
