@@ -8,11 +8,15 @@ let initial: model;
 [@deriving show]
 type command =
   | FormatDocument
-  | FormatRange;
+  | FormatSelection;
 
 [@deriving show]
 type msg =
   | Command(command)
+  | FormatRange({
+      startLine: Index.t,
+      endLine: Index.t,
+    })
   | DocumentFormatterAvailable({
       handle: int,
       selector: Exthost.DocumentSelector.t,
@@ -48,6 +52,7 @@ type outmsg =
 
 let update:
   (
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~configuration: Oni_Core.Configuration.t,
     ~maybeSelection: option(Range.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),

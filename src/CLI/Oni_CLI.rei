@@ -14,6 +14,7 @@ type eff =
   | CheckHealth
   | ListExtensions
   | InstallExtension(string)
+  | QueryExtension(string)
   | UninstallExtension(string)
   | StartSyntaxServer({
       parentPid: string,

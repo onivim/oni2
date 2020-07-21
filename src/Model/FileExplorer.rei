@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Extensions;
 
 type t = {
   tree: option(FsTreeNode.t),
@@ -23,6 +22,7 @@ type action =
 let initial: t;
 
 let getFileIcon:
-  (LanguageInfo.t, IconTheme.t, string) => option(IconTheme.IconDefinition.t);
+  (Exthost.LanguageInfo.t, IconTheme.t, string) =>
+  option(IconTheme.IconDefinition.t);
 let getDirectoryTree:
-  (string, LanguageInfo.t, IconTheme.t, list(string)) => FsTreeNode.t;
+  (string, Exthost.LanguageInfo.t, IconTheme.t, list(string)) => FsTreeNode.t;

@@ -7,6 +7,15 @@
 open Oni_Core;
 open Rench;
 
+module Log = (val Log.withNamespace("Exthost.Extension.Contributions"));
+
+module Breakpoint = {
+  [@deriving show]
+  type t = Yojson.Safe.t;
+  let decode = Json.Decode.value;
+  let encode = Json.Encode.value;
+};
+
 module Command = {
   [@deriving show]
   type t = {
@@ -43,6 +52,14 @@ module Command = {
     );
 };
 
+module Debugger = {
+  [@deriving show]
+  type t = Yojson.Safe.t;
+
+  let decode = Json.Decode.value;
+  let encode = Json.Encode.value;
+};
+
 module Menu = {
   [@deriving show]
   type t = Menu.Schema.definition
@@ -77,25 +94,94 @@ module Menu = {
 };
 
 module Configuration = {
+  module PropertyType = {
+    [@deriving show]
+    type t =
+      | Array
+      | Boolean
+      | String
+      | Integer
+      | Number
+      | Object
+      | Unknown;
+
+    let default: t => Yojson.Safe.t =
+      fun
+      | Array => `List([])
+      | String => `String("")
+      | Integer => `Int(0)
+      | Number => `Int(0)
+      | Boolean => `Bool(false)
+      | Object => `Assoc([])
+      | Unknown => `Null;
+
+    module Decode = {
+      open Json.Decode;
+
+      let list = list(string) |> map(_ => Unknown);
+
+      let single =
+        string
+        |> map(String.lowercase_ascii)
+        |> and_then(
+             fun
+             | "array" => succeed(Array)
+             | "boolean" => succeed(Boolean)
+             | "string" => succeed(String)
+             | "integer" => succeed(Integer)
+             | "number" => succeed(Number)
+             | "object" => succeed(Object)
+             | unknown => {
+                 Log.warnf(m => m("Unknown configuration type: %s", unknown));
+                 succeed(Unknown);
+               },
+           );
+
+      let decode = one_of([("single", single), ("list", list)]);
+    };
+
+    let decode = Decode.decode;
+  };
+
   [@deriving show]
   type t = list(property)
-
   and property = {
     name: string,
     default: [@opaque] Json.t,
+    propertyType: PropertyType.t,
     // TODO:
-    // type
     // description
     // scope
+    // enum
   };
 
   module Decode = {
     open Json.Decode;
 
+    let setDefaultIfNecessary = prop => {
+      switch (prop.default) {
+      | `Null => {...prop, default: PropertyType.default(prop.propertyType)}
+      | _ => prop
+      };
+    };
+
     let property = name =>
-      field_opt("default", value)
-      |> default(Json.Encode.null)
-      |> map(default => {name, default});
+      obj(({field, _}) => {
+        let propertyType =
+          field.withDefault(
+            "type",
+            PropertyType.Unknown,
+            PropertyType.decode,
+          );
+
+        let default = PropertyType.default(propertyType);
+        {
+          name,
+          default: field.withDefault("default", default, value),
+          propertyType,
+        };
+      })
+      |> map(setDefaultIfNecessary);
 
     let properties = key_value_pairs_seq(property);
 
@@ -107,13 +193,166 @@ module Configuration = {
         ("list", list(simple) |> map(List.flatten)),
       ]);
     };
+
+    let%test_module "decode" =
+      (module
+       {
+         let ofString = (decoder, str) =>
+           str
+           |> Yojson.Safe.from_string
+           |> Json.Decode.decode_value(decoder)
+           |> Result.get_ok;
+
+         let expectEquals = (a, b) => {
+           a == b;
+         };
+
+         let%test "property: bool, no type" = {
+           {|
+            {
+              "default": false
+            }
+          |}
+           |> ofString(property("boolprop"))
+           |> expectEquals({
+                name: "boolprop",
+                // TODO:
+                // The property could/should be inferred by the default value
+                propertyType: Unknown,
+                default: `Bool(false),
+              });
+         };
+
+         let%test "property: string, no type" = {
+           {|
+            {
+              "default": "set",
+            }
+          |}
+           |> ofString(property("stringprop"))
+           |> expectEquals({
+                name: "stringprop",
+                // TODO:
+                // The property could/should be inferred by the default value
+                propertyType: Unknown,
+                default: `String("set"),
+              });
+         };
+
+         let%test "property: boolean, default" = {
+           {|
+            {
+              "type": "boolean",
+              "default": false
+            }
+          |}
+           |> ofString(property("boolprop"))
+           |> expectEquals({
+                name: "boolprop",
+                propertyType: Boolean,
+                default: `Bool(false),
+              });
+         };
+
+         let%test "property: boolean, no default" = {
+           {|
+            {
+              "type": "boolean",
+            }
+          |}
+           |> ofString(property("boolprop"))
+           |> expectEquals({
+                name: "boolprop",
+                propertyType: Boolean,
+                default: `Bool(false),
+              });
+         };
+
+         let%test "property: number, no default" = {
+           {|
+            {
+              "type": "number",
+            }
+          |}
+           |> ofString(property("prop"))
+           |> expectEquals({
+                name: "prop",
+                propertyType: Number,
+                default: `Int(0),
+              });
+         };
+
+         let%test "property: number, with default" = {
+           {|
+            {
+              "type": "number",
+              "default": 111
+            }
+          |}
+           |> ofString(property("prop"))
+           |> expectEquals({
+                name: "prop",
+                propertyType: Number,
+                default: `Int(111),
+              });
+         };
+
+         let%test "property: number, no default" = {
+           {|
+            {
+              "type": "object",
+            }
+          |}
+           |> ofString(property("prop"))
+           |> expectEquals({
+                name: "prop",
+                propertyType: Object,
+                default: `Assoc([]),
+              });
+         };
+
+         let%test "property: array, no default" = {
+           {|
+            {
+              "type": "array",
+            }
+          |}
+           |> ofString(property("arrayprop"))
+           |> expectEquals({
+                name: "arrayprop",
+                propertyType: Array,
+                default: `List([]),
+              });
+         };
+
+         let%test "property: list of types, default already set" =
+           {
+             {|
+        {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "markdownDescription": "%typescript.tsdk.desc%",
+          "scope": "window"
+        }
+             |};
+           }
+           |> ofString(property("multiprop"))
+           |> expectEquals({
+                name: "multiprop",
+                propertyType: Unknown,
+                default: `Null,
+              });
+       });
   };
 
   let decode = Decode.configuration;
 
   let toSettings = config =>
     config
-    |> List.map(({name, default}) => (name, default))
+    |> List.map(({name, default, _}) => (name, default))
     |> Config.Settings.fromList;
 };
 
@@ -250,7 +489,9 @@ module IconTheme = {
 
 [@deriving show]
 type t = {
+  breakpoints: list(Breakpoint.t),
   commands: list(Command.t),
+  debuggers: list(Debugger.t),
   menus: list(Menu.t),
   languages: list(Language.t),
   grammars: list(Grammar.t),
@@ -267,6 +508,8 @@ let default = {
   themes: [],
   iconThemes: [],
   configuration: [],
+  debuggers: [],
+  breakpoints: [],
 };
 
 let decode =
@@ -282,6 +525,9 @@ let decode =
           field.withDefault("iconThemes", [], list(IconTheme.decode)),
         configuration:
           field.withDefault("configuration", [], Configuration.decode),
+        debuggers: field.withDefault("debuggers", [], list(Debugger.decode)),
+        breakpoints:
+          field.withDefault("breakpoints", [], list(Breakpoint.decode)),
       }
     )
   );
@@ -296,8 +542,19 @@ let encode = data =>
       ("themes", data.themes |> list(Theme.encode)),
       ("iconThemes", data.iconThemes |> list(IconTheme.encode)),
       ("configuration", null),
+      ("debuggers", data.debuggers |> list(Debugger.encode)),
+      ("breakpoints", data.breakpoints |> list(Breakpoint.encode)),
     ])
   );
+let to_yojson = contributes => {
+  contributes |> Json.Encode.encode_value(encode);
+};
+
+let of_yojson = json => {
+  json
+  |> Json.Decode.decode_value(decode)
+  |> Result.map_error(Json.Decode.string_of_error);
+};
 
 let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
   List.map(g => Grammar.toAbsolutePath(path, g), grammars);

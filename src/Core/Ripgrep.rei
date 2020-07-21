@@ -14,7 +14,8 @@ type t = {
       ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
-      ~onComplete: unit => unit
+      ~onComplete: unit => unit,
+      ~onError: string => unit
     ) =>
     dispose,
   findInFiles:
@@ -22,7 +23,8 @@ type t = {
       ~directory: string,
       ~query: string,
       ~onUpdate: list(Match.t) => unit,
-      ~onComplete: unit => unit
+      ~onComplete: unit => unit,
+      ~onError: string => unit
     ) =>
     dispose,
 }

@@ -10,16 +10,17 @@ runTest(
     dispatch(CopyActiveFilepathToClipboard);
     runEffects();
 
-    wait(~name="clipboard contains file path", (state: State.t) =>
+    wait(~name="clipboard contains file path", (state: State.t) => {
       switch (Selectors.getActiveBuffer(state)) {
       | Some(buffer) =>
         switch (getClipboard(), Buffer.getFilePath(buffer)) {
-        | (Some(textInClipBoard), Some(filname)) =>
-          String.equal(textInClipBoard, filname)
-        | _ => false
+        | (Some(clipboardText), Some(filename)) =>
+          String.equal(clipboardText, filename)
+
+        | _ => failwith("no clipboard or file path")
         }
-      | _ => false
+      | _ => failwith("no buffer")
       }
-    );
+    });
   },
 );

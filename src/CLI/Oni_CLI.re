@@ -25,6 +25,7 @@ type eff =
   | CheckHealth
   | ListExtensions
   | InstallExtension(string)
+  | QueryExtension(string)
   | UninstallExtension(string)
   | StartSyntaxServer({
       parentPid: string,
@@ -103,6 +104,7 @@ let parse = args => {
       ("--debug", Unit(CoreLog.enableDebug), ""),
       ("--trace", Unit(CoreLog.enableTrace), ""),
       ("--quiet", Unit(CoreLog.enableQuiet), ""),
+      ("--silent", Unit(Timber.App.disable), ""),
       ("--version", setEffect(PrintVersion), ""),
       ("--no-log-colors", Unit(Timber.App.disableColors), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
@@ -113,6 +115,7 @@ let parse = args => {
       ("--checkhealth", setEffect(CheckHealth), ""),
       ("--list-extensions", setEffect(ListExtensions), ""),
       ("--install-extension", setStringEffect(s => InstallExtension(s)), ""),
+      ("--query-extension", setStringEffect(s => QueryExtension(s)), ""),
       (
         "--uninstall-extension",
         setStringEffect(s => UninstallExtension(s)),

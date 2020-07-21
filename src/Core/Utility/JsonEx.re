@@ -30,6 +30,11 @@ let update = (key, f, json) => {
   };
 };
 
+let from_string = str =>
+  try(Ok(Yojson.Safe.from_string(str))) {
+  | e => Error(Printexc.to_string(e))
+  };
+
 let from_file = file =>
   try(Ok(Yojson.Safe.from_file(file))) {
   | e => Error(Printexc.to_string(e))

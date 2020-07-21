@@ -65,7 +65,7 @@ folder. The current folder can be changed once inside Oni2 by using the normal v
 You can set Oni2 as the [default text editor for git](https://www.git-scm.com/book/en/v2/Customizing-Git-Git-Configuration#_code_core_editor_code) by running: 
 
 ```bash
-git config --global core.editor "oni2 --nofork --quiet"
+git config --global core.editor "oni2 --nofork --silent"
 ```
 
 ## Extension Management

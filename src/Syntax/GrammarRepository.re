@@ -2,11 +2,9 @@
  * GrammarRepository.re
  */
 
-module Ext = Oni_Extensions;
-
 type t = {
   scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t),
-  languageInfo: Ext.LanguageInfo.t,
+  languageInfo: Exthost.LanguageInfo.t,
   log: string => unit,
 };
 
@@ -16,13 +14,15 @@ let create = (~log=_ => (), languageInfo) => {
   languageInfo,
 };
 
-let empty = create(Ext.LanguageInfo.initial);
+let empty = create(Exthost.LanguageInfo.initial);
 
 let getGrammar = (~scope: string, gr: t) => {
   switch (Hashtbl.find_opt(gr.scopeToGrammar, scope)) {
   | Some(v) => Some(v)
   | None =>
-    switch (Ext.LanguageInfo.getGrammarPathFromScope(gr.languageInfo, scope)) {
+    switch (
+      Exthost.LanguageInfo.getGrammarPathFromScope(gr.languageInfo, scope)
+    ) {
     | Some(grammarPath) =>
       gr.log("Loading grammar from: " ++ grammarPath);
 

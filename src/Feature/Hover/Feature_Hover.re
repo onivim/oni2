@@ -261,7 +261,7 @@ module View = {
         (),
       ) => {
     let defaultLanguage =
-      Oni_Extensions.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
+      Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
     let hoverMarkdown = (~markdown) =>
       Oni_Components.Markdown.make(
         ~colorTheme,
@@ -278,6 +278,7 @@ module View = {
         ~markdown=Exthost.MarkdownString.toString(markdown),
         ~baseFontSize=uiFont.size,
         ~codeBlockStyle=Style.[flexGrow(1)],
+        ~codeBlockFontSize=editorFont.fontSize,
       );
 
     let hoverDiagnostic =

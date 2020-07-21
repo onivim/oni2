@@ -11,15 +11,29 @@ module Item = {
     priority: int,
     label: Exthost.Label.t,
     alignment: Exthost.Msg.StatusBar.alignment,
+    color: option(Exthost.Color.t),
     command: option(string),
+    tooltip: option(string),
   };
 
-  let create = (~command=?, ~id, ~priority, ~label, ~alignment=Left, ()) => {
+  let create =
+      (
+        ~color=?,
+        ~command=?,
+        ~tooltip=?,
+        ~id,
+        ~priority,
+        ~label,
+        ~alignment=Left,
+        (),
+      ) => {
     id,
+    color,
     priority,
     label,
     alignment,
     command,
+    tooltip,
   };
 };
 
@@ -80,6 +94,7 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module Editor = Feature_Editor.Editor;
 
 module Colors = Feature_Theme.Colors;
+module Tooltip = Oni_Components.Tooltip;
 
 module Styles = {
   open Style;
@@ -340,6 +355,8 @@ module View = {
     let%hook (yOffset, _animationState, _reset) =
       Hooks.animation(transitionAnimation);
 
+    let defaultForeground = Colors.StatusBar.foreground.from(theme);
+
     let toStatusBarElement = (statusItem: Item.t) => {
       let onClick =
         statusItem.command
@@ -347,16 +364,27 @@ module View = {
              dispatch(ContributedItemClicked({id: statusItem.id, command}))
            );
 
-      <item ?onClick>
-        <View
-          style=Style.[
-            flexDirection(`Row),
-            justifyContent(`Center),
-            alignItems(`Center),
-          ]>
-          <Label font color=Revery.Colors.white label={statusItem.label} />
-        </View>
-      </item>;
+      let color =
+        statusItem.color
+        |> OptionEx.flatMap(Exthost.Color.resolve(theme))
+        |> Option.value(~default=defaultForeground);
+
+      let children = <Label font color label={statusItem.label} />;
+      let style =
+        Style.[
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ];
+
+      let viewOrTooltip =
+        switch (statusItem.tooltip) {
+        | None => <View style> children </View>
+        | Some(tooltip) =>
+          <Tooltip offsetY=(-25) text=tooltip style> children </Tooltip>
+        };
+
+      <item ?onClick> viewOrTooltip </item>;
     };
 
     let leftItems =

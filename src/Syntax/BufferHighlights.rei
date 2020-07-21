@@ -14,10 +14,6 @@ type t;
 
 let initial: t;
 
-let setMatchingPair: (int, Location.t, Location.t, t) => t;
-let getMatchingPair: (int, t) => option((Location.t, Location.t));
-let clearMatchingPair: (int, t) => t;
-
 let setSearchHighlights: (int, list(Range.t), t) => t;
 let clearSearchHighlights: (int, t) => t;
 

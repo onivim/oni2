@@ -36,3 +36,5 @@ let getTitle: unit => string;
       This path is different on developer machines vs CI environments
    */
 let getAssetPath: string => string;
+
+let runCommand: (~dispatch: 'msg => unit, Core.Command.t('msg)) => unit;

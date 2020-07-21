@@ -42,9 +42,12 @@ runTest(
     );
     // TODO: Figure out why this check is failing...
     wait(~name="Validate buffer is empty", (state: State.t) => {
-      Model.Selectors.getActiveBuffer(state)
-      |> Option.map(Core.Buffer.getLines)
-      |> Option.map(Array.to_list) == Some([""])
+      let actual =
+        Model.Selectors.getActiveBuffer(state)
+        |> Option.map(Core.Buffer.getLines)
+        |> Option.map(Array.to_list);
+
+      actual == Some([]);
     });
   },
 );

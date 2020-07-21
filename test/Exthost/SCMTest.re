@@ -18,7 +18,7 @@ describe("SCM", ({test, _}) => {
          ~name="RegisterSourceControl",
          fun
          | Msg.SCM(RegisterSourceControl({id, label, _})) =>
-           id == "\"test\"" && label == "\"Test\""
+           id == "test" && label == "Test"
          | _ => false,
        )
     |> Test.terminate

@@ -1,8 +1,6 @@
 open Oni_Core;
 open Utility;
-
-module InputModel = Oni_Components.InputModel;
-module Selection = Oni_Components.Selection;
+open Oni_Components;
 
 // MODEL
 
@@ -34,28 +32,34 @@ module Provider = {
     count: int,
     commitTemplate: string,
     acceptInputCommand: option(command),
+    inputVisible: bool,
+    validationEnabled: bool,
+  };
+
+  let initial = (~handle, ~id, ~label, ~rootUri) => {
+    handle,
+    id,
+    label,
+    rootUri,
+    resourceGroups: [],
+    hasQuickDiffProvider: false,
+    count: 0,
+    commitTemplate: "",
+    acceptInputCommand: None,
+    inputVisible: true,
+    validationEnabled: false,
   };
 };
 
 [@deriving show({with_path: false})]
 type model = {
   providers: list(Provider.t),
-  inputBox,
-}
-
-and inputBox = {
-  value: string,
-  selection: Selection.t,
-  placeholder: string,
+  inputBox: Feature_InputText.model,
 };
 
 let initial = {
   providers: [],
-  inputBox: {
-    value: "",
-    selection: Selection.initial,
-    placeholder: "Do the commit thing!",
-  },
+  inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
 };
 
 // EFFECTS
@@ -90,6 +94,16 @@ type msg =
       id: string,
       label: string,
     })
+  | GroupHideWhenEmptyChanged({
+      provider: int,
+      handle: int,
+      hideWhenEmpty: bool,
+    })
+  | GroupLabelChanged({
+      provider: int,
+      handle: int,
+      label: string,
+    })
   | LostResourceGroup({
       provider: int,
       handle: int,
@@ -117,10 +131,24 @@ type msg =
       handle: int,
       command: Exthost.SCM.command,
     })
+  //  | InputBoxPlaceholderChanged({
+  //      handle: int,
+  //      placeholder: string,
+  //    })
+  | InputBoxVisibilityChanged({
+      handle: int,
+      visible: bool,
+    })
+  | ValidationProviderEnabledChanged({
+      handle: int,
+      validationEnabled: bool,
+    })
   | KeyPressed({key: string})
-  | InputBoxClicked({selection: Selection.t});
+  | Pasted({text: string})
+  | InputBox(Feature_InputText.msg);
 
 module Msg = {
+  let paste = text => Pasted({text: text});
   let keyPressed = key => KeyPressed({key: key});
 };
 
@@ -129,23 +157,47 @@ type outmsg =
   | Focus
   | Nothing;
 
+module Internal = {
+  let updateProvider = (~handle, f, model) => {
+    {
+      ...model,
+      providers:
+        List.map(
+          (it: Provider.t) => it.handle == handle ? f(it) : it,
+          model.providers,
+        ),
+    };
+  };
+
+  let updateResourceGroup = (~provider, ~group, f, model) => {
+    {
+      ...model,
+      providers:
+        List.map(
+          (p: Provider.t) =>
+            p.handle == provider
+              ? {
+                ...p,
+                resourceGroups:
+                  List.map(
+                    (g: ResourceGroup.t) => g.handle == group ? f(g) : g,
+                    p.resourceGroups,
+                  ),
+              }
+              : p,
+          model.providers,
+        ),
+    };
+  };
+};
+
 let update = (extHostClient: Exthost.Client.t, model, msg) =>
   switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
       {
         ...model,
         providers: [
-          Provider.{
-            handle,
-            id,
-            label,
-            rootUri,
-            resourceGroups: [],
-            hasQuickDiffProvider: false,
-            count: 0,
-            commitTemplate: "",
-            acceptInputCommand: None,
-          },
+          Provider.initial(~handle, ~id, ~label, ~rootUri),
           ...model.providers,
         ],
       },
@@ -165,104 +217,106 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
 
   | QuickDiffProviderChanged({handle, available}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle
-                ? {...it, hasQuickDiffProvider: available} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, hasQuickDiffProvider: available}
+         ),
+      Nothing,
+    )
+
+  // TODO: Handle replacing '{0}' character in placeholder text
+  //  | InputBoxPlaceholderChanged({handle, placeholder}) => (
+  //      {
+  //        ...model,
+  //        inputBox:
+  //          Feature_InputText.setPlaceholder(~placeholder, model.inputBox),
+  //      },
+  //      Nothing,
+  //    )
+
+  | InputBoxVisibilityChanged({handle, visible}) => (
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, inputVisible: visible}
+         ),
+      Nothing,
+    )
+
+  | ValidationProviderEnabledChanged({handle, validationEnabled}) => (
+      model
+      |> Internal.updateProvider(~handle, it => {...it, validationEnabled}),
       Nothing,
     )
 
   | CountChanged({handle, count}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) => it.handle == handle ? {...it, count} : it,
-            model.providers,
-          ),
-      },
+      model |> Internal.updateProvider(~handle, it => {...it, count}),
       Nothing,
     )
 
   | CommitTemplateChanged({handle, template}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle ? {...it, commitTemplate: template} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, commitTemplate: template}
+         ),
       Nothing,
     )
 
   | AcceptInputCommandChanged({handle, command}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle
-                ? {...it, acceptInputCommand: Some(command)} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, acceptInputCommand: Some(command)}
+         ),
       Nothing,
     )
 
   | NewResourceGroup({provider, handle, id, label}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups: [
-                    ResourceGroup.{
-                      handle,
-                      id,
-                      label,
-                      hideWhenEmpty: false,
-                      resources: [],
-                    },
-                    ...p.resourceGroups,
-                  ],
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle=provider, p =>
+           {
+             ...p,
+             resourceGroups: [
+               ResourceGroup.{
+                 handle,
+                 id,
+                 label,
+                 hideWhenEmpty: false,
+                 resources: [],
+               },
+               ...p.resourceGroups,
+             ],
+           }
+         ),
       Nothing,
     )
 
   | LostResourceGroup({provider, handle}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups:
-                    List.filter(
-                      (g: ResourceGroup.t) => g.handle != handle,
-                      p.resourceGroups,
-                    ),
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle=provider, p =>
+           {
+             ...p,
+             resourceGroups:
+               List.filter(
+                 (g: ResourceGroup.t) => g.handle != handle,
+                 p.resourceGroups,
+               ),
+           }
+         ),
+      Nothing,
+    )
+
+  | GroupHideWhenEmptyChanged({provider, handle, hideWhenEmpty}) => (
+      model
+      |> Internal.updateResourceGroup(~provider, ~group=handle, group =>
+           {...group, hideWhenEmpty}
+         ),
+      Nothing,
+    )
+
+  | GroupLabelChanged({provider, handle, label}) => (
+      model
+      |> Internal.updateResourceGroup(~provider, ~group=handle, group =>
+           {...group, label}
+         ),
       Nothing,
     )
 
@@ -273,36 +327,19 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       deleteCount,
       additions,
     }) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups:
-                    List.map(
-                      (g: ResourceGroup.t) =>
-                        g.handle == group
-                          ? {
-                            ...g,
-                            resources:
-                              ListEx.splice(
-                                ~start=spliceStart,
-                                ~deleteCount,
-                                ~additions,
-                                g.resources,
-                              ),
-                          }
-                          : g,
-                      p.resourceGroups,
-                    ),
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateResourceGroup(~provider, ~group, g =>
+           {
+             ...g,
+             resources:
+               ListEx.splice(
+                 ~start=spliceStart,
+                 ~deleteCount,
+                 ~additions,
+                 g.resources,
+               ),
+           }
+         ),
       Nothing,
     )
 
@@ -329,29 +366,16 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
 
   | KeyPressed({key}) =>
-    let (value, selection) =
-      InputModel.handleInput(
-        ~text=model.inputBox.value,
-        ~selection=model.inputBox.selection,
-        key,
-      );
-
+    let inputBox = Feature_InputText.handleInput(~key, model.inputBox);
     (
-      {
-        ...model,
-        inputBox: {
-          ...model.inputBox,
-          value,
-          selection,
-        },
-      },
+      {...model, inputBox},
       Effect(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
                Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
-                 ~value,
+                 ~value=inputBox |> Feature_InputText.value,
                  extHostClient,
                )
              ),
@@ -359,14 +383,26 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       ),
     );
 
-  | InputBoxClicked({selection}) => (
-      {
-        ...model,
-        inputBox: {
-          ...model.inputBox,
-          selection,
-        },
-      },
+  | Pasted({text}) =>
+    let inputBox = Feature_InputText.paste(~text, model.inputBox);
+    (
+      {...model, inputBox},
+      Effect(
+        Isolinear.Effect.batch(
+          model.providers
+          |> List.map((provider: Provider.t) =>
+               Service_Exthost.Effects.SCM.onInputBoxValueChange(
+                 ~handle=provider.handle,
+                 ~value=inputBox |> Feature_InputText.value,
+                 extHostClient,
+               )
+             ),
+        ),
+      ),
+    );
+
+  | InputBox(msg) => (
+      {...model, inputBox: Feature_InputText.update(msg, model.inputBox)},
       Focus,
     )
   };
@@ -384,6 +420,20 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
 
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
+
+  | UpdateGroup({provider, handle, features}) =>
+    Exthost.SCM.GroupFeatures.(
+      dispatch(
+        GroupHideWhenEmptyChanged({
+          provider,
+          handle,
+          hideWhenEmpty: features.hideWhenEmpty,
+        }),
+      )
+    )
+
+  | UpdateGroupLabel({provider, handle, label}) =>
+    dispatch(GroupLabelChanged({provider, handle, label}))
 
   | SpliceSCMResourceStates({handle, splices}) =>
     open Exthost.SCM;
@@ -426,6 +476,16 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
+  | SetInputBoxPlaceholder(_) =>
+    // TODO: Set up replacement for '{0}'
+    //dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))
+    ()
+  | SetInputBoxVisibility({handle, visible}) =>
+    dispatch(InputBoxVisibilityChanged({handle, visible}))
+  | SetValidationProviderIsEnabled({handle, enabled}) =>
+    dispatch(
+      ValidationProviderEnabledChanged({handle, validationEnabled: enabled}),
+    )
   };
 
 // VIEW
@@ -434,15 +494,13 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-module Input = Oni_Components.Input;
-
 module Colors = Feature_Theme.Colors;
 
 module Pane = {
   module Styles = {
     open Style;
 
-    let container = [padding(10), flexGrow(1)];
+    let container = [flexGrow(1)];
 
     let text = (~theme) => [
       color(Colors.SideBar.foreground.from(theme)),
@@ -450,25 +508,14 @@ module Pane = {
       textOverflow(`Ellipsis),
     ];
 
-    let input = [flexGrow(1)];
-
-    let group = [];
-
-    let groupLabel = [paddingVertical(3)];
-
-    let groupLabelText = (~theme) => [
-      color(Colors.SideBar.foreground.from(theme)),
-      textWrap(TextWrapping.NoWrap),
-      textOverflow(`Ellipsis),
-    ];
-
-    let groupItems = [marginLeft(6)];
+    let input = [flexGrow(1), margin(12)];
 
     let item = (~isHovered, ~theme) => [
       isHovered
         ? backgroundColor(Colors.List.hoverBackground.from(theme))
         : backgroundColor(Colors.SideBar.background.from(theme)),
       paddingVertical(2),
+      marginLeft(6),
       cursor(MouseCursors.pointer),
     ];
   };
@@ -516,49 +563,47 @@ module Pane = {
         ~font: UiFont.t,
         ~workingDirectory,
         ~onItemClick,
+        ~onTitleClick,
+        ~expanded,
         (),
       ) => {
-    let label = String.uppercase_ascii(group.label);
-    <View style=Styles.group>
-      <View style=Styles.groupLabel>
-        <Text
-          style={Styles.groupLabelText(~theme)}
-          text=label
-          fontFamily={font.family}
-          fontWeight=Bold
-          fontSize={font.size *. 0.85}
-        />
-      </View>
-      <View style=Styles.groupItems>
-        ...{
-             group.resources
-             |> List.map(resource =>
-                  <itemView
-                    provider
-                    resource
-                    theme
-                    font
-                    workingDirectory
-                    onClick={() => onItemClick(resource)}
-                  />
-                )
-             |> React.listToElement
-           }
-      </View>
-    </View>;
+    let label = group.label;
+    let items = Array.of_list(group.resources);
+    let renderItem = (items, idx) => {
+      let resource = items[idx];
+      <itemView
+        provider
+        resource
+        theme
+        font
+        workingDirectory
+        onClick={() => onItemClick(resource)}
+      />;
+    };
+    <Accordion
+      title=label
+      expanded
+      uiFont=font
+      rowHeight=20
+      count={Array.length(items)}
+      renderItem={renderItem(items)}
+      focused=None
+      theme
+      onClick=onTitleClick
+    />;
   };
 
-  let make =
-      (
-        ~model,
-        ~workingDirectory,
-        ~onItemClick,
-        ~isFocused,
-        ~theme,
-        ~font: UiFont.t,
-        ~dispatch,
-        (),
-      ) => {
+  let%component make =
+                (
+                  ~model,
+                  ~workingDirectory,
+                  ~onItemClick,
+                  ~isFocused,
+                  ~theme,
+                  ~font: UiFont.t,
+                  ~dispatch,
+                  (),
+                ) => {
     let groups = {
       open Base.List.Let_syntax;
 
@@ -568,32 +613,52 @@ module Pane = {
       return((provider, group));
     };
 
-    <ScrollView style=Styles.container>
-      <Input
+    let%hook (localState, localDispatch) =
+      Hooks.reducer(~initialState=StringMap.empty, (msg, model) => {
+        StringMap.update(
+          msg,
+          fun
+          | None => Some(false)
+          | Some(false) => Some(true)
+          | Some(true) => Some(false),
+          model,
+        )
+      });
+
+    <View style=Styles.container>
+      <Feature_InputText.View
         style=Styles.input
-        value={model.inputBox.value}
-        selection={model.inputBox.selection}
-        placeholder={model.inputBox.placeholder}
+        model={model.inputBox}
         isFocused
         fontFamily={font.family}
         fontSize={font.size}
-        onClick={selection =>
-          dispatch(InputBoxClicked({selection: selection}))
-        }
+        dispatch={msg => dispatch(InputBox(msg))}
         theme
       />
       {groups
-       |> List.map(((provider, group)) =>
-            <groupView
-              provider
-              group
-              theme
-              font
-              workingDirectory
-              onItemClick
-            />
-          )
+       |> List.filter_map(((provider, group: ResourceGroup.t)) => {
+            let expanded =
+              StringMap.find_opt(group.label, localState)
+              |> Option.value(~default=true);
+
+            if (group.resources == [] && group.hideWhenEmpty) {
+              None;
+            } else {
+              Some(
+                <groupView
+                  provider
+                  expanded
+                  group
+                  theme
+                  font
+                  workingDirectory
+                  onItemClick
+                  onTitleClick={() => localDispatch(group.label)}
+                />,
+              );
+            };
+          })
        |> React.listToElement}
-    </ScrollView>;
+    </View>;
   };
 };

@@ -38,7 +38,6 @@ let isWhitespace = c => {
 let filterRuns = (r: Tokenizer.TextRun.t) => ZedBundled.length(r.text) != 0;
 
 let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
-  //let startIndex = Index.toZeroBased(r.startIndex);
   let {color, backgroundColor, bold, italic}: BufferLineColorizer.themedToken =
     colorizer(r.startByte);
 
@@ -63,19 +62,6 @@ let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
     bold,
     italic,
   };
-};
-
-let getCharacterPositionAndWidth = (~viewOffset: int=0, line: BufferLine.t, i) => {
-  let (totalOffset, width) = BufferLine.getPositionAndWidth(~index=i, line);
-
-  let actualOffset =
-    if (viewOffset > 0) {
-      totalOffset - viewOffset;
-    } else {
-      totalOffset;
-    };
-
-  (actualOffset, width);
 };
 
 let tokenize =

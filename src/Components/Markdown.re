@@ -27,16 +27,21 @@ open {
            );
 
          let scope =
-           Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-             languageInfo,
-             language,
-           )
-           |> Utility.OptionEx.or_(
-                Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-                  languageInfo,
-                  defaultLanguage,
-                ),
-              );
+           switch (language) {
+           | Some(language) =>
+             Exthost.LanguageInfo.getScopeFromLanguage(languageInfo, language)
+             |> Utility.OptionEx.or_(
+                  Exthost.LanguageInfo.getScopeFromLanguage(
+                    languageInfo,
+                    defaultLanguage,
+                  ),
+                )
+           | None =>
+             Exthost.LanguageInfo.getScopeFromLanguage(
+               languageInfo,
+               defaultLanguage,
+             )
+           };
 
          switch (scope) {
          | Some(scope) =>
@@ -107,6 +112,7 @@ let make =
       ~codeFontFamily,
       ~baseFontSize=16.,
       ~codeBlockStyle=?,
+      ~codeBlockFontSize=16.,
       ~defaultLanguage="",
       (),
     ) => {
@@ -134,5 +140,6 @@ let make =
     activeLinkStyle={Styles.linkActive(~theme=colorTheme)}
     inactiveLinkStyle={Styles.linkInactive(~theme=colorTheme)}
     ?codeBlockStyle
+    codeBlockFontSize
   />;
 };

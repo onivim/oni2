@@ -4,11 +4,9 @@
 
 open Oni_Syntax;
 
-module Ext = Oni_Extensions;
-
 type t = {
   scopeToConverter: Hashtbl.t(string, TreeSitterScopes.TextMateConverter.t),
-  languageInfo: Ext.LanguageInfo.t,
+  languageInfo: Exthost.LanguageInfo.t,
   log: string => unit,
 };
 
@@ -18,7 +16,7 @@ let create = (~log=_ => (), languageInfo) => {
   languageInfo,
 };
 
-let empty = create(Ext.LanguageInfo.initial);
+let empty = create(Exthost.LanguageInfo.initial);
 
 let getScopeConverter = (~scope: string, gr: t) => {
   switch (Hashtbl.find_opt(gr.scopeToConverter, scope)) {
@@ -30,7 +28,7 @@ let getScopeConverter = (~scope: string, gr: t) => {
       "getScopeConverter - querying language info for language: " ++ scope,
     );
     switch (
-      Ext.LanguageInfo.getTreesitterPathFromScope(gr.languageInfo, scope)
+      Exthost.LanguageInfo.getTreesitterPathFromScope(gr.languageInfo, scope)
     ) {
     | Some(grammarPath) =>
       gr.log("Loading tree sitter converter from: " ++ grammarPath);

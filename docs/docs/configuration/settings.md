@@ -33,13 +33,15 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialiased"_)__ - The smoothing strategy used when rendering fonts. The `"antialiased"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid. 
 
+- `editor.fontLigatures` __(_string|bool_ default: `true`)__ - Sets whether or not font ligatures are enabled. When `true`, the font's default features are enabled. When `false`, contextual alternates and standard ligatues are disabled. If a string is entered, it must be of the form `"'tag1', 'tag2', ..."`, where each tag listed will be enabled. This is particularly useful for enabling stylistic sets, i.e. `"'ss01', 'ss02', ..."`.
+
 - `editor.hover.delay` __(_int_ default: `1000`)__ - The delay in milliseconds before showing the hover UI.
 
 - `editor.hover.enabled` __(_bool_ default: `true`)__ - Controls whether or not the hover UI is enabled.
 
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
 
-- `editor.lineNumbers` __(_"on"|"off"|"relative" _default: `"on"`)__ - Controls how line numbers are rendered on the editor surface
+- `editor.lineNumbers` __(_"on"|"off"|"relative"_ default: `"on"`)__ - Controls how line numbers are rendered on the editor surface
     - _"on"_ - absolute line numbers are displayed
     - _"relative"_ - the absolute line number of the line with the cursor is displayed, other line numbers are shown relative. (This is helpful for motions in Vim!)
     - _"off"_ - do not render line numbers.
@@ -71,6 +73,16 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
+
+## Layout
+
+- `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
+
+- `oni.layout.showLayoutTabs` __(_"always"|"smart"|"never"_ default: `"smart"`)__ - Controls the display of layout tabs. `"smart"` will only show the tabs if there's more than one.
+
+- `oni.layout.layoutTabPosition` __(_"top"|"bottom"_ default: `"bottom"`)__ - Controls the position of the layout tabs.
+
+- `oni.layout.singleTabMode` __(_bool_ default: `false`)__ - When `true`, groups will only hold a single editor, and closing this editor will always close the group. It will also hide the editor tabs, and therefore essentially hide the concept of editor groups.
 
 ## Rendering
 

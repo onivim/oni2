@@ -8,9 +8,7 @@ open Oni_Model;
 open Oni_UI;
 open Utility;
 
-module InputModel = Oni_Components.InputModel;
 module ExtensionContributions = Exthost.Extension.Contributions;
-module Selection = Oni_Components.Selection;
 
 module Log = (val Log.withNamespace("Oni2.Store.Quickmenu"));
 
@@ -59,7 +57,7 @@ module Internal = {
   };
 };
 
-let start = (themeInfo: ThemeInfo.t) => {
+let start = () => {
   let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
@@ -117,6 +115,9 @@ let start = (themeInfo: ThemeInfo.t) => {
     |> Array.of_list;
   };
 
+  let typeToSearchInput =
+    Feature_InputText.create(~placeholder="type to search...");
+
   let menuUpdater =
       (
         state: option(Quickmenu.t),
@@ -124,7 +125,6 @@ let start = (themeInfo: ThemeInfo.t) => {
         buffers,
         languageInfo,
         iconTheme,
-        themeInfo,
         commands,
         menus,
         contextKeys,
@@ -136,6 +136,7 @@ let start = (themeInfo: ThemeInfo.t) => {
           ...Quickmenu.defaults(CommandPalette),
           items: Internal.commandPaletteItems(commands, menus, contextKeys),
           focused: Some(0),
+          inputText: typeToSearchInput,
         }),
         Isolinear.Effect.none,
       )
@@ -160,7 +161,9 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuShow(FilesPicker) => (
         Some({
           ...Quickmenu.defaults(FilesPicker),
+          filterProgress: Loading,
           ripgrepProgress: Loading,
+          inputText: typeToSearchInput,
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -174,9 +177,9 @@ let start = (themeInfo: ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(ThemesPicker) =>
+    | QuickmenuShow(ThemesPicker(themes)) =>
       let items =
-        ThemeInfo.getThemes(themeInfo)
+        themes
         |> List.map((theme: ExtensionContributions.Theme.t) => {
              Actions.{
                category: Some("Theme"),
@@ -189,29 +192,43 @@ let start = (themeInfo: ThemeInfo.t) => {
         |> Array.of_list;
 
       (
-        Some({...Quickmenu.defaults(ThemesPicker), items}),
+        Some({...Quickmenu.defaults(ThemesPicker(themes)), items}),
         Isolinear.Effect.none,
       );
 
+    | QuickmenuPaste(text) => (
+        Option.map(
+          (Quickmenu.{inputText, _} as state) => {
+            let inputText = Feature_InputText.paste(~text, inputText);
+
+            Quickmenu.{...state, inputText, focused: Some(0)};
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
     | QuickmenuInput(key) => (
         Option.map(
-          (Quickmenu.{query, selection, _} as state) => {
-            let (text, selection) =
-              InputModel.handleInput(~text=query, ~selection, key);
+          (Quickmenu.{inputText, _} as state) => {
+            let inputText = Feature_InputText.handleInput(~key, inputText);
 
-            Quickmenu.{...state, query: text, selection, focused: Some(0)};
+            Quickmenu.{...state, inputText, focused: Some(0)};
           },
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuInputClicked((newSelection: Selection.t)) => (
+    | QuickmenuInputMessage(msg) => (
         Option.map(
-          (Quickmenu.{variant, selection, _} as state) => {
+          (Quickmenu.{variant, inputText, _} as state) => {
             switch (variant) {
             | Wildmenu(_) =>
-              let transition = selection.focus - newSelection.focus;
+              let oldPosition = inputText |> Feature_InputText.cursorPosition;
+
+              let inputText = Feature_InputText.update(msg, inputText);
+              let newPosition = inputText |> Feature_InputText.cursorPosition;
+              let transition = newPosition - oldPosition;
 
               if (transition > 0) {
                 for (_ in 0 to transition) {
@@ -229,20 +246,20 @@ let start = (themeInfo: ThemeInfo.t) => {
             | _ => ()
             };
 
-            Quickmenu.{...state, variant, selection: newSelection};
+            Quickmenu.{...state, variant, inputText};
           },
           state,
         ),
         Isolinear.Effect.none,
       )
 
-    | QuickmenuCommandlineUpdated(text, cursorPosition) => (
+    | QuickmenuCommandlineUpdated(text, cursor) => (
         Option.map(
           state =>
             Quickmenu.{
               ...state,
-              query: text,
-              selection: Selection.collapsed(~text, cursorPosition),
+              inputText:
+                Feature_InputText.set(~text, ~cursor, state.inputText),
             },
           state,
         ),
@@ -361,7 +378,6 @@ let start = (themeInfo: ThemeInfo.t) => {
         state.buffers,
         state.languageInfo,
         state.iconTheme,
-        themeInfo,
         State.commands(state),
         State.menus(state),
         WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
@@ -438,19 +454,21 @@ let subscriptions = (ripgrep, dispatch) => {
           dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
         },
       ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
+      ~onError=_ => Actions.Noop,
     );
   };
 
   let updater = (state: State.t) => {
     switch (state.quickmenu) {
     | Some(quickmenu) =>
+      let query = quickmenu.inputText |> Feature_InputText.value;
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
-      | ThemesPicker => [filter(quickmenu.query, quickmenu.items)]
+      | ThemesPicker(_) => [filter(query, quickmenu.items)]
 
       | FilesPicker => [
-          filter(quickmenu.query, quickmenu.items),
+          filter(query, quickmenu.items),
           ripgrep(state.languageInfo, state.iconTheme, state.configuration),
         ]
 
@@ -458,12 +476,12 @@ let subscriptions = (ripgrep, dispatch) => {
       | DocumentSymbols =>
         switch (Selectors.getActiveBuffer(state)) {
         | Some(buffer) => [
-            filter(quickmenu.query, quickmenu.items),
+            filter(query, quickmenu.items),
             documentSymbols(state.languageFeatures, buffer),
           ]
         | None => []
         }
-      }
+      };
 
     | None => []
     };

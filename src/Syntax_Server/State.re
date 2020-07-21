@@ -9,8 +9,6 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Syntax;
 
-module Ext = Oni_Extensions;
-
 type logFunc = string => unit;
 
 type bufferInfo = {
@@ -23,7 +21,7 @@ type t = {
   useTreeSitter: bool,
   setup: option(Setup.t),
   bufferInfo: IntMap.t(bufferInfo),
-  languageInfo: Ext.LanguageInfo.t,
+  languageInfo: Exthost.LanguageInfo.t,
   treesitterRepository: TreesitterRepository.t,
   grammarRepository: GrammarRepository.t,
   theme: TokenTheme.t,
@@ -38,7 +36,7 @@ let empty = {
   visibleBuffers: [],
   highlightsMap: IntMap.empty,
   theme: TokenTheme.empty,
-  languageInfo: Ext.LanguageInfo.initial,
+  languageInfo: Exthost.LanguageInfo.initial,
   grammarRepository: GrammarRepository.empty,
   treesitterRepository: TreesitterRepository.empty,
 };
@@ -265,10 +263,7 @@ let bufferEnter =
     };
 
   let scope =
-    Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-      state.languageInfo,
-      filetype,
-    )
+    Exthost.LanguageInfo.getScopeFromLanguage(state.languageInfo, filetype)
     |> Option.value(~default=Constants.defaultScope);
 
   let bufferInfo =

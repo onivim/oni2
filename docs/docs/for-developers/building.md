@@ -10,7 +10,7 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.6.2__ is required `npm install -g esy@0.6.2`)
+- Install [Esy](https://esy.sh) (__0.6.2__ or above is required, but the latest version is recommened: `npm install -g esy@latest`)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - Install any other system packages required by Oni2 dependencies, as outlined below.
 

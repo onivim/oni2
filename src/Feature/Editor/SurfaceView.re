@@ -77,7 +77,12 @@ let%component make =
     };
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-    dispatch(Msg.EditorMouseWheel({deltaWheel: wheelEvent.deltaY *. (-1.)}));
+    dispatch(
+      Msg.EditorMouseWheel({
+        deltaY: wheelEvent.deltaY *. (-1.),
+        deltaX: wheelEvent.deltaX,
+      }),
+    );
 
   let getMaybeLocationFromMousePosition = (mouseX, mouseY) => {
     maybeBbox^
@@ -254,7 +259,6 @@ let%component make =
       config
       editor
       editorFont
-      buffer
       mode
       cursorPosition
       isActiveSplit

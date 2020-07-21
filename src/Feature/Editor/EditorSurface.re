@@ -124,6 +124,7 @@ let scrollSpringOptions =
 let%component make =
               (
                 ~dispatch,
+                ~languageConfiguration,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -199,16 +200,24 @@ let%component make =
     Editor.getLayout(
       ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
       ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      ~isMinimapShown=Config.Minimap.enabled.get(config),
       editor,
     );
+
+  let matchingPairCheckPosition =
+    mode == Vim.Types.Insert
+      ? Location.{
+          line: cursorPosition.line,
+          column: Index.(cursorPosition.column - 1),
+        }
+      : cursorPosition;
 
   let matchingPairs =
     !Config.matchBrackets.get(config)
       ? None
-      : BufferHighlights.getMatchingPair(
-          Buffer.getId(buffer),
-          bufferHighlights,
+      : Editor.getNearestMatchingPair(
+          ~location=matchingPairCheckPosition,
+          ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
+          editor,
         );
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
@@ -220,19 +229,20 @@ let%component make =
       ? EditorDiffMarkers.generate(buffer) : None;
 
   let smoothScroll = Config.Experimental.smoothScroll.get(config);
+  let isScrollAnimated = Editor.isScrollAnimated(editor);
 
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
       ~target=Editor.scrollY(editor),
       ~restThreshold=10.,
-      ~enabled=smoothScroll,
+      ~enabled=smoothScroll && isScrollAnimated,
       scrollSpringOptions,
     );
   let%hook (scrollX, _setScrollXImmediately) =
     Hooks.spring(
       ~target=Editor.scrollX(editor),
       ~restThreshold=10.,
-      ~enabled=smoothScroll,
+      ~enabled=smoothScroll && isScrollAnimated,
       scrollSpringOptions,
     );
 
@@ -283,7 +293,7 @@ let%component make =
       windowIsFocused
       config
     />
-    {Config.Minimap.enabled.get(config)
+    {Editor.isMinimapEnabled(editor)
        ? <minimap
            editor
            diagnosticsMap
@@ -316,6 +326,7 @@ let%component make =
       <Scrollbar.Vertical
         dispatch
         editor
+        matchingPair=matchingPairs
         cursorPosition
         width=Constants.scrollBarThickness
         height=pixelHeight

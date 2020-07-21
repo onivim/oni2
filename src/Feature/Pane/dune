@@ -1,0 +1,12 @@
+(library
+    (name Feature_Pane)
+    (public_name Oni2.feature.pane)
+    (libraries 
+      Oni2.core
+      Oni2.components
+      Oni2.feature.theme
+      isolinear
+      base
+      Revery
+    )
+    (preprocess (pps brisk-reconciler.ppx ppx_deriving.show)))

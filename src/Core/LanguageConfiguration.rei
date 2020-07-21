@@ -40,6 +40,11 @@ type t = {
 
 let default: t;
 
+let shouldIncreaseIndent:
+  (~previousLine: string, ~beforePreviousLine: option(string), t) => bool;
+
+let shouldDecreaseIndent: (~line: string, t) => bool;
+
 let decode: Json.decoder(t);
 
 let toVimAutoClosingPairs: (SyntaxScope.t, t) => Vim.AutoClosingPairs.t;

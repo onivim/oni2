@@ -1,7 +1,15 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-let lastId = ref(0);
+module GlobalState = {
+  let lastId = ref(0);
+
+  let generateId = () => {
+    let id = lastId^;
+    incr(lastId);
+    id;
+  };
+};
 
 type pixelPosition = {
   pixelX: float,
@@ -21,6 +29,8 @@ type t = {
   editorId: EditorId.t,
   scrollX: float,
   scrollY: float,
+  isScrollAnimated: bool,
+  isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   /*
@@ -47,6 +57,14 @@ let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
 let lineHeightInPixels = ({font, _}) => font.measuredHeight;
 let characterWidthInPixels = ({font, _}) => font.measuredWidth;
 let font = ({font, _}) => font;
+
+let setMinimapEnabled = (~enabled, editor) => {
+  ...editor,
+  isMinimapEnabled: enabled,
+};
+
+let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
+let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
 let bufferLineByteToPixel =
     (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
@@ -93,12 +111,15 @@ let bufferLineCharacterToPixel =
   };
 };
 
-let create = (~font, ~buffer, ()) => {
-  let id = lastId^;
-  incr(lastId);
+let create = (~config, ~font, ~buffer, ()) => {
+  let id = GlobalState.generateId();
+
+  let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
 
   {
     editorId: id,
+    isMinimapEnabled,
+    isScrollAnimated: false,
     buffer,
     scrollX: 0.,
     scrollY: 0.,
@@ -125,6 +146,12 @@ let create = (~font, ~buffer, ()) => {
   };
 };
 
+let copy = editor => {
+  let id = GlobalState.generateId();
+
+  {...editor, editorId: id};
+};
+
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,
@@ -132,7 +159,27 @@ type scrollbarMetrics = {
 };
 
 let getVimCursors = ({cursors, _}) => cursors;
-let setVimCursors = (~cursors, editor) => {...editor, cursors};
+
+let getNearestMatchingPair = (~location: Location.t, ~pairs, {buffer, _}) => {
+  BracketMatch.findFirst(
+    ~buffer,
+    ~line=location.line |> Index.toZeroBased,
+    ~index=location.column |> Index.toZeroBased,
+    ~pairs,
+  )
+  |> Option.map(({start, stop}: BracketMatch.pair) =>
+       (
+         Location.{
+           line: start.line |> Index.fromZeroBased,
+           column: start.index |> Index.fromZeroBased,
+         },
+         Location.{
+           line: stop.line |> Index.fromZeroBased,
+           column: stop.index |> Index.fromZeroBased,
+         },
+       )
+     );
+};
 
 let mapCursor = (~position: Vim.Cursor.t, editor) => {
   let byte = position.column |> Index.toZeroBased;
@@ -151,6 +198,40 @@ let mapCursor = (~position: Vim.Cursor.t, editor) => {
   };
 };
 
+let getCharacterAtPosition = (~line, ~index, {buffer, _}) => {
+  let bufferLineCount = EditorBuffer.numberOfLines(buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = EditorBuffer.line(line, buffer);
+    try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+    | _exn => None
+    };
+  } else {
+    None;
+  };
+};
+
+let getCharacterBehindCursor = ({cursors, buffer, _}) => {
+  switch (cursors) {
+  | [] => None
+  | [cursor, ..._] =>
+    let byte = cursor.column |> Index.toZeroBased;
+    let line = cursor.line |> Index.toZeroBased;
+
+    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
+
+    if (line < bufferLineCount) {
+      let bufferLine = EditorBuffer.line(line, buffer);
+      let index = max(0, BufferLine.getIndex(~byte, bufferLine) - 1);
+      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+      | _exn => None
+      };
+    } else {
+      None;
+    };
+  };
+};
+
 let getCharacterUnderCursor = ({cursors, buffer, _}) => {
   switch (cursors) {
   | [] => None
@@ -163,8 +244,9 @@ let getCharacterUnderCursor = ({cursors, buffer, _}) => {
     if (line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
       let index = BufferLine.getIndex(~byte, bufferLine);
-      let character = BufferLine.getUcharExn(~index, bufferLine);
-      Some(character);
+      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+      | _exn => None
+      };
     } else {
       None;
     };
@@ -244,13 +326,12 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
     };
 };
 
-let getLayout =
-    (~showLineNumbers, ~isMinimapShown, ~maxMinimapCharacters, view) => {
-  let {pixelWidth, pixelHeight, _} = view;
+let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
+  let {pixelWidth, pixelHeight, isMinimapEnabled, _} = view;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~showLineNumbers,
-      ~isMinimapShown,
+      ~isMinimapShown=isMinimapEnabled,
       ~maxMinimapCharacters,
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
@@ -262,6 +343,56 @@ let getLayout =
 
   layout;
 };
+
+let exposePrimaryCursor = editor => {
+  switch (editor.cursors) {
+  | [primaryCursor, ..._tail] =>
+    let line = Vim.Cursor.(primaryCursor.line |> Index.toZeroBased);
+    let byte = Vim.Cursor.(primaryCursor.column |> Index.toZeroBased);
+
+    let {bufferWidthInPixels, _}: EditorLayout.t =
+      getLayout(~showLineNumbers=true, ~maxMinimapCharacters=999, editor);
+
+    let pixelWidth = bufferWidthInPixels;
+
+    let {pixelHeight, scrollX, scrollY, _} = editor;
+    let pixelHeight = float(pixelHeight);
+
+    let ({pixelX, pixelY}, _width) =
+      bufferLineByteToPixel(~line, ~byteIndex=byte, editor);
+
+    let scrollOffX = getCharacterWidth(editor) *. 2.;
+    let scrollOffY = getLineHeight(editor);
+
+    let availableX = pixelWidth -. scrollOffX;
+    let availableY = pixelHeight -. scrollOffY;
+
+    let adjustedScrollX =
+      if (pixelX < 0.) {
+        scrollX +. pixelX;
+      } else if (pixelX >= availableX) {
+        scrollX +. (pixelX -. availableX);
+      } else {
+        scrollX;
+      };
+
+    let adjustedScrollY =
+      if (pixelY < 0.) {
+        scrollY +. pixelY;
+      } else if (pixelY >= availableY) {
+        scrollY +. (pixelY -. availableY);
+      } else {
+        scrollY;
+      };
+
+    {...editor, scrollX: adjustedScrollX, scrollY: adjustedScrollY};
+
+  | _ => editor
+  };
+};
+
+let setVimCursors = (~cursors, editor) =>
+  {...editor, cursors} |> exposePrimaryCursor;
 
 let getLeftVisibleColumn = view => {
   int_of_float(view.scrollX /. getCharacterWidth(view));
@@ -304,12 +435,17 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
   let newMinimapScroll =
     scrollPercentage *. float_of_int(availableMinimapScroll);
 
-  {...view, minimapScrollY: newMinimapScroll, scrollY: newScrollY};
+  {
+    ...view,
+    isScrollAnimated: false,
+    minimapScrollY: newMinimapScroll,
+    scrollY: newScrollY,
+  };
 };
 
 let scrollToLine = (~line, view) => {
   let pixelY = float_of_int(line) *. getLineHeight(view);
-  scrollToPixelY(~pixelY, view);
+  {...scrollToPixelY(~pixelY, view), isScrollAnimated: true};
 };
 
 let scrollToPixelX = (~pixelX as newScrollX, view) => {
@@ -319,7 +455,7 @@ let scrollToPixelX = (~pixelX as newScrollX, view) => {
     max(0., float_of_int(view.maxLineLength) *. getCharacterWidth(view));
   let scrollX = min(newScrollX, availableScroll);
 
-  {...view, scrollX};
+  {...view, isScrollAnimated: false, scrollX};
 };
 
 let scrollDeltaPixelX = (~pixelX, editor) => {
@@ -329,12 +465,27 @@ let scrollDeltaPixelX = (~pixelX, editor) => {
 
 let scrollToColumn = (~column, view) => {
   let pixelX = float_of_int(column) *. getCharacterWidth(view);
-  scrollToPixelX(~pixelX, view);
+  {...scrollToPixelX(~pixelX, view), isScrollAnimated: true};
 };
 
 let scrollDeltaPixelY = (~pixelY, view) => {
   let pixelY = view.scrollY +. pixelY;
   scrollToPixelY(~pixelY, view);
+};
+
+let scrollToPixelXY = (~pixelX as newScrollX, ~pixelY as newScrollY, view) => {
+  let {scrollX, _} = scrollToPixelX(~pixelX=newScrollX, view);
+  let {scrollY, minimapScrollY, _} =
+    scrollToPixelY(~pixelY=newScrollY, view);
+
+  {...view, scrollX, scrollY, minimapScrollY};
+};
+
+let scrollDeltaPixelXY = (~pixelX, ~pixelY, view) => {
+  let {scrollX, _} = scrollDeltaPixelX(~pixelX, view);
+  let {scrollY, minimapScrollY, _} = scrollDeltaPixelY(~pixelY, view);
+
+  {...view, scrollX, scrollY, minimapScrollY};
 };
 
 // PROJECTION

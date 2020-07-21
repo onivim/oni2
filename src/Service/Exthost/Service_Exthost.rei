@@ -1,6 +1,16 @@
 open EditorCoreTypes;
 // EFFECTS
 module Effects: {
+  module Commands: {
+    let executeContributedCommand:
+      (
+        ~command: string,
+        ~arguments: list(Oni_Core.Json.t),
+        Exthost.Client.t
+      ) =>
+      Isolinear.Effect.t(_);
+  };
+
   module Documents: {
     let modelChanged:
       (

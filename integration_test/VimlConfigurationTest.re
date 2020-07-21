@@ -24,7 +24,8 @@ runTest(
     dispatch(KeyboardInput("e"));
     wait(~name="Mode switches to command line", (state: State.t) =>
       switch (state.quickmenu) {
-      | Some(quickmenu) => quickmenu.query == "e"
+      | Some(quickmenu) =>
+        quickmenu.inputText |> Feature_InputText.value == "e"
       | None => false
       }
     );
@@ -33,7 +34,8 @@ runTest(
 
     wait(~name="Mode switches to command line", (state: State.t) =>
       switch (state.quickmenu) {
-      | Some(quickmenu) => quickmenu.query == "eh"
+      | Some(quickmenu) =>
+        quickmenu.inputText |> Feature_InputText.value == "eh"
       | None => false
       }
     );

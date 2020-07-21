@@ -4,9 +4,9 @@
     (libraries 
       editor-core-types
       Oni2.core
+      Oni2.feature.inputText
       Oni2.feature.theme
       Oni2.components
-      Oni2.extensions
       Oni2.service.exthost
       Revery
       isolinear

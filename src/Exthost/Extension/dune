@@ -1,5 +1,6 @@
 (library
     (name Exthost_Extension)
     (public_name Oni2.exthost.extension)
+    (inline_tests)
     (libraries Oni2.core Oni2.core.whenExpr Rench luv re timber yojson decoders-yojson)
-    (preprocess (pps ppx_deriving.show ppx_deriving_yojson)))
+    (preprocess (pps ppx_deriving.show ppx_deriving_yojson ppx_inline_test)))

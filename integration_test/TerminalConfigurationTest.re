@@ -44,7 +44,7 @@ runTest(
       (state: State.t) =>
       List.exists(
         id => id == "oni-dev-extension",
-        state.extensions.activatedIds,
+        state.extensions |> Feature_Extensions.activatedIds,
       )
     );
 

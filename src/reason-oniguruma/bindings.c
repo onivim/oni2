@@ -12,6 +12,7 @@
 typedef struct _regexp {
   regex_t *regexp;
   OnigRegion *region;
+  int status;
 } regexp_W;
 
 void reonig_finalize_regexp(value v) {
@@ -80,6 +81,7 @@ CAMLprim value reonig_create(value vPattern) {
     OnigRegion *region = onig_region_new();
     regexpWrapper.regexp = reg;
     regexpWrapper.region = region;
+    regexpWrapper.status = ONIG_MISMATCH;
     v = caml_alloc_custom(&regexp_custom_ops, sizeof(regexp_W), 0, 1);
     memcpy(Data_custom_val(v), &regexpWrapper, sizeof(regexp_W));
     result = reonig_val_result_ok(v);
@@ -105,6 +107,7 @@ CAMLprim value reonig_search(value vStr, value vPos, value vRegExp) {
       onig_search(regex, searchData, searchData + end, searchData + position,
                   searchData + end, region, ONIG_OPTION_NONE);
 
+  p->status = status;
   if (status != ONIG_MISMATCH) {
     int num = region->num_regs;
     ret = caml_alloc(num, 0);
@@ -133,4 +136,73 @@ CAMLprim value reonig_search(value vStr, value vPos, value vRegExp) {
   }
 
   CAMLreturn(ret);
+};
+
+CAMLprim value reonig_get_last_matches(value vStr, value vRegExp) {
+  CAMLparam2(vStr, vRegExp);
+  CAMLlocal2(ret, v);
+  regexp_W *p = Data_custom_val(vRegExp);
+  regex_t *regex = p->regexp;
+  int status = p->status;
+  OnigRegion *region = p->region;
+
+  if (status != ONIG_MISMATCH) {
+    int num = region->num_regs;
+    ret = caml_alloc(num, 0);
+    for (int i = 0; i < num; i++) {
+      v = caml_alloc(5, 0);
+      int start = *(region->beg + i);
+      if (start < 0) {
+        start = 0;
+      }
+
+      int length = *(region->end + i) - *(region->beg + i);
+      if (length < 0) {
+        length = 0;
+      }
+
+      Store_field(v, 0, Val_int(i));
+      Store_field(v, 1, Val_int(start));
+      Store_field(v, 2, Val_int(length));
+      Store_field(v, 3, Val_int(start + length));
+      Store_field(v, 4, vStr);
+
+      Store_field(ret, i, v);
+    }
+  } else {
+    ret = Atom(0);
+  }
+
+  CAMLreturn(ret);
+};
+
+CAMLprim value reonig_search_fast(value vStr, value vPos, value vRegExp) {
+  CAMLparam3(vStr, vPos, vRegExp);
+
+  UChar *searchData = String_val(vStr);
+  size_t position = Int_val(vPos);
+  size_t end = strlen(searchData);
+
+  regexp_W *p = Data_custom_val(vRegExp);
+  regex_t *regex = p->regexp;
+  OnigRegion *region = p->region;
+  int status =
+      onig_search(regex, searchData, searchData + end, searchData + position,
+                  searchData + end, region, ONIG_OPTION_NONE);
+
+  p->status = status;
+  if (status != ONIG_MISMATCH) {
+    int num = region->num_regs;
+    if (num >= 1) {
+      int start = *(region->beg);
+      if (start < 0) {
+        start = 0;
+      }
+      CAMLreturn(Val_int(start));
+    } else {
+      CAMLreturn(Val_int(-1));
+    }
+  } else {
+    CAMLreturn(Val_int(-1));
+  }
 };
