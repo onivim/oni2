@@ -596,7 +596,7 @@ let update =
       };
     let (layout, editorEffect) =
       Internal.updateEditors(~scope, ~msg, state.layout);
-    let state = {...state, layout};
+    let state = {...state, layout, signatureHelp};
     let effect = [shEffect, editorEffect] |> Effect.batch;
     (state, effect);
 
