@@ -7,11 +7,17 @@ let initial: model;
 [@deriving show]
 type msg;
 
-module Msg: {let exthost: Exthost.Msg.LanguageFeatures.msg => msg;};
+module Msg: {
+  let exthost: Exthost.Msg.LanguageFeatures.msg => msg;
+  let keyPressed: string => msg;
+  let pasted: string => msg;
+};
 
 type outmsg;
 
 let update: (msg, model) => (model, outmsg);
+
+let isFocused: model => bool;
 
 module Contributions: {
   let commands: list(Command.t(msg));

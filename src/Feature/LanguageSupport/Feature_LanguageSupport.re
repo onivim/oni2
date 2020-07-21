@@ -5,16 +5,23 @@ let initial = {rename: Rename.initial};
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
-  | Rename(Rename.msg);
+  | Rename(Rename.msg)
+  | KeyPressed(string)
+  | Pasted(string);
 
 module Msg = {
   let exthost = msg => Exthost(msg);
+
+  let keyPressed = key => KeyPressed(key);
+  let pasted = key => Pasted(key);
 };
 
 type outmsg = Common.Outmsg.t;
 
 let update = (msg, model) =>
   switch (msg) {
+  | KeyPressed(_)
+  | Pasted(_)
   | Exthost(_) =>
     // TODO:
     (model, ())
@@ -22,6 +29,8 @@ let update = (msg, model) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
     ({rename: rename'}, outmsg);
   };
+
+let isFocused = ({rename}) => Rename.isFocused(rename);
 
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;

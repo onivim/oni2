@@ -75,6 +75,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | InsertRegister => [
         Actions.Registers(Feature_Registers.Msg.keyPressed(k)),
       ]
+    | LanguageSupport => [
+        Actions.LanguageSupport(Feature_LanguageSupport.Msg.keyPressed(k)),
+      ]
     };
   };
 
@@ -90,6 +93,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           Actions.Extensions(Feature_Extensions.Pasted(firstLine))
         | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))
         | Search => Actions.Search(Feature_Search.Pasted(firstLine))
+        | LanguageSupport =>
+          Actions.LanguageSupport(
+            Feature_LanguageSupport.Msg.pasted(firstLine),
+          )
 
         // No paste handling in these UIs, currently...
         | Terminal(_) => Actions.Noop

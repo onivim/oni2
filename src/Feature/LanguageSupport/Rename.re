@@ -3,11 +3,14 @@ open Exthost;
 
 [@deriving show]
 type command =
-  | RenameSymbol;
+  | RenameSymbol
+  | Cancel
+  | Commit;
 
 [@deriving show]
 type msg =
-  | Command(command);
+  | Command(command)
+  | InputText(Feature_InputText.msg);
 
 type provider = {
   handle: int,
@@ -15,11 +18,28 @@ type provider = {
   supportsResolveInitialValues: bool,
 };
 
-type model = {providers: list(provider)};
+type sessionState =
+  | Inactive
+  | Resolving({sessionId: int})
+  | Resolved({
+      sessionId: int, //location: RenameLocation.t,
+      inputText: Feature_InputText.model,
+    })
+  | Applying({
+      sessionId: int,
+      edit: WorkspaceEdit.t,
+    });
 
-let initial = {providers: []};
+type model = {
+  nextSessionId: int,
+  sessionState,
+  providers: list(provider),
+};
+
+let initial = {nextSessionId: 0, sessionState: Inactive, providers: []};
 
 let register = (~handle, ~selector, ~supportsResolveInitialValues, model) => {
+  ...model,
   providers: [
     {handle, selector, supportsResolveInitialValues},
     ...model.providers,
@@ -27,15 +47,51 @@ let register = (~handle, ~selector, ~supportsResolveInitialValues, model) => {
 };
 
 let unregister = (~handle, model) => {
+  ...model,
   providers:
     model.providers |> List.filter(provider => provider.handle != handle),
 };
 
+let isFocused = ({sessionState, _}) => {
+  switch (sessionState) {
+  | Inactive => false
+  | Resolving(_) => false
+  | Resolved(_) => true
+  | Applying(_) => true
+  };
+};
+
 let update = (msg, model) => {
   switch (msg) {
+  | InputText(inputMsg) =>
+    switch (model.sessionState) {
+    | Resolved({inputText, _} as resolved) =>
+      let inputText' = Feature_InputText.update(inputMsg, inputText);
+      (
+        {
+          ...model,
+          sessionState: Resolved({...resolved, inputText: inputText'}),
+        },
+        (),
+      );
+    | _ => (model, ())
+    }
+  | Command(Commit)
+  | Command(Cancel) => ({...model, sessionState: Inactive}, ())
   | Command(RenameSymbol) =>
-    prerr_endline("is it wired up?");
-    failwith("done!");
+    let sessionId = model.nextSessionId;
+    (
+      {
+        ...model,
+        nextSessionId: sessionId + 1,
+        sessionState:
+          Resolved({
+            sessionId,
+            inputText: Feature_InputText.create(~placeholder="hi"),
+          }),
+      },
+      (),
+    );
   };
 };
 
@@ -49,13 +105,17 @@ module Commands = {
       "editor.action.rename",
       Command(RenameSymbol),
     );
+
+  let cancel = define("editor.action.rename.cancel", Command(Cancel));
+
+  let commit = define("editor.action.rename.commit", Command(Commit));
 };
 
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
   // TODO:
-  let renameInputVisible = bool("renameInputVisible", (_: model) => false);
+  let renameInputVisible = bool("renameInputVisible", isFocused);
 };
 
 module Keybindings = {
@@ -64,10 +124,82 @@ module Keybindings = {
   let condition = "normalMode" |> WhenExpr.parse;
 
   let rename = {key: "<F2>", command: Commands.rename.id, condition};
+
+  let activeCondition = "renameInputVisible" |> WhenExpr.parse;
+
+  let cancel = {
+    key: "<ESC>",
+    command: Commands.cancel.id,
+    condition: activeCondition,
+  };
+  let commit = {
+    key: "<CR>",
+    command: Commands.commit.id,
+    condition: activeCondition,
+  };
 };
 
 module Contributions = {
-  let commands = [Commands.rename];
+  // TODO:
+  //let commands = Commands.[rename, cancel, commit];
+  let commands = [];
+
   let contextKeys = [ContextKeys.renameInputVisible];
-  let keybindings = [Keybindings.rename];
+
+  // TODO:
+  // let keybindings = Keybindings.[rename, cancel, commit];
+  let keybindings = [];
+};
+
+module View = {
+  open Revery;
+  open Revery.UI;
+  module Styles = {
+    open Style;
+    let color = Color.rgba(0., 0., 0., 0.75);
+    let boxShadow = [
+      backgroundColor(color),
+      boxShadow(
+        ~xOffset=4.,
+        ~yOffset=4.,
+        ~blurRadius=12.,
+        ~spreadRadius=0.,
+        ~color,
+      ),
+    ];
+  };
+  module Colors = Feature_Theme.Colors;
+  let make =
+      (
+        ~theme: ColorTheme.Colors.t,
+        ~rename: model,
+        ~font: UiFont.t,
+        ~dispatch: msg => unit,
+        (),
+      ) => {
+    switch (rename.sessionState) {
+    | Resolved({inputText, _}) =>
+      <View style=Styles.boxShadow>
+        <View
+          style=Style.[
+            width(400),
+            backgroundColor(Colors.Menu.background.from(theme)),
+            color(Colors.Menu.foreground.from(theme)),
+          ]>
+          <View style=Style.[padding(5)]>
+            <Feature_InputText.View
+              prefix="="
+              model=inputText
+              theme
+              isFocused=true
+              fontFamily={font.family}
+              fontSize=14.
+              dispatch={msg => dispatch(InputText(msg))}
+            />
+          </View>
+        </View>
+      </View>
+    | _ => React.empty
+    };
+  };
 };
