@@ -155,7 +155,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ),
       )
 
-    | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
+    | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
     | BufferEnter({id, filePath, _}) =>
       let eff =
