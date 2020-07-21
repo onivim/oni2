@@ -291,36 +291,29 @@ let start =
       if (metadata.id == 1 && ! libvimHasInitialized^) {
         Log.info("Ignoring initial buffer");
       } else {
-        let fileType =
-          switch (metadata.filePath) {
-          | Some(v) =>
-            // TODO: Can't be changed, as buffer is only made a few lines below.
-            // But we probably could re-run once the buffer is made, in BufferEnter?
-            Some(
-              Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v),
-            )
-          | None => None
-          };
-
         let lineEndings: option(Vim.lineEnding) =
           Vim.Buffer.getLineEndings(buf);
 
         let state = getState();
 
         let buffer =
-          (
-            switch (Selectors.getBufferById(state, metadata.id)) {
-            | Some(buf) => buf
-            | None =>
-              Oni_Core.Buffer.ofMetadata(
-                ~id=metadata.id,
-                ~version=- metadata.version,
-                ~filePath=metadata.filePath,
-                ~modified=metadata.modified,
-              )
-            }
-          )
-          |> Oni_Core.Buffer.setFileType(fileType);
+          switch (Selectors.getBufferById(state, metadata.id)) {
+          | Some(buf) => buf
+          | None =>
+            Oni_Core.Buffer.ofMetadata(
+              ~id=metadata.id,
+              ~version=- metadata.version,
+              ~filePath=metadata.filePath,
+              ~modified=metadata.modified,
+            )
+          };
+
+        // getLanguageFromBuffer always returns something, even if it is just the defaultLanguage.
+        let fileType =
+          Some(
+            Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer),
+          );
+        let buffer = Oni_Core.Buffer.setFileType(fileType, buffer);
 
         dispatch(
           Actions.BufferEnter({
