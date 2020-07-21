@@ -563,7 +563,11 @@ let update =
       Service_OS.Effect.statMultiple(paths, (path, stats) =>
         switch (stats.st_kind) {
         | S_REG => OpenFileByPath(path, None, None)
-        | S_DIR => DirectoryChanged(path)
+        | S_DIR =>
+          switch (Luv.Path.chdir(path)) {
+          | Ok () => DirectoryChanged(path)
+          | Error(_) => Noop
+          }
         | _ => Noop
         }
       );
