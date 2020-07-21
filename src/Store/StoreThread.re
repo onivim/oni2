@@ -415,6 +415,8 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
     Feature_Registers.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
+    Feature_LanguageSupport.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);
