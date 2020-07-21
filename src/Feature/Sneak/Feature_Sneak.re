@@ -340,6 +340,8 @@ module View = {
                     ~tabindex=?,
                     ~onKeyDown=?,
                     ~onKeyUp=?,
+                    ~onMouseEnter=?,
+                    ~onMouseLeave=?,
                     ~onTextEdit=?,
                     ~onTextInput=?,
                     ~children,
@@ -381,6 +383,8 @@ module View = {
         ?tabindex
         ?onKeyDown
         ?onKeyUp
+        ?onMouseEnter
+        ?onMouseLeave
         ?onTextEdit
         ?onTextInput>
         children

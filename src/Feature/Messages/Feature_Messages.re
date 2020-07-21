@@ -153,7 +153,11 @@ module View = {
 
     let text = (~theme) => [flexGrow(1)];
 
-    let buttons = [flexDirection(`Row), pointerEvents(`Allow)];
+    let buttons = [
+      flexDirection(`Row),
+      pointerEvents(`Allow),
+      justifyContent(`SpaceBetween),
+    ];
 
     let button = (~theme) => [
       border(~width=1, ~color=Colors.red),
@@ -173,9 +177,7 @@ module View = {
     let onClick = () =>
       dispatch(CommandClicked({messageId, handle: command.handle}));
 
-    <Clickable style={Styles.button(~theme)} onClick>
-      <Text fontFamily={font.family} fontSize=12. text={command.title} />
-    </Clickable>;
+    <Oni_Components.Button font theme onClick label={command.title} />;
   };
 
   let messageItem =

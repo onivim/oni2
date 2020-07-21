@@ -53,6 +53,8 @@ module View: {
         ~tabindex: int=?,
         ~onKeyDown: Revery_UI.NodeEvents.keyDownHandler=?,
         ~onKeyUp: Revery_UI.NodeEvents.keyUpHandler=?,
+        ~onMouseEnter: Revery_UI.NodeEvents.mouseMoveHandler=?,
+        ~onMouseLeave: Revery_UI.NodeEvents.mouseMoveHandler=?,
         ~onTextEdit: Revery_UI.NodeEvents.textEditHandler=?,
         ~onTextInput: Revery_UI.NodeEvents.textInputHandler=?,
         ~children: Revery.UI.element,
