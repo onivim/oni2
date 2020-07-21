@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 
 [@deriving show]
 type msg =
@@ -13,6 +12,7 @@ type msg =
       commands: list(Exthost.Message.Command.t),
       resolver: [@opaque] Lwt.u(option(Exthost.Message.handle)),
     })
+  | CancelClicked({messageId: int})
   | CommandClicked({
       messageId: int,
       handle: Exthost.Message.handle,
@@ -59,6 +59,8 @@ type model = {
 
 let initial = {nextId: 0, messages: []};
 
+exception MessageCancelled;
+
 module Internal = {
   let severityToKind =
     Feature_Notification.(
@@ -89,6 +91,11 @@ module Effect = {
     Isolinear.Effect.create(~name="Feature_Messages.Effect.resolve", () => {
       Lwt.wakeup(resolver, Some(handle))
     });
+
+  let cancel = (~resolver) =>
+    Isolinear.Effect.create(~name="Feature_Messages.Effect.resolve", () => {
+      Lwt.wakeup_exn(resolver, MessageCancelled)
+    });
 };
 
 let update = (msg, model) => {
@@ -110,6 +117,21 @@ let update = (msg, model) => {
       },
       Nothing,
     );
+  | CancelClicked({messageId}) =>
+    let maybeMessage =
+      model.messages
+      |> List.filter((message: message) => message.messageId == messageId)
+      |> (list => List.nth_opt(list, 0));
+
+    maybeMessage
+    |> Option.map(message => {
+         let eff = Effect.cancel(~resolver=message.resolver);
+
+         let model = Internal.removeMessage(~messageId, model);
+
+         (model, Effect(eff));
+       })
+    |> Option.value(~default=(model, Nothing));
   | CommandClicked({messageId, handle}) =>
     let maybeMessage =
       model.messages
@@ -131,37 +153,49 @@ let update = (msg, model) => {
 module View = {
   open Revery;
   open Revery.UI;
-  open Revery.UI.Components;
 
+  module Colors = Feature_Theme.Colors;
   module Sneakable = Feature_Sneak.View.Sneakable;
 
   module Styles = {
     open Style;
 
-    let container = [
+    let color = Color.rgba(0., 0., 0., 0.75);
+
+    let container = (~theme) => [
       position(`Absolute),
-      backgroundColor(Colors.black),
+      backgroundColor(Colors.Notifications.background.from(theme)),
       bottom(100),
       right(100),
       width(360),
       height(120),
+      boxShadow(
+        ~xOffset=4.,
+        ~yOffset=4.,
+        ~blurRadius=12.,
+        ~spreadRadius=0.,
+        ~color,
+      ),
+      flexDirection(`Column),
       pointerEvents(`Allow),
-      //      flexDirection(`Column),
-      //      alignItems(`Center),
-      //      justifyContent(`SpaceBetween),
     ];
 
-    let text = (~theme) => [flexGrow(1)];
+    let contents = [width(360), flexDirection(`Row), flexGrow(1)];
+
+    let iconContainer = [
+      flexGrow(0),
+      width(25),
+      height(25),
+      alignItems(`Center),
+      justifyContent(`Center),
+    ];
+
+    let text = [width(360 - 8 - 25), padding(8)];
 
     let buttons = [
       flexDirection(`Row),
       pointerEvents(`Allow),
       justifyContent(`SpaceBetween),
-    ];
-
-    let button = (~theme) => [
-      border(~width=1, ~color=Colors.red),
-      margin(8),
     ];
   };
 
@@ -190,9 +224,25 @@ module View = {
         ~dispatch,
         (),
       ) => {
-    <View style=Styles.container>
-      <View style={Styles.text(~theme)}>
-        <Text fontFamily={font.family} fontSize=12. text=title />
+    <View style={Styles.container(~theme)}>
+      <View style=Styles.contents>
+        <View style=Styles.text>
+          <Text
+            fontFamily={font.family}
+            fontSize=12.
+            text=title
+            style=[Style.color(Colors.Notifications.foreground.from(theme))]
+          />
+        </View>
+        <View style=Styles.iconContainer>
+          <Sneakable
+            onClick={() => dispatch(CancelClicked({messageId: messageId}))}>
+            <Oni_Components.Codicon
+              color={Colors.Notifications.foreground.from(theme)}
+              icon=Oni_Components.Codicon.close
+            />
+          </Sneakable>
+        </View>
       </View>
       <View style=Styles.buttons>
         {commands
@@ -218,7 +268,7 @@ module View = {
       React.empty;
     } else {
       messages
-      |> List.map(({messageId, message, commands, severity, resolver}) => {
+      |> List.map(({messageId, message, commands, _}) => {
            <messageItem messageId font theme title=message commands dispatch />
          })
       |> React.listToElement;

@@ -105,6 +105,8 @@ function activate(context) {
         vscode.window.showInformationMessage('Hello!', "Option 1", "Option 2", "Option 3")
         .then((result) => {
            vscode.window.showInformationMessage('You picked: ' + result); 
+        }, (err) => {
+           vscode.window.showInformationMessage('Cancelled: ' + err); 
         });
     }));
 

@@ -1,5 +1,4 @@
 open Oni_Core;
-open Revery;
 open Revery.UI;
 
 module LocalState = {
@@ -11,7 +10,7 @@ module LocalState = {
     | MouseOver
     | MouseOut;
 
-  let reduce = (msg, model) => {
+  let reduce = (msg, _model) => {
     switch (msg) {
     | MouseOver => {isHovered: true}
     | MouseOut => {isHovered: false}
