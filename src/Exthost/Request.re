@@ -462,6 +462,37 @@ module LanguageFeatures = {
       client,
     );
   };
+
+  let provideRenameEdits = (~handle, ~resource, ~position, ~newName: string) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(WorkspaceEdit.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideRenameEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `String(newName),
+        ]),
+    );
+  };
+
+  let resolveRenameLocation = (~handle, ~resource, ~position) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(RenameLocation.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveRenameLocation",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
+    );
+  };
 };
 
 module SCM = {

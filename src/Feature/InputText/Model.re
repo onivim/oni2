@@ -260,6 +260,8 @@ let set = (~text, ~cursor, model) => {
   selection: Selection.collapsed(~text, cursor),
 };
 
+let setPlaceholder = (~placeholder, model) => {...model, placeholder};
+
 let isCursorAtEnd = ({value, selection, _}) => {
   Selection.isCollapsed(selection) && selection.focus == String.length(value);
 };

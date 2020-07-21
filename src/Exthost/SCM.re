@@ -96,6 +96,18 @@ module Resource = {
   let decode = Decode.resource;
 };
 
+module GroupFeatures = {
+  [@deriving show({with_path: false})]
+  type t = {hideWhenEmpty: bool};
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {hideWhenEmpty: field.withDefault("hideWhenEmpty", false, bool)}
+      )
+    );
+};
+
 module Decode = {
   open Yojson.Safe.Util;
 
