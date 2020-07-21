@@ -131,6 +131,10 @@ type t =
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
+  | QuickmenuUpdateExtensionItems({
+      id: int,
+      items: list(Exthost.QuickOpen.Item.t),
+    })
   | QuickmenuSearch(string)
   | QuickmenuClose
   | ListFocus(int)
@@ -253,6 +257,7 @@ and menuItem = {
   command: unit => t,
   icon: [@opaque] option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
+  handle: option(int),
 }
 and quickmenuVariant =
   | CommandPalette
@@ -261,6 +266,7 @@ and quickmenuVariant =
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | DocumentSymbols
+  | Extension({id: int})
 and progress =
   | Loading
   | InProgress(float)

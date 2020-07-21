@@ -57,12 +57,14 @@ module QuickOpen = {
   let handle = (method, args: Yojson.Safe.t) => {
     Base.Result.Let_syntax.(
       switch (method, args) {
-      | (
-          "$show",
-          `List([`Int(instance), optionsJson, _cancellationTokenJson]),
-        ) =>
-        let%bind options =
-          optionsJson |> Internal.decode_value(QuickOpen.Options.decode);
+      | ("$show", `List([`Int(instance), optionsJson])) =>
+        let%bind maybeOptions =
+          optionsJson
+          |> Internal.decode_value(
+               Json.Decode.nullable(QuickOpen.Options.decode),
+             );
+        let options =
+          maybeOptions |> Option.value(~default=QuickOpen.Options.default);
         Ok(Show({instance, options}));
       | ("$setItems", `List([`Int(instance), itemsJson])) =>
         let%bind items =
@@ -71,14 +73,7 @@ module QuickOpen = {
         Ok(SetItems({instance, items}));
       | ("$setError", `List([`Int(instance), errorJson])) =>
         Ok(SetError({instance, error: errorJson}))
-      | (
-          "$input",
-          `List([
-            inputBoxOptionsJson,
-            `Bool(validateInput),
-            _cancellationTokenJson,
-          ]),
-        ) =>
+      | ("$input", `List([inputBoxOptionsJson, `Bool(validateInput)])) =>
         let%bind inputBox =
           inputBoxOptionsJson |> Internal.decode_value(InputBoxOptions.decode);
         Ok(Input({options: inputBox, validateInput}));
@@ -87,7 +82,13 @@ module QuickOpen = {
           paramsJson |> Internal.decode_value(QuickOpen.decode);
         Ok(CreateOrUpdate({params: params}));
       | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
-      | _ => Error("Unhandled quickOpen method: " ++ method)
+      | _ =>
+        Error(
+          "Unhandled quickOpen method: "
+          ++ method
+          ++ " - args: "
+          ++ Yojson.Safe.to_string(args),
+        )
       }
     );
   };
@@ -1463,6 +1464,7 @@ type t =
   | MessageService(MessageService.msg)
   | OutputService(OutputService.msg)
   | Progress(Progress.msg)
+  | QuickOpen(QuickOpen.msg)
   | SCM(SCM.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)

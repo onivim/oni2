@@ -34,9 +34,20 @@ module Internal = {
              },
            icon: item.icon,
            highlight: [],
+           handle: None,
          }
        )
     |> Array.of_list;
+
+  let extensionItem: Exthost.QuickOpen.Item.t => Actions.menuItem =
+    item => {
+      category: None,
+      name: item.label,
+      handle: Some(item.handle),
+      icon: None,
+      highlight: [],
+      command: () => Actions.Noop,
+    };
 
   let commandPaletteItems = (commands, menus, contextKeys) => {
     let contextKeys =
@@ -107,6 +118,7 @@ let start = () => {
                },
                icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
                highlight: [],
+               handle: None,
              },
            maybeName,
            maybePath,
@@ -158,6 +170,14 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
+    | QuickmenuShow(Extension({id})) => (
+        Some({
+          ...Quickmenu.defaults(Extension({id: id})),
+          focused: Some(0),
+        }),
+        Isolinear.Effect.none,
+      )
+
     | QuickmenuShow(FilesPicker) => (
         Some({
           ...Quickmenu.defaults(FilesPicker),
@@ -187,6 +207,7 @@ let start = () => {
                command: () => ThemeLoadByName(theme.label),
                icon: None,
                highlight: [],
+               handle: None,
              }
            })
         |> Array.of_list;
@@ -269,6 +290,21 @@ let start = () => {
     | QuickmenuUpdateRipgrepProgress(progress) => (
         Option.map(
           (state: Quickmenu.t) => {...state, ripgrepProgress: progress},
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
+
+    | QuickmenuUpdateExtensionItems({items, _}) => (
+        Option.map(
+          (state: Quickmenu.t) =>
+            {
+              ...state,
+              items:
+                items |> List.map(Internal.extensionItem) |> Array.of_list,
+              filterProgress: Loading,
+              focused: None,
+            },
           state,
         ),
         Isolinear.Effect.none,
@@ -438,6 +474,7 @@ let subscriptions = (ripgrep, dispatch) => {
         command: () => Actions.OpenFileByPath(fullPath, None, None),
         icon: FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
         highlight: [],
+        handle: None,
       };
 
     RipgrepSubscription.create(
@@ -463,6 +500,7 @@ let subscriptions = (ripgrep, dispatch) => {
     | Some(quickmenu) =>
       let query = quickmenu.inputText |> Feature_InputText.value;
       switch (quickmenu.variant) {
+      | Extension(_)
       | CommandPalette
       | EditorsPicker
       | ThemesPicker(_) => [filter(query, quickmenu.items)]

@@ -15,6 +15,17 @@ module Options = {
     contextKey: option(string),
   };
 
+  let default = {
+    placeholder: None,
+    matchOnDescription: false,
+    matchOnDetail: false,
+    matchOnLabel: true,
+    autoFocusOnList: true,
+    ignoreFocusLost: false,
+    canPickMany: false,
+    contextKey: None,
+  };
+
   let decode =
     Json.Decode.(
       obj(({field, _}) =>

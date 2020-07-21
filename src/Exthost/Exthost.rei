@@ -1383,6 +1383,7 @@ module Msg: {
     | MessageService(MessageService.msg)
     | OutputService(OutputService.msg)
     | Progress(Progress.msg)
+    | QuickOpen(QuickOpen.msg)
     | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)

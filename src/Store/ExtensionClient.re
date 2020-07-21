@@ -395,6 +395,22 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         dispatch(ExtMessageReceived({severity, message, extensionId}));
         Lwt.return(Reply.okEmpty);
 
+      | QuickOpen(msg) =>
+        switch (msg) {
+        | QuickOpen.Show({instance, _}) =>
+          prerr_endline("-- DISPATCHING!");
+          dispatch(QuickmenuShow(Extension({id: instance})));
+          Lwt.return(Reply.okEmpty);
+        | QuickOpen.SetItems({instance, items}) =>
+          prerr_endline("-- DISPATCHING!");
+          dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
+          Lwt.return(Reply.okEmpty);
+        | _ =>
+          // TODO;
+
+          Lwt.return(Reply.okEmpty)
+        }
+
       | StatusBar(
           SetEntry({
             id,
