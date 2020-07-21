@@ -5,7 +5,7 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        zed_oni
+        Revery.zed
         threads
         editor-core-types
         timber)

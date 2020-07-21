@@ -122,7 +122,9 @@ let mainChecks = [
     _ => {
       let fontPath =
         Revery.Environment.executingDirectory ++ "JetBrainsMono-Regular.ttf";
-      switch (Revery.Font.load(fontPath)) {
+      let family = Revery.Font.Family.fromFile(fontPath);
+      let maybeSkia = Revery.Font.Family.toSkia(Normal, family);
+      switch (Revery.Font.load(maybeSkia)) {
       | Ok(font) =>
         let metrics = Revery.Font.getMetrics(font, 12.0);
         ignore(metrics);

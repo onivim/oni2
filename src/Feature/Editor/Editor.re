@@ -159,7 +159,6 @@ type scrollbarMetrics = {
 };
 
 let getVimCursors = ({cursors, _}) => cursors;
-let setVimCursors = (~cursors, editor) => {...editor, cursors};
 
 let getNearestMatchingPair = (~location: Location.t, ~pairs, {buffer, _}) => {
   BracketMatch.findFirst(
@@ -344,6 +343,56 @@ let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
 
   layout;
 };
+
+let exposePrimaryCursor = editor => {
+  switch (editor.cursors) {
+  | [primaryCursor, ..._tail] =>
+    let line = Vim.Cursor.(primaryCursor.line |> Index.toZeroBased);
+    let byte = Vim.Cursor.(primaryCursor.column |> Index.toZeroBased);
+
+    let {bufferWidthInPixels, _}: EditorLayout.t =
+      getLayout(~showLineNumbers=true, ~maxMinimapCharacters=999, editor);
+
+    let pixelWidth = bufferWidthInPixels;
+
+    let {pixelHeight, scrollX, scrollY, _} = editor;
+    let pixelHeight = float(pixelHeight);
+
+    let ({pixelX, pixelY}, _width) =
+      bufferLineByteToPixel(~line, ~byteIndex=byte, editor);
+
+    let scrollOffX = getCharacterWidth(editor) *. 2.;
+    let scrollOffY = getLineHeight(editor);
+
+    let availableX = pixelWidth -. scrollOffX;
+    let availableY = pixelHeight -. scrollOffY;
+
+    let adjustedScrollX =
+      if (pixelX < 0.) {
+        scrollX +. pixelX;
+      } else if (pixelX >= availableX) {
+        scrollX +. (pixelX -. availableX);
+      } else {
+        scrollX;
+      };
+
+    let adjustedScrollY =
+      if (pixelY < 0.) {
+        scrollY +. pixelY;
+      } else if (pixelY >= availableY) {
+        scrollY +. (pixelY -. availableY);
+      } else {
+        scrollY;
+      };
+
+    {...editor, scrollX: adjustedScrollX, scrollY: adjustedScrollY};
+
+  | _ => editor
+  };
+};
+
+let setVimCursors = (~cursors, editor) =>
+  {...editor, cursors} |> exposePrimaryCursor;
 
 let getLeftVisibleColumn = view => {
   int_of_float(view.scrollX /. getCharacterWidth(view));

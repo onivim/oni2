@@ -165,7 +165,7 @@ let uninstall = (~extensionsFolder=?, extensionId) => {
     });
 
     Lwt.on_failure(promise, _ => {
-      Log.errorf(m => m("Unable to install extension: %s", extensionId))
+      Log.errorf(m => m("Unable to uninstall extension: %s", extensionId))
     });
 
     promise;

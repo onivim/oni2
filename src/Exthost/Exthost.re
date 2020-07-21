@@ -33,6 +33,7 @@ module ModelChangedEvent = ModelChangedEvent;
 module ModelContentChange = ModelContentChange;
 module OneBasedPosition = OneBasedPosition;
 module OneBasedRange = OneBasedRange;
+module Progress = Progress;
 module ReferenceContext = ReferenceContext;
 module Reply = Reply;
 module SCM = SCM;
@@ -43,6 +44,7 @@ module SymbolKind = SymbolKind;
 module TextEditor = TextEditor;
 module ThemeColor = ThemeColor;
 module WorkspaceData = WorkspaceData;
+module WorkspaceEdit = WorkspaceEdit;
 
 module Client = Client;
 module Request = Request;
