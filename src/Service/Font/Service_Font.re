@@ -81,23 +81,26 @@ let setFont =
 
       // This is formatted this way to accomodate other future features
       let features =
-        []
-        |> (
-          features =>
-            fontLigatures
-              ? features
-              : [
-                Revery.Font.Feature.make(
-                  ~tag=Revery.Font.Features.contextualAlternates,
-                  ~value=0,
-                ),
-                Revery.Font.Feature.make(
-                  ~tag=Revery.Font.Features.standardLigatures,
-                  ~value=0,
-                ),
-                ...features,
-              ]
-        );
+        switch (fontLigatures) {
+        | `Bool(true) => []
+        | `Bool(false) => [
+            Revery.Font.Feature.make(
+              ~tag=Revery.Font.Features.contextualAlternates,
+              ~value=0,
+            ),
+            Revery.Font.Feature.make(
+              ~tag=Revery.Font.Features.standardLigatures,
+              ~value=0,
+            ),
+          ]
+        | `List(list) =>
+          list
+          |> List.map(tag => {
+               Log.infof(m => m("Enabling font feature: %s", tag));
+               let tag = Revery_Font.Feature.customTag(tag);
+               Revery.Font.Feature.make(~tag, ~value=1);
+             })
+        };
 
       let res =
         FontLoader.loadAndValidateEditorFont(
@@ -152,7 +155,7 @@ module Sub = {
   type params = {
     fontFamily: string,
     fontSize: float,
-    fontLigatures: bool,
+    fontLigatures: ConfigurationValues.fontLigatures,
     fontSmoothing: ConfigurationValues.fontSmoothing,
     uniqueId: string,
   };
@@ -162,7 +165,7 @@ module Sub = {
       type state = {
         fontFamily: string,
         fontSize: float,
-        fontLigatures: bool,
+        fontLigatures: ConfigurationValues.fontLigatures,
         fontSmoothing: ConfigurationValues.fontSmoothing,
         requestId: ref(int),
       };
