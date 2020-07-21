@@ -568,10 +568,14 @@ let update =
   | FilesDropped({paths}) =>
     let eff =
       Service_OS.Effect.statMultiple(paths, (path, stats) =>
-        if (stats.st_kind == S_REG) {
-          OpenFileByPath(path, None, None);
-        } else {
-          Noop;
+        switch (stats.st_kind) {
+        | S_REG => OpenFileByPath(path, None, None)
+        | S_DIR =>
+          switch (Luv.Path.chdir(path)) {
+          | Ok () => DirectoryChanged(path)
+          | Error(_) => Noop
+          }
+        | _ => Noop
         }
       );
     (state, eff);

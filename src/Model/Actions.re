@@ -184,7 +184,7 @@ type t =
   | Pane(Feature_Pane.msg)
   | PaneTabClicked(Feature_Pane.pane)
   | PaneCloseButtonClicked
-  | VimDirectoryChanged(string)
+  | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
