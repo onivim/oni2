@@ -10,6 +10,7 @@
     "exthost": "esy '@test' x OniUnitTestRunnerExtHost",
     "textmate": "esy '@test' x OniUnitTestRunnerTextmate",
     "service_net": "esy '@test' x OniUnitTestRunnerServiceNet",
+    "service_extensions": "esy '@test' x OniUnitTestRunnerServiceExtensions",
     "watch": "esy '@test' dune build --watch --root . -j4",
     "inline": "esy b dune runtest",
     "watch:inline": "esy b dune runtest --watch"

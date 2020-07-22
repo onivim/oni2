@@ -5,10 +5,7 @@ const path = require("path")
 
 const extensionPath = process.argv[2]
 const extensionFolder = process.argv[3]
-const extensionName = process.argv[4] || path.basename(extensionPath, path.extname(extensionPath))
-const extensionVersion = process.argv[5] || ""
-
-const extensionDestFolder = extensionName + extensionVersion
+const extensionDestFolder = process.argv[4]
 
 if (
     !path.isAbsolute(extensionPath) ||

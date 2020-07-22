@@ -12,7 +12,6 @@ open Oni_Model;
 module Core = Oni_Core;
 open Core.Utility;
 
-module Ext = Oni_Extensions;
 module Zed_utf8 = Core.ZedBundled;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module Definition = Feature_LanguageSupport.Definition;
@@ -24,7 +23,7 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 let start =
     (
       ~showUpdateChangelog: bool,
-      languageInfo: Ext.LanguageInfo.t,
+      languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
       setClipboardText,
@@ -40,11 +39,6 @@ let start =
         c.vimUseSystemClipboard
       );
 
-    let isMultipleLines = s => String.contains(s, '\n');
-
-    let splitNewLines = s =>
-      s |> StringEx.removeTrailingNewLine |> StringEx.splitNewLines;
-
     let starReg = Char.code('*');
     let plusReg = Char.code('+');
     let unnamedReg = 0;
@@ -55,22 +49,14 @@ let start =
       && yankConfig.paste; // or if 'paste' set, but unnamed
 
     if (shouldPullFromClipboard) {
-      let clipboardValue = getClipboardText();
-      let blockType: Vim.Types.blockType =
-        clipboardValue
-        |> Option.map(isMultipleLines)
-        |> Option.map(
-             multiLine => multiLine ? Vim.Types.Line : Vim.Types.Character:
-                                                                    bool =>
-                                                                    Vim.Types.blockType,
-           )
-        |> Option.value(~default=Vim.Types.Line: Vim.Types.blockType);
-
-      clipboardValue
-      |> Option.map(StringEx.removeTrailingNewLine)
-      |> Option.map(StringEx.removeWindowsNewLines)
-      |> Option.map(splitNewLines)
-      |> Option.map(lines => Vim.Types.{lines, blockType});
+      let maybeClipboardValue = getClipboardText();
+      maybeClipboardValue
+      |> Option.map(clipboardValue => {
+           let (multiLine, lines) = StringEx.splitLines(clipboardValue);
+           let blockType: Vim.Types.blockType =
+             multiLine ? Vim.Types.Line : Vim.Types.Character;
+           Vim.Types.{lines, blockType};
+         });
     } else {
       None;
     };
@@ -142,7 +128,7 @@ let start =
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Actions.VimDirectoryChanged(newDir))
+      dispatch(Actions.DirectoryChanged(newDir))
     );
 
   let _: unit => unit =
@@ -187,7 +173,7 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+          Some(Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
@@ -308,7 +294,9 @@ let start =
         let fileType =
           switch (metadata.filePath) {
           | Some(v) =>
-            Some(Ext.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
+            Some(
+              Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v),
+            )
           | None => None
           };
 
@@ -541,12 +529,13 @@ let start =
           Vim.input(~context, key);
         currentTriggerKey := None;
 
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: CursorsChanged(cursors),
-          }),
-        );
+        // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,
+        // and then the cursor changed. This is because the cursor changed may impact the scroll
+        // (ensuring the cursor is visible).
+        //
+        // Ultimately - we want to get rid of those topline/columnline sync, and have Onivim wholly
+        // own the 'scroll' experience.
+        // ie: https://github.com/onivim/oni2/pull/2067/commits/a1eb60dd3b9679d0aabda83616c4400ebe1eb3d3
         dispatch(
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
@@ -557,6 +546,13 @@ let start =
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
             msg: ScrollToColumn(newLeftColumn),
+          }),
+        );
+
+        dispatch(
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: CursorsChanged(cursors),
           }),
         );
 
@@ -627,29 +623,6 @@ let start =
         isCompleting := false;
       }
     );
-
-  let pasteIntoEditorAction =
-    Isolinear.Effect.create(~name="vim.clipboardPaste", () => {
-      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
-      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
-
-      if (isInsertMode || isCmdLineMode) {
-        getClipboardText()
-        |> Option.iter(text => {
-             if (!isCmdLineMode) {
-               Vim.command("set paste") |> ignore;
-             };
-
-             let latestContext: Vim.Context.t =
-               Oni_Core.VimEx.inputString(text);
-
-             if (!isCmdLineMode) {
-               updateActiveEditorCursors(latestContext.cursors);
-               Vim.command("set nopaste") |> ignore;
-             };
-           });
-      };
-    });
 
   let copyActiveFilepathToClipboardEffect =
     Isolinear.Effect.create(~name="vim.copyActiveFilepathToClipboard", () =>
@@ -765,10 +738,6 @@ let start =
         synchronizeViml(configuration),
       )
 
-    | Command("editor.action.clipboardPasteAction") => (
-        state,
-        pasteIntoEditorAction,
-      )
     | Command("undo") => (state, undoEffect)
     | Command("redo") => (state, redoEffect)
     | Command("workbench.action.files.save") => (state, saveEffect)
@@ -940,7 +909,7 @@ let start =
         copyActiveFilepathToClipboardEffect,
       )
 
-    | VimDirectoryChanged(workingDirectory) =>
+    | DirectoryChanged(workingDirectory) =>
       let newState = {
         ...state,
         workspace: {

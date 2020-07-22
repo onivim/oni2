@@ -8,14 +8,12 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Syntax;
 
-module Ext = Oni_Extensions;
-
 type t;
 let empty: t;
 
 type logFunc = string => unit;
 
-let initialize: (~log: logFunc, Ext.LanguageInfo.t, Setup.t, t) => t;
+let initialize: (~log: logFunc, Exthost.LanguageInfo.t, Setup.t, t) => t;
 
 let getVisibleBuffers: t => list(int);
 let getVisibleHighlighters: t => list(NativeSyntaxHighlights.t);

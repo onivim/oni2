@@ -46,12 +46,6 @@ module Editor = {
         Command("editor.action.detectIndentation"),
       );
 
-    let clipboardPasteAction =
-      register(
-        "editor.action.clipboardPasteAction",
-        Command("editor.action.clipboardPasteAction"),
-      );
-
     let indentLines =
       register(
         "editor.action.indentLines",
@@ -203,14 +197,6 @@ module Workbench = {
         ~title="Open keybindings file",
         "workbench.action.openDefaultKeybindingsFile",
         OpenConfigFile("keybindings.json"),
-      );
-
-    let selectTheme =
-      register(
-        ~category="Preferences",
-        ~title="Theme Picker",
-        "workbench.action.selectTheme",
-        QuickmenuShow(ThemesPicker),
       );
 
     let showCommands =

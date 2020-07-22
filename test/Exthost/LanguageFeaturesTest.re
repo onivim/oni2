@@ -640,6 +640,25 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
          )
       |> finishTest;
     });
+    test("range formatting: extension ID is correct", _ => {
+      let waitForRegisterRangeFormattingSupport =
+        fun
+        | Msg.LanguageFeatures(
+            RegisterRangeFormattingSupport({extensionId, displayName, _}),
+          ) => {
+            extensionId == "oni-language-features"
+            && displayName == "oni-language-features";
+          }
+        | _ => false;
+
+      startTest()
+      |> Test.waitForMessage(
+           ~name="RegisterRangeFormattingSupport",
+           waitForRegisterRangeFormattingSupport,
+         )
+      |> finishTest;
+    });
+
     test("range formatting", ({expect, _}) => {
       let documentRangeFormattingHandle = ref(-1);
 

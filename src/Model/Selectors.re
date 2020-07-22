@@ -7,7 +7,6 @@
 open Oni_Core;
 open Oni_Core.Utility;
 
-module Ext = Oni_Extensions;
 module Editor = Feature_Editor.Editor;
 
 let getBufferById = (state: State.t, id: int) => {
@@ -20,7 +19,7 @@ let getBufferForEditor = (buffers, editor: Editor.t) => {
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
   let fileType =
-    Ext.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+    Exthost.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
   Configuration.getValue(~fileType, f, state.configuration);
 };
 
@@ -45,7 +44,7 @@ let getActiveConfigurationValue = (state: State.t, f) => {
   | None => Configuration.getValue(f, state.configuration)
   | Some(buffer) =>
     let fileType =
-      Ext.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+      Exthost.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
     Configuration.getValue(~fileType, f, state.configuration);
   };
 };

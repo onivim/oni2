@@ -15,7 +15,7 @@ module Internal = {
       for (idx in 0 to len - 1) {
         let line = lines[idx];
 
-        if (StringEx.isOnlyWhitespace(line)) {
+        if (StringEx.isEmpty(line)) {
           out[idx] = "";
         } else {
           let indentLevel =

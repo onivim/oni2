@@ -4,8 +4,6 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Actions;
 
-module Ext = Oni_Extensions;
-
 module Internal = {
   let notificationEffect = (~kind, message) => {
     Feature_Notification.Effects.create(~kind, message)
@@ -16,10 +14,7 @@ module Internal = {
     buffer
     |> Oni_Core.Buffer.getFileType
     |> Utility.OptionEx.flatMap(fileType =>
-         Oni_Extensions.LanguageInfo.getScopeFromLanguage(
-           languageInfo,
-           fileType,
-         )
+         Exthost.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
        )
     |> Option.value(~default="source.plaintext");
   };
@@ -96,17 +91,79 @@ let update =
       action: Actions.t,
     ) =>
   switch (action) {
+  | Clipboard(msg) =>
+    let (model, outmsg) = Feature_Clipboard.update(msg, state.clipboard);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Clipboard(msg))
+      | Pasted({rawText, isMultiLine, lines}) =>
+        Isolinear.Effect.createWithDispatch(~name="Clipboard.Pasted", dispatch => {
+          dispatch(Actions.Pasted({rawText, isMultiLine, lines}))
+        })
+      };
+
+    ({...state, clipboard: model}, eff);
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
-    let state' = {...state, extensions: model};
-    let effect =
-      switch (outMsg) {
-      | Feature_Extensions.Nothing => Effect.none
-      | Feature_Extensions.Effect(eff) =>
-        eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg))
-      };
+    let state = {...state, extensions: model};
+    let (state', effect) =
+      Feature_Extensions.(
+        switch (outMsg) {
+        | Nothing => (state, Effect.none)
+        | Effect(eff) => (
+            state,
+            eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
+          )
+        | Focus => (FocusManager.push(Focus.Extensions, state), Effect.none)
+        | NotifySuccess(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Info, msg),
+          )
+        | NotifyFailure(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Error, msg),
+          )
+        | InstallSucceeded({extensionId, contributions}) =>
+          let notificationEffect =
+            Internal.notificationEffect(
+              ~kind=Info,
+              Printf.sprintf(
+                "Extension %s was installed successfully and will be activated on restart.",
+                extensionId,
+              ),
+            );
+          let themes: list(Exthost.Extension.Contributions.Theme.t) =
+            Exthost.Extension.Contributions.(contributions.themes);
+          let showThemePickerEffect =
+            if (themes != []) {
+              Isolinear.Effect.createWithDispatch(
+                ~name="feature.extensions.showThemeAfterInstall", dispatch => {
+                dispatch(QuickmenuShow(ThemesPicker(themes)))
+              });
+            } else {
+              Isolinear.Effect.none;
+            };
+          (
+            state,
+            Isolinear.Effect.batch([
+              notificationEffect,
+              showThemePickerEffect,
+            ]),
+          );
+        }
+      );
     (state', effect);
+
+  | LanguageSupport(msg) =>
+    let (model, _outmsg) =
+      Feature_LanguageSupport.update(msg, state.languageSupport);
+
+    ({...state, languageSupport: model}, Isolinear.Effect.none);
+
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let selection =
@@ -118,7 +175,7 @@ let update =
       maybeBuffer
       |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
       |> OptionEx.flatMap(
-           Ext.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+           Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
          )
       |> Option.value(~default=LanguageConfiguration.default);
 
@@ -146,6 +203,61 @@ let update =
       };
     (state', effect);
 
+  | Messages(msg) =>
+    let (model, outmsg) = Feature_Messages.update(msg, state.messages);
+    let state = {...state, messages: model};
+
+    let eff =
+      Feature_Messages.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | Notification({kind, message}) =>
+          Internal.notificationEffect(~kind, message)
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => Actions.Messages(msg))
+        }
+      );
+    (state, eff);
+
+  | Pane(msg) =>
+    let (model, outmsg) = Feature_Pane.update(msg, state.pane);
+
+    let state = {...state, pane: model};
+
+    let state =
+      switch (outmsg) {
+      | Nothing => state
+      | PopFocus(_pane) => FocusManager.pop(Focus.Search, state)
+      };
+    (state, Effect.none);
+
+  | Registers(msg) =>
+    let (model, outmsg) = Feature_Registers.update(msg, state.registers);
+
+    let state = {...state, registers: model};
+    let eff =
+      switch (outmsg) {
+      | Feature_Registers.EmitRegister({raw, lines, _}) =>
+        Isolinear.Effect.createWithDispatch(~name="register.paste", dispatch => {
+          dispatch(
+            Pasted({
+              rawText: raw,
+              isMultiLine: String.contains(raw, '\n'),
+              lines,
+            }),
+          )
+        })
+      | Feature_Registers.FailedToGetRegister(c) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          Printf.sprintf("No value at register %c", c),
+        )
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Registers(msg))
+      | Nothing => Isolinear.Effect.none
+      };
+    (state, eff);
+
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
@@ -172,6 +284,9 @@ let update =
 
     (state, eff |> Effect.map(msg => Actions.SCM(msg)));
 
+  | SideBar(msg) =>
+    let sideBar' = Feature_SideBar.update(msg, state.sideBar);
+    ({...state, sideBar: sideBar'}, Effect.none);
   | Sneak(msg) =>
     let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
 
@@ -355,12 +470,13 @@ let update =
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
     | Focus(Left) => (
-        state.sideBar.isOpen ? SideBarReducer.focus(state) : state,
+        Feature_SideBar.isOpen(state.sideBar)
+          ? SideBarReducer.focus(state) : state,
         Effect.none,
       )
 
     | Focus(Bottom) => (
-        state.pane.isOpen ? PaneStore.focus(state) : state,
+        Feature_Pane.isOpen(state.pane) ? PaneStore.focus(state) : state,
         Effect.none,
       )
 
@@ -421,8 +537,25 @@ let update =
     (state, effect);
 
   | Theme(msg) =>
-    let model' = Feature_Theme.update(state.colorTheme, msg);
-    ({...state, colorTheme: model'}, Effect.none);
+    let (model', outmsg) = Feature_Theme.update(state.colorTheme, msg);
+
+    let eff =
+      switch (outmsg) {
+      | OpenThemePicker(_) =>
+        let themes =
+          state.extensions
+          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+               Exthost.Extension.Contributions.(manifest.contributes.themes)
+             })
+          |> List.flatten;
+
+        Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
+          dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
+        });
+      | Nothing => Isolinear.Effect.none
+      };
+
+    ({...state, colorTheme: model'}, eff);
 
   | Notification(msg) =>
     let model' = Feature_Notification.update(state.notifications, msg);
@@ -451,13 +584,41 @@ let update =
   | FilesDropped({paths}) =>
     let eff =
       Service_OS.Effect.statMultiple(paths, (path, stats) =>
-        if (stats.st_kind == S_REG) {
-          OpenFileByPath(path, None, None);
-        } else {
-          Noop;
+        switch (stats.st_kind) {
+        | S_REG => OpenFileByPath(path, None, None)
+        | S_DIR =>
+          switch (Luv.Path.chdir(path)) {
+          | Ok () => DirectoryChanged(path)
+          | Error(_) => Noop
+          }
+        | _ => Noop
         }
       );
     (state, eff);
+
+  | Editor({scope, msg: CursorsChanged(_) as msg}) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let editor = Feature_Layout.activeEditor(state.layout);
+    let (signatureHelp, shOutMsg) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor=Some(editor),
+        ~extHostClient,
+        state.signatureHelp,
+        Feature_SignatureHelp.CursorMoved(
+          Feature_Editor.Editor.getId(editor),
+        ),
+      );
+    let shEffect =
+      switch (shOutMsg) {
+      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
+      | _ => Effect.none
+      };
+    let (layout, editorEffect) =
+      Internal.updateEditors(~scope, ~msg, state.layout);
+    let state = {...state, layout, signatureHelp};
+    let effect = [shEffect, editorEffect] |> Effect.batch;
+    (state, effect);
 
   | Editor({scope, msg}) =>
     let (layout, effect) =
@@ -559,10 +720,32 @@ let update =
     let effect = [shEffect] |> Effect.batch;
     ({...state, signatureHelp}, effect);
 
-  | Vim(msg) => (
-      {...state, vim: Feature_Vim.update(msg, state.vim)},
-      Effect.none,
-    )
+  | Vim(msg) =>
+    let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
+    let state = {...state, vim};
+
+    let (state', eff) =
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | Effect(e) => (state, e)
+      | CursorsUpdated(cursors) =>
+        open Feature_Editor;
+        let activeEditorId =
+          state.layout |> Feature_Layout.activeEditor |> Editor.getId;
+
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               if (Editor.getId(editor) == activeEditorId) {
+                 Editor.setVimCursors(~cursors, editor);
+               } else {
+                 editor;
+               }
+             );
+        ({...state, layout: layout'}, Isolinear.Effect.none);
+      };
+
+    (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
   | _ => (state, Effect.none)
   };

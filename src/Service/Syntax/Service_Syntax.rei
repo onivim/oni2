@@ -16,7 +16,7 @@ module Sub: {
   let server:
     (
       ~useTreeSitter: bool,
-      ~languageInfo: Oni_Extensions.LanguageInfo.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~setup: Setup.t,
       ~tokenTheme: TokenTheme.t
     ) =>

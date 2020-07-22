@@ -4,7 +4,7 @@
     (libraries 
         str
         bigarray
-        zed_oni
+        Revery.zed
         luv
         lwt
         lwt.unix

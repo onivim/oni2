@@ -22,7 +22,14 @@ runTest(
   setClipboard(Some("def\nghi"));
 
   dispatch(KeyboardInput("A"));
-  dispatch(Command("editor.action.clipboardPasteAction"));
+  dispatch(Actions.Clipboard(Feature_Clipboard.Msg.paste));
+  wait(~name="Paste goes through", (state: State.t) =>
+    state
+    |> Selectors.getActiveBuffer
+    |> Option.map(buf => Buffer.getNumberOfLines(buf) == 2)
+    |> Option.value(~default=false)
+  );
+
   dispatch(KeyboardInput("B"));
 
   runEffects();
@@ -32,6 +39,7 @@ runTest(
     | None => false
     | Some(buf) =>
       let line1 = Buffer.getLine(0, buf) |> BufferLine.raw;
+      prerr_endline("LINE1: " ++ line1);
       let line2 = Buffer.getLine(1, buf) |> BufferLine.raw;
       Log.info("Line1 is: " ++ line1 ++ "|");
       Log.info("Line2 is: " ++ line2 ++ "|");

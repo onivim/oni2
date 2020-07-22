@@ -35,11 +35,14 @@ type quickSuggestionsEnabled = {
   strings: bool,
 };
 
+type fontLigatures = [ | `Bool(bool) | `List(list(string))];
+
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
   editorFontFile: string,
   editorFontSize: float,
+  editorFontLigatures: fontLigatures,
   editorFontSmoothing: fontSmoothing,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
@@ -90,6 +93,7 @@ let default = {
   editorFontFile: Constants.defaultFontFile,
   editorFontSmoothing: Default,
   editorFontSize: Constants.defaultFontSize,
+  editorFontLigatures: `Bool(true),
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,

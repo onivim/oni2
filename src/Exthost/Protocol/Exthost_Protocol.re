@@ -69,9 +69,13 @@ module ByteParser = {
         let (argType, bytes) = readUInt8(bytes);
         if (argType == argString || argType == argBuffer) {
           let (str, bytes) = readLongString(bytes);
+          // It's weird, but... if the argument is a string, we need to parse it as JSON:
+          // https://github.com/onivim/vscode-exthost/blob/923c38b016c87a205957456e13c62f8dfd3bdc62/src/vs/workbench/services/extensions/common/rpcProtocol.ts#L710
+
+          // If it isn't meant to be JSON, we'll return it as a `String (which is the closet thing we have to 'buffer')
           let result =
             argType == argString
-              ? `String(str) : Yojson.Safe.from_string(str);
+              ? Yojson.Safe.from_string(str) : `String(str);
           [result, ...loop(bytes, idx + 1)];
         } else {
           [`Null, ...loop(bytes, idx + 1)];
@@ -97,7 +101,7 @@ module Message = {
     | Message(string);
 
   module Incoming = {
-    [@deriving (show, yojson({strict: false}))]
+    [@deriving show]
     type t =
       | Connected
       | Initialized
@@ -127,7 +131,7 @@ module Message = {
   };
 
   module Outgoing = {
-    [@deriving (show, yojson({strict: false}))]
+    [@deriving show]
     type t =
       | Initialize({
           requestId: int,
@@ -144,6 +148,10 @@ module Message = {
       | ReplyOKJSON({
           requestId: int,
           json: Yojson.Safe.t,
+        })
+      | ReplyOKBuffer({
+          requestId: int,
+          bytes: Bytes.t,
         })
       | ReplyError({
           requestId: int,
@@ -252,6 +260,7 @@ module Message = {
       | RequestJSONArgs({requestId, _}) => requestId
       | ReplyOKEmpty({requestId, _}) => requestId
       | ReplyOKJSON({requestId, _}) => requestId
+      | ReplyOKBuffer({requestId, _}) => requestId
       | ReplyError({requestId, _}) => requestId
       | Terminate => Int.max_int;
     let requestId = getRequestId(msg) |> Int32.of_int;
@@ -307,6 +316,10 @@ module Message = {
       writePreamble(~buffer, ~msgType=replyOkJSON, ~requestId);
       let reply = json |> Yojson.Safe.to_string;
       writeLongString(buffer, reply);
+      bufferToPacket(~buffer);
+    | ReplyOKBuffer({bytes, _}) =>
+      writePreamble(~buffer, ~msgType=replyOkBuffer, ~requestId);
+      writeLongString(buffer, Bytes.to_string(bytes));
       bufferToPacket(~buffer);
     | ReplyError({error, _}) =>
       writePreamble(~buffer, ~msgType=replyErrError, ~requestId);

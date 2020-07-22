@@ -10,7 +10,7 @@
         base
         editor-core-types
         timber
-        zed_oni
+        Revery.zed
         ppx_deriving.runtime
 ))
 

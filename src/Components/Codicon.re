@@ -839,10 +839,29 @@ module Styles = {
 
 let codeToIcon = icon => ZedBundled.singleton(Uchar.of_int(icon));
 
-let make = (~icon, ~fontSize=15., ~color, ()) =>
-  <Text
-    text={codeToIcon(icon)}
-    style={Styles.text(~color)}
-    fontSize
-    fontFamily=Constants.fontFamily
-  />;
+module Animation = {
+  let rotation =
+    Revery.(
+      Animation.(animate(Time.seconds(1)) |> tween(0., 6.28) |> repeat)
+    );
+};
+
+let%component make = (~spin=false, ~icon, ~fontSize=15., ~color, ()) => {
+  let%hook (rotation, _animationState, _reset) =
+    Hooks.animation(Animation.rotation, ~active=spin);
+  <View
+    style=Style.[
+      transform([
+        Transform.Rotate(Revery.Math.Angle.from_radians(rotation)),
+      ]),
+      width(fontSize |> int_of_float),
+      height(fontSize |> int_of_float),
+    ]>
+    <Text
+      text={codeToIcon(icon)}
+      style={Styles.text(~color)}
+      fontSize
+      fontFamily=Constants.fontFamily
+    />
+  </View>;
+};

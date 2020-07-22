@@ -176,11 +176,42 @@ module DocumentsAndEditors = {
 };
 
 module ExtensionService = {
+  open Json.Encode;
   let activateByEvent = (~event, client) => {
     Client.notify(
       ~rpcName="ExtHostExtensionService",
       ~method="$activateByEvent",
       ~args=`List([`String(event)]),
+      client,
+    );
+  };
+
+  let activate = (~extensionId, ~reason, client) => {
+    Client.request(
+      ~decoder=Json.Decode.bool,
+      ~rpcName="ExtHostExtensionService",
+      ~method="$activate",
+      ~args=
+        `List([
+          extensionId |> encode_value(string),
+          reason |> encode_value(ExtensionActivationReason.encode),
+        ]),
+      client,
+    );
+  };
+
+  let deltaExtensions = (~toAdd, ~toRemove, client) => {
+    Client.request(
+      ~decoder=Json.Decode.null,
+      ~rpcName="ExtHostExtensionService",
+      ~method="$deltaExtensions",
+      ~args=
+        `List([
+          `List(
+            toAdd |> List.map(Exthost_Extension.InitData.Extension.to_yojson),
+          ),
+          `List(toRemove |> List.map(encode_value(ExtensionId.encode))),
+        ]),
       client,
     );
   };
@@ -429,6 +460,37 @@ module LanguageFeatures = {
           options |> Json.Encode.encode_value(FormattingOptions.encode),
         ]),
       client,
+    );
+  };
+
+  let provideRenameEdits = (~handle, ~resource, ~position, ~newName: string) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(WorkspaceEdit.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideRenameEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `String(newName),
+        ]),
+    );
+  };
+
+  let resolveRenameLocation = (~handle, ~resource, ~position) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(RenameLocation.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveRenameLocation",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
     );
   };
 };

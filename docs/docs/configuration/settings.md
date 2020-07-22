@@ -33,6 +33,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialiased"_)__ - The smoothing strategy used when rendering fonts. The `"antialiased"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid. 
 
+- `editor.fontLigatures` __(_string|bool_ default: `true`)__ - Sets whether or not font ligatures are enabled. When `true`, the font's default features are enabled. When `false`, contextual alternates and standard ligatues are disabled. If a string is entered, it must be of the form `"'tag1', 'tag2', ..."`, where each tag listed will be enabled. This is particularly useful for enabling stylistic sets, i.e. `"'ss01', 'ss02', ..."`.
+
 - `editor.hover.delay` __(_int_ default: `1000`)__ - The delay in milliseconds before showing the hover UI.
 
 - `editor.hover.enabled` __(_bool_ default: `true`)__ - Controls whether or not the hover UI is enabled.

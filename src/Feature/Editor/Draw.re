@@ -14,6 +14,7 @@ type context = {
   charWidth: float,
   charHeight: float,
   smoothing: Revery.Font.Smoothing.t,
+  features: list(Revery.Font.Feature.t),
 };
 
 let createContext =
@@ -34,6 +35,7 @@ let createContext =
     charWidth: editorFont.measuredWidth,
     charHeight: editorFont.measuredHeight,
     smoothing: editorFont.smoothing,
+    features: editorFont.features,
   };
 };
 
@@ -77,22 +79,33 @@ let drawShapedText = {
 
   Skia.Paint.setLcdRenderText(paint, true);
 
-  (~context, ~x, ~y, ~color, ~bold, ~italic, ~mono, text) => {
+  (~context, ~x, ~y, ~color, ~bold, ~italic, text) => {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        ~mono,
         bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
         context.fontFamily,
       );
-    let text = Revery.Font.(shape(font, text) |> ShapeResult.getGlyphString);
+    let text =
+      Revery.Font.(
+        shape(~features=context.features, font, text)
+        |> ShapeResult.getGlyphStrings
+      );
 
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
     Skia.Paint.setTextSize(paint, context.fontSize);
-    Skia.Paint.setTypeface(paint, Revery.Font.getSkiaTypeface(font));
     Skia.Paint.setColor(paint, Revery.Color.toSkia(color));
 
-    drawText(~context, ~x, ~y, ~paint, text);
+    let offset = ref(x);
+
+    text
+    |> List.iter(((skiaFace, str)) => {
+         Skia.Paint.setTypeface(paint, skiaFace);
+
+         drawText(~context, ~x=offset^, ~y, ~paint, str);
+
+         offset := offset^ +. Skia.Paint.measureText(paint, str, None);
+       });
   };
 };
 let shapedText = drawShapedText;
@@ -103,11 +116,10 @@ let drawUtf8Text = {
 
   Skia.Paint.setLcdRenderText(paint, true);
 
-  (~context, ~x, ~y, ~color, ~bold, ~italic, ~mono, text) => {
+  (~context, ~x, ~y, ~color, ~bold, ~italic, ~text) => {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        ~mono,
         bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
         context.fontFamily,
       );
@@ -185,11 +197,16 @@ let range = (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
   );
 };
 
+let tabPaint = Skia.Paint.make();
+Skia.Paint.setTextEncoding(tabPaint, GlyphId);
+Skia.Paint.setLcdRenderText(tabPaint, true);
+Skia.Paint.setAntiAlias(tabPaint, true);
+Skia.Paint.setTextSize(tabPaint, 10.);
+
 let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
-      ~mono=true,
       token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
       context.fontFamily,
     );
@@ -214,26 +231,27 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
       ~color=token.color,
       ~bold=token.bold,
       ~italic=token.italic,
-      ~mono=true,
       token.text,
     )
 
   | Tab =>
-    CanvasContext.Deprecated.drawString(
+    Skia.Paint.setColor(
+      tabPaint,
+      Revery_Core.Color.toSkia(colors.whitespaceForeground),
+    );
+    FontAwesome.FontFamily.solid
+    |> Revery.Font.Family.toSkia(Normal)
+    |> Revery.Font.load
+    |> Result.get_ok
+    |> Revery.Font.getSkiaTypeface
+    |> Skia.Paint.setTypeface(tabPaint);
+    CanvasContext.drawText(
+      ~paint=tabPaint,
       ~x=x +. context.charWidth /. 4.,
       ~y,
-      ~color=colors.whitespaceForeground,
-      ~fontFamily=
-        Revery.Font.Family.toPath(
-          ~italic=false,
-          ~mono=false,
-          Normal,
-          FontAwesome.FontFamily.solid,
-        ),
-      ~fontSize=10.,
       ~text=FontIcon.codeToIcon(FontAwesome.longArrowAltRight),
       context.canvasContext,
-    )
+    );
 
   | Whitespace =>
     let size = 2.;

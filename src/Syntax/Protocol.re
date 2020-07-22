@@ -6,8 +6,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 
-module Ext = Oni_Extensions;
-
 let pidToNamedPipe = pid => {
   Exthost.(
     {
@@ -52,7 +50,7 @@ module ClientToServer = {
   [@deriving show({with_path: false})]
   type t =
     | Echo(string)
-    | Initialize([@opaque] Ext.LanguageInfo.t, Setup.t)
+    | Initialize([@opaque] Exthost.LanguageInfo.t, Setup.t)
     | BufferStartHighlighting({
         bufferId: int,
         filetype: string,

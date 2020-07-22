@@ -480,6 +480,22 @@ CAMLprim value libvim_vimInput(value v) {
   return Val_unit;
 }
 
+CAMLprim value libvim_vimEval(value vStr) {
+  CAMLparam1(vStr);
+  CAMLlocal2(vOut, vRet);
+
+  char_u *result = vimEval(String_val(vStr));
+
+  if (result == NULL) {
+    vRet = Val_none;
+  } else {
+    vOut = caml_copy_string(result);
+    vRet = Val_some(vOut);
+    free(result);
+  }
+  CAMLreturn(vRet);
+}
+
 CAMLprim value libvim_vimCommand(value v) {
   char_u *s;
   s = (char_u *)String_val(v);
@@ -901,6 +917,31 @@ CAMLprim value libvim_vimVisualGetRange(value unit) {
   CAMLreturn(ret);
 }
 
+CAMLprim value libvim_vimRegisterGet(value vChar) {
+  CAMLparam1(vChar);
+  CAMLlocal2(ret, vArray);
+
+  
+  int reg = Int_val(vChar);
+  int numLines = 0;
+  char_u **lines = NULL;
+  vimRegisterGet(reg, &numLines, &lines);
+
+  if (numLines == 0 || lines == NULL) {
+    ret = Val_none;
+  } else {
+    vArray = caml_alloc(numLines, 0);
+
+    for (int i = 0; i < numLines; i++) {
+      Store_field(vArray, i, caml_copy_string(lines[i]));
+    }
+
+    ret = Val_some(vArray);
+  }
+
+  CAMLreturn(ret);
+}
+
 CAMLprim value libvim_vimWindowGetWidth(value unit) {
   int width = vimWindowGetWidth();
   return Val_int(width);
@@ -940,14 +981,6 @@ CAMLprim value libvim_vimWindowSetTopLeft(value top, value left) {
   return Val_unit;
 }
 
-CAMLprim value libvim_vimUndoSaveCursor(value unit) {
-  CAMLparam0();
-
-  vimUndoSaveCursor();
-
-  CAMLreturn(Val_unit);
-}
-
 CAMLprim value libvim_vimUndoSync(value force) {
   CAMLparam0();
 
@@ -958,13 +991,14 @@ CAMLprim value libvim_vimUndoSync(value force) {
 
 CAMLprim value libvim_vimUndoSaveRegion(value startLine, value endLine) {
   CAMLparam2(startLine, endLine);
-
+  CAMLlocal1(ret);
+  
   int start = Int_val(startLine);
   int end = Int_val(endLine);
 
-  vimUndoSaveRegion(start, end);
+  int success = vimUndoSaveRegion(start, end);
 
-  CAMLreturn(Val_unit);
+  CAMLreturn(Val_bool(success != FAIL));
 }
 
 CAMLprim value libvim_vimVisualGetType(value unit) {

@@ -1,7 +1,6 @@
 /*
  * NodeTask.re
  */
-
 open Utility;
 exception TaskFailed;
 module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
@@ -29,7 +28,6 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
     let%bind _: Luv.Process.t =
       LuvEx.Process.spawn(
         ~on_exit,
-        ~detached=true,
         ~redirect=[
           Luv.Process.to_parent_pipe(
             ~fd=Luv.Process.stdout,
@@ -61,7 +59,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
               |> List.rev
               |> List.map(Luv.Buffer.to_string)
               |> String.concat("");
-            Log.infof(m => m("Got output: %s", allOutput));
+            Log.debugf(m => m("Got output: %s", allOutput));
             Lwt.wakeup(resolver, allOutput);
           }
         | Error(msg) => Log.error(Luv.Error.strerror(msg))

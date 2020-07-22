@@ -104,6 +104,7 @@ let parse = args => {
       ("--debug", Unit(CoreLog.enableDebug), ""),
       ("--trace", Unit(CoreLog.enableTrace), ""),
       ("--quiet", Unit(CoreLog.enableQuiet), ""),
+      ("--silent", Unit(Timber.App.disable), ""),
       ("--version", setEffect(PrintVersion), ""),
       ("--no-log-colors", Unit(Timber.App.disableColors), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),

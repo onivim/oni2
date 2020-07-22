@@ -10,8 +10,6 @@ open Oni_Model;
 open Actions;
 open Oni_Syntax;
 
-module Ext = Oni_Extensions;
-
 module DefinitionResult = LanguageFeatures.DefinitionResult;
 module Editor = Feature_Editor.Editor;
 

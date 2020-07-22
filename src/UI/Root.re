@@ -9,6 +9,7 @@ open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
+module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 
 module Colors = Feature_Theme.Colors;
@@ -81,6 +82,16 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
 
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
+  let messagesDispatch = msg => dispatch(Actions.Messages(msg));
+
+  let messages = () => {
+    <Feature_Messages.View
+      theme
+      font={state.uiFont}
+      model={state.messages}
+      dispatch=messagesDispatch
+    />;
+  };
 
   let statusBar = () =>
     if (Selectors.getActiveConfigurationValue(state, c =>
@@ -111,20 +122,20 @@ let make = (~dispatch, ~state: State.t, ()) => {
           c.workbenchActivityBarVisible
         )
         && !zenMode) {
-      React.listToElement([
-        <Dock theme sideBar pane />,
-        <WindowHandle direction=`Vertical />,
-      ]);
+      <Dock
+        font={state.uiFont}
+        theme
+        sideBar
+        pane
+        extensions={state.extensions}
+      />;
     } else {
       React.empty;
     };
 
   let sideBar = () =>
-    if (!zenMode && sideBar.isOpen) {
-      React.listToElement([
-        <SideBarView theme state />,
-        <WindowHandle direction=`Vertical />,
-      ]);
+    if (!zenMode) {
+      <SideBarView theme state dispatch />;
     } else {
       React.empty;
     };
@@ -189,10 +200,17 @@ let make = (~dispatch, ~state: State.t, ()) => {
        | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
        | None => React.empty
        }}
+      <Feature_Registers.View
+        theme
+        registers={state.registers}
+        font
+        dispatch={msg => dispatch(Actions.Registers(msg))}
+      />
     </Overlay>
     <statusBar />
     <contextMenuOverlay />
     <Tooltip.Overlay theme font=uiFont />
+    <messages />
     <modals />
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />

@@ -8,9 +8,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
-open Oni_Components;
 
-module Ext = Oni_Extensions;
 module ContextMenu = Oni_Components.ContextMenu;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module CompletionItem = Feature_LanguageSupport.CompletionItem;
@@ -55,6 +53,7 @@ type t =
   | BufferSaved(int)
   | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
   | BufferSetModified(int, bool)
+  | Clipboard(Feature_Clipboard.msg)
   | Syntax(Feature_Syntax.msg)
   | Hover(Feature_Hover.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
@@ -113,11 +112,7 @@ type t =
     })
   | Formatting(Feature_Formatting.msg)
   | Notification(Feature_Notification.msg)
-  | ExtMessageReceived({
-      severity: [@opaque] Exthost.Msg.MessageService.severity,
-      message: string,
-      extensionId: option(string),
-    })
+  | Messages(Feature_Messages.msg)
   | Editor({
       scope: EditorScope.t,
       msg: Feature_Editor.msg,
@@ -125,9 +120,11 @@ type t =
   | FilesDropped({paths: list(string)})
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
+  | LanguageSupport(Feature_LanguageSupport.msg)
+  | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputClicked(Selection.t)
+  | QuickmenuInputMessage(Feature_InputText.msg)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
@@ -147,6 +144,12 @@ type t =
   | BufferOpened(string, option(Location.t), int)
   | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
+  | Pasted({
+      rawText: string,
+      isMultiLine: bool,
+      lines: array(string),
+    })
+  | Registers(Feature_Registers.msg)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_
@@ -155,7 +158,7 @@ type t =
   | RegisterQuitCleanup(unit => unit)
   | SearchSetHighlights(int, list(Range.t))
   | SearchClearHighlights(int)
-  | SetLanguageInfo([@opaque] Ext.LanguageInfo.t)
+  | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeLoadByPath(string, string)
   | ThemeLoadByName(string)
@@ -171,12 +174,14 @@ type t =
   | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
+  | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
-  | PaneTabClicked(Pane.pane)
+  | Pane(Feature_Pane.msg)
+  | PaneTabClicked(Feature_Pane.pane)
   | PaneCloseButtonClicked
-  | VimDirectoryChanged(string)
+  | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
@@ -251,7 +256,7 @@ and quickmenuVariant =
   | EditorsPicker
   | FilesPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
-  | ThemesPicker
+  | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | DocumentSymbols
 and progress =
   | Loading

@@ -2,7 +2,6 @@ open EditorCoreTypes;
 module Core = Oni_Core;
 module Syntax = Oni_Syntax;
 module Protocol = Oni_Syntax.Protocol;
-module Ext = Oni_Extensions;
 module OptionEx = Core.Utility.OptionEx;
 
 module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
@@ -47,7 +46,7 @@ module Internal = {
 module Sub = {
   type serverParams = {
     id: string,
-    languageInfo: Ext.LanguageInfo.t,
+    languageInfo: Exthost.LanguageInfo.t,
     setup: Core.Setup.t,
     tokenTheme: Syntax.TokenTheme.t,
     useTreeSitter: bool,

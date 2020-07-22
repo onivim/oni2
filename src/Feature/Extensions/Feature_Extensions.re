@@ -1,51 +1,7 @@
 open Oni_Core;
 open Exthost.Extension;
 
-[@deriving show({with_path: false})]
-type msg =
-  | Activated(string /* id */)
-  | Discovered([@opaque] list(Scanner.ScanResult.t))
-  | ExecuteCommand({
-      command: string,
-      arguments: [@opaque] list(Json.t),
-    });
-
-type outmsg =
-  | Nothing
-  | Effect(Isolinear.Effect.t(msg));
-
 include Model;
-
-let empty = {activatedIds: [], extensions: []};
-
-module Internal = {
-  let markActivated = (id: string, model) => {
-    ...model,
-    activatedIds: [id, ...model.activatedIds],
-  };
-
-  let add = (extensions, model) => {
-    ...model,
-    extensions: extensions @ model.extensions,
-  };
-};
-
-let update = (~extHostClient, msg, model) => {
-  switch (msg) {
-  | Activated(id) => (Internal.markActivated(id, model), Nothing)
-  | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
-  | ExecuteCommand({command, arguments}) => (
-      model,
-      Effect(
-        Service_Exthost.Effects.Commands.executeContributedCommand(
-          ~command,
-          ~arguments,
-          extHostClient,
-        ),
-      ),
-    )
-  };
-};
 
 let all = ({extensions, _}) => extensions;
 let activatedIds = ({activatedIds, _}) => activatedIds;
@@ -91,4 +47,40 @@ let menus = model =>
   |> Seq.map(((id, items)) => Menu.Schema.{id, items})
   |> List.of_seq;
 
+let pick = (f, {extensions, _}) => {
+  extensions
+  |> List.map((scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
+       f(scanResult.manifest)
+     });
+};
+
+let themeByName = (~name, model) => {
+  model
+  |> pick(manifest => manifest.contributes.themes)
+  |> List.flatten
+  |> List.fold_left(
+       (acc, curr: Contributions.Theme.t) =>
+         if (curr.label == name) {
+           Some(curr);
+         } else {
+           acc;
+         },
+       None,
+     );
+};
+
 module ListView = ListView;
+
+let sub = (~setup, model) => {
+  let toMsg =
+    fun
+    | Ok(query) => SearchQueryResults(query)
+    | Error(err) => SearchQueryError(err);
+
+  switch (model.latestQuery) {
+  | Some(query) when !Service_Extensions.Query.isComplete(query) =>
+    Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
+  | Some(_)
+  | None => Isolinear.Sub.none
+  };
+};
