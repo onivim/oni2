@@ -128,7 +128,7 @@ let start =
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Actions.VimDirectoryChanged(newDir))
+      dispatch(Actions.DirectoryChanged(newDir))
     );
 
   let _: unit => unit =
@@ -910,7 +910,7 @@ let start =
         copyActiveFilepathToClipboardEffect,
       )
 
-    | VimDirectoryChanged(workingDirectory) =>
+    | DirectoryChanged(workingDirectory) =>
       let newState = {
         ...state,
         workspace: {

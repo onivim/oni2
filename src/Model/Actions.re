@@ -111,11 +111,7 @@ type t =
     })
   | Formatting(Feature_Formatting.msg)
   | Notification(Feature_Notification.msg)
-  | ExtMessageReceived({
-      severity: [@opaque] Exthost.Msg.MessageService.severity,
-      message: string,
-      extensionId: option(string),
-    })
+  | Messages(Feature_Messages.msg)
   | Editor({
       scope: EditorScope.t,
       msg: Feature_Editor.msg,
@@ -188,7 +184,7 @@ type t =
   | Pane(Feature_Pane.msg)
   | PaneTabClicked(Feature_Pane.pane)
   | PaneCloseButtonClicked
-  | VimDirectoryChanged(string)
+  | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,

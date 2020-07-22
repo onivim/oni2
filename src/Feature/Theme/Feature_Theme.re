@@ -16,6 +16,7 @@ let defaults =
   [
     Colors.ActivityBar.defaults,
     Colors.ActivityBarBadge.defaults,
+    Colors.Button.defaults,
     Colors.Dropdown.defaults,
     Colors.Editor.defaults,
     Colors.EditorError.defaults,
@@ -39,6 +40,7 @@ let defaults =
     Colors.Minimap.defaults,
     Colors.MinimapSlider.defaults,
     Colors.MinimapGutter.defaults,
+    Colors.Notifications.defaults,
     Colors.Oni.defaults,
     Colors.Oni.Modal.defaults,
     Colors.Oni.Sneak.defaults,

@@ -27,6 +27,7 @@ module InputBoxOptions = InputBoxOptions;
 module Label = Label;
 module Location = Location;
 module MarkdownString = MarkdownString;
+module Message = Message;
 module Middleware = Middleware;
 module ModelAddedDelta = ModelAddedDelta;
 module ModelChangedEvent = ModelChangedEvent;
