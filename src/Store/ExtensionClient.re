@@ -464,8 +464,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         Service_Terminal.handleExtensionMessage(msg);
         Lwt.return(Reply.okEmpty);
       | Window(OpenUri({uri})) =>
-        prerr_endline("URI: " ++ Oni_Core.Uri.toString(uri));
-        Lwt.return(Reply.okEmpty);
+        Service_OS.Api.openURL(uri |> Oni_Core.Uri.toString) ? Lwt.return(Reply.okEmpty) : Lwt.return(Reply.error("Unable to open URI"));
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
       | unhandledMsg =>
