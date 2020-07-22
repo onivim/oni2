@@ -170,6 +170,14 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
+      // TODO: This isn't buffer aware, so it won't be able to deal with the
+      // firstline way of getting syntax, which means if that is in use,
+      // it will get wiped when renaming the file.
+      //
+      // Other notes: The file path is going to be updated in BufferFilenameChanged,
+      // so you can't use the buffer here, as it will have the old path.
+      // Additionally, the syntax server will need to be notified on the filetype
+      // change / hook it up to onFileTypeChanged.
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>

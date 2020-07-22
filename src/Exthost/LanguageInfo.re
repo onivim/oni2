@@ -61,14 +61,14 @@ let getLanguageFromExtension = (li: t, ext: string) => {
 };
 
 let getLanguageFromFileNamePattern = (li: t, fileName: string) =>
-  try(
-    List.find(
+  switch (
+    List.find_opt(
       p => Oniguruma.OnigRegExp.test(fileName, p.pattern),
       li.fileNamePatternToLanguage,
-    ).
-      language
+    )
   ) {
-  | Not_found => defaultLanguage
+  | Some(l) => l.language
+  | None => defaultLanguage
   };
 
 let getLanguageFromFileName = (li: t, fileName: string) => {
@@ -108,14 +108,14 @@ let getLanguageFromFirstLine = (li: t, buffer: Buffer.t) => {
   if (firstLine == "") {
     defaultLanguage;
   } else {
-    try(
-      List.find(
+    switch (
+      List.find_opt(
         p => Oniguruma.OnigRegExp.test(firstLine, p.pattern),
         li.firstLineToLanguage,
-      ).
-        language
+      )
     ) {
-    | Not_found => defaultLanguage
+    | Some(l) => l.language
+    | None => defaultLanguage
     };
   };
 };
