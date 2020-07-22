@@ -19,6 +19,7 @@ let handleInput: (~key: string, model) => model;
 let paste: (~text: string, model) => model;
 
 let set: (~text: string, ~cursor: int, model) => model;
+let setPlaceholder: (~placeholder: string, model) => model;
 
 let isCursorAtEnd: model => bool;
 

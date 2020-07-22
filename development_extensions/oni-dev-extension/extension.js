@@ -20,9 +20,9 @@ function activate(context) {
     item.show();
 
     let cleanup = (disposable) => context.subscriptions.push(disposable);
-    
+
     cleanup(vscode.commands.registerCommand('developer.oni.statusBarClicked', () => {
-        vscode.window.showWarningMessage('You clicked developer');
+        vscode.window.showWarningMessage('You clicked developer', []);
     }));
 
     cleanup(vscode.languages.registerDefinitionProvider('oni-dev', {
@@ -100,6 +100,15 @@ function activate(context) {
            }]);
         }
     }));
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.showChoiceMessage', () => {
+        vscode.window.showInformationMessage('Hello!', "Option 1", "Option 2", "Option 3")
+        .then((result) => {
+           vscode.window.showInformationMessage('You picked: ' + result); 
+        }, (err) => {
+           vscode.window.showInformationMessage('Cancelled: ' + err); 
+        });
+    }));
 
     cleanup(vscode.commands.registerCommand('developer.oni.showWarning', () => {
         vscode.window.showWarningMessage('This is a warning');
@@ -134,6 +143,23 @@ function activate(context) {
         vscode.window.showInformationMessage(
         "Visible editors: " + JSON.stringify(vscode.window.visibleTextEditors)
         );
+    }));
+    
+    cleanup(vscode.commands.registerCommand('developer.oni.showQuickPick', () => {
+        vscode.window.showQuickPick([
+            "Item 1",
+            "Item 2",
+            "Item 3",
+        ])
+        .then((selectedItem) => {
+            
+        vscode.window.showInformationMessage(
+        "Quick pick item selected: " + selectedItem);
+        }, (err) => {
+            
+        vscode.window.showErrorMessage(
+        "Quick pick cancelled: " + err);
+        })
     }));
     
     function createResourceUri(relativePath) {

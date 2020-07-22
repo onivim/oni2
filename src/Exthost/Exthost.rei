@@ -199,6 +199,40 @@ module Hover: {
   let decode: Json.decoder(t);
 };
 
+module Message: {
+  [@deriving show]
+  type severity =
+    | Ignore
+    | Info
+    | Warning
+    | Error;
+
+  [@deriving show]
+  type handle;
+
+  let handleToJson: handle => Yojson.Safe.t;
+
+  module Command: {
+    [@deriving show]
+    type t = {
+      title: string,
+      isCloseAffordance: bool,
+      handle,
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
+module RenameLocation: {
+  type t = {
+    range: OneBasedRange.t,
+    text: string,
+  };
+
+  let decode: Json.decoder(t);
+};
+
 module SuggestItem: {
   type t = {
     label: string,
@@ -228,9 +262,160 @@ module Label: {
   [@deriving show]
   type t = list(segment);
 
-  let of_string: string => t;
+  let ofString: string => t;
+  let toString: t => string;
 
   let decode: Json.decoder(t);
+};
+
+module Progress: {
+  module Location: {
+    [@deriving show]
+    type t =
+      | Explorer
+      | SCM
+      | Extensions
+      | Window
+      | Notification
+      | Dialog
+      | Other(string);
+
+    let decode: Json.decoder(t);
+  };
+
+  module Options: {
+    [@deriving show]
+    type t = {
+      location: Location.t,
+      title: option(string),
+      source: option(string),
+      total: option(int),
+      cancellable: bool,
+      buttons: list(string),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
+  module Step: {
+    [@deriving show]
+    type t = {
+      message: option(string),
+      increment: option(int),
+      total: option(int),
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
+module InputBoxOptions: {
+  [@deriving show]
+  type t = {
+    ignoreFocusOut: bool,
+    password: bool,
+    placeHolder: option(string),
+    prompt: option(string),
+    value: option(string),
+    // TODO
+    // valueSelection: (int, int),
+  };
+};
+
+module QuickOpen: {
+  module Options: {
+    [@deriving show]
+    type t = {
+      placeholder: option(string),
+      matchOnDescription: bool,
+      matchOnDetail: bool,
+      matchOnLabel: bool, // default true
+      autoFocusOnList: bool, // default true
+      ignoreFocusLost: bool,
+      canPickMany: bool,
+      // TODO:
+      // https://github.com/onivim/vscode-exthost/blob/a25f426a04fe427beab7465be660f89a794605b5/src/vs/platform/quickinput/common/quickInput.ts#L78
+      //quickNavigate
+      contextKey: option(string),
+    };
+  };
+
+  module Button: {
+    [@deriving show]
+    type icon = {
+      dark: Oni_Core.Uri.t,
+      light: option(Oni_Core.Uri.t),
+    };
+
+    [@deriving show]
+    type t = {
+      iconPath: option(icon),
+      iconClass: option(string),
+      tooltip: option(string),
+    };
+  };
+
+  module Item: {
+    [@deriving show]
+    type t = {
+      // TransferQuickPickItems
+      handle: int,
+      // IQuickPickItem
+      id: option(string),
+      label: string,
+      description: option(string),
+      detail: option(string),
+      iconClasses: list(string),
+      buttons: list(Button.t),
+      picked: bool,
+      alwaysShow: bool,
+    };
+  };
+
+  module QuickPick: {
+    [@deriving show]
+    type t = {
+      // BaseTransferQuickInput
+      id: int,
+      enabled: bool,
+      busy: bool,
+      visible: bool,
+      // TransferQuickPick
+      value: option(string),
+      placeholder: option(string),
+      buttons: list(Button.t),
+      items: list(Item.t),
+      // TODO:
+      // activeItems
+      // selectedItems
+      // canSelectMany
+      // ignoreFocusOut
+      // matchOnDescription
+      // Match on Detail
+    };
+  };
+
+  module QuickInput: {
+    [@deriving show]
+    type t = {
+      // BaseTransferQuickInput
+      id: int,
+      enabled: bool,
+      busy: bool,
+      visible: bool,
+      // TransferInputBox
+      value: option(string),
+      placeholder: option(string),
+      buttons: list(Button.t),
+      prompt: option(string),
+      validationMessage: option(string),
+    };
+  };
+
+  [@deriving show]
+  type t =
+    | QuickPick(QuickPick.t)
+    | QuickInput(QuickInput.t);
 };
 
 module SCM: {
@@ -280,6 +465,13 @@ module SCM: {
     };
 
     module Decode: {let splices: Json.decoder(Splices.t);};
+  };
+
+  module GroupFeatures: {
+    [@deriving show({with_path: false})]
+    type t = {hideWhenEmpty: bool};
+
+    let decode: Json.decoder(t);
   };
 
   module Decode: {
@@ -754,6 +946,21 @@ module Color: {
   let resolve: (Oni_Core.ColorTheme.Colors.t, t) => option(Revery.Color.t);
 };
 
+module WorkspaceEdit: {
+  module FileEdit: {type t;};
+
+  module TextEdit: {type t;};
+
+  type edit =
+    | File(FileEdit.t)
+    | Text(TextEdit.t);
+
+  type t = {
+    edits: list(edit),
+    rejectReason: option(string),
+  };
+};
+
 module Msg: {
   module Clipboard: {
     [@deriving show]
@@ -773,6 +980,16 @@ module Msg: {
           retry: bool,
         })
       | GetCommands;
+  };
+
+  module Console: {
+    [@deriving show]
+    type msg =
+      | LogExtensionHostMessage({
+          logType: string,
+          severity: string,
+          arguments: Yojson.Safe.t,
+        });
   };
 
   module DebugService: {
@@ -819,6 +1036,21 @@ module Msg: {
           uri: Oni_Core.Uri.t,
           value: string,
         });
+  };
+
+  module DownloadService: {
+    [@deriving show]
+    type msg =
+      | Download({
+          uri: Oni_Core.Uri.t,
+          dest: Oni_Core.Uri.t,
+        });
+  };
+
+  module Errors: {
+    [@deriving show]
+    type msg =
+      | OnUnexpectedError(Yojson.Safe.t);
   };
 
   module ExtensionService: {
@@ -940,6 +1172,11 @@ module Msg: {
           handle: int,
           selector: DocumentSelector.t,
         })
+      | RegisterRenameSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          supportsResolveInitialValues: bool,
+        })
       | RegisterDocumentFormattingSupport({
           handle: int,
           selector: DocumentSelector.t,
@@ -962,19 +1199,52 @@ module Msg: {
   };
 
   module MessageService: {
-    type severity =
-      | Ignore
-      | Info
-      | Warning
-      | Error;
-
     [@deriving show]
     type msg =
       | ShowMessage({
-          severity,
+          severity: Message.severity,
           message: string,
           extensionId: option(string),
+          commands: list(Message.Command.t),
         });
+  };
+
+  module Progress: {
+    [@deriving show]
+    type msg =
+      | StartProgress({
+          handle: int,
+          options: Progress.Options.t,
+        })
+      | ProgressReport({
+          handle: int,
+          message: Progress.Step.t,
+        })
+      | ProgressEnd({handle: int});
+  };
+
+  module QuickOpen: {
+    [@deriving show]
+    type msg =
+      // TODO: How to handle incoming cancellation token?
+      | Show({
+          instance: int,
+          options: QuickOpen.Options.t,
+        }) // Returns a promise / id
+      | SetItems({
+          instance: int,
+          items: list(QuickOpen.Item.t),
+        })
+      | SetError({
+          instance: int,
+          error: Yojson.Safe.t,
+        })
+      | Input({
+          options: InputBoxOptions.t,
+          validateInput: bool,
+        })
+      | CreateOrUpdate({params: QuickOpen.t})
+      | Dispose({id: int});
   };
 
   module SCM: {
@@ -1004,6 +1274,28 @@ module Msg: {
       | UnregisterSCMResourceGroup({
           provider: int,
           handle: int,
+        })
+      | UpdateGroup({
+          provider: int,
+          handle: int,
+          features: SCM.GroupFeatures.t,
+        })
+      | UpdateGroupLabel({
+          provider: int,
+          handle: int,
+          label: string,
+        })
+      | SetInputBoxPlaceholder({
+          handle: int,
+          value: string,
+        })
+      | SetInputBoxVisibility({
+          handle: int,
+          visible: bool,
+        })
+      | SetValidationProviderIsEnabled({
+          handle: int,
+          enabled: bool,
         })
       | SpliceSCMResourceStates({
           handle: int,
@@ -1046,6 +1338,31 @@ module Msg: {
         });
   };
 
+  module OutputService: {
+    [@deriving show]
+    type msg =
+      | Register({
+          label: string,
+          log: bool,
+          file: option(Oni_Core.Uri.t),
+        })
+      | Append({
+          channelId: string,
+          value: string,
+        })
+      | Update({channelId: string})
+      | Clear({
+          channelId: string,
+          till: int,
+        })
+      | Reveal({
+          channelId: string,
+          preserveFocus: bool,
+        })
+      | Close({channelId: string})
+      | Dispose({channelId: string});
+  };
+
   module StatusBar: {
     [@deriving show]
     type alignment =
@@ -1073,14 +1390,20 @@ module Msg: {
     | Ready
     | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
+    | Console(Console.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
+    | DownloadService(DownloadService.msg)
+    | Errors(Errors.msg)
     | ExtensionService(ExtensionService.msg)
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
     | MessageService(MessageService.msg)
+    | OutputService(OutputService.msg)
+    | Progress(Progress.msg)
+    | QuickOpen(QuickOpen.msg)
     | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
@@ -1115,7 +1438,10 @@ module Reply: {
   let okBuffer: Bytes.t => t;
 };
 
-module Middleware: {let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);};
+module Middleware: {
+  let download: Msg.DownloadService.msg => Lwt.t(Reply.t);
+  let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);
+};
 
 module Client: {
   type t;
@@ -1299,6 +1625,25 @@ module Request: {
       ) =>
       Lwt.t(list(Location.t));
 
+    let provideRenameEdits:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~newName: string,
+        Client.t
+      ) =>
+      Lwt.t(option(WorkspaceEdit.t));
+
+    let resolveRenameLocation:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        Client.t
+      ) =>
+      Lwt.t(option(RenameLocation.t));
+
     let provideTypeDefinition:
       (
         ~handle: int,
@@ -1386,4 +1731,5 @@ module Request: {
   };
 };
 
+module GrammarInfo = GrammarInfo;
 module LanguageInfo = LanguageInfo;

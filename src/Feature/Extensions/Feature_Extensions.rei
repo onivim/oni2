@@ -36,13 +36,24 @@ type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg))
+  | InstallSucceeded({
+      extensionId: string,
+      contributions: Exthost.Extension.Contributions.t,
+    })
   | NotifySuccess(string)
   | NotifyFailure(string);
+
+let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
+
+let themeByName: (~name: string, model) => option(Contributions.Theme.t);
 
 let initial: (~extensionsFolder: option(string)) => model;
 
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
+
+let isInstalling: (~extensionId: string, model) => bool;
+let isUninstalling: (~extensionId: string, model) => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 

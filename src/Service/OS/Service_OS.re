@@ -36,7 +36,12 @@ module Api = {
     };
   };
 
-  let stat = str => str |> wrap(Luv.File.stat);
+  let stat = path => {
+    Log.infof(m => m("Luv.stat: %s", path));
+    path
+    |> wrap(Luv.File.stat)
+    |> LwtEx.tap(_ => Log.infof(m => m("Stat completed: %s", path)));
+  };
 
   let readdir = path => {
     path
@@ -113,20 +118,26 @@ module Api = {
            Lwt.bind(Internal.readdir(dir), dirents => {
              dirents
              |> Array.to_list
-             |> List.map((dirent: Luv.File.Dirent.t) => {
-                  let name = Rench.Path.join(candidate, dirent.name);
-                  switch (dirent.kind) {
-                  | `LINK
-                  | `FILE => unlink(Rench.Path.join(candidate, dirent.name))
-                  | `DIR => loop(Rench.Path.join(candidate, name))
-                  | _ =>
-                    Log.warnf(m =>
-                      m("Unknown file type encountered: %s", name)
-                    );
-                    Lwt.return();
-                  };
-                })
-             |> Lwt.join
+             |> List.fold_left(
+                  (acc, dirent: Luv.File.Dirent.t) => {
+                    acc
+                    |> LwtEx.flatMap(_ => {
+                         let name = Rench.Path.join(candidate, dirent.name);
+                         switch (dirent.kind) {
+                         | `LINK
+                         | `FILE =>
+                           unlink(Rench.Path.join(candidate, dirent.name))
+                         | `DIR => loop(Rench.Path.join(candidate, name))
+                         | _ =>
+                           Log.warnf(m =>
+                             m("Unknown file type encountered: %s", name)
+                           );
+                           Lwt.return();
+                         };
+                       })
+                  },
+                  Lwt.return(),
+                )
              |> bind(_ => Internal.closedir(dir))
              |> bind(_ => rmdirNonRecursive(candidate))
            })

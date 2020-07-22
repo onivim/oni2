@@ -291,6 +291,38 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
+  test("font ligatures (list)", ({expect, _}) => {
+    let configuration = {|
+    { "editor.fontLigatures": "'ss01', 'ss02', 'calt'" }
+    |};
+    let expected = `List(["ss01", "ss02", "calt"]);
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.editorFontLigatures, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("font ligatures (list, malformed)", ({expect, _}) => {
+    let configuration = {|
+    { "editor.fontLigatures": "'ss01', 'ss02' 'calt'" }
+    |};
+    let expected = `Bool(true);
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.editorFontLigatures, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
   test("resiliency tests", ({expect, _}) => {
     let trailingCommaInObject = {|
       { "editor.rulers": [120, 80], }

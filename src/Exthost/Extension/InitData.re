@@ -99,12 +99,18 @@ module Remote = {
 module TelemetryInfo = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
-    sessionId: int,
-    machineId: int,
-    instanceId: int,
+    sessionId: string,
+    machineId: string,
+    instanceId: string,
+    msftInternal: bool,
   };
 
-  let default = {sessionId: 0, machineId: 0, instanceId: 0};
+  let default = {
+    sessionId: "Anonymous",
+    machineId: "Anonymous",
+    instanceId: "Anonymous",
+    msftInternal: false,
+  };
 };
 
 [@deriving (show, yojson({strict: false}))]

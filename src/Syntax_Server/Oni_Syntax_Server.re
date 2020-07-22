@@ -103,16 +103,16 @@ let start = (~parentPid, ~namedPipe, ~healthCheck) => {
           let res = healthCheck();
           write(Protocol.ServerToClient.HealthCheckPass(res == 0));
         }
-      | BufferStartHighlighting({bufferId, filetype, lines, visibleRanges}) => {
+      | BufferStartHighlighting({bufferId, scope, lines, visibleRanges}) => {
           log(
             Printf.sprintf(
-              "Buffer enter - id: %d filetype: %s",
+              "Buffer enter - id: %d scope: %s",
               bufferId,
-              filetype,
+              scope,
             ),
           );
           updateAndRestartTimer(
-            State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges),
+            State.bufferEnter(~bufferId, ~scope, ~lines, ~visibleRanges),
           );
         }
 

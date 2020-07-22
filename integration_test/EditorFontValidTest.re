@@ -27,12 +27,16 @@ if (Revery.Environment.os !== Revery.Environment.Linux) {
       );
 
       wait(
-        ~name="There should be a new font set", ~timeout=10., (state: State.t) =>
-        !
-          String.equal(
-            state.editorFont.fontFile,
-            Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
-          )
+        ~name="There should be a new font set",
+        ~timeout=10.,
+        (state: State.t) => {
+          let fontName =
+            state.editorFont.fontFamily
+            |> Revery_Font.Family.toSkia(Revery.Font.Weight.Normal)
+            |> Option.map(tf => Skia.Typeface.getFamilyName(tf))
+            |> Option.value(~default="");
+          !String.equal(fontName, "JetBrains Mono");
+        },
       );
     },
   );

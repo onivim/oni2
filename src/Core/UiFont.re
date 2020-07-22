@@ -5,7 +5,7 @@ type t = {
 
 let default = {
   family:
-    Revery.Font.Family.fromFiles((~weight, ~italic, ~mono as _) =>
+    Revery.Font.Family.fromFiles((~weight, ~italic) =>
       switch (weight, italic) {
       | (Bold | UltraBold | Heavy, false) => "Inter-UI-Bold.ttf"
       | (Medium | SemiBold, false) => "Inter-UI-Medium.ttf"

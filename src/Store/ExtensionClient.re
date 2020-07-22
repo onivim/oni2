@@ -255,6 +255,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
+      | DownloadService(msg) => Middleware.download(msg)
       | FileSystem(msg) => Middleware.filesystem(msg)
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
@@ -390,9 +391,42 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | MessageService(ShowMessage({severity, message, extensionId})) =>
-        dispatch(ExtMessageReceived({severity, message, extensionId}));
-        Lwt.return(Reply.okEmpty);
+      | MessageService(msg) =>
+        Feature_Messages.Msg.exthost(
+          ~dispatch=msg => dispatch(Actions.Messages(msg)),
+          msg,
+        )
+        |> Lwt.map(
+             fun
+             | None => Reply.okEmpty
+             | Some(handle) =>
+               Reply.okJson(Exthost.Message.handleToJson(handle)),
+           )
+
+      | QuickOpen(msg) =>
+        switch (msg) {
+        | QuickOpen.Show({instance, _}) =>
+          let (promise, resolver) = Lwt.task();
+          dispatch(
+            QuickmenuShow(
+              Extension({id: instance, hasItems: false, resolver}),
+            ),
+          );
+
+          promise |> Lwt.map(handle => Reply.okJson(`Int(handle)));
+        | QuickOpen.SetItems({instance, items}) =>
+          dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
+          Lwt.return(Reply.okEmpty);
+        | msg =>
+          // TODO: Additional quick open messages
+          Log.warnf(m =>
+            m(
+              "Unhandled QuickOpen message: %s",
+              Exthost.Msg.QuickOpen.show_msg(msg),
+            )
+          );
+          Lwt.return(Reply.okEmpty);
+        }
 
       | StatusBar(
           SetEntry({
@@ -429,7 +463,11 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       | TerminalService(msg) =>
         Service_Terminal.handleExtensionMessage(msg);
         Lwt.return(Reply.okEmpty);
-      | _ => Lwt.return(Reply.okEmpty)
+      | unhandledMsg =>
+        Log.warnf(m =>
+          m("Unhandled message: %s", Exthost.Msg.show(unhandledMsg))
+        );
+        Lwt.return(Reply.okEmpty);
       };
     };
 

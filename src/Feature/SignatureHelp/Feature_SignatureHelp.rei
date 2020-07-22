@@ -28,11 +28,14 @@ type msg =
       activeParameter: int,
       requestID: int,
       editorID: int,
+      location: EditorCoreTypes.Location.t,
+      context: Exthost.SignatureHelp.RequestContext.t,
     })
   | EmptyInfoReceived(int)
   | RequestFailed(string)
   | SignatureIncrementClicked
-  | SignatureDecrementClicked;
+  | SignatureDecrementClicked
+  | CursorMoved(int);
 
 type outmsg =
   | Nothing

@@ -22,7 +22,6 @@ type patternLanguagePair = {
 
 [@deriving show]
 type t = {
-  grammars: list(Contributions.Grammar.t),
   languages: list(Contributions.Language.t),
   extToLanguage: [@opaque] StringMap.t(string),
   fileNameToLanguage: [@opaque] StringMap.t(string),
@@ -31,18 +30,10 @@ type t = {
   languageCache: [@opaque] Hashtbl.t(string, configurationLoadState),
   languageToConfigurationPath: [@opaque] StringMap.t(string),
   languageToScope: [@opaque] StringMap.t(string),
-  scopeToGrammarPath: [@opaque] StringMap.t(string),
-  scopeToTreesitterPath: [@opaque] StringMap.t(option(string)),
 };
 
 let toString = languageInfo => {
-  show(languageInfo)
-  ++ "\n Grammars: \n"
-  ++ StringMap.fold(
-       (key, v, acc) => {acc ++ "\n" ++ "key: " ++ key ++ " val: " ++ v},
-       languageInfo.scopeToGrammarPath,
-       "",
-     );
+  show(languageInfo);
 };
 
 module Regexes = {
@@ -50,7 +41,6 @@ module Regexes = {
 };
 
 let initial = {
-  grammars: [],
   languages: [],
   languageCache: Hashtbl.create(16),
   extToLanguage: StringMap.empty,
@@ -59,12 +49,6 @@ let initial = {
   firstLineToLanguage: [],
   languageToConfigurationPath: StringMap.empty,
   languageToScope: StringMap.empty,
-  scopeToGrammarPath: StringMap.empty,
-  scopeToTreesitterPath: StringMap.empty,
-};
-
-let getGrammars = (li: t) => {
-  li.grammars;
 };
 
 let defaultLanguage = "plaintext";
@@ -341,22 +325,6 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
          StringMap.empty,
        );
 
-  let scopeToGrammarPath =
-    grammars
-    |> List.fold_left(
-         (prev, curr) => {StringMap.add(curr.scopeName, curr.path, prev)},
-         StringMap.empty,
-       );
-
-  let scopeToTreesitterPath =
-    grammars
-    |> List.fold_left(
-         (prev, curr) => {
-           StringMap.add(curr.scopeName, curr.treeSitterPath, prev)
-         },
-         StringMap.empty,
-       );
-
   let languageToConfigurationPath =
     languages
     |> List.fold_left(
@@ -371,7 +339,6 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
 
   {
     ...initial,
-    grammars,
     languages,
     extToLanguage,
     fileNameToLanguage,
@@ -379,7 +346,5 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
     firstLineToLanguage,
     languageToConfigurationPath,
     languageToScope,
-    scopeToGrammarPath,
-    scopeToTreesitterPath,
   };
 };
