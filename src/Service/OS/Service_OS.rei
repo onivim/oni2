@@ -12,6 +12,8 @@ module Api: {
 
   let mktempdir: (~prefix: string=?, unit) => Lwt.t(string);
   let delete: (~recursive: bool, string) => Lwt.t(unit);
+
+  let openURL: string => bool;
 };
 
 module Effect: {
