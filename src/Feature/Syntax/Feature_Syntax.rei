@@ -57,6 +57,7 @@ module Effect: {
 let subscription:
   (
     ~config: Config.resolver,
+    ~grammarInfo: Exthost.GrammarInfo.t,
     ~languageInfo: Exthost.LanguageInfo.t,
     ~setup: Setup.t,
     ~tokenTheme: Oni_Syntax.TokenTheme.t,

@@ -53,4 +53,5 @@ module Request = Request;
 module NamedPipe = NamedPipe;
 
 module Msg = Msg;
+module GrammarInfo = GrammarInfo;
 module LanguageInfo = LanguageInfo;
