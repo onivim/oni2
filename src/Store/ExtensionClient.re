@@ -49,36 +49,6 @@ module ExtensionCompletionProvider = {
   };
 };
 
-module ExtensionDefinitionProvider = {
-  let definitionToModel = defs => {
-    let def = List.hd(defs);
-    let Exthost.DefinitionLink.{uri, range, originSelectionRange, _} = def;
-    let Range.{start, _}: EditorCoreTypes.Range.t =
-      Exthost.OneBasedRange.toRange(range);
-
-    let originRange: option(EditorCoreTypes.Range.t) =
-      originSelectionRange |> Option.map(Exthost.OneBasedRange.toRange);
-
-    LanguageFeatures.DefinitionResult.create(
-      ~originRange,
-      ~uri,
-      ~location=start,
-    );
-  };
-
-  let create = (id, selector, client, (buffer, location)) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDefinition(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        client,
-      )
-      |> Lwt.map(definitionToModel)
-    });
-  };
-};
-
 module ExtensionDocumentHighlightProvider = {
   let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
     highlights
@@ -153,18 +123,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
            path,
          )
        );
-
-  let onRegisterDefinitionProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let definitionProvider =
-      ExtensionDefinitionProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
-      ),
-    );
-  };
 
   let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
     let id = "exthost." ++ string_of_int(handle);

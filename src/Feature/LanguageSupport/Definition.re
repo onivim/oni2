@@ -7,6 +7,34 @@ open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 
+module New: {
+  type provider = {
+    handle: int,
+    selector: DocumentSelector.t,
+  };
+  
+  type model = {
+    providers: list(provider),
+  };
+
+  [@deriving show]
+  type msg = unit;
+
+  let initial = {
+    providers: [],
+  };
+
+  let register: (~handle: int, ~selector: Exthost.DocumentSelector.t, model) => {
+    ...model,
+    providers: [{handle, selector}, ...model.providers]
+  };
+  
+  let unregister: (~handle: int, model) => {
+    ...model,
+    providers: model.providers |> List.filter((prov) => prov.handle != handle)
+  };
+};
+
 type definition = {
   bufferId: int,
   // The position the hover was requested

@@ -5,6 +5,7 @@ let initial = {rename: Rename.initial};
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
+  | Definition(Definition.New.msg)
   | Rename(Rename.msg)
   | KeyPressed(string)
   | Pasted(string);

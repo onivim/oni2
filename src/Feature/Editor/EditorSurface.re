@@ -20,7 +20,6 @@ module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
 
 module Constants = {
   include Constants;

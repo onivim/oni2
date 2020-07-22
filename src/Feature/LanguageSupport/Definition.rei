@@ -3,6 +3,22 @@
  *
  * This module is responsible for recording and managing the 'definition' feature state
  */
+
+module New: {
+  type model;
+
+  let initial: model;
+
+  [@deriving show]
+  type msg;
+
+  let update: (msg, model) => model;
+
+  let register:
+    (~handle: int, ~selector: Exthost.DocumentSelector.t, model) => model;
+  let unregister: (~handle: int, model) => model;
+};
+
 open EditorCoreTypes;
 
 type t;
