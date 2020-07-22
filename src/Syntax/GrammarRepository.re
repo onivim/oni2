@@ -4,24 +4,24 @@
 
 type t = {
   scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t),
-  languageInfo: Exthost.LanguageInfo.t,
+  grammarInfo: Exthost.GrammarInfo.t,
   log: string => unit,
 };
 
-let create = (~log=_ => (), languageInfo) => {
+let create = (~log=_ => (), grammarInfo) => {
   log,
   scopeToGrammar: Hashtbl.create(32),
-  languageInfo,
+  grammarInfo,
 };
 
-let empty = create(Exthost.LanguageInfo.initial);
+let empty = create(Exthost.GrammarInfo.initial);
 
 let getGrammar = (~scope: string, gr: t) => {
   switch (Hashtbl.find_opt(gr.scopeToGrammar, scope)) {
   | Some(v) => Some(v)
   | None =>
     switch (
-      Exthost.LanguageInfo.getGrammarPathFromScope(gr.languageInfo, scope)
+      Exthost.GrammarInfo.getGrammarPathFromScope(gr.grammarInfo, scope)
     ) {
     | Some(grammarPath) =>
       gr.log("Loading grammar from: " ++ grammarPath);

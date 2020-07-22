@@ -1597,4 +1597,5 @@ module Request: {
   };
 };
 
+module GrammarInfo = GrammarInfo;
 module LanguageInfo = LanguageInfo;
