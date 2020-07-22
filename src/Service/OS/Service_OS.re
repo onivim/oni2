@@ -158,6 +158,13 @@ module Api = {
   };
 
   let delete = (~recursive, path) => rmdir(~recursive, path);
+
+  let openURL = url =>
+    if (Oni_Core.TrustedDomains.isUrlAllowed(url)) {
+      Revery.Native.Shell.openURL(url);
+    } else {
+      false;
+    };
 };
 
 module Effect = {

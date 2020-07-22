@@ -438,6 +438,11 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       | TerminalService(msg) =>
         Service_Terminal.handleExtensionMessage(msg);
         Lwt.return(Reply.okEmpty);
+      | Window(OpenUri({uri})) =>
+        prerr_endline("URI: " ++ Oni_Core.Uri.toString(uri));
+        Lwt.return(Reply.okEmpty);
+      | Window(GetWindowVisibility) =>
+        Lwt.return(Reply.okJson(`Bool(true)))
       | unhandledMsg =>
         Log.warnf(m =>
           m("Unhandled message: %s", Exthost.Msg.show(unhandledMsg))
