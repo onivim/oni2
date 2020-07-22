@@ -19,6 +19,10 @@ let update: (msg, model) => (model, outmsg);
 
 let isFocused: model => bool;
 
+let sub:
+  (~visibleBuffers: list(Oni_Core.Buffer.t), ~client: Exthost.Client.t) =>
+  Isolinear.Sub.t(msg);
+
 module Contributions: {
   let commands: list(Command.t(msg));
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
