@@ -29,11 +29,11 @@ let buf = Buffer.ofLines([|"#!/bin/bash", "ls *"|]);
 
 describe("LanguageInfo", ({describe, _}) => {
   describe("get language from file path", ({test, _}) => {
-    // test("get language from file path: Oni2 Path", ({expect, _}) => {
-    //   let lang =
-    //     Exthost.LanguageInfo.getLanguageFromFilePath(li, "oni://Welcome");
-    //   expect.string(lang).toEqual("Welcome");
-    // });
+    test("get language from file path: Oni2 Path", ({expect, _}) => {
+      let lang =
+        Exthost.LanguageInfo.getLanguageFromFilePath(li, "oni://terminal/");
+      expect.string(lang).toEqual("terminal");
+    });
     test("get language from file path: extension", ({expect, _}) => {
       // Extension match
       let fp = "/home/oni2/git/oni2/test.sh";
@@ -62,11 +62,11 @@ describe("LanguageInfo", ({describe, _}) => {
     });
   });
   describe("get language from buffer", ({test, _}) => {
-    // test("get language from buffer: Oni2 Path", ({expect, _}) => {
-    //   let lang =
-    //     Exthost.LanguageInfo.getLanguageFromFilePath(li, "oni://Welcome");
-    //   expect.string(lang).toEqual("Welcome");
-    // });
+    test("get language from buffer: Oni2 Path", ({expect, _}) => {
+      let lang =
+        Exthost.LanguageInfo.getLanguageFromFilePath(li, "oni://terminal/");
+      expect.string(lang).toEqual("terminal");
+    });
     test("get language from buffer: extension", ({expect, _}) => {
       let buf = Buffer.setFilePath(Some("/home/oni2/git/oni2/test.sh"), buf);
       let lang = Exthost.LanguageInfo.getLanguageFromBuffer(li, buf);
