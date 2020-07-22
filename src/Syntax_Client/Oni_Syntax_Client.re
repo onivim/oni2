@@ -80,7 +80,7 @@ let start =
       ~onClose=_ => (),
       ~onHighlights,
       ~onHealthCheckResult,
-      languageInfo,
+      grammarInfo,
       setup,
     ) => {
   let parentPid =
@@ -122,7 +122,7 @@ let start =
              writeTransport(
                ~id=0,
                t,
-               Protocol.ClientToServer.Initialize(languageInfo, setup),
+               Protocol.ClientToServer.Initialize(grammarInfo, setup),
              )
            );
       }
@@ -141,13 +141,13 @@ let start =
 let startHighlightingBuffer =
     (
       ~bufferId: int,
-      ~filetype: string,
+      ~scope: string,
       ~visibleRanges: list(Range.t),
       ~lines: array(string),
       v: t,
     ) => {
   let message: Oni_Syntax.Protocol.ClientToServer.t =
-    BufferStartHighlighting({bufferId, filetype, lines, visibleRanges});
+    BufferStartHighlighting({bufferId, scope, lines, visibleRanges});
   ClientLog.tracef(m => m("Sending startHighlightingBuffer: %d", bufferId));
   write(v, message);
 };

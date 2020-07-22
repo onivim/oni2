@@ -422,6 +422,7 @@ let start =
             icon: None,
             command: () => Noop,
             highlight: [],
+            handle: None,
           },
         completions,
       );

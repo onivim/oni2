@@ -17,24 +17,15 @@ type configurationLoadState =
 
 [@deriving show]
 type t = {
-  grammars: list(Contributions.Grammar.t),
   languages: list(Contributions.Language.t),
   extToLanguage: [@opaque] StringMap.t(string),
   languageCache: [@opaque] Hashtbl.t(string, configurationLoadState),
   languageToConfigurationPath: [@opaque] StringMap.t(string),
   languageToScope: [@opaque] StringMap.t(string),
-  scopeToGrammarPath: [@opaque] StringMap.t(string),
-  scopeToTreesitterPath: [@opaque] StringMap.t(option(string)),
 };
 
 let toString = languageInfo => {
-  show(languageInfo)
-  ++ "\n Grammars: \n"
-  ++ StringMap.fold(
-       (key, v, acc) => {acc ++ "\n" ++ "key: " ++ key ++ " val: " ++ v},
-       languageInfo.scopeToGrammarPath,
-       "",
-     );
+  show(languageInfo);
 };
 
 module Regexes = {
@@ -42,18 +33,11 @@ module Regexes = {
 };
 
 let initial = {
-  grammars: [],
   languages: [],
   languageCache: Hashtbl.create(16),
   extToLanguage: StringMap.empty,
   languageToConfigurationPath: StringMap.empty,
   languageToScope: StringMap.empty,
-  scopeToGrammarPath: StringMap.empty,
-  scopeToTreesitterPath: StringMap.empty,
-};
-
-let getGrammars = (li: t) => {
-  li.grammars;
 };
 
 let defaultLanguage = "plaintext";
@@ -151,14 +135,6 @@ let getScopeFromExtension = (li: t, ext: string) => {
   getLanguageFromExtension(li, ext) |> getScopeFromLanguage(li);
 };
 
-let getGrammarPathFromScope = (li: t, scope: string) => {
-  StringMap.find_opt(scope, li.scopeToGrammarPath);
-};
-
-let getTreesitterPathFromScope = (li: t, scope: string) => {
-  li.scopeToTreesitterPath |> StringMap.find_opt(scope) |> Option.join;
-};
-
 let _getLanguageTuples = (lang: Contributions.Language.t) => {
   List.map(extension => (extension, lang.id), lang.extensions);
 };
@@ -198,22 +174,6 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
          StringMap.empty,
        );
 
-  let scopeToGrammarPath =
-    grammars
-    |> List.fold_left(
-         (prev, curr) => {StringMap.add(curr.scopeName, curr.path, prev)},
-         StringMap.empty,
-       );
-
-  let scopeToTreesitterPath =
-    grammars
-    |> List.fold_left(
-         (prev, curr) => {
-           StringMap.add(curr.scopeName, curr.treeSitterPath, prev)
-         },
-         StringMap.empty,
-       );
-
   let languageToConfigurationPath =
     languages
     |> List.fold_left(
@@ -228,12 +188,9 @@ let ofExtensions = (extensions: list(Scanner.ScanResult.t)) => {
 
   {
     ...initial,
-    grammars,
     languages,
     extToLanguage,
     languageToConfigurationPath,
     languageToScope,
-    scopeToGrammarPath,
-    scopeToTreesitterPath,
   };
 };

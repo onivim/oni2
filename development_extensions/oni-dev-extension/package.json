@@ -43,6 +43,10 @@
 			{
 				"command": "developer.oni.showWorkspaceFolders",
 				"title": "Onivim - Developer: Show Workspace Folders"
+			},
+			{
+				"command": "developer.oni.showQuickPick",
+				"title": "Onivim - Developer: Show Quick Pick"
 			}
 		],
 		"configuration": {
