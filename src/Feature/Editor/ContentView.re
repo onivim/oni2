@@ -196,7 +196,7 @@ let render =
       ~matchingPairs,
       ~bufferHighlights,
       ~cursorPosition: Location.t,
-      ~definition,
+      ~languageSupport,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
       ~bufferWidthInCharacters,
@@ -212,10 +212,10 @@ let render =
     ~bufferHighlights,
   );
 
-  if (Definition.isAvailable(
-        Buffer.getId(buffer),
-        cursorPosition,
-        definition,
+  if (Feature_LanguageSupport.Definition.isAvailable(
+        ~bufferId=Buffer.getId(buffer),
+        ~location=cursorPosition,
+        languageSupport,
       )) {
     renderDefinition(
       ~context,

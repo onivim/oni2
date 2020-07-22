@@ -4,6 +4,8 @@
  * This module is responsible for recording and managing the 'definition' feature state
  */
 
+  open EditorCoreTypes;
+
 module New: {
   type model;
 
@@ -17,6 +19,10 @@ module New: {
   let register:
     (~handle: int, ~selector: Exthost.DocumentSelector.t, model) => model;
   let unregister: (~handle: int, model) => model;
+
+  let getAt: (~bufferId: int, ~location: Location.t, model) => option(
+    Exthost.DefinitionLink.t
+  );
 };
 
 open EditorCoreTypes;

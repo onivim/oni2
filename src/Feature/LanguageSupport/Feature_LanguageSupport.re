@@ -1,10 +1,15 @@
 open Common;
 type model = {
   codeLens: CodeLens.model,
+  definition: Definition.New.model,
   rename: Rename.model,
 };
 
-let initial = {rename: Rename.initial, codeLens: CodeLens.initial};
+let initial = {
+  codeLens: CodeLens.initial,
+  definition: Definition.New.initial,
+  rename: Rename.initial, 
+};
 
 [@deriving show]
 type msg =
@@ -31,9 +36,15 @@ let update = (msg, model) =>
   | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
     let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
     ({...model, codeLens: codeLens'}, Outmsg.Nothing);
+    
+  | Exthost(RegisterDefinitionSupport({handle, selector })) =>
+    let definition' = Definition.New.register(~handle, ~selector, model.definition);
+    ({...model, definition: definition'}, Outmsg.Nothing);
+    
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
+        definition: Definition.New.unregister(~handle, model.definition),
         rename: Rename.unregister(~handle, model.rename),
       },
       Outmsg.Nothing,
@@ -41,9 +52,15 @@ let update = (msg, model) =>
   | Exthost(_) =>
     // TODO:
     (model, Outmsg.Nothing)
+    
   | CodeLens(codeLensMsg) =>
     let codeLens' = CodeLens.update(codeLensMsg, model.codeLens);
     ({...model, codeLens: codeLens'}, Outmsg.Nothing);
+
+  | Definition(definitionMsg) =>
+    let definition' = Definition.New.update(definitionMsg, model.definition);
+    ({...model, definition: definition'}, Outmsg.Nothing)
+
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
     ({...model, rename: rename'}, outmsg);
@@ -66,6 +83,19 @@ module Contributions = {
   let keybindings = Rename.Contributions.keybindings;
 };
 
+module OldDefinition = Definition;
+module Definition = {
+  let getAt = (~bufferId, ~location, {definition, _}: model) => {
+    OldDefinition.New.getAt(~bufferId, ~location, definition);
+  }
+
+  let isAvailable = (~bufferId, ~location, model) => {
+    model
+    |> getAt(~bufferId, ~location)
+    |> Option.is_some
+  };
+};
+
 let sub = (~visibleBuffers, ~client) => {
   CodeLens.sub(~visibleBuffers, ~client)
   |> Isolinear.Sub.map(msg => CodeLens(msg));
@@ -75,7 +105,6 @@ let sub = (~visibleBuffers, ~client) => {
 module Completions = Completions;
 module CompletionItem = CompletionItem;
 module CompletionMeet = CompletionMeet;
-module Definition = Definition;
 module Diagnostic = Diagnostic;
 module Diagnostics = Diagnostics;
 module LanguageFeatures = LanguageFeatures;

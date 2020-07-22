@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 type model;
@@ -29,11 +30,19 @@ module Contributions: {
   let keybindings: list(Oni_Input.Keybindings.keybinding);
 };
 
+module Definition: {
+  
+  let getAt: (~bufferId: int, ~location: Location.t, model) => option(
+    Exthost.DefinitionLink.t
+  );
+
+  let isAvailable: (~bufferId: int, ~location: Location.t, model) => bool;
+};
+
 // TODO: Remove
 module Completions = Completions;
 module CompletionItem = CompletionItem;
 module CompletionMeet = CompletionMeet;
-module Definition = Definition;
 module Diagnostic = Diagnostic;
 module Diagnostics = Diagnostics;
 module LanguageFeatures = LanguageFeatures;

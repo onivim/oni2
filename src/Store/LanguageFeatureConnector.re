@@ -21,13 +21,6 @@ let start = () => {
       ~name="languageFeature.checkForDefinition", dispatch => {
       Log.debug("Checking for definition...");
 
-      let getDefinitionPromise =
-        LanguageFeatures.requestDefinition(
-          ~buffer,
-          ~location,
-          languageFeatures,
-        );
-
       let getHighlightsPromise =
         LanguageFeatures.requestDocumentHighlights(
           ~buffer,
@@ -50,10 +43,6 @@ let start = () => {
           BufferHighlights(BufferHighlights.DocumentHighlightsCleared(id)),
         )
       });
-
-      Lwt.on_success(getDefinitionPromise, result =>
-        dispatch(DefinitionAvailable(id, location, result))
-      );
     });
 
   let findAllReferences = (state: State.t) =>

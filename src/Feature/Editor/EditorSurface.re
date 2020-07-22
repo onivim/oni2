@@ -139,7 +139,7 @@ let%component make =
                 ~completions,
                 ~tokenTheme,
                 ~onCursorChange,
-                ~definition,
+                ~languageSupport,
                 ~windowIsFocused,
                 ~config,
                 ~renderOverlays=(~gutterWidth as _: float) => <View />,
@@ -281,7 +281,7 @@ let%component make =
       selectionRanges
       matchingPairs
       bufferHighlights
-      definition
+      languageSupport
       bufferSyntaxHighlights
       bottomVisibleLine
       mode

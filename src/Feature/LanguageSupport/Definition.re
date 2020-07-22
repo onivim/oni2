@@ -7,10 +7,10 @@ open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 
-module New: {
+module New = {
   type provider = {
     handle: int,
-    selector: DocumentSelector.t,
+    selector: Exthost.DocumentSelector.t,
   };
   
   type model = {
@@ -24,15 +24,21 @@ module New: {
     providers: [],
   };
 
-  let register: (~handle: int, ~selector: Exthost.DocumentSelector.t, model) => {
+  let update = (_msg, model) => model;
+
+  let register = (~handle, ~selector, model) => {
     ...model,
     providers: [{handle, selector}, ...model.providers]
   };
   
-  let unregister: (~handle: int, model) => {
+  let unregister = (~handle: int, model) => {
     ...model,
     providers: model.providers |> List.filter((prov) => prov.handle != handle)
   };
+
+  let getAt = (~bufferId, ~location, model) => {
+    None;
+  }
 };
 
 type definition = {

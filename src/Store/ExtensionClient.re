@@ -229,9 +229,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           onRegisterDocumentSymbolProvider(handle, selector, label),
         );
         Lwt.return(Reply.okEmpty);
-      | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
-        withClient(onRegisterDefinitionProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
 
       | LanguageFeatures(
           RegisterDocumentHighlightProvider({handle, selector}),
