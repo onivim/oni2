@@ -596,6 +596,30 @@ let update =
       );
     (state, eff);
 
+  | Editor({scope, msg: CursorsChanged(_) as msg}) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let editor = Feature_Layout.activeEditor(state.layout);
+    let (signatureHelp, shOutMsg) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor=Some(editor),
+        ~extHostClient,
+        state.signatureHelp,
+        Feature_SignatureHelp.CursorMoved(
+          Feature_Editor.Editor.getId(editor),
+        ),
+      );
+    let shEffect =
+      switch (shOutMsg) {
+      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
+      | _ => Effect.none
+      };
+    let (layout, editorEffect) =
+      Internal.updateEditors(~scope, ~msg, state.layout);
+    let state = {...state, layout, signatureHelp};
+    let effect = [shEffect, editorEffect] |> Effect.batch;
+    (state, effect);
+
   | Editor({scope, msg}) =>
     let (layout, effect) =
       Internal.updateEditors(~scope, ~msg, state.layout);
