@@ -82,6 +82,16 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
 
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
+  let messagesDispatch = msg => dispatch(Actions.Messages(msg));
+
+  let messages = () => {
+    <Feature_Messages.View
+      theme
+      font={state.uiFont}
+      model={state.messages}
+      dispatch=messagesDispatch
+    />;
+  };
 
   let statusBar = () =>
     if (Selectors.getActiveConfigurationValue(state, c =>
@@ -200,6 +210,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     <statusBar />
     <contextMenuOverlay />
     <Tooltip.Overlay theme font=uiFont />
+    <messages />
     <modals />
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />

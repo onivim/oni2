@@ -203,6 +203,22 @@ let update =
       };
     (state', effect);
 
+  | Messages(msg) =>
+    let (model, outmsg) = Feature_Messages.update(msg, state.messages);
+    let state = {...state, messages: model};
+
+    let eff =
+      Feature_Messages.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | Notification({kind, message}) =>
+          Internal.notificationEffect(~kind, message)
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => Actions.Messages(msg))
+        }
+      );
+    (state, eff);
+
   | Pane(msg) =>
     let (model, outmsg) = Feature_Pane.update(msg, state.pane);
 

@@ -199,6 +199,31 @@ module Hover: {
   let decode: Json.decoder(t);
 };
 
+module Message: {
+  [@deriving show]
+  type severity =
+    | Ignore
+    | Info
+    | Warning
+    | Error;
+
+  [@deriving show]
+  type handle;
+
+  let handleToJson: handle => Yojson.Safe.t;
+
+  module Command: {
+    [@deriving show]
+    type t = {
+      title: string,
+      isCloseAffordance: bool,
+      handle,
+    };
+
+    let decode: Json.decoder(t);
+  };
+};
+
 module RenameLocation: {
   type t = {
     range: OneBasedRange.t,
@@ -1065,18 +1090,13 @@ module Msg: {
   };
 
   module MessageService: {
-    type severity =
-      | Ignore
-      | Info
-      | Warning
-      | Error;
-
     [@deriving show]
     type msg =
       | ShowMessage({
-          severity,
+          severity: Message.severity,
           message: string,
           extensionId: option(string),
+          commands: list(Message.Command.t),
         });
   };
 

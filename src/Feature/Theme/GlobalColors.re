@@ -84,6 +84,28 @@ module ActivityBarBadge = {
   let defaults = [background, foreground];
 };
 
+module Button = {
+  let foreground =
+    define(
+      "button.foreground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: hex("#FFF")},
+    );
+
+  let background =
+    define(
+      "button.background",
+      {dark: hex("#0E639C"), light: hex("#007ACC"), hc: unspecified},
+    );
+
+  let hoverBackground =
+    define(
+      "button.hoverBackground",
+      {dark: ref(background), light: ref(background), hc: unspecified},
+    );
+
+  let defaults = [background, foreground, hoverBackground];
+};
+
 module Dropdown = {
   let background =
     define(
@@ -292,6 +314,48 @@ module EditorWidget = {
     );
 
   let defaults = [background, foreground, border];
+};
+
+module Notifications = {
+  let background =
+    define("notifications.background", all(ref(EditorWidget.background)));
+  let foreground =
+    define("notifications.foreground", all(ref(EditorWidget.foreground)));
+
+  let headerForeground =
+    define("notificationsCenterHeader.foreground", all(unspecified));
+
+  let headerBackground =
+    define("notificationsCenterHeader.background", all(ref(background)));
+
+  let border = define("notifications.border", all(ref(headerBackground)));
+
+  let errorIcon =
+    define(
+      "notificationsErrorIcon.foreground",
+      all(ref(EditorError.foreground)),
+    );
+  let warningIcon =
+    define(
+      "notificationsWarningIcon.foreground",
+      all(ref(EditorWarning.foreground)),
+    );
+  let infoIcon =
+    define(
+      "notificationsWarningIcon.foreground",
+      all(ref(EditorInfo.foreground)),
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    headerForeground,
+    headerBackground,
+    border,
+    errorIcon,
+    warningIcon,
+    infoIcon,
+  ];
 };
 
 module EditorHoverWidget = {
