@@ -200,6 +200,7 @@ module Tab = {
         ~theme,
       )}>
       <Sneakable
+        sneakId=title
         onSneak=onClick
         onAnyClick
         style=Style.[
@@ -218,7 +219,7 @@ module Tab = {
           text=title
         />
       </Sneakable>
-      <Sneakable onClick=onClose style=Styles.icon>
+      <Sneakable onClick=onClose style=Styles.icon sneakId={title ++ ".close"}>
         <FontIcon
           icon={isModified ? FontAwesome.circle : FontAwesome.times}
           color={

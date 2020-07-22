@@ -329,7 +329,7 @@ let%component make =
       fontSize
     />;
 
-  <Sneakable onAnyClick=handleClick onSneak>
+  <Sneakable sneakId="text" onAnyClick=handleClick onSneak>
     <View style=Styles.box>
       <View style=Styles.marginContainer>
         <selectionView />

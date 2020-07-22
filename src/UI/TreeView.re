@@ -112,7 +112,9 @@ module Make = (Model: TreeModel) => {
 
     let item = (~arrow, ()) =>
       <Sneakable
-        onClick={() => onClick(node)} style={Styles.item(~itemHeight)}>
+        sneakId="arrow"
+        onClick={() => onClick(node)}
+        style={Styles.item(~itemHeight)}>
         <arrow />
         {renderContent(node)}
       </Sneakable>;

@@ -71,6 +71,7 @@ module Styles = {
 module ActionButton = {
   let make =
       (
+        ~extensionId: string,
         ~font: UiFont.t,
         ~title: string,
         ~backgroundColor,
@@ -80,7 +81,10 @@ module ActionButton = {
       ) => {
     // TODO
     ignore(color);
-    <Sneakable style={Styles.button(~backgroundColor)} onClick=onAction>
+    <Sneakable
+      sneakId=extensionId
+      style={Styles.button(~backgroundColor)}
+      onClick=onAction>
       <View style=Styles.innerButton>
         <Text
           fontFamily={font.family}
