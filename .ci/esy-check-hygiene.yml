@@ -46,3 +46,9 @@ steps:
   - script: yarn audit
     workingDirectory: extensions
     displayName: 'yarn audit: extensions'
+  - script: npm install
+    workingDirectory: docs/website
+    displayName: 'install website dependencies'
+  - script: npm run build
+    workingDirectory: docs/website
+    displayName: 'build website'
