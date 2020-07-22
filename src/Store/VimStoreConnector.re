@@ -173,7 +173,7 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)) // TODO: I should be fromBuffer..but I use metadata right now.
+          Some(Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
         | None => None
         };
 
