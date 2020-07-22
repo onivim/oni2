@@ -202,6 +202,7 @@ Skia.Paint.setTextEncoding(tabPaint, GlyphId);
 Skia.Paint.setLcdRenderText(tabPaint, true);
 Skia.Paint.setAntiAlias(tabPaint, true);
 Skia.Paint.setTextSize(tabPaint, 10.);
+Skia.Paint.setTextEncoding(tabPaint, Utf8);
 
 let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
   let font =
