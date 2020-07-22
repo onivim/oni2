@@ -34,9 +34,20 @@ module Internal = {
              },
            icon: item.icon,
            highlight: [],
+           handle: None,
          }
        )
     |> Array.of_list;
+
+  let extensionItem: Exthost.QuickOpen.Item.t => Actions.menuItem =
+    item => {
+      category: None,
+      name: item.label,
+      handle: Some(item.handle),
+      icon: None,
+      highlight: [],
+      command: () => Actions.Noop,
+    };
 
   let commandPaletteItems = (commands, menus, contextKeys) => {
     let contextKeys =
@@ -81,6 +92,21 @@ let start = () => {
       )
     });
 
+  exception MenuCancelled;
+
+  let selectExtensionItemEffect = (~resolver, item: Actions.menuItem) =>
+    Isolinear.Effect.create(~name="quickmenu.selectExtensionItem", () => {
+      switch (item.handle) {
+      | Some(handle) => Lwt.wakeup(resolver, handle)
+      | None => Lwt.wakeup_exn(resolver, MenuCancelled)
+      }
+    });
+
+  let cancelExtensionMenuEffect = (~resolver) =>
+    Isolinear.Effect.create(~name="quickmenu.cancelExtensionMenu", () => {
+      Lwt.wakeup_exn(resolver, MenuCancelled)
+    });
+
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
     let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
@@ -107,6 +133,7 @@ let start = () => {
                },
                icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
                highlight: [],
+               handle: None,
              },
            maybeName,
            maybePath,
@@ -158,6 +185,14 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
+    | QuickmenuShow(Extension({id, hasItems, resolver})) => (
+        Some({
+          ...Quickmenu.defaults(Extension({id, hasItems, resolver})),
+          focused: Some(0),
+        }),
+        Isolinear.Effect.none,
+      )
+
     | QuickmenuShow(FilesPicker) => (
         Some({
           ...Quickmenu.defaults(FilesPicker),
@@ -187,6 +222,7 @@ let start = () => {
                command: () => ThemeLoadByName(theme.label),
                icon: None,
                highlight: [],
+               handle: None,
              }
            })
         |> Array.of_list;
@@ -274,6 +310,27 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
+    | QuickmenuUpdateExtensionItems({items, _}) => (
+        Option.map(
+          (state: Quickmenu.t) => {
+            switch (state.variant) {
+            | Extension({id, resolver, _}) => {
+                ...
+                  Quickmenu.defaults(
+                    Extension({id, hasItems: true, resolver}),
+                  ),
+                focused: None,
+                items:
+                  items |> List.map(Internal.extensionItem) |> Array.of_list,
+              }
+            | _ => state
+            }
+          },
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
+
     | QuickmenuUpdateFilterProgress(items, progress) => (
         Option.map(
           (state: Quickmenu.t) => {
@@ -337,6 +394,20 @@ let start = () => {
     | ListSelect =>
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
+
+      | Some({
+          variant: Extension({resolver, _}),
+          items,
+          focused: Some(focused),
+          _,
+        }) =>
+        switch (items[focused]) {
+        | item => (None, selectExtensionItemEffect(~resolver, item))
+        | exception (Invalid_argument(_)) => (
+            None,
+            cancelExtensionMenuEffect(~resolver),
+          )
+        }
 
       | Some({items, focused: Some(focused), _}) =>
         switch (items[focused]) {
@@ -438,6 +509,7 @@ let subscriptions = (ripgrep, dispatch) => {
         command: () => Actions.OpenFileByPath(fullPath, None, None),
         icon: FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
         highlight: [],
+        handle: None,
       };
 
     RipgrepSubscription.create(
@@ -466,6 +538,9 @@ let subscriptions = (ripgrep, dispatch) => {
       | CommandPalette
       | EditorsPicker
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
+
+      | Extension({hasItems, _}) =>
+        hasItems ? [filter(query, quickmenu.items)] : []
 
       | FilesPicker => [
           filter(query, quickmenu.items),

@@ -403,6 +403,31 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
                Reply.okJson(Exthost.Message.handleToJson(handle)),
            )
 
+      | QuickOpen(msg) =>
+        switch (msg) {
+        | QuickOpen.Show({instance, _}) =>
+          let (promise, resolver) = Lwt.task();
+          dispatch(
+            QuickmenuShow(
+              Extension({id: instance, hasItems: false, resolver}),
+            ),
+          );
+
+          promise |> Lwt.map(handle => Reply.okJson(`Int(handle)));
+        | QuickOpen.SetItems({instance, items}) =>
+          dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
+          Lwt.return(Reply.okEmpty);
+        | msg =>
+          // TODO: Additional quick open messages
+          Log.warnf(m =>
+            m(
+              "Unhandled QuickOpen message: %s",
+              Exthost.Msg.QuickOpen.show_msg(msg),
+            )
+          );
+          Lwt.return(Reply.okEmpty);
+        }
+
       | StatusBar(
           SetEntry({
             id,

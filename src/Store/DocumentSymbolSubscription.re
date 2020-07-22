@@ -42,6 +42,7 @@ module Provider = {
               ),
             icon: None,
             highlight: [],
+            handle: None,
           };
         };
 
