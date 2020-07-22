@@ -217,16 +217,8 @@ let getScopeFromFileName = (li: t, fileName: string) => {
   getLanguageFromFileName(li, fileName) |> getScopeFromLanguage(li);
 };
 
-let getScopeFromExtension = (li: t, ext: string) => {
-  getLanguageFromExtension(li, ext) |> getScopeFromLanguage(li);
-};
-
-let getGrammarPathFromScope = (li: t, scope: string) => {
-  StringMap.find_opt(scope, li.scopeToGrammarPath);
-};
-
-let getTreesitterPathFromScope = (li: t, scope: string) => {
-  li.scopeToTreesitterPath |> StringMap.find_opt(scope) |> Option.join;
+let getScopeFromBuffer = (li: t, buffer: Oni_Core.Buffer.t) => {
+  getLanguageFromBuffer(li, buffer) |> getScopeFromLanguage(li);
 };
 
 let getExtensionLanguageTuples = (lang: Contributions.Language.t) => {
