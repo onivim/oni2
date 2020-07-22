@@ -266,7 +266,10 @@ and quickmenuVariant =
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | DocumentSymbols
-  | Extension({id: int})
+  | Extension({
+      id: int,
+      hasItems: bool,
+    })
 and progress =
   | Loading
   | InProgress(float)

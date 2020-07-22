@@ -170,9 +170,9 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(Extension({id})) => (
+    | QuickmenuShow(Extension({id, hasItems})) => (
         Some({
-          ...Quickmenu.defaults(Extension({id: id})),
+          ...Quickmenu.defaults(Extension({id, hasItems})),
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -295,18 +295,12 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuUpdateExtensionItems({items, _}) => (
-        Option.map(
-          (state: Quickmenu.t) =>
-            {
-              ...state,
-              items:
-                items |> List.map(Internal.extensionItem) |> Array.of_list,
-              filterProgress: Loading,
-              focused: None,
-            },
-          state,
-        ),
+    | QuickmenuUpdateExtensionItems({items, id}) => (
+        Some({
+          ...Quickmenu.defaults(Extension({id, hasItems: true})),
+          focused: None,
+          items: items |> List.map(Internal.extensionItem) |> Array.of_list,
+        }),
         Isolinear.Effect.none,
       )
 
@@ -500,10 +494,12 @@ let subscriptions = (ripgrep, dispatch) => {
     | Some(quickmenu) =>
       let query = quickmenu.inputText |> Feature_InputText.value;
       switch (quickmenu.variant) {
-      | Extension(_)
       | CommandPalette
       | EditorsPicker
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
+
+      | Extension({hasItems, _}) =>
+        hasItems ? [filter(query, quickmenu.items)] : []
 
       | FilesPicker => [
           filter(query, quickmenu.items),

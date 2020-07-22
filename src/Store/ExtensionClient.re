@@ -398,17 +398,22 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       | QuickOpen(msg) =>
         switch (msg) {
         | QuickOpen.Show({instance, _}) =>
-          prerr_endline("-- DISPATCHING!");
-          dispatch(QuickmenuShow(Extension({id: instance})));
+          dispatch(
+            QuickmenuShow(Extension({id: instance, hasItems: false})),
+          );
           Lwt.return(Reply.okEmpty);
         | QuickOpen.SetItems({instance, items}) =>
-          prerr_endline("-- DISPATCHING!");
           dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
           Lwt.return(Reply.okEmpty);
-        | _ =>
-          // TODO;
-
-          Lwt.return(Reply.okEmpty)
+        | msg =>
+          // TODO: Additional quick open messages
+          Log.warnf(m =>
+            m(
+              "Unhandled QuickOpen message: %s",
+              Exthost.Msg.QuickOpen.show_msg(msg),
+            )
+          );
+          Lwt.return(Reply.okEmpty);
         }
 
       | StatusBar(
