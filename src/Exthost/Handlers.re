@@ -180,7 +180,11 @@ let handlers =
     ),
     mainNotImplemented("MainThreadSearch"),
     mainNotImplemented("MainThreadTask"),
-    mainNotImplemented("MainThreadWindow"),
+    main(
+      ~handler=Msg.Window.handle,
+      ~mapper=msg => Msg.Window(msg),
+      "MainThreadWindow",
+    ),
     mainNotImplemented("MainThreadLabelService"),
     mainNotImplemented("MainThreadNotebook"),
     mainNotImplemented("MainThreadTheming"),
