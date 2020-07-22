@@ -391,6 +391,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
+      | LanguageFeatures(msg) =>
+        dispatch(
+          Actions.LanguageSupport(Feature_LanguageSupport.Msg.exthost(msg)),
+        );
+        Lwt.return(Reply.okEmpty);
+
       | MessageService(msg) =>
         Feature_Messages.Msg.exthost(
           ~dispatch=msg => dispatch(Actions.Messages(msg)),
