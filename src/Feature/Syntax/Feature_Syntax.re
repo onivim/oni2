@@ -295,7 +295,12 @@ let subscription =
          !BufferMap.mem(Oni_Core.Buffer.getId(buffer), ignoredBuffers)
        )
     |> List.map(((buffer, visibleRanges)) => {
-         Service_Syntax.Sub.buffer(~client, ~buffer, ~languageInfo, ~visibleRanges)
+         Service_Syntax.Sub.buffer(
+           ~client,
+           ~buffer,
+           ~languageInfo,
+           ~visibleRanges,
+         )
          |> Isolinear.Sub.map(
               fun
               | Service_Syntax.ReceivedHighlights(tokens) => {

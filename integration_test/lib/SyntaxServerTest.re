@@ -60,7 +60,7 @@ let run = (~parentPid=?, ~name, f) => {
       ~onClose,
       ~onHighlights=(~bufferId as _, ~tokens as _) => (),
       ~onHealthCheckResult=_ => (),
-      LanguageInfo.initial,
+      GrammarInfo.initial,
       Setup.default(),
     )
     |> Result.get_ok;

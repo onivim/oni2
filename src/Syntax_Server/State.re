@@ -262,11 +262,6 @@ let bufferEnter =
       [bufferId, ...state.visibleBuffers];
     };
 
-// TODO: Send in scope
-//  let scope =
-//    Exthost.GrammarInfo.getScopeFromLanguage(state.grammarInfo, filetype)
-//    |> Option.value(~default=Constants.defaultScope);
-
   let bufferInfo =
     state.bufferInfo
     |> IntMap.update(

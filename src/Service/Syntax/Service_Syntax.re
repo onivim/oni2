@@ -194,13 +194,13 @@ module Sub = {
 
         Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
 
-       Oni_Syntax_Client.startHighlightingBuffer(
-         ~scope=params.scope,
-         ~bufferId,
-         ~visibleRanges=params.visibleRanges,
-         ~lines=Core.Buffer.getLines(params.buffer),
-         params.client,
-       );
+        Oni_Syntax_Client.startHighlightingBuffer(
+          ~scope=params.scope,
+          ~bufferId,
+          ~visibleRanges=params.visibleRanges,
+          ~lines=Core.Buffer.getLines(params.buffer),
+          params.client,
+        );
 
         {lastVisibleRanges: params.visibleRanges, unsubscribe};
       };
@@ -231,7 +231,9 @@ module Sub = {
     let scope =
       buffer
       |> Core.Buffer.getFileType
-      |> OptionEx.flatMap(Exthost.LanguageInfo.getScopeFromLanguage(languageInfo))
+      |> OptionEx.flatMap(
+           Exthost.LanguageInfo.getScopeFromLanguage(languageInfo),
+         )
       |> Option.value(~default=Constants.defaultScope);
 
     BufferSubscription.create({client, buffer, scope, visibleRanges});
