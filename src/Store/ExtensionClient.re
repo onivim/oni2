@@ -406,10 +406,14 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       | QuickOpen(msg) =>
         switch (msg) {
         | QuickOpen.Show({instance, _}) =>
+          let (promise, resolver) = Lwt.task();
           dispatch(
-            QuickmenuShow(Extension({id: instance, hasItems: false})),
+            QuickmenuShow(
+              Extension({id: instance, hasItems: false, resolver}),
+            ),
           );
-          Lwt.return(Reply.okEmpty);
+
+          promise |> Lwt.map(handle => Reply.okJson(`Int(handle)));
         | QuickOpen.SetItems({instance, items}) =>
           dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
           Lwt.return(Reply.okEmpty);

@@ -21,6 +21,7 @@ and variant =
     | Extension({
         id: int,
         hasItems: bool,
+        resolver: Lwt.u(int),
       });
 
 let placeholderText =

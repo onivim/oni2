@@ -265,6 +265,7 @@ and quickmenuVariant =
   | Extension({
       id: int,
       hasItems: bool,
+      resolver: [@opaque] Lwt.u(int),
     })
 and progress =
   | Loading

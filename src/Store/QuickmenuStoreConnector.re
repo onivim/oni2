@@ -92,6 +92,21 @@ let start = () => {
       )
     });
 
+  exception MenuCancelled;
+
+  let selectExtensionItemEffect = (~resolver, item: Actions.menuItem) =>
+    Isolinear.Effect.create(~name="quickmenu.selectExtensionItem", () => {
+      switch (item.handle) {
+      | Some(handle) => Lwt.wakeup(resolver, handle)
+      | None => Lwt.wakeup_exn(resolver, MenuCancelled)
+      }
+    });
+
+  let cancelExtensionMenuEffect = (~resolver) =>
+    Isolinear.Effect.create(~name="quickmenu.cancelExtensionMenu", () => {
+      Lwt.wakeup_exn(resolver, MenuCancelled)
+    });
+
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
     let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
@@ -170,9 +185,9 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(Extension({id, hasItems})) => (
+    | QuickmenuShow(Extension({id, hasItems, resolver})) => (
         Some({
-          ...Quickmenu.defaults(Extension({id, hasItems})),
+          ...Quickmenu.defaults(Extension({id, hasItems, resolver})),
           focused: Some(0),
         }),
         Isolinear.Effect.none,
@@ -295,12 +310,24 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuUpdateExtensionItems({items, id}) => (
-        Some({
-          ...Quickmenu.defaults(Extension({id, hasItems: true})),
-          focused: None,
-          items: items |> List.map(Internal.extensionItem) |> Array.of_list,
-        }),
+    | QuickmenuUpdateExtensionItems({items, _}) => (
+        Option.map(
+          (state: Quickmenu.t) => {
+            switch (state.variant) {
+            | Extension({id, resolver, _}) => {
+                ...
+                  Quickmenu.defaults(
+                    Extension({id, hasItems: true, resolver}),
+                  ),
+                focused: None,
+                items:
+                  items |> List.map(Internal.extensionItem) |> Array.of_list,
+              }
+            | _ => state
+            }
+          },
+          state,
+        ),
         Isolinear.Effect.none,
       )
 
@@ -367,6 +394,20 @@ let start = () => {
     | ListSelect =>
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
+
+      | Some({
+          variant: Extension({resolver, _}),
+          items,
+          focused: Some(focused),
+          _,
+        }) =>
+        switch (items[focused]) {
+        | item => (None, selectExtensionItemEffect(~resolver, item))
+        | exception (Invalid_argument(_)) => (
+            None,
+            cancelExtensionMenuEffect(~resolver),
+          )
+        }
 
       | Some({items, focused: Some(focused), _}) =>
         switch (items[focused]) {
