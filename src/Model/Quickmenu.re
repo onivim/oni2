@@ -17,7 +17,12 @@ and variant =
     | FilesPicker
     | Wildmenu(Vim.Types.cmdlineType)
     | ThemesPicker(list(Feature_Theme.theme))
-    | DocumentSymbols;
+    | DocumentSymbols
+    | Extension({
+        id: int,
+        hasItems: bool,
+        resolver: Lwt.u(int),
+      });
 
 let placeholderText =
   fun

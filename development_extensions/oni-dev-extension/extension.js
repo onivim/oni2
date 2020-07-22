@@ -145,6 +145,23 @@ function activate(context) {
         );
     }));
     
+    cleanup(vscode.commands.registerCommand('developer.oni.showQuickPick', () => {
+        vscode.window.showQuickPick([
+            "Item 1",
+            "Item 2",
+            "Item 3",
+        ])
+        .then((selectedItem) => {
+            
+        vscode.window.showInformationMessage(
+        "Quick pick item selected: " + selectedItem);
+        }, (err) => {
+            
+        vscode.window.showErrorMessage(
+        "Quick pick cancelled: " + err);
+        })
+    }));
+    
     function createResourceUri(relativePath) {
         const absolutePath = path.join(vscode.workspace.rootPath, relativePath);
         return vscode.Uri.file(absolutePath);

@@ -115,7 +115,8 @@ let start =
       ~overriddenExtensionsDir,
     );
   let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
-  let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
+  let grammarInfo = Exthost.GrammarInfo.ofExtensions(extensions);
+  let grammarRepository = Oni_Syntax.GrammarRepository.create(grammarInfo);
 
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
@@ -220,6 +221,7 @@ let start =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
             ~config,
+            ~grammarInfo,
             ~languageInfo,
             ~setup,
             ~tokenTheme=state.tokenTheme,
