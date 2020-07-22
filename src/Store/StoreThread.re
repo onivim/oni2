@@ -312,13 +312,10 @@ let start =
         Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
       );
 
-    let codelensSub =
-      Feature_Codelens.sub(
-        ~buffers=visibleBuffers,
-        ~client=extHostClient
-      )
-      |> Isolinear.Sub.map(msg => Model.Actions.Codelens(msg));
-      
+    let languageSupportSub =
+      Feature_LanguageSupport.sub(~visibleBuffers, ~client=extHostClient)
+      |> Isolinear.Sub.map(msg => Model.Actions.LanguageSupport(msg));
+
     let editorGlobalSub =
       Feature_Editor.Sub.global(~config)
       |> Isolinear.Sub.map(msg =>
@@ -334,7 +331,7 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
 
     [
-      codelensSub,
+      languageSupportSub,
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,

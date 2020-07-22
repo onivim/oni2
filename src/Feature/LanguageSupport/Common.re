@@ -1,3 +1,4 @@
 module Outmsg = {
-  type t = unit;
+  type t =
+    | Nothing;
 };

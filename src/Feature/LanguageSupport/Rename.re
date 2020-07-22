@@ -1,6 +1,8 @@
 open Oni_Core;
 open Exthost;
 
+open Common;
+
 [@deriving show]
 type command =
   | RenameSymbol
@@ -72,12 +74,12 @@ let update = (msg, model) => {
           ...model,
           sessionState: Resolved({...resolved, inputText: inputText'}),
         },
-        (),
+        Outmsg.Nothing,
       );
-    | _ => (model, ())
+    | _ => (model, Outmsg.Nothing)
     }
   | Command(Commit)
-  | Command(Cancel) => ({...model, sessionState: Inactive}, ())
+  | Command(Cancel) => ({...model, sessionState: Inactive}, Outmsg.Nothing)
   | Command(RenameSymbol) =>
     let sessionId = model.nextSessionId;
     (
@@ -90,7 +92,7 @@ let update = (msg, model) => {
             inputText: Feature_InputText.create(~placeholder="hi"),
           }),
       },
-      (),
+      Outmsg.Nothing,
     );
   };
 };

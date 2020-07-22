@@ -58,7 +58,6 @@ type t =
   | Hover(Feature_Hover.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
-  | Codelens(Feature_Codelens.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
   | CompletionAddItems(
