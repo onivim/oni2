@@ -19,8 +19,5 @@ let isUrlAllowed = (url: string) => {
 };
 
 let isAllowed = (uri: Uri.t) => {
-  uri
-  |> Uri.toString
-  |> isUrlAllowed
+  uri |> Uri.toString |> isUrlAllowed;
 };
-

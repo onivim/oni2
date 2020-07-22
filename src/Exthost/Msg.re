@@ -1445,11 +1445,13 @@ module Window = {
     | "$getWindowVisibility" => Ok(GetWindowVisibility)
 
     | "$openUri" =>
-    prerr_endline ("ARGS: " ++ Yojson.Safe.to_string(args));
       switch (args) {
       | `List([uriJson, _uriString, _options]) =>
         uriJson |> Uri.of_yojson |> Result.map(uri => {OpenUri({uri: uri})})
-      | _ => Error("Unexpected arguments for $openUri: " ++ Yojson.Safe.to_string(args))
+      | _ =>
+        Error(
+          "Unexpected arguments for $openUri: " ++ Yojson.Safe.to_string(args),
+        )
       }
 
     | _ =>
