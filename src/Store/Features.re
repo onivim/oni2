@@ -111,26 +111,59 @@ let update =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
     let state = {...state, extensions: model};
     let (state', effect) =
-      switch (outMsg) {
-      | Feature_Extensions.Nothing => (state, Effect.none)
-      | Feature_Extensions.Effect(eff) => (
-          state,
-          eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
-        )
-      | Feature_Extensions.Focus => (
-          FocusManager.push(Focus.Extensions, state),
-          Effect.none,
-        )
-      | Feature_Extensions.NotifySuccess(msg) => (
-          state,
-          Internal.notificationEffect(~kind=Info, msg),
-        )
-      | Feature_Extensions.NotifyFailure(msg) => (
-          state,
-          Internal.notificationEffect(~kind=Error, msg),
-        )
-      };
+      Feature_Extensions.(
+        switch (outMsg) {
+        | Nothing => (state, Effect.none)
+        | Effect(eff) => (
+            state,
+            eff |> Isolinear.Effect.map(msg => Actions.Extensions(msg)),
+          )
+        | Focus => (FocusManager.push(Focus.Extensions, state), Effect.none)
+        | NotifySuccess(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Info, msg),
+          )
+        | NotifyFailure(msg) => (
+            state,
+            Internal.notificationEffect(~kind=Error, msg),
+          )
+        | InstallSucceeded({extensionId, contributions}) =>
+          let notificationEffect =
+            Internal.notificationEffect(
+              ~kind=Info,
+              Printf.sprintf(
+                "Extension %s was installed successfully and will be activated on restart.",
+                extensionId,
+              ),
+            );
+          let themes: list(Exthost.Extension.Contributions.Theme.t) =
+            Exthost.Extension.Contributions.(contributions.themes);
+          let showThemePickerEffect =
+            if (themes != []) {
+              Isolinear.Effect.createWithDispatch(
+                ~name="feature.extensions.showThemeAfterInstall", dispatch => {
+                dispatch(QuickmenuShow(ThemesPicker(themes)))
+              });
+            } else {
+              Isolinear.Effect.none;
+            };
+          (
+            state,
+            Isolinear.Effect.batch([
+              notificationEffect,
+              showThemePickerEffect,
+            ]),
+          );
+        }
+      );
     (state', effect);
+
+  | LanguageSupport(msg) =>
+    let (model, _outmsg) =
+      Feature_LanguageSupport.update(msg, state.languageSupport);
+
+    ({...state, languageSupport: model}, Isolinear.Effect.none);
+
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let selection =
@@ -169,6 +202,22 @@ let update =
         eff |> Effect.map(msg => Actions.Formatting(msg))
       };
     (state', effect);
+
+  | Messages(msg) =>
+    let (model, outmsg) = Feature_Messages.update(msg, state.messages);
+    let state = {...state, messages: model};
+
+    let eff =
+      Feature_Messages.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | Notification({kind, message}) =>
+          Internal.notificationEffect(~kind, message)
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => Actions.Messages(msg))
+        }
+      );
+    (state, eff);
 
   | Pane(msg) =>
     let (model, outmsg) = Feature_Pane.update(msg, state.pane);
@@ -488,8 +537,25 @@ let update =
     (state, effect);
 
   | Theme(msg) =>
-    let model' = Feature_Theme.update(state.colorTheme, msg);
-    ({...state, colorTheme: model'}, Effect.none);
+    let (model', outmsg) = Feature_Theme.update(state.colorTheme, msg);
+
+    let eff =
+      switch (outmsg) {
+      | OpenThemePicker(_) =>
+        let themes =
+          state.extensions
+          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+               Exthost.Extension.Contributions.(manifest.contributes.themes)
+             })
+          |> List.flatten;
+
+        Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
+          dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
+        });
+      | Nothing => Isolinear.Effect.none
+      };
+
+    ({...state, colorTheme: model'}, eff);
 
   | Notification(msg) =>
     let model' = Feature_Notification.update(state.notifications, msg);
@@ -518,13 +584,41 @@ let update =
   | FilesDropped({paths}) =>
     let eff =
       Service_OS.Effect.statMultiple(paths, (path, stats) =>
-        if (stats.st_kind == S_REG) {
-          OpenFileByPath(path, None, None);
-        } else {
-          Noop;
+        switch (stats.st_kind) {
+        | S_REG => OpenFileByPath(path, None, None)
+        | S_DIR =>
+          switch (Luv.Path.chdir(path)) {
+          | Ok () => DirectoryChanged(path)
+          | Error(_) => Noop
+          }
+        | _ => Noop
         }
       );
     (state, eff);
+
+  | Editor({scope, msg: CursorsChanged(_) as msg}) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let editor = Feature_Layout.activeEditor(state.layout);
+    let (signatureHelp, shOutMsg) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor=Some(editor),
+        ~extHostClient,
+        state.signatureHelp,
+        Feature_SignatureHelp.CursorMoved(
+          Feature_Editor.Editor.getId(editor),
+        ),
+      );
+    let shEffect =
+      switch (shOutMsg) {
+      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
+      | _ => Effect.none
+      };
+    let (layout, editorEffect) =
+      Internal.updateEditors(~scope, ~msg, state.layout);
+    let state = {...state, layout, signatureHelp};
+    let effect = [shEffect, editorEffect] |> Effect.batch;
+    (state, effect);
 
   | Editor({scope, msg}) =>
     let (layout, effect) =

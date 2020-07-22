@@ -98,6 +98,8 @@ let all =
     Feature_Registers.Contributions.contextKeys
     |> fromList
     |> map(({registers, _}: State.t) => registers),
+    Feature_LanguageSupport.Contributions.contextKeys
+    |> map(({languageSupport, _}: State.t) => languageSupport),
     menus |> map((state: State.t) => state.quickmenu),
     editors,
     other,

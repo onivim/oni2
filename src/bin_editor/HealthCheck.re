@@ -193,7 +193,7 @@ let mainChecks = [
           ~onClose=_ => {closed := true},
           ~onHighlights=(~bufferId as _, ~tokens as _) => (),
           ~onHealthCheckResult=res => {healthCheckResult := res},
-          Exthost.LanguageInfo.initial,
+          Exthost.GrammarInfo.initial,
           setup,
         )
         |> Result.get_ok;

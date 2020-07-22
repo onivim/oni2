@@ -134,8 +134,16 @@ let handlers =
       ~mapper=msg => Msg.OutputService(msg),
       "MainThreadOutputService",
     ),
-    mainNotImplemented("MainThreadProgress"),
-    mainNotImplemented("MainThreadQuickOpen"),
+    main(
+      ~handler=Msg.Progress.handle,
+      ~mapper=msg => Msg.Progress(msg),
+      "MainThreadProgress",
+    ),
+    main(
+      ~handler=Msg.QuickOpen.handle,
+      ~mapper=msg => Msg.QuickOpen(msg),
+      "MainThreadQuickOpen",
+    ),
     main(
       ~handler=Msg.StatusBar.handle,
       ~mapper=msg => Msg.StatusBar(msg),

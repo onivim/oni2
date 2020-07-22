@@ -34,6 +34,10 @@ type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg))
+  | InstallSucceeded({
+      extensionId: string,
+      contributions: Exthost.Extension.Contributions.t,
+    })
   | NotifySuccess(string)
   | NotifyFailure(string);
 
@@ -59,6 +63,14 @@ let initial = (~extensionsFolder) => {
 
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
   pendingInstalls != [] || pendingUninstalls != [];
+};
+
+let isInstalling = (~extensionId, {pendingInstalls, _}) => {
+  pendingInstalls |> List.exists(id => id == extensionId);
+};
+
+let isUninstalling = (~extensionId, {pendingUninstalls, _}) => {
+  pendingUninstalls |> List.exists(id => id == extensionId);
 };
 
 let searchResults = ({latestQuery, _}) =>
@@ -232,7 +244,7 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingUninstall(~extensionId), Effect(eff));
   | UninstallExtensionSuccess({extensionId}) => (
       model |> Internal.uninstalled(~extensionId),
-      NotifyFailure(
+      NotifySuccess(
         Printf.sprintf("Successfully uninstalled %s", extensionId),
       ),
     )
@@ -259,14 +271,14 @@ let update = (~extHostClient, msg, model) => {
         extensionId,
       );
     (model |> Internal.addPendingInstall(~extensionId), Effect(eff));
+
   | InstallExtensionSuccess({extensionId, scanResult}) => (
       model |> Internal.installed(~extensionId, ~scanResult),
-      NotifySuccess(
-        Printf.sprintf(
-          "Extension %s was installed successfully and will be activated on restart.",
-          extensionId,
-        ),
-      ),
+      InstallSucceeded({
+        extensionId,
+        contributions:
+          Exthost.Extension.Manifest.(scanResult.manifest.contributes),
+      }),
     )
   | InstallExtensionFailed({extensionId, errorMsg}) => (
       model |> Internal.clearPendingInstall(~extensionId),

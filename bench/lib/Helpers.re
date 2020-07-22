@@ -39,6 +39,7 @@ let defaultFont: Service_Font.font = {
   measuredHeight: 10.,
   descenderHeight: 1.,
   smoothing: Revery.Font.Smoothing.default,
+  features: [],
 };
 
 let simpleState =

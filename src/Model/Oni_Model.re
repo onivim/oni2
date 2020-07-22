@@ -29,7 +29,6 @@ module References = References;
 module Selectors = Selectors;
 module State = State;
 module Sub = Sub;
-module ThemeInfo = ThemeInfo;
 module Title = Title;
 module Workspace = Workspace;
 module VimContext = VimContext;

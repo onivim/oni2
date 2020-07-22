@@ -2,6 +2,9 @@
  TextMateGrammar.re
  */
 
+open Oni_Core;
+open Oni_Core.Utility;
+
 type t = {
   initialScopeStack: ScopeStack.t,
   scopeName: string,
@@ -177,10 +180,11 @@ module Xml = {
   };
 
   let of_file = path => {
-    let%bind plist =
-      SimpleXml.of_file(path) |> Option.get |> XmlPlistParser.parse;
-
-    PlistDecoder.grammar(plist);
+    path
+    |> SimpleXml.of_file
+    |> Option.to_result(~none="Unable to load file: " ++ path)
+    |> ResultEx.flatMap(XmlPlistParser.parse)
+    |> ResultEx.flatMap(xml => PlistDecoder.grammar(xml));
   };
 };
 

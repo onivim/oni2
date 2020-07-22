@@ -31,6 +31,69 @@ module Decode = {
     one_of([("string", string), ("int", int |> map(string_of_int))]);
 };
 
+module QuickOpen = {
+  [@deriving show]
+  type msg =
+    // TODO: How to handle incoming cancellation token?
+    | Show({
+        instance: int,
+        options: QuickOpen.Options.t,
+      }) // Returns a promise / id
+    | SetItems({
+        instance: int,
+        items: list(QuickOpen.Item.t),
+      })
+    | SetError({
+        instance: int,
+        error: Yojson.Safe.t,
+      })
+    | Input({
+        options: InputBoxOptions.t,
+        validateInput: bool,
+      }) // Returns a string promise
+    | CreateOrUpdate({params: QuickOpen.t})
+    | Dispose({id: int});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method, args) {
+      | ("$show", `List([`Int(instance), optionsJson])) =>
+        let%bind maybeOptions =
+          optionsJson
+          |> Internal.decode_value(
+               Json.Decode.nullable(QuickOpen.Options.decode),
+             );
+        let options =
+          maybeOptions |> Option.value(~default=QuickOpen.Options.default);
+        Ok(Show({instance, options}));
+      | ("$setItems", `List([`Int(instance), itemsJson])) =>
+        let%bind items =
+          itemsJson
+          |> Internal.decode_value(Json.Decode.list(QuickOpen.Item.decode));
+        Ok(SetItems({instance, items}));
+      | ("$setError", `List([`Int(instance), errorJson])) =>
+        Ok(SetError({instance, error: errorJson}))
+      | ("$input", `List([inputBoxOptionsJson, `Bool(validateInput)])) =>
+        let%bind inputBox =
+          inputBoxOptionsJson |> Internal.decode_value(InputBoxOptions.decode);
+        Ok(Input({options: inputBox, validateInput}));
+      | ("$createOrUpdate", `List([paramsJson])) =>
+        let%bind params =
+          paramsJson |> Internal.decode_value(QuickOpen.decode);
+        Ok(CreateOrUpdate({params: params}));
+      | ("$dispose", `List([`Int(id)])) => Ok(Dispose({id: id}))
+      | _ =>
+        Error(
+          "Unhandled quickOpen method: "
+          ++ method
+          ++ " - args: "
+          ++ Yojson.Safe.to_string(args),
+        )
+      }
+    );
+  };
+};
+
 module Clipboard = {
   [@deriving show]
   type msg =
@@ -166,7 +229,17 @@ module Decorations = {
              Uri.of_yojson(json) |> Stdlib.Result.to_option
            );
       Ok(DecorationsDidChange({handle, uris}));
-    | _ => Error("Unhandled method: " ++ method)
+
+    | ("$onDidChange", `List([`Int(handle), `Null])) =>
+      Ok(DecorationsDidChange({handle, uris: []}))
+
+    | _ =>
+      Error(
+        "Unhandled method: "
+        ++ method
+        ++ " json: "
+        ++ Yojson.Safe.to_string(args),
+      )
     };
   };
 };
@@ -523,6 +596,11 @@ module LanguageFeatures = {
         handle: int,
         selector: list(DocumentFilter.t),
       })
+    | RegisterRenameSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        supportsResolveInitialValues: bool,
+      })
     | RegisterDocumentFormattingSupport({
         handle: int,
         selector: DocumentSelector.t,
@@ -731,6 +809,28 @@ module LanguageFeatures = {
       };
 
       ret |> Result.map_error(string_of_error);
+
+    | (
+        "$registerRenameSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          `Bool(supportsResolveInitialValues),
+        ]),
+      ) =>
+      open Json.Decode;
+      open Base.Result.Let_syntax;
+      let%bind selector =
+        selectorJson |> Internal.decode_value(list(DocumentFilter.decode));
+
+      Ok(
+        RegisterRenameSupport({
+          handle,
+          selector,
+          supportsResolveInitialValues,
+        }),
+      );
+
     | (
         "$registerDocumentFormattingSupport",
         `List([
@@ -838,47 +938,36 @@ module LanguageFeatures = {
 
 module MessageService = {
   [@deriving show]
-  type severity =
-    | Ignore
-    | Info
-    | Warning
-    | Error;
-
-  let intToSeverity =
-    fun
-    | 0 => Ignore
-    | 1 => Info
-    | 2 => Warning
-    | 3 => Error
-    | _ => Ignore;
-
-  [@deriving show]
   type msg =
     | ShowMessage({
-        severity,
+        severity: Message.severity,
         message: string,
         extensionId: option(string),
+        commands: list(Message.Command.t),
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | (
         "$showMessage",
-        `List([`Int(severity), `String(message), _options, ..._]),
+        `List([`Int(severity), `String(message), _options, commandsJson]),
       ) =>
-      try(
-        Ok(
-          ShowMessage({
-            severity: intToSeverity(severity),
-            message,
-            // TODO:
-            // Fix this up
-            extensionId: None,
-          }),
-        )
-      ) {
-      | exn => Error(Printexc.to_string(exn))
-      }
+      open Base.Result.Let_syntax;
+      open Json.Decode;
+
+      let%bind commands =
+        commandsJson |> Internal.decode_value(list(Message.Command.decode));
+
+      Ok(
+        ShowMessage({
+          severity: Message.intToSeverity(severity),
+          message,
+          // TODO:
+          // Fix this up
+          commands,
+          extensionId: None,
+        }),
+      );
     | _ =>
       Error(
         "Unable to parse method: "
@@ -968,22 +1057,6 @@ module StatusBar = {
       })
     | Dispose({id: int});
 
-  let parseCommand = commandJson => {
-    switch (commandJson) {
-    | `String(jsonString) =>
-      jsonString
-      |> Utility.JsonEx.from_string
-      |> Utility.ResultEx.flatMap(json =>
-           Json.Decode.decode_value(
-             Json.Decode.nullable(ExtCommand.decode),
-             json,
-           )
-           |> Result.map_error(Json.Decode.string_of_error)
-         )
-    | _ => Ok(None)
-    };
-  };
-
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
     | (
@@ -1004,7 +1077,8 @@ module StatusBar = {
       open Json.Decode;
 
       let%bind id = idJson |> Internal.decode_value(Decode.id);
-      let%bind command = parseCommand(commandJson);
+      let%bind command =
+        commandJson |> Internal.decode_value(nullable(ExtCommand.decode));
       let%bind color =
         colorJson |> Internal.decode_value(nullable(Color.decode));
       let%bind tooltip =
@@ -1063,6 +1137,41 @@ module Telemetry = {
   };
 };
 
+module Progress = {
+  [@deriving show]
+  type msg =
+    | StartProgress({
+        handle: int,
+        options: Progress.Options.t,
+      })
+    | ProgressReport({
+        handle: int,
+        message: Progress.Step.t,
+      })
+    | ProgressEnd({handle: int});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method, args) {
+      | ("$startProgress", `List([`Int(handle), optionsJson, ..._])) =>
+        let%bind options =
+          optionsJson |> Internal.decode_value(Progress.Options.decode);
+
+        Ok(StartProgress({handle, options}));
+
+      | ("$progressReport", `List([`Int(handle), messageJson])) =>
+        let%bind message =
+          messageJson |> Internal.decode_value(Progress.Step.decode);
+        Ok(ProgressReport({handle, message}));
+
+      | ("$progressEnd", `List([`Int(handle)])) =>
+        Ok(ProgressEnd({handle: handle}))
+      | _ => Error("Progress - unhandled method: " ++ method)
+      }
+    );
+  };
+};
+
 module SCM = {
   [@deriving show]
   type msg =
@@ -1091,6 +1200,28 @@ module SCM = {
         provider: int,
         handle: int,
       })
+    | UpdateGroup({
+        provider: int,
+        handle: int,
+        features: SCM.GroupFeatures.t,
+      })
+    | UpdateGroupLabel({
+        provider: int,
+        handle: int,
+        label: string,
+      })
+    | SetInputBoxPlaceholder({
+        handle: int,
+        value: string,
+      })
+    | SetInputBoxVisibility({
+        handle: int,
+        visible: bool,
+      })
+    | SetValidationProviderIsEnabled({
+        handle: int,
+        enabled: bool,
+      })
     | SpliceSCMResourceStates({
         handle: int,
         splices: list(SCM.Resource.Splices.t),
@@ -1098,93 +1229,143 @@ module SCM = {
   //additions: list(SCM.Resource.t),
 
   let handle = (method, args: Yojson.Safe.t) => {
-    switch (method) {
-    | "$registerSourceControl" =>
-      switch (args) {
-      | `List([`Int(handle), `String(id), `String(label), rootUri]) =>
-        let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
-        Ok(RegisterSourceControl({handle, id, label, rootUri}));
-      | `List([`String(handleStr), `String(id), `String(label), rootUri]) =>
-        let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
-        let maybeHandle = int_of_string_opt(handleStr);
-        switch (maybeHandle) {
-        | Some(handle) =>
-          Ok(RegisterSourceControl({handle, id, label, rootUri}))
-        | None =>
-          Error("Expected number for handle, but received: " ++ handleStr)
-        };
-      | _ => Error("Unexpected arguments for $registerSourceControl")
-      }
+    Base.Result.Let_syntax.(
+      switch (method) {
+      | "$registerSourceControl" =>
+        switch (args) {
+        | `List([`Int(handle), `String(id), `String(label), rootUri]) =>
+          let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
+          Ok(RegisterSourceControl({handle, id, label, rootUri}));
+        | `List([`String(handleStr), `String(id), `String(label), rootUri]) =>
+          let rootUri = Uri.of_yojson(rootUri) |> Stdlib.Result.to_option;
+          let maybeHandle = int_of_string_opt(handleStr);
+          switch (maybeHandle) {
+          | Some(handle) =>
+            Ok(RegisterSourceControl({handle, id, label, rootUri}))
+          | None =>
+            Error("Expected number for handle, but received: " ++ handleStr)
+          };
+        | _ => Error("Unexpected arguments for $registerSourceControl")
+        }
 
-    | "$unregisterSourceControl" =>
-      switch (args) {
-      | `List([`Int(handle)]) =>
-        Ok(UnregisterSourceControl({handle: handle}))
+      | "$unregisterSourceControl" =>
+        switch (args) {
+        | `List([`Int(handle)]) =>
+          Ok(UnregisterSourceControl({handle: handle}))
 
-      | _ => Error("Unexpected arguments for $unregisterSourceControl")
-      }
+        | _ => Error("Unexpected arguments for $unregisterSourceControl")
+        }
 
-    | "$updateSourceControl" =>
-      switch (args) {
-      | `List([`Int(handle), features]) =>
-        Yojson.Safe.Util.(
-          Ok(
-            UpdateSourceControl({
-              handle,
-              hasQuickDiffProvider:
-                features |> member("hasQuickDiffProvider") |> to_bool_option,
-              count: features |> member("count") |> to_int_option,
-              commitTemplate:
-                features |> member("commitTemplate") |> to_string_option,
-              acceptInputCommand:
-                features |> member("acceptInputCommand") |> SCM.Decode.command,
-            }),
+      | "$updateSourceControl" =>
+        switch (args) {
+        | `List([`Int(handle), features]) =>
+          Yojson.Safe.Util.(
+            Ok(
+              UpdateSourceControl({
+                handle,
+                hasQuickDiffProvider:
+                  features |> member("hasQuickDiffProvider") |> to_bool_option,
+                count: features |> member("count") |> to_int_option,
+                commitTemplate:
+                  features |> member("commitTemplate") |> to_string_option,
+                acceptInputCommand:
+                  features
+                  |> member("acceptInputCommand")
+                  |> SCM.Decode.command,
+              }),
+            )
           )
+
+        | _ => Error("Unexpected arguments for $updateSourceControl")
+        }
+
+      | "$registerGroup" =>
+        switch (args) {
+        | `List([
+            `Int(provider),
+            `Int(handle),
+            `String(id),
+            `String(label),
+          ]) =>
+          Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
+
+        | _ => Error("Unexpected arguments for $registerGroup")
+        }
+
+      | "$updateGroup" =>
+        switch (args) {
+        | `List([`Int(provider), `Int(handle), featuresJson]) =>
+          let%bind features =
+            featuresJson |> Internal.decode_value(SCM.GroupFeatures.decode);
+          Ok(UpdateGroup({provider, handle, features}));
+        | _ => Error("Unexpected arguments for $updateGroup")
+        }
+
+      | "$updateGroupLabel" =>
+        switch (args) {
+        | `List([`Int(provider), `Int(handle), `String(label)]) =>
+          Ok(UpdateGroupLabel({provider, handle, label}))
+        | _ => Error("Unexpected arguments for $updateGroup")
+        }
+
+      | "$unregisterGroup" =>
+        switch (args) {
+        | `List([`Int(handle), `Int(provider)]) =>
+          Ok(UnregisterSCMResourceGroup({provider, handle}))
+
+        | _ => Error("Unexpected arguments for $unregisterGroup")
+        }
+
+      | "$setInputBoxPlaceholder" =>
+        switch (args) {
+        | `List([`Int(handle), `String(value)]) =>
+          Ok(SetInputBoxPlaceholder({handle, value}))
+
+        | _ => Error("Unexpected arguments for $setInputBoxPlaceholder")
+        }
+
+      | "$setInputBoxVisibility" =>
+        switch (args) {
+        | `List([`Int(handle), `Bool(visible)]) =>
+          Ok(SetInputBoxVisibility({handle, visible}))
+
+        | _ => Error("Unexpected arguments for $setInputBoxVisibility")
+        }
+
+      | "$setValidationProviderIsEnabled" =>
+        switch (args) {
+        | `List([`Int(handle), `Bool(enabled)]) =>
+          Ok(SetValidationProviderIsEnabled({handle, enabled}))
+
+        | _ =>
+          Error("Unexpected arguments for $setValidationProviderIsEnabled")
+        }
+
+      | "$spliceResourceStates" =>
+        switch (args) {
+        | `List([`Int(handle), splicesJson]) =>
+          let splicesResult =
+            Json.Decode.(
+              splicesJson
+              |> Json.Decode.decode_value(list(SCM.Resource.Decode.splices))
+            );
+
+          switch (splicesResult) {
+          | Ok(splices) => Ok(SpliceSCMResourceStates({handle, splices}))
+          | Error(err) => Error(Json.Decode.string_of_error(err))
+          };
+        | _ => Error("Unexpected arguments for $spliceResourceStates")
+        }
+      | _ =>
+        Error(
+          Printf.sprintf(
+            "Unhandled SCM message - %s: %s",
+            method,
+            Yojson.Safe.to_string(args),
+          ),
         )
-
-      | _ => Error("Unexpected arguments for $updateSourceControl")
       }
-
-    | "$registerGroup" =>
-      switch (args) {
-      | `List([`Int(provider), `Int(handle), `String(id), `String(label)]) =>
-        Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
-
-      | _ => Error("Unexpected arguments for $registerGroup")
-      }
-
-    | "$unregisterGroup" =>
-      switch (args) {
-      | `List([`Int(handle), `Int(provider)]) =>
-        Ok(UnregisterSCMResourceGroup({provider, handle}))
-
-      | _ => Error("Unexpected arguments for $unregisterGroup")
-      }
-
-    | "$spliceResourceStates" =>
-      switch (args) {
-      | `List([`Int(handle), splicesJson]) =>
-        let splicesResult =
-          Json.Decode.(
-            splicesJson
-            |> Json.Decode.decode_value(list(SCM.Resource.Decode.splices))
-          );
-
-        switch (splicesResult) {
-        | Ok(splices) => Ok(SpliceSCMResourceStates({handle, splices}))
-        | Error(err) => Error(Json.Decode.string_of_error(err))
-        };
-      | _ => Error("Unexpected arguments for $spliceResourceStates")
-      }
-    | _ =>
-      Error(
-        Printf.sprintf(
-          "Unhandled SCM message - %s: %s",
-          method,
-          Yojson.Safe.to_string(args),
-        ),
-      )
-    };
+    );
   };
 };
 
@@ -1271,6 +1452,8 @@ type t =
   | LanguageFeatures(LanguageFeatures.msg)
   | MessageService(MessageService.msg)
   | OutputService(OutputService.msg)
+  | Progress(Progress.msg)
+  | QuickOpen(QuickOpen.msg)
   | SCM(SCM.msg)
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)

@@ -155,7 +155,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ),
       )
 
-    | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
+    | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
     | BufferEnter({id, filePath, _}) =>
       let eff =
@@ -273,25 +273,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         },
         Isolinear.Effect.none,
       )
-
-    | ExtMessageReceived({severity, message, extensionId}) =>
-      let kind: Feature_Notification.kind =
-        switch (severity) {
-        | Exthost.Msg.MessageService.Ignore => Info
-        | Exthost.Msg.MessageService.Info => Info
-        | Exthost.Msg.MessageService.Warning => Warning
-        | Exthost.Msg.MessageService.Error => Error
-        };
-
-      (
-        state,
-        Feature_Notification.Effects.create(
-          ~kind,
-          ~source=?extensionId,
-          message,
-        )
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
-      );
 
     | _ => (state, Isolinear.Effect.none)
     };

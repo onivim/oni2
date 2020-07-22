@@ -11,6 +11,7 @@ type font = {
   measuredHeight: float,
   descenderHeight: float,
   smoothing: [@opaque] Revery.Font.Smoothing.t,
+  features: [@opaque] list(Revery.Font.Feature.t),
 };
 
 let toString = show_font;
@@ -22,6 +23,7 @@ let default = {
   measuredHeight: 1.,
   descenderHeight: 0.,
   smoothing: Revery.Font.Smoothing.default,
+  features: [],
 };
 
 let measure = (~text, v: font) => {
@@ -51,6 +53,7 @@ let setFont =
       ~requestId,
       ~fontFamily as familyString,
       ~fontSize,
+      ~fontLigatures,
       ~smoothing,
       ~dispatch,
     ) => {
@@ -74,6 +77,29 @@ let setFont =
           Revery_Font.Family.fromFile(familyString);
         } else {
           Revery_Font.Family.system(familyString);
+        };
+
+      // This is formatted this way to accomodate other future features
+      let features =
+        switch (fontLigatures) {
+        | `Bool(true) => []
+        | `Bool(false) => [
+            Revery.Font.Feature.make(
+              ~tag=Revery.Font.Features.contextualAlternates,
+              ~value=0,
+            ),
+            Revery.Font.Feature.make(
+              ~tag=Revery.Font.Features.standardLigatures,
+              ~value=0,
+            ),
+          ]
+        | `List(list) =>
+          list
+          |> List.map(tag => {
+               Log.infof(m => m("Enabling font feature: %s", tag));
+               let tag = Revery_Font.Feature.customTag(tag);
+               Revery.Font.Feature.make(~tag, ~value=1);
+             })
         };
 
       let res =
@@ -114,6 +140,7 @@ let setFont =
               measuredHeight,
               descenderHeight,
               smoothing,
+              features,
             }),
           );
         }
@@ -128,6 +155,7 @@ module Sub = {
   type params = {
     fontFamily: string,
     fontSize: float,
+    fontLigatures: ConfigurationValues.fontLigatures,
     fontSmoothing: ConfigurationValues.fontSmoothing,
     uniqueId: string,
   };
@@ -137,6 +165,7 @@ module Sub = {
       type state = {
         fontFamily: string,
         fontSize: float,
+        fontLigatures: ConfigurationValues.fontLigatures,
         fontSmoothing: ConfigurationValues.fontSmoothing,
         requestId: ref(int),
       };
@@ -165,6 +194,7 @@ module Sub = {
           ~requestId,
           ~fontFamily=params.fontFamily,
           ~fontSize=params.fontSize,
+          ~fontLigatures=params.fontLigatures,
           ~smoothing=reveryFontSmoothing,
           ~dispatch,
         );
@@ -173,6 +203,7 @@ module Sub = {
           fontFamily: params.fontFamily,
           fontSize: params.fontSize,
           fontSmoothing: params.fontSmoothing,
+          fontLigatures: params.fontLigatures,
           requestId,
         };
       };
@@ -180,7 +211,8 @@ module Sub = {
       let update = (~params: params, ~state: state, ~dispatch: msg => unit) =>
         if (params.fontFamily != state.fontFamily
             || !Float.equal(params.fontSize, state.fontSize)
-            || params.fontSmoothing != state.fontSmoothing) {
+            || params.fontSmoothing != state.fontSmoothing
+            || params.fontLigatures != state.fontLigatures) {
           let reveryFontSmoothing =
             getReveryFontSmoothing(params.fontSmoothing);
           setFont(
@@ -188,6 +220,7 @@ module Sub = {
             ~fontFamily=params.fontFamily,
             ~fontSize=params.fontSize,
             ~smoothing=reveryFontSmoothing,
+            ~fontLigatures=params.fontLigatures,
             ~dispatch,
           );
           {
@@ -195,6 +228,7 @@ module Sub = {
             fontFamily: params.fontFamily,
             fontSize: params.fontSize,
             fontSmoothing: params.fontSmoothing,
+            fontLigatures: params.fontLigatures,
           };
         } else {
           state;
@@ -206,7 +240,14 @@ module Sub = {
       };
     });
 
-  let font = (~uniqueId, ~fontFamily, ~fontSize, ~fontSmoothing) => {
-    FontSubscription.create({uniqueId, fontFamily, fontSize, fontSmoothing});
+  let font =
+      (~uniqueId, ~fontFamily, ~fontSize, ~fontLigatures, ~fontSmoothing) => {
+    FontSubscription.create({
+      uniqueId,
+      fontFamily,
+      fontSize,
+      fontSmoothing,
+      fontLigatures,
+    });
   };
 };

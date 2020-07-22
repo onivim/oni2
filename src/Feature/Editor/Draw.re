@@ -14,6 +14,7 @@ type context = {
   charWidth: float,
   charHeight: float,
   smoothing: Revery.Font.Smoothing.t,
+  features: list(Revery.Font.Feature.t),
 };
 
 let createContext =
@@ -34,6 +35,7 @@ let createContext =
     charWidth: editorFont.measuredWidth,
     charHeight: editorFont.measuredHeight,
     smoothing: editorFont.smoothing,
+    features: editorFont.features,
   };
 };
 
@@ -84,7 +86,11 @@ let drawShapedText = {
         bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
         context.fontFamily,
       );
-    let text = Revery.Font.(shape(font, text) |> ShapeResult.getGlyphStrings);
+    let text =
+      Revery.Font.(
+        shape(~features=context.features, font, text)
+        |> ShapeResult.getGlyphStrings
+      );
 
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
     Skia.Paint.setTextSize(paint, context.fontSize);

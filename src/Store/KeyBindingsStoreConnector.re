@@ -132,6 +132,7 @@ let start = maybeKeyBindingsFilePath => {
       },
     ]
     @ Feature_Registers.Contributions.keybindings
+    @ Feature_LanguageSupport.Contributions.keybindings
     @ Keybindings.[
         {
           key: "<CR>",
