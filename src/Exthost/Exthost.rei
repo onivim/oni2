@@ -1384,6 +1384,13 @@ module Msg: {
       | Dispose({id: int});
   };
 
+  module Window: {
+    [@deriving show]
+    type msg =
+      | GetWindowVisibility
+      | OpenUri({uri: Oni_Core.Uri.t});
+  };
+
   [@deriving show]
   type t =
     | Connected
@@ -1408,6 +1415,7 @@ module Msg: {
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
+    | Window(Window.msg)
     | Initialized
     | Disconnected
     | Unhandled

@@ -1,11 +1,16 @@
-type model = {rename: Rename.model};
+open Common;
+type model = {
+  codeLens: CodeLens.model,
+  rename: Rename.model,
+};
 
-let initial = {rename: Rename.initial};
+let initial = {rename: Rename.initial, codeLens: CodeLens.initial};
 
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
   | Rename(Rename.msg)
+  | CodeLens(CodeLens.msg)
   | KeyPressed(string)
   | Pasted(string);
 
@@ -21,16 +26,29 @@ type outmsg = Common.Outmsg.t;
 let update = (msg, model) =>
   switch (msg) {
   | KeyPressed(_)
-  | Pasted(_)
+  | Pasted(_) => (model, Outmsg.Nothing)
+  | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
+    let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
+    ({...model, codeLens: codeLens'}, Outmsg.Nothing);
+  | Exthost(Unregister({handle})) => (
+      {
+        codeLens: CodeLens.unregister(~handle, model.codeLens),
+        rename: Rename.unregister(~handle, model.rename),
+      },
+      Outmsg.Nothing,
+    )
   | Exthost(_) =>
     // TODO:
-    (model, ())
+    (model, Outmsg.Nothing)
+  | CodeLens(codeLensMsg) =>
+    let codeLens' = CodeLens.update(codeLensMsg, model.codeLens);
+    ({...model, codeLens: codeLens'}, Outmsg.Nothing);
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
-    ({rename: rename'}, outmsg);
+    ({...model, rename: rename'}, outmsg);
   };
 
-let isFocused = ({rename}) => Rename.isFocused(rename);
+let isFocused = ({rename, _}) => Rename.isFocused(rename);
 
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
@@ -42,9 +60,14 @@ module Contributions = {
   let contextKeys =
     Rename.Contributions.contextKeys
     |> fromList
-    |> map(({rename}: model) => rename);
+    |> map(({rename, _}: model) => rename);
 
   let keybindings = Rename.Contributions.keybindings;
+};
+
+let sub = (~visibleBuffers, ~client) => {
+  CodeLens.sub(~visibleBuffers, ~client)
+  |> Isolinear.Sub.map(msg => CodeLens(msg));
 };
 
 // TODO: Remove

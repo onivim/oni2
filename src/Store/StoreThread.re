@@ -314,6 +314,10 @@ let start =
         Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
       );
 
+    let languageSupportSub =
+      Feature_LanguageSupport.sub(~visibleBuffers, ~client=extHostClient)
+      |> Isolinear.Sub.map(msg => Model.Actions.LanguageSupport(msg));
+
     let editorGlobalSub =
       Feature_Editor.Sub.global(~config)
       |> Isolinear.Sub.map(msg =>
@@ -329,6 +333,7 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
 
     [
+      languageSupportSub,
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,

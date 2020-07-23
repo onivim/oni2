@@ -48,6 +48,7 @@ module SyntaxScope = SyntaxScope;
 module ColorTheme = ColorTheme;
 module ThreadHelper = Kernel.ThreadHelper;
 module Tokenizer = Tokenizer;
+module TrustedDomains = TrustedDomains;
 module UiFont = UiFont;
 module Uri = Uri;
 module Utility = Utility;

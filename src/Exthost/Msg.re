@@ -1434,6 +1434,38 @@ module TerminalService = {
   };
 };
 
+module Window = {
+  [@deriving show]
+  type msg =
+    | GetWindowVisibility
+    | OpenUri({uri: Oni_Core.Uri.t});
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method) {
+    | "$getWindowVisibility" => Ok(GetWindowVisibility)
+
+    | "$openUri" =>
+      switch (args) {
+      | `List([uriJson, _uriString, _options]) =>
+        uriJson |> Uri.of_yojson |> Result.map(uri => {OpenUri({uri: uri})})
+      | _ =>
+        Error(
+          "Unexpected arguments for $openUri: " ++ Yojson.Safe.to_string(args),
+        )
+      }
+
+    | _ =>
+      Error(
+        Printf.sprintf(
+          "Unhandled window message - %s: %s",
+          method,
+          Yojson.Safe.to_string(args),
+        ),
+      )
+    };
+  };
+};
+
 [@deriving show]
 type t =
   | Connected
@@ -1458,6 +1490,7 @@ type t =
   | StatusBar(StatusBar.msg)
   | Telemetry(Telemetry.msg)
   | TerminalService(TerminalService.msg)
+  | Window(Window.msg)
   | Initialized
   | Disconnected
   | Unhandled
