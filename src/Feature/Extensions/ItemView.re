@@ -6,9 +6,10 @@ module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Constants = {
   let itemHeight = 72;
-  let imageSize = 50;
-  let imageContainerSize = 64;
+  let imageSize = 40;
+  let imageContainerSize = 50;
   let defaultIcon = "https://open-vsx.org/default-icon.png";
+  let buttonWidth = 50;
 };
 
 module Styles = {
@@ -122,13 +123,9 @@ let make =
 
   <View style={Styles.container(~width)}>
     <View style=Styles.imageContainer> icon </View>
-    <View>
+    <View style=Style.[flexDirection(`Column), width(descriptionWidth)]>
       <View
-        style=Style.[
-          flexDirection(`Row),
-          justifyContent(`SpaceBetween),
-          width(descriptionWidth),
-        ]>
+        style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
         <Text
           style={Styles.titleText(~width=width - defaultWidth, ~theme)}
           fontFamily={font.family}
@@ -144,18 +141,18 @@ let make =
         />
       </View>
       <View
-        style=Style.[
-          flexDirection(`Row),
-          justifyContent(`SpaceBetween),
-          width(descriptionWidth),
-        ]>
-        <Text
-          style={Styles.text(~theme)}
-          fontFamily={font.family}
-          fontSize={font.size}
-          text=author
-        />
-        actionButton
+        style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
+        <View style=Style.[flexShrink(1)]>
+          <Text
+            style={Styles.text(~theme)}
+            fontFamily={font.family}
+            fontSize={font.size}
+            text=author
+          />
+        </View>
+        <View style=Style.[flexBasis(Constants.buttonWidth), flexShrink(0)]>
+          actionButton
+        </View>
       </View>
     </View>
   </View>;
