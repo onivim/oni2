@@ -7,6 +7,7 @@
       Oni2.syntax
       Oni2.feature.commands
       Oni2.feature.inputText
+      Oni2.service.exthost
       Oni2.input
       uucp
     )

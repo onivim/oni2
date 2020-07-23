@@ -43,6 +43,7 @@ module View: {
     let make:
       (
         ~key: Brisk_reconciler.Key.t=?,
+        ~sneakId: string,
         ~style: list(Revery_UI.Style.viewStyleProps)=?,
         ~onClick: unit => unit=?,
         ~onRightClick: unit => unit=?,

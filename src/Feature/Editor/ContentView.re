@@ -5,7 +5,6 @@ open Oni_Core;
 open Helpers;
 
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
 
 let renderLine =
     (
@@ -93,6 +92,8 @@ let renderEmbellishments =
 let renderDefinition =
     (
       ~context,
+      ~bufferId,
+      ~languageSupport,
       ~leftVisibleColumn,
       ~cursorPosition: Location.t,
       ~editor,
@@ -120,7 +121,17 @@ let renderDefinition =
              Location.{line: cursorPosition.line, column: token.startIndex},
            stop: Location.{line: cursorPosition.line, column: token.endIndex},
          };
-       Draw.underline(~context, ~color=token.color, range);
+
+       // Double-check that the range of the token falls into our definition position
+
+       Feature_LanguageSupport.Definition.getAt(
+         ~bufferId,
+         ~range,
+         languageSupport,
+       )
+       |> Option.iter(_ => {
+            Draw.underline(~context, ~color=token.color, range)
+          });
      });
 
 let renderTokens =
@@ -196,7 +207,7 @@ let render =
       ~matchingPairs,
       ~bufferHighlights,
       ~cursorPosition: Location.t,
-      ~definition,
+      ~languageSupport,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
       ~bufferWidthInCharacters,
@@ -212,12 +223,14 @@ let render =
     ~bufferHighlights,
   );
 
-  if (Definition.isAvailable(
-        Buffer.getId(buffer),
-        cursorPosition,
-        definition,
+  let bufferId = Buffer.getId(buffer);
+  if (Feature_LanguageSupport.Definition.isAvailable(
+        ~bufferId,
+        languageSupport,
       )) {
     renderDefinition(
+      ~bufferId,
+      ~languageSupport,
       ~context,
       ~editor,
       ~leftVisibleColumn,

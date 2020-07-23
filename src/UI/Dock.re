@@ -128,7 +128,10 @@ let%component item =
     };
 
   <View onMouseOver onMouseOut>
-    <Sneakable onClick style={Styles.item(~isHovered, ~isActive, ~theme)}>
+    <Sneakable
+      sneakId="item"
+      onClick
+      style={Styles.item(~isHovered, ~isActive, ~theme)}>
       <icon />
       notificationElement
     </Sneakable>
