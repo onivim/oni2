@@ -93,19 +93,19 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(byte).toBe(0);
     })
   });
-  describe("getPositionAndWidth", ({test, _}) => {
+  describe("getCharacterPositionAndWidth", ({test, _}) => {
     test("UTF-8: Hiragana あ", ({expect, _}) => {
       let str = "あa";
       let bufferLine = makeLine(str);
 
       let (position, width) =
-        BufferLine.getPositionAndWidth(~index=0, bufferLine);
+        BufferLine.getCharacterPositionAndWidth(~index=0, bufferLine);
 
       expect.int(position).toBe(0);
       expect.int(width).toBe(2);
 
       let (position, width) =
-        BufferLine.getPositionAndWidth(~index=1, bufferLine);
+        BufferLine.getCharacterPositionAndWidth(~index=1, bufferLine);
 
       expect.int(position).toBe(2);
       expect.int(width).toBe(1);
@@ -113,7 +113,7 @@ describe("BufferLine", ({describe, _}) => {
     test("negative index should not throw", ({expect, _}) => {
       let bufferLine = makeLine("abc");
       let (position, width) =
-        BufferLine.getPositionAndWidth(~index=-1, bufferLine);
+        BufferLine.getCharacterPositionAndWidth(~index=-1, bufferLine);
 
       expect.int(position).toBe(0);
       expect.int(width).toBe(1);
@@ -121,7 +121,7 @@ describe("BufferLine", ({describe, _}) => {
     test("empty line", ({expect, _}) => {
       let bufferLine = makeLine("");
       let (position, width) =
-        BufferLine.getPositionAndWidth(~index=0, bufferLine);
+        BufferLine.getCharacterPositionAndWidth(~index=0, bufferLine);
 
       expect.int(position).toBe(0);
       expect.int(width).toBe(1);
@@ -129,7 +129,7 @@ describe("BufferLine", ({describe, _}) => {
     test("position past end of string", ({expect, _}) => {
       let bufferLine = makeLine("abc");
       let (position, width) =
-        BufferLine.getPositionAndWidth(~index=4, bufferLine);
+        BufferLine.getCharacterPositionAndWidth(~index=4, bufferLine);
 
       expect.int(position).toBe(3);
       expect.int(width).toBe(1);
@@ -140,7 +140,7 @@ describe("BufferLine", ({describe, _}) => {
 
       let bufferLine = BufferLine.make(~indentation, "\t");
       let (_position, width) =
-        BufferLine.getPositionAndWidth(~index=0, bufferLine);
+        BufferLine.getCharacterPositionAndWidth(~index=0, bufferLine);
       expect.int(width).toBe(3);
     });
     test("tab settings impact position", ({expect, _}) => {
@@ -149,7 +149,7 @@ describe("BufferLine", ({describe, _}) => {
 
       let bufferLine = BufferLine.make(~indentation, "\ta");
       let (position, width) =
-        BufferLine.getPositionAndWidth(~index=1, bufferLine);
+        BufferLine.getCharacterPositionAndWidth(~index=1, bufferLine);
       expect.int(width).toBe(1);
       expect.int(position).toBe(3);
     });

@@ -101,13 +101,13 @@ let bufferLineCharacterToPixel =
     let (cursorOffset, width) =
       buffer
       |> EditorBuffer.line(line)
-      |> BufferLine.getCharacterPositionAndWidth(~index=characterIndex);
+      |> BufferLine.getPixelPositionAndWidth(~index=characterIndex);
 
-    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+    let pixelX = cursorOffset -. scrollX +. 0.5;
 
     let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+    ({pixelX, pixelY}, width);
   };
 };
 

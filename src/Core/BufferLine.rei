@@ -53,6 +53,8 @@ let subExn: (~index: int, ~length: int, t) => string;
 
 let getCharacterPositionAndWidth: (~index: int, t) => (int, int);
 
+let getPixelPositionAndWidth: (~index: int, t) => (float, float);
+
 module Slow: {
   /*
    * [getByteFromPosition(~position, str)] returns the byte index as position [index].

@@ -18,6 +18,7 @@ type characterCacheInfo = {
   positionPixelOffset: float,
   uchar: Uchar.t,
   width: int,
+  pixelWidth: float,
 };
 
 // We use these 'empty' values to reduce allocations in the normal workflow
@@ -192,6 +193,7 @@ module Internal = {
             positionPixelOffset: pixelPosition^,
             uchar,
             width: characterWidth,
+            pixelWidth,
           });
 
         cache.byteIndexMap[byteOffset] = Some(idx);
@@ -344,6 +346,31 @@ let getCharacterPositionAndWidth = (~index: int, bufferLine: t) => {
           1,
         )
       | None => (0, 1)
+      }
+    };
+  };
+};
+
+let getPixelPositionAndWidth = (~index: int, bufferLine: t) => {
+  Internal.resolveTo(~index, bufferLine);
+  let characters = bufferLine.characters;
+  let len = Array.length(characters);
+
+  if (index < 0 || index >= len || len == 0) {
+    (bufferLine.nextPixelPosition, bufferLine.font.measuredWidth);
+  } else {
+    switch (characters[index]) {
+    | Some({positionPixelOffset, pixelWidth, _}) => (
+        positionPixelOffset,
+        pixelWidth,
+      )
+    | None =>
+      switch (characters[bufferLine.nextIndex - 1]) {
+      | Some({positionPixelOffset, pixelWidth, _}) => (
+          positionPixelOffset +. pixelWidth,
+          bufferLine.font.measuredWidth,
+        )
+      | None => (0., bufferLine.font.measuredWidth)
       }
     };
   };
