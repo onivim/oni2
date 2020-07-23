@@ -38,7 +38,7 @@ type t = {
   // [raw] is the raw string (byte array)
   raw: string,
   // [glyphStrings] is a list of typefaces and strings from shaping
-  glyphStrings: list((Skia.Typeface.t, string)),
+  mutable glyphStrings: list((Skia.Typeface.t, string)),
   // [font] is the main font to render the line with
   font: Font.t,
   // [characters] is a cache of discovered characters we've found in the string so far
@@ -50,8 +50,6 @@ type t = {
   // [nextIndex] is the nextIndex to work from
   mutable nextIndex: int,
   // [nextGlyphStringIndex] is the next nth glyph string in shapes
-  mutable nextGlyphStringIndex: int,
-  // [nextGlyphStringByte] is the next byte index in the current glyph string
   mutable nextGlyphStringByte: int,
   // [nextCharacterPosition] is the graphical position (based on character width)
   mutable nextCharacterPosition: int,
@@ -158,15 +156,16 @@ module Internal = {
       let characterPosition: ref(int) = ref(cache.nextCharacterPosition);
       let pixelPosition: ref(float) = ref(cache.nextPixelPosition);
 
-      let glyphStringIndex: ref(int) = ref(cache.nextGlyphStringIndex);
+      let glyphStrings: ref(list((Skia.Typeface.t, string))) =
+        ref(cache.glyphStrings);
       let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
 
       while (i^ <= index && byte^ < len) {
         let (uchar, offset) =
           ZedBundled.unsafe_extract_next(cache.raw, byte^);
 
-        let (skiaFace, glyphStr) =
-          glyphStringIndex^ |> List.nth(cache.glyphStrings);
+        let (skiaFace, glyphStr) = List.hd(glyphStrings^);
+
         // All glyphs are 16bits and encoded into this string
         let glyphSubstr = String.sub(glyphStr, glyphStringByte^, 2);
 
@@ -186,8 +185,7 @@ module Internal = {
 
         Log.debugf(m =>
           m(
-            "resolveTo loop: glyphStringIndex : %d, glyphStringByte : %d, pixelPosition : %f, glyphNumber : %d",
-            glyphStringIndex^,
+            "resolveTo loop: glyphStringByte : %d, pixelPosition : %f, glyphNumber : %d",
             glyphStringByte^,
             pixelPosition^,
             getGlyphNumber(),
@@ -216,7 +214,7 @@ module Internal = {
         if (glyphStringByte^ + 2 >= String.length(glyphStr)) {
           Log.debug("Reached end of current glyphString");
           glyphStringByte := 0;
-          glyphStringIndex := glyphStringIndex^ + 1;
+          glyphStrings := List.tl(glyphStrings^);
         } else {
           // Otherwise we go to the next two bytes
           Log.debug("Continuing on current glyphString");
@@ -229,7 +227,7 @@ module Internal = {
       cache.nextByte = byte^;
       cache.nextCharacterPosition = characterPosition^;
       cache.nextPixelPosition = pixelPosition^;
-      cache.nextGlyphStringIndex = glyphStringIndex^;
+      cache.glyphStrings = glyphStrings^;
       cache.nextGlyphStringByte = glyphStringByte^;
     };
   };
@@ -264,7 +262,6 @@ let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
     byteIndexMap: emptyByteIndexMap,
     nextByte: 0,
     nextIndex: 0,
-    nextGlyphStringIndex: 0,
     nextGlyphStringByte: 0,
     nextCharacterPosition: 0,
     nextPixelPosition: 0.,
