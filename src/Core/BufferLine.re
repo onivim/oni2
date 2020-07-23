@@ -37,10 +37,12 @@ type t = {
   indentation: IndentationSettings.t,
   // [raw] is the raw string (byte array)
   raw: string,
-  // [glyphStrings] is a list of typefaces and strings from shaping
-  mutable glyphStrings: list((Skia.Typeface.t, string)),
   // [font] is the main font to render the line with
   font: Font.t,
+  // [skiaTypeface] is the Skia typeface associated with the font
+  skiaTypeface: Skia.Typeface.t,
+  // [glyphStrings] is a list of typefaces and strings from shaping
+  mutable glyphStrings: list((Skia.Typeface.t, string)),
   // [characters] is a cache of discovered characters we've found in the string so far
   mutable characters: array(option(characterCacheInfo)),
   // [byteIndexMap] is a cache of byte -> index
@@ -58,13 +60,15 @@ type t = {
 };
 
 module Internal = {
+  let skiaTypefaceEqual = (tf1, tf2) =>
+    Skia.Typeface.getUniqueID(tf1) == Skia.Typeface.getUniqueID(tf2);
+
   // We want to cache measurements tied to typefaces and characters, since text measuring is expensive
   module SkiaTypefaceUcharHashable = {
     type t = (Skia.Typeface.t, Uchar.t);
 
     let equal = ((tf1, uc1), (tf2, uc2)) =>
-      Skia.Typeface.getUniqueID(tf1) == Skia.Typeface.getUniqueID(tf2)
-      && Uchar.equal(uc1, uc2);
+      skiaTypefaceEqual(tf1, tf2) && Uchar.equal(uc1, uc2);
 
     let hash = ((tf, uc)) =>
       Int32.to_int(Skia.Typeface.getUniqueID(tf)) + Uchar.hash(uc);
@@ -87,13 +91,7 @@ module Internal = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
 
-  let measure =
-      (
-        ~typeface: Skia.Typeface.t,
-        ~indentationSettings: IndentationSettings.t,
-        substr,
-        uchar,
-      ) =>
+  let measure = (~typeface: Skia.Typeface.t, ~cache: t, substr, uchar) =>
     switch (MeasurementsCache.find((typeface, uchar), measurementsCache)) {
     | Some(result) =>
       MeasurementsCache.promote((typeface, uchar), measurementsCache);
@@ -118,7 +116,7 @@ module Internal = {
       // The width in monospaced characters
       let characterWidth =
         if (Uchar.equal(uchar, tab)) {
-          indentationSettings.tabSize;
+          cache.indentation.tabSize;
         } else {
           // Some unicode codepoints are double width, like many CJK characters
           Uucp.Break.tty_width_hint(
@@ -176,12 +174,7 @@ module Internal = {
         };
 
         let (characterWidth, pixelWidth) =
-          measure(
-            ~typeface=skiaFace,
-            ~indentationSettings=cache.indentation,
-            glyphSubstr,
-            uchar,
-          );
+          measure(~typeface=skiaFace, ~cache, glyphSubstr, uchar);
 
         Log.debugf(m =>
           m(
@@ -258,6 +251,7 @@ let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
     raw,
     glyphStrings,
     font,
+    skiaTypeface: Revery.Font.getSkiaTypeface(loadedFont),
     characters: emptyCharacterMap,
     byteIndexMap: emptyByteIndexMap,
     nextByte: 0,
