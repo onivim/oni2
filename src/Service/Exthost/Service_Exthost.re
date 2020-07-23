@@ -476,7 +476,7 @@ module Sub = {
           }
         );
 
-        Lwt.on_failure(promise, definitionLinks =>
+        Lwt.on_failure(promise, _ =>
           if (Latch.isOpen(latch)) {
             dispatch([]);
           }
@@ -485,7 +485,7 @@ module Sub = {
         {latch: latch};
       };
 
-      let update = (~params, ~state, ~dispatch as _) => state;
+      let update = (~params as _, ~state, ~dispatch as _) => state;
 
       let dispose = (~params as _, ~state) => {
         Latch.close(state.latch);

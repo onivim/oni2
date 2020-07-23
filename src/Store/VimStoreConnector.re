@@ -14,7 +14,6 @@ open Core.Utility;
 
 module Zed_utf8 = Core.ZedBundled;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
-module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
 
@@ -83,11 +82,10 @@ let start =
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      let editor = Feature_Layout.activeEditor(state.layout);
+      //      let editor = Feature_Layout.activeEditor(state.layout);
 
       let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(editor);
         Feature_LanguageSupport.Definition.get(
           ~bufferId=id,
           state.languageSupport,

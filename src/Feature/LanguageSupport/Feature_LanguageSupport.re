@@ -1,4 +1,3 @@
-open Common;
 type model = {
   codeLens: CodeLens.model,
   definition: Definition.model,
@@ -27,20 +26,20 @@ module Msg = {
   let pasted = key => Pasted(key);
 };
 
-type outmsg = Common.Outmsg.t;
+include Common;
 
 let update = (msg, model) =>
   switch (msg) {
   | KeyPressed(_)
-  | Pasted(_) => (model, Outmsg.Nothing)
+  | Pasted(_) => (model, Nothing)
   | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
     let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
-    ({...model, codeLens: codeLens'}, Outmsg.Nothing);
+    ({...model, codeLens: codeLens'}, Nothing);
 
   | Exthost(RegisterDefinitionSupport({handle, selector})) =>
     let definition' =
       Definition.register(~handle, ~selector, model.definition);
-    ({...model, definition: definition'}, Outmsg.Nothing);
+    ({...model, definition: definition'}, Nothing);
 
   | Exthost(Unregister({handle})) => (
       {
@@ -48,19 +47,20 @@ let update = (msg, model) =>
         definition: Definition.unregister(~handle, model.definition),
         rename: Rename.unregister(~handle, model.rename),
       },
-      Outmsg.Nothing,
+      Nothing,
     )
   | Exthost(_) =>
     // TODO:
-    (model, Outmsg.Nothing)
+    (model, Nothing)
 
   | CodeLens(codeLensMsg) =>
     let codeLens' = CodeLens.update(codeLensMsg, model.codeLens);
-    ({...model, codeLens: codeLens'}, Outmsg.Nothing);
+    ({...model, codeLens: codeLens'}, Nothing);
 
   | Definition(definitionMsg) =>
-    let definition' = Definition.update(definitionMsg, model.definition);
-    ({...model, definition: definition'}, Outmsg.Nothing);
+    let (definition', outmsg) =
+      Definition.update(definitionMsg, model.definition);
+    ({...model, definition: definition'}, outmsg);
 
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
@@ -73,15 +73,22 @@ module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
   let commands =
-    Rename.Contributions.commands
-    |> List.map(Oni_Core.Command.map(msg => Rename(msg)));
+    (
+      Rename.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => Rename(msg)))
+    )
+    @ (
+      Definition.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => Definition(msg)))
+    );
 
   let contextKeys =
     Rename.Contributions.contextKeys
     |> fromList
     |> map(({rename, _}: model) => rename);
 
-  let keybindings = Rename.Contributions.keybindings;
+  let keybindings =
+    Rename.Contributions.keybindings @ Definition.Contributions.keybindings;
 };
 
 module OldDefinition = Definition;

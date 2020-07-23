@@ -25,19 +25,43 @@ type model = {
 };
 
 [@deriving show]
+type command =
+  | GotoDefinition;
+
+[@deriving show]
 type msg =
   | DefinitionAvailable(definition)
-  | DefinitionNotAvailable;
+  | DefinitionNotAvailable
+  | Command(command);
 
 let initial = {maybeDefinition: None, providers: []};
 
 let update = (msg, model) =>
   switch (msg) {
-  | DefinitionNotAvailable => {...model, maybeDefinition: None}
-  | DefinitionAvailable(definition) => {
-      ...model,
-      maybeDefinition: Some(definition),
-    }
+  | DefinitionNotAvailable => (
+      {...model, maybeDefinition: None},
+      Common.Nothing,
+    )
+  | DefinitionAvailable(definition) => (
+      {...model, maybeDefinition: Some(definition)},
+      Common.Nothing,
+    )
+  | Command(GotoDefinition) =>
+    let outmsg =
+      switch (model.maybeDefinition) {
+      | None => Common.Nothing
+      | Some({definition, _}) =>
+        let position =
+          Location.{
+            line: Index.fromOneBased(definition.range.startLineNumber),
+            column: Index.fromOneBased(definition.range.startColumn),
+          };
+        Common.OpenFile({
+          filePath: definition.uri |> Oni_Core.Uri.toFileSystemPath,
+          location: Some(position),
+        });
+      };
+    (model, outmsg);
   };
 
 let register = (~handle, ~selector, model) => {
@@ -50,10 +74,10 @@ let unregister = (~handle: int, model) => {
   providers: model.providers |> List.filter(prov => prov.handle != handle),
 };
 
-let get = (~bufferId, {maybeDefinition, _}) => {
+let get = (~bufferId as currentBufferId, {maybeDefinition, _}) => {
   maybeDefinition
-  |> OptionEx.flatMap(({bufferId as lastBufferId, definition}) =>
-       if (bufferId == lastBufferId) {
+  |> OptionEx.flatMap(({bufferId, definition, _}) =>
+       if (currentBufferId == bufferId) {
          Some(definition);
        } else {
          None;
@@ -61,10 +85,10 @@ let get = (~bufferId, {maybeDefinition, _}) => {
      );
 };
 
-let getAt = (~bufferId, ~range, {maybeDefinition, _}) => {
+let getAt = (~bufferId as currentBufferId, ~range as _, {maybeDefinition, _}) => {
   maybeDefinition
-  |> OptionEx.flatMap(({bufferId as lastBufferId, definition}) =>
-       if (bufferId == lastBufferId) {
+  |> OptionEx.flatMap(({bufferId, definition, _}) =>
+       if (bufferId == currentBufferId) {
          Some(definition);
        } else {
          None;
@@ -107,4 +131,34 @@ let sub = (~buffer, ~location, ~client, model) => {
        }
      )
   |> Isolinear.Sub.batch;
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let gotoDefinition =
+    define(
+      ~category="Language",
+      ~title="Go-to Definition",
+      "editor.action.revealDefinition",
+      Command(GotoDefinition),
+    );
+};
+
+module Keybindings = {
+  open Oni_Input.Keybindings;
+
+  let condition = "normalMode" |> WhenExpr.parse;
+
+  let goToDefinition = {
+    key: "<F12>",
+    command: Commands.gotoDefinition.id,
+    condition,
+  };
+};
+
+module Contributions = {
+  let commands = [Commands.gotoDefinition];
+
+  let keybindings = [Keybindings.goToDefinition];
 };

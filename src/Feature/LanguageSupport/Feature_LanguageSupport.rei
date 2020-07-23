@@ -14,7 +14,12 @@ module Msg: {
   let pasted: string => msg;
 };
 
-type outmsg;
+type outmsg =
+  | Nothing
+  | OpenFile({
+      filePath: string,
+      location: option(Location.t),
+    });
 
 let update: (msg, model) => (model, outmsg);
 

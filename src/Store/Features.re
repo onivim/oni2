@@ -159,10 +159,22 @@ let update =
     (state', effect);
 
   | LanguageSupport(msg) =>
-    let (model, _outmsg) =
+    let (model, outmsg) =
       Feature_LanguageSupport.update(msg, state.languageSupport);
 
-    ({...state, languageSupport: model}, Isolinear.Effect.none);
+    let eff =
+      Feature_LanguageSupport.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | OpenFile({filePath, location}) =>
+          Isolinear.Effect.createWithDispatch(
+            ~name="feature.languageSupport.openFileByPath", dispatch =>
+            dispatch(OpenFileByPath(filePath, None, location))
+          )
+        }
+      );
+
+    ({...state, languageSupport: model}, eff);
 
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);

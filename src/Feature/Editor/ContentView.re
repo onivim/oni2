@@ -5,7 +5,6 @@ open Oni_Core;
 open Helpers;
 
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
 
 let renderLine =
     (

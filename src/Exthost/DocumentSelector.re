@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 
 [@deriving show]
 type t = list(DocumentFilter.t);

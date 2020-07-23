@@ -2,7 +2,6 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Feature_LanguageSupport;
 open Feature_Editor;
 
 // This test validates:
@@ -62,12 +61,10 @@ runTestWithInput(
     ~name="Validate we get some completions from the 'oni-dev' extension",
     (state: State.t) => {
       let editor = Feature_Layout.activeEditor(state.layout);
-      let location = Editor.getPrimaryCursor(editor);
 
-      Definition.isAvailable(
-        Editor.getBufferId(editor),
-        location,
-        state.definition,
+      Feature_LanguageSupport.Definition.isAvailable(
+        ~bufferId=Editor.getBufferId(editor),
+        state.languageSupport,
       );
     },
   );
