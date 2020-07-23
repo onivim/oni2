@@ -299,29 +299,34 @@ let start =
       if (metadata.id == 1 && ! libvimHasInitialized^) {
         Log.info("Ignoring initial buffer");
       } else {
+        let fileType =
+          switch (metadata.filePath) {
+          | Some(v) =>
+            Some(
+              Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v),
+            )
+          | None => None
+          };
+
         let lineEndings: option(Vim.lineEnding) =
           Vim.Buffer.getLineEndings(buf);
 
         let state = getState();
 
         let buffer =
-          switch (Selectors.getBufferById(state, metadata.id)) {
-          | Some(buf) => buf
-          | None =>
-            Oni_Core.Buffer.ofMetadata(
-              ~id=metadata.id,
-              ~version=- metadata.version,
-              ~filePath=metadata.filePath,
-              ~modified=metadata.modified,
-            )
-          };
-
-        // getLanguageFromBuffer always returns something, even if it is just the defaultLanguage.
-        let fileType =
-          Some(
-            Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer),
-          );
-        let buffer = Oni_Core.Buffer.setFileType(fileType, buffer);
+          (
+            switch (Selectors.getBufferById(state, metadata.id)) {
+            | Some(buf) => buf
+            | None =>
+              Oni_Core.Buffer.ofMetadata(
+                ~id=metadata.id,
+                ~version=- metadata.version,
+                ~filePath=metadata.filePath,
+                ~modified=metadata.modified,
+              )
+            }
+          )
+          |> Oni_Core.Buffer.setFileType(fileType);
 
         dispatch(
           Actions.BufferEnter({
