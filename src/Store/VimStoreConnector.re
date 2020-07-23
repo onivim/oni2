@@ -392,6 +392,27 @@ let start =
         maybeBuffer
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
+
+             // If the first line changes in a file with no filetype, re-run the
+             // file detection.
+             let firstLineChanged =
+               Index.equals(bu.startLine, Index.fromZeroBased(0))
+               || bu.isFull;
+
+             let newBuffer =
+               if (firstLineChanged) {
+                 let fileType =
+                   Some(
+                     Exthost.LanguageInfo.getLanguageFromBuffer(
+                       languageInfo,
+                       newBuffer,
+                     ),
+                   );
+                 newBuffer |> Core.Buffer.setFileType(fileType);
+               } else {
+                 newBuffer;
+               };
+
              dispatch(
                Actions.BufferUpdate({
                  update: bu,
