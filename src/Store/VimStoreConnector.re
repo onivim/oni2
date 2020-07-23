@@ -82,8 +82,6 @@ let start =
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      //      let editor = Feature_Layout.activeEditor(state.layout);
-
       let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
         Feature_LanguageSupport.Definition.get(
