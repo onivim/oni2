@@ -88,22 +88,26 @@ let start =
       let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
         let position = Editor.getPrimaryCursor(editor);
-        Feature_LanguageSupport.Definition.getAt(id, position, state.languageSupport)
+        Feature_LanguageSupport.Definition.getAt(
+          id,
+          position,
+          state.languageSupport,
+        )
         |> Option.map((definitionResult: Exthost.DefinitionLink.t) => {
+             let {startLineNumber, startColumn, _}: Exthost.OneBasedRange.t =
+               definitionResult.range;
 
-             let {startLineNumber, startColumn, _}: Exthost.OneBasedRange.t = definitionResult.range;
-
-            let position = Location.{
-            line:
-            Index.fromOneBased(startLineNumber),
-            column:Index.fromOneBased(startColumn)};
-
+             let position =
+               Location.{
+                 line: Index.fromOneBased(startLineNumber),
+                 column: Index.fromOneBased(startColumn),
+               };
 
              Actions.OpenFileByPath(
                definitionResult.uri |> Core.Uri.toFileSystemPath,
                None,
                Some(position),
-             )
+             );
            });
       };
 

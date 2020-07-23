@@ -8,7 +8,7 @@ type model = {
 let initial = {
   codeLens: CodeLens.initial,
   definition: Definition.New.initial,
-  rename: Rename.initial, 
+  rename: Rename.initial,
 };
 
 [@deriving show]
@@ -36,11 +36,12 @@ let update = (msg, model) =>
   | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
     let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
     ({...model, codeLens: codeLens'}, Outmsg.Nothing);
-    
-  | Exthost(RegisterDefinitionSupport({handle, selector })) =>
-    let definition' = Definition.New.register(~handle, ~selector, model.definition);
+
+  | Exthost(RegisterDefinitionSupport({handle, selector})) =>
+    let definition' =
+      Definition.New.register(~handle, ~selector, model.definition);
     ({...model, definition: definition'}, Outmsg.Nothing);
-    
+
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
@@ -52,14 +53,14 @@ let update = (msg, model) =>
   | Exthost(_) =>
     // TODO:
     (model, Outmsg.Nothing)
-    
+
   | CodeLens(codeLensMsg) =>
     let codeLens' = CodeLens.update(codeLensMsg, model.codeLens);
     ({...model, codeLens: codeLens'}, Outmsg.Nothing);
 
   | Definition(definitionMsg) =>
     let definition' = Definition.New.update(definitionMsg, model.definition);
-    ({...model, definition: definition'}, Outmsg.Nothing)
+    ({...model, definition: definition'}, Outmsg.Nothing);
 
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
@@ -87,12 +88,10 @@ module OldDefinition = Definition;
 module Definition = {
   let getAt = (~bufferId, ~location, {definition, _}: model) => {
     OldDefinition.New.getAt(~bufferId, ~location, definition);
-  }
+  };
 
   let isAvailable = (~bufferId, ~location, model) => {
-    model
-    |> getAt(~bufferId, ~location)
-    |> Option.is_some
+    model |> getAt(~bufferId, ~location) |> Option.is_some;
   };
 };
 

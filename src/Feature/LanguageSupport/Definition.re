@@ -12,33 +12,29 @@ module New = {
     handle: int,
     selector: Exthost.DocumentSelector.t,
   };
-  
-  type model = {
-    providers: list(provider),
-  };
+
+  type model = {providers: list(provider)};
 
   [@deriving show]
   type msg = unit;
 
-  let initial = {
-    providers: [],
-  };
+  let initial = {providers: []};
 
   let update = (_msg, model) => model;
 
   let register = (~handle, ~selector, model) => {
     ...model,
-    providers: [{handle, selector}, ...model.providers]
+    providers: [{handle, selector}, ...model.providers],
   };
-  
+
   let unregister = (~handle: int, model) => {
     ...model,
-    providers: model.providers |> List.filter((prov) => prov.handle != handle)
+    providers: model.providers |> List.filter(prov => prov.handle != handle),
   };
 
   let getAt = (~bufferId, ~location, model) => {
     None;
-  }
+  };
 };
 
 type definition = {

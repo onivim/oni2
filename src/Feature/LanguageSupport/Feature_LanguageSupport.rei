@@ -31,10 +31,9 @@ module Contributions: {
 };
 
 module Definition: {
-  
-  let getAt: (~bufferId: int, ~location: Location.t, model) => option(
-    Exthost.DefinitionLink.t
-  );
+  let getAt:
+    (~bufferId: int, ~location: Location.t, model) =>
+    option(Exthost.DefinitionLink.t);
 
   let isAvailable: (~bufferId: int, ~location: Location.t, model) => bool;
 };

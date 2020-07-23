@@ -96,9 +96,12 @@ module Sub: {
     Isolinear.Sub.t(unit);
 
   let definition:
-    (~buffer: Oni_Core.Buffer.t,
-     ~position: EditorCoreTypes.Location.t,
-     ~toMsg: list(Exthost.DefinitionLink.t) => 'a,
-     Exthost.Client.t,
-    ) => Isolinear.Sub.t('a);
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: list(Exthost.DefinitionLink.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
 };
