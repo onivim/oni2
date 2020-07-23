@@ -39,24 +39,28 @@ type t = {
   raw: string,
   // [glyphStrings] is a list of typefaces and strings from shaping
   glyphStrings: list((Skia.Typeface.t, string)),
+  // [font] is the main font to render the line with
   font: Font.t,
   // [characters] is a cache of discovered characters we've found in the string so far
   mutable characters: array(option(characterCacheInfo)),
   // [byteIndexMap] is a cache of byte -> index
   mutable byteIndexMap: array(option(int)),
-  // nextByte is the nextByte to work from, or -1 if complete
+  // [nextByte] is the nextByte to work from, or -1 if complete
   mutable nextByte: int,
-  // nextIndex is the nextIndex to work from
+  // [nextIndex] is the nextIndex to work from
   mutable nextIndex: int,
+  // [nextGlyphStringIndex] is the next nth glyph string in shapes
   mutable nextGlyphStringIndex: int,
+  // [nextGlyphStringByte] is the next byte index in the current glyph string
   mutable nextGlyphStringByte: int,
-  // nextCharacterPosition is the graphical position (based on character width)
+  // [nextCharacterPosition] is the graphical position (based on character width)
   mutable nextCharacterPosition: int,
-  // nextPixelPosition is the graphical position (based on pixels)
+  // [nextPixelPosition] is the graphical position (based on pixels)
   mutable nextPixelPosition: float,
 };
 
 module Internal = {
+  // We want to cache measurements tied to typefaces and characters, since text measuring is expensive
   module SkiaTypefaceUcharHashable = {
     type t = (Skia.Typeface.t, Uchar.t);
 
@@ -81,6 +85,7 @@ module Internal = {
   let measurementsCache =
     MeasurementsCache.create(~initialSize=1024, 128 * 1024);
 
+  // Create a paint to measure the character with
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
 
@@ -112,11 +117,15 @@ module Internal = {
           Uchar.to_int(uchar),
         )
       );
+      // The width in monospaced characters
       let characterWidth =
         if (Uchar.equal(uchar, tab)) {
           indentationSettings.tabSize;
         } else {
-          Uucp.Break.tty_width_hint(uchar);
+          // Some unicode codepoints are double width, like many CJK characters
+          Uucp.Break.tty_width_hint(
+            uchar,
+          );
         };
       Skia.Paint.setTypeface(paint, typeface);
       let pixelWidth = Skia.Paint.measureText(paint, substr, None);
@@ -158,9 +167,10 @@ module Internal = {
 
         let (skiaFace, glyphStr) =
           glyphStringIndex^ |> List.nth(cache.glyphStrings);
+        // All glyphs are 16bits and encoded into this string
         let glyphSubstr = String.sub(glyphStr, glyphStringByte^, 2);
 
-        let glyphNumber = {
+        let getGlyphNumber = () => {
           let lowBit = glyphSubstr.[0] |> Char.code;
           let highBit = glyphSubstr.[1] |> Char.code;
           highBit lsl 8 lor lowBit;
@@ -180,7 +190,7 @@ module Internal = {
             glyphStringIndex^,
             glyphStringByte^,
             pixelPosition^,
-            glyphNumber,
+            getGlyphNumber(),
           )
         );
 
@@ -201,13 +211,16 @@ module Internal = {
         characterPosition := characterPosition^ + characterWidth;
         pixelPosition := pixelPosition^ +. pixelWidth;
         byte := offset;
+        // Since all OCaml strings are 8bits/1byte, if the next position would
+        // overshoot the length of the string, we go to the next glyph string
         if (glyphStringByte^ + 2 >= String.length(glyphStr)) {
+          Log.debug("Reached end of current glyphString");
           glyphStringByte := 0;
           glyphStringIndex := glyphStringIndex^ + 1;
-          Log.debug("Reached end of current glyphString");
         } else {
-          glyphStringByte := glyphStringByte^ + 2;
+          // Otherwise we go to the next two bytes
           Log.debug("Continuing on current glyphString");
+          glyphStringByte := glyphStringByte^ + 2;
         };
         incr(i);
       };
@@ -225,6 +238,11 @@ module Internal = {
 let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
   let Font.{fontFamily, features, smoothing, fontSize, _} = font;
 
+  // We assume that the whoever is requesting the buffer has verified
+  // that the font is resolvable.
+  // TODO (maybe): we will probably eventually support having a different
+  // default weight. This will probably be part of the font record, so
+  // this will need to be updated if/when this is added.
   let loadedFont =
     fontFamily
     |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
@@ -233,6 +251,7 @@ let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
 
   let glyphStrings =
     Revery.Font.shape(~features, loadedFont, raw).glyphStrings;
+
   {
     // Create a cache the size of the string - this would be the max length
     // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
