@@ -49,7 +49,7 @@ let getUcharExn: (~index: int, t) => Uchar.t;
 
 let subExn: (~index: int, ~length: int, t) => string;
 
-let getPositionAndWidth: (~index: int, t) => (int, int);
+let getCharacterPositionAndWidth: (~index: int, t) => (int, int);
 
 module Slow: {
   /*

@@ -12,7 +12,8 @@ let _lf = Uchar.of_char('\n');
 
 type characterCacheInfo = {
   byteOffset: int,
-  positionOffset: int,
+  positionCharacterOffset: int,
+  positionPixelOffset: float,
   uchar: Uchar.t,
   width: int,
 };
@@ -41,8 +42,10 @@ type t = {
   mutable nextByte: int,
   // nextIndex is the nextIndex to work from
   mutable nextIndex: int,
-  // nextPosition is the graphical position (based on character width)
-  mutable nextPosition: int,
+  // nextCharacterPosition is the graphical position (based on character width)
+  mutable nextCharacterPosition: int,
+  // nextPixelPosition is the graphical position (based on pixels)
+  mutable nextPixelPosition: float,
 };
 
 module Internal = {
@@ -73,7 +76,7 @@ module Internal = {
 
       let i: ref(int) = ref(cache.nextIndex);
       let byte: ref(int) = ref(cache.nextByte);
-      let position: ref(int) = ref(cache.nextPosition);
+      let characterPosition: ref(int) = ref(cache.nextCharacterPosition);
       while (i^ <= index && byte^ < len) {
         let (uchar, offset) =
           ZedBundled.unsafe_extract_next(cache.raw, byte^);
@@ -85,21 +88,22 @@ module Internal = {
         cache.characters[idx] =
           Some({
             byteOffset,
-            positionOffset: position^,
+            positionCharacterOffset: characterPosition^,
+            positionPixelOffset: 0.,
             uchar,
             width: characterWidth,
           });
 
         cache.byteIndexMap[byteOffset] = Some(idx);
 
-        position := position^ + characterWidth;
+        characterPosition := characterPosition^ + characterWidth;
         byte := offset;
         incr(i);
       };
 
       cache.nextIndex = i^;
       cache.nextByte = byte^;
-      cache.nextPosition = position^;
+      cache.nextCharacterPosition = characterPosition^;
     };
   };
 };
@@ -115,7 +119,8 @@ let make = (~indentation, raw: string) => {
     byteIndexMap: emptyByteIndexMap,
     nextByte: 0,
     nextIndex: 0,
-    nextPosition: 0,
+    nextCharacterPosition: 0,
+    nextPixelPosition: 0.,
   };
 };
 
@@ -190,19 +195,19 @@ let subExn = (~index: int, ~length: int, bufferLine) => {
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
 };
 
-let getPositionAndWidth = (~index: int, bufferLine: t) => {
+let getCharacterPositionAndWidth = (~index: int, bufferLine: t) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
   let len = Array.length(characters);
 
   if (index < 0 || index >= len || len == 0) {
-    (bufferLine.nextPosition, 1);
+    (bufferLine.nextCharacterPosition, 1);
   } else {
     switch (characters[index]) {
-    | Some({positionOffset, width, _}) => (positionOffset, width)
+    | Some({positionCharacterOffset, width, _}) => (positionCharacterOffset, width)
     | None =>
       switch (characters[bufferLine.nextIndex - 1]) {
-      | Some({positionOffset, width, _}) => (positionOffset + width, 1)
+      | Some({positionCharacterOffset, width, _}) => (positionCharacterOffset + width, 1)
       | None => (0, 1)
       }
     };
@@ -218,7 +223,7 @@ module Slow = {
       } else {
         let index = getIndex(~byte=byteIndex, bufferLine);
         let (characterPosition, width) =
-          getPositionAndWidth(~index, bufferLine);
+          getCharacterPositionAndWidth(~index, bufferLine);
 
         if (position >= characterPosition
             && position < characterPosition

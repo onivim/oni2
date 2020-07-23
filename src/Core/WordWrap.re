@@ -17,7 +17,7 @@ let fixed = (~columns, bufferLine) => {
       curr;
     } else {
       let (_position, width) =
-        BufferLine.getPositionAndWidth(~index=characterIndex, bufferLine);
+        BufferLine.getCharacterPositionAndWidth(~index=characterIndex, bufferLine);
 
       // We haven't exceeded column size yet, so continue traversing
       if (width + currWidth <= columns) {

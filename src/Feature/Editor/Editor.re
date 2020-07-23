@@ -76,7 +76,7 @@ let bufferLineByteToPixel =
 
     let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
     let (cursorOffset, width) =
-      BufferLine.getPositionAndWidth(~index, bufferLine);
+      BufferLine.getCharacterPositionAndWidth(~index, bufferLine);
 
     let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
 
@@ -101,7 +101,7 @@ let bufferLineCharacterToPixel =
     let (cursorOffset, width) =
       buffer
       |> EditorBuffer.line(line)
-      |> BufferLine.getPositionAndWidth(~index=characterIndex);
+      |> BufferLine.getCharacterPositionAndWidth(~index=characterIndex);
 
     let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
 
