@@ -85,10 +85,11 @@ let get = (~bufferId as currentBufferId, {maybeDefinition, _}) => {
      );
 };
 
-let getAt = (~bufferId as currentBufferId, ~range as _, {maybeDefinition, _}) => {
+let getAt = (~bufferId as currentBufferId, ~range, {maybeDefinition, _}) => {
   maybeDefinition
-  |> OptionEx.flatMap(({bufferId, definition, _}) =>
-       if (bufferId == currentBufferId) {
+  |> OptionEx.flatMap(({bufferId, definition, requestLocation}) =>
+       if (bufferId == currentBufferId
+           && Range.contains(requestLocation, range)) {
          Some(definition);
        } else {
          None;

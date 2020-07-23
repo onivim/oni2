@@ -92,6 +92,8 @@ let renderEmbellishments =
 let renderDefinition =
     (
       ~context,
+      ~bufferId,
+      ~languageSupport,
       ~leftVisibleColumn,
       ~cursorPosition: Location.t,
       ~editor,
@@ -119,7 +121,17 @@ let renderDefinition =
              Location.{line: cursorPosition.line, column: token.startIndex},
            stop: Location.{line: cursorPosition.line, column: token.endIndex},
          };
-       Draw.underline(~context, ~color=token.color, range);
+
+       // Double-check that the range of the token falls into our definition position
+
+       Feature_LanguageSupport.Definition.getAt(
+         ~bufferId,
+         ~range,
+         languageSupport,
+       )
+       |> Option.iter(_ => {
+            Draw.underline(~context, ~color=token.color, range)
+          });
      });
 
 let renderTokens =
@@ -211,11 +223,14 @@ let render =
     ~bufferHighlights,
   );
 
+  let bufferId = Buffer.getId(buffer);
   if (Feature_LanguageSupport.Definition.isAvailable(
-        ~bufferId=Buffer.getId(buffer),
+        ~bufferId,
         languageSupport,
       )) {
     renderDefinition(
+      ~bufferId,
+      ~languageSupport,
       ~context,
       ~editor,
       ~leftVisibleColumn,
