@@ -11,7 +11,6 @@ open Oni_Syntax;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 type windowDisplayMode =
@@ -34,7 +33,6 @@ type t = {
   configuration: Configuration.t,
   decorationProviders: list(DecorationProvider.t),
   diagnostics: Diagnostics.t,
-  definition: Definition.t,
   editorFont: Service_Font.font,
   formatting: Feature_Formatting.model,
   messages: Feature_Messages.model,
@@ -130,7 +128,6 @@ let initial =
     config,
     configuration: Configuration.default,
     decorationProviders: [],
-    definition: Definition.empty,
     diagnostics: Diagnostics.create(),
     quickmenu: None,
     editorFont: Service_Font.default,

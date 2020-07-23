@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
@@ -45,36 +44,6 @@ module ExtensionCompletionProvider = {
         client,
       )
       |> Lwt.map(items => {suggestionsToCompletionItems(items)})
-    });
-  };
-};
-
-module ExtensionDefinitionProvider = {
-  let definitionToModel = defs => {
-    let def = List.hd(defs);
-    let Exthost.DefinitionLink.{uri, range, originSelectionRange, _} = def;
-    let Range.{start, _}: EditorCoreTypes.Range.t =
-      Exthost.OneBasedRange.toRange(range);
-
-    let originRange: option(EditorCoreTypes.Range.t) =
-      originSelectionRange |> Option.map(Exthost.OneBasedRange.toRange);
-
-    LanguageFeatures.DefinitionResult.create(
-      ~originRange,
-      ~uri,
-      ~location=start,
-    );
-  };
-
-  let create = (id, selector, client, (buffer, location)) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDefinition(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        client,
-      )
-      |> Lwt.map(definitionToModel)
     });
   };
 };
@@ -153,18 +122,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
            path,
          )
        );
-
-  let onRegisterDefinitionProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let definitionProvider =
-      ExtensionDefinitionProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
-      ),
-    );
-  };
 
   let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
     let id = "exthost." ++ string_of_int(handle);
@@ -270,9 +227,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         withClient(
           onRegisterDocumentSymbolProvider(handle, selector, label),
         );
-        Lwt.return(Reply.okEmpty);
-      | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
-        withClient(onRegisterDefinitionProvider(handle, selector));
         Lwt.return(Reply.okEmpty);
 
       | LanguageFeatures(

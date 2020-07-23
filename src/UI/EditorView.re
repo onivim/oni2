@@ -73,7 +73,7 @@ module Parts = {
         diagnostics={state.diagnostics}
         completions={state.completions}
         tokenTheme={state.tokenTheme}
-        definition={state.definition}
+        languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
         config={Feature_Configuration.resolver(state.config)}
         renderOverlays

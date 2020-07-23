@@ -202,6 +202,8 @@ let start =
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
 
+    let isInsertMode = Feature_Vim.mode(state.vim) == Vim.Types.Insert;
+
     let visibleRanges =
       visibleBuffersAndRanges
       |> List.map(((bufferId, ranges)) => {
@@ -298,6 +300,10 @@ let start =
 
     let activeEditor = Feature_Layout.activeEditor(state.layout);
     let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
+    let activeBufferId = Feature_Editor.Editor.getBufferId(activeEditor);
+    let activePosition = Feature_Editor.Editor.getPrimaryCursor(activeEditor);
+    let maybeActiveBuffer =
+      Model.Buffers.getBuffer(activeBufferId, state.buffers);
 
     let extHostSubscription =
       Feature_Exthost.subscription(
@@ -315,8 +321,19 @@ let start =
       );
 
     let languageSupportSub =
-      Feature_LanguageSupport.sub(~visibleBuffers, ~client=extHostClient)
-      |> Isolinear.Sub.map(msg => Model.Actions.LanguageSupport(msg));
+      maybeActiveBuffer
+      |> Option.map(activeBuffer => {
+           Feature_LanguageSupport.sub(
+             ~isInsertMode,
+             ~activeBuffer,
+             ~activePosition,
+             ~visibleBuffers,
+             ~client=extHostClient,
+             state.languageSupport,
+           )
+           |> Isolinear.Sub.map(msg => Model.Actions.LanguageSupport(msg))
+         })
+      |> Option.value(~default=Isolinear.Sub.none);
 
     let editorGlobalSub =
       Feature_Editor.Sub.global(~config)
