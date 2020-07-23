@@ -252,7 +252,10 @@ let make =
       let language =
         switch (buffer) {
         | Some(buf) =>
-          Exthost.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buf)
+          switch (Oni_Core.Buffer.getFileType(buf)) {
+          | Some(ft) => ft
+          | None => Exthost.LanguageInfo.defaultLanguage
+          }
         | None => Exthost.LanguageInfo.defaultLanguage
         };
 

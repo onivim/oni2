@@ -393,8 +393,7 @@ let start =
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
 
-             // If the first line changes in a file with no filetype, re-run the
-             // file detection.
+             // If the first line changes, re-run the file detection.
              let firstLineChanged =
                Index.equals(bu.startLine, Index.fromZeroBased(0))
                || bu.isFull;

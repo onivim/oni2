@@ -19,7 +19,10 @@ let getBufferForEditor = (buffers, editor: Editor.t) => {
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
   let fileType =
-    Exthost.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+    Option.value(
+      ~default=Exthost.LanguageInfo.defaultLanguage,
+      Buffer.getFileType(buffer),
+    );
   Configuration.getValue(~fileType, f, state.configuration);
 };
 
@@ -44,7 +47,10 @@ let getActiveConfigurationValue = (state: State.t, f) => {
   | None => Configuration.getValue(f, state.configuration)
   | Some(buffer) =>
     let fileType =
-      Exthost.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+      Option.value(
+        ~default=Exthost.LanguageInfo.defaultLanguage,
+        Buffer.getFileType(buffer),
+      );
     Configuration.getValue(~fileType, f, state.configuration);
   };
 };
