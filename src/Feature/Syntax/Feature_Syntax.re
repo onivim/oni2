@@ -80,7 +80,7 @@ module Internal = {
       [||];
     } else {
       let linesToHighlight =
-        Array.sub(lines, 0, numberOfLinesToHighlight - 1);
+        Array.sub(lines, 0, numberOfLinesToHighlight);
       let highlights = highlight(~scope, ~theme, ~grammars, linesToHighlight);
       highlights;
     };
