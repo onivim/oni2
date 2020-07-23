@@ -214,7 +214,6 @@ let render =
 
   if (Feature_LanguageSupport.Definition.isAvailable(
         ~bufferId=Buffer.getId(buffer),
-        ~location=cursorPosition,
         languageSupport,
       )) {
     renderDefinition(

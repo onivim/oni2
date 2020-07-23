@@ -1,20 +1,20 @@
 open Common;
 type model = {
   codeLens: CodeLens.model,
-  definition: Definition.New.model,
+  definition: Definition.model,
   rename: Rename.model,
 };
 
 let initial = {
   codeLens: CodeLens.initial,
-  definition: Definition.New.initial,
+  definition: Definition.initial,
   rename: Rename.initial,
 };
 
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
-  | Definition(Definition.New.msg)
+  | Definition(Definition.msg)
   | Rename(Rename.msg)
   | CodeLens(CodeLens.msg)
   | KeyPressed(string)
@@ -39,13 +39,13 @@ let update = (msg, model) =>
 
   | Exthost(RegisterDefinitionSupport({handle, selector})) =>
     let definition' =
-      Definition.New.register(~handle, ~selector, model.definition);
+      Definition.register(~handle, ~selector, model.definition);
     ({...model, definition: definition'}, Outmsg.Nothing);
 
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
-        definition: Definition.New.unregister(~handle, model.definition),
+        definition: Definition.unregister(~handle, model.definition),
         rename: Rename.unregister(~handle, model.rename),
       },
       Outmsg.Nothing,
@@ -59,7 +59,7 @@ let update = (msg, model) =>
     ({...model, codeLens: codeLens'}, Outmsg.Nothing);
 
   | Definition(definitionMsg) =>
-    let definition' = Definition.New.update(definitionMsg, model.definition);
+    let definition' = Definition.update(definitionMsg, model.definition);
     ({...model, definition: definition'}, Outmsg.Nothing);
 
   | Rename(renameMsg) =>
@@ -86,18 +86,44 @@ module Contributions = {
 
 module OldDefinition = Definition;
 module Definition = {
-  let getAt = (~bufferId, ~location, {definition, _}: model) => {
-    OldDefinition.New.getAt(~bufferId, ~location, definition);
+  let get = (~bufferId, {definition, _}: model) => {
+    OldDefinition.get(~bufferId, definition);
   };
 
-  let isAvailable = (~bufferId, ~location, model) => {
-    model |> getAt(~bufferId, ~location) |> Option.is_some;
+  let getAt = (~bufferId, ~range, {definition, _}: model) => {
+    OldDefinition.getAt(~bufferId, ~range, definition);
+  };
+
+  let isAvailable = (~bufferId, model) => {
+    model |> get(~bufferId) |> Option.is_some;
   };
 };
 
-let sub = (~visibleBuffers, ~client) => {
-  CodeLens.sub(~visibleBuffers, ~client)
-  |> Isolinear.Sub.map(msg => CodeLens(msg));
+let sub =
+    (
+      ~isInsertMode,
+      ~activeBuffer,
+      ~activePosition,
+      ~visibleBuffers,
+      ~client,
+      {definition, _},
+    ) => {
+  let codeLensSub =
+    CodeLens.sub(~visibleBuffers, ~client)
+    |> Isolinear.Sub.map(msg => CodeLens(msg));
+
+  let definitionSub =
+    isInsertMode
+      ? Isolinear.Sub.none
+      : OldDefinition.sub(
+          ~buffer=activeBuffer,
+          ~location=activePosition,
+          ~client,
+          definition,
+        )
+        |> Isolinear.Sub.map(msg => Definition(msg));
+
+  [codeLensSub, definitionSub] |> Isolinear.Sub.batch;
 };
 
 // TODO: Remove

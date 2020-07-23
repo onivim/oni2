@@ -134,6 +134,7 @@ module ExtensionId: {
 };
 
 module DefinitionLink: {
+  [@deriving show]
   type t = {
     uri: Uri.t,
     range: OneBasedRange.t,
@@ -164,6 +165,8 @@ module DocumentSelector: {
   type t = list(DocumentFilter.t);
 
   let matches: (~filetype: string, t) => bool;
+
+  let matchesBuffer: (~buffer: Oni_Core.Buffer.t, t) => bool;
 
   let decode: Json.decoder(t);
 };

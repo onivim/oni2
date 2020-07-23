@@ -21,7 +21,14 @@ let update: (msg, model) => (model, outmsg);
 let isFocused: model => bool;
 
 let sub:
-  (~visibleBuffers: list(Oni_Core.Buffer.t), ~client: Exthost.Client.t) =>
+  (
+    ~isInsertMode: bool,
+    ~activeBuffer: Oni_Core.Buffer.t,
+    ~activePosition: Location.t,
+    ~visibleBuffers: list(Oni_Core.Buffer.t),
+    ~client: Exthost.Client.t,
+    model
+  ) =>
   Isolinear.Sub.t(msg);
 
 module Contributions: {
@@ -31,11 +38,13 @@ module Contributions: {
 };
 
 module Definition: {
+  let get: (~bufferId: int, model) => option(Exthost.DefinitionLink.t);
+
   let getAt:
-    (~bufferId: int, ~location: Location.t, model) =>
+    (~bufferId: int, ~range: Range.t, model) =>
     option(Exthost.DefinitionLink.t);
 
-  let isAvailable: (~bufferId: int, ~location: Location.t, model) => bool;
+  let isAvailable: (~bufferId: int, model) => bool;
 };
 
 // TODO: Remove

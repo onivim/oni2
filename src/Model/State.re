@@ -11,7 +11,6 @@ open Oni_Syntax;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 type windowDisplayMode =

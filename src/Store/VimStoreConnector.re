@@ -78,7 +78,7 @@ let start =
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
-      Log.debug("Goto definition requested");
+      Log.info("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
@@ -88,9 +88,8 @@ let start =
       let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
         let position = Editor.getPrimaryCursor(editor);
-        Feature_LanguageSupport.Definition.getAt(
-          id,
-          position,
+        Feature_LanguageSupport.Definition.get(
+          ~bufferId=id,
           state.languageSupport,
         )
         |> Option.map((definitionResult: Exthost.DefinitionLink.t) => {
