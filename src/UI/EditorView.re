@@ -55,6 +55,7 @@ module Parts = {
         editorDispatch(CursorsChanged([cursor]));
 
       <EditorSurface
+        key={editor |> Feature_Editor.Editor.key}
         dispatch=editorDispatch
         ?backgroundColor
         ?foregroundColor
