@@ -98,7 +98,7 @@ module Sub: {
   let definition:
     (~buffer: Oni_Core.Buffer.t,
      ~position: EditorCoreTypes.Location.t,
-     ~toMsg: list(DefinitionLink.t) => 'a,
+     ~toMsg: list(Exthost.DefinitionLink.t) => 'a,
      Exthost.Client.t,
     ) => Isolinear.Sub.t('a);
 };
