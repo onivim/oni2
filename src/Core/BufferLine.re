@@ -250,13 +250,16 @@ let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
   };
 };
 
-let empty = make(~indentation=IndentationSettings.default, "");
+let empty = (~font=Font.default, ()) =>
+  make(~indentation=IndentationSettings.default, ~font, "");
 
 let lengthInBytes = ({raw, _}) => String.length(raw);
 
 let lengthSlow = ({raw, _}) => ZedBundled.length(raw);
 
 let raw = ({raw, _}) => raw;
+
+let font = ({font, _}) => font;
 
 let lengthBounded = (~max, bufferLine) => {
   Internal.resolveTo(~index=max, bufferLine);

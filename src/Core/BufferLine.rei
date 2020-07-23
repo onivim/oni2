@@ -8,13 +8,15 @@ exception OutOfBounds;
 
 type t;
 
-let empty: t;
-
 let make: (~indentation: IndentationSettings.t, ~font: Font.t=?, string) => t;
+
+let empty: (~font: Font.t=?, unit) => t;
 
 let lengthInBytes: t => int;
 
 let raw: t => string;
+
+let font: t => Font.t;
 
 /*
  * [lengthSlow(bufferLine)] returns the UTF-8 length of the buffer line.

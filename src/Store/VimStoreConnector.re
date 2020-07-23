@@ -383,7 +383,8 @@ let start =
       if (shouldApply) {
         maybeBuffer
         |> Option.iter(oldBuffer => {
-             let newBuffer = Core.Buffer.update(oldBuffer, bu);
+             let font = getState().editorFont;
+             let newBuffer = Core.Buffer.update(~font, oldBuffer, bu);
              dispatch(
                Actions.BufferUpdate({
                  update: bu,

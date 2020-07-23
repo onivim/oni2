@@ -68,10 +68,12 @@ let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
      });
 };
 
-let ofLines = (~id=0, rawLines: array(string)) => {
+let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
   let lines =
     rawLines
-    |> Array.map(BufferLine.make(~indentation=IndentationSettings.default));
+    |> Array.map(
+         BufferLine.make(~font, ~indentation=IndentationSettings.default),
+       );
 
   {
     id,
@@ -180,8 +182,14 @@ let getEstimatedMaxLineLength = buffer => {
 };
 
 let applyUpdate =
-    (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
-  let updateLines = update.lines |> Array.map(BufferLine.make(~indentation));
+    (
+      ~indentation,
+      lines: array(BufferLine.t),
+      ~font=Font.default,
+      update: BufferUpdate.t,
+    ) => {
+  let updateLines =
+    update.lines |> Array.map(BufferLine.make(~font, ~indentation));
   let startLine = update.startLine |> Index.toZeroBased;
   let endLine = update.endLine |> Index.toZeroBased;
   ArrayEx.replace(
@@ -201,9 +209,11 @@ let isIndentationSet = buf => {
 let setIndentation = (indentation, buf) => {
   let lines =
     buf.lines
-    |> Array.map(line =>
-         BufferLine.raw(line) |> BufferLine.make(~indentation)
-       );
+    |> Array.map(line => {
+         let raw = BufferLine.raw(line);
+         let font = BufferLine.font(line);
+         BufferLine.make(~font, ~indentation, raw);
+       });
   {...buf, lines, indentation: Some(indentation)};
 };
 
@@ -213,7 +223,7 @@ let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
   update.version > getVersion(buf);
 };
 
-let update = (buf: t, update: BufferUpdate.t) => {
+let update = (~font=Font.default, buf: t, update: BufferUpdate.t) => {
   let indentation =
     Option.value(~default=IndentationSettings.default, buf.indentation);
   if (shouldApplyUpdate(update, buf)) {
@@ -224,13 +234,14 @@ let update = (buf: t, update: BufferUpdate.t) => {
       {
         ...buf,
         version: update.version,
-        lines: update.lines |> Array.map(BufferLine.make(~indentation)),
+        lines:
+          update.lines |> Array.map(BufferLine.make(~font, ~indentation)),
       };
     } else {
       {
         ...buf,
         version: update.version,
-        lines: applyUpdate(~indentation, buf.lines, update),
+        lines: applyUpdate(~indentation, ~font, buf.lines, update),
       };
     };
   } else {

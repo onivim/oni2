@@ -10,7 +10,7 @@ let initial: t;
 
 let show: t => string;
 
-let ofLines: (~id: int=?, array(string)) => t;
+let ofLines: (~id: int=?, ~font: Font.t=?, array(string)) => t;
 let ofMetadata:
   (~id: int, ~version: int, ~filePath: option(string), ~modified: bool) => t;
 
@@ -57,4 +57,4 @@ let stampLastUsed: t => t;
 let getLastUsed: t => float;
 
 let shouldApplyUpdate: (BufferUpdate.t, t) => bool;
-let update: (t, BufferUpdate.t) => t;
+let update: (~font: Font.t=?, t, BufferUpdate.t) => t;
