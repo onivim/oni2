@@ -10,7 +10,7 @@ type t;
 
 let empty: t;
 
-let make: (~indentation: IndentationSettings.t, string) => t;
+let make: (~indentation: IndentationSettings.t, ~font: Font.t=?, string) => t;
 
 let lengthInBytes: t => int;
 

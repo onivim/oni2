@@ -1,14 +1,16 @@
 open Oni_Core;
 
-type font = {
-  fontFamily: Revery.Font.Family.t,
-  fontSize: float,
-  measuredWidth: float,
-  measuredHeight: float,
-  descenderHeight: float,
-  smoothing: Revery.Font.Smoothing.t,
-  features: list(Revery.Font.Feature.t),
-};
+[@deriving show({with_path: false})]
+type font =
+  Oni_Core.Font.t = {
+    fontFamily: [@opaque] Revery.Font.Family.t,
+    fontSize: float,
+    measuredWidth: float,
+    measuredHeight: float,
+    descenderHeight: float,
+    smoothing: [@opaque] Revery.Font.Smoothing.t,
+    features: [@opaque] list(Revery.Font.Feature.t),
+  };
 
 let toString: font => string;
 
