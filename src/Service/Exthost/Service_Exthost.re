@@ -404,4 +404,8 @@ module Sub = {
   let activeEditor = (~activeEditorId, ~client) => {
     ActiveEditorSubscription.create({activeEditorId, client});
   };
+
+  let definition = (~buffer, ~position, ~toMsg, client) => {
+    Isolinear.Sub.none;
+  }
 };
