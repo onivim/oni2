@@ -140,6 +140,7 @@ module Internal = {
       let characterWidth =
         getCharacterWidth(~indentation=cache.indentation, uchar);
       Skia.Paint.setTypeface(paint, typeface);
+      Skia.Paint.setTextSize(paint, cache.font.fontSize);
 
       // When the character is a tab, we have to make sure
       // we offset the correct amount.
@@ -187,8 +188,6 @@ module Internal = {
       let glyphStrings: ref(list((Skia.Typeface.t, string))) =
         ref(cache.glyphStrings);
       let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
-
-      Skia.Paint.setTextSize(paint, cache.font.fontSize);
 
       while (i^ <= index && byte^ < len && glyphStrings^ != []) {
         let (uchar, offset) =
