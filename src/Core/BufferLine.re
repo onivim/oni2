@@ -158,7 +158,7 @@ module Internal = {
         ref(cache.glyphStrings);
       let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
 
-      while (i^ <= index && byte^ < len) {
+      while (i^ <= index && byte^ < len && glyphStrings^ != []) {
         let (uchar, offset) =
           ZedBundled.unsafe_extract_next(cache.raw, byte^);
 
@@ -178,7 +178,8 @@ module Internal = {
 
         Log.debugf(m =>
           m(
-            "resolveTo loop: glyphStringByte : %d, pixelPosition : %f, glyphNumber : %d",
+            "resolveTo loop: uchar : %s, glyphStringByte : %d, pixelPosition : %f, glyphNumber : %d",
+            Zed_utf8.singleton(uchar),
             glyphStringByte^,
             pixelPosition^,
             getGlyphNumber(),
