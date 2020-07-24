@@ -129,7 +129,18 @@ module Internal = {
       let characterWidth =
         getCharacterWidth(~indentation=cache.indentation, uchar);
       Skia.Paint.setTypeface(paint, typeface);
-      let pixelWidth = Skia.Paint.measureText(paint, substr, None);
+      
+      // When the character is a tab, we have to make sure
+      // we offset the correct amount.
+      let pixelWidth =
+        if (Uchar.equal(uchar, tab)) {
+          Skia.Paint.setTextEncoding(paint, Utf8);
+          let spaceSize = Skia.Paint.measureText(paint, "  ", None);
+          Skia.Paint.setTextEncoding(paint, GlyphId);
+          float(cache.indentation.size) *. spaceSize;
+        } else {
+          Skia.Paint.measureText(paint, substr, None);
+        };
       MeasurementsCache.add(
         (typeface, uchar),
         pixelWidth,
