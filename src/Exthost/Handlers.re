@@ -78,7 +78,8 @@ let handlers =
     main(
       ~handler=Msg.Configuration.handle,
       ~mapper=msg => Msg.Configuration(msg),
-      "MainThreadConfiguration"),
+      "MainThreadConfiguration",
+    ),
     main(
       ~handler=Msg.Console.handle,
       ~mapper=msg => Msg.Console(msg),

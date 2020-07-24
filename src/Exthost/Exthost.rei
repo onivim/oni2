@@ -625,14 +625,14 @@ module Configuration: {
   };
 
   module Target: {
-    type t = 
-    | User
-    | UserLocal
-    | UserRemote
-    | Workspace
-    | WorkspaceFolder
-    | Default
-    | Memory;
+    type t =
+      | User
+      | UserLocal
+      | UserRemote
+      | Workspace
+      | WorkspaceFolder
+      | Default
+      | Memory;
 
     let toInt: t => int;
     let ofInt: int => option(t);
@@ -640,7 +640,7 @@ module Configuration: {
 
     let encode: Json.encoder(t);
     let decode: Json.decoder(t);
-  }
+  };
 
   module Overrides: {
     type t = {
@@ -1015,19 +1015,19 @@ module Msg: {
   module Configuration: {
     [@deriving show]
     type msg =
-    | UpdateConfigurationOption({
-      target: option(Configuration.Target.t),
-      key: string,
-      value: Yojson.Safe.t,
-      overrides: option(Configuration.Overrides.t),
-      scopeToLanguage: bool,
-    })
-    | RemoveConfigurationOption({
-      target: option(Configuration.Target.t),
-      key: string,
-      overrides: option(Configuration.Overrides.t),
-      scopeToLanguage: bool,
-    })
+      | UpdateConfigurationOption({
+          target: option(Configuration.Target.t),
+          key: string,
+          value: Yojson.Safe.t,
+          overrides: option(Configuration.Overrides.t),
+          scopeToLanguage: bool,
+        })
+      | RemoveConfigurationOption({
+          target: option(Configuration.Target.t),
+          key: string,
+          overrides: option(Configuration.Overrides.t),
+          scopeToLanguage: bool,
+        });
   };
 
   module Console: {

@@ -13,10 +13,7 @@ module Internal = {
 module Decode = {
   open Json.Decode;
 
-  let bool = one_of([
-    ("bool", bool),
-    ("false", succeed(false))
-  ]);
+  let bool = one_of([("bool", bool), ("false", succeed(false))]);
 
   let int =
     one_of([
@@ -148,53 +145,91 @@ module Configuration = {
   [@deriving show]
   type msg =
     | UpdateConfigurationOption({
-      target: option(ExtConfig.Target.t),
-      key: string,
-      value: Yojson.Safe.t,
-      overrides: option(ExtConfig.Overrides.t),
-      scopeToLanguage: bool,
-    })
+        target: option(ExtConfig.Target.t),
+        key: string,
+        value: Yojson.Safe.t,
+        overrides: option(ExtConfig.Overrides.t),
+        scopeToLanguage: bool,
+      })
     | RemoveConfigurationOption({
-      target: option(ExtConfig.Target.t),
-      key: string,
-      overrides: option(ExtConfig.Overrides.t),
-      scopeToLanguage: bool,
-    });
+        target: option(ExtConfig.Target.t),
+        key: string,
+        overrides: option(ExtConfig.Overrides.t),
+        scopeToLanguage: bool,
+      });
 
   let handle = (method, args: Yojson.Safe.t) => {
     Base.Result.Let_syntax.(
       switch (method, args) {
-      | ("$updateConfigurationOption", `List([
-        targetJson,
-        `String(key),
-        valueJson,
-        overridesJson,
-        scopeToLanguageJson,
-      ])) => {
+      | (
+          "$updateConfigurationOption",
+          `List([
+            targetJson,
+            `String(key),
+            valueJson,
+            overridesJson,
+            scopeToLanguageJson,
+          ]),
+        ) =>
+        let%bind target =
+          targetJson
+          |> Internal.decode_value(
+               Json.Decode.(nullable(ExtConfig.Target.decode)),
+             );
 
-        let%bind target = targetJson |> Internal.decode_value(
-          Json.Decode.(nullable(ExtConfig.Target.decode))
+        let%bind overrides =
+          overridesJson
+          |> Internal.decode_value(
+               Json.Decode.(nullable(ExtConfig.Overrides.decode)),
+             );
+
+        let%bind scopeToLanguage =
+          scopeToLanguageJson |> Internal.decode_value(Decode.bool);
+        Ok(
+          UpdateConfigurationOption({
+            target,
+            key,
+            value: valueJson,
+            overrides,
+            scopeToLanguage,
+          }),
         );
 
-        let%bind overrides = overridesJson |> Internal.decode_value(
-          Json.Decode.(nullable(ExtConfig.Overrides.decode))
-        );
+      | (
+          "$removeConfigurationOption",
+          `List([
+            targetJson,
+            `String(key),
+            overridesJson,
+            scopeToLanguageJson,
+          ]),
+        ) =>
+        let%bind target =
+          targetJson
+          |> Internal.decode_value(
+               Json.Decode.(nullable(ExtConfig.Target.decode)),
+             );
 
-        let%bind scopeToLanguage = scopeToLanguageJson |> Internal.decode_value(
-          Decode.bool
+        let%bind overrides =
+          overridesJson
+          |> Internal.decode_value(
+               Json.Decode.(nullable(ExtConfig.Overrides.decode)),
+             );
+
+        let%bind scopeToLanguage =
+          scopeToLanguageJson |> Internal.decode_value(Decode.bool);
+        Ok(
+          RemoveConfigurationOption({
+            target,
+            key,
+            overrides,
+            scopeToLanguage,
+          }),
         );
-        Ok(UpdateConfigurationOption({
-          target,
-          key,
-          value: valueJson,
-          overrides,
-          scopeToLanguage,
-        }));
-        
+      | _ => Error("Unhandled Configuration method: " ++ method)
       }
-     | _ => Error("Unhandled Configuration method: " ++ method);
-     })
-     };
+    );
+  };
 };
 
 module Console = {
