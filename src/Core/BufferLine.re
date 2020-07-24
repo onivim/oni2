@@ -228,7 +228,7 @@ module Internal = {
 };
 
 let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
-  let Font.{fontFamily, features, smoothing, fontSize, _} = font;
+  let Font.{fontFamily, features, _} = font;
 
   // We assume that the whoever is requesting the buffer has verified
   // that the font is resolvable.
