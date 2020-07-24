@@ -1,23 +1,43 @@
+open EditorCoreTypes;
+
 type model = {
   codeLens: CodeLens.model,
   definition: Definition.model,
   rename: Rename.model,
+  references: References.model,
 };
 
 let initial = {
   codeLens: CodeLens.initial,
   definition: Definition.initial,
   rename: Rename.initial,
+  references: References.initial,
 };
 
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
   | Definition(Definition.msg)
+  | References(References.msg)
   | Rename(Rename.msg)
   | CodeLens(CodeLens.msg)
   | KeyPressed(string)
   | Pasted(string);
+
+type outmsg =
+  | Nothing
+  | OpenFile({
+      filePath: string,
+      location: option(Location.t),
+    })
+  | Effect(Isolinear.Effect.t(msg));
+
+let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
+  f =>
+    fun
+    | Outmsg.Nothing => Nothing
+    | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
+    | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -26,9 +46,7 @@ module Msg = {
   let pasted = key => Pasted(key);
 };
 
-include Common;
-
-let update = (msg, model) =>
+let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
   switch (msg) {
   | KeyPressed(_)
   | Pasted(_) => (model, Nothing)
@@ -41,10 +59,16 @@ let update = (msg, model) =>
       Definition.register(~handle, ~selector, model.definition);
     ({...model, definition: definition'}, Nothing);
 
+  | Exthost(RegisterReferenceSupport({handle, selector})) =>
+    let references' =
+      References.register(~handle, ~selector, model.references);
+    ({...model, references: references'}, Nothing);
+
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         definition: Definition.unregister(~handle, model.definition),
+        references: References.unregister(~handle, model.references),
         rename: Rename.unregister(~handle, model.rename),
       },
       Nothing,
@@ -60,11 +84,29 @@ let update = (msg, model) =>
   | Definition(definitionMsg) =>
     let (definition', outmsg) =
       Definition.update(definitionMsg, model.definition);
-    ({...model, definition: definition'}, outmsg);
+    (
+      {...model, definition: definition'},
+      outmsg |> map(msg => Definition(msg)),
+    );
+
+  | References(referencesMsg) =>
+    let (references', outmsg) =
+      References.update(
+        ~maybeBuffer,
+        ~cursorLocation,
+        ~client,
+        referencesMsg,
+        model.references,
+      );
+
+    (
+      {...model, references: references'},
+      outmsg |> map(msg => References(msg)),
+    );
 
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
-    ({...model, rename: rename'}, outmsg);
+    ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
   };
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
@@ -80,6 +122,10 @@ module Contributions = {
     @ (
       Definition.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Definition(msg)))
+    )
+    @ (
+      References.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => References(msg)))
     );
 
   let contextKeys =
