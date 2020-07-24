@@ -75,7 +75,10 @@ let handlers =
       "MainThreadCommands",
     ),
     mainNotImplemented("MainThreadComments"),
-    mainNotImplemented("MainThreadConfiguration"),
+    main(
+      ~handler=Msg.Configuration.handle,
+      ~mapper=msg => Msg.Configuration(msg),
+      "MainThreadConfiguration"),
     main(
       ~handler=Msg.Console.handle,
       ~mapper=msg => Msg.Console(msg),

@@ -635,7 +635,7 @@ module Configuration: {
     | Memory;
 
     let toInt: t => int;
-    let fromInt: int => option(t);
+    let ofInt: int => option(t);
     let toString: t => string;
 
     let encode: Json.encoder(t);
@@ -1010,6 +1010,24 @@ module Msg: {
           retry: bool,
         })
       | GetCommands;
+  };
+
+  module Configuration: {
+    [@deriving show]
+    type msg =
+    | UpdateConfigurationOption({
+      target: option(Configuration.Target.t),
+      key: string,
+      value: Yojson.Safe.t,
+      overrides: option(Configuration.Overrides.t),
+      scopeToLanguage: bool,
+    })
+    | RemoveConfigurationOption({
+      target: option(Configuration.Target.t),
+      key: string,
+      overrides: option(Configuration.Overrides.t),
+      scopeToLanguage: bool,
+    })
   };
 
   module Console: {
@@ -1427,6 +1445,7 @@ module Msg: {
     | Ready
     | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
+    | Configuration(Configuration.msg)
     | Console(Console.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)

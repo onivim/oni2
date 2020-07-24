@@ -1,4 +1,5 @@
 module ExtCommand = Command;
+module ExtConfig = Configuration;
 open Oni_Core;
 
 module Internal = {
@@ -11,6 +12,11 @@ module Internal = {
 
 module Decode = {
   open Json.Decode;
+
+  let bool = one_of([
+    ("bool", bool),
+    ("false", succeed(false))
+  ]);
 
   let int =
     one_of([
@@ -136,6 +142,59 @@ module Commands = {
     | _ => Error("Unhandled method: " ++ method)
     };
   };
+};
+
+module Configuration = {
+  [@deriving show]
+  type msg =
+    | UpdateConfigurationOption({
+      target: option(ExtConfig.Target.t),
+      key: string,
+      value: Yojson.Safe.t,
+      overrides: option(ExtConfig.Overrides.t),
+      scopeToLanguage: bool,
+    })
+    | RemoveConfigurationOption({
+      target: option(ExtConfig.Target.t),
+      key: string,
+      overrides: option(ExtConfig.Overrides.t),
+      scopeToLanguage: bool,
+    });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method, args) {
+      | ("$updateConfigurationOption", `List([
+        targetJson,
+        `String(key),
+        valueJson,
+        overridesJson,
+        scopeToLanguageJson,
+      ])) => {
+
+        let%bind target = targetJson |> Internal.decode_value(
+          Json.Decode.(nullable(ExtConfig.Target.decode))
+        );
+
+        let%bind overrides = overridesJson |> Internal.decode_value(
+          Json.Decode.(nullable(ExtConfig.Overrides.decode))
+        );
+
+        let%bind scopeToLanguage = scopeToLanguageJson |> Internal.decode_value(
+          Decode.bool
+        );
+        Ok(UpdateConfigurationOption({
+          target,
+          key,
+          value: valueJson,
+          overrides,
+          scopeToLanguage,
+        }));
+        
+      }
+     | _ => Error("Unhandled Configuration method: " ++ method);
+     })
+     };
 };
 
 module Console = {
@@ -1472,6 +1531,7 @@ type t =
   | Ready
   | Clipboard(Clipboard.msg)
   | Commands(Commands.msg)
+  | Configuration(Configuration.msg)
   | Console(Console.msg)
   | DebugService(DebugService.msg)
   | Decorations(Decorations.msg)

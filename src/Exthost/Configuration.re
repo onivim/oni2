@@ -91,6 +91,7 @@ let create =
 // Must be kept in-sync with:
 // https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/platform/configuration/common/configuration.ts#L30
 module Target = {
+  [@deriving show]
   type t = 
   | User
   | UserLocal
@@ -138,6 +139,7 @@ module Target = {
 };
 
 module Overrides = {
+    [@deriving show]
     type t = {
       overrideIdentifier: option(string),
       resource: option(Oni_Core.Uri.t),
