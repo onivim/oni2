@@ -3,6 +3,22 @@ open Exthost.Extension;
 
 include Model;
 
+module Msg = {
+  let exthost = msg => Exthost(msg);
+  let discovered = extensions => Discovered(extensions);
+  let keyPressed = key => KeyPressed(key);
+  let pasted = key => Pasted(key);
+};
+
+module Persistence = {
+  type t = Yojson.Safe.t;
+  let initial = `Assoc([]);
+
+  let codec = Oni_Core.Persistence.Schema.value;
+  let getValue = (~shared, ~key, model) => initial;
+  let get = (~shared, model) => initial;
+};
+
 let all = ({extensions, _}) => extensions;
 let activatedIds = ({activatedIds, _}) => activatedIds;
 

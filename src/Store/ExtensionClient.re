@@ -221,6 +221,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
+      | Storage(msg) =>
+        // TODO: send msg
+        Lwt.return(Reply.okEmpty)
+
       | LanguageFeatures(
           RegisterDocumentSymbolProvider({handle, selector, label}),
         ) =>
@@ -275,21 +279,8 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         dispatch(DecorationsChanged({handle, uris}));
         Lwt.return(Reply.okEmpty);
 
-      | ExtensionService(
-          ExtensionActivationError({extensionId, errorMessage}),
-        ) =>
-        Log.errorf(m =>
-          m(
-            "Extension '%s' failed to activate: %s",
-            extensionId,
-            errorMessage,
-          )
-        );
-        Lwt.return(Reply.okEmpty);
-      | ExtensionService(DidActivateExtension({extensionId, _})) =>
-        dispatch(
-          Actions.Extensions(Feature_Extensions.Activated(extensionId)),
-        );
+      | ExtensionService(msg) =>
+        dispatch(Actions.Extensions(Feature_Extensions.Msg.exthost(msg)));
         Lwt.return(Reply.okEmpty);
 
       | LanguageFeatures(

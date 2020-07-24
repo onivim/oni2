@@ -3,7 +3,7 @@ open Exthost.Extension;
 
 [@deriving show({with_path: false})]
 type msg =
-  | Activated(string /* id */)
+  | Exthost(Exthost.Msg.ExtensionService.msg)
   | Discovered([@opaque] list(Scanner.ScanResult.t))
   | ExecuteCommand({
       command: string,
@@ -49,6 +49,8 @@ type model = {
   extensionsFolder: option(string),
   pendingInstalls: list(string),
   pendingUninstalls: list(string),
+  globalValues: Yojson.Safe.t,
+  localValues: Yojson.Safe.t,
 };
 
 let initial = (~extensionsFolder) => {
@@ -59,6 +61,8 @@ let initial = (~extensionsFolder) => {
   extensionsFolder,
   pendingInstalls: [],
   pendingUninstalls: [],
+  globalValues: `Assoc([]),
+  localValues: `Assoc([]),
 };
 
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
@@ -175,7 +179,20 @@ let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
-  | Activated(id) => (Internal.markActivated(id, model), Nothing)
+  | Exthost(msg) =>
+    Exthost.(
+      switch (msg) {
+      // TODO: Notification?
+      | ExtensionActivationError(_) => (model, Nothing)
+      | DidActivateExtension({extensionId, _}) => (
+          Internal.markActivated(extensionId, model),
+          Nothing,
+        )
+      | _ =>
+        // TODO: Additional methods
+        (model, Nothing)
+      }
+    )
   | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
   | ExecuteCommand({command, arguments}) => (
       model,
