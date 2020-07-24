@@ -202,8 +202,21 @@ let findFirst = (~buffer, ~line, ~index, ~pairs) => {
 };
 
 module Test = {
+  let font =
+    Oni_Core.Font.{
+      fontFamily: Revery.Font.Family.defaultMono,
+      fontSize: 12.0,
+      measuredWidth: 0.0,
+      measuredHeight: 0.0,
+      descenderHeight: 0.0,
+      smoothing: Revery_Font.Smoothing.default,
+      features: [],
+    };
   let create = lines =>
-    lines |> Array.of_list |> Oni_Core.Buffer.ofLines |> EditorBuffer.ofBuffer;
+    lines
+    |> Array.of_list
+    |> Oni_Core.Buffer.ofLines(~font)
+    |> EditorBuffer.ofBuffer;
   let%test_module "findFirst" =
     (module
      {
