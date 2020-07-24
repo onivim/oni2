@@ -91,7 +91,7 @@ let make =
     | `Custom(view) => view
     };
 
-  <Sneakable style=Styles.clickable onClick>
+  <Sneakable sneakId="menuItem" style=Styles.clickable onClick>
     <View
       onMouseOver={_ => onMouseOver()}
       style={Styles.container(~theme, ~isFocused)}>

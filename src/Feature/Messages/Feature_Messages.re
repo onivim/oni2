@@ -236,6 +236,7 @@ module View = {
         </View>
         <View style=Styles.iconContainer>
           <Sneakable
+            sneakId={string_of_int(messageId)}
             onClick={() => dispatch(CancelClicked({messageId: messageId}))}>
             <Oni_Components.Codicon
               color={Colors.Notifications.foreground.from(theme)}

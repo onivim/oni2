@@ -70,6 +70,7 @@ let%component make =
   let foreground = Colors.Button.foreground.from(theme);
 
   <Sneakable
+    sneakId=label
     onClick
     onMouseEnter={_ => {dispatch(LocalState.MouseOver)}}
     onMouseLeave={_ => {dispatch(LocalState.MouseOut)}}

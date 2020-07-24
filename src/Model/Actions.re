@@ -71,11 +71,6 @@ type t =
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
-  | DefinitionAvailable(
-      int,
-      Location.t,
-      [@opaque] LanguageFeatures.DefinitionResult.t,
-    )
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
@@ -90,7 +85,6 @@ type t =
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | HoverShow
   | ContextMenuOverlayClicked
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))

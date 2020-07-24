@@ -55,6 +55,7 @@ module Parts = {
         editorDispatch(CursorsChanged([cursor]));
 
       <EditorSurface
+        key={editor |> Feature_Editor.Editor.key}
         dispatch=editorDispatch
         ?backgroundColor
         ?foregroundColor
@@ -72,7 +73,7 @@ module Parts = {
         diagnostics={state.diagnostics}
         completions={state.completions}
         tokenTheme={state.tokenTheme}
-        definition={state.definition}
+        languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
         config={Feature_Configuration.resolver(state.config)}
         renderOverlays

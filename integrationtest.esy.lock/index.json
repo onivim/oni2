@@ -1,5 +1,5 @@
 {
-  "checksum": "8684670d9fe4a421cdf4db9335955bf2",
+  "checksum": "c3b35fe00779625b0419c027b06cb062",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -118,7 +118,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#53e36af@d41d8cd9",
+        "revery@github:revery-ui/revery#c26cb3a@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
@@ -126,13 +126,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#53e36af@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#53e36af@d41d8cd9",
+    "revery@github:revery-ui/revery#c26cb3a@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#c26cb3a@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#53e36af",
+      "version": "github:revery-ui/revery#c26cb3a",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#53e36af" ]
+        "source": [ "github:revery-ui/revery#c26cb3a" ]
       },
       "overrides": [],
       "dependencies": [
@@ -443,14 +443,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.53@d41d8cd9": {
-      "id": "libvim@8.10869.53@d41d8cd9",
+    "libvim@8.10869.54@d41d8cd9": {
+      "id": "libvim@8.10869.54@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.53",
+      "version": "8.10869.54",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.53.tgz#sha1:f12cd617120a88385672d0e5f426c7a9e383d01d"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.54.tgz#sha1:b2a7ed95377207da7d62b0cc67f4aa3aec35bf80"
         ]
       },
       "overrides": [],
@@ -1011,13 +1011,13 @@
       "overrides": [ "integrationtest.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#3cb342f@d41d8cd9",
-        "revery@github:revery-ui/revery#53e36af@d41d8cd9",
+        "revery@github:revery-ui/revery#c26cb3a@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-tree-sitter@1.0.1001@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.53@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.54@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
         "esy-sdl2@2.0.10008@d41d8cd9",

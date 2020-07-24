@@ -14,7 +14,6 @@ open Core.Utility;
 
 module Zed_utf8 = Core.ZedBundled;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
-module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
 
@@ -78,23 +77,32 @@ let start =
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
-      Log.debug("Goto definition requested");
+      Log.info("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      let editor = Feature_Layout.activeEditor(state.layout);
-
       let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(editor);
-        Definition.getAt(id, position, state.definition)
-        |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
+        Feature_LanguageSupport.Definition.get(
+          ~bufferId=id,
+          state.languageSupport,
+        )
+        |> Option.map((definitionResult: Exthost.DefinitionLink.t) => {
+             let {startLineNumber, startColumn, _}: Exthost.OneBasedRange.t =
+               definitionResult.range;
+
+             let position =
+               Location.{
+                 line: Index.fromOneBased(startLineNumber),
+                 column: Index.fromOneBased(startColumn),
+               };
+
              Actions.OpenFileByPath(
                definitionResult.uri |> Core.Uri.toFileSystemPath,
                None,
-               Some(definitionResult.location),
-             )
+               Some(position),
+             );
            });
       };
 
@@ -410,25 +418,33 @@ let start =
   let checkCommandLineCompletions = () => {
     Log.debug("checkCommandLineCompletions");
 
-    let completions = Vim.CommandLine.getCompletions();
+    let position = Vim.CommandLine.getPosition();
+    Vim.CommandLine.getText()
+    |> Option.iter(commandStr =>
+         if (position == String.length(commandStr)) {
+           let completions = Vim.CommandLine.getCompletions();
 
-    Log.debugf(m => m("  got %n completions.", Array.length(completions)));
+           Log.debugf(m =>
+             m("  got %n completions.", Array.length(completions))
+           );
 
-    let items =
-      Array.map(
-        name =>
-          Actions.{
-            name,
-            category: None,
-            icon: None,
-            command: () => Noop,
-            highlight: [],
-            handle: None,
-          },
-        completions,
-      );
+           let items =
+             Array.map(
+               name =>
+                 Actions.{
+                   name,
+                   category: None,
+                   icon: None,
+                   command: () => Noop,
+                   highlight: [],
+                   handle: None,
+                 },
+               completions,
+             );
 
-    dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+           dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+         }
+       );
   };
 
   let _: unit => unit =

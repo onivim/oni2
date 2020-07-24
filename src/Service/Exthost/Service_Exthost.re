@@ -216,6 +216,24 @@ module Internal = {
        );
 };
 
+// This is a temporary helper to avoid dispatching after a subscription is disposed
+// Really, this needs to be baked into isolinear - we should not ignore dispatches that
+// occur in the context of a disposed description. However - at this point in this release,
+// it's risky, so we'll scope it to just some of the new subscriptions.
+module Latch = {
+  type state =
+    | Open
+    | Closed;
+
+  type t = ref(state);
+
+  let create = () => ref(Open);
+
+  let isOpen = latch => latch^ == Open;
+
+  let close = latch => latch := Closed;
+};
+
 // SUBSCRIPTIONS
 
 module Sub = {
@@ -403,5 +421,80 @@ module Sub = {
 
   let activeEditor = (~activeEditorId, ~client) => {
     ActiveEditorSubscription.create({activeEditorId, client});
+  };
+
+  type definitionParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    position: Exthost.OneBasedPosition.t,
+  };
+
+  let idFromBufferPosition = (~handle, ~buffer, ~position, name) => {
+    Exthost.OneBasedPosition.(
+      Printf.sprintf(
+        "%d-%d-%d-%d.%s",
+        handle,
+        Oni_Core.Buffer.getId(buffer),
+        position.lineNumber,
+        position.column,
+        name,
+      )
+    );
+  };
+
+  module DefinitionSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(Exthost.DefinitionLink.t);
+      type nonrec params = definitionParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.DefinitionSubscription";
+      let id = ({handle, buffer, position, _}) =>
+        idFromBufferPosition(
+          ~handle,
+          ~buffer,
+          ~position,
+          "DefinitionSubscription",
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideDefinition(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, definitionLinks =>
+          if (Latch.isOpen(latch)) {
+            dispatch(definitionLinks);
+          }
+        );
+
+        Lwt.on_failure(promise, _ =>
+          if (Latch.isOpen(latch)) {
+            dispatch([]);
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+
+  let definition = (~handle, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    DefinitionSubscription.create({handle, buffer, position, client})
+    |> Isolinear.Sub.map(toMsg);
   };
 };

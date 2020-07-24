@@ -31,6 +31,7 @@ let create:
   t;
 let copy: t => t;
 
+let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
 let getBufferId: t => int;
 let getTopVisibleLine: t => int;

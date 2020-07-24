@@ -7,42 +7,159 @@ open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 
+type provider = {
+  handle: int,
+  selector: Exthost.DocumentSelector.t,
+};
+
+[@deriving show]
 type definition = {
   bufferId: int,
-  // The position the hover was requested
-  requestPosition: Location.t,
-  // result
-  result: option(LanguageFeatures.DefinitionResult.t),
+  requestLocation: Location.t,
+  definition: Exthost.DefinitionLink.t,
 };
 
-type t = option(definition);
-
-let empty: t = None;
-
-let getAt = (bufferId, position, definition: t) => {
-  let getHover = definition =>
-    if (bufferId === definition.bufferId
-        && Location.equals(position, definition.requestPosition)) {
-      definition.result;
-    } else {
-      None;
-    };
-
-  Option.bind(definition, getHover);
+type model = {
+  maybeDefinition: option(definition),
+  providers: list(provider),
 };
 
-let getRange = (definition: t) => {
-  definition
-  |> OptionEx.flatMap(def => def.result)
-  |> OptionEx.flatMap((res: LanguageFeatures.DefinitionResult.t) =>
-       res.originRange
+[@deriving show]
+type command =
+  | GotoDefinition;
+
+[@deriving show]
+type msg =
+  | DefinitionAvailable(definition)
+  | DefinitionNotAvailable
+  | Command(command);
+
+let initial = {maybeDefinition: None, providers: []};
+
+let update = (msg, model) =>
+  switch (msg) {
+  | DefinitionNotAvailable => (
+      {...model, maybeDefinition: None},
+      Common.Nothing,
+    )
+  | DefinitionAvailable(definition) => (
+      {...model, maybeDefinition: Some(definition)},
+      Common.Nothing,
+    )
+  | Command(GotoDefinition) =>
+    let outmsg =
+      switch (model.maybeDefinition) {
+      | None => Common.Nothing
+      | Some({definition, _}) =>
+        let position =
+          Location.{
+            line: Index.fromOneBased(definition.range.startLineNumber),
+            column: Index.fromOneBased(definition.range.startColumn),
+          };
+        Common.OpenFile({
+          filePath: definition.uri |> Oni_Core.Uri.toFileSystemPath,
+          location: Some(position),
+        });
+      };
+    (model, outmsg);
+  };
+
+let register = (~handle, ~selector, model) => {
+  ...model,
+  providers: [{handle, selector}, ...model.providers],
+};
+
+let unregister = (~handle: int, model) => {
+  ...model,
+  providers: model.providers |> List.filter(prov => prov.handle != handle),
+};
+
+let get = (~bufferId as currentBufferId, {maybeDefinition, _}) => {
+  maybeDefinition
+  |> OptionEx.flatMap(({bufferId, definition, _}) =>
+       if (currentBufferId == bufferId) {
+         Some(definition);
+       } else {
+         None;
+       }
      );
 };
 
-let isAvailable = (bufferId, position, definition: t) => {
-  getAt(bufferId, position, definition) != None;
+let getAt = (~bufferId as currentBufferId, ~range, {maybeDefinition, _}) => {
+  maybeDefinition
+  |> OptionEx.flatMap(({bufferId, definition, requestLocation}) =>
+       if (bufferId == currentBufferId
+           && Range.contains(requestLocation, range)) {
+         Some(definition);
+       } else {
+         None;
+       }
+     );
 };
 
-let create = (bufferId, requestPosition, result) => {
-  Some({bufferId, requestPosition, result: Some(result)});
+let handleResponse =
+    (
+      ~bufferId: int,
+      ~location,
+      definitionLinks: list(Exthost.DefinitionLink.t),
+    ) => {
+  switch (definitionLinks) {
+  | [] => DefinitionNotAvailable
+  | [hd, ..._tail] =>
+    DefinitionAvailable({bufferId, definition: hd, requestLocation: location})
+  };
+};
+
+let sub = (~buffer, ~location, ~client, model) => {
+  model.providers
+  |> List.filter_map(({handle, selector}) =>
+       if (Exthost.DocumentSelector.matchesBuffer(~buffer, selector)) {
+         Some(
+           Service_Exthost.Sub.definition(
+             ~handle,
+             ~buffer,
+             ~position=location,
+             ~toMsg=
+               handleResponse(
+                 ~location,
+                 ~bufferId=Oni_Core.Buffer.getId(buffer),
+               ),
+             client,
+           ),
+         );
+       } else {
+         None;
+       }
+     )
+  |> Isolinear.Sub.batch;
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let gotoDefinition =
+    define(
+      ~category="Language",
+      ~title="Go-to Definition",
+      "editor.action.revealDefinition",
+      Command(GotoDefinition),
+    );
+};
+
+module Keybindings = {
+  open Oni_Input.Keybindings;
+
+  let condition = "normalMode" |> WhenExpr.parse;
+
+  let goToDefinition = {
+    key: "<F12>",
+    command: Commands.gotoDefinition.id,
+    condition,
+  };
+};
+
+module Contributions = {
+  let commands = [Commands.gotoDefinition];
+
+  let keybindings = [Keybindings.goToDefinition];
 };

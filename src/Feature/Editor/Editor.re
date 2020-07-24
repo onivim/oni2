@@ -23,8 +23,8 @@ type viewLine = {
 };
 
 [@deriving show]
-// TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
 type t = {
+  key: [@opaque] Brisk_reconciler.Key.t,
   buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
   scrollX: float,
@@ -46,6 +46,7 @@ type t = {
   pixelHeight: int,
 };
 
+let key = ({key, _}) => key;
 let totalViewLines = ({viewLines, _}) => viewLines;
 let selection = ({selection, _}) => selection;
 let setSelection = (~selection, editor) => {...editor, selection};
@@ -113,11 +114,13 @@ let bufferLineCharacterToPixel =
 
 let create = (~config, ~font, ~buffer, ()) => {
   let id = GlobalState.generateId();
+  let key = Brisk_reconciler.Key.create();
 
   let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
 
   {
     editorId: id,
+    key,
     isMinimapEnabled,
     isScrollAnimated: false,
     buffer,
@@ -148,8 +151,9 @@ let create = (~config, ~font, ~buffer, ()) => {
 
 let copy = editor => {
   let id = GlobalState.generateId();
+  let key = Brisk_reconciler.Key.create();
 
-  {...editor, editorId: id};
+  {...editor, key, editorId: id};
 };
 
 type scrollbarMetrics = {

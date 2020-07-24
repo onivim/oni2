@@ -94,4 +94,14 @@ module Sub: {
   let activeEditor:
     (~activeEditorId: string, ~client: Exthost.Client.t) =>
     Isolinear.Sub.t(unit);
+
+  let definition:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: list(Exthost.DefinitionLink.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
 };

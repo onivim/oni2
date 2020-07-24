@@ -134,6 +134,7 @@ module ExtensionId: {
 };
 
 module DefinitionLink: {
+  [@deriving show]
   type t = {
     uri: Uri.t,
     range: OneBasedRange.t,
@@ -164,6 +165,8 @@ module DocumentSelector: {
   type t = list(DocumentFilter.t);
 
   let matches: (~filetype: string, t) => bool;
+
+  let matchesBuffer: (~buffer: Oni_Core.Buffer.t, t) => bool;
 
   let decode: Json.decoder(t);
 };
@@ -1384,6 +1387,13 @@ module Msg: {
       | Dispose({id: int});
   };
 
+  module Window: {
+    [@deriving show]
+    type msg =
+      | GetWindowVisibility
+      | OpenUri({uri: Oni_Core.Uri.t});
+  };
+
   [@deriving show]
   type t =
     | Connected
@@ -1408,6 +1418,7 @@ module Msg: {
     | StatusBar(StatusBar.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
+    | Window(Window.msg)
     | Initialized
     | Disconnected
     | Unhandled

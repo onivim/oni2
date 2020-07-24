@@ -1,3 +1,8 @@
-module Outmsg = {
-  type t = unit;
-};
+open EditorCoreTypes;
+
+type outmsg =
+  | Nothing
+  | OpenFile({
+      filePath: string,
+      location: option(Location.t),
+    });
