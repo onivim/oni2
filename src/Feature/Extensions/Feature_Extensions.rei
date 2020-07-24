@@ -8,36 +8,14 @@ type msg;
 
 module Msg: {
   let exthost: Exthost.Msg.ExtensionService.msg => msg;
+  let storage:
+    (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Storage.msg) => msg;
   let discovered: list(Scanner.ScanResult.t) => msg;
   let keyPressed: string => msg;
   let pasted: string => msg;
+
+  let command: (~command: string, ~arguments: list(Yojson.Safe.t)) => msg;
 };
-//  | Activated(string /* id */)
-//  | Discovered([@opaque] list(Scanner.ScanResult.t))
-//  | ExecuteCommand({
-//      command: string,
-//      arguments: [@opaque] list(Json.t),
-//    })
-//  | KeyPressed(string)
-//  | Pasted(string)
-//  | SearchQueryResults(Service_Extensions.Query.t)
-//  | SearchQueryError(string)
-//  | SearchText(Feature_InputText.msg)
-//  | UninstallExtensionClicked({extensionId: string})
-//  | UninstallExtensionSuccess({extensionId: string})
-//  | UninstallExtensionFailed({
-//      extensionId: string,
-//      errorMsg: string,
-//    })
-//  | InstallExtensionClicked({extensionId: string})
-//  | InstallExtensionSuccess({
-//      extensionId: string,
-//      scanResult: [@opaque] Scanner.ScanResult.t,
-//    })
-//  | InstallExtensionFailed({
-//      extensionId: string,
-//      errorMsg: string,
-//    });
 
 type outmsg =
   | Nothing
@@ -73,8 +51,6 @@ let commands: model => list(Command.t(msg));
 let sub: (~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
 
 module Persistence: {
-  let getValue: (~shared: bool, ~key: string, model) => Yojson.Safe.t;
-
   type t = Yojson.Safe.t;
   let initial: t;
 

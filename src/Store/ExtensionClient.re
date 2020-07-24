@@ -223,7 +223,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
       | Storage(msg) =>
         // TODO: send msg
-        Lwt.return(Reply.okEmpty)
+        let (promise, resolver) = Lwt.task();
+
+        let storageMsg = Feature_Extensions.Msg.storage(~resolver, msg);
+        dispatch(Extensions(storageMsg));
+
+        promise;
 
       | LanguageFeatures(
           RegisterDocumentSymbolProvider({handle, selector, label}),
@@ -279,8 +284,11 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         dispatch(DecorationsChanged({handle, uris}));
         Lwt.return(Reply.okEmpty);
 
-      | ExtensionService(msg) =>
-        dispatch(Actions.Extensions(Feature_Extensions.Msg.exthost(msg)));
+      | ExtensionService(extMsg) =>
+        Log.infof(m => m("ExtensionService: %s", Exthost.Msg.show(msg)));
+        dispatch(
+          Actions.Extensions(Feature_Extensions.Msg.exthost(extMsg)),
+        );
         Lwt.return(Reply.okEmpty);
 
       | LanguageFeatures(

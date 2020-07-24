@@ -4,6 +4,10 @@ open Exthost.Extension;
 [@deriving show({with_path: false})]
 type msg =
   | Exthost(Exthost.Msg.ExtensionService.msg)
+  | Storage({
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+      msg: Exthost.Msg.Storage.msg,
+    })
   | Discovered([@opaque] list(Scanner.ScanResult.t))
   | ExecuteCommand({
       command: string,
@@ -40,6 +44,18 @@ type outmsg =
     })
   | NotifySuccess(string)
   | NotifyFailure(string);
+
+module Effect = {
+  let replySuccess = (~resolver) =>
+    Isolinear.Effect.create(~name="feature.extensions.replySuccess", () => {
+      Lwt.wakeup(resolver, Exthost.Reply.okEmpty)
+    });
+
+  let replyJson = (~resolver, json) =>
+    Isolinear.Effect.create(~name="feature.extensions.replyJson", () => {
+      Lwt.wakeup(resolver, Exthost.Reply.okJson(json))
+    });
+};
 
 type model = {
   activatedIds: list(string),
@@ -166,6 +182,13 @@ let getExtensions = (~category, model) => {
   };
 };
 
+let getPersistedValue = (~shared, ~key, model) => {
+  let store = shared ? model.globalValues : model.localValues;
+  [store]
+  |> Yojson.Safe.Util.filter_member(key)
+  |> (l => List.nth_opt(l, 0));
+};
+
 let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
   if (previousText != newText) {
     if (String.length(newText) == 0) {
@@ -180,20 +203,45 @@ let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
   | Exthost(msg) =>
-    Exthost.(
-      switch (msg) {
-      // TODO: Notification?
-      | ExtensionActivationError(_) => (model, Nothing)
-      | DidActivateExtension({extensionId, _}) => (
-          Internal.markActivated(extensionId, model),
-          Nothing,
-        )
-      | _ =>
-        // TODO: Additional methods
-        (model, Nothing)
-      }
-    )
+    switch (msg) {
+    | ExtensionActivationError(_) /*{extensionId, errorMessage}*/ =>
+      // TODO: Notification + track error!
+      (model, Nothing)
+    | DidActivateExtension({extensionId, _}) => (
+        Internal.markActivated(extensionId, model),
+        Nothing,
+      )
+    | _ =>
+      // TODO: Additional methods
+      (model, Nothing)
+    }
+
+  | Storage({resolver, msg}) =>
+    switch (msg) {
+    | GetValue({shared, key}) =>
+      let value = getPersistedValue(~shared, ~key, model);
+
+      let eff =
+        switch (value) {
+        | None => Effect.replyJson(~resolver, `Null)
+        | Some(json) => Effect.replyJson(~resolver, json)
+        };
+      (model, Effect(eff));
+
+    | SetValue({shared, key, value}) =>
+      let store = shared ? model.globalValues : model.localValues;
+      let store' = Utility.JsonEx.update(key, _ => Some(value), store);
+      let model' =
+        shared
+          ? {...model, globalValues: store'}
+          : {...model, localValues: store'};
+
+      let eff = Effect.replySuccess(~resolver);
+      (model', Effect(eff));
+    }
+
   | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
+
   | ExecuteCommand({command, arguments}) => (
       model,
       Effect(
@@ -204,6 +252,7 @@ let update = (~extHostClient, msg, model) => {
         ),
       ),
     )
+
   | KeyPressed(key) =>
     let previousText = model.searchText |> Feature_InputText.value;
     let searchText' = Feature_InputText.handleInput(~key, model.searchText);
