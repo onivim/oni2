@@ -417,25 +417,33 @@ let start =
   let checkCommandLineCompletions = () => {
     Log.debug("checkCommandLineCompletions");
 
-    let completions = Vim.CommandLine.getCompletions();
+    let position = Vim.CommandLine.getPosition();
+    Vim.CommandLine.getText()
+    |> Option.iter(commandStr =>
+         if (position == String.length(commandStr)) {
+           let completions = Vim.CommandLine.getCompletions();
 
-    Log.debugf(m => m("  got %n completions.", Array.length(completions)));
+           Log.debugf(m =>
+             m("  got %n completions.", Array.length(completions))
+           );
 
-    let items =
-      Array.map(
-        name =>
-          Actions.{
-            name,
-            category: None,
-            icon: None,
-            command: () => Noop,
-            highlight: [],
-            handle: None,
-          },
-        completions,
-      );
+           let items =
+             Array.map(
+               name =>
+                 Actions.{
+                   name,
+                   category: None,
+                   icon: None,
+                   command: () => Noop,
+                   highlight: [],
+                   handle: None,
+                 },
+               completions,
+             );
 
-    dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+           dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+         }
+       );
   };
 
   let _: unit => unit =
