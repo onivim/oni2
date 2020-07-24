@@ -161,6 +161,37 @@ function activate(context) {
         "Quick pick cancelled: " + err);
         })
     }));
+
+    const getValue = (str) => {
+        return str + ":" + (new Date().getTime().toString());
+    };
+
+    cleanup(vscode.commands.registerCommand(
+        'developer.oni.setGlobalMemento',() => {
+            const valueToSet = getValue("oni-dev.global");
+            context.globalState.update("oni-dev.global", valueToSet);
+            vscode.window.showInformationMessage("Set global value: " + valueToSet);
+        }));
+        
+    cleanup(vscode.commands.registerCommand(
+        'developer.oni.setWorkspaceMemento',() => {
+            const valueToSet = getValue("oni-dev.workspace");
+            context.globalState.update("oni-dev.workspace", valueToSet);
+            vscode.window.showInformationMessage("Set workspace value: " + valueToSet);
+        }));
+
+    cleanup(vscode.commands.registerCommand(
+        'developer.oni.getGlobalMemento',() => {
+            const value = context.globalState.get("oni-dev.global");
+            vscode.window.showInformationMessage("Got global value: " + value);
+        }));
+
+    cleanup(vscode.commands.registerCommand(
+        'developer.oni.getWorkspaceMemento',() => {
+            context.globalState.get("oni-dev.workspace").then((value) => {
+            vscode.window.showInformationMessage("Got workspace value: " + value);
+            })
+        }));
     
     function createResourceUri(relativePath) {
         const absolutePath = path.join(vscode.workspace.rootPath, relativePath);
