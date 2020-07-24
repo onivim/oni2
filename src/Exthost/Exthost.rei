@@ -624,6 +624,33 @@ module Configuration: {
     let toString: t => string;
   };
 
+  module Target: {
+    type t = 
+    | User
+    | UserLocal
+    | UserRemote
+    | Workspace
+    | WorkspaceFolder
+    | Default
+    | Memory;
+
+    let toInt: t => int;
+    let fromInt: int => option(t);
+    let toString: t => string;
+
+    let encode: Json.encoder(t);
+    let decode: Json.decoder(t);
+  }
+
+  module Overrides: {
+    type t = {
+      overrideIdentifier: option(string),
+      resource: option(Oni_Core.Uri.t),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
   type t;
 
   let to_yojson: t => Json.t;
