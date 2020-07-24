@@ -65,13 +65,16 @@ module Internal = {
 
   // We want to cache measurements tied to typefaces and characters, since text measuring is expensive
   module SkiaTypefaceUcharHashable = {
-    type t = (Skia.Typeface.t, Uchar.t);
+    // This is of the form typeface, size, uchar
+    type t = (Skia.Typeface.t, float, Uchar.t);
 
-    let equal = ((tf1, uc1), (tf2, uc2)) =>
-      skiaTypefaceEqual(tf1, tf2) && Uchar.equal(uc1, uc2);
+    let equal = ((tf1, s1, uc1), (tf2, s2, uc2)) =>
+      skiaTypefaceEqual(tf1, tf2) && s1 == s2 && Uchar.equal(uc1, uc2);
 
-    let hash = ((tf, uc)) =>
-      Int32.to_int(Skia.Typeface.getUniqueID(tf)) + Uchar.hash(uc);
+    let hash = ((tf, s, uc)) =>
+      Int32.to_int(Skia.Typeface.getUniqueID(tf))
+      + Uchar.hash(uc)
+      + Hashtbl.hash(s);
   };
 
   module MeasureResult = {
@@ -102,9 +105,17 @@ module Internal = {
 
   // The measure result is of the form (characterWidth, pixelWidth)
   let measure = (~typeface: Skia.Typeface.t, ~cache: t, substr, uchar) =>
-    switch (MeasurementsCache.find((typeface, uchar), measurementsCache)) {
+    switch (
+      MeasurementsCache.find(
+        (typeface, cache.font.fontSize, uchar),
+        measurementsCache,
+      )
+    ) {
     | Some(pixelWidth) =>
-      MeasurementsCache.promote((typeface, uchar), measurementsCache);
+      MeasurementsCache.promote(
+        (typeface, cache.font.fontSize, uchar),
+        measurementsCache,
+      );
       Log.debugf(m =>
         m(
           "MeasurementCache : Hit! Typeface : %s, Uchar: %s (%d)",
@@ -129,7 +140,7 @@ module Internal = {
       let characterWidth =
         getCharacterWidth(~indentation=cache.indentation, uchar);
       Skia.Paint.setTypeface(paint, typeface);
-      
+
       // When the character is a tab, we have to make sure
       // we offset the correct amount.
       let pixelWidth =
@@ -142,7 +153,7 @@ module Internal = {
           Skia.Paint.measureText(paint, substr, None);
         };
       MeasurementsCache.add(
-        (typeface, uchar),
+        (typeface, cache.font.fontSize, uchar),
         pixelWidth,
         measurementsCache,
       );
@@ -176,6 +187,8 @@ module Internal = {
       let glyphStrings: ref(list((Skia.Typeface.t, string))) =
         ref(cache.glyphStrings);
       let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
+
+      Skia.Paint.setTextSize(paint, cache.font.fontSize);
 
       while (i^ <= index && byte^ < len && glyphStrings^ != []) {
         let (uchar, offset) =
