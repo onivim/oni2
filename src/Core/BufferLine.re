@@ -75,8 +75,7 @@ module Internal = {
   };
 
   module MeasureResult = {
-    // The measure result is of the form (characterWidth, pixelWidth)
-    type t = (int, float);
+    type t = float;
 
     let weight = _ => 1;
   };
@@ -91,9 +90,20 @@ module Internal = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
 
+  let getCharacterWidth = (~indentation: IndentationSettings.t, uchar) =>
+    if (Uchar.equal(uchar, tab)) {
+      indentation.tabSize;
+    } else {
+      // Some unicode codepoints are double width, like many CJK characters
+      Uucp.Break.tty_width_hint(
+        uchar,
+      );
+    };
+
+  // The measure result is of the form (characterWidth, pixelWidth)
   let measure = (~typeface: Skia.Typeface.t, ~cache: t, substr, uchar) =>
     switch (MeasurementsCache.find((typeface, uchar), measurementsCache)) {
-    | Some(result) =>
+    | Some(pixelWidth) =>
       MeasurementsCache.promote((typeface, uchar), measurementsCache);
       Log.debugf(m =>
         m(
@@ -103,7 +113,9 @@ module Internal = {
           Uchar.to_int(uchar),
         )
       );
-      result;
+      let characterWidth =
+        getCharacterWidth(~indentation=cache.indentation, uchar);
+      (characterWidth, pixelWidth);
     | None =>
       Log.debugf(m =>
         m(
@@ -115,20 +127,16 @@ module Internal = {
       );
       // The width in monospaced characters
       let characterWidth =
-        if (Uchar.equal(uchar, tab)) {
-          cache.indentation.tabSize;
-        } else {
-          // Some unicode codepoints are double width, like many CJK characters
-          Uucp.Break.tty_width_hint(
-            uchar,
-          );
-        };
+        getCharacterWidth(~indentation=cache.indentation, uchar);
       Skia.Paint.setTypeface(paint, typeface);
       let pixelWidth = Skia.Paint.measureText(paint, substr, None);
-      let result = (characterWidth, pixelWidth);
-      MeasurementsCache.add((typeface, uchar), result, measurementsCache);
+      MeasurementsCache.add(
+        (typeface, uchar),
+        pixelWidth,
+        measurementsCache,
+      );
       MeasurementsCache.trim(measurementsCache);
-      result;
+      (characterWidth, pixelWidth);
     };
 
   let resolveTo = (~index, cache: t) => {

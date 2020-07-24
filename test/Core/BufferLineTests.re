@@ -160,6 +160,7 @@ describe("BufferLine", ({describe, _}) => {
         IndentationSettings.create(~mode=Tabs, ~size=8, ~tabSize=8, ());
 
       let bufferLine = BufferLine.make(~indentation, "\ta");
+      print_endline(bufferLine |> BufferLine.raw);
       let byteIndex =
         BufferLine.Slow.getByteFromPosition(~position=0, bufferLine);
       expect.int(byteIndex).toBe(0);
