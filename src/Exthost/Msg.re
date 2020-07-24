@@ -14,6 +14,7 @@ module Decode = {
 
   let int =
     one_of([
+      ("float", float |> map(int_of_float)),
       ("int", int),
       (
         "string",
