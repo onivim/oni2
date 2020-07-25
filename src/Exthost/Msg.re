@@ -1467,23 +1467,27 @@ module SCM = {
 module TerminalService = {
   [@deriving show]
   type msg =
-    | CreateTerminal({
-      config: Terminal.LaunchConfig.t,
-    })
-    | Dispose({ terminalId: int })
-    | Hide({ terminalId: int })
-    | SendText({ terminalId: int, text: string, addNewLine: bool})
-    | Show({terminalId: int, preserveFocus: bool})
+    | CreateTerminal({config: Terminal.LaunchConfig.t})
+    | Dispose({terminalId: int})
+    | Hide({terminalId: int})
+    | SendText({
+        terminalId: int,
+        text: string,
+        addNewLine: bool,
+      })
+    | Show({
+        terminalId: int,
+        preserveFocus: bool,
+      })
     | StartSendingDataEvents
     | StopSendingDataEvents
     | StartHandlingLinks
     | StopHandlingLinks
-// TODO:
-//    | SetEnvironmentVariableCollection({
-//      extensionId: string,
-//      persistent: bool,
-//    })
-
+    // TODO:
+    //    | SetEnvironmentVariableCollection({
+    //      extensionId: string,
+    //      persistent: bool,
+    //    })
     | SendProcessTitle({
         terminalId: int,
         title: string,
