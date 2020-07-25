@@ -494,7 +494,7 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
-    
+
   | SetInputBoxPlaceholder(_) =>
     // TODO: Set up replacement for '{0}'
     //dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))
