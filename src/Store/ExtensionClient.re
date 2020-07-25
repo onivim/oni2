@@ -192,6 +192,24 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
+      | Configuration(RemoveConfigurationOption({key, _})) =>
+        dispatch(
+          Actions.ConfigurationTransform(
+            "configuration.json",
+            ConfigurationTransformer.removeField(key),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | Configuration(UpdateConfigurationOption({key, value, _})) =>
+        dispatch(
+          Actions.ConfigurationTransform(
+            "configuration.json",
+            ConfigurationTransformer.setField(key, value),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+
       | LanguageFeatures(
           RegisterDocumentSymbolProvider({handle, selector, label}),
         ) =>
