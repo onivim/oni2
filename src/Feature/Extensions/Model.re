@@ -205,7 +205,7 @@ let update = (~extHostClient, msg, model) => {
   | Exthost(msg) =>
     switch (msg) {
     | ExtensionActivationError({extensionId, errorMessage}) =>
-      (model, NotifyFailure(Printf.sprintf("Extension %s failed to activate: %s\n", extensionId, errorMessage)));
+      (model, NotifyFailure(Printf.sprintf("Error: %s", errorMessage)));
     | DidActivateExtension({extensionId, _}) => (
         Internal.markActivated(extensionId, model),
         Nothing,
