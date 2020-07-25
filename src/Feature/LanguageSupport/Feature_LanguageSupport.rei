@@ -19,9 +19,18 @@ type outmsg =
   | OpenFile({
       filePath: string,
       location: option(Location.t),
-    });
+    })
+  | Effect(Isolinear.Effect.t(msg));
 
-let update: (msg, model) => (model, outmsg);
+let update:
+  (
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~cursorLocation: Location.t,
+    ~client: Exthost.Client.t,
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 let isFocused: model => bool;
 

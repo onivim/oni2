@@ -105,6 +105,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           contextMenu
           diagnostics={state.diagnostics}
           font={state.uiFont}
+          scm={state.scm}
           statusBar={state.statusBar}
           activeBuffer=maybeActiveBuffer
           activeEditor={Some(activeEditor)}

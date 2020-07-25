@@ -171,16 +171,6 @@ module Oni = {
   };
 };
 
-module ReferencesView = {
-  let find =
-    register(
-      ~category="References",
-      ~title="Find all References",
-      "references-view.find",
-      References(References.Requested),
-    );
-};
-
 module Workbench = {
   module Action = {
     let openSettings =

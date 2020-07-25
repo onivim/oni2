@@ -69,6 +69,17 @@ module Effects: {
       ) =>
       Isolinear.Effect.t('msg);
 
+    let provideReferences:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.Location.t,
+        ~context: Exthost.ReferenceContext.t,
+        Exthost.Client.t,
+        result(list(Exthost.Location.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+
     let provideSignatureHelp:
       (
         ~handle: int,

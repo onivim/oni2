@@ -159,8 +159,20 @@ let update =
     (state', effect);
 
   | LanguageSupport(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let cursorLocation =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
     let (model, outmsg) =
-      Feature_LanguageSupport.update(msg, state.languageSupport);
+      Feature_LanguageSupport.update(
+        ~maybeBuffer,
+        ~cursorLocation,
+        ~client=extHostClient,
+        msg,
+        state.languageSupport,
+      );
 
     let eff =
       Feature_LanguageSupport.(
@@ -171,6 +183,8 @@ let update =
             ~name="feature.languageSupport.openFileByPath", dispatch =>
             dispatch(OpenFileByPath(filePath, None, location))
           )
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => LanguageSupport(msg))
         }
       );
 
@@ -205,9 +219,14 @@ let update =
     let effect =
       switch (eff) {
       | Feature_Formatting.Nothing => Effect.none
-      | Feature_Formatting.FormattingApplied({editCount, _}) =>
-        let msg = Printf.sprintf("Applied %d edits", editCount);
-        Internal.notificationEffect(~kind=Info, "Format: " ++ msg);
+      | Feature_Formatting.FormattingApplied({editCount, displayName}) =>
+        let msg =
+          Printf.sprintf(
+            "Format: Applied %d edits with %s",
+            editCount,
+            displayName,
+          );
+        Internal.notificationEffect(~kind=Info, msg);
       | Feature_Formatting.FormatError(msg) =>
         Internal.notificationEffect(~kind=Error, "Format: " ++ msg)
       | Feature_Formatting.Effect(eff) =>
