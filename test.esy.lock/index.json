@@ -1,5 +1,5 @@
 {
-  "checksum": "e2f43c27bdc4c1d3e32a6e006f9670a6",
+  "checksum": "941c2110d8f6c0f9b5e264d02e9420ff",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -749,7 +749,9 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
+      "dependencies": [
+        "esy-cmake@github:prometheansacrifice/esy-cmake#2dda31230b7bf6a7d0030d2a2a041cd1aea105fc@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9": {
@@ -812,17 +814,21 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
+      "dependencies": [
+        "esy-cmake@github:prometheansacrifice/esy-cmake#2dda31230b7bf6a7d0030d2a2a041cd1aea105fc@d41d8cd9"
+      ],
       "devDependencies": []
     },
-    "esy-cmake@0.3.5@d41d8cd9": {
-      "id": "esy-cmake@0.3.5@d41d8cd9",
+    "esy-cmake@github:prometheansacrifice/esy-cmake#2dda31230b7bf6a7d0030d2a2a041cd1aea105fc@d41d8cd9": {
+      "id":
+        "esy-cmake@github:prometheansacrifice/esy-cmake#2dda31230b7bf6a7d0030d2a2a041cd1aea105fc@d41d8cd9",
       "name": "esy-cmake",
-      "version": "0.3.5",
+      "version":
+        "github:prometheansacrifice/esy-cmake#2dda31230b7bf6a7d0030d2a2a041cd1aea105fc",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/esy-cmake/-/esy-cmake-0.3.5.tgz#sha1:2df0bdfe9317fbcded5f463fca1f346464494c7a"
+          "github:prometheansacrifice/esy-cmake#2dda31230b7bf6a7d0030d2a2a041cd1aea105fc"
         ]
       },
       "overrides": [],
@@ -1087,7 +1093,9 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
+      "dependencies": [
+        "esy-cmake@github:prometheansacrifice/esy-cmake#2dda31230b7bf6a7d0030d2a2a041cd1aea105fc@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "@revery/esy-cmake@0.3.5001@d41d8cd9": {
