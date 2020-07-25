@@ -42,6 +42,7 @@ module Provider: {
     acceptInputCommand: option(command),
     inputVisible: bool,
     validationEnabled: bool,
+    statusBarCommands: list(Exthost.Command.t),
   };
 };
 
@@ -74,6 +75,8 @@ type outmsg =
   | Nothing;
 
 let update: (Exthost.Client.t, model, msg) => (model, outmsg);
+
+let statusBarCommands: model => list(Exthost.Command.t);
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;

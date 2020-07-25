@@ -48,10 +48,7 @@ type msg =
   | ContextMenuNotificationOpenClicked
   | NotificationCountClicked
   | NotificationsCountRightClicked
-  | ContributedItemClicked({
-      id: string,
-      command: string,
-    });
+  | ContributedItemClicked({command: string});
 
 // TODO: Wire these up to Pane / ContextMenu
 type outmsg =
@@ -357,19 +354,19 @@ module View = {
 
     let defaultForeground = Colors.StatusBar.foreground.from(theme);
 
-    let toStatusBarElement = (statusItem: Item.t) => {
+    let toStatusBarElement = (~command=?, ~color=?, ~tooltip=?, label) => {
       let onClick =
-        statusItem.command
+        command
         |> Option.map((command, ()) =>
-             dispatch(ContributedItemClicked({id: statusItem.id, command}))
+             dispatch(ContributedItemClicked({command: command}))
            );
 
       let color =
-        statusItem.color
+        color
         |> OptionEx.flatMap(Exthost.Color.resolve(theme))
         |> Option.value(~default=defaultForeground);
 
-      let children = <Label font color label={statusItem.label} />;
+      let children = <Label font color label />;
       let style =
         Style.[
           flexDirection(`Row),
@@ -378,7 +375,7 @@ module View = {
         ];
 
       let viewOrTooltip =
-        switch (statusItem.tooltip) {
+        switch (tooltip) {
         | None => <View style> children </View>
         | Some(tooltip) =>
           <Tooltip offsetY=(-25) text=tooltip style> children </Tooltip>
@@ -390,13 +387,17 @@ module View = {
     let leftItems =
       statusBar.items
       |> List.filter((item: Item.t) => item.alignment == Left)
-      |> List.map(toStatusBarElement)
+      |> List.map(({command, label, color, tooltip, _}: Item.t) =>
+           toStatusBarElement(~command?, ~color?, ~tooltip?, label)
+         )
       |> React.listToElement;
 
     let rightItems =
       statusBar.items
       |> List.filter((item: Item.t) => item.alignment == Right)
-      |> List.map(toStatusBarElement)
+      |> List.map(({command, label, color, tooltip, _}: Item.t) =>
+           toStatusBarElement(~command?, ~color?, ~tooltip?, label)
+         )
       |> React.listToElement;
 
     let indentation = () => {

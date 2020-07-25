@@ -5,11 +5,26 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Label: {
+  [@deriving show]
+  type segment =
+    | Text(string)
+    | Icon(string);
+
+  [@deriving show]
+  type t = list(segment);
+
+  let ofString: string => t;
+  let toString: t => string;
+
+  let decode: Json.decoder(t);
+};
+
 module Command: {
   [@deriving show]
   type t = {
     id: string,
-    title: option(string),
+    label: option(Label.t),
   };
 
   let decode: Json.decoder(t);
@@ -254,21 +269,6 @@ module ReferenceContext: {
   type t = {includeDeclaration: bool};
 
   let encode: Json.encoder(t);
-};
-
-module Label: {
-  [@deriving show]
-  type segment =
-    | Text(string)
-    | Icon(string);
-
-  [@deriving show]
-  type t = list(segment);
-
-  let ofString: string => t;
-  let toString: t => string;
-
-  let decode: Json.decoder(t);
 };
 
 module Progress: {
