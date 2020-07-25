@@ -83,6 +83,8 @@ let initial =
     (
       ~initialBuffer,
       ~initialBufferRenderers,
+      ~extensionGlobalPersistence,
+      ~extensionWorkspacePersistence,
       ~getUserSettings,
       ~contributedCommands,
       ~workingDirectory,
@@ -132,7 +134,12 @@ let initial =
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
-    extensions: Feature_Extensions.initial(~extensionsFolder),
+    extensions:
+      Feature_Extensions.initial(
+        ~globalPersistence=extensionGlobalPersistence,
+        ~workspacePersistence=extensionWorkspacePersistence,
+        ~extensionsFolder,
+      ),
     formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     languageSupport: Feature_LanguageSupport.initial,

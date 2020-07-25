@@ -69,7 +69,17 @@ type model = {
   localValues: Yojson.Safe.t,
 };
 
-let initial = (~extensionsFolder) => {
+module Persistence = {
+  type t = Yojson.Safe.t;
+  let initial = `Assoc([]);
+
+  let codec = Oni_Core.Persistence.Schema.value;
+
+  let get = (~shared, model) =>
+    shared ? model.globalValues : model.localValues;
+};
+
+let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => {
   activatedIds: [],
   extensions: [],
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
@@ -77,8 +87,8 @@ let initial = (~extensionsFolder) => {
   extensionsFolder,
   pendingInstalls: [],
   pendingUninstalls: [],
-  globalValues: `Assoc([]),
-  localValues: `Assoc([]),
+  globalValues: globalPersistence,
+  localValues: workspacePersistence,
 };
 
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
@@ -204,8 +214,10 @@ let update = (~extHostClient, msg, model) => {
   switch (msg) {
   | Exthost(msg) =>
     switch (msg) {
-    | ExtensionActivationError({extensionId, errorMessage}) =>
-      (model, NotifyFailure(Printf.sprintf("Error: %s", errorMessage)));
+    | ExtensionActivationError({errorMessage, _}) => (
+        model,
+        NotifyFailure(Printf.sprintf("Error: %s", errorMessage)),
+      )
     | DidActivateExtension({extensionId, _}) => (
         Internal.markActivated(extensionId, model),
         Nothing,

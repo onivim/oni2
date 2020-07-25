@@ -14,16 +14,6 @@ module Msg = {
     ExecuteCommand({command, arguments});
 };
 
-module Persistence = {
-  type t = Yojson.Safe.t;
-  let initial = `Assoc([]);
-
-  let codec = Oni_Core.Persistence.Schema.value;
-
-  let get = (~shared, model) =>
-    shared ? model.globalValues : model.localValues;
-};
-
 let all = ({extensions, _}) => extensions;
 let activatedIds = ({activatedIds, _}) => activatedIds;
 

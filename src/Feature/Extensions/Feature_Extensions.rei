@@ -32,8 +32,6 @@ let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 
 let themeByName: (~name: string, model) => option(Contributions.Theme.t);
 
-let initial: (~extensionsFolder: option(string)) => model;
-
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
 
@@ -58,6 +56,14 @@ module Persistence: {
 
   let get: (~shared: bool, model) => t;
 };
+
+let initial:
+  (
+    ~workspacePersistence: Persistence.t,
+    ~globalPersistence: Persistence.t,
+    ~extensionsFolder: option(string)
+  ) =>
+  model;
 
 module ListView: {
   let make:
