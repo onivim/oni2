@@ -77,20 +77,6 @@ module ExtensionDocumentHighlightProvider = {
   };
 };
 
-module ExtensionFindAllReferencesProvider = {
-  let create = (id, selector, client, (buffer, location)) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideReferences(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        ~context=Exthost.ReferenceContext.{includeDeclaration: true},
-        client,
-      )
-    });
-  };
-};
-
 module ExtensionDocumentSymbolProvider = {
   let create =
       (
@@ -133,21 +119,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         LanguageFeatures.DocumentSymbolProviderAvailable(
           id,
           documentSymbolProvider,
-        ),
-      ),
-    );
-  };
-
-  let onRegisterReferencesProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let findAllReferencesProvider =
-      ExtensionFindAllReferencesProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.FindAllReferencesProviderAvailable(
-          id,
-          findAllReferencesProvider,
         ),
       ),
     );
@@ -234,9 +205,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         ) =>
         withClient(onRegisterDocumentHighlightProvider(handle, selector));
         Lwt.return(Reply.okEmpty);
-      | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
-        withClient(onRegisterReferencesProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
+
       | LanguageFeatures(
           RegisterSuggestSupport({
             handle,

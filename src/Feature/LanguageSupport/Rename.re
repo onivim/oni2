@@ -72,12 +72,12 @@ let update = (msg, model) => {
           ...model,
           sessionState: Resolved({...resolved, inputText: inputText'}),
         },
-        Common.Nothing,
+        Outmsg.Nothing,
       );
-    | _ => (model, Common.Nothing)
+    | _ => (model, Outmsg.Nothing)
     }
   | Command(Commit)
-  | Command(Cancel) => ({...model, sessionState: Inactive}, Common.Nothing)
+  | Command(Cancel) => ({...model, sessionState: Inactive}, Outmsg.Nothing)
   | Command(RenameSymbol) =>
     let sessionId = model.nextSessionId;
     (
@@ -90,7 +90,7 @@ let update = (msg, model) => {
             inputText: Feature_InputText.create(~placeholder="hi"),
           }),
       },
-      Common.Nothing,
+      Outmsg.Nothing,
     );
   };
 };

@@ -159,8 +159,20 @@ let update =
     (state', effect);
 
   | LanguageSupport(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let cursorLocation =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
     let (model, outmsg) =
-      Feature_LanguageSupport.update(msg, state.languageSupport);
+      Feature_LanguageSupport.update(
+        ~maybeBuffer,
+        ~cursorLocation,
+        ~client=extHostClient,
+        msg,
+        state.languageSupport,
+      );
 
     let eff =
       Feature_LanguageSupport.(
@@ -171,6 +183,8 @@ let update =
             ~name="feature.languageSupport.openFileByPath", dispatch =>
             dispatch(OpenFileByPath(filePath, None, location))
           )
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => LanguageSupport(msg))
         }
       );
 
