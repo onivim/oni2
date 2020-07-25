@@ -1279,10 +1279,7 @@ module SCM = {
     | UnregisterSourceControl({handle: int})
     | UpdateSourceControl({
         handle: int,
-        hasQuickDiffProvider: option(bool),
-        count: option(int),
-        commitTemplate: option(string),
-        acceptInputCommand: option(SCM.command),
+        features: SCM.ProviderFeatures.t,
       })
     // statusBarCommands: option(_),
     | RegisterSCMResourceGroup({
@@ -1353,23 +1350,11 @@ module SCM = {
 
       | "$updateSourceControl" =>
         switch (args) {
-        | `List([`Int(handle), features]) =>
-          Yojson.Safe.Util.(
-            Ok(
-              UpdateSourceControl({
-                handle,
-                hasQuickDiffProvider:
-                  features |> member("hasQuickDiffProvider") |> to_bool_option,
-                count: features |> member("count") |> to_int_option,
-                commitTemplate:
-                  features |> member("commitTemplate") |> to_string_option,
-                acceptInputCommand:
-                  features
-                  |> member("acceptInputCommand")
-                  |> SCM.Decode.command,
-              }),
-            )
-          )
+        | `List([`Int(handle), featuresJson]) =>
+          let%bind features =
+            featuresJson |> Internal.decode_value(SCM.ProviderFeatures.decode);
+
+          Ok(UpdateSourceControl({handle, features}));
 
         | _ => Error("Unexpected arguments for $updateSourceControl")
         }

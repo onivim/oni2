@@ -34,6 +34,7 @@ module Provider = {
     acceptInputCommand: option(command),
     inputVisible: bool,
     validationEnabled: bool,
+    statusBarCommands: list(Exthost.Command.t),
   };
 
   let initial = (~handle, ~id, ~label, ~rootUri) => {
@@ -48,6 +49,7 @@ module Provider = {
     acceptInputCommand: None,
     inputVisible: true,
     validationEnabled: false,
+    statusBarCommands: [],
   };
 };
 
@@ -60,6 +62,12 @@ type model = {
 let initial = {
   providers: [],
   inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
+};
+
+let statusBarCommands = ({providers, _}: model) => {
+  providers
+  |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
+  |> List.flatten;
 };
 
 // EFFECTS
@@ -122,6 +130,10 @@ type msg =
   | QuickDiffProviderChanged({
       handle: int,
       available: bool,
+    })
+  | StatusBarCommandsChanged({
+      handle: int,
+      statusBarCommands: list(Exthost.Command.t),
     })
   | CommitTemplateChanged({
       handle: int,
@@ -221,6 +233,12 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       |> Internal.updateProvider(~handle, it =>
            {...it, hasQuickDiffProvider: available}
          ),
+      Nothing,
+    )
+
+  | StatusBarCommandsChanged({handle, statusBarCommands}) => (
+      model
+      |> Internal.updateProvider(~handle, p => {...p, statusBarCommands}),
       Nothing,
     )
 
@@ -456,16 +474,16 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
               )
             });
        });
-  | UpdateSourceControl({
-      handle,
+  | UpdateSourceControl({handle, features}) =>
+    let {
       hasQuickDiffProvider,
       count,
       commitTemplate,
       acceptInputCommand,
-    }) =>
-    Option.iter(
-      available => dispatch(QuickDiffProviderChanged({handle, available})),
-      hasQuickDiffProvider,
+      statusBarCommands,
+    }: Exthost.SCM.ProviderFeatures.t = features;
+    dispatch(
+      QuickDiffProviderChanged({handle, available: hasQuickDiffProvider}),
     );
     Option.iter(count => dispatch(CountChanged({handle, count})), count);
     Option.iter(
@@ -476,6 +494,9 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
+
+    dispatch(StatusBarCommandsChanged({handle, statusBarCommands}));
+
   | SetInputBoxPlaceholder(_) =>
     // TODO: Set up replacement for '{0}'
     //dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))
