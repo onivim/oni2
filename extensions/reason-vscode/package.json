@@ -1,5 +1,6 @@
 {
 	"name": "reason-vscode",
+	"displayName": "Reason / OCaml LSP",
 	"description": "IDE & Syntax support for Reason/OCaml",
 	"author": "Jared Forsyth",
 	"license": "ISC",
