@@ -494,12 +494,7 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
-
-    prerr_endline("Update source control: ");
-    statusBarCommands
-    |> List.iter(sc => Exthost.Command.show(sc) |> prerr_endline);
-
-    dispatch(StatusBarCommandsChanged({handle, statusBarCommands}));
+    
   | SetInputBoxPlaceholder(_) =>
     // TODO: Set up replacement for '{0}'
     //dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))

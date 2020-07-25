@@ -51,6 +51,8 @@ type model;
 
 let initial: model;
 
+let statusBarCommands: model => list(Exthost.Command.t);
+
 // EFFECTS
 
 module Effects: {
@@ -75,8 +77,6 @@ type outmsg =
   | Nothing;
 
 let update: (Exthost.Client.t, model, msg) => (model, outmsg);
-
-let statusBarCommands: model => list(Exthost.Command.t);
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;

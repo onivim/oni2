@@ -315,6 +315,7 @@ module View = {
                   ~activeBuffer: option(Oni_Core.Buffer.t),
                   ~activeEditor: option(Feature_Editor.Editor.t),
                   ~indentationSettings: IndentationSettings.t,
+                  ~scm: Feature_SCM.model,
                   ~statusBar: model,
                   ~theme,
                   ~dispatch,
@@ -392,6 +393,17 @@ module View = {
          )
       |> React.listToElement;
 
+    let scmItems =
+      scm
+      |> Feature_SCM.statusBarCommands
+      |> List.filter_map((item: Exthost.Command.t) =>
+           item.label
+           |> Option.map(label => {
+                toStatusBarElement(~command=item.id, label)
+              })
+         )
+      |> React.listToElement;
+
     let rightItems =
       statusBar.items
       |> List.filter((item: Item.t) => item.alignment == Right)
@@ -463,6 +475,7 @@ module View = {
         <section align=`FlexStart> leftItems </section>
         <section align=`FlexStart>
           <diagnosticCount font background theme diagnostics dispatch />
+          scmItems
         </section>
         <section align=`Center />
         <section align=`FlexEnd> rightItems </section>
