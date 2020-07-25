@@ -470,16 +470,23 @@ module SCM: {
     module Decode: {let splices: Json.decoder(Splices.t);};
   };
 
+  module ProviderFeatures: {
+    type t = {
+      hasQuickDiffProvider: bool,
+      count: option(int),
+      commitTemplate: option(string),
+      acceptInputCommand: option(command),
+      statusBarCommands: list(Command.t),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
   module GroupFeatures: {
     [@deriving show({with_path: false})]
     type t = {hideWhenEmpty: bool};
 
     let decode: Json.decoder(t);
-  };
-
-  module Decode: {
-    //let resource: Yojson.Safe.t => Resource.t;
-    let command: Yojson.Safe.t => option(command);
   };
 };
 
@@ -1307,10 +1314,7 @@ module Msg: {
       | UnregisterSourceControl({handle: int})
       | UpdateSourceControl({
           handle: int,
-          hasQuickDiffProvider: option(bool),
-          count: option(int),
-          commitTemplate: option(string),
-          acceptInputCommand: option(SCM.command),
+          features: SCM.ProviderFeatures.t,
         })
       // statusBarCommands: option(_),
       | RegisterSCMResourceGroup({

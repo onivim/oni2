@@ -456,16 +456,16 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
               )
             });
        });
-  | UpdateSourceControl({
-      handle,
+  | UpdateSourceControl({handle, features}) =>
+    let {
       hasQuickDiffProvider,
       count,
       commitTemplate,
       acceptInputCommand,
-    }) =>
-    Option.iter(
-      available => dispatch(QuickDiffProviderChanged({handle, available})),
-      hasQuickDiffProvider,
+      statusBarCommands,
+    }: Exthost.SCM.ProviderFeatures.t = features;
+    dispatch(
+      QuickDiffProviderChanged({handle, available: hasQuickDiffProvider}),
     );
     Option.iter(count => dispatch(CountChanged({handle, count})), count);
     Option.iter(
@@ -476,6 +476,10 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
+
+    prerr_endline("Update source control: ");
+    statusBarCommands
+    |> List.iter(sc => Exthost.Command.show(sc) |> prerr_endline);
   | SetInputBoxPlaceholder(_) =>
     // TODO: Set up replacement for '{0}'
     //dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))
