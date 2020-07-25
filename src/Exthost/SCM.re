@@ -1,3 +1,4 @@
+module ExtCommand = Command;
 open Oni_Core;
 
 [@deriving show({with_path: false})]
@@ -109,21 +110,46 @@ module GroupFeatures = {
 };
 
 module Decode = {
-  open Yojson.Safe.Util;
-
-  let listOrEmpty =
-    fun
-    | `List(list) => list
-    | _ => [];
-
   let command =
-    fun
-    | `Assoc(_) as obj =>
-      Some({
-        id: obj |> member("id") |> to_string,
-        title: obj |> member("title") |> to_string,
-        tooltip: obj |> member("tooltip") |> to_string_option,
-        arguments: obj |> member("arguments") |> listOrEmpty,
-      })
-    | _ => None;
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          id: field.required("id", string),
+          title: field.required("title", string),
+          tooltip: field.optional("tooltip", string),
+          arguments: field.withDefault("arguments", [], list(value)),
+        }
+      )
+    );
+};
+
+module ProviderFeatures = {
+  [@deriving show({with_path: false})]
+  type t = {
+    hasQuickDiffProvider: bool,
+    count: option(int),
+    commitTemplate: option(string),
+    acceptInputCommand: option(command),
+    statusBarCommands: list(ExtCommand.t),
+  };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          hasQuickDiffProvider:
+            field.withDefault("hasQuickDiffProvider", false, bool),
+          count: field.optional("count", int),
+          commitTemplate: field.optional("commitTemplate", string),
+          acceptInputCommand:
+            field.optional("acceptInputCommand", Decode.command),
+          statusBarCommands:
+            field.withDefault(
+              "statusBarCommands",
+              [],
+              list(ExtCommand.decode),
+            ),
+        }
+      )
+    );
 };

@@ -5,11 +5,26 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Label: {
+  [@deriving show]
+  type segment =
+    | Text(string)
+    | Icon(string);
+
+  [@deriving show]
+  type t = list(segment);
+
+  let ofString: string => t;
+  let toString: t => string;
+
+  let decode: Json.decoder(t);
+};
+
 module Command: {
   [@deriving show]
   type t = {
     id: string,
-    title: option(string),
+    label: option(Label.t),
   };
 
   let decode: Json.decoder(t);
@@ -256,21 +271,6 @@ module ReferenceContext: {
   let encode: Json.encoder(t);
 };
 
-module Label: {
-  [@deriving show]
-  type segment =
-    | Text(string)
-    | Icon(string);
-
-  [@deriving show]
-  type t = list(segment);
-
-  let ofString: string => t;
-  let toString: t => string;
-
-  let decode: Json.decoder(t);
-};
-
 module Progress: {
   module Location: {
     [@deriving show]
@@ -470,16 +470,23 @@ module SCM: {
     module Decode: {let splices: Json.decoder(Splices.t);};
   };
 
+  module ProviderFeatures: {
+    type t = {
+      hasQuickDiffProvider: bool,
+      count: option(int),
+      commitTemplate: option(string),
+      acceptInputCommand: option(command),
+      statusBarCommands: list(Command.t),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
   module GroupFeatures: {
     [@deriving show({with_path: false})]
     type t = {hideWhenEmpty: bool};
 
     let decode: Json.decoder(t);
-  };
-
-  module Decode: {
-    //let resource: Yojson.Safe.t => Resource.t;
-    let command: Yojson.Safe.t => option(command);
   };
 };
 
@@ -1307,10 +1314,7 @@ module Msg: {
       | UnregisterSourceControl({handle: int})
       | UpdateSourceControl({
           handle: int,
-          hasQuickDiffProvider: option(bool),
-          count: option(int),
-          commitTemplate: option(string),
-          acceptInputCommand: option(SCM.command),
+          features: SCM.ProviderFeatures.t,
         })
       // statusBarCommands: option(_),
       | RegisterSCMResourceGroup({
