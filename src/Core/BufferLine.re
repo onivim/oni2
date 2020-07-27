@@ -93,7 +93,6 @@ module Internal = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
   Skia.Paint.setLcdRenderText(paint, true);
-  Skia.Paint.setAntiAlias(paint, true);
 
   let getCharacterWidth = (~indentation: IndentationSettings.t, uchar) =>
     if (Uchar.equal(uchar, tab)) {
