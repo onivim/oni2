@@ -254,12 +254,22 @@ switch (eff) {
            )
       );
 
+    let extensionGlobalPersistence =
+      Store.Persistence.Global.extensionValues();
+
+    let initialWorkspaceStore =
+      Store.Persistence.Workspace.storeFor(initialWorkingDirectory);
+    let extensionWorkspacePersistence =
+      Store.Persistence.Workspace.extensionValues(initialWorkspaceStore);
+
     let currentState =
       ref(
         Model.State.initial(
           ~initialBuffer,
           ~initialBufferRenderers,
           ~getUserSettings,
+          ~extensionGlobalPersistence,
+          ~extensionWorkspacePersistence,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,

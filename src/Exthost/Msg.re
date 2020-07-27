@@ -1209,6 +1209,31 @@ module StatusBar = {
     };
   };
 };
+
+module Storage = {
+  [@deriving show]
+  type msg =
+    | GetValue({
+        shared: bool,
+        key: string,
+      })
+    | SetValue({
+        shared: bool,
+        key: string,
+        value: Yojson.Safe.t,
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$getValue", `List([`Bool(shared), `String(key)])) =>
+      Ok(GetValue({shared, key}))
+    | ("$setValue", `List([`Bool(shared), `String(key), valueJson])) =>
+      Ok(SetValue({shared, key, value: valueJson}))
+    | _ => Error("Unhandled storage method: " ++ method)
+    };
+  };
+};
+
 module Telemetry = {
   [@deriving show]
   type msg =
@@ -1569,6 +1594,7 @@ type t =
   | QuickOpen(QuickOpen.msg)
   | SCM(SCM.msg)
   | StatusBar(StatusBar.msg)
+  | Storage(Storage.msg)
   | Telemetry(Telemetry.msg)
   | TerminalService(TerminalService.msg)
   | Window(Window.msg)

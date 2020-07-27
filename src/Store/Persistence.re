@@ -5,6 +5,13 @@ module Global = {
     open Oni_Model.State;
     open Persistence.Schema;
 
+    let extensionValues =
+      Feature_Extensions.(
+        define(
+          "extensionValues", Persistence.codec, Persistence.initial, state =>
+          state.extensions |> Persistence.get(~shared=true)
+        )
+      );
     let version =
       define("version", string, BuildInfo.commitId, _ => BuildInfo.commitId);
     let workspace =
@@ -19,11 +26,12 @@ module Global = {
     lazy(
       {
         instantiate("global", () =>
-          Schema.[entry(version), entry(workspace)]
+          Schema.[entry(version), entry(workspace), entry(extensionValues)]
         );
       }
     );
 
+  let extensionValues = () => get(Schema.extensionValues, Lazy.force(store));
   let version = () => get(Schema.version, Lazy.force(store));
   let workspace = () => get(Schema.workspace, Lazy.force(store));
 
@@ -55,6 +63,17 @@ module Workspace = {
       define("windowMaximized", bool, false, ((_state, window)) =>
         Window.isMaximized(window)
       );
+
+    let extensionValues =
+      Feature_Extensions.(
+        define(
+          "extensionValues",
+          Persistence.codec,
+          Persistence.initial,
+          ((state: Oni_Model.State.t, _window)) =>
+          state.extensions |> Persistence.get(~shared=false)
+        )
+      );
   };
 
   type state = (Oni_Model.State.t, Revery.Window.t);
@@ -69,6 +88,7 @@ module Workspace = {
         entry(windowWidth),
         entry(windowHeight),
         entry(windowMaximized),
+        entry(extensionValues),
       ]
     );
 
@@ -90,4 +110,5 @@ module Workspace = {
   let windowWidth = store => get(Schema.windowWidth, store);
   let windowHeight = store => get(Schema.windowHeight, store);
   let windowMaximized = store => get(Schema.windowMaximized, store);
+  let extensionValues = store => get(Schema.extensionValues, store);
 };

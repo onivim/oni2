@@ -4,33 +4,18 @@ open Exthost.Extension;
 type model;
 
 [@deriving show({with_path: false})]
-type msg =
-  | Activated(string /* id */)
-  | Discovered([@opaque] list(Scanner.ScanResult.t))
-  | ExecuteCommand({
-      command: string,
-      arguments: [@opaque] list(Json.t),
-    })
-  | KeyPressed(string)
-  | Pasted(string)
-  | SearchQueryResults(Service_Extensions.Query.t)
-  | SearchQueryError(string)
-  | SearchText(Feature_InputText.msg)
-  | UninstallExtensionClicked({extensionId: string})
-  | UninstallExtensionSuccess({extensionId: string})
-  | UninstallExtensionFailed({
-      extensionId: string,
-      errorMsg: string,
-    })
-  | InstallExtensionClicked({extensionId: string})
-  | InstallExtensionSuccess({
-      extensionId: string,
-      scanResult: [@opaque] Scanner.ScanResult.t,
-    })
-  | InstallExtensionFailed({
-      extensionId: string,
-      errorMsg: string,
-    });
+type msg;
+
+module Msg: {
+  let exthost: Exthost.Msg.ExtensionService.msg => msg;
+  let storage:
+    (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Storage.msg) => msg;
+  let discovered: list(Scanner.ScanResult.t) => msg;
+  let keyPressed: string => msg;
+  let pasted: string => msg;
+
+  let command: (~command: string, ~arguments: list(Yojson.Safe.t)) => msg;
+};
 
 type outmsg =
   | Nothing
@@ -47,8 +32,6 @@ let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 
 let themeByName: (~name: string, model) => option(Contributions.Theme.t);
 
-let initial: (~extensionsFolder: option(string)) => model;
-
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
 
@@ -64,6 +47,23 @@ let menus: model => list(Menu.Schema.definition);
 let commands: model => list(Command.t(msg));
 
 let sub: (~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
+
+module Persistence: {
+  type t = Yojson.Safe.t;
+  let initial: t;
+
+  let codec: Oni_Core.Persistence.Schema.Codec.t(t);
+
+  let get: (~shared: bool, model) => t;
+};
+
+let initial:
+  (
+    ~workspacePersistence: Persistence.t,
+    ~globalPersistence: Persistence.t,
+    ~extensionsFolder: option(string)
+  ) =>
+  model;
 
 module ListView: {
   let make:

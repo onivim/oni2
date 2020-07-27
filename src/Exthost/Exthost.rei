@@ -1355,6 +1355,20 @@ module Msg: {
         });
   };
 
+  module Storage: {
+    [@deriving show]
+    type msg =
+      | GetValue({
+          shared: bool,
+          key: string,
+        })
+      | SetValue({
+          shared: bool,
+          key: string,
+          value: Yojson.Safe.t,
+        });
+  };
+
   module Telemetry: {
     [@deriving show]
     type msg =
@@ -1466,6 +1480,7 @@ module Msg: {
     | QuickOpen(QuickOpen.msg)
     | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
+    | Storage(Storage.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
     | Window(Window.msg)
