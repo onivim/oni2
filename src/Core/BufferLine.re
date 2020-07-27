@@ -147,10 +147,7 @@ module Internal = {
       // we offset the correct amount.
       let pixelWidth =
         if (Uchar.equal(uchar, tab)) {
-          Skia.Paint.setTextEncoding(paint, Utf8);
-          let spaceSize = Skia.Paint.measureText(paint, "  ", None);
-          Skia.Paint.setTextEncoding(paint, GlyphId);
-          float(cache.indentation.size) *. spaceSize;
+          float(cache.indentation.size) *. cache.font.measuredWidth;
         } else {
           Skia.Paint.measureText(paint, substr, None);
         };
