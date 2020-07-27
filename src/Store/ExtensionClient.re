@@ -192,6 +192,14 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
+      | Storage(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let storageMsg = Feature_Extensions.Msg.storage(~resolver, msg);
+        dispatch(Extensions(storageMsg));
+
+        promise;
+
       | Configuration(RemoveConfigurationOption({key, _})) =>
         dispatch(
           Actions.ConfigurationTransform(
@@ -262,20 +270,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         dispatch(DecorationsChanged({handle, uris}));
         Lwt.return(Reply.okEmpty);
 
-      | ExtensionService(
-          ExtensionActivationError({extensionId, errorMessage}),
-        ) =>
-        Log.errorf(m =>
-          m(
-            "Extension '%s' failed to activate: %s",
-            extensionId,
-            errorMessage,
-          )
-        );
-        Lwt.return(Reply.okEmpty);
-      | ExtensionService(DidActivateExtension({extensionId, _})) =>
+      | ExtensionService(extMsg) =>
+        Log.infof(m => m("ExtensionService: %s", Exthost.Msg.show(msg)));
         dispatch(
-          Actions.Extensions(Feature_Extensions.Activated(extensionId)),
+          Actions.Extensions(Feature_Extensions.Msg.exthost(extMsg)),
         );
         Lwt.return(Reply.okEmpty);
 
