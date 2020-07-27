@@ -14,7 +14,6 @@ let _lf = Uchar.of_char('\n');
 
 type characterCacheInfo = {
   byteOffset: int,
-  positionCharacterOffset: int,
   positionPixelOffset: float,
   uchar: Uchar.t,
   width: int,
@@ -53,8 +52,6 @@ type t = {
   mutable nextIndex: int,
   // [nextGlyphStringIndex] is the next nth glyph string in shapes
   mutable nextGlyphStringByte: int,
-  // [nextCharacterPosition] is the graphical position (based on character width)
-  mutable nextCharacterPosition: int,
   // [nextPixelPosition] is the graphical position (based on pixels)
   mutable nextPixelPosition: float,
 };
@@ -179,7 +176,6 @@ module Internal = {
 
       let i: ref(int) = ref(cache.nextIndex);
       let byte: ref(int) = ref(cache.nextByte);
-      let characterPosition: ref(int) = ref(cache.nextCharacterPosition);
       let pixelPosition: ref(float) = ref(cache.nextPixelPosition);
 
       let glyphStrings: ref(list((Skia.Typeface.t, string))) =
@@ -222,7 +218,6 @@ module Internal = {
         cache.characters[idx] =
           Some({
             byteOffset,
-            positionCharacterOffset: characterPosition^,
             positionPixelOffset: pixelPosition^,
             uchar,
             width: characterWidth,
@@ -231,7 +226,6 @@ module Internal = {
 
         cache.byteIndexMap[byteOffset] = Some(idx);
 
-        characterPosition := characterPosition^ + characterWidth;
         pixelPosition := pixelPosition^ +. pixelWidth;
         byte := offset;
         // Since all OCaml strings are 8bits/1byte, if the next position would
@@ -250,7 +244,6 @@ module Internal = {
 
       cache.nextIndex = i^;
       cache.nextByte = byte^;
-      cache.nextCharacterPosition = characterPosition^;
       cache.nextPixelPosition = pixelPosition^;
       cache.glyphStrings = glyphStrings^;
       cache.nextGlyphStringByte = glyphStringByte^;
@@ -289,7 +282,6 @@ let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
     nextByte: 0,
     nextIndex: 0,
     nextGlyphStringByte: 0,
-    nextCharacterPosition: 0,
     nextPixelPosition: 0.,
   };
 };
