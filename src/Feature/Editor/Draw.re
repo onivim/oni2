@@ -32,7 +32,7 @@ let createContext =
     editor,
     fontFamily: editorFont.fontFamily,
     fontSize: editorFont.fontSize,
-    charWidth: editorFont.measuredWidth,
+    charWidth: editorFont.spaceWidth,
     charHeight: editorFont.measuredHeight,
     smoothing: editorFont.smoothing,
     features: editorFont.features,

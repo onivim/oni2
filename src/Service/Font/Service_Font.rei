@@ -5,7 +5,7 @@ type font =
   Oni_Core.Font.t = {
     fontFamily: [@opaque] Revery.Font.Family.t,
     fontSize: float,
-    measuredWidth: float,
+    spaceWidth: float,
     measuredHeight: float,
     descenderHeight: float,
     smoothing: [@opaque] Revery.Font.Smoothing.t,

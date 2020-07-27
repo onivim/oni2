@@ -8,7 +8,7 @@ type font =
   Oni_Core.Font.t = {
     fontFamily: [@opaque] Revery.Font.Family.t,
     fontSize: float,
-    measuredWidth: float,
+    spaceWidth: float,
     measuredHeight: float,
     descenderHeight: float,
     smoothing: [@opaque] Revery.Font.Smoothing.t,
@@ -20,7 +20,7 @@ let toString = show_font;
 let default = Oni_Core.Font.default;
 
 let measure = (~text, v: font) => {
-  float_of_int(Zed_utf8.length(text)) *. v.measuredWidth;
+  float_of_int(Zed_utf8.length(text)) *. v.spaceWidth;
 };
 
 let getHeight = ({measuredHeight, _}) => measuredHeight;
@@ -117,7 +117,7 @@ let setFont =
           {
             fontFamily,
             fontSize,
-            measuredWidth,
+            spaceWidth,
             measuredHeight,
             descenderHeight,
             smoothing,
@@ -129,7 +129,7 @@ let setFont =
             FontLoaded({
               fontFamily,
               fontSize,
-              measuredWidth,
+              spaceWidth,
               measuredHeight,
               descenderHeight,
               smoothing,

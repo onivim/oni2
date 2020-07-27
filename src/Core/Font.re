@@ -2,7 +2,7 @@
 type t = {
   fontFamily: [@opaque] Revery.Font.Family.t,
   fontSize: float,
-  measuredWidth: float,
+  spaceWidth: float,
   measuredHeight: float,
   descenderHeight: float,
   smoothing: [@opaque] Revery.Font.Smoothing.t,
@@ -12,7 +12,7 @@ type t = {
 let default = {
   fontFamily: Revery.Font.Family.fromFile(Constants.defaultFontFile),
   fontSize: Constants.defaultFontSize,
-  measuredWidth: 1.,
+  spaceWidth: 1.,
   measuredHeight: 1.,
   descenderHeight: 0.,
   smoothing: Revery.Font.Smoothing.default,

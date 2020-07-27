@@ -147,7 +147,7 @@ module Internal = {
       // we offset the correct amount.
       let pixelWidth =
         if (Uchar.equal(uchar, tab)) {
-          float(cache.indentation.size) *. cache.font.measuredWidth;
+          float(cache.indentation.size) *. cache.font.spaceWidth;
         } else {
           Skia.Paint.measureText(paint, substr, None);
         };
@@ -400,7 +400,7 @@ let getPixelPositionAndWidth = (~index: int, bufferLine: t) => {
   let len = Array.length(characters);
 
   if (index < 0 || index >= len || len == 0) {
-    (bufferLine.nextPixelPosition, bufferLine.font.measuredWidth);
+    (bufferLine.nextPixelPosition, bufferLine.font.spaceWidth);
   } else {
     switch (characters[index]) {
     | Some({positionPixelOffset, pixelWidth, _}) => (
@@ -411,9 +411,9 @@ let getPixelPositionAndWidth = (~index: int, bufferLine: t) => {
       switch (characters[bufferLine.nextIndex - 1]) {
       | Some({positionPixelOffset, pixelWidth, _}) => (
           positionPixelOffset +. pixelWidth,
-          bufferLine.font.measuredWidth,
+          bufferLine.font.spaceWidth,
         )
-      | None => (0., bufferLine.font.measuredWidth)
+      | None => (0., bufferLine.font.spaceWidth)
       }
     };
   };

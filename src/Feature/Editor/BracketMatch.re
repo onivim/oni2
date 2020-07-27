@@ -206,7 +206,7 @@ module Test = {
     Oni_Core.Font.{
       fontFamily: Revery.Font.Family.defaultMono,
       fontSize: 12.0,
-      measuredWidth: 0.0,
+      spaceWidth: 0.0,
       measuredHeight: 0.0,
       descenderHeight: 0.0,
       smoothing: Revery_Font.Smoothing.default,

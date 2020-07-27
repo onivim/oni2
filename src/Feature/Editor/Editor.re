@@ -56,7 +56,7 @@ let scrollY = ({scrollY, _}) => scrollY;
 let scrollX = ({scrollX, _}) => scrollX;
 let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
 let lineHeightInPixels = ({font, _}) => font.measuredHeight;
-let characterWidthInPixels = ({font, _}) => font.measuredWidth;
+let characterWidthInPixels = ({font, _}) => font.spaceWidth;
 let font = ({font, _}) => font;
 
 let setMinimapEnabled = (~enabled, editor) => {
@@ -79,11 +79,11 @@ let bufferLineByteToPixel =
     let (cursorOffset, width) =
       BufferLine.getCharacterPositionAndWidth(~index, bufferLine);
 
-    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+    let pixelX = font.spaceWidth *. float(cursorOffset) -. scrollX +. 0.5;
 
     let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+    ({pixelX, pixelY}, float(width) *. font.spaceWidth);
   };
 };
 
@@ -282,7 +282,7 @@ let selectionOrCursorRange = editor => {
 let getId = model => model.editorId;
 
 let getLineHeight = editor => editor.font.measuredHeight;
-let getCharacterWidth = editor => editor.font.measuredWidth;
+let getCharacterWidth = editor => editor.font.spaceWidth;
 
 let getVisibleView = editor => {
   let {pixelHeight, _} = editor;

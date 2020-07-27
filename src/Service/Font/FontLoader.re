@@ -14,7 +14,7 @@ type t = {
   fontFamily: [@opaque] Family.t,
   fontSize: float,
   font: [@opaque] Revery.Font.t,
-  measuredWidth: float,
+  spaceWidth: float,
   measuredHeight: float,
   descenderHeight: float,
   smoothing: [@opaque] Smoothing.t,
@@ -44,7 +44,7 @@ let loadAndValidateEditorFont =
   Result.bind(
     result,
     font => {
-      let measuredWidth =
+      let spaceWidth =
         Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "  ").
           width;
       let {lineHeight, descent, _}: Revery.Font.FontMetrics.t =
@@ -110,7 +110,7 @@ let loadAndValidateEditorFont =
           fontFamily: family,
           fontSize,
           font,
-          measuredWidth,
+          spaceWidth,
           measuredHeight: lineHeight,
           descenderHeight: descent,
           smoothing,
