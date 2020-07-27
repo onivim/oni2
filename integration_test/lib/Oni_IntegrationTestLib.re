@@ -144,6 +144,8 @@ let runTest =
         ~contributedCommands=[],
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,
+        ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
+        ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
       ),
     );
 

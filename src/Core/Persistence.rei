@@ -16,6 +16,7 @@ module Schema: {
   let int: Codec.t(int);
   let string: Codec.t(Stdlib.String.t);
   let option: Codec.t('value) => Codec.t(option('value));
+  let value: Codec.t(Yojson.Safe.t);
 
   type item('state, 'value);
   let define:
