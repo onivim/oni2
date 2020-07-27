@@ -72,6 +72,7 @@ type t = {
   engines: string,
   activationEvents: list(string),
   extensionDependencies: list(string),
+  runtimeDependencies: Yojson.Safe.t,
   extensionPack: list(string),
   extensionKind: list(Kind.t),
   contributes: Contributions.t,
@@ -123,6 +124,8 @@ module Decode = {
             field.withDefault("activationEvents", [], list(string)),
           extensionDependencies:
             field.withDefault("extensionDependencies", [], list(string)),
+          runtimeDependencies:
+            field.withDefault("runtimeDependencies", `Null, value),
           extensionPack:
             field.withDefault("extensionPack", [], list(string)),
           extensionKind:
