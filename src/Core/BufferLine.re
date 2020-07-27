@@ -16,7 +16,6 @@ type characterCacheInfo = {
   byteOffset: int,
   positionPixelOffset: float,
   uchar: Uchar.t,
-  width: int,
   pixelWidth: float,
 };
 
@@ -91,17 +90,6 @@ module Internal = {
   Skia.Paint.setTextEncoding(paint, GlyphId);
   Skia.Paint.setLcdRenderText(paint, true);
 
-  let getCharacterWidth = (~indentation: IndentationSettings.t, uchar) =>
-    if (Uchar.equal(uchar, tab)) {
-      indentation.tabSize;
-    } else {
-      // Some unicode codepoints are double width, like many CJK characters
-      Uucp.Break.tty_width_hint(
-        uchar,
-      );
-    };
-
-  // The measure result is of the form (characterWidth, pixelWidth)
   let measure = (~typeface: Skia.Typeface.t, ~cache: t, substr, uchar) =>
     switch (
       MeasurementsCache.find(
@@ -122,9 +110,7 @@ module Internal = {
           Uchar.to_int(uchar),
         )
       );
-      let characterWidth =
-        getCharacterWidth(~indentation=cache.indentation, uchar);
-      (characterWidth, pixelWidth);
+      pixelWidth;
     | None =>
       Log.debugf(m =>
         m(
@@ -134,11 +120,7 @@ module Internal = {
           Uchar.to_int(uchar),
         )
       );
-      // The width in monospaced characters
-      let characterWidth =
-        getCharacterWidth(~indentation=cache.indentation, uchar);
       Skia.Paint.setTypeface(paint, typeface);
-
       // When the character is a tab, we have to make sure
       // we offset the correct amount.
       let pixelWidth =
@@ -153,7 +135,7 @@ module Internal = {
         measurementsCache,
       );
       MeasurementsCache.trim(measurementsCache);
-      (characterWidth, pixelWidth);
+      pixelWidth;
     };
 
   let resolveTo = (~index, cache: t) => {
@@ -200,7 +182,7 @@ module Internal = {
           highBit lsl 8 lor lowBit;
         };
 
-        let (characterWidth, pixelWidth) =
+        let pixelWidth =
           measure(~typeface=skiaFace, ~cache, glyphSubstr, uchar);
 
         Log.debugf(m =>
@@ -220,7 +202,6 @@ module Internal = {
             byteOffset,
             positionPixelOffset: pixelPosition^,
             uchar,
-            width: characterWidth,
             pixelWidth,
           });
 
