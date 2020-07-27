@@ -48,34 +48,34 @@ module ExtensionCompletionProvider = {
   };
 };
 
-module ExtensionDocumentHighlightProvider = {
-  let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
-    highlights
-    |> List.map(highlight => {
-         Exthost.OneBasedRange.toRange(
-           Exthost.DocumentHighlight.(highlight.range),
-         )
-       });
-  };
-
-  let create =
-      (
-        id: int,
-        selector: Exthost.DocumentSelector.t,
-        client,
-        (buffer, location),
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDocumentHighlights(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        client,
-      )
-      |> Lwt.map(definitionToModel)
-    });
-  };
-};
+//module ExtensionDocumentHighlightProvider = {
+//  let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
+//    highlights
+//    |> List.map(highlight => {
+//         Exthost.OneBasedRange.toRange(
+//           Exthost.DocumentHighlight.(highlight.range),
+//         )
+//       });
+//  };
+//
+//  let create =
+//      (
+//        id: int,
+//        selector: Exthost.DocumentSelector.t,
+//        client,
+//        (buffer, location),
+//      ) => {
+//    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
+//      Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+//        ~handle=id,
+//        ~resource=Buffer.getUri(buffer),
+//        ~position=Exthost.OneBasedPosition.ofPosition(location),
+//        client,
+//      )
+//      |> Lwt.map(definitionToModel)
+//    });
+//  };
+//};
 
 module ExtensionDocumentSymbolProvider = {
   let create =
@@ -124,20 +124,20 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     );
   };
 
-  let onRegisterDocumentHighlightProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let documentHighlightProvider =
-      ExtensionDocumentHighlightProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DocumentHighlightProviderAvailable(
-          id,
-          documentHighlightProvider,
-        ),
-      ),
-    );
-  };
+  //  let onRegisterDocumentHighlightProvider = (handle, selector, client) => {
+  //    let id = "exthost." ++ string_of_int(handle);
+  //    let documentHighlightProvider =
+  //      ExtensionDocumentHighlightProvider.create(handle, selector, client);
+  //
+  //    dispatch(
+  //      Actions.LanguageFeature(
+  //        LanguageFeatures.DocumentHighlightProviderAvailable(
+  //          id,
+  //          documentHighlightProvider,
+  //        ),
+  //      ),
+  //    );
+  //  };
 
   let onRegisterSuggestProvider = (handle, selector, client) => {
     let id = "exthost." ++ string_of_int(handle);
@@ -224,12 +224,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         withClient(
           onRegisterDocumentSymbolProvider(handle, selector, label),
         );
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
-          RegisterDocumentHighlightProvider({handle, selector}),
-        ) =>
-        withClient(onRegisterDocumentHighlightProvider(handle, selector));
         Lwt.return(Reply.okEmpty);
 
       | LanguageFeatures(
