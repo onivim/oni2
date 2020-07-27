@@ -77,13 +77,13 @@ let bufferLineByteToPixel =
 
     let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
     let (cursorOffset, width) =
-      BufferLine.getCharacterPositionAndWidth(~index, bufferLine);
+      BufferLine.getPixelPositionAndWidth(~index, bufferLine);
 
-    let pixelX = font.spaceWidth *. float(cursorOffset) -. scrollX +. 0.5;
+    let pixelX = cursorOffset -. scrollX +. 0.5;
 
     let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, float(width) *. font.spaceWidth);
+    ({pixelX, pixelY}, width);
   };
 };
 
@@ -543,8 +543,6 @@ module Slow = {
       (~buffer, ~pixelX: float, ~pixelY: float, view) => {
     let rawLine =
       int_of_float((pixelY +. view.scrollY) /. getLineHeight(view));
-    let rawColumn =
-      int_of_float((pixelX +. view.scrollX) /. getCharacterWidth(view));
 
     let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
 
@@ -558,7 +556,10 @@ module Slow = {
     if (line >= 0 && line < totalLinesInBuffer) {
       let bufferLine = Buffer.getLine(line, buffer);
       let byte =
-        BufferLine.Slow.getByteFromPosition(~position=rawColumn, bufferLine);
+        BufferLine.Slow.getByteFromPixel(
+          ~pixel=pixelX +. view.scrollX,
+          bufferLine,
+        );
       (line, byte);
     } else {
       (

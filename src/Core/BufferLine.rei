@@ -51,16 +51,14 @@ let getUcharExn: (~index: int, t) => Uchar.t;
 
 let subExn: (~index: int, ~length: int, t) => string;
 
-let getCharacterPositionAndWidth: (~index: int, t) => (int, int);
-
 let getPixelPositionAndWidth: (~index: int, t) => (float, float);
 
 module Slow: {
   /*
-   * [getByteFromPosition(~position, str)] returns the byte index as position [index].
+   * [getByteFromPixel(~position, str)] returns the pixel position [index].
    * The position of a character is dependent on indentation settings, multi-width characters, etc.
    *
    * _slow_ because requires traversal of the string, currently.
    */
-  let getByteFromPosition: (~position: int, t) => int;
+  let getByteFromPixel: (~pixel: float, t) => int;
 };

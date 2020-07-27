@@ -368,31 +368,6 @@ let subExn = (~index: int, ~length: int, bufferLine) => {
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
 };
 
-let getCharacterPositionAndWidth = (~index: int, bufferLine: t) => {
-  Internal.resolveTo(~index, bufferLine);
-  let characters = bufferLine.characters;
-  let len = Array.length(characters);
-
-  if (index < 0 || index >= len || len == 0) {
-    (bufferLine.nextCharacterPosition, 1);
-  } else {
-    switch (characters[index]) {
-    | Some({positionCharacterOffset, width, _}) => (
-        positionCharacterOffset,
-        width,
-      )
-    | None =>
-      switch (characters[bufferLine.nextIndex - 1]) {
-      | Some({positionCharacterOffset, width, _}) => (
-          positionCharacterOffset + width,
-          1,
-        )
-      | None => (0, 1)
-      }
-    };
-  };
-};
-
 let getPixelPositionAndWidth = (~index: int, bufferLine: t) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
@@ -419,25 +394,24 @@ let getPixelPositionAndWidth = (~index: int, bufferLine: t) => {
 };
 
 module Slow = {
-  let getByteFromPosition = (~position, bufferLine) => {
+  let getByteFromPixel = (~pixel, bufferLine) => {
     let length = lengthInBytes(bufferLine);
-    let rec loop = byteIndex =>
-      if (byteIndex >= length) {
+    Internal.resolveTo(~index=length, bufferLine);
+
+    let rec loop = byteIndex => {
+      let (currentPixel, width) =
+        getPixelPositionAndWidth(~index=byteIndex, bufferLine);
+      if (currentPixel >= bufferLine.nextPixelPosition) {
         length - 1;
       } else {
         let index = getIndex(~byte=byteIndex, bufferLine);
-        let (characterPosition, width) =
-          getCharacterPositionAndWidth(~index, bufferLine);
-
-        if (position >= characterPosition
-            && position < characterPosition
-            + width) {
+        if (pixel >= currentPixel && pixel < currentPixel +. width) {
           index;
         } else {
           loop(byteIndex + 1);
         };
       };
-
+    };
     loop(0);
   };
 };
