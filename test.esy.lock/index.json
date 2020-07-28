@@ -1,5 +1,5 @@
 {
-  "checksum": "e2f43c27bdc4c1d3e32a6e006f9670a6",
+  "checksum": "250051bb1366993fbee9e12686c191c8",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -118,7 +118,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#c26cb3a@d41d8cd9",
+        "revery@github:revery-ui/revery#d595f27@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
@@ -126,13 +126,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#c26cb3a@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#c26cb3a@d41d8cd9",
+    "revery@github:revery-ui/revery#d595f27@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#d595f27@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#c26cb3a",
+      "version": "github:revery-ui/revery#d595f27",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#c26cb3a" ]
+        "source": [ "github:revery-ui/revery#d595f27" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1011,7 +1011,7 @@
       "overrides": [ "test.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#3cb342f@d41d8cd9",
-        "revery@github:revery-ui/revery#c26cb3a@d41d8cd9",
+        "revery@github:revery-ui/revery#d595f27@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
@@ -1473,7 +1473,7 @@
         "ocaml@4.10.0@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
         "@opam/dune@opam:2.5.0@aef1678b",
         "@opam/charInfo_width@opam:1.1.0@b400bb29",
-        "@opam/camomile@opam:1.0.2@51b42ad8",
+        "@opam/camomile@opam:1.0.2@40411a6b",
         "@opam/base-bytes@opam:base@19d0c2ff",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
@@ -1481,7 +1481,7 @@
         "ocaml@4.10.0@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
         "@opam/dune@opam:2.5.0@aef1678b",
         "@opam/charInfo_width@opam:1.1.0@b400bb29",
-        "@opam/camomile@opam:1.0.2@51b42ad8",
+        "@opam/camomile@opam:1.0.2@40411a6b",
         "@opam/base-bytes@opam:base@19d0c2ff"
       ]
     },
@@ -2980,7 +2980,7 @@
         "@opam/lwt_react@opam:1.1.3@72987fcf",
         "@opam/lwt_log@opam:1.1.1@2d7a797f", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/dune@opam:2.5.0@aef1678b",
-        "@opam/camomile@opam:1.0.2@51b42ad8",
+        "@opam/camomile@opam:1.0.2@40411a6b",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -2990,7 +2990,7 @@
         "@opam/lwt_react@opam:1.1.3@72987fcf",
         "@opam/lwt_log@opam:1.1.1@2d7a797f", "@opam/lwt@opam:4.5.0@677655b4",
         "@opam/dune@opam:2.5.0@aef1678b",
-        "@opam/camomile@opam:1.0.2@51b42ad8"
+        "@opam/camomile@opam:1.0.2@40411a6b"
       ]
     },
     "@opam/junit@opam:2.0.2@0b7bd730": {
@@ -3631,17 +3631,17 @@
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/dune@opam:2.5.0@aef1678b",
-        "@opam/camomile@opam:1.0.2@51b42ad8",
+        "@opam/camomile@opam:1.0.2@40411a6b",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/dune@opam:2.5.0@aef1678b",
-        "@opam/camomile@opam:1.0.2@51b42ad8"
+        "@opam/camomile@opam:1.0.2@40411a6b"
       ]
     },
-    "@opam/camomile@opam:1.0.2@51b42ad8": {
-      "id": "@opam/camomile@opam:1.0.2@51b42ad8",
+    "@opam/camomile@opam:1.0.2@40411a6b": {
+      "id": "@opam/camomile@opam:1.0.2@40411a6b",
       "name": "@opam/camomile",
       "version": "opam:1.0.2",
       "source": {
