@@ -101,7 +101,11 @@ let handlers =
       "MainThreadDiagnostics",
     ),
     mainNotImplemented("MainThreadDialogs"),
-    mainNotImplemented("MainThreadDocuments"),
+    main(
+      ~handler=Msg.Documents.handle,
+      ~mapper=msg => Msg.Documents(msg),
+      "MainThreadDocuments",
+    ),
     main(
       ~handler=Msg.DocumentContentProvider.handle,
       ~mapper=msg => Msg.DocumentContentProvider(msg),
