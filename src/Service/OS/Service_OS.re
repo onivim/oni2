@@ -54,6 +54,77 @@ module Api = {
        });
   };
 
+  let rec fold =
+          (
+            ~includeFiles,
+            ~excludeDirectory,
+            ~initial,
+            accumulateFn: ('a, string) => 'a,
+            rootPath,
+          ) => {
+    readdir(rootPath)
+    |> LwtEx.flatMap(entries => {
+         entries
+         |> List.fold_left(
+              (accPromise, {kind, name}: Luv.File.Dirent.t) => {
+                let fullPath = Rench.Path.join(rootPath, name);
+                if (kind == `FILE && includeFiles(fullPath)) {
+                  let promise: Lwt.t('a) =
+                    accPromise
+                    |> LwtEx.flatMap(acc => {
+                         Lwt.return(accumulateFn(acc, fullPath))
+                       });
+                  promise;
+                } else if (kind == `DIR && !excludeDirectory(fullPath)) {
+                  let promise: Lwt.t('a) =
+                    accPromise
+                    |> LwtEx.flatMap(acc => {
+                         fold(
+                           ~includeFiles,
+                           ~excludeDirectory,
+                           ~initial=acc,
+                           accumulateFn,
+                           fullPath,
+                         )
+                       });
+                  promise;
+                } else {
+                  accPromise;
+                };
+              },
+              Lwt.return(initial),
+            )
+       });
+  };
+
+  let glob = (~includeFiles=?, ~excludeDirectories=?, path) => {
+    let includeFilesFn =
+      includeFiles
+      |> Option.map(filesGlobStr => {
+           let regex =
+             Re.Glob.glob(~expand_braces=true, filesGlobStr) |> Re.compile;
+           p => Re.execp(regex, p);
+         })
+      |> Option.value(~default=_ => true);
+    let excludeDirectoryFn =
+      excludeDirectories
+      |> Option.map(excludeDirectoryStr => {
+           let regex =
+             Re.Glob.glob(~expand_braces=true, excludeDirectoryStr)
+             |> Re.compile;
+           p => Re.execp(regex, p);
+         })
+      |> Option.value(~default=_ => false);
+
+    fold(
+      ~includeFiles=includeFilesFn,
+      ~excludeDirectory=excludeDirectoryFn,
+      ~initial=[],
+      (acc, curr) => [curr, ...acc],
+      path,
+    );
+  };
+
   let readFile = (~chunkSize=4096, path) => {
     let rec loop = (acc, file) => {
       let buffer = Luv.Buffer.create(chunkSize);

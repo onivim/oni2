@@ -170,7 +170,11 @@ let handlers =
     ),
     mainNotImplemented("MainThreadWebviews"),
     mainNotImplemented("MainThreadUrls"),
-    mainNotImplemented("MainThreadWorkspace"),
+    main(
+      ~handler=Msg.Workspace.handle,
+      ~mapper=msg => Msg.Workspace(msg),
+      "MainThreadWorkspace",
+    ),
     main(
       ~handler=Msg.FileSystem.handle,
       ~mapper=msg => Msg.FileSystem(msg),

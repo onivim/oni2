@@ -1571,6 +1571,59 @@ module Window = {
   };
 };
 
+module Workspace = {
+  [@deriving show]
+  type msg =
+    | StartFileSearch({
+        includePattern: option(string),
+        //        includeFolder: option(Oni_Core.Uri.t),
+        excludePattern: option(string),
+        maxResults: option(int),
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method) {
+      | "$startFileSearch" =>
+        switch (args) {
+        | `List([
+            includePatternJson,
+            _includeFolder,
+            excludePatternJson,
+            maxResultsJson,
+            ..._,
+          ]) =>
+          let%bind includePattern =
+            includePatternJson
+            |> Internal.decode_value(Json.Decode.(nullable(string)));
+          let%bind excludePattern =
+            excludePatternJson
+            |> Internal.decode_value(Json.Decode.(nullable(string)));
+          let%bind maxResults =
+            maxResultsJson
+            |> Internal.decode_value(Json.Decode.nullable(Decode.int));
+
+          Ok(StartFileSearch({includePattern, excludePattern, maxResults}));
+        | _ =>
+          Error(
+            "Unexpected arguments for $startFileSearch: "
+            ++ Yojson.Safe.to_string(args),
+          )
+        }
+
+      | _ =>
+        Error(
+          Printf.sprintf(
+            "Unhandled workspace message - %s: %s",
+            method,
+            Yojson.Safe.to_string(args),
+          ),
+        )
+      }
+    );
+  };
+};
+
 [@deriving show]
 type t =
   | Connected
@@ -1598,6 +1651,7 @@ type t =
   | Telemetry(Telemetry.msg)
   | TerminalService(TerminalService.msg)
   | Window(Window.msg)
+  | Workspace(Workspace.msg)
   | Initialized
   | Disconnected
   | Unhandled
