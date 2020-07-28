@@ -1093,6 +1093,17 @@ module Msg: {
         });
   };
 
+  module Documents: {
+    [@deriving show]
+    type msg =
+      | TryCreateDocument({
+          language: option(string),
+          content: option(string),
+        })
+      | TryOpenDocument({uri: Oni_Core.Uri.t})
+      | TrySaveDocument({uri: Oni_Core.Uri.t});
+  };
+
   module DownloadService: {
     [@deriving show]
     type msg =
@@ -1480,6 +1491,7 @@ module Msg: {
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
+    | Documents(Documents.msg)
     | DownloadService(DownloadService.msg)
     | Errors(Errors.msg)
     | ExtensionService(ExtensionService.msg)
