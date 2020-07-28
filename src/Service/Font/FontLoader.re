@@ -15,6 +15,7 @@ type t = {
   fontSize: float,
   font: [@opaque] Revery.Font.t,
   spaceWidth: float,
+  underscoreWidth: float,
   avgCharWidth: float,
   maxCharWidth: float,
   measuredHeight: float,
@@ -48,6 +49,9 @@ let loadAndValidateEditorFont =
     font => {
       let spaceWidth =
         Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, " ").
+          width;
+      let underscoreWidth =
+        Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "_").
           width;
       let {lineHeight, descent, avgCharWidth, maxCharWidth, _}: Revery.Font.FontMetrics.t =
         Revery.Font.getMetrics(font, fontSize);
@@ -113,6 +117,7 @@ let loadAndValidateEditorFont =
           fontSize,
           font,
           spaceWidth,
+          underscoreWidth,
           avgCharWidth,
           maxCharWidth,
           measuredHeight: lineHeight,
