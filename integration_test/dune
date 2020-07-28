@@ -37,6 +37,7 @@
            Regression1671Test
            RegressionCommandLineNoCompletionTest
            RegressionDeleteAllLinesTest
+           RegressionFontFallbackTest
            RegressionFileModifiedIndicationTest
            RegressionNonExistentDirectory
            RegressionVspEmptyInitialBufferTest
@@ -96,6 +97,7 @@
         RegressionCommandLineNoCompletionTest.exe
         RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
+        RegressionFontFallbackTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionNonExistentDirectory.exe
         RegressionVspEmptyExistingBufferTest.exe
@@ -124,4 +126,5 @@
         test.crlf
         test.lf
         utf8.txt
+        utf8-test-file.htm
 ))
