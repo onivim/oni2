@@ -166,7 +166,7 @@ let make =
     showLineNumbers != `Off
       ? LineNumber.getLineNumberPixelWidth(
           ~lines=count,
-          ~fontPixelWidth=editorFont.spaceWidth,
+          ~fontPixelWidth=editorFont.underscoreWidth,
           (),
         )
       : 0.0;
