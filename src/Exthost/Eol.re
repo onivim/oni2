@@ -13,8 +13,9 @@ let toString = (v: t) =>
   | LF => "\n"
   };
 
-let sizeInBytes = fun
-| LF => 1
-| CRLF => 2;
+let sizeInBytes =
+  fun
+  | LF => 1
+  | CRLF => 2;
 
 let encode = eol => eol |> toString |> Json.Encode.string;

@@ -916,7 +916,8 @@ module ModelContentChange: {
     rangeLength: int,
   };
 
-  let ofBufferUpdate: (~previousBuffer: Oni_Core.Buffer.t, BufferUpdate.t, Eol.t) => t;
+  let ofBufferUpdate:
+    (~previousBuffer: Oni_Core.Buffer.t, BufferUpdate.t, Eol.t) => t;
 
   let to_yojson: t => Yojson.Safe.t;
 };

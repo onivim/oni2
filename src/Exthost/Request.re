@@ -149,9 +149,6 @@ module Documents = {
   };
 
   let acceptModelChanged = (~uri, ~modelChangedEvent, ~isDirty, client) => {
-    prerr_endline (Printf.sprintf("-- acceptModelChanged: %s %s",
-    uri |> Uri.toString,
-    modelChangedEvent |> ModelChangedEvent.show));
     Client.notify(
       ~rpcName="ExtHostDocuments",
       ~method="$acceptModelChanged",
@@ -169,7 +166,6 @@ module Documents = {
 module DocumentsAndEditors = {
   open Json.Encode;
   let acceptDocumentsAndEditorsDelta = (~delta, client) => {
-    prerr_endline ("-- acceptDocumentsAndEditorsDelta: " ++ DocumentsAndEditorsDelta.show(delta));
     Client.notify(
       ~rpcName="ExtHostDocumentsAndEditors",
       ~method="$acceptDocumentsAndEditorsDelta",
