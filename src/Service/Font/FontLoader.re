@@ -45,7 +45,7 @@ let loadAndValidateEditorFont =
     result,
     font => {
       let spaceWidth =
-        Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, "  ").
+        Revery.Font.FontRenderer.measure(~smoothing, font, fontSize, " ").
           width;
       let {lineHeight, descent, _}: Revery.Font.FontMetrics.t =
         Revery.Font.getMetrics(font, fontSize);
