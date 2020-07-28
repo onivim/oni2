@@ -1093,6 +1093,17 @@ module Msg: {
         });
   };
 
+  module Documents: {
+    [@deriving show]
+    type msg =
+      | TryCreateDocument({
+          language: option(string),
+          content: option(string),
+        })
+      | TryOpenDocument({uri: Oni_Core.Uri.t})
+      | TrySaveDocument({uri: Oni_Core.Uri.t});
+  };
+
   module DownloadService: {
     [@deriving show]
     type msg =
@@ -1457,6 +1468,17 @@ module Msg: {
       | OpenUri({uri: Oni_Core.Uri.t});
   };
 
+  module Workspace: {
+    [@deriving show]
+    type msg =
+      | StartFileSearch({
+          includePattern: option(string),
+          //        includeFolder: option(Oni_Core.Uri.t),
+          excludePattern: option(string),
+          maxResults: option(int),
+        });
+  };
+
   [@deriving show]
   type t =
     | Connected
@@ -1469,6 +1491,7 @@ module Msg: {
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
+    | Documents(Documents.msg)
     | DownloadService(DownloadService.msg)
     | Errors(Errors.msg)
     | ExtensionService(ExtensionService.msg)
@@ -1484,6 +1507,7 @@ module Msg: {
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
     | Window(Window.msg)
+    | Workspace(Workspace.msg)
     | Initialized
     | Disconnected
     | Unhandled
