@@ -61,6 +61,12 @@ module Definition: {
   let isAvailable: (~bufferId: int, model) => bool;
 };
 
+module DocumentHighlights: {
+  let getByLine: (~bufferId: int, ~line: int, model) => list(Range.t);
+
+  let getLinesWithHighlight: (~bufferId: int, model) => list(int);
+};
+
 // TODO: Remove
 module Completions = Completions;
 module CompletionItem = CompletionItem;

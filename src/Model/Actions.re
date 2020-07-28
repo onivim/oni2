@@ -19,7 +19,6 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 type t =
   | Init
   | ActivityBar(ActivityBar.action)
-  | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter({
       id: int,

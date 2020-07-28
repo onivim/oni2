@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 
 type provider = {
   handle: int,
@@ -8,7 +9,8 @@ type provider = {
 
 type model = {
   providers: list(provider),
-  bufferToHighlights: IntMap.t(list(Range.t)),
+  // buffer Id -> lines -> ranges
+  bufferToHighlights: IntMap.t(IntMap.t(list(Range.t))),
 };
 
 let initial = {providers: [], bufferToHighlights: IntMap.empty};
@@ -24,8 +26,9 @@ type msg =
 let update = (msg, model) => {
   switch (msg) {
   | DocumentHighlighted({bufferId, ranges}) =>
+    let lineMap = ranges |> Utility.RangeEx.toLineMap;
     let bufferToHighlights =
-      model.bufferToHighlights |> IntMap.add(bufferId, ranges);
+      model.bufferToHighlights |> IntMap.add(bufferId, lineMap);
     {...model, bufferToHighlights};
   };
 };
@@ -38,6 +41,20 @@ let register = (~handle: int, ~selector, model) => {
 let unregister = (~handle: int, model) => {
   ...model,
   providers: model.providers |> List.filter(prov => prov.handle != handle),
+};
+
+let getByLine = (~bufferId, ~line, model) => {
+  model.bufferToHighlights
+  |> IntMap.find_opt(bufferId)
+  |> OptionEx.flatMap(IntMap.find_opt(line))
+  |> Option.value(~default=[]);
+};
+
+let getLinesWithHighlight = (~bufferId, model) => {
+  model.bufferToHighlights
+  |> IntMap.find_opt(bufferId)
+  |> Option.map(lineMap => IntMap.bindings(lineMap) |> List.map(fst))
+  |> Option.value(~default=[]);
 };
 
 let sub = (~buffer, ~location, ~client, model) => {

@@ -176,6 +176,16 @@ module Definition = {
   };
 };
 
+module DocumentHighlights = {
+  let getByLine = (~bufferId, ~line, {documentHighlights, _}) => {
+    OldHighlights.getByLine(~bufferId, ~line, documentHighlights);
+  };
+
+  let getLinesWithHighlight = (~bufferId, {documentHighlights, _}) => {
+    OldHighlights.getLinesWithHighlight(~bufferId, documentHighlights);
+  };
+};
+
 let sub =
     (
       ~isInsertMode,

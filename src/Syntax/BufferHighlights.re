@@ -9,20 +9,9 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
-[@deriving show({with_path: false})]
-type action =
-  | DocumentHighlightsAvailable(int, [@opaque] list(Range.t))
-  | DocumentHighlightsCleared(int);
+type highlights = {searchHighlightsByLine: IntMap.t(list(Range.t))};
 
-type highlights = {
-  searchHighlightsByLine: IntMap.t(list(Range.t)),
-  documentHighlightsByLine: IntMap.t(list(Range.t)),
-};
-
-let default: highlights = {
-  searchHighlightsByLine: IntMap.empty,
-  documentHighlightsByLine: IntMap.empty,
-};
+let default: highlights = {searchHighlightsByLine: IntMap.empty};
 
 type t = IntMap.t(highlights);
 
@@ -31,13 +20,9 @@ let initial = IntMap.empty;
 let setSearchHighlights = (bufferId, ranges, state) => {
   let searchHighlightsByLine = RangeEx.toLineMap(ranges);
 
-  IntMap.update(
+  IntMap.add(
     bufferId,
-    oldHighlights =>
-      switch (oldHighlights) {
-      | None => Some({...default, searchHighlightsByLine})
-      | Some(v) => Some({...v, searchHighlightsByLine})
-      },
+    {searchHighlightsByLine: searchHighlightsByLine},
     state,
   );
 };
@@ -54,46 +39,47 @@ let clearSearchHighlights = (bufferId, state) => {
     bufferId,
     fun
     | None => Some(default)
-    | Some(v) => Some({...v, searchHighlightsByLine: IntMap.empty}),
+    | Some(_) => Some({searchHighlightsByLine: IntMap.empty}),
     state,
   );
 };
 
-let setDocumentHighlights = (bufferId, ranges, state) => {
-  let documentHighlightsByLine = RangeEx.toLineMap(ranges);
+//let setDocumentHighlights = (bufferId, ranges, state) => {
+//  let documentHighlightsByLine = RangeEx.toLineMap(ranges);
+//
+//  IntMap.update(
+//    bufferId,
+//    oldHighlights =>
+//      switch (oldHighlights) {
+//      | None => Some({...default, documentHighlightsByLine})
+//      | Some(v) => Some({...v, documentHighlightsByLine})
+//      },
+//    state,
+//  );
+//};
 
-  IntMap.update(
-    bufferId,
-    oldHighlights =>
-      switch (oldHighlights) {
-      | None => Some({...default, documentHighlightsByLine})
-      | Some(v) => Some({...v, documentHighlightsByLine})
-      },
-    state,
-  );
-};
+//let getDocumentHighlights = (~bufferId, ~line, state) => {
+//  IntMap.find_opt(bufferId, state)
+//  |> Option.map(highlights => highlights.documentHighlightsByLine)
+//  |> OptionEx.flatMap(IntMap.find_opt(Index.toZeroBased(line)))
+//  |> Option.value(~default=[]);
+//};
 
-let getDocumentHighlights = (~bufferId, ~line, state) => {
-  IntMap.find_opt(bufferId, state)
-  |> Option.map(highlights => highlights.documentHighlightsByLine)
-  |> OptionEx.flatMap(IntMap.find_opt(Index.toZeroBased(line)))
-  |> Option.value(~default=[]);
-};
-
-let clearDocumentHighlights = (bufferId, state) => {
-  IntMap.update(
-    bufferId,
-    fun
-    | None => Some(default)
-    | Some(v) => Some({...v, documentHighlightsByLine: IntMap.empty}),
-    state,
-  );
-};
+//let clearDocumentHighlights = (bufferId, state) => {
+//  IntMap.update(
+//    bufferId,
+//    fun
+//    | None => Some(default)
+//    | Some(v) => Some({ documentHighlightsByLine: IntMap.empty}),
+//    state,
+//  );
+//};
 
 let getHighlightsByLine = (~bufferId, ~line, state) => {
   let searchHighlights = getSearchHighlights(~bufferId, ~line, state);
-  let documentHighlights = getDocumentHighlights(~bufferId, ~line, state);
-  searchHighlights @ documentHighlights;
+  //  let documentHighlights = getDocumentHighlights(~bufferId, ~line, state);
+  //  searchHighlights @ documentHighlights;
+  searchHighlights;
 };
 
 let getHighlights = (~bufferId, state) => {
@@ -107,13 +93,14 @@ let getHighlights = (~bufferId, state) => {
 
   IntMap.find_opt(bufferId, state)
   |> Option.map(highlights => {
-       let mergedMap =
-         IntMap.union(
-           (_key, a, _b) => Some(a),
-           highlights.documentHighlightsByLine,
-           highlights.searchHighlightsByLine,
-         );
-       intMapToIndices(mergedMap);
+       //       let mergedMap =
+       //         IntMap.union(
+       //           (_key, a, _b) => Some(a),
+       //           //highlights.documentHighlightsByLine,
+       //           highlights.searchHighlightsByLine,
+       //         );
+       highlights.searchHighlightsByLine
+       |> intMapToIndices
      })
   |> Option.value(~default=[]);
 };

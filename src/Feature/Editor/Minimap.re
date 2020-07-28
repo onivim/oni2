@@ -122,6 +122,7 @@ let%component make =
                 ~showSlider,
                 ~colors: Colors.t,
                 ~bufferHighlights,
+                ~languageSupport,
                 ~diffMarkers,
                 (),
               ) => {
@@ -343,20 +344,30 @@ let%component make =
               };
 
               let tokens = getTokensForLine(item);
+              let bufferId = Editor.getBufferId(editor);
 
-              let highlightRanges =
+              let searchHighlightRanges =
                 BufferHighlights.getHighlightsByLine(
-                  ~bufferId=Editor.getBufferId(editor),
+                  ~bufferId,
                   ~line=index,
                   bufferHighlights,
                 );
+
+              let documentHighlightRanges =
+                Feature_LanguageSupport.DocumentHighlights.getByLine(
+                  ~bufferId,
+                  ~line=Index.toZeroBased(index),
+                  languageSupport,
+                );
+
+              let highlights = searchHighlightRanges @ documentHighlightRanges;
 
               let shouldHighlight = i =>
                 List.exists(
                   r =>
                     Index.toZeroBased(r.start.column) <= i
                     && Index.toZeroBased(r.stop.column) >= i,
-                  highlightRanges,
+                  highlights,
                 );
 
               // Draw error highlight
