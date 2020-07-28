@@ -913,9 +913,10 @@ module ModelContentChange: {
   type t = {
     range: OneBasedRange.t,
     text: string,
+    rangeLength: int,
   };
 
-  let ofBufferUpdate: (BufferUpdate.t, Eol.t) => t;
+  let ofBufferUpdate: (~previousBuffer: Oni_Core.Buffer.t, BufferUpdate.t, Eol.t) => t;
 
   let to_yojson: t => Yojson.Safe.t;
 };
@@ -1091,17 +1092,6 @@ module Msg: {
           uri: Oni_Core.Uri.t,
           value: string,
         });
-  };
-
-  module Documents: {
-    [@deriving show]
-    type msg =
-      | TryCreateDocument({
-          language: option(string),
-          content: option(string),
-        })
-      | TryOpenDocument({uri: Oni_Core.Uri.t})
-      | TrySaveDocument({uri: Oni_Core.Uri.t});
   };
 
   module DownloadService: {
@@ -1491,7 +1481,6 @@ module Msg: {
     | Decorations(Decorations.msg)
     | Diagnostics(Diagnostics.msg)
     | DocumentContentProvider(DocumentContentProvider.msg)
-    | Documents(Documents.msg)
     | DownloadService(DownloadService.msg)
     | Errors(Errors.msg)
     | ExtensionService(ExtensionService.msg)

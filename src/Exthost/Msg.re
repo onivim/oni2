@@ -431,63 +431,6 @@ module DocumentContentProvider = {
   };
 };
 
-module Documents = {
-  module CreateOptions = {
-    type t = {
-      language: option(string),
-      content: option(string),
-    };
-
-    let decode =
-      Json.Decode.(
-        obj(({field, _}) =>
-          {
-            language: field.optional("language", string),
-            content: field.optional("content", string),
-          }
-        )
-      );
-  };
-
-  [@deriving show]
-  type msg =
-    | TryCreateDocument({
-        language: option(string),
-        content: option(string),
-      })
-    | TryOpenDocument({uri: Oni_Core.Uri.t})
-    | TrySaveDocument({uri: Oni_Core.Uri.t});
-
-  let handle = (method, args) => {
-    Base.Result.Let_syntax.(
-      switch (method, args) {
-      | ("$tryCreateDocument", `List([])) =>
-        Ok(TryCreateDocument({language: None, content: None}))
-
-      | ("$tryCreateDocument", `List([optionsJson])) =>
-        let%bind options =
-          optionsJson |> Internal.decode_value(CreateOptions.decode);
-        Ok(
-          TryCreateDocument({
-            language: options.language,
-            content: options.content,
-          }),
-        );
-
-      | ("$tryOpenDocument", `List([uriJson])) =>
-        let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
-        Ok(TryOpenDocument({uri: uri}));
-
-      | ("$trySaveDocument", `List([uriJson])) =>
-        let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
-        Ok(TrySaveDocument({uri: uri}));
-
-      | _ => Error("Unhandled method: " ++ method)
-      }
-    );
-  };
-};
-
 module DownloadService = {
   [@deriving show]
   type msg =
@@ -1693,7 +1636,6 @@ type t =
   | Decorations(Decorations.msg)
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
-  | Documents(Documents.msg)
   | DownloadService(DownloadService.msg)
   | Errors(Errors.msg)
   | ExtensionService(ExtensionService.msg)

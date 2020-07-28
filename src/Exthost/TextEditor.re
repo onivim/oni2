@@ -1,6 +1,7 @@
 open Oni_Core;
 
 module CursorStyle = {
+  [@deriving show]
   type t =
     | Hidden // 0
     | Blink // 1
@@ -22,6 +23,7 @@ module CursorStyle = {
 };
 
 module LineNumbersStyle = {
+  [@deriving show]
   type t =
     | Off
     | On
@@ -38,6 +40,7 @@ module LineNumbersStyle = {
 };
 
 module ResolvedConfiguration = {
+  [@deriving show]
   type t = {
     tabSize: int,
     indentSize: int,
@@ -62,6 +65,7 @@ module ResolvedConfiguration = {
 };
 
 module AddData = {
+  [@deriving show]
   type t = {
     id: string,
     documentUri: Uri.t,
