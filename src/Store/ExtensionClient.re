@@ -414,6 +414,23 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
+      | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
+        Service_OS.Api.glob(
+          ~includeFiles=?includePattern,
+          ~excludeDirectories=?excludePattern,
+          // TODO: Pull from store
+          Sys.getcwd(),
+        )
+        |> Lwt.map(paths =>
+             Reply.okJson(
+               `List(
+                 paths
+                 |> List.map(str =>
+                      Oni_Core.Uri.fromPath(str) |> Oni_Core.Uri.to_yojson
+                    ),
+               ),
+             )
+           )
       | unhandledMsg =>
         Log.warnf(m =>
           m("Unhandled message: %s", Exthost.Msg.show(unhandledMsg))
