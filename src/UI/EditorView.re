@@ -246,15 +246,19 @@ let make =
     };
 
     let icon = editor => {
-      let (_, _, filePath) =
-        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers)
-        |> getBufferMetadata;
+      let buffer =
+        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers);
+      let (_, _, filePath) = getBufferMetadata(buffer);
 
       let language =
-        Exthost.LanguageInfo.getLanguageFromFilePath(
-          state.languageInfo,
-          filePath,
-        );
+        switch (buffer) {
+        | Some(buf) =>
+          switch (Oni_Core.Buffer.getFileType(buf)) {
+          | Some(ft) => ft
+          | None => Exthost.LanguageInfo.defaultLanguage
+          }
+        | None => Exthost.LanguageInfo.defaultLanguage
+        };
 
       IconTheme.getIconForFile(state.iconTheme, filePath, language);
     };

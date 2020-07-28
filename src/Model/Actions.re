@@ -76,7 +76,6 @@ type t =
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload

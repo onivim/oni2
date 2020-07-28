@@ -3,7 +3,11 @@ open Exthost.Extension;
 
 [@deriving show({with_path: false})]
 type msg =
-  | Activated(string /* id */)
+  | Exthost(Exthost.Msg.ExtensionService.msg)
+  | Storage({
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+      msg: Exthost.Msg.Storage.msg,
+    })
   | Discovered([@opaque] list(Scanner.ScanResult.t))
   | ExecuteCommand({
       command: string,
@@ -41,6 +45,18 @@ type outmsg =
   | NotifySuccess(string)
   | NotifyFailure(string);
 
+module Effect = {
+  let replySuccess = (~resolver) =>
+    Isolinear.Effect.create(~name="feature.extensions.replySuccess", () => {
+      Lwt.wakeup(resolver, Exthost.Reply.okEmpty)
+    });
+
+  let replyJson = (~resolver, json) =>
+    Isolinear.Effect.create(~name="feature.extensions.replyJson", () => {
+      Lwt.wakeup(resolver, Exthost.Reply.okJson(json))
+    });
+};
+
 type model = {
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
@@ -49,9 +65,21 @@ type model = {
   extensionsFolder: option(string),
   pendingInstalls: list(string),
   pendingUninstalls: list(string),
+  globalValues: Yojson.Safe.t,
+  localValues: Yojson.Safe.t,
 };
 
-let initial = (~extensionsFolder) => {
+module Persistence = {
+  type t = Yojson.Safe.t;
+  let initial = `Assoc([]);
+
+  let codec = Oni_Core.Persistence.Schema.value;
+
+  let get = (~shared, model) =>
+    shared ? model.globalValues : model.localValues;
+};
+
+let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => {
   activatedIds: [],
   extensions: [],
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
@@ -59,6 +87,8 @@ let initial = (~extensionsFolder) => {
   extensionsFolder,
   pendingInstalls: [],
   pendingUninstalls: [],
+  globalValues: globalPersistence,
+  localValues: workspacePersistence,
 };
 
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
@@ -162,6 +192,13 @@ let getExtensions = (~category, model) => {
   };
 };
 
+let getPersistedValue = (~shared, ~key, model) => {
+  let store = shared ? model.globalValues : model.localValues;
+  [store]
+  |> Yojson.Safe.Util.filter_member(key)
+  |> (l => List.nth_opt(l, 0));
+};
+
 let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
   if (previousText != newText) {
     if (String.length(newText) == 0) {
@@ -175,8 +212,47 @@ let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
-  | Activated(id) => (Internal.markActivated(id, model), Nothing)
+  | Exthost(msg) =>
+    switch (msg) {
+    | ExtensionActivationError({errorMessage, _}) => (
+        model,
+        NotifyFailure(Printf.sprintf("Error: %s", errorMessage)),
+      )
+    | DidActivateExtension({extensionId, _}) => (
+        Internal.markActivated(extensionId, model),
+        Nothing,
+      )
+    | _ =>
+      // TODO: Additional methods
+      (model, Nothing)
+    }
+
+  | Storage({resolver, msg}) =>
+    switch (msg) {
+    | GetValue({shared, key}) =>
+      let value = getPersistedValue(~shared, ~key, model);
+
+      let eff =
+        switch (value) {
+        | None => Effect.replyJson(~resolver, `Null)
+        | Some(json) => Effect.replyJson(~resolver, json)
+        };
+      (model, Effect(eff));
+
+    | SetValue({shared, key, value}) =>
+      let store = shared ? model.globalValues : model.localValues;
+      let store' = Utility.JsonEx.update(key, _ => Some(value), store);
+      let model' =
+        shared
+          ? {...model, globalValues: store'}
+          : {...model, localValues: store'};
+
+      let eff = Effect.replySuccess(~resolver);
+      (model', Effect(eff));
+    }
+
   | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
+
   | ExecuteCommand({command, arguments}) => (
       model,
       Effect(
@@ -187,6 +263,7 @@ let update = (~extHostClient, msg, model) => {
         ),
       ),
     )
+
   | KeyPressed(key) =>
     let previousText = model.searchText |> Feature_InputText.value;
     let searchText' = Feature_InputText.handleInput(~key, model.searchText);

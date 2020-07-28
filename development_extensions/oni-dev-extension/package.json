@@ -47,6 +47,22 @@
 			{
 				"command": "developer.oni.showQuickPick",
 				"title": "Onivim - Developer: Show Quick Pick"
+			},
+			{
+				"command": "developer.oni.setGlobalMemento",
+				"title": "Onivim - Developer: Set Global Memento"
+			},
+			{
+				"command": "developer.oni.getGlobalMemento",
+				"title": "Onivim - Developer: Get Global Memento"
+			},
+			{
+				"command": "developer.oni.getWorkspaceMemento",
+				"title": "Onivim - Developer: Get Workspace Memento"
+			},
+			{
+				"command": "developer.oni.setWorkspaceMemento",
+				"title": "Onivim - Developer: Set Workspace Memento"
 			}
 		],
 		"configuration": {

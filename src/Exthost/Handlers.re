@@ -75,7 +75,11 @@ let handlers =
       "MainThreadCommands",
     ),
     mainNotImplemented("MainThreadComments"),
-    mainNotImplemented("MainThreadConfiguration"),
+    main(
+      ~handler=Msg.Configuration.handle,
+      ~mapper=msg => Msg.Configuration(msg),
+      "MainThreadConfiguration",
+    ),
     main(
       ~handler=Msg.Console.handle,
       ~mapper=msg => Msg.Console(msg),
@@ -149,7 +153,11 @@ let handlers =
       ~mapper=msg => Msg.StatusBar(msg),
       "MainThreadStatusBar",
     ),
-    mainNotImplemented("MainThreadStorage"),
+    main(
+      ~handler=Msg.Storage.handle,
+      ~mapper=msg => Msg.Storage(msg),
+      "MainThreadStorage",
+    ),
     main(
       ~handler=Msg.Telemetry.handle,
       ~mapper=msg => Msg.Telemetry(msg),

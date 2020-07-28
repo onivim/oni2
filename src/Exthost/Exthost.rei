@@ -5,11 +5,26 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module Label: {
+  [@deriving show]
+  type segment =
+    | Text(string)
+    | Icon(string);
+
+  [@deriving show]
+  type t = list(segment);
+
+  let ofString: string => t;
+  let toString: t => string;
+
+  let decode: Json.decoder(t);
+};
+
 module Command: {
   [@deriving show]
   type t = {
     id: string,
-    title: option(string),
+    label: option(Label.t),
   };
 
   let decode: Json.decoder(t);
@@ -256,21 +271,6 @@ module ReferenceContext: {
   let encode: Json.encoder(t);
 };
 
-module Label: {
-  [@deriving show]
-  type segment =
-    | Text(string)
-    | Icon(string);
-
-  [@deriving show]
-  type t = list(segment);
-
-  let ofString: string => t;
-  let toString: t => string;
-
-  let decode: Json.decoder(t);
-};
-
 module Progress: {
   module Location: {
     [@deriving show]
@@ -470,16 +470,23 @@ module SCM: {
     module Decode: {let splices: Json.decoder(Splices.t);};
   };
 
+  module ProviderFeatures: {
+    type t = {
+      hasQuickDiffProvider: bool,
+      count: option(int),
+      commitTemplate: option(string),
+      acceptInputCommand: option(command),
+      statusBarCommands: list(Command.t),
+    };
+
+    let decode: Json.decoder(t);
+  };
+
   module GroupFeatures: {
     [@deriving show({with_path: false})]
     type t = {hideWhenEmpty: bool};
 
     let decode: Json.decoder(t);
-  };
-
-  module Decode: {
-    //let resource: Yojson.Safe.t => Resource.t;
-    let command: Yojson.Safe.t => option(command);
   };
 };
 
@@ -622,6 +629,33 @@ module Configuration: {
     let encode: Json.encoder(t);
     let fromSettings: Config.Settings.t => t;
     let toString: t => string;
+  };
+
+  module Target: {
+    type t =
+      | User
+      | UserLocal
+      | UserRemote
+      | Workspace
+      | WorkspaceFolder
+      | Default
+      | Memory;
+
+    let toInt: t => int;
+    let ofInt: int => option(t);
+    let toString: t => string;
+
+    let encode: Json.encoder(t);
+    let decode: Json.decoder(t);
+  };
+
+  module Overrides: {
+    type t = {
+      overrideIdentifier: option(string),
+      resource: option(Oni_Core.Uri.t),
+    };
+
+    let decode: Json.decoder(t);
   };
 
   type t;
@@ -985,6 +1019,24 @@ module Msg: {
       | GetCommands;
   };
 
+  module Configuration: {
+    [@deriving show]
+    type msg =
+      | UpdateConfigurationOption({
+          target: option(Configuration.Target.t),
+          key: string,
+          value: Yojson.Safe.t,
+          overrides: option(Configuration.Overrides.t),
+          scopeToLanguage: bool,
+        })
+      | RemoveConfigurationOption({
+          target: option(Configuration.Target.t),
+          key: string,
+          overrides: option(Configuration.Overrides.t),
+          scopeToLanguage: bool,
+        });
+  };
+
   module Console: {
     [@deriving show]
     type msg =
@@ -1262,10 +1314,7 @@ module Msg: {
       | UnregisterSourceControl({handle: int})
       | UpdateSourceControl({
           handle: int,
-          hasQuickDiffProvider: option(bool),
-          count: option(int),
-          commitTemplate: option(string),
-          acceptInputCommand: option(SCM.command),
+          features: SCM.ProviderFeatures.t,
         })
       // statusBarCommands: option(_),
       | RegisterSCMResourceGroup({
@@ -1303,6 +1352,20 @@ module Msg: {
       | SpliceSCMResourceStates({
           handle: int,
           splices: list(SCM.Resource.Splices.t),
+        });
+  };
+
+  module Storage: {
+    [@deriving show]
+    type msg =
+      | GetValue({
+          shared: bool,
+          key: string,
+        })
+      | SetValue({
+          shared: bool,
+          key: string,
+          value: Yojson.Safe.t,
         });
   };
 
@@ -1400,6 +1463,7 @@ module Msg: {
     | Ready
     | Clipboard(Clipboard.msg)
     | Commands(Commands.msg)
+    | Configuration(Configuration.msg)
     | Console(Console.msg)
     | DebugService(DebugService.msg)
     | Decorations(Decorations.msg)
@@ -1416,6 +1480,7 @@ module Msg: {
     | QuickOpen(QuickOpen.msg)
     | SCM(SCM.msg)
     | StatusBar(StatusBar.msg)
+    | Storage(Storage.msg)
     | Telemetry(Telemetry.msg)
     | TerminalService(TerminalService.msg)
     | Window(Window.msg)

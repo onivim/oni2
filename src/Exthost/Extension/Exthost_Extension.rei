@@ -88,6 +88,9 @@ module Contributions: {
     type t = {
       id: string,
       extensions: list(string),
+      filenames: list(string),
+      filenamePatterns: list(string),
+      firstLine: option(string),
       aliases: list(string),
       configuration: option(string),
     };
@@ -159,6 +162,7 @@ module Manifest: {
     engines: string,
     activationEvents: list(string),
     extensionDependencies: list(string),
+    runtimeDependencies: Yojson.Safe.t,
     extensionPack: list(string),
     extensionKind: list(Kind.t),
     contributes: Contributions.t,
@@ -211,6 +215,7 @@ module InitData: {
       engines: string,
       activationEvents: list(string),
       extensionDependencies: list(string),
+      runtimeDependencies: Yojson.Safe.t,
       extensionKind: list(string),
       contributes: Contributions.t,
       enableProposedApi: bool,

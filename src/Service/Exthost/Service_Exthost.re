@@ -145,6 +145,29 @@ module Effects = {
       });
     };
 
+    let provideReferences =
+        (~handle, ~uri, ~position, ~context, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.provideReferences", dispatch => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideReferences(
+            ~handle,
+            ~resource=uri,
+            ~position=Exthost.OneBasedPosition.ofPosition(position),
+            ~context,
+            client,
+          );
+
+        Lwt.on_success(promise, locations =>
+          dispatch(toMsg(Ok(locations)))
+        );
+
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
+
     let provideSignatureHelp =
         (~handle, ~uri, ~position, ~context, client, toMsg) => {
       Isolinear.Effect.createWithDispatch(

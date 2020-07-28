@@ -54,6 +54,11 @@ module Schema = {
         encode: Json.Encode.nullable(codec.encode),
         decode: Json.Decode.maybe(codec.decode),
       };
+      let value = {
+        equal: Yojson.Safe.equal,
+        encode: Json.Encode.value,
+        decode: Json.Decode.value,
+      };
     };
   };
 

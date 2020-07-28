@@ -40,23 +40,23 @@ let update = (msg, model) =>
   switch (msg) {
   | DefinitionNotAvailable => (
       {...model, maybeDefinition: None},
-      Common.Nothing,
+      Outmsg.Nothing,
     )
   | DefinitionAvailable(definition) => (
       {...model, maybeDefinition: Some(definition)},
-      Common.Nothing,
+      Outmsg.Nothing,
     )
   | Command(GotoDefinition) =>
     let outmsg =
       switch (model.maybeDefinition) {
-      | None => Common.Nothing
+      | None => Outmsg.Nothing
       | Some({definition, _}) =>
         let position =
           Location.{
             line: Index.fromOneBased(definition.range.startLineNumber),
             column: Index.fromOneBased(definition.range.startColumn),
           };
-        Common.OpenFile({
+        Outmsg.OpenFile({
           filePath: definition.uri |> Oni_Core.Uri.toFileSystemPath,
           location: Some(position),
         });
