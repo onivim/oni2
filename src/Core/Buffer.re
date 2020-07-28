@@ -248,3 +248,14 @@ let update = (~font=Font.default, buf: t, update: BufferUpdate.t) => {
     buf;
   };
 };
+
+let setFont = (font, buf) => {
+  let lines =
+    buf.lines
+    |> Array.map(line => {
+         let raw = BufferLine.raw(line);
+         let indentation = BufferLine.indentation(line);
+         BufferLine.make(~font, ~indentation, raw);
+       });
+  {...buf, lines};
+};

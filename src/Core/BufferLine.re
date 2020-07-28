@@ -278,6 +278,8 @@ let raw = ({raw, _}) => raw;
 
 let font = ({font, _}) => font;
 
+let indentation = ({indentation, _}) => indentation;
+
 let lengthBounded = (~max, bufferLine) => {
   Internal.resolveTo(~index=max, bufferLine);
   min(bufferLine.nextIndex, max);

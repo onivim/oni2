@@ -18,6 +18,8 @@ let raw: t => string;
 
 let font: t => Font.t;
 
+let indentation: t => IndentationSettings.t;
+
 /*
  * [lengthSlow(bufferLine)] returns the UTF-8 length of the buffer line.
  *

@@ -414,7 +414,11 @@ let getBottomVisibleLine = view => {
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 
-let setFont = (~font, editor) => {...editor, font};
+let setFont = (~font: Oni_Core.Font.t, editor) => {
+  ...editor,
+  font,
+  buffer: EditorBuffer.setFont(font, editor.buffer),
+};
 
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   ...editor,

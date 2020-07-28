@@ -58,3 +58,5 @@ let getLastUsed: t => float;
 
 let shouldApplyUpdate: (BufferUpdate.t, t) => bool;
 let update: (~font: Font.t=?, t, BufferUpdate.t) => t;
+
+let setFont: (Font.t, t) => t;
