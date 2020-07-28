@@ -33,12 +33,16 @@ type outmsg =
       filePath: string,
       location: option(Location.t),
     })
+  | NotifySuccess(string)
+  | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg));
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
     fun
     | Outmsg.Nothing => Nothing
+    | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
+    | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
     | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));
 
@@ -56,7 +60,17 @@ module Msg = {
   };
 };
 
-let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
+let update =
+    (
+      ~configuration,
+      ~languageConfiguration,
+      ~maybeSelection,
+      ~maybeBuffer,
+      ~cursorLocation,
+      ~client,
+      msg,
+      model,
+    ) =>
   switch (msg) {
   | KeyPressed(_)
   | Pasted(_) => (model, Nothing)
@@ -141,12 +155,34 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
 
   | Formatting(formatMsg) =>
     let (formatting', outMsg) =
-      Formatting.update(formatMsg, model.formatting);
+      Formatting.update(
+        ~languageConfiguration,
+        ~configuration,
+        ~maybeSelection,
+        ~maybeBuffer,
+        ~extHostClient=client,
+        formatMsg,
+        model.formatting,
+      );
 
     // TODO:
-    ignore(outMsg);
+    let outMsg' =
+      switch (outMsg) {
+      | Formatting.Nothing => Nothing
+      | Formatting.Effect(eff) =>
+        Effect(eff |> Isolinear.Effect.map(msg => Formatting(msg)))
+      | Formatting.FormattingApplied({displayName, editCount}) =>
+        NotifySuccess(
+          Printf.sprintf(
+            "Formatting: Applied %d edits with %s",
+            editCount,
+            displayName,
+          ),
+        )
+      | Formatting.FormatError(errorMsg) => NotifyFailure(errorMsg)
+      };
 
-    {...model, formatting: formatting'};
+    ({...model, formatting: formatting'}, outMsg');
 
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);

@@ -73,8 +73,12 @@ let registerRangeFormatter = (~handle, ~selector, ~displayName, model) => {
 
 let unregister = (~handle, model) => {
   ...model,
-  availableDocumentFormatters: model.availableDocumentFormatters |> List.filter(prov => prov.handle != handle),
-  availableRangeFormatters: model.availableRangeFormatters |> List.filter(prov => prov.handle != handle),
+  availableDocumentFormatters:
+    model.availableDocumentFormatters
+    |> List.filter(prov => prov.handle != handle),
+  availableRangeFormatters:
+    model.availableRangeFormatters
+    |> List.filter(prov => prov.handle != handle),
 };
 
 type outmsg =
@@ -222,8 +226,8 @@ let update =
       ~maybeSelection,
       ~maybeBuffer,
       ~extHostClient,
-      model,
       msg,
+      model,
     ) => {
   switch (msg) {
   | FormatRange({startLine, endLine}) =>

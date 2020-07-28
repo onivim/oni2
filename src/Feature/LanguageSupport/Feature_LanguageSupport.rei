@@ -15,9 +15,7 @@ module Msg: {
 
   module Formatting: {
     let formatDocument: msg;
-    let formatRange:
-      (~startLine: Index.t, ~endLine: Index.t) =>
-      msg;
+    let formatRange: (~startLine: Index.t, ~endLine: Index.t) => msg;
   };
 };
 
@@ -27,10 +25,15 @@ type outmsg =
       filePath: string,
       location: option(Location.t),
     })
+  | NotifySuccess(string)
+  | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg));
 
 let update:
   (
+    ~configuration: Oni_Core.Configuration.t,
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
+    ~maybeSelection: option(Range.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
     ~cursorLocation: Location.t,
     ~client: Exthost.Client.t,
