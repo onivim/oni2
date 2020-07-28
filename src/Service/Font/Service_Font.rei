@@ -6,6 +6,8 @@ type font =
     fontFamily: [@opaque] Revery.Font.Family.t,
     fontSize: float,
     spaceWidth: float,
+    avgCharWidth: float,
+    maxCharWidth: float,
     measuredHeight: float,
     descenderHeight: float,
     smoothing: [@opaque] Revery.Font.Smoothing.t,

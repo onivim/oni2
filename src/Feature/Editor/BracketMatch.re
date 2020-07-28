@@ -207,6 +207,8 @@ module Test = {
       fontFamily: Revery.Font.Family.defaultMono,
       fontSize: 12.0,
       spaceWidth: 0.0,
+      maxCharWidth: 0.0,
+      avgCharWidth: 0.0,
       measuredHeight: 0.0,
       descenderHeight: 0.0,
       smoothing: Revery_Font.Smoothing.default,
