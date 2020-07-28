@@ -60,8 +60,7 @@ let getHighlights = (~bufferId, state) => {
 
   IntMap.find_opt(bufferId, state)
   |> Option.map(highlights => {
-       highlights.searchHighlightsByLine
-       |> intMapToIndices
+       highlights.searchHighlightsByLine |> intMapToIndices
      })
   |> Option.value(~default=[]);
 };
