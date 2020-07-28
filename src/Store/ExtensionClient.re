@@ -220,6 +220,32 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         dispatch(DecorationsChanged({handle, uris}));
         Lwt.return(Reply.okEmpty);
 
+      | Documents(documentsMsg) =>
+        switch (documentsMsg) {
+        | Documents.TryOpenDocument({uri}) =>
+          if (Oni_Core.Uri.getScheme(uri) == Oni_Core.Uri.Scheme.File) {
+            dispatch(
+              Actions.OpenFileByPath(
+                Oni_Core.Uri.toFileSystemPath(uri),
+                None,
+                None,
+              ),
+            );
+          } else {
+            Log.warnf(m =>
+              m(
+                "TryOpenDocument: Unable to open %s",
+                uri |> Oni_Core.Uri.toString,
+              )
+            );
+          }
+        | Documents.TrySaveDocument(_) =>
+          Log.warn("TrySaveDocument is not yet implemented.")
+        | Documents.TryCreateDocument(_) =>
+          Log.warn("TryCreateDocument is not yet implemented.")
+        };
+        Lwt.return(Reply.okEmpty);
+
       | ExtensionService(extMsg) =>
         Log.infof(m => m("ExtensionService: %s", Exthost.Msg.show(msg)));
         dispatch(
@@ -364,6 +390,23 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
+      | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
+        Service_OS.Api.glob(
+          ~includeFiles=?includePattern,
+          ~excludeDirectories=?excludePattern,
+          // TODO: Pull from store
+          Sys.getcwd(),
+        )
+        |> Lwt.map(paths =>
+             Reply.okJson(
+               `List(
+                 paths
+                 |> List.map(str =>
+                      Oni_Core.Uri.fromPath(str) |> Oni_Core.Uri.to_yojson
+                    ),
+               ),
+             )
+           )
       | unhandledMsg =>
         Log.warnf(m =>
           m("Unhandled message: %s", Exthost.Msg.show(unhandledMsg))

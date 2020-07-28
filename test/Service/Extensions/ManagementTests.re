@@ -64,7 +64,8 @@ describe("Management", ({describe, _}) => {
       expect.equal(List.length(startExtensions), 0);
 
       let result =
-        ExtM.install(~setup, ~extensionsFolder, "redhat.java") |> LwtEx.sync;
+        ExtM.install(~setup, ~extensionsFolder, "redhat.java")
+        |> LwtEx.sync(~timeout=60.0);
 
       expect.equal(Result.is_ok(result), true);
 
@@ -83,7 +84,8 @@ describe("Management", ({describe, _}) => {
       expect.equal(List.length(startExtensions), 0);
 
       let result =
-        ExtM.install(~setup, ~extensionsFolder, "golang.Go") |> LwtEx.sync;
+        ExtM.install(~setup, ~extensionsFolder, "golang.Go")
+        |> LwtEx.sync(~timeout=60.0);
 
       expect.equal(Result.is_ok(result), true);
     });
