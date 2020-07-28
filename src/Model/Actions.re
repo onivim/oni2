@@ -102,7 +102,6 @@ type t =
       pixelWidth: int,
       pixelHeight: int,
     })
-  | Formatting(Feature_Formatting.msg)
   | Notification(Feature_Notification.msg)
   | Messages(Feature_Messages.msg)
   | Editor({

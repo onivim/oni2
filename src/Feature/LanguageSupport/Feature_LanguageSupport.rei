@@ -12,6 +12,13 @@ module Msg: {
   let exthost: Exthost.Msg.LanguageFeatures.msg => msg;
   let keyPressed: string => msg;
   let pasted: string => msg;
+
+  module Formatting: {
+    let formatDocument: msg;
+    let formatRange:
+      (~startLine: Index.t, ~endLine: Index.t) =>
+      msg;
+  };
 };
 
 type outmsg =

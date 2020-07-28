@@ -3,6 +3,7 @@ open EditorCoreTypes;
 type model = {
   codeLens: CodeLens.model,
   definition: Definition.model,
+  formatting: Formatting.model,
   rename: Rename.model,
   references: References.model,
 };
@@ -10,6 +11,7 @@ type model = {
 let initial = {
   codeLens: CodeLens.initial,
   definition: Definition.initial,
+  formatting: Formatting.initial,
   rename: Rename.initial,
   references: References.initial,
 };
@@ -18,6 +20,7 @@ let initial = {
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
   | Definition(Definition.msg)
+  | Formatting(Formatting.msg)
   | References(References.msg)
   | Rename(Rename.msg)
   | CodeLens(CodeLens.msg)
@@ -44,6 +47,13 @@ module Msg = {
 
   let keyPressed = key => KeyPressed(key);
   let pasted = key => Pasted(key);
+
+  module Formatting = {
+    let formatDocument = Formatting(Formatting.(Command(FormatDocument)));
+
+    let formatRange = (~startLine, ~endLine) =>
+      Formatting(Formatting.FormatRange({startLine, endLine}));
+  };
 };
 
 let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
@@ -64,10 +74,35 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
       References.register(~handle, ~selector, model.references);
     ({...model, references: references'}, Nothing);
 
+  | Exthost(
+      RegisterRangeFormattingSupport({handle, selector, displayName, _}),
+    ) =>
+    let formatting' =
+      Formatting.registerRangeFormatter(
+        ~handle,
+        ~selector,
+        ~displayName,
+        model.formatting,
+      );
+    ({...model, formatting: formatting'}, Nothing);
+
+  | Exthost(
+      RegisterDocumentFormattingSupport({handle, selector, displayName, _}),
+    ) =>
+    let formatting' =
+      Formatting.registerDocumentFormatter(
+        ~handle,
+        ~selector,
+        ~displayName,
+        model.formatting,
+      );
+    ({...model, formatting: formatting'}, Nothing);
+
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         definition: Definition.unregister(~handle, model.definition),
+        formatting: Formatting.unregister(~handle, model.formatting),
         references: References.unregister(~handle, model.references),
         rename: Rename.unregister(~handle, model.rename),
       },
@@ -104,6 +139,15 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
       outmsg |> map(msg => References(msg)),
     );
 
+  | Formatting(formatMsg) =>
+    let (formatting', outMsg) =
+      Formatting.update(formatMsg, model.formatting);
+
+    // TODO:
+    ignore(outMsg);
+
+    {...model, formatting: formatting'};
+
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
@@ -126,6 +170,10 @@ module Contributions = {
     @ (
       References.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => References(msg)))
+    )
+    @ (
+      Formatting.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
   let contextKeys =
