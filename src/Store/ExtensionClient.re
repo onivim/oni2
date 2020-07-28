@@ -183,6 +183,8 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
+      | Initialized => prerr_endline ("-- INITIALIZED");
+      Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)
       | FileSystem(msg) => Middleware.filesystem(msg)
       | SCM(msg) =>
@@ -488,7 +490,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let redirect =
-    if (Timber.App.isEnabled()) {
+//    if (Timber.App.isEnabled()) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,
@@ -506,9 +508,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           (),
         ),
       ];
-    } else {
-      [];
-    };
+//    } else {
+//      [];
+//    };
 
   let _process: Luv.Process.t =
     LuvEx.Process.spawn(
