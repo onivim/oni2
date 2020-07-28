@@ -115,8 +115,8 @@ let start =
       ~overriddenExtensionsDir,
     );
   let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
-  let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
-  let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
+  let grammarInfo = Exthost.GrammarInfo.ofExtensions(extensions);
+  let grammarRepository = Oni_Syntax.GrammarRepository.create(grammarInfo);
 
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
@@ -128,7 +128,7 @@ let start =
       setClipboardText,
     );
 
-  let themeUpdater = ThemeStoreConnector.start(themeInfo);
+  let themeUpdater = ThemeStoreConnector.start();
 
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
@@ -139,7 +139,7 @@ let start =
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);
 
-  let quickmenuUpdater = QuickmenuStoreConnector.start(themeInfo);
+  let quickmenuUpdater = QuickmenuStoreConnector.start();
 
   let configurationUpdater =
     ConfigurationStoreConnector.start(
@@ -202,6 +202,8 @@ let start =
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
 
+    let isInsertMode = Feature_Vim.mode(state.vim) == Vim.Types.Insert;
+
     let visibleRanges =
       visibleBuffersAndRanges
       |> List.map(((bufferId, ranges)) => {
@@ -221,6 +223,7 @@ let start =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
             ~config,
+            ~grammarInfo,
             ~languageInfo,
             ~setup,
             ~tokenTheme=state.tokenTheme,
@@ -253,12 +256,18 @@ let start =
         c => c.editorFontSmoothing,
         state.configuration,
       );
+    let fontLigatures =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontLigatures,
+        state.configuration,
+      );
     let editorFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="editorFont",
         ~fontFamily,
         ~fontSize,
         ~fontSmoothing,
+        ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
@@ -283,6 +292,7 @@ let start =
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
         ~fontSmoothing=terminalFontSmoothing,
+        ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
@@ -290,6 +300,10 @@ let start =
 
     let activeEditor = Feature_Layout.activeEditor(state.layout);
     let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
+    let activeBufferId = Feature_Editor.Editor.getBufferId(activeEditor);
+    let activePosition = Feature_Editor.Editor.getPrimaryCursor(activeEditor);
+    let maybeActiveBuffer =
+      Model.Buffers.getBuffer(activeBufferId, state.buffers);
 
     let extHostSubscription =
       Feature_Exthost.subscription(
@@ -306,6 +320,21 @@ let start =
         Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
       );
 
+    let languageSupportSub =
+      maybeActiveBuffer
+      |> Option.map(activeBuffer => {
+           Feature_LanguageSupport.sub(
+             ~isInsertMode,
+             ~activeBuffer,
+             ~activePosition,
+             ~visibleBuffers,
+             ~client=extHostClient,
+             state.languageSupport,
+           )
+           |> Isolinear.Sub.map(msg => Model.Actions.LanguageSupport(msg))
+         })
+      |> Option.value(~default=Isolinear.Sub.none);
+
     let editorGlobalSub =
       Feature_Editor.Sub.global(~config)
       |> Isolinear.Sub.map(msg =>
@@ -321,6 +350,7 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
 
     [
+      languageSupportSub,
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
@@ -386,50 +416,34 @@ let start =
     window,
   );
 
-  registerCommands(~dispatch, Model.GlobalCommands.registrations());
-  registerCommands(
-    ~dispatch,
-    Feature_Terminal.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
-  );
-  registerCommands(
-    ~dispatch,
+  // Commands
+  [
+    Model.GlobalCommands.registrations(),
     Feature_Sneak.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
-  );
-  registerCommands(
-    ~dispatch,
+    Feature_Terminal.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
+    Feature_Sneak.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
     Feature_Layout.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
-  );
-  registerCommands(
-    ~dispatch,
     Feature_Hover.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
-  );
-  registerCommands(
-    ~dispatch,
     Feature_SignatureHelp.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
-  );
-
-  registerCommands(
-    ~dispatch,
     Feature_Formatting.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
-  );
-
-  registerCommands(
-    ~dispatch,
+    Feature_Theme.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Theme(msg))),
     Feature_Clipboard.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
-  );
-
-  registerCommands(
-    ~dispatch,
     Feature_Registers.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
-  );
+    Feature_LanguageSupport.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
+  ]
+  |> List.flatten
+  |> registerCommands(~dispatch);
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =

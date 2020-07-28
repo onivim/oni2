@@ -4,7 +4,7 @@
 open Oni_Core;
 open EditorCoreTypes;
 
-module Log = (val Log.withNamespace("Oni.Feature.SignatureHelp"));
+module Log = (val Log.withNamespace("Oni2.Feature.SignatureHelp"));
 module IDGenerator =
   Utility.IDGenerator.Make({});
 
@@ -24,6 +24,8 @@ type model = {
   activeSignature: option(int),
   activeParameter: option(int),
   editorID: option(int),
+  location: option(Location.t),
+  context: option(Exthost.SignatureHelp.RequestContext.t),
 };
 
 let initial = {
@@ -35,6 +37,8 @@ let initial = {
   activeSignature: None,
   activeParameter: None,
   editorID: None,
+  location: None,
+  context: None,
 };
 
 [@deriving show({with_path: false})]
@@ -54,11 +58,14 @@ type msg =
       activeParameter: int,
       requestID: int,
       editorID: int,
+      location: Location.t,
+      context: Exthost.SignatureHelp.RequestContext.t,
     })
   | EmptyInfoReceived(int)
   | RequestFailed(string)
   | SignatureIncrementClicked
-  | SignatureDecrementClicked;
+  | SignatureDecrementClicked
+  | CursorMoved(int);
 
 type outmsg =
   | Nothing
@@ -135,6 +142,8 @@ let getEffectsForLocation =
              activeParameter,
              requestID,
              editorID: Feature_Editor.Editor.getId(editor),
+             location,
+             context,
            })
          | Ok(None) => EmptyInfoReceived(requestID)
          | Error(s) => RequestFailed(s)
@@ -189,6 +198,8 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       activeParameter,
       requestID,
       editorID,
+      location,
+      context,
     }) =>
     switch (model.lastRequestID) {
     | Some(reqID) when reqID == requestID => (
@@ -198,6 +209,8 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           activeSignature: Some(activeSignature),
           activeParameter: Some(activeParameter),
           editorID: Some(editorID),
+          location: Some(location),
+          context: Some(context),
         },
         Nothing,
       )
@@ -348,6 +361,41 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       },
       Nothing,
     )
+  | CursorMoved(editorID) =>
+    switch (model.editorID, maybeEditor, maybeBuffer, model.context) {
+    | (Some(editorID'), Some(editor), Some(buffer), Some(context))
+        when
+          editorID == editorID'
+          && editorID == Feature_Editor.Editor.getId(editor) =>
+      let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
+      let loc =
+        Index.(
+          Location.create(
+            ~line=cursorLocation.line,
+            ~column=cursorLocation.column + 1,
+          )
+        );
+      switch (model.location) {
+      | Some(location) when location == loc =>
+        let requestID = IDGenerator.get();
+        let effects =
+          getEffectsForLocation(
+            ~buffer,
+            ~editor,
+            ~location=cursorLocation,
+            ~extHostClient,
+            ~model,
+            ~context,
+            ~requestID,
+          );
+        (
+          {...model, shown: true, lastRequestID: Some(requestID)},
+          Effect(effects),
+        );
+      | _ => (model, Nothing)
+      };
+    | _ => (model, Nothing)
+    }
   };
 
 module View = {

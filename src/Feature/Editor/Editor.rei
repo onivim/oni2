@@ -31,6 +31,7 @@ let create:
   t;
 let copy: t => t;
 
+let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
 let getBufferId: t => int;
 let getTopVisibleLine: t => int;
@@ -52,6 +53,9 @@ let setVimCursors: (~cursors: list(Vim.Cursor.t), t) => t;
 
 let isMinimapEnabled: t => bool;
 let setMinimapEnabled: (~enabled: bool, t) => t;
+
+// [exposePrimaryCursor(editor)] ensures the primary cursor is visible - adjusting the scroll if it isnot.
+let exposePrimaryCursor: t => t;
 
 let getNearestMatchingPair:
   (

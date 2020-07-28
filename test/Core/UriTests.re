@@ -13,6 +13,10 @@ let uriSchemeArrayJSON =
 |}
   |> Yojson.Safe.from_string;
 
+let uriFromExthostJSON =
+  {|{"$mid":1,"path":"/fwlink/","scheme":"https","authority":"go.microsoft.com","query":"linkid=839919"}|}
+  |> Yojson.Safe.from_string;
+
 let okOrFail = v =>
   switch (v) {
   | Ok(v) => v
@@ -50,6 +54,16 @@ describe("Uri", ({describe, _}) => {
         Uri.of_yojson(uriSchemeArrayJSON) |> okOrFail |> Uri.getScheme;
 
       expect.bool(scheme == Uri.Scheme.Memory).toBe(true);
+    });
+    test(
+      "parse with path, scheme, authority, and query works as expected",
+      ({expect, _}) => {
+      let urlString =
+        Uri.of_yojson(uriFromExthostJSON) |> okOrFail |> Uri.toString;
+
+      expect.string(urlString).toEqual(
+        "https://go.microsoft.com/fwlink/?linkid=839919",
+      );
     });
   });
 });

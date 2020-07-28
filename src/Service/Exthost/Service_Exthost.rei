@@ -69,6 +69,17 @@ module Effects: {
       ) =>
       Isolinear.Effect.t('msg);
 
+    let provideReferences:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.Location.t,
+        ~context: Exthost.ReferenceContext.t,
+        Exthost.Client.t,
+        result(list(Exthost.Location.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+
     let provideSignatureHelp:
       (
         ~handle: int,
@@ -94,4 +105,14 @@ module Sub: {
   let activeEditor:
     (~activeEditorId: string, ~client: Exthost.Client.t) =>
     Isolinear.Sub.t(unit);
+
+  let definition:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: list(Exthost.DefinitionLink.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
 };

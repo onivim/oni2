@@ -3,7 +3,7 @@ open Oni_Core;
 [@deriving show]
 type t = {
   id: string,
-  title: option(string),
+  label: option(Label.t),
 };
 
 module Decode = {
@@ -12,7 +12,7 @@ module Decode = {
       obj(({field, _}) =>
         {
           id: field.required("id", string),
-          title: field.optional("title", string),
+          label: field.optional("title", Label.decode),
         }
       )
     );

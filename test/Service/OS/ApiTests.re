@@ -7,6 +7,19 @@ open Service_OS.Api;
 let bind = (fst, snd) => Lwt.bind(snd, fst);
 
 describe("Service.OS.Api", ({describe, _}) => {
+  describe("glob", ({test, _}) => {
+    test("test glob matching", ({expect, _}) => {
+      let glob =
+        Re.Glob.glob(
+          ~expand_braces=true,
+          "{**/node_modules/**,**/bower_components/**}",
+        )
+        |> Re.compile;
+
+      expect.notEqual(Re.matches(glob, "/node_modules/test"), []);
+      expect.equal(Re.matches(glob, "random-file.txt"), []);
+    })
+  });
   describe("mkdir", ({test, _}) => {
     test("creates a directory successfully", ({expect, _}) => {
       let test =

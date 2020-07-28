@@ -75,7 +75,11 @@ let handlers =
       "MainThreadCommands",
     ),
     mainNotImplemented("MainThreadComments"),
-    mainNotImplemented("MainThreadConfiguration"),
+    main(
+      ~handler=Msg.Configuration.handle,
+      ~mapper=msg => Msg.Configuration(msg),
+      "MainThreadConfiguration",
+    ),
     main(
       ~handler=Msg.Console.handle,
       ~mapper=msg => Msg.Console(msg),
@@ -97,7 +101,11 @@ let handlers =
       "MainThreadDiagnostics",
     ),
     mainNotImplemented("MainThreadDialogs"),
-    mainNotImplemented("MainThreadDocuments"),
+    main(
+      ~handler=Msg.Documents.handle,
+      ~mapper=msg => Msg.Documents(msg),
+      "MainThreadDocuments",
+    ),
     main(
       ~handler=Msg.DocumentContentProvider.handle,
       ~mapper=msg => Msg.DocumentContentProvider(msg),
@@ -134,14 +142,26 @@ let handlers =
       ~mapper=msg => Msg.OutputService(msg),
       "MainThreadOutputService",
     ),
-    mainNotImplemented("MainThreadProgress"),
-    mainNotImplemented("MainThreadQuickOpen"),
+    main(
+      ~handler=Msg.Progress.handle,
+      ~mapper=msg => Msg.Progress(msg),
+      "MainThreadProgress",
+    ),
+    main(
+      ~handler=Msg.QuickOpen.handle,
+      ~mapper=msg => Msg.QuickOpen(msg),
+      "MainThreadQuickOpen",
+    ),
     main(
       ~handler=Msg.StatusBar.handle,
       ~mapper=msg => Msg.StatusBar(msg),
       "MainThreadStatusBar",
     ),
-    mainNotImplemented("MainThreadStorage"),
+    main(
+      ~handler=Msg.Storage.handle,
+      ~mapper=msg => Msg.Storage(msg),
+      "MainThreadStorage",
+    ),
     main(
       ~handler=Msg.Telemetry.handle,
       ~mapper=msg => Msg.Telemetry(msg),
@@ -154,7 +174,11 @@ let handlers =
     ),
     mainNotImplemented("MainThreadWebviews"),
     mainNotImplemented("MainThreadUrls"),
-    mainNotImplemented("MainThreadWorkspace"),
+    main(
+      ~handler=Msg.Workspace.handle,
+      ~mapper=msg => Msg.Workspace(msg),
+      "MainThreadWorkspace",
+    ),
     main(
       ~handler=Msg.FileSystem.handle,
       ~mapper=msg => Msg.FileSystem(msg),
@@ -172,7 +196,11 @@ let handlers =
     ),
     mainNotImplemented("MainThreadSearch"),
     mainNotImplemented("MainThreadTask"),
-    mainNotImplemented("MainThreadWindow"),
+    main(
+      ~handler=Msg.Window.handle,
+      ~mapper=msg => Msg.Window(msg),
+      "MainThreadWindow",
+    ),
     mainNotImplemented("MainThreadLabelService"),
     mainNotImplemented("MainThreadNotebook"),
     mainNotImplemented("MainThreadTheming"),

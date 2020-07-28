@@ -4,8 +4,8 @@
     (libraries 
       editor-core-types
       Oni2.core
-      Oni2.components
       Oni2.feature.commands
+      Oni2.feature.theme
       isolinear
       Revery
       base

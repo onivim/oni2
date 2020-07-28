@@ -92,7 +92,10 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                      command:
                        Some(
                          Exthost.Command.{
-                           title: Some("codelens: command1"),
+                           label:
+                             Some(
+                               Exthost.Label.ofString("codelens: command1"),
+                             ),
                            id: "codelens.command1",
                          },
                        ),
@@ -103,7 +106,10 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                      command:
                        Some(
                          Exthost.Command.{
-                           title: Some("codelens: command2"),
+                           label:
+                             Some(
+                               Exthost.Label.ofString("codelens: command2"),
+                             ),
                            id: "codelens.command2",
                          },
                        ),

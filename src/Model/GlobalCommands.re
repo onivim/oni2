@@ -171,16 +171,6 @@ module Oni = {
   };
 };
 
-module ReferencesView = {
-  let find =
-    register(
-      ~category="References",
-      ~title="Find all References",
-      "references-view.find",
-      References(References.Requested),
-    );
-};
-
 module Workbench = {
   module Action = {
     let openSettings =
@@ -197,14 +187,6 @@ module Workbench = {
         ~title="Open keybindings file",
         "workbench.action.openDefaultKeybindingsFile",
         OpenConfigFile("keybindings.json"),
-      );
-
-    let selectTheme =
-      register(
-        ~category="Preferences",
-        ~title="Theme Picker",
-        "workbench.action.selectTheme",
-        QuickmenuShow(ThemesPicker),
       );
 
     let showCommands =

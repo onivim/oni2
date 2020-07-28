@@ -8,12 +8,7 @@ module Colors = Feature_Theme.Colors;
 
 module Styles = {
   open Style;
-  let container = (~width) => [
-    Style.width(width),
-    flexDirection(`Column),
-    flexGrow(1),
-    overflow(`Hidden),
-  ];
+  let container = [flexDirection(`Column), flexGrow(1), overflow(`Hidden)];
   let input = [flexGrow(1), margin(12)];
 };
 
@@ -54,6 +49,7 @@ let installButton = (~font, ~extensionId, ~dispatch, ()) => {
 
 let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
   <ItemView.ActionButton
+    extensionId
     font
     title="Uninstall"
     backgroundColor=Revery.Colors.red
@@ -61,6 +57,17 @@ let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
     onAction={() =>
       dispatch(Model.UninstallExtensionClicked({extensionId: extensionId}))
     }
+  />;
+};
+
+let progressButton = (~extensionId, ~font, ~title, ()) => {
+  <ItemView.ActionButton
+    extensionId
+    font
+    title
+    backgroundColor=Revery.Colors.blue
+    color=Revery.Colors.white
+    onAction={() => ()}
   />;
 };
 
@@ -101,13 +108,13 @@ let%component make =
     let displayName = Manifest.getDisplayName(extension.manifest);
     let author = extension.manifest.author;
     let version = extension.manifest.version;
+    let id = Manifest.identifier(extension.manifest);
 
+    let extensionId = extension.manifest |> Manifest.identifier;
     let actionButton =
-      <uninstallButton
-        font
-        extensionId={extension.manifest |> Manifest.identifier}
-        dispatch
-      />;
+      Model.isUninstalling(~extensionId=id, model)
+        ? <progressButton extensionId font title="Uninstalling" />
+        : <uninstallButton font extensionId dispatch />;
 
     <ItemView
       actionButton
@@ -164,14 +171,17 @@ let%component make =
                summary |> Service_Extensions.Catalog.Summary.name;
              let extensionId =
                summary |> Service_Extensions.Catalog.Summary.id;
-             let {namespace, version, _}: Service_Extensions.Catalog.Summary.t = summary;
+             let {namespace, version, iconUrl, _}: Service_Extensions.Catalog.Summary.t = summary;
              let author = namespace;
 
-             let actionButton = <installButton dispatch font extensionId />;
+             let actionButton =
+               Model.isInstalling(~extensionId, model)
+                 ? <progressButton extensionId title="Installing" font />
+                 : <installButton extensionId dispatch font extensionId />;
              <ItemView
                actionButton
                width
-               iconPath=None
+               iconPath=iconUrl
                theme
                displayName
                author
@@ -194,7 +204,7 @@ let%component make =
   let isBusy = Model.isSearchInProgress(model) || Model.isBusy(model);
 
   <View
-    style={Styles.container(~width)}
+    style=Styles.container
     onDimensionsChanged={({width, _}) =>
       localDispatch(WidthChanged(width))
     }>

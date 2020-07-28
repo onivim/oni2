@@ -1,15 +1,15 @@
 open Oni_Core;
 open Revery.UI;
 
-open Revery.UI.Components;
-
 module Colors = Feature_Theme.Colors;
 module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Constants = {
   let itemHeight = 72;
-  let imageSize = 50;
-  let imageContainerSize = 64;
+  let imageSize = 40;
+  let imageContainerSize = 50;
+  let defaultIcon = "https://open-vsx.org/default-icon.png";
+  let buttonWidth = 50;
 };
 
 module Styles = {
@@ -25,7 +25,8 @@ module Styles = {
   let titleText = (~width, ~theme) => [
     color(Colors.SideBar.foreground.from(theme)),
     marginVertical(2),
-    textOverflow(`Ellipsis),
+    // TODO: Workaround for #2140
+    //textOverflow(`Ellipsis),
     Style.width(width),
   ];
   let versionText = (~width, ~theme) => [
@@ -43,7 +44,8 @@ module Styles = {
       |> Revery.Color.multiplyAlpha(0.75),
     ),
     marginVertical(2),
-    textOverflow(`Ellipsis),
+    // TODO: Workaround for #2140
+    //textOverflow(`Ellipsis),
     textWrap(Revery.TextWrapping.NoWrap),
   ];
   let imageContainer =
@@ -70,6 +72,7 @@ module Styles = {
 module ActionButton = {
   let make =
       (
+        ~extensionId: string,
         ~font: UiFont.t,
         ~title: string,
         ~backgroundColor,
@@ -79,7 +82,10 @@ module ActionButton = {
       ) => {
     // TODO
     ignore(color);
-    <Sneakable style={Styles.button(~backgroundColor)} onClick=onAction>
+    <Sneakable
+      sneakId=extensionId
+      style={Styles.button(~backgroundColor)}
+      onClick=onAction>
       <View style=Styles.innerButton>
         <Text
           fontFamily={font.family}
@@ -105,34 +111,22 @@ let make =
       ~onClick,
       (),
     ) => {
+  let url = iconPath |> Option.value(~default=Constants.defaultIcon);
   let icon =
-    switch (iconPath) {
-    | None =>
-      <Container
-        color=Revery.Colors.darkGray
-        width=Constants.imageSize
-        height=Constants.imageSize
-      />
-    | Some(iconPath) =>
-      <Image
-        src={`File(iconPath)}
-        width=Constants.imageSize
-        height=Constants.imageSize
-      />
-    };
+    <Oni_Components.RemoteImage
+      url
+      width=Constants.imageSize
+      height=Constants.imageSize
+    />;
 
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;
 
-  <Clickable style={Styles.container(~width)} onClick>
+  <Revery.UI.Components.Clickable style={Styles.container(~width)} onClick>
     <View style=Styles.imageContainer> icon </View>
-    <View>
+    <View style=Style.[flexDirection(`Column), width(descriptionWidth)]>
       <View
-        style=Style.[
-          flexDirection(`Row),
-          justifyContent(`SpaceBetween),
-          width(descriptionWidth),
-        ]>
+        style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
         <Text
           style={Styles.titleText(~width=width - defaultWidth, ~theme)}
           fontFamily={font.family}
@@ -148,19 +142,19 @@ let make =
         />
       </View>
       <View
-        style=Style.[
-          flexDirection(`Row),
-          justifyContent(`SpaceBetween),
-          width(descriptionWidth),
-        ]>
-        <Text
-          style={Styles.text(~theme)}
-          fontFamily={font.family}
-          fontSize={font.size}
-          text=author
-        />
-        actionButton
+        style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
+        <View style=Style.[flexShrink(1)]>
+          <Text
+            style={Styles.text(~theme)}
+            fontFamily={font.family}
+            fontSize={font.size}
+            text=author
+          />
+        </View>
+        <View style=Style.[flexBasis(Constants.buttonWidth), flexShrink(0)]>
+          actionButton
+        </View>
       </View>
     </View>
-  </Clickable>;
+  </Revery.UI.Components.Clickable>;
 };

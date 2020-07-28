@@ -32,6 +32,24 @@ module Provider = {
     count: int,
     commitTemplate: string,
     acceptInputCommand: option(command),
+    inputVisible: bool,
+    validationEnabled: bool,
+    statusBarCommands: list(Exthost.Command.t),
+  };
+
+  let initial = (~handle, ~id, ~label, ~rootUri) => {
+    handle,
+    id,
+    label,
+    rootUri,
+    resourceGroups: [],
+    hasQuickDiffProvider: false,
+    count: 0,
+    commitTemplate: "",
+    acceptInputCommand: None,
+    inputVisible: true,
+    validationEnabled: false,
+    statusBarCommands: [],
   };
 };
 
@@ -44,6 +62,12 @@ type model = {
 let initial = {
   providers: [],
   inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
+};
+
+let statusBarCommands = ({providers, _}: model) => {
+  providers
+  |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
+  |> List.flatten;
 };
 
 // EFFECTS
@@ -78,6 +102,16 @@ type msg =
       id: string,
       label: string,
     })
+  | GroupHideWhenEmptyChanged({
+      provider: int,
+      handle: int,
+      hideWhenEmpty: bool,
+    })
+  | GroupLabelChanged({
+      provider: int,
+      handle: int,
+      label: string,
+    })
   | LostResourceGroup({
       provider: int,
       handle: int,
@@ -97,6 +131,10 @@ type msg =
       handle: int,
       available: bool,
     })
+  | StatusBarCommandsChanged({
+      handle: int,
+      statusBarCommands: list(Exthost.Command.t),
+    })
   | CommitTemplateChanged({
       handle: int,
       template: string,
@@ -104,6 +142,18 @@ type msg =
   | AcceptInputCommandChanged({
       handle: int,
       command: Exthost.SCM.command,
+    })
+  //  | InputBoxPlaceholderChanged({
+  //      handle: int,
+  //      placeholder: string,
+  //    })
+  | InputBoxVisibilityChanged({
+      handle: int,
+      visible: bool,
+    })
+  | ValidationProviderEnabledChanged({
+      handle: int,
+      validationEnabled: bool,
     })
   | KeyPressed({key: string})
   | Pasted({text: string})
@@ -119,23 +169,47 @@ type outmsg =
   | Focus
   | Nothing;
 
+module Internal = {
+  let updateProvider = (~handle, f, model) => {
+    {
+      ...model,
+      providers:
+        List.map(
+          (it: Provider.t) => it.handle == handle ? f(it) : it,
+          model.providers,
+        ),
+    };
+  };
+
+  let updateResourceGroup = (~provider, ~group, f, model) => {
+    {
+      ...model,
+      providers:
+        List.map(
+          (p: Provider.t) =>
+            p.handle == provider
+              ? {
+                ...p,
+                resourceGroups:
+                  List.map(
+                    (g: ResourceGroup.t) => g.handle == group ? f(g) : g,
+                    p.resourceGroups,
+                  ),
+              }
+              : p,
+          model.providers,
+        ),
+    };
+  };
+};
+
 let update = (extHostClient: Exthost.Client.t, model, msg) =>
   switch (msg) {
   | NewProvider({handle, id, label, rootUri}) => (
       {
         ...model,
         providers: [
-          Provider.{
-            handle,
-            id,
-            label,
-            rootUri,
-            resourceGroups: [],
-            hasQuickDiffProvider: false,
-            count: 0,
-            commitTemplate: "",
-            acceptInputCommand: None,
-          },
+          Provider.initial(~handle, ~id, ~label, ~rootUri),
           ...model.providers,
         ],
       },
@@ -155,104 +229,112 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
 
   | QuickDiffProviderChanged({handle, available}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle
-                ? {...it, hasQuickDiffProvider: available} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, hasQuickDiffProvider: available}
+         ),
+      Nothing,
+    )
+
+  | StatusBarCommandsChanged({handle, statusBarCommands}) => (
+      model
+      |> Internal.updateProvider(~handle, p => {...p, statusBarCommands}),
+      Nothing,
+    )
+
+  // TODO: Handle replacing '{0}' character in placeholder text
+  //  | InputBoxPlaceholderChanged({handle, placeholder}) => (
+  //      {
+  //        ...model,
+  //        inputBox:
+  //          Feature_InputText.setPlaceholder(~placeholder, model.inputBox),
+  //      },
+  //      Nothing,
+  //    )
+
+  | InputBoxVisibilityChanged({handle, visible}) => (
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, inputVisible: visible}
+         ),
+      Nothing,
+    )
+
+  | ValidationProviderEnabledChanged({handle, validationEnabled}) => (
+      model
+      |> Internal.updateProvider(~handle, it => {...it, validationEnabled}),
       Nothing,
     )
 
   | CountChanged({handle, count}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) => it.handle == handle ? {...it, count} : it,
-            model.providers,
-          ),
-      },
+      model |> Internal.updateProvider(~handle, it => {...it, count}),
       Nothing,
     )
 
   | CommitTemplateChanged({handle, template}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle ? {...it, commitTemplate: template} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, commitTemplate: template}
+         ),
       Nothing,
     )
 
   | AcceptInputCommandChanged({handle, command}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (it: Provider.t) =>
-              it.handle == handle
-                ? {...it, acceptInputCommand: Some(command)} : it,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle, it =>
+           {...it, acceptInputCommand: Some(command)}
+         ),
       Nothing,
     )
 
   | NewResourceGroup({provider, handle, id, label}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups: [
-                    ResourceGroup.{
-                      handle,
-                      id,
-                      label,
-                      hideWhenEmpty: false,
-                      resources: [],
-                    },
-                    ...p.resourceGroups,
-                  ],
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle=provider, p =>
+           {
+             ...p,
+             resourceGroups: [
+               ResourceGroup.{
+                 handle,
+                 id,
+                 label,
+                 hideWhenEmpty: false,
+                 resources: [],
+               },
+               ...p.resourceGroups,
+             ],
+           }
+         ),
       Nothing,
     )
 
   | LostResourceGroup({provider, handle}) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups:
-                    List.filter(
-                      (g: ResourceGroup.t) => g.handle != handle,
-                      p.resourceGroups,
-                    ),
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateProvider(~handle=provider, p =>
+           {
+             ...p,
+             resourceGroups:
+               List.filter(
+                 (g: ResourceGroup.t) => g.handle != handle,
+                 p.resourceGroups,
+               ),
+           }
+         ),
+      Nothing,
+    )
+
+  | GroupHideWhenEmptyChanged({provider, handle, hideWhenEmpty}) => (
+      model
+      |> Internal.updateResourceGroup(~provider, ~group=handle, group =>
+           {...group, hideWhenEmpty}
+         ),
+      Nothing,
+    )
+
+  | GroupLabelChanged({provider, handle, label}) => (
+      model
+      |> Internal.updateResourceGroup(~provider, ~group=handle, group =>
+           {...group, label}
+         ),
       Nothing,
     )
 
@@ -263,36 +345,19 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       deleteCount,
       additions,
     }) => (
-      {
-        ...model,
-        providers:
-          List.map(
-            (p: Provider.t) =>
-              p.handle == provider
-                ? {
-                  ...p,
-                  resourceGroups:
-                    List.map(
-                      (g: ResourceGroup.t) =>
-                        g.handle == group
-                          ? {
-                            ...g,
-                            resources:
-                              ListEx.splice(
-                                ~start=spliceStart,
-                                ~deleteCount,
-                                ~additions,
-                                g.resources,
-                              ),
-                          }
-                          : g,
-                      p.resourceGroups,
-                    ),
-                }
-                : p,
-            model.providers,
-          ),
-      },
+      model
+      |> Internal.updateResourceGroup(~provider, ~group, g =>
+           {
+             ...g,
+             resources:
+               ListEx.splice(
+                 ~start=spliceStart,
+                 ~deleteCount,
+                 ~additions,
+                 g.resources,
+               ),
+           }
+         ),
       Nothing,
     )
 
@@ -374,6 +439,20 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
 
+  | UpdateGroup({provider, handle, features}) =>
+    Exthost.SCM.GroupFeatures.(
+      dispatch(
+        GroupHideWhenEmptyChanged({
+          provider,
+          handle,
+          hideWhenEmpty: features.hideWhenEmpty,
+        }),
+      )
+    )
+
+  | UpdateGroupLabel({provider, handle, label}) =>
+    dispatch(GroupLabelChanged({provider, handle, label}))
+
   | SpliceSCMResourceStates({handle, splices}) =>
     open Exthost.SCM;
 
@@ -395,16 +474,16 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
               )
             });
        });
-  | UpdateSourceControl({
-      handle,
+  | UpdateSourceControl({handle, features}) =>
+    let {
       hasQuickDiffProvider,
       count,
       commitTemplate,
       acceptInputCommand,
-    }) =>
-    Option.iter(
-      available => dispatch(QuickDiffProviderChanged({handle, available})),
-      hasQuickDiffProvider,
+      statusBarCommands,
+    }: Exthost.SCM.ProviderFeatures.t = features;
+    dispatch(
+      QuickDiffProviderChanged({handle, available: hasQuickDiffProvider}),
     );
     Option.iter(count => dispatch(CountChanged({handle, count})), count);
     Option.iter(
@@ -415,6 +494,19 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       command => dispatch(AcceptInputCommandChanged({handle, command})),
       acceptInputCommand,
     );
+
+    dispatch(StatusBarCommandsChanged({handle, statusBarCommands}));
+
+  | SetInputBoxPlaceholder(_) =>
+    // TODO: Set up replacement for '{0}'
+    //dispatch(InputBoxPlaceholderChanged({handle, placeholder: value}))
+    ()
+  | SetInputBoxVisibility({handle, visible}) =>
+    dispatch(InputBoxVisibilityChanged({handle, visible}))
+  | SetValidationProviderIsEnabled({handle, enabled}) =>
+    dispatch(
+      ValidationProviderEnabledChanged({handle, validationEnabled: enabled}),
+    )
   };
 
 // VIEW
@@ -565,21 +657,27 @@ module Pane = {
         theme
       />
       {groups
-       |> List.map(((provider, group: ResourceGroup.t)) => {
+       |> List.filter_map(((provider, group: ResourceGroup.t)) => {
             let expanded =
               StringMap.find_opt(group.label, localState)
               |> Option.value(~default=true);
 
-            <groupView
-              provider
-              expanded
-              group
-              theme
-              font
-              workingDirectory
-              onItemClick
-              onTitleClick={() => localDispatch(group.label)}
-            />;
+            if (group.resources == [] && group.hideWhenEmpty) {
+              None;
+            } else {
+              Some(
+                <groupView
+                  provider
+                  expanded
+                  group
+                  theme
+                  font
+                  workingDirectory
+                  onItemClick
+                  onTitleClick={() => localDispatch(group.label)}
+                />,
+              );
+            };
           })
        |> React.listToElement}
     </View>;

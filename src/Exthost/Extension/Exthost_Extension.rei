@@ -88,6 +88,9 @@ module Contributions: {
     type t = {
       id: string,
       extensions: list(string),
+      filenames: list(string),
+      filenamePatterns: list(string),
+      firstLine: option(string),
       aliases: list(string),
       configuration: option(string),
     };
@@ -152,6 +155,7 @@ module Manifest: {
     displayName: option(LocalizedToken.t),
     description: option(string),
     publisher: option(string),
+    defaults: Yojson.Safe.t,
     main: option(string),
     icon: option(string),
     categories: list(string),
@@ -159,6 +163,7 @@ module Manifest: {
     engines: string,
     activationEvents: list(string),
     extensionDependencies: list(string),
+    runtimeDependencies: Yojson.Safe.t,
     extensionPack: list(string),
     extensionKind: list(Kind.t),
     contributes: Contributions.t,
@@ -199,22 +204,7 @@ module InitData: {
 
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
-    type t = {
-      identifier: Identifier.t,
-      extensionLocation: Oni_Core.Uri.t,
-      name: string,
-      displayName: option(string),
-      description: option(string),
-      main: option(string),
-      icon: option(string),
-      version: string,
-      engines: string,
-      activationEvents: list(string),
-      extensionDependencies: list(string),
-      extensionKind: list(string),
-      contributes: Contributions.t,
-      enableProposedApi: bool,
-    };
+    type t;
 
     let ofManifestAndPath: (Manifest.t, string) => t;
   };

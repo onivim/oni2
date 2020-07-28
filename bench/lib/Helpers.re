@@ -21,6 +21,8 @@ let simpleState = {
       ~initialBuffer,
       ~initialBufferRenderers=BufferRenderers.initial,
       ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
+      ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
       ~contributedCommands=[],
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,
@@ -39,6 +41,7 @@ let defaultFont: Service_Font.font = {
   measuredHeight: 10.,
   descenderHeight: 1.,
   smoothing: Revery.Font.Smoothing.default,
+  features: [],
 };
 
 let simpleState =

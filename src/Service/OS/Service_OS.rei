@@ -1,4 +1,18 @@
 module Api: {
+  let fold:
+    (
+      ~includeFiles: string => bool,
+      ~excludeDirectory: string => bool,
+      ~initial: 'a,
+      ('a, string) => 'a,
+      string
+    ) =>
+    Lwt.t('a);
+
+  let glob:
+    (~includeFiles: string=?, ~excludeDirectories: string=?, string) =>
+    Lwt.t(list(string));
+
   let rmdir: (~recursive: bool=?, string) => Lwt.t(unit);
   let stat: string => Lwt.t(Luv.File.Stat.t);
   let readdir: string => Lwt.t(list(Luv.File.Dirent.t));
@@ -12,6 +26,8 @@ module Api: {
 
   let mktempdir: (~prefix: string=?, unit) => Lwt.t(string);
   let delete: (~recursive: bool, string) => Lwt.t(unit);
+
+  let openURL: string => bool;
 };
 
 module Effect: {

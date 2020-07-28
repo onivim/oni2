@@ -13,6 +13,10 @@
 	"contributes": {
 		"commands": [
 			{
+				"command": "developer.oni.showChoiceMessage",
+				"title": "Onivim - Developer: Show Choice Message"
+			},
+			{
 				"command": "developer.oni.showWarning",
 				"title": "Onivim - Developer: Show Warning"
 			},
@@ -39,6 +43,26 @@
 			{
 				"command": "developer.oni.showWorkspaceFolders",
 				"title": "Onivim - Developer: Show Workspace Folders"
+			},
+			{
+				"command": "developer.oni.showQuickPick",
+				"title": "Onivim - Developer: Show Quick Pick"
+			},
+			{
+				"command": "developer.oni.setGlobalMemento",
+				"title": "Onivim - Developer: Set Global Memento"
+			},
+			{
+				"command": "developer.oni.getGlobalMemento",
+				"title": "Onivim - Developer: Get Global Memento"
+			},
+			{
+				"command": "developer.oni.getWorkspaceMemento",
+				"title": "Onivim - Developer: Get Workspace Memento"
+			},
+			{
+				"command": "developer.oni.setWorkspaceMemento",
+				"title": "Onivim - Developer: Set Workspace Memento"
 			}
 		],
 		"configuration": {

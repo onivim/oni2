@@ -11,7 +11,6 @@ open Oni_Syntax;
 module KeyDisplayer = Oni_Components.KeyDisplayer;
 module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 type windowDisplayMode =
@@ -34,9 +33,9 @@ type t = {
   configuration: Configuration.t,
   decorationProviders: list(DecorationProvider.t),
   diagnostics: Diagnostics.t,
-  definition: Definition.t,
   editorFont: Service_Font.font,
   formatting: Feature_Formatting.model,
+  messages: Feature_Messages.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
@@ -49,11 +48,12 @@ type t = {
   keyBindings: Keybindings.t,
   keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
+  languageSupport: Feature_LanguageSupport.model,
   languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   notifications: Feature_Notification.model,
-  references: References.t,
+  //  references: References.t,
   registers: Feature_Registers.model,
   scm: Feature_SCM.model,
   sneak: Feature_Sneak.model,
@@ -83,6 +83,8 @@ let initial =
     (
       ~initialBuffer,
       ~initialBufferRenderers,
+      ~extensionGlobalPersistence,
+      ~extensionWorkspacePersistence,
       ~getUserSettings,
       ~contributedCommands,
       ~workingDirectory,
@@ -128,15 +130,21 @@ let initial =
     config,
     configuration: Configuration.default,
     decorationProviders: [],
-    definition: Definition.empty,
     diagnostics: Diagnostics.create(),
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
-    extensions: Feature_Extensions.initial(~extensionsFolder),
+    extensions:
+      Feature_Extensions.initial(
+        ~globalPersistence=extensionGlobalPersistence,
+        ~workspacePersistence=extensionWorkspacePersistence,
+        ~extensionsFolder,
+      ),
     formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
+    languageSupport: Feature_LanguageSupport.initial,
     lifecycle: Lifecycle.create(),
+    messages: Feature_Messages.initial,
     uiFont: UiFont.default,
     sideBar: Feature_SideBar.initial,
     tokenTheme: TokenTheme.empty,
@@ -147,7 +155,7 @@ let initial =
     languageInfo: Exthost.LanguageInfo.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
-    references: References.initial,
+    //    references: References.initial,
     registers: Feature_Registers.initial,
     scm: Feature_SCM.initial,
     sneak: Feature_Sneak.initial,

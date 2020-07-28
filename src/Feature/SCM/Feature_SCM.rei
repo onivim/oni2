@@ -40,6 +40,9 @@ module Provider: {
     count: int,
     commitTemplate: string,
     acceptInputCommand: option(command),
+    inputVisible: bool,
+    validationEnabled: bool,
+    statusBarCommands: list(Exthost.Command.t),
   };
 };
 
@@ -47,6 +50,8 @@ module Provider: {
 type model;
 
 let initial: model;
+
+let statusBarCommands: model => list(Exthost.Command.t);
 
 // EFFECTS
 

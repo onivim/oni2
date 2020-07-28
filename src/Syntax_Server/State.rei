@@ -13,7 +13,7 @@ let empty: t;
 
 type logFunc = string => unit;
 
-let initialize: (~log: logFunc, Exthost.LanguageInfo.t, Setup.t, t) => t;
+let initialize: (~log: logFunc, Exthost.GrammarInfo.t, Setup.t, t) => t;
 
 let getVisibleBuffers: t => list(int);
 let getVisibleHighlighters: t => list(NativeSyntaxHighlights.t);
@@ -24,7 +24,7 @@ let anyPendingWork: t => bool;
 let bufferEnter:
   (
     ~bufferId: int,
-    ~filetype: string,
+    ~scope: string,
     ~lines: array(string),
     ~visibleRanges: list(Range.t),
     t

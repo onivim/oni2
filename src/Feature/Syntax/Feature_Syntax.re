@@ -79,8 +79,7 @@ module Internal = {
     if (numberOfLinesToHighlight == 0) {
       [||];
     } else {
-      let linesToHighlight =
-        Array.sub(lines, 0, numberOfLinesToHighlight - 1);
+      let linesToHighlight = Array.sub(lines, 0, numberOfLinesToHighlight);
       let highlights = highlight(~scope, ~theme, ~grammars, linesToHighlight);
       highlights;
     };
@@ -282,6 +281,7 @@ let update: (t, msg) => (t, outmsg) =
 let subscription =
     (
       ~config: Config.resolver,
+      ~grammarInfo,
       ~languageInfo,
       ~setup,
       ~tokenTheme,
@@ -294,7 +294,12 @@ let subscription =
          !BufferMap.mem(Oni_Core.Buffer.getId(buffer), ignoredBuffers)
        )
     |> List.map(((buffer, visibleRanges)) => {
-         Service_Syntax.Sub.buffer(~client, ~buffer, ~visibleRanges)
+         Service_Syntax.Sub.buffer(
+           ~client,
+           ~buffer,
+           ~languageInfo,
+           ~visibleRanges,
+         )
          |> Isolinear.Sub.map(
               fun
               | Service_Syntax.ReceivedHighlights(tokens) => {
@@ -313,7 +318,7 @@ let subscription =
   let serverSubscription =
     Service_Syntax.Sub.server(
       ~useTreeSitter=Configuration.Experimental.treeSitter.get(config),
-      ~languageInfo,
+      ~grammarInfo,
       ~setup,
       ~tokenTheme,
     )

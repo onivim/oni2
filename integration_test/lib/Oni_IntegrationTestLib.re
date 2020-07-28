@@ -144,6 +144,8 @@ let runTest =
         ~contributedCommands=[],
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,
+        ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
+        ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
       ),
     );
 
@@ -167,10 +169,10 @@ let runTest =
           <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
       },
-      //        Revery.Utility.HeadlessWindow.takeScreenshot(
-      //          headlessWindow,
-      //          "screenshot.png",
-      //        );
+      //      Revery.Utility.HeadlessWindow.takeScreenshot(
+      //        headlessWindow,
+      //        "screenshot.png",
+      //      );
       Revery.Time.zero,
     );
 

@@ -106,6 +106,7 @@ let update =
       };
 
     ({...state, clipboard: model}, eff);
+
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
@@ -127,6 +128,7 @@ let update =
             state,
             Internal.notificationEffect(~kind=Error, msg),
           )
+
         | OpenExtensionDetails =>
           let eff =
             Isolinear.Effect.createWithDispatch(
@@ -136,9 +138,70 @@ let update =
               )
             });
           (state, eff);
+
+        | InstallSucceeded({extensionId, contributions}) =>
+          let notificationEffect =
+            Internal.notificationEffect(
+              ~kind=Info,
+              Printf.sprintf(
+                "Extension %s was installed successfully and will be activated on restart.",
+                extensionId,
+              ),
+            );
+          let themes: list(Exthost.Extension.Contributions.Theme.t) =
+            Exthost.Extension.Contributions.(contributions.themes);
+          let showThemePickerEffect =
+            if (themes != []) {
+              Isolinear.Effect.createWithDispatch(
+                ~name="feature.extensions.showThemeAfterInstall", dispatch => {
+                dispatch(QuickmenuShow(ThemesPicker(themes)))
+              });
+            } else {
+              Isolinear.Effect.none;
+            };
+          (
+            state,
+            Isolinear.Effect.batch([
+              notificationEffect,
+              showThemePickerEffect,
+            ]),
+          );
         }
       );
     (state', effect);
+
+  | LanguageSupport(msg) =>
+    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+    let cursorLocation =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
+    let (model, outmsg) =
+      Feature_LanguageSupport.update(
+        ~maybeBuffer,
+        ~cursorLocation,
+        ~client=extHostClient,
+        msg,
+        state.languageSupport,
+      );
+
+    let eff =
+      Feature_LanguageSupport.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | OpenFile({filePath, location}) =>
+          Isolinear.Effect.createWithDispatch(
+            ~name="feature.languageSupport.openFileByPath", dispatch =>
+            dispatch(OpenFileByPath(filePath, None, location))
+          )
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => LanguageSupport(msg))
+        }
+      );
+
+    ({...state, languageSupport: model}, eff);
+
   | Formatting(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let selection =
@@ -168,15 +231,36 @@ let update =
     let effect =
       switch (eff) {
       | Feature_Formatting.Nothing => Effect.none
-      | Feature_Formatting.FormattingApplied({editCount, _}) =>
-        let msg = Printf.sprintf("Applied %d edits", editCount);
-        Internal.notificationEffect(~kind=Info, "Format: " ++ msg);
+      | Feature_Formatting.FormattingApplied({editCount, displayName}) =>
+        let msg =
+          Printf.sprintf(
+            "Format: Applied %d edits with %s",
+            editCount,
+            displayName,
+          );
+        Internal.notificationEffect(~kind=Info, msg);
       | Feature_Formatting.FormatError(msg) =>
         Internal.notificationEffect(~kind=Error, "Format: " ++ msg)
       | Feature_Formatting.Effect(eff) =>
         eff |> Effect.map(msg => Actions.Formatting(msg))
       };
     (state', effect);
+
+  | Messages(msg) =>
+    let (model, outmsg) = Feature_Messages.update(msg, state.messages);
+    let state = {...state, messages: model};
+
+    let eff =
+      Feature_Messages.(
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | Notification({kind, message}) =>
+          Internal.notificationEffect(~kind, message)
+        | Effect(eff) =>
+          eff |> Isolinear.Effect.map(msg => Actions.Messages(msg))
+        }
+      );
+    (state, eff);
 
   | Pane(msg) =>
     let (model, outmsg) = Feature_Pane.update(msg, state.pane);
@@ -496,8 +580,25 @@ let update =
     (state, effect);
 
   | Theme(msg) =>
-    let model' = Feature_Theme.update(state.colorTheme, msg);
-    ({...state, colorTheme: model'}, Effect.none);
+    let (model', outmsg) = Feature_Theme.update(state.colorTheme, msg);
+
+    let eff =
+      switch (outmsg) {
+      | OpenThemePicker(_) =>
+        let themes =
+          state.extensions
+          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+               Exthost.Extension.Contributions.(manifest.contributes.themes)
+             })
+          |> List.flatten;
+
+        Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
+          dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
+        });
+      | Nothing => Isolinear.Effect.none
+      };
+
+    ({...state, colorTheme: model'}, eff);
 
   | Notification(msg) =>
     let model' = Feature_Notification.update(state.notifications, msg);
@@ -526,13 +627,41 @@ let update =
   | FilesDropped({paths}) =>
     let eff =
       Service_OS.Effect.statMultiple(paths, (path, stats) =>
-        if (stats.st_kind == S_REG) {
-          OpenFileByPath(path, None, None);
-        } else {
-          Noop;
+        switch (stats.st_kind) {
+        | S_REG => OpenFileByPath(path, None, None)
+        | S_DIR =>
+          switch (Luv.Path.chdir(path)) {
+          | Ok () => DirectoryChanged(path)
+          | Error(_) => Noop
+          }
+        | _ => Noop
         }
       );
     (state, eff);
+
+  | Editor({scope, msg: CursorsChanged(_) as msg}) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let editor = Feature_Layout.activeEditor(state.layout);
+    let (signatureHelp, shOutMsg) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor=Some(editor),
+        ~extHostClient,
+        state.signatureHelp,
+        Feature_SignatureHelp.CursorMoved(
+          Feature_Editor.Editor.getId(editor),
+        ),
+      );
+    let shEffect =
+      switch (shOutMsg) {
+      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
+      | _ => Effect.none
+      };
+    let (layout, editorEffect) =
+      Internal.updateEditors(~scope, ~msg, state.layout);
+    let state = {...state, layout, signatureHelp};
+    let effect = [shEffect, editorEffect] |> Effect.batch;
+    (state, effect);
 
   | Editor({scope, msg}) =>
     let (layout, effect) =

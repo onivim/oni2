@@ -50,10 +50,12 @@ module ClientToServer = {
   [@deriving show({with_path: false})]
   type t =
     | Echo(string)
-    | Initialize([@opaque] Exthost.LanguageInfo.t, Setup.t)
+    | Initialize([@opaque] Exthost.GrammarInfo.t, Setup.t)
     | BufferStartHighlighting({
         bufferId: int,
-        filetype: string,
+        // We send in the actual textmate scope, ie:
+        // 'source.js' vs 'javascript'
+        scope: string,
         lines: [@opaque] array(string),
         visibleRanges: [@opaque] list(Range.t),
       })

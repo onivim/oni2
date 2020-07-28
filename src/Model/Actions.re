@@ -71,17 +71,11 @@ type t =
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
-  | DefinitionAvailable(
-      int,
-      Location.t,
-      [@opaque] LanguageFeatures.DefinitionResult.t,
-    )
   | EditorFont(Service_Font.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | References(References.actions)
   | KeyBindingsSet([@opaque] Keybindings.t)
   // Reload keybindings from configuration
   | KeyBindingsReload
@@ -90,7 +84,6 @@ type t =
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | HoverShow
   | ContextMenuOverlayClicked
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
@@ -111,11 +104,7 @@ type t =
     })
   | Formatting(Feature_Formatting.msg)
   | Notification(Feature_Notification.msg)
-  | ExtMessageReceived({
-      severity: [@opaque] Exthost.Msg.MessageService.severity,
-      message: string,
-      extensionId: option(string),
-    })
+  | Messages(Feature_Messages.msg)
   | Editor({
       scope: EditorScope.t,
       msg: Feature_Editor.msg,
@@ -123,6 +112,7 @@ type t =
   | FilesDropped({paths: list(string)})
   | FileExplorer(FileExplorer.action)
   | LanguageFeature(LanguageFeatures.action)
+  | LanguageSupport(Feature_LanguageSupport.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
@@ -130,6 +120,10 @@ type t =
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
+  | QuickmenuUpdateExtensionItems({
+      id: int,
+      items: list(Exthost.QuickOpen.Item.t),
+    })
   | QuickmenuSearch(string)
   | QuickmenuClose
   | ListFocus(int)
@@ -183,7 +177,7 @@ type t =
   | Pane(Feature_Pane.msg)
   | PaneTabClicked(Feature_Pane.pane)
   | PaneCloseButtonClicked
-  | VimDirectoryChanged(string)
+  | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
@@ -252,14 +246,20 @@ and menuItem = {
   command: unit => t,
   icon: [@opaque] option(IconTheme.IconDefinition.t),
   highlight: list((int, int)),
+  handle: option(int),
 }
 and quickmenuVariant =
   | CommandPalette
   | EditorsPicker
   | FilesPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
-  | ThemesPicker
+  | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | DocumentSymbols
+  | Extension({
+      id: int,
+      hasItems: bool,
+      resolver: [@opaque] Lwt.u(int),
+    })
 and progress =
   | Loading
   | InProgress(float)

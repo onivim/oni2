@@ -14,7 +14,6 @@ open Core.Utility;
 
 module Zed_utf8 = Core.ZedBundled;
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
-module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
 
@@ -78,23 +77,32 @@ let start =
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
-      Log.debug("Goto definition requested");
+      Log.info("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      let editor = Feature_Layout.activeEditor(state.layout);
-
       let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(editor);
-        Definition.getAt(id, position, state.definition)
-        |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
+        Feature_LanguageSupport.Definition.get(
+          ~bufferId=id,
+          state.languageSupport,
+        )
+        |> Option.map((definitionResult: Exthost.DefinitionLink.t) => {
+             let {startLineNumber, startColumn, _}: Exthost.OneBasedRange.t =
+               definitionResult.range;
+
+             let position =
+               Location.{
+                 line: Index.fromOneBased(startLineNumber),
+                 column: Index.fromOneBased(startColumn),
+               };
+
              Actions.OpenFileByPath(
                definitionResult.uri |> Core.Uri.toFileSystemPath,
                None,
-               Some(definitionResult.location),
-             )
+               Some(position),
+             );
            });
       };
 
@@ -128,7 +136,7 @@ let start =
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Actions.VimDirectoryChanged(newDir))
+      dispatch(Actions.DirectoryChanged(newDir))
     );
 
   let _: unit => unit =
@@ -170,6 +178,14 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
+      // TODO: This isn't buffer aware, so it won't be able to deal with the
+      // firstline way of getting syntax, which means if that is in use,
+      // it will get wiped when renaming the file.
+      //
+      // Other notes: The file path is going to be updated in BufferFilenameChanged,
+      // so you can't use the buffer here, as it will have the old path.
+      // Additionally, the syntax server will need to be notified on the filetype
+      // change / hook it up to onFileTypeChanged.
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
@@ -384,6 +400,26 @@ let start =
         maybeBuffer
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
+
+             // If the first line changes, re-run the file detection.
+             let firstLineChanged =
+               Index.equals(bu.startLine, Index.fromZeroBased(0))
+               || bu.isFull;
+
+             let newBuffer =
+               if (firstLineChanged) {
+                 let fileType =
+                   Some(
+                     Exthost.LanguageInfo.getLanguageFromBuffer(
+                       languageInfo,
+                       newBuffer,
+                     ),
+                   );
+                 newBuffer |> Core.Buffer.setFileType(fileType);
+               } else {
+                 newBuffer;
+               };
+
              dispatch(
                Actions.BufferUpdate({
                  update: bu,
@@ -409,24 +445,33 @@ let start =
   let checkCommandLineCompletions = () => {
     Log.debug("checkCommandLineCompletions");
 
-    let completions = Vim.CommandLine.getCompletions();
+    let position = Vim.CommandLine.getPosition();
+    Vim.CommandLine.getText()
+    |> Option.iter(commandStr =>
+         if (position == String.length(commandStr)) {
+           let completions = Vim.CommandLine.getCompletions();
 
-    Log.debugf(m => m("  got %n completions.", Array.length(completions)));
+           Log.debugf(m =>
+             m("  got %n completions.", Array.length(completions))
+           );
 
-    let items =
-      Array.map(
-        name =>
-          Actions.{
-            name,
-            category: None,
-            icon: None,
-            command: () => Noop,
-            highlight: [],
-          },
-        completions,
-      );
+           let items =
+             Array.map(
+               name =>
+                 Actions.{
+                   name,
+                   category: None,
+                   icon: None,
+                   command: () => Noop,
+                   highlight: [],
+                   handle: None,
+                 },
+               completions,
+             );
 
-    dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+           dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+         }
+       );
   };
 
   let _: unit => unit =
@@ -529,12 +574,13 @@ let start =
           Vim.input(~context, key);
         currentTriggerKey := None;
 
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: CursorsChanged(cursors),
-          }),
-        );
+        // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,
+        // and then the cursor changed. This is because the cursor changed may impact the scroll
+        // (ensuring the cursor is visible).
+        //
+        // Ultimately - we want to get rid of those topline/columnline sync, and have Onivim wholly
+        // own the 'scroll' experience.
+        // ie: https://github.com/onivim/oni2/pull/2067/commits/a1eb60dd3b9679d0aabda83616c4400ebe1eb3d3
         dispatch(
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
@@ -545,6 +591,13 @@ let start =
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
             msg: ScrollToColumn(newLeftColumn),
+          }),
+        );
+
+        dispatch(
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: CursorsChanged(cursors),
           }),
         );
 
@@ -902,7 +955,7 @@ let start =
         copyActiveFilepathToClipboardEffect,
       )
 
-    | VimDirectoryChanged(workingDirectory) =>
+    | DirectoryChanged(workingDirectory) =>
       let newState = {
         ...state,
         workspace: {
