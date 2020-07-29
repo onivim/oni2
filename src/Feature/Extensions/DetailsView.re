@@ -10,11 +10,17 @@ module Colors = Feature_Theme.Colors;
 
 module Styles = {
   open Style;
-  let container = [flexDirection(`Column), flexGrow(1), overflow(`Hidden)];
+  let container = [
+    flexDirection(`Column),
+    flexGrow(1),
+    overflow(`Hidden),
+    backgroundColor(Revery.Colors.red),
+  ];
 
   let row = [
     flexDirection(`Row),
     flexGrow(1),
+    flexShrink(0),
     justifyContent(`Center),
     alignItems(`Center),
   ];
@@ -55,8 +61,23 @@ let header = (~font: UiFont.t, ~maybeLogo, ~displayName, ~description, ()) => {
     | None => <Container color=Revery.Colors.gray height=128 width=128 />
     };
 
-  <row>
-    <column> logo </column>
+  <View
+    style=Style.[
+      flexDirection(`Row),
+      flexGrow(0),
+      flexShrink(0),
+      flexBasis(200),
+      backgroundColor(Revery.Colors.blue),
+    ]>
+    <View
+      style=Style.[
+        flexDirection(`Column),
+        justifyContent(`Center),
+        alignItems(`Center),
+        backgroundColor(Revery.Colors.green),
+      ]>
+      logo
+    </View>
     <column>
       <row>
         <Text
@@ -70,13 +91,17 @@ let header = (~font: UiFont.t, ~maybeLogo, ~displayName, ~description, ()) => {
         <Text fontFamily={font.family} fontSize=18. text=description />
       </row>
     </column>
-  </row>;
+  </View>;
 };
 
-let make = (~model: Model.model, ~theme, ~font: UiFont.t, ~dispatch, ()) => {
+let make =
+    (~model: Model.model, ~theme, ~tokenTheme, ~font: UiFont.t, ~dispatch, ()) => {
   switch (model.selected) {
-  | None => <View />
+  | None =>
+    prerr_endline("NOTHING SELECTED");
+    <View />;
   | Some(selected) =>
+    prerr_endline("SOMETHING SELECTED");
     let maybeLogo = selected |> Selected.logo;
     let displayName = selected |> Selected.displayName;
     let description =
@@ -84,6 +109,15 @@ let make = (~model: Model.model, ~theme, ~font: UiFont.t, ~dispatch, ()) => {
 
     <View style=Styles.container>
       <header font maybeLogo displayName description />
+      <Oni_Components.Markdown
+        colorTheme=theme
+        tokenTheme
+        markdown="Hello"
+        languageInfo=Exthost.LanguageInfo.initial
+        grammars=Oni_Syntax.GrammarRepository.empty
+        fontFamily={font.family}
+        codeFontFamily={font.family}
+      />
     </View>;
   };
 };

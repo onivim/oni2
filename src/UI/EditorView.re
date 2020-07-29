@@ -177,6 +177,7 @@ module Parts = {
       | ExtensionDetails =>
         <Feature_Extensions.DetailsView
           model={state.extensions}
+          tokenTheme={state.tokenTheme}
           theme
           font=uiFont
           dispatch={_ => ()}

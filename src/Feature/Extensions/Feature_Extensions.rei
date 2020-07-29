@@ -86,6 +86,7 @@ module DetailsView: {
     (
       ~model: model,
       ~theme: ColorTheme.Colors.t,
+      ~tokenTheme: Oni_Syntax.TokenTheme.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,
       unit

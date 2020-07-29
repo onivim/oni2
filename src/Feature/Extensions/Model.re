@@ -76,6 +76,11 @@ module Selected = {
     fun
     | Local(scanResult) => scanResult.manifest.description
     | Remote(_) => None;
+
+  let readme =
+    fun
+    | Local(scanResult) => Rench.Path.join(scanResult.path, "README.md")
+    | Remote({readmeUrl}) => readmeUrl;
 };
 
 module Effect = {
