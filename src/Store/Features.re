@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Isolinear;
 open Oni_Core;
 open Oni_Core.Utility;
@@ -732,24 +733,43 @@ let update =
       };
     ({...state, signatureHelp: model'}, effect);
 
-  | ExtensionBufferUpdateQueued(buffer) /* {triggerKey}*/ =>
+  | ExtensionBufferUpdateQueued({triggerKey}) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
+    let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
     let (signatureHelp, shOutMsg) =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
         ~maybeEditor=Some(editor),
         ~extHostClient,
         state.signatureHelp,
-        Feature_SignatureHelp.KeyPressed(buffer.triggerKey, false),
+        Feature_SignatureHelp.KeyPressed(triggerKey, false),
       );
     let shEffect =
       switch (shOutMsg) {
       | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
       | _ => Effect.none
       };
-    let effect = [shEffect] |> Effect.batch;
-    ({...state, signatureHelp}, effect);
+
+    let languageSupport' =
+    maybeBuffer
+    |> Option.map(buffer => {
+      let syntaxScope = Feature_Syntax.getSyntaxScope(
+        ~bufferId=Buffer.getId(buffer),
+        ~line=activeCursor.line,
+        ~bytePosition=activeCursor.column |> Index.toZeroBased,
+        state.syntaxHighlights,
+      );
+    Feature_LanguageSupport.bufferUpdated(
+      ~buffer,
+      ~activeCursor,
+      ~syntaxScope,
+      ~triggerKey,
+      state.languageSupport
+    );})
+    |> Option.value(~default=state.languageSupport);
+    
+    ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
 
   | Vim(msg) =>
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);

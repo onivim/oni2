@@ -79,7 +79,8 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
         ~selector,
         ~triggerCharacters,
         ~supportsResolveDetails,
-        ~extensionId
+        ~extensionId,
+        model.completion,
       );
       ({...model, completion: completion'}, Nothing)
 
@@ -128,6 +129,14 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
   };
+
+let bufferUpdated = (
+  ~buffer,
+  ~activeCursor,
+  ~syntaxScope,
+  ~triggerKey,
+  model
+) => model;
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
 
