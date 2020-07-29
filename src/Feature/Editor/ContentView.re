@@ -171,8 +171,7 @@ let renderText =
           }
         };
       let bufferLine = Editor.viewLine(editor, item).contents;
-      let startPixel =
-        float(leftVisibleColumn) *. Editor.font(editor).spaceWidth;
+      let startPixel = Editor.scrollX(editor);
       let startCharacter =
         BufferLine.Slow.getByteFromPixel(~pixel=startPixel, bufferLine);
       let endCharacter =
