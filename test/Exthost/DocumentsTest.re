@@ -128,6 +128,7 @@ describe("DocumentsTest", ({test, _}) => {
         endColumn: 6,
       },
       text: "Greetings",
+      rangeLength: 5,
     };
 
     let modelChangedEvent: ModelChangedEvent.t = {
