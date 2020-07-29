@@ -154,28 +154,25 @@ describe("BufferLine", ({describe, _}) => {
       expect.float(position).toBeCloseTo(6.);
     });
   });
-  /*  describe("getIndexFromPosition", ({test, _}) => {
-        test("position mapped to index", ({expect, _}) => {
-          let indentation =
-            IndentationSettings.create(~mode=Tabs, ~size=8, ~tabSize=8, ());
+  describe("getIndexFromPixel", ({test, _}) => {
+    test("position mapped to pixel", ({expect, _}) => {
+      let indentation =
+        IndentationSettings.create(~mode=Tabs, ~size=8, ~tabSize=8, ());
 
-          let bufferLine = BufferLine.make(~indentation, "\ta");
-          print_endline(bufferLine |> BufferLine.raw);
-          let byteIndex =
-            BufferLine.Slow.getByteFromPosition(~position=0, bufferLine);
-          expect.int(byteIndex).toBe(0);
+      let bufferLine = BufferLine.make(~indentation, "\ta");
+      print_endline(bufferLine |> BufferLine.raw);
+      let byteIndex = BufferLine.Slow.getByteFromPixel(~pixel=0., bufferLine);
+      expect.int(byteIndex).toBe(0);
 
-          let byteIndex =
-            BufferLine.Slow.getByteFromPosition(~position=7, bufferLine);
-          expect.int(byteIndex).toBe(0);
+      let byteIndex = BufferLine.Slow.getByteFromPixel(~pixel=7., bufferLine);
+      expect.int(byteIndex).toBe(0);
 
-          let byteIndex =
-            BufferLine.Slow.getByteFromPosition(~position=8, bufferLine);
-          expect.int(byteIndex).toBe(1);
+      let byteIndex = BufferLine.Slow.getByteFromPixel(~pixel=8., bufferLine);
+      expect.int(byteIndex).toBe(1);
 
-          let byteIndex =
-            BufferLine.Slow.getByteFromPosition(~position=9, bufferLine);
-          expect.int(byteIndex).toBe(1);
-        })
-      }); */
+      let byteIndex =
+        BufferLine.Slow.getByteFromPixel(~pixel=100., bufferLine);
+      expect.int(byteIndex).toBe(1);
+    })
+  });
 });
