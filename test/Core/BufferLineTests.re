@@ -116,7 +116,7 @@ describe("BufferLine", ({describe, _}) => {
         BufferLine.getPixelPositionAndWidth(~index=-1, bufferLine);
 
       expect.float(position).toBeCloseTo(0.);
-      expect.float(width).toBeCloseTo(1.);
+      expect.float(width).toBeCloseTo(8.4);
     });
     test("empty line", ({expect, _}) => {
       let bufferLine = makeLine("");
@@ -124,7 +124,7 @@ describe("BufferLine", ({describe, _}) => {
         BufferLine.getPixelPositionAndWidth(~index=0, bufferLine);
 
       expect.float(position).toBeCloseTo(0.);
-      expect.float(width).toBeCloseTo(1.);
+      expect.float(width).toBeCloseTo(8.4);
     });
     test("position past end of string", ({expect, _}) => {
       let bufferLine = makeLine("abc");
@@ -132,7 +132,7 @@ describe("BufferLine", ({describe, _}) => {
         BufferLine.getPixelPositionAndWidth(~index=4, bufferLine);
 
       expect.float(position).toBeCloseTo(25.2);
-      expect.float(width).toBeCloseTo(1.);
+      expect.float(width).toBeCloseTo(8.4);
     });
     test("tab settings are respected for width", ({expect, _}) => {
       let indentation =
@@ -141,7 +141,7 @@ describe("BufferLine", ({describe, _}) => {
       let bufferLine = BufferLine.make(~indentation, "\t");
       let (_position, width) =
         BufferLine.getPixelPositionAndWidth(~index=0, bufferLine);
-      expect.float(width).toBeCloseTo(6.);
+      expect.float(width).toBeCloseTo(6. *. 8.4);
     });
     test("tab settings impact position", ({expect, _}) => {
       let indentation =
@@ -151,7 +151,7 @@ describe("BufferLine", ({describe, _}) => {
       let (position, width) =
         BufferLine.getPixelPositionAndWidth(~index=1, bufferLine);
       expect.float(width).toBeCloseTo(8.4);
-      expect.float(position).toBeCloseTo(6.);
+      expect.float(position).toBeCloseTo(6. *. 8.4);
     });
   });
   describe("getIndexFromPixel", ({test, _}) => {
@@ -167,7 +167,8 @@ describe("BufferLine", ({describe, _}) => {
       let byteIndex = BufferLine.Slow.getByteFromPixel(~pixel=7., bufferLine);
       expect.int(byteIndex).toBe(0);
 
-      let byteIndex = BufferLine.Slow.getByteFromPixel(~pixel=8., bufferLine);
+      let byteIndex =
+        BufferLine.Slow.getByteFromPixel(~pixel=8. *. 8.4, bufferLine);
       expect.int(byteIndex).toBe(1);
 
       let byteIndex =
