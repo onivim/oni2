@@ -15,12 +15,12 @@ type t = {
 let default = {
   fontFamily: Revery.Font.Family.fromFile(Constants.defaultFontFile),
   fontSize: Constants.defaultFontSize,
-  spaceWidth: 1.,
-  underscoreWidth: 1.,
-  avgCharWidth: 1.,
-  maxCharWidth: 1.,
-  measuredHeight: 1.,
-  descenderHeight: 0.,
+  spaceWidth: 8.4,
+  underscoreWidth: 8.4,
+  avgCharWidth: 34.37,
+  maxCharWidth: 34.37,
+  measuredHeight: 17.36,
+  descenderHeight: 3.78,
   smoothing: Revery.Font.Smoothing.default,
   features: [],
 };
