@@ -18,12 +18,19 @@ module Effects = {
   };
   module Documents = {
     let modelChanged =
-        (~buffer: Buffer.t, ~update: BufferUpdate.t, client, toMsg) =>
+        (
+          ~previousBuffer,
+          ~buffer: Buffer.t,
+          ~update: BufferUpdate.t,
+          client,
+          toMsg,
+        ) =>
       Isolinear.Effect.createWithDispatch(
         ~name="exthost.bufferUpdate", dispatch =>
         Oni_Core.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
             Exthost.ModelContentChange.ofBufferUpdate(
+              ~previousBuffer,
               update,
               Exthost.Eol.default,
             );
