@@ -19,6 +19,7 @@ let initial = {
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
+  | Completion(Completion.msg)
   | Definition(Definition.msg)
   | References(References.msg)
   | Rename(Rename.msg)
@@ -52,6 +53,7 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
   switch (msg) {
   | KeyPressed(_)
   | Pasted(_) => (model, Nothing)
+  
   | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
     let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
     ({...model, codeLens: codeLens'}, Nothing);
@@ -94,6 +96,7 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
       },
       Nothing,
     )
+    
   | Exthost(_) =>
     // TODO:
     (model, Nothing)
@@ -101,6 +104,14 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
   | CodeLens(codeLensMsg) =>
     let codeLens' = CodeLens.update(codeLensMsg, model.codeLens);
     ({...model, codeLens: codeLens'}, Nothing);
+
+  | Completion(completionMsg) =>
+    let (completion', outmsg) =
+      Completion.update(completionMsg, model.completion);
+
+    ({
+      ...model, completion: completion'
+    }, outmsg |> map(msg => Completion(msg)));
 
   | Definition(definitionMsg) =>
     let (definition', outmsg) =
@@ -136,7 +147,16 @@ let bufferUpdated = (
   ~syntaxScope,
   ~triggerKey,
   model
-) => model;
+) => {
+  let completion' = Completion.bufferUpdated(
+    ~buffer,
+    ~activeCursor,
+    ~syntaxScope,
+    ~triggerKey,
+    model.completion
+  );
+  {...model, completion: completion'};
+};
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
 
@@ -188,7 +208,7 @@ let sub =
       ~activePosition,
       ~visibleBuffers,
       ~client,
-      {definition, _},
+      {definition, completion, _},
     ) => {
   let codeLensSub =
     CodeLens.sub(~visibleBuffers, ~client)
@@ -205,7 +225,13 @@ let sub =
         )
         |> Isolinear.Sub.map(msg => Definition(msg));
 
-  [codeLensSub, definitionSub] |> Isolinear.Sub.batch;
+  let completionSub =
+    !isInsertMode ?
+    Isolinear.Sub.none
+    : Completion.sub(completion)
+    |> Isolinear.Sub.map(msg => Completion(msg));
+
+  [codeLensSub, definitionSub, completionSub] |> Isolinear.Sub.batch;
 };
 
 // TODO: Remove
