@@ -527,4 +527,68 @@ module Sub = {
     DefinitionSubscription.create({handle, buffer, position, client})
     |> Isolinear.Sub.map(toMsg);
   };
+
+  type completionParams = {
+    handle: int,
+    context: Exthost.CompletionContext.t,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    position: Exthost.OneBasedPosition.t,
+  };
+
+  module CompletionSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(Exthost.SuggestResult.t, string);
+      type nonrec params = completionParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.CompletionSubscription";
+      let id = ({handle, buffer, position, _}) =>
+        idFromBufferPosition(
+          ~handle,
+          ~buffer,
+          ~position,
+          "CompletionSubscription",
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideCompletionItems(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            ~context=params.context,
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, suggestResult =>
+          if (Latch.isOpen(latch)) {
+            dispatch(Ok(suggestResult));
+          }
+        );
+
+        Lwt.on_failure(promise, exn =>
+          if (Latch.isOpen(latch)) {
+            dispatch(Error(Printexc.to_string(exn)));
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+  let completionItems =
+      (~handle, ~context, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    CompletionSubscription.create({handle, context, buffer, position, client})
+    |> Isolinear.Sub.map(toMsg);
+  };
 };

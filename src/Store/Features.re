@@ -752,23 +752,25 @@ let update =
       };
 
     let languageSupport' =
-    maybeBuffer
-    |> Option.map(buffer => {
-      let syntaxScope = Feature_Syntax.getSyntaxScope(
-        ~bufferId=Buffer.getId(buffer),
-        ~line=activeCursor.line,
-        ~bytePosition=activeCursor.column |> Index.toZeroBased,
-        state.syntaxHighlights,
-      );
-    Feature_LanguageSupport.bufferUpdated(
-      ~buffer,
-      ~activeCursor,
-      ~syntaxScope,
-      ~triggerKey,
-      state.languageSupport
-    );})
-    |> Option.value(~default=state.languageSupport);
-    
+      maybeBuffer
+      |> Option.map(buffer => {
+           let syntaxScope =
+             Feature_Syntax.getSyntaxScope(
+               ~bufferId=Buffer.getId(buffer),
+               ~line=activeCursor.line,
+               ~bytePosition=activeCursor.column |> Index.toZeroBased,
+               state.syntaxHighlights,
+             );
+           Feature_LanguageSupport.bufferUpdated(
+             ~buffer,
+             ~activeCursor,
+             ~syntaxScope,
+             ~triggerKey,
+             state.languageSupport,
+           );
+         })
+      |> Option.value(~default=state.languageSupport);
+
     ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
 
   | Vim(msg) =>

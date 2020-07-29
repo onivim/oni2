@@ -139,17 +139,17 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     );
   };
 
-//  let onRegisterSuggestProvider = (handle, selector, client) => {
-//    let id = "exthost." ++ string_of_int(handle);
-//    let completionProvider =
-//      ExtensionCompletionProvider.create(handle, selector, client);
-//
-//    dispatch(
-//      Actions.LanguageFeature(
-//        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
-//      ),
-//    );
-//  };
+  //  let onRegisterSuggestProvider = (handle, selector, client) => {
+  //    let id = "exthost." ++ string_of_int(handle);
+  //    let completionProvider =
+  //      ExtensionCompletionProvider.create(handle, selector, client);
+  //
+  //    dispatch(
+  //      Actions.LanguageFeature(
+  //        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
+  //      ),
+  //    );
+  //  };
 
   let onDiagnosticsChangeMany =
       (owner: string, entries: list(Exthost.Msg.Diagnostics.entry)) => {
@@ -232,16 +232,16 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         withClient(onRegisterDocumentHighlightProvider(handle, selector));
         Lwt.return(Reply.okEmpty);
 
-//      | LanguageFeatures(
-//          RegisterSuggestSupport({
-//            handle,
-//            selector,
-//            _,
-//            // TODO: Handle additional configuration from suggest registration!
-//          }),
-//        ) =>
-//        withClient(onRegisterSuggestProvider(handle, selector));
-//        Lwt.return(Reply.okEmpty);
+      //      | LanguageFeatures(
+      //          RegisterSuggestSupport({
+      //            handle,
+      //            selector,
+      //            _,
+      //            // TODO: Handle additional configuration from suggest registration!
+      //          }),
+      //        ) =>
+      //        withClient(onRegisterSuggestProvider(handle, selector));
+      //        Lwt.return(Reply.okEmpty);
 
       | Diagnostics(Clear({owner})) =>
         dispatch(Actions.DiagnosticsClear(owner));

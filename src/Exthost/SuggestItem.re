@@ -1,4 +1,5 @@
 open Oni_Core;
+[@deriving show]
 type t = {
   label: string,
   kind: CompletionKind.t,

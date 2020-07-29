@@ -555,6 +555,7 @@ module SignatureHelp: {
 };
 
 module SuggestResult: {
+  [@deriving show]
   type t = {
     completions: list(SuggestItem.t),
     isIncomplete: bool,

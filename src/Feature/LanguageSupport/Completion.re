@@ -2,7 +2,15 @@ open Oni_Core;
 open Exthost;
 
 [@deriving show]
-type msg = unit;
+type msg =
+  | CompletionResultAvailable({
+      handle: int,
+      suggestResult: Exthost.SuggestResult.t,
+    })
+  | CompletionError({
+      handle: int,
+      errorMsg: string,
+    });
 
 [@deriving show]
 type provider = {
@@ -13,81 +21,152 @@ type provider = {
   extensionId: string,
 };
 
-[@deriving show]
-type meet = {
-  buffer: [@opaque] Oni_Core.Buffer.t,
-  base: string,
-  location: EditorCoreTypes.Location.t,
+module Session = {
+  type state =
+    | Waiting
+    | Completed(list(Exthost.SuggestItem.t))
+    // TODO
+    //| Incomplete(list(Exthost.SuggestItem.t))
+    | Error(string);
+
+  [@deriving show]
+  type t = {
+    state,
+    buffer: [@opaque] Oni_Core.Buffer.t,
+    base: string,
+    location: EditorCoreTypes.Location.t,
+  };
+
+  let create = (~buffer, ~base, ~location) => {
+    state: Waiting,
+    buffer,
+    base,
+    location,
+  };
+
+  let refine = (~base, current) => {
+    ...current,
+    base,
+    // TODO: Filter results based on base
+  };
+
+  let update = (~buffer, ~base, ~location, previous) =>
+    // If different buffer or location... start over!
+    if (Oni_Core.Buffer.getId(buffer)
+        != Oni_Core.Buffer.getId(previous.buffer)
+        || location != previous.location) {
+      create(~buffer, ~base, ~location);
+    } else {
+      // Refine results
+      refine(~base, previous);
+    };
 };
 
 type model = {
-  handleToMeet: IntMap.t(meet),
-  providers: list(provider)
+  handleToSession: IntMap.t(Session.t),
+  providers: list(provider),
 };
 
-let initial = {
-  handleToMeet: IntMap.empty,
-  providers: [],
-};
+let initial = {handleToSession: IntMap.empty, providers: []};
 
-let register = (
-    ~handle,
-    ~selector,
-    ~triggerCharacters,
-    ~supportsResolveDetails,
-    ~extensionId,
-    model
-) => {
-    ...model,
-    providers: [{handle, selector, triggerCharacters, supportsResolveDetails, extensionId}, ...model.providers]
+let register =
+    (
+      ~handle,
+      ~selector,
+      ~triggerCharacters,
+      ~supportsResolveDetails,
+      ~extensionId,
+      model,
+    ) => {
+  ...model,
+  providers: [
+    {
+      handle,
+      selector,
+      triggerCharacters,
+      supportsResolveDetails,
+      extensionId,
+    },
+    ...model.providers,
+  ],
 };
 
 let unregister = (~handle, model) => {
-    ...model,
-    providers: List.filter(prov => prov.handle != handle, model.providers)
+  ...model,
+  providers: List.filter(prov => prov.handle != handle, model.providers),
 };
 
-let bufferUpdated = (
-  ~buffer,
-  ~activeCursor,
-  ~syntaxScope,
-  ~triggerKey,
-  model
-) => {
-  
-  let candidateProviders = model.providers
-  |> List.filter(prov => Exthost.DocumentSelector.matchesBuffer(
-    ~buffer, prov.selector
-  ));
+let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+  let candidateProviders =
+    model.providers
+    |> List.filter(prov =>
+         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
+       );
 
-  let handleToMeet = List.fold_left((acc: IntMap.t(meet), curr: provider) => {
-    let maybeMeet = CompletionMeet.fromBufferLocation(
-      // TODO: triggerCharacters
-      ~location=activeCursor,
-      buffer
+  let handleToSession =
+    List.fold_left(
+      (acc: IntMap.t(Session.t), curr: provider) => {
+        let maybeMeet =
+          CompletionMeet.fromBufferLocation(
+            // TODO: triggerCharacters
+            ~location=activeCursor,
+            buffer,
+          );
+
+        switch (maybeMeet) {
+        | None => acc
+        | Some({base, location, _}) =>
+          acc
+          |> IntMap.update(
+               curr.handle,
+               fun
+               | None => Some(Session.create(~buffer, ~base, ~location))
+               | Some(previous) =>
+                 Some(Session.update(~buffer, ~base, ~location, previous)),
+             )
+        };
+      },
+      IntMap.empty,
+      candidateProviders,
     );
 
-    switch (maybeMeet) {
-    | None => acc
-    | Some({base, location, _}) =>
-    let meet = {
-      buffer,
-      base,
-      location
-      
-    };
-    prerr_endline(
-      Printf.sprintf("MEET %d: %s", curr.handle, show_meet(meet))
-    );
-      IntMap.add(curr.handle, meet, acc)
-    }
-  }, IntMap.empty, candidateProviders);
-  
-  {...model, handleToMeet}
-}
+  {...model, handleToSession};
+};
 
 let update = (msg, model) => {
-  (model, Outmsg.Nothing)
+  (model, Outmsg.Nothing);
 };
 
-let sub = (model) => Isolinear.Sub.none;
+let sub = (~client, model) => {
+  model.handleToSession
+  |> IntMap.bindings
+  |> List.map(((handle: int, meet: Session.t)) => {
+       Service_Exthost.Sub.completionItems(
+         // TODO: proper trigger kind
+         ~context=
+           Exthost.CompletionContext.{
+             triggerKind: Invoke,
+             triggerCharacter: None,
+           },
+         ~handle,
+         ~buffer=meet.buffer,
+         ~position=meet.location,
+         ~toMsg=
+           suggestResult => {
+             prerr_endline(
+               "Got result for handle: " ++ string_of_int(handle),
+             );
+             switch (suggestResult) {
+             | Ok(v) =>
+               prerr_endline(Exthost.SuggestResult.show(v));
+               CompletionResultAvailable({handle, suggestResult: v});
+             | Error(errorMsg) =>
+               prerr_endline(errorMsg);
+               CompletionError({handle, errorMsg});
+             };
+           },
+         client,
+       )
+     })
+  |> Isolinear.Sub.batch;
+};

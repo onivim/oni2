@@ -32,13 +32,15 @@ let update:
   ) =>
   (model, outmsg);
 
-let bufferUpdated: (
-  ~buffer: Oni_Core.Buffer.t,
-  ~activeCursor: Location.t,
-  ~syntaxScope: Oni_Core.SyntaxScope.t,
-  ~triggerKey: option(string),
-  model
-) => model;
+let bufferUpdated:
+  (
+    ~buffer: Oni_Core.Buffer.t,
+    ~activeCursor: Location.t,
+    ~syntaxScope: Oni_Core.SyntaxScope.t,
+    ~triggerKey: option(string),
+    model
+  ) =>
+  model;
 
 let isFocused: model => bool;
 

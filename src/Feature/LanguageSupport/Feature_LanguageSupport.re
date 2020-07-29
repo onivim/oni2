@@ -53,7 +53,7 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
   switch (msg) {
   | KeyPressed(_)
   | Pasted(_) => (model, Nothing)
-  
+
   | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
     let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
     ({...model, codeLens: codeLens'}, Nothing);
@@ -68,13 +68,15 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
       References.register(~handle, ~selector, model.references);
     ({...model, references: references'}, Nothing);
 
-  | Exthost(RegisterSuggestSupport({
-    handle,
-    selector,
-    triggerCharacters,
-    extensionId,
-    supportsResolveDetails,
-  })) => 
+  | Exthost(
+      RegisterSuggestSupport({
+        handle,
+        selector,
+        triggerCharacters,
+        extensionId,
+        supportsResolveDetails,
+      }),
+    ) =>
     let completion' =
       Completion.register(
         ~handle,
@@ -84,7 +86,7 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
         ~extensionId,
         model.completion,
       );
-      ({...model, completion: completion'}, Nothing)
+    ({...model, completion: completion'}, Nothing);
 
   | Exthost(Unregister({handle})) => (
       {
@@ -96,7 +98,7 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
       },
       Nothing,
     )
-    
+
   | Exthost(_) =>
     // TODO:
     (model, Nothing)
@@ -109,9 +111,10 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
     let (completion', outmsg) =
       Completion.update(completionMsg, model.completion);
 
-    ({
-      ...model, completion: completion'
-    }, outmsg |> map(msg => Completion(msg)));
+    (
+      {...model, completion: completion'},
+      outmsg |> map(msg => Completion(msg)),
+    );
 
   | Definition(definitionMsg) =>
     let (definition', outmsg) =
@@ -141,20 +144,15 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
   };
 
-let bufferUpdated = (
-  ~buffer,
-  ~activeCursor,
-  ~syntaxScope,
-  ~triggerKey,
-  model
-) => {
-  let completion' = Completion.bufferUpdated(
-    ~buffer,
-    ~activeCursor,
-    ~syntaxScope,
-    ~triggerKey,
-    model.completion
-  );
+let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+  let completion' =
+    Completion.bufferUpdated(
+      ~buffer,
+      ~activeCursor,
+      ~syntaxScope,
+      ~triggerKey,
+      model.completion,
+    );
   {...model, completion: completion'};
 };
 
@@ -226,10 +224,10 @@ let sub =
         |> Isolinear.Sub.map(msg => Definition(msg));
 
   let completionSub =
-    !isInsertMode ?
-    Isolinear.Sub.none
-    : Completion.sub(completion)
-    |> Isolinear.Sub.map(msg => Completion(msg));
+    !isInsertMode
+      ? Isolinear.Sub.none
+      : Completion.sub(~client, completion)
+        |> Isolinear.Sub.map(msg => Completion(msg));
 
   [codeLensSub, definitionSub, completionSub] |> Isolinear.Sub.batch;
 };
