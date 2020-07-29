@@ -186,9 +186,9 @@ let renderText =
       let bufferLine = Editor.viewLine(editor, item).contents;
       let startPixel = Editor.scrollX(editor);
       let startCharacter =
-        BufferLine.Slow.getByteFromPixel(~pixel=startPixel, bufferLine);
+        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine);
       let endCharacter =
-        BufferLine.Slow.getByteFromPixel(
+        BufferLine.Slow.getIndexFromPixel(
           ~pixel=startPixel +. float(bufferWidthInPixels),
           bufferLine,
         );

@@ -370,15 +370,13 @@ let getPixelPositionAndWidth = (~index: int, bufferLine: t) => {
 };
 
 module Slow = {
-  let getByteFromPixel = (~pixel, bufferLine) => {
-    let length = lengthInBytes(bufferLine);
-    Internal.resolveTo(~index=length, bufferLine);
-
+  let getIndexFromPixel = (~pixel, bufferLine) => {
+    let characterLength = lengthSlow(bufferLine);
     let rec loop = (low, high) =>
       if (high == low) {
-        getIndex(~byte=high, bufferLine);
+        high;
       } else if (high < low) {
-        getIndex(~byte=length - 1, bufferLine);
+        characterLength - 1;
       } else {
         let mid = (low + high) / 2;
         let (midPixel, midPixelWidth) =
@@ -388,10 +386,10 @@ module Slow = {
         } else if (pixel > midPixel +. midPixelWidth) {
           loop(mid + 1, high);
         } else {
-          getIndex(~byte=mid, bufferLine);
+          mid;
         };
       };
 
-    loop(0, length - 1);
+    loop(0, characterLength - 1);
   };
 };
