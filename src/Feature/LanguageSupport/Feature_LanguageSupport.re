@@ -281,13 +281,14 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
-  let contextKeys = [
-    Rename.Contributions.contextKeys
-    |> fromList
-    |> map(({rename, _}: model) => rename),
-    Completion.Contributions.contextKeys
-    |> fromList
-    |> map(({completion, _}: model) => completion),
+  let contextKeys =
+    [
+      Rename.Contributions.contextKeys
+      |> fromList
+      |> map(({rename, _}: model) => rename),
+      Completion.Contributions.contextKeys
+      |> fromList
+      |> map(({completion, _}: model) => completion),
     ]
     |> unionMany;
 
@@ -300,33 +301,34 @@ module OldDefinition = Definition;
 module OldHighlights = DocumentHighlights;
 
 module Completion = {
-  let isActive = ({completion, _}: model) => 
+  let isActive = ({completion, _}: model) =>
     OldCompletion.isActive(completion);
 
   module View = {
-    let make = (
-      ~key=?,
-      ~x,
-      ~y,
-      ~lineHeight,
-      ~theme,
-      ~tokenTheme,
-      ~editorFont,
-      ~model,
-      ()) => {
-        OldCompletion.View.make(
-          ~key?,
+    let make =
+        (
+          ~key=?,
           ~x,
           ~y,
           ~lineHeight,
           ~theme,
           ~tokenTheme,
           ~editorFont,
-          ~model=model.completion,
+          ~model,
           (),
-        )
-      }
-  }
+        ) => {
+      OldCompletion.View.make(
+        ~x,
+        ~y,
+        ~lineHeight,
+        ~theme,
+        ~tokenTheme,
+        ~editorFont,
+        ~completions=model.completion,
+        (),
+      );
+    };
+  };
 };
 
 module Definition = {

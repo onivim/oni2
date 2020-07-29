@@ -40,10 +40,10 @@ let completionsView =
         x=cursorPixelX
         y=cursorPixelY
         lineHeight={editorFont.measuredHeight}
-        //colors
         theme
         tokenTheme
         editorFont
+        //colors
         model=languageSupport
       />
     : React.empty;

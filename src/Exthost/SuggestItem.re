@@ -25,6 +25,13 @@ let filterText = ({filterText, label, _}) => {
   };
 };
 
+let sortText = ({sortText, label, _}) => {
+  switch (sortText) {
+  | None => label
+  | Some(sortText) => sortText
+  };
+};
+
 let decode = {
   Json.Decode.(
     obj(({field, _}) => {

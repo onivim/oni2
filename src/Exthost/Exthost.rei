@@ -264,6 +264,7 @@ module SuggestItem: {
   };
 
   let filterText: t => string;
+  let sortText: t => string;
 
   let decode: Json.decoder(t);
 };
