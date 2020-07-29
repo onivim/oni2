@@ -31,7 +31,7 @@ let getTokensForLine =
       [];
     } else {
       let idx = Index.fromZeroBased(i);
-      let highlights =
+      let searchHighlights =
         BufferHighlights.getHighlightsByLine(
           ~bufferId,
           ~line=idx,
@@ -75,7 +75,7 @@ let getTokensForLine =
           ~selectionHighlights=selection,
           ~selectionColor=colors.selectionBackground,
           ~matchingPair=matchingPairIndex,
-          ~searchHighlights=highlights,
+          ~searchHighlights,
           ~searchHighlightColor=colors.findMatchBackground,
           tokenColors,
         );

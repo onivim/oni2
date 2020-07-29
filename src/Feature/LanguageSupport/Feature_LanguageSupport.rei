@@ -12,6 +12,11 @@ module Msg: {
   let exthost: Exthost.Msg.LanguageFeatures.msg => msg;
   let keyPressed: string => msg;
   let pasted: string => msg;
+
+  module Formatting: {
+    let formatDocument: msg;
+    let formatRange: (~startLine: Index.t, ~endLine: Index.t) => msg;
+  };
 };
 
 type outmsg =
@@ -20,10 +25,15 @@ type outmsg =
       filePath: string,
       location: option(Location.t),
     })
+  | NotifySuccess(string)
+  | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg));
 
 let update:
   (
+    ~configuration: Oni_Core.Configuration.t,
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
+    ~maybeSelection: option(Range.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
     ~cursorLocation: Location.t,
     ~client: Exthost.Client.t,
@@ -69,6 +79,12 @@ module Definition: {
     option(Exthost.DefinitionLink.t);
 
   let isAvailable: (~bufferId: int, model) => bool;
+};
+
+module DocumentHighlights: {
+  let getByLine: (~bufferId: int, ~line: int, model) => list(Range.t);
+
+  let getLinesWithHighlight: (~bufferId: int, model) => list(int);
 };
 
 // TODO: Remove

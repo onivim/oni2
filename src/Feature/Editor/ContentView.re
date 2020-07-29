@@ -15,6 +15,7 @@ let renderLine =
       ~selectionRanges,
       ~matchingPairs,
       ~bufferHighlights,
+      ~languageSupport,
       item,
       _offset,
     ) => {
@@ -53,11 +54,22 @@ let renderLine =
     );
   };
 
+  let bufferId = Buffer.getId(buffer);
   /* Draw search highlights */
   BufferHighlights.getHighlightsByLine(
-    ~bufferId=Buffer.getId(buffer),
+    ~bufferId,
     ~line=index,
     bufferHighlights,
+  )
+  |> List.iter(
+       Draw.range(~context, ~padding=1., ~color=colors.findMatchBackground),
+     );
+
+  /* Draw document highlights */
+  Feature_LanguageSupport.DocumentHighlights.getByLine(
+    ~bufferId,
+    ~line=index |> Index.toZeroBased,
+    languageSupport,
   )
   |> List.iter(
        Draw.range(~context, ~padding=1., ~color=colors.findMatchBackground),
@@ -74,6 +86,7 @@ let renderEmbellishments =
       ~selectionRanges,
       ~matchingPairs,
       ~bufferHighlights,
+      ~languageSupport,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -86,6 +99,7 @@ let renderEmbellishments =
       ~selectionRanges,
       ~matchingPairs,
       ~bufferHighlights,
+      ~languageSupport,
     ),
   );
 
@@ -221,6 +235,7 @@ let render =
     ~selectionRanges,
     ~matchingPairs,
     ~bufferHighlights,
+    ~languageSupport,
   );
 
   let bufferId = Buffer.getId(buffer);

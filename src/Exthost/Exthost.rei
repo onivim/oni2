@@ -252,6 +252,7 @@ module RenameLocation: {
 };
 
 module SuggestItem: {
+  [@deriving show]
   type t = {
     label: string,
     kind: CompletionKind.t,

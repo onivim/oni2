@@ -41,16 +41,6 @@ type msg =
       startLine: Index.t,
       endLine: Index.t,
     })
-  | DocumentFormatterAvailable({
-      handle: int,
-      selector: Exthost.DocumentSelector.t,
-      displayName: string,
-    })
-  | RangeFormatterAvailable({
-      handle: int,
-      selector: Exthost.DocumentSelector.t,
-      displayName: string,
-    })
   | EditsReceived({
       displayName: string,
       sessionId: int,
@@ -64,6 +54,32 @@ type msg =
       editCount: int,
       displayName: string,
     });
+
+let registerDocumentFormatter = (~handle, ~selector, ~displayName, model) => {
+  ...model,
+  availableDocumentFormatters: [
+    {handle, selector, displayName},
+    ...model.availableDocumentFormatters,
+  ],
+};
+
+let registerRangeFormatter = (~handle, ~selector, ~displayName, model) => {
+  ...model,
+  availableRangeFormatters: [
+    {handle, selector, displayName},
+    ...model.availableRangeFormatters,
+  ],
+};
+
+let unregister = (~handle, model) => {
+  ...model,
+  availableDocumentFormatters:
+    model.availableDocumentFormatters
+    |> List.filter(prov => prov.handle != handle),
+  availableRangeFormatters:
+    model.availableRangeFormatters
+    |> List.filter(prov => prov.handle != handle),
+};
 
 type outmsg =
   | Nothing
@@ -210,8 +226,8 @@ let update =
       ~maybeSelection,
       ~maybeBuffer,
       ~extHostClient,
-      model,
       msg,
+      model,
     ) => {
   switch (msg) {
   | FormatRange({startLine, endLine}) =>
@@ -321,27 +337,6 @@ let update =
           },
       );
     }
-  | DocumentFormatterAvailable({handle, selector, displayName}) => (
-      {
-        ...model,
-        availableDocumentFormatters: [
-          {handle, selector, displayName},
-          ...model.availableDocumentFormatters,
-        ],
-      },
-      Nothing,
-    )
-
-  | RangeFormatterAvailable({handle, selector, displayName}) => (
-      {
-        ...model,
-        availableRangeFormatters: [
-          {handle, selector, displayName},
-          ...model.availableRangeFormatters,
-        ],
-      },
-      Nothing,
-    )
 
   | EditsReceived({displayName, sessionId, edits}) =>
     switch (model.activeSession) {

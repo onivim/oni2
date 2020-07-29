@@ -22,6 +22,7 @@ type provider = {
 };
 
 module Session = {
+  [@deriving show]
   type state =
     | Waiting
     | Completed(list(Exthost.SuggestItem.t))

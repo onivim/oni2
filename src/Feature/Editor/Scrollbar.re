@@ -276,6 +276,33 @@ module Vertical = {
     |> React.listToElement;
   };
 
+  let documentHighlightMarkers =
+      (~languageSupport, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+    let searchMatches = t =>
+      Style.[
+        position(`Absolute),
+        top(t - 3),
+        left(4),
+        right(4),
+        height(8),
+        backgroundColor(colors.findMatchBackground),
+      ];
+
+    let documentHighlightToElement = line => {
+      let position =
+        Editor.projectLine(~line, ~pixelHeight=totalHeight, editor)
+        |> int_of_float;
+      <View style={searchMatches(position)} />;
+    };
+
+    Feature_LanguageSupport.DocumentHighlights.getLinesWithHighlight(
+      ~bufferId=Editor.getBufferId(editor),
+      languageSupport,
+    )
+    |> List.map(documentHighlightToElement)
+    |> React.listToElement;
+  };
+
   let selectionMarkers = (~totalHeight, ~editor, ~colors: Colors.t, ()) => {
     let selectionStyle = (t, bot) => {
       Style.[
@@ -325,6 +352,7 @@ module Vertical = {
         ~diagnostics: IntMap.t(list(Diagnostic.t)),
         ~colors: Colors.t,
         ~bufferHighlights,
+        ~languageSupport,
         (),
       ) => {
     let scrollMetrics =
@@ -413,6 +441,12 @@ module Vertical = {
               colors
             />
             <searchMarkers bufferHighlights editor totalHeight colors />
+            <documentHighlightMarkers
+              languageSupport
+              editor
+              totalHeight
+              colors
+            />
           </View>
         </View>
       }}
