@@ -376,6 +376,8 @@ module Slow = {
     let rec loop = (low, high) =>
       if (high == low) {
         getIndex(~byte=high, bufferLine);
+      } else if (high < low) {
+        getIndex(~byte=length - 1, bufferLine);
       } else {
         let mid = (low + high) / 2;
         let (midPixel, midPixelWidth) =
