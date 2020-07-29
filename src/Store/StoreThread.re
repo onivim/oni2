@@ -161,8 +161,6 @@ let start =
 
   let completionUpdater = CompletionStoreConnector.start();
 
-  let languageFeatureUpdater = LanguageFeatureConnector.start();
-
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
@@ -184,7 +182,6 @@ let start =
       indentationUpdater,
       windowUpdater,
       themeUpdater,
-      languageFeatureUpdater,
       completionUpdater,
       titleUpdater,
       Features.update(

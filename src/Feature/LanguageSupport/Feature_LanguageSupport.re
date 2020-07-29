@@ -3,6 +3,7 @@ open EditorCoreTypes;
 type model = {
   codeLens: CodeLens.model,
   definition: Definition.model,
+  documentHighlights: DocumentHighlights.model,
   formatting: Formatting.model,
   rename: Rename.model,
   references: References.model,
@@ -11,6 +12,7 @@ type model = {
 let initial = {
   codeLens: CodeLens.initial,
   definition: Definition.initial,
+  documentHighlights: DocumentHighlights.initial,
   formatting: Formatting.initial,
   rename: Rename.initial,
   references: References.initial,
@@ -20,6 +22,7 @@ let initial = {
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
   | Definition(Definition.msg)
+  | DocumentHighlights(DocumentHighlights.msg)
   | Formatting(Formatting.msg)
   | References(References.msg)
   | Rename(Rename.msg)
@@ -83,6 +86,15 @@ let update =
       Definition.register(~handle, ~selector, model.definition);
     ({...model, definition: definition'}, Nothing);
 
+  | Exthost(RegisterDocumentHighlightProvider({handle, selector})) =>
+    let documentHighlights' =
+      DocumentHighlights.register(
+        ~handle,
+        ~selector,
+        model.documentHighlights,
+      );
+    ({...model, documentHighlights: documentHighlights'}, Nothing);
+
   | Exthost(RegisterReferenceSupport({handle, selector})) =>
     let references' =
       References.register(~handle, ~selector, model.references);
@@ -116,6 +128,8 @@ let update =
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         definition: Definition.unregister(~handle, model.definition),
+        documentHighlights:
+          DocumentHighlights.unregister(~handle, model.documentHighlights),
         formatting: Formatting.unregister(~handle, model.formatting),
         references: References.unregister(~handle, model.references),
         rename: Rename.unregister(~handle, model.rename),
@@ -137,6 +151,14 @@ let update =
       {...model, definition: definition'},
       outmsg |> map(msg => Definition(msg)),
     );
+
+  | DocumentHighlights(documentHighlightsMsg) =>
+    let documentHighlights' =
+      DocumentHighlights.update(
+        documentHighlightsMsg,
+        model.documentHighlights,
+      );
+    ({...model, documentHighlights: documentHighlights'}, Nothing);
 
   | References(referencesMsg) =>
     let (references', outmsg) =
@@ -222,6 +244,8 @@ module Contributions = {
 };
 
 module OldDefinition = Definition;
+module OldHighlights = DocumentHighlights;
+
 module Definition = {
   let get = (~bufferId, {definition, _}: model) => {
     OldDefinition.get(~bufferId, definition);
@@ -236,6 +260,16 @@ module Definition = {
   };
 };
 
+module DocumentHighlights = {
+  let getByLine = (~bufferId, ~line, {documentHighlights, _}) => {
+    OldHighlights.getByLine(~bufferId, ~line, documentHighlights);
+  };
+
+  let getLinesWithHighlight = (~bufferId, {documentHighlights, _}) => {
+    OldHighlights.getLinesWithHighlight(~bufferId, documentHighlights);
+  };
+};
+
 let sub =
     (
       ~isInsertMode,
@@ -243,7 +277,7 @@ let sub =
       ~activePosition,
       ~visibleBuffers,
       ~client,
-      {definition, _},
+      {definition, documentHighlights, _},
     ) => {
   let codeLensSub =
     CodeLens.sub(~visibleBuffers, ~client)
@@ -260,7 +294,16 @@ let sub =
         )
         |> Isolinear.Sub.map(msg => Definition(msg));
 
-  [codeLensSub, definitionSub] |> Isolinear.Sub.batch;
+  let documentHighlightsSub =
+    OldHighlights.sub(
+      ~buffer=activeBuffer,
+      ~location=activePosition,
+      ~client,
+      documentHighlights,
+    )
+    |> Isolinear.Sub.map(msg => DocumentHighlights(msg));
+
+  [codeLensSub, definitionSub, documentHighlightsSub] |> Isolinear.Sub.batch;
 };
 
 // TODO: Remove
