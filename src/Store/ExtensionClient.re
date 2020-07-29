@@ -48,35 +48,6 @@ module ExtensionCompletionProvider = {
   };
 };
 
-module ExtensionDocumentHighlightProvider = {
-  let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
-    highlights
-    |> List.map(highlight => {
-         Exthost.OneBasedRange.toRange(
-           Exthost.DocumentHighlight.(highlight.range),
-         )
-       });
-  };
-
-  let create =
-      (
-        id: int,
-        selector: Exthost.DocumentSelector.t,
-        client,
-        (buffer, location),
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDocumentHighlights(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        client,
-      )
-      |> Lwt.map(definitionToModel)
-    });
-  };
-};
-
 module ExtensionDocumentSymbolProvider = {
   let create =
       (
@@ -119,21 +90,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         LanguageFeatures.DocumentSymbolProviderAvailable(
           id,
           documentSymbolProvider,
-        ),
-      ),
-    );
-  };
-
-  let onRegisterDocumentHighlightProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let documentHighlightProvider =
-      ExtensionDocumentHighlightProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DocumentHighlightProviderAvailable(
-          id,
-          documentHighlightProvider,
         ),
       ),
     );
@@ -227,12 +183,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         Lwt.return(Reply.okEmpty);
 
       | LanguageFeatures(
-          RegisterDocumentHighlightProvider({handle, selector}),
-        ) =>
-        withClient(onRegisterDocumentHighlightProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
           RegisterSuggestSupport({
             handle,
             selector,
@@ -268,6 +218,32 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         Lwt.return(Reply.okEmpty);
       | Decorations(DecorationsDidChange({handle, uris})) =>
         dispatch(DecorationsChanged({handle, uris}));
+        Lwt.return(Reply.okEmpty);
+
+      | Documents(documentsMsg) =>
+        switch (documentsMsg) {
+        | Documents.TryOpenDocument({uri}) =>
+          if (Oni_Core.Uri.getScheme(uri) == Oni_Core.Uri.Scheme.File) {
+            dispatch(
+              Actions.OpenFileByPath(
+                Oni_Core.Uri.toFileSystemPath(uri),
+                None,
+                None,
+              ),
+            );
+          } else {
+            Log.warnf(m =>
+              m(
+                "TryOpenDocument: Unable to open %s",
+                uri |> Oni_Core.Uri.toString,
+              )
+            );
+          }
+        | Documents.TrySaveDocument(_) =>
+          Log.warn("TrySaveDocument is not yet implemented.")
+        | Documents.TryCreateDocument(_) =>
+          Log.warn("TryCreateDocument is not yet implemented.")
+        };
         Lwt.return(Reply.okEmpty);
 
       | ExtensionService(extMsg) =>
@@ -414,6 +390,23 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
+      | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
+        Service_OS.Api.glob(
+          ~includeFiles=?includePattern,
+          ~excludeDirectories=?excludePattern,
+          // TODO: Pull from store
+          Sys.getcwd(),
+        )
+        |> Lwt.map(paths =>
+             Reply.okJson(
+               `List(
+                 paths
+                 |> List.map(str =>
+                      Oni_Core.Uri.fromPath(str) |> Oni_Core.Uri.to_yojson
+                    ),
+               ),
+             )
+           )
       | unhandledMsg =>
         Log.warnf(m =>
           m("Unhandled message: %s", Exthost.Msg.show(unhandledMsg))

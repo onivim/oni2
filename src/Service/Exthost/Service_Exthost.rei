@@ -14,6 +14,7 @@ module Effects: {
   module Documents: {
     let modelChanged:
       (
+        ~previousBuffer: Oni_Core.Buffer.t,
         ~buffer: Oni_Core.Buffer.t,
         ~update: Oni_Core.BufferUpdate.t,
         Exthost.Client.t,
@@ -112,6 +113,16 @@ module Sub: {
       ~buffer: Oni_Core.Buffer.t,
       ~position: EditorCoreTypes.Location.t,
       ~toMsg: list(Exthost.DefinitionLink.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
+  let documentHighlights:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: list(Exthost.DocumentHighlight.t) => 'a,
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);

@@ -431,6 +431,63 @@ module DocumentContentProvider = {
   };
 };
 
+module Documents = {
+  module CreateOptions = {
+    type t = {
+      language: option(string),
+      content: option(string),
+    };
+
+    let decode =
+      Json.Decode.(
+        obj(({field, _}) =>
+          {
+            language: field.optional("language", string),
+            content: field.optional("content", string),
+          }
+        )
+      );
+  };
+
+  [@deriving show]
+  type msg =
+    | TryCreateDocument({
+        language: option(string),
+        content: option(string),
+      })
+    | TryOpenDocument({uri: Oni_Core.Uri.t})
+    | TrySaveDocument({uri: Oni_Core.Uri.t});
+
+  let handle = (method, args) => {
+    Base.Result.Let_syntax.(
+      switch (method, args) {
+      | ("$tryCreateDocument", `List([])) =>
+        Ok(TryCreateDocument({language: None, content: None}))
+
+      | ("$tryCreateDocument", `List([optionsJson])) =>
+        let%bind options =
+          optionsJson |> Internal.decode_value(CreateOptions.decode);
+        Ok(
+          TryCreateDocument({
+            language: options.language,
+            content: options.content,
+          }),
+        );
+
+      | ("$tryOpenDocument", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
+        Ok(TryOpenDocument({uri: uri}));
+
+      | ("$trySaveDocument", `List([uriJson])) =>
+        let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
+        Ok(TrySaveDocument({uri: uri}));
+
+      | _ => Error("Unhandled method: " ++ method)
+      }
+    );
+  };
+};
+
 module DownloadService = {
   [@deriving show]
   type msg =
@@ -1571,6 +1628,59 @@ module Window = {
   };
 };
 
+module Workspace = {
+  [@deriving show]
+  type msg =
+    | StartFileSearch({
+        includePattern: option(string),
+        //        includeFolder: option(Oni_Core.Uri.t),
+        excludePattern: option(string),
+        maxResults: option(int),
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    Base.Result.Let_syntax.(
+      switch (method) {
+      | "$startFileSearch" =>
+        switch (args) {
+        | `List([
+            includePatternJson,
+            _includeFolder,
+            excludePatternJson,
+            maxResultsJson,
+            ..._,
+          ]) =>
+          let%bind includePattern =
+            includePatternJson
+            |> Internal.decode_value(Json.Decode.(nullable(string)));
+          let%bind excludePattern =
+            excludePatternJson
+            |> Internal.decode_value(Json.Decode.(nullable(string)));
+          let%bind maxResults =
+            maxResultsJson
+            |> Internal.decode_value(Json.Decode.nullable(Decode.int));
+
+          Ok(StartFileSearch({includePattern, excludePattern, maxResults}));
+        | _ =>
+          Error(
+            "Unexpected arguments for $startFileSearch: "
+            ++ Yojson.Safe.to_string(args),
+          )
+        }
+
+      | _ =>
+        Error(
+          Printf.sprintf(
+            "Unhandled workspace message - %s: %s",
+            method,
+            Yojson.Safe.to_string(args),
+          ),
+        )
+      }
+    );
+  };
+};
+
 [@deriving show]
 type t =
   | Connected
@@ -1583,6 +1693,7 @@ type t =
   | Decorations(Decorations.msg)
   | Diagnostics(Diagnostics.msg)
   | DocumentContentProvider(DocumentContentProvider.msg)
+  | Documents(Documents.msg)
   | DownloadService(DownloadService.msg)
   | Errors(Errors.msg)
   | ExtensionService(ExtensionService.msg)
@@ -1598,6 +1709,7 @@ type t =
   | Telemetry(Telemetry.msg)
   | TerminalService(TerminalService.msg)
   | Window(Window.msg)
+  | Workspace(Workspace.msg)
   | Initialized
   | Disconnected
   | Unhandled

@@ -101,7 +101,11 @@ let handlers =
       "MainThreadDiagnostics",
     ),
     mainNotImplemented("MainThreadDialogs"),
-    mainNotImplemented("MainThreadDocuments"),
+    main(
+      ~handler=Msg.Documents.handle,
+      ~mapper=msg => Msg.Documents(msg),
+      "MainThreadDocuments",
+    ),
     main(
       ~handler=Msg.DocumentContentProvider.handle,
       ~mapper=msg => Msg.DocumentContentProvider(msg),
@@ -170,7 +174,11 @@ let handlers =
     ),
     mainNotImplemented("MainThreadWebviews"),
     mainNotImplemented("MainThreadUrls"),
-    mainNotImplemented("MainThreadWorkspace"),
+    main(
+      ~handler=Msg.Workspace.handle,
+      ~mapper=msg => Msg.Workspace(msg),
+      "MainThreadWorkspace",
+    ),
     main(
       ~handler=Msg.FileSystem.handle,
       ~mapper=msg => Msg.FileSystem(msg),
