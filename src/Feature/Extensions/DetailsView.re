@@ -46,11 +46,11 @@ let installButton = (~font, ~extensionId, ~dispatch, ()) => {
 };
 
 let row = (~children, ()) => {
-  <View style=Styles.row />;
+  <View style=Styles.row children />;
 };
 
 let column = (~children, ()) => {
-  <View style=Styles.column />;
+  <View style=Styles.column children />;
 };
 
 let header = (~font: UiFont.t, ~maybeLogo, ~displayName, ~description, ()) => {
@@ -97,22 +97,21 @@ let header = (~font: UiFont.t, ~maybeLogo, ~displayName, ~description, ()) => {
 let make =
     (~model: Model.model, ~theme, ~tokenTheme, ~font: UiFont.t, ~dispatch, ()) => {
   switch (model.selected) {
-  | None =>
-    prerr_endline("NOTHING SELECTED");
-    <View />;
+  | None => <View />
   | Some(selected) =>
-    prerr_endline("SOMETHING SELECTED");
     let maybeLogo = selected |> Selected.logo;
     let displayName = selected |> Selected.displayName;
     let description =
       selected |> Selected.description |> Option.value(~default="");
 
+    let readmeUrl = selected |> Selected.readme;
+
     <View style=Styles.container>
       <header font maybeLogo displayName description />
-      <Oni_Components.Markdown
+      <RemoteMarkdown
+        url=readmeUrl
         colorTheme=theme
         tokenTheme
-        markdown="Hello"
         languageInfo=Exthost.LanguageInfo.initial
         grammars=Oni_Syntax.GrammarRepository.empty
         fontFamily={font.family}

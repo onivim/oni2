@@ -1,13 +1,20 @@
 open Revery.UI;
 
+module FilePathDownloader =
+  RemoteAsset.Make({
+    type asset = string;
+    let mapper = (~filePath) => Lwt.return(filePath);
+  });
+
 let make = (~width: int, ~height: int, ~url: string, ()) => {
-  <RemoteAsset url>
+  <FilePathDownloader url>
     ...{
          fun
-         | RemoteAsset.Downloading => <View />
-         | RemoteAsset.Downloaded({filePath}) =>
+         | FilePathDownloader.Downloading => <View />
+         | FilePathDownloader.Downloaded(filePath) =>
            <Image width height src={`File(filePath)} />
-         | RemoteAsset.DownloadFailed({errorMsg}) => <Text text=errorMsg />
+         | FilePathDownloader.DownloadFailed({errorMsg}) =>
+           <Text text=errorMsg />
        }
-  </RemoteAsset>;
+  </FilePathDownloader>;
 };
