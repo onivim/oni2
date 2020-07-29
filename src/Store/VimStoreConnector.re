@@ -119,12 +119,17 @@ let start =
       | TabPage(msg) => dispatch(TabPage(msg))
       | Format(Buffer(_)) =>
         dispatch(
-          Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
+          Actions.LanguageSupport(
+            Feature_LanguageSupport.Msg.Formatting.formatDocument,
+          ),
         )
       | Format(Range({startLine, endLine, _})) =>
         dispatch(
-          Actions.Formatting(
-            Feature_Formatting.FormatRange({startLine, endLine}),
+          Actions.LanguageSupport(
+            Feature_LanguageSupport.Msg.Formatting.formatRange(
+              ~startLine,
+              ~endLine,
+            ),
           ),
         ),
     );

@@ -4,6 +4,7 @@ type model = {
   codeLens: CodeLens.model,
   definition: Definition.model,
   documentHighlights: DocumentHighlights.model,
+  formatting: Formatting.model,
   rename: Rename.model,
   references: References.model,
 };
@@ -12,6 +13,7 @@ let initial = {
   codeLens: CodeLens.initial,
   definition: Definition.initial,
   documentHighlights: DocumentHighlights.initial,
+  formatting: Formatting.initial,
   rename: Rename.initial,
   references: References.initial,
 };
@@ -21,6 +23,7 @@ type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
   | Definition(Definition.msg)
   | DocumentHighlights(DocumentHighlights.msg)
+  | Formatting(Formatting.msg)
   | References(References.msg)
   | Rename(Rename.msg)
   | CodeLens(CodeLens.msg)
@@ -33,12 +36,16 @@ type outmsg =
       filePath: string,
       location: option(Location.t),
     })
+  | NotifySuccess(string)
+  | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg));
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
     fun
     | Outmsg.Nothing => Nothing
+    | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
+    | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
     | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));
 
@@ -47,9 +54,26 @@ module Msg = {
 
   let keyPressed = key => KeyPressed(key);
   let pasted = key => Pasted(key);
+
+  module Formatting = {
+    let formatDocument = Formatting(Formatting.(Command(FormatDocument)));
+
+    let formatRange = (~startLine, ~endLine) =>
+      Formatting(Formatting.FormatRange({startLine, endLine}));
+  };
 };
 
-let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
+let update =
+    (
+      ~configuration,
+      ~languageConfiguration,
+      ~maybeSelection,
+      ~maybeBuffer,
+      ~cursorLocation,
+      ~client,
+      msg,
+      model,
+    ) =>
   switch (msg) {
   | KeyPressed(_)
   | Pasted(_) => (model, Nothing)
@@ -76,12 +100,37 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
       References.register(~handle, ~selector, model.references);
     ({...model, references: references'}, Nothing);
 
+  | Exthost(
+      RegisterRangeFormattingSupport({handle, selector, displayName, _}),
+    ) =>
+    let formatting' =
+      Formatting.registerRangeFormatter(
+        ~handle,
+        ~selector,
+        ~displayName,
+        model.formatting,
+      );
+    ({...model, formatting: formatting'}, Nothing);
+
+  | Exthost(
+      RegisterDocumentFormattingSupport({handle, selector, displayName, _}),
+    ) =>
+    let formatting' =
+      Formatting.registerDocumentFormatter(
+        ~handle,
+        ~selector,
+        ~displayName,
+        model.formatting,
+      );
+    ({...model, formatting: formatting'}, Nothing);
+
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         definition: Definition.unregister(~handle, model.definition),
         documentHighlights:
           DocumentHighlights.unregister(~handle, model.documentHighlights),
+        formatting: Formatting.unregister(~handle, model.formatting),
         references: References.unregister(~handle, model.references),
         rename: Rename.unregister(~handle, model.rename),
       },
@@ -126,6 +175,37 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
       outmsg |> map(msg => References(msg)),
     );
 
+  | Formatting(formatMsg) =>
+    let (formatting', outMsg) =
+      Formatting.update(
+        ~languageConfiguration,
+        ~configuration,
+        ~maybeSelection,
+        ~maybeBuffer,
+        ~extHostClient=client,
+        formatMsg,
+        model.formatting,
+      );
+
+    // TODO:
+    let outMsg' =
+      switch (outMsg) {
+      | Formatting.Nothing => Nothing
+      | Formatting.Effect(eff) =>
+        Effect(eff |> Isolinear.Effect.map(msg => Formatting(msg)))
+      | Formatting.FormattingApplied({displayName, editCount}) =>
+        NotifySuccess(
+          Printf.sprintf(
+            "Formatting: Applied %d edits with %s",
+            editCount,
+            displayName,
+          ),
+        )
+      | Formatting.FormatError(errorMsg) => NotifyFailure(errorMsg)
+      };
+
+    ({...model, formatting: formatting'}, outMsg');
+
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
@@ -148,6 +228,10 @@ module Contributions = {
     @ (
       References.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => References(msg)))
+    )
+    @ (
+      Formatting.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
   let contextKeys =

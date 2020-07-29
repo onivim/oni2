@@ -165,9 +165,25 @@ let update =
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
+    let selection =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.selectionOrCursorRange;
+
+    let languageConfiguration =
+      maybeBuffer
+      |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
+      |> OptionEx.flatMap(
+           Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+         )
+      |> Option.value(~default=LanguageConfiguration.default);
+
     let (model, outmsg) =
       Feature_LanguageSupport.update(
+        ~languageConfiguration,
+        ~configuration=state.configuration,
         ~maybeBuffer,
+        ~maybeSelection=Some(selection),
         ~cursorLocation,
         ~client=extHostClient,
         msg,
@@ -183,56 +199,14 @@ let update =
             ~name="feature.languageSupport.openFileByPath", dispatch =>
             dispatch(OpenFileByPath(filePath, None, location))
           )
+        | NotifySuccess(msg) => Internal.notificationEffect(~kind=Info, msg)
+        | NotifyFailure(msg) => Internal.notificationEffect(~kind=Error, msg)
         | Effect(eff) =>
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg))
         }
       );
 
     ({...state, languageSupport: model}, eff);
-
-  | Formatting(msg) =>
-    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
-    let selection =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.selectionOrCursorRange;
-
-    let languageConfiguration =
-      maybeBuffer
-      |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
-      |> OptionEx.flatMap(
-           Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
-         )
-      |> Option.value(~default=LanguageConfiguration.default);
-
-    let (model', eff) =
-      Feature_Formatting.update(
-        ~languageConfiguration,
-        ~configuration=state.configuration,
-        ~maybeBuffer,
-        ~maybeSelection=Some(selection),
-        ~extHostClient,
-        state.formatting,
-        msg,
-      );
-    let state' = {...state, formatting: model'};
-    let effect =
-      switch (eff) {
-      | Feature_Formatting.Nothing => Effect.none
-      | Feature_Formatting.FormattingApplied({editCount, displayName}) =>
-        let msg =
-          Printf.sprintf(
-            "Format: Applied %d edits with %s",
-            editCount,
-            displayName,
-          );
-        Internal.notificationEffect(~kind=Info, msg);
-      | Feature_Formatting.FormatError(msg) =>
-        Internal.notificationEffect(~kind=Error, "Format: " ++ msg)
-      | Feature_Formatting.Effect(eff) =>
-        eff |> Effect.map(msg => Actions.Formatting(msg))
-      };
-    (state', effect);
 
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);
