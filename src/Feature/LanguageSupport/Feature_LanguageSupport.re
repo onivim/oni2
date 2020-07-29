@@ -2,6 +2,7 @@ open EditorCoreTypes;
 
 type model = {
   codeLens: CodeLens.model,
+  completion: Completion.model,
   definition: Definition.model,
   rename: Rename.model,
   references: References.model,
@@ -9,6 +10,7 @@ type model = {
 
 let initial = {
   codeLens: CodeLens.initial,
+  completion: Completion.initial,
   definition: Definition.initial,
   rename: Rename.initial,
   references: References.initial,
@@ -64,9 +66,27 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) =>
       References.register(~handle, ~selector, model.references);
     ({...model, references: references'}, Nothing);
 
+  | Exthost(RegisterSuggestSupport({
+    handle,
+    selector,
+    triggerCharacters,
+    extensionId,
+    supportsResolveDetails,
+  })) => 
+    let completion' =
+      Completion.register(
+        ~handle,
+        ~selector,
+        ~triggerCharacters,
+        ~supportsResolveDetails,
+        ~extensionId
+      );
+      ({...model, completion: completion'}, Nothing)
+
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
+        completion: Completion.unregister(~handle, model.completion),
         definition: Definition.unregister(~handle, model.definition),
         references: References.unregister(~handle, model.references),
         rename: Rename.unregister(~handle, model.rename),
