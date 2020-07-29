@@ -93,46 +93,46 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(byte).toBe(0);
     })
   });
-  describe("getCharacterPositionAndWidth", ({test, _}) => {
+  describe("getPixelPositionAndWidth", ({test, _}) => {
     test("UTF-8: Hiragana あ", ({expect, _}) => {
       let str = "あa";
       let bufferLine = makeLine(str);
 
       let (position, width) =
-        BufferLine.getCharacterPositionAndWidth(~index=0, bufferLine);
+        BufferLine.getPixelPositionAndWidth(~index=0, bufferLine);
 
-      expect.int(position).toBe(0);
-      expect.int(width).toBe(2);
+      expect.float(position).toBeCloseTo(0.);
+      expect.float(width).toBeCloseTo(14.);
 
       let (position, width) =
-        BufferLine.getCharacterPositionAndWidth(~index=1, bufferLine);
+        BufferLine.getPixelPositionAndWidth(~index=1, bufferLine);
 
-      expect.int(position).toBe(2);
-      expect.int(width).toBe(1);
+      expect.float(position).toBeCloseTo(14.);
+      expect.float(width).toBeCloseTo(22.4 -. 14.);
     });
     test("negative index should not throw", ({expect, _}) => {
       let bufferLine = makeLine("abc");
       let (position, width) =
-        BufferLine.getCharacterPositionAndWidth(~index=-1, bufferLine);
+        BufferLine.getPixelPositionAndWidth(~index=-1, bufferLine);
 
-      expect.int(position).toBe(0);
-      expect.int(width).toBe(1);
+      expect.float(position).toBeCloseTo(0.);
+      expect.float(width).toBeCloseTo(1.);
     });
     test("empty line", ({expect, _}) => {
       let bufferLine = makeLine("");
       let (position, width) =
-        BufferLine.getCharacterPositionAndWidth(~index=0, bufferLine);
+        BufferLine.getPixelPositionAndWidth(~index=0, bufferLine);
 
-      expect.int(position).toBe(0);
-      expect.int(width).toBe(1);
+      expect.float(position).toBeCloseTo(0.);
+      expect.float(width).toBeCloseTo(1.);
     });
     test("position past end of string", ({expect, _}) => {
       let bufferLine = makeLine("abc");
       let (position, width) =
-        BufferLine.getCharacterPositionAndWidth(~index=4, bufferLine);
+        BufferLine.getPixelPositionAndWidth(~index=4, bufferLine);
 
-      expect.int(position).toBe(3);
-      expect.int(width).toBe(1);
+      expect.float(position).toBeCloseTo(25.2);
+      expect.float(width).toBeCloseTo(1.);
     });
     test("tab settings are respected for width", ({expect, _}) => {
       let indentation =
@@ -140,8 +140,8 @@ describe("BufferLine", ({describe, _}) => {
 
       let bufferLine = BufferLine.make(~indentation, "\t");
       let (_position, width) =
-        BufferLine.getCharacterPositionAndWidth(~index=0, bufferLine);
-      expect.int(width).toBe(3);
+        BufferLine.getPixelPositionAndWidth(~index=0, bufferLine);
+      expect.float(width).toBeCloseTo(6.);
     });
     test("tab settings impact position", ({expect, _}) => {
       let indentation =
@@ -149,33 +149,33 @@ describe("BufferLine", ({describe, _}) => {
 
       let bufferLine = BufferLine.make(~indentation, "\ta");
       let (position, width) =
-        BufferLine.getCharacterPositionAndWidth(~index=1, bufferLine);
-      expect.int(width).toBe(1);
-      expect.int(position).toBe(3);
+        BufferLine.getPixelPositionAndWidth(~index=1, bufferLine);
+      expect.float(width).toBeCloseTo(8.4);
+      expect.float(position).toBeCloseTo(6.);
     });
   });
-  describe("getIndexFromPosition", ({test, _}) => {
-    test("position mapped to index", ({expect, _}) => {
-      let indentation =
-        IndentationSettings.create(~mode=Tabs, ~size=8, ~tabSize=8, ());
+  /*  describe("getIndexFromPosition", ({test, _}) => {
+        test("position mapped to index", ({expect, _}) => {
+          let indentation =
+            IndentationSettings.create(~mode=Tabs, ~size=8, ~tabSize=8, ());
 
-      let bufferLine = BufferLine.make(~indentation, "\ta");
-      print_endline(bufferLine |> BufferLine.raw);
-      let byteIndex =
-        BufferLine.Slow.getByteFromPosition(~position=0, bufferLine);
-      expect.int(byteIndex).toBe(0);
+          let bufferLine = BufferLine.make(~indentation, "\ta");
+          print_endline(bufferLine |> BufferLine.raw);
+          let byteIndex =
+            BufferLine.Slow.getByteFromPosition(~position=0, bufferLine);
+          expect.int(byteIndex).toBe(0);
 
-      let byteIndex =
-        BufferLine.Slow.getByteFromPosition(~position=7, bufferLine);
-      expect.int(byteIndex).toBe(0);
+          let byteIndex =
+            BufferLine.Slow.getByteFromPosition(~position=7, bufferLine);
+          expect.int(byteIndex).toBe(0);
 
-      let byteIndex =
-        BufferLine.Slow.getByteFromPosition(~position=8, bufferLine);
-      expect.int(byteIndex).toBe(1);
+          let byteIndex =
+            BufferLine.Slow.getByteFromPosition(~position=8, bufferLine);
+          expect.int(byteIndex).toBe(1);
 
-      let byteIndex =
-        BufferLine.Slow.getByteFromPosition(~position=9, bufferLine);
-      expect.int(byteIndex).toBe(1);
-    })
-  });
+          let byteIndex =
+            BufferLine.Slow.getByteFromPosition(~position=9, bufferLine);
+          expect.int(byteIndex).toBe(1);
+        })
+      }); */
 });
