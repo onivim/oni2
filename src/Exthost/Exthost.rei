@@ -263,6 +263,8 @@ module SuggestItem: {
     insertText: option(string),
   };
 
+  let filterText: t => string;
+
   let decode: Json.decoder(t);
 };
 

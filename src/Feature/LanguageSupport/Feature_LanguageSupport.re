@@ -281,10 +281,15 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
-  let contextKeys =
+  let contextKeys = [
     Rename.Contributions.contextKeys
     |> fromList
-    |> map(({rename, _}: model) => rename);
+    |> map(({rename, _}: model) => rename),
+    Completion.Contributions.contextKeys
+    |> fromList
+    |> map(({completion, _}: model) => completion),
+    ]
+    |> unionMany;
 
   let keybindings =
     Rename.Contributions.keybindings @ Definition.Contributions.keybindings;

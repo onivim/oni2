@@ -25,10 +25,13 @@ module Session = {
   [@deriving show]
   type state =
     | Waiting
-    | Completed(list(Exthost.SuggestItem.t))
+    | Completed({
+      allItems: list(Exthost.SuggestItem.t),
+      filteredItems: list(Exthost.SuggestItem.t)
+    })
     // TODO
     //| Incomplete(list(Exthost.SuggestItem.t))
-    | Error(string);
+    | Failure(string);
 
   [@deriving show]
   type t = {
@@ -38,6 +41,16 @@ module Session = {
     location: EditorCoreTypes.Location.t,
   };
 
+  let filter: (~query: string, list(Exthost.SuggestItem.t)) => list(Exthost.SuggestItem.t) =
+    (~query, items) => {
+      items
+      |> List.filter((item: Exthost.SuggestItem.t) => {
+        let query = Zed_utf8.explode(query);
+        let filterText = Exthost.SuggestItem.filterText(item);
+        Filter.fuzzyMatches(query, filterText)
+      })
+    };
+
   let create = (~buffer, ~base, ~location) => {
     state: Waiting,
     buffer,
@@ -46,10 +59,34 @@ module Session = {
   };
 
   let refine = (~base, current) => {
-    ...current,
-    base,
-    // TODO: Filter results based on base
+    let state' = switch (current.state) {
+      | Waiting => Waiting
+      | Failure(_) as failure => failure
+      | Completed({ allItems, _}) => Completed({
+        allItems,
+        filteredItems: filter(~query=base, allItems)
+      })
+    };
+
+    {
+      ...current,
+      base,
+      state: state',
+    };
   };
+
+  let receivedItems = (items: list(Exthost.SuggestItem.t), model) => {
+    ...model,
+    state: Completed({
+      allItems: items,
+      filteredItems: filter(~query=model.base, items),
+    })
+  };
+
+  let error = (~errorMsg: string, model) => {
+    ...model,
+    state: Failure(errorMsg)
+  }
 
   let update = (~buffer, ~base, ~location, previous) =>
     // If different buffer or location... start over!
@@ -70,7 +107,7 @@ type model = {
 
 let initial = {handleToSession: IntMap.empty, providers: []};
 
-let isActive = (_model) => true;
+let isActive = (model: model) => true;
 
 let register =
     (
@@ -137,7 +174,30 @@ let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) =
 };
 
 let update = (msg, model) => {
-  (model, Outmsg.Nothing);
+  switch (msg) {
+  | CompletionResultAvailable({ handle, suggestResult}) =>
+    ({
+      ...model,
+      handleToSession: IntMap.update(
+        handle,
+        Option.map(prev => Session.receivedItems(
+          Exthost.SuggestResult.(suggestResult.completions),
+          prev
+        )),
+        model.handleToSession)
+    }, Outmsg.Nothing)
+  | CompletionError({handle, errorMsg}) =>
+    ({
+      ...model,
+      handleToSession: IntMap.update(
+        handle,
+        Option.map(prev => Session.error(
+          ~errorMsg,
+          prev
+        )),
+        model.handleToSession),
+    }, Outmsg.Nothing)
+  };
 };
 
 let sub = (~client, model) => {
@@ -172,6 +232,16 @@ let sub = (~client, model) => {
        )
      })
   |> Isolinear.Sub.batch;
+};
+
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+  
+  let suggestWidgetVisible = bool("suggestWidgetVisible", isActive);
+};
+
+module Contributions = {
+  let contextKeys = ContextKeys.[suggestWidgetVisible];
 };
 
 module View = {

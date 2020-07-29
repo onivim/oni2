@@ -18,6 +18,13 @@ type t = {
   // chainedCacheId?
 };
 
+let filterText = ({filterText, label, _}) => {
+  switch (filterText) {
+  | None => label
+  | Some(filter) => filter
+  };
+};
+
 let decode = {
   Json.Decode.(
     obj(({field, _}) => {
