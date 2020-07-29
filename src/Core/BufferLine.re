@@ -373,20 +373,22 @@ module Slow = {
     let length = lengthInBytes(bufferLine);
     Internal.resolveTo(~index=length, bufferLine);
 
-    let rec loop = byteIndex => {
-      let (currentPixel, width) =
-        getPixelPositionAndWidth(~index=byteIndex, bufferLine);
-      if (currentPixel >= bufferLine.nextPixelPosition) {
-        length - 1;
+    let rec loop = (low, high) =>
+      if (high == low) {
+        getIndex(~byte=high, bufferLine);
       } else {
-        let index = getIndex(~byte=byteIndex, bufferLine);
-        if (pixel >= currentPixel && pixel < currentPixel +. width) {
-          index;
+        let mid = (low + high) / 2;
+        let (midPixel, midPixelWidth) =
+          getPixelPositionAndWidth(~index=mid, bufferLine);
+        if (pixel < midPixel) {
+          loop(low, mid - 1);
+        } else if (pixel > midPixel +. midPixelWidth) {
+          loop(mid + 1, high);
         } else {
-          loop(byteIndex + 1);
+          getIndex(~byte=mid, bufferLine);
         };
       };
-    };
-    loop(0);
+
+    loop(0, length - 1);
   };
 };
