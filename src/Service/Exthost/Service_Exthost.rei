@@ -116,4 +116,14 @@ module Sub: {
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);
+
+  let documentHighlights:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: list(Exthost.DocumentHighlight.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
 };

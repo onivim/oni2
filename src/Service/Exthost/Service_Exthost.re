@@ -453,7 +453,7 @@ module Sub = {
     ActiveEditorSubscription.create({activeEditorId, client});
   };
 
-  type definitionParams = {
+  type bufferPositionParams = {
     handle: int,
     client: Exthost.Client.t,
     buffer: Oni_Core.Buffer.t,
@@ -473,10 +473,24 @@ module Sub = {
     );
   };
 
+  let idFromBufferPositionVersion = (~handle, ~buffer, ~position, name) => {
+    Exthost.OneBasedPosition.(
+      Printf.sprintf(
+        "%d-%d-%d-%d.%d.%s",
+        handle,
+        Oni_Core.Buffer.getId(buffer),
+        position.lineNumber,
+        position.column,
+        Oni_Core.Buffer.getVersion(buffer),
+        name,
+      )
+    );
+  };
+
   module DefinitionSubscription =
     Isolinear.Sub.Make({
       type nonrec msg = list(Exthost.DefinitionLink.t);
-      type nonrec params = definitionParams;
+      type nonrec params = bufferPositionParams;
 
       type state = {latch: Latch.t};
 
@@ -525,6 +539,61 @@ module Sub = {
   let definition = (~handle, ~buffer, ~position, ~toMsg, client) => {
     let position = position |> Exthost.OneBasedPosition.ofPosition;
     DefinitionSubscription.create({handle, buffer, position, client})
+    |> Isolinear.Sub.map(toMsg);
+  };
+
+  module DocumentHighlightsSub =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(Exthost.DocumentHighlight.t);
+      type nonrec params = bufferPositionParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.DocumentHighlightsSubscription";
+      let id = ({handle, buffer, position, _}) =>
+        idFromBufferPositionVersion(
+          ~handle,
+          ~buffer,
+          ~position,
+          "DocumentHighlightsSubscription",
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, documentHighlights =>
+          if (Latch.isOpen(latch)) {
+            dispatch(documentHighlights);
+          }
+        );
+
+        Lwt.on_failure(promise, _ =>
+          if (Latch.isOpen(latch)) {
+            dispatch([]);
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+
+  let documentHighlights = (~handle, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    DocumentHighlightsSub.create({handle, buffer, position, client})
     |> Isolinear.Sub.map(toMsg);
   };
 };

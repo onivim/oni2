@@ -69,6 +69,7 @@ let minimap =
       ~diagnosticsMap,
       ~bufferWidthInCharacters,
       ~minimapWidthInPixels,
+      ~languageSupport,
       (),
     ) => {
   let minimapPixelWidth = minimapWidthInPixels + Constants.minimapPadding * 2;
@@ -112,6 +113,7 @@ let minimap =
       colors
       bufferHighlights
       diffMarkers
+      languageSupport
     />
   </View>;
 };
@@ -307,6 +309,7 @@ let%component make =
            diffMarkers
            bufferWidthInCharacters={layout.bufferWidthInCharacters}
            minimapWidthInPixels={layout.minimapWidthInPixels}
+           languageSupport
          />
        : React.empty}
     <OverlaysView
@@ -332,6 +335,7 @@ let%component make =
         diagnostics=diagnosticsMap
         colors
         bufferHighlights
+        languageSupport
       />
     </View>
     <View
