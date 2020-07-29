@@ -57,10 +57,10 @@ let getPixelPositionAndWidth: (~index: int, t) => (float, float);
 
 module Slow: {
   /*
-   * [getByteFromPixel(~position, str)] returns the pixel position [index].
+   * [getIndexFromPixel(~position, str)] returns the character index at pixel position [position].
    * The position of a character is dependent on indentation settings, multi-width characters, etc.
    *
    * _slow_ because requires traversal of the string, currently.
    */
-  let getByteFromPixel: (~pixel: float, t) => int;
+  let getIndexFromPixel: (~pixel: float, t) => int;
 };

@@ -559,11 +559,14 @@ module Slow = {
 
     if (line >= 0 && line < totalLinesInBuffer) {
       let bufferLine = Buffer.getLine(line, buffer);
-      let byte =
-        BufferLine.Slow.getByteFromPixel(
+      let index =
+        BufferLine.Slow.getIndexFromPixel(
           ~pixel=pixelX +. view.scrollX,
           bufferLine,
         );
+
+      let byte = BufferLine.getByteFromIndex(~index, bufferLine);
+
       (line, byte);
     } else {
       (
