@@ -65,6 +65,25 @@ let sub:
   ) =>
   Isolinear.Sub.t(msg);
 
+module Completion: {
+  let isActive: (model) => bool;
+
+  module View: {
+    let make: (
+      ~key: Brisk_reconciler.Key.t=?,
+      ~x: int,
+      ~y: int,
+      ~lineHeight: float,
+      // TODO: Colors
+      ~theme: Oni_Core.ColorTheme.Colors.t,
+      ~tokenTheme: Oni_Syntax.TokenTheme.t,
+      ~editorFont: Service_Font.font,
+      ~model: model,
+      unit,
+    ) => Revery.UI.element;
+  }
+}
+
 module Contributions: {
   let commands: list(Command.t(msg));
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);

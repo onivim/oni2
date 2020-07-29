@@ -26,7 +26,7 @@ module Styles = {
 
 let completionsView =
     (
-      ~completions,
+      ~languageSupport,
       ~cursorPixelX,
       ~cursorPixelY,
       ~colors,
@@ -35,16 +35,16 @@ let completionsView =
       ~editorFont: Service_Font.font,
       (),
     ) =>
-  Completions.isActive(completions)
-    ? <CompletionsView
+  Feature_LanguageSupport.Completion.isActive(languageSupport)
+    ? <Feature_LanguageSupport.Completion.View
         x=cursorPixelX
         y=cursorPixelY
         lineHeight={editorFont.measuredHeight}
-        colors
+        //colors
         theme
         tokenTheme
         editorFont
-        completions
+        model=languageSupport
       />
     : React.empty;
 
@@ -54,10 +54,10 @@ let make =
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
       ~gutterWidth,
-      ~completions,
       ~colors,
       ~theme,
       ~tokenTheme,
+      ~languageSupport,
       ~editorFont: Service_Font.font,
       (),
     ) => {
@@ -74,7 +74,7 @@ let make =
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
         <completionsView
-          completions
+          languageSupport
           cursorPixelX
           cursorPixelY
           colors

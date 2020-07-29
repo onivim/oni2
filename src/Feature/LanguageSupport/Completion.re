@@ -70,6 +70,8 @@ type model = {
 
 let initial = {handleToSession: IntMap.empty, providers: []};
 
+let isActive = (_model) => true;
+
 let register =
     (
       ~handle,
@@ -170,4 +172,22 @@ let sub = (~client, model) => {
        )
      })
   |> Isolinear.Sub.batch;
+};
+
+module View = {
+  open Revery;
+  open Revery.UI;
+  let%component make = (
+    ~x: int,
+    ~y: int,
+    ~lineHeight: float,
+    ~theme: Oni_Core.ColorTheme.Colors.t,
+    ~tokenTheme: Oni_Syntax.TokenTheme.t,
+    ~editorFont: Service_Font.font,
+    ~model: model,
+    (),
+  ) =>  {
+    let%hook () = Hooks.effect(OnMount, () => None);
+    <View />
+  };
 };

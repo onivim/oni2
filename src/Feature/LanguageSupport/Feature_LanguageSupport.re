@@ -290,8 +290,39 @@ module Contributions = {
     Rename.Contributions.keybindings @ Definition.Contributions.keybindings;
 };
 
+module OldCompletion = Completion;
 module OldDefinition = Definition;
 module OldHighlights = DocumentHighlights;
+
+module Completion = {
+  let isActive = ({completion, _}: model) => 
+    OldCompletion.isActive(completion);
+
+  module View = {
+    let make = (
+      ~key=?,
+      ~x,
+      ~y,
+      ~lineHeight,
+      ~theme,
+      ~tokenTheme,
+      ~editorFont,
+      ~model,
+      ()) => {
+        OldCompletion.View.make(
+          ~key?,
+          ~x,
+          ~y,
+          ~lineHeight,
+          ~theme,
+          ~tokenTheme,
+          ~editorFont,
+          ~model=model.completion,
+          (),
+        )
+      }
+  }
+};
 
 module Definition = {
   let get = (~bufferId, {definition, _}: model) => {
@@ -344,7 +375,7 @@ let sub =
   let completionSub =
     !isInsertMode
       ? Isolinear.Sub.none
-      : Completion.sub(~client, completion)
+      : OldCompletion.sub(~client, completion)
         |> Isolinear.Sub.map(msg => Completion(msg));
 
   let documentHighlightsSub =

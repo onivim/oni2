@@ -138,7 +138,6 @@ let%component make =
                 ~bufferHighlights,
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
-                ~completions,
                 ~tokenTheme,
                 ~onCursorChange,
                 ~languageSupport,
@@ -318,7 +317,7 @@ let%component make =
       editor
       gutterWidth
       editorFont
-      completions
+      languageSupport
       colors
       theme
       tokenTheme
