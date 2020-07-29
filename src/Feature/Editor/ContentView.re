@@ -152,7 +152,6 @@ let renderText =
       ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
-      ~leftVisibleColumn,
       ~shouldRenderWhitespace,
       ~bufferWidthInPixels,
     ) =>
@@ -264,7 +263,6 @@ let render =
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
-    ~leftVisibleColumn,
     ~shouldRenderWhitespace,
     ~bufferWidthInPixels,
   );
