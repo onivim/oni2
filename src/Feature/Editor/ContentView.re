@@ -33,7 +33,7 @@ let renderLine =
   | None => ()
   | Some(selections) =>
     List.iter(
-      Draw.range(~context, ~color=colors.selectionBackground),
+      Draw.rangeByte(~context, ~color=colors.selectionBackground),
       selections,
     )
   };
@@ -42,12 +42,12 @@ let renderLine =
   switch (matchingPairs) {
   | None => ()
   | Some((startPos, endPos)) =>
-    Draw.range(
+    Draw.rangeByte(
       ~context,
       ~color=colors.selectionBackground,
       Range.{start: startPos, stop: startPos},
     );
-    Draw.range(
+    Draw.rangeByte(
       ~context,
       ~color=colors.selectionBackground,
       Range.{start: endPos, stop: endPos},
@@ -62,7 +62,11 @@ let renderLine =
     bufferHighlights,
   )
   |> List.iter(
-       Draw.range(~context, ~padding=1., ~color=colors.findMatchBackground),
+       Draw.rangeByte(
+         ~context,
+         ~padding=1.,
+         ~color=colors.findMatchBackground,
+       ),
      );
 
   /* Draw document highlights */
@@ -72,7 +76,11 @@ let renderLine =
     languageSupport,
   )
   |> List.iter(
-       Draw.range(~context, ~padding=1., ~color=colors.findMatchBackground),
+       Draw.rangeByte(
+         ~context,
+         ~padding=1.,
+         ~color=colors.findMatchBackground,
+       ),
      );
 };
 
