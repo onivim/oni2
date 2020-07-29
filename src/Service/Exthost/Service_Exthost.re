@@ -473,61 +473,6 @@ module Sub = {
     );
   };
 
-  module DefinitionSubscription =
-    Isolinear.Sub.Make({
-      type nonrec msg = list(Exthost.DefinitionLink.t);
-      type nonrec params = definitionParams;
-
-      type state = {latch: Latch.t};
-
-      let name = "Service_Exthost.DefinitionSubscription";
-      let id = ({handle, buffer, position, _}) =>
-        idFromBufferPosition(
-          ~handle,
-          ~buffer,
-          ~position,
-          "DefinitionSubscription",
-        );
-
-      let init = (~params, ~dispatch) => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideDefinition(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
-            params.client,
-          );
-
-        let latch = Latch.create();
-
-        Lwt.on_success(promise, definitionLinks =>
-          if (Latch.isOpen(latch)) {
-            dispatch(definitionLinks);
-          }
-        );
-
-        Lwt.on_failure(promise, _ =>
-          if (Latch.isOpen(latch)) {
-            dispatch([]);
-          }
-        );
-
-        {latch: latch};
-      };
-
-      let update = (~params as _, ~state, ~dispatch as _) => state;
-
-      let dispose = (~params as _, ~state) => {
-        Latch.close(state.latch);
-      };
-    });
-
-  let definition = (~handle, ~buffer, ~position, ~toMsg, client) => {
-    let position = position |> Exthost.OneBasedPosition.ofPosition;
-    DefinitionSubscription.create({handle, buffer, position, client})
-    |> Isolinear.Sub.map(toMsg);
-  };
-
   type completionParams = {
     handle: int,
     context: Exthost.CompletionContext.t,
@@ -589,6 +534,61 @@ module Sub = {
       (~handle, ~context, ~buffer, ~position, ~toMsg, client) => {
     let position = position |> Exthost.OneBasedPosition.ofPosition;
     CompletionSubscription.create({handle, context, buffer, position, client})
+    |> Isolinear.Sub.map(toMsg);
+  };
+
+  module DefinitionSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(Exthost.DefinitionLink.t);
+      type nonrec params = definitionParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.DefinitionSubscription";
+      let id = ({handle, buffer, position, _}) =>
+        idFromBufferPosition(
+          ~handle,
+          ~buffer,
+          ~position,
+          "DefinitionSubscription",
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideDefinition(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, definitionLinks =>
+          if (Latch.isOpen(latch)) {
+            dispatch(definitionLinks);
+          }
+        );
+
+        Lwt.on_failure(promise, _ =>
+          if (Latch.isOpen(latch)) {
+            dispatch([]);
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+
+  let definition = (~handle, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    DefinitionSubscription.create({handle, buffer, position, client})
     |> Isolinear.Sub.map(toMsg);
   };
 };
