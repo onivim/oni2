@@ -13,7 +13,13 @@ let simpleState = {
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
-    Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    Buffer.ofMetadata(
+      ~font=Font.default,
+      ~id,
+      ~version,
+      ~filePath,
+      ~modified,
+    );
   };
 
   let state =
