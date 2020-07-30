@@ -669,14 +669,17 @@ let update =
           Feature_Layout.map(
             editor => {
               let bufferId = Feature_Editor.Editor.getBufferId(editor);
-              let updatedBuffer =
-                buffers'
-                |> Buffers.getBufferExn(bufferId)
-                |> Feature_Editor.EditorBuffer.ofBuffer;
-              Feature_Editor.Editor.updateBuffer(
-                ~buffer=updatedBuffer,
-                editor,
-              );
+              buffers'
+              |> Buffers.getBuffer(bufferId)
+              |> Option.map(buffer => {
+                   let updatedBuffer =
+                     buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+                   Feature_Editor.Editor.updateBuffer(
+                     ~buffer=updatedBuffer,
+                     editor,
+                   );
+                 })
+              |> Option.value(~default=editor);
             },
             state.layout,
           ),

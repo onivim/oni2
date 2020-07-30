@@ -931,12 +931,16 @@ let start =
               Feature_Layout.map(
                 editor =>
                   if (Editor.getBufferId(editor) == bufferId) {
-                    let buffer =
-                      state.buffers
-                      |> Buffers.getBufferExn(bufferId)
-                      |> Oni_Core.Buffer.setFont(state.terminalFont)
-                      |> Feature_Editor.EditorBuffer.ofBuffer;
-                    Editor.updateBuffer(~buffer, editor);
+                    state.buffers
+                    |> Buffers.getBuffer(bufferId)
+                    |> Option.map(buffer => {
+                         let updatedBuffer =
+                           buffer
+                           |> Oni_Core.Buffer.setFont(state.terminalFont)
+                           |> Feature_Editor.EditorBuffer.ofBuffer;
+                         Editor.updateBuffer(~buffer=updatedBuffer, editor);
+                       })
+                    |> Option.value(~default=editor);
                   } else {
                     editor;
                   },
