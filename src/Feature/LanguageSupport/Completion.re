@@ -81,12 +81,16 @@ module Session = {
         shouldLower ? String.lowercase_ascii(item.label) : item.label;
 
       prerr_endline("-- running filter with query: " ++ query);
+      let explodedQuery = Zed_utf8.explode(query);
 
       items
       |> List.filter((item: Exthost.SuggestItem.t) => {
-           let query = Zed_utf8.explode(query);
            let filterText = Exthost.SuggestItem.filterText(item);
-           Filter.fuzzyMatches(query, filterText);
+           if (String.length(filterText) <= String.length(query)) {
+            false
+           } else {
+             Filter.fuzzyMatches(explodedQuery, filterText);
+           }
          })
       |> Filter.rank(query, toString);
     };
@@ -156,18 +160,17 @@ module Session = {
 type model = {
   handleToSession: IntMap.t(Session.t),
   providers: list(provider),
+  allItems: array(Filter.result(CompletionItem.t)),
 };
 
-let initial = {handleToSession: IntMap.empty, providers: []};
-
-let isActive = (model: model) => true;
+let initial = {handleToSession: IntMap.empty, providers: [], allItems: [||]};
 
 let getMeetLocation = (~handle, model) => {
   IntMap.find_opt(handle, model.handleToSession)
   |> Option.map(({location, _}: Session.t) => location);
 };
 
-let allItems = (model: model) => {
+let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
   let compare =
       (
         a: Filter.result(CompletionItem.t),
@@ -176,7 +179,7 @@ let allItems = (model: model) => {
     String.compare(a.item.sortText, b.item.sortText);
   };
 
-  model.handleToSession
+  sessions
   |> IntMap.bindings
   |> List.map(((handle, session)) => {
        session
@@ -184,8 +187,17 @@ let allItems = (model: model) => {
        |> List.map(Filter.map(CompletionItem.create(~handle)))
      })
   |> List.flatten
-  |> List.fast_sort(compare);
+  |> List.fast_sort(compare)
+  |> Array.of_list
 };
+
+let allItems = ({allItems, _}) => allItems;
+
+let isActive = (model: model) => {
+  (model.allItems
+  |> Array.length) > 0
+}
+
 
 let register =
     (
@@ -262,7 +274,7 @@ let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) =
       candidateProviders,
     );
 
-  {...model, handleToSession};
+  {...model, handleToSession, allItems: recomputeAllItems(handleToSession)};
 };
 
 let update = (msg, model) => {
@@ -271,10 +283,10 @@ let update = (msg, model) => {
     let allItems = allItems(model);
 
     let default = (model, Outmsg.Nothing);
-    if (allItems == []) {
+    if (allItems == [||]) {
       default;
     } else {
-      let result: Filter.result(CompletionItem.t) = List.hd(allItems);
+      let result: Filter.result(CompletionItem.t) = allItems[0];
 
       let handle = result.item.handle;
 
@@ -288,6 +300,7 @@ let update = (msg, model) => {
                    session => {session |> Session.complete},
                    model.handleToSession,
                  ),
+                allItems: [||]
              },
              Outmsg.ApplyCompletion({
                meetColumn: location.column,
@@ -300,11 +313,8 @@ let update = (msg, model) => {
 
   | Command(_) => (model, Outmsg.Nothing)
 
-  | CompletionResultAvailable({handle, suggestResult}) => (
-      {
-        ...model,
-        handleToSession:
-          IntMap.update(
+  | CompletionResultAvailable({handle, suggestResult}) => {
+      let handleToSession = IntMap.update(
             handle,
             Option.map(prev =>
               Session.receivedItems(
@@ -313,10 +323,15 @@ let update = (msg, model) => {
               )
             ),
             model.handleToSession,
-          ),
+          );
+      ({
+        ...model,
+        handleToSession,
+        allItems: recomputeAllItems(handleToSession),
       },
       Outmsg.Nothing,
     )
+    }
   | CompletionError({handle, errorMsg}) => (
       {
         ...model,
@@ -664,7 +679,7 @@ module View = {
       ) => {
     /*let hoverEnabled =
       Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
-    let items = completions |> allItems |> Array.of_list;
+    let items = completions |> allItems;
 
     let colors: Colors.t = {
       suggestWidgetSelectedBackground:
