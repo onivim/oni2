@@ -263,6 +263,8 @@ let isFocused = ({rename, _}) => Rename.isFocused(rename);
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
+  let colors = [];
+
   let commands =
     (
       Completion.Contributions.commands
@@ -285,6 +287,8 @@ module Contributions = {
       Formatting.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
+
+  let configuration = [];
 
   let contextKeys =
     [

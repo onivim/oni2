@@ -120,6 +120,7 @@ let initial =
     clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
+        Feature_LanguageSupport.Contributions.colors,
         Feature_Terminal.Contributions.colors,
         Feature_Notification.Contributions.colors,
       ]),
