@@ -161,10 +161,12 @@ describe("BufferLine", ({describe, _}) => {
 
       let bufferLine = BufferLine.make(~indentation, "\ta");
       print_endline(bufferLine |> BufferLine.raw);
-      let byteIndex = BufferLine.Slow.getIndexFromPixel(~pixel=0., bufferLine);
+      let byteIndex =
+        BufferLine.Slow.getIndexFromPixel(~pixel=0., bufferLine);
       expect.int(byteIndex).toBe(0);
 
-      let byteIndex = BufferLine.Slow.getIndexFromPixel(~pixel=7., bufferLine);
+      let byteIndex =
+        BufferLine.Slow.getIndexFromPixel(~pixel=7., bufferLine);
       expect.int(byteIndex).toBe(0);
 
       let byteIndex =
