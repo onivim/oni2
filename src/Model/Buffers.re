@@ -19,6 +19,7 @@ let update = IntMap.update;
 let remove = IntMap.remove;
 
 let getBuffer = (id, map) => IntMap.find_opt(id, map);
+let getBufferExn = (id, map) => IntMap.find(id, map);
 
 let anyModified = (buffers: t) => {
   IntMap.fold(

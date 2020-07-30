@@ -671,8 +671,7 @@ let update =
               let bufferId = Feature_Editor.Editor.getBufferId(editor);
               let updatedBuffer =
                 buffers'
-                |> Buffers.getBuffer(bufferId)
-                |> Option.get
+                |> Buffers.getBufferExn(bufferId)
                 |> Feature_Editor.EditorBuffer.ofBuffer;
               Feature_Editor.Editor.updateBuffer(
                 ~buffer=updatedBuffer,

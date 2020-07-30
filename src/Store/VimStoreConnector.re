@@ -933,8 +933,7 @@ let start =
                   if (Editor.getBufferId(editor) == bufferId) {
                     let buffer =
                       state.buffers
-                      |> Buffers.getBuffer(bufferId)
-                      |> Option.get
+                      |> Buffers.getBufferExn(bufferId)
                       |> Oni_Core.Buffer.setFont(state.terminalFont)
                       |> Feature_Editor.EditorBuffer.ofBuffer;
                     Editor.updateBuffer(~buffer, editor);
