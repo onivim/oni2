@@ -248,7 +248,15 @@ let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
     fontFamily
     |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
     |> Revery.Font.load
-    |> Result.get_ok;
+    |> Result.to_option
+    |> Option.value(
+         ~default={
+           Font.default.fontFamily
+           |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
+           |> Revery.Font.load
+           |> Result.get_ok;
+         },
+       );
 
   let glyphStrings =
     Revery.Font.shape(~features, loadedFont, raw).glyphStrings;
