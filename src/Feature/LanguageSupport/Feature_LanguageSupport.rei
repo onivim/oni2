@@ -75,7 +75,6 @@ module Completion: {
         ~x: int,
         ~y: int,
         ~lineHeight: float,
-        // TODO: Colors
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~editorFont: Service_Font.font,

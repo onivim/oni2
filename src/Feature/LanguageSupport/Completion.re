@@ -2,10 +2,10 @@ open Oni_Core;
 open Exthost;
 
 [@deriving show]
-type command = 
-| AcceptSelected
-| SelectPrevious
-| SelectNext;
+type command =
+  | AcceptSelected
+  | SelectPrevious
+  | SelectNext;
 
 [@deriving show]
 type msg =
@@ -298,24 +298,17 @@ let sub = (~client, model) => {
 };
 
 module Commands = {
-  
   open Feature_Commands.Schema;
 
-  let acceptSelected = define(
-    "acceptSelectedSuggestion",
-    Command(AcceptSelected)
-  );
+  let acceptSelected =
+    define("acceptSelectedSuggestion", Command(AcceptSelected));
 
-  let selectPrevSuggestion = define(
-    "selectPrevSuggestion",
-    Command(SelectPrevious)
-  );
+  let selectPrevSuggestion =
+    define("selectPrevSuggestion", Command(SelectPrevious));
 
-  let selectNextSuggestion = define(
-    "selectNextSuggestion",
-    Command(SelectNext)
-  );
-}
+  let selectNextSuggestion =
+    define("selectNextSuggestion", Command(SelectNext));
+};
 
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
@@ -327,19 +320,20 @@ module KeyBindings = {
   open Oni_Input.Keybindings;
 
   let suggestWidgetVisible = "suggestWidgetVisible" |> WhenExpr.parse;
-  let acceptOnEnter = "acceptSuggestionOnEnter && suggestWidgetVisible" |> WhenExpr.parse;
+  let acceptOnEnter =
+    "acceptSuggestionOnEnter && suggestWidgetVisible" |> WhenExpr.parse;
 
   let nextSuggestion = {
     key: "<C-N>",
     command: Commands.selectNextSuggestion.id,
-    condition: suggestWidgetVisible
+    condition: suggestWidgetVisible,
   };
 
   let previousSuggestion = {
     key: "<C-P>",
     command: Commands.selectPrevSuggestion.id,
-    condition: suggestWidgetVisible
-  }
+    condition: suggestWidgetVisible,
+  };
 
   let acceptSuggestionEnter = {
     key: "<CR>",
@@ -358,33 +352,34 @@ module KeyBindings = {
     command: Commands.acceptSelected.id,
     condition: suggestWidgetVisible,
   };
-  
+
   let acceptSuggestionShiftEnter = {
     key: "<S-TAB>",
     command: Commands.acceptSelected.id,
     condition: suggestWidgetVisible,
   };
-
-}
+};
 
 module Contributions = {
-  let commands = Commands.[
-    acceptSelected,
-    selectPrevSuggestion,
-    selectNextSuggestion,
-  ];
+  let colors = [];
+
+  let commands =
+    Commands.[acceptSelected, selectPrevSuggestion, selectNextSuggestion];
 
   let contextKeys = ContextKeys.[suggestWidgetVisible];
 
-  let keybindings = KeyBindings.[
-    nextSuggestion,
-    previousSuggestion,
-    acceptSuggestionEnter,
-    acceptSuggestionTab,
-    acceptSuggestionShiftTab,
-    acceptSuggestionShiftEnter,
-  ];
+  let keybindings =
+    KeyBindings.[
+      nextSuggestion,
+      previousSuggestion,
+      acceptSuggestionEnter,
+      acceptSuggestionTab,
+      acceptSuggestionShiftTab,
+      acceptSuggestionShiftEnter,
+    ];
 };
+
+module ShadowedColors = Colors;
 
 module View = {
   open Revery;
@@ -459,14 +454,6 @@ module View = {
       editorForeground: Revery.Color.t,
       normalModeBackground: Revery.Color.t,
     };
-  };
-
-  let colors: Colors.t = {
-    suggestWidgetSelectedBackground: Revery.Colors.red,
-    suggestWidgetBackground: Revery.Colors.magenta,
-    suggestWidgetBorder: Revery.Colors.white,
-    editorForeground: Revery.Colors.white,
-    normalModeBackground: Revery.Colors.blue,
   };
 
   module Styles = {
@@ -601,7 +588,6 @@ module View = {
         ~y: int,
         ~lineHeight: float,
         // TODO
-        // ~colors,
         ~theme,
         ~tokenTheme,
         ~editorFont,
@@ -611,6 +597,20 @@ module View = {
     /*let hoverEnabled =
       Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
     let items = completions |> allItems |> Array.of_list;
+
+    let colors: Colors.t = {
+      suggestWidgetSelectedBackground:
+        Feature_Theme.Colors.EditorSuggestWidget.selectedBackground.from(
+          theme,
+        ),
+      suggestWidgetBackground:
+        Feature_Theme.Colors.EditorSuggestWidget.background.from(theme),
+      suggestWidgetBorder:
+        Feature_Theme.Colors.EditorSuggestWidget.border.from(theme),
+      editorForeground: Feature_Theme.Colors.Editor.foreground.from(theme),
+      normalModeBackground:
+        Feature_Theme.Colors.Oni.normalModeBackground.from(theme),
+    };
 
     // TODO
     let focused = None;

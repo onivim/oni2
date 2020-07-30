@@ -263,15 +263,14 @@ let isFocused = ({rename, _}) => Rename.isFocused(rename);
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
-  let colors = [];
+  let colors = Completion.Contributions.colors;
 
   let commands =
     (
       Completion.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
     )
-    @
-    (
+    @ (
       Rename.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Rename(msg)))
     )
@@ -305,7 +304,6 @@ module Contributions = {
     Rename.Contributions.keybindings
     @ Definition.Contributions.keybindings
     @ Completion.Contributions.keybindings;
-
 };
 
 module OldCompletion = Completion;
