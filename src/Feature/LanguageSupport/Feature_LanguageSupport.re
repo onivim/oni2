@@ -35,6 +35,10 @@ type msg =
 
 type outmsg =
   | Nothing
+  | ApplyCompletion({
+      meetColumn: Index.t,
+      insertText: string,
+    })
   | OpenFile({
       filePath: string,
       location: option(Location.t),
@@ -46,6 +50,8 @@ type outmsg =
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
     fun
+    | Outmsg.ApplyCompletion({meetColumn, insertText}) =>
+      ApplyCompletion({meetColumn, insertText})
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)

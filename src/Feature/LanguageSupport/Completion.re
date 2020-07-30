@@ -28,6 +28,28 @@ type provider = {
   extensionId: string,
 };
 
+module CompletionItem = {
+  type t = {
+    handle: int,
+    label: string,
+    kind: Exthost.CompletionKind.t,
+    detail: option(string),
+    documentation: option(string),
+    insertText: string,
+    sortText: string,
+  };
+
+  let create = (~handle, item: Exthost.SuggestItem.t) => {
+    handle,
+    label: item.label,
+    kind: item.kind,
+    detail: item.detail,
+    documentation: item.documentation,
+    insertText: item |> Exthost.SuggestItem.insertText,
+    sortText: item |> Exthost.SuggestItem.sortText,
+  };
+};
+
 module Session = {
   [@deriving show]
   type state =
@@ -38,7 +60,8 @@ module Session = {
       })
     // TODO
     //| Incomplete(list(Exthost.SuggestItem.t))
-    | Failure(string);
+    | Failure(string)
+    | Accepted;
 
   [@deriving show]
   type t = {
@@ -47,6 +70,8 @@ module Session = {
     base: string,
     location: EditorCoreTypes.Location.t,
   };
+
+  let complete = session => {...session, state: Accepted};
 
   let filter:
     (~query: string, list(Exthost.SuggestItem.t)) =>
@@ -68,6 +93,7 @@ module Session = {
 
   let filteredItems = ({state, _}) => {
     switch (state) {
+    | Accepted => []
     | Waiting => []
     | Failure(_) => []
     | Completed({filteredItems, _}) => filteredItems
@@ -84,6 +110,7 @@ module Session = {
   let refine = (~base, current) => {
     let state' =
       switch (current.state) {
+      | Accepted => Accepted
       | Waiting => Waiting
       | Failure(_) as failure => failure
       | Completed({allItems, _}) =>
@@ -93,14 +120,19 @@ module Session = {
     {...current, base, state: state'};
   };
 
-  let receivedItems = (items: list(Exthost.SuggestItem.t), model) => {
-    ...model,
-    state:
-      Completed({
-        allItems: items,
-        filteredItems: filter(~query=model.base, items),
-      }),
-  };
+  let receivedItems = (items: list(Exthost.SuggestItem.t), model) =>
+    if (model.state == Accepted) {
+      model;
+    } else {
+      {
+        ...model,
+        state:
+          Completed({
+            allItems: items,
+            filteredItems: filter(~query=model.base, items),
+          }),
+      };
+    };
 
   let error = (~errorMsg: string, model) => {
     ...model,
@@ -130,21 +162,27 @@ let initial = {handleToSession: IntMap.empty, providers: []};
 
 let isActive = (model: model) => true;
 
+let getMeetLocation = (~handle, model) => {
+  IntMap.find_opt(handle, model.handleToSession)
+  |> Option.map(({location, _}: Session.t) => location);
+};
+
 let allItems = (model: model) => {
   let compare =
       (
-        a: Filter.result(Exthost.SuggestItem.t),
-        b: Filter.result(Exthost.SuggestItem.t),
+        a: Filter.result(CompletionItem.t),
+        b: Filter.result(CompletionItem.t),
       ) => {
-    String.compare(
-      a.item |> Exthost.SuggestItem.sortText,
-      b.item |> Exthost.SuggestItem.sortText,
-    );
+    String.compare(a.item.sortText, b.item.sortText);
   };
 
   model.handleToSession
   |> IntMap.bindings
-  |> List.map(((handle, session)) => {session |> Session.filteredItems})
+  |> List.map(((handle, session)) => {
+       session
+       |> Session.filteredItems
+       |> List.map(Filter.map(CompletionItem.create(~handle)))
+     })
   |> List.flatten
   |> List.fast_sort(compare);
 };
@@ -229,7 +267,39 @@ let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) =
 
 let update = (msg, model) => {
   switch (msg) {
+  | Command(AcceptSelected) =>
+    let allItems = allItems(model);
+
+    let default = (model, Outmsg.Nothing);
+    if (allItems == []) {
+      default;
+    } else {
+      let result: Filter.result(CompletionItem.t) = List.hd(allItems);
+
+      let handle = result.item.handle;
+
+      getMeetLocation(~handle, model)
+      |> Option.map((location: EditorCoreTypes.Location.t) => {
+           (
+             {
+               ...model,
+               handleToSession:
+                 IntMap.map(
+                   session => {session |> Session.complete},
+                   model.handleToSession,
+                 ),
+             },
+             Outmsg.ApplyCompletion({
+               meetColumn: location.column,
+               insertText: result.item.insertText,
+             }),
+           )
+         })
+      |> Option.value(~default);
+    };
+
   | Command(_) => (model, Outmsg.Nothing)
+
   | CompletionResultAvailable({handle, suggestResult}) => (
       {
         ...model,
@@ -618,7 +688,7 @@ module View = {
     let maxWidth =
       items
       |> Array.fold_left(
-           (maxWidth, this: Filter.result(Exthost.SuggestItem.t)) => {
+           (maxWidth, this: Filter.result(CompletionItem.t)) => {
              let textWidth =
                Service_Font.measure(~text=this.item.label, editorFont);
              let thisWidth =
@@ -635,7 +705,7 @@ module View = {
     let detail =
       switch (focused) {
       | Some(index) =>
-        let focused: Filter.result(Exthost.SuggestItem.t) = items[index];
+        let focused: Filter.result(CompletionItem.t) = items[index];
         switch (focused.item.detail) {
         | Some(text) =>
           <detailView text width lineHeight colors tokenTheme editorFont />
@@ -656,7 +726,7 @@ module View = {
             focused>
             ...{index => {
               let Filter.{highlight, item} = items[index];
-              let Exthost.SuggestItem.{label: text, kind, _} = item;
+              let CompletionItem.{label: text, kind, _} = item;
               <itemView
                 isFocused={Some(index) == focused}
                 text

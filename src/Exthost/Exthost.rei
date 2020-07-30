@@ -263,6 +263,7 @@ module SuggestItem: {
     insertText: option(string),
   };
 
+  let insertText: t => string;
   let filterText: t => string;
   let sortText: t => string;
 

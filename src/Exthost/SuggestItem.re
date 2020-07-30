@@ -18,6 +18,14 @@ type t = {
   // chainedCacheId?
 };
 
+let insertText = ({insertText, label, _}) => {
+  //  switch (insertText) {
+  //  | None => label
+  //  | Some(insert) => insert
+  //  };
+  label;
+};
+
 let filterText = ({filterText, label, _}) => {
   switch (filterText) {
   | None => label

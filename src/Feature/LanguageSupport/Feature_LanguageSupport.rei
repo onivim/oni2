@@ -21,6 +21,10 @@ module Msg: {
 
 type outmsg =
   | Nothing
+  | ApplyCompletion({
+      meetColumn: Index.t,
+      insertText: string,
+    })
   | OpenFile({
       filePath: string,
       location: option(Location.t),

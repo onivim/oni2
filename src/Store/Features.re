@@ -171,6 +171,11 @@ let update =
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.selectionOrCursorRange;
 
+    let editorId =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getId;
+
     let languageConfiguration =
       maybeBuffer
       |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
@@ -195,6 +200,14 @@ let update =
       Feature_LanguageSupport.(
         switch (outmsg) {
         | Nothing => Isolinear.Effect.none
+        | ApplyCompletion({insertText, meetColumn}) =>
+          Service_Vim.Effects.applyCompletion(
+            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            Actions.Editor({
+              scope: EditorScope.Editor(editorId),
+              msg: CursorsChanged(cursors),
+            })
+          )
         | OpenFile({filePath, location}) =>
           Isolinear.Effect.createWithDispatch(
             ~name="feature.languageSupport.openFileByPath", dispatch =>
