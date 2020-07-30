@@ -204,7 +204,7 @@ let findFirst = (~buffer, ~line, ~index, ~pairs) => {
 module Test = {
   let font =
     Oni_Core.Font.{
-      fontFamily: Revery.Font.Family.defaultMono,
+      fontFamily: Revery.Font.Family.default,
       fontSize: 12.0,
       spaceWidth: 0.0,
       underscoreWidth: 0.0,
