@@ -115,7 +115,6 @@ module DocumentHighlights: {
 
 // TODO: Remove
 module Completions = Completions;
-module CompletionItem = CompletionItem;
 module CompletionMeet = CompletionMeet;
 module Diagnostic = Diagnostic;
 module Diagnostics = Diagnostics;

@@ -4,49 +4,8 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
-module ExtensionCompletionProvider = {
-  let suggestionItemToCompletionItem: Exthost.SuggestItem.t => CompletionItem.t =
-    suggestion => {
-      {
-        label: suggestion.label,
-        kind: suggestion.kind,
-        detail: suggestion.detail,
-      };
-    };
-
-  let suggestionsToCompletionItems:
-    Exthost.SuggestResult.t => list(CompletionItem.t) =
-    ({completions, _}) => {
-      completions |> List.map(suggestionItemToCompletionItem);
-    };
-
-  let create =
-      (
-        id: int,
-        selector: Exthost.DocumentSelector.t,
-        client: Exthost.Client.t,
-        (buffer, _completionMeet, location),
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideCompletionItems(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        ~context=
-          Exthost.CompletionContext.{
-            triggerKind: Invoke,
-            triggerCharacter: None,
-          },
-        client,
-      )
-      |> Lwt.map(items => {suggestionsToCompletionItems(items)})
-    });
-  };
-};
 
 module ExtensionDocumentSymbolProvider = {
   let create =

@@ -449,8 +449,6 @@ module Contributions = {
     ];
 };
 
-module ShadowedColors = Colors;
-
 module View = {
   open Revery;
   open Revery.UI;
