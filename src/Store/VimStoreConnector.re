@@ -328,6 +328,7 @@ let start =
             | None =>
               Oni_Core.Buffer.ofMetadata(
                 ~id=metadata.id,
+                ~font=state.editorFont,
                 ~version=- metadata.version,
                 ~filePath=metadata.filePath,
                 ~modified=metadata.modified,
@@ -346,6 +347,7 @@ let start =
             version: 0,
             isModified: metadata.modified,
             filePath: metadata.filePath,
+            font: Oni_Core.Buffer.getFont(buffer),
           }),
         );
       };
@@ -399,8 +401,7 @@ let start =
       if (shouldApply) {
         maybeBuffer
         |> Option.iter(oldBuffer => {
-             let font = getState().editorFont;
-             let newBuffer = Core.Buffer.update(~font, oldBuffer, bu);
+             let newBuffer = Core.Buffer.update(oldBuffer, bu);
              // If the first line changes, re-run the file detection.
              let firstLineChanged =
                Index.equals(bu.startLine, Index.fromZeroBased(0))

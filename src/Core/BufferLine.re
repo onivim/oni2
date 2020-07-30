@@ -65,7 +65,9 @@ module Internal = {
     type t = (Skia.Typeface.t, float, Uchar.t);
 
     let equal = ((tf1, s1, uc1), (tf2, s2, uc2)) =>
-      skiaTypefaceEqual(tf1, tf2) && s1 == s2 && Uchar.equal(uc1, uc2);
+      skiaTypefaceEqual(tf1, tf2)
+      && Float.equal(s1, s2)
+      && Uchar.equal(uc1, uc2);
 
     let hash = ((tf, s, uc)) =>
       Int32.to_int(Skia.Typeface.getUniqueID(tf))
@@ -104,8 +106,9 @@ module Internal = {
       );
       Log.debugf(m =>
         m(
-          "MeasurementCache : Hit! Typeface : %s, Uchar: %s (%d)",
+          "MeasurementCache : Hit! Typeface : %s, Font Size: %f, Uchar: %s (%d)",
           Skia.Typeface.getFamilyName(typeface),
+          cache.font.fontSize,
           Zed_utf8.singleton(uchar),
           Uchar.to_int(uchar),
         )
