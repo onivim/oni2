@@ -2,7 +2,14 @@ open Oni_Core;
 open Exthost;
 
 [@deriving show]
+type command = 
+| AcceptSelected
+| SelectPrevious
+| SelectNext;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | CompletionResultAvailable({
       handle: int,
       suggestResult: Exthost.SuggestResult.t,
@@ -222,6 +229,7 @@ let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) =
 
 let update = (msg, model) => {
   switch (msg) {
+  | Command(_) => (model, Outmsg.Nothing)
   | CompletionResultAvailable({handle, suggestResult}) => (
       {
         ...model,
@@ -289,14 +297,93 @@ let sub = (~client, model) => {
   |> Isolinear.Sub.batch;
 };
 
+module Commands = {
+  
+  open Feature_Commands.Schema;
+
+  let acceptSelected = define(
+    "acceptSelectedSuggestion",
+    Command(AcceptSelected)
+  );
+
+  let selectPrevSuggestion = define(
+    "selectPrevSuggestion",
+    Command(SelectPrevious)
+  );
+
+  let selectNextSuggestion = define(
+    "selectNextSuggestion",
+    Command(SelectNext)
+  );
+}
+
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
   let suggestWidgetVisible = bool("suggestWidgetVisible", isActive);
 };
 
+module KeyBindings = {
+  open Oni_Input.Keybindings;
+
+  let suggestWidgetVisible = "suggestWidgetVisible" |> WhenExpr.parse;
+  let acceptOnEnter = "acceptSuggestionOnEnter && suggestWidgetVisible" |> WhenExpr.parse;
+
+  let nextSuggestion = {
+    key: "<C-N>",
+    command: Commands.selectNextSuggestion.id,
+    condition: suggestWidgetVisible
+  };
+
+  let previousSuggestion = {
+    key: "<C-P>",
+    command: Commands.selectPrevSuggestion.id,
+    condition: suggestWidgetVisible
+  }
+
+  let acceptSuggestionEnter = {
+    key: "<CR>",
+    command: Commands.acceptSelected.id,
+    condition: acceptOnEnter,
+  };
+
+  let acceptSuggestionTab = {
+    key: "<TAB>",
+    command: Commands.acceptSelected.id,
+    condition: suggestWidgetVisible,
+  };
+
+  let acceptSuggestionShiftTab = {
+    key: "<S-TAB>",
+    command: Commands.acceptSelected.id,
+    condition: suggestWidgetVisible,
+  };
+  
+  let acceptSuggestionShiftEnter = {
+    key: "<S-TAB>",
+    command: Commands.acceptSelected.id,
+    condition: suggestWidgetVisible,
+  };
+
+}
+
 module Contributions = {
+  let commands = Commands.[
+    acceptSelected,
+    selectPrevSuggestion,
+    selectNextSuggestion,
+  ];
+
   let contextKeys = ContextKeys.[suggestWidgetVisible];
+
+  let keybindings = KeyBindings.[
+    nextSuggestion,
+    previousSuggestion,
+    acceptSuggestionEnter,
+    acceptSuggestionTab,
+    acceptSuggestionShiftTab,
+    acceptSuggestionShiftEnter,
+  ];
 };
 
 module View = {

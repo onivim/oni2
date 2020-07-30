@@ -145,37 +145,6 @@ let start = maybeKeyBindingsFilePath => {
           condition: "editorTextFocus" |> WhenExpr.parse,
         },
         {
-          key: "<C-P>",
-          command: Commands.selectPrevSuggestion.id,
-          condition: "suggestWidgetVisible" |> WhenExpr.parse,
-        },
-        {
-          key: "<C-N>",
-          command: Commands.selectNextSuggestion.id,
-          condition: "suggestWidgetVisible" |> WhenExpr.parse,
-        },
-        {
-          key: "<CR>",
-          command: Commands.acceptSelectedSuggestion.id,
-          condition:
-            "acceptSuggestionOnEnter && suggestWidgetVisible" |> WhenExpr.parse,
-        },
-        {
-          key: "<TAB>",
-          command: Commands.acceptSelectedSuggestion.id,
-          condition: "suggestWidgetVisible" |> WhenExpr.parse,
-        },
-        {
-          key: "<S-TAB>",
-          command: Commands.acceptSelectedSuggestion.id,
-          condition: "suggestWidgetVisible" |> WhenExpr.parse,
-        },
-        {
-          key: "<S-CR>",
-          command: Commands.acceptSelectedSuggestion.id,
-          condition: "suggestWidgetVisible" |> WhenExpr.parse,
-        },
-        {
           key: "<D-Z>",
           command: Commands.undo.id,
           condition: "editorTextFocus" |> WhenExpr.parse,
