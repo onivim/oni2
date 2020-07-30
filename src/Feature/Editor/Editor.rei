@@ -21,14 +21,7 @@ type viewLine = {
   characterOffset: int,
 };
 
-let create:
-  (
-    ~config: Config.resolver,
-    ~font: Service_Font.font,
-    ~buffer: EditorBuffer.t,
-    unit
-  ) =>
-  t;
+let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
 let key: t => Brisk_reconciler.Key.t;
@@ -133,7 +126,6 @@ let unprojectToPixel:
   (~pixelX: float, ~pixelY: float, ~pixelWidth: int, ~pixelHeight: int, t) =>
   (float, float);
 
-let setFont: (~font: Service_Font.font, t) => t;
 let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
 
 let updateBuffer: (~buffer: EditorBuffer.t, t) => t;

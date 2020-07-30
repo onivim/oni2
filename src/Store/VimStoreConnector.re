@@ -930,9 +930,17 @@ let start =
             let layout =
               Feature_Layout.map(
                 editor =>
-                  Editor.getBufferId(editor) == bufferId
-                    ? Editor.setFont(~font=state.terminalFont, editor)
-                    : editor,
+                  if (Editor.getBufferId(editor) == bufferId) {
+                    let buffer =
+                      state.buffers
+                      |> Buffers.getBuffer(bufferId)
+                      |> Option.get
+                      |> Oni_Core.Buffer.setFont(state.terminalFont)
+                      |> Feature_Editor.EditorBuffer.ofBuffer;
+                    Editor.updateBuffer(~buffer, editor);
+                  } else {
+                    editor;
+                  },
                 state.layout,
               );
 

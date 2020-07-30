@@ -41,7 +41,6 @@ type t = {
   viewLines: int,
   cursors: [@opaque] list(Vim.Cursor.t),
   selection: [@opaque] VisualRange.t,
-  font: [@opaque] Service_Font.font,
   pixelWidth: int,
   pixelHeight: int,
 };
@@ -55,9 +54,11 @@ let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
 let scrollY = ({scrollY, _}) => scrollY;
 let scrollX = ({scrollX, _}) => scrollX;
 let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
-let lineHeightInPixels = ({font, _}) => font.measuredHeight;
-let characterWidthInPixels = ({font, _}) => font.spaceWidth;
-let font = ({font, _}) => font;
+let lineHeightInPixels = ({buffer, _}) =>
+  EditorBuffer.font(buffer).measuredHeight;
+let characterWidthInPixels = ({buffer, _}) =>
+  EditorBuffer.font(buffer).spaceWidth;
+let font = ({buffer, _}) => EditorBuffer.font(buffer);
 
 let setMinimapEnabled = (~enabled, editor) => {
   ...editor,
@@ -68,12 +69,13 @@ let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
 let bufferLineByteToPixel =
-    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
+    (~line, ~byteIndex, {scrollX, scrollY, buffer, _}) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
     let bufferLine = buffer |> EditorBuffer.line(line);
+    let font = buffer |> EditorBuffer.font;
 
     let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
     let (cursorOffset, width) =
@@ -94,11 +96,12 @@ let viewLine = (editor, lineNumber) => {
 };
 
 let bufferLineCharacterToPixel =
-    (~line, ~characterIndex, {scrollX, scrollY, buffer, font, _}) => {
+    (~line, ~characterIndex, {scrollX, scrollY, buffer, _}) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
+    let font = EditorBuffer.font(buffer);
     let (cursorOffset, width) =
       buffer
       |> EditorBuffer.line(line)
@@ -112,7 +115,7 @@ let bufferLineCharacterToPixel =
   };
 };
 
-let create = (~config, ~font, ~buffer, ()) => {
+let create = (~config, ~buffer, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
@@ -143,7 +146,6 @@ let create = (~config, ~font, ~buffer, ()) => {
           stop: Location.{line: Index.zero, column: Index.zero},
         },
       ),
-    font,
     pixelWidth: 1,
     pixelHeight: 1,
   };
@@ -281,8 +283,10 @@ let selectionOrCursorRange = editor => {
 
 let getId = model => model.editorId;
 
-let getLineHeight = editor => editor.font.measuredHeight;
-let getCharacterWidth = editor => editor.font.spaceWidth;
+let getLineHeight = ({buffer, _}) =>
+  EditorBuffer.font(buffer).measuredHeight;
+let getCharacterWidth = ({buffer, _}) =>
+  EditorBuffer.font(buffer).spaceWidth;
 
 let getVisibleView = editor => {
   let {pixelHeight, _} = editor;
@@ -414,12 +418,6 @@ let getBottomVisibleLine = view => {
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 
-let setFont = (~font: Oni_Core.Font.t, editor) => {
-  ...editor,
-  font,
-  buffer: EditorBuffer.setFont(font, editor.buffer),
-};
-
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   ...editor,
   pixelWidth,
@@ -503,7 +501,8 @@ let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
   ignore(column);
   ignore(pixelWidth);
 
-  let editorPixelY = float_of_int(line) *. editor.font.measuredHeight;
+  let editorPixelY =
+    float_of_int(line) *. EditorBuffer.font(editor.buffer).measuredHeight;
   let totalEditorHeight = getTotalHeightInPixels(editor) |> float_of_int;
   let transformedPixelY =
     editorPixelY
