@@ -72,10 +72,13 @@ let sub:
 module Completion: {
   let isActive: model => bool;
 
+  let providerCount: model => int;
+
+  let availableCompletionCount: model => int;
+
   module View: {
     let make:
       (
-        ~key: Brisk_reconciler.Key.t=?,
         ~x: int,
         ~y: int,
         ~lineHeight: float,

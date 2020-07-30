@@ -318,7 +318,6 @@ let%component make =
       gutterWidth
       editorFont
       languageSupport
-      colors
       theme
       tokenTheme
     />

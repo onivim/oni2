@@ -3,16 +3,14 @@
  *
  * This implements an updater (reducer + side effects) for completion
  */
-
-open EditorCoreTypes;
-open Oni_Core;
-open Oni_Model;
-open Actions;
-
-module Log = (val Log.withNamespace("Oni2.Store.Completions"));
-module Completions = Feature_LanguageSupport.Completions;
-module Editor = Feature_Editor.Editor;
-
+//open EditorCoreTypes;
+//open Oni_Core;
+//open Oni_Model;
+//open Actions;
+//
+//module Log = (val Log.withNamespace("Oni2.Store.Completions"));
+//module Completions = Feature_LanguageSupport.Completions;
+//module Editor = Feature_Editor.Editor;
 //module Effects = {
 //  let requestCompletions =
 //      (~languageFeatures, ~buffer, ~meet: CompletionMeet.t) =>

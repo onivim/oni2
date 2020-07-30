@@ -80,17 +80,16 @@ module Session = {
       let toString = (item: Exthost.SuggestItem.t, ~shouldLower) =>
         shouldLower ? String.lowercase_ascii(item.label) : item.label;
 
-      prerr_endline("-- running filter with query: " ++ query);
       let explodedQuery = Zed_utf8.explode(query);
 
       items
       |> List.filter((item: Exthost.SuggestItem.t) => {
            let filterText = Exthost.SuggestItem.filterText(item);
            if (String.length(filterText) <= String.length(query)) {
-            false
+             false;
            } else {
              Filter.fuzzyMatches(explodedQuery, filterText);
-           }
+           };
          })
       |> Filter.rank(query, toString);
     };
@@ -148,11 +147,9 @@ module Session = {
     if (Oni_Core.Buffer.getId(buffer)
         != Oni_Core.Buffer.getId(previous.buffer)
         || location != previous.location) {
-      prerr_endline("RECREATING!");
       create(~buffer, ~base, ~location);
     } else {
       // Refine results
-      prerr_endline("REFINING!");
       refine(~base, previous);
     };
 };
@@ -164,6 +161,9 @@ type model = {
 };
 
 let initial = {handleToSession: IntMap.empty, providers: [], allItems: [||]};
+
+let providerCount = ({providers, _}) => List.length(providers);
+let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
 let getMeetLocation = (~handle, model) => {
   IntMap.find_opt(handle, model.handleToSession)
@@ -188,16 +188,14 @@ let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
      })
   |> List.flatten
   |> List.fast_sort(compare)
-  |> Array.of_list
+  |> Array.of_list;
 };
 
 let allItems = ({allItems, _}) => allItems;
 
 let isActive = (model: model) => {
-  (model.allItems
-  |> Array.length) > 0
-}
-
+  model.allItems |> Array.length > 0;
+};
 
 let register =
     (
@@ -227,6 +225,12 @@ let unregister = (~handle, model) => {
 };
 
 let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+  // TODO: Account for syntax scope
+  ignore(syntaxScope);
+
+  // TODO: Account for trigger key
+  ignore(triggerKey);
+
   let candidateProviders =
     model.providers
     |> List.filter(prov =>
@@ -243,31 +247,20 @@ let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) =
             buffer,
           );
 
-        prerr_endline(
-          "Trying to update handle: " ++ string_of_int(curr.handle),
-        );
-
         switch (maybeMeet) {
-        | None =>
-          prerr_endline("No meet");
-          acc |> IntMap.remove(curr.handle);
+        | None => acc |> IntMap.remove(curr.handle)
         | Some({base, location, _}) =>
-          prerr_endline("Got meet");
           acc
           |> IntMap.update(
                curr.handle,
                fun
                | None => {
-                   prerr_endline(
-                     "No previous results for handle, recreating",
-                   );
                    Some(Session.create(~buffer, ~base, ~location));
                  }
                | Some(previous) => {
-                   prerr_endline("Some previous results - refining");
                    Some(Session.update(~buffer, ~base, ~location, previous));
                  },
-             );
+             )
         };
       },
       model.handleToSession,
@@ -300,7 +293,7 @@ let update = (msg, model) => {
                    session => {session |> Session.complete},
                    model.handleToSession,
                  ),
-                allItems: [||]
+               allItems: [||],
              },
              Outmsg.ApplyCompletion({
                meetColumn: location.column,
@@ -313,25 +306,26 @@ let update = (msg, model) => {
 
   | Command(_) => (model, Outmsg.Nothing)
 
-  | CompletionResultAvailable({handle, suggestResult}) => {
-      let handleToSession = IntMap.update(
-            handle,
-            Option.map(prev =>
-              Session.receivedItems(
-                Exthost.SuggestResult.(suggestResult.completions),
-                prev,
-              )
-            ),
-            model.handleToSession,
-          );
-      ({
+  | CompletionResultAvailable({handle, suggestResult}) =>
+    let handleToSession =
+      IntMap.update(
+        handle,
+        Option.map(prev =>
+          Session.receivedItems(
+            Exthost.SuggestResult.(suggestResult.completions),
+            prev,
+          )
+        ),
+        model.handleToSession,
+      );
+    (
+      {
         ...model,
         handleToSession,
         allItems: recomputeAllItems(handleToSession),
       },
       Outmsg.Nothing,
-    )
-    }
+    );
   | CompletionError({handle, errorMsg}) => (
       {
         ...model,
@@ -363,17 +357,9 @@ let sub = (~client, model) => {
          ~position=meet.location,
          ~toMsg=
            suggestResult => {
-             //             prerr_endline(
-             //             );
              switch (suggestResult) {
-             //               "Got result for handle: " ++ string_of_int(handle),
-
-             | Ok(v) =>
-               //prerr_endline(Exthost.SuggestResult.show(v));
-               CompletionResultAvailable({handle, suggestResult: v})
-             | Error(errorMsg) =>
-               //prerr_endline(errorMsg);
-               CompletionError({handle, errorMsg})
+             | Ok(v) => CompletionResultAvailable({handle, suggestResult: v})
+             | Error(errorMsg) => CompletionError({handle, errorMsg})
              }
            },
          client,
@@ -465,7 +451,6 @@ module Contributions = {
 };
 
 module View = {
-  open Revery;
   open Revery.UI;
   open Oni_Syntax;
   open Oni_Components;

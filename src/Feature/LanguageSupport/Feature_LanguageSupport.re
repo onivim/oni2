@@ -320,19 +320,15 @@ module Completion = {
   let isActive = ({completion, _}: model) =>
     OldCompletion.isActive(completion);
 
+  let providerCount = ({completion, _}: model) =>
+    OldCompletion.providerCount(completion);
+
+  let availableCompletionCount = ({completion, _}: model) =>
+    OldCompletion.availableCompletionCount(completion);
+
   module View = {
     let make =
-        (
-          ~key=?,
-          ~x,
-          ~y,
-          ~lineHeight,
-          ~theme,
-          ~tokenTheme,
-          ~editorFont,
-          ~model,
-          (),
-        ) => {
+        (~x, ~y, ~lineHeight, ~theme, ~tokenTheme, ~editorFont, ~model, ()) => {
       OldCompletion.View.make(
         ~x,
         ~y,

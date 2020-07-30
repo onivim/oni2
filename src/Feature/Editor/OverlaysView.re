@@ -29,7 +29,6 @@ let completionsView =
       ~languageSupport,
       ~cursorPixelX,
       ~cursorPixelY,
-      ~colors,
       ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
@@ -54,7 +53,6 @@ let make =
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
       ~gutterWidth,
-      ~colors,
       ~theme,
       ~tokenTheme,
       ~languageSupport,
@@ -77,7 +75,6 @@ let make =
           languageSupport
           cursorPixelX
           cursorPixelY
-          colors
           theme
           tokenTheme
           editorFont
