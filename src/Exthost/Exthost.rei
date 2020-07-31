@@ -43,6 +43,7 @@ module CompletionContext: {
 };
 
 module CompletionKind: {
+  [@deriving show]
   type t =
     | Method
     | Function
@@ -122,6 +123,7 @@ module MarkdownString: {
 
 module Edit: {
   module SingleEditOperation: {
+    [@deriving show]
     type t = {
       range: OneBasedRange.t,
       text: option(string),

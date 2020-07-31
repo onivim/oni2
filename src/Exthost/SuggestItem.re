@@ -49,12 +49,15 @@ type t = {
   // chainedCacheId?
 };
 
-let insertText = ({label, _}) => {
+let insertText = ({label,insertText, _}) => {
   // TODO: Consider the `insertText` value
   // There are some cases we don't handle - for example, the JS / TS provider
   // prefixes the insertText with a `.` - we'd need to examine how we are
   // applying completion in that context.
-  label;
+  switch (insertText) {
+  | Some(insert) => insert
+  | None => label
+  }
 };
 
 let filterText = ({filterText, label, _}) => {

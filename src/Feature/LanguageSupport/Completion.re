@@ -119,6 +119,7 @@ module Configuration = {
 };
 
 module CompletionItem = {
+  [@deriving show]
   type t = {
     handle: int,
     label: string,
@@ -127,6 +128,10 @@ module CompletionItem = {
     documentation: option(string),
     insertText: string,
     sortText: string,
+    suggestRange: option(Exthost.SuggestItem.SuggestRange.t),
+    commitCharacters: list(string),
+    additionalTextEdits: list(Exthost.Edit.SingleEditOperation.t),
+    command: option(Exthost.Command.t),
   };
 
   let create = (~handle, item: Exthost.SuggestItem.t) => {
@@ -137,6 +142,10 @@ module CompletionItem = {
     documentation: item.documentation,
     insertText: item |> Exthost.SuggestItem.insertText,
     sortText: item |> Exthost.SuggestItem.sortText,
+    suggestRange: item.suggestRange,
+    commitCharacters: item.commitCharacters,
+    additionalTextEdits: item.additionalTextEdits,
+    command: item.command,
   };
 };
 
@@ -431,8 +440,11 @@ let update = (msg, model) => {
 
       let handle = result.item.handle;
 
+      prerr_endline ("SELECTED ITEM: " ++ CompletionItem.show(result.item));
+
       getMeetLocation(~handle, model)
       |> Option.map((location: EditorCoreTypes.Location.t) => {
+           
            (
              {
                ...model,
