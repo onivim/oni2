@@ -9,6 +9,7 @@
     "Basic Usage": [
       "using-onivim/moving-in-onivim",
       "using-onivim/editing-and-deleting",
+      "using-onivim/language-features",
       "using-onivim/visual-mode",
       "using-onivim/working-with-files",
       "using-onivim/command-line",
