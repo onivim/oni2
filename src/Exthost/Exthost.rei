@@ -271,10 +271,10 @@ module SuggestItem: {
     sortText: option(string),
     filterText: option(string),
     insertText: option(string),
-    //    suggestRange: option(SuggestRange.t),
-    //    commitCharacters: list(string),
-    //    additionalTextEdits: list(Edit.SingleEditOperation.t),
-    //    command: option(Command.t),
+    suggestRange: option(SuggestRange.t),
+    commitCharacters: list(string),
+    additionalTextEdits: list(Edit.SingleEditOperation.t),
+    command: option(Command.t),
   };
 
   let insertText: t => string;
