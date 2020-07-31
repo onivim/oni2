@@ -1,6 +1,5 @@
 open Oni_Core;
 open TestFramework;
-open Revery;
 
 module BracketMatch = Feature_Editor.BracketMatch;
 
