@@ -252,10 +252,11 @@ let update =
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
   };
 
-let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+let bufferUpdated = (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
   let completion' =
     Completion.bufferUpdated(
       ~buffer,
+      ~config,
       ~activeCursor,
       ~syntaxScope,
       ~triggerKey,

@@ -30,7 +30,7 @@ type provider = {
 
 // CONFIGURATION
 
-module QuickSuggestionsEnabled = {
+module QuickSuggestionsSetting = {
   type t = {
     comments: bool,
     strings: bool,
@@ -85,10 +85,10 @@ module Configuration = {
   let quickSuggestions = setting(
     "editor.quickSuggestions",
     custom(
-      ~decode=QuickSuggestionsEnabled.decode,
-      ~encode=QuickSuggestionsEnabled.encode
+      ~decode=QuickSuggestionsSetting.decode,
+      ~encode=QuickSuggestionsSetting.encode
     ),
-    ~default=QuickSuggestionsEnabled.initial,
+    ~default=QuickSuggestionsSetting.initial,
   );
 }
 
@@ -288,50 +288,58 @@ let unregister = (~handle, model) => {
   providers: List.filter(prov => prov.handle != handle, model.providers),
 };
 
-let bufferUpdated = (~buffer, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+let bufferUpdated = (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
   // TODO: Account for syntax scope
   ignore(syntaxScope);
 
+  let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
+  
+  if (!QuickSuggestionsSetting.enabledFor(~syntaxScope, quickSuggestionsSetting)) {
+    // TODO: Do we need to clear in this case?
+    model
+  } else {
+
   // TODO: Account for trigger key
-  ignore(triggerKey);
+    ignore(triggerKey);
 
-  let candidateProviders =
-    model.providers
-    |> List.filter(prov =>
-         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
-       );
+    let candidateProviders =
+      model.providers
+      |> List.filter(prov =>
+           Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
+         );
 
-  let handleToSession =
-    List.fold_left(
-      (acc: IntMap.t(Session.t), curr: provider) => {
-        let maybeMeet =
-          CompletionMeet.fromBufferLocation(
-            // TODO: triggerCharacters
-            ~location=activeCursor,
-            buffer,
-          );
+    let handleToSession =
+      List.fold_left(
+        (acc: IntMap.t(Session.t), curr: provider) => {
+          let maybeMeet =
+            CompletionMeet.fromBufferLocation(
+              // TODO: triggerCharacters
+              ~location=activeCursor,
+              buffer,
+            );
 
-        switch (maybeMeet) {
-        | None => acc |> IntMap.remove(curr.handle)
-        | Some({base, location, _}) =>
-          acc
-          |> IntMap.update(
-               curr.handle,
-               fun
-               | None => {
-                   Some(Session.create(~buffer, ~base, ~location));
-                 }
-               | Some(previous) => {
-                   Some(Session.update(~buffer, ~base, ~location, previous));
-                 },
-             )
-        };
-      },
-      model.handleToSession,
-      candidateProviders,
-    );
+          switch (maybeMeet) {
+          | None => acc |> IntMap.remove(curr.handle)
+          | Some({base, location, _}) =>
+            acc
+            |> IntMap.update(
+                 curr.handle,
+                 fun
+                 | None => {
+                     Some(Session.create(~buffer, ~base, ~location));
+                   }
+                 | Some(previous) => {
+                     Some(Session.update(~buffer, ~base, ~location, previous));
+                   },
+               )
+          };
+        },
+        model.handleToSession,
+        candidateProviders,
+      );
 
-  {...model, handleToSession, allItems: recomputeAllItems(handleToSession)};
+    {...model, handleToSession, allItems: recomputeAllItems(handleToSession)};
+  }
 };
 
 let update = (msg, model) => {
@@ -445,12 +453,6 @@ module Commands = {
 
   let selectNextSuggestion =
     define("selectNextSuggestion", Command(SelectNext));
-};
-
-// CONFIGURATION
-
-module Configuration = {
-  
 };
 
 // CONTEXTKEYS

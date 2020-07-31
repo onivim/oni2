@@ -313,13 +313,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.quickSuggestions",
-    (config, json) => {
-      ...config,
-      editorQuickSuggestions: parseQuickSuggestions(json),
-    },
-  ),
-  (
     "editor.renderIndentGuides",
     (config, json) => {
       ...config,

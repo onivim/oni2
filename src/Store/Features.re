@@ -748,8 +748,10 @@ let update =
                ~bytePosition=activeCursor.column |> Index.toZeroBased,
                state.syntaxHighlights,
              );
+           let config = Feature_Configuration.resolver(state.config);
            Feature_LanguageSupport.bufferUpdated(
              ~buffer,
+             ~config,
              ~activeCursor,
              ~syntaxScope,
              ~triggerKey,

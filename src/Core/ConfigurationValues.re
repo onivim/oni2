@@ -101,11 +101,6 @@ let default = {
   editorTabSize: 4,
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
-  editorQuickSuggestions: {
-    other: true,
-    comments: true,
-    strings: true,
-  },
   editorRenderWhitespace: None,
   editorRulers: [],
   terminalIntegratedFontFile: Constants.defaultFontFile,
