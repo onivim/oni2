@@ -20,7 +20,6 @@
       "configuration/extensions"
     ],
     "Languages": [
-      "languages/overview",
       "languages/reason-ocaml",
       "languages/python",
       "languages/go",

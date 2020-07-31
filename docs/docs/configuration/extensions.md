@@ -24,7 +24,9 @@ There are more details about the Open VSX project in the [Eclipse Open VSX artic
 
 ### Install via the UI
 
-[TODO: Screenshot]
+![image](https://user-images.githubusercontent.com/13532591/88987848-18b52300-d28c-11ea-86fa-e20ed1558fb5.png)
+
+> __HINT:__ Use [sneak mode](./../using-onivim/moving-in-onivim#sneak-mode) to avoid the mouse.
 
 ### Install via the CLI
 
@@ -58,6 +60,6 @@ WIP
 
 Installed extensions can be viewed in the extensions pane:
 
-[TODO: Screenshot]
+![extensions-pane](https://user-images.githubusercontent.com/13532591/88988024-911be400-d28c-11ea-91db-4decbeb37eb8.png)
 
-or, via the `oni2 --list-extensions` command.
+or, via the CLI: `oni2 --list-extensions` command.

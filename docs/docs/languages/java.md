@@ -6,7 +6,7 @@ sidebar_label: Java
 
 Onivim supports Java via the [`redhat.java`](https://open-vsx.org/extension/redhat/java) extension.
 
-[TODO: screenshot]
+![java](https://user-images.githubusercontent.com/13532591/88988303-59fa0280-d28d-11ea-9995-3dadbadc8063.png)
 
 The following features are supported:
 - Code completion
@@ -26,7 +26,7 @@ Install via the command-line:
 
 - Open a folder with a _Maven_ or _Gradle_ build file in the directory hierarchy.
 
-If all goes well - you'll see a language status in the status bar:
+If all goes well - you'll see a 'thumbs up' status in the status bar:
 
-[TODO: status bar screenshot]
+![java-status-bar](https://user-images.githubusercontent.com/13532591/88988346-81e96600-d28d-11ea-90a2-c3a1cc131545.png)
 
