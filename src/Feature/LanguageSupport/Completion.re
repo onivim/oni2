@@ -24,9 +24,23 @@ type msg =
 type provider = {
   handle: int,
   selector: DocumentSelector.t,
-  triggerCharacters: list(string),
+  triggerCharacters: [@opaque] list(Uchar.t),
   supportsResolveDetails: bool,
   extensionId: string,
+};
+
+module Internal = {
+  let stringsToUchars: list(string) => list(Uchar.t) =
+    strings => {
+      strings
+      |> List.filter_map(str =>
+           if (String.length(str) != 1) {
+             None;
+           } else {
+             Some(Uchar.of_char(str.[0]));
+           }
+         );
+    };
 };
 
 // CONFIGURATION
@@ -315,7 +329,7 @@ let register =
     {
       handle,
       selector,
-      triggerCharacters,
+      triggerCharacters: Internal.stringsToUchars(triggerCharacters),
       supportsResolveDetails,
       extensionId,
     },
@@ -357,7 +371,7 @@ let bufferUpdated =
         (acc: IntMap.t(Session.t), curr: provider) => {
           let maybeMeet =
             CompletionMeet.fromBufferLocation(
-              // TODO: triggerCharacters
+              ~triggerCharacters=curr.triggerCharacters,
               ~location=activeCursor,
               buffer,
             );
