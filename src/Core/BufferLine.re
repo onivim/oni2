@@ -62,17 +62,19 @@ module Internal = {
   // We want to cache measurements tied to typefaces and characters, since text measuring is expensive
   module SkiaTypefaceUcharHashable = {
     // This is of the form typeface, size, uchar
-    type t = (Skia.Typeface.t, float, Uchar.t);
+    type t = (Skia.Typeface.t, float, Revery.Font.Smoothing.t, Uchar.t);
 
-    let equal = ((tf1, s1, uc1), (tf2, s2, uc2)) =>
+    let equal = ((tf1, sz1, sm1, uc1), (tf2, sz2, sm2, uc2)) =>
       skiaTypefaceEqual(tf1, tf2)
-      && Float.equal(s1, s2)
+      && Float.equal(sz1, sz2)
+      && sm1 == sm2
       && Uchar.equal(uc1, uc2);
 
-    let hash = ((tf, s, uc)) =>
+    let hash = ((tf, sz, sm, uc)) =>
       Int32.to_int(Skia.Typeface.getUniqueID(tf))
       + Uchar.hash(uc)
-      + Hashtbl.hash(s);
+      + Hashtbl.hash(sz)
+      + Hashtbl.hash(sm);
   };
 
   module MeasureResult = {
@@ -95,13 +97,13 @@ module Internal = {
   let measure = (~typeface: Skia.Typeface.t, ~cache: t, substr, uchar) =>
     switch (
       MeasurementsCache.find(
-        (typeface, cache.font.fontSize, uchar),
+        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
         measurementsCache,
       )
     ) {
     | Some(pixelWidth) =>
       MeasurementsCache.promote(
-        (typeface, cache.font.fontSize, uchar),
+        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
         measurementsCache,
       );
       Log.debugf(m =>
@@ -134,7 +136,7 @@ module Internal = {
           Skia.Paint.measureText(paint, substr, None);
         };
       MeasurementsCache.add(
-        (typeface, cache.font.fontSize, uchar),
+        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
         pixelWidth,
         measurementsCache,
       );
