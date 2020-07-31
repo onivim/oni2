@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 open Exthost;
 
 [@deriving show]
@@ -37,60 +38,69 @@ module QuickSuggestionsSetting = {
     other: bool,
   };
 
-  let initial = {
-    comments: false,
-    strings: false,
-    other: true,
-  }
+  let initial = {comments: false, strings: false, other: true};
 
   let enabledFor = (~syntaxScope: SyntaxScope.t, {comments, strings, other}) => {
-     (syntaxScope.isComment && comments)
-     || (syntaxScope.isString && strings)
-     || (!syntaxScope.isComment && !syntaxScope.isString && other);
+    syntaxScope.isComment
+    && comments
+    || syntaxScope.isString
+    && strings
+    || !syntaxScope.isComment
+    && !syntaxScope.isString
+    && other;
   };
 
   module Decode = {
     open Json.Decode;
-    let decodeBool = bool |> map(fun
-    | false => {comments: false, strings: false, other: false}
-    | true => { comments: true, strings: true, other: true}
-    );
+    let decodeBool =
+      bool
+      |> map(
+           fun
+           | false => {comments: false, strings: false, other: false}
+           | true => {comments: true, strings: true, other: true},
+         );
 
-    let decodeObj = obj((({field, _}) => {
-      comments: field.withDefault("comments", initial.comments, bool),
-      strings: field.withDefault("strings", initial.strings, bool),
-      other: field.withDefault("other", initial.other, bool),
-    }));
+    let decodeObj =
+      obj(({field, _}) =>
+        {
+          comments: field.withDefault("comments", initial.comments, bool),
+          strings: field.withDefault("strings", initial.strings, bool),
+          other: field.withDefault("other", initial.other, bool),
+        }
+      );
 
-    let decode = one_of([
-      ("bool", decodeBool),
-      ("obj", decodeObj),
-    ]);
+    let decode = one_of([("bool", decodeBool), ("obj", decodeObj)]);
   };
 
   let decode = Decode.decode;
 
-  let encode = setting => Json.Encode.({
-    obj([
-      ("comments", setting.comments |> bool),
-      ("strings", setting.strings |> bool),
-      ("other", setting.other |> bool)
-    ])
-  });
+  let encode = setting =>
+    Json.Encode.(
+      {
+        obj([
+          ("comments", setting.comments |> bool),
+          ("strings", setting.strings |> bool),
+          ("other", setting.other |> bool),
+        ]);
+      }
+    );
 };
+
+// CONFIGURATION
 
 module Configuration = {
   open Config.Schema;
 
-  let quickSuggestions = setting(
-    "editor.quickSuggestions",
-    custom(
-      ~decode=QuickSuggestionsSetting.decode,
-      ~encode=QuickSuggestionsSetting.encode
-    ),
-    ~default=QuickSuggestionsSetting.initial,
-  );
-}
+  let quickSuggestions =
+    setting(
+      "editor.quickSuggestions",
+      custom(
+        ~decode=QuickSuggestionsSetting.decode,
+        ~encode=QuickSuggestionsSetting.encode,
+      ),
+      ~default=QuickSuggestionsSetting.initial,
+    );
+};
 
 module CompletionItem = {
   type t = {
@@ -218,13 +228,43 @@ module Session = {
     };
 };
 
+module Selection = {
+  type t = option(int);
+  let initial = None;
+
+  let ensureValidFocus = (~count, selection) =>
+    if (count == 0) {
+      None;
+    } else {
+      switch (selection) {
+      | None => Some(0)
+      | Some(index) =>
+        index |> IntEx.clamp(~lo=0, ~hi=count - 1) |> Option.some
+      };
+    };
+
+  let focusPrevious = (~count, selection) => {
+    IndexEx.prevRollOverOpt(~last=count - 1, selection);
+  };
+
+  let focusNext = (~count, selection) => {
+    IndexEx.nextRollOverOpt(~last=count - 1, selection);
+  };
+};
+
 type model = {
   handleToSession: IntMap.t(Session.t),
   providers: list(provider),
   allItems: array(Filter.result(CompletionItem.t)),
+  selection: Selection.t,
 };
 
-let initial = {handleToSession: IntMap.empty, providers: [], allItems: [||]};
+let initial = {
+  handleToSession: IntMap.empty,
+  providers: [],
+  allItems: [||],
+  selection: Selection.initial,
+};
 
 let providerCount = ({providers, _}) => List.length(providers);
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
@@ -288,18 +328,22 @@ let unregister = (~handle, model) => {
   providers: List.filter(prov => prov.handle != handle, model.providers),
 };
 
-let bufferUpdated = (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+let bufferUpdated =
+    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
   // TODO: Account for syntax scope
   ignore(syntaxScope);
 
   let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
-  
-  if (!QuickSuggestionsSetting.enabledFor(~syntaxScope, quickSuggestionsSetting)) {
-    // TODO: Do we need to clear in this case?
-    model
-  } else {
 
-  // TODO: Account for trigger key
+  if (!
+        QuickSuggestionsSetting.enabledFor(
+          ~syntaxScope,
+          quickSuggestionsSetting,
+        )) {
+    // TODO: Do we need to clear in this case?
+    model;
+  } else {
+    // TODO: Account for trigger key
     ignore(triggerKey);
 
     let candidateProviders =
@@ -329,7 +373,9 @@ let bufferUpdated = (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey,
                      Some(Session.create(~buffer, ~base, ~location));
                    }
                  | Some(previous) => {
-                     Some(Session.update(~buffer, ~base, ~location, previous));
+                     Some(
+                       Session.update(~buffer, ~base, ~location, previous),
+                     );
                    },
                )
           };
@@ -338,8 +384,15 @@ let bufferUpdated = (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey,
         candidateProviders,
       );
 
-    {...model, handleToSession, allItems: recomputeAllItems(handleToSession)};
-  }
+    let allItems = recomputeAllItems(handleToSession);
+    let selection =
+      Selection.ensureValidFocus(
+        ~count=Array.length(allItems),
+        model.selection,
+      );
+
+    {...model, handleToSession, allItems, selection};
+  };
 };
 
 let update = (msg, model) => {
@@ -366,6 +419,7 @@ let update = (msg, model) => {
                    model.handleToSession,
                  ),
                allItems: [||],
+               selection: None,
              },
              Outmsg.ApplyCompletion({
                meetColumn: location.column,
@@ -376,7 +430,19 @@ let update = (msg, model) => {
       |> Option.value(~default);
     };
 
-  | Command(_) => (model, Outmsg.Nothing)
+  | Command(SelectNext) =>
+    let count = Array.length(model.allItems);
+    (
+      {...model, selection: Selection.focusNext(~count, model.selection)},
+      Nothing,
+    );
+
+  | Command(SelectPrevious) =>
+    let count = Array.length(model.allItems);
+    (
+      {...model, selection: Selection.focusPrevious(~count, model.selection)},
+      Nothing,
+    );
 
   | CompletionResultAvailable({handle, suggestResult}) =>
     let handleToSession =
@@ -390,11 +456,17 @@ let update = (msg, model) => {
         ),
         model.handleToSession,
       );
+    let allItems = recomputeAllItems(handleToSession);
     (
       {
         ...model,
         handleToSession,
-        allItems: recomputeAllItems(handleToSession),
+        allItems,
+        selection:
+          Selection.ensureValidFocus(
+            ~count=Array.length(allItems) - 1,
+            model.selection,
+          ),
       },
       Outmsg.Nothing,
     );
@@ -512,9 +584,7 @@ module KeyBindings = {
 module Contributions = {
   let colors = [];
 
-  let configuration = Configuration.[
-    quickSuggestions.spec,
-  ];
+  let configuration = Configuration.[quickSuggestions.spec];
 
   let commands =
     Commands.[acceptSelected, selectPrevSuggestion, selectNextSuggestion];
@@ -763,7 +833,7 @@ module View = {
     };
 
     // TODO
-    let focused = None;
+    let focused = completions.selection;
 
     let maxWidth =
       items

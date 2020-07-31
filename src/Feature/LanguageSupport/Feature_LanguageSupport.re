@@ -252,7 +252,8 @@ let update =
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
   };
 
-let bufferUpdated = (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+let bufferUpdated =
+    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
   let completion' =
     Completion.bufferUpdated(
       ~buffer,
@@ -294,8 +295,7 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
-  let configuration = 
-    Completion.Contributions.configuration;
+  let configuration = Completion.Contributions.configuration;
 
   let contextKeys =
     [
