@@ -767,6 +767,8 @@ let update =
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
+    let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Types.Insert;
+
     let (state', eff) =
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
@@ -788,7 +790,19 @@ let update =
         ({...state, layout: layout'}, Isolinear.Effect.none);
       };
 
-    (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
+    let isInInsertMode = Feature_Vim.mode(state'.vim) == Vim.Types.Insert;
+
+    // Entered insert mode
+    let languageSupport = if (isInInsertMode && !wasInInsertMode) {
+        state.languageSupport |> Feature_LanguageSupport.startInsertMode;
+    // Exited insert mode
+    } else if (!isInInsertMode && wasInInsertMode) {
+        state.languageSupport |> Feature_LanguageSupport.stopInsertMode;
+    } else {
+      state.languageSupport
+    };
+
+    ({...state', languageSupport }, eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
   | _ => (state, Effect.none)
   };

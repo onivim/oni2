@@ -315,6 +315,14 @@ let isActive = (model: model) => {
   model.allItems |> Array.length > 0;
 };
 
+let stopInsertMode = (model) => {
+  model
+//     ...model,
+//     handleToSession: IntMap.empty,
+//     allItems: [||],
+//     selection: None,
+};
+
 let register =
     (
       ~handle,

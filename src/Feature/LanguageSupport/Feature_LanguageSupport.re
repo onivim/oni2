@@ -266,6 +266,12 @@ let bufferUpdated =
   {...model, completion: completion'};
 };
 
+let startInsertMode = model => model;
+let stopInsertMode = model => {
+  ...model,
+  completion: Completion.stopInsertMode(model.completion)
+};
+
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
 
 module Contributions = {

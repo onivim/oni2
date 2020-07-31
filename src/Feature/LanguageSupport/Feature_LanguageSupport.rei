@@ -57,6 +57,9 @@ let bufferUpdated:
   ) =>
   model;
 
+let startInsertMode: model => model;
+let stopInsertMode: model => model;
+
 let isFocused: model => bool;
 
 let sub:

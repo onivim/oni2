@@ -39,10 +39,10 @@ type t = {
   sortText: option(string),
   filterText: option(string),
   insertText: option(string),
-  suggestRange: option(SuggestRange.t),
-  commitCharacters: list(string),
-  additionalTextEdits: list(Edit.SingleEditOperation.t),
-  command: option(ExtCommand.t),
+//  suggestRange: option(SuggestRange.t),
+//  commitCharacters: list(string),
+//  additionalTextEdits: list(Edit.SingleEditOperation.t),
+//  command: option(ExtCommand.t),
   // TODO:
   // insertTextRules
   // kindModifer
@@ -90,11 +90,11 @@ let decode = {
       let sortText = field.optional("e", string);
       let filterText = field.optional("f", string);
       let insertText = field.optional("h", string);
-      let suggestRange = field.optional("j", SuggestRange.decode);
-      let commitCharacters = field.withDefault("k", [], list(string));
-      let additionalTextEdits =
-        field.withDefault("l", [], list(Edit.SingleEditOperation.decode));
-      let command = field.optional("m", ExtCommand.decode);
+//      let suggestRange = field.optional("j", SuggestRange.decode);
+//      let commitCharacters = field.withDefault("k", [], list(string));
+//      let additionalTextEdits =
+//        field.withDefault("l", [], list(Edit.SingleEditOperation.decode));
+//      let command = field.optional("m", ExtCommand.decode);
       {
         label,
         kind,
@@ -103,10 +103,10 @@ let decode = {
         sortText,
         filterText,
         insertText,
-        suggestRange,
-        commitCharacters,
-        additionalTextEdits,
-        command,
+//        suggestRange,
+//        commitCharacters,
+//        additionalTextEdits,
+//        command,
       };
     })
   );
