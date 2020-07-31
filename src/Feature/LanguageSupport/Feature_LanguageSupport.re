@@ -413,8 +413,6 @@ let sub =
 };
 
 // TODO: Remove
-module Completions = Completions;
-module CompletionMeet = CompletionMeet;
 module Diagnostic = Diagnostic;
 module Diagnostics = Diagnostics;
 module LanguageFeatures = LanguageFeatures;

@@ -107,6 +107,7 @@ let update =
       };
 
     ({...state, clipboard: model}, eff);
+
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);

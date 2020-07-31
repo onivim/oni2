@@ -6,6 +6,7 @@ open Feature_LanguageSupport;
 let makeLine = str =>
   BufferLine.make(~indentation=IndentationSettings.default, str);
 
+// TODO: Move to inline tests
 describe("CompletionMeet", ({describe, _}) => {
   describe("createFromLine", ({test, _}) => {
     let line0column0 = Location.{line: Index.zero, column: Index.zero};

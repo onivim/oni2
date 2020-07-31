@@ -17,7 +17,6 @@ module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 

@@ -13,7 +13,6 @@ module Core = Oni_Core;
 open Core.Utility;
 
 module Zed_utf8 = Core.ZedBundled;
-module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
 
