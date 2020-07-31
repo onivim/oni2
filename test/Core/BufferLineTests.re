@@ -141,7 +141,7 @@ describe("BufferLine", ({describe, _}) => {
       let bufferLine = BufferLine.make(~indentation, "\t");
       let (_position, width) =
         BufferLine.getPixelPositionAndWidth(~index=0, bufferLine);
-      expect.float(width).toBeCloseTo(6. *. 8.4);
+      expect.float(width).toBeCloseTo(3. *. 8.4);
     });
     test("tab settings impact position", ({expect, _}) => {
       let indentation =
@@ -151,7 +151,7 @@ describe("BufferLine", ({describe, _}) => {
       let (position, width) =
         BufferLine.getPixelPositionAndWidth(~index=1, bufferLine);
       expect.float(width).toBeCloseTo(8.4);
-      expect.float(position).toBeCloseTo(6. *. 8.4);
+      expect.float(position).toBeCloseTo(3. *. 8.4);
     });
   });
   describe("getIndexFromPixel", ({test, _}) => {
