@@ -293,7 +293,8 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
-  let configuration = [];
+  let configuration = 
+    Completion.Contributions.configuration;
 
   let contextKeys =
     [

@@ -29,12 +29,6 @@ type fontSmoothing =
   | Antialiased
   | SubpixelAntialiased;
 
-type quickSuggestionsEnabled = {
-  other: bool,
-  comments: bool,
-  strings: bool,
-};
-
 type fontLigatures = [ | `Bool(bool) | `List(list(string))];
 
 type t = {
@@ -55,7 +49,6 @@ type t = {
   editorMinimapMaxColumn: int,
   editorInsertSpaces: bool,
   editorIndentSize: int,
-  editorQuickSuggestions: quickSuggestionsEnabled,
   editorTabSize: int,
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,

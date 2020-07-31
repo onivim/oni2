@@ -28,6 +28,70 @@ type provider = {
   extensionId: string,
 };
 
+// CONFIGURATION
+
+module QuickSuggestionsEnabled = {
+  type t = {
+    comments: bool,
+    strings: bool,
+    other: bool,
+  };
+
+  let initial = {
+    comments: false,
+    strings: false,
+    other: true,
+  }
+
+  let enabledFor = (~syntaxScope: SyntaxScope.t, {comments, strings, other}) => {
+     (syntaxScope.isComment && comments)
+     || (syntaxScope.isString && strings)
+     || (!syntaxScope.isComment && !syntaxScope.isString && other);
+  };
+
+  module Decode = {
+    open Json.Decode;
+    let decodeBool = bool |> map(fun
+    | false => {comments: false, strings: false, other: false}
+    | true => { comments: true, strings: true, other: true}
+    );
+
+    let decodeObj = obj((({field, _}) => {
+      comments: field.withDefault("comments", initial.comments, bool),
+      strings: field.withDefault("strings", initial.strings, bool),
+      other: field.withDefault("other", initial.other, bool),
+    }));
+
+    let decode = one_of([
+      ("bool", decodeBool),
+      ("obj", decodeObj),
+    ]);
+  };
+
+  let decode = Decode.decode;
+
+  let encode = setting => Json.Encode.({
+    obj([
+      ("comments", setting.comments |> bool),
+      ("strings", setting.strings |> bool),
+      ("other", setting.other |> bool)
+    ])
+  });
+};
+
+module Configuration = {
+  open Config.Schema;
+
+  let quickSuggestions = setting(
+    "editor.quickSuggestions",
+    custom(
+      ~decode=QuickSuggestionsEnabled.decode,
+      ~encode=QuickSuggestionsEnabled.encode
+    ),
+    ~default=QuickSuggestionsEnabled.initial,
+  );
+}
+
 module CompletionItem = {
   type t = {
     handle: int,
@@ -368,6 +432,8 @@ let sub = (~client, model) => {
   |> Isolinear.Sub.batch;
 };
 
+// COMMANDS
+
 module Commands = {
   open Feature_Commands.Schema;
 
@@ -381,11 +447,21 @@ module Commands = {
     define("selectNextSuggestion", Command(SelectNext));
 };
 
+// CONFIGURATION
+
+module Configuration = {
+  
+};
+
+// CONTEXTKEYS
+
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
   let suggestWidgetVisible = bool("suggestWidgetVisible", isActive);
 };
+
+// KEYBINDINGS
 
 module KeyBindings = {
   open Oni_Input.Keybindings;
@@ -433,6 +509,10 @@ module KeyBindings = {
 
 module Contributions = {
   let colors = [];
+
+  let configuration = Configuration.[
+    quickSuggestions.spec,
+  ];
 
   let commands =
     Commands.[acceptSelected, selectPrevSuggestion, selectNextSuggestion];
