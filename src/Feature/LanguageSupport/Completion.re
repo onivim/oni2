@@ -572,9 +572,20 @@ module KeyBindings = {
     command: Commands.selectNextSuggestion.id,
     condition: suggestWidgetVisible,
   };
+  
+  let nextSuggestionArrow = {
+    key: "<DOWN>",
+    command: Commands.selectNextSuggestion.id,
+    condition: suggestWidgetVisible,
+  };
 
   let previousSuggestion = {
     key: "<C-P>",
+    command: Commands.selectPrevSuggestion.id,
+    condition: suggestWidgetVisible,
+  };
+  let previousSuggestionArrow = {
+    key: "<UP>",
     command: Commands.selectPrevSuggestion.id,
     condition: suggestWidgetVisible,
   };
@@ -617,7 +628,9 @@ module Contributions = {
   let keybindings =
     KeyBindings.[
       nextSuggestion,
+      nextSuggestionArrow,
       previousSuggestion,
+      previousSuggestionArrow,
       acceptSuggestionEnter,
       acceptSuggestionTab,
       acceptSuggestionShiftTab,
