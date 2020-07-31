@@ -1,4 +1,35 @@
+module ExtCommand = Command;
 open Oni_Core;
+
+module SuggestRange = {
+  [@deriving show]
+  type t =
+    | Single(OneBasedRange.t)
+    | Combo({
+        insert: OneBasedRange.t,
+        replace: OneBasedRange.t,
+      });
+
+  module Decode = {
+    open Json.Decode;
+    let single = OneBasedRange.decode |> map(range => Single(range));
+
+    let combo =
+      obj(({field, _}) =>
+        Combo({
+          insert: field.required("insert", OneBasedRange.decode),
+          replace: field.required("replace", OneBasedRange.decode),
+        })
+      );
+  };
+
+  let decode =
+    Json.Decode.one_of([
+      ("single", Decode.single),
+      ("combo", Decode.combo),
+    ]);
+};
+
 [@deriving show]
 type t = {
   label: string,
@@ -8,12 +39,12 @@ type t = {
   sortText: option(string),
   filterText: option(string),
   insertText: option(string),
+  suggestRange: option(SuggestRange.t),
+  commitCharacters: list(string),
+  additionalTextEdits: list(Edit.SingleEditOperation.t),
+  command: option(ExtCommand.t),
   // TODO:
   // insertTextRules
-  // range
-  // commitCharacters
-  // additionalTextEdits
-  // command
   // kindModifer
   // chainedCacheId?
 };
@@ -59,6 +90,11 @@ let decode = {
       let sortText = field.optional("e", string);
       let filterText = field.optional("f", string);
       let insertText = field.optional("h", string);
+      let suggestRange = field.optional("j", SuggestRange.decode);
+      let commitCharacters = field.withDefault("k", [], list(string));
+      let additionalTextEdits =
+        field.withDefault("l", [], list(Edit.SingleEditOperation.decode));
+      let command = field.optional("m", ExtCommand.decode);
       {
         label,
         kind,
@@ -67,6 +103,10 @@ let decode = {
         sortText,
         filterText,
         insertText,
+        suggestRange,
+        commitCharacters,
+        additionalTextEdits,
+        command,
       };
     })
   );

@@ -252,6 +252,16 @@ module RenameLocation: {
 };
 
 module SuggestItem: {
+  module SuggestRange: {
+    [@deriving show]
+    type t =
+      | Single(OneBasedRange.t)
+      | Combo({
+          insert: OneBasedRange.t,
+          replace: OneBasedRange.t,
+        });
+  };
+
   [@deriving show]
   type t = {
     label: string,
@@ -261,6 +271,10 @@ module SuggestItem: {
     sortText: option(string),
     filterText: option(string),
     insertText: option(string),
+    suggestRange: option(SuggestRange.t),
+    commitCharacters: list(string),
+    additionalTextEdits: list(Edit.SingleEditOperation.t),
+    command: option(Command.t),
   };
 
   let insertText: t => string;
