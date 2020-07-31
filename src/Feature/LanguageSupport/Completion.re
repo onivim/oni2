@@ -46,6 +46,7 @@ module Internal = {
 // CONFIGURATION
 
 module QuickSuggestionsSetting = {
+  [@deriving show]
   type t = {
     comments: bool,
     strings: bool,
@@ -55,13 +56,14 @@ module QuickSuggestionsSetting = {
   let initial = {comments: false, strings: false, other: true};
 
   let enabledFor = (~syntaxScope: SyntaxScope.t, {comments, strings, other}) => {
-    syntaxScope.isComment
-    && comments
-    || syntaxScope.isString
-    && strings
-    || !syntaxScope.isComment
-    && !syntaxScope.isString
-    && other;
+    let isCommentAndAllowed = syntaxScope.isComment && comments;
+
+    let isStringAndAllowed = syntaxScope.isString && strings;
+
+    let isOtherAndAllowed =
+      !syntaxScope.isComment && !syntaxScope.isString && other;
+
+    isCommentAndAllowed || isStringAndAllowed || isOtherAndAllowed;
   };
 
   module Decode = {
@@ -315,12 +317,11 @@ let isActive = (model: model) => {
   model.allItems |> Array.length > 0;
 };
 
-let stopInsertMode = (model) => {
-  model
-//     ...model,
-//     handleToSession: IntMap.empty,
-//     allItems: [||],
-//     selection: None,
+let stopInsertMode = model => {
+  ...model,
+  handleToSession: IntMap.empty,
+  allItems: [||],
+  selection: None,
 };
 
 let register =

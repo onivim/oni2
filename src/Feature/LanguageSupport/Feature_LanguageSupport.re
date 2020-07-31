@@ -269,7 +269,7 @@ let bufferUpdated =
 let startInsertMode = model => model;
 let stopInsertMode = model => {
   ...model,
-  completion: Completion.stopInsertMode(model.completion)
+  completion: Completion.stopInsertMode(model.completion),
 };
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);

@@ -764,10 +764,9 @@ let update =
     ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
 
   | Vim(msg) =>
+    let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Types.Insert;
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
-
-    let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Types.Insert;
 
     let (state', eff) =
       switch (outmsg) {
@@ -793,16 +792,20 @@ let update =
     let isInInsertMode = Feature_Vim.mode(state'.vim) == Vim.Types.Insert;
 
     // Entered insert mode
-    let languageSupport = if (isInInsertMode && !wasInInsertMode) {
+    let languageSupport =
+      if (isInInsertMode && !wasInInsertMode) {
         state.languageSupport |> Feature_LanguageSupport.startInsertMode;
-    // Exited insert mode
-    } else if (!isInInsertMode && wasInInsertMode) {
+                                                                    // Exited insert mode
+      } else if (!isInInsertMode && wasInInsertMode) {
         state.languageSupport |> Feature_LanguageSupport.stopInsertMode;
-    } else {
-      state.languageSupport
-    };
+      } else {
+        state.languageSupport;
+      };
 
-    ({...state', languageSupport }, eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
+    (
+      {...state', languageSupport},
+      eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+    );
 
   | _ => (state, Effect.none)
   };
