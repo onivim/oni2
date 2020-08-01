@@ -71,6 +71,19 @@ let commonChecks = [
       true;
     },
   ),
+  (
+    "Verify harfbuzz dependency",
+    _ => {
+      Log.infof(m =>
+        m(
+          "harfbuzz versions - compiled: %s linked: %s",
+          Harfbuzz.hb_version_string_compiled(),
+          Harfbuzz.hb_version_string_runtime(),
+        )
+      );
+      true;
+    },
+  ),
 ];
 
 let mainChecks = [
