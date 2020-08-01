@@ -121,6 +121,16 @@ let make = (~theme, ~uiFont, ~editorFont, ()) => {
     <header text="libuv" />
     <version name="Version " version={Luv.Version.string()} />
     // spacer
+    <header text="Harfbuzz" />
+    <version
+      name="Harfbuzz Compiled"
+      version={Harfbuzz.hb_version_string_compiled()}
+    />
+    <version
+      name="Harfbuzz Linked"
+      version={Harfbuzz.hb_version_string_runtime()}
+    />
+    // spacer
     <header text="SDL" />
     <version
       name="SDL Compiled"
