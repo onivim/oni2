@@ -54,18 +54,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     );
   };
 
-  //  let onRegisterSuggestProvider = (handle, selector, client) => {
-  //    let id = "exthost." ++ string_of_int(handle);
-  //    let completionProvider =
-  //      ExtensionCompletionProvider.create(handle, selector, client);
-  //
-  //    dispatch(
-  //      Actions.LanguageFeature(
-  //        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
-  //      ),
-  //    );
-  //  };
-
   let onDiagnosticsChangeMany =
       (owner: string, entries: list(Exthost.Msg.Diagnostics.entry)) => {
     let protocolDiagToDiag: Exthost.Diagnostic.t => Diagnostic.t =

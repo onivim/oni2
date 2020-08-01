@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 open Exthost;
@@ -491,6 +492,18 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
 
       getMeetLocation(~handle, model)
       |> Option.map((location: EditorCoreTypes.Location.t) => {
+           let meetColumn =
+             Exthost.SuggestItem.(
+               switch (result.item.suggestRange) {
+               | Some(SuggestRange.Single({startColumn, _})) =>
+                 startColumn |> Index.fromOneBased
+               | Some(SuggestRange.Combo({insert, _})) =>
+                 Exthost.OneBasedRange.(
+                   insert.startColumn |> Index.fromOneBased
+                 )
+               | None => location.column
+               }
+             );
            (
              {
                ...model,
@@ -503,10 +516,10 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
                selection: None,
              },
              Outmsg.ApplyCompletion({
-               meetColumn: location.column,
+               meetColumn,
                insertText: result.item.insertText,
              }),
-           )
+           );
          })
       |> Option.value(~default);
     };
@@ -958,7 +971,6 @@ module View = {
         Feature_Theme.Colors.Oni.normalModeBackground.from(theme),
     };
 
-    // TODO
     let focused = completions.selection;
 
     let maxWidth =
