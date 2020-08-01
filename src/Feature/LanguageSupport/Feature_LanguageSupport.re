@@ -178,7 +178,12 @@ let update =
 
   | Completion(completionMsg) =>
     let (completion', outmsg) =
-      Completion.update(~maybeBuffer, ~activeCursor=cursorLocation, completionMsg, model.completion);
+      Completion.update(
+        ~maybeBuffer,
+        ~activeCursor=cursorLocation,
+        completionMsg,
+        model.completion,
+      );
 
     (
       {...model, completion: completion'},

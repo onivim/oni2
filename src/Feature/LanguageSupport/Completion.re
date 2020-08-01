@@ -209,7 +209,7 @@ module Session = {
     | Waiting => true
     | Failure(_) => false
     | Completed(_) => true
-    }
+    };
   };
 
   let create = (~buffer, ~base, ~location) => {
@@ -251,15 +251,19 @@ module Session = {
     state: Failure(errorMsg),
   };
 
-  let update = (~buffer, ~base, ~location, previous) =>
+  let update = (~createNew, ~buffer, ~base, ~location, previous) =>
     // If different buffer or location... start over!
     if (Oni_Core.Buffer.getId(buffer)
         != Oni_Core.Buffer.getId(previous.buffer)
         || location != previous.location) {
-      create(~buffer, ~base, ~location);
+      if (createNew) {
+        Some(create(~buffer, ~base, ~location));
+      } else {
+        None;
+      };
     } else {
       // Refine results
-      refine(~base, previous);
+      Some(refine(~base, previous));
     };
 };
 
@@ -370,54 +374,59 @@ let unregister = (~handle, model) => {
   providers: List.filter(prov => prov.handle != handle, model.providers),
 };
 
-let startCompletion = (~buffer, ~activeCursor, model) => {
-    let candidateProviders =
-      model.providers
-      |> List.filter(prov =>
-           Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
-         );
+let startCompletion = (~startNewSession, ~buffer, ~activeCursor, model) => {
+  let candidateProviders =
+    model.providers
+    |> List.filter(prov =>
+         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
+       );
 
-    let handleToSession =
-      List.fold_left(
-        (acc: IntMap.t(Session.t), curr: provider) => {
-          let maybeMeet =
-            CompletionMeet.fromBufferLocation(
-              ~triggerCharacters=curr.triggerCharacters,
-              ~location=activeCursor,
-              buffer,
-            );
+  let handleToSession =
+    List.fold_left(
+      (acc: IntMap.t(Session.t), curr: provider) => {
+        let maybeMeet =
+          CompletionMeet.fromBufferLocation(
+            ~triggerCharacters=curr.triggerCharacters,
+            ~location=activeCursor,
+            buffer,
+          );
 
-          switch (maybeMeet) {
-          | None => acc |> IntMap.remove(curr.handle)
-          | Some({base, location, _}) =>
-            acc
-            |> IntMap.update(
-                 curr.handle,
-                 fun
-                 | None => {
-                     Some(Session.create(~buffer, ~base, ~location));
-                   }
-                 | Some(previous) => {
-                     Some(
-                       Session.update(~buffer, ~base, ~location, previous),
-                     );
-                   },
-               )
-          };
-        },
-        model.handleToSession,
-        candidateProviders,
-      );
+        switch (maybeMeet) {
+        | None => acc |> IntMap.remove(curr.handle)
+        | Some({base, location, _}) =>
+          acc
+          |> IntMap.update(
+               curr.handle,
+               fun
+               | None => {
+                   startNewSession
+                     ? Some(Session.create(~buffer, ~base, ~location)) : None;
+                 }
+               | Some(previous) => {
+                   Session.update(
+                     ~createNew=startNewSession,
+                     ~buffer,
+                     ~base,
+                     ~location,
+                     previous,
+                   );
+                 },
+             )
+        };
+      },
+      model.handleToSession,
+      candidateProviders,
+    );
 
-    let allItems = recomputeAllItems(handleToSession);
-    let selection =
-      Selection.ensureValidFocus(
-        ~count=Array.length(allItems),
-        model.selection,
-      );
+  let allItems = recomputeAllItems(handleToSession);
+  let selection =
+    Selection.ensureValidFocus(
+      ~count=Array.length(allItems),
+      model.selection,
+    );
 
-    {...model, handleToSession, allItems, selection};
-}
+  {...model, handleToSession, allItems, selection};
+};
 
 let bufferUpdated =
     (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
@@ -426,21 +435,27 @@ let bufferUpdated =
 
   let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
 
-  let anySessionsActive = model.handleToSession
-  |> IntMap.exists((_key, session) => session |> Session.isActive);
+  let anySessionsActive =
+    model.handleToSession
+    |> IntMap.exists((_key, session) => session |> Session.isActive);
+
+  // TODO: Account for trigger key
+  ignore(triggerKey);
 
   if (!
         QuickSuggestionsSetting.enabledFor(
           ~syntaxScope,
           quickSuggestionsSetting,
-        ) && !anySessionsActive) {
-    // TODO: Do we need to clear in this case?
-    model;
+        )) {
+    // If we already had started a session (ie, manually triggered) -
+    // make sure to continue, even if suggestions are off
+    if (anySessionsActive) {
+      startCompletion(~startNewSession=false, ~buffer, ~activeCursor, model);
+    } else {
+      model;
+    };
   } else {
-    // TODO: Account for trigger key
-    ignore(triggerKey);
-
-    startCompletion(~buffer, ~activeCursor, model);
+    startCompletion(~startNewSession=true, ~buffer, ~activeCursor, model);
   };
 };
 
@@ -450,9 +465,17 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
   | Command(TriggerSuggest) =>
     maybeBuffer
     |> Option.map(buffer => {
-      (startCompletion(~buffer, ~activeCursor, model), Outmsg.Nothing)
-    })
-    |> Option.value(~default);
+         (
+           startCompletion(
+             ~startNewSession=true,
+             ~buffer,
+             ~activeCursor,
+             model,
+           ),
+           Outmsg.Nothing,
+         )
+       })
+    |> Option.value(~default)
 
   | Command(AcceptSelected) =>
     let allItems = allItems(model);
@@ -464,11 +487,10 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
 
       let handle = result.item.handle;
 
-      prerr_endline ("SELECTED ITEM: " ++ CompletionItem.show(result.item));
+      prerr_endline("SELECTED ITEM: " ++ CompletionItem.show(result.item));
 
       getMeetLocation(~handle, model)
       |> Option.map((location: EditorCoreTypes.Location.t) => {
-           
            (
              {
                ...model,
@@ -602,11 +624,14 @@ module ContextKeys = {
 module KeyBindings = {
   open Oni_Input.Keybindings;
 
-  let suggestWidgetVisible = "editorTextFocus && suggestWidgetVisible" |> WhenExpr.parse;
+  let suggestWidgetVisible =
+    "editorTextFocus && suggestWidgetVisible" |> WhenExpr.parse;
   let acceptOnEnter =
-    "acceptSuggestionOnEnter && suggestWidgetVisible && editorTextFocus" |> WhenExpr.parse;
+    "acceptSuggestionOnEnter && suggestWidgetVisible && editorTextFocus"
+    |> WhenExpr.parse;
 
-  let triggerSuggestCondition = "editorTextFocus && insertMode && !suggestWidgetVisible" |> WhenExpr.parse;
+  let triggerSuggestCondition =
+    "editorTextFocus && insertMode && !suggestWidgetVisible" |> WhenExpr.parse;
 
   let triggerSuggestControlSpace = {
     key: "<C-Space>",
@@ -629,7 +654,7 @@ module KeyBindings = {
     command: Commands.selectNextSuggestion.id,
     condition: suggestWidgetVisible,
   };
-  
+
   let nextSuggestionArrow = {
     key: "<DOWN>",
     command: Commands.selectNextSuggestion.id,
@@ -678,7 +703,12 @@ module Contributions = {
   let configuration = Configuration.[quickSuggestions.spec];
 
   let commands =
-    Commands.[acceptSelected, selectPrevSuggestion, selectNextSuggestion, triggerSuggest];
+    Commands.[
+      acceptSelected,
+      selectPrevSuggestion,
+      selectNextSuggestion,
+      triggerSuggest,
+    ];
 
   let contextKeys = ContextKeys.[suggestWidgetVisible];
 
