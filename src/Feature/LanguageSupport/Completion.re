@@ -6,7 +6,8 @@ open Exthost;
 type command =
   | AcceptSelected
   | SelectPrevious
-  | SelectNext;
+  | SelectNext
+  | TriggerSuggest;
 
 [@deriving show]
 type msg =
@@ -202,6 +203,15 @@ module Session = {
     };
   };
 
+  let isActive = ({state, _}) => {
+    switch (state) {
+    | Accepted => false
+    | Waiting => true
+    | Failure(_) => false
+    | Completed(_) => true
+    }
+  };
+
   let create = (~buffer, ~base, ~location) => {
     state: Waiting,
     buffer,
@@ -360,24 +370,7 @@ let unregister = (~handle, model) => {
   providers: List.filter(prov => prov.handle != handle, model.providers),
 };
 
-let bufferUpdated =
-    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
-  // TODO: Account for syntax scope
-  ignore(syntaxScope);
-
-  let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
-
-  if (!
-        QuickSuggestionsSetting.enabledFor(
-          ~syntaxScope,
-          quickSuggestionsSetting,
-        )) {
-    // TODO: Do we need to clear in this case?
-    model;
-  } else {
-    // TODO: Account for trigger key
-    ignore(triggerKey);
-
+let startCompletion = (~buffer, ~activeCursor, model) => {
     let candidateProviders =
       model.providers
       |> List.filter(prov =>
@@ -424,15 +417,46 @@ let bufferUpdated =
       );
 
     {...model, handleToSession, allItems, selection};
+}
+
+let bufferUpdated =
+    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+  // TODO: Account for syntax scope
+  ignore(syntaxScope);
+
+  let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
+
+  let anySessionsActive = model.handleToSession
+  |> IntMap.exists((_key, session) => session |> Session.isActive);
+
+  if (!
+        QuickSuggestionsSetting.enabledFor(
+          ~syntaxScope,
+          quickSuggestionsSetting,
+        ) && !anySessionsActive) {
+    // TODO: Do we need to clear in this case?
+    model;
+  } else {
+    // TODO: Account for trigger key
+    ignore(triggerKey);
+
+    startCompletion(~buffer, ~activeCursor, model);
   };
 };
 
-let update = (msg, model) => {
+let update = (~maybeBuffer, ~activeCursor, msg, model) => {
+  let default = (model, Outmsg.Nothing);
   switch (msg) {
+  | Command(TriggerSuggest) =>
+    maybeBuffer
+    |> Option.map(buffer => {
+      (startCompletion(~buffer, ~activeCursor, model), Outmsg.Nothing)
+    })
+    |> Option.value(~default);
+
   | Command(AcceptSelected) =>
     let allItems = allItems(model);
 
-    let default = (model, Outmsg.Nothing);
     if (allItems == [||]) {
       default;
     } else {
@@ -560,6 +584,9 @@ module Commands = {
 
   let selectNextSuggestion =
     define("selectNextSuggestion", Command(SelectNext));
+
+  let triggerSuggest =
+    define("editor.action.triggerSuggest", Command(TriggerSuggest));
 };
 
 // CONTEXTKEYS
@@ -575,9 +602,27 @@ module ContextKeys = {
 module KeyBindings = {
   open Oni_Input.Keybindings;
 
-  let suggestWidgetVisible = "suggestWidgetVisible" |> WhenExpr.parse;
+  let suggestWidgetVisible = "editorTextFocus && suggestWidgetVisible" |> WhenExpr.parse;
   let acceptOnEnter =
-    "acceptSuggestionOnEnter && suggestWidgetVisible" |> WhenExpr.parse;
+    "acceptSuggestionOnEnter && suggestWidgetVisible && editorTextFocus" |> WhenExpr.parse;
+
+  let triggerSuggestCondition = "editorTextFocus && insertMode && !suggestWidgetVisible" |> WhenExpr.parse;
+
+  let triggerSuggestControlSpace = {
+    key: "<C-Space>",
+    command: Commands.triggerSuggest.id,
+    condition: triggerSuggestCondition,
+  };
+  let triggerSuggestControlN = {
+    key: "<C-N>",
+    command: Commands.triggerSuggest.id,
+    condition: triggerSuggestCondition,
+  };
+  let triggerSuggestControlP = {
+    key: "<C-N>",
+    command: Commands.triggerSuggest.id,
+    condition: triggerSuggestCondition,
+  };
 
   let nextSuggestion = {
     key: "<C-N>",
@@ -633,12 +678,15 @@ module Contributions = {
   let configuration = Configuration.[quickSuggestions.spec];
 
   let commands =
-    Commands.[acceptSelected, selectPrevSuggestion, selectNextSuggestion];
+    Commands.[acceptSelected, selectPrevSuggestion, selectNextSuggestion, triggerSuggest];
 
   let contextKeys = ContextKeys.[suggestWidgetVisible];
 
   let keybindings =
     KeyBindings.[
+      triggerSuggestControlN,
+      triggerSuggestControlP,
+      triggerSuggestControlSpace,
       nextSuggestion,
       nextSuggestionArrow,
       previousSuggestion,
