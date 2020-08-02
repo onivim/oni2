@@ -21,6 +21,7 @@ type t = {
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
   lastUsed: float,
+  font: Font.t,
 };
 
 let show = _ => "TODO";
@@ -68,10 +69,12 @@ let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
      });
 };
 
-let ofLines = (~id=0, rawLines: array(string)) => {
+let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
   let lines =
     rawLines
-    |> Array.map(BufferLine.make(~indentation=IndentationSettings.default));
+    |> Array.map(
+         BufferLine.make(~font, ~indentation=IndentationSettings.default),
+       );
 
   {
     id,
@@ -86,12 +89,13 @@ let ofLines = (~id=0, rawLines: array(string)) => {
     indentation: None,
     syntaxHighlightingEnabled: true,
     lastUsed: 0.,
+    font,
   };
 };
 
 let initial = ofLines([||]);
 
-let ofMetadata = (~id, ~version, ~filePath, ~modified) => {
+let ofMetadata = (~font=Font.default, ~id, ~version, ~filePath, ~modified) => {
   id,
   version,
   filePath,
@@ -104,6 +108,7 @@ let ofMetadata = (~id, ~version, ~filePath, ~modified) => {
   indentation: None,
   syntaxHighlightingEnabled: true,
   lastUsed: 0.,
+  font,
 };
 
 let getFilePath = (buffer: t) => buffer.filePath;
@@ -180,8 +185,9 @@ let getEstimatedMaxLineLength = buffer => {
 };
 
 let applyUpdate =
-    (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
-  let updateLines = update.lines |> Array.map(BufferLine.make(~indentation));
+    (~indentation, ~font, lines: array(BufferLine.t), update: BufferUpdate.t) => {
+  let updateLines =
+    update.lines |> Array.map(BufferLine.make(~font, ~indentation));
   let startLine = update.startLine |> Index.toZeroBased;
   let endLine = update.endLine |> Index.toZeroBased;
   ArrayEx.replace(
@@ -201,9 +207,11 @@ let isIndentationSet = buf => {
 let setIndentation = (indentation, buf) => {
   let lines =
     buf.lines
-    |> Array.map(line =>
-         BufferLine.raw(line) |> BufferLine.make(~indentation)
-       );
+    |> Array.map(line => {
+         let raw = BufferLine.raw(line);
+         let font = BufferLine.font(line);
+         BufferLine.make(~font, ~indentation, raw);
+       });
   {...buf, lines, indentation: Some(indentation)};
 };
 
@@ -224,16 +232,31 @@ let update = (buf: t, update: BufferUpdate.t) => {
       {
         ...buf,
         version: update.version,
-        lines: update.lines |> Array.map(BufferLine.make(~indentation)),
+        lines:
+          update.lines
+          |> Array.map(BufferLine.make(~font=buf.font, ~indentation)),
       };
     } else {
       {
         ...buf,
         version: update.version,
-        lines: applyUpdate(~indentation, buf.lines, update),
+        lines: applyUpdate(~indentation, ~font=buf.font, buf.lines, update),
       };
     };
   } else {
     buf;
   };
+};
+
+let getFont = buf => buf.font;
+
+let setFont = (font, buf) => {
+  let lines =
+    buf.lines
+    |> Array.map(line => {
+         let raw = BufferLine.raw(line);
+         let indentation = BufferLine.indentation(line);
+         BufferLine.make(~font, ~indentation, raw);
+       });
+  {...buf, font, lines};
 };

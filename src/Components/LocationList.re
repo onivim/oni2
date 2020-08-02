@@ -123,8 +123,7 @@ let item =
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
       let availableWidth = float(width) -. locationWidth;
-      let maxLength =
-        int_of_float(availableWidth /. editorFont.measuredWidth);
+      let maxLength = int_of_float(availableWidth /. editorFont.spaceWidth);
       let charStart = Index.toZeroBased(indexStart);
       let charEnd = Index.toZeroBased(indexEnd);
 
@@ -180,7 +179,7 @@ let%component make =
   let editorFont = {
     ...editorFont,
     fontSize: uiFont.size,
-    measuredWidth: getFontAdvance(editorFont.fontFamily, uiFont.size).width,
+    spaceWidth: getFontAdvance(editorFont.fontFamily, uiFont.size).width,
     // measuredHeight:
     //   editorFont.measuredHeight
     //   *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),

@@ -328,12 +328,7 @@ let update =
         layout:
           Feature_Layout.openEditor(
             ~config,
-            Feature_Editor.Editor.create(
-              ~config,
-              ~font=state.editorFont,
-              ~buffer=editorBuffer,
-              (),
-            ),
+            Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
             state.layout,
           ),
       },
@@ -636,18 +631,35 @@ let update =
     ({...state, changelog: model}, eff);
 
   // TODO: This should live in the editor feature project
-  | EditorFont(Service_Font.FontLoaded(font)) => (
+  | EditorFont(Service_Font.FontLoaded(font)) =>
+    let buffers' =
+      state.buffers |> IntMap.map(Oni_Core.Buffer.setFont(font));
+    (
       {
         ...state,
         editorFont: font,
+        buffers: buffers',
         layout:
           Feature_Layout.map(
-            editor => Feature_Editor.Editor.setFont(~font, editor),
+            editor => {
+              let bufferId = Feature_Editor.Editor.getBufferId(editor);
+              buffers'
+              |> Buffers.getBuffer(bufferId)
+              |> Option.map(buffer => {
+                   let updatedBuffer =
+                     buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+                   Feature_Editor.Editor.updateBuffer(
+                     ~buffer=updatedBuffer,
+                     editor,
+                   );
+                 })
+              |> Option.value(~default=editor);
+            },
             state.layout,
           ),
       },
       Effect.none,
-    )
+    );
   | EditorFont(Service_Font.FontLoadError(message)) => (
       state,
       Internal.notificationEffect(~kind=Error, message),

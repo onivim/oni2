@@ -33,7 +33,7 @@ let renderLine =
   | None => ()
   | Some(selections) =>
     List.iter(
-      Draw.range(~context, ~color=colors.selectionBackground),
+      Draw.rangeByte(~context, ~color=colors.selectionBackground),
       selections,
     )
   };
@@ -42,12 +42,12 @@ let renderLine =
   switch (matchingPairs) {
   | None => ()
   | Some((startPos, endPos)) =>
-    Draw.range(
+    Draw.rangeByte(
       ~context,
       ~color=colors.selectionBackground,
       Range.{start: startPos, stop: startPos},
     );
-    Draw.range(
+    Draw.rangeByte(
       ~context,
       ~color=colors.selectionBackground,
       Range.{start: endPos, stop: endPos},
@@ -62,7 +62,11 @@ let renderLine =
     bufferHighlights,
   )
   |> List.iter(
-       Draw.range(~context, ~padding=1., ~color=colors.findMatchBackground),
+       Draw.rangeByte(
+         ~context,
+         ~padding=1.,
+         ~color=colors.findMatchBackground,
+       ),
      );
 
   /* Draw document highlights */
@@ -72,7 +76,11 @@ let renderLine =
     languageSupport,
   )
   |> List.iter(
-       Draw.range(~context, ~padding=1., ~color=colors.findMatchBackground),
+       Draw.rangeByte(
+         ~context,
+         ~padding=1.,
+         ~color=colors.findMatchBackground,
+       ),
      );
 };
 
@@ -166,9 +174,8 @@ let renderText =
       ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
-      ~leftVisibleColumn,
       ~shouldRenderWhitespace,
-      ~bufferWidthInCharacters,
+      ~bufferWidthInPixels,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -184,6 +191,16 @@ let renderText =
           | _ => Some(List.hd(v))
           }
         };
+      let bufferLine = Editor.viewLine(editor, item).contents;
+      let startPixel = Editor.scrollX(editor);
+      let startCharacter =
+        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine);
+      let endCharacter =
+        BufferLine.Slow.getIndexFromPixel(
+          ~pixel=startPixel +. float(bufferWidthInPixels),
+          bufferLine,
+        );
+
       let tokens =
         getTokensForLine(
           ~editor,
@@ -193,8 +210,8 @@ let renderText =
           ~matchingPairs,
           ~bufferSyntaxHighlights,
           ~selection=selectionRange,
-          leftVisibleColumn,
-          leftVisibleColumn + bufferWidthInCharacters,
+          startCharacter,
+          endCharacter + 1,
           item,
         );
 
@@ -225,6 +242,7 @@ let render =
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
       ~bufferWidthInCharacters,
+      ~bufferWidthInPixels,
     ) => {
   renderEmbellishments(
     ~context,
@@ -268,8 +286,7 @@ let render =
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
-    ~leftVisibleColumn,
     ~shouldRenderWhitespace,
-    ~bufferWidthInCharacters,
+    ~bufferWidthInPixels,
   );
 };

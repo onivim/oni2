@@ -13,7 +13,13 @@ let simpleState = {
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
-    Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    Buffer.ofMetadata(
+      ~font=Font.default,
+      ~id,
+      ~version,
+      ~filePath,
+      ~modified,
+    );
   };
 
   let state =
@@ -37,7 +43,10 @@ let simpleState = {
 let defaultFont: Service_Font.font = {
   fontFamily: Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf"),
   fontSize: 10.,
-  measuredWidth: 10.,
+  spaceWidth: 10.,
+  underscoreWidth: 10.,
+  avgCharWidth: 10.,
+  maxCharWidth: 10.,
   measuredHeight: 10.,
   descenderHeight: 1.,
   smoothing: Revery.Font.Smoothing.default,
@@ -58,7 +67,7 @@ let defaultEditorBuffer =
   defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
 
 let simpleEditor =
-  Editor.create(~config, ~font=defaultFont, ~buffer=defaultEditorBuffer, ())
+  Editor.create(~config, ~buffer=defaultEditorBuffer, ())
   |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {

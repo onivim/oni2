@@ -32,7 +32,7 @@ let createContext =
     editor,
     fontFamily: editorFont.fontFamily,
     fontSize: editorFont.fontSize,
-    charWidth: editorFont.measuredWidth,
+    charWidth: editorFont.spaceWidth,
     charHeight: editorFont.measuredHeight,
     smoothing: editorFont.smoothing,
     features: editorFont.features,
@@ -163,7 +163,10 @@ let underline = (~context, ~color=Revery.Colors.black, r: Range.t) => {
   );
 };
 
-let range = (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
+open {};
+
+let rangeCharacter =
+    (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
   let doublePadding = padding *. 2.;
   let line = Index.toZeroBased(r.start.line);
   let start = Index.toZeroBased(r.start.column);
@@ -181,6 +184,37 @@ let range = (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
     Editor.bufferLineCharacterToPixel(
       ~line=endLine,
       ~characterIndex=endC,
+      context.editor,
+    );
+
+  let lineHeight = Editor.lineHeightInPixels(context.editor);
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
+
+  drawRect(
+    ~context,
+    ~x=startPixelX,
+    ~y=startPixelY,
+    ~height=lineHeight +. doublePadding,
+    ~width=max(stopPixelX -. startPixelX, characterWidth),
+    ~color,
+  );
+};
+
+let rangeByte =
+    (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
+  let doublePadding = padding *. 2.;
+  let line = Index.toZeroBased(r.start.line);
+  let start = Index.toZeroBased(r.start.column);
+  let endC = Index.toZeroBased(r.stop.column);
+  let endLine = Index.toZeroBased(r.stop.line);
+
+  let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
+    Editor.bufferLineByteToPixel(~line, ~byteIndex=start, context.editor);
+
+  let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
+    Editor.bufferLineByteToPixel(
+      ~line=endLine,
+      ~byteIndex=endC,
       context.editor,
     );
 

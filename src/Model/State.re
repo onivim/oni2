@@ -103,12 +103,7 @@ let initial =
     open Feature_Editor;
     let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
     let config = Feature_Configuration.resolver(config);
-    Editor.create(
-      ~config,
-      ~font=Service_Font.default,
-      ~buffer=editorBuffer,
-      (),
-    );
+    Editor.create(~config, ~buffer=editorBuffer, ());
   };
 
   {

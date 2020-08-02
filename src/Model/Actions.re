@@ -27,6 +27,7 @@ type t =
       filePath: option(string),
       isModified: bool,
       version: int,
+      font: Font.t,
       // TODO: This duplication-of-truth is really awkward,
       // but I want to remove it shortly
       buffer: [@opaque] Buffer.t,
