@@ -529,9 +529,6 @@ let startCompletion = (~startNewSession, ~buffer, ~activeCursor, model) => {
 
 let bufferUpdated =
     (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
-  // TODO: Account for syntax scope
-  ignore(syntaxScope);
-
   let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
 
   let anySessionsActive =
@@ -582,55 +579,57 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
     if (allItems == [||]) {
       default;
     } else {
-      let result: Filter.result(CompletionItem.t) = allItems[0];
+      switch (model.selection) {
+      | None => default
+      | Some(focusedIndex) =>
+        let result: Filter.result(CompletionItem.t) = allItems[focusedIndex];
 
-      let handle = result.item.handle;
+        let handle = result.item.handle;
 
-      prerr_endline("COMPLETION: " ++ CompletionItem.show(result.item));
+        getMeetLocation(~handle, model)
+        |> Option.map((location: EditorCoreTypes.Location.t) => {
+             let meetColumn =
+               Exthost.SuggestItem.(
+                 switch (result.item.suggestRange) {
+                 | Some(SuggestRange.Single({startColumn, _})) =>
+                   startColumn |> Index.fromOneBased
+                 | Some(SuggestRange.Combo({insert, _})) =>
+                   Exthost.OneBasedRange.(
+                     insert.startColumn |> Index.fromOneBased
+                   )
+                 | None => location.column
+                 }
+               );
 
-      getMeetLocation(~handle, model)
-      |> Option.map((location: EditorCoreTypes.Location.t) => {
-           let meetColumn =
-             Exthost.SuggestItem.(
-               switch (result.item.suggestRange) {
-               | Some(SuggestRange.Single({startColumn, _})) =>
-                 startColumn |> Index.fromOneBased
-               | Some(SuggestRange.Combo({insert, _})) =>
-                 Exthost.OneBasedRange.(
-                   insert.startColumn |> Index.fromOneBased
-                 )
-               | None => location.column
-               }
+             let effect =
+               Exthost.SuggestItem.InsertTextRules.(
+                 matches(~rule=InsertAsSnippet, result.item.insertTextRules)
+               )
+                 ? Outmsg.InsertSnippet({
+                     meetColumn,
+                     snippet: result.item.insertText,
+                   })
+                 : Outmsg.ApplyCompletion({
+                     meetColumn,
+                     insertText: result.item.insertText,
+                   });
+
+             (
+               {
+                 ...model,
+                 handleToSession:
+                   IntMap.map(
+                     session => {session |> Session.complete},
+                     model.handleToSession,
+                   ),
+                 allItems: [||],
+                 selection: None,
+               },
+               effect,
              );
-
-           let effect =
-             Exthost.SuggestItem.InsertTextRules.(
-               matches(~rule=InsertAsSnippet, result.item.insertTextRules)
-             )
-               ? Outmsg.InsertSnippet({
-                   meetColumn,
-                   snippet: result.item.insertText,
-                 })
-               : Outmsg.ApplyCompletion({
-                   meetColumn,
-                   insertText: result.item.insertText,
-                 });
-
-           (
-             {
-               ...model,
-               handleToSession:
-                 IntMap.map(
-                   session => {session |> Session.complete},
-                   model.handleToSession,
-                 ),
-               allItems: [||],
-               selection: None,
-             },
-             effect,
-           );
-         })
-      |> Option.value(~default);
+           })
+        |> Option.value(~default);
+      };
     };
 
   | Command(SelectNext) =>
