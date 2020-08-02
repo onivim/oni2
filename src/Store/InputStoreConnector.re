@@ -10,7 +10,6 @@ open Oni_Input;
 module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
-module Completions = Feature_LanguageSupport.Completions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Input"));
 

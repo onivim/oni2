@@ -5,6 +5,11 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module ChainedCacheId: {
+  [@deriving show]
+  type t;
+};
+
 module Label: {
   [@deriving show]
   type segment =
@@ -43,6 +48,7 @@ module CompletionContext: {
 };
 
 module CompletionKind: {
+  [@deriving show]
   type t =
     | Method
     | Function
@@ -122,6 +128,7 @@ module MarkdownString: {
 
 module Edit: {
   module SingleEditOperation: {
+    [@deriving show]
     type t = {
       range: OneBasedRange.t,
       text: option(string),
@@ -252,17 +259,47 @@ module RenameLocation: {
 };
 
 module SuggestItem: {
+  module InsertTextRules: {
+    [@deriving show]
+    type rule =
+      | KeepWhitespace // 0b001
+      | InsertAsSnippet; // 0b100
+
+    [@deriving show]
+    type t;
+
+    let matches: (~rule: rule, t) => bool;
+  };
+  module SuggestRange: {
+    [@deriving show]
+    type t =
+      | Single(OneBasedRange.t)
+      | Combo({
+          insert: OneBasedRange.t,
+          replace: OneBasedRange.t,
+        });
+  };
+
+  [@deriving show]
   type t = {
+    chainedCacheId: option(ChainedCacheId.t),
     label: string,
     kind: CompletionKind.t,
     detail: option(string),
-    documentation: option(string),
+    documentation: option(MarkdownString.t),
     sortText: option(string),
     filterText: option(string),
     insertText: option(string),
+    insertTextRules: InsertTextRules.t,
+    suggestRange: option(SuggestRange.t),
+    commitCharacters: list(string),
+    additionalTextEdits: list(Edit.SingleEditOperation.t),
+    command: option(Command.t),
   };
 
-  let decode: Json.decoder(t);
+  let insertText: t => string;
+  let filterText: t => string;
+  let sortText: t => string;
 };
 
 module ReferenceContext: {
@@ -555,14 +592,13 @@ module SignatureHelp: {
 };
 
 module SuggestResult: {
+  [@deriving show]
   type t = {
     completions: list(SuggestItem.t),
     isIncomplete: bool,
   };
 
   let empty: t;
-
-  let decode: Json.decoder(t);
 };
 
 module SymbolKind: {
@@ -1667,6 +1703,16 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let resolveCompletionItem:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~chainedCacheId: ChainedCacheId.t,
+        Client.t
+      ) =>
+      Lwt.t(SuggestItem.t);
 
     let provideDocumentHighlights:
       (

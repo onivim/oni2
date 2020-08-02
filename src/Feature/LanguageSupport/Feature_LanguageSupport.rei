@@ -21,6 +21,14 @@ module Msg: {
 
 type outmsg =
   | Nothing
+  | ApplyCompletion({
+      meetColumn: Index.t,
+      insertText: string,
+    })
+  | InsertSnippet({
+      meetColumn: Index.t,
+      snippet: string,
+    })
   | OpenFile({
       filePath: string,
       location: option(Location.t),
@@ -42,6 +50,19 @@ let update:
   ) =>
   (model, outmsg);
 
+let bufferUpdated:
+  (
+    ~buffer: Oni_Core.Buffer.t,
+    ~config: Oni_Core.Config.resolver,
+    ~activeCursor: Location.t,
+    ~syntaxScope: Oni_Core.SyntaxScope.t,
+    ~triggerKey: option(string),
+    model
+  ) =>
+  model;
+let cursorMoved: (~previous: Location.t, ~current: Location.t, model) => model;
+let startInsertMode: model => model;
+let stopInsertMode: model => model;
 let isFocused: model => bool;
 
 let sub:
@@ -55,8 +76,33 @@ let sub:
   ) =>
   Isolinear.Sub.t(msg);
 
+module Completion: {
+  let isActive: model => bool;
+
+  let providerCount: model => int;
+
+  let availableCompletionCount: model => int;
+
+  module View: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~lineHeight: float,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
+        ~editorFont: Service_Font.font,
+        ~model: model,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
 module Contributions: {
+  let colors: list(ColorTheme.Schema.definition);
   let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
   let keybindings: list(Oni_Input.Keybindings.keybinding);
 };
@@ -78,9 +124,6 @@ module DocumentHighlights: {
 };
 
 // TODO: Remove
-module Completions = Completions;
-module CompletionItem = CompletionItem;
-module CompletionMeet = CompletionMeet;
 module Diagnostic = Diagnostic;
 module Diagnostics = Diagnostics;
 module LanguageFeatures = LanguageFeatures;

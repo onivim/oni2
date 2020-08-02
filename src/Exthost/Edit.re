@@ -1,6 +1,7 @@
 open Oni_Core;
 
 module SingleEditOperation = {
+  [@deriving show]
   type t = {
     range: OneBasedRange.t,
     text: option(string),

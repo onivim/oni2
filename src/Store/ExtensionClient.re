@@ -4,49 +4,8 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
-module ExtensionCompletionProvider = {
-  let suggestionItemToCompletionItem: Exthost.SuggestItem.t => CompletionItem.t =
-    suggestion => {
-      {
-        label: suggestion.label,
-        kind: suggestion.kind,
-        detail: suggestion.detail,
-      };
-    };
-
-  let suggestionsToCompletionItems:
-    Exthost.SuggestResult.t => list(CompletionItem.t) =
-    ({completions, _}) => {
-      completions |> List.map(suggestionItemToCompletionItem);
-    };
-
-  let create =
-      (
-        id: int,
-        selector: Exthost.DocumentSelector.t,
-        client: Exthost.Client.t,
-        (buffer, _completionMeet, location),
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideCompletionItems(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        ~context=
-          Exthost.CompletionContext.{
-            triggerKind: Invoke,
-            triggerCharacter: None,
-          },
-        client,
-      )
-      |> Lwt.map(items => {suggestionsToCompletionItems(items)})
-    });
-  };
-};
 
 module ExtensionDocumentSymbolProvider = {
   let create =
@@ -91,18 +50,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           id,
           documentSymbolProvider,
         ),
-      ),
-    );
-  };
-
-  let onRegisterSuggestProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let completionProvider =
-      ExtensionCompletionProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
       ),
     );
   };
@@ -180,17 +127,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         withClient(
           onRegisterDocumentSymbolProvider(handle, selector, label),
         );
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
-          RegisterSuggestSupport({
-            handle,
-            selector,
-            _,
-            // TODO: Handle additional configuration from suggest registration!
-          }),
-        ) =>
-        withClient(onRegisterSuggestProvider(handle, selector));
         Lwt.return(Reply.okEmpty);
 
       | Diagnostics(Clear({owner})) =>

@@ -75,7 +75,8 @@ runTestWithInput(
     ~timeout=30.0,
     ~name="Validate we also got some completions",
     (state: State.t) =>
-    Array.length(state.completions.filtered) > 0
+    state.languageSupport
+    |> Feature_LanguageSupport.Completion.availableCompletionCount > 0
   );
 
   // Finish input, clear diagnostics

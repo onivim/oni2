@@ -39,13 +39,11 @@ let waitForNewCompletionProviders =
   waitForState(
     ~name=
       "Getting count of current suggest providers: " ++ originalDescription,
-    (State.{languageFeatures, _}) => {
-      let current = LanguageFeatures.getCompletionProviders(languageFeatures);
+    (State.{languageSupport, _}) => {
+      let current =
+        Feature_LanguageSupport.Completion.providerCount(languageSupport);
 
-      Log.info("Current suggest providers: ");
-      List.iter(id => Log.info("-- " ++ id), current);
-
-      existingCompletionCount := List.length(current);
+      existingCompletionCount := current;
       true;
     },
   );
@@ -55,13 +53,11 @@ let waitForNewCompletionProviders =
   waitForState(
     ~timeout=10.0,
     ~name="Waiting for new suggest providers: " ++ originalDescription,
-    (State.{languageFeatures, _}) => {
-      let current = LanguageFeatures.getCompletionProviders(languageFeatures);
+    (State.{languageSupport, _}) => {
+      let current =
+        Feature_LanguageSupport.Completion.providerCount(languageSupport);
 
-      Log.info("Current suggest providers: ");
-      List.iter(id => Log.info("-- " ++ id), current);
-
-      List.length(current) > existingCompletionCount^;
+      current > existingCompletionCount^;
     },
   );
 };

@@ -159,7 +159,7 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
-  let completionUpdater = CompletionStoreConnector.start();
+  //  let completionUpdater = CompletionStoreConnector.start();
 
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
@@ -182,7 +182,7 @@ let start =
       indentationUpdater,
       windowUpdater,
       themeUpdater,
-      completionUpdater,
+      //      completionUpdater,
       titleUpdater,
       Features.update(
         ~grammarRepository,

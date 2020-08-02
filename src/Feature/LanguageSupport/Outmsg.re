@@ -2,6 +2,14 @@ open EditorCoreTypes;
 
 type internalMsg('a) =
   | Nothing
+  | ApplyCompletion({
+      meetColumn: Index.t,
+      insertText: string,
+    })
+  | InsertSnippet({
+      meetColumn: Index.t,
+      snippet: string,
+    })
   | OpenFile({
       filePath: string,
       location: option(Location.t),
@@ -12,8 +20,5 @@ type internalMsg('a) =
 
 let map = f =>
   fun
-  | Nothing => Nothing
-  | OpenFile(fp) => OpenFile(fp)
-  | NotifySuccess(msg) => NotifySuccess(msg)
-  | NotifyFailure(msg) => NotifyFailure(msg)
-  | Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));
+  | Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
+  | outmsg => outmsg;

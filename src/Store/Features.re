@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Isolinear;
 open Oni_Core;
 open Oni_Core.Utility;
@@ -106,6 +107,7 @@ let update =
       };
 
     ({...state, clipboard: model}, eff);
+
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
@@ -170,6 +172,11 @@ let update =
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.selectionOrCursorRange;
 
+    let editorId =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getId;
+
     let languageConfiguration =
       maybeBuffer
       |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
@@ -194,6 +201,24 @@ let update =
       Feature_LanguageSupport.(
         switch (outmsg) {
         | Nothing => Isolinear.Effect.none
+        | ApplyCompletion({insertText, meetColumn}) =>
+          Service_Vim.Effects.applyCompletion(
+            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            Actions.Editor({
+              scope: EditorScope.Editor(editorId),
+              msg: CursorsChanged(cursors),
+            })
+          )
+        | InsertSnippet({meetColumn, snippet}) =>
+          // TODO: Full snippet integration!
+          let insertText = Feature_Snippets.snippetToInsert(~snippet);
+          Service_Vim.Effects.applyCompletion(
+            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            Actions.Editor({
+              scope: EditorScope.Editor(editorId),
+              msg: CursorsChanged(cursors),
+            })
+          );
         | OpenFile({filePath, location}) =>
           Isolinear.Effect.createWithDispatch(
             ~name="feature.languageSupport.openFileByPath", dispatch =>
@@ -596,7 +621,13 @@ let update =
       );
     (state, eff);
 
+  // TODO: Merge into Editor(...) update
   | Editor({scope, msg: CursorsChanged(_) as msg}) =>
+    let prevCursor =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
     let (signatureHelp, shOutMsg) =
@@ -609,6 +640,7 @@ let update =
           Feature_Editor.Editor.getId(editor),
         ),
       );
+
     let shEffect =
       switch (shOutMsg) {
       | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
@@ -616,7 +648,24 @@ let update =
       };
     let (layout, editorEffect) =
       Internal.updateEditors(~scope, ~msg, state.layout);
-    let state = {...state, layout, signatureHelp};
+
+    let newCursor =
+      layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
+    let languageSupport =
+      if (prevCursor != newCursor) {
+        Feature_LanguageSupport.cursorMoved(
+          ~previous=prevCursor,
+          ~current=newCursor,
+          state.languageSupport,
+        );
+      } else {
+        state.languageSupport;
+      };
+
+    let state = {...state, layout, signatureHelp, languageSupport};
     let effect = [shEffect, editorEffect] |> Effect.batch;
     (state, effect);
 
@@ -718,26 +767,50 @@ let update =
       };
     ({...state, signatureHelp: model'}, effect);
 
-  | ExtensionBufferUpdateQueued(buffer) /* {triggerKey}*/ =>
+  | ExtensionBufferUpdateQueued({triggerKey}) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
+    let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
     let (signatureHelp, shOutMsg) =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
         ~maybeEditor=Some(editor),
         ~extHostClient,
         state.signatureHelp,
-        Feature_SignatureHelp.KeyPressed(buffer.triggerKey, false),
+        Feature_SignatureHelp.KeyPressed(triggerKey, false),
       );
     let shEffect =
       switch (shOutMsg) {
       | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
       | _ => Effect.none
       };
-    let effect = [shEffect] |> Effect.batch;
-    ({...state, signatureHelp}, effect);
+
+    let languageSupport' =
+      maybeBuffer
+      |> Option.map(buffer => {
+           let syntaxScope =
+             Feature_Syntax.getSyntaxScope(
+               ~bufferId=Buffer.getId(buffer),
+               ~line=activeCursor.line,
+               ~bytePosition=activeCursor.column |> Index.toZeroBased,
+               state.syntaxHighlights,
+             );
+           let config = Feature_Configuration.resolver(state.config);
+           Feature_LanguageSupport.bufferUpdated(
+             ~buffer,
+             ~config,
+             ~activeCursor,
+             ~syntaxScope,
+             ~triggerKey,
+             state.languageSupport,
+           );
+         })
+      |> Option.value(~default=state.languageSupport);
+
+    ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
 
   | Vim(msg) =>
+    let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Types.Insert;
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
@@ -762,7 +835,23 @@ let update =
         ({...state, layout: layout'}, Isolinear.Effect.none);
       };
 
-    (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
+    let isInInsertMode = Feature_Vim.mode(state'.vim) == Vim.Types.Insert;
+
+    // Entered insert mode
+    let languageSupport =
+      if (isInInsertMode && !wasInInsertMode) {
+        state.languageSupport |> Feature_LanguageSupport.startInsertMode;
+                                                                    // Exited insert mode
+      } else if (!isInInsertMode && wasInInsertMode) {
+        state.languageSupport |> Feature_LanguageSupport.stopInsertMode;
+      } else {
+        state.languageSupport;
+      };
+
+    (
+      {...state', languageSupport},
+      eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+    );
 
   | _ => (state, Effect.none)
   };

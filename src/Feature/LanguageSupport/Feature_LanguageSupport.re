@@ -2,6 +2,7 @@ open EditorCoreTypes;
 
 type model = {
   codeLens: CodeLens.model,
+  completion: Completion.model,
   definition: Definition.model,
   documentHighlights: DocumentHighlights.model,
   formatting: Formatting.model,
@@ -11,6 +12,7 @@ type model = {
 
 let initial = {
   codeLens: CodeLens.initial,
+  completion: Completion.initial,
   definition: Definition.initial,
   documentHighlights: DocumentHighlights.initial,
   formatting: Formatting.initial,
@@ -21,6 +23,7 @@ let initial = {
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
+  | Completion(Completion.msg)
   | Definition(Definition.msg)
   | DocumentHighlights(DocumentHighlights.msg)
   | Formatting(Formatting.msg)
@@ -32,6 +35,14 @@ type msg =
 
 type outmsg =
   | Nothing
+  | ApplyCompletion({
+      meetColumn: Index.t,
+      insertText: string,
+    })
+  | InsertSnippet({
+      meetColumn: Index.t,
+      snippet: string,
+    })
   | OpenFile({
       filePath: string,
       location: option(Location.t),
@@ -43,6 +54,10 @@ type outmsg =
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
     fun
+    | Outmsg.ApplyCompletion({meetColumn, insertText}) =>
+      ApplyCompletion({meetColumn, insertText})
+    | Outmsg.InsertSnippet({meetColumn, snippet}) =>
+      InsertSnippet({meetColumn, snippet})
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
@@ -77,6 +92,7 @@ let update =
   switch (msg) {
   | KeyPressed(_)
   | Pasted(_) => (model, Nothing)
+
   | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
     let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
     ({...model, codeLens: codeLens'}, Nothing);
@@ -99,6 +115,26 @@ let update =
     let references' =
       References.register(~handle, ~selector, model.references);
     ({...model, references: references'}, Nothing);
+
+  | Exthost(
+      RegisterSuggestSupport({
+        handle,
+        selector,
+        triggerCharacters,
+        extensionId,
+        supportsResolveDetails,
+      }),
+    ) =>
+    let completion' =
+      Completion.register(
+        ~handle,
+        ~selector,
+        ~triggerCharacters,
+        ~supportsResolveDetails,
+        ~extensionId,
+        model.completion,
+      );
+    ({...model, completion: completion'}, Nothing);
 
   | Exthost(
       RegisterRangeFormattingSupport({handle, selector, displayName, _}),
@@ -127,6 +163,7 @@ let update =
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
+        completion: Completion.unregister(~handle, model.completion),
         definition: Definition.unregister(~handle, model.definition),
         documentHighlights:
           DocumentHighlights.unregister(~handle, model.documentHighlights),
@@ -136,6 +173,7 @@ let update =
       },
       Nothing,
     )
+
   | Exthost(_) =>
     // TODO:
     (model, Nothing)
@@ -143,6 +181,20 @@ let update =
   | CodeLens(codeLensMsg) =>
     let codeLens' = CodeLens.update(codeLensMsg, model.codeLens);
     ({...model, codeLens: codeLens'}, Nothing);
+
+  | Completion(completionMsg) =>
+    let (completion', outmsg) =
+      Completion.update(
+        ~maybeBuffer,
+        ~activeCursor=cursorLocation,
+        completionMsg,
+        model.completion,
+      );
+
+    (
+      {...model, completion: completion'},
+      outmsg |> map(msg => Completion(msg)),
+    );
 
   | Definition(definitionMsg) =>
     let (definition', outmsg) =
@@ -211,13 +263,45 @@ let update =
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
   };
 
+let bufferUpdated =
+    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+  let completion =
+    Completion.bufferUpdated(
+      ~buffer,
+      ~config,
+      ~activeCursor,
+      ~syntaxScope,
+      ~triggerKey,
+      model.completion,
+    );
+  {...model, completion};
+};
+
+let cursorMoved = (~previous, ~current, model) => {
+  let completion =
+    Completion.cursorMoved(~previous, ~current, model.completion);
+  {...model, completion};
+};
+
+let startInsertMode = model => model;
+let stopInsertMode = model => {
+  ...model,
+  completion: Completion.stopInsertMode(model.completion),
+};
+
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
 
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
+  let colors = Completion.Contributions.colors;
+
   let commands =
     (
+      Completion.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
+    )
+    @ (
       Rename.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Rename(msg)))
     )
@@ -234,17 +318,55 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
+  let configuration = Completion.Contributions.configuration;
+
   let contextKeys =
-    Rename.Contributions.contextKeys
-    |> fromList
-    |> map(({rename, _}: model) => rename);
+    [
+      Rename.Contributions.contextKeys
+      |> fromList
+      |> map(({rename, _}: model) => rename),
+      Completion.Contributions.contextKeys
+      |> fromList
+      |> map(({completion, _}: model) => completion),
+    ]
+    |> unionMany;
 
   let keybindings =
-    Rename.Contributions.keybindings @ Definition.Contributions.keybindings;
+    Rename.Contributions.keybindings
+    @ Definition.Contributions.keybindings
+    @ Completion.Contributions.keybindings;
 };
 
+module OldCompletion = Completion;
 module OldDefinition = Definition;
 module OldHighlights = DocumentHighlights;
+
+module Completion = {
+  let isActive = ({completion, _}: model) =>
+    OldCompletion.isActive(completion);
+
+  let providerCount = ({completion, _}: model) =>
+    OldCompletion.providerCount(completion);
+
+  let availableCompletionCount = ({completion, _}: model) =>
+    OldCompletion.availableCompletionCount(completion);
+
+  module View = {
+    let make =
+        (~x, ~y, ~lineHeight, ~theme, ~tokenTheme, ~editorFont, ~model, ()) => {
+      OldCompletion.View.make(
+        ~x,
+        ~y,
+        ~lineHeight,
+        ~theme,
+        ~tokenTheme,
+        ~editorFont,
+        ~completions=model.completion,
+        (),
+      );
+    };
+  };
+};
 
 module Definition = {
   let get = (~bufferId, {definition, _}: model) => {
@@ -277,7 +399,7 @@ let sub =
       ~activePosition,
       ~visibleBuffers,
       ~client,
-      {definition, documentHighlights, _},
+      {definition, completion, documentHighlights, _},
     ) => {
   let codeLensSub =
     CodeLens.sub(~visibleBuffers, ~client)
@@ -294,6 +416,12 @@ let sub =
         )
         |> Isolinear.Sub.map(msg => Definition(msg));
 
+  let completionSub =
+    !isInsertMode
+      ? Isolinear.Sub.none
+      : OldCompletion.sub(~client, completion)
+        |> Isolinear.Sub.map(msg => Completion(msg));
+
   let documentHighlightsSub =
     OldHighlights.sub(
       ~buffer=activeBuffer,
@@ -303,13 +431,11 @@ let sub =
     )
     |> Isolinear.Sub.map(msg => DocumentHighlights(msg));
 
-  [codeLensSub, definitionSub, documentHighlightsSub] |> Isolinear.Sub.batch;
+  [codeLensSub, completionSub, definitionSub, documentHighlightsSub]
+  |> Isolinear.Sub.batch;
 };
 
 // TODO: Remove
-module Completions = Completions;
-module CompletionItem = CompletionItem;
-module CompletionMeet = CompletionMeet;
 module Diagnostic = Diagnostic;
 module Diagnostics = Diagnostics;
 module LanguageFeatures = LanguageFeatures;

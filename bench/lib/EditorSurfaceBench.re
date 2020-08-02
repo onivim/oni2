@@ -27,7 +27,6 @@ let editor = (editor, buffer, state: State.t) => {
     bufferHighlights={state.bufferHighlights}
     bufferSyntaxHighlights={state.syntaxHighlights}
     diagnostics={state.diagnostics}
-    completions={state.completions}
     tokenTheme={state.tokenTheme}
     languageSupport={state.languageSupport}
     mode={Feature_Vim.mode(state.vim)}

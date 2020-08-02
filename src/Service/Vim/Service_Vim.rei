@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 let forceReload: unit => Isolinear.Effect.t(_);
 let forceOverwrite: unit => Isolinear.Effect.t(_);
 let reload: unit => Isolinear.Effect.t(_);
@@ -18,6 +20,14 @@ module Effects: {
       ~version: int,
       ~edits: list(Vim.Edit.t),
       result(unit, string) => 'msg
+    ) =>
+    Isolinear.Effect.t('msg);
+
+  let applyCompletion:
+    (
+      ~meetColumn: Index.t,
+      ~insertText: string,
+      ~toMsg: list(Vim.Cursor.t) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
 };
