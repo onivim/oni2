@@ -41,7 +41,7 @@ build: [
 depends: [
   # Please keep the lower bound in sync with .travis.yml, dune-project
   # and min_ocaml_version in bootstrap.ml
-  ("ocaml" {>= "4.07"} | ("ocaml" {< "4.07~~"} & "ocamlfind-secondary"))
+  ("ocaml" {>= "4.07" & < "4.12"} | ("ocaml" {< "4.07~~"} & "ocamlfind-secondary"))
   "base-unix"
   "base-threads"
 ]
