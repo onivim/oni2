@@ -473,10 +473,10 @@ module View = {
         ~codeBlockFontSize=editorFont.fontSize,
       );
     let maybeSignature: option(Signature.t) =
-      List.nth_opt(model.signatures, signatureIndex);
+      Base.List.nth(model.signatures, signatureIndex);
     let maybeParameter: option(ParameterInformation.t) =
       Option.bind(maybeSignature, signature =>
-        List.nth_opt(signature.parameters, parameterIndex)
+        Base.List.nth(signature.parameters, parameterIndex)
       );
     let renderLabel = () =>
       switch (maybeSignature, maybeParameter) {
