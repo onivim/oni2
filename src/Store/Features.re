@@ -209,6 +209,16 @@ let update =
               msg: CursorsChanged(cursors),
             })
           )
+        | InsertSnippet({meetColumn, snippet}) =>
+          // TODO: Full snippet integration!
+          let insertText = Feature_Snippets.snippetToInsert(~snippet);
+          Service_Vim.Effects.applyCompletion(
+            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            Actions.Editor({
+              scope: EditorScope.Editor(editorId),
+              msg: CursorsChanged(cursors),
+            })
+          );
         | OpenFile({filePath, location}) =>
           Isolinear.Effect.createWithDispatch(
             ~name="feature.languageSupport.openFileByPath", dispatch =>

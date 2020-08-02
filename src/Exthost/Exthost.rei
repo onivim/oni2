@@ -261,15 +261,15 @@ module RenameLocation: {
 module SuggestItem: {
   module InsertTextRules: {
     [@deriving show]
-    type rule = 
-    | KeepWhitespace // 0b001
-    | InsertAsSnippet; // 0b100
+    type rule =
+      | KeepWhitespace // 0b001
+      | InsertAsSnippet; // 0b100
 
     [@deriving show]
     type t;
 
     let matches: (~rule: rule, t) => bool;
-  }
+  };
   module SuggestRange: {
     [@deriving show]
     type t =

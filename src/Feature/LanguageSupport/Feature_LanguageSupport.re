@@ -39,6 +39,10 @@ type outmsg =
       meetColumn: Index.t,
       insertText: string,
     })
+  | InsertSnippet({
+      meetColumn: Index.t,
+      snippet: string,
+    })
   | OpenFile({
       filePath: string,
       location: option(Location.t),
@@ -52,6 +56,8 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     fun
     | Outmsg.ApplyCompletion({meetColumn, insertText}) =>
       ApplyCompletion({meetColumn, insertText})
+    | Outmsg.InsertSnippet({meetColumn, snippet}) =>
+      InsertSnippet({meetColumn, snippet})
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)

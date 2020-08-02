@@ -6,6 +6,10 @@ type internalMsg('a) =
       meetColumn: Index.t,
       insertText: string,
     })
+  | InsertSnippet({
+      meetColumn: Index.t,
+      snippet: string,
+    })
   | OpenFile({
       filePath: string,
       location: option(Location.t),

@@ -25,6 +25,10 @@ type outmsg =
       meetColumn: Index.t,
       insertText: string,
     })
+  | InsertSnippet({
+      meetColumn: Index.t,
+      snippet: string,
+    })
   | OpenFile({
       filePath: string,
       location: option(Location.t),
@@ -56,12 +60,9 @@ let bufferUpdated:
     model
   ) =>
   model;
-
 let cursorMoved: (~previous: Location.t, ~current: Location.t, model) => model;
-
 let startInsertMode: model => model;
 let stopInsertMode: model => model;
-
 let isFocused: model => bool;
 
 let sub:

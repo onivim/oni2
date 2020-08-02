@@ -3,11 +3,11 @@ open Oni_Core;
 
 module InsertTextRules = {
   // Must be kept in sync:
-  // https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/editor/common/modes.ts#L439 // 
+  // https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/editor/common/modes.ts#L439 //
   [@deriving show]
-  type rule = 
-  | KeepWhitespace // 0b001
-  | InsertAsSnippet; // 0b100
+  type rule =
+    | KeepWhitespace // 0b001
+    | InsertAsSnippet; // 0b100
 
   [@deriving show]
   type t = list(rule);
@@ -15,10 +15,10 @@ module InsertTextRules = {
   let none = [];
 
   let ofInt = ruleAsInt => {
-    let keepWhitespace = (ruleAsInt land 0b001) == 0b001;
-    let insertAsSnippet = (ruleAsInt land 0b100) == 0b100;
+    let keepWhitespace = ruleAsInt land 0b001 == 0b001;
+    let insertAsSnippet = ruleAsInt land 0b100 == 0b100;
 
-    switch ((keepWhitespace, insertAsSnippet)) {
+    switch (keepWhitespace, insertAsSnippet) {
     | (true, true) => [KeepWhitespace, InsertAsSnippet]
     | (true, false) => [KeepWhitespace]
     | (false, true) => [InsertAsSnippet]
@@ -27,13 +27,15 @@ module InsertTextRules = {
   };
 
   let matches = (~rule: rule, rules) => {
-    rules
-    |> List.exists(r => r == rule)
+    rules |> List.exists(r => r == rule);
   };
 
-  let decode = Json.Decode.({
-    int |> map(ofInt)
-  });
+  let decode =
+    Json.Decode.(
+      {
+        int |> map(ofInt);
+      }
+    );
 };
 
 module SuggestRange = {
@@ -142,9 +144,12 @@ module Dto = {
         let sortText = field.optional("e", string);
         let filterText = field.optional("f", string);
         let insertText = field.optional("h", string);
-        let insertTextRules = field.withDefault("i",
-        InsertTextRules.none,
-        InsertTextRules.decode);
+        let insertTextRules =
+          field.withDefault(
+            "i",
+            InsertTextRules.none,
+            InsertTextRules.decode,
+          );
         let suggestRange = field.optional("j", SuggestRange.decode);
         let commitCharacters = field.withDefault("k", [], list(string));
         let additionalTextEdits =

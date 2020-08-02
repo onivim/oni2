@@ -138,6 +138,7 @@ module CompletionItem = {
     detail: option(string),
     documentation: option(Exthost.MarkdownString.t),
     insertText: string,
+    insertTextRules: Exthost.SuggestItem.InsertTextRules.t,
     sortText: string,
     suggestRange: option(Exthost.SuggestItem.SuggestRange.t),
     commitCharacters: list(string),
@@ -153,6 +154,7 @@ module CompletionItem = {
     detail: item.detail,
     documentation: item.documentation,
     insertText: item |> Exthost.SuggestItem.insertText,
+    insertTextRules: item.insertTextRules,
     sortText: item |> Exthost.SuggestItem.sortText,
     suggestRange: item.suggestRange,
     commitCharacters: item.commitCharacters,
@@ -584,7 +586,7 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
 
       let handle = result.item.handle;
 
-      prerr_endline ("COMPLETION: " ++ CompletionItem.show(result.item));
+      prerr_endline("COMPLETION: " ++ CompletionItem.show(result.item));
 
       getMeetLocation(~handle, model)
       |> Option.map((location: EditorCoreTypes.Location.t) => {
@@ -600,6 +602,20 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
                | None => location.column
                }
              );
+
+           let effect =
+             Exthost.SuggestItem.InsertTextRules.(
+               matches(~rule=InsertAsSnippet, result.item.insertTextRules)
+             )
+               ? Outmsg.InsertSnippet({
+                   meetColumn,
+                   snippet: result.item.insertText,
+                 })
+               : Outmsg.ApplyCompletion({
+                   meetColumn,
+                   insertText: result.item.insertText,
+                 });
+
            (
              {
                ...model,
@@ -611,10 +627,7 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
                allItems: [||],
                selection: None,
              },
-             Outmsg.ApplyCompletion({
-               meetColumn,
-               insertText: result.item.insertText,
-             }),
+             effect,
            );
          })
       |> Option.value(~default);
