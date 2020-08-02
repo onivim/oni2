@@ -1,6 +1,41 @@
 module ExtCommand = Command;
 open Oni_Core;
 
+module InsertTextRules = {
+  // Must be kept in sync:
+  // https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/editor/common/modes.ts#L439 // 
+  [@deriving show]
+  type rule = 
+  | KeepWhitespace // 0b001
+  | InsertAsSnippet; // 0b100
+
+  [@deriving show]
+  type t = list(rule);
+
+  let none = [];
+
+  let ofInt = ruleAsInt => {
+    let keepWhitespace = (ruleAsInt land 0b001) == 0b001;
+    let insertAsSnippet = (ruleAsInt land 0b100) == 0b100;
+
+    switch ((keepWhitespace, insertAsSnippet)) {
+    | (true, true) => [KeepWhitespace, InsertAsSnippet]
+    | (true, false) => [KeepWhitespace]
+    | (false, true) => [InsertAsSnippet]
+    | (false, false) => []
+    };
+  };
+
+  let matches = (~rule: rule, rules) => {
+    rules
+    |> List.exists(r => r == rule)
+  };
+
+  let decode = Json.Decode.({
+    int |> map(ofInt)
+  });
+};
+
 module SuggestRange = {
   [@deriving show]
   type t =
@@ -54,12 +89,12 @@ type t = {
   sortText: option(string),
   filterText: option(string),
   insertText: option(string),
+  insertTextRules: InsertTextRules.t,
   suggestRange: option(SuggestRange.t),
   commitCharacters: list(string),
   additionalTextEdits: list(Edit.SingleEditOperation.t),
   command: option(ExtCommand.t),
   // TODO:
-  // insertTextRules
   // kindModifer
   // chainedCacheId?
 };
@@ -107,6 +142,9 @@ module Dto = {
         let sortText = field.optional("e", string);
         let filterText = field.optional("f", string);
         let insertText = field.optional("h", string);
+        let insertTextRules = field.withDefault("i",
+        InsertTextRules.none,
+        InsertTextRules.decode);
         let suggestRange = field.optional("j", SuggestRange.decode);
         let commitCharacters = field.withDefault("k", [], list(string));
         let additionalTextEdits =
@@ -122,6 +160,7 @@ module Dto = {
           sortText,
           filterText,
           insertText,
+          insertTextRules,
           suggestRange,
           commitCharacters,
           additionalTextEdits,

@@ -259,6 +259,17 @@ module RenameLocation: {
 };
 
 module SuggestItem: {
+  module InsertTextRules: {
+    [@deriving show]
+    type rule = 
+    | KeepWhitespace // 0b001
+    | InsertAsSnippet; // 0b100
+
+    [@deriving show]
+    type t;
+
+    let matches: (~rule: rule, t) => bool;
+  }
   module SuggestRange: {
     [@deriving show]
     type t =
@@ -279,6 +290,7 @@ module SuggestItem: {
     sortText: option(string),
     filterText: option(string),
     insertText: option(string),
+    insertTextRules: InsertTextRules.t,
     suggestRange: option(SuggestRange.t),
     commitCharacters: list(string),
     additionalTextEdits: list(Edit.SingleEditOperation.t),

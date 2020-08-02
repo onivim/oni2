@@ -584,6 +584,8 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
 
       let handle = result.item.handle;
 
+      prerr_endline ("COMPLETION: " ++ CompletionItem.show(result.item));
+
       getMeetLocation(~handle, model)
       |> Option.map((location: EditorCoreTypes.Location.t) => {
            let meetColumn =
