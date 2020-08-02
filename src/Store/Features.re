@@ -616,7 +616,13 @@ let update =
       );
     (state, eff);
 
+  // TODO: Merge into Editor(...) update
   | Editor({scope, msg: CursorsChanged(_) as msg}) =>
+    let prevCursor =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
     let (signatureHelp, shOutMsg) =
@@ -629,6 +635,7 @@ let update =
           Feature_Editor.Editor.getId(editor),
         ),
       );
+
     let shEffect =
       switch (shOutMsg) {
       | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
@@ -636,7 +643,24 @@ let update =
       };
     let (layout, editorEffect) =
       Internal.updateEditors(~scope, ~msg, state.layout);
-    let state = {...state, layout, signatureHelp};
+
+    let newCursor =
+      layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
+    let languageSupport =
+      if (prevCursor != newCursor) {
+        Feature_LanguageSupport.cursorMoved(
+          ~previous=prevCursor,
+          ~current=newCursor,
+          state.languageSupport,
+        );
+      } else {
+        state.languageSupport;
+      };
+
+    let state = {...state, layout, signatureHelp, languageSupport};
     let effect = [shEffect, editorEffect] |> Effect.batch;
     (state, effect);
 

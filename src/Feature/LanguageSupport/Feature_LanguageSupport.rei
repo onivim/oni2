@@ -57,6 +57,8 @@ let bufferUpdated:
   ) =>
   model;
 
+let cursorMoved: (~previous: Location.t, ~current: Location.t, model) => model;
+
 let startInsertMode: model => model;
 let stopInsertMode: model => model;
 

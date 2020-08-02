@@ -259,7 +259,7 @@ let update =
 
 let bufferUpdated =
     (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
-  let completion' =
+  let completion =
     Completion.bufferUpdated(
       ~buffer,
       ~config,
@@ -268,7 +268,13 @@ let bufferUpdated =
       ~triggerKey,
       model.completion,
     );
-  {...model, completion: completion'};
+  {...model, completion};
+};
+
+let cursorMoved = (~previous, ~current, model) => {
+  let completion =
+    Completion.cursorMoved(~previous, ~current, model.completion);
+  {...model, completion};
 };
 
 let startInsertMode = model => model;

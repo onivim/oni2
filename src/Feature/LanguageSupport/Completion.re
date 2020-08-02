@@ -348,6 +348,43 @@ let stopInsertMode = model => {
   selection: None,
 };
 
+let cursorMoved =
+    (~previous as _, ~current: EditorCoreTypes.Location.t, model) => {
+  // Filter providers, such that the completion meets are still
+  // valid in the context of the new cursor position
+
+  let isCompletionMeetStillValid = (meetLocation: EditorCoreTypes.Location.t) => {
+    // If the line changed, the meet is no longer valid
+    meetLocation.line == current.line
+    // If the cursor moved before the meet, on the same line,
+    // it is no longer valid. The after case is a bit trickier -
+    // the cursor moves first, before we get the buffer update,
+    // so the meet may not be valid until the buffer update comes through.
+    // We'll allow cursor moves after the meet, for now.
+    && Index.toZeroBased(meetLocation.column)
+    <= Index.toZeroBased(current.column);
+  };
+
+  let handleToSession =
+    IntMap.filter(
+      (_key, session: Session.t) => {
+        isCompletionMeetStillValid(Session.(session.location))
+      },
+      model.handleToSession,
+    );
+
+  let allItems = recomputeAllItems(handleToSession);
+
+  let count = Array.length(allItems);
+
+  {
+    ...model,
+    handleToSession,
+    allItems,
+    selection: Selection.ensureValidFocus(~count, model.selection),
+  };
+};
+
 let register =
     (
       ~handle,
