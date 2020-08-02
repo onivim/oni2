@@ -16,6 +16,13 @@ let create = (~startLineNumber, ~endLineNumber, ~startColumn, ~endColumn, ()) =>
   endColumn,
 };
 
+let one = {
+  startLineNumber: 1,
+  endLineNumber: 1,
+  startColumn: 1,
+  endColumn: 1,
+};
+
 let ofRange = (r: Range.t) => {
   startLineNumber: r.start.line |> Index.toOneBased,
   endLineNumber: r.stop.line |> Index.toOneBased,
@@ -50,4 +57,14 @@ let decode =
         }
       );
     }
+  );
+
+let encode = range =>
+  Json.Encode.(
+    obj([
+      ("startLineNumber", range.startLineNumber |> int),
+      ("endLineNumber", range.endLineNumber |> int),
+      ("startColumn", range.startColumn |> int),
+      ("endColumn", range.endColumn |> int),
+    ])
   );

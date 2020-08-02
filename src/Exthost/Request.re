@@ -243,7 +243,7 @@ module LanguageFeatures = {
     // empty set of suggestions.
     let decoder =
       Json.Decode.(
-        nullable(SuggestResult.decode)
+        nullable(SuggestResult.Dto.decode)
         |> map(
              fun
              | Some(suggestResult) => suggestResult

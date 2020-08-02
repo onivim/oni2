@@ -266,6 +266,7 @@ module SuggestItem: {
 
   [@deriving show]
   type t = {
+    id: option(int),
     label: string,
     kind: CompletionKind.t,
     detail: option(string),
@@ -584,7 +585,7 @@ module SuggestResult: {
 
   let empty: t;
 
-  let decode: Json.decoder(t);
+  //let decode: Json.decoder(t);
 };
 
 module SymbolKind: {
@@ -1689,6 +1690,15 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(SuggestResult.t);
+
+    let resolveCompletionItem: (
+      ~handle: int,
+      ~resource: Uri.t,
+      ~position: OneBasedPosition.t,
+      ~context: CompletionContext.t,
+      ~suggestion: SuggestItem.t,
+      Client.t
+    ) => Lwt.t(SuggestResult.t);
 
     let provideDocumentHighlights:
       (
