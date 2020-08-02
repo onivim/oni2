@@ -272,11 +272,11 @@ module LanguageFeatures = {
         ~handle: int,
         ~resource: Uri.t,
         ~position: OneBasedPosition.t,
-        ~suggestion: SuggestItem.t,
+        ~chainedCacheId: ChainedCacheId.t,
         client,
       ) => {
     Client.request(
-      ~decoder=SuggestItem.decode,
+      ~decoder=SuggestItem.Dto.decode,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$resolveCompletionItem",
@@ -285,7 +285,7 @@ module LanguageFeatures = {
           `Int(handle),
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
-          suggestion |> Json.Encode.encode_value(SuggestItem.encode),
+          chainedCacheId |> Json.Encode.encode_value(ChainedCacheId.encode),
         ]),
       client,
     );

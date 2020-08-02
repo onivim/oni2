@@ -20,6 +20,14 @@ type msg =
   | CompletionError({
       handle: int,
       errorMsg: string,
+    })
+  | CompletionDetailsAvailable({
+      handle: int,
+      suggestItem: Exthost.SuggestItem.t,
+    })
+  | CompletionDetailsError({
+      handle: int,
+      errorMsg: string,
     });
 
 [@deriving show]
@@ -123,11 +131,12 @@ module Configuration = {
 module CompletionItem = {
   [@deriving show]
   type t = {
+    chainedCacheId: option(Exthost.ChainedCacheId.t),
     handle: int,
     label: string,
     kind: Exthost.CompletionKind.t,
     detail: option(string),
-    documentation: option(string),
+    documentation: option(Exthost.MarkdownString.t),
     insertText: string,
     sortText: string,
     suggestRange: option(Exthost.SuggestItem.SuggestRange.t),
@@ -137,6 +146,7 @@ module CompletionItem = {
   };
 
   let create = (~handle, item: Exthost.SuggestItem.t) => {
+    chainedCacheId: item.chainedCacheId,
     handle,
     label: item.label,
     kind: item.kind,
@@ -170,6 +180,7 @@ module Session = {
     buffer: [@opaque] Oni_Core.Buffer.t,
     base: string,
     location: EditorCoreTypes.Location.t,
+    supportsResolve: bool,
   };
 
   let complete = session => {...session, state: Accepted};
@@ -204,6 +215,27 @@ module Session = {
     };
   };
 
+  let updateItem = (~item: Exthost.SuggestItem.t, {state, _} as model) => {
+    switch (state) {
+    | Waiting
+    | Failure(_)
+    | Accepted => model
+    | Completed({allItems, _}) =>
+      let allItems =
+        allItems
+        |> List.map((previousItem: Exthost.SuggestItem.t) =>
+             if (previousItem.chainedCacheId == item.chainedCacheId) {
+               item;
+             } else {
+               previousItem;
+             }
+           );
+
+      let filteredItems = filter(~query=model.base, allItems);
+      {...model, state: Completed({filteredItems, allItems})};
+    };
+  };
+
   let isActive = ({state, _}) => {
     switch (state) {
     | Accepted => false
@@ -213,11 +245,12 @@ module Session = {
     };
   };
 
-  let create = (~buffer, ~base, ~location) => {
+  let create = (~buffer, ~base, ~location, ~supportsResolve) => {
     state: Waiting,
     buffer,
     base,
     location,
+    supportsResolve,
   };
 
   let refine = (~base, current) => {
@@ -258,7 +291,14 @@ module Session = {
         != Oni_Core.Buffer.getId(previous.buffer)
         || location != previous.location) {
       if (createNew) {
-        Some(create(~buffer, ~base, ~location));
+        Some(
+          create(
+            ~buffer,
+            ~base,
+            ~location,
+            ~supportsResolve=previous.supportsResolve,
+          ),
+        );
       } else {
         None;
       };
@@ -336,6 +376,17 @@ let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
 };
 
 let allItems = ({allItems, _}) => allItems;
+
+let focused = ({allItems, selection, _}) => {
+  selection
+  |> OptionEx.flatMap(idx =>
+       if (idx < Array.length(allItems) && idx >= 0) {
+         Some(allItems[idx]);
+       } else {
+         None;
+       }
+     );
+};
 
 let isActive = (model: model) => {
   model.allItems |> Array.length > 0;
@@ -438,7 +489,15 @@ let startCompletion = (~startNewSession, ~buffer, ~activeCursor, model) => {
                fun
                | None => {
                    startNewSession
-                     ? Some(Session.create(~buffer, ~base, ~location)) : None;
+                     ? Some(
+                         Session.create(
+                           ~buffer,
+                           ~base,
+                           ~location,
+                           ~supportsResolve=curr.supportsResolveDetails,
+                         ),
+                       )
+                     : None;
                  }
                | Some(previous) => {
                    Session.update(
@@ -524,8 +583,6 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
       let result: Filter.result(CompletionItem.t) = allItems[0];
 
       let handle = result.item.handle;
-
-      prerr_endline("SELECTED ITEM: " ++ CompletionItem.show(result.item));
 
       getMeetLocation(~handle, model)
       |> Option.map((location: EditorCoreTypes.Location.t) => {
@@ -613,34 +670,86 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
       },
       Outmsg.Nothing,
     )
+
+  | CompletionDetailsAvailable({handle, suggestItem}) =>
+    let handleToSession =
+      model.handleToSession
+      |> IntMap.update(
+           handle,
+           Option.map(prev => Session.updateItem(~item=suggestItem, prev)),
+         );
+
+    let allItems = recomputeAllItems(handleToSession);
+    ({...model, handleToSession, allItems}, Outmsg.Nothing);
+
+  | CompletionDetailsError(_) => (model, Outmsg.Nothing)
   };
 };
 
 let sub = (~client, model) => {
-  model.handleToSession
-  |> IntMap.bindings
-  |> List.map(((handle: int, meet: Session.t)) => {
-       Service_Exthost.Sub.completionItems(
-         // TODO: proper trigger kind
-         ~context=
-           Exthost.CompletionContext.{
-             triggerKind: Invoke,
-             triggerCharacter: None,
-           },
-         ~handle,
-         ~buffer=meet.buffer,
-         ~position=meet.location,
-         ~toMsg=
-           suggestResult => {
-             switch (suggestResult) {
-             | Ok(v) => CompletionResultAvailable({handle, suggestResult: v})
-             | Error(errorMsg) => CompletionError({handle, errorMsg})
-             }
-           },
-         client,
-       )
-     })
-  |> Isolinear.Sub.batch;
+  // Subs for each pending handle..
+  let handleSubs =
+    model.handleToSession
+    |> IntMap.bindings
+    |> List.map(((handle: int, meet: Session.t)) => {
+         Service_Exthost.Sub.completionItems(
+           // TODO: proper trigger kind
+           ~context=
+             Exthost.CompletionContext.{
+               triggerKind: Invoke,
+               triggerCharacter: None,
+             },
+           ~handle,
+           ~buffer=meet.buffer,
+           ~position=meet.location,
+           ~toMsg=
+             suggestResult => {
+               switch (suggestResult) {
+               | Ok(v) =>
+                 CompletionResultAvailable({handle, suggestResult: v})
+               | Error(errorMsg) => CompletionError({handle, errorMsg})
+               }
+             },
+           client,
+         )
+       });
+
+  // And subs for the current item, if the handle supports resolution
+  let resolveSub =
+    model
+    |> focused
+    |> OptionEx.flatMap((focusedItem: Filter.result(CompletionItem.t)) => {
+         let handle = focusedItem.item.handle;
+
+         model.handleToSession
+         |> IntMap.find_opt(handle)
+         |> OptionEx.flatMap(
+              ({supportsResolve, buffer, location, _}: Session.t) =>
+              if (supportsResolve) {
+                focusedItem.item.chainedCacheId
+                |> Option.map(chainedCacheId => {
+                     Service_Exthost.Sub.completionItem(
+                       ~handle,
+                       ~chainedCacheId,
+                       ~buffer,
+                       ~position=location,
+                       ~toMsg=
+                         fun
+                         | Ok(suggestItem) =>
+                           CompletionDetailsAvailable({handle, suggestItem})
+                         | Error(errorMsg) =>
+                           CompletionDetailsError({handle, errorMsg}),
+                       client,
+                     )
+                   });
+              } else {
+                None;
+              }
+            );
+       })
+    |> Option.value(~default=Isolinear.Sub.none);
+
+  [resolveSub, ...handleSubs] |> Isolinear.Sub.batch;
 };
 
 // COMMANDS

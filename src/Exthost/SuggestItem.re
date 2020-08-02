@@ -46,11 +46,11 @@ module SuggestRange = {
 
 [@deriving show]
 type t = {
-  id: option(int),
+  chainedCacheId: option(ChainedCacheId.t),
   label: string,
   kind: CompletionKind.t,
   detail: option(string),
-  documentation: option(string),
+  documentation: option(MarkdownString.t),
   sortText: option(string),
   filterText: option(string),
   insertText: option(string),
@@ -102,12 +102,8 @@ module Dto = {
           |> CompletionKind.ofInt
           |> Option.value(~default=CompletionKind.Method);
 
-        let id = field.optional("_id", int);
-
         let detail = field.optional("c", string);
-        // TODO: Handle parsing correctly
-        // There are other types besides string that documentation can take..
-        //let documentation = field.optional("d", string);
+        let documentation = field.optional("d", MarkdownString.decode);
         let sortText = field.optional("e", string);
         let filterText = field.optional("f", string);
         let insertText = field.optional("h", string);
@@ -116,12 +112,13 @@ module Dto = {
         let additionalTextEdits =
           field.withDefault("l", [], list(Edit.SingleEditOperation.decode));
         let command = field.optional("m", ExtCommand.decode);
+        let chainedCacheId = field.optional("x", ChainedCacheId.decode);
         {
-          id,
+          chainedCacheId,
           label,
           kind,
           detail,
-          documentation: None,
+          documentation,
           sortText,
           filterText,
           insertText,
@@ -133,55 +130,6 @@ module Dto = {
       })
     );
   };
-};
-
-let decode = {
-  Json.Decode.(
-    obj(({field, _}) => {
-      // These fields come from the `ISuggestDataDtoField` definition:
-      // https://github.com/onivim/vscode-exthost/blob/50bef147f7bbd250015361a4e3cad3305f65bc27/src/vs/workbench/api/common/extHost.protocol.ts#L1089
-      let label = field.required("label", string);
-
-      let kind =
-        field.required("kind", int)
-        |> CompletionKind.ofInt
-        |> Option.value(~default=CompletionKind.Method);
-
-      let id = field.optional("_id", int);
-
-      let detail = field.optional("detail", string);
-      // TODO: Handle parsing correctly
-      // There are other types besides string that documentation can take..
-      //let documentation = field.optional("d", string);
-      let sortText = field.optional("sortText", string);
-      let filterText = field.optional("filterText", string);
-      let insertText = field.optional("insertText", string);
-      let suggestRange = field.optional("range", SuggestRange.decode);
-      let commitCharacters =
-        field.withDefault("commitCharacters", [], list(string));
-      let additionalTextEdits =
-        field.withDefault(
-          "additionalTextEdits",
-          [],
-          list(Edit.SingleEditOperation.decode),
-        );
-      let command = field.optional("command", ExtCommand.decode);
-      {
-        id,
-        label,
-        kind,
-        detail,
-        documentation: None,
-        sortText,
-        filterText,
-        insertText,
-        suggestRange,
-        commitCharacters,
-        additionalTextEdits,
-        command,
-      };
-    })
-  );
 };
 
 let encode = suggestItem =>

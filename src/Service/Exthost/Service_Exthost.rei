@@ -119,6 +119,17 @@ module Sub: {
     ) =>
     Isolinear.Sub.t('a);
 
+  let completionItem:
+    (
+      ~handle: int,
+      ~chainedCacheId: Exthost.ChainedCacheId.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: result(Exthost.SuggestItem.t, string) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
   let definition:
     (
       ~handle: int,

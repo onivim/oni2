@@ -5,6 +5,11 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module ChainedCacheId: {
+  [@deriving show]
+  type t;
+};
+
 module Label: {
   [@deriving show]
   type segment =
@@ -266,11 +271,11 @@ module SuggestItem: {
 
   [@deriving show]
   type t = {
-    id: option(int),
+    chainedCacheId: option(ChainedCacheId.t),
     label: string,
     kind: CompletionKind.t,
     detail: option(string),
-    documentation: option(string),
+    documentation: option(MarkdownString.t),
     sortText: option(string),
     filterText: option(string),
     insertText: option(string),
@@ -1692,7 +1697,7 @@ module Request: {
         ~handle: int,
         ~resource: Uri.t,
         ~position: OneBasedPosition.t,
-        ~suggestion: SuggestItem.t,
+        ~chainedCacheId: ChainedCacheId.t,
         Client.t
       ) =>
       Lwt.t(SuggestItem.t);

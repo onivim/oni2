@@ -41,6 +41,11 @@ function activate(context) {
             provideCompletionItems: (document, position, token, context) => {
                 return [vscode.CompletionItem("HelloWorld"), vscode.CompletionItem("HelloAgain")]
             },
+            resolveCompletionItem: (completionItem, token) => {
+                completionItem.documentation = "RESOLVED documentation:  "+ completionItem.label;
+                completionItem.detail = "RESOLVED detail: " + completionItem.label;
+                return completionItem;
+            }
         }),
     )
 
