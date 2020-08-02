@@ -283,8 +283,6 @@ module SuggestItem: {
   let insertText: t => string;
   let filterText: t => string;
   let sortText: t => string;
-
-  let decode: Json.decoder(t);
 };
 
 module ReferenceContext: {
@@ -584,8 +582,6 @@ module SuggestResult: {
   };
 
   let empty: t;
-
-  //let decode: Json.decoder(t);
 };
 
 module SymbolKind: {
@@ -1691,14 +1687,15 @@ module Request: {
       ) =>
       Lwt.t(SuggestResult.t);
 
-    let resolveCompletionItem: (
-      ~handle: int,
-      ~resource: Uri.t,
-      ~position: OneBasedPosition.t,
-      ~context: CompletionContext.t,
-      ~suggestion: SuggestItem.t,
-      Client.t
-    ) => Lwt.t(SuggestResult.t);
+    let resolveCompletionItem:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~suggestion: SuggestItem.t,
+        Client.t
+      ) =>
+      Lwt.t(SuggestItem.t);
 
     let provideDocumentHighlights:
       (

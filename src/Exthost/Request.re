@@ -267,6 +267,30 @@ module LanguageFeatures = {
     );
   };
 
+  let resolveCompletionItem =
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~suggestion: SuggestItem.t,
+        client,
+      ) => {
+    Client.request(
+      ~decoder=SuggestItem.decode,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveCompletionItem",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          suggestion |> Json.Encode.encode_value(SuggestItem.encode),
+        ]),
+      client,
+    );
+  };
+
   module Internal = {
     let provideDefinitionLink =
         (~handle, ~resource, ~position, method, client) => {
