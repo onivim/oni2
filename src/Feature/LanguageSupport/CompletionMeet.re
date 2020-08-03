@@ -134,7 +134,7 @@ let%test_module "createFromLine" =
 
      let font: Oni_Core.Font.t = {
        ...Font.default,
-       fontFamily: Revery.Font.Family.defaultMono,
+       fontFamily: Revery.Font.Family.default,
      };
 
      let makeLine = str =>
