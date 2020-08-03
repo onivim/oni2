@@ -5,6 +5,7 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("Buffer", ({describe, _}) => {
   describe("fileformats", ({test, _}) => {
@@ -325,7 +326,7 @@ describe("Buffer", ({describe, _}) => {
       expect.bool(List.hd(modifyVals^)).toBe(true);
 
       // Switching mode shouldn't trigger a modified change
-      input("<esc>");
+      key("<esc>");
       expect.int(List.length(modifyVals^)).toBe(1);
 
       // ..undo should, though
@@ -334,7 +335,7 @@ describe("Buffer", ({describe, _}) => {
       expect.bool(List.hd(modifyVals^)).toBe(false);
 
       // ..and redo
-      input("<c-r>");
+      key("<c-r>");
       expect.int(List.length(modifyVals^)).toBe(3);
       expect.bool(List.hd(modifyVals^)).toBe(true);
 
@@ -460,12 +461,12 @@ describe("Buffer", ({describe, _}) => {
 
       expect.bool(Buffer.getCurrent() == buf2).toBe(true);
 
-      input("<c-o>");
+      key("<c-o>");
       expect.bool(Buffer.getCurrent() == buf1).toBe(true);
       expect.int(List.length(updates^)).toBe(1);
       expect.bool(List.hd(updates^) == buf1).toBe(true);
 
-      input("<c-i>");
+      key("<c-i>");
       expect.bool(Buffer.getCurrent() == buf2).toBe(true);
       expect.int(List.length(updates^)).toBe(2);
       expect.bool(List.hd(updates^) == buf2).toBe(true);

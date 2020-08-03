@@ -474,10 +474,21 @@ CAMLprim value libvim_vimInit(value unit) {
 }
 
 CAMLprim value libvim_vimInput(value v) {
+  CAMLparam1(v);
   char_u *s;
   s = (char_u *)String_val(v);
   vimInput(s);
-  return Val_unit;
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value libvim_vimKey(value v) {
+  CAMLparam1(v);
+  char_u *s;
+  s = (char_u *)String_val(v);
+  printf("before vim key: %s\n", s);
+  vimKey(s);
+  printf("after vim key: %s\n", s);
+  CAMLreturn(Val_unit);
 }
 
 CAMLprim value libvim_vimEval(value vStr) {

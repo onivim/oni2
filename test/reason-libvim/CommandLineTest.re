@@ -4,6 +4,7 @@ open TestFramework;
 
 let reset = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("CommandLine", ({describe, _}) => {
   describe("getType", ({test, _}) =>
@@ -11,15 +12,15 @@ describe("CommandLine", ({describe, _}) => {
       let _ = reset();
       input(":");
       expect.bool(CommandLine.getType() == Types.Ex).toBe(true);
-      input("<esc>");
+      key("<esc>");
 
       input("/");
       expect.bool(CommandLine.getType() == Types.SearchForward).toBe(true);
-      input("<esc>");
+      key("<esc>");
 
       input("?");
       expect.bool(CommandLine.getType() == Types.SearchReverse).toBe(true);
-      input("<esc>");
+      key("<esc>");
     })
   );
 
@@ -81,7 +82,7 @@ describe("CommandLine", ({describe, _}) => {
       input("a");
       expect.int(getEnterCount()).toBe(1);
       expect.int(leaveCount^).toBe(0);
-      input("<esc>");
+      key("<esc>");
       expect.int(getEnterCount()).toBe(1);
       expect.int(leaveCount^).toBe(1);
 
@@ -93,7 +94,7 @@ describe("CommandLine", ({describe, _}) => {
       input("b");
       expect.int(getEnterCount()).toBe(2);
       expect.int(leaveCount^).toBe(1);
-      input("<esc>");
+      key("<esc>");
       expect.int(getEnterCount()).toBe(2);
       expect.int(leaveCount^).toBe(2);
 
@@ -126,11 +127,11 @@ describe("CommandLine", ({describe, _}) => {
       input("b");
       expectCommandLineText("ab");
       expectCommandLinePosition(2);
-      input("<c-h>");
+      key("<c-h>");
       expectCommandLineText("a");
       expectCommandLinePosition(1);
 
-      input("<esc>");
+      key("<esc>");
       dispose1();
     });
   });
@@ -147,7 +148,7 @@ describe("CommandLine", ({describe, _}) => {
       input("D");
       input("!");
       input("g");
-      input("<cr>");
+      key("<cr>");
 
       expect.bool(Mode.getCurrent() == Normal).toBe(true);
 
@@ -159,7 +160,7 @@ describe("CommandLine", ({describe, _}) => {
       let _ = reset();
       input(":");
       input("3");
-      input("<cr>");
+      key("<cr>");
 
       expect.int((Cursor.getLine() :> int)).toBe(2);
     });
@@ -171,7 +172,7 @@ describe("CommandLine", ({describe, _}) => {
       let _: Event.unsubscribe = Vim.onIntro(() => hit := true);
       input(":");
       input("intro");
-      input("<cr>");
+      key("<cr>");
 
       expect.equal(hit^, true);
     });
@@ -183,7 +184,7 @@ describe("CommandLine", ({describe, _}) => {
       let _: Event.unsubscribe = Vim.onVersion(() => hit := true);
       input(":");
       input("version");
-      input("<cr>");
+      key("<cr>");
 
       expect.equal(hit^, true);
     });

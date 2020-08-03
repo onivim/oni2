@@ -469,7 +469,7 @@ let init = () => {
   BufferInternal.checkCurrentBufferForUpdate();
 };
 
-let input = (~context=Context.current(), v: string) => {
+let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
   let {autoClosingPairs, cursors, _}: Context.t = context;
   runWith(
     ~context,
@@ -503,39 +503,39 @@ let input = (~context=Context.current(), v: string) => {
                    location.column,
                    autoClosingPairs,
                  )) {
-            Native.vimInput("<DEL>");
-            Native.vimInput("<BS>");
+            Native.vimKey("<DEL>");
+            Native.vimKey("<BS>");
           } else if (v == "<CR>" && isBetweenClosingPairs()) {
             let precedingWhitespace =
               Internal.getPrecedingWhitespace(
                 ~max=location.column |> Index.toOneBased,
                 line,
               );
-            Native.vimInput("<CR>");
-            Native.vimInput("<CR>");
-            Native.vimInput("<UP>");
+            Native.vimKey("<CR>");
+            Native.vimKey("<CR>");
+            Native.vimKey("<UP>");
             if (String.length(precedingWhitespace) > 0) {
               Native.vimInput(precedingWhitespace);
             };
-            Native.vimInput("<TAB>");
+            Native.vimKey("<TAB>");
           } else if (AutoClosingPairs.isPassThrough(
                        v,
                        line,
                        location.column,
                        autoClosingPairs,
                      )) {
-            Native.vimInput("<RIGHT>");
+            Native.vimKey("<RIGHT>");
           } else if (AutoClosingPairs.isOpeningPair(v, autoClosingPairs)
                      && canCloseBefore()) {
             let pair = AutoClosingPairs.getByOpeningPair(v, autoClosingPairs);
             Native.vimInput(v);
             Native.vimInput(pair.closing);
-            Native.vimInput("<LEFT>");
+            Native.vimKey("<LEFT>");
           } else {
-            Native.vimInput(v);
+            inputFn(v);
           };
         } else {
-          Native.vimInput(v);
+          inputFn(v);
         };
         Cursor.get();
       };
@@ -565,12 +565,15 @@ let input = (~context=Context.current(), v: string) => {
         | [hd, ..._] => Cursor.set(hd)
         | _ => ()
         };
-        Native.vimInput(v);
+        inputFn(v);
         Internal.getDefaultCursors([]);
       };
     },
   );
 };
+
+let input = inputCommon(~inputFn=Native.vimInput);
+let key = inputCommon(~inputFn=Native.vimKey);
 
 module Registers = {
   let get = (~register) => Native.vimRegisterGet(int_of_char(register));

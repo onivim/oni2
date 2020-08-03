@@ -34,18 +34,18 @@ module Effects = {
       let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
 
       if (isInsertMode || isCmdLineMode) {
-//        if (!isCmdLineMode) {
-//          Vim.command("set paste") |> ignore;
-//        };
+        if (!isCmdLineMode) {
+          Vim.command("set paste") |> ignore;
+        };
 
         Log.infof(m => m("Pasting: %s", text));
-        prerr_endline ("Pasting: |" ++ text ++ "|");
+        prerr_endline("Pasting: |" ++ text ++ "|");
         let latestContext: Vim.Context.t = Oni_Core.VimEx.inputString(text);
 
-//        if (!isCmdLineMode) {
-//          Vim.command("set nopaste") |> ignore;
-//          dispatch(toMsg(latestContext.cursors));
-//        };
+        if (!isCmdLineMode) {
+          Vim.command("set nopaste") |> ignore;
+          dispatch(toMsg(latestContext.cursors));
+        };
       };
     });
   };

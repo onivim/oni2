@@ -10,14 +10,14 @@ describe("InsertModeEdit", ({describe, _}) => {
   describe("utf8", ({test, _}) => {
     test("insert 32773", ({expect, _}) => {
       let buffer = resetBuffer();
-    let charToInsert = Zed_utf8.singleton(Uchar.of_int(32773));
-    input("O");
-    input(charToInsert);
+      let charToInsert = Zed_utf8.singleton(Uchar.of_int(32773));
+      input("O");
+      input(charToInsert);
       let line = Buffer.getLine(buffer, Index.zero);
-    expect.string(line).toEqual(charToInsert);
-//      input("O");
-//      input(""
-    });
+      expect.string(line).toEqual(charToInsert);
+      //      input("O");
+      //      input(""
+    })
   });
   describe("insert mode", ({test, _}) => {
     test("insert mode should flip modified flag", ({expect, _}) => {
@@ -82,5 +82,5 @@ describe("InsertModeEdit", ({describe, _}) => {
       let newChangedTick = Buffer.getVersion(buffer);
       expect.int(newChangedTick).toBe(startChangedTick + 3);
     });
-  })
+  });
 });
