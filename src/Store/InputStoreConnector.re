@@ -119,17 +119,13 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Keybindings.Execute(command) => [
         Actions.KeybindingInvoked({command: command}),
       ]
-    | Keybindings.Text(text) =>
-      prerr_endline("Text effect: |" ++ text ++ "|");
-      handleTextEffect(state, text);
+    | Keybindings.Text(text) => handleTextEffect(state, text)
     | Keybindings.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();
       let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
       switch (maybeKeyString) {
       | None => []
-      | Some(k) =>
-        prerr_endline("KEY EFFECT: |" ++ k ++ "|");
-        handleTextEffect(state, k);
+      | Some(k) => handleTextEffect(state, k)
       };
     };
 

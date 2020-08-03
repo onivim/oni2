@@ -16,7 +16,7 @@ describe("InsertModeEdit", ({describe, _}) => {
       input(charToInsert);
       let line = Buffer.getLine(buffer, Index.zero);
       expect.string(line).toEqual(charToInsert);
-    })
+    });
     test("insert κόσμε", ({expect, _}) => {
       let buffer = resetBuffer();
       input("O");

@@ -17,10 +17,7 @@ let input = (~autoClosingPairs=AutoClosingPairs.empty, ~cursors=[], key) => {
 
 let key = (~autoClosingPairs=AutoClosingPairs.empty, ~cursors=[], key) => {
   let out =
-    Vim.key(
-      ~context={...Context.current(), autoClosingPairs, cursors},
-      key,
-    );
+    Vim.key(~context={...Context.current(), autoClosingPairs, cursors}, key);
 
   Context.(out.cursors);
 };
