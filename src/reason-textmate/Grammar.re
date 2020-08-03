@@ -89,6 +89,7 @@ module Json = {
   };
 
   let repository_of_yojson = (scope, json: Yojson.Safe.t) => {
+    prerr_endline ("-- ROOT JSON: " ++ Yojson.Safe.to_string(json));
     switch (json) {
     | `Assoc(v) =>
       List.fold_left(
@@ -97,6 +98,8 @@ module Json = {
           | Error(e) => Error(e)
           | Ok(currItems) =>
             let (key, json) = curr;
+
+            prerr_endline ("JSON: " ++ Yojson.Safe.to_string(json));
 
             // Is this a nested set of patterns?
             switch (member("begin", json), member("patterns", json)) {
