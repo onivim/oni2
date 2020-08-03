@@ -606,6 +606,7 @@ let start =
           }),
         );
 
+        prerr_endline ("Handled key: " ++ key);
         Log.debug("handled key: " ++ key);
       }
     );

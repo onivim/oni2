@@ -6,7 +6,19 @@ let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
-describe("InsertModeEdit", ({describe, _}) =>
+describe("InsertModeEdit", ({describe, _}) => {
+  describe("utf8", ({test, _}) => {
+    test("insert 32773", ({expect, _}) => {
+      let buffer = resetBuffer();
+    let charToInsert = Zed_utf8.singleton(Uchar.of_int(32773));
+    input("O");
+    input(charToInsert);
+      let line = Buffer.getLine(buffer, Index.zero);
+    expect.string(line).toEqual(charToInsert);
+//      input("O");
+//      input(""
+    });
+  });
   describe("insert mode", ({test, _}) => {
     test("insert mode should flip modified flag", ({expect, _}) => {
       let buffer = resetBuffer();
@@ -71,4 +83,4 @@ describe("InsertModeEdit", ({describe, _}) =>
       expect.int(newChangedTick).toBe(startChangedTick + 3);
     });
   })
-);
+});
