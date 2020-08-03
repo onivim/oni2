@@ -132,8 +132,13 @@ let%test_module "createFromLine" =
      let line0column2 = Location.{line: Index.zero, column: Index.(zero + 2)};
      let line0column8 = Location.{line: Index.zero, column: Index.(zero + 8)};
 
+     let font: Oni_Core.Font.t = {
+       ...Font.default,
+       fontFamily: Revery.Font.Family.defaultMono,
+     };
+
      let makeLine = str =>
-       BufferLine.make(~indentation=IndentationSettings.default, str);
+       BufferLine.make(~font, ~indentation=IndentationSettings.default, str);
 
      let meet = (~index0, str) => {
        fromLine(~index=Index.(zero + index0), ~bufferId=0, str |> makeLine);

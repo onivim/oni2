@@ -5,6 +5,8 @@
  */
 exception OutOfBounds;
 
+open Utility;
+
 module Log = (val Timber.Log.withNamespace("Oni2.Core.BufferLine"));
 
 let _space = Uchar.of_char(' ');
@@ -250,14 +252,12 @@ let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
     |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
     |> Revery.Font.load
     |> Result.to_option
-    |> Option.value(
-         ~default={
-           Font.default.fontFamily
-           |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
-           |> Revery.Font.load
-           |> Result.get_ok;
-         },
-       );
+    |> OptionEx.lazyDefault(() => {
+         Font.default.fontFamily
+         |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
+         |> Revery.Font.load
+         |> Result.get_ok
+       });
 
   let glyphStrings =
     Revery.Font.shape(~features, loadedFont, raw).glyphStrings;
