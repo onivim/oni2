@@ -128,6 +128,7 @@ module Parts = {
             grammars={state.grammarRepository}
             editor
             gutterWidth
+            buffer
             dispatch={msg => dispatch(SignatureHelp(msg))}
           />,
         ]
