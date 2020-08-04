@@ -6,13 +6,13 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
     Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
-  dispatch(KeyboardInput(":"));
+  dispatch(KeyboardInput({isText: true, input: ":"}));
 
   wait(~name="Mode switches to command line", (state: State.t) =>
     Feature_Vim.mode(state.vim) == Vim.Types.CommandLine
   );
 
-  dispatch(KeyboardInput("e"));
+  dispatch(KeyboardInput({isText: true, input: "e"}));
   wait(~name="Mode switches to command line", (state: State.t) =>
     switch (state.quickmenu) {
     | Some(quickmenu) => quickmenu.inputText |> Feature_InputText.value == "e"
@@ -20,7 +20,7 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
     }
   );
 
-  dispatch(KeyboardInput("h"));
+  dispatch(KeyboardInput({isText: true, input: "h"}));
 
   wait(~name="Mode switches to command line", (state: State.t) =>
     switch (state.quickmenu) {

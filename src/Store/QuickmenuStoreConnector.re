@@ -80,7 +80,7 @@ let start = () => {
       ~name="quickmenu.executeVimCommand", dispatch => {
       // TODO: Hard-coding "<CR>" and assuming `KeyboardInput` reaches vim seems very sketchy
       dispatch(
-        Actions.KeyboardInput("<CR>"),
+        Actions.KeyboardInput({isText: false, input: "<CR>"}),
       )
     });
 
@@ -88,7 +88,7 @@ let start = () => {
     Isolinear.Effect.createWithDispatch(~name="quickmenu.exitMode", dispatch => {
       // TODO: Hard-coding "<ESC>" and assuming `KeyboardInput` reaches vim seems very sketchy
       dispatch(
-        Actions.KeyboardInput("<ESC>"),
+        Actions.KeyboardInput({isText: false, input: "<ESC>"}),
       )
     });
 
@@ -269,13 +269,13 @@ let start = () => {
               if (transition > 0) {
                 for (_ in 0 to transition) {
                   GlobalContext.current().dispatch(
-                    Actions.KeyboardInput("<LEFT>"),
+                    Actions.KeyboardInput({isText: false, input: "<LEFT>"}),
                   );
                 };
               } else if (transition < 0) {
                 for (_ in 0 downto transition) {
                   GlobalContext.current().dispatch(
-                    Actions.KeyboardInput("<RIGHT>"),
+                    Actions.KeyboardInput({isText: false, input: "<RIGHT>"}),
                   );
                 };
               };
