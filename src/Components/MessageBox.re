@@ -83,8 +83,18 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
 
+  let shadowColor = Revery.Color.rgba(0., 0., 0., 0.75);
+
   let container = (~theme) => [
     backgroundColor(Colors.Oni.Modal.background.from(theme)),
+    border(~color=Colors.Oni.Modal.border.from(theme), ~width=1),
+    boxShadow(
+      ~xOffset=4.,
+      ~yOffset=4.,
+      ~blurRadius=12.,
+      ~spreadRadius=0.,
+      ~color=shadowColor,
+    ),
   ];
 
   let message = [padding(20), paddingBottom(10)];
@@ -129,6 +139,7 @@ let shortcutView = (~text, ~input="", ~theme, ~font: UiFont.t, ()) => {
   <View style=Styles.shortcut>
     <Text
       style={Styles.shortcutHighlight(~theme)}
+      fontWeight=Revery.Font.Weight.Bold
       fontFamily={font.family}
       fontSize={font.size}
       text=input

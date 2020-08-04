@@ -3,6 +3,7 @@ open Vim;
 
 let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("DirectoryChanged", ({test, _}) => {
   test("get changed directory event", ({expect, _}) => {
@@ -25,24 +26,12 @@ describe("DirectoryChanged", ({test, _}) => {
     let updates: ref(list(string)) = ref([]);
     let dispose = onDirectoryChanged(upd => updates := [upd, ...updates^]);
 
-    input(":");
-    input("c");
-    input("d");
-    input(" ");
-    input("t");
-    input("e");
-    input("s");
-    input("t");
-    input("<cr>");
+    input(":cd test");
+    key("<cr>");
     expect.int(List.length(updates^)).toBe(1);
 
-    input(":");
-    input("c");
-    input("d");
-    input(" ");
-    input(".");
-    input(".");
-    input("<cr>");
+    input(":cd ..");
+    key("<cr>");
     expect.int(List.length(updates^)).toBe(2);
 
     dispose();

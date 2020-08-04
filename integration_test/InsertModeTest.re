@@ -6,7 +6,7 @@ runTest(~name="InsertMode test", (dispatch, wait, _) => {
     Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
     Feature_Vim.mode(state.vim) == Vim.Types.Insert

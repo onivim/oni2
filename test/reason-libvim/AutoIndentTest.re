@@ -17,6 +17,15 @@ let input = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
   );
 };
 
+let key = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
+  ignore(
+    Vim.key(
+      ~context={...Context.current(), insertSpaces, tabSize, autoIndent},
+      s,
+    ): Context.t,
+  );
+};
+
 describe("AutoIndent", ({test, _}) => {
   let keepIndent = (~previousLine as _, ~beforePreviousLine: option(string)) => {
     ignore(beforePreviousLine);
@@ -66,10 +75,11 @@ describe("AutoIndent", ({test, _}) => {
     let buffer = resetBuffer();
 
     let input = input(~insertSpaces=true, ~autoIndent=decreaseIndent);
+    let key = key(~insertSpaces=true, ~autoIndent=decreaseIndent);
     input("o");
     input("\t");
     input("a");
-    input("<CR>");
+    key("<CR>");
     input("b");
 
     let line = Buffer.getLine(buffer, Index.(zero + 2));

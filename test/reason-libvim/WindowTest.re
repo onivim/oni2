@@ -5,6 +5,7 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/lines_100.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("Window", ({describe, _}) => {
   describe("get / set metrics", ({test, _}) =>
@@ -78,7 +79,7 @@ describe("Window", ({describe, _}) => {
       input(":");
       input("5");
       input("0");
-      input("<cr>");
+      key("<cr>");
 
       input("z");
       input("z");
@@ -154,7 +155,7 @@ describe("Window", ({describe, _}) => {
           splits := [(splitType, name), ...splits^]
         );
 
-      input("<c-w>");
+      key("<c-w>");
       input("v");
 
       expect.int(List.length(splits^)).toBe(1);
@@ -178,7 +179,7 @@ describe("Window", ({describe, _}) => {
           splits := [(splitType, name), ...splits^]
         );
 
-      input("<c-w>");
+      key("<c-w>");
       input("s");
 
       expect.int(List.length(splits^)).toBe(1);

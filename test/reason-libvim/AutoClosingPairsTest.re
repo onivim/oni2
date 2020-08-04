@@ -9,6 +9,12 @@ let input = (~autoClosingPairs=AutoClosingPairs.empty, s) => {
   );
 };
 
+let key = (~autoClosingPairs=AutoClosingPairs.empty, s) => {
+  ignore(
+    Vim.key(~context={...Context.current(), autoClosingPairs}, s): Context.t,
+  );
+};
+
 open AutoClosingPairs;
 let quote = {|"|};
 let parenthesesPair = AutoPair.{opening: "(", closing: ")"};
@@ -53,7 +59,7 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
 
       input(~autoClosingPairs, "O");
       input(~autoClosingPairs, "[");
-      input(~autoClosingPairs, "<CR>");
+      key(~autoClosingPairs, "<CR>");
       input(~autoClosingPairs, "a");
 
       let line1 = Buffer.getLine(b, Index.zero);
@@ -68,9 +74,9 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
       let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
 
       input(~autoClosingPairs, "O");
-      input(~autoClosingPairs, "<TAB>");
+      key(~autoClosingPairs, "<TAB>");
       input(~autoClosingPairs, "[");
-      input(~autoClosingPairs, "<CR>");
+      key(~autoClosingPairs, "<CR>");
       input(~autoClosingPairs, "a");
 
       let line1 = Buffer.getLine(b, Index.zero);
@@ -110,7 +116,7 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
 
     input(~autoClosingPairs, "O");
     input(~autoClosingPairs, "[");
-    input(~autoClosingPairs, "<BS>");
+    key(~autoClosingPairs, "<BS>");
 
     let line = Buffer.getLine(b, Index.zero);
     expect.string(line).toEqual("");
@@ -127,7 +133,7 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
 
     input(~autoClosingPairs, "O");
     input(~autoClosingPairs, "[");
-    input(~autoClosingPairs, "<BS>");
+    key(~autoClosingPairs, "<BS>");
 
     let line = Buffer.getLine(b, Index.zero);
     expect.string(line).toEqual("");

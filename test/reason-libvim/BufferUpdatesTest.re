@@ -4,6 +4,7 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("Buffer.onUpdate", ({describe, _}) => {
   describe("reloading", ({test, _}) =>
@@ -20,11 +21,11 @@ describe("Buffer.onUpdate", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      input("<esc>");
+      key("<esc>");
       input(":");
       input("e");
       input("!");
-      input("<cr>");
+      key("<cr>");
 
       expect.bool(Buffer.getVersion(buffer) > lastChangedTick).toBe(true);
       expect.int(List.length(updates^)).toBe(1);

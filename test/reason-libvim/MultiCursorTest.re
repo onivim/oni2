@@ -15,6 +15,13 @@ let input = (~autoClosingPairs=AutoClosingPairs.empty, ~cursors=[], key) => {
   Context.(out.cursors);
 };
 
+let key = (~autoClosingPairs=AutoClosingPairs.empty, ~cursors=[], key) => {
+  let out =
+    Vim.key(~context={...Context.current(), autoClosingPairs, cursors}, key);
+
+  Context.(out.cursors);
+};
+
 describe("Multi-cursor", ({describe, _}) => {
   describe("normal mode", ({describe, _}) => {
     describe("single cursor", ({test, _}) => {
@@ -148,7 +155,7 @@ describe("Multi-cursor", ({describe, _}) => {
         "abThis is the third line of a test file",
       );
 
-      let _: list(Cursor.t) = input(~cursors, "<bs>");
+      let _: list(Cursor.t) = key(~cursors, "<bs>");
 
       let line1 = Buffer.getLine(buf, Index.zero);
       let line2 = Buffer.getLine(buf, Index.(zero + 1));
