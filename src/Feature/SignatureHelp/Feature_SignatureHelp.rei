@@ -70,6 +70,7 @@ module View: {
       ~uiFont: UiFont.t,
       ~editorFont: Service_Font.font,
       ~model: model,
+      ~buffer: Oni_Core.Buffer.t,
       ~editor: Feature_Editor.Editor.t,
       ~gutterWidth: float,
       ~grammars: Oni_Syntax.GrammarRepository.t,
