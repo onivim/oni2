@@ -92,29 +92,30 @@ module Json = {
     switch (json) {
     | `Assoc(v) =>
       List.fold_left(
-        (prev, curr) => {
-          switch (prev) {
-          | Error(e) => Error(e)
-          | Ok(currItems) =>
-            let (key, json) = curr;
+        (maybeAcc, curr) => {
+          maybeAcc
+          |> ResultEx.flatMap(acc => {
+               let (key, json) = curr;
 
-            // Is this a nested set of patterns?
-            switch (member("begin", json), member("patterns", json)) {
-            // Yes...
-            | (`Null, `List(_) as patternList) =>
-              let patterns = patterns_of_yojson(scope, patternList);
-              switch (patterns) {
-              | Error(e) => Error(e)
-              | Ok(v) => Ok([(key, v), ...currItems])
-              };
-            // Nope... just a single pattern
-            | _ =>
-              switch (Pattern.Json.of_yojson(scope, json)) {
-              | Error(e) => Error(e)
-              | Ok(v) => Ok([(key, [v]), ...currItems])
-              }
-            };
-          }
+               switch (json) {
+               | `List(_) as patternList =>
+                 patterns_of_yojson(scope, patternList)
+                 |> Result.map(pattern => {[(key, pattern), ...acc]})
+               | json =>
+                 // Is this a nested set of patterns?
+                 switch (member("begin", json), member("patterns", json)) {
+                 // Yes...
+                 | (`Null, `List(_) as patternList) =>
+                   patterns_of_yojson(scope, patternList)
+                   |> Result.map(pattern => {[(key, pattern), ...acc]})
+
+                 // Nope... just a single pattern
+                 | _ =>
+                   Pattern.Json.of_yojson(scope, json)
+                   |> Result.map(pattern => [(key, [pattern]), ...acc])
+                 }
+               };
+             })
         },
         Ok([]),
         v,
