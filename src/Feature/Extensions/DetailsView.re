@@ -3,19 +3,13 @@ open Revery.UI;
 open Revery.UI.Components;
 open Oni_Components;
 
-open Exthost.Extension;
 open Model;
 
 module Colors = Feature_Theme.Colors;
 
 module Styles = {
   open Style;
-  let container = [
-    flexDirection(`Column),
-    flexGrow(1),
-    overflow(`Hidden),
-    backgroundColor(Revery.Colors.red),
-  ];
+  let container = [flexDirection(`Column), flexGrow(1), overflow(`Hidden)];
 
   let row = [
     flexDirection(`Row),
@@ -31,6 +25,16 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
   ];
+
+  let headerRow = [
+    flexGrow(0),
+    flexDirection(`Row),
+    alignItems(`Center),
+    justifyContent(`FlexStart),
+    marginLeft(8),
+  ];
+
+  let headerTextContainer = [marginHorizontal(8), marginVertical(4)];
 };
 
 let installButton = (~font, ~extensionId, ~dispatch, ()) => {
@@ -45,14 +49,6 @@ let installButton = (~font, ~extensionId, ~dispatch, ()) => {
   />;
 };
 
-let row = (~children, ()) => {
-  <View style=Styles.row />;
-};
-
-let column = (~children, ()) => {
-  <View style=Styles.column />;
-};
-
 let header =
     (
       ~font: UiFont.t,
@@ -60,13 +56,14 @@ let header =
       ~displayName,
       ~description,
       ~extensionId,
+      ~version,
       (),
     ) => {
   let logo =
     switch (maybeLogo) {
-    | Some(src) => <Image width=128 height=128 src={`File(src)} />
+    | Some(src) => <Image width=96 height=96 src={`File(src)} />
     // TODO: Replace with real logo
-    | None => <Container color=Revery.Colors.gray height=128 width=128 />
+    | None => <Container color=Revery.Colors.gray height=96 width=96 />
     };
 
   <View
@@ -75,62 +72,64 @@ let header =
       flexGrow(0),
       flexShrink(0),
       flexBasis(200),
-      backgroundColor(Revery.Colors.blue),
+      backgroundColor(Revery.Color.rgba_int(0, 0, 0, 32)),
     ]>
     <View
       style=Style.[
         flexDirection(`Column),
         justifyContent(`Center),
         alignItems(`Center),
-        backgroundColor(Revery.Colors.green),
         margin(8),
       ]>
       logo
     </View>
-    <View
-      style=Style.[
-        flexDirection(`Column),
-        justifyContent(`Center),
-        flexShrink(0),
-        flexGrow(1),
-      ]>
-      <View
-        style=Style.[
-          flexDirection(`Row),
-          alignItems(`Center),
-          justifyContent(`FlexStart),
-          margin(8),
-          backgroundColor(Revery.Colors.aqua),
-        ]>
-        <Text
-          fontFamily={font.family}
-          fontSize=24.
-          fontWeight=Revery.Font.Weight.Bold
-          text=displayName
-        />
-        <Text
-          fontFamily={font.family}
-          fontSize=18.
-          fontWeight=Revery.Font.Weight.Bold
-          text=extensionId
-        />
+    <View style=Style.[flexDirection(`Column), justifyContent(`Center)]>
+      <View style=Styles.headerRow>
+        <View style=Styles.headerTextContainer>
+          <Text
+            fontFamily={font.family}
+            fontSize=24.
+            fontWeight=Revery.Font.Weight.Bold
+            text=displayName
+          />
+        </View>
       </View>
-      <View
-        style=Style.[
-          flexDirection(`Row),
-          alignItems(`Center),
-          justifyContent(`FlexStart),
-          margin(8),
-          backgroundColor(Revery.Colors.purple),
-        ]>
-        <Text fontFamily={font.family} fontSize=18. text=description />
+      <View style=Styles.headerRow>
+        <View
+          style=Style.[
+            backgroundColor(Revery.Color.rgba_int(128, 128, 128, 64)),
+            marginLeft(8),
+            padding(4),
+          ]>
+          <Text
+            fontFamily={font.family}
+            fontSize=18.
+            fontWeight=Revery.Font.Weight.Bold
+            text=extensionId
+          />
+        </View>
+        <View style=Styles.headerTextContainer>
+          <Text fontFamily={font.family} fontSize=18. text=version />
+        </View>
+      </View>
+      <View style=Styles.headerRow>
+        <View style=Styles.headerTextContainer>
+          <Text fontFamily={font.family} fontSize=18. text=description />
+        </View>
       </View>
     </View>
   </View>;
 };
 
 let make =
-    (~model: Model.model, ~theme, ~tokenTheme, ~font: UiFont.t, ~dispatch, ()) => {
+    (
+      ~model: Model.model,
+      ~theme,
+      ~tokenTheme,
+      ~font: UiFont.t,
+      ~dispatch as _,
+      (),
+    ) => {
   switch (model.selected) {
   | None => <View />
   | Some(selected) =>
@@ -141,9 +140,10 @@ let make =
 
     let readmeUrl = selected |> Selected.readme;
     let extensionId = selected |> Selected.identifier;
+    let version = selected |> Selected.version;
 
     <View style=Styles.container>
-      <header font maybeLogo displayName description extensionId />
+      <header font maybeLogo displayName description extensionId version />
       <ScrollView style=Style.[paddingLeft(64), flexGrow(1)]>
         <RemoteMarkdown
           url=readmeUrl

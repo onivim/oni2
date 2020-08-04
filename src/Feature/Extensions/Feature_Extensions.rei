@@ -7,7 +7,6 @@ type model;
 type msg;
 
 module Msg: {
-  let discovered: list(Scanner.ScanResult.t) => msg;
   let exthost: Exthost.Msg.ExtensionService.msg => msg;
   let storage:
     (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Storage.msg) => msg;

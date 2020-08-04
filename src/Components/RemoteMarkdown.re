@@ -32,6 +32,7 @@ let make =
              grammars
              fontFamily
              codeFontFamily
+             headerMargin=16
            />
          | FileContentsDownloader.DownloadFailed({errorMsg}) =>
            <Text text=errorMsg />

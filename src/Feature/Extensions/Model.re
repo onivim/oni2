@@ -74,23 +74,28 @@ module Selected = {
   let logo =
     fun
     | Local(scanResult) => scanResult.manifest.icon
-    // TODO
-    | Remote(_) => None;
+    | Remote({iconUrl, _}) => iconUrl;
 
   let displayName =
     fun
     | Local(scanResult) => scanResult.manifest |> Manifest.getDisplayName
-    | Remote(_) => "TODO";
+    | Remote({displayName, namespace, name, _}) =>
+      displayName |> Option.value(~default=namespace ++ "." ++ name);
 
   let description =
     fun
     | Local(scanResult) => scanResult.manifest.description
-    | Remote(_) => None;
+    | Remote({description, _}) => Some(description);
 
   let readme =
     fun
     | Local(scanResult) => Rench.Path.join(scanResult.path, "README.md")
-    | Remote({readmeUrl}) => readmeUrl;
+    | Remote({readmeUrl, _}) => readmeUrl;
+
+  let version =
+    fun
+    | Local({manifest, _}) => manifest.version
+    | Remote({version, _}) => version;
 };
 
 module Effect = {
