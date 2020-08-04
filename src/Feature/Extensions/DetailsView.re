@@ -46,14 +46,22 @@ let installButton = (~font, ~extensionId, ~dispatch, ()) => {
 };
 
 let row = (~children, ()) => {
-  <View style=Styles.row children />;
+  <View style=Styles.row />;
 };
 
 let column = (~children, ()) => {
-  <View style=Styles.column children />;
+  <View style=Styles.column />;
 };
 
-let header = (~font: UiFont.t, ~maybeLogo, ~displayName, ~description, ()) => {
+let header =
+    (
+      ~font: UiFont.t,
+      ~maybeLogo,
+      ~displayName,
+      ~description,
+      ~extensionId,
+      (),
+    ) => {
   let logo =
     switch (maybeLogo) {
     | Some(src) => <Image width=128 height=128 src={`File(src)} />
@@ -75,22 +83,49 @@ let header = (~font: UiFont.t, ~maybeLogo, ~displayName, ~description, ()) => {
         justifyContent(`Center),
         alignItems(`Center),
         backgroundColor(Revery.Colors.green),
+        margin(8),
       ]>
       logo
     </View>
-    <column>
-      <row>
+    <View
+      style=Style.[
+        flexDirection(`Column),
+        justifyContent(`Center),
+        flexShrink(0),
+        flexGrow(1),
+      ]>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          alignItems(`Center),
+          justifyContent(`FlexStart),
+          margin(8),
+          backgroundColor(Revery.Colors.aqua),
+        ]>
         <Text
           fontFamily={font.family}
           fontSize=24.
           fontWeight=Revery.Font.Weight.Bold
           text=displayName
         />
-      </row>
-      <row>
+        <Text
+          fontFamily={font.family}
+          fontSize=18.
+          fontWeight=Revery.Font.Weight.Bold
+          text=extensionId
+        />
+      </View>
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          alignItems(`Center),
+          justifyContent(`FlexStart),
+          margin(8),
+          backgroundColor(Revery.Colors.purple),
+        ]>
         <Text fontFamily={font.family} fontSize=18. text=description />
-      </row>
-    </column>
+      </View>
+    </View>
   </View>;
 };
 
@@ -105,18 +140,21 @@ let make =
       selected |> Selected.description |> Option.value(~default="");
 
     let readmeUrl = selected |> Selected.readme;
+    let extensionId = selected |> Selected.identifier;
 
     <View style=Styles.container>
-      <header font maybeLogo displayName description />
-      <RemoteMarkdown
-        url=readmeUrl
-        colorTheme=theme
-        tokenTheme
-        languageInfo=Exthost.LanguageInfo.initial
-        grammars=Oni_Syntax.GrammarRepository.empty
-        fontFamily={font.family}
-        codeFontFamily={font.family}
-      />
+      <header font maybeLogo displayName description extensionId />
+      <ScrollView style=Style.[paddingLeft(64), flexGrow(1)]>
+        <RemoteMarkdown
+          url=readmeUrl
+          colorTheme=theme
+          tokenTheme
+          languageInfo=Exthost.LanguageInfo.initial
+          grammars=Oni_Syntax.GrammarRepository.empty
+          fontFamily={font.family}
+          codeFontFamily={font.family}
+        />
+      </ScrollView>
     </View>;
   };
 };

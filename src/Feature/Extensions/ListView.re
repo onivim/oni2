@@ -187,7 +187,11 @@ let%component make =
                author
                version
                font
-               onClick={() => prerr_endline("Click remote!")}
+               onClick={_ =>
+                 dispatch(
+                   Model.RemoteExtensionClicked({extensionId: extensionId}),
+                 )
+               }
              />;
            })
         |> Array.of_list;

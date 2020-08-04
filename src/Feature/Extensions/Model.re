@@ -33,7 +33,12 @@ type msg =
       extensionId: string,
       errorMsg: string,
     })
-  | LocalExtensionSelected({extensionInfo: [@opaque] Scanner.ScanResult.t});
+  | LocalExtensionSelected({extensionInfo: [@opaque] Scanner.ScanResult.t})
+  | RemoteExtensionClicked({extensionId: string})
+  | RemoteExtensionSelected({
+      extensionInfo: Service_Extensions.Catalog.Details.t,
+    })
+  | RemoteExtensionUnableToFetchDetails({errorMsg: string});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -60,6 +65,11 @@ module Selected = {
   type t =
     | Local(Scanner.ScanResult.t)
     | Remote(Service_Extensions.Catalog.Details.t);
+
+  let identifier =
+    fun
+    | Local(scanResult) => scanResult.manifest |> Manifest.identifier
+    | Remote(details) => details.namespace ++ "." ++ details.name;
 
   let logo =
     fun
@@ -410,6 +420,29 @@ let update = (~extHostClient, msg, model) => {
   | LocalExtensionSelected({extensionInfo}) => (
       {...model, selected: Some(Selected.Local(extensionInfo))},
       OpenExtensionDetails,
+    )
+  | RemoteExtensionClicked({extensionId}) => (
+      model,
+      Effect(
+        Service_Extensions.Effects.details(
+          ~extensionId,
+          ~toMsg={
+            fun
+            | Ok(extensionInfo) =>
+              RemoteExtensionSelected({extensionInfo: extensionInfo})
+            | Error(errorMsg) =>
+              RemoteExtensionUnableToFetchDetails({errorMsg: errorMsg});
+          },
+        ),
+      ),
+    )
+  | RemoteExtensionSelected({extensionInfo}) => (
+      {...model, selected: Some(Selected.Remote(extensionInfo))},
+      OpenExtensionDetails,
+    )
+  | RemoteExtensionUnableToFetchDetails({errorMsg}) => (
+      model,
+      NotifyFailure(errorMsg),
     )
   };
 };
