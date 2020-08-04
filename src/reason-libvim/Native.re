@@ -16,6 +16,7 @@ type formatRequest = {
 
 external vimInit: unit => unit = "libvim_vimInit";
 external vimInput: string => unit = "libvim_vimInput";
+external vimKey: string => unit = "libvim_vimKey";
 external vimCommand: string => unit = "libvim_vimCommand";
 
 external vimGetMode: unit => Types.mode = "libvim_vimGetMode";

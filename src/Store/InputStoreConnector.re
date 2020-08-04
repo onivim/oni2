@@ -42,11 +42,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     (state, immediateDispatchEffect(actions));
   };
 
-  let handleTextEffect = (state: State.t, k: string) => {
+  let handleTextEffect = (~isText, state: State.t, k: string) => {
     switch (Model.FocusManager.current(state)) {
     | Editor
     | Wildmenu => [
-        Actions.KeyboardInput(k),
+        Actions.KeyboardInput({isText, input: k}),
         Actions.Hover(Feature_Hover.KeyPressed(k)),
         Actions.SignatureHelp(
           Feature_SignatureHelp.KeyPressed(Some(k), true),
@@ -119,13 +119,13 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Keybindings.Execute(command) => [
         Actions.KeybindingInvoked({command: command}),
       ]
-    | Keybindings.Text(text) => handleTextEffect(state, text)
+    | Keybindings.Text(text) => handleTextEffect(~isText=true, state, text)
     | Keybindings.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();
       let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
       switch (maybeKeyString) {
       | None => []
-      | Some(k) => handleTextEffect(state, k)
+      | Some(k) => handleTextEffect(~isText=false, state, k)
       };
     };
 

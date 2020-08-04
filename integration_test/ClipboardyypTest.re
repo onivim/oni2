@@ -35,9 +35,9 @@ runTest(~name="ClipboardyypTest", (dispatch, wait, runEffects) => {
     |> Option.value(~default=false)
   });
 
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("p"));
+  dispatch(KeyboardInput({isText: true, input: "y"}));
+  dispatch(KeyboardInput({isText: true, input: "y"}));
+  dispatch(KeyboardInput({isText: true, input: "p"}));
 
   runEffects();
 

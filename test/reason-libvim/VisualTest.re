@@ -5,6 +5,7 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("Visual", ({describe, _}) => {
   describe("getRange", ({test, _}) =>
@@ -48,17 +49,17 @@ describe("Visual", ({describe, _}) => {
       input("v");
       let vt = Visual.getType();
       expect.bool(vt == Character).toBe(true);
-      input("<esc>");
+      key("<esc>");
 
       input("V");
       let vt = Visual.getType();
       expect.bool(vt == Line).toBe(true);
-      input("<esc>");
+      key("<esc>");
 
-      input("<C-v>");
+      key("<C-v>");
       let vt = Visual.getType();
       expect.bool(vt == Block).toBe(true);
-      input("<esc>");
+      key("<esc>");
 
       let vt = Visual.getType();
       expect.bool(vt == None).toBe(true);

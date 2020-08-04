@@ -19,7 +19,9 @@ describe("Mode", ({describe, _}) => {
 
       // Enter replace mode
       let _ = Vim.input("V");
-      let _ = Vim.input("<C-g>");
+      expect.equal(Vim.Mode.getCurrent(), Vim.Types.Visual);
+
+      let _ = Vim.key("<C-g>");
 
       expect.equal(Vim.Mode.getCurrent(), Vim.Types.Select);
     })

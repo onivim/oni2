@@ -13,7 +13,7 @@ runTest(
     Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
     Feature_Vim.mode(state.vim) == Vim.Types.Insert
@@ -22,7 +22,7 @@ runTest(
   setClipboard(Some("def"));
 
   /* Simulate multiple events getting dispatched before running effects */
-  dispatch(KeyboardInput("A"));
+  dispatch(KeyboardInput({isText: true, input: "A"}));
   wait(~name="Should be a line available", (state: State.t) => {
     switch (Selectors.getActiveBuffer(state)) {
     | None => false
@@ -39,7 +39,7 @@ runTest(
       String.equal(line, "Adef");
     }
   );
-  dispatch(KeyboardInput("B"));
+  dispatch(KeyboardInput({isText: true, input: "B"}));
 
   runEffects();
 
