@@ -304,7 +304,7 @@ let runTestWithInput =
     ~onAfterDispatch?,
     (dispatch, wait, runEffects) => {
       let input = key => {
-        dispatch(Model.Actions.KeyboardInput(key));
+        dispatch(Model.Actions.KeyboardInput({isText: false, input: key}));
         runEffects();
       };
 

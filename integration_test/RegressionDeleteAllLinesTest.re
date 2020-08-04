@@ -34,12 +34,12 @@ runTest(~name="RegressionDeleteAllLinesTest", (dispatch, wait, runEffects) => {
   });
 
   // Delete all contents of the buffer
-  dispatch(KeyboardInput("g"));
-  dispatch(KeyboardInput("g"));
+  dispatch(KeyboardInput({isText: true, input: "g"}));
+  dispatch(KeyboardInput({isText: true, input: "g"}));
 
-  dispatch(KeyboardInput("d"));
+  dispatch(KeyboardInput({isText: true, input: "d"}));
 
-  dispatch(KeyboardInput("G"));
+  dispatch(KeyboardInput({isText: true, input: "G"}));
   runEffects();
 
   // Wait for highlights to show up

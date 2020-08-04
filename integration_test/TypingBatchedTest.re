@@ -11,7 +11,7 @@ runTest(
     Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
     Feature_Vim.mode(state.vim) == Vim.Types.Insert
@@ -19,9 +19,9 @@ runTest(
 
   /* Simulate multiple events getting dispatched before running effects */
 
-  dispatch(KeyboardInput("A"));
-  dispatch(KeyboardInput("B"));
-  dispatch(KeyboardInput("C"));
+  dispatch(KeyboardInput({isText: true, input: "A"}));
+  dispatch(KeyboardInput({isText: true, input: "B"}));
+  dispatch(KeyboardInput({isText: true, input: "C"}));
 
   runEffects();
 

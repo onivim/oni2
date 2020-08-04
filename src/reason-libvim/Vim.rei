@@ -271,16 +271,27 @@ module Effect: {
 let init: unit => unit;
 
 /**
-[input(s)] sends a single keystroke to Vim.
+[input(s)] sends a string of text to Vim
 
-The value [s] may be of the following form:
-- A single ASCII character, ie ["a"] or [":"]
+The value [s] must be a string of UTF-8 characters.
+- A string of
 - A Vim key, ie ["<cr>"] or ["<bs>"]
 - A Vim key with modifiers, ie ["<C-a>"]
 
 The keystroke is processed synchronously.
 */
 let input: (~context: Context.t=?, string) => Context.t;
+
+/**
+[key(s)] sends a single keystroke.
+
+The value [s] must be a valid Vim key, such as:
+- A Vim key, ie ["<cr>"] or ["<bs>"]
+- A Vim key with modifiers, ie ["<C-a>"]
+*/
+
+// TODO: Strongly type these keys...
+let key: (~context: Context.t=?, string) => Context.t;
 
 let eval: string => result(string, string);
 

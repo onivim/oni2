@@ -93,7 +93,7 @@ module Effects = {
       let delta =
         Index.toZeroBased(cursor.column) - Index.toZeroBased(meetColumn);
 
-      let _: Vim.Context.t = VimEx.repeatInput(delta, "<BS>");
+      let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
       let {cursors, _}: Vim.Context.t = VimEx.inputString(insertText);
 
       dispatch(toMsg(cursors));

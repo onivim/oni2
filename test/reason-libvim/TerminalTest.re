@@ -17,7 +17,7 @@ describe("Terminal", ({test, _}) => {
 
     // Enter term command
     let _ = Vim.input(":term");
-    let _ = Vim.input("<CR>");
+    let _ = Vim.key("<CR>");
 
     expect.equal(hitCount^, 1);
 
@@ -37,7 +37,7 @@ describe("Terminal", ({test, _}) => {
 
     // Enter term command
     let _ = Vim.input(":term bash");
-    let _ = Vim.input("<CR>");
+    let _ = Vim.key("<CR>");
 
     expect.equal(hitCount^, 1);
 
@@ -58,7 +58,7 @@ describe("Terminal", ({test, _}) => {
 
     // Enter term command
     let _ = Vim.input(":term ++curwin bash");
-    let _ = Vim.input("<CR>");
+    let _ = Vim.key("<CR>");
 
     expect.equal(hitCount^, 1);
 
@@ -78,7 +78,7 @@ describe("Terminal", ({test, _}) => {
 
     // Enter term command
     let _ = Vim.input(":term ++noclose bash");
-    let _ = Vim.input("<CR>");
+    let _ = Vim.key("<CR>");
 
     expect.equal(hitCount^, 1);
 
@@ -98,7 +98,7 @@ describe("Terminal", ({test, _}) => {
     // Enter term command
     let iter = () => {
       let _ = Vim.input(":term ++curwin bash");
-      let _ = Vim.input("<CR>");
+      let _ = Vim.key("<CR>");
       ();
     };
 

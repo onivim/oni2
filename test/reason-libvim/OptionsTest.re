@@ -5,6 +5,7 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("Options", ({describe, _}) => {
   describe("tabs / spaces", ({test, _}) => {
@@ -48,13 +49,13 @@ describe("Options", ({describe, _}) => {
       Options.setInsertSpaces(true);
 
       input("I");
-      input("<tab>");
+      key("<tab>");
 
       expect.string(Buffer.getLine(b, Index.zero)).toEqual(
         "   This is the first line of a test file",
       );
 
-      input("<bs>");
+      key("<bs>");
 
       expect.string(Buffer.getLine(b, Index.zero)).toEqual(
         "This is the first line of a test file",
@@ -63,7 +64,7 @@ describe("Options", ({describe, _}) => {
       Options.setTabSize(3);
       Options.setInsertSpaces(false);
 
-      input("<tab>");
+      key("<tab>");
       expect.string(Buffer.getLine(b, Index.zero)).toEqual(
         "\tThis is the first line of a test file",
       );
