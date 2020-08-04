@@ -150,6 +150,11 @@ let update = (msg, model) => {
   };
 };
 
+module Constants = {
+  let totalHeight = 150;
+  let totalWidth = 360;
+};
+
 module View = {
   open Revery;
   open Revery.UI;
@@ -167,8 +172,8 @@ module View = {
       backgroundColor(Colors.Notifications.background.from(theme)),
       bottom(100),
       right(100),
-      width(360),
-      height(120),
+      width(Constants.totalWidth),
+      height(Constants.totalHeight),
       boxShadow(
         ~xOffset=4.,
         ~yOffset=4.,
@@ -176,26 +181,50 @@ module View = {
         ~spreadRadius=0.,
         ~color,
       ),
+      border(~color=Colors.Notifications.border.from(theme), ~width=1),
       flexDirection(`Column),
       pointerEvents(`Allow),
+      flexGrow(0),
+      overflow(`Hidden),
     ];
 
-    let contents = [width(360), flexDirection(`Row), flexGrow(1)];
+    let title = (~theme) => [
+      backgroundColor(Colors.Notifications.headerBackground.from(theme)),
+      height(25),
+      width(Constants.totalWidth - 2),
+      flexGrow(0),
+      flexShrink(0),
+      flexDirection(`Row),
+      borderBottom(
+        ~color=Colors.Notifications.headerBorder.from(theme),
+        ~width=1,
+      ),
+    ];
+
+    let titleText = [flexGrow(1), flexShrink(0), padding(8)];
+
+    let contents = [
+      width(Constants.totalWidth),
+      flexDirection(`Row),
+      flexGrow(1),
+    ];
 
     let iconContainer = [
       flexGrow(0),
+      flexShrink(0),
       width(25),
       height(25),
       alignItems(`Center),
       justifyContent(`Center),
     ];
 
-    let text = [width(360 - 8 - 25), padding(8)];
+    let text = [width(Constants.totalWidth - 8 - 25), padding(8)];
 
     let buttons = [
       flexDirection(`Row),
+      flexShrink(0),
       pointerEvents(`Allow),
-      justifyContent(`SpaceBetween),
+      justifyContent(`FlexStart),
     ];
   };
 
@@ -225,13 +254,16 @@ module View = {
         (),
       ) => {
     <View style={Styles.container(~theme)}>
-      <View style=Styles.contents>
-        <View style=Styles.text>
+      <View style={Styles.title(~theme)}>
+        <View style=Styles.titleText>
           <Text
             fontFamily={font.family}
+            fontWeight=Revery.Font.Weight.Bold
             fontSize=12.
-            text=title
-            style=[Style.color(Colors.Notifications.foreground.from(theme))]
+            text="NOTIFICATIONS"
+            style=[
+              Style.color(Colors.Notifications.headerForeground.from(theme)),
+            ]
           />
         </View>
         <View style=Styles.iconContainer>
@@ -245,6 +277,16 @@ module View = {
           </Sneakable>
         </View>
       </View>
+      <Revery.UI.Components.ScrollView style=Styles.contents>
+        <View style=Styles.text>
+          <Text
+            fontFamily={font.family}
+            fontSize=12.
+            text=title
+            style=[Style.color(Colors.Notifications.foreground.from(theme))]
+          />
+        </View>
+      </Revery.UI.Components.ScrollView>
       <View style=Styles.buttons>
         {commands
          |> List.map(commandInfo => {

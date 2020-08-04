@@ -564,7 +564,7 @@ let start =
     });
   };
 
-  let inputEffect = key =>
+  let inputEffect = (~isText, key) =>
     Isolinear.Effect.createWithDispatch(~name="vim.input", dispatch =>
       if (isVimKey(key)) {
         // Set cursors based on current editor
@@ -576,7 +576,7 @@ let start =
 
         currentTriggerKey := Some(key);
         let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
-          Vim.input(~context, key);
+          isText ? Vim.input(~context, key) : Vim.key(~context, key);
         currentTriggerKey := None;
 
         // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,
@@ -663,7 +663,7 @@ let start =
         isCompleting := true;
         let currentPos = ref(Vim.CommandLine.getPosition());
         while (currentPos^ > position) {
-          let _: Vim.Context.t = Vim.input("<bs>");
+          let _: Vim.Context.t = Vim.key("<bs>");
           currentPos := Vim.CommandLine.getPosition();
         };
 
@@ -703,51 +703,51 @@ let start =
 
   let undoEffect =
     Isolinear.Effect.create(~name="vim.undo", () => {
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let {cursors, _}: Vim.Context.t = Vim.input("u");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let {cursors, _}: Vim.Context.t = Vim.key("u");
       updateActiveEditorCursors(cursors);
       ();
     });
 
   let redoEffect =
     Isolinear.Effect.create(~name="vim.redo", () => {
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let {cursors, _}: Vim.Context.t = Vim.input("<c-r>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let {cursors, _}: Vim.Context.t = Vim.key("<c-r>");
       updateActiveEditorCursors(cursors);
       ();
     });
 
   let saveEffect =
     Isolinear.Effect.create(~name="vim.save", () => {
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input(":");
-      let _: Vim.Context.t = Vim.input("w");
-      let _: Vim.Context.t = Vim.input("<CR>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key(":");
+      let _: Vim.Context.t = Vim.key("w");
+      let _: Vim.Context.t = Vim.key("<CR>");
       ();
     });
 
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
-      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
       ();
     });
 
   let indentEffect =
     Isolinear.Effect.create(~name="vim.indent", () => {
-      let _: Vim.Context.t = Vim.input(">");
-      let _: Vim.Context.t = Vim.input("g");
-      let _: Vim.Context.t = Vim.input("v");
+      let _: Vim.Context.t = Vim.key(">");
+      let _: Vim.Context.t = Vim.key("g");
+      let _: Vim.Context.t = Vim.key("v");
       ();
     });
 
   let outdentEffect =
     Isolinear.Effect.create(~name="vim.outdent", () => {
-      let _: Vim.Context.t = Vim.input("<");
-      let _: Vim.Context.t = Vim.input("g");
-      let _: Vim.Context.t = Vim.input("v");
+      let _: Vim.Context.t = Vim.key("<");
+      let _: Vim.Context.t = Vim.key("g");
+      let _: Vim.Context.t = Vim.key("v");
       ();
     });
 
@@ -764,8 +764,8 @@ let start =
            });
 
       // Clear out previous mode
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
       // Jump to bottom
       let _: Vim.Context.t = Vim.input("g");
       let _: Vim.Context.t = Vim.input("g");
@@ -963,7 +963,7 @@ let start =
 
       (state, effect);
 
-    | KeyboardInput(s) => (state, inputEffect(s))
+    | KeyboardInput({isText, input}) => (state, inputEffect(~isText, input))
 
     | CopyActiveFilepathToClipboard => (
         state,

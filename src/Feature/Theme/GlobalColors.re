@@ -323,10 +323,13 @@ module Notifications = {
     define("notifications.foreground", all(ref(EditorWidget.foreground)));
 
   let headerForeground =
-    define("notificationsCenterHeader.foreground", all(unspecified));
+    define("notificationsCenterHeader.foreground", all(ref(foreground)));
 
   let headerBackground =
     define("notificationsCenterHeader.background", all(ref(background)));
+
+  let headerBorder =
+    define("notificationsCenterHeader.border", all(ref(headerBackground)));
 
   let border = define("notifications.border", all(ref(headerBackground)));
 
@@ -638,8 +641,11 @@ module Oni = {
   module Modal = {
     let backdrop = define("oni.modal.backdrop", all(hex("#0004")));
     let background =
-      define("oni.modal.background", all(ref(Editor.background)));
-    let foreground = define("oni.modal.foreground", all(ref(foreground)));
+      define("oni.modal.background", all(ref(Notifications.background)));
+    let foreground =
+      define("oni.modal.foreground", all(ref(Notifications.border)));
+    let border =
+      define("oni.modal.border", all(ref(Notifications.background)));
     let shortcutForeground =
       define(
         "oni.modal.shortcutForeground",

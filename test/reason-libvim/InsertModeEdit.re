@@ -5,8 +5,26 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
-describe("InsertModeEdit", ({describe, _}) =>
+describe("InsertModeEdit", ({describe, _}) => {
+  describe("utf8", ({test, _}) => {
+    test("insert 32773", ({expect, _}) => {
+      let buffer = resetBuffer();
+      let charToInsert = Zed_utf8.singleton(Uchar.of_int(32773));
+      input("O");
+      input(charToInsert);
+      let line = Buffer.getLine(buffer, Index.zero);
+      expect.string(line).toEqual(charToInsert);
+    });
+    test("insert κόσμε", ({expect, _}) => {
+      let buffer = resetBuffer();
+      input("O");
+      input("κόσμε");
+      let line = Buffer.getLine(buffer, Index.zero);
+      expect.string(line).toEqual("κόσμε");
+    });
+  });
   describe("insert mode", ({test, _}) => {
     test("insert mode should flip modified flag", ({expect, _}) => {
       let buffer = resetBuffer();
@@ -46,7 +64,7 @@ describe("InsertModeEdit", ({describe, _}) =>
         "abcThis is the first line of a test file",
       );
 
-      input("<cr>");
+      key("<cr>");
       let line = Buffer.getLine(buffer, Index.zero);
       expect.string(line).toEqual("abc");
     });
@@ -70,5 +88,5 @@ describe("InsertModeEdit", ({describe, _}) =>
       let newChangedTick = Buffer.getVersion(buffer);
       expect.int(newChangedTick).toBe(startChangedTick + 3);
     });
-  })
-);
+  });
+});

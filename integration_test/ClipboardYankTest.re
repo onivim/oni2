@@ -35,15 +35,13 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
     true;
   });
 
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
   wait(~name="Mode switches to insert", (state: State.t) =>
     Feature_Vim.mode(state.vim) == Vim.Types.Insert
   );
 
-  dispatch(KeyboardInput("a"));
-  dispatch(KeyboardInput("b"));
-  dispatch(KeyboardInput("c"));
-  dispatch(KeyboardInput("<esc>"));
+  dispatch(KeyboardInput({isText: true, input: "abc"}));
+  dispatch(KeyboardInput({isText: false, input: "<esc>"}));
   runEffects();
 
   wait(~name="Mode switches back to normal", (state: State.t) =>
@@ -53,8 +51,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
   setClipboard(None);
 
   /* Validate yank w/ no register sets clipboard */
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
+  dispatch(KeyboardInput({isText: true, input: "yy"}));
   runEffects();
 
   wait(~name="Yank 1 is sent to clipboard", _ => {
@@ -64,10 +61,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
 
   setClipboard(None);
   /* Validate yank w/ a register sets clipboard */
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("a"));
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
+  dispatch(KeyboardInput({isText: true, input: "\"ayy"}));
   runEffects();
 
   wait(~name="Yank 2 is sent to clipboard", _ => {
@@ -98,8 +92,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
 
   setClipboard(None);
   /* Validate yank w/ no register doesn't set clipboard */
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
+  dispatch(KeyboardInput({isText: true, input: "yy"}));
   runEffects();
 
   wait(~name="Yank 3 is NOT sent to clipboard", _ => {
@@ -109,10 +102,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
 
   setClipboard(None);
   /* Validate yank w/ a register doesn't set clipboard */
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("a"));
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
+  dispatch(KeyboardInput({isText: true, input: "\"ayy"}));
   runEffects();
 
   wait(~name="Yank 4 w/ register 'a' is NOT sent to clipboard", _ => {
@@ -121,10 +111,7 @@ runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
   });
   setClipboard(None);
   /* Validate yank w/ + register sets clipboard */
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("+"));
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
+  dispatch(KeyboardInput({isText: true, input: "\"+yy"}));
   runEffects();
 
   wait(~name="Yank 4 w/ register '+' is still sent to clipboard", _ => {
