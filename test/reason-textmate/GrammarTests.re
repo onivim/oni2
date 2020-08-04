@@ -50,6 +50,16 @@ describe("Grammar", ({describe, _}) => {
       let grammar = Result.get_ok(maybeGrammar);
       expect.string(grammar.scopeName).toEqual("source.nim");
     });
+
+    test("regression test: racket grammar", ({expect, _}) => {
+      let maybeGrammar =
+        Grammar.Json.of_file("test/reason-textmate/racket.tmLanguage.json");
+
+      expect.result(maybeGrammar).toBeOk();
+
+      let grammar = Result.get_ok(maybeGrammar);
+      expect.string(grammar.scopeName).toEqual("source.racket");
+    });
   });
 
   describe("xml parsing", ({test, _}) => {
