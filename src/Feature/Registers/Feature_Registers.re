@@ -181,7 +181,8 @@ module Keybindings = {
     key: "<C-R>",
     command: Commands.insert.id,
     condition:
-      "insertMode || commandLineMode || inQuickOpen || terminalFocus"
+      // !terminalFocus - #2205 - we should not override the '<C-R>' terminal behavior.
+      "!terminalFocus && insertMode || commandLineMode || inQuickOpen"
       |> WhenExpr.parse,
   };
 };

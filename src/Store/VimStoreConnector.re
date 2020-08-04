@@ -13,7 +13,6 @@ module Core = Oni_Core;
 open Core.Utility;
 
 module Zed_utf8 = Core.ZedBundled;
-module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
 
@@ -119,12 +118,17 @@ let start =
       | TabPage(msg) => dispatch(TabPage(msg))
       | Format(Buffer(_)) =>
         dispatch(
-          Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
+          Actions.LanguageSupport(
+            Feature_LanguageSupport.Msg.Formatting.formatDocument,
+          ),
         )
       | Format(Range({startLine, endLine, _})) =>
         dispatch(
-          Actions.Formatting(
-            Feature_Formatting.FormatRange({startLine, endLine}),
+          Actions.LanguageSupport(
+            Feature_LanguageSupport.Msg.Formatting.formatRange(
+              ~startLine,
+              ~endLine,
+            ),
           ),
         ),
     );
@@ -328,6 +332,7 @@ let start =
             | None =>
               Oni_Core.Buffer.ofMetadata(
                 ~id=metadata.id,
+                ~font=state.editorFont,
                 ~version=- metadata.version,
                 ~filePath=metadata.filePath,
                 ~modified=metadata.modified,
@@ -346,6 +351,7 @@ let start =
             version: 0,
             isModified: metadata.modified,
             filePath: metadata.filePath,
+            font: Oni_Core.Buffer.getFont(buffer),
           }),
         );
       };
@@ -400,7 +406,6 @@ let start =
         maybeBuffer
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
-
              // If the first line changes, re-run the file detection.
              let firstLineChanged =
                Index.equals(bu.startLine, Index.fromZeroBased(0))
@@ -930,9 +935,20 @@ let start =
             let layout =
               Feature_Layout.map(
                 editor =>
-                  Editor.getBufferId(editor) == bufferId
-                    ? Editor.setFont(~font=state.terminalFont, editor)
-                    : editor,
+                  if (Editor.getBufferId(editor) == bufferId) {
+                    state.buffers
+                    |> Buffers.getBuffer(bufferId)
+                    |> Option.map(buffer => {
+                         let updatedBuffer =
+                           buffer
+                           |> Oni_Core.Buffer.setFont(state.terminalFont)
+                           |> Feature_Editor.EditorBuffer.ofBuffer;
+                         Editor.updateBuffer(~buffer=updatedBuffer, editor);
+                       })
+                    |> Option.value(~default=editor);
+                  } else {
+                    editor;
+                  },
                 state.layout,
               );
 

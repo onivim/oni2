@@ -9,7 +9,6 @@ open Oni_Input;
 open Oni_Syntax;
 
 module KeyDisplayer = Oni_Components.KeyDisplayer;
-module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
@@ -28,13 +27,12 @@ type t = {
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: Feature_ContextMenu.model,
-  completions: Completions.t,
+  //completions: Completions.t,
   config: Feature_Configuration.model,
   configuration: Configuration.t,
   decorationProviders: list(DecorationProvider.t),
   diagnostics: Diagnostics.t,
   editorFont: Service_Font.font,
-  formatting: Feature_Formatting.model,
   messages: Feature_Messages.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
@@ -97,6 +95,7 @@ let initial =
         Feature_Editor.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
+        Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
       ],
     );
@@ -104,12 +103,7 @@ let initial =
     open Feature_Editor;
     let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
     let config = Feature_Configuration.resolver(config);
-    Editor.create(
-      ~config,
-      ~font=Service_Font.default,
-      ~buffer=editorBuffer,
-      (),
-    );
+    Editor.create(~config, ~buffer=editorBuffer, ());
   };
 
   {
@@ -121,12 +115,13 @@ let initial =
     clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
+        Feature_LanguageSupport.Contributions.colors,
         Feature_Terminal.Contributions.colors,
         Feature_Notification.Contributions.colors,
       ]),
     commands: Feature_Commands.initial(contributedCommands),
     contextMenu: Feature_ContextMenu.initial,
-    completions: Completions.initial,
+    //completions: Completions.initial,
     config,
     configuration: Configuration.default,
     decorationProviders: [],
@@ -140,7 +135,6 @@ let initial =
         ~workspacePersistence=extensionWorkspacePersistence,
         ~extensionsFolder,
       ),
-    formatting: Feature_Formatting.initial,
     languageFeatures: LanguageFeatures.empty,
     languageSupport: Feature_LanguageSupport.initial,
     lifecycle: Lifecycle.create(),

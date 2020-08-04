@@ -30,8 +30,8 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
     );
 
     (
-      /*mac / windows */ isClose(editorFont.measuredWidth, 4.8)
-      || /* linux */ isClose(editorFont.measuredWidth, 5.0)
+      /*mac / windows */ isClose(editorFont.spaceWidth, 4.8)
+      || /* linux */ isClose(editorFont.spaceWidth, 5.0)
     )
     // Apparently the line height can vary between platforms!
     //&& isClose(editorFont.measuredHeight, 9.599976)
@@ -58,8 +58,8 @@ runTest(~name="FontSizeChangeTest", (dispatch, wait, runEffects) => {
       "Font metrics, round 2: " ++ Service_Font.toString(editorFont),
     );
     (
-      /* mac/win */ isClose(editorFont.measuredWidth, 14.4)
-      || /* linux */ isClose(editorFont.measuredWidth, 14.0)
+      /* mac/win */ isClose(editorFont.spaceWidth, 14.4)
+      || /* linux */ isClose(editorFont.spaceWidth, 14.0)
     )
     // Apparently the line height can vary between platforms!
     // && isClose(editorFont.measuredHeight, 28.799927)

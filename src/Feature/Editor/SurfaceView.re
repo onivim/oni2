@@ -207,6 +207,19 @@ let%component make =
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
 
+        if (Config.renderIndentGuides.get(config)) {
+          IndentLineRenderer.render(
+            ~context,
+            ~buffer,
+            ~startLine=topVisibleLine - 1,
+            ~endLine=bottomVisibleLine + 1,
+            ~cursorPosition,
+            ~colors,
+            ~showActive=Config.highlightActiveIndentGuide.get(config),
+            indentation,
+          );
+        };
+
         ContentView.render(
           ~context,
           ~count=lineCount,
@@ -223,20 +236,8 @@ let%component make =
           ~bufferSyntaxHighlights,
           ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
           ~bufferWidthInCharacters,
+          ~bufferWidthInPixels=bufferPixelWidth,
         );
-
-        if (Config.renderIndentGuides.get(config)) {
-          IndentLineRenderer.render(
-            ~context,
-            ~buffer,
-            ~startLine=topVisibleLine - 1,
-            ~endLine=bottomVisibleLine + 1,
-            ~cursorPosition,
-            ~colors,
-            ~showActive=Config.highlightActiveIndentGuide.get(config),
-            indentation,
-          );
-        };
 
         if (Config.scrollShadow.get(config)) {
           let () =

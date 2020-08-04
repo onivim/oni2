@@ -26,12 +26,12 @@
         Oni2.feature.contextMenu
         Oni2.feature.extensions
         Oni2.feature.exthost
-        Oni2.feature.formatting
         Oni2.feature.language_support
         Oni2.feature.menus
         Oni2.feature.notification
         Oni2.feature.theme
         Oni2.feature.registers
+        Oni2.feature.snippets
         Oni2.feature.statusbar
         Oni2.feature.terminal
         Oni2.feature.modals

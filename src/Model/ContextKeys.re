@@ -74,12 +74,6 @@ let editors =
 let other =
   fromList(
     State.[
-      bool(
-        "suggestWidgetVisible",
-        fun
-        | {completions, _} when Completions.isActive(completions) => true
-        | _ => false,
-      ),
       bool("isLinux", _state =>
         Revery.Environment.os == Revery.Environment.Linux
       ),

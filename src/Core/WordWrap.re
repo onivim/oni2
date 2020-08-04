@@ -10,6 +10,9 @@ let none = _line => [{byte: 0, index: 0}];
 let fixed = (~columns, bufferLine) => {
   let byteLength = BufferLine.lengthInBytes(bufferLine);
 
+  let columnsInPixels =
+    BufferLine.font(bufferLine).spaceWidth *. float(columns);
+
   let rec loop = (curr, currWidth, characterIndex) => {
     let byteIndex =
       BufferLine.getByteFromIndex(~index=characterIndex, bufferLine);
@@ -17,13 +20,16 @@ let fixed = (~columns, bufferLine) => {
       curr;
     } else {
       let (_position, width) =
-        BufferLine.getPositionAndWidth(~index=characterIndex, bufferLine);
+        BufferLine.getPixelPositionAndWidth(
+          ~index=characterIndex,
+          bufferLine,
+        );
 
       // We haven't exceeded column size yet, so continue traversing
-      if (width + currWidth <= columns) {
+      if (width +. currWidth <= columnsInPixels) {
         loop(
           curr,
-          currWidth + width,
+          currWidth +. width,
           characterIndex + 1,
           // We have hit the column width, so drop a new line break
         );
@@ -34,5 +40,5 @@ let fixed = (~columns, bufferLine) => {
     };
   };
 
-  loop([{byte: 0, index: 0}], 0, 0) |> List.rev;
+  loop([{byte: 0, index: 0}], 0., 0) |> List.rev;
 };

@@ -9,3 +9,4 @@ let id: t => int;
 let getEstimatedMaxLineLength: t => int;
 let numberOfLines: t => int;
 let line: (int, t) => Oni_Core.BufferLine.t;
+let font: t => Oni_Core.Font.t;

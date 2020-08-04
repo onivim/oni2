@@ -7,7 +7,6 @@ module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
@@ -26,25 +25,24 @@ module Styles = {
 
 let completionsView =
     (
-      ~completions,
+      ~languageSupport,
       ~cursorPixelX,
       ~cursorPixelY,
-      ~colors,
       ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
       (),
     ) =>
-  Completions.isActive(completions)
-    ? <CompletionsView
+  Feature_LanguageSupport.Completion.isActive(languageSupport)
+    ? <Feature_LanguageSupport.Completion.View
         x=cursorPixelX
         y=cursorPixelY
         lineHeight={editorFont.measuredHeight}
-        colors
         theme
         tokenTheme
         editorFont
-        completions
+        //colors
+        model=languageSupport
       />
     : React.empty;
 
@@ -54,10 +52,9 @@ let make =
       ~cursorPosition: Location.t,
       ~editor: Editor.t,
       ~gutterWidth,
-      ~completions,
-      ~colors,
       ~theme,
       ~tokenTheme,
+      ~languageSupport,
       ~editorFont: Service_Font.font,
       (),
     ) => {
@@ -74,10 +71,9 @@ let make =
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
         <completionsView
-          completions
+          languageSupport
           cursorPixelX
           cursorPixelY
-          colors
           theme
           tokenTheme
           editorFont

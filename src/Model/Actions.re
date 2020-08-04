@@ -10,8 +10,8 @@ open Oni_Input;
 open Oni_Syntax;
 
 module ContextMenu = Oni_Components.ContextMenu;
-module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
-module CompletionItem = Feature_LanguageSupport.CompletionItem;
+//module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
+//module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
@@ -19,7 +19,6 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 type t =
   | Init
   | ActivityBar(ActivityBar.action)
-  | BufferHighlights(BufferHighlights.action)
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter({
       id: int,
@@ -28,6 +27,7 @@ type t =
       filePath: option(string),
       isModified: bool,
       version: int,
+      font: Font.t,
       // TODO: This duplication-of-truth is really awkward,
       // but I want to remove it shortly
       buffer: [@opaque] Buffer.t,
@@ -60,10 +60,6 @@ type t =
   | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
-  | CompletionAddItems(
-      [@opaque] CompletionMeet.t,
-      [@opaque] list(CompletionItem.t),
-    )
   | Configuration(Feature_Configuration.msg)
   | ConfigurationParseError(string)
   | ConfigurationReload
@@ -102,7 +98,6 @@ type t =
       pixelWidth: int,
       pixelHeight: int,
     })
-  | Formatting(Feature_Formatting.msg)
   | Notification(Feature_Notification.msg)
   | Messages(Feature_Messages.msg)
   | Editor({

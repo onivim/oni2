@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 module Log = (val Log.withNamespace("Service_Vim"));
 
@@ -86,6 +87,17 @@ module Effects = {
       result |> toMsg |> dispatch;
     });
   };
+  let applyCompletion = (~meetColumn, ~insertText, ~toMsg) =>
+    Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
+      let cursor = Vim.Cursor.get();
+      let delta =
+        Index.toZeroBased(cursor.column) - Index.toZeroBased(meetColumn);
+
+      let _: Vim.Context.t = VimEx.repeatInput(delta, "<BS>");
+      let {cursors, _}: Vim.Context.t = VimEx.inputString(insertText);
+
+      dispatch(toMsg(cursors));
+    });
 };
 
 module Sub = {

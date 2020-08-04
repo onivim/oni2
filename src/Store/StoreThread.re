@@ -159,9 +159,7 @@ let start =
   let indentationUpdater = IndentationStoreConnector.start();
   let windowUpdater = WindowsStoreConnector.start();
 
-  let completionUpdater = CompletionStoreConnector.start();
-
-  let languageFeatureUpdater = LanguageFeatureConnector.start();
+  //  let completionUpdater = CompletionStoreConnector.start();
 
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
@@ -184,8 +182,7 @@ let start =
       indentationUpdater,
       windowUpdater,
       themeUpdater,
-      languageFeatureUpdater,
-      completionUpdater,
+      //      completionUpdater,
       titleUpdater,
       Features.update(
         ~grammarRepository,
@@ -431,8 +428,6 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Hover(msg))),
     Feature_SignatureHelp.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
-    Feature_Formatting.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.Formatting(msg))),
     Feature_Theme.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Theme(msg))),
     Feature_Clipboard.Contributions.commands

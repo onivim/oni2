@@ -17,7 +17,6 @@ module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
@@ -69,6 +68,7 @@ let minimap =
       ~diagnosticsMap,
       ~bufferWidthInCharacters,
       ~minimapWidthInPixels,
+      ~languageSupport,
       (),
     ) => {
   let minimapPixelWidth = minimapWidthInPixels + Constants.minimapPadding * 2;
@@ -112,6 +112,7 @@ let minimap =
       colors
       bufferHighlights
       diffMarkers
+      languageSupport
     />
   </View>;
 };
@@ -136,7 +137,6 @@ let%component make =
                 ~bufferHighlights,
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
-                ~completions,
                 ~tokenTheme,
                 ~onCursorChange,
                 ~languageSupport,
@@ -307,6 +307,7 @@ let%component make =
            diffMarkers
            bufferWidthInCharacters={layout.bufferWidthInCharacters}
            minimapWidthInPixels={layout.minimapWidthInPixels}
+           languageSupport
          />
        : React.empty}
     <OverlaysView
@@ -315,8 +316,7 @@ let%component make =
       editor
       gutterWidth
       editorFont
-      completions
-      colors
+      languageSupport
       theme
       tokenTheme
     />
@@ -332,6 +332,7 @@ let%component make =
         diagnostics=diagnosticsMap
         colors
         bufferHighlights
+        languageSupport
       />
     </View>
     <View

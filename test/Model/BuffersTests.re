@@ -44,6 +44,7 @@ describe("Buffer List Tests", ({test, _}) => {
           isModified: false,
           version: 0,
           filePath: Some("/test1.re"),
+          font: Oni_Core.Font.default,
         }),
       );
 
@@ -73,6 +74,7 @@ describe("Buffer List Tests", ({test, _}) => {
           version: 0,
           fileType: None,
           lineEndings: None,
+          font: Oni_Core.Font.default,
         }),
       );
     let addedAgain =
@@ -86,6 +88,7 @@ describe("Buffer List Tests", ({test, _}) => {
           version: 0,
           fileType: None,
           lineEndings: None,
+          font: Oni_Core.Font.default,
         }),
       );
 
@@ -108,6 +111,7 @@ describe("Buffer List Tests", ({test, _}) => {
           version: 0,
           fileType: None,
           lineEndings: None,
+          font: Oni_Core.Font.default,
         }),
       );
     let activeBuffer = Buffers.getBuffer(4, updated);
@@ -128,6 +132,7 @@ describe("Buffer List Tests", ({test, _}) => {
           version: 0,
           fileType: Some("reason"),
           lineEndings: None,
+          font: Oni_Core.Font.default,
         }),
       );
     let activeBuffer = Buffers.getBuffer(4, updated);

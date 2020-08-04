@@ -4,78 +4,8 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
-module ExtensionCompletionProvider = {
-  let suggestionItemToCompletionItem: Exthost.SuggestItem.t => CompletionItem.t =
-    suggestion => {
-      {
-        label: suggestion.label,
-        kind: suggestion.kind,
-        detail: suggestion.detail,
-      };
-    };
-
-  let suggestionsToCompletionItems:
-    Exthost.SuggestResult.t => list(CompletionItem.t) =
-    ({completions, _}) => {
-      completions |> List.map(suggestionItemToCompletionItem);
-    };
-
-  let create =
-      (
-        id: int,
-        selector: Exthost.DocumentSelector.t,
-        client: Exthost.Client.t,
-        (buffer, _completionMeet, location),
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideCompletionItems(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        ~context=
-          Exthost.CompletionContext.{
-            triggerKind: Invoke,
-            triggerCharacter: None,
-          },
-        client,
-      )
-      |> Lwt.map(items => {suggestionsToCompletionItems(items)})
-    });
-  };
-};
-
-module ExtensionDocumentHighlightProvider = {
-  let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
-    highlights
-    |> List.map(highlight => {
-         Exthost.OneBasedRange.toRange(
-           Exthost.DocumentHighlight.(highlight.range),
-         )
-       });
-  };
-
-  let create =
-      (
-        id: int,
-        selector: Exthost.DocumentSelector.t,
-        client,
-        (buffer, location),
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDocumentHighlights(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        client,
-      )
-      |> Lwt.map(definitionToModel)
-    });
-  };
-};
 
 module ExtensionDocumentSymbolProvider = {
   let create =
@@ -120,33 +50,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           id,
           documentSymbolProvider,
         ),
-      ),
-    );
-  };
-
-  let onRegisterDocumentHighlightProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let documentHighlightProvider =
-      ExtensionDocumentHighlightProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DocumentHighlightProviderAvailable(
-          id,
-          documentHighlightProvider,
-        ),
-      ),
-    );
-  };
-
-  let onRegisterSuggestProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let completionProvider =
-      ExtensionCompletionProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
       ),
     );
   };
@@ -226,23 +129,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(
-          RegisterDocumentHighlightProvider({handle, selector}),
-        ) =>
-        withClient(onRegisterDocumentHighlightProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
-          RegisterSuggestSupport({
-            handle,
-            selector,
-            _,
-            // TODO: Handle additional configuration from suggest registration!
-          }),
-        ) =>
-        withClient(onRegisterSuggestProvider(handle, selector));
-        Lwt.return(Reply.okEmpty);
-
       | Diagnostics(Clear({owner})) =>
         dispatch(Actions.DiagnosticsClear(owner));
         Lwt.return(Reply.okEmpty);
@@ -303,37 +189,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(
-          RegisterRangeFormattingSupport({handle, selector, displayName, _}),
-        ) =>
-        dispatch(
-          Formatting(
-            Feature_Formatting.RangeFormatterAvailable({
-              handle,
-              selector,
-              displayName,
-            }),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
-      | LanguageFeatures(
-          RegisterDocumentFormattingSupport({
-            handle,
-            selector,
-            displayName,
-            _,
-          }),
-        ) =>
-        dispatch(
-          Formatting(
-            Feature_Formatting.DocumentFormatterAvailable({
-              handle,
-              selector,
-              displayName,
-            }),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
       | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
         dispatch(
           Actions.Hover(

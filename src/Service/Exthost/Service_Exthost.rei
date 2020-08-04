@@ -14,6 +14,7 @@ module Effects: {
   module Documents: {
     let modelChanged:
       (
+        ~previousBuffer: Oni_Core.Buffer.t,
         ~buffer: Oni_Core.Buffer.t,
         ~update: Oni_Core.BufferUpdate.t,
         Exthost.Client.t,
@@ -106,12 +107,45 @@ module Sub: {
     (~activeEditorId: string, ~client: Exthost.Client.t) =>
     Isolinear.Sub.t(unit);
 
+  let completionItems:
+    // TODO: ~base: option(string),
+    (
+      ~handle: int,
+      ~context: Exthost.CompletionContext.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: result(Exthost.SuggestResult.t, string) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
+  let completionItem:
+    (
+      ~handle: int,
+      ~chainedCacheId: Exthost.ChainedCacheId.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: result(Exthost.SuggestItem.t, string) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
   let definition:
     (
       ~handle: int,
       ~buffer: Oni_Core.Buffer.t,
       ~position: EditorCoreTypes.Location.t,
       ~toMsg: list(Exthost.DefinitionLink.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
+  let documentHighlights:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.Location.t,
+      ~toMsg: list(Exthost.DocumentHighlight.t) => 'a,
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);

@@ -242,7 +242,13 @@ switch (eff) {
       let Vim.BufferMetadata.{id, version, filePath, modified, _} =
         Vim.Buffer.openFile(Core.BufferPath.welcome)
         |> Vim.BufferMetadata.ofBuffer;
-      Core.Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+      Core.Buffer.ofMetadata(
+        ~font=Core.Font.default,
+        ~id,
+        ~version,
+        ~filePath,
+        ~modified,
+      );
     };
 
     let initialBufferRenderers =

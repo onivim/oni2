@@ -11,7 +11,6 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStoreConnector"));
 
-module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
@@ -133,10 +132,14 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ]),
       )
 
-    | BufferUpdate({update, newBuffer, triggerKey, _}) => (
+    | BufferUpdate({update, newBuffer, triggerKey, oldBuffer}) => (
         state,
         Service_Exthost.Effects.Documents.modelChanged(
-          ~buffer=newBuffer, ~update, extHostClient, () =>
+          ~previousBuffer=oldBuffer,
+          ~buffer=newBuffer,
+          ~update,
+          extHostClient,
+          () =>
           Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
         ),
       )

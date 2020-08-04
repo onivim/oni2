@@ -122,51 +122,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   };
 
-  describe("editor.quickSuggestions", ({test, _}) => {
-    let getQuickSuggestions = getExpectedValue(c => c.editorQuickSuggestions);
-    test("bool: false", ({expect, _}) => {
-      let quickSuggestions =
-        getQuickSuggestions(
-          {|
-        { "editor.quickSuggestions": false }
-      |},
-        );
-      expect.equal(
-        quickSuggestions,
-        {other: false, strings: false, comments: false},
-      );
-    });
-    test("bool: true", ({expect, _}) => {
-      let quickSuggestions =
-        getQuickSuggestions(
-          {|
-        { "editor.quickSuggestions": true }
-      |},
-        );
-      expect.equal(
-        quickSuggestions,
-        {other: true, strings: true, comments: true},
-      );
-    });
-
-    test("json: mixed", ({expect, _}) => {
-      let quickSuggestions =
-        getQuickSuggestions(
-          {|
-        { "editor.quickSuggestions": {
-          "other": false,
-          "strings": true,
-          "comments": false,
-        } }
-      |},
-        );
-      expect.equal(
-        quickSuggestions,
-        {other: false, strings: true, comments: false},
-      );
-    });
-  });
-
   describe("editor.fontSize", ({test, _}) => {
     let getFontSize = getExpectedValue(c => c.editorFontSize);
     test("parses string if possible", ({expect, _}) => {
