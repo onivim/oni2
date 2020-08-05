@@ -57,6 +57,8 @@ module Effect = {
     });
 };
 
+type extensionState = {isRestartRequired: bool};
+
 type model = {
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
@@ -67,6 +69,7 @@ type model = {
   pendingUninstalls: list(string),
   globalValues: Yojson.Safe.t,
   localValues: Yojson.Safe.t,
+  extensionState: StringMap.t(extensionState),
 };
 
 module Persistence = {
@@ -89,6 +92,7 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
   pendingUninstalls: [],
   globalValues: globalPersistence,
   localValues: workspacePersistence,
+  extensionState: StringMap.empty,
 };
 
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
@@ -101,6 +105,13 @@ let isInstalling = (~extensionId, {pendingInstalls, _}) => {
 
 let isUninstalling = (~extensionId, {pendingUninstalls, _}) => {
   pendingUninstalls |> List.exists(id => id == extensionId);
+};
+
+let isRestartRequired = (~extensionId, {extensionState, _}) => {
+  extensionState
+  |> StringMap.find_opt(extensionId)
+  |> Option.map(({isRestartRequired}) => isRestartRequired)
+  |> Option.value(~default=false);
 };
 
 let searchResults = ({latestQuery, _}) =>
@@ -158,8 +169,23 @@ module Internal = {
       List.filter(id => id != extensionId, model.pendingUninstalls),
   };
 
+  let markRestartNeeded = (~extensionId, model) => {
+    ...model,
+    extensionState:
+      StringMap.update(
+        extensionId,
+        fun
+        | None => Some({isRestartRequired: true})
+        | Some(_prev) => Some({isRestartRequired: true}),
+        model.extensionState,
+      ),
+  };
+
   let installed = (~extensionId, ~scanResult, model) => {
-    let model' = model |> clearPendingInstall(~extensionId);
+    let model' =
+      model
+      |> clearPendingInstall(~extensionId)
+      |> markRestartNeeded(~extensionId);
 
     {...model', extensions: [scanResult, ...model'.extensions]};
   };

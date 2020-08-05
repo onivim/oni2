@@ -48,6 +48,14 @@ module Styles = {
     //textOverflow(`Ellipsis),
     textWrap(Revery.TextWrapping.NoWrap),
   ];
+
+  let restartText = (~theme) => [
+    color(Colors.EditorError.foreground.from(theme)),
+    marginVertical(2),
+    // TODO: Workaround for #2140
+    //textOverflow(`Ellipsis),
+    textWrap(Revery.TextWrapping.NoWrap),
+  ];
   let imageContainer =
     Style.[
       width(Constants.imageContainerSize),
@@ -106,6 +114,7 @@ let make =
       ~theme,
       ~displayName,
       ~author,
+      ~isRestartRequired,
       ~version,
       ~font: UiFont.t,
       (),
@@ -120,6 +129,22 @@ let make =
 
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;
+
+  let authorOrRestart =
+    isRestartRequired
+      ? <Text
+          style={Styles.restartText(~theme)}
+          fontFamily={font.family}
+          fontSize={font.size}
+          text="Restart Required"
+          italic=true
+        />
+      : <Text
+          style={Styles.text(~theme)}
+          fontFamily={font.family}
+          fontSize={font.size}
+          text=author
+        />;
 
   <View style={Styles.container(~width)}>
     <View style=Styles.imageContainer> icon </View>
@@ -142,14 +167,7 @@ let make =
       </View>
       <View
         style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
-        <View style=Style.[flexShrink(1)]>
-          <Text
-            style={Styles.text(~theme)}
-            fontFamily={font.family}
-            fontSize={font.size}
-            text=author
-          />
-        </View>
+        <View style=Style.[flexShrink(1)]> authorOrRestart </View>
         <View style=Style.[flexBasis(Constants.buttonWidth), flexShrink(0)]>
           actionButton
         </View>
