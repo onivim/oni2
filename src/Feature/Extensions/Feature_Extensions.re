@@ -81,6 +81,7 @@ let themeByName = (~name, model) => {
 };
 
 module ListView = ListView;
+module DetailsView = DetailsView;
 
 let sub = (~setup, model) => {
   let toMsg =

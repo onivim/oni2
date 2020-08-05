@@ -5,27 +5,6 @@ open Revery.UI;
 
 module Log = (val Log.withNamespace("Oni2.Components.RemoteAsset"));
 
-type status =
-  | Downloading
-  | Downloaded({filePath: string})
-  | DownloadFailed({errorMsg: string});
-
-module LocalState = {
-  let initial = Downloading;
-
-  type action =
-    | Reset
-    | DownloadSuccess(string)
-    | DownloadFailed(string);
-
-  let reducer = (action, _model) =>
-    switch (action) {
-    | Reset => Downloading
-    | DownloadSuccess(asset) => Downloaded({filePath: asset})
-    | DownloadFailed(msg) => DownloadFailed({errorMsg: msg})
-    };
-};
-
 module Internal = {
   let allowedDomains = [
     "https://open-vsx.org/",
@@ -45,52 +24,86 @@ module Internal = {
   };
 };
 
-let%component make =
-              (
-                ~url: string,
-                ~children: status => React.element(React.node),
-                (),
-              ) => {
-  open LocalState;
-  let renderItem = children;
+module Make =
+       (
+         Config: {
+           type asset;
+           let mapper: (~filePath: string) => Lwt.t(asset);
+         },
+       ) => {
+  type asset = Config.asset;
 
-  let%hook (state, localDispatch) =
-    Hooks.reducer(~initialState=LocalState.initial, LocalState.reducer);
+  type status =
+    | Downloading
+    | Downloaded(asset)
+    | DownloadFailed({errorMsg: string});
 
-  let%hook () =
-    Hooks.effect(
-      OnMountAndIf((!=), url),
-      () => {
-        if (Internal.isLocal(url)) {
-          // If this is a local file path, just treat it as
-          // a successful download.
-          localDispatch(
-            DownloadSuccess(url),
-          );
-        } else {
-          localDispatch(Reset);
-          Log.infof(m => m("Mounted or src changed: %s", url));
+  module LocalState = {
+    let initial = Downloading;
+
+    type action =
+      | Reset
+      | DownloadSuccess(asset)
+      | DownloadFailed(string);
+
+    let reducer = (action, _model) =>
+      switch (action) {
+      | Reset => Downloading
+      | DownloadSuccess(asset) => Downloaded(asset)
+      | DownloadFailed(msg) => DownloadFailed({errorMsg: msg})
+      };
+  };
+
+  let%component make =
+                (
+                  ~url: string,
+                  ~children: status => React.element(React.node),
+                  (),
+                ) => {
+    open LocalState;
+    let renderItem = children;
+
+    let%hook (state, localDispatch) =
+      Hooks.reducer(~initialState=LocalState.initial, LocalState.reducer);
+
+    let%hook () =
+      Hooks.effect(
+        OnMountAndIf((!=), url),
+        () => {
+          let downloadPromise =
+            if (Internal.isLocal(url)) {
+              // If this is a local file path, just treat it as
+              // a successful download.
+              Lwt.return(
+                url,
+              );
+            } else {
+              localDispatch(Reset);
+              Log.infof(m => m("Mounted or src changed: %s", url));
+
+              url
+              |> Internal.isUrlAllowed
+              |> (
+                fun
+                | true =>
+                  Service_Net.Request.download(
+                    ~setup=Oni_Core.Setup.init(),
+                    url,
+                  )
+                | false => Lwt.fail_with(url ++ " is not an allowed domain")
+              );
+            };
 
           let promise =
-            url
-            |> Internal.isUrlAllowed
-            |> (
-              fun
-              | true =>
-                Service_Net.Request.download(
-                  ~setup=Oni_Core.Setup.init(),
-                  url,
-                )
-              | false => Lwt.fail_with(url ++ " is not an allowed domain")
-            );
+            downloadPromise
+            |> LwtEx.tap(path => {
+                 Log.infof(m => m("Download succeeded: %s to %s", url, path))
+               })
+            |> LwtEx.flatMap(filePath => Config.mapper(~filePath));
 
-          Lwt.on_success(
-            promise,
-            res => {
-              Log.infof(m => m("Download succeeded: %s to %s", url, res));
-              localDispatch(DownloadSuccess(res));
-            },
-          );
+          Lwt.on_success(promise, res => {
+            localDispatch(DownloadSuccess(res))
+          });
 
           Lwt.on_failure(
             promise,
@@ -100,10 +113,10 @@ let%component make =
               localDispatch(DownloadFailed(errMsg));
             },
           );
-        };
-        None;
-      },
-    );
+          None;
+        },
+      );
 
-  renderItem(state);
+    renderItem(state);
+  };
 };

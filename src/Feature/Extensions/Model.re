@@ -32,7 +32,20 @@ type msg =
   | InstallExtensionFailed({
       extensionId: string,
       errorMsg: string,
-    });
+    })
+  | LocalExtensionSelected({extensionInfo: [@opaque] Scanner.ScanResult.t})
+  | RemoteExtensionClicked({extensionId: string})
+  | RemoteExtensionSelected({
+      extensionInfo: Service_Extensions.Catalog.Details.t,
+    })
+  | RemoteExtensionUnableToFetchDetails({errorMsg: string});
+
+module Msg = {
+  let exthost = msg => Exthost(msg);
+  let keyPressed = key => KeyPressed(key);
+  let pasted = contents => Pasted(contents);
+  let discovered = scanResult => Discovered(scanResult);
+};
 
 type outmsg =
   | Nothing
@@ -43,7 +56,47 @@ type outmsg =
       contributions: Exthost.Extension.Contributions.t,
     })
   | NotifySuccess(string)
-  | NotifyFailure(string);
+  | NotifyFailure(string)
+  | OpenExtensionDetails;
+
+module Selected = {
+  open Exthost_Extension;
+  open Exthost_Extension.Manifest;
+  type t =
+    | Local(Scanner.ScanResult.t)
+    | Remote(Service_Extensions.Catalog.Details.t);
+
+  let identifier =
+    fun
+    | Local(scanResult) => scanResult.manifest |> Manifest.identifier
+    | Remote(details) => details.namespace ++ "." ++ details.name;
+
+  let logo =
+    fun
+    | Local(scanResult) => scanResult.manifest.icon
+    | Remote({iconUrl, _}) => iconUrl;
+
+  let displayName =
+    fun
+    | Local(scanResult) => scanResult.manifest |> Manifest.getDisplayName
+    | Remote({displayName, namespace, name, _}) =>
+      displayName |> Option.value(~default=namespace ++ "." ++ name);
+
+  let description =
+    fun
+    | Local(scanResult) => scanResult.manifest.description
+    | Remote({description, _}) => Some(description);
+
+  let readme =
+    fun
+    | Local(scanResult) => Rench.Path.join(scanResult.path, "README.md")
+    | Remote({readmeUrl, _}) => readmeUrl;
+
+  let version =
+    fun
+    | Local({manifest, _}) => manifest.version
+    | Remote({version, _}) => version;
+};
 
 module Effect = {
   let replySuccess = (~resolver) =>
@@ -58,6 +111,7 @@ module Effect = {
 };
 
 type model = {
+  selected: option(Selected.t),
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
   searchText: Feature_InputText.model,
@@ -81,6 +135,7 @@ module Persistence = {
 
 let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => {
   activatedIds: [],
+  selected: None,
   extensions: [],
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
   latestQuery: None,
@@ -212,20 +267,20 @@ let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
-  | Exthost(msg) =>
-    switch (msg) {
-    | ExtensionActivationError({errorMessage, _}) => (
-        model,
-        NotifyFailure(Printf.sprintf("Error: %s", errorMessage)),
-      )
-    | DidActivateExtension({extensionId, _}) => (
-        Internal.markActivated(extensionId, model),
-        Nothing,
-      )
-    | _ =>
-      // TODO: Additional methods
-      (model, Nothing)
-    }
+  | Exthost(WillActivateExtension(_))
+  | Exthost(ExtensionRuntimeError(_)) => (model, Nothing)
+  | Exthost(ActivateExtension({extensionId, _})) => (
+      Internal.markActivated(extensionId, model),
+      Nothing,
+    )
+  | Exthost(ExtensionActivationError({errorMessage, _})) => (
+      model,
+      NotifyFailure(Printf.sprintf("Error: %s", errorMessage)),
+    )
+  | Exthost(DidActivateExtension({extensionId, _})) => (
+      Internal.markActivated(extensionId, model),
+      Nothing,
+    )
 
   | Storage({resolver, msg}) =>
     switch (msg) {
@@ -366,6 +421,33 @@ let update = (~extHostClient, msg, model) => {
           errorMsg,
         ),
       ),
+    )
+  | LocalExtensionSelected({extensionInfo}) => (
+      {...model, selected: Some(Selected.Local(extensionInfo))},
+      OpenExtensionDetails,
+    )
+  | RemoteExtensionClicked({extensionId}) => (
+      model,
+      Effect(
+        Service_Extensions.Effects.details(
+          ~extensionId,
+          ~toMsg={
+            fun
+            | Ok(extensionInfo) =>
+              RemoteExtensionSelected({extensionInfo: extensionInfo})
+            | Error(errorMsg) =>
+              RemoteExtensionUnableToFetchDetails({errorMsg: errorMsg});
+          },
+        ),
+      ),
+    )
+  | RemoteExtensionSelected({extensionInfo}) => (
+      {...model, selected: Some(Selected.Remote(extensionInfo))},
+      OpenExtensionDetails,
+    )
+  | RemoteExtensionUnableToFetchDetails({errorMsg}) => (
+      model,
+      NotifyFailure(errorMsg),
     )
   };
 };
