@@ -199,7 +199,7 @@ module Session = {
       items
       |> List.filter((item: Exthost.SuggestItem.t) => {
            let filterText = Exthost.SuggestItem.filterText(item);
-           if (String.length(filterText) <= String.length(query)) {
+           if (String.length(filterText) < String.length(query)) {
              false;
            } else {
              Filter.fuzzyMatches(explodedQuery, filterText);
