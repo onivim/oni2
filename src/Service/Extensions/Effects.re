@@ -35,3 +35,20 @@ let install = (~extensionsFolder, ~toMsg, extensionId) =>
     });
   })
   |> Isolinear.Effect.map(toMsg);
+
+let details = (~extensionId, ~toMsg) =>
+  Isolinear.Effect.createWithDispatch(
+    ~name="Service_Extensions.Effect.details", dispatch => {
+    let maybeIdentifier = Catalog.Identifier.fromString(extensionId);
+    switch (maybeIdentifier) {
+    | None => dispatch(toMsg(Error("Invalid identifier: " ++ extensionId)))
+    | Some(id) =>
+      let promise = Catalog.details(~setup=Oni_Core.Setup.init(), id);
+
+      Lwt.on_success(promise, details => {dispatch(toMsg(Ok(details)))});
+
+      Lwt.on_failure(promise, exn => {
+        dispatch(toMsg(Error(Printexc.to_string(exn))))
+      });
+    };
+  });

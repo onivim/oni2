@@ -97,6 +97,9 @@ let%component make =
       author
       version
       font
+      onClick={_ =>
+        dispatch(Model.LocalExtensionSelected({extensionInfo: extension}))
+      }
     />;
   };
 
@@ -124,7 +127,13 @@ let%component make =
       author
       version
       font
+<<<<<<< HEAD
       showIcon
+=======
+      onClick={_ =>
+        dispatch(Model.LocalExtensionSelected({extensionInfo: extension}))
+      }
+>>>>>>> master
     />;
   };
 
@@ -184,7 +193,15 @@ let%component make =
                author
                version
                font
+<<<<<<< HEAD
                showIcon
+=======
+               onClick={_ =>
+                 dispatch(
+                   Model.RemoteExtensionClicked({extensionId: extensionId}),
+                 )
+               }
+>>>>>>> master
              />;
            })
         |> Array.of_list;

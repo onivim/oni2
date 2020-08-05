@@ -35,6 +35,7 @@ let getMediumFriendlyName =
   maybeFilePath
   |> Option.map(filePath =>
        switch (BufferPath.parse(filePath)) {
+       | ExtensionDetails => "Extension Details"
        | Welcome => "Welcome"
        | Version => "Version"
        | Terminal({cmd, _}) => "Terminal - " ++ cmd
@@ -59,6 +60,7 @@ let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
   maybeFilePath
   |> Option.map(filePath => {
        switch (BufferPath.parse(filePath)) {
+       | ExtensionDetails => "Extension Details"
        | Welcome => "Welcome"
        | Version => "Version"
        | UpdateChangelog => "Updates"
