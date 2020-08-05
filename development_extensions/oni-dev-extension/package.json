@@ -49,6 +49,14 @@
 				"title": "Onivim - Developer: Show Quick Pick"
 			},
 			{
+				"command": "developer.oni.showStatusBar",
+				"title": "Onivim - Developer: Show Status Bar Item"
+			},
+			{
+				"command": "developer.oni.hideStatusBar",
+				"title": "Onivim - Developer: Hide Status Bar Item"
+			},
+			{
 				"command": "developer.oni.setGlobalMemento",
 				"title": "Onivim - Developer: Set Global Memento"
 			},
