@@ -12,28 +12,64 @@ module Identifier = {
   let fromString = str => {value: str, _lower: String.lowercase_ascii(str)};
 };
 
+module Hacks = {
+  // TEMPORARY workarounds for external bugs blocking extensions
+  let hacks = [
+    // Workaround for https://github.com/open-vsx/publish-extensions/issues/106
+    (
+      "matklad.rust-analyzer",
+      Utility.JsonEx.update(
+        "releaseTag",
+        fun
+        | Some(`String(str)) => Some(`String(str))
+        | _ => Some(`String("2020-08-04")),
+      ),
+    ),
+  ];
+
+  let apply = (~extensionId, initDataJson) => {
+    hacks
+    |> List.fold_left(
+         (acc, curr) => {
+           let (toApplyId, hackF) = curr;
+
+           if (String.equal(toApplyId, extensionId)) {
+             Log.infof(m => m("Applying extension patch to: %s", toApplyId));
+             hackF(acc);
+           } else {
+             acc;
+           };
+         },
+         initDataJson,
+       );
+  };
+};
+
 module Extension = {
   [@deriving (show, yojson({strict: false}))]
   type t = Yojson.Safe.t;
 
   let ofScanResult = (scanner: Scanner.ScanResult.t) => {
-    let identifier =
-      scanner.manifest |> Manifest.identifier |> Identifier.fromString;
+    let extensionId = scanner.manifest |> Manifest.identifier;
+    let identifier = extensionId |> Identifier.fromString;
     let extensionLocation = scanner.path |> Uri.fromPath;
 
-    switch (scanner.rawPackageJson) {
-    | `Assoc(items) =>
-      `Assoc([
-        ("identifier", Identifier.to_yojson(identifier)),
-        ("extensionLocation", Uri.to_yojson(extensionLocation)),
-        ...items,
-      ])
-    | json =>
-      Log.warnf(m =>
-        m("Unexpected package format: %s", Yojson.Safe.to_string(json))
-      );
-      json;
-    };
+    let json =
+      switch (scanner.rawPackageJson) {
+      | `Assoc(items) =>
+        `Assoc([
+          ("identifier", Identifier.to_yojson(identifier)),
+          ("extensionLocation", Uri.to_yojson(extensionLocation)),
+          ...items,
+        ])
+      | json =>
+        Log.warnf(m =>
+          m("Unexpected package format: %s", Yojson.Safe.to_string(json))
+        );
+        json;
+      };
+
+    json |> Hacks.apply(~extensionId);
   };
 };
 
