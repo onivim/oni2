@@ -22,6 +22,7 @@ module Url = {
 };
 
 module Identifier = {
+  [@deriving show]
   type t = {
     publisher: string,
     name: string,
@@ -39,6 +40,7 @@ module Identifier = {
     String.concat("", [publisher, ".", name]);
 };
 module VersionInfo = {
+  [@deriving show]
   type t = {
     version: string,
     url: string,
@@ -55,6 +57,7 @@ module VersionInfo = {
 };
 
 module Details = {
+  [@deriving show]
   type t = {
     downloadUrl: string,
     repositoryUrl: string,

@@ -108,6 +108,7 @@ let make =
       ~author,
       ~version,
       ~font: UiFont.t,
+      ~onClick,
       (),
     ) => {
   let url = iconPath |> Option.value(~default=Constants.defaultIcon);
@@ -121,7 +122,7 @@ let make =
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;
 
-  <View style={Styles.container(~width)}>
+  <Revery.UI.Components.Clickable style={Styles.container(~width)} onClick>
     <View style=Styles.imageContainer> icon </View>
     <View style=Style.[flexDirection(`Column), width(descriptionWidth)]>
       <View
@@ -155,5 +156,5 @@ let make =
         </View>
       </View>
     </View>
-  </View>;
+  </Revery.UI.Components.Clickable>;
 };
