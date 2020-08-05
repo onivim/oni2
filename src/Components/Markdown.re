@@ -90,7 +90,10 @@ open {
          open Style;
          module Colors = Feature_Theme.Colors;
 
-         let text = (~theme) => [color(Colors.foreground.from(theme))];
+         let text = (~verticalMargin, ~theme) => [
+           marginVertical(verticalMargin),
+           color(Colors.foreground.from(theme)),
+         ];
 
          let linkActive = (~theme) => [
            color(Colors.TextLink.activeForeground.from(theme)),
@@ -114,9 +117,12 @@ let make =
       ~codeBlockStyle=?,
       ~codeBlockFontSize=16.,
       ~defaultLanguage="",
+      ~headerMargin=0,
       (),
     ) => {
-  let textStyle = Styles.text(~theme=colorTheme);
+  let textStyle = Styles.text(~theme=colorTheme, ~verticalMargin=0);
+  let headerStyle =
+    Styles.text(~theme=colorTheme, ~verticalMargin=headerMargin);
   <Markdown
     syntaxHighlighter={syntaxHighlighter(
       ~tokenTheme,
@@ -130,12 +136,12 @@ let make =
     baseFontSize
     codeFontFamily
     paragraphStyle=textStyle
-    h1Style=textStyle
-    h2Style=textStyle
-    h3Style=textStyle
-    h4Style=textStyle
-    h5Style=textStyle
-    h6Style=textStyle
+    h1Style=headerStyle
+    h2Style=headerStyle
+    h3Style=headerStyle
+    h4Style=headerStyle
+    h5Style=headerStyle
+    h6Style=headerStyle
     inlineCodeStyle=textStyle
     activeLinkStyle={Styles.linkActive(~theme=colorTheme)}
     inactiveLinkStyle={Styles.linkInactive(~theme=colorTheme)}

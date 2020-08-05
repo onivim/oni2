@@ -835,6 +835,7 @@ let start =
     | BufferOpened(path, maybeLocation, bufferId) =>
       let maybeRenderer =
         switch (Core.BufferPath.parse(path)) {
+        | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
         | Terminal({bufferId, _}) =>
           Some(
             BufferRenderer.Terminal({
