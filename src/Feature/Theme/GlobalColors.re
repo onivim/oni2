@@ -644,8 +644,7 @@ module Oni = {
       define("oni.modal.background", all(ref(Notifications.background)));
     let foreground =
       define("oni.modal.foreground", all(ref(Notifications.foreground)));
-    let border =
-      define("oni.modal.border", all(ref(Notifications.border)));
+    let border = define("oni.modal.border", all(ref(Notifications.border)));
     let shortcutForeground =
       define(
         "oni.modal.shortcutForeground",
