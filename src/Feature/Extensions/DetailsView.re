@@ -54,6 +54,21 @@ let installButton = (~font, ~extensionId, ~dispatch, ()) => {
   </View>;
 };
 
+let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <View style=Styles.headerButton>
+    <ItemView.ActionButton
+      font
+      title="Uninstall"
+      extensionId
+      backgroundColor=Revery.Colors.green
+      color=Revery.Colors.white
+      onAction={() =>
+        dispatch(Model.UninstallExtensionClicked({extensionId: extensionId}))
+      }
+    />
+  </View>;
+};
+
 let setThemeButton = (~font, ~extensionId, ~dispatch, ()) => {
   <View style=Styles.headerButton>
     <ItemView.ActionButton
@@ -71,6 +86,7 @@ let setThemeButton = (~font, ~extensionId, ~dispatch, ()) => {
 
 let header =
     (
+      ~model: Model.model,
       ~font: UiFont.t,
       ~maybeLogo,
       ~displayName,
@@ -86,6 +102,22 @@ let header =
     // TODO: Replace with real logo
     | None => <Container color=Revery.Colors.gray height=96 width=96 />
     };
+
+  let isInstalled = Model.isInstalled(~extensionId, model);
+  let hasThemes = Model.hasThemes(~extensionId, model);
+
+  let buttons =
+    (
+      switch (isInstalled, hasThemes) {
+      | (true, true) => [
+          <setThemeButton font extensionId dispatch />,
+          <uninstallButton font extensionId dispatch />,
+        ]
+      | (true, false) => [<uninstallButton font extensionId dispatch />]
+      | _ => [<installButton font extensionId dispatch />]
+      }
+    )
+    |> React.listToElement;
 
   <View
     style=Style.[
@@ -138,10 +170,7 @@ let header =
           <Text fontFamily={font.family} fontSize=18. text=description />
         </View>
       </View>
-      <View style=Styles.headerRow>
-        <setThemeButton font extensionId dispatch />
-        <installButton font extensionId dispatch />
-      </View>
+      <View style=Styles.headerRow> buttons </View>
     </View>
   </View>;
 };
@@ -169,6 +198,7 @@ let make =
         extensionId
         version
         dispatch
+        model
       />
       <ScrollView style=Style.[paddingLeft(64), flexGrow(1)]>
         <RemoteMarkdown

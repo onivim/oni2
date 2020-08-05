@@ -122,7 +122,7 @@ let make =
   let descriptionWidth = width - Constants.imageContainerSize;
   let defaultWidth = 100;
 
-  <Revery.UI.Components.Clickable style={Styles.container(~width)} onClick>
+  <Sneakable sneakId=displayName style={Styles.container(~width)} onClick>
     <View style=Styles.imageContainer> icon </View>
     <View style=Style.[flexDirection(`Column), width(descriptionWidth)]>
       <View
@@ -156,5 +156,5 @@ let make =
         </View>
       </View>
     </View>
-  </Revery.UI.Components.Clickable>;
+  </Sneakable>;
 };

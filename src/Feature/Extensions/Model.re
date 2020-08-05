@@ -156,6 +156,34 @@ let isInstalling = (~extensionId, {pendingInstalls, _}) => {
   pendingInstalls |> List.exists(id => id == extensionId);
 };
 
+let themes = (~extensionId, {extensions, _}) => {
+  extensions
+  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+       String.equal(ext.manifest |> Manifest.identifier, extensionId)
+     )
+  |> (
+    l =>
+      List.nth_opt(l, 0)
+      |> Option.map(({manifest, _}: Exthost.Extension.Scanner.ScanResult.t) =>
+           manifest.contributes.themes
+         )
+  );
+};
+
+let isInstalled = (~extensionId, {extensions, _}) => {
+  extensions
+  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+       String.equal(ext.manifest |> Manifest.identifier, extensionId)
+     )
+  != [];
+};
+
+let hasThemes = (~extensionId, model) => {
+  themes(~extensionId, model)
+  |> Option.map(themes => themes != [])
+  |> Option.value(~default=false);
+};
+
 let isUninstalling = (~extensionId, {pendingUninstalls, _}) => {
   pendingUninstalls |> List.exists(id => id == extensionId);
 };
@@ -453,26 +481,15 @@ let update = (~extHostClient, msg, model) => {
     )
 
   | SetThemeClicked({extensionId}) =>
-    model.extensions
-    |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
-         String.equal(ext.manifest |> Manifest.identifier, extensionId)
+    themes(~extensionId, model)
+    |> Option.map(themes => {(model, SelectTheme({themes: themes}))})
+    |> Option.value(
+         ~default=(
+           model,
+           NotifyFailure(
+             Printf.sprintf("Unable to find extension: %s", extensionId),
+           ),
+         ),
        )
-    |> (
-      l =>
-        List.nth_opt(l, 0)
-        |> Option.map(
-             ({manifest, _}: Exthost.Extension.Scanner.ScanResult.t) =>
-             manifest.contributes.themes
-           )
-        |> Option.map(themes => {(model, SelectTheme({themes: themes}))})
-        |> Option.value(
-             ~default=(
-               model,
-               NotifyFailure(
-                 Printf.sprintf("Unable to find extension: %s", extensionId),
-               ),
-             ),
-           )
-    )
   };
 };
