@@ -33,6 +33,7 @@ type msg =
       extensionId: string,
       errorMsg: string,
     })
+  | SetThemeClicked({extensionId: string})
   | LocalExtensionSelected({extensionInfo: [@opaque] Scanner.ScanResult.t})
   | RemoteExtensionClicked({extensionId: string})
   | RemoteExtensionSelected({
@@ -57,7 +58,8 @@ type outmsg =
     })
   | NotifySuccess(string)
   | NotifyFailure(string)
-  | OpenExtensionDetails;
+  | OpenExtensionDetails
+  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)});
 
 module Selected = {
   open Exthost_Extension;
@@ -448,6 +450,29 @@ let update = (~extHostClient, msg, model) => {
   | RemoteExtensionUnableToFetchDetails({errorMsg}) => (
       model,
       NotifyFailure(errorMsg),
+    )
+
+  | SetThemeClicked({extensionId}) =>
+    model.extensions
+    |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+         String.equal(ext.manifest |> Manifest.identifier, extensionId)
+       )
+    |> (
+      l =>
+        List.nth_opt(l, 0)
+        |> Option.map(
+             ({manifest, _}: Exthost.Extension.Scanner.ScanResult.t) =>
+             manifest.contributes.themes
+           )
+        |> Option.map(themes => {(model, SelectTheme({themes: themes}))})
+        |> Option.value(
+             ~default=(
+               model,
+               NotifyFailure(
+                 Printf.sprintf("Unable to find extension: %s", extensionId),
+               ),
+             ),
+           )
     )
   };
 };

@@ -34,19 +34,39 @@ module Styles = {
     marginLeft(8),
   ];
 
+  let headerButton = [padding(8)];
+
   let headerTextContainer = [marginHorizontal(8), marginVertical(4)];
 };
 
 let installButton = (~font, ~extensionId, ~dispatch, ()) => {
-  <ItemView.ActionButton
-    font
-    title="Install"
-    backgroundColor=Revery.Colors.green
-    color=Revery.Colors.white
-    onAction={() =>
-      dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
-    }
-  />;
+  <View style=Styles.headerButton>
+    <ItemView.ActionButton
+      font
+      title="Install"
+      extensionId
+      backgroundColor=Revery.Colors.green
+      color=Revery.Colors.white
+      onAction={() =>
+        dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
+      }
+    />
+  </View>;
+};
+
+let setThemeButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <View style=Styles.headerButton>
+    <ItemView.ActionButton
+      font
+      title="Set Theme"
+      extensionId
+      backgroundColor=Revery.Colors.green
+      color=Revery.Colors.white
+      onAction={() =>
+        dispatch(Model.SetThemeClicked({extensionId: extensionId}))
+      }
+    />
+  </View>;
 };
 
 let header =
@@ -57,6 +77,7 @@ let header =
       ~description,
       ~extensionId,
       ~version,
+      ~dispatch,
       (),
     ) => {
   let logo =
@@ -117,19 +138,16 @@ let header =
           <Text fontFamily={font.family} fontSize=18. text=description />
         </View>
       </View>
+      <View style=Styles.headerRow>
+        <setThemeButton font extensionId dispatch />
+        <installButton font extensionId dispatch />
+      </View>
     </View>
   </View>;
 };
 
 let make =
-    (
-      ~model: Model.model,
-      ~theme,
-      ~tokenTheme,
-      ~font: UiFont.t,
-      ~dispatch as _,
-      (),
-    ) => {
+    (~model: Model.model, ~theme, ~tokenTheme, ~font: UiFont.t, ~dispatch, ()) => {
   switch (model.selected) {
   | None => <View />
   | Some(selected) =>
@@ -143,7 +161,15 @@ let make =
     let version = selected |> Selected.version;
 
     <View style=Styles.container>
-      <header font maybeLogo displayName description extensionId version />
+      <header
+        font
+        maybeLogo
+        displayName
+        description
+        extensionId
+        version
+        dispatch
+      />
       <ScrollView style=Style.[paddingLeft(64), flexGrow(1)]>
         <RemoteMarkdown
           url=readmeUrl
