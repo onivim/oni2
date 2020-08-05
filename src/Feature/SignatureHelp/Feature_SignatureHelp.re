@@ -453,6 +453,7 @@ module View = {
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
         ~model,
+        ~buffer,
         ~editor,
         ~grammars,
         ~signatureIndex,
@@ -460,11 +461,17 @@ module View = {
         ~dispatch,
         (),
       ) => {
-    let signatureHelpMarkdown = (~markdown) =>
+    let defaultLanguage =
+      Option.value(
+        ~default=Exthost.LanguageInfo.defaultLanguage,
+        Buffer.getFileType(buffer),
+      );
+    let signatureHelpMarkdown = (~markdown) => {
       Oni_Components.Markdown.make(
         ~colorTheme,
         ~tokenTheme,
         ~languageInfo,
+        ~defaultLanguage,
         ~fontFamily=uiFont.family,
         ~codeFontFamily=editorFont.fontFamily,
         ~grammars,
@@ -472,6 +479,7 @@ module View = {
         ~baseFontSize=uiFont.size,
         ~codeBlockFontSize=editorFont.fontSize,
       );
+    };
     let maybeSignature: option(Signature.t) =
       Base.List.nth(model.signatures, signatureIndex);
     let maybeParameter: option(ParameterInformation.t) =
@@ -610,6 +618,7 @@ module View = {
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
         ~model,
+        ~buffer,
         ~editor,
         ~gutterWidth,
         ~grammars,
@@ -644,6 +653,7 @@ module View = {
         languageInfo
         uiFont
         editorFont
+        buffer
         model
         editor
         grammars
