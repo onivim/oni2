@@ -96,6 +96,9 @@ let%component make =
       version
       isRestartRequired=false
       font
+      onClick={_ =>
+        dispatch(Model.LocalExtensionSelected({extensionInfo: extension}))
+      }
     />;
   };
 
@@ -125,6 +128,9 @@ let%component make =
       version
       isRestartRequired
       font
+      onClick={_ =>
+        dispatch(Model.LocalExtensionSelected({extensionInfo: extension}))
+      }
     />;
   };
 
@@ -188,6 +194,11 @@ let%component make =
                author
                version
                font
+               onClick={_ =>
+                 dispatch(
+                   Model.RemoteExtensionClicked({extensionId: extensionId}),
+                 )
+               }
              />;
            })
         |> Array.of_list;

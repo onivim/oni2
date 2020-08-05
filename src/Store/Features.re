@@ -129,6 +129,17 @@ let update =
             state,
             Internal.notificationEffect(~kind=Error, msg),
           )
+
+        | OpenExtensionDetails =>
+          let eff =
+            Isolinear.Effect.createWithDispatch(
+              ~name="feature.extensions.openDetails", dispatch => {
+              dispatch(
+                Actions.OpenFileByPath("oni://ExtensionDetails", None, None),
+              )
+            });
+          (state, eff);
+
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
             Internal.notificationEffect(
