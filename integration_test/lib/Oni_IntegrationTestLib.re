@@ -206,7 +206,6 @@ let runTest =
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
-      ~showUpdateChangelog=false,
       ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
