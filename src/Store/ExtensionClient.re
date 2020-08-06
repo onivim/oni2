@@ -279,6 +279,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
+      | StatusBar(Dispose({id})) =>
+        dispatch(Actions.StatusBar(ItemDisposed(id |> string_of_int)));
+        Lwt.return(Reply.okEmpty);
+
       | TerminalService(msg) =>
         Service_Terminal.handleExtensionMessage(msg);
         Lwt.return(Reply.okEmpty);

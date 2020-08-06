@@ -45,6 +45,14 @@ module Styles = {
     marginVertical(2),
     textWrap(Revery.TextWrapping.NoWrap),
   ];
+
+  let restartText = (~theme) => [
+    color(Colors.EditorError.foreground.from(theme)),
+    marginVertical(2),
+    // TODO: Workaround for #2140
+    //textOverflow(`Ellipsis),
+    textWrap(Revery.TextWrapping.NoWrap),
+  ];
   let imageContainer =
     Style.[
       width(Constants.imageContainerSize),
@@ -103,6 +111,7 @@ let make =
       ~theme,
       ~displayName,
       ~author,
+      ~isRestartRequired,
       ~version,
       ~font: UiFont.t,
       ~showIcon=true,
@@ -125,6 +134,22 @@ let make =
 
   let descriptionWidth =
     showIcon ? width - Constants.imageContainerSize - 16 : width - 32;
+
+  let authorOrRestart =
+    isRestartRequired
+      ? <Text
+          style={Styles.restartText(~theme)}
+          fontFamily={font.family}
+          fontSize={font.size}
+          text="Restart Required"
+          italic=true
+        />
+      : <Text
+          style={Styles.text(~theme)}
+          fontFamily={font.family}
+          fontSize={font.size}
+          text=author
+        />;
 
   <Revery.UI.Components.Clickable style={Styles.container(~width)} onClick>
     padding
@@ -152,14 +177,7 @@ let make =
       </View>
       <View
         style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
-        <View style=Style.[flexShrink(1)]>
-          <Text
-            style={Styles.text(~theme)}
-            fontFamily={font.family}
-            fontSize={font.size}
-            text=author
-          />
-        </View>
+        <View style=Style.[flexShrink(1)]> authorOrRestart </View>
         <View style=Style.[flexBasis(Constants.buttonWidth), flexShrink(0)]>
           actionButton
         </View>

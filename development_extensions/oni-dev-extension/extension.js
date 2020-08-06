@@ -26,6 +26,18 @@ function activate(context) {
             vscode.window.showWarningMessage("You clicked developer", [])
         }),
     )
+    
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.hideStatusBar", () => {
+            item.hide();
+        }),
+    )
+    
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.showStatusBar", () => {
+            item.show();
+        }),
+    )
 
     cleanup(
         vscode.languages.registerDefinitionProvider("oni-dev", {
