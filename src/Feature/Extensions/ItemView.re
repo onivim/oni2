@@ -22,20 +22,19 @@ module Styles = {
     height(Constants.itemHeight),
     flexGrow(0),
   ];
-  let titleText = (~width, ~theme) => [
+  let titleText = (~theme) => [
     color(Colors.SideBar.foreground.from(theme)),
     marginVertical(2),
-    // TODO: Workaround for #2140
-    //textOverflow(`Ellipsis),
-    Style.width(width),
+    overflow(`Hidden),
+    textWrap(Revery.TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
   ];
-  let versionText = (~width, ~theme) => [
+  let versionText = (~theme) => [
     color(
       Colors.SideBar.foreground.from(theme)
       |> Revery.Color.multiplyAlpha(0.75),
     ),
     marginTop(4),
-    Style.width(width),
   ];
 
   let text = (~theme) => [
@@ -44,8 +43,6 @@ module Styles = {
       |> Revery.Color.multiplyAlpha(0.75),
     ),
     marginVertical(2),
-    // TODO: Workaround for #2140
-    //textOverflow(`Ellipsis),
     textWrap(Revery.TextWrapping.NoWrap),
   ];
   let imageContainer =
@@ -108,38 +105,50 @@ let make =
       ~author,
       ~version,
       ~font: UiFont.t,
+      ~showIcon=true,
       ~onClick,
       (),
     ) => {
   let url = iconPath |> Option.value(~default=Constants.defaultIcon);
+  let padding =
+    <View style=Style.[flexGrow(0), flexShrink(0), width(16)] />;
   let icon =
-    <Oni_Components.RemoteImage
-      url
-      width=Constants.imageSize
-      height=Constants.imageSize
-    />;
+    showIcon
+      ? <View style=Styles.imageContainer>
+          <Oni_Components.RemoteImage
+            url
+            width=Constants.imageSize
+            height=Constants.imageSize
+          />
+        </View>
+      : React.empty;
 
-  let descriptionWidth = width - Constants.imageContainerSize;
-  let defaultWidth = 100;
+  let descriptionWidth =
+    showIcon ? width - Constants.imageContainerSize - 16 : width - 32;
 
   <Revery.UI.Components.Clickable style={Styles.container(~width)} onClick>
-    <View style=Styles.imageContainer> icon </View>
+    padding
+    icon
     <View style=Style.[flexDirection(`Column), width(descriptionWidth)]>
       <View
         style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
-        <Text
-          style={Styles.titleText(~width=width - defaultWidth, ~theme)}
-          fontFamily={font.family}
-          fontSize=13.0
-          fontWeight=Revery.Font.Weight.Bold
-          text=displayName
-        />
-        <Text
-          style={Styles.versionText(~width=defaultWidth, ~theme)}
-          fontFamily={font.family}
-          fontSize=10.
-          text=version
-        />
+        <View style=Style.[flexGrow(1), flexShrink(1), overflow(`Hidden)]>
+          <Text
+            style={Styles.titleText(~theme)}
+            fontFamily={font.family}
+            fontSize=13.0
+            fontWeight=Revery.Font.Weight.Bold
+            text=displayName
+          />
+        </View>
+        <View style=Style.[flexShrink(0)]>
+          <Text
+            style={Styles.versionText(~theme)}
+            fontFamily={font.family}
+            fontSize=10.
+            text=version
+          />
+        </View>
       </View>
       <View
         style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
@@ -156,5 +165,6 @@ let make =
         </View>
       </View>
     </View>
+    padding
   </Revery.UI.Components.Clickable>;
 };
