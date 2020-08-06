@@ -29,9 +29,7 @@ let getExtensionManifest =
     p =>
       Rench.Path.join(p, "package.json")
       |> Scanner.load(~category=Scanner.Bundled)
-      |> Option.map(({manifest, path, _}: Extension.Scanner.ScanResult.t) => {
-           InitData.Extension.ofManifestAndPath(manifest, path)
-         })
+      |> Option.map(InitData.Extension.ofScanResult)
       |> Option.get
   );
 };
@@ -66,9 +64,7 @@ let startWithExtensions =
     |> List.map(p => Rench.Path.join(p, "package.json"))
     |> List.map(Scanner.load(~category=Scanner.Bundled))
     |> List.filter_map(v => v)
-    |> List.map((Extension.Scanner.ScanResult.{manifest, path, _}) => {
-         InitData.Extension.ofManifestAndPath(manifest, path)
-       });
+    |> List.map(InitData.Extension.ofScanResult);
 
   extensions |> List.iter(m => m |> InitData.Extension.show |> prerr_endline);
 

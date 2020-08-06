@@ -30,14 +30,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let extensionInfo =
-    extensions
-    |> List.map(
-         ({manifest, path, _}: Exthost.Extension.Scanner.ScanResult.t) =>
-         Exthost.Extension.InitData.Extension.ofManifestAndPath(
-           manifest,
-           path,
-         )
-       );
+    extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
 
   let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
     let id = "exthost." ++ string_of_int(handle);
