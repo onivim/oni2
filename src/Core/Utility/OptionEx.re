@@ -4,6 +4,11 @@ let bind2 = (a, b, f) =>
   | _ => None
   };
 
+let filter = f =>
+  fun
+  | Some(x) as v => f(x) ? v : None
+  | None => None;
+
 let flatMap = f =>
   fun
   | Some(x) => f(x)
