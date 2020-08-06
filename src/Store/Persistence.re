@@ -44,15 +44,13 @@ module Workspace = {
     open Persistence.Schema;
 
     let windowX =
-      define("windowX", option(int), None, ((_state, window)) =>
+      define("windowX", option(int), None, ((_state, window))
         // TODO: We should check if window is minimized
-        Some(Window.getPosition(window) |> fst)
-      );
+        => Some(Window.getPosition(window) |> fst));
     let windowY =
-      define("windowY", option(int), None, ((_state, window)) =>
+      define("windowY", option(int), None, ((_state, window))
         // TODO: We should check if window is minimized
-        Some(Window.getPosition(window) |> snd)
-      );
+        => Some(Window.getPosition(window) |> snd));
     let windowWidth =
       define("windowWidth", int, 800, ((_state, window)) =>
         Window.getSize(window).width
