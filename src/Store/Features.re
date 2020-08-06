@@ -11,6 +11,23 @@ module Internal = {
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
 
+  let setThemesEffect =
+      (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
+    switch (themes) {
+    | [] => Isolinear.Effect.none
+    | [theme] =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="feature.extensions.selectTheme", dispatch => {
+        dispatch(ThemeLoadByName(theme.label))
+      })
+    | themes =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="feature.extensions.showThemeAfterInstall", dispatch => {
+        dispatch(QuickmenuShow(ThemesPicker(themes)))
+      })
+    };
+  };
+
   let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
     buffer
     |> Oni_Core.Buffer.getFileType
@@ -140,6 +157,10 @@ let update =
             });
           (state, eff);
 
+        | SelectTheme({themes}) =>
+          let eff = Internal.setThemesEffect(~themes);
+          (state, eff);
+
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
             Internal.notificationEffect(
@@ -151,15 +172,7 @@ let update =
             );
           let themes: list(Exthost.Extension.Contributions.Theme.t) =
             Exthost.Extension.Contributions.(contributions.themes);
-          let showThemePickerEffect =
-            if (themes != []) {
-              Isolinear.Effect.createWithDispatch(
-                ~name="feature.extensions.showThemeAfterInstall", dispatch => {
-                dispatch(QuickmenuShow(ThemesPicker(themes)))
-              });
-            } else {
-              Isolinear.Effect.none;
-            };
+          let showThemePickerEffect = Internal.setThemesEffect(~themes);
           (
             state,
             Isolinear.Effect.batch([

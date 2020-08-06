@@ -33,6 +33,7 @@ type msg =
       extensionId: string,
       errorMsg: string,
     })
+  | SetThemeClicked({extensionId: string})
   | LocalExtensionSelected({extensionInfo: [@opaque] Scanner.ScanResult.t})
   | RemoteExtensionClicked({extensionId: string})
   | RemoteExtensionSelected({
@@ -57,7 +58,8 @@ type outmsg =
     })
   | NotifySuccess(string)
   | NotifyFailure(string)
-  | OpenExtensionDetails;
+  | OpenExtensionDetails
+  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)});
 
 module Selected = {
   open Exthost_Extension;
@@ -157,6 +159,34 @@ let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
 
 let isInstalling = (~extensionId, {pendingInstalls, _}) => {
   pendingInstalls |> List.exists(id => id == extensionId);
+};
+
+let themes = (~extensionId, {extensions, _}) => {
+  extensions
+  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+       String.equal(ext.manifest |> Manifest.identifier, extensionId)
+     )
+  |> (
+    l =>
+      List.nth_opt(l, 0)
+      |> Option.map(({manifest, _}: Exthost.Extension.Scanner.ScanResult.t) =>
+           manifest.contributes.themes
+         )
+  );
+};
+
+let isInstalled = (~extensionId, {extensions, _}) => {
+  extensions
+  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+       String.equal(ext.manifest |> Manifest.identifier, extensionId)
+     )
+  != [];
+};
+
+let hasThemes = (~extensionId, model) => {
+  themes(~extensionId, model)
+  |> Option.map(themes => themes != [])
+  |> Option.value(~default=false);
 };
 
 let isUninstalling = (~extensionId, {pendingUninstalls, _}) => {
@@ -476,5 +506,17 @@ let update = (~extHostClient, msg, model) => {
       model,
       NotifyFailure(errorMsg),
     )
+
+  | SetThemeClicked({extensionId}) =>
+    themes(~extensionId, model)
+    |> Option.map(themes => {(model, SelectTheme({themes: themes}))})
+    |> Option.value(
+         ~default=(
+           model,
+           NotifyFailure(
+             Printf.sprintf("Unable to find extension: %s", extensionId),
+           ),
+         ),
+       )
   };
 };

@@ -180,7 +180,7 @@ module Parts = {
           tokenTheme={state.tokenTheme}
           theme
           font=uiFont
-          dispatch={_ => ()}
+          dispatch={msg => dispatch(Actions.Extensions(msg))}
         />
 
       | UpdateChangelog({since}) =>

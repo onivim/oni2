@@ -27,7 +27,8 @@ type outmsg =
     })
   | NotifySuccess(string)
   | NotifyFailure(string)
-  | OpenExtensionDetails;
+  | OpenExtensionDetails
+  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)});
 
 let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 

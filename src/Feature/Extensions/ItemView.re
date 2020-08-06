@@ -151,7 +151,7 @@ let make =
           text=author
         />;
 
-  <Revery.UI.Components.Clickable style={Styles.container(~width)} onClick>
+  <Sneakable sneakId=displayName style={Styles.container(~width)} onClick>
     padding
     icon
     <View style=Style.[flexDirection(`Column), width(descriptionWidth)]>
@@ -184,5 +184,5 @@ let make =
       </View>
     </View>
     padding
-  </Revery.UI.Components.Clickable>;
+  </Sneakable>;
 };

@@ -34,29 +34,66 @@ module Styles = {
     marginLeft(8),
   ];
 
+  let headerButton = [padding(8)];
+
   let headerTextContainer = [marginHorizontal(8), marginVertical(4)];
 };
 
 let installButton = (~font, ~extensionId, ~dispatch, ()) => {
-  <ItemView.ActionButton
-    font
-    title="Install"
-    backgroundColor=Revery.Colors.green
-    color=Revery.Colors.white
-    onAction={() =>
-      dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
-    }
-  />;
+  <View style=Styles.headerButton>
+    <ItemView.ActionButton
+      font
+      title="Install"
+      extensionId
+      backgroundColor=Revery.Colors.green
+      color=Revery.Colors.white
+      onAction={() =>
+        dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
+      }
+    />
+  </View>;
+};
+
+let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <View style=Styles.headerButton>
+    <ItemView.ActionButton
+      font
+      title="Uninstall"
+      extensionId
+      backgroundColor=Revery.Colors.green
+      color=Revery.Colors.white
+      onAction={() =>
+        dispatch(Model.UninstallExtensionClicked({extensionId: extensionId}))
+      }
+    />
+  </View>;
+};
+
+let setThemeButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <View style=Styles.headerButton>
+    <ItemView.ActionButton
+      font
+      title="Set Theme"
+      extensionId
+      backgroundColor=Revery.Colors.green
+      color=Revery.Colors.white
+      onAction={() =>
+        dispatch(Model.SetThemeClicked({extensionId: extensionId}))
+      }
+    />
+  </View>;
 };
 
 let header =
     (
+      ~model: Model.model,
       ~font: UiFont.t,
       ~maybeLogo,
       ~displayName,
       ~description,
       ~extensionId,
       ~version,
+      ~dispatch,
       (),
     ) => {
   let logo =
@@ -65,6 +102,22 @@ let header =
     // TODO: Replace with real logo
     | None => <Container color=Revery.Colors.gray height=96 width=96 />
     };
+
+  let isInstalled = Model.isInstalled(~extensionId, model);
+  let hasThemes = Model.hasThemes(~extensionId, model);
+
+  let buttons =
+    (
+      switch (isInstalled, hasThemes) {
+      | (true, true) => [
+          <setThemeButton font extensionId dispatch />,
+          <uninstallButton font extensionId dispatch />,
+        ]
+      | (true, false) => [<uninstallButton font extensionId dispatch />]
+      | _ => [<installButton font extensionId dispatch />]
+      }
+    )
+    |> React.listToElement;
 
   <View
     style=Style.[
@@ -117,19 +170,13 @@ let header =
           <Text fontFamily={font.family} fontSize=18. text=description />
         </View>
       </View>
+      <View style=Styles.headerRow> buttons </View>
     </View>
   </View>;
 };
 
 let make =
-    (
-      ~model: Model.model,
-      ~theme,
-      ~tokenTheme,
-      ~font: UiFont.t,
-      ~dispatch as _,
-      (),
-    ) => {
+    (~model: Model.model, ~theme, ~tokenTheme, ~font: UiFont.t, ~dispatch, ()) => {
   switch (model.selected) {
   | None => <View />
   | Some(selected) =>
@@ -172,7 +219,16 @@ let make =
       };
 
     <View style=Styles.container>
-      <header font maybeLogo displayName description extensionId version />
+      <header
+        font
+        maybeLogo
+        displayName
+        description
+        extensionId
+        version
+        dispatch
+        model
+      />
       contents
     </View>;
   };
