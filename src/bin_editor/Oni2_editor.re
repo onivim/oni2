@@ -16,7 +16,9 @@ module Store = Oni_Store;
 module ExtM = Service_Extensions.Management;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
+
 module LwtEx = Core.Utility.LwtEx;
+module OptionEx = Core.Utility.OptionEx;
 
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   let setup = Core.Setup.init();
@@ -155,6 +157,18 @@ switch (eff) {
     path;
   };
 
+  // Fix for https://github.com/onivim/oni2/issues/2229
+  // Can we take the displays into account, to see if the negative position is actually valid?
+  // It's normal for positions to be negative, depending on display configuration - but this filters
+  // out the extreme case where we are persisting incorrect values (like -32000 in the case of #2229).
+  let isValidPosition = position => position > (-2000);
+
+  let positionToString = (
+    fun
+    | `Absolute(v) => Printf.sprintf("Absolute(%d)", v)
+    | `Centered => "Centered"
+  );
+
   let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
     let (x, y, width, height, maximized) = {
       open Store.Persistence.Workspace;
@@ -162,14 +176,28 @@ switch (eff) {
 
       (
         windowX(store)
+        |> OptionEx.tap(x => Log.infof(m => m("Unsanitized x value: %d", x)))
+        |> OptionEx.filter(isValidPosition)
         |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
         windowY(store)
+        |> OptionEx.tap(y => Log.infof(m => m("Unsanitized x value: %d", y)))
+        |> OptionEx.filter(isValidPosition)
         |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
         windowWidth(store),
         windowHeight(store),
         windowMaximized(store),
       );
     };
+
+    Log.infof(m =>
+      m(
+        "Sanitized values from persistence - x: %s y: %s width: %d height: %d",
+        x |> positionToString,
+        y |> positionToString,
+        width,
+        height,
+      )
+    );
 
     let decorated =
       switch (Revery.Environment.os) {
