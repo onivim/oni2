@@ -1,5 +1,7 @@
 open Oni_Core;
 
+module Log = (val Timber.Log.withNamespace("Exthost.Extension.InitData"));
+
 module Identifier = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
@@ -10,44 +12,64 @@ module Identifier = {
   let fromString = str => {value: str, _lower: String.lowercase_ascii(str)};
 };
 
+module Hacks = {
+  // TEMPORARY workarounds for external bugs blocking extensions
+  let hacks = [
+    // Workaround for https://github.com/open-vsx/publish-extensions/issues/106
+    (
+      "matklad.rust-analyzer",
+      Utility.JsonEx.update(
+        "releaseTag",
+        fun
+        | Some(`String(str)) => Some(`String(str))
+        | _ => Some(`String("2020-08-04")),
+      ),
+    ),
+  ];
+
+  let apply = (~extensionId, initDataJson) => {
+    hacks
+    |> List.fold_left(
+         (acc, curr) => {
+           let (toApplyId, hackF) = curr;
+
+           if (String.equal(toApplyId, extensionId)) {
+             Log.infof(m => m("Applying extension patch to: %s", toApplyId));
+             hackF(acc);
+           } else {
+             acc;
+           };
+         },
+         initDataJson,
+       );
+  };
+};
+
 module Extension = {
   [@deriving (show, yojson({strict: false}))]
-  type t = {
-    identifier: Identifier.t,
-    extensionLocation: Uri.t,
-    name: string,
-    displayName: option(string),
-    description: option(string),
-    main: option(string),
-    icon: option(string),
-    version: string,
-    engines: string,
-    defaults: Yojson.Safe.t,
-    activationEvents: list(string),
-    extensionDependencies: list(string),
-    runtimeDependencies: Yojson.Safe.t,
-    extensionKind: list(string),
-    contributes: Contributions.t,
-    enableProposedApi: bool,
-  };
+  type t = Yojson.Safe.t;
 
-  let ofManifestAndPath = (manifest: Manifest.t, path: string) => {
-    identifier: manifest |> Manifest.identifier |> Identifier.fromString,
-    extensionLocation: path |> Uri.fromPath,
-    displayName: manifest |> Manifest.displayName,
-    description: manifest.description,
-    icon: manifest.icon,
-    name: manifest.name,
-    main: manifest.main,
-    version: manifest.version,
-    engines: manifest.engines,
-    defaults: manifest.defaults,
-    activationEvents: manifest.activationEvents,
-    extensionDependencies: manifest.extensionDependencies,
-    runtimeDependencies: manifest.runtimeDependencies,
-    extensionKind: manifest.extensionKind |> List.map(Manifest.Kind.toString),
-    enableProposedApi: manifest.enableProposedApi,
-    contributes: manifest.contributes,
+  let ofScanResult = (scanner: Scanner.ScanResult.t) => {
+    let extensionId = scanner.manifest |> Manifest.identifier;
+    let identifier = extensionId |> Identifier.fromString;
+    let extensionLocation = scanner.path |> Uri.fromPath;
+
+    let json =
+      switch (scanner.rawPackageJson) {
+      | `Assoc(items) =>
+        `Assoc([
+          ("identifier", Identifier.to_yojson(identifier)),
+          ("extensionLocation", Uri.to_yojson(extensionLocation)),
+          ...items,
+        ])
+      | json =>
+        Log.warnf(m =>
+          m("Unexpected package format: %s", Yojson.Safe.to_string(json))
+        );
+        json;
+      };
+
+    json |> Hacks.apply(~extensionId);
   };
 };
 
