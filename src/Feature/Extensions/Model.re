@@ -91,7 +91,8 @@ module Selected = {
 
   let readme =
     fun
-    | Local(scanResult) => Rench.Path.join(scanResult.path, "README.md")
+    | Local(scanResult) =>
+      Some(Rench.Path.join(scanResult.path, "README.md"))
     | Remote({readmeUrl, _}) => readmeUrl;
 
   let version =
