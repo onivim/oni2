@@ -12,14 +12,20 @@ The following features are supported:
 - Go-to definition
 - Signature Help
 
-Install via the command-line:
+### Setup
+
+1) Ensure you have the latest version of the .NET Core tools: https://docs.microsoft.com/en-us/dotnet/core/install/
+
+2) Install the extension via the command-line:
 
 - `oni2 --install-extension muhammad-sammy.csharp`
+
+### Usage
 
 Once installed, run `oni2` in the your project's folder - for example: `oni2 /path/to/csharp-project`, and then open a C# file.
 
 The first time the extension activates, it will automatically download and install the OmniSharp server.
 
-After it installs, you should see a status bar icon showing the server status, as well as the current project:
+After the extension installs required dependencies, you'll see a status bar icon showing the server status, as well as the current project:
 
 ![status-bar](https://user-images.githubusercontent.com/13532591/89578393-ea34cc00-d7e6-11ea-8b66-7b2f15151dfb.png)
