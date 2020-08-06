@@ -188,6 +188,7 @@ module Scanner: {
       category,
       manifest: Manifest.t,
       path: string,
+      rawPackageJson: Yojson.Safe.t,
     };
   };
 
@@ -206,7 +207,7 @@ module InitData: {
     [@deriving (show, yojson({strict: false}))]
     type t;
 
-    let ofManifestAndPath: (Manifest.t, string) => t;
+    let ofScanResult: Scanner.ScanResult.t => t;
   };
 
   module Environment: {
