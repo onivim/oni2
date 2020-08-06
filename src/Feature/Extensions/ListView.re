@@ -96,6 +96,7 @@ let%component make =
       displayName
       author
       version
+      isRestartRequired=false
       font
       onClick={_ =>
         dispatch(Model.LocalExtensionSelected({extensionInfo: extension}))
@@ -113,6 +114,7 @@ let%component make =
     let id = Manifest.identifier(extension.manifest);
 
     let extensionId = extension.manifest |> Manifest.identifier;
+    let isRestartRequired = Model.isRestartRequired(~extensionId, model);
     let actionButton =
       Model.isUninstalling(~extensionId=id, model)
         ? <progressButton extensionId font title="Uninstalling" />
@@ -126,6 +128,7 @@ let%component make =
       displayName
       author
       version
+      isRestartRequired
       font
       showIcon
       onClick={_ =>
@@ -177,6 +180,9 @@ let%component make =
              let {namespace, version, iconUrl, _}: Service_Extensions.Catalog.Summary.t = summary;
              let author = namespace;
 
+             let isRestartRequired =
+               Model.isRestartRequired(~extensionId, model);
+
              let actionButton =
                Model.isInstalling(~extensionId, model)
                  ? <progressButton extensionId title="Installing" font />
@@ -187,6 +193,7 @@ let%component make =
                iconPath=iconUrl
                theme
                displayName
+               isRestartRequired
                author
                version
                font
