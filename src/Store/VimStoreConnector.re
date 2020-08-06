@@ -522,7 +522,7 @@ let start =
 
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
-      libvimHasInitialized := true;
+      libvimHasInitialized := true
     });
 
   let updateActiveEditorCursors = cursors => {
