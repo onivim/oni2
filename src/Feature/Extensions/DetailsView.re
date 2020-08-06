@@ -138,23 +138,42 @@ let make =
     let description =
       selected |> Selected.description |> Option.value(~default="");
 
-    let readmeUrl = selected |> Selected.readme;
+    let maybeReadmeUrl = selected |> Selected.readme;
     let extensionId = selected |> Selected.identifier;
     let version = selected |> Selected.version;
 
+    let contents =
+      switch (maybeReadmeUrl) {
+      | None =>
+        <View
+          style=Style.[
+            flexGrow(1),
+            justifyContent(`Center),
+            alignItems(`Center),
+          ]>
+          <Text
+            fontFamily={font.family}
+            fontSize=18.
+            text="No README available"
+          />
+        </View>
+      | Some(readmeUrl) =>
+        <ScrollView style=Style.[paddingLeft(64), flexGrow(1)]>
+          <RemoteMarkdown
+            url=readmeUrl
+            colorTheme=theme
+            tokenTheme
+            languageInfo=Exthost.LanguageInfo.initial
+            grammars=Oni_Syntax.GrammarRepository.empty
+            fontFamily={font.family}
+            codeFontFamily={font.family}
+          />
+        </ScrollView>
+      };
+
     <View style=Styles.container>
       <header font maybeLogo displayName description extensionId version />
-      <ScrollView style=Style.[paddingLeft(64), flexGrow(1)]>
-        <RemoteMarkdown
-          url=readmeUrl
-          colorTheme=theme
-          tokenTheme
-          languageInfo=Exthost.LanguageInfo.initial
-          grammars=Oni_Syntax.GrammarRepository.empty
-          fontFamily={font.family}
-          codeFontFamily={font.family}
-        />
-      </ScrollView>
+      contents
     </View>;
   };
 };

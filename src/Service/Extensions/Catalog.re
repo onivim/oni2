@@ -64,7 +64,7 @@ module Details = {
     homepageUrl: string,
     manifestUrl: string,
     iconUrl: option(string),
-    readmeUrl: string,
+    readmeUrl: option(string),
     licenseName: option(string),
     //      licenseUrl: string,
     name: string,
@@ -112,7 +112,7 @@ module Details = {
     let downloadUrl = files("download", string);
     let manifestUrl = files("manifest", string);
     let iconUrl = files("icon", nullable(string));
-    let readmeUrl = files("readme", string);
+    let readmeUrl = files("readme", nullable(string));
     let homepageUrl = field("publishedBy", field("homepage", string));
 
     let decode =
