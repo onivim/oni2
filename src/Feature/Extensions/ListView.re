@@ -76,6 +76,8 @@ let%component make =
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
     Hooks.reducer(~initialState=default, reduce);
 
+  let showIcon = width > 300;
+
   let renderBundled = (extensions: array(Scanner.ScanResult.t), idx) => {
     let extension = extensions[idx];
 
@@ -128,6 +130,7 @@ let%component make =
       version
       isRestartRequired
       font
+      showIcon
       onClick={_ =>
         dispatch(Model.LocalExtensionSelected({extensionInfo: extension}))
       }
@@ -194,6 +197,7 @@ let%component make =
                author
                version
                font
+               showIcon
                onClick={_ =>
                  dispatch(
                    Model.RemoteExtensionClicked({extensionId: extensionId}),
