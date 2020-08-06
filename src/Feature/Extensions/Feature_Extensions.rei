@@ -26,7 +26,8 @@ type outmsg =
       contributions: Exthost.Extension.Contributions.t,
     })
   | NotifySuccess(string)
-  | NotifyFailure(string);
+  | NotifyFailure(string)
+  | OpenExtensionDetails;
 
 let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 
@@ -73,6 +74,19 @@ module ListView: {
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~isFocused: bool,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
+    Revery.UI.element;
+};
+
+module DetailsView: {
+  let make:
+    (
+      ~model: model,
+      ~theme: ColorTheme.Colors.t,
+      ~tokenTheme: Oni_Syntax.TokenTheme.t,
+      ~font: UiFont.t,
       ~dispatch: msg => unit,
       unit
     ) =>

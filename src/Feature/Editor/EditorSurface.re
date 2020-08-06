@@ -227,7 +227,7 @@ let%component make =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
       ? EditorDiffMarkers.generate(buffer) : None;
 
-  let smoothScroll = Config.Experimental.smoothScroll.get(config);
+  let smoothScroll = Config.smoothScroll.get(config);
   let isScrollAnimated = Editor.isScrollAnimated(editor);
 
   let%hook (scrollY, _setScrollYImmediately) =

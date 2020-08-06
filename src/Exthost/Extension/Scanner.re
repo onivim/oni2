@@ -20,6 +20,7 @@ module ScanResult = {
     category,
     manifest: Manifest.t,
     path: string,
+    rawPackageJson: Yojson.Safe.t,
   };
 };
 
@@ -54,7 +55,9 @@ let load = (~category, packageFile) => {
   | Ok(parsedManifest) =>
     let manifest = parsedManifest |> remapManifest(directory) |> localize;
 
-    Some(ScanResult.{category, manifest, path: directory});
+    Some(
+      ScanResult.{category, manifest, path: directory, rawPackageJson: json},
+    );
 
   | Error(err) =>
     Log.errorf(m =>

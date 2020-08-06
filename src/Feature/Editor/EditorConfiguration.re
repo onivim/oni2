@@ -81,6 +81,8 @@ let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`All);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
+let smoothScroll = setting("editor.smoothScroll", bool, ~default=true);
+
 let tabSize = setting("editor.tabSize", int, ~default=4);
 
 module Hover = {
@@ -100,9 +102,6 @@ module ZenMode = {
 };
 
 module Experimental = {
-  let smoothScroll =
-    setting("experimental.editor.smoothScroll", bool, ~default=false);
-
   let cursorSmoothCaretAnimation =
     setting(
       "experimental.editor.cursorSmoothCaretAnimation",
@@ -126,6 +125,7 @@ let contributions = [
   renderWhitespace.spec,
   rulers.spec,
   scrollShadow.spec,
+  smoothScroll.spec,
   tabSize.spec,
   Hover.enabled.spec,
   Hover.delay.spec,
@@ -134,6 +134,5 @@ let contributions = [
   Minimap.showSlider.spec,
   ZenMode.hideTabs.spec,
   ZenMode.singleFile.spec,
-  Experimental.smoothScroll.spec,
   Experimental.cursorSmoothCaretAnimation.spec,
 ];
