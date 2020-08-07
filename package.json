@@ -1,6 +1,6 @@
 {
   "name": "Oni2",
-  "version": "0.5.0",
+  "version": "0.5.1-nightly",
   "description": "Lightweight code editor",
   "license": "MIT",
   "esy": {
