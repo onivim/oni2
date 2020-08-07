@@ -3,12 +3,14 @@ id: c-sharp
 title: C#
 sidebar_label: C#
 ---
-![c-sharp](https://user-images.githubusercontent.com/13532591/89577746-fcfad100-d7e5-11ea-9e96-afb1edf630e2.png)
 
-Onivim supports C# via the [`muhammad-sammy.csharp`](https://open-vsx.org/extension/muhammad-sammy/csharp) extensions
+Onivim supports C# via the [`muhammad-sammy.csharp`](https://open-vsx.org/extension/muhammad-sammy/csharp) extension:
+
+![c-sharp](https://user-images.githubusercontent.com/13532591/89577746-fcfad100-d7e5-11ea-9e96-afb1edf630e2.png)
 
 The following features are supported:
 - Code completion
+- Diagnostics
 - Go-to definition
 - Signature Help
 

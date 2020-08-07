@@ -10,6 +10,7 @@ Onivim supports rust via the [`matklad.rust-analyzer`](https://open-vsx.org/exte
 The following features are supported:
 
 - Code completion
+- Diagnostics
 - Go-to definition
 - Hover
 - Document highlights
