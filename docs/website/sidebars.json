@@ -25,7 +25,9 @@
       "languages/python",
       "languages/go",
       "languages/java",
-      "languages/c"
+      "languages/c",
+      "languages/c-sharp",
+      "languages/rust"
     ],
     "For Developers": [
       "for-developers/architecture",
