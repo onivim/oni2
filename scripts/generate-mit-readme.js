@@ -15,4 +15,13 @@ const lines = inputLines.replace("%%COMMITID%%", commitId)
 
 console.log(lines)
 
+console.log("Updating README.md...");
 fs.writeFileSync(destinationMd, lines, "utf8")
+
+console.log("Updating package.json license field...");
+let packageJsonPath = path.join(destPath, "package.json");
+
+let packageJson = JSON.parse(packageJsonPath);
+packageJson["license"] = "MIT";
+fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson));
+
