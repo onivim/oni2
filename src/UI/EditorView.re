@@ -21,6 +21,7 @@ module Parts = {
     let make =
         (
           ~editor,
+          ~buffer,
           ~state: State.t,
           ~theme,
           ~isActive,
@@ -31,10 +32,6 @@ module Parts = {
           ~dispatch,
           (),
         ) => {
-      let buffer =
-        Selectors.getBufferForEditor(state.buffers, editor)
-        |> Option.value(~default=Buffer.initial);
-
       let languageConfiguration =
         buffer
         |> Oni_Core.Buffer.getFileType
@@ -141,6 +138,7 @@ module Parts = {
 
         <Editor
           editor
+          buffer
           state
           theme
           isActive
@@ -160,7 +158,7 @@ module Parts = {
         |> Option.value(~default=React.empty)
 
       | Editor =>
-        <Editor editor state theme isActive dispatch renderOverlays />
+        <Editor editor buffer state theme isActive dispatch renderOverlays />
 
       | Welcome => <WelcomeView theme uiFont editorFont />
 
