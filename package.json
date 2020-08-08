@@ -2,7 +2,7 @@
   "name": "Oni2",
   "version": "0.5.1-nightly",
   "description": "Lightweight code editor",
-  "license": "MIT",
+  "license": "SEE LICENSE IN Outrun-Labs-EULA-v1.1.md",
   "esy": {
     "build": "refmterr dune build -p libvim,textmate,Oni2 -j4",
     "buildEnv": { "MACOSX_DEPLOYMENT_TARGET": "10.12" },
