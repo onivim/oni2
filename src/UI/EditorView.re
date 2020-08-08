@@ -286,15 +286,15 @@ let make =
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 
   <View onFileDropped style={Styles.container(theme)}>
-      <Feature_Layout.View
-        uiFont={state.uiFont}
-        theme
-        isZenMode={state.zenMode}
-        showTabs
-        model={state.layout}
-        config={Feature_Configuration.resolver(state.config)}
-        dispatch={msg => dispatch(Actions.Layout(msg))}>
-        ...(module ContentProvider)
-      </Feature_Layout.View>
+    <Feature_Layout.View
+      uiFont={state.uiFont}
+      theme
+      isZenMode={state.zenMode}
+      showTabs
+      model={state.layout}
+      config={Feature_Configuration.resolver(state.config)}
+      dispatch={msg => dispatch(Actions.Layout(msg))}>
+      ...(module ContentProvider)
+    </Feature_Layout.View>
   </View>;
 };
