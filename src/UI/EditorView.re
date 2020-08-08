@@ -286,7 +286,6 @@ let make =
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 
   <View onFileDropped style={Styles.container(theme)}>
-    <View style={Styles.container(theme)}>
       <Feature_Layout.View
         uiFont={state.uiFont}
         theme
@@ -297,6 +296,5 @@ let make =
         dispatch={msg => dispatch(Actions.Layout(msg))}>
         ...(module ContentProvider)
       </Feature_Layout.View>
-    </View>
   </View>;
 };
