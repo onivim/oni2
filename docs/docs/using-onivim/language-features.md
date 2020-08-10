@@ -26,7 +26,7 @@ Hover shows detailed information about a variable or identifier, as well as any 
 
 __Keybindings__
 
-- <kbd>g</kbd><kbd>d</kbd> _normal mode_ - open hover
+- <kbd>g</kbd><kbd>h</kbd> _normal mode_ - open hover
 - <kbd>Escape</kbd> - close open hover
 
 ## Signature Help
