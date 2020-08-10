@@ -1,5 +1,5 @@
 {
-  "checksum": "106e40036d97b11bada30a2ef1d76565",
+  "checksum": "0295397dbdd5a1e2e26f155726cd87ef",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -118,7 +118,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#f85b01ca@d41d8cd9",
+        "revery@github:revery-ui/revery#102b3d97@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
@@ -126,13 +126,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#f85b01ca@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#f85b01ca@d41d8cd9",
+    "revery@github:revery-ui/revery#102b3d97@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#102b3d97@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#f85b01ca",
+      "version": "github:revery-ui/revery#102b3d97",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#f85b01ca" ]
+        "source": [ "github:revery-ui/revery#102b3d97" ]
       },
       "overrides": [],
       "dependencies": [
@@ -976,7 +976,7 @@
       "overrides": [ "test.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#37e19a3@d41d8cd9",
-        "revery@github:revery-ui/revery#f85b01ca@d41d8cd9",
+        "revery@github:revery-ui/revery#102b3d97@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
@@ -1555,7 +1555,7 @@
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocaml-migrate-parsetree@opam:1.7.3@dbcf3b47",
-        "@opam/merlin-extend@opam:0.5@675b1611",
+        "@opam/merlin-extend@opam:0.6@404f814c",
         "@opam/menhir@opam:20200624@8629ff13",
         "@opam/fix@opam:20200131@0ecd2f01", "@opam/dune@opam:2.5.0@e0bac278",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
@@ -1563,7 +1563,7 @@
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/ocaml-migrate-parsetree@opam:1.7.3@dbcf3b47",
-        "@opam/merlin-extend@opam:0.5@675b1611",
+        "@opam/merlin-extend@opam:0.6@404f814c",
         "@opam/menhir@opam:20200624@8629ff13",
         "@opam/fix@opam:20200131@0ecd2f01", "@opam/dune@opam:2.5.0@e0bac278"
       ]
@@ -2260,20 +2260,20 @@
         "@opam/result@opam:1.5@6b753c82", "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
-    "@opam/merlin-extend@opam:0.5@675b1611": {
-      "id": "@opam/merlin-extend@opam:0.5@675b1611",
+    "@opam/merlin-extend@opam:0.6@404f814c": {
+      "id": "@opam/merlin-extend@opam:0.6@404f814c",
       "name": "@opam/merlin-extend",
-      "version": "opam:0.5",
+      "version": "opam:0.6",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/ca/ca3a38c360c7d4827eb4789abf7a6aa4b6e3b4e3c3ef69a5be64dce4601ec227#sha256:ca3a38c360c7d4827eb4789abf7a6aa4b6e3b4e3c3ef69a5be64dce4601ec227",
-          "archive:https://github.com/let-def/merlin-extend/releases/download/v0.5/merlin-extend-v0.5.tbz#sha256:ca3a38c360c7d4827eb4789abf7a6aa4b6e3b4e3c3ef69a5be64dce4601ec227"
+          "archive:https://opam.ocaml.org/cache/sha256/c2/c2f236ae97feb6ba0bc90f33beb7b7343e42f9871b66de9ba07974917e256c43#sha256:c2f236ae97feb6ba0bc90f33beb7b7343e42f9871b66de9ba07974917e256c43",
+          "archive:https://github.com/let-def/merlin-extend/releases/download/v0.6/merlin-extend-v0.6.tbz#sha256:c2f236ae97feb6ba0bc90f33beb7b7343e42f9871b66de9ba07974917e256c43"
         ],
         "opam": {
           "name": "merlin-extend",
-          "version": "0.5",
-          "path": "test.esy.lock/opam/merlin-extend.0.5"
+          "version": "0.6",
+          "path": "test.esy.lock/opam/merlin-extend.0.6"
         }
       },
       "overrides": [],
@@ -2707,12 +2707,12 @@
         "@opam/result@opam:1.5@6b753c82",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/astring@opam:0.8.4@1215f84d",
+        "@opam/astring@opam:0.8.5@1300cee8",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
-        "@opam/astring@opam:0.8.4@1215f84d"
+        "@opam/astring@opam:0.8.5@1300cee8"
       ]
     },
     "@opam/fp@github:bryphe/reason-native:fp.opam#fd0225c@d41d8cd9": {
@@ -3197,7 +3197,7 @@
         "@opam/logs@opam:0.7.0@1d03143e", "@opam/fpath@opam:0.7.2@45477b93",
         "@opam/fmt@opam:0.8.8@01c3a23c",
         "@opam/base-unix@opam:base@87d0b2eb",
-        "@opam/astring@opam:0.8.4@1215f84d",
+        "@opam/astring@opam:0.8.5@1300cee8",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -3205,7 +3205,7 @@
         "@opam/logs@opam:0.7.0@1d03143e", "@opam/fpath@opam:0.7.2@45477b93",
         "@opam/fmt@opam:0.8.8@01c3a23c",
         "@opam/base-unix@opam:base@87d0b2eb",
-        "@opam/astring@opam:0.8.4@1215f84d"
+        "@opam/astring@opam:0.8.5@1300cee8"
       ]
     },
     "@opam/biniou@opam:1.2.1@d7570399": {
@@ -3480,20 +3480,20 @@
         "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
-    "@opam/astring@opam:0.8.4@1215f84d": {
-      "id": "@opam/astring@opam:0.8.4@1215f84d",
+    "@opam/astring@opam:0.8.5@1300cee8": {
+      "id": "@opam/astring@opam:0.8.5@1300cee8",
       "name": "@opam/astring",
-      "version": "opam:0.8.4",
+      "version": "opam:0.8.5",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/54/548fcbf501ca4cb816d219ca4f25f660#md5:548fcbf501ca4cb816d219ca4f25f660",
-          "archive:https://erratique.ch/software/astring/releases/astring-0.8.4.tbz#md5:548fcbf501ca4cb816d219ca4f25f660"
+          "archive:https://opam.ocaml.org/cache/md5/e1/e148907c24157d1df43bec89b58b3ec8#md5:e148907c24157d1df43bec89b58b3ec8",
+          "archive:https://erratique.ch/software/astring/releases/astring-0.8.5.tbz#md5:e148907c24157d1df43bec89b58b3ec8"
         ],
         "opam": {
           "name": "astring",
-          "version": "0.8.4",
-          "path": "test.esy.lock/opam/astring.0.8.4"
+          "version": "0.8.5",
+          "path": "test.esy.lock/opam/astring.0.8.5"
         }
       },
       "overrides": [],
@@ -3599,7 +3599,7 @@
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocaml-migrate-parsetree@opam:1.7.3@dbcf3b47",
-        "@opam/merlin-extend@opam:0.5@675b1611",
+        "@opam/merlin-extend@opam:0.6@404f814c",
         "@opam/menhir@opam:20200624@8629ff13",
         "@opam/fix@opam:20200131@0ecd2f01", "@opam/dune@opam:2.5.0@e0bac278"
       ],
