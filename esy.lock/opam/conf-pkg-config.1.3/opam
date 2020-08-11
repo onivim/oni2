@@ -28,6 +28,7 @@ depexts: [
   ["pkgconfig"] {os-distribution = "nixos"}
   ["devel/pkgconf"] {os = "openbsd"}
   ["pkg-config"] {os = "macos" & os-distribution = "homebrew"}
+  ["pkgconfig"] {os = "macos" & os-distribution = "macports"}
   ["pkgconf"] {os = "freebsd"}
   ["pkgconf-pkg-config"] {os-distribution = "rhel" & os-version >= "8"}
   ["pkgconf-pkg-config"] {os-distribution = "centos" & os-version >= "8"}
