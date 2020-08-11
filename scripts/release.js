@@ -124,6 +124,7 @@ if (process.platform == "linux") {
         CFBundleSignature: "????",
         CFBundleExecutable: "Oni2_editor",
         NSHighResolutionCapable: true,
+        NSSupportsAutomaticGraphicsSwitching: true,
         CFBundleDocumentTypes: package.build.fileAssociations.map((fileAssoc) => {
             return {
                 CFBundleTypeExtensions: fileAssoc.ext.map((ext) => ext.substr(1)),
