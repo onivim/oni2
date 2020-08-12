@@ -145,17 +145,15 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
       )
 
     | BufferSaved(bufferId) =>
-      let effect = state.buffers
-      |> Oni_Model.Buffers.getBuffer(bufferId)
-      |> Option.map(buffer => {
-        gitRefreshEffect(state.scm, buffer |> Oni_Core.Buffer.getUri)
-      })
-      |> Option.value(~default=Isolinear.Effect.none);
+      let effect =
+        state.buffers
+        |> Oni_Model.Buffers.getBuffer(bufferId)
+        |> Option.map(buffer => {
+             gitRefreshEffect(state.scm, buffer |> Oni_Core.Buffer.getUri)
+           })
+        |> Option.value(~default=Isolinear.Effect.none);
 
-      (
-        state,
-        effect,
-      );
+      (state, effect);
 
     | StatusBar(ContributedItemClicked({command, _})) => (
         state,
