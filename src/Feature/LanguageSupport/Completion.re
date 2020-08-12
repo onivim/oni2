@@ -949,21 +949,40 @@ module View = {
     | Issue => Codicon.symbolMisc
     | Snippet => Codicon.symbolText;
 
-  let kindToColor = (tokenTheme: TokenTheme.t) =>
-    fun
-    | Text => Some(tokenTheme.textColor)
-    | Method => Some(tokenTheme.functionColor)
-    | Function => Some(tokenTheme.functionColor)
-    | Constructor => Some(tokenTheme.entityColor)
-    | Struct => Some(tokenTheme.typeColor)
-    | Module => Some(tokenTheme.entityColor)
-    | Unit => Some(tokenTheme.entityColor)
-    | Keyword => Some(tokenTheme.keywordColor)
-    | Enum => Some(tokenTheme.entityColor)
-    | Constant => Some(tokenTheme.constantColor)
-    | Property => Some(tokenTheme.entityColor)
-    | Interface => Some(tokenTheme.entityColor)
-    | _ => None;
+  let kindToColor = (colors: Oni_Core.ColorTheme.Colors.t) =>
+    Feature_Theme.Colors.SymbolIcon.(
+      {
+        fun
+        | Method => methodForeground.from(colors)
+        | Function => functionForeground.from(colors)
+        | Constructor => constructorForeground.from(colors)
+        | Field => fieldForeground.from(colors)
+        | Variable => variableForeground.from(colors)
+        | Class => classForeground.from(colors)
+        | Struct => structForeground.from(colors)
+        | Interface => interfaceForeground.from(colors)
+        | Module => moduleForeground.from(colors)
+        | Property => propertyForeground.from(colors)
+        | Event => eventForeground.from(colors)
+        | Operator => operatorForeground.from(colors)
+        | Unit => unitForeground.from(colors)
+        | Value
+        | Constant => constantForeground.from(colors)
+        | Enum => enumeratorForeground.from(colors)
+        | EnumMember => enumeratorMemberForeground.from(colors)
+        | Keyword => keywordForeground.from(colors)
+        | Text => textForeground.from(colors)
+        | Color => colorForeground.from(colors)
+        | File => fileForeground.from(colors)
+        | Reference => referenceForeground.from(colors)
+        | Customcolor => colorForeground.from(colors)
+        | Folder => folderForeground.from(colors)
+        | TypeParameter => typeParameterForeground.from(colors)
+        | User => nullForeground.from(colors)
+        | Issue => nullForeground.from(colors)
+        | Snippet => snippetForeground.from(colors);
+      }
+    );
 
   module Colors = {
     type t = {
@@ -1048,17 +1067,14 @@ module View = {
         ~text,
         ~kind,
         ~highlight,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
         ~colors: Colors.t,
-        ~tokenTheme,
         ~editorFont: Service_Font.font,
         (),
       ) => {
     let icon = kind |> kindToIcon;
 
-    let iconColor =
-      kind
-      |> kindToColor(tokenTheme)
-      |> Option.value(~default=colors.editorForeground);
+    let iconColor = kind |> kindToColor(theme);
 
     <View style={Styles.item(~isFocused, ~colors)}>
       <View style={Styles.icon(~color=iconColor)}>
@@ -1180,8 +1196,8 @@ module View = {
                 text
                 kind
                 highlight
+                theme
                 colors
-                tokenTheme
                 editorFont
               />;
             }}
