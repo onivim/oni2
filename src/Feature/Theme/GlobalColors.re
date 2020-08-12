@@ -917,6 +917,107 @@ module StatusBar = {
   let defaults = [background, foreground];
 };
 
+module SymbolIcon = {
+  let arrayForeground =
+    define("symbolIcon.arrayForeground", all(ref(foreground)));
+  let booleanForeground =
+    define("symbolIcon.booleanForeground", all(ref(foreground)));
+  let classForeground =
+    define("symbolIcon.classForeground", all(ref(foreground)));
+  let colorForeground =
+    define("symbolIcon.colorForeground", all(ref(foreground)));
+  let constantForeground =
+    define("symbolIcon.constantForeground", all(ref(foreground)));
+  let constructorForeground =
+    define("symbolIcon.constructorForeground", all(ref(foreground)));
+  let enumeratorForeground =
+    define("symbolIcon.enumeratorForeground", all(ref(foreground)));
+  let enumeratorMemberForeground =
+    define("symbolIcon.enumeratorMemberForeground", all(ref(foreground)));
+  let eventForeground =
+    define("symbolIcon.eventForeground", all(ref(foreground)));
+  let fieldForeground =
+    define("symbolIcon.fieldForeground", all(ref(foreground)));
+  let fileForeground =
+    define("symbolIcon.fileForeground", all(ref(foreground)));
+  let folderForeground =
+    define("symbolIcon.folderForeground", all(ref(foreground)));
+  let functionForeground =
+    define("symbolIcon.functionForeground", all(ref(foreground)));
+  let interfaceForeground =
+    define("symbolIcon.interfaceForeground", all(ref(foreground)));
+  let keyForeground =
+    define("symbolIcon.keyForeground", all(ref(foreground)));
+  let keywordForeground =
+    define("symbolIcon.keywordForeground", all(ref(foreground)));
+  let methodForeground =
+    define("symbolIcon.methodForeground", all(ref(foreground)));
+  let moduleForeground =
+    define("symbolIcon.moduleForeground", all(ref(foreground)));
+  let namespaceForeground =
+    define("symbolIcon.namespaceForeground", all(ref(foreground)));
+  let nullForeground =
+    define("symbolIcon.nullForeground", all(ref(foreground)));
+  let objectForeground =
+    define("symbolIcon.objectForeground", all(ref(foreground)));
+  let operatorForeground =
+    define("symbolIcon.operatorForeground", all(ref(foreground)));
+  let packageForeground =
+    define("symbolIcon.packageForeground", all(ref(foreground)));
+  let propertyForeground =
+    define("symbolIcon.propertyForeground", all(ref(foreground)));
+  let referenceForeground =
+    define("symbolIcon.referenceForeground", all(ref(foreground)));
+  let snippetForeground =
+    define("symbolIcon.snippetForeground", all(ref(foreground)));
+  let stringForeground =
+    define("symbolIcon.stringForeground", all(ref(foreground)));
+  let structForeground =
+    define("symbolIcon.structForeground", all(ref(foreground)));
+  let textForeground =
+    define("symbolIcon.textForeground", all(ref(foreground)));
+  let typeParameterForeground =
+    define("symbolIcon.typeParameterForeground", all(ref(foreground)));
+  let unitForeground =
+    define("symbolIcon.unitForeground", all(ref(foreground)));
+  let variableForeground =
+    define("symbolIcon.variableForeground", all(ref(foreground)));
+
+  let defaults = [
+    arrayForeground,
+    booleanForeground,
+    classForeground,
+    colorForeground,
+    constantForeground,
+    constructorForeground,
+    enumeratorForeground,
+    enumeratorMemberForeground,
+    eventForeground,
+    fieldForeground,
+    fileForeground,
+    folderForeground,
+    functionForeground,
+    interfaceForeground,
+    keyForeground,
+    keywordForeground,
+    methodForeground,
+    moduleForeground,
+    namespaceForeground,
+    nullForeground,
+    objectForeground,
+    packageForeground,
+    propertyForeground,
+    referenceForeground,
+    snippetForeground,
+    stringForeground,
+    structForeground,
+    textForeground,
+    typeParameterForeground,
+    unitForeground,
+    variableForeground,
+  ];
+};
+
 module Tab = {
   // BACKGROUND
 

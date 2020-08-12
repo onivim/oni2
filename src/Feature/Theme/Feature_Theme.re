@@ -52,6 +52,7 @@ let defaults =
     Colors.SideBar.defaults,
     Colors.SideBarSectionHeader.defaults,
     Colors.StatusBar.defaults,
+    Colors.SymbolIcon.defaults,
     Colors.Tab.defaults,
     Colors.TextLink.defaults,
     Colors.TitleBar.defaults,
