@@ -91,7 +91,6 @@ let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
-let getLineHeight: t => float;
 
 // PIXEL-SPACE CONVERSION
 
