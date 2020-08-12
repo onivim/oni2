@@ -11,6 +11,7 @@
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll \\'$cur__bin\\'': 'echo'}\"",
       "bash -c \"cp #{esy-sdl2.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
       "bash -c \"cp #{esy-skia.bin}/skia.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
+      "bash -c \"cp #{esy-angle-prebuilt.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
       "bash -c \"cp #{@reason-native-web/esy-openssl.bin}/libcrypto-1_1-x64.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
       "bash -c \"cp #{@reason-native-web/esy-openssl.bin}/libssl-1_1-x64.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
     ]
@@ -234,6 +235,7 @@
     "axios": "^0.19.0",
     "editor-core-types": "*",
     "editor-input": "*",
+    "esy-angle-prebuilt": "^1.0.0",
     "esy-macdylibbundler": "*",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "esy-sdl2": "*",
@@ -251,7 +253,7 @@
   },
   "resolutions": {
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#102b3d97",
+    "revery": "revery-ui/revery#926dabd4",
     "editor-core-types": "onivim/editor-core-types#6a8afaf",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",

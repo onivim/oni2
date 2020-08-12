@@ -15,13 +15,13 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let start = (extensions, extHostClient: Exthost.Client.t) => {
-  let gitRefreshEffect = (scm: Feature_SCM.model) =>
+  let gitRefreshEffect = (scm: Feature_SCM.model, uri) =>
     if (scm == Feature_SCM.initial) {
       Isolinear.Effect.none;
     } else {
       Service_Exthost.Effects.Commands.executeContributedCommand(
         ~command="git.refresh",
-        ~arguments=[],
+        ~arguments=[`String(uri |> Oni_Core.Uri.toFileSystemPath)],
         extHostClient,
       );
     };
@@ -144,10 +144,16 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ),
       )
 
-    | BufferSaved(_) => (
-        state,
-        Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
-      )
+    | BufferSaved(bufferId) =>
+      let effect =
+        state.buffers
+        |> Oni_Model.Buffers.getBuffer(bufferId)
+        |> Option.map(buffer => {
+             gitRefreshEffect(state.scm, buffer |> Oni_Core.Buffer.getUri)
+           })
+        |> Option.value(~default=Isolinear.Effect.none);
+
+      (state, effect);
 
     | StatusBar(ContributedItemClicked({command, _})) => (
         state,
