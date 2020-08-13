@@ -9,7 +9,6 @@ module Constants = {
   let imageSize = 40;
   let imageContainerSize = 50;
   let defaultIcon = "https://open-vsx.org/default-icon.png";
-  let buttonWidth = 50;
 };
 
 module Styles = {
@@ -69,9 +68,9 @@ module Styles = {
     flexDirection(`Row),
     justifyContent(`Center),
     alignItems(`Center),
-    flexGrow(0),
+    flexShrink(0),
   ];
-  let innerButton = [margin(2)];
+  let innerButton = [margin(4)];
 };
 
 module ActionButton = {
@@ -178,9 +177,7 @@ let make =
       <View
         style=Style.[flexDirection(`Row), justifyContent(`SpaceBetween)]>
         <View style=Style.[flexShrink(1)]> authorOrRestart </View>
-        <View style=Style.[flexBasis(Constants.buttonWidth), flexShrink(0)]>
-          actionButton
-        </View>
+        <View style=Style.[flexShrink(0)]> actionButton </View>
       </View>
     </View>
     padding
