@@ -381,10 +381,10 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
   ),
   (
-    "workbench.sideBar.position",
+    "workbench.sideBar.location",
     (config, json) => {
       ...config,
-      workbenchSideBarPosition: parseString(json),
+      workbenchSideBarLocation: parseString(json),
     },
   ),
   (

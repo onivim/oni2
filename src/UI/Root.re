@@ -181,7 +181,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   ];
 
   let surfaceComponents =
-    switch (Feature_SideBar.position(state.sideBar)) {
+    switch (Feature_SideBar.location(state.sideBar)) {
     | Feature_SideBar.Left => defaultSurfaceComponents
     | Feature_SideBar.Right => List.rev(defaultSurfaceComponents)
     };

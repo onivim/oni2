@@ -3,7 +3,7 @@ type pane =
   | SCM
   | Extensions;
 
-type position =
+type location =
   | Left
   | Right;
 
@@ -27,12 +27,12 @@ type model = {
   width: int,
   resizeDelta: int,
   shouldSnapShut: bool,
-  position,
+  location,
 };
 
 let selected = ({selected, _}) => selected;
 let isOpen = ({isOpen, _}) => isOpen;
-let position = ({position, _}) => position;
+let location = ({location, _}) => location;
 
 let initial = {
   openByDefault: false,
@@ -41,7 +41,7 @@ let initial = {
   width: Constants.defaultWidth,
   resizeDelta: 0,
   shouldSnapShut: true,
-  position: Left,
+  location: Left,
 };
 
 let width = ({width, resizeDelta, isOpen, shouldSnapShut, _}) =>
@@ -99,24 +99,24 @@ let toggle = (pane, state) =>
     {...state, shouldSnapShut: true, isOpen: true, selected: pane};
   };
 
-let setDefaultPosition = (state, setting) => {
-  let position =
+let setDefaultLocation = (state, setting) => {
+  let location =
     switch (setting) {
     | "right" => Right
     | "left" => Left
     | _ => Left
     };
 
-  {...state, position};
+  {...state, location};
 };
 
 type settings = {
-  sideBarPosition: string,
+  sideBarLocation: string,
   sideBarVisibility: bool,
 };
 
 let setDefaults = (state, settings) => {
-  let {sideBarVisibility, sideBarPosition} = settings;
-  let state = setDefaultPosition(state, sideBarPosition);
+  let {sideBarVisibility, sideBarLocation} = settings;
+  let state = setDefaultLocation(state, sideBarLocation);
   setDefaultVisibility(state, sideBarVisibility);
 };

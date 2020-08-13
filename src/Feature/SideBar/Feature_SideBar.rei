@@ -3,7 +3,7 @@ type pane =
   | SCM
   | Extensions;
 
-type position =
+type location =
   | Left
   | Right;
 
@@ -21,15 +21,15 @@ let initial: model;
 let width: model => int;
 let isOpen: model => bool;
 let selected: model => pane;
-let position: model => position;
+let location: model => location;
 
 let isVisible: (pane, model) => bool;
 let toggle: (pane, model) => model;
 let setDefaultVisibility: (model, bool) => model;
-let setDefaultPosition: (model, string) => model;
+let setDefaultLocation: (model, string) => model;
 
 type settings = {
-  sideBarPosition: string,
+  sideBarLocation: string,
   sideBarVisibility: bool,
 };
 

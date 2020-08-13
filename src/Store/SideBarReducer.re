@@ -27,11 +27,11 @@ let reduce = (~zenMode, state: Feature_SideBar.model, action: Actions.t) => {
   | ActivityBar(ActivityBar.ExtensionsClick) when !zenMode =>
     Feature_SideBar.toggle(Feature_SideBar.Extensions, state)
   | ConfigurationSet(newConfig) =>
-    let sideBarPosition =
-      Configuration.getValue(c => c.workbenchSideBarPosition, newConfig);
+    let sideBarLocation =
+      Configuration.getValue(c => c.workbenchSideBarLocation, newConfig);
     let sideBarVisibility =
       Configuration.getValue(c => c.workbenchSideBarVisible, newConfig);
-    Feature_SideBar.setDefaults(state, {sideBarPosition, sideBarVisibility});
+    Feature_SideBar.setDefaults(state, {sideBarLocation, sideBarVisibility});
   | _ => state
   };
 };
