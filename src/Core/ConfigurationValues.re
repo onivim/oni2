@@ -60,6 +60,7 @@ type t = {
   workbenchActivityBarVisible: bool,
   workbenchColorTheme: string,
   workbenchIconTheme: string,
+  workbenchSideBarPosition: string,
   /* Onivim2 specific setting */
   workbenchSideBarVisible: bool,
   workbenchEditorShowTabs: bool,
@@ -109,6 +110,7 @@ let default = {
   workbenchActivityBarVisible: true,
   workbenchColorTheme: "LaserWave Italic",
   workbenchEditorShowTabs: true,
+  workbenchSideBarPosition: "left",
   workbenchSideBarVisible: true,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
