@@ -150,7 +150,7 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
       |> List.map(token => {
            let {position, scopes, _}: Textmate.Token.t = token;
            let combinedScopes = scopes |> String.concat(" ") |> String.trim;
-           prerr_endline ("COMBINED SCOPES: " ++ combinedScopes);
+           prerr_endline("COMBINED SCOPES: " ++ combinedScopes);
 
            let resolvedColor =
              TokenTheme.match(pending.theme, combinedScopes);
