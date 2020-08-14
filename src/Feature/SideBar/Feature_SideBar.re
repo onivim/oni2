@@ -100,13 +100,7 @@ let toggle = (pane, state) =>
   };
 
 let setDefaultLocation = (state, setting) => {
-  let location =
-    switch (setting) {
-    | "right" => Right
-    | "left" => Left
-    | _ => Left
-    };
-
+  let location = setting == "right" ? Right : Left;
   {...state, location};
 };
 
