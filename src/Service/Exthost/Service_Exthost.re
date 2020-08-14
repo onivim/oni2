@@ -276,7 +276,10 @@ module Sub = {
     Isolinear.Sub.Make({
       type nonrec msg = unit;
       type nonrec params = bufferParams;
-      type state = {didAdd: bool};
+      type state = {
+        didAdd: bool,
+        lastFileType: option(string)
+      };
 
       let name = "Service_Exthost.BufferSubscription";
       let id = params => {
@@ -286,6 +289,7 @@ module Sub = {
       let init = (~params, ~dispatch as _) => {
         let bufferId = Oni_Core.Buffer.getId(params.buffer);
 
+        let maybeFileType = Oni_Core.Buffer.getFileType(params.buffer);
         Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
 
         params.buffer
@@ -308,13 +312,36 @@ module Sub = {
             ~delta=addedDelta,
             params.client,
           );
-          {didAdd: true};
-        | None => {didAdd: false}
+          {lastFileType: maybeFileType, didAdd: true};
+        | None => {lastFileType: maybeFileType, didAdd: false}
         };
       };
 
-      let update = (~params as _, ~state, ~dispatch as _) => {
-        state;
+      let update = (~params, ~state, ~dispatch as _) => {
+        let maybeFileType = Oni_Core.Buffer.getFileType(params.buffer);
+
+        if (state.lastFileType != maybeFileType && state.didAdd) {
+          let oldModeId = state.lastFileType
+          |> Option.value(~default="plaintext");
+
+          let newModeId = maybeFileType
+          |> Option.value(~default="plaintext");
+          
+          // Ensure relevant extensions are activated
+          let () = params.buffer
+          |> Oni_Core.Buffer.getFileType
+          |> Internal.activateFileType(~client=params.client);
+
+          Log.infof(m => m("Updated mode for extension host - old: %s new: %s", oldModeId, newModeId))
+          let () = Exthost.Request.Documents.acceptModelModeChanged(
+            ~uri=Oni_Core.Buffer.getUri(params.buffer),
+            ~oldModeId,
+            ~newModeId,
+            params.client,
+          );
+        };
+
+        { ...state, lastFileType: maybeFileType };
       };
 
       let dispose = (~params, ~state) =>

@@ -69,6 +69,18 @@ let start =
       Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
 
+  let _: unit => unit =
+    Vim.Buffer.onFiletypeChanged(metadata => {
+      let Vim.BufferMetadata.{id, fileType, _} = metadata;
+
+      switch (fileType) {
+      | None => ()
+      | Some(fileType) =>
+        Log.infof(m => m("Setting filetype %s for buffer %d", fileType, id));
+        dispatch(Actions.BufferFileTypeChanged({id, fileType}));
+      };
+    });
+
   let handleGoto = gotoType => {
     switch (gotoType) {
     | Vim.Goto.Hover => dispatch(Actions.Hover(Feature_Hover.Command(Show)))

@@ -32,6 +32,10 @@ type t =
       // but I want to remove it shortly
       buffer: [@opaque] Buffer.t,
     })
+  | BufferFileTypeChanged({
+      id: int,
+      fileType: string,
+    })
   | BufferFilenameChanged({
       id: int,
       newFilePath: option(string),
