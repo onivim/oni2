@@ -47,7 +47,7 @@ let create =
 
   let trie =
     List.fold_left(
-      (prev, curr) => {
+      (prev: Trie.t(selectorWithParents), curr) => {
         open Selector;
         let {scopes, style} = curr;
 
@@ -240,7 +240,9 @@ let _applyStyle: (TokenStyle.t, TokenStyle.t) => TokenStyle.t =
   };
 
 let match = (theme: t, scopes: string) => {
+  prerr_endline ("Scopes before: " ++ scopes);
   let scopes = Scopes.ofString(scopes) |> List.rev;
+  prerr_endline ("Scopes after: " ++ Scopes.toString(scopes));
   let default =
     ResolvedStyle.default(
       ~foreground=theme.defaultForeground,
@@ -248,7 +250,8 @@ let match = (theme: t, scopes: string) => {
       (),
     );
 
-  let rec f = scopes => {
+  let rec f = (~default: ResolvedStyle.t, scopes) => {
+    prerr_endline ("f: " ++ Scopes.toString(scopes));
     switch (scopes) {
     | [] => default
     | [scope, ...scopeParents] =>
@@ -257,13 +260,14 @@ let match = (theme: t, scopes: string) => {
 
       switch (p) {
       // If there were no matches... try the next scope up.
-      | [] => f(scopeParents)
+      | [] => f(~default, scopeParents)
       // Got matches - we'll apply them in sequence
       | _ =>
         let result =
           List.fold_left(
             (prev: option(TokenStyle.t), curr) => {
-              let (_name, selector: option(selectorWithParents)) = curr;
+              let (name, selector: option(selectorWithParents)) = curr;
+              prerr_endline ("Evaluating: " ++ name);
 
               switch (selector) {
               // No selector at this node. This can happen when a node is on the
@@ -286,12 +290,17 @@ let match = (theme: t, scopes: string) => {
 
                 switch (parentsScopesToApply, style) {
                 // Case 1: No parent selectors match AND there is no style. We should continue on.
-                | ([], None) => None
+                | ([], None) =>
+                prerr_endline (" -- Case 1 hit.");
+                None
                 // Case 2: No parent selectors match, but there is a style at the Node. We should apply the style.
-                | ([], Some(style)) => Some(_applyStyle(prevStyle, style))
+                | ([], Some(style)) => 
+                prerr_endline (" -- Case 2 hit.");
+                Some(_applyStyle(prevStyle, style))
                 // Case 3: We have parent selectors that match, and may or may not have a style at the node.
                 // Apply the parent styles, and the node style, if applicable.
                 | (_, style) =>
+                prerr_endline ("-- Case 3 hit");
                   let newStyle =
                     switch (style) {
                     | Some(v) => _applyStyle(prevStyle, v)
@@ -320,7 +329,7 @@ let match = (theme: t, scopes: string) => {
           );
 
         switch (result) {
-        | None => f(scopeParents)
+        | None => f(~default, scopeParents)
         | Some(result) =>
           let foreground =
             switch (result.foreground) {
@@ -346,10 +355,10 @@ let match = (theme: t, scopes: string) => {
             | None => default.background
             };
 
-          {background, foreground, bold, italic};
+          f(~default=ResolvedStyle.{background, foreground, bold, italic}, scopeParents);
         };
       };
     };
   };
-  f(scopes);
+  f(~default, scopes);
 };

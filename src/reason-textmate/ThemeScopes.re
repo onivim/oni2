@@ -13,6 +13,8 @@ module Scope = {
 
   let ofString = s => String.split_on_char('.', s);
 
+  let toString = scope => String.concat(".", scope);
+
   let rec matches = (selector: t, v: t) => {
     switch (selector, v) {
     | ([], _) => true
@@ -43,6 +45,8 @@ module Scopes = {
     s
     |> String.split_on_char(' ')
     |> List.map(v => Scope.ofString(String.trim(v)));
+
+  let toString = scopes => String.concat("\n", scopes |> List.map(Scope.toString));
 
   let rec matches = (selector: t, v: t) => {
     switch (selector, v) {
