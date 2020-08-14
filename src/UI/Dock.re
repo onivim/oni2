@@ -24,20 +24,28 @@ module Styles = {
     transform(Transform.[TranslateX(offsetX)]),
   ];
 
-  let item = (~isHovered, ~isActive, ~theme) => [
-    position(`Relative),
-    height(50),
-    width(50),
-    justifyContent(`Center),
-    alignItems(`Center),
-    borderLeft(
-      ~width=2,
-      ~color=(isActive ? Colors.activeBorder : Colors.border).from(theme),
-    ),
-    backgroundColor(
-      theme |> (isHovered ? Colors.activeBackground : Colors.background).from,
-    ),
-  ];
+  let item = (~isHovered, ~isActive, ~theme, ~sideBar) => {
+    let borderFn =
+      switch (Feature_SideBar.location(sideBar)) {
+      | Feature_SideBar.Right => borderRight
+      | Feature_SideBar.Left => borderLeft
+      };
+
+    [
+      position(`Relative),
+      height(50),
+      width(50),
+      justifyContent(`Center),
+      alignItems(`Center),
+      borderFn(
+        ~width=2,
+        ~color=(isActive ? Colors.activeBorder : Colors.border).from(theme),
+      ),
+      backgroundColor(
+        theme |> (isHovered ? Colors.activeBackground : Colors.background).from,
+      ),
+    ];
+  };
 
   let notification = (~scale, ~theme, ~padding) => [
     position(`Absolute),
@@ -99,6 +107,7 @@ let%component item =
               (
                 ~notification: option(notification)=?,
                 ~onClick,
+                ~sideBar,
                 ~theme,
                 ~isActive,
                 ~icon,
@@ -131,7 +140,7 @@ let%component item =
     <Sneakable
       sneakId="item"
       onClick
-      style={Styles.item(~isHovered, ~isActive, ~theme)}>
+      style={Styles.item(~isHovered, ~isActive, ~theme, ~sideBar)}>
       <icon />
       notificationElement
     </Sneakable>
@@ -183,6 +192,7 @@ let%component make =
     <item
       font
       onClick=onExplorerClick
+      sideBar
       theme
       isActive={isSidebarVisible(FileExplorer)}
       icon=FontAwesome.copy
@@ -191,6 +201,7 @@ let%component make =
     <item
       font
       onClick=onSearchClick
+      sideBar
       theme
       isActive={isPaneVisible(Search)}
       icon=FontAwesome.search
@@ -198,6 +209,7 @@ let%component make =
     <item
       font
       onClick=onSCMClick
+      sideBar
       theme
       isActive={isSidebarVisible(SCM)}
       icon=FontAwesome.codeBranch
@@ -205,6 +217,7 @@ let%component make =
     <item
       font
       onClick=onExtensionsClick
+      sideBar
       theme
       isActive={isSidebarVisible(Extensions)}
       icon=FontAwesome.thLarge
