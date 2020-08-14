@@ -63,6 +63,22 @@ module Scopes = {
   };
 };
 
+module ResolvedStyle = {
+  type t = {
+    foreground: string,
+    background: string,
+    bold: bool,
+    italic: bool,
+  };
+
+  let default = (~foreground, ~background, ()) => {
+    foreground,
+    background,
+    bold: false,
+    italic: false,
+  };
+};
+
 module TokenStyle = {
   [@deriving show({with_path: false})]
   type t = {
@@ -77,6 +93,66 @@ module TokenStyle = {
     | None => "Foreground: None"
     | Some(_) => "Foreground: Some"
     };
+  };
+
+  let merge = (prev, style) => {
+    let foreground =
+      switch (prev.foreground, style.foreground) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    let background =
+      switch (prev.background, style.background) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    let bold =
+      switch (prev.bold, style.bold) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    let italic =
+      switch (prev.italic, style.italic) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    {background, foreground, bold, italic};
+  };
+
+  let resolve = (~default: ResolvedStyle.t, style) => {
+    let foreground =
+      switch (style.foreground) {
+      | Some(v) => v
+      | None => default.foreground
+      };
+
+    let bold =
+      switch (style.bold) {
+      | Some(v) => v
+      | None => default.bold
+      };
+
+    let italic =
+      switch (style.italic) {
+      | Some(v) => v
+      | None => default.italic
+      };
+
+    let background =
+      switch (style.background) {
+      | Some(v) => v
+      | None => default.background
+      };
+
+    ResolvedStyle.{bold, italic, foreground, background};
   };
 
   let create =
@@ -98,22 +174,6 @@ module TokenStyle = {
     background: None,
     bold: None,
     italic: None,
-  };
-};
-
-module ResolvedStyle = {
-  type t = {
-    foreground: string,
-    background: string,
-    bold: bool,
-    italic: bool,
-  };
-
-  let default = (~foreground, ~background, ()) => {
-    foreground,
-    background,
-    bold: false,
-    italic: false,
   };
 };
 

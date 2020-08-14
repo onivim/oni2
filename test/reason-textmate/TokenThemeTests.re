@@ -422,20 +422,15 @@ describe("TokenTheme", ({describe, _}) => {
           json,
         );
 
-      //      // Just support.function.console.js should resolve to the support.function
-      //      let style: ResolvedStyle.t =
-      //        TokenTheme.match(theme, "support.function.console.js");
-      //      expect.string(style.foreground).toEqual("#AAAAAA");
-      //
+      // Just support.function.console.js should resolve to the support.function
+      let style: ResolvedStyle.t =
+        TokenTheme.match(theme, "support.function.console.js");
+      expect.string(style.foreground).toEqual("#AAAAAA");
+
       //...and introducing source.js should still be the same, since it is less specific
-      prerr_endline("-- START");
       let style: ResolvedStyle.t =
         TokenTheme.match(theme, "support.function.console.js source.js");
       expect.string(style.foreground).toEqual("#AAAAAA");
-      prerr_endline("-- DONE");
-      //      let style: ResolvedStyle.t =
-      //        TokenTheme.match(theme, "support.function.console.js source.js");
-      //      expect.string(style.foreground).toEqual("#AAAAAA");
     });
   });
 });

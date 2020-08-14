@@ -206,95 +206,44 @@ let show = (v: t) => {
   );
 };
 
-let _applyStyle: (TokenStyle.t, TokenStyle.t) => TokenStyle.t =
-  (prev: TokenStyle.t, style: TokenStyle.t) => {
-    let foreground =
-      switch (prev.foreground, style.foreground) {
-      | (Some(v), _) => Some(v)
-      | (_, Some(v)) => Some(v)
-      | _ => None
-      };
-
-    let background =
-      switch (prev.background, style.background) {
-      | (Some(v), _) => Some(v)
-      | (_, Some(v)) => Some(v)
-      | _ => None
-      };
-
-    let bold =
-      switch (prev.bold, style.bold) {
-      | (Some(v), _) => Some(v)
-      | (_, Some(v)) => Some(v)
-      | _ => None
-      };
-
-    let italic =
-      switch (prev.italic, style.italic) {
-      | (Some(v), _) => Some(v)
-      | (_, Some(v)) => Some(v)
-      | _ => None
-      };
-
-    {background, foreground, bold, italic};
-  };
-
 type styleWithScore = {
   style: TokenStyle.t,
   score: int,
 };
 
 let match = (theme: t, scopes: string) => {
-  prerr_endline("Scopes before: " ++ scopes);
   let scopes = Scopes.ofString(scopes) |> List.rev;
-  prerr_endline("Scopes after: " ++ Scopes.toString(scopes));
-  let default =
-    ResolvedStyle.default(
-      ~foreground=theme.defaultForeground,
-      ~background=theme.defaultBackground,
-      (),
-    );
 
-  let rec f =
-          (~parentScopes, ~initialScore, ~acc: list(styleWithScore), scopes) => {
-    prerr_endline("f: " ++ Scopes.toString(scopes));
+  let rec calculateStyle =
+          (~parentScopes, ~acc: list(styleWithScore), scopes) => {
     switch (scopes) {
     | [] => acc
     | [scope, ...nextScope] =>
       // Get the matching path from the Trie
       let matchingPath = Trie.matches(theme.trie, scope);
-      let score = List.length(matchingPath) + initialScore;
-      prerr_endline("-- Score: " ++ string_of_int(score));
 
-      switch (matchingPath) {
-      // If there were no matches... try the next scope up.
-      | [] =>
-        f(
+      if (matchingPath == []) {
+        // No matches - let's try the next scope!
+        calculateStyle(
           ~parentScopes=[scope, ...parentScopes],
-          ~initialScore,
           ~acc,
           nextScope,
-        )
-      // Got matches - we'll apply them in sequence
-      | _ =>
+        );
+      } else {
         let maybeTokenStyle: option(TokenStyle.t) =
           matchingPath
           |> List.fold_left(
-               (prev: option(TokenStyle.t), curr) => {
-                 let (name, selector: option(selectorWithParents)) = curr;
-                 prerr_endline("Evaluating: " ++ name);
+               (maybePrev: option(TokenStyle.t), curr) => {
+                 let (_name, selector: option(selectorWithParents)) = curr;
 
                  switch (selector) {
                  // No selector at this node. This can happen when a node is on the
                  // path to a node with a style. Nothing to do here; continue on.
-                 | None => prev
+                 | None => maybePrev
                  // We have a selector at this node. Let's check it out.
                  | Some({style, parents}) =>
                    let prevStyle =
-                     switch (prev) {
-                     | None => TokenStyle.default
-                     | Some(v) => v
-                     };
+                     maybePrev |> Option.value(~default=TokenStyle.default);
 
                    // Get the list of matching parent selectors to apply
                    let parentsScopesToApply =
@@ -305,22 +254,20 @@ let match = (theme: t, scopes: string) => {
 
                    switch (parentsScopesToApply, style) {
                    // Case 1: No parent selectors match AND there is no style. We should continue on.
-                   | ([], None) =>
-                     prerr_endline(" -- Case 1 hit.");
-                     None;
+                   | ([], None) => None
+
                    // Case 2: No parent selectors match, but there is a style at the Node. We should apply the style.
                    | ([], Some(style)) =>
-                     prerr_endline(" -- Case 2 hit.");
-                     Some(_applyStyle(prevStyle, style));
+                     Some(TokenStyle.merge(prevStyle, style))
+
                    // Case 3: We have parent selectors that match, and may or may not have a style at the node.
                    // Apply the parent styles, and the node style, if applicable.
-                   | (_, style) =>
-                     prerr_endline("-- Case 3 hit");
+                   | (_, maybeStyle) =>
                      let newStyle =
-                       switch (style) {
-                       | Some(v) => _applyStyle(prevStyle, v)
-                       | None => TokenStyle.default
-                       };
+                       maybeStyle
+                       |> Option.map(TokenStyle.merge(prevStyle))
+                       |> Option.value(~default=TokenStyle.default);
+
                      // Apply any parent selectors that match...
                      // we should be sorting this by score!
                      Some(
@@ -330,7 +277,7 @@ let match = (theme: t, scopes: string) => {
                            let {style, _} = curr;
                            // Reversing the order because the parent style
                            // should take precedence over previous style
-                           _applyStyle(style, prev);
+                           TokenStyle.merge(style, prev);
                          },
                          newStyle,
                          parentsScopesToApply,
@@ -344,12 +291,13 @@ let match = (theme: t, scopes: string) => {
 
         let acc =
           maybeTokenStyle
-          |> Option.map(tokenStyle => [{style: tokenStyle, score}, ...acc])
+          |> Option.map(tokenStyle =>
+               [{style: tokenStyle, score: 0}, ...acc]
+             )
           |> Option.value(~default=acc);
 
-        f(
+        calculateStyle(
           ~parentScopes=[scope, ...parentScopes],
-          ~initialScore,
           ~acc,
           nextScope,
         );
@@ -357,7 +305,7 @@ let match = (theme: t, scopes: string) => {
     };
   };
 
-  let scoredStyles = f(~parentScopes=[], ~initialScore=0, ~acc=[], scopes);
+  let scoredStyles = calculateStyle(~parentScopes=[], ~acc=[], scopes);
 
   let result: TokenStyle.t =
     scoredStyles
@@ -365,33 +313,16 @@ let match = (theme: t, scopes: string) => {
     //    b.score - a.score
     //  })
     |> List.fold_left(
-         (acc, {style, _}) => {_applyStyle(acc, style)},
+         (acc, {style, _}) => {TokenStyle.merge(acc, style)},
          TokenStyle.default,
        );
 
-  let foreground =
-    switch (result.foreground) {
-    | Some(v) => v
-    | None => default.foreground
-    };
+  let default =
+    ResolvedStyle.default(
+      ~foreground=theme.defaultForeground,
+      ~background=theme.defaultBackground,
+      (),
+    );
 
-  let bold =
-    switch (result.bold) {
-    | Some(v) => v
-    | None => default.bold
-    };
-
-  let italic =
-    switch (result.italic) {
-    | Some(v) => v
-    | None => default.italic
-    };
-
-  let background =
-    switch (result.background) {
-    | Some(v) => v
-    | None => default.background
-    };
-
-  ResolvedStyle.{bold, italic, foreground, background};
+  TokenStyle.resolve(~default, result);
 };
