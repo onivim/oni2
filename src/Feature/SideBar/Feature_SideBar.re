@@ -44,11 +44,16 @@ let initial = {
   location: Left,
 };
 
-let width = ({width, resizeDelta, isOpen, shouldSnapShut, _}) =>
+let width = ({width, resizeDelta, isOpen, location, shouldSnapShut, _}) =>
   if (!isOpen) {
     0;
   } else {
-    let candidate = width + resizeDelta;
+    let candidate =
+      switch (location) {
+      | Left => width + resizeDelta
+      | Right => width - resizeDelta
+      };
+
     if (candidate < Constants.minWidth && shouldSnapShut) {
       0;
     } else if (candidate > Constants.maxWidth) {
