@@ -206,16 +206,11 @@ let show = (v: t) => {
   );
 };
 
-type styleWithScore = {
-  style: TokenStyle.t,
-  score: int,
-};
-
 let match = (theme: t, scopes: string) => {
   let scopes = Scopes.ofString(scopes) |> List.rev;
 
   let rec calculateStyle =
-          (~parentScopes, ~acc: list(styleWithScore), scopes) => {
+          (~parentScopes, ~acc: list(TokenStyle.t), scopes) => {
     switch (scopes) {
     | [] => acc
     | [scope, ...nextScope] =>
@@ -292,7 +287,7 @@ let match = (theme: t, scopes: string) => {
         let acc =
           maybeTokenStyle
           |> Option.map(tokenStyle =>
-               [{style: tokenStyle, score: 0}, ...acc]
+               [tokenStyle, ...acc]
              )
           |> Option.value(~default=acc);
 
@@ -305,15 +300,12 @@ let match = (theme: t, scopes: string) => {
     };
   };
 
-  let scoredStyles = calculateStyle(~parentScopes=[], ~acc=[], scopes);
+  let styles = calculateStyle(~parentScopes=[], ~acc=[], scopes);
 
   let result: TokenStyle.t =
-    scoredStyles
-    //  |> List.sort((a, b) => {
-    //    b.score - a.score
-    //  })
+    styles
     |> List.fold_left(
-         (acc, {style, _}) => {TokenStyle.merge(acc, style)},
+         (acc, style) => {TokenStyle.merge(acc, style)},
          TokenStyle.default,
        );
 
