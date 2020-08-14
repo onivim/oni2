@@ -239,6 +239,11 @@ let _applyStyle: (TokenStyle.t, TokenStyle.t) => TokenStyle.t =
     {background, foreground, bold, italic};
   };
 
+type styleWithScore = {
+  style: TokenStyle.t,
+  score: int,
+};
+
 let match = (theme: t, scopes: string) => {
   prerr_endline ("Scopes before: " ++ scopes);
   let scopes = Scopes.ofString(scopes) |> List.rev;
@@ -250,21 +255,24 @@ let match = (theme: t, scopes: string) => {
       (),
     );
 
-  let rec f = (~default: ResolvedStyle.t, scopes) => {
+  let rec f = (~parentScopes, ~initialScore, ~acc: list(styleWithScore), scopes) => {
     prerr_endline ("f: " ++ Scopes.toString(scopes));
     switch (scopes) {
-    | [] => default
-    | [scope, ...scopeParents] =>
+    | [] => acc
+    | [scope, ...nextScope] =>
       // Get the matching path from the Trie
-      let p = Trie.matches(theme.trie, scope);
+      let matchingPath = Trie.matches(theme.trie, scope);
+      let score = List.length(matchingPath) + initialScore;
+      prerr_endline ("-- Score: " ++ string_of_int(score));
 
-      switch (p) {
+      switch (matchingPath) {
       // If there were no matches... try the next scope up.
-      | [] => f(~default, scopeParents)
+      | [] => f(~parentScopes=[scope, ...parentScopes], ~initialScore, ~acc, nextScope)
       // Got matches - we'll apply them in sequence
       | _ =>
-        let result =
-          List.fold_left(
+        let maybeTokenStyle: option(TokenStyle.t) =
+          matchingPath
+          |> List.fold_left(
             (prev: option(TokenStyle.t), curr) => {
               let (name, selector: option(selectorWithParents)) = curr;
               prerr_endline ("Evaluating: " ++ name);
@@ -285,7 +293,7 @@ let match = (theme: t, scopes: string) => {
                 let parentsScopesToApply =
                   parents
                   |> List.filter(selector =>
-                       Selector.matches(selector, scopeParents)
+                       Selector.matches(selector, parentScopes)
                      );
 
                 switch (parentsScopesToApply, style) {
@@ -325,14 +333,31 @@ let match = (theme: t, scopes: string) => {
               };
             },
             None,
-            p,
           );
 
-        switch (result) {
-        | None => f(~default, scopeParents)
-        | Some(result) =>
-          let foreground =
-            switch (result.foreground) {
+        let acc = maybeTokenStyle
+        |> Option.map(tokenStyle => [{
+          style: tokenStyle,
+          score
+        }, ...acc])
+        |> Option.value(~default=acc)
+
+        f(~parentScopes=[scope, ...parentScopes], ~initialScore=initialScore, ~acc, nextScope);
+        };
+      };
+    };
+  
+  let scoredStyles = f(~parentScopes=[], ~initialScore=0, ~acc=[], scopes);
+
+  let result: TokenStyle.t = scoredStyles
+//  |> List.sort((a, b) => {
+//    b.score - a.score
+//  })
+  |> List.fold_left((acc, ({style, _})) => {
+    _applyStyle(acc, style)
+  }, TokenStyle.default);
+
+            let foreground = switch (result.foreground) {
             | Some(v) => v
             | None => default.foreground
             };
@@ -355,10 +380,6 @@ let match = (theme: t, scopes: string) => {
             | None => default.background
             };
 
-          f(~default=ResolvedStyle.{background, foreground, bold, italic}, scopeParents);
-        };
-      };
-    };
-  };
-  f(~default, scopes);
+            ResolvedStyle.{bold, italic, foreground, background};
+  
 };

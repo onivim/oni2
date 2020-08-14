@@ -70,7 +70,7 @@ describe("TokenTheme", ({describe, _}) => {
       let style: ResolvedStyle.t =
         TokenTheme.match(
           simpleTokenTheme,
-          "source.js constant.numeric.meta.js",
+          "constant.numeric.meta.js source.js",
         );
 
       expect.string(style.foreground).toEqual("#990000");
@@ -82,7 +82,7 @@ describe("TokenTheme", ({describe, _}) => {
       let style: ResolvedStyle.t =
         TokenTheme.match(
           simpleTokenTheme,
-          "source.js constant.numeric.meta.js some-unmatched-style",
+          "some-unmatched-style constant.numeric.meta.js source.js",
         );
 
       expect.string(style.foreground).toEqual("#990000");
@@ -92,20 +92,21 @@ describe("TokenTheme", ({describe, _}) => {
     });
     test("background color should be picked up", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TokenTheme.match(simpleTokenTheme, "text.html.basic source.js");
+        TokenTheme.match(simpleTokenTheme, "source.js text.html.basic");
 
       expect.string(style.foreground).toEqual("navy");
       expect.string(style.background).toEqual("cornflowerBlue");
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(false);
     });
+    // Test case from https://macromates.com/manual/en/scope_selectors (13.2)
     test(
       "deeper rule should win (source.php string over text.html source.php)",
       ({expect, _}) => {
       let style: ResolvedStyle.t =
         TokenTheme.match(
           simpleTokenTheme,
-          "text.html.basic source.php.html string.quoted",
+          "string.quoted source.php.embedded.html text.html.basic"
         );
 
       expect.string(style.foreground).toEqual("peachPuff");
@@ -115,7 +116,7 @@ describe("TokenTheme", ({describe, _}) => {
     });
     test("parent rule (meta html) gets applied", ({expect, _}) => {
       let style: ResolvedStyle.t =
-        TokenTheme.match(simpleTokenTheme, "meta html");
+        TokenTheme.match(simpleTokenTheme, "html meta");
 
       expect.string(style.foreground).toEqual("smoke");
       expect.string(style.background).toEqual("#000");
@@ -123,7 +124,7 @@ describe("TokenTheme", ({describe, _}) => {
       expect.bool(style.italic).toBe(false);
 
       let style: ResolvedStyle.t =
-        TokenTheme.match(simpleTokenTheme, "meta.source.js html");
+        TokenTheme.match(simpleTokenTheme, "html meta.source.js");
 
       expect.string(style.foreground).toEqual("smoke");
       expect.string(style.background).toEqual("#000");
@@ -426,16 +427,16 @@ describe("TokenTheme", ({describe, _}) => {
 //        TokenTheme.match(theme, "support.function.console.js");
 //      expect.string(style.foreground).toEqual("#AAAAAA");
 //
-//      //...and introducing source.js should still be the same, since it is less specific
-//      let style: ResolvedStyle.t =
-//        TokenTheme.match(theme, "source.js support.function.console.js");
-//      expect.string(style.foreground).toEqual("#AAAAAA");
-      
+      //...and introducing source.js should still be the same, since it is less specific
       prerr_endline ("-- START");
       let style: ResolvedStyle.t =
         TokenTheme.match(theme, "support.function.console.js source.js");
       expect.string(style.foreground).toEqual("#AAAAAA");
       prerr_endline ("-- DONE");
+      
+//      let style: ResolvedStyle.t =
+//        TokenTheme.match(theme, "support.function.console.js source.js");
+//      expect.string(style.foreground).toEqual("#AAAAAA");
     });
   });
 });
