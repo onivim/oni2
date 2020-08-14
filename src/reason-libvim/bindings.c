@@ -56,7 +56,7 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
     lv_onAutoIndent = caml_named_value("lv_onAutoIndent");
   }
 
-  vPrevLine = caml_copy_string(prevLine);
+  vPrevLine = caml_copy_string((const char *) prevLine);
 
   value vIndent = caml_callback2(*lv_onAutoIndent, Val_int(lnum), vPrevLine);
 
@@ -90,6 +90,8 @@ int onGoto(gotoRequest_T gotoInfo) {
   }
 
   caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), Val_int(target));
+
+  return target;
 }
 
 int onTabPage(tabPageRequest_T request) {
@@ -167,7 +169,7 @@ void onDirectoryChanged(char_u *path) {
     lv_onDirectoryChanged = caml_named_value("lv_onDirectoryChanged");
   }
 
-  pathString = caml_copy_string(path);
+  pathString = caml_copy_string((const char *) path);
   caml_callback(*lv_onDirectoryChanged, pathString);
   CAMLreturn0;
 }
@@ -182,7 +184,7 @@ void onFormat(formatRequest_T *pRequest) {
   }
 
   if (pRequest->cmd != NULL) {
-    commandString = caml_copy_string(pRequest->cmd);
+    commandString = caml_copy_string((const char *) pRequest->cmd);
     commandOpt = Val_some(commandString);
   } else {
     commandOpt = Val_none;
@@ -218,8 +220,8 @@ void onMessage(char_u *title, char_u *contents, msgPriority_T priority) {
     lv_onMessage = caml_named_value("lv_onMessage");
   }
 
-  titleString = caml_copy_string(title);
-  contentsString = caml_copy_string(contents);
+  titleString = caml_copy_string((const char *) title);
+  contentsString = caml_copy_string((const char *) contents);
   caml_callback3(*lv_onMessage, Val_int(priority), titleString, contentsString);
   CAMLreturn0;
 }
@@ -235,7 +237,7 @@ void onTerminal(terminalRequest_t *pRequest) {
   }
 
   if (pRequest->cmd != NULL) {
-    commandString = caml_copy_string(pRequest->cmd);
+    commandString = caml_copy_string((const char *) pRequest->cmd);
     commandOpt = Val_some(commandString);
   } else {
     commandOpt = Val_none;
@@ -348,7 +350,7 @@ void onWindowSplit(windowSplit_T splitType, char_u *path) {
     lv_onWindowSplit = caml_named_value("lv_onWindowSplit");
   }
 
-  pathString = caml_copy_string(path);
+  pathString = caml_copy_string((const char *) path);
   caml_callback2(*lv_onWindowSplit, Val_int(splitType), pathString);
   CAMLreturn0;
 }
@@ -385,7 +387,7 @@ int getClipboardCallback(int regname, int *num_lines, char_u ***lines,
     char_u **out = malloc(sizeof(char_u *) * len);
 
     for (int i = 0; i < len; i++) {
-      char *sz = String_val(Field(clipboardArray, i));
+      const char *sz = String_val(Field(clipboardArray, i));
       out[i] = malloc((sizeof(char) * strlen(sz)) + 1);
       strcpy((char *)out[i], sz);
     }
@@ -414,7 +416,7 @@ void onYank(yankInfo_T *yankInfo) {
   } else {
     lines = caml_alloc(yankInfo->numLines, 0);
     for (int i = 0; i < yankInfo->numLines; i++) {
-      Store_field(lines, i, caml_copy_string(yankInfo->lines[i]));
+      Store_field(lines, i, caml_copy_string((const char *) yankInfo->lines[i]));
     }
   }
 
@@ -493,12 +495,12 @@ CAMLprim value libvim_vimEval(value vStr) {
   CAMLparam1(vStr);
   CAMLlocal2(vOut, vRet);
 
-  char_u *result = vimEval(String_val(vStr));
+  char_u *result = vimEval((char_u *) String_val(vStr));
 
   if (result == NULL) {
     vRet = Val_none;
   } else {
-    vOut = caml_copy_string(result);
+    vOut = caml_copy_string((const char *) result);
     vRet = Val_some(vOut);
     free(result);
   }
@@ -604,7 +606,7 @@ CAMLprim value libvim_vimBufferGetFilename(value v) {
     if (fname == NULL) {
       ret = Val_none;
     } else {
-      ret = Val_some(caml_copy_string(fname));
+      ret = Val_some(caml_copy_string((const char *) fname));
     }
   }
 
@@ -694,7 +696,7 @@ CAMLprim value libvim_vimBufferGetFiletype(value v) {
     if (ftype == NULL) {
       ret = Val_none;
     } else {
-      ret = Val_some(caml_copy_string(ftype));
+      ret = Val_some(caml_copy_string((const char *) ftype));
     }
   }
 
@@ -758,7 +760,7 @@ CAMLprim value libvim_vimBufferGetLine(value vBuf, value vLine) {
   int line = Int_val(vLine);
 
   char_u *c = vimBufferGetLine(buf, line);
-  ret = caml_copy_string(c);
+  ret = caml_copy_string((const char *) c);
 
   CAMLreturn(ret);
 }
@@ -775,8 +777,8 @@ CAMLprim value libvim_vimBufferSetLines(value vBuf, value vStart, value vEnd,
 
   char_u **newLines = malloc(sizeof(char_u *) * len);
   for (int i = 0; i < len; i++) {
-    char *sz = String_val(Field(vLines, i));
-    newLines[i] = sz;
+    const char *sz = String_val(Field(vLines, i));
+    newLines[i] = (char_u *) sz;
   }
   vimBufferSetLines(buf, start, end, newLines, len);
   free(newLines);
@@ -805,7 +807,7 @@ CAMLprim value libvim_vimCommandLineGetCompletions(value unit) {
   } else {
     ret = caml_alloc(count, 0);
     for (int i = 0; i < count; i++) {
-      Store_field(ret, i, caml_copy_string(completions[i]));
+      Store_field(ret, i, caml_copy_string((const char *) completions[i]));
       vim_free(completions[i]);
     }
 
@@ -830,7 +832,7 @@ CAMLprim value libvim_vimCommandLineGetText(value unit) {
   if (c == NULL) {
     ret = Val_none;
   } else {
-    ret = Val_some(caml_copy_string(c));
+    ret = Val_some(caml_copy_string((const char *) c));
   }
 
   CAMLreturn(ret);
@@ -893,8 +895,8 @@ CAMLprim value libvim_vimOptionSetInsertSpaces(value v) {
 }
 
 CAMLprim value libvim_vimOptionSetLineComment(value v) {
-  char *str = String_val(v);
-  vimOptionSetLineComment(str);
+  const char *str = String_val(v);
+  vimOptionSetLineComment((char_u *) str);
   return Val_unit;
 }
 
@@ -942,7 +944,7 @@ CAMLprim value libvim_vimRegisterGet(value vChar) {
     vArray = caml_alloc(numLines, 0);
 
     for (int i = 0; i < numLines; i++) {
-      Store_field(vArray, i, caml_copy_string(lines[i]));
+      Store_field(vArray, i, caml_copy_string((const char *) lines[i]));
     }
 
     ret = Val_some(vArray);
