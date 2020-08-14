@@ -387,5 +387,49 @@ describe("TokenTheme", ({describe, _}) => {
       expect.bool(style.bold).toBe(false);
       expect.bool(style.italic).toBe(true);
     });
+    test("dracula: source should not override all styles", ({expect, _}) => {
+      let json =
+        Yojson.Safe.from_string(
+          {|
+       [
+        {
+            "scope": [
+                "source"
+            ],
+            "settings": {
+                "foreground": "#FF0000"
+            }
+        },
+        {
+            "name": "Built-in functions / properties",
+            "scope": [
+                "support.function",
+                "support.type.property-name"
+            ],
+            "settings": {
+                "fontStyle": "regular",
+                "foreground": "#AAAAAA"
+            }
+        }
+       ]
+      |},
+        );
+      let theme =
+        TokenTheme.of_yojson(
+          ~defaultForeground="#fff",
+          ~defaultBackground="#000",
+          json,
+        );
+
+      // Just support.function.console.js should resolve to the support.function
+      let style: ResolvedStyle.t =
+        TokenTheme.match(theme, "support.function.console.js");
+      expect.string(style.foreground).toEqual("#AAAAAA");
+
+      //...and introducing source.js should still be the same, since it is less specific
+      let style: ResolvedStyle.t =
+        TokenTheme.match(theme, "support.function.console.js source.js");
+      expect.string(style.foreground).toEqual("#AAAAAA");
+    });
   });
 });
