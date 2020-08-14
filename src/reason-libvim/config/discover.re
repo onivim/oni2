@@ -42,6 +42,8 @@ let root = Sys.getenv("cur__root");
 let libvimIncludePath = Sys.getenv("LIBVIM_INCLUDE_PATH");
 let libvimLibPath = Sys.getenv("LIBVIM_LIB_PATH");
 let c_flags = [
+  "-Wall",
+  "-Werror",
   "-I",
   libvimIncludePath,
   "-I",
