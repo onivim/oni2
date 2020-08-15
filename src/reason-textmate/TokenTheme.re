@@ -209,8 +209,7 @@ let show = (v: t) => {
 let match = (theme: t, scopes: string) => {
   let scopes = Scopes.ofString(scopes) |> List.rev;
 
-  let rec calculateStyle =
-          (~parentScopes, ~acc: list(TokenStyle.t), scopes) => {
+  let rec calculateStyle = (~parentScopes, ~acc: list(TokenStyle.t), scopes) => {
     switch (scopes) {
     | [] => acc
     | [scope, ...nextScope] =>
@@ -286,9 +285,7 @@ let match = (theme: t, scopes: string) => {
 
         let acc =
           maybeTokenStyle
-          |> Option.map(tokenStyle =>
-               [tokenStyle, ...acc]
-             )
+          |> Option.map(tokenStyle => [tokenStyle, ...acc])
           |> Option.value(~default=acc);
 
         calculateStyle(
