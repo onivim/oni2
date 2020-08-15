@@ -244,7 +244,7 @@
     "libvim": "8.10869.55",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
-    "reason-tree-sitter": "^1.0.1001",
+    "reason-tree-sitter": "*",
     "reasonFuzz": "*",
     "refmterr": "*",
     "rench": "1.7.1",
@@ -264,6 +264,7 @@
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
+    "reason-tree-sitter": "CrossR/reason-tree-sitter#b2913d3",
     "@opam/conf-pkg-config": "1.2"
   },
   "devDependencies": {

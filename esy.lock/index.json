@@ -1,5 +1,5 @@
 {
-  "checksum": "c37b1858514aac1c3a2f01daacf39d52",
+  "checksum": "903fd03f9db0da7ef98b560eeeab931e",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -278,25 +278,25 @@
       ],
       "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
     },
-    "reason-tree-sitter@1.0.1001@d41d8cd9": {
-      "id": "reason-tree-sitter@1.0.1001@d41d8cd9",
+    "reason-tree-sitter@github:CrossR/reason-tree-sitter#b2913d3@d41d8cd9": {
+      "id":
+        "reason-tree-sitter@github:CrossR/reason-tree-sitter#b2913d3@d41d8cd9",
       "name": "reason-tree-sitter",
-      "version": "1.0.1001",
+      "version": "github:CrossR/reason-tree-sitter#b2913d3",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/reason-tree-sitter/-/reason-tree-sitter-1.0.1001.tgz#sha1:bd642ac513d19dc1151ab78d983cab779677cb31"
-        ]
+        "source": [ "github:CrossR/reason-tree-sitter#b2913d3" ]
       },
       "overrides": [],
       "dependencies": [
         "reperf@1.5.0@d41d8cd9", "refmterr@3.3.2@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "esy-tree-sitter@1.4.1@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9",
+        "esy-tree-sitter@github:CrossR/esy-tree-sitter#fdcf8f7@d41d8cd9",
         "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@e0bac278", "@esy-ocaml/reason@3.6.0@d41d8cd9"
       ],
-      "devDependencies": []
+      "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
     },
     "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9": {
       "id":
@@ -672,15 +672,13 @@
       ],
       "devDependencies": []
     },
-    "esy-tree-sitter@1.4.1@d41d8cd9": {
-      "id": "esy-tree-sitter@1.4.1@d41d8cd9",
+    "esy-tree-sitter@github:CrossR/esy-tree-sitter#fdcf8f7@d41d8cd9": {
+      "id": "esy-tree-sitter@github:CrossR/esy-tree-sitter#fdcf8f7@d41d8cd9",
       "name": "esy-tree-sitter",
-      "version": "1.4.1",
+      "version": "github:CrossR/esy-tree-sitter#fdcf8f7",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/esy-tree-sitter/-/esy-tree-sitter-1.4.1.tgz#sha1:67731d4e01fb391ebd1988a4781d41e1532ac6b6"
-        ]
+        "source": [ "github:CrossR/esy-tree-sitter#fdcf8f7" ]
       },
       "overrides": [],
       "dependencies": [],
@@ -1030,7 +1028,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
-        "reason-tree-sitter@1.0.1001@d41d8cd9",
+        "reason-tree-sitter@github:CrossR/reason-tree-sitter#b2913d3@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.55@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
@@ -1731,8 +1729,8 @@
         "@opam/base-bytes@opam:base@19d0c2ff"
       ]
     },
-    "@opam/stdlib-shims@opam:0.1.0@d957c903": {
-      "id": "@opam/stdlib-shims@opam:0.1.0@d957c903",
+    "@opam/stdlib-shims@opam:0.1.0@8c116481": {
+      "id": "@opam/stdlib-shims@opam:0.1.0@8c116481",
       "name": "@opam/stdlib-shims",
       "version": "opam:0.1.0",
       "source": {
@@ -2509,7 +2507,7 @@
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
-        "@opam/stdlib-shims@opam:0.1.0@d957c903",
+        "@opam/stdlib-shims@opam:0.1.0@8c116481",
         "@opam/ppx_yojson_conv_lib@opam:v0.14.0@116b53d6",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/menhir@opam:20200624@8629ff13",
@@ -2519,7 +2517,7 @@
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
-        "@opam/stdlib-shims@opam:0.1.0@d957c903",
+        "@opam/stdlib-shims@opam:0.1.0@8c116481",
         "@opam/ppx_yojson_conv_lib@opam:v0.14.0@116b53d6",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/menhir@opam:20200624@8629ff13",
@@ -3177,7 +3175,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/topkg@opam:1.0.2@3c5942ad",
-        "@opam/stdlib-shims@opam:0.1.0@d957c903",
+        "@opam/stdlib-shims@opam:0.1.0@8c116481",
         "@opam/seq@opam:base@d8d7de1d",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
@@ -3185,7 +3183,7 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.10.0@d41d8cd9", "@opam/stdlib-shims@opam:0.1.0@d957c903",
+        "ocaml@4.10.0@d41d8cd9", "@opam/stdlib-shims@opam:0.1.0@8c116481",
         "@opam/seq@opam:base@d8d7de1d"
       ]
     },
