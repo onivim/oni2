@@ -33,29 +33,29 @@ let initial = (~getUserSettings, contributions) =>
   });
 
 let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
-  open Oni_Extensions;
+  open Exthost.Extension;
+  open Scanner.ScanResult;
 
   let defaults =
     extensions
-    |> List.map(ext =>
-         ext.ExtensionScanner.manifest.contributes.configuration
-       )
-    |> List.map(ExtensionContributions.Configuration.toSettings)
+    |> List.map(ext => ext.manifest.contributes.configuration)
+    |> List.map(Contributions.Configuration.toSettings)
     |> Config.Settings.unionMany
     |> Config.Settings.union(Config.Schema.defaults(config.schema))
-    |> Configuration.Model.fromSettings;
+    |> Exthost.Configuration.Model.fromSettings;
 
   let user =
     Config.Settings.fromList([
       ("reason_language_server.location", Json.Encode.string(setup.rlsPath)),
+      ("telemetry.enableTelemetry", Json.Encode.bool(false)),
       ("terminal.integrated.env.windows", Json.Encode.null),
       ("terminal.integrated.env.linux", Json.Encode.null),
       ("terminal.integrated.env.osx", Json.Encode.null),
     ])
     |> Config.Settings.union(config.user)
-    |> Configuration.Model.fromSettings;
+    |> Exthost.Configuration.Model.fromSettings;
 
-  Configuration.create(~defaults, ~user, ());
+  Exthost.Configuration.create(~defaults, ~user, ());
 };
 
 [@deriving show({with_path: false})]

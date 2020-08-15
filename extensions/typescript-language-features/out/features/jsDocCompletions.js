@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = exports.templateToSnippet = void 0;
 const vscode = require("vscode");
 const nls = require("vscode-nls");
 const dependentRegistration_1 = require("../utils/dependentRegistration");
@@ -21,7 +22,8 @@ class JsDocCompletionItem extends vscode.CompletionItem {
         const prefix = line.slice(0, position.character).match(/\/\**\s*$/);
         const suffix = line.slice(position.character).match(/^\s*\**\//);
         const start = position.translate(0, prefix ? -prefix[0].length : 0);
-        this.range = new vscode.Range(start, position.translate(0, suffix ? suffix[0].length : 0));
+        const range = new vscode.Range(start, position.translate(0, suffix ? suffix[0].length : 0));
+        this.range = { inserting: range, replacing: range };
     }
 }
 class JsDocCompletionProvider {
@@ -58,12 +60,12 @@ class JsDocCompletionProvider {
         // or could be the opening of a comment
         const line = document.lineAt(position.line).text;
         const prefix = line.slice(0, position.character);
-        if (prefix.match(/^\s*$|\/\*\*\s*$|^\s*\/\*\*+\s*$/) === null) {
+        if (!/^\s*$|\/\*\*\s*$|^\s*\/\*\*+\s*$/.test(prefix)) {
             return false;
         }
         // And everything after is possibly a closing comment or more whitespace
         const suffix = line.slice(position.character);
-        return suffix.match(/^\s*\*+\//) !== null;
+        return /^\s*(\*+\/)?\s*$/.test(suffix);
     }
 }
 function templateToSnippet(template) {

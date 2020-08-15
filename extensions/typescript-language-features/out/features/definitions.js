@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
 const api_1 = require("../utils/api");
 const typeConverters = require("../utils/typeConverters");
@@ -27,10 +28,18 @@ class TypeScriptDefinitionProvider extends definitionProviderBase_1.default {
             return response.body.definitions
                 .map((location) => {
                 const target = typeConverters.Location.fromTextSpan(this.client.toResource(location.file), location);
+                if (location.contextStart) {
+                    return {
+                        originSelectionRange: span,
+                        targetRange: typeConverters.Range.fromLocations(location.contextStart, location.contextEnd),
+                        targetUri: target.uri,
+                        targetSelectionRange: target.range,
+                    };
+                }
                 return {
                     originSelectionRange: span,
                     targetRange: target.range,
-                    targetUri: target.uri,
+                    targetUri: target.uri
                 };
             });
         }

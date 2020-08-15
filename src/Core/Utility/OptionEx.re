@@ -4,6 +4,11 @@ let bind2 = (a, b, f) =>
   | _ => None
   };
 
+let filter = f =>
+  fun
+  | Some(x) as v => f(x) ? v : None
+  | None => None;
+
 let flatMap = f =>
   fun
   | Some(x) => f(x)
@@ -21,6 +26,14 @@ let map3 = (f, a, b, c) =>
   | _ => None
   };
 
+let tap = f =>
+  fun
+  | Some(v) as some => {
+      f(v);
+      some;
+    }
+  | None => None;
+
 let iter2 = (f, a, b) => {
   switch (a, b) {
   | (Some(a), Some(b)) => f(a, b)
@@ -36,6 +49,11 @@ let or_ = other =>
 let or_lazy = f =>
   fun
   | Some(_) as orig => orig
+  | None => f();
+
+let lazyDefault = f =>
+  fun
+  | Some(v) => v
   | None => f();
 
 let of_list =

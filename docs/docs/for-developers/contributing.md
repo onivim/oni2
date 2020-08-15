@@ -24,6 +24,73 @@ To improve the chances to get a pull request merged, you should select an issue 
 
 In addition, Onivim 2 is built on [Revery](https://github.com/revery-ui/revery) - any work or improvements there will directly improve Onivim 2, as well!
 
+#### Changelog Generation
+
+We use a script to generate the change log based on metadata picked up from the commit message, and pull request title and body. For the changelog to be generated successfully it's therefore important that these follow the exact format explained below.
+
+##### Pull Request Title
+
+Pull request titles should have the following format:
+
+```
+<type>(<scope>): <subject>
+```
+
+where `type` can be one of
+
+* **feat:** A new feature
+* **fix:** A bug fix
+* **refactor:** A code change that neither fixes a bug nor adds a feature
+* **perf:** A code change that improves performance
+* **test:** Adding missing or correcting existing tests
+* **docs:** Documentation only changes
+* **chore:** Changes to the build process or auxiliary tools and libraries such as documentation generation
+
+`scope` is optional, but "encouraged". It is typically one of the ["area" issue labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) or the name of a feature project. Supplementary information, like associated issues, can be added to the scope following a `/`. For example, a PR that fixes issue `#123` regarding vim could have the type and scope `fix(vim/#123)`.
+
+`subject` should contain a succinct description of the change:
+
+* use the imperative, present tense: "change" not "changed" nor "changes"
+* don't capitalize first letter
+* no dot (.) at the end
+
+Do NOT add temporary tags, like `[WIP]`, to the title. Instead use GitHub's draft function and/or labels.
+
+Some examples:
+- `feat(scm): add support for multiple providers`
+- `fix(vim/#123): get_op_type error when using gcc`
+- `refactor(editor): remove duplication`
+- `chore(ci): fix build failure on CentOS VM`
+
+*Attribution: Adapted from [Angular's commit guidelines](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commit-message-format)*
+
+##### Pull Request Body
+
+More details can be provided in a `changelog` code block in the body of the pull request if a longer description is needed or if there are beaking changes:
+
+    ```changelog    
+    Detailed description of the change
+    Can span multiple lines
+    
+    <breaking>This change breaks my brain</breaking>
+    ```
+
+Text inside `<breaking>` tags will be listed in the changelog as separate items so that they can be emphasized. ALL breaking changes MUST be listed in this way. If in doubt, list it anyway. We'll remove it later in the process if it's considered insignificant.
+
+The rest of the text will become the overall description of the change and can include anything considered text content in XML. Use [predefined entities](https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references#Predefined_entities_in_XML) in place of characters with special meaning in XML. And please do still try to be brief!
+
+##### Commit Message
+
+*Note: this section is relevant only to maintainers who merge PRs. Contributors can safely ignore this.*
+
+Commits messages pushed to `master` should have the following format:
+
+```
+<type>(<scope>): <subject> (#<PR number>)
+```  
+
+where `type` and `scope` is as described above. This is usually what Github generates automatically when squashing a PR, assuming the PR title was formatted correctly.
+
 ### Submitting a Pull Request
 
 Before we can accept a pull request from you, you'll need to sign a a [Contributor License Agreement (CLA)](https://gist.github.com/bf98297731dd69b9b580ca1d7fd2b90e). It is an automated process and you'll be guided
@@ -51,23 +118,16 @@ The following conventions are used to determine the priority level of log messag
 
 ### Branch Naming
 
-We recommend this scheme for naming branches: `<type>/<area>/<description>`
+We recommend this scheme for naming branches: `<type>/<scope>/<description>`
 
-`type` is one of:
-- `bugfix` - a change that fixes a bug
-- `feature` - a change that adds new functionality
-- `doc` - a change that modifies the documentation
-- `refactoring` - a code change that does not fix a bug or change a feature
-- `dependency` - a change to bring in a new dependency
+where `type` and `scope` are as defined in the [Pull Request title section](#PR_title) above
 
-`area` corresponds to our [Area Labels](https://github.com/onivim/oni2/labels?utf8=%E2%9C%93&q=A+-) 
-
-`description` is just a short, hyphen-delimited blurb to very briefly describe the change.
+`description` is a short, hyphen-delimited blurb to very briefly describe the change.
 
 Some examples:
-- `bugfix/vim/fix-gd-crash`
-- `feature/exthost/go-to-definition`
-- `refactoring/editor-component/remove-duplication`
+- `fix/vim/gd-crash`
+- `feat/exthost/go-to-definition`
+- `refactor/editor-component/remove-duplication`
 
 ## Discussion Etiquette
 

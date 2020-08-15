@@ -12,8 +12,6 @@ While we're developing Onivim 2, the latest builds are available at our [early a
 
 - Requires OSX 10.13+
 
-> NOTE: We're [working on 10.12 support](https://github.com/onivim/oni2/issues/902), but it is not currently available.
-
 ### Windows
 
 - x64 Only

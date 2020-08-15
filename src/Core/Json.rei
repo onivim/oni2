@@ -1,5 +1,7 @@
 // API reference: https://mattjbray.github.io/ocaml-decoders/decoders/decoders-yojson/Decoders_yojson/index.html
 
+open EditorCoreTypes;
+
 type t = Yojson.Safe.json;
 
 module Decode: {
@@ -25,3 +27,12 @@ module Encode: {include Decoders.Encode.S with type value = t;};
 
 type decoder('a) = Decode.decoder('a);
 type encoder('a) = Encode.encoder('a);
+
+module Error: {
+  type t = {
+    range: Range.t,
+    message: string,
+  };
+
+  let ofString: string => option(t);
+};

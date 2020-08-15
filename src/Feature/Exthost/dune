@@ -1,0 +1,12 @@
+(library
+    (name Feature_Exthost)
+    (public_name Oni2.feature.exthost)
+    (libraries
+      Oni2.core
+      Oni2.components
+      Oni2.feature.editor
+      Oni2.service.exthost
+      Revery
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

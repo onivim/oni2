@@ -1,6 +1,6 @@
 open TestFramework;
 
-module IconTheme = Oni_Model.IconTheme;
+module IconTheme = Oni_Core.IconTheme;
 
 let testTheme = {|
     {

@@ -8,7 +8,10 @@ mkdir -p _staging
 
 cp -r $cur__bin _release/linux
 
-wget -O _staging/linuxdeploy-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+# Temporary workaround for: https://github.com/linuxdeploy/linuxdeploy/issues/142
+#wget -O _staging/linuxdeploy-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+wget -O _staging/linuxdeploy-x86_64.AppImage https://artifacts.assassinate-you.net/artifactory/list/linuxdeploy/travis-456/linuxdeploy-x86_64.AppImage
+
 chmod +x _staging/linuxdeploy-x86_64.AppImage
 
 wget -O _staging/appimagetool-x86_64.AppImage https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage
@@ -31,7 +34,7 @@ cp _release/linux/bin/*.* _release/Onivim2.AppDir/usr/bin
 cp _release/linux/bin/Oni2 _release/Onivim2.AppDir/usr/bin/Oni2
 
 cp vendor/ripgrep-v0.10.0/linux/rg _release/Onivim2.AppDir/usr/bin/rg
-cp vendor/node-v10.15.1/linux-x64/node _release/Onivim2.AppDir/usr/bin/node
+cp vendor/node-v12.17.0/linux-x64/node _release/Onivim2.AppDir/usr/bin/node
 cp vendor/reason-language-server/bin.native.linux _release/Onivim2.AppDir/usr/bin/rls
 
 ls _release/Onivim2.AppDir/usr/share

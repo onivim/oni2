@@ -79,14 +79,15 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.BufferEnter(metadata, _) =>
-      switch (Buffers.getBuffer(metadata.id, state.buffers)) {
+    | Actions.BufferEnter({buffer, _}) =>
+      let id = Oni_Core.Buffer.getId(buffer);
+      switch (Buffers.getBuffer(id, state.buffers)) {
       | Some(buffer) when !Buffer.isIndentationSet(buffer) => (
           state,
           checkIndentationEffect(state, buffer),
         )
       | _ => (state, Isolinear.Effect.none)
-      }
+      };
 
     | Actions.BufferUpdate({oldBuffer, newBuffer, _})
         when

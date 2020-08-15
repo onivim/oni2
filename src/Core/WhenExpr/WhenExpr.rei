@@ -28,7 +28,11 @@ module ContextKeys: {
 
   type t;
 
+  let fromList: list((string, Value.t)) => t;
   let fromSchema: (Schema.t('model), 'model) => t;
+
+  let union: (t, t) => t;
+  let unionMany: list(t) => t;
 
   let getValue: (t, string) => Value.t;
 };
@@ -38,7 +42,7 @@ type t =
   | Defined(string)
   | Eq(string, Value.t)
   | Neq(string, Value.t)
-  | Regex(string, option(Re.re))
+  | Regex(string, option([@opaque] Oniguruma.OnigRegExp.t))
   | And(list(t))
   | Or(list(t))
   | Not(t)

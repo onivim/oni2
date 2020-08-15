@@ -15,12 +15,6 @@ module Styles = {
 
   let container = [flexGrow(1)];
 
-  let title = (~fg, ~font: UiFont.t) => [
-    fontSize(font.fontSize),
-    fontFamily(font.fontFile),
-    color(fg),
-  ];
-
   let heading = theme => [
     flexDirection(`Row),
     justifyContent(`Center),
@@ -28,6 +22,9 @@ module Styles = {
     backgroundColor(Colors.SideBar.background.from(theme)),
     height(Constants.tabHeight),
   ];
+
+  // Minor adjustment to align with text
+  let folder = [marginTop(4)];
 
   let item = (~isFocus, ~isActive, ~theme) => [
     flexDirection(`Row),
@@ -39,14 +36,13 @@ module Styles = {
       } else if (isFocus) {
         Colors.List.focusBackground.from(theme);
       } else {
+        // NOTE: Could use, `Colors.SideBar.background.from(theme)`
         Revery.Colors.transparentWhite;
       },
     ),
   ];
 
-  let text = (~isFocus, ~isActive, ~decoration, ~theme, ~font: UiFont.t) => [
-    fontSize(11.),
-    fontFamily(font.fontFile),
+  let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
     color(
       switch (
         Option.bind(decoration, (decoration: Decoration.t) =>
@@ -60,28 +56,31 @@ module Styles = {
         } else if (isFocus) {
           Colors.List.focusForeground.from(theme);
         } else {
-          Colors.foreground.from(theme);
+          Colors.SideBar.foreground.from(theme);
         }
       },
     ),
     marginLeft(10),
-    marginVertical(2),
+    // Minor adjustment to align with seti-icon
+    marginTop(4),
     textWrap(TextWrapping.NoWrap),
   ];
 };
 
-let setiIcon = (~icon, ~fontSize as size, ~fg, ()) => {
+let setiIcon = (~icon, ~fontSize, ~fg, ()) => {
   <Text
     text={FontIcon.codeToIcon(icon)}
     style=Style.[
-      fontFamily("seti.ttf"),
-      fontSize(size *. 2.),
       color(fg),
-      width(int_of_float(size *. 1.5)),
-      height(int_of_float(size *. 1.75)),
+      width(int_of_float(fontSize *. 1.5)),
+      height(int_of_float(fontSize *. 1.75)),
       textWrap(TextWrapping.NoWrap),
+      // Minor adjustment to center vertically
+      marginTop(-2),
       marginLeft(-4),
     ]
+    fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
+    fontSize={fontSize *. 2.}
   />;
 };
 
@@ -99,7 +98,7 @@ let nodeView =
     switch (node.icon) {
     | Some(icon) =>
       <setiIcon
-        fontSize={font.fontSize}
+        fontSize={font.size}
         fg={icon.fontColor}
         icon={icon.fontCharacter}
       />
@@ -111,10 +110,12 @@ let nodeView =
   let icon = () =>
     switch (node.kind) {
     | Directory({isOpen, _}) =>
-      <FontIcon
-        color={Colors.SideBar.foreground.from(theme)}
-        icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
-      />
+      <View style=Styles.folder>
+        <FontIcon
+          color={Colors.SideBar.foreground.from(theme)}
+          icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
+        />
+      </View>
     | _ => <icon />
     };
 
@@ -135,7 +136,9 @@ let nodeView =
     <icon />
     <Text
       text={node.displayName}
-      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme, ~font)}
+      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
+      fontFamily={font.family}
+      fontSize=12.
     />
   </Tooltip>;
 };
@@ -166,7 +169,7 @@ let make =
       tree
       itemHeight=22
       onClick=onNodeClick
-      arrowColor={Colors.foreground.from(theme)}>
+      arrowColor={Colors.SideBar.foreground.from(theme)}>
       ...{node => {
         let decorations = StringMap.find_opt(node.path, decorations);
 

@@ -19,15 +19,15 @@ runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   // '*' test case
-  setClipboard(Some("abc"));
+  setClipboard(Some("abc\n"));
 
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("*"));
-  dispatch(KeyboardInput("P"));
+  dispatch(KeyboardInput({isText: true, input: "\""}));
+  dispatch(KeyboardInput({isText: true, input: "*"}));
+  dispatch(KeyboardInput({isText: true, input: "P"}));
   runEffects();
 
   wait(~name="Mode switches to insert", (state: State.t) =>
@@ -43,9 +43,9 @@ runTest(
   // '*' multi-line test case
   setClipboard(Some("1\n2\n3\n"));
 
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("*"));
-  dispatch(KeyboardInput("P"));
+  dispatch(KeyboardInput({isText: true, input: "\""}));
+  dispatch(KeyboardInput({isText: true, input: "*"}));
+  dispatch(KeyboardInput({isText: true, input: "P"}));
   runEffects();
 
   wait(~name="Multi-line paste works correctly", (state: State.t) =>
@@ -70,9 +70,9 @@ runTest(
   // '*' multi-line test case, windows style
   setClipboard(Some("4\r\n5\r\n6\r\n"));
 
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("*"));
-  dispatch(KeyboardInput("P"));
+  dispatch(KeyboardInput({isText: true, input: "\""}));
+  dispatch(KeyboardInput({isText: true, input: "*"}));
+  dispatch(KeyboardInput({isText: true, input: "P"}));
   runEffects();
 
   wait(~name="Multi-line paste works correctly", (state: State.t) =>
@@ -94,11 +94,11 @@ runTest(
     }
   );
   // '+' test case
-  setClipboard(Some("def"));
+  setClipboard(Some("def\n"));
 
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("*"));
-  dispatch(KeyboardInput("P"));
+  dispatch(KeyboardInput({isText: true, input: "\""}));
+  dispatch(KeyboardInput({isText: true, input: "*"}));
+  dispatch(KeyboardInput({isText: true, input: "P"}));
   runEffects();
 
   wait(~name="Mode switches to insert", (state: State.t) =>
@@ -113,17 +113,17 @@ runTest(
 
   // 'a' test case
   // yank current line - def - to 'a' register
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("a"));
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
+  dispatch(KeyboardInput({isText: true, input: "\""}));
+  dispatch(KeyboardInput({isText: true, input: "a"}));
+  dispatch(KeyboardInput({isText: true, input: "y"}));
+  dispatch(KeyboardInput({isText: true, input: "y"}));
   runEffects();
 
-  setClipboard(Some("ghi"));
+  setClipboard(Some("ghi\n"));
 
-  dispatch(KeyboardInput("\""));
-  dispatch(KeyboardInput("a"));
-  dispatch(KeyboardInput("P"));
+  dispatch(KeyboardInput({isText: true, input: "\""}));
+  dispatch(KeyboardInput({isText: true, input: "a"}));
+  dispatch(KeyboardInput({isText: true, input: "P"}));
   runEffects();
 
   wait(~name="Mode switches to insert", (state: State.t) =>
@@ -137,7 +137,7 @@ runTest(
   );
 
   // Test if the configuration is set - paste from unnamed register will pull from the keyboard
-  setClipboard(Some("jkl"));
+  setClipboard(Some("jkl\n"));
 
   wait(~name="Set configuration to pull clipboard on paste", (state: State.t) => {
     let configuration = state.configuration;
@@ -158,9 +158,9 @@ runTest(
     true;
   });
 
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("P"));
+  dispatch(KeyboardInput({isText: true, input: "y"}));
+  dispatch(KeyboardInput({isText: true, input: "y"}));
+  dispatch(KeyboardInput({isText: true, input: "P"}));
   runEffects();
 
   wait(
@@ -177,7 +177,7 @@ runTest(
   );
 
   // Set configuration back (paste=false), and it should not pull from clipboard
-  setClipboard(Some("mno"));
+  setClipboard(Some("mno\n"));
 
   wait(~name="Set configuration to pull clipboard on paste", (state: State.t) => {
     let configuration = state.configuration;
@@ -198,9 +198,9 @@ runTest(
     true;
   });
 
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("y"));
-  dispatch(KeyboardInput("P"));
+  dispatch(KeyboardInput({isText: true, input: "y"}));
+  dispatch(KeyboardInput({isText: true, input: "y"}));
+  dispatch(KeyboardInput({isText: true, input: "P"}));
   runEffects();
 
   wait(
@@ -213,6 +213,23 @@ runTest(
       let line = Buffer.getLine(0, buf) |> BufferLine.raw;
       Log.info("Current line is: |" ++ line ++ "|");
       String.equal(line, "jkl");
+    }
+  );
+
+  // Single line case - should paste in front of previous text
+  setClipboard(Some("mno"));
+  dispatch(KeyboardInput({isText: true, input: "\""}));
+  dispatch(KeyboardInput({isText: true, input: "*"}));
+  dispatch(KeyboardInput({isText: true, input: "P"}));
+  runEffects();
+
+  wait(~name="paste with single line, from clipboard", (state: State.t) =>
+    switch (Selectors.getActiveBuffer(state)) {
+    | None => false
+    | Some(buf) =>
+      let line = Buffer.getLine(0, buf) |> BufferLine.raw;
+      Log.info("Current line is: |" ++ line ++ "|");
+      String.equal(line, "mnojkl");
     }
   );
 });

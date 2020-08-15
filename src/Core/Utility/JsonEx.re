@@ -30,6 +30,11 @@ let update = (key, f, json) => {
   };
 };
 
+let from_string = str =>
+  try(Ok(Yojson.Safe.from_string(str))) {
+  | e => Error(Printexc.to_string(e))
+  };
+
 let from_file = file =>
   try(Ok(Yojson.Safe.from_file(file))) {
   | e => Error(Printexc.to_string(e))
@@ -61,7 +66,6 @@ let explode_key = String.split_on_char('.');
  and converts it to:
  [{"a": { "b": { "c": 1 }}}]
  */
-
 let explode = json => {
   let rec expand_item = (currJson, keys, jsonValue) => {
     switch (keys) {

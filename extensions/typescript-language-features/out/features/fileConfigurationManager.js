@@ -6,9 +6,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
 const api_1 = require("../utils/api");
+const dispose_1 = require("../utils/dispose");
+const fileSchemes = require("../utils/fileSchemes");
 const languageModeIds_1 = require("../utils/languageModeIds");
 const resourceMap_1 = require("../utils/resourceMap");
-const dispose_1 = require("../utils/dispose");
 function objsAreEqual(a, b) {
     let keys = Object.keys(a);
     for (const key of keys) {
@@ -65,7 +66,10 @@ class FileConfigurationManager extends dispose_1.Disposable {
         }
         let resolve;
         this.formatOptions.set(document.uri, new Promise(r => resolve = r));
-        const args = Object.assign({ file }, currentOptions);
+        const args = {
+            file,
+            ...currentOptions,
+        };
         try {
             const response = await this.client.execute('configure', args, token);
             resolve(response.type === 'response' ? currentOptions : undefined);
@@ -79,7 +83,10 @@ class FileConfigurationManager extends dispose_1.Disposable {
         if (!formattingOptions) {
             return;
         }
-        const args = Object.assign({ file: undefined /*global*/ }, this.getFileOptions(document, formattingOptions));
+        const args = {
+            file: undefined /*global*/,
+            ...this.getFileOptions(document, formattingOptions),
+        };
         await this.client.execute('configure', args, token);
     }
     reset() {
@@ -114,6 +121,7 @@ class FileConfigurationManager extends dispose_1.Disposable {
             insertSpaceAfterTypeAssertion: config.get('insertSpaceAfterTypeAssertion'),
             placeOpenBraceOnNewLineForFunctions: config.get('placeOpenBraceOnNewLineForFunctions'),
             placeOpenBraceOnNewLineForControlBlocks: config.get('placeOpenBraceOnNewLineForControlBlocks'),
+            semicolons: config.get('semicolons'),
         };
     }
     getPreferences(document) {
@@ -121,13 +129,17 @@ class FileConfigurationManager extends dispose_1.Disposable {
             return {};
         }
         const config = vscode.workspace.getConfiguration(languageModeIds_1.isTypeScriptDocument(document) ? 'typescript.preferences' : 'javascript.preferences', document.uri);
-        return {
+        // `importModuleSpecifierEnding` added to `Proto.UserPreferences` in TypeScript 3.9:
+        // remove intersection type after upgrading TypeScript.
+        const preferences = {
             quotePreference: this.getQuoteStylePreference(config),
             importModuleSpecifierPreference: getImportModuleSpecifierPreference(config),
-            allowTextChangesInNewFiles: document.uri.scheme === 'file',
+            importModuleSpecifierEnding: getImportModuleSpecifierEndingPreference(config),
+            allowTextChangesInNewFiles: document.uri.scheme === fileSchemes.file,
             providePrefixAndSuffixTextForRename: config.get('renameShorthandProperties', true),
             allowRenameOfImportPath: true,
         };
+        return preferences;
     }
     getQuoteStylePreference(config) {
         switch (config.get('quoteStyle')) {
@@ -143,6 +155,14 @@ function getImportModuleSpecifierPreference(config) {
         case 'relative': return 'relative';
         case 'non-relative': return 'non-relative';
         default: return undefined;
+    }
+}
+function getImportModuleSpecifierEndingPreference(config) {
+    switch (config.get('importModuleSpecifierEnding')) {
+        case 'minimal': return 'minimal';
+        case 'index': return 'index';
+        case 'js': return 'js';
+        default: return 'auto';
     }
 }
 //# sourceMappingURL=fileConfigurationManager.js.map

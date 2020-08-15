@@ -4,7 +4,7 @@
 
 open EditorCoreTypes;
 module Core = Oni_Core;
-module ColorizedToken = Core.ColorizedToken;
+module ThemeToken = Core.ThemeToken;
 
 module type SyntaxHighlighter = {
   type t;
@@ -17,7 +17,7 @@ module type SyntaxHighlighter = {
   let update:
     (~bufferUpdate: Core.BufferUpdate.t, ~lines: array(string), t) => t;
 
-  let getTokenColors: (t, int) => list(ColorizedToken.t);
+  let getTokenColors: (t, int) => list(ThemeToken.t);
 
   // Get a list of lines that have been updated since last clear
   let getUpdatedLines: t => list(int);
@@ -62,23 +62,18 @@ let updateTheme = (theme, hl) => {
 
 let create =
     (
-      ~bufferUpdate,
-      ~configuration,
+      ~useTreeSitter,
       ~scope,
       ~theme,
       ~getTreesitterScope,
       ~getTextmateGrammar,
       lines: array(string),
     ) => {
-  ignore(bufferUpdate);
   let maybeScopeConverter = getTreesitterScope(scope);
   let maybeParser = TreeSitterSyntaxHighlights.getParserFromScope(scope);
 
-  let allowTreeSitter =
-    Core.Configuration.getValue(c => c.experimentalTreeSitter, configuration);
-
   switch (maybeScopeConverter, maybeParser) {
-  | (Some(scopeConverter), Some(parser)) when allowTreeSitter =>
+  | (Some(scopeConverter), Some(parser)) when useTreeSitter =>
     let ts =
       TreeSitterSyntaxHighlights.create(
         ~theme,

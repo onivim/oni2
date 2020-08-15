@@ -122,51 +122,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   };
 
-  describe("editor.quickSuggestions", ({test, _}) => {
-    let getQuickSuggestions = getExpectedValue(c => c.editorQuickSuggestions);
-    test("bool: false", ({expect, _}) => {
-      let quickSuggestions =
-        getQuickSuggestions(
-          {|
-        { "editor.quickSuggestions": false }
-      |},
-        );
-      expect.equal(
-        quickSuggestions,
-        {other: false, strings: false, comments: false},
-      );
-    });
-    test("bool: true", ({expect, _}) => {
-      let quickSuggestions =
-        getQuickSuggestions(
-          {|
-        { "editor.quickSuggestions": true }
-      |},
-        );
-      expect.equal(
-        quickSuggestions,
-        {other: true, strings: true, comments: true},
-      );
-    });
-
-    test("json: mixed", ({expect, _}) => {
-      let quickSuggestions =
-        getQuickSuggestions(
-          {|
-        { "editor.quickSuggestions": {
-          "other": false,
-          "strings": true,
-          "comments": false,
-        } }
-      |},
-        );
-      expect.equal(
-        quickSuggestions,
-        {other: false, strings: true, comments: false},
-      );
-    });
-  });
-
   describe("editor.fontSize", ({test, _}) => {
     let getFontSize = getExpectedValue(c => c.editorFontSize);
     test("parses string if possible", ({expect, _}) => {
@@ -287,6 +242,38 @@ describe("ConfigurationParser", ({test, describe, _}) => {
         "second thing",
         "third thing",
       ])
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("font ligatures (list)", ({expect, _}) => {
+    let configuration = {|
+    { "editor.fontLigatures": "'ss01', 'ss02', 'calt'" }
+    |};
+    let expected = `List(["ss01", "ss02", "calt"]);
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.editorFontLigatures, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("font ligatures (list, malformed)", ({expect, _}) => {
+    let configuration = {|
+    { "editor.fontLigatures": "'ss01', 'ss02' 'calt'" }
+    |};
+    let expected = `Bool(true);
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.editorFontLigatures, v),
+      )
     | Error(_) => expect.bool(false).toBe(true)
     };
   });

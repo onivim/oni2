@@ -37,3 +37,27 @@ Therefore, for function names, we'd recommend:
 - `validateExn: string => t`
 
 Where the `Exn` postfix shows that the function may throw an exception.
+
+### Ignoring Values
+
+When not consuming a returned value, the type must be provided to prevent partial applications:
+
+As an example, consider this block of code:
+
+```
+let _ = Event.subscribe(f, someEvent);
+```
+
+The problem here is that, if the signature of `Event.subscribe` changes to add an extra parameter - the code here will still happily compile, but not do what we expect!
+
+To prevent this from occurring, we required that the 'ignored' value must be described in one of the following ways:
+
+```
+let _: unit => unit = Event.subscribe(f, someEvent);
+```
+
+or
+
+```
+ignore(Event.subscribe(f, someEvent): unit => unit);
+```

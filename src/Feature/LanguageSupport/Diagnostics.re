@@ -8,6 +8,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 
 /*
  * The type for diagnostics is a nested map:
@@ -62,7 +63,7 @@ let _explodeDiagnostics = (buffer, diagnostics) => {
     );
   };
 
-  List.map(Diagnostic.explode(buffer), diagnostics)
+  ListEx.safeMap(Diagnostic.explode(buffer), diagnostics)
   |> List.flatten
   |> List.fold_left(f, IntMap.empty);
 };

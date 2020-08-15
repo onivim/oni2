@@ -6,7 +6,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode = require("vscode");
 const api_1 = require("../utils/api");
+const arrays_1 = require("../utils/arrays");
 const async_1 = require("../utils/async");
+const cancellation_1 = require("../utils/cancellation");
 const dispose_1 = require("../utils/dispose");
 const languageModeIds = require("../utils/languageModeIds");
 const resourceMap_1 = require("../utils/resourceMap");
@@ -20,6 +22,24 @@ function mode2ScriptKind(mode) {
     }
     return undefined;
 }
+class CloseOperation {
+    constructor(args) {
+        this.args = args;
+        this.type = 0 /* Close */;
+    }
+}
+class OpenOperation {
+    constructor(args) {
+        this.args = args;
+        this.type = 1 /* Open */;
+    }
+}
+class ChangeOperation {
+    constructor(args) {
+        this.args = args;
+        this.type = 2 /* Change */;
+    }
+}
 /**
  * Manages synchronization of buffers with the TS server.
  *
@@ -28,61 +48,51 @@ function mode2ScriptKind(mode) {
 class BufferSynchronizer {
     constructor(client) {
         this.client = client;
-        this._pending = {};
-        this._pendingFiles = new Set();
+        this._pending = new resourceMap_1.ResourceMap();
     }
-    open(args) {
+    open(resource, args) {
         if (this.supportsBatching) {
-            this.updatePending(args.file, pending => {
-                if (!pending.openFiles) {
-                    pending.openFiles = [];
-                }
-                pending.openFiles.push(args);
-            });
+            this.updatePending(resource, new OpenOperation(args));
         }
         else {
             this.client.executeWithoutWaitingForResponse('open', args);
         }
     }
-    close(filepath) {
+    close(resource, filepath) {
         if (this.supportsBatching) {
-            this.updatePending(filepath, pending => {
-                if (!pending.closedFiles) {
-                    pending.closedFiles = [];
-                }
-                pending.closedFiles.push(filepath);
-            });
+            this.updatePending(resource, new CloseOperation(filepath));
         }
         else {
             const args = { file: filepath };
             this.client.executeWithoutWaitingForResponse('close', args);
         }
     }
-    change(filepath, events) {
+    change(resource, filepath, events) {
         if (!events.length) {
             return;
         }
         if (this.supportsBatching) {
-            this.updatePending(filepath, pending => {
-                if (!pending.changedFiles) {
-                    pending.changedFiles = [];
-                }
-                pending.changedFiles.push({
-                    fileName: filepath,
-                    textChanges: events.map((change) => ({
-                        newText: change.text,
-                        start: typeConverters.Position.toLocation(change.range.start),
-                        end: typeConverters.Position.toLocation(change.range.end),
-                    })).reverse(),
-                });
-            });
+            this.updatePending(resource, new ChangeOperation({
+                fileName: filepath,
+                textChanges: events.map((change) => ({
+                    newText: change.text,
+                    start: typeConverters.Position.toLocation(change.range.start),
+                    end: typeConverters.Position.toLocation(change.range.end),
+                })).reverse(),
+            }));
         }
         else {
             for (const { range, text } of events) {
-                const args = Object.assign({ insertString: text }, typeConverters.Range.toFormattingRequestArgs(filepath, range));
+                const args = {
+                    insertString: text,
+                    ...typeConverters.Range.toFormattingRequestArgs(filepath, range)
+                };
                 this.client.executeWithoutWaitingForResponse('change', args);
             }
         }
+    }
+    reset() {
+        this._pending.clear();
     }
     beforeCommand(command) {
         if (command === 'updateOpen') {
@@ -93,27 +103,49 @@ class BufferSynchronizer {
     flush() {
         if (!this.supportsBatching) {
             // We've already eagerly synchronized
+            this._pending.clear();
             return;
         }
-        if (this._pending.changedFiles || this._pending.closedFiles || this._pending.openFiles) {
-            this.client.executeWithoutWaitingForResponse('updateOpen', this._pending);
-            this._pending = {};
-            this._pendingFiles.clear();
+        if (this._pending.size > 0) {
+            const closedFiles = [];
+            const openFiles = [];
+            const changedFiles = [];
+            for (const change of this._pending.values) {
+                switch (change.type) {
+                    case 2 /* Change */:
+                        changedFiles.push(change.args);
+                        break;
+                    case 1 /* Open */:
+                        openFiles.push(change.args);
+                        break;
+                    case 0 /* Close */:
+                        closedFiles.push(change.args);
+                        break;
+                }
+            }
+            this.client.execute('updateOpen', { changedFiles, closedFiles, openFiles }, cancellation_1.nulToken, { nonRecoverable: true });
+            this._pending.clear();
         }
     }
     get supportsBatching() {
-        return this.client.apiVersion.gte(api_1.default.v340) && vscode.workspace.getConfiguration('typescript', null).get('useBatchedBufferSync', true);
+        return this.client.apiVersion.gte(api_1.default.v340);
     }
-    updatePending(filepath, f) {
-        if (this.supportsBatching && this._pendingFiles.has(filepath)) {
+    updatePending(resource, op) {
+        switch (op.type) {
+            case 0 /* Close */:
+                const existing = this._pending.get(resource);
+                switch (existing === null || existing === void 0 ? void 0 : existing.type) {
+                    case 1 /* Open */:
+                        this._pending.delete(resource);
+                        return; // Open then close. No need to do anything
+                }
+                break;
+        }
+        if (this._pending.has(resource)) {
+            // we saw this file before, make sure we flush before working with it again
             this.flush();
-            this._pendingFiles.clear();
-            f(this._pending);
-            this._pendingFiles.add(filepath);
         }
-        else {
-            f(this._pending);
-        }
+        this._pending.set(resource, op);
     }
 }
 class SyncedBuffer {
@@ -128,15 +160,11 @@ class SyncedBuffer {
         const args = {
             file: this.filepath,
             fileContent: this.document.getText(),
+            projectRootPath: this.client.getWorkspaceRootForResource(this.document.uri),
         };
-        if (this.client.apiVersion.gte(api_1.default.v203)) {
-            const scriptKind = mode2ScriptKind(this.document.languageId);
-            if (scriptKind) {
-                args.scriptKindName = scriptKind;
-            }
-        }
-        if (this.client.apiVersion.gte(api_1.default.v230)) {
-            args.projectRootPath = this.client.getWorkspaceRootForResource(this.document.uri);
+        const scriptKind = mode2ScriptKind(this.document.languageId);
+        if (scriptKind) {
+            args.scriptKindName = scriptKind;
         }
         if (this.client.apiVersion.gte(api_1.default.v240)) {
             const tsPluginsForDocument = this.client.pluginManager.plugins
@@ -145,7 +173,7 @@ class SyncedBuffer {
                 args.plugins = tsPluginsForDocument.map(plugin => plugin.name);
             }
         }
-        this.synchronizer.open(args);
+        this.synchronizer.open(this.resource, args);
         this.state = 2 /* Open */;
     }
     get resource() {
@@ -166,14 +194,14 @@ class SyncedBuffer {
         }
     }
     close() {
-        this.synchronizer.close(this.filepath);
+        this.synchronizer.close(this.resource, this.filepath);
         this.state = 2 /* Closed */;
     }
     onContentChanged(events) {
         if (this.state !== 2 /* Open */) {
             console.error(`Unexpected buffer state: ${this.state}`);
         }
-        this.synchronizer.change(this.filepath, events);
+        this.synchronizer.change(this.resource, this.filepath, events);
     }
 }
 class SyncedBufferMap extends resourceMap_1.ResourceMap {
@@ -197,28 +225,32 @@ class PendingDiagnostics extends resourceMap_1.ResourceMap {
     }
 }
 class GetErrRequest {
-    constructor(client, files, _token, onDone) {
+    constructor(client, files, onDone) {
         this.files = files;
-        this._token = _token;
         this._done = false;
-        const args = {
-            delay: 0,
-            files: Array.from(files.entries)
-                .map(entry => client.normalizedPath(entry.resource))
-                .filter(x => !!x)
-        };
-        client.executeAsync('geterr', args, _token.token)
-            .finally(() => {
-            if (this._done) {
-                return;
-            }
+        this._token = new vscode.CancellationTokenSource();
+        const allFiles = arrays_1.coalesce(Array.from(files.entries).map(entry => client.normalizedPath(entry.resource)));
+        if (!allFiles.length) {
             this._done = true;
             onDone();
-        });
+        }
+        else {
+            const request = client.configuration.enableProjectDiagnostics
+                // Note that geterrForProject is almost certainly not the api we want here as it ends up computing far
+                // too many diagnostics
+                ? client.executeAsync('geterrForProject', { delay: 0, file: allFiles[0] }, this._token.token)
+                : client.executeAsync('geterr', { delay: 0, files: allFiles }, this._token.token);
+            request.finally(() => {
+                if (this._done) {
+                    return;
+                }
+                this._done = true;
+                onDone();
+            });
+        }
     }
     static executeGetErrRequest(client, files, onDone) {
-        const token = new vscode.CancellationTokenSource();
-        return new GetErrRequest(client, files, token, onDone);
+        return new GetErrRequest(client, files, onDone);
     }
     cancel() {
         if (!this._done) {
@@ -235,6 +267,8 @@ class BufferSyncSupport extends dispose_1.Disposable {
         this.listening = false;
         this._onDelete = this._register(new vscode.EventEmitter());
         this.onDelete = this._onDelete.event;
+        this._onWillChange = this._register(new vscode.EventEmitter());
+        this.onWillChange = this._onWillChange.event;
         this.client = client;
         this.modeIds = new Set(modeIds);
         this.diagnosticDelayer = new async_1.Delayer(300);
@@ -253,10 +287,37 @@ class BufferSyncSupport extends dispose_1.Disposable {
         vscode.workspace.onDidOpenTextDocument(this.openTextDocument, this, this._disposables);
         vscode.workspace.onDidCloseTextDocument(this.onDidCloseTextDocument, this, this._disposables);
         vscode.workspace.onDidChangeTextDocument(this.onDidChangeTextDocument, this, this._disposables);
+        vscode.window.onDidChangeVisibleTextEditors(e => {
+            for (const { document } of e) {
+                const syncedBuffer = this.syncedBuffers.get(document.uri);
+                if (syncedBuffer) {
+                    this.requestDiagnostic(syncedBuffer);
+                }
+            }
+        }, this, this._disposables);
         vscode.workspace.textDocuments.forEach(this.openTextDocument, this);
     }
     handles(resource) {
         return this.syncedBuffers.has(resource);
+    }
+    ensureHasBuffer(resource) {
+        if (this.syncedBuffers.has(resource)) {
+            return true;
+        }
+        const existingDocument = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === resource.toString());
+        if (existingDocument) {
+            return this.openTextDocument(existingDocument);
+        }
+        return false;
+    }
+    toVsCodeResource(resource) {
+        const filepath = this.client.normalizedPath(resource);
+        for (const buffer of this.syncedBuffers.allBuffers) {
+            if (buffer.filepath === filepath) {
+                return buffer.resource;
+            }
+        }
+        return resource;
     }
     toResource(filePath) {
         const buffer = this.syncedBuffers.getForPath(filePath);
@@ -265,41 +326,53 @@ class BufferSyncSupport extends dispose_1.Disposable {
         }
         return vscode.Uri.file(filePath);
     }
-    reOpenDocuments() {
+    reset() {
+        var _a;
+        (_a = this.pendingGetErr) === null || _a === void 0 ? void 0 : _a.cancel();
+        this.pendingDiagnostics.clear();
+        this.synchronizer.reset();
+    }
+    reinitialize() {
+        this.reset();
         for (const buffer of this.syncedBuffers.allBuffers) {
             buffer.open();
         }
     }
     openTextDocument(document) {
         if (!this.modeIds.has(document.languageId)) {
-            return;
+            return false;
         }
         const resource = document.uri;
         const filepath = this.client.normalizedPath(resource);
         if (!filepath) {
-            return;
+            return false;
         }
         if (this.syncedBuffers.has(resource)) {
-            return;
+            return true;
         }
         const syncedBuffer = new SyncedBuffer(document, filepath, this.client, this.synchronizer);
         this.syncedBuffers.set(resource, syncedBuffer);
         syncedBuffer.open();
         this.requestDiagnostic(syncedBuffer);
+        return true;
     }
     closeResource(resource) {
+        var _a;
         const syncedBuffer = this.syncedBuffers.get(resource);
         if (!syncedBuffer) {
             return;
         }
         this.pendingDiagnostics.delete(resource);
+        (_a = this.pendingGetErr) === null || _a === void 0 ? void 0 : _a.files.delete(resource);
         this.syncedBuffers.delete(resource);
         syncedBuffer.close();
         this._onDelete.fire(resource);
         this.requestAllDiagnostics();
     }
     interuptGetErr(f) {
-        if (!this.pendingGetErr) {
+        if (!this.pendingGetErr
+            || this.client.configuration.enableProjectDiagnostics // `geterr` happens on seperate server so no need to cancel it.
+        ) {
             return f();
         }
         this.pendingGetErr.cancel();
@@ -319,6 +392,7 @@ class BufferSyncSupport extends dispose_1.Disposable {
         if (!syncedBuffer) {
             return;
         }
+        this._onWillChange.fire(syncedBuffer.resource);
         syncedBuffer.onContentChanged(e.contentChanges);
         const didTrigger = this.requestDiagnostic(syncedBuffer);
         if (!didTrigger && this.pendingGetErr) {
@@ -365,17 +439,20 @@ class BufferSyncSupport extends dispose_1.Disposable {
     }
     sendPendingDiagnostics() {
         const orderedFileSet = this.pendingDiagnostics.getOrderedFileSet();
+        if (this.pendingGetErr) {
+            this.pendingGetErr.cancel();
+            for (const { resource } of this.pendingGetErr.files.entries) {
+                if (this.syncedBuffers.get(resource)) {
+                    orderedFileSet.set(resource, undefined);
+                }
+            }
+            this.pendingGetErr = undefined;
+        }
         // Add all open TS buffers to the geterr request. They might be visible
         for (const buffer of this.syncedBuffers.values) {
             orderedFileSet.set(buffer.resource, undefined);
         }
         if (orderedFileSet.size) {
-            if (this.pendingGetErr) {
-                this.pendingGetErr.cancel();
-                for (const file of this.pendingGetErr.files.entries) {
-                    orderedFileSet.set(file.resource, undefined);
-                }
-            }
             const getErr = this.pendingGetErr = GetErrRequest.executeGetErrRequest(this.client, orderedFileSet, () => {
                 if (this.pendingGetErr === getErr) {
                     this.pendingGetErr = undefined;

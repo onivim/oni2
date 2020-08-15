@@ -8,24 +8,24 @@ runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    state.vimMode == Vim.Types.Insert
+    Feature_Vim.mode(state.vim) == Vim.Types.Insert
   );
 
   /* Simulate multiple events getting dispatched before running effects */
 
-  dispatch(KeyboardInput("A"));
+  dispatch(KeyboardInput({isText: true, input: "A"}));
   runEffects();
 
-  dispatch(KeyboardInput("B"));
+  dispatch(KeyboardInput({isText: true, input: "B"}));
   runEffects();
 
-  dispatch(KeyboardInput("C"));
+  dispatch(KeyboardInput({isText: true, input: "C"}));
   runEffects();
 
   wait(~name="Buffer shows ABC", (state: State.t) =>

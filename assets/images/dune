@@ -1,4 +1,4 @@
 (install
     (section bin)
     (package Oni2)
-    (files logo.png background-grid.png title-logo.png))
+    (files logo.png logo-titlebar.png background-grid.png title-logo.png))

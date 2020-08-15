@@ -18,18 +18,16 @@ module Constants = {
 
 module Styles = {
   open Style;
-  open UiFont;
 
   let container = (~isActive, ~theme) => {
-    let modeColor = Colors.Oni.backgroundFor(Mode.Normal).from(theme);
-    let borderColor = isActive ? modeColor : Revery.Colors.transparentBlack;
+    let borderColor =
+      isActive ? Colors.PanelTitle.activeBorder : Colors.Panel.background;
 
     [
       overflow(`Hidden),
       paddingHorizontal(5),
-      backgroundColor(Colors.Editor.background.from(theme)),
-      borderTop(~color=Revery.Colors.transparentBlack, ~width=2),
-      borderBottom(~color=borderColor, ~width=2),
+      backgroundColor(Colors.Panel.background.from(theme)),
+      borderBottom(~color=borderColor.from(theme), ~width=2),
       height(30),
       minWidth(Constants.minWidth),
       flexDirection(`Row),
@@ -45,20 +43,26 @@ module Styles = {
     justifyContent(`Center),
   ];
 
-  let text = (~isActive, ~uiFont, ~theme) => [
+  let text = (~isActive, ~theme) => [
     textOverflow(`Ellipsis),
-    fontFamily(isActive ? uiFont.fontFileSemiBold : uiFont.fontFile),
-    fontSize(uiFont.fontSize),
-    color(Colors.Tab.activeForeground.from(theme)),
+    isActive
+      ? color(Colors.PanelTitle.activeForeground.from(theme))
+      : color(Colors.PanelTitle.inactiveForeground.from(theme)),
     justifyContent(`Center),
     alignItems(`Center),
   ];
 };
 
-let make = (~uiFont, ~theme, ~title, ~onClick, ~isActive, ()) => {
+let make = (~uiFont: UiFont.t, ~theme, ~title, ~onClick, ~isActive, ()) => {
   <View style={Styles.container(~isActive, ~theme)}>
     <Clickable onClick style=Styles.clickable>
-      <Text style={Styles.text(~isActive, ~uiFont, ~theme)} text=title />
+      <Text
+        style={Styles.text(~isActive, ~theme)}
+        fontFamily={uiFont.family}
+        fontWeight={isActive ? Medium : Normal}
+        fontSize={uiFont.size}
+        text=title
+      />
     </Clickable>
   </View>;
 };

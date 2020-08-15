@@ -1,6 +1,7 @@
 (library
     (name Feature_Editor)
     (public_name Oni2.feature.editor)
+    (inline_tests)
     (libraries 
       editor-core-types
       Oni2.core
@@ -10,7 +11,8 @@
       Oni2.feature.language_support
       Oni2.feature.syntax
       Oni2.service.font
+      Oni2.service.os
       Revery
       libvim
     )
-    (preprocess (pps ppx_deriving.show brisk-reconciler.ppx)))
+    (preprocess (pps ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))

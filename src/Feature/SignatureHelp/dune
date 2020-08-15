@@ -1,0 +1,14 @@
+(library
+    (name Feature_SignatureHelp)
+    (public_name Oni2.feature.signature_help)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Oni2.syntax
+      Oni2.feature.commands
+      Oni2.feature.editor
+      Oni2.components
+      Oni2.service.exthost
+      uucp
+    )
+    (preprocess (pps ppx_deriving.show brisk-reconciler.ppx)))

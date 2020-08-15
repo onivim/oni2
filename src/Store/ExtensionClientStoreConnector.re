@@ -9,106 +9,28 @@
 open Oni_Core;
 open Oni_Model;
 
-module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
+module Log = (val Log.withNamespace("Oni2.Extension.ClientStoreConnector"));
 
-open Oni_Extensions;
-module Extensions = Oni_Extensions;
-module Protocol = Extensions.ExtHostProtocol;
-module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-module Workspace = Protocol.Workspace;
-
-let start = (extensions, extHostClient) => {
-  let _bufferMetadataToModelAddedDelta =
-      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
-    switch (bm.filePath, fileType) {
-    | (Some(fp), Some(ft)) =>
-      Log.trace("Creating model for filetype: " ++ ft);
-
-      Some(
-        Protocol.ModelAddedDelta.create(
-          ~uri=Uri.fromPath(fp),
-          ~versionId=bm.version,
-          ~lines=[""],
-          ~modeId=ft,
-          ~isDirty=true,
-          (),
-        ),
-      );
-    | _ => None
-    };
-
-  let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
-
-  let activateFileType = (fileType: option(string)) =>
-    fileType
-    |> Option.iter(ft =>
-         if (!Hashtbl.mem(activatedFileTypes, ft)) {
-           // If no entry, we haven't activated yet
-           ExtHostClient.activateByEvent("onLanguage:" ++ ft, extHostClient);
-           Hashtbl.add(activatedFileTypes, ft, true);
-         }
-       );
-
-  let sendBufferEnterEffect =
-      (bm: Vim.BufferMetadata.t, fileType: option(string)) =>
-    Isolinear.Effect.create(~name="exthost.bufferEnter", () =>
-      switch (_bufferMetadataToModelAddedDelta(bm, fileType)) {
-      | None => ()
-      | Some((v: Protocol.ModelAddedDelta.t)) =>
-        activateFileType(fileType);
-        ExtHostClient.addDocument(v, extHostClient);
-      }
-    );
-
-  let modelChangedEffect = (buffers: Buffers.t, update: BufferUpdate.t) =>
-    Isolinear.Effect.create(~name="exthost.bufferUpdate", () =>
-      switch (Buffers.getBuffer(update.id, buffers)) {
-      | None => ()
-      | Some(buffer) =>
-        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
-          let modelContentChange =
-            Protocol.ModelContentChange.ofBufferUpdate(
-              update,
-              Protocol.Eol.default,
-            );
-          let modelChangedEvent =
-            Protocol.ModelChangedEvent.create(
-              ~changes=[modelContentChange],
-              ~eol=Protocol.Eol.default,
-              ~versionId=update.version,
-              (),
-            );
-
-          ExtHostClient.updateDocument(
-            Buffer.getUri(buffer),
-            modelChangedEvent,
-            ~dirty=Buffer.isModified(buffer),
-            extHostClient,
-          );
-        })
-      }
-    );
-
-  let executeContributedCommandEffect = cmd =>
-    Isolinear.Effect.create(~name="exthost.executeContributedCommand", () => {
-      ExtHostClient.executeContributedCommand(cmd, extHostClient)
-    });
-
-  let gitRefreshEffect = (scm: Feature_SCM.model) =>
+let start = (extensions, extHostClient: Exthost.Client.t) => {
+  let gitRefreshEffect = (scm: Feature_SCM.model, uri) =>
     if (scm == Feature_SCM.initial) {
       Isolinear.Effect.none;
     } else {
-      executeContributedCommandEffect("git.refresh");
+      Service_Exthost.Effects.Commands.executeContributedCommand(
+        ~command="git.refresh",
+        ~arguments=[`String(uri |> Oni_Core.Uri.toFileSystemPath)],
+        extHostClient,
+      );
     };
 
   let discoveredExtensionsEffect = extensions =>
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
       dispatch(
-        Actions.Extension(Oni_Model.Extensions.Discovered(extensions)),
+        Actions.Extensions(Feature_Extensions.Msg.discovered(extensions)),
       )
     );
 
@@ -117,15 +39,15 @@ let start = (extensions, extHostClient) => {
       ~name="exthost.registerQuitCleanup", dispatch =>
       dispatch(
         Actions.RegisterQuitCleanup(
-          () => ExtHostClient.close(extHostClient),
+          () => Exthost.Client.terminate(extHostClient),
         ),
       )
     );
 
   let changeWorkspaceEffect = path =>
     Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
-      ExtHostClient.acceptWorkspaceData(
-        Workspace.fromPath(path),
+      Exthost.Request.Workspace.acceptWorkspaceData(
+        ~workspace=Some(Exthost.WorkspaceData.fromPath(path)),
         extHostClient,
       )
     });
@@ -139,38 +61,66 @@ let start = (extensions, extHostClient) => {
       |> Option.iter(provider => {
            let (handle, _) = provider;
            let promise =
-             ExtHostClient.provideTextDocumentContent(
-               handle,
-               uri,
+             Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
+               ~handle,
+               ~uri,
                extHostClient,
              );
 
-           Lwt.on_success(
-             promise,
-             content => {
+           Lwt.on_success(promise, maybeContent => {
+             switch (maybeContent) {
+             | None => ()
+             | Some(content) =>
                let lines =
                  content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
 
                dispatch(Actions.GotOriginalContent({bufferId, lines}));
-             },
-           );
+             }
+           });
          });
     });
 
-  let provideDecorationsEffect = (handle, uri) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="exthost.provideDecorations", dispatch => {
-      let promise =
-        Oni_Extensions.ExtHostClient.provideDecorations(
-          handle,
-          uri,
-          extHostClient,
-        );
+  let provideDecorationsEffect = {
+    open Exthost.Request.Decorations;
+    let nextRequestId = ref(0);
 
-      Lwt.on_success(promise, decorations =>
-        dispatch(Actions.GotDecorations({handle, uri, decorations}))
-      );
-    });
+    (handle, uri) =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="exthost.provideDecorations", dispatch => {
+        let requests = [{id: nextRequestId^, handle, uri}];
+        incr(nextRequestId);
+
+        let promise =
+          Exthost.Request.Decorations.provideDecorations(
+            ~requests,
+            extHostClient,
+          );
+
+        let toCoreDecoration:
+          Exthost.Request.Decorations.decoration => Oni_Core.Decoration.t =
+          decoration => {
+            handle,
+            tooltip: decoration.title,
+            letter: decoration.letter,
+            color: decoration.color.id,
+          };
+
+        Lwt.on_success(
+          promise,
+          decorations => {
+            let decorations =
+              decorations
+              |> IntMap.bindings
+              |> List.to_seq
+              |> Seq.map(snd)
+              |> Seq.map(toCoreDecoration)
+              |> List.of_seq;
+
+            dispatch(Actions.GotDecorations({handle, uri, decorations}));
+          },
+        );
+      });
+  };
 
   let updater = (state: State.t, action: Actions.t) =>
     switch (action) {
@@ -182,38 +132,50 @@ let start = (extensions, extHostClient) => {
         ]),
       )
 
-    | BufferUpdate(bu) => (
+    | BufferUpdate({update, newBuffer, triggerKey, oldBuffer}) => (
         state,
-        Isolinear.Effect.batch([
-          modelChangedEffect(state.buffers, bu.update),
-        ]),
+        Service_Exthost.Effects.Documents.modelChanged(
+          ~previousBuffer=oldBuffer,
+          ~buffer=newBuffer,
+          ~update,
+          extHostClient,
+          () =>
+          Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
+        ),
       )
 
-    | BufferSaved(_) => (
+    | BufferSaved(bufferId) =>
+      let effect =
+        state.buffers
+        |> Oni_Model.Buffers.getBuffer(bufferId)
+        |> Option.map(buffer => {
+             gitRefreshEffect(state.scm, buffer |> Oni_Core.Buffer.getUri)
+           })
+        |> Option.value(~default=Isolinear.Effect.none);
+
+      (state, effect);
+
+    | StatusBar(ContributedItemClicked({command, _})) => (
         state,
-        Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
+        Service_Exthost.Effects.Commands.executeContributedCommand(
+          ~command,
+          ~arguments=[],
+          extHostClient,
+        ),
       )
 
-    | CommandExecuteContributed(cmd) => (
-        state,
-        executeContributedCommandEffect(cmd),
-      )
+    | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
-    | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
-
-    | BufferEnter(metadata, fileTypeOpt) =>
+    | BufferEnter({id, filePath, _}) =>
       let eff =
-        switch (metadata.filePath) {
+        switch (filePath) {
         | Some(path) =>
-          Isolinear.Effect.batch([
-            sendBufferEnterEffect(metadata, fileTypeOpt),
-            Feature_SCM.Effects.getOriginalUri(
-              extHostClient, state.scm, path, uri =>
-              Actions.GotOriginalUri({bufferId: metadata.id, uri})
-            ),
-          ])
+          Feature_SCM.Effects.getOriginalUri(
+            extHostClient, state.scm, path, uri =>
+            Actions.GotOriginalUri({bufferId: id, uri})
+          )
 
-        | None => sendBufferEnterEffect(metadata, fileTypeOpt)
+        | None => Isolinear.Effect.none
         };
       (state, eff);
 
@@ -320,25 +282,6 @@ let start = (extensions, extHostClient) => {
         },
         Isolinear.Effect.none,
       )
-
-    | ExtMessageReceived({severity, message, extensionId}) =>
-      let kind: Feature_Notification.kind =
-        switch (severity) {
-        | `Ignore => Info
-        | `Info => Info
-        | `Warning => Warning
-        | `Error => Error
-        };
-
-      (
-        state,
-        Feature_Notification.Effects.create(
-          ~kind,
-          ~source=?extensionId,
-          message,
-        )
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
-      );
 
     | _ => (state, Isolinear.Effect.none)
     };

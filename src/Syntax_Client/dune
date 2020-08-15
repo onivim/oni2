@@ -4,7 +4,8 @@
     (libraries 
         str
         bigarray
-        zed_oni
+        Revery.zed
+        luv
         lwt
         lwt.unix
         yojson
@@ -14,4 +15,5 @@
         Revery
         textmate
         treesitter
+        Oni2.exthost
     ))

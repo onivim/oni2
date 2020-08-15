@@ -1,13 +1,15 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-const vscode = require("vscode");
-const arrays = require("./arrays");
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TypeScriptServiceConfiguration = exports.TsServerLogLevel = void 0;
 const os = require("os");
 const path = require("path");
+const vscode = require("vscode");
+const objects = require("../utils/objects");
+const arrays = require("./arrays");
 var TsServerLogLevel;
 (function (TsServerLogLevel) {
     TsServerLogLevel[TsServerLogLevel["Off"] = 0] = "Off";
@@ -58,6 +60,10 @@ class TypeScriptServiceConfiguration {
         this.checkJs = TypeScriptServiceConfiguration.readCheckJs(configuration);
         this.experimentalDecorators = TypeScriptServiceConfiguration.readExperimentalDecorators(configuration);
         this.disableAutomaticTypeAcquisition = TypeScriptServiceConfiguration.readDisableAutomaticTypeAcquisition(configuration);
+        this.useSeparateSyntaxServer = TypeScriptServiceConfiguration.readUseSeparateSyntaxServer(configuration);
+        this.enableProjectDiagnostics = TypeScriptServiceConfiguration.readEnableProjectDiagnostics(configuration);
+        this.maxTsServerMemory = TypeScriptServiceConfiguration.readMaxTsServerMemory(configuration);
+        this.watchOptions = TypeScriptServiceConfiguration.readWatchOptions(configuration);
     }
     static loadFromWorkspace() {
         return new TypeScriptServiceConfiguration();
@@ -71,7 +77,11 @@ class TypeScriptServiceConfiguration {
             && this.checkJs === other.checkJs
             && this.experimentalDecorators === other.experimentalDecorators
             && this.disableAutomaticTypeAcquisition === other.disableAutomaticTypeAcquisition
-            && arrays.equals(this.tsServerPluginPaths, other.tsServerPluginPaths);
+            && arrays.equals(this.tsServerPluginPaths, other.tsServerPluginPaths)
+            && this.useSeparateSyntaxServer === other.useSeparateSyntaxServer
+            && this.enableProjectDiagnostics === other.enableProjectDiagnostics
+            && this.maxTsServerMemory === other.maxTsServerMemory
+            && objects.equals(this.watchOptions, other.watchOptions);
     }
     static fixPathPrefixes(inspectValue) {
         const pathPrefixes = ['~' + path.sep];
@@ -117,6 +127,24 @@ class TypeScriptServiceConfiguration {
     }
     static extractLocale(configuration) {
         return configuration.get('typescript.locale', null);
+    }
+    static readUseSeparateSyntaxServer(configuration) {
+        return configuration.get('typescript.tsserver.useSeparateSyntaxServer', true);
+    }
+    static readEnableProjectDiagnostics(configuration) {
+        return configuration.get('typescript.tsserver.experimental.enableProjectDiagnostics', false);
+    }
+    static readWatchOptions(configuration) {
+        return configuration.get('typescript.tsserver.watchOptions');
+    }
+    static readMaxTsServerMemory(configuration) {
+        const defaultMaxMemory = 3072;
+        const minimumMaxMemory = 128;
+        const memoryInMB = configuration.get('typescript.tsserver.maxTsServerMemory', defaultMaxMemory);
+        if (!Number.isSafeInteger(memoryInMB)) {
+            return defaultMaxMemory;
+        }
+        return Math.max(memoryInMB, minimumMaxMemory);
     }
 }
 exports.TypeScriptServiceConfiguration = TypeScriptServiceConfiguration;

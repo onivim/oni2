@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
 const PConst = require("../protocol.const");
 const typeConverters = require("../utils/typeConverters");
@@ -13,7 +14,7 @@ const getSymbolKind = (kind) => {
         case PConst.Kind.class: return vscode.SymbolKind.Class;
         case PConst.Kind.enum: return vscode.SymbolKind.Enum;
         case PConst.Kind.interface: return vscode.SymbolKind.Interface;
-        case PConst.Kind.memberFunction: return vscode.SymbolKind.Method;
+        case PConst.Kind.method: return vscode.SymbolKind.Method;
         case PConst.Kind.memberVariable: return vscode.SymbolKind.Property;
         case PConst.Kind.memberGetAccessor: return vscode.SymbolKind.Property;
         case PConst.Kind.memberSetAccessor: return vscode.SymbolKind.Property;
@@ -22,6 +23,8 @@ const getSymbolKind = (kind) => {
         case PConst.Kind.localVariable: return vscode.SymbolKind.Variable;
         case PConst.Kind.function: return vscode.SymbolKind.Function;
         case PConst.Kind.localFunction: return vscode.SymbolKind.Function;
+        case PConst.Kind.constructSignature: return vscode.SymbolKind.Constructor;
+        case PConst.Kind.constructorImplementation: return vscode.SymbolKind.Constructor;
     }
     return vscode.SymbolKind.Variable;
 };
@@ -31,30 +34,34 @@ class TypeScriptDocumentSymbolProvider {
         this.cachedResponse = cachedResponse;
     }
     async provideDocumentSymbols(document, token) {
+        var _a;
         const file = this.client.toOpenedFilePath(document);
         if (!file) {
             return undefined;
         }
         const args = { file };
         const response = await this.cachedResponse.execute(document, () => this.client.execute('navtree', args, token));
-        if (response.type !== 'response' || !response.body) {
+        if (response.type !== 'response' || !((_a = response.body) === null || _a === void 0 ? void 0 : _a.childItems)) {
             return undefined;
         }
-        let tree = response.body;
-        if (tree && tree.childItems) {
-            // The root represents the file. Ignore this when showing in the UI
-            const result = [];
-            tree.childItems.forEach(item => TypeScriptDocumentSymbolProvider.convertNavTree(document.uri, result, item));
-            return result;
+        // The root represents the file. Ignore this when showing in the UI
+        const result = [];
+        for (const item of response.body.childItems) {
+            TypeScriptDocumentSymbolProvider.convertNavTree(document.uri, result, item);
         }
-        return undefined;
+        return result;
     }
-    static convertNavTree(resource, bucket, item) {
+    static convertNavTree(resource, output, item) {
+        var _a;
         let shouldInclude = TypeScriptDocumentSymbolProvider.shouldInclueEntry(item);
+        if (!shouldInclude && !((_a = item.childItems) === null || _a === void 0 ? void 0 : _a.length)) {
+            return false;
+        }
         const children = new Set(item.childItems || []);
         for (const span of item.spans) {
             const range = typeConverters.Range.fromTextSpan(span);
-            const symbolInfo = new vscode.DocumentSymbol(item.text, '', getSymbolKind(item.kind), range, range);
+            const selectionRange = item.nameSpan ? typeConverters.Range.fromTextSpan(item.nameSpan) : range;
+            const symbolInfo = new vscode.DocumentSymbol(item.text, '', getSymbolKind(item.kind), range, range.contains(selectionRange) ? selectionRange : range);
             for (const child of children) {
                 if (child.spans.some(span => !!range.intersection(typeConverters.Range.fromTextSpan(span)))) {
                     const includedChild = TypeScriptDocumentSymbolProvider.convertNavTree(resource, symbolInfo.children, child);
@@ -63,7 +70,7 @@ class TypeScriptDocumentSymbolProvider {
                 }
             }
             if (shouldInclude) {
-                bucket.push(symbolInfo);
+                output.push(symbolInfo);
             }
         }
         return shouldInclude;

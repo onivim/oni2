@@ -1,0 +1,11 @@
+(library
+    (name Libvim_Test)
+    (flags (:standard (-w -39)))
+    (ocamlopt_flags -linkall -g)
+    (libraries rely.lib libvim)
+)
+
+(install
+ (section bin)
+ (package OniUnitTestRunner)
+ (files lines_100.txt testfile.txt brackets.txt))

@@ -21,8 +21,12 @@ let pop = (focusable: Focus.focusable, state: State.t) =>
   };
 
 let current = (state: State.t) =>
-  if (Sneak.isActive(state.sneak)) {
+  if (Feature_Sneak.isActive(state.sneak)) {
     Focus.Sneak;
+  } else if (Feature_LanguageSupport.isFocused(state.languageSupport)) {
+    Focus.LanguageSupport;
+  } else if (Feature_Registers.isActive(state.registers)) {
+    Focus.InsertRegister;
   } else if (state.modal != None) {
     Focus.Modal;
   } else {

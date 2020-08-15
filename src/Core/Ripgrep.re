@@ -1,5 +1,4 @@
 open Kernel;
-open Rench;
 open Utility;
 
 module Time = Revery_Core.Time;
@@ -63,7 +62,8 @@ type t = {
       ~filesExclude: list(string),
       ~directory: string,
       ~onUpdate: list(string) => unit,
-      ~onComplete: unit => unit
+      ~onComplete: unit => unit,
+      ~onError: string => unit
     ) =>
     dispose,
   findInFiles:
@@ -71,7 +71,8 @@ type t = {
       ~directory: string,
       ~query: string,
       ~onUpdate: list(Match.t) => unit,
-      ~onComplete: unit => unit
+      ~onComplete: unit => unit,
+      ~onError: string => unit
     ) =>
     dispose,
 }
@@ -88,7 +89,6 @@ and dispose = unit => unit;
 module RipgrepProcessingJob = {
   type pendingWork = {
     onUpdate: list(string) => unit,
-    onComplete: unit => unit,
     queue: Queue.t(Bytes.t),
   };
 
@@ -111,21 +111,17 @@ module RipgrepProcessingJob = {
         queue;
       };
 
-    if (Queue.isEmpty(pending.queue)) {
-      pending.onComplete();
-    };
-
     (Queue.isEmpty(pending.queue), {...pending, queue}, completed);
   };
 
-  let create = (~onUpdate, ~onComplete) => {
+  let create = (~onUpdate) => {
     Job.create(
       ~f=doWork,
       ~initialCompletedWork=(),
       ~name="RipgrepProcessingJob",
       ~pendingWorkPrinter,
       ~budget=Time.ms(2),
-      {onUpdate, onComplete, queue: Queue.empty},
+      {onUpdate, queue: Queue.empty},
     );
   };
 
@@ -140,60 +136,93 @@ module RipgrepProcessingJob = {
   };
 };
 
-let process = (rgPath, args, onUpdate, onComplete) => {
-  let argsStr = String.concat("|", Array.to_list(args));
-  Log.debugf(m => m("Starting process: %s with args: |%s|", rgPath, argsStr));
+let process = (rgPath, args, onUpdate, onComplete, onError) => {
+  let on_exit = (_, ~exit_status: int64, ~term_signal as _) => {
+    Log.debugf(m =>
+      m("Process completed - exit code: %n", exit_status |> Int64.to_int)
+    );
+  };
 
-  // Mutex to
-  let jobMutex = Mutex.create();
-  let job = ref(RipgrepProcessingJob.create(~onUpdate, ~onComplete));
+  Log.debugf(m =>
+    m(
+      "Starting process: %s with args: |%s|",
+      rgPath,
+      args |> String.concat(" "),
+    )
+  );
 
-  let disposeTick = ref(None);
+  let processResult =
+    Luv.Pipe.init()
+    |> ResultEx.flatMap(pipe => {
+         LuvEx.Process.spawn(
+           ~on_exit,
+           ~redirect=[
+             Luv.Process.to_parent_pipe(
+               ~fd=Luv.Process.stdout,
+               ~parent_pipe=pipe,
+               (),
+             ),
+           ],
+           rgPath,
+           [rgPath, ...args],
+         )
+         |> Result.map(process => (process, pipe))
+       });
 
-  Revery.App.runOnMainThread(() =>
+  switch (processResult) {
+  | Error(err) =>
+    let errMsg = err |> Luv.Error.strerror;
+    Log.error(errMsg);
+    onError(errMsg);
+    (() => ());
+  | Ok((process, pipe)) =>
+    let job = ref(RipgrepProcessingJob.create(~onUpdate));
+    let isRipgrepProcessDone = ref(false);
+
+    let disposeTick = ref(None);
+    let disposeAll = () => {
+      Log.info("disposeAll");
+      disposeTick^ |> Option.iter(f => f());
+      let _: result(unit, Luv.Error.t) = Luv.Process.kill(process, 2);
+      isRipgrepProcessDone := true;
+      ();
+    };
+
+    Luv.Stream.read_start(
+      pipe,
+      fun
+      | Error(`EOF) => {
+          Luv.Handle.close(pipe, ignore);
+          isRipgrepProcessDone := true;
+        }
+      | Error(msg) => {
+          disposeAll();
+          let errMsg = msg |> Luv.Error.strerror;
+
+          onError(errMsg);
+        }
+      | Ok(buffer) => {
+          let bytes = Luv.Buffer.to_bytes(buffer);
+          job := RipgrepProcessingJob.queueWork(bytes, job^);
+        },
+    );
+
     disposeTick :=
       Some(
         Revery.Tick.interval(
           _ =>
             if (!Job.isComplete(job^)) {
-              Mutex.lock(jobMutex);
               job := Job.tick(job^);
-              Mutex.unlock(jobMutex);
+            } else if (isRipgrepProcessDone^) {
+              onComplete();
+              disposeAll();
             },
           Time.zero,
         ),
-      )
-  );
+      );
 
-  let childProcess = ChildProcess.spawn(rgPath, args);
-
-  let disposeOnData =
-    Event.subscribe(
-      childProcess.stdout.onData,
-      value => {
-        Mutex.lock(jobMutex);
-        job := RipgrepProcessingJob.queueWork(value, job^);
-        Mutex.unlock(jobMutex);
-      },
-    );
-
-  let disposeOnClose =
-    Event.subscribe(childProcess.onClose, exitCode => {
-      Log.debugf(m => m("Process completed - exit code: %n", exitCode))
-    });
-
-  let dispose = () => {
-    Log.debug("Session complete.");
-    disposeOnData();
-    disposeOnClose();
-    switch (disposeTick^) {
-    | Some(dispose) => dispose()
-    | None => ()
-    };
-    childProcess.kill(Sys.sigkill);
+    disposeAll;
   };
-
-  dispose;
 };
 
 /**
@@ -202,7 +231,14 @@ let process = (rgPath, args, onUpdate, onComplete) => {
    path, modified, created
  */
 let search =
-    (~executablePath, ~filesExclude, ~directory, ~onUpdate, ~onComplete) => {
+    (
+      ~executablePath,
+      ~filesExclude,
+      ~directory,
+      ~onUpdate,
+      ~onComplete,
+      ~onError,
+    ) => {
   let dedup = {
     let seen = Hashtbl.create(1000);
 
@@ -222,24 +258,22 @@ let search =
     |> List.map(x => ["-g", x])
     |> List.concat;
 
-  let args =
-    globs
-    @ ["--smart-case", "--hidden", "--files", "--", directory]
-    |> Array.of_list;
+  let args = globs @ ["--smart-case", "--hidden", "--files", "--", directory];
 
   process(
     executablePath,
     args,
     items => items |> dedup |> onUpdate,
     onComplete,
+    onError,
   );
 };
 
 let findInFiles =
-    (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete) => {
+    (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete, ~onError) => {
   process(
     executablePath,
-    [|"--smart-case", "--hidden", "--json", "--", query, directory|],
+    ["--smart-case", "--hidden", "--json", "--", query, directory],
     items => {
       items
       |> List.filter_map(Match.fromJsonString)
@@ -247,6 +281,7 @@ let findInFiles =
       |> onUpdate
     },
     onComplete,
+    onError,
   );
 };
 

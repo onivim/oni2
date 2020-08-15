@@ -1,0 +1,14 @@
+(library
+    (name Service_Extensions)
+    (public_name Oni2.service.extensions)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Oni2.exthost
+      Oni2.service.net
+      Oni2.service.os
+      Revery
+      isolinear
+      base
+    )
+    (preprocess (pps ppx_let ppx_deriving.show)))

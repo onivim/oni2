@@ -10,7 +10,7 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.6.2__ is required `npm install -g esy@0.6.2`)
+- Install [Esy](https://esy.sh) (__0.6.2__ or above is required, but the latest version is recommened: `npm install -g esy@latest`)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - Install any other system packages required by Oni2 dependencies, as outlined below.
 
@@ -25,7 +25,7 @@ No additional requirements.
 
 ### macOS
 
-Requires `libtool`. Can be installed via homebrew: `brew install libtool`.
+Requires `libtool` and `gettext` from homebrew: `brew install libtool gettext`.
 
 ### Linux
 
@@ -95,11 +95,18 @@ This will create a `_release` folder at the root with the application bundle ins
 
 ### OSX
 
-Once you have a release build created, you can create an `oni2` symlink to point to your development environment.
+Once you have a release build created, you can install Oni2 in your `Applications` folder.
 
 Run the following from the `oni2` directory:
-- `./scripts/osx/create-symlink.sh`
 
+- `cp -R _release/Onivim2.app $USER/Applications`
+
+If you want to open the editor from terminal with an `oni2` command, you can add Oni2 to the system PATH using a command
+item within the app:
+
+- Open Oni2 from launchpad
+- Open command palette with `Cmd + Shift + P`
+- Execute: `System: Add Oni2 to System PATH`
 
 ## Extension Integration
 

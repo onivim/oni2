@@ -25,6 +25,11 @@
 				"label": "LaserWave",
 				"uiTheme": "vs-dark",
 				"path": "./themes/LaserWave-color-theme.json"
+			},
+			{
+				"label": "LaserWave Italic",
+				"uiTheme": "vs-dark",
+				"path": "./themes/LaserWave-italic-color-theme.json"
 			}
 		]
 	},

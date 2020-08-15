@@ -26,6 +26,8 @@ We made the trade-off of moving to the 'modern' definition: each window split in
 
 However, we see value in the concept of the 'Vim-tab' - a grouping of window splits - and we want to keep that moving forward. We're working on adding a concept of [workspaces](https://github.com/onivim/oni2/issues/440), which encompass a grouping of window splits, as well some other properties (like the current working directory). Let us know if you have feedback on that concept by posting on that issue!
 
+## Commands
 
+- The `gh` command shows the _hover UI_ in Onivim (In Vim, `gh` starts select mode).
 
 

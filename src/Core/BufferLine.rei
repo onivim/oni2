@@ -8,13 +8,17 @@ exception OutOfBounds;
 
 type t;
 
-let empty: t;
+let make: (~indentation: IndentationSettings.t, ~font: Font.t=?, string) => t;
 
-let make: (~indentation: IndentationSettings.t, string) => t;
+let empty: (~font: Font.t=?, unit) => t;
 
 let lengthInBytes: t => int;
 
 let raw: t => string;
+
+let font: t => Font.t;
+
+let indentation: t => IndentationSettings.t;
 
 /*
  * [lengthSlow(bufferLine)] returns the UTF-8 length of the buffer line.
@@ -32,6 +36,16 @@ let lengthSlow: t => int;
 let lengthBounded: (~max: int, t) => int;
 
 /*
+ * [getIndex(~byte, str)] returns the character index at byte [byte]
+ */
+let getIndex: (~byte: int, t) => int;
+
+/*
+ * [getByteFromIndex(~index, str)] returns the byte index at character [index].
+ */
+let getByteFromIndex: (~index: int, t) => int;
+
+/*
   * [getUcharExn(~index, str)] returns the [Uchar.t] at UTF-8 index [index].
   * Raises [OutOfBounds] if the index is not valid.
  */
@@ -39,4 +53,14 @@ let getUcharExn: (~index: int, t) => Uchar.t;
 
 let subExn: (~index: int, ~length: int, t) => string;
 
-let getPositionAndWidth: (~index: int, t) => (int, int);
+let getPixelPositionAndWidth: (~index: int, t) => (float, float);
+
+module Slow: {
+  /*
+   * [getIndexFromPixel(~position, str)] returns the character index at pixel position [position].
+   * The position of a character is dependent on indentation settings, multi-width characters, etc.
+   *
+   * _slow_ because requires traversal of the string, currently.
+   */
+  let getIndexFromPixel: (~pixel: float, t) => int;
+};

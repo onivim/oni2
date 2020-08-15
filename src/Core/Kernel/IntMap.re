@@ -24,37 +24,37 @@ let shift =
       ~delta: int,
       map,
     ) =>
-  if (endPos - startPos == delta) {
+  if (delta == 0) {
     map;
   } else {
+    let original: t('a) = map;
     // Shift all items based on delta
     let newMap =
       fold(
-        (key, v, prev) =>
+        (key, oldValue, prev) =>
           if (delta > 0) {
             if (key < startPos) {
-              update(key, _opt => Some(v), prev);
+              prev;
             } else {
-              update(key + delta, _opt => Some(v), prev);
+              update(key + delta, _ => Some(oldValue), prev);
             };
           } else if (key <= endPos) {
-            update(key, _opt => Some(v), prev);
+            prev;
           } else {
-            update(key + delta, _opt => Some(v), prev);
+            let originalValue: option('a) = find_opt(key, original);
+            update(key + delta, _ => originalValue, prev);
           },
-        map,
-        empty,
+        map, /* map to fold over */
+        map /* seed defaults */
       );
 
     // Set 'new' items to be the default value
-    let start_ = ref(startPos);
     let current = find_opt(startPos, newMap);
-    let end_ = startPos + (endPos - startPos + delta);
+    let stop = startPos + (endPos - startPos + delta);
     let ret = ref(newMap);
 
-    while (start_^ < end_) {
-      ret := update(start_^, _ => default(current), ret^);
-      incr(start_);
+    for (idx in startPos to stop - 1) {
+      ret := update(idx, _ => default(current), ret^);
     };
 
     ret^;

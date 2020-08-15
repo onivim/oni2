@@ -10,30 +10,32 @@ runTest(
   ~name="Viml Configuration Block",
   (dispatch, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      state.vimMode == Vim.Types.Normal
+      Feature_Vim.mode(state.vim) == Vim.Types.Normal
     );
 
     // Because of our 'experimental.viml' block, the ';' semicolon
     // is mapped to ':' - so sending it should open the command line.
-    dispatch(KeyboardInput(";"));
+    dispatch(KeyboardInput({isText: true, input: ";"}));
 
     wait(~name="Mode switches to command line", (state: State.t) =>
-      state.vimMode == Vim.Types.CommandLine
+      Feature_Vim.mode(state.vim) == Vim.Types.CommandLine
     );
 
-    dispatch(KeyboardInput("e"));
+    dispatch(KeyboardInput({isText: true, input: "e"}));
     wait(~name="Mode switches to command line", (state: State.t) =>
       switch (state.quickmenu) {
-      | Some(quickmenu) => quickmenu.query == "e"
+      | Some(quickmenu) =>
+        quickmenu.inputText |> Feature_InputText.value == "e"
       | None => false
       }
     );
 
-    dispatch(KeyboardInput("h"));
+    dispatch(KeyboardInput({isText: true, input: "h"}));
 
     wait(~name="Mode switches to command line", (state: State.t) =>
       switch (state.quickmenu) {
-      | Some(quickmenu) => quickmenu.query == "eh"
+      | Some(quickmenu) =>
+        quickmenu.inputText |> Feature_InputText.value == "eh"
       | None => false
       }
     );

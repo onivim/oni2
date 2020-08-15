@@ -1,0 +1,5 @@
+(library
+    (name Service_Net_Test)
+    (library_flags (-linkall -g))
+    (modules (:standard))
+    (libraries Oni2.core Oni2.service.net Oni_Core_Test rely.lib editor-core-types))

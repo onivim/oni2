@@ -1,0 +1,9 @@
+(library
+    (name Feature_ContextMenu)
+    (public_name Oni2.feature.contextMenu)
+    (libraries
+      Oni2.core
+      Revery
+      isolinear
+    )
+    (preprocess (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

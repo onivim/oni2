@@ -46,10 +46,8 @@ module MenuItem = {
     //   color(fgColor),
     // ];
 
-    let label = (~font: UiFont.t, ~theme, ~isFocused) => [
-      fontFamily(font.fontFile),
+    let label = (~theme, ~isFocused) => [
       textOverflow(`Ellipsis),
-      fontSize(Constants.fontSize),
       color(Colors.Menu.foreground.from(theme)),
       backgroundColor(bg(~isFocused).from(theme)),
     ];
@@ -85,8 +83,13 @@ module MenuItem = {
         //   };
 
         let labelView = {
-          let style = Styles.label(~font, ~theme, ~isFocused);
-          <Text style text={item.label} />;
+          let style = Styles.label(~theme, ~isFocused);
+          <Text
+            fontFamily={font.family}
+            fontSize=Constants.fontSize
+            style
+            text={item.label}
+          />;
         };
 
         (
@@ -180,7 +183,7 @@ module Overlay = {
   module Styles = {
     open Style;
 
-    let overlay = [
+    let backdrop = [
       position(`Absolute),
       top(0),
       bottom(0),
@@ -198,7 +201,7 @@ module Overlay = {
     if (IntMap.is_empty(menus)) {
       React.empty;
     } else {
-      <Clickable onClick style=Styles.overlay>
+      <Clickable onClick style=Styles.backdrop>
         {IntMap.bindings(menus) |> List.map(snd) |> React.listToElement}
       </Clickable>;
     };

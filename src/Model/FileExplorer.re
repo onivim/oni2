@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Extensions;
 
 module Log = (val Log.withNamespace("Oni2.Model.FileExplorer"));
 
@@ -14,6 +13,7 @@ type t = {
 
 [@deriving show({with_path: false})]
 type action =
+  | ActiveFilePathChanged(option(string))
   | TreeLoaded(FsTreeNode.t)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
@@ -32,7 +32,7 @@ let initial = {
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
   let fileIcon =
-    LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
+    Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
     |> IconTheme.getIconForFile(iconTheme, filePath);
 
   switch (fileIcon) {

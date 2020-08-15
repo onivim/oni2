@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Extensions;
 
 // MODEL
 
@@ -11,13 +10,10 @@ module Resource: {
   type t = {
     handle: int,
     uri: Uri.t,
-    icons: list(string),
+    //    icons: Exthost.SCM.Resource.Icons.t,
     tooltip: string,
     strikeThrough: bool,
     faded: bool,
-    source: option(string),
-    letter: option(string),
-    color: option(string),
   };
 };
 
@@ -44,6 +40,9 @@ module Provider: {
     count: int,
     commitTemplate: string,
     acceptInputCommand: option(command),
+    inputVisible: bool,
+    validationEnabled: bool,
+    statusBarCommands: list(Exthost.Command.t),
   };
 };
 
@@ -52,11 +51,13 @@ type model;
 
 let initial: model;
 
+let statusBarCommands: model => list(Exthost.Command.t);
+
 // EFFECTS
 
 module Effects: {
   let getOriginalUri:
-    (ExtHostClient.t, model, string, Uri.t => 'msg) =>
+    (Exthost.Client.t, model, string, Uri.t => 'msg) =>
     Isolinear.Effect.t('msg);
 };
 
@@ -65,25 +66,29 @@ module Effects: {
 [@deriving show]
 type msg;
 
-module Msg: {let keyPressed: string => msg;};
+module Msg: {
+  let keyPressed: string => msg;
+  let paste: string => msg;
+};
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | Focus
   | Nothing;
 
-let update: (ExtHostClient.t, model, msg) => (model, outmsg);
+let update: (Exthost.Client.t, model, msg) => (model, outmsg);
 
 let handleExtensionMessage:
-  (~dispatch: msg => unit, ExtHostClient.SCM.msg) => unit;
+  (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;
 
 // VIEW
 
 module Pane: {
   let make:
     (
+      ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
-      ~workingDirectory: option(string),
+      ~workingDirectory: string,
       ~onItemClick: Resource.t => unit,
       ~isFocused: bool,
       ~theme: ColorTheme.Colors.t,

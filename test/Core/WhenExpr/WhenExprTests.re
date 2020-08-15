@@ -5,23 +5,32 @@ let re = (pattern, str) => {
   Re.execp(re, str);
 };
 
+let createContext = pairs => {
+  let context = Hashtbl.create(List.length(pairs));
+  List.iter(((k, v)) => Hashtbl.add(context, k, v), pairs);
+
+  name =>
+    switch (Hashtbl.find_opt(context, name)) {
+    | Some(value) => value
+    | None => WhenExpr.Value.False
+    };
+};
+
 describe("WhenExpr", ({describe, _}) => {
   describe("vscode tests", ({describe, _}) => {
     // Translkated from https://github.com/microsoft/vscode/blob/7fc5d9150569247b3494eb3715a078bf7f8e9272/src/vs/platform/contextkey/test/common/contextkey.test.ts
     // TODO: equals
     // TODO: normalize
     describe("evaluate", ({test, _}) => {
-      let context = Hashtbl.create(4);
-      Hashtbl.add(context, "a", WhenExpr.Value.True);
-      Hashtbl.add(context, "b", WhenExpr.Value.False);
-      Hashtbl.add(context, "c", WhenExpr.Value.String("5"));
-      Hashtbl.add(context, "d", WhenExpr.Value.String("d"));
-
-      let getValue = name =>
-        switch (Hashtbl.find_opt(context, name)) {
-        | Some(value) => value
-        | None => WhenExpr.Value.False
-        };
+      let getValue =
+        createContext(
+          WhenExpr.Value.[
+            ("a", True),
+            ("b", False),
+            ("c", String("5")),
+            ("d", String("d")),
+          ],
+        );
 
       let testExpression = (expr, expected) =>
         test(
@@ -61,5 +70,22 @@ describe("WhenExpr", ({describe, _}) => {
       testExpression("a && b", true && false);
       testExpression("a && !b && c == 5", true && !false && "5" == "5");
     })
-  })
+  });
+
+  describe("regex", ({test, _}) => {
+    test("1729-gitlens-regression", ({expect, _}) => {
+      let getValue =
+        createContext(
+          WhenExpr.Value.[
+            ("gitlens:activeFileStatus", String("some revision or other")),
+            ("resourceScheme", String("file$")),
+          ],
+        );
+
+      let expr = "gitlens:activeFileStatus =~ /revision/ && resourceScheme =~ /^(?!(file|git)$).*$/";
+      let rules = WhenExpr.parse(expr);
+      //Console.log(WhenExpr.show(rules));
+      expect.bool(WhenExpr.evaluate(rules, getValue)).toBe(true);
+    })
+  });
 });

@@ -12,6 +12,7 @@ type t = {
   id: int,
   filePath: option(string),
   fileType: option(string),
+  lineEndings: option(Vim.lineEnding),
   modified: bool,
   version: int,
   lines: array(BufferLine.t),
@@ -20,6 +21,7 @@ type t = {
   indentation: option(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
   lastUsed: float,
+  font: Font.t,
 };
 
 let show = _ => "TODO";
@@ -33,9 +35,12 @@ let getMediumFriendlyName =
   maybeFilePath
   |> Option.map(filePath =>
        switch (BufferPath.parse(filePath)) {
+       | ExtensionDetails => "Extension Details"
        | Welcome => "Welcome"
        | Version => "Version"
        | Terminal({cmd, _}) => "Terminal - " ++ cmd
+       | UpdateChangelog => "Updates"
+       | Changelog => "Changelog"
        | FilePath(fp) =>
          switch (workingDirectory) {
          | Some(base) => Path.toRelative(~base, fp)
@@ -45,22 +50,33 @@ let getMediumFriendlyName =
      );
 };
 
+let getLineEndings = ({lineEndings, _}) => lineEndings;
+let setLineEndings = (lineEndings, buf) => {
+  ...buf,
+  lineEndings: Some(lineEndings),
+};
+
 let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
   maybeFilePath
   |> Option.map(filePath => {
        switch (BufferPath.parse(filePath)) {
+       | ExtensionDetails => "Extension Details"
        | Welcome => "Welcome"
        | Version => "Version"
+       | UpdateChangelog => "Updates"
+       | Changelog => "Changelog"
        | Terminal({cmd, _}) => "Terminal - " ++ cmd
        | FilePath(fp) => fp
        }
      });
 };
 
-let ofLines = (~id=0, rawLines: array(string)) => {
+let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
   let lines =
     rawLines
-    |> Array.map(BufferLine.make(~indentation=IndentationSettings.default));
+    |> Array.map(
+         BufferLine.make(~font, ~indentation=IndentationSettings.default),
+       );
 
   {
     id,
@@ -69,21 +85,24 @@ let ofLines = (~id=0, rawLines: array(string)) => {
     fileType: None,
     modified: false,
     lines,
+    lineEndings: None,
     originalUri: None,
     originalLines: None,
     indentation: None,
     syntaxHighlightingEnabled: true,
     lastUsed: 0.,
+    font,
   };
 };
 
 let initial = ofLines([||]);
 
-let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
-  id: metadata.id,
-  version: metadata.version,
-  filePath: metadata.filePath,
-  modified: metadata.modified,
+let ofMetadata = (~font=Font.default, ~id, ~version, ~filePath, ~modified) => {
+  id,
+  version,
+  filePath,
+  lineEndings: None,
+  modified,
   fileType: None,
   lines: [||],
   originalUri: None,
@@ -91,6 +110,7 @@ let ofMetadata = (metadata: Vim.BufferMetadata.t) => {
   indentation: None,
   syntaxHighlightingEnabled: true,
   lastUsed: 0.,
+  font,
 };
 
 let getFilePath = (buffer: t) => buffer.filePath;
@@ -147,30 +167,37 @@ let getUri = (buffer: t) => {
 
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
+// TODO: This method needs a lot of improvements:
+// - It's only estimated, as the byte length is quicker to calculate
+// - It always traverses the entire buffer - we could be much smarter
+//   by using buffer updates and only recalculating subsets.
+let getEstimatedMaxLineLength = buffer => {
+  let totalLines = getNumberOfLines(buffer);
+
+  let currentMax = ref(0);
+  for (idx in 0 to totalLines - 1) {
+    let lengthInBytes = buffer |> getLine(idx) |> BufferLine.lengthInBytes;
+
+    if (lengthInBytes > currentMax^) {
+      currentMax := lengthInBytes;
+    };
+  };
+
+  currentMax^;
+};
+
 let applyUpdate =
-    (~indentation, lines: array(BufferLine.t), update: BufferUpdate.t) => {
-  let updateLines = update.lines |> Array.map(BufferLine.make(~indentation));
+    (~indentation, ~font, lines: array(BufferLine.t), update: BufferUpdate.t) => {
+  let updateLines =
+    update.lines |> Array.map(BufferLine.make(~font, ~indentation));
   let startLine = update.startLine |> Index.toZeroBased;
   let endLine = update.endLine |> Index.toZeroBased;
-  if (Array.length(lines) == 0) {
-    updateLines;
-  } else if (startLine >= Array.length(lines)) {
-    let ret = Array.concat([lines, updateLines]);
-    ret;
-  } else {
-    let prev = ArrayEx.slice(~lines, ~start=0, ~length=startLine, ());
-    let post =
-      ArrayEx.slice(
-        ~lines,
-        ~start=endLine,
-        ~length=Array.length(lines) - endLine,
-        (),
-      );
-
-    let lines = updateLines;
-
-    Array.concat([prev, lines, post]);
-  };
+  ArrayEx.replace(
+    ~replacement=updateLines,
+    ~start=startLine,
+    ~stop=endLine,
+    lines,
+  );
 };
 
 let isIndentationSet = buf => {
@@ -182,9 +209,11 @@ let isIndentationSet = buf => {
 let setIndentation = (indentation, buf) => {
   let lines =
     buf.lines
-    |> Array.map(line =>
-         BufferLine.raw(line) |> BufferLine.make(~indentation)
-       );
+    |> Array.map(line => {
+         let raw = BufferLine.raw(line);
+         let font = BufferLine.font(line);
+         BufferLine.make(~font, ~indentation, raw);
+       });
   {...buf, lines, indentation: Some(indentation)};
 };
 
@@ -205,16 +234,31 @@ let update = (buf: t, update: BufferUpdate.t) => {
       {
         ...buf,
         version: update.version,
-        lines: update.lines |> Array.map(BufferLine.make(~indentation)),
+        lines:
+          update.lines
+          |> Array.map(BufferLine.make(~font=buf.font, ~indentation)),
       };
     } else {
       {
         ...buf,
         version: update.version,
-        lines: applyUpdate(~indentation, buf.lines, update),
+        lines: applyUpdate(~indentation, ~font=buf.font, buf.lines, update),
       };
     };
   } else {
     buf;
   };
+};
+
+let getFont = buf => buf.font;
+
+let setFont = (font, buf) => {
+  let lines =
+    buf.lines
+    |> Array.map(line => {
+         let raw = BufferLine.raw(line);
+         let indentation = BufferLine.indentation(line);
+         BufferLine.make(~font, ~indentation, raw);
+       });
+  {...buf, font, lines};
 };

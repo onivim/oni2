@@ -1,4 +1,5 @@
 open Oni_Core;
+open Exthost;
 
 module UserSettingsProvider: {
   let getSettings: unit => result(Config.Settings.t, string);
@@ -18,8 +19,8 @@ let initial:
   model;
 
 let toExtensionConfiguration:
-  (model, list(Oni_Extensions.ExtensionScanner.t), Setup.t) =>
-  Oni_Extensions.Configuration.t;
+  (model, list(Extension.Scanner.ScanResult.t), Setup.t) =>
+  Exthost.Configuration.t;
 
 [@deriving show]
 type msg =

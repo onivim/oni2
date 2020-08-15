@@ -1,0 +1,12 @@
+(library
+    (name Feature_Menus)
+    (public_name Oni2.feature.menus)
+    (libraries 
+      editor-core-types
+      Oni2.core
+      Oni2.core.whenExpr
+      Oni2.feature.commands
+      isolinear
+      base
+    )
+    (preprocess (pps ppx_let ppx_deriving.show)))

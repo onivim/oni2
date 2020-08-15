@@ -157,39 +157,40 @@ let parseAutoClosingBrackets:
     | _ => Never
     };
 
-let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled = {
-  let decode =
-    Json.Decode.(
-      field("other", bool)
-      >>= (
-        other =>
-          field("comments", bool)
-          >>= (
-            comments =>
-              field("strings", bool)
-              >>= (strings => succeed({other, comments, strings}))
-          )
-      )
-    )
-    |> Json.Decode.decode_value;
-  json =>
-    switch (json) {
-    | `Bool(enabled) => {other: enabled, comments: enabled, strings: enabled}
-    // TODO: Parse JS objects of the form:
-    // { "other": bool, "comments": bool, "strings": bool }
-    | _ =>
-      json
-      |> decode
-      |> Result.value(
-           ~default={other: false, comments: false, strings: false},
-         )
-    };
-};
-
 let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
   | _ => default
+  };
+
+let parseFontLigatures = json =>
+  switch (json) {
+  | `Bool(_) as bool => bool
+  | `String(str) =>
+    open Angstrom;
+
+    let quoted = p => char('\'') *> p <* char('\'');
+
+    let isAlphaNumeric = (
+      fun
+      | 'a'..'z'
+      | 'A'..'Z'
+      | '0'..'9' => true
+      | _ => false
+    );
+
+    let alphaString = take_while1(isAlphaNumeric);
+
+    let feature = quoted(alphaString);
+    let spaces = many(char(' '));
+
+    let parse = sep_by(char(',') <* spaces, feature);
+
+    switch (Angstrom.parse_string(~consume=All, parse, str)) {
+    | Ok(list) => `List(list)
+    | Error(_) => `Bool(true)
+    };
+  | _ => `Bool(true)
   };
 
 type parseFunction =
@@ -209,8 +210,14 @@ let configurationParsers: list(configurationTuple) = [
     "editor.fontFamily",
     (config, json) => {
       ...config,
-      editorFontFamily:
-        parseString(~default=Constants.defaultFontFamily, json),
+      editorFontFile: parseString(~default=Constants.defaultFontFile, json),
+    },
+  ),
+  (
+    "editor.fontLigatures",
+    (config, json) => {
+      ...config,
+      editorFontLigatures: parseFontLigatures(json),
     },
   ),
   (
@@ -306,13 +313,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.quickSuggestions",
-    (config, json) => {
-      ...config,
-      editorQuickSuggestions: parseQuickSuggestions(json),
-    },
-  ),
-  (
     "editor.renderIndentGuides",
     (config, json) => {
       ...config,
@@ -342,8 +342,8 @@ let configurationParsers: list(configurationTuple) = [
     "terminal.integrated.fontFamily",
     (config, json) => {
       ...config,
-      terminalIntegratedFontFamily:
-        parseString(~default=Constants.defaultFontFamily, json),
+      terminalIntegratedFontFile:
+        parseString(~default=Constants.defaultFontFile, json),
     },
   ),
   (
@@ -381,6 +381,13 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
   ),
   (
+    "workbench.sideBar.location",
+    (config, json) => {
+      ...config,
+      workbenchSideBarLocation: parseString(json),
+    },
+  ),
+  (
     "workbench.sideBar.visible",
     (config, json) => {...config, workbenchSideBarVisible: parseBool(json)},
   ),
@@ -404,22 +411,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, zenModeSingleFile: parseBool(json)},
   ),
   (
-    "syntax.eagerMaxLines",
-    (config, json) => {
-      ...config,
-      syntaxEagerMaxLines:
-        parseInt(~default=Constants.syntaxEagerMaxLines, json),
-    },
-  ),
-  (
-    "syntax.eagerMaxLineLength",
-    (config, json) => {
-      ...config,
-      syntaxEagerMaxLineLength:
-        parseInt(~default=Constants.syntaxEagerMaxLineLength, json),
-    },
-  ),
-  (
     "ui.shadows",
     (config, json) => {...config, uiShadows: parseBool(json)},
   ),
@@ -438,10 +429,6 @@ let configurationParsers: list(configurationTuple) = [
       vsync:
         parseBool(json) ? Revery.Vsync.Synchronized : Revery.Vsync.Immediate,
     },
-  ),
-  (
-    "experimental.treeSitter",
-    (config, json) => {...config, experimentalTreeSitter: parseBool(json)},
   ),
   (
     "experimental.viml",

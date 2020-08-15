@@ -10,7 +10,7 @@ open Feature_LanguageSupport;
 runTestWithInput(
   ~name="LanguageCssTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   ExtensionHelpers.waitForExtensionToActivate(
@@ -75,7 +75,8 @@ runTestWithInput(
     ~timeout=30.0,
     ~name="Validate we also got some completions",
     (state: State.t) =>
-    Array.length(state.completions.filtered) > 0
+    state.languageSupport
+    |> Feature_LanguageSupport.Completion.availableCompletionCount > 0
   );
 
   // Finish input, clear diagnostics

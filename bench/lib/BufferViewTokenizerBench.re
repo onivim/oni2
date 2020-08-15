@@ -1,6 +1,5 @@
 open Oni_Core;
 open BenchFramework;
-open Revery;
 open Feature_Editor;
 
 let giantString =
@@ -12,7 +11,13 @@ let options = Reperf.Options.create(~iterations=1000, ());
 let setup = () => ();
 
 let indentationSettings = IndentationSettings.default;
-let simpleColorizer = _ => (Colors.black, Colors.white);
+let simpleColorizer = _ =>
+  BufferLineColorizer.{
+    color: Revery.Colors.black,
+    backgroundColor: Revery.Colors.white,
+    bold: false,
+    italic: false,
+  };
 
 let tokenizeLine = () => {
   let _ =

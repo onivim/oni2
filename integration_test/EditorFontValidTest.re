@@ -23,16 +23,20 @@ if (Revery.Environment.os !== Revery.Environment.Linux) {
     ~name="EditorFontValid",
     (_, wait, _) => {
       wait(~name="Initial mode is normal", (state: State.t) =>
-        state.vimMode == Vim.Types.Normal
+        Feature_Vim.mode(state.vim) == Vim.Types.Normal
       );
 
       wait(
-        ~name="There should be a new font set", ~timeout=10., (state: State.t) =>
-        !
-          String.equal(
-            state.editorFont.fontFile,
-            Revery.Environment.executingDirectory ++ "FiraCode-Regular.ttf",
-          )
+        ~name="There should be a new font set",
+        ~timeout=10.,
+        (state: State.t) => {
+          let fontName =
+            state.editorFont.fontFamily
+            |> Revery_Font.Family.toSkia(Revery.Font.Weight.Normal)
+            |> Option.map(tf => Skia.Typeface.getFamilyName(tf))
+            |> Option.value(~default="");
+          !String.equal(fontName, "JetBrains Mono");
+        },
       );
     },
   );

@@ -5,48 +5,36 @@ open Oni_Core;
 open Helpers;
 
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
 
 let renderLine =
     (
       ~context,
       ~buffer,
-      ~leftVisibleColumn,
       ~colors: Colors.t,
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
       ~bufferHighlights,
+      ~languageSupport,
       item,
       _offset,
     ) => {
   let index = Index.fromZeroBased(item);
-  let renderDiagnostics = (d: Diagnostic.t) =>
-    Draw.underline(
-      ~context,
-      ~buffer,
-      ~leftVisibleColumn,
-      ~color=Revery.Colors.red,
-      d.range,
-    );
+  let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) =>
+    Draw.underline(~context, ~color=colors.errorForeground, diagnostic.range);
 
   /* Draw error markers */
   switch (IntMap.find_opt(item, diagnosticsMap)) {
   | None => ()
-  | Some(v) => List.iter(renderDiagnostics, v)
+  | Some(diagnostics) => List.iter(renderDiagnostics(colors), diagnostics)
   };
 
   switch (Hashtbl.find_opt(selectionRanges, index)) {
   | None => ()
-  | Some(v) =>
+  | Some(selections) =>
     List.iter(
-      Draw.range(
-        ~context,
-        ~buffer,
-        ~leftVisibleColumn,
-        ~color=colors.selectionBackground,
-      ),
-      v,
+      Draw.rangeByte(~context, ~color=colors.selectionBackground),
+      selections,
     )
   };
 
@@ -54,33 +42,42 @@ let renderLine =
   switch (matchingPairs) {
   | None => ()
   | Some((startPos, endPos)) =>
-    Draw.range(
+    Draw.rangeByte(
       ~context,
-      ~buffer,
-      ~leftVisibleColumn,
       ~color=colors.selectionBackground,
       Range.{start: startPos, stop: startPos},
     );
-    Draw.range(
+    Draw.rangeByte(
       ~context,
-      ~buffer,
-      ~leftVisibleColumn,
       ~color=colors.selectionBackground,
       Range.{start: endPos, stop: endPos},
     );
   };
 
+  let bufferId = Buffer.getId(buffer);
   /* Draw search highlights */
   BufferHighlights.getHighlightsByLine(
-    ~bufferId=Buffer.getId(buffer),
+    ~bufferId,
     ~line=index,
     bufferHighlights,
   )
   |> List.iter(
-       Draw.range(
+       Draw.rangeByte(
          ~context,
-         ~buffer,
-         ~leftVisibleColumn,
+         ~padding=1.,
+         ~color=colors.findMatchBackground,
+       ),
+     );
+
+  /* Draw document highlights */
+  Feature_LanguageSupport.DocumentHighlights.getByLine(
+    ~bufferId,
+    ~line=index |> Index.toZeroBased,
+    languageSupport,
+  )
+  |> List.iter(
+       Draw.rangeByte(
+         ~context,
          ~padding=1.,
          ~color=colors.findMatchBackground,
        ),
@@ -92,12 +89,12 @@ let renderEmbellishments =
       ~context,
       ~count,
       ~buffer,
-      ~leftVisibleColumn,
       ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
       ~bufferHighlights,
+      ~languageSupport,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -105,21 +102,23 @@ let renderEmbellishments =
     renderLine(
       ~context,
       ~buffer,
-      ~leftVisibleColumn,
       ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
       ~bufferHighlights,
+      ~languageSupport,
     ),
   );
 
 let renderDefinition =
     (
       ~context,
+      ~bufferId,
+      ~languageSupport,
       ~leftVisibleColumn,
       ~cursorPosition: Location.t,
-      ~buffer,
+      ~editor,
       ~bufferHighlights,
       ~colors,
       ~matchingPairs,
@@ -127,7 +126,7 @@ let renderDefinition =
       ~bufferWidthInCharacters,
     ) =>
   getTokenAtPosition(
-    ~buffer,
+    ~editor,
     ~bufferHighlights,
     ~cursorLine=Index.toZeroBased(cursorPosition.line),
     ~colors,
@@ -141,27 +140,27 @@ let renderDefinition =
        let range =
          Range.{
            start:
-             Location.{
-               line: cursorPosition.line,
-               column: token.startPosition,
-             },
-           stop:
-             Location.{line: cursorPosition.line, column: token.endPosition},
+             Location.{line: cursorPosition.line, column: token.startIndex},
+           stop: Location.{line: cursorPosition.line, column: token.endIndex},
          };
-       Draw.underline(
-         ~context,
-         ~buffer,
-         ~leftVisibleColumn,
-         ~color=token.color,
-         range,
-       );
+
+       // Double-check that the range of the token falls into our definition position
+
+       Feature_LanguageSupport.Definition.getAt(
+         ~bufferId,
+         ~range,
+         languageSupport,
+       )
+       |> Option.iter(_ => {
+            Draw.underline(~context, ~color=token.color, range)
+          });
      });
 
 let renderTokens =
-    (~context, ~offsetY, ~colors, ~tokens, ~shouldRenderWhitespace) => {
+    (~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
   tokens
   |> WhitespaceTokenFilter.filter(shouldRenderWhitespace)
-  |> List.iter(Draw.token(~context, ~offsetY, ~colors));
+  |> List.iter(Draw.token(~context, ~line, ~colors));
 };
 
 let renderText =
@@ -169,20 +168,19 @@ let renderText =
       ~context,
       ~count,
       ~selectionRanges,
-      ~buffer,
+      ~editor,
       ~bufferHighlights,
       ~cursorLine,
       ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
-      ~leftVisibleColumn,
       ~shouldRenderWhitespace,
-      ~bufferWidthInCharacters,
+      ~bufferWidthInPixels,
     ) =>
   Draw.renderImmediate(
     ~context,
     ~count,
-    (item, offsetY) => {
+    (item, _offsetY) => {
       let index = Index.fromZeroBased(item);
       let selectionRange =
         switch (Hashtbl.find_opt(selectionRanges, index)) {
@@ -193,23 +191,33 @@ let renderText =
           | _ => Some(List.hd(v))
           }
         };
+      let bufferLine = Editor.viewLine(editor, item).contents;
+      let startPixel = Editor.scrollX(editor);
+      let startCharacter =
+        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine);
+      let endCharacter =
+        BufferLine.Slow.getIndexFromPixel(
+          ~pixel=startPixel +. float(bufferWidthInPixels),
+          bufferLine,
+        );
+
       let tokens =
         getTokensForLine(
-          ~buffer,
+          ~editor,
           ~bufferHighlights,
           ~cursorLine,
           ~colors,
           ~matchingPairs,
           ~bufferSyntaxHighlights,
           ~selection=selectionRange,
-          leftVisibleColumn,
-          leftVisibleColumn + bufferWidthInCharacters,
+          startCharacter,
+          endCharacter + 1,
           item,
         );
 
       renderTokens(
         ~context,
-        ~offsetY,
+        ~line=item,
         ~colors,
         ~tokens,
         ~shouldRenderWhitespace,
@@ -222,6 +230,7 @@ let render =
       ~context,
       ~count,
       ~buffer,
+      ~editor,
       ~leftVisibleColumn,
       ~colors,
       ~diagnosticsMap,
@@ -229,33 +238,36 @@ let render =
       ~matchingPairs,
       ~bufferHighlights,
       ~cursorPosition: Location.t,
-      ~definition,
+      ~languageSupport,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
       ~bufferWidthInCharacters,
+      ~bufferWidthInPixels,
     ) => {
   renderEmbellishments(
     ~context,
     ~count,
     ~buffer,
-    ~leftVisibleColumn,
     ~colors,
     ~diagnosticsMap,
     ~selectionRanges,
     ~matchingPairs,
     ~bufferHighlights,
+    ~languageSupport,
   );
 
-  if (Definition.isAvailable(
-        Buffer.getId(buffer),
-        cursorPosition,
-        definition,
+  let bufferId = Buffer.getId(buffer);
+  if (Feature_LanguageSupport.Definition.isAvailable(
+        ~bufferId,
+        languageSupport,
       )) {
     renderDefinition(
+      ~bufferId,
+      ~languageSupport,
       ~context,
+      ~editor,
       ~leftVisibleColumn,
       ~cursorPosition,
-      ~buffer,
       ~bufferHighlights,
       ~colors,
       ~matchingPairs,
@@ -268,14 +280,13 @@ let render =
     ~context,
     ~count,
     ~selectionRanges,
-    ~buffer,
+    ~editor,
     ~bufferHighlights,
     ~cursorLine=Index.toZeroBased(cursorPosition.line),
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
-    ~leftVisibleColumn,
     ~shouldRenderWhitespace,
-    ~bufferWidthInCharacters,
+    ~bufferWidthInPixels,
   );
 };

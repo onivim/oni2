@@ -1,0 +1,300 @@
+[
+	{
+		"grammarPath": "fixtures/hello.json",
+		"lines": [
+			{
+				"line": "hello",
+				"tokens": [
+					{
+						"value": "hello",
+						"scopes": [
+							"source.hello",
+							"hello.outer",
+							"hello.inner"
+						]
+					}
+				]
+			}
+		],
+		"grammars": [
+			"fixtures/hello.json"
+		],
+		"desc": "ONIVIM TEST #1 - non-consuming matches"
+	},
+	{
+		"grammarPath": "fixtures/reason.json",
+		"lines": [
+			{
+				"line": "let abc = 100",
+				"tokens": [
+					{
+						"value": "let",
+						"scopes": [
+							"source.reason",
+							"storage.type"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "abc",
+						"scopes": [
+							"source.reason",
+							"entity.name.function"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "=",
+						"scopes": [
+							"source.reason",
+							"keyword.control.less"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "100",
+						"scopes": [
+							"source.reason",
+							"constant.numeric"
+						]
+					}
+				]
+			}
+		],
+		"grammars": [
+			"fixtures/reason.json"
+		],
+		"desc": "ONIVIM TEST #2 - basic reason statement"
+	},
+	{
+		"grammarPath": "fixtures/reason.json",
+		"lines": [
+			{
+				"line": "module M = { type t; }",
+				"tokens": [
+					{
+						"value": "module",
+						"scopes": [
+							"source.reason",
+							"storage.type",
+							"message.error"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "M",
+						"scopes": [
+							"source.reason",
+							"support.class",
+							"entity.name.class"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "=",
+						"scopes": [
+							"source.reason",
+							"keyword.control.less"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "{",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "type",
+						"scopes": [
+							"source.reason",
+							"keyword.other"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "t",
+						"scopes": [
+							"source.reason",
+							"entity.name.function"
+						]
+					},
+					{
+						"value": ";",
+						"scopes": [
+							"source.reason",
+							"variable.other.class.js",
+							"variable.interpolation",
+							"keyword.operator",
+							"keyword.control",
+							"message.error"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "}",
+						"scopes": [
+							"source.reason"
+						]
+					}
+				]
+			}
+		],
+		"grammars": [
+			"fixtures/reason.json"
+		],
+		"desc": "ONIVIM TEST #3 - ReasonML module"
+	},
+	{
+		"grammarPath": "fixtures/anchor-a.json",
+		"lines": [
+			{
+				"line": "hello",
+				"tokens": [
+					{
+						"value": "hello",
+						"scopes": [
+							"source.anchor-a",
+							"hello.first-line"
+						]
+					}
+				]
+			},
+			{
+				"line": "hello",
+				"tokens": [
+					{
+						"value": "hello",
+						"scopes": [
+							"source.anchor-a",
+							"hello.after-first-line"
+						]
+					}
+				]
+			}
+		],
+		"grammars": [
+			"fixtures/anchor-a.json"
+		],
+		"desc": "ONIVIM TEST #4 - anchor A"
+	},
+	{
+		"grammarPath": "fixtures/reason.json",
+		"lines": [
+			{
+				"line": "<Test abc/>",
+				"tokens": [
+					{
+						"value": "<",
+						"scopes": [
+							"source.reason",
+							"punctuation.definition.tag.begin.js"
+						]
+					},
+					{
+						"value": "Test",
+						"scopes": [
+							"source.reason",
+							"support.class",
+							"entity.name.class"
+						]
+					},
+					{
+						"value": " ",
+						"scopes": [
+							"source.reason"
+						]
+					},
+					{
+						"value": "abc",
+						"scopes": [
+							"source.reason",
+							"markup.inserted",
+							"constant.language",
+							"support.property-value",
+							"entity.name.filename"
+						]
+					},
+					{
+						"value": "/>",
+						"scopes": [
+							"source.reason",
+							"punctuation.definition.tag.end.js"
+						]
+					}
+				]
+			}
+		],
+		"grammars": [
+			"fixtures/reason.json"
+		],
+		"desc": "ONIVIM TEST #5 - ReasonML JSX"
+	},
+	{
+		"grammarPath": "fixtures/markdown.json",
+		"lines": [
+			{
+				"line": "# Hello",
+				"tokens": [
+					{
+						"value": "# Hello",
+						"scopes": [
+							"text.html.markdown",
+							"markup.heading.markdown"
+						]
+					}
+				]
+			}
+		],
+		"grammars": [
+			"fixtures/markdown.json"
+		],
+		"desc": "ONIVIM TEST #6 - markdown header"
+	}
+]

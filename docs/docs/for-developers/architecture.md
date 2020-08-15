@@ -59,7 +59,7 @@ Onivim 2 integrates with `reason-libvim` via a _store connector_: [`VimStoreConn
 
 [Revery](https://github.com/revery-ui/revery) was built to support Onivim 2. It is a new UI framework that is intended to build fast, native, cross-platform applications with the ergonomics of React & Redux.
 
-It manages the lifecycle of the application - it provides the `App.start`, `App.createWindow`, and `UI.start` methods we use to kick-off the application: [`Oni2_editor.re`](https://github.com/onivim/oni2/blob/master/src/editor/bin_editor/Oni2_editor.re)
+It manages the lifecycle of the application - it provides the `App.start`, `App.createWindow`, and `UI.start` methods we use to kick-off the application: [`Oni2_editor.re`](https://github.com/onivim/oni2/blob/master/src/bin_editor/Oni2_editor.re)
 
 ### Extension Host
 

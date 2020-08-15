@@ -13,8 +13,26 @@ let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
 
 let giantString = createGiantString(50) |> makeLine;
 
-let splitEverything = (_, _, _, _) => true;
-let splitNothing = (_, _, _, _) => false;
+let splitEverything =
+    (
+      ~index0 as _,
+      ~byte0 as _,
+      ~char0 as _,
+      ~index1 as _,
+      ~byte1 as _,
+      ~char1 as _,
+    ) =>
+  true;
+let splitNothing =
+    (
+      ~index0 as _,
+      ~byte0 as _,
+      ~char0 as _,
+      ~index1 as _,
+      ~byte1 as _,
+      ~char1 as _,
+    ) =>
+  false;
 
 let tokenizeWithSplits = () => {
   let _: list(Tokenizer.TextRun.t) =

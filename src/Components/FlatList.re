@@ -6,16 +6,16 @@
 open Oni_Core;
 open Utility;
 
-open Revery;
 open Revery.UI;
 open Revery_UI_Components;
+
+module Colors = Feature_Theme.Colors;
 
 module Constants = {
   let scrollWheelMultiplier = 25;
   let additionalRowsToRender = 1;
   let scrollBarThickness = 6;
-  let scrollTrackColor = Color.rgba(0.0, 0.0, 0.0, 0.4);
-  let scrollThumbColor = Color.rgba(0.5, 0.5, 0.5, 0.4);
+  let minimumThumbSize = 4;
 };
 
 module Styles = {
@@ -93,6 +93,7 @@ let%component make =
                 ~children as renderItem: int => React.element(React.node),
                 ~count: int,
                 ~focused: option(int),
+                ~theme: ColorTheme.Colors.t,
                 ~ref as onRef=_ => (),
                 (),
               ) => {
@@ -143,7 +144,10 @@ let%component make =
   let scrollbar = {
     let maxHeight = count * rowHeight - viewportHeight;
     let thumbHeight =
-      viewportHeight * viewportHeight / max(1, count * rowHeight);
+      viewportHeight
+      * viewportHeight
+      / max(1, count * rowHeight)
+      |> max(Constants.minimumThumbSize);
     let isVisible = maxHeight > 0;
 
     if (isVisible) {
@@ -157,9 +161,9 @@ let%component make =
           value={float_of_int(actualScrollTop)}
           trackThickness=Constants.scrollBarThickness
           thumbThickness=Constants.scrollBarThickness
-          minimumTrackColor=Constants.scrollTrackColor
-          maximumTrackColor=Constants.scrollTrackColor
-          thumbColor=Constants.scrollThumbColor
+          minimumTrackColor=Revery.Colors.transparentBlack
+          maximumTrackColor=Revery.Colors.transparentBlack
+          thumbColor={Colors.ScrollbarSlider.background.from(theme)}
           vertical=true
         />
       </View>;

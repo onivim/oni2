@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.LanguageConfigurationManager = void 0;
 /* --------------------------------------------------------------------------------------------
  * Includes code from typescript-sublime-plugin project, obtained from
  * https://github.com/Microsoft/TypeScript-Sublime-Plugin/blob/master/TypeScript%20Indent.tmPreferences
@@ -16,7 +17,7 @@ const jsTsLanguageConfiguration = {
         decreaseIndentPattern: /^((?!.*?\/\*).*\*\/)?\s*[\}\]].*$/,
         increaseIndentPattern: /^((?!\/\/).)*(\{[^}"'`]*|\([^)"'`]*|\[[^\]"'`]*)$/
     },
-    wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+    wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
     onEnterRules: [
         {
             // e.g. /** | */
@@ -41,6 +42,11 @@ const jsTsLanguageConfiguration = {
             // e.g.  *-----*/|
             beforeText: /^(\t|[ ])*[ ]\*[^/]*\*\/\s*$/,
             action: { indentAction: vscode.IndentAction.None, removeText: 1 },
+        },
+        {
+            beforeText: /^\s*(\bcase\s.+:|\bdefault:)$/,
+            afterText: /^(?!\s*(\bcase\b|\bdefault\b))/,
+            action: { indentAction: vscode.IndentAction.Indent },
         }
     ]
 };
@@ -49,14 +55,26 @@ const jsxTagsLanguageConfiguration = {
     wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
     onEnterRules: [
         {
-            beforeText: new RegExp(`<(?!(?:${EMPTY_ELEMENTS.join('|')}))([_:\\w][_:\\w-.\\d]*)([^/>]*(?!/)>)[^<]*$`, 'i'),
+            beforeText: new RegExp(`<(?!(?:${EMPTY_ELEMENTS.join('|')}))([_:\\w][_:\\w\\-.\\d]*)([^/>]*(?!/)>)[^<]*$`, 'i'),
             afterText: /^<\/([_:\w][_:\w-.\d]*)\s*>$/i,
             action: { indentAction: vscode.IndentAction.IndentOutdent }
         },
         {
-            beforeText: new RegExp(`<(?!(?:${EMPTY_ELEMENTS.join('|')}))(\\w[\\w\\d]*)([^/>]*(?!/)>)[^<]*$`, 'i'),
+            beforeText: new RegExp(`<(?!(?:${EMPTY_ELEMENTS.join('|')}))([_:\\w][_:\\w\\-.\\d]*)([^/>]*(?!/)>)[^<]*$`, 'i'),
             action: { indentAction: vscode.IndentAction.Indent }
-        }
+        },
+        {
+            // `beforeText` only applies to tokens of a given language. Since we are dealing with jsx-tags,
+            // make sure we apply to the closing `>` of a tag so that mixed language spans
+            // such as `<div onclick={1}>` are handled properly.
+            beforeText: /^>$/,
+            afterText: /^<\/([_:\w][_:\w-.\d]*)\s*>$/i,
+            action: { indentAction: vscode.IndentAction.IndentOutdent }
+        },
+        {
+            beforeText: /^>$/,
+            action: { indentAction: vscode.IndentAction.Indent }
+        },
     ],
 };
 class LanguageConfigurationManager extends dispose_1.Disposable {

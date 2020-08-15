@@ -7,6 +7,40 @@ open Oni_Core;
 open Oni_Model;
 open Utility;
 
+module Log = (val Log.withNamespace("Oni2.Store.Title"));
+
+module Internal = {
+  type titleClickBehavior =
+    | Maximize
+    | Minimize;
+
+  let getTitleDoubleClickBehavior = () => {
+    switch (Revery.Environment.os) {
+    | Mac =>
+      try({
+        let ic =
+          Unix.open_process_in(
+            "defaults read 'Apple Global Domain' AppleActionOnDoubleClick",
+          );
+        let operation = input_line(ic);
+        switch (operation) {
+        | "Maximize" => Maximize
+        | "Minimize" => Minimize
+        | _ => Maximize
+        };
+      }) {
+      | _exn =>
+        Log.warn(
+          "
+          Unable to read default behavior for AppleActionOnDoubleClick",
+        );
+        Maximize;
+      }
+    | _ => Maximize
+    };
+  };
+};
+
 let withTag = (tag: string, value: option(string)) =>
   Option.map(v => (tag, v), value);
 
@@ -26,24 +60,17 @@ let getTemplateVariables: State.t => StringMap.t(string) =
       )
       |> withTag("dirty");
 
-    let (rootName, rootPath) =
-      switch (state.workspace) {
-      | Some({rootName, workingDirectory}) => (
-          Some(rootName) |> withTag("rootName"),
-          Some(workingDirectory) |> withTag("rootPath"),
-        )
-      | None => (None, None)
-      };
-
     let activeEditorShort =
       Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
       |> withTag("activeEditorShort");
+
     let activeEditorMedium =
-      Option.bind(maybeBuffer, buf => {
-        Option.bind(rootPath, ((_, nestedRootPath)) => {
-          Buffer.getMediumFriendlyName(~workingDirectory=nestedRootPath, buf)
-        })
-      })
+      Option.bind(maybeBuffer, buf =>
+        Buffer.getMediumFriendlyName(
+          ~workingDirectory=state.workspace.workingDirectory,
+          buf,
+        )
+      )
       |> withTag("activeEditorMedium");
 
     let activeEditorLong =
@@ -55,16 +82,15 @@ let getTemplateVariables: State.t => StringMap.t(string) =
         maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
       )
       |> withTag("activeFolderShort");
+
     let activeFolderMedium =
       maybeFilePath
       |> Option.map(Filename.dirname)
       |> OptionEx.flatMap(fp =>
-           switch (rootPath) {
-           | Some((_, base)) => Some(Path.toRelative(~base, fp))
-           | _ => None
-           }
+           Some(Path.toRelative(~base=state.workspace.workingDirectory, fp))
          )
       |> withTag("activeFolderMedium");
+
     let activeFolderLong =
       maybeFilePath
       |> Option.map(Filename.dirname)
@@ -79,8 +105,8 @@ let getTemplateVariables: State.t => StringMap.t(string) =
       activeFolderShort,
       activeFolderMedium,
       activeFolderLong,
-      rootName,
-      rootPath,
+      Some(("rootName", state.workspace.rootName)),
+      Some(("rootPath", state.workspace.workingDirectory)),
     ]
     |> OptionEx.values
     |> List.to_seq
@@ -101,7 +127,7 @@ module Effects = {
     });
 };
 
-let start = setTitle => {
+let start = (setTitle, maximize, minimize, restore, close) => {
   let _lastTitle = ref("");
 
   let internalSetTitleEffect = title =>
@@ -112,6 +138,23 @@ let start = setTitle => {
         setTitle(title);
       }
     );
+
+  let internalDoubleClickEffect =
+    Isolinear.Effect.create(~name="maximize", () =>
+      switch (Internal.getTitleDoubleClickBehavior()) {
+      | Maximize => maximize()
+      | Minimize => minimize()
+      }
+    );
+
+  let internalWindowCloseEffect =
+    Isolinear.Effect.create(~name="window.close", () => close());
+  let internalWindowMaximizeEffect =
+    Isolinear.Effect.create(~name="window.maximize", () => maximize());
+  let internalWindowMinimizeEffect =
+    Isolinear.Effect.create(~name="window.minimize", () => minimize());
+  let internalWindowRestoreEffect =
+    Isolinear.Effect.create(~name="window.restore", () => restore());
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
@@ -127,6 +170,26 @@ let start = setTitle => {
     | SetTitle(title) => (
         {...state, windowTitle: title},
         internalSetTitleEffect(title),
+      )
+    | TitleBar(Feature_TitleBar.TitleDoubleClicked) => (
+        state,
+        internalDoubleClickEffect,
+      )
+    | TitleBar(Feature_TitleBar.WindowCloseClicked) => (
+        state,
+        internalWindowCloseEffect,
+      )
+    | TitleBar(Feature_TitleBar.WindowMaximizeClicked) => (
+        state,
+        internalWindowMaximizeEffect,
+      )
+    | TitleBar(Feature_TitleBar.WindowRestoreClicked) => (
+        state,
+        internalWindowRestoreEffect,
+      )
+    | TitleBar(Feature_TitleBar.WindowMinimizeClicked) => (
+        state,
+        internalWindowMinimizeEffect,
       )
 
     | _ => (state, Isolinear.Effect.none)

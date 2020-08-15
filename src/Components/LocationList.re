@@ -17,19 +17,15 @@ type item = {
 };
 
 // TODO: move to Revery
-let getFontAdvance = (fontFile, fontSize) => {
-  let dimensions =
-    switch (Revery.Font.load(fontFile)) {
-    | Ok(font) =>
-      Revery.Font.FontRenderer.measure(
-        ~smoothing=Revery.Font.Smoothing.default,
-        font,
-        fontSize,
-        "x",
-      )
-    | Error(_) => {width: 0., height: 0.}
-    };
-  dimensions;
+let getFontAdvance = (fontFamily, fontSize) => {
+  let font =
+    Service_Font.resolveWithFallback(Revery.Font.Weight.Normal, fontFamily);
+  Revery.Font.FontRenderer.measure(
+    ~smoothing=Revery.Font.Smoothing.default,
+    font,
+    fontSize,
+    "x",
+  );
 };
 
 module Styles = {
@@ -49,16 +45,12 @@ module Styles = {
     ),
   ];
 
-  let locationText = (~font: UiFont.t, ~theme) => [
-    fontFamily(font.fontFile),
-    fontSize(font.fontSize),
+  let locationText = (~theme) => [
     color(Colors.EditorLineNumber.activeForeground.from(theme)),
     textWrap(TextWrapping.NoWrap),
   ];
 
-  let snippet = (~font: Service_Font.font, ~theme, ~isHighlighted) => [
-    fontFamily(font.fontFile),
-    fontSize(font.fontSize),
+  let snippet = (~theme, ~isHighlighted) => [
     color(
       isHighlighted
         ? Colors.Oni.normalModeBackground.from(theme)
@@ -72,7 +64,7 @@ let item =
     (
       ~theme,
       ~uiFont: UiFont.t,
-      ~editorFont,
+      ~editorFont: Service_Font.font,
       ~onMouseOver,
       ~onMouseOut,
       ~width,
@@ -93,10 +85,11 @@ let item =
     );
 
   let locationWidth = {
-    Revery.Draw.Text.measure(
+    Revery.Draw.Text.dimensions(
       ~smoothing=Revery.Font.Smoothing.default,
-      ~fontSize=uiFont.fontSize,
-      ~fontFamily=uiFont.fontFile,
+      ~fontSize=uiFont.size,
+      ~fontFamily=uiFont.family,
+      ~fontWeight=Normal,
       locationText,
     ).
       width;
@@ -104,28 +97,33 @@ let item =
 
   let location = () =>
     <Text
-      style={Styles.locationText(~font=uiFont, ~theme)}
+      style={Styles.locationText(~theme)}
+      fontFamily={uiFont.family}
+      fontSize={uiFont.size}
       text=locationText
     />;
 
   let content = () => {
     let unstyled = (~text, ()) =>
       <Text
-        style={Styles.snippet(~font=editorFont, ~theme, ~isHighlighted=false)}
+        style={Styles.snippet(~theme, ~isHighlighted=false)}
+        fontFamily={editorFont.fontFamily}
+        fontSize={editorFont.fontSize}
         text
       />;
 
     let highlighted = (~text, ()) =>
       <Text
-        style={Styles.snippet(~font=editorFont, ~theme, ~isHighlighted=true)}
+        style={Styles.snippet(~theme, ~isHighlighted=true)}
+        fontFamily={editorFont.fontFamily}
+        fontSize={editorFont.fontSize}
         text
       />;
 
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
       let availableWidth = float(width) -. locationWidth;
-      let maxLength =
-        int_of_float(availableWidth /. editorFont.measuredWidth);
+      let maxLength = int_of_float(availableWidth /. editorFont.spaceWidth);
       let charStart = Index.toZeroBased(indexStart);
       let charEnd = Index.toZeroBased(indexEnd);
 
@@ -180,8 +178,8 @@ let%component make =
 
   let editorFont = {
     ...editorFont,
-    fontSize: uiFont.fontSize,
-    measuredWidth: getFontAdvance(editorFont.fontFile, uiFont.fontSize).width,
+    fontSize: uiFont.size,
+    spaceWidth: getFontAdvance(editorFont.fontFamily, uiFont.size).width,
     // measuredHeight:
     //   editorFont.measuredHeight
     //   *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),
@@ -194,7 +192,7 @@ let%component make =
          ~default=
            Revery.UI.getActiveWindow()
            |> Option.map((window: Window.t) =>
-                Revery.Window.getRawSize(window).width
+                Revery.Window.getSize(window).width
               )
            |> Option.value(~default=4000),
        );
@@ -220,6 +218,7 @@ let%component make =
     rowHeight=20
     count={Array.length(items)}
     focused=None
+    theme
     ref={ref => outerRef := Some(ref)}>
     ...renderItem
   </FlatList>;

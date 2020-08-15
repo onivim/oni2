@@ -5,7 +5,7 @@ open Oni_IntegrationTestLib;
 // Validate that textmate highlight runs
 runTest(~name="RegressionDeleteAllLinesTest", (dispatch, wait, runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   let testFile = getAssetPath("some-test-file.txt");
@@ -34,12 +34,12 @@ runTest(~name="RegressionDeleteAllLinesTest", (dispatch, wait, runEffects) => {
   });
 
   // Delete all contents of the buffer
-  dispatch(KeyboardInput("g"));
-  dispatch(KeyboardInput("g"));
+  dispatch(KeyboardInput({isText: true, input: "g"}));
+  dispatch(KeyboardInput({isText: true, input: "g"}));
 
-  dispatch(KeyboardInput("d"));
+  dispatch(KeyboardInput({isText: true, input: "d"}));
 
-  dispatch(KeyboardInput("G"));
+  dispatch(KeyboardInput({isText: true, input: "G"}));
   runEffects();
 
   // Wait for highlights to show up

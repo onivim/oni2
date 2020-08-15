@@ -10,13 +10,26 @@ let initial: t;
 
 let show: t => string;
 
-let ofLines: (~id: int=?, array(string)) => t;
-let ofMetadata: Vim.BufferMetadata.t => t;
+let ofLines: (~id: int=?, ~font: Font.t=?, array(string)) => t;
+let ofMetadata:
+  (
+    ~font: Font.t=?,
+    ~id: int,
+    ~version: int,
+    ~filePath: option(string),
+    ~modified: bool
+  ) =>
+  t;
 
 let getId: t => int;
 let getUri: t => Uri.t;
 let getFilePath: t => option(string);
 let setFilePath: (option(string), t) => t;
+
+let getEstimatedMaxLineLength: t => int;
+
+let getLineEndings: t => option(Vim.lineEnding);
+let setLineEndings: (Vim.lineEnding, t) => t;
 
 let getShortFriendlyName: t => option(string);
 let getMediumFriendlyName: (~workingDirectory: string=?, t) => option(string);
@@ -52,3 +65,6 @@ let getLastUsed: t => float;
 
 let shouldApplyUpdate: (BufferUpdate.t, t) => bool;
 let update: (t, BufferUpdate.t) => t;
+
+let getFont: t => Font.t;
+let setFont: (Font.t, t) => t;

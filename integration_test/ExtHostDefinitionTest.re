@@ -2,16 +2,15 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Feature_LanguageSupport;
 open Feature_Editor;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - We get a definition response
 runTestWithInput(
-  ~name="ExtHostDefinitionTest", (input, _dispatch, wait, _runEffects) => {
+  ~name="ExtHostDefinitionTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Types.Normal
   );
 
   // Wait until the extension is activated
@@ -22,12 +21,12 @@ runTestWithInput(
     (state: State.t) =>
     List.exists(
       id => id == "oni-dev-extension",
-      state.extensions.activatedIds,
+      state.extensions |> Feature_Extensions.activatedIds,
     )
   );
 
   // Create a buffer
-  Vim.command("new test.oni-dev");
+  dispatch(Actions.OpenFileByPath("test.oni-dev", None, None));
 
   // Wait for the oni-dev filetype
   wait(
@@ -61,24 +60,12 @@ runTestWithInput(
     ~timeout=30.0,
     ~name="Validate we get some completions from the 'oni-dev' extension",
     (state: State.t) => {
-      let maybeBuffer = Selectors.getActiveBuffer(state);
+      let editor = Feature_Layout.activeEditor(state.layout);
 
-      let maybeEditor =
-        state
-        |> Selectors.getActiveEditorGroup
-        |> Selectors.getActiveEditor
-        |> Option.map(editor => Editor.getPrimaryCursor(editor));
-
-      let isDefinitionAvailable = (buffer, location) => {
-        Definition.isAvailable(
-          Buffer.getId(buffer),
-          location,
-          state.definition,
-        );
-      };
-
-      OptionEx.map2(isDefinitionAvailable, maybeBuffer, maybeEditor)
-      |> Option.value(~default=false);
+      Feature_LanguageSupport.Definition.isAvailable(
+        ~bufferId=Editor.getBufferId(editor),
+        state.languageSupport,
+      );
     },
   );
 });

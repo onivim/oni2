@@ -42,14 +42,14 @@ let configurationWatcher =
   newUpdater;
 };
 
-let start = (themeInfo: ThemeInfo.t) => {
-  Log.info(ThemeInfo.show(themeInfo));
-
+let start = () => {
   let loadThemeByPathEffect = (uiTheme, themePath) =>
     Isolinear.Effect.createWithDispatch(
       ~name="theme.loadThemeByPath", dispatch => {
       Oni_Core.Log.perf("theme.load", () => {
         let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
+
+        Log.infof(m => m("Loading theme: %s", themePath));
 
         themePath
         |> Textmate.Theme.from_file(~isDark=dark)
@@ -77,8 +77,10 @@ let start = (themeInfo: ThemeInfo.t) => {
       })
     });
 
-  let loadThemeByNameEffect = themeName => {
-    let themeInfo = ThemeInfo.getThemeByName(themeInfo, themeName);
+  let loadThemeByNameEffect = (~extensions, themeName) => {
+    Log.infof(m => m("Loading theme by name: %s", themeName));
+    let themeInfo =
+      Feature_Extensions.themeByName(~name=themeName, extensions);
 
     switch (themeInfo) {
     | Some({uiTheme, path, _}) => loadThemeByPathEffect(uiTheme, path)
@@ -115,9 +117,15 @@ let start = (themeInfo: ThemeInfo.t) => {
     | Actions.ListFocusDown
     | Actions.ListFocus(_) =>
       switch (state.quickmenu) {
-      | Some({variant: ThemesPicker, focused: Some(focused), items, _}) =>
+      | Some({variant: ThemesPicker(_), focused: Some(focused), items, _}) =>
         let focusedItem = items[focused];
-        (state, loadThemeByNameEffect(focusedItem.name));
+        (
+          state,
+          loadThemeByNameEffect(
+            ~extensions=state.extensions,
+            focusedItem.name,
+          ),
+        );
       | _ => (state, Isolinear.Effect.none)
       }
 
@@ -130,11 +138,14 @@ let start = (themeInfo: ThemeInfo.t) => {
         state,
         Isolinear.Effect.batch([
           persistThemeEffect(name),
-          loadThemeByNameEffect(name),
+          loadThemeByNameEffect(~extensions=state.extensions, name),
         ]),
       )
 
-    | ThemeChanged(name) => (state, loadThemeByNameEffect(name))
+    | ThemeChanged(name) => (
+        state,
+        loadThemeByNameEffect(~extensions=state.extensions, name),
+      )
 
     | Actions.ThemeLoadError(errorMsg) => (
         state,
