@@ -44,13 +44,13 @@ let extend = (~text: string, ~selection: t, offset: int): t => {
 let%test_module "Selection" =
   (module
    {
+     let uTestString = "😊↪ Вім is Cool";
+     let uTestStringLength = Zed_utf8.length(uTestString);
+     let uCreate = create(~text=uTestString);
+
      let testString = "Some Strin";
      let testStringLength = Zed_utf8.length(testString);
      let create = create(~text=testString);
-
-     let uTestString = "😊↪ Вім is Cool";
-     let uTestStringLength = Zed_utf8.length(uTestString);
-     let uCreate = Selection.create(~text=uTestString);
 
      let%test_module "initial" =
        (module

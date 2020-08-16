@@ -1,5 +1,4 @@
 open Oni_Core;
-open Utility;
 
 [@deriving show]
 type msg =
@@ -280,7 +279,6 @@ let%test_module "Model" =
      };
 
      let uTestString = "😊↪Вім is Cool";
-     let uTestStringLength = Zed_utf8.length(uTestString);
 
      let%test_module "paste" =
        (module
