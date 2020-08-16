@@ -59,22 +59,6 @@ type changeEvent = {
   superKey: bool,
 };
 
-let getStringParts = (index, str) => {
-  switch (index) {
-  | 0 => ("", str)
-  | _ =>
-    let strBeginning =
-      try(Str.string_before(str, index)) {
-      | _ => str
-      };
-    let strEnd =
-      try(Str.string_after(str, index)) {
-      | _ => ""
-      };
-    (strBeginning, strEnd);
-  };
-};
-
 module Constants = {
   let cursorWidth = 2;
   let selectionOpacity = 0.75;
@@ -207,7 +191,7 @@ let%component make =
 
   let () = {
     let cursorOffset =
-      measureTextWidth(String.sub(displayValue, 0, selection.focus))
+      measureTextWidth(Zed_utf8.sub(displayValue, 0, selection.focus))
       |> int_of_float;
 
     switch (Option.bind(textRef^, r => r#getParent())) {
@@ -237,11 +221,11 @@ let%component make =
 
     let indexNearestOffset = offset => {
       let rec loop = (i, last) =>
-        if (i > String.length(value)) {
+        if (i > Zed_utf8.length(value)) {
           i - 1;
         } else {
           let width =
-            measureTextWidth(String.sub(value, 0, i)) |> int_of_float;
+            measureTextWidth(Zed_utf8.sub(value, 0, i)) |> int_of_float;
 
           if (width > offset) {
             let isCurrentNearest = width - offset < offset - last;
@@ -272,8 +256,11 @@ let%component make =
   };
 
   let cursor = () => {
-    let (startStr, _) =
-      getStringParts(selection.focus + String.length(prefix), displayValue);
+    let startStr =
+      Zed_utf8.before(
+        displayValue,
+        selection.focus + Zed_utf8.length(prefix),
+      );
 
     let textWidth = measureTextWidth(startStr) |> int_of_float;
 
@@ -297,14 +284,14 @@ let%component make =
       let startOffset = Selection.offsetLeft(selection);
       let endOffset = Selection.offsetRight(selection);
 
-      let (beginnigStartStr, _) =
-        getStringParts(startOffset + String.length(prefix), displayValue);
+      let beginnigStartStr =
+        Zed_utf8.before(displayValue, startOffset + Zed_utf8.length(prefix));
       let beginningTextWidth =
         measureTextWidth(beginnigStartStr) |> int_of_float;
       let startOffset = beginningTextWidth - scrollOffset^;
 
-      let (endingStartStr, _) =
-        getStringParts(endOffset + String.length(prefix), displayValue);
+      let endingStartStr =
+        Zed_utf8.before(displayValue, endOffset + Zed_utf8.length(prefix));
       let endingTextWidth = measureTextWidth(endingStartStr) |> int_of_float;
       let endOffset = endingTextWidth - scrollOffset^;
       let width = endOffset - startOffset + Constants.cursorWidth;
