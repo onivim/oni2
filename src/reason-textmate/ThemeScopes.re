@@ -13,6 +13,8 @@ module Scope = {
 
   let ofString = s => String.split_on_char('.', s);
 
+  let toString = scope => String.concat(".", scope);
+
   let rec matches = (selector: t, v: t) => {
     switch (selector, v) {
     | ([], _) => true
@@ -44,6 +46,9 @@ module Scopes = {
     |> String.split_on_char(' ')
     |> List.map(v => Scope.ofString(String.trim(v)));
 
+  let toString = scopes =>
+    String.concat("\n", scopes |> List.map(Scope.toString));
+
   let rec matches = (selector: t, v: t) => {
     switch (selector, v) {
     | ([], _) => true
@@ -55,6 +60,22 @@ module Scopes = {
       }
     | (_, []) => false
     };
+  };
+};
+
+module ResolvedStyle = {
+  type t = {
+    foreground: string,
+    background: string,
+    bold: bool,
+    italic: bool,
+  };
+
+  let default = (~foreground, ~background, ()) => {
+    foreground,
+    background,
+    bold: false,
+    italic: false,
   };
 };
 
@@ -72,6 +93,66 @@ module TokenStyle = {
     | None => "Foreground: None"
     | Some(_) => "Foreground: Some"
     };
+  };
+
+  let merge = (prev, style) => {
+    let foreground =
+      switch (prev.foreground, style.foreground) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    let background =
+      switch (prev.background, style.background) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    let bold =
+      switch (prev.bold, style.bold) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    let italic =
+      switch (prev.italic, style.italic) {
+      | (Some(v), _) => Some(v)
+      | (_, Some(v)) => Some(v)
+      | _ => None
+      };
+
+    {background, foreground, bold, italic};
+  };
+
+  let resolve = (~default: ResolvedStyle.t, style) => {
+    let foreground =
+      switch (style.foreground) {
+      | Some(v) => v
+      | None => default.foreground
+      };
+
+    let bold =
+      switch (style.bold) {
+      | Some(v) => v
+      | None => default.bold
+      };
+
+    let italic =
+      switch (style.italic) {
+      | Some(v) => v
+      | None => default.italic
+      };
+
+    let background =
+      switch (style.background) {
+      | Some(v) => v
+      | None => default.background
+      };
+
+    ResolvedStyle.{bold, italic, foreground, background};
   };
 
   let create =
@@ -93,22 +174,6 @@ module TokenStyle = {
     background: None,
     bold: None,
     italic: None,
-  };
-};
-
-module ResolvedStyle = {
-  type t = {
-    foreground: string,
-    background: string,
-    bold: bool,
-    italic: bool,
-  };
-
-  let default = (~foreground, ~background, ()) => {
-    foreground,
-    background,
-    bold: false,
-    italic: false,
   };
 };
 
