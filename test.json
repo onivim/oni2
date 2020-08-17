@@ -16,7 +16,7 @@
     "watch:inline": "esy b dune runtest --watch"
   },
   "override": {
-      "build": ["dune build -p libvim,textmate,Oni2,OniUnitTestRunner -j4"],
+      "build": ["dune build -p libvim,textmate,treesitter,Oni2,OniUnitTestRunner -j4"],
       "dependencies": {
         "@reason-native/rely": "^3.2.1"
       },
