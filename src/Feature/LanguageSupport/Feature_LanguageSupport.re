@@ -6,6 +6,7 @@ type model = {
   definition: Definition.model,
   documentHighlights: DocumentHighlights.model,
   formatting: Formatting.model,
+  hover: Hover.model,
   rename: Rename.model,
   references: References.model,
 };
@@ -16,6 +17,7 @@ let initial = {
   definition: Definition.initial,
   documentHighlights: DocumentHighlights.initial,
   formatting: Formatting.initial,
+  hover: Hover.initial,
   rename: Rename.initial,
   references: References.initial,
 };
@@ -168,6 +170,7 @@ let update =
         documentHighlights:
           DocumentHighlights.unregister(~handle, model.documentHighlights),
         formatting: Formatting.unregister(~handle, model.formatting),
+        hover: Hover.unregister(~handle, model.hover),
         references: References.unregister(~handle, model.references),
         rename: Rename.unregister(~handle, model.rename),
       },
@@ -389,6 +392,21 @@ module DocumentHighlights = {
 
   let getLinesWithHighlight = (~bufferId, {documentHighlights, _}) => {
     OldHighlights.getLinesWithHighlight(~bufferId, documentHighlights);
+  };
+};
+
+module Hover = {
+  module Popup = {
+    let make = (
+      ~theme,
+      ~languageInfo,
+      ~uiFont,
+      ~editorFont,
+      ~model,
+      ~grammars,
+      ~buffer,
+      ~editorId
+    ) => None;
   };
 };
 

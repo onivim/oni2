@@ -99,6 +99,21 @@ module Completion: {
   };
 };
 
+module Hover: {
+  module Popup: {
+    let make: (
+    ~theme: Oni_Core.ColorTheme.Colors.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
+    ~uiFont: UiFont.t,
+    ~editorFont: Service_Font.font,
+    ~model: model,
+    ~grammars: Oni_Syntax.GrammarRepository.t,
+    ~buffer: Oni_Core.Buffer.t,
+    ~editorId: int,
+    ) => option(Oni_Components.Popup.Section.t);
+  };
+};
+
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
   let commands: list(Command.t(msg));

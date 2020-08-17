@@ -182,14 +182,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
-        dispatch(
-          Actions.Hover(
-            Feature_Hover.ProviderRegistered({handle, selector}),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
-
       | LanguageFeatures(
           RegisterSignatureHelpProvider({handle, selector, metadata}),
         ) =>
