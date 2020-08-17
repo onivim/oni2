@@ -2,6 +2,6 @@
     (name OniBench)
     (public_name OniBench)
     (modules OniBench)
-    (libraries OniBench.lib)
+    (libraries OniBench.lib OniBench.treesitter)
     (package OniBench)
 )
