@@ -17,6 +17,7 @@ Service_OS_Test.TestFramework.cli();
 Vim.init();
 Libvim_Test.TestFramework.cli();
 
+EditorInput_Test.TestFramework.cli();
 Exthost_Transport_Test.TestFramework.cli();
 Exthost_Test.TestFramework.cli();
 
