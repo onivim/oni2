@@ -141,7 +141,7 @@ let%component make =
           ~scrollTop=state.scrollTop,
         )}
         onMouseWheel=scroll
-        onDimensionsChanged={({height, width}) => {
+        onDimensionsChanged={({height, _}) => {
           dispatch(SetHeight(height))
         }}>
         ...children

@@ -9,7 +9,6 @@ module Section = {
   };
 };
 
-open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
@@ -46,17 +45,19 @@ let make =
       ~theme: Oni_Core.ColorTheme.Colors.t,
       (),
     ) => {
+  // TODO: Implement positioning logic
+  ignore(topY);
+  ignore(availableWidth);
+  ignore(availableHeight);
+
   switch (sections) {
   | [] => React.empty
   | sections =>
     let element =
       sections
       |> List.map(({element, _}: Section.t) => element)
-      |> (
-        list =>
-          Base.List.intersperse(list, <horizontalRule theme />)
-          |> React.listToElement
-      );
+      |> Base.List.intersperse(~sep=<horizontalRule theme />)
+      |> React.listToElement;
 
     <HoverView x y=bottomY theme> element </HoverView>;
   };
