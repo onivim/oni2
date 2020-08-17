@@ -339,7 +339,7 @@ describe("EditorInput", ({describe, _}) => {
       // Should be unhandled because the context function is [false]
       expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
     });
-    test("key sequence is unhandled when context is false", ({expect,_}) => {
+    test("key sequence is unhandled when context is false", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
