@@ -4,7 +4,7 @@
   "description": "Lightweight code editor",
   "license": "SEE LICENSE IN Outrun-Labs-EULA-v1.1.md",
   "esy": {
-    "build": "refmterr dune build -p libvim,textmate,Oni2 -j4",
+    "build": "refmterr dune build -p libvim,textmate,treesitter,Oni2 -j4",
     "buildEnv": { "MACOSX_DEPLOYMENT_TARGET": "10.12" },
     "install": [
       "esy-installer Oni2.install",
@@ -240,11 +240,11 @@
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "esy-sdl2": "*",
     "esy-skia": "*",
+    "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
     "libvim": "8.10869.55",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
-    "reason-tree-sitter": "^1.0.1001",
     "reasonFuzz": "*",
     "refmterr": "*",
     "rench": "1.7.1",
