@@ -4,8 +4,7 @@ type t = {
   modifiers: Modifiers.t,
 };
 
-let toString =
-    (~meta="Meta", ~keyCodeToString, {scancode, keycode, modifiers}) => {
+let toString = (~meta="Meta", ~keyCodeToString, {keycode, modifiers, _}) => {
   let buffer = Buffer.create(16);
   let separator = " + ";
 
