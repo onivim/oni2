@@ -280,7 +280,6 @@ let%component make =
         ~grammars=grammarRepository,
         ~buffer,
         ~editorId=Some(editorId),
-        // TODO:
         ~languageInfo,
       );
 
