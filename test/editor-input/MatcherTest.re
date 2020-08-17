@@ -59,7 +59,7 @@ let modifiersShift = {...Modifiers.none, shift: true};
 
 describe("Matcher", ({describe, _}) => {
   describe("parser", ({test, _}) => {
-    test("all keys", ({expect}) => {
+    test("all keys", ({expect, _}) => {
       open Matcher;
       // Exercise full set of keys described here:
       // https://code.visualstudio.com/docs/getstarted/keybindings#_accepted-keys
@@ -122,7 +122,7 @@ describe("Matcher", ({describe, _}) => {
       let _: unit = cases |> List.iter(runCase);
       ();
     });
-    test("simple parsing", ({expect}) => {
+    test("simple parsing", ({expect, _}) => {
       let result = defaultParse("a");
       expect.equal(
         result,
@@ -144,11 +144,11 @@ describe("Matcher", ({describe, _}) => {
         Ok(Sequence([Keydown(Keycode(99, Modifiers.none))])),
       );
     });
-    test("all keys released", ({expect}) => {
+    test("all keys released", ({expect, _}) => {
       let result = defaultParse("<RELEASE>");
       expect.equal(result, Ok(AllKeysReleased));
     });
-    test("vim bindings", ({expect}) => {
+    test("vim bindings", ({expect, _}) => {
       let result = defaultParse("<a>");
       expect.equal(
         result,
@@ -167,7 +167,7 @@ describe("Matcher", ({describe, _}) => {
         Ok(Sequence([Keydown(Keycode(1, modifiersShift))])),
       );
     });
-    test("vscode bindings", ({expect}) => {
+    test("vscode bindings", ({expect, _}) => {
       let result = defaultParse("Ctrl+a");
       expect.equal(
         result,
@@ -180,7 +180,7 @@ describe("Matcher", ({describe, _}) => {
         Ok(Sequence([Keydown(Keycode(1, modifiersControl))])),
       );
     });
-    test("binding list", ({expect}) => {
+    test("binding list", ({expect, _}) => {
       let result = defaultParse("ab");
       expect.equal(
         result,
@@ -235,7 +235,7 @@ describe("Matcher", ({describe, _}) => {
         ),
       );
     });
-    test("keyup", ({expect}) => {
+    test("keyup", ({expect, _}) => {
       let result = defaultParse("!a");
       expect.equal(
         result,

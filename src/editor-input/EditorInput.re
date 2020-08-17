@@ -200,7 +200,7 @@ module Make = (Config: {
            fun
            | AllKeysReleased => None
            | Down(id, key) => Some(Down(id, key))
-           | Up(key) => None,
+           | Up(_key) => None,
          );
 
     let bindingsWithoutUpKey =
@@ -372,7 +372,7 @@ module Make = (Config: {
             remainingText,
             [Unhandled(latestKey)] @ textEffects @ effects,
           );
-        | [Up(latestKey)] =>
+        | [Up(_latestKey)] =>
           // At the last key... if we got here, we couldn't find any match for this key
           ([], remainingText, effects)
         | [latestKey, ...otherKeys] =>
@@ -490,7 +490,7 @@ module Make = (Config: {
       // For '<release>', only care about dispatch actions
       | [{action: Dispatch(command), _}, ..._] => [Execute(command)]
 
-      | [hd, ...tail] => loop(tail)
+      | [_hd, ...tail] => loop(tail)
       | [] => []
       };
 
