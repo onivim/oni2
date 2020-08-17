@@ -17,6 +17,12 @@ module Msg: {
     let formatDocument: msg;
     let formatRange: (~startLine: Index.t, ~endLine: Index.t) => msg;
   };
+
+  module Hover: {
+    let show: msg;
+    let mouseHovered: Location.t => msg;
+    let mouseMoved: Location.t => msg;
+  };
 };
 
 type outmsg =
@@ -43,6 +49,7 @@ let update:
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(Range.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~editorId: int,
     ~cursorLocation: Location.t,
     ~client: Exthost.Client.t,
     msg,
@@ -101,16 +108,18 @@ module Completion: {
 
 module Hover: {
   module Popup: {
-    let make: (
-    ~theme: Oni_Core.ColorTheme.Colors.t,
-    ~languageInfo: Exthost.LanguageInfo.t,
-    ~uiFont: UiFont.t,
-    ~editorFont: Service_Font.font,
-    ~model: model,
-    ~grammars: Oni_Syntax.GrammarRepository.t,
-    ~buffer: Oni_Core.Buffer.t,
-    ~editorId: int,
-    ) => option(Oni_Components.Popup.Section.t);
+    let make:
+      (
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~model: model,
+        ~grammars: Oni_Syntax.GrammarRepository.t,
+        ~buffer: Oni_Core.Buffer.t,
+        ~editorId: int
+      ) =>
+      option(Oni_Components.Popup.Section.t);
   };
 };
 

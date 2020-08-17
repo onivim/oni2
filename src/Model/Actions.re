@@ -55,7 +55,6 @@ type t =
   | BufferSetModified(int, bool)
   | Clipboard(Feature_Clipboard.msg)
   | Syntax(Feature_Syntax.msg)
-  | Hover(Feature_Hover.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
   | Command(string)

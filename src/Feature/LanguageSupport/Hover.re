@@ -88,7 +88,7 @@ let getEffectsForLocation =
              contents,
              range: Option.map(Exthost.OneBasedRange.toRange, range),
              requestID,
-             editorID: editorId
+             editorID: editorId,
            })
          | Error(s) => HoverRequestFailed(s)
          }
@@ -97,13 +97,19 @@ let getEffectsForLocation =
   |> Isolinear.Effect.batch;
 };
 
-let update = (
-~cursorLocation: Location.t,
-~maybeBuffer, ~maybeEditorId, ~extHostClient, model, msg) =>
+let update =
+    (
+      ~cursorLocation: Location.t,
+      ~maybeBuffer,
+      ~editorId,
+      ~extHostClient,
+      model,
+      msg,
+    ) =>
   switch (msg) {
   | Command(Show) =>
-    switch (maybeBuffer, maybeEditorId) {
-    | (Some(buffer), Some(editorId)) =>
+    switch (maybeBuffer) {
+    | Some(buffer) =>
       let requestID = IDGenerator.get();
       let effects =
         getEffectsForLocation(
@@ -127,8 +133,8 @@ let update = (
     | _ => (model, Nothing)
     }
   | MouseHovered(location) =>
-    switch (maybeBuffer, maybeEditorId) {
-    | (Some(buffer), Some(editorId)) =>
+    switch (maybeBuffer) {
+    | Some(buffer) =>
       let requestID = IDGenerator.get();
       let effects =
         getEffectsForLocation(
@@ -202,13 +208,23 @@ let update = (
   | _ => (model, Nothing)
   };
 
+let keyPressed = (_key, model) => {
+  ...model,
+  shown: false,
+  contents: [],
+  range: None,
+  triggeredFrom: None,
+};
+
 let register = (~handle, ~selector, model) => {
-  ...model, providers: [{handle, selector}, ...model.providers]
+  ...model,
+  providers: [{handle, selector}, ...model.providers],
 };
 
 let unregister = (~handle, model) => {
   ...model,
-  providers: List.filter(provider => provider.handle != handle, model.providers)
+  providers:
+    List.filter(provider => provider.handle != handle, model.providers),
 };
 
 module Commands = {
@@ -291,8 +307,7 @@ module View = {
         ~codeBlockFontSize=editorFont.fontSize,
       );
 
-    let hoverDiagnostic =
-        (~diagnostic: Diagnostic.t, ()) => {
+    let hoverDiagnostic = (~diagnostic: Diagnostic.t, ()) => {
       <Text
         text={diagnostic.message}
         fontFamily={editorFont.fontFamily}
@@ -301,124 +316,123 @@ module View = {
       />;
     };
 
-    React.empty
-//    switch (model.editorID) {
-//    | Some(editorID) when editorID == Feature_Editor.Editor.getId(editor) =>
-//      <Oni_Components.HoverView x y theme=colorTheme>
-//        {List.map(markdown => <hoverMarkdown markdown />, model.contents)
-//         |> React.listToElement}
-//        {model.contents != [] && diagnostic != []
-//           ? <horizontalRule theme=colorTheme /> : React.empty}
-//        {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
-//         |> React.listToElement}
-//      </Oni_Components.HoverView>
-//    | _ => React.empty
-//    };
+    React.empty;
+    //    switch (model.editorID) {
+    //    | Some(editorID) when editorID == Feature_Editor.Editor.getId(editor) =>
+    //      <Oni_Components.HoverView x y theme=colorTheme>
+    //        {List.map(markdown => <hoverMarkdown markdown />, model.contents)
+    //         |> React.listToElement}
+    //        {model.contents != [] && diagnostic != []
+    //           ? <horizontalRule theme=colorTheme /> : React.empty}
+    //        {List.map(diag => <hoverDiagnostic diagnostic=diag />, diagnostic)
+    //         |> React.listToElement}
+    //      </Oni_Components.HoverView>
+    //    | _ => React.empty
+    //    };
   };
-
-//  let make =
-//      (
-//        ~colorTheme,
-//        ~tokenTheme,
-//        ~languageInfo,
-//        ~uiFont: UiFont.t,
-//        ~editorFont: Service_Font.font,
-//        ~model,
-//        ~editor: Feature_Editor.Editor.t,
-//        ~buffer,
-//        ~gutterWidth,
-//        ~grammars,
-//        ~diagnostics,
-//        (),
-//      ) => {
-//    let (maybeCoords, maybeDiagnostic): (
-//      option((int, int)),
-//      option(list(Diagnostic.t)),
-//    ) =
-//      switch (model.range, model.triggeredFrom, model.shown) {
-//      | (Some(range), Some(trigger), true) =>
-//        let diagLocation =
-//          switch (trigger) {
-//          | `Mouse(location) => location
-//          | `CommandPalette => Feature_Editor.Editor.getPrimaryCursor(editor)
-//          };
-//
-//        let diagnostic =
-//          Diagnostics.getDiagnosticsAtPosition(
-//            diagnostics,
-//            buffer,
-//            diagLocation,
-//          );
-//
-//        let hoverLocation =
-//          switch (diagnostic) {
-//          | [] => range.start
-//          | [diag, ..._] => diag.range.start
-//          };
-//
-//        let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
-//          Feature_Editor.Editor.bufferLineCharacterToPixel(
-//            ~line=hoverLocation.line |> Index.toZeroBased,
-//            ~characterIndex=hoverLocation.column |> Index.toZeroBased,
-//            editor,
-//          );
-//
-//        let x = int_of_float(pixelX +. gutterWidth);
-//        let y =
-//          int_of_float(
-//            pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor),
-//          );
-//
-//        // TODO: Hover width?
-//
-//        (Some((x, y)), Some(diagnostic));
-//      | (None, Some(trigger), true) =>
-//        let location =
-//          switch (trigger) {
-//          | `Mouse(location) => location
-//          | `CommandPalette => Feature_Editor.Editor.getPrimaryCursor(editor)
-//          };
-//
-//        let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
-//          Feature_Editor.Editor.bufferLineCharacterToPixel(
-//            ~line=location.line |> Index.toZeroBased,
-//            ~characterIndex=location.column |> Index.toZeroBased,
-//            editor,
-//          );
-//
-//        let x = int_of_float(pixelX +. gutterWidth);
-//        let y =
-//          int_of_float(
-//            pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor),
-//          );
-//
-//        let diagnostic =
-//          Diagnostics.getDiagnosticsAtPosition(
-//            diagnostics,
-//            buffer,
-//            location,
-//          );
-//
-//        diagnostic == [] ? (None, None) : (Some((x, y)), Some(diagnostic));
-//      | _ => (None, None)
-//      };
-//    switch (maybeCoords, maybeDiagnostic) {
-//    | (Some((x, y)), Some(diagnostic)) =>
-//      <hover
-//        x
-//        y
-//        colorTheme
-//        tokenTheme
-//        languageInfo
-//        uiFont
-//        editorFont
-//        model
-//        grammars
-//        diagnostic
-//        buffer
-//        editor
-//      />
-//    | _ => React.empty
-//    };
-//  };
+  //  let make =
+  //      (
+  //        ~colorTheme,
+  //        ~tokenTheme,
+  //        ~languageInfo,
+  //        ~uiFont: UiFont.t,
+  //        ~editorFont: Service_Font.font,
+  //        ~model,
+  //        ~editor: Feature_Editor.Editor.t,
+  //        ~buffer,
+  //        ~gutterWidth,
+  //        ~grammars,
+  //        ~diagnostics,
+  //        (),
+  //      ) => {
+  //    let (maybeCoords, maybeDiagnostic): (
+  //      option((int, int)),
+  //      option(list(Diagnostic.t)),
+  //    ) =
+  //      switch (model.range, model.triggeredFrom, model.shown) {
+  //      | (Some(range), Some(trigger), true) =>
+  //        let diagLocation =
+  //          switch (trigger) {
+  //          | `Mouse(location) => location
+  //          | `CommandPalette => Feature_Editor.Editor.getPrimaryCursor(editor)
+  //          };
+  //
+  //        let diagnostic =
+  //          Diagnostics.getDiagnosticsAtPosition(
+  //            diagnostics,
+  //            buffer,
+  //            diagLocation,
+  //          );
+  //
+  //        let hoverLocation =
+  //          switch (diagnostic) {
+  //          | [] => range.start
+  //          | [diag, ..._] => diag.range.start
+  //          };
+  //
+  //        let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+  //          Feature_Editor.Editor.bufferLineCharacterToPixel(
+  //            ~line=hoverLocation.line |> Index.toZeroBased,
+  //            ~characterIndex=hoverLocation.column |> Index.toZeroBased,
+  //            editor,
+  //          );
+  //
+  //        let x = int_of_float(pixelX +. gutterWidth);
+  //        let y =
+  //          int_of_float(
+  //            pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor),
+  //          );
+  //
+  //        // TODO: Hover width?
+  //
+  //        (Some((x, y)), Some(diagnostic));
+  //      | (None, Some(trigger), true) =>
+  //        let location =
+  //          switch (trigger) {
+  //          | `Mouse(location) => location
+  //          | `CommandPalette => Feature_Editor.Editor.getPrimaryCursor(editor)
+  //          };
+  //
+  //        let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+  //          Feature_Editor.Editor.bufferLineCharacterToPixel(
+  //            ~line=location.line |> Index.toZeroBased,
+  //            ~characterIndex=location.column |> Index.toZeroBased,
+  //            editor,
+  //          );
+  //
+  //        let x = int_of_float(pixelX +. gutterWidth);
+  //        let y =
+  //          int_of_float(
+  //            pixelY +. Feature_Editor.Editor.lineHeightInPixels(editor),
+  //          );
+  //
+  //        let diagnostic =
+  //          Diagnostics.getDiagnosticsAtPosition(
+  //            diagnostics,
+  //            buffer,
+  //            location,
+  //          );
+  //
+  //        diagnostic == [] ? (None, None) : (Some((x, y)), Some(diagnostic));
+  //      | _ => (None, None)
+  //      };
+  //    switch (maybeCoords, maybeDiagnostic) {
+  //    | (Some((x, y)), Some(diagnostic)) =>
+  //      <hover
+  //        x
+  //        y
+  //        colorTheme
+  //        tokenTheme
+  //        languageInfo
+  //        uiFont
+  //        editorFont
+  //        model
+  //        grammars
+  //        diagnostic
+  //        buffer
+  //        editor
+  //      />
+  //    | _ => React.empty
+  //    };
+  //  };
 };

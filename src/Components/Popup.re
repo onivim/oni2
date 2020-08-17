@@ -1,11 +1,8 @@
-
-type position = [
-| `Top
-| `Bottom];
+type position = [ | `Top | `Bottom];
 
 module Section = {
-    type t = {
-        element: Revery.UI.element,
-        position: position
-    };
+  type t = {
+    element: Revery.UI.element,
+    position,
+  };
 };
