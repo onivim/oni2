@@ -22,6 +22,7 @@
         Libvim_Test
         Oniguruma_Test
         Textmate_Test
+        TreeSitter_Test
         reason-native-crash-utils.asan
             ))
 
@@ -151,5 +152,6 @@
         Libvim_Test
         Oniguruma_Test
         Textmate_Test
+        TreeSitter_Test
         reason-native-crash-utils.asan
             ))
