@@ -22,6 +22,7 @@ module Msg: {
     let show: msg;
     let mouseHovered: Location.t => msg;
     let mouseMoved: Location.t => msg;
+    let keyPressed: string => msg;
   };
 };
 
@@ -110,16 +111,18 @@ module Hover: {
   module Popup: {
     let make:
       (
+        ~diagnostics: Diagnostics.t,
         ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~languageInfo: Exthost.LanguageInfo.t,
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
-        ~model: model,
         ~grammars: Oni_Syntax.GrammarRepository.t,
+        ~model: model,
         ~buffer: Oni_Core.Buffer.t,
-        ~editorId: int
+        ~editorId: option(int)
       ) =>
-      option(Oni_Components.Popup.Section.t);
+      option((Location.t, list(Oni_Components.Popup.Section.t)));
   };
 };
 

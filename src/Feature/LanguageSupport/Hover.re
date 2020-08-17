@@ -21,7 +21,12 @@ type model = {
   contents: list(Exthost.MarkdownString.t),
   range: option(EditorCoreTypes.Range.t),
   triggeredFrom:
-    option([ | `CommandPalette | `Mouse(EditorCoreTypes.Location.t)]),
+    option(
+      [
+        | `CommandPalette(EditorCoreTypes.Location.t)
+        | `Mouse(EditorCoreTypes.Location.t)
+      ],
+    ),
   lastRequestID: option(int),
   editorID: option(int),
 };
@@ -124,7 +129,7 @@ let update =
         {
           ...model,
           shown: true,
-          triggeredFrom: Some(`CommandPalette),
+          triggeredFrom: Some(`CommandPalette(cursorLocation)),
           lastRequestID: Some(requestID),
         },
         Effect(effects),
@@ -268,8 +273,6 @@ module View = {
 
   let hover =
       (
-        ~x,
-        ~y,
         ~colorTheme,
         ~tokenTheme,
         ~languageInfo,
@@ -435,4 +438,111 @@ module View = {
   //    | _ => React.empty
   //    };
   //  };
+};
+
+module Popup = {
+  let make =
+      (
+        ~diagnostics,
+        ~theme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~uiFont: Oni_Core.UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~grammars,
+        ~model,
+        ~buffer,
+        ~editorId,
+      ) =>
+    if (model.editorID != editorId) {
+      None;
+    } else {
+      let (maybeLocation, maybeDiagnostic): (
+        option(EditorCoreTypes.Location.t),
+        option(list(Diagnostic.t)),
+      ) =
+        switch (model.range, model.triggeredFrom, model.shown) {
+        | (Some(range), Some(trigger), true) =>
+          let diagLocation =
+            switch (trigger) {
+            | `Mouse(location) => location
+            | `CommandPalette(location) => location
+            };
+
+          let diagnostic =
+            Diagnostics.getDiagnosticsAtPosition(
+              diagnostics,
+              buffer,
+              diagLocation,
+            );
+
+          let hoverLocation =
+            switch (diagnostic) {
+            | [] => range.start
+            | [diag, ..._] => diag.range.start
+            };
+
+          // TODO: Hover width?
+
+          (Some(hoverLocation), Some(diagnostic));
+        | (None, Some(trigger), true) =>
+          let location =
+            switch (trigger) {
+            | `Mouse(location) => location
+            | `CommandPalette(location) => location
+            };
+
+          let diagnostic =
+            Diagnostics.getDiagnosticsAtPosition(
+              diagnostics,
+              buffer,
+              location,
+            );
+
+          diagnostic == []
+            ? (None, None) : (Some(location), Some(diagnostic));
+        | _ => (None, None)
+        };
+
+      let defaultLanguage =
+        Option.value(
+          ~default=Exthost.LanguageInfo.defaultLanguage,
+          Buffer.getFileType(buffer),
+        );
+
+      let hoverMarkdown = (~markdown) => {
+        Oni_Components.Markdown.make(
+          ~colorTheme=theme,
+          ~tokenTheme,
+          ~languageInfo,
+          ~defaultLanguage,
+          ~fontFamily={
+            uiFont.family;
+          },
+          ~codeFontFamily={
+            editorFont.fontFamily;
+          },
+          ~grammars,
+          ~markdown=Exthost.MarkdownString.toString(markdown),
+          ~baseFontSize=uiFont.size,
+          ~codeBlockStyle=Style.[flexGrow(1)],
+          ~codeBlockFontSize=editorFont.fontSize,
+        );
+      };
+
+      switch (maybeLocation, maybeDiagnostic) {
+      | (Some(location), Some(diagnostic)) =>
+        let hoverElement = {
+          List.map(markdown => <hoverMarkdown markdown />, model.contents)
+          |> React.listToElement;
+        };
+        let hoverSection =
+          Oni_Components.Popup.Section.{
+            element: hoverElement,
+            position: `Below,
+          };
+        Some((location, [hoverSection]));
+      | _ => None
+      };
+    };
 };

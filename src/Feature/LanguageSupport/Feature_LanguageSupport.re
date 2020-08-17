@@ -85,6 +85,8 @@ module Msg = {
 
     let mouseHovered = location => Hover(Hover.MouseHovered(location));
     let mouseMoved = location => Hover(Hover.MouseMoved(location));
+
+    let keyPressed = key => Hover(Hover.KeyPressed(key));
   };
 };
 
@@ -436,20 +438,36 @@ module DocumentHighlights = {
   };
 };
 
+module OldHover = Hover;
 module Hover = {
   module Popup = {
     let make =
         (
+          ~diagnostics,
           ~theme,
+          ~tokenTheme,
           ~languageInfo,
           ~uiFont,
           ~editorFont,
-          ~model,
           ~grammars,
+          ~model,
           ~buffer,
           ~editorId,
-        ) =>
-      None;
+        ) => {
+      let {hover, _} = model;
+      OldHover.Popup.make(
+        ~diagnostics,
+        ~theme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~uiFont,
+        ~editorFont,
+        ~grammars,
+        ~model=hover,
+        ~buffer,
+        ~editorId,
+      );
+    };
   };
 };
 

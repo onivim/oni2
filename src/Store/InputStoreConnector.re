@@ -47,6 +47,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Editor
     | Wildmenu => [
         Actions.KeyboardInput({isText, input: k}),
+        Actions.LanguageSupport(
+          Feature_LanguageSupport.Msg.Hover.keyPressed(k),
+        ),
         Actions.SignatureHelp(
           Feature_SignatureHelp.KeyPressed(Some(k), true),
         ),

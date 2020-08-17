@@ -6,6 +6,7 @@
       editor-core-types
       Oni2.core
       Oni2.components
+      Oni2.exthost
       Oni2.syntax
       Oni2.feature.theme
       Oni2.feature.language_support
