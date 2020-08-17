@@ -21,7 +21,7 @@ let get_os =
 
 let treeSitterIncludePath = Sys.getenv "TREESITTER_INCLUDE_PATH"
 let treeSitterLibPath = Sys.getenv "TREESITTER_LIB_PATH"
-let c_flags = ["-I"; treeSitterIncludePath; "-I"; treeSitterLibPath ]
+let c_flags = ["-Werror"; "-I"; treeSitterIncludePath; "-I"; treeSitterLibPath ]
 
 let _ = print_endline (treeSitterIncludePath)
 let _ = print_endline (treeSitterLibPath)

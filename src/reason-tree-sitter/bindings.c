@@ -34,30 +34,30 @@ void finalize_tree(value v) {
 }
 
 static struct custom_operations parser_custom_ops = {
-  identifier : "parser handling",
-  finalize : finalize_parser,
-  compare : custom_compare_default,
-  hash : custom_hash_default,
-  serialize : custom_serialize_default,
-  deserialize : custom_deserialize_default
+  .identifier = "parser handling",
+  .finalize = finalize_parser,
+  .compare = custom_compare_default,
+  .hash = custom_hash_default,
+  .serialize = custom_serialize_default,
+  .deserialize = custom_deserialize_default
 };
 
 static struct custom_operations tree_custom_ops = {
-  identifier : "tree handling",
-  finalize : finalize_tree,
-  compare : custom_compare_default,
-  hash : custom_hash_default,
-  serialize : custom_serialize_default,
-  deserialize : custom_deserialize_default
+  .identifier = "tree handling",
+  .finalize = finalize_tree,
+  .compare = custom_compare_default,
+  .hash = custom_hash_default,
+  .serialize = custom_serialize_default,
+  .deserialize = custom_deserialize_default
 };
 
 static struct custom_operations TSNode_custom_ops = {
-  identifier : "TSNode handling",
-  finalize : custom_finalize_default,
-  compare : custom_compare_default,
-  hash : custom_hash_default,
-  serialize : custom_serialize_default,
-  deserialize : custom_deserialize_default
+  .identifier = "TSNode handling",
+  .finalize = custom_finalize_default,
+  .compare = custom_compare_default,
+  .hash = custom_hash_default,
+  .serialize = custom_serialize_default,
+  .deserialize = custom_deserialize_default
 };
 
 CAMLprim value rets_parser_new_json(value unit) {
@@ -90,17 +90,17 @@ CAMLprim value rets_parser_new_c(value unit) {
 
 const char *rets_read(void *payload, uint32_t byte_offset, TSPoint position,
                       uint32_t *bytes_read) {
-  value *closure = caml_named_value("rets__parse_read");
+  const value *closure = caml_named_value("rets__parse_read");
   value result =
       caml_callback3(*closure, Val_int(byte_offset), Val_int(position.row),
                      Val_int(position.column));
 
-  char *ret = NULL;
+  const char *ret = NULL;
   *bytes_read = 0;
   if (Is_block(result)) {
     value strVal = Field(result, 0);
 
-    char *str = String_val(strVal);
+    const char *str = String_val(strVal);
     *bytes_read = strlen(str);
     ret = str;
   }
