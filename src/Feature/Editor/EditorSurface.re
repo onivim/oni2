@@ -142,7 +142,7 @@ let%component make =
                 ~languageSupport,
                 ~windowIsFocused,
                 ~config,
-                ~renderOverlays=(~gutterWidth as _: float) => <View />,
+                ~renderOverlays,
                 (),
               ) => {
   let colors = Colors.precompute(theme);
@@ -321,6 +321,7 @@ let%component make =
       tokenTheme
     />
     {renderOverlays(~gutterWidth)}
+    <Oni_Components.Popup x=0 topY=0 bottomY=0 sections=[] />
     <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical
         dispatch

@@ -28,8 +28,8 @@ module Parts = {
           ~backgroundColor=?,
           ~foregroundColor=?,
           ~showDiffMarkers=true,
-          ~renderOverlays,
           ~dispatch,
+          ~renderOverlays,
           (),
         ) => {
       let languageConfiguration =
