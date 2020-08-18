@@ -397,14 +397,14 @@ let addLayoutTab = model => {
 let gotoLayoutTab = (index, model) => {
   ...model,
   activeLayoutIndex:
-    IntEx.clamp(index, ~lo=0, ~hi=List.length(model.layouts) - 1),
+    IntEx.wrap(index, ~lo=0, ~hi=List.length(model.layouts) - 1),
 };
 
 let previousLayoutTab = (~count=1, model) =>
-  gotoLayoutTab(model.activeLayoutIndex - count, model);
+  gotoLayoutTab((model.activeLayoutIndex - count), model);
 
 let nextLayoutTab = (~count=1, model) =>
-  gotoLayoutTab(model.activeLayoutIndex + count, model);
+  gotoLayoutTab((model.activeLayoutIndex + count), model);
 
 let moveActiveLayoutTabTo = (index, model) => {
   let newLayouts =
