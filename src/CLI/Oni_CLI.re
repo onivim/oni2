@@ -90,7 +90,7 @@ let parse = args => {
     fun
     | "software" => gpuAcceleration := `ForceSoftware
     | "hardware" => gpuAcceleration := `ForceHardware
-    | unknown => ();
+    | _unknown => ();
 
   let setEffect = effect => {
     Arg.Unit(() => {eff := effect});
