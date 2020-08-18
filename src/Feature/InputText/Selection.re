@@ -9,7 +9,7 @@ type t = {
 let initial: t = {anchor: 0, focus: 0};
 
 let create = (~text: string, ~anchor: int, ~focus: int): t => {
-  let safeOffset = IntEx.clamp(~lo=0, ~hi=String.length(text));
+  let safeOffset = IntEx.clamp(~lo=0, ~hi=Zed_utf8.length(text));
 
   let safeAnchor = safeOffset(anchor);
   let safeFocus = safeOffset(focus);
@@ -44,8 +44,12 @@ let extend = (~text: string, ~selection: t, offset: int): t => {
 let%test_module "Selection" =
   (module
    {
+     let uTestString = "😊↪ Вім is Cool";
+     let uTestStringLength = Zed_utf8.length(uTestString);
+     let uCreate = create(~text=uTestString);
+
      let testString = "Some Strin";
-     let testStringLength = String.length(testString);
+     let testStringLength = Zed_utf8.length(testString);
      let create = create(~text=testString);
 
      let%test_module "initial" =
@@ -76,6 +80,11 @@ let%test_module "Selection" =
           let%test "Handle above length" = {
             let {anchor, focus} = create(~anchor=70, ~focus=55);
             anchor == testStringLength && focus == testStringLength;
+          };
+
+          let%test "Handle unicode character" = {
+            let {anchor, focus} = uCreate(~anchor=70, ~focus=55);
+            anchor == uTestStringLength && focus == uTestStringLength;
           };
         });
      let%test_module "length" =

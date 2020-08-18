@@ -76,7 +76,7 @@ let add = (~time, key, model) => {
           groups;
         }
       | Key(keyString) =>
-        let isCharKey = String.length(keyString) == 1;
+        let isCharKey = Zed_utf8.length(keyString) == 1;
         let isExclusive = !isCharKey || keyString == " ";
         let isWithinGroupingInterval = group =>
           time -. group.time <= Constants.maxGroupingInterval;
