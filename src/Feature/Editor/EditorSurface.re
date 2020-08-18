@@ -125,6 +125,8 @@ let%component make =
               (
                 ~dispatch,
                 ~languageConfiguration,
+                ~languageInfo,
+                ~grammarRepository,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -132,6 +134,7 @@ let%component make =
                 ~onEditorSizeChanged,
                 ~isActiveSplit: bool,
                 ~editor: Editor.t,
+                ~uiFont: Oni_Core.UiFont.t,
                 ~theme,
                 ~mode: Vim.Mode.t,
                 ~bufferHighlights,
@@ -142,7 +145,7 @@ let%component make =
                 ~languageSupport,
                 ~windowIsFocused,
                 ~config,
-                ~renderOverlays=(~gutterWidth as _: float) => <View />,
+                ~renderOverlays,
                 (),
               ) => {
   let colors = Colors.precompute(theme);
@@ -265,6 +268,50 @@ let%component make =
       diffMarkers
     />;
 
+  let hoverPopup = {
+    let maybeHover =
+      Feature_LanguageSupport.Hover.Popup.make(
+        ~theme,
+        ~uiFont,
+        ~editorFont,
+        ~model=languageSupport,
+        ~diagnostics,
+        ~tokenTheme,
+        ~grammars=grammarRepository,
+        ~buffer,
+        ~editorId=Some(editorId),
+        ~languageInfo,
+      );
+
+    maybeHover
+    |> Option.map(((location: Location.t, sections)) => {
+         let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+           Editor.bufferLineCharacterToPixel(
+             ~line=location.line |> Index.toZeroBased,
+             ~characterIndex=location.column |> Index.toZeroBased,
+             editor,
+           );
+         let popupX = pixelX +. gutterWidth |> int_of_float;
+         let popupTopY = pixelY |> int_of_float;
+         let popupBottomY =
+           pixelY +. Editor.getLineHeight(editor) |> int_of_float;
+
+         let popupAvailableWidth = layout.bufferWidthInPixels |> int_of_float;
+         let popupAvailableHeight = pixelHeight;
+
+         <Oni_Components.Popup
+           x=popupX
+           topY=popupTopY
+           bottomY=popupBottomY
+           availableWidth=popupAvailableWidth
+           availableHeight=popupAvailableHeight
+           sections
+           theme
+         />;
+       })
+    |> Option.value(~default=React.empty);
+  };
+
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
@@ -321,6 +368,7 @@ let%component make =
       tokenTheme
     />
     {renderOverlays(~gutterWidth)}
+    hoverPopup
     <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical
         dispatch

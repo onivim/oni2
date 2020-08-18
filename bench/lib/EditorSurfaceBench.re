@@ -33,6 +33,10 @@ let editor = (editor, buffer, state: State.t) => {
     theme={Feature_Theme.colors(state.colorTheme)}
     windowIsFocused=true
     config={configResolver(Config.Settings.empty)}
+    languageInfo=Exthost.LanguageInfo.initial
+    grammarRepository=Oni_Syntax.GrammarRepository.empty
+    uiFont=Oni_Core.UiFont.default
+    renderOverlays={(~gutterWidth as _) => <Revery.UI.View />}
   />;
 };
 

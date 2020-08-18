@@ -6,6 +6,7 @@ type model = {
   definition: Definition.model,
   documentHighlights: DocumentHighlights.model,
   formatting: Formatting.model,
+  hover: Hover.model,
   rename: Rename.model,
   references: References.model,
 };
@@ -16,6 +17,7 @@ let initial = {
   definition: Definition.initial,
   documentHighlights: DocumentHighlights.initial,
   formatting: Formatting.initial,
+  hover: Hover.initial,
   rename: Rename.initial,
   references: References.initial,
 };
@@ -27,6 +29,7 @@ type msg =
   | Definition(Definition.msg)
   | DocumentHighlights(DocumentHighlights.msg)
   | Formatting(Formatting.msg)
+  | Hover(Hover.msg)
   | References(References.msg)
   | Rename(Rename.msg)
   | CodeLens(CodeLens.msg)
@@ -76,6 +79,15 @@ module Msg = {
     let formatRange = (~startLine, ~endLine) =>
       Formatting(Formatting.FormatRange({startLine, endLine}));
   };
+
+  module Hover = {
+    let show = Hover(Hover.(Command(Show)));
+
+    let mouseHovered = location => Hover(Hover.MouseHovered(location));
+    let mouseMoved = location => Hover(Hover.MouseMoved(location));
+
+    let keyPressed = key => Hover(Hover.KeyPressed(key));
+  };
 };
 
 let update =
@@ -84,13 +96,17 @@ let update =
       ~languageConfiguration,
       ~maybeSelection,
       ~maybeBuffer,
+      ~editorId,
       ~cursorLocation,
       ~client,
       msg,
       model,
     ) =>
   switch (msg) {
-  | KeyPressed(_)
+  | KeyPressed(key) => (
+      {...model, hover: Hover.keyPressed(key, model.hover)},
+      Nothing,
+    )
   | Pasted(_) => (model, Nothing)
 
   | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
@@ -160,6 +176,11 @@ let update =
       );
     ({...model, formatting: formatting'}, Nothing);
 
+  | Exthost(RegisterHoverProvider({handle, selector})) =>
+    let hover' = Hover.register(~handle, ~selector, model.hover);
+
+    ({...model, hover: hover'}, Nothing);
+
   | Exthost(Unregister({handle})) => (
       {
         codeLens: CodeLens.unregister(~handle, model.codeLens),
@@ -168,6 +189,7 @@ let update =
         documentHighlights:
           DocumentHighlights.unregister(~handle, model.documentHighlights),
         formatting: Formatting.unregister(~handle, model.formatting),
+        hover: Hover.unregister(~handle, model.hover),
         references: References.unregister(~handle, model.references),
         rename: Rename.unregister(~handle, model.rename),
       },
@@ -258,6 +280,26 @@ let update =
 
     ({...model, formatting: formatting'}, outMsg');
 
+  | Hover(hoverMsg) =>
+    let (hover', outMsg) =
+      Hover.update(
+        ~cursorLocation,
+        ~maybeBuffer,
+        ~editorId,
+        ~extHostClient=client,
+        model.hover,
+        hoverMsg,
+      );
+
+    let outMsg' =
+      switch (outMsg) {
+      | Hover.Nothing => Nothing
+      | Hover.Effect(eff) =>
+        Effect(eff |> Isolinear.Effect.map(msg => Hover(msg)))
+      };
+
+    ({...model, hover: hover'}, outMsg');
+
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
@@ -308,6 +350,10 @@ module Contributions = {
     @ (
       Definition.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Definition(msg)))
+    )
+    @ (
+      Hover.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => Hover(msg)))
     )
     @ (
       References.Contributions.commands
@@ -389,6 +435,39 @@ module DocumentHighlights = {
 
   let getLinesWithHighlight = (~bufferId, {documentHighlights, _}) => {
     OldHighlights.getLinesWithHighlight(~bufferId, documentHighlights);
+  };
+};
+
+module OldHover = Hover;
+module Hover = {
+  module Popup = {
+    let make =
+        (
+          ~diagnostics,
+          ~theme,
+          ~tokenTheme,
+          ~languageInfo,
+          ~uiFont,
+          ~editorFont,
+          ~grammars,
+          ~model,
+          ~buffer,
+          ~editorId,
+        ) => {
+      let {hover, _} = model;
+      OldHover.Popup.make(
+        ~diagnostics,
+        ~theme,
+        ~tokenTheme,
+        ~languageInfo,
+        ~uiFont,
+        ~editorFont,
+        ~grammars,
+        ~model=hover,
+        ~buffer,
+        ~editorId,
+      );
+    };
   };
 };
 

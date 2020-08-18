@@ -17,6 +17,13 @@ module Msg: {
     let formatDocument: msg;
     let formatRange: (~startLine: Index.t, ~endLine: Index.t) => msg;
   };
+
+  module Hover: {
+    let show: msg;
+    let mouseHovered: Location.t => msg;
+    let mouseMoved: Location.t => msg;
+    let keyPressed: string => msg;
+  };
 };
 
 type outmsg =
@@ -43,6 +50,7 @@ let update:
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(Range.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~editorId: int,
     ~cursorLocation: Location.t,
     ~client: Exthost.Client.t,
     msg,
@@ -96,6 +104,25 @@ module Completion: {
         unit
       ) =>
       Revery.UI.element;
+  };
+};
+
+module Hover: {
+  module Popup: {
+    let make:
+      (
+        ~diagnostics: Diagnostics.t,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~uiFont: UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~grammars: Oni_Syntax.GrammarRepository.t,
+        ~model: model,
+        ~buffer: Oni_Core.Buffer.t,
+        ~editorId: option(int)
+      ) =>
+      option((Location.t, list(Oni_Components.Popup.Section.t)));
   };
 };
 

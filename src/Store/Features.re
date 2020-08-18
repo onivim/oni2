@@ -59,11 +59,19 @@ module Internal = {
         | Nothing => Effect.none
         | MouseHovered(location) =>
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
-            dispatch(Hover(Feature_Hover.MouseHovered(location)))
+            dispatch(
+              LanguageSupport(
+                Feature_LanguageSupport.Msg.Hover.mouseHovered(location),
+              ),
+            )
           })
         | MouseMoved(location) =>
           Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
-            dispatch(Hover(Feature_Hover.MouseMoved(location)))
+            dispatch(
+              LanguageSupport(
+                Feature_LanguageSupport.Msg.Hover.mouseMoved(location),
+              ),
+            )
           })
         };
 
@@ -215,6 +223,7 @@ let update =
         ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=Some(selection),
+        ~editorId,
         ~cursorLocation,
         ~client=extHostClient,
         msg,
@@ -747,25 +756,6 @@ let update =
       state,
       Internal.notificationEffect(~kind=Error, message),
     )
-
-  | Hover(msg) =>
-    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
-    let editor = Feature_Layout.activeEditor(state.layout);
-    let (model', eff) =
-      Feature_Hover.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.hover,
-        msg,
-      );
-    let effect =
-      switch (eff) {
-      | Feature_Hover.Nothing => Effect.none
-      | Feature_Hover.Effect(eff) =>
-        Effect.map(msg => Actions.Hover(msg), eff)
-      };
-    ({...state, hover: model'}, effect);
 
   | SignatureHelp(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
