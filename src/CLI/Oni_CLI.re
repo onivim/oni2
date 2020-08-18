@@ -10,6 +10,7 @@ module CoreLog = Log;
 module Log = (val Log.withNamespace("Oni2.Core.Cli"));
 
 type t = {
+  gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
@@ -83,6 +84,14 @@ let parse = args => {
   let shouldLoadConfiguration = ref(true);
   let shouldSyntaxHighlight = ref(true);
 
+  let gpuAcceleration = ref(`Auto);
+
+  let setGpuAcceleration =
+    fun
+    | "software" => gpuAcceleration := `ForceSoftware
+    | "hardware" => gpuAcceleration := `ForceHardware
+    | _unknown => ();
+
   let setEffect = effect => {
     Arg.Unit(() => {eff := effect});
   };
@@ -110,6 +119,7 @@ let parse = args => {
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
       ("--disable-configuration", Unit(disableLoadConfiguration), ""),
       ("--disable-syntax-highlighting", Unit(disableSyntaxHighlight), ""),
+      ("--gpu-acceleration", String(setGpuAcceleration), ""),
       ("--log-file", String(Timber.App.setLogFile), ""),
       ("--log-filter", String(Timber.App.setNamespaceFilter), ""),
       ("--checkhealth", setEffect(CheckHealth), ""),
@@ -221,6 +231,7 @@ let parse = args => {
     folder,
     filesToOpen,
     forceScaleFactor: scaleFactor^,
+    gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir: extensionsDir^,
     shouldClose: shouldClose^,
     shouldLoadExtensions: shouldLoadExtensions^,
