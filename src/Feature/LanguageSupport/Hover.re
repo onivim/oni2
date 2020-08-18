@@ -4,7 +4,6 @@
 open Oni_Core;
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 open EditorCoreTypes;
 
 module Log = (val Log.withNamespace("Oni.Feature.Hover"));
