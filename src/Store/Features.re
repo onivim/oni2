@@ -372,14 +372,28 @@ let update =
       switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
       | Nothing => Effect.none
       | Feature_StatusBar.ShowFileTypePicker =>
-        let themes =
-          state.extensions
-          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
-               Exthost.Extension.Contributions.(manifest.contributes.themes)
-             })
-          |> List.flatten;
-        Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
-          dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
+        let bufferId =
+          state.layout
+          |> Feature_Layout.activeEditor
+          |> Feature_Editor.Editor.getBufferId;
+
+        let languages =
+          state.languageInfo
+          |> Exthost.LanguageInfo.languages
+          |> List.map(language =>
+               (
+                 language,
+                 Oni_Core.IconTheme.getIconForLanguage(
+                   state.iconTheme,
+                   language,
+                 ),
+               )
+             );
+        Isolinear.Effect.createWithDispatch(
+          ~name="statusBar.fileTypePicker", dispatch => {
+          dispatch(
+            Actions.QuickmenuShow(FileTypesPicker({bufferId, languages})),
+          )
         });
       };
 

@@ -428,9 +428,13 @@ module View = {
         |> Option.map(Oni_Core.Buffer.FileType.toString)
         |> Option.value(~default=Oni_Core.Buffer.FileType.default);
 
-      <textItem font background theme text onClick={() => {
-        dispatch(FileTypeClicked);
-      }} />;
+      <textItem
+        font
+        background
+        theme
+        text
+        onClick={() => {dispatch(FileTypeClicked)}}
+      />;
     };
 
     let lineEndings = () => {

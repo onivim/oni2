@@ -39,10 +39,11 @@ module IconDefinition = {
     fontColor: string,
   };
 
+  [@deriving show({with_path: false})]
   type t = {
     /* id: string, */
     fontCharacter: int,
-    fontColor: Color.t,
+    fontColor: [@opaque] Color.t,
   };
 
   let parseId: string => int =
@@ -99,6 +100,16 @@ let getIconForFile: (t, string, string) => option(IconDefinition.t) =
           }
         }
       };
+
+    StringMap.find_opt(id, iconTheme.iconDefinitions);
+  };
+
+let getIconForLanguage: (t, string) => option(IconDefinition.t) =
+  (iconTheme: t, languageId: string) => {
+    let id =
+      iconTheme.languageIds
+      |> StringMap.find_opt(languageId)
+      |> Option.value(~default=iconTheme.file);
 
     StringMap.find_opt(id, iconTheme.iconDefinitions);
   };

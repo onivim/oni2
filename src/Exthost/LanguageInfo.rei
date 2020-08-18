@@ -12,6 +12,8 @@ let toString: t => string;
 
 let defaultLanguage: string;
 
+let languages: t => list(string);
+
 let getLanguageFromFilePath: (t, string) => string;
 let getLanguageFromBuffer: (t, Buffer.t) => string;
 

@@ -68,9 +68,7 @@ type outmsg =
 let getEffectsForLocation =
     (~buffer, ~location, ~extHostClient, ~model, ~requestID, ~editorId) => {
   let filetype =
-    buffer
-    |> Oni_Core.Buffer.getFileType
-    |> Oni_Core.Buffer.FileType.toString;
+    buffer |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
 
   let matchingProviders =
     model.providers
@@ -285,9 +283,8 @@ module Popup = {
         | _ => None
         };
 
-      let defaultLanguage = buffer
-      |> Buffer.getFileType
-      |> Buffer.FileType.toString;
+      let defaultLanguage =
+        buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
       let hoverDiagnostic = (~diagnostic: Diagnostic.t, ()) => {
         <Text

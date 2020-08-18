@@ -232,6 +232,33 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
+    | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
+      let items =
+        languages
+        |> List.map(((fileType, maybeIcon)) => {
+             Actions.{
+               category: None,
+               name: fileType,
+               command: () =>
+                 BufferFileTypeChanged({
+                   id: bufferId,
+                   fileType: Oni_Core.Buffer.FileType.explicit(fileType),
+                 }),
+               icon: maybeIcon,
+               highlight: [],
+               handle: None,
+             }
+           })
+        |> Array.of_list;
+
+      (
+        Some({
+          ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
+          items,
+        }),
+        Isolinear.Effect.none,
+      );
+
     | QuickmenuPaste(text) => (
         Option.map(
           (Quickmenu.{inputText, _} as state) => {
@@ -546,6 +573,8 @@ let subscriptions = (ripgrep, dispatch) => {
           filter(query, quickmenu.items),
           ripgrep(state.languageInfo, state.iconTheme, state.configuration),
         ]
+
+      | FileTypesPicker(_) => [filter(query, quickmenu.items)]
 
       | Wildmenu(_) => []
       | DocumentSymbols =>

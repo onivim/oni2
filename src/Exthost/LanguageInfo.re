@@ -32,6 +32,18 @@ type t = {
   languageToScope: [@opaque] StringMap.t(string),
 };
 
+let languages = ({languages, _}) => {
+  languages
+  |> List.fold_left(
+       (acc, {id, _}: Contributions.Language.t) => {
+         acc |> StringMap.add(id, ())
+       },
+       StringMap.empty,
+     )
+  |> StringMap.bindings
+  |> List.map(fst);
+};
+
 let toString = languageInfo => {
   show(languageInfo);
 };
