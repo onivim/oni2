@@ -71,7 +71,10 @@ let start =
 
   let handleGoto = gotoType => {
     switch (gotoType) {
-    | Vim.Goto.Hover => dispatch(Actions.Hover(Feature_Hover.Command(Show)))
+    | Vim.Goto.Hover =>
+      dispatch(
+        Actions.LanguageSupport(Feature_LanguageSupport.Msg.Hover.show),
+      )
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>

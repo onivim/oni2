@@ -28,8 +28,8 @@ module Parts = {
           ~backgroundColor=?,
           ~foregroundColor=?,
           ~showDiffMarkers=true,
-          ~renderOverlays,
           ~dispatch,
+          ~renderOverlays,
           (),
         ) => {
       let languageConfiguration =
@@ -60,7 +60,10 @@ module Parts = {
         isActiveSplit=isActive
         editor
         buffer
+        uiFont={state.uiFont}
         languageConfiguration
+        languageInfo={state.languageInfo}
+        grammarRepository={state.grammarRepository}
         onCursorChange
         onEditorSizeChanged
         theme
@@ -102,19 +105,6 @@ module Parts = {
         |> Option.value(~default=Buffer.initial);
       let renderOverlays = (~gutterWidth) =>
         [
-          <Feature_Hover.View
-            colorTheme=theme
-            tokenTheme={state.tokenTheme}
-            model={state.hover}
-            uiFont={state.uiFont}
-            editorFont={state.editorFont}
-            languageInfo={state.languageInfo}
-            grammars={state.grammarRepository}
-            diagnostics={state.diagnostics}
-            editor
-            buffer
-            gutterWidth
-          />,
           <Feature_SignatureHelp.View
             colorTheme=theme
             tokenTheme={state.tokenTheme}
