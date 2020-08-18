@@ -26,6 +26,6 @@
         Revery
         Revery.zed
         revery-terminal.lib
-        editor-core-types
+        Oni2.editor-core-types
         ppx_deriving.runtime
     ))

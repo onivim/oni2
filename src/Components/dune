@@ -18,6 +18,6 @@
         Oni2.feature.theme
         Rench
         Revery
-        editor-core-types
+        Oni2.editor-core-types
         isolinear
     ))
