@@ -2,7 +2,7 @@
     (name Feature_Sneak)
     (public_name Oni2.feature.sneak)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Oni2.feature.commands
       Oni2.feature.theme

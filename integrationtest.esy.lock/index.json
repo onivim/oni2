@@ -1,5 +1,5 @@
 {
-  "checksum": "e3b06c2adff2f04f842cd48ecae50b0b",
+  "checksum": "03fcb789f98a1964a223269a253e696f",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -803,23 +803,6 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9": {
-      "id":
-        "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
-      "name": "editor-core-types",
-      "version": "github:onivim/editor-core-types#6a8afaf",
-      "source": {
-        "type": "install",
-        "source": [ "github:onivim/editor-core-types#6a8afaf" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "refmterr@3.3.2@d41d8cd9", "ocaml@4.10.0@d41d8cd9",
-        "@opam/ppx_deriving@opam:4.5@d89f2934",
-        "@opam/dune@opam:2.5.0@e0bac278", "@esy-ocaml/reason@3.6.2@d41d8cd9"
-      ],
-      "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
-    },
     "debug@3.1.0@d41d8cd9": {
       "id": "debug@3.1.0@d41d8cd9",
       "name": "debug",
@@ -966,9 +949,7 @@
         "esy-sdl2@2.0.10008@d41d8cd9",
         "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
-        "esy-angle-prebuilt@1.0.0@d41d8cd9",
-        "editor-core-types@github:onivim/editor-core-types#6a8afaf@d41d8cd9",
-        "axios@0.19.2@d41d8cd9",
+        "esy-angle-prebuilt@1.0.0@d41d8cd9", "axios@0.19.2@d41d8cd9",
         "@reason-native-web/esy-openssl@1.1.1006@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",

@@ -46,6 +46,13 @@ Feature_LanguageSupport_Test.TestFramework.run(
   ),
 );
 
+EditorCoreTypes_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
 EditorInput_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
