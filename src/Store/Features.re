@@ -371,6 +371,16 @@ let update =
     let eff =
       switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
       | Nothing => Effect.none
+      | Feature_StatusBar.ShowFileTypePicker =>
+        let themes =
+          state.extensions
+          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+               Exthost.Extension.Contributions.(manifest.contributes.themes)
+             })
+          |> List.flatten;
+        Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
+          dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
+        });
       };
 
     (state', eff);
