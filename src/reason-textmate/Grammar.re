@@ -183,7 +183,6 @@ module Xml = {
   let of_file = path => {
     path
     |> SimpleXml.of_file
-    |> Option.to_result(~none="Unable to load file: " ++ path)
     |> ResultEx.flatMap(XmlPlistParser.parse)
     |> ResultEx.flatMap(xml => PlistDecoder.grammar(xml));
   };

@@ -20,4 +20,13 @@ let simplify = stream =>
      );
 
 let of_file = path =>
-  Markup.file(path) |> fst |> Markup.parse_xml |> Markup.signals |> simplify;
+  try(
+    Markup.file(path)
+    |> fst
+    |> Markup.parse_xml
+    |> Markup.signals
+    |> simplify
+    |> Option.to_result(~none="Unable to parse file: " ++ path)
+  ) {
+  | exn => Error(Printexc.to_string(exn))
+  };
