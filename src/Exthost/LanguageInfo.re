@@ -51,7 +51,7 @@ let initial = {
   languageToScope: StringMap.empty,
 };
 
-let defaultLanguage = "plaintext";
+let defaultLanguage = Oni_Core.Buffer.FileType.default;
 
 let getLanguageFromExtension = (li: t, ext: string) => {
   switch (StringMap.find_opt(ext, li.extToLanguage)) {

@@ -421,8 +421,9 @@ module View = {
     let fileType = () => {
       let text =
         activeBuffer
-        |> OptionEx.flatMap(Buffer.getFileType)
-        |> Option.value(~default="plaintext");
+        |> Option.map(Buffer.getFileType)
+        |> Option.map(Oni_Core.Buffer.FileType.toString)
+        |> Option.value(~default=Oni_Core.Buffer.FileType.default);
 
       <textItem font background theme text />;
     };

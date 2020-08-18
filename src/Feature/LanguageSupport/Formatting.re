@@ -245,9 +245,7 @@ let update =
           },
         };
       let filetype =
-        buf
-        |> Oni_Core.Buffer.getFileType
-        |> Option.value(~default="plaintext");
+        buf |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
 
       let matchingFormatters =
         model.availableRangeFormatters
@@ -274,9 +272,7 @@ let update =
     switch (maybeBuffer, maybeSelection) {
     | (Some(buf), Some(range)) =>
       let filetype =
-        buf
-        |> Oni_Core.Buffer.getFileType
-        |> Option.value(~default="plaintext");
+        buf |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
 
       let matchingFormatters =
         model.availableRangeFormatters
@@ -305,9 +301,7 @@ let update =
     | None => (model, Nothing)
     | Some(buf) =>
       let filetype =
-        buf
-        |> Oni_Core.Buffer.getFileType
-        |> Option.value(~default="plaintext");
+        buf |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
 
       let matchingFormatters =
         model.availableDocumentFormatters

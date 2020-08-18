@@ -116,8 +116,7 @@ let getEffectsForLocation =
       ~requestID,
       ~editor,
     ) => {
-  let filetype =
-    buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
+  let filetype = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
   let matchingProviders =
     model.providers
@@ -238,8 +237,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | KeyPressed(maybeKey, before) =>
     switch (maybeBuffer, maybeEditor, maybeKey) {
     | (Some(buffer), Some(editor), Some(key)) =>
-      let filetype =
-        buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
+      let filetype = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
       let matchingProviders =
         model.providers
         |> List.filter(({selector, _}) =>
@@ -462,10 +460,7 @@ module View = {
         (),
       ) => {
     let defaultLanguage =
-      Option.value(
-        ~default=Exthost.LanguageInfo.defaultLanguage,
-        Buffer.getFileType(buffer),
-      );
+      Buffer.getFileType(buffer) |> Buffer.FileType.toString;
     let signatureHelpMarkdown = (~markdown) => {
       Oni_Components.Markdown.make(
         ~colorTheme,

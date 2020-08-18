@@ -12,6 +12,7 @@ let matches = (~filetype: string, filter) => {
 let matchesBuffer = (~buffer: Oni_Core.Buffer.t, filter) => {
   buffer
   |> Oni_Core.Buffer.getFileType
+  |> Oni_Core.Buffer.FileType.toOption
   |> Option.map(filetype => matches(~filetype, filter))
   |> Option.value(~default=false);
 };

@@ -22,7 +22,7 @@ type t =
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter({
       id: int,
-      fileType: option(string),
+      fileType: Buffer.FileType.t,
       lineEndings: [@opaque] option(Vim.lineEnding),
       filePath: option(string),
       isModified: bool,
@@ -34,12 +34,12 @@ type t =
     })
   | BufferFileTypeChanged({
       id: int,
-      fileType: string,
+      fileType: Oni_Core.Buffer.FileType.t,
     })
   | BufferFilenameChanged({
       id: int,
       newFilePath: option(string),
-      newFileType: option(string),
+      newFileType: Buffer.FileType.t,
       version: int,
       isModified: bool,
     })

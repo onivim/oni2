@@ -250,9 +250,8 @@ module Sub = {
     let scope =
       buffer
       |> Core.Buffer.getFileType
-      |> OptionEx.flatMap(
-           Exthost.LanguageInfo.getScopeFromLanguage(languageInfo),
-         )
+      |> Core.Buffer.FileType.toString
+      |> Exthost.LanguageInfo.getScopeFromLanguage(languageInfo)
       |> Option.value(~default=Constants.defaultScope);
 
     BufferSubscription.create({client, buffer, scope, visibleRanges});

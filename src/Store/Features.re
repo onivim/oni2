@@ -31,9 +31,8 @@ module Internal = {
   let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
     buffer
     |> Oni_Core.Buffer.getFileType
-    |> Utility.OptionEx.flatMap(fileType =>
-         Exthost.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
-       )
+    |> Oni_Core.Buffer.FileType.toString
+    |> Exthost.LanguageInfo.getScopeFromLanguage(languageInfo)
     |> Option.value(~default="source.plaintext");
   };
 
@@ -203,7 +202,8 @@ let update =
 
     let languageConfiguration =
       maybeBuffer
-      |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
+      |> Option.map(Oni_Core.Buffer.getFileType)
+      |> Option.map(Oni_Core.Buffer.FileType.toString)
       |> OptionEx.flatMap(
            Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
          )
