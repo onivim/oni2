@@ -234,7 +234,6 @@
     "@reason-native-web/esy-openssl": "*",
     "axios": "^0.19.0",
     "editor-core-types": "*",
-    "editor-input": "*",
     "esy-angle-prebuilt": "^1.0.0",
     "esy-macdylibbundler": "*",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
