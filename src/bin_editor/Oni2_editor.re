@@ -220,6 +220,7 @@ switch (eff) {
         ~createOptions=
           WindowCreateOptions.create(
             ~forceScaleFactor,
+            ~acceleration=cliOptions.gpuAcceleration,
             ~maximized,
             ~vsync=Vsync.Immediate,
             ~icon,
