@@ -46,6 +46,13 @@ Feature_LanguageSupport_Test.TestFramework.run(
   ),
 );
 
+EditorInput_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
 Exthost_Transport_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
@@ -96,6 +103,13 @@ Service_OS_Test.TestFramework.run(
   ),
 );
 Textmate_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
+TreeSitter_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
     Rely.RunConfig.initialize(),

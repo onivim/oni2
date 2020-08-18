@@ -7,9 +7,9 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        editor-input
         Oni2.core
         Oni2.core.whenExpr
+        Oni2.editor-input
         Oni2.model
         Oni2.input
         Oni2.syntax_client

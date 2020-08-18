@@ -1,0 +1,5 @@
+/*
+     NativeTypes.re
+ */
+
+type node;

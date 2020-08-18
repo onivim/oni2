@@ -76,11 +76,25 @@ node install-node-deps.js
 - `esy '@test' build`
 - `esy '@test' run`
 
+### Inline Unit Tests
+
+- `esy @test inline`
+
+### Check build
+
+- `esy build dune build @check`
+
 ### Benchmarks
 
 - `esy '@bench' install`
 - `esy '@bench' build`
 - `esy '@bench' run`
+
+### Format code
+
+We use auto formatting tool, you might want to run it before you commit changes
+
+- `esy format`
 
 ## Release 
 

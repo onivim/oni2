@@ -72,13 +72,21 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.zenMode.hideTabs` __(_bool_ default: `true`)__ - When `true`, the Onivim will hide the buffer tabs from the user whilst in zen mode. Zen mode can be toggled in the command pallette, or automatically enabled with the `editor.zenMode.singleFile` configuration option.
 
-- `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
+- `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
+
+- `workbench.iconTheme` __(_string_ default: `"vs-seti"`)__ - Icon theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 
 ## Layout
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
+
+- `workbench.sideBar.location` __(_"left"|"right"_ default: `"left"`)__ - Controls the location of the sidebar.
+
+- `workbench.sideBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the sidebar.
+
+- `workbench.statusBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the status bar.
 
 - `oni.layout.showLayoutTabs` __(_"always"|"smart"|"never"_ default: `"smart"`)__ - Controls the display of layout tabs. `"smart"` will only show the tabs if there's more than one.
 
