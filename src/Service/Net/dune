@@ -3,7 +3,7 @@
     (public_name Oni2.service.net)
     (inline_tests)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Oni2.service.os
       Revery

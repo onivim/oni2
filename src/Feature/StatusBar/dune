@@ -2,7 +2,7 @@
     (name Feature_StatusBar)
     (public_name Oni2.feature.statusbar)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Oni2.feature.contextMenu
       Oni2.feature.editor

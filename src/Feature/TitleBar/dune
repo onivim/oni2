@@ -2,7 +2,7 @@
     (name Feature_TitleBar)
     (public_name Oni2.feature.titlebar)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Oni2.feature.contextMenu
       Oni2.feature.theme

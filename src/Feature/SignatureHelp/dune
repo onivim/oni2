@@ -2,7 +2,7 @@
     (name Feature_SignatureHelp)
     (public_name Oni2.feature.signature_help)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Oni2.syntax
       Oni2.feature.commands

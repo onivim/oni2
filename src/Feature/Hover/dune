@@ -2,7 +2,7 @@
     (name Feature_Hover)
     (public_name Oni2.feature.hover)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Oni2.syntax
       Oni2.feature.commands

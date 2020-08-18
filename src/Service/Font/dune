@@ -2,7 +2,7 @@
     (name Service_Font)
     (public_name Oni2.service.font)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Revery
       isolinear

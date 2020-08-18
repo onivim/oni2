@@ -2,7 +2,7 @@
     (name Feature_SCM)
     (public_name Oni2.feature.scm)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Oni2.feature.inputText
       Oni2.feature.theme
