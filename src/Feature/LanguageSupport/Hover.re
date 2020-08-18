@@ -70,7 +70,7 @@ let getEffectsForLocation =
   let filetype =
     buffer
     |> Oni_Core.Buffer.getFileType
-    |> Option.value(~default="plaintext");
+    |> Oni_Core.Buffer.FileType.toString;
 
   let matchingProviders =
     model.providers
@@ -285,11 +285,9 @@ module Popup = {
         | _ => None
         };
 
-      let defaultLanguage =
-        Option.value(
-          ~default=Exthost.LanguageInfo.defaultLanguage,
-          Buffer.getFileType(buffer),
-        );
+      let defaultLanguage = buffer
+      |> Buffer.getFileType
+      |> Buffer.FileType.toString;
 
       let hoverDiagnostic = (~diagnostic: Diagnostic.t, ()) => {
         <Text
