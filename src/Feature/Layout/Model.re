@@ -401,10 +401,10 @@ let gotoLayoutTab = (index, model) => {
 };
 
 let previousLayoutTab = (~count=1, model) =>
-  gotoLayoutTab((model.activeLayoutIndex - count), model);
+  gotoLayoutTab(model.activeLayoutIndex - count, model);
 
 let nextLayoutTab = (~count=1, model) =>
-  gotoLayoutTab((model.activeLayoutIndex + count), model);
+  gotoLayoutTab(model.activeLayoutIndex + count, model);
 
 let moveActiveLayoutTabTo = (index, model) => {
   let newLayouts =

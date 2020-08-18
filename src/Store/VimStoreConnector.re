@@ -1018,9 +1018,7 @@ let start =
       | _ => (state, Isolinear.Effect.none)
       }
 
-    | TabPage(Goto(index)) =>
-    prerr_endline ("TabPage - Goto");
-      (
+    | TabPage(Goto(index)) => (
         {
           ...state,
           layout: Feature_Layout.gotoLayoutTab(index - 1, state.layout),
@@ -1028,9 +1026,7 @@ let start =
         Isolinear.Effect.none,
       )
 
-    | TabPage(GotoRelative(delta)) when delta < 0 => 
-    prerr_endline ("TabPage - GotoRelative A");
-      (
+    | TabPage(GotoRelative(delta)) when delta < 0 => (
         {
           ...state,
           layout:
@@ -1039,9 +1035,7 @@ let start =
         Isolinear.Effect.none,
       )
 
-    | TabPage(GotoRelative(delta)) => 
-    prerr_endline ("TabPage - GotoRelative B");
-      (
+    | TabPage(GotoRelative(delta)) => (
         {
           ...state,
           layout: Feature_Layout.nextLayoutTab(~count=delta, state.layout),
@@ -1049,9 +1043,7 @@ let start =
         Isolinear.Effect.none,
       )
 
-    | TabPage(Move(index)) =>
-    prerr_endline ("TabPage - Move");
-      (
+    | TabPage(Move(index)) => (
         {
           ...state,
           layout:
@@ -1060,9 +1052,7 @@ let start =
         Isolinear.Effect.none,
       )
 
-    | TabPage(MoveRelative(delta)) => 
-    prerr_endline ("TabPage - MoveRelative");
-      (
+    | TabPage(MoveRelative(delta)) => (
         {
           ...state,
           layout:
