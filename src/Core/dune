@@ -17,7 +17,7 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        editor-core-types
+        Oni2.editor-core-types
         timber
         ReasonFuzz
         decoders-yojson

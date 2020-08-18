@@ -35,7 +35,6 @@
         Oni2.feature.statusbar
         Oni2.feature.terminal
         Oni2.feature.modals
-        Oni2.feature.hover
         Oni2.feature.vim
         Oni2.feature.signature_help
         Oni2.feature.editor
