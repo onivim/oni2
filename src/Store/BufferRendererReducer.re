@@ -12,7 +12,9 @@ let reduce = (state: BufferRenderers.t, action) => {
     let reduceForBuffer = (id, renderer) => {
       BufferRenderer.(
         switch (renderer, action) {
-        | (Welcome, BufferUpdate(bu)) when bu.update.id == id => Editor
+        | (Welcome, Buffers(Feature_Buffers.Update(bu)))
+            when bu.update.id == id =>
+          Editor
         | (Version, _) => Version
         | (Editor, _) => Editor
         | (Terminal(state), Terminal(msg)) =>

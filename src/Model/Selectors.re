@@ -10,11 +10,11 @@ open Oni_Core.Utility;
 module Editor = Feature_Editor.Editor;
 
 let getBufferById = (state: State.t, id: int) => {
-  Buffers.getBuffer(id, state.buffers);
+  Feature_Buffers.get(id, state.buffers);
 };
 
 let getBufferForEditor = (buffers, editor: Editor.t) => {
-  Buffers.getBuffer(Editor.getBufferId(editor), buffers);
+  Feature_Buffers.get(Editor.getBufferId(editor), buffers);
 };
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {

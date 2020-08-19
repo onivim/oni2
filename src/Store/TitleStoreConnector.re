@@ -159,8 +159,7 @@ let start = (setTitle, maximize, minimize, restore, close) => {
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Init => (state, Effects.updateTitle(state))
-    | BufferEnter(_) => (state, Effects.updateTitle(state))
-    | BufferSetModified(_) => (state, Effects.updateTitle(state))
+    | Buffers(_) => (state, Effects.updateTitle(state))
 
     // TODO: This shouldn't exist, but needs to  be here because it depends on
     // `setTitle` being passed in. It would however be better to have a more

@@ -19,7 +19,7 @@ type windowDisplayMode =
   | Fullscreen;
 
 type t = {
-  buffers: Buffers.t,
+  buffers: Feature_Buffers.model,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   changelog: Feature_Changelog.model,
@@ -106,8 +106,7 @@ let initial =
   };
 
   {
-    buffers:
-      Buffers.empty |> IntMap.add(Buffer.getId(initialBuffer), initialBuffer),
+    buffers: Feature_Buffers.empty |> Feature_Buffers.add(initialBuffer),
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,

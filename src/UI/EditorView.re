@@ -218,7 +218,7 @@ let make =
 
     let title = editor => {
       let (_, title, _) =
-        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers)
+        Feature_Buffers.get(Editor.getBufferId(editor), state.buffers)
         |> getBufferMetadata;
 
       let renderer =
@@ -236,7 +236,7 @@ let make =
 
     let isModified = editor => {
       let (modified, _, _) =
-        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers)
+        Feature_Buffers.get(Editor.getBufferId(editor), state.buffers)
         |> getBufferMetadata;
 
       modified;
@@ -244,7 +244,7 @@ let make =
 
     let icon = editor => {
       let buffer =
-        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers);
+        Feature_Buffers.get(Editor.getBufferId(editor), state.buffers);
       let (_, _, filePath) = getBufferMetadata(buffer);
 
       let language =
