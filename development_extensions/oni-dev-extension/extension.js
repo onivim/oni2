@@ -35,13 +35,12 @@ function activate(context) {
 
     cleanup(
         vscode.commands.registerCommand("developer.oni.tryOpenDocument", () => {
-            vscode.workspace.openTextDocument(vscode.Uri.file("/Users/bryphe/oni2/package.json"))
+            vscode.workspace.openTextDocument(vscode.Uri.file("package.json"))
             .then((document) => {
                 let text = document.getText();
-                //vscode.window.showInformationMessage(JSON.stringify(text));
-                vscode.window.showInformationMessage("SUCCESS: " + text);
+                vscode.window.showInformationMessage("Got text document: " + text);
             }, err => {
-                vscode.window.showErrorMessage("FAILURE: " + err.toString());
+                vscode.window.showErrorMessage("Failed to get text document: " + err.toString());
             })
         }),
     )
