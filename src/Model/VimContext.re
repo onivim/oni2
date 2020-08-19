@@ -67,7 +67,9 @@ let current = (state: State.t) => {
   let editorBuffer = Selectors.getActiveBuffer(state);
   let maybeLanguageConfig: option(LanguageConfiguration.t) =
     editorBuffer
-    |> OptionEx.flatMap(Buffer.getFileType)
+    |> OptionEx.flatMap(buf =>
+         Buffer.getFileType(buf) |> Buffer.FileType.toOption
+       )
     |> OptionEx.flatMap(
          Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
        );

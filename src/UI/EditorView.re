@@ -35,11 +35,8 @@ module Parts = {
       let languageConfiguration =
         buffer
         |> Oni_Core.Buffer.getFileType
-        |> OptionEx.flatMap(
-             Exthost.LanguageInfo.getLanguageConfiguration(
-               state.languageInfo,
-             ),
-           )
+        |> Oni_Core.Buffer.FileType.toString
+        |> Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo)
         |> Option.value(~default=LanguageConfiguration.default);
 
       let editorDispatch = msg =>
@@ -250,11 +247,9 @@ let make =
       let language =
         switch (buffer) {
         | Some(buf) =>
-          switch (Oni_Core.Buffer.getFileType(buf)) {
-          | Some(ft) => ft
-          | None => Exthost.LanguageInfo.defaultLanguage
-          }
-        | None => Exthost.LanguageInfo.defaultLanguage
+          Oni_Core.Buffer.getFileType(buf)
+          |> Oni_Core.Buffer.FileType.toString
+        | None => Oni_Core.Buffer.FileType.default
         };
 
       IconTheme.getIconForFile(state.iconTheme, filePath, language);

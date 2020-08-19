@@ -67,7 +67,7 @@ type msg =
   | SyntaxHighlightingDisabled(int)
   | Entered({
       id: int,
-      fileType: option(string),
+      fileType: Oni_Core.Buffer.FileType.t,
       lineEndings: [@opaque] option(Vim.lineEnding),
       filePath: option(string),
       isModified: bool,
@@ -77,10 +77,14 @@ type msg =
       // but I want to remove it shortly
       buffer: [@opaque] Buffer.t,
     })
+  | FileTypeChanged({
+      id: int,
+      fileType: Oni_Core.Buffer.FileType.t,
+    })
   | FilenameChanged({
       id: int,
       newFilePath: option(string),
-      newFileType: option(string),
+      newFileType: Oni_Core.Buffer.FileType.t,
       version: int,
       isModified: bool,
     })
@@ -171,6 +175,9 @@ let update = (msg: msg, model: model) => {
 
   | Update({update, newBuffer, _}) => IntMap.add(update.id, newBuffer, model)
 
-  | _ => model
+  | FileTypeChanged({id, fileType}) =>
+    IntMap.update(id, Option.map(Buffer.setFileType(fileType)), model)
+
+  | Saved(_) => model
   };
 };
