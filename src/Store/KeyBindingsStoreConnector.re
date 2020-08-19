@@ -15,6 +15,9 @@ module Commands = GlobalCommands;
 let start = maybeKeyBindingsFilePath => {
   let windowCommandCondition =
     "!insertMode || terminalFocus" |> WhenExpr.parse;
+
+  let isMacCondition = "isMac" |> WhenExpr.parse;
+  
   let default =
     Keybindings.[
       {
@@ -40,7 +43,7 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<D-S-F>",
         command: Commands.Workbench.Action.findInFiles.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "isMac && editorTextFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-TAB>",
@@ -56,7 +59,7 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<D-P>",
         command: Commands.Workbench.Action.quickOpen.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        condition: "isMac && editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-C-P>",
@@ -66,7 +69,7 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<D-S-P>",
         command: Commands.Workbench.Action.showCommands.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        condition: "isMac && editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-V>",
@@ -76,7 +79,7 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<D-V>",
         command: Feature_Clipboard.Commands.paste.id,
-        condition: WhenExpr.Value(True),
+        condition: isMacCondition,
       },
       {
         key: "<ESC>",
@@ -96,12 +99,12 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<D-N>",
         command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "isMac && listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
         command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "isMac && listFocus || textInputFocus" |> WhenExpr.parse,
       },
       {
         key: "<TAB>",
@@ -147,17 +150,17 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<D-Z>",
           command: Commands.undo.id,
-          condition: "editorTextFocus" |> WhenExpr.parse,
+          condition: "isMac && editorTextFocus" |> WhenExpr.parse,
         },
         {
           key: "<D-S-Z>",
           command: Commands.redo.id,
-          condition: "editorTextFocus" |> WhenExpr.parse,
+          condition: "isMac && editorTextFocus" |> WhenExpr.parse,
         },
         {
           key: "<D-S>",
           command: Commands.Workbench.Action.Files.save.id,
-          condition: "editorTextFocus" |> WhenExpr.parse,
+          condition: "isMac && editorTextFocus" |> WhenExpr.parse,
         },
         {
           key: "<C-S>",
@@ -177,12 +180,12 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<D-]>",
           command: Commands.Editor.Action.indentLines.id,
-          condition: "visualMode" |> WhenExpr.parse,
+          condition: "isMac && visualMode" |> WhenExpr.parse,
         },
         {
           key: "<D-[>",
           command: Commands.Editor.Action.outdentLines.id,
-          condition: "visualMode" |> WhenExpr.parse,
+          condition: "isMac && visualMode" |> WhenExpr.parse,
         },
         {
           key: "<TAB>",
@@ -212,12 +215,12 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<D-S-M>",
           command: Commands.Workbench.Actions.View.problems.id,
-          condition: WhenExpr.Value(True),
+          condition: isMacCondition,
         },
         {
           key: "<D-W>",
           command: Feature_Layout.Commands.closeActiveEditor.id,
-          condition: WhenExpr.Value(True),
+          condition: isMacCondition,
         },
         {
           key: "<C-PAGEDOWN>",
@@ -227,7 +230,7 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<D-S-]>",
           command: Feature_Layout.Commands.nextEditor.id,
-          condition: WhenExpr.Value(True),
+          condition: isMacCondition,
         },
         {
           key: "<C-PAGEUP>",
@@ -237,12 +240,12 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<D-S-[>",
           command: Feature_Layout.Commands.previousEditor.id,
-          condition: WhenExpr.Value(True),
+          condition: isMacCondition,
         },
         {
           key: "<D-=>",
           command: "workbench.action.zoomIn",
-          condition: WhenExpr.Value(True),
+          condition: isMacCondition,
         },
         {
           key: "<C-=>",
@@ -252,7 +255,7 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<D-->",
           command: "workbench.action.zoomOut",
-          condition: WhenExpr.Value(True),
+          condition: isMacCondition,
         },
         {
           key: "<C-->",
@@ -262,7 +265,7 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<D-0>",
           command: "workbench.action.zoomReset",
-          condition: WhenExpr.Value(True),
+          condition: isMacCondition,
         },
         {
           key: "<C-0>",
