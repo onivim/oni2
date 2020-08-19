@@ -32,6 +32,19 @@ function activate(context) {
             item.hide();
         }),
     )
+
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.tryOpenDocument", () => {
+            vscode.workspace.openTextDocument(vscode.Uri.file("/Users/bryphe/oni2/package.json"))
+            .then((document) => {
+                let text = document.getText();
+                //vscode.window.showInformationMessage(JSON.stringify(text));
+                vscode.window.showInformationMessage("SUCCESS: " + text);
+            }, err => {
+                vscode.window.showErrorMessage("FAILURE: " + err.toString());
+            })
+        }),
+    )
     
     cleanup(
         vscode.commands.registerCommand("developer.oni.showStatusBar", () => {
