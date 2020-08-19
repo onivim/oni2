@@ -17,7 +17,7 @@ let start = maybeKeyBindingsFilePath => {
     "!insertMode || terminalFocus" |> WhenExpr.parse;
 
   let isMacCondition = "isMac" |> WhenExpr.parse;
-  
+
   let default =
     Keybindings.[
       {
@@ -59,7 +59,8 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<D-P>",
         command: Commands.Workbench.Action.quickOpen.id,
-        condition: "isMac && editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        condition:
+          "isMac && editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-C-P>",
@@ -69,7 +70,8 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<D-S-P>",
         command: Commands.Workbench.Action.showCommands.id,
-        condition: "isMac && editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        condition:
+          "isMac && editorTextFocus || terminalFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-V>",
