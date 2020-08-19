@@ -44,6 +44,7 @@ type msg =
   | ItemAdded(Item.t)
   | ItemDisposed(string)
   | DiagnosticsClicked
+  | FileTypeClicked
   | ContextMenuNotificationClearAllClicked
   | ContextMenuNotificationOpenClicked
   | NotificationCountClicked
@@ -52,7 +53,8 @@ type msg =
 
 // TODO: Wire these up to Pane / ContextMenu
 type outmsg =
-  | Nothing;
+  | Nothing
+  | ShowFileTypePicker;
 
 type model = {items: list(Item.t)};
 
@@ -70,6 +72,7 @@ let update = (model, msg) => {
     let newItems = removeItemById(model.items, item.id);
     ({items: [item, ...newItems]}, Nothing);
   | ItemDisposed(id) => ({items: removeItemById(model.items, id)}, Nothing)
+  | FileTypeClicked => (model, ShowFileTypePicker)
   | _ => (model, Nothing)
   };
 };
@@ -171,8 +174,8 @@ let item =
   };
 };
 
-let textItem = (~background, ~font: UiFont.t, ~theme, ~text, ()) =>
-  <item>
+let textItem = (~onClick=?, ~background, ~font: UiFont.t, ~theme, ~text, ()) =>
+  <item ?onClick>
     <Text
       style={Styles.text(
         ~color=Colors.StatusBar.foreground.from(theme),
@@ -421,10 +424,17 @@ module View = {
     let fileType = () => {
       let text =
         activeBuffer
-        |> OptionEx.flatMap(Buffer.getFileType)
-        |> Option.value(~default="plaintext");
+        |> Option.map(Buffer.getFileType)
+        |> Option.map(Oni_Core.Buffer.FileType.toString)
+        |> Option.value(~default=Oni_Core.Buffer.FileType.default);
 
-      <textItem font background theme text />;
+      <textItem
+        font
+        background
+        theme
+        text
+        onClick={() => {dispatch(FileTypeClicked)}}
+      />;
     };
 
     let lineEndings = () => {

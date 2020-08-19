@@ -175,6 +175,7 @@ module Sub = {
       type nonrec params = bufferParams;
 
       type state = {
+        lastScope: string,
         lastVisibleRanges: list(Range.t),
         unsubscribe: unit => unit,
       };
@@ -182,7 +183,7 @@ module Sub = {
       let name = "BufferSubscription";
       let id = params => {
         let bufferId = params.buffer |> Core.Buffer.getId |> string_of_int;
-        bufferId ++ params.scope;
+        bufferId;
       };
 
       let init = (~params, ~dispatch) => {
@@ -202,13 +203,27 @@ module Sub = {
           params.client,
         );
 
-        {lastVisibleRanges: params.visibleRanges, unsubscribe};
+        {
+          lastVisibleRanges: params.visibleRanges,
+          unsubscribe,
+          lastScope: params.scope,
+        };
       };
 
       let update = (~params, ~state, ~dispatch as _) => {
         let currentVisibleRanges = state.lastVisibleRanges;
 
-        if (currentVisibleRanges != params.visibleRanges) {
+        if (state.lastScope != params.scope) {
+          let bufferId = Core.Buffer.getId(params.buffer);
+          Oni_Syntax_Client.stopHighlightingBuffer(~bufferId, params.client);
+          Oni_Syntax_Client.startHighlightingBuffer(
+            ~scope=params.scope,
+            ~bufferId,
+            ~visibleRanges=params.visibleRanges,
+            ~lines=Core.Buffer.getLines(params.buffer),
+            params.client,
+          );
+        } else if (currentVisibleRanges != params.visibleRanges) {
           Oni_Syntax_Client.notifyBufferVisibilityChanged(
             ~bufferId=Core.Buffer.getId(params.buffer),
             ~ranges=params.visibleRanges,
@@ -216,7 +231,11 @@ module Sub = {
           );
         };
 
-        {...state, lastVisibleRanges: params.visibleRanges};
+        {
+          ...state,
+          lastVisibleRanges: params.visibleRanges,
+          lastScope: params.scope,
+        };
       };
 
       let dispose = (~params, ~state) => {
@@ -231,9 +250,8 @@ module Sub = {
     let scope =
       buffer
       |> Core.Buffer.getFileType
-      |> OptionEx.flatMap(
-           Exthost.LanguageInfo.getScopeFromLanguage(languageInfo),
-         )
+      |> Core.Buffer.FileType.toString
+      |> Exthost.LanguageInfo.getScopeFromLanguage(languageInfo)
       |> Option.value(~default=Constants.defaultScope);
 
     BufferSubscription.create({client, buffer, scope, visibleRanges});

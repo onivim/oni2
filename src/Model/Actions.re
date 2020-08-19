@@ -22,7 +22,7 @@ type t =
   | BufferDisableSyntaxHighlighting(int)
   | BufferEnter({
       id: int,
-      fileType: option(string),
+      fileType: Buffer.FileType.t,
       lineEndings: [@opaque] option(Vim.lineEnding),
       filePath: option(string),
       isModified: bool,
@@ -32,10 +32,14 @@ type t =
       // but I want to remove it shortly
       buffer: [@opaque] Buffer.t,
     })
+  | BufferFileTypeChanged({
+      id: int,
+      fileType: Oni_Core.Buffer.FileType.t,
+    })
   | BufferFilenameChanged({
       id: int,
       newFilePath: option(string),
-      newFileType: option(string),
+      newFileType: Buffer.FileType.t,
       version: int,
       isModified: bool,
     })
@@ -254,6 +258,11 @@ and quickmenuVariant =
   | FilesPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
+  | FileTypesPicker({
+      bufferId: int,
+      languages:
+        list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
+    })
   | DocumentSymbols
   | Extension({
       id: int,

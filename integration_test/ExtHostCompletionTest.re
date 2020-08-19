@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -34,12 +33,10 @@ runTestWithInput(
     (state: State.t) => {
       let fileType =
         Selectors.getActiveBuffer(state)
-        |> OptionEx.flatMap(Buffer.getFileType);
+        |> Option.map(Buffer.getFileType)
+        |> Option.map(Buffer.FileType.toString);
 
-      switch (fileType) {
-      | Some("oni-dev") => true
-      | _ => false
-      };
+      fileType == Some("oni-dev");
     },
   );
 
