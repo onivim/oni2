@@ -174,6 +174,18 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | Oni_Model.State.Windowed => Feature_TitleBar.Windowed
     | Oni_Model.State.Fullscreen => Feature_TitleBar.Fullscreen;
 
+  let defaultSurfaceComponents = [
+    <activityBar />,
+    <sideBar />,
+    <EditorView state theme dispatch />,
+  ];
+
+  let surfaceComponents =
+    switch (Feature_SideBar.location(state.sideBar)) {
+    | Feature_SideBar.Left => defaultSurfaceComponents
+    | Feature_SideBar.Right => List.rev(defaultSurfaceComponents)
+    };
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       isFocused={state.windowIsFocused}
@@ -185,9 +197,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
-        <activityBar />
-        <sideBar />
-        <EditorView state theme dispatch />
+        {React.listToElement(surfaceComponents)}
       </View>
       <PaneView theme uiFont editorFont state />
     </View>

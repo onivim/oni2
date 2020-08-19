@@ -21,28 +21,22 @@ module Parts = {
     let make =
         (
           ~editor,
+          ~buffer,
           ~state: State.t,
           ~theme,
           ~isActive,
           ~backgroundColor=?,
           ~foregroundColor=?,
           ~showDiffMarkers=true,
-          ~renderOverlays,
           ~dispatch,
+          ~renderOverlays,
           (),
         ) => {
-      let buffer =
-        Selectors.getBufferForEditor(state.buffers, editor)
-        |> Option.value(~default=Buffer.initial);
-
       let languageConfiguration =
         buffer
         |> Oni_Core.Buffer.getFileType
-        |> OptionEx.flatMap(
-             Exthost.LanguageInfo.getLanguageConfiguration(
-               state.languageInfo,
-             ),
-           )
+        |> Oni_Core.Buffer.FileType.toString
+        |> Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo)
         |> Option.value(~default=LanguageConfiguration.default);
 
       let editorDispatch = msg =>
@@ -63,7 +57,10 @@ module Parts = {
         isActiveSplit=isActive
         editor
         buffer
+        uiFont={state.uiFont}
         languageConfiguration
+        languageInfo={state.languageInfo}
+        grammarRepository={state.grammarRepository}
         onCursorChange
         onEditorSizeChanged
         theme
@@ -105,19 +102,6 @@ module Parts = {
         |> Option.value(~default=Buffer.initial);
       let renderOverlays = (~gutterWidth) =>
         [
-          <Feature_Hover.View
-            colorTheme=theme
-            tokenTheme={state.tokenTheme}
-            model={state.hover}
-            uiFont={state.uiFont}
-            editorFont={state.editorFont}
-            languageInfo={state.languageInfo}
-            grammars={state.grammarRepository}
-            diagnostics={state.diagnostics}
-            editor
-            buffer
-            gutterWidth
-          />,
           <Feature_SignatureHelp.View
             colorTheme=theme
             tokenTheme={state.tokenTheme}
@@ -141,6 +125,7 @@ module Parts = {
 
         <Editor
           editor
+          buffer
           state
           theme
           isActive
@@ -160,7 +145,7 @@ module Parts = {
         |> Option.value(~default=React.empty)
 
       | Editor =>
-        <Editor editor state theme isActive dispatch renderOverlays />
+        <Editor editor buffer state theme isActive dispatch renderOverlays />
 
       | Welcome => <WelcomeView theme uiFont editorFont />
 
@@ -262,11 +247,9 @@ let make =
       let language =
         switch (buffer) {
         | Some(buf) =>
-          switch (Oni_Core.Buffer.getFileType(buf)) {
-          | Some(ft) => ft
-          | None => Exthost.LanguageInfo.defaultLanguage
-          }
-        | None => Exthost.LanguageInfo.defaultLanguage
+          Oni_Core.Buffer.getFileType(buf)
+          |> Oni_Core.Buffer.FileType.toString
+        | None => Oni_Core.Buffer.FileType.default
         };
 
       IconTheme.getIconForFile(state.iconTheme, filePath, language);
@@ -286,17 +269,15 @@ let make =
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 
   <View onFileDropped style={Styles.container(theme)}>
-    <View style={Styles.container(theme)}>
-      <Feature_Layout.View
-        uiFont={state.uiFont}
-        theme
-        isZenMode={state.zenMode}
-        showTabs
-        model={state.layout}
-        config={Feature_Configuration.resolver(state.config)}
-        dispatch={msg => dispatch(Actions.Layout(msg))}>
-        ...(module ContentProvider)
-      </Feature_Layout.View>
-    </View>
+    <Feature_Layout.View
+      uiFont={state.uiFont}
+      theme
+      isZenMode={state.zenMode}
+      showTabs
+      model={state.layout}
+      config={Feature_Configuration.resolver(state.config)}
+      dispatch={msg => dispatch(Actions.Layout(msg))}>
+      ...(module ContentProvider)
+    </Feature_Layout.View>
   </View>;
 };

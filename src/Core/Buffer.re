@@ -8,10 +8,49 @@ module ArrayEx = Utility.ArrayEx;
 module OptionEx = Utility.OptionEx;
 module Path = Utility.Path;
 
+module FileType = {
+  let default = "plaintext";
+
+  [@deriving show]
+  type t =
+    | NotSet
+    | Inferred(string)
+    | Explicit(string);
+
+  let set = (~newFileType: t, current: t) =>
+    switch (newFileType, current) {
+    | (Explicit(newType), _) => Explicit(newType)
+    | (_, Explicit(currentType)) => Explicit(currentType)
+    | (Inferred(newType), _) => Inferred(newType)
+    | (NotSet, _) => NotSet
+    };
+
+  let inferred = fileType => Inferred(fileType);
+  let explicit = fileType => Explicit(fileType);
+  let none = NotSet;
+
+  let toString =
+    fun
+    | NotSet => "default"
+    | Inferred(fileType)
+    | Explicit(fileType) => fileType;
+
+  let ofOption =
+    fun
+    | None => NotSet
+    | Some(fileType) => Inferred(fileType);
+
+  let toOption =
+    fun
+    | NotSet => None
+    | Inferred(fileType)
+    | Explicit(fileType) => Some(fileType);
+};
+
 type t = {
   id: int,
   filePath: option(string),
-  fileType: option(string),
+  fileType: FileType.t,
   lineEndings: option(Vim.lineEnding),
   modified: bool,
   version: int,
@@ -82,7 +121,7 @@ let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
     id,
     version: 0,
     filePath: None,
-    fileType: None,
+    fileType: FileType.NotSet,
     modified: false,
     lines,
     lineEndings: None,
@@ -103,7 +142,7 @@ let ofMetadata = (~font=Font.default, ~id, ~version, ~filePath, ~modified) => {
   filePath,
   lineEndings: None,
   modified,
-  fileType: None,
+  fileType: FileType.NotSet,
   lines: [||],
   originalUri: None,
   originalLines: None,
@@ -120,9 +159,9 @@ let setFilePath = (filePath: option(string), buffer) => {
 };
 
 let getFileType = (buffer: t) => buffer.fileType;
-let setFileType = (fileType: option(string), buffer: t) => {
+let setFileType = (fileType: FileType.t, buffer: t) => {
   ...buffer,
-  fileType,
+  fileType: FileType.set(~newFileType=fileType, buffer.fileType),
 };
 
 let getId = (buffer: t) => buffer.id;

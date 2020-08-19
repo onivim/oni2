@@ -1,4 +1,5 @@
 type t = {
+  gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),

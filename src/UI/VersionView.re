@@ -37,7 +37,7 @@ module VersionView = {
       justifyContent(`Center),
       alignItems(`Center),
       height(18),
-      maxWidth(400),
+      maxWidth(500),
       minWidth(150),
       flexGrow(0),
       borderBottom(~color=Revery.Color.rgba(1.0, 1.0, 1.0, 0.2), ~width=1),

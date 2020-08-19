@@ -1,5 +1,4 @@
 open Oni_Core;
-open Utility;
 
 [@deriving show]
 type msg =
@@ -35,11 +34,11 @@ module Internal = {
   let wordSeparators = " ./\\()\"'-:,.;<>~!@#$%^&*|+=[]{}`~?";
 
   let separatorOnIndexExn = (index, text) => {
-    String.contains(wordSeparators, text.[index]);
+    Zed_utf8.contains(wordSeparators, Zed_utf8.sub(text, index, 1));
   };
 
   let findNextWordBoundary = (text, focus) => {
-    let finalIndex = String.length(text);
+    let finalIndex = Zed_utf8.length(text);
     let index = ref(min(focus + 1, finalIndex));
 
     while (index^ < finalIndex && !separatorOnIndexExn(index^, text)) {
@@ -60,31 +59,21 @@ module Internal = {
     index^;
   };
 
-  let slice = (~start=0, ~stop=?, str) => {
-    let length = String.length(str);
-    let start = IntEx.clamp(~lo=0, ~hi=length, start);
-    let stop =
-      switch (stop) {
-      | Some(index) => IntEx.clamp(~lo=0, ~hi=length, index)
-      | None => length
-      };
+  let removeBefore = (~count=1, index, text) => {
+    let safeCount = min(0, index - count) + count;
 
-    String.sub(str, start, stop - start);
+    (Zed_utf8.remove(text, index - safeCount, safeCount), index - safeCount);
   };
 
-  let removeBefore = (~count=1, index, text) => (
-    slice(text, ~stop=index - count) ++ slice(text, ~start=index),
-    max(0, index - count),
-  );
+  let removeAfter = (~count=1, index, text) => {
+    let safeCount = min(0, Zed_utf8.length(text) - (index + count)) + count;
 
-  let removeAfter = (~count=1, index, text) => (
-    slice(text, ~stop=index) ++ slice(text, ~start=index + count),
-    index,
-  );
+    (Zed_utf8.remove(text, index, safeCount), index);
+  };
 
   let add = (~at as index, insert, text) => (
-    slice(text, ~stop=index) ++ insert ++ slice(text, ~start=index),
-    index + String.length(insert),
+    Zed_utf8.insert(text, index, insert),
+    index + Zed_utf8.length(insert),
   );
 
   let removeCharBefore = (text, selection: Selection.t) => {
@@ -204,7 +193,7 @@ module Internal = {
     | ("<HOME>", _) => (text, Selection.collapsed(~text, 0))
     | ("<END>", _) => (
         text,
-        Selection.collapsed(~text, String.length(text)),
+        Selection.collapsed(~text, Zed_utf8.length(text)),
       )
     | ("<S-LEFT>", _) => (
         text,
@@ -219,17 +208,17 @@ module Internal = {
     | ("<S-HOME>", _) => (text, Selection.extend(~text, ~selection, 0))
     | ("<S-END>", _) => (
         text,
-        Selection.extend(~text, ~selection, String.length(text)),
+        Selection.extend(~text, ~selection, Zed_utf8.length(text)),
       )
     | ("<S-C-LEFT>", _) => extendPrevWord(text, selection)
     | ("<S-C-RIGHT>", _) => extendNextWord(text, selection)
     | ("<C-a>", _) => (
         text,
-        Selection.create(~text, ~anchor=0, ~focus=String.length(text)),
+        Selection.create(~text, ~anchor=0, ~focus=Zed_utf8.length(text)),
       )
-    | (key, true) when String.length(key) == 1 =>
+    | (key, true) when Zed_utf8.length(key) == 1 =>
       addCharacter(key, text, selection)
-    | (key, false) when String.length(key) == 1 =>
+    | (key, false) when Zed_utf8.length(key) == 1 =>
       replacesSelection(key, text, selection)
     | (_, _) => (text, selection)
     };
@@ -263,7 +252,8 @@ let set = (~text, ~cursor, model) => {
 let setPlaceholder = (~placeholder, model) => {...model, placeholder};
 
 let isCursorAtEnd = ({value, selection, _}) => {
-  Selection.isCollapsed(selection) && selection.focus == String.length(value);
+  Selection.isCollapsed(selection)
+  && selection.focus == Zed_utf8.length(value);
 };
 
 let cursorPosition = ({selection, _}) => selection.focus;
@@ -274,7 +264,7 @@ let%test_module "Model" =
   (module
    {
      let testString = "Some interesting. Test. String. Isn't it? Maybe";
-     let testStringLength = String.length(testString);
+     let testStringLength = Zed_utf8.length(testString);
 
      let collapsed = (~text=testString, position) => {
        value: text,
@@ -288,11 +278,13 @@ let%test_module "Model" =
        placeholder: "",
      };
 
+     let uTestString = "😊↪Вім is Cool";
+
      let%test_module "paste" =
        (module
         {
-          let pasteText = "hello from clipboard";
-          let pasteTextLength = pasteText |> String.length;
+          let pasteText = "😊↪Вім hello from clipboard";
+          let pasteTextLength = pasteText |> Zed_utf8.length;
           let%test "empty" = {
             collapsed(~text="", 0)
             |> paste(~text=pasteText)
@@ -402,6 +394,10 @@ let%test_module "Model" =
                  0,
                );
           };
+          let%test "Removes word with unicode characters on the left of cursor" = {
+            collapsed(~text=uTestString, 6)
+            |> handleInput(~key) == collapsed(~text="is Cool", 0);
+          };
 
           let%test "Doesn't remove anything if cursor at the beginning" = {
             collapsed(0) |> handleInput(~key) == collapsed(0);
@@ -425,6 +421,22 @@ let%test_module "Model" =
                       ~text="Som interesting. Test. String. Isn't it? Maybe",
                       3,
                     )
+               });
+          };
+          let%test "Removes emoji character on the left of cursor" = {
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text=uTestString, 1)
+                 |> handleInput(~key)
+                 == collapsed(~text="↪Вім is Cool", 0)
+               });
+          };
+          let%test "Removes cyrilic character on the left of cursor" = {
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text=uTestString, 3)
+                 |> handleInput(~key)
+                 == collapsed(~text="😊↪ім is Cool", 2)
                });
           };
           let%test "Doesn't remove character if cursor at the beginning" = {
@@ -465,6 +477,11 @@ let%test_module "Model" =
                  (),
                );
           };
+          let%test "Removes selection for unicode characters" = {
+            notCollapsed(~text=uTestString, ~anchor=0, ~focus=7, ())
+            |> handleInput(~key)
+            == notCollapsed(~anchor=0, ~focus=0, ~text="s Cool", ());
+          };
         });
      let%test_module "When <DEL> with no selection" =
        (module
@@ -477,6 +494,14 @@ let%test_module "Model" =
                  ~text="Someinteresting. Test. String. Isn't it? Maybe",
                  4,
                );
+          };
+          let%test "Removes emoji character on the right side of cursor" = {
+            collapsed(~text=uTestString, 0)
+            |> handleInput(~key) == collapsed(~text="↪Вім is Cool", 0);
+          };
+          let%test "Removes cyrilic character on the right side of cursor" = {
+            collapsed(~text=uTestString, 2)
+            |> handleInput(~key) == collapsed(~text="😊↪ім is Cool", 2);
           };
           let%test "Doesn't remove character if cursor at the end" = {
             collapsed(testStringLength)
@@ -510,6 +535,11 @@ let%test_module "Model" =
                  ~text="So interesting. Test. String. Isn't it? Maybe",
                  (),
                );
+          };
+          let%test "Removes selection when unicode character" = {
+            notCollapsed(~text=uTestString, ~anchor=0, ~focus=7, ())
+            |> handleInput(~key)
+            == notCollapsed(~anchor=0, ~focus=0, ~text="s Cool", ());
           };
         });
      let%test_module "When <HOME> with no selection" =
@@ -876,6 +906,64 @@ let%test_module "Model" =
                );
           };
         });
+     let%test_module "Emoji letter with no selection" =
+       (module
+        {
+          let key = "😊";
+          let%test "Adds character to the beginning" = {
+            collapsed(0)
+            |> handleInput(~key)
+            == collapsed(
+                 ~text="😊Some interesting. Test. String. Isn't it? Maybe",
+                 1,
+               );
+          };
+          let%test "Adds character to the end" = {
+            collapsed(testStringLength)
+            |> handleInput(~key)
+            == collapsed(
+                 ~text="Some interesting. Test. String. Isn't it? Maybe😊",
+                 testStringLength + 1,
+               );
+          };
+          let%test "Adds character to cursor position" = {
+            collapsed(7)
+            |> handleInput(~key)
+            == collapsed(
+                 ~text="Some in😊teresting. Test. String. Isn't it? Maybe",
+                 8,
+               );
+          };
+        });
+     let%test_module "Cyrilic letter with no selection" =
+       (module
+        {
+          let key = "Ї";
+          let%test "Adds character to the beginning" = {
+            collapsed(0)
+            |> handleInput(~key)
+            == collapsed(
+                 ~text="ЇSome interesting. Test. String. Isn't it? Maybe",
+                 1,
+               );
+          };
+          let%test "Adds character to the end" = {
+            collapsed(testStringLength)
+            |> handleInput(~key)
+            == collapsed(
+                 ~text="Some interesting. Test. String. Isn't it? MaybeЇ",
+                 testStringLength + 1,
+               );
+          };
+          let%test "Adds character to cursor position" = {
+            collapsed(7)
+            |> handleInput(~key)
+            == collapsed(
+                 ~text="Some inЇteresting. Test. String. Isn't it? Maybe",
+                 8,
+               );
+          };
+        });
      let%test_module "ASCII letter with  selection" =
        (module
         {
@@ -896,6 +984,50 @@ let%test_module "Model" =
           let%test "Replaces all string" = {
             notCollapsed(~anchor=testStringLength, ~focus=0, ())
             |> handleInput(~key) == collapsed(~text="F", 1);
+          };
+        });
+     let%test_module "Emoji letter with  selection" =
+       (module
+        {
+          let key = "😊";
+          let%test "Adds character to the beginning" = {
+            notCollapsed(~anchor=0, ~focus=1, ())
+            |> handleInput(~key)
+            == collapsed(
+                 ~text="😊ome interesting. Test. String. Isn't it? Maybe",
+                 1,
+               );
+          };
+          let%test "Replaces many characters" = {
+            notCollapsed(~anchor=16, ~focus=4, ())
+            |> handleInput(~key)
+            == collapsed(~text="Some😊. Test. String. Isn't it? Maybe", 5);
+          };
+          let%test "Replaces all string" = {
+            notCollapsed(~anchor=testStringLength, ~focus=0, ())
+            |> handleInput(~key) == collapsed(~text="😊", 1);
+          };
+        });
+     let%test_module "Cyrilic letter with  selection" =
+       (module
+        {
+          let key = "Ї";
+          let%test "Adds character to the beginning" = {
+            notCollapsed(~anchor=0, ~focus=1, ())
+            |> handleInput(~key)
+            == collapsed(
+                 ~text="Їome interesting. Test. String. Isn't it? Maybe",
+                 1,
+               );
+          };
+          let%test "Replaces many characters" = {
+            notCollapsed(~anchor=16, ~focus=4, ())
+            |> handleInput(~key)
+            == collapsed(~text="SomeЇ. Test. String. Isn't it? Maybe", 5);
+          };
+          let%test "Replaces all string" = {
+            notCollapsed(~anchor=testStringLength, ~focus=0, ())
+            |> handleInput(~key) == collapsed(~text="Ї", 1);
           };
         });
      let%test_module "When <C-a>" =

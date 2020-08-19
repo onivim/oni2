@@ -4,13 +4,13 @@
     (libraries 
         str
         bigarray
-        editor-input
         reason-sdl2
         Revery.zed
         lwt
         lwt.unix
         Oni2.core
         Oni2.core.whenExpr
+        Oni2.editor-input
         Rench
         Revery
     )

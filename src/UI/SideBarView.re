@@ -107,8 +107,8 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
   let separator =
     Feature_SideBar.isOpen(state.sideBar) && width > 4
       ? <separator /> : React.empty;
-  <View style={Styles.sidebar(~theme, ~transition)}>
-    separator
+
+  let content =
     <View style={Styles.contents(~width)}>
       <View style={Styles.heading(theme)}>
         <View style=Styles.titleContainer>
@@ -122,7 +122,9 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
         </View>
       </View>
       elem
-    </View>
+    </View>;
+
+  let resizer =
     <View style=Styles.resizer>
       <ResizeHandle.Vertical
         onDrag={delta =>
@@ -136,6 +138,17 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
           dispatch(Actions.SideBar(Feature_SideBar.ResizeCommitted))
         }
       />
-    </View>
+    </View>;
+
+  let defaultOrder = [content, resizer];
+  let items =
+    switch (Feature_SideBar.location(sideBar)) {
+    | Feature_SideBar.Left => defaultOrder
+    | Feature_SideBar.Right => List.rev(defaultOrder)
+    };
+
+  <View style={Styles.sidebar(~theme, ~transition)}>
+    separator
+    {React.listToElement(items)}
   </View>;
 };

@@ -31,9 +31,8 @@ module Internal = {
   let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
     buffer
     |> Oni_Core.Buffer.getFileType
-    |> Utility.OptionEx.flatMap(fileType =>
-         Exthost.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
-       )
+    |> Oni_Core.Buffer.FileType.toString
+    |> Exthost.LanguageInfo.getScopeFromLanguage(languageInfo)
     |> Option.value(~default="source.plaintext");
   };
 
@@ -59,11 +58,19 @@ module Internal = {
         | Nothing => Effect.none
         | MouseHovered(location) =>
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
-            dispatch(Hover(Feature_Hover.MouseHovered(location)))
+            dispatch(
+              LanguageSupport(
+                Feature_LanguageSupport.Msg.Hover.mouseHovered(location),
+              ),
+            )
           })
         | MouseMoved(location) =>
           Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
-            dispatch(Hover(Feature_Hover.MouseMoved(location)))
+            dispatch(
+              LanguageSupport(
+                Feature_LanguageSupport.Msg.Hover.mouseMoved(location),
+              ),
+            )
           })
         };
 
@@ -203,7 +210,8 @@ let update =
 
     let languageConfiguration =
       maybeBuffer
-      |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
+      |> Option.map(Oni_Core.Buffer.getFileType)
+      |> Option.map(Oni_Core.Buffer.FileType.toString)
       |> OptionEx.flatMap(
            Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
          )
@@ -215,6 +223,7 @@ let update =
         ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=Some(selection),
+        ~editorId,
         ~cursorLocation,
         ~client=extHostClient,
         msg,
@@ -362,6 +371,30 @@ let update =
     let eff =
       switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
       | Nothing => Effect.none
+      | Feature_StatusBar.ShowFileTypePicker =>
+        let bufferId =
+          state.layout
+          |> Feature_Layout.activeEditor
+          |> Feature_Editor.Editor.getBufferId;
+
+        let languages =
+          state.languageInfo
+          |> Exthost.LanguageInfo.languages
+          |> List.map(language =>
+               (
+                 language,
+                 Oni_Core.IconTheme.getIconForLanguage(
+                   state.iconTheme,
+                   language,
+                 ),
+               )
+             );
+        Isolinear.Effect.createWithDispatch(
+          ~name="statusBar.fileTypePicker", dispatch => {
+          dispatch(
+            Actions.QuickmenuShow(FileTypesPicker({bufferId, languages})),
+          )
+        });
       };
 
     (state', eff);
@@ -747,25 +780,6 @@ let update =
       state,
       Internal.notificationEffect(~kind=Error, message),
     )
-
-  | Hover(msg) =>
-    let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
-    let editor = Feature_Layout.activeEditor(state.layout);
-    let (model', eff) =
-      Feature_Hover.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.hover,
-        msg,
-      );
-    let effect =
-      switch (eff) {
-      | Feature_Hover.Nothing => Effect.none
-      | Feature_Hover.Effect(eff) =>
-        Effect.map(msg => Actions.Hover(msg), eff)
-      };
-    ({...state, hover: model'}, effect);
 
   | SignatureHelp(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);

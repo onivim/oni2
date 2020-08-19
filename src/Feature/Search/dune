@@ -2,7 +2,7 @@
     (name Feature_Search)
     (public_name Oni2.feature.search)
     (libraries 
-      editor-core-types
+      Oni2.editor-core-types
       Oni2.core
       Oni2.components
       Oni2.service.font

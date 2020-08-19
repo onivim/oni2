@@ -126,6 +126,9 @@ let reduce = (state: t, action: Actions.t) => {
   | BufferLineEndingsChanged({id, lineEndings}) =>
     IntMap.update(id, setLineEndings(lineEndings), state)
 
+  | BufferFileTypeChanged({id, fileType}) =>
+    IntMap.update(id, Option.map(Buffer.setFileType(fileType)), state)
+
   | BufferUpdate({update, newBuffer, _}) =>
     IntMap.add(update.id, newBuffer, state)
 
