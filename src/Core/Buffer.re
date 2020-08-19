@@ -172,15 +172,6 @@ let getLine = (line: int, buffer: t) => {
 
 let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
 
-let getOriginalUri = buffer => buffer.originalUri;
-let setOriginalUri = (uri, buffer) => {...buffer, originalUri: Some(uri)};
-
-let getOriginalLines = buffer => buffer.originalLines;
-let setOriginalLines = (lines, buffer) => {
-  ...buffer,
-  originalLines: Some(lines),
-};
-
 let getVersion = (buffer: t) => buffer.version;
 let setVersion = (version: int, buffer: t) => {...buffer, version};
 

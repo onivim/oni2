@@ -198,22 +198,17 @@ type t =
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
   | WriteFailure
-  | NewTextContentProvider({
-      handle: int,
-      scheme: string,
-    })
-  | LostTextContentProvider({handle: int})
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
-  | GotOriginalUri({
-      bufferId: int,
-      uri: Uri.t,
-    })
-  | GotOriginalContent({
-      bufferId: int,
-      lines: [@opaque] array(string),
-    })
+  //  | GotOriginalUri({
+  //      bufferId: int,
+  //      uri: Uri.t,
+  //    })
+  //  | GotOriginalContent({
+  //      bufferId: int,
+  //      lines: [@opaque] array(string),
+  //    })
   | NewDecorationProvider({
       handle: int,
       label: string,

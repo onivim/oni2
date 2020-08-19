@@ -32,6 +32,7 @@ let editor = (editor, buffer, state: State.t) => {
     mode={Feature_Vim.mode(state.vim)}
     theme={Feature_Theme.colors(state.colorTheme)}
     windowIsFocused=true
+    scm=Feature_SCM.initial
     config={configResolver(Config.Settings.empty)}
     languageInfo=Exthost.LanguageInfo.initial
     grammarRepository=Oni_Syntax.GrammarRepository.empty

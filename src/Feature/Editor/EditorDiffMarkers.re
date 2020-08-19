@@ -12,9 +12,8 @@ and marker =
   | DeletedAfter
   | Unmodified;
 
-let generate = buffer =>
-  buffer
-  |> Buffer.getOriginalLines
+let generate = (~scm, buffer) =>
+  Feature_SCM.getOriginalLines(buffer, scm)
   |> Option.map(originalLines => {
        // `adds` is an array of bools the length of the current lines array where `true` indicates the line is added
        // `deletes` is an array of bools the length of the originall lines array where `true` indicates the line has been deleted

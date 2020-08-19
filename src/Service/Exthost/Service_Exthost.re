@@ -52,24 +52,26 @@ module Effects = {
       );
   };
   module SCM = {
-    let provideOriginalResource = (~handles, extHostClient, path, toMsg) =>
-      Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
-        // Try our luck with every provider. If several returns Last-Writer-Wins
-        // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
-        handles
-        |> List.iter(handle => {
-             let promise =
-               Exthost.Request.SCM.provideOriginalResource(
-                 ~handle,
-                 ~uri=Uri.fromPath(path),
-                 extHostClient,
-               );
+    let getOriginalContent = (~handle, ~uri, ~toMsg, client) =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="scm.getOriginalSourceLines", dispatch => {
+        let promise =
+          Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
+            ~handle,
+            ~uri,
+            client,
+          );
 
-             Lwt.on_success(
-               promise,
-               Option.iter(uri => dispatch(toMsg(uri))),
-             );
-           })
+        Lwt.on_success(promise, maybeContent => {
+          switch (maybeContent) {
+          | None => ()
+          | Some(content) =>
+            let lines =
+              content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
+
+            dispatch(toMsg(lines));
+          }
+        });
       });
 
     let onInputBoxValueChange = (~handle, ~value, extHostClient) =>
@@ -263,6 +265,52 @@ module Latch = {
 // SUBSCRIPTIONS
 
 module Sub = {
+  module SCM = {
+    type originalUriParams = {
+      filePath: string,
+      handle: int,
+      client: Exthost.Client.t,
+    };
+
+    module OriginalUriSubscription =
+      Isolinear.Sub.Make({
+        type nonrec msg = Uri.t;
+        type nonrec params = originalUriParams;
+        type state = unit;
+
+        let name = "Service_Exthost.SCM.OriginalUriSubscription";
+        let id = params => string_of_int(params.handle) ++ params.filePath;
+
+        let init = (~params, ~dispatch) => {
+          let promise =
+            Exthost.Request.SCM.provideOriginalResource(
+              ~handle=params.handle,
+              ~uri=Uri.fromPath(params.filePath),
+              params.client,
+            );
+
+          Lwt.on_success(
+            promise,
+            fun
+            | None => ()
+            | Some(uri) => dispatch(uri),
+          );
+
+          ();
+        };
+
+        let update = (~params as _, ~state, ~dispatch as _) => {
+          state;
+        };
+
+        let dispose = (~params as _, ~state as _) => ();
+      });
+
+    let originalUri = (~handle, ~filePath, ~toMsg, client) => {
+      OriginalUriSubscription.create({filePath, handle, client})
+      |> Isolinear.Sub.map(uri => toMsg(uri));
+    };
+  };
   type bufferParams = {
     client: Exthost.Client.t,
     buffer: Oni_Core.Buffer.t,

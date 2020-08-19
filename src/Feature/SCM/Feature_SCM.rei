@@ -53,14 +53,6 @@ let initial: model;
 
 let statusBarCommands: model => list(Exthost.Command.t);
 
-// EFFECTS
-
-module Effects: {
-  let getOriginalUri:
-    (Exthost.Client.t, model, string, Uri.t => 'msg) =>
-    Isolinear.Effect.t('msg);
-};
-
 // UPDATE
 
 [@deriving show]
@@ -69,6 +61,7 @@ type msg;
 module Msg: {
   let keyPressed: string => msg;
   let paste: string => msg;
+  let documentContentProvider: Exthost.Msg.DocumentContentProvider.msg => msg;
 };
 
 type outmsg =
@@ -78,8 +71,17 @@ type outmsg =
 
 let update: (Exthost.Client.t, model, msg) => (model, outmsg);
 
+let getOriginalLines: (Oni_Core.Buffer.t, model) => option(array(string));
+let setOriginalLines: (Oni_Core.Buffer.t, array(string), model) => model;
+
 let handleExtensionMessage:
   (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;
+
+// SUBSCRIPTION
+
+let sub:
+  (~activeBuffer: Oni_Core.Buffer.t, ~client: Exthost.Client.t, model) =>
+  Isolinear.Sub.t(msg);
 
 // VIEW
 

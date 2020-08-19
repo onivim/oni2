@@ -129,14 +129,15 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         onDiagnosticsChangeMany(owner, entries);
         Lwt.return(Reply.okEmpty);
 
-      | DocumentContentProvider(
-          RegisterTextContentProvider({handle, scheme}),
-        ) =>
-        dispatch(NewTextContentProvider({handle, scheme}));
-        Lwt.return(Reply.okEmpty);
+      | DocumentContentProvider(documentContentProviderMsg) =>
+        dispatch(
+          Actions.SCM(
+            Feature_SCM.Msg.documentContentProvider(
+              documentContentProviderMsg,
+            ),
+          ),
+        );
 
-      | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
-        dispatch(LostTextContentProvider({handle: handle}));
         Lwt.return(Reply.okEmpty);
 
       | Decorations(RegisterDecorationProvider({handle, label})) =>
