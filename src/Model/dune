@@ -25,6 +25,7 @@
         Oni2.feature.clipboard
         Oni2.feature.configuration
         Oni2.feature.contextMenu
+        Oni2.feature.exthost
         Oni2.feature.extensions
         Oni2.feature.messages
         Oni2.feature.theme

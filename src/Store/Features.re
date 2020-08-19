@@ -133,6 +133,18 @@ let update =
 
     ({...state, clipboard: model}, eff);
 
+  | Exthost(msg) =>
+    let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
+
+    let state = {...state, exthost: model};
+    let eff =
+      switch (outMsg) {
+      | Feature_Exthost.Nothing => Isolinear.Effect.none
+      | Feature_Exthost.Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Exthost(msg))
+      };
+    (state, eff);
+
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);

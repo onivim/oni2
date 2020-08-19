@@ -22,6 +22,7 @@ type t =
   | Buffers(Feature_Buffers.msg)
   | BufferRenderer(BufferRenderer.action)
   | Clipboard(Feature_Clipboard.msg)
+  | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)

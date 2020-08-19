@@ -3,6 +3,8 @@ open Oni_Core.Utility;
 open Feature_Editor;
 open Exthost;
 
+module Log = (val Log.withNamespace("Oni2.Feature.Exthost"));
+
 module Internal = {
   let getVscodeEditorId = editorId =>
     "onivim.editor:" ++ string_of_int(editorId);
@@ -42,9 +44,105 @@ module Internal = {
     };
 };
 
-let subscription = (~buffers, ~editors, ~activeEditorId, ~client) => {
+[@deriving show]
+type msg =
+  | Noop
+  | DocumentAdded({uri: Oni_Core.Uri.t})
+  | ExthostDocuments({
+      msg: Exthost.Msg.Documents.msg,
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+    });
+
+module Msg = {
+  let document = (msg, resolver) => {
+    ExthostDocuments({msg, resolver});
+  };
+};
+
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+type model = {
+  pendingResolutions: StringMap.t(list(Lwt.u(Exthost.Reply.t))),
+};
+
+let initial = {pendingResolutions: StringMap.empty};
+
+module Effects = {
+  let resolve = resolver => {
+    Isolinear.Effect.create(~name="resolve", () => {
+      Lwt.wakeup(resolver, Reply.okEmpty)
+    });
+  };
+};
+
+let update = (msg: msg, model) =>
+  switch (msg) {
+  | Noop => (model, Nothing)
+
+  | DocumentAdded({uri}) =>
+    let filePath = Oni_Core.Uri.toFileSystemPath(uri);
+    let eff = Effect(Isolinear.Effect.none);
+    // TODO: Fix up
+    //  let eff = switch(StringMap.find_opt(filePath, model.pendingResolutions))
+    //  {
+    //    | None => Nothing
+    //    | Some(resolvers) => Effect(resolvers
+    //    |> List.map(Effects.resolve)
+    //    |> Isolinear.Effect.batch);
+    //  }
+
+    let pendingResolutions =
+      StringMap.remove(filePath, model.pendingResolutions);
+
+    ({pendingResolutions: pendingResolutions}, eff);
+
+  | ExthostDocuments({msg, resolver}) =>
+    switch (msg) {
+    | Exthost.Msg.Documents.TryOpenDocument({uri}) =>
+      let filePath = Oni_Core.Uri.toFileSystemPath(uri);
+      // TODO: Hook this up end-to-end
+      //      let eff = Service_Vim.Effects.loadBuffer(
+      //        ~filePath,
+      //        (~bufferId)=> Noop
+      //      );
+      let eff = Effect(Effects.resolve(resolver));
+      let pendingResolutions =
+        model.pendingResolutions
+        |> StringMap.update(
+             filePath,
+             fun
+             | None => Some([resolver])
+             | Some(cur) => Some([resolver, ...cur]),
+           );
+      ({pendingResolutions: pendingResolutions}, eff);
+
+    | Exthost.Msg.Documents.TrySaveDocument(_) =>
+      Log.warn("TrySaveDocument is not yet implemented.");
+      (model, Effect(Effects.resolve(resolver)));
+
+    | Exthost.Msg.Documents.TryCreateDocument(_) =>
+      Log.warn("TryCreateDocument is not yet implemented.");
+      (model, Effect(Effects.resolve(resolver)));
+    }
+  };
+
+let subscription =
+    (
+      ~buffers: Feature_Buffers.model,
+      ~editors,
+      ~activeEditorId,
+      ~client,
+      model,
+    ) => {
+  let visibleBuffers: list(Oni_Core.Buffer.t) =
+    editors
+    |> List.map(Feature_Editor.Editor.getBufferId)
+    |> List.filter_map(bufferId => Feature_Buffers.get(bufferId, buffers));
+
   let bufferMap =
-    buffers
+    visibleBuffers
     |> List.fold_left(
          (acc, curr) => {
            let id = Buffer.getId(curr);
@@ -53,9 +151,46 @@ let subscription = (~buffers, ~editors, ~activeEditorId, ~client) => {
          IntMap.empty,
        );
 
-  let bufferSubscriptions =
+  let tryOpenedBuffers: list(Oni_Core.Buffer.t) =
     buffers
-    |> List.map(buffer => {Service_Exthost.Sub.buffer(~buffer, ~client)})
+    |> Feature_Buffers.filter(buf =>
+         StringMap.find_opt(
+           Oni_Core.Buffer.getUri(buf) |> Oni_Core.Uri.toFileSystemPath,
+           model.pendingResolutions,
+         )
+         |> Option.is_some
+       )
+    |> List.filter(buffer =>
+         IntMap.find_opt(Oni_Core.Buffer.getId(buffer), bufferMap)
+         |> Option.is_none
+       );
+
+  let bufferSubscriptions =
+    visibleBuffers
+    |> List.map(buffer => {
+         Service_Exthost.Sub.buffer(
+           ~buffer,
+           ~client,
+           ~toMsg=
+             fun
+             | `Added =>
+               DocumentAdded({uri: buffer |> Oni_Core.Buffer.getUri}),
+         )
+       })
+    |> Isolinear.Sub.batch;
+
+  let tryOpenedBufferSubscriptions =
+    tryOpenedBuffers
+    |> List.map(buffer => {
+         Service_Exthost.Sub.buffer(
+           ~buffer,
+           ~client,
+           ~toMsg=
+             fun
+             | `Added =>
+               DocumentAdded({uri: buffer |> Oni_Core.Buffer.getUri}),
+         )
+       })
     |> Isolinear.Sub.batch;
 
   let editors =
@@ -66,7 +201,8 @@ let subscription = (~buffers, ~editors, ~activeEditorId, ~client) => {
   let editorSubscriptions =
     editors
     |> List.map(editor => {Service_Exthost.Sub.editor(~editor, ~client)})
-    |> Isolinear.Sub.batch;
+    |> Isolinear.Sub.batch
+    |> Isolinear.Sub.map(() => Noop);
 
   let activeEditorSubscription =
     switch (activeEditorId) {
@@ -76,10 +212,12 @@ let subscription = (~buffers, ~editors, ~activeEditorId, ~client) => {
         ~activeEditorId=Internal.getVscodeEditorId(editorId),
         ~client,
       )
+      |> Isolinear.Sub.map(() => Noop)
     };
 
   Isolinear.Sub.batch([
     bufferSubscriptions,
+    tryOpenedBufferSubscriptions,
     editorSubscriptions,
     activeEditorSubscription,
   ]);

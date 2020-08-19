@@ -15,7 +15,6 @@ let empty = IntMap.empty;
 type mapFunction = Buffer.t => Buffer.t;
 
 let map = IntMap.map;
-let update = IntMap.update;
 let remove = IntMap.remove;
 
 let get = (id, model) => IntMap.find_opt(id, model);
@@ -30,6 +29,10 @@ let anyModified = (buffers: model) => {
 
 let add = (buffer, model) => {
   model |> IntMap.add(Buffer.getId(buffer), buffer);
+};
+
+let filter = (f, model) => {
+  model |> IntMap.bindings |> List.map(snd) |> List.filter(f);
 };
 
 let isModifiedByPath = (buffers: model, filePath: string) => {

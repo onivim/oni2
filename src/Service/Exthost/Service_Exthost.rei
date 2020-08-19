@@ -96,8 +96,12 @@ module Effects: {
 
 module Sub: {
   let buffer:
-    (~buffer: Oni_Core.Buffer.t, ~client: Exthost.Client.t) =>
-    Isolinear.Sub.t(unit);
+    (
+      ~buffer: Oni_Core.Buffer.t,
+      ~client: Exthost.Client.t,
+      ~toMsg: [ | `Added] => 'msg
+    ) =>
+    Isolinear.Sub.t('msg);
 
   let editor:
     (~editor: Exthost.TextEditor.AddData.t, ~client: Exthost.Client.t) =>

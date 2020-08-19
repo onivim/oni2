@@ -302,12 +302,13 @@ let start =
 
     let extHostSubscription =
       Feature_Exthost.subscription(
-        ~buffers=visibleBuffers,
+        ~buffers=state.buffers,
         ~editors=visibleEditors,
         ~activeEditorId=Some(activeEditorId),
         ~client=extHostClient,
+        state.exthost,
       )
-      |> Isolinear.Sub.map(() => Model.Actions.Noop);
+      |> Isolinear.Sub.map(msg => Model.Actions.Exthost(msg));
 
     let fileExplorerActiveFileSub =
       Model.Sub.activeFile(

@@ -41,6 +41,7 @@ type t = {
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
   extensions: Feature_Extensions.model,
+  exthost: Feature_Exthost.model,
   iconTheme: IconTheme.t,
   isQuitting: bool,
   keyBindings: Keybindings.t,
@@ -133,6 +134,7 @@ let initial =
         ~workspacePersistence=extensionWorkspacePersistence,
         ~extensionsFolder,
       ),
+    exthost: Feature_Exthost.initial,
     languageFeatures: LanguageFeatures.empty,
     languageSupport: Feature_LanguageSupport.initial,
     lifecycle: Lifecycle.create(),

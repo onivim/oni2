@@ -274,7 +274,7 @@ module Sub = {
 
   module BufferSubscription =
     Isolinear.Sub.Make({
-      type nonrec msg = unit;
+      type nonrec msg = [ | `Added];
       type nonrec params = bufferParams;
       type state = {didAdd: bool};
 
@@ -283,7 +283,7 @@ module Sub = {
         params.buffer |> Oni_Core.Buffer.getId |> string_of_int;
       };
 
-      let init = (~params, ~dispatch as _) => {
+      let init = (~params, ~dispatch) => {
         let bufferId = Oni_Core.Buffer.getId(params.buffer);
 
         Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
@@ -308,6 +308,7 @@ module Sub = {
             ~delta=addedDelta,
             params.client,
           );
+          dispatch(`Added);
           {didAdd: true};
         | None => {didAdd: false}
         };
@@ -336,8 +337,8 @@ module Sub = {
         };
     });
 
-  let buffer = (~buffer, ~client) =>
-    BufferSubscription.create({buffer, client});
+  let buffer = (~buffer, ~client, ~toMsg) =>
+    BufferSubscription.create({buffer, client}) |> Isolinear.Sub.map(toMsg);
 
   type editorParams = {
     client: Exthost.Client.t,
