@@ -2,6 +2,8 @@
  * GrammarRepository.re
  */
 
+open Oni_Core.Utility;
+
 type t = {
   scopeToGrammar: Hashtbl.t(string, Textmate.Grammar.t),
   grammarInfo: Exthost.GrammarInfo.t,
@@ -26,8 +28,8 @@ let getGrammar = (~scope: string, gr: t) => {
     | Some(grammarPath) =>
       gr.log("Loading grammar from: " ++ grammarPath);
 
-      switch (Yojson.Safe.from_file(grammarPath)) {
-      | json =>
+      switch (JsonEx.from_file(grammarPath)) {
+      | Ok(json) =>
         switch (Textmate.Grammar.Json.of_yojson(json)) {
         | Ok(grammar) =>
           gr.log("JSON Grammar loaded successfully");
@@ -39,7 +41,8 @@ let getGrammar = (~scope: string, gr: t) => {
           None;
         }
 
-      | exception (Yojson.Json_error(_)) =>
+      | Error(msg) =>
+        gr.log("JSON Grammar failed to load, falling back to XML: " ++ msg);
         switch (Textmate.Grammar.Xml.of_file(grammarPath)) {
         | Ok(grammar) =>
           gr.log("XML Grammar loaded successfully");
@@ -49,7 +52,7 @@ let getGrammar = (~scope: string, gr: t) => {
         | Error(e) =>
           gr.log("Grammar loading failed with: " ++ e);
           None;
-        }
+        };
       };
 
     | None => None
