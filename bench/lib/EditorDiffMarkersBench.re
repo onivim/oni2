@@ -29,7 +29,6 @@ module Data = {
     |> Feature_SCM.setOriginalLines(buffer_10k_randomchanges, lines_10k_b);
 
   let buffer_10k_onelineoriginal = Buffer.ofLines(lines_10k_a);
-  //    |> Buffer.setOriginalLines([|randomString()|]);
 
   let scm_10k_onelineoriginal =
     Feature_SCM.initial
@@ -39,7 +38,6 @@ module Data = {
        );
 
   let buffer_10k_onelinemodified = Buffer.ofLines([|randomString()|]);
-  //    |> Buffer.setOriginalLines(lines_10k_a);
 
   let scm_10k_onelinemodified =
     Feature_SCM.initial
