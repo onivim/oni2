@@ -1,30 +1,18 @@
+open Oni_Core.Utility;
 open TestFramework;
 
 module Buffers = Oni_Model.Buffers;
 module Buffer = Oni_Core.Buffer;
 
-let getFilePathOrFail = (v: option(Buffer.t)) => {
-  let failedMsg = "failed - no buffer was specified";
-  switch (v) {
-  | Some(v) =>
-    switch (Buffer.getFilePath(v)) {
-    | Some(path) => path
-    | None => failedMsg
-    }
-  | None => failedMsg
-  };
+let getFilePathOrFail = (maybeBuffer: option(Buffer.t)) => {
+  maybeBuffer |> OptionEx.flatMap(Buffer.getFilePath) |> Option.get;
 };
 
-let getFileTypeOrFail = (v: option(Buffer.t)) => {
-  let failedMsg = "failed - no buffer was specified";
-  switch (v) {
-  | Some(v) =>
-    switch (Buffer.getFileType(v)) {
-    | Some(t) => t
-    | None => failedMsg
-    }
-  | None => failedMsg
-  };
+let getFileTypeOrFail = (maybeBuffer: option(Buffer.t)) => {
+  maybeBuffer
+  |> Option.map(Buffer.getFileType)
+  |> Option.map(Buffer.FileType.toString)
+  |> Option.get;
 };
 
 let emptyBuffer = Oni_Core.Buffer.ofLines([||]);
@@ -39,7 +27,7 @@ describe("Buffer List Tests", ({test, _}) => {
         BufferEnter({
           id: 0,
           buffer: emptyBuffer,
-          fileType: None,
+          fileType: Buffer.FileType.none,
           lineEndings: None,
           isModified: false,
           version: 0,
@@ -72,7 +60,7 @@ describe("Buffer List Tests", ({test, _}) => {
           filePath: Some("/test1.re"),
           isModified: false,
           version: 0,
-          fileType: None,
+          fileType: Buffer.FileType.none,
           lineEndings: None,
           font: Oni_Core.Font.default,
         }),
@@ -86,7 +74,7 @@ describe("Buffer List Tests", ({test, _}) => {
           filePath: Some("/test2.re"),
           isModified: false,
           version: 0,
-          fileType: None,
+          fileType: Buffer.FileType.none,
           lineEndings: None,
           font: Oni_Core.Font.default,
         }),
@@ -109,7 +97,7 @@ describe("Buffer List Tests", ({test, _}) => {
           filePath: Some("/myfile.js"),
           isModified: false,
           version: 0,
-          fileType: None,
+          fileType: Buffer.FileType.none,
           lineEndings: None,
           font: Oni_Core.Font.default,
         }),
@@ -130,7 +118,7 @@ describe("Buffer List Tests", ({test, _}) => {
           filePath: Some("/myfile.js"),
           isModified: false,
           version: 0,
-          fileType: Some("reason"),
+          fileType: Buffer.FileType.inferred("reason"),
           lineEndings: None,
           font: Oni_Core.Font.default,
         }),

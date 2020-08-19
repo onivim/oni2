@@ -6,6 +6,22 @@
 
 type t;
 
+module FileType: {
+  [@deriving show]
+  type t;
+
+  let default: string;
+
+  let none: t;
+  let inferred: string => t;
+  let explicit: string => t;
+
+  let ofOption: option(string) => t;
+
+  let toString: t => string;
+  let toOption: t => option(string);
+};
+
 let initial: t;
 
 let show: t => string;
@@ -35,8 +51,8 @@ let getShortFriendlyName: t => option(string);
 let getMediumFriendlyName: (~workingDirectory: string=?, t) => option(string);
 let getLongFriendlyName: t => option(string);
 
-let getFileType: t => option(string);
-let setFileType: (option(string), t) => t;
+let getFileType: t => FileType.t;
+let setFileType: (FileType.t, t) => t;
 let getLine: (int, t) => BufferLine.t;
 let getLines: t => array(string);
 let getNumberOfLines: t => int;

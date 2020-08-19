@@ -207,8 +207,7 @@ module Internal = {
     let lines = Buffer.getLines(buffer) |> Array.to_list;
     let version = Buffer.getVersion(buffer);
     let maybeFilePath = Buffer.getFilePath(buffer);
-    let modeId =
-      Buffer.getFileType(buffer) |> Option.value(~default="plaintext");
+    let modeId = Buffer.getFileType(buffer) |> Buffer.FileType.toString;
 
     // The extension host does not like a completely empty buffer,
     // so at least send a single line with an empty string.
@@ -232,18 +231,15 @@ module Internal = {
        });
   };
 
-  let activateFileType = (~client, maybeFileType: option(string)) =>
-    maybeFileType
-    |> Option.iter(ft =>
-         if (!Hashtbl.mem(MutableState.activatedFileTypes, ft)) {
-           // If no entry, we haven't activated yet
-           Exthost.Request.ExtensionService.activateByEvent(
-             ~event="onLanguage:" ++ ft,
-             client,
-           );
-           Hashtbl.add(MutableState.activatedFileTypes, ft, true);
-         }
-       );
+  let activateFileType = (~client, fileType: string) =>
+    if (!Hashtbl.mem(MutableState.activatedFileTypes, fileType)) {
+      // If no entry, we haven't activated yet
+      Exthost.Request.ExtensionService.activateByEvent(
+        ~event="onLanguage:" ++ fileType,
+        client,
+      );
+      Hashtbl.add(MutableState.activatedFileTypes, fileType, true);
+    };
 };
 
 // This is a temporary helper to avoid dispatching after a subscription is disposed
@@ -276,7 +272,10 @@ module Sub = {
     Isolinear.Sub.Make({
       type nonrec msg = unit;
       type nonrec params = bufferParams;
-      type state = {didAdd: bool};
+      type state = {
+        didAdd: bool,
+        lastFileType: string,
+      };
 
       let name = "Service_Exthost.BufferSubscription";
       let id = params => {
@@ -286,11 +285,14 @@ module Sub = {
       let init = (~params, ~dispatch as _) => {
         let bufferId = Oni_Core.Buffer.getId(params.buffer);
 
+        let fileType =
+          params.buffer
+          |> Oni_Core.Buffer.getFileType
+          |> Oni_Core.Buffer.FileType.toString;
+
         Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
 
-        params.buffer
-        |> Oni_Core.Buffer.getFileType
-        |> Internal.activateFileType(~client=params.client);
+        fileType |> Internal.activateFileType(~client=params.client);
 
         let maybeMetadata =
           Internal.bufferMetadataToModelAddedDelta(params.buffer);
@@ -308,13 +310,38 @@ module Sub = {
             ~delta=addedDelta,
             params.client,
           );
-          {didAdd: true};
-        | None => {didAdd: false}
+          {lastFileType: fileType, didAdd: true};
+        | None => {lastFileType: fileType, didAdd: false}
         };
       };
 
-      let update = (~params as _, ~state, ~dispatch as _) => {
-        state;
+      let update = (~params, ~state, ~dispatch as _) => {
+        let newFileType =
+          Oni_Core.Buffer.getFileType(params.buffer)
+          |> Oni_Core.Buffer.FileType.toString;
+
+        if (state.lastFileType != newFileType && state.didAdd) {
+          // Ensure relevant extensions are activated
+          newFileType |> Internal.activateFileType(~client=params.client);
+
+          Log.infof(m =>
+            m(
+              "Updated mode for extension host - old: %s new: %s",
+              state.lastFileType,
+              newFileType,
+            )
+          );
+          let () =
+            Exthost.Request.Documents.acceptModelModeChanged(
+              ~uri=Oni_Core.Buffer.getUri(params.buffer),
+              ~oldModeId=state.lastFileType,
+              ~newModeId=newFileType,
+              params.client,
+            );
+          ();
+        };
+
+        {...state, lastFileType: newFileType};
       };
 
       let dispose = (~params, ~state) =>

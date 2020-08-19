@@ -21,7 +21,7 @@ let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
   let fileType =
     Option.value(
       ~default=Exthost.LanguageInfo.defaultLanguage,
-      Buffer.getFileType(buffer),
+      Buffer.getFileType(buffer) |> Buffer.FileType.toOption,
     );
   Configuration.getValue(~fileType, f, state.configuration);
 };
@@ -35,9 +35,10 @@ let getActiveBuffer = (state: State.t) => {
 let withActiveBufferAndFileType = (state: State.t, f) => {
   let () =
     getActiveBuffer(state)
-    |> OptionEx.flatMap(buf =>
-         Buffer.getFileType(buf) |> Option.map(ft => (buf, ft))
-       )
+    |> Option.map(buf => {
+         let fileType = Buffer.getFileType(buf) |> Buffer.FileType.toString;
+         (buf, fileType);
+       })
     |> Option.iter(((buf, ft)) => f(buf, ft));
   ();
 };
@@ -46,11 +47,8 @@ let getActiveConfigurationValue = (state: State.t, f) => {
   switch (getActiveBuffer(state)) {
   | None => Configuration.getValue(f, state.configuration)
   | Some(buffer) =>
-    let fileType =
-      Option.value(
-        ~default=Exthost.LanguageInfo.defaultLanguage,
-        Buffer.getFileType(buffer),
-      );
+    let fileType = Buffer.getFileType(buffer) |> Buffer.FileType.toString;
+
     Configuration.getValue(~fileType, f, state.configuration);
   };
 };

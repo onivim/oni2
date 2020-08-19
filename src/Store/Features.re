@@ -31,9 +31,8 @@ module Internal = {
   let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
     buffer
     |> Oni_Core.Buffer.getFileType
-    |> Utility.OptionEx.flatMap(fileType =>
-         Exthost.LanguageInfo.getScopeFromLanguage(languageInfo, fileType)
-       )
+    |> Oni_Core.Buffer.FileType.toString
+    |> Exthost.LanguageInfo.getScopeFromLanguage(languageInfo)
     |> Option.value(~default="source.plaintext");
   };
 
@@ -211,7 +210,8 @@ let update =
 
     let languageConfiguration =
       maybeBuffer
-      |> OptionEx.flatMap(Oni_Core.Buffer.getFileType)
+      |> Option.map(Oni_Core.Buffer.getFileType)
+      |> Option.map(Oni_Core.Buffer.FileType.toString)
       |> OptionEx.flatMap(
            Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
          )
@@ -371,6 +371,30 @@ let update =
     let eff =
       switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
       | Nothing => Effect.none
+      | Feature_StatusBar.ShowFileTypePicker =>
+        let bufferId =
+          state.layout
+          |> Feature_Layout.activeEditor
+          |> Feature_Editor.Editor.getBufferId;
+
+        let languages =
+          state.languageInfo
+          |> Exthost.LanguageInfo.languages
+          |> List.map(language =>
+               (
+                 language,
+                 Oni_Core.IconTheme.getIconForLanguage(
+                   state.iconTheme,
+                   language,
+                 ),
+               )
+             );
+        Isolinear.Effect.createWithDispatch(
+          ~name="statusBar.fileTypePicker", dispatch => {
+          dispatch(
+            Actions.QuickmenuShow(FileTypesPicker({bufferId, languages})),
+          )
+        });
       };
 
     (state', eff);

@@ -69,6 +69,23 @@ let start =
       Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
     });
 
+  let _: unit => unit =
+    Vim.Buffer.onFiletypeChanged(metadata => {
+      let Vim.BufferMetadata.{id, fileType, _} = metadata;
+
+      switch (fileType) {
+      | None => ()
+      | Some(fileType) =>
+        Log.infof(m => m("Setting filetype %s for buffer %d", fileType, id));
+        dispatch(
+          Actions.BufferFileTypeChanged({
+            id,
+            fileType: Oni_Core.Buffer.FileType.explicit(fileType),
+          }),
+        );
+      };
+    });
+
   let handleGoto = gotoType => {
     switch (gotoType) {
     | Vim.Goto.Hover =>
@@ -195,8 +212,9 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-        | None => None
+          Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)
+          |> Oni_Core.Buffer.FileType.inferred
+        | None => Oni_Core.Buffer.FileType.none
         };
 
       dispatch(
@@ -316,10 +334,9 @@ let start =
         let fileType =
           switch (metadata.filePath) {
           | Some(v) =>
-            Some(
-              Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v),
-            )
-          | None => None
+            Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)
+            |> Oni_Core.Buffer.FileType.inferred
+          | None => Oni_Core.Buffer.FileType.none
           };
 
         let lineEndings: option(Vim.lineEnding) =
@@ -416,7 +433,7 @@ let start =
              let newBuffer =
                if (firstLineChanged) {
                  let fileType =
-                   Some(
+                   Oni_Core.Buffer.FileType.inferred(
                      Exthost.LanguageInfo.getLanguageFromBuffer(
                        languageInfo,
                        newBuffer,
