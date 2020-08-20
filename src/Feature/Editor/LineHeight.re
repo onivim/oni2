@@ -26,7 +26,8 @@ module Decode = {
   let absolute =
     obj(({field, _}) => {Absolute(field.required("absolute", float))});
 
-  let justFloat = float |> map(size => Absolute(size));
+  let justFloat =
+    float |> map(size => size >= 5. ? Absolute(size) : Proportional(1.2));
 
   let decode =
     one_of([
