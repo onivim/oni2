@@ -1052,9 +1052,12 @@ module View = {
       justifyContent(`Center),
       border(~color=colors.suggestWidgetBorder, ~width=1),
       backgroundColor(colors.suggestWidgetBackground),
+      overflow(`Hidden)
     ];
 
     let detailText = (~tokenTheme: TokenTheme.t) => [
+      overflow(`Hidden),
+      textWrap(Revery.TextWrapping.Wrap),
       textOverflow(`Ellipsis),
       color(tokenTheme.commentColor),
       margin(3),
@@ -1101,13 +1104,33 @@ module View = {
   let detailView =
       (
         ~text,
+        ~documentation,
         ~width,
         ~lineHeight,
+        ~uiFont: Oni_Core.UiFont.t,
         ~editorFont: Service_Font.font,
         ~colors,
+        ~colorTheme,
         ~tokenTheme,
         (),
-      ) =>
+      ) => {
+
+    let documentationElement = switch(documentation) {
+    | None => React.empty
+    | Some(markdownString) => Markdown.make(
+        ~markdown=Exthost.MarkdownString.toString(markdownString),
+        ~fontFamily=uiFont.family,
+        ~colorTheme,
+        ~tokenTheme,
+        ~languageInfo=LanguageInfo.initial,
+        ~defaultLanguage="reason",
+        ~codeFontFamily=editorFont.fontFamily,
+        ~grammars=Oni_Syntax.GrammarRepository.empty,
+        ~baseFontSize=10.,
+        ~codeBlockFontSize=editorFont.fontSize,
+        ());
+    };
+
     <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
       <Text
         style={Styles.detailText(~tokenTheme)}
@@ -1115,7 +1138,9 @@ module View = {
         fontSize={editorFont.fontSize}
         text
       />
+      documentationElement
     </View>;
+    };
 
   let make =
       (
@@ -1172,7 +1197,7 @@ module View = {
         let focused: Filter.result(CompletionItem.t) = items[index];
         switch (focused.item.detail) {
         | Some(text) =>
-          <detailView text width lineHeight colors tokenTheme editorFont />
+          <detailView uiFont={Oni_Core.UiFont.default} text documentation={focused.item.documentation} width lineHeight colorTheme=theme colors tokenTheme editorFont />
         | None => React.empty
         };
       | None => React.empty
