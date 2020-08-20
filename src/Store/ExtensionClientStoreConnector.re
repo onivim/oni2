@@ -132,7 +132,9 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ]),
       )
 
-    | BufferUpdate({update, newBuffer, triggerKey, oldBuffer}) => (
+    | Buffers(
+        Feature_Buffers.Update({update, newBuffer, triggerKey, oldBuffer}),
+      ) => (
         state,
         Service_Exthost.Effects.Documents.modelChanged(
           ~previousBuffer=oldBuffer,
@@ -144,10 +146,10 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ),
       )
 
-    | BufferSaved(bufferId) =>
+    | Buffers(Feature_Buffers.Saved(bufferId)) =>
       let effect =
         state.buffers
-        |> Oni_Model.Buffers.getBuffer(bufferId)
+        |> Feature_Buffers.get(bufferId)
         |> Option.map(buffer => {
              gitRefreshEffect(state.scm, buffer |> Oni_Core.Buffer.getUri)
            })
@@ -166,7 +168,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
 
     | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
-    | BufferEnter({id, filePath, _}) =>
+    | Buffers(Feature_Buffers.Entered({id, filePath, _})) =>
       let eff =
         switch (filePath) {
         | Some(path) =>

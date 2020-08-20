@@ -72,7 +72,9 @@ let simpleEditor =
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
-  Actions.BufferUpdate({update, oldBuffer, newBuffer, triggerKey: None});
+  Actions.Buffers(
+    Feature_Buffers.Update({update, oldBuffer, newBuffer, triggerKey: None}),
+  );
 };
 
 let thousandLineBuffer = Buffer.ofLines(thousandLines);

@@ -298,16 +298,17 @@ let start =
     let activeBufferId = Feature_Editor.Editor.getBufferId(activeEditor);
     let activePosition = Feature_Editor.Editor.getPrimaryCursor(activeEditor);
     let maybeActiveBuffer =
-      Model.Buffers.getBuffer(activeBufferId, state.buffers);
+      Feature_Buffers.get(activeBufferId, state.buffers);
 
     let extHostSubscription =
       Feature_Exthost.subscription(
-        ~buffers=visibleBuffers,
+        ~buffers=state.buffers,
         ~editors=visibleEditors,
         ~activeEditorId=Some(activeEditorId),
         ~client=extHostClient,
+        state.exthost,
       )
-      |> Isolinear.Sub.map(() => Model.Actions.Noop);
+      |> Isolinear.Sub.map(msg => Model.Actions.Exthost(msg));
 
     let fileExplorerActiveFileSub =
       Model.Sub.activeFile(
@@ -401,7 +402,7 @@ let start =
   Option.iter(
     window =>
       Revery.Window.setCanQuitCallback(window, () =>
-        if (Model.Buffers.anyModified(getState().buffers)) {
+        if (Feature_Buffers.anyModified(getState().buffers)) {
           dispatch(Model.Actions.WindowCloseBlocked);
           false;
         } else {

@@ -8,7 +8,6 @@
 
 module Actions = Actions;
 module ActivityBar = ActivityBar;
-module Buffers = Buffers;
 module BufferRenderer = BufferRenderer;
 module BufferRenderers = BufferRenderers;
 module ContextKeys = ContextKeys;

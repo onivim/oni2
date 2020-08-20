@@ -132,6 +132,18 @@ let update =
 
     ({...state, clipboard: model}, eff);
 
+  | Exthost(msg) =>
+    let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
+
+    let state = {...state, exthost: model};
+    let eff =
+      switch (outMsg) {
+      | Feature_Exthost.Nothing => Isolinear.Effect.none
+      | Feature_Exthost.Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Exthost(msg))
+      };
+    (state, eff);
+
   | Extensions(msg) =>
     let (model, outMsg) =
       Feature_Extensions.update(~extHostClient, msg, state.extensions);
@@ -399,44 +411,9 @@ let update =
 
     (state', eff);
 
-  // TEMPORARY: Needs https://github.com/onivim/oni2/pull/1627 to remove
-  | BufferEnter({buffer, _}) =>
-    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+  | Buffers(Feature_Buffers.Update({update, newBuffer, _}) as msg) =>
+    let buffers = Feature_Buffers.update(msg, state.buffers);
 
-    let config = Feature_Configuration.resolver(state.config);
-    (
-      {
-        ...state,
-        layout:
-          Feature_Layout.openEditor(
-            ~config,
-            Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
-            state.layout,
-          ),
-      },
-      Effect.none,
-    );
-
-  | EditorSizeChanged({id, pixelWidth, pixelHeight}) => (
-      {
-        ...state,
-        layout:
-          Feature_Layout.map(
-            editor =>
-              Feature_Editor.Editor.getId(editor) == id
-                ? Feature_Editor.Editor.setSize(
-                    ~pixelWidth,
-                    ~pixelHeight,
-                    editor,
-                  )
-                : editor,
-            state.layout,
-          ),
-      },
-      Effect.none,
-    )
-
-  | BufferUpdate({update, newBuffer, _}) =>
     let syntaxHighlights =
       Feature_Syntax.handleUpdate(
         ~scope=
@@ -451,7 +428,7 @@ let update =
         state.syntaxHighlights,
       );
 
-    let state = {...state, syntaxHighlights};
+    let state = {...state, buffers, syntaxHighlights};
 
     let (state, eff) = (
       state,
@@ -481,6 +458,50 @@ let update =
       },
       eff,
     );
+
+  // TEMPORARY: Needs https://github.com/onivim/oni2/pull/1627 to remove
+  | Buffers(Feature_Buffers.Entered({buffer, _}) as msg) =>
+    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+
+    let buffers = Feature_Buffers.update(msg, state.buffers);
+
+    let config = Feature_Configuration.resolver(state.config);
+    (
+      {
+        ...state,
+        buffers,
+        layout:
+          Feature_Layout.openEditor(
+            ~config,
+            Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
+            state.layout,
+          ),
+      },
+      Effect.none,
+    );
+
+  | Buffers(msg) =>
+    let buffers = Feature_Buffers.update(msg, state.buffers);
+    ({...state, buffers}, Effect.none);
+
+  | EditorSizeChanged({id, pixelWidth, pixelHeight}) => (
+      {
+        ...state,
+        layout:
+          Feature_Layout.map(
+            editor =>
+              Feature_Editor.Editor.getId(editor) == id
+                ? Feature_Editor.Editor.setSize(
+                    ~pixelWidth,
+                    ~pixelHeight,
+                    editor,
+                  )
+                : editor,
+            state.layout,
+          ),
+      },
+      Effect.none,
+    )
 
   | Configuration(msg) =>
     let (config, outmsg) =
@@ -750,7 +771,7 @@ let update =
             editor => {
               let bufferId = Feature_Editor.Editor.getBufferId(editor);
               buffers'
-              |> Buffers.getBuffer(bufferId)
+              |> Feature_Buffers.get(bufferId)
               |> Option.map(buffer => {
                    let updatedBuffer =
                      buffer |> Feature_Editor.EditorBuffer.ofBuffer;

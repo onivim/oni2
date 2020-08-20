@@ -1,7 +1,7 @@
 open Oni_Core.Utility;
 open TestFramework;
 
-module Buffers = Oni_Model.Buffers;
+module Buffers = Feature_Buffers;
 module Buffer = Oni_Core.Buffer;
 
 let getFilePathOrFail = (maybeBuffer: option(Buffer.t)) => {
@@ -22,9 +22,8 @@ describe("Buffer List Tests", ({test, _}) => {
     let bufferList = Buffers.empty;
 
     let added =
-      Buffers.reduce(
-        bufferList,
-        BufferEnter({
+      Buffers.update(
+        Buffers.Entered({
           id: 0,
           buffer: emptyBuffer,
           fileType: Buffer.FileType.none,
@@ -34,9 +33,10 @@ describe("Buffer List Tests", ({test, _}) => {
           filePath: Some("/test1.re"),
           font: Oni_Core.Font.default,
         }),
+        bufferList,
       );
 
-    expect.string(Buffers.getBuffer(0, added) |> getFilePathOrFail).toMatch(
+    expect.string(Buffers.get(0, added) |> getFilePathOrFail).toMatch(
       "/test1.re",
     );
   });
@@ -52,9 +52,8 @@ describe("Buffer List Tests", ({test, _}) => {
     let bufferList = Buffers.empty;
 
     let added =
-      Buffers.reduce(
-        bufferList,
-        BufferEnter({
+      Buffers.update(
+        Buffers.Entered({
           id: 0,
           buffer: emptyBuffer,
           filePath: Some("/test1.re"),
@@ -64,11 +63,11 @@ describe("Buffer List Tests", ({test, _}) => {
           lineEndings: None,
           font: Oni_Core.Font.default,
         }),
+        bufferList,
       );
     let addedAgain =
-      Buffers.reduce(
-        added,
-        BufferEnter({
+      Buffers.update(
+        Buffers.Entered({
           id: 0,
           buffer: emptyBuffer,
           filePath: Some("/test2.re"),
@@ -78,10 +77,10 @@ describe("Buffer List Tests", ({test, _}) => {
           lineEndings: None,
           font: Oni_Core.Font.default,
         }),
+        added,
       );
 
-    expect.string(Buffers.getBuffer(0, addedAgain) |> getFilePathOrFail).
-      toMatch(
+    expect.string(Buffers.get(0, addedAgain) |> getFilePathOrFail).toMatch(
       "/test2.re",
     );
   });
@@ -89,9 +88,8 @@ describe("Buffer List Tests", ({test, _}) => {
   test("Should correctly find the active bufferId", ({expect, _}) => {
     let bufferList = Buffers.empty;
     let updated =
-      Buffers.reduce(
-        bufferList,
-        BufferEnter({
+      Buffers.update(
+        Buffers.Entered({
           id: 4,
           buffer: emptyBuffer,
           filePath: Some("/myfile.js"),
@@ -101,8 +99,9 @@ describe("Buffer List Tests", ({test, _}) => {
           lineEndings: None,
           font: Oni_Core.Font.default,
         }),
+        bufferList,
       );
-    let activeBuffer = Buffers.getBuffer(4, updated);
+    let activeBuffer = Buffers.get(4, updated);
     let path = getFilePathOrFail(activeBuffer);
     expect.string(path).toMatch("/myfile.js");
   });
@@ -110,9 +109,8 @@ describe("Buffer List Tests", ({test, _}) => {
   test("Should set filetype", ({expect, _}) => {
     let bufferList = Buffers.empty;
     let updated =
-      Buffers.reduce(
-        bufferList,
-        BufferEnter({
+      Buffers.update(
+        Buffers.Entered({
           id: 4,
           buffer: emptyBuffer,
           filePath: Some("/myfile.js"),
@@ -122,8 +120,9 @@ describe("Buffer List Tests", ({test, _}) => {
           lineEndings: None,
           font: Oni_Core.Font.default,
         }),
+        bufferList,
       );
-    let activeBuffer = Buffers.getBuffer(4, updated);
+    let activeBuffer = Buffers.get(4, updated);
     let fileType = getFileTypeOrFail(activeBuffer);
     expect.string(fileType).toEqual("reason");
   });

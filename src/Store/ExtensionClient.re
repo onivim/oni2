@@ -150,30 +150,13 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         Lwt.return(Reply.okEmpty);
 
       | Documents(documentsMsg) =>
-        switch (documentsMsg) {
-        | Documents.TryOpenDocument({uri}) =>
-          if (Oni_Core.Uri.getScheme(uri) == Oni_Core.Uri.Scheme.File) {
-            dispatch(
-              Actions.OpenFileByPath(
-                Oni_Core.Uri.toFileSystemPath(uri),
-                None,
-                None,
-              ),
-            );
-          } else {
-            Log.warnf(m =>
-              m(
-                "TryOpenDocument: Unable to open %s",
-                uri |> Oni_Core.Uri.toString,
-              )
-            );
-          }
-        | Documents.TrySaveDocument(_) =>
-          Log.warn("TrySaveDocument is not yet implemented.")
-        | Documents.TryCreateDocument(_) =>
-          Log.warn("TryCreateDocument is not yet implemented.")
-        };
-        Lwt.return(Reply.okEmpty);
+        let (promise, resolver) = Lwt.task();
+        dispatch(
+          Actions.Exthost(
+            Feature_Exthost.Msg.document(documentsMsg, resolver),
+          ),
+        );
+        promise;
 
       | ExtensionService(extMsg) =>
         Log.infof(m => m("ExtensionService: %s", Exthost.Msg.show(msg)));
