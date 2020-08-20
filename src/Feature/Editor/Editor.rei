@@ -70,6 +70,8 @@ let scrollY: t => float;
 let minimapScrollY: t => float;
 
 let lineHeightInPixels: t => float;
+let linePaddingInPixels: t => float;
+let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
 let selection: t => VisualRange.t;
@@ -91,7 +93,6 @@ let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
-let getLineHeight: t => float;
 
 // PIXEL-SPACE CONVERSION
 

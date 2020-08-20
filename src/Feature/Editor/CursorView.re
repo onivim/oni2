@@ -78,6 +78,8 @@ let%component make =
   let textOpacity =
     (maxDistSquared -. deltaDistSquared) /. maxDistSquared |> max(0.);
 
+  let characterPaddingY = editor |> Editor.linePaddingInPixels;
+
   <Canvas
     style=Style.[
       position(`Absolute),
@@ -144,7 +146,7 @@ let%component make =
                  Draw.shapedText(
                    ~context,
                    ~x=x -. 0.5,
-                   ~y=y -. fontMetrics.ascent -. 0.5,
+                   ~y=characterPaddingY +. y -. fontMetrics.ascent -. 0.5,
                    ~bold=false,
                    ~italic=false,
                    ~color=

@@ -28,4 +28,5 @@ type t =
   | CursorsChanged([@opaque] list(Vim.Cursor.t))
   | ScrollToLine(int)
   | ScrollToColumn(int)
-  | MinimapEnabledConfigChanged(bool);
+  | MinimapEnabledConfigChanged(bool)
+  | LineHeightConfigChanged(LineHeight.t);

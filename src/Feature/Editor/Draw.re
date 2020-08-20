@@ -153,10 +153,12 @@ let underline = (~context, ~color=Revery.Colors.black, r: Range.t) => {
       context.editor,
     );
 
+  let paddingY = context.editor |> Editor.linePaddingInPixels;
+
   drawRect(
     ~context,
     ~x=startPixelX,
-    ~y=startPixelY +. Editor.lineHeightInPixels(context.editor),
+    ~y=startPixelY -. paddingY +. Editor.lineHeightInPixels(context.editor),
     ~height=1.,
     ~width=max(stopPixelX -. startPixelX, 1.0),
     ~color,
@@ -254,7 +256,9 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
       context.editor,
     );
 
-  let y = pixelY -. fontMetrics.ascent;
+  let paddingY = context.editor |> Editor.linePaddingInPixels;
+
+  let y = paddingY +. pixelY -. fontMetrics.ascent;
   let x = pixelX;
 
   switch (token.tokenType) {
