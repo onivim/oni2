@@ -179,6 +179,7 @@ module Session = {
   [@deriving show]
   type t = {
     state,
+    trigger: Exthost.CompletionContext.t,
     buffer: [@opaque] Oni_Core.Buffer.t,
     base: string,
     location: EditorCoreTypes.Location.t,
@@ -247,7 +248,8 @@ module Session = {
     };
   };
 
-  let create = (~buffer, ~base, ~location, ~supportsResolve) => {
+  let create = (~trigger, ~buffer, ~base, ~location, ~supportsResolve) => {
+    trigger,
     state: Waiting,
     buffer,
     base,
@@ -295,6 +297,7 @@ module Session = {
       if (createNew) {
         Some(
           create(
+            ~trigger=previous.trigger,
             ~buffer,
             ~base,
             ~location,
@@ -362,7 +365,12 @@ let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
         a: Filter.result(CompletionItem.t),
         b: Filter.result(CompletionItem.t),
       ) => {
-    String.compare(a.item.sortText, b.item.sortText);
+    let sortValue = String.compare(a.item.sortText, b.item.sortText);
+    if (sortValue == 0) {
+      String.compare(a.item.label, b.item.label);
+    } else {
+      sortValue;
+    };
   };
 
   sessions
@@ -465,7 +473,50 @@ let unregister = (~handle, model) => {
   providers: List.filter(prov => prov.handle != handle, model.providers),
 };
 
-let startCompletion = (~startNewSession, ~buffer, ~activeCursor, model) => {
+let invokeCompletion = (~buffer, ~activeCursor, model) => {
+  let candidateProviders =
+    model.providers
+    |> List.filter(prov =>
+         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
+       );
+
+  let location = activeCursor;
+
+  let handleToSession =
+    List.fold_left(
+      (acc: IntMap.t(Session.t), curr: provider) => {
+        acc
+        |> IntMap.add(
+             curr.handle,
+             Session.create(
+               ~trigger=
+                 Exthost.CompletionContext.{
+                   triggerKind: Invoke,
+                   triggerCharacter: None,
+                 },
+               ~buffer,
+               ~base="",
+               ~location,
+               ~supportsResolve=curr.supportsResolveDetails,
+             ),
+           )
+      },
+      IntMap.empty,
+      candidateProviders,
+    );
+
+  let allItems = recomputeAllItems(handleToSession);
+  let selection =
+    Selection.ensureValidFocus(
+      ~count=Array.length(allItems),
+      model.selection,
+    );
+
+  {...model, handleToSession, allItems, selection};
+};
+
+let startCompletion =
+    (~startNewSession, ~trigger, ~buffer, ~activeCursor, model) => {
   let candidateProviders =
     model.providers
     |> List.filter(prov =>
@@ -494,6 +545,7 @@ let startCompletion = (~startNewSession, ~buffer, ~activeCursor, model) => {
                      ? Some(
                          Session.create(
                            ~buffer,
+                           ~trigger,
                            ~base,
                            ~location,
                            ~supportsResolve=curr.supportsResolveDetails,
@@ -535,8 +587,11 @@ let bufferUpdated =
     model.handleToSession
     |> IntMap.exists((_key, session) => session |> Session.isActive);
 
-  // TODO: Account for trigger key
-  ignore(triggerKey);
+  let trigger =
+    Exthost.CompletionContext.{
+      triggerKind: TriggerCharacter,
+      triggerCharacter: triggerKey,
+    };
 
   if (!
         QuickSuggestionsSetting.enabledFor(
@@ -546,12 +601,24 @@ let bufferUpdated =
     // If we already had started a session (ie, manually triggered) -
     // make sure to continue, even if suggestions are off
     if (anySessionsActive) {
-      startCompletion(~startNewSession=false, ~buffer, ~activeCursor, model);
+      startCompletion(
+        ~trigger,
+        ~startNewSession=false,
+        ~buffer,
+        ~activeCursor,
+        model,
+      );
     } else {
       model;
     };
   } else {
-    startCompletion(~startNewSession=true, ~buffer, ~activeCursor, model);
+    startCompletion(
+      ~trigger,
+      ~startNewSession=true,
+      ~buffer,
+      ~activeCursor,
+      model,
+    );
   };
 };
 
@@ -561,15 +628,7 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
   | Command(TriggerSuggest) =>
     maybeBuffer
     |> Option.map(buffer => {
-         (
-           startCompletion(
-             ~startNewSession=true,
-             ~buffer,
-             ~activeCursor,
-             model,
-           ),
-           Outmsg.Nothing,
-         )
+         (invokeCompletion(~buffer, ~activeCursor, model), Outmsg.Nothing)
        })
     |> Option.value(~default)
 
