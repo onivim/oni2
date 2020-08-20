@@ -1047,18 +1047,14 @@ module View = {
       left(width),
       top(int_of_float(lineHeight +. 0.5)),
       Style.width(Constants.maxDetailWidth),
-      flexDirection(`Column),
-      alignItems(`FlexStart),
-      justifyContent(`Center),
       border(~color=colors.suggestWidgetBorder, ~width=1),
       backgroundColor(colors.suggestWidgetBackground),
-      overflow(`Hidden)
     ];
 
     let detailText = (~tokenTheme: TokenTheme.t) => [
-      overflow(`Hidden),
+      //      overflow(`Hidden),
       textWrap(Revery.TextWrapping.Wrap),
-      textOverflow(`Ellipsis),
+      //      textOverflow(`Ellipsis),
       color(tokenTheme.commentColor),
       margin(3),
     ];
@@ -1114,33 +1110,37 @@ module View = {
         ~tokenTheme,
         (),
       ) => {
-
-    let documentationElement = switch(documentation) {
-    | None => React.empty
-    | Some(markdownString) => Markdown.make(
-        ~markdown=Exthost.MarkdownString.toString(markdownString),
-        ~fontFamily=uiFont.family,
-        ~colorTheme,
-        ~tokenTheme,
-        ~languageInfo=LanguageInfo.initial,
-        ~defaultLanguage="reason",
-        ~codeFontFamily=editorFont.fontFamily,
-        ~grammars=Oni_Syntax.GrammarRepository.empty,
-        ~baseFontSize=10.,
-        ~codeBlockFontSize=editorFont.fontSize,
-        ());
-    };
+    let documentationElement =
+      switch (documentation) {
+      | None => React.empty
+      | Some(markdownString) =>
+        Markdown.make(
+          ~markdown=Exthost.MarkdownString.toString(markdownString),
+          ~fontFamily=uiFont.family,
+          ~colorTheme,
+          ~tokenTheme,
+          ~languageInfo=LanguageInfo.initial,
+          ~defaultLanguage="reason",
+          ~codeFontFamily=editorFont.fontFamily,
+          ~grammars=Oni_Syntax.GrammarRepository.empty,
+          ~baseFontSize=10.,
+          ~codeBlockFontSize=editorFont.fontSize,
+          (),
+        )
+      };
 
     <View style={Styles.detail(~width, ~lineHeight, ~colors)}>
-      <Text
-        style={Styles.detailText(~tokenTheme)}
-        fontFamily={editorFont.fontFamily}
-        fontSize={editorFont.fontSize}
-        text
-      />
-      documentationElement
+      <View style=Style.[flexGrow(1), flexDirection(`Column)]>
+        <Text
+          style={Styles.detailText(~tokenTheme)}
+          fontFamily={editorFont.fontFamily}
+          fontSize={editorFont.fontSize}
+          text
+        />
+        documentationElement
+      </View>
     </View>;
-    };
+  };
 
   let make =
       (
@@ -1197,7 +1197,17 @@ module View = {
         let focused: Filter.result(CompletionItem.t) = items[index];
         switch (focused.item.detail) {
         | Some(text) =>
-          <detailView uiFont={Oni_Core.UiFont.default} text documentation={focused.item.documentation} width lineHeight colorTheme=theme colors tokenTheme editorFont />
+          <detailView
+            uiFont=Oni_Core.UiFont.default
+            text
+            documentation={focused.item.documentation}
+            width
+            lineHeight
+            colorTheme=theme
+            colors
+            tokenTheme
+            editorFont
+          />
         | None => React.empty
         };
       | None => React.empty
