@@ -4,8 +4,11 @@
     (libraries
       Oni2.core
       Oni2.components
+      Oni2.exthost
+      Oni2.feature.buffers
       Oni2.feature.editor
       Oni2.service.exthost
+      Oni2.service.vim
       Revery
       isolinear
     )

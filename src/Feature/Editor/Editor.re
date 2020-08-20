@@ -27,6 +27,7 @@ type t = {
   key: [@opaque] Brisk_reconciler.Key.t,
   buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
+  lineHeight: LineHeight.t,
   scrollX: float,
   scrollY: float,
   isScrollAnimated: bool,
@@ -54,8 +55,15 @@ let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
 let scrollY = ({scrollY, _}) => scrollY;
 let scrollX = ({scrollX, _}) => scrollX;
 let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
-let lineHeightInPixels = ({buffer, _}) =>
-  EditorBuffer.font(buffer).measuredHeight;
+let lineHeightInPixels = ({buffer, lineHeight, _}) =>
+  lineHeight
+  |> LineHeight.calculate(
+       ~measuredFontHeight=EditorBuffer.font(buffer).measuredHeight,
+     );
+
+let linePaddingInPixels = ({buffer, _} as editor) =>
+  (lineHeightInPixels(editor) -. EditorBuffer.font(buffer).measuredHeight)
+  /. 2.;
 let characterWidthInPixels = ({buffer, _}) =>
   EditorBuffer.font(buffer).spaceWidth;
 let font = ({buffer, _}) => EditorBuffer.font(buffer);
@@ -69,13 +77,12 @@ let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
 let bufferLineByteToPixel =
-    (~line, ~byteIndex, {scrollX, scrollY, buffer, _}) => {
+    (~line, ~byteIndex, {scrollX, scrollY, buffer, _} as editor) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
     let bufferLine = buffer |> EditorBuffer.line(line);
-    let font = buffer |> EditorBuffer.font;
 
     let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
     let (cursorOffset, width) =
@@ -83,7 +90,7 @@ let bufferLineByteToPixel =
 
     let pixelX = cursorOffset -. scrollX +. 0.5;
 
-    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+    let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
 
     ({pixelX, pixelY}, width);
   };
@@ -96,12 +103,11 @@ let viewLine = (editor, lineNumber) => {
 };
 
 let bufferLineCharacterToPixel =
-    (~line, ~characterIndex, {scrollX, scrollY, buffer, _}) => {
+    (~line, ~characterIndex, {scrollX, scrollY, buffer, _} as editor) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   if (line < 0 || line >= lineCount) {
     ({pixelX: 0., pixelY: 0.}, 0.);
   } else {
-    let font = EditorBuffer.font(buffer);
     let (cursorOffset, width) =
       buffer
       |> EditorBuffer.line(line)
@@ -109,7 +115,7 @@ let bufferLineCharacterToPixel =
 
     let pixelX = cursorOffset -. scrollX +. 0.5;
 
-    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+    let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
 
     ({pixelX, pixelY}, width);
   };
@@ -120,10 +126,12 @@ let create = (~config, ~buffer, ()) => {
   let key = Brisk_reconciler.Key.create();
 
   let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
+  let lineHeight = EditorConfiguration.lineHeight.get(config);
 
   {
     editorId: id,
     key,
+    lineHeight,
     isMinimapEnabled,
     isScrollAnimated: false,
     buffer,
@@ -281,20 +289,22 @@ let selectionOrCursorRange = editor => {
   };
 };
 
+let setLineHeight = (~lineHeight, editor) => {...editor, lineHeight};
+
 let getId = model => model.editorId;
 
-let getLineHeight = ({buffer, _}) =>
-  EditorBuffer.font(buffer).measuredHeight;
 let getCharacterWidth = ({buffer, _}) =>
   EditorBuffer.font(buffer).spaceWidth;
 
 let getVisibleView = editor => {
   let {pixelHeight, _} = editor;
-  int_of_float(float_of_int(pixelHeight) /. getLineHeight(editor));
+  int_of_float(float_of_int(pixelHeight) /. lineHeightInPixels(editor));
 };
 
 let getTotalHeightInPixels = editor =>
-  int_of_float(float_of_int(editor.viewLines) *. getLineHeight(editor));
+  int_of_float(
+    float_of_int(editor.viewLines) *. lineHeightInPixels(editor),
+  );
 
 let getTotalWidthInPixels = editor =>
   int_of_float(
@@ -344,7 +354,7 @@ let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
       ~characterWidth=getCharacterWidth(view),
-      ~characterHeight=getLineHeight(view),
+      ~characterHeight=lineHeightInPixels(view),
       ~bufferLineCount=view.viewLines,
       (),
     );
@@ -370,7 +380,7 @@ let exposePrimaryCursor = editor => {
       bufferLineByteToPixel(~line, ~byteIndex=byte, editor);
 
     let scrollOffX = getCharacterWidth(editor) *. 2.;
-    let scrollOffY = getLineHeight(editor);
+    let scrollOffY = lineHeightInPixels(editor);
 
     let availableX = pixelWidth -. scrollOffX;
     let availableY = pixelHeight -. scrollOffY;
@@ -407,12 +417,13 @@ let getLeftVisibleColumn = view => {
 };
 
 let getTopVisibleLine = view =>
-  int_of_float(view.scrollY /. getLineHeight(view)) + 1;
+  int_of_float(view.scrollY /. lineHeightInPixels(view)) + 1;
 
 let getBottomVisibleLine = view => {
   let absoluteBottomLine =
     int_of_float(
-      (view.scrollY +. float_of_int(view.pixelHeight)) /. getLineHeight(view),
+      (view.scrollY +. float_of_int(view.pixelHeight))
+      /. lineHeightInPixels(view),
     );
 
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
@@ -428,7 +439,7 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
   let {pixelHeight, _} = view;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
-    max(float_of_int(view.viewLines - 1), 0.) *. getLineHeight(view);
+    max(float_of_int(view.viewLines - 1), 0.) *. lineHeightInPixels(view);
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
@@ -450,7 +461,7 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
 };
 
 let scrollToLine = (~line, view) => {
-  let pixelY = float_of_int(line) *. getLineHeight(view);
+  let pixelY = float_of_int(line) *. lineHeightInPixels(view);
   {...scrollToPixelY(~pixelY, view), isScrollAnimated: true};
 };
 
@@ -501,8 +512,7 @@ let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
   ignore(column);
   ignore(pixelWidth);
 
-  let editorPixelY =
-    float_of_int(line) *. EditorBuffer.font(editor.buffer).measuredHeight;
+  let editorPixelY = float_of_int(line) *. lineHeightInPixels(editor);
   let totalEditorHeight = getTotalHeightInPixels(editor) |> float_of_int;
   let transformedPixelY =
     editorPixelY
@@ -545,7 +555,7 @@ module Slow = {
   let pixelPositionToBufferLineByte =
       (~buffer, ~pixelX: float, ~pixelY: float, view) => {
     let rawLine =
-      int_of_float((pixelY +. view.scrollY) /. getLineHeight(view));
+      int_of_float((pixelY +. view.scrollY) /. lineHeightInPixels(view));
 
     let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
 

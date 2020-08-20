@@ -11,7 +11,7 @@ let start = (~quit, ~raiseWindow) => {
   let quitAllEffect = (state: State.t, force) => {
     let handlers = state.lifecycle.onQuitFunctions;
 
-    let anyModified = Buffers.anyModified(state.buffers);
+    let anyModified = Feature_Buffers.anyModified(state.buffers);
     let canClose = force || !anyModified;
 
     Isolinear.Effect.createWithDispatch(~name="lifecycle.quitAll", dispatch =>

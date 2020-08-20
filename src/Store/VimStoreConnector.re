@@ -66,7 +66,8 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onLineEndingsChanged((id, lineEndings) => {
-      Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
+      Actions.Buffers(Feature_Buffers.LineEndingsChanged({id, lineEndings}))
+      |> dispatch
     });
 
   let _: unit => unit =
@@ -78,10 +79,12 @@ let start =
       | Some(fileType) =>
         Log.infof(m => m("Setting filetype %s for buffer %d", fileType, id));
         dispatch(
-          Actions.BufferFileTypeChanged({
-            id,
-            fileType: Oni_Core.Buffer.FileType.explicit(fileType),
-          }),
+          Actions.Buffers(
+            Feature_Buffers.FileTypeChanged({
+              id,
+              fileType: Oni_Core.Buffer.FileType.explicit(fileType),
+            }),
+          ),
         );
       };
     });
@@ -218,24 +221,30 @@ let start =
         };
 
       dispatch(
-        Actions.BufferFilenameChanged({
-          id: meta.id,
-          newFileType: fileType,
-          newFilePath: meta.filePath,
-          isModified: meta.modified,
-          version: meta.version,
-        }),
+        Actions.Buffers(
+          Feature_Buffers.FilenameChanged({
+            id: meta.id,
+            newFileType: fileType,
+            newFilePath: meta.filePath,
+            isModified: meta.modified,
+            version: meta.version,
+          }),
+        ),
       );
     });
 
   let _: unit => unit =
     Vim.Buffer.onModifiedChanged((id, isModified) => {
       Log.debugf(m => m("Buffer metadata changed: %n | %b", id, isModified));
-      dispatch(Actions.BufferSetModified(id, isModified));
+      dispatch(
+        Actions.Buffers(Feature_Buffers.ModifiedSet(id, isModified)),
+      );
     });
 
   let _: unit => unit =
-    Vim.Buffer.onWrite(id => {dispatch(Actions.BufferSaved(id))});
+    Vim.Buffer.onWrite(id => {
+      dispatch(Actions.Buffers(Feature_Buffers.Saved(id)))
+    });
 
   let _: unit => unit =
     Vim.Search.onStopSearchHighlight(() => {
@@ -361,17 +370,19 @@ let start =
           |> Oni_Core.Buffer.setFileType(fileType);
 
         dispatch(
-          Actions.BufferEnter({
-            id: metadata.id,
-            buffer,
-            fileType,
-            lineEndings,
-            // Version must be 0 so that a buffer update will be processed
-            version: 0,
-            isModified: metadata.modified,
-            filePath: metadata.filePath,
-            font: Oni_Core.Buffer.getFont(buffer),
-          }),
+          Actions.Buffers(
+            Feature_Buffers.Entered({
+              id: metadata.id,
+              buffer,
+              fileType,
+              lineEndings,
+              // Version must be 0 so that a buffer update will be processed
+              version: 0,
+              isModified: metadata.modified,
+              filePath: metadata.filePath,
+              font: Oni_Core.Buffer.getFont(buffer),
+            }),
+          ),
         );
       };
     });
@@ -384,7 +395,7 @@ let start =
 
       let isFull = update.endLine == (-1);
 
-      let maybeBuffer = Buffers.getBuffer(update.id, getState().buffers);
+      let maybeBuffer = Feature_Buffers.get(update.id, getState().buffers);
 
       // If this is a 'full' update, check if there was a previous buffer.
       // We need to keep track of the previous line count for some
@@ -445,12 +456,14 @@ let start =
                };
 
              dispatch(
-               Actions.BufferUpdate({
-                 update: bu,
-                 newBuffer,
-                 oldBuffer,
-                 triggerKey: currentTriggerKey^,
-               }),
+               Actions.Buffers(
+                 Feature_Buffers.Update({
+                   update: bu,
+                   newBuffer,
+                   oldBuffer,
+                   triggerKey: currentTriggerKey^,
+                 }),
+               ),
              );
            });
       } else {
@@ -950,7 +963,7 @@ let start =
                 editor =>
                   if (Editor.getBufferId(editor) == bufferId) {
                     state.buffers
-                    |> Buffers.getBuffer(bufferId)
+                    |> Feature_Buffers.get(bufferId)
                     |> Option.map(buffer => {
                          let updatedBuffer =
                            buffer

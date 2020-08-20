@@ -266,7 +266,6 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       }
     )
 
-  // TODO:
   | GotOriginalUri({bufferId, uri}) => (
       model,
       Effect(

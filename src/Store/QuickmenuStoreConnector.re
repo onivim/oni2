@@ -240,10 +240,12 @@ let start = () => {
                category: None,
                name: fileType,
                command: () =>
-                 BufferFileTypeChanged({
-                   id: bufferId,
-                   fileType: Oni_Core.Buffer.FileType.explicit(fileType),
-                 }),
+                 Buffers(
+                   Feature_Buffers.FileTypeChanged({
+                     id: bufferId,
+                     fileType: Oni_Core.Buffer.FileType.explicit(fileType),
+                   }),
+                 ),
                icon: maybeIcon,
                highlight: [],
                handle: None,

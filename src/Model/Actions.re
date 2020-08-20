@@ -19,45 +19,10 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 type t =
   | Init
   | ActivityBar(ActivityBar.action)
-  | BufferDisableSyntaxHighlighting(int)
-  | BufferEnter({
-      id: int,
-      fileType: Buffer.FileType.t,
-      lineEndings: [@opaque] option(Vim.lineEnding),
-      filePath: option(string),
-      isModified: bool,
-      version: int,
-      font: Font.t,
-      // TODO: This duplication-of-truth is really awkward,
-      // but I want to remove it shortly
-      buffer: [@opaque] Buffer.t,
-    })
-  | BufferFileTypeChanged({
-      id: int,
-      fileType: Oni_Core.Buffer.FileType.t,
-    })
-  | BufferFilenameChanged({
-      id: int,
-      newFilePath: option(string),
-      newFileType: Buffer.FileType.t,
-      version: int,
-      isModified: bool,
-    })
-  | BufferUpdate({
-      update: [@opaque] BufferUpdate.t,
-      oldBuffer: [@opaque] Buffer.t,
-      newBuffer: [@opaque] Buffer.t,
-      triggerKey: option(string),
-    })
-  | BufferLineEndingsChanged({
-      id: int,
-      lineEndings: [@opaque] Vim.lineEnding,
-    })
+  | Buffers(Feature_Buffers.msg)
   | BufferRenderer(BufferRenderer.action)
-  | BufferSaved(int)
-  | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
-  | BufferSetModified(int, bool)
   | Clipboard(Feature_Clipboard.msg)
+  | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)

@@ -32,7 +32,9 @@ let renderLineNumber =
       ~byteIndex=0,
       context.editor,
     );
-  let y = yOffset -. fontMetrics.ascent;
+
+  let paddingY = context.editor |> Editor.linePaddingInPixels;
+  let y = paddingY +. yOffset -. fontMetrics.ascent;
 
   let lineNumber =
     string_of_int(

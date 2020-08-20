@@ -104,7 +104,9 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ]),
       )
 
-    | BufferUpdate({update, newBuffer, triggerKey, oldBuffer}) => (
+    | Buffers(
+        Feature_Buffers.Update({update, newBuffer, triggerKey, oldBuffer}),
+      ) => (
         state,
         Service_Exthost.Effects.Documents.modelChanged(
           ~previousBuffer=oldBuffer,
@@ -116,10 +118,10 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ),
       )
 
-    | BufferSaved(bufferId) =>
+    | Buffers(Feature_Buffers.Saved(bufferId)) =>
       let effect =
         state.buffers
-        |> Oni_Model.Buffers.getBuffer(bufferId)
+        |> Feature_Buffers.get(bufferId)
         |> Option.map(buffer => {
              gitRefreshEffect(state.scm, buffer |> Oni_Core.Buffer.getUri)
            })
@@ -138,6 +140,71 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
 
     | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
+<<<<<<< HEAD
+=======
+    | Buffers(Feature_Buffers.Entered({id, filePath, _})) =>
+      let eff =
+        switch (filePath) {
+        | Some(path) =>
+          Feature_SCM.Effects.getOriginalUri(
+            extHostClient, state.scm, path, uri =>
+            Actions.GotOriginalUri({bufferId: id, uri})
+          )
+
+        | None => Isolinear.Effect.none
+        };
+      (state, eff);
+
+    | NewTextContentProvider({handle, scheme}) => (
+        {
+          ...state,
+          textContentProviders: [
+            (handle, scheme),
+            ...state.textContentProviders,
+          ],
+        },
+        Isolinear.Effect.none,
+      )
+
+    | LostTextContentProvider({handle}) => (
+        {
+          ...state,
+          textContentProviders:
+            List.filter(
+              ((h, _)) => h != handle,
+              state.textContentProviders,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
+    | GotOriginalUri({bufferId, uri}) => (
+        {
+          ...state,
+          buffers:
+            IntMap.update(
+              bufferId,
+              Option.map(Buffer.setOriginalUri(uri)),
+              state.buffers,
+            ),
+        },
+        getOriginalContent(bufferId, uri, state.textContentProviders),
+      )
+
+    | GotOriginalContent({bufferId, lines}) => (
+        {
+          ...state,
+          buffers:
+            IntMap.update(
+              bufferId,
+              Option.map(Buffer.setOriginalLines(lines)),
+              state.buffers,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
+>>>>>>> master
     | NewDecorationProvider({handle, label}) => (
         {
           ...state,

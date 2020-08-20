@@ -8,19 +8,18 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
-type t = IntMap.t(Buffer.t);
+type model = IntMap.t(Buffer.t);
 
 let empty = IntMap.empty;
 
 type mapFunction = Buffer.t => Buffer.t;
 
 let map = IntMap.map;
-let update = IntMap.update;
 let remove = IntMap.remove;
 
-let getBuffer = (id, map) => IntMap.find_opt(id, map);
+let get = (id, model) => IntMap.find_opt(id, model);
 
-let anyModified = (buffers: t) => {
+let anyModified = (buffers: model) => {
   IntMap.fold(
     (_key, v, prev) => Buffer.isModified(v) || prev,
     buffers,
@@ -28,7 +27,15 @@ let anyModified = (buffers: t) => {
   );
 };
 
-let isModifiedByPath = (buffers: t, filePath: string) => {
+let add = (buffer, model) => {
+  model |> IntMap.add(Buffer.getId(buffer), buffer);
+};
+
+let filter = (f, model) => {
+  model |> IntMap.bindings |> List.map(snd) |> List.filter(f);
+};
+
+let isModifiedByPath = (buffers: model, filePath: string) => {
   IntMap.exists(
     (_id, v) => {
       let bufferPath = Buffer.getFilePath(v);
@@ -55,12 +62,52 @@ let setModified = modified =>
 let setLineEndings = le =>
   Option.map(buffer => Buffer.setLineEndings(le, buffer));
 
-let reduce = (state: t, action: Actions.t) => {
-  switch (action) {
-  | BufferDisableSyntaxHighlighting(id) =>
-    IntMap.update(id, disableSyntaxHighlighting, state)
+[@deriving show({with_path: false})]
+type msg =
+  | SyntaxHighlightingDisabled(int)
+  | Entered({
+      id: int,
+      fileType: Oni_Core.Buffer.FileType.t,
+      lineEndings: [@opaque] option(Vim.lineEnding),
+      filePath: option(string),
+      isModified: bool,
+      version: int,
+      font: Font.t,
+      // TODO: This duplication-of-truth is really awkward,
+      // but I want to remove it shortly
+      buffer: [@opaque] Buffer.t,
+    })
+  | FileTypeChanged({
+      id: int,
+      fileType: Oni_Core.Buffer.FileType.t,
+    })
+  | FilenameChanged({
+      id: int,
+      newFilePath: option(string),
+      newFileType: Oni_Core.Buffer.FileType.t,
+      version: int,
+      isModified: bool,
+    })
+  | Update({
+      update: [@opaque] BufferUpdate.t,
+      oldBuffer: [@opaque] Buffer.t,
+      newBuffer: [@opaque] Buffer.t,
+      triggerKey: option(string),
+    })
+  | LineEndingsChanged({
+      id: int,
+      lineEndings: [@opaque] Vim.lineEnding,
+    })
+  | Saved(int)
+  | IndentationSet(int, [@opaque] IndentationSettings.t)
+  | ModifiedSet(int, bool);
 
-  | BufferEnter({
+let update = (msg: msg, model: model) => {
+  switch (msg) {
+  | SyntaxHighlightingDisabled(id) =>
+    IntMap.update(id, disableSyntaxHighlighting, model)
+
+  | Entered({
       id,
       fileType,
       lineEndings,
@@ -100,9 +147,9 @@ let reduce = (state: t, action: Actions.t) => {
         |> maybeSetLineEndings(lineEndings)
         |> Option.some
     );
-    IntMap.update(id, updater, state);
+    IntMap.update(id, updater, model);
 
-  | BufferFilenameChanged({id, newFileType, newFilePath, version, isModified}) =>
+  | FilenameChanged({id, newFileType, newFilePath, version, isModified}) =>
     let updater = (
       fun
       | Some(buffer) =>
@@ -115,23 +162,22 @@ let reduce = (state: t, action: Actions.t) => {
         |> Option.some
       | None => None
     );
-    IntMap.update(id, updater, state);
+    IntMap.update(id, updater, model);
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
-  | BufferSetModified(id, isModified) =>
-    IntMap.update(id, setModified(isModified), state)
+  | ModifiedSet(id, isModified) =>
+    IntMap.update(id, setModified(isModified), model)
 
-  | BufferSetIndentation(id, indent) =>
-    IntMap.update(id, setIndentation(indent), state)
+  | IndentationSet(id, indent) =>
+    IntMap.update(id, setIndentation(indent), model)
 
-  | BufferLineEndingsChanged({id, lineEndings}) =>
-    IntMap.update(id, setLineEndings(lineEndings), state)
+  | LineEndingsChanged({id, lineEndings}) =>
+    IntMap.update(id, setLineEndings(lineEndings), model)
 
-  | BufferFileTypeChanged({id, fileType}) =>
-    IntMap.update(id, Option.map(Buffer.setFileType(fileType)), state)
+  | Update({update, newBuffer, _}) => IntMap.add(update.id, newBuffer, model)
 
-  | BufferUpdate({update, newBuffer, _}) =>
-    IntMap.add(update.id, newBuffer, state)
+  | FileTypeChanged({id, fileType}) =>
+    IntMap.update(id, Option.map(Buffer.setFileType(fileType)), model)
 
-  | _ => state
+  | Saved(_) => model
   };
 };
