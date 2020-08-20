@@ -109,6 +109,10 @@ let update = (editor, msg) => {
       Editor.setMinimapEnabled(~enabled, editor),
       Nothing,
     )
+  | LineHeightConfigChanged(lineHeight) => (
+      Editor.setLineHeight(~lineHeight, editor),
+      Nothing,
+    )
   };
 };
 
@@ -119,10 +123,27 @@ module Sub = {
       let schema = EditorConfiguration.Minimap.enabled;
       type msg = Msg.t;
     });
+  module LineHeightSub =
+    Oni_Core.Config.Sub.Make({
+      type configValue = LineHeight.t;
+      let schema = EditorConfiguration.lineHeight;
+      type msg = Msg.t;
+    });
   let global = (~config) => {
-    MinimapEnabledSub.create(
-      ~config, ~name="Feature_Editor.Config.minimapEnabled", ~toMsg=enabled =>
-      MinimapEnabledConfigChanged(enabled)
-    );
+    let minimapEnabledConfig =
+      MinimapEnabledSub.create(
+        ~config, ~name="Feature_Editor.Config.minimapEnabled", ~toMsg=enabled =>
+        MinimapEnabledConfigChanged(enabled)
+      );
+
+    let lineHeightConfig =
+      LineHeightSub.create(
+        ~config,
+        ~name="Feature_Editor.Config.lineHeightEnabled",
+        ~toMsg=lineHeight =>
+        LineHeightConfigChanged(lineHeight)
+      );
+
+    [minimapEnabledConfig, lineHeightConfig] |> Isolinear.Sub.batch;
   };
 };

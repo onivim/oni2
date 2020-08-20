@@ -294,7 +294,7 @@ let%component make =
          let popupX = pixelX +. gutterWidth |> int_of_float;
          let popupTopY = pixelY |> int_of_float;
          let popupBottomY =
-           pixelY +. Editor.getLineHeight(editor) |> int_of_float;
+           pixelY +. Editor.lineHeightInPixels(editor) |> int_of_float;
 
          let popupAvailableWidth = layout.bufferWidthInPixels |> int_of_float;
          let popupAvailableHeight = pixelHeight;
