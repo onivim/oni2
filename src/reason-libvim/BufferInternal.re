@@ -71,8 +71,6 @@ let checkBufferForUpdate = buffer => {
         };
 
         if (!String.equal(string_opt(lastFt), string_opt(newFiletype))) {
-          prerr_endline("last filetype: " ++ string_opt(lastFt));
-          prerr_endline("new filetype: " ++ string_opt(newFiletype));
           lastFiletype := newFiletype;
           Event.dispatch(
             BufferMetadata.ofBuffer(buffer),
