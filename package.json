@@ -196,6 +196,7 @@
     "format": "esy dune build @fmt --auto-promote",
     "checkhealth": "esy x Oni2 -f --checkhealth",
     "check": "esy b dune build @check",
+    "lint": "esy b bash ./scripts/lint.sh",
     "run": "esy x Oni2",
     "watch": "dune build --watch -p libvim,textmate,Oni2 -j4",
     "create-release": "esy node ./scripts/release.js",
