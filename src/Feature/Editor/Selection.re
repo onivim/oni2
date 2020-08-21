@@ -17,20 +17,23 @@ let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
     ranges :=
       [
         EditorCoreTypes.(
-        CharacterRange.{
-          start: CharacterPosition.{
-            line: LineNumber.ofZeroBased(currentPos),
-            character: CharacterIndex.zero,
-          },
-          stop: {
-            line: LineNumber.ofZeroBased(currentPos),
-            character: CharacterIndex.ofInt(
+          CharacterRange.{
+            start:
+              CharacterPosition.{
+                line: LineNumber.ofZeroBased(currentPos),
+                character: CharacterIndex.zero,
+              },
+            stop: {
+              line: LineNumber.ofZeroBased(currentPos),
+              character:
+                CharacterIndex.ofInt(
                   buffer
                   |> Buffer.getLine(currentPos)
                   |> BufferLine.lengthInBytes,
-            )
+                ),
+            },
           }
-        }),
+        ),
         ...ranges^,
       ];
 
@@ -47,26 +50,27 @@ let getRangesForVisualSelection =
 
   while (pos^ <= endLine) {
     let currentPos = pos^;
-    let startCharacterIdx = startLine == currentPos ? startColumn : 0
-    let endCharacterIdx = 
-                    endLine == currentPos
-                      ? endColumn + 1
-                      : buffer
-                        |> Buffer.getLine(currentPos)
-                        |> BufferLine.lengthInBytes
+    let startCharacterIdx = startLine == currentPos ? startColumn : 0;
+    let endCharacterIdx =
+      endLine == currentPos
+        ? endColumn + 1
+        : buffer |> Buffer.getLine(currentPos) |> BufferLine.lengthInBytes;
     ranges :=
       [
         EditorCoreTypes.(
-        CharacterRange.{
-            start: CharacterPosition.{
-              line: LineNumber.ofZeroBased(currentPos),
-              character: CharacterIndex.ofInt(startCharacterIdx),
-            },
-            stop: CharacterPosition.{
-              line: LineNumber.ofZeroBased(currentPos),
-              character: CharacterIndex.ofInt(endCharacterIdx),
-            },
-          }),
+          CharacterRange.{
+            start:
+              CharacterPosition.{
+                line: LineNumber.ofZeroBased(currentPos),
+                character: CharacterIndex.ofInt(startCharacterIdx),
+              },
+            stop:
+              CharacterPosition.{
+                line: LineNumber.ofZeroBased(currentPos),
+                character: CharacterIndex.ofInt(endCharacterIdx),
+              },
+          }
+        ),
         ...ranges^,
       ];
 
@@ -96,14 +100,17 @@ let getRangesForBlockSelection =
       if (startC < bufferLength) {
         Some(
           CharacterRange.{
-            start: CharacterPosition.{
-              line: EditorCoreTypes.LineNumber.ofZeroBased(currentPos),
-              character: CharacterIndex.ofInt(startC),
-            },
-            stop: CharacterPosition.{
-              line: EditorCoreTypes.LineNumber.ofZeroBased(currentPos),
-              character: CharacterIndex.ofInt(min(endColumn + 1, bufferLength)),
-            }
+            start:
+              CharacterPosition.{
+                line: EditorCoreTypes.LineNumber.ofZeroBased(currentPos),
+                character: CharacterIndex.ofInt(startC),
+              },
+            stop:
+              CharacterPosition.{
+                line: EditorCoreTypes.LineNumber.ofZeroBased(currentPos),
+                character:
+                  CharacterIndex.ofInt(min(endColumn + 1, bufferLength)),
+              },
           },
         );
       } else {
@@ -136,13 +143,18 @@ let getRangesForBlockSelection =
  */
 let getRanges: (VisualRange.t, Buffer.t) => list(CharacterRange.t) =
   (selection, buffer) => {
-    let startLine = EditorCoreTypes.LineNumber.toZeroBased(selection.range.start.line);
-    let startCharacter = CharacterIndex.toInt(selection.range.start.character);
+    let startLine =
+      EditorCoreTypes.LineNumber.toZeroBased(selection.range.start.line);
+    let startCharacter =
+      CharacterIndex.toInt(selection.range.start.character);
 
     let bufferLines = Buffer.getNumberOfLines(buffer);
 
     let endLine =
-      min(EditorCoreTypes.LineNumber.toZeroBased(selection.range.stop.line), bufferLines - 1);
+      min(
+        EditorCoreTypes.LineNumber.toZeroBased(selection.range.stop.line),
+        bufferLines - 1,
+      );
     let endCharacter = CharacterIndex.toInt(selection.range.stop.character);
 
     switch (selection.mode) {

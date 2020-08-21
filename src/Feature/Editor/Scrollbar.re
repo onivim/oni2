@@ -179,7 +179,11 @@ module Vertical = {
        })
     |> List.map(line => {
          let diagTop =
-           Editor.projectLine(~line=EditorCoreTypes.LineNumber.ofZeroBased(line), ~pixelHeight=totalHeight, editor)
+           Editor.projectLine(
+             ~line=EditorCoreTypes.LineNumber.ofZeroBased(line),
+             ~pixelHeight=totalHeight,
+             editor,
+           )
            |> int_of_float;
 
          let diagnosticStyle =
@@ -221,8 +225,10 @@ module Vertical = {
 
     matchingPair
     |> Option.map(mp => {
-         let (startPos: EditorCoreTypes.CharacterPosition.t,
-         endPos: EditorCoreTypes.CharacterPosition.t) = mp;
+         let (
+           startPos: EditorCoreTypes.CharacterPosition.t,
+           endPos: EditorCoreTypes.CharacterPosition.t,
+         ) = mp;
 
          let topLine =
            Editor.projectLine(

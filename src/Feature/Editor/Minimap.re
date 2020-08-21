@@ -117,7 +117,11 @@ let%component make =
                 ~count,
                 ~diagnostics,
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
-                ~selection: Hashtbl.t(EditorCoreTypes.LineNumber.t, list(CharacterRange.t)),
+                ~selection:
+                   Hashtbl.t(
+                     EditorCoreTypes.LineNumber.t,
+                     list(CharacterRange.t),
+                   ),
                 ~showSlider,
                 ~colors: Colors.t,
                 ~bufferHighlights,
@@ -277,10 +281,11 @@ let%component make =
           ~left=Constants.leftMargin,
           ~top=
             rowHeight
-            *. float(EditorCoreTypes.LineNumber.toZeroBased(
-              CharacterPosition.(
-            cursorPosition.line
-            )))
+            *. float(
+                 EditorCoreTypes.LineNumber.toZeroBased(
+                   CharacterPosition.(cursorPosition.line),
+                 ),
+               )
             -. scrollY,
           ~height=float(Constants.minimapCharacterHeight),
           ~width=float(width),
@@ -335,7 +340,6 @@ let%component make =
           ~count,
           ~render=
             (item, offset) => {
-              open Range;
               /* draw selection */
               let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
               switch (Hashtbl.find_opt(selection, index)) {

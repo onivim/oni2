@@ -3,7 +3,7 @@ open EditorCoreTypes;
 let zeroRange =
   CharacterRange.{
     start: CharacterPosition.zero,
-    stop: CharacterPosition.zero
+    stop: CharacterPosition.zero,
   };
 
 let getRange = () => {
@@ -15,15 +15,17 @@ let getRange = () => {
     zeroRange;
   } else {
     CharacterRange.{
-      start: CharacterPosition.{
-        line: LineNumber.ofOneBased(startLine),
-        character: CharacterIndex.ofInt(startColumn),
-      },
-      stop: CharacterPosition.{
-        line: LineNumber.ofOneBased(stopLine),
-        character: CharacterIndex.ofInt(stopColumn),
-      }
-    }
+      start:
+        CharacterPosition.{
+          line: LineNumber.ofOneBased(startLine),
+          character: CharacterIndex.ofInt(startColumn),
+        },
+      stop:
+        CharacterPosition.{
+          line: LineNumber.ofOneBased(stopLine),
+          character: CharacterIndex.ofInt(stopColumn),
+        },
+    };
   };
 };
 

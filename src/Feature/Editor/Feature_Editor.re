@@ -26,8 +26,14 @@ type msg = Msg.t;
 
 type outmsg =
   | Nothing
-  | MouseHovered({bytePosition: BytePosition.t, characterPosition: CharacterPosition.t })
-  | MouseMoved({bytePosition: BytePosition.t, characterPosition: CharacterPosition.t });
+  | MouseHovered({
+      bytePosition: BytePosition.t,
+      characterPosition: CharacterPosition.t,
+    })
+  | MouseMoved({
+      bytePosition: BytePosition.t,
+      characterPosition: CharacterPosition.t,
+    });
 
 type model = Editor.t;
 
@@ -92,20 +98,26 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | MouseHovered({bytePosition}) => (editor,  {
-    Editor.byteToCharacter(bytePosition, editor)
-    |> Option.map(characterPosition => {
-    MouseHovered({bytePosition: bytePosition, characterPosition: characterPosition })
-    })
-    |> Option.value(~default=Nothing)
-  })
-  | MouseMoved({bytePosition}) => (editor,  {
-    Editor.byteToCharacter(bytePosition, editor)
-    |> Option.map(characterPosition => {
-    MouseMoved({bytePosition: bytePosition, characterPosition: characterPosition })
-    })
-    |> Option.value(~default=Nothing)
-  })
+  | MouseHovered({bytePosition}) => (
+      editor,
+      {
+        Editor.byteToCharacter(bytePosition, editor)
+        |> Option.map(characterPosition => {
+             MouseHovered({bytePosition, characterPosition})
+           })
+        |> Option.value(~default=Nothing);
+      },
+    )
+  | MouseMoved({bytePosition}) => (
+      editor,
+      {
+        Editor.byteToCharacter(bytePosition, editor)
+        |> Option.map(characterPosition => {
+             MouseMoved({bytePosition, characterPosition})
+           })
+        |> Option.value(~default=Nothing);
+      },
+    )
   | SelectionChanged(selection) => (
       Editor.setSelection(~selection, editor),
       Nothing,

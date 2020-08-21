@@ -9,6 +9,7 @@ let toZeroBased: t => int;
 let toOneBased: t => int;
 
 let (+): (t, int) => t;
+let (-): (t, int) => t;
 
 let equals: (t, t) => bool;
 let (==): (t, t) => bool;

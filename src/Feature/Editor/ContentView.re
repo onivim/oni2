@@ -201,12 +201,14 @@ let renderText =
       let bufferLine = Editor.viewLine(editor, item).contents;
       let startPixel = Editor.scrollX(editor);
       let startCharacter =
-        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine) |> CharacterIndex.toInt;
+        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine)
+        |> CharacterIndex.toInt;
       let endCharacter =
         BufferLine.Slow.getIndexFromPixel(
           ~pixel=startPixel +. float(bufferWidthInPixels),
           bufferLine,
-        ) |> CharacterIndex.toInt;
+        )
+        |> CharacterIndex.toInt;
 
       let tokens =
         getTokensForLine(

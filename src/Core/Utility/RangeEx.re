@@ -20,8 +20,9 @@ let toLineMap: list(Range.t) => IntMap.t(list(Range.t)) =
       ranges,
     );
   };
-  
-let toCharacterLineMap: list(CharacterRange.t) => IntMap.t(list(CharacterRange.t)) =
+
+let toCharacterLineMap:
+  list(CharacterRange.t) => IntMap.t(list(CharacterRange.t)) =
   ranges => {
     List.fold_left(
       (prev, cur) =>

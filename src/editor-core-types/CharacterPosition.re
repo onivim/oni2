@@ -8,9 +8,6 @@ let equals = (a, b) => {
   a.line == b.line && a.character == b.character;
 };
 
-let zero = {
-  line: LineNumber.zero,
-  character: CharacterIndex.zero,
-};
+let zero = {line: LineNumber.zero, character: CharacterIndex.zero};
 
 let (==) = equals;

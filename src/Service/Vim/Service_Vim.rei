@@ -29,7 +29,7 @@ module Effects: {
 
   let applyCompletion:
     (
-      ~meetColumn: Index.t,
+      ~meetColumn: CharacterIndex.t,
       ~insertText: string,
       ~toMsg: list(BytePosition.t) => 'msg
     ) =>

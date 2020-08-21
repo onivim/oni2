@@ -53,7 +53,10 @@ let update = (msg, model) =>
       | Some({definition, _}) =>
         let position =
           CharacterPosition.{
-            line: EditorCoreTypes.LineNumber.ofOneBased(definition.range.startLineNumber),
+            line:
+              EditorCoreTypes.LineNumber.ofOneBased(
+                definition.range.startLineNumber,
+              ),
             character: CharacterIndex.ofInt(definition.range.startColumn - 1),
           };
         Outmsg.OpenFile({

@@ -3,7 +3,6 @@
  *
  * In-memory text buffer representation
  */
-open EditorCoreTypes;
 module ArrayEx = Utility.ArrayEx;
 module OptionEx = Utility.OptionEx;
 module Path = Utility.Path;

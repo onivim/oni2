@@ -15,7 +15,12 @@ module Msg: {
 
   module Formatting: {
     let formatDocument: msg;
-    let formatRange: (~startLine: EditorCoreTypes.LineNumber.t, ~endLine: EditorCoreTypes.LineNumber.t) => msg;
+    let formatRange:
+      (
+        ~startLine: EditorCoreTypes.LineNumber.t,
+        ~endLine: EditorCoreTypes.LineNumber.t
+      ) =>
+      msg;
   };
 
   module Hover: {
@@ -68,7 +73,9 @@ let bufferUpdated:
     model
   ) =>
   model;
-let cursorMoved: (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) => model;
+let cursorMoved:
+  (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) =>
+  model;
 let startInsertMode: model => model;
 let stopInsertMode: model => model;
 let isFocused: model => bool;
@@ -145,7 +152,8 @@ module Definition: {
 };
 
 module DocumentHighlights: {
-  let getByLine: (~bufferId: int, ~line: int, model) => list(CharacterRange.t);
+  let getByLine:
+    (~bufferId: int, ~line: int, model) => list(CharacterRange.t);
 
   let getLinesWithHighlight: (~bufferId: int, model) => list(int);
 };

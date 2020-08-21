@@ -100,7 +100,8 @@ let minimap =
       getTokensForLine={getTokensForLine(
         ~editor,
         ~bufferHighlights,
-        ~cursorLine=EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
+        ~cursorLine=
+          EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
         ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
@@ -224,7 +225,8 @@ let%component make =
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
-    Selection.getRanges(Editor.selection(editor), buffer) |> CharacterRange.toHash;
+    Selection.getRanges(Editor.selection(editor), buffer)
+    |> CharacterRange.toHash;
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
@@ -286,10 +288,7 @@ let%component make =
     maybeHover
     |> Option.map(((position: CharacterPosition.t, sections)) => {
          let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-           Editor.bufferCharacterPositionToPixel(
-             ~position,
-             editor,
-           );
+           Editor.bufferCharacterPositionToPixel(~position, editor);
          let popupX = pixelX +. gutterWidth |> int_of_float;
          let popupTopY = pixelY |> int_of_float;
          let popupBottomY =

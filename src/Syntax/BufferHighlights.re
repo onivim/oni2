@@ -9,7 +9,9 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
-type highlights = {searchHighlightsByLine: IntMap.t(list(CharacterRange.t))};
+type highlights = {
+  searchHighlightsByLine: IntMap.t(list(CharacterRange.t)),
+};
 
 let default: highlights = {searchHighlightsByLine: IntMap.empty};
 
@@ -30,7 +32,9 @@ let setSearchHighlights = (bufferId, ranges, state) => {
 let getSearchHighlights = (~bufferId, ~line, state) => {
   IntMap.find_opt(bufferId, state)
   |> Option.map(highlights => highlights.searchHighlightsByLine)
-  |> OptionEx.flatMap(IntMap.find_opt(EditorCoreTypes.LineNumber.toZeroBased(line)))
+  |> OptionEx.flatMap(
+       IntMap.find_opt(EditorCoreTypes.LineNumber.toZeroBased(line)),
+     )
   |> Option.value(~default=[]);
 };
 

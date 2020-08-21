@@ -154,11 +154,19 @@ let create = (~config, ~buffer, ()) => {
       VisualRange.create(
         ~mode=Vim.Types.None,
         EditorCoreTypes.(
-        CharacterRange.{
-          start: CharacterPosition.{line: LineNumber.zero, 
-          character: CharacterIndex.zero},
-          stop: CharacterPosition.{line: LineNumber.zero, character: CharacterIndex.zero},
-        }),
+          CharacterRange.{
+            start:
+              CharacterPosition.{
+                line: LineNumber.zero,
+                character: CharacterIndex.zero,
+              },
+            stop:
+              CharacterPosition.{
+                line: LineNumber.zero,
+                character: CharacterIndex.zero,
+              },
+          }
+        ),
       ),
     pixelWidth: 1,
     pixelHeight: 1,
@@ -193,15 +201,13 @@ let byteToCharacter = (position: BytePosition.t, editor) => {
 
   if (line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
-    let character =
-      BufferLine.getIndex(~byte=position.byte, bufferLine)
+    let character = BufferLine.getIndex(~byte=position.byte, bufferLine);
 
-    Some(EditorCoreTypes.(CharacterPosition.{
-    line: position.line,
-    character,
-    }));
+    Some(
+      EditorCoreTypes.(CharacterPosition.{line: position.line, character}),
+    );
   } else {
-    None
+    None;
   };
 };
 
@@ -215,12 +221,9 @@ let characterToByte = (position: CharacterPosition.t, editor) => {
     let byte =
       BufferLine.getByteFromIndex(~index=position.character, bufferLine);
 
-    Some(EditorCoreTypes.(BytePosition.{
-    line: position.line,
-    byte,
-    }));
+    Some(EditorCoreTypes.(BytePosition.{line: position.line, byte}));
   } else {
-    None
+    None;
   };
 };
 let getCharacterAtPosition = (~position: CharacterPosition.t, {buffer, _}) => {
@@ -311,17 +314,20 @@ let getCharacterUnderCursor = ({cursors, buffer, _}) => {
 };
 
 let getPrimaryCursor = editor => {
-  let maybeCharacterCursor = switch (editor.cursors) {
-  | [cursor, ..._] => byteToCharacter(cursor, editor)
-  | [] =>  None;
-  };
+  let maybeCharacterCursor =
+    switch (editor.cursors) {
+    | [cursor, ..._] => byteToCharacter(cursor, editor)
+    | [] => None
+    };
 
   maybeCharacterCursor
-  |> Option.value(~default=
-    CharacterPosition.{
-    line: EditorCoreTypes.LineNumber.zero,
-    character: CharacterIndex.zero,
-  });
+  |> Option.value(
+       ~default=
+         CharacterPosition.{
+           line: EditorCoreTypes.LineNumber.zero,
+           character: CharacterIndex.zero,
+         },
+     );
 };
 
 let getPrimaryCursorByte = editor =>
@@ -336,8 +342,13 @@ let selectionOrCursorRange = editor => {
     let pos = getPrimaryCursor(editor);
     let range =
       CharacterRange.{
-        start: CharacterPosition.{line: pos.line, character: CharacterIndex.zero},
-        stop: CharacterPosition.{line: EditorCoreTypes.LineNumber.(pos.line + 1), character: CharacterIndex.zero},
+        start:
+          CharacterPosition.{line: pos.line, character: CharacterIndex.zero},
+        stop:
+          CharacterPosition.{
+            line: EditorCoreTypes.LineNumber.(pos.line + 1),
+            character: CharacterIndex.zero,
+          },
       };
     range;
   | Line

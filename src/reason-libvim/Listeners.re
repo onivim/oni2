@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open Types;
 
 type autocmdListener = (autocmd, Native.buffer) => unit;

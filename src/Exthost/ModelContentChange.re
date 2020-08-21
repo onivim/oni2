@@ -22,12 +22,15 @@ let joinLines = (separator: string, lines: list(string)) => {
 
 let getRangeFromEdit = (bu: BufferUpdate.t) => {
   let newLines = Array.length(bu.lines);
-  let isInsert = EditorCoreTypes.(
-    newLines >= LineNumber.toZeroBased(bu.endLine)
-    - LineNumber.toZeroBased(bu.startLine));
+  let isInsert =
+    EditorCoreTypes.(
+      newLines >= LineNumber.toZeroBased(bu.endLine)
+      - LineNumber.toZeroBased(bu.startLine)
+    );
 
   let startLine = EditorCoreTypes.LineNumber.toZeroBased(bu.startLine);
-  let endLine = EditorCoreTypes.LineNumber.toZeroBased(bu.endLine) |> max(startLine);
+  let endLine =
+    EditorCoreTypes.LineNumber.toZeroBased(bu.endLine) |> max(startLine);
 
   let range =
     EditorCoreTypes.(
@@ -38,7 +41,7 @@ let getRangeFromEdit = (bu: BufferUpdate.t) => {
             character: CharacterIndex.zero,
           },
         stop:
-          Location.{
+          CharacterPosition.{
             line: LineNumber.ofZeroBased(endLine),
             character: CharacterIndex.zero,
           },
@@ -51,7 +54,8 @@ let getRangeFromEdit = (bu: BufferUpdate.t) => {
 let getRangeLengthFromEdit =
     (~previousBuffer, ~eol: Eol.t, bu: BufferUpdate.t) => {
   let startLine = EditorCoreTypes.LineNumber.toZeroBased(bu.startLine);
-  let endLine = EditorCoreTypes.LineNumber.toZeroBased(bu.endLine) |> max(startLine);
+  let endLine =
+    EditorCoreTypes.LineNumber.toZeroBased(bu.endLine) |> max(startLine);
 
   let totalLines = Buffer.getNumberOfLines(previousBuffer);
 

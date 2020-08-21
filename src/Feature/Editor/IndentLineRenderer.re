@@ -76,7 +76,8 @@ let render =
     ) => {
   /* First, render *all* indent guides */
   let bufferLineCount = Buffer.getNumberOfLines(buffer);
-  let cursorLine = EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line);
+  let cursorLine =
+    EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line);
   let startLine = max(0, startLine);
   let endLine = min(bufferLineCount, endLine);
 
@@ -92,7 +93,7 @@ let render =
       Editor.bufferBytePositionToPixel(
         ~position=
           BytePosition.{
-            line: cursorPosition.line,
+            line: EditorCoreTypes.LineNumber.ofZeroBased(line),
             byte: ByteIndex.zero,
           },
         editor,

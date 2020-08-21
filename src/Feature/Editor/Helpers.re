@@ -50,7 +50,7 @@ let getTokensForLine =
             when !ignoreMatchingPairs =>
           // Convert character position -> byte position
           None
-          // TODO before merge:
+        // TODO before merge:
         //          if (Index.toZeroBased(startPos.line) == i) {
         //            Some(Index.toZeroBased(startPos.column));
         //          } else if (Index.toZeroBased(endPos.line) == i) {

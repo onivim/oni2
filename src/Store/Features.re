@@ -60,7 +60,9 @@ module Internal = {
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
             dispatch(
               LanguageSupport(
-                Feature_LanguageSupport.Msg.Hover.mouseHovered(characterPosition),
+                Feature_LanguageSupport.Msg.Hover.mouseHovered(
+                  characterPosition,
+                ),
               ),
             )
           })
@@ -68,7 +70,9 @@ module Internal = {
           Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
             dispatch(
               LanguageSupport(
-                Feature_LanguageSupport.Msg.Hover.mouseMoved(characterPosition),
+                Feature_LanguageSupport.Msg.Hover.mouseMoved(
+                  characterPosition,
+                ),
               ),
             )
           })
@@ -852,8 +856,7 @@ let update =
            let syntaxScope =
              Feature_Syntax.getSyntaxScope(
                ~bufferId=Buffer.getId(buffer),
-               ~line=activeCursorByte.line,
-               ~byteIndex=activeCursorByte.byte,
+               ~bytePosition=activeCursorByte,
                state.syntaxHighlights,
              );
            let config = Feature_Configuration.resolver(state.config);

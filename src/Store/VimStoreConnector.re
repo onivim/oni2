@@ -282,11 +282,7 @@ let start =
       open Vim.VisualRange;
 
       let {visualType, range} = vr;
-      let vr =
-        Core.VisualRange.create(
-          ~mode=visualType,
-          range,
-        );
+      let vr = Core.VisualRange.create(~mode=visualType, range);
 
       let editorId =
         Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
@@ -429,7 +425,9 @@ let start =
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
              // If the first line changes, re-run the file detection.
              let firstLineChanged =
-               EditorCoreTypes.(LineNumber.equals(bu.startLine, LineNumber.zero))
+               EditorCoreTypes.(
+                 LineNumber.equals(bu.startLine, LineNumber.zero)
+               )
                || bu.isFull;
 
              let newBuffer =
@@ -523,8 +521,8 @@ let start =
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
 
-        let sameLineFilter = (range: Range.t) =>
-          range.start.line == range.stop.line;
+        let sameLineFilter = (range: CharacterRange.t) =>
+          EditorCoreTypes.LineNumber.(range.start.line == range.stop.line);
 
         let buffer = Vim.Buffer.getCurrent();
         let id = Vim.Buffer.getId(buffer);
@@ -873,8 +871,7 @@ let start =
         };
 
       let editor = Feature_Layout.activeEditor(state.layout);
-      let editorId =
-        editor |> Editor.getId;
+      let editorId = editor |> Editor.getId;
 
       (
         state,
@@ -883,7 +880,9 @@ let start =
           |> Option.map(addBufferRendererEffect(bufferId))
           |> Option.value(~default=Isolinear.Effect.none),
           maybeLocation
-          |> OptionEx.flatMap(loc => Feature_Editor.Editor.characterToByte(loc, editor))
+          |> OptionEx.flatMap(loc =>
+               Feature_Editor.Editor.characterToByte(loc, editor)
+             )
           |> Option.map(gotoLocationEffect(editorId))
           |> Option.value(~default=Isolinear.Effect.none),
         ]),

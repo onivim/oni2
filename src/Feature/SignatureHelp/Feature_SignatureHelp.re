@@ -258,10 +258,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           open Index;
           let CharacterPosition.{line, character: col} =
             Feature_Editor.Editor.getPrimaryCursor(editor);
-          CharacterPosition.{
-            line,
-            character: CharacterIndex.(col + 1),
-          };
+          CharacterPosition.{line, character: CharacterIndex.(col + 1)};
         } else {
           Feature_Editor.Editor.getPrimaryCursor(editor);
         };
@@ -369,11 +366,12 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           editorID == editorID'
           && editorID == Feature_Editor.Editor.getId(editor) =>
       let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
-      
-      let loc = CharacterPosition.({
-        line: cursorLocation.line,
-        character: CharacterIndex.(cursorLocation.character + 1),
-      });
+
+      let loc =
+        CharacterPosition.{
+          line: cursorLocation.line,
+          character: CharacterIndex.(cursorLocation.character + 1),
+        };
       switch (model.location) {
       | Some(location) when location == loc =>
         let requestID = IDGenerator.get();
@@ -630,11 +628,11 @@ module View = {
           None;
         }
       )
-      |> Option.map((characterPosition: CharacterPosition.t)=> {
+      |> Option.map((characterPosition: CharacterPosition.t) => {
            let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
              Feature_Editor.Editor.bufferCharacterPositionToPixel(
-              ~position=characterPosition,
-              editor,
+               ~position=characterPosition,
+               editor,
              );
            (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
          });

@@ -119,11 +119,18 @@ let bufferCharacterPositionToPixel:
 // defined by [pixelWidth] and [pixelHeight], return the [(pixelX, pixelY)]
 // corresponding to the top-left of the line and column.
 let project:
-  (~line: EditorCoreTypes.LineNumber.t, ~column: int, ~pixelWidth: int, ~pixelHeight: int, t) =>
+  (
+    ~line: EditorCoreTypes.LineNumber.t,
+    ~column: int,
+    ~pixelWidth: int,
+    ~pixelHeight: int,
+    t
+  ) =>
   (float, float);
 
 // [projectLine] - like [project], but ignoring the [column]/[width]
-let projectLine: (~line: EditorCoreTypes.LineNumber.t, ~pixelHeight: int, t) => float;
+let projectLine:
+  (~line: EditorCoreTypes.LineNumber.t, ~pixelHeight: int, t) => float;
 
 // [unproject] - given a pixel space defined by [pixelWidth] and [pixelHeight],
 // map the [pixelX] and [pixelY] of that space to a pixel position on the editor

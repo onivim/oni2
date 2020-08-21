@@ -76,4 +76,5 @@ let toHash = ranges => {
   hash;
 };
 
-let equals = (a, b) => CharacterPosition.(a.start == b.start && a.stop == b.stop);
+let equals = (a, b) =>
+  CharacterPosition.(a.start == b.start && a.stop == b.stop);
