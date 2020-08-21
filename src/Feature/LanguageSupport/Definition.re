@@ -15,7 +15,7 @@ type provider = {
 [@deriving show]
 type definition = {
   bufferId: int,
-  requestLocation: Location.t,
+  requestLocation: CharacterPosition.t,
   definition: Exthost.DefinitionLink.t,
 };
 
@@ -89,7 +89,7 @@ let getAt = (~bufferId as currentBufferId, ~range, {maybeDefinition, _}) => {
   maybeDefinition
   |> OptionEx.flatMap(({bufferId, definition, requestLocation}) =>
        if (bufferId == currentBufferId
-           && Range.contains(requestLocation, range)) {
+           && CharacterRange.contains(requestLocation, range)) {
          Some(definition);
        } else {
          None;

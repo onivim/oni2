@@ -15,14 +15,14 @@ type t = {
   // Base is the prefix string
   base: string,
   // Meet is the location where we request completions
-  location: Location.t,
+  location: CharacterPosition.t,
 };
 
 let toString = (meet: t) =>
   Printf.sprintf(
     "Base: |%s| Meet: %s",
     meet.base,
-    meet.location |> Location.show,
+    meet.location |> CharacterPosition.show,
   );
 
 let defaultTriggerCharacters = [Uchar.of_char('.')];
@@ -77,9 +77,9 @@ let fromLine =
       Some({
         bufferId,
         location:
-          Location.{
-            line: Index.fromZeroBased(lineNumber),
-            column: Index.zero,
+          CharacterPosition.{
+            line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+            character: CharacterIndex.zero,
           },
         base,
       });
@@ -90,9 +90,9 @@ let fromLine =
     Some({
       bufferId,
       location:
-        Location.{
-          line: Index.fromZeroBased(lineNumber),
-          column: Index.fromZeroBased(v),
+        CharacterPosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          character: CharacterIndex.ofInt(v),
         },
       base,
     })

@@ -99,10 +99,10 @@ let getTokenAtPosition =
       ~bufferSyntaxHighlights,
       ~startIndex,
       ~endIndex,
-      position: Location.t,
+      position: CharacterPosition.t,
     ) => {
-  let lineNumber = position.line |> Index.toZeroBased;
-  let index = position.column |> Index.toZeroBased;
+  let lineNumber = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
+  let index = position.character |> CharacterIndex.toInt;
 
   getTokensForLine(
     ~editor,

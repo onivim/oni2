@@ -1,4 +1,6 @@
 [@deriving show({with_path: false})]
+
+// Zero-based UTF-8 character index
 type t;
 
 let zero: t;
@@ -12,3 +14,5 @@ let (/): (t, int) => t;
 let (-): (t, int) => t;
 let (<): (t, t) => bool;
 let (>): (t, t) => bool;
+let (<=): (t, t) => bool;
+let (>=): (t, t) => bool;

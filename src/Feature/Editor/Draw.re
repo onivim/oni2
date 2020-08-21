@@ -133,27 +133,21 @@ let drawUtf8Text = {
 };
 let utf8Text = drawUtf8Text;
 
-let underline = (~context, ~color=Revery.Colors.black, r: Range.t) => {
-  let line = Index.toZeroBased(r.start.line);
-  let start = Index.toZeroBased(r.start.column);
-  let endLine = Index.toZeroBased(r.stop.line);
-  let endC = Index.toZeroBased(r.stop.column);
+let underline = (~context, ~color=Revery.Colors.black, range: CharacterRange.t) => {
+//  let line = Index.toZeroBased(r.start.line);
+//  let start = Index.toZeroBased(r.start.column);
+//  let endLine = Index.toZeroBased(r.stop.line);
+//  let endC = Index.toZeroBased(r.stop.column);
 
   let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
     Editor.bufferCharacterPositionToPixel(
-      ~position=CharacterPosition.{
-        line: LineNumber.ofZeroBased(line),
-        character: CharacterIndex.ofInt(start)
-      },
+      ~position=range.start,
       context.editor,
     );
 
   let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
     Editor.bufferCharacterPositionToPixel(
-      ~position=CharacterPosition.{
-        line: LineNumber.ofZeroBased(endLine),
-        character: CharacterIndex.ofInt(endC)
-      },
+      ~position=range.stop,
       context.editor,
     );
 

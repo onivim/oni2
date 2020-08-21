@@ -10,7 +10,7 @@ type t = {
   rangeLength: int,
 };
 
-let create = (~rangeLength: int, ~range: Range.t, ~text: string, ()) => {
+let create = (~rangeLength: int, ~range: CharacterRange.t, ~text: string, ()) => {
   range: OneBasedRange.ofRange(range),
   text,
   rangeLength,
@@ -29,13 +29,16 @@ let getRangeFromEdit = (bu: BufferUpdate.t) => {
   let startLine = Index.toZeroBased(bu.startLine);
   let endLine = Index.toZeroBased(bu.endLine) |> max(startLine);
 
-  let range =
-    Range.{
+  let range = EditorCoreTypes.(
+    CharacterRange.{
       start:
-        Location.{line: Index.fromZeroBased(startLine), column: Index.zero},
+        CharacterPosition.{
+        line: LineNumber.ofZeroBased(startLine), character: CharacterIndex.zero},
       stop:
-        Location.{line: Index.fromZeroBased(endLine), column: Index.zero},
-    };
+        Location.{
+        line: LineNumber.ofZeroBased(endLine), 
+        character: CharacterIndex.zero},
+    });
 
   (isInsert, range);
 };

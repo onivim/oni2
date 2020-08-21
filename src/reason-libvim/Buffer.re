@@ -73,13 +73,13 @@ let setLineEndings = (buffer, lineEnding) => {
 let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
   let startLine =
     switch (start) {
-    | Some(v) => Index.toOneBased(v) - 1
+    | Some(v) => LineNumber.toOneBased(v) - 1
     | None => 0
     };
 
   let endLine =
     switch (stop) {
-    | Some(v) => Index.toOneBased(v) - 1
+    | Some(v) => LineNumber.toOneBased(v) - 1
     | None => (-1)
     };
 
@@ -120,22 +120,24 @@ let applyEdits = (~edits, buffer) => {
       let result = Edit.applyEdit(~provider, hd);
       switch (result) {
       | Ok({oldStartLine, oldEndLine, newLines}) =>
+      EditorCoreTypes.({
         // Save previous lines for undo
         Undo.saveRegion(
-          oldStartLine |> Index.toZeroBased,
-          (oldEndLine |> Index.toZeroBased) + 2,
+          oldStartLine |> LineNumber.toZeroBased,
+          (oldEndLine |> LineNumber.toZeroBased) + 2,
         );
 
         let lineCount = getLineCount(buffer);
         let stop =
-          if (oldEndLine |> Index.toZeroBased >= lineCount) {
+          if (oldEndLine |> LineNumber.toZeroBased >= lineCount) {
             None;
           } else {
-            Some(Index.(oldEndLine + 1));
+            Some(LineNumber.(oldEndLine + 1));
           };
 
         setLines(~start=oldStartLine, ~stop?, ~lines=newLines, buffer);
         loop(tail);
+        });
       | Error(_) as err => err
       };
     };

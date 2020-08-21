@@ -117,7 +117,7 @@ let renderDefinition =
       ~bufferId,
       ~languageSupport,
       ~leftVisibleColumn,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~editor,
       ~bufferHighlights,
       ~colors,
@@ -128,7 +128,7 @@ let renderDefinition =
   getTokenAtPosition(
     ~editor,
     ~bufferHighlights,
-    ~cursorLine=Index.toZeroBased(cursorPosition.line),
+    ~cursorLine=LineNumber.toZeroBased(cursorPosition.line),
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
@@ -138,10 +138,14 @@ let renderDefinition =
   )
   |> Option.iter((token: BufferViewTokenizer.t) => {
        let range =
-         Range.{
+         CharacterRange.{
            start:
-             Location.{line: cursorPosition.line, column: token.startIndex},
-           stop: Location.{line: cursorPosition.line, column: token.endIndex},
+             CharacterPosition.{
+             line: cursorPosition.line, character: token.startIndex
+             },
+           stop: CharacterPosition.{
+           line: cursorPosition.line,
+           character: token.endIndex},
          };
 
        // Double-check that the range of the token falls into our definition position

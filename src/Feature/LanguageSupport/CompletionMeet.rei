@@ -10,7 +10,7 @@ type t = {
   // Base is the prefix string
   base: string,
   // Meet is the location where we request completions
-  location: Location.t,
+  location: CharacterPosition.t,
 };
 
 let toString: t => string;

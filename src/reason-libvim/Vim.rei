@@ -60,13 +60,13 @@ module Registers: {let get: (~register: char) => option(array(string));};
 module Edit: {
   [@deriving show]
   type t = {
-    range: Range.t,
+    range: CharacterRange.t,
     text: array(string),
   };
 
   type editResult = {
-    oldStartLine: Index.t,
-    oldEndLine: Index.t,
+    oldStartLine: EditorCoreTypes.LineNumber.t,
+    oldEndLine: EditorCoreTypes.LineNumber.t,
     newLines: array(string),
   };
 
@@ -158,7 +158,7 @@ module Buffer: {
   - If neither [start] or [stop] are specified, the lines in the buffer will be replaced with [lines]
   */
   let setLines:
-    (~start: Index.t=?, ~stop: Index.t=?, ~lines: array(string), t) => unit;
+    (~start: LineNumber.t=?, ~stop: LineNumber.t=?, ~lines: array(string), t) => unit;
 
   let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
 

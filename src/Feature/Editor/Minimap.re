@@ -305,14 +305,14 @@ let%component make =
              canvasContext,
            )};
 
-        let renderUnderline = (~color, ~offset, range: Range.t) =>
+        let renderUnderline = (~color, ~offset, range: CharacterRange.t) =>
           {let startX =
-             float(Index.toZeroBased(range.start.column))
+             float(CharacterIndex.toInt(range.start.character))
              *. float(Constants.minimapCharacterWidth)
              +. Constants.leftMargin
              +. Constants.gutterWidth;
            let endX =
-             float(Index.toZeroBased(range.stop.column))
+             float(CharacterIndex.toInt(range.stop.character))
              *. float(Constants.minimapCharacterWidth);
 
            Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));

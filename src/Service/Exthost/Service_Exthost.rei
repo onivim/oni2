@@ -53,7 +53,7 @@ module Effects: {
       (
         ~handle: int,
         ~uri: Oni_Core.Uri.t,
-        ~range: Range.t,
+        ~range: CharacterRange.t,
         ~options: Exthost.FormattingOptions.t,
         Exthost.Client.t,
         result(list(Exthost.Edit.SingleEditOperation.t), string) => 'msg
@@ -64,7 +64,7 @@ module Effects: {
       (
         ~handle: int,
         ~uri: Oni_Core.Uri.t,
-        ~position: EditorCoreTypes.Location.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
         Exthost.Client.t,
         result(Exthost.Hover.t, string) => 'msg
       ) =>
@@ -74,7 +74,7 @@ module Effects: {
       (
         ~handle: int,
         ~uri: Oni_Core.Uri.t,
-        ~position: EditorCoreTypes.Location.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
         ~context: Exthost.ReferenceContext.t,
         Exthost.Client.t,
         result(list(Exthost.Location.t), string) => 'msg
@@ -85,7 +85,7 @@ module Effects: {
       (
         ~handle: int,
         ~uri: Oni_Core.Uri.t,
-        ~position: EditorCoreTypes.Location.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
         ~context: Exthost.SignatureHelp.RequestContext.t,
         Exthost.Client.t,
         result(option(Exthost.SignatureHelp.Response.t), string) => 'msg
@@ -117,7 +117,7 @@ module Sub: {
       ~handle: int,
       ~context: Exthost.CompletionContext.t,
       ~buffer: Oni_Core.Buffer.t,
-      ~position: EditorCoreTypes.Location.t,
+      ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: result(Exthost.SuggestResult.t, string) => 'a,
       Exthost.Client.t
     ) =>
@@ -128,7 +128,7 @@ module Sub: {
       ~handle: int,
       ~chainedCacheId: Exthost.ChainedCacheId.t,
       ~buffer: Oni_Core.Buffer.t,
-      ~position: EditorCoreTypes.Location.t,
+      ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: result(Exthost.SuggestItem.t, string) => 'a,
       Exthost.Client.t
     ) =>
@@ -138,7 +138,7 @@ module Sub: {
     (
       ~handle: int,
       ~buffer: Oni_Core.Buffer.t,
-      ~position: EditorCoreTypes.Location.t,
+      ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: list(Exthost.DefinitionLink.t) => 'a,
       Exthost.Client.t
     ) =>
@@ -148,7 +148,7 @@ module Sub: {
     (
       ~handle: int,
       ~buffer: Oni_Core.Buffer.t,
-      ~position: EditorCoreTypes.Location.t,
+      ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: list(Exthost.DocumentHighlight.t) => 'a,
       Exthost.Client.t
     ) =>

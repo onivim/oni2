@@ -13,7 +13,7 @@ type themedToken = {
   italic: bool,
   bold: bool,
 };
-type t = int => themedToken;
+type t = ByteIndex.t => themedToken;
 
 module Internal = {
   let getFirstRelevantToken = (~default, ~startByte, tokens) => {
@@ -55,12 +55,12 @@ module Internal = {
 
 let create =
     (
-      ~startByte,
+      ~startByte: ByteIndex.t,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
       ~selectionHighlights: option(Range.t),
       ~selectionColor: Color.t,
-      ~matchingPair: option(int),
+      ~matchingPair: option(ByteIndex.t),
       ~searchHighlights: list(Range.t),
       ~searchHighlightColor: Color.t,
       themedTokens: list(ThemeToken.t),
@@ -74,10 +74,14 @@ let create =
       (),
     );
 
+  let matchingPair = matchingPair
+  |> Option.map(ByteIndex.toInt);
+
+  let startByteIdx = ByteIndex.toInt(startByte);
   let (defaultToken, tokens) =
     Internal.getFirstRelevantToken(
       ~default=initialDefaultToken,
-      ~startByte,
+      ~startByte=startByteIdx,
       themedTokens,
     );
 
@@ -90,7 +94,8 @@ let create =
     | None => ((-1), (-1))
     };
 
-  i => {
+  (byteIndex: ByteIndex.t) => {
+    let i = ByteIndex.toInt(byteIndex);
     let colorIndex =
       Internal.getTokenAtByte(~byteIndex=i, ~default=defaultToken, tokens);
 

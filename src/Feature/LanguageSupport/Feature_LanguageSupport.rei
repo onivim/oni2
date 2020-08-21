@@ -138,7 +138,7 @@ module Definition: {
   let get: (~bufferId: int, model) => option(Exthost.DefinitionLink.t);
 
   let getAt:
-    (~bufferId: int, ~range: Range.t, model) =>
+    (~bufferId: int, ~range: CharacterRange.t, model) =>
     option(Exthost.DefinitionLink.t);
 
   let isAvailable: (~bufferId: int, model) => bool;

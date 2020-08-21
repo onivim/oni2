@@ -103,7 +103,7 @@ let viewLine = (editor, lineNumber) => {
   {contents, byteOffset: 0, characterOffset: 0};
 };
 
-let bufferLineCharacterToPixel =
+let bufferCharacterPositionToPixel =
     (~position: CharacterPosition.t, {scrollX, scrollY, buffer, _} as editor) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
@@ -570,7 +570,7 @@ let updateBuffer = (~buffer, editor) => {
 };
 
 module Slow = {
-  let pixelPositionToBufferLineByte =
+  let pixelPositionToBytePosition =
       (~buffer, ~pixelX: float, ~pixelY: float, view) => {
     let rawLine =
       int_of_float((pixelY +. view.scrollY) /. lineHeightInPixels(view));

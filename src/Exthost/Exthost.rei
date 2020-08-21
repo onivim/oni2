@@ -92,8 +92,8 @@ module OneBasedRange: {
     endColumn: int,
   };
 
-  let ofRange: Range.t => t;
-  let toRange: t => Range.t;
+  let ofRange: CharacterRange.t => t;
+  let toRange: t => CharacterRange.t;
 };
 
 module CodeLens: {
@@ -943,7 +943,7 @@ module OneBasedPosition: {
     column: int,
   };
 
-  let ofPosition: EditorCoreTypes.Location.t => t;
+  let ofPosition: EditorCoreTypes.CharacterPosition.t => t;
   let to_yojson: t => Yojson.Safe.t;
 };
 
