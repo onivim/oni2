@@ -644,12 +644,11 @@ let start =
       dispatch(onComplete(bufferId));
     });
 
-  let gotoLocationEffect = (editorId, location: Location.t) =>
+  let gotoLocationEffect = (editorId, location: BytePosition.t) =>
     Isolinear.Effect.create(~name="vim.gotoLocation", () => {
-      let cursor = (location :> Vim.Cursor.t);
-      updateActiveEditorCursors([cursor]);
+      updateActiveEditorCursors([location]);
 
-      let topLine: int = max(Index.toZeroBased(location.line) - 10, 0);
+      let topLine: int = max(LineNumber.toZeroBased(location.line) - 10, 0);
 
       dispatch(
         Actions.Editor({
@@ -891,6 +890,7 @@ let start =
           maybeRenderer
           |> Option.map(addBufferRendererEffect(bufferId))
           |> Option.value(~default=Isolinear.Effect.none),
+
           maybeLocation
           |> Option.map(gotoLocationEffect(editorId))
           |> Option.value(~default=Isolinear.Effect.none),

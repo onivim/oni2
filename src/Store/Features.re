@@ -830,6 +830,7 @@ let update =
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
+    let activeCursorByte = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
     let (signatureHelp, shOutMsg) =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
@@ -850,8 +851,8 @@ let update =
            let syntaxScope =
              Feature_Syntax.getSyntaxScope(
                ~bufferId=Buffer.getId(buffer),
-               ~line=activeCursor.line,
-               ~bytePosition=activeCursor.column |> Index.toZeroBased,
+               ~line=activeCursorByte.line,
+               ~byteIndex=activeCursorByte.byte,
                state.syntaxHighlights,
              );
            let config = Feature_Configuration.resolver(state.config);
@@ -886,7 +887,7 @@ let update =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Editor.getId(editor) == activeEditorId) {
-                 Editor.setVimCursors(~cursors, editor);
+                 Editor.setCursors(~cursors, editor);
                } else {
                  editor;
                }

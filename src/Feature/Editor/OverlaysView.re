@@ -49,7 +49,7 @@ let completionsView =
 let make =
     (
       ~isActiveSplit,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~editor: Editor.t,
       ~gutterWidth,
       ~theme,
@@ -59,9 +59,8 @@ let make =
       (),
     ) => {
   let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=Index.toZeroBased(cursorPosition.line),
-      ~byteIndex=Index.toZeroBased(cursorPosition.column),
+    Editor.bufferCharacterPositionToPixel(
+      ~position=cursorPosition,
       editor,
     );
 

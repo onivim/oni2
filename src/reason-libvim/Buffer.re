@@ -35,8 +35,8 @@ let getLineCount = (buffer: t) => {
   Native.vimBufferGetLineCount(buffer);
 };
 
-let getLine = (buffer: t, line: Index.t) => {
-  Native.vimBufferGetLine(buffer, Index.toOneBased(line));
+let getLine = (buffer: t, line: LineNumber.t) => {
+  Native.vimBufferGetLine(buffer, LineNumber.toOneBased(line));
 };
 
 let getId = (buffer: t) => {
@@ -92,7 +92,7 @@ let applyEdits = (~edits, buffer) => {
     if (idx >= lineCount) {
       None;
     } else {
-      Some(getLine(buffer, Index.(zero + idx)));
+      Some(getLine(buffer, LineNumber.ofZeroBased(idx)))
     };
   };
 

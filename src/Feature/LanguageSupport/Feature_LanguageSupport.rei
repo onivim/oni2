@@ -62,7 +62,7 @@ let bufferUpdated:
   (
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
-    ~activeCursor: Location.t,
+    ~activeCursor: CharacterPosition.t,
     ~syntaxScope: Oni_Core.SyntaxScope.t,
     ~triggerKey: option(string),
     model

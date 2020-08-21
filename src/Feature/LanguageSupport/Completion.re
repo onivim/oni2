@@ -527,9 +527,9 @@ let startCompletion =
     List.fold_left(
       (acc: IntMap.t(Session.t), curr: provider) => {
         let maybeMeet =
-          CompletionMeet.fromBufferLocation(
+          CompletionMeet.fromBufferPosition(
             ~triggerCharacters=curr.triggerCharacters,
-            ~location=activeCursor,
+            ~position=activeCursor,
             buffer,
           );
 

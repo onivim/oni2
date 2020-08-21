@@ -97,7 +97,7 @@ let update = (editor, msg) => {
       Nothing,
     )
   | CursorsChanged(cursors) => (
-      Editor.setVimCursors(~cursors, editor),
+      Editor.setCursors(~cursors, editor),
       Nothing,
     )
   | ScrollToLine(line) => (Editor.scrollToLine(~line, editor), Nothing)

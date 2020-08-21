@@ -140,16 +140,20 @@ let underline = (~context, ~color=Revery.Colors.black, r: Range.t) => {
   let endC = Index.toZeroBased(r.stop.column);
 
   let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line,
-      ~characterIndex=start,
+    Editor.bufferCharacterPositionToPixel(
+      ~position=CharacterPosition.{
+        line: LineNumber.ofZeroBased(line),
+        character: CharacterIndex.ofInt(start)
+      },
       context.editor,
     );
 
   let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line=endLine,
-      ~characterIndex=endC,
+    Editor.bufferCharacterPositionToPixel(
+      ~position=CharacterPosition.{
+        line: LineNumber.ofZeroBased(endLine),
+        character: CharacterIndex.ofInt(endC)
+      },
       context.editor,
     );
 
@@ -176,16 +180,20 @@ let rangeCharacter =
   let endLine = Index.toZeroBased(r.stop.line);
 
   let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line,
-      ~characterIndex=start,
+    Editor.bufferCharacterPositionToPixel(
+      ~position=CharacterPosition.{
+        line: EditorCoreTypes.LineNumber.ofZeroBased(line),
+        character: CharacterIndex.ofInt(start),
+      },
       context.editor,
     );
 
   let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line=endLine,
-      ~characterIndex=endC,
+    Editor.bufferCharacterPositionToPixel(
+      ~position=CharacterPosition.{
+        line: EditorCoreTypes.LineNumber.ofZeroBased(endLine),
+        character: CharacterIndex.ofInt(endC),
+      },
       context.editor,
     );
 
@@ -211,13 +219,21 @@ let rangeByte =
   let endLine = Index.toZeroBased(r.stop.line);
 
   let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(~line, ~byteIndex=start, context.editor);
+    Editor.bufferBytePositionToPixel(
+      ~position=BytePosition.{
+        line: EditorCoreTypes.LineNumber.ofZeroBased(line),
+        byte: ByteIndex.ofInt(start),
+      },
+      context.editor
+    );
 
   let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=endLine,
-      ~byteIndex=endC,
-      context.editor,
+    Editor.bufferBytePositionToPixel(
+      ~position=BytePosition.{
+        line: EditorCoreTypes.LineNumber.ofZeroBased(endLine),
+        byte: ByteIndex.ofInt(endC),
+      },
+      context.editor
     );
 
   let lineHeight = Editor.lineHeightInPixels(context.editor);
@@ -250,9 +266,10 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
 
   let ({pixelY, pixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line,
-      ~characterIndex=token.startIndex |> Index.toZeroBased,
+    Editor.bufferCharacterPositionToPixel(~position=CharacterPosition.{
+      line,
+      character: token.startIndex
+    },
       context.editor,
     );
 
@@ -324,7 +341,13 @@ let ruler = (~context, ~color, x) =>
 
 let lineHighlight = (~context, ~color, line) => {
   let ({pixelY, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(~line, ~byteIndex=0, context.editor);
+    Editor.bufferBytePositionToPixel(
+      ~position=BytePosition.{
+        line,
+        byte: ByteIndex.zero
+      },
+      context.editor
+    );
 
   drawRect(
     ~context,

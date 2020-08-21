@@ -164,12 +164,12 @@ let%component make =
          Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
          Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
 
-         let cursor =
-           Vim.Cursor.create(
-             ~line=Index.fromOneBased(line + 1),
-             ~column=Index.fromZeroBased(col),
-           );
-
+         let cursor = EditorCoreTypes.(
+           BytePosition.{
+             line: LineNumber.ofOneBased(line + 1),
+             // TODO: Is this correct?
+             byte: ByteIndex.ofInt(col),
+           });
          onCursorChange(cursor);
        });
   };

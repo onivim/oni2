@@ -46,26 +46,30 @@ let getTokensForLine =
       let matchingPairIndex =
         switch (matchingPairs) {
         | None => None
-        | Some((startPos: Location.t, endPos: Location.t))
+        | Some((startPos: CharacterPosition.t, endPos: CharacterPosition.t))
             when !ignoreMatchingPairs =>
-          if (Index.toZeroBased(startPos.line) == i) {
-            Some(Index.toZeroBased(startPos.column));
-          } else if (Index.toZeroBased(endPos.line) == i) {
-            Some(Index.toZeroBased(endPos.column));
-          } else {
+// TODO before merge:
+// Convert character position -> byte position
             None;
-          }
+//          if (Index.toZeroBased(startPos.line) == i) {
+//            Some(Index.toZeroBased(startPos.column));
+//          } else if (Index.toZeroBased(endPos.line) == i) {
+//            Some(Index.toZeroBased(endPos.column));
+//          } else {
+//            None;
+//          }
         | _ => None
         };
 
       let tokenColors =
         Feature_Syntax.getTokens(
           ~bufferId,
-          ~line=Index.fromZeroBased(i),
+          ~line=EditorCoreTypes.LineNumber.ofZeroBased(i),
           bufferSyntaxHighlights,
         );
 
-      let startByte = BufferLine.getByteFromIndex(~index=startIndex, line);
+      let startByte = BufferLine.getByteFromIndex(~index=
+      startIndex |> CharacterIndex.ofInt, line);
 
       let colorizer =
         BufferLineColorizer.create(
@@ -80,7 +84,8 @@ let getTokensForLine =
           tokenColors,
         );
 
-      BufferViewTokenizer.tokenize(~startIndex, ~endIndex, line, colorizer);
+      BufferViewTokenizer.tokenize(~start=CharacterIndex.ofInt(startIndex),
+      ~stop=CharacterIndex.ofInt(endIndex), line, colorizer);
     };
   };
 
@@ -112,8 +117,8 @@ let getTokenAtPosition =
     lineNumber,
   )
   |> List.filter((token: BufferViewTokenizer.t) => {
-       let tokenStart = token.startIndex |> Index.toZeroBased;
-       let tokenEnd = token.endIndex |> Index.toZeroBased;
+       let tokenStart = token.startIndex |> CharacterIndex.toInt;
+       let tokenEnd = token.endIndex |> CharacterIndex.toInt;
        index >= tokenStart && index < tokenEnd;
      })
   |> Utility.OptionEx.of_list;

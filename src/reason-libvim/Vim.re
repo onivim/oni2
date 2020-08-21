@@ -69,7 +69,7 @@ module Internal = {
       };
     };
 
-  let getDefaultCursors = (cursors: list(Cursor.t)) =>
+  let getDefaultCursors = (cursors: list(BytePosition.t)) =>
     if (cursors == []) {
       [Cursor.get()];
     } else {
@@ -174,7 +174,7 @@ let runWith = (~context: Context.t, f) => {
 
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.getCurrent();
-  let prevLocation = Cursor.getLocation();
+  let prevLocation = Cursor.get();
   let prevRange = Visual.getRange();
   let prevTopLine = Window.getTopLine();
   let prevLeftColumn = Window.getLeftColumn();
@@ -189,7 +189,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.autoIndent := None;
 
   let newBuf = Buffer.getCurrent();
-  let newLocation = Cursor.getLocation();
+  let newLocation = Cursor.get();
   let newMode = Mode.getCurrent();
   let newRange = Visual.getRange();
   let newLeftColumn = Window.getLeftColumn();
@@ -218,17 +218,17 @@ let runWith = (~context: Context.t, f) => {
     );
   };
 
-  if (!Location.(prevLocation == newLocation)) {
-    Event.dispatch(newLocation, Listeners.cursorMoved);
-  };
-
-  if (prevTopLine != newTopLine) {
-    Event.dispatch(newTopLine, Listeners.topLineChanged);
-  };
-
-  if (prevLeftColumn != newLeftColumn) {
-    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
-  };
+//  if (BytePosition.(prevLocation == newLocation)) {
+//    Event.dispatch(newLocation, Listeners.cursorMoved);
+//  };
+//
+//  if (prevTopLine != newTopLine) {
+//    Event.dispatch(newTopLine, Listeners.topLineChanged);
+//  };
+//
+//  if (prevLeftColumn != newLeftColumn) {
+//    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
+//  };
 
   if (!Range.equals(prevRange, newRange)
       || newMode == Visual
@@ -379,14 +379,14 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
   // lnum is one-based, coming from Vim - we'd only have a beforePreviousLine if the current line is line 3
   let beforePreviousLine =
     if (lnum >= 3 && lnum <= lineCount) {
-      lnum - 2 |> Index.fromOneBased |> Buffer.getLine(buf) |> Option.some;
+      lnum - 2 |> LineNumber.ofOneBased |> Buffer.getLine(buf) |> Option.some;
     } else {
       None;
     };
 
   let beforeLine =
     if (lnum >= 2 && lnum <= lineCount) {
-      lnum - 1 |> Index.fromOneBased |> Buffer.getLine(buf);
+      lnum - 1 |> LineNumber.ofOneBased |> Buffer.getLine(buf);
     } else {
       ""; // This should never happen... but follow the Vim convention for empty lines.
     };
@@ -479,13 +479,13 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
       let runCursor = cursor => {
         Cursor.set(cursor);
         if (Mode.getCurrent() == Types.Insert) {
-          let location = Cursor.getLocation();
-          let line = Buffer.getLine(Buffer.getCurrent(), location.line);
-
+          let position: BytePosition.t = Cursor.get();
+          let line = Buffer.getLine(Buffer.getCurrent(), position.line);
+          
           let isBetweenClosingPairs = () => {
             AutoClosingPairs.isBetweenClosingPairs(
               line,
-              location.column,
+              position.byte,
               autoClosingPairs,
             );
           };
@@ -493,14 +493,14 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           let canCloseBefore = () =>
             AutoClosingPairs.canCloseBefore(
               line,
-              location.column,
+              position.byte,
               autoClosingPairs,
             );
 
           if (v == "<BS>"
               && AutoClosingPairs.isBetweenDeletionPairs(
                    line,
-                   location.column,
+                   position.byte,
                    autoClosingPairs,
                  )) {
             Native.vimKey("<DEL>");
@@ -508,7 +508,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           } else if (v == "<CR>" && isBetweenClosingPairs()) {
             let precedingWhitespace =
               Internal.getPrecedingWhitespace(
-                ~max=location.column |> Index.toOneBased,
+                ~max=position.byte |> ByteIndex.toInt,
                 line,
               );
             Native.vimKey("<CR>");
@@ -521,7 +521,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           } else if (AutoClosingPairs.isPassThrough(
                        v,
                        line,
-                       location.column,
+                       position.byte,
                        autoClosingPairs,
                      )) {
             Native.vimKey("<RIGHT>");

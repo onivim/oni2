@@ -23,9 +23,9 @@ module AutoClosingPairs: {
     ) =>
     t;
 
-  let isBetweenClosingPairs: (string, Index.t, t) => bool;
+  let isBetweenClosingPairs: (string, ByteIndex.t, t) => bool;
 
-  let isBetweenDeletionPairs: (string, Index.t, t) => bool;
+  let isBetweenDeletionPairs: (string, ByteIndex.t, t) => bool;
 };
 
 module AutoIndent: {
@@ -46,7 +46,7 @@ module Context: {
     height: int,
     leftColumn: int,
     topLine: int,
-    cursors: list(Cursor.t),
+    cursors: list(BytePosition.t),
     lineComment: option(string),
     tabSize: int,
     insertSpaces: bool,
@@ -120,7 +120,7 @@ module Buffer: {
   /**
   [getline(buffer, line)] returns the text content at the one-based line number [line] for buffer [buffer].
   */
-  let getLine: (t, Index.t) => string;
+  let getLine: (t, LineNumber.t) => string;
 
   /**
   [getId(buffer)] returns the id of buffer [buffer];

@@ -34,15 +34,16 @@ let getLayout:
   (~showLineNumbers: bool, ~maxMinimapCharacters: int, t) => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
 let getCharacterBehindCursor: t => option(Uchar.t);
-let getCharacterAtPosition: (~line: int, ~index: int, t) => option(Uchar.t);
+let getCharacterAtPosition: (~position: CharacterPosition.t, t) => option(Uchar.t);
 let getPrimaryCursor: t => Location.t;
+let getPrimaryCursorByte: t => BytePosition.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
-let getVimCursors: t => list(Vim.Cursor.t);
-let setVimCursors: (~cursors: list(Vim.Cursor.t), t) => t;
+let getCursors: t => list(BytePosition.t);
+let setCursors: (~cursors: list(BytePosition.t), t) => t;
 
 let isMinimapEnabled: t => bool;
 let setMinimapEnabled: (~enabled: bool, t) => t;
@@ -52,11 +53,11 @@ let exposePrimaryCursor: t => t;
 
 let getNearestMatchingPair:
   (
-    ~location: Location.t,
+    ~characterPosition: CharacterPosition.t,
     ~pairs: list(LanguageConfiguration.BracketPair.t),
     t
   ) =>
-  option((Location.t, Location.t));
+  option((CharacterPosition.t, CharacterPosition.t));
 
 let visiblePixelWidth: t => int;
 let visiblePixelHeight: t => int;
@@ -94,16 +95,20 @@ let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
 
+// BYTE-CHARACTER CONVERSION
+//let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
+//let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
+
 // PIXEL-SPACE CONVERSION
 
 // These methods convert a buffer (line, byte) or (line, utf8 character index)
 // to a pixel position on-screen - accounting for word wrap, folding, scrolling, etc.
 
 // They return both the pixel position, as well as the character width of the target character.
-let bufferLineByteToPixel:
-  (~line: int, ~byteIndex: int, t) => (pixelPosition, float);
-let bufferLineCharacterToPixel:
-  (~line: int, ~characterIndex: int, t) => (pixelPosition, float);
+let bufferBytePositionToPixel:
+  (~position: BytePosition.t, t) => (pixelPosition, float);
+let bufferCharacterPositionToPixel:
+  (~position: CharacterPosition.t, t) => (pixelPosition, float);
 
 // PROJECTION
 
@@ -132,6 +137,6 @@ let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
 let updateBuffer: (~buffer: EditorBuffer.t, t) => t;
 
 module Slow: {
-  let pixelPositionToBufferLineByte:
-    (~buffer: Buffer.t, ~pixelX: float, ~pixelY: float, t) => (int, int);
+  let pixelPositionToBytePosition:
+    (~buffer: Buffer.t, ~pixelX: float, ~pixelY: float, t) => BytePosition.t
 };

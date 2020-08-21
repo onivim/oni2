@@ -89,7 +89,13 @@ let render =
   let editor = context.editor;
   let bufferPositionToPixel = line => {
     let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-      Editor.bufferLineByteToPixel(~line, ~byteIndex=0, editor);
+      Editor.bufferBytePositionToPixel(
+        ~position=BytePosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(line),
+          byte: ByteIndex.zero,
+        },
+        editor
+      );
 
     let x = pixelX;
     let y = pixelY;

@@ -4,18 +4,17 @@ open Oni_Core.Utility;
 open Feature_Editor;
 
 module Internal = {
-  let syntaxScope = (~cursor: option(Vim.Cursor.t), state: State.t) => {
+  let syntaxScope = (~maybeCursor: option(BytePosition.t), state: State.t) => {
     state
     |> Selectors.getActiveBuffer
     |> OptionEx.flatMap(buffer => {
          let bufferId = Buffer.getId(buffer);
 
-         cursor
-         |> Option.map((cursor: Vim.Cursor.t) => {
+         maybeCursor
+         |> Option.map((cursor: BytePosition.t) => {
               Feature_Syntax.getSyntaxScope(
                 ~bufferId,
-                ~line=cursor.line,
-                ~bytePosition=Index.toZeroBased(cursor.column),
+                ~bytePosition=cursor,
                 state.syntaxHighlights,
               )
             });
@@ -62,7 +61,7 @@ module Internal = {
 let current = (state: State.t) => {
   let editor = Feature_Layout.activeEditor(state.layout);
   let bufferId = Editor.getBufferId(editor);
-  let cursors = Editor.getVimCursors(editor);
+  let cursors = Editor.getCursors(editor);
 
   let editorBuffer = Selectors.getActiveBuffer(state);
   let maybeLanguageConfig: option(LanguageConfiguration.t) =
@@ -75,7 +74,7 @@ let current = (state: State.t) => {
        );
 
   let maybeCursor =
-    switch (Editor.getVimCursors(editor)) {
+    switch (Editor.getCursors(editor)) {
     | [hd, ..._] => Some(hd)
     | [] => None
     };
@@ -88,7 +87,7 @@ let current = (state: State.t) => {
          Vim.AutoIndent.KeepIndent
        );
 
-  let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
+  let syntaxScope = Internal.syntaxScope(~maybeCursor, state);
   let autoClosingPairs =
     Internal.autoClosingPairs(~syntaxScope, ~maybeLanguageConfig, state);
 

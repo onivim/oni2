@@ -103,10 +103,10 @@ type t =
   | OpenFileByPath(
       string,
       option([ | `Horizontal | `Vertical]),
-      option(Location.t),
+      option(CharacterPosition.t),
     )
   | OpenFileInNewLayout(string)
-  | BufferOpened(string, option(Location.t), int)
+  | BufferOpened(string, option(CharacterPosition.t), int)
   | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | Pasted({
