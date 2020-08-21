@@ -248,8 +248,8 @@ let handleUpdate =
         fun
         | None => None
         | Some(lineMap) => {
-            let startPos = bufferUpdate.startLine |> Index.toZeroBased;
-            let endPos = bufferUpdate.endLine |> Index.toZeroBased;
+            let startPos = bufferUpdate.startLine |> EditorCoreTypes.LineNumber.toZeroBased;
+            let endPos = bufferUpdate.endLine |> EditorCoreTypes.LineNumber.toZeroBased;
             Some(
               LineMap.shift(
                 ~default=v => v,

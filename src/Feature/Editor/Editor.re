@@ -205,6 +205,24 @@ let byteToCharacter = (position: BytePosition.t, editor) => {
   };
 };
 
+let characterToByte = (position: CharacterPosition.t, editor) => {
+  let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
+
+  let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = EditorBuffer.line(line, editor.buffer);
+    let byte =
+      BufferLine.getByteFromIndex(~index=position.character, bufferLine);
+
+    Some(EditorCoreTypes.(BytePosition.{
+    line: position.line,
+    byte,
+    }));
+  } else {
+    None
+  };
+};
 let getCharacterAtPosition = (~position: CharacterPosition.t, {buffer, _}) => {
   let line = EditorCoreTypes.LineNumber.toZeroBased(position.line);
   let bufferLineCount = EditorBuffer.numberOfLines(buffer);

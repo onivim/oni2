@@ -883,7 +883,7 @@ let start =
           |> Option.map(addBufferRendererEffect(bufferId))
           |> Option.value(~default=Isolinear.Effect.none),
           maybeLocation
-          |> Option.map(loc => Feature_Layout.)
+          |> OptionEx.flatMap(loc => Feature_Editor.Editor.characterToByte(loc, editor))
           |> Option.map(gotoLocationEffect(editorId))
           |> Option.value(~default=Isolinear.Effect.none),
         ]),

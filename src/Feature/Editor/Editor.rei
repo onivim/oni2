@@ -98,7 +98,7 @@ let getCharacterWidth: t => float;
 
 // BYTE-CHARACTER CONVERSION
 let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
-//let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
+let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 // PIXEL-SPACE CONVERSION
 
