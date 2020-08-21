@@ -11,6 +11,7 @@ let toOneBased = lnum => lnum + 1;
 
 let (+) = (a, b) => a + b;
 
+let equals = (a, b) => a == b;
 let (==) = (a, b) => a == b;
 let (<) = (a, b) => a < b;
 let (>) = (a, b) => a > b;

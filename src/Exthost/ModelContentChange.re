@@ -22,12 +22,12 @@ let joinLines = (separator: string, lines: list(string)) => {
 
 let getRangeFromEdit = (bu: BufferUpdate.t) => {
   let newLines = Array.length(bu.lines);
-  let isInsert =
-    newLines >= Index.toZeroBased(bu.endLine)
-    - Index.toZeroBased(bu.startLine);
+  let isInsert = EditorCoreTypes.(
+    newLines >= LineNumber.toZeroBased(bu.endLine)
+    - LineNumber.toZeroBased(bu.startLine));
 
-  let startLine = Index.toZeroBased(bu.startLine);
-  let endLine = Index.toZeroBased(bu.endLine) |> max(startLine);
+  let startLine = EditorCoreTypes.LineNumber.toZeroBased(bu.startLine);
+  let endLine = EditorCoreTypes.LineNumber.toZeroBased(bu.endLine) |> max(startLine);
 
   let range =
     EditorCoreTypes.(
@@ -50,8 +50,8 @@ let getRangeFromEdit = (bu: BufferUpdate.t) => {
 
 let getRangeLengthFromEdit =
     (~previousBuffer, ~eol: Eol.t, bu: BufferUpdate.t) => {
-  let startLine = Index.toZeroBased(bu.startLine);
-  let endLine = Index.toZeroBased(bu.endLine) |> max(startLine);
+  let startLine = EditorCoreTypes.LineNumber.toZeroBased(bu.startLine);
+  let endLine = EditorCoreTypes.LineNumber.toZeroBased(bu.endLine) |> max(startLine);
 
   let totalLines = Buffer.getNumberOfLines(previousBuffer);
 

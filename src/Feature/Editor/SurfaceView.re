@@ -44,7 +44,7 @@ let%component make =
                 ~dispatch,
                 ~topVisibleLine,
                 ~onCursorChange,
-                ~cursorPosition: Location.t,
+                ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
                 ~leftVisibleColumn,
                 ~diagnosticsMap,
@@ -92,7 +92,7 @@ let%component make =
          let relX = mouseX -. minX;
          let relY = mouseY -. minY;
 
-         Editor.Slow.pixelPositionToBufferLineByte(
+         Editor.Slow.pixelPositionToBytePosition(
            ~buffer,
            ~pixelX=relX,
            ~pixelY=relY,
@@ -103,14 +103,10 @@ let%component make =
 
   let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(((line, col)) => {
+    |> Option.iter(bytePosition => {
          dispatch(
            Msg.MouseMoved({
-             location:
-               EditorCoreTypes.Location.create(
-                 ~line=Index.fromZeroBased(line),
-                 ~column=Index.fromZeroBased(col),
-               ),
+             bytePosition: bytePosition
            }),
          )
        });
@@ -139,17 +135,13 @@ let%component make =
         |> Utility.OptionEx.flatMap(((mouseX, mouseY)) =>
              getMaybeLocationFromMousePosition(mouseX, mouseY)
            )
-        |> Option.iter(((line, col)) =>
+        |> Option.iter(bytePosition => {
              dispatch(
                Msg.MouseHovered({
-                 location:
-                   EditorCoreTypes.Location.create(
-                     ~line=Index.fromZeroBased(line),
-                     ~column=Index.fromZeroBased(col),
-                   ),
+                 bytePosition: bytePosition,
                }),
              )
-           );
+           });
         hoverTimerActive := false;
         resetHoverTimer();
         None;
@@ -160,19 +152,10 @@ let%component make =
     Log.trace("editorMouseUp");
 
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(((line, col)) => {
+    |> Option.iter(bytePosition => {
          Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-         Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
-
-         let cursor =
-           EditorCoreTypes.(
-             BytePosition.{
-               line: LineNumber.ofOneBased(line + 1),
-               // TODO: Is this correct?
-               byte: ByteIndex.ofInt(col),
-             }
-           );
-         onCursorChange(cursor);
+         Log.tracef(m => m("  setPosition (%s)", BytePosition.show(bytePosition)));
+         onCursorChange(bytePosition);
        });
   };
 
@@ -204,7 +187,7 @@ let%component make =
         drawCurrentLineHighlight(
           ~context,
           ~colors,
-          cursorPosition.line |> Index.toZeroBased,
+          cursorPosition.line,
         );
 
         renderRulers(~context, ~colors, Config.rulers.get(config));

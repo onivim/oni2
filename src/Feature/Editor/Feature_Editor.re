@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 module BracketMatch = BracketMatch;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
@@ -24,8 +26,8 @@ type msg = Msg.t;
 
 type outmsg =
   | Nothing
-  | MouseHovered(EditorCoreTypes.Location.t)
-  | MouseMoved(EditorCoreTypes.Location.t);
+  | MouseHovered({bytePosition: BytePosition.t })
+  | MouseMoved({bytePosition: BytePosition.t});
 
 type model = Editor.t;
 
@@ -90,8 +92,8 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | MouseHovered({location}) => (editor, MouseHovered(location))
-  | MouseMoved({location}) => (editor, MouseMoved(location))
+  | MouseHovered({bytePosition}) => (editor, MouseHovered({bytePosition: bytePosition}))
+  | MouseMoved({bytePosition}) => (editor, MouseMoved({bytePosition: bytePosition}))
   | SelectionChanged(selection) => (
       Editor.setSelection(~selection, editor),
       Nothing,

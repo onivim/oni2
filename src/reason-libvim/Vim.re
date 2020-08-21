@@ -63,8 +63,8 @@ module Internal = {
           formatType,
           bufferId,
           adjustCursor,
-          startLine: Index.fromOneBased(startLine),
-          endLine: Index.fromOneBased(endLine),
+          startLine: EditorCoreTypes.LineNumber.ofOneBased(startLine),
+          endLine: EditorCoreTypes.LineNumber.ofOneBased(endLine),
         });
       };
     };
@@ -230,7 +230,7 @@ let runWith = (~context: Context.t, f) => {
   //    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
   //  };
 
-  if (!Range.equals(prevRange, newRange)
+  if (!CharacterRange.equals(prevRange, newRange)
       || newMode == Visual
       && prevMode != Visual
       || prevVisualMode != newVisualMode) {

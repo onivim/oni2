@@ -58,10 +58,10 @@ let create =
       ~startByte: ByteIndex.t,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
-      ~selectionHighlights: option(Range.t),
+      ~selectionHighlights: option(CharacterRange.t),
       ~selectionColor: Color.t,
       ~matchingPair: option(ByteIndex.t),
-      ~searchHighlights: list(Range.t),
+      ~searchHighlights: list(CharacterRange.t),
       ~searchHighlightColor: Color.t,
       themedTokens: list(ThemeToken.t),
     ) => {
@@ -87,8 +87,8 @@ let create =
   let (selectionStart, selectionEnd) =
     switch (selectionHighlights) {
     | Some(range) =>
-      let start = Index.toZeroBased(range.start.column);
-      let stop = Index.toZeroBased(range.stop.column);
+      let start = CharacterIndex.toInt(range.start.character);
+      let stop = CharacterIndex.toInt(range.stop.character);
       start < stop ? (start, stop) : (stop, start);
     | None => ((-1), (-1))
     };
@@ -108,9 +108,9 @@ let create =
       i >= selectionStart && i < selectionEnd || i == matchingPair
         ? selectionColor : defaultBackgroundColor;
 
-    let doesSearchIntersect = (range: Range.t) => {
-      Index.toZeroBased(range.start.column) <= i
-      && Index.toZeroBased(range.stop.column) > i;
+    let doesSearchIntersect = (range: CharacterRange.t) => {
+      CharacterIndex.toInt(range.start.character) <= i
+      && CharacterIndex.toInt(range.stop.character) > i;
     };
 
     let isSearchHighlight =

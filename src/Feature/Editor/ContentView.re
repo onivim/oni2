@@ -13,13 +13,13 @@ let renderLine =
       ~colors: Colors.t,
       ~diagnosticsMap,
       ~selectionRanges,
-      ~matchingPairs,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferHighlights,
       ~languageSupport,
       item,
       _offset,
     ) => {
-  let index = Index.fromZeroBased(item);
+  let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
   let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) =>
     Draw.underline(~context, ~color=colors.errorForeground, diagnostic.range);
 
@@ -33,7 +33,7 @@ let renderLine =
   | None => ()
   | Some(selections) =>
     List.iter(
-      Draw.rangeByte(~context, ~color=colors.selectionBackground),
+      Draw.rangeCharacter(~context, ~color=colors.selectionBackground),
       selections,
     )
   };
@@ -42,15 +42,15 @@ let renderLine =
   switch (matchingPairs) {
   | None => ()
   | Some((startPos, endPos)) =>
-    Draw.rangeByte(
+    Draw.rangeCharacter(
       ~context,
       ~color=colors.selectionBackground,
-      Range.{start: startPos, stop: startPos},
+      CharacterRange.{start: startPos, stop: startPos},
     );
-    Draw.rangeByte(
+    Draw.rangeCharacter(
       ~context,
       ~color=colors.selectionBackground,
-      Range.{start: endPos, stop: endPos},
+      CharacterRange.{start: endPos, stop: endPos},
     );
   };
 
@@ -62,7 +62,7 @@ let renderLine =
     bufferHighlights,
   )
   |> List.iter(
-       Draw.rangeByte(
+       Draw.rangeCharacter(
          ~context,
          ~padding=1.,
          ~color=colors.findMatchBackground,
@@ -72,11 +72,11 @@ let renderLine =
   /* Draw document highlights */
   Feature_LanguageSupport.DocumentHighlights.getByLine(
     ~bufferId,
-    ~line=index |> Index.toZeroBased,
+    ~line=index |> EditorCoreTypes.LineNumber.toZeroBased,
     languageSupport,
   )
   |> List.iter(
-       Draw.rangeByte(
+       Draw.rangeCharacter(
          ~context,
          ~padding=1.,
          ~color=colors.findMatchBackground,
@@ -121,14 +121,14 @@ let renderDefinition =
       ~editor,
       ~bufferHighlights,
       ~colors,
-      ~matchingPairs,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferSyntaxHighlights,
       ~bufferWidthInCharacters,
     ) =>
   getTokenAtPosition(
     ~editor,
     ~bufferHighlights,
-    ~cursorLine=LineNumber.toZeroBased(cursorPosition.line),
+    ~cursorLine=EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
@@ -188,7 +188,7 @@ let renderText =
     ~context,
     ~count,
     (item, _offsetY) => {
-      let index = Index.fromZeroBased(item);
+      let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
       let selectionRange =
         switch (Hashtbl.find_opt(selectionRanges, index)) {
         | None => None
@@ -201,12 +201,12 @@ let renderText =
       let bufferLine = Editor.viewLine(editor, item).contents;
       let startPixel = Editor.scrollX(editor);
       let startCharacter =
-        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine);
+        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine) |> CharacterIndex.toInt;
       let endCharacter =
         BufferLine.Slow.getIndexFromPixel(
           ~pixel=startPixel +. float(bufferWidthInPixels),
           bufferLine,
-        );
+        ) |> CharacterIndex.toInt;
 
       let tokens =
         getTokensForLine(
@@ -224,7 +224,7 @@ let renderText =
 
       renderTokens(
         ~context,
-        ~line=item,
+        ~line=item |> EditorCoreTypes.LineNumber.ofZeroBased,
         ~colors,
         ~tokens,
         ~shouldRenderWhitespace,
@@ -242,9 +242,9 @@ let render =
       ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
-      ~matchingPairs,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferHighlights,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~languageSupport,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
@@ -289,7 +289,7 @@ let render =
     ~selectionRanges,
     ~editor,
     ~bufferHighlights,
-    ~cursorLine=Index.toZeroBased(cursorPosition.line),
+    ~cursorLine=EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,

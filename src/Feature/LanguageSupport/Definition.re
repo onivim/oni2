@@ -52,9 +52,9 @@ let update = (msg, model) =>
       | None => Outmsg.Nothing
       | Some({definition, _}) =>
         let position =
-          Location.{
-            line: Index.fromOneBased(definition.range.startLineNumber),
-            column: Index.fromOneBased(definition.range.startColumn),
+          CharacterPosition.{
+            line: EditorCoreTypes.LineNumber.ofOneBased(definition.range.startLineNumber),
+            character: CharacterIndex.ofInt(definition.range.startColumn - 1),
           };
         Outmsg.OpenFile({
           filePath: definition.uri |> Oni_Core.Uri.toFileSystemPath,

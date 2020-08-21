@@ -4,5 +4,7 @@ type t = {
   character: CharacterIndex.t,
 };
 
+let zero: t;
+
 let equals: (t, t) => bool;
 let (==): (t, t) => bool;

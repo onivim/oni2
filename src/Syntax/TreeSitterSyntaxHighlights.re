@@ -78,8 +78,8 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v: t) => {
   let delta =
     TreeSitter.ArrayParser.Delta.create(
       lastBaseline,
-      Index.toZeroBased(bufferUpdate.startLine),
-      Index.toZeroBased(bufferUpdate.endLine),
+      EditorCoreTypes.LineNumber.toZeroBased(bufferUpdate.startLine),
+      EditorCoreTypes.LineNumber.toZeroBased(bufferUpdate.endLine),
       bufferUpdate.lines,
     );
 

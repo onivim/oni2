@@ -36,7 +36,7 @@ let getCharacterUnderCursor: t => option(Uchar.t);
 let getCharacterBehindCursor: t => option(Uchar.t);
 let getCharacterAtPosition:
   (~position: CharacterPosition.t, t) => option(Uchar.t);
-let getPrimaryCursor: t => Location.t;
+let getPrimaryCursor: t => CharacterPosition.t;
 let getPrimaryCursorByte: t => BytePosition.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
@@ -78,7 +78,7 @@ let characterWidthInPixels: t => float;
 
 let selection: t => VisualRange.t;
 let setSelection: (~selection: VisualRange.t, t) => t;
-let selectionOrCursorRange: t => Range.t;
+let selectionOrCursorRange: t => CharacterRange.t;
 
 let totalViewLines: t => int;
 
@@ -97,7 +97,7 @@ let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 let getCharacterWidth: t => float;
 
 // BYTE-CHARACTER CONVERSION
-//let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
+let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 //let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 // PIXEL-SPACE CONVERSION
@@ -119,11 +119,11 @@ let bufferCharacterPositionToPixel:
 // defined by [pixelWidth] and [pixelHeight], return the [(pixelX, pixelY)]
 // corresponding to the top-left of the line and column.
 let project:
-  (~line: int, ~column: int, ~pixelWidth: int, ~pixelHeight: int, t) =>
+  (~line: EditorCoreTypes.LineNumber.t, ~column: int, ~pixelWidth: int, ~pixelHeight: int, t) =>
   (float, float);
 
 // [projectLine] - like [project], but ignoring the [column]/[width]
-let projectLine: (~line: int, ~pixelHeight: int, t) => float;
+let projectLine: (~line: EditorCoreTypes.LineNumber.t, ~pixelHeight: int, t) => float;
 
 // [unproject] - given a pixel space defined by [pixelWidth] and [pixelHeight],
 // map the [pixelX] and [pixelY] of that space to a pixel position on the editor

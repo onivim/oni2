@@ -114,9 +114,9 @@ let start =
                definitionResult.range;
 
              let position =
-               Location.{
-                 line: Index.fromOneBased(startLineNumber),
-                 column: Index.fromOneBased(startColumn),
+               CharacterPosition.{
+                 line: EditorCoreTypes.LineNumber.ofOneBased(startLineNumber),
+                 character: CharacterIndex.ofInt(startColumn - 1),
                };
 
              Actions.OpenFileByPath(
@@ -285,16 +285,7 @@ let start =
       let vr =
         Core.VisualRange.create(
           ~mode=visualType,
-          Range.{
-            start: {
-              ...range.start,
-              column: range.start.column,
-            },
-            stop: {
-              ...range.stop,
-              column: range.stop.column,
-            },
-          },
+          range,
         );
 
       let editorId =
@@ -413,8 +404,8 @@ let start =
         Core.BufferUpdate.create(
           ~id=update.id,
           ~isFull,
-          ~startLine=Index.fromOneBased(update.startLine),
-          ~endLine=Index.fromOneBased(endLine),
+          ~startLine=EditorCoreTypes.LineNumber.ofOneBased(update.startLine),
+          ~endLine=EditorCoreTypes.LineNumber.ofOneBased(endLine),
           ~lines=update.lines,
           ~version=update.version,
           (),
@@ -438,7 +429,7 @@ let start =
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
              // If the first line changes, re-run the file detection.
              let firstLineChanged =
-               Index.equals(bu.startLine, Index.fromZeroBased(0))
+               EditorCoreTypes.(LineNumber.equals(bu.startLine, LineNumber.zero))
                || bu.isFull;
 
              let newBuffer =
@@ -881,8 +872,9 @@ let start =
         | FilePath(_) => None
         };
 
+      let editor = Feature_Layout.activeEditor(state.layout);
       let editorId =
-        Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+        editor |> Editor.getId;
 
       (
         state,
@@ -891,6 +883,7 @@ let start =
           |> Option.map(addBufferRendererEffect(bufferId))
           |> Option.value(~default=Isolinear.Effect.none),
           maybeLocation
+          |> Option.map(loc => Feature_Layout.)
           |> Option.map(gotoLocationEffect(editorId))
           |> Option.value(~default=Isolinear.Effect.none),
         ]),

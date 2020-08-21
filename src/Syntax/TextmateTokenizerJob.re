@@ -70,8 +70,8 @@ let onTheme = (theme: TokenTheme.t, v: t) => {
 };
 
 let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
-  let startPos = Index.toZeroBased(bufferUpdate.startLine);
-  let endPos = Index.toZeroBased(bufferUpdate.endLine);
+  let startPos = EditorCoreTypes.LineNumber.toZeroBased(bufferUpdate.startLine);
+  let endPos = EditorCoreTypes.LineNumber.toZeroBased(bufferUpdate.endLine);
 
   let f = (p: pendingWork, c: completedWork) => {
     (

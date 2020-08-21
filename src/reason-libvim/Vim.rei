@@ -256,8 +256,8 @@ module Format: {
     | Range({
         formatType,
         bufferId: int,
-        startLine: Index.t,
-        endLine: Index.t,
+        startLine: LineNumber.t,
+        endLine: LineNumber.t,
         adjustCursor: bool,
       });
 };

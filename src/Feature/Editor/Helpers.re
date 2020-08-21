@@ -30,7 +30,7 @@ let getTokensForLine =
     if (length == 0) {
       [];
     } else {
-      let idx = Index.fromZeroBased(i);
+      let idx = EditorCoreTypes.LineNumber.ofZeroBased(i);
       let searchHighlights =
         BufferHighlights.getHighlightsByLine(
           ~bufferId,
@@ -102,7 +102,7 @@ let getTokenAtPosition =
       ~bufferHighlights,
       ~cursorLine,
       ~colors,
-      ~matchingPairs,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferSyntaxHighlights,
       ~startIndex,
       ~endIndex,

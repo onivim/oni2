@@ -10,6 +10,7 @@ let toOneBased: t => int;
 
 let (+): (t, int) => t;
 
+let equals: (t, t) => bool;
 let (==): (t, t) => bool;
 let (>): (t, t) => bool;
 let (<): (t, t) => bool;

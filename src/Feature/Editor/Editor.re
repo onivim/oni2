@@ -153,10 +153,12 @@ let create = (~config, ~buffer, ()) => {
     selection:
       VisualRange.create(
         ~mode=Vim.Types.None,
-        Range.{
-          start: Location.{line: Index.zero, column: Index.zero},
-          stop: Location.{line: Index.zero, column: Index.zero},
-        },
+        EditorCoreTypes.(
+        CharacterRange.{
+          start: CharacterPosition.{line: LineNumber.zero, 
+          character: CharacterIndex.zero},
+          stop: CharacterPosition.{line: LineNumber.zero, character: CharacterIndex.zero},
+        }),
       ),
     pixelWidth: 1,
     pixelHeight: 1,
@@ -184,20 +186,22 @@ let getNearestMatchingPair =
   |> Option.map(({start, stop}: BracketMatch.pair) => (start, stop));
 };
 
-let mapCursor = (~position: BytePosition.t, editor) => {
+let byteToCharacter = (position: BytePosition.t, editor) => {
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
 
   let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
   if (line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
-    let column =
+    let character =
       BufferLine.getIndex(~byte=position.byte, bufferLine)
-      |> CharacterIndex.toInt;
 
-    Location.{line: Index.(zero + line), column: Index.(zero + column)};
+    Some(EditorCoreTypes.(CharacterPosition.{
+    line: position.line,
+    character,
+    }));
   } else {
-    Location.{line: Index.zero, column: Index.zero};
+    None
   };
 };
 
@@ -288,11 +292,19 @@ let getCharacterUnderCursor = ({cursors, buffer, _}) => {
   };
 };
 
-let getPrimaryCursor = editor =>
-  switch (editor.cursors) {
-  | [cursor, ..._] => mapCursor(~position=cursor, editor)
-  | [] => Location.{line: Index.zero, column: Index.zero}
+let getPrimaryCursor = editor => {
+  let maybeCharacterCursor = switch (editor.cursors) {
+  | [cursor, ..._] => byteToCharacter(cursor, editor)
+  | [] =>  None;
   };
+
+  maybeCharacterCursor
+  |> Option.value(~default=
+    CharacterPosition.{
+    line: EditorCoreTypes.LineNumber.zero,
+    character: CharacterIndex.zero,
+  });
+};
 
 let getPrimaryCursorByte = editor =>
   switch (editor.cursors) {
@@ -305,9 +317,9 @@ let selectionOrCursorRange = editor => {
   | None =>
     let pos = getPrimaryCursor(editor);
     let range =
-      Range.{
-        start: Location.{line: pos.line, column: Index.zero},
-        stop: Location.{line: Index.(pos.line + 1), column: Index.zero},
+      CharacterRange.{
+        start: CharacterPosition.{line: pos.line, character: CharacterIndex.zero},
+        stop: CharacterPosition.{line: EditorCoreTypes.LineNumber.(pos.line + 1), character: CharacterIndex.zero},
       };
     range;
   | Line
@@ -536,7 +548,8 @@ let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
   ignore(column);
   ignore(pixelWidth);
 
-  let editorPixelY = float_of_int(line) *. lineHeightInPixels(editor);
+  let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(line);
+  let editorPixelY = float_of_int(lineIdx) *. lineHeightInPixels(editor);
   let totalEditorHeight = getTotalHeightInPixels(editor) |> float_of_int;
   let transformedPixelY =
     editorPixelY

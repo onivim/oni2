@@ -111,13 +111,13 @@ let%component make =
               (
                 ~dispatch: Msg.t => unit,
                 ~editor: Editor.t,
-                ~cursorPosition: Location.t,
+                ~cursorPosition: CharacterPosition.t,
                 ~width: int,
                 ~height: int,
                 ~count,
                 ~diagnostics,
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
-                ~selection: Hashtbl.t(Index.t, list(Range.t)),
+                ~selection: Hashtbl.t(EditorCoreTypes.LineNumber.t, list(CharacterRange.t)),
                 ~showSlider,
                 ~colors: Colors.t,
                 ~bufferHighlights,
@@ -277,7 +277,10 @@ let%component make =
           ~left=Constants.leftMargin,
           ~top=
             rowHeight
-            *. float(Index.toZeroBased(Location.(cursorPosition.line)))
+            *. float(EditorCoreTypes.LineNumber.toZeroBased(
+              CharacterPosition.(
+            cursorPosition.line
+            )))
             -. scrollY,
           ~height=float(Constants.minimapCharacterHeight),
           ~width=float(width),
@@ -285,14 +288,14 @@ let%component make =
           canvasContext,
         );
 
-        let renderRange = (~color, ~offset, range: Range.t) =>
+        let renderRange = (~color, ~offset, range: CharacterRange.t) =>
           {let startX =
-             float(Index.toZeroBased(range.start.column))
+             float(CharacterIndex.toInt(range.start.character))
              *. float(Constants.minimapCharacterWidth)
              +. Constants.leftMargin
              +. Constants.gutterWidth;
            let endX =
-             float(Index.toZeroBased(range.stop.column))
+             float(CharacterIndex.toInt(range.stop.character))
              *. float(Constants.minimapCharacterWidth);
 
            Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
@@ -334,7 +337,7 @@ let%component make =
             (item, offset) => {
               open Range;
               /* draw selection */
-              let index = Index.fromZeroBased(item);
+              let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
               switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
@@ -355,7 +358,7 @@ let%component make =
               let documentHighlightRanges =
                 Feature_LanguageSupport.DocumentHighlights.getByLine(
                   ~bufferId,
-                  ~line=Index.toZeroBased(index),
+                  ~line=EditorCoreTypes.LineNumber.toZeroBased(index),
                   languageSupport,
                 );
 
@@ -363,9 +366,9 @@ let%component make =
 
               let shouldHighlight = i =>
                 List.exists(
-                  r =>
-                    Index.toZeroBased(r.start.column) <= i
-                    && Index.toZeroBased(r.stop.column) >= i,
+                  (r: CharacterRange.t) =>
+                    CharacterIndex.toInt(r.start.character) <= i
+                    && CharacterIndex.toInt(r.stop.character) >= i,
                   highlights,
                 );
 

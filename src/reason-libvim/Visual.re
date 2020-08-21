@@ -1,10 +1,10 @@
 open EditorCoreTypes;
 
 let zeroRange =
-  Range.create(
-    ~start=Location.create(~line=Index.zero, ~column=Index.zero),
-    ~stop=Location.create(~line=Index.zero, ~column=Index.zero),
-  );
+  CharacterRange.{
+    start: CharacterPosition.zero,
+    stop: CharacterPosition.zero
+  };
 
 let getRange = () => {
   let (startLine, startColumn, stopLine, stopColumn) =
@@ -14,18 +14,16 @@ let getRange = () => {
   if (startLine == 0 || stopLine == 0) {
     zeroRange;
   } else {
-    Range.create(
-      ~start=
-        Location.create(
-          ~line=Index.fromOneBased(startLine),
-          ~column=Index.fromZeroBased(startColumn),
-        ),
-      ~stop=
-        Location.create(
-          ~line=Index.fromOneBased(stopLine),
-          ~column=Index.fromZeroBased(stopColumn),
-        ),
-    );
+    CharacterRange.{
+      start: CharacterPosition.{
+        line: LineNumber.ofOneBased(startLine),
+        character: CharacterIndex.ofInt(startColumn),
+      },
+      stop: CharacterPosition.{
+        line: LineNumber.ofOneBased(stopLine),
+        character: CharacterIndex.ofInt(stopColumn),
+      }
+    }
   };
 };
 
