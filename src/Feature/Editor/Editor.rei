@@ -34,7 +34,8 @@ let getLayout:
   (~showLineNumbers: bool, ~maxMinimapCharacters: int, t) => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
 let getCharacterBehindCursor: t => option(Uchar.t);
-let getCharacterAtPosition: (~position: CharacterPosition.t, t) => option(Uchar.t);
+let getCharacterAtPosition:
+  (~position: CharacterPosition.t, t) => option(Uchar.t);
 let getPrimaryCursor: t => Location.t;
 let getPrimaryCursorByte: t => BytePosition.t;
 let getVisibleView: t => int;
@@ -138,5 +139,5 @@ let updateBuffer: (~buffer: EditorBuffer.t, t) => t;
 
 module Slow: {
   let pixelPositionToBytePosition:
-    (~buffer: Buffer.t, ~pixelX: float, ~pixelY: float, t) => BytePosition.t
+    (~buffer: Buffer.t, ~pixelX: float, ~pixelY: float, t) => BytePosition.t;
 };

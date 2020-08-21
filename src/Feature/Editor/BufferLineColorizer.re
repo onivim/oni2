@@ -74,8 +74,7 @@ let create =
       (),
     );
 
-  let matchingPair = matchingPair
-  |> Option.map(ByteIndex.toInt);
+  let matchingPair = matchingPair |> Option.map(ByteIndex.toInt);
 
   let startByteIdx = ByteIndex.toInt(startByte);
   let (defaultToken, tokens) =

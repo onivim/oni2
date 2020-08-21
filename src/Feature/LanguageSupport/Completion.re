@@ -414,7 +414,8 @@ let cursorMoved =
   // Filter providers, such that the completion meets are still
   // valid in the context of the new cursor position
 
-  let isCompletionMeetStillValid = (meetLocation: EditorCoreTypes.CharacterPosition.t) => {
+  let isCompletionMeetStillValid =
+      (meetLocation: EditorCoreTypes.CharacterPosition.t) => {
     // If the line changed, the meet is no longer valid
     meetLocation.line == current.line
     // If the cursor moved before the meet, on the same line,
@@ -651,10 +652,10 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
                Exthost.SuggestItem.(
                  switch (result.item.suggestRange) {
                  | Some(SuggestRange.Single({startColumn, _})) =>
-                   (startColumn -1)|> CharacterIndex.ofInt
+                   startColumn - 1 |> CharacterIndex.ofInt
                  | Some(SuggestRange.Combo({insert, _})) =>
                    Exthost.OneBasedRange.(
-                     (insert.startColumn - 1) |> CharacterIndex.ofInt
+                     insert.startColumn - 1 |> CharacterIndex.ofInt
                    )
                  | None => location.character
                  }

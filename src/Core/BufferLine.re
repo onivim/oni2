@@ -303,11 +303,12 @@ let lengthBounded = (~max, bufferLine) => {
 
 let getIndex = (~byte, bufferLine) => {
   let byteIdx = ByteIndex.toInt(byte);
-  
+
   // The maximum character index this byte could be is literally [byte]
   // (ie, in the case where the string is all ASCII / 1-byte characters)
   // So resolve to that point
-  let maximumPossibleCharacterIndex = CharacterIndex.ofInt(ByteIndex.toInt(byte));
+  let maximumPossibleCharacterIndex =
+    CharacterIndex.ofInt(ByteIndex.toInt(byte));
   Internal.resolveTo(~index=maximumPossibleCharacterIndex, bufferLine);
 
   // In the case where we are looking at an 'intermediate' byte,
@@ -348,22 +349,25 @@ let getByteFromIndex = (~index, bufferLine) => {
   let characters = bufferLine.characters;
   let len = Array.length(characters);
   let characterIdx = CharacterIndex.toInt(index);
-  let byteIdx = if (characterIdx < 0) {
-    0;
-  } else if (characterIdx >= len) {
-    rawLength;
-  } else {
-    switch (characters[characterIdx]) {
-    | Some({byteOffset, _}) => byteOffset
-    | None => rawLength
+  let byteIdx =
+    if (characterIdx < 0) {
+      0;
+    } else if (characterIdx >= len) {
+      rawLength;
+    } else {
+      switch (characters[characterIdx]) {
+      | Some({byteOffset, _}) => byteOffset
+      | None => rawLength
+      };
     };
-  };
   byteIdx |> ByteIndex.ofInt;
 };
 
 let subExn = (~index: CharacterIndex.t, ~length: int, bufferLine) => {
   let startOffset = getByteFromIndex(~index, bufferLine) |> ByteIndex.toInt;
-  let endOffset = getByteFromIndex(~index=CharacterIndex.(index + length), bufferLine) |> ByteIndex.toInt;
+  let endOffset =
+    getByteFromIndex(~index=CharacterIndex.(index + length), bufferLine)
+    |> ByteIndex.toInt;
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
 };
 
@@ -405,7 +409,10 @@ module Slow = {
       } else {
         let mid = (low + high) / 2;
         let (midPixel, midPixelWidth) =
-          getPixelPositionAndWidth(~index=CharacterIndex.ofInt(mid), bufferLine);
+          getPixelPositionAndWidth(
+            ~index=CharacterIndex.ofInt(mid),
+            bufferLine,
+          );
         if (pixel < midPixel) {
           loop(low, mid - 1);
         } else if (pixel > midPixel +. midPixelWidth) {
@@ -415,7 +422,6 @@ module Slow = {
         };
       };
 
-    loop(0, characterLength - 1)
-    |> CharacterIndex.ofInt;
+    loop(0, characterLength - 1) |> CharacterIndex.ofInt;
   };
 };

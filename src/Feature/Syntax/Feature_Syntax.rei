@@ -21,7 +21,9 @@ type t;
 
 let empty: t;
 
-let getTokens: (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, t) => list(ThemeToken.t);
+let getTokens:
+  (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, t) =>
+  list(ThemeToken.t);
 
 let getSyntaxScope:
   (~bytePosition: BytePosition.t, ~bufferId: int, t) => SyntaxScope.t;

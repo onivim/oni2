@@ -31,18 +31,20 @@ let ofRange = (r: CharacterRange.t) => {
 };
 
 let toRange = ({startLineNumber, endLineNumber, startColumn, endColumn}) => {
-  EditorCoreTypes.(CharacterRange.{
-    start:
-      EditorCoreTypes.CharacterPosition.{
-        line: LineNumber.ofOneBased(startLineNumber),
-        character: CharacterIndex.ofInt(startColumn - 1),
-      },
-    stop:
-      EditorCoreTypes.CharacterPosition.{
-        line: LineNumber.ofOneBased(endLineNumber),
-        character: CharacterIndex.ofInt(endColumn - 1),
-      },
-  });
+  EditorCoreTypes.(
+    CharacterRange.{
+      start:
+        EditorCoreTypes.CharacterPosition.{
+          line: LineNumber.ofOneBased(startLineNumber),
+          character: CharacterIndex.ofInt(startColumn - 1),
+        },
+      stop:
+        EditorCoreTypes.CharacterPosition.{
+          line: LineNumber.ofOneBased(endLineNumber),
+          character: CharacterIndex.ofInt(endColumn - 1),
+        },
+    }
+  );
 };
 
 let decode =

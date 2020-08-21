@@ -16,17 +16,16 @@ let get = () => {
   BytePosition.{
     line: Native.vimCursorGetLine() |> LineNumber.ofOneBased,
     byte: Native.vimCursorGetColumn() |> ByteIndex.ofInt,
-  }
-}
+  };
+};
 //  Location.create(
 //    ~line=Index.fromOneBased(Native.vimCursorGetLine()),
 //    ~column=Index.fromZeroBased(Native.vimCursorGetColumn()),
 //  );
 
 let set = (cursor: BytePosition.t) => {
-//  let previousTopLine = Native.vimWindowGetTopLine();
-//  let previousLeft = Native.vimWindowGetLeftColumn();
-
+  //  let previousTopLine = Native.vimWindowGetTopLine();
+  //  let previousLeft = Native.vimWindowGetLeftColumn();
   Native.vimCursorSetPosition(
     cursor.line |> LineNumber.toOneBased,
     cursor.byte |> ByteIndex.toInt,

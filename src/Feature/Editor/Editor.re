@@ -113,7 +113,7 @@ let bufferCharacterPositionToPixel =
     let (cursorOffset, width) =
       buffer
       |> EditorBuffer.line(line)
-      |> BufferLine.getPixelPositionAndWidth(~index=position.character)
+      |> BufferLine.getPixelPositionAndWidth(~index=position.character);
 
     let pixelX = cursorOffset -. scrollX +. 0.5;
 
@@ -147,10 +147,9 @@ let create = (~config, ~buffer, ()) => {
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
      */
-    cursors: [ByteIndex.{
-      line: EditorCoreTypes.LineNumber.zero,
-      byte: ByteIndex.zero,
-    }],
+    cursors: [
+      ByteIndex.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero},
+    ],
     selection:
       VisualRange.create(
         ~mode=Vim.Types.None,
@@ -179,18 +178,10 @@ type scrollbarMetrics = {
 
 let getCursors = ({cursors, _}) => cursors;
 
-let getNearestMatchingPair = (~characterPosition: CharacterPosition.t, ~pairs, {buffer, _}) => {
-  BracketMatch.findFirst(
-    ~buffer,
-    ~characterPosition,
-    ~pairs,
-  )
-  |> Option.map(({start, stop}: BracketMatch.pair) =>
-       (
-         start,
-         stop,
-       )
-     );
+let getNearestMatchingPair =
+    (~characterPosition: CharacterPosition.t, ~pairs, {buffer, _}) => {
+  BracketMatch.findFirst(~buffer, ~characterPosition, ~pairs)
+  |> Option.map(({start, stop}: BracketMatch.pair) => (start, stop));
 };
 
 let mapCursor = (~position: BytePosition.t, editor) => {
@@ -200,8 +191,9 @@ let mapCursor = (~position: BytePosition.t, editor) => {
 
   if (line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
-    let column = BufferLine.getIndex(~byte=position.byte, bufferLine)
-    |> CharacterIndex.toInt;
+    let column =
+      BufferLine.getIndex(~byte=position.byte, bufferLine)
+      |> CharacterIndex.toInt;
 
     Location.{line: Index.(zero + line), column: Index.(zero + column)};
   } else {
@@ -233,9 +225,22 @@ let getCharacterBehindCursor = ({cursors, buffer, _}) => {
 
     if (line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
-      let index = 
-      max(0, CharacterIndex.toInt(BufferLine.getIndex(~byte=cursor.byte, bufferLine)) - 1);
-      try(Some(BufferLine.getUcharExn(~index=CharacterIndex.ofInt(index), bufferLine))) {
+      let index =
+        max(
+          0,
+          CharacterIndex.toInt(
+            BufferLine.getIndex(~byte=cursor.byte, bufferLine),
+          )
+          - 1,
+        );
+      try(
+        Some(
+          BufferLine.getUcharExn(
+            ~index=CharacterIndex.ofInt(index),
+            bufferLine,
+          ),
+        )
+      ) {
       | _exn => None
       };
     } else {
@@ -292,7 +297,8 @@ let getPrimaryCursor = editor =>
 let getPrimaryCursorByte = editor =>
   switch (editor.cursors) {
   | [cursor, ..._] => cursor
-  | [] => BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero }
+  | [] =>
+    BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
 let selectionOrCursorRange = editor => {
   switch (editor.selection.mode) {

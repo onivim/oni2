@@ -38,7 +38,11 @@ let fromLine =
   let cursorIdx = CharacterIndex.toInt(index);
   let idx =
     Stdlib.min(
-      BufferLine.lengthBounded(~max=CharacterIndex.ofInt(cursorIdx + 1), line) - 1,
+      BufferLine.lengthBounded(
+        ~max=CharacterIndex.ofInt(cursorIdx + 1),
+        line,
+      )
+      - 1,
       cursorIdx,
     );
   let pos = ref(idx);

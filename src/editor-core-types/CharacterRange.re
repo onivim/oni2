@@ -16,37 +16,33 @@ let explode = (measure, range) =>
     while (i^ < range.stop.line) {
       let startColumn =
         i^ == range.start.line ? range.start.character : CharacterIndex.zero;
-        // TODO: Is this correct?
-      let stopColumn = measure(i^) |>  
-      v => CharacterIndex.ofInt(v + 1);
+      // TODO: Is this correct?
+      let stopColumn = measure(i^) |> (v => CharacterIndex.ofInt(v + 1));
 
       pushRange(
-        ~start=CharacterPosition.{
-        line:i^,
-        character:startColumn,
-        },
-        ~stop=CharacterPosition.{
-          line: i^,
-          character: stopColumn,
-        },
+        ~start=CharacterPosition.{line: i^, character: startColumn},
+        ~stop=CharacterPosition.{line: i^, character: stopColumn},
       );
 
       i := LineNumber.(i^ + 1);
     };
 
     pushRange(
-      ~start=CharacterPosition.{
-        line: range.stop.line, character: CharacterIndex.zero,
-      },
-      ~stop=CharacterPosition.{
-        line: range.stop.line, character: range.stop.character,
-      }
+      ~start=
+        CharacterPosition.{
+          line: range.stop.line,
+          character: CharacterIndex.zero,
+        },
+      ~stop=
+        CharacterPosition.{
+          line: range.stop.line,
+          character: range.stop.character,
+        },
     );
 
     ranges^ |> List.rev;
   };
 
-  
 let contains = (position: CharacterPosition.t, range) => {
   (
     LineNumber.(position.line == range.start.line)

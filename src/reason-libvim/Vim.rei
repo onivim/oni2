@@ -158,7 +158,13 @@ module Buffer: {
   - If neither [start] or [stop] are specified, the lines in the buffer will be replaced with [lines]
   */
   let setLines:
-    (~start: LineNumber.t=?, ~stop: LineNumber.t=?, ~lines: array(string), t) => unit;
+    (
+      ~start: LineNumber.t=?,
+      ~stop: LineNumber.t=?,
+      ~lines: array(string),
+      t
+    ) =>
+    unit;
 
   let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
 

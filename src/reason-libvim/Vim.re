@@ -218,17 +218,17 @@ let runWith = (~context: Context.t, f) => {
     );
   };
 
-//  if (BytePosition.(prevLocation == newLocation)) {
-//    Event.dispatch(newLocation, Listeners.cursorMoved);
-//  };
-//
-//  if (prevTopLine != newTopLine) {
-//    Event.dispatch(newTopLine, Listeners.topLineChanged);
-//  };
-//
-//  if (prevLeftColumn != newLeftColumn) {
-//    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
-//  };
+  //  if (BytePosition.(prevLocation == newLocation)) {
+  //    Event.dispatch(newLocation, Listeners.cursorMoved);
+  //  };
+  //
+  //  if (prevTopLine != newTopLine) {
+  //    Event.dispatch(newTopLine, Listeners.topLineChanged);
+  //  };
+  //
+  //  if (prevLeftColumn != newLeftColumn) {
+  //    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
+  //  };
 
   if (!Range.equals(prevRange, newRange)
       || newMode == Visual
@@ -481,7 +481,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         if (Mode.getCurrent() == Types.Insert) {
           let position: BytePosition.t = Cursor.get();
           let line = Buffer.getLine(Buffer.getCurrent(), position.line);
-          
+
           let isBetweenClosingPairs = () => {
             AutoClosingPairs.isBetweenClosingPairs(
               line,

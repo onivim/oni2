@@ -141,11 +141,14 @@ let renderDefinition =
          CharacterRange.{
            start:
              CharacterPosition.{
-             line: cursorPosition.line, character: token.startIndex
+               line: cursorPosition.line,
+               character: token.startIndex,
              },
-           stop: CharacterPosition.{
-           line: cursorPosition.line,
-           character: token.endIndex},
+           stop:
+             CharacterPosition.{
+               line: cursorPosition.line,
+               character: token.endIndex,
+             },
          };
 
        // Double-check that the range of the token falls into our definition position

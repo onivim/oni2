@@ -7,10 +7,10 @@ let ofInt = Fun.id;
 let toInt = Fun.id;
 
 let (+) = (a, b) => a + b;
-let (-) = (a,b) => a - b;
-let (*) = (a,b) => a * b;
-let (/) = (a,b) => a / b;
-let (<) = (a,b) => a < b;
-let (>) = (a,b) => a > b;
-let (<=) = (a,b) => a <= b;
-let (>=) = (a,b) => a >= b;
+let (-) = (a, b) => a - b;
+let ( * ) = (a, b) => a * b;
+let (/) = (a, b) => a / b;
+let (<) = (a, b) => a < b;
+let (>) = (a, b) => a > b;
+let (<=) = (a, b) => a <= b;
+let (>=) = (a, b) => a >= b;

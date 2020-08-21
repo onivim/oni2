@@ -117,16 +117,20 @@ let noTokens = [];
 
 module ClientLog = (val Oni_Core.Log.withNamespace("Oni2.Feature.Syntax"));
 
-let getTokens = (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, {highlights, _}) => {
+let getTokens =
+    (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, {highlights, _}) => {
   highlights
   |> BufferMap.find_opt(bufferId)
-  |> OptionEx.flatMap(LineMap.find_opt(line |> EditorCoreTypes.LineNumber.toZeroBased))
+  |> OptionEx.flatMap(
+       LineMap.find_opt(line |> EditorCoreTypes.LineNumber.toZeroBased),
+     )
   |> Option.value(~default=noTokens);
 };
 
 let getSyntaxScope =
     (~bytePosition: BytePosition.t, ~bufferId: int, bufferHighlights) => {
-  let tokens = getTokens(~bufferId, ~line=bytePosition.line, bufferHighlights);
+  let tokens =
+    getTokens(~bufferId, ~line=bytePosition.line, bufferHighlights);
   let byte = ByteIndex.toInt(bytePosition.byte);
 
   let rec loop = (syntaxScope, currentTokens) => {

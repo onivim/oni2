@@ -48,16 +48,16 @@ let getTokensForLine =
         | None => None
         | Some((startPos: CharacterPosition.t, endPos: CharacterPosition.t))
             when !ignoreMatchingPairs =>
-// TODO before merge:
-// Convert character position -> byte position
-            None;
-//          if (Index.toZeroBased(startPos.line) == i) {
-//            Some(Index.toZeroBased(startPos.column));
-//          } else if (Index.toZeroBased(endPos.line) == i) {
-//            Some(Index.toZeroBased(endPos.column));
-//          } else {
-//            None;
-//          }
+          // Convert character position -> byte position
+          None
+          // TODO before merge:
+        //          if (Index.toZeroBased(startPos.line) == i) {
+        //            Some(Index.toZeroBased(startPos.column));
+        //          } else if (Index.toZeroBased(endPos.line) == i) {
+        //            Some(Index.toZeroBased(endPos.column));
+        //          } else {
+        //            None;
+        //          }
         | _ => None
         };
 
@@ -68,8 +68,11 @@ let getTokensForLine =
           bufferSyntaxHighlights,
         );
 
-      let startByte = BufferLine.getByteFromIndex(~index=
-      startIndex |> CharacterIndex.ofInt, line);
+      let startByte =
+        BufferLine.getByteFromIndex(
+          ~index=startIndex |> CharacterIndex.ofInt,
+          line,
+        );
 
       let colorizer =
         BufferLineColorizer.create(
@@ -84,8 +87,12 @@ let getTokensForLine =
           tokenColors,
         );
 
-      BufferViewTokenizer.tokenize(~start=CharacterIndex.ofInt(startIndex),
-      ~stop=CharacterIndex.ofInt(endIndex), line, colorizer);
+      BufferViewTokenizer.tokenize(
+        ~start=CharacterIndex.ofInt(startIndex),
+        ~stop=CharacterIndex.ofInt(endIndex),
+        line,
+        colorizer,
+      );
     };
   };
 

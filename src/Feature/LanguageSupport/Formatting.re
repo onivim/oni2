@@ -318,17 +318,20 @@ let update =
         ~buf,
         ~extHostClient,
         ~range=
-          EditorCoreTypes.(CharacterRange.{
-            start: {
-              line: LineNumber.zero,
-              character: CharacterIndex.zero,
-            },
-            stop: {
-              line:
-                Oni_Core.Buffer.getNumberOfLines(buf) |> LineNumber.ofZeroBased,
-              character: CharacterIndex.zero,
-            },
-          }),
+          EditorCoreTypes.(
+            CharacterRange.{
+              start: {
+                line: LineNumber.zero,
+                character: CharacterIndex.zero,
+              },
+              stop: {
+                line:
+                  Oni_Core.Buffer.getNumberOfLines(buf)
+                  |> LineNumber.ofZeroBased,
+                character: CharacterIndex.zero,
+              },
+            }
+          ),
       );
     }
 

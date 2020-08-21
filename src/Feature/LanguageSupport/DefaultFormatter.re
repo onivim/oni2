@@ -134,8 +134,12 @@ module Internal = {
 
 let format = (~indentation, ~languageConfiguration, ~startLineNumber, lines) => {
   let len: int = Array.length(lines);
-  let lenIdx = EditorCoreTypes.(
-    LineNumber.toZeroBased(startLineNumber) + len - 1 |> LineNumber.ofZeroBased
+  let lenIdx =
+    EditorCoreTypes.(
+      LineNumber.toZeroBased(startLineNumber)
+      + len
+      - 1
+      |> LineNumber.ofZeroBased
     );
   let out = Internal.doFormat(~indentation, ~languageConfiguration, lines);
 

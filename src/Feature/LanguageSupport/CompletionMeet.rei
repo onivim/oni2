@@ -26,5 +26,9 @@ let fromLine:
   option(t);
 
 let fromBufferPosition:
-  (~triggerCharacters: list(Uchar.t)=?, ~position: CharacterPosition.t, Buffer.t) =>
+  (
+    ~triggerCharacters: list(Uchar.t)=?,
+    ~position: CharacterPosition.t,
+    Buffer.t
+  ) =>
   option(t);

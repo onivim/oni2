@@ -29,10 +29,11 @@ let renderLineNumber =
   let isActiveLine = lineNumber == cursorLine;
   let ({pixelY: yOffset, _}: Editor.pixelPosition, _) =
     Editor.bufferBytePositionToPixel(
-      ~position=BytePosition.{
-        line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
-        byte: ByteIndex.zero,
-      },
+      ~position=
+        BytePosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          byte: ByteIndex.zero,
+        },
       context.editor,
     );
 

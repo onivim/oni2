@@ -41,7 +41,8 @@ let applyEdit = (~provider, edit) => {
   // For now, we assume the start line and end line are the same
   // this is safe for formatting operations, but we'll need to
   // improve this for more general edits (like code actions).
-  let startLine = edit.range.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+  let startLine =
+    edit.range.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
   let endLine = edit.range.stop.line |> EditorCoreTypes.LineNumber.toZeroBased;
   let startColumn = edit.range.start.character |> CharacterIndex.toInt;
   let endColumn = edit.range.stop.character |> CharacterIndex.toInt;
@@ -83,8 +84,10 @@ let sort = edits => {
     let rangeA = editA.range;
     let rangeB = editB.range;
 
-    let startLineA = rangeA.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
-    let startLineB = rangeB.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+    let startLineA =
+      rangeA.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+    let startLineB =
+      rangeB.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
 
     let startColumnA = rangeA.start.character |> CharacterIndex.toInt;
     let startColumnB = rangeB.start.character |> CharacterIndex.toInt;

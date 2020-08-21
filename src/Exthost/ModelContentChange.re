@@ -29,16 +29,21 @@ let getRangeFromEdit = (bu: BufferUpdate.t) => {
   let startLine = Index.toZeroBased(bu.startLine);
   let endLine = Index.toZeroBased(bu.endLine) |> max(startLine);
 
-  let range = EditorCoreTypes.(
-    CharacterRange.{
-      start:
-        CharacterPosition.{
-        line: LineNumber.ofZeroBased(startLine), character: CharacterIndex.zero},
-      stop:
-        Location.{
-        line: LineNumber.ofZeroBased(endLine), 
-        character: CharacterIndex.zero},
-    });
+  let range =
+    EditorCoreTypes.(
+      CharacterRange.{
+        start:
+          CharacterPosition.{
+            line: LineNumber.ofZeroBased(startLine),
+            character: CharacterIndex.zero,
+          },
+        stop:
+          Location.{
+            line: LineNumber.ofZeroBased(endLine),
+            character: CharacterIndex.zero,
+          },
+      }
+    );
 
   (isInsert, range);
 };

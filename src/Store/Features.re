@@ -830,7 +830,8 @@ let update =
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
-    let activeCursorByte = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
+    let activeCursorByte =
+      editor |> Feature_Editor.Editor.getPrimaryCursorByte;
     let (signatureHelp, shOutMsg) =
       Feature_SignatureHelp.update(
         ~maybeBuffer,

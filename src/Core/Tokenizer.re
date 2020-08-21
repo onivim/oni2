@@ -67,7 +67,12 @@ let _getNextBreak =
 };
 
 let tokenize =
-    (~start=CharacterIndex.zero, ~stop: CharacterIndex.t, ~f: splitFunc, bufferLine: BufferLine.t) => {
+    (
+      ~start=CharacterIndex.zero,
+      ~stop: CharacterIndex.t,
+      ~f: splitFunc,
+      bufferLine: BufferLine.t,
+    ) => {
   let startIndex = CharacterIndex.toInt(start);
   let endIndex = CharacterIndex.toInt(stop);
   let len = BufferLine.lengthBounded(~max=stop, bufferLine);
@@ -92,8 +97,15 @@ let tokenize =
         );
 
       let startByte =
-        BufferLine.getByteFromIndex(~index=CharacterIndex.ofInt(startToken), bufferLine);
-      let endByte = BufferLine.getByteFromIndex(~index=CharacterIndex.ofInt(endToken), bufferLine);
+        BufferLine.getByteFromIndex(
+          ~index=CharacterIndex.ofInt(startToken),
+          bufferLine,
+        );
+      let endByte =
+        BufferLine.getByteFromIndex(
+          ~index=CharacterIndex.ofInt(endToken),
+          bufferLine,
+        );
 
       let textRun =
         TextRun.create(

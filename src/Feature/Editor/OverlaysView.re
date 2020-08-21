@@ -59,10 +59,7 @@ let make =
       (),
     ) => {
   let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-    Editor.bufferCharacterPositionToPixel(
-      ~position=cursorPosition,
-      editor,
-    );
+    Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let cursorPixelY = pixelY |> int_of_float;
   let cursorPixelX = pixelX +. gutterWidth |> int_of_float;

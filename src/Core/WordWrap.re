@@ -37,11 +37,19 @@ let fixed = (~pixels, bufferLine) => {
           // We have hit the column width, so drop a new line break
         );
       } else {
-        let newWraps = [{byte: byteIndex, character: characterIndex}, ...curr];
+        let newWraps = [
+          {byte: byteIndex, character: characterIndex},
+          ...curr,
+        ];
         loop(newWraps, width, nextCharacterIndex);
       };
     };
   };
 
-  loop([{byte: ByteIndex.zero, character: CharacterIndex.zero}], 0., CharacterIndex.zero) |> List.rev;
+  loop(
+    [{byte: ByteIndex.zero, character: CharacterIndex.zero}],
+    0.,
+    CharacterIndex.zero,
+  )
+  |> List.rev;
 };

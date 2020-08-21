@@ -890,7 +890,6 @@ let start =
           maybeRenderer
           |> Option.map(addBufferRendererEffect(bufferId))
           |> Option.value(~default=Isolinear.Effect.none),
-
           maybeLocation
           |> Option.map(gotoLocationEffect(editorId))
           |> Option.value(~default=Isolinear.Effect.none),

@@ -67,8 +67,16 @@ module Internal = {
         };
       };
 
-    loop(-1, 0, [], {line: EditorCoreTypes.LineNumber.zero, 
-    byteOffset: ByteIndex.zero, characterOffset: CharacterIndex.zero});
+    loop(
+      -1,
+      0,
+      [],
+      {
+        line: EditorCoreTypes.LineNumber.zero,
+        byteOffset: ByteIndex.zero,
+        characterOffset: CharacterIndex.zero,
+      },
+    );
   };
 };
 

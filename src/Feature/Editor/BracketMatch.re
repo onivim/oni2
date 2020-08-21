@@ -46,8 +46,10 @@ let find =
     } else {
       let bufferLine = buffer |> EditorBuffer.line(line);
       let lineLength =
-        bufferLine |> BufferLine.lengthBounded(~max=Constants.maxLineLength
-        |> CharacterIndex.ofInt);
+        bufferLine
+        |> BufferLine.lengthBounded(
+             ~max=Constants.maxLineLength |> CharacterIndex.ofInt,
+           );
 
       let idx =
         switch (index) {
@@ -76,8 +78,9 @@ let find =
           ~stopCharacter,
         );
       } else {
-        let char: Uchar.t = bufferLine |> 
-        BufferLine.getUcharExn(~index=idx |> CharacterIndex.ofInt);
+        let char: Uchar.t =
+          bufferLine
+          |> BufferLine.getUcharExn(~index=idx |> CharacterIndex.ofInt);
 
         let count =
           if (char == startCharacter) {
@@ -89,8 +92,12 @@ let find =
           };
 
         if (count == 0) {
-          Some({line: EditorCoreTypes.LineNumber.ofZeroBased(line),
-          character: CharacterIndex.ofInt(idx)}: CharacterPosition.t);
+          Some(
+            {
+              line: EditorCoreTypes.LineNumber.ofZeroBased(line),
+              character: CharacterIndex.ofInt(idx),
+            }: CharacterPosition.t,
+          );
         } else {
           loop(
             ~count,
@@ -112,12 +119,15 @@ let find =
     if (line < bufferLen && line >= 0) {
       let bufferLine = buffer |> EditorBuffer.line(line);
       let lineLength =
-        bufferLine |> BufferLine.lengthBounded(~max=
-        Constants.maxLineLength |> CharacterIndex.ofInt);
+        bufferLine
+        |> BufferLine.lengthBounded(
+             ~max=Constants.maxLineLength |> CharacterIndex.ofInt,
+           );
 
       if (index < lineLength && index >= 0) {
-        let char: Uchar.t = bufferLine |> BufferLine.getUcharExn(~index=
-        CharacterIndex.ofInt(index));
+        let char: Uchar.t =
+          bufferLine
+          |> BufferLine.getUcharExn(~index=CharacterIndex.ofInt(index));
         if (char != stop) {
           (Some(index), line);
         } else if (index > 0) {
@@ -187,21 +197,20 @@ let findFirst = (~buffer, ~characterPosition, ~pairs) => {
         | (Some(_) as acc, None) => acc
         | (None, Some(_) as newPair) => newPair
         | (Some(previousPair), Some(newPair)) =>
-          let newStartLine = newPair.start.line |>
-          EditorCoreTypes.LineNumber.toZeroBased;
-          let previousStartLine = previousPair.start.line |>
-          EditorCoreTypes.LineNumber.toZeroBased;
-          let previousStartIndex = previousPair.start.character
-          |> CharacterIndex.toInt;
-          let newStartIndex = newPair.start.character
-          |> CharacterIndex.toInt;
+          let newStartLine =
+            newPair.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+          let previousStartLine =
+            previousPair.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+          let previousStartIndex =
+            previousPair.start.character |> CharacterIndex.toInt;
+          let newStartIndex = newPair.start.character |> CharacterIndex.toInt;
           if (newStartLine > previousStartLine
               || newStartLine == previousStartLine
-              && newStartIndex> previousStartIndex) {
+              && newStartIndex > previousStartIndex) {
             Some(newPair);
           } else {
             Some(previousPair);
-          }
+          };
         | (None, None) => None
         };
       };

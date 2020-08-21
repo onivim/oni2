@@ -153,7 +153,9 @@ let getAllDiagnostics = (diagnostics: t) => {
 
 let getDiagnosticsAtPosition = (instance, buffer, position) => {
   getDiagnostics(instance, buffer)
-  |> List.filter((Diagnostic.{range, _}) => CharacterRange.contains(position, range));
+  |> List.filter((Diagnostic.{range, _}) =>
+       CharacterRange.contains(position, range)
+     );
 };
 
 let getDiagnosticsMap = (instance, buffer) => {
