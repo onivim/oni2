@@ -225,8 +225,7 @@ let%component make =
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
-    Selection.getRanges(Editor.selection(editor), buffer)
-    |> CharacterRange.toHash;
+    Selection.getRanges(Editor.selection(editor), buffer) |> ByteRange.toHash;
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers

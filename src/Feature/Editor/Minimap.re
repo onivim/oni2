@@ -120,7 +120,7 @@ let%component make =
                 ~selection:
                    Hashtbl.t(
                      EditorCoreTypes.LineNumber.t,
-                     list(CharacterRange.t),
+                     list(ByteRange.t),
                    ),
                 ~showSlider,
                 ~colors: Colors.t,
@@ -293,24 +293,39 @@ let%component make =
           canvasContext,
         );
 
-        let renderRange = (~color, ~offset, range: CharacterRange.t) =>
-          {let startX =
-             float(CharacterIndex.toInt(range.start.character))
-             *. float(Constants.minimapCharacterWidth)
-             +. Constants.leftMargin
-             +. Constants.gutterWidth;
-           let endX =
-             float(CharacterIndex.toInt(range.stop.character))
-             *. float(Constants.minimapCharacterWidth);
+        let renderRange = (~color, ~offset, range: ByteRange.t) =>
+          {let maybeCharacterStart =
+             Editor.byteToCharacter(range.start, editor);
+           let maybeCharacterStop =
+             Editor.byteToCharacter(range.stop, editor);
 
-           Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
-           CanvasContext.drawRectLtwh(
-             ~left=startX -. 1.0,
-             ~top=offset -. 1.0,
-             ~height=float(Constants.minimapCharacterHeight) +. 2.0,
-             ~width=endX -. startX +. 2.,
-             ~paint=minimapPaint,
-             canvasContext,
+           OptionEx.iter2(
+             (characterStart, characterStop) => {
+               let startX =
+                 CharacterPosition.(
+                   float(CharacterIndex.toInt(characterStart.character))
+                   *. float(Constants.minimapCharacterWidth)
+                   +. Constants.leftMargin
+                   +. Constants.gutterWidth
+                 );
+               let endX =
+                 CharacterPosition.(
+                   float(CharacterIndex.toInt(characterStop.character))
+                   *. float(Constants.minimapCharacterWidth)
+                 );
+
+               Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
+               CanvasContext.drawRectLtwh(
+                 ~left=startX -. 1.0,
+                 ~top=offset -. 1.0,
+                 ~height=float(Constants.minimapCharacterHeight) +. 2.0,
+                 ~width=endX -. startX +. 2.,
+                 ~paint=minimapPaint,
+                 canvasContext,
+               );
+             },
+             maybeCharacterStart,
+             maybeCharacterStop,
            )};
 
         let renderUnderline = (~color, ~offset, range: CharacterRange.t) =>

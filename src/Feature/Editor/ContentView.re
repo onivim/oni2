@@ -33,7 +33,7 @@ let renderLine =
   | None => ()
   | Some(selections) =>
     List.iter(
-      Draw.rangeCharacter(~context, ~color=colors.selectionBackground),
+      Draw.rangeByte(~context, ~color=colors.selectionBackground),
       selections,
     )
   };

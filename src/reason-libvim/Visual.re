@@ -1,10 +1,6 @@
 open EditorCoreTypes;
 
-let zeroRange =
-  CharacterRange.{
-    start: CharacterPosition.zero,
-    stop: CharacterPosition.zero,
-  };
+let zeroRange = ByteRange.{start: BytePosition.zero, stop: BytePosition.zero};
 
 let getRange = () => {
   let (startLine, startColumn, stopLine, stopColumn) =
@@ -14,16 +10,16 @@ let getRange = () => {
   if (startLine == 0 || stopLine == 0) {
     zeroRange;
   } else {
-    CharacterRange.{
+    ByteRange.{
       start:
-        CharacterPosition.{
+        BytePosition.{
           line: LineNumber.ofOneBased(startLine),
-          character: CharacterIndex.ofInt(startColumn),
+          byte: ByteIndex.ofInt(startColumn),
         },
       stop:
-        CharacterPosition.{
+        BytePosition.{
           line: LineNumber.ofOneBased(stopLine),
-          character: CharacterIndex.ofInt(stopColumn),
+          byte: ByteIndex.ofInt(stopColumn),
         },
     };
   };

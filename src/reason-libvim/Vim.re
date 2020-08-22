@@ -230,7 +230,7 @@ let runWith = (~context: Context.t, f) => {
   //    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
   //  };
 
-  if (!CharacterRange.equals(prevRange, newRange)
+  if (!ByteRange.equals(prevRange, newRange)
       || newMode == Visual
       && prevMode != Visual
       || prevVisualMode != newVisualMode) {

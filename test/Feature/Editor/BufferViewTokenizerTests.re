@@ -18,7 +18,7 @@ let basicColorizer = _ =>
     italic: false,
   };
 
-let splitColorizer = (split, idx) =>
+let splitColorizer = (split, idx) => {
   let idx = ByteIndex.toInt(idx);
   if (idx < split) {
     BufferLineColorizer.{
@@ -35,6 +35,7 @@ let splitColorizer = (split, idx) =>
       italic: false,
     };
   };
+};
 
 let makeLine = str => BufferLine.make(~indentation, str);
 

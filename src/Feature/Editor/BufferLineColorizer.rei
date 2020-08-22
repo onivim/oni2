@@ -33,7 +33,7 @@ let create:
     ~startByte: ByteIndex.t,
     ~defaultBackgroundColor: Color.t,
     ~defaultForegroundColor: Color.t, // theme.editorForeground
-    ~selectionHighlights: option(CharacterRange.t),
+    ~selectionHighlights: option(ByteRange.t),
     ~selectionColor: Color.t,
     ~matchingPair: option(ByteIndex.t),
     ~searchHighlights: list(CharacterRange.t),

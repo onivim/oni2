@@ -17,16 +17,16 @@ let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
     ranges :=
       [
         EditorCoreTypes.(
-          CharacterRange.{
+          ByteRange.{
             start:
-              CharacterPosition.{
+              BytePosition.{
                 line: LineNumber.ofZeroBased(currentPos),
-                character: CharacterIndex.zero,
+                byte: ByteIndex.zero,
               },
             stop: {
               line: LineNumber.ofZeroBased(currentPos),
-              character:
-                CharacterIndex.ofInt(
+              byte:
+                ByteIndex.ofInt(
                   buffer
                   |> Buffer.getLine(currentPos)
                   |> BufferLine.lengthInBytes,
@@ -58,16 +58,16 @@ let getRangesForVisualSelection =
     ranges :=
       [
         EditorCoreTypes.(
-          CharacterRange.{
+          ByteRange.{
             start:
-              CharacterPosition.{
+              BytePosition.{
                 line: LineNumber.ofZeroBased(currentPos),
-                character: CharacterIndex.ofInt(startCharacterIdx),
+                byte: ByteIndex.ofInt(startCharacterIdx),
               },
             stop:
-              CharacterPosition.{
+              BytePosition.{
                 line: LineNumber.ofZeroBased(currentPos),
-                character: CharacterIndex.ofInt(endCharacterIdx),
+                byte: ByteIndex.ofInt(endCharacterIdx),
               },
           }
         ),
@@ -99,17 +99,16 @@ let getRangesForBlockSelection =
     let newRange =
       if (startC < bufferLength) {
         Some(
-          CharacterRange.{
+          ByteRange.{
             start:
-              CharacterPosition.{
+              BytePosition.{
                 line: EditorCoreTypes.LineNumber.ofZeroBased(currentPos),
-                character: CharacterIndex.ofInt(startC),
+                byte: ByteIndex.ofInt(startC),
               },
             stop:
-              CharacterPosition.{
+              BytePosition.{
                 line: EditorCoreTypes.LineNumber.ofZeroBased(currentPos),
-                character:
-                  CharacterIndex.ofInt(min(endColumn + 1, bufferLength)),
+                byte: ByteIndex.ofInt(min(endColumn + 1, bufferLength)),
               },
           },
         );
@@ -141,12 +140,11 @@ let getRangesForBlockSelection =
  * getRanges returns a list of Range.t in Buffer Space,
  * where selection highlights should be displayed
  */
-let getRanges: (VisualRange.t, Buffer.t) => list(CharacterRange.t) =
+let getRanges: (VisualRange.t, Buffer.t) => list(ByteRange.t) =
   (selection, buffer) => {
     let startLine =
       EditorCoreTypes.LineNumber.toZeroBased(selection.range.start.line);
-    let startCharacter =
-      CharacterIndex.toInt(selection.range.start.character);
+    let startCharacter = ByteIndex.toInt(selection.range.start.byte);
 
     let bufferLines = Buffer.getNumberOfLines(buffer);
 
@@ -155,7 +153,7 @@ let getRanges: (VisualRange.t, Buffer.t) => list(CharacterRange.t) =
         EditorCoreTypes.LineNumber.toZeroBased(selection.range.stop.line),
         bufferLines - 1,
       );
-    let endCharacter = CharacterIndex.toInt(selection.range.stop.character);
+    let endCharacter = ByteIndex.toInt(selection.range.stop.byte);
 
     switch (selection.mode) {
     | Vim.Types.Block =>

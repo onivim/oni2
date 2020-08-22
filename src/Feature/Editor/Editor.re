@@ -154,17 +154,9 @@ let create = (~config, ~buffer, ()) => {
       VisualRange.create(
         ~mode=Vim.Types.None,
         EditorCoreTypes.(
-          CharacterRange.{
-            start:
-              CharacterPosition.{
-                line: LineNumber.zero,
-                character: CharacterIndex.zero,
-              },
-            stop:
-              CharacterPosition.{
-                line: LineNumber.zero,
-                character: CharacterIndex.zero,
-              },
+          ByteRange.{
+            start: BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+            stop: BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
           }
         ),
       ),
@@ -209,6 +201,17 @@ let byteToCharacter = (position: BytePosition.t, editor) => {
   } else {
     None;
   };
+};
+
+let byteRangeToCharacterRange = ({start, stop}: ByteRange.t, editor) => {
+  let maybeCharacterStart = byteToCharacter(start, editor);
+  let maybeCharacterStop = byteToCharacter(stop, editor);
+
+  Oni_Core.Utility.OptionEx.map2(
+    (start, stop) => {CharacterRange.{start, stop}},
+    maybeCharacterStart,
+    maybeCharacterStop,
+  );
 };
 
 let characterToByte = (position: CharacterPosition.t, editor) => {
@@ -341,18 +344,15 @@ let getPrimaryCursorByte = editor =>
 let selectionOrCursorRange = editor => {
   switch (editor.selection.mode) {
   | None =>
-    let pos = getPrimaryCursor(editor);
-    let range =
-      CharacterRange.{
-        start:
-          CharacterPosition.{line: pos.line, character: CharacterIndex.zero},
-        stop:
-          CharacterPosition.{
-            line: EditorCoreTypes.LineNumber.(pos.line + 1),
-            character: CharacterIndex.zero,
-          },
-      };
-    range;
+    let pos = getPrimaryCursorByte(editor);
+    ByteRange.{
+      start: BytePosition.{line: pos.line, byte: ByteIndex.zero},
+      stop:
+        BytePosition.{
+          line: EditorCoreTypes.LineNumber.(pos.line + 1),
+          byte: ByteIndex.zero,
+        },
+    };
   | Line
   | Block
   | Character => editor.selection.range
@@ -627,26 +627,26 @@ module Slow = {
 
     let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
 
-    let line =
+    let lineIdx =
       if (rawLine >= totalLinesInBuffer) {
         max(0, totalLinesInBuffer - 1);
       } else {
         rawLine;
       };
 
-    if (line >= 0 && line < totalLinesInBuffer) {
-      let bufferLine = Buffer.getLine(line, buffer);
+    if (lineIdx >= 0 && lineIdx < totalLinesInBuffer) {
+      let bufferLine = Buffer.getLine(lineIdx, buffer);
       let index =
         BufferLine.Slow.getIndexFromPixel(
           ~pixel=pixelX +. view.scrollX,
           bufferLine,
         );
 
-      let byte = BufferLine.getByteFromIndex(~index, bufferLine);
+      let byteIndex = BufferLine.getByteFromIndex(~index, bufferLine);
 
       BytePosition.{
-        line: EditorCoreTypes.LineNumber.ofZeroBased(line),
-        byte,
+        line: EditorCoreTypes.LineNumber.ofZeroBased(lineIdx),
+        byte: byteIndex,
       };
     } else {
       BytePosition.{

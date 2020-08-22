@@ -4,6 +4,8 @@ type t = {
   byte: ByteIndex.t,
 };
 
+let zero = {line: LineNumber.zero, byte: ByteIndex.zero};
+
 let equals = (a, b) => {
   a.line == b.line && a.byte == b.byte;
 };

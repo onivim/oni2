@@ -193,6 +193,33 @@ let rangeCharacter =
   );
 };
 
+let rangeByte =
+    (~context, ~padding=0., ~color=Revery.Colors.black, r: ByteRange.t) => {
+  let doublePadding = padding *. 2.;
+  //  let line = Index.toZeroBased(r.start.line);
+  //  let start = Index.toZeroBased(r.start.column);
+  //  let endC = Index.toZeroBased(r.stop.column);
+  //  let endLine = Index.toZeroBased(r.stop.line);
+
+  let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
+    Editor.bufferBytePositionToPixel(~position=r.start, context.editor);
+
+  let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
+    Editor.bufferBytePositionToPixel(~position=r.stop, context.editor);
+
+  let lineHeight = Editor.lineHeightInPixels(context.editor);
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
+
+  drawRect(
+    ~context,
+    ~x=startPixelX,
+    ~y=startPixelY,
+    ~height=lineHeight +. doublePadding,
+    ~width=max(stopPixelX -. startPixelX, characterWidth),
+    ~color,
+  );
+};
+
 //let rangeByte =
 //    (~context, ~padding=0., ~color=Revery.Colors.black, r: ByteRange.t) => {
 //  let doublePadding = padding *. 2.;

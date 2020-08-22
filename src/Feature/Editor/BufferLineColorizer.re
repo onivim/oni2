@@ -58,7 +58,7 @@ let create =
       ~startByte: ByteIndex.t,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
-      ~selectionHighlights: option(CharacterRange.t),
+      ~selectionHighlights: option(ByteRange.t),
       ~selectionColor: Color.t,
       ~matchingPair: option(ByteIndex.t),
       ~searchHighlights: list(CharacterRange.t),
@@ -87,8 +87,8 @@ let create =
   let (selectionStart, selectionEnd) =
     switch (selectionHighlights) {
     | Some(range) =>
-      let start = CharacterIndex.toInt(range.start.character);
-      let stop = CharacterIndex.toInt(range.stop.character);
+      let start = ByteIndex.toInt(range.start.byte);
+      let stop = ByteIndex.toInt(range.stop.byte);
       start < stop ? (start, stop) : (stop, start);
     | None => ((-1), (-1))
     };

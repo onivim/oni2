@@ -78,7 +78,7 @@ let characterWidthInPixels: t => float;
 
 let selection: t => VisualRange.t;
 let setSelection: (~selection: VisualRange.t, t) => t;
-let selectionOrCursorRange: t => CharacterRange.t;
+let selectionOrCursorRange: t => ByteRange.t;
 
 let totalViewLines: t => int;
 
@@ -99,6 +99,8 @@ let getCharacterWidth: t => float;
 // BYTE-CHARACTER CONVERSION
 let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
+
+let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
 
 // PIXEL-SPACE CONVERSION
 

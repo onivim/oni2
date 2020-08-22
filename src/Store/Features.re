@@ -208,20 +208,12 @@ let update =
 
   | LanguageSupport(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
-    let cursorLocation =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.getPrimaryCursor;
+    let editor = state.layout |> Feature_Layout.activeEditor;
+    let cursorLocation = editor |> Feature_Editor.Editor.getPrimaryCursor;
 
-    let selection =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.selectionOrCursorRange;
+    let selection = editor |> Feature_Editor.Editor.selectionOrCursorRange;
 
-    let editorId =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.getId;
+    let editorId = editor |> Feature_Editor.Editor.getId;
 
     let languageConfiguration =
       maybeBuffer
@@ -232,12 +224,15 @@ let update =
          )
       |> Option.value(~default=LanguageConfiguration.default);
 
+    let characterSelection =
+      editor |> Feature_Editor.Editor.byteRangeToCharacterRange(selection);
+
     let (model, outmsg) =
       Feature_LanguageSupport.update(
         ~languageConfiguration,
         ~configuration=state.configuration,
         ~maybeBuffer,
-        ~maybeSelection=Some(selection),
+        ~maybeSelection=characterSelection,
         ~editorId,
         ~cursorLocation,
         ~client=extHostClient,
