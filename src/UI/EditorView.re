@@ -68,6 +68,7 @@ module Parts = {
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
+        scm={state.scm}
         tokenTheme={state.tokenTheme}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}

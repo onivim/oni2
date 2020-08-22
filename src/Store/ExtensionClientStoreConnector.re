@@ -52,34 +52,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
       )
     });
 
-  let getOriginalContent = (bufferId, uri, providers) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="scm.getOriginalSourceLines", dispatch => {
-      let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
-      providers
-      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
-      |> Option.iter(provider => {
-           let (handle, _) = provider;
-           let promise =
-             Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
-               ~handle,
-               ~uri,
-               extHostClient,
-             );
-
-           Lwt.on_success(promise, maybeContent => {
-             switch (maybeContent) {
-             | None => ()
-             | Some(content) =>
-               let lines =
-                 content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
-
-               dispatch(Actions.GotOriginalContent({bufferId, lines}));
-             }
-           });
-         });
-    });
-
   let provideDecorationsEffect = {
     open Exthost.Request.Decorations;
     let nextRequestId = ref(0);
@@ -167,68 +139,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
       )
 
     | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
-
-    | Buffers(Feature_Buffers.Entered({id, filePath, _})) =>
-      let eff =
-        switch (filePath) {
-        | Some(path) =>
-          Feature_SCM.Effects.getOriginalUri(
-            extHostClient, state.scm, path, uri =>
-            Actions.GotOriginalUri({bufferId: id, uri})
-          )
-
-        | None => Isolinear.Effect.none
-        };
-      (state, eff);
-
-    | NewTextContentProvider({handle, scheme}) => (
-        {
-          ...state,
-          textContentProviders: [
-            (handle, scheme),
-            ...state.textContentProviders,
-          ],
-        },
-        Isolinear.Effect.none,
-      )
-
-    | LostTextContentProvider({handle}) => (
-        {
-          ...state,
-          textContentProviders:
-            List.filter(
-              ((h, _)) => h != handle,
-              state.textContentProviders,
-            ),
-        },
-        Isolinear.Effect.none,
-      )
-
-    | GotOriginalUri({bufferId, uri}) => (
-        {
-          ...state,
-          buffers:
-            IntMap.update(
-              bufferId,
-              Option.map(Buffer.setOriginalUri(uri)),
-              state.buffers,
-            ),
-        },
-        getOriginalContent(bufferId, uri, state.textContentProviders),
-      )
-
-    | GotOriginalContent({bufferId, lines}) => (
-        {
-          ...state,
-          buffers:
-            IntMap.update(
-              bufferId,
-              Option.map(Buffer.setOriginalLines(lines)),
-              state.buffers,
-            ),
-        },
-        Isolinear.Effect.none,
-      )
 
     | NewDecorationProvider({handle, label}) => (
         {

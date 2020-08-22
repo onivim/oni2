@@ -24,12 +24,12 @@ module Effects: {
   };
 
   module SCM: {
-    let provideOriginalResource:
+    let getOriginalContent:
       (
-        ~handles: list(int),
-        Exthost.Client.t,
-        string,
-        Oni_Core.Uri.t => 'msg
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~toMsg: array(string) => 'msg,
+        Exthost.Client.t
       ) =>
       Isolinear.Effect.t('msg);
 
@@ -153,4 +153,15 @@ module Sub: {
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);
+
+  module SCM: {
+    let originalUri:
+      (
+        ~handle: int,
+        ~filePath: string,
+        ~toMsg: Oni_Core.Uri.t => 'msg,
+        Exthost.Client.t
+      ) =>
+      Isolinear.Sub.t('msg);
+  };
 };
