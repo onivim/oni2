@@ -1,6 +1,20 @@
 open Oni_Core;
+open Oni_Core.Utility;
 
 // MODEL
+
+type codeLens = Exthost.CodeLens.t;
+
+let lineNumber = (codeLens: Exthost.CodeLens.t) => Exthost.OneBasedRange.(
+  codeLens.range.startLineNumber - 1
+);
+
+let text = (codeLens: Exthost.CodeLens.t) => Exthost.Command.(
+  codeLens.command
+  |> OptionEx.flatMap(command => command.label)
+  |> Option.map(Exthost.Label.toString)
+  |> Option.value(~default="(null)")
+);
 
 type provider = {
   handle: int,
@@ -13,6 +27,15 @@ type model = {
   providers: list(provider),
   bufferToLenses: IntMap.t(handleToLenses),
 };
+
+let get = (~bufferId, {bufferToLenses, _}) => {
+  bufferToLenses
+  |> IntMap.find_opt(bufferId)
+  |> Option.value(~default=IntMap.empty)
+  |> IntMap.bindings
+  |> List.map(snd)
+  |> List.flatten
+}
 
 let initial = {providers: [], bufferToLenses: IntMap.empty};
 

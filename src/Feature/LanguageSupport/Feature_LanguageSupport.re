@@ -480,6 +480,9 @@ module CodeLens = {
     ShadowedCodeLens.get(~bufferId, model.codeLens);
   };
 
+  let lineNumber = (codeLens) => ShadowedCodeLens.lineNumber(codeLens);
+  let text = (codeLens) => ShadowedCodeLens.text(codeLens);
+
   module View = {
     let make = (
       ~theme,
@@ -502,7 +505,7 @@ let sub =
       {definition, completion, documentHighlights, codeLens, _},
     ) => {
   let codeLensSub =
-    CodeLens.sub(~visibleBuffers, ~client, codeLens )
+    ShadowedCodeLens.sub(~visibleBuffers, ~client, codeLens )
     |> Isolinear.Sub.map(msg => CodeLens(msg));
 
   let definitionSub =

@@ -156,6 +156,38 @@ let%component make =
       },
     );
 
+  let bufferId = buffer |> Oni_Core.Buffer.getId;
+  let lenses = Feature_LanguageSupport.CodeLens.get(~bufferId, languageSupport);
+  let topLine = Editor.getTopVisibleLine(editor);
+  let bottomLine = Editor.getBottomVisibleLine(editor);
+
+  let visibleLenses = lenses
+  |> List.filter(lens => {
+    let lensLine = Feature_LanguageSupport.CodeLens.lineNumber(lens);
+    lensLine >= topLine && lensLine <= bottomLine;
+  });
+
+  let lensElements = visibleLenses
+  |> List.map(lens => {
+    let lineNumber = Feature_LanguageSupport.CodeLens.lineNumber(lens);
+    let text = Feature_LanguageSupport.CodeLens.text(lens);
+
+    let ({pixelY, _}: Editor.pixelPosition, _width) = Editor.bufferLineByteToPixel(
+      ~line=lineNumber,
+      ~byteIndex=0,
+      editor
+    );
+
+    <View style=Style.[
+      position(`Absolute),
+      top(pixelY |> int_of_float),
+      left(0),
+      right(0)
+    ]>
+      <Text text />
+    </View>
+  });
+  
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     Log.trace("editorMouseUp");
 
@@ -256,6 +288,7 @@ let%component make =
         };
       }}
     />
+    {lensElements |> React.listToElement}
     <CursorView
       config
       editor

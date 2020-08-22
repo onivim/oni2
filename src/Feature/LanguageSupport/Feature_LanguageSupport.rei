@@ -131,6 +131,9 @@ module CodeLens: {
 
   let get: (~bufferId: int, model) => list(t);
 
+  let lineNumber: t => int;
+  let text: t => string;
+
   module View: {
     let make: (
         ~theme: Oni_Core.ColorTheme.Colors.t,
