@@ -9,6 +9,7 @@ module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
 let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   Log.info("Starting task: " ++ name);
   let (promise, resolver) = Lwt.task();
+  let (outputPromise, outputResolver) = Lwt.task();
 
   let scriptPath = Setup.getNodeScriptPath(~script, setup);
   Log.info("Using node path: " ++ scriptPath);
@@ -22,6 +23,11 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
     let on_exit = (_, ~exit_status, ~term_signal as _) =>
       if (exit_status == 0L) {
         Log.info("Task completed successfully: " ++ name);
+
+        Lwt.on_success(outputPromise, (output) => {
+          Lwt.wakeup(resolver, output);
+        });
+        
       } else {
         Lwt.wakeup_exn(resolver, TaskFailed);
       };
@@ -61,7 +67,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
               |> List.map(Luv.Buffer.to_string)
               |> String.concat("");
             Log.debugf(m => m("Got output: %s", allOutput));
-            Lwt.wakeup(resolver, allOutput);
+            Lwt.wakeup(outputResolver, allOutput);
           }
         | Error(msg) => Log.error(Luv.Error.strerror(msg))
         | Ok(buffer) => buffers := [buffer, ...buffers^],
