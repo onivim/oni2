@@ -521,7 +521,7 @@ let start =
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
 
-        let sameLineFilter = (range: CharacterRange.t) =>
+        let sameLineFilter = (range: ByteRange.t) =>
           EditorCoreTypes.LineNumber.(range.start.line == range.stop.line);
 
         let buffer = Vim.Buffer.getCurrent();

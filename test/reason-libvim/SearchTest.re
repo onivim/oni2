@@ -8,7 +8,7 @@ let reset = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
 let lineNumberToInt = lnum => lnum |> EditorCoreTypes.LineNumber.toZeroBased;
-let characterToInt = char => char |> CharacterIndex.toInt;
+let byteToInt = byte => byte |> ByteIndex.toInt;
 
 describe("Search", ({describe, _}) => {
   describe("getSearchHighlights", ({test, _}) => {
@@ -27,9 +27,9 @@ describe("Search", ({describe, _}) => {
 
       let secondHighlight = highlights[1];
       expect.int(secondHighlight.start.line |> lineNumberToInt).toBe(1);
-      expect.int(secondHighlight.start.character |> characterToInt).toBe(30);
+      expect.int(secondHighlight.start.byte |> byteToInt).toBe(30);
       expect.int(secondHighlight.stop.line |> lineNumberToInt).toBe(1);
-      expect.int(secondHighlight.stop.character |> characterToInt).toBe(32);
+      expect.int(secondHighlight.stop.byte |> byteToInt).toBe(32);
     });
 
     test("gets highlights", ({expect, _}) => {

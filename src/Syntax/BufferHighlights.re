@@ -9,9 +9,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
-type highlights = {
-  searchHighlightsByLine: IntMap.t(list(CharacterRange.t)),
-};
+type highlights = {searchHighlightsByLine: IntMap.t(list(ByteRange.t))};
 
 let default: highlights = {searchHighlightsByLine: IntMap.empty};
 
@@ -20,7 +18,7 @@ type t = IntMap.t(highlights);
 let initial = IntMap.empty;
 
 let setSearchHighlights = (bufferId, ranges, state) => {
-  let searchHighlightsByLine = RangeEx.toCharacterLineMap(ranges);
+  let searchHighlightsByLine = RangeEx.toByteLineMap(ranges);
 
   IntMap.add(
     bufferId,

@@ -372,7 +372,10 @@ let%component make =
                   ~bufferId,
                   ~line=index,
                   bufferHighlights,
-                );
+                )
+                |> List.filter_map(byteRange => {
+                     Editor.byteRangeToCharacterRange(byteRange, editor)
+                   });
 
               let documentHighlightRanges =
                 Feature_LanguageSupport.DocumentHighlights.getByLine(

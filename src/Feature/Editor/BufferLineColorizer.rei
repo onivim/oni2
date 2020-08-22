@@ -36,7 +36,7 @@ let create:
     ~selectionHighlights: option(ByteRange.t),
     ~selectionColor: Color.t,
     ~matchingPair: option(ByteIndex.t),
-    ~searchHighlights: list(CharacterRange.t),
+    ~searchHighlights: list(ByteRange.t),
     ~searchHighlightColor: Color.t, // theme.editorFindMatchBackground
     list(ThemeToken.t)
   ) =>

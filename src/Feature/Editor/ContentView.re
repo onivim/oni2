@@ -62,7 +62,7 @@ let renderLine =
     bufferHighlights,
   )
   |> List.iter(
-       Draw.rangeCharacter(
+       Draw.rangeByte(
          ~context,
          ~padding=1.,
          ~color=colors.findMatchBackground,
