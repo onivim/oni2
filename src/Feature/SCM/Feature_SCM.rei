@@ -66,6 +66,7 @@ module Msg: {
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
+  | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
   | Nothing;
 

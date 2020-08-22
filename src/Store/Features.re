@@ -353,7 +353,8 @@ let update =
     let (state, eff) =
       switch ((maybeOutmsg: Feature_SCM.outmsg)) {
       | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
-      | Effect(eff) => (FocusManager.push(Focus.SCM, state), eff)
+      | Effect(eff) => (state, eff)
+      | EffectAndFocus(eff) => (FocusManager.push(Focus.SCM, state), eff)
       | Nothing => (state, Effect.none)
       };
 
