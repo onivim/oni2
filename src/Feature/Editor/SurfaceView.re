@@ -157,37 +157,54 @@ let%component make =
     );
 
   let bufferId = buffer |> Oni_Core.Buffer.getId;
-  let lenses = Feature_LanguageSupport.CodeLens.get(~bufferId, languageSupport);
+  let lenses =
+    Feature_LanguageSupport.CodeLens.get(~bufferId, languageSupport);
   let topLine = Editor.getTopVisibleLine(editor);
   let bottomLine = Editor.getBottomVisibleLine(editor);
 
-  let visibleLenses = lenses
-  |> List.filter(lens => {
-    let lensLine = Feature_LanguageSupport.CodeLens.lineNumber(lens);
-    lensLine >= topLine && lensLine <= bottomLine;
-  });
+  let visibleLenses =
+    lenses
+    |> List.filter(lens => {
+         let lensLine = Feature_LanguageSupport.CodeLens.lineNumber(lens);
+         lensLine >= topLine && lensLine <= bottomLine;
+       });
 
-  let lensElements = visibleLenses
-  |> List.map(lens => {
-    let lineNumber = Feature_LanguageSupport.CodeLens.lineNumber(lens);
-    let text = Feature_LanguageSupport.CodeLens.text(lens);
+  let lensElements =
+    visibleLenses
+    |> List.map(lens => {
+         let lineNumber = Feature_LanguageSupport.CodeLens.lineNumber(lens);
+         let text = Feature_LanguageSupport.CodeLens.text(lens);
 
-    let ({pixelY, _}: Editor.pixelPosition, _width) = Editor.bufferLineByteToPixel(
-      ~line=lineNumber,
-      ~byteIndex=0,
-      editor
-    );
+         let ({pixelY, _}: Editor.pixelPosition, _width) =
+           Editor.bufferLineByteToPixel(
+             ~line=lineNumber,
+             ~byteIndex=0,
+             editor,
+           );
 
-    <View style=Style.[
-      position(`Absolute),
-      top(pixelY |> int_of_float),
-      left(0),
-      right(0)
-    ]>
-      <Text text />
-    </View>
-  });
-  
+         <View
+           style=Style.[
+             position(`Absolute),
+             top(pixelY |> int_of_float),
+             height(20),
+             backgroundColor(Revery.Colors.black),
+             left(0),
+             right(0),
+           ]>
+           <View style=Style.[flexDirection(`Row), flexGrow(1)]>
+             <Text
+               text
+               style=Style.[
+                 color(Revery.Colors.red),
+                 flexGrow(1),
+                 textOverflow(`Ellipsis),
+                 textWrap(Revery.TextWrapping.NoWrap),
+               ]
+             />
+           </View>
+         </View>;
+       });
+
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     Log.trace("editorMouseUp");
 

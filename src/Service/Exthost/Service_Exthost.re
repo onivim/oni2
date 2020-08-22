@@ -549,13 +549,13 @@ module Sub = {
     );
   };
   let idFromBufferVersion = (~handle, ~buffer, name) => {
-      Printf.sprintf(
-        "%d-%d-%d.%s",
-        handle,
-        Oni_Core.Buffer.getId(buffer),
-        Oni_Core.Buffer.getVersion(buffer),
-        name,
-      )
+    Printf.sprintf(
+      "%d-%d-%d.%s",
+      handle,
+      Oni_Core.Buffer.getId(buffer),
+      Oni_Core.Buffer.getVersion(buffer),
+      name,
+    );
   };
   let idFromBufferPositionVersion = (~handle, ~buffer, ~position, name) => {
     Exthost.OneBasedPosition.(
@@ -680,7 +680,7 @@ module Sub = {
     DocumentHighlightsSub.create({handle, buffer, position, client})
     |> Isolinear.Sub.map(toMsg);
   };
-  
+
   type codeLensesParams = {
     handle: int,
     client: Exthost.Client.t,
@@ -696,11 +696,7 @@ module Sub = {
 
       let name = "Service_Exthost.CodeLensesSubscription";
       let id = ({handle, buffer, _}: params) =>
-        idFromBufferVersion(
-          ~handle,
-          ~buffer,
-          "CodeLensSubscription",
-        );
+        idFromBufferVersion(~handle, ~buffer, "CodeLensSubscription");
 
       let init = (~params, ~dispatch) => {
         let promise =
@@ -714,9 +710,8 @@ module Sub = {
 
         Lwt.on_success(promise, maybeCodeLenses =>
           if (Latch.isOpen(latch)) {
-            let lenses = maybeCodeLenses
-            |> Option.value(~default=[])
-            |> Result.ok;
+            let lenses =
+              maybeCodeLenses |> Option.value(~default=[]) |> Result.ok;
             dispatch(lenses);
           }
         );
@@ -736,11 +731,8 @@ module Sub = {
         Latch.close(state.latch);
       };
     });
-  let codeLenses =
-      (~handle, ~buffer, ~toMsg, client) => {
-    CodeLensesSubscription.create(
-      {handle, buffer, client}: codeLensesParams
-    )
+  let codeLenses = (~handle, ~buffer, ~toMsg, client) => {
+    CodeLensesSubscription.create({handle, buffer, client}: codeLensesParams)
     |> Isolinear.Sub.map(toMsg);
   };
 

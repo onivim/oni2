@@ -135,16 +135,18 @@ module CodeLens: {
   let text: t => string;
 
   module View: {
-    let make: (
+    let make:
+      (
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~uiFont: UiFont.t,
         ~editorId: int,
         ~codeLens: t,
-        ~dispatch: msg => unit, 
+        ~dispatch: msg => unit,
         unit
-    ) =>  Revery.UI.element;
-  } 
-}
+      ) =>
+      Revery.UI.element;
+  };
+};
 
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);

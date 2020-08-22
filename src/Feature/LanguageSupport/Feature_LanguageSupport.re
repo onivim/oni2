@@ -476,22 +476,16 @@ module CodeLens = {
   // TODO: Maybe there will be additional state - like expanded?
   type t = ShadowedCodeLens.codeLens;
 
-  let get = (~bufferId, model)  => {
+  let get = (~bufferId, model) => {
     ShadowedCodeLens.get(~bufferId, model.codeLens);
   };
 
-  let lineNumber = (codeLens) => ShadowedCodeLens.lineNumber(codeLens);
-  let text = (codeLens) => ShadowedCodeLens.text(codeLens);
+  let lineNumber = codeLens => ShadowedCodeLens.lineNumber(codeLens);
+  let text = codeLens => ShadowedCodeLens.text(codeLens);
 
   module View = {
-    let make = (
-      ~theme,
-      ~uiFont,
-      ~editorId,
-      ~codeLens,
-      ~dispatch,
-      ()
-    ) => <Revery.UI.Text text="Hello, world!" />;
+    let make = (~theme, ~uiFont, ~editorId, ~codeLens, ~dispatch, ()) =>
+      <Revery.UI.Text text="Hello, world!" />;
   };
 };
 
@@ -505,7 +499,7 @@ let sub =
       {definition, completion, documentHighlights, codeLens, _},
     ) => {
   let codeLensSub =
-    ShadowedCodeLens.sub(~visibleBuffers, ~client, codeLens )
+    ShadowedCodeLens.sub(~visibleBuffers, ~client, codeLens)
     |> Isolinear.Sub.map(msg => CodeLens(msg));
 
   let definitionSub =

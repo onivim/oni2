@@ -817,8 +817,8 @@ module LanguageFeatures = {
   };
 
   let handle = (method, args: Yojson.Safe.t) => {
-    prerr_endline ("METHOD: " ++ method);
-    prerr_endline ("ARGS: " ++ Yojson.Safe.to_string(args));
+    prerr_endline("METHOD: " ++ method);
+    prerr_endline("ARGS: " ++ Yojson.Safe.to_string(args));
     switch (method, args) {
     | ("$unregister", `List([`Int(handle)])) =>
       Ok(Unregister({handle: handle}))

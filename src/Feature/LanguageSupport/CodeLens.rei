@@ -20,5 +20,9 @@ let lineNumber: codeLens => int;
 let text: codeLens => string;
 
 let sub:
-  (~visibleBuffers: list(Oni_Core.Buffer.t), ~client: Exthost.Client.t, model) =>
+  (
+    ~visibleBuffers: list(Oni_Core.Buffer.t),
+    ~client: Exthost.Client.t,
+    model
+  ) =>
   Isolinear.Sub.t(msg);
