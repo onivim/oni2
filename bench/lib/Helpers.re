@@ -1,8 +1,9 @@
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
+
+module LineNumber = EditorCoreTypes.LineNumber;
 
 Vim.init();
 
@@ -85,8 +86,8 @@ let thousandLineState =
     createUpdateAction(
       thousandLineBuffer,
       BufferUpdate.create(
-        ~startLine=Index.zero,
-        ~endLine=Index.fromZeroBased(1),
+        ~startLine=LineNumber.zero,
+        ~endLine=LineNumber.ofZeroBased(1),
         ~lines=thousandLines,
         ~version=1,
         (),
@@ -111,8 +112,8 @@ let thousandLineStateWithIndents =
     createUpdateAction(
       thousandLineBuffer,
       BufferUpdate.create(
-        ~startLine=Index.zero,
-        ~endLine=Index.fromZeroBased(1),
+        ~startLine=LineNumber.zero,
+        ~endLine=LineNumber.ofZeroBased(1),
         ~lines=thousandLinesWithIndents,
         ~version=1,
         (),
@@ -129,8 +130,8 @@ let hundredThousandLineState =
     createUpdateAction(
       Buffer.ofLines([||]),
       BufferUpdate.create(
-        ~startLine=Index.zero,
-        ~endLine=Index.fromZeroBased(1),
+        ~startLine=LineNumber.zero,
+        ~endLine=LineNumber.ofZeroBased(1),
         ~lines=hundredThousandLines,
         ~version=1,
         (),

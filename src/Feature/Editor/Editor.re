@@ -147,9 +147,7 @@ let create = (~config, ~buffer, ()) => {
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
      */
-    cursors: [
-      ByteIndex.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero},
-    ],
+    cursors: [{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}],
     selection:
       VisualRange.create(
         ~mode=Vim.Types.None,
