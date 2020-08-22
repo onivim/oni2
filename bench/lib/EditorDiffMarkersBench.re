@@ -17,49 +17,84 @@ module Data = {
   let lines_10k_b = Array.init(10000, _ => randomString());
   let lines_100k = Array.init(100000, _ => randomString());
 
-  let buffer_10k_nochanges =
-    Buffer.ofLines(lines_10k_a) |> Buffer.setOriginalLines(lines_10k_a);
+  let buffer_10k_nochanges = Buffer.ofLines(lines_10k_a);
+  let scm_10k_nochanges =
+    Feature_SCM.initial
+    |> Feature_SCM.setOriginalLines(buffer_10k_nochanges, lines_10k_a);
 
-  let buffer_10k_randomchanges =
-    Buffer.ofLines(lines_10k_a) |> Buffer.setOriginalLines(lines_10k_b);
+  let buffer_10k_randomchanges = Buffer.ofLines(lines_10k_a);
 
-  let buffer_10k_onelineoriginal =
-    Buffer.ofLines(lines_10k_a)
-    |> Buffer.setOriginalLines([|randomString()|]);
+  let scm_10k_randomchanges =
+    Feature_SCM.initial
+    |> Feature_SCM.setOriginalLines(buffer_10k_randomchanges, lines_10k_b);
 
-  let buffer_10k_onelinemodified =
-    Buffer.ofLines([|randomString()|])
-    |> Buffer.setOriginalLines(lines_10k_a);
+  let buffer_10k_onelineoriginal = Buffer.ofLines(lines_10k_a);
 
-  let buffer_100k_nochanges =
-    Buffer.ofLines(lines_100k) |> Buffer.setOriginalLines(lines_100k);
+  let scm_10k_onelineoriginal =
+    Feature_SCM.initial
+    |> Feature_SCM.setOriginalLines(
+         buffer_10k_onelineoriginal,
+         [|randomString()|],
+       );
+
+  let buffer_10k_onelinemodified = Buffer.ofLines([|randomString()|]);
+
+  let scm_10k_onelinemodified =
+    Feature_SCM.initial
+    |> Feature_SCM.setOriginalLines(buffer_10k_onelinemodified, lines_10k_a);
+
+  let buffer_100k_nochanges = Buffer.ofLines(lines_100k);
+
+  let scm_100k_nochanges =
+    Feature_SCM.initial
+    |> Feature_SCM.setOriginalLines(buffer_100k_nochanges, lines_100k);
 };
 
 // TESTS
 
 module Tests = {
   let diff_10k_nochanges = () => {
-    let _ = EditorDiffMarkers.generate(Data.buffer_10k_nochanges);
+    let _ =
+      EditorDiffMarkers.generate(
+        ~scm=Data.scm_10k_nochanges,
+        Data.buffer_10k_nochanges,
+      );
     ();
   };
 
   let diff_10k_randomchanges = () => {
-    let _ = EditorDiffMarkers.generate(Data.buffer_10k_nochanges);
+    let _ =
+      EditorDiffMarkers.generate(
+        ~scm=Data.scm_10k_randomchanges,
+        Data.buffer_10k_randomchanges,
+      );
     ();
   };
 
   let diff_10k_onelineoriginal = () => {
-    let _ = EditorDiffMarkers.generate(Data.buffer_10k_onelineoriginal);
+    let _ =
+      EditorDiffMarkers.generate(
+        ~scm=Data.scm_10k_onelineoriginal,
+        Data.buffer_10k_onelineoriginal,
+      );
     ();
   };
 
   let diff_10k_onelinemodified = () => {
-    let _ = EditorDiffMarkers.generate(Data.buffer_10k_onelinemodified);
+    let _ =
+      EditorDiffMarkers.generate(
+        ~scm=Data.scm_10k_onelinemodified,
+        Data.buffer_10k_onelinemodified,
+      );
     ();
   };
 
   let diff_100k_nochanges = () => {
-    let _ = EditorDiffMarkers.generate(Data.buffer_100k_nochanges);
+    let _ =
+      EditorDiffMarkers.generate(
+        ~scm=Data.scm_100k_nochanges,
+        Data.buffer_100k_nochanges,
+      );
     ();
   };
 };

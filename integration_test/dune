@@ -36,7 +36,6 @@
            SyntaxServerReadExceptionTest
            Regression1671Test
            RegressionCommandLineNoCompletionTest
-           RegressionDeleteAllLinesTest
            RegressionFontFallbackTest
            RegressionFileModifiedIndicationTest
            RegressionNonExistentDirectory
@@ -95,7 +94,6 @@
         QuickOpenEventuallyCompletesTest.exe
         Regression1671Test.exe
         RegressionCommandLineNoCompletionTest.exe
-        RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionFontFallbackTest.exe
         RegressionVspEmptyInitialBufferTest.exe

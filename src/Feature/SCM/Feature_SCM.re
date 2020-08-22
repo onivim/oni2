@@ -57,11 +57,15 @@ module Provider = {
 type model = {
   providers: list(Provider.t),
   inputBox: Feature_InputText.model,
+  textContentProviders: list((int, string)),
+  originalLines: [@opaque] IntMap.t(array(string)),
 };
 
 let initial = {
   providers: [],
   inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
+  textContentProviders: [],
+  originalLines: IntMap.empty,
 };
 
 let statusBarCommands = ({providers, _}: model) => {
@@ -70,25 +74,30 @@ let statusBarCommands = ({providers, _}: model) => {
   |> List.flatten;
 };
 
-// EFFECTS
+let getOriginalLines = (buffer, model) => {
+  let bufferId = buffer |> Oni_Core.Buffer.getId;
 
-module Effects = {
-  let getOriginalUri = (extHostClient, model, path, toMsg) => {
-    let handles =
-      model.providers |> List.map((provider: Provider.t) => provider.handle);
-    Service_Exthost.Effects.SCM.provideOriginalResource(
-      ~handles,
-      extHostClient,
-      path,
-      toMsg,
-    );
-  };
+  IntMap.find_opt(bufferId, model.originalLines);
+};
+
+let setOriginalLines = (buffer, lines, model) => {
+  let bufferId = buffer |> Oni_Core.Buffer.getId;
+  let originalLines = IntMap.add(bufferId, lines, model.originalLines);
+  {...model, originalLines};
 };
 
 // UPDATE
 
 [@deriving show({with_path: false})]
 type msg =
+  | GotOriginalUri({
+      bufferId: int,
+      uri: Uri.t,
+    })
+  | GotOriginalContent({
+      bufferId: int,
+      lines: array(string),
+    })
   | NewProvider({
       handle: int,
       id: string,
@@ -157,17 +166,38 @@ type msg =
     })
   | KeyPressed({key: string})
   | Pasted({text: string})
+  | DocumentContentProvider(Exthost.Msg.DocumentContentProvider.msg)
   | InputBox(Feature_InputText.msg);
 
 module Msg = {
   let paste = text => Pasted({text: text});
   let keyPressed = key => KeyPressed({key: key});
+
+  let documentContentProvider = msg => DocumentContentProvider(msg);
 };
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | Focus
   | Nothing;
+
+module Effects = {
+  let getOriginalContent = (bufferId, uri, providers, client) => {
+    let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
+    providers
+    |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+    |> Option.map(provider => {
+         let (handle, _) = provider;
+         Service_Exthost.Effects.SCM.getOriginalContent(
+           ~handle,
+           ~uri,
+           ~toMsg=lines => GotOriginalContent({bufferId, lines}),
+           client,
+         );
+       })
+    |> Option.value(~default=Isolinear.Effect.none);
+  };
+};
 
 module Internal = {
   let updateProvider = (~handle, f, model) => {
@@ -205,6 +235,57 @@ module Internal = {
 
 let update = (extHostClient: Exthost.Client.t, model, msg) =>
   switch (msg) {
+  | DocumentContentProvider(documentContentProviderMsg) =>
+    Exthost.Msg.DocumentContentProvider.(
+      {
+        switch (documentContentProviderMsg) {
+        | RegisterTextContentProvider({handle, scheme}) => (
+            {
+              ...model,
+              textContentProviders: [
+                (handle, scheme),
+                ...model.textContentProviders,
+              ],
+            },
+            Nothing,
+          )
+
+        | UnregisterTextContentProvider({handle}) => (
+            {
+              ...model,
+              textContentProviders:
+                List.filter(
+                  ((h, _)) => h != handle,
+                  model.textContentProviders,
+                ),
+            },
+            Nothing,
+          )
+        | VirtualDocumentChange(_) => (model, Nothing)
+        };
+      }
+    )
+
+  | GotOriginalUri({bufferId, uri}) => (
+      model,
+      Effect(
+        Effects.getOriginalContent(
+          bufferId,
+          uri,
+          model.textContentProviders,
+          extHostClient,
+        ),
+      ),
+    )
+
+  | GotOriginalContent({bufferId, lines}) => (
+      {
+        ...model,
+        originalLines: IntMap.add(bufferId, lines, model.originalLines),
+      },
+      Nothing,
+    )
+
   | NewProvider({handle, id, label, rootUri}) => (
       {
         ...model,
@@ -508,6 +589,26 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       ValidationProviderEnabledChanged({handle, validationEnabled: enabled}),
     )
   };
+
+// SUBSCRIPTION
+
+let sub = (~activeBuffer, ~client, model) => {
+  let filePath =
+    activeBuffer |> Oni_Core.Buffer.getUri |> Oni_Core.Uri.toFileSystemPath;
+
+  let bufferId = activeBuffer |> Oni_Core.Buffer.getId;
+
+  model.providers
+  |> List.map((provider: Provider.t) =>
+       Service_Exthost.Sub.SCM.originalUri(
+         ~handle=provider.handle,
+         ~filePath,
+         ~toMsg=uri => GotOriginalUri({bufferId, uri}),
+         client,
+       )
+     )
+  |> Isolinear.Sub.batch;
+};
 
 // VIEW
 

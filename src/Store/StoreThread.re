@@ -345,6 +345,18 @@ let start =
       Feature_Registers.sub(state.registers)
       |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
 
+    let scmSub =
+      maybeActiveBuffer
+      |> Option.map(buffer => {
+           Feature_SCM.sub(
+             ~activeBuffer=buffer,
+             ~client=extHostClient,
+             state.scm,
+           )
+           |> Isolinear.Sub.map(msg => Model.Actions.SCM(msg))
+         })
+      |> Option.value(~default=Isolinear.Sub.none);
+
     [
       languageSupportSub,
       syntaxSubscription,
@@ -357,6 +369,7 @@ let start =
       editorGlobalSub,
       extensionsSub,
       registersSub,
+      scmSub,
     ]
     |> Isolinear.Sub.batch;
   };

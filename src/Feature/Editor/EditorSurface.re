@@ -144,6 +144,7 @@ let%component make =
                 ~tokenTheme,
                 ~onCursorChange,
                 ~languageSupport,
+                ~scm,
                 ~windowIsFocused,
                 ~config,
                 ~renderOverlays,
@@ -229,7 +230,7 @@ let%component make =
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
-      ? EditorDiffMarkers.generate(buffer) : None;
+      ? EditorDiffMarkers.generate(~scm, buffer) : None;
 
   let smoothScroll = Config.smoothScroll.get(config);
   let isScrollAnimated = Editor.isScrollAnimated(editor);
