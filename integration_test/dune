@@ -35,6 +35,7 @@
            SyntaxServerParentPidCorrectTest
            SyntaxServerReadExceptionTest
            Regression1671Test
+           Regression2349EnewTest
            RegressionCommandLineNoCompletionTest
            RegressionFontFallbackTest
            RegressionFileModifiedIndicationTest
@@ -93,6 +94,7 @@
         LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
         Regression1671Test.exe
+        Regression2349EnewTest.exe
         RegressionCommandLineNoCompletionTest.exe
         RegressionFileModifiedIndicationTest.exe
         RegressionFontFallbackTest.exe
