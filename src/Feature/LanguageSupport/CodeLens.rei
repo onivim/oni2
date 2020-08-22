@@ -1,3 +1,5 @@
+type codeLens;
+
 type model;
 
 let initial: model;
@@ -12,6 +14,8 @@ let unregister: (~handle: int, model) => model;
 
 let update: (msg, model) => model;
 
+let get: (~bufferId: int, model) => list(codeLens);
+
 let sub:
-  (~visibleBuffers: list(Oni_Core.Buffer.t), ~client: Exthost.Client.t) =>
+  (~visibleBuffers: list(Oni_Core.Buffer.t), ~client: Exthost.Client.t, model) =>
   Isolinear.Sub.t(msg);

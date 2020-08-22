@@ -548,6 +548,15 @@ module Sub = {
       )
     );
   };
+  let idFromBufferVersion = (~handle, ~buffer, name) => {
+      Printf.sprintf(
+        "%d-%d-%d.%s",
+        handle,
+        Oni_Core.Buffer.getId(buffer),
+        Oni_Core.Buffer.getVersion(buffer),
+        name,
+      )
+  };
   let idFromBufferPositionVersion = (~handle, ~buffer, ~position, name) => {
     Exthost.OneBasedPosition.(
       Printf.sprintf(
@@ -669,6 +678,69 @@ module Sub = {
   let documentHighlights = (~handle, ~buffer, ~position, ~toMsg, client) => {
     let position = position |> Exthost.OneBasedPosition.ofPosition;
     DocumentHighlightsSub.create({handle, buffer, position, client})
+    |> Isolinear.Sub.map(toMsg);
+  };
+  
+  type codeLensesParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+  };
+
+  module CodeLensesSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(list(Exthost.CodeLens.t), string);
+      type nonrec params = codeLensesParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.CodeLensesSubscription";
+      let id = ({handle, buffer, _}: params) =>
+        idFromBufferVersion(
+          ~handle,
+          ~buffer,
+          "CodeLensSubscription",
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideCodeLenses(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, maybeCodeLenses =>
+          if (Latch.isOpen(latch)) {
+            let lenses = maybeCodeLenses
+            |> Option.value(~default=[])
+            |> Result.ok;
+            dispatch(lenses);
+          }
+        );
+
+        Lwt.on_failure(promise, exn =>
+          if (Latch.isOpen(latch)) {
+            dispatch(Error(Printexc.to_string(exn)));
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+  let codeLenses =
+      (~handle, ~buffer, ~toMsg, client) => {
+    CodeLensesSubscription.create(
+      {handle, buffer, client}: codeLensesParams
+    )
     |> Isolinear.Sub.map(toMsg);
   };
 

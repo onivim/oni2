@@ -471,6 +471,27 @@ module Hover = {
   };
 };
 
+module ShadowedCodeLens = CodeLens;
+module CodeLens = {
+  // TODO: Maybe there will be additional state - like expanded?
+  type t = ShadowedCodeLens.codeLens;
+
+  let get = (~bufferId, model)  => {
+    ShadowedCodeLens.get(~bufferId, model.codeLens);
+  };
+
+  module View = {
+    let make = (
+      ~theme,
+      ~uiFont,
+      ~editorId,
+      ~codeLens,
+      ~dispatch,
+      ()
+    ) => <Revery.UI.Text text="Hello, world!" />;
+  };
+};
+
 let sub =
     (
       ~isInsertMode,
@@ -478,10 +499,10 @@ let sub =
       ~activePosition,
       ~visibleBuffers,
       ~client,
-      {definition, completion, documentHighlights, _},
+      {definition, completion, documentHighlights, codeLens, _},
     ) => {
   let codeLensSub =
-    CodeLens.sub(~visibleBuffers, ~client)
+    CodeLens.sub(~visibleBuffers, ~client, codeLens )
     |> Isolinear.Sub.map(msg => CodeLens(msg));
 
   let definitionSub =

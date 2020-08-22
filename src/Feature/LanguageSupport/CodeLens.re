@@ -1,26 +1,29 @@
 open Oni_Core;
 
+// MODEL
+
 type provider = {
   handle: int,
   selector: Exthost.DocumentSelector.t,
 };
 
-type lenses = {lenses: list(Exthost.CodeLens.t)};
+type handleToLenses = IntMap.t(list(Exthost.CodeLens.t));
 
 type model = {
   providers: list(provider),
-  bufferToLenses: IntMap.t(lenses),
+  bufferToLenses: IntMap.t(handleToLenses),
 };
 
 let initial = {providers: [], bufferToLenses: IntMap.empty};
 
 [@deriving show]
-type msg = unit;
-// TODO: Hook up subscription
-//  | CodelensesReceived({
-//      bufferId: int,
-//      lenses: list(Exthost.CodeLens.t),
-//    });
+type msg = 
+  | CodeLensesError(string)
+  | CodeLensesReceived({
+      handle: int,
+      bufferId: int,
+      lenses: list(Exthost.CodeLens.t),
+    });
 
 let register = (~handle: int, ~selector, model) => {
   ...model,
@@ -32,13 +35,44 @@ let unregister = (~handle: int, model) => {
   providers: model.providers |> List.filter(prov => prov.handle != handle),
 };
 
-let update = (_msg, model) => model;
+// UPDATE
+
+let addLenses = (handle, lenses, handleToLenses) => {
+  IntMap.add(handle, lenses, handleToLenses)
+};
+
+let update = (msg, model) => switch (msg) {
+| CodeLensesError(_) => model
+| CodeLensesReceived({ handle, bufferId, lenses }) => {
+  let bufferToLenses = model.bufferToLenses
+  |> IntMap.update(bufferId, fun
+  | None => IntMap.empty |> addLenses(handle, lenses) |> Option.some
+  | Some(existing) => existing |> addLenses(handle, lenses) |> Option.some
+  );
+  {...model, bufferToLenses}
+}
+}
+
+// SUBSCRIPTION
 
 module Sub = {
-  let create = (~visibleBuffers, ~client) => {
-    ignore(visibleBuffers);
-    ignore(client);
-    Isolinear.Sub.none;
+  let create = (~visibleBuffers, ~client, model) => {
+
+    visibleBuffers
+    |> List.map(buffer => {
+      model.providers
+      |> List.filter(({selector, _}) => Exthost.DocumentSelector.matchesBuffer(~buffer, selector))
+      |> List.map(({handle, _}) => {
+
+      let toMsg = fun
+      | Error(msg) => CodeLensesError(msg)
+      | Ok(lenses) => CodeLensesReceived({handle, bufferId: buffer |> Oni_Core.Buffer.getId, lenses});
+      
+      Service_Exthost.Sub.codeLenses(~handle, ~buffer, ~toMsg, client)
+    })
+    })
+    |> List.flatten
+    |> Isolinear.Sub.batch;
   };
 };
 

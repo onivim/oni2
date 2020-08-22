@@ -126,6 +126,23 @@ module Hover: {
   };
 };
 
+module CodeLens: {
+  type t;
+
+  let get: (~bufferId: int, model) => list(t);
+
+  module View: {
+    let make: (
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        ~editorId: int,
+        ~codeLens: t,
+        ~dispatch: msg => unit, 
+        unit
+    ) =>  Revery.UI.element;
+  } 
+}
+
 module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
   let commands: list(Command.t(msg));
