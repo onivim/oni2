@@ -1,5 +1,8 @@
 // Not very robust path-handling utilities.
-// TODO: Make good
+// TODO: Replace with a strongly-typed solution like `fp`:
+// https://github.com/facebookexperimental/reason-native/tree/master/src/fp
+
+module Log = (val Kernel.Log.withNamespace("Oni2.Core.Utility.Path"));
 
 let hasTrailingSeparator = path => {
   let len = String.length(path);
@@ -39,10 +42,19 @@ let trimTrailingSeparator = path => {
   };
 };
 
+let filename = path =>
+  try(Rench.Path.filename(path)) {
+  | Invalid_argument(_) =>
+    Log.warnf(m => m("getExtension - invalid filename: %s", path));
+    "";
+  };
+
 let getExtension = path => {
   let fileName =
     try(Rench.Path.filename(path)) {
-    | Invalid_argument(_) => ""
+    | Invalid_argument(_) =>
+      Log.warnf(m => m("getExtension - invalid filename: %s", path));
+      "";
     };
 
   if (String.length(fileName) == 0) {
