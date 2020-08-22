@@ -218,10 +218,12 @@ let characterToByte = (position: CharacterPosition.t, editor) => {
 
   if (line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
-    let byte =
+    let byteIndex =
       BufferLine.getByteFromIndex(~index=position.character, bufferLine);
 
-    Some(EditorCoreTypes.(BytePosition.{line: position.line, byte}));
+    Some(
+      EditorCoreTypes.(BytePosition.{line: position.line, byte: byteIndex}),
+    );
   } else {
     None;
   };

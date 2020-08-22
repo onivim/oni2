@@ -255,7 +255,6 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
            );
       let location =
         if (before) {
-          open Index;
           let CharacterPosition.{line, character: col} =
             Feature_Editor.Editor.getPrimaryCursor(editor);
           CharacterPosition.{line, character: CharacterIndex.(col + 1)};

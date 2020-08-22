@@ -29,7 +29,7 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
            Feature_Syntax.getTokens(
              ~bufferId,
              // Verify we get highlighting at the end!
-             ~line=Index.(zero + 14110),
+             ~line=EditorCoreTypes.LineNumber.(zero + 14110),
              state.syntaxHighlights,
            );
 

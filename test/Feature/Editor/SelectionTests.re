@@ -15,9 +15,17 @@ describe("Selection", ({test, _}) =>
     let vr =
       VisualRange.create(
         ~mode=Vim.Types.Line,
-        Range.{
-          start: Location.{line: Index.zero, column: Index.zero},
-          stop: Location.{line: Index.(zero + 1), column: Index.(zero + 4)},
+        CharacterRange.{
+          start:
+            CharacterPosition.{
+              line: LineNumber.zero,
+              character: CharacterIndex.zero,
+            },
+          stop:
+            CharacterPosition.{
+              line: LineNumber.(zero + 1),
+              character: CharacterIndex.(zero + 4),
+            },
         },
       );
 
@@ -29,19 +37,34 @@ describe("Selection", ({test, _}) =>
     let r1 = List.nth(ranges, 1);
 
     let expectedR0 =
-      Range.{
-        start: Location.{line: Index.zero, column: Index.zero},
-        stop: Location.{line: Index.zero, column: Index.(zero + 3)},
+      CharacterRange.{
+        start:
+          CharacterPosition.{
+            line: LineNumber.zero,
+            character: CharacterIndex.zero,
+          },
+        stop:
+          CharacterPosition.{
+            line: LineNumber.(zero + 1),
+            character: CharacterIndex.(zero + 3),
+          },
       };
 
     let expectedR1 =
-      Range.create(
-        ~start=Location.create(~line=Index.(zero + 1), ~column=Index.zero),
-        ~stop=
-          Location.create(~line=Index.(zero + 1), ~column=Index.(zero + 4)),
-      );
+      CharacterRange.{
+        start:
+          CharacterPosition.{
+            line: LineNumber.(zero + 1),
+            character: CharacterIndex.zero,
+          },
+        stop:
+          CharacterPosition.{
+            line: LineNumber.(zero + 1),
+            character: CharacterIndex.(zero + 4),
+          },
+      };
 
-    validateRange(expect, r0, expectedR0);
-    validateRange(expect, r1, expectedR1);
+    validateCharacterRange(expect, r0, expectedR0);
+    validateCharacterRange(expect, r1, expectedR1);
   })
 );

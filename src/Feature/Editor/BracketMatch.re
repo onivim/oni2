@@ -163,7 +163,7 @@ let find =
        loop(
          ~count=0,
          ~line=EditorCoreTypes.LineNumber.toZeroBased(line),
-         ~index=Some(index),
+         ~index=Some(character |> CharacterIndex.toInt),
          ~travel=0,
          ~direction=1,
          ~startCharacter=start,

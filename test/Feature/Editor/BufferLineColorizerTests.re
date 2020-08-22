@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
 open Revery;
@@ -44,9 +45,11 @@ let basicTokens = [
 
 describe("BufferLineColorizer", ({test, _}) => {
   test("base case - cover all tokens", ({expect, _}) => {
-    let colorize = basicColorizer(~startByte=0, basicTokens);
+    let colorize =
+      basicColorizer(~startByte=ByteIndex.ofInt(0), basicTokens);
 
-    let BufferLineColorizer.{color: color0, _} = colorize(0);
+    let BufferLineColorizer.{color: color0, _} =
+      colorize(ByteIndex.ofInt(0));
     let BufferLineColorizer.{color: color2, _} = colorize(2);
     let BufferLineColorizer.{color: color6, _} = colorize(6);
     let BufferLineColorizer.{color: color11, _} = colorize(11);

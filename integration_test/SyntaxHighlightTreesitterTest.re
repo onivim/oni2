@@ -36,7 +36,7 @@ runTest(
            let tokens =
              Feature_Syntax.getTokens(
                ~bufferId,
-               ~line=Index.zero,
+               ~line=EditorCoreTypes.LineNumber.zero,
                state.syntaxHighlights,
              );
 

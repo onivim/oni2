@@ -9,3 +9,6 @@ let equals = (a, b) => {
 };
 
 let (==) = equals;
+
+let line = ({line, _}) => line;
+let byte = ({byte, _}) => byte;

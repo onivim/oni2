@@ -4,5 +4,8 @@ type t = {
   byte: ByteIndex.t,
 };
 
+let line: t => LineNumber.t;
+let byte: t => ByteIndex.t;
+
 let equals: (t, t) => bool;
 let (==): (t, t) => bool;

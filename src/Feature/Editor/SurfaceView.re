@@ -25,7 +25,8 @@ module Constants = {
   let hoverTime = 1.0;
 };
 
-let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
+let drawCurrentLineHighlight =
+    (~context, ~colors: Colors.t, line: EditorCoreTypes.LineNumber.t) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
 let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {

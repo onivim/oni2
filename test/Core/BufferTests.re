@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open Oni_Core;
 
 module LineNumber = EditorCoreTypes.LineNumber;
@@ -12,7 +11,7 @@ describe("Buffer", ({describe, _}) =>
       let buffer = Buffer.ofLines([||]);
       let update =
         BufferUpdate.create(
-          ~startLine=LinenNumber.zero,
+          ~startLine=LineNumber.zero,
           ~endLine=LineNumber.ofZeroBased(1),
           ~lines=[|"a"|],
           ~version=1,

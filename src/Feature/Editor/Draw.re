@@ -310,10 +310,10 @@ let ruler = (~context, ~color, x) =>
     ~color,
   );
 
-let lineHighlight = (~context, ~color, line) => {
+let lineHighlight = (~context, ~color, lineIdx: EditorCoreTypes.LineNumber.t) => {
   let ({pixelY, _}: Editor.pixelPosition, _) =
     Editor.bufferBytePositionToPixel(
-      ~position=BytePosition.{line, byte: ByteIndex.zero},
+      ~position=BytePosition.{line: lineIdx, byte: ByteIndex.zero},
       context.editor,
     );
 

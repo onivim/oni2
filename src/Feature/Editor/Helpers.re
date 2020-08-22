@@ -48,16 +48,15 @@ let getTokensForLine =
         | None => None
         | Some((startPos: CharacterPosition.t, endPos: CharacterPosition.t))
             when !ignoreMatchingPairs =>
-          // Convert character position -> byte position
-          None
-        // TODO before merge:
-        //          if (Index.toZeroBased(startPos.line) == i) {
-        //            Some(Index.toZeroBased(startPos.column));
-        //          } else if (Index.toZeroBased(endPos.line) == i) {
-        //            Some(Index.toZeroBased(endPos.column));
-        //          } else {
-        //            None;
-        //          }
+          let maybeStartPosByte = Editor.characterToByte(startPos, editor);
+          let maybeEndPosByte = Editor.characterToByte(endPos, editor);
+          if (EditorCoreTypes.LineNumber.toZeroBased(startPos.line) == i) {
+            maybeStartPosByte |> Option.map(BytePosition.byte);
+          } else if (EditorCoreTypes.LineNumber.toZeroBased(endPos.line) == i) {
+            maybeEndPosByte |> Option.map(BytePosition.byte);
+          } else {
+            None;
+          };
         | _ => None
         };
 

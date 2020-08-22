@@ -174,10 +174,10 @@ let runWith = (~context: Context.t, f) => {
 
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.getCurrent();
-  let prevLocation = Cursor.get();
+  //  let prevLocation = Cursor.get();
   let prevRange = Visual.getRange();
-  let prevTopLine = Window.getTopLine();
-  let prevLeftColumn = Window.getLeftColumn();
+  //  let prevTopLine = Window.getTopLine();
+  //  let prevLeftColumn = Window.getLeftColumn();
   let prevVisualMode = Visual.getType();
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
@@ -189,11 +189,11 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.autoIndent := None;
 
   let newBuf = Buffer.getCurrent();
-  let newLocation = Cursor.get();
+  //  let newLocation = Cursor.get();
   let newMode = Mode.getCurrent();
   let newRange = Visual.getRange();
-  let newLeftColumn = Window.getLeftColumn();
-  let newTopLine = Window.getTopLine();
+  //  let newLeftColumn = Window.getLeftColumn();
+  //  let newTopLine = Window.getTopLine();
   let newVisualMode = Visual.getType();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);

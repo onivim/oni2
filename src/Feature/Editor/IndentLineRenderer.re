@@ -88,12 +88,12 @@ let render =
     float(indentationSettings.tabSize) *. context.charWidth;
 
   let editor = context.editor;
-  let bufferPositionToPixel = line => {
+  let bufferPositionToPixel = lineIdx => {
     let ({pixelX, pixelY}: Editor.pixelPosition, _) =
       Editor.bufferBytePositionToPixel(
         ~position=
           BytePosition.{
-            line: EditorCoreTypes.LineNumber.ofZeroBased(line),
+            line: EditorCoreTypes.LineNumber.ofZeroBased(lineIdx),
             byte: ByteIndex.zero,
           },
         editor,

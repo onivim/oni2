@@ -152,7 +152,7 @@ describe("CommandLine", ({describe, _}) => {
 
       expect.bool(Mode.getCurrent() == Normal).toBe(true);
 
-      let line = Buffer.getLine(buffer, Index.fromOneBased(3));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(3));
       expect.string(line).toEqual("Dhis is the third line of a test file");
     });
 
@@ -162,7 +162,10 @@ describe("CommandLine", ({describe, _}) => {
       input("3");
       key("<cr>");
 
-      expect.int((Cursor.getLine() :> int)).toBe(2);
+      expect.int(Cursor.get() |> BytePosition.line |> LineNumber.toZeroBased).
+        toBe(
+        2,
+      );
     });
 
     test(":intro", ({expect, _}) => {

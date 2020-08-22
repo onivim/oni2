@@ -19,6 +19,7 @@ let basicColorizer = _ =>
   };
 
 let splitColorizer = (split, idx) =>
+  let idx = ByteIndex.toInt(idx);
   if (idx < split) {
     BufferLineColorizer.{
       color: Colors.red,
@@ -41,7 +42,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("empty string", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
-        ~endIndex=0,
+        ~stop=CharacterIndex.zero,
         "" |> makeLine,
         basicColorizer,
       );
@@ -51,7 +52,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("multi-byte case", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
-        ~endIndex=9,
+        ~stop=CharacterIndex.ofInt(9),
         "κόσμε abc" |> BufferLine.make(~indentation),
         // Split at byte 11 - after the multi-byte characters
         splitColorizer(11),
