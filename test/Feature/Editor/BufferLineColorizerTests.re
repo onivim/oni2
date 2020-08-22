@@ -50,9 +50,12 @@ describe("BufferLineColorizer", ({test, _}) => {
 
     let BufferLineColorizer.{color: color0, _} =
       colorize(ByteIndex.ofInt(0));
-    let BufferLineColorizer.{color: color2, _} = colorize(2);
-    let BufferLineColorizer.{color: color6, _} = colorize(6);
-    let BufferLineColorizer.{color: color11, _} = colorize(11);
+    let BufferLineColorizer.{color: color2, _} =
+      colorize(ByteIndex.ofInt(2));
+    let BufferLineColorizer.{color: color6, _} =
+      colorize(ByteIndex.ofInt(6));
+    let BufferLineColorizer.{color: color11, _} =
+      colorize(ByteIndex.ofInt(11));
 
     expect.equal(color0, Colors.white);
     expect.equal(color2, Colors.green);
@@ -61,10 +64,13 @@ describe("BufferLineColorizer", ({test, _}) => {
   });
 
   test("out of bounds", ({expect, _}) => {
-    let colorize = basicColorizer(~startByte=4, basicTokens);
+    let colorize =
+      basicColorizer(~startByte=ByteIndex.ofInt(4), basicTokens);
 
-    let BufferLineColorizer.{color: color0, _} = colorize(0);
-    let BufferLineColorizer.{color: color11, _} = colorize(11);
+    let BufferLineColorizer.{color: color0, _} =
+      colorize(ByteIndex.ofInt(0));
+    let BufferLineColorizer.{color: color11, _} =
+      colorize(ByteIndex.ofInt(11));
 
     expect.equal(color0, Colors.green);
     expect.equal(color11, Colors.blue);

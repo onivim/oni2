@@ -8,7 +8,7 @@ let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
 let lineNumberToInt = (lnum: LineNumber.t) => LineNumber.toZeroBased(lnum);
-let characterToInt = character => CharacterIndex.toInt(character);
+let byteToInt = byte => ByteIndex.toInt(byte);
 
 describe("Visual", ({describe, _}) => {
   describe("getRange", ({test, _}) =>
@@ -20,25 +20,25 @@ describe("Visual", ({describe, _}) => {
 
       let range = Visual.getRange();
       expect.int(range.start.line |> lineNumberToInt).toBe(0);
-      expect.int(range.start.character |> characterToInt).toBe(0);
+      expect.int(range.start.byte |> byteToInt).toBe(0);
       expect.int(range.stop.line |> lineNumberToInt).toBe(0);
-      expect.int(range.stop.character |> characterToInt).toBe(1);
+      expect.int(range.stop.byte |> byteToInt).toBe(1);
 
       input("3");
       input("l");
 
       let range = Visual.getRange();
       expect.int(range.start.line |> lineNumberToInt).toBe(0);
-      expect.int(range.start.character |> characterToInt).toBe(0);
+      expect.int(range.start.byte |> byteToInt).toBe(0);
       expect.int(range.stop.line |> lineNumberToInt).toBe(0);
-      expect.int(range.stop.character |> characterToInt).toBe(4);
+      expect.int(range.stop.byte |> byteToInt).toBe(4);
 
       input("j");
       let range = Visual.getRange();
       expect.int(range.start.line |> lineNumberToInt).toBe(0);
-      expect.int(range.start.character |> characterToInt).toBe(0);
+      expect.int(range.start.byte |> byteToInt).toBe(0);
       expect.int(range.stop.line |> lineNumberToInt).toBe(1);
-      expect.int(range.stop.character |> characterToInt).toBe(4);
+      expect.int(range.stop.byte |> byteToInt).toBe(4);
     })
   );
 
@@ -73,7 +73,7 @@ describe("Visual", ({describe, _}) => {
     test("dispatches on change", ({expect, _}) => {
       let _ = resetBuffer();
 
-      let rangeChanges: ref(list(CharacterRange.t)) = ref([]);
+      let rangeChanges: ref(list(ByteRange.t)) = ref([]);
       let dispose =
         Visual.onRangeChanged(vr => {
           open Vim.VisualRange;
@@ -86,18 +86,18 @@ describe("Visual", ({describe, _}) => {
       expect.int(List.length(rangeChanges^)).toBe(1);
       let r = List.hd(rangeChanges^);
       expect.int(r.start.line |> lineNumberToInt).toBe(0);
-      expect.int(r.start.character |> characterToInt).toBe(0);
+      expect.int(r.start.byte |> byteToInt).toBe(0);
       expect.int(r.stop.line |> lineNumberToInt).toBe(0);
-      expect.int(r.stop.character |> characterToInt).toBe(0);
+      expect.int(r.stop.byte |> byteToInt).toBe(0);
 
       input("j");
 
       expect.int(List.length(rangeChanges^)).toBe(2);
       let r = List.hd(rangeChanges^);
       expect.int(r.start.line |> lineNumberToInt).toBe(0);
-      expect.int(r.start.character |> characterToInt).toBe(0);
+      expect.int(r.start.byte |> byteToInt).toBe(0);
       expect.int(r.stop.line |> lineNumberToInt).toBe(1);
-      expect.int(r.stop.character |> characterToInt).toBe(0);
+      expect.int(r.stop.byte |> byteToInt).toBe(0);
 
       dispose();
     })

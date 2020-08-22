@@ -56,7 +56,14 @@ describe("Wrapping", ({describe, _}) => {
     });
   });
   describe("fixed=3", ({test, _}) => {
-    let wrap = WordWrap.fixed(~pixels=3.);
+    let characterWidth = {
+      let (_, width) =
+        BufferLine.make(~indentation=IndentationSettings.default, "a")
+        |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
+      width;
+    };
+    let threeCharacterWidth = 3. *. characterWidth;
+    let wrap = WordWrap.fixed(~pixels=threeCharacterWidth);
     let wrapping = Wrapping.make(~wrap, ~buffer=simpleAsciiBuffer);
     test("bufferLineByteToViewLine", ({expect, _}) => {
       expect.int(

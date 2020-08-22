@@ -4,6 +4,8 @@ type t = {
   stop: BytePosition.t,
 };
 
+let contains: (BytePosition.t, t) => bool;
+
 /**
  * [toHash(ranges)] takes a list [ranges] of [Range.t], and returns them as a
  * a hash table, where the key is the start line of the [Range.t],

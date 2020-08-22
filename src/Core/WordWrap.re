@@ -13,6 +13,7 @@ let fixed = (~pixels, bufferLine) => {
   let byteLength = BufferLine.lengthInBytes(bufferLine);
 
   let columnsInPixels = pixels;
+  prerr_endline("COLUMNS IN PIXELS: " ++ string_of_float(columnsInPixels));
 
   let rec loop = (curr, currWidth, characterIndex) => {
     let byteIndex =
@@ -25,6 +26,7 @@ let fixed = (~pixels, bufferLine) => {
           ~index=characterIndex,
           bufferLine,
         );
+      prerr_endline("Character width: " ++ string_of_float(width));
 
       let nextCharacterIndex = CharacterIndex.(characterIndex + 1);
 

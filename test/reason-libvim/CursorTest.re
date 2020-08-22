@@ -23,7 +23,7 @@ describe("Cursor", ({describe, _}) => {
 
       Cursor.set(
         BytePosition.{
-          line: LineNumber.(zero + 3),
+          line: LineNumber.ofOneBased(3),
           byte: ByteIndex.(zero + 4),
         },
       );
@@ -41,8 +41,6 @@ describe("Cursor", ({describe, _}) => {
       ({expect, _}) => {
       let _ = resetBuffer();
 
-      let topLineEvents = ref([]);
-
       Window.setWidth(80);
       Window.setHeight(40);
       Window.setTopLeft(1, 1);
@@ -58,8 +56,6 @@ describe("Cursor", ({describe, _}) => {
       );
 
       expect.int(Window.getTopLine()).toBe(61);
-      expect.int(List.length(topLineEvents^)).toBe(1);
-      expect.int(List.hd(topLineEvents^)).toBe(61);
     });
 
     test(

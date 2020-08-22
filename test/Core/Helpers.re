@@ -74,6 +74,26 @@ let validateCharacterRange =
   );
 };
 
+let validateByteRange =
+    (
+      expect: Rely.matchers(unit),
+      actualRange: ByteRange.t,
+      expectedRange: ByteRange.t,
+    ) => {
+  expect.int(LineNumber.toZeroBased(actualRange.start.line)).toBe(
+    LineNumber.toZeroBased(expectedRange.start.line),
+  );
+  expect.int(LineNumber.toZeroBased(actualRange.stop.line)).toBe(
+    LineNumber.toZeroBased(expectedRange.stop.line),
+  );
+  expect.int(ByteIndex.toInt(actualRange.start.byte)).toBe(
+    ByteIndex.toInt(expectedRange.start.byte),
+  );
+  expect.int(ByteIndex.toInt(actualRange.stop.byte)).toBe(
+    ByteIndex.toInt(expectedRange.stop.byte),
+  );
+};
+
 let validateRanges =
     (expect: Rely.matchers(unit), actualRanges, expectedRanges) => {
   List.iter2(validateRange(expect), actualRanges, expectedRanges);

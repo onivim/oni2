@@ -63,8 +63,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "κόσμε",
-        startIndex: Index.zero,
-        endIndex: Index.fromZeroBased(5),
+        startIndex: CharacterIndex.zero,
+        endIndex: CharacterIndex.ofInt(5),
         color: Colors.red,
         backgroundColor: Colors.red,
         bold: false,
@@ -73,8 +73,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Whitespace,
         text: " ",
-        startIndex: Index.fromZeroBased(5),
-        endIndex: Index.fromZeroBased(6),
+        startIndex: CharacterIndex.ofInt(5),
+        endIndex: CharacterIndex.ofInt(6),
         color: Colors.green,
         backgroundColor: Colors.green,
         bold: false,
@@ -83,8 +83,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "abc",
-        startIndex: Index.fromZeroBased(6),
-        endIndex: Index.fromZeroBased(9),
+        startIndex: CharacterIndex.ofInt(6),
+        endIndex: CharacterIndex.ofInt(9),
         color: Colors.green,
         backgroundColor: Colors.green,
         bold: false,
@@ -100,7 +100,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ());
       let result =
         BufferViewTokenizer.tokenize(
-          ~endIndex=4,
+          ~stop=CharacterIndex.ofInt(4),
           "\tabc" |> BufferLine.make(~indentation),
           basicColorizer,
         );
@@ -109,8 +109,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         {
           tokenType: Tab,
           text: "\t",
-          startIndex: Index.zero,
-          endIndex: Index.fromZeroBased(4),
+          startIndex: CharacterIndex.zero,
+          endIndex: CharacterIndex.ofInt(4),
           color: Colors.red,
           backgroundColor: Colors.red,
           bold: false,
@@ -119,8 +119,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
         {
           tokenType: Text,
           text: "abc",
-          startIndex: Index.fromZeroBased(4),
-          endIndex: Index.fromZeroBased(7),
+          startIndex: CharacterIndex.ofInt(4),
+          endIndex: CharacterIndex.ofInt(7),
           color: Colors.red,
           backgroundColor: Colors.white,
           bold: false,
@@ -135,7 +135,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("string with only whitespace", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
-        ~endIndex=4,
+        ~stop=CharacterIndex.ofInt(4),
         "   \t" |> makeLine,
         basicColorizer,
       );
@@ -145,7 +145,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("single word token", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
-        ~endIndex=8,
+        ~stop=CharacterIndex.ofInt(8),
         "testWord" |> makeLine,
         basicColorizer,
       );
@@ -154,8 +154,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "testWord",
-        startIndex: Index.zero,
-        endIndex: Index.fromZeroBased(8),
+        startIndex: CharacterIndex.zero,
+        endIndex: CharacterIndex.ofInt(8),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -169,7 +169,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("single word token, surrounded by whitespace", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
-        ~endIndex=12,
+        ~stop=CharacterIndex.ofInt(12),
         "  testWord  " |> makeLine,
         basicColorizer,
       );
@@ -178,8 +178,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Whitespace,
         text: "  ",
-        startIndex: Index.zero,
-        endIndex: Index.fromZeroBased(2),
+        startIndex: CharacterIndex.zero,
+        endIndex: CharacterIndex.ofInt(2),
         color: Colors.red,
         backgroundColor: Colors.red,
         bold: false,
@@ -188,8 +188,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "testWord",
-        startIndex: Index.fromZeroBased(2),
-        endIndex: Index.fromZeroBased(10),
+        startIndex: CharacterIndex.ofInt(2),
+        endIndex: CharacterIndex.ofInt(10),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -198,8 +198,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Whitespace,
         text: "  ",
-        startIndex: Index.fromZeroBased(10),
-        endIndex: Index.fromZeroBased(12),
+        startIndex: CharacterIndex.ofInt(10),
+        endIndex: CharacterIndex.ofInt(12),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -213,7 +213,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("single letter token, no spaces", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
-        ~endIndex=1,
+        ~stop=CharacterIndex.ofInt(1),
         "a" |> makeLine,
         basicColorizer,
       );
@@ -222,8 +222,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "a",
-        startIndex: Index.zero,
-        endIndex: Index.fromZeroBased(1),
+        startIndex: CharacterIndex.zero,
+        endIndex: CharacterIndex.ofInt(1),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -236,7 +236,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   test("respects tokenColor breaks", ({expect, _}) => {
     let differentColorTokenizer = i =>
-      i > 0
+      ByteIndex.toInt(i) > 0
         ? BufferLineColorizer.{
             color: Colors.green,
             backgroundColor: Colors.yellow,
@@ -252,7 +252,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
     let result =
       BufferViewTokenizer.tokenize(
-        ~endIndex=2,
+        ~stop=CharacterIndex.ofInt(2),
         "ab" |> makeLine,
         differentColorTokenizer,
       );
@@ -261,8 +261,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "a",
-        startIndex: Index.zero,
-        endIndex: Index.fromZeroBased(1),
+        startIndex: CharacterIndex.zero,
+        endIndex: CharacterIndex.ofInt(1),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -271,8 +271,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "b",
-        startIndex: Index.fromZeroBased(1),
-        endIndex: Index.fromZeroBased(2),
+        startIndex: CharacterIndex.ofInt(1),
+        endIndex: CharacterIndex.ofInt(2),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -286,7 +286,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("multiple tokens", ({expect, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
-        ~endIndex=9,
+        ~stop=CharacterIndex.ofInt(9),
         " a btest " |> makeLine,
         basicColorizer,
       );
@@ -295,8 +295,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Whitespace,
         text: " ",
-        startIndex: Index.zero,
-        endIndex: Index.fromZeroBased(1),
+        startIndex: CharacterIndex.zero,
+        endIndex: CharacterIndex.ofInt(1),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -305,8 +305,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "a",
-        startIndex: Index.fromZeroBased(1),
-        endIndex: Index.fromZeroBased(2),
+        startIndex: CharacterIndex.ofInt(1),
+        endIndex: CharacterIndex.ofInt(2),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -315,8 +315,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Whitespace,
         text: " ",
-        startIndex: Index.fromZeroBased(2),
-        endIndex: Index.fromZeroBased(3),
+        startIndex: CharacterIndex.ofInt(2),
+        endIndex: CharacterIndex.ofInt(3),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -325,8 +325,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Text,
         text: "btest",
-        startIndex: Index.fromZeroBased(3),
-        endIndex: Index.fromZeroBased(8),
+        startIndex: CharacterIndex.ofInt(3),
+        endIndex: CharacterIndex.ofInt(8),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,
@@ -335,8 +335,8 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
       {
         tokenType: Whitespace,
         text: " ",
-        startIndex: Index.fromZeroBased(8),
-        endIndex: Index.fromZeroBased(9),
+        startIndex: CharacterIndex.ofInt(8),
+        endIndex: CharacterIndex.ofInt(9),
         color: Colors.red,
         backgroundColor: Colors.white,
         bold: false,

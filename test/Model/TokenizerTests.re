@@ -215,7 +215,11 @@ describe("Tokenizer", ({test, describe, _}) => {
   test("string broken up by characters", ({expect, _}) => {
     let str = "abab" |> makeLine;
     let result =
-      Tokenizer.tokenize(~stop=CharacterIndex.zero, ~f=splitOnCharacter, str);
+      Tokenizer.tokenize(
+        ~stop=CharacterIndex.ofInt(4),
+        ~f=splitOnCharacter,
+        str,
+      );
 
     let runs = [
       TextRun.create(
