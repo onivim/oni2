@@ -114,9 +114,9 @@ let start =
                definitionResult.range;
 
              let position =
-               Location.{
-                 line: Index.fromOneBased(startLineNumber),
-                 column: Index.fromOneBased(startColumn),
+               CharacterPosition.{
+                 line: EditorCoreTypes.LineNumber.ofOneBased(startLineNumber),
+                 character: CharacterIndex.ofInt(startColumn - 1),
                };
 
              Actions.OpenFileByPath(
@@ -282,20 +282,7 @@ let start =
       open Vim.VisualRange;
 
       let {visualType, range} = vr;
-      let vr =
-        Core.VisualRange.create(
-          ~mode=visualType,
-          Range.{
-            start: {
-              ...range.start,
-              column: range.start.column,
-            },
-            stop: {
-              ...range.stop,
-              column: range.stop.column,
-            },
-          },
-        );
+      let vr = Core.VisualRange.create(~mode=visualType, range);
 
       let editorId =
         Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
@@ -413,8 +400,8 @@ let start =
         Core.BufferUpdate.create(
           ~id=update.id,
           ~isFull,
-          ~startLine=Index.fromOneBased(update.startLine),
-          ~endLine=Index.fromOneBased(endLine),
+          ~startLine=EditorCoreTypes.LineNumber.ofOneBased(update.startLine),
+          ~endLine=EditorCoreTypes.LineNumber.ofOneBased(endLine),
           ~lines=update.lines,
           ~version=update.version,
           (),
@@ -438,7 +425,9 @@ let start =
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
              // If the first line changes, re-run the file detection.
              let firstLineChanged =
-               Index.equals(bu.startLine, Index.fromZeroBased(0))
+               EditorCoreTypes.(
+                 LineNumber.equals(bu.startLine, LineNumber.zero)
+               )
                || bu.isFull;
 
              let newBuffer =
@@ -532,8 +521,8 @@ let start =
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
 
-        let sameLineFilter = (range: Range.t) =>
-          range.start.line == range.stop.line;
+        let sameLineFilter = (range: ByteRange.t) =>
+          EditorCoreTypes.LineNumber.(range.start.line == range.stop.line);
 
         let buffer = Vim.Buffer.getCurrent();
         let id = Vim.Buffer.getId(buffer);
@@ -644,12 +633,11 @@ let start =
       dispatch(onComplete(bufferId));
     });
 
-  let gotoLocationEffect = (editorId, location: Location.t) =>
+  let gotoLocationEffect = (editorId, location: BytePosition.t) =>
     Isolinear.Effect.create(~name="vim.gotoLocation", () => {
-      let cursor = (location :> Vim.Cursor.t);
-      updateActiveEditorCursors([cursor]);
+      updateActiveEditorCursors([location]);
 
-      let topLine: int = max(Index.toZeroBased(location.line) - 10, 0);
+      let topLine: int = max(LineNumber.toZeroBased(location.line) - 10, 0);
 
       dispatch(
         Actions.Editor({
@@ -882,8 +870,8 @@ let start =
         | FilePath(_) => None
         };
 
-      let editorId =
-        Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+      let editor = Feature_Layout.activeEditor(state.layout);
+      let editorId = editor |> Editor.getId;
 
       (
         state,
@@ -892,6 +880,9 @@ let start =
           |> Option.map(addBufferRendererEffect(bufferId))
           |> Option.value(~default=Isolinear.Effect.none),
           maybeLocation
+          |> OptionEx.flatMap(loc =>
+               Feature_Editor.Editor.characterToByte(loc, editor)
+             )
           |> Option.map(gotoLocationEffect(editorId))
           |> Option.value(~default=Isolinear.Effect.none),
         ]),

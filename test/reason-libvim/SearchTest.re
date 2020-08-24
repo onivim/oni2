@@ -1,12 +1,14 @@
 open EditorCoreTypes;
 open Vim;
 open TestFramework;
-open Range;
 
 let resetBrackets = () =>
   Helpers.resetBuffer("test/reason-libvim/brackets.txt");
 let reset = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
+
+let lineNumberToInt = lnum => lnum |> EditorCoreTypes.LineNumber.toZeroBased;
+let byteToInt = byte => byte |> ByteIndex.toInt;
 
 describe("Search", ({describe, _}) => {
   describe("getSearchHighlights", ({test, _}) => {
@@ -24,10 +26,10 @@ describe("Search", ({describe, _}) => {
       expect.int(Array.length(highlights)).toBe(3);
 
       let secondHighlight = highlights[1];
-      expect.int((secondHighlight.start.line :> int)).toBe(1);
-      expect.int((secondHighlight.start.column :> int)).toBe(30);
-      expect.int((secondHighlight.stop.line :> int)).toBe(1);
-      expect.int((secondHighlight.stop.column :> int)).toBe(32);
+      expect.int(secondHighlight.start.line |> lineNumberToInt).toBe(1);
+      expect.int(secondHighlight.start.byte |> byteToInt).toBe(30);
+      expect.int(secondHighlight.stop.line |> lineNumberToInt).toBe(1);
+      expect.int(secondHighlight.stop.byte |> byteToInt).toBe(32);
     });
 
     test("gets highlights", ({expect, _}) => {

@@ -142,11 +142,11 @@ module Styles = {
 
 let positionToString =
   fun
-  | Some((loc: Location.t)) =>
+  | Some((loc: CharacterPosition.t)) =>
     Printf.sprintf(
       "%n,%n",
-      Index.toOneBased(loc.line),
-      Index.toOneBased(loc.column),
+      EditorCoreTypes.LineNumber.toOneBased(loc.line),
+      CharacterIndex.toInt(loc.character) + 1,
     )
   | None => "";
 

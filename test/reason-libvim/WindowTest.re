@@ -26,80 +26,16 @@ describe("Window", ({describe, _}) => {
 
       Window.setWidth(3);
       Window.setHeight(3);
-      Cursor.setLocation(
-        ~line=Index.fromOneBased(2),
-        ~column=Index.fromZeroBased(4),
+      Cursor.set(
+        BytePosition.{
+          line: LineNumber.ofOneBased(2),
+          byte: ByteIndex.ofInt(4),
+        },
       );
       Window.setTopLeft(2, 3);
 
       expect.int(Window.getTopLine()).toBe(2);
       expect.int(Window.getLeftColumn()).toBe(3);
-    })
-  );
-
-  describe("onLeftColumnChanged", ({test, _}) =>
-    test("dispatches on change", ({expect, _}) => {
-      let _ = resetBuffer();
-
-      Window.setWidth(3);
-      Window.setHeight(3);
-
-      let leftColumnChanges: ref(list(int)) = ref([]);
-      let dispose =
-        Window.onLeftColumnChanged(tl =>
-          leftColumnChanges := [tl, ...leftColumnChanges^]
-        );
-
-      input("$");
-
-      expect.int(List.length(leftColumnChanges^)).toBe(1);
-      expect.int(List.hd(leftColumnChanges^)).toBe(4);
-
-      input("0");
-      expect.int(List.length(leftColumnChanges^)).toBe(2);
-      expect.int(List.hd(leftColumnChanges^)).toBe(0);
-
-      dispose();
-    })
-  );
-
-  describe("onTopLineChanged", ({test, _}) =>
-    test("dispatches on change", ({expect, _}) => {
-      let _ = resetBuffer();
-
-      Window.setWidth(50);
-      Window.setHeight(20);
-
-      let topLineChanges: ref(list(int)) = ref([]);
-      let dispose =
-        Window.onTopLineChanged(tl =>
-          topLineChanges := [tl, ...topLineChanges^]
-        );
-
-      input(":");
-      input("5");
-      input("0");
-      key("<cr>");
-
-      input("z");
-      input("z");
-
-      expect.int(List.length(topLineChanges^)).toBe(1);
-      expect.int(List.hd(topLineChanges^)).toBe(41);
-
-      input("z");
-      input("b");
-
-      expect.int(List.length(topLineChanges^)).toBe(2);
-      expect.int(List.hd(topLineChanges^)).toBe(31);
-
-      input("z");
-      input("t");
-
-      expect.int(List.length(topLineChanges^)).toBe(3);
-      expect.int(List.hd(topLineChanges^)).toBe(50);
-
-      dispose();
     })
   );
 

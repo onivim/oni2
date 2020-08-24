@@ -47,13 +47,17 @@ let validateToken =
       expectedToken: TextRun.t,
     ) => {
   expect.string(actualToken.text).toEqual(expectedToken.text);
-  expect.int(actualToken.startByte).toBe(expectedToken.startByte);
-  expect.int(actualToken.endByte).toBe(expectedToken.endByte);
-  expect.int(Index.toZeroBased(actualToken.startIndex)).toBe(
-    Index.toZeroBased(expectedToken.startIndex),
+  expect.int(actualToken.startByte |> ByteIndex.toInt).toBe(
+    expectedToken.startByte |> ByteIndex.toInt,
   );
-  expect.int(Index.toZeroBased(actualToken.endIndex)).toBe(
-    Index.toZeroBased(expectedToken.endIndex),
+  expect.int(actualToken.endByte |> ByteIndex.toInt).toBe(
+    expectedToken.endByte |> ByteIndex.toInt,
+  );
+  expect.int(actualToken.startIndex |> CharacterIndex.toInt).toBe(
+    expectedToken.startIndex |> CharacterIndex.toInt,
+  );
+  expect.int(actualToken.endIndex |> CharacterIndex.toInt).toBe(
+    CharacterIndex.toInt(expectedToken.endIndex),
   );
 };
 
@@ -77,8 +81,8 @@ describe("Tokenizer", ({test, describe, _}) => {
     test("empty string returns nothing", ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
-          ~startIndex=1,
-          ~endIndex=3,
+          ~start=CharacterIndex.(zero + 1),
+          ~stop=CharacterIndex.(zero + 3),
           ~f=noSplit,
           "" |> makeLine,
         );
@@ -90,8 +94,8 @@ describe("Tokenizer", ({test, describe, _}) => {
     test("start index past string", ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
-          ~startIndex=5,
-          ~endIndex=8,
+          ~start=CharacterIndex.(zero + 5),
+          ~stop=CharacterIndex.(zero + 8),
           ~f=noSplit,
           "abc" |> makeLine,
         );
@@ -105,8 +109,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       ({expect, _}) => {
       let result =
         Tokenizer.tokenize(
-          ~startIndex=1,
-          ~endIndex=3,
+          ~start=CharacterIndex.(zero + 1),
+          ~stop=CharacterIndex.(zero + 3),
           ~f=noSplit,
           "abcd" |> makeLine,
         );
@@ -114,10 +118,10 @@ describe("Tokenizer", ({test, describe, _}) => {
       let runs = [
         TextRun.create(
           ~text="bc",
-          ~startByte=1,
-          ~endByte=3,
-          ~startIndex=Index.fromZeroBased(1),
-          ~endIndex=Index.fromZeroBased(3),
+          ~startByte=ByteIndex.ofInt(1),
+          ~endByte=ByteIndex.ofInt(3),
+          ~startIndex=CharacterIndex.ofInt(1),
+          ~endIndex=CharacterIndex.ofInt(3),
           (),
         ),
       ];
@@ -128,8 +132,8 @@ describe("Tokenizer", ({test, describe, _}) => {
       // Use '\t' which is two characters wide with default settings
       let result =
         Tokenizer.tokenize(
-          ~startIndex=3,
-          ~endIndex=5,
+          ~start=3 |> CharacterIndex.ofInt,
+          ~stop=5 |> CharacterIndex.ofInt,
           ~f=noSplit,
           "\t\t\tcd" |> makeLine,
         );
@@ -137,10 +141,10 @@ describe("Tokenizer", ({test, describe, _}) => {
       let runs = [
         TextRun.create(
           ~text="cd",
-          ~startByte=3,
-          ~endByte=5,
-          ~startIndex=Index.fromZeroBased(3),
-          ~endIndex=Index.fromZeroBased(5),
+          ~startByte=ByteIndex.ofInt(3),
+          ~endByte=ByteIndex.ofInt(5),
+          ~startIndex=CharacterIndex.ofInt(3),
+          ~endIndex=CharacterIndex.ofInt(5),
           (),
         ),
       ];
@@ -153,39 +157,43 @@ describe("Tokenizer", ({test, describe, _}) => {
     test("wide tab", ({expect, _}) => {
       let str = "a\ta\t";
       let result =
-        Tokenizer.tokenize(~endIndex=4, ~f=splitOnCharacter, str |> makeLine);
+        Tokenizer.tokenize(
+          ~stop=CharacterIndex.ofInt(4),
+          ~f=splitOnCharacter,
+          str |> makeLine,
+        );
 
       let runs = [
         TextRun.create(
           ~text="a",
-          ~startByte=0,
-          ~endByte=1,
-          ~startIndex=Index.zero,
-          ~endIndex=Index.fromZeroBased(1),
+          ~startByte=ByteIndex.ofInt(0),
+          ~endByte=ByteIndex.ofInt(1),
+          ~startIndex=CharacterIndex.zero,
+          ~endIndex=CharacterIndex.ofInt(1),
           (),
         ),
         TextRun.create(
           ~text="\t",
-          ~startByte=1,
-          ~endByte=2,
-          ~startIndex=Index.fromZeroBased(1),
-          ~endIndex=Index.fromZeroBased(2),
+          ~startByte=ByteIndex.ofInt(1),
+          ~endByte=ByteIndex.ofInt(2),
+          ~startIndex=CharacterIndex.ofInt(1),
+          ~endIndex=CharacterIndex.ofInt(2),
           (),
         ),
         TextRun.create(
           ~text="a",
-          ~startByte=2,
-          ~endByte=3,
-          ~startIndex=Index.fromZeroBased(2),
-          ~endIndex=Index.fromZeroBased(3),
+          ~startByte=ByteIndex.ofInt(2),
+          ~endByte=ByteIndex.ofInt(3),
+          ~startIndex=CharacterIndex.ofInt(2),
+          ~endIndex=CharacterIndex.ofInt(3),
           (),
         ),
         TextRun.create(
           ~text="\t",
-          ~startByte=3,
-          ~endByte=4,
-          ~startIndex=Index.fromZeroBased(3),
-          ~endIndex=Index.fromZeroBased(4),
+          ~startByte=ByteIndex.ofInt(3),
+          ~endByte=ByteIndex.ofInt(4),
+          ~startIndex=CharacterIndex.ofInt(3),
+          ~endIndex=CharacterIndex.ofInt(4),
           (),
         ),
       ];
@@ -196,45 +204,54 @@ describe("Tokenizer", ({test, describe, _}) => {
 
   test("empty string", ({expect, _}) => {
     let result =
-      Tokenizer.tokenize(~endIndex=0, ~f=alwaysSplit, "" |> makeLine);
+      Tokenizer.tokenize(
+        ~stop=CharacterIndex.zero,
+        ~f=alwaysSplit,
+        "" |> makeLine,
+      );
     expect.int(List.length(result)).toBe(0);
   });
 
   test("string broken up by characters", ({expect, _}) => {
     let str = "abab" |> makeLine;
-    let result = Tokenizer.tokenize(~endIndex=4, ~f=splitOnCharacter, str);
+    let result =
+      Tokenizer.tokenize(
+        ~stop=CharacterIndex.ofInt(4),
+        ~f=splitOnCharacter,
+        str,
+      );
 
     let runs = [
       TextRun.create(
         ~text="a",
-        ~startByte=0,
-        ~endByte=1,
-        ~startIndex=Index.zero,
-        ~endIndex=Index.fromZeroBased(1),
+        ~startByte=ByteIndex.ofInt(0),
+        ~endByte=ByteIndex.ofInt(1),
+        ~startIndex=CharacterIndex.zero,
+        ~endIndex=CharacterIndex.ofInt(1),
         (),
       ),
       TextRun.create(
         ~text="b",
-        ~startByte=1,
-        ~endByte=2,
-        ~startIndex=Index.fromZeroBased(1),
-        ~endIndex=Index.fromZeroBased(2),
+        ~startByte=ByteIndex.ofInt(1),
+        ~endByte=ByteIndex.ofInt(2),
+        ~startIndex=CharacterIndex.ofInt(1),
+        ~endIndex=CharacterIndex.ofInt(2),
         (),
       ),
       TextRun.create(
         ~text="a",
-        ~startByte=2,
-        ~endByte=3,
-        ~startIndex=Index.fromZeroBased(2),
-        ~endIndex=Index.fromZeroBased(3),
+        ~startByte=ByteIndex.ofInt(2),
+        ~endByte=ByteIndex.ofInt(3),
+        ~startIndex=CharacterIndex.ofInt(2),
+        ~endIndex=CharacterIndex.ofInt(3),
         (),
       ),
       TextRun.create(
         ~text="b",
-        ~startByte=3,
-        ~endByte=4,
-        ~startIndex=Index.fromZeroBased(3),
-        ~endIndex=Index.fromZeroBased(4),
+        ~startByte=ByteIndex.ofInt(3),
+        ~endByte=ByteIndex.ofInt(4),
+        ~startIndex=CharacterIndex.ofInt(3),
+        ~endIndex=CharacterIndex.ofInt(4),
         (),
       ),
     ];
@@ -245,7 +262,7 @@ describe("Tokenizer", ({test, describe, _}) => {
     let str = "κόσμε";
     let result =
       Tokenizer.tokenize(
-        ~endIndex=String.length(str),
+        ~stop=String.length(str) |> CharacterIndex.ofInt,
         ~f=noSplit,
         str |> makeLine,
       );
@@ -253,10 +270,10 @@ describe("Tokenizer", ({test, describe, _}) => {
     let runs = [
       TextRun.create(
         ~text="κόσμε",
-        ~startByte=0,
-        ~endByte=11,
-        ~startIndex=Index.zero,
-        ~endIndex=Index.fromZeroBased(5),
+        ~startByte=ByteIndex.ofInt(0),
+        ~endByte=ByteIndex.ofInt(11),
+        ~startIndex=CharacterIndex.zero,
+        ~endIndex=CharacterIndex.ofInt(5),
         (),
       ),
     ];
@@ -268,7 +285,7 @@ describe("Tokenizer", ({test, describe, _}) => {
     let str = "aabbbbaa";
     let result =
       Tokenizer.tokenize(
-        ~endIndex=String.length(str),
+        ~stop=String.length(str) |> CharacterIndex.ofInt,
         ~f=splitOnCharacter,
         str |> makeLine,
       );
@@ -276,26 +293,26 @@ describe("Tokenizer", ({test, describe, _}) => {
     let runs = [
       TextRun.create(
         ~text="aa",
-        ~startByte=0,
-        ~endByte=2,
-        ~startIndex=Index.zero,
-        ~endIndex=Index.fromZeroBased(2),
+        ~startByte=ByteIndex.ofInt(0),
+        ~endByte=ByteIndex.ofInt(2),
+        ~startIndex=CharacterIndex.zero,
+        ~endIndex=CharacterIndex.ofInt(2),
         (),
       ),
       TextRun.create(
         ~text="bbbb",
-        ~startByte=2,
-        ~endByte=6,
-        ~startIndex=Index.fromZeroBased(2),
-        ~endIndex=Index.fromZeroBased(6),
+        ~startByte=ByteIndex.ofInt(2),
+        ~endByte=ByteIndex.ofInt(6),
+        ~startIndex=CharacterIndex.ofInt(2),
+        ~endIndex=CharacterIndex.ofInt(6),
         (),
       ),
       TextRun.create(
         ~text="aa",
-        ~startByte=6,
-        ~endByte=8,
-        ~startIndex=Index.fromZeroBased(6),
-        ~endIndex=Index.fromZeroBased(8),
+        ~startByte=ByteIndex.ofInt(6),
+        ~endByte=ByteIndex.ofInt(8),
+        ~startIndex=CharacterIndex.ofInt(6),
+        ~endIndex=CharacterIndex.ofInt(8),
         (),
       ),
     ];

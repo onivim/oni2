@@ -39,16 +39,16 @@ type msg =
 type outmsg =
   | Nothing
   | ApplyCompletion({
-      meetColumn: Index.t,
+      meetColumn: CharacterIndex.t,
       insertText: string,
     })
   | InsertSnippet({
-      meetColumn: Index.t,
+      meetColumn: CharacterIndex.t,
       snippet: string,
     })
   | OpenFile({
       filePath: string,
-      location: option(Location.t),
+      location: option(CharacterPosition.t),
     })
   | NotifySuccess(string)
   | NotifyFailure(string)

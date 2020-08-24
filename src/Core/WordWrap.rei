@@ -1,6 +1,8 @@
+open EditorCoreTypes;
+
 type lineWrap = {
-  byte: int,
-  index: int,
+  byte: ByteIndex.t,
+  character: CharacterIndex.t,
 };
 
 type t = BufferLine.t => list(lineWrap);
@@ -9,5 +11,5 @@ type t = BufferLine.t => list(lineWrap);
 let none: t;
 
 // A wrapping implementation that clamps the characters
-// naively to a fixed column width.
-let fixed: (~columns: int) => t;
+// naively to a fixed pixel width
+let fixed: (~pixels: float) => t;

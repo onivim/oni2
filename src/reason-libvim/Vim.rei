@@ -23,9 +23,9 @@ module AutoClosingPairs: {
     ) =>
     t;
 
-  let isBetweenClosingPairs: (string, Index.t, t) => bool;
+  let isBetweenClosingPairs: (string, ByteIndex.t, t) => bool;
 
-  let isBetweenDeletionPairs: (string, Index.t, t) => bool;
+  let isBetweenDeletionPairs: (string, ByteIndex.t, t) => bool;
 };
 
 module AutoIndent: {
@@ -46,7 +46,7 @@ module Context: {
     height: int,
     leftColumn: int,
     topLine: int,
-    cursors: list(Cursor.t),
+    cursors: list(BytePosition.t),
     lineComment: option(string),
     tabSize: int,
     insertSpaces: bool,
@@ -60,13 +60,13 @@ module Registers: {let get: (~register: char) => option(array(string));};
 module Edit: {
   [@deriving show]
   type t = {
-    range: Range.t,
+    range: CharacterRange.t,
     text: array(string),
   };
 
   type editResult = {
-    oldStartLine: Index.t,
-    oldEndLine: Index.t,
+    oldStartLine: EditorCoreTypes.LineNumber.t,
+    oldEndLine: EditorCoreTypes.LineNumber.t,
     newLines: array(string),
   };
 
@@ -120,7 +120,7 @@ module Buffer: {
   /**
   [getline(buffer, line)] returns the text content at the one-based line number [line] for buffer [buffer].
   */
-  let getLine: (t, Index.t) => string;
+  let getLine: (t, LineNumber.t) => string;
 
   /**
   [getId(buffer)] returns the id of buffer [buffer];
@@ -158,7 +158,13 @@ module Buffer: {
   - If neither [start] or [stop] are specified, the lines in the buffer will be replaced with [lines]
   */
   let setLines:
-    (~start: Index.t=?, ~stop: Index.t=?, ~lines: array(string), t) => unit;
+    (
+      ~start: LineNumber.t=?,
+      ~stop: LineNumber.t=?,
+      ~lines: array(string),
+      t
+    ) =>
+    unit;
 
   let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
 
@@ -250,8 +256,8 @@ module Format: {
     | Range({
         formatType,
         bufferId: int,
-        startLine: Index.t,
-        endLine: Index.t,
+        startLine: LineNumber.t,
+        endLine: LineNumber.t,
         adjustCursor: bool,
       });
 };

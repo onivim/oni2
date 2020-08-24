@@ -90,8 +90,9 @@ module Effects = {
   let applyCompletion = (~meetColumn, ~insertText, ~toMsg) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
       let cursor = Vim.Cursor.get();
+      // TODO: Does this logic correctly handle unicode characters?
       let delta =
-        Index.toZeroBased(cursor.column) - Index.toZeroBased(meetColumn);
+        ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
 
       let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
       let {cursors, _}: Vim.Context.t = VimEx.inputString(insertText);

@@ -24,7 +24,7 @@ type model = {
   activeSignature: option(int),
   activeParameter: option(int),
   editorID: option(int),
-  location: option(Location.t),
+  location: option(CharacterPosition.t),
   context: option(Exthost.SignatureHelp.RequestContext.t),
 };
 
@@ -58,7 +58,7 @@ type msg =
       activeParameter: int,
       requestID: int,
       editorID: int,
-      location: Location.t,
+      location: CharacterPosition.t,
       context: Exthost.SignatureHelp.RequestContext.t,
     })
   | EmptyInfoReceived(int)
@@ -255,10 +255,9 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
            );
       let location =
         if (before) {
-          open Index;
-          let Location.{line, column: col} =
+          let CharacterPosition.{line, character: col} =
             Feature_Editor.Editor.getPrimaryCursor(editor);
-          Location.create(~line, ~column=col + 1);
+          CharacterPosition.{line, character: CharacterIndex.(col + 1)};
         } else {
           Feature_Editor.Editor.getPrimaryCursor(editor);
         };
@@ -366,13 +365,12 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           editorID == editorID'
           && editorID == Feature_Editor.Editor.getId(editor) =>
       let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
+
       let loc =
-        Index.(
-          Location.create(
-            ~line=cursorLocation.line,
-            ~column=cursorLocation.column + 1,
-          )
-        );
+        CharacterPosition.{
+          line: cursorLocation.line,
+          character: CharacterIndex.(cursorLocation.character + 1),
+        };
       switch (model.location) {
       | Some(location) when location == loc =>
         let requestID = IDGenerator.get();
@@ -629,11 +627,10 @@ module View = {
           None;
         }
       )
-      |> Option.map((Location.{line, column}) => {
+      |> Option.map((characterPosition: CharacterPosition.t) => {
            let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
-             Feature_Editor.Editor.bufferLineCharacterToPixel(
-               ~line=line |> Index.toZeroBased,
-               ~characterIndex=column |> Index.toZeroBased,
+             Feature_Editor.Editor.bufferCharacterPositionToPixel(
+               ~position=characterPosition,
                editor,
              );
            (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);

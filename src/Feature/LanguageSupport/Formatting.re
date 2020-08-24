@@ -38,8 +38,8 @@ type command =
 type msg =
   | Command(command)
   | FormatRange({
-      startLine: Index.t,
-      endLine: Index.t,
+      startLine: EditorCoreTypes.LineNumber.t,
+      endLine: EditorCoreTypes.LineNumber.t,
     })
   | EditsReceived({
       displayName: string,
@@ -120,11 +120,11 @@ module Internal = {
     };
 
   let fallBackToDefaultFormatter =
-      (~indentation, ~languageConfiguration, ~buffer, range: Range.t) => {
+      (~indentation, ~languageConfiguration, ~buffer, range: CharacterRange.t) => {
     let lines = buffer |> Oni_Core.Buffer.getLines;
 
-    let startLine = Index.toZeroBased(range.start.line);
-    let stopLine = Index.toZeroBased(range.stop.line);
+    let startLine = EditorCoreTypes.LineNumber.toZeroBased(range.start.line);
+    let stopLine = EditorCoreTypes.LineNumber.toZeroBased(range.stop.line);
 
     if (startLine >= 0
         && startLine < Array.length(lines)
@@ -234,14 +234,14 @@ let update =
     switch (maybeBuffer) {
     | Some(buf) =>
       let range =
-        Range.{
+        CharacterRange.{
           start: {
             line: startLine,
-            column: Index.zero,
+            character: CharacterIndex.zero,
           },
           stop: {
             line: endLine,
-            column: Index.zero,
+            character: CharacterIndex.zero,
           },
         };
       let filetype =
@@ -318,17 +318,20 @@ let update =
         ~buf,
         ~extHostClient,
         ~range=
-          Range.{
-            start: {
-              line: Index.zero,
-              column: Index.zero,
-            },
-            stop: {
-              line:
-                Oni_Core.Buffer.getNumberOfLines(buf) |> Index.fromZeroBased,
-              column: Index.zero,
-            },
-          },
+          EditorCoreTypes.(
+            CharacterRange.{
+              start: {
+                line: LineNumber.zero,
+                character: CharacterIndex.zero,
+              },
+              stop: {
+                line:
+                  Oni_Core.Buffer.getNumberOfLines(buf)
+                  |> LineNumber.ofZeroBased,
+                character: CharacterIndex.zero,
+              },
+            }
+          ),
       );
     }
 

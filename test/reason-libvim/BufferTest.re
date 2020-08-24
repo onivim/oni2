@@ -61,9 +61,9 @@ describe("Buffer", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      Buffer.setLines(~stop=Index.zero, ~lines=[|"abc"|], buffer);
-      let line0 = Buffer.getLine(buffer, Index.zero);
-      let line1 = Buffer.getLine(buffer, Index.(zero + 1));
+      Buffer.setLines(~stop=LineNumber.zero, ~lines=[|"abc"|], buffer);
+      let line0 = Buffer.getLine(buffer, LineNumber.zero);
+      let line1 = Buffer.getLine(buffer, LineNumber.(zero + 1));
       let lineCount = Buffer.getLineCount(buffer);
       expect.int(lineCount).toBe(4);
       expect.string(line0).toEqual("abc");
@@ -82,15 +82,15 @@ describe("Buffer", ({describe, _}) => {
     test("change line in middle", ({expect, _}) => {
       let buffer = resetBuffer();
 
-      let line1Index = Index.(zero + 1);
-      let line2Index = Index.(zero + 2);
+      let line1Index = LineNumber.(zero + 1);
+      let line2Index = LineNumber.(zero + 2);
 
       let lines = [|"abc"|];
       Buffer.setLines(~start=line1Index, ~stop=line2Index, ~lines, buffer);
       let lineCount = Buffer.getLineCount(buffer);
-      let line0 = Buffer.getLine(buffer, Index.zero);
-      let line1 = Buffer.getLine(buffer, Index.(zero + 1));
-      let line2 = Buffer.getLine(buffer, Index.(zero + 2));
+      let line0 = Buffer.getLine(buffer, LineNumber.zero);
+      let line1 = Buffer.getLine(buffer, LineNumber.(zero + 1));
+      let line2 = Buffer.getLine(buffer, LineNumber.(zero + 2));
       expect.int(lineCount).toBe(3);
       expect.string(line0).toEqual("This is the first line of a test file");
       expect.string(line1).toEqual("abc");
@@ -99,8 +99,8 @@ describe("Buffer", ({describe, _}) => {
     test("should increment version", ({expect, _}) => {
       let buffer = resetBuffer();
 
-      let line1Index = Index.(zero + 1);
-      let line2Index = Index.(zero + 2);
+      let line1Index = LineNumber.(zero + 1);
+      let line2Index = LineNumber.(zero + 2);
 
       let startVersion = Buffer.getVersion(buffer);
 
@@ -114,8 +114,8 @@ describe("Buffer", ({describe, _}) => {
 
       expect.bool(Buffer.isModified(buffer)).toBe(false);
 
-      let line1Index = Index.(zero + 1);
-      let line2Index = Index.(zero + 2);
+      let line1Index = LineNumber.(zero + 1);
+      let line2Index = LineNumber.(zero + 2);
 
       let lines = [|"abc"|];
       Buffer.setLines(~start=line1Index, ~stop=line2Index, ~lines, buffer);
@@ -125,22 +125,22 @@ describe("Buffer", ({describe, _}) => {
       let buffer = resetBuffer();
 
       Buffer.setLines(
-        ~start=Index.zero,
-        ~stop=Index.(zero + 4),
+        ~start=LineNumber.zero,
+        ~stop=LineNumber.(zero + 4),
         ~lines=[|"abc"|],
         buffer,
       );
       let lineCount = Buffer.getLineCount(buffer);
-      let line0 = Buffer.getLine(buffer, Index.zero);
+      let line0 = Buffer.getLine(buffer, LineNumber.zero);
       expect.int(lineCount).toBe(1);
       expect.string(line0).toEqual("abc");
     });
     test("replace whole buffer - set just start", ({expect, _}) => {
       let buffer = resetBuffer();
 
-      Buffer.setLines(~start=Index.zero, ~lines=[|"abc"|], buffer);
+      Buffer.setLines(~start=LineNumber.zero, ~lines=[|"abc"|], buffer);
       let lineCount = Buffer.getLineCount(buffer);
-      let line0 = Buffer.getLine(buffer, Index.zero);
+      let line0 = Buffer.getLine(buffer, LineNumber.zero);
       expect.int(lineCount).toBe(1);
       expect.string(line0).toEqual("abc");
     });
@@ -152,7 +152,7 @@ describe("Buffer", ({describe, _}) => {
 
       Buffer.setLines(~lines=[|"abc"|], buffer);
       let lineCount = Buffer.getLineCount(buffer);
-      let line0 = Buffer.getLine(buffer, Index.zero);
+      let line0 = Buffer.getLine(buffer, LineNumber.zero);
       expect.int(lineCount).toBe(1);
       expect.string(line0).toEqual("abc");
 
@@ -169,11 +169,11 @@ describe("Buffer", ({describe, _}) => {
     test("add a line at end", ({expect, _}) => {
       let buffer = resetBuffer();
 
-      let endPoint = Buffer.getLineCount(buffer) |> Index.fromZeroBased;
+      let endPoint = Buffer.getLineCount(buffer) |> LineNumber.ofZeroBased;
 
       Buffer.setLines(~start=endPoint, ~lines=[|"abc"|], buffer);
-      let line3 = Buffer.getLine(buffer, Index.(zero + 2));
-      let line4 = Buffer.getLine(buffer, Index.(zero + 3));
+      let line3 = Buffer.getLine(buffer, LineNumber.(zero + 2));
+      let line4 = Buffer.getLine(buffer, LineNumber.(zero + 3));
       let lineCount = Buffer.getLineCount(buffer);
       expect.int(lineCount).toBe(4);
       expect.string(line3).toEqual("This is the third line of a test file");
@@ -182,17 +182,17 @@ describe("Buffer", ({describe, _}) => {
   });
   describe("applyEdits", ({test, _}) => {
     let range = (startLine, startColumn, endLine, endColumn) =>
-      Range.{
+      CharacterRange.{
         start:
-          Location.create(
-            ~line=Index.(zero + startLine),
-            ~column=Index.(zero + startColumn),
-          ),
+          CharacterPosition.{
+            line: LineNumber.(zero + startLine),
+            character: CharacterIndex.(zero + startColumn),
+          },
         stop:
-          Location.create(
-            ~line=Index.(zero + endLine),
-            ~column=Index.(zero + endColumn),
-          ),
+          CharacterPosition.{
+            line: LineNumber.(zero + endLine),
+            character: CharacterIndex.(zero + endColumn),
+          },
       };
 
     test("insert string inside line", ({expect, _}) => {
@@ -203,7 +203,7 @@ describe("Buffer", ({describe, _}) => {
 
       let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
-      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("Tahis is the first line of a test file");
       expect.int(Buffer.getLineCount(buffer)).toBe(3);
     });
@@ -219,9 +219,9 @@ describe("Buffer", ({describe, _}) => {
 
       let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
-      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("This is a whole new line");
-      let line = Buffer.getLine(buffer, Index.fromOneBased(2));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(2));
       expect.string(line).toEqual("This is the first line of a test file");
       expect.int(Buffer.getLineCount(buffer)).toBe(4);
     });
@@ -255,7 +255,7 @@ describe("Buffer", ({describe, _}) => {
 
       let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
-      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("This is the second line of a test file");
 
       expect.int(Buffer.getLineCount(buffer)).toBe(2);
@@ -268,7 +268,7 @@ describe("Buffer", ({describe, _}) => {
 
       let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
-      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("This is the third line of a test file");
 
       expect.int(Buffer.getLineCount(buffer)).toBe(1);
@@ -281,7 +281,7 @@ describe("Buffer", ({describe, _}) => {
 
       let () = Buffer.applyEdits(~edits=[edit], buffer) |> Result.get_ok;
 
-      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("import 'κόσμε'");
 
       expect.int(Buffer.getLineCount(buffer)).toBe(1);
@@ -291,7 +291,7 @@ describe("Buffer", ({describe, _}) => {
     test("single file", ({expect, _}) => {
       let _ = resetBuffer();
       let buffer = Buffer.openFile("test/reason-libvim/testfile.txt");
-      let line = Buffer.getLine(buffer, Index.fromOneBased(1));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(1));
       expect.string(line).toEqual("This is the first line of a test file");
     })
   );

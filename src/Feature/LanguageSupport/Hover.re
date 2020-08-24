@@ -18,12 +18,12 @@ type model = {
   shown: bool,
   providers: list(provider),
   contents: list(Exthost.MarkdownString.t),
-  range: option(EditorCoreTypes.Range.t),
+  range: option(EditorCoreTypes.CharacterRange.t),
   triggeredFrom:
     option(
       [
-        | `CommandPalette(EditorCoreTypes.Location.t)
-        | `Mouse(EditorCoreTypes.Location.t)
+        | `CommandPalette(EditorCoreTypes.CharacterPosition.t)
+        | `Mouse(EditorCoreTypes.CharacterPosition.t)
       ],
     ),
   lastRequestID: option(int),
@@ -53,13 +53,13 @@ type msg =
   | KeyPressed(string)
   | HoverInfoReceived({
       contents: list(Exthost.MarkdownString.t),
-      range: option(EditorCoreTypes.Range.t),
+      range: option(EditorCoreTypes.CharacterRange.t),
       requestID: int,
       editorID: int,
     })
   | HoverRequestFailed(string)
-  | MouseHovered(EditorCoreTypes.Location.t)
-  | MouseMoved(EditorCoreTypes.Location.t);
+  | MouseHovered(EditorCoreTypes.CharacterPosition.t)
+  | MouseMoved(EditorCoreTypes.CharacterPosition.t);
 
 type outmsg =
   | Nothing
@@ -101,7 +101,7 @@ let getEffectsForLocation =
 
 let update =
     (
-      ~cursorLocation: Location.t,
+      ~cursorLocation: CharacterPosition.t,
       ~maybeBuffer,
       ~editorId,
       ~extHostClient,
@@ -162,7 +162,7 @@ let update =
     let newModel =
       switch (model.range) {
       | Some(range) =>
-        if (EditorCoreTypes.Range.contains(location, range)) {
+        if (EditorCoreTypes.CharacterRange.contains(location, range)) {
           model;
         } else {
           {
@@ -273,7 +273,7 @@ module Popup = {
     if (model.editorID != editorId) {
       None;
     } else {
-      let maybeLocation: option(EditorCoreTypes.Location.t) =
+      let maybeLocation: option(EditorCoreTypes.CharacterPosition.t) =
         switch (model.triggeredFrom, model.shown) {
         | (Some(trigger), true) =>
           switch (trigger) {

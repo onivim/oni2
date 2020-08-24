@@ -1,5 +1,7 @@
+open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
+module LineNumber = EditorCoreTypes.LineNumber;
 
 module BracketMatch = Feature_Editor.BracketMatch;
 
@@ -20,29 +22,46 @@ describe("BracketMatch", ({describe, _}) => {
   describe("findFirst", ({test, _}) => {
     test("empty buffer", ({expect, _}) => {
       let buffer = create([""]);
-      let result = BracketMatch.findFirst(~buffer, ~line=0, ~index=0, ~pairs);
+      let result =
+        BracketMatch.findFirst(
+          ~buffer,
+          ~characterPosition=CharacterPosition.zero,
+          ~pairs,
+        );
       expect.option(result).toBeNone();
     });
 
     test("pair outside should not get picked up", ({expect, _}) => {
       let buffer = create(["abc", "", "({[a]})"]);
-      let result = BracketMatch.findFirst(~buffer, ~line=1, ~index=0, ~pairs);
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.(zero + 1),
+          character: CharacterIndex.zero,
+        };
+      let result =
+        BracketMatch.findFirst(~buffer, ~characterPosition, ~pairs);
       expect.option(result).toBeNone();
     });
 
     test("picks nearest", ({expect, _}) => {
       let buffer = create(["({[a]})"]);
-      let result = BracketMatch.findFirst(~buffer, ~line=0, ~index=3, ~pairs);
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.zero,
+          character: CharacterIndex.(zero + 3),
+        };
+      let result =
+        BracketMatch.findFirst(~buffer, ~characterPosition, ~pairs);
       let expected =
         Some(
           BracketMatch.{
             start: {
-              line: 0,
-              index: 2,
+              line: LineNumber.zero,
+              character: CharacterIndex.ofInt(2),
             },
             stop: {
-              line: 0,
-              index: 4,
+              line: LineNumber.zero,
+              character: CharacterIndex.ofInt(4),
             },
           },
         );
@@ -51,17 +70,23 @@ describe("BracketMatch", ({describe, _}) => {
 
     test("uses closing character if cursor is on it", ({expect, _}) => {
       let buffer = create(["({[a]})"]);
-      let result = BracketMatch.findFirst(~buffer, ~line=0, ~index=4, ~pairs);
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.zero,
+          character: CharacterIndex.(zero + 4),
+        };
+      let result =
+        BracketMatch.findFirst(~buffer, ~characterPosition, ~pairs);
       let expected =
         Some(
           BracketMatch.{
             start: {
-              line: 0,
-              index: 2,
+              line: LineNumber.zero,
+              character: CharacterIndex.ofInt(2),
             },
             stop: {
-              line: 0,
-              index: 4,
+              line: LineNumber.zero,
+              character: CharacterIndex.ofInt(4),
             },
           },
         );
@@ -75,11 +100,15 @@ describe("BracketMatch", ({describe, _}) => {
 
     test("empty buffer", ({expect, _}) => {
       let buffer = create([""]);
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.zero,
+          character: CharacterIndex.zero,
+        };
       let result =
         BracketMatch.find(
           ~buffer,
-          ~line=0,
-          ~index=0,
+          ~characterPosition,
           ~start=Uchar.of_int(0),
           ~stop=Uchar.of_int(0),
         );
@@ -88,11 +117,15 @@ describe("BracketMatch", ({describe, _}) => {
 
     test("out of bounds: line < 0", ({expect, _}) => {
       let buffer = create([""]);
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.ofZeroBased(-1),
+          character: CharacterIndex.zero,
+        };
       let result =
         BracketMatch.find(
           ~buffer,
-          ~line=-1,
-          ~index=0,
+          ~characterPosition,
           ~start=Uchar.of_int(0),
           ~stop=Uchar.of_int(0),
         );
@@ -101,11 +134,15 @@ describe("BracketMatch", ({describe, _}) => {
 
     test("out of bounds: line > len0", ({expect, _}) => {
       let buffer = create([""]);
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.ofZeroBased(2),
+          character: CharacterIndex.zero,
+        };
       let result =
         BracketMatch.find(
           ~buffer,
-          ~line=2,
-          ~index=0,
+          ~characterPosition,
           ~start=Uchar.of_int(0),
           ~stop=Uchar.of_int(0),
         );
@@ -114,11 +151,11 @@ describe("BracketMatch", ({describe, _}) => {
 
     test("find pair at start position", ({expect, _}) => {
       let buffer = create(["{}"]);
+      let characterPosition = CharacterPosition.zero;
       let result =
         BracketMatch.find(
           ~buffer,
-          ~line=0,
-          ~index=0,
+          ~characterPosition,
           ~start=leftBracket,
           ~stop=rightBracket,
         );
@@ -126,12 +163,12 @@ describe("BracketMatch", ({describe, _}) => {
         Some(
           BracketMatch.{
             start: {
-              line: 0,
-              index: 0,
+              line: LineNumber.zero,
+              character: CharacterIndex.zero,
             },
             stop: {
-              line: 0,
-              index: 1,
+              line: LineNumber.zero,
+              character: CharacterIndex.ofInt(1),
             },
           },
         );
@@ -145,20 +182,24 @@ describe("BracketMatch", ({describe, _}) => {
         Some(
           BracketMatch.{
             start: {
-              line: 0,
-              index: 0,
+              line: LineNumber.zero,
+              character: CharacterIndex.zero,
             },
             stop: {
-              line: 0,
-              index: 1,
+              line: LineNumber.zero,
+              character: CharacterIndex.(zero + 1),
             },
           },
         );
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.zero,
+          character: CharacterIndex.(zero + 1),
+        };
       let result =
         BracketMatch.find(
           ~buffer,
-          ~line=0,
-          ~index=1,
+          ~characterPosition,
           ~start=leftBracket,
           ~stop=rightBracket,
         );
@@ -172,20 +213,24 @@ describe("BracketMatch", ({describe, _}) => {
         Some(
           BracketMatch.{
             start: {
-              line: 0,
-              index: 1,
+              line: LineNumber.zero,
+              character: CharacterIndex.ofInt(1),
             },
             stop: {
-              line: 2,
-              index: 0,
+              line: LineNumber.(zero + 2),
+              character: CharacterIndex.zero,
             },
           },
         );
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.(zero + 1),
+          character: CharacterIndex.(zero + 1),
+        };
       let result =
         BracketMatch.find(
           ~buffer,
-          ~line=1,
-          ~index=1,
+          ~characterPosition,
           ~start=leftBracket,
           ~stop=rightBracket,
         );
@@ -198,20 +243,24 @@ describe("BracketMatch", ({describe, _}) => {
         Some(
           BracketMatch.{
             start: {
-              line: 0,
-              index: 0,
+              line: LineNumber.zero,
+              character: CharacterIndex.zero,
             },
             stop: {
-              line: 2,
-              index: 3,
+              line: LineNumber.(zero + 2),
+              character: CharacterIndex.ofInt(3),
             },
           },
         );
+      let characterPosition =
+        CharacterPosition.{
+          line: LineNumber.(zero + 1),
+          character: CharacterIndex.zero,
+        };
       let result =
         BracketMatch.find(
           ~buffer,
-          ~line=1,
-          ~index=0,
+          ~characterPosition,
           ~start=leftBracket,
           ~stop=rightBracket,
         );

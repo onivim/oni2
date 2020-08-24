@@ -47,7 +47,7 @@ describe("AutoIndent", ({test, _}) => {
     input(~autoIndent=keepIndent, "o");
     input(~autoIndent=keepIndent, "a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("a");
   });
 
@@ -56,7 +56,7 @@ describe("AutoIndent", ({test, _}) => {
     input(~autoIndent=increaseIndent, "o");
     input(~autoIndent=increaseIndent, "a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("\ta");
   });
 
@@ -67,7 +67,7 @@ describe("AutoIndent", ({test, _}) => {
     input("o");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("   a");
   });
 
@@ -82,7 +82,7 @@ describe("AutoIndent", ({test, _}) => {
     key("<CR>");
     input("b");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 2));
     expect.string(line).toEqual("b");
   });
   test(
@@ -153,7 +153,7 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 2));
     expect.string(line).toEqual("  a");
   });
 
@@ -166,7 +166,7 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("a");
   });
 
@@ -179,7 +179,7 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("  a");
   });
 
@@ -193,7 +193,7 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 2));
     expect.string(line).toEqual("a");
   });
 

@@ -15,14 +15,14 @@ type t = {
   // Base is the prefix string
   base: string,
   // Meet is the location where we request completions
-  location: Location.t,
+  location: CharacterPosition.t,
 };
 
 let toString = (meet: t) =>
   Printf.sprintf(
     "Base: |%s| Meet: %s",
     meet.base,
-    meet.location |> Location.show,
+    meet.location |> CharacterPosition.show,
   );
 
 let defaultTriggerCharacters = [Uchar.of_char('.')];
@@ -32,13 +32,17 @@ let fromLine =
       ~triggerCharacters=defaultTriggerCharacters,
       ~lineNumber=0,
       ~bufferId,
-      ~index: Index.t,
+      ~index: CharacterIndex.t,
       line: BufferLine.t,
     ) => {
-  let cursorIdx = Index.toZeroBased(index);
+  let cursorIdx = CharacterIndex.toInt(index);
   let idx =
     Stdlib.min(
-      BufferLine.lengthBounded(~max=cursorIdx + 1, line) - 1,
+      BufferLine.lengthBounded(
+        ~max=CharacterIndex.ofInt(cursorIdx + 1),
+        line,
+      )
+      - 1,
       cursorIdx,
     );
   let pos = ref(idx);
@@ -53,7 +57,7 @@ let fromLine =
   let candidateBase = ref([]);
 
   while (pos^ >= 0 && ! found^) {
-    let c = BufferLine.getUcharExn(~index=pos^, line);
+    let c = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(pos^), line);
     lastCharacter := Some(c);
 
     if (matchesTriggerCharacters(c)
@@ -77,9 +81,9 @@ let fromLine =
       Some({
         bufferId,
         location:
-          Location.{
-            line: Index.fromZeroBased(lineNumber),
-            column: Index.zero,
+          CharacterPosition.{
+            line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+            character: CharacterIndex.zero,
           },
         base,
       });
@@ -90,23 +94,23 @@ let fromLine =
     Some({
       bufferId,
       location:
-        Location.{
-          line: Index.fromZeroBased(lineNumber),
-          column: Index.fromZeroBased(v),
+        CharacterPosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          character: CharacterIndex.ofInt(v),
         },
       base,
     })
   };
 };
 
-let fromBufferLocation =
+let fromBufferPosition =
     (
       ~triggerCharacters=defaultTriggerCharacters,
-      ~location: Location.t,
+      ~position: CharacterPosition.t,
       buffer: Buffer.t,
     ) => {
   let bufferLines = Buffer.getNumberOfLines(buffer);
-  let line0 = Index.toZeroBased(location.line);
+  let line0 = EditorCoreTypes.LineNumber.toZeroBased(position.line);
 
   if (line0 < bufferLines) {
     let line = Buffer.getLine(line0, buffer);
@@ -114,7 +118,7 @@ let fromBufferLocation =
       ~bufferId=Buffer.getId(buffer),
       ~lineNumber=line0,
       ~triggerCharacters,
-      ~index=location.column,
+      ~index=position.character,
       line,
     );
   } else {

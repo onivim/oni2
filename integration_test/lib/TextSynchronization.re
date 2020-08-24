@@ -15,7 +15,8 @@ let _getTextForVimBuffer = () => {
   let i = ref(1);
   let lines = ref([]);
   while (i^ <= count) {
-    lines := [Vim.Buffer.getLine(buffer, Index.fromOneBased(i^)), ...lines^];
+    lines :=
+      [Vim.Buffer.getLine(buffer, LineNumber.ofOneBased(i^)), ...lines^];
     incr(i);
   };
   "fulltext:" ++ String.concat("|", lines^ |> List.rev) ++ "|";
