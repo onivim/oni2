@@ -321,6 +321,7 @@ let%component make =
       onCursorChange
       cursorPosition
       editorFont
+      uiFont
       leftVisibleColumn
       diagnosticsMap
       selectionRanges
@@ -336,6 +337,7 @@ let%component make =
       bufferWidthInCharacters={layout.bufferWidthInCharacters}
       windowIsFocused
       config
+      theme
     />
     {Editor.isMinimapEnabled(editor)
        ? <minimap

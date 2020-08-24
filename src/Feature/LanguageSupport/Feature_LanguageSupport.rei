@@ -82,6 +82,7 @@ let isFocused: model => bool;
 
 let sub:
   (
+    ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
@@ -139,16 +140,14 @@ module CodeLens: {
   let get: (~bufferId: int, model) => list(t);
 
   let lineNumber: t => int;
-  let text: t => string;
+  let uniqueId: t => string;
 
   module View: {
     let make:
       (
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~uiFont: UiFont.t,
-        ~editorId: int,
         ~codeLens: t,
-        ~dispatch: msg => unit,
         unit
       ) =>
       Revery.UI.element;

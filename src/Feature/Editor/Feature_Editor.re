@@ -139,6 +139,15 @@ let update = (editor, msg) => {
       Editor.setLineHeight(~lineHeight, editor),
       Nothing,
     )
+
+  | InlineElementUpdated({uniqueId, lineNumber, height}) => (
+      Editor.addInlineElement(~uniqueId, ~lineNumber, ~height, editor),
+      Nothing,
+    )
+  | InlineElementRemoved({uniqueId}) => (
+      Editor.removeInlineElement(~uniqueId, editor),
+      Nothing,
+    )
   };
 };
 

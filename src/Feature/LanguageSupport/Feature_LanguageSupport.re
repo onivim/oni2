@@ -336,7 +336,7 @@ let isFocused = ({rename, _}) => Rename.isFocused(rename);
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
-  let colors = Completion.Contributions.colors;
+  let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
   let commands =
     (
@@ -364,7 +364,9 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
-  let configuration = Completion.Contributions.configuration;
+  let configuration =
+    CodeLens.Contributions.configuration
+    @ Completion.Contributions.configuration;
 
   let contextKeys =
     [
@@ -473,7 +475,6 @@ module Hover = {
 
 module ShadowedCodeLens = CodeLens;
 module CodeLens = {
-  // TODO: Maybe there will be additional state - like expanded?
   type t = ShadowedCodeLens.codeLens;
 
   let get = (~bufferId, model) => {
@@ -481,16 +482,14 @@ module CodeLens = {
   };
 
   let lineNumber = codeLens => ShadowedCodeLens.lineNumber(codeLens);
-  let text = codeLens => ShadowedCodeLens.text(codeLens);
+  let uniqueId = codeLens => ShadowedCodeLens.uniqueId(codeLens);
 
-  module View = {
-    let make = (~theme, ~uiFont, ~editorId, ~codeLens, ~dispatch, ()) =>
-      <Revery.UI.Text text="Hello, world!" />;
-  };
+  module View = ShadowedCodeLens.View;
 };
 
 let sub =
     (
+      ~config,
       ~isInsertMode,
       ~activeBuffer,
       ~activePosition,
@@ -499,7 +498,7 @@ let sub =
       {definition, completion, documentHighlights, codeLens, _},
     ) => {
   let codeLensSub =
-    ShadowedCodeLens.sub(~visibleBuffers, ~client, codeLens)
+    ShadowedCodeLens.sub(~config, ~visibleBuffers, ~client, codeLens)
     |> Isolinear.Sub.map(msg => CodeLens(msg));
 
   let definitionSub =

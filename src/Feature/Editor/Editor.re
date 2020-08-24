@@ -90,9 +90,17 @@ let bufferBytePositionToPixel =
     let (cursorOffset, width) =
       BufferLine.getPixelPositionAndWidth(~index, bufferLine);
 
+    let inlineElementOffsetY =
+      InlineElements.getReservedSpace(position.line, editor.inlineElements);
+
     let pixelX = cursorOffset -. scrollX +. 0.5;
 
-    let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
+    let pixelY =
+      inlineElementOffsetY
+      +. lineHeightInPixels(editor)
+      *. float(line)
+      -. scrollY
+      +. 0.5;
 
     ({pixelX, pixelY}, width);
   };
@@ -116,9 +124,16 @@ let bufferCharacterPositionToPixel =
       |> EditorBuffer.line(line)
       |> BufferLine.getPixelPositionAndWidth(~index=position.character);
 
+    let inlineElementOffsetY =
+      InlineElements.getReservedSpace(position.line, editor.inlineElements);
     let pixelX = cursorOffset -. scrollX +. 0.5;
 
-    let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
+    let pixelY =
+      inlineElementOffsetY
+      +. lineHeightInPixels(editor)
+      *. float(line)
+      -. scrollY
+      +. 0.5;
 
     ({pixelX, pixelY}, width);
   };
@@ -616,6 +631,26 @@ let updateBuffer = (~buffer, editor) => {
     // TODO: These will both change with word wrap
     viewLines: EditorBuffer.numberOfLines(buffer),
     maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
+  };
+};
+
+let addInlineElement = (~uniqueId, ~lineNumber, ~height, editor) => {
+  {
+    ...editor,
+    inlineElements:
+      InlineElements.add(
+        ~uniqueId,
+        ~line=lineNumber,
+        ~height=float(height),
+        editor.inlineElements,
+      ),
+  };
+};
+
+let removeInlineElement = (~uniqueId, editor) => {
+  {
+    ...editor,
+    inlineElements: InlineElements.remove(~uniqueId, editor.inlineElements),
   };
 };
 

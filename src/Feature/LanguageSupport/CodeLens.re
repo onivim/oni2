@@ -3,14 +3,20 @@ open Oni_Core.Utility;
 
 // MODEL
 
-type codeLens = Exthost.CodeLens.t;
+type codeLens = {
+  handle: int,
+  lens: Exthost.CodeLens.t,
+  uniqueId: string,
+};
 
-let lineNumber = (codeLens: Exthost.CodeLens.t) =>
-  Exthost.OneBasedRange.(codeLens.range.startLineNumber - 1);
+let lineNumber = ({lens, _}) =>
+  Exthost.OneBasedRange.(lens.range.startLineNumber - 1);
 
-let text = (codeLens: Exthost.CodeLens.t) =>
+let uniqueId = ({uniqueId, _}) => uniqueId;
+
+let text = ({lens, _}: codeLens) =>
   Exthost.Command.(
-    codeLens.command
+    lens.command
     |> OptionEx.flatMap(command => command.label)
     |> Option.map(Exthost.Label.toString)
     |> Option.value(~default="(null)")
@@ -21,7 +27,7 @@ type provider = {
   selector: Exthost.DocumentSelector.t,
 };
 
-type handleToLenses = IntMap.t(list(Exthost.CodeLens.t));
+type handleToLenses = IntMap.t(list(codeLens));
 
 type model = {
   providers: list(provider),
@@ -60,8 +66,23 @@ let unregister = (~handle: int, model) => {
 
 // UPDATE
 
-let addLenses = (handle, lenses, handleToLenses) => {
-  IntMap.add(handle, lenses, handleToLenses);
+let addLenses = (handle, bufferId, lenses, handleToLenses) => {
+  let internalLenses =
+    lenses
+    |> List.map(lens =>
+         {
+           lens,
+           handle,
+           uniqueId:
+             Printf.sprintf(
+               "%d%d%d",
+               handle,
+               bufferId,
+               lens.range.startLineNumber,
+             ),
+         }
+       );
+  IntMap.add(handle, internalLenses, handleToLenses);
 };
 
 let update = (msg, model) =>
@@ -73,12 +94,26 @@ let update = (msg, model) =>
       |> IntMap.update(
            bufferId,
            fun
-           | None => IntMap.empty |> addLenses(handle, lenses) |> Option.some
+           | None =>
+             IntMap.empty
+             |> addLenses(handle, bufferId, lenses)
+             |> Option.some
            | Some(existing) =>
-             existing |> addLenses(handle, lenses) |> Option.some,
+             existing |> addLenses(handle, bufferId, lenses) |> Option.some,
          );
     {...model, bufferToLenses};
   };
+
+// CONFIGURATION
+
+module Configuration = {
+  open Config.Schema;
+
+  module Experimental = {
+    let enabled =
+      setting("experimental.editor.codeLens", bool, ~default=false);
+  };
+};
 
 // SUBSCRIPTION
 
@@ -114,4 +149,50 @@ module Sub = {
   };
 };
 
-let sub = Sub.create;
+let sub = (~config, ~visibleBuffers, ~client, model) =>
+  if (Configuration.Experimental.enabled.get(config)) {
+    Sub.create(~visibleBuffers, ~client, model);
+  } else {
+    Isolinear.Sub.none;
+  };
+
+// COLORS
+
+module Colors = {
+  open Revery;
+  open ColorTheme.Schema;
+
+  let foreground =
+    define("editorCodeLens.foreground", color(Color.hex("#999999")) |> all);
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let colors = Colors.[foreground];
+
+  let configuration = Configuration.[Experimental.enabled.spec];
+};
+
+// VIEW
+
+module View = {
+  module CodeLensColors = Colors;
+  open Revery.UI;
+  let make = (~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
+    let foregroundColor = CodeLensColors.foreground.from(theme);
+    let text = text(codeLens);
+    <View style=Style.[marginTop(4), marginBottom(-4)]>
+      <Text
+        text
+        fontFamily={uiFont.family}
+        fontSize={uiFont.size}
+        style=Style.[
+          color(foregroundColor),
+          flexGrow(1),
+          textWrap(Revery.TextWrapping.Wrap),
+        ]
+      />
+    </View>;
+  };
+};

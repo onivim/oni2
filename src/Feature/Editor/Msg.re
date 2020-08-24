@@ -18,6 +18,12 @@ type t =
   | MinimapMouseWheel({deltaWheel: float})
   | MinimapClicked({viewLine: int})
   | MinimapDragged({newPixelScrollY: float})
+  | InlineElementUpdated({
+      uniqueId: string,
+      lineNumber: EditorCoreTypes.LineNumber.t,
+      height: int,
+    })
+  | InlineElementRemoved({uniqueId: string})
   | EditorMouseWheel({
       deltaX: float,
       deltaY: float,

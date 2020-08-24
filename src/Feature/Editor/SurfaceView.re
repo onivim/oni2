@@ -47,6 +47,8 @@ let%component make =
                 ~onCursorChange,
                 ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
+                ~uiFont: Oni_Core.UiFont.t,
+                ~theme,
                 ~leftVisibleColumn,
                 ~diagnosticsMap,
                 ~selectionRanges,
@@ -144,50 +146,19 @@ let%component make =
   let bufferId = buffer |> Oni_Core.Buffer.getId;
   let lenses =
     Feature_LanguageSupport.CodeLens.get(~bufferId, languageSupport);
-  let topLine = Editor.getTopVisibleLine(editor);
-  let bottomLine = Editor.getBottomVisibleLine(editor);
 
-  let visibleLenses =
-    lenses
-    |> List.filter(lens => {
-         let lensLine = Feature_LanguageSupport.CodeLens.lineNumber(lens);
-         lensLine >= topLine && lensLine <= bottomLine;
-       });
+  let visibleLenses = lenses;
 
   let lensElements =
     visibleLenses
     |> List.map(lens => {
          let lineNumber = Feature_LanguageSupport.CodeLens.lineNumber(lens);
-         let text = Feature_LanguageSupport.CodeLens.text(lens);
+         let line = EditorCoreTypes.LineNumber.ofZeroBased(lineNumber);
+         let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
 
-         let ({pixelY, _}: Editor.pixelPosition, _width) =
-           Editor.bufferLineByteToPixel(
-             ~line=lineNumber,
-             ~byteIndex=0,
-             editor,
-           );
-
-         <View
-           style=Style.[
-             position(`Absolute),
-             top(pixelY |> int_of_float),
-             height(20),
-             backgroundColor(Revery.Colors.black),
-             left(0),
-             right(0),
-           ]>
-           <View style=Style.[flexDirection(`Row), flexGrow(1)]>
-             <Text
-               text
-               style=Style.[
-                 color(Revery.Colors.red),
-                 flexGrow(1),
-                 textOverflow(`Ellipsis),
-                 textWrap(Revery.TextWrapping.NoWrap),
-               ]
-             />
-           </View>
-         </View>;
+         <InlineElementView uniqueId dispatch lineNumber=line editor>
+           <Feature_LanguageSupport.CodeLens.View codeLens=lens uiFont theme />
+         </InlineElementView>;
        });
 
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {

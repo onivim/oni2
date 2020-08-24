@@ -46,6 +46,18 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setCursors: (~cursors: list(BytePosition.t), t) => t;
 
+// Inline Elements
+let addInlineElement:
+  (
+    ~uniqueId: string,
+    ~lineNumber: EditorCoreTypes.LineNumber.t,
+    ~height: int,
+    t
+  ) =>
+  t;
+
+let removeInlineElement: (~uniqueId: string, t) => t;
+
 let isMinimapEnabled: t => bool;
 let setMinimapEnabled: (~enabled: bool, t) => t;
 
