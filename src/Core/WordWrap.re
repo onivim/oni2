@@ -1,22 +1,23 @@
+open EditorCoreTypes;
+
 type lineWrap = {
-  byte: int,
-  index: int,
+  byte: ByteIndex.t,
+  character: CharacterIndex.t,
 };
 
 type t = BufferLine.t => list(lineWrap);
 
-let none = _line => [{byte: 0, index: 0}];
+let none = _line => [{byte: ByteIndex.zero, character: CharacterIndex.zero}];
 
-let fixed = (~columns, bufferLine) => {
+let fixed = (~pixels, bufferLine) => {
   let byteLength = BufferLine.lengthInBytes(bufferLine);
 
-  let columnsInPixels =
-    BufferLine.font(bufferLine).spaceWidth *. float(columns);
+  let columnsInPixels = pixels;
 
   let rec loop = (curr, currWidth, characterIndex) => {
     let byteIndex =
       BufferLine.getByteFromIndex(~index=characterIndex, bufferLine);
-    if (byteIndex >= byteLength) {
+    if (ByteIndex.toInt(byteIndex) >= byteLength) {
       curr;
     } else {
       let (_position, width) =
@@ -24,21 +25,30 @@ let fixed = (~columns, bufferLine) => {
           ~index=characterIndex,
           bufferLine,
         );
+      let nextCharacterIndex = CharacterIndex.(characterIndex + 1);
 
       // We haven't exceeded column size yet, so continue traversing
       if (width +. currWidth <= columnsInPixels) {
         loop(
           curr,
           currWidth +. width,
-          characterIndex + 1,
+          nextCharacterIndex,
           // We have hit the column width, so drop a new line break
         );
       } else {
-        let newWraps = [{byte: byteIndex, index: characterIndex}, ...curr];
-        loop(newWraps, width, characterIndex + 1);
+        let newWraps = [
+          {byte: byteIndex, character: characterIndex},
+          ...curr,
+        ];
+        loop(newWraps, width, nextCharacterIndex);
       };
     };
   };
 
-  loop([{byte: 0, index: 0}], 0., 0) |> List.rev;
+  loop(
+    [{byte: ByteIndex.zero, character: CharacterIndex.zero}],
+    0.,
+    CharacterIndex.zero,
+  )
+  |> List.rev;
 };

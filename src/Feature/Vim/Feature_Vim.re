@@ -1,5 +1,7 @@
-// MODEL
+open EditorCoreTypes;
 open Oni_Core.Utility;
+
+// MODEL
 
 type model = {mode: Vim.Mode.t};
 
@@ -12,13 +14,13 @@ let mode = ({mode}) => mode;
 [@deriving show]
 type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
-  | PasteCompleted({cursors: [@opaque] list(Vim.Cursor.t)})
+  | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
   | Pasted(string);
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(Vim.Cursor.t));
+  | CursorsUpdated(list(BytePosition.t));
 
 let update = (msg, model: model) => {
   switch (msg) {

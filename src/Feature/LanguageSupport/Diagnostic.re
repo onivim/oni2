@@ -14,7 +14,7 @@ module Constants = {
 
 [@deriving show]
 type t = {
-  range: Range.t,
+  range: CharacterRange.t,
   message: string,
 };
 
@@ -23,14 +23,15 @@ let create = (~range, ~message, ()) => {range, message};
 let explode = (buffer, diagnostic) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
   let measure = n => {
-    Index.toZeroBased(n) < lineCount
+    EditorCoreTypes.LineNumber.toZeroBased(n) < lineCount
       ? buffer
-        |> Buffer.getLine(Index.toZeroBased(n))
+        |> Buffer.getLine(EditorCoreTypes.LineNumber.toZeroBased(n))
+        // TODO: Is this correct, for a character range?
         |> BufferLine.lengthInBytes
       : 0;
   };
 
-  Range.explode(measure, diagnostic.range)
+  CharacterRange.explode(measure, diagnostic.range)
   |> ListEx.firstk(Constants.maxDiagnosticLines)
   |> ListEx.safeMap(range => create(~range, ~message=diagnostic.message, ()));
 };

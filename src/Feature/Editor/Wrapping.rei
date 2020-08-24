@@ -1,18 +1,19 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 type t;
 
 type bufferPosition = {
-  line: int,
-  byteOffset: int,
-  characterOffset: int,
+  line: EditorCoreTypes.LineNumber.t,
+  byteOffset: ByteIndex.t,
+  characterOffset: CharacterIndex.t,
 };
 
 let make: (~wrap: Oni_Core.WordWrap.t, ~buffer: EditorBuffer.t) => t;
 
 let update: (~update: BufferUpdate.t, ~newBuffer: EditorBuffer.t, t) => t;
 
-let bufferLineByteToViewLine: (~line: int, ~byteIndex: int, t) => int;
+let bufferBytePositionToViewLine: (~bytePosition: BytePosition.t, t) => int;
 let viewLineToBufferPosition: (~line: int, t) => bufferPosition;
 
 let numberOfLines: t => int;

@@ -177,7 +177,7 @@ type encoder('a) = Encode.encoder('a);
 
 module Error = {
   type t = {
-    range: Range.t,
+    range: CharacterRange.t,
     message: string,
   };
 
@@ -201,16 +201,16 @@ module Error = {
                OnigRegExp.Match.getText(matches[3]) |> int_of_string;
              let message = OnigRegExp.Match.getText(matches[4]);
              let start =
-               Location.{
-                 line: Index.(zero + line - 1),
-                 column: Index.(zero + startByte),
+               CharacterPosition.{
+                 line: EditorCoreTypes.LineNumber.(zero + line - 1),
+                 character: CharacterIndex.(zero + startByte),
                };
              let stop =
-               Location.{
-                 line: Index.(zero + line - 1),
-                 column: Index.(zero + endByte),
+               CharacterPosition.{
+                 line: EditorCoreTypes.LineNumber.(zero + line - 1),
+                 character: CharacterIndex.(zero + endByte),
                };
-             Some({range: Range.{start, stop}, message});
+             Some({range: CharacterRange.{start, stop}, message});
            };
          });
     };

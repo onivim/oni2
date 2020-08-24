@@ -65,7 +65,7 @@ let getByOpeningPair = (c, closingPairs: t) => {
 };
 
 let isBetweenPairs = (line, index, pairs) => {
-  let index = Index.toZeroBased(index);
+  let index = ByteIndex.toInt(index);
   let len = String.length(line);
   if (index > 0 && index < len) {
     List.exists(
@@ -79,34 +79,36 @@ let isBetweenPairs = (line, index, pairs) => {
   };
 };
 
-let isBetweenClosingPairs = (line, index, closingPairs) => {
-  isBetweenPairs(line, index, closingPairs.pairs);
+let isBetweenClosingPairs = (line, byteIndex, closingPairs) => {
+  isBetweenPairs(line, byteIndex, closingPairs.pairs);
 };
 
-let isBetweenDeletionPairs = (line, index, closingPairs) => {
-  isBetweenPairs(line, index, closingPairs.deletionPairs);
+let isBetweenDeletionPairs = (line, byteIndex, closingPairs) => {
+  isBetweenPairs(line, byteIndex, closingPairs.deletionPairs);
 };
 
-let _exists = (key, hashtbl) =>
-  switch (Hashtbl.find_opt(hashtbl, key)) {
-  | Some(_) => true
-  | None => false
-  };
+module Internal = {
+  let exists = (key, hashtbl) =>
+    switch (Hashtbl.find_opt(hashtbl, key)) {
+    | Some(_) => true
+    | None => false
+    };
+};
 
-let canCloseBefore = (line, index, closingPairs) => {
-  let index = Index.toZeroBased(index);
+let canCloseBefore = (line, byteIndex, closingPairs) => {
+  let index = ByteIndex.toInt(byteIndex);
   let len = String.length(line);
   if (index > 0 && index < len) {
     let nextChar = String.sub(line, index, 1);
-    _exists(nextChar, closingPairs.before);
+    Internal.exists(nextChar, closingPairs.before);
   } else {
     true;
         // No character past cursor, always allow
   };
 };
 
-let doesNextCharacterMatch = (line, index, s) => {
-  let index = Index.toZeroBased(index);
+let doesNextCharacterMatch = (line, byteIndex, s) => {
+  let index = ByteIndex.toInt(byteIndex);
   let len = String.length(line);
   if (index > 0 && index < len) {
     s == String.sub(line, index, 1);

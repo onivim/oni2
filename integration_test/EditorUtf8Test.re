@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
@@ -23,11 +24,11 @@ runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
     "κόσμε"
     |> Oni_Core.BufferLine.make(~indentation=IndentationSettings.default);
 
-  let c0 = BufferLine.getUcharExn(~index=0, str);
-  let c1 = BufferLine.getUcharExn(~index=1, str);
-  let c2 = BufferLine.getUcharExn(~index=2, str);
-  let c3 = BufferLine.getUcharExn(~index=3, str);
-  let c4 = BufferLine.getUcharExn(~index=4, str);
+  let c0 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(0), str);
+  let c1 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(1), str);
+  let c2 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(2), str);
+  let c3 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(3), str);
+  let c4 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(4), str);
 
   let validateCharacter = (expectedCharacter, state: State.t) => {
     state.layout

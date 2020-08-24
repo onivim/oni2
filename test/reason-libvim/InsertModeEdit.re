@@ -14,14 +14,14 @@ describe("InsertModeEdit", ({describe, _}) => {
       let charToInsert = Zed_utf8.singleton(Uchar.of_int(32773));
       input("O");
       input(charToInsert);
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual(charToInsert);
     });
     test("insert κόσμε", ({expect, _}) => {
       let buffer = resetBuffer();
       input("O");
       input("κόσμε");
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual("κόσμε");
     });
   });
@@ -32,13 +32,13 @@ describe("InsertModeEdit", ({describe, _}) => {
       expect.bool(Buffer.isModified(buffer)).toBe(false);
 
       input("I");
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual("This is the first line of a test file");
 
       expect.bool(Buffer.isModified(buffer)).toBe(false);
 
       input("z");
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual("zThis is the first line of a test file");
 
       expect.bool(Buffer.isModified(buffer)).toBe(true);
@@ -47,25 +47,25 @@ describe("InsertModeEdit", ({describe, _}) => {
       let buffer = resetBuffer();
 
       input("I");
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual("This is the first line of a test file");
 
       input("a");
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual("aThis is the first line of a test file");
 
       input("b");
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual("abThis is the first line of a test file");
 
       input("c");
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual(
         "abcThis is the first line of a test file",
       );
 
       key("<cr>");
-      let line = Buffer.getLine(buffer, Index.zero);
+      let line = Buffer.getLine(buffer, LineNumber.zero);
       expect.string(line).toEqual("abc");
     });
     test("changed tick should be updated after each input", ({expect, _}) => {

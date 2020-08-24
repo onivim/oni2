@@ -30,7 +30,7 @@ let getTokensForLine =
     if (length == 0) {
       [];
     } else {
-      let idx = Index.fromZeroBased(i);
+      let idx = EditorCoreTypes.LineNumber.ofZeroBased(i);
       let searchHighlights =
         BufferHighlights.getHighlightsByLine(
           ~bufferId,
@@ -46,26 +46,32 @@ let getTokensForLine =
       let matchingPairIndex =
         switch (matchingPairs) {
         | None => None
-        | Some((startPos: Location.t, endPos: Location.t))
+        | Some((startPos: CharacterPosition.t, endPos: CharacterPosition.t))
             when !ignoreMatchingPairs =>
-          if (Index.toZeroBased(startPos.line) == i) {
-            Some(Index.toZeroBased(startPos.column));
-          } else if (Index.toZeroBased(endPos.line) == i) {
-            Some(Index.toZeroBased(endPos.column));
+          let maybeStartPosByte = Editor.characterToByte(startPos, editor);
+          let maybeEndPosByte = Editor.characterToByte(endPos, editor);
+          if (EditorCoreTypes.LineNumber.toZeroBased(startPos.line) == i) {
+            maybeStartPosByte |> Option.map(BytePosition.byte);
+          } else if (EditorCoreTypes.LineNumber.toZeroBased(endPos.line) == i) {
+            maybeEndPosByte |> Option.map(BytePosition.byte);
           } else {
             None;
-          }
+          };
         | _ => None
         };
 
       let tokenColors =
         Feature_Syntax.getTokens(
           ~bufferId,
-          ~line=Index.fromZeroBased(i),
+          ~line=EditorCoreTypes.LineNumber.ofZeroBased(i),
           bufferSyntaxHighlights,
         );
 
-      let startByte = BufferLine.getByteFromIndex(~index=startIndex, line);
+      let startByte =
+        BufferLine.getByteFromIndex(
+          ~index=startIndex |> CharacterIndex.ofInt,
+          line,
+        );
 
       let colorizer =
         BufferLineColorizer.create(
@@ -80,7 +86,12 @@ let getTokensForLine =
           tokenColors,
         );
 
-      BufferViewTokenizer.tokenize(~startIndex, ~endIndex, line, colorizer);
+      BufferViewTokenizer.tokenize(
+        ~start=CharacterIndex.ofInt(startIndex),
+        ~stop=CharacterIndex.ofInt(endIndex),
+        line,
+        colorizer,
+      );
     };
   };
 
@@ -90,14 +101,14 @@ let getTokenAtPosition =
       ~bufferHighlights,
       ~cursorLine,
       ~colors,
-      ~matchingPairs,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferSyntaxHighlights,
       ~startIndex,
       ~endIndex,
-      position: Location.t,
+      position: CharacterPosition.t,
     ) => {
-  let lineNumber = position.line |> Index.toZeroBased;
-  let index = position.column |> Index.toZeroBased;
+  let lineNumber = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
+  let index = position.character |> CharacterIndex.toInt;
 
   getTokensForLine(
     ~editor,
@@ -112,8 +123,8 @@ let getTokenAtPosition =
     lineNumber,
   )
   |> List.filter((token: BufferViewTokenizer.t) => {
-       let tokenStart = token.startIndex |> Index.toZeroBased;
-       let tokenEnd = token.endIndex |> Index.toZeroBased;
+       let tokenStart = token.startIndex |> CharacterIndex.toInt;
+       let tokenEnd = token.endIndex |> CharacterIndex.toInt;
        index >= tokenStart && index < tokenEnd;
      })
   |> Utility.OptionEx.of_list;

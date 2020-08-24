@@ -2,15 +2,23 @@ open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
 open Feature_LanguageSupport;
+module LineNumber = EditorCoreTypes.LineNumber;
 
 describe("Diagnostics", ({describe, _}) => {
   describe("explode", ({test, _}) => {
     test("Regression Test for #1607 - stack overflow", ({expect, _}) => {
-      let start = Location.{line: Index.zero, column: Index.zero};
+      let start =
+        CharacterPosition.{
+          line: LineNumber.zero,
+          character: CharacterIndex.zero,
+        };
       let stop =
-        Location.{line: Index.(zero + 424242), column: Index.(zero + 424242)};
+        CharacterPosition.{
+          line: LineNumber.(zero + 424242),
+          character: CharacterIndex.(zero + 424242),
+        };
 
-      let range = Range.{start, stop};
+      let range = CharacterRange.{start, stop};
 
       let hugeDiagnostic =
         Diagnostic.create(~range, ~message="test diagnostic", ());

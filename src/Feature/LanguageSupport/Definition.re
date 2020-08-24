@@ -15,7 +15,7 @@ type provider = {
 [@deriving show]
 type definition = {
   bufferId: int,
-  requestLocation: Location.t,
+  requestLocation: CharacterPosition.t,
   definition: Exthost.DefinitionLink.t,
 };
 
@@ -52,9 +52,12 @@ let update = (msg, model) =>
       | None => Outmsg.Nothing
       | Some({definition, _}) =>
         let position =
-          Location.{
-            line: Index.fromOneBased(definition.range.startLineNumber),
-            column: Index.fromOneBased(definition.range.startColumn),
+          CharacterPosition.{
+            line:
+              EditorCoreTypes.LineNumber.ofOneBased(
+                definition.range.startLineNumber,
+              ),
+            character: CharacterIndex.ofInt(definition.range.startColumn - 1),
           };
         Outmsg.OpenFile({
           filePath: definition.uri |> Oni_Core.Uri.toFileSystemPath,
@@ -89,7 +92,7 @@ let getAt = (~bufferId as currentBufferId, ~range, {maybeDefinition, _}) => {
   maybeDefinition
   |> OptionEx.flatMap(({bufferId, definition, requestLocation}) =>
        if (bufferId == currentBufferId
-           && Range.contains(requestLocation, range)) {
+           && CharacterRange.contains(requestLocation, range)) {
          Some(definition);
        } else {
          None;

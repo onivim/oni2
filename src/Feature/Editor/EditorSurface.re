@@ -56,7 +56,7 @@ module Styles = {
 let minimap =
     (
       ~bufferHighlights,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~colors,
       ~dispatch,
       ~matchingPairs,
@@ -100,7 +100,8 @@ let minimap =
       getTokensForLine={getTokensForLine(
         ~editor,
         ~bufferHighlights,
-        ~cursorLine=Index.toZeroBased(cursorPosition.line),
+        ~cursorLine=
+          EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
         ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
@@ -208,9 +209,9 @@ let%component make =
 
   let matchingPairCheckPosition =
     mode == Vim.Types.Insert
-      ? Location.{
+      ? CharacterPosition.{
           line: cursorPosition.line,
-          column: Index.(cursorPosition.column - 1),
+          character: CharacterIndex.(cursorPosition.character - 1),
         }
       : cursorPosition;
 
@@ -218,14 +219,14 @@ let%component make =
     !Config.matchBrackets.get(config)
       ? None
       : Editor.getNearestMatchingPair(
-          ~location=matchingPairCheckPosition,
+          ~characterPosition=matchingPairCheckPosition,
           ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
           editor,
         );
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
-    Selection.getRanges(Editor.selection(editor), buffer) |> Range.toHash;
+    Selection.getRanges(Editor.selection(editor), buffer) |> ByteRange.toHash;
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
@@ -265,7 +266,7 @@ let%component make =
       colors
       count=lineCount
       editorFont
-      cursorLine={Index.toZeroBased(cursorPosition.line)}
+      cursorLine={EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line)}
       diffMarkers
     />;
 
@@ -285,13 +286,9 @@ let%component make =
       );
 
     maybeHover
-    |> Option.map(((location: Location.t, sections)) => {
+    |> Option.map(((position: CharacterPosition.t, sections)) => {
          let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-           Editor.bufferLineCharacterToPixel(
-             ~line=location.line |> Index.toZeroBased,
-             ~characterIndex=location.column |> Index.toZeroBased,
-             editor,
-           );
+           Editor.bufferCharacterPositionToPixel(~position, editor);
          let popupX = pixelX +. gutterWidth |> int_of_float;
          let popupTopY = pixelY |> int_of_float;
          let popupBottomY =

@@ -1,6 +1,8 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Feature_Editor;
 open TestFramework;
+module LineNumber = EditorCoreTypes.LineNumber;
 
 let simpleAsciiBuffer =
   [|"abcdef", "ghijkl"|] |> Oni_Core.Buffer.ofLines |> EditorBuffer.ofBuffer;
@@ -11,13 +13,21 @@ describe("Wrapping", ({describe, _}) => {
     let wrapping = Wrapping.make(~wrap, ~buffer=simpleAsciiBuffer);
     test("bufferLineByteToViewLine", ({expect, _}) => {
       expect.int(
-        Wrapping.bufferLineByteToViewLine(~line=0, ~byteIndex=0, wrapping),
+        Wrapping.bufferBytePositionToViewLine(
+          ~bytePosition=
+            BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+          wrapping,
+        ),
       ).
         toBe(
         0,
       );
       expect.int(
-        Wrapping.bufferLineByteToViewLine(~line=1, ~byteIndex=0, wrapping),
+        Wrapping.bufferBytePositionToViewLine(
+          ~bytePosition=
+            BytePosition.{line: LineNumber.(zero + 1), byte: ByteIndex.zero},
+          wrapping,
+        ),
       ).
         toBe(
         1,
@@ -26,11 +36,19 @@ describe("Wrapping", ({describe, _}) => {
     test("viewLineToBufferPosition", ({expect, _}) => {
       expect.equal(
         Wrapping.viewLineToBufferPosition(~line=0, wrapping),
-        Wrapping.{line: 0, byteOffset: 0, characterOffset: 0},
+        Wrapping.{
+          line: 0 |> LineNumber.ofZeroBased,
+          byteOffset: 0 |> ByteIndex.ofInt,
+          characterOffset: 0 |> CharacterIndex.ofInt,
+        },
       );
       expect.equal(
         Wrapping.viewLineToBufferPosition(~line=1, wrapping),
-        Wrapping.{line: 1, byteOffset: 0, characterOffset: 0},
+        Wrapping.{
+          line: 1 |> LineNumber.ofZeroBased,
+          byteOffset: 0 |> ByteIndex.ofInt,
+          characterOffset: 0 |> CharacterIndex.ofInt,
+        },
       );
     });
     test("numberOfLines", ({expect, _}) => {
@@ -38,23 +56,45 @@ describe("Wrapping", ({describe, _}) => {
     });
   });
   describe("fixed=3", ({test, _}) => {
-    let wrap = WordWrap.fixed(~columns=3);
+    let characterWidth = {
+      let (_, width) =
+        BufferLine.make(~indentation=IndentationSettings.default, "a")
+        |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
+      width;
+    };
+    let threeCharacterWidth = 3. *. characterWidth;
+    let wrap = WordWrap.fixed(~pixels=threeCharacterWidth);
     let wrapping = Wrapping.make(~wrap, ~buffer=simpleAsciiBuffer);
     test("bufferLineByteToViewLine", ({expect, _}) => {
       expect.int(
-        Wrapping.bufferLineByteToViewLine(~line=0, ~byteIndex=0, wrapping),
+        Wrapping.bufferBytePositionToViewLine(
+          ~bytePosition=
+            BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+          wrapping,
+        ),
       ).
         toBe(
         0,
       );
       expect.int(
-        Wrapping.bufferLineByteToViewLine(~line=0, ~byteIndex=3, wrapping),
+        Wrapping.bufferBytePositionToViewLine(
+          ~bytePosition=
+            BytePosition.{line: LineNumber.zero, byte: ByteIndex.(zero + 3)},
+          wrapping,
+        ),
       ).
         toBe(
         1,
       );
       expect.int(
-        Wrapping.bufferLineByteToViewLine(~line=1, ~byteIndex=0, wrapping),
+        Wrapping.bufferBytePositionToViewLine(
+          ~bytePosition=
+            BytePosition.{
+              line: LineNumber.(zero + 1),
+              byte: ByteIndex.(zero),
+            },
+          wrapping,
+        ),
       ).
         toBe(
         2,
@@ -63,19 +103,35 @@ describe("Wrapping", ({describe, _}) => {
     test("viewLineToBufferPosition", ({expect, _}) => {
       expect.equal(
         Wrapping.viewLineToBufferPosition(~line=0, wrapping),
-        Wrapping.{line: 0, byteOffset: 0, characterOffset: 0},
+        Wrapping.{
+          line: 0 |> LineNumber.ofZeroBased,
+          byteOffset: 0 |> ByteIndex.ofInt,
+          characterOffset: 0 |> CharacterIndex.ofInt,
+        },
       );
       expect.equal(
         Wrapping.viewLineToBufferPosition(~line=1, wrapping),
-        Wrapping.{line: 0, byteOffset: 3, characterOffset: 3},
+        Wrapping.{
+          line: 0 |> LineNumber.ofZeroBased,
+          byteOffset: 3 |> ByteIndex.ofInt,
+          characterOffset: 3 |> CharacterIndex.ofInt,
+        },
       );
       expect.equal(
         Wrapping.viewLineToBufferPosition(~line=2, wrapping),
-        Wrapping.{line: 1, byteOffset: 0, characterOffset: 0},
+        Wrapping.{
+          line: 1 |> LineNumber.ofZeroBased,
+          byteOffset: 0 |> ByteIndex.ofInt,
+          characterOffset: 0 |> CharacterIndex.ofInt,
+        },
       );
       expect.equal(
         Wrapping.viewLineToBufferPosition(~line=3, wrapping),
-        Wrapping.{line: 1, byteOffset: 3, characterOffset: 3},
+        Wrapping.{
+          line: 1 |> LineNumber.ofZeroBased,
+          byteOffset: 3 |> ByteIndex.ofInt,
+          characterOffset: 3 |> CharacterIndex.ofInt,
+        },
       );
     });
     test("numberOfLines", ({expect, _}) => {

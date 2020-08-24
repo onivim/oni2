@@ -3,10 +3,12 @@ open Oni_Core;
 open TestFramework;
 open Feature_LanguageSupport;
 
+module LineNumber = EditorCoreTypes.LineNumber;
+
 let zeroRange =
-  Range.{
-    start: Location.{line: Index.zero, column: Index.zero},
-    stop: Location.{line: Index.zero, column: Index.zero},
+  CharacterRange.{
+    start: CharacterPosition.zero,
+    stop: CharacterPosition.zero,
   };
 
 let singleDiagnostic = [
@@ -71,11 +73,17 @@ describe("Diagnostics", ({describe, _}) => {
       let singleDiagnostic = [
         Diagnostic.create(
           ~range=
-            Range.{
+            CharacterRange.{
               start:
-                Location.{line: Index.(zero + 1), column: Index.(zero + 1)},
+                CharacterPosition.{
+                  line: LineNumber.(zero + 1),
+                  character: CharacterIndex.(zero + 1),
+                },
               stop:
-                Location.{line: Index.(zero + 2), column: Index.(zero + 2)},
+                CharacterPosition.{
+                  line: LineNumber.(zero + 2),
+                  character: CharacterIndex.(zero + 2),
+                },
             },
           ~message="single error",
           (),
@@ -90,7 +98,10 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Location.{line: Index.zero, column: Index.zero},
+          CharacterPosition.{
+            line: LineNumber.zero,
+            character: CharacterIndex.zero,
+          },
         );
       expect.int(List.length(diags)).toBe(0);
 
@@ -98,7 +109,10 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Location.{line: Index.(zero + 1), column: Index.(zero + 1)},
+          CharacterPosition.{
+            line: LineNumber.(zero + 1),
+            character: CharacterIndex.(zero + 1),
+          },
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -106,7 +120,10 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Location.{line: Index.(zero + 2), column: Index.(zero + 1)},
+          CharacterPosition.{
+            line: LineNumber.(zero + 2),
+            character: CharacterIndex.(zero + 1),
+          },
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -114,7 +131,10 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Location.{line: Index.(zero + 2), column: Index.(zero + 2)},
+          CharacterPosition.{
+            line: LineNumber.(zero + 2),
+            character: CharacterIndex.(zero + 2),
+          },
         );
       expect.int(List.length(diags)).toBe(1);
 
@@ -122,7 +142,10 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Location.{line: Index.(zero + 2), column: Index.(zero + 3)},
+          CharacterPosition.{
+            line: LineNumber.(zero + 2),
+            character: CharacterIndex.(zero + 3),
+          },
         );
       expect.int(List.length(diags)).toBe(0);
 
@@ -130,7 +153,10 @@ describe("Diagnostics", ({describe, _}) => {
         Diagnostics.getDiagnosticsAtPosition(
           v,
           buffer,
-          Location.{line: Index.(zero + 3), column: Index.zero},
+          CharacterPosition.{
+            line: LineNumber.(zero + 3),
+            character: CharacterIndex.zero,
+          },
         );
       expect.int(List.length(diags)).toBe(0);
     })

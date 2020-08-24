@@ -69,14 +69,15 @@ let render =
       ~buffer: Buffer.t,
       ~startLine: int,
       ~endLine: int,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~colors: Colors.t,
       ~showActive: bool,
       indentationSettings: IndentationSettings.t,
     ) => {
   /* First, render *all* indent guides */
   let bufferLineCount = Buffer.getNumberOfLines(buffer);
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
+  let cursorLine =
+    EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line);
   let startLine = max(0, startLine);
   let endLine = min(bufferLineCount, endLine);
 
@@ -87,9 +88,16 @@ let render =
     float(indentationSettings.tabSize) *. context.charWidth;
 
   let editor = context.editor;
-  let bufferPositionToPixel = line => {
+  let bufferPositionToPixel = lineIdx => {
     let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-      Editor.bufferLineByteToPixel(~line, ~byteIndex=0, editor);
+      Editor.bufferBytePositionToPixel(
+        ~position=
+          BytePosition.{
+            line: EditorCoreTypes.LineNumber.ofZeroBased(lineIdx),
+            byte: ByteIndex.zero,
+          },
+        editor,
+      );
 
     let x = pixelX;
     let y = pixelY;

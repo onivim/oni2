@@ -28,7 +28,7 @@ type msg =
       activeParameter: int,
       requestID: int,
       editorID: int,
-      location: EditorCoreTypes.Location.t,
+      location: EditorCoreTypes.CharacterPosition.t,
       context: Exthost.SignatureHelp.RequestContext.t,
     })
   | EmptyInfoReceived(int)

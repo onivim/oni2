@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 type t = {
   autoClosingPairs: AutoClosingPairs.t,
   autoIndent:
@@ -8,7 +10,7 @@ type t = {
   height: int,
   leftColumn: int,
   topLine: int,
-  cursors: list(Cursor.t),
+  cursors: list(BytePosition.t),
   lineComment: option(string),
   tabSize: int,
   insertSpaces: bool,

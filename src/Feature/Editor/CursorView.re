@@ -14,18 +14,16 @@ let%component make =
                 ~editorFont: Service_Font.font,
                 ~mode: Vim.Mode.t,
                 ~isActiveSplit,
-                ~cursorPosition: Location.t,
+                ~cursorPosition: CharacterPosition.t,
                 ~colors: Colors.t,
                 ~windowIsFocused,
                 ~config,
                 (),
               ) => {
   let%hook () = React.Hooks.effect(Always, () => None);
-  let line = Index.toZeroBased(cursorPosition.line);
-  let column = Index.toZeroBased(cursorPosition.column);
 
   let ({pixelX, pixelY}: Editor.pixelPosition, characterWidth) =
-    Editor.bufferLineCharacterToPixel(~line, ~characterIndex=column, editor);
+    Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let originalX = pixelX;
   let originalY = pixelY;
@@ -131,7 +129,7 @@ let%component make =
           Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
 
           editor
-          |> Editor.getCharacterAtPosition(~line, ~index=column)
+          |> Editor.getCharacterAtPosition(~position=cursorPosition)
           |> Option.iter(uchar =>
                if (!BufferViewTokenizer.isWhitespace(uchar)) {
                  let text = ZedBundled.make(1, uchar);

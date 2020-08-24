@@ -13,7 +13,7 @@ type themedToken = {
   italic: bool,
   bold: bool,
 };
-type t = int => themedToken;
+type t = ByteIndex.t => themedToken;
 
 module Internal = {
   let getFirstRelevantToken = (~default, ~startByte, tokens) => {
@@ -55,13 +55,13 @@ module Internal = {
 
 let create =
     (
-      ~startByte,
+      ~startByte: ByteIndex.t,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
-      ~selectionHighlights: option(Range.t),
+      ~selectionHighlights: option(ByteRange.t),
       ~selectionColor: Color.t,
-      ~matchingPair: option(int),
-      ~searchHighlights: list(Range.t),
+      ~matchingPair: option(ByteIndex.t),
+      ~searchHighlights: list(ByteRange.t),
       ~searchHighlightColor: Color.t,
       themedTokens: list(ThemeToken.t),
     ) => {
@@ -74,23 +74,27 @@ let create =
       (),
     );
 
+  let matchingPair = matchingPair |> Option.map(ByteIndex.toInt);
+
+  let startByteIdx = ByteIndex.toInt(startByte);
   let (defaultToken, tokens) =
     Internal.getFirstRelevantToken(
       ~default=initialDefaultToken,
-      ~startByte,
+      ~startByte=startByteIdx,
       themedTokens,
     );
 
   let (selectionStart, selectionEnd) =
     switch (selectionHighlights) {
     | Some(range) =>
-      let start = Index.toZeroBased(range.start.column);
-      let stop = Index.toZeroBased(range.stop.column);
+      let start = ByteIndex.toInt(range.start.byte);
+      let stop = ByteIndex.toInt(range.stop.byte);
       start < stop ? (start, stop) : (stop, start);
     | None => ((-1), (-1))
     };
 
-  i => {
+  (byteIndex: ByteIndex.t) => {
+    let i = ByteIndex.toInt(byteIndex);
     let colorIndex =
       Internal.getTokenAtByte(~byteIndex=i, ~default=defaultToken, tokens);
 
@@ -104,9 +108,9 @@ let create =
       i >= selectionStart && i < selectionEnd || i == matchingPair
         ? selectionColor : defaultBackgroundColor;
 
-    let doesSearchIntersect = (range: Range.t) => {
-      Index.toZeroBased(range.start.column) <= i
-      && Index.toZeroBased(range.stop.column) > i;
+    let doesSearchIntersect = (range: ByteRange.t) => {
+      ByteIndex.toInt(range.start.byte) <= i
+      && ByteIndex.toInt(range.stop.byte) > i;
     };
 
     let isSearchHighlight =

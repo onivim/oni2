@@ -10,7 +10,7 @@ type t = {
   // Base is the prefix string
   base: string,
   // Meet is the location where we request completions
-  location: Location.t,
+  location: CharacterPosition.t,
 };
 
 let toString: t => string;
@@ -20,11 +20,15 @@ let fromLine:
     ~triggerCharacters: list(Uchar.t)=?,
     ~lineNumber: int=?,
     ~bufferId: int,
-    ~index: Index.t,
+    ~index: CharacterIndex.t,
     BufferLine.t
   ) =>
   option(t);
 
-let fromBufferLocation:
-  (~triggerCharacters: list(Uchar.t)=?, ~location: Location.t, Buffer.t) =>
+let fromBufferPosition:
+  (
+    ~triggerCharacters: list(Uchar.t)=?,
+    ~position: CharacterPosition.t,
+    Buffer.t
+  ) =>
   option(t);

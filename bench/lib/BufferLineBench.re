@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open BenchFramework;
 
@@ -11,17 +12,23 @@ let lengthSlow = () => {
 };
 
 let lengthBounded = () => {
-  let _ = largeBufferLine |> BufferLine.lengthBounded(~max=5000);
+  let _ =
+    largeBufferLine
+    |> BufferLine.lengthBounded(~max=5000 |> CharacterIndex.ofInt);
   ();
 };
 
 let getUcharExn = () => {
-  let _ = largeBufferLine |> BufferLine.getUcharExn(~index=8000);
+  let _ =
+    largeBufferLine
+    |> BufferLine.getUcharExn(~index=8000 |> CharacterIndex.ofInt);
   ();
 };
 
 let getPositionAndWidth = () => {
-  let _ = largeBufferLine |> BufferLine.getUcharExn(~index=9000);
+  let _ =
+    largeBufferLine
+    |> BufferLine.getUcharExn(~index=9000 |> CharacterIndex.ofInt);
   ();
 };
 

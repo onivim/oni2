@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Revery.UI;
 open Oni_Core;
 
@@ -27,9 +28,12 @@ let renderLineNumber =
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
   let isActiveLine = lineNumber == cursorLine;
   let ({pixelY: yOffset, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=lineNumber,
-      ~byteIndex=0,
+    Editor.bufferBytePositionToPixel(
+      ~position=
+        BytePosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          byte: ByteIndex.zero,
+        },
       context.editor,
     );
 

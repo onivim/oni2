@@ -182,7 +182,7 @@ module Session = {
     trigger: Exthost.CompletionContext.t,
     buffer: [@opaque] Oni_Core.Buffer.t,
     base: string,
-    location: EditorCoreTypes.Location.t,
+    location: EditorCoreTypes.CharacterPosition.t,
     supportsResolve: bool,
   };
 
@@ -410,11 +410,12 @@ let stopInsertMode = model => {
 };
 
 let cursorMoved =
-    (~previous as _, ~current: EditorCoreTypes.Location.t, model) => {
+    (~previous as _, ~current: EditorCoreTypes.CharacterPosition.t, model) => {
   // Filter providers, such that the completion meets are still
   // valid in the context of the new cursor position
 
-  let isCompletionMeetStillValid = (meetLocation: EditorCoreTypes.Location.t) => {
+  let isCompletionMeetStillValid =
+      (meetLocation: EditorCoreTypes.CharacterPosition.t) => {
     // If the line changed, the meet is no longer valid
     meetLocation.line == current.line
     // If the cursor moved before the meet, on the same line,
@@ -422,8 +423,8 @@ let cursorMoved =
     // the cursor moves first, before we get the buffer update,
     // so the meet may not be valid until the buffer update comes through.
     // We'll allow cursor moves after the meet, for now.
-    && Index.toZeroBased(meetLocation.column)
-    <= Index.toZeroBased(current.column);
+    && CharacterIndex.toInt(meetLocation.character)
+    <= CharacterIndex.toInt(current.character);
   };
 
   let handleToSession =
@@ -527,9 +528,9 @@ let startCompletion =
     List.fold_left(
       (acc: IntMap.t(Session.t), curr: provider) => {
         let maybeMeet =
-          CompletionMeet.fromBufferLocation(
+          CompletionMeet.fromBufferPosition(
             ~triggerCharacters=curr.triggerCharacters,
-            ~location=activeCursor,
+            ~position=activeCursor,
             buffer,
           );
 
@@ -646,17 +647,17 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
         let handle = result.item.handle;
 
         getMeetLocation(~handle, model)
-        |> Option.map((location: EditorCoreTypes.Location.t) => {
+        |> Option.map((location: EditorCoreTypes.CharacterPosition.t) => {
              let meetColumn =
                Exthost.SuggestItem.(
                  switch (result.item.suggestRange) {
                  | Some(SuggestRange.Single({startColumn, _})) =>
-                   startColumn |> Index.fromOneBased
+                   startColumn - 1 |> CharacterIndex.ofInt
                  | Some(SuggestRange.Combo({insert, _})) =>
                    Exthost.OneBasedRange.(
-                     insert.startColumn |> Index.fromOneBased
+                     insert.startColumn - 1 |> CharacterIndex.ofInt
                    )
-                 | None => location.column
+                 | None => location.character
                  }
                );
 

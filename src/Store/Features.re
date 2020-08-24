@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open Isolinear;
 open Oni_Core;
 open Oni_Core.Utility;
@@ -56,19 +55,23 @@ module Internal = {
       let effect =
         switch (outmsg) {
         | Nothing => Effect.none
-        | MouseHovered(location) =>
+        | MouseHovered({characterPosition, _}) =>
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
             dispatch(
               LanguageSupport(
-                Feature_LanguageSupport.Msg.Hover.mouseHovered(location),
+                Feature_LanguageSupport.Msg.Hover.mouseHovered(
+                  characterPosition,
+                ),
               ),
             )
           })
-        | MouseMoved(location) =>
+        | MouseMoved({characterPosition, _}) =>
           Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
             dispatch(
               LanguageSupport(
-                Feature_LanguageSupport.Msg.Hover.mouseMoved(location),
+                Feature_LanguageSupport.Msg.Hover.mouseMoved(
+                  characterPosition,
+                ),
               ),
             )
           })
@@ -205,20 +208,12 @@ let update =
 
   | LanguageSupport(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
-    let cursorLocation =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.getPrimaryCursor;
+    let editor = state.layout |> Feature_Layout.activeEditor;
+    let cursorLocation = editor |> Feature_Editor.Editor.getPrimaryCursor;
 
-    let selection =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.selectionOrCursorRange;
+    let selection = editor |> Feature_Editor.Editor.selectionOrCursorRange;
 
-    let editorId =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.getId;
+    let editorId = editor |> Feature_Editor.Editor.getId;
 
     let languageConfiguration =
       maybeBuffer
@@ -229,12 +224,15 @@ let update =
          )
       |> Option.value(~default=LanguageConfiguration.default);
 
+    let characterSelection =
+      editor |> Feature_Editor.Editor.byteRangeToCharacterRange(selection);
+
     let (model, outmsg) =
       Feature_LanguageSupport.update(
         ~languageConfiguration,
         ~configuration=state.configuration,
         ~maybeBuffer,
-        ~maybeSelection=Some(selection),
+        ~maybeSelection=characterSelection,
         ~editorId,
         ~cursorLocation,
         ~client=extHostClient,
@@ -831,6 +829,8 @@ let update =
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
+    let activeCursorByte =
+      editor |> Feature_Editor.Editor.getPrimaryCursorByte;
     let (signatureHelp, shOutMsg) =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
@@ -851,8 +851,7 @@ let update =
            let syntaxScope =
              Feature_Syntax.getSyntaxScope(
                ~bufferId=Buffer.getId(buffer),
-               ~line=activeCursor.line,
-               ~bytePosition=activeCursor.column |> Index.toZeroBased,
+               ~bytePosition=activeCursorByte,
                state.syntaxHighlights,
              );
            let config = Feature_Configuration.resolver(state.config);
@@ -887,7 +886,7 @@ let update =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Editor.getId(editor) == activeEditorId) {
-                 Editor.setVimCursors(~cursors, editor);
+                 Editor.setCursors(~cursors, editor);
                } else {
                  editor;
                }
