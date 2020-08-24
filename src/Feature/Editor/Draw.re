@@ -133,23 +133,22 @@ let drawUtf8Text = {
 };
 let utf8Text = drawUtf8Text;
 
-let underline = (~context, ~color=Revery.Colors.black, r: Range.t) => {
-  let line = Index.toZeroBased(r.start.line);
-  let start = Index.toZeroBased(r.start.column);
-  let endLine = Index.toZeroBased(r.stop.line);
-  let endC = Index.toZeroBased(r.stop.column);
+let underline =
+    (~context, ~color=Revery.Colors.black, range: CharacterRange.t) => {
+  //  let line = Index.toZeroBased(r.start.line);
+  //  let start = Index.toZeroBased(r.start.column);
+  //  let endLine = Index.toZeroBased(r.stop.line);
+  //  let endC = Index.toZeroBased(r.stop.column);
 
   let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line,
-      ~characterIndex=start,
+    Editor.bufferCharacterPositionToPixel(
+      ~position=range.start,
       context.editor,
     );
 
   let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line=endLine,
-      ~characterIndex=endC,
+    Editor.bufferCharacterPositionToPixel(
+      ~position=range.stop,
       context.editor,
     );
 
@@ -168,26 +167,18 @@ let underline = (~context, ~color=Revery.Colors.black, r: Range.t) => {
 open {};
 
 let rangeCharacter =
-    (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
+    (~context, ~padding=0., ~color=Revery.Colors.black, r: CharacterRange.t) => {
   let doublePadding = padding *. 2.;
-  let line = Index.toZeroBased(r.start.line);
-  let start = Index.toZeroBased(r.start.column);
-  let endC = Index.toZeroBased(r.stop.column);
-  let endLine = Index.toZeroBased(r.stop.line);
+  //  let line = Index.toZeroBased(r.start.line);
+  //  let start = Index.toZeroBased(r.start.column);
+  //  let endC = Index.toZeroBased(r.stop.column);
+  //  let endLine = Index.toZeroBased(r.stop.line);
 
   let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line,
-      ~characterIndex=start,
-      context.editor,
-    );
+    Editor.bufferCharacterPositionToPixel(~position=r.start, context.editor);
 
   let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line=endLine,
-      ~characterIndex=endC,
-      context.editor,
-    );
+    Editor.bufferCharacterPositionToPixel(~position=r.stop, context.editor);
 
   let lineHeight = Editor.lineHeightInPixels(context.editor);
   let characterWidth = Editor.characterWidthInPixels(context.editor);
@@ -203,22 +194,18 @@ let rangeCharacter =
 };
 
 let rangeByte =
-    (~context, ~padding=0., ~color=Revery.Colors.black, r: Range.t) => {
+    (~context, ~padding=0., ~color=Revery.Colors.black, r: ByteRange.t) => {
   let doublePadding = padding *. 2.;
-  let line = Index.toZeroBased(r.start.line);
-  let start = Index.toZeroBased(r.start.column);
-  let endC = Index.toZeroBased(r.stop.column);
-  let endLine = Index.toZeroBased(r.stop.line);
+  //  let line = Index.toZeroBased(r.start.line);
+  //  let start = Index.toZeroBased(r.start.column);
+  //  let endC = Index.toZeroBased(r.stop.column);
+  //  let endLine = Index.toZeroBased(r.stop.line);
 
   let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(~line, ~byteIndex=start, context.editor);
+    Editor.bufferBytePositionToPixel(~position=r.start, context.editor);
 
   let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=endLine,
-      ~byteIndex=endC,
-      context.editor,
-    );
+    Editor.bufferBytePositionToPixel(~position=r.stop, context.editor);
 
   let lineHeight = Editor.lineHeightInPixels(context.editor);
   let characterWidth = Editor.characterWidthInPixels(context.editor);
@@ -232,6 +219,35 @@ let rangeByte =
     ~color,
   );
 };
+
+//let rangeByte =
+//    (~context, ~padding=0., ~color=Revery.Colors.black, r: ByteRange.t) => {
+//  let doublePadding = padding *. 2.;
+//
+//  let ({pixelY: startPixelY, pixelX: startPixelX}: Editor.pixelPosition, _) =
+//    Editor.bufferBytePositionToPixel(
+//      ~position=r.start,
+//      context.editor,
+//    );
+//
+//  let ({pixelX: stopPixelX, _}: Editor.pixelPosition, _) =
+//    Editor.bufferBytePositionToPixel(
+//      ~position=r.stop,
+//      context.editor,
+//    );
+//
+//  let lineHeight = Editor.lineHeightInPixels(context.editor);
+//  let characterWidth = Editor.characterWidthInPixels(context.editor);
+//
+//  drawRect(
+//    ~context,
+//    ~x=startPixelX,
+//    ~y=startPixelY,
+//    ~height=lineHeight +. doublePadding,
+//    ~width=max(stopPixelX -. startPixelX, characterWidth),
+//    ~color,
+//  );
+//};
 
 let tabPaint = Skia.Paint.make();
 Skia.Paint.setTextEncoding(tabPaint, GlyphId);
@@ -250,9 +266,8 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
 
   let ({pixelY, pixelX}: Editor.pixelPosition, _) =
-    Editor.bufferLineCharacterToPixel(
-      ~line,
-      ~characterIndex=token.startIndex |> Index.toZeroBased,
+    Editor.bufferCharacterPositionToPixel(
+      ~position=CharacterPosition.{line, character: token.startIndex},
       context.editor,
     );
 
@@ -322,9 +337,12 @@ let ruler = (~context, ~color, x) =>
     ~color,
   );
 
-let lineHighlight = (~context, ~color, line) => {
+let lineHighlight = (~context, ~color, lineIdx: EditorCoreTypes.LineNumber.t) => {
   let ({pixelY, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(~line, ~byteIndex=0, context.editor);
+    Editor.bufferBytePositionToPixel(
+      ~position=BytePosition.{line: lineIdx, byte: ByteIndex.zero},
+      context.editor,
+    );
 
   drawRect(
     ~context,

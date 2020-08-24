@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 module BracketMatch = BracketMatch;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
@@ -24,8 +26,14 @@ type msg = Msg.t;
 
 type outmsg =
   | Nothing
-  | MouseHovered(EditorCoreTypes.Location.t)
-  | MouseMoved(EditorCoreTypes.Location.t);
+  | MouseHovered({
+      bytePosition: BytePosition.t,
+      characterPosition: CharacterPosition.t,
+    })
+  | MouseMoved({
+      bytePosition: BytePosition.t,
+      characterPosition: CharacterPosition.t,
+    });
 
 type model = Editor.t;
 
@@ -90,14 +98,32 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | MouseHovered({location}) => (editor, MouseHovered(location))
-  | MouseMoved({location}) => (editor, MouseMoved(location))
+  | MouseHovered({bytePosition}) => (
+      editor,
+      {
+        Editor.byteToCharacter(bytePosition, editor)
+        |> Option.map(characterPosition => {
+             MouseHovered({bytePosition, characterPosition})
+           })
+        |> Option.value(~default=Nothing);
+      },
+    )
+  | MouseMoved({bytePosition}) => (
+      editor,
+      {
+        Editor.byteToCharacter(bytePosition, editor)
+        |> Option.map(characterPosition => {
+             MouseMoved({bytePosition, characterPosition})
+           })
+        |> Option.value(~default=Nothing);
+      },
+    )
   | SelectionChanged(selection) => (
       Editor.setSelection(~selection, editor),
       Nothing,
     )
   | CursorsChanged(cursors) => (
-      Editor.setVimCursors(~cursors, editor),
+      Editor.setCursors(~cursors, editor),
       Nothing,
     )
   | ScrollToLine(line) => (Editor.scrollToLine(~line, editor), Nothing)

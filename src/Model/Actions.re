@@ -10,8 +10,6 @@ open Oni_Input;
 open Oni_Syntax;
 
 module ContextMenu = Oni_Components.ContextMenu;
-//module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
-//module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
@@ -103,10 +101,10 @@ type t =
   | OpenFileByPath(
       string,
       option([ | `Horizontal | `Vertical]),
-      option(Location.t),
+      option(CharacterPosition.t),
     )
   | OpenFileInNewLayout(string)
-  | BufferOpened(string, option(Location.t), int)
+  | BufferOpened(string, option(CharacterPosition.t), int)
   | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | Pasted({
@@ -121,7 +119,7 @@ type t =
   // to quit the app. This gives subscriptions the chance to clean up.
   | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
-  | SearchSetHighlights(int, list(Range.t))
+  | SearchSetHighlights(int, list(ByteRange.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)

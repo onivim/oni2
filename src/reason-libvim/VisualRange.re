@@ -1,7 +1,7 @@
 open EditorCoreTypes;
 
 type t = {
-  range: Range.t,
+  range: ByteRange.t,
   visualType: Types.visualType,
 };
 

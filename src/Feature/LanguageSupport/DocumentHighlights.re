@@ -10,7 +10,7 @@ type provider = {
 type model = {
   providers: list(provider),
   // buffer Id -> lines -> ranges
-  bufferToHighlights: IntMap.t(IntMap.t(list(Range.t))),
+  bufferToHighlights: IntMap.t(IntMap.t(list(CharacterRange.t))),
 };
 
 let initial = {providers: [], bufferToHighlights: IntMap.empty};
@@ -19,14 +19,14 @@ let initial = {providers: [], bufferToHighlights: IntMap.empty};
 type msg =
   | DocumentHighlighted({
       bufferId: int,
-      ranges: list(Range.t),
+      ranges: list(CharacterRange.t),
     });
 // TODO: kind?
 
 let update = (msg, model) => {
   switch (msg) {
   | DocumentHighlighted({bufferId, ranges}) =>
-    let lineMap = ranges |> Utility.RangeEx.toLineMap;
+    let lineMap = ranges |> Utility.RangeEx.toCharacterLineMap;
     let bufferToHighlights =
       model.bufferToHighlights |> IntMap.add(bufferId, lineMap);
     {...model, bufferToHighlights};

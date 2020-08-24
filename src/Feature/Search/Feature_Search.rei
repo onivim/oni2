@@ -30,7 +30,7 @@ let make:
     ~editorFont: Service_Font.font,
     ~isFocused: bool,
     ~model: model,
-    ~onSelectResult: (string, Location.t) => unit,
+    ~onSelectResult: (string, CharacterPosition.t) => unit,
     ~dispatch: msg => unit,
     unit
   ) =>

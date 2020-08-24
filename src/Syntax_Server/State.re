@@ -210,8 +210,10 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
              let newLines =
                ArrayEx.replace(
                  ~replacement=update.lines,
-                 ~start=update.startLine |> Index.toZeroBased,
-                 ~stop=update.endLine |> Index.toZeroBased,
+                 ~start=
+                   update.startLine |> EditorCoreTypes.LineNumber.toZeroBased,
+                 ~stop=
+                   update.endLine |> EditorCoreTypes.LineNumber.toZeroBased,
                  lines,
                );
              Some({scope, lines: newLines, version: update.version});

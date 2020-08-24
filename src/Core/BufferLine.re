@@ -1,10 +1,11 @@
 /*
- * Buffer.re
+ * BufferLine.re
  *
  * In-memory text buffer representation
  */
 exception OutOfBounds;
 
+open EditorCoreTypes;
 open Utility;
 
 module Log = (val Timber.Log.withNamespace("Oni2.Core.BufferLine"));
@@ -145,7 +146,7 @@ module Internal = {
       pixelWidth;
     };
 
-  let resolveTo = (~index, cache: t) => {
+  let resolveTo = (~index: CharacterIndex.t, cache: t) => {
     // First, allocate our cache, if necessary
     if (cache.characters === emptyCharacterMap) {
       cache.characters = Array.make(String.length(cache.raw), None);
@@ -155,9 +156,11 @@ module Internal = {
       cache.byteIndexMap = Array.make(String.length(cache.raw), None);
     };
 
+    let characterIndexInt = CharacterIndex.toInt(index);
+
     // We've already resolved to this point,
     // no work needed!
-    if (index < cache.nextIndex) {
+    if (characterIndexInt < cache.nextIndex) {
       ();
     } else {
       // Requested an index we haven't discovered yet - so we'll need to compute up to the point
@@ -174,7 +177,7 @@ module Internal = {
       Skia.Paint.setTextSize(paint, cache.font.fontSize);
       Revery.Font.Smoothing.setPaint(~smoothing=cache.font.smoothing, paint);
 
-      while (i^ <= index && byte^ < len && glyphStrings^ != []) {
+      while (i^ <= characterIndexInt && byte^ < len && glyphStrings^ != []) {
         let (uchar, offset) =
           ZedBundled.unsafe_extract_next(cache.raw, byte^);
 
@@ -295,21 +298,28 @@ let indentation = ({indentation, _}) => indentation;
 
 let lengthBounded = (~max, bufferLine) => {
   Internal.resolveTo(~index=max, bufferLine);
-  min(bufferLine.nextIndex, max);
+  min(bufferLine.nextIndex, CharacterIndex.toInt(max));
 };
 
 let getIndex = (~byte, bufferLine) => {
-  Internal.resolveTo(~index=byte, bufferLine);
+  let byteIdx = ByteIndex.toInt(byte);
+
+  // The maximum character index this byte could be is literally [byte]
+  // (ie, in the case where the string is all ASCII / 1-byte characters)
+  // So resolve to that point
+  let maximumPossibleCharacterIndex =
+    CharacterIndex.ofInt(ByteIndex.toInt(byte));
+  Internal.resolveTo(~index=maximumPossibleCharacterIndex, bufferLine);
 
   // In the case where we are looking at an 'intermediate' byte,
   // work backwards to the previous matching index.
-  let rec loop = idx =>
-    if (idx <= 0) {
+  let rec loop = byteIdx =>
+    if (byteIdx <= 0) {
       0;
     } else {
-      switch (bufferLine.byteIndexMap[idx]) {
+      switch (bufferLine.byteIndexMap[byteIdx]) {
       | Some(v) => v
-      | None => loop(idx - 1)
+      | None => loop(byteIdx - 1)
       };
     };
 
@@ -317,17 +327,17 @@ let getIndex = (~byte, bufferLine) => {
   // return the index that would be past the last index. The reason
   // we handle this case - as opposed throw - is to handle the
   // case where a cursor position is past the end of the current string.
-  if (byte >= String.length(bufferLine.raw)) {
-    bufferLine.nextIndex;
+  if (byteIdx >= String.length(bufferLine.raw)) {
+    bufferLine.nextIndex |> CharacterIndex.ofInt;
   } else {
-    loop(byte);
+    loop(ByteIndex.toInt(byte)) |> CharacterIndex.ofInt;
   };
 };
 
 let getUcharExn = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
-  switch (characters[index]) {
+  switch (characters[CharacterIndex.toInt(index)]) {
   | Some({uchar, _}) => uchar
   | None => raise(OutOfBounds)
   };
@@ -338,33 +348,40 @@ let getByteFromIndex = (~index, bufferLine) => {
   let rawLength = String.length(bufferLine.raw);
   let characters = bufferLine.characters;
   let len = Array.length(characters);
-  if (index < 0) {
-    0;
-  } else if (index >= len) {
-    rawLength;
-  } else {
-    switch (characters[index]) {
-    | Some({byteOffset, _}) => byteOffset
-    | None => rawLength
+  let characterIdx = CharacterIndex.toInt(index);
+  let byteIdx =
+    if (characterIdx < 0) {
+      0;
+    } else if (characterIdx >= len) {
+      rawLength;
+    } else {
+      switch (characters[characterIdx]) {
+      | Some({byteOffset, _}) => byteOffset
+      | None => rawLength
+      };
     };
-  };
+  byteIdx |> ByteIndex.ofInt;
 };
 
-let subExn = (~index: int, ~length: int, bufferLine) => {
-  let startOffset = getByteFromIndex(~index, bufferLine);
-  let endOffset = getByteFromIndex(~index=index + length, bufferLine);
+let subExn = (~index: CharacterIndex.t, ~length: int, bufferLine) => {
+  let startOffset = getByteFromIndex(~index, bufferLine) |> ByteIndex.toInt;
+  let endOffset =
+    getByteFromIndex(~index=CharacterIndex.(index + length), bufferLine)
+    |> ByteIndex.toInt;
   String.sub(bufferLine.raw, startOffset, endOffset - startOffset);
 };
 
-let getPixelPositionAndWidth = (~index: int, bufferLine: t) => {
+let getPixelPositionAndWidth = (~index: CharacterIndex.t, bufferLine: t) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
   let len = Array.length(characters);
 
-  if (index < 0 || index >= len || len == 0) {
+  let characterIdx = CharacterIndex.toInt(index);
+
+  if (characterIdx < 0 || characterIdx >= len || len == 0) {
     (bufferLine.nextPixelPosition, bufferLine.font.spaceWidth);
   } else {
-    switch (characters[index]) {
+    switch (characters[characterIdx]) {
     | Some({positionPixelOffset, pixelWidth, _}) => (
         positionPixelOffset,
         pixelWidth,
@@ -392,7 +409,10 @@ module Slow = {
       } else {
         let mid = (low + high) / 2;
         let (midPixel, midPixelWidth) =
-          getPixelPositionAndWidth(~index=mid, bufferLine);
+          getPixelPositionAndWidth(
+            ~index=CharacterIndex.ofInt(mid),
+            bufferLine,
+          );
         if (pixel < midPixel) {
           loop(low, mid - 1);
         } else if (pixel > midPixel +. midPixelWidth) {
@@ -402,6 +422,6 @@ module Slow = {
         };
       };
 
-    loop(0, characterLength - 1);
+    loop(0, characterLength - 1) |> CharacterIndex.ofInt;
   };
 };

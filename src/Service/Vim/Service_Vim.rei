@@ -8,7 +8,8 @@ let quitAll: unit => Isolinear.Effect.t(_);
 
 module Effects: {
   let paste:
-    (~toMsg: list(Vim.Cursor.t) => 'msg, string) => Isolinear.Effect.t('msg);
+    (~toMsg: list(BytePosition.t) => 'msg, string) =>
+    Isolinear.Effect.t('msg);
 
   let getRegisterValue:
     (~toMsg: option(array(string)) => 'msg, char) =>
@@ -28,9 +29,9 @@ module Effects: {
 
   let applyCompletion:
     (
-      ~meetColumn: Index.t,
+      ~meetColumn: CharacterIndex.t,
       ~insertText: string,
-      ~toMsg: list(Vim.Cursor.t) => 'msg
+      ~toMsg: list(BytePosition.t) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
 };

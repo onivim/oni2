@@ -55,8 +55,8 @@ describe("Format", ({test, _}) => {
           formatType: Format.Indentation,
           bufferId,
           adjustCursor: false,
-          startLine: Index.zero,
-          endLine: Index.zero,
+          startLine: LineNumber.zero,
+          endLine: LineNumber.zero,
         }),
       ),
     );

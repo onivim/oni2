@@ -51,13 +51,13 @@ describe("Options", ({describe, _}) => {
       input("I");
       key("<tab>");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "   This is the first line of a test file",
       );
 
       key("<bs>");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "This is the first line of a test file",
       );
 
@@ -65,7 +65,7 @@ describe("Options", ({describe, _}) => {
       Options.setInsertSpaces(false);
 
       key("<tab>");
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "\tThis is the first line of a test file",
       );
     });
@@ -81,7 +81,7 @@ describe("Options", ({describe, _}) => {
       input("c");
       input("c");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "; This is the first line of a test file",
       );
 
@@ -89,7 +89,7 @@ describe("Options", ({describe, _}) => {
       input("c");
       input("c");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "This is the first line of a test file",
       );
 
@@ -99,7 +99,7 @@ describe("Options", ({describe, _}) => {
       input("c");
       input("c");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "!!This is the first line of a test file",
       );
     })

@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 // MODEL
 
 type model;
@@ -11,13 +12,13 @@ let mode: model => Vim.Mode.t;
 [@deriving show]
 type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
-  | PasteCompleted({cursors: [@opaque] list(Vim.Cursor.t)})
+  | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
   | Pasted(string);
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(Vim.Cursor.t));
+  | CursorsUpdated(list(BytePosition.t));
 
 // UPDATE
 

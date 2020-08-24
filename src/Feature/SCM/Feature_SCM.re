@@ -178,6 +178,7 @@ module Msg = {
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
+  | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
   | Nothing;
 
@@ -444,7 +445,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
 
   | KeyPressed({key: "<CR>"}) => (
       model,
-      Effect(
+      EffectAndFocus(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
@@ -468,7 +469,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     let inputBox = Feature_InputText.handleInput(~key, model.inputBox);
     (
       {...model, inputBox},
-      Effect(
+      EffectAndFocus(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
@@ -486,7 +487,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     let inputBox = Feature_InputText.paste(~text, model.inputBox);
     (
       {...model, inputBox},
-      Effect(
+      EffectAndFocus(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>

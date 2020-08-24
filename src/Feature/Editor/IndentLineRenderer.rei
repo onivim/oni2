@@ -10,7 +10,7 @@ let render:
     ~buffer: Oni_Core.Buffer.t,
     ~startLine: int,
     ~endLine: int,
-    ~cursorPosition: EditorCoreTypes.Location.t,
+    ~cursorPosition: EditorCoreTypes.CharacterPosition.t,
     ~colors: Colors.t,
     ~showActive: bool,
     Oni_Core.IndentationSettings.t

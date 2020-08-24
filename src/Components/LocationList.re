@@ -11,7 +11,7 @@ module Colors = Feature_Theme.Colors;
 
 type item = {
   file: string,
-  location: Location.t,
+  location: CharacterPosition.t,
   text: string,
   highlight: option((Index.t, Index.t)),
 };
@@ -81,7 +81,7 @@ let item =
     Printf.sprintf(
       "%s:%n - ",
       Path.toRelative(~base=workingDirectory, item.file),
-      Index.toOneBased(item.location.line),
+      EditorCoreTypes.LineNumber.toOneBased(item.location.line),
     );
 
   let locationWidth = {

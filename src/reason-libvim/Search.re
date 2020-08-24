@@ -4,18 +4,18 @@ let getHighlightsInRange = (startLine, stopLine) => {
   let highlights = Native.vimSearchGetHighlights(startLine, stopLine);
   Array.map(
     ((startLine, startColumn, stopLine, stopColumn)) =>
-      Range.create(
-        ~start=
-          Location.create(
-            ~line=Index.fromOneBased(startLine),
-            ~column=Index.fromZeroBased(startColumn),
-          ),
-        ~stop=
-          Location.create(
-            ~line=Index.fromOneBased(stopLine),
-            ~column=Index.fromZeroBased(stopColumn),
-          ),
-      ),
+      ByteRange.{
+        start:
+          BytePosition.{
+            line: LineNumber.ofOneBased(startLine),
+            byte: ByteIndex.ofInt(startColumn),
+          },
+        stop:
+          BytePosition.{
+            line: LineNumber.ofOneBased(stopLine),
+            byte: ByteIndex.ofInt(stopColumn),
+          },
+      },
     highlights,
   );
 };

@@ -3,7 +3,6 @@
  *
  * In-memory text buffer representation
  */
-open EditorCoreTypes;
 module ArrayEx = Utility.ArrayEx;
 module OptionEx = Utility.OptionEx;
 module Path = Utility.Path;
@@ -220,8 +219,8 @@ let applyUpdate =
     (~indentation, ~font, lines: array(BufferLine.t), update: BufferUpdate.t) => {
   let updateLines =
     update.lines |> Array.map(BufferLine.make(~font, ~indentation));
-  let startLine = update.startLine |> Index.toZeroBased;
-  let endLine = update.endLine |> Index.toZeroBased;
+  let startLine = update.startLine |> EditorCoreTypes.LineNumber.toZeroBased;
+  let endLine = update.endLine |> EditorCoreTypes.LineNumber.toZeroBased;
   ArrayEx.replace(
     ~replacement=updateLines,
     ~start=startLine,

@@ -232,6 +232,24 @@ let make =
       };
     };
 
+    let tooltip = editor => {
+      let (_, _, filePath) =
+        Feature_Buffers.get(Editor.getBufferId(editor), state.buffers)
+        |> getBufferMetadata;
+
+      let renderer =
+        BufferRenderers.getById(
+          Editor.getBufferId(editor),
+          state.bufferRenderers,
+        );
+
+      switch (renderer) {
+      | Welcome => "Welcome"
+      | Terminal({title, _}) => title
+      | _ => filePath
+      };
+    };
+
     let isModified = editor => {
       let (modified, _, _) =
         Feature_Buffers.get(Editor.getBufferId(editor), state.buffers)

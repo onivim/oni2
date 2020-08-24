@@ -1,5 +1,3 @@
-open EditorCoreTypes;
-
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
@@ -36,7 +34,7 @@ runTest(
            let tokens =
              Feature_Syntax.getTokens(
                ~bufferId,
-               ~line=Index.zero,
+               ~line=EditorCoreTypes.LineNumber.zero,
                state.syntaxHighlights,
              );
 

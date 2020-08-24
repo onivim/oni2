@@ -15,13 +15,18 @@ module Msg: {
 
   module Formatting: {
     let formatDocument: msg;
-    let formatRange: (~startLine: Index.t, ~endLine: Index.t) => msg;
+    let formatRange:
+      (
+        ~startLine: EditorCoreTypes.LineNumber.t,
+        ~endLine: EditorCoreTypes.LineNumber.t
+      ) =>
+      msg;
   };
 
   module Hover: {
     let show: msg;
-    let mouseHovered: Location.t => msg;
-    let mouseMoved: Location.t => msg;
+    let mouseHovered: CharacterPosition.t => msg;
+    let mouseMoved: CharacterPosition.t => msg;
     let keyPressed: string => msg;
   };
 };
@@ -29,16 +34,16 @@ module Msg: {
 type outmsg =
   | Nothing
   | ApplyCompletion({
-      meetColumn: Index.t,
+      meetColumn: CharacterIndex.t,
       insertText: string,
     })
   | InsertSnippet({
-      meetColumn: Index.t,
+      meetColumn: CharacterIndex.t,
       snippet: string,
     })
   | OpenFile({
       filePath: string,
-      location: option(Location.t),
+      location: option(CharacterPosition.t),
     })
   | NotifySuccess(string)
   | NotifyFailure(string)
@@ -48,10 +53,10 @@ let update:
   (
     ~configuration: Oni_Core.Configuration.t,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
-    ~maybeSelection: option(Range.t),
+    ~maybeSelection: option(CharacterRange.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
     ~editorId: int,
-    ~cursorLocation: Location.t,
+    ~cursorLocation: CharacterPosition.t,
     ~client: Exthost.Client.t,
     msg,
     model
@@ -62,13 +67,15 @@ let bufferUpdated:
   (
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
-    ~activeCursor: Location.t,
+    ~activeCursor: CharacterPosition.t,
     ~syntaxScope: Oni_Core.SyntaxScope.t,
     ~triggerKey: option(string),
     model
   ) =>
   model;
-let cursorMoved: (~previous: Location.t, ~current: Location.t, model) => model;
+let cursorMoved:
+  (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) =>
+  model;
 let startInsertMode: model => model;
 let stopInsertMode: model => model;
 let isFocused: model => bool;
@@ -77,7 +84,7 @@ let sub:
   (
     ~isInsertMode: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
-    ~activePosition: Location.t,
+    ~activePosition: CharacterPosition.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
     ~client: Exthost.Client.t,
     model
@@ -122,7 +129,7 @@ module Hover: {
         ~buffer: Oni_Core.Buffer.t,
         ~editorId: option(int)
       ) =>
-      option((Location.t, list(Oni_Components.Popup.Section.t)));
+      option((CharacterPosition.t, list(Oni_Components.Popup.Section.t)));
   };
 };
 
@@ -138,14 +145,15 @@ module Definition: {
   let get: (~bufferId: int, model) => option(Exthost.DefinitionLink.t);
 
   let getAt:
-    (~bufferId: int, ~range: Range.t, model) =>
+    (~bufferId: int, ~range: CharacterRange.t, model) =>
     option(Exthost.DefinitionLink.t);
 
   let isAvailable: (~bufferId: int, model) => bool;
 };
 
 module DocumentHighlights: {
-  let getByLine: (~bufferId: int, ~line: int, model) => list(Range.t);
+  let getByLine:
+    (~bufferId: int, ~line: int, model) => list(CharacterRange.t);
 
   let getLinesWithHighlight: (~bufferId: int, model) => list(int);
 };
