@@ -27,6 +27,7 @@ type t = {
   key: [@opaque] Brisk_reconciler.Key.t,
   buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
+  inlineElements: InlineElements.t,
   lineHeight: LineHeight.t,
   scrollX: float,
   scrollY: float,
@@ -131,6 +132,7 @@ let create = (~config, ~buffer, ()) => {
   {
     editorId: id,
     key,
+    inlineElements: InlineElements.initial,
     lineHeight,
     isMinimapEnabled,
     isScrollAnimated: false,
