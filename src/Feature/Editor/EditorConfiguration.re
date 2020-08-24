@@ -121,6 +121,7 @@ let contributions = [
   fontFamily.spec,
   fontLigatures.spec,
   fontSize.spec,
+  lineHeight.spec,
   largeFileOptimization.spec,
   highlightActiveIndentGuide.spec,
   indentSize.spec,
