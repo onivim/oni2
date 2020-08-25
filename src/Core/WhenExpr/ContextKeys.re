@@ -88,3 +88,11 @@ let unionMany = lookups => List.fold_left(union, Lookup.empty, lookups);
 let getValue = (lookup, key) =>
   Lookup.find_opt(Lookup.key(key), lookup)
   |> Option.value(~default=Value.False);
+
+let values = lookup =>
+  lookup
+  |> Lookup.to_seq
+  |> Seq.map(((key, value)) =>
+       (Kernel.KeyedStringMap.keyName(key), value)
+     )
+  |> List.of_seq;

@@ -94,7 +94,10 @@ module type Input = {
   type effect =
     // The `Execute` effect means that a key-sequence associated with `command`
     // has been completed, and the `command` should now be executed.
-    | Execute(command)
+    | Execute({
+        count: int,
+        command,
+      })
     // The `Text` effect occurs when an unhandled `text` input event occurs.
     | Text(string)
     // The `Unhandled` effect occurs when an unhandled `keyDown` input event occurs.
@@ -111,6 +114,8 @@ module type Input = {
   keybinding pending, false otherwise
   */
   let isPending: t => bool;
+
+  let candidates: (~context: context, t) => list((Matcher.t, command));
 
   let count: t => int;
 

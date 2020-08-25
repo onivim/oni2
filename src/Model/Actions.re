@@ -42,7 +42,10 @@ type t =
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
-  | KeybindingInvoked({command: string})
+  | KeybindingInvoked({
+      count: int,
+      command: string,
+    })
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)

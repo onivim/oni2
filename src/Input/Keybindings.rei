@@ -3,7 +3,10 @@ type t;
 let empty: t;
 
 type effect =
-  | Execute(string)
+  | Execute({
+      count: int,
+      command: string,
+    })
   | Text(string)
   | Unhandled(EditorInput.KeyPress.t);
 
@@ -14,6 +17,10 @@ let keyDown:
   (t, list(effect));
 
 let text: (~text: string, t) => (t, list(effect));
+
+let candidates:
+  (~context: WhenExpr.ContextKeys.t, t) =>
+  list((EditorInput.Matcher.t, string));
 
 let keyUp:
   (~context: WhenExpr.ContextKeys.t, ~key: EditorInput.KeyPress.t, t) =>

@@ -94,7 +94,12 @@ module Internal = {
 
 type effect =
   Input.effect =
-    | Execute(string) | Text(string) | Unhandled(EditorInput.KeyPress.t);
+    | Execute({
+        count: int,
+        command: string,
+      })
+    | Text(string)
+    | Unhandled(EditorInput.KeyPress.t);
 
 type t = Input.t;
 
@@ -103,6 +108,7 @@ let count = Input.count;
 let keyDown = Input.keyDown;
 let text = Input.text;
 let keyUp = Input.keyUp;
+let candidates = Input.candidates;
 
 // Old version of keybindings - the legacy format:
 // { bindings: [ ..bindings. ] }

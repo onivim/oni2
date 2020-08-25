@@ -45,7 +45,7 @@ describe("EditorInput", ({describe, _}) => {
 
       let (_bindings, effects) = Input.flush(~context=true, bindings);
 
-      expect.equal(effects, [Execute("commandA")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandA"})]);
     })
   });
   describe("allKeysReleased", ({test, _}) => {
@@ -61,7 +61,7 @@ describe("EditorInput", ({describe, _}) => {
       let (_bindings, effects) =
         Input.keyUp(~context=true, ~key=aKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("commandA")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandA"})]);
     })
   });
   describe("text", ({test, _}) => {
@@ -123,7 +123,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, effects) =
         Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("commandAB")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandAB"})]);
 
       let (_bindings, effects) = Input.text(~text="b", bindings);
 
@@ -152,7 +152,7 @@ describe("EditorInput", ({describe, _}) => {
       let (_bindings, effects) =
         Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("commandAB")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandAB"})]);
     });
   });
   describe("sequences", ({test, _}) => {
@@ -179,7 +179,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, effects) =
         Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("command1")]);
+      expect.equal(effects, [Execute({count: 1, command: "command1"})]);
       expect.equal(Input.isPending(bindings), false);
     });
     test("same key in a sequence", ({expect, _}) => {
@@ -202,7 +202,7 @@ describe("EditorInput", ({describe, _}) => {
       let (_bindings, effects) =
         Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("commandAA")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandAA"})]);
     });
     test("key up doesn't stop sequence", ({expect, _}) => {
       let (bindings, _id) =
@@ -229,7 +229,7 @@ describe("EditorInput", ({describe, _}) => {
       let (_bindings, effects) =
         Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("commandAB")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandAB"})]);
     });
     test("sequence with keyups", ({expect, _}) => {
       let (bindings, _id) =
@@ -251,7 +251,7 @@ describe("EditorInput", ({describe, _}) => {
       let (_bindings, effects) =
         Input.keyUp(~context=true, ~key=aKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("commandA!A")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandA!A"})]);
     });
     test("partial match with another match", ({expect, _}) => {
       let (bindings, _id) =
@@ -281,12 +281,12 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, effects) =
         Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("commandA")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandA"})]);
 
       let (_bindings, effects) =
         Input.keyDown(~context=true, ~key=cKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("commandAC")]);
+      expect.equal(effects, [Execute({count: 1, command: "commandAC"})]);
     });
     test("partial match with unhandled", ({expect, _}) => {
       let (bindings, _id) =
@@ -318,7 +318,10 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(
         effects,
-        [Unhandled(bKeyNoModifiers), Execute("commandA")],
+        [
+          Unhandled(bKeyNoModifiers),
+          Execute({count: 1, command: "commandA"}),
+        ],
       );
     });
   });
@@ -370,7 +373,7 @@ describe("EditorInput", ({describe, _}) => {
       let (_bindings, effects) =
         Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("command1")]);
+      expect.equal(effects, [Execute({count: 1, command: "command1"})]);
     });
     test("key with no matches is unhandled", ({expect, _}) => {
       let bindings = Input.empty;
@@ -489,7 +492,7 @@ describe("EditorInput", ({describe, _}) => {
       let (_bindings, effects) =
         Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Execute("command2")]);
+      expect.equal(effects, [Execute({count: 1, command: "command2"})]);
     });
   });
 });

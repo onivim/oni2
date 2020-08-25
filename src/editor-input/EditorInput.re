@@ -22,7 +22,10 @@ module type Input = {
     (Matcher.t, context => bool, list(KeyPress.t), t) => (t, uniqueId);
 
   type effect =
-    | Execute(command)
+    | Execute({
+        count: int,
+        command,
+      })
     | Text(string)
     | Unhandled(KeyPress.t);
 
@@ -32,6 +35,8 @@ module type Input = {
   let flush: (~context: context, t) => (t, list(effect));
 
   let isPending: t => bool;
+
+  let candidates: (~context: context, t) => list((Matcher.t, command));
 
   let count: t => int;
 
@@ -68,7 +73,10 @@ module Make = (Config: {
   type context = Config.context;
 
   type effect =
-    | Execute(command)
+    | Execute({
+        count: int,
+        command,
+      })
     | Text(string)
     | Unhandled(KeyPress.t);
 
@@ -92,7 +100,11 @@ module Make = (Config: {
   type keyDownId = int;
 
   type gesture =
-    | Down(keyDownId, KeyPress.t)
+    | Down({
+        count: int,
+        id: keyDownId,
+        key: KeyPress.t,
+      })
     | Up(KeyPress.t)
     | AllKeysReleased;
 
@@ -125,9 +137,9 @@ module Make = (Config: {
     Matcher.(
       {
         switch (keyMatcher, key) {
-        | (Keydown(Scancode(scancode, mods)), Down(_id, key)) =>
+        | (Keydown(Scancode(scancode, mods)), Down({key, _})) =>
           key.scancode == scancode && Modifiers.equals(mods, key.modifiers)
-        | (Keydown(Keycode(keycode, mods)), Down(_id, key)) =>
+        | (Keydown(Keycode(keycode, mods)), Down({key, _})) =>
           key.keycode == keycode && Modifiers.equals(mods, key.modifiers)
         | (Keyup(Scancode(scancode, mods)), Up(key)) =>
           key.scancode == scancode && Modifiers.equals(mods, key.modifiers)
@@ -199,7 +211,7 @@ module Make = (Config: {
       |> List.filter_map(
            fun
            | AllKeysReleased => None
-           | Down(id, key) => Some(Down(id, key))
+           | Down(_) as downKey => Some(downKey)
            | Up(_key) => None,
          );
 
@@ -258,7 +270,7 @@ module Make = (Config: {
          switch (curr) {
          | AllKeysReleased => ()
          | Up(_key) => ()
-         | Down(id, _key) => Hashtbl.add(ret, id, true)
+         | Down({id, _}) => Hashtbl.add(ret, id, true)
          }
        });
 
@@ -326,11 +338,13 @@ module Make = (Config: {
           | Dispatch(command) => (
               remainingKeys,
               remainingText,
-              [Execute(command), ...effects],
+              [Execute({command, count: 1}), ...effects],
             )
           | Remap(keys) =>
             let newKeys =
-              keys |> List.map(k => Down(KeyDownId.get(), k)) |> List.rev;
+              keys
+              |> List.map(k => Down({count: 1, id: KeyDownId.get(), key: k}))
+              |> List.rev;
             loop(
               ~flush,
               newKeys,
@@ -356,7 +370,7 @@ module Make = (Config: {
         | [] =>
           // No keys left, we're done here
           (remainingKeys, remainingText, effects)
-        | [Down(keyDownId, latestKey)] =>
+        | [Down({id as keyDownId, key as latestKey, _})] =>
           let textEffects =
             remainingText
             |> List.filter(textEntry => textEntry.keyDownId == keyDownId)
@@ -432,13 +446,16 @@ module Make = (Config: {
         switch (binding.action) {
         | Dispatch(command) => (
             reset({...bindings, suppressText: true, text}),
-            [Execute(command)],
+            [Execute({count: 1, command})],
           )
         | Remap(remappedKeys) =>
           let keys =
             List.append(
               originalKeys,
-              List.map(k => Down(KeyDownId.get(), k), remappedKeys),
+              List.map(
+                k => Down({count: 1, id: KeyDownId.get(), key: k}),
+                remappedKeys,
+              ),
             );
           flush(~context, {...bindings, suppressText: true, text, keys});
         };
@@ -453,7 +470,7 @@ module Make = (Config: {
     let id = KeyDownId.get();
     handleKeyCore(
       ~context,
-      Down(id, key),
+      Down({id, key, count: 1}),
       {
         ...bindings,
         pressedScancodes: IntSet.add(key.scancode, bindings.pressedScancodes),
@@ -488,7 +505,9 @@ module Make = (Config: {
     let rec loop = bindings =>
       switch (bindings) {
       // For '<release>', only care about dispatch actions
-      | [{action: Dispatch(command), _}, ..._] => [Execute(command)]
+      | [{action: Dispatch(command), _}, ..._] => [
+          Execute({count: 1, command}),
+        ]
 
       | [_hd, ...tail] => loop(tail)
       | [] => []
@@ -514,6 +533,22 @@ module Make = (Config: {
     let (bindings, effects) = handleKeyCore(~context, Up(key), bindings);
 
     (bindings, effects @ initialEffects);
+  };
+
+  let candidates = (~context, {keys, bindings, _}) => {
+    applyKeysToBindings(~context, keys, bindings)
+    |> List.filter_map(({id, matcher, action, enabled}: binding) => {
+         switch (action) {
+         | Remap(_) => None
+         | Dispatch(command) =>
+           switch (matcher) {
+           | Matched => None
+           | Unmatched(matchers) when enabled(context) =>
+             Some((matchers, command))
+           | _ => None
+           }
+         }
+       });
   };
 
   let empty = {

@@ -118,8 +118,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Keybindings.Execute(command) => [
-        Actions.KeybindingInvoked({command: command}),
+    | Keybindings.Execute({command, count}) => [
+        Actions.KeybindingInvoked({count, command}),
       ]
     | Keybindings.Text(text) => handleTextEffect(~isText=true, state, text)
     | Keybindings.Unhandled(key) =>
@@ -190,6 +190,19 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       Keybindings.keyDown(~context, ~key, state.keyBindings);
 
     let newState = {...state, keyBindings};
+
+    let candidates = keyBindings |> Keybindings.candidates(~context);
+
+    prerr_endline("-- CONTEXT KEYS");
+    context
+    |> WhenExpr.ContextKeys.values
+    |> List.iter(((key, v)) => {
+         prerr_endline(" *key: " ++ key ++ " - " ++ WhenExpr.Value.show(v))
+       });
+
+    prerr_endline("-- CANDIDATES!");
+    candidates
+    |> List.iter(((_, command)) => prerr_endline(" * " ++ command));
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
