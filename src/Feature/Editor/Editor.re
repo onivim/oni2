@@ -333,6 +333,28 @@ let getPrimaryCursor = editor => {
      );
 };
 
+let additionalCursors = editor => {
+  switch (editor.cursors) {
+  | [] => []
+  | [_primaryCursor] => []
+  | [_primaryCursor, ...additionalCursors] =>
+    additionalCursors
+    |> List.filter_map(cursor => byteToCharacter(cursor, editor))
+  };
+};
+
+let addCursorAbove = editor => {
+  ...editor,
+  cursors:
+    editor.cursors
+    @ [
+      BytePosition.{
+        line: EditorCoreTypes.LineNumber.zero,
+        byte: ByteIndex.zero,
+      },
+    ],
+};
+
 let getPrimaryCursorByte = editor =>
   switch (editor.cursors) {
   | [cursor, ..._] => cursor

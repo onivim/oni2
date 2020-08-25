@@ -36,8 +36,12 @@ let getCharacterUnderCursor: t => option(Uchar.t);
 let getCharacterBehindCursor: t => option(Uchar.t);
 let getCharacterAtPosition:
   (~position: CharacterPosition.t, t) => option(Uchar.t);
+
+let addCursorAbove: t => t;
+
 let getPrimaryCursor: t => CharacterPosition.t;
 let getPrimaryCursorByte: t => BytePosition.t;
+let additionalCursors: t => list(CharacterPosition.t);
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => int;

@@ -529,6 +529,20 @@ let update =
 
     (state, eff);
 
+  | Command("editor.action.addCursor") =>
+    let activeEditorId =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getId;
+    let layout =
+      Feature_Layout.map(
+        editor =>
+          Feature_Editor.Editor.getId(editor) == activeEditorId
+            ? editor |> Feature_Editor.Editor.addCursorAbove : editor,
+        state.layout,
+      );
+    ({...state, layout}, Effect.none);
+
   | Commands(msg) =>
     let commands = Feature_Commands.update(state.commands, msg);
     let state = {...state, commands};

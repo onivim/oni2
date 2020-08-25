@@ -57,6 +57,12 @@ module Editor = {
         "editor.action.outdentLines",
         Command("editor.action.outdentLines"),
       );
+
+    let addCursorAbove =
+      register(
+        "editor.action.addCursor",
+        Command("editor.action.addCursor"),
+      );
   };
 };
 

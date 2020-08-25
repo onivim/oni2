@@ -478,6 +478,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
       let runCursor = cursor => {
         Cursor.set(cursor);
+        Undo.saveRegion(0, 2);
         if (Mode.getCurrent() == Types.Insert) {
           let position: BytePosition.t = Cursor.get();
           let line = Buffer.getLine(Buffer.getCurrent(), position.line);

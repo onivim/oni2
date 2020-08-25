@@ -157,6 +157,21 @@ let%component make =
   let pixelWidth = Editor.visiblePixelWidth(editor);
   let pixelHeight = Editor.visiblePixelHeight(editor);
 
+  let extraCursors =
+    Editor.additionalCursors(editor)
+    |> List.map(cursorPosition => {
+         <CursorView
+           config
+           editor
+           editorFont
+           mode
+           cursorPosition
+           isActiveSplit
+           windowIsFocused
+           colors
+         />
+       });
+
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
@@ -242,5 +257,6 @@ let%component make =
       windowIsFocused
       colors
     />
+    {extraCursors |> React.listToElement}
   </View>;
 };

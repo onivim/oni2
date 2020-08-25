@@ -457,17 +457,23 @@ let start = maybeKeyBindingsFilePath => {
           command: Feature_Layout.Commands.toggleMaximize.id,
           condition: windowCommandCondition,
         },
-        {
-          key: "<A-DOWN>",
-          command: Feature_SignatureHelp.Commands.incrementSignature.id,
-          condition:
-            "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
-        },
+        //        {
+        //          key: "<A-DOWN>",
+        //          command: Feature_SignatureHelp.Commands.incrementSignature.id,
+        //          condition:
+        //            "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+        //        },
+        //        {
+        //          key: "<A-UP>",
+        //          command: Feature_SignatureHelp.Commands.decrementSignature.id,
+        //          condition:
+        //            "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+        //        },
         {
           key: "<A-UP>",
-          command: Feature_SignatureHelp.Commands.decrementSignature.id,
+          command: Commands.Editor.Action.addCursorAbove.id,
           condition:
-            "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+            "editorTextFocus && !parameterHintsVisible" |> WhenExpr.parse,
         },
       ];
 
